@@ -214,11 +214,11 @@
     <Content Include="Resources\DVSplit.cur" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Au\Au.csproj">
+    <ProjectReference Include="..\..\Au\Au.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
       <Name>Au</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Controls\Au.Controls.csproj">
+    <ProjectReference Include="..\..\Controls\Au.Controls.csproj">
       <Project>{4c53ea3e-d770-41ac-9a19-381b840cd14a}</Project>
       <Name>Au.Controls</Name>
     </ProjectReference>

@@ -25,15 +25,15 @@ using SG = SourceGrid;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
-//FUTURE: when the AO is in a control of other thread, use Wnd.Find(...).Child(...), and show tree only of that control.
-//FUTURE: support Edge better. Eg can find without UIA. See the workarounds.
+//FUTURE: support Edge better. Eg can find without UIA. See the workaround.
 
 namespace Au.Tools
 {
 	public partial class Form_Acc :Form_
 	{
 		Acc _acc;
-		Wnd _wnd;
+		Wnd _wnd, _con;
+		bool _useCon;
 		TUtil.CaptureWindowEtcWithHotkey _capt;
 		CommonInfos _commonInfos;
 
@@ -78,35 +78,49 @@ namespace Au.Tools
 			base.OnFormClosing(e);
 		}
 
-		//protected override void OnShown(EventArgs e)
-		//{
-		//	base.OnShown(e);
-
-		//	if(_acc != null) try { Mouse.Move((Wnd)_bTest); } catch { }
-		//}
-
 		void _SetAcc(bool captured)
 		{
 			//note: don't reorder all the calls.
 
-			_bTest.Enabled = true; _bOK.Enabled = true;
+			Wnd c = _acc.WndContainer, w = c.WndWindow;
+			if(!w.IsVisibleEx) {
+				if(!captured) return;
+				//Edge workaround. Without it, w would be some cloaked window of other process, and there are many such cloaked windows, and Wnd.Find often finds wrong window.
+				c = Wnd.FromMouse();
+				w = c.WndWindow;
+				if(w.Is0) return;
+			}
 
-			var wndOld = _wnd;
-			_wnd = _acc.WndTopLevel;
-			//if(captured && _wnd.Is0) _wnd = Wnd.FromMouse(WXYFlags.NeedWindow);
-			if(captured && !_wnd.IsVisibleEx) _wnd = Wnd.FromMouse(WXYFlags.NeedWindow); //Edge workaround. Without it, _wnd would be some cloaked window of other process, and there are many such cloaked windows, and Wnd.Find often finds wrong window.
+			//if control is in other thread, search in control by default, elso coild be slow because cannot use inproc. Except for known windows.
+			bool useCon = c != w && c.ThreadId != w.ThreadId && 0 == c.ClassNameIs(Api.string_IES, "Windows.UI.Core.CoreWindow");
+
+			_SetWndCon(w, c, useCon);
 
 			if(_grid2.RowsCount == 0) _FillGrid2();
 
+			if(!_FillGridCodeThree(captured)) return;
+
+			_bTest.Enabled = true; _bOK.Enabled = true; _bEtc.Enabled = true;
+		}
+
+		void _SetWndCon(Wnd wnd, Wnd con, bool useCon = false)
+		{
+			_wnd = wnd;
+			_con = con == wnd ? default : con;
+			_useCon = useCon && !_con.Is0;
+		}
+
+		bool _FillGridCodeThree(bool captured = false)
+		{
 			_ClearTree();
-			if(!_FillGrid(out var p)) return;
-
-			_FormatCode(newWindow: _wnd != wndOld);
-
-			if(!_wnd.Is0) _FillTree(p);
+			if(!_FillGrid(out var p)) return false;
+			_UpdateCodeBox();
+			_FillTree(p);
 
 			if(captured && p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_acc.MiscFlags.Has_(AccMiscFlags.Java) && Ver.Is64BitOS)
 				_SetFormInfo(c_infoJava);
+
+			return true;
 		}
 
 		bool _FillGrid(out AccProperties p)
@@ -123,10 +137,8 @@ namespace Au.Tools
 
 			_noeventGridValueChanged = true;
 
-			Wnd w = p.WndContainer;
-			if(!_wnd.Is0 && !w.IsChildOf(_wnd)) w = _wnd; //Edge workaround (see other workaround)
-
-			bool isWeb = _IsVisibleWebPage(_acc, out int browser, w);
+			bool isWeb = _IsVisibleWebPage(_acc, out var browser, _con.Is0 ? _wnd : _con);
+			_isWebIE = isWeb && browser == _BrowserEnum.IE;
 
 			var role = p.Role; if(isWeb) role = "web:" + role;
 			_AddIfNotEmpty("role", role, true, false, info: c_infoRole);
@@ -135,9 +147,9 @@ namespace Au.Tools
 			if(_AddIfNotEmpty("uiaid", p.UiaId, noName, true, info: "UIA AutomationId.$")) noName = false;
 
 			//control
-			if(!isWeb && w != _wnd) {
-				if(TUtil.GetUsefulControlId(w, _wnd, out int id)) _Add("id", id.ToString(), true, info: c_infoId);
-				_Add("class", TUtil.StripWndClassName(w.ClassName, true), id == 0, info: c_infoClass);
+			if(!isWeb && !_con.Is0 && !_useCon) {
+				if(TUtil.GetUsefulControlId(_con, _wnd, out int id)) _Add("id", id.ToString(), true, info: c_infoId);
+				_Add("class", TUtil.StripWndClassName(_con.ClassName, true), id == 0, info: c_infoClass);
 			}
 
 			_AddIfNotEmpty("value", p.Value, false, true, info: "Value.$");
@@ -190,8 +202,8 @@ namespace Au.Tools
 			g.ZAdd(null, "wait", "5", tt: c_infoWait);
 			g.ZAddCheck("orThrow", "Exception if not found", true, tt: "Checked - throw exception.\nUnchecked - return null.");
 			g.ZAddHeaderRow("Search settings");
-			g.ZAddCheck(nameof(AFFlags.Reverse), "Reverse order", tt: "Flag AFFlags.Reverse.\nWalk the object tree from bottom to top.");
 			g.ZAddCheck(nameof(AFFlags.HiddenToo), "Can be invisible", tt: "Flag AFFlags.HiddenToo.");
+			g.ZAddCheck(nameof(AFFlags.Reverse), "Reverse order", tt: "Flag AFFlags.Reverse.\nWalk the object tree from bottom to top.");
 			g.ZAddCheck(nameof(AFFlags.UIA), "UI Automation", tt: "Flag AFFlags.UIA.\nUse UI Automation API instead of IAccessible.\nThe capturing tool checks/unchecks this automatically when need.");
 			g.ZAddCheck(nameof(AFFlags.NotInProc), "Not in-process", tt: "Flag AFFlags.NotInProc.\nMore info in AFFlags help.");
 			g.ZAddCheck(nameof(AFFlags.ClientArea), "Only client area", tt: "Flag AFFlags.ClientArea.\nMore info in AFFlags help.");
@@ -224,15 +236,15 @@ namespace Au.Tools
 			}
 			_noeventGridValueChanged = false;
 
-			_FormatCode();
+			_UpdateCodeBox();
 		}
 		bool _noeventGridValueChanged;
 
-		string _FormatCode(bool forTest = false, bool newWindow = false)
+		(string code, string wndVar) _FormatCode(bool forTest = false)
 		{
-			if(_grid.RowsCount == 0) return null; //cleared on exception
+			if(_grid.RowsCount == 0) return default; //cleared on exception
 
-			var (wndCode, wndVar) = _code.FormatWndFindCode(_wnd, newWindow);
+			var (wndCode, wndVar) = _code.ZGetWndFindCode(_wnd, _useCon ? _con : default);
 
 			var b = new StringBuilder();
 			b.AppendLine(wndCode);
@@ -307,7 +319,7 @@ namespace Au.Tools
 
 			if(!forTest) _code.ZSetText(R, wndCode.Length);
 
-			return R;
+			return (R, wndVar);
 		}
 
 		#region capture
@@ -347,12 +359,36 @@ namespace Au.Tools
 		{
 			//Wnd w = (Wnd)this; uint msg = (uint)m.Msg; LPARAM wParam = m.WParam, lParam = m.LParam;
 
-			if(_capt != null && _capt.WndProc(ref m)) {
-				_Capture();
+			if(_capt != null && _capt.WndProc(ref m, out bool capture)) {
+				if(capture) _Capture();
 				return;
 			}
 
 			base.WndProc(ref m);
+		}
+
+		#endregion
+
+		#region wnd, etc
+
+		private void _bEtc_Click(object sender, EventArgs e)
+		{
+			var m = new AuMenu();
+			m["Control"] = o => { _useCon = o.MenuItem.Checked && !_con.Is0; _FillGridCodeThree(); };
+			m.LastMenuItem.Enabled = !_con.Is0;
+			m.LastMenuItem.CheckOnClick = true;
+			m.LastMenuItem.Checked = _useCon;
+			m["Edit window/control..."] = o =>
+			{
+				var wPrev = _WndSearchIn;
+				var r = _code.ZShowWndTool(_wnd, _con, !_useCon);
+				if(!r.ok) return;
+				_SetWndCon(r.wnd, r.con, r.useCon);
+				if(_WndSearchIn != wPrev) _FillGridCodeThree();
+			};
+			m.LastMenuItem.ToolTipText = "Search only in control (if captured), not in whole window.\r\nTo edit window or/and control name etc, click 'Edit window/control...' or edit it in the code field.";
+			m.LastMenuItem.Enabled = !_wnd.Is0;
+			m.Show(_bEtc);
 		}
 
 		#endregion
@@ -363,15 +399,19 @@ namespace Au.Tools
 		bool _IsChecked2(string rowKey) => _grid2.ZIsChecked(rowKey);
 		void _Check2(string rowKey, bool check) => _grid2.ZCheck(rowKey, check);
 
+		Wnd _WndSearchIn => _useCon ? _con : _wnd;
+
+		void _UpdateCodeBox() => _FormatCode();
+
 		//Returns true if a is in visible web page in one of 3 browsers.
 		//browser - receives nonzero if container's class is like in one of browsers: 1 IES, 2 FF, 3 Chrome. Even if returns false.
-		static bool _IsVisibleWebPage(Acc a, out int browser, Wnd wContainer = default)
+		static bool _IsVisibleWebPage(Acc a, out _BrowserEnum browser, Wnd wContainer = default)
 		{
 			browser = 0;
 			if(wContainer.Is0) wContainer = a.WndContainer;
-			browser = wContainer.ClassNameIs(Api.string_IES, "Mozilla*", "Chrome*");
+			browser = (_BrowserEnum)wContainer.ClassNameIs(Api.string_IES, "Mozilla*", "Chrome*");
 			if(browser == 0) return false;
-			if(browser == 1) return true;
+			if(browser == _BrowserEnum.IE) return true;
 			Acc ad = null;
 			do {
 				if(a.RoleInt == AccROLE.DOCUMENT) ad = a;
@@ -380,6 +420,7 @@ namespace Au.Tools
 			if(ad == null || ad.IsInvisible) return false;
 			return true;
 		}
+		enum _BrowserEnum { IE = 1, FF, Chrome }
 
 		#endregion
 
@@ -398,8 +439,8 @@ namespace Au.Tools
 
 		private async void _bTest_Click(object sender, EventArgs ea)
 		{
-			var code = _FormatCode(true); if(code == null) return;
-			var r = await TUtil.RunTestFindObject(code, _wnd, _bTest, _lSpeed, o => (o as Acc).Rect);
+			var (code, wndVar) = _FormatCode(true); if(code == null) return;
+			var r = await TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as Acc).Rect);
 
 			if(r.obj is Acc a && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
 				if(!a.MiscFlags.Has_(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {
@@ -459,13 +500,15 @@ namespace Au.Tools
 			return (xRoot, xSelect);
 		}
 
+		bool _isWebIE; //_FillGrid sets it; then _FillTree uses it.
+
 		//p - _acc properties. This func uses them to find and select the AO in the tree.
 		void _FillTree(in AccProperties p)
 		{
-			//SHOULDDO: if web in IE, show tree only for the control, because now can be slow because not in-proc.
-
 			//Perf.First();
-			var (xRoot, xSelect) = _CreateModel(_wnd, in p, false);
+			var w = _WndSearchIn;
+			if(_isWebIE && !_useCon && !_con.Is0) w = _con; //if IE, don't display whole tree. Could be very slow, because cannot use in-proc for web pages (and there may be many tabs with large pages), because its control is in other thread.
+			var (xRoot, xSelect) = _CreateModel(w, in p, false);
 			if(xRoot == null) return;
 
 			if(xSelect == null) {
@@ -474,7 +517,7 @@ namespace Au.Tools
 				//	Also, WndContainer then may get the top-level window. Eg in Word.
 				//	Workaround: enum child controls and look for _acc in one them. Then add "class" row if need.
 				Debug_.Print("broken IAccessible branch");
-				foreach(var c in _wnd.AllChildren(onlyVisible: true)) {
+				foreach(var c in w.AllChildren(onlyVisible: true)) {
 					var m = _CreateModel(c, in p, true);
 					if(m.xSelect != null) {
 						//m.xRoot.a = Acc.FromWindow(c, flags: AWFlags.NoThrow);
@@ -584,7 +627,7 @@ namespace Au.Tools
 			if(node == null) return;
 			_acc = (node.Tag as _AccNode).a;
 			if(!_FillGrid(out var p)) return;
-			_FormatCode();
+			_UpdateCodeBox();
 			TUtil.ShowOsdRect(p.Rect);
 		}
 
@@ -704,7 +747,7 @@ namespace Au.Tools
 		}
 
 		const string c_infoForm =
-@"Creates code to <help M_Au_Acc_Find>find accessible object (AO)<> in <help M_Au_Wnd_Find>window<>. Your script can click it, etc.
+@"Creates code to find <help M_Au_Acc_Find>accessible object<> (AO) in <help M_Au_Wnd_Find>window<>. Your script can click it, etc.
 1. Move the mouse to an AO (button, link, etc). Press key <b>F3<>.
 2. Click the Test button. It finds and shows the AO and the search time.
 3. If need, check/uncheck/edit some fields or select another AO; click Test.

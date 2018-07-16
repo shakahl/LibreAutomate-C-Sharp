@@ -20,6 +20,12 @@
             3. Fixes some MenuStrip bugs.
             </summary>
         </member>
+        <member name="T:Au.Controls.ParamGrid">
+            <summary>
+            Property grid control.
+            Used in many tools, for example "Find window or control".
+            </summary>
+        </member>
         <member name="M:Au.Controls.ParamGrid.ZAutoSize(System.Boolean,System.Boolean)">
             <summary>
             Call this after adding all rows.
@@ -36,6 +42,17 @@
             When ended, the string is null.
             </summary>
         </member>
+        <member name="T:Au.Controls.ParamGrid.EditCell">
+            <summary>
+            Simple editable text cell.
+            Adds to SG.Cells.Cell: property Info.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.ParamGrid.ComboCell">
+            <summary>
+            Editable text cell with drop-down button that shows drop-down list similar to combo box.
+            </summary>
+        </member>
         <member name="F:Au.Controls.ParamGrid._RowType.Editable">
             <summary>Checkbox and editable cell. If check is null, adds lebel instead of checkbox.</summary>
         </member>
@@ -45,40 +62,71 @@
         <member name="F:Au.Controls.ParamGrid._RowType.Header">
             <summary>Only label. If check is not null, adds checkbox instead of label.</summary>
         </member>
-        <member name="M:Au.Controls.ParamGrid.ZAdd(System.String,System.String,System.Object,System.Nullable{System.Boolean},System.String,System.String,System.Boolean,System.Int32,Au.Controls.ParamGrid.EditType,System.EventHandler,System.Int32)">
+        <member name="T:Au.Controls.ParamGrid.EditType">
+            <summary>
+            Types of the editable cell.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.ParamGrid.EditType.Text">
+            <summary>Simple editable text.</summary>
+        </member>
+        <member name="F:Au.Controls.ParamGrid.EditType.ComboText">
+            <summary>Editable text with combobox-like drop-down.</summary>
+        </member>
+        <member name="F:Au.Controls.ParamGrid.EditType.ComboList">
+            <summary>Read-only combobox.</summary>
+        </member>
+        <member name="F:Au.Controls.ParamGrid.EditType.TextButton">
+            <summary>Editable text with button.</summary>
+        </member>
+        <member name="F:Au.Controls.ParamGrid.EditType.Button">
+            <summary>Button.</summary>
+        </member>
+        <member name="M:Au.Controls.ParamGrid.ZAdd(System.String,System.String,System.Object,System.Nullable{System.Boolean},System.String,System.String,System.Int32,Au.Controls.ParamGrid.EditType,System.EventHandler,System.Int32)">
             <summary>
             Adds row with checkbox (or label) and editable cell.
+            Returns row index.
             </summary>
-            <param name="key">Row Tag property. Used by <see cref="M:Au.Controls.ParamGrid.ZGetValue(System.String,System.String@,System.Boolean)"/>.</param>
-            <param name="name"></param>
+            <param name="key">Row's Tag property. If null, uses <paramref name="name"/>. Used by <see cref="M:Au.Controls.ParamGrid.ZGetValue(System.String,System.String@,System.Boolean)"/> and other functions.</param>
+            <param name="name">Readonly text in column 0 (checkbox or label).</param>
             <param name="value">
             string.
             For combo can be string like "one|two|three" or string[] List of string.
             For editable combo also can be Func&lt;string[]&gt; callback that returns items. Called before each dropdown.
             </param>
-            <param name="check">If null, adds label instead of checkbox.</param>
+            <param name="check">Checked or not. If null, adds label instead of checkbox.</param>
             <param name="tt">Tooltip text.</param>
             <param name="info"><see cref="E:Au.Controls.ParamGrid.ZShowEditInfo"/> text.</param>
-            <param name="hidden"></param>
             <param name="insertAt"></param>
             <param name="etype">Edit cell control type.</param>
             <param name="buttonAction">Button click action when etype is Button or TextButton; required.</param>
             <param name="comboIndex">If not -1, selects this combo box item.</param>
         </member>
-        <member name="M:Au.Controls.ParamGrid.ZAddCheck(System.String,System.String,System.Boolean,System.String,System.Boolean,System.Int32)">
+        <member name="M:Au.Controls.ParamGrid.ZAddCheck(System.String,System.String,System.Boolean,System.String,System.Int32)">
             <summary>
             Adds row with only checkbox (without an editable cell).
+            Returns row index.
             </summary>
-            <param name="key">Row Tag property. Used by <see cref="M:Au.Controls.ParamGrid.ZGetValue(System.String,System.String@,System.Boolean)"/>.</param>
-            <param name="name"></param>
+            <param name="key">Row's Tag property. If null, uses <paramref name="name"/>. Used by <see cref="M:Au.Controls.ParamGrid.ZGetValue(System.String,System.String@,System.Boolean)"/> and other functions.</param>
+            <param name="name">Checkbox text.</param>
             <param name="check"></param>
             <param name="tt">Tooltip text.</param>
-            <param name="hidden"></param>
             <param name="insertAt"></param>
         </member>
-        <member name="M:Au.Controls.ParamGrid.ZAddHeaderRow(System.String,System.Nullable{System.Boolean},System.String,System.Boolean,System.Int32)">
+        <member name="M:Au.Controls.ParamGrid.ZAddHeaderRow(System.String,System.Nullable{System.Boolean},System.String,System.Int32,System.String)">
             <summary>
-            Adds a header row. It is readonly and spans all columns. Optionally with checkbox.
+            Adds a header row that can be anywhere (and multiple). It is readonly and spans all columns. Optionally with checkbox.
+            Returns row index.
+            </summary>
+            <param name="name">Read-only text.</param>
+            <param name="check">Checked or not. If null, adds label instead of checkbox.</param>
+            <param name="tt">Tooltip text.</param>
+            <param name="insertAt"></param>
+            <param name="key">Row's Tag property. If null, uses <paramref name="name"/>. Used by <see cref="M:Au.Controls.ParamGrid.ZGetValue(System.String,System.String@,System.Boolean)"/> and other functions.</param>
+        </member>
+        <member name="P:Au.Controls.ParamGrid.ZAddHidden">
+            <summary>
+            If true, ZAdd and similar functions will add hidden rows.
             </summary>
         </member>
         <member name="M:Au.Controls.ParamGrid.ZIsChecked(System.Int32)">
@@ -200,23 +248,209 @@
             If editing the specified cell, ends editing and returns true.
             </summary>
         </member>
-        <member name="T:Au.Controls.PopupList">
+        <member name="M:Au.Controls.ParamGrid.ZEnableCell(System.Int32,System.Int32,System.Boolean)">
             <summary>
-            Shows a popup or drop-down list.
+            Disables or enables cell (can be checkbox).
             </summary>
         </member>
-        <member name="P:Au.Controls.PopupList.Popup">
+        <member name="M:Au.Controls.ParamGrid.ZEnableCell(System.String,System.Int32,System.Boolean)">
+            <summary>
+            Disables or enables cell (can be checkbox).
+            </summary>
+        </member>
+        <member name="T:Au.Controls.LibPopup">
+            <summary>
+            Represents a pop-up window.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.LibPopup.Content">
+            <summary>
+            Gets the content of the pop-up.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.LibPopup.ShowingAnimation">
+            <summary>
+            Determines which animation to use while showing the pop-up window.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.LibPopup.HidingAnimation">
+            <summary>
+            Determines which animation to use while hiding the pop-up window.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.LibPopup.AnimationDuration">
+            <summary>
+            Determines the duration of the animation.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.LibPopup.FocusOnOpen">
+            <summary>
+            Gets or sets a value indicating whether the content should receive the focus after the pop-up has been opened.
+            </summary>
+            <value><c>true</c> if the content should be focused after the pop-up has been opened; otherwise, <c>false</c>.</value>
+            <remarks>If the FocusOnOpen property is set to <c>false</c>, then pop-up cannot use the fade effect.</remarks>
+        </member>
+        <member name="P:Au.Controls.LibPopup.AcceptAlt">
+            <summary>
+            Gets or sets a value indicating whether pressing the alt key should close the pop-up.
+            </summary>
+            <value><c>true</c> if pressing the alt key does not close the pop-up; otherwise, <c>false</c>.</value>
+        </member>
+        <member name="P:Au.Controls.LibPopup.MinimumSize">
+            <summary>
+            Gets or sets a minimum size of the pop-up.
+            </summary>
+            <returns>An ordered pair of type <see cref="T:System.Drawing.Size" /> representing the width and height of a rectangle.</returns>
+        </member>
+        <member name="P:Au.Controls.LibPopup.MaximumSize">
+            <summary>
+            Gets or sets a maximum size of the pop-up.
+            </summary>
+            <returns>An ordered pair of type <see cref="T:System.Drawing.Size" /> representing the width and height of a rectangle.</returns>
+        </member>
+        <member name="M:Au.Controls.LibPopup.#ctor(System.Windows.Forms.Control)">
+            <param name="content">The content of the pop-up.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="content" /> is <code>null</code>.</exception>
+        </member>
+        <member name="M:Au.Controls.LibPopup.OnVisibleChanged(System.EventArgs)">
+            <summary>
+            Raises the <see cref="E:System.Windows.Forms.ToolStripItem.VisibleChanged"/> event.
+            </summary>
+            <param name="e">An <see cref="T:System.EventArgs"/> that contains the event data.</param>
+        </member>
+        <member name="M:Au.Controls.LibPopup.ProcessDialogKey(System.Windows.Forms.Keys)">
+            <summary>
+            Processes a dialog box key.
+            </summary>
+            <param name="keyData">One of the <see cref="T:System.Windows.Forms.Keys" /> values that represents the key to process.</param>
+            <returns>
+            true if the key was processed by the control; otherwise, false.
+            </returns>
+        </member>
+        <member name="M:Au.Controls.LibPopup.UpdateRegion">
+            <summary>
+            Updates the pop-up region.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.LibPopup.Show(System.Windows.Forms.Control)">
+            <summary>
+            Shows the pop-up window below the specified control.
+            </summary>
+            <param name="control">The control below which the pop-up will be shown.</param>
+            <remarks>
+            When there is no space below the specified control, the pop-up control is shown above it.
+            </remarks>
+            <exception cref="T:System.ArgumentNullException"><paramref name="control"/> is <code>null</code>.</exception>
+        </member>
+        <member name="M:Au.Controls.LibPopup.Show(System.Drawing.Rectangle)">
+            <summary>
+            Shows the pop-up window below the specified area.
+            </summary>
+            <param name="area">The area of desktop below which the pop-up will be shown.</param>
+            <remarks>
+            When there is no space below specified area, the pop-up control is shown above it.
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.LibPopup.Show(System.Windows.Forms.Control,System.Drawing.Rectangle)">
+            <summary>
+            Shows the pop-up window below the specified area of the specified control.
+            </summary>
+            <param name="control">The control used to compute screen location of specified area.</param>
+            <param name="area">The area of control below which the pop-up will be shown.</param>
+            <remarks>
+            When there is no space below specified area, the pop-up control is shown above it.
+            </remarks>
+            <exception cref="T:System.ArgumentNullException"><paramref name="control"/> is <code>null</code>.</exception>
+        </member>
+        <member name="T:Au.Controls.LibPopup.PopupAnimations">
+            <summary>
+            Types of animation of the pop-up window.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.LibPopup.PopupAnimations.None">
+            <summary>
+            Uses no animation.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.LibPopup.PopupAnimations.LeftToRight">
+            <summary>
+            Animates the window from left to right. This flag can be used with roll or slide animation.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.LibPopup.PopupAnimations.RightToLeft">
+            <summary>
+            Animates the window from right to left. This flag can be used with roll or slide animation.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.LibPopup.PopupAnimations.TopToBottom">
+            <summary>
+            Animates the window from top to bottom. This flag can be used with roll or slide animation.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.LibPopup.PopupAnimations.BottomToTop">
+            <summary>
+            Animates the window from bottom to top. This flag can be used with roll or slide animation.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.LibPopup.PopupAnimations.Center">
+            <summary>
+            Makes the window appear to collapse inward if it is hiding or expand outward if the window is showing.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.LibPopup.PopupAnimations.Slide">
+            <summary>
+            Uses a slide animation.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.LibPopup.PopupAnimations.Blend">
+            <summary>
+            Uses a fade effect.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.LibPopup.PopupAnimations.Roll">
+            <summary>
+            Uses a roll animation.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.LibPopup.PopupAnimations.SystemDefault">
+            <summary>
+            Uses a default animation.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.LibPopup.components">
+            <summary>
+            Required designer variable.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.LibPopup.Dispose(System.Boolean)">
+            <summary>
+            Clean up any resources being used.
+            </summary>
+            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        </member>
+        <member name="M:Au.Controls.LibPopup.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify 
+            the contents of this method with the code editor.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.DropDownList">
+            <summary>
+            Drop-down list window, similar to a menu.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.DropDownList.LibPopup">
             <summary>
             Gets the popup control.
             </summary>
         </member>
-        <member name="P:Au.Controls.PopupList.Items">
+        <member name="P:Au.Controls.DropDownList.Items">
             <summary>
             Sets list items.
             Call this before <b>Show</b>.
             </summary>
         </member>
-        <member name="P:Au.Controls.PopupList.OnSelected">
+        <member name="P:Au.Controls.DropDownList.OnSelected">
             <summary>
             Sets callback function called when an item selected.
             The callback can use the <b>ResultX</b> properties to get selection info.
@@ -224,46 +458,46 @@
             Call this before <b>Show</b>.
             </summary>
         </member>
-        <member name="P:Au.Controls.PopupList.ResultIndex">
+        <member name="P:Au.Controls.DropDownList.ResultIndex">
             <summary>
             Gets the selected index.
             Call this from <b>OnSelected</b> callback function.
             </summary>
         </member>
-        <member name="P:Au.Controls.PopupList.ResultString">
+        <member name="P:Au.Controls.DropDownList.ResultString">
             <summary>
             Gets the selected string.
             Call this from <b>OnSelected</b> callback function.
             </summary>
         </member>
-        <member name="P:Au.Controls.PopupList.ResultWasKey">
+        <member name="P:Au.Controls.DropDownList.ResultWasKey">
             <summary>
             True if the selection was made with the keyboard (Enter), false if clicked.
             Call this from <b>OnSelected</b> callback function.
             </summary>
         </member>
-        <member name="M:Au.Controls.PopupList.#ctor">
+        <member name="M:Au.Controls.DropDownList.#ctor">
             
         </member>
-        <member name="M:Au.Controls.PopupList.Show(System.Windows.Forms.Control,System.Drawing.Rectangle)">
+        <member name="M:Au.Controls.DropDownList.Show(System.Windows.Forms.Control,System.Drawing.Rectangle)">
             <summary>
             Shows the popup list.
-            To add items, set <see cref="P:Au.Controls.PopupList.Items"/> before. To get results, set <see cref="P:Au.Controls.PopupList.OnSelected"/> before.
+            To add items, set <see cref="P:Au.Controls.DropDownList.Items"/> before. To get results, set <see cref="P:Au.Controls.DropDownList.OnSelected"/> before.
             </summary>
             <param name="owner">Owner control.</param>
             <param name="r">Rectangle in owner control's client area. The popup will be below or above it.</param>
         </member>
-        <member name="M:Au.Controls.PopupList.Show(System.Windows.Forms.Control)">
+        <member name="M:Au.Controls.DropDownList.Show(System.Windows.Forms.Control)">
             <summary>
             Shows the popup list.
-            To add items, set <see cref="P:Au.Controls.PopupList.Items"/> before. To get results, set <see cref="P:Au.Controls.PopupList.OnSelected"/> before.
+            To add items, set <see cref="P:Au.Controls.DropDownList.Items"/> before. To get results, set <see cref="P:Au.Controls.DropDownList.OnSelected"/> before.
             </summary>
             <param name="owner">Owner control. The popup will be below or above it.</param>
         </member>
-        <member name="M:Au.Controls.PopupList.Show(System.Drawing.Rectangle)">
+        <member name="M:Au.Controls.DropDownList.Show(System.Drawing.Rectangle)">
             <summary>
             Shows the popup list.
-            To add items, set <see cref="P:Au.Controls.PopupList.Items"/> before. To get results, set <see cref="P:Au.Controls.PopupList.OnSelected"/> before.
+            To add items, set <see cref="P:Au.Controls.DropDownList.Items"/> before. To get results, set <see cref="P:Au.Controls.DropDownList.OnSelected"/> before.
             </summary>
             <param name="r">Rectangle in screen. The popup will be below or above it.</param>
         </member>
@@ -346,7 +580,7 @@
             <param name="sciMessage"></param>
             <param name="wParam"></param>
             <param name="bufferSize">
-            How much bytes to allocate for Scintilla to store the text.
+            How much UTF8 bytes to allocate for Scintilla to store the text.
             If -1 (default), at first calls sciMessage with lParam=0 (null buffer), let it return required buffer size. Then it can get binary string (with '\0' characters).
             If 0, returns "" and does not call the message.
             If positive, it can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0'). Then it cannot get binary string (with '\0' characters).
@@ -410,37 +644,37 @@
         </member>
         <member name="P:Au.Controls.SciText.TextLengthBytes">
             <summary>
-            Gets text length. It is the number of bytes, not characters.
+            Gets text length. It is the number of UTF8 bytes, not characters.
             </summary>
         </member>
         <member name="M:Au.Controls.SciText.LineIndexFromPosition(System.Int32)">
             <summary>
-            Gets line index from character position.
+            Gets line index from character position (UTF8 bytes).
             </summary>
             <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineStart(System.Int32)">
             <summary>
-            Gets line start position from line index.
+            Gets line start position (UTF8 bytes) from line index.
             </summary>
             <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineEnd(System.Int32,System.Boolean)">
             <summary>
-            Gets line end position from line index.
+            Gets line end position (UTF8 bytes) from line index.
             </summary>
             <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
             <param name="withRN">Include \r\n.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineStartFromPosition(System.Int32)">
             <summary>
-            Gets line start position from any position.
+            Gets line start position from any position. Both are in UTF8 bytes.
             </summary>
             <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineEndFromPosition(System.Int32,System.Boolean,System.Boolean)">
             <summary>
-            Gets line end position from any position.
+            Gets line end position from any position. Both are in UTF8 bytes.
             </summary>
             <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
             <param name="withRN">Include \r\n.</param>
@@ -456,8 +690,8 @@
             <summary>
             Gets range text.
             </summary>
-            <param name="from">If less than 0, uses 0.</param>
-            <param name="to">If less than 0, uses TextLengthBytes.</param>
+            <param name="from">Start index (UTF8 bytes). If less than 0, uses 0.</param>
+            <param name="to">End index (UTF8 bytes). If less than 0, uses TextLengthBytes.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineHeight(System.Int32)">
             <summary>
@@ -502,23 +736,23 @@
             Moves 'from' to the start of its line, and 'to' to the end of its line.
             Does not change 'to' if it is at a line start.
             </summary>
-            <param name="from"></param>
-            <param name="to"></param>
+            <param name="from">Start index (UTF8 bytes).</param>
+            <param name="to">End index (UTF8 bytes).</param>
             <param name="withRN">Include "\r\n".</param>
         </member>
         <member name="M:Au.Controls.SciText.DeleteRange(System.Int32,System.Int32)">
             <summary>
             SCI_DELETERANGE.
             </summary>
-            <param name="pos"></param>
-            <param name="length"></param>
+            <param name="pos">Start index (UTF8 bytes).</param>
+            <param name="length">Length (UTF8 bytes).</param>
         </member>
         <member name="M:Au.Controls.SciText.InsertText(System.Int32,System.String)">
             <summary>
             SCI_INSERTTEXT.
             Does not parse tags.
             </summary>
-            <param name="pos"></param>
+            <param name="pos">Start index (UTF8 bytes).</param>
             <param name="s"></param>
         </member>
         <member name="T:Au.Controls.AuScintilla">

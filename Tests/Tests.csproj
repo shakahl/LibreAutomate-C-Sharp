@@ -151,10 +151,6 @@
       <Project>{11859729-3aab-41ae-9f28-571a11f1f029}</Project>
       <Name>Au.Tools</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TreeList\TreeList.csproj">
-      <Project>{e73bb233-d88b-44a7-a98f-d71ee158381d}</Project>
-      <Name>TreeList</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Images\test.png" />

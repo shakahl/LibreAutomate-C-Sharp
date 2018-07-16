@@ -25,9 +25,9 @@ using Au.Controls;
 namespace Au.Tools
 {
 	/// <summary>
-	/// Scintilla-based control to show code created by its parent form (a code tool dialog).
+	/// Scintilla-based control that shows colored C# code created by its parent form (a code tool dialog).
 	/// </summary>
-	internal class CodeBox :AuScintilla
+	public class CodeBox :AuScintilla
 	{
 		public CodeBox()
 		{
@@ -80,10 +80,17 @@ namespace Au.Tools
 				}
 			}
 
+			//FUTURE: autosize (move splitter of parent splitcontainer).
+
 			base.OnSciNotify(ref n);
 		}
 		bool _noNotify;
 
+		/// <summary>
+		/// Sets text and makes all or part of it readonly.
+		/// </summary>
+		/// <param name="s"></param>
+		/// <param name="readonlyFrom"></param>
 		public void ZSetText(string s, int readonlyFrom = 0)
 		{
 			ST.Call(Sci.SCI_SETREADONLY, false);
@@ -99,6 +106,10 @@ namespace Au.Tools
 			}
 		}
 
+		/// <summary>
+		/// Gets or sets text.
+		/// The 'set' function makes text readonly.
+		/// </summary>
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public override string Text
 		{
@@ -111,7 +122,7 @@ namespace Au.Tools
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
 		public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : _LenFromUtf8(0, _ReadonlyStartUtf8);
 		int _readonlyLenUtf8;
-		int _ReadonlyStartUtf8 => _LenUtf8 - _readonlyLenUtf8;
+		int _ReadonlyStartUtf8 => _readonlyLenUtf8 < 0 ? 0 : _LenUtf8 - _readonlyLenUtf8;
 
 		int _LenUtf8 => Call(Sci.SCI_GETLENGTH);
 		int _LenFromUtf8(int start, int end) => Call(Sci.SCI_COUNTCHARACTERS, start, end);
@@ -127,36 +138,102 @@ namespace Au.Tools
 		}
 
 		/// <summary>
-		/// Returns code to find window w.
-		/// If newWindow==true, gets code from this control, from the start to ZReadonlyStart.
-		/// Else creates code "var w = Wnd.Find(...).OrThrow();". If w is invalid, returns "var w = Wnd.WndActive;".
+		/// Returns code to find window wnd and optionally control con in it.
+		/// If wnd/con is same as previous and code of this control is valid, gets code from this code control, from the start to ZReadonlyStart.
+		/// Else creates code "var w = Wnd.Find(...).OrThrow();". If wnd is invalid, creates code "Wnd w = default;".
+		/// The returned wndVar is final Wnd variable name (of window or control).
 		/// </summary>
-		public (string code, string wndVar) FormatWndFindCode(Wnd w, bool newWindow)
+		public (string code, string wndVar) ZGetWndFindCode(Wnd wnd, Wnd con = default)
 		{
-			if(!newWindow) {
-				var sCode = base.Text;
-				if(!sCode.RegexMatch_(@"^(?:var|Wnd) (\w+)", 1, out var wndVar)) wndVar = "w";
-				return (sCode.Remove(ZReadonlyStart), wndVar);
-			}
-
-			string R = null;
-			if(!w.Is0) {
-				var b = new StringBuilder("var w = Wnd.Find(");
-
-				var s = TUtil.EscapeWindowName(w.Name, true);
-				b.AppendStringArg(s, noComma: true);
-
-				s = w.ClassName;
-				if(s != null) {
-					b.AppendStringArg(TUtil.StripWndClassName(s, true));
-
-					if(!w.IsVisibleEx) b.AppendOtherArg("WFFlags.HiddenToo", "flags");
-
-					b.Append(").OrThrow();");
-					R = b.ToString();
+			string R = null, sCode = null, wndVar = "w", conVar = "c", cls = null;
+			if(!wnd.Is0) {
+				if(wnd == _wnd) {
+					sCode = ST.RangeText(0, _ReadonlyStartUtf8);
+					if(sCode.RegexMatch_(@"^(?:var|Wnd) (\w+)((?s).+\r\n(?:var|Wnd) (\w+).+$)?", out var m)) {
+						bool isConCode = m[3].Exists;
+						if(con == _con && !con.Is0 == isConCode) return (sCode, m[isConCode ? 3 : 1].Value);
+						wndVar = m[1].Value;
+						if(isConCode) sCode = sCode.Remove(m[3].Index - 6);
+						if(con.Is0) { _con = default; return (sCode, wndVar); }
+						if(isConCode) conVar = m[3].Value;
+					} else sCode = null;
 				}
+
+				var b = new StringBuilder();
+				if(sCode != null) b.Append(sCode);
+				else if((cls = wnd.ClassName) != null) {
+					b.Append("var w = Wnd.Find(");
+					b.AppendStringArg(TUtil.EscapeWindowName(wnd.Name, true), noComma: true);
+					b.AppendStringArg(TUtil.StripWndClassName(cls, true));
+					if(!wnd.IsVisibleEx) b.AppendOtherArg("WFFlags.HiddenToo", "flags");
+					b.Append(").OrThrow();");
+				} else con = default;
+
+				if(!con.Is0) {
+					bool isId = TUtil.GetUsefulControlId(con, wnd, out int id);
+					if(isId || (cls = con.ClassName) != null) {
+						b.AppendFormat("\r\nvar {0} = {1}.Child", conVar, wndVar);
+						wndVar = conVar;
+						if(isId) {
+							b.AppendFormat("ById({0});", id);
+						} else {
+							cls = TUtil.StripWndClassName(cls, true);
+							string name = con.Name, prefix = null;
+							if(Empty(name)) {
+								name = con.NameWinForms;
+								if(!Empty(name)) prefix = "***wfName ";
+								else {
+									var nameAcc = con.NameAcc;
+									var nameLabel = con.NameLabel;
+									if(!Empty(nameAcc) || !Empty(nameLabel)) {
+										if(Empty(nameAcc) || nameLabel == nameAcc) {
+											name = nameLabel; prefix = "***label ";
+										} else {
+											name = nameAcc; prefix = "***accName ";
+										}
+									}
+								}
+							}
+							if(Wildex.HasWildcards(name)) name = "**t " + name;
+							name = prefix + name;
+
+							b.Append("(");
+							b.AppendStringArg(name, noComma: true);
+							b.AppendStringArg(cls);
+							if(!con.IsVisibleEx) b.AppendOtherArg("WCFlags.HiddenToo", "flags");
+							b.Append(").OrThrow();");
+						}
+					} else con = default;
+				}
+
+				if(b.Length != 0) R = b.ToString();
 			}
-			return (R ?? "var w = Wnd.WndActive;", "w");
+
+			if(R == null) {
+				_wnd = default; _con = default;
+				return ("Wnd w = default;", "w");
+			}
+			_wnd = wnd; _con = con;
+			return (R, wndVar);
+		}
+		Wnd _wnd, _con;
+
+		/// <summary>
+		/// Shows <see cref="Form_Wnd"/> and updates text.
+		/// </summary>
+		public (bool ok, Wnd wnd, Wnd con, bool useCon) ZShowWndTool(Wnd wnd, Wnd con, bool uncheckControl)
+		{
+			using(var f = new Form_Wnd(con.Is0 ? wnd : con, uncheckControl)) {
+				if(f.ShowDialog(FindForm()) != DialogResult.OK) return default;
+				var code = f.ResultCode;
+				_wnd = f.ResultWindow;
+				_con = f.ResultUseControl ? f.ResultControl : default;
+				int i = _ReadonlyStartUtf8;
+				var code2 = ST.RangeText(i, i + _readonlyLenUtf8);
+				ST.Call(Sci.SCI_SETREADONLY, false);
+				base.Text = code + code2;
+				return (true, f.ResultWindow, f.ResultControl, f.ResultUseControl);
+			}
 		}
 	}
 }

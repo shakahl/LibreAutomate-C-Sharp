@@ -44,6 +44,7 @@ namespace Au.Tools
 			this._lSpeed = new System.Windows.Forms.Label();
 			this._info = new Au.Controls.AuInfoBox();
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
+			this._bEtc = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
@@ -134,6 +135,7 @@ namespace Au.Tools
 			this._grid.TabIndex = 0;
 			this._grid.TabStop = true;
 			this._grid.ToolTipText = "";
+			this._grid.ZAddHidden = false;
 			// 
 			// _grid2
 			// 
@@ -156,6 +158,7 @@ namespace Au.Tools
 			this._grid2.TabIndex = 0;
 			this._grid2.TabStop = true;
 			this._grid2.ToolTipText = "";
+			this._grid2.ZAddHidden = false;
 			// 
 			// splitContainer3
 			// 
@@ -228,7 +231,7 @@ namespace Au.Tools
 			this._bTest.Size = new System.Drawing.Size(72, 24);
 			this._bTest.TabIndex = 1;
 			this._bTest.Text = "&Test";
-			this._toolTip.SetToolTip(this._bTest, "Executes the 'find' code (without wait, etc). If AO found, shows its rectangle.");
+			this._toolTip.SetToolTip(this._bTest, "Executes the \'find\' code (without wait, etc). If AO found, shows its rectangle.");
 			this._bTest.UseVisualStyleBackColor = true;
 			this._bTest.Click += new System.EventHandler(this._bTest_Click);
 			// 
@@ -250,6 +253,17 @@ namespace Au.Tools
 			this._info.Size = new System.Drawing.Size(600, 56);
 			this._info.TabIndex = 0;
 			// 
+			// _bEtc
+			// 
+			this._bEtc.Enabled = false;
+			this._bEtc.Location = new System.Drawing.Point(328, 72);
+			this._bEtc.Name = "_bEtc";
+			this._bEtc.Size = new System.Drawing.Size(32, 24);
+			this._bEtc.TabIndex = 4;
+			this._bEtc.Text = "&...";
+			this._bEtc.UseVisualStyleBackColor = true;
+			this._bEtc.Click += new System.EventHandler(this._bEtc_Click);
+			// 
 			// Form_Acc
 			// 
 			this.AcceptButton = this._bOK;
@@ -257,6 +271,7 @@ namespace Au.Tools
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.CancelButton = this._bCancel;
 			this.ClientSize = new System.Drawing.Size(616, 551);
+			this.Controls.Add(this._bEtc);
 			this.Controls.Add(this._info);
 			this.Controls.Add(this._lSpeed);
 			this.Controls.Add(this._bTest);
@@ -299,5 +314,6 @@ namespace Au.Tools
 		private ToolTip _toolTip;
 		private CodeBox _code;
 		private SplitContainer splitContainer3;
+		private Button _bEtc;
 	}
 }

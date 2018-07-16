@@ -99,7 +99,7 @@ namespace Au.Controls
 		/// <param name="sciMessage"></param>
 		/// <param name="wParam"></param>
 		/// <param name="bufferSize">
-		/// How much bytes to allocate for Scintilla to store the text.
+		/// How much UTF8 bytes to allocate for Scintilla to store the text.
 		/// If -1 (default), at first calls sciMessage with lParam=0 (null buffer), let it return required buffer size. Then it can get binary string (with '\0' characters).
 		/// If 0, returns "" and does not call the message.
 		/// If positive, it can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0'). Then it cannot get binary string (with '\0' characters).
@@ -275,12 +275,12 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets text length. It is the number of bytes, not characters.
+		/// Gets text length. It is the number of UTF8 bytes, not characters.
 		/// </summary>
 		public int TextLengthBytes { get => Call(SCI_GETTEXTLENGTH); }
 
 		/// <summary>
-		/// Gets line index from character position.
+		/// Gets line index from character position (UTF8 bytes).
 		/// </summary>
 		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
 		public int LineIndexFromPosition(int pos)
@@ -290,7 +290,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets line start position from line index.
+		/// Gets line start position (UTF8 bytes) from line index.
 		/// </summary>
 		/// <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
 		public int LineStart(int line)
@@ -302,7 +302,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets line end position from line index.
+		/// Gets line end position (UTF8 bytes) from line index.
 		/// </summary>
 		/// <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
 		/// <param name="withRN">Include \r\n.</param>
@@ -314,7 +314,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets line start position from any position.
+		/// Gets line start position from any position. Both are in UTF8 bytes.
 		/// </summary>
 		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
 		public int LineStartFromPosition(int pos)
@@ -323,7 +323,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets line end position from any position.
+		/// Gets line end position from any position. Both are in UTF8 bytes.
 		/// </summary>
 		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
 		/// <param name="withRN">Include \r\n.</param>
@@ -349,8 +349,8 @@ namespace Au.Controls
 		/// <summary>
 		/// Gets range text.
 		/// </summary>
-		/// <param name="from">If less than 0, uses 0.</param>
-		/// <param name="to">If less than 0, uses TextLengthBytes.</param>
+		/// <param name="from">Start index (UTF8 bytes). If less than 0, uses 0.</param>
+		/// <param name="to">End index (UTF8 bytes). If less than 0, uses TextLengthBytes.</param>
 		public string RangeText(int from, int to)
 		{
 			if(from < 0) from = 0;
@@ -425,8 +425,8 @@ namespace Au.Controls
 		/// Moves 'from' to the start of its line, and 'to' to the end of its line.
 		/// Does not change 'to' if it is at a line start.
 		/// </summary>
-		/// <param name="from"></param>
-		/// <param name="to"></param>
+		/// <param name="from">Start index (UTF8 bytes).</param>
+		/// <param name="to">End index (UTF8 bytes).</param>
 		/// <param name="withRN">Include "\r\n".</param>
 		public void RangeToFullLines(ref int from, ref int to, bool withRN = false)
 		{
@@ -438,8 +438,8 @@ namespace Au.Controls
 		/// <summary>
 		/// SCI_DELETERANGE.
 		/// </summary>
-		/// <param name="pos"></param>
-		/// <param name="length"></param>
+		/// <param name="pos">Start index (UTF8 bytes).</param>
+		/// <param name="length">Length (UTF8 bytes).</param>
 		public void DeleteRange(int pos, int length)
 		{
 			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
@@ -451,7 +451,7 @@ namespace Au.Controls
 		/// SCI_INSERTTEXT.
 		/// Does not parse tags.
 		/// </summary>
-		/// <param name="pos"></param>
+		/// <param name="pos">Start index (UTF8 bytes).</param>
 		/// <param name="s"></param>
 		public void InsertText(int pos, string s)
 		{

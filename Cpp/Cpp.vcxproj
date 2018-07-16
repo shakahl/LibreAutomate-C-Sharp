@@ -210,7 +210,7 @@
     <ClInclude Include="util.h" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PCRE\PCRE.vcxproj">
+    <ProjectReference Include="..\Libraries\PCRE\PCRE.vcxproj">
       <Project>{190bc611-ee00-4b10-87f2-a7e73b639e59}</Project>
     </ProjectReference>
   </ItemGroup>

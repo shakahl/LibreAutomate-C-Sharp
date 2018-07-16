@@ -359,9 +359,9 @@ namespace Au
 	/// <example>
 	/// <code><![CDATA[
 	/// //this example sets 3 timers
-	/// Timer_.After(500, t => Print("after 500 ms"));
-	/// Timer_.Every(1000, t => Print("every 1000 ms"));
-	/// var t3 = new Timer_(t => Print("after 3000 ms")); t3.Start(3000, true); //the same as Timer_.After
+	/// Timer_.After(500, () => Print("after 500 ms"));
+	/// Timer_.Every(1000, () => Print("every 1000 ms"));
+	/// var t3 = new Timer_(() => Print("after 3000 ms")); t3.Start(3000, true); //the same as Timer_.After
 	/// MessageBox.Show("");
 	/// ]]></code>
 	/// </example>
@@ -397,15 +397,17 @@ namespace Au
 		/// <summary>
 		/// Starts timer. If already started, resets and changes its period.
 		/// </summary>
-		/// <param name="periodMilliseconds">Time interval (period) of calling the callback function (constructor's parameter <i>timerAction</i>), milliseconds.</param>
+		/// <param name="periodMilliseconds">Time interval (period) of calling the callback function (constructor's parameter <i>timerAction</i>), milliseconds. The minimal time is 10-20, even if this parameter is less than that.</param>
 		/// <param name="singlePeriod">Call the callback function once (stop the timer before calling the callback function).</param>
+		/// <exception cref="ArgumentOutOfRangeException">Negative periodMilliseconds.</exception>
 		/// <exception cref="InvalidOperationException">Called not in the same thread as previous <b>Start</b>.</exception>
+		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
 		/// <remarks>
 		/// If already started, this function must be called in the same thread as when started.
 		/// </remarks>
-		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
 		public void Start(int periodMilliseconds, bool singlePeriod)
 		{
+			if(periodMilliseconds < 0) throw new ArgumentOutOfRangeException();
 			bool isNew = _id == 0;
 			if(!isNew) {
 				_CheckThread();
@@ -420,14 +422,20 @@ namespace Au
 				if(t_timers == null) t_timers = new Dictionary<LPARAM, Timer_>();
 				t_timers.Add(_id, this);
 			}
+			//Print($"Start: {_id}  isNew={isNew}  singlePeriod={singlePeriod}  _threadId={_threadId}");
 		}
 
 		static Api.TIMERPROC _timerProc = _TimerProc;
 		static void _TimerProc(Wnd w, uint msg, LPARAM idEvent, uint time)
 		{
+			//Print(t_timers.Count, idEvent);
 			if(!t_timers.TryGetValue(idEvent, out var t)) {
-				Debug.Assert(false);
+				//Debug_.Print($"timer id {idEvent} not in t_timers");
 				return;
+				//It is possible after killing timer.
+				//	Normally API KillTimer removes WM_TIMER message from queue (tested), but in some conditions our callback can still be called several times.
+				//	For example if multiple messages are retrieved from the OS queue without dispatching each, and then all are dispatched.
+				//	Usually we can safely ignore it. But not good if the same timer id is reused for another timer. Tested on Win10: OS does not reuse ids soon.
 			}
 			if(t._singlePeriod) t.Stop();
 			
@@ -449,8 +457,8 @@ namespace Au
 		/// </remarks>
 		public void Stop()
 		{
-			//Print("Stop: " + _id);
 			if(_id != 0) {
+				//Print($"Stop: {_id}          _threadId={_threadId}");
 				_CheckThread();
 				Api.KillTimer(default, _id);
 				//tested: KillTimer removes pending WM_TIMER messages from queue. MSDN lies. Tested on Win 10 and 7.
@@ -478,11 +486,13 @@ namespace Au
 
 		/// <summary>
 		/// Sets new one-time timer.
-		/// Returns new <see cref="Timer_"/> object. Rarely used.
+		/// Returns new <see cref="Timer_"/> object. Usually you don't need it.
 		/// </summary>
-		/// <param name="timeMilliseconds">Time after which will be called the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal time usually is 10-20.</param>
+		/// <param name="timeMilliseconds">Time after which will be called the callback function, milliseconds. The minimal time is 10-20, even if this parameter is less than that.</param>
 		/// <param name="timerAction">Callback function.</param>
 		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Negative periodMilliseconds.</exception>
+		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
 		/// <remarks>
 		/// The callback function will be called in this thread.
 		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.
@@ -502,9 +512,11 @@ namespace Au
 		/// Sets new periodic timer.
 		/// Returns new <see cref="Timer_"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
 		/// </summary>
-		/// <param name="periodMilliseconds">Time interval (period) of calling the callback function, milliseconds. Can be 1 to int.MaxValue. The actual minimal period usually is 10-20.</param>
+		/// <param name="periodMilliseconds">Time interval (period) of calling the callback function, milliseconds. The minimal period is 10-20, even if this parameter is less than that.</param>
 		/// <param name="timerAction">Callback function.</param>
 		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Negative periodMilliseconds.</exception>
+		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
 		/// <remarks>
 		/// The callback function will be called in this thread.
 		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.

@@ -69,25 +69,26 @@ namespace SourceGrid.Cells.Views
 
         protected virtual void PrepareVisualElementDropDown(CellContext context)
         {
-            if (context.CellRange.Contains(context.Grid.MouseCellPosition))
-            {
-                ElementDropDown.Style = DevAge.Drawing.ButtonStyle.Hot;
-            }
-            else
-            {
-                ElementDropDown.Style = DevAge.Drawing.ButtonStyle.Normal;
-            }
-        }
+#if MOD //workaround for: combo dropdown button is hot randomly
+			//ElementDropDown.Style = DevAge.Drawing.ButtonStyle.Normal; //don't overwrite what is set externally, because may be eg disabled
+#else
+			if(context.CellRange.Contains(context.Grid.MouseCellPosition)) {
+				ElementDropDown.Style = DevAge.Drawing.ButtonStyle.Hot;
+			} else {
+				ElementDropDown.Style = DevAge.Drawing.ButtonStyle.Normal;
+			}
+#endif
+		}
 
-        #region Clone
-        /// <summary>
-        /// Clone this object. This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
-        /// </summary>
-        /// <returns></returns>
-        public override object Clone()
+#region Clone
+		/// <summary>
+		/// Clone this object. This method duplicate all the reference field (Image, Font, StringFormat) creating a new instance.
+		/// </summary>
+		/// <returns></returns>
+		public override object Clone()
         {
             return new ComboBox(this);
         }
-        #endregion
+#endregion
     }
 }

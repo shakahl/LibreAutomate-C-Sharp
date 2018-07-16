@@ -136,7 +136,7 @@ namespace Au
 							}
 						}
 					}
-					if(trimEnd > 0 && i > 0) b.Remove(b.Length - trimEnd, trimEnd);
+					if(trimEnd > 0 && i > 0) b.Length -= trimEnd;
 					s = b.ToString();
 				}
 			}

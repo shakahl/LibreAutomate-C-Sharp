@@ -52,10 +52,6 @@
       <HintPath>..\_\Compiler\Microsoft.CodeAnalysis.Scripting.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="SourceGrid, Version=4.40.4580.29115, Culture=neutral, PublicKeyToken=df6f5e538749e85d, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\_\SourceGrid.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -132,7 +128,11 @@
       <Project>{4c53ea3e-d770-41ac-9a19-381b840cd14a}</Project>
       <Name>Au.Controls</Name>
     </ProjectReference>
-    <ProjectReference Include="..\TreeList\TreeList.csproj">
+    <ProjectReference Include="..\Libraries\SourceGrid\SourceGrid.csproj">
+      <Project>{2a5a1657-dba8-4117-8e2a-9f1236ace9e2}</Project>
+      <Name>SourceGrid</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Libraries\TreeList\TreeList.csproj">
       <Project>{e73bb233-d88b-44a7-a98f-d71ee158381d}</Project>
       <Name>TreeList</Name>
     </ProjectReference>

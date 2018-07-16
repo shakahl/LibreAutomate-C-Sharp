@@ -142,25 +142,24 @@ namespace Au.Tools
 		/// <summary>
 		/// If s has *? characters, prepends "**t ".
 		/// But if s has single * character, converts to "**r regexp" that ignores it. Because single * often is used to indicate unsaved state.
-		/// If makeRegexVerbatim and makes regex, prepends @" and appends ".
+		/// If canMakeVerbatim and makes regex or s contains '\' and no newlines etc, prepends @" and appends ".
 		/// s can be null.
 		/// </summary>
-		internal static string EscapeWindowName(string s, bool makeRegexVerbatim)
+		internal static string EscapeWindowName(string s, bool canMakeVerbatim)
 		{
+			if(s == null) return s;
 			if(Wildex.HasWildcards(s)) {
 				int i = s.IndexOf('*');
 				if(i >= 0 && s.IndexOf('*', i + 1) < 0) {
 					var b = new StringBuilder();
-					if(makeRegexVerbatim) b.Append("@\"");
 					if(i > 0) b.Append(@"**r \Q").Append(s, 0, i).Append(@"\E");
 					b.Append(@"\*?");
 					int len = s.Length - ++i;
 					if(len > 0) b.Append(@"\Q").Append(s, i, len).Append(@"\E");
-					if(makeRegexVerbatim) b.Append("\"");
-					return b.ToString();
-				}
-				s = "**t " + s;
+					s = b.ToString();
+				} else s = "**t " + s;
 			}
+			if(canMakeVerbatim && s.IndexOf('\\') >= 0 && !s.RegexIsMatch_(@"[\x00-\x1F""\x85\x{2028}\x{2029}]")) s = "@\"" + s + "\"";
 			return s;
 		}
 
@@ -244,6 +243,7 @@ namespace Au.Tools
 		internal class CaptureWindowEtcWithHotkey
 		{
 			Timer_ _timer;
+			long _prevTime;
 			OsdRect _osr;
 			Form _form;
 			CheckBox _captureCheckbox;
@@ -291,10 +291,16 @@ namespace Au.Tools
 						_osr = TUtil.CreateOsdRect();
 						_timer = new Timer_(t =>
 						{
+							//Don't capture too frequently.
+							//	Eg if the callback is very slow. Or if multiple timer messages are received without time interval (possible in some conditions).
+							long t1 = Time.Milliseconds, t2 = t1 - _prevTime; _prevTime = t1; if(t2 < 100) return;
+
 							//show rect of UI object from mouse
 							Wnd w = Wnd.FromMouse(WXYFlags.NeedWindow);
 							RECT? r = default;
-							if(!(w.Is0 || w == wForm || w.WndOwner == wForm)) r = _cbGetRect();
+							if(!(w.Is0 || w == wForm || w.WndOwner == wForm)) {
+								r = _cbGetRect();
+							}
 							if(r.HasValue) {
 								var rr = r.GetValueOrDefault();
 								rr.Inflate(2, 2); //2 pixels inside, 2 outside
@@ -318,13 +324,17 @@ namespace Au.Tools
 			/// <summary>
 			/// Must be called from WndProc of the tool form.
 			/// If returns true, don't call base.WndProc.
+			/// Whe hotkey pressed, sets capture=true and returns true.
 			/// </summary>
 			/// <param name="m"></param>
-			public bool WndProc(ref Message m)
+			public bool WndProc(ref Message m, out bool capture)
 			{
+				capture = false;
 				switch((uint)m.Msg) {
 				case Api.WM_HOTKEY:
-					if((int)m.WParam == 1) return true;
+					if((int)m.WParam == 1) {
+						capture = true; return true;
+					}
 					break;
 				case c_stopMessage:
 					_captureCheckbox.Checked = false;
@@ -384,21 +394,21 @@ namespace Au.Tools
 		/// Returns the found object and the speed.
 		/// </summary>
 		/// <param name="code">
-		/// The first line should be 'find window' code like <c>var w = Wnd.Find(...);</c>. This function uses this regex to get Wnd variable name: "^(?:var|Wnd) (\w+)"; if does not match, uses name w.
-		/// The last line must be a 'find object' function call. Example: <c>Acc.Find(...);</c>. Without variable and without OrThrow.
-		/// Between them can be more lines of code. For example <c>w = w.Child(...);</c>.
+		/// Must start with one or more lines that find window or control and set Wnd variable named wndVar. Can be any code.
+		/// The last line must be a 'find object' function call. Example: <c>Acc.Find(...);</c>. Without 'var obj = ', without OrThrow, without Wait.
 		/// </param>
-		/// <param name="wnd">Window handle.</param>
-		/// <param name="bTest">The 'Test' button. This function will disable/enable it.</param>
+		/// <param name="wndVar">Name of Wnd variable of the window or control in which to search.</param>
+		/// <param name="wnd">Window or control in which to search.</param>
+		/// <param name="bTest">The 'Test' button. This function disables it while executing code.</param>
 		/// <param name="lSpeed">Label control that displays speed.</param>
 		/// <param name="getRect">Callback function that returns object's rectangle in screen. Called when object has been found.</param>
 		/// <example>
 		/// <code><![CDATA[
-		/// var r = await TUtil.RunTestFindObject(code, _wnd, _bTest, _lSpeed, o => (o as Acc).Rect);
+		/// var r = await TUtil.RunTestFindObject(code, _wndVar, _wnd, _bTest, _lSpeed, o => (o as Acc).Rect);
 		/// ]]></code>
 		/// </example>
 		internal static async Task<TestFindObjectResults> RunTestFindObject(
-			string code, Wnd wnd, Button bTest, Label lSpeed, Func<object, RECT> getRect)
+			string code, string wndVar, Wnd wnd, Button bTest, Label lSpeed, Func<object, RECT> getRect)
 		{
 			if(Empty(code)) return default;
 			Form form = lSpeed.FindForm();
@@ -406,8 +416,6 @@ namespace Au.Tools
 
 			//Print(code);
 			//Perf.First();
-
-			if(!code.RegexMatch_(@"^(?:var|Wnd) (\w+)", 1, out var wndVar)) wndVar = "w";
 
 			var b = new StringBuilder();
 			var lines = code.SplitLines_(true);
@@ -460,7 +468,7 @@ namespace Au.Tools
 				//if form or its visible owners cover the found object, temporarily activate object's window
 				foreach(var ow in Wnd.Misc.OwnerWindowsAndThis((Wnd)form, true)) {
 					if(re.IntersectsWith(ow.Rect)) {
-						r.wnd.ActivateLL();
+						r.wnd.WndWindow.ActivateLL();
 						Time.SleepDoEvents(1500);
 						break;
 					}
@@ -475,9 +483,10 @@ namespace Au.Tools
 			((Wnd)form).ActivateLL();
 
 			if(r.wnd != wnd && !r.wnd.Is0) {
-				AuDialog.ShowWarning("The code finds another window",
+				AuDialog.ShowWarning("The code finds another " + (r.wnd.IsChild ? "control" : "window"),
 				$"Need:  {wnd.ToString()}\r\n\r\nFound:  {r.wnd.ToString()}",
 				owner: form, flags: DFlags.OwnerCenter | DFlags.Wider);
+				TUtil.ShowOsdRect(r.wnd.Rect, true);
 				return default;
 			}
 			return new TestFindObjectResults() { obj = r.obj, speed = r.speed };

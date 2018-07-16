@@ -269,22 +269,13 @@ namespace SourceGrid
 				get { return AccessibleRole.Cell; }
 			}
 
+#if MOD //for checkbox return Caption instead of True/False
 			/// <summary>
 			/// Returns the name of the cell.
 			/// </summary>
 			/// <remarks>
 			/// If display text not found, returns a default name containing the column index.
 			/// </remarks>
-			//public override string Name
-			//{
-			//	get
-			//	{
-			//		if(cell.DisplayText != null)
-			//			return cell.DisplayText;
-			//		return "Column " + cell.Column.Index;
-			//	}
-			//}
-			//au: for checkbox return Caption instead of True/False.
 			public override string Name
 			{
 				get
@@ -300,7 +291,6 @@ namespace SourceGrid
 				}
 			}
 
-			//au: add state
 			public override AccessibleStates State
 			{
 				get
@@ -317,9 +307,18 @@ namespace SourceGrid
 				}
 			}
 
-			//au: add Help
 			public override string Help => cell.ToolTipText ?? base.Help;
-
+#else
+			public override string Name
+			{
+				get
+				{
+					if(cell.DisplayText != null)
+						return cell.DisplayText;
+					return "Column " + cell.Column.Index;
+				}
+			}
+#endif
 			/// <summary>
 			/// Set or get the value of the cell.
 			/// </summary>

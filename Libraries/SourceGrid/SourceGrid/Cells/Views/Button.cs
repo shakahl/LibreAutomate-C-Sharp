@@ -67,9 +67,11 @@ namespace SourceGrid.Cells.Views
                 Background.Style = DevAge.Drawing.ButtonStyle.Pressed;
             else if (context.CellRange.Contains(context.Grid.MouseCellPosition))
                 Background.Style = DevAge.Drawing.ButtonStyle.Hot;
-            else if (context.CellRange.Contains(context.Grid.Selection.ActivePosition))
+#if !MOD //the focus rectangle does not look good. Then we have 3 rectangles - cell border (or probably the active cell border), button border and focus rect.
+			else if (context.CellRange.Contains(context.Grid.Selection.ActivePosition))
                 Background.Style = DevAge.Drawing.ButtonStyle.Focus;
-            else
+#endif
+			else
                 Background.Style = DevAge.Drawing.ButtonStyle.Normal;
         }
         #endregion

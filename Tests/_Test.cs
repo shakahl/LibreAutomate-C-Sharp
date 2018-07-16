@@ -1018,7 +1018,7 @@ static partial class Test
 		//var w = Wnd.Find("Options*").ChildById(1571);
 		//Print(w.NameAcc);
 
-		//var w = Wnd.Find("Options*").Child("**accName:Run as", "combo*").OrThrow();
+		//var w = Wnd.Find("Options*").Child("***accName Run as", "combo*").OrThrow();
 		//Print(w);
 
 		//var w = Wnd.Find("Options*");
@@ -3552,11 +3552,20 @@ REE`");
 	static void TestAccForm()
 	{
 		Acc a = null;
-#if false
+#if true
 		//Cpp.Cpp_Test(); return;
 
-		var w = Wnd.Find("* Chrome").OrThrow();
-		a = Acc.Find(w, "web:BUTTON", "Search").OrThrow();
+		var w = Wnd.Find(null, "QM_Editor").OrThrow();
+		a = Acc.Find(w, "BUTTON", "Paste*").OrThrow();
+
+		//var w = Wnd.Find(null, "IEFrame").OrThrow();
+		//a = Acc.Find(w, "web:LINK", "QM and*").OrThrow();
+
+		//var w = Wnd.Find(null, "Shell_TrayWnd").OrThrow();
+		//a = Acc.Find(w, "BUTTON").OrThrow();
+
+		//var w = Wnd.Find("* Chrome").OrThrow();
+		//a = Acc.Find(w, "web:BUTTON", "Search").OrThrow();
 		//a = Acc.Find(w, "web:BUTTON", "Search", "class=moo").OrThrow();
 
 
@@ -7108,8 +7117,7 @@ REE`");
 
 	static void TestToolWinImage()
 	{
-		var f = new Au.Tools.Form_WinImage();
-		f.ShowDialog();
+		using(var f = new Au.Tools.Form_WinImage()) f.ShowDialog();
 	}
 
 	static void TestToolWinImageCode()
@@ -7225,15 +7233,16 @@ REE`");
 	{
 		Wnd w = default;
 
-		//w = Wnd.Find(null, "QM_Editor");
+		w = Wnd.Find(null, "QM_Editor");
 		//w = Wnd.Find(className: "Shell_TrayWnd");
 		//w = Wnd.Find("Notepad");
-		w = Wnd.Find("Options");
+		//w = Wnd.Find("Options");
+		//w = Wnd.Find("Administrator:*");
 		w.OrThrow();
 
 		//w = w.Child(null, "Button").OrThrow();
-		//w = w.Child(null, "SysListView32").OrThrow();
-		w = w.Child(null, "ComboBox").OrThrow();
+		w = w.Child(null, "SysListView32").OrThrow();
+		//w = w.Child(null, "ComboBox").OrThrow();
 		////w = w.Child("***label Check").OrThrow();
 		//w = w.Child("***label Text", "Edit").OrThrow();
 		////w.Child(also: o => { Print(o.ClassName, o.NameLabel); return false; });
@@ -7243,8 +7252,11 @@ REE`");
 		//var w = Wnd.Find("*Sandcastle*").OrThrow();
 		//w = w.Child(null, "*.SysTree*").OrThrow();
 
-		var f = new Au.Tools.Form_Wnd(w);
-		f.ShowDialog();
+		using(var f = new Au.Tools.Form_Wnd(w)) {
+			f.ShowDialog();
+			//Print("form closed");
+		}
+		//Print("form disposed");
 	}
 
 
@@ -7266,104 +7278,18 @@ REE`");
 		}
 
 		try {
-#if true
+#if false
 
-			TestToolWnd();
+			//TestToolWnd();
+			TestToolWinImage();
 			//TestWFEtc();
 			//TestWndFindContainsRoleName();
-			//TestToolWinImage();
 			//TestAccFindParamNavig();
 			//TestThrowAndWait();
 			//TestToolWinImageCode();
 			//TestWinImageCapture();
 			//Au.Tools.Test.OsdRect();
 			//TestOsd();
-			//TestAuMenuIcons();
-			//TestIconMemory();
-			//TestIconCacheEtc();
-			//TestLoadCursor();
-			//TestConvert();
-			//TestLibIsPossiblyDos();
-			//TestScreen();
-			//TestWndChild();
-			//TestWaitFor();
-			//TestAccFromEvent();
-			//TestAccHook();
-			//TestWinHook();
-			//TestOnScreenRect();
-			//TestMyWindow();
-			//TestRegisterHotkey();
-			//TestStringCompare();
-			//TestBase64();
-			//TestShellRunResult();
-			//TestWinImage1();
-			//TestTimer();
-			//TestLparamOperators();
-			//TestOutputServer();
-			//TestAuDialogMessaging();
-			//TestKeybClipbMouseOwnWindow();
-			//TestAuOptions();
-			//TestKeyOwnThread();
-			//TestKeybFinally();
-			//TestTimeKeyPressedInt();
-			//TestPrintNoQuot();
-			//TestClipbDataContains();
-			//TestClipbDataGet();
-			//TestClipbGetText();
-			//TestCopy();
-			//TestCreateHtmlFormatData();
-			//TestPasteFormat();
-			//TestPaste();
-			//TestSleep2();
-			//TestKey();
-			//TestClipb();
-			//TestKeybExamples();
-			//TestWaitPrecision();
-			//TestIsKey();
-			//TestGetMod();
-			//TestBlockUserInput();
-			//TestSpeedThreadAndTask();
-			//TestLibThreadCpuSwitcher();
-			//TestAttachThreadInput();
-			//TestPrintHex();
-			//TestRegexGroupByName();
-			//TestWildexRegex();
-			//TestRegexStatic();
-			//TestRegexExamples();
-			//TestKeySyntax();
-			//TestAuDialogRenamed();
-			//TestSpan();
-			//TestLibDC();
-			//TestNewEscape();
-			//TestPrintListEx();
-			//TestRegexAndGC();
-			//TestRegexCalloutWithFindAll();
-			//TestRegexSplit();
-			//TestRegexFindAllE();
-			//TestRegexReplace();
-			//TestRegexFindAll();
-			//TestRegex_();
-			//TestRegexCulture();
-			//TestRegexMatch();
-			//TestRegexGetRepeatedGroupInstances();
-			//TestRegexCallout();
-			//TestRegexGroupNumberFromName();
-			//var g=TestRegex_(); //Print(g.Value); Print(g.Value);
-			//TestRegex_();
-			//TestPcreSpeed();
-			//TestPcreRegexStatic();
-			//TestNewWildexSyntax();
-			//TestWndImage();
-			//TestWndForm();
-			//TestTaskDialogOwnerWpf();
-			//TestWndFindProgramEtc();
-			//TestMainWindows2();
-			//TestRunConsole();
-			//TestStrtoiOverflow();
-			//TestCompiler();
-			//TestToIntWithFlags();
-			//TestFinalizersAndGC();
-			//return;
 #else
 			try {
 

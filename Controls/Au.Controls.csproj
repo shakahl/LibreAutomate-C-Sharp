@@ -46,13 +46,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Accessibility" />
-    <Reference Include="PopupControl">
-      <HintPath>..\_\PopupControl.dll</HintPath>
-    </Reference>
-    <Reference Include="SourceGrid, Version=4.40.4580.29115, Culture=neutral, PublicKeyToken=df6f5e538749e85d, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\_\SourceGrid.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -72,7 +65,13 @@
     <Compile Include="Other\ParamGrid.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Other\PopupList.cs" />
+    <Compile Include="Other\LibPopup.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Other\LibPopup.designer.cs">
+      <DependentUpon>LibPopup.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Other\DropDownList.cs" />
     <Compile Include="Sci\AuInfoBox.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -125,6 +124,10 @@
     <ProjectReference Include="..\Au\Au.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
       <Name>Au</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Libraries\SourceGrid\SourceGrid.csproj">
+      <Project>{2a5a1657-dba8-4117-8e2a-9f1236ace9e2}</Project>
+      <Name>SourceGrid</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

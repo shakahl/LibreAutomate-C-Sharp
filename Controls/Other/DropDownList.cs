@@ -21,22 +21,26 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 
-//TODO: dispose? Now no WM_DESTROY.
-
 namespace Au.Controls
 {
 	/// <summary>
-	/// Shows a popup or drop-down list.
+	/// Drop-down list window, similar to a menu.
 	/// </summary>
-	public class PopupList
+	public class DropDownList :IDisposable
 	{
+		LibPopup _popup;
 		ListView _lv;
 		int _itemHeight;
+
+		public void Dispose()
+		{
+			_popup.Dispose();
+		}
 
 		/// <summary>
 		/// Gets the popup control.
 		/// </summary>
-		public PopupControl.Popup Popup { get; }
+		internal LibPopup LibPopup => _popup;
 
 		/// <summary>
 		/// Sets list items.
@@ -52,7 +56,7 @@ namespace Au.Controls
 		/// Then the popup is already hidden, but not disposed.
 		/// Call this before <b>Show</b>.
 		/// </summary>
-		public Action<PopupList> OnSelected { get; set; }
+		public Action<DropDownList> OnSelected { get; set; }
 
 		/// <summary>
 		/// Gets the selected index.
@@ -73,7 +77,7 @@ namespace Au.Controls
 		public bool ResultWasKey { get; private set; }
 
 		///
-		public PopupList()
+		public DropDownList()
 		{
 			_lv = new _ListView(this) {
 				View = View.Details,
@@ -88,9 +92,9 @@ namespace Au.Controls
 			};
 			_lv.Columns.Add(null, 0);
 
-			Popup = new PopupControl.Popup(_lv) {
+			_popup = new LibPopup(_lv) {
 				FocusOnOpen = false,
-				ShowingAnimation = PopupControl.PopupAnimations.TopToBottom | PopupControl.PopupAnimations.Roll,
+				ShowingAnimation = LibPopup.PopupAnimations.TopToBottom | LibPopup.PopupAnimations.Roll,
 				AnimationDuration = 0, //system default, same as standard combobox
 			};
 		}
@@ -104,7 +108,7 @@ namespace Au.Controls
 		public void Show(Control owner, Rectangle r)
 		{
 			if(!_AddItemsAndSetSize(r.Width)) return;
-			Popup.Show(owner, r);
+			_popup.Show(owner, r);
 		}
 
 		/// <summary>
@@ -115,7 +119,7 @@ namespace Au.Controls
 		public void Show(Control owner)
 		{
 			if(!_AddItemsAndSetSize(owner.Width)) return;
-			Popup.Show(owner);
+			_popup.Show(owner);
 		}
 
 		/// <summary>
@@ -126,7 +130,7 @@ namespace Au.Controls
 		public void Show(Rectangle r)
 		{
 			if(!_AddItemsAndSetSize(r.Width)) return;
-			Popup.Show(r);
+			_popup.Show(r);
 		}
 
 		bool _AddItemsAndSetSize(int width)
@@ -147,7 +151,7 @@ namespace Au.Controls
 				//	The only reliable way is _lv.GetItemRect (LVM_GETITEMRECT).
 				//	Problem: it creates _lv handle. Then on Popup.Size toolstrip recreates handle. Dirty and slow.
 				//	Workaround: Popup.PerformLayout. Then creates handle once.
-				Popup.PerformLayout();
+				_popup.PerformLayout();
 				_itemHeight = _lv.GetItemRect(0).Height;
 				//Perf.Next();
 
@@ -159,7 +163,7 @@ namespace Au.Controls
 			}
 
 			int nVisible = Math.Min(n, 30);
-			Popup.Size = new Size(width, _itemHeight * nVisible + 4);
+			_popup.Size = new Size(width, _itemHeight * nVisible + 4);
 			_lv.Columns[0].Width = _lv.ClientSize.Width;
 
 			//rejected: set initial selected item from property SelectIndex or from ComboTextBox.Text. Problems.
@@ -179,10 +183,10 @@ namespace Au.Controls
 
 		class _ListView :ListView
 		{
-			PopupList _p;
+			DropDownList _p;
 			ListViewItem _lvi;
 
-			public _ListView(PopupList p)
+			public _ListView(DropDownList p)
 			{
 				_p = p;
 				_lvi = new ListViewItem();
@@ -209,7 +213,7 @@ namespace Au.Controls
 
 			void _Selected(bool key)
 			{
-				_p.Popup.Visible = false;
+				_p._popup.Visible = false;
 				var si = SelectedIndices;
 				if(si.Count == 1) {
 					int i = si[0];
@@ -220,19 +224,20 @@ namespace Au.Controls
 				}
 			}
 
-			protected override void WndProc(ref Message m)
-			{
-				//Wnd.Misc.PrintMsg(m, Api.WM_REFLECT|Api.WM_NOTIFY);
-				//if(m.Msg < Api.WM_USER) Wnd.Misc.PrintMsg(m);
-				//if((uint)m.Msg == Api.WM_CREATE || (uint)m.Msg == Api.WM_DESTROY) Wnd.Misc.PrintMsg(m);
+			//protected override void WndProc(ref Message m)
+			//{
+			//	//Wnd.Misc.PrintMsg(m, Api.WM_REFLECT|Api.WM_NOTIFY);
+			//	//if(m.Msg < Api.WM_USER) Wnd.Misc.PrintMsg(m);
+			//	if((uint)m.Msg == Api.WM_CREATE || (uint)m.Msg == Api.WM_DESTROY) Wnd.Misc.PrintMsg(m);
 
-				//if((uint)m.Msg == Api.WM_MOUSEACTIVATE) {
-				//	m.Result= (IntPtr)Api.MA_NOACTIVATE; //toolstrip sets focus anyway
-				//	return;
-				//}
+			//	//if((uint)m.Msg == Api.WM_MOUSEACTIVATE) {
+			//	//	Print("WM_MOUSEACTIVATE 1");
+			//	//	m.Result = (IntPtr)Api.MA_NOACTIVATE; //toolstrip sets focus anyway
+			//	//	return;
+			//	//}
 
-				base.WndProc(ref m);
-			}
+			//	base.WndProc(ref m);
+			//}
 		}
 	}
 }

@@ -22,14 +22,12 @@ using static Au.NoClass;
 using Au.Controls;
 using SG = SourceGrid;
 
-//FUTURE:
-//Option to use child window.
-
 namespace Au.Tools
 {
 	public partial class Form_WinImage :Form_
 	{
-		Wnd _wnd;
+		Wnd _wnd, _con;
+		bool _useCon;
 		Bitmap _image;
 		RECT _rect;
 		bool _isColor;
@@ -83,14 +81,21 @@ namespace Au.Tools
 			_SetImage(r);
 		}
 
-		void _SetImage(WICResult r)
+		//Use r on Capture. Use image on Open.
+		void _SetImage(WICResult r = null, Bitmap image = null)
 		{
-			if(_isColor = (r.image == null)) using(var g = Graphics.FromImage(r.image = new Bitmap(16, 16))) g.Clear((Color)r.color);
-			_color = r.color.color & 0xffffff;
-			_image = r.image;
-			var wndOld = _wnd;
-			_wnd = r.wnd;
-			_rect = r.rect;
+			if(r != null) { //on Capture
+				var wnd = r.wnd.WndWindow; if(wnd.Is0) return;
+				_SetWndCon(wnd, r.wnd, true, false);
+				if(_isColor = (r.image == null)) using(var g = Graphics.FromImage(r.image = new Bitmap(16, 16))) g.Clear((Color)r.color);
+				_color = r.color.color & 0xffffff;
+				_image = r.image;
+				_rect = r.rect;
+			} else { //on Open
+				_color = 0;
+				_image = image;
+				_rect = (0, 0, image.Width, image.Height);
+			}
 
 			//set _pict
 			var oldImage = _pict.Image;
@@ -98,7 +103,7 @@ namespace Au.Tools
 			oldImage?.Dispose();
 
 			//set _code
-			_FormatCode(newWindow: _wnd != wndOld);
+			_FormatCode();
 
 			_bTest.Enabled = true; _bOK.Enabled = true;
 
@@ -107,14 +112,48 @@ namespace Au.Tools
 			_errorProvider.Clear();
 		}
 
+		void _SetWndCon(Wnd wnd, Wnd con, bool useCon, bool updateCodeIfNeed)
+		{
+			var wPrev = _WndSearchIn;
+			_wnd = wnd;
+			_con = con == wnd ? default : con;
+
+			_noeventGridValueChanged = !updateCodeIfNeed;
+			_useCon = useCon && !_con.Is0;
+			if(!_useCon) _grid.ZCheck(0, false);
+			_grid.ZEnableCell(0, 0, !_con.Is0);
+			if(_useCon) _grid.ZCheck(0, true);
+			if(_WndSearchIn != wPrev) _Check("rect", false);
+			_noeventGridValueChanged = false;
+		}
+
 		void _FillGrid()
 		{
 			_noeventGridValueChanged = true;
 			var g = _grid;
 			g.Clear();
 
-			//g.ZAdd("wnd", "Window", "Edit...", null, etype: ParamGrid.EditType.Button, buttonAction: (unu, sed) => Print("FUTURE"));
-			g.ZAdd("rect", "Search in rectangle", "(left, top, width, height)", etype: ParamGrid.EditType.TextButton, buttonAction: (unu, sed) =>
+			g.ZAdd(null, "Control", "Edit window/control...", false, etype: ParamGrid.EditType.Button,
+				buttonAction: (unu, sed) => { var r = _code.ZShowWndTool(_wnd, _con, !_useCon); if(r.ok) _SetWndCon(r.wnd, r.con, r.useCon, true); },
+				tt: "Search only in control (if captured), not in whole window.\r\nTo edit window or/and control name etc, click 'Edit window/control...' or edit it in the code field.");
+			g.ZEnableCell(0, 0, false);
+			g.ZAdd("rect", "Search in rectangle", "(left, top, width, height)", etype: ParamGrid.EditType.TextButton, buttonAction: _MenuRect,
+				tt: "Limit the search area to this rectangle in the client area of the window or control.\nSmaller = faster.");
+			g.ZAddCheck("WindowDC", "Window can be in background", tt: "Flag WindowDC.\nMakes faster etc.");
+			g.ZAdd("colorDiff", "Allow color difference", "10", tt: "Parameter colorDiff.\nValid values: 0 - 250.\nBigger = slower.");
+			g.ZAdd("skip", "Skip matching images", "1", tt: "0-based index of matching image.\nFor example, if 1, gets the second matching image.");
+
+			//g.ZAddHeaderRow("Results, wait, action");
+			g.ZAddCheck("all", "Find all", tt: "Find all matching images");
+			g.ZAdd("Wait", "Wait", "5", tt: c_infoWait);
+			g.ZAdd("WaitNot", "Wait until disappears", "5", tt: c_infoWait);
+			g.ZAddCheck("orThrow", "Exception if not found", true);
+			g.ZAdd(null, "Mouse", "Move|Click|Right click", true, tt: "When found, call MouseMove or MouseClick", etype: ParamGrid.EditType.ComboList, comboIndex: 0);
+
+			_noeventGridValueChanged = false;
+			g.ZAutoSize();
+
+			void _MenuRect(object unu, EventArgs sed)
 			{
 				if(_wnd.Is0) return;
 				var m = new AuMenu();
@@ -126,20 +165,7 @@ namespace Au.Tools
 					_grid.ZSetCellText("rect", 1, $"({k.left}, {k.top}, {k.Width}, {k.Height})");
 					_Check("rect", true);
 				}
-			}, tt: "Limit the search area to this rectangle in window client area.\nSmaller = faster.");
-			g.ZAddCheck("WindowDC", "Window can be in background", tt: "Flag WindowDC.\nMakes faster etc.");
-			g.ZAdd("colorDiff", "Allow color difference", "10", tt: "Parameter colorDiff.\nValid values: 0 - 250.\nBigger = slower.");
-			g.ZAdd("skip", "Skip matching images", "1", tt: "0-based index of matching image.\nFor example, if 1, gets the second matching image.");
-
-			//g.ZAddHeaderRow("Results, wait, action");
-			g.ZAddCheck("all", "Find all", tt: "Find all matching images");
-			g.ZAdd("Wait", "Wait", "5", tt: c_infoWait);
-			g.ZAdd("WaitNot", "Wait until disappears", "5", tt: c_infoWait);
-			g.ZAddCheck("orThrow", "Exception if not found", true);
-			g.ZAdd("Mouse", "Mouse", "Move|Click|Right click", true, tt: "When found, call MouseMove or MouseClick", etype: ParamGrid.EditType.ComboList, comboIndex: 0);
-
-			_noeventGridValueChanged = false;
-			g.ZAutoSize();
+			}
 		}
 
 		void _grid_ZValueChanged(SG.CellContext sender)
@@ -151,6 +177,10 @@ namespace Au.Tools
 			case 0:
 				bool on = (sender.Cell as SG.Cells.CheckBox).Checked.GetValueOrDefault();
 				switch(g.ZGetRowKey(pos.Row)) {
+				case "Control":
+					if(_useCon = on) _wnd.MapClientToClientOf(_con, ref _rect); else _con.MapClientToClientOf(_wnd, ref _rect);
+					_Check("rect", false);
+					break;
 				case "WindowDC":
 					if(_image != null) {
 						_errorProvider.Icon = Icons.GetStockIcon(StockIcon.INFO, 16);
@@ -172,9 +202,10 @@ namespace Au.Tools
 		}
 		bool _noeventGridValueChanged;
 
-		string _FormatCode(bool forTest = false, bool newWindow = false)
+		(string code, string wndVar) _FormatCode(bool forTest = false)
 		{
-			if(_image == null) return null;
+			//Print("_FormatCode");
+			if(_image == null) return default;
 
 			var b = new StringBuilder();
 
@@ -194,7 +225,7 @@ namespace Au.Tools
 				b.Append("WinImage.Find(");
 			}
 
-			var (wndCode, wndVar) = _code.FormatWndFindCode(_wnd, newWindow);
+			var (wndCode, wndVar) = _code.ZGetWndFindCode(_wnd, _useCon ? _con : default);
 
 			if(_grid.ZGetValue("rect", out var sRect, true)) b.Append("(").Append(wndVar).Append(", ").Append(sRect).Append(")");
 			else b.Append(wndVar);
@@ -261,13 +292,17 @@ namespace Au.Tools
 
 			if(!forTest) _code.ZSetText(R, wndCode.Length);
 
-			return R;
+			return (R, wndVar);
 		}
 
 		#region util, misc
 
 		bool _IsChecked(string rowKey) => _grid.ZIsChecked(rowKey);
 		void _Check(string rowKey, bool check) => _grid.ZCheck(rowKey, check);
+
+		Wnd _WndSearchIn => _useCon ? _con : _wnd;
+
+		void _UpdateCodeBox() => _FormatCode();
 
 		bool _CaptureImageOrRect(bool rect, out WICResult r)
 		{
@@ -276,11 +311,11 @@ namespace Au.Tools
 			if(rect) fl = WICFlags.Rectangle;
 			else if(_IsChecked("WindowDC")) fl |= WICFlags.WindowDC; //FUTURE: how rect is if DPI-scaled window?
 			if(!WinImage.CaptureUI(out r, fl, this)) return false;
-			r.wnd = r.wnd.WndWindow;
 
 			string es = null;
 			if(rect) {
-				if(r.wnd != _wnd) es = "Whole rectangle must be in the client area of the captured image's window.";
+				bool otherWindow = (_useCon ? r.wnd : r.wnd.WndWindow) != (_useCon ? _con : _wnd);
+				if(otherWindow) es = "Whole rectangle must be in the client area of the captured image's window or control.";
 			} else if(r.wnd.Is0) {
 				r.image?.Dispose(); r.image = null;
 				es = "Whole image must be in the client area of a single window.";
@@ -302,11 +337,6 @@ namespace Au.Tools
 				_image.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
 				return "@\"image:" + Convert.ToBase64String(ms.GetBuffer(), 0, (int)ms.Length) + "\"";
 			}
-		}
-
-		void _UpdateCodeBox()
-		{
-			_FormatCode();
 		}
 
 		#endregion
@@ -338,8 +368,8 @@ namespace Au.Tools
 
 		void _OpenFile(bool embed)
 		{
-			if(_image == null) {
-				AuDialog.ShowInfo("At first please capture window", "Close this dialog, click Capture, click the window.", owner: this);
+			if(_wnd.Is0) {
+				Osd.ShowText("At first please select a window with button 'Capture' or 'Edit...'.", xy: this, icon: SystemIcons.Error);
 				return;
 			}
 
@@ -348,8 +378,7 @@ namespace Au.Tools
 			var f = d.FileName;
 			var im = Image.FromFile(f) as Bitmap;
 			_imageFile = embed ? null : f;
-			var r = new WICResult() { image = im, wnd = _wnd, rect = (0, 0, im.Width, im.Height) };
-			_SetImage(r);
+			_SetImage(null, im);
 		}
 		const string c_fileDialogFilter = "png, bmp|*.png;*.bmp";
 
@@ -391,7 +420,7 @@ namespace Au.Tools
 
 		//FUTURE: make transparent.
 		//	This code is not useful because images are often alpha-blended with background. Need to make transparent near-color pixels too.
-		//	Ideally let the user set color difference with preview. Maybe even draw or flood-fill clicked areas.
+		//	Let the user set color difference with preview. Maybe even draw or flood-fill clicked areas.
 		//void _MakeTransparent(int corner)
 		//{
 		//	int x = 0, y = 0;
@@ -418,12 +447,10 @@ namespace Au.Tools
 		private async void _bTest_Click(object sender, EventArgs e)
 		{
 			_errorProvider.Clear();
-			var code = _FormatCode(true); if(code == null) return;
+			var (code, wndVar) = _FormatCode(true); if(code == null) return;
 			_wnd.ActivateLL(); Time.SleepDoEvents(200);
-			var r = await TUtil.RunTestFindObject(code, _wnd, _bTest, _lSpeed, o => (o as WinImage).RectInScreen);
-			//if(r.obj != null) _testedAndFound = true;
+			var r = await TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as WinImage).RectInScreen);
 		}
-		//bool _testedAndFound;
 
 		#endregion
 

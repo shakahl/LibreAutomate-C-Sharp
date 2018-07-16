@@ -25,7 +25,7 @@ using SG = SourceGrid;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
-//TODO: init from code string. Cannot use Roslyn because of its slowness.
+//FUTURE: init from code string. Cannot use Roslyn because of its slowness.
 
 namespace Au.Tools
 {
@@ -34,8 +34,9 @@ namespace Au.Tools
 		Wnd _wnd, _con;
 		TUtil.CaptureWindowEtcWithHotkey _capt;
 		CommonInfos _commonInfos;
+		bool _uncheckControl;
 
-		public Form_Wnd(Wnd wnd = default)
+		public Form_Wnd(Wnd wnd = default, bool uncheckControl = false)
 		{
 			InitializeComponent();
 			splitContainer3.SplitterWidth = 8;
@@ -47,8 +48,9 @@ namespace Au.Tools
 			_InitTree();
 
 			_con = wnd;
+			_uncheckControl = uncheckControl;
 
-			_grid.ZDebug = true;
+			//_grid.ZDebug = true;
 		}
 
 		const string c_registryKey = @"\Tools\Wnd";
@@ -79,13 +81,6 @@ namespace Au.Tools
 			base.OnFormClosing(e);
 		}
 
-		//protected override void OnShown(EventArgs e)
-		//{
-		//	base.OnShown(e);
-
-		//	if(!_wnd.Is0) try { Mouse.Move((Wnd)_bTest); } catch { }
-		//}
-
 		void _SetWnd(bool captured)
 		{
 			//note: don't reorder all the calls.
@@ -98,13 +93,10 @@ namespace Au.Tools
 			bool newWindow = _wnd != wndOld;
 
 			_FillGrid2();
-
 			_ClearTree();
 			if(!_FillGrid(newWindow)) return;
-
 			_FormatCode(false, newWindow);
-
-			if(!_wnd.Is0) _FillTree();
+			_FillTree();
 		}
 
 		bool _FillGrid(bool newWindow)
@@ -135,7 +127,8 @@ namespace Au.Tools
 			}
 
 			if(isCon) {
-				g.ZAddHeaderRow("Control", check: true);
+				g.ZAddHeaderRow("Control", check: !_uncheckControl);
+				g.ZAddHidden = _uncheckControl;
 
 				//name combo
 				f.cName = _con.Name;
@@ -159,8 +152,10 @@ namespace Au.Tools
 				if(idUseful) g.ZAdd(null, "id", f.cId, true); else an.Add("***id " + f.cId + " (probably not useful)");
 				g.ZAdd("nameC", "name", an, !idUseful, info: "Control name.$", etype: ParamGrid.EditType.ComboText, comboIndex: iSel);
 				g.ZAdd("classC", "class", TUtil.StripWndClassName(f.cClass, true), !idUseful, info: "Control class name.$");
+				g.ZAddHidden = false;
 			}
 
+			_uncheckControl = false;
 			_noeventGridValueChanged = false;
 			g.ZAutoSize();
 			_FilWindowInfo(f);
@@ -226,9 +221,9 @@ namespace Au.Tools
 		}
 		bool _noeventGridValueChanged;
 
-		string _FormatCode(bool forTest = false, bool newWindow = false)
+		(string code, string wndVar) _FormatCode(bool forTest = false, bool newWindow = false)
 		{
-			if(_grid.RowsCount == 0) return null; //cleared on exception
+			if(_grid.RowsCount == 0) return default; //cleared on exception
 
 			var b = new StringBuilder();
 
@@ -306,13 +301,13 @@ namespace Au.Tools
 
 			if(!forTest) _code.ZSetText(R);
 
-			return R;
+			return (R, "w");
 		}
 
 		void _FillGrid2()
 		{
 			var g = _grid2;
-			bool noCon = _con.Is0;
+			bool noCon = _con.Is0 || _uncheckControl;
 
 			if(g.RowsCount != 0) {
 				int i = g.ZFindRow("Control");
@@ -325,23 +320,25 @@ namespace Au.Tools
 			_AddFlag(nameof(WFFlags.SkipCloaked), "Cannot be cloaked", tt: "Don't find cloaked windows, eg those on other Windows 10 virtual desktops.\r\nFlag WFFlags.SkipCloaked.");
 			_AddProp("alsoW", "also", "o => false", tt: "Lambda that returns true if Wnd o is the wanted window.", info: c_infoAlsoW);
 			_AddProp(null, "wait", "5", tt: c_infoWait);
-			g.ZAddHeaderRow("Control", hidden: noCon);
-			_AddFlag("C." + nameof(WCFlags.HiddenToo), "Can be invisible", tt: "Flag WCFlags.HiddenToo.", hidden: noCon);
-			//_AddFlag("C." + nameof(WCFlags.DirectChild), "Direct child of the window", tt: "Don't find indirect descendant controls (children of children and so on).\r\nFlag WCFlags.DirectChild.", hidden: noCon); //rejected: almost not useful here
-			_AddProp("alsoC", "also", "o => false", tt: "Lambda that returns true if Wnd o is the wanted control.", info: c_infoAlsoC, hidden: noCon);
-			_AddProp(null, "skip", "1", tt: "0-based index of matching control.\nFor example, if 1, gets the second matching control.", hidden: noCon);
-			_AddFlag("orThrow", "Exception if not found", true, tt: "Checked - throw exception.\nUnchecked - return default(Wnd).", hidden: noCon);
+			g.ZAddHidden = noCon;
+			g.ZAddHeaderRow("Control");
+			_AddFlag("C." + nameof(WCFlags.HiddenToo), "Can be invisible", tt: "Flag WCFlags.HiddenToo.");
+			//_AddFlag("C." + nameof(WCFlags.DirectChild), "Direct child of the window", tt: "Don't find indirect descendant controls (children of children and so on).\r\nFlag WCFlags.DirectChild."); //rejected: almost not useful here
+			_AddProp("alsoC", "also", "o => false", tt: "Lambda that returns true if Wnd o is the wanted control.", info: c_infoAlsoC);
+			_AddProp(null, "skip", "1", tt: "0-based index of matching control.\nFor example, if 1, gets the second matching control.");
+			_AddFlag("orThrow", "Exception if not found", true, tt: "Checked - throw exception.\nUnchecked - return default(Wnd).");
+			g.ZAddHidden = false;
 
 			g.ZAutoSize();
 
-			void _AddProp(string key, string name, string value, string tt = null, string info = null, bool hidden = false)
+			void _AddProp(string key, string name, string value, string tt = null, string info = null)
 			{
-				g.ZAdd(key, name, value, false, tt, info, hidden);
+				g.ZAdd(key, name, value, false, tt, info);
 			}
 
-			void _AddFlag(string flag, string name, bool check = false, string tt = null, bool hidden = false)
+			void _AddFlag(string flag, string name, bool check = false, string tt = null)
 			{
-				g.ZAddCheck(flag, name, check, tt, hidden);
+				g.ZAddCheck(flag, name, check, tt);
 			}
 		}
 
@@ -357,6 +354,7 @@ namespace Au.Tools
 		{
 			var c = Wnd.FromMouse(); if(c.Is0) return;
 			_con = c;
+			_uncheckControl = false;
 			_SetWnd(true);
 			var w = (Wnd)this;
 			if(w.IsMinimized) {
@@ -369,8 +367,8 @@ namespace Au.Tools
 		{
 			//Wnd w = (Wnd)this; uint msg = (uint)m.Msg; LPARAM wParam = m.WParam, lParam = m.LParam;
 
-			if(_capt != null && _capt.WndProc(ref m)) {
-				_Capture();
+			if(_capt != null && _capt.WndProc(ref m, out bool capture)) {
+				if(capture) _Capture();
 				return;
 			}
 
@@ -390,6 +388,22 @@ namespace Au.Tools
 		#region OK, Test
 
 		/// <summary>
+		/// When OK clicked, the top-level window (even when <see cref="ResultUseControl"/> is true).
+		/// </summary>
+		public Wnd ResultWindow => _wnd;
+
+		/// <summary>
+		/// When OK clicked, the control (even when <see cref="ResultUseControl"/> is false) or default(Wnd).
+		/// </summary>
+		public Wnd ResultControl => _con;
+
+		/// <summary>
+		/// When OK clicked, true if a control was selected and the 'Control' checkbox checked.
+		/// Use <see cref="ResultWindow"/> or <see cref="ResultControl"/>, depending on this property.
+		/// </summary>
+		public bool ResultUseControl { get; private set; }
+
+		/// <summary>
 		/// When OK clicked, contains C# code.
 		/// </summary>
 		public string ResultCode { get; private set; }
@@ -398,12 +412,13 @@ namespace Au.Tools
 		{
 			ResultCode = _code.Text;
 			if(Empty(ResultCode)) this.DialogResult = DialogResult.Cancel;
+			else ResultUseControl=!_con.Is0 && _IsChecked("Control");
 		}
 
 		private async void _bTest_Click(object sender, EventArgs ea)
 		{
-			var code = _FormatCode(true); if(code == null) return;
-			await TUtil.RunTestFindObject(code, _wnd, _bTest, _lSpeed, o =>
+			var (code, wndVar) = _FormatCode(true); if(code == null) return;
+			await TUtil.RunTestFindObject(code, wndVar, _wnd, _bTest, _lSpeed, o =>
 			{
 				var w = (Wnd)o;
 				var r = w.Rect;
@@ -427,6 +442,7 @@ namespace Au.Tools
 
 			var xWindow = new _WndNode("w") { c = _wnd };
 			xRoot.Add(xWindow);
+			//if(_con.Is0 || !_IsChecked("Control")) xSelect = xWindow; //no, always select control
 			if(_con.Is0) xSelect = xWindow;
 			_AddChildren(_wnd, xWindow);
 
@@ -662,7 +678,7 @@ namespace Au.Tools
 
 			void _Common(bool isCon, StringBuilder b, Wnd w, string name, string className)
 			{
-				string s, sh=w.Handle.ToString();
+				string s, sh = w.Handle.ToString();
 				b.Append("<i>Handle<>:    ").AppendLine(sh);
 				b.Append("<i>ClassName<>:    ").AppendLine(className);
 				if(!isCon || !Empty(name)) b.Append("<i>Name<>:    ").AppendLine(name);
@@ -674,7 +690,7 @@ namespace Au.Tools
 					b.Append("<i>ControlId<>:    ").AppendLine(cId.ToString());
 					b.AppendFormat("<_rect {0}><i>RectInWindow<><>:    ", sh).AppendLine(w.RectInWindow.ToString());
 				} else {
-					var wo =w.WndOwner;
+					var wo = w.WndOwner;
 					if(!wo.Is0) b.AppendFormat("<_rect {0}><i>WndOwner<><>:    ", wo.Handle.ToString()).AppendLine(wo.ToString());
 					b.AppendFormat("<_rect {0}><i>Rect<><>:    ", sh).AppendLine(w.Rect.ToString());
 				}
