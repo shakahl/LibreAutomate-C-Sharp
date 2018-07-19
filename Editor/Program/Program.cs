@@ -68,7 +68,7 @@ static class Program
 		catch(Exception e) { Print(e); }
 	}
 
-	internal static Au.Tools.OutputServer OutputServer = new Au.Tools.OutputServer(true);
+	internal static Au.Util.OutputServer OutputServer = new Au.Util.OutputServer(true);
 	internal static ProgramSettings Settings;
 	internal static EForm MainForm;
 	internal static FilesModel Model;

@@ -232,7 +232,7 @@ namespace Au
 		/// <item>
 		/// string that starts with "image:" or "~:" - Base64-encoded .png or .bmp image embedded in script.
 		/// If "image:", it is .png file data, else it is compressed .bmp file data.
-		/// Can be created with Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
+		/// Can be created with function Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
 		/// </item>
 		/// <item>int, ColorInt or Color - color. Int must be in 0xRRGGBB format. Alpha is not used.</item>
 		/// <item>Bitmap - image object in memory.</item>
@@ -263,6 +263,8 @@ namespace Au
 		/// <exception cref="Exception">Depending on <paramref name="image"/> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="Convert_.Decompress"/>.</exception>
 		/// <exception cref="AuException">Something failed.</exception>
 		/// <remarks>
+		/// To create code for this function, use dialog "Find image or color in window". It is form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll.
+		/// 
 		/// The speed mostly depends on:
 		/// 1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>(w, rectangle)</c>).
 		/// 2. Flag <see cref="WIFlags.WindowDC"/>. Usually makes several times faster. With this flag the speed depends on window.
@@ -281,7 +283,7 @@ namespace Au
 		/// var w = Wnd.Find("Window Name").OrThrow();
 		/// string image = "image:iVBORw0KGgoAAAANSUhEUgAAABYAAAANCAYAAACtpZ5jAAAAAXNSR0IArs4c...";
 		/// var wi = WinImage.Find(w, image).OrThrow();
-		/// wi.MouseMove();
+		/// wi.Click();
 		/// ]]></code>
 		/// </example>
 		public static WinImage Find(WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<WinImage, WIAlso> also = null)

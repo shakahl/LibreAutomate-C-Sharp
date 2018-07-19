@@ -222,9 +222,9 @@ namespace Au
 			if(vk != 0) {
 				var a = DoNotBlockKeys;
 				if(a != null) foreach(var k in a) if(vk == k) return true;
-				w = Wnd.WndActive;
+				w = Wnd.Active;
 			} else {
-				w = isMMove ? Wnd.WndActive : Wnd.FromMouse();
+				w = isMMove ? Wnd.Active : Wnd.FromMouse();
 				//note: don't use hook's pt, because of a bug in some OS versions.
 				//note: for wheel it's better to use FromMouse.
 			}

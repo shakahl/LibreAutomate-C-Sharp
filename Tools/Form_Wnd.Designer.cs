@@ -31,8 +31,8 @@
 			this._info = new Au.Controls.AuInfoBox();
 			this._lSpeed = new System.Windows.Forms.Label();
 			this._bTest = new System.Windows.Forms.Button();
-			this._bCancel = new System.Windows.Forms.Button();
-			this._bOK = new System.Windows.Forms.Button();
+			this._bOK = new Au.Controls.ButtonOK();
+			this._bCancel = new Au.Controls.ButtonCancel();
 			this._cCapture = new System.Windows.Forms.CheckBox();
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
@@ -93,27 +93,23 @@
 			this._bTest.UseVisualStyleBackColor = true;
 			this._bTest.Click += new System.EventHandler(this._bTest_Click);
 			// 
-			// _bCancel
-			// 
-			this._bCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this._bCancel.Location = new System.Drawing.Point(248, 72);
-			this._bCancel.Name = "_bCancel";
-			this._bCancel.Size = new System.Drawing.Size(72, 24);
-			this._bCancel.TabIndex = 11;
-			this._bCancel.Text = "Cancel";
-			this._bCancel.UseVisualStyleBackColor = true;
-			// 
 			// _bOK
 			// 
-			this._bOK.DialogResult = System.Windows.Forms.DialogResult.OK;
 			this._bOK.Enabled = false;
 			this._bOK.Location = new System.Drawing.Point(168, 72);
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
 			this._bOK.TabIndex = 10;
-			this._bOK.Text = "&OK";
 			this._bOK.UseVisualStyleBackColor = true;
 			this._bOK.Click += new System.EventHandler(this._bOK_Click);
+			// 
+			// _bCancel
+			// 
+			this._bCancel.Location = new System.Drawing.Point(248, 72);
+			this._bCancel.Name = "_bCancel";
+			this._bCancel.Size = new System.Drawing.Size(72, 24);
+			this._bCancel.TabIndex = 11;
+			this._bCancel.UseVisualStyleBackColor = true;
 			// 
 			// _cCapture
 			// 
@@ -187,6 +183,7 @@
 			this._grid.TabIndex = 0;
 			this._grid.TabStop = true;
 			this._grid.ToolTipText = "";
+			this._grid.ZAddHidden = false;
 			// 
 			// _grid2
 			// 
@@ -209,6 +206,7 @@
 			this._grid2.TabIndex = 0;
 			this._grid2.TabStop = true;
 			this._grid2.ToolTipText = "";
+			this._grid2.ZAddHidden = false;
 			// 
 			// splitContainer3
 			// 
@@ -296,6 +294,7 @@
 			this.Controls.Add(this._bOK);
 			this.Controls.Add(this._cCapture);
 			this.Controls.Add(this.splitContainer1);
+			this.IsPopup = true;
 			this.MinimumSize = new System.Drawing.Size(500, 400);
 			this.Name = "Form_Wnd";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
@@ -326,8 +325,8 @@
 		private Controls.AuInfoBox _info;
 		private System.Windows.Forms.Label _lSpeed;
 		private System.Windows.Forms.Button _bTest;
-		private System.Windows.Forms.Button _bCancel;
-		private System.Windows.Forms.Button _bOK;
+		private Au.Controls.ButtonOK _bOK;
+		private Au.Controls.ButtonCancel _bCancel;
 		private System.Windows.Forms.CheckBox _cCapture;
 		private System.Windows.Forms.SplitContainer splitContainer1;
 		private System.Windows.Forms.SplitContainer splitContainer2;

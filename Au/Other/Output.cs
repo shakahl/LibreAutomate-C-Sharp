@@ -1,15 +1,4 @@
-﻿/*
-When Write etc is called, where the string goes:
-	If redirected, to wherever it is redirected.
-	Else if using log file (LogFile not null), writes to the file.
-	Else if using console (IsWritingToConsole), writes to console.
-	Else if using local OutputServer (in this appdomain), writes to it.
-	Else if exists global OutputServer (in any process/appdomain), writes to it.
-	Else nowhere.
-*/
-
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Text;
@@ -35,12 +24,23 @@ namespace Au
 	/// <summary>
 	/// Writes text to the output window, console or log file.
 	/// </summary>
+	/// <remarks>
+	/// When <see cref="Write"/>, <b>Print</b>, etc is called, where the text goes:
+	/// <list type="bullet">
+	/// <item>If redirected, to wherever it is redirected. See <see cref="Writer"/>.</item>
+	/// <item>Else if using log file (<see cref="LogFile"/> not null), writes to the file.</item>
+	/// <item>Else if using console (<see cref="IsWritingToConsole"/> returns true), writes to console.</item>
+	/// <item>Else if using local <see cref="Util.OutputServer"/> (in this appdomain), writes to it.</item>
+	/// <item>Else if exists global <see cref="Util.OutputServer"/> (in any process/appdomain), writes to it.</item>
+	/// <item>Else nowhere.</item>
+	/// </list>
+	/// </remarks>
 	//[DebuggerStepThrough]
 	public static partial class Output
 	{
 		//note:
 		//This library does not redirect Console.WriteLine, unless user calls Output.RedirectConsoleOutput.
-		//One of reasons - there is no way to auto-run a class library initialization code that would redirect. Static ctors run before the class is used first time, not when assembly loaded.
+		//One of reasons - there is no way to auto-run a class library initialization code that would redirect.
 
 		/// <summary>
 		/// Returns true if this is a console process.
@@ -50,8 +50,16 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if is writing to console, false if to the output window or log file. Assuming that <see cref="Writer"/> is not changed.
-		/// Does not write to console in these cases: <see cref="IsConsoleProcess"/> is false. <see cref="IgnoreConsole"/> is true. <see cref="LogFile"/> is not null. The startup info of this process tells to not show console window and to not redirect the standard output.
 		/// </summary>
+		/// <remarks>
+		/// Does not write to console in these cases:
+		/// <list type="bullet">
+		/// <item><see cref="IsConsoleProcess"/> is false.</item>
+		/// <item><see cref="IgnoreConsole"/> is true.</item>
+		/// <item><see cref="LogFile"/> is not null.</item>
+		/// <item>The startup info of this process tells to not show console window and to not redirect the standard output.</item>
+		/// </list>
+		/// </remarks>
 		public static bool IsWritingToConsole
 		{
 			get

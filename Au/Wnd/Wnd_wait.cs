@@ -32,7 +32,7 @@ namespace Au
 		/// <param name="secondsTimeout">
 		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns default(Wnd).
 		/// </param>
-		/// <param name="active">The window must be the active window (<see cref="WndActive"/>), and not minimized.</param>
+		/// <param name="active">The window must be the active window (<see cref="Active"/>), and not minimized.</param>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
 		/// By default ignores invisible windows. Use flag <see cref="WFFlags.HiddenToo"/> if need.
@@ -65,7 +65,7 @@ namespace Au
 			var to = new WaitFor.Loop(secondsTimeout);
 			for(; ; ) {
 				if(active) {
-					Wnd w = WndActive;
+					Wnd w = Active;
 					if(f.IsMatch(w) && !w.IsMinimized) return w;
 				} else {
 					if(f.Find()) return f.Result;
@@ -73,13 +73,14 @@ namespace Au
 				if(!to.Sleep()) return default;
 			}
 		}
+		//SHOULDDO: if wait for active, also wait until released mouse buttons.
 
 		/// <summary>
 		/// Waits until any of specified windows exists, is visible (optionally) and active (optionally).
 		/// Returns window handle. On timeout returns default(Wnd) if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="Wait"/></param>
-		/// <param name="active">The window must be the active window (<see cref="WndActive"/>), and not minimized.</param>
+		/// <param name="active">The window must be the active window (<see cref="Active"/>), and not minimized.</param>
 		/// <param name="windows">One or more variables containing window properties.</param>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
@@ -97,7 +98,7 @@ namespace Au
 			var to = new WaitFor.Loop(secondsTimeout);
 			for(; ; ) {
 				if(active) {
-					Wnd w = WndActive;
+					Wnd w = Active;
 					foreach(var f in windows) if(f.IsMatch(w) && !w.IsMinimized) return w;
 				} else {
 					foreach(var f in windows) if(f.Find()) return f.Result;

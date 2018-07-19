@@ -99,7 +99,7 @@ partial class EForm :Form
 
 		switch(msg) {
 		case Api.WM_CREATE:
-			//Print(w.AllChildren().Length); //0
+			//Print(w.Get.Children().Length); //0
 			if(Settings.Get("wndPos", out string wndPos))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 			break;
@@ -162,7 +162,7 @@ partial class EForm :Form
 
 public static class Panels
 {
-	internal static GDockPanel PanelManager;
+	internal static AuDockPanel PanelManager;
 	internal static PanelEdit Editor;
 	internal static PanelFiles Files;
 	internal static PanelOpen Open;
@@ -187,7 +187,7 @@ public static class Panels
 		c.Name = "Results";
 #endif
 
-		var m = PanelManager = new GDockPanel();
+		var m = PanelManager = new AuDockPanel();
 		m.Create(Folders.ThisApp + @"Default\Panels.xml", Folders.ThisAppDocuments + @"!Settings\Panels.xml",
 			Editor, Files, Output, Find, Open, Running, Recent,
 #if TEST

@@ -433,6 +433,8 @@ namespace Au
 		/// <exception cref="WndException">Invalid window (if the function has parameter <paramref name="w"/>).</exception>
 		/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Process_.UacInfo">UAC</see> integrity level process.</exception>
 		/// <remarks>
+		/// To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.Form_Acc</b> in Au.Tools.dll.
+		/// 
 		/// Walks the tree of accessible objects, until finds a matching AO.
 		/// Uses <see cref="Finder"/>. You can use it directly. See example.
 		/// In wildcard expressions supports PCRE regular expressions (prefix "**r ") but not .NET regular expressions (prefix "**R "). They are similar.

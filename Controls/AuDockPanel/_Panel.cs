@@ -24,22 +24,22 @@ using static Au.NoClass;
 
 namespace Au.Controls
 {
-	partial class GDockPanel
+	public partial class AuDockPanel
 	{
 		/// <summary>
 		/// Contains single Control.
 		/// </summary>
-		partial class GPanel :GContentNode, IPanel
+		partial class _Panel :_ContentNode, IPanel
 		{
 			internal string Name;
-			internal GTab ParentTab; //if this is a tabbed panel, ie is on a GTab, not directly on a GSplit
+			internal _Tab ParentTab; //if this is a tabbed panel, ie is on a _Tab, not directly on a _Split
 			internal bool HasDocument; //no caption etc
 			internal bool HasToolbar; //small caption, maybe no splitter etc
 
 			/// <summary>
 			/// This ctor is used at startup, when adding from XML.
 			/// </summary>
-			internal GPanel(GDockPanel manager, GSplit parentSplit, XElement x, GTab parentTab = null) : base(manager, parentSplit)
+			internal _Panel(AuDockPanel manager, _Split parentSplit, XElement x, _Tab parentTab = null) : base(manager, parentSplit)
 			{
 				var name = x.Attribute_("name");
 				var c = manager._initControls[name];
@@ -174,7 +174,7 @@ namespace Au.Controls
 			void Focus();
 		}
 
-		partial class GPanel
+		partial class _Panel
 		{
 			public Control Content { get; } //the control. Can be null, eg when there was XML node but no control for it; then this panel is hidden.
 
@@ -237,7 +237,7 @@ namespace Au.Controls
 			public bool Floating
 			{
 				get => this.IsFloating;
-				set { if(value != this.IsFloating) this.SetDockState(this.IsFloating ? GDockState.Docked : GDockState.Floating); }
+				set { if(value != this.IsFloating) this.SetDockState(this.IsFloating ? _DockState.Docked : _DockState.Floating); }
 			}
 
 			public void Focus() { Show(true); }
@@ -280,9 +280,5 @@ namespace Au.Controls
 				return this.Text;
 			}
 		}
-
-		//class GDocument :GPanel
-		//{
-		//}
 	}
 }

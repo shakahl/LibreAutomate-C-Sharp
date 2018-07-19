@@ -1,6 +1,6 @@
 ﻿#define DESIGNER //makes the form class not nested, which allows to edit the form in the designer
 //	But it shows a warning without a number. Tried to disable 3042, does not work.
-//	Workaround: set GSMProp.resx Build Action = None.
+//	Workaround: set AuStripManagerPropertiesDialog.resx Build Action = None.
 //	But then next time cannot edit form in designer. Workaround: briefly set build action =Compile, then set =None again. Default action is Embedded Resource.
 
 using System;
@@ -28,17 +28,17 @@ using static Au.NoClass;
 namespace Au.Controls
 {
 #if !DESIGNER
-	partial class GStripManager
+	public partial class AuStripManager
 	{
 #endif
-	partial class GStripManagerPropertiesDialog :Form_
+	class AuStripManagerPropertiesDialog :Form_
 	{
-		GStripManager _man;
+		AuStripManager _man;
 		XElement _x;
 		bool _isMenu;
 		List<XElement> _hotkeys;
 
-		internal GStripManagerPropertiesDialog(GStripManager man, XElement x, bool isMenu)
+		internal AuStripManagerPropertiesDialog(AuStripManager man, XElement x, bool isMenu)
 		{
 			_man = man;
 			_x = x;
@@ -451,7 +451,7 @@ namespace Au.Controls
 			this.groupHotkey.TabStop = false;
 			this.groupHotkey.Text = "Menu item hotkey";
 			// 
-			// GStripManagerPropertiesDialog
+			// AuStripManagerPropertiesDialog
 			// 
 			this.AcceptButton = this.button1;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -467,7 +467,6 @@ namespace Au.Controls
 			this.Controls.Add(this.textText);
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.groupStyle);
-			this.Name = "GStripManagerPropertiesDialog";
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.groupStyle.ResumeLayout(false);

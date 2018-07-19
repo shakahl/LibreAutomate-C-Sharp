@@ -59,7 +59,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Converts object to string like <see cref="Print(object)"/> does.
+		/// Converts object to string like <see cref="Print(object)" r=""/> does.
 		/// </summary>
 		internal static string LibPrintObjectToString(object value)
 		{
@@ -103,7 +103,7 @@ namespace Au
 		/// {0} - item index, starting from 0.
 		/// {1} - item index, starting from 1.
 		/// 
-		/// Default "{s}\r\n". It works like <see cref="Print{T}(IEnumerable{T})"/>.
+		/// Default "{s}\r\n". It works like <see cref="Print{T}(IEnumerable{T})" r=""/>.
 		/// </param>
 		/// <param name="trimEnd">
 		/// How many characters to remove from the end of the result string.

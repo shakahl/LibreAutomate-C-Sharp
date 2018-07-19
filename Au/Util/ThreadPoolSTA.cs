@@ -21,7 +21,6 @@ namespace Au.Util
 	/// <summary>
 	/// Thread pool where COM can be used. Initializes thread COM as single-thread-apartment.
 	/// </summary>
-	//[DebuggerStepThrough]
 	internal static unsafe class ThreadPoolSTA
 	{
 		/// <summary>

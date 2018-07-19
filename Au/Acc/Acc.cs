@@ -366,12 +366,12 @@ namespace Au
 		/// </param>
 		public static Acc Focused(bool useUIAutomation = false)
 		{
-			var w = Wnd.WndFocused;
+			var w = Wnd.Focused;
 			g1:
 			if(w.Is0) return null;
 			int hr = Cpp.Cpp_AccGetFocused(w, useUIAutomation ? 1 : 0, out var a);
 			if(hr != 0) {
-				var w2 = Wnd.WndFocused;
+				var w2 = Wnd.Focused;
 				if(w2 != w) { w = w2; goto g1; }
 				return null;
 			}

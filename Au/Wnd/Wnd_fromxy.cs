@@ -49,7 +49,7 @@ namespace Au
 			if(needW) {
 				w = Api.RealChildWindowFromPoint(Api.GetDesktopWindow(), p); //much faster than WindowFromPoint
 				if(!w.HasExStyle(Native.WS_EX.TRANSPARENT | Native.WS_EX.LAYERED)) return w; //fast. Windows that have both these styles are mouse-transparent.
-				return Api.WindowFromPoint(p).WndWindow; //ChildWindowFromPointEx would be faster, but less reliable
+				return Api.WindowFromPoint(p).Window; //ChildWindowFromPointEx would be faster, but less reliable
 
 				//info:
 				//WindowFromPoint is the most reliable. It skips really transparent top-level windows (TL). Unfortunately it skips disabled controls (but not TL).
@@ -62,7 +62,7 @@ namespace Au
 				//speed:
 				//RealChildWindowFromPoint is the fastest. About 5 mcs.
 				//ChildWindowFromPointEx is 50% slower.
-				//WindowFromPoint is 4 times slower; WndWindow does not make significantly slower.
+				//WindowFromPoint is 4 times slower; .Window does not make significantly slower.
 				//AccessibleObjectFromPoint.get_Parent often is of RealChildWindowFromPoint speed, but often much slower than all others.
 				//IUIAutomation.FromPoint super slow, 6-10 ms. Getting window handle from it is not easy, > 0.5 ms.
 			}
@@ -71,11 +71,11 @@ namespace Au
 			if(w.Is0) return w;
 
 			if(0 != (flags & WXYFlags.Raw)) {
-				if(needW) w = w.WndWindow; else if(needC && w == w.WndWindow) w = default;
+				if(needW) w = w.Window; else if(needC && w == w.Window) w = default;
 				return w;
 			}
 
-			Wnd t = w.WndDirectParent; //need parent because need to call realchildwindowfrompoint on it, else for group box would go through the slow way of detecting transparen control
+			Wnd t = w.Get.DirectParent; //need parent because need to call realchildwindowfrompoint on it, else for group box would go through the slow way of detecting transparen control
 			if(!t.Is0) w = t;
 
 			t = w._ChildFromXY(p, false, true);
@@ -114,6 +114,16 @@ namespace Au
 			return _ChildFromXY(p, directChild, screenXY);
 		}
 
+		/// <inheritdoc cref="ChildFromXY(Coord, Coord, bool, bool)"/>
+		/// <param name="p">Coordinates in the client area of this window.</param>
+		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
+		/// <param name="screenXY">p is relative to the pimary screen, not to the client area.</param>
+		public Wnd ChildFromXY(POINT p, bool directChild, bool screenXY)
+		{
+			ThrowIfInvalid();
+			return _ChildFromXY(p, directChild, screenXY);
+		}
+
 		//Returns child or default(Wnd).
 		Wnd _ChildFromXY(POINT p, bool directChild, bool screenXY)
 		{
@@ -146,7 +156,7 @@ namespace Au
 				}
 
 				//now we know that R is transparent and there is another control behind
-				if(!directChild) //that control can contain a child in that point, so we must find it
+				if(!directChild) //that control can contain a child in that point, so let's find it
 				{
 					R = _TopChildWindowFromPointSimple(t, p, false, true);
 					//Print(R);
@@ -180,6 +190,42 @@ namespace Au
 		}
 
 		#endregion
+
+		/// <summary>
+		/// Get sibling control in space: left, right, above or below.
+		/// Returns default(Wnd) if there is no sibling.
+		/// </summary>
+		/// <param name="direction"></param>
+		/// <param name="distance">Distance from this control (from its edge) in the specified direction. Default 10.</param>
+		/// <param name="edgeOffset">
+		/// Distance in perpendicular direction, along the specified edge. Default 5.
+		/// If <paramref name="direction"/> is <b>Left</b> or <b>Right</b>, 0 is the top edge, 1 is 1 pixel down, -1 is 1 pixel up, and so on.
+		/// If <paramref name="direction"/> is <b>Above</b> or <b>Below</b>, 0 is the left edge, 1 is 1 pixel to the right, -1 is 1 pixel to the left, and so on.
+		/// </param>
+		/// <param name="topChild">If at that point is a visible child or descendant of the sibling, get that child/descendant. Default false.</param>
+		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+		/// <remarks>
+		/// This function is used mostly with controls, but supports top-level windows too.
+		/// </remarks>
+		Wnd _SiblingXY(_SibXY direction, int distance = 10, int edgeOffset = 5, bool topChild = false)
+		{
+			Wnd w = Get.DirectParent;
+			if(!(w.Is0 ? GetRect(out RECT r) : GetRectInClientOf(w, out r))) ThrowUseNative(); //note: most other Wnd 'get' functions don't throw, but here it's better to throw.
+			POINT p = default;
+			switch(direction) {
+			case _SibXY.Left: p = (r.left - distance, r.top + edgeOffset); break;
+			case _SibXY.Right: p = (r.right + distance, r.top + edgeOffset); break;
+			case _SibXY.Above: p = (r.left + edgeOffset, r.top - distance); break;
+			case _SibXY.Below: p = (r.left + edgeOffset, r.bottom + distance); break;
+			}
+			//Print(p); if(w.Is0) Mouse.Move(p); else Mouse.Move(w, p.x, p.y);
+			Wnd R = w.Is0
+				? FromXY(p, topChild ? 0 : WXYFlags.NeedWindow)
+				: w._ChildFromXY(p, !topChild, false);
+			return R == this ? default : R; //cannot return self, but can return child if topChild, it's ok
+		}
+
+		enum _SibXY { Left, Right, Above, Below }
 	}
 }
 

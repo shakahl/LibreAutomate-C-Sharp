@@ -51,13 +51,11 @@ using Microsoft.Win32.SafeHandles;
 
 using Au.Types;
 using static Au.NoClass;
-using Au.Tools;
-using System.Collections;
 
-namespace Au.Tools
+namespace Au.Util
 {
 	/// <summary>
-	/// Receives messages sent from clients when they call <see cref="Output.Write"/> and related methods.
+	/// Receives messages sent by <see cref="Output.Write"/> and related methods (<b>Print</b> etc).
 	/// </summary>
 	/// <remarks>
 	/// If server is global, clients can be multiple appdomains and processes, including this. Else only this appdomain.
@@ -97,10 +95,10 @@ namespace Au.Tools
 	/// 	{
 	/// 		while(_os.GetMessage(out var m)) {
 	/// 			switch(m.Type) {
-	/// 			case Au.Tools.OutputServer.MessageType.Clear:
+	/// 			case Au.Util.OutputServer.MessageType.Clear:
 	/// 				_tb.Clear();
 	/// 				break;
-	/// 			case Au.Tools.OutputServer.MessageType.Write:
+	/// 			case Au.Util.OutputServer.MessageType.Write:
 	/// 				//_tb.AppendText(m.Text);
 	/// 				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Domain}  {m.Text}");
 	/// 				break;
@@ -108,7 +106,7 @@ namespace Au.Tools
 	/// 		}
 	/// 	}
 	/// 
-	/// 	static Au.Tools.OutputServer _os = new Au.Tools.OutputServer(false);
+	/// 	static Au.Util.OutputServer _os = new Au.Util.OutputServer(isGlobal: false);
 	/// 
 	/// 	[STAThread]
 	/// 	public static void Main()
@@ -120,8 +118,7 @@ namespace Au.Tools
 	/// 		Print("test before setting notifications");
 	/// 		Task.Run(() => { 1.s(); Print("test after"); 1.s(); Output.Clear(); 1.s(); Print("test after Clear"); });
 	/// 
-	/// 		var f = new OutputFormExample();
-	/// 		f.ShowDialog();
+	/// 		Application.Run(new OutputFormExample());
 	/// 		_os.Stop();
 	/// 	}
 	/// }
@@ -129,6 +126,7 @@ namespace Au.Tools
 	/// </example>
 	public unsafe class OutputServer
 	{
+		/// <tocexclude />
 		/// <summary>
 		/// See <see cref="Message.Type"/>.
 		/// </summary>
@@ -136,17 +134,18 @@ namespace Au.Tools
 		{
 			/// <summary>
 			/// Add line to the output window.
-			/// All Message members can be used.
+			/// All <see cref="Message"/> members can be used.
 			/// </summary>
 			Write,
 
 			/// <summary>
 			/// Clear the output window.
-			/// Other Message members are not used.
+			/// Only <see cref="Message.Type"/> is used.
 			/// </summary>
 			Clear,
 		}
 
+		/// <tocexclude />
 		/// <summary>
 		/// Contains message text and/or related info.
 		/// More info: <see cref="OutputServer"/>, <see cref="GetMessage"/>.
@@ -217,7 +216,9 @@ namespace Au.Tools
 		bool _isGlobal;
 		bool _isLocalTimer;
 
-		/// <param name="isGlobal">Serve all appdomains and processes that don't have local server.</param>
+		/// <param name="isGlobal">
+		/// If true, will receive output from all appdomains and processes that don't have local server.
+		/// </param>
 		public OutputServer(bool isGlobal) => _isGlobal = isGlobal;
 
 		/// <summary>
@@ -334,7 +335,7 @@ namespace Au.Tools
 
 						if(_isGlobal) { //read messages from mailslot and add to _messages. Else messages are added directly to _messages.
 							while(Api.GetMailslotInfo(_mailslot, null, out var nextSize, out var msgCount) && msgCount > 0) {
-								fixed (byte* b0 = Util.Buffers.LibByte(nextSize + 4)) {
+								fixed (byte* b0 = Buffers.LibByte(nextSize + 4)) {
 									var b = b0; //+4 for "\r\n"
 									bool ok = Api.ReadFile(_mailslot, b, nextSize, out var readSize) && readSize == nextSize;
 									if(ok) {
@@ -453,7 +454,7 @@ namespace Au.Tools
 #if NEED_CALLER
 			/// <summary>
 			/// Let clients provide the caller method of Write, Print etc.
-			/// Note: It makes these methods much slower, especially when thread stack is big. Then the speed usually is similar to Console.WriteLine. Also it generates much garbage. To find caller method is used <see cref="StackTrace"/> class.
+			/// Note: It makes these methods much slower, especially when thread stack is big. Also generates much garbage. To find caller method is used <see cref="StackTrace"/> class.
 			/// See also: <see cref="IntroduceWriterClass"/>.
 			/// </summary>
 			public bool NeedCallerMethod
@@ -501,12 +502,14 @@ namespace Au.Tools
 				public byte NeedCaller;
 #endif
 		}
-		internal static LibSharedMemoryData* _SM => &Util.LibSharedMemory.Ptr->outp;
+		internal static LibSharedMemoryData* _SM => &LibSharedMemory.Ptr->outp;
 	}
 }
 
 namespace Au
 {
+	using Au.Util;
+
 	public static partial class Output
 	{
 		[MethodImpl(MethodImplOptions.NoInlining)] //for stack trace
@@ -556,7 +559,7 @@ namespace Au
 			//info: the mailslot/timer are implicitly disposed when appdomain ends.
 
 			SafeFileHandle _mailslot;
-			Util.WaitableTimer _timer;
+			WaitableTimer _timer;
 			long _sizeWritten;
 
 			public void WriteLine(string s, long time, string caller)
@@ -641,10 +644,10 @@ namespace Au
 				}
 
 				if(_mailslot == null) {
-					_mailslot = Output.LibCreateFile(OutputServer.LibMailslotName, true);
+					_mailslot = LibCreateFile(OutputServer.LibMailslotName, true);
 					if(_mailslot == null) return false;
 
-					_timer = Util.WaitableTimer.Open(OutputServer.LibTimerName, noException: true);
+					_timer = WaitableTimer.Open(OutputServer.LibTimerName, noException: true);
 					if(_timer == null) {
 						_mailslot.Close(); _mailslot = null;
 						return false;

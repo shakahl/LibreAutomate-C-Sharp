@@ -106,10 +106,9 @@
     <Compile Include="String\Regex_ types.cs" />
     <Compile Include="String\Regex_.cs" />
     <Compile Include="String\StringSegment.cs" />
-    <Compile Include="Util\AccHook.cs" />
     <Compile Include="Util\StringMisc.cs" />
-    <Compile Include="Util\Util^GDI.cs" />
-    <Compile Include="Util\WinHook.cs" />
+    <Compile Include="Util\image, GDI, etc.cs" />
+    <Compile Include="Util\hooks.cs" />
     <Compile Include="Util\InterDomainVariables.cs" />
     <Compile Include="Common\Param types.cs" />
     <Compile Include="Files, system\Files.Misc.cs" />
@@ -150,7 +149,7 @@
     <Compile Include="Time\WaitFor.cs" />
     <Compile Include="Util\ArrayBuilder.cs" />
     <Compile Include="Util\StringCache.cs" />
-    <Compile Include="Util\Tables.cs" />
+    <Compile Include="Util\tables.cs" />
     <None Include="Util\excluded\ThreadVar.cs" />
     <Compile Include="Wnd\Wnd.cs" />
     <Compile Include="Wnd\Wnd_child.cs" />
@@ -161,8 +160,8 @@
     <Compile Include="Wnd\Wnd_other.cs" />
     <Compile Include="Wnd\Wnd_private.cs" />
     <Compile Include="Util\AppDomain_.cs" />
-    <Compile Include="Util\Memory.cs" />
-    <Compile Include="Util\MessageLoops.cs" />
+    <Compile Include="Util\memory.cs" />
+    <Compile Include="Util\messageloop, dragdrop.cs" />
     <Compile Include="Util\ThreadPoolSTA.cs" />
     <Compile Include="Wnd\Wnd_find.cs" />
     <Compile Include="Wnd\Wnd_get.cs" />
@@ -175,16 +174,14 @@
     <Compile Include="Time\Perf.cs" />
     <Compile Include="Api\Api_const.cs" />
     <EmbeddedResource Include="Properties\Au.manifest" />
-    <Compile Include="Util\Util.cs" />
+    <Compile Include="Util\misc util.cs" />
     <Compile Include="Api\Api.cs" />
-    <Compile Include="Util\Workarounds.cs" />
+    <Compile Include="Util\workarounds.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\Au.pfx" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Automation\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <None Include="Resources\red_cross_cursor.cur" />
   </ItemGroup>

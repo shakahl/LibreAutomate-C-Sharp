@@ -955,7 +955,7 @@ namespace Au
 			if(recycle) f |= Api.FOF_ALLOWUNDO; else f |= Api.FOF_NO_CONNECTED_ELEMENTS;
 			x.fFlags = (ushort)f;
 			x.pFrom = path + "\0";
-			x.hwnd = Wnd.Misc.WndRoot;
+			x.hwnd = Wnd.GetWnd.Root;
 			var r = Api.SHFileOperation(ref x);
 			//if(r != 0 || x.fAnyOperationsAborted) return false; //do not use fAnyOperationsAborted, it can be true even if finished to delete. Also, I guess it cannot be aborted because there is no UI, because we use FOF_SILENT to avoid deactivating the active window even when the UI is not displayed.
 			//if(r != 0) return false; //after all, I don't trust this too

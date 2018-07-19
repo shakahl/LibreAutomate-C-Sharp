@@ -52,7 +52,6 @@ static class EDotNetExtensions
 
 }
 
-//[DebuggerStepThrough]
 static class EResources
 {
 	static EResources()

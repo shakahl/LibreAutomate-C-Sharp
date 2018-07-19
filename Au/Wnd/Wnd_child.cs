@@ -40,7 +40,7 @@ namespace Au
 		/// </example>
 		public class ChildFinder
 		{
-			enum _NameIs { name, id, text, label, accName, wfName }
+			enum _NameIs { name, id, text, accName, wfName }
 
 			readonly Wildex _name;
 			readonly Wildex _className;
@@ -62,13 +62,13 @@ namespace Au
 					_className = className;
 				}
 				if(name != null) {
-					switch(Util.StringMisc.ParseParam3Stars(ref name, "id", "text", "label", "accName", "wfName")) {
-					case -1: throw new ArgumentException("Invalid name prefix. Can be: \"***id \", \"***text \", \"***label \", \"***accName \", \"***wfName \".");
+					switch(Util.StringMisc.ParseParam3Stars(ref name, "id", "text", "accName", "wfName"/*, "label"*/)) {
+					case -1: throw new ArgumentException("Invalid name prefix. Can be: \"***id \", \"***text \", \"***accName \", \"***wfName \"."); //, \"***label \"
 					case 1: _nameIs = _NameIs.id; _id = name.ToInt_(); break;
 					case 2: _nameIs = _NameIs.text; break;
-					case 3: _nameIs = _NameIs.label; break;
-					case 4: _nameIs = _NameIs.accName; break;
-					case 5: _nameIs = _NameIs.wfName; break;
+					case 3: _nameIs = _NameIs.accName; break;
+					case 4: _nameIs = _NameIs.wfName; break;
+					//case 5: _nameIs = _NameIs.label; break;
 					}
 					if(_nameIs != _NameIs.id) _name = name;
 				}
@@ -110,7 +110,7 @@ namespace Au
 			/// Returns 0-based index, or -1 if not found.
 			/// The <see cref="Result"/> property will be the control.
 			/// </summary>
-			/// <param name="a">List of controls, for example returned by <see cref="AllChildren"/>.</param>
+			/// <param name="a">List of controls, for example returned by <see cref="GetWnd.Children"/>.</param>
 			/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
 			public int FindInList(IEnumerable<Wnd> a, Wnd wParent = default)
 			{
@@ -133,7 +133,7 @@ namespace Au
 			/// Finds all matching controls in a list of controls.
 			/// Returns array containing 0 or more control handles as Wnd.
 			/// </summary>
-			/// <param name="a">List of controls, for example returned by <see cref="AllChildren"/>.</param>
+			/// <param name="a">List of controls, for example returned by <see cref="GetWnd.Children"/>.</param>
 			/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
 			public Wnd[] FindAllInList(IEnumerable<Wnd> a, Wnd wParent = default)
 			{
@@ -174,7 +174,7 @@ namespace Au
 							}
 
 							if(_flags.Has_(WCFlags.DirectChild) && !wParent.Is0) {
-								if(w.WndDirectParentOrOwner != wParent) continue;
+								if(w.Get.DirectParentOrOwner != wParent) continue;
 							}
 						}
 
@@ -192,9 +192,9 @@ namespace Au
 							case _NameIs.text:
 								s = w.ControlText;
 								break;
-							case _NameIs.label:
-								s = w.NameLabel;
-								break;
+							//case _NameIs.label:
+							//	s = w.NameLabel;
+							//	break;
 							case _NameIs.accName:
 								s = w.NameAcc;
 								break;
@@ -274,10 +274,6 @@ namespace Au
 		/// It is slower and can be less reliable (because can get editable text), especially if className not used. It does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// </item>
 		/// <item>
-		/// "***label " - use <see cref="NameLabel"/>.
-		/// Useful when the control itself does not have a name but an adjacent control is used as its name. Examples - Edit controls in dialogs.
-		/// </item>
-		/// <item>
 		/// "***accName " - use <see cref="NameAcc"/>.
 		/// Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
 		/// </item>
@@ -313,6 +309,9 @@ namespace Au
 		/// <paramref name="className"/> is "". To match any, use null.
 		/// Invalid wildcard expression ("**options " or regular expression).
 		/// </exception>
+		/// <remarks>
+		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
+		/// </remarks>
 		public Wnd Child(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 		{
 			//ThrowIfInvalid(); //will be called later
@@ -389,6 +388,8 @@ namespace Au
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
 		/// <remarks>
+		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
+		/// 
 		/// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
 		/// </remarks>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
@@ -402,7 +403,7 @@ namespace Au
 			{
 				ref var x = ref *(_KidEnumData*)p;
 				if(c.ControlId == x.id) {
-					if(x.flags.Has_(WCFlags.DirectChild) && c.WndDirectParentOrOwner != x.wThis) return true;
+					if(x.flags.Has_(WCFlags.DirectChild) && c.Get.DirectParentOrOwner != x.wThis) return true;
 					if(c.IsVisible) { x.cVisible = c; return false; }
 					if(x.flags.Has_(WCFlags.HiddenToo) && x.cHidden.Is0) x.cHidden = c;
 				}
@@ -428,13 +429,12 @@ namespace Au
 		/// <remarks>
 		/// In the returned list, hidden controls (when using WCFlags.HiddenToo) are always after visible controls.
 		/// </remarks>
+		/// <seealso cref="GetWnd.Children"/>
 		public Wnd[] ChildAll(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null)
 		{
 			//ThrowIfInvalid(); //will be called later
 			var f = new ChildFinder(name, className, flags, also);
-			var a = f.FindAll(this);
-			//CONSIDER: add property LastChildParams, like LastFind.
-			return a;
+			return f.FindAll(this);
 		}
 
 		/// <summary>
@@ -470,39 +470,43 @@ namespace Au
 			return Api.FindWindowEx(this, wAfter, className, name);
 		}
 
-		/// <summary>
-		/// Gets child controls.
-		/// Returns array containing 0 or more control handles as Wnd.
-		/// </summary>
-		/// <param name="directChild">Need only direct children, not grandchildren.</param>
-		/// <param name="onlyVisible">Need only visible controls.</param>
-		/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
-		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
-		/// <remarks>
-		/// Calls API <msdn>EnumChildWindows</msdn>.
-		/// </remarks>
-		public Wnd[] AllChildren(bool directChild = false, bool onlyVisible = false, bool sortFirstVisible = false)
+		public partial struct GetWnd
 		{
-			ThrowIfInvalid();
-			return Lib.EnumWindows(Lib.EnumWindowsAPI.EnumChildWindows, onlyVisible, sortFirstVisible, this, directChild);
-		}
+			/// <summary>
+			/// Gets child controls, including all descendants.
+			/// Returns array containing 0 or more control handles as Wnd.
+			/// </summary>
+			/// <param name="directChild">Need only direct children, not grandchildren.</param>
+			/// <param name="onlyVisible">Need only visible controls.</param>
+			/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
+			/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <remarks>
+			/// Calls API <msdn>EnumChildWindows</msdn>.
+			/// </remarks>
+			/// <seealso cref="ChildAll"/>
+			public Wnd[] Children(bool directChild = false, bool onlyVisible = false, bool sortFirstVisible = false)
+			{
+				_w.ThrowIfInvalid();
+				return Lib.EnumWindows(Lib.EnumWindowsAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild);
+			}
 
-		//Better don't use this.
-		///// <summary>
-		///// Gets list of direct child controls of a window.
-		///// Uses WndChild and WndNext. It is faster than API EnumChildWindows.
-		///// Should be used only with windows of current thread. Else it is unreliable because, if some controls are zordered or destroyed while enumerating, some controls can be skipped or retrieved more than once.
-		///// </summary>
-		//public static Wnd[] DirectChildControlsFastUnsafe(string className = null)
-		//{
-		//	var wild = _GetWildcard(className);
-		//	var a = new List<Wnd>();
-		//	for(Wnd c = WndChild; !c.Is0; c = c.WndNext) {
-		//		if(wild != null && !c._ClassNameIs(wild)) continue;
-		//		a.Add(c);
-		//	}
-		//	return a.ToArray();
-		//}
+			//rejected: unreliable.
+			///// <summary>
+			///// Gets list of direct child controls.
+			///// Faster than API EnumChildWindows.
+			///// Should be used only with windows of current thread. Else it is unreliable because, if some controls are zordered or destroyed while enumerating, some controls can be skipped or retrieved more than once.
+			///// </summary>
+			//public static Wnd[] DirectChildrenFastUnsafe(string className = null)
+			//{
+			//	Wildex wild = className;
+			//	var a = new List<Wnd>();
+			//	for(Wnd c = FirstChild; !c.Is0; c = c.Next) {
+			//		if(wild != null && !c._ClassNameIs(wild)) continue;
+			//		a.Add(c);
+			//	}
+			//	return a.ToArray();
+			//}
+		}
 
 		/// <summary>
 		/// Like <see cref="Wnd"/>, but has only button, check box and radio button functions - Click, Check etc.
@@ -561,7 +565,7 @@ namespace Au
 
 			void _PostBmClick()
 			{
-				var w = W.WndWindow;
+				var w = W.Window;
 				bool workaround = !w.IsActive;
 				if(workaround) w.Post(Api.WM_ACTIVATE, 1); //workaround for the documented BM_CLICK bug
 				W.Post(BM_CLICK); //it sends WM_LBUTTONDOWN/UP
@@ -631,7 +635,7 @@ namespace Au
 				} else {
 					if(state == W.Send(BM_GETCHECK)) return;
 					W.Post(BM_SETCHECK, state);
-					W.WndDirectParent.Post(Api.WM_COMMAND, id, (LPARAM)W);
+					W.Get.DirectParent.Post(Api.WM_COMMAND, id, (LPARAM)W);
 				}
 				W.LibMinimalSleepIfOtherThread();
 			}

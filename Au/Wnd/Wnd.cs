@@ -749,7 +749,7 @@ namespace Au
 					return _EnableActivate_AllowSetFore();
 				}
 
-				var wFore = WndActive; bool retry = false;
+				var wFore = Active; bool retry = false;
 				g1: _EnableActivate_MinRes();
 				if(!_EnableActivate_AllowSetFore()) return false;
 				if(!wFore.Is0 && !retry) {
@@ -795,7 +795,7 @@ namespace Au
 					t.LibSetWindowPlacement(ref wp); //activates t; fast (no animation)
 					_EnableActivate_SendKey(false); //makes so that later our process can always activate
 					_EnableActivate_AllowSetFore();
-					Api.SetForegroundWindow(Misc.WndRoot); //set no foreground window, or may activate the higher IL window (maybe does not activate, but winevents hook gets events, in random order). Other way would be to destroy our window later, but more difficult to implement.
+					Api.SetForegroundWindow(GetWnd.Root); //set no foreground window, or may activate the higher IL window (maybe does not activate, but winevents hook gets events, in random order). Other way would be to destroy our window later, but more difficult to implement.
 				}
 				finally { Api.DestroyWindow(t); }
 
@@ -835,7 +835,7 @@ namespace Au
 					}
 
 					//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
-					if(w == Misc.WndRoot) return WndActive.Is0;
+					if(w == GetWnd.Root) return Active.Is0;
 					//CONSIDER: if GetForegroundWindow is not w, send WM_NULL. Info: https://blogs.msdn.microsoft.com/oldnewthing/20161118-00/?p=94745
 					return Misc.WaitForAnActiveWindow();
 				}
@@ -852,9 +852,9 @@ namespace Au
 				NoThrowIfInvalid = 1,
 
 				/// <summary>
-				/// Don't call WndWindow (ie caller ensures it's a top-level window, not control).
+				/// Don't call Get.Window (ie caller ensures it's a top-level window, not control).
 				/// </summary>
-				NoGetWndWindow = 2,
+				NoGetWindow = 2,
 
 				/// <summary>
 				/// Don't activate if has WS_EX_NOACTIVATE style or is toolwindow without caption, unless cloaked.
@@ -878,11 +878,11 @@ namespace Au
 		internal bool LibActivate(Lib.ActivateFlags flags)
 		{
 			if(!flags.Has_(Lib.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
-			if(flags.Has_(Lib.ActivateFlags.NoGetWndWindow)) Debug.Assert(!IsChild);
+			if(flags.Has_(Lib.ActivateFlags.NoGetWindow)) Debug.Assert(!IsChild);
 			else {
-				var w = WndWindow;
+				var w = Window;
 				if(w != this) {
-					return w.LibActivate((flags | Lib.ActivateFlags.NoGetWndWindow) & ~Lib.ActivateFlags.NoThrowIfInvalid);
+					return w.LibActivate((flags | Lib.ActivateFlags.NoGetWindow) & ~Lib.ActivateFlags.NoThrowIfInvalid);
 				}
 			}
 
@@ -917,20 +917,20 @@ namespace Au
 					}
 
 					if(ok) {
-						Wnd f = WndActive;
+						Wnd f = Active;
 						if(f == this) R = true;
-						else if(this == Misc.WndRoot) R = f.Is0; //activating GetDesktopWindow makes "no active window"
+						else if(this == GetWnd.Root) R = f.Is0; //activating GetDesktopWindow makes "no active window"
 						else { //forgive if the target app instead activated another window of same thread
 							int tid = ThreadId; if(tid == 0) break;
 							if(f.ThreadId == tid) {
 								//at first try to recognize such known windows, to avoid the hard way
-								if(isMinimized || (f.WndOwner == this && Rect.IsEmpty)) {
+								if(isMinimized || (f.Owner == this && Rect.IsEmpty)) {
 									R = true;
 								} else {
-									R = Api.SetForegroundWindow(Misc.WndRoot) && ActivateLL() && WndActive.ThreadId == tid;
+									R = Api.SetForegroundWindow(GetWnd.Root) && ActivateLL() && Active.ThreadId == tid;
 									if(R && !ofThisThread) {
 										LibMinimalSleepNoCheckThread();
-										R = WndActive.ThreadId == tid;
+										R = Active.ThreadId == tid;
 									}
 								}
 								//Example 1:
@@ -951,7 +951,7 @@ namespace Au
 				}
 			}
 
-			if(R && !ofThisThread && this != Misc.WndRoot) {
+			if(R && !ofThisThread && this != GetWnd.Root) {
 				//If we activate a window that is on an inactive Win10 desktop, its desktop becomes active.
 				//Windows on inactive desktops are cloaked. They are uncloaked after ~15 ms.
 				if(IsCloaked) {
@@ -986,15 +986,15 @@ namespace Au
 		/// Fails (throws exception) if cannot activate this window, except:
 		/// <list type="number">
 		/// <item>If this is a control, activates its top-level parent window.</item>
-		/// <item>If this is <see cref="Misc.WndRoot"/>, just deactivates the currently active window.</item>
+		/// <item>If this is <see cref="GetWnd.Root"/>, just deactivates the currently active window.</item>
 		/// <item>When the target application instead activates another window of the same thread.</item>
 		/// </list>
 		/// </remarks>
 		/// <exception cref="WndException"/>
 		/// <seealso cref="ActivateLL"/>
 		/// <seealso cref="IsActive"/>
-		/// <seealso cref="WndActive"/>
-		/// <seealso cref="Misc.SwitchActiveWindow"/>
+		/// <seealso cref="Active"/>
+		/// <seealso cref="SwitchActiveWindow"/>
 		public void Activate()
 		{
 			LibActivate(0);
@@ -1026,7 +1026,7 @@ namespace Au
 			{
 				for(int i = 0; i < 32; i++) {
 					Time.DoEvents();
-					if(!WndActive.Is0) return true;
+					if(!Active.Is0) return true;
 					Thread.Sleep(15); //SHOULDDO: SleepDoEvents, or WaitForCallback
 				}
 				return false;
@@ -1075,14 +1075,14 @@ namespace Au
 		/// Invalid handle; disabled; failed to set focus; failed to activate parent window.
 		/// Fails to set focus when the target process is admin or uiAccess and this process isn't (see <see cref="Process_.UacInfo">UAC</see>).
 		/// </exception>
-		/// <seealso cref="WndFocused"/>
+		/// <seealso cref="Focused"/>
 		/// <seealso cref="IsFocused"/>
 		/// <seealso cref="Acc.Focus"/>
 		public void Focus()
 		{
 			ThrowIfInvalid();
-			Wnd wTL = WndWindow;
-			if(!wTL.IsActive) wTL.LibActivate(Lib.ActivateFlags.NoGetWndWindow);
+			Wnd wTL = Window;
+			if(!wTL.IsActive) wTL.LibActivate(Lib.ActivateFlags.NoGetWindow);
 
 			int tid = ThreadId;
 			if(tid == Api.GetCurrentThreadId()) {
@@ -1103,7 +1103,7 @@ namespace Au
 						if(i > 0) Thread.Sleep(30);
 						Native.ClearError();
 						if(ThisThread.Focus(this)) {
-							Wnd f = WndFocused;
+							Wnd f = Focused;
 							if(f == this || f.IsChildOf(this)) { ok = true; break; }
 						}
 					}
@@ -1124,12 +1124,12 @@ namespace Au
 		/// Gets the control or window that has the keyboard input focus.
 		/// </summary>
 		/// <remarks>
-		/// The control/window can belong to any process/thread. With controls/windows of this thread you can use the more lightweight function <see cref="ThisThread.WndFocused"/>.
+		/// The control/window can belong to any process/thread. With controls/windows of this thread you can use the more lightweight function <see cref="ThisThread.Focused"/>.
 		/// Calls API <msdn>GetGUIThreadInfo</msdn>.
 		/// </remarks>
 		/// <seealso cref="Focus"/>
 		/// <seealso cref="IsFocused"/>
-		public static Wnd WndFocused
+		public static Wnd Focused
 		{
 			get
 			{
@@ -1147,10 +1147,10 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// This control/window can belong to any process/thread. With controls/windows of this thread you can use the more lightweight function <see cref="ThisThread.IsFocused"/>.
-		/// Calls <see cref="WndFocused"/>.
+		/// Calls <see cref="Focused"/>.
 		/// </remarks>
 		/// <seealso cref="Focus"/>
-		public bool IsFocused => !this.Is0 && this == WndFocused;
+		public bool IsFocused => !this.Is0 && this == Focused;
 
 		/// <summary>
 		/// Functions that can be used only with windows/controls of this thread.
@@ -1158,7 +1158,7 @@ namespace Au
 		public static class ThisThread
 		{
 			/// <summary>
-			/// Calls API <msdn>SetFocus</msdn>, which sets the keyboard input focus to the specified control or window, which must be of this thread.
+			/// Calls API <msdn>SetFocus</msdn>. It sets the keyboard input focus to the specified control or window, which must be of this thread.
 			/// Returns false if fails. Supports <see cref="Native.GetError"/>.
 			/// </summary>
 			/// <remarks>
@@ -1175,15 +1175,15 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Gets the control or window of this thread that has the keyboard input focus.
+			/// Gets the focused control or window of this thread.
 			/// </summary>
 			/// <remarks>
 			/// Calls API <msdn>GetFocus</msdn>.
 			/// </remarks>
-			public static Wnd WndFocused => Api.GetFocus();
+			public static Wnd Focused => Api.GetFocus();
 
 			/// <summary>
-			/// Returns true if this is the control or window of this thread that has the keyboard input focus.
+			/// Returns true if w is the focused control or window of this thread.
 			/// </summary>
 			/// <remarks>
 			/// Calls API <msdn>GetFocus</msdn>.
@@ -1194,7 +1194,7 @@ namespace Au
 			/// Gets the active window of this thread.
 			/// Calls API <msdn>GetActiveWindow</msdn>.
 			/// </summary>
-			public static Wnd WndActive => Api.GetActiveWindow();
+			public static Wnd Active => Api.GetActiveWindow();
 		}
 
 		#endregion
@@ -1620,17 +1620,17 @@ namespace Au
 		/// Gets child window rectangle in the client area of the direct parent window.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="WndDirectParent"/> and <see cref="GetRectInClientOf"/>. Returns default(RECT) if fails (eg window closed).
+		/// Calls <see cref="GetWnd.DirectParent"/> and <see cref="GetRectInClientOf"/>. Returns default(RECT) if fails (eg window closed).
 		/// </remarks>
-		public RECT RectInDirectParent => GetRectInClientOf(WndDirectParent, out var r) ? r : default;
+		public RECT RectInDirectParent => GetRectInClientOf(Get.DirectParent, out var r) ? r : default;
 
 		/// <summary>
 		/// Gets child window rectangle in the client area of the top-level parent window.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="WndWindow"/> and <see cref="GetRectInClientOf"/>. Returns default(RECT) if fails (eg window closed).
+		/// Calls <see cref="Window"/> and <see cref="GetRectInClientOf"/>. Returns default(RECT) if fails (eg window closed).
 		/// </remarks>
-		public RECT RectInWindow => GetRectInClientOf(WndWindow, out var r) ? r : default;
+		public RECT RectInWindow => GetRectInClientOf(Window, out var r) ? r : default;
 
 		/// <summary>
 		/// Gets rectangle of normal (restored) window even if currently it is minimized or maximized.
@@ -1690,11 +1690,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// This overload calls <see cref="ContainsWindowXY(Wnd, Coord, Coord)"/>(WndWindow, x, y).
+		/// This overload calls <see cref="ContainsWindowXY(Wnd, Coord, Coord)"/>(Window, x, y).
 		/// </summary>
 		public bool ContainsWindowXY(Coord x, Coord y)
 		{
-			return ContainsWindowXY(WndWindow, x, y);
+			return ContainsWindowXY(Window, x, y);
 		}
 
 		#endregion
@@ -1778,7 +1778,7 @@ namespace Au
 		{
 			ThrowIfInvalid();
 
-			Wnd w = WndDirectParent;
+			Wnd w = Get.DirectParent;
 			POINT xy, wh;
 			if(!w.Is0) {
 				xy = Coord.NormalizeInWindow(x, y, w);
@@ -1911,8 +1911,8 @@ namespace Au
 						//Windows bug: before a dialog is first time shown, may fail to move if it has an owner window. Depends on coordinates and on don't know what.
 						//There are several workarounds. The best of them - temporarily set owner window 0.
 						if(!visible) {
-							hto = w.WndOwner;
-							if(!hto.Is0) w.WndOwner = default;
+							hto = w.Owner;
+							if(!hto.Is0) w.Owner = default;
 						}
 
 						wp.rcNormalPosition = r;
@@ -1929,7 +1929,7 @@ namespace Au
 						}
 					}
 					finally {
-						if(!hto.Is0) w.WndOwner = hto;
+						if(!hto.Is0) w.Owner = hto;
 					}
 
 					w.LibMinimalSleepIfOtherThread();
@@ -2031,7 +2031,7 @@ namespace Au
 			if(w.Is0) return before ? ZorderBottom() : ZorderTop();
 			if(w == this) return true;
 			if(IsTopmost && !w.IsTopmost) ZorderNoTopmost(); //see comments below
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, before ? w.WndPrev : w);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, before ? w.Get.Previous() : w);
 		}
 
 		/// <summary>
@@ -2103,7 +2103,7 @@ namespace Au
 
 			//place this after the active window
 			if(afterActiveWindow) {
-				Wnd wa = WndActive;
+				Wnd wa = Active;
 				if(wa != this && !wa.IsTopmost) SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa);
 			}
 
@@ -2641,31 +2641,36 @@ namespace Au
 			if(!SendTimeoutS(30000, out var _, Api.WM_SETTEXT, 0, text ?? "", 0)) ThrowUseNative();
 		}
 
-		/// <summary>
-		/// Gets <see cref="Name"/> of previous (in Z order) sibling control.
-		/// Returns null if there is no such control.
-		/// </summary>
-		/// <remarks>
-		/// Can be used to identify controls that have no name but have a named control (label) at the left or above. For example Edit And ComboBox controls in dialogs.
-		/// In such cases this function works like <see cref="NameAcc"/>, but is faster and supports any sibling control type.
-		/// </remarks>
-		public string NameLabel
-		{
-			get
-			{
-				for(var w = this; ;) {
-					var p = w.WndDirectParent;
-					if(p.Is0) return null;
-					w = w.WndPrev; if(!w.Is0) return w.Name;
-					w = p;
-				}
-				//TODO: if the label control is not at the left/above, find topmost control at the left/above
-			}
-		}
-		//TODO: reject. Instead, let Child find label control itself, and then navigate.
-		//	To navigate: WndLeft(Coord xDistance, Coord yEdge=Coord.Center); WndRight, WndAbove, WndBelow.
-		//	Or: WndXY(WXY.Left, 20). Or WndX(bool right, Coord xDistance, Coord yEdge=Coord.Center); WndY.
-		//		Also can replace all WndNext etc with WndZ(WZ.Next).
+		//rejected: faster but not better than NameAcc. Or must be improved.
+		//	Instead, let Child find label control, and then navigate with Get.Right() etc.
+		///// <summary>
+		///// Gets <see cref="Name"/> of previous (in Z order) sibling control.
+		///// Returns null if there is no such control.
+		///// </summary>
+		///// <remarks>
+		///// Can be used to identify controls that have no name but have a named control (label) at the left or above. For example Edit And ComboBox controls in dialogs.
+		///// In such cases this function works like <see cref="NameAcc"/>, but is faster and supports any sibling control type.
+		///// </remarks>
+		//public string NameLabel
+		//{
+		//	get
+		//	{
+		//		for(var w = this; ;) {
+		//			var p = w.Get.DirectParent;
+		//			if(p.Is0) return null;
+		//			w = w.Get.Previous(); if(!w.Is0) return w.Name;
+		//			w = p;
+		//		}
+		//		//_todo: if the label control is not at the left/above, find topmost control at the left/above
+		//	}
+		//}
+#if false //artifacts of xml doc from various places. Maybe it will come back some day. The code is commented out there.
+		//from Wnd.Child comments:
+		/// <item>
+		/// "***label " - use <see cref="NameLabel"/>.
+		/// Useful when the control itself does not have a name but an adjacent control is used as its name. Examples - Edit controls in dialogs.
+		/// </item>
+#endif
 
 		/// <summary>
 		/// Gets <see cref="Acc.Name"/> of the accessible object (role WINDOW) of this window or control.

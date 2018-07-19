@@ -24,33 +24,33 @@ using static Au.NoClass;
 
 namespace Au.Controls
 {
-	partial class GDockPanel
+	public partial class AuDockPanel
 	{
 		/// <summary>
-		/// Contains multiple GPanel.
+		/// Contains multiple _Panel.
 		/// </summary>
-		partial class GTab :GContentNode
+		partial class _Tab :_ContentNode
 		{
-			internal List<GPanel> Items; //all child panels, including hidden, floating etc
-			internal GPanel ActiveItem; //null if _dockedItemCount is 0 or if there is no active (currently impossible)
-			int _dockedItemCount; //if 0, this is hidden; else if 1, draws caption like GPanel
+			internal List<_Panel> Items; //all child panels, including hidden, floating etc
+			internal _Panel ActiveItem; //null if _dockedItemCount is 0 or if there is no active (currently impossible)
+			int _dockedItemCount; //if 0, this is hidden; else if 1, draws caption like _Panel
 			bool _tooSmall; //too small to display tab buttons
 			bool _onlyIcons; //display only icons in tab buttons (too small to display text)
 
 			/// <summary>
 			/// This ctor is used at startup, when adding from XML.
 			/// </summary>
-			internal GTab(GDockPanel manager, GSplit parentSplit, XElement x) : base(manager, parentSplit)
+			internal _Tab(AuDockPanel manager, _Split parentSplit, XElement x) : base(manager, parentSplit)
 			{
 				manager._aTab.Add(this);
 
 				int iAct = x.Attribute_("active", 0);
 				var xPanels = x.Elements("panel");
-				this.Items = new List<GPanel>();
+				this.Items = new List<_Panel>();
 
 				int i = 0;
 				foreach(var xx in xPanels) {
-					var gp = new GPanel(manager, parentSplit, xx, this);
+					var gp = new _Panel(manager, parentSplit, xx, this);
 					this.Items.Add(gp);
 					if(gp.IsDocked) {
 						_dockedItemCount++;
@@ -85,14 +85,14 @@ namespace Au.Controls
 			}
 
 			/// <summary>
-			/// This ctor is used when a floating GPanel dropped on a docked non-tabbed GPanel caption.
+			/// This ctor is used when a floating _Panel dropped on a docked non-tabbed _Panel caption.
 			/// item1 or item2 must be docked, but not both.
 			/// </summary>
-			internal GTab(GDockPanel manager, GSplit parentSplit, GPanel item1, GPanel item2) : base(manager, parentSplit)
+			internal _Tab(AuDockPanel manager, _Split parentSplit, _Panel item1, _Panel item2) : base(manager, parentSplit)
 			{
 				manager._aTab.Add(this);
 
-				this.Items = new List<GPanel>() { item1, item2 };
+				this.Items = new List<_Panel>() { item1, item2 };
 				item1.ParentTab = item2.ParentTab = this;
 				Debug.Assert(item1.IsDocked != item2.IsDocked);
 				_dockedItemCount = 1;
@@ -155,10 +155,10 @@ namespace Au.Controls
 							brushBack = t.brushActiveTabBack;
 							//shift button rect 1 pixel towards content, and add 1-pixel border at other edges
 							switch(this.CaptionAt) {
-							case GCaptionEdge.Left: r.X++; r.Y++; r.Height -= 2; break;
-							case GCaptionEdge.Top: r.Y++; r.X++; r.Width -= 2; break;
-							case GCaptionEdge.Right: r.X--; r.Y++; r.Height -= 2; break;
-							case GCaptionEdge.Bottom: r.Y--; r.X++; r.Width -= 2; break;
+							case CaptionEdge.Left: r.X++; r.Y++; r.Height -= 2; break;
+							case CaptionEdge.Top: r.Y++; r.X++; r.Width -= 2; break;
+							case CaptionEdge.Right: r.X--; r.Y++; r.Height -= 2; break;
+							case CaptionEdge.Bottom: r.Y--; r.X++; r.Width -= 2; break;
 							}
 						} else {
 							brushBack = (gp == _manager._hilitedTabButton) ? t.brushActiveTabBack : t.brushInactiveTabBack;
@@ -252,14 +252,14 @@ namespace Au.Controls
 				}
 			}
 
-			internal int IndexOf(GPanel gp)
+			internal int IndexOf(_Panel gp)
 			{
 				int i = this.Items.IndexOf(gp);
 				Debug.Assert(i >= 0);
 				return i;
 			}
 
-			internal void OnMouseDownTabButton(GPanel gp, MouseButtons mb)
+			internal void OnMouseDownTabButton(_Panel gp, MouseButtons mb)
 			{
 				_AssertIsChild(gp);
 				if(!gp.IsDocked) return;
@@ -272,7 +272,7 @@ namespace Au.Controls
 			/// </summary>
 			/// <param name="gp">Can be null to deactivate all.</param>
 			/// <param name="focusControl"></param>
-			internal void SetActiveItem(GPanel gp, bool focusControl = false)
+			internal void SetActiveItem(_Panel gp, bool focusControl = false)
 			{
 				_AssertIsDockedChildOrNull(gp);
 				if(gp != this.ActiveItem) {
@@ -284,7 +284,7 @@ namespace Au.Controls
 				if(focusControl) gp.Content?.Focus();
 			}
 
-			internal void OnItemUndocked(GPanel gp, out Action postAction)
+			internal void OnItemUndocked(_Panel gp, out Action postAction)
 			{
 				postAction = null;
 				_AssertIsChild(gp);
@@ -292,7 +292,7 @@ namespace Au.Controls
 
 				if(--_dockedItemCount < 1) {
 					this.SetActiveItem(null);
-					postAction = () => SetDockState(GDockState.Hidden);
+					postAction = () => SetDockState(_DockState.Hidden);
 					return;
 				}
 
@@ -302,17 +302,17 @@ namespace Au.Controls
 
 				//if this is floating, and just 1 other docked item left, dock this. Else would be problems.
 				if(_dockedItemCount == 1 && this.IsFloating) {
-					postAction = () => SetDockState(GDockState.Docked); //because this func is called by SetDockState, it must execute postAction later
+					postAction = () => SetDockState(_DockState.Docked); //because this func is called by SetDockState, it must execute postAction later
 					return;
 				}
 
 				this.InvalidateCaption();
 			}
 
-			internal void OnItemDocked(GPanel gp, bool setActive = true)
+			internal void OnItemDocked(_Panel gp, bool setActive = true)
 			{
 				_AssertIsChild(gp);
-				if(this.IsHidden) SetDockState(GDockState.Docked);
+				if(this.IsHidden) SetDockState(_DockState.Docked);
 				_dockedItemCount++;
 				UpdateLayout();
 				if(setActive || _dockedItemCount == 1) SetActiveItem(gp);
@@ -322,7 +322,7 @@ namespace Au.Controls
 			/// Removes a child panel from Items.
 			/// If single item left, moves it to this parent and invalidates/removes this.
 			/// </summary>
-			internal void OnItemRemoved(GPanel gp)
+			internal void OnItemRemoved(_Panel gp)
 			{
 				_AssertIsChild(gp);
 				Debug.Assert(this.Items.Count > 1);
@@ -344,7 +344,7 @@ namespace Au.Controls
 			/// If target is null, adds to the end (does nothing if gp is child).
 			/// Does not update layout.
 			/// </summary>
-			internal void AddOrReorderItem(GPanel gp, GPanel target, bool after)
+			internal void AddOrReorderItem(_Panel gp, _Panel target, bool after)
 			{
 				bool gpIsChild = _IsChild(gp);
 				if(target == null) {
@@ -363,26 +363,26 @@ namespace Au.Controls
 				gp.ParentTab = this;
 			}
 
-			bool _IsChild(GPanel gp)
+			bool _IsChild(_Panel gp)
 			{
 				return this.Items.IndexOf(gp) >= 0;
 			}
 
 			[Conditional("DEBUG")]
-			void _AssertIsChild(GPanel gp)
+			void _AssertIsChild(_Panel gp)
 			{
 				Debug.Assert(_IsChild(gp));
 			}
 
 			[Conditional("DEBUG")]
-			void _AssertIsDockedChild(GPanel gp)
+			void _AssertIsDockedChild(_Panel gp)
 			{
 				Debug.Assert(_IsChild(gp));
 				Debug.Assert(gp.IsDocked);
 			}
 
 			[Conditional("DEBUG")]
-			void _AssertIsDockedChildOrNull(GPanel gp)
+			void _AssertIsDockedChildOrNull(_Panel gp)
 			{
 				if(gp != null) _AssertIsDockedChild(gp);
 			}

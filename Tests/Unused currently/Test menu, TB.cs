@@ -1079,9 +1079,9 @@ public partial class Test
 
 //		//Wnd wt = (Wnd)t.Handle;
 //		//Print(wt);
-//		//Print(wt.WndDirectParent);
+//		//Print(wt.Get.DirectParent);
 //		//if(Api.SetParent(wt, w).Is0) Print(new Win32Exception().Message);
-//		//Print(wt.WndDirectParentOrOwner);
+//		//Print(wt.Get.DirectParentOrOwner);
 
 //		t.ResumeLayout();
 //		t.CreateControl();

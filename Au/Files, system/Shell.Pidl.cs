@@ -19,7 +19,6 @@ using static Au.NoClass;
 
 namespace Au
 {
-	//[DebuggerStepThrough]
 	partial class Shell
 	{
 		/// <summary>

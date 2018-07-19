@@ -123,7 +123,7 @@ namespace Au
 		//static Wnd _WindowsStoreAppHost(Wnd w)
 		//{
 		//	if(!Ver.MinWin10 || !w.ClassNameIs("Windows.UI.Core.CoreWindow")) return default;
-		//	Wnd wo = w.WndDirectParent; if(!wo.Is0 && wo.ClassNameIs("ApplicationFrameWindow")) return wo;
+		//	Wnd wo = w.Get.DirectParent; if(!wo.Is0 && wo.ClassNameIs("ApplicationFrameWindow")) return wo;
 		//	string s = w.GetText(false, false); if(Empty(s)) return default;
 		//	return Api.FindWindow("ApplicationFrameWindow", s);
 		//}
@@ -178,6 +178,16 @@ namespace Au
 			}
 			static ushort s_atomDWP;
 			const string c_wndClassDWP = "Au.DWP";
+
+			/// <summary>
+			/// Returns true if w contains a non-zero special handle value (<see cref="Native.HWND"/>).
+			/// Note: <b>Native.HWND.TOP</b> is 0.
+			/// </summary>
+			public static bool IsSpecHwnd(Wnd w)
+			{
+				int i = (int)(LPARAM)w;
+				return (i <= 1 && i >= -3) || i == 0xffff;
+			}
 		}
 	}
 }

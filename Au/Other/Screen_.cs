@@ -119,7 +119,7 @@ namespace Au.Types
 				//	Therefore I cannot test and add filtering. No problems if they are the last in the list. Never mind.
 				//	Wiki about mirror drivers: https://en.wikipedia.org/wiki/Mirror_driver
 			} else if(screenIndex == OfMouse) return Screen.FromPoint(Mouse.XY);
-			else if(screenIndex == OfActiveWindow) return ScreenFromWindow(Wnd.WndActive);
+			else if(screenIndex == OfActiveWindow) return ScreenFromWindow(Wnd.Active);
 
 			if(screenIndex != 0) PrintWarning("Invalid screen index.");
 			return Screen.PrimaryScreen;

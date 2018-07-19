@@ -375,17 +375,6 @@ namespace Au
 			/// <summary>API <msdn>DefWindowProc</msdn></summary>
 			[DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
 			public static extern LPARAM DefWindowProc(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
-
-		}
-
-		/// <summary>
-		/// Returns true if w contains a non-zero special handle value (<see cref="Native.HWND"/>).
-		/// Note: <b>Native.HWND.TOP</b> is 0.
-		/// </summary>
-		public static bool IsSpecHwnd(Wnd w)
-		{
-			int i = (int)(LPARAM)w;
-			return (i <= 1 && i >= -3) || i == 0xffff;
 		}
 	}
 }

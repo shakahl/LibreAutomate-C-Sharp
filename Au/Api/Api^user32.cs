@@ -263,7 +263,7 @@ namespace Au.Types
 		internal const int GW_CHILD = 5;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern Wnd GetWindow(Wnd hWnd, uint GW_X);
+		internal static extern Wnd GetWindow(Wnd hWnd, int GW_X);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern Wnd GetTopWindow(Wnd hWnd);

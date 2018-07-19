@@ -30,7 +30,7 @@ static class Strips
 	public static ToolStripSpringTextBox cHelpFind; //controls on toolbars
 
 	static CmdHandlers _cmd; //all menu/toolbar commands. Contains command handlers, their names and delegates.
-	static GStripManager _strips;
+	static AuStripManager _strips;
 
 	public static void Init()
 	{
@@ -40,8 +40,8 @@ static class Strips
 		_cmd = new CmdHandlers();
 		//p.Next();
 
-		_strips = new GStripManager(MainForm, _cmd);
-		_strips.BuildAll(Folders.ThisApp + @"Default\Strips.xml", Folders.ThisAppDocuments + @"!Settings\Strips.xml", new GDockPanel.DockedToolStripRenderer());
+		_strips = new AuStripManager(MainForm, _cmd);
+		_strips.BuildAll(Folders.ThisApp + @"Default\Strips.xml", Folders.ThisAppDocuments + @"!Settings\Strips.xml", new AuDockPanel.DockedToolStripRenderer());
 		//p.Next();
 
 		//get top-level toolstrips (menu bar and toolbars)
@@ -80,7 +80,7 @@ static class Strips
 			if(_strips.Xml.Descendant_(k) == null) PrintWarning("no menu item for command " + k);
 		}
 		//p.NW(); //450
-		//for vice versa, GStripManager takes care
+		//for vice versa, AuStripManager takes care
 #endif
 
 #if TEST
@@ -88,7 +88,7 @@ static class Strips
 		{
 			MainForm.TestEditor();
 			//Panels.Files.Test();
-			//Panels.Code.Test();
+			//Panels.Editor.Test();
 			//Model.LoadState();
 		});
 #endif

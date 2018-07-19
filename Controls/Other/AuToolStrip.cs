@@ -29,7 +29,6 @@ namespace Au.Controls
 	/// 2. A click does not activate the parent form if it has WS_EX_NOACTIVATE style.
 	/// 3. Can show tooltips when parent form is not the active window. To enable it, the form's ShowWithoutActivation override must return true (it is called when need to show a tooltip).
 	/// </summary>
-	//[DebuggerStepThrough]
 	public class AuToolStrip :ToolStrip
 	{
 		//these are used for tooltip

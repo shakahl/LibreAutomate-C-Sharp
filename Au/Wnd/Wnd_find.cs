@@ -102,7 +102,7 @@ namespace Au
 			/// Returns 0-based index, or -1 if not found.
 			/// The <see cref="Result"/> property will be the window.
 			/// </summary>
-			/// <param name="a">Array or list of windows, for example returned by <see cref="Misc.AllWindows"/>.</param>
+			/// <param name="a">Array or list of windows, for example returned by <see cref="GetWnd.AllWindows"/>.</param>
 			public int FindInList(IEnumerable<Wnd> a)
 			{
 				using(var k = new _WndList(a))
@@ -122,7 +122,7 @@ namespace Au
 			/// Finds all matching windows in a list of windows.
 			/// Returns array containing 0 or more window handles as Wnd.
 			/// </summary>
-			/// <param name="a">Array or list of windows, for example returned by <see cref="Misc.AllWindows"/>.</param>
+			/// <param name="a">Array or list of windows, for example returned by <see cref="GetWnd.AllWindows"/>.</param>
 			public Wnd[] FindAllInList(IEnumerable<Wnd> a)
 			{
 				return _FindAll(new _WndList(a));
@@ -168,7 +168,7 @@ namespace Au
 					}
 
 					if(isOwner) {
-						if(_owner != w.WndOwner) continue;
+						if(_owner != w.Owner) continue;
 					}
 
 					if(_name != null) {
@@ -300,7 +300,7 @@ namespace Au
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// null means 'can be any'. Cannot be "". Cannot be path.
 		/// Or <see cref="WFEtc.Process"/>(process id), <see cref="WFEtc.Thread"/>(thread id), <see cref="WFEtc.Owner"/>(owner window).
-		/// See <see cref="ProcessId"/>, <see cref="Process_.CurrentProcessId"/>, <see cref="ThreadId"/>, <see cref="Thread_.NativeId"/>, <see cref="WndOwner"/>.
+		/// See <see cref="ProcessId"/>, <see cref="Process_.CurrentProcessId"/>, <see cref="ThreadId"/>, <see cref="Thread_.NativeId"/>, <see cref="Owner"/>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
@@ -320,6 +320,8 @@ namespace Au
 		/// This parameter is evaluated after <paramref name="also"/>.
 		/// </param>
 		/// <remarks>
+		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
+		/// 
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
 		/// On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to find such windows you can use <see cref="FindFast"/>.
 		/// To find message-only windows use <see cref="Misc.FindMessageWindow"/> instead.
@@ -347,25 +349,26 @@ namespace Au
 		{
 			var f = new Finder(name, className, programEtc, flags, also, contains);
 			f.Find();
-			LastFind = f;
+			//LastFind = f;
 			return f.Result;
 		}
 
-		/// <summary>
-		/// Gets arguments and result of this thread's last call to <see cref="Find"/> or <see cref="FindAll"/>.
-		/// </summary>
-		/// <remarks>
-		/// <b>Wnd.Wait</b> and similar functions don't change this property. <see cref="FindOrRun"/> and some other functions of this library change this property because they call <see cref="Find"/> internally.
-		/// </remarks>
-		/// <example>
-		/// This example is similar to what <see cref="FindOrRun"/> does.
-		/// <code><![CDATA[
-		/// Wnd w = Wnd.Find("*- Notepad", "Notepad");
-		/// if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
-		/// ]]></code>
-		/// </example>
-		[field: ThreadStatic]
-		public static Finder LastFind { get; set; }
+		//rejected: probably most users will not understand what is it, and will not use. It's easy and more clear to create and use Finder instances.
+		///// <summary>
+		///// Gets arguments and result of this thread's last call to <see cref="Find"/> or <see cref="FindAll"/>.
+		///// </summary>
+		///// <remarks>
+		///// <b>Wnd.Wait</b> and similar functions don't change this property. <see cref="FindOrRun"/> and some other functions of this library change this property because they call <see cref="Find"/> internally.
+		///// </remarks>
+		///// <example>
+		///// This example is similar to what <see cref="FindOrRun"/> does.
+		///// <code><![CDATA[
+		///// Wnd w = Wnd.Find("*- Notepad", "Notepad");
+		///// if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
+		///// ]]></code>
+		///// </example>
+		//[field: ThreadStatic]
+		//public static Finder LastFind { get; set; }
 
 		/// <inheritdoc cref="Find"/>
 		/// <summary>
@@ -376,13 +379,16 @@ namespace Au
 		/// <remarks>
 		/// The list is sorted to match the Z order, however hidden windows (when using <see cref="WFFlags.HiddenToo"/>) are always after visible windows.
 		/// </remarks>
+		/// <seealso cref="GetWnd.AllWindows"/>
+		/// <seealso cref="GetWnd.MainWindows"/>
+		/// <seealso cref="GetWnd.ThreadWindows"/>
 		public static Wnd[] FindAll(
 			string name = null, string className = null, WFEtc programEtc = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 		{
 			var f = new Finder(name, className, programEtc, flags, also, contains);
 			var a = f.FindAll();
-			LastFind = f;
+			//LastFind = f;
 			return a;
 		}
 
@@ -413,6 +419,35 @@ namespace Au
 		public static Wnd FindFast(string name, string className, Wnd wAfter = default)
 		{
 			return Api.FindWindowEx(default, wAfter, className, name);
+		}
+
+		public static partial class Misc
+		{
+			/// <summary>
+			/// Finds a message-only window and returns its handle as Wnd. Returns default(Wnd) if not found.
+			/// Calls API <msdn>FindWindowEx</msdn>.
+			/// Faster than <see cref="Find"/>, which does not find message-only windows.
+			/// Can be used only when you know full name and/or class name.
+			/// Finds hidden windows too.
+			/// </summary>
+			/// <param name="name">
+			/// Name.
+			/// Use null to match any.
+			/// Full, case-insensitive. Wildcard etc not supported.
+			/// </param>
+			/// <param name="className">
+			/// Class name.
+			/// Use null to match any. Cannot be "".
+			/// Full, case-insensitive. Wildcard etc not supported.
+			/// </param>
+			/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
+			/// <remarks>
+			/// Supports <see cref="Native.GetError"/>.
+			/// </remarks>
+			public static Wnd FindMessageWindow(string name, string className, Wnd wAfter = default)
+			{
+				return Api.FindWindowEx(Native.HWND.MESSAGE, wAfter, className, name);
+			}
 		}
 
 		/// <inheritdoc cref="Find"/>
@@ -446,22 +481,23 @@ namespace Au
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 			Action run = null, double runWaitS = 60.0, bool needActiveWindow = true)
 		{
-			var w = Find(name, className, programEtc, flags, also, contains);
-			if(!w.Is0) {
+			Wnd w = default;
+			var f = new Finder(name, className, programEtc, flags, also, contains);
+			if(f.Find()) {
+				w = f.Result;
 				if(needActiveWindow) w.Activate();
 			} else if(run != null) {
-				var finder = LastFind;
 				run();
-				w = WaitAny(runWaitS, needActiveWindow, finder);
+				w = WaitAny(runWaitS, needActiveWindow, f);
 			}
 			return w;
 		}
 
-		public static partial class Misc
+		public partial struct GetWnd
 		{
 			/// <summary>
 			/// Gets top-level windows.
-			/// Returns array containing 0 or more window handles as Wnd.
+			/// Returns array containing window handles as Wnd.
 			/// </summary>
 			/// <param name="onlyVisible">Need only visible windows.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
@@ -471,6 +507,7 @@ namespace Au
 			/// By default array elements are sorted to match the Z order.
 			/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <see cref="Process_.UacInfo">UAC</see> integrity level uiAccess; to get such windows you can use <see cref="FindFast"/>.
 			/// </remarks>
+			/// <seealso cref="FindAll"/>
 			public static Wnd[] AllWindows(bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				return Lib.EnumWindows(Lib.EnumWindowsAPI.EnumWindows, onlyVisible, sortFirstVisible);
@@ -500,32 +537,6 @@ namespace Au
 				return Lib.EnumWindows(Lib.EnumWindowsAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId);
 
 				//speed: 2.5 times faster than EnumWindows. Tested with a foreign thread with 30 windows.
-			}
-
-			/// <summary>
-			/// Finds a message-only window and returns its handle as Wnd. Returns default(Wnd) if not found.
-			/// Calls API <msdn>FindWindowEx</msdn>.
-			/// Faster than <see cref="Find"/>, which does not find message-only windows.
-			/// Can be used only when you know full name and/or class name.
-			/// Finds hidden windows too.
-			/// </summary>
-			/// <param name="name">
-			/// Name.
-			/// Use null to match any.
-			/// Full, case-insensitive. Wildcard etc not supported.
-			/// </param>
-			/// <param name="className">
-			/// Class name.
-			/// Use null to match any. Cannot be "".
-			/// Full, case-insensitive. Wildcard etc not supported.
-			/// </param>
-			/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
-			/// <remarks>
-			/// Supports <see cref="Native.GetError"/>.
-			/// </remarks>
-			public static Wnd FindMessageWindow(string name, string className, Wnd wAfter = default)
-			{
-				return Api.FindWindowEx(Native.HWND.MESSAGE, wAfter, className, name);
 			}
 		}
 
@@ -625,7 +636,7 @@ namespace Au
 						if(_directChild && Api.GetParent(w) != _wParent) return 1;
 					} else {
 						if(_onlyVisible && !w.IsVisibleEx) return 1;
-						if(!_wParent.Is0 && w.WndOwner != _wParent) return 1;
+						if(!_wParent.Is0 && w.Owner != _wParent) return 1;
 					}
 					if(_predicate != null && !_predicate(w, _param)) return 1;
 					a.Add(w);

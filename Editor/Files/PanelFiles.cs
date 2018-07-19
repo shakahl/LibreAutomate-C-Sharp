@@ -26,7 +26,6 @@ using Aga.Controls.Tree.NodeControls;
 
 partial class ThisIsNotAFormFile { }
 
-//[DebuggerStepThrough]
 partial class PanelFiles :Control
 {
 	//idea: when file clicked, open it and show AuMenu of its functions (if > 1).

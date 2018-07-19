@@ -44,16 +44,16 @@ namespace Au.Util
 			//Print("workaround", AppDomain.CurrentDomain.Id);
 
 			//Print(Api.GetActiveWindow());
-			if(Wnd.WndActive.IsOfThisProcess) return;
+			if(Wnd.Active.IsOfThisProcess) return;
 #if true
 			Wnd w = Wnd.Misc.CreateMessageWindow("#32770");
 			//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster and prevents setting foreground; empty class same speed.
 			Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.
 
 			//Api.SetForegroundWindow(w);
-			//Print(Wnd.WndActive);
+			//Print(Wnd.Active);
 			Wnd.Misc.DestroyWindow(w);
-			//Print(Wnd.WndActive);
+			//Print(Wnd.Active);
 			//Perf.NW(); //1 ms when ngened, else 2 ms
 #else
 			//This makes startup faster. Also, if in same thread, it can take much more time, don't know why, depending on where called.
@@ -63,7 +63,7 @@ namespace Au.Util
 				//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster; empty class same speed.
 				//w.FocusControlOfThisThread();
 				Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.
-				//Print(Wnd.WndActive);
+				//Print(Wnd.Active);
 				//Perf.NW();
 				Wnd.Misc.DestroyWindow(w);
 			};

@@ -303,7 +303,7 @@ static partial class Test
 		//Wnd w = Wnd.Find("app -*");
 		//Wnd w = Wnd.Find("QM# -*");
 		//Wnd w = Wnd.Find("WinDbg*");
-		//Wnd w = Wnd.Misc.WndRoot;
+		//Wnd w = Wnd.GetWnd.Root;
 		//w.Activate(); .2.s();
 		//w= w.ChildById(2216);
 		//Wnd w = Wnd.Find(className: "QM_Editor").ChildById(2052);
@@ -317,7 +317,7 @@ static partial class Test
 #if false
 			x.TestAcc(w);
 
-			//foreach(Wnd ww in Wnd.Misc.AllWindows(true)) x.TestAcc(ww);
+			//foreach(Wnd ww in Wnd.GetWnd.AllWindows(true)) x.TestAcc(ww);
 
 			Perf.NW();
 			x.PrintMemory();
@@ -442,12 +442,12 @@ static partial class Test
 
 	//	//return;
 
-	//	//foreach(var v in Wnd.Misc.AllWindows()) {
+	//	//foreach(var v in Wnd.GetWnd.AllWindows()) {
 	//	//	foreach(var a in )
 	//	//}
 
 	//	Wnd wSkip = Wnd.Find("Quick*").Child(2202);
-	//	w = Wnd.Misc.WndRoot;
+	//	w = Wnd.GetWnd.Root;
 	//	//w = Wnd.Find("app -*");
 	//	//w = Wnd.Find("* - Notepad");
 	//	//Perf.First();
@@ -482,7 +482,7 @@ static partial class Test
 	//			//Perf.First();
 	//			using(var aa = a.Navigate(AccNAVDIR.PARENT)) {
 	//				//Perf.Next();
-	//				if(aa == null) Print(s, a.WndContainer, a.WndContainer.WndWindow);
+	//				if(aa == null) Print(s, a.WndContainer, a.WndTopLevel);
 	//				//if(aa == null) Print(s);
 	//				//else Print("<><c 0x8000>" + s + "</c>\r\n<c 0xff0000>" + aa.ToString(a.Level+1) + "</c>");
 	//			}
@@ -909,7 +909,7 @@ static partial class Test
 			}
 		}
 		//100.ms();
-		//Print(Wnd.WndActive);
+		//Print(Wnd.Active);
 	}
 
 	static void TestAccWebPageProp()
@@ -1503,7 +1503,7 @@ static partial class Test
 		//var w = Wnd.Find("* Google Chrome", "Chrome*").Child(null, "Chrome_Render*").OrThrow();
 		//var w = Wnd.Find("* Internet Explorer").OrThrow();
 		//var w = Wnd.Find("* Internet Explorer").Child(null, Api.s_IES).OrThrow();
-		//var w = Wnd.Find("* Internet Explorer").Child(null, "TabWindowClass").OrThrow().WndDirectParent;
+		//var w = Wnd.Find("* Internet Explorer").Child(null, "TabWindowClass").OrThrow().Get.DirectParent;
 		//var w = Wnd.Find("* Internet Explorer").Child(null, "Shell DocObject View").OrThrow();
 		//var w = Wnd.Find("* Microsoft Edge").OrThrow();
 		//var w = Wnd.Find("* Microsoft Edge").Child(null, "Windows.UI.Core.CoreWindow").OrThrow();
@@ -1725,7 +1725,7 @@ static partial class Test
 	//static void TestDllInProcManyWindows()
 	//{
 	//	try {
-	//		var aw = Wnd.Misc.AllWindows(true);
+	//		var aw = Wnd.GetWnd.AllWindows(true);
 	//		foreach(var w in aw) {
 	//			if(!w.ClassNameIs("Mozilla*")) continue;
 	//			Print($"<><c 0xFF8000>{w}</c>");
@@ -2116,7 +2116,7 @@ static partial class Test
 
 		var flags = AFFlags.MenuToo;
 		//flags |= AFFlags.NotInProc;
-		var aw = Wnd.Misc.AllWindows(true);
+		var aw = Wnd.GetWnd.AllWindows(true);
 		var k = new List<Acc>(100000);
 		foreach(var w_ in aw) {
 			var w = w_;
@@ -2190,8 +2190,8 @@ static partial class Test
 	static void TestWndAccName()
 	{
 		var k = new List<Wnd>(10000);
-		foreach(var w in Wnd.Misc.AllWindows(true)) {
-			k.AddRange(w.AllChildren());
+		foreach(var w in Wnd.GetWnd.AllWindows(true)) {
+			k.AddRange(w.Get.Children());
 		}
 		Perf.SpeedUpCPU(200);
 		Perf.First();
@@ -2380,7 +2380,7 @@ static partial class Test
 
 	static void TestAccChildCount()
 	{
-		//var kk =Wnd.Misc.AllWindows(true);
+		//var kk =Wnd.GetWnd.AllWindows(true);
 		//Print("----");
 		//foreach( var v in kk) {
 		//	Print(v);
@@ -2431,7 +2431,7 @@ static partial class Test
 		Print(a);
 		Print(a.MiscFlags);
 
-		//foreach(var c in w.AllChildren()) {
+		//foreach(var c in w.Get.Children()) {
 		//	Print(c);
 		//	//var a2 = Acc.FromWindow(c, AccOBJID.CLIENT);
 		//	var a2 = Acc.FromWindow(c, AccOBJID.CLIENT, flags: AWFlags.NoThrow);
@@ -2598,7 +2598,7 @@ static partial class Test
 		//Print(a.HtmlAttribute("href"));
 
 		//w.Activate();
-		//Print(Wnd.WndActive);
+		//Print(Wnd.Active);
 		//a.DoAction(); //yes, but Edge bug: scrolls and calls SetForegroundWindow(direct container control).
 		//a.ScrollTo(); //yes
 		//a.VirtualClick(); //no
@@ -2626,7 +2626,7 @@ static partial class Test
 		//}
 
 		//1.s();
-		//Print(Wnd.WndActive);
+		//Print(Wnd.Active);
 		Print("-- END --");
 	}
 
@@ -2724,7 +2724,7 @@ static partial class Test
 
 		//Print(Acc.Find(w, "web:div", flags: flags, skip: 1));
 
-		//foreach(var w in Wnd.Misc.AllWindows()) {
+		//foreach(var w in Wnd.GetWnd.AllWindows()) {
 		//	Print($"<><c 0xff0000>{w.ToString()}</c>");
 		//	string name = w.Name;
 		//	if(name.EndsWith_(" Edge") || name == "Ensemble") flags |= AFFlags.UIAutomation; else flags &= ~AFFlags.UIAutomation;
@@ -3402,44 +3402,44 @@ REE`");
 
 	static void TestMainWindows2()
 	{
-		//var a =Wnd.Misc.MainWindows(likeAltTab:true);
+		//var a =Wnd.GetWnd.MainWindows(likeAltTab:true);
 		//Print("---");
 		//Print(a);
 
-		//Print(Wnd.WndActive);
-		//Wnd.Misc.SwitchActiveWindow();
-		//Print(Wnd.WndActive);
+		//Print(Wnd.Active);
+		//Wnd.SwitchActiveWindow();
+		//Print(Wnd.Active);
 
 		//Print(Api.GetDesktopWindow());
 		//Print("----");
-		//var a =Wnd.Misc.AllWindows();
+		//var a =Wnd.GetWnd.AllWindows();
 
 		////Perf.SpinCPU(100);
 		////for(int i1 = 0; i1 < 5; i1++) {
 		////	int n2 = 1000;
 		////	Perf.First();
-		////	for(int i2 = 0; i2 < n2; i2++) { foreach(var w in a) { var ro = Wnd.Misc.WndRootOwnerOrThis(w); } }
+		////	for(int i2 = 0; i2 < n2; i2++) { foreach(var w in a) { var ro = w.Get.RootOwnerOrThis(); } }
 		////	Perf.Next();
-		////	for(int i2 = 0; i2 < n2; i2++) { foreach(var w in a) { var ro = w.WndOwner; } }
+		////	for(int i2 = 0; i2 < n2; i2++) { foreach(var w in a) { var ro = w.Owner; } }
 		////	Perf.Next();
-		////	//for(int i2 = 0; i2 < n2; i2++) { foreach(var w in a) { var ro = Wnd.Misc.WndRootOwnerOrThis2(w); } }
+		////	//for(int i2 = 0; i2 < n2; i2++) { foreach(var w in a) { var ro = w.Get.RootOwnerOrThis2(); } }
 		////	//Perf.Next();
 		////	for(int i2 = 0; i2 < n2; i2++) { }
 		////	Perf.NW();
 		////}
 
 		//foreach(var w in a) {
-		//	var ro = Wnd.Misc.WndRootOwnerOrThis(w);
+		//	var ro = w.Get.RootOwnerOrThis();
 		//	//if(ro== Api.GetDesktopWindow()) {
 		//	//if(ro!= w) {
 		//	//	Print("----");
 		//	//	Print(w);
 		//	//	Print(ro);
-		//	//	Print(w.WndOwner);
-		//	//	Print(w.WndDirectParentOrOwner );
+		//	//	Print(w.Owner);
+		//	//	Print(w.Get.DirectParentOrOwner );
 		//	//}
 		//	//Print();
-		//	var ro2 = Wnd.Misc.WndRootOwnerOrThis(w, true);
+		//	var ro2 = w.Get.RootOwnerOrThis(true);
 		//	if(ro2 != ro) {
 		//		Print("----");
 		//		Print(w);
@@ -3450,15 +3450,15 @@ REE`");
 
 		//var w = Wnd.Find("Options");
 		//Print(w);
-		//Print(Wnd.Misc.WndLastActiveOwnedOrThis(w));
-		//Print(Wnd.Misc.WndLastActiveOwnedOrThis(w, true));
+		//Print(w.Get.LastActiveOwnedOrThis());
+		//Print(w.Get.LastActiveOwnedOrThis(true));
 
-		//Print(Wnd.Misc.MainWindows());
-		////Print(Wnd.Misc.WndNextMain());
+		//Print(Wnd.GetWnd.MainWindows());
+		////Print(Wnd.GetWnd.NextMain());
 		//var w = Wnd.Find("* Chrome").OrThrow();
-		//Print(Wnd.Misc.WndNextMain(w, retryFromTop: true));
-		Print(Wnd.Misc.SwitchActiveWindow());
-		Print(Wnd.WndActive);
+		//Print(Wnd.GetWnd.NextMain(w, retryFromTop: true));
+		Print(Wnd.SwitchActiveWindow());
+		Print(Wnd.Active);
 	}
 
 	static void TestAccProcessDoesNotExit()
@@ -3588,7 +3588,7 @@ REE`");
 		//var w = Wnd.Find("Quick *").OrThrow();
 		//a = Acc.Find(w, "BUTTON", "Properties*").OrThrow();
 
-		//foreach(var k in Wnd.Misc.AllWindows(false)) {
+		//foreach(var k in Wnd.GetWnd.AllWindows(false)) {
 		//	//if(!k.ClassNameIs("Windows.UI.Core.CoreWindow")) continue;
 		//	//if(!k.IsVisible || k.IsVisibleEx) continue;
 		//	if(!k.IsCloaked) continue;
@@ -3596,7 +3596,7 @@ REE`");
 		//	Print(k);
 		//	//Print(k.IsVisible, k.IsCloaked);
 		//	//continue;
-		//	foreach(var c in k.AllChildren()) {
+		//	foreach(var c in k.Get.Children()) {
 		//		Print($"\t{c.ToString()}");
 		//	}
 		//}
@@ -5045,14 +5045,14 @@ REE`");
 		//var k = new Keyb();
 		//k.Key("a");
 
-		var wa = Wnd.WndActive;
+		var wa = Wnd.Active;
 		//var w = Wnd.Find("Quick*").OrThrow();
 		//var w = Wnd.Find("* Writer").OrThrow();
 		//var w = Wnd.Find("* Word*").OrThrow();
 		//var w = Wnd.Find("Dialog").OrThrow();
 		//var w = Wnd.Find("*Notepad").OrThrow();
 		//w.Activate();
-		if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
+		if(wa.Name.Like_("*Studio ")) Wnd.SwitchActiveWindow();
 		100.ms();
 
 		//new Keyb(Opt.Key).AddKeys("Tab Ctrl+V Alt+E+P Alt+(E P) Ctrl+Shift+Left Left*3 Space a , 5 #5 $abc Enter").Send();
@@ -5148,7 +5148,7 @@ REE`");
 		//Opt.Key.Hook = o =>
 		//{
 		//	Print(o.w);
-		//	Wnd w = o.w.WndWindow;
+		//	Wnd w = o.w.Window;
 		//	if(w.Name?.StartsWith_("Unti") ?? false) o.opt.KeySpeed = 500;
 		//	//opt.TextOption = KTextOption.Keys;
 		//	//opt.SleepFinally = 1000;
@@ -5300,8 +5300,8 @@ REE`");
 
 	static void TestPaste()
 	{
-		var wa = Wnd.WndActive;
-		if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
+		var wa = Wnd.Active;
+		if(wa.Name.Like_("*Studio ")) Wnd.SwitchActiveWindow();
 		100.ms();
 
 		Opt.Key.TextOption = KTextOption.Paste;
@@ -5329,7 +5329,7 @@ REE`");
 			Text(a[i]);
 			Perf.Next();
 			//100.ms();
-			//Wnd.WndFocused.Send(0);
+			//Wnd.Focused.Send(0);
 			//Perf.Next();
 			//break;
 		}
@@ -5355,7 +5355,7 @@ REE`");
 		//Print(Clipb.GetText());
 		//return;
 
-		var wa = Wnd.WndActive;
+		var wa = Wnd.Active;
 		//if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
 		100.ms();
 
@@ -5450,8 +5450,8 @@ REE`");
 
 		return;
 
-		var wa = Wnd.WndActive;
-		if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
+		var wa = Wnd.Active;
+		if(wa.Name.Like_("*Studio ")) Wnd.SwitchActiveWindow();
 		100.ms();
 
 		Opt.Key.PasteEnter = true;
@@ -5579,8 +5579,8 @@ REE`");
 
 	static void TestKeybFinally()
 	{
-		var wa = Wnd.WndActive;
-		if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
+		var wa = Wnd.Active;
+		if(wa.Name.Like_("*Studio ")) Wnd.SwitchActiveWindow();
 		100.ms();
 
 		//Key("Tab abc Enter*2 Back");
@@ -5798,7 +5798,7 @@ REE`");
 		//Key("one", 3000, "two");
 		//Key("one");
 		//Opt.Mouse.MoveSpeed = 100;
-		//Mouse.Click(Wnd.WndActive, 100, 100);
+		//Mouse.Click(Wnd.Active, 100, 100);
 		Perf.NW();
 	}
 
@@ -5842,16 +5842,16 @@ REE`");
 	}
 	static Wnd _hwndQM2;
 
-	static unsafe void _AddMessage(ConcurrentQueue<Au.Tools.OutputServer.Message> q)
+	static unsafe void _AddMessage(ConcurrentQueue<Au.Util.OutputServer.Message> q)
 	{
 		char c = '\0';
-		var m = new Au.Tools.OutputServer.Message(Au.Tools.OutputServer.MessageType.Write, new string(&c), 0, null);
+		var m = new Au.Util.OutputServer.Message(Au.Util.OutputServer.MessageType.Write, new string(&c), 0, null);
 	}
 
 	static void TestOutputServer()
 	{
 
-		//var q = new ConcurrentQueue<Au.Tools.OutputServer.Message>();
+		//var q = new ConcurrentQueue<Au.Util.OutputServer.Message>();
 		//_AddMessage(q);
 		//var m1 = GC.GetTotalMemory(false);
 		//int n = 10000;
@@ -6116,8 +6116,8 @@ REE`");
 
 		//Print(Mouse.WaitForCursor(-10, MCursor.IBeam));
 
-		//Au.Tools.Misc.GetCurrentMouseCursor(out var hcur);
-		//var hash = Au.Tools.Misc.HashMouseCursor(hcur);
+		//Au.Util.Cursors_.GetCurrentCursor(out var hcur);
+		//var hash = Au.Util.Cursors_.HashCursor(hcur);
 		////3.s();
 		////Print(Mouse.WaitForCursor(-10, hash));
 		//Print(Mouse.WaitForCursor(-10, hash, true));
@@ -6717,12 +6717,12 @@ REE`");
 		//Wnd.Find("*Edge").Activate();
 		//Wnd.Find("*Notepad").Activate();
 		//Wnd.Find("*VMware*").Activate(); Mouse.Click(1079, 445);
-		//Print(Wnd.WndActive);
+		//Print(Wnd.Active);
 		//for(int i = 0; i < 12; i++) {
 		//	Task.Run(() => Perf.SpeedUpCPU(500));
 		//}
 		100.ms();
-		//Print(Wnd.WndFocused);
+		//Print(Wnd.Focused);
 		Key("Back*20", 100);
 		//Opt.Key.KeySpeed = 1000; Key("ab"); return;
 #if true
@@ -6788,7 +6788,7 @@ REE`");
 		//	  //a = new List<POINT>() { (0,0),(2,0),(2,2),(0,2) };
 
 		//	  //var w =(Wnd)f;
-		//	  //w.WndOwner = Wnd.Misc.WndRoot;
+		//	  //w.Owner = Wnd.GetWnd.Root;
 		//	  //Print(Wnd.Misc.OwnerWindowsAndThis(w)); return;
 
 		//	  var b = WinImage.Capture(a);
@@ -7225,7 +7225,7 @@ REE`");
 		//var w = Wnd.Find("Options", null, WFEtc.Thread(wo.ThreadId));
 		Print(w);
 
-		//Print(Wnd.Misc.WndDesktop);
+		//Print(Wnd.GetWnd.Desktop);
 
 	}
 
@@ -7259,29 +7259,150 @@ REE`");
 		//Print("form disposed");
 	}
 
+	static void TestFormClose()
+	{
+		//		var f = new Form();
+		//		var ed = new TextBox() { Top = 100, TabStop = true }; f.Controls.Add(ed);
+		//		var ok = new Au.Controls.ButtonOK() { Text = "OK", TabStop=true, TabIndex=1 }; f.Controls.Add(ok);
+		//		var can = new Au.Controls.ButtonCancel() { Text = "Cancel", Left=100, TabStop = true, TabIndex=2 }; f.Controls.Add(can);
+
+		//#if false
+		//		f.ShowDialog();
+		//#else
+		//		var f2=new Form();
+		//		Timer_.After(100, () =>f.Show(f2));
+		//		f2.ShowDialog();
+		//#endif
+
+		//		Print(f.DialogResult);
+
+		var main = new Form() { Text = "Main" };
+
+		var f = new FormTest() { Text = "Popup" };
+		f.IsPopup = true;
+		//f.ShowInTaskbar = false;
+
+		Timer_.After(500, () => f.Show(main));
+		//main.ShowDialog();
+		Application.Run(main);
+	}
+
+	class FormTest :Au.Controls.Form_
+	{
+		bool _closing;
+
+		//protected override void WndProc(ref Message m)
+		//{
+		//	switch((uint)m.Msg) {
+		//	case Api.WM_CLOSE:
+		//		_closing = true;
+		//		break;
+		//	//case Api.WM_ACTIVATE when _closing && (int)m.WParam == 0:
+		//	//	Print("deact");
+		//	//	break;
+		//	case Api.WM_WINDOWPOSCHANGING when _closing:
+		//		Print("WM_WINDOWPOSCHANGING");
+		//		break;
+		//	}
+
+		//	if(_closing)
+		//	Print($"{m.ToString().Split(')')[0]}\r\n\tact={Wnd.Active}\r\n\town={((Wnd)this).Owner}");
+
+		//	base.WndProc(ref m);
+		//}
+
+
+	}
+
+	static void TestWndGet()
+	{
+		var w = Wnd.Find("Options", "#32770").OrThrow();
+		w = w.ChildById(11).OrThrow();
+		//Print(w);
+
+		Wnd r;
+		//object r;
+		//r = w.Get.Next(0);
+		//r = w.Get.Previous(1);
+		//r = w.Get.Child(1);
+		//r = w.Get.FirstChild;
+		//r = w.Get.LastChild;
+		//r = w.Get.FirstSibling;
+		//r = w.Get.LastSibling;
+		//r = w.Get.Window;
+		//r = w.Get.Owner;
+		//r = w.Get.DirectParent;
+		//r = w.Get.DirectParentOrOwner;
+		//r = w.Get.LastActiveOwnedOrThis();
+		//r = w.Get.LastActiveOwnedOrThis(true);
+		//r = w.Get.RootOwnerOrThis(true);
+		//r = w.Get.RootOwnerOrThis();
+		//r = w.Get.OwnersAndThis();
+		//r = w.Get.RootOwnerOrThis();
+		//r = w.Get.Children();
+		//r = w.Get.Children(true);
+		//r = w.Get.Above();
+		//r = w.Get.Above(80);
+		//r = w.Get.Below();
+		//r = w.Get.Below(topChild: true);
+		//r = w.Get.Left();
+		//r = w.Get.Right();
+		//r = w.Get.Right(yOffset: 60);
+		//r = w.Get.Right(50, 60);
+		//r = w.Get.Right(-50);
+		r = w.Get.Right(-50, topChild: true);
+
+		//r = Wnd.GetWnd.Top;
+		//r = Wnd.GetWnd.Desktop;
+		//r = Wnd.GetWnd.DesktopControl;
+		//r = Wnd.GetWnd.AllWindows();
+		//r = Wnd.GetWnd.AllWindows(true);
+		//r = Wnd.GetWnd.AllWindows(false, true);
+		//r = Wnd.GetWnd.Root;
+		//r = Wnd.GetWnd.Shell;
+		//r = Wnd.GetWnd.ThreadWindows(w.ThreadId);
+		//r = Wnd.GetWnd.ThreadWindows(w.ThreadId, true);
+		//r = Wnd.GetWnd.ThreadWindows(w.ThreadId, false, true);
+		//r = Wnd.GetWnd.IsMainWindow(w);
+		//r = Wnd.GetWnd.IsMainWindow(w.Owner);
+		//r = Wnd.GetWnd.MainWindows();
+		//r = Wnd.GetWnd.MainWindows(true);
+		//r = Wnd.GetWnd.NextMain();
+		//r = Wnd.GetWnd.NextMain(r);
+
+		Print(r);
+
+		//w = w.Get.Right();
+		//Print(w);
+		//w = w.Get.Next();
+		//Print(w);
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
 		//MessageBox.Show(""); return;
 		//OutputFormExample.Main(); return;
-
+		//Output.IgnoreConsole = true;
 #if DEBUG
 		//Output.IgnoreConsole = true;
 		//Output.LogFile=@"Q:\Test\Au"+IntPtr.Size*8+".log";
 #endif
-		Output.LibUseQM2 = true;
-		Output.RedirectConsoleOutput = true;
+		//Output.LibUseQM2 = true;
+		//Output.RedirectConsoleOutput = true;
 		if(!Output.IsWritingToConsole) {
 			Output.Clear();
 			//100.ms();
 		}
 
 		try {
-#if false
+#if true
 
+
+			//TestWndGet();
 			//TestToolWnd();
-			TestToolWinImage();
+			//TestToolWinImage();
 			//TestWFEtc();
 			//TestWndFindContainsRoleName();
 			//TestAccFindParamNavig();
@@ -7290,6 +7411,7 @@ REE`");
 			//TestWinImageCapture();
 			//Au.Tools.Test.OsdRect();
 			//TestOsd();
+			//TestFormClose();
 #else
 			try {
 

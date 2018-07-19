@@ -28,8 +28,9 @@ Most tags are like in QM2.
 NEW TAGS:
    <bi> - bold italic.
    <mono> - monospace font.
+   <hidden> - hidden.
    <size n> - font size (1-127).
-   <osd> - Osd.ShowText.
+   <tooltip> - Osd.ShowText.
 
 NEW PARAMETERS:
    <c ColorName> - .NET color name for text color. Also color can be #RRGGBB.
@@ -74,13 +75,213 @@ namespace Au.Controls
 	using static Sci;
 
 	/// <summary>
-	/// Used by <see cref="AuScintilla"/> controls. Adds links and formatting.
+	/// Adds links and text formatting to a <see cref="AuScintilla"/> control.
+	/// Links and formatting is specified in text, using tags like in HTML. Reference is in Remarks.
+	/// Tags are supported by the <b>Print</b> function when it writes to the Au script editor.
 	/// </summary>
 	/// <remarks>
-	/// Links and formatting is specified in control text using tags similar to HTML. To enable tags, use <see cref="AuScintilla.InitTagsStyle"/>.
+	/// Links and text formatting is specified in control text using tags similar to HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
 	/// 
-	/// //TODO
+	/// For most tags use this format: <c><![CDATA[<tag>text<>]]></c> or <c><![CDATA[<tag attribute>text<>]]></c>. Attribute can be enclosed in ' or " (must be enclosed if contains &gt;).
+	/// For these tags use different format: <c><![CDATA[<_>literal text</_>]]></c>, <c><![CDATA[<code>code</code>]]></c>, <c><![CDATA[<image "attribute">]]></c>.
+	/// Tags can be nested, like <c><![CDATA[<b><c green>text<><>]]></c> or <c><![CDATA[<b>text <c green>text<> text<>]]></c>.
+	/// 
+	/// Simple formatting tags:
+	/// <list type="table">
+	/// <listheader>
+	/// <term>Examples</term>
+	/// <term>Comments</term>
+	/// </listheader>
+	/// <item>
+	/// <description><c><![CDATA[<b>text<>]]></c></description>
+	/// <description>Bold text.</description>
+	/// </item>
+	/// <item>
+	/// <description><c><![CDATA[<i>text<>]]></c></description>
+	/// <description>Italic text.</description>
+	/// </item>
+	/// <item>
+	/// <description><c><![CDATA[<bi>text<>]]></c></description>
+	/// <description>Bold italic.</description>
+	/// </item>
+	/// <item>
+	/// <description><c><![CDATA[<u>text<>]]></c></description>
+	/// <description>Underline.</description>
+	/// </item>
+	/// <item>
+	/// <description>
+	/// <para><c><![CDATA[<c 0xE0A000>text<>]]></c></para>
+	/// <para><c><![CDATA[<c #E0A000>text<>]]></c></para>
+	/// <para><c><![CDATA[<c green>text<>]]></c></para>
+	/// </description>
+	/// <description>
+	/// Text color.
+	/// Color can be 0xRRGGBB, #RRGGBB or .NET color name.
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <description><c><![CDATA[<z yellow>text<>]]></c></description>
+	/// <description>Text background color.</description>
+	/// </item>
+	/// <item>
+	/// <description><c><![CDATA[<Z wheat>text<>]]></c></description>
+	/// <description>Line background color, when followed by new line.</description>
+	/// </item>
+	/// <item>
+	/// <description><c><![CDATA[<size 10>text<>]]></c></description>
+	/// <description>
+	/// Font height.
+	/// Note: it can increase height of all lines.
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <description><c><![CDATA[<mono>text<>]]></c></description>
+	/// <description>Monospace font.</description>
+	/// </item>
+	/// <item>
+	/// <description><c><![CDATA[<hidden>text<>]]></c></description>
+	/// <description>Hidden text.</description>
+	/// </item>
+	/// </list>
+	/// 
+	/// Links:
+	/// <list type="table">
+	/// <listheader>
+	/// <term>Examples</term>
+	/// <term>Comments</term>
+	/// </listheader>
+	/// <item>
+	/// <description>
+	/// <para><c><![CDATA[<link http://www.example.com>link text<>]]></c></para>
+	/// <para><c><![CDATA[<link C:\files\example.exe>link text<>]]></c></para>
+	/// <para><c><![CDATA[<link>http://www.example.com<>]]></c></para>
+	/// <para><c><![CDATA[<link>C:\files\example.exe<>]]></c></para>
+	/// <para><c><![CDATA[<link C:\example.exe|args>link text<>]]></c></para>
+	/// </description>
+	/// <description>
+	/// Opens a web page or runs a program or any file.
+	/// Calls function <see cref="Shell.TryRun"/>.
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <description>
+	/// <para><c><![CDATA[<google find this>link text<>]]></c></para>
+	/// <para><c><![CDATA[<google>find this<>]]></c></para>
+	/// <para><c><![CDATA[<google find this|append>link text<>]]></c></para>
+	/// </description>
+	/// <description>
+	/// Google.
+	/// Uses this code:
+	/// <c>Shell.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);</c>
+	/// Here s1 and s2 are attribute parts separated by |.
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <description>
+	/// <para><c><![CDATA[<dialog text>link text<>]]></c></para>
+	/// <para><c><![CDATA[<dialog text1|text2>link text<>]]></c></para>
+	/// </description>
+	/// <description>
+	/// Shows dialog.
+	/// Calls <see cref="AuDialog.Show"/>.
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <description>
+	/// <para><c><![CDATA[<tooltip text>link text<>]]></c></para>
+	/// <para><c><![CDATA[<tooltip text|secondsTimeout>link text<>]]></c></para>
+	/// </description>
+	/// <description>
+	/// Shows tooltip.
+	/// Calls <see cref="Osd.ShowText"/>.
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <description>
+	/// <c><![CDATA[<print text>link text<>]]></c>
+	/// </description>
+	/// <description>
+	/// Shows text in output.
+	/// Calls <see cref="Print(string)" r=""/>.
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <description>
+	/// <c><![CDATA[<help M_Au_Wnd_Find>link text<>]]></c>
+	/// </description>
+	/// <description>
+	/// Shows an Au class library help topic (file "Au Help.chm").
+	/// Calls <see cref="Util.Help.AuHelp"/>.
+	/// Attribute: right click in the help topic, click Properties, copy filename from the Address field.
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <description>
+	/// <para><c><![CDATA[<open document>link text<>]]></c></para>
+	/// <para><c><![CDATA[<open>document<>]]></c></para>
+	/// </description>
+	/// <description>
+	/// Should open a document or script or some other item in the program.
+	/// This control does not implement this tag. If used, it must be implemented by the program.
+	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <description>
+	/// <para><c><![CDATA[<script script>link text<>]]></c></para>
+	/// <para><c><![CDATA[<script>script<>]]></c></para>
+	/// </description>
+	/// <description>
+	/// Should run/execute a script.
+	/// This control does not implement this tag. If used, it must be implemented by the program.
+	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
+	/// </description>
+	/// </item>
+	/// </list>
+	/// Also you can register custom link tags that call your callback functions. See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
+	/// 
+	/// Other tags:
+	/// <list type="table">
+	/// <listheader>
+	/// <term>Examples</term>
+	/// <term>Comments</term>
+	/// </listheader>
+	/// <item>
+	/// <description><c><![CDATA[<_>text</_>]]></c></description>
+	/// <description>Literal text. Tags in it are ignored.</description>
+	/// </item>
+	/// <item>
+	/// <description><c><![CDATA[<code>var s="example";</code>]]></c></description>
+	/// <description>Colored C# code. Tags in it are ignored.</description>
+	/// </item>
+	/// <item>
+	/// <description>
+	/// <para><c><![CDATA[<image "c:\images\example.png">]]></c></para>
+	/// <para><c><![CDATA[<image "c:\files\example.txt">]]></c></para>
+	/// <para><c><![CDATA[<image "image:PngBase64">]]></c></para>
+	/// <para><c><![CDATA[<image "~:BmpCompressedBase64">]]></c></para>
+	/// <para><c><![CDATA[<image "resource:ResourceName">]]></c></para>
+	/// </description>
+	/// <description>
+	/// Image.
+	/// Images are displayed below this line.
+	/// Supports images of formats: png, bmp, jpg, gif, ico (only 16x16).
+	/// For other file types and folders displays small file icon.
+	/// Supports managed image resources of the entry assembly. Not icons.
+	/// Image file data is encoded as Base64 string. For it can be used dialog<br/>
+	/// "Find image or color in window" (form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll)<br/>
+	/// or function Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
+	/// </description>
+	/// </item>
+	/// </list>
+	/// 
+	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au script editor it is the output (use <b>Print</b>, like in the example below). In this library - the <see cref="AuInfoBox"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.InitTagsStyle"/> and optionally <see cref="AuScintilla.InitImagesStyle"/>.
 	/// </remarks>
+	/// <example>
+	/// <code><![CDATA[
+	/// Print("<>Text with <i>tags<>.");
+	/// ]]></code>
+	/// </example>
 	public unsafe class SciTags
 	{
 		const int STYLE_FIRST_EX = STYLE_LASTPREDEFINED + 1;
@@ -177,7 +378,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Displays <see cref="Tools.OutputServer"/> messages that are currently in its queue.
+		/// Displays <see cref="OutputServer"/> messages that are currently in its queue.
 		/// </summary>
 		/// <param name="os">The OutputServer instance.</param>
 		/// <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.</param>
@@ -187,8 +388,8 @@ namespace Au.Controls
 		/// Messages with tags must have prefix "&lt;&gt;".
 		/// Limits text length to about 4 MB (removes oldest text when exceeded).
 		/// </remarks>
-		/// <seealso cref="Tools.OutputServer.SetNotifications"/>
-		public void OutputServerProcessMessages(Tools.OutputServer os, Action<Tools.OutputServer.Message> onMessage = null)
+		/// <seealso cref="OutputServer.SetNotifications"/>
+		public void OutputServerProcessMessages(OutputServer os, Action<OutputServer.Message> onMessage = null)
 		{
 			//info: Cannot call _c.Write for each message, it's too slow. Need to join all messages.
 			//	If multiple messages, use StringBuilder.
@@ -200,12 +401,12 @@ namespace Au.Controls
 			while(os.GetMessage(out var m)) {
 				onMessage?.Invoke(m);
 				switch(m.Type) {
-				case Tools.OutputServer.MessageType.Clear:
+				case OutputServer.MessageType.Clear:
 					_c.ST.ClearText();
 					s = null;
 					b?.Clear();
 					break;
-				case Tools.OutputServer.MessageType.Write:
+				case OutputServer.MessageType.Write:
 					if(s == null) {
 						s = m.Text;
 						hasTags = hasTagsPrev = s.StartsWith_("<>");
@@ -449,8 +650,8 @@ namespace Au.Controls
 				case 4 << 16 | 'h':
 					linkTag = "help";
 					break;
-				case 3 << 16 | 'o':
-					linkTag = "osd";
+				case 7 << 16 | 't':
+					linkTag = "tooltip";
 					break;
 				case 4 << 16 | 'o':
 					linkTag = "open";
@@ -700,7 +901,7 @@ namespace Au.Controls
 			case "dialog":
 				AuDialog.Show(one ? null : s1, one ? s1 : s2, owner: _c);
 				break;
-			case "osd":
+			case "tooltip":
 				Osd.ShowText(s1, one ? 0 : s2.ToInt_(), PopupXY.Mouse);
 				break;
 			case "print":

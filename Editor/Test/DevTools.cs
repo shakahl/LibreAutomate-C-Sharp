@@ -21,7 +21,6 @@ using static Au.NoClass;
 
 namespace ETest
 {
-	//[DebuggerStepThrough]
 	public static class DevTools
 	{
 		public static void CreatePngImagelistFileFromIconFiles_il_tv()

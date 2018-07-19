@@ -23,7 +23,7 @@ namespace Au
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class AuMenu :AuBaseMT, IDisposable
+	public class AuMenu :BaseMT, IDisposable
 	{
 		//The main wrapped object. The class is derived from ContextMenuStrip.
 		ContextMenuStrip_ _cm;
@@ -119,7 +119,7 @@ namespace Au
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="onClick">Callback function. Called when the menu item clicked.</param>
 		/// <param name="icon">Can be:
-		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="AuBaseMT.IconFlags"/>.
+		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="BaseMT.IconFlags"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// Icon, Image, Folders.FolderPath.
@@ -689,7 +689,7 @@ namespace Au
 				base.OnOpening(e);
 			}
 
-			//AuBaseMT creates this. We call GetAllAsync.
+			//BaseMT creates this. We call GetAllAsync.
 			internal List<Util.IconsAsync.Item> AsyncIcons { get; set; }
 
 			protected override void OnOpened(EventArgs e)
@@ -837,16 +837,16 @@ namespace Au
 		void _OnClosingAny(bool isSubmenu, ToolStripDropDownMenu dd, ToolStripDropDownClosingEventArgs e)
 		{
 			if(!_isOwned && !e.Cancel) {
-				//Print(e.CloseReason, dd.Focused, dd.ContainsFocus, Wnd.WndActive, Wnd.Misc.WndRootOwnerOrThis(Wnd.WndActive));
+				//Print(e.CloseReason, dd.Focused, dd.ContainsFocus, Wnd.Active, Wnd.Active.Get.RootOwnerOrThis());
 				switch(e.CloseReason) {
 				case ToolStripDropDownCloseReason.AppClicked: //eg clicked a context menu item of a child textbox. Note: the AppClicked documentation lies; actually we receive this when clicked a window of this thread (or maybe this process, not tested).
-					if(Wnd.WndActive.Handle == dd.Handle) e.Cancel = true;
+					if(Wnd.Active.Handle == dd.Handle) e.Cancel = true;
 					break;
 				case ToolStripDropDownCloseReason.AppFocusChange: //eg showed a dialog owned by this menu window
-					var wa = Wnd.WndActive;
+					var wa = Wnd.Active;
 					if(wa.Handle == dd.Handle) { //eg when closing this activated submenu because mouse moved to the parent menu
 						if(isSubmenu) Api.SetForegroundWindow((Wnd)dd.OwnerItem.Owner.Handle); //prevent closing the parent menu
-					} else if(Wnd.Misc.WndRootOwnerOrThis(wa).Handle == dd.Handle) e.Cancel = true;
+					} else if(wa.Get.RootOwnerOrThis().Handle == dd.Handle) e.Cancel = true;
 					break;
 				}
 				//Print(e.Cancel);
@@ -1009,13 +1009,13 @@ namespace Au.Types
 	/// Base class of AuMenu and AuToolbar.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
-	public abstract class AuBaseMT
+	public abstract class BaseMT
 	{
 		internal bool m_inRightClick;
 		EventHandler _onClick;
 		System.Collections.Hashtable _clickDelegates = new System.Collections.Hashtable();
 
-		internal AuBaseMT()
+		internal BaseMT()
 		{
 			_onClick = _OnClick;
 		}
@@ -1247,7 +1247,7 @@ namespace Au.Types
 		}
 
 		///
-		~AuBaseMT() { /*Print("base dtor");*/ _Dispose(false); }
+		~BaseMT() { /*Print("base dtor");*/ _Dispose(false); }
 	}
 
 	/// <summary>

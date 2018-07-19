@@ -26,7 +26,6 @@ namespace Au.Controls
 	/// Allows to set/get scroll info and receive scroll notifications.
 	/// This class exists because .NET ScrollableControl does not work when AutoScroll is false.
 	/// </summary>
-	//[DebuggerStepThrough]
 	public class ScrollableControl_ :Control
 	{
 		internal const uint SIF_RANGE = 0x1;

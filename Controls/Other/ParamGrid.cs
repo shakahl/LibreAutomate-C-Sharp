@@ -28,8 +28,8 @@ using DevAge.Drawing;
 namespace Au.Controls
 {
 	/// <summary>
-	/// Property grid control.
-	/// Used in many tools, for example "Find window or control".
+	/// 2-column grid control similar to a propertygrid but more flexible.
+	/// Used in many code tools to edit function arguments etc. For example in "Find window or control".
 	/// </summary>
 	public class ParamGrid :SG.Grid
 	{

@@ -27,7 +27,7 @@ namespace Au.Controls
 	using static Sci;
 
 	/// <summary>
-	/// Gets image file paths etc from Scintilla control text and displays the images below that lines.
+	/// Gets image file paths etc from <see cref="AuScintilla"/> control text and displays the images below that lines.
 	/// </summary>
 	/// <remarks>
 	/// Draws images in annotation areas.

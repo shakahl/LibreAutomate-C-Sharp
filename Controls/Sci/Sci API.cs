@@ -22,7 +22,6 @@ using static Au.NoClass;
 
 namespace Au.Controls
 {
-	//[DebuggerStepThrough]
 	public static unsafe class Sci
 	{
 		#region au modifications

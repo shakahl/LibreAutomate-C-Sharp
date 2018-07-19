@@ -25,6 +25,7 @@ using SG = SourceGrid;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
+//FUTURE: add UI to format code 'w = w.Get.Right();' etc.
 //FUTURE: init from code string. Cannot use Roslyn because of its slowness.
 
 namespace Au.Tools
@@ -88,7 +89,7 @@ namespace Au.Tools
 			_bTest.Enabled = true; _bOK.Enabled = true;
 
 			var wndOld = _wnd;
-			_wnd = _con.WndWindow;
+			_wnd = _con.Window;
 			if(_wnd == _con) _con = default;
 			bool newWindow = _wnd != wndOld;
 
@@ -109,7 +110,7 @@ namespace Au.Tools
 
 			_WinInfo f = default;
 
-			if(newWindow && !_GetClassName(_wnd, out f.wClass)) return false;
+			if(!_GetClassName(_wnd, out f.wClass)) return false; //note: get even if !newWindow, to detect closed window
 			if(isCon && !_GetClassName(_con, out f.cClass)) return false;
 			_propError = null;
 
@@ -121,7 +122,7 @@ namespace Au.Tools
 				g.ZAdd(null, "name", TUtil.EscapeWindowName(f.wName, true), true, info: "Window name.$");
 				g.ZAdd(null, "class", TUtil.StripWndClassName(f.wClass, true), true, info: "Window class name.$");
 				f.wProg = _wnd.ProgramName;
-				var ap = new List<string> { f.wProg, "WFEtc.Process(processId)", "WFEtc.Thread(threadId)" }; if(!_wnd.WndOwner.Is0) ap.Add("WFEtc.Owner(ownerWindow)");
+				var ap = new List<string> { f.wProg, "WFEtc.Process(processId)", "WFEtc.Thread(threadId)" }; if(!_wnd.Owner.Is0) ap.Add("WFEtc.Owner(ownerWindow)");
 				g.ZAdd(null, "program", ap, Empty(f.wName), info: "Program.$", etype: ParamGrid.EditType.ComboText, comboIndex: 0);
 				g.ZAdd(null, "contains", (Func<string[]>)_ContainsCombo_DropDown, false, info: "An accessible object in the window. Format: 'role' name.\r\nName$$", etype: ParamGrid.EditType.ComboText);
 			}
@@ -135,9 +136,10 @@ namespace Au.Tools
 				int iSel = Empty(f.cName) ? -1 : 0;
 				var an = new List<string> { TUtil.EscapeWildex(f.cName) };
 				_ConNameAdd("***wfName ", f.cWF = _con.NameWinForms);
-				bool isAcc = _ConNameAdd("***accName ", f.cAcc = _con.NameAcc);
-				bool isLabel = _ConNameAdd("***label ", f.cLabel = _con.NameLabel);
-				if(isAcc && isLabel && iSel == an.Count - 2 && f.cAcc == f.cLabel) iSel++; //if label == accName, prefer label
+				/*bool isAcc =*/
+				_ConNameAdd("***accName ", f.cAcc = _con.NameAcc);
+				//bool isLabel = _ConNameAdd("***label ", f.cLabel = _con.NameLabel);
+				//if(isAcc && isLabel && iSel == an.Count - 2 && f.cAcc == f.cLabel) iSel++; //if label == accName, prefer label
 				if(iSel < 0) iSel = 0; //never select text, even if all others unavailable
 				_ConNameAdd("***text ", f.cText = _con.ControlText);
 				bool _ConNameAdd(string prefix, string value)
@@ -185,7 +187,9 @@ namespace Au.Tools
 				cn = w.ClassName;
 				if(cn != null) return true;
 				_propError = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + Native.GetErrorMessage();
+				_grid.Clear();
 				_grid.Invalidate();
+				_winInfo.Text = "";
 				return false;
 			}
 		}
@@ -291,7 +295,11 @@ namespace Au.Tools
 				if(m != 0) {
 					b.Append(" // ");
 					if(0 != (m & 2)) b.Append(sClass);
-					if(0 != (m & 1)) { if(0 != (m & 2)) b.Append(' '); b.Append(sName.Escape_(100, true)); }
+					if(0 != (m & 1)) {
+						if(0 != (m & 2)) b.Append(' ');
+						sName = sName.Limit_(100).RegexReplace_(@"^\*\*\*\w+ (.+)", "$1");
+						b.AppendStringArg(sName, noComma: true);
+					}
 				}
 			}
 
@@ -412,7 +420,7 @@ namespace Au.Tools
 		{
 			ResultCode = _code.Text;
 			if(Empty(ResultCode)) this.DialogResult = DialogResult.Cancel;
-			else ResultUseControl=!_con.Is0 && _IsChecked("Control");
+			else ResultUseControl = !_con.Is0 && _IsChecked("Control");
 		}
 
 		private async void _bTest_Click(object sender, EventArgs ea)
@@ -448,7 +456,7 @@ namespace Au.Tools
 
 			void _AddChildren(Wnd wParent, _WndNode nParent)
 			{
-				for(Wnd t = wParent.WndFirstChild; !t.Is0; t = t.WndNext) {
+				for(Wnd t = wParent.Get.FirstChild; !t.Is0; t = t.Get.Next()) {
 					var x = new _WndNode("w") { c = t };
 					nParent.Add(x);
 					if(t == _con && xSelect == null) xSelect = x;
@@ -611,7 +619,7 @@ namespace Au.Tools
 
 		struct _WinInfo
 		{
-			public string wClass, wName, wProg, cClass, cName, cText, cLabel, cAcc, cWF;
+			public string wClass, wName, wProg, cClass, cName, cText, /*cLabel,*/ cAcc, cWF;
 			public int cId;
 
 			public string Format(Wnd w, Wnd c, int wcp)
@@ -619,6 +627,7 @@ namespace Au.Tools
 				var b = new StringBuilder();
 
 				if(wcp == 2 && c.Is0) wcp = 1;
+				if(!w.IsAlive) return "";
 				if(wcp == 1) { //window
 					b.AppendLine("<Z #B0E0B0><b>Window<>    <_switch 2>Control<>    <_switch 3>Process<><>");
 					if(wClass == null) {
@@ -628,17 +637,18 @@ namespace Au.Tools
 					_Common(false, b, w, wName, wClass);
 				} else if(wcp == 2) { //control
 					b.AppendLine("<Z #B0E0B0><_switch 1>Window<>    <b>Control<>    <_switch 3>Process<><>");
-					w = c;
-					if(cClass == null) {
-						cClass = w.ClassName;
-						cName = w.Name;
-						cText = w.ControlText;
-						cLabel = w.NameLabel;
-						cAcc = w.NameAcc;
-						cWF = w.NameWinForms;
-						cId = w.ControlId;
+					if(c.IsAlive) {
+						if(cClass == null) {
+							cClass = c.ClassName;
+							cName = c.Name;
+							cText = c.ControlText;
+							//cLabel = c.NameLabel;
+							cAcc = c.NameAcc;
+							cWF = c.NameWinForms;
+							cId = c.ControlId;
+						}
+						_Common(true, b, c, cName, cClass);
 					}
-					_Common(true, b, w, cName, cClass);
 				} else { //program
 					b.AppendLine("<Z #B0E0B0><_switch 1>Window<>    <_switch 2>Control<>    <b>Process<><>");
 					g1:
@@ -683,15 +693,15 @@ namespace Au.Tools
 				b.Append("<i>ClassName<>:    ").AppendLine(className);
 				if(!isCon || !Empty(name)) b.Append("<i>Name<>:    ").AppendLine(name);
 				if(isCon) {
-					if(!Empty(cLabel)) b.Append("<i>NameLabel<>:    ").AppendLine(cLabel);
+					//if(!Empty(cLabel)) b.Append("<i>NameLabel<>:    ").AppendLine(cLabel);
 					if(!Empty(cAcc)) b.Append("<i>NameAcc<>:    ").AppendLine(cAcc);
 					if(!Empty(cWF)) b.Append("<i>NameWinForms<>:    ").AppendLine(cWF);
 					if(!Empty(cText)) b.Append("<i>ControlText<>:    ").Append("<_>").Append(cText.Escape_(10000, true)).AppendLine("</_>");
 					b.Append("<i>ControlId<>:    ").AppendLine(cId.ToString());
 					b.AppendFormat("<_rect {0}><i>RectInWindow<><>:    ", sh).AppendLine(w.RectInWindow.ToString());
 				} else {
-					var wo = w.WndOwner;
-					if(!wo.Is0) b.AppendFormat("<_rect {0}><i>WndOwner<><>:    ", wo.Handle.ToString()).AppendLine(wo.ToString());
+					var wo = w.Owner;
+					if(!wo.Is0) b.AppendFormat("<_rect {0}><i>Owner<><>:    ", wo.Handle.ToString()).AppendLine(wo.ToString());
 					b.AppendFormat("<_rect {0}><i>Rect<><>:    ", sh).AppendLine(w.Rect.ToString());
 				}
 				b.AppendFormat("<_rect {0} 1><i>ClientRect<><>:    ", sh).AppendLine(w.ClientRect.ToString());

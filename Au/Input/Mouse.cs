@@ -76,8 +76,8 @@ namespace Au
 			}
 			if(!ok && !relaxed) {
 				var es = $"*mouse-move to this x y in screen. " + p.ToString();
-				Wnd.WndActive.LibUacCheckAndThrow(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
-																		//rejected: Wnd.Misc.WndRoot.ActivateLL()
+				Wnd.Active.LibUacCheckAndThrow(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
+																		//rejected: Wnd.GetWnd.Root.ActivateLL()
 				throw new AuException(es);
 				//known reasons:
 				//	Active window of higher UAC IL.
@@ -195,7 +195,7 @@ namespace Au
 		{
 			LibWaitForNoButtonsPressed();
 			w.ThrowIfInvalid();
-			var wTL = w.WndWindow;
+			var wTL = w.Window;
 			if(!wTL.IsVisibleEx) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not.
 			if(wTL.IsMinimized) { wTL.ShowNotMinimized(true); _Sleep(500); } //never mind: if w is a control...
 			var p = Coord.NormalizeInWindow(x, y, w, nonClient, centerIfEmpty: true);
@@ -271,7 +271,7 @@ namespace Au
 		/// Plays recorded mouse movements, relative to <see cref="LastMoveXY"/>.
 		/// Returns the final cursor position in primary screen coordinates.
 		/// </summary>
-		/// <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="Tools.Recording.MouseToString"/>.</param>
+		/// <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="Util.Recording.MouseToString"/>.</param>
 		/// <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
 		/// <exception cref="ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
 		/// <exception cref="ArgumentOutOfRangeException">The last x y is not in screen. No exception option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
@@ -324,7 +324,7 @@ namespace Au
 		}
 	}
 
-	namespace Tools
+	namespace Util
 	{
 		/// <summary>
 		/// Functions for keyboard/mouse/etc recorder tools.
@@ -609,15 +609,15 @@ namespace Au
 			//Make sure will click w, not another window.
 			var action = button & (MButton.Down | MButton.Up | MButton.DoubleClick);
 			if(action != MButton.Up && !Opt.Mouse.Relaxed) { //allow to release anywhere, eg it could be a drag-drop
-				var wTL = w.WndWindow;
+				var wTL = w.Window;
 				bool bad = !wTL.Rect.Contains(p);
 				if(!bad && !_CheckWindowFromPoint()) {
 					Debug_.Print("need to activate");
 					//info: activating brings to the Z top and also uncloaks
 					if(!wTL.IsEnabled) bad = true; //probably an owned modal dialog disabled the window
-					else if(wTL.ThreadId == Wnd.Misc.WndShell.ThreadId) bad = true; //desktop
+					else if(wTL.ThreadId == Wnd.GetWnd.Shell.ThreadId) bad = true; //desktop
 					else if(wTL.IsActive) wTL.ZorderTop(); //can be below another window in the same topmost/normal Z order, although it is rare
-					else bad = !wTL.LibActivate(Wnd.Lib.ActivateFlags.NoThrowIfInvalid | Wnd.Lib.ActivateFlags.IgnoreIfNoActivateStyleEtc | Wnd.Lib.ActivateFlags.NoGetWndWindow);
+					else bad = !wTL.LibActivate(Wnd.Lib.ActivateFlags.NoThrowIfInvalid | Wnd.Lib.ActivateFlags.IgnoreIfNoActivateStyleEtc | Wnd.Lib.ActivateFlags.NoGetWindow);
 
 					//rejected: if wTL is desktop, minimize windows. Scripts should not have a reason to click desktop. If need, they can minimize windows explicitly.
 					//CONSIDER: activate always, because some controls don't respond when clicked while the window is inactive. But there is a risk to activate a window that does not want to be activated on click, even if we don't activate windows that have noactivate style. Probably better let the script author insert Activate before Click when need.
@@ -1107,21 +1107,21 @@ namespace Au
 			IntPtr hcur = Api.LoadCursor(default, cursor);
 			if(hcur == default) throw new AuException(0, "*load cursor");
 
-			return WaitFor.Condition(secondsTimeout, () => (Tools.Misc.GetCurrentMouseCursor(out var h) && h == hcur) ^ not);
+			return WaitFor.Condition(secondsTimeout, () => (Util.Cursors_.GetCurrentCursor(out var h) && h == hcur) ^ not);
 		}
 
 		/// <summary>
 		/// Waits for a nonstandard mouse cursor (pointer) visible.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <param name="cursorHash">Cursor hash, as returned by <see cref="Tools.Misc.HashMouseCursor"/>.</param>
+		/// <param name="cursorHash">Cursor hash, as returned by <see cref="Util.Cursors_.HashCursor"/>.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
 		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		public static bool WaitForCursor(double secondsTimeout, long cursorHash, bool not = false)
 		{
 			if(cursorHash == 0) throw new ArgumentException();
-			return WaitFor.Condition(secondsTimeout, () => (Tools.Misc.GetCurrentMouseCursor(out var h) && Tools.Misc.HashMouseCursor(h) == cursorHash) ^ not);
+			return WaitFor.Condition(secondsTimeout, () => (Util.Cursors_.GetCurrentCursor(out var h) && Util.Cursors_.HashCursor(h) == cursorHash) ^ not);
 		}
 	}
 
@@ -1462,48 +1462,6 @@ namespace Au.Types
 		}
 
 		#endregion
-
-	}
-}
-
-namespace Au.Tools
-{
-	/// <summary>
-	/// Miscellaneous functions.
-	/// </summary>
-	public static partial class Misc
-	{
-		/// <summary>
-		/// Calculates 64-bit FNV1 hash of a mouse cursor's mask bitmap.
-		/// Returns 0 if fails.
-		/// </summary>
-		/// <param name="hCursor">Native cursor handle. See <see cref="GetCurrentMouseCursor"/>.</param>
-		public static unsafe long HashMouseCursor(IntPtr hCursor)
-		{
-			long R = 0; Api.BITMAP b;
-			if(!Api.GetIconInfo(hCursor, out var ii)) return 0;
-			if(ii.hbmColor != default) Api.DeleteObject(ii.hbmColor);
-			var hb = Api.CopyImage(ii.hbmMask, Api.IMAGE_BITMAP, 0, 0, Api.LR_COPYDELETEORG | Api.LR_CREATEDIBSECTION);
-			if(hb == default) { Api.DeleteObject(ii.hbmMask); return 0; }
-			if(0 != Api.GetObject(hb, sizeof(Api.BITMAP), &b) && b.bmBits != default)
-				R = Convert_.HashFnv1_64((byte*)b.bmBits, b.bmHeight * b.bmWidthBytes);
-			Api.DeleteObject(hb);
-			return R;
-		}
-
-		/// <summary>
-		/// Gets the native handle of the current mouse cursor.
-		/// Returns false if the cursor is currently invisible.
-		/// </summary>
-		/// <remarks>
-		/// It is the system cursor, not the cursor of this thread.
-		/// </remarks>
-		public static bool GetCurrentMouseCursor(out IntPtr hcursor)
-		{
-			Api.CURSORINFO ci = default; ci.cbSize = Api.SizeOf(ci);
-			if(Api.GetCursorInfo(ref ci) && ci.hCursor != default && 0 != (ci.flags & Api.CURSOR_SHOWING)) { hcursor = ci.hCursor; return true; }
-			hcursor = default; return false;
-		}
 
 	}
 }

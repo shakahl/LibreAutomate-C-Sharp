@@ -82,12 +82,12 @@ namespace Au.Tools
 		{
 			//note: don't reorder all the calls.
 
-			Wnd c = _acc.WndContainer, w = c.WndWindow;
+			Wnd c = _acc.WndContainer, w = c.Window;
 			if(!w.IsVisibleEx) {
 				if(!captured) return;
 				//Edge workaround. Without it, w would be some cloaked window of other process, and there are many such cloaked windows, and Wnd.Find often finds wrong window.
 				c = Wnd.FromMouse();
-				w = c.WndWindow;
+				w = c.Window;
 				if(w.Is0) return;
 			}
 
@@ -517,7 +517,7 @@ namespace Au.Tools
 				//	Also, WndContainer then may get the top-level window. Eg in Word.
 				//	Workaround: enum child controls and look for _acc in one them. Then add "class" row if need.
 				Debug_.Print("broken IAccessible branch");
-				foreach(var c in w.AllChildren(onlyVisible: true)) {
+				foreach(var c in w.Get.Children(onlyVisible: true)) {
 					var m = _CreateModel(c, in p, true);
 					if(m.xSelect != null) {
 						//m.xRoot.a = Acc.FromWindow(c, flags: AWFlags.NoThrow);

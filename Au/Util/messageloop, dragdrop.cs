@@ -198,6 +198,7 @@ namespace Au.Util
 			return R;
 		}
 
+		/// <tocexclude />
 		/// <summary>
 		/// <see cref="SimpleDragDrop(AnyWnd, MButtons, Action{MsgArgs})"/> callback function arguments.
 		/// </summary>

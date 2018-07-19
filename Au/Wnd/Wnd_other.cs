@@ -81,7 +81,7 @@ namespace Au
 
 				//is it desktop?
 				if(LibIsOfShellThread) return false;
-				if(this == Misc.WndRoot) return false;
+				if(this == GetWnd.Root) return false;
 
 				return true;
 
@@ -116,7 +116,7 @@ namespace Au
 
 			public int IsShellWindow(Wnd w)
 			{
-				Wnd wDesk = Misc.WndShell; //fast
+				Wnd wDesk = GetWnd.Shell; //fast
 				if(w == wDesk) return 1; //Progman. Usually other window (WorkerW) is active when desktop active.
 
 				//cache because GetWindowThreadProcessId quite slow

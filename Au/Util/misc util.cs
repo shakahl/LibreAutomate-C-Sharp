@@ -244,7 +244,6 @@ namespace Au.Util
 	/// </summary>
 	public static class Resources_
 	{
-
 		/// <summary>
 		/// Gets an Image or other object from managed resources of appdomain's entry assembly.
 		/// Returns null if not found.

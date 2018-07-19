@@ -252,7 +252,8 @@ namespace Au
 			Wnd[] aw = null; Wnd wTool = default;
 			try {
 				if(!toolWindow.IsEmpty) {
-					aw = Wnd.Misc.OwnerWindowsAndThis(wTool = toolWindow.Wnd, true);
+					wTool = toolWindow.Wnd;
+					aw = wTool.Get.OwnersAndThis(true);
 					foreach(var w in aw) w.ShowLL(false);
 					using(new BlockUserInput(BIEvents.MouseClicks)) Time.SleepDoEvents(300); //time for animations
 				}
@@ -309,7 +310,7 @@ namespace Au
 			Wnd w1 = Wnd.FromXY((r.rect.left, r.rect.top));
 			Wnd w2 = (r.image == null) ? w1 : Wnd.FromXY((r.rect.right - 1, r.rect.bottom - 1));
 			if(w2 != w1 || !_IsInClientArea(w1)) {
-				Wnd w3 = w1.WndWindow, w4 = w2.WndWindow;
+				Wnd w3 = w1.Window, w4 = w2.Window;
 				w1 = (w4 == w3 && _IsInClientArea(w3)) ? w3 : default;
 			}
 			return w1;

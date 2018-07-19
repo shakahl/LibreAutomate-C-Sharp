@@ -85,7 +85,7 @@ namespace Au.Tools
 		void _SetImage(WICResult r = null, Bitmap image = null)
 		{
 			if(r != null) { //on Capture
-				var wnd = r.wnd.WndWindow; if(wnd.Is0) return;
+				var wnd = r.wnd.Window; if(wnd.Is0) return;
 				_SetWndCon(wnd, r.wnd, true, false);
 				if(_isColor = (r.image == null)) using(var g = Graphics.FromImage(r.image = new Bitmap(16, 16))) g.Clear((Color)r.color);
 				_color = r.color.color & 0xffffff;
@@ -251,6 +251,8 @@ namespace Au.Tools
 			var bb = new StringBuilder();
 			bb.AppendLine(wndCode);
 
+			if(forTest) bb.AppendLine(wndVar).Append(".ActivateLL(); 200.ms();");
+
 			if(!isColor) {
 				if(isMulti) {
 					bb.AppendLine("object[] image = {");
@@ -314,7 +316,7 @@ namespace Au.Tools
 
 			string es = null;
 			if(rect) {
-				bool otherWindow = (_useCon ? r.wnd : r.wnd.WndWindow) != (_useCon ? _con : _wnd);
+				bool otherWindow = (_useCon ? r.wnd : r.wnd.Window) != (_useCon ? _con : _wnd);
 				if(otherWindow) es = "Whole rectangle must be in the client area of the captured image's window or control.";
 			} else if(r.wnd.Is0) {
 				r.image?.Dispose(); r.image = null;
@@ -448,7 +450,6 @@ namespace Au.Tools
 		{
 			_errorProvider.Clear();
 			var (code, wndVar) = _FormatCode(true); if(code == null) return;
-			_wnd.ActivateLL(); Time.SleepDoEvents(200);
 			var r = await TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as WinImage).RectInScreen);
 		}
 

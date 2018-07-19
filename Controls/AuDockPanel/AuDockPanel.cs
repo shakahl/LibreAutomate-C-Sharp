@@ -23,19 +23,16 @@ using static Au.NoClass;
 
 namespace Au.Controls
 {
-	//[DebuggerStepThrough]
-	//public sealed partial class GDockPanel :ContainerControl
-	//public sealed partial class GDockPanel :Panel
-	public sealed partial class GDockPanel :Control
+	public sealed partial class AuDockPanel :Control
 	{
-		List<GSplit> _aSplit;
-		List<GTab> _aTab;
-		List<GPanel> _aPanel;
-		GSplit _firstSplit; //matches the first <split> tag in XML
+		List<_Split> _aSplit;
+		List<_Tab> _aTab;
+		List<_Panel> _aPanel;
+		_Split _firstSplit; //matches the first <split> tag in XML
 		_PainTools _paintTools; //cache for brushes etc
 		ToolTip _toolTip; //tooltip for panel captions and tab buttons
 		string _xmlFile; //used to save panel layout later
-		Dictionary<string, Control> _initControls; //used to find controls specified in XML. Temporary, just for GPanel ctors called by Create().
+		Dictionary<string, Control> _initControls; //used to find controls specified in XML. Temporary, just for _Panel ctors called by Create().
 		const int _splitterWidth = 4; //default splitter width. Also used for toolbar caption width.
 
 		protected override void Dispose(bool disposing)
@@ -50,7 +47,7 @@ namespace Au.Controls
 			_paintTools?.Dispose(); _paintTools = null;
 			_toolTip?.Dispose(); _toolTip = null;
 
-			//tested: all GFloat are automatically closed before destroying this window
+			//tested: all _Float are automatically closed before destroying this window
 		}
 
 		/// <summary>
@@ -69,9 +66,9 @@ namespace Au.Controls
 				_initControls.Add(c.Name, c);
 			}
 
-			_aSplit = new List<GSplit>();
-			_aTab = new List<GTab>();
-			_aPanel = new List<GPanel>();
+			_aSplit = new List<_Split>();
+			_aTab = new List<_Tab>();
+			_aPanel = new List<_Panel>();
 			_paintTools = new _PainTools(this);
 			_toolTip = new ToolTip();
 
@@ -111,7 +108,7 @@ namespace Au.Controls
 					x = x.Element("split");
 
 					//THIS DOES THE MAIN JOB
-					_firstSplit = new GSplit(this, null, x);
+					_firstSplit = new _Split(this, null, x);
 
 					if(_aPanel.Count < _initControls.Count) { //more panels added in this app version
 						if(usesDefaultXML) throw new Exception("debug1");
@@ -149,9 +146,9 @@ namespace Au.Controls
 			foreach(var c in _initControls.Values) {
 				if(_aPanel.Exists(v => v.Content == c)) continue;
 				var x = xml.Descendant_("panel", "name", c.Name);
-				var gp = new GPanel(this, null, x) {
-					DockState = GDockState.Hidden,
-					SavedVisibleDockState = GDockState.Floating
+				var gp = new _Panel(this, null, x) {
+					DockState = _DockState.Hidden,
+					SavedVisibleDockState = _DockState.Floating
 				};
 				c.Visible = false;
 				Print($"Info: new {(gp.HasToolbar ? "toolbar" : "panel")} '{gp.Text}' added in this aplication version. Currently it is hidden.");
@@ -221,8 +218,8 @@ namespace Au.Controls
 			_WndProcAfter_Common(this, ref m);
 		}
 
-		//The X_Common functions are called by GDockPanel and by GFloat.
-		//Would be better to use a common base class for them, but it is difficult etc because GDockPanel is a control and GFloat is a top-level form.
+		//The X_Common functions are called by AuDockPanel and by _Float.
+		//Would be better to use a common base class for them, but it is difficult etc because AuDockPanel is a control and _Float is a top-level form.
 		bool _WndProcBefore_Common(Control c, ref Message m)
 		{
 			switch((uint)m.Msg) {
@@ -337,7 +334,7 @@ namespace Au.Controls
 			_HideTooltip();
 		}
 
-		GPanel _hilitedTabButton, _toolTipTabButton;
+		_Panel _hilitedTabButton, _toolTipTabButton;
 
 		void _UnhiliteTabButton()
 		{
@@ -414,25 +411,25 @@ namespace Au.Controls
 		};
 		struct _HitTestData
 		{
-			internal GSplit gs; //not null when _HitTestResult.Splitter
-			internal GTab gt; //not null when _HitTestResult.Caption and cursor is on tab caption and not button
-			internal GPanel gp; //not null when _HitTestResult.Caption and cursor is on panel caption or tab button
+			internal _Split gs; //not null when _HitTestResult.Splitter
+			internal _Tab gt; //not null when _HitTestResult.Caption and cursor is on tab caption and not button
+			internal _Panel gp; //not null when _HitTestResult.Caption and cursor is on panel caption or tab button
 
 			/// <summary>
-			/// If hit test on a tabbed GPanel, returns its parent GTab, else null.
+			/// If hit test on a tabbed _Panel, returns its parent _Tab, else null.
 			/// </summary>
-			internal GTab ParentTab { get => gp?.ParentTab; }
+			internal _Tab ParentTab { get => gp?.ParentTab; }
 
 			/// <summary>
-			/// If hit test on a GContentNode, returns it, else null.
+			/// If hit test on a _ContentNode, returns it, else null.
 			/// </summary>
-			internal GContentNode ContentNode { get => gt ?? gp as GContentNode; }
+			internal _ContentNode ContentNode { get => gt ?? gp as _ContentNode; }
 		}
 
 		/// <summary>
 		/// If hit-test on a splitter, sets ht.gs and returns _HitTestResult.Splitter.
-		/// Else if on a GPanel caption or GPanel tab button, sets gp and returns _HitTestResult.Caption.
-		/// Else (if on a GTab caption but not a  GPanel tab button) sets gt and returns _HitTestResult.Caption.
+		/// Else if on a _Panel caption or _Panel tab button, sets gp and returns _HitTestResult.Caption.
+		/// Else (if on a _Tab caption but not a  _Panel tab button) sets gt and returns _HitTestResult.Caption.
 		/// </summary>
 		_HitTestResult _HitTest(Control c, int x, int y, out _HitTestData ht)
 		{
@@ -446,13 +443,13 @@ namespace Au.Controls
 		#endregion mouse
 
 		[DebuggerStepThrough]
-		GPanel _FindPanel(Control control)
+		_Panel _FindPanel(Control control)
 		{
 			return _aPanel.Find(gp => gp.Content == control);
 		}
 
 		[DebuggerStepThrough]
-		GPanel _FindPanel(string name)
+		_Panel _FindPanel(string name)
 		{
 			return _aPanel.Find(gp => gp.Name == name);
 		}
@@ -514,14 +511,14 @@ namespace Au.Controls
 		//This worked, but better don't use.
 		//Instead, if panels added/removed/changed in new version, now automatically uses data from the default XML file.
 		/// <summary>
-		/// Creates new GPanel and adds it by the panel of control cBy, to an existing or new tab group or split.
+		/// Creates new _Panel and adds it by the panel of control cBy, to an existing or new tab group or split.
 		/// Does nothing if c is already added.
 		/// The new panel settings will be saved to the XML file.
 		/// Call this ater Create() when the new version of your app wants to add more panels without replacing the old XML (user-modified).
 		/// You can simply always call this function for all panels added in new versions (it does nothing if called not first time). Or call it once, eg if FindPanel() returns false for that control.
 		/// Also in new versions always pass the control to Create() too; it just ignores it if there is still no XML element for it.
 		/// </summary>
-		/// <param name="c">Control of the new GPanel.</param>
+		/// <param name="c">Control of the new _Panel.</param>
 		/// <param name="cBy">Add the new panel by the panel of this control.</param>
 		/// <param name="side">Specifies whether to add in a tab group or split, and at which side of cBy.</param>
 		/// <param name="xml">XML containing single element that stores panel settings, eg "&lt;panel text='Results' tooltip='Find results' image='15' hide='' /&gt;".</param>
@@ -532,8 +529,8 @@ namespace Au.Controls
 			this.Controls.Add(c);
 
 			var xdoc = XElement.Load(xml);
-			var gp = new GPanel(c, this, null, xdoc);
-			bool hide = gp.IsHidden; gp.DockState = GDockState.Hidden;
+			var gp = new _Panel(c, this, null, xdoc);
+			bool hide = gp.IsHidden; gp.DockState = DockState.Hidden;
 			var gpBy = _FindPanel(cBy);
 			gp.DockBy(gpBy, side, true);
 			if(hide) gp.Hide();
@@ -553,19 +550,19 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Used with many GDockPanel events and othe callbacks.
+		/// Used with many AuDockPanel events and othe callbacks.
 		/// </summary>
-		public class GDockPanelEventArgs :EventArgs
+		public class DPEventArgs :EventArgs
 		{
-			public GDockPanel dp { get; private set; }
+			public AuDockPanel dp { get; private set; }
 			public Control control { get; set; }
 			public string panelName { get; private set; }
 
 			/// <summary>ctor.</summary>
-			/// <param name="gPanel">Must be GPanel. We use object because C# compiler does not allow to use GPanel (less accessible).</param>
-			internal GDockPanelEventArgs(object gPanel)
+			/// <param name="gPanel">Must be _Panel. We use object because C# compiler does not allow to use _Panel (less accessible).</param>
+			internal DPEventArgs(object gPanel)
 			{
-				var gp = gPanel as GPanel;
+				var gp = gPanel as _Panel;
 				dp = gp.Manager;
 				control = gp.Content;
 				panelName = gp.Name;
@@ -573,17 +570,15 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Used with many GDockPanel events and other callbacks.
+		/// Used with many AuDockPanel events and other callbacks.
 		/// </summary>
-		public delegate void GDockPanelEventHandler<T>(T e);
+		public delegate void DPEventHandler<T>(T e);
 
-		//public event GDockPanelEventHandler<GDockPanelEventArgs> DockStateChanged;
-
-		public class GDockPanelContextMenuEventArgs :GDockPanelEventArgs
+		public class DPContextMenuEventArgs :DPEventArgs
 		{
 			public AuMenu menu { get; internal set; }
 
-			internal GDockPanelContextMenuEventArgs(object gPanel, AuMenu cm) : base(gPanel)
+			internal DPContextMenuEventArgs(object gPanel, AuMenu cm) : base(gPanel)
 			{
 				menu = cm;
 			}
@@ -593,7 +588,7 @@ namespace Au.Controls
 		/// Before showing the context menu when the user right-clicks a panel tab button or caption.
 		/// The event handler can add/remove/etc menu items.
 		/// </summary>
-		public event GDockPanelEventHandler<GDockPanelContextMenuEventArgs> PanelContextMenu;
+		public event DPEventHandler<DPContextMenuEventArgs> PanelContextMenu;
 
 		/// <summary>
 		/// Removes rounded edges of the ToolStrip to which is assigned.

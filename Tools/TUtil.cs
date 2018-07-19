@@ -298,7 +298,7 @@ namespace Au.Tools
 							//show rect of UI object from mouse
 							Wnd w = Wnd.FromMouse(WXYFlags.NeedWindow);
 							RECT? r = default;
-							if(!(w.Is0 || w == wForm || w.WndOwner == wForm)) {
+							if(!(w.Is0 || w == wForm || w.Owner == wForm)) {
 								r = _cbGetRect();
 							}
 							if(r.HasValue) {
@@ -466,9 +466,9 @@ namespace Au.Tools
 				TUtil.ShowOsdRect(re);
 
 				//if form or its visible owners cover the found object, temporarily activate object's window
-				foreach(var ow in Wnd.Misc.OwnerWindowsAndThis((Wnd)form, true)) {
+				foreach(var ow in ((Wnd)form).Get.OwnersAndThis(true)) {
 					if(re.IntersectsWith(ow.Rect)) {
-						r.wnd.WndWindow.ActivateLL();
+						r.wnd.Window.ActivateLL();
 						Time.SleepDoEvents(1500);
 						break;
 					}

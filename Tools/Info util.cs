@@ -37,7 +37,6 @@ namespace Au.Tools
 	/// Can be used by tool dialogs to display common info in <see cref="AuInfoBox"/> control.
 	/// The control must support tags.
 	/// </summary>
-	//[DebuggerStepThrough]
 	internal class CommonInfos
 	{
 		AuInfoBox _control;

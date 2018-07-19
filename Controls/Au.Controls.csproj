@@ -35,7 +35,7 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>3001,3002,3003,3009,1591</NoWarn>
-    <DocumentationFile>Au.Controls.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\Au.Controls.xml</DocumentationFile>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
@@ -49,6 +49,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.ValueTuple, Version=4.0.2.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.ValueTuple.4.4.0\lib\net461\System.ValueTuple.dll</HintPath>
@@ -62,6 +63,7 @@
     <Compile Include="Other\AuToolStrip.cs">
       <SubType>Component</SubType>
     </Compile>
+    <Compile Include="Other\Buttons.cs" />
     <Compile Include="Other\ParamGrid.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -82,34 +84,33 @@
     </Compile>
     <Compile Include="Sci\SciTags.cs" />
     <Compile Include="Util, Api\ControlsApi.cs" />
-    <Compile Include="Util, Api\ControlUtil.cs" />
-    <Compile Include="GDockPanel\GDP common.cs">
+    <Compile Include="AuDockPanel\DP common.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GDockPanel\GFloat.cs">
+    <Compile Include="AuDockPanel\_Float.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GDockPanel\GPanel.cs">
+    <Compile Include="AuDockPanel\_Panel.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GDockPanel\GDockPanel.cs">
+    <Compile Include="AuDockPanel\AuDockPanel.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GDockPanel\GSplit.cs">
+    <Compile Include="AuDockPanel\_Split.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GDockPanel\GTab.cs">
+    <Compile Include="AuDockPanel\_Tab.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="GDockPanel\GAcc.cs">
+    <Compile Include="AuDockPanel\_Acc.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Sci\Sci API.cs" />
     <Compile Include="Sci\SciImages.cs" />
-    <Compile Include="GStripManager\GSMProp.cs">
+    <Compile Include="AuStripManager\AuStripManagerPropertiesDialog.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="GStripManager\GStripManager.cs" />
+    <Compile Include="AuStripManager\AuStripManager.cs" />
     <Compile Include="Other\Form_.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -135,8 +136,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="GStripManager\GSMProp.resx">
-      <DependentUpon>GSMProp.cs</DependentUpon>
+    <None Include="AuStripManager\AuStripManagerPropertiesDialog.resx">
+      <DependentUpon>AuStripManagerPropertiesDialog.cs</DependentUpon>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

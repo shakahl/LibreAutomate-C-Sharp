@@ -728,7 +728,7 @@ namespace Au.Types
 		public readonly OptKey opt;
 
 		/// <summary>
-		/// The focused control. If there is no focused control - the active window. Use <c>w.WndWindow</c> to get top-level parent window; if <c>w.WndWindow == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
+		/// The focused control. If there is no focused control - the active window. Use <c>w.Window</c> to get top-level window; if <c>w.Window == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
 		/// </summary>
 		public readonly Wnd w;
 	}

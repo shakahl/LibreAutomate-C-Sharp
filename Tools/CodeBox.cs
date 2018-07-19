@@ -184,13 +184,13 @@ namespace Au.Tools
 								if(!Empty(name)) prefix = "***wfName ";
 								else {
 									var nameAcc = con.NameAcc;
-									var nameLabel = con.NameLabel;
-									if(!Empty(nameAcc) || !Empty(nameLabel)) {
-										if(Empty(nameAcc) || nameLabel == nameAcc) {
-											name = nameLabel; prefix = "***label ";
-										} else {
+									//var nameLabel = con.NameLabel;
+									if(!Empty(nameAcc)/* || !Empty(nameLabel)*/) {
+										//if(Empty(nameAcc) || nameLabel == nameAcc) {
+										//	name = nameLabel; prefix = "***label ";
+										//} else {
 											name = nameAcc; prefix = "***accName ";
-										}
+										//}
 									}
 								}
 							}

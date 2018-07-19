@@ -38,8 +38,8 @@ namespace Au.Tools
 			this.splitContainer3 = new System.Windows.Forms.SplitContainer();
 			this._code = new Au.Tools.CodeBox();
 			this._cCapture = new System.Windows.Forms.CheckBox();
-			this._bOK = new System.Windows.Forms.Button();
-			this._bCancel = new System.Windows.Forms.Button();
+			this._bOK = new Au.Controls.ButtonOK();
+			this._bCancel = new Au.Controls.ButtonCancel();
 			this._bTest = new System.Windows.Forms.Button();
 			this._lSpeed = new System.Windows.Forms.Label();
 			this._info = new Au.Controls.AuInfoBox();
@@ -203,24 +203,20 @@ namespace Au.Tools
 			// 
 			// _bOK
 			// 
-			this._bOK.DialogResult = System.Windows.Forms.DialogResult.OK;
 			this._bOK.Enabled = false;
 			this._bOK.Location = new System.Drawing.Point(168, 72);
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
 			this._bOK.TabIndex = 2;
-			this._bOK.Text = "&OK";
 			this._bOK.UseVisualStyleBackColor = true;
 			this._bOK.Click += new System.EventHandler(this._bOK_Click);
 			// 
 			// _bCancel
 			// 
-			this._bCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
 			this._bCancel.Location = new System.Drawing.Point(248, 72);
 			this._bCancel.Name = "_bCancel";
 			this._bCancel.Size = new System.Drawing.Size(72, 24);
 			this._bCancel.TabIndex = 3;
-			this._bCancel.Text = "Cancel";
 			this._bCancel.UseVisualStyleBackColor = true;
 			// 
 			// _bTest
@@ -279,6 +275,7 @@ namespace Au.Tools
 			this.Controls.Add(this._bOK);
 			this.Controls.Add(this._cCapture);
 			this.Controls.Add(this.splitContainer1);
+			this.IsPopup = true;
 			this.MinimumSize = new System.Drawing.Size(500, 400);
 			this.Name = "Form_Acc";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
@@ -303,8 +300,8 @@ namespace Au.Tools
 		private CheckBox _cCapture;
 		private Button _bTest;
 		private Label _lSpeed;
-		private Button _bOK;
-		private Button _bCancel;
+		private Au.Controls.ButtonOK _bOK;
+		private Au.Controls.ButtonCancel _bCancel;
 		private SplitContainer splitContainer1;
 		private SplitContainer splitContainer2;
 		private Au.Controls.ParamGrid _grid;

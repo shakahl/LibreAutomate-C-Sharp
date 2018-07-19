@@ -649,7 +649,7 @@ namespace Au
 		/// <seealso cref="Options.AutoOwnerWindow"/>
 		public void SetOwnerWindow(AnyWnd owner, bool ownerCenter = false, bool doNotDisable = false)
 		{
-			_c.hwndParent = owner.IsEmpty ? default : owner.Wnd.WndWindow;
+			_c.hwndParent = owner.IsEmpty ? default : owner.Wnd.Window;
 			_SetFlag(TDF_.POSITION_RELATIVE_TO_WINDOW, ownerCenter);
 			_enableOwner = doNotDisable;
 		}
@@ -761,7 +761,7 @@ namespace Au
 			SetTitleBarText(_c.pszWindowTitle); //if not set, sets default
 			_EditControlInitBeforeShowDialog(); //don't reorder, must be before flags
 
-			if(_c.hwndParent.Is0 && Options.AutoOwnerWindow) _c.hwndParent = Wnd.ThisThread.WndActive; //info: MessageBox.Show also does it, but it also disables all thread windows
+			if(_c.hwndParent.Is0 && Options.AutoOwnerWindow) _c.hwndParent = Wnd.ThisThread.Active; //info: MessageBox.Show also does it, but it also disables all thread windows
 			if(_c.hwndParent.IsAlive) {
 				if(!_enableOwner && !_c.hwndParent.IsOfThisThread) _enableOwner = true;
 				if(_enableOwner && !_c.hwndParent.IsEnabled) _enableOwner = false;
@@ -1201,7 +1201,7 @@ namespace Au
 			case Api.WM_NCRBUTTONDOWN:
 			case Api.WM_KEYDOWN:
 			case Api.WM_SYSKEYDOWN:
-				if(_timeoutActive && d.msg->hwnd.WndWindow == _dlg) {
+				if(_timeoutActive && d.msg->hwnd.Window == _dlg) {
 					_timeoutActive = false;
 					//_TimeoutFooterTextHide();
 					Send.ChangeFooterText(_timeoutFooterText, false);

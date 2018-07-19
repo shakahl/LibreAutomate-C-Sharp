@@ -21,56 +21,56 @@ using static Au.NoClass;
 
 namespace Au.Controls
 {
-	partial class GDockPanel
+	public partial class AuDockPanel
 	{
-		internal GAccContainer AccObj;
+		_AccContainer _acc;
 
 		protected override AccessibleObject CreateAccessibilityInstance()
 		{
-			if(AccObj == null) AccObj = new GAccContainer(this, this);
-			return AccObj;
+			if(_acc == null) _acc = new _AccContainer(this, this);
+			return _acc;
 		}
 
-		partial class GFloat
+		partial class _Float
 		{
-			internal GAccContainer AccObj;
+			internal _AccContainer AccObj;
 
 			protected override AccessibleObject CreateAccessibilityInstance()
 			{
-				if(AccObj == null) AccObj = new GAccContainer(this, _manager);
+				if(AccObj == null) AccObj = new _AccContainer(this, _manager);
 				return AccObj;
 			}
 
 			internal string AccName { get => _gc.AccName; }
 		}
 
-		partial class GNode
+		partial class _Node
 		{
-			GAccNode _acc;
+			_AccNode _acc;
 
-			//internal GAccNode AccNode { get}
-			public static explicit operator GAccNode(GNode gn) { return gn._acc ?? (gn._acc = new GAccNode(gn)); }
+			//internal _AccNode AccNode { get}
+			public static explicit operator _AccNode(_Node gn) { return gn._acc ?? (gn._acc = new _AccNode(gn)); }
 
 			internal virtual string AccName { get; }
 			internal virtual string AccDescription { get; }
 
 		}
 
-		partial class GPanel
+		partial class _Panel
 		{
 			internal override string AccName { get => Name; }
 			internal override string AccDescription { get => ToolTipText; }
 
 		}
 
-		partial class GTab
+		partial class _Tab
 		{
 			internal override string AccName { get => "Tab group " + _manager._aTab.IndexOf(this); }
 			internal override string AccDescription { get => string.Join(", ", this.Items.Select(v => v.AccName)); }
 
 		}
 
-		partial class GSplit
+		partial class _Split
 		{
 			internal override string AccName { get => "Splitter " + _manager._aSplit.IndexOf(this); }
 			internal override string AccDescription { get => (this.IsVerticalSplit ? "Vertical" : "Horizontal"); }
@@ -78,20 +78,19 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Used by GDockPanel and GFloat.
+		/// Used by AuDockPanel and _Float.
 		/// </summary>
-		//[DebuggerStepThrough]
-		internal class GAccContainer :ControlAccessibleObject
+		class _AccContainer :ControlAccessibleObject
 		{
-			GDockPanel _manager;
+			AuDockPanel _manager;
 			Control _control;
-			GFloat _gf;
+			_Float _gf;
 
-			public GAccContainer(Control ownerControl, GDockPanel manager) : base(ownerControl)
+			public _AccContainer(Control ownerControl, AuDockPanel manager) : base(ownerControl)
 			{
 				_manager = manager;
 				_control = ownerControl;
-				_gf = ownerControl as GFloat;
+				_gf = ownerControl as _Float;
 			}
 
 			//public override AccessibleRole Role { get => AccessibleRole.Client; }
@@ -110,9 +109,9 @@ namespace Au.Controls
 				_HitTestData ht;
 				switch(_manager._HitTest(_control, p.X, p.Y, out ht)) {
 				case _HitTestResult.Splitter:
-					return (GAccNode)ht.gs;
+					return (_AccNode)ht.gs;
 				case _HitTestResult.Caption:
-					return (GAccNode)ht.ContentNode;
+					return (_AccNode)ht.ContentNode;
 				}
 
 				foreach(var gp in _manager._aPanel) {
@@ -149,21 +148,21 @@ namespace Au.Controls
 
 			public override AccessibleObject GetChild(int index)
 			{
-				//note: we always get all GNode and controls (docked and floating), regardless of _control type (GDockPanel or GFloat).
+				//note: we always get all _Node and controls (docked and floating), regardless of _control type (AuDockPanel or _Float).
 
 				//Print(index);
 				var n = _manager._aPanel.Count * 2;
 				if(index < n) {
 					var gp = _manager._aPanel[index / 2];
-					if((index & 1) == 0) return (GAccNode)gp;
+					if((index & 1) == 0) return (_AccNode)gp;
 					return _AccOfControl(gp.Content);
 				}
 				index -= n;
 				n = _manager._aTab.Count;
-				if(index < n) return (GAccNode)_manager._aTab[index];
+				if(index < n) return (_AccNode)_manager._aTab[index];
 				index -= n;
 				n = _manager._aSplit.Count;
-				if(index < n) return (GAccNode)_manager._aSplit[index];
+				if(index < n) return (_AccNode)_manager._aSplit[index];
 				Debug.Assert(false);
 				return null;
 			}
@@ -174,17 +173,17 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// AccessibleObject of GNode.
-		/// We use separate class (don't inherit GNode from AccessibleObject) to avoid GNode cluttering and conflicts (Name, Bounds etc).
+		/// AccessibleObject of _Node.
+		/// We use separate class (don't inherit _Node from AccessibleObject) to avoid _Node cluttering and conflicts (Name, Bounds etc).
 		/// </summary>
-		class GAccNode :AccessibleObject
+		class _AccNode :AccessibleObject
 		{
-			//GAccContainer _parentAcc; //will get from _gn.ParentControl, because it may change
-			GNode _gn;
+			//_AccContainer _parentAcc; //will get from _gn.ParentControl, because it may change
+			_Node _gn;
 
-			internal GAccNode(GNode gn)
+			internal _AccNode(_Node gn)
 			{
-				//Print("GAccNode ctor", gn.AccName);
+				//Print("_AccNode ctor", gn.AccName);
 				_gn = gn;
 			}
 
@@ -192,8 +191,8 @@ namespace Au.Controls
 			{
 				get
 				{
-					if(_gn is GSplit) return AccessibleRole.Separator;
-					if(_gn is GTab) return AccessibleRole.PageTabList;
+					if(_gn is _Split) return AccessibleRole.Separator;
+					if(_gn is _Tab) return AccessibleRole.PageTabList;
 					return AccessibleRole.PageTab;
 				}
 			}
@@ -205,7 +204,7 @@ namespace Au.Controls
 				get
 				{
 					if(!_gn.IsHidden) {
-						if(!(_gn is GSplit gs) || gs.IsSplitterVisible) return AccessibleStates.None;
+						if(!(_gn is _Split gs) || gs.IsSplitterVisible) return AccessibleStates.None;
 					}
 					return AccessibleStates.Invisible;
 				}
@@ -216,9 +215,9 @@ namespace Au.Controls
 				get
 				{
 					Rectangle r;
-					if(_gn is GSplit gs) r = gs.SplitterBounds;
-					else if(_gn is GPanel gp) r = gp.CaptionBounds;
-					else r = (_gn as GTab).CaptionBoundsExceptButtons;
+					if(_gn is _Split gs) r = gs.SplitterBounds;
+					else if(_gn is _Panel gp) r = gp.CaptionBounds;
+					else r = (_gn as _Tab).CaptionBoundsExceptButtons;
 
 					return _gn.ParentControl.RectangleToScreen(r);
 				}
@@ -238,8 +237,8 @@ namespace Au.Controls
 				get
 				{
 					var c = _gn.ParentControl;
-					if(c is GFloat gf) return gf.AccObj;
-					return (c as GDockPanel).AccObj;
+					if(c is _Float gf) return gf.AccObj;
+					return (c as AuDockPanel)._acc;
 				}
 			}
 
@@ -249,21 +248,21 @@ namespace Au.Controls
 			{
 				get
 				{
-					if(_gn is GPanel gp && gp.IsTabbedPanel) return "Click";
+					if(_gn is _Panel gp && gp.IsTabbedPanel) return "Click";
 					return null;
 				}
 			}
 
 			public override void DoDefaultAction()
 			{
-				var gp = _gn as GPanel;
+				var gp = _gn as _Panel;
 				var gt = gp?.ParentTab;
 				gt?.SetActiveItem(gp, true);
 			}
 
 			public override AccessibleObject GetSelected()
 			{
-				if(_gn is GTab gt) return (GAccNode)gt.ActiveItem;
+				if(_gn is _Tab gt) return (_AccNode)gt.ActiveItem;
 				return null;
 			}
 		}

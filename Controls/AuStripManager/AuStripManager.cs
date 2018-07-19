@@ -23,7 +23,7 @@ using static Au.NoClass;
 namespace Au.Controls
 {
 	/// <summary>
-	/// <see cref="GStripManager"/> uses this interface to get properties of menu/toolbar items that it cannot get from XML (Click event handlers, images etc).
+	/// <see cref="AuStripManager"/> uses this interface to get properties of menu/toolbar items that it cannot get from XML (Click event handlers, images etc).
 	/// Also used to notify about some events.
 	/// </summary>
 	public interface IGStripManagerCallbacks
@@ -50,8 +50,7 @@ namespace Au.Controls
 		void ItemAdding(ToolStripItem item, ToolStrip owner);
 	}
 
-	//[DebuggerStepThrough]
-	public partial class GStripManager
+	public partial class AuStripManager
 	{
 		string _xmlFileDefault, _xmlFileCustom;
 		XElement _xStrips; //XML root element, contains menubar and toolbars
@@ -80,7 +79,7 @@ namespace Au.Controls
 
 		/// <param name="form">Form used as owner of dialog boxes.</param>
 		/// <param name="callbacks"></param>
-		public GStripManager(Form form, IGStripManagerCallbacks callbacks)
+		public AuStripManager(Form form, IGStripManagerCallbacks callbacks)
 		{
 			_form = form;
 			_callbacks = callbacks;
@@ -100,11 +99,12 @@ namespace Au.Controls
 
 			_xmlFileDefault = xmlFile;
 			_xmlFileCustom = xmlFileCustom;
-			_xStrips = XElement.Load(xmlFile); //TODO: now silent unhandled exception if not found
+			try { _xStrips = XElement.Load(xmlFile); }
+			catch(Exception ex) { AuDialog.ShowError("Failed to load file", ex.ToString()); throw; }
 			XElement xCustom = null;
 			if(Files.ExistsAsFile(_xmlFileCustom)) {
 				try { xCustom = XElement.Load(_xmlFileCustom); }
-				catch(Exception e) { Print("Failed to load XML file", _xmlFileCustom, e.Message); }
+				catch(Exception e) { Print("Failed to load file", _xmlFileCustom, e.Message); }
 			}
 
 			Size imageScalingSize = Au.Util.Dpi.SmallIconSize; //if high DPI, auto scale images
@@ -501,7 +501,7 @@ namespace Au.Controls
 			var m = new AuMenu();
 			m["Properties..."] = o =>
 			{
-				using(var f = new GStripManagerPropertiesDialog(this, item.Tag as XElement, isMenu)) {
+				using(var f = new AuStripManagerPropertiesDialog(this, item.Tag as XElement, isMenu)) {
 					if(f.ShowDialog(_form) == DialogResult.OK)
 						_Strips_Customize(6, item, null, f);
 				}
@@ -550,7 +550,7 @@ namespace Au.Controls
 		/// <param name="tsTo">Destination toolbar, or null if don't need.</param>
 		/// <param name="etc">
 		/// With action 2 (move) can be the target button as ToolStripItem; if null, moves to the end.
-		/// With action 6 (properties) - GSMProp.
+		/// With action 6 (properties) - AuStripManagerPropertiesDialog.
 		/// </param>
 		void _Strips_Customize(uint action, ToolStripItem item, ToolStrip tsTo = null, object etc = null)
 		{
@@ -601,7 +601,7 @@ namespace Au.Controls
 				item.Overflow = hide ? ToolStripItemOverflow.Always : ToolStripItemOverflow.AsNeeded;
 				break;
 			case 6: //properties
-				var f = etc as GStripManagerPropertiesDialog;
+				var f = etc as AuStripManagerPropertiesDialog;
 				bool isMenu = item.Owner is ToolStripDropDownMenu;
 
 				s = f.textText.Text; if(s == "") s = null;

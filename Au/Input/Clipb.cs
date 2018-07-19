@@ -487,7 +487,6 @@ namespace Au
 					//		With or without clipboard restoring.
 					//		Then starts to work correctly always. Difficult to debug.
 					//		KeySpeedClipboard=100 usually helps, but sometimes even 300 does not help.
-					//	TODO: QM2 always pastes old text, waits and then error.
 				}
 			}
 		}

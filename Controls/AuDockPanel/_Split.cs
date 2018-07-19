@@ -23,14 +23,14 @@ using static Au.NoClass;
 
 namespace Au.Controls
 {
-	partial class GDockPanel
+	public partial class AuDockPanel
 	{
 		/// <summary>
-		/// Contains 2 GNode (GPanel, GTab, GSplit or GDummyNode) and a splitter.
+		/// Contains 2 _Node (_Panel, _Tab, _Split or _DummyNode) and a splitter.
 		/// </summary>
-		partial class GSplit :GNode
+		partial class _Split :_Node
 		{
-			internal GNode Child1, Child2; //GPanel or GSplit or GTab
+			internal _Node Child1, Child2; //_Panel or _Split or _Tab
 			internal Rectangle SplitterBounds; //valid only when both children are docked
 			internal bool IsVerticalSplit;
 			internal int SplitterWidth;
@@ -42,7 +42,7 @@ namespace Au.Controls
 			/// <summary>
 			/// This ctor is used at startup, when adding from XML.
 			/// </summary>
-			internal GSplit(GDockPanel manager, GSplit parentSplit, XElement x) : base(manager, parentSplit)
+			internal _Split(AuDockPanel manager, _Split parentSplit, XElement x) : base(manager, parentSplit)
 			{
 				manager._aSplit.Add(this);
 
@@ -50,23 +50,23 @@ namespace Au.Controls
 				int k = x.Attribute_("splitter", -1); if(k < 0 || k > 20) k = _splitterWidth;
 				this.SplitterWidth = k;
 
-				//SHOULDDO: should use DPI-dependent units, not pixels. Especially if form size depends on DPI.
+				//SHOULDDO: use DPI-dependent units, not pixels. Especially if form size depends on DPI.
 				if(!(_isFraction = x.Attribute_(out _fraction, "f")) && !(_isWidth1 = x.Attribute_(out _width, "w1"))) _width = x.Attribute_("w2", 1);
 
 				foreach(var xe in x.Elements()) {
-					GNode gn = null;
+					_Node gn = null;
 					switch(xe.Name.LocalName) {
 					case "panel":
-						gn = new GPanel(manager, this, xe);
+						gn = new _Panel(manager, this, xe);
 						break;
 					case "split":
-						gn = new GSplit(manager, this, xe);
+						gn = new _Split(manager, this, xe);
 						break;
 					case "tab":
-						gn = new GTab(manager, this, xe);
+						gn = new _Tab(manager, this, xe);
 						break;
 					case "dummy":
-						gn = new GDummyNode(_manager, this);
+						gn = new _DummyNode(_manager, this);
 						break;
 					default: continue;
 					}
@@ -77,7 +77,7 @@ namespace Au.Controls
 				}
 				if(Child2 == null) throw new Exception();
 
-				if(_dockedChildCount == 0) this.DockState = GDockState.Hidden;
+				if(_dockedChildCount == 0) this.DockState = _DockState.Hidden;
 			}
 
 			internal override void Save(XmlWriter x)
@@ -100,10 +100,10 @@ namespace Au.Controls
 			}
 
 			/// <summary>
-			/// This ctor is used when a floating GContentNode dropped on a docked GContentNode.
+			/// This ctor is used when a floating _ContentNode dropped on a docked _ContentNode.
 			/// child1 or child2 must be docked, but not both.
 			/// </summary>
-			internal GSplit(GDockPanel manager, GSplit parentSplit, GNode child1, GNode child2, bool isVertical) : base(manager, parentSplit)
+			internal _Split(AuDockPanel manager, _Split parentSplit, _Node child1, _Node child2, bool isVertical) : base(manager, parentSplit)
 			{
 				manager._aSplit.Add(this);
 
@@ -124,16 +124,16 @@ namespace Au.Controls
 			/// Does not update layout.
 			/// </summary>
 			/// <param name="gn">One of children. The caller is removing it from this.</param>
-			internal void OnChildRemoved(GNode gn)
+			internal void OnChildRemoved(_Node gn)
 			{
 				_AssertIsChild(gn);
 				Debug.Assert(!gn.IsDocked);
 				var gnOther = gn == Child1 ? Child2 : Child1;
 				if(this == _manager._firstSplit) {
-					var gs = gnOther as GSplit;
+					var gs = gnOther as _Split;
 					if(gs == null) {
-						//gnOther is GTab, because the user moved all panels to a single GTab. We cannot delete this (root) GSplit.
-						var gd = new GDummyNode(_manager, this);
+						//gnOther is _Tab, because the user moved all panels to a single _Tab. We cannot delete this (root) _Split.
+						var gd = new _DummyNode(_manager, this);
 						if(gn == Child1) Child1 = gd; else Child2 = gd;
 						//never mind: when saving layout to XML, should remove this dummy node if can. Not necessary, because impossible to create multiple dummy nodes.
 						return;
@@ -153,7 +153,7 @@ namespace Au.Controls
 			/// Replaces child gnOld with gnNew.
 			/// Sets gnNew.ParentSplit = this.
 			/// </summary>
-			internal void ReplaceChild(GNode gnOld, GNode gnNew)
+			internal void ReplaceChild(_Node gnOld, _Node gnNew)
 			{
 				_AssertIsChild(gnOld);
 				if(gnOld == Child1) Child1 = gnNew; else Child2 = gnNew;
@@ -164,7 +164,7 @@ namespace Au.Controls
 			/// Changes IsVerticalSplit, Child1 and Child2 if need.
 			/// Does not update layout.
 			/// </summary>
-			internal void RepositionChild(GNode gn, bool vertically, bool afterSibling)
+			internal void RepositionChild(_Node gn, bool vertically, bool afterSibling)
 			{
 				_AssertIsChild(gn);
 				this.IsVerticalSplit = vertically;
@@ -251,7 +251,7 @@ namespace Au.Controls
 				}
 			}
 
-			int _MinimalChildWidthOrHeight(GNode gn)
+			int _MinimalChildWidthOrHeight(_Node gn)
 			{
 				if(!gn.IsDocked) return 0;
 				return this.IsVerticalSplit ? gn.MinimalWidth : gn.MinimalHeight;
@@ -296,7 +296,7 @@ namespace Au.Controls
 			}
 
 			/// <summary>
-			/// Called from GDockPanel.OnPaint, for its _firstSplit.
+			/// Called from AuDockPanel.OnPaint, for its _firstSplit.
 			/// Paints all descendants.
 			/// </summary>
 			internal override void Paint(Graphics g)
@@ -323,13 +323,13 @@ namespace Au.Controls
 
 			internal bool IsSplitterVisible { get => _dockedChildCount == 2; }
 
-			internal void OnChildUndocked(GNode gn)
+			internal void OnChildUndocked(_Node gn)
 			{
 				_AssertIsChild(gn);
 				Debug.Assert(_dockedChildCount > 0);
 
 				if(--_dockedChildCount == 0) {
-					this.DockState = GDockState.Hidden;
+					this.DockState = _DockState.Hidden;
 					if(this.ParentSplit != null) this.ParentSplit.OnChildUndocked(this);
 					else _manager.Invalidate(this.Bounds); //not this.Invalidate(); because now already Hidden
 				} else {
@@ -337,13 +337,13 @@ namespace Au.Controls
 				}
 			}
 
-			internal void OnChildDocked(GNode gn)
+			internal void OnChildDocked(_Node gn)
 			{
 				_AssertIsChild(gn);
 				Debug.Assert(_dockedChildCount < 2);
 
 				if(++_dockedChildCount == 1) {
-					this.DockState = GDockState.Docked;
+					this.DockState = _DockState.Docked;
 					this.ParentSplit?.OnChildDocked(this);
 				}
 
@@ -354,7 +354,7 @@ namespace Au.Controls
 			/// Sets a child (of this, or of an ancestor if need) to have fixed width or height.
 			/// Used for context menu.
 			/// </summary>
-			internal void SetChildFixedSize(GNode gn, bool useWidth, bool fixedSize)
+			internal void SetChildFixedSize(_Node gn, bool useWidth, bool fixedSize)
 			{
 				//gn = _GetChildNotTabbedPanel(gn);
 				_AssertIsChild(gn);
@@ -381,7 +381,7 @@ namespace Au.Controls
 			/// Gets whether a child (of this, or of an ancestor if need) has fixed width or height.
 			/// Used for context menu.
 			/// </summary>
-			internal bool IsChildFixedSize(GNode gn, bool useWidth)
+			internal bool IsChildFixedSize(_Node gn, bool useWidth)
 			{
 				//gn = _GetChildNotTabbedPanel(gn);
 				_AssertIsChild(gn);
@@ -412,7 +412,7 @@ namespace Au.Controls
 			}
 
 			[Conditional("DEBUG")]
-			void _AssertIsChild(GNode gn)
+			void _AssertIsChild(_Node gn)
 			{
 				Debug.Assert(gn == Child1 || gn == Child2);
 			}

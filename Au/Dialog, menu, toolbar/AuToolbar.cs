@@ -24,7 +24,7 @@ namespace Au
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class AuToolbar :AuBaseMT
+	public class AuToolbar :BaseMT
 	{
 		static AuToolbar()
 		{

@@ -23,14 +23,18 @@ using static Au.NoClass;
 #if TEST
 partial class ThisIsNotAFormFile { }
 
-//[DebuggerStepThrough]
 partial class EForm
 {
 	internal void TestEditor()
 	{
-		var f = new Au.Tools.Form_Acc();
+		var f = new Au.Tools.Form_Wnd();
+		//var f = new Au.Tools.Form_Acc();
+		//var f = new Au.Tools.Form_WinImage();
+		//Wnd.GetWnd.Root.Activate();100.ms();
 		f.Show(this);
-
+		//f.ShowDialog();
+		//f.Dispose();
+		f.FormClosed += (unu, sed) => Print(f.DialogResult, f.ResultCode);
 
 
 		//Panels.Status.SetText("same thread\r\nline2\r\nline3");

@@ -20,10 +20,20 @@
             3. Fixes some MenuStrip bugs.
             </summary>
         </member>
+        <member name="T:Au.Controls.ButtonOK">
+            <summary>
+            Button that automatically sets its Text = "OK", DialogResult = DialogResult.OK and form's AcceptButton.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.ButtonCancel">
+            <summary>
+            Button that automatically sets its Text = "Cancel", DialogResult = DialogResult.Cancel and form's CancelButton.
+            </summary>
+        </member>
         <member name="T:Au.Controls.ParamGrid">
             <summary>
-            Property grid control.
-            Used in many tools, for example "Find window or control".
+            2-column grid control similar to a propertygrid but more flexible.
+            Used in many code tools to edit function arguments etc. For example in "Find window or control".
             </summary>
         </member>
         <member name="M:Au.Controls.ParamGrid.ZAutoSize(System.Boolean,System.Boolean)">
@@ -879,13 +889,213 @@
         </member>
         <member name="T:Au.Controls.SciTags">
             <summary>
-            Used by <see cref="T:Au.Controls.AuScintilla"/> controls. Adds links and formatting.
+            Adds links and text formatting to a <see cref="T:Au.Controls.AuScintilla"/> control.
+            Links and formatting is specified in text, using tags like in HTML. Reference is in Remarks.
+            Tags are supported by the <b>Print</b> function when it writes to the Au script editor.
             </summary>
             <remarks>
-            Links and formatting is specified in control text using tags similar to HTML. To enable tags, use <see cref="P:Au.Controls.AuScintilla.InitTagsStyle"/>.
+            Links and text formatting is specified in control text using tags similar to HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
             
-            //TODO
+            For most tags use this format: <c><![CDATA[<tag>text<>]]></c> or <c><![CDATA[<tag attribute>text<>]]></c>. Attribute can be enclosed in ' or " (must be enclosed if contains &gt;).
+            For these tags use different format: <c><![CDATA[<_>literal text</_>]]></c>, <c><![CDATA[<code>code</code>]]></c>, <c><![CDATA[<image "attribute">]]></c>.
+            Tags can be nested, like <c><![CDATA[<b><c green>text<><>]]></c> or <c><![CDATA[<b>text <c green>text<> text<>]]></c>.
+            
+            Simple formatting tags:
+            <list type="table">
+            <listheader>
+            <term>Examples</term>
+            <term>Comments</term>
+            </listheader>
+            <item>
+            <description><c><![CDATA[<b>text<>]]></c></description>
+            <description>Bold text.</description>
+            </item>
+            <item>
+            <description><c><![CDATA[<i>text<>]]></c></description>
+            <description>Italic text.</description>
+            </item>
+            <item>
+            <description><c><![CDATA[<bi>text<>]]></c></description>
+            <description>Bold italic.</description>
+            </item>
+            <item>
+            <description><c><![CDATA[<u>text<>]]></c></description>
+            <description>Underline.</description>
+            </item>
+            <item>
+            <description>
+            <para><c><![CDATA[<c 0xE0A000>text<>]]></c></para>
+            <para><c><![CDATA[<c #E0A000>text<>]]></c></para>
+            <para><c><![CDATA[<c green>text<>]]></c></para>
+            </description>
+            <description>
+            Text color.
+            Color can be 0xRRGGBB, #RRGGBB or .NET color name.
+            </description>
+            </item>
+            <item>
+            <description><c><![CDATA[<z yellow>text<>]]></c></description>
+            <description>Text background color.</description>
+            </item>
+            <item>
+            <description><c><![CDATA[<Z wheat>text<>]]></c></description>
+            <description>Line background color, when followed by new line.</description>
+            </item>
+            <item>
+            <description><c><![CDATA[<size 10>text<>]]></c></description>
+            <description>
+            Font height.
+            Note: it can increase height of all lines.
+            </description>
+            </item>
+            <item>
+            <description><c><![CDATA[<mono>text<>]]></c></description>
+            <description>Monospace font.</description>
+            </item>
+            <item>
+            <description><c><![CDATA[<hidden>text<>]]></c></description>
+            <description>Hidden text.</description>
+            </item>
+            </list>
+            
+            Links:
+            <list type="table">
+            <listheader>
+            <term>Examples</term>
+            <term>Comments</term>
+            </listheader>
+            <item>
+            <description>
+            <para><c><![CDATA[<link http://www.example.com>link text<>]]></c></para>
+            <para><c><![CDATA[<link C:\files\example.exe>link text<>]]></c></para>
+            <para><c><![CDATA[<link>http://www.example.com<>]]></c></para>
+            <para><c><![CDATA[<link>C:\files\example.exe<>]]></c></para>
+            <para><c><![CDATA[<link C:\example.exe|args>link text<>]]></c></para>
+            </description>
+            <description>
+            Opens a web page or runs a program or any file.
+            Calls function <see cref="M:Au.Shell.TryRun(System.String,System.String,Au.Types.SRFlags,Au.Types.SRMore)"/>.
+            </description>
+            </item>
+            <item>
+            <description>
+            <para><c><![CDATA[<google find this>link text<>]]></c></para>
+            <para><c><![CDATA[<google>find this<>]]></c></para>
+            <para><c><![CDATA[<google find this|append>link text<>]]></c></para>
+            </description>
+            <description>
+            Google.
+            Uses this code:
+            <c>Shell.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);</c>
+            Here s1 and s2 are attribute parts separated by |.
+            </description>
+            </item>
+            <item>
+            <description>
+            <para><c><![CDATA[<dialog text>link text<>]]></c></para>
+            <para><c><![CDATA[<dialog text1|text2>link text<>]]></c></para>
+            </description>
+            <description>
+            Shows dialog.
+            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.
+            </description>
+            </item>
+            <item>
+            <description>
+            <para><c><![CDATA[<tooltip text>link text<>]]></c></para>
+            <para><c><![CDATA[<tooltip text|secondsTimeout>link text<>]]></c></para>
+            </description>
+            <description>
+            Shows tooltip.
+            Calls <see cref="M:Au.Osd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/>.
+            </description>
+            </item>
+            <item>
+            <description>
+            <c><![CDATA[<print text>link text<>]]></c>
+            </description>
+            <description>
+            Shows text in output.
+            Calls <see cref="M:Au.NoClass.Print(System.String)" r=""/>.
+            </description>
+            </item>
+            <item>
+            <description>
+            <c><![CDATA[<help M_Au_Wnd_Find>link text<>]]></c>
+            </description>
+            <description>
+            Shows an Au class library help topic (file "Au Help.chm").
+            Calls <see cref="M:Au.Util.Help.AuHelp(System.String)"/>.
+            Attribute: right click in the help topic, click Properties, copy filename from the Address field.
+            </description>
+            </item>
+            <item>
+            <description>
+            <para><c><![CDATA[<open document>link text<>]]></c></para>
+            <para><c><![CDATA[<open>document<>]]></c></para>
+            </description>
+            <description>
+            Should open a document or script or some other item in the program.
+            This control does not implement this tag. If used, it must be implemented by the program.
+            See <see cref="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>, <see cref="M:Au.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})"/>.
+            </description>
+            </item>
+            <item>
+            <description>
+            <para><c><![CDATA[<script script>link text<>]]></c></para>
+            <para><c><![CDATA[<script>script<>]]></c></para>
+            </description>
+            <description>
+            Should run/execute a script.
+            This control does not implement this tag. If used, it must be implemented by the program.
+            See <see cref="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>, <see cref="M:Au.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})"/>.
+            </description>
+            </item>
+            </list>
+            Also you can register custom link tags that call your callback functions. See <see cref="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>, <see cref="M:Au.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})"/>.
+            
+            Other tags:
+            <list type="table">
+            <listheader>
+            <term>Examples</term>
+            <term>Comments</term>
+            </listheader>
+            <item>
+            <description><c><![CDATA[<_>text</_>]]></c></description>
+            <description>Literal text. Tags in it are ignored.</description>
+            </item>
+            <item>
+            <description><c><![CDATA[<code>var s="example";</code>]]></c></description>
+            <description>Colored C# code. Tags in it are ignored.</description>
+            </item>
+            <item>
+            <description>
+            <para><c><![CDATA[<image "c:\images\example.png">]]></c></para>
+            <para><c><![CDATA[<image "c:\files\example.txt">]]></c></para>
+            <para><c><![CDATA[<image "image:PngBase64">]]></c></para>
+            <para><c><![CDATA[<image "~:BmpCompressedBase64">]]></c></para>
+            <para><c><![CDATA[<image "resource:ResourceName">]]></c></para>
+            </description>
+            <description>
+            Image.
+            Images are displayed below this line.
+            Supports images of formats: png, bmp, jpg, gif, ico (only 16x16).
+            For other file types and folders displays small file icon.
+            Supports managed image resources of the entry assembly. Not icons.
+            Image file data is encoded as Base64 string. For it can be used dialog<br/>
+            "Find image or color in window" (form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll)<br/>
+            or function Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
+            </description>
+            </item>
+            </list>
+            
+            Tags are supported by some existing controls based on <see cref="T:Au.Controls.AuScintilla"/>. In the Au script editor it is the output (use <b>Print</b>, like in the example below). In this library - the <see cref="T:Au.Controls.AuInfoBox"/> control. To enable tags in other <see cref="T:Au.Controls.AuScintilla"/> controls, use <see cref="P:Au.Controls.AuScintilla.InitTagsStyle"/> and optionally <see cref="P:Au.Controls.AuScintilla.InitImagesStyle"/>.
             </remarks>
+            <example>
+            <code><![CDATA[
+            Print("<>Text with <i>tags<>.");
+            ]]></code>
+            </example>
         </member>
         <member name="M:Au.Controls.SciTags._ClearUserStyles">
             <summary>
@@ -894,9 +1104,9 @@
             This func is usually called after clearing control text.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciTags.OutputServerProcessMessages(Au.Tools.OutputServer,System.Action{Au.Tools.OutputServer.Message})">
+        <member name="M:Au.Controls.SciTags.OutputServerProcessMessages(Au.Util.OutputServer,System.Action{Au.Util.OutputServer.Message})">
             <summary>
-            Displays <see cref="T:Au.Tools.OutputServer"/> messages that are currently in its queue.
+            Displays <see cref="T:Au.Util.OutputServer"/> messages that are currently in its queue.
             </summary>
             <param name="os">The OutputServer instance.</param>
             <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.</param>
@@ -906,7 +1116,7 @@
             Messages with tags must have prefix "&lt;&gt;".
             Limits text length to about 4 MB (removes oldest text when exceeded).
             </remarks>
-            <seealso cref="M:Au.Tools.OutputServer.SetNotifications(System.Action,System.Windows.Forms.Control)"/>
+            <seealso cref="M:Au.Util.OutputServer.SetNotifications(System.Action,System.Windows.Forms.Control)"/>
         </member>
         <member name="M:Au.Controls.SciTags.AddText(System.String,System.Boolean,System.Boolean)">
             <summary>
@@ -960,168 +1170,168 @@
             Controls.
             </summary>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GNode">
+        <member name="T:Au.Controls.AuDockPanel._Node">
             <summary>
-            Base of GSplit, GContentNode (GPanel and GTab) and GDummyNode.
+            Base of _Split, _ContentNode (_Panel and _Tab) and _DummyNode.
             </summary>
         </member>
-        <member name="P:Au.Controls.GDockPanel.GNode.IsDocked">
+        <member name="P:Au.Controls.AuDockPanel._Node.IsDocked">
             <summary>
             Returns true if is docked in main window or in a floating tab.
-            <seealso cref="M:Au.Controls.GDockPanel.GContentNode.IsDockedOn(System.Windows.Forms.Control)"/>.
             </summary>
+            <seealso cref="M:Au.Controls.AuDockPanel._ContentNode.IsDockedOn(System.Windows.Forms.Control)"/>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GContentNode">
+        <member name="T:Au.Controls.AuDockPanel._ContentNode">
             <summary>
-            Base of GPanel and GTab.
+            Base of _Panel and _Tab.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GContentNode.HitTestCaption(System.Windows.Forms.Control,System.Int32,System.Int32)">
+        <member name="M:Au.Controls.AuDockPanel._ContentNode.HitTestCaption(System.Windows.Forms.Control,System.Int32,System.Int32)">
             <summary>
             Returns true if x/y is in caption and this is visible and is a child of parent.
-            For tabbed GPanel returns true only if x/y is in its tab button, unless there are no visible siblings.
-            For GTab returns true even if on a tab button.
+            For tabbed _Panel returns true only if x/y is in its tab button, unless there are no visible siblings.
+            For _Tab returns true even if on a tab button.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GContentNode.Show(System.Boolean)">
+        <member name="M:Au.Controls.AuDockPanel._ContentNode.Show(System.Boolean)">
             <summary>
             Shows in the most recent visible state. Activates tab group panel.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GContentNode.Hide">
+        <member name="M:Au.Controls.AuDockPanel._ContentNode.Hide">
             <summary>
             Hides, does not close.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GContentNode.DockBy(Au.Controls.GDockPanel.GContentNode,Au.Controls.GDockPanel.GDockHow)">
+        <member name="M:Au.Controls.AuDockPanel._ContentNode.DockBy(Au.Controls.AuDockPanel._ContentNode,Au.Controls.AuDockPanel._DockHow)">
             <summary>
-            Docks this GPanel or GTab in an existing or new GTab or GSplit.
-            If need, creates new GTab or GSplit in gcTarget place and adds gcTarget and this to it. Else reorders if need.
-            This can be a new GPanel, with null ParentSplit and ParentTab, dock state not Docked.
+            Docks this _Panel or _Tab in an existing or new _Tab or _Split.
+            If need, creates new _Tab or _Split in gcTarget place and adds gcTarget and this to it. Else reorders if need.
+            This can be a new _Panel, with null ParentSplit and ParentTab, dock state not Docked.
             </summary>
-            <param name="gcTarget">New sibling GPanel (side can be any) or sibling GTab (when side is SplitX) or parent GTab (when side is TabX).</param>
-            <param name="side">Specifies whether to add on a GTab or GSplit, and at which side of gcTarget.</param>
+            <param name="gcTarget">New sibling _Panel (side can be any) or sibling _Tab (when side is SplitX) or parent _Tab (when side is TabX).</param>
+            <param name="side">Specifies whether to add on a _Tab or _Split, and at which side of gcTarget.</param>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GFloat">
+        <member name="T:Au.Controls.AuDockPanel._Float">
             <summary>
-            Floating parent form of a GPanel.
+            Floating parent form of a _Panel.
             </summary>
         </member>
-        <member name="P:Au.Controls.GDockPanel.GFloat.ShowWithoutActivation">
+        <member name="P:Au.Controls.AuDockPanel._Float.ShowWithoutActivation">
             <summary>
             1. Prevents activating window when showing. 2. Allows to show ToolTip for inactive window.
             </summary>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GFloat._DockIndicator">
+        <member name="T:Au.Controls.AuDockPanel._Float._DockIndicator">
             <summary>
             Calculates and shows transparent rectangles where the floating panel can be docked when dragging it.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GFloat._DockIndicator._OnFloatMoved(System.Drawing.Point,Au.Types.RECT@,Au.Types.RECT@)">
+        <member name="M:Au.Controls.AuDockPanel._Float._DockIndicator._OnFloatMoved(System.Drawing.Point,Au.Types.RECT@,Au.Types.RECT@)">
             <summary>
             Everything is in _manager client area.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GFloat._DockIndicator._CalcDockRectPart(Au.Types.RECT,System.Drawing.Point)">
+        <member name="M:Au.Controls.AuDockPanel._Float._DockIndicator._CalcDockRectPart(Au.Types.RECT,System.Drawing.Point)">
             <summary>
             Returns the left, top, right or bottom half of r, depending on where p is in it.
             Sets _target.side.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GFloat._DockIndicator._CalcNewTabButtonRectInFullCaption(Au.Controls.GDockPanel.GPanel,Au.Types.RECT,System.Drawing.Point)">
+        <member name="M:Au.Controls.AuDockPanel._Float._DockIndicator._CalcNewTabButtonRectInFullCaption(Au.Controls.AuDockPanel._Panel,Au.Types.RECT,System.Drawing.Point)">
             <summary>
             Returns a half of r (gp full caption, not just tab button), depending on where p is (even if not in r).
             Sets _target.side.
             </summary>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GFloat.DockTarget">
+        <member name="T:Au.Controls.AuDockPanel._Float.DockTarget">
             <summary>
-            GFloat.Drag() and _DockIndicator.OnFloatDropped() return this if can be docked.
+            _Float.Drag() and _DockIndicator.OnFloatDropped() return this if can be docked.
             </summary>
         </member>
-        <member name="F:Au.Controls.GDockPanel.GFloat.DockTarget.gc">
+        <member name="F:Au.Controls.AuDockPanel._Float.DockTarget.gc">
             <summary>
             The target.
             Note: when dockAsTab is true, it currently may be tabbed or not; if tabbed, may be docked or not.
             </summary>
         </member>
-        <member name="F:Au.Controls.GDockPanel.GFloat.DockTarget.side">
-            <summary>Specifies whether to add on a GTab or GSplit, and at which side of gc.</summary>
+        <member name="F:Au.Controls.AuDockPanel._Float.DockTarget.side">
+            <summary>Specifies whether to add on a _Tab or _Split, and at which side of gc.</summary>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GPanel">
+        <member name="T:Au.Controls.AuDockPanel._Panel">
             <summary>
             Contains single Control.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GPanel.#ctor(Au.Controls.GDockPanel,Au.Controls.GDockPanel.GSplit,System.Xml.Linq.XElement,Au.Controls.GDockPanel.GTab)">
+        <member name="M:Au.Controls.AuDockPanel._Panel.#ctor(Au.Controls.AuDockPanel,Au.Controls.AuDockPanel._Split,System.Xml.Linq.XElement,Au.Controls.AuDockPanel._Tab)">
             <summary>
             This ctor is used at startup, when adding from XML.
             </summary>
         </member>
-        <member name="P:Au.Controls.GDockPanel.GPanel.Visible">
+        <member name="P:Au.Controls.AuDockPanel._Panel.Visible">
             <summary>
             note: this is not just !IsHidden. Returns false if in a hidden tab group even if IsHidden is false.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GPanel._IsVisible(System.Boolean)">
+        <member name="M:Au.Controls.AuDockPanel._Panel._IsVisible(System.Boolean)">
             <summary>
             Returns true if this isn't hidden and isn't in a hidden tab group.
             </summary>
             <param name="andContentVisible">And isn't an inactive tab.</param>
         </member>
-        <member name="P:Au.Controls.GDockPanel.IPanel.Content">
+        <member name="P:Au.Controls.AuDockPanel.IPanel.Content">
             <summary>
             The child Control.
             </summary>
         </member>
-        <member name="P:Au.Controls.GDockPanel.IPanel.Text">
+        <member name="P:Au.Controls.AuDockPanel.IPanel.Text">
             <summary>
             Panel caption text. Also tab button text.
             If null or not set, uses control's Name property.
             </summary>
         </member>
-        <member name="P:Au.Controls.GDockPanel.IPanel.ToolTipText">
+        <member name="P:Au.Controls.AuDockPanel.IPanel.ToolTipText">
             <summary>
             Tooltip text.
             If null or not set, uses Text (default - control's Name property).
             </summary>
         </member>
-        <member name="P:Au.Controls.GDockPanel.IPanel.Image">
+        <member name="P:Au.Controls.AuDockPanel.IPanel.Image">
             <summary>
             Image to display on tab button if it is too small for text.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.IPanel.Init(System.String,System.Drawing.Image)">
+        <member name="M:Au.Controls.AuDockPanel.IPanel.Init(System.String,System.Drawing.Image)">
             <summary>
             Sets commonly used properties. Can be used to avoid several function calls (Image, ToolTipText).
             </summary>
             <param name="toolTip">Tooltip text.</param>
             <param name="image">Image to display on tab button if it is too small for text.</param>
         </member>
-        <member name="P:Au.Controls.GDockPanel.IPanel.Visible">
+        <member name="P:Au.Controls.AuDockPanel.IPanel.Visible">
             <summary>
             The 'get' function returns true if the panel or its tab button is visible. Returns false if it is hidden or its parent tab group is hidden.
             The 'set' function makes the panel visible, in the most recent state (docked or floating). Activates its tab button if need.
             </summary>
         </member>
-        <member name="P:Au.Controls.GDockPanel.IPanel.ReallyVisible">
+        <member name="P:Au.Controls.AuDockPanel.IPanel.ReallyVisible">
             <summary>
             Returns true if the panel is visible.
             Returns false if it is hidden or its parent tab group is hidden or it is an inactive tab.
             </summary>
         </member>
-        <member name="P:Au.Controls.GDockPanel.IPanel.Floating">
+        <member name="P:Au.Controls.AuDockPanel.IPanel.Floating">
             <summary>
             The 'get' function returns true if the panel is floating and not hidden.
             The 'set' function: if true, makes this panel floating and visible if it is currently docked or hidden; if false, makes it docked if it is currently floating and visible.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.IPanel.Focus">
+        <member name="M:Au.Controls.AuDockPanel.IPanel.Focus">
             <summary>
-            Make the panel visible (like <see cref="P:Au.Controls.GDockPanel.IPanel.Visible"/>) and focus its control.
+            Make the panel visible (like <see cref="P:Au.Controls.AuDockPanel.IPanel.Visible"/>) and focus its control.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.Create(System.String,System.String,System.Windows.Forms.Control[])">
+        <member name="M:Au.Controls.AuDockPanel.Create(System.String,System.String,System.Windows.Forms.Control[])">
             <summary>
             Loads UI layout from XML file and adds controls (panels, toolbars) to this control.
             Adjusts control properties and positions everything according to the XML.
@@ -1130,95 +1340,95 @@
             <param name="xmlFileCustomized">XML file containing customized panel/toolbar layout. It will be created or updated when saving customizations.</param>
             <param name="controls">Controls. Control Name must match the XML element (panel) name attribute in the XML.</param>
         </member>
-        <member name="P:Au.Controls.GDockPanel._HitTestData.ParentTab">
+        <member name="P:Au.Controls.AuDockPanel._HitTestData.ParentTab">
             <summary>
-            If hit test on a tabbed GPanel, returns its parent GTab, else null.
+            If hit test on a tabbed _Panel, returns its parent _Tab, else null.
             </summary>
         </member>
-        <member name="P:Au.Controls.GDockPanel._HitTestData.ContentNode">
+        <member name="P:Au.Controls.AuDockPanel._HitTestData.ContentNode">
             <summary>
-            If hit test on a GContentNode, returns it, else null.
+            If hit test on a _ContentNode, returns it, else null.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel._HitTest(System.Windows.Forms.Control,System.Int32,System.Int32,Au.Controls.GDockPanel._HitTestData@)">
+        <member name="M:Au.Controls.AuDockPanel._HitTest(System.Windows.Forms.Control,System.Int32,System.Int32,Au.Controls.AuDockPanel._HitTestData@)">
             <summary>
             If hit-test on a splitter, sets ht.gs and returns _HitTestResult.Splitter.
-            Else if on a GPanel caption or GPanel tab button, sets gp and returns _HitTestResult.Caption.
-            Else (if on a GTab caption but not a  GPanel tab button) sets gt and returns _HitTestResult.Caption.
+            Else if on a _Panel caption or _Panel tab button, sets gp and returns _HitTestResult.Caption.
+            Else (if on a _Tab caption but not a  _Panel tab button) sets gt and returns _HitTestResult.Caption.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GetPanel(System.Windows.Forms.Control)">
+        <member name="M:Au.Controls.AuDockPanel.GetPanel(System.Windows.Forms.Control)">
             <summary>
             Gets control's host panel interface.
             Returns null if not found.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GetPanel(System.String)">
+        <member name="M:Au.Controls.AuDockPanel.GetPanel(System.String)">
             <summary>
             Gets panel interface by name.
             Returns null if not found.
             </summary>
             <param name="name">Panel name, which is its control's Name property.</param>
         </member>
-        <member name="M:Au.Controls.GDockPanel.AddShowPanelsToMenu(System.Windows.Forms.ToolStripDropDown,System.Boolean,System.Boolean)">
+        <member name="M:Au.Controls.AuDockPanel.AddShowPanelsToMenu(System.Windows.Forms.ToolStripDropDown,System.Boolean,System.Boolean)">
             <summary>
             Adds menu items for all panels or toolbars, except the doc panel, to a menu.
             On menu item click will show that panel.
             </summary>
         </member>
-        <member name="P:Au.Controls.GDockPanel.ResetLayoutAfterRestart">
+        <member name="P:Au.Controls.AuDockPanel.ResetLayoutAfterRestart">
             <summary>
             When disposing this, delete the user's saved layout file. Then next time will use the default file.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.EnableDisableAllFloatingWindows(System.Boolean)">
+        <member name="M:Au.Controls.AuDockPanel.EnableDisableAllFloatingWindows(System.Boolean)">
             <summary>
             Call this in main window's WndProc override on WM_ENABLE.
             </summary>
             <param name="enable">Enable or disable.</param>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GDockPanelEventArgs">
+        <member name="T:Au.Controls.AuDockPanel.DPEventArgs">
             <summary>
-            Used with many GDockPanel events and othe callbacks.
+            Used with many AuDockPanel events and othe callbacks.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GDockPanelEventArgs.#ctor(System.Object)">
+        <member name="M:Au.Controls.AuDockPanel.DPEventArgs.#ctor(System.Object)">
             <summary>ctor.</summary>
-            <param name="gPanel">Must be GPanel. We use object because C# compiler does not allow to use GPanel (less accessible).</param>
+            <param name="gPanel">Must be _Panel. We use object because C# compiler does not allow to use _Panel (less accessible).</param>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GDockPanelEventHandler`1">
+        <member name="T:Au.Controls.AuDockPanel.DPEventHandler`1">
             <summary>
-            Used with many GDockPanel events and other callbacks.
+            Used with many AuDockPanel events and other callbacks.
             </summary>
         </member>
-        <member name="E:Au.Controls.GDockPanel.PanelContextMenu">
+        <member name="E:Au.Controls.AuDockPanel.PanelContextMenu">
             <summary>
             Before showing the context menu when the user right-clicks a panel tab button or caption.
             The event handler can add/remove/etc menu items.
             </summary>
         </member>
-        <member name="T:Au.Controls.GDockPanel.DockedToolStripRenderer">
+        <member name="T:Au.Controls.AuDockPanel.DockedToolStripRenderer">
             <summary>
             Removes rounded edges of the ToolStrip to which is assigned.
             </summary>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GSplit">
+        <member name="T:Au.Controls.AuDockPanel._Split">
             <summary>
-            Contains 2 GNode (GPanel, GTab, GSplit or GDummyNode) and a splitter.
+            Contains 2 _Node (_Panel, _Tab, _Split or _DummyNode) and a splitter.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GSplit.#ctor(Au.Controls.GDockPanel,Au.Controls.GDockPanel.GSplit,System.Xml.Linq.XElement)">
+        <member name="M:Au.Controls.AuDockPanel._Split.#ctor(Au.Controls.AuDockPanel,Au.Controls.AuDockPanel._Split,System.Xml.Linq.XElement)">
             <summary>
             This ctor is used at startup, when adding from XML.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GSplit.#ctor(Au.Controls.GDockPanel,Au.Controls.GDockPanel.GSplit,Au.Controls.GDockPanel.GNode,Au.Controls.GDockPanel.GNode,System.Boolean)">
+        <member name="M:Au.Controls.AuDockPanel._Split.#ctor(Au.Controls.AuDockPanel,Au.Controls.AuDockPanel._Split,Au.Controls.AuDockPanel._Node,Au.Controls.AuDockPanel._Node,System.Boolean)">
             <summary>
-            This ctor is used when a floating GContentNode dropped on a docked GContentNode.
+            This ctor is used when a floating _ContentNode dropped on a docked _ContentNode.
             child1 or child2 must be docked, but not both.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GSplit.OnChildRemoved(Au.Controls.GDockPanel.GNode)">
+        <member name="M:Au.Controls.AuDockPanel._Split.OnChildRemoved(Au.Controls.AuDockPanel._Node)">
             <summary>
             Puts gn sibling in parent split of this, in place of this.
             Makes this invalid and removes from _aSplit.
@@ -1226,77 +1436,77 @@
             </summary>
             <param name="gn">One of children. The caller is removing it from this.</param>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GSplit.ReplaceChild(Au.Controls.GDockPanel.GNode,Au.Controls.GDockPanel.GNode)">
+        <member name="M:Au.Controls.AuDockPanel._Split.ReplaceChild(Au.Controls.AuDockPanel._Node,Au.Controls.AuDockPanel._Node)">
             <summary>
             Replaces child gnOld with gnNew.
             Sets gnNew.ParentSplit = this.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GSplit.RepositionChild(Au.Controls.GDockPanel.GNode,System.Boolean,System.Boolean)">
+        <member name="M:Au.Controls.AuDockPanel._Split.RepositionChild(Au.Controls.AuDockPanel._Node,System.Boolean,System.Boolean)">
             <summary>
             Changes IsVerticalSplit, Child1 and Child2 if need.
             Does not update layout.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GSplit.DragSplitter">
+        <member name="M:Au.Controls.AuDockPanel._Split.DragSplitter">
             <summary>
             Called on mouse left button down on splitter.
             Returns when the drag operation ends.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GSplit.Paint(System.Drawing.Graphics)">
+        <member name="M:Au.Controls.AuDockPanel._Split.Paint(System.Drawing.Graphics)">
             <summary>
-            Called from GDockPanel.OnPaint, for its _firstSplit.
+            Called from AuDockPanel.OnPaint, for its _firstSplit.
             Paints all descendants.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GSplit.SetChildFixedSize(Au.Controls.GDockPanel.GNode,System.Boolean,System.Boolean)">
+        <member name="M:Au.Controls.AuDockPanel._Split.SetChildFixedSize(Au.Controls.AuDockPanel._Node,System.Boolean,System.Boolean)">
             <summary>
             Sets a child (of this, or of an ancestor if need) to have fixed width or height.
             Used for context menu.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GSplit.IsChildFixedSize(Au.Controls.GDockPanel.GNode,System.Boolean)">
+        <member name="M:Au.Controls.AuDockPanel._Split.IsChildFixedSize(Au.Controls.AuDockPanel._Node,System.Boolean)">
             <summary>
             Gets whether a child (of this, or of an ancestor if need) has fixed width or height.
             Used for context menu.
             </summary>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GTab">
+        <member name="T:Au.Controls.AuDockPanel._Tab">
             <summary>
-            Contains multiple GPanel.
+            Contains multiple _Panel.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GTab.#ctor(Au.Controls.GDockPanel,Au.Controls.GDockPanel.GSplit,System.Xml.Linq.XElement)">
+        <member name="M:Au.Controls.AuDockPanel._Tab.#ctor(Au.Controls.AuDockPanel,Au.Controls.AuDockPanel._Split,System.Xml.Linq.XElement)">
             <summary>
             This ctor is used at startup, when adding from XML.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GTab.#ctor(Au.Controls.GDockPanel,Au.Controls.GDockPanel.GSplit,Au.Controls.GDockPanel.GPanel,Au.Controls.GDockPanel.GPanel)">
+        <member name="M:Au.Controls.AuDockPanel._Tab.#ctor(Au.Controls.AuDockPanel,Au.Controls.AuDockPanel._Split,Au.Controls.AuDockPanel._Panel,Au.Controls.AuDockPanel._Panel)">
             <summary>
-            This ctor is used when a floating GPanel dropped on a docked non-tabbed GPanel caption.
+            This ctor is used when a floating _Panel dropped on a docked non-tabbed _Panel caption.
             item1 or item2 must be docked, but not both.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GTab._CalcButtonsBounds(System.Drawing.Graphics)">
+        <member name="M:Au.Controls.AuDockPanel._Tab._CalcButtonsBounds(System.Drawing.Graphics)">
             <summary>
             Returns buttons width.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GTab.SetActiveItem(Au.Controls.GDockPanel.GPanel,System.Boolean)">
+        <member name="M:Au.Controls.AuDockPanel._Tab.SetActiveItem(Au.Controls.AuDockPanel._Panel,System.Boolean)">
             <summary>
             Sets ActiveItem, shows its contents, hides previous ActiveItem contents, invalidate caption, calls DockedDocumentPanelActivated event.
             </summary>
             <param name="gp">Can be null to deactivate all.</param>
             <param name="focusControl"></param>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GTab.OnItemRemoved(Au.Controls.GDockPanel.GPanel)">
+        <member name="M:Au.Controls.AuDockPanel._Tab.OnItemRemoved(Au.Controls.AuDockPanel._Panel)">
             <summary>
             Removes a child panel from Items.
             If single item left, moves it to this parent and invalidates/removes this.
             </summary>
         </member>
-        <member name="M:Au.Controls.GDockPanel.GTab.AddOrReorderItem(Au.Controls.GDockPanel.GPanel,Au.Controls.GDockPanel.GPanel,System.Boolean)">
+        <member name="M:Au.Controls.AuDockPanel._Tab.AddOrReorderItem(Au.Controls.AuDockPanel._Panel,Au.Controls.AuDockPanel._Panel,System.Boolean)">
             <summary>
             If gp is child of this, moves it to the place before or after target (a child of this).
             Else just inserts gp there.
@@ -1304,15 +1514,15 @@
             Does not update layout.
             </summary>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GAccContainer">
+        <member name="T:Au.Controls.AuDockPanel._AccContainer">
             <summary>
-            Used by GDockPanel and GFloat.
+            Used by AuDockPanel and _Float.
             </summary>
         </member>
-        <member name="T:Au.Controls.GDockPanel.GAccNode">
+        <member name="T:Au.Controls.AuDockPanel._AccNode">
             <summary>
-            AccessibleObject of GNode.
-            We use separate class (don't inherit GNode from AccessibleObject) to avoid GNode cluttering and conflicts (Name, Bounds etc).
+            AccessibleObject of _Node.
+            We use separate class (don't inherit _Node from AccessibleObject) to avoid _Node cluttering and conflicts (Name, Bounds etc).
             </summary>
         </member>
         <member name="P:Au.Controls.Sci.SCNotification.Text">
@@ -1324,7 +1534,7 @@
         </member>
         <member name="T:Au.Controls.SciImages">
             <summary>
-            Gets image file paths etc from Scintilla control text and displays the images below that lines.
+            Gets image file paths etc from <see cref="T:Au.Controls.AuScintilla"/> control text and displays the images below that lines.
             </summary>
             <remarks>
             Draws images in annotation areas.
@@ -1412,18 +1622,18 @@
             When hiding, it just removes images, does not hide text annotations (SCI_ANNOTATIONGETVISIBLE remains unchanged).
             </summary>
         </member>
-        <member name="F:Au.Controls.GStripManagerPropertiesDialog.components">
+        <member name="F:Au.Controls.AuStripManagerPropertiesDialog.components">
             <summary>
             Required designer variable.
             </summary>
         </member>
-        <member name="M:Au.Controls.GStripManagerPropertiesDialog.Dispose(System.Boolean)">
+        <member name="M:Au.Controls.AuStripManagerPropertiesDialog.Dispose(System.Boolean)">
             <summary>
             Clean up any resources being used.
             </summary>
             <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         </member>
-        <member name="M:Au.Controls.GStripManagerPropertiesDialog.InitializeComponent">
+        <member name="M:Au.Controls.AuStripManagerPropertiesDialog.InitializeComponent">
             <summary>
             Required method for Designer support - do not modify
             the contents of this method with the code editor.
@@ -1431,7 +1641,7 @@
         </member>
         <member name="T:Au.Controls.IGStripManagerCallbacks">
             <summary>
-            <see cref="T:Au.Controls.GStripManager"/> uses this interface to get properties of menu/toolbar items that it cannot get from XML (Click event handlers, images etc).
+            <see cref="T:Au.Controls.AuStripManager"/> uses this interface to get properties of menu/toolbar items that it cannot get from XML (Click event handlers, images etc).
             Also used to notify about some events.
             </summary>
         </member>
@@ -1456,26 +1666,26 @@
             <param name="item">Can be ToolStripMenuItem, ToolStripButton, ToolStripSplitButton, ToolStripDropDownButton, ToolStripSpringTextBox, ToolStripSpringComboBox, ToolStripSeparator. Its Tag property is XElement.</param>
             <param name="owner">ToolStrip, MenuStrip or ToolStripDropDownMenu to which will be added this item. Its Tag property is XElement.</param>
         </member>
-        <member name="P:Au.Controls.GStripManager.MenuBar">
+        <member name="P:Au.Controls.AuStripManager.MenuBar">
             <summary>
             Menu bar.
             </summary>
         </member>
-        <member name="P:Au.Controls.GStripManager.Toolbars">
+        <member name="P:Au.Controls.AuStripManager.Toolbars">
             <summary>
             Toolbars.
             </summary>
         </member>
-        <member name="P:Au.Controls.GStripManager.Submenus">
+        <member name="P:Au.Controls.AuStripManager.Submenus">
             <summary>
             Submenus.
             </summary>
         </member>
-        <member name="M:Au.Controls.GStripManager.#ctor(System.Windows.Forms.Form,Au.Controls.IGStripManagerCallbacks)">
+        <member name="M:Au.Controls.AuStripManager.#ctor(System.Windows.Forms.Form,Au.Controls.IGStripManagerCallbacks)">
             <param name="form">Form used as owner of dialog boxes.</param>
             <param name="callbacks"></param>
         </member>
-        <member name="M:Au.Controls.GStripManager.BuildAll(System.String,System.String,System.Windows.Forms.ToolStripRenderer)">
+        <member name="M:Au.Controls.AuStripManager.BuildAll(System.String,System.String,System.Windows.Forms.ToolStripRenderer)">
             <summary>
             Opens XML file and creates toolbars/menus/submenus from XML tags.
             </summary>
@@ -1483,7 +1693,7 @@
             <param name="xmlFileCustom">XML file containing user customizations. It will be created or updated when saving customizations.</param>
             <param name="tsRenderer"></param>
         </member>
-        <member name="M:Au.Controls.GStripManager._AddChildItems(System.Xml.Linq.XElement,System.Windows.Forms.ToolStrip,System.Boolean)">
+        <member name="M:Au.Controls.AuStripManager._AddChildItems(System.Xml.Linq.XElement,System.Windows.Forms.ToolStrip,System.Boolean)">
             <summary>
             Adds toolbar buttons or menu bar items.
             Call this for each top-level toolstrip (toolbar or menu bar).
@@ -1492,7 +1702,7 @@
             <param name="owner">The toolbar or menu bar.</param>
             <param name="isMenu">true if menu, false if toolbar.</param>
         </member>
-        <member name="M:Au.Controls.GStripManager._AddChildItem(System.Xml.Linq.XElement,System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Int32)">
+        <member name="M:Au.Controls.AuStripManager._AddChildItem(System.Xml.Linq.XElement,System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Int32)">
             <summary>
             Adds item to owner.
             Before it calls <see cref="M:Au.Controls.IGStripManagerCallbacks.ItemAdding(System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip)"/>.
@@ -1502,20 +1712,20 @@
             <param name="owner">ToolStrip, MenuStrip or ToolStripDropDownMenu to which to add this item.</param>
             <param name="insertAt">If not negative, inserts at this index. If negative, adds to the end.</param>
         </member>
-        <member name="M:Au.Controls.GStripManager._CreateChildItem(System.Xml.Linq.XElement,System.Boolean)">
+        <member name="M:Au.Controls.AuStripManager._CreateChildItem(System.Xml.Linq.XElement,System.Boolean)">
             <summary>
             Creates a menu or toolbar item.
             </summary>
             <param name="x">XML element containing item properties.</param>
             <param name="isMenu">false if toolbar item, true if menu item (also if menu bar item).</param>
         </member>
-        <member name="M:Au.Controls.GStripManager._GetDefaultItemText(System.Xml.Linq.XElement)">
+        <member name="M:Au.Controls.AuStripManager._GetDefaultItemText(System.Xml.Linq.XElement)">
             <summary>
             If x has attribute t, gets its value.
             Else gets its name and converts to text, eg "File_OneTwo" to "One Two".
             </summary>
         </member>
-        <member name="M:Au.Controls.GStripManager._MergeCustom(System.Xml.Linq.XElement,System.Xml.Linq.XElement@,System.String,System.Boolean)">
+        <member name="M:Au.Controls.AuStripManager._MergeCustom(System.Xml.Linq.XElement,System.Xml.Linq.XElement@,System.String,System.Boolean)">
             <summary>
             Merges custom attributes into default menubar or toolbar XML.
             Reorders toolbar buttons if need.
@@ -1525,17 +1735,17 @@
             <param name="name">xtsDef name, just to avoid getting it again.</param>
             <param name="isMenu"></param>
         </member>
-        <member name="M:Au.Controls.GStripManager._DiffCustom">
+        <member name="M:Au.Controls.AuStripManager._DiffCustom">
             <summary>
             Extracts differences between _xmlFileDefault and _xStrips and saves to _xmlFileCustom.
             </summary>
         </member>
-        <member name="M:Au.Controls.GStripManager._OnMouseUp(System.Object,System.Windows.Forms.MouseEventArgs)">
+        <member name="M:Au.Controls.AuStripManager._OnMouseUp(System.Object,System.Windows.Forms.MouseEventArgs)">
             <summary>
             Toolbar button MouseUp handler. Implements context menu that allows to customize.
             </summary>
         </member>
-        <member name="M:Au.Controls.GStripManager._Strips_Customize(System.UInt32,System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Object)">
+        <member name="M:Au.Controls.AuStripManager._Strips_Customize(System.UInt32,System.Windows.Forms.ToolStripItem,System.Windows.Forms.ToolStrip,System.Object)">
             <summary>
             Implements toolbar button customization.
             </summary>
@@ -1544,15 +1754,15 @@
             <param name="tsTo">Destination toolbar, or null if don't need.</param>
             <param name="etc">
             With action 2 (move) can be the target button as ToolStripItem; if null, moves to the end.
-            With action 6 (properties) - GSMProp.
+            With action 6 (properties) - AuStripManagerPropertiesDialog.
             </param>
         </member>
-        <member name="M:Au.Controls.GStripManager._OnMouseDown(System.Object,System.Windows.Forms.MouseEventArgs)">
+        <member name="M:Au.Controls.AuStripManager._OnMouseDown(System.Object,System.Windows.Forms.MouseEventArgs)">
             <summary>
             Toolbar button MouseDown handler. Implements toolbar button reordering with Alt+drag.
             </summary>
         </member>
-        <member name="M:Au.Controls.GStripManager.Find(System.String)">
+        <member name="M:Au.Controls.AuStripManager.Find(System.String)">
             <summary>
             Gets menu items and toolbar buttons that have the specified name (XML tag).
             If not found, returns empty List.
@@ -1573,6 +1783,12 @@
             	Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font).
             	Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form.
             </remarks>
+        </member>
+        <member name="P:Au.Controls.Form_.IsPopup">
+            <summary>
+            Adds WS_POPUP style. Also prevents activating an unrelated window when closing this active owned nonmodal form.
+            Set it before creating; later does nothing.
+            </summary>
         </member>
         <member name="T:Au.Controls.ScrollableControl_">
             <summary>

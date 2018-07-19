@@ -501,46 +501,46 @@ namespace Au
 
 		/// <summary>
 		/// Converts unmanaged icon to Icon object.
-		/// Returns null if hi is default(IntPtr).
+		/// Returns null if hIcon is default(IntPtr).
 		/// </summary>
-		/// <param name="hi">Icon handle.</param>
+		/// <param name="hIcon">Icon handle.</param>
 		/// <param name="destroyIcon">If true (default), the returned variable owns the unmanaged icon and destroys it when disposing. If false, the returned variable just uses the unmanaged icon and will not destroy; the caller later should destroy it with <see cref="DestroyIconHandle"/>.</param>
-		public static Icon HandleToIcon(IntPtr hi, bool destroyIcon = true)
+		public static Icon HandleToIcon(IntPtr hIcon, bool destroyIcon = true)
 		{
-			if(hi == default) return null;
-			Icon ic = Icon.FromHandle(hi);
+			if(hIcon == default) return null;
+			var R = Icon.FromHandle(hIcon);
 			if(destroyIcon) {
 				var fi = typeof(Icon).GetField("ownHandle", BindingFlags.NonPublic | BindingFlags.Instance);
 				Debug.Assert(fi != null);
-				fi?.SetValue(ic, true);
+				fi?.SetValue(R, true);
 
 				//Don't allow to exceed the process handle limit when the program does not dispose them.
 				//Default limit for USER and GDI objects is 10000, min 200.
 				//Icons are USER objects. Most icons also create 3 GDI objects, some 2. So a process can have max 3333 icons.
 				//If GC starts working when pressure is 100 KB, then the number of icons is ~50 and GDI handles ~150.
 				//We don't care about icon memory size.
-				Util.GC_.AddObjectMemoryPressure(ic, 2000);
+				Util.GC_.AddObjectMemoryPressure(R, 2000);
 			}
-			return ic;
+			return R;
 		}
 
 		/// <summary>
 		/// Converts unmanaged icon to Bitmap object and destroys the unmanaged icon.
-		/// Returns null if hi is default(IntPtr) or if fails to convert.
+		/// Returns null if hIcon is default(IntPtr) or if fails to convert.
 		/// </summary>
-		/// <param name="hi">Icon handle.</param>
+		/// <param name="hIcon">Icon handle.</param>
 		/// <param name="destroyIcon">If true (default), destroys the unmanaged icon.</param>
-		public static Bitmap HandleToImage(IntPtr hi, bool destroyIcon = true)
+		public static Bitmap HandleToImage(IntPtr hIcon, bool destroyIcon = true)
 		{
 			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc.
 
-			if(hi == default) return null;
+			if(hIcon == default) return null;
 			//var perf = Perf.StartNew();
-			Icon ic = Icon.FromHandle(hi);
+			Icon ic = Icon.FromHandle(hIcon);
 			Bitmap im = null;
 			try { im = ic.ToBitmap(); } catch(Exception e) { Debug_.Print(e.Message); }
 			ic.Dispose();
-			if(destroyIcon) Api.DestroyIcon(hi);
+			if(destroyIcon) Api.DestroyIcon(hIcon);
 			//perf.NW();
 			return im;
 		}

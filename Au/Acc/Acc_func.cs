@@ -58,7 +58,7 @@ namespace Au
 		/// Returns default(Wnd) if failed. Supports <see cref="Native.GetError"/>.
 		/// All objects must support this property, but some have bugs and can return default(Wnd).
 		/// </remarks>
-		public Wnd WndTopLevel => WndContainer.WndWindow;
+		public Wnd WndTopLevel => WndContainer.Window;
 		//note: named not WndWindow, to avoid using accidentally instead of WndContainer.
 
 		/// <summary>
@@ -669,7 +669,7 @@ namespace Au
 			Wnd w = default, wTL = default; bool focusingControl = false;
 			if(how.Has_(AccSELFLAG.TAKEFOCUS) && 0 == _GetWnd(out w)) {
 				if(!w.IsEnabled) throw new AuException("*set focus. Disabled"); //accSelect would not fail
-				wTL = w.WndWindow;
+				wTL = w.Window;
 				wTL.Activate();
 				if(focusingControl = (w != wTL)) w.Focus();
 				if(IsFocused) how &= ~AccSELFLAG.TAKEFOCUS;

@@ -50,7 +50,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if this thread has a .NET message loop (Forms or WPF).
 		/// </summary>
-		/// <seealso cref="Wnd.Misc.ThreadWindows"/>
+		/// <seealso cref="Wnd.GetWnd.ThreadWindows"/>
 		public static bool IsUI
 		{
 			get

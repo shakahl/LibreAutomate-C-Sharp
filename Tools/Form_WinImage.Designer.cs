@@ -31,14 +31,14 @@
 			this._info = new Au.Controls.AuInfoBox();
 			this._lSpeed = new System.Windows.Forms.Label();
 			this._bTest = new System.Windows.Forms.Button();
-			this._bOK = new System.Windows.Forms.Button();
+			this._bOK = new Au.Controls.ButtonOK();
+			this._bCancel = new Au.Controls.ButtonCancel();
 			this._bCapture = new System.Windows.Forms.Button();
 			this._grid = new Au.Controls.ParamGrid();
 			this._pict = new System.Windows.Forms.PictureBox();
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 			this._bEtc = new System.Windows.Forms.Button();
 			this.panel1 = new System.Windows.Forms.Panel();
-			this._bCancel = new System.Windows.Forms.Button();
 			this._code = new Au.Tools.CodeBox();
 			this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
 			((System.ComponentModel.ISupportInitialize)(this._pict)).BeginInit();
@@ -72,21 +72,28 @@
 			this._bTest.Size = new System.Drawing.Size(72, 24);
 			this._bTest.TabIndex = 2;
 			this._bTest.Text = "&Test";
-			this._toolTip.SetToolTip(this._bTest, "Executes the 'find' code (without wait, mouse, etc). If image found, shows its rectangle.");
+			this._toolTip.SetToolTip(this._bTest, "Executes the \'find\' code (without wait, mouse, etc). If image found, shows its re" +
+        "ctangle.");
 			this._bTest.UseVisualStyleBackColor = true;
 			this._bTest.Click += new System.EventHandler(this._bTest_Click);
 			// 
 			// _bOK
 			// 
-			this._bOK.DialogResult = System.Windows.Forms.DialogResult.OK;
 			this._bOK.Enabled = false;
 			this._bOK.Location = new System.Drawing.Point(8, 136);
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
 			this._bOK.TabIndex = 3;
-			this._bOK.Text = "&OK";
 			this._bOK.UseVisualStyleBackColor = true;
 			this._bOK.Click += new System.EventHandler(this._bOK_Click);
+			// 
+			// _bCancel
+			// 
+			this._bCancel.Location = new System.Drawing.Point(88, 136);
+			this._bCancel.Name = "_bCancel";
+			this._bCancel.Size = new System.Drawing.Size(72, 24);
+			this._bCancel.TabIndex = 4;
+			this._bCancel.UseVisualStyleBackColor = true;
 			// 
 			// _bCapture
 			// 
@@ -120,6 +127,7 @@
 			this._grid.TabIndex = 5;
 			this._grid.TabStop = true;
 			this._grid.ToolTipText = "";
+			this._grid.ZAddHidden = false;
 			// 
 			// _pict
 			// 
@@ -151,16 +159,6 @@
 			this.panel1.Name = "panel1";
 			this.panel1.Size = new System.Drawing.Size(152, 96);
 			this.panel1.TabIndex = 13;
-			// 
-			// _bCancel
-			// 
-			this._bCancel.DialogResult = System.Windows.Forms.DialogResult.Cancel;
-			this._bCancel.Location = new System.Drawing.Point(88, 136);
-			this._bCancel.Name = "_bCancel";
-			this._bCancel.Size = new System.Drawing.Size(72, 24);
-			this._bCancel.TabIndex = 4;
-			this._bCancel.Text = "Cancel";
-			this._bCancel.UseVisualStyleBackColor = true;
 			// 
 			// _code
 			// 
@@ -194,6 +192,7 @@
 			this.Controls.Add(this._bCapture);
 			this.Controls.Add(this._bTest);
 			this.Controls.Add(this._bOK);
+			this.IsPopup = true;
 			this.MinimumSize = new System.Drawing.Size(500, 400);
 			this.Name = "Form_WinImage";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
@@ -211,7 +210,8 @@
 		private Controls.AuInfoBox _info;
 		private System.Windows.Forms.Label _lSpeed;
 		private System.Windows.Forms.Button _bTest;
-		private System.Windows.Forms.Button _bOK;
+		private Au.Controls.ButtonOK _bOK;
+		private Au.Controls.ButtonCancel _bCancel;
 		private System.Windows.Forms.Button _bCapture;
 		private Controls.ParamGrid _grid;
 		private System.Windows.Forms.PictureBox _pict;
@@ -219,7 +219,6 @@
 		private System.Windows.Forms.Button _bEtc;
 		private CodeBox _code;
 		private System.Windows.Forms.Panel panel1;
-		private System.Windows.Forms.Button _bCancel;
 		private System.Windows.Forms.ErrorProvider _errorProvider;
 	}
 }

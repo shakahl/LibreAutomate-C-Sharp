@@ -22,24 +22,24 @@ using static Au.NoClass;
 
 namespace Au.Controls
 {
-	partial class GDockPanel
+	public partial class AuDockPanel
 	{
 		/// <summary>
-		/// Floating parent form of a GPanel.
+		/// Floating parent form of a _Panel.
 		/// </summary>
-		partial class GFloat :Form
+		partial class _Float :Form
 		{
-			GDockPanel _manager;
-			GContentNode _gc; //a GPanel or GTab for which this GFloat is a temporary parent
-			_DockIndicator _dockIndic; //calculates and displays dock indicator rectangles while the user Alt+drags this GFloat window. At other time null.
+			AuDockPanel _manager;
+			_ContentNode _gc; //a _Panel or _Tab for which this _Float is a temporary parent
+			_DockIndicator _dockIndic; //calculates and displays dock indicator rectangles while the user Alt+drags this _Float window. At other time null.
 			bool _hasToolbar;
 
-			internal GFloat(GDockPanel manager, GContentNode gc)
+			internal _Float(AuDockPanel manager, _ContentNode gc)
 			{
 				_manager = manager;
 				_gc = gc;
 
-				var gp = _gc as GPanel;
+				var gp = _gc as _Panel;
 
 				//we'll use this to prevent window activation on click, for toolbar and menubar classes that support it
 				_hasToolbar = (gp != null && gp.HasToolbar && (gp.Content is AuToolStrip || gp.Content is AuMenuStrip));
@@ -94,12 +94,12 @@ namespace Au.Controls
 
 			protected override void OnGotFocus(EventArgs e)
 			{
-				(_gc as GPanel)?.Content?.Focus();
+				(_gc as _Panel)?.Content?.Focus();
 				//Normally the control is automatically focused, and this func not called.
 				//But not if the control contains a native child control.
 			}
 
-			internal void OnReplacedChild(GContentNode newChild)
+			internal void OnReplacedChild(_ContentNode newChild)
 			{
 				_gc = newChild;
 			}
@@ -169,14 +169,14 @@ namespace Au.Controls
 			/// </summary>
 			class _DockIndicator :Form
 			{
-				GDockPanel _manager;
-				GFloat _float;
-				//these are calculated by OnFloatMoved() while moving the GFloat window:
+				AuDockPanel _manager;
+				_Float _float;
+				//these are calculated by OnFloatMoved() while moving the _Float window:
 				RECT _rect, _rectTabButton;
 				DockTarget _target;
 				bool _isTargetValid;
 
-				internal _DockIndicator(GDockPanel manager, GFloat gfloat)
+				internal _DockIndicator(AuDockPanel manager, _Float gfloat)
 				{
 					_manager = manager;
 					_float = gfloat;
@@ -244,8 +244,8 @@ namespace Au.Controls
 					if(!firstSplit.Bounds.Contains(p)) return false;
 					if(firstSplit.IsHidden) return false; //never mind, can dock without drag-drop
 					var gc = this._float._gc;
-					bool isThisTab = gc is GTab; //don't allow to add to a tab group
-					bool isThisTB = !isThisTab && (gc as GPanel).HasToolbar;
+					bool isThisTab = gc is _Tab; //don't allow to add to a tab group
+					bool isThisTB = !isThisTab && (gc as _Panel).HasToolbar;
 
 					var panels = _manager._aPanel.FindAll(v => v.IsDockedOn(_manager));
 					var tabs = _manager._aTab.FindAll(v => v.IsDockedOn(_manager));
@@ -253,18 +253,18 @@ namespace Au.Controls
 					foreach(var gp in panels) {
 						if(!gp.Bounds.Contains(p)) continue;
 
-						//look in GPanel captions and tab buttons
+						//look in _Panel captions and tab buttons
 						if(gp.CaptionBounds.Contains(p)) {
 							if(isThisTab || isThisTB || gp.HasToolbar) return false;
 							var gt = gp.ParentTab;
 							//r = gp.Content.Bounds; //better don't display the big blue rect
 							rb = gp.CaptionBounds;
-							if(gt != null && gt.ShowsTabButtons) _target.side = GDockHow.TabBefore;
+							if(gt != null && gt.ShowsTabButtons) _target.side = _DockHow.TabBefore;
 							else rb = _CalcNewTabButtonRectInFullCaption(gp, rb, p); //sets _target.side
 							_target.gc = gp;
 							return true;
 						}
-						//look in GPanel content, except tabbed panels
+						//look in _Panel content, except tabbed panels
 						if(gp.IsTabbedPanel) continue;
 						if(!isThisTB && gp.HasToolbar) continue; //don't allow to drop panels on toolbars, or would be problems because of minimal height
 						r = _CalcDockRectPart(gp.Bounds, p); //sets _target.side
@@ -275,22 +275,22 @@ namespace Au.Controls
 					foreach(var gt in tabs) {
 						if(!gt.Bounds.Contains(p)) continue;
 
-						//look in GTab captions except child tab buttons
+						//look in _Tab captions except child tab buttons
 						if(gt.CaptionBounds.Contains(p)) {
 							if(isThisTab || isThisTB) return false;
 							if(gt.DockedItemCount > 0) {
 								//r = gt.ActiveItem.Content.Bounds; //better don't display the big blue rect
 								rb = gt.CaptionBoundsExceptButtons;
-								_target.side = GDockHow.TabAfter;
+								_target.side = _DockHow.TabAfter;
 								_target.gc = gt.Items.Last();
 							} else {
 								rb = gt.CaptionBounds;
-								_target.side = GDockHow.TabBefore;
+								_target.side = _DockHow.TabBefore;
 								_target.gc = gt;
 							}
 							return true;
 						}
-						//look in GTab rect
+						//look in _Tab rect
 						r = _CalcDockRectPart(gt.Bounds, p); //sets _target.side
 						_target.gc = gt;
 						return true;
@@ -308,16 +308,16 @@ namespace Au.Controls
 				/// </summary>
 				RECT _CalcDockRectPart(RECT r, Point p)
 				{
-					GDockHow side;
+					_DockHow side;
 					int wid = r.Width, hei = r.Height, wid2 = wid / 2, hei2 = hei / 2, dx = p.X - r.left, dy = p.Y - r.top;
 					double k = wid / (double)hei;
-					if(dx < wid2) side = GDockHow.SplitLeft; else { side = GDockHow.SplitRight; dx = wid - dx; }
-					if(dy < hei2) { if(dy * k < dx) side = GDockHow.SplitAbove; } else { if((hei - dy) * k < dx) side = GDockHow.SplitBelow; }
+					if(dx < wid2) side = _DockHow.SplitLeft; else { side = _DockHow.SplitRight; dx = wid - dx; }
+					if(dy < hei2) { if(dy * k < dx) side = _DockHow.SplitAbove; } else { if((hei - dy) * k < dx) side = _DockHow.SplitBelow; }
 					switch(_target.side = side) {
-					case GDockHow.SplitLeft: r.right -= wid2; break;
-					case GDockHow.SplitAbove: r.bottom -= hei2; break;
-					case GDockHow.SplitRight: r.left += wid2; break;
-					case GDockHow.SplitBelow: r.top += hei2; break;
+					case _DockHow.SplitLeft: r.right -= wid2; break;
+					case _DockHow.SplitAbove: r.bottom -= hei2; break;
+					case _DockHow.SplitRight: r.left += wid2; break;
+					case _DockHow.SplitBelow: r.top += hei2; break;
 					}
 					return r;
 				}
@@ -326,7 +326,7 @@ namespace Au.Controls
 				/// Returns a half of r (gp full caption, not just tab button), depending on where p is (even if not in r).
 				/// Sets _target.side.
 				/// </summary>
-				RECT _CalcNewTabButtonRectInFullCaption(GPanel gp, RECT r, Point p)
+				RECT _CalcNewTabButtonRectInFullCaption(_Panel gp, RECT r, Point p)
 				{
 					bool after;
 					if(gp.IsVerticalCaption) {
@@ -336,7 +336,7 @@ namespace Au.Controls
 						int mid = (r.left + r.right) / 2;
 						if(after = (p.X >= mid)) r.left = mid; else r.right = mid;
 					}
-					_target.side = after ? GDockHow.TabAfter : GDockHow.TabBefore;
+					_target.side = after ? _DockHow.TabAfter : _DockHow.TabBefore;
 					return r;
 				}
 
@@ -349,7 +349,7 @@ namespace Au.Controls
 			} //class _DockIndicator
 
 			/// <summary>
-			/// GFloat.Drag() and _DockIndicator.OnFloatDropped() return this if can be docked.
+			/// _Float.Drag() and _DockIndicator.OnFloatDropped() return this if can be docked.
 			/// </summary>
 			internal class DockTarget
 			{
@@ -357,9 +357,9 @@ namespace Au.Controls
 				/// The target.
 				/// Note: when dockAsTab is true, it currently may be tabbed or not; if tabbed, may be docked or not.
 				/// </summary>
-				internal GContentNode gc;
-				/// <summary>Specifies whether to add on a GTab or GSplit, and at which side of gc.</summary>
-				internal GDockHow side;
+				internal _ContentNode gc;
+				/// <summary>Specifies whether to add on a _Tab or _Split, and at which side of gc.</summary>
+				internal _DockHow side;
 			}
 
 			internal DockTarget Drag(Point p)

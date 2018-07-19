@@ -71,11 +71,9 @@ namespace Au
 		/// Shell.Run("notepad.exe");
 		/// Wnd w = Wnd.Wait(10, true, "*- Notepad", "Notepad");
 		/// ]]></code>
-		/// Run notepad or activate its window. Works like Wnd.FindOrRun.
+		/// Run notepad or activate its window.
 		/// <code><![CDATA[
-		/// Wnd w = Wnd.Find("*- Notepad", "Notepad");
-		/// if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
-		/// w.Activate();
+		/// Wnd w = Wnd.FindOrRun("*- Notepad", run: () => Shell.Run("notepad.exe"));
 		/// ]]></code>
 		/// </example>
 		public static SRResult Run(string file, string args = null, SRFlags flags = 0, SRMore more = null)
@@ -87,7 +85,7 @@ namespace Au
 			if(more != null) {
 				x.lpVerb = more.Verb;
 				x.lpDirectory = Path_.ExpandEnvVar(more.WorkingDirectory);
-				if(!more.OwnerWindow.IsEmpty) x.hwnd = more.OwnerWindow.Wnd.WndWindow;
+				if(!more.OwnerWindow.IsEmpty) x.hwnd = more.OwnerWindow.Wnd.Window;
 				switch(more.WindowState) {
 				case ProcessWindowStyle.Hidden: x.nShow = Api.SW_HIDE; break;
 				case ProcessWindowStyle.Minimized: x.nShow = Api.SW_SHOWMINIMIZED; break;
@@ -279,7 +277,7 @@ namespace Au
 
 		/// <summary>
 		/// Runs a console program (hidden), waits until its process ends, and prints its output text.
-		/// Calls <see cref="RunConsole(out string, string, string, string, Encoding)"/> and <see cref="Print(string)"/>.
+		/// Calls <see cref="RunConsole(out string, string, string, string, Encoding)"/> and <see cref="Print(string)" r=""/>.
 		/// </summary>
 		/// <param name="file"></param>
 		/// <param name="args"></param>

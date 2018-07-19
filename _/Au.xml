@@ -1140,7 +1140,7 @@
         </member>
         <member name="F:Au.Types.KOHookData.w">
             <summary>
-            The focused control. If there is no focused control - the active window. Use <c>w.WndWindow</c> to get top-level parent window; if <c>w.WndWindow == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
+            The focused control. If there is no focused control - the active window. Use <c>w.Window</c> to get top-level window; if <c>w.Window == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
             </summary>
         </member>
         <member name="T:Au.Types.KTextOption">
@@ -2192,36 +2192,6 @@
             Contains types of hook data for hook procedures installed by <see cref="T:Au.Util.WinHook"/> and <see cref="T:Au.Util.AccHook"/>.
             </summary>
         </member>
-        <member name="T:Au.Types.HookData.AccHookData">
-            <summary>
-            Hook data for the hook procedure installed by <see cref="T:Au.Util.AccHook"/>.
-            More info: <msdn>WinEventProc</msdn>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.hook">
-            <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.aEvent">
-            <summary><msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.wnd">
-            <summary><msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.idObject">
-            <summary><msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.idChild">
-            <summary><msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.idThread">
-            <summary><msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.eventTime">
-            <summary><msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="M:Au.Types.HookData.AccHookData.GetAcc">
-            <inheritdoc cref="M:Au.Acc.FromEvent(Au.Wnd,System.Int32,System.Int32)"/>
-        </member>
         <member name="T:Au.Types.HookData.Keyboard">
             <summary>
             Hook data for the hook procedure installed by <see cref="M:Au.Util.WinHook.Keyboard(System.Func{Au.Types.HookData.Keyboard,System.Boolean})"/>.
@@ -2544,6 +2514,36 @@
             <remarks>
             It can be used as a workaround for this problem: in low-level hook procedure some functions don't work with some windows. For example cannot get an accessible object or use a COM object. Error/exception "An outgoing call cannot be made since the application is dispatching an input-synchronous call (0x8001010D)".
             </remarks>
+        </member>
+        <member name="T:Au.Types.HookData.AccHookData">
+            <summary>
+            Hook data for the hook procedure installed by <see cref="T:Au.Util.AccHook"/>.
+            More info: <msdn>WinEventProc</msdn>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.hook">
+            <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.aEvent">
+            <summary><msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.wnd">
+            <summary><msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.idObject">
+            <summary><msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.idChild">
+            <summary><msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.idThread">
+            <summary><msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.eventTime">
+            <summary><msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="M:Au.Types.HookData.AccHookData.GetAcc">
+            <inheritdoc cref="M:Au.Acc.FromEvent(Au.Wnd,System.Int32,System.Int32)"/>
         </member>
         <member name="T:Au.Types.NamespaceDoc">
             <summary>
@@ -5238,6 +5238,8 @@
              <exception cref="T:Au.Types.WndException">Invalid window (if the function has parameter <paramref name="w"/>).</exception>
              <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
              <remarks>
+             To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.Form_Acc</b> in Au.Tools.dll.
+             
              Walks the tree of accessible objects, until finds a matching AO.
              Uses <see cref="T:Au.Acc.Finder"/>. You can use it directly. See example.
              In wildcard expressions supports PCRE regular expressions (prefix "**r ") but not .NET regular expressions (prefix "**R "). They are similar.
@@ -5675,62 +5677,203 @@
             More info: <msdn>WM_HOTKEY</msdn>.
             </summary>
         </member>
-        <member name="T:Au.Util.AccHook">
+        <member name="T:Au.Util.OutputServer">
             <summary>
-            Helps with accessible object event hooks. See <msdn>SetWinEventHook</msdn>.
+            Receives messages sent by <see cref="M:Au.Output.Write(System.String)"/> and related methods (<b>Print</b> etc).
             </summary>
             <remarks>
-            The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="P:Au.Opt.WaitFor"/>).
-            The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Uninstall</b>) or with the 'using' pattern.
+            If server is global, clients can be multiple appdomains and processes, including this. Else only this appdomain.
+            Works asynchronously, to make writing messages faster.
+            When a client writes a message, the message arrives to the server with some delay and is placed in a queue.
+            You then can get/remove messages from the queue (call <see cref="M:Au.Util.OutputServer.GetMessage(Au.Util.OutputServer.Message@)"/>) and display them in a window (for example).
+            You can be notified about new messages.
+            
+            Recommended setup (see example):
+            1. When your application starts, create an <b>OutputServer</b> instance and assign to a static variable. Call <see cref="M:Au.Util.OutputServer.Start"/>.
+            2. When your application creates its output window, call <see cref="M:Au.Util.OutputServer.SetNotifications(System.Action,System.Windows.Forms.Control)"/> to register callback function.
+            3. In the callback function get/remove/display all new messages.
+            4. Call <see cref="M:Au.Util.OutputServer.Stop"/> when closing the window. Optional but recommended.
             </remarks>
             <example>
+            Simple program with output window.
             <code><![CDATA[
-            //using Au.Util;
-            bool stop = false;
-            using(new AccHook(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
+            class OutputFormExample :Form
             {
-            	Print(x.wnd);
-            	var a = x.GetAcc();
-            	Print(a);
-            	if(x.wnd.ClassNameIs("Shell_TrayWnd")) stop = true;
-            })) {
-            	MessageBox.Show("hook");
-            	//or
-            	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
-            	//Print("the end");
+            	TextBox _tb;
+            
+            	public OutputFormExample()
+            	{
+            		_tb = new TextBox();
+            		_tb.ReadOnly = true;
+            		_tb.Multiline = true;
+            		_tb.ScrollBars = ScrollBars.Both;
+            		_tb.WordWrap = false;
+            		_tb.Dock = DockStyle.Fill;
+            		_tb.TabStop = false;
+            		this.Controls.Add(_tb);
+            
+            		_os.SetNotifications(_ProcessMessages, this);
+            	}
+            
+            	void _ProcessMessages()
+            	{
+            		while(_os.GetMessage(out var m)) {
+            			switch(m.Type) {
+            			case Au.Util.OutputServer.MessageType.Clear:
+            				_tb.Clear();
+            				break;
+            			case Au.Util.OutputServer.MessageType.Write:
+            				//_tb.AppendText(m.Text);
+            				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Domain}  {m.Text}");
+            				break;
+            			}
+            		}
+            	}
+            
+            	static Au.Util.OutputServer _os = new Au.Util.OutputServer(isGlobal: false);
+            
+            	[STAThread]
+            	public static void Main()
+            	{
+            		_os.Start();
+            
+            		//test Print and Clear, before and after creating window
+            		Output.IgnoreConsole = true;
+            		Print("test before setting notifications");
+            		Task.Run(() => { 1.s(); Print("test after"); 1.s(); Output.Clear(); 1.s(); Print("test after Clear"); });
+            
+            		Application.Run(new OutputFormExample());
+            		_os.Stop();
+            	}
             }
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Util.AccHook.#ctor(Au.Types.AccEVENT,Au.Types.AccEVENT,System.Action{Au.Types.HookData.AccHookData},System.Int32,System.Int32,Au.Types.AccHookFlags)">
+        <member name="T:Au.Util.OutputServer.MessageType">
             <summary>
-            Installs hook.
-            Calls API <msdn>SetWinEventHook</msdn>.
+            See <see cref="P:Au.Util.OutputServer.Message.Type"/>.
             </summary>
-            <param name="eventMin">Specifies the event constant for the lowest event value in the range of events that are handled by the hook function. This parameter can be set to AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>.</param>
-            <param name="eventMax">Specifies the event constant for the highest event value in the range of events that are handled by the hook function. This parameter can be set to AccEVENT.MAX to indicate the highest possible event value. If 0, uses <paramref name="eventMin"/>.</param>
-            <param name="hookProc">Delegate of the hook procedure.</param>
-            <param name="idProcess">Specifies the id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
-            <param name="idThread">Specifies the native id of the thread from which the hook function receives events. If 0 - all threads.</param>
-            <param name="flags"></param>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
-            <example><inheritdoc cref="T:Au.Util.AccHook"/></example>
         </member>
-        <member name="M:Au.Util.AccHook.Unhook">
+        <member name="F:Au.Util.OutputServer.MessageType.Write">
             <summary>
-            Uninstalls the hook if installed.
+            Add line to the output window.
+            All <see cref="T:Au.Util.OutputServer.Message"/> members can be used.
+            </summary>
+        </member>
+        <member name="F:Au.Util.OutputServer.MessageType.Clear">
+            <summary>
+            Clear the output window.
+            Only <see cref="P:Au.Util.OutputServer.Message.Type"/> is used.
+            </summary>
+        </member>
+        <member name="T:Au.Util.OutputServer.Message">
+            <summary>
+            Contains message text and/or related info.
+            More info: <see cref="T:Au.Util.OutputServer"/>, <see cref="M:Au.Util.OutputServer.GetMessage(Au.Util.OutputServer.Message@)"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Util.OutputServer.Message.Type">
+            <summary>
+            Message type.
+            Currently there are 2 types - Write and Clear.
+            </summary>
+        </member>
+        <member name="P:Au.Util.OutputServer.Message.Text">
+            <summary>
+            Message text.
+            Used with MessageType.Write.
+            </summary>
+        </member>
+        <member name="P:Au.Util.OutputServer.Message.TimeUtc">
+            <summary>
+            Message time in FILETIME format, UTC.
+            Used with MessageType.Write.
+            To convert to string: <c>DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime().ToString()</c>.
+            </summary>
+        </member>
+        <member name="P:Au.Util.OutputServer.Message.Domain">
+            <summary>
+            The name of the appdomain that called the Write/Print/etc method.
+            Used with MessageType.Write.
+            </summary>
+        </member>
+        <member name="M:Au.Util.OutputServer.#ctor(System.Boolean)">
+            <param name="isGlobal">
+            If true, will receive output from all appdomains and processes that don't have local server.
+            </param>
+        </member>
+        <member name="M:Au.Util.OutputServer.Start">
+            <summary>
+            Starts server.
+            Returns false if server already exists (if global - in any process).
+            </summary>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+        </member>
+        <member name="M:Au.Util.OutputServer.Stop">
+            <summary>
+            Stops server.
+            </summary>
+        </member>
+        <member name="M:Au.Util.OutputServer.Finalize">
+            <summary>
+            Calls Stop.
+            </summary>
+        </member>
+        <member name="M:Au.Util.OutputServer.SetNotifications(System.Action,System.Windows.Forms.Control)">
+            <summary>
+            Sets callback function, to be notified about server events.
+            </summary>
+            <param name="cbFunc">
+            Callback function's delegate. Called when one or more messages are available.
+            It should call <see cref="M:Au.Util.OutputServer.GetMessage(Au.Util.OutputServer.Message@)"/> until it returns false.
+            See example in class help.
+            </param>
+            <param name="c">A control or form. The callback function will be called in its thread. If null, the callback function will be called in other thread.</param>
+        </member>
+        <member name="M:Au.Util.OutputServer.LibLocalWrite(System.String,System.Int64,System.String)">
+            <summary>
+            Adds s directly to _messages and sets timer.
+            If s is null, it is 'Clear' command.
+            Else if !NoNewline, appends "\r\n".
+            Used with local server only.
+            </summary>
+        </member>
+        <member name="M:Au.Util.OutputServer.GetMessage(Au.Util.OutputServer.Message@)">
+            <summary>
+            Gets next message and removes from the queue.
+            Returns false if there are no messages.
             </summary>
             <remarks>
-            Must be called from the same thread that installed the hook.
+            Messages are added to an internal queue when clients call <see cref="M:Au.Output.Write(System.String)"/> etc. They contain the text, time, etc. This function gets the oldest message and removes it from the queue.
             </remarks>
         </member>
-        <member name="M:Au.Util.AccHook.Dispose">
+        <member name="P:Au.Util.OutputServer.MessageCount">
             <summary>
-            Calls <see cref="M:Au.Util.AccHook.Unhook"/>.
+            Gets the count of messages in the queue.
             </summary>
         </member>
-        <member name="M:Au.Util.AccHook.Finalize">
-            
+        <member name="P:Au.Util.OutputServer.NoNewline">
+            <summary>
+            Let messages don't end with "\r\n".
+            </summary>
+            <remarks>
+            This can be used for performance, to avoid string copying when using local server. Does not affect performance of global server.
+            </remarks>
+        </member>
+        <member name="P:Au.Util.OutputServer.LibMailslotName">
+            <summary>
+            Gets mailslot name like @"\\.\mailslot\Au.Output\" + sessionId.
+            </summary>
+        </member>
+        <member name="P:Au.Util.OutputServer.LibTimerName">
+            <summary>
+            Gets waitable timer name like "timer.Au.Output".
+            </summary>
+        </member>
+        <member name="T:Au.Util.OutputServer.LibSharedMemoryData">
+            <summary>
+            Shared memory variables. Used with global server only.
+            </summary>
         </member>
         <member name="T:Au.Util.StringMisc">
             <summary>
@@ -5855,7 +5998,7 @@
         </member>
         <member name="T:Au.Util.Cursors_">
             <summary>
-            Helps to load cursors.
+            Helps to load cursors, etc.
             </summary>
         </member>
         <member name="M:Au.Util.Cursors_.LoadCursorFromFile(System.String,System.Int32)">
@@ -5869,6 +6012,14 @@
             This function exists because <see cref="T:System.Windows.Forms.Cursor"/> constructors don't support colors, ani cursors and custom size.
             </remarks>
         </member>
+        <member name="M:Au.Util.Cursors_.HandleToCursor(System.IntPtr,System.Boolean)">
+            <summary>
+            Converts unmanaged cursor to Cursor object.
+            Returns null if hCur is default(IntPtr).
+            </summary>
+            <param name="hCursor">Cursor handle.</param>
+            <param name="destroyCursor">If true (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If false, the returned variable just uses the unmanaged cursor and will not destroy; if need, the caller later should destroy it with API <msdn>DestroyCursor</msdn>.</param>
+        </member>
         <member name="M:Au.Util.Cursors_.LoadCursorFromMemory(System.Byte[],System.Int32)">
             <summary>
             Creates cursor from cursor file data in memory, for example from a managed resource.
@@ -5878,6 +6029,23 @@
             <param name="size">Width and height. If 0, uses system default size, which depends on DPI (the "text size" system setting).</param>
             <remarks>
             This function exists because <see cref="T:System.Windows.Forms.Cursor"/> constructors don't support colors, ani cursors and custom size.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.Cursors_.HashCursor(System.IntPtr)">
+            <summary>
+            Calculates 64-bit FNV1 hash of a mouse cursor's mask bitmap.
+            Returns 0 if fails.
+            </summary>
+            <param name="hCursor">Native cursor handle. See <see cref="M:Au.Util.Cursors_.GetCurrentCursor(System.IntPtr@)"/>.</param>
+        </member>
+        <member name="M:Au.Util.Cursors_.GetCurrentCursor(System.IntPtr@)">
+            <summary>
+            Gets the native handle of the current mouse cursor.
+            Returns false if the cursor is currently invisible.
+            </summary>
+            <remarks>
+            It is the system cursor, not the cursor of this thread.
+            Don't destroy the cursor.
             </remarks>
         </member>
         <member name="T:Au.Util.LibGDI">
@@ -6141,6 +6309,63 @@
             </summary>
         </member>
         <member name="M:Au.Util.WinHook.Finalize">
+            
+        </member>
+        <member name="T:Au.Util.AccHook">
+            <summary>
+            Helps with accessible object event hooks. See <msdn>SetWinEventHook</msdn>.
+            </summary>
+            <remarks>
+            The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="P:Au.Opt.WaitFor"/>).
+            The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Uninstall</b>) or with the 'using' pattern.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            //using Au.Util;
+            bool stop = false;
+            using(new AccHook(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
+            {
+            	Print(x.wnd);
+            	var a = x.GetAcc();
+            	Print(a);
+            	if(x.wnd.ClassNameIs("Shell_TrayWnd")) stop = true;
+            })) {
+            	MessageBox.Show("hook");
+            	//or
+            	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
+            	//Print("the end");
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Util.AccHook.#ctor(Au.Types.AccEVENT,Au.Types.AccEVENT,System.Action{Au.Types.HookData.AccHookData},System.Int32,System.Int32,Au.Types.AccHookFlags)">
+            <summary>
+            Installs hook.
+            Calls API <msdn>SetWinEventHook</msdn>.
+            </summary>
+            <param name="eventMin">Specifies the event constant for the lowest event value in the range of events that are handled by the hook function. This parameter can be set to AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>.</param>
+            <param name="eventMax">Specifies the event constant for the highest event value in the range of events that are handled by the hook function. This parameter can be set to AccEVENT.MAX to indicate the highest possible event value. If 0, uses <paramref name="eventMin"/>.</param>
+            <param name="hookProc">Delegate of the hook procedure.</param>
+            <param name="idProcess">Specifies the id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
+            <param name="idThread">Specifies the native id of the thread from which the hook function receives events. If 0 - all threads.</param>
+            <param name="flags"></param>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <example><inheritdoc cref="T:Au.Util.AccHook"/></example>
+        </member>
+        <member name="M:Au.Util.AccHook.Unhook">
+            <summary>
+            Uninstalls the hook if installed.
+            </summary>
+            <remarks>
+            Must be called from the same thread that installed the hook.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.AccHook.Dispose">
+            <summary>
+            Calls <see cref="M:Au.Util.AccHook.Unhook"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AccHook.Finalize">
             
         </member>
         <member name="T:Au.Util.LibCharPtr">
@@ -7113,7 +7338,7 @@
             <summary>
             Returns true if this thread has a .NET message loop (Forms or WPF).
             </summary>
-            <seealso cref="M:Au.Wnd.Misc.ThreadWindows(System.Int32,System.Boolean,System.Boolean)"/>
+            <seealso cref="M:Au.Wnd.GetWnd.ThreadWindows(System.Int32,System.Boolean,System.Boolean)"/>
         </member>
         <member name="T:Au.BlockUserInput">
             <summary>
@@ -7688,7 +7913,7 @@
         </member>
         <member name="M:Au.NoClass.LibPrintObjectToString(System.Object)">
             <summary>
-            Converts object to string like <see cref="M:Au.NoClass.Print(System.Object)"/> does.
+            Converts object to string like <see cref="M:Au.NoClass.Print(System.Object)" r=""/> does.
             </summary>
         </member>
         <member name="M:Au.NoClass.Print``1(System.Collections.Generic.IEnumerable{``0})">
@@ -7713,7 +7938,7 @@
             {0} - item index, starting from 0.
             {1} - item index, starting from 1.
             
-            Default "{s}\r\n". It works like <see cref="M:Au.NoClass.Print``1(System.Collections.Generic.IEnumerable{``0})"/>.
+            Default "{s}\r\n". It works like <see cref="M:Au.NoClass.Print``1(System.Collections.Generic.IEnumerable{``0})" r=""/>.
             </param>
             <param name="trimEnd">
             How many characters to remove from the end of the result string.
@@ -9202,7 +9427,7 @@
             <item>
             string that starts with "image:" or "~:" - Base64-encoded .png or .bmp image embedded in script.
             If "image:", it is .png file data, else it is compressed .bmp file data.
-            Can be created with Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
+            Can be created with function Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
             </item>
             <item>int, ColorInt or Color - color. Int must be in 0xRRGGBB format. Alpha is not used.</item>
             <item>Bitmap - image object in memory.</item>
@@ -9233,6 +9458,8 @@
             <exception cref="T:System.Exception">Depending on <paramref name="image"/> string format, exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, <see cref="M:Au.Convert_.Decompress(System.Byte[],System.Int32,System.Int32)"/>.</exception>
             <exception cref="T:Au.Types.AuException">Something failed.</exception>
             <remarks>
+            To create code for this function, use dialog "Find image or color in window". It is form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll.
+            
             The speed mostly depends on:
             1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>(w, rectangle)</c>).
             2. Flag <see cref="F:Au.Types.WIFlags.WindowDC"/>. Usually makes several times faster. With this flag the speed depends on window.
@@ -9251,7 +9478,7 @@
             var w = Wnd.Find("Window Name").OrThrow();
             string image = "image:iVBORw0KGgoAAAANSUhEUgAAABYAAAANCAYAAACtpZ5jAAAAAXNSR0IArs4c...";
             var wi = WinImage.Find(w, image).OrThrow();
-            wi.MouseMove();
+            wi.Click();
             ]]></code>
             </example>
         </member>
@@ -9549,247 +9776,21 @@
         <member name="M:Au.Opt.Temp.RestoreKey.Dispose">
             <summary>Restores options.</summary>
         </member>
-        <member name="T:Au.Tools.OutputServer">
-            <summary>
-            Receives messages sent from clients when they call <see cref="M:Au.Output.Write(System.String)"/> and related methods.
-            </summary>
-            <remarks>
-            If server is global, clients can be multiple appdomains and processes, including this. Else only this appdomain.
-            Works asynchronously, to make writing messages faster.
-            When a client writes a message, the message arrives to the server with some delay and is placed in a queue.
-            You then can get/remove messages from the queue (call <see cref="M:Au.Tools.OutputServer.GetMessage(Au.Tools.OutputServer.Message@)"/>) and display them in a window (for example).
-            You can be notified about new messages.
-            
-            Recommended setup (see example):
-            1. When your application starts, create an <b>OutputServer</b> instance and assign to a static variable. Call <see cref="M:Au.Tools.OutputServer.Start"/>.
-            2. When your application creates its output window, call <see cref="M:Au.Tools.OutputServer.SetNotifications(System.Action,System.Windows.Forms.Control)"/> to register callback function.
-            3. In the callback function get/remove/display all new messages.
-            4. Call <see cref="M:Au.Tools.OutputServer.Stop"/> when closing the window. Optional but recommended.
-            </remarks>
-            <example>
-            Simple program with output window.
-            <code><![CDATA[
-            class OutputFormExample :Form
-            {
-            	TextBox _tb;
-            
-            	public OutputFormExample()
-            	{
-            		_tb = new TextBox();
-            		_tb.ReadOnly = true;
-            		_tb.Multiline = true;
-            		_tb.ScrollBars = ScrollBars.Both;
-            		_tb.WordWrap = false;
-            		_tb.Dock = DockStyle.Fill;
-            		_tb.TabStop = false;
-            		this.Controls.Add(_tb);
-            
-            		_os.SetNotifications(_ProcessMessages, this);
-            	}
-            
-            	void _ProcessMessages()
-            	{
-            		while(_os.GetMessage(out var m)) {
-            			switch(m.Type) {
-            			case Au.Tools.OutputServer.MessageType.Clear:
-            				_tb.Clear();
-            				break;
-            			case Au.Tools.OutputServer.MessageType.Write:
-            				//_tb.AppendText(m.Text);
-            				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Domain}  {m.Text}");
-            				break;
-            			}
-            		}
-            	}
-            
-            	static Au.Tools.OutputServer _os = new Au.Tools.OutputServer(false);
-            
-            	[STAThread]
-            	public static void Main()
-            	{
-            		_os.Start();
-            
-            		//test Print and Clear, before and after creating window
-            		Output.IgnoreConsole = true;
-            		Print("test before setting notifications");
-            		Task.Run(() => { 1.s(); Print("test after"); 1.s(); Output.Clear(); 1.s(); Print("test after Clear"); });
-            
-            		var f = new OutputFormExample();
-            		f.ShowDialog();
-            		_os.Stop();
-            	}
-            }
-            ]]></code>
-            </example>
-        </member>
-        <member name="T:Au.Tools.OutputServer.MessageType">
-            <summary>
-            See <see cref="P:Au.Tools.OutputServer.Message.Type"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Tools.OutputServer.MessageType.Write">
-            <summary>
-            Add line to the output window.
-            All Message members can be used.
-            </summary>
-        </member>
-        <member name="F:Au.Tools.OutputServer.MessageType.Clear">
-            <summary>
-            Clear the output window.
-            Other Message members are not used.
-            </summary>
-        </member>
-        <member name="T:Au.Tools.OutputServer.Message">
-            <summary>
-            Contains message text and/or related info.
-            More info: <see cref="T:Au.Tools.OutputServer"/>, <see cref="M:Au.Tools.OutputServer.GetMessage(Au.Tools.OutputServer.Message@)"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Tools.OutputServer.Message.Type">
-            <summary>
-            Message type.
-            Currently there are 2 types - Write and Clear.
-            </summary>
-        </member>
-        <member name="P:Au.Tools.OutputServer.Message.Text">
-            <summary>
-            Message text.
-            Used with MessageType.Write.
-            </summary>
-        </member>
-        <member name="P:Au.Tools.OutputServer.Message.TimeUtc">
-            <summary>
-            Message time in FILETIME format, UTC.
-            Used with MessageType.Write.
-            To convert to string: <c>DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime().ToString()</c>.
-            </summary>
-        </member>
-        <member name="P:Au.Tools.OutputServer.Message.Domain">
-            <summary>
-            The name of the appdomain that called the Write/Print/etc method.
-            Used with MessageType.Write.
-            </summary>
-        </member>
-        <member name="M:Au.Tools.OutputServer.#ctor(System.Boolean)">
-            <param name="isGlobal">Serve all appdomains and processes that don't have local server.</param>
-        </member>
-        <member name="M:Au.Tools.OutputServer.Start">
-            <summary>
-            Starts server.
-            Returns false if server already exists (if global - in any process).
-            </summary>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
-        </member>
-        <member name="M:Au.Tools.OutputServer.Stop">
-            <summary>
-            Stops server.
-            </summary>
-        </member>
-        <member name="M:Au.Tools.OutputServer.Finalize">
-            <summary>
-            Calls Stop.
-            </summary>
-        </member>
-        <member name="M:Au.Tools.OutputServer.SetNotifications(System.Action,System.Windows.Forms.Control)">
-            <summary>
-            Sets callback function, to be notified about server events.
-            </summary>
-            <param name="cbFunc">
-            Callback function's delegate. Called when one or more messages are available.
-            It should call <see cref="M:Au.Tools.OutputServer.GetMessage(Au.Tools.OutputServer.Message@)"/> until it returns false.
-            See example in class help.
-            </param>
-            <param name="c">A control or form. The callback function will be called in its thread. If null, the callback function will be called in other thread.</param>
-        </member>
-        <member name="M:Au.Tools.OutputServer.LibLocalWrite(System.String,System.Int64,System.String)">
-            <summary>
-            Adds s directly to _messages and sets timer.
-            If s is null, it is 'Clear' command.
-            Else if !NoNewline, appends "\r\n".
-            Used with local server only.
-            </summary>
-        </member>
-        <member name="M:Au.Tools.OutputServer.GetMessage(Au.Tools.OutputServer.Message@)">
-            <summary>
-            Gets next message and removes from the queue.
-            Returns false if there are no messages.
-            </summary>
-            <remarks>
-            Messages are added to an internal queue when clients call <see cref="M:Au.Output.Write(System.String)"/> etc. They contain the text, time, etc. This function gets the oldest message and removes it from the queue.
-            </remarks>
-        </member>
-        <member name="P:Au.Tools.OutputServer.MessageCount">
-            <summary>
-            Gets the count of messages in the queue.
-            </summary>
-        </member>
-        <member name="P:Au.Tools.OutputServer.NoNewline">
-            <summary>
-            Let messages don't end with "\r\n".
-            </summary>
-            <remarks>
-            This can be used for performance, to avoid string copying when using local server. Does not affect performance of global server.
-            </remarks>
-        </member>
-        <member name="P:Au.Tools.OutputServer.LibMailslotName">
-            <summary>
-            Gets mailslot name like @"\\.\mailslot\Au.Output\" + sessionId.
-            </summary>
-        </member>
-        <member name="P:Au.Tools.OutputServer.LibTimerName">
-            <summary>
-            Gets waitable timer name like "timer.Au.Output".
-            </summary>
-        </member>
-        <member name="T:Au.Tools.OutputServer.LibSharedMemoryData">
-            <summary>
-            Shared memory variables. Used with global server only.
-            </summary>
-        </member>
-        <member name="T:Au.Tools.Recording">
-            <summary>
-            Functions for keyboard/mouse/etc recorder tools.
-            </summary>
-        </member>
-        <member name="M:Au.Tools.Recording.MouseToString(System.Collections.Generic.IEnumerable{System.UInt32},System.Boolean)">
-            <summary>
-            Converts multiple recorded mouse movements to string for <see cref="M:Au.Mouse.MoveRecorded(System.String,System.Double)"/>.
-            </summary>
-            <param name="recorded">
-            List of x y distances from previous.
-            The first distance is from the mouse position before the first movement; at run time it will be distance from <see cref="P:Au.Mouse.LastMoveXY"/>.
-            To create uint value from distance dx dy use this code: <c>Math_.MakeUint(dx, dy)</c>.
-            </param>
-            <param name="withSleepTimes">
-            <paramref name="recorded"/> also contains sleep times (milliseconds) alternating with distances.
-            It must start with a sleep time. Example: {time1, dist1, time2, dist2}. Another example: {time1, dist1, time2, dist2, time3}. This is invalid: {dist1, time1, dist2, time2}.
-            </param>
-        </member>
-        <member name="T:Au.Tools.Misc">
-            <summary>
-            Miscellaneous functions.
-            </summary>
-        </member>
-        <member name="M:Au.Tools.Misc.HashMouseCursor(System.IntPtr)">
-            <summary>
-            Calculates 64-bit FNV1 hash of a mouse cursor's mask bitmap.
-            Returns 0 if fails.
-            </summary>
-            <param name="hCursor">Native cursor handle. See <see cref="M:Au.Tools.Misc.GetCurrentMouseCursor(System.IntPtr@)"/>.</param>
-        </member>
-        <member name="M:Au.Tools.Misc.GetCurrentMouseCursor(System.IntPtr@)">
-            <summary>
-            Gets the native handle of the current mouse cursor.
-            Returns false if the cursor is currently invisible.
-            </summary>
-            <remarks>
-            It is the system cursor, not the cursor of this thread.
-            </remarks>
-        </member>
         <member name="T:Au.Output">
             <summary>
             Writes text to the output window, console or log file.
             </summary>
+            <remarks>
+            When <see cref="M:Au.Output.Write(System.String)"/>, <b>Print</b>, etc is called, where the text goes:
+            <list type="bullet">
+            <item>If redirected, to wherever it is redirected. See <see cref="P:Au.Output.Writer"/>.</item>
+            <item>Else if using log file (<see cref="P:Au.Output.LogFile"/> not null), writes to the file.</item>
+            <item>Else if using console (<see cref="P:Au.Output.IsWritingToConsole"/> returns true), writes to console.</item>
+            <item>Else if using local <see cref="T:Au.Util.OutputServer"/> (in this appdomain), writes to it.</item>
+            <item>Else if exists global <see cref="T:Au.Util.OutputServer"/> (in any process/appdomain), writes to it.</item>
+            <item>Else nowhere.</item>
+            </list>
+            </remarks>
         </member>
         <member name="P:Au.Output.IsConsoleProcess">
             <summary>
@@ -9799,8 +9800,16 @@
         <member name="P:Au.Output.IsWritingToConsole">
             <summary>
             Returns true if is writing to console, false if to the output window or log file. Assuming that <see cref="P:Au.Output.Writer"/> is not changed.
-            Does not write to console in these cases: <see cref="P:Au.Output.IsConsoleProcess"/> is false. <see cref="P:Au.Output.IgnoreConsole"/> is true. <see cref="P:Au.Output.LogFile"/> is not null. The startup info of this process tells to not show console window and to not redirect the standard output.
             </summary>
+            <remarks>
+            Does not write to console in these cases:
+            <list type="bullet">
+            <item><see cref="P:Au.Output.IsConsoleProcess"/> is false.</item>
+            <item><see cref="P:Au.Output.IgnoreConsole"/> is true.</item>
+            <item><see cref="P:Au.Output.LogFile"/> is not null.</item>
+            <item>The startup info of this process tells to not show console window and to not redirect the standard output.</item>
+            </list>
+            </remarks>
         </member>
         <member name="P:Au.Output.IgnoreConsole">
             <summary>
@@ -12317,11 +12326,9 @@
             Shell.Run("notepad.exe");
             Wnd w = Wnd.Wait(10, true, "*- Notepad", "Notepad");
             ]]></code>
-            Run notepad or activate its window. Works like Wnd.FindOrRun.
+            Run notepad or activate its window.
             <code><![CDATA[
-            Wnd w = Wnd.Find("*- Notepad", "Notepad");
-            if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
-            w.Activate();
+            Wnd w = Wnd.FindOrRun("*- Notepad", run: () => Shell.Run("notepad.exe"));
             ]]></code>
             </example>
         </member>
@@ -12371,7 +12378,7 @@
         <member name="M:Au.Shell.RunConsole(System.String,System.String,System.String,System.Text.Encoding)">
             <summary>
             Runs a console program (hidden), waits until its process ends, and prints its output text.
-            Calls <see cref="M:Au.Shell.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)"/> and <see cref="M:Au.NoClass.Print(System.String)"/>.
+            Calls <see cref="M:Au.Shell.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)"/> and <see cref="M:Au.NoClass.Print(System.String)" r=""/>.
             </summary>
             <param name="file"></param>
             <param name="args"></param>
@@ -14075,10 +14082,29 @@
             Waits for a nonstandard mouse cursor (pointer) visible.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
-            <param name="cursorHash">Cursor hash, as returned by <see cref="M:Au.Tools.Misc.HashMouseCursor(System.IntPtr)"/>.</param>
+            <param name="cursorHash">Cursor hash, as returned by <see cref="M:Au.Util.Cursors_.HashCursor(System.IntPtr)"/>.</param>
             <param name="not">Wait until this cursor disappears.</param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
+        </member>
+        <member name="T:Au.Tools.Recording">
+            <summary>
+            Functions for keyboard/mouse/etc recorder tools.
+            </summary>
+        </member>
+        <member name="M:Au.Tools.Recording.MouseToString(System.Collections.Generic.IEnumerable{System.UInt32},System.Boolean)">
+            <summary>
+            Converts multiple recorded mouse movements to string for <see cref="M:Au.Mouse.MoveRecorded(System.String,System.Double)"/>.
+            </summary>
+            <param name="recorded">
+            List of x y distances from previous.
+            The first distance is from the mouse position before the first movement; at run time it will be distance from <see cref="P:Au.Mouse.LastMoveXY"/>.
+            To create uint value from distance dx dy use this code: <c>Math_.MakeUint(dx, dy)</c>.
+            </param>
+            <param name="withSleepTimes">
+            <paramref name="recorded"/> also contains sleep times (milliseconds) alternating with distances.
+            It must start with a sleep time. Example: {time1, dist1, time2, dist2}. Another example: {time1, dist1, time2, dist2, time3}. This is invalid: {dist1, time1, dist2, time2}.
+            </param>
         </member>
         <member name="T:Au.Char_">
             <summary>
@@ -15938,7 +15964,7 @@
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, after that time interval returns default(Wnd).
             </param>
-            <param name="active">The window must be the active window (<see cref="P:Au.Wnd.WndActive"/>), and not minimized.</param>
+            <param name="active">The window must be the active window (<see cref="P:Au.Wnd.Active"/>), and not minimized.</param>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
             By default ignores invisible windows. Use flag <see cref="F:Au.Types.WFFlags.HiddenToo"/> if need.
@@ -15968,7 +15994,7 @@
             Returns window handle. On timeout returns default(Wnd) if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/></param>
-            <param name="active">The window must be the active window (<see cref="P:Au.Wnd.WndActive"/>), and not minimized.</param>
+            <param name="active">The window must be the active window (<see cref="P:Au.Wnd.Active"/>), and not minimized.</param>
             <param name="windows">One or more variables containing window properties.</param>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
             <remarks>
@@ -16426,38 +16452,6 @@
             </summary>
             <tocexclude />
         </member>
-        <member name="M:Au.Wnd.Misc.AllWindows(System.Boolean,System.Boolean)">
-            <summary>
-            Gets top-level windows.
-            Returns array containing 0 or more window handles as Wnd.
-            </summary>
-            <param name="onlyVisible">Need only visible windows.</param>
-            <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
-            <remarks>
-            Calls API <msdn>EnumWindows</msdn>.
-            <note>The list can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="M:Au.Wnd.Misc.MainWindows(System.Boolean)"/>.</note>
-            By default array elements are sorted to match the Z order.
-            On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess; to get such windows you can use <see cref="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.Wnd.Misc.ThreadWindows(System.Int32,System.Boolean,System.Boolean)">
-            <summary>
-            Gets top-level windows of a thread.
-            Returns array containing 0 or more window handles as Wnd.
-            </summary>
-            <param name="threadId">
-            Unmanaged thread id.
-            See <see cref="P:Au.Thread_.NativeId"/>, <see cref="P:Au.Wnd.ThreadId"/>.
-            If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="M:Au.Types.Native.GetError"/>.
-            </param>
-            <param name="onlyVisible">Need only visible windows.</param>
-            <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
-            <exception cref="T:System.ArgumentException">0 threadId.</exception>
-            <remarks>
-            Calls API <msdn>EnumThreadWindows</msdn>.
-            </remarks>
-            <seealso cref="P:Au.Thread_.IsUI"/>
-        </member>
         <member name="M:Au.Wnd.Misc.FindMessageWindow(System.String,System.String,Au.Wnd)">
             <summary>
             Finds a message-only window and returns its handle as Wnd. Returns default(Wnd) if not found.
@@ -16479,120 +16473,6 @@
             <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
             <remarks>
             Supports <see cref="M:Au.Types.Native.GetError"/>.
-            </remarks>
-        </member>
-        <member name="P:Au.Wnd.Misc.WndTop">
-            <summary>
-            Gets the very first top-level window in the Z order.
-            Usually it is a topmost window.
-            Calls API <msdn>GetTopWindow</msdn>(default(Wnd)).
-            </summary>
-        </member>
-        <member name="M:Au.Wnd.Misc.WndLastActiveOwnedOrThis(Au.Wnd,System.Boolean)">
-            <summary>
-            Gets the most recently active window in the chain of windows owned by w, or w itself if there are no such windows.
-            </summary>
-            <param name="w"></param>
-            <param name="includeOwners">Can return an owner (or owner's owner and so on) of w too.</param>
-            <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.Wnd.Misc.WndRootOwnerOrThis(Au.Wnd,System.Boolean)">
-            <summary>
-            Gets the most bottom owner window in the chain of owner windows of w.
-            If w is not owned, returns w. If w is invalid, returns default(Wnd).
-            </summary>
-            <param name="w"></param>
-            <param name="supportControls">If w is a child window, use its top-level parent window instead.</param>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-        </member>
-        <member name="P:Au.Wnd.Misc.WndRoot">
-            <summary>
-            Gets the virtual parent window of all top-level windows.
-            Calls API <msdn>GetDesktopWindow</msdn>.
-            <note>It is not the visible desktop window (see <see cref="P:Au.Wnd.Misc.WndDesktop"/>)</note>
-            </summary>
-        </member>
-        <member name="P:Au.Wnd.Misc.WndShell">
-            <summary>
-            Gets a window of the shell process (usually process "explorer", class name "Progman").
-            Calls API <msdn>GetShellWindow</msdn>.
-            <note>In most cases it is not the window that contains desktop icons (see <see cref="P:Au.Wnd.Misc.WndDesktop"/>). But it belongs to the same thread.</note>
-            </summary>
-        </member>
-        <member name="P:Au.Wnd.Misc.WndDesktop">
-            <summary>
-            Gets the desktop window.
-            It displays desktop icons and wallpaper in its child control <see cref="P:Au.Wnd.Misc.WndDesktopControl"/>. The "Show Desktop" command (Win+D) activates it.
-            <note>It is not API <msdn>GetDesktopWindow</msdn> (see <see cref="P:Au.Wnd.Misc.WndRoot"/>)</note>
-            </summary>
-            <remarks>
-            <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
-            </remarks>
-        </member>
-        <member name="P:Au.Wnd.Misc.WndDesktopControl">
-            <summary>
-            Gets the control of "SysListView32" class that contains desktop icons and wallpaper. It is a child of <see cref="P:Au.Wnd.Misc.WndDesktop"/>.
-            </summary>
-            <remarks>
-            <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
-            </remarks>
-        </member>
-        <member name="M:Au.Wnd.Misc.OwnerWindowsAndThis(Au.Wnd,System.Boolean)">
-            <summary>
-            Gets all owner windows of the specified window.
-            Returns array that starts with the specified window or its top-level parent (if control).
-            </summary>
-            <param name="w">Window or control. If control, its top-level parent window will be the first in the array.</param>
-            <param name="onlyVisible">Skip invisible windows.</param>
-            <remarks>
-            This function for example can be used to temporarily hide a tool window and its owners when capturing something from the screen.
-            The array does not include <see cref="P:Au.Wnd.Misc.WndRoot"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.Wnd.Misc.IsMainWindow(Au.Wnd,System.Boolean,System.Boolean)">
-            <summary>
-            Returns true if window w is considered a main window, ie probably is in the Windows taskbar.
-            Returns false if it is invisible, cloaked, owned, toolwindow, menu, etc.
-            </summary>
-            <param name="w"></param>
-            <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
-            <param name="skipMinimized">Return false if w is minimized.</param>
-        </member>
-        <member name="M:Au.Wnd.Misc.MainWindows(System.Boolean)">
-            <summary>
-            Gets main windows, ie those that probably are in the Windows taskbar.
-            Returns array containing 0 or more Wnd.
-            </summary>
-            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
-            <remarks>
-            Uses <see cref="M:Au.Wnd.Misc.IsMainWindow(Au.Wnd,System.Boolean,System.Boolean)"/>.
-            Does not match the order of buttons in the Windows taskbar.
-            </remarks>
-        </member>
-        <member name="M:Au.Wnd.Misc.WndNextMain(Au.Wnd,System.Boolean,System.Boolean,System.Boolean)">
-            <summary>
-            Gets next window in the Z order, skipping invisible and other windows that probably are not in the Windows taskbar.
-            Returns default(Wnd) if there are no such windows.
-            </summary>
-            <param name="w">Start from this window. If default(Wnd), starts from the top of the Z order.</param>
-            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
-            <param name="skipMinimized">Skip minimized windows.</param>
-            <param name="retryFromTop">If w is not default(Wnd) and there are no matching windows after it, retry from the top of the Z order. Then can return w.</param>
-            <remarks>
-            Uses <see cref="M:Au.Wnd.Misc.IsMainWindow(Au.Wnd,System.Boolean,System.Boolean)"/>.
-            This function is quite slow. Does not match the order of buttons in the Windows taskbar.
-            </remarks>
-        </member>
-        <member name="M:Au.Wnd.Misc.SwitchActiveWindow">
-            <summary>
-            Activates next non-minimized main window, like with Alt+Tab.
-            Returns true if activated, false if there is no such window or failed to activate.
-            </summary>
-            <remarks>
-            Uses <see cref="M:Au.Wnd.Misc.WndNextMain(Au.Wnd,System.Boolean,System.Boolean,System.Boolean)"/>, <see cref="M:Au.Wnd.Misc.WndLastActiveOwnedOrThis(Au.Wnd,System.Boolean)"/>, <see cref="M:Au.Wnd.Activate"/>.
-            An alternative way - send Alt+Tab keys, but it works not everywhere.
             </remarks>
         </member>
         <member name="M:Au.Wnd.Misc.WindowRectFromClientRect(Au.Types.RECT@,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Boolean)">
@@ -17071,9 +16951,9 @@
             Don't call ThrowIfInvalid at the very start (ie called ensures it is valid).
             </summary>
         </member>
-        <member name="F:Au.Wnd.Lib.ActivateFlags.NoGetWndWindow">
+        <member name="F:Au.Wnd.Lib.ActivateFlags.NoGetWindow">
             <summary>
-            Don't call WndWindow (ie caller ensures it's a top-level window, not control).
+            Don't call Get.Window (ie caller ensures it's a top-level window, not control).
             </summary>
         </member>
         <member name="F:Au.Wnd.Lib.ActivateFlags.IgnoreIfNoActivateStyleEtc">
@@ -17095,6 +16975,12 @@
         <member name="T:Au.Wnd.Lib.WinFlags">
             <summary>
             Calls API SetProp/GetProp to set/get window flags <see cref="T:Au.Wnd.Lib.WFlags"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Wnd.Lib.IsSpecHwnd(Au.Wnd)">
+            <summary>
+            Returns true if w contains a non-zero special handle value (<see cref="T:Au.Types.Native.HWND"/>).
+            Note: <b>Native.HWND.TOP</b> is 0.
             </summary>
         </member>
         <member name="T:Au.Wnd.Lib.EnumCallback">
@@ -17126,15 +17012,15 @@
             Fails (throws exception) if cannot activate this window, except:
             <list type="number">
             <item>If this is a control, activates its top-level parent window.</item>
-            <item>If this is <see cref="P:Au.Wnd.Misc.WndRoot"/>, just deactivates the currently active window.</item>
+            <item>If this is <see cref="P:Au.Wnd.GetWnd.Root"/>, just deactivates the currently active window.</item>
             <item>When the target application instead activates another window of the same thread.</item>
             </list>
             </remarks>
             <exception cref="T:Au.Types.WndException"/>
             <seealso cref="M:Au.Wnd.ActivateLL"/>
             <seealso cref="P:Au.Wnd.IsActive"/>
-            <seealso cref="P:Au.Wnd.WndActive"/>
-            <seealso cref="M:Au.Wnd.Misc.SwitchActiveWindow"/>
+            <seealso cref="P:Au.Wnd.Active"/>
+            <seealso cref="M:Au.Wnd.SwitchActiveWindow"/>
         </member>
         <member name="M:Au.Wnd.ActivateLL">
             <summary>
@@ -17159,16 +17045,16 @@
             Invalid handle; disabled; failed to set focus; failed to activate parent window.
             Fails to set focus when the target process is admin or uiAccess and this process isn't (see <see cref="T:Au.Process_.UacInfo">UAC</see>).
             </exception>
-            <seealso cref="P:Au.Wnd.WndFocused"/>
+            <seealso cref="P:Au.Wnd.Focused"/>
             <seealso cref="P:Au.Wnd.IsFocused"/>
             <seealso cref="M:Au.Acc.Focus(System.Boolean)"/>
         </member>
-        <member name="P:Au.Wnd.WndFocused">
+        <member name="P:Au.Wnd.Focused">
             <summary>
             Gets the control or window that has the keyboard input focus.
             </summary>
             <remarks>
-            The control/window can belong to any process/thread. With controls/windows of this thread you can use the more lightweight function <see cref="P:Au.Wnd.ThisThread.WndFocused"/>.
+            The control/window can belong to any process/thread. With controls/windows of this thread you can use the more lightweight function <see cref="P:Au.Wnd.ThisThread.Focused"/>.
             Calls API <msdn>GetGUIThreadInfo</msdn>.
             </remarks>
             <seealso cref="M:Au.Wnd.Focus"/>
@@ -17180,7 +17066,7 @@
             </summary>
             <remarks>
             This control/window can belong to any process/thread. With controls/windows of this thread you can use the more lightweight function <see cref="M:Au.Wnd.ThisThread.IsFocused(Au.Wnd)"/>.
-            Calls <see cref="P:Au.Wnd.WndFocused"/>.
+            Calls <see cref="P:Au.Wnd.Focused"/>.
             </remarks>
             <seealso cref="M:Au.Wnd.Focus"/>
         </member>
@@ -17191,7 +17077,7 @@
         </member>
         <member name="M:Au.Wnd.ThisThread.Focus(Au.Wnd)">
             <summary>
-            Calls API <msdn>SetFocus</msdn>, which sets the keyboard input focus to the specified control or window, which must be of this thread.
+            Calls API <msdn>SetFocus</msdn>. It sets the keyboard input focus to the specified control or window, which must be of this thread.
             Returns false if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
             <remarks>
@@ -17199,9 +17085,9 @@
             Can instead focus a child control. For example, if ComboBox, will focus its child Edit control. Then returns true.
             </remarks>
         </member>
-        <member name="P:Au.Wnd.ThisThread.WndFocused">
+        <member name="P:Au.Wnd.ThisThread.Focused">
             <summary>
-            Gets the control or window of this thread that has the keyboard input focus.
+            Gets the focused control or window of this thread.
             </summary>
             <remarks>
             Calls API <msdn>GetFocus</msdn>.
@@ -17209,13 +17095,13 @@
         </member>
         <member name="M:Au.Wnd.ThisThread.IsFocused(Au.Wnd)">
             <summary>
-            Returns true if this is the control or window of this thread that has the keyboard input focus.
+            Returns true if w is the focused control or window of this thread.
             </summary>
             <remarks>
             Calls API <msdn>GetFocus</msdn>.
             </remarks>
         </member>
-        <member name="P:Au.Wnd.ThisThread.WndActive">
+        <member name="P:Au.Wnd.ThisThread.Active">
             <summary>
             Gets the active window of this thread.
             Calls API <msdn>GetActiveWindow</msdn>.
@@ -17458,7 +17344,7 @@
             Gets child window rectangle in the client area of the direct parent window.
             </summary>
             <remarks>
-            Calls <see cref="P:Au.Wnd.WndDirectParent"/> and <see cref="M:Au.Wnd.GetRectInClientOf(Au.Wnd,Au.Types.RECT@)"/>. Returns default(RECT) if fails (eg window closed).
+            Calls <see cref="P:Au.Wnd.GetWnd.DirectParent"/> and <see cref="M:Au.Wnd.GetRectInClientOf(Au.Wnd,Au.Types.RECT@)"/>. Returns default(RECT) if fails (eg window closed).
             </remarks>
         </member>
         <member name="P:Au.Wnd.RectInWindow">
@@ -17466,7 +17352,7 @@
             Gets child window rectangle in the client area of the top-level parent window.
             </summary>
             <remarks>
-            Calls <see cref="P:Au.Wnd.WndWindow"/> and <see cref="M:Au.Wnd.GetRectInClientOf(Au.Wnd,Au.Types.RECT@)"/>. Returns default(RECT) if fails (eg window closed).
+            Calls <see cref="P:Au.Wnd.Window"/> and <see cref="M:Au.Wnd.GetRectInClientOf(Au.Wnd,Au.Types.RECT@)"/>. Returns default(RECT) if fails (eg window closed).
             </remarks>
         </member>
         <member name="M:Au.Wnd.GetRectNotMinMax(Au.Types.RECT@)">
@@ -17500,7 +17386,7 @@
         </member>
         <member name="M:Au.Wnd.ContainsWindowXY(Au.Types.Coord,Au.Types.Coord)">
             <summary>
-            This overload calls <see cref="M:Au.Wnd.ContainsWindowXY(Au.Wnd,Au.Types.Coord,Au.Types.Coord)"/>(WndWindow, x, y).
+            This overload calls <see cref="M:Au.Wnd.ContainsWindowXY(Au.Wnd,Au.Types.Coord,Au.Types.Coord)"/>(Window, x, y).
             </summary>
         </member>
         <member name="M:Au.Wnd.SetWindowPos(Au.Types.Native.SWP,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd)">
@@ -17999,16 +17885,6 @@
             <seealso cref="P:Au.Wnd.Name"/>
             <seealso cref="P:Au.Wnd.ControlText"/>
         </member>
-        <member name="P:Au.Wnd.NameLabel">
-            <summary>
-            Gets <see cref="P:Au.Wnd.Name"/> of previous (in Z order) sibling control.
-            Returns null if there is no such control.
-            </summary>
-            <remarks>
-            Can be used to identify controls that have no name but have a named control (label) at the left or above. For example Edit And ComboBox controls in dialogs.
-            In such cases this function works like <see cref="P:Au.Wnd.NameAcc"/>, but is faster and supports any sibling control type.
-            </remarks>
-        </member>
         <member name="P:Au.Wnd.NameAcc">
             <summary>
             Gets <see cref="P:Au.Acc.Name"/> of the accessible object (role WINDOW) of this window or control.
@@ -18116,7 +17992,7 @@
             Returns 0-based index, or -1 if not found.
             The <see cref="P:Au.Wnd.ChildFinder.Result"/> property will be the control.
             </summary>
-            <param name="a">List of controls, for example returned by <see cref="M:Au.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean)"/>.</param>
+            <param name="a">List of controls, for example returned by <see cref="M:Au.Wnd.GetWnd.Children(System.Boolean,System.Boolean,System.Boolean)"/>.</param>
             <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
         </member>
         <member name="M:Au.Wnd.ChildFinder.FindAll(Au.Wnd)">
@@ -18132,7 +18008,7 @@
             Finds all matching controls in a list of controls.
             Returns array containing 0 or more control handles as Wnd.
             </summary>
-            <param name="a">List of controls, for example returned by <see cref="M:Au.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean)"/>.</param>
+            <param name="a">List of controls, for example returned by <see cref="M:Au.Wnd.GetWnd.Children(System.Boolean,System.Boolean,System.Boolean)"/>.</param>
             <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
         </member>
         <member name="M:Au.Wnd.ChildFinder._FindInList(Au.Wnd,Au.Wnd._WndList,System.Action{Au.Wnd})">
@@ -18167,10 +18043,6 @@
             <item>
             "***text " - use <see cref="P:Au.Wnd.ControlText"/>.
             It is slower and can be less reliable (because can get editable text), especially if className not used. It does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
-            </item>
-            <item>
-            "***label " - use <see cref="P:Au.Wnd.NameLabel"/>.
-            Useful when the control itself does not have a name but an adjacent control is used as its name. Examples - Edit controls in dialogs.
             </item>
             <item>
             "***accName " - use <see cref="P:Au.Wnd.NameAcc"/>.
@@ -18208,6 +18080,9 @@
             <paramref name="className"/> is "". To match any, use null.
             Invalid wildcard expression ("**options " or regular expression).
             </exception>
+            <remarks>
+            To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
+            </remarks>
         </member>
         <member name="M:Au.Wnd.HasChild(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)">
             <summary>
@@ -18269,6 +18144,8 @@
             <param name="id">Control id.</param>
             <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/>.</param>
             <remarks>
+            To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
+            
             Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
             </remarks>
             <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
@@ -18284,6 +18161,7 @@
             <remarks>
             In the returned list, hidden controls (when using WCFlags.HiddenToo) are always after visible controls.
             </remarks>
+            <seealso cref="M:Au.Wnd.GetWnd.Children(System.Boolean,System.Boolean,System.Boolean)"/>
         </member>
         <member name="M:Au.Wnd.ChildFast(System.String,System.String,Au.Wnd)">
             <summary>
@@ -18310,9 +18188,15 @@
             Supports <see cref="M:Au.Types.Native.GetError"/>.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.AllChildren(System.Boolean,System.Boolean,System.Boolean)">
+        <member name="T:Au.Wnd.GetWnd">
             <summary>
-            Gets child controls.
+            Static functions of this class are used to get special windows (used like <c>Wnd w = Wnd.GetWnd.Top;</c>) and all windows.
+            Instances of this class are used to get related windows and controls, like <c>Wnd w2 = w1.Get.FirstChild;</c> (here w1 is a Wnd variable).
+            </summary>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.Children(System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Gets child controls, including all descendants.
             Returns array containing 0 or more control handles as Wnd.
             </summary>
             <param name="directChild">Need only direct children, not grandchildren.</param>
@@ -18321,6 +18205,321 @@
             <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
             <remarks>
             Calls API <msdn>EnumChildWindows</msdn>.
+            </remarks>
+            <seealso cref="M:Au.Wnd.ChildAll(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean})"/>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.AllWindows(System.Boolean,System.Boolean)">
+            <summary>
+            Gets top-level windows.
+            Returns array containing window handles as Wnd.
+            </summary>
+            <param name="onlyVisible">Need only visible windows.</param>
+            <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
+            <remarks>
+            Calls API <msdn>EnumWindows</msdn>.
+            <note>The list can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="M:Au.Wnd.GetWnd.MainWindows(System.Boolean)"/>.</note>
+            By default array elements are sorted to match the Z order.
+            On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess; to get such windows you can use <see cref="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)"/>.
+            </remarks>
+            <seealso cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.ThreadWindows(System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Gets top-level windows of a thread.
+            Returns array containing 0 or more window handles as Wnd.
+            </summary>
+            <param name="threadId">
+            Unmanaged thread id.
+            See <see cref="P:Au.Thread_.NativeId"/>, <see cref="P:Au.Wnd.ThreadId"/>.
+            If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </param>
+            <param name="onlyVisible">Need only visible windows.</param>
+            <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
+            <exception cref="T:System.ArgumentException">0 threadId.</exception>
+            <remarks>
+            Calls API <msdn>EnumThreadWindows</msdn>.
+            </remarks>
+            <seealso cref="P:Au.Thread_.IsUI"/>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.#ctor(Au.Wnd)">
+            
+        </member>
+        <member name="M:Au.Wnd.GetWnd.Left(System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Gets a sibling control to the left from this.
+            Returns default(Wnd) if there is no sibling.
+            </summary>
+            <param name="distance">Horizontal distance from the left of this control. Default 10.</param>
+            <param name="yOffset">Vertical offset from the top of this control. If negative - up. Default 5.</param>
+            <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
+            <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>
+            This function is used mostly with controls, but supports top-level windows too.
+            </remarks>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.Right(System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Gets a sibling control to the right from this.
+            Returns default(Wnd) if there is no sibling.
+            </summary>
+            <param name="distance">Horizontal distance from the right of this control. Default 10.</param>
+            <param name="yOffset">Vertical offset from the top of this control. If negative - up. Default 5.</param>
+            <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
+            <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>
+            This function is used mostly with controls, but supports top-level windows too.
+            </remarks>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.Above(System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Gets a sibling control above this.
+            Returns default(Wnd) if there is no sibling.
+            </summary>
+            <param name="distance">Vertical distance from the top of this control. Default 10.</param>
+            <param name="xOffset">Horizontal offset from the left of this control. If negative - to the left. Default 5.</param>
+            <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
+            <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>
+            This function is used mostly with controls, but supports top-level windows too.
+            </remarks>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.Below(System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Gets a sibling control below this.
+            Returns default(Wnd) if there is no sibling.
+            </summary>
+            <param name="distance">Vertical distance from the bottom of this control. Default 10.</param>
+            <param name="xOffset">Horizontal offset from the left of this control. If negative - to the left. Default 5.</param>
+            <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
+            <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>
+            This function is used mostly with controls, but supports top-level windows too.
+            </remarks>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.Next(System.Int32)">
+            <summary>
+            Gets next sibling window or control in the Z order.
+            Returns default(Wnd) if this is the last or if fails.
+            </summary>
+            <param name="skip">How many next windows to skip.</param>
+            <remarks>
+            If this is a top-level window, gets next top-level window, else gets next control of the same direct parent.
+            Calls API <msdn>GetWindow</msdn>(GW_HWNDNEXT).
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.Previous(System.Int32)">
+            <summary>
+            Gets previous sibling window or control in the Z order.
+            Returns default(Wnd) if this is the first or if fails.
+            </summary>
+            <param name="skip">How many previous windows to skip.</param>
+            <remarks>
+            If this is a top-level window, gets previous top-level window, else gets previous control of the same direct parent.
+            Calls API <msdn>GetWindow</msdn>(GW_HWNDPREV).
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.FirstSibling">
+            <summary>
+            Gets the first sibling window or control in the Z order.
+            If this is the first, returns this.
+            </summary>
+            <remarks>
+            If this is a top-level window, gets the first top-level window, else gets the first control of the same direct parent.
+            Calls API <msdn>GetWindow</msdn>(this, GW_HWNDFIRST).
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.LastSibling">
+            <summary>
+            Gets the last sibling window or control in the Z order.
+            If this is the last, returns this, not default(Wnd).
+            </summary>
+            <remarks>
+            If this is a top-level window, gets the last top-level window, else gets the last control of the same direct parent.
+            Calls API <msdn>GetWindow</msdn>(this, GW_HWNDLAST).
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.FirstChild">
+            <summary>
+            Gets the first direct child control in the Z order.
+            Returns default(Wnd) if no children or if fails.
+            </summary>
+            <remarks>
+            Calls API <msdn>GetWindow</msdn>(GW_CHILD).
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.LastChild">
+            <summary>
+            Gets the last direct child control in the Z order.
+            Returns default(Wnd) if no children or if fails.
+            </summary>
+            <remarks>
+            Calls API <msdn>GetWindow</msdn>.
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.Child(System.Int32)">
+            <summary>
+            Gets a direct child control by index.
+            Returns default(Wnd) if no children or if index is invalid or if fails.
+            </summary>
+            <param name="index">0-based index of the child control in the Z order.</param>
+            <remarks>
+            Calls API <msdn>GetWindow</msdn>.
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.Owner">
+            <summary>
+            Gets the owner window of this top-level window.
+            Returns default(Wnd) if this window isn't owned or if fails.
+            </summary>
+            <remarks>
+            A window that has an owner window is always on top of it.
+            Controls don't have an owner window.
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            This function is the same as <see cref="P:Au.Wnd.Owner"/>, which also allows to change owner.
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.Window">
+            <summary>
+            Gets the top-level parent window of this control.
+            If this is a top-level window, returns this.
+            Returns default(Wnd) if fails.
+            </summary>
+            <remarks>
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            This function is the same as <see cref="P:Au.Wnd.Window"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.DirectParent">
+            <summary>
+            Gets the direct parent window or control of this control.
+            Returns default(Wnd) if this is a top-level window or if fails.
+            </summary>
+            <remarks>
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.DirectParentOrOwner">
+            <summary>
+            Gets the direct parent window or control of this control, or the owner window of this top-level window.
+            Returns default(Wnd) if this is an unowned top-level window or if fails.
+            </summary>
+            <remarks>
+            Calls API <msdn>GetParent</msdn>.
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.LastActiveOwnedOrThis(System.Boolean)">
+            <summary>
+            Gets the most recently active window in the chain of windows owned by this window, or this window itself if there are no such windows.
+            Returns default(Wnd) if fails.
+            </summary>
+            <param name="includeOwners">Can return an owner (or owner's owner and so on) of this window too.</param>
+            <remarks>
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.RootOwnerOrThis(System.Boolean)">
+            <summary>
+            Gets the bottom-most owner window in the chain of owner windows of this window.
+            If this window is not owned, returns this window.
+            Returns default(Wnd) if fails.
+            </summary>
+            <param name="supportControls">If this is a child window, use its top-level parent window instead.</param>
+            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.OwnersAndThis(System.Boolean)">
+            <summary>
+            Gets all owner windows of this window, including this window or its top-level parent.
+            Returns array that starts with this window or its top-level parent (if control).
+            </summary>
+            <param name="onlyVisible">Skip invisible windows.</param>
+            <remarks>
+            This window can be top-level window or control. If control, its top-level parent window will be the first in the array.
+            This function for example can be used to temporarily hide a tool window and its owners when capturing something from the screen.
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.Top">
+            <summary>
+            Gets the very first top-level window in the Z order.
+            </summary>
+            <remarks>
+            Probably it is a topmost window.
+            Calls API <msdn>GetTopWindow</msdn>(default(Wnd)).
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.Root">
+            <summary>
+            Calls API <msdn>GetDesktopWindow</msdn>. It gets the virtual parent window of all top-level windows.
+            </summary>
+            <remarks>
+            <note>It is not the desktop window (see <see cref="P:Au.Wnd.GetWnd.Desktop"/>) that displays icons and wallpaper.</note>
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.Shell">
+            <summary>
+            Calls API <msdn>GetShellWindow</msdn>. It gets a window of the shell process (usually process "explorer", class name "Progman").
+            </summary>
+            <remarks>
+            It can be the window that contains desktop icons (see <see cref="P:Au.Wnd.GetWnd.Desktop"/>) or other window of the same thread.
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.Desktop">
+            <summary>
+            Gets the desktop window that displays desktop icons and wallpaper in its child control <see cref="P:Au.Wnd.GetWnd.DesktopControl"/>.
+            </summary>
+            <remarks>
+            The "Show Desktop" command (Win+D) activates this window.
+            <note>It is not API <msdn>GetDesktopWindow</msdn> (see <see cref="P:Au.Wnd.GetWnd.Root"/>)</note>
+            <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.GetWnd.DesktopControl">
+            <summary>
+            Gets the control of "SysListView32" class that contains desktop icons and wallpaper. It is a child of <see cref="P:Au.Wnd.GetWnd.Desktop"/>.
+            </summary>
+            <remarks>
+            <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+            </remarks>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.IsMainWindow(Au.Wnd,System.Boolean,System.Boolean)">
+            <summary>
+            Returns true if window w is considered a main window, ie probably is in the Windows taskbar.
+            Returns false if it is invisible, cloaked, owned, toolwindow, menu, etc.
+            </summary>
+            <param name="w"></param>
+            <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
+            <param name="skipMinimized">Return false if w is minimized.</param>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.MainWindows(System.Boolean)">
+            <summary>
+            Gets main windows, ie those that probably are in the Windows taskbar.
+            Returns array containing 0 or more Wnd.
+            </summary>
+            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
+            <remarks>
+            Uses <see cref="M:Au.Wnd.GetWnd.IsMainWindow(Au.Wnd,System.Boolean,System.Boolean)"/>.
+            Does not match the order of buttons in the Windows taskbar.
+            </remarks>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.NextMain(Au.Wnd,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Gets next window in the Z order, skipping invisible and other windows that probably are not in the Windows taskbar.
+            Returns default(Wnd) if there are no such windows.
+            </summary>
+            <param name="w">Start from this window. If default(Wnd), starts from the top of the Z order.</param>
+            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
+            <param name="skipMinimized">Skip minimized windows.</param>
+            <param name="retryFromTop">If w is not default(Wnd) and there are no matching windows after it, retry from the top of the Z order. Then can return w.</param>
+            <remarks>
+            Uses <see cref="M:Au.Wnd.GetWnd.IsMainWindow(Au.Wnd,System.Boolean,System.Boolean)"/>.
+            This function is quite slow. Does not match the order of buttons in the Windows taskbar.
             </remarks>
         </member>
         <member name="T:Au.Wnd.WButton">
@@ -18487,6 +18686,30 @@
             <param name="screenXY">x y are relative to the pimary screen, not to the client area.</param>
             <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
         </member>
+        <member name="M:Au.Wnd.ChildFromXY(Au.Types.POINT,System.Boolean,System.Boolean)">
+            <inheritdoc cref="M:Au.Wnd.ChildFromXY(Au.Types.Coord,Au.Types.Coord,System.Boolean,System.Boolean)"/>
+            <param name="p">Coordinates in the client area of this window.</param>
+            <param name="directChild">Get direct child, not a child of a child and so on.</param>
+            <param name="screenXY">p is relative to the pimary screen, not to the client area.</param>
+        </member>
+        <member name="M:Au.Wnd._SiblingXY(Au.Wnd._SibXY,System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Get sibling control in space: left, right, above or below.
+            Returns default(Wnd) if there is no sibling.
+            </summary>
+            <param name="direction"></param>
+            <param name="distance">Distance from this control (from its edge) in the specified direction. Default 10.</param>
+            <param name="edgeOffset">
+            Distance in perpendicular direction, along the specified edge. Default 5.
+            If <paramref name="direction"/> is <b>Left</b> or <b>Right</b>, 0 is the top edge, 1 is 1 pixel down, -1 is 1 pixel up, and so on.
+            If <paramref name="direction"/> is <b>Above</b> or <b>Below</b>, 0 is the left edge, 1 is 1 pixel to the right, -1 is 1 pixel to the left, and so on.
+            </param>
+            <param name="topChild">If at that point is a visible child or descendant of the sibling, get that child/descendant. Default false.</param>
+            <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>
+            This function is used mostly with controls, but supports top-level windows too.
+            </remarks>
+        </member>
         <member name="M:Au.Wnd.SetTransparency(System.Boolean,System.Nullable{System.Double},System.Nullable{Au.Types.ColorInt})">
             <summary>
             Sets transparency.
@@ -18611,7 +18834,7 @@
             Returns 0-based index, or -1 if not found.
             The <see cref="P:Au.Wnd.Finder.Result"/> property will be the window.
             </summary>
-            <param name="a">Array or list of windows, for example returned by <see cref="M:Au.Wnd.Misc.AllWindows(System.Boolean,System.Boolean)"/>.</param>
+            <param name="a">Array or list of windows, for example returned by <see cref="M:Au.Wnd.GetWnd.AllWindows(System.Boolean,System.Boolean)"/>.</param>
         </member>
         <member name="M:Au.Wnd.Finder.FindAll">
             <summary>
@@ -18624,7 +18847,7 @@
             Finds all matching windows in a list of windows.
             Returns array containing 0 or more window handles as Wnd.
             </summary>
-            <param name="a">Array or list of windows, for example returned by <see cref="M:Au.Wnd.Misc.AllWindows(System.Boolean,System.Boolean)"/>.</param>
+            <param name="a">Array or list of windows, for example returned by <see cref="M:Au.Wnd.GetWnd.AllWindows(System.Boolean,System.Boolean)"/>.</param>
         </member>
         <member name="M:Au.Wnd.Finder._FindInList(Au.Wnd._WndList,System.Action{Au.Wnd})">
             <summary>
@@ -18660,7 +18883,7 @@
              String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
              null means 'can be any'. Cannot be "". Cannot be path.
              Or <see cref="M:Au.Types.WFEtc.Process(System.Int32)"/>(process id), <see cref="M:Au.Types.WFEtc.Thread(System.Int32)"/>(thread id), <see cref="M:Au.Types.WFEtc.Owner(Au.Types.AnyWnd)"/>(owner window).
-             See <see cref="P:Au.Wnd.ProcessId"/>, <see cref="P:Au.Process_.CurrentProcessId"/>, <see cref="P:Au.Wnd.ThreadId"/>, <see cref="P:Au.Thread_.NativeId"/>, <see cref="P:Au.Wnd.WndOwner"/>.
+             See <see cref="P:Au.Wnd.ProcessId"/>, <see cref="P:Au.Process_.CurrentProcessId"/>, <see cref="P:Au.Wnd.ThreadId"/>, <see cref="P:Au.Thread_.NativeId"/>, <see cref="P:Au.Wnd.Owner"/>.
              </param>
              <param name="flags"></param>
              <param name="also">
@@ -18680,6 +18903,8 @@
              This parameter is evaluated after <paramref name="also"/>.
              </param>
              <remarks>
+             To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
+             
              If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
              On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to find such windows you can use <see cref="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)"/>.
              To find message-only windows use <see cref="M:Au.Wnd.Misc.FindMessageWindow(System.String,System.String,Au.Wnd)"/> instead.
@@ -18701,21 +18926,6 @@
              </code>
              </example>
         </member>
-        <member name="P:Au.Wnd.LastFind">
-            <summary>
-            Gets arguments and result of this thread's last call to <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> or <see cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
-            </summary>
-            <remarks>
-            <b>Wnd.Wait</b> and similar functions don't change this property. <see cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/> and some other functions of this library change this property because they call <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> internally.
-            </remarks>
-            <example>
-            This example is similar to what <see cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/> does.
-            <code><![CDATA[
-            Wnd w = Wnd.Find("*- Notepad", "Notepad");
-            if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
-            ]]></code>
-            </example>
-        </member>
         <member name="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
             <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
@@ -18726,6 +18936,9 @@
             <remarks>
             The list is sorted to match the Z order, however hidden windows (when using <see cref="F:Au.Types.WFFlags.HiddenToo"/>) are always after visible windows.
             </remarks>
+            <seealso cref="M:Au.Wnd.GetWnd.AllWindows(System.Boolean,System.Boolean)"/>
+            <seealso cref="M:Au.Wnd.GetWnd.MainWindows(System.Boolean)"/>
+            <seealso cref="M:Au.Wnd.GetWnd.ThreadWindows(System.Int32,System.Boolean,System.Boolean)"/>
         </member>
         <member name="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)">
             <summary>
@@ -18786,19 +18999,35 @@
             Must be disposed if it is Util.LibArrayBuilder or IEnumerator, else disposing is optional.
             </summary>
         </member>
-        <member name="P:Au.Wnd.WndOwner">
+        <member name="P:Au.Wnd.Get">
+            <summary>
+            Gets related windows and controls.
+            Use like <c>Wnd w2 = w1.Get.Owner;</c> (here w1 is a Wnd variable).
+            </summary>
+        </member>
+        <member name="M:Au.Wnd.SwitchActiveWindow">
+            <summary>
+            Activates next non-minimized main window, like with Alt+Tab.
+            Returns true if activated, false if there is no such window or failed to activate.
+            </summary>
+            <remarks>
+            Uses <see cref="M:Au.Wnd.GetWnd.NextMain(Au.Wnd,System.Boolean,System.Boolean,System.Boolean)"/>, <see cref="M:Au.Wnd.GetWnd.LastActiveOwnedOrThis(System.Boolean)"/>, <see cref="M:Au.Wnd.Activate"/>.
+            An alternative way - send Alt+Tab keys, but it works not everywhere.
+            </remarks>
+        </member>
+        <member name="P:Au.Wnd.Owner">
             <summary>
             Gets or sets the owner window of this top-level window.
             </summary>
-            <exception cref="T:Au.Types.WndException">Failed (only 'set' function).</exception>
+            <exception cref="T:Au.Types.WndException">Failed (only the 'set' function).</exception>
             <remarks>
-            A window that has an owner window is always on top of its owner window.
+            A window that has an owner window is always on top of it.
             Don't call this for controls, they don't have an owner window.
             The 'get' function returns default(Wnd) if this window isn't owned or is invalid. Supports <see cref="M:Au.Types.Native.GetError"/>.
             The 'set' function can fail, eg if the owner's process has higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level.
             </remarks>
         </member>
-        <member name="P:Au.Wnd.WndWindow">
+        <member name="P:Au.Wnd.Window">
             <summary>
             Gets the top-level parent window of this control.
             If this is a top-level window, returns this. Returns default(Wnd) if this window is invalid.
@@ -18811,93 +19040,20 @@
             </summary>
             <remarks>
             Supports <see cref="M:Au.Types.Native.GetError"/>.
-            Uses <see cref="P:Au.Wnd.WndDirectParent"/>.
+            Uses <see cref="P:Au.Wnd.GetWnd.DirectParent"/>.
             Another way is <c>w.HasStyle(Native.WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
             </remarks>
         </member>
         <member name="M:Au.Wnd.IsChildOf(Au.Wnd)">
             <summary>
             Returns true if this is a direct or indirect child (descendant) of window w.
+            </summary>
+            <remarks>
             Calls API <msdn>IsChild</msdn>.
-            </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </remarks>
         </member>
-        <member name="P:Au.Wnd.WndDirectParent">
-            <summary>
-            Gets the window or control that is the direct parent of this control.
-            Returns default(Wnd) if this is a top-level window.
-            If you need the top-level parent window, use <see cref="P:Au.Wnd.WndWindow"/> instead.
-            </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-        </member>
-        <member name="P:Au.Wnd.WndDirectParentOrOwner">
-            <summary>
-            Gets the window or control that is the direct parent of this control or owner of this top-level window.
-            Calls API <msdn>GetParent</msdn>. Faster than <see cref="P:Au.Wnd.WndDirectParent"/>.
-            </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-        </member>
-        <member name="P:Au.Wnd.WndFirstSibling">
-            <summary>
-            Gets the window of the same type that is highest in the Z order.
-            If this is a top-level window, gets first top-level window, else gets first control of the same direct parent.
-            If this is the first, returns this, not default(Wnd).
-            Calls API <msdn>GetWindow</msdn>(this, GW_HWNDFIRST).
-            </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-        </member>
-        <member name="P:Au.Wnd.WndLastSibling">
-            <summary>
-            Gets the window of the same type that is lowest in the Z order.
-            If this is a top-level window, gets last top-level window, else gets last control of the same direct parent.
-            If this is the last, returns this, not default(Wnd).
-            Calls API <msdn>GetWindow</msdn>(this, GW_HWNDLAST).
-            </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-        </member>
-        <member name="P:Au.Wnd.WndNext">
-            <summary>
-            Gets the window of the same type that is next (below this) in the Z order.
-            If this is a top-level window, gets next top-level window, else gets next control of the same direct parent.
-            If this is the last, returns default(Wnd).
-            Calls API <msdn>GetWindow</msdn>(this, GW_HWNDNEXT).
-            </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-        </member>
-        <member name="P:Au.Wnd.WndPrev">
-            <summary>
-            Gets the window of the same type that is previous (above this) in the Z order.
-            If this is a top-level window, gets previous top-level window, else gets previous control of the same direct parent.
-            If this is the first, returns default(Wnd).
-            Calls API <msdn>GetWindow</msdn>(this, GW_HWNDPREV).
-            </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-        </member>
-        <member name="P:Au.Wnd.WndFirstChild">
-            <summary>
-            Gets the child control at the top of the Z order.
-            Returns default(Wnd) if no children.
-            The same as <see cref="M:Au.Wnd.WndChild(System.Int32)"/>(0).
-            Calls API <msdn>GetWindow</msdn>(this, GW_CHILD).
-            </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-        </member>
-        <member name="P:Au.Wnd.WndLastChild">
-            <summary>
-            Gets the child control at the bottom of the Z order.
-            Returns default(Wnd) if no children.
-            </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-        </member>
-        <member name="M:Au.Wnd.WndChild(System.Int32)">
-            <summary>
-            Gets the child control at the specified position in the Z order.
-            Returns default(Wnd) if no children or if index is invalid.
-            </summary>
-            <param name="index">0-based index of the child control in the Z order.</param>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-        </member>
-        <member name="P:Au.Wnd.WndActive">
+        <member name="P:Au.Wnd.Active">
             <summary>
             Gets the active (foreground) window.
             Calls API <msdn>GetForegroundWindow</msdn>.
@@ -18912,13 +19068,7 @@
         <member name="P:Au.Wnd.LibIsActiveOrNoActiveAndThisIsWndRoot">
             <summary>
             Returns true if this window is the active (foreground) window.
-            If this is <see cref="P:Au.Wnd.Misc.WndRoot"/>, returns true if there is no active window.
-            </summary>
-        </member>
-        <member name="M:Au.Wnd.IsSpecHwnd(Au.Wnd)">
-            <summary>
-            Returns true if w contains a non-zero special handle value (<see cref="T:Au.Types.Native.HWND"/>).
-            Note: <b>Native.HWND.TOP</b> is 0.
+            If this is <see cref="P:Au.Wnd.GetWnd.Root"/>, returns true if there is no active window.
             </summary>
         </member>
         <member name="T:Au.Time">
@@ -19727,17 +19877,17 @@
         <member name="M:Au.Icons.HandleToIcon(System.IntPtr,System.Boolean)">
             <summary>
             Converts unmanaged icon to Icon object.
-            Returns null if hi is default(IntPtr).
+            Returns null if hIcon is default(IntPtr).
             </summary>
-            <param name="hi">Icon handle.</param>
+            <param name="hIcon">Icon handle.</param>
             <param name="destroyIcon">If true (default), the returned variable owns the unmanaged icon and destroys it when disposing. If false, the returned variable just uses the unmanaged icon and will not destroy; the caller later should destroy it with <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/>.</param>
         </member>
         <member name="M:Au.Icons.HandleToImage(System.IntPtr,System.Boolean)">
             <summary>
             Converts unmanaged icon to Bitmap object and destroys the unmanaged icon.
-            Returns null if hi is default(IntPtr) or if fails to convert.
+            Returns null if hIcon is default(IntPtr) or if fails to convert.
             </summary>
-            <param name="hi">Icon handle.</param>
+            <param name="hIcon">Icon handle.</param>
             <param name="destroyIcon">If true (default), destroys the unmanaged icon.</param>
         </member>
         <member name="M:Au.Icons.ParseIconLocation(System.String@,System.Int32@)">

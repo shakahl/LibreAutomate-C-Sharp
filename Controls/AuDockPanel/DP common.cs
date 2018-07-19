@@ -23,7 +23,7 @@ using static Au.NoClass;
 
 namespace Au.Controls
 {
-	partial class GDockPanel
+	public partial class AuDockPanel
 	{
 		class _PainTools
 		{
@@ -31,7 +31,7 @@ namespace Au.Controls
 			internal StringFormat txtFormatHorz, txtFormatVert;
 			bool _inited;
 
-			internal _PainTools(GDockPanel manager)
+			internal _PainTools(AuDockPanel manager)
 			{
 				if(!_inited) {
 					brushSplitter = new SolidBrush(manager.BackColor);
@@ -59,38 +59,38 @@ namespace Au.Controls
 			}
 		}
 
-		internal enum GDockState
+		enum _DockState
 		{
 			//note: don't reorder. Default must be Docked; also saved in XML.
 
-			Docked, //visible as part of the main window or a child GPanel of a floating GTab.
-			Floating, //visible as direct child of a GFloat
+			Docked, //visible as part of the main window or a child _Panel of a floating _Tab.
+			Floating, //visible as direct child of a _Float
 			Hidden, //hidden. Always child of main window, even if previously was floating.
 			AutoHide, //not implemented
 			LastVisible = 100 //used just for "Show hidden panel" command, to pass to SetDockState, which then uses SavedVisibleDockState instead
 
-			//GSplit can be only Docked or Hidden (when both children non-docked), and only in main window (cannot float etc).
+			//_Split can be only Docked or Hidden (when both children non-docked), and only in main window (cannot float etc).
 		};
 
 		//used only when docking, not as a state
-		internal enum GDockHow
+		enum _DockHow
 		{
 			TabBefore, TabAfter, SplitLeft, SplitRight, SplitAbove, SplitBelow
 		}
 
 		/// <summary>
-		/// Base of GSplit, GContentNode (GPanel and GTab) and GDummyNode.
+		/// Base of _Split, _ContentNode (_Panel and _Tab) and _DummyNode.
 		/// </summary>
-		abstract partial class GNode
+		abstract partial class _Node
 		{
-			protected readonly GDockPanel _manager;
-			internal GDockPanel Manager { get => _manager; }
+			protected readonly AuDockPanel _manager;
+			internal AuDockPanel Manager { get => _manager; }
 
-			internal GSplit ParentSplit; //null if new panel added in this app version
+			internal _Split ParentSplit; //null if new panel added in this app version
 			internal Rectangle Bounds; //in current parent Control client area
-			internal GDockState DockState;
+			internal _DockState DockState;
 
-			internal GNode(GDockPanel manager, GSplit parentSplit)
+			internal _Node(AuDockPanel manager, _Split parentSplit)
 			{
 				_manager = manager;
 				ParentSplit = parentSplit;
@@ -99,10 +99,10 @@ namespace Au.Controls
 
 			/// <summary>
 			/// Returns true if is docked in main window or in a floating tab.
-			/// <seealso cref="GContentNode.IsDockedOn"/>.
 			/// </summary>
-			internal bool IsDocked { get => DockState == GDockState.Docked; }
-			internal bool IsHidden { get => DockState == GDockState.Hidden; }
+			/// <seealso cref="_ContentNode.IsDockedOn"/>
+			internal bool IsDocked { get => DockState == _DockState.Docked; }
+			internal bool IsHidden { get => DockState == _DockState.Hidden; }
 
 			internal virtual Control ParentControl { get => _manager; }
 			internal virtual void Paint(Graphics g) { }
@@ -114,11 +114,11 @@ namespace Au.Controls
 			internal virtual void Save(XmlWriter x) { }
 		}
 
-		class GDummyNode :GNode
+		class _DummyNode :_Node
 		{
-			internal GDummyNode(GDockPanel manager, GSplit parentSplit) : base(manager, parentSplit)
+			internal _DummyNode(AuDockPanel manager, _Split parentSplit) : base(manager, parentSplit)
 			{
-				this.DockState = GDockState.Hidden;
+				this.DockState = _DockState.Hidden;
 			}
 
 			internal override void Save(XmlWriter x)
@@ -130,25 +130,25 @@ namespace Au.Controls
 
 
 		/// <summary>
-		/// Base of GPanel and GTab.
+		/// Base of _Panel and _Tab.
 		/// </summary>
-		abstract class GContentNode :GNode
+		abstract class _ContentNode :_Node
 		{
-			internal Rectangle CaptionBounds; //in current parent client area. If GTab, it is whole caption area (includes child panel buttons); else if GTab child panel and there are more visible siblings, only its button; else whole caption area.
+			internal Rectangle CaptionBounds; //in current parent client area. If _Tab, it is whole caption area (includes child panel buttons); else if _Tab child panel and there are more visible siblings, only its button; else whole caption area.
 			internal Rectangle SavedFloatingBounds; //when docked etc, contains bounds when was floating, to restore when floating again
 			protected Control _parentControl;
-			internal override Control ParentControl { get => _parentControl; } //_manager or a GFloat
-			internal GDockState SavedVisibleDockState; //when hidden, in what state to show
+			internal override Control ParentControl { get => _parentControl; } //_manager or a _Float
+			internal _DockState SavedVisibleDockState; //when hidden, in what state to show
 
-			internal GContentNode(GDockPanel manager, GSplit parentSplit) : base(manager, parentSplit)
+			internal _ContentNode(AuDockPanel manager, _Split parentSplit) : base(manager, parentSplit)
 			{
 				_parentControl = manager;
 			}
 
 			internal bool IsDockedOn(Control parent) { return this.IsDocked && this.ParentControl == parent; }
 
-			internal bool IsFloating { get => DockState == GDockState.Floating; }
-			//internal bool IsAutoHide { get => DockState == GDockState.AutoHide; }
+			internal bool IsFloating { get => DockState == _DockState.Floating; }
+			//internal bool IsAutoHide { get => DockState == _DockState.AutoHide; }
 			//internal bool IsFloatingOrAutoHide { get => IsFloating || IsAutoHide; }
 
 			internal virtual bool IsTabbedPanel { get => false; }
@@ -161,8 +161,8 @@ namespace Au.Controls
 				this.Bounds = r;
 
 				RECT rCont = r, rCap = rCont;
-				var gt = this as GTab;
-				var gp = this as GPanel;
+				var gt = this as _Tab;
+				var gp = this as _Panel;
 				bool isTB = gp != null && gp.HasToolbar;
 				int capThick = isTB ? _splitterWidth * 2 : _manager._CaptionHeight;
 				bool noCaption = gp != null && gp.HasDocument;
@@ -171,10 +171,10 @@ namespace Au.Controls
 					this.CaptionBounds = new Rectangle(r.Left, r.Top, 0, 0);
 				} else {
 					switch(this.CaptionAt) {
-					case GCaptionEdge.Left: rCap.right = (rCont.left += capThick); break;
-					case GCaptionEdge.Top: rCap.bottom = (rCont.top += capThick); break;
-					case GCaptionEdge.Right: rCap.left = (rCont.right -= capThick); break;
-					case GCaptionEdge.Bottom: rCap.top = (rCont.bottom -= capThick); break;
+					case CaptionEdge.Left: rCap.right = (rCont.left += capThick); break;
+					case CaptionEdge.Top: rCap.bottom = (rCont.top += capThick); break;
+					case CaptionEdge.Right: rCap.left = (rCont.right -= capThick); break;
+					case CaptionEdge.Bottom: rCap.top = (rCont.bottom -= capThick); break;
 					}
 					this.CaptionBounds = rCap;
 				}
@@ -209,10 +209,10 @@ namespace Au.Controls
 
 				//include content border
 				switch(this.CaptionAt) {
-				case GCaptionEdge.Left: u.right++; break;
-				case GCaptionEdge.Top: u.bottom++; break;
-				case GCaptionEdge.Right: u.left--; break;
-				case GCaptionEdge.Bottom: u.top--; break;
+				case CaptionEdge.Left: u.right++; break;
+				case CaptionEdge.Top: u.bottom++; break;
+				case CaptionEdge.Right: u.left--; break;
+				case CaptionEdge.Bottom: u.top--; break;
 				}
 
 				this.ParentControl.Invalidate(u);
@@ -220,8 +220,8 @@ namespace Au.Controls
 
 			/// <summary>
 			/// Returns true if x/y is in caption and this is visible and is a child of parent.
-			/// For tabbed GPanel returns true only if x/y is in its tab button, unless there are no visible siblings.
-			/// For GTab returns true even if on a tab button.
+			/// For tabbed _Panel returns true only if x/y is in its tab button, unless there are no visible siblings.
+			/// For _Tab returns true even if on a tab button.
 			/// </summary>
 			internal virtual bool HitTestCaption(Control parent, int x, int y)
 			{
@@ -231,24 +231,24 @@ namespace Au.Controls
 
 			internal void ToggleDockedFloating()
 			{
-				if(this.IsDocked) SetDockState(GDockState.Floating);
-				else if(this.IsFloating) SetDockState(GDockState.Docked);
+				if(this.IsDocked) SetDockState(_DockState.Floating);
+				else if(this.IsFloating) SetDockState(_DockState.Docked);
 			}
 
 			internal void ShowContextMenu(Point p)
 			{
-				var gp = this as GPanel;
-				var gt = this as GTab;
+				var gp = this as _Panel;
+				var gt = this as _Tab;
 				bool isTab = gt != null;
 				var state = this.DockState;
 				var m = new AuMenu();
 				m.CMS.Text = "Menu";
 
 				//dock state
-				m.Add("Float\tD-click, drag", o => this.SetDockState(GDockState.Floating)).Enabled = state != GDockState.Floating;
-				m.Add("Dock    \tD-click, Alt+drag", o => this.SetDockState(GDockState.Docked)).Enabled = state != GDockState.Docked;
-				//menu.Add("Auto Hide", o => this.SetDockState(GDockState.AutoHide)).Enabled = state != GDockState.AutoHide && !isTab; //not implemented
-				m["Hide\tM-click"] = o => this.SetDockState(GDockState.Hidden);
+				m.Add("Float\tD-click, drag", o => this.SetDockState(_DockState.Floating)).Enabled = state != _DockState.Floating;
+				m.Add("Dock    \tD-click, Alt+drag", o => this.SetDockState(_DockState.Docked)).Enabled = state != _DockState.Docked;
+				//menu.Add("Auto Hide", o => this.SetDockState(_DockState.AutoHide)).Enabled = state != _DockState.AutoHide && !isTab; //not implemented
+				m["Hide\tM-click"] = o => this.SetDockState(_DockState.Hidden);
 
 				m.Separator();
 				using(m.Submenu("Show Panel")) _manager.AddShowPanelsToMenu(m.LastMenuItem.DropDown, false);
@@ -268,10 +268,10 @@ namespace Au.Controls
 				}
 				//caption edge
 				using(m.Submenu("Caption At")) {
-					m["Top"] = o => k._SetCaptionEdge(GCaptionEdge.Top); if(k.CaptionAt == GCaptionEdge.Top) m.LastMenuItem.Checked = true;
-					m["Bottom"] = o => k._SetCaptionEdge(GCaptionEdge.Bottom); if(k.CaptionAt == GCaptionEdge.Bottom) m.LastMenuItem.Checked = true;
-					m["Left"] = o => k._SetCaptionEdge(GCaptionEdge.Left); if(k.CaptionAt == GCaptionEdge.Left) m.LastMenuItem.Checked = true;
-					m["Right"] = o => k._SetCaptionEdge(GCaptionEdge.Right); if(k.CaptionAt == GCaptionEdge.Right) m.LastMenuItem.Checked = true;
+					m["Top"] = o => k._SetCaptionEdge(CaptionEdge.Top); if(k.CaptionAt == CaptionEdge.Top) m.LastMenuItem.Checked = true;
+					m["Bottom"] = o => k._SetCaptionEdge(CaptionEdge.Bottom); if(k.CaptionAt == CaptionEdge.Bottom) m.LastMenuItem.Checked = true;
+					m["Left"] = o => k._SetCaptionEdge(CaptionEdge.Left); if(k.CaptionAt == CaptionEdge.Left) m.LastMenuItem.Checked = true;
+					m["Right"] = o => k._SetCaptionEdge(CaptionEdge.Right); if(k.CaptionAt == CaptionEdge.Right) m.LastMenuItem.Checked = true;
 				}
 
 				//test
@@ -281,7 +281,7 @@ namespace Au.Controls
 				//};
 
 				//custom
-				_manager.PanelContextMenu?.Invoke(new GDockPanelContextMenuEventArgs(gp, m));
+				_manager.PanelContextMenu?.Invoke(new DPContextMenuEventArgs(gp, m));
 
 				m.Show(this.ParentControl, p.X, p.Y);
 			}
@@ -291,10 +291,10 @@ namespace Au.Controls
 			/// </summary>
 			internal void Show(bool focus = false)
 			{
-				this.SetDockState(GDockState.LastVisible);
+				this.SetDockState(_DockState.LastVisible);
 				if(focus) {
-					var gt = this as GTab;
-					var gp = (gt != null) ? gt.ActiveItem : (this as GPanel);
+					var gt = this as _Tab;
+					var gp = (gt != null) ? gt.ActiveItem : (this as _Panel);
 					gp?.Content?.Focus();
 				}
 			}
@@ -304,21 +304,21 @@ namespace Au.Controls
 			/// </summary>
 			internal void Hide()
 			{
-				this.SetDockState(GDockState.Hidden);
+				this.SetDockState(_DockState.Hidden);
 			}
 
-			internal void SetDockState(GDockState state, bool onStartDrag = false)
+			internal void SetDockState(_DockState state, bool onStartDrag = false)
 			{
 				//Print(this, Name);
-				var gp = this as GPanel;
+				var gp = this as _Panel;
 
-				if(state == GDockState.LastVisible) {
+				if(state == _DockState.LastVisible) {
 					if(!this.IsHidden) {
 						if(this.IsTabbedPanel) {
-							gp.ParentTab.SetDockState(GDockState.LastVisible);
+							gp.ParentTab.SetDockState(_DockState.LastVisible);
 							if(this.IsDocked) gp.ParentTab.SetActiveItem(gp);
 						}
-						if(this.ParentControl is GFloat gf) ((Wnd)gf).EnsureInScreen();
+						if(this.ParentControl is _Float gf) ((Wnd)gf).EnsureInScreen();
 						return;
 					}
 					state = this.SavedVisibleDockState;
@@ -327,20 +327,20 @@ namespace Au.Controls
 				var prevState = this.DockState;
 				if(state == prevState) return;
 
-				if(this.ParentSplit == null && state == GDockState.Docked) { //new panel
+				if(this.ParentSplit == null && state == _DockState.Docked) { //new panel
 					AuDialog.ShowInfo("How to dock floating panels", "Alt+drag and drop.", owner: _manager);
 					return;
 				}
 
 				bool isTab = gp == null;
-				GTab gt = null, gtParent = null;
-				if(isTab) gt = this as GTab; else gtParent = gp.ParentTab;
+				_Tab gt = null, gtParent = null;
+				if(isTab) gt = this as _Tab; else gtParent = gp.ParentTab;
 
 				this.DockState = state;
 
 				//get RECT for floating now, because later this.ParentControl will change and even may be destroyed
 				RECT rect = new RECT();
-				if(state == GDockState.Floating) {
+				if(state == _DockState.Floating) {
 					if(!onStartDrag && !SavedFloatingBounds.IsEmpty_()) {
 						rect = SavedFloatingBounds;
 						rect.EnsureInScreen();
@@ -354,40 +354,40 @@ namespace Au.Controls
 					}
 				}
 
-				var panels = isTab ? gt.Items.FindAll(v => v.IsDocked) : new List<GPanel>(1) { gp };
+				var panels = isTab ? gt.Items.FindAll(v => v.IsDocked) : new List<_Panel>(1) { gp };
 
 				(isTab ? gt.ActiveItem : gp)?.Content.Hide();
 
 				Action postAction = null;
 
 				switch(prevState) {
-				case GDockState.Docked:
+				case _DockState.Docked:
 					if(gtParent != null) gtParent.OnItemUndocked(gp, out postAction);
 					else this.ParentSplit.OnChildUndocked(this);
 
 					_manager.Invalidate(this.Bounds, true); //some controls don't redraw properly, eg ToolStripTextBox
 					break;
-				case GDockState.Floating:
-					//case GDockState.AutoHide:
-					var f = this.ParentControl as GFloat;
+				case _DockState.Floating:
+					//case _DockState.AutoHide:
+					var f = this.ParentControl as _Float;
 					var parent = (gtParent != null) ? gtParent.ParentControl : _manager;
 					_parentControl = parent;
 					foreach(var v in panels) {
 						v._parentControl = parent;
 						v.Content.Parent = parent;
 					}
-					if(prevState == GDockState.Floating) this.SavedFloatingBounds = f.Bounds;
+					if(prevState == _DockState.Floating) this.SavedFloatingBounds = f.Bounds;
 					f.Close();
 					break;
 				}
 
 				switch(state) {
-				case GDockState.Docked:
+				case _DockState.Docked:
 					if(gtParent != null) gtParent.OnItemDocked(gp);
 					else this.ParentSplit.OnChildDocked(this);
 					break;
-				case GDockState.Floating:
-					var f = new GFloat(_manager, this);
+				case _DockState.Floating:
+					var f = new _Float(_manager, this);
 					this._parentControl = f;
 					foreach(var v in panels) {
 						v._parentControl = f;
@@ -397,46 +397,46 @@ namespace Au.Controls
 					f.Bounds = rect;
 					f.Show(_manager.TopLevelControl);
 					break;
-				//case GDockState.AutoHide:
+				//case _DockState.AutoHide:
 				//	break;
-				case GDockState.Hidden:
+				case _DockState.Hidden:
 					this.SavedVisibleDockState = prevState;
 					break;
 				}
 
-				if(state != GDockState.Hidden) (isTab ? gt.ActiveItem : gp)?.Content.Show();
+				if(state != _DockState.Hidden) (isTab ? gt.ActiveItem : gp)?.Content.Show();
 
 				postAction?.Invoke();
 				//_manager.Invalidate(true);
 
-				if(prevState != GDockState.Hidden) _manager._OnMouseLeave_Common(this.ParentControl); //calls _UnhiliteTabButton and _HideTooltip
+				if(prevState != _DockState.Hidden) _manager._OnMouseLeave_Common(this.ParentControl); //calls _UnhiliteTabButton and _HideTooltip
 			}
 
 			/// <summary>
-			/// Docks this GPanel or GTab in an existing or new GTab or GSplit.
-			/// If need, creates new GTab or GSplit in gcTarget place and adds gcTarget and this to it. Else reorders if need.
-			/// This can be a new GPanel, with null ParentSplit and ParentTab, dock state not Docked.
+			/// Docks this _Panel or _Tab in an existing or new _Tab or _Split.
+			/// If need, creates new _Tab or _Split in gcTarget place and adds gcTarget and this to it. Else reorders if need.
+			/// This can be a new _Panel, with null ParentSplit and ParentTab, dock state not Docked.
 			/// </summary>
-			/// <param name="gcTarget">New sibling GPanel (side can be any) or sibling GTab (when side is SplitX) or parent GTab (when side is TabX).</param>
-			/// <param name="side">Specifies whether to add on a GTab or GSplit, and at which side of gcTarget.</param>
-			internal void DockBy(GContentNode gcTarget, GDockHow side)
+			/// <param name="gcTarget">New sibling _Panel (side can be any) or sibling _Tab (when side is SplitX) or parent _Tab (when side is TabX).</param>
+			/// <param name="side">Specifies whether to add on a _Tab or _Split, and at which side of gcTarget.</param>
+			internal void DockBy(_ContentNode gcTarget, _DockHow side)
 			{
-				var gpThis = this as GPanel;
+				var gpThis = this as _Panel;
 				var gtThisParent = gpThis?.ParentTab;
 				var gsThisParent = this.ParentSplit;
 				var gsTargetParent = gcTarget.ParentSplit;
 
-				if(side == GDockHow.TabBefore || side == GDockHow.TabAfter) {
-					var gpTarget = gcTarget as GPanel;
-					GTab gtTargetParent = (gpTarget != null) ? gpTarget.ParentTab : gcTarget as GTab;
-					bool after = side == GDockHow.TabAfter;
+				if(side == _DockHow.TabBefore || side == _DockHow.TabAfter) {
+					var gpTarget = gcTarget as _Panel;
+					_Tab gtTargetParent = (gpTarget != null) ? gpTarget.ParentTab : gcTarget as _Tab;
+					bool after = side == _DockHow.TabAfter;
 					bool sameTargetTab = false;
 
 					if(gtTargetParent != null) {
 						gtTargetParent.AddOrReorderItem(gpThis, gpTarget, after);
 						if(gtThisParent == gtTargetParent) sameTargetTab = true;
 					} else {
-						var gtNew = new GTab(_manager, gsTargetParent, after ? gpTarget : gpThis, after ? gpThis : gpTarget);
+						var gtNew = new _Tab(_manager, gsTargetParent, after ? gpTarget : gpThis, after ? gpThis : gpTarget);
 						gsTargetParent.ReplaceChild(gpTarget, gtNew);
 						gtNew.Bounds = gpTarget.Bounds;
 						gtNew.CaptionAt = gpTarget.CaptionAt;
@@ -451,15 +451,15 @@ namespace Au.Controls
 						}
 					}
 				} else {
-					if(gcTarget.IsTabbedPanel) gcTarget = (gcTarget as GPanel).ParentTab;
-					bool after = side == GDockHow.SplitRight || side == GDockHow.SplitBelow;
-					bool verticalSplit = side == GDockHow.SplitLeft || side == GDockHow.SplitRight;
+					if(gcTarget.IsTabbedPanel) gcTarget = (gcTarget as _Panel).ParentTab;
+					bool after = side == _DockHow.SplitRight || side == _DockHow.SplitBelow;
+					bool verticalSplit = side == _DockHow.SplitLeft || side == _DockHow.SplitRight;
 
 					if(gsTargetParent == gsThisParent && gtThisParent == null) {
 						//just change vertical/horizontal or/and swap with sibling
 						gsThisParent.RepositionChild(this, verticalSplit, after);
 					} else {
-						var gsNew = new GSplit(_manager, gsTargetParent, after ? gcTarget : this, after ? this : gcTarget, verticalSplit);
+						var gsNew = new _Split(_manager, gsTargetParent, after ? gcTarget : this, after ? this : gcTarget, verticalSplit);
 						gsTargetParent.ReplaceChild(gcTarget, gsNew);
 						gsNew.Bounds = gcTarget.Bounds;
 
@@ -472,15 +472,15 @@ namespace Au.Controls
 					}
 				}
 
-				SetDockState(GDockState.Docked, false);
+				SetDockState(_DockState.Docked, false);
 			}
 
 			internal void OnMouseLeftDown()
 			{
 				POINT p = Mouse.XY;
 				if(Api.DragDetect((Wnd)this.ParentControl, p)) {
-					if(!this.IsFloating) this.SetDockState(GDockState.Floating, true);
-					var d = (this.ParentControl as GFloat)?.Drag(p);
+					if(!this.IsFloating) this.SetDockState(_DockState.Floating, true);
+					var d = (this.ParentControl as _Float)?.Drag(p);
 					if(d != null) DockBy(d.gc, d.side);
 				}
 			}
@@ -488,15 +488,15 @@ namespace Au.Controls
 			internal void InitDockStateFromXML(XElement x)
 			{
 				Enum.TryParse(x.Attribute_("state"), out this.DockState);
-				bool hide = x.HasAttribute_("hide"), floating = this.DockState == GDockState.Floating;
+				bool hide = x.HasAttribute_("hide"), floating = this.DockState == _DockState.Floating;
 				if(hide || floating) {
 					this.SavedVisibleDockState = this.DockState;
-					this.DockState = GDockState.Hidden;
+					this.DockState = _DockState.Hidden;
 					switch(this) {
-					case GPanel gp:
+					case _Panel gp:
 						gp.Content.Visible = false;
 						break;
-					case GTab gt:
+					case _Tab gt:
 						foreach(var v in gt.Items) v.Content.Visible = false;
 						break;
 					}
@@ -506,8 +506,8 @@ namespace Au.Controls
 							{
 								_manager.Paint -= eh;
 								//Print(1);
-								//SetDockState(GDockState.Floating);
-								Timer_.After(200, () => SetDockState(GDockState.Floating));
+								//SetDockState(_DockState.Floating);
+								Timer_.After(200, () => SetDockState(_DockState.Floating));
 							};
 						_manager.Paint += eh;
 					}
@@ -519,18 +519,18 @@ namespace Au.Controls
 			internal void SaveDockStateToXml(XmlWriter x)
 			{
 				switch(this.DockState) {
-				case GDockState.Hidden:
+				case _DockState.Hidden:
 					x.WriteAttributeString("hide", "");
 					x.WriteAttributeString("state", this.SavedVisibleDockState.ToString());
 					break;
-				case GDockState.Docked:
+				case _DockState.Docked:
 					break;
 				default:
 					x.WriteAttributeString("state", this.DockState.ToString());
 					break;
 				}
 
-				var r = (this.DockState == GDockState.Floating) ? this.ParentControl.Bounds : this.SavedFloatingBounds;
+				var r = (this.DockState == _DockState.Floating) ? this.ParentControl.Bounds : this.SavedFloatingBounds;
 				if(!r.IsEmpty) x.WriteAttributeString("rectFloating", _RectToString(r));
 
 				if(this.CaptionAt != default && (!this.IsTabbedPanel || this.IsFloating))
@@ -554,17 +554,17 @@ namespace Au.Controls
 				return r;
 			}
 
-			internal enum GCaptionEdge { Left, Right, Top, Bottom }
-			internal GCaptionEdge CaptionAt;
-			internal bool IsVerticalCaption { get { return CaptionAt <= GCaptionEdge.Right; } }
+			internal enum CaptionEdge { Left, Right, Top, Bottom }
+			internal CaptionEdge CaptionAt;
+			internal bool IsVerticalCaption { get { return CaptionAt <= CaptionEdge.Right; } }
 
-			void _SetCaptionEdge(GCaptionEdge edge)
+			void _SetCaptionEdge(CaptionEdge edge)
 			{
 				CaptionAt = edge;
 				this.UpdateLayout();
 				this.Invalidate();
 				//make sure that floating panel caption is in screen, else cannot move it until restarting this app
-				if(this.ParentControl is GFloat gf) ((Wnd)gf).EnsureInScreen();
+				if(this.ParentControl is _Float gf) ((Wnd)gf).EnsureInScreen();
 			}
 		}
 	}
