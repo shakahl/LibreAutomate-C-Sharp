@@ -107,14 +107,10 @@ namespace Au.Controls
 			return ToolStripSpringBox.CalcPreferredWidth(this, base.GetPreferredSize(constrainingSize));
 		}
 
-		public void SetCueBanner(string text)
+		public void SetCueBanner(string text, bool showWhenFocused = false)
 		{
 			var c = this.Control as TextBox;
-			if(c.IsHandleCreated) {
-				c.SetCueBanner_(text);
-			} else if(!Empty(text)) {
-				c.HandleCreated += (unu, sed) => c.SetCueBanner_(text);
-			}
+			c.SetCueBanner_(text, showWhenFocused);
 		}
 	}
 
@@ -133,11 +129,7 @@ namespace Au.Controls
 		public void SetCueBanner(string text)
 		{
 			var c = this.Control as ComboBox;
-			if(c.IsHandleCreated) {
-				c.SetCueBanner_(text);
-			} else if(!Empty(text)) {
-				c.HandleCreated += (unu, sed) => c.SetCueBanner_(text);
-			}
+			c.SetCueBanner_(text);
 		}
 	}
 }

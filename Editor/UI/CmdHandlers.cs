@@ -65,8 +65,10 @@ class CmdHandlers :IGStripManagerCallbacks
 		#region add to _dict
 
 		_dict.Add(nameof(File_NewScript), File_NewScript);
-		_dict.Add(nameof(File_NewLibrary), File_NewLibrary);
+		_dict.Add(nameof(File_NewClass), File_NewClass);
 		_dict.Add(nameof(File_NewFolder), File_NewFolder);
+		_dict.Add(nameof(File_NewApp), File_NewApp);
+		_dict.Add(nameof(File_NewLibrary), File_NewLibrary);
 		_dict.Add(nameof(File_Import), File_Import);
 		_dict.Add(nameof(File_Disable), File_Disable);
 		_dict.Add(nameof(File_Rename), File_Rename);
@@ -182,18 +184,27 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void File_NewScript()
 	{
-		//DebugPrintFunc();
 		Model.NewItem(FileNode.NewItemTemplate.Script);
 	}
 
-	public void File_NewLibrary()
+	public void File_NewClass()
 	{
-		Model.NewItem(FileNode.NewItemTemplate.Library);
+		Model.NewItem(FileNode.NewItemTemplate.Class);
 	}
 
 	public void File_NewFolder()
 	{
 		Model.NewItem(FileNode.NewItemTemplate.Folder);
+	}
+
+	public void File_NewApp()
+	{
+		Model.NewItem(FileNode.NewItemTemplate.AppProject);
+	}
+
+	public void File_NewLibrary()
+	{
+		Model.NewItem(FileNode.NewItemTemplate.LibraryProject);
 	}
 
 	public void File_Import()
@@ -458,9 +469,14 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	#region menu Run
 
+	public void Run_Compile()
+	{
+		Compiler.CompileAndRun(Model.CurrentFile, false);
+	}
+
 	public void Run_Run()
 	{
-
+		Compiler.CompileAndRun(Model.CurrentFile, true);
 	}
 
 	public void Run_End()
@@ -469,11 +485,6 @@ class CmdHandlers :IGStripManagerCallbacks
 	}
 
 	public void Run_Pause()
-	{
-
-	}
-
-	public void Run_Compile()
 	{
 
 	}

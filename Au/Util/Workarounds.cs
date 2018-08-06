@@ -82,51 +82,50 @@ namespace Au.Util
 	/// <summary>
 	/// Activates our manifest which tells to use comctl32.dll version 6.
 	/// The manifest is embedded in this dll, resource id 2.
-	/// This code is from .NET MessageBox.Show.
 	/// </summary>
-	internal static class LibActCtx
+	internal class LibActCtx :IDisposable
 	{
-		static Api.ACTCTX _actCtx;
-		static IntPtr _hActCtx;
-		static bool _contextCreationSucceeded;
+		IntPtr _cookie;
 
-		static LibActCtx()
+		public static LibActCtx Activate()
 		{
-			_actCtx.cbSize = Api.SizeOf<Api.ACTCTX>();
-			_actCtx.lpSource = Assembly.GetExecutingAssembly().Location;
-			_actCtx.lpResourceName = (IntPtr)2;
-			_actCtx.dwFlags = Api.ACTCTX_FLAG_RESOURCE_NAME_VALID;
-
-			_hActCtx = Api.CreateActCtx(_actCtx);
-			_contextCreationSucceeded = (_hActCtx != new IntPtr(-1));
+			if(s_actCtx.Handle == default || !Api.ActivateActCtx(s_actCtx.Handle, out var cookie)) return default;
+			return new LibActCtx() { _cookie = cookie };
 		}
 
-		static bool IsContextActive()
+		public void Dispose()
 		{
-			IntPtr current = default;
-
-			if(_contextCreationSucceeded && Api.GetCurrentActCtx(out current)) {
-				return current == _hActCtx;
+			if(_cookie != default) {
+				Api.DeactivateActCtx(0, _cookie);
+				_cookie = default;
 			}
-			return false;
 		}
 
-		internal static IntPtr Activate()
-		{
-			IntPtr R = default;
+		static ActCtx s_actCtx = new ActCtx();
 
-			if(_contextCreationSucceeded) {
-				if(!IsContextActive()) {
-					if(!Api.ActivateActCtx(_hActCtx, out R)) R = default;
+		class ActCtx
+		{
+			public IntPtr Handle;
+
+			public ActCtx()
+			{
+				Api.ACTCTX a = default;
+				a.cbSize = Api.SizeOf<Api.ACTCTX>();
+				a.lpSource = Assembly.GetExecutingAssembly().Location;
+				a.lpResourceName = (IntPtr)2;
+				a.dwFlags = Api.ACTCTX_FLAG_RESOURCE_NAME_VALID;
+
+				var h = Api.CreateActCtx(a);
+				if(h != (IntPtr)(-1)) Handle = h;
+			}
+
+			~ActCtx()
+			{
+				if(Handle != default) {
+					Api.ReleaseActCtx(Handle);
+					Handle = default;
 				}
 			}
-
-			return R;
-		}
-
-		internal static void Deactivate(IntPtr userCookie)
-		{
-			if(userCookie != default) Api.DeactivateActCtx(0, userCookie);
 		}
 	}
 

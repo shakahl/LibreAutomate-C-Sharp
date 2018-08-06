@@ -100,7 +100,7 @@ namespace Au
 					Debug.Assert(Handle == default && !t_windows.Contains(this));
 				}
 
-				LPARAM _WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+				LPARAM _WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
 				{
 					var R = WndProc(w, message, wParam, lParam);
 
@@ -117,8 +117,8 @@ namespace Au
 				/// Your derived class should override this function, call base.WndProc and return its return value, except when don't need default processing.
 				/// More info: <msdn>Window Procedures</msdn>.
 				/// </summary>
-				/// <seealso cref="Wnd.Misc.PrintMsg(Wnd, uint, LPARAM, LPARAM, uint[])"/>
-				protected virtual LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+				/// <seealso cref="Wnd.Misc.PrintMsg(Wnd, int, LPARAM, LPARAM, int[])"/>
+				protected virtual LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
 				{
 					return _classWndProc == _defWindowProc
 						? Api.DefWindowProc(w, message, wParam, lParam) //not necessary but presumably faster

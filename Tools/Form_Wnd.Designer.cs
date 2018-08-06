@@ -67,6 +67,7 @@
 			this._info.AccessibleName = "_info";
 			this._info.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+			this._info.DisableModifiedNotifications = false;
 			this._info.Location = new System.Drawing.Point(8, 8);
 			this._info.Name = "_info";
 			this._info.Size = new System.Drawing.Size(600, 56);
@@ -76,7 +77,7 @@
 			// 
 			this._lSpeed.Location = new System.Drawing.Point(87, 77);
 			this._lSpeed.Name = "_lSpeed";
-			this._lSpeed.Size = new System.Drawing.Size(81, 15);
+			this._lSpeed.Size = new System.Drawing.Size(97, 15);
 			this._lSpeed.TabIndex = 7;
 			this._toolTip.SetToolTip(this._lSpeed, "Shows the Test execution time. Red if not found.");
 			// 
@@ -96,7 +97,7 @@
 			// _bOK
 			// 
 			this._bOK.Enabled = false;
-			this._bOK.Location = new System.Drawing.Point(168, 72);
+			this._bOK.Location = new System.Drawing.Point(184, 72);
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
 			this._bOK.TabIndex = 10;
@@ -105,7 +106,7 @@
 			// 
 			// _bCancel
 			// 
-			this._bCancel.Location = new System.Drawing.Point(248, 72);
+			this._bCancel.Location = new System.Drawing.Point(264, 72);
 			this._bCancel.Name = "_bCancel";
 			this._bCancel.Size = new System.Drawing.Size(72, 24);
 			this._bCancel.TabIndex = 11;
@@ -230,6 +231,7 @@
 			// _code
 			// 
 			this._code.AccessibleName = "_code";
+			this._code.DisableModifiedNotifications = false;
 			this._code.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._code.Location = new System.Drawing.Point(0, 0);
 			this._code.Name = "_code";
@@ -272,6 +274,7 @@
 			// _winInfo
 			// 
 			this._winInfo.AccessibleName = "_winInfo";
+			this._winInfo.DisableModifiedNotifications = false;
 			this._winInfo.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._winInfo.InitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this._winInfo.Location = new System.Drawing.Point(0, 0);

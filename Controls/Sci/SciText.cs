@@ -152,7 +152,84 @@ namespace Au.Controls
 			return Convert_.LibUtf8FromString(s, ref t_byte, utf8Length);
 		}
 
+		struct _NoReadonly :IDisposable
+		{
+			SciText _t;
+			bool _ro;
+
+			public _NoReadonly(SciText t)
+			{
+				_t = t;
+				_ro = _t.SC.InitReadOnlyAlways;
+				if(_ro) _t.SC.Call(SCI_SETREADONLY, 0);
+			}
+
+			public void Dispose()
+			{
+				if(_ro) _t.SC.Call(SCI_SETREADONLY, 1);
+			}
+		}
+
+		struct _NoUndoNotif :IDisposable
+		{
+			SciText _t;
+			bool _noUndo, _noNotif;
+
+			public _NoUndoNotif(SciText t, bool noUndo, bool noNotif)
+			{
+				Debug.Assert(!((noUndo | noNotif) && t.SC.InitReadOnlyAlways));
+				_t = t;
+				_noUndo = noUndo && 0 != _t.Call(SCI_GETUNDOCOLLECTION);
+				_noNotif = noNotif;
+				if(_noNotif) _t.SC.DisableModifiedNotifications = true;
+				if(_noUndo) _t.Call(SCI_SETUNDOCOLLECTION, false);
+			}
+
+			public void Dispose()
+			{
+				if(_noUndo) {
+					_t.Call(SCI_EMPTYUNDOBUFFER);
+					_t.Call(SCI_SETUNDOCOLLECTION, true);
+				}
+				if(_noNotif) _t.SC.DisableModifiedNotifications = false;
+			}
+		}
+
 		#endregion
+
+		/// <summary>
+		/// Removes all text (SCI_CLEARALL).
+		/// For InitReadOnlyAlways controls, noUndo and noNotif must be false (asserts), because Undo and notifications are disabled when creating control.
+		/// </summary>
+		/// <param name="noUndo">Cannot be undone; clear Undo buffer.</param>
+		/// <param name="noNotif">Don't send 'modified' notifications.</param>
+		public void ClearText(bool noUndo = false, bool noNotif = false)
+		{
+			using(new _NoUndoNotif(this, noUndo, noNotif))
+			using(new _NoReadonly(this))
+				Call(SCI_CLEARALL);
+		}
+
+		/// <summary>
+		/// Replaces all text.
+		/// For InitReadOnlyAlways controls, noUndo and noNotif must be false (asserts), because Undo and notifications are disabled when creating control.
+		/// </summary>
+		/// <param name="s">Text.</param>
+		/// <param name="noUndo">Cannot be undone; clear Undo buffer.</param>
+		/// <param name="noNotif">Don't send 'modified' notifications.</param>
+		/// <param name="ignoreTags">Don't parse tags, regardless of SC.TagsStyle.</param>
+		public void SetText(string s, bool noUndo = false, bool noNotif = false, bool ignoreTags = false)
+		{
+			using(new _NoUndoNotif(this, noUndo, noNotif)) {
+				if(!ignoreTags && _CanParseTags(s)) {
+					ClearText();
+					SC.Tags.AddText(s, false, SC.InitTagsStyle == AuScintilla.TagsStyle.AutoWithPrefix);
+				} else {
+					using(new _NoReadonly(this))
+						SetString(SCI_SETTEXT, 0, s);
+				}
+			}
+		}
 
 		bool _CanParseTags(string s)
 		{
@@ -164,34 +241,6 @@ namespace Au.Controls
 				return s.StartsWith_("<>");
 			}
 			return false;
-		}
-
-		/// <summary>
-		/// Removes all text.
-		/// Uses SCI_CLEARALL.
-		/// </summary>
-		public void ClearText()
-		{
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
-			Call(SCI_CLEARALL);
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
-		}
-
-		/// <summary>
-		/// Replaces all text.
-		/// </summary>
-		/// <param name="s">Text.</param>
-		/// <param name="ignoreTags">Don't parse tags, regardless of SC.TagsStyle.</param>
-		public void SetText(string s, bool ignoreTags = false)
-		{
-			if(!ignoreTags && _CanParseTags(s)) {
-				ClearText();
-				SC.Tags.AddText(s, false, SC.InitTagsStyle == AuScintilla.TagsStyle.AutoWithPrefix);
-			} else {
-				if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
-				SetString(SCI_SETTEXT, 0, s);
-				if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
-			}
 		}
 
 		/// <summary>
@@ -214,9 +263,8 @@ namespace Au.Controls
 				Convert_.Utf8FromString(s, b, n + 1);
 				if(andRN) { b[n++] = (byte)'\r'; b[n++] = (byte)'\n'; }
 
-				if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
-				Call(SCI_APPENDTEXT, n, b);
-				if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
+				using(new _NoReadonly(this))
+					Call(SCI_APPENDTEXT, n, b);
 			}
 			if(scroll) Call(SCI_GOTOPOS, TextLengthBytes);
 		}
@@ -227,10 +275,9 @@ namespace Au.Controls
 		/// </summary>
 		internal void LibAddText(bool append, byte* s, int lenToAppend)
 		{
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
-			if(append) Call(SCI_APPENDTEXT, lenToAppend, s);
-			else Call(SCI_SETTEXT, 0, s);
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
+			using(new _NoReadonly(this))
+				if(append) Call(SCI_APPENDTEXT, lenToAppend, s);
+				else Call(SCI_SETTEXT, 0, s);
 
 			if(append) Call(SCI_GOTOPOS, TextLengthBytes);
 		}
@@ -246,10 +293,9 @@ namespace Au.Controls
 		//{
 		//	if(append) Call(SCI_SETEMPTYSELECTION, TextLengthBytes);
 
-		//	if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
+		//	using(new _NoReadonly(this))
 		//	if(!append) Call(SCI_SETTEXT);
 		//	Call(SCI_ADDSTYLEDTEXT, lenBytes, s);
-		//	if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
 
 		//	if(append) Call(SCI_GOTOPOS, TextLengthBytes);
 		//}
@@ -260,9 +306,8 @@ namespace Au.Controls
 		/// </summary>
 		internal void LibSetText(byte* s)
 		{
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
-			Call(SCI_SETTEXT, 0, s);
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
+			using(new _NoReadonly(this))
+				Call(SCI_SETTEXT, 0, s);
 		}
 
 		/// <summary>
@@ -442,9 +487,8 @@ namespace Au.Controls
 		/// <param name="length">Length (UTF8 bytes).</param>
 		public void DeleteRange(int pos, int length)
 		{
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
-			Call(SCI_DELETERANGE, pos, length);
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
+			using(new _NoReadonly(this))
+				Call(SCI_DELETERANGE, pos, length);
 		}
 
 		/// <summary>
@@ -455,9 +499,8 @@ namespace Au.Controls
 		/// <param name="s"></param>
 		public void InsertText(int pos, string s)
 		{
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 0);
-			SetString(SCI_INSERTTEXT, pos, s);
-			if(SC.InitReadOnlyAlways) Call(SCI_SETREADONLY, 1);
+			using(new _NoReadonly(this))
+				SetString(SCI_INSERTTEXT, pos, s);
 		}
 	}
 }

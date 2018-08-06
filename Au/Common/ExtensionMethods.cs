@@ -50,6 +50,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets mouse cursor position in client area coordinates.
+		/// Returns default(POINT) if handle not created.
 		/// </summary>
 		public static POINT MouseClientXY_(this Control t)
 		{
@@ -67,23 +68,32 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Sets the textual cue, or tip, that is displayed by the edit control to prompt the user for information.
-		/// Does not if Multiline.
+		/// Sets the textual cue, or tip, that is displayed by the control when it does not have text.
 		/// Sends API <msdn>EM_SETCUEBANNER</msdn>.
+		/// Does nothing if Multiline.
 		/// </summary>
 		public static void SetCueBanner_(this TextBox t, string text, bool showWhenFocused = false)
 		{
 			Debug.Assert(!t.Multiline);
-			((Wnd)t).SendS(Api.EM_SETCUEBANNER, showWhenFocused, text);
+			_SetCueBanner_(t, Api.EM_SETCUEBANNER, showWhenFocused, text);
 		}
 
 		/// <summary>
-		/// Sets the textual cue, or tip, that is displayed by the ComboBox edit control to prompt the user for information.
+		/// Sets the textual cue, or tip, that is displayed by the edit control when it does not have text.
 		/// Sends API <msdn>CB_SETCUEBANNER</msdn>.
 		/// </summary>
 		public static void SetCueBanner_(this ComboBox t, string text)
 		{
-			((Wnd)t).SendS(Api.CB_SETCUEBANNER, 0, text);
+			_SetCueBanner_(t, Api.CB_SETCUEBANNER, false, text);
+		}
+
+		static void _SetCueBanner_(Control c, int message, bool showWhenFocused, string text)
+		{
+			if(c.IsHandleCreated) {
+				((Wnd)c).SendS(message, showWhenFocused, text);
+			} else if(!Empty(text)) {
+				c.HandleCreated += (unu, sed) => _SetCueBanner_(c, message, showWhenFocused, text);
+			}
 		}
 
 		/// <summary>

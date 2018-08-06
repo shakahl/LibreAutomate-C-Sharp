@@ -200,7 +200,7 @@ namespace Au
 		/// Called when the OSD window receives a message.
 		/// If your derived class overrides this function, it must call base.WndProc and return its return value, except when don't need default processing.
 		/// </summary>
-		protected virtual LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+		protected virtual LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
 		{
 			switch(message) {
 			case Api.WM_ERASEBKGND:
@@ -236,9 +236,9 @@ namespace Au
 
 			public WndClass(OsdWindow osd) => _osd = osd;
 
-			protected override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam) => _osd.WndProc(w, message, wParam, lParam);
+			protected override LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam) => _osd.WndProc(w, message, wParam, lParam);
 
-			public LPARAM WndProc2(Wnd w, uint message, LPARAM wParam, LPARAM lParam) => base.WndProc(w, message, wParam, lParam);
+			public LPARAM WndProc2(Wnd w, int message, LPARAM wParam, LPARAM lParam) => base.WndProc(w, message, wParam, lParam);
 		}
 
 		/// <summary>

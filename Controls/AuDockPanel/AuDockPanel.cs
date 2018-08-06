@@ -222,7 +222,7 @@ namespace Au.Controls
 		//Would be better to use a common base class for them, but it is difficult etc because AuDockPanel is a control and _Float is a top-level form.
 		bool _WndProcBefore_Common(Control c, ref Message m)
 		{
-			switch((uint)m.Msg) {
+			switch(m.Msg) {
 			case Api.WM_SETCURSOR:
 				if(m.WParam == c.Handle && _OnSetCursor(c, m.LParam)) {
 					m.Result = (IntPtr)1;

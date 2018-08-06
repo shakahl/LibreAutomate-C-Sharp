@@ -77,7 +77,7 @@ namespace Simple
 		}
 
 		//static Au.POINT _mmm;
-		static Au.AuScriptOptions _opt=new Au.AuScriptOptions(null);
+		//static Au.AuScriptOptions _opt=new Au.AuScriptOptions(null);
 
 
 		//		[DebuggerStepThrough]

@@ -12,6 +12,7 @@
     <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -51,14 +52,41 @@
     <AssemblyOriginatorKeyFile>Properties\Au.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <PropertyGroup />
-  <PropertyGroup>
-    <ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
-  </PropertyGroup>
+  <PropertyGroup />
   <PropertyGroup>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationIcon>Resources\qm.ico</ApplicationIcon>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
+  <PropertyGroup>
+    <Win32Resource>
+    </Win32Resource>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CodeAnalysis">
+      <HintPath>..\_\Compiler\Microsoft.CodeAnalysis.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp">
+      <HintPath>..\_\Compiler\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=1.2.1.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\_\Compiler\System.Collections.Immutable.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -80,6 +108,15 @@
   <ItemGroup>
     <Compile Include="Files\Save.cs" />
     <Compile Include="GlobalSuppressions.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Run\ErrBuilder.cs" />
+    <Compile Include="Run\Meta.cs" />
+    <Compile Include="Run\MetaReferences.cs" />
+    <Compile Include="Run\Compiler.cs" />
     <Compile Include="UI\CmdHandlers.cs" />
     <Compile Include="Edit\PanelEdit.cs">
       <SubType>Component</SubType>
@@ -122,11 +159,6 @@
     <Compile Include="Program\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UI\CmdStrips.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Test\DevTools.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -136,7 +168,9 @@
     <None Include="Resources\Au.manifest" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <None Include="App.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Au\Au.csproj">
@@ -156,9 +190,7 @@
       <Name>Au.Tools</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Run\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="Default\files.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -213,15 +245,18 @@
     <None Include="Resources\png icons\tip.png" />
     <None Include="Resources\png icons\tip_book.png" />
     <None Include="Resources\png icons\undo.png" />
-    <None Include="Resources\Folder_16x.png" />
-    <None Include="Resources\FolderOpen_16x.png" />
-    <None Include="Resources\CS_16x.png" />
+    <None Include="Resources\folder.png" />
+    <None Include="Resources\folderOpen.png" />
+    <None Include="Resources\fileClass.png" />
     <None Include="Resources\NewSolutionFolder_16x.png" />
+    <Content Include="Resources\fileScript.png" />
+    <None Include="Resources\project.png" />
+    <Content Include="Resources\qm.ico" />
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>REM $(TargetDir)kill Au.Editor.exe</PreBuildEvent>
+    <PreBuildEvent>$(TargetDir)kill_Au.Editor.exe</PreBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

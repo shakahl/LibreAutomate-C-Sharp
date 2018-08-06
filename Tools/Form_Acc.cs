@@ -357,7 +357,7 @@ namespace Au.Tools
 
 		protected override void WndProc(ref Message m)
 		{
-			//Wnd w = (Wnd)this; uint msg = (uint)m.Msg; LPARAM wParam = m.WParam, lParam = m.LParam;
+			//Wnd w = (Wnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
 
 			if(_capt != null && _capt.WndProc(ref m, out bool capture)) {
 				if(capture) _Capture();
@@ -743,7 +743,7 @@ namespace Au.Tools
 				_commonInfos.SetTextWithWildexInfo(info.Remove(info.Length - 1));
 				return;
 			}
-			_info.Text = info;
+			_info.ST.SetText(info);
 		}
 
 		const string c_infoForm =

@@ -94,7 +94,7 @@ namespace Au
 
 			ThreadPool.QueueUserWorkItem(_this => (_this as BlockUserInput)._ThreadProc(), this);
 
-			Api.WaitForSingleObject(_syncEvent, Api.INFINITE);
+			Api.WaitForSingleObject(_syncEvent, Timeout.Infinite);
 			GC.KeepAlive(this);
 		}
 
@@ -134,7 +134,7 @@ namespace Au
 			_block = 0;
 
 			Api.SetEvent(_stopEvent);
-			Api.WaitForSingleObject(_syncEvent, Api.INFINITE);
+			Api.WaitForSingleObject(_syncEvent, Timeout.Infinite);
 			_CloseHandles();
 
 			var bk = _blockedKeys;

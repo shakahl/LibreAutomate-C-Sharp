@@ -279,7 +279,7 @@ namespace Au.Util
 			public IntPtr FinalizationCallback;
 			public uint Flags;
 			public int CallbackPriority;
-			public uint Size;
+			public int Size;
 		}
 
 		enum TP_CALLBACK_PRIORITY

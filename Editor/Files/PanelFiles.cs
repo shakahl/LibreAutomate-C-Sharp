@@ -82,17 +82,6 @@ partial class PanelFiles :Control
 		//p.NW();
 	}
 
-	protected override void Dispose(bool disposing)
-	{
-		//DebugPrintFunc();
-		var m = _model;
-		if(m != null) {
-			m.Save.AllNowIfNeed();
-			m.Dispose();
-		}
-		base.Dispose(disposing);
-	}
-
 	public TreeViewAdv TV { get => _c; }
 
 	public FilesModel Model { get => _model; }
@@ -268,6 +257,7 @@ partial class PanelFiles :Control
 		try {
 			//CONSIDER: use different logic. Now silently creates empty files, it's not always good. Add parameter createNew. If false, show error if file not found.
 			if(!Files.ExistsAsFile(xmlFile)) {
+				if(!Files.ExistsAsDirectory(Path_.GetDirectoryPath(xmlFile))) throw new DirectoryNotFoundException("Folder does not exist.");
 				Files.CopyTo(Folders.ThisApp + @"Default\files", collDir);
 				Files.Copy(Folders.ThisApp + @"Default\files.xml", xmlFile);
 			}
@@ -314,6 +304,15 @@ partial class PanelFiles :Control
 		m.LoadState();
 
 		return _model;
+	}
+
+	public void UnloadOnFormClosed()
+	{
+		if(_model == null) return;
+		_model.Save.AllNowIfNeed();
+		var oldModel = _model;
+		Program.Model = _model = null;
+		oldModel.Dispose();
 	}
 
 	/// <summary>

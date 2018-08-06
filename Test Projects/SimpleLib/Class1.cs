@@ -9,6 +9,8 @@ namespace SimpleLib
 	public class Class1
 	{
 		public int x;
+
+		public static int Test { get; set; } = 10;
 	}
 
 	public struct Struct1

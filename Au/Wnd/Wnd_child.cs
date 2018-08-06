@@ -693,9 +693,9 @@ namespace Au
 				return false;
 			}
 
-			internal const uint BM_CLICK = 0xF5;
-			internal const uint BM_GETCHECK = 0xF0;
-			internal const uint BM_SETCHECK = 0xF1;
+			internal const int BM_CLICK = 0xF5;
+			internal const int BM_GETCHECK = 0xF0;
+			internal const int BM_SETCHECK = 0xF1;
 
 			internal const uint BS_CHECKBOX = 0x2;
 			internal const uint BS_AUTOCHECKBOX = 0x3;

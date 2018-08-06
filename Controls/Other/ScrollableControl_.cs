@@ -35,7 +35,7 @@ namespace Au.Controls
 
 		internal struct SCROLLINFO
 		{
-			public uint cbSize;
+			public int cbSize;
 			public uint fMask;
 			public int nMin;
 			public int nMax;
@@ -160,11 +160,10 @@ namespace Au.Controls
 
 		protected override void WndProc(ref Message m)
 		{
-			uint msg = (uint)m.Msg;
-			switch(msg) {
+			switch(m.Msg) {
 			case Api.WM_HSCROLL:
 			case Api.WM_VSCROLL:
-				_OnScroll(msg == Api.WM_VSCROLL, (ScrollEventType)Math_.LoUshort(m.WParam));
+				_OnScroll(m.Msg == Api.WM_VSCROLL, (ScrollEventType)Math_.LoUshort(m.WParam));
 				break;
 			}
 			base.WndProc(ref m);

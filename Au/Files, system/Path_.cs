@@ -97,15 +97,18 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if path matches one of these wildcard patterns:
-		///		@"?:\*" - local path, like @"C:\a\b.txt". Here ? is A-Z, a-z.
-		///		@"?:" - drive name, like @"C:". Here ? is A-Z, a-z. Note: it is considered full path in this library, but for .NET and Windows API it is not full path.
-		///		@"\\*" - network path, like @"\\server\share\...". Or has prefix @"\\?\".
+		/// Returns true if the string is full path, like @"C:\a\b.txt" or @"C:" or @"\\server\share\...":
 		/// </summary>
 		/// <param name="path">Any string. Can be null.</param>
 		/// <remarks>
+		/// Returns true if <paramref name="path"/> matches one of these wildcard patterns:
+		/// <list type="bullet">
+		/// <item>@"?:\*" - local path, like @"C:\a\b.txt". Here ? is A-Z, a-z.</item>
+		/// <item>@"?:" - drive name, like @"C:". Here ? is A-Z, a-z.</item>
+		/// <item>@"\\*" - network path, like @"\\server\share\...". Or has prefix @"\\?\".</item>
+		/// </list>
 		/// Supports '/' characters too.
-		/// Supports only file-system paths. Returns false if path is URL (use <see cref="IsUrl"/> instead) or starts with "::".
+		/// Supports only file-system paths. Returns false if path is URL (<see cref="IsUrl"/>) or starts with "::".
 		/// If path starts with "%environmentVariable%", shows warning and returns false. You should at first expand environment variables with <see cref="ExpandEnvVar"/> or instead use <see cref="IsFullPathExpandEnvVar"/>.
 		/// </remarks>
 		public static bool IsFullPath(string path)
@@ -139,18 +142,21 @@ namespace Au
 
 		/// <summary>
 		/// Expands environment variables and calls <see cref="IsFullPath"/>.
-		/// Returns true if path matches one of these wildcard patterns:
-		///		@"?:\*" - local path, like @"C:\a\b.txt". Here ? is A-Z, a-z.
-		///		@"?:" - drive name, like @"C:". Here ? is A-Z, a-z. Note: it is considered full path in this library, but for .NET and Windows API it is not full path.
-		///		@"\\*" - network path, like @"\\server\share\...". Or has prefix @"\\?\".
+		/// Returns true if the string is full path, like @"C:\a\b.txt" or @"C:" or @"\\server\share\...":
 		/// </summary>
 		/// <param name="path">
 		/// Any string. Can be null.
 		/// If starts with '%' character, calls <see cref="IsFullPath"/> with expanded environment variables (<see cref="ExpandEnvVar"/>). If it returns true, replaces the passed variable with the expanded path string.
 		/// </param>
 		/// <remarks>
+		/// Returns true if <paramref name="path"/> matches one of these wildcard patterns:
+		/// <list type="bullet">
+		/// <item>@"?:\*" - local path, like @"C:\a\b.txt". Here ? is A-Z, a-z.</item>
+		/// <item>@"?:" - drive name, like @"C:". Here ? is A-Z, a-z.</item>
+		/// <item>@"\\*" - network path, like @"\\server\share\...". Or has prefix @"\\?\".</item>
+		/// </list>
 		/// Supports '/' characters too.
-		/// Supports only file-system paths. Returns false if path is URL (use <see cref="IsUrl"/> instead) or starts with "::".
+		/// Supports only file-system paths. Returns false if path is URL (<see cref="IsUrl"/>) or starts with "::".
 		/// </remarks>
 		public static bool IsFullPathExpandEnvVar(ref string path)
 		{
@@ -584,7 +590,7 @@ namespace Au
 		/// Returns true if name cannot be used for a file name, eg contains '\\' etc characters or is empty.
 		/// More info: <see cref="CorrectFileName"/>.
 		/// </summary>
-		/// <param name="name">Any string. Can be null. Example: "name.txt".</param>
+		/// <param name="name">Any string. Example: "name.txt". Can be null.</param>
 		public static bool IsInvalidFileName(string name)
 		{
 			if(name == null || (name = name.Trim()).Length == 0) return true;
@@ -596,7 +602,7 @@ namespace Au
 		/// Returns "" if there is no filename.
 		/// Returns null if path is null.
 		/// </summary>
-		/// <param name="path">Path or filename.</param>
+		/// <param name="path">Path or filename. Can be null.</param>
 		/// <remarks>
 		/// Similar to <see cref="Path.GetFileName"/>. Some diferences: does not throw exceptions; if ends with '\\' or '/', gets part before it, eg "B" from @"C:\A\B\".
 		/// Supports separators '\\' and '/'.
@@ -629,7 +635,7 @@ namespace Au
 		/// Returns "" if there is no filename.
 		/// Returns null if path is null.
 		/// </summary>
-		/// <param name="path">Path or filename.</param>
+		/// <param name="path">Path or filename. Can be null.</param>
 		/// <remarks>
 		/// Similar to <see cref="Path.GetFileNameWithoutExtension"/> Some diferences: does not throw exceptions; if ends with '\\' or '/', gets part before it, eg "B" from @"C:\A\B\" (then does not remove extension from it because it is a directory name).
 		/// Supports separators '\\' and '/'.
@@ -662,7 +668,7 @@ namespace Au
 		/// Returns "" if there is no extension.
 		/// Returns null if path is null.
 		/// </summary>
-		/// <param name="path">Path or filename.</param>
+		/// <param name="path">Path or filename. Can be null.</param>
 		/// <remarks>
 		/// Supports separators '\\' and '/'.
 		/// Like <see cref="Path.GetExtension"/>, but does not throw exceptions.
@@ -676,7 +682,7 @@ namespace Au
 		/// Gets filename extension and path part without the extension.
 		/// More info: <see cref="GetExtension(string)"/>.
 		/// </summary>
-		/// <param name="path">Path or filename.</param>
+		/// <param name="path">Path or filename. Can be null.</param>
 		/// <param name="pathWithoutExtension">Receives path part without the extension. Can be the same variable as path.</param>
 		public static string GetExtension(string path, out string pathWithoutExtension)
 		{
@@ -687,12 +693,32 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Finds filename extension, like ".txt".
+		/// Returns '.' character index, or -1 if there is no extension.
+		/// </summary>
+		/// <param name="path">Path or filename. Can be null.</param>
+		/// <remarks>
+		/// Returns -1 if '.' is before '\\' or '/'.
+		/// </remarks>
+		public static int FindExtension(string path)
+		{
+			if(path == null) return -1;
+			int i;
+			for(i = path.Length - 1; i >= 0; i--) {
+				switch(path[i]) {
+				case '.': return i;
+				case '\\': case '/': /*case ':':*/ return -1;
+				}
+			}
+			return i;
+		}
+
+		/// <summary>
 		/// Removes filename part from path. By default also removes separator ('\\' or '/') if it is not after drive name (eg "C:").
 		/// Returns "" if the string is a filename.
-		/// Returns null if the string is a root (like @"C:\" or "C:" or @"\\server\share" or "http:").
-		/// Returns null if the string is null.
+		/// Returns null if the string is null or a root (like @"C:\" or "C:" or @"\\server\share" or "http:").
 		/// </summary>
-		/// <param name="path">Path or filename.</param>
+		/// <param name="path">Path or filename. Can be null.</param>
 		/// <param name="withSeparator">
 		/// Don't remove the separator character(s) ('\\' or '/').
 		/// Examples: from @"C:\A\B" gets @"C:\A\", not @"C:\A"; from "http://x.y" gets "http://", not "http:".</param>

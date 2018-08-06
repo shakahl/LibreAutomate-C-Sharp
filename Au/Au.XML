@@ -12,11 +12,6 @@
             Extra info value of key and mouse events sent by functions of this library.
             </summary>
         </member>
-        <member name="M:Au.Types.Api.CreateIconFromResourceEx(System.Byte*,System.Int32,System.Boolean,System.UInt32,System.Int32,System.Int32,System.UInt32)">
-            <summary>
-            note: don't use LR_SHARED. It is only for native resources.
-            </summary>
-        </member>
         <member name="M:Au.Types.Api.PROPVARIANT.Dispose">
             <summary>
             Calls PropVariantClear.
@@ -25,14 +20,14 @@
         <member name="M:Au.Types.Api.SizeOf``1(``0)">
             <summary>
             Gets the native size of a struct variable.
-            Returns (uint)Marshal.SizeOf(typeof(T)).
+            Returns Marshal.SizeOf(typeof(T)).
             Speed: the same (in Release config) as Marshal.SizeOf(typeof(T)), and 2 times faster than Marshal.SizeOf(v).
             </summary>
         </member>
         <member name="M:Au.Types.Api.SizeOf``1">
             <summary>
             Gets the native size of a type.
-            Returns (uint)Marshal.SizeOf(typeof(T)).
+            Returns Marshal.SizeOf(typeof(T)).
             </summary>
         </member>
         <member name="M:Au.Types.Api.GetProcAddress(System.String,System.String)">
@@ -1497,6 +1492,7 @@
         <member name="M:Au.Types.ExtensionMethods.MouseClientXY_(System.Windows.Forms.Control)">
             <summary>
             Gets mouse cursor position in client area coordinates.
+            Returns default(POINT) if handle not created.
             </summary>
         </member>
         <member name="M:Au.Types.ExtensionMethods.MouseWindowXY_(System.Windows.Forms.Control)">
@@ -1506,14 +1502,14 @@
         </member>
         <member name="M:Au.Types.ExtensionMethods.SetCueBanner_(System.Windows.Forms.TextBox,System.String,System.Boolean)">
             <summary>
-            Sets the textual cue, or tip, that is displayed by the edit control to prompt the user for information.
-            Does not if Multiline.
+            Sets the textual cue, or tip, that is displayed by the control when it does not have text.
             Sends API <msdn>EM_SETCUEBANNER</msdn>.
+            Does nothing if Multiline.
             </summary>
         </member>
         <member name="M:Au.Types.ExtensionMethods.SetCueBanner_(System.Windows.Forms.ComboBox,System.String)">
             <summary>
-            Sets the textual cue, or tip, that is displayed by the ComboBox edit control to prompt the user for information.
+            Sets the textual cue, or tip, that is displayed by the edit control when it does not have text.
             Sends API <msdn>CB_SETCUEBANNER</msdn>.
             </summary>
         </member>
@@ -3400,45 +3396,82 @@
             By default adds to our string cache.
             </summary>
         </member>
-        <member name="T:Au.Types.AuBaseMT">
+        <member name="T:Au.Types.BaseMT">
             <summary>
-            Base class of AuMenu and AuToolbar.
+            Base class of <see cref="T:Au.AuMenu"/> and <see cref="T:Au.AuToolbar"/>.
             </summary>
         </member>
-        <member name="P:Au.Types.AuBaseMT.MainToolStrip">
+        <member name="P:Au.Types.BaseMT.ItemThread">
+            <summary>
+            In what thread to execute item callback functions.
+            Default: current thread.
+            </summary>
+            <remarks>
+            If current thread is a UI thread (has windows etc), and item callback functions execute some long automations in the same thread, current thread probably is hung during that time. Use this property to avoid it.
+            This property is applied to items added afterwards.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.BaseMT.ExceptionHandling">
+            <summary>
+            Whether/how to handle unhandled exceptions in item code.
+            Default: <see cref="F:Au.Types.MTExcept.Exception"/> (don't handle exceptions if <see cref="P:Au.Types.BaseMT.ItemThread"/> is <see cref="F:Au.Types.MTThread.Current"/> (default), else show warning).
+            </summary>
+            <remarks>
+            This property is applied to items added afterwards.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.BaseMT.MainToolStrip">
             <summary>
             Gets ToolStrip of AuMenu and AuToolbar, which override this.
             </summary>
         </member>
-        <member name="P:Au.Types.AuBaseMT.LastItem">
+        <member name="P:Au.Types.BaseMT.LastItem">
             <summary>
-            Gets the last added item as ToolStripItem, which is the base type of ToolStripMenuItem, ToolStripButton and other supported types.
-            The item can be added with m.Add(...), m[...]=, m.Separator() and m.Submenu(...).
+            Gets the last added item as <see cref="T:System.Windows.Forms.ToolStripItem"/>, which is the base type of <see cref="T:System.Windows.Forms.ToolStripMenuItem"/>, <see cref="T:System.Windows.Forms.ToolStripButton"/> and other supported types.
             </summary>
         </member>
-        <member name="E:Au.Types.AuBaseMT.ItemAdded">
+        <member name="E:Au.Types.BaseMT.ItemAdded">
             <summary>
             Occurs when an item is added.
             Allows to set item properties in single place instead of after each 'add item' code line.
             For example, the event handler can set item properties common to all items, or set item properties encoded in item text.
             </summary>
         </member>
-        <member name="P:Au.Types.AuBaseMT.IconFlags">
+        <member name="P:Au.Types.BaseMT.IconFlags">
             <summary>
-            Flags to pass to <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>. See <see cref="T:Au.Types.GIFlags"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.AuBaseMT.IconSize">
-            <summary>
-            Image width and height.
-            Also can be enum <see cref="P:Au.Types.AuBaseMT.IconSize"/>, cast to int.
-            Set it before adding items.
+            Flags to pass to <see cref="M:Au.Icons.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>. See <see cref="T:Au.Types.GIFlags"/>.
             </summary>
             <remarks>
-            To set different size for a submenu: <c>using(m.Submenu("sub")) { m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);</c>
+            This property is applied to all items.
             </remarks>
         </member>
-        <member name="M:Au.Types.AuBaseMT.Finalize">
+        <member name="P:Au.Types.BaseMT.IconSize">
+            <summary>
+            Image width and height.
+            Also can be enum <see cref="P:Au.Types.BaseMT.IconSize"/>, cast to int.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">The 'set' function is called after adding items.</exception>
+            <remarks>
+            This property is applied to all items, and can be set only before adding items (else exception).
+            To set different icon size for a submenu: <c>using(m.Submenu("sub")) { m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);</c>
+            </remarks>
+        </member>
+        <member name="P:Au.Types.BaseMT.ExtractIconPathFromCode">
+            <summary>
+            When adding items without explicitly specified icon, extract icon from item code.
+            </summary>
+            <remarks>
+            This property is applied to items added afterwards.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.BaseMT._IconPathFromCode(System.Reflection.MethodInfo)">
+            <summary>
+            Gets icon path from code that contains string like @"c:\windows\system32\notepad.exe" or @"%Folders.System%\notepad.exe" or URL/shell.
+            Also supports code patterns like 'Folders.System + "notepad.exe"' or 'Folders.Virtual.RecycleBin'.
+            Returns null if no such string/pattern.
+            </summary>
+        </member>
+        <member name="M:Au.Types.BaseMT.Finalize">
             
         </member>
         <member name="T:Au.Types.MTClickArgs">
@@ -3461,6 +3494,51 @@
             <summary>
             Gets item text.
             </summary>
+        </member>
+        <member name="T:Au.Types.MTThread">
+            <summary>
+            Used with <see cref="P:Au.Types.BaseMT.ItemThread"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.MTThread.Current">
+            <summary>
+            Execute item callback functions in current thread. This is default.
+            </summary>
+        </member>
+        <member name="F:Au.Types.MTThread.ThreadPool">
+            <summary>
+            Execute item callback functions in thread pool threads (<see cref="M:System.Threading.Tasks.Task.Run(System.Action)"/>).
+            Note: current thread does not wait until the callback function finishes.
+            </summary>
+        </member>
+        <member name="F:Au.Types.MTThread.StaThread">
+            <summary>
+            Execute item callback functions in new STA threads (<see cref="M:System.Threading.Thread.SetApartmentState(System.Threading.ApartmentState)"/>).
+            Note: current thread does not wait until the callback function finishes.
+            </summary>
+        </member>
+        <member name="F:Au.Types.MTThread.StaBackgroundThread">
+            <summary>
+            Execute item callback functions in new STA background threads (<see cref="P:System.Threading.Thread.IsBackground"/>).
+            Note: current thread does not wait until the callback function finishes.
+            </summary>
+        </member>
+        <member name="T:Au.Types.MTExcept">
+            <summary>
+            Used with <see cref="P:Au.Types.BaseMT.ExceptionHandling"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.MTExcept.Exception">
+            <summary>
+            Don't handle exceptions. This is default.
+            However if <see cref="P:Au.Types.BaseMT.ItemThread"/> is not <see cref="F:Au.Types.MTThread.Current"/>, handles exceptions and shows warning.
+            </summary>
+        </member>
+        <member name="F:Au.Types.MTExcept.Warning">
+            <summary>Handle exceptions. On exception call <see cref="M:Au.NoClass.PrintWarning(System.String,System.Int32,System.String)"/>.</summary>
+        </member>
+        <member name="F:Au.Types.MTExcept.Silent">
+            <summary>Handle exceptions. On exception do nothing.</summary>
         </member>
         <member name="T:Au.Types.MButton">
             <summary>
@@ -5517,7 +5595,7 @@
             <summary>
             Adds a file path to an internal collection.
             </summary>
-            <param name="file">File path etc to pass to <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>.</param>
+            <param name="file">File path etc. See <see cref="M:Au.Icons.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>.</param>
             <param name="obj">Something to pass to your callback function together with icon handle for this file.</param>
         </member>
         <member name="M:Au.Util.IconsAsync.AddRange(System.Collections.Generic.IEnumerable{Au.Util.IconsAsync.Item})">
@@ -5619,7 +5697,7 @@
             
             	protected override void WndProc(ref Message m)
             	{
-            		switch((uint)m.Msg) {
+            		switch(m.Msg) {
             		case Api.WM_CREATE: //0x1
             			bool r1 = _hk2.Register(1, "Ctrl+Alt+F10", this);
             			bool r2 = _hk1.Register(2, (KMod.Ctrl | KMod.Shift, KKey.D), this); //Ctrl+Shift+D
@@ -5876,6 +5954,111 @@
             <summary>
             Shared memory variables. Used with global server only.
             </summary>
+        </member>
+        <member name="P:Au.Util.ILInstruction.RawData">
+            <summary>
+            Gets the raw data.
+            </summary>
+        </member>
+        <member name="P:Au.Util.ILInstruction.Data">
+            <summary>
+            Gets the data.
+            </summary>
+        </member>
+        <member name="P:Au.Util.ILInstruction.Address">
+            <summary>
+            Gets the address of the instruction.
+            </summary>
+        </member>
+        <member name="P:Au.Util.ILInstruction.InstructionIndex">
+            <summary>
+            Gets the index of the instruction.
+            </summary>
+            <value>
+            The index of the instruction.
+            </value>
+        </member>
+        <member name="P:Au.Util.ILInstruction.DataValue">
+            <summary>
+            Gets the value as integer
+            </summary>
+            <value>The data value.</value>
+        </member>
+        <member name="P:Au.Util.ILInstruction.Length">
+            <summary>
+            Gets the length of the instructions and operands.
+            </summary>
+            <value>The length.</value>
+        </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
+        </member>
+        <member name="T:Au.Util.ILReader">
+            <summary>
+            Reads IL instructions from a byte stream.
+            </summary>
+            <remarks>Allows generated code to be viewed without debugger or enabled debug assemblies.</remarks>
+        </member>
+        <member name="F:Au.Util.ILReader.instructionLookup">
+            <summary>
+            The _instruction lookup.
+            </summary>
+        </member>
+        <member name="F:Au.Util.ILReader.intermediateLanguageProvider">
+            <summary>
+            The IL reader provider.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ILReader.#ctor(System.Reflection.MethodInfo)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Au.Util.ILReader"/> class.
+            </summary>
+            <param name="method">
+            The method.
+            </param>
+        </member>
+        <member name="P:Au.Util.ILReader.Instructions">
+            <summary>
+            Gets the instructions.
+            </summary>
+            <value>The instructions.</value>
+        </member>
+        <member name="M:Au.Util.ILReader.CreateILReaderProvider(System.Reflection.MethodInfo)">
+            <summary>
+            Creates the IL reader provider.
+            </summary>
+            <param name="methodInfo">The MethodInfo object that represents the method to read..</param>
+            <returns>
+            The ILReader provider.
+            </returns>
+        </member>
+        <member name="M:Au.Util.ILReader.IsInstructionPrefix(System.Int16)">
+            <summary>
+            Checks to see if the IL instruction is a prefix indicating the length of the instruction is two bytes long.
+            </summary>
+            <param name="value">The IL instruction as a byte.</param>
+            <remarks>IL instructions can either be 1 or 2 bytes.</remarks>
+            <returns>True if this IL instruction is a prefix indicating the instruction is two bytes long.</returns>
+        </member>
+        <member name="M:Au.Util.ILReader.GetLookupTable">
+            <summary>
+            The get lookup table.
+            </summary>
+            <returns>
+            A dictionary of IL instructions.
+            </returns>
+        </member>
+        <member name="M:Au.Util.ILReader.GetSize(System.Reflection.Emit.OperandType)">
+            <summary>
+            Gets the size of a operand.
+            </summary>
+            <param name="operandType">Defines the type of operand.</param>
+            <returns>The size in bytes of the operand type.</returns>
         </member>
         <member name="T:Au.Util.StringMisc">
             <summary>
@@ -6990,6 +7173,7 @@
             <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
         </member>
         <member name="T:Au.Util.DragDrop.MsgArgs">
+            <tocexclude />
             <summary>
             <see cref="M:Au.Util.DragDrop.SimpleDragDrop(Au.Types.AnyWnd,Au.Types.MButtons,System.Action{Au.Util.DragDrop.MsgArgs})"/> callback function arguments.
             </summary>
@@ -7189,10 +7373,19 @@
             The Image is not cached. Will need to Dispose.
             </remarks>
         </member>
+        <member name="P:Au.Util.Resources_.AppResourcesName">
+            <summary>
+            Full name of embedded resources file, like "Project.Properties.Resources.resources".
+            Set this property once before calling <see cref="M:Au.Util.Resources_.GetAppResource(System.String)"/>.
+            If not set, it will look for resource where name ends with ".Resources.resources". If there is no such resources, uses the first.
+            To see embedded resource file names you can use this code: <c>Print(System.Reflection.Assembly.GetEntryAssembly().GetManifestResourceNames()</c>.
+            </summary>
+        </member>
         <member name="M:Au.Util.Resources_.LibGetAppResourceManager(System.Globalization.CultureInfo@)">
             <summary>
             Gets ResourceManager of appdomain's entry assembly.
-            Returns null if the assembly does not have resources or if fails.
+            Returns null if fails or if the assembly does not have resources.
+            Note: if the assembly contains multiple embedded .resource files, may need to set <see cref="P:Au.Util.Resources_.AppResourcesName"/> before.
             </summary>
         </member>
         <member name="T:Au.Util.Dpi">
@@ -7328,7 +7521,6 @@
             <summary>
             Activates our manifest which tells to use comctl32.dll version 6.
             The manifest is embedded in this dll, resource id 2.
-            This code is from .NET MessageBox.Show.
             </summary>
         </member>
         <member name="T:Au.Thread_">
@@ -8994,7 +9186,7 @@
             Does nothing if not created or not visible.
             </summary>
         </member>
-        <member name="M:Au.OsdWindow.WndProc(Au.Wnd,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.OsdWindow.WndProc(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Called when the OSD window receives a message.
             If your derived class overrides this function, it must call base.WndProc and return its return value, except when don't need default processing.
@@ -9443,7 +9635,7 @@
             <item>
             string - path of .png or .bmp file.
             If not full path, uses <see cref="P:Au.Folders.ThisAppImages"/>.
-            If the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file @"C:\X.png" not found. Alternatively you can use code like <c>using(var b = Project.Properties.Resources.X) WinImage.Find(w, b);</c>.
+            If the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file @"C:\X.png" not found.
             </item>
             <item>
             string that starts with "image:" or "~:" - Base64-encoded .png or .bmp image embedded in script.
@@ -12457,33 +12649,39 @@
         </member>
         <member name="M:Au.Path_.IsFullPath(System.String)">
             <summary>
-            Returns true if path matches one of these wildcard patterns:
-            	@"?:\*" - local path, like @"C:\a\b.txt". Here ? is A-Z, a-z.
-            	@"?:" - drive name, like @"C:". Here ? is A-Z, a-z. Note: it is considered full path in this library, but for .NET and Windows API it is not full path.
-            	@"\\*" - network path, like @"\\server\share\...". Or has prefix @"\\?\".
+            Returns true if the string is full path, like @"C:\a\b.txt" or @"C:" or @"\\server\share\...":
             </summary>
             <param name="path">Any string. Can be null.</param>
             <remarks>
+            Returns true if <paramref name="path"/> matches one of these wildcard patterns:
+            <list type="bullet">
+            <item>@"?:\*" - local path, like @"C:\a\b.txt". Here ? is A-Z, a-z.</item>
+            <item>@"?:" - drive name, like @"C:". Here ? is A-Z, a-z.</item>
+            <item>@"\\*" - network path, like @"\\server\share\...". Or has prefix @"\\?\".</item>
+            </list>
             Supports '/' characters too.
-            Supports only file-system paths. Returns false if path is URL (use <see cref="M:Au.Path_.IsUrl(System.String)"/> instead) or starts with "::".
+            Supports only file-system paths. Returns false if path is URL (<see cref="M:Au.Path_.IsUrl(System.String)"/>) or starts with "::".
             If path starts with "%environmentVariable%", shows warning and returns false. You should at first expand environment variables with <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/> or instead use <see cref="M:Au.Path_.IsFullPathExpandEnvVar(System.String@)"/>.
             </remarks>
         </member>
         <member name="M:Au.Path_.IsFullPathExpandEnvVar(System.String@)">
             <summary>
             Expands environment variables and calls <see cref="M:Au.Path_.IsFullPath(System.String)"/>.
-            Returns true if path matches one of these wildcard patterns:
-            	@"?:\*" - local path, like @"C:\a\b.txt". Here ? is A-Z, a-z.
-            	@"?:" - drive name, like @"C:". Here ? is A-Z, a-z. Note: it is considered full path in this library, but for .NET and Windows API it is not full path.
-            	@"\\*" - network path, like @"\\server\share\...". Or has prefix @"\\?\".
+            Returns true if the string is full path, like @"C:\a\b.txt" or @"C:" or @"\\server\share\...":
             </summary>
             <param name="path">
             Any string. Can be null.
             If starts with '%' character, calls <see cref="M:Au.Path_.IsFullPath(System.String)"/> with expanded environment variables (<see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). If it returns true, replaces the passed variable with the expanded path string.
             </param>
             <remarks>
+            Returns true if <paramref name="path"/> matches one of these wildcard patterns:
+            <list type="bullet">
+            <item>@"?:\*" - local path, like @"C:\a\b.txt". Here ? is A-Z, a-z.</item>
+            <item>@"?:" - drive name, like @"C:". Here ? is A-Z, a-z.</item>
+            <item>@"\\*" - network path, like @"\\server\share\...". Or has prefix @"\\?\".</item>
+            </list>
             Supports '/' characters too.
-            Supports only file-system paths. Returns false if path is URL (use <see cref="M:Au.Path_.IsUrl(System.String)"/> instead) or starts with "::".
+            Supports only file-system paths. Returns false if path is URL (<see cref="M:Au.Path_.IsUrl(System.String)"/>) or starts with "::".
             </remarks>
         </member>
         <member name="M:Au.Path_.GetRootLength(System.String)">
@@ -12675,7 +12873,7 @@
             Returns true if name cannot be used for a file name, eg contains '\\' etc characters or is empty.
             More info: <see cref="M:Au.Path_.CorrectFileName(System.String,System.String)"/>.
             </summary>
-            <param name="name">Any string. Can be null. Example: "name.txt".</param>
+            <param name="name">Any string. Example: "name.txt". Can be null.</param>
         </member>
         <member name="M:Au.Path_.GetFileName(System.String)">
             <summary>
@@ -12683,7 +12881,7 @@
             Returns "" if there is no filename.
             Returns null if path is null.
             </summary>
-            <param name="path">Path or filename.</param>
+            <param name="path">Path or filename. Can be null.</param>
             <remarks>
             Similar to <see cref="M:System.IO.Path.GetFileName(System.String)"/>. Some diferences: does not throw exceptions; if ends with '\\' or '/', gets part before it, eg "B" from @"C:\A\B\".
             Supports separators '\\' and '/'.
@@ -12713,7 +12911,7 @@
             Returns "" if there is no filename.
             Returns null if path is null.
             </summary>
-            <param name="path">Path or filename.</param>
+            <param name="path">Path or filename. Can be null.</param>
             <remarks>
             Similar to <see cref="M:System.IO.Path.GetFileNameWithoutExtension(System.String)"/> Some diferences: does not throw exceptions; if ends with '\\' or '/', gets part before it, eg "B" from @"C:\A\B\" (then does not remove extension from it because it is a directory name).
             Supports separators '\\' and '/'.
@@ -12743,7 +12941,7 @@
             Returns "" if there is no extension.
             Returns null if path is null.
             </summary>
-            <param name="path">Path or filename.</param>
+            <param name="path">Path or filename. Can be null.</param>
             <remarks>
             Supports separators '\\' and '/'.
             Like <see cref="M:System.IO.Path.GetExtension(System.String)"/>, but does not throw exceptions.
@@ -12754,17 +12952,26 @@
             Gets filename extension and path part without the extension.
             More info: <see cref="M:Au.Path_.GetExtension(System.String)"/>.
             </summary>
-            <param name="path">Path or filename.</param>
+            <param name="path">Path or filename. Can be null.</param>
             <param name="pathWithoutExtension">Receives path part without the extension. Can be the same variable as path.</param>
+        </member>
+        <member name="M:Au.Path_.FindExtension(System.String)">
+            <summary>
+            Finds filename extension, like ".txt".
+            Returns '.' character index, or -1 if there is no extension.
+            </summary>
+            <param name="path">Path or filename. Can be null.</param>
+            <remarks>
+            Returns -1 if '.' is before '\\' or '/'.
+            </remarks>
         </member>
         <member name="M:Au.Path_.GetDirectoryPath(System.String,System.Boolean)">
             <summary>
             Removes filename part from path. By default also removes separator ('\\' or '/') if it is not after drive name (eg "C:").
             Returns "" if the string is a filename.
-            Returns null if the string is a root (like @"C:\" or "C:" or @"\\server\share" or "http:").
-            Returns null if the string is null.
+            Returns null if the string is null or a root (like @"C:\" or "C:" or @"\\server\share" or "http:").
             </summary>
-            <param name="path">Path or filename.</param>
+            <param name="path">Path or filename. Can be null.</param>
             <param name="withSeparator">
             Don't remove the separator character(s) ('\\' or '/').
             Examples: from @"C:\A\B" gets @"C:\A\", not @"C:\A"; from "http://x.y" gets "http://", not "http:".</param>
@@ -13191,6 +13398,11 @@
         <member name="P:Au.Folders.ProgramFilesCommonX64">
             <summary>More info in class help.</summary>
         </member>
+        <member name="P:Au.Folders.NetFrameworkRuntime">
+            <summary>
+            Returns <see cref="M:System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory"/> without '\\' at the end.
+            </summary>
+        </member>
         <member name="P:Au.Folders.CdDvdDrive">
             <summary>
             Gets CD/DVD drive path, like @"D:\".
@@ -13279,8 +13491,8 @@
         </member>
         <member name="M:Au.AuToolbar.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)">
             <summary>
-            Adds new button as ToolStripButton.
-            Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
+            Adds new button as <see cref="T:System.Windows.Forms.ToolStripButton"/>.
+            Sets its text, icon and Click event handler. Other properties can be specified later. See example.
             Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c> .
             </summary>
             <param name="text">Text.</param>
@@ -13354,28 +13566,34 @@
             m.LastItem.ToolTipText = "tooltip";
             m["Three"] = o => { Print(o.MenuItem.Checked); };
             m.LastMenuItem.Checked = true;
+            m.ExtractIconPathFromCode = true;
+            m["notepad"] = o => Shell.TryRun(Folders.System + "notepad.exe"));
             m.Show();
             </code></example>
         </member>
         <member name="M:Au.AuMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)">
             <summary>
-            Adds new item as ToolStripMenuItem.
-            Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
+            Adds new item as <see cref="T:System.Windows.Forms.ToolStripMenuItem"/>.
+            Sets its text, icon and <b>Click</b> event handler. Other properties can be specified later. See example.
             Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c> .
             </summary>
             <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
-            <param name="onClick">Callback function. Called when the menu item clicked.</param>
+            <param name="onClick">Callback function. Called when clicked the menu item.</param>
             <param name="icon">Can be:
-            string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>. If not full path, searches in <see cref="P:Au.Folders.ThisAppImages"/>; see also <see cref="P:Au.Types.AuBaseMT.IconFlags"/>.
+            string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.Icons.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>. If not full path, searches in <see cref="P:Au.Folders.ThisAppImages"/>; see also <see cref="P:Au.Types.BaseMT.IconFlags" r=""/>.
             string - image name (key) in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageKey"/>).
             int - image index in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
             Icon, Image, Folders.FolderPath.
+            null (default) - no icon. If <see cref="P:Au.Types.BaseMT.ExtractIconPathFromCode" r=""/> == true, extracts icon path from <paramref name="onClick"/> code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
+            "" - no icon.
             </param>
             <example><code>
             var m = new AuMenu();
             m.Add("One", o => Print(o), @"icon file path");
-            m.Add("Two", o => { Print(o.MenuItem.Checked); });
+            m.Add("Two", o => { Print(o.MenuItem.Checked); AuDialog.Show(o.ToString()); });
             m.LastMenuItem.Checked = true;
+            m.ExtractIconPathFromCode = true;
+            m.Add("notepad", o => Shell.TryRun(Folders.System + "notepad.exe"));
             m.Show();
             </code></example>
         </member>
@@ -13395,18 +13613,18 @@
         </member>
         <member name="M:Au.AuMenu.Submenu(System.String,System.Object,System.Action{Au.Types.MTClickArgs})">
             <summary>
-            Adds new item (ToolStripMenuItem) that will open a submenu.
-            Then the add-item functions will add items to its submenu.
+            Adds new item (<see cref="T:System.Windows.Forms.ToolStripMenuItem"/>) that will open a submenu.
+            Then the add-item functions will add items to the submenu.
             Can be used in 2 ways:
             1. <c>using(m.Submenu(...)) { add items; }</c>. See example.
             2. <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="M:Au.AuMenu.EndSubmenu"/>.
             </summary>
             <param name="text">Text.</param>
             <param name="icon"><inheritdoc cref="M:Au.AuMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/></param>
-            <param name="onClick">Callback function. Called when the menu item clicked. Rarely used.</param>
+            <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
             <remarks>
             Submenus inherit these properties of the main menu, set before adding submenus (see example):
-            BackgroundImage, BackgroundImageLayout, ContextMenu, Cursor, Font, ForeColor, ImageList, ImageScalingSize, Renderer, ShowCheckMargin, ShowImageMargin.
+            <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>ContextMenu</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
             </remarks>
             <example><code>
             var m = new AuMenu();
@@ -13428,7 +13646,7 @@
         </member>
         <member name="M:Au.AuMenu.EndSubmenu">
             <summary>
-            Call this to end adding items to the current submenu if Submenu() was called without 'using' and without a callback function that adds submenu items.
+            Call this to end adding items to the current submenu if <see cref="M:Au.AuMenu.Submenu(System.String,System.Object,System.Action{Au.Types.MTClickArgs})"/> was called without 'using' and without a callback function that adds submenu items.
             </summary>
             <example><code>
             var m = new AuMenu();
@@ -13460,13 +13678,13 @@
         </member>
         <member name="M:Au.AuMenu.Submenu(System.String,System.Action{Au.AuMenu},System.Object,System.Action{Au.Types.MTClickArgs})">
             <summary>
-            Adds new item (ToolStripMenuItem) that will open a submenu.
+            Adds new item (<see cref="T:System.Windows.Forms.ToolStripMenuItem"/>) that will open a submenu.
             When showing the submenu first time, your callback function will be called and can add submenu items.
             </summary>
             <param name="text">Text.</param>
             <param name="onOpening">Callback function that should add submenu items.</param>
             <param name="icon"><inheritdoc cref="M:Au.AuMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/></param>
-            <param name="onClick">Callback function. Called when the menu item clicked. Rarely used.</param>
+            <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
             <example><code>
             var m = new AuMenu();
             m["One"] = o => Print(o);
@@ -13490,21 +13708,16 @@
         </member>
         <member name="P:Au.AuMenu.CurrentAddMenu">
             <summary>
-            Gets ToolStripDropDownMenu of the main menu or submenu where currently m.Add(...), m[...]=, m.Separator() and m.Submenu(...) would add new item.
+            Gets <see cref="T:System.Windows.Forms.ToolStripDropDownMenu"/> of the main menu or submenu where new items currently are added.
             </summary>
-            <remarks>
-            Initially it is the main menu.
-            In code of <c>using(m.Submenu(...)) { code; }</c>, <c>m.Submenu(...); code; m.EndSubmenu();</c> and <c>m.Submenu(..., m1 => { code; });</c> it is that submenu.
-            </remarks>
         </member>
         <member name="P:Au.AuMenu.LastMenuItem">
             <summary>
-            Gets the last added item as ToolStripMenuItem.
-            Returns null if it is not a ToolStripMenuItem, eg a button or separator.
-            The item can be added with m.Add(...), m[...]= and m.Submenu(...).
+            Gets the last added item as <see cref="T:System.Windows.Forms.ToolStripMenuItem"/>.
+            Returns null if it is not a <b>ToolStripMenuItem</b>, for example a button or separator.
             </summary>
             <remarks>
-            You can instead use LastItem, which gets ToolStripItem, which is the base class of all supported item types; cast it to a derived type if need.
+            You can instead use <see cref="P:Au.Types.BaseMT.LastItem" r=""/>, which gets <see cref="T:System.Windows.Forms.ToolStripItem"/>, which is the base class of all supported item types.
             </remarks>
         </member>
         <member name="M:Au.AuMenu.Show">
@@ -13544,15 +13757,15 @@
         </member>
         <member name="P:Au.AuMenu.MultiShow">
             <summary>
-            If false, calls Dispose() when the menu is closed.
-            If true, does not call Dispose(); then you can call <b>Show</b> multiple times for the same object.
+            If false, disposes the menu when it is closed.
+            If true, does not dispose. Then you can call <b>Show</b> multiple times for the same object.
             Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control.
             </summary>
             <seealso cref="P:Au.AuMenu.DefaultMultiShow"/>
         </member>
         <member name="P:Au.AuMenu.DefaultMultiShow">
             <summary>
-            Default MultiShow value for all new AuMenu instances.
+            Default <see cref="P:Au.AuMenu.MultiShow"/> value for new <b>AuMenu</b> instances.
             </summary>
         </member>
         <member name="P:Au.AuMenu.ModalAlways">
@@ -13572,8 +13785,7 @@
         </member>
         <member name="P:Au.AuMenu.DefaultActivateMenuWindow">
             <summary>
-            Default ActivateMenuWindow value for AuMenu instances.
-            A AuMenu instance inherits this at the moment it is created.
+            Default <see cref="P:Au.AuMenu.ActivateMenuWindow"/> value for new <b>AuMenu</b> instances.
             </summary>
         </member>
         <member name="P:Au.AuMenu.MouseClosingDistance">
@@ -14538,16 +14750,23 @@
             Returns true if using Debug configuration of Au.dll.
             </summary>
         </member>
-        <member name="F:Au.Debug_.s_mem0">
+        <member name="M:Au.Debug_.LibMemoryGet(System.Boolean)">
             <summary>
             Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
             Works in Release too.
             </summary>
+            <param name="fromAnchor">Get the difference from previous call to <b>LibMemorySetAnchor</b>.</param>
         </member>
-        <member name="M:Au.Debug_.LibPrintMemory">
+        <member name="M:Au.Debug_.LibMemoryPrint(System.Boolean)">
             <summary>
             Prints managed memory size. Uses GC.GetTotalMemory.
             Works in Release too.
+            </summary>
+            <param name="fromAnchor">Get the difference from previous call to <b>LibMemorySetAnchor</b>.</param>
+        </member>
+        <member name="M:Au.Debug_.LibMemorySetAnchor">
+            <summary>
+            Memorizes current managed memory size, so that next call to another <b>LibMemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
             </summary>
         </member>
         <member name="T:Au.Process_">
@@ -16109,8 +16328,7 @@
         <member name="M:Au.Wnd.op_Explicit(System.Windows.Forms.Control)~Au.Wnd">
             <summary>
             Gets the window handle as Wnd from a System.Windows.Forms.Control (or Form etc) variable.
-            Returns default(Wnd) if c is null.
-            If the handle is still not created, the Control auto-creates it (hidden window).
+            Returns default(Wnd) if w is null or the handle is still not created.
             </summary>
         </member>
         <member name="M:Au.Wnd.op_Explicit(System.Windows.Window)~Au.Wnd">
@@ -16154,74 +16372,74 @@
             Formats string $"{handle}  {ClassName}  \"{Name}\"  {ProgramName}  {Rect}".
             </summary>
         </member>
-        <member name="M:Au.Wnd.Send(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Wnd.Send(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Calls API <msdn>SendMessage</msdn>.
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.SendS(System.UInt32,Au.Types.LPARAM,System.String)">
+        <member name="M:Au.Wnd.SendS(System.Int32,Au.Types.LPARAM,System.String)">
             <summary>
             Calls API <msdn>SendMessage</msdn> where lParam is string.
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.SendS(System.UInt32,Au.Types.LPARAM,System.Char[])">
+        <member name="M:Au.Wnd.SendS(System.Int32,Au.Types.LPARAM,System.Char[])">
             <summary>
             Calls API <msdn>SendMessage</msdn> where lParam is char[].
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.SendTimeout(System.Int32,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.Native.SMTO)">
+        <member name="M:Au.Wnd.SendTimeout(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.Native.SMTO)">
             <summary>
             Calls API <msdn>SendMessageTimeout</msdn>.
             Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
         </member>
-        <member name="M:Au.Wnd.SendTimeout(System.Int32,Au.Types.LPARAM@,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.Native.SMTO)">
+        <member name="M:Au.Wnd.SendTimeout(System.Int32,Au.Types.LPARAM@,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.Native.SMTO)">
             <summary>
             Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
             Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
         </member>
-        <member name="M:Au.Wnd.SendTimeoutS(System.Int32,Au.Types.LPARAM@,System.UInt32,Au.Types.LPARAM,System.String,Au.Types.Native.SMTO)">
+        <member name="M:Au.Wnd.SendTimeoutS(System.Int32,Au.Types.LPARAM@,System.Int32,Au.Types.LPARAM,System.String,Au.Types.Native.SMTO)">
             <summary>
             Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
             Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
         </member>
-        <member name="M:Au.Wnd.SendTimeoutS(System.Int32,Au.Types.LPARAM@,System.UInt32,Au.Types.LPARAM,System.Char[],Au.Types.Native.SMTO)">
+        <member name="M:Au.Wnd.SendTimeoutS(System.Int32,Au.Types.LPARAM@,System.Int32,Au.Types.LPARAM,System.Char[],Au.Types.Native.SMTO)">
             <summary>
             Calls API <msdn>SendMessageTimeout</msdn> where lParam is char[].
             Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
         </member>
-        <member name="M:Au.Wnd.SendNotify(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Wnd.SendNotify(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Calls API <msdn>SendNotifyMessage</msdn>.
             Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
         </member>
-        <member name="M:Au.Wnd.Post(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Wnd.Post(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Calls API <msdn>PostMessage</msdn>.
             Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
-            <seealso cref="M:Au.Wnd.Misc.PostThreadMessage(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)"/>
+            <seealso cref="M:Au.Wnd.Misc.PostThreadMessage(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/>
         </member>
         <member name="T:Au.Wnd.Misc">
             <summary>
             Contains miscellaneous static window-related functions and classes, rarely used or useful only for programmers.
             </summary>
         </member>
-        <member name="M:Au.Wnd.Misc.PostThreadMessage(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Wnd.Misc.PostThreadMessage(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Posts a message to the message queue of this thread.
             Calls API <msdn>PostMessage</msdn> with default(Wnd). 
             Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
         </member>
-        <member name="M:Au.Wnd.Misc.PostThreadMessage(System.UInt32,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Wnd.Misc.PostThreadMessage(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Posts a message to the message queue of the specified thread.
             Calls API <msdn>PostThreadMessage</msdn>. 
@@ -16399,7 +16617,7 @@
             <param name="parent">Owner or parent window, or default.</param>
             <param name="controlId">Control id or 0.</param>
             <remarks>
-            Your derived class should override <see cref="M:Au.Wnd.Misc.MyWindow.WndProc(Au.Wnd,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)"/>, which calls the window procedure of window class <paramref name="className"/>.
+            Your derived class should override <see cref="M:Au.Wnd.Misc.MyWindow.WndProc(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/>, which calls the window procedure of window class <paramref name="className"/>.
             The window will be destroyed in these cases: 1. Called <see cref="M:Au.Wnd.Misc.MyWindow.Destroy"/>. 2. Closed by the user or some program/script. 3. When this thread ends. 4. This function called again (then destroys old window and creates new).
             </remarks>
         </member>
@@ -16418,13 +16636,13 @@
             If the window is not destroyed explicitly, the system destroys it when its thread ends.
             </summary>
         </member>
-        <member name="M:Au.Wnd.Misc.MyWindow.WndProc(Au.Wnd,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Wnd.Misc.MyWindow.WndProc(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Calls the window procedure of the window class (see <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/>) and manages the lifetime of this variable.
             Your derived class should override this function, call base.WndProc and return its return value, except when don't need default processing.
             More info: <msdn>Window Procedures</msdn>.
             </summary>
-            <seealso cref="M:Au.Wnd.Misc.PrintMsg(Au.Wnd,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM,System.UInt32[])"/>
+            <seealso cref="M:Au.Wnd.Misc.PrintMsg(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,System.Int32[])"/>
         </member>
         <member name="M:Au.Wnd.Misc.MyWindow.RegisterClass(System.String,Au.Wnd.Misc.MyWindow.WndClassEx)">
             <summary>
@@ -16441,7 +16659,7 @@
             <remarks>
             Calls API <msdn>RegisterClassEx</msdn>.
             The class then can be used in all appdomains of this process. To create windows, use <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/>.
-            Each class derived from MyWindow provides its own window procedure (overrides <see cref="M:Au.Wnd.Misc.MyWindow.WndProc(Au.Wnd,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)"/>). Windows created not with <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/> use API <msdn>DefWindowProc</msdn> as window procedure, and therefore are not useful.
+            Each class derived from MyWindow provides its own window procedure (overrides <see cref="M:Au.Wnd.Misc.MyWindow.WndProc(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/>). Windows created not with <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/> use API <msdn>DefWindowProc</msdn> as window procedure, and therefore are not useful.
             The window class remains registered until this process ends. Don't need to unregister.
             This function can be called multiple times for the same class, for example called once in each appdomain. Next time it just returns class atom.
             Thread-safe.
@@ -16610,9 +16828,9 @@
             Calls API <msdn>RegisterWindowMessage</msdn>.
             </summary>
             <param name="name">Message name. Can be any unique string.</param>
-            <param name="uacEnable">Also call API <msdn>ChangeWindowMessageFilter</msdn> for the message. More info: <see cref="M:Au.Wnd.Misc.UacEnableMessages(System.UInt32[])"/>.</param>
+            <param name="uacEnable">Also call API <msdn>ChangeWindowMessageFilter</msdn> for the message. More info: <see cref="M:Au.Wnd.Misc.UacEnableMessages(System.Int32[])"/>.</param>
         </member>
-        <member name="M:Au.Wnd.Misc.UacEnableMessages(System.UInt32[])">
+        <member name="M:Au.Wnd.Misc.UacEnableMessages(System.Int32[])">
             <summary>
             Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
             It allows processes of lower <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level to send these messages to this process.
@@ -16647,14 +16865,14 @@
             <note type="note"><see cref="T:Au.Process_.UacInfo">UAC</see> blocks messages sent from processes of lower integrity level. Call <see cref="M:Au.Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA"/> before (once).</note>
             </remarks>
         </member>
-        <member name="M:Au.Wnd.Misc.PrintMsg(System.Windows.Forms.Message@,System.UInt32[])">
+        <member name="M:Au.Wnd.Misc.PrintMsg(System.Windows.Forms.Message@,System.Int32[])">
             <summary>
             Writes a Windows message to the output.
             </summary>
             <param name="m"></param>
             <param name="ignore">Messages to not show.</param>
         </member>
-        <member name="M:Au.Wnd.Misc.PrintMsg(Au.Wnd,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM,System.UInt32[])">
+        <member name="M:Au.Wnd.Misc.PrintMsg(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,System.Int32[])">
             <summary>
             Writes a Windows message to the output.
             </summary>
@@ -16664,7 +16882,7 @@
             <param name="lParam"></param>
             <param name="ignore">Messages to not show.</param>
         </member>
-        <member name="M:Au.Wnd.Misc.PrintMsg(Au.Types.Native.MSG@,System.UInt32[])">
+        <member name="M:Au.Wnd.Misc.PrintMsg(Au.Types.Native.MSG@,System.Int32[])">
             <summary>
             Writes a Windows message to the output.
             </summary>
@@ -17940,7 +18158,7 @@
             </param>
             <remarks>
             The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or is a dialog without X button, or just need more time to close it.
-            If the window is of this thread, just calls <see cref="M:Au.Wnd.Send(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)"/> or <see cref="M:Au.Wnd.Post(System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)"/> (if <paramref name="noWait"/>==true) and returns true.
+            If the window is of this thread, just calls <see cref="M:Au.Wnd.Send(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/> or <see cref="M:Au.Wnd.Post(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/> (if <paramref name="noWait"/>==true) and returns true.
             </remarks>
             <seealso cref="M:Au.Wnd.WaitForClosed(System.Double,System.Boolean)"/>
             <example>
@@ -20024,7 +20242,7 @@
         </member>
         <member name="M:Au.Perf.Inst.First(System.Int32)">
             <summary>
-            Calls <see cref="M:Au.Perf.SpeedUpCPU(System.Int32)"/> and <see cref="M:Au.Perf.Inst.First"/>.
+            Calls <see cref="M:Au.Perf.WakeCPU(System.Int32)"/> and <see cref="M:Au.Perf.Inst.First"/>.
             </summary>
         </member>
         <member name="M:Au.Perf.Inst.Next(System.Char)">
@@ -20042,10 +20260,16 @@
             </summary>
             <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
         </member>
-        <member name="P:Au.Perf.Inst.Times">
+        <member name="M:Au.Perf.Inst.ToString">
             <summary>
             Formats a string from time values collected by calling <see cref="M:Au.Perf.Inst.First"/> and <see cref="M:Au.Perf.Inst.Next(System.Char)"/>.
             The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
+            </summary>
+        </member>
+        <member name="M:Au.Perf.Inst.ToArray">
+            <summary>
+            Return array of time values collected by calling <see cref="M:Au.Perf.Inst.First"/> and <see cref="M:Au.Perf.Inst.Next(System.Char)"/>.
+            Each element is the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
             </summary>
         </member>
         <member name="P:Au.Perf.Inst.TimeTotal">
@@ -20071,7 +20295,7 @@
         <member name="P:Au.Perf.Incremental">
             <summary>
             If true, times of each new First/Next/Next... measurement are added to previous measurement times.
-            Finally you can call <see cref="M:Au.Perf.Write"/> or <see cref="P:Au.Perf.Times"/> to get the sums.
+            Finally you can call <see cref="M:Au.Perf.Write"/> or <see cref="M:Au.Perf.ToString"/> to get the sums.
             Usually used to measure code in loops. See example.
             </summary>
             <example>
@@ -20098,7 +20322,7 @@
         </member>
         <member name="M:Au.Perf.First(System.Int32)">
             <summary>
-            Calls <see cref="M:Au.Perf.SpeedUpCPU(System.Int32)"/> and <see cref="M:Au.Perf.First"/>.
+            Calls <see cref="M:Au.Perf.WakeCPU(System.Int32)"/> and <see cref="M:Au.Perf.First"/>.
             </summary>
         </member>
         <member name="M:Au.Perf.Next(System.Char)">
@@ -20132,10 +20356,16 @@
             </summary>
             <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
         </member>
-        <member name="P:Au.Perf.Times">
+        <member name="M:Au.Perf.ToString">
             <summary>
             Formats a string from time values collected by calling <see cref="M:Au.Perf.First"/> and <see cref="M:Au.Perf.Next(System.Char)"/>.
             The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
+            </summary>
+        </member>
+        <member name="M:Au.Perf.ToArray">
+            <summary>
+            Return array of time values collected by calling <see cref="M:Au.Perf.First"/> and <see cref="M:Au.Perf.Next(System.Char)"/>.
+            Each element is the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
             </summary>
         </member>
         <member name="P:Au.Perf.TimeTotal">
@@ -20153,14 +20383,16 @@
             <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
             </summary>
         </member>
-        <member name="M:Au.Perf.SpeedUpCPU(System.Int32)">
+        <member name="M:Au.Perf.WakeCPU(System.Int32)">
             <summary>
-            Makes CPU to run at full speed.
+            Executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
             </summary>
             <param name="timeMilliseconds">How long to speed up CPU, milliseconds. The minimal required time probably is about 100 ms, but depends on CPU.</param>
             <remarks>
-            To save energy, most CPU don't run at full speed when not actively used. Then code speed measurements can be incorrect when you want to measure it when CPU is running at full speed.
-            This function executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
+            Code speed measurements often are misleading because of variable CPU speed. Most CPU don't run at full speed when not actively used.
+            
+            You can make CPU speed constant in Control Panel -> Power Options -> ... Advanced -> Processor power management -> Minimum or maximum power state.
+            There are programs that show current CPU speed. For example HWMonitor.
             </remarks>
         </member>
     </members>

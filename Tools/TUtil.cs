@@ -19,8 +19,6 @@ using System.Drawing;
 using System.Linq;
 //using System.Xml.Linq;
 
-//using SG = SourceGrid;
-
 #if USE_CODEANALYSIS_REF
 using Microsoft.CodeAnalysis.CSharp.Scripting;
 using Microsoft.CodeAnalysis.Scripting;
@@ -249,7 +247,7 @@ namespace Au.Tools
 			CheckBox _captureCheckbox;
 			Func<RECT?> _cbGetRect;
 			const string c_propName = "Au.Capture";
-			const uint c_stopMessage = Api.WM_USER + 242;
+			const int c_stopMessage = Api.WM_USER + 242;
 
 			public bool Capturing { get; private set; }
 
@@ -330,7 +328,7 @@ namespace Au.Tools
 			public bool WndProc(ref Message m, out bool capture)
 			{
 				capture = false;
-				switch((uint)m.Msg) {
+				switch(m.Msg) {
 				case Api.WM_HOTKEY:
 					if((int)m.WParam == 1) {
 						capture = true; return true;
@@ -360,7 +358,7 @@ namespace Au.Tools
 		//Namespaces and references for 'also' lambda, to use when testing.
 		//FUTURE: user-defined imports and references. Probably as script header, where can bu used #r, #load, using, etc.
 		static string[] s_testImports = { "Au", "Au.Types", "Au.NoClass", "System", "System.Collections.Generic", "System.Text.RegularExpressions", "System.Windows.Forms", "System.Drawing", "System.Linq" };
-		static Assembly[] s_testReferences = { Assembly.GetAssembly(typeof(Wnd)) }; //info: somehow don't need to add System.Windows.Forms, System.Drawing.
+		static Assembly[] s_testReferences = { Assembly.GetAssembly(typeof(Wnd)) }; //info: somehow don't need to add System.Windows.Forms, System.Drawing. TODO: test linq and regex
 
 #if USE_CODEANALYSIS_REF
 		//C# script compiler setup:
@@ -380,6 +378,8 @@ namespace Au.Tools
 		//	Issues:
 		//		Adds System.Collections.Immutable.dll to the main output folder.
 		//			Tried to edit app.config etc, unsuccessfully.
+		//			Workaround (rejected): add reference System.Collections.Immutable.dll to the exe project too (although not used), and make "copy local" = false.
+		//			Good: Editor project doesn't add it, if it uses these references directly (for scripting).
 		//		Also, in app.config must be:
 		//			<assemblyBinding xmlns = "urn:schemas-microsoft-com:asm.v1" >
 		//				<probing privatePath="Compiler"/>
@@ -402,13 +402,16 @@ namespace Au.Tools
 		/// <param name="bTest">The 'Test' button. This function disables it while executing code.</param>
 		/// <param name="lSpeed">Label control that displays speed.</param>
 		/// <param name="getRect">Callback function that returns object's rectangle in screen. Called when object has been found.</param>
+		/// <remarks>
+		/// The test code is executed in this thread. Else would get invalid Acc etc. If need, caller can use Task.Run.
+		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var r = await TUtil.RunTestFindObject(code, _wndVar, _wnd, _bTest, _lSpeed, o => (o as Acc).Rect);
 		/// ]]></code>
 		/// </example>
 		internal static async Task<TestFindObjectResults> RunTestFindObject(
-			string code, string wndVar, Wnd wnd, Button bTest, Label lSpeed, Func<object, RECT> getRect)
+			string code, string wndVar, Wnd wnd, Button bTest, Label lSpeed, Func<object, RECT> getRect, bool activateWindow = false)
 		{
 			if(Empty(code)) return default;
 			Form form = lSpeed.FindForm();
@@ -418,21 +421,27 @@ namespace Au.Tools
 			//Perf.First();
 
 			var b = new StringBuilder();
+			if(activateWindow) b.Append("((Wnd)(LPARAM)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
+			b.AppendLine("var _p_ = Perf.StartNew();");
 			var lines = code.SplitLines_(true);
 			int lastLine = lines.Length - 1;
 			for(int i = 0; i < lastLine; i++) b.AppendLine(lines[i]);
-			b.AppendLine("var _p_ = Perf.StartNew(); var _a_ =");
+			b.AppendLine("_p_.Next(); var _a_ =");
 			b.AppendLine(lines[lastLine]);
-			b.AppendLine($"_p_.Next(); return (_p_.TimeTotal, _a_, {wndVar});");
+			b.AppendLine($"_p_.Next(); return (_p_.ToArray(), _a_, {wndVar});");
 			code = b.ToString(); //Print(code);
 
-			(long speed, object obj, Wnd wnd) r = default;
+			(long[] speed, object obj, Wnd wnd) r = default;
 			bool ok = false;
 			try {
 				bTest.Enabled = false;
 				var so = ScriptOptions.Default.WithReferences(s_testReferences).WithImports(s_testImports);
-				r = await CSharpScript.EvaluateAsync<(long, object, Wnd)>(code, so);
+				r = await CSharpScript.EvaluateAsync<(long[], object, Wnd)>(code, so);
 				ok = true;
+
+				//note: although named Async, the script runs in this thread.
+				//	Bad: blocks current UI thread. But maybe not so bad.
+				//	Good: we get valid Acc result. Else it would be marshalled for a script thread.
 			}
 			catch(CompilationErrorException e) {
 				var es = String.Join("\r\n", e.Diagnostics);
@@ -456,8 +465,12 @@ namespace Au.Tools
 			//Perf.NW();
 			//Print(r);
 
-			var t = Math.Round((double)r.speed / 1000, r.speed < 1000 ? 2 : (r.speed < 10000 ? 1 : 0));
-			var sTime = t.ToString_() + " ms";
+			double _SpeedMcsToMs(long tn) => Math.Round(tn / 1000d, tn < 1000 ? 2 : (tn < 10000 ? 1 : 0));
+			double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of Wnd.Find and Object.Find
+			string sTime;
+			if(lastLine == 1 && lines[0].Length == 6) sTime = t1.ToString_() + " ms"; //only Wnd.Find: "Wnd w;\r\nw = Wnd.Find(...);"
+			else sTime = t0.ToString_() + "+" + t1.ToString_() + " ms";
+
 			if(r.obj is Wnd w1 && w1.Is0) r.obj = null;
 			if(r.obj != null) {
 				lSpeed.ForeColor = Form.DefaultForeColor;
@@ -489,7 +502,7 @@ namespace Au.Tools
 				TUtil.ShowOsdRect(r.wnd.Rect, true);
 				return default;
 			}
-			return new TestFindObjectResults() { obj = r.obj, speed = r.speed };
+			return new TestFindObjectResults() { obj = r.obj, speed = r.speed[1] };
 		}
 #endif
 		//FUTURE: ngen C# compiler assemblies. Now each Windows update unngens most of them.

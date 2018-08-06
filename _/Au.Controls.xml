@@ -612,17 +612,22 @@
             This function can get binary string (with '\0' characters).
             </remarks>
         </member>
-        <member name="M:Au.Controls.SciText.ClearText">
+        <member name="M:Au.Controls.SciText.ClearText(System.Boolean,System.Boolean)">
             <summary>
-            Removes all text.
-            Uses SCI_CLEARALL.
+            Removes all text (SCI_CLEARALL).
+            For InitReadOnlyAlways controls, noUndo and noNotif must be false (asserts), because Undo and notifications are disabled when creating control.
             </summary>
+            <param name="noUndo">Cannot be undone; clear Undo buffer.</param>
+            <param name="noNotif">Don't send 'modified' notifications.</param>
         </member>
-        <member name="M:Au.Controls.SciText.SetText(System.String,System.Boolean)">
+        <member name="M:Au.Controls.SciText.SetText(System.String,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Replaces all text.
+            For InitReadOnlyAlways controls, noUndo and noNotif must be false (asserts), because Undo and notifications are disabled when creating control.
             </summary>
             <param name="s">Text.</param>
+            <param name="noUndo">Cannot be undone; clear Undo buffer.</param>
+            <param name="noNotif">Don't send 'modified' notifications.</param>
             <param name="ignoreTags">Don't parse tags, regardless of SC.TagsStyle.</param>
         </member>
         <member name="M:Au.Controls.SciText.AppendText(System.String,System.Boolean,System.Boolean,System.Boolean)">
@@ -792,6 +797,12 @@
             Occurs when any Scintilla notification is received.
             </summary>
         </member>
+        <member name="P:Au.Controls.AuScintilla.DisableModifiedNotifications">
+            <summary>
+            On SCN_MODIFIED notifications suppress <see cref="M:Au.Controls.AuScintilla.OnSciNotify(Au.Controls.Sci.SCNotification@)"/> and <see cref="E:Au.Controls.AuScintilla.SciNotify"/>.
+            Use to temporarily disable 'modified' notifications. Don't use SCI_SETMODEVENTMASK for it, because then will not work tags and images.
+            </summary>
+        </member>
         <member name="M:Au.Controls.AuScintilla.CallRetPtr(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Sends a Scintilla message to the control and returns LPARAM.
@@ -880,11 +891,6 @@
         <member name="P:Au.Controls.AuScintilla.WrapLines">
             <summary>
             Word-wrap.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.AuScintilla.Text">
-            <summary>
-            Gets or sets all text.
             </summary>
         </member>
         <member name="T:Au.Controls.SciTags">

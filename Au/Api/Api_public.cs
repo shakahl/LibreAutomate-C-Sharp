@@ -103,10 +103,10 @@ namespace Au.Types
 		public struct MSG
 		{
 			public Wnd hwnd;
-			public uint message;
+			public int message;
 			public LPARAM wParam;
 			public LPARAM lParam;
-			public uint time;
+			public int time;
 			public POINT pt;
 
 			public override string ToString()
@@ -119,7 +119,7 @@ namespace Au.Types
 		/// <tocexclude />
 		public struct GUITHREADINFO
 		{
-			public uint cbSize;
+			public int cbSize;
 			public uint flags;
 			public Wnd hwndActive;
 			public Wnd hwndFocus;
@@ -163,7 +163,7 @@ namespace Au.Types
 		{
 			public POINT pt;
 			public Wnd hwnd;
-			public uint wHitTestCode;
+			public int wHitTestCode;
 			public LPARAM dwExtraInfo;
 		}
 
@@ -173,7 +173,7 @@ namespace Au.Types
 		{
 			public LPARAM lParam;
 			public LPARAM wParam;
-			public uint message;
+			public int message;
 			public Wnd hwnd;
 		}
 
@@ -184,7 +184,7 @@ namespace Au.Types
 			public LPARAM lResult;
 			public LPARAM lParam;
 			public LPARAM wParam;
-			public uint message;
+			public int message;
 			public Wnd hwnd;
 		}
 
@@ -206,7 +206,7 @@ namespace Au.Types
 
 		/// <summary><msdn>WNDPROC</msdn></summary>
 		/// <tocexclude />
-		public delegate LPARAM WNDPROC(Wnd w, uint msg, LPARAM wParam, LPARAM lParam);
+		public delegate LPARAM WNDPROC(Wnd w, int msg, LPARAM wParam, LPARAM lParam);
 
 		/// <summary><msdn>SetWindowPos</msdn></summary>
 		/// <tocexclude />

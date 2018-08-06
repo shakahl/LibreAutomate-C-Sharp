@@ -143,7 +143,7 @@ namespace Au.Controls
 			//Wnd.Misc.PrintMsg(ref m);
 			//LPARAM WP = m.WParam, LP = m.LParam;
 
-			switch((uint)m.Msg) {
+			switch(m.Msg) {
 			case Api.WM_MOUSEACTIVATE:
 				m.Result = (IntPtr)(((Wnd)_TopLevelParent).HasExStyle(Native.WS_EX.NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
 				return;
@@ -167,7 +167,7 @@ namespace Au.Controls
 		//Then base.OnFontChanged creates parked control + drop-down etc.
 		protected override void OnFontChanged(EventArgs e)
 		{
-			//DebugPrintFunc();
+			//Debug_.PrintFunc();
 			if(!IsHandleCreated) return;
 			base.OnFontChanged(e);
 		}
@@ -177,7 +177,7 @@ namespace Au.Controls
 			//Wnd.Misc.PrintMsg(ref m);
 			//LPARAM WP = m.WParam, LP = m.LParam;
 
-			switch((uint)m.Msg) {
+			switch(m.Msg) {
 			case Api.WM_MOUSEACTIVATE:
 				m.Result = (IntPtr)(((Wnd)this.TopLevelControl).HasExStyle(Native.WS_EX.NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
 				return;

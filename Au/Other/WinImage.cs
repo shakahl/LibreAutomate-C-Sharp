@@ -227,7 +227,7 @@ namespace Au
 		/// <item>
 		/// string - path of .png or .bmp file.
 		/// If not full path, uses <see cref="Folders.ThisAppImages"/>.
-		/// If the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file @"C:\X.png" not found. Alternatively you can use code like <c>using(var b = Project.Properties.Resources.X) WinImage.Find(w, b);</c>.
+		/// If the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file @"C:\X.png" not found.
 		/// </item>
 		/// <item>
 		/// string that starts with "image:" or "~:" - Base64-encoded .png or .bmp image embedded in script.

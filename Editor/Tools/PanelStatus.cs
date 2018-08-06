@@ -56,7 +56,7 @@ class PanelStatus :Control
 #if MOUSE_INFO_FAST_RESPONSE
 		_timer = new Timer_(_MouseInfo);
 #endif
-		Program.Timer1s += Program_Timer1s;
+		Timer1s += _Program_Timer1s;
 	}
 
 	private void _c_HandleCreated(object sender, EventArgs e)
@@ -73,7 +73,7 @@ class PanelStatus :Control
 	protected override void Dispose(bool disposing)
 	{
 		//Print(disposing);
-		Program.Timer1s -= Program_Timer1s;
+		Program.Timer1s -= _Program_Timer1s;
 		base.Dispose(disposing);
 	}
 
@@ -85,10 +85,10 @@ class PanelStatus :Control
 
 	void _SetText(string text)
 	{
-		_c.Text = text;
+		_c.ST.SetText(text);
 	}
 
-	private void Program_Timer1s()
+	private void _Program_Timer1s()
 	{
 #if MOUSE_INFO_FAST_RESPONSE
 		if(_isMyTimer) return;

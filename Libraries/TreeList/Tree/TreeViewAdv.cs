@@ -374,14 +374,17 @@ namespace Aga.Controls.Tree
 
 		protected override void OnSizeChanged(EventArgs e)
 		{
+			//if(IsHandleCreated) Print("OnSizeChanged");
 			UpdateScrollBars();
 			base.OnSizeChanged(e);
 		}
 
-		protected override void OnHandleCreated(EventArgs e)
-		{
-			UpdateScrollBars();
-		}
+		//protected override void OnHandleCreated(EventArgs e)
+		//{
+		//	//Print("OnHandleCreated");
+		//	base.OnHandleCreated(e);
+		//	UpdateScrollBars();
+		//}
 
 		public void UpdateScrollBars()
 		{

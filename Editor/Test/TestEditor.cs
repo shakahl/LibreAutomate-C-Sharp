@@ -19,6 +19,11 @@ using System.Xml.Linq;
 using Au;
 using Au.Types;
 using static Au.NoClass;
+using static Program;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using System.Collections.Immutable;
 
 #if TEST
 partial class ThisIsNotAFormFile { }
@@ -51,5 +56,30 @@ partial class EForm
 		Application.ApplicationExit += (unu, sed) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with WinHook) 
 	}
 	static Au.Util.WinHook _hook;
+
+	public static void TestParsing()
+	{
+		var code = Panels.Editor.ActiveDoc.Text;
+
+		var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Au.dll" };
+		//var sRef = new string[] { typeof(object).Assembly.Location };
+
+		var references = new List<PortableExecutableReference>();
+		foreach(var s in sRef) {
+			//references.Add(MetadataReference.CreateFromFile())
+			references.Add(MetadataReference.CreateFromFile(s));
+		}
+
+		//Microsoft.CodeAnalysis.Text.SourceText.From()
+		//var po=new CSharpParseOptions(LanguageVersion.)
+		var tree = CSharpSyntaxTree.ParseText(code);
+
+		//Print(tree.);
+
+
+
+		//var options = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true);
+		//var compilation = CSharpCompilation.Create(name, new[] { tree }, references, options);
+	}
 }
 #endif

@@ -168,7 +168,7 @@ namespace Au.Util
 				}
 
 				bool call = false;
-				uint m = x.Msg.message;
+				int m = x.Msg.message;
 				if(m >= Api.WM_MOUSEFIRST && m <= Api.WM_MOUSELAST) {
 					if(m == Api.WM_LBUTTONUP) {
 						if(R = (mouseButton & MButtons.Left) != 0) break;

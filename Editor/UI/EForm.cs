@@ -70,11 +70,9 @@ partial class EForm :Form
 		//Perf.Next();
 		Timer_.After(1, () =>
 		{
-			//Perf.NW();
 			Perf.Next();
-			//AuDialog.Show("", Perf.Times);
-			Print(Perf.Times);
-			//AuDialog.Show(Perf.Times, IsWinEventHookInstalled(EVENT_OBJECT_CREATE).ToString()); //IsWinEventHookInstalled always true (false positive, as documented)
+			Perf.Write();
+			//AuDialog.Show(Perf.ToString(), IsWinEventHookInstalled(EVENT_OBJECT_CREATE).ToString()); //IsWinEventHookInstalled always true (false positive, as documented)
 			//GC.Collect();
 
 			CommandLine.OnAfterCreatedFormAndOpenedCollection();
@@ -85,9 +83,15 @@ partial class EForm :Form
 		base.OnLoad(e);
 	}
 
+	protected override void OnFormClosed(FormClosedEventArgs e)
+	{
+		base.OnFormClosed(e);
+		Panels.Files.UnloadOnFormClosed();
+	}
+
 	protected override void WndProc(ref Message m)
 	{
-		Wnd w = (Wnd)this; uint msg = (uint)m.Msg; LPARAM wParam = m.WParam, lParam = m.LParam;
+		Wnd w = (Wnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
 		//var s = m.ToString();
 
 		//switch(msg) {
@@ -97,7 +101,7 @@ partial class EForm :Form
 
 		base.WndProc(ref m);
 
-		switch(msg) {
+		switch(m.Msg) {
 		case Api.WM_CREATE:
 			//Print(w.Get.Children().Length); //0
 			if(Settings.Get("wndPos", out string wndPos))
@@ -137,7 +141,7 @@ partial class EForm :Form
 	{
 		public bool PreFilterMessage(ref Message m)
 		{
-			//switch((uint)m.Msg) {
+			//switch(m.Msg) {
 			//case Api.WM_PAINT:
 			//case Api.WM_TIMER:
 			//case Api.WM_MOUSEMOVE:
@@ -148,7 +152,7 @@ partial class EForm :Form
 			//}
 			//Print(m);
 
-			switch((uint)m.Msg) {
+			switch(m.Msg) {
 			case Api.WM_MOUSEWHEEL: //let's scroll the mouse control, not the focused control
 				var w1 = Wnd.FromMouse();
 				if(w1.IsOfThisThread) m.HWnd = w1.Handle;

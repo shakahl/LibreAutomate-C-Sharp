@@ -276,12 +276,12 @@ namespace Au
 				for(long timePrev = 0; ;) {
 					if(stopVar != null && stopVar.waitVar) return nHandles + 1;
 
-					uint timeSlice = (all && doEvents) ? 15u : 300u; //support Thread.Abort: call API in loop with small timeout. //TODO: test
+					int timeSlice = (all && doEvents) ? 15 : 300; //support Thread.Abort: call API in loop with small timeout. //TODO: test
 					if(timeMS > 0) {
 						long timeNow = Time.MillisecondsWithoutComputerSleepTime;
 						if(timePrev > 0) timeMS -= timeNow - timePrev;
 						if(timeMS <= 0) return Api.WAIT_TIMEOUT;
-						if(timeSlice > timeMS) timeSlice = (uint)timeMS;
+						if(timeSlice > timeMS) timeSlice = (int)timeMS;
 						timePrev = timeNow;
 					} else if(timeMS == 0) timeSlice = 0;
 

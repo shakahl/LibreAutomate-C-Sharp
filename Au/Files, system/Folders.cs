@@ -421,6 +421,12 @@ namespace Au
 		//The normal retrieving method for these folders is broken. Fails even on 64-bit OS if process is 32-bit.
 
 		/// <summary>
+		/// Returns <see cref="RuntimeEnvironment.GetRuntimeDirectory"/> without '\\' at the end.
+		/// </summary>
+		public static FolderPath NetFrameworkRuntime => __NetFrameworkRuntime ?? (__NetFrameworkRuntime = RuntimeEnvironment.GetRuntimeDirectory().TrimEnd('\\'));
+		static string __NetFrameworkRuntime;
+
+		/// <summary>
 		/// Gets CD/DVD drive path, like @"D:\".
 		/// Returns null if unavailable.
 		/// </summary>

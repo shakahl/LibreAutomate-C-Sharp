@@ -116,11 +116,11 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Calls <see cref="SpeedUpCPU"/> and <see cref="First()"/>.
+			/// Calls <see cref="WakeCPU"/> and <see cref="First()"/>.
 			/// </summary>
 			public void First(int timeSpeedUpCPU)
 			{
-				SpeedUpCPU(timeSpeedUpCPU);
+				WakeCPU(timeSpeedUpCPU);
 				First();
 			}
 
@@ -144,7 +144,7 @@ namespace Au
 			public void Write()
 			{
 				if(!_canWrite) return;
-				var s = Times;
+				var s = ToString();
 				if(s != null) Output.Write(s);
 			}
 
@@ -158,45 +158,61 @@ namespace Au
 			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>.
 			/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 			/// </summary>
-			public string Times
+			public override string ToString()
 			{
-				get
-				{
-					int i, n = _counter;
-					if(n == 0) return null;
-					if(n > _nElem) n = _nElem;
-					double freq = 1000000.0 / Stopwatch.Frequency;
-					//long _f; QueryPerformanceFrequency(out _f); double freq = 1000000.0 / _f;
-					bool average = false; int nMeasurements = 1;
+				using(new Util.LibStringBuilder(out var b)) {
+					b.Append("speed:");
+					_Results(Math.Min(_counter, _nElem), b, null);
+					return b.ToString();
+				}
+			}
 
-					using(new Util.LibStringBuilder(out var b)) {
-						b.Append("speed:");
+			/// <summary>
+			/// Return array of time values collected by calling <see cref="First"/> and <see cref="Next"/>.
+			/// Each element is the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
+			/// </summary>
+			public long[] ToArray()
+			{
+				int n = Math.Min(_counter, _nElem);
+				var a = new long[n];
+				_Results(n, null, a);
+				return a;
+			}
 
-						fixed (long* p = _a) fixed (char* c = _aMark) {
-							g1:
-							double t = 0.0, tPrev = 0.0;
-							for(i = 0; i < n; i++) {
-								b.Append("  ");
-								if(c[i] != '\0') b.Append(c[i]).Append('=');
-								t = freq * p[i];
-								double d = t - tPrev; //could add 0.5 to round up, but assume that Stopwatch.GetTimestamp() call time is up to 0.5.
-								if(average) d /= nMeasurements;
-								b.Append((long)d);
-								tPrev = t;
-							}
+			void _Results(int n, StringBuilder b, long[] a)
+			{
+				if(n == 0) return;
+				double freq = 1000000.0 / Stopwatch.Frequency;
+				//long _f; QueryPerformanceFrequency(out _f); double freq = 1000000.0 / _f;
+				bool average = false; int nMeasurements = 1;
 
-							if(n > 1) {
-								if(average) t /= nMeasurements;
-								b.Append("  (").Append((long)t).Append(")");
-							}
-
-							if(!average && _incremental && (nMeasurements = _nMeasurements) > 1) {
-								average = true;
-								b.Append(";  measured ").Append(nMeasurements).Append(" times, average");
-								goto g1;
-							}
+				fixed (long* p = _a) fixed (char* c = _aMark) {
+					g1:
+					double t = 0d, tPrev = 0d;
+					for(int i = 0; i < n; i++) {
+						t = freq * p[i];
+						double d = t - tPrev; tPrev = t; //could add 0.5 to round up, but assume that Stopwatch.GetTimestamp() call time is 0 - 0.5.
+						if(average) d /= nMeasurements;
+						long dLong = (long)d;
+						if(b != null) {
+							b.Append("  ");
+							if(c[i] != '\0') b.Append(c[i]).Append('=');
+							b.Append(dLong.ToString());
+						} else {
+							a[i] = dLong;
 						}
-						return b.ToString();
+					}
+					if(b == null) return;
+
+					if(n > 1) {
+						if(average) t /= nMeasurements;
+						b.Append("  (").Append((long)t).Append(")");
+					}
+
+					if(!average && _incremental && (nMeasurements = _nMeasurements) > 1) {
+						average = true;
+						b.Append(";  measured ").Append(nMeasurements).Append(" times, average");
+						goto g1;
 					}
 				}
 			}
@@ -252,7 +268,7 @@ namespace Au
 
 		/// <summary>
 		/// If true, times of each new First/Next/Next... measurement are added to previous measurement times.
-		/// Finally you can call <see cref="Write"/> or <see cref="Times"/> to get the sums.
+		/// Finally you can call <see cref="Write"/> or <see cref="ToString"/> to get the sums.
 		/// Usually used to measure code in loops. See example.
 		/// </summary>
 		/// <example>
@@ -284,7 +300,7 @@ namespace Au
 		public static void First() { _SM->First(); }
 
 		/// <summary>
-		/// Calls <see cref="SpeedUpCPU"/> and <see cref="First()"/>.
+		/// Calls <see cref="WakeCPU"/> and <see cref="First()"/>.
 		/// </summary>
 		public static void First(int timeSpeedUpCPU) { _SM->First(timeSpeedUpCPU); }
 
@@ -323,7 +339,13 @@ namespace Au
 		/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>.
 		/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 		/// </summary>
-		public static string Times => _SM->Times;
+		public static new string ToString() => _SM->ToString();
+
+		/// <summary>
+		/// Return array of time values collected by calling <see cref="First"/> and <see cref="Next"/>.
+		/// Each element is the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
+		/// </summary>
+		public static long[] ToArray() => _SM->ToArray();
 
 		/// <summary>
 		/// Gets the number of microseconds between <see cref="First"/> and the last <see cref="Next"/>.
@@ -341,17 +363,19 @@ namespace Au
 		public static void ExecuteMulti(int countAll, int countEach, params Action[] codes) { _SM->ExecuteMulti(countAll, countEach, codes); }
 
 		/// <summary>
-		/// Makes CPU to run at full speed.
+		/// Executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
 		/// </summary>
 		/// <param name="timeMilliseconds">How long to speed up CPU, milliseconds. The minimal required time probably is about 100 ms, but depends on CPU.</param>
 		/// <remarks>
-		/// To save energy, most CPU don't run at full speed when not actively used. Then code speed measurements can be incorrect when you want to measure it when CPU is running at full speed.
-		/// This function executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
+		/// Code speed measurements often are misleading because of variable CPU speed. Most CPU don't run at full speed when not actively used.
+		/// 
+		/// You can make CPU speed constant in Control Panel -> Power Options -> ... Advanced -> Processor power management -> Minimum or maximum power state.
+		/// There are programs that show current CPU speed. For example HWMonitor.
 		/// </remarks>
-		public static void SpeedUpCPU(int timeMilliseconds = 200)
+		public static void WakeCPU(int timeMilliseconds = 200)
 		{
 			int n = 0;
-			for(long t0 = Time.Microseconds; Time.Microseconds - t0 < timeMilliseconds * 1000L; n++) {}
+			for(long t0 = Time.Microseconds; Time.Microseconds - t0 < timeMilliseconds * 1000L; n++) { }
 			//Print(n);
 		}
 	}

@@ -37,9 +37,11 @@
 	<Menu>
 		<Menu_File>
 			<File_New>
-				<File_NewScript i="_new" hk="Ctrl+N"/>
+				<File_NewScript i="fileScript" hk="Ctrl+N"/>
+				<File_NewClass i="fileClass"/>
+				<File_NewFolder i="folder"/>
+				<File_NewApp/>
 				<File_NewLibrary/>
-				<File_NewFolder i="NewFolder_16x"/>
 				<File_Templates dd=""/>
 				<File_Import t="Import..." i="open"/>
 			</File_New>

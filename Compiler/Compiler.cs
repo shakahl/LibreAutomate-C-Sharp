@@ -51,12 +51,12 @@ namespace Au.Compiler
 
 			//message loop (not Application.Run() because then loads slower etc)
 			Native.MSG m;
-			while(Api.GetMessage(out m, default, 0, 0) > 0) { Api.DispatchMessage(ref m); }
+			while(Api.GetMessage(out m, default, 0, 0) > 0) { Api.DispatchMessage(m); }
 		}
 
 		class MsgWindow :Wnd.Misc.MyWindow
 		{
-			public override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+			protected override LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
 			{
 				switch(message) {
 				case Api.WM_USER:

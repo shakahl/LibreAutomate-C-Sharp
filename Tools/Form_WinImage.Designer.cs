@@ -51,6 +51,7 @@
 			this._info.AccessibleName = "_info";
 			this._info.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+			this._info.DisableModifiedNotifications = false;
 			this._info.Location = new System.Drawing.Point(8, 8);
 			this._info.Name = "_info";
 			this._info.Size = new System.Drawing.Size(600, 56);
@@ -60,7 +61,7 @@
 			// 
 			this._lSpeed.Location = new System.Drawing.Point(87, 109);
 			this._lSpeed.Name = "_lSpeed";
-			this._lSpeed.Size = new System.Drawing.Size(81, 15);
+			this._lSpeed.Size = new System.Drawing.Size(89, 15);
 			this._lSpeed.TabIndex = 2;
 			this._toolTip.SetToolTip(this._lSpeed, "Shows the Test execution time. Red if not found.");
 			// 
@@ -166,6 +167,7 @@
 			this._code.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
+			this._code.DisableModifiedNotifications = false;
 			this._code.Location = new System.Drawing.Point(8, 272);
 			this._code.Name = "_code";
 			this._code.Size = new System.Drawing.Size(600, 104);

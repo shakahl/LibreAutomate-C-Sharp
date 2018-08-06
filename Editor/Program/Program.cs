@@ -29,6 +29,8 @@ static class Program
 	/// The main entry point for the application.
 	/// </summary>
 	[STAThread]
+	//[LoaderOptimization(LoaderOptimization.MultiDomain)] //shares all assembles; does not unload assemblies; very slow DoCallback.
+	[LoaderOptimization(LoaderOptimization.MultiDomainHost)] //shares only GAC assemblies; unloads non-GAC assemblies.
 	static void Main(string[] args)
 	{
 		try {
@@ -40,9 +42,13 @@ static class Program
 
 			Perf.First();
 
-			//TODO: test this
-			//ProfileOptimization.SetProfileRoot("Q:\\Profiles\\");
-			//ProfileOptimization.StartProfile("Editor");
+#if !DEBUG
+			var fProfile = Folders.ThisAppDataLocal + "ProfileOptimization";
+			Files.CreateDirectory(fProfile);
+			ProfileOptimization.SetProfileRoot(fProfile);
+			ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 640 -> 470 ms (ngen 267). Makes compiler startup faster 4000 -> 2500 (ngen 670).
+			Perf.Next();
+#endif
 
 			if(CommandLine.OnProgramStarted(args)) return;
 

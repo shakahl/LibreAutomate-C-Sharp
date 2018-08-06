@@ -29,16 +29,16 @@ namespace Au.Types
 
 		/// <summary>
 		/// Gets the native size of a struct variable.
-		/// Returns (uint)Marshal.SizeOf(typeof(T)).
+		/// Returns Marshal.SizeOf(typeof(T)).
 		/// Speed: the same (in Release config) as Marshal.SizeOf(typeof(T)), and 2 times faster than Marshal.SizeOf(v).
 		/// </summary>
-		internal static uint SizeOf<T>(T v) { return (uint)Marshal.SizeOf(typeof(T)); }
+		internal static int SizeOf<T>(T v) { return Marshal.SizeOf(typeof(T)); }
 
 		/// <summary>
 		/// Gets the native size of a type.
-		/// Returns (uint)Marshal.SizeOf(typeof(T)).
+		/// Returns Marshal.SizeOf(typeof(T)).
 		/// </summary>
-		internal static uint SizeOf<T>() { return (uint)Marshal.SizeOf(typeof(T)); }
+		internal static int SizeOf<T>() { return Marshal.SizeOf(typeof(T)); }
 
 		/// <summary>
 		/// Gets dll module handle (Api.GetModuleHandle) or loads dll (Api.LoadLibrary), and returns unmanaged exported function address (Api.GetProcAddress).
@@ -386,10 +386,10 @@ namespace Au.Types
 		}
 
 		[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
-		internal static extern LPARAM SHGetFileInfo(string pszPath, uint dwFileAttributes, ref SHFILEINFO psfi, uint cbFileInfo, uint uFlags);
+		internal static extern LPARAM SHGetFileInfo(string pszPath, uint dwFileAttributes, ref SHFILEINFO psfi, int cbFileInfo, uint uFlags);
 
 		[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
-		internal static extern LPARAM SHGetFileInfo(IntPtr pidl, uint dwFileAttributes, ref SHFILEINFO psfi, uint cbFileInfo, uint uFlags);
+		internal static extern LPARAM SHGetFileInfo(IntPtr pidl, uint dwFileAttributes, ref SHFILEINFO psfi, int cbFileInfo, uint uFlags);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
 		internal static extern int SHGetDesktopFolder(out IShellFolder ppshf);
@@ -421,11 +421,11 @@ namespace Au.Types
 
 		internal struct NOTIFYICONDATA
 		{
-			public uint cbSize;
+			public int cbSize;
 			public Wnd hWnd;
-			public uint uID;
+			public int uID;
 			public uint uFlags;
-			public uint uCallbackMessage;
+			public int uCallbackMessage;
 			public IntPtr hIcon;
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
 			public string szTip;
@@ -438,7 +438,7 @@ namespace Au.Types
 			public struct TYPE_1
 			{
 				[FieldOffset(0)]
-				public uint uTimeout;
+				public int uTimeout;
 				[FieldOffset(0)]
 				public uint uVersion;
 			}
@@ -487,11 +487,11 @@ namespace Au.Types
 		internal const uint NIIF_RESPECT_QUIET_TIME = 0x80;
 
 		[DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW")]
-		internal static extern bool Shell_NotifyIcon(uint dwMessage, ref NOTIFYICONDATA lpData);
+		internal static extern bool Shell_NotifyIcon(int dwMessage, ref NOTIFYICONDATA lpData);
 
 		//internal struct SHSTOCKICONINFO
 		//{
-		//	public uint cbSize;
+		//	public int cbSize;
 		//	public IntPtr hIcon;
 		//	public int iSysImageIndex;
 		//	public int iIcon;
@@ -501,7 +501,7 @@ namespace Au.Types
 
 		internal struct SHSTOCKICONINFO
 		{
-			public uint cbSize;
+			public int cbSize;
 			public IntPtr hIcon;
 			public int iSysImageIndex;
 			public int iIcon;
@@ -575,7 +575,7 @@ namespace Au.Types
 
 		internal struct SHELLEXECUTEINFO
 		{
-			public uint cbSize;
+			public int cbSize;
 			public uint fMask;
 			public Wnd hwnd;
 			public string lpVerb;
@@ -687,7 +687,7 @@ namespace Au.Types
 		internal static extern int SHFileOperation(ref SHFILEOPSTRUCT lpFileOp);
 
 		[DllImport("shell32.dll", EntryPoint = "DragQueryFileW")]
-		internal static extern int DragQueryFile(IntPtr hDrop, int iFile, char* lpszFile, uint cch);
+		internal static extern int DragQueryFile(IntPtr hDrop, int iFile, char* lpszFile, int cch);
 
 
 
@@ -1027,7 +1027,7 @@ namespace Au.Types
 
 
 		[DllImport("hhctrl.ocx", EntryPoint = "HtmlHelpW")]
-		internal static extern Wnd HtmlHelp(Wnd hwndCaller, string pszFile, uint uCommand, LPARAM dwData);
+		internal static extern Wnd HtmlHelp(Wnd hwndCaller, string pszFile, int uCommand, LPARAM dwData);
 
 		#endregion
 

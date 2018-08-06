@@ -196,17 +196,26 @@ namespace Au
 		/// Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
 		/// Works in Release too.
 		/// </summary>
-		static long s_mem0;
-		internal static string LibGetMemory()
+		/// <param name="fromAnchor">Get the difference from previous call to <b>LibMemorySetAnchor</b>.</param>
+		internal static string LibMemoryGet(bool fromAnchor = true)
 		{
 			var mem = GC.GetTotalMemory(false);
-			if(s_mem0 == 0) s_mem0 = mem;
-			return ((mem - s_mem0) / 1024d / 1024d).ToString_("F3");
+			//if(s_mem0 == 0) s_mem0 = mem;
+			if(fromAnchor) mem -= s_mem0;
+			return (mem / 1024d / 1024d).ToString_("F3");
 		}
+		static long s_mem0;
+
 		/// <summary>
 		/// Prints managed memory size. Uses GC.GetTotalMemory.
 		/// Works in Release too.
 		/// </summary>
-		internal static void LibPrintMemory() => Print(LibGetMemory());
+		/// <param name="fromAnchor">Get the difference from previous call to <b>LibMemorySetAnchor</b>.</param>
+		internal static void LibMemoryPrint(bool fromAnchor = true) => Output.Write(LibMemoryGet());
+
+		/// <summary>
+		/// Memorizes current managed memory size, so that next call to another <b>LibMemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
+		/// </summary>
+		internal static void LibMemorySetAnchor() { s_mem0 = GC.GetTotalMemory(false); }
 	}
 }

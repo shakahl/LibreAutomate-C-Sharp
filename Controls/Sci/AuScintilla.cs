@@ -150,9 +150,9 @@ namespace Au.Controls
 		{
 			//if(this.Parent?.Name == "Output") Wnd.Misc.PrintMsg(ref m, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
 
-			uint msg = (uint)m.Msg; LPARAM wParam = m.WParam, lParam = m.LParam;
+			//LPARAM wParam = m.WParam, lParam = m.LParam;
 
-			switch(msg) {
+			switch(m.Msg) {
 			case Api.WM_SETCURSOR:
 			case Api.WM_SETFOCUS:
 			case Api.WM_KILLFOCUS:
@@ -192,6 +192,7 @@ namespace Au.Controls
 			switch(code) {
 			case NOTIF.SCN_MODIFIED:
 				_NotifyModified(ref n);
+				if(DisableModifiedNotifications) return;
 				break;
 			case NOTIF.SCN_HOTSPOTRELEASECLICK:
 				Tags?.LibOnLinkClick(n.position, 0 != (n.modifiers & SCMOD_CTRL));
@@ -225,6 +226,12 @@ namespace Au.Controls
 		/// Occurs when any Scintilla notification is received.
 		/// </summary>
 		public event SciEventHandler SciNotify;
+
+		/// <summary>
+		/// On SCN_MODIFIED notifications suppress <see cref="OnSciNotify"/> and <see cref="SciNotify"/>.
+		/// Use to temporarily disable 'modified' notifications. Don't use SCI_SETMODEVENTMASK for it, because then will not work tags and images.
+		/// </summary>
+		public bool DisableModifiedNotifications { get; set; }
 
 		/// <summary>
 		/// Sends a Scintilla message to the control and returns LPARAM.
@@ -369,10 +376,9 @@ namespace Au.Controls
 		}
 		bool _wrapLines;
 
-		/// <summary>
-		/// Gets or sets all text.
-		/// </summary>
-		public override string Text { get => ST.GetText(); set => ST.SetText(value); }
-		//info: this class should not contain text functions, but need to override this
-	}
+        //[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden), EditorBrowsable(EditorBrowsableState.Never)]
+        //[Obsolete("Use ST.SetText or ST.SetTextNewDocument", true)] //because we don't know how to set text, with undo or as new document
+        //public new virtual string Text { get; set; }
+        public new virtual string Text { get => ST.GetText(); }
+    }
 }

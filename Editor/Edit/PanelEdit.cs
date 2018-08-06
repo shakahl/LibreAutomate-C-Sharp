@@ -28,6 +28,8 @@ partial class PanelEdit :Control
 	List<SciCode> _docs = new List<SciCode>(); //documents that are actually open currently. Note that FilesModel.OpenFiles contains these and possibly more.
 	SciCode _activeDoc;
 
+	public AuScintilla ActiveDoc => _activeDoc;
+
 	public PanelEdit()
 	{
 		this.Name = "Code";
@@ -77,10 +79,7 @@ partial class PanelEdit :Control
 				_activeDoc = doc;
 				this.Controls.Add(doc);
 				//doc.CreateHandle_(); //info: not auto-created because not Visible
-				doc.Text = s;
-				//TODO: maybe temp disable undo collection etc
-				doc.Call(SCI_EMPTYUNDOBUFFER);
-				//doc.Call(SCI_SETSAVEPOINT); //SCI_EMPTYUNDOBUFFER probably does it
+				doc.ST.SetText(s, noUndo: true, noNotif: true);
 			}
 			if(focus) _activeDoc.Focus();
 		}
@@ -241,7 +240,31 @@ partial class PanelEdit :Control
 
 		protected override void OnSciNotify(ref SCNotification n)
 		{
-			//Print(n.nmhdr.code);
+			//switch(n.nmhdr.code) {
+			//case NOTIF.SCN_PAINTED:
+			//case NOTIF.SCN_UPDATEUI:
+			//case NOTIF.SCN_FOCUSIN:
+			//case NOTIF.SCN_FOCUSOUT:
+			//	break;
+			//case NOTIF.SCN_MODIFIED:
+			//	Print(n.nmhdr.code, n.modificationType);
+			//	break;
+			//default:
+			//	Print(n.nmhdr.code);
+			//	break;
+			//}
+
+			switch(n.nmhdr.code) {
+			case NOTIF.SCN_SAVEPOINTLEFT:
+				Model.Save.TextLater();
+				break;
+			case NOTIF.SCN_SAVEPOINTREACHED:
+				//never mind: we should cancel the 'save text later'
+				break;
+			case NOTIF.SCN_MODIFIED:
+
+				break;
+			}
 
 			base.OnSciNotify(ref n);
 		}
@@ -273,11 +296,11 @@ partial class PanelEdit :Control
 		//}
 		//LexLanguage _currentLexer;
 
-		public bool IsModified { get; private set; }
+		public bool IsUnsaved => 0 != Call(SCI_GETMODIFY);
 
 		public bool Save()
 		{
-			if(IsModified) {
+			if(IsUnsaved) {
 				try {
 					File.WriteAllText(FN.FilePath, this.Text);
 				}
@@ -285,6 +308,8 @@ partial class PanelEdit :Control
 					Print(ex.Message);
 					return false;
 				}
+				Call(SCI_SETSAVEPOINT);
+				//Print("saved");
 			}
 			return true;
 		}

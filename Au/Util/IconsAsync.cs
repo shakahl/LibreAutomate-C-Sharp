@@ -42,7 +42,7 @@ namespace Au.Util
 		/// <summary>
 		/// Adds a file path to an internal collection.
 		/// </summary>
-		/// <param name="file">File path etc to pass to <see cref="Icons.GetFileIconHandle"/>.</param>
+		/// <param name="file">File path etc. See <see cref="Icons.GetFileIcon"/>.</param>
 		/// <param name="obj">Something to pass to your callback function together with icon handle for this file.</param>
 		public void Add(string file, object obj)
 		{

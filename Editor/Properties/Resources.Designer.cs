@@ -143,16 +143,6 @@ namespace Project.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CS_16x {
-            get {
-                object obj = ResourceManager.GetObject("CS_16x", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap cut {
             get {
                 object obj = ResourceManager.GetObject("cut", resourceCulture);
@@ -253,6 +243,26 @@ namespace Project.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap fileClass {
+            get {
+                object obj = ResourceManager.GetObject("fileClass", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap fileScript {
+            get {
+                object obj = ResourceManager.GetObject("fileScript", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap find {
             get {
                 object obj = ResourceManager.GetObject("find", resourceCulture);
@@ -273,9 +283,9 @@ namespace Project.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Folder_16x {
+        internal static System.Drawing.Bitmap folder {
             get {
-                object obj = ResourceManager.GetObject("Folder_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("folder", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -283,9 +293,9 @@ namespace Project.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap FolderOpen_16x {
+        internal static System.Drawing.Bitmap folderOpen {
             get {
-                object obj = ResourceManager.GetObject("FolderOpen_16x", resourceCulture);
+                object obj = ResourceManager.GetObject("folderOpen", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -383,6 +393,16 @@ namespace Project.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap project {
+            get {
+                object obj = ResourceManager.GetObject("project", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap properties {
             get {
                 object obj = ResourceManager.GetObject("properties", resourceCulture);
@@ -441,21 +461,59 @@ namespace Project.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to test.
-        /// </summary>
-        internal static string String1 {
-            get {
-                return ResourceManager.GetString("String1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap tags {
             get {
                 object obj = ResourceManager.GetObject("tags", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to static class Program
+        ///{
+        ///[STAThread]
+        ///static void Main(string[] args)
+        ///{
+        ///	Print(&quot;test&quot;);
+        ///
+        ///
+        ///
+        ///}
+        ///}.
+        /// </summary>
+        internal static string TemplateApp {
+            get {
+                return ResourceManager.GetString("TemplateApp", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to /// &lt;summary&gt;
+        ////// Example class.
+        ////// &lt;/summary&gt;
+        ////// &lt;example&gt;
+        ////// Static functions.
+        ////// &lt;code&gt;&lt;![CDATA[
+        ////// int i = Example.StaticProperty1;
+        ////// string s = Example.StaticProperty2;
+        ////// Example.StaticProperty2 = &quot;new value&quot;;
+        ////// Example.StaticMethod(10, &quot;optional argument&quot;);
+        ////// Example.StaticMethod(10);
+        ////// ]]&gt;&lt;/code&gt;
+        ////// Instance.
+        ////// &lt;code&gt;&lt;![CDATA[
+        ////// var x = new Example(&quot;Name&quot;);
+        ////// int i = x.Property1;
+        ////// x.Property3 = &quot;test&quot;;
+        ////// x.Method1();
+        ////// var s = x.Method2(&quot;test &quot;, 2);
+        ////// [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string TemplateClass {
+            get {
+                return ResourceManager.GetString("TemplateClass", resourceCulture);
             }
         }
         

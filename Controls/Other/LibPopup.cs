@@ -72,12 +72,12 @@ namespace Au.Controls
 		/// <value><c>true</c> if pressing the alt key does not close the pop-up; otherwise, <c>false</c>.</value>
 		public bool AcceptAlt { get; set; }
 
-		private ToolStripControlHost _host;
-		private Control _opener;
-		private LibPopup _ownerPopup;
-		private LibPopup _childPopup;
-		private bool _resizableTop;
-		private bool _resizableLeft;
+		ToolStripControlHost _host;
+		Control _opener;
+		LibPopup _ownerPopup;
+		LibPopup _childPopup;
+		bool _resizableTop;
+		bool _resizableLeft;
 
 		/// <summary>
 		/// Gets or sets a minimum size of the pop-up.
@@ -109,10 +109,7 @@ namespace Au.Controls
 		/// <exception cref="T:System.ArgumentNullException"><paramref name="content" /> is <code>null</code>.</exception>
 		public LibPopup(Control content)
 		{
-			if(content == null) {
-				throw new ArgumentNullException("content");
-			}
-			Content = content;
+			Content = content ?? throw new ArgumentNullException("content");
 			FocusOnOpen = true;
 			AcceptAlt = true;
 			ShowingAnimation = PopupAnimations.SystemDefault;
@@ -155,7 +152,7 @@ namespace Au.Controls
 			if((Visible && ShowingAnimation == PopupAnimations.None) || (!Visible && HidingAnimation == PopupAnimations.None)) {
 				return;
 			}
-			NativeMethods.AnimationFlags flags = Visible ? NativeMethods.AnimationFlags.Roll : NativeMethods.AnimationFlags.Hide;
+			Api.AnimationFlags flags = Visible ? Api.AnimationFlags.Roll : Api.AnimationFlags.Hide;
 			PopupAnimations _flags = Visible ? ShowingAnimation : HidingAnimation;
 			if(_flags == PopupAnimations.SystemDefault) {
 				if(SystemInformation.IsMenuAnimationEnabled) {
@@ -187,9 +184,10 @@ namespace Au.Controls
 					_flags = (_flags & ~PopupAnimations.LeftToRight) | PopupAnimations.RightToLeft;
 				}
 			}
-			flags = flags | (NativeMethods.AnimationFlags.Mask & (NativeMethods.AnimationFlags)(int)_flags);
-			NativeMethods.SetTopMost(this);
-			NativeMethods.AnimateWindow(this, AnimationDuration, flags);
+			flags = flags | (Api.AnimationFlags.Mask & (Api.AnimationFlags)(int)_flags);
+			var w = (Wnd)this;
+			w.ZorderTopmost();
+			Api.AnimateWindow(w, AnimationDuration, flags);
 		}
 
 		/// <summary>
@@ -284,7 +282,7 @@ namespace Au.Controls
 			if(control == null) {
 				throw new ArgumentNullException("control");
 			}
-			SetOwnerItem(control);
+			_SetOwnerItem(control);
 
 			_resizableTop = _resizableLeft = false;
 			Point location = control.PointToScreen(new Point(area.Left, area.Top + area.Height));
@@ -301,7 +299,7 @@ namespace Au.Controls
 			Show(control, location, ToolStripDropDownDirection.BelowRight);
 		}
 
-		private void SetOwnerItem(Control control)
+		void _SetOwnerItem(Control control)
 		{
 			if(control == null) {
 				return;
@@ -316,7 +314,7 @@ namespace Au.Controls
 				_opener = control;
 			}
 			if(control.Parent != null) {
-				SetOwnerItem(control.Parent);
+				_SetOwnerItem(control.Parent);
 			}
 		}
 
@@ -357,7 +355,7 @@ namespace Au.Controls
 
 		//protected override void WndProc(ref Message m)
 		//{
-		//	//if((uint)m.Msg == Api.WM_MOUSEACTIVATE) {
+		//	//if(m.Msg == Api.WM_MOUSEACTIVATE) {
 		//	//	Print("WM_MOUSEACTIVATE 2");
 		//	//	m.Result = (IntPtr)Api.MA_NOACTIVATE; //toolstrip sets focus anyway
 		//	//	return;
@@ -413,45 +411,6 @@ namespace Au.Controls
 			/// Uses a default animation.
 			/// </summary>
 			SystemDefault = 0x200000,
-		}
-
-		static class NativeMethods
-		{
-			private static HandleRef HWND_TOPMOST = new HandleRef(null, new IntPtr(-1));
-
-			[Flags]
-			internal enum AnimationFlags :int
-			{
-				Roll = 0x0000, // Uses a roll animation.
-				HorizontalPositive = 0x00001, // Animates the window from left to right. This flag can be used with roll or slide animation.
-				HorizontalNegative = 0x00002, // Animates the window from right to left. This flag can be used with roll or slide animation.
-				VerticalPositive = 0x00004, // Animates the window from top to bottom. This flag can be used with roll or slide animation.
-				VerticalNegative = 0x00008, // Animates the window from bottom to top. This flag can be used with roll or slide animation.
-				Center = 0x00010, // Makes the window appear to collapse inward if Hide is used or expand outward if the Hide is not used.
-				Hide = 0x10000, // Hides the window. By default, the window is shown.
-				Activate = 0x20000, // Activates the window.
-				Slide = 0x40000, // Uses a slide animation. By default, roll animation is used.
-				Blend = 0x80000, // Uses a fade effect. This flag can be used only with a top-level window.
-				Mask = 0xfffff,
-			}
-
-			[SuppressUnmanagedCodeSecurity]
-			[DllImport("user32.dll")]
-			private static extern int AnimateWindow(HandleRef windowHandle, int time, AnimationFlags flags);
-
-			internal static void AnimateWindow(Control control, int time, AnimationFlags flags)
-			{
-				AnimateWindow(new HandleRef(control, control.Handle), time, flags);
-			}
-
-			[SuppressUnmanagedCodeSecurity]
-			[DllImport("user32.dll")]
-			private static extern bool SetWindowPos(HandleRef hWnd, HandleRef hWndInsertAfter, int x, int y, int cx, int cy, int flags);
-
-			internal static void SetTopMost(Control control)
-			{
-				SetWindowPos(new HandleRef(control, control.Handle), HWND_TOPMOST, 0, 0, 0, 0, 0x13);
-			}
 		}
 	}
 }

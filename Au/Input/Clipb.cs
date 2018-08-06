@@ -432,7 +432,7 @@ namespace Au
 				}
 			}
 
-			LPARAM _WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+			LPARAM _WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
 			{
 				//Wnd.Misc.PrintMsg(w, message, wParam, lParam);
 

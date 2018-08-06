@@ -160,7 +160,7 @@ namespace Au.Tools
 			_uncheckControl = false;
 			_noeventGridValueChanged = false;
 			g.ZAutoSize();
-			_FilWindowInfo(f);
+			_FillWindowInfo(f);
 			return true;
 
 			string[] _ContainsCombo_DropDown()
@@ -189,7 +189,7 @@ namespace Au.Tools
 				_propError = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + Native.GetErrorMessage();
 				_grid.Clear();
 				_grid.Invalidate();
-				_winInfo.Text = "";
+				_winInfo.ST.ClearText();
 				return false;
 			}
 		}
@@ -373,7 +373,7 @@ namespace Au.Tools
 
 		protected override void WndProc(ref Message m)
 		{
-			//Wnd w = (Wnd)this; uint msg = (uint)m.Msg; LPARAM wParam = m.WParam, lParam = m.LParam;
+			//Wnd w = (Wnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
 
 			if(_capt != null && _capt.WndProc(ref m, out bool capture)) {
 				if(capture) _Capture();
@@ -742,14 +742,14 @@ namespace Au.Tools
 			}
 		}
 
-		void _FilWindowInfo(in _WinInfo f)
+		void _FillWindowInfo(in _WinInfo f)
 		{
 			if(_wiWCP == 0) {
 				_wiWCP = 1;
 				_winInfo.Tags.AddLinkTag("_switch", s =>
 				{
-					_WinInfo f0 = default;
-					_winInfo.Text = f0.Format(_wnd, _con, _wiWCP = s.ToInt_());
+					_wiWCP = s.ToInt_();
+                    _SetText(default);
 				});
 				_winInfo.Tags.AddLinkTag("_rect", s =>
 				{
@@ -759,7 +759,13 @@ namespace Au.Tools
 					TUtil.ShowOsdRect(r, limitToScreen: w.IsMaximized);
 				});
 			}
-			_winInfo.Text = f.Format(_wnd, _con, _wiWCP);
+			_SetText(f);
+
+            void _SetText(in _WinInfo wi)
+            {
+                var s1=wi.Format(_wnd, _con, _wiWCP);
+                _winInfo.ST.SetText(s1);
+            }
 		}
 		int _wiWCP; //0 not inited, 1 window, 2 control, 3 program
 
@@ -803,7 +809,7 @@ namespace Au.Tools
 				_commonInfos.SetTextWithWildexInfo(info.Remove(info.Length - 1));
 				return;
 			}
-			_info.Text = info;
+			_info.ST.SetText(info);
 		}
 
 		const string c_infoForm =

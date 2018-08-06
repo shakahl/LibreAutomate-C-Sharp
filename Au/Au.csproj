@@ -106,6 +106,7 @@
     <Compile Include="String\Regex_ types.cs" />
     <Compile Include="String\Regex_.cs" />
     <Compile Include="String\StringSegment.cs" />
+    <Compile Include="Util\ILReader.cs" />
     <Compile Include="Util\StringMisc.cs" />
     <Compile Include="Util\image, GDI, etc.cs" />
     <Compile Include="Util\hooks.cs" />

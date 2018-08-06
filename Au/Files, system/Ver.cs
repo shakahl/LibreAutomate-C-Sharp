@@ -54,7 +54,7 @@ namespace Au
 
 		struct RTL_OSVERSIONINFOW
 		{
-			public uint dwOSVersionInfoSize;
+			public int dwOSVersionInfoSize;
 			public uint dwMajorVersion;
 			public uint dwMinorVersion;
 			public uint dwBuildNumber;

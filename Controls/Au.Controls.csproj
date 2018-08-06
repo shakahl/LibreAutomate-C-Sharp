@@ -42,7 +42,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>Au.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>Properties\Au.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Accessibility" />
@@ -132,7 +132,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Au.pfx" />
+    <None Include="Properties\Au.pfx" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

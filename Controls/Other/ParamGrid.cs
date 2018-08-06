@@ -81,16 +81,16 @@ namespace Au.Controls
 
 		protected override void OnHandleDestroyed(EventArgs e)
 		{
-			if(this._comboPopup != null) {
-				this._comboPopup.Dispose();
-				this._comboPopup = null;
+			if(this._comboDD != null) {
+				this._comboDD.Dispose();
+				this._comboDD = null;
 			}
 			base.OnHandleDestroyed(e);
 		}
 
-//#if DEBUG
-//		public bool ZDebug { get; set; }
-//#endif
+		//#if DEBUG
+		//		public bool ZDebug { get; set; }
+		//#endif
 
 		void _ShowCellFocusRect(bool yes)
 		{
@@ -184,14 +184,13 @@ namespace Au.Controls
 			{
 				//Debug_.PrintFunc();
 
-				if(sender.Cell.Editor is Editors.ComboBox cb) {
+				if(sender.Cell.Editor is Editors.ComboBox cb) { //read-only combo. The grid shows a ComboBox control.
 					cb.Control.DroppedDown = true;
-				} else if(sender.Cell is ComboCell cc) {
+				} else if(sender.Cell is ComboCell cc) { //editable combo. We show DropDownList _comboDD. With ComboBox too ugly and limited, eg cannot edit multiline.
 					var g = cc.Grid as ParamGrid;
-					var tb = (cc.Editor as Editors.TextBox).Control;
-					var bWidth = cc.MeasuredButtonWidth;
-					tb.Width -= bWidth;
-					if(g._clickX >= tb.Right) cc.ShowDropDown(); //clicked drop-down button
+					var t = (cc.Editor as Editors.TextBox).Control;
+					t.Width -= cc.MeasuredButtonWidth; //don't hide the drop-down button
+					if(g._clickX >= t.Right) cc.ShowDropDown(); //clicked the drop-down button
 				}
 
 				base.OnEditStarted(sender, e);
@@ -201,16 +200,18 @@ namespace Au.Controls
 
 			public override void OnEditEnded(SG.CellContext sender, EventArgs e)
 			{
+				var g = sender.Grid as ParamGrid;
 				_ShowEditInfo(sender, false);
+
 				base.OnEditEnded(sender, e);
 			}
 
-			void _ShowEditInfo(SG.CellContext sender, bool show)
+			void _ShowEditInfo(SG.CellContext c, bool show)
 			{
-				var t = sender.Cell as EditCell;
+				var t = c.Cell as EditCell;
 				if(t?.Info != null) {
-					var grid = sender.Grid as ParamGrid;
-					grid.ZOnShowEditInfo(sender, show ? t.Info : null);
+					var g = c.Grid as ParamGrid;
+					g.ZOnShowEditInfo(c, show ? t.Info : null);
 				}
 			}
 		}
@@ -220,10 +221,8 @@ namespace Au.Controls
 			if(ZGetEditCell(out var c)) {
 				if(c.Position != PositionAtPoint(e.Location)) {
 					c.EndEdit(cancel: false);
-				} else if(c.Cell is ComboCell cc && _comboPopup!=null) {
-					//never mind: cannot toggle, because the click closed the popup before this event
-					//_comboPopup.Popup.Visible = !_comboPopup.Popup.Visible; //no, then shows in wrong place if form moved while editing cell
-					cc.ShowDropDown(sameItems: true);
+				} else if(c.Cell is ComboCell cc && !_comboNoDD) {
+					cc.ShowDropDown();
 				}
 				return;
 			}
@@ -231,10 +230,21 @@ namespace Au.Controls
 			base.OnMouseDown(e);
 		}
 
+		protected override void WndProc(ref Message m)
+		{
+			switch(m.Msg) {
+			case Api.WM_USER + 10:
+				_comboNoDD = false;
+				break;
+			}
+			base.WndProc(ref m);
+		}
+
 		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
 		{
 			switch(keyData) {
-			case Keys.Down: case Keys.Down | Keys.Alt:
+			case Keys.Down:
+			case Keys.Down | Keys.Alt:
 				if(ZGetEditCell(out var c) && c.Cell is ComboCell cc) {
 					cc.ShowDropDown();
 					return true;
@@ -304,30 +314,38 @@ namespace Au.Controls
 
 			internal int MeasuredButtonWidth => ((this.View as SG.Cells.Views.ComboBox).ElementDropDown as _ComboButton).MeasuredWidth;
 
-			internal void ShowDropDown(bool sameItems = false)
+			internal void ShowDropDown()
 			{
 				var g = Grid as ParamGrid;
-				var p = g._comboPopup;
-				if(!sameItems) {
-					var items = _items;
-					if(items == null) items = _callback?.Invoke();
-					if(items == null || items.Length == 0) return;
+				var p = g._comboDD;
+				var items = _items;
+				if(items == null) items = _callback?.Invoke();
+				if(items == null || items.Length == 0) return;
 
-					var tb = (this.Editor as Editors.TextBox).Control;
-					tb.Update(); g.Update(); //paint controls before the popup animation, to avoid flickering
-					if(p == null) g._comboPopup = p = new DropDownList();
-					p.Items = items;
-					p.OnSelected = pp =>
+				var t = (this.Editor as Editors.TextBox).Control;
+				t.Update(); g.Update(); //paint controls before the popup animation, to avoid flickering
+				if(p == null) {
+					g._comboDD = p = new DropDownList();
+
+					//prevent showing drop-down again when the user clicks the drop-down button to close it
+					p.LibPopup.VisibleChanged += (unu, sed) =>
 					{
-						tb.Value = pp.ResultString;
-						if(!pp.ResultWasKey) g.ZEndEdit(cancel: false);
+						if(g._comboDD.LibPopup.Visible) g._comboNoDD = true;
+						else ((Wnd)g).Post(Api.WM_USER + 10); //WndProc will set _comboNoDD = false
 					};
 				}
+				p.Items = items;
+				p.OnSelected = pp =>
+				{
+					t.Value = pp.ResultString;
+					if(!pp.ResultWasKey) g.ZEndEdit(cancel: false);
+				};
 				var r = g.PositionToRectangle(new SG.Position(Row.Index, Column.Index));
 				p.Show(g, r);
 			}
 		}
-		DropDownList _comboPopup;
+		DropDownList _comboDD;
+		bool _comboNoDD;
 
 		enum _ViewType
 		{
@@ -598,7 +616,7 @@ namespace Au.Controls
 		/// <param name="tt">Tooltip text.</param>
 		/// <param name="insertAt"></param>
 		/// <param name="key">Row's Tag property. If null, uses <paramref name="name"/>. Used by <see cref="ZGetValue(string, out string, bool)"/> and other functions.</param>
-		public int ZAddHeaderRow(string name, bool? check = null, string tt = null, int insertAt = -1, string key=null)
+		public int ZAddHeaderRow(string name, bool? check = null, string tt = null, int insertAt = -1, string key = null)
 		{
 			return _AddRow(key, name, null, check, _RowType.Header, tt, null, insertAt);
 		}

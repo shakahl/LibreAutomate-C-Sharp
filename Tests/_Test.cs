@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define TOOLS
+
+using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.Text;
@@ -61,11 +63,9 @@ using System.Net.NetworkInformation;
 
 using Au.Types;
 using Au.Util;
+using Au.Controls;
 
 using System.Dynamic;
-
-//using Microsoft.CodeAnalysis;
-//using Microsoft.CodeAnalysis.CSharp;
 
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
 
@@ -94,6 +94,8 @@ static partial class Test
 	[STAThread]
 	static void Main(string[] args)
 	{
+		//TestProcessStartSpeed(); return;
+
 		_EnableVisualStylesEtc();
 #if true
 		TestMain();
@@ -905,7 +907,7 @@ static partial class Test
 				//	//Print(ap);
 				//	Print(!w1.Is0, !w2.Is0);
 				//}
-				if(i == 0) Perf.SpeedUpCPU(100);
+				if(i == 0) Perf.WakeCPU(100);
 			}
 		}
 		//100.ms();
@@ -1242,7 +1244,7 @@ static partial class Test
 		var x2 = new Regex_(w);
 
 		//100.ms();
-		Perf.SpeedUpCPU(200);
+		Perf.WakeCPU(200);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 10000;
 			Perf.First();
@@ -1354,7 +1356,7 @@ static partial class Test
 			Print(w.Equals_(s, ignoreCase));
 			Print(x.Match(s));
 
-			Perf.SpeedUpCPU(200);
+			Perf.WakeCPU(200);
 			//200.ms();
 			for(int i1 = 0; i1 < 5; i1++) {
 				int n2 = 10000;
@@ -2151,7 +2153,7 @@ static partial class Test
 		//return;
 		Print("");
 		long lenIP = 0, lenNIP = 0;
-		Perf.SpeedUpCPU(500);
+		Perf.WakeCPU(500);
 		Perf.First();
 		var sb = new StringBuilder(1000000);
 		foreach(var a in k) {
@@ -2193,7 +2195,7 @@ static partial class Test
 		foreach(var w in Wnd.GetWnd.AllWindows(true)) {
 			k.AddRange(w.Get.Children());
 		}
-		Perf.SpeedUpCPU(200);
+		Perf.WakeCPU(200);
 		Perf.First();
 		long g = 0;
 		for(int i = 0; i < 5; i++) {
@@ -2818,7 +2820,7 @@ static partial class Test
 		Print(LevenshteinDistance("kitten", "sitting"));
 		0.1.s();
 		int n = 0;
-		Perf.SpeedUpCPU(100);
+		Perf.WakeCPU(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -3001,7 +3003,7 @@ static partial class Test
 
 	class MyWindow2 :Wnd.Misc.MyWindow
 	{
-		protected override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+		protected override LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
 		{
 			Wnd.Misc.PrintMsg(w, message, wParam, lParam);
 
@@ -3549,6 +3551,7 @@ REE`");
 		//AuDialog.Show(owner: Wnd.Find("Quick*"));
 	}
 
+#if TOOLS
 	static void TestAccForm()
 	{
 		Acc a = null;
@@ -3618,6 +3621,7 @@ REE`");
 		f.Dispose();
 		//AuDialog.Show("-");
 	}
+#endif
 
 	//static void TestScreenCaptureSpeedWithCaptureblt()
 	//{
@@ -3761,7 +3765,7 @@ REE`");
 		//for(int i = 0; i < 1000; i++) rx[i] = _rxTest + i.ToString();
 
 		int k1 = 0, k2 = 0, k3 = 0, k4 = 0, k5 = 0, k6 = 0, k7 = 0, k8 = 0, k9 = 0;
-		Perf.SpeedUpCPU(100);
+		Perf.WakeCPU(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -4206,15 +4210,15 @@ REE`");
 		if(x.FindAllS(s, out var as1)) Print(as1);
 
 		int k1 = 0, k2 = 0, k3 = 0, k4 = 0;
-		Perf.SpeedUpCPU(100);
-		Debug_.LibPrintMemory();
+		Perf.WakeCPU(100);
+		Debug_.LibMemoryPrint();
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 100;
 			Perf.First();
 			for(int i2 = 0; i2 < n2; i2++) { foreach(var m in x.FindAllS(s)) k1++; }
 			//for(int i2 = 0; i2 < n2; i2++) { if(x.FindAllS(s, out var a2)) k2++; }
 			Perf.NW();
-			Debug_.LibPrintMemory();
+			Debug_.LibMemoryPrint();
 		}
 		Print(k1, k2, k3, k4);
 	}
@@ -4306,12 +4310,12 @@ REE`");
 	{
 		//return;
 		int n = 0;
-		Debug_.LibPrintMemory();
+		Debug_.LibMemoryPrint();
 		for(int i = 0; i < 15; i++) {
 			for(int j = 0; j < 40; j++) {
 				n = TestAccLeaks3(w);
 			}
-			Debug_.LibPrintMemory();
+			Debug_.LibMemoryPrint();
 			100.ms();
 		}
 		Print(n);
@@ -4865,7 +4869,7 @@ REE`");
 		//Print(Keyb.IsMod());
 		Print(Keyb.GetMod());
 
-		Perf.SpeedUpCPU(100);
+		Perf.WakeCPU(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -5893,7 +5897,7 @@ REE`");
 		//s = new string('a', 11_0000);
 
 		100.ms();
-		Perf.SpeedUpCPU(100);
+		Perf.WakeCPU(100);
 		for(int i1 = 0; i1 < 1; i1++) {
 			int n2 = 100;
 			n2 = 1000000;
@@ -6018,7 +6022,7 @@ REE`");
 		Print(s1.IndexOfAny("ai".ToCharArray()));
 		Print(s1.IndexOfAny(s_ca1));
 
-		Perf.SpeedUpCPU(100);
+		Perf.WakeCPU(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 10000;
 			Perf.First();
@@ -6324,7 +6328,7 @@ REE`");
 
 		protected override void WndProc(ref Message m)
 		{
-			switch((uint)m.Msg) {
+			switch(m.Msg) {
 			case Api.WM_CREATE: //0x1
 				bool r1 = _hk2.Register(1, "Ctrl+Alt+F10", this);
 				bool r2 = _hk1.Register(2, (KMod.Ctrl | KMod.Shift, KKey.D), this); //Ctrl+Shift+D
@@ -6719,7 +6723,7 @@ REE`");
 		//Wnd.Find("*VMware*").Activate(); Mouse.Click(1079, 445);
 		//Print(Wnd.Active);
 		//for(int i = 0; i < 12; i++) {
-		//	Task.Run(() => Perf.SpeedUpCPU(500));
+		//	Task.Run(() => Perf.WakeCPU(500));
 		//}
 		100.ms();
 		//Print(Wnd.Focused);
@@ -6863,7 +6867,7 @@ REE`");
 				//1.ms();
 			}
 			if((i % 10) == 0) {
-				Print(i, Debug_.LibGetMemory(),
+				Print(i, Debug_.LibMemoryGet(),
 					GetGuiResources(Process_.CurrentProcessHandle, 1),
 					GetGuiResources(Process_.CurrentProcessHandle, 4),
 					GetGuiResources(Process_.CurrentProcessHandle, 0),
@@ -7115,11 +7119,13 @@ REE`");
 		//AuDialog.Show();
 	}
 
+#if TOOLS
 	static void TestToolWinImage()
 	{
 		using(var f = new Au.Tools.Form_WinImage()) f.ShowDialog();
 	}
 
+#endif
 	static void TestToolWinImageCode()
 	{
 #if true
@@ -7229,6 +7235,7 @@ REE`");
 
 	}
 
+#if TOOLS
 	static void TestToolWnd()
 	{
 		Wnd w = default;
@@ -7259,6 +7266,7 @@ REE`");
 		//Print("form disposed");
 	}
 
+#endif
 	static void TestFormClose()
 	{
 		//		var f = new Form();
@@ -7293,7 +7301,7 @@ REE`");
 
 		//protected override void WndProc(ref Message m)
 		//{
-		//	switch((uint)m.Msg) {
+		//	switch(m.Msg) {
 		//	case Api.WM_CLOSE:
 		//		_closing = true;
 		//		break;
@@ -7378,6 +7386,221 @@ REE`");
 		//Print(w);
 	}
 
+	static void TestSciSetText()
+	{
+		var f = new Form();
+
+		var x = new SciTest();
+		x.Size = new Size(200, 150);
+		//x.InitReadOnlyAlways = true;
+
+		f.Controls.Add(x);
+		f.Click += (unu, sed) =>
+		{
+			//x.ST.ClearText();
+			//x.ST.ClearText(noUndo: true, noNotif: true);
+
+			x.ST.SetText("moo");
+			//x.ST.SetText("moo", noUndo: true, noNotif: true);
+
+			//x.Call(Sci.SCI_SETREADONLY, 0);
+		};
+		Application.Run(f);
+	}
+
+	class SciTest :AuScintilla
+	{
+
+		protected override void OnSciNotify(ref Sci.SCNotification n)
+		{
+			switch(n.nmhdr.code) {
+			case Sci.NOTIF.SCN_PAINTED: case Sci.NOTIF.SCN_UPDATEUI: case Sci.NOTIF.SCN_STYLENEEDED: break;
+			default: Print(n.nmhdr.code, n.modificationType); break;
+			}
+
+			base.OnSciNotify(ref n);
+		}
+	}
+
+	static void TestMenuAutoIcons()
+	{
+		var m = new AuMenu() { ExtractIconPathFromCode = true };
+		//m.IconSize = 32;
+		//m.ItemThread = MTThread.ThreadPool;
+		//m.ItemThread = MTThread.StaThread;
+		//m.ItemThread = MTThread.StaBackgroundThread;
+		//m.ExceptionHandling = MTExcept.Warning;
+
+		m["'notepad.exe'"] = o => Shell.TryRun("notepad.exe");
+		m["'%Folders.System%\\notepad.exe'"] = o => Shell.TryRun("%Folders.System%\\notepad.exe");
+		//m.ExtractIconPathFromCode=false;
+		m["Folders.System + 'notepad.exe'"] = o => Shell.TryRun(Folders.System + "notepad.exe");
+		//m["notepad"] = o => Shell.TryRun(Folders.Test() + "notepad.exe");
+		//m["notepad"] = o => Shell.TryRun(Folders.System + @"c:\windows\system32\notepad.exe");
+		m["'quickmacros'"] = o => Shell.TryRun("http://www.quickmacros.com");
+		m["Folders.System"] = o => Shell.TryRun(Folders.System);
+		m["Folders.Virtual.RecycleBin"] = o => Shell.TryRun(Folders.Virtual.RecycleBin);
+		m["':: 14001F7840F05F6481501B109F0800AA002F954E'"] = o => Shell.TryRun(":: 14001F7840F05F6481501B109F0800AA002F954E");
+		m[@"'shell: AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App'"] = o => Shell.TryRun(@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App");
+		m["'notepad.exe', ''", ""] = o => Shell.TryRun("notepad.exe");
+		m["'notepad.exe', 'notepad.exe'", Folders.System + "notepad.exe"] = o => Shell.TryRun("notepad.exe");
+		m["TryRun('no.exe')"] = o => Shell.TryRun("no.exe");
+		m["Run('no.exe')"] = o => Shell.Run("no.exe");
+		//m["'bad'"] = o => Shell.TryRun("one", "two", 0, new SRMore() { Verb = "verb", WorkingDirectory = "dir" });
+		m["Task.Run"] = o => Task.Run(() => Shell.Run("notepad.exe"));
+		m["Task.Run"] = o => Task.Run(() => Shell.Run(Folders.System + "notepad.exe"));
+		m.Separator();
+		//m["Task.Run"] = o => Task.Run(()=> AuDialog.Show("text"));
+		//Print(Thread_.NativeId);
+		m["Task.Run"] = o => { var t = Thread.CurrentThread; Print(Thread_.NativeId, t.GetApartmentState(), t.IsThreadPoolThread, t.IsBackground); AuDialog.Show("test"); };
+		m["Run('no.exe')"] = o => Shell.Run("no.exe");
+		m["Form"] = o => new Form().ShowDialog();
+		m["OpenFileDialog"] = o => new System.Windows.Forms.OpenFileDialog().ShowDialog();
+		m["Clipboard"] = o => Print(Clipboard.GetText());
+		m.Separator();
+		m.CMS.Items.Add("external", null, (sender, sed) => Print(sender));
+
+		//m.MultiShow = true;
+		m.Show();
+		1000.ms();
+		//AuDialog.Show("after");
+		//var i = "moo";
+		//Shell.TryRun("notepad.exe");
+	}
+
+	public class Autotext :IDisposable
+	{
+
+		public void Dispose()
+		{
+
+		}
+
+		//public void Add(string text, ATValue replacement)
+		//{
+
+		//}
+
+		public void Add(string text, string replacement)
+		{
+			Print(1);
+		}
+
+		public void Add(string text, Func<string, string> replacement)
+		{
+			Print(2);
+		}
+
+		public void Add(string text, Action<string> replacement)
+		{
+			Print(3);
+		}
+
+		public object this[string text]
+		{
+			set
+			{
+				Print(4);
+			}
+		}
+
+		//public ATValue this[string text]
+		//{
+		//	set
+		//	{
+
+		//	}
+		//}
+
+		//public int this[string text]
+		//{
+		//	set
+		//	{
+
+		//	}
+		//}
+
+		public void Run()
+		{
+
+			//Time.SleepDoEvents(Timeout.Infinite);
+		}
+	}
+
+	//public struct ATValue
+	//{
+	//	object _o;
+	//	ATValue(object o) => _o = o;
+
+	//	public static implicit operator ATValue(string s) => new ATValue(s);
+	//	public static implicit operator ATValue(Func<string, string> s) => new ATValue(s);
+	//	public static implicit operator ATValue(Action<string> s) => new ATValue(s);
+	//}
+
+	static void TestAutotext()
+	{
+		using(var a = new Autotext()) {
+			a.Add("one", "ONE");
+			a.Add("two", o => "TWO");
+			a.Add("three", o => Print("THREE"));
+			//a.Add("two", new Func<string, string>(o => "TWO"));
+			a["one"] = "ONE";
+			//a["two"] = o => "TWO";
+			//a["two"] = new Func<string, string>(o => "TWO");
+			//a["two"] = new FuncSS(o => "TWO");
+			a.Run();
+		}
+	}
+
+	//public delegate string FuncSS(string s);
+
+	static void TestProcessStartSpeed()
+	{
+		using(var e = EventWaitHandle.OpenExisting("Au.TestEv")) {
+			e.Set();
+
+			100.ms();
+			Output.LibUseQM2 = true;
+			Print(2);
+		}
+	}
+
+
+
+
+
+[MethodImpl(MethodImplOptions.NoInlining)]
+	static void _TestTaskExceptions()
+	{
+		var t = Task.Run(() => { Print("task"); throw new InvalidOperationException("test"); });
+		//100.ms();
+		//t.Dispose();
+	}
+	static void TestTaskExceptions()
+	{
+		//TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
+		for(int i = 0; i < 5; i++) _TestTaskExceptions();
+		//for(int i=0; i<5; i++) {
+		//	//Thread.Sleep(100);
+		//	Time.SleepDoEvents(100);
+		//	GC.Collect();
+		//	GC.WaitForPendingFinalizers();
+		//}
+		Task.Run(() =>
+		{
+			500.ms();
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+		});
+		AuDialog.Show();
+		//MessageBox.Show("");
+		Print("fin");
+	}
+
+	private static void TaskScheduler_UnobservedTaskException(object sender, UnobservedTaskExceptionEventArgs e)
+	{
+		Print(e.Observed, e.Exception);
+	}
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -7389,8 +7612,8 @@ REE`");
 		//Output.IgnoreConsole = true;
 		//Output.LogFile=@"Q:\Test\Au"+IntPtr.Size*8+".log";
 #endif
-		//Output.LibUseQM2 = true;
-		//Output.RedirectConsoleOutput = true;
+		Output.LibUseQM2 = true;
+		Output.RedirectConsoleOutput = true;
 		if(!Output.IsWritingToConsole) {
 			Output.Clear();
 			//100.ms();
@@ -7400,8 +7623,13 @@ REE`");
 #if true
 
 
-			//TestWndGet();
+			//TestTaskExceptions();
+			//TestAutotext();
+			//TestCompiler();
+			//TestMenuAutoIcons();
 			//TestToolWnd();
+			//TestSciSetText();
+			//TestWndGet();
 			//TestToolWinImage();
 			//TestWFEtc();
 			//TestWndFindContainsRoleName();

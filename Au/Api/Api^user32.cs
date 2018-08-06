@@ -8,19 +8,19 @@ namespace Au.Types
 	internal static unsafe partial class Api
 	{
 		[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
-		internal static extern LPARAM SendMessage(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam);
+		internal static extern LPARAM SendMessage(Wnd hWnd, int msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll", EntryPoint = "SendMessageTimeoutW", SetLastError = true)]
-		internal static extern LPARAM SendMessageTimeout(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam, Native.SMTO flags, uint uTimeout, out LPARAM lpdwResult);
+		internal static extern LPARAM SendMessageTimeout(Wnd hWnd, int Msg, LPARAM wParam, LPARAM lParam, Native.SMTO flags, int uTimeout, out LPARAM lpdwResult);
 
 		[DllImport("user32.dll", EntryPoint = "SendNotifyMessageW", SetLastError = true)]
-		internal static extern bool SendNotifyMessage(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
+		internal static extern bool SendNotifyMessage(Wnd hWnd, int Msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll", EntryPoint = "PostMessageW", SetLastError = true)]
-		internal static extern bool PostMessage(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
+		internal static extern bool PostMessage(Wnd hWnd, int Msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll", EntryPoint = "PostThreadMessageW")]
-		internal static extern bool PostThreadMessage(uint idThread, uint Msg, LPARAM wParam, LPARAM lParam);
+		internal static extern bool PostThreadMessage(int idThread, int Msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
 		internal static extern int GetWindowLong32(Wnd hWnd, int nIndex);
@@ -106,7 +106,7 @@ namespace Au.Types
 
 		internal struct WNDCLASSEX
 		{
-			public uint cbSize;
+			public int cbSize;
 			public uint style;
 			public IntPtr lpfnWndProc; //not WNDPROC to avoid auto-marshaling where don't need. Use Marshal.GetFunctionPointerForDelegate/GetDelegateForFunctionPointer.
 			public int cbClsExtra;
@@ -154,11 +154,11 @@ namespace Au.Types
 		internal static extern Wnd CreateWindowEx(Native.WS_EX dwExStyle, string lpClassName, string lpWindowName, Native.WS dwStyle, int x, int y, int nWidth, int nHeight, Wnd hWndParent, LPARAM hMenu, IntPtr hInstance, LPARAM lpParam);
 
 		[DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
-		internal static extern LPARAM DefWindowProc(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam);
+		internal static extern LPARAM DefWindowProc(Wnd hWnd, int msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll", EntryPoint = "CallWindowProcW")]
-		internal static extern LPARAM CallWindowProc(LPARAM lpPrevWndFunc, Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
-		//internal static extern LPARAM CallWindowProc(Native.WNDPROC lpPrevWndFunc, Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
+		internal static extern LPARAM CallWindowProc(LPARAM lpPrevWndFunc, Wnd hWnd, int Msg, LPARAM wParam, LPARAM lParam);
+		//internal static extern LPARAM CallWindowProc(Native.WNDPROC lpPrevWndFunc, Wnd hWnd, int Msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool DestroyWindow(Wnd hWnd);
@@ -167,7 +167,7 @@ namespace Au.Types
 		internal static extern void PostQuitMessage(int nExitCode);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int GetMessage(out Native.MSG lpMsg, Wnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax);
+		internal static extern int GetMessage(out Native.MSG lpMsg, Wnd hWnd, int wMsgFilterMin, int wMsgFilterMax);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool TranslateMessage(in Native.MSG lpMsg);
@@ -187,7 +187,7 @@ namespace Au.Types
 		internal const uint PM_QS_INPUT = 0x1C070000;
 
 		[DllImport("user32.dll", EntryPoint = "PeekMessageW", SetLastError = true)]
-		internal static extern bool PeekMessage(out Native.MSG lpMsg, Wnd hWnd, uint wMsgFilterMin, uint wMsgFilterMax, uint wRemoveMsg);
+		internal static extern bool PeekMessage(out Native.MSG lpMsg, Wnd hWnd, int wMsgFilterMin, int wMsgFilterMax, uint wRemoveMsg);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ReplyMessage(LPARAM lResult);
@@ -244,11 +244,11 @@ namespace Au.Types
 
 		internal struct FLASHWINFO
 		{
-			public uint cbSize;
+			public int cbSize;
 			public Wnd hwnd;
 			public uint dwFlags;
-			public uint uCount;
-			public uint dwTimeout;
+			public int uCount;
+			public int dwTimeout;
 		}
 
 		[DllImport("user32.dll", SetLastError = true)]
@@ -293,12 +293,12 @@ namespace Au.Types
 		internal static extern bool GetCursorPos(out POINT lpPoint);
 
 		[DllImport("user32.dll", EntryPoint = "LoadImageW", SetLastError = true)]
-		internal static extern IntPtr LoadImage(IntPtr hInst, string name, uint type, int cx, int cy, uint LR_X);
+		internal static extern IntPtr LoadImage(IntPtr hInst, string name, int type, int cx, int cy, uint LR_X);
 		[DllImport("user32.dll", EntryPoint = "LoadImageW", SetLastError = true)]
-		internal static extern IntPtr LoadImage(IntPtr hInst, LPARAM resId, uint type, int cx, int cy, uint LR_X);
+		internal static extern IntPtr LoadImage(IntPtr hInst, LPARAM resId, int type, int cx, int cy, uint LR_X);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern IntPtr CopyImage(IntPtr h, uint type, int cx, int cy, uint flags);
+		internal static extern IntPtr CopyImage(IntPtr h, int type, int cx, int cy, uint flags);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool DestroyIcon(IntPtr hIcon);
@@ -318,7 +318,7 @@ namespace Au.Types
 
 		internal struct WINDOWPLACEMENT
 		{
-			public uint length;
+			public int length;
 			/// <summary> WPF_ </summary>
 			public uint flags;
 			public int showCmd;
@@ -335,14 +335,14 @@ namespace Au.Types
 
 		internal struct WINDOWINFO
 		{
-			public uint cbSize;
+			public int cbSize;
 			public RECT rcWindow;
 			public RECT rcClient;
 			public uint dwStyle;
 			public uint dwExStyle;
 			public uint dwWindowStatus;
-			public uint cxWindowBorders;
-			public uint cyWindowBorders;
+			public int cxWindowBorders;
+			public int cyWindowBorders;
 			public ushort atomWindowType;
 			public ushort wCreatorVersion;
 		}
@@ -402,7 +402,7 @@ namespace Au.Types
 		internal static extern bool EnumChildWindows(Wnd hWndParent, WNDENUMPROC lpEnumFunc, void* p);
 
 		[DllImport("user32.dll", EntryPoint = "RegisterWindowMessageW", SetLastError = true)]
-		internal static extern uint RegisterWindowMessage(string lpString);
+		internal static extern int RegisterWindowMessage(string lpString);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool IsChild(Wnd hWndParent, Wnd hWnd);
@@ -728,7 +728,7 @@ namespace Au.Types
 			public ushort wVk;
 			public ushort wScan;
 			public uint dwFlags;
-			public uint time;
+			public int time;
 			public LPARAM dwExtraInfo;
 #pragma warning disable 414 //never used
 			int _u1, _u2; //need INPUT size
@@ -780,7 +780,7 @@ namespace Au.Types
 			public int dy;
 			public int mouseData;
 			public IMFlags dwFlags;
-			public uint time;
+			public int time;
 			public LPARAM dwExtraInfo;
 
 			public INPUTM(IMFlags flags, int x = 0, int y = 0, int data = 0)
@@ -827,10 +827,10 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "LoadCursorW", SetLastError = true)]
 		internal static extern IntPtr LoadCursor(IntPtr hInstance, MCursor cursorId);
 
-		internal delegate void TIMERPROC(Wnd param1, uint param2, LPARAM param3, uint param4);
+		internal delegate void TIMERPROC(Wnd param1, int param2, LPARAM param3, uint param4);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern LPARAM SetTimer(Wnd hWnd, LPARAM nIDEvent, uint uElapse, TIMERPROC lpTimerFunc);
+		internal static extern LPARAM SetTimer(Wnd hWnd, LPARAM nIDEvent, int uElapse, TIMERPROC lpTimerFunc);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool KillTimer(Wnd hWnd, LPARAM uIDEvent);
@@ -842,7 +842,7 @@ namespace Au.Types
 		internal static extern bool AdjustWindowRectEx(ref RECT lpRect, Native.WS dwStyle, bool bMenu, Native.WS_EX dwExStyle);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool ChangeWindowMessageFilter(uint message, uint dwFlag);
+		internal static extern bool ChangeWindowMessageFilter(int message, uint dwFlag);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern short GetKeyState(int nVirtKey);
@@ -867,7 +867,7 @@ namespace Au.Types
 		internal const uint MWMO_INPUTAVAILABLE = 0x4;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int MsgWaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, uint dwMilliseconds, uint dwWakeMask, uint MWMO_Flags);
+		internal static extern int MsgWaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, int dwMilliseconds, uint dwWakeMask, uint MWMO_Flags);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool EndMenu();
@@ -1028,7 +1028,7 @@ namespace Au.Types
 
 		internal struct CURSORINFO
 		{
-			public uint cbSize;
+			public int cbSize;
 			public uint flags;
 			public IntPtr hCursor;
 			public POINT ptScreenPos;
@@ -1095,7 +1095,7 @@ namespace Au.Types
 			public uint vkCode;
 			public uint scanCode;
 			public uint flags;
-			public uint time;
+			public int time;
 			public LPARAM dwExtraInfo;
 		}
 
@@ -1106,7 +1106,7 @@ namespace Au.Types
 			public POINT pt;
 			public uint mouseData;
 			public uint flags;
-			public uint time;
+			public int time;
 			public LPARAM dwExtraInfo;
 		}
 
@@ -1132,11 +1132,24 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
-		/// <summary>
-		/// note: don't use LR_SHARED. It is only for native resources.
-		/// </summary>
-		[DllImport("user32.dll")] //does not support last error
-		internal static extern IntPtr CreateIconFromResourceEx(byte* pbIconBits, int cbIconBits, bool fIcon, uint dwVer= 0x30000, int cxDesired=0, int cyDesired=0, uint uFlags=0);
+		[Flags]
+		internal enum AnimationFlags :uint
+		{
+			Roll = 0x0000, // Uses a roll animation.
+			HorizontalPositive = 0x00001, // Animates the window from left to right. This flag can be used with roll or slide animation.
+			HorizontalNegative = 0x00002, // Animates the window from right to left. This flag can be used with roll or slide animation.
+			VerticalPositive = 0x00004, // Animates the window from top to bottom. This flag can be used with roll or slide animation.
+			VerticalNegative = 0x00008, // Animates the window from bottom to top. This flag can be used with roll or slide animation.
+			Center = 0x00010, // Makes the window appear to collapse inward if Hide is used or expand outward if the Hide is not used.
+			Hide = 0x10000, // Hides the window. By default, the window is shown.
+			Activate = 0x20000, // Activates the window.
+			Slide = 0x40000, // Uses a slide animation. By default, roll animation is used.
+			Blend = 0x80000, // Uses a fade effect. This flag can be used only with a top-level window.
+			Mask = 0xfffff,
+		}
+
+		[DllImport("user32.dll")]
+		internal static extern bool AnimateWindow(Wnd hWnd, int dwTime, AnimationFlags dwFlags);
 
 	}
 }

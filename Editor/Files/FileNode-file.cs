@@ -176,21 +176,28 @@ partial class FileNode
 	/// <param name="fileName">Suggested fileName. Will be changed if exists in that folder.</param>
 	public static FileNode NewItem(FilesModel model, FileNode target, NodePosition pos, NewItemTemplate template, string fileName = null)
 	{
-		bool isFolder = template == NewItemTemplate.Folder;
+		bool isFolder = false, isProject = false;
+		switch(template) {
+		case NewItemTemplate.Folder: isFolder = true; break;
+		case NewItemTemplate.AppProject:
+		case NewItemTemplate.LibraryProject: isFolder = isProject = true; break;
+		}
 
 		var xNew = new XElement(isFolder ? "d" : "f");
 
 		//create unique name
 		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
-		if(fileName == null) fileName = template.ToString() + (isFolder ? " 1" : " 1.cs");
+		//if(fileName == null) fileName = template.ToString() + (isFolder ? " 1" : (template == NewItemTemplate.Script ? " 1.csx" : " 1.cs"));
+		if(fileName == null) fileName = template.ToString() + ((isFolder || template == NewItemTemplate.Script) ? " 1" : " 1.cs");
 		string name = CreateNameUniqueInFolder(newParent, fileName, isFolder);
 		xNew.SetAttributeValue("n", name);
+		if(isProject) xNew.SetAttributeValue("project", template == NewItemTemplate.AppProject ? "app" : "library");
 
 		//create empty file or folder
 		try {
 			var path = newParent.FilePath + "\\" + name;
 			if(isFolder) Files.CreateDirectory(path);
-			else File.WriteAllText(path, ""); //TODO: use template
+			else File.WriteAllText(path, _Template(template));
 		}
 		catch(Exception ex) { Print(ex.Message); return null; }
 
@@ -198,14 +205,11 @@ partial class FileNode
 		var f = new FileNode(model, xNew);
 		f._Common_MoveCopyNew(target, pos);
 
+		if(isProject) {
+			template = template == NewItemTemplate.AppProject ? NewItemTemplate.AppClass : NewItemTemplate.Class;
+			return NewItem(model, f, NodePosition.Inside, template);
+		}
 		return f;
-	}
-
-	public enum NewItemTemplate
-	{
-		Folder,
-		Script,
-		Library,
 	}
 
 	public static string CreateNameUniqueInFolder(FileNode folder, string fromName, bool forFolder)
@@ -256,5 +260,33 @@ partial class FileNode
 		_model.Save.CollectionLater();
 		return true;
 	}
+
+	#region templates
+
+	static string _Template(NewItemTemplate template) //TODO: make editable etc
+	{
+		string r = "";
+		switch(template) {
+		case NewItemTemplate.Class:
+			r = Compiler.DefaultUsingsForTemplate + Project.Properties.Resources.TemplateClass;
+			break;
+		case NewItemTemplate.AppClass:
+			r = Compiler.DefaultUsingsForTemplate + Project.Properties.Resources.TemplateApp;
+			break;
+		}
+		return r;
+	}
+
+	public enum NewItemTemplate
+	{
+		Script,
+		Class,
+		AppClass,
+		Folder,
+		AppProject,
+		LibraryProject,
+	}
+
+	#endregion
 
 }

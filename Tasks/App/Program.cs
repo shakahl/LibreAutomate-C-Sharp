@@ -35,7 +35,7 @@ namespace Au.Tasks
 		/// </summary>
 		[STAThread]
 		//[LoaderOptimization(LoaderOptimization.MultiDomain)] //makes new AppDomain creation faster by 10 ms. But then does not unload assemblies of unloaded domains (uses many more MB of memory).
-		[LoaderOptimization(LoaderOptimization.MultiDomainHost)] //makes new AppDomain creation faster, and unloads non-GAC assemblies, eg frees many MB of compiler memory.
+		[LoaderOptimization(LoaderOptimization.MultiDomainHost)] //makes new AppDomain creation faster, and unloads non-GAC assemblies.
 		static void Main(string[] args)
 		{
 			//if(args.Length >= 1 && args[0] == "/domain") {
@@ -194,7 +194,7 @@ namespace Au.Tasks
 			m.Show();
 		}
 
-		unsafe static LPARAM WndProcAppsManager(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)
+		unsafe static LPARAM WndProcAppsManager(Wnd hWnd, int msg, LPARAM wParam, LPARAM lParam)
 		{
 			//if(_WndProcTrayIcon(msg, wParam, lParam)) return 0;
 
@@ -294,9 +294,9 @@ namespace Au.Tasks
 				IntPtr ev = Api.CreateEvent(default, false, false, null);
 				var thr = new Thread(_CompilerAppDomainThread);
 				thr.Start(ev);
-				Api.WaitForSingleObject(ev, Api.INFINITE);
+				Api.WaitForSingleObject(ev, Timeout.Infinite);
 				Api.CloseHandle(ev);
-				_compilerWindow = (Wnd)(IntPtr)_compilerDomain.GetData("hwndCompiler");
+				_compilerWindow = (Wnd)(LPARAM)_compilerDomain.GetData("hwndCompiler");
 			}
 
 			_compilerDomain.SetData("cs", csFile);

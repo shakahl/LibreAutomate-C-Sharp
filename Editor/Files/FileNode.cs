@@ -84,6 +84,11 @@ partial class FileNode
 		get => _x.Attribute_("g");
 	}
 
+	public string HexGUID
+	{
+		get => Convert_.HexEncode(Convert_.Base64Decode(GUID));
+	}
+
 #if TEST_MANY_COLUMNS
 				public bool Checked
 				{

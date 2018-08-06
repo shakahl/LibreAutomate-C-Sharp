@@ -60,8 +60,21 @@ namespace Au
 		#region API
 		#region private API
 
-		[DllImport("comctl32.dll")]
-		static extern int TaskDialogIndirect(in TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
+		//[DllImport("comctl32.dll")]
+		//static extern int TaskDialogIndirect(in TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
+		delegate int _tTaskDialogIndirect(in TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
+		static readonly _tTaskDialogIndirect TaskDialogIndirect = _GetTaskDialogIndirect();
+
+		static _tTaskDialogIndirect _GetTaskDialogIndirect()
+		{
+			//Activate manifest that tells to use comctl32.dll version 6. The API is unavailable in version 5.
+			//Need this if the host app does not have such manifest, eg if uses the default manifest added by Visual Studio.
+			using(Util.LibActCtx.Activate()) {
+				//Also, don't use DllImport, because it uses v5 comctl32.dll if it is already loaded.
+				Api.GetDelegate(out _tTaskDialogIndirect R, "comctl32.dll", "TaskDialogIndirect");
+				return R;
+			}
+		}
 
 		//TASKDIALOGCONFIG flags.
 		[Flags]
@@ -106,7 +119,7 @@ namespace Au
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		unsafe struct TASKDIALOGCONFIG
 		{
-			public uint cbSize;
+			public int cbSize;
 			public Wnd hwndParent;
 			public IntPtr hInstance;
 			public TDF_ dwFlags;
@@ -800,7 +813,6 @@ namespace Au
 			int rNativeButton = 0, rRadioButton = 0, rIsChecked = 0, hr = 0;
 			bool hasCustomButtons = false;
 			Util.WinHook hook = null;
-			IntPtr actCtxCookie = default;
 
 			try {
 				_threadIdInShow = Thread.CurrentThread.ManagedThreadId;
@@ -814,10 +826,6 @@ namespace Au
 				}
 
 				Wnd.Lib.EnableActivate(true);
-
-				//Activate manifest that tells to use comctl32.dll version 6. The API is unavailable in version 5.
-				//Need this if the host app does not have such manifest, eg if uses the default manifest added by Visual Studio.
-				actCtxCookie = Util.LibActCtx.Activate();
 
 				for(int i = 0; i < 10; i++) { //see the API bug-workaround comment below
 					_LockUnlock(true); //see the API bug-workaround comment below
@@ -856,14 +864,8 @@ namespace Au
 				if(!_dlg.Is0) Api.DestroyWindow(_dlg);
 
 				_SetClosed();
-
 				_threadIdInShow = 0;
-
 				hook?.Dispose();
-
-				//DeactivateActCtx throws SEHException on Thread.Abort, don't know why.
-				try { Util.LibActCtx.Deactivate(actCtxCookie); } catch(SEHException) { /*Debug_.Print("exc");*/ }
-
 				_buttons.MarshalFreeButtons(ref _c);
 			}
 
@@ -895,7 +897,7 @@ namespace Au
 			pnButton = pnRadioButton = pChecked = 0;
 			try {
 #endif
-				return TaskDialogIndirect(in _c, out pnButton, out pnRadioButton, out pChecked);
+			return TaskDialogIndirect(in _c, out pnButton, out pnRadioButton, out pChecked);
 #if DEBUG
 			}
 			catch(Exception e) when(!(e is ThreadAbortException)) {
@@ -1170,7 +1172,7 @@ namespace Au
 				break;
 			}
 
-			return (int)_dlg.Send((uint)message, wParam, lParam);
+			return (int)_dlg.Send((int)message, wParam, lParam);
 		}
 
 		//called by TDSend
@@ -1180,7 +1182,7 @@ namespace Au
 				text = _c.pszContent = text + c_multilineString;
 			}
 
-			_dlg.SendS((uint)(resizeDialog ? TDApi.TDM.SET_ELEMENT_TEXT : TDApi.TDM.UPDATE_ELEMENT_TEXT), (int)partId, text ?? "");
+			_dlg.SendS((int)(resizeDialog ? TDApi.TDM.SET_ELEMENT_TEXT : TDApi.TDM.UPDATE_ELEMENT_TEXT), (int)partId, text ?? "");
 			//info: null does not change text.
 
 			if(_IsEdit) _EditControlUpdateAsync(!resizeDialog);
@@ -1271,7 +1273,7 @@ namespace Au
 				int top = r.top;
 				if(!_c.pszContent.EndsWith_(c_multilineString)) {
 					_c.pszContent += c_multilineString;
-					_dlg.SendS((uint)TDApi.TDM.SET_ELEMENT_TEXT, (int)TDApi.TDE.CONTENT, _c.pszContent);
+					_dlg.SendS((int)TDApi.TDM.SET_ELEMENT_TEXT, (int)TDApi.TDE.CONTENT, _c.pszContent);
 					prog.GetRectInClientOf(parent, out r); //used to calculate Edit control height: after changing text, prog is moved down, and we know its previous location...
 				}
 				if(_editMultilineHeight == 0) { _editMultilineHeight = r.bottom - top; } else top = r.bottom - _editMultilineHeight;
@@ -1294,8 +1296,8 @@ namespace Au
 			var pStyle = Native.WS.CHILD | Native.WS.VISIBLE | Native.WS.CLIPCHILDREN | Native.WS.CLIPSIBLINGS; //don't need WS_TABSTOP
 			var pExStyle = Native.WS_EX.NOPARENTNOTIFY; //not Native.WS_EX.CONTROLPARENT
 			_editParent = Wnd.Misc.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
-			_EditControlParentProcHolder = _EditControlParentProc;
-			_editParent.SetWindowLong(Native.GWL.DWLP_DLGPROC, Marshal.GetFunctionPointerForDelegate(_EditControlParentProcHolder));
+			_editControlParentProcHolder = _EditControlParentProc;
+			_editParent.SetWindowLong(Native.GWL.DWLP_DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder));
 
 			//Create Edit or ComboBox control.
 			string className = "Edit";
@@ -1349,7 +1351,7 @@ namespace Au
 		Util.LibNativeFont _editFont;
 
 		//Dlgproc of our intermediate #32770 control, the parent of out Edit control.
-		int _EditControlParentProc(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam)
+		int _EditControlParentProc(Wnd hWnd, int msg, LPARAM wParam, LPARAM lParam)
 		{
 			//Print(msg, wParam, lParam);
 			switch(msg) {
@@ -1372,8 +1374,8 @@ namespace Au
 			return 0;
 			//tested: WM_GETDLGCODE, no results.
 		}
-		DLGPROC _EditControlParentProcHolder;
-		delegate int DLGPROC(Wnd w, uint msg, LPARAM wParam, LPARAM lParam);
+		DLGPROC _editControlParentProcHolder;
+		delegate int DLGPROC(Wnd w, int msg, LPARAM wParam, LPARAM lParam);
 
 		#endregion Edit control
 

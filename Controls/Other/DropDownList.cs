@@ -228,9 +228,9 @@ namespace Au.Controls
 			//{
 			//	//Wnd.Misc.PrintMsg(m, Api.WM_REFLECT|Api.WM_NOTIFY);
 			//	//if(m.Msg < Api.WM_USER) Wnd.Misc.PrintMsg(m);
-			//	if((uint)m.Msg == Api.WM_CREATE || (uint)m.Msg == Api.WM_DESTROY) Wnd.Misc.PrintMsg(m);
+			//	if(m.Msg == Api.WM_CREATE || m.Msg == Api.WM_DESTROY) Wnd.Misc.PrintMsg(m);
 
-			//	//if((uint)m.Msg == Api.WM_MOUSEACTIVATE) {
+			//	//if(m.Msg == Api.WM_MOUSEACTIVATE) {
 			//	//	Print("WM_MOUSEACTIVATE 1");
 			//	//	m.Result = (IntPtr)Api.MA_NOACTIVATE; //toolstrip sets focus anyway
 			//	//	return;

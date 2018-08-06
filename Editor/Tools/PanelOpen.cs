@@ -65,7 +65,7 @@ class PanelOpen :Control, ITreeModel
 
 	public void UpdateList()
 	{
-		//DebugPrintFunc();
+		//Debug_.PrintFunc();
 		//Perf.First();
 		//_c.Model = null; _c.Model = this; //works, but slightly slower and maybe less correct
 		if(_c.Model == null) _c.Model = this; else StructureChanged?.Invoke(this, new TreePathEventArgs(TreePath.Empty));
@@ -76,14 +76,14 @@ class PanelOpen :Control, ITreeModel
 	{
 		if(fn == null) _c.ClearSelection();
 		else _c.SelectedNode = _c.FindNodeByTag(fn);
-		//DebugPrintFunc();
+		//Debug_.PrintFunc();
 	}
 
 	#region ITreeModel
 
 	public IEnumerable GetChildren(object nodeTag)
 	{
-		//DebugPrintFunc();
+		//Debug_.PrintFunc();
 		Debug.Assert(nodeTag == null);
 		return Model?.OpenFiles.AsEnumerable().Reverse();
 	}

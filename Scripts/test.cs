@@ -12,7 +12,8 @@ public static class Test
 
     public static void Main()
     {
-Out("catkeys");
+//Print("Au");
+AuDialog.Show("Au");
 //Console.WriteLine ($"Hello {77} World");
 //MessageBoxA((IntPtr)0, "aa", "bb", 0);
 //Console.Write("Press any key to continue . . . ");

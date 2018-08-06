@@ -97,10 +97,9 @@ namespace Au
 
 		/// <summary>
 		/// Gets the window handle as Wnd from a System.Windows.Forms.Control (or Form etc) variable.
-		/// Returns default(Wnd) if c is null.
-		/// If the handle is still not created, the Control auto-creates it (hidden window).
+		/// Returns default(Wnd) if w is null or the handle is still not created.
 		/// </summary>
-		public static explicit operator Wnd(System.Windows.Forms.Control c) => new Wnd(c == null ? default : c.Handle);
+		public static explicit operator Wnd(System.Windows.Forms.Control c) => new Wnd(c == null || !c.IsHandleCreated ? default : c.Handle);
 
 		/// <summary>
 		/// Gets the window handle as Wnd from a System.Windows.Window variable (WPF window).
@@ -189,8 +188,9 @@ namespace Au
 		/// Calls API <msdn>SendMessage</msdn>.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public LPARAM Send(uint message, LPARAM wParam = default, LPARAM lParam = default)
+		public LPARAM Send(int message, LPARAM wParam = default, LPARAM lParam = default)
 		{
+			Debug.Assert(!Is0);
 			return Api.SendMessage(this, message, wParam, lParam);
 		}
 
@@ -198,8 +198,9 @@ namespace Au
 		/// Calls API <msdn>SendMessage</msdn> where lParam is string.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public LPARAM SendS(uint message, LPARAM wParam, string lParam)
+		public LPARAM SendS(int message, LPARAM wParam, string lParam)
 		{
+			Debug.Assert(!Is0);
 			fixed (char* p = lParam)
 				return Api.SendMessage(this, message, wParam, p);
 			//info: don't use overload, then eg ambiguous if null.
@@ -209,8 +210,9 @@ namespace Au
 		/// Calls API <msdn>SendMessage</msdn> where lParam is char[].
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public LPARAM SendS(uint message, LPARAM wParam, char[] lParam)
+		public LPARAM SendS(int message, LPARAM wParam, char[] lParam)
 		{
+			Debug.Assert(!Is0);
 			fixed (char* p = lParam)
 				return Api.SendMessage(this, message, wParam, p);
 		}
@@ -219,49 +221,54 @@ namespace Au
 		/// Calls API <msdn>SendMessageTimeout</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public bool SendTimeout(int timeoutMS, uint message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
+		public bool SendTimeout(int timeoutMS, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
-			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, (uint)timeoutMS, out LPARAM R);
+			Debug.Assert(!Is0);
+			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, timeoutMS, out LPARAM R);
 		}
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public bool SendTimeout(int timeoutMS, out LPARAM result, uint message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
+		public bool SendTimeout(int timeoutMS, out LPARAM result, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
+			Debug.Assert(!Is0);
 			result = 0;
-			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, (uint)timeoutMS, out result);
+			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, timeoutMS, out result);
 		}
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, string lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
+		public bool SendTimeoutS(int timeoutMS, out LPARAM result, int message, LPARAM wParam, string lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
+			Debug.Assert(!Is0);
 			result = 0;
 			fixed (char* p = lParam)
-				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, (uint)timeoutMS, out result);
+				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, timeoutMS, out result);
 		}
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is char[].
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public bool SendTimeoutS(int timeoutMS, out LPARAM result, uint message, LPARAM wParam, char[] lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
+		public bool SendTimeoutS(int timeoutMS, out LPARAM result, int message, LPARAM wParam, char[] lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
+			Debug.Assert(!Is0);
 			result = 0;
 			fixed (char* p = lParam)
-				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, (uint)timeoutMS, out result);
+				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, timeoutMS, out result);
 		}
 
 		/// <summary>
 		/// Calls API <msdn>SendNotifyMessage</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public bool SendNotify(uint message, LPARAM wParam = default, LPARAM lParam = default)
+		public bool SendNotify(int message, LPARAM wParam = default, LPARAM lParam = default)
 		{
+			Debug.Assert(!Is0);
 			return Api.SendNotifyMessage(this, message, wParam, lParam);
 		}
 
@@ -269,9 +276,10 @@ namespace Au
 		/// Calls API <msdn>PostMessage</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		/// <seealso cref="Misc.PostThreadMessage(uint, LPARAM, LPARAM)"/>
-		public bool Post(uint message, LPARAM wParam = default, LPARAM lParam = default)
+		/// <seealso cref="Misc.PostThreadMessage(int, LPARAM, LPARAM)"/>
+		public bool Post(int message, LPARAM wParam = default, LPARAM lParam = default)
 		{
+			Debug.Assert(!Is0);
 			return Api.PostMessage(this, message, wParam, lParam);
 		}
 
@@ -282,7 +290,7 @@ namespace Au
 			/// Calls API <msdn>PostMessage</msdn> with default(Wnd). 
 			/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 			/// </summary>
-			public static bool PostThreadMessage(uint message, LPARAM wParam = default, LPARAM lParam = default)
+			public static bool PostThreadMessage(int message, LPARAM wParam = default, LPARAM lParam = default)
 			{
 				return Api.PostMessage(default, message, wParam, lParam);
 			}
@@ -292,7 +300,7 @@ namespace Au
 			/// Calls API <msdn>PostThreadMessage</msdn>. 
 			/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 			/// </summary>
-			public static bool PostThreadMessage(uint threadId, uint message, LPARAM wParam = default, LPARAM lParam = default)
+			public static bool PostThreadMessage(int threadId, int message, LPARAM wParam = default, LPARAM lParam = default)
 			{
 				return Api.PostThreadMessage(threadId, message, wParam, lParam);
 			}
@@ -1098,7 +1106,7 @@ namespace Au
 
 			bool ok = false;
 			using(new Util.LibAttachThreadInput(tid, out bool atiOK)) {
-				if(atiOK) { //FUTURE: if fails, try Acc.Focus.
+				if(atiOK) { //FUTURE: if fails, try Acc.Focus or UIA. AttachThreadInput is unreliable.
 					for(int i = 0; i < 5; i++) {
 						if(i > 0) Thread.Sleep(30);
 						Native.ClearError();
@@ -2741,7 +2749,7 @@ namespace Au
 		{
 			if(!IsAlive) return true;
 
-			uint msg = Api.WM_CLOSE, wparam = 0; if(useXButton) { msg = Api.WM_SYSCOMMAND; wparam = Api.SC_CLOSE; }
+			int msg = Api.WM_CLOSE; uint wparam = 0; if(useXButton) { msg = Api.WM_SYSCOMMAND; wparam = Api.SC_CLOSE; }
 
 			if(IsOfThisThread) {
 				if(noWait.GetValueOrDefault()) Post(msg, wparam);

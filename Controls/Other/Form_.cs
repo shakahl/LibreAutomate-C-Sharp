@@ -42,7 +42,10 @@ namespace Au.Controls
 			get
 			{
 				var p = base.CreateParams;
-				if(IsPopup) p.Style |= unchecked((int)Native.WS.POPUP);
+				if(IsPopup) {
+					if(((Native.WS)p.Style).Has_(Native.WS.CHILD)) p.Style &= ~unchecked((int)Native.WS.POPUP); //probably in designer
+					else p.Style |= unchecked((int)Native.WS.POPUP);
+				}
 				return p;
 			}
 		}

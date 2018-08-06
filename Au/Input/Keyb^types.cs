@@ -326,7 +326,7 @@ namespace Au.Util
 	/// 
 	/// 	protected override void WndProc(ref Message m)
 	/// 	{
-	/// 		switch((uint)m.Msg) {
+	/// 		switch(m.Msg) {
 	/// 		case Api.WM_CREATE: //0x1
 	/// 			bool r1 = _hk2.Register(1, "Ctrl+Alt+F10", this);
 	/// 			bool r2 = _hk1.Register(2, (KMod.Ctrl | KMod.Shift, KKey.D), this); //Ctrl+Shift+D

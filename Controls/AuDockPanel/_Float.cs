@@ -111,7 +111,7 @@ namespace Au.Controls
 				//Util.LibDebug_.PrintMsg(ref m);
 				//LPARAM WP = m.WParam, LP = m.LParam;
 
-				switch((uint)m.Msg) {
+				switch(m.Msg) {
 				case Api.WM_CREATE:
 					if(!_sizeChanged) OnClientSizeChanged(null); //OnClientSizeChanged not called if the size is = default form size (300, 300)
 					break;

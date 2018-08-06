@@ -39,7 +39,7 @@ namespace Au
 
 			//var perf = Perf.StartNew();
 			IntPtr R = _GetFileIcon(file, size, flags);
-			//perf.Next(); Print(perf.Times, file);
+			//perf.Next(); Print(perf.ToString(), file);
 			//Print($"<><c 0xff0000>{file}</c>");
 			return R;
 		}

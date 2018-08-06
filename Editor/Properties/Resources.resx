@@ -232,19 +232,130 @@
   <data name="_new" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\png icons\new.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="CS_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\CS_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="FolderOpen_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\FolderOpen_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="Folder_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\Folder_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="String1" xml:space="preserve">
-    <value>test</value>
-  </data>
   <data name="NewFolder_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\NewSolutionFolder_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="fileClass" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\fileclass.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="fileScript" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\filescript.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="folder" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\folder.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="folderOpen" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\folderopen.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="TemplateApp" xml:space="preserve">
+    <value>static class Program
+{
+[STAThread]
+static void Main(string[] args)
+{
+	Print("test");
+
+
+
+}
+}</value>
+  </data>
+  <data name="TemplateClass" xml:space="preserve">
+    <value>/// &lt;summary&gt;
+/// Example class.
+/// &lt;/summary&gt;
+/// &lt;example&gt;
+/// Static functions.
+/// &lt;code&gt;&lt;![CDATA[
+/// int i = Example.StaticProperty1;
+/// string s = Example.StaticProperty2;
+/// Example.StaticProperty2 = "new value";
+/// Example.StaticMethod(10, "optional argument");
+/// Example.StaticMethod(10);
+/// ]]&gt;&lt;/code&gt;
+/// Instance.
+/// &lt;code&gt;&lt;![CDATA[
+/// var x = new Example("Name");
+/// int i = x.Property1;
+/// x.Property3 = "test";
+/// x.Method1();
+/// var s = x.Method2("test ", 2);
+/// ]]&gt;&lt;/code&gt;
+/// &lt;/example&gt;
+public class Example
+{
+	#region static functions
+
+	static int s_privateField1 = 5;
+
+	public static int StaticProperty1 =&gt; s_privateField1;
+
+	public static string StaticProperty2 { get; set; }
+
+	public static int StaticProperty3 { get { return s_privateField3; } set { s_privateField3 = value; } }
+	static int s_privateField3;
+
+	public static void StaticMethod(int i, string s = null)
+	{
+
+	}
+
+	static void _StaticPrivateMethod()
+	{
+
+	}
+
+	#endregion
+
+	#region instance functions
+
+	string _name;
+	int _privateField1;
+
+	public Example(string name)
+	{
+		Print("constructor");
+		_name = name;
+		_privateField1 = 1;
+	}
+
+	public int Property1 =&gt; _privateField1;
+
+	public string Property2 { get; private set; }
+
+	public string Property3
+	{
+		get
+		{
+			return _privateField3;
+		}
+		set
+		{
+			if(value == null) throw new ArgumentNullException();
+			_privateField3 = value;
+		}
+	}
+	string _privateField3 = "default";
+
+	public void Method1()
+	{
+		Print("method");
+	}
+
+	public string Method2(string s, int i)
+	{
+		return s + _PrivateMethod(i);
+	}
+
+	int _PrivateMethod(int i)
+	{
+		return i * i;
+	}
+
+	#endregion
+}</value>
+  </data>
+  <data name="project" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\project.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

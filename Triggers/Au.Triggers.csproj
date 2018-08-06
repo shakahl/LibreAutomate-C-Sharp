@@ -34,7 +34,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>Au.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>Properties\Au.pfx</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
@@ -58,7 +58,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Au.pfx" />
+    <None Include="Properties\Au.pfx" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -464,7 +464,7 @@ namespace Au.Types
 			/// <summary><msdn>KBDLLHOOKSTRUCT</msdn></summary>
 			public uint flags => _x->flags;
 			/// <summary><msdn>KBDLLHOOKSTRUCT</msdn></summary>
-			public uint time => _x->time;
+			public int time => _x->time;
 			/// <summary><msdn>KBDLLHOOKSTRUCT</msdn></summary>
 			public LPARAM dwExtraInfo => _x->dwExtraInfo;
 		}
@@ -550,7 +550,7 @@ namespace Au.Types
 			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>
 			public uint flags => _x->flags;
 			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>
-			public uint time => _x->time;
+			public int time => _x->time;
 			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>
 			public LPARAM dwExtraInfo => _x->dwExtraInfo;
 		}

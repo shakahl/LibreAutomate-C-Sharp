@@ -37,10 +37,10 @@ namespace Au.Types
 		internal static extern bool SetEvent(IntPtr hEvent);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern uint WaitForSingleObject(IntPtr hHandle, uint dwMilliseconds);
+		internal static extern int WaitForSingleObject(IntPtr hHandle, int dwMilliseconds);
 
 		//[DllImport("kernel32.dll")]
-		//internal static extern uint SignalObjectAndWait(IntPtr hObjectToSignal, IntPtr hObjectToWaitOn, uint dwMilliseconds, bool bAlertable);
+		//internal static extern int SignalObjectAndWait(IntPtr hObjectToSignal, IntPtr hObjectToWaitOn, int dwMilliseconds, bool bAlertable);
 		//note: don't know why, this often is much slower than setevent/waitforsingleobject.
 
 		[DllImport("kernel32.dll")] //note: no SetLastError = true
@@ -258,16 +258,16 @@ namespace Au.Types
 
 		internal struct STARTUPINFO
 		{
-			public uint cb;
+			public int cb;
 			public IntPtr lpReserved;
 			public IntPtr lpDesktop;
 			public IntPtr lpTitle;
-			public uint dwX;
-			public uint dwY;
-			public uint dwXSize;
-			public uint dwYSize;
-			public uint dwXCountChars;
-			public uint dwYCountChars;
+			public int dwX;
+			public int dwY;
+			public int dwXSize;
+			public int dwYSize;
+			public int dwXCountChars;
+			public int dwYCountChars;
 			public uint dwFillAttribute;
 			public uint dwFlags;
 			public ushort wShowWindow;
@@ -404,10 +404,10 @@ namespace Au.Types
 		internal static extern bool SetEndOfFile(SafeFileHandle hFile);
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateMailslotW", SetLastError = true)]
-		internal static extern SafeFileHandle CreateMailslot(string lpName, uint nMaxMessageSize, uint lReadTimeout, SECURITY_ATTRIBUTES lpSecurityAttributes);
+		internal static extern SafeFileHandle CreateMailslot(string lpName, uint nMaxMessageSize, int lReadTimeout, SECURITY_ATTRIBUTES lpSecurityAttributes);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool GetMailslotInfo(SafeFileHandle hMailslot, uint* lpMaxMessageSize, out int lpNextSize, out int lpMessageCount, uint* lpReadTimeout = null);
+		internal static extern bool GetMailslotInfo(SafeFileHandle hMailslot, uint* lpMaxMessageSize, out int lpNextSize, out int lpMessageCount, int* lpReadTimeout = null);
 
 		internal struct SYSTEMTIME
 		{
@@ -545,15 +545,15 @@ namespace Au.Types
 		[DllImport("kernel32", SetLastError = true)]
 		internal extern static bool DeactivateActCtx(int dwFlags, IntPtr lpCookie);
 
-		[DllImport("kernel32", SetLastError = true)]
-		internal extern static bool GetCurrentActCtx(out IntPtr handle);
+		[DllImport("kernel32.dll")]
+		internal static extern void ReleaseActCtx(IntPtr hActCtx);
 
 		internal const int ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID = 0x004;
 		internal const int ACTCTX_FLAG_RESOURCE_NAME_VALID = 0x008;
 
 		internal struct ACTCTX
 		{
-			public uint cbSize;
+			public int cbSize;
 			public uint dwFlags;
 			public string lpSource;
 			public ushort wProcessorArchitecture;
@@ -596,10 +596,10 @@ namespace Au.Types
 		internal static extern bool GetFileSizeEx(SafeFileHandle hFile, out long lpFileSize);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern int WaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, bool bWaitAll, uint dwMilliseconds, bool bAlertable);
+		internal static extern int WaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, bool bWaitAll, int dwMilliseconds, bool bAlertable);
 
 		[DllImport("kernel32.dll")]
-		internal static extern int SleepEx(uint dwMilliseconds, bool bAlertable);
+		internal static extern int SleepEx(int dwMilliseconds, bool bAlertable);
 
 		[DllImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
 		internal static extern IntPtr FindResource(IntPtr hModule, LPARAM lpName, LPARAM lpType);

@@ -51,7 +51,7 @@ namespace Au.Tools
 			if(Registry_.GetString(out var wndPos, "wndPos", c_registryKey))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 
-			_info.Text = c_infoForm;
+			_info.ST.SetText(c_infoForm);
 			_FillGrid();
 		}
 
@@ -251,8 +251,6 @@ namespace Au.Tools
 			var bb = new StringBuilder();
 			bb.AppendLine(wndCode);
 
-			if(forTest) bb.AppendLine(wndVar).Append(".ActivateLL(); 200.ms();");
-
 			if(!isColor) {
 				if(isMulti) {
 					bb.AppendLine("object[] image = {");
@@ -450,7 +448,7 @@ namespace Au.Tools
 		{
 			_errorProvider.Clear();
 			var (code, wndVar) = _FormatCode(true); if(code == null) return;
-			var r = await TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as WinImage).RectInScreen);
+			await TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as WinImage).RectInScreen, activateWindow: true);
 		}
 
 		#endregion

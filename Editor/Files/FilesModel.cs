@@ -30,7 +30,9 @@ partial class FilesModel :ITreeModel
 	public readonly FileNode Root;
 	public readonly XElement Xml;
 	public readonly string CollectionFile;
+	public readonly string CollectionDirectory;
 	public readonly string FilesDirectory;
+	public readonly string CacheDirectory;
 	public readonly string StateFile;
 	public readonly Dictionary<string, FileNode> GuidMap;
 	public readonly List<FileNode> OpenFiles;
@@ -47,10 +49,11 @@ partial class FilesModel :ITreeModel
 	{
 		TV = c;
 		CollectionFile = Path_.Normalize(file);
-		var colDir = Path_.GetDirectoryPath(CollectionFile, true);
-		this.FilesDirectory = colDir + "files";
-		Files.CreateDirectory(this.FilesDirectory);
-		this.StateFile = colDir + "state.xml";
+		CollectionDirectory = Path_.GetDirectoryPath(CollectionFile);
+		FilesDirectory = CollectionDirectory + @"\files";
+		CacheDirectory = CollectionDirectory + @"\cache";
+		Files.CreateDirectory(FilesDirectory);
+		StateFile = CollectionDirectory + @"\state.xml";
 
 		Xml = XElement.Load(CollectionFile);
 
@@ -123,12 +126,15 @@ partial class FilesModel :ITreeModel
 
 		if(_myClipboard.Contains(f)) return EResources.GetImageUseCache("cut");
 
-		bool leaf = node.IsLeaf;
+		bool isLeaf = node.IsLeaf, isScript=isLeaf;
 #if true
 		//var p = new Perf.Inst(true);
-		if(leaf) {
+		if(isLeaf) {
 			bool isPath = f.IsLink(out string s);
-			if(!(isPath ? s : f.Name).EndsWith_(".cs", true)) {
+			if(!isPath) s = f.Name;
+			int i = Path_.FindExtension(s);
+			if(i >= 0) isScript = false;
+			if(!(isScript || s.EndsWith_(".cs", true))) {
 				//p.Next();
 				if(!isPath) s = f.FilePath;
 				var r = IconCache.GetImage(s, true);
@@ -139,8 +145,18 @@ partial class FilesModel :ITreeModel
 			}
 		}
 #endif
-		return EResources.GetImageUseCache(leaf ? "CS_16x" : (node.IsExpanded ? "FolderOpen_16x" : "Folder_16x"));
+		string k;
+		if(isLeaf) {
+			if(isScript) k = "fileScript";
+			else k = "fileClass";
+		} else {
+			if(f.Xml.HasAttribute_("project")) k = "project";
+			else if(node.IsExpanded) k = "folderOpen";
+			else k = "folder";
+		}
+		return EResources.GetImageUseCache(k);
 	}
+	static readonly string[] s_csExt = new string[] { ".cs", ".csx" };
 
 	private void _ncName_DrawText(object sender, DrawEventArgs e)
 	{
@@ -220,16 +236,28 @@ partial class FilesModel :ITreeModel
 
 	#region find
 
+	/// <summary>
+	/// Finds file or folder by name or @"\relative path".
+	/// </summary>
+	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
 	public FileNode FindFileOrFolder(string name)
 	{
 		return Root.FindDescendantFileOrFolder(name);
 	}
 
+	/// <summary>
+	/// Finds file by name or @"\relative path".
+	/// </summary>
+	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
 	public FileNode FindFile(string name)
 	{
 		return Root.FindDescendantFile(name);
 	}
 
+	/// <summary>
+	/// Finds folder by name or @"\relative path".
+	/// </summary>
+	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
 	public FileNode FindFolder(string name)
 	{
 		return Root.FindDescendantFolder(name);
@@ -862,7 +890,6 @@ partial class FilesModel :ITreeModel
 	private void _TV_DragOver(object sender, DragEventArgs e)
 	{
 		_selectOnClick_FileNode = null;
-
 		e.Effect = DragDropEffects.None;
 		var effect = e.AllowedEffect;
 		bool copy = (e.KeyState & 8) != 0;
@@ -1000,20 +1027,21 @@ partial class FilesModel :ITreeModel
 		_watcher = new FileSystemWatcher(this.FilesDirectory);
 		_watcher.IncludeSubdirectories = true;
 		_watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite;
-		//_watcher.EnableRaisingEvents = true;
 		_watcher.Changed += _watcher_Changed;
 		_watcher.Created += _watcher_Created;
 		_watcher.Deleted += _watcher_Deleted;
 		_watcher.Renamed += _watcher_Renamed;
+		//_watcher.EnableRaisingEvents = true; //FUTURE
 	}
 
 	void _UninitWatcher()
 	{
+		//_watcher.EnableRaisingEvents = false;
 		//_watcher.Changed -= _watcher_Changed;
 		//_watcher.Created -= _watcher_Created;
 		//_watcher.Deleted -= _watcher_Deleted;
 		//_watcher.Renamed -= _watcher_Renamed;
-		_watcher.Dispose();
+		_watcher.Dispose(); //disables raising events and sets all events = null
 	}
 
 	private void _watcher_Renamed(object sender, RenamedEventArgs e)

@@ -265,24 +265,51 @@ namespace Au.Util
 		}
 
 		/// <summary>
+		/// Full name of embedded resources file, like "Project.Properties.Resources.resources".
+		/// Set this property once before calling <see cref="GetAppResource"/>.
+		/// If not set, it will look for resource where name ends with ".Resources.resources". If there is no such resources, uses the first.
+		/// To see embedded resource file names you can use this code: <c>Print(System.Reflection.Assembly.GetEntryAssembly().GetManifestResourceNames()</c>.
+		/// </summary>
+		public static string AppResourcesName
+		{
+			get => s_appResourcesName;
+			set { if(value != s_appResourcesName) { s_appResourcesName = value; _appResourceManager = null; } }
+		}
+		static string s_appResourcesName;
+
+		/// <summary>
 		/// Gets ResourceManager of appdomain's entry assembly.
-		/// Returns null if the assembly does not have resources or if fails.
+		/// Returns null if fails or if the assembly does not have resources.
+		/// Note: if the assembly contains multiple embedded .resource files, may need to set <see cref="AppResourcesName"/> before.
 		/// </summary>
 		internal static ResourceManager LibGetAppResourceManager(out CultureInfo culture)
 		{
 			if(_appResourceManager == null) {
 				culture = null;
-				var asm = Assembly_.EntryAssembly;
-				var s = asm?.GetManifestResourceNames()?.FirstOrDefault(k => k.EndsWith_(".Properties.Resources.resources")); //eg "Project.Properties.Resources.resources". Skip those like "Form1.resources".
-				if(s == null) return null; //no resources
-				s = s.Remove(s.Length - 10); //remove ".resources", it's documented
-				var t = asm.GetType(s); if(t == null) return null;
-				var fl = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static; //need NonPublic because default access is internal
-				if(t.GetProperty("ResourceManager", fl)?.GetValue(null) is ResourceManager rm) {
-					_appResourceCulture = t.GetProperty("Culture")?.GetValue(null) as CultureInfo;
-					_appResourceManager = rm;
+				var asm = Assembly_.EntryAssembly; if(asm == null) return null;
+				var a = asm.GetManifestResourceNames(); if(a == null || a.Length == 0) return null; //no resources
+				string s;
+				if(s_appResourcesName != null) {
+					s = a.FirstOrDefault(k => k == s_appResourcesName);
 				} else {
-					Debug_.Print("failed to get ResourceManager property");
+					if(a.Length == 1 && a[0].EndsWith_(".resources")) s = a[0];
+					else {
+						s = a.FirstOrDefault(k => k.EndsWith_(".Resources.resources")); //eg "Project.Properties.Resources.resources". Skip those like "Form1.resources".
+						if(s == null) s = a.FirstOrDefault(k => k.EndsWith_(".resources"));
+					}
+				}
+				if(s == null) return null;
+				s = s.Remove(s.Length - 10); //remove ".resources"
+				var t = asm.GetType(s);
+				if(t != null) {
+					var fl = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static; //need NonPublic because default access is internal
+					if(t.GetProperty("ResourceManager", fl)?.GetValue(null) is ResourceManager rm) {
+						_appResourceCulture = t.GetProperty("Culture")?.GetValue(null) as CultureInfo;
+						_appResourceManager = rm;
+					}
+				}
+				if(_appResourceManager == null) {
+					//Debug_.Print("failed to get ResourceManager property"); //eg Au-compiled scripts don't have the type
 					_appResourceManager = new ResourceManager(s, asm);
 				}
 			}

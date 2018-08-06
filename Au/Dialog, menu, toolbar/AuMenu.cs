@@ -14,6 +14,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
+using System.Reflection.Emit;
 
 using Au.Types;
 using static Au.NoClass;
@@ -80,7 +81,7 @@ namespace Au
 		m["Label"] = o => Shell.TryRun("notepad.exe");
 		can use
 		m.Run("notepad.exe", "label"); //label is optional
-		Then can auto-get icon without disassembling the delegate.
+		Then can auto-get icon without disassembling the callback.
 
 		Another example: instead of
 		m["Label"] = o => Paste("notepad.exe");
@@ -104,6 +105,8 @@ namespace Au
 		/// m.LastItem.ToolTipText = "tooltip";
 		/// m["Three"] = o => { Print(o.MenuItem.Checked); };
 		/// m.LastMenuItem.Checked = true;
+		/// m.ExtractIconPathFromCode = true;
+		/// m["notepad"] = o => Shell.TryRun(Folders.System + "notepad.exe"));
 		/// m.Show();
 		/// </code></example>
 		public Action<MTClickArgs> this[string text, object icon = null]
@@ -112,23 +115,27 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Adds new item as ToolStripMenuItem.
-		/// Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
+		/// Adds new item as <see cref="ToolStripMenuItem"/>.
+		/// Sets its text, icon and <b>Click</b> event handler. Other properties can be specified later. See example.
 		/// Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c> .
 		/// </summary>
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
-		/// <param name="onClick">Callback function. Called when the menu item clicked.</param>
+		/// <param name="onClick">Callback function. Called when clicked the menu item.</param>
 		/// <param name="icon">Can be:
-		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIconHandle"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="BaseMT.IconFlags"/>.
+		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIcon"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="BaseMT.IconFlags" r=""/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// Icon, Image, Folders.FolderPath.
+		/// null (default) - no icon. If <see cref="BaseMT.ExtractIconPathFromCode" r=""/> == true, extracts icon path from <paramref name="onClick"/> code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
+		/// "" - no icon.
 		/// </param>
 		/// <example><code>
 		/// var m = new AuMenu();
 		/// m.Add("One", o => Print(o), @"icon file path");
-		/// m.Add("Two", o => { Print(o.MenuItem.Checked); });
+		/// m.Add("Two", o => { Print(o.MenuItem.Checked); AuDialog.Show(o.ToString()); });
 		/// m.LastMenuItem.Checked = true;
+		/// m.ExtractIconPathFromCode = true;
+		/// m.Add("notepad", o => Shell.TryRun(Folders.System + "notepad.exe"));
 		/// m.Show();
 		/// </code></example>
 		public ToolStripMenuItem Add(string text, Action<MTClickArgs> onClick, object icon = null)
@@ -174,7 +181,7 @@ namespace Au
 		//Called when a text box or combo box clicked. Before MouseDown, which does not work well with combo box.
 		void _Item_GotFocus(object sender, EventArgs e)
 		{
-			//DebugPrintFunc();
+			//Debug_.PrintFunc();
 			if(!(_isOwned || ActivateMenuWindow)) {
 				var t = sender as ToolStripItem;
 
@@ -197,18 +204,18 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Adds new item (ToolStripMenuItem) that will open a submenu.
-		/// Then the add-item functions will add items to its submenu.
+		/// Adds new item (<see cref="ToolStripMenuItem"/>) that will open a submenu.
+		/// Then the add-item functions will add items to the submenu.
 		/// Can be used in 2 ways:
 		/// 1. <c>using(m.Submenu(...)) { add items; }</c>. See example.
 		/// 2. <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="EndSubmenu"/>.
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="icon"><inheritdoc cref="Add(string, Action{MTClickArgs}, object)"/></param>
-		/// <param name="onClick">Callback function. Called when the menu item clicked. Rarely used.</param>
+		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
 		/// <remarks>
 		/// Submenus inherit these properties of the main menu, set before adding submenus (see example):
-		/// BackgroundImage, BackgroundImageLayout, ContextMenu, Cursor, Font, ForeColor, ImageList, ImageScalingSize, Renderer, ShowCheckMargin, ShowImageMargin.
+		/// <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>ContextMenu</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
 		/// </remarks>
 		/// <example><code>
 		/// var m = new AuMenu();
@@ -286,7 +293,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Call this to end adding items to the current submenu if Submenu() was called without 'using' and without a callback function that adds submenu items.
+		/// Call this to end adding items to the current submenu if <see cref="Submenu"/> was called without 'using' and without a callback function that adds submenu items.
 		/// </summary>
 		/// <example><code>
 		/// var m = new AuMenu();
@@ -326,13 +333,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Adds new item (ToolStripMenuItem) that will open a submenu.
+		/// Adds new item (<see cref="ToolStripMenuItem"/>) that will open a submenu.
 		/// When showing the submenu first time, your callback function will be called and can add submenu items.
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="onOpening">Callback function that should add submenu items.</param>
 		/// <param name="icon"><inheritdoc cref="Add(string, Action{MTClickArgs}, object)"/></param>
-		/// <param name="onClick">Callback function. Called when the menu item clicked. Rarely used.</param>
+		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
 		/// <example><code>
 		/// var m = new AuMenu();
 		/// m["One"] = o => Print(o);
@@ -371,12 +378,8 @@ namespace Au
 		bool _AddingSubmenuItems => _submenuStack.Count > 0;
 
 		/// <summary>
-		/// Gets ToolStripDropDownMenu of the main menu or submenu where currently m.Add(...), m[...]=, m.Separator() and m.Submenu(...) would add new item.
+		/// Gets <see cref="ToolStripDropDownMenu"/> of the main menu or submenu where new items currently are added.
 		/// </summary>
-		/// <remarks>
-		/// Initially it is the main menu.
-		/// In code of <c>using(m.Submenu(...)) { code; }</c>, <c>m.Submenu(...); code; m.EndSubmenu();</c> and <c>m.Submenu(..., m1 => { code; });</c> it is that submenu.
-		/// </remarks>
 		public ToolStripDropDownMenu CurrentAddMenu
 		{
 			get
@@ -387,12 +390,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the last added item as ToolStripMenuItem.
-		/// Returns null if it is not a ToolStripMenuItem, eg a button or separator.
-		/// The item can be added with m.Add(...), m[...]= and m.Submenu(...).
+		/// Gets the last added item as <see cref="ToolStripMenuItem"/>.
+		/// Returns null if it is not a <b>ToolStripMenuItem</b>, for example a button or separator.
 		/// </summary>
 		/// <remarks>
-		/// You can instead use LastItem, which gets ToolStripItem, which is the base class of all supported item types; cast it to a derived type if need.
+		/// You can instead use <see cref="BaseMT.LastItem" r=""/>, which gets <see cref="ToolStripItem"/>, which is the base class of all supported item types.
 		/// </remarks>
 		public ToolStripMenuItem LastMenuItem => LastItem as ToolStripMenuItem;
 
@@ -485,15 +487,15 @@ namespace Au
 		Util.MessageLoop _msgLoop = new Util.MessageLoop();
 
 		/// <summary>
-		/// If false, calls Dispose() when the menu is closed.
-		/// If true, does not call Dispose(); then you can call <b>Show</b> multiple times for the same object.
+		/// If false, disposes the menu when it is closed.
+		/// If true, does not dispose. Then you can call <b>Show</b> multiple times for the same object.
 		/// Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control.
 		/// </summary>
 		/// <seealso cref="DefaultMultiShow"/>
 		public bool MultiShow { get; set; } = DefaultMultiShow;
 
 		/// <summary>
-		/// Default MultiShow value for all new AuMenu instances.
+		/// Default <see cref="MultiShow"/> value for new <b>AuMenu</b> instances.
 		/// </summary>
 		public static bool DefaultMultiShow { get; set; }
 
@@ -514,8 +516,7 @@ namespace Au
 		public bool ActivateMenuWindow { get; set; } = DefaultActivateMenuWindow;
 
 		/// <summary>
-		/// Default ActivateMenuWindow value for AuMenu instances.
-		/// A AuMenu instance inherits this at the moment it is created.
+		/// Default <see cref="ActivateMenuWindow"/> value for new <b>AuMenu</b> instances.
 		/// </summary>
 		public static bool DefaultActivateMenuWindow { get; set; }
 
@@ -552,7 +553,7 @@ namespace Au
 				if(_am._WndProc_Before(true, this, ref m)) return;
 				//var t = Perf.StartNew();
 				base.WndProc(ref m);
-				//t.Next(); if(t.TimeTotal >= 100) { Print(t.Times, m); }
+				//t.Next(); if(t.TimeTotal >= 100) { Print(t.ToString(), m); }
 				_am._WndProc_After(true, this, ref m);
 			}
 
@@ -605,10 +606,10 @@ namespace Au
 			{
 				//var perf = Perf.StartNew();
 
-				//DebugPrintFunc();
+				//Debug_.PrintFunc();
 				base.OnPaint(e);
 
-				//perf.Next(); Print("------------------ paint", perf.Times);
+				//perf.Next(); Print("------------------ paint", perf.ToString());
 
 				_paintedOnce = true;
 			}
@@ -730,7 +731,7 @@ namespace Au
 
 			protected override void OnPaint(PaintEventArgs e)
 			{
-				//DebugPrintFunc();
+				//Debug_.PrintFunc();
 				base.OnPaint(e);
 				_paintedOnce = true;
 			}
@@ -748,14 +749,14 @@ namespace Au
 		bool _WndProc_Before(bool isMainMenu, ToolStripDropDownMenu dd, ref Message m)
 		{
 			if(isMainMenu) {
-				switch((uint)m.Msg) {
+				switch(m.Msg) {
 				case Api.WM_HOTKEY:
 					if(_OnHotkey((int)m.WParam)) return true;
 					break;
 				}
 			}
 
-			switch((uint)m.Msg) {
+			switch(m.Msg) {
 			case Api.WM_CLOSE:
 				//Print("WM_CLOSE", dd.Visible);
 				if((int)m.WParam != _wmCloseWparam && dd.Visible) { Close(); return true; } //something tried to close from outside
@@ -785,7 +786,7 @@ namespace Au
 		void _WndProc_After(bool isMainMenu, ToolStripDropDownMenu dd, ref Message m)
 		{
 			if(isMainMenu) {
-				switch((uint)m.Msg) {
+				switch(m.Msg) {
 				case Api.WM_CREATE:
 					//Prevent 'wait' cursor appearing briefly when mouse enters a thread window first time.
 					//It happens because initial thread cursor when creating the first thread window is 'wait', and the first mouse message is WM_NCHITTEST, followed by WM_SETCURSOR which sets correct cursor, and Windows briefly shows 'wait' cursor before sending WM_NCHITTEST.
@@ -802,7 +803,7 @@ namespace Au
 				}
 			}
 
-			switch((uint)m.Msg) {
+			switch(m.Msg) {
 			//case Api.WM_DESTROY:
 			//	Print("WM_DESTROY", isMainMenu, m.HWnd);
 			//	break;
@@ -1006,30 +1007,87 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Base class of AuMenu and AuToolbar.
+	/// Base class of <see cref="AuMenu"/> and <see cref="AuToolbar"/>.
 	/// </summary>
 	[EditorBrowsable(EditorBrowsableState.Never)]
 	public abstract class BaseMT
 	{
-		internal bool m_inRightClick;
+		struct _ClickAction
+		{
+			public Action<MTClickArgs> action;
+			public MTThread threadOpt;
+			public MTExcept exceptOpt;
+		}
+
+		Dictionary<object, _ClickAction> _clickActions;
 		EventHandler _onClick;
-		System.Collections.Hashtable _clickDelegates = new System.Collections.Hashtable();
+		internal bool m_inRightClick;
 
 		internal BaseMT()
 		{
 			_onClick = _OnClick;
+			_clickActions = new Dictionary<object, _ClickAction>();
 		}
 
 		//Common Click even handler of all items.
-		//Calls true item's onClick delegate if need.
+		//Calls true item's onClick callback if need.
 		void _OnClick(object sender, EventArgs args)
 		{
-			//Print(m_inRightClick);
 			if(m_inRightClick) return; //disable this item while showing a context menu for this item
-			var d = _clickDelegates[sender] as Action<MTClickArgs>;
-			Debug.Assert(d != null); if(d == null) return;
-			d(new MTClickArgs(sender as ToolStripItem));
+			var x = _clickActions[sender];
+
+			switch(x.threadOpt) {
+			case MTThread.Current:
+				_ExecItem(sender, x);
+				break;
+			case MTThread.ThreadPool:
+				Task.Run(() => _ExecItem(sender, x));
+				break;
+			case MTThread.StaThread:
+			case MTThread.StaBackgroundThread:
+				var t = new Thread(() => _ExecItem(sender, x));
+				t.SetApartmentState(ApartmentState.STA);
+				if(x.threadOpt == MTThread.StaBackgroundThread) t.IsBackground = true;
+				t.Start();
+				break;
+			}
 		}
+
+		void _ExecItem(object sender, in _ClickAction x)
+		{
+			var ca = new MTClickArgs(sender as ToolStripItem);
+			if(x.exceptOpt == MTExcept.Exception && x.threadOpt == MTThread.Current) {
+				x.action(ca);
+			} else {
+				try {
+					x.action(ca);
+				}
+				catch(Exception e) when(!(e is ThreadAbortException)) {
+					if(x.exceptOpt != MTExcept.Silent) PrintWarning(e.ToString(), -1);
+				}
+			}
+		}
+
+		/// <summary>
+		/// In what thread to execute item callback functions.
+		/// Default: current thread.
+		/// </summary>
+		/// <remarks>
+		/// If current thread is a UI thread (has windows etc), and item callback functions execute some long automations in the same thread, current thread probably is hung during that time. Use this property to avoid it.
+		/// This property is applied to items added afterwards.
+		/// </remarks>
+		public MTThread ItemThread { get; set; }
+
+		/// <summary>
+		/// Whether/how to handle unhandled exceptions in item code.
+		/// Default: <see cref="MTExcept.Exception"/> (don't handle exceptions if <see cref="ItemThread"/> is <see cref="MTThread.Current"/> (default), else show warning).
+		/// </summary>
+		/// <remarks>
+		/// This property is applied to items added afterwards.
+		/// </remarks>
+		public MTExcept ExceptionHandling { get; set; }
+		//FUTURE: public Type[] ExceptionTypes { get; set; }
+		//	Or bool ExceptionHandling and Func<Exception, bool> ExceptionFilter.
 
 		/// <summary>
 		/// Gets ToolStrip of AuMenu and AuToolbar, which override this.
@@ -1037,8 +1095,7 @@ namespace Au.Types
 		protected abstract ToolStrip MainToolStrip { get; }
 
 		/// <summary>
-		/// Gets the last added item as ToolStripItem, which is the base type of ToolStripMenuItem, ToolStripButton and other supported types.
-		/// The item can be added with m.Add(...), m[...]=, m.Separator() and m.Submenu(...).
+		/// Gets the last added item as <see cref="ToolStripItem"/>, which is the base type of <see cref="ToolStripMenuItem"/>, <see cref="ToolStripButton"/> and other supported types.
 		/// </summary>
 		public ToolStripItem LastItem { get; protected set; }
 
@@ -1060,22 +1117,30 @@ namespace Au.Types
 		//}
 
 		/// <summary>
-		/// Flags to pass to <see cref="Icons.GetFileIconHandle"/>. See <see cref="GIFlags"/>.
+		/// Flags to pass to <see cref="Icons.GetFileIcon"/>. See <see cref="GIFlags"/>.
 		/// </summary>
+		/// <remarks>
+		/// This property is applied to all items.
+		/// </remarks>
 		public GIFlags IconFlags { get; set; }
 
 		/// <summary>
 		/// Image width and height.
 		/// Also can be enum <see cref="IconSize"/>, cast to int.
-		/// Set it before adding items.
 		/// </summary>
+		/// <exception cref="InvalidOperationException">The 'set' function is called after adding items.</exception>
 		/// <remarks>
-		/// To set different size for a submenu: <c>using(m.Submenu("sub")) { m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);</c>
+		/// This property is applied to all items, and can be set only before adding items (else exception).
+		/// To set different icon size for a submenu: <c>using(m.Submenu("sub")) { m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);</c>
 		/// </remarks>
 		public int IconSize
 		{
 			get => MainToolStrip.ImageScalingSize.Width;
-			set { MainToolStrip.ImageScalingSize = new Size(value, value); }
+			set
+			{
+				if(MainToolStrip.Items.Count != 0) throw new InvalidOperationException();
+				MainToolStrip.ImageScalingSize = new Size(value, value);
+			}
 		}
 
 		//Sets icon and onClick delegate.
@@ -1084,8 +1149,13 @@ namespace Au.Types
 		internal void _SetItemProp(bool isBar, ToolStripItem item, Action<MTClickArgs> onClick, object icon)
 		{
 			if(onClick != null) {
-				_clickDelegates[item] = onClick;
+				_clickActions[item] = new _ClickAction() { action = onClick, threadOpt = this.ItemThread, exceptOpt = this.ExceptionHandling };
 				item.Click += _onClick;
+
+				//Perf.First();
+				if(icon == null && ExtractIconPathFromCode) icon = _IconPathFromCode(onClick.Method);
+				//Perf.NW(); //ngened about 10 ms first time, then fast. Else 30-40 ms first time.
+				//Print(icon);
 			}
 
 #if true //to quickly disable icons when measuring speed
@@ -1106,6 +1176,14 @@ namespace Au.Types
 
 			ItemAdded?.Invoke(item);
 		}
+
+		/// <summary>
+		/// When adding items without explicitly specified icon, extract icon from item code.
+		/// </summary>
+		/// <remarks>
+		/// This property is applied to items added afterwards.
+		/// </remarks>
+		public bool ExtractIconPathFromCode { get; set; }
 
 		void _SetItemFileIcon(bool isBar, ToolStripItem item, string s)
 		{
@@ -1223,7 +1301,63 @@ namespace Au.Types
 
 		IntPtr _region1, _region2;
 		internal List<Image> _images;
-		bool _isDisposed;
+
+		/// <summary>
+		/// Gets icon path from code that contains string like @"c:\windows\system32\notepad.exe" or @"%Folders.System%\notepad.exe" or URL/shell.
+		/// Also supports code patterns like 'Folders.System + "notepad.exe"' or 'Folders.Virtual.RecycleBin'.
+		/// Returns null if no such string/pattern.
+		/// </summary>
+		static string _IconPathFromCode(MethodInfo mi)
+		{
+			//support code pattern like 'Folders.System + "notepad.exe"'.
+			//	Opcodes: call(Folders.System), ldstr("notepad.exe"), Folders.FolderPath.op_Addition.
+			//also code pattern like 'Folders.System' or 'Folders.Virtual.RecycleBin'.
+			//	Opcodes: call(Folders.System), Folders.FolderPath.op_Implicit(FolderPath to string).
+			//also code pattern like 'Shell.TryRun("notepad.exe")'.
+			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
+			try {
+				var reader = new Util.ILReader(mi);
+				foreach(var instruction in reader.Instructions) {
+					if(++i > 100) break;
+					var op = instruction.Op;
+					//Print(op);
+					if(instruction.Op == OpCodes.Ldstr) {
+						var s = instruction.Data as string;
+						//Print(s);
+						if(i == patternStart + 1) filename = s;
+						else {
+							if(Path_.IsFullPathExpandEnvVar(ref s)) return s; //eg Shell.TryRun(@"%Folders.System%\notepad.exe");
+							if(Path_.IsUrl(s) || Path_.LibIsShellPath(s)) return s;
+							filename = null; patternStart = -1;
+							if(i == 1) filename2 = s;
+						}
+					} else if(op == OpCodes.Call && instruction.Data is MethodInfo f && f.IsStatic) {
+						//Print(f, f.DeclaringType, f.Name, f.MemberType, f.ReturnType, f.GetParameters().Length);
+						var dt = f.DeclaringType;
+						if(dt == typeof(Folders) || dt == typeof(Folders.Virtual)) {
+							if(f.ReturnType == typeof(Folders.FolderPath) && f.GetParameters().Length == 0) {
+								//Print(1);
+								f1 = f;
+								patternStart = i;
+							}
+						} else if(dt == typeof(Folders.FolderPath)) {
+							if(i == patternStart + 2 && f.Name == "op_Addition") {
+								//Print(2);
+								var fp = (Folders.FolderPath)f1.Invoke(null, null);
+								if((string)fp == null) return null;
+								return fp + filename;
+							} else if(i == patternStart + 1 && f.Name == "op_Implicit" && f.ReturnType == typeof(string)) {
+								//Print(3);
+								return (Folders.FolderPath)f1.Invoke(null, null);
+							}
+						}
+					}
+				}
+				if(filename2 != null && filename2.EndsWith_(".exe", true)) return Files.SearchPath(filename2);
+			}
+			catch(Exception ex) { Debug_.Print(ex); }
+			return null;
+		}
 
 		internal void _Dispose(bool disposing)
 		{
@@ -1245,6 +1379,7 @@ namespace Au.Types
 
 			LastItem = null;
 		}
+		bool _isDisposed;
 
 		///
 		~BaseMT() { /*Print("base dtor");*/ _Dispose(false); }
@@ -1271,9 +1406,53 @@ namespace Au.Types
 		/// <summary>
 		/// Gets item text.
 		/// </summary>
-		public override string ToString()
-		{
-			return Item.ToString();
-		}
+		public override string ToString() => Item.ToString();
+	}
+
+	/// <summary>
+	/// Used with <see cref="BaseMT.ItemThread"/>.
+	/// </summary>
+	public enum MTThread :byte
+	{
+		/// <summary>
+		/// Execute item callback functions in current thread. This is default.
+		/// </summary>
+		Current,
+
+		/// <summary>
+		/// Execute item callback functions in thread pool threads (<see cref="Task.Run"/>).
+		/// Note: current thread does not wait until the callback function finishes.
+		/// </summary>
+		ThreadPool,
+
+		/// <summary>
+		/// Execute item callback functions in new STA threads (<see cref="Thread.SetApartmentState"/>).
+		/// Note: current thread does not wait until the callback function finishes.
+		/// </summary>
+		StaThread,
+
+		/// <summary>
+		/// Execute item callback functions in new STA background threads (<see cref="Thread.IsBackground"/>).
+		/// Note: current thread does not wait until the callback function finishes.
+		/// </summary>
+		StaBackgroundThread,
+	}
+
+	/// <summary>
+	/// Used with <see cref="BaseMT.ExceptionHandling"/>.
+	/// </summary>
+	public enum MTExcept :byte
+	{
+		/// <summary>
+		/// Don't handle exceptions. This is default.
+		/// However if <see cref="BaseMT.ItemThread"/> is not <see cref="MTThread.Current"/>, handles exceptions and shows warning.
+		/// </summary>
+		Exception,
+
+		/// <summary>Handle exceptions. On exception call <see cref="PrintWarning"/>.</summary>
+		Warning,
+
+		/// <summary>Handle exceptions. On exception do nothing.</summary>
+		Silent,
 	}
 }

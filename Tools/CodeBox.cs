@@ -57,34 +57,31 @@ namespace Au.Tools
 
 		protected override void OnSciNotify(ref Sci.SCNotification n)
 		{
-			if(!_noNotify) {
-				//switch(n.nmhdr.code) {
-				//case Sci.NOTIF.SCN_PAINTED: case Sci.NOTIF.SCN_UPDATEUI: break;
-				//default: Print(n.nmhdr.code, n.modificationType); break;
-				//}
+			//switch(n.nmhdr.code) {
+			//case Sci.NOTIF.SCN_PAINTED: case Sci.NOTIF.SCN_UPDATEUI: break;
+			//default: Print(n.nmhdr.code, n.modificationType); break;
+			//}
 
-				switch(n.nmhdr.code) {
-				case Sci.NOTIF.SCN_MODIFIED:
-					//Print(n.modificationType);
-					if(n.modificationType.HasAny_(Sci.MOD.SC_MOD_INSERTTEXT | Sci.MOD.SC_MOD_DELETETEXT)) ZTextChanged?.Invoke(this, null);
-					break;
-				case Sci.NOTIF.SCN_UPDATEUI:
-					//make text after _ReadonlyStartUtf8 readonly
-					if(0 != (n.updated & Sci.SC_UPDATE_SELECTION)) { //selection changed
-						if(_readonlyLenUtf8 > 0) {
-							int i = Call(Sci.SCI_GETSELECTIONEND);
-							ST.Call(Sci.SCI_SETREADONLY, i > _ReadonlyStartUtf8 || _LenUtf8 == 0);
-						}
+			switch(n.nmhdr.code) {
+			case Sci.NOTIF.SCN_MODIFIED:
+				//Print(n.modificationType);
+				if(n.modificationType.HasAny_(Sci.MOD.SC_MOD_INSERTTEXT | Sci.MOD.SC_MOD_DELETETEXT)) ZTextChanged?.Invoke(this, null);
+				break;
+			case Sci.NOTIF.SCN_UPDATEUI:
+				//make text after _ReadonlyStartUtf8 readonly
+				if(0 != (n.updated & Sci.SC_UPDATE_SELECTION)) { //selection changed
+					if(_readonlyLenUtf8 > 0) {
+						int i = Call(Sci.SCI_GETSELECTIONEND);
+						ST.Call(Sci.SCI_SETREADONLY, i > _ReadonlyStartUtf8 || _LenUtf8 == 0);
 					}
-					break;
 				}
+				break;
 			}
 
 			//FUTURE: autosize (move splitter of parent splitcontainer).
 
 			base.OnSciNotify(ref n);
 		}
-		bool _noNotify;
 
 		/// <summary>
 		/// Sets text and makes all or part of it readonly.
@@ -94,27 +91,13 @@ namespace Au.Tools
 		public void ZSetText(string s, int readonlyFrom = 0)
 		{
 			ST.Call(Sci.SCI_SETREADONLY, false);
-			_noNotify = true;
-			base.Text = s;
-			Call(Sci.SCI_EMPTYUNDOBUFFER);
-			_noNotify = false;
+			ST.SetText(s, noUndo: true, noNotif: true);
 			if(readonlyFrom > 0) {
 				_readonlyLenUtf8 = _LenUtf8 - _LenToUtf8(0, readonlyFrom);
 			} else {
 				ST.Call(Sci.SCI_SETREADONLY, true);
 				_readonlyLenUtf8 = -1;
 			}
-		}
-
-		/// <summary>
-		/// Gets or sets text.
-		/// The 'set' function makes text readonly.
-		/// </summary>
-		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public override string Text
-		{
-			get => base.Text;
-			set => ZSetText(value);
 		}
 
 		public event EventHandler ZTextChanged;
@@ -189,7 +172,7 @@ namespace Au.Tools
 										//if(Empty(nameAcc) || nameLabel == nameAcc) {
 										//	name = nameLabel; prefix = "***label ";
 										//} else {
-											name = nameAcc; prefix = "***accName ";
+										name = nameAcc; prefix = "***accName ";
 										//}
 									}
 								}
@@ -231,7 +214,7 @@ namespace Au.Tools
 				int i = _ReadonlyStartUtf8;
 				var code2 = ST.RangeText(i, i + _readonlyLenUtf8);
 				ST.Call(Sci.SCI_SETREADONLY, false);
-				base.Text = code + code2;
+				ST.SetText(code + code2);
 				return (true, f.ResultWindow, f.ResultControl, f.ResultUseControl);
 			}
 		}

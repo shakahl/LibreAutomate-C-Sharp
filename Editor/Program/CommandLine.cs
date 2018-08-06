@@ -103,7 +103,7 @@ static class CommandLine
 
 	class MsgWindow :Wnd.Misc.MyWindow
 	{
-		protected override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+		protected override LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
 		{
 			switch(message) {
 			case Api.WM_COPYDATA:

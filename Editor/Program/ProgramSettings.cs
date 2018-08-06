@@ -74,7 +74,7 @@ class ProgramSettings
 
 	private void _x_Changed(object sender, XObjectChangeEventArgs e)
 	{
-		//DebugPrintFunc(); //note: SetElementValue sends 2 events, because internally it removes/adds node's content. Setting the Value property is the same.
+		//Debug_.PrintFunc(); //note: SetElementValue sends 2 events, because internally it removes/adds node's content. Setting the Value property is the same.
 		Debug.Assert(Monitor.IsEntered(this));
 		_isDirty = true;
 	}

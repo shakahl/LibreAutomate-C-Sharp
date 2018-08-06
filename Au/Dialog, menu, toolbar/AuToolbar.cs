@@ -61,8 +61,8 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Adds new button as ToolStripButton.
-		/// Sets its text, icon and Click event handler delegate. Other properties can be specified later. See example.
+		/// Adds new button as <see cref="ToolStripButton"/>.
+		/// Sets its text, icon and Click event handler. Other properties can be specified later. See example.
 		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c> .
 		/// </summary>
 		/// <param name="text">Text.</param>
@@ -101,7 +101,7 @@ namespace Au
 
 		void _Item_GotFocus(object sender, EventArgs e)
 		{
-			//DebugPrintFunc();
+			//Debug_.PrintFunc();
 			//_w.ActivateLL();
 			Api.SetForegroundWindow(_w); //does not fail, probably after a mouse click this process is allowed to activate windows, even if the click did not activate because of the window style
 		}
@@ -192,7 +192,7 @@ namespace Au
 				_x = x;
 			}
 
-			protected override LPARAM WndProc(Wnd w, uint message, LPARAM wParam, LPARAM lParam)
+			protected override LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
 			{
 				switch(message) {
 				case Api.WM_NCCREATE:
@@ -264,7 +264,7 @@ namespace Au
 			////Solves ToolStrip problem in inactive window: no tooltips.
 			//protected override void OnMouseHover(EventArgs e)
 			//{
-			//	//DebugPrintFunc();
+			//	//Debug_.PrintFunc();
 			//	if(!_parent._w.IsActive && CanFocus && !Focused) {
 			//		//Print("focus");
 			//		Focus();
@@ -279,7 +279,7 @@ namespace Au
 			//This also creates another problem: at startup not hot button (until mouse-move) if mouse was there.
 			//protected override void OnMouseEnter(EventArgs e)
 			//{
-			//	//DebugPrintFunc();
+			//	//Debug_.PrintFunc();
 			//	if(!_parent._w.IsActive && CanFocus && !Focused) {
 			//		//Print("focus");
 			//		Print(_parent._showTime);
@@ -293,7 +293,7 @@ namespace Au
 			//This also creates another problem: at startup not hot button (until mouse-move) if mouse was there.
 			protected override void OnMouseEnter(EventArgs e)
 			{
-				//DebugPrintFunc();
+				//Debug_.PrintFunc();
 				if(!_parent._w.IsActive && CanFocus && !Focused) {
 					//Print("focus");
 					long td = Time.Milliseconds - _parent._showTime - 500;
@@ -316,7 +316,7 @@ namespace Au
 				base.OnPaint(e);
 				//if(!_paintedOnce) Thread.CurrentThread.Priority = tp;
 
-				//perf.Next(); Print("------------------ paint", perf.Times);
+				//perf.Next(); Print("------------------ paint", perf.ToString());
 
 				_paintedOnce = true;
 			}

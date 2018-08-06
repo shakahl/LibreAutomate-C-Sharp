@@ -256,7 +256,7 @@ namespace Au
 			/// </summary>
 			/// <param name="name">Message name. Can be any unique string.</param>
 			/// <param name="uacEnable">Also call API <msdn>ChangeWindowMessageFilter</msdn> for the message. More info: <see cref="UacEnableMessages"/>.</param>
-			public static uint RegisterMessage(string name, bool uacEnable = false)
+			public static int RegisterMessage(string name, bool uacEnable = false)
 			{
 				var m = Api.RegisterWindowMessage(name);
 				if(uacEnable && m != 0) Api.ChangeWindowMessageFilter(m, 1);
@@ -267,7 +267,7 @@ namespace Au
 			/// Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
 			/// It allows processes of lower <see cref="Process_.UacInfo">UAC</see> integrity level to send these messages to this process.
 			/// </summary>
-			public static void UacEnableMessages(params uint[] messages)
+			public static void UacEnableMessages(params int[] messages)
 			{
 				foreach(var m in messages) Api.ChangeWindowMessageFilter(m, 1);
 			}
@@ -321,10 +321,9 @@ namespace Au
 			/// </summary>
 			/// <param name="m"></param>
 			/// <param name="ignore">Messages to not show.</param>
-			public static void PrintMsg(in System.Windows.Forms.Message m, params uint[] ignore)
+			public static void PrintMsg(in System.Windows.Forms.Message m, params int[] ignore)
 			{
-				uint msg = (uint)m.Msg;
-				if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
+				if(ignore != null) foreach(uint t in ignore) { if(t == m.Msg) return; }
 
 				Wnd w = (Wnd)m.HWnd;
 				uint counter = (uint)w.Prop["PrintMsg"]; w.Prop.Set("PrintMsg", ++counter);
@@ -339,7 +338,7 @@ namespace Au
 			/// <param name="wParam"></param>
 			/// <param name="lParam"></param>
 			/// <param name="ignore">Messages to not show.</param>
-			public static void PrintMsg(Wnd w, uint msg, LPARAM wParam, LPARAM lParam, params uint[] ignore)
+			public static void PrintMsg(Wnd w, int msg, LPARAM wParam, LPARAM lParam, params int[] ignore)
 			{
 				if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
 				var m = System.Windows.Forms.Message.Create(w.Handle, (int)msg, wParam, lParam);
@@ -351,7 +350,7 @@ namespace Au
 			/// </summary>
 			/// <param name="m"></param>
 			/// <param name="ignore">Messages to not show.</param>
-			public static void PrintMsg(in Native.MSG m, params uint[] ignore)
+			public static void PrintMsg(in Native.MSG m, params int[] ignore)
 			{
 				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, ignore);
 			}

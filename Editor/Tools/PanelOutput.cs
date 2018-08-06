@@ -139,6 +139,9 @@ class PanelOutput :Control
 			InitReadOnlyAlways = true;
 			InitTagsStyle = TagsStyle.AutoWithPrefix;
 			InitImagesStyle = ImagesStyle.ImageTag;
+
+			SciTags.AddCommonLinkTag("open", s => _OpenLink(false, s));
+			SciTags.AddCommonLinkTag("_open", s => _OpenLink(true, s));
 		}
 
 		protected override void OnHandleCreated(EventArgs e)
@@ -169,6 +172,23 @@ class PanelOutput :Control
 				break;
 			}
 			base.OnMouseUp(e);
+		}
+
+		void _OpenLink(bool isGuid, string s)
+		{
+			//Print(s);
+			var a = s.Split('|');
+			var fn = isGuid ? Model.FindByGUID(a[0]) : Model.FindFile(a[0]);
+			if(fn == null) return;
+			Model.SetCurrentFile(fn);
+			if(a.Length == 1) return;
+			int line = a[1].ToInt_(0) - 1; if(line < 0) return;
+			int column = a.Length == 2 ? -1 : a[2].ToInt_() - 1;
+
+			var t = Panels.Editor.ActiveDoc.ST;
+			int i = t.LineStart(line);
+			if(column > 0) i = t.Call(SCI_POSITIONRELATIVE, i, column); //not SCI_FINDCOLUMN, it calculates tabs
+			t.Call(SCI_GOTOPOS, i);
 		}
 	}
 }

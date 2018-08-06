@@ -47,7 +47,7 @@ namespace Au
 
 					var fi = new Api.FLASHWINFO(); fi.cbSize = Api.SizeOf(fi); fi.hwnd = w;
 					if(count > 0) {
-						fi.uCount = (uint)count;
+						fi.uCount = count;
 						//fi.dwTimeout = (uint)periodMS; //not useful
 						fi.dwFlags = FLASHW_TRAY;
 					}
@@ -268,7 +268,7 @@ namespace Au
 					GC.SuppressFinalize(this);
 				}
 
-				static readonly uint WM_GETCONTROLNAME = Api.RegisterWindowMessage("WM_GETCONTROLNAME");
+				static readonly int WM_GETCONTROLNAME = Api.RegisterWindowMessage("WM_GETCONTROLNAME");
 
 				/// <summary>
 				/// Prepares to get control names.

@@ -412,7 +412,7 @@ namespace Au
 			if(!isNew) {
 				_CheckThread();
 			}
-			LPARAM r = Api.SetTimer(default, _id, (uint)periodMilliseconds, _timerProc);
+			LPARAM r = Api.SetTimer(default, _id, periodMilliseconds, _timerProc);
 			if(r == 0) throw new Win32Exception();
 			Debug.Assert(isNew || r == _id);
 			_id = r;
@@ -426,7 +426,7 @@ namespace Au
 		}
 
 		static Api.TIMERPROC _timerProc = _TimerProc;
-		static void _TimerProc(Wnd w, uint msg, LPARAM idEvent, uint time)
+		static void _TimerProc(Wnd w, int msg, LPARAM idEvent, uint time)
 		{
 			//Print(t_timers.Count, idEvent);
 			if(!t_timers.TryGetValue(idEvent, out var t)) {

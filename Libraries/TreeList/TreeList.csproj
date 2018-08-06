@@ -18,7 +18,7 @@
     <SccProvider>
     </SccProvider>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>Au.pfx</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>Properties\Au.pfx</AssemblyOriginatorKeyFile>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
     <OldToolsVersion>3.5</OldToolsVersion>
@@ -62,7 +62,7 @@
     <Compile Include="Tree\TVAcc.cs">
       <SubType>Component</SubType>
     </Compile>
-    <None Include="Au.pfx" />
+    <None Include="Properties\Au.pfx" />
     <None Include="removed\GifDecoder.cs" />
     <None Include="removed\PerformanceAnalyzer.cs" />
     <Compile Include="ResourceHelper.cs" />

@@ -63,7 +63,7 @@ namespace Au.Tools
 
 		void _SetInfoText(string text)
 		{
-			_control.Text = text;
+			_control.ST.SetText(text);
 		}
 
 		void _Examples(string what)
