@@ -13,7 +13,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
+//using Microsoft.Win32;
+//using Registry = Microsoft.Win32.Registry;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -907,7 +908,7 @@ static partial class Test
 				//	//Print(ap);
 				//	Print(!w1.Is0, !w2.Is0);
 				//}
-				if(i == 0) Perf.WakeCPU(100);
+				if(i == 0) Perf.Cpu(100);
 			}
 		}
 		//100.ms();
@@ -1244,7 +1245,7 @@ static partial class Test
 		var x2 = new Regex_(w);
 
 		//100.ms();
-		Perf.WakeCPU(200);
+		Perf.Cpu(200);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 10000;
 			Perf.First();
@@ -1356,7 +1357,7 @@ static partial class Test
 			Print(w.Equals_(s, ignoreCase));
 			Print(x.Match(s));
 
-			Perf.WakeCPU(200);
+			Perf.Cpu(200);
 			//200.ms();
 			for(int i1 = 0; i1 < 5; i1++) {
 				int n2 = 10000;
@@ -2153,7 +2154,7 @@ static partial class Test
 		//return;
 		Print("");
 		long lenIP = 0, lenNIP = 0;
-		Perf.WakeCPU(500);
+		Perf.Cpu(500);
 		Perf.First();
 		var sb = new StringBuilder(1000000);
 		foreach(var a in k) {
@@ -2195,7 +2196,7 @@ static partial class Test
 		foreach(var w in Wnd.GetWnd.AllWindows(true)) {
 			k.AddRange(w.Get.Children());
 		}
-		Perf.WakeCPU(200);
+		Perf.Cpu(200);
 		Perf.First();
 		long g = 0;
 		for(int i = 0; i < 5; i++) {
@@ -2820,7 +2821,7 @@ static partial class Test
 		Print(LevenshteinDistance("kitten", "sitting"));
 		0.1.s();
 		int n = 0;
-		Perf.WakeCPU(100);
+		Perf.Cpu(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -3765,7 +3766,7 @@ REE`");
 		//for(int i = 0; i < 1000; i++) rx[i] = _rxTest + i.ToString();
 
 		int k1 = 0, k2 = 0, k3 = 0, k4 = 0, k5 = 0, k6 = 0, k7 = 0, k8 = 0, k9 = 0;
-		Perf.WakeCPU(100);
+		Perf.Cpu(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -4210,7 +4211,7 @@ REE`");
 		if(x.FindAllS(s, out var as1)) Print(as1);
 
 		int k1 = 0, k2 = 0, k3 = 0, k4 = 0;
-		Perf.WakeCPU(100);
+		Perf.Cpu(100);
 		Debug_.LibMemoryPrint();
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 100;
@@ -4869,7 +4870,7 @@ REE`");
 		//Print(Keyb.IsMod());
 		Print(Keyb.GetMod());
 
-		Perf.WakeCPU(100);
+		Perf.Cpu(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			Perf.First();
@@ -5897,7 +5898,7 @@ REE`");
 		//s = new string('a', 11_0000);
 
 		100.ms();
-		Perf.WakeCPU(100);
+		Perf.Cpu(100);
 		for(int i1 = 0; i1 < 1; i1++) {
 			int n2 = 100;
 			n2 = 1000000;
@@ -6022,7 +6023,7 @@ REE`");
 		Print(s1.IndexOfAny("ai".ToCharArray()));
 		Print(s1.IndexOfAny(s_ca1));
 
-		Perf.WakeCPU(100);
+		Perf.Cpu(100);
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 10000;
 			Perf.First();
@@ -6723,7 +6724,7 @@ REE`");
 		//Wnd.Find("*VMware*").Activate(); Mouse.Click(1079, 445);
 		//Print(Wnd.Active);
 		//for(int i = 0; i < 12; i++) {
-		//	Task.Run(() => Perf.WakeCPU(500));
+		//	Task.Run(() => Perf.Cpu(500));
 		//}
 		100.ms();
 		//Print(Wnd.Focused);
@@ -6877,7 +6878,7 @@ REE`");
 			int size = 32;
 			//Perf.First();
 			//var k = Icons.GetStockIcon(StockIcon.DESKTOPPC, size);
-			var k = Icons.GetFileIcon(@"q:\app\qm.exe", size);
+			var k = Icon_.GetFileIcon(@"q:\app\qm.exe", size);
 			//var k = Icons.GetFileIcon(@"q:\app\macro.ico", size);
 			//Perf.Next();
 			//size/=2;
@@ -6893,7 +6894,7 @@ REE`");
 	{
 		//var sf = @"q:\app\app.cpp";
 		var sf = @"Q:\My QM\icon.exe";
-		var c = new Icons.ImageCache(Folders.Temp + "Au.icon.cache", 16);
+		var c = new Icon_.ImageCache(Folders.Temp + "Au.icon.cache", 16);
 		//c.ClearCache();
 		//Print(k);
 
@@ -7565,11 +7566,57 @@ REE`");
 		}
 	}
 
+	static unsafe void TestMD5Hash()
+	{
+		//Print(sizeof(decimal));
+		//Print(sizeof(GOYTR));
+		//Print(sizeof(Convert_.MD5Hash));
+
+		//string s = "one two ąčę Ə";
+		//Convert_.MD5Hash h = default;
+		var h = new Convert_.MD5Hash();
+		//fixed(char* p = s) {
+
+		//	h.Add(p, s.Length);
+		//	var r = h.Hash;
+		//	Print(r);
+		//}
+
+		//var b = Encoding.UTF8.GetBytes(s);
+		//fixed (byte* p = b) {
+
+		//	h.Add(p, b.Length);
+		//	var r = h.Hash;
+		//	Print(r);
+
+		//	var a = r.ToArray();
+		//	Print(Convert_.HexEncode(a));
+
+		//}
+
+		//h.Add(s);
+
+		var g1 = Guid.NewGuid();
+		var g2 = Guid.NewGuid();
+
+		h.Add(&g1, sizeof(Guid));
+		h.Add(&g2, sizeof(Guid));
+		Print(h.Hash);
+
+		h.Add(&g1, sizeof(Guid));
+		h.Add(&g2, sizeof(Guid));
+		Print(h.Hash);
+	}
+
+	[StructLayout(LayoutKind.Explicit)]
+	struct GOYTR
+	{
+		[FieldOffset(0)] long k;
+		[FieldOffset(40)] public decimal d;
+	}
 
 
-
-
-[MethodImpl(MethodImplOptions.NoInlining)]
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _TestTaskExceptions()
 	{
 		var t = Task.Run(() => { Print("task"); throw new InvalidOperationException("test"); });
@@ -7602,6 +7649,144 @@ REE`");
 		Print(e.Observed, e.Exception);
 	}
 
+	static void _TestFileWriteLineSpeed()
+	{
+		var path = @"Q:\Test\ok\test.log";
+		string s1 = "ffskjfdshfjshdfjkdshfj", s2 = "dahshdkahfjdfjhgjshdfahfiodjfijifjkjsglkjdkgljskljgkldjg";
+
+		Perf.First();
+		//using(var b = File.CreateText(path)) {
+		//	for(int i = 0; i < 1000; i++) {
+		//		if(false) b.WriteLine(s1);
+		//		else { b.Write(s1); b.WriteLine(s2); }
+		//		//else b.WriteLine(s1+s2);
+		//	}
+		//}
+
+		var k = new StringBuilder();
+		for(int i = 0; i < 1000; i++) {
+			if(false) k.AppendLine(s1);
+			else { k.Append(s1); k.AppendLine(s2); }
+			//else b.WriteLine(s1+s2);
+		}
+		File.WriteAllText(path, k.ToString());
+
+		Perf.NW();
+	}
+
+	static void TestFileWriteLineSpeed()
+	{
+		Perf.Cpu();
+		for(int i1 = 0; i1 < 5; i1++) {
+			_TestFileWriteLineSpeed();
+		}
+
+	}
+
+	static object koooo;
+	static unsafe void TestKeySpeedWithEnum()
+	{
+		Perf.Next();
+		koooo = "dd";
+
+		var k = new Keyb(null);
+		Perf.Cpu();
+		for(int i1 = 0; i1 < 5; i1++) {
+			int n2 = 100;
+			Perf.First();
+			//for(int i2 = 0; i2 < n2; i2++) { k.AddKeys("Down"); }
+			for(int i2 = 0; i2 < n2; i2++) { if(0 == Keyb.Misc.ParseKeyName("Down")) throw new ArgumentException(); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { if(0 == Keyb.Misc.ParseKeyName("VolumeUp")) throw new ArgumentException(); }
+			//for(int i2 = 0; i2 < n2; i2++) { if(0 == Keyb.Misc.ParseKeyName("Attn")) throw new ArgumentException(); }
+			Perf.NW();
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static unsafe void TestPerfWithoutSM(long t1)
+	{
+		//var t = Time.Microseconds;
+		//var t2 = Time.Microseconds;
+		//var t3 = Time.Microseconds;
+		//Print(t2 - t, t3-t2);
+
+		//var p = Perf.StartNew();
+		//var pp = new Perf.Inst();
+		//1.ms();
+		//p.Next();
+		//1.ms();
+		//p.Next();
+		////Print(sizeof(Perf.Inst));
+
+		//Perf.First();
+		//string s=null;
+		//for(int i = 0; i < 5; i++) {
+		//	//s=Convert_.HexEncode(&p, sizeof(Perf.Inst));
+		//	//var si = sizeof(Perf.Inst);
+		//	//var b = new byte[si]; Marshal.Copy((IntPtr)(&p), b, 0, si);
+		//	//s = Convert.ToBase64String(b);
+		//	s = p.Serialize();
+		//	Perf.Next();
+		//	//b = Convert.FromBase64String(s);
+		//	//pp.Deserialize(s);
+		//	pp = new Perf.Inst(s);
+		//	Perf.Next();
+		//}
+		//Perf.Write();
+		//Print(s);
+		//p.Write();
+		//pp.Write();
+
+		var t2 = Time.Microseconds;
+		//200.ms();
+		//Perf.Cpu();
+
+		Perf.First();
+
+		var t3 = Time.Microseconds;
+
+		Perf.Next();
+
+		var t4 = Time.Microseconds;
+
+		Perf.Next();
+		Perf.Next();
+		Perf.NW();
+
+		Print("t", t2 - t1, t3 - t2, t4 - t3);
+	}
+
+	static void Cpu(int timeMilliseconds = 200)
+	{
+		int n = 0;
+		for(long t0 = Time.Microseconds; Time.Microseconds - t0 < timeMilliseconds * 1000L; n++) { }
+		//Print(n);
+	}
+
+	static int s_mfgytr=8;
+
+	static ref int Bure()
+	{
+		return ref s_mfgytr;
+	}
+
+	//static void TestWebBrowserLeaks()
+	//{
+	//	for(int i = 0; i < 5; i++) {
+	//		var t = new Thread(() =>
+	//		  {
+	//			  var f = new Tests.Form1();
+	//			  Application.Run(f);
+	//		  });
+	//		t.SetApartmentState(ApartmentState.STA);
+	//		t.Start();
+	//		t.Join();
+	//		AuDialog.Show();
+	//	}
+	//}
+
+
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
@@ -7622,7 +7807,12 @@ REE`");
 		try {
 #if true
 
-
+			//TestWebBrowserLeaks();
+			//Cpu();
+			//var t1 = Time.Microseconds;
+			//TestPerfWithoutSM(t1);
+			//TestKeySpeedWithEnum();
+			//TestFileWriteLineSpeed();
 			//TestTaskExceptions();
 			//TestAutotext();
 			//TestCompiler();

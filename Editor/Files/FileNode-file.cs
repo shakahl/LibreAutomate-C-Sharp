@@ -30,22 +30,28 @@ partial class FileNode
 	/// </summary>
 	/// <param name="name">
 	/// Name, like "New name.cs" or "New name".
-	/// If no extension, and it is not folder, adds previous extension if it's an existing file type.
+	/// If not folder: if no extension, adds previous extension; else if new name would change type script/cs/other, corrects name to prevent it.
 	/// If invalid filename, replaces invalid characters etc.
 	/// </param>
 	/// <param name="notifyControl">true if called not from the control edit notification.</param>
 	public bool FileRename(string name, bool notifyControl)
 	{
 		name = Path_.CorrectFileName(name);
-		if(name.IndexOf('.') < 0 && !IsFolder) {
-			var ext = Path_.GetExtension(Name);
-			if(ext.Length > 0 && Registry_.CanOpen(ext, Registry.ClassesRoot)) name += ext;
+		if(!IsFolder) {
+			if(name.IndexOf('.') < 0) {
+				var ext = Path_.GetExtension(Name);
+				if(ext.Length > 0) name += ext;
+			} else if(Name.IndexOf('.') < 0) {
+				name = name.Replace('.', ';');
+			} else if(Name.EndsWith_(".cs", true) != name.EndsWith_(".cs", true)) {
+				name += Path_.GetExtension(Name);
+			}
 		}
 		if(name == Name) return true;
 
 		if(!this.IsLink()) {
 			try {
-				Files.Rename(this.FilePath, name, IfExists.Fail);
+				File_.Rename(this.FilePath, name, IfExists.Fail);
 			}
 			catch(Exception ex) { Print(ex.Message); return false; }
 			//if(IsLink(out string sp)) _x.SetAttributeValue("path", Path_.GetDirectoryPath(sp, true) + name); //if we would rename the taget file
@@ -99,7 +105,7 @@ partial class FileNode
 			var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
 			if(newParent != oldParent) {
 				try {
-					Files.Move(this.FilePath, newParent.FilePath + "\\" + Name, IfExists.Fail);
+					File_.Move(this.FilePath, newParent.FilePath + "\\" + Name, IfExists.Fail);
 				}
 				catch(Exception ex) { Print(ex.Message); return false; }
 			}
@@ -152,7 +158,7 @@ partial class FileNode
 		//copy file or directory
 		if(!IsLink()) {
 			try {
-				Files.Copy(this.FilePath, newParent.FilePath + "\\" + name, IfExists.Fail);
+				File_.Copy(this.FilePath, newParent.FilePath + "\\" + name, IfExists.Fail);
 			}
 			catch(Exception ex) { Print(ex.Message); return null; }
 		}
@@ -172,32 +178,46 @@ partial class FileNode
 	/// <param name="model"></param>
 	/// <param name="target"></param>
 	/// <param name="pos"></param>
-	/// <param name="template"></param>
-	/// <param name="fileName">Suggested fileName. Will be changed if exists in that folder.</param>
-	public static FileNode NewItem(FilesModel model, FileNode target, NodePosition pos, NewItemTemplate template, string fileName = null)
+	/// <param name="template">
+	/// Item type and template.
+	/// Can be filename or relative path of a file or folder from the Templates folder.
+	/// Examples: "Script", "Class.cs", "Text.txt", "Subfolder", "Subfolder\File.cs".
+	/// If "Folder", creates simple folder. If the file/folder does not exist, creates script or class (.cs) or other file.
+	/// Files without extension are considered C# scripts.
+	/// </param>
+	/// <param name="name">If not null, creates with this name (made unique). Else gets name from template. In any case, makes unique name.</param>
+	public static FileNode NewItem(FilesModel model, FileNode target, NodePosition pos, string template, string name = null)
 	{
-		bool isFolder = false, isProject = false;
-		switch(template) {
-		case NewItemTemplate.Folder: isFolder = true; break;
-		case NewItemTemplate.AppProject:
-		case NewItemTemplate.LibraryProject: isFolder = isProject = true; break;
+		Debug.Assert(!Empty(template));
+
+		int i;
+		string text = "";
+		bool isFolder = template == "Folder";
+		if(!isFolder) {
+			string templFile = s_dirTemplates + template;
+			switch(File_.ExistsAs(templFile, true)) {
+			case FileDir.Directory: isFolder = true; break;
+			case FileDir.File: text = _NI_GetTemplateText(templFile); break;
+			}
 		}
 
 		var xNew = new XElement(isFolder ? "d" : "f");
+		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
 
 		//create unique name
-		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
-		//if(fileName == null) fileName = template.ToString() + (isFolder ? " 1" : (template == NewItemTemplate.Script ? " 1.csx" : " 1.cs"));
-		if(fileName == null) fileName = template.ToString() + ((isFolder || template == NewItemTemplate.Script) ? " 1" : " 1.cs");
-		string name = CreateNameUniqueInFolder(newParent, fileName, isFolder);
+		if(name == null) {
+			name = Path_.GetFileName(template);
+			//let unique names start from 1
+			if(!isFolder && (i = name.LastIndexOf('.')) > 0) name = name.Insert(i, "1"); else name += "1";
+		}
+		name = CreateNameUniqueInFolder(newParent, name, isFolder);
 		xNew.SetAttributeValue("n", name);
-		if(isProject) xNew.SetAttributeValue("project", template == NewItemTemplate.AppProject ? "app" : "library");
 
-		//create empty file or folder
+		//create file or folder
 		try {
 			var path = newParent.FilePath + "\\" + name;
-			if(isFolder) Files.CreateDirectory(path);
-			else File.WriteAllText(path, _Template(template));
+			if(isFolder) File_.CreateDirectory(path);
+			else File.WriteAllText(path, text);
 		}
 		catch(Exception ex) { Print(ex.Message); return null; }
 
@@ -205,11 +225,44 @@ partial class FileNode
 		var f = new FileNode(model, xNew);
 		f._Common_MoveCopyNew(target, pos);
 
-		if(isProject) {
-			template = template == NewItemTemplate.AppProject ? NewItemTemplate.AppClass : NewItemTemplate.Class;
-			return NewItem(model, f, NodePosition.Inside, template);
+		if(isFolder && template.EndsWith_(" project", true)) {
+			var sm = Path.GetFileName(template); sm = sm.Remove(sm.Length - 8) + ".cs"; //name of project's main file
+			return _NI_FillProjectFolder(model, f, s_dirTemplates + template, sm);
 		}
 		return f;
+	}
+	static string s_dirTemplates = Folders.ThisApp + @"Templates\";
+
+	static FileNode _NI_FillProjectFolder(FilesModel model, FileNode fnParent, string dirParent, string mainName)
+	{
+		FileNode fnMain = null;
+		foreach(var v in File_.EnumDirectory(dirParent, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
+			var f = NewItem(model, fnParent, NodePosition.Inside, v.FullPath.Substring(s_dirTemplates.Length), v.Name);
+			if(v.IsDirectory) {
+				_NI_FillProjectFolder(model, f, v.FullPath, null);
+			} else {
+				if(mainName != null && v.Name.Equals_(mainName, true)) {
+					mainName = null;
+					fnParent.Xml.SetAttributeValue("project", f.Guid);
+					fnMain = f;
+				}
+			}
+		}
+		return fnMain;
+	}
+
+	static string _NI_GetTemplateText(string templFile)
+	{
+		string s = File.ReadAllText(templFile);
+		//replace //"#include file" with text of file from "include" subfolder
+		s = s.RegexReplace_(@"(?m)^//#include +(.+)$", m =>
+		{
+			var si = s_dirTemplates + @"include\" + m[1];
+			if(File_.ExistsAsFile(si)) return File.ReadAllText(si);
+			return null;
+		});
+		//SHOULDDO: when adding classes to library project, if the main file contains a namespace, add that namespace in the new file too.
+		return s;
 	}
 
 	public static string CreateNameUniqueInFolder(FileNode folder, string fromName, bool forFolder)
@@ -221,16 +274,16 @@ partial class FileNode
 			int i = fromName.LastIndexOf('.');
 			if(i >= 0) { ext = fromName.Substring(i); fromName = fromName.Remove(i); }
 		}
-		fromName = fromName.RegexReplace_(@" \d+$", "");
+		fromName = fromName.RegexReplace_(@"\d+$", "");
 		for(int i = 2; ; i++) {
-			var s = fromName + " " + i + ext;
+			var s = fromName + i + ext;
 			if(!_Exists(s)) return s;
 		}
 
 		bool _Exists(string s)
 		{
 			if(null != folder.Xml.Element_(null, "n", s, true)) return true;
-			if(Files.ExistsAsAny(folder.FilePath + "\\" + s)) return true; //orphaned file?
+			if(File_.ExistsAsAny(folder.FilePath + "\\" + s)) return true; //orphaned file?
 			return false;
 		}
 	}
@@ -248,12 +301,12 @@ partial class FileNode
 
 		if(!doNotDeleteFile && (canDeleteLinkTarget || !IsLink())) {
 			try {
-				Files.Delete(this.FilePath, tryRecycleBin);
+				File_.Delete(this.FilePath, tryRecycleBin);
 			}
 			catch(Exception ex) { Print(ex.Message); return false; }
 		}
 
-		foreach(var f in e) _model.GuidMap.Remove(f.GUID);
+		foreach(var f in e) _model.GuidMap.Remove(f.Guid);
 		_model.OnNodeRemoved(this);
 		_x.Remove();
 
@@ -263,29 +316,6 @@ partial class FileNode
 
 	#region templates
 
-	static string _Template(NewItemTemplate template) //TODO: make editable etc
-	{
-		string r = "";
-		switch(template) {
-		case NewItemTemplate.Class:
-			r = Compiler.DefaultUsingsForTemplate + Project.Properties.Resources.TemplateClass;
-			break;
-		case NewItemTemplate.AppClass:
-			r = Compiler.DefaultUsingsForTemplate + Project.Properties.Resources.TemplateApp;
-			break;
-		}
-		return r;
-	}
-
-	public enum NewItemTemplate
-	{
-		Script,
-		Class,
-		AppClass,
-		Folder,
-		AppProject,
-		LibraryProject,
-	}
 
 	#endregion
 

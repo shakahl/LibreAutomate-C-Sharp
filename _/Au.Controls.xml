@@ -574,6 +574,13 @@
             Don't call this function from another thread.
             </summary>
         </member>
+        <member name="M:Au.Controls.SciText.SetString(System.Int32,System.String,Au.Types.LPARAM)">
+            <summary>
+            Calls a Scintilla message that sets a string which is passed using wParam.
+            If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
+            Don't call this function from another thread.
+            </summary>
+        </member>
         <member name="M:Au.Controls.SciText.SetStringString(System.Int32,System.String)">
             <summary>
             Calls a Scintilla message and passes two strings using wParam and lParam.
@@ -659,7 +666,13 @@
         </member>
         <member name="P:Au.Controls.SciText.TextLengthBytes">
             <summary>
-            Gets text length. It is the number of UTF8 bytes, not characters.
+            Gets text length (SCI_GETTEXTLENGTH) in UTF8 bytes.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciText.PositionBytes">
+            <summary>
+            Gets or sets current caret position (SCI_GETCURRENTPOS/SCI_SETEMPTYSELECTION) in UTF8 bytes.
+            The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
             </summary>
         </member>
         <member name="M:Au.Controls.SciText.LineIndexFromPosition(System.Int32)">
@@ -769,6 +782,16 @@
             </summary>
             <param name="pos">Start index (UTF8 bytes).</param>
             <param name="s"></param>
+        </member>
+        <member name="M:Au.Controls.SciText.GoToPos(System.Int32)">
+            <summary>
+            SCI_GOTOPOS and ensures visible.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.GoToLine(System.Int32)">
+            <summary>
+            SCI_GOTOLINE and ensures visible.
+            </summary>
         </member>
         <member name="T:Au.Controls.AuScintilla">
             <summary>
@@ -1869,7 +1892,7 @@
             </summary>
             <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
             <param name="t">Image type and string format.</param>
-            <param name="searchPath">Use <see cref="M:Au.Files.SearchPath(System.String,System.String[])"/></param>
+            <param name="searchPath">Use <see cref="M:Au.File_.SearchPath(System.String,System.String[])"/></param>
             <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.Folders.ThisAppImages"/>.</remarks>
         </member>
         <member name="M:Au.Controls.ImageUtil.BmpFileDataToString(System.Byte[])">

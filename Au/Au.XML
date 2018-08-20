@@ -3439,7 +3439,7 @@
         </member>
         <member name="P:Au.Types.BaseMT.IconFlags">
             <summary>
-            Flags to pass to <see cref="M:Au.Icons.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>. See <see cref="T:Au.Types.GIFlags"/>.
+            Flags to pass to <see cref="M:Au.Icon_.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>. See <see cref="T:Au.Types.GIFlags"/>.
             </summary>
             <remarks>
             This property is applied to all items.
@@ -4267,7 +4267,7 @@
         <member name="T:Au.Types.FileDir">
             <summary>
             File system entry type - file, directory, and whether it exists.
-            Returned by <see cref="M:Au.Files.ExistsAs(System.String,System.Boolean)"/>.
+            Returned by <see cref="M:Au.File_.ExistsAs(System.String,System.Boolean)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.FileDir.NotFound">
@@ -4282,7 +4282,7 @@
         <member name="T:Au.Types.FileDir2">
             <summary>
             File system entry type - file, directory, symbolic link, whether it exists and is accessible.
-            Returned by <see cref="M:Au.Files.ExistsAs2(System.String,System.Boolean)"/>.
+            Returned by <see cref="M:Au.File_.ExistsAs2(System.String,System.Boolean)"/>.
             The enum value NotFound is 0; AccessDenied is negative ((int)0x80000000); other values are greater than 0.
             </summary>
         </member>
@@ -4306,7 +4306,7 @@
         </member>
         <member name="T:Au.Types.FAFlags">
             <summary>
-            Flags for <see cref="M:Au.Files.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and some other functions.
+            Flags for <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and some other functions.
             </summary>
         </member>
         <member name="F:Au.Types.FAFlags.UseRawPath">
@@ -4321,7 +4321,7 @@
         </member>
         <member name="T:Au.Types.FileProperties">
             <summary>
-            File or directory properties. Used with <see cref="M:Au.Files.GetProperties(System.String,Au.Types.FileProperties@,Au.Types.FAFlags)"/>.
+            File or directory properties. Used with <see cref="M:Au.File_.GetProperties(System.String,Au.Types.FileProperties@,Au.Types.FAFlags)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.FileProperties.Attributes">
@@ -4341,7 +4341,7 @@
         </member>
         <member name="T:Au.Types.FEFlags">
             <summary>
-            flags for <see cref="M:Au.Files.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
+            flags for <see cref="M:Au.File_.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
             </summary>
         </member>
         <member name="F:Au.Types.FEFlags.AndSubdirectories">
@@ -4392,7 +4392,7 @@
         </member>
         <member name="T:Au.Types.FCFlags">
             <summary>
-            flags for <see cref="M:Au.Files.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> and some other similar functions.
+            flags for <see cref="M:Au.File_.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> and some other similar functions.
             Used only when copying directory.
             </summary>
         </member>
@@ -4411,7 +4411,7 @@
         </member>
         <member name="T:Au.Types.FEFile">
             <summary>
-            Contains name and other main properties of a file or subdirectory retrieved by <see cref="M:Au.Files.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
+            Contains name and other main properties of a file or subdirectory retrieved by <see cref="M:Au.File_.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
             The values are not changed after creating the variable.
             </summary>
         </member>
@@ -4462,7 +4462,7 @@
         <member name="T:Au.Types.IfExists">
             <summary>
             What to do if the destination directory contains a file or directory with the same name as the source file or directory when copying, moving or renaming.
-            Used with <see cref="M:Au.Files.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>, <see cref="M:Au.Files.Move(System.String,System.String,Au.Types.IfExists)"/> and similar functions.
+            Used with <see cref="M:Au.File_.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>, <see cref="M:Au.File_.Move(System.String,System.String,Au.Types.IfExists)"/> and similar functions.
             When renaming or moving, if the destination is the same as the source, these options are ignored and the destination is simply renamed. For example when renaming "file.txt" to "FILE.TXT".
             </summary>
         </member>
@@ -4484,7 +4484,7 @@
         </member>
         <member name="T:Au.Types.GIFlags">
             <summary>
-            Flags for <see cref="M:Au.Icons.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/> and similar functions.
+            Flags for <see cref="M:Au.Icon_.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.GIFlags.LiteralPath">
@@ -4494,7 +4494,7 @@
         </member>
         <member name="F:Au.Types.GIFlags.SearchPath">
             <summary>
-            If file is not full path, call <see cref="M:Au.Files.SearchPath(System.String,System.String[])"/>.
+            If file is not full path, call <see cref="M:Au.File_.SearchPath(System.String,System.String[])"/>.
             Without this flag searches only in <see cref="P:Au.Folders.ThisAppImages"/>; with this flag also searches there first.
             </summary>
         </member>
@@ -4502,7 +4502,7 @@
             <summary>
             Standard icon sizes.
             </summary>
-            <seealso cref="M:Au.Icons.GetShellIconSize(Au.Types.IconSize)"/>
+            <seealso cref="M:Au.Icon_.GetShellIconSize(Au.Types.IconSize)"/>
             <tocexclude />
         </member>
         <member name="F:Au.Types.IconSize.SysSmall">
@@ -4532,7 +4532,7 @@
         </member>
         <member name="T:Au.Types.StockIcon">
             <summary><msdn>SHSTOCKICONID</msdn></summary>
-            <seealso cref="M:Au.Icons.GetStockIcon(Au.Types.StockIcon,System.Int32)"/>
+            <seealso cref="M:Au.Icon_.GetStockIcon(Au.Types.StockIcon,System.Int32)"/>
         </member>
         <member name="T:Au.Types.STIFlags">
             <summary>
@@ -5589,13 +5589,13 @@
             At first call <see cref="M:Au.Util.IconsAsync.Add(System.String,System.Object)"/> (for each file) or <see cref="M:Au.Util.IconsAsync.AddRange(System.Collections.Generic.IEnumerable{Au.Util.IconsAsync.Item})"/>. Then call <see cref="M:Au.Util.IconsAsync.GetAllAsync(Au.Util.IconsAsync.Callback,System.Int32,Au.Types.GIFlags,System.Object)"/>.
             Create a callback function of type <see cref="T:Au.Util.IconsAsync.Callback"/> and pass its delegate to <b>GetAllAsync</b>.
             </remarks>
-            <seealso cref="T:Au.Icons.ImageCache"/>
+            <seealso cref="T:Au.Icon_.ImageCache"/>
         </member>
         <member name="M:Au.Util.IconsAsync.Add(System.String,System.Object)">
             <summary>
             Adds a file path to an internal collection.
             </summary>
-            <param name="file">File path etc. See <see cref="M:Au.Icons.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>.</param>
+            <param name="file">File path etc. See <see cref="M:Au.Icon_.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>.</param>
             <param name="obj">Something to pass to your callback function together with icon handle for this file.</param>
         </member>
         <member name="M:Au.Util.IconsAsync.AddRange(System.Collections.Generic.IEnumerable{Au.Util.IconsAsync.Item})">
@@ -5620,7 +5620,7 @@
             <param name="flags"><see cref="T:Au.Types.GIFlags"/></param>
             <param name="objCommon">Something to pass to callback functions.</param>
             <remarks>
-            After this function returns, icons are asynchronously extracted with <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>, and callback called with icon handle (or default(IntPtr) if failed).
+            After this function returns, icons are asynchronously extracted with <see cref="M:Au.Icon_.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/>, and callback called with icon handle (or default(IntPtr) if failed).
             The callback is called in this thread. This thread must have a message loop (eg Application.Run).
             If you'll need more icons, you can add more files and call this function again with the same <b>IconsAsync</b> instance, even if getting old icons if still not finished.
             </remarks>
@@ -5662,7 +5662,7 @@
             <summary>obj passed to <see cref="M:Au.Util.IconsAsync.Add(System.String,System.Object)"/>.</summary>
         </member>
         <member name="F:Au.Util.IconsAsync.Result.hIcon">
-            <summary>Icon handle. To get managed object from it, use <b>Icons.HandleToX</b> functions; else finally call <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/>. Can be default(IntPtr).</summary>
+            <summary>Icon handle. To get managed object from it, use <b>Icons.HandleToX</b> functions; else finally call <see cref="M:Au.Icon_.DestroyIconHandle(System.IntPtr)"/>. Can be default(IntPtr).</summary>
         </member>
         <member name="M:Au.Util.IconsAsync.Result.#ctor(System.String,System.Object)">
             <summary>Icon converted to Image object, if used IconFlags.NeedImage and the thread pool decided to convert handle to Image. You should call Dispose() when finished using it. Can be null.</summary>
@@ -5990,14 +5990,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -6059,6 +6051,32 @@
             </summary>
             <param name="operandType">Defines the type of operand.</param>
             <returns>The size in bytes of the operand type.</returns>
+        </member>
+        <member name="T:Au.Util.LibRunAsm">
+            <summary>
+            Used by other Au projects to execute script assembly in new appdomain etc.
+            The code must be in Au, to avoid loading the program assembly into the new appdomain. Now Au is loaded instead.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibRunAsm.RunInNewAppDomain(System.String,System.Object,System.Boolean,System.String[],System.String)">
+            <summary>
+            Executes assembly in new appdomain in this thread.
+            Handles exceptions.
+            </summary>
+            <param name="name">Appdomain name.</param>
+            <param name="asmPathOrBytes">String (path) or byte[] (assembly in memory).</param>
+            <param name="isScript"></param>
+            <param name="args">To pass to Main.</param>
+            <param name="config">Config file path.</param>
+        </member>
+        <member name="M:Au.Util.LibRunAsm.RunHere(System.Object,System.Boolean,System.String[])">
+            <summary>
+            Executes assembly in this appdomain in this thread.
+            Handles exceptions.
+            </summary>
+            <param name="asmPathOrBytes">String (path) or byte[] (assembly in memory).</param>
+            <param name="isScript"></param>
+            <param name="args">To pass to Main.</param>
         </member>
         <member name="T:Au.Util.StringMisc">
             <summary>
@@ -7289,39 +7307,39 @@
             Some classes are public, and can be used not only in this library.
             </summary>
         </member>
-        <member name="T:Au.Util.ModuleHandle">
+        <member name="T:Au.Util.ModuleHandle_">
             <summary>
             Gets native module handle.
             </summary>
         </member>
-        <member name="M:Au.Util.ModuleHandle.OfType(System.Type)">
+        <member name="M:Au.Util.ModuleHandle_.OfType(System.Type)">
             <summary>
             Gets native module handle of type's assembly.
             </summary>
         </member>
-        <member name="M:Au.Util.ModuleHandle.OfAssembly(System.Reflection.Assembly)">
+        <member name="M:Au.Util.ModuleHandle_.OfAssembly(System.Reflection.Assembly)">
             <summary>
             Gets native module handle of an assembly.
             If the assembly consists of multiple modules, gets its first loaded module.
             </summary>
         </member>
-        <member name="M:Au.Util.ModuleHandle.OfAppDomainEntryAssembly">
+        <member name="M:Au.Util.ModuleHandle_.OfAppDomainEntryAssembly">
             <summary>
             Gets native module handle of the entry assembly of this appdomain.
             If the assembly consists of multiple modules, gets its first loaded module.
             </summary>
         </member>
-        <member name="M:Au.Util.ModuleHandle.OfAuDll">
+        <member name="M:Au.Util.ModuleHandle_.OfAuDll">
             <summary>
             Gets native module handle of Au.dll.
             </summary>
         </member>
-        <member name="M:Au.Util.ModuleHandle.OfProcessExe">
+        <member name="M:Au.Util.ModuleHandle_.OfProcessExe">
             <summary>
             Gets native module handle of the program file of this process.
             </summary>
         </member>
-        <member name="M:Au.Util.ModuleHandle.OfAppIcon">
+        <member name="M:Au.Util.ModuleHandle_.OfAppIcon">
             <summary>
             Gets native module handle of the assembly containing native icon that can be displayed as icon of this app.
             Some API functions need it when you use <msdn>IDI_APPLICATION</msdn>.
@@ -7338,11 +7356,6 @@
             <summary>
             Gets the entry assembly of this appdomain.
             Normally instead can be used <see cref="M:System.Reflection.Assembly.GetEntryAssembly"/>, but it returns null if appdomain launched through <see cref="M:System.AppDomain.DoCallBack(System.CrossAppDomainDelegate)"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Util.Assembly_.LibIsAuInGAC">
-            <summary>
-            Returns true if Au.dll is installed in the global assembly cache.
             </summary>
         </member>
         <member name="P:Au.Util.Assembly_.LibIsAuNgened">
@@ -9646,7 +9659,7 @@
             <item>Bitmap - image object in memory.</item>
             <item>IEnumerable of string, int/ColorInt/Color, Bitmap or object - multiple images or colors. Action - find any. To create a different action can be used callback function (parameter <paramref name="also"/>).</item>
             </list>
-            Icons are not supported directly, but you can use <see cref="M:Au.Icons.GetFileIconImage(System.String,System.Int32,Au.Types.GIFlags)"/> or <see cref="M:Au.Icons.HandleToImage(System.IntPtr,System.Boolean)"/>.
+            Icons are not supported directly, but you can use <see cref="M:Au.Icon_.GetFileIconImage(System.String,System.Int32,Au.Types.GIFlags)"/> or <see cref="M:Au.Icon_.HandleToImage(System.IntPtr,System.Boolean)"/>.
             Transparent and partially transparent pixels are not compared. For example, when you capture a non-rectangular area image, the image actually is rectangular, but pixels outside of its captured area are transparent and therefore not compared. Also you can draw transparent areas with an image editor that supports it, for example Paint.NET.
             </param>
             <param name="flags"></param>
@@ -11262,7 +11275,7 @@
         </member>
         <member name="M:Au.String_.Limit_(System.String,System.Int32)">
             <summary>
-            If this string is longer than <paramref name="limit"/>, returns its substring 0 to <paramref name="limit"/>-3 with appended "...".
+            If this string is longer than <paramref name="limit"/>, returns its substring 0 to <paramref name="limit"/>-1 with appended '…' character.
             Else returns this string.
             </summary>
         </member>
@@ -11273,7 +11286,7 @@
             If the string contains these characters, replaces and returns new string. Else returns this string.
             </summary>
             <param name="t">This string.</param>
-            <param name="limit">If the final string is longer than <paramref name="limit"/>, get its substring 0 to <paramref name="limit"/>-3 with appended "...". The enclosing "" are not counted.</param>
+            <param name="limit">If the final string is longer than <paramref name="limit"/>, get its substring 0 to <paramref name="limit"/>-1 with appended '…' character. The enclosing "" are not counted.</param>
             <param name="quote">Enclose in "".</param>
         </member>
         <member name="M:Au.String_.IsAscii_(System.String)">
@@ -11731,7 +11744,7 @@
             The same as <see cref="M:Au.InterDomainVariables.DefaultDomainVariable``1(System.String,System.Boolean@)"/>, just does not have the bool parameter.
             </summary>
         </member>
-        <member name="T:Au.Files">
+        <member name="T:Au.File_">
             <summary>
             File system functions.
             </summary>
@@ -11743,75 +11756,75 @@
             Most functions support extended-length paths (longer than 259). Such local paths should have @"\\?\" prefix, like @"\\?\C:\...". Such network path should be like @"\\?\UNC\server\share\...". See <see cref="M:Au.Path_.PrefixLongPath(System.String)"/>, <see cref="M:Au.Path_.PrefixLongPathIfNeed(System.String)"/>. Many functions support long paths even without prefix.
             </remarks>
         </member>
-        <member name="T:Au.Files.Misc">
+        <member name="T:Au.File_.Misc">
             <summary>
             Miscellaneous file/directory functions.
             </summary>
         </member>
-        <member name="T:Au.Files.Misc.FileId">
+        <member name="T:Au.File_.Misc.FileId">
             <summary>
             Contains file properties that can be used to uniquely identify the file on a single computer.
             </summary>
             <remarks>
             Can be used with files and directories.
-            To get it, use <see cref="M:Au.Files.Misc.GetFileId(System.String,Au.Files.Misc.FileId@)"/>.
+            To get it, use <see cref="M:Au.File_.Misc.GetFileId(System.String,Au.File_.Misc.FileId@)"/>.
             There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
             </remarks>
             <tocexclude />
         </member>
-        <member name="F:Au.Files.Misc.FileId.VolumeSerialNumber">
+        <member name="F:Au.File_.Misc.FileId.VolumeSerialNumber">
             <summary>The serial number of the volume (aka disk drive) that contains the file.</summary>
         </member>
-        <member name="F:Au.Files.Misc.FileId.FileIndex">
+        <member name="F:Au.File_.Misc.FileId.FileIndex">
             <summary>An identifier that is associated with the file. It is unique in that volume.</summary>
         </member>
-        <member name="M:Au.Files.Misc.FileId.op_Equality(Au.Files.Misc.FileId,Au.Files.Misc.FileId)">
+        <member name="M:Au.File_.Misc.FileId.op_Equality(Au.File_.Misc.FileId,Au.File_.Misc.FileId)">
             
         </member>
-        <member name="M:Au.Files.Misc.FileId.op_Inequality(Au.Files.Misc.FileId,Au.Files.Misc.FileId)">
+        <member name="M:Au.File_.Misc.FileId.op_Inequality(Au.File_.Misc.FileId,Au.File_.Misc.FileId)">
             
         </member>
-        <member name="M:Au.Files.Misc.GetFileId(System.String,Au.Files.Misc.FileId@)">
+        <member name="M:Au.File_.Misc.GetFileId(System.String,Au.File_.Misc.FileId@)">
             <summary>
-            Gets <see cref="T:Au.Files.Misc.FileId"/> of a file or directory.
+            Gets <see cref="T:Au.File_.Misc.FileId"/> of a file or directory.
             Returns false if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
             <param name="path">Full path. Supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>).</param>
             <param name="fileId"></param>
         </member>
-        <member name="M:Au.Files.Misc.LibIsSameFile(System.String,System.String)">
+        <member name="M:Au.File_.Misc.LibIsSameFile(System.String,System.String)">
             <summary>
-            Calls <see cref="M:Au.Files.Misc.GetFileId(System.String,Au.Files.Misc.FileId@)"/> for two paths and returns true if both calls succeed and the ids are equal.
+            Calls <see cref="M:Au.File_.Misc.GetFileId(System.String,Au.File_.Misc.FileId@)"/> for two paths and returns true if both calls succeed and the ids are equal.
             Paths should be normalized. They are passed to API unmodified.
             </summary>
             <param name="path1"></param>
             <param name="path2"></param>
         </member>
-        <member name="T:Au.Files.Misc.DisableRedirection">
+        <member name="T:Au.File_.Misc.DisableRedirection">
             <summary>
             Temporarily disables file system redirection, to allow this 32-bit process access the 64-bit System32 directory.
             </summary>
         </member>
-        <member name="M:Au.Files.Misc.DisableRedirection.Disable">
+        <member name="M:Au.File_.Misc.DisableRedirection.Disable">
             <summary>
             If Ver.Is32BitProcessOn64BitOS, calls API <msdn>Wow64DisableWow64FsRedirection</msdn>, which disables file system redirection.
             The caller can call this without checking OS and process bitness. This function checks it and it is fast.
-            Always call <see cref="M:Au.Files.Misc.DisableRedirection.Revert"/> or Dispose, for example in finally{}, or use using (this struct implements IDisposable). Not calling it is more dangerous than a memory leak. It is not called by GC.
+            Always call <see cref="M:Au.File_.Misc.DisableRedirection.Revert"/> or Dispose, for example in finally{}, or use using (this struct implements IDisposable). Not calling it is more dangerous than a memory leak. It is not called by GC.
             </summary>
         </member>
-        <member name="M:Au.Files.Misc.DisableRedirection.Revert">
+        <member name="M:Au.File_.Misc.DisableRedirection.Revert">
             <summary>
             If redirected, calls API <msdn>Wow64RevertWow64FsRedirection</msdn>.
             </summary>
         </member>
-        <member name="M:Au.Files.Misc.DisableRedirection.IsSystem64PathIn32BitProcess(System.String)">
+        <member name="M:Au.File_.Misc.DisableRedirection.IsSystem64PathIn32BitProcess(System.String)">
             <summary>
             Returns true if Ver.Is32BitProcessOn64BitOS is true and path starts with Folders.System.
             Most such paths are redirected, therefore you may want to disable redirection with this class.
             </summary>
             <param name="path">Normalized path. This function does not normalize. Also it is unaware of @"\\?\".</param>
         </member>
-        <member name="M:Au.Files.Misc.DisableRedirection.GetNonRedirectedSystemPath(System.String,System.Boolean)">
+        <member name="M:Au.File_.Misc.DisableRedirection.GetNonRedirectedSystemPath(System.String,System.Boolean)">
             <summary>
             If Ver.Is32BitProcessOn64BitOS is true and path starts with Folders.System, replaces that path part with <see cref="P:Au.Folders.SystemX64"/>.
             It disables redirection to Folders.SystemX32 for that path.
@@ -11819,18 +11832,18 @@
             <param name="path">Normalized path. This function does not normalize. Also it is unaware of @"\\?\".</param>
             <param name="ifExistsOnlyThere">Don't replace path if the file or directory exists in the redirected folder or does not exist in the non-redirected folder.</param>
         </member>
-        <member name="M:Au.Files.Misc.DisableRedirection.Dispose">
+        <member name="M:Au.File_.Misc.DisableRedirection.Dispose">
             <summary>
-            Calls <see cref="M:Au.Files.Misc.DisableRedirection.Revert"/>.
+            Calls <see cref="M:Au.File_.Misc.DisableRedirection.Revert"/>.
             </summary>
         </member>
-        <member name="M:Au.Files._DisableDeviceNotReadyMessageBox">
+        <member name="M:Au.File_._DisableDeviceNotReadyMessageBox">
             <summary>
             Adds SEM_FAILCRITICALERRORS to the error mode of this process, as MSDN recommends. Does this once in appdomain.
             It is to avoid unnecessary message boxes when an API tries to access an ejected CD/DVD etc.
             </summary>
         </member>
-        <member name="M:Au.Files.GetProperties(System.String,Au.Types.FileProperties@,Au.Types.FAFlags)">
+        <member name="M:Au.File_.GetProperties(System.String,Au.Types.FileProperties@,Au.Types.FAFlags)">
             <summary>
             Gets file or directory attributes, size and times.
             Returns false if the file/directory does not exist.
@@ -11843,10 +11856,10 @@
             <exception cref="T:Au.Types.AuException">The file/directory exist but failed to get its properties. Not thrown if used flag DoNotThrow.</exception>
             <remarks>
             For symbolic links etc, gets properties of the link, not of its target.
-            You can also get most of these properties with <see cref="M:Au.Files.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
+            You can also get most of these properties with <see cref="M:Au.File_.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
             </remarks>
         </member>
-        <member name="M:Au.Files.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)">
+        <member name="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)">
             <summary>
             Gets file or directory attributes.
             Returns false if the file/directory does not exist.
@@ -11861,13 +11874,13 @@
             For symbolic links etc, gets properties of the link, not of its target.
             </remarks>
         </member>
-        <member name="M:Au.Files._GetAttributes(System.String,System.IO.FileAttributes@,System.Boolean)">
+        <member name="M:Au.File_._GetAttributes(System.String,System.IO.FileAttributes@,System.Boolean)">
             <summary>
             Gets attributes.
             Returns false if INVALID_FILE_ATTRIBUTES or if relative path. No exceptions.
             </summary>
         </member>
-        <member name="M:Au.Files.ExistsAs(System.String,System.Boolean)">
+        <member name="M:Au.File_.ExistsAs(System.String,System.Boolean)">
             <summary>
             Gets file system entry type - file, directory, and whether it exists.
             Returns NotFound (0) if does not exist or if fails to get attributes.
@@ -11876,71 +11889,71 @@
             <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.Files.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
+            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
             </remarks>
         </member>
-        <member name="M:Au.Files.ExistsAs2(System.String,System.Boolean)">
+        <member name="M:Au.File_.ExistsAs2(System.String,System.Boolean)">
             <summary>
             Gets file system entry type - file, directory, symbolic link, whether it exists and is accessible.
             Returns NotFound (0) if does not exist. Returns AccessDenied (&lt; 0) if exists but this process cannot access it and get attributes.
             Calls API <msdn>GetFileAttributes</msdn>.
-            The same as <see cref="M:Au.Files.ExistsAs(System.String,System.Boolean)"/> but provides more complete result. In most cases you can use ExistsAs, it's simpler.
+            The same as <see cref="M:Au.File_.ExistsAs(System.String,System.Boolean)"/> but provides more complete result. In most cases you can use ExistsAs, it's simpler.
             </summary>
             <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.Files.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attributes Directory and ReparsePoint.
+            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attributes Directory and ReparsePoint.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
             </remarks>
         </member>
-        <member name="M:Au.Files.ExistsAsAny(System.String,System.Boolean)">
+        <member name="M:Au.File_.ExistsAsAny(System.String,System.Boolean)">
             <summary>
             Returns true if file or directory exists.
-            Calls <see cref="M:Au.Files.ExistsAs2(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
+            Calls <see cref="M:Au.File_.ExistsAs2(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
             </summary>
             <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.Files.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/>.
+            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/>.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
             For symbolic links etc, returns true if the link exists. Does not care whether its target exists.
-            Unlike <see cref="M:Au.Files.ExistsAsFile(System.String,System.Boolean)"/> and <see cref="M:Au.Files.ExistsAsDirectory(System.String,System.Boolean)"/>, this function returns true when the file exists but cannot get its attributes. Then <c>ExistsAsAny(path)</c> is not the same as <c>ExistsAsFile(path) || ExistsAsDirectory(path)</c>.
+            Unlike <see cref="M:Au.File_.ExistsAsFile(System.String,System.Boolean)"/> and <see cref="M:Au.File_.ExistsAsDirectory(System.String,System.Boolean)"/>, this function returns true when the file exists but cannot get its attributes. Then <c>ExistsAsAny(path)</c> is not the same as <c>ExistsAsFile(path) || ExistsAsDirectory(path)</c>.
             </remarks>
         </member>
-        <member name="M:Au.Files.ExistsAsFile(System.String,System.Boolean)">
+        <member name="M:Au.File_.ExistsAsFile(System.String,System.Boolean)">
             <summary>
             Returns true if file exists and is not a directory.
             Returns false if does not exist or if fails to get its attributes.
-            Calls <see cref="M:Au.Files.ExistsAs(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
+            Calls <see cref="M:Au.File_.ExistsAs(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
             </summary>
             <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.Files.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
+            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
             For symbolic links etc, returns true if the link exists and its target is not a directory. Does not care whether its target exists.
             </remarks>
         </member>
-        <member name="M:Au.Files.ExistsAsDirectory(System.String,System.Boolean)">
+        <member name="M:Au.File_.ExistsAsDirectory(System.String,System.Boolean)">
             <summary>
             Returns true if directory (folder or drive) exists.
             Returns false if does not exist or if fails to get its attributes.
-            Calls <see cref="M:Au.Files.ExistsAs(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
+            Calls <see cref="M:Au.File_.ExistsAs(System.String,System.Boolean)"/>, which calls API <msdn>GetFileAttributes</msdn>.
             </summary>
             <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.Files.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
+            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
             For symbolic links etc, returns true if the link exists and its target is a directory. Does not care whether its target exists.
             </remarks>
         </member>
-        <member name="M:Au.Files.SearchPath(System.String,System.String[])">
+        <member name="M:Au.File_.SearchPath(System.String,System.String[])">
             <summary>
             Finds file or directory and returns full path.
             Returns null if cannot be found.
-            If the path argument is full path, calls <see cref="M:Au.Files.ExistsAsAny(System.String,System.Boolean)"/> and returns normalized path if exists, null if not.
+            If the path argument is full path, calls <see cref="M:Au.File_.ExistsAsAny(System.String,System.Boolean)"/> and returns normalized path if exists, null if not.
             Else searches in these places:
             1. dirs, if used.
             2. <see cref="P:Au.Folders.ThisApp"/>.
@@ -11950,7 +11963,7 @@
             <param name="path">Full or relative path or just filename with extension. Supports network paths too.</param>
             <param name="dirs">0 or more directories where to search.</param>
         </member>
-        <member name="M:Au.Files.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})">
+        <member name="M:Au.File_.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})">
             <summary>
             Gets names and other info of files and subdirectories in the specified directory.
             Returns an enumerable collection of <see cref="T:Au.Types.FEFile"/> objects containing the info.
@@ -11988,12 +12001,12 @@
             Enumeration of a subdirectory starts immediately after the subdirectory itself is retrieved.
             </remarks>
         </member>
-        <member name="M:Au.Files._SafeDeleteExistingDirectory.Rename(System.String,System.Boolean)">
+        <member name="M:Au.File_._SafeDeleteExistingDirectory.Rename(System.String,System.Boolean)">
             <summary>
             note: path must be normalized.
             </summary>
         </member>
-        <member name="M:Au.Files.Rename(System.String,System.String,Au.Types.IfExists)">
+        <member name="M:Au.File_.Rename(System.String,System.String,Au.Types.IfExists)">
             <summary>
             Renames file or directory.
             </summary>
@@ -12010,14 +12023,14 @@
             Uses API <msdn>MoveFileEx</msdn>.
             </remarks>
         </member>
-        <member name="M:Au.Files.Move(System.String,System.String,Au.Types.IfExists)">
+        <member name="M:Au.File_.Move(System.String,System.String,Au.Types.IfExists)">
             <summary>
             Moves (changes path of) file or directory.
             </summary>
             <param name="path">Full path.</param>
             <param name="newPath">
             New full path.
-            <note type="note">It is not the new parent directory. Use <see cref="M:Au.Files.MoveTo(System.String,System.String,Au.Types.IfExists)"/> for it.</note>
+            <note type="note">It is not the new parent directory. Use <see cref="M:Au.File_.MoveTo(System.String,System.String,Au.Types.IfExists)"/> for it.</note>
             </param>
             <param name="ifExists"></param>
             <exception cref="T:System.ArgumentException">path or newPath is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).</exception>
@@ -12028,11 +12041,11 @@
             In these cases copies/deletes: destination is on another drive; need to merge directories.
             When need to copy, does not copy the security properties; sets default security properties.
             
-            Creates the destination directory if does not exist (see <see cref="M:Au.Files.CreateDirectory(System.String,System.String)"/>).
+            Creates the destination directory if does not exist (see <see cref="M:Au.File_.CreateDirectory(System.String,System.String)"/>).
             If path and newPath share the same parent directory, just renames the file.
             </remarks>
         </member>
-        <member name="M:Au.Files.MoveTo(System.String,System.String,Au.Types.IfExists)">
+        <member name="M:Au.File_.MoveTo(System.String,System.String,Au.Types.IfExists)">
             <summary>
             Moves file or directory into another directory.
             </summary>
@@ -12041,7 +12054,7 @@
             <param name="ifExists"></param>
             <exception cref="T:System.ArgumentException">
             path or newDirectory is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).
-            path is drive. To move drive content, use <see cref="M:Au.Files.Move(System.String,System.String,Au.Types.IfExists)"/>.
+            path is drive. To move drive content, use <see cref="M:Au.File_.Move(System.String,System.String,Au.Types.IfExists)"/>.
             </exception>
             <exception cref="T:System.IO.FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
@@ -12050,17 +12063,17 @@
             In these cases copies/deletes: destination is on another drive; need to merge directories.
             When need to copy, does not copy the security properties; sets default security properties.
             
-            Creates the destination directory if does not exist (see <see cref="M:Au.Files.CreateDirectory(System.String,System.String)"/>).
+            Creates the destination directory if does not exist (see <see cref="M:Au.File_.CreateDirectory(System.String,System.String)"/>).
             </remarks>
         </member>
-        <member name="M:Au.Files.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})">
+        <member name="M:Au.File_.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})">
             <summary>
             Copies file or directory.
             </summary>
             <param name="path">Full path.</param>
             <param name="newPath">
             New full path.
-            <note type="note">It is not the new parent directory. Use <see cref="M:Au.Files.CopyTo(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> for it.</note>
+            <note type="note">It is not the new parent directory. Use <see cref="M:Au.File_.CopyTo(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> for it.</note>
             </param>
             <param name="ifExists"></param>
             <param name="copyFlags">Options used when copying directory.</param>
@@ -12075,10 +12088,10 @@
             Uses API <msdn>CopyFileEx</msdn>.
             On Windows 7 does not copy the security properties; sets default security properties.
             Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
-            Creates the destination directory if does not exist (see <see cref="M:Au.Files.CreateDirectory(System.String,System.String)"/>).
+            Creates the destination directory if does not exist (see <see cref="M:Au.File_.CreateDirectory(System.String,System.String)"/>).
             </remarks>
         </member>
-        <member name="M:Au.Files.CopyTo(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})">
+        <member name="M:Au.File_.CopyTo(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})">
             <summary>
             Copies file or directory into another directory.
             </summary>
@@ -12086,10 +12099,10 @@
             <param name="newDirectory">New parent directory.</param>
             <param name="ifExists"></param>
             <param name="copyFlags">Options used when copying directory.</param>
-            <param name="filter"><inheritdoc cref="M:Au.Files.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/></param>
+            <param name="filter"><inheritdoc cref="M:Au.File_.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/></param>
             <exception cref="T:System.ArgumentException">
             path or newDirectory is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).
-            path is drive. To copy drive content, use <see cref="M:Au.Files.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>.
+            path is drive. To copy drive content, use <see cref="M:Au.File_.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>.
             </exception>
             <exception cref="T:System.IO.FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
@@ -12097,10 +12110,10 @@
             Uses API <msdn>CopyFileEx</msdn>.
             On Windows 7 does not copy the security properties; sets default security properties.
             Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
-            Creates the destination directory if does not exist (see <see cref="M:Au.Files.CreateDirectory(System.String,System.String)"/>).
+            Creates the destination directory if does not exist (see <see cref="M:Au.File_.CreateDirectory(System.String,System.String)"/>).
             </remarks>
         </member>
-        <member name="M:Au.Files.Delete(System.String,System.Boolean)">
+        <member name="M:Au.File_.Delete(System.String,System.Boolean)">
             <summary>
             Deletes file or directory.
             Does nothing if it does not exist (no exception).
@@ -12109,7 +12122,7 @@
             <param name="tryRecycleBin">
             Send to the Recycle Bin. If not possible, delete anyway.
             Why could be not possible: 1. The file is in a removable drive (most removables don't have a recycle bin). 2. The file is too large. 3. The path is too long. 4. The Recycle Bin is not used on that drive (it can be set in the Recycle Bin Properties dialog). 5. This process is non-UI-interactive, eg a service. 6. Unknown reasons.
-            Note: it is much slower. To delete multiple, use <see cref="M:Au.Files.Delete(System.Collections.Generic.IEnumerable{System.String},System.Boolean)"/>.
+            Note: it is much slower. To delete multiple, use <see cref="M:Au.File_.Delete(System.Collections.Generic.IEnumerable{System.String},System.Boolean)"/>.
             </param>
             <exception cref="T:System.ArgumentException">path is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).</exception>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
@@ -12124,33 +12137,33 @@
             3. The directory is (or contains) the "current directory" (in any process).
             </remarks>
         </member>
-        <member name="M:Au.Files.Delete(System.Collections.Generic.IEnumerable{System.String},System.Boolean)">
+        <member name="M:Au.File_.Delete(System.Collections.Generic.IEnumerable{System.String},System.Boolean)">
             <summary>
             Deletes multiple files or/and directories.
-            The same as <see cref="M:Au.Files.Delete(System.String,System.Boolean)"/>, but faster when using Recycle Bin.
+            The same as <see cref="M:Au.File_.Delete(System.String,System.Boolean)"/>, but faster when using Recycle Bin.
             </summary>
             <param name="paths">string array, List or other collection. Full paths.</param>
             <param name="tryRecycleBin"></param>
         </member>
-        <member name="M:Au.Files._Delete(System.String,System.Boolean)">
+        <member name="M:Au.File_._Delete(System.String,System.Boolean)">
             <summary>
             note: path must be normalized.
             </summary>
         </member>
-        <member name="M:Au.Files.CalculateDirectorySize(System.String,Au.Types.FEFlags)">
+        <member name="M:Au.File_.CalculateDirectorySize(System.String,Au.Types.FEFlags)">
             <summary>
-            Calls <see cref="M:Au.Files.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> and returns sum of all file sizes.
+            Calls <see cref="M:Au.File_.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> and returns sum of all file sizes.
             With default flags, it includes sizes of all descendant files, in this directory and all subdirectories except in inaccessible [sub]directories.
             </summary>
             <param name="path">Full path.</param>
             <param name="flags">EnumDirectory flags.</param>
-            <exception cref="T:System.Exception"><see cref="M:Au.Files.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> exceptions. By default, no exceptions if used full path and the directory exists.</exception>
+            <exception cref="T:System.Exception"><see cref="M:Au.File_.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> exceptions. By default, no exceptions if used full path and the directory exists.</exception>
             <remarks>
             This function is slow if the directory is large.
             Don't use this function for files (throws exception) and drives (instead use <see cref="T:System.IO.DriveInfo"/>, it's fast and includes sizes of Recycle Bin and other protected hidden system directories).
             </remarks>
         </member>
-        <member name="M:Au.Files.CreateDirectory(System.String,System.String)">
+        <member name="M:Au.File_.CreateDirectory(System.String,System.String)">
             <summary>
             Creates new directory if does not exists.
             If need, creates missing parent/ancestor directories.
@@ -12166,10 +12179,10 @@
             To create the specified directory, calls API <msdn>CreateDirectory</msdn> or <msdn>CreateDirectoryEx</msdn> (if templateDirectory is not null).
             </remarks>
         </member>
-        <member name="M:Au.Files.CreateDirectoryFor(System.String)">
+        <member name="M:Au.File_.CreateDirectoryFor(System.String)">
             <summary>
             Creates parent directory for a new file, if does not exist.
-            The same as <see cref="M:Au.Files.CreateDirectory(System.String,System.String)"/>, just removes filename from filePath.
+            The same as <see cref="M:Au.File_.CreateDirectory(System.String,System.String)"/>, just removes filename from filePath.
             </summary>
             <param name="filePath">Path of new file.</param>
             <exception cref="T:System.ArgumentException">Not full path. No filename.</exception>
@@ -12177,36 +12190,36 @@
             <example>
             <code><![CDATA[
             string path = @"D:\Test\new\test.txt";
-            Files.CreateDirectoryFor(path);
+            File_.CreateDirectoryFor(path);
             File.WriteAllText(path, "text"); //would fail if directory @"D:\Test\new" does not exist
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Files._PreparePath(System.String)">
+        <member name="M:Au.File_._PreparePath(System.String)">
             <summary>
             Expands environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). Throws ArgumentException if not full path. Normalizes. Removes or adds '\\' at the end.
             </summary>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
         </member>
-        <member name="M:Au.Files._FindFilename(System.String,System.Boolean)">
+        <member name="M:Au.File_._FindFilename(System.String,System.Boolean)">
             <summary>
             Finds filename, eg @"b.txt" in @"c:\a\b.txt".
             </summary>
             <exception cref="T:System.ArgumentException">'\\' not found or is at the end. If noException, instead returns -1.</exception>
         </member>
-        <member name="M:Au.Files._RemoveFilename(System.String,System.Boolean)">
+        <member name="M:Au.File_._RemoveFilename(System.String,System.Boolean)">
             <summary>
             Removes filename, eg @"c:\a\b.txt" -> @"c:\a".
             </summary>
             <exception cref="T:System.ArgumentException">'\\' not found or is at the end. If noException, instead returns null.</exception>
         </member>
-        <member name="M:Au.Files._GetFilename(System.String,System.Boolean)">
+        <member name="M:Au.File_._GetFilename(System.String,System.Boolean)">
             <summary>
             Gets filename, eg @"c:\a\b.txt" -> @"b.txt".
             </summary>
             <exception cref="T:System.ArgumentException">'\\' not found or is at the end. If noException, instead returns null.</exception>
         </member>
-        <member name="M:Au.Files._IsSepChar(System.Char)">
+        <member name="M:Au.File_._IsSepChar(System.Char)">
             <summary>
             Returns true if character c == '\\' || c == '/'.
             </summary>
@@ -12492,7 +12505,7 @@
             </summary>
             <param name="lnkPath">.lnk file path.</param>
             <exception cref="T:Au.Types.AuException">Failed to unregister hotkey.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Files.Delete(System.String,System.Boolean)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.File_.Delete(System.String,System.Boolean)"/>.</exception>
         </member>
         <member name="M:Au.Shell.Shortcut._UnregisterHotkey(System.String)">
             <exception cref="T:Au.Types.AuException">Failed to open or save.</exception>
@@ -12511,7 +12524,7 @@
             <param name="file">
             What to run. Can be:
             Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>Folders.System + "notepad.exe"</c>, <c>@"%Folders.System%\notepad.exe"</c>.
-            Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="M:Au.Files.SearchPath(System.String,System.String[])"/>.
+            Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="M:Au.File_.SearchPath(System.String,System.String[])"/>.
             Path relative to <see cref="P:Au.Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
             URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
             Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
@@ -12570,7 +12583,7 @@
             <param name="file">
             Path or name of an .exe or .bat file. Can be:
             Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>Folders.System + "x.exe"</c>, <c>@"%Folders.System%\x.exe"</c>.
-            Filename, like <c>"x.exe"</c>. The function calls <see cref="M:Au.Files.SearchPath(System.String,System.String[])"/>.
+            Filename, like <c>"x.exe"</c>. The function calls <see cref="M:Au.File_.SearchPath(System.String,System.String[])"/>.
             Path relative to <see cref="P:Au.Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
             Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>.
             </param>
@@ -12626,7 +12639,7 @@
              Usually known folders are used like <c>string path = Folders.Documents + "file.txt"</c>. It's easier and faster. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
              To get known folder path, this function calls <see cref="M:Au.Folders.GetFolder(System.String)"/>.
             
-             This function is called by many functions of classes Path_, Files, Shell, Icons, some others, therefore all they support environment variables and known folders in path string.
+             This function is called by many functions of classes Path_, File_, Shell, Icon_, some others, therefore all they support environment variables and known folders in path string.
              </remarks>
         </member>
         <member name="M:Au.Path_.LibGetEnvVar(System.String)">
@@ -13240,7 +13253,7 @@
              Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like "_Win8" which means that the folder is unavailable on older Windows.
              Some known folders, although supported and registerd, may be still not created.
              
-             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.Folders.VirtualPidl"/> return it as <see cref="T:Au.Shell.Pidl"/>. Functions of the nested class <see cref="T:Au.Folders.Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes Shell, Shell.Pidl, Icons) but not with .NET or native functions.
+             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.Folders.VirtualPidl"/> return it as <see cref="T:Au.Shell.Pidl"/>. Functions of the nested class <see cref="T:Au.Folders.Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes Shell, Shell.Pidl, Icon_) but not with .NET or native functions.
             
              Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
              The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
@@ -13378,7 +13391,7 @@
             <summary>
             Gets or sets path of images (icons etc) folder of this application.
             Default is ThisApp + "Images".
-            Functions of these classes will look for image there: Icons, AuMenu, AuToolbar, WinImage, possibly some other.
+            Functions of these classes will look for image there: Icon_, AuMenu, AuToolbar, WinImage, possibly some other.
             </summary>
         </member>
         <member name="P:Au.Folders.SystemX64">
@@ -13389,7 +13402,7 @@
             If this process is 32-bit and OS is 64-bit, when it uses the <see cref="P:Au.Folders.System"/> folder path (@"C:\WINDOWS\system32"), the OS in most cases redirects it to @"C:\Windows\SysWOW64", which contains 32-bit versions of program files. Use SystemX64 when you want to avoid the redirection and access the true System32 folder which on 64-bit OS contains 64-bit program files.
             More info in class help.
             </remarks>
-            <seealso cref="T:Au.Files.Misc.DisableRedirection"/>
+            <seealso cref="T:Au.File_.Misc.DisableRedirection"/>
             <seealso cref="P:Au.Ver.Is32BitProcessOn64BitOS"/>
         </member>
         <member name="P:Au.Folders.ProgramFilesX64">
@@ -13580,7 +13593,7 @@
             <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
             <param name="onClick">Callback function. Called when clicked the menu item.</param>
             <param name="icon">Can be:
-            string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.Icons.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>. If not full path, searches in <see cref="P:Au.Folders.ThisAppImages"/>; see also <see cref="P:Au.Types.BaseMT.IconFlags" r=""/>.
+            string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.Icon_.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>. If not full path, searches in <see cref="P:Au.Folders.ThisAppImages"/>; see also <see cref="P:Au.Types.BaseMT.IconFlags" r=""/>.
             string - image name (key) in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageKey"/>).
             int - image index in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
             Icon, Image, Folders.FolderPath.
@@ -14428,63 +14441,91 @@
             <param name="count">Length of substring.</param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="M:Au.Convert_.HashMD5(System.Byte[])">
+        <member name="T:Au.Convert_.MD5Hash">
             <summary>
-            Computes MD5 hash of binary data.
-            The same as Hash(..., "MD5") but much faster.
+            Computes MD5 hash of some data.
+            Multiple datas can be hashed, producing single result.
+            Call <b>Add</b> one or more times. Finally use <see cref="P:Au.Convert_.MD5Hash.Hash"/> to get result.
+            </summary>
+            <remarks>
+            Faster than the static <b>Hash</b> functions.
+            </remarks>
+        </member>
+        <member name="M:Au.Convert_.MD5Hash.Add(System.Void*,System.Int32)">
+            <summary>Adds data.</summary>
+            <exception cref="T:System.ArgumentNullException">data is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">size &lt; 0.</exception>
+        </member>
+        <member name="M:Au.Convert_.MD5Hash.Add(System.Byte[])">
+            <summary>Adds data.</summary>
+            <exception cref="T:System.ArgumentNullException">data is null.</exception>
+        </member>
+        <member name="M:Au.Convert_.MD5Hash.Add(System.String)">
+            <summary>Adds data.</summary>
+            <exception cref="T:System.ArgumentNullException">data is null.</exception>
+            <remarks>Adds UTF8 bytes, not UTF16 characters.</remarks>
+        </member>
+        <member name="P:Au.Convert_.MD5Hash.Hash">
+            <summary>
+            Computes final hash of datas added with <b>Add</b>.
+            </summary>
+            <exception cref="T:System.InvalidOperationException"><b>Add</b> was not called.</exception>
+            <remarks>
+            Resets state, so that if <b>Add</b> called again, it will start adding new datas.
+            </remarks>
+        </member>
+        <member name="T:Au.Convert_.MD5HashResult">
+            <summary>
+            Result of <see cref="P:Au.Convert_.MD5Hash.Hash"/>.
+            It is 16 bytes stored in 2 long fields r1 and r2.
+            If need, can be converted to byte[] with <see cref="M:Au.Convert_.MD5HashResult.ToArray"/> or to hex string with <see cref="M:Au.Convert_.MD5HashResult.ToString"/>.
             </summary>
         </member>
-        <member name="M:Au.Convert_.HashMD5(System.String)">
+        <member name="M:Au.Convert_.MD5HashResult.ToString">
             <summary>
-            Computes MD5 hash of string.
-            The same as Hash(..., "MD5") but much faster.
-            </summary>
-            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
-        </member>
-        <member name="M:Au.Convert_.HashMD5Hex(System.Byte[],System.Boolean)">
-            <summary>
-            Computes MD5 hash of binary data and converts to hex string.
-            The same as Hash(..., "MD5") but much faster.
+            Converts this to hex string of Length = 32.
             </summary>
         </member>
-        <member name="M:Au.Convert_.HashMD5Hex(System.String,System.Boolean)">
+        <member name="M:Au.Convert_.MD5HashResult.ToArray">
             <summary>
-            Computes MD5 hash of string and converts to hex string.
-            The same as Hash(..., "MD5") but much faster.
+            Converts this to byte[16].
             </summary>
-            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
+        </member>
+        <member name="M:Au.Convert_.MD5HashResult.FromString(System.String,System.Int32,System.Int32,Au.Convert_.MD5HashResult@)">
+            <summary>
+            Creates MD5HashResult from hex string returned by <see cref="M:Au.Convert_.MD5HashResult.ToString"/>.
+            Returns false if some parameter is invalid. Does not throw exception.
+            </summary>
         </member>
         <member name="M:Au.Convert_.Hash(System.Byte[],System.String)">
             <summary>
-            Computes binary data hash using a specified cryptographic algorithm.
+            Computes binary data hash using the specified cryptographic algorithm.
             </summary>
             <param name="a"></param>
-            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
+            <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="T:System.Security.Cryptography.CryptoConfig"/>.</param>
         </member>
         <member name="M:Au.Convert_.Hash(System.String,System.String)">
             <summary>
-            Computes string hash using a specified cryptographic algorithm.
+            Computes string hash using the specified cryptographic algorithm.
             </summary>
             <param name="s"></param>
-            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
-            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
+            <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="T:System.Security.Cryptography.CryptoConfig"/>.</param>
+            <remarks>Uses UTF8 bytes, not UTF16 bytes.</remarks>
         </member>
-        <member name="M:Au.Convert_.HashHex(System.Byte[],System.String,System.Boolean)">
+        <member name="M:Au.Convert_.HashHex(System.Byte[],System.String)">
             <summary>
-            Computes binary data hash using a specified cryptographic algorithm and converts to hex string.
+            Computes binary data hash using the specified cryptographic algorithm and converts to hex string.
             </summary>
             <param name="a"></param>
-            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
-            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+            <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="T:System.Security.Cryptography.CryptoConfig"/>.</param>
         </member>
-        <member name="M:Au.Convert_.HashHex(System.String,System.String,System.Boolean)">
+        <member name="M:Au.Convert_.HashHex(System.String,System.String)">
             <summary>
-            Computes string hash using a specified cryptographic algorithm and converts to hex string.
+            Computes string hash using the specified cryptographic algorithm and converts to hex string.
             </summary>
             <param name="s"></param>
-            <param name="algorithm">Algorithm name, eg "SHA256". <see cref="T:System.Security.Cryptography.CryptoConfig"/></param>
-            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
-            <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
+            <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="T:System.Security.Cryptography.CryptoConfig"/>.</param>
+            <remarks>Uses UTF8 bytes, not UTF16 bytes.</remarks>
         </member>
         <member name="M:Au.Convert_.HexEncode(System.Byte[],System.Boolean)">
             <summary>
@@ -14566,7 +14607,7 @@
             This library does not have Base64-encode functions. Use <see cref="M:System.Convert.ToBase64String(System.Byte[])"/>.
             </remarks>
         </member>
-        <member name="M:Au.Convert_.GuidToBase64Filename(System.Guid)">
+        <member name="M:Au.Convert_.GuidToBase64Filename(System.Guid@)">
             <summary>
             Converts GUID to string that can be used in file paths and URLs.
             </summary>
@@ -16791,12 +16832,12 @@
             Does not copy the icon; don't dispose it while the window is alive.
             Use this function only with windows of current process.
             </summary>
-            <seealso cref="T:Au.Icons"/>
+            <seealso cref="T:Au.Icon_"/>
         </member>
         <member name="M:Au.Wnd.Misc.GetIconHandle(Au.Wnd,System.Boolean)">
             <summary>
             Gets icon that is displayed in window title bar and in its taskbar button.
-            Returns icon handle if successful, else default(IntPtr). Later call <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/> or <see cref="M:Au.Icons.HandleToImage(System.IntPtr,System.Boolean)"/>.
+            Returns icon handle if successful, else default(IntPtr). Later call <see cref="M:Au.Icon_.DestroyIconHandle(System.IntPtr)"/> or <see cref="M:Au.Icon_.HandleToImage(System.IntPtr,System.Boolean)"/>.
             </summary>
             <param name="w"></param>
             <param name="size32">Get 32x32 icon. If false, gets 16x16 icon.</param>
@@ -16804,7 +16845,7 @@
             Icon size depends on DPI (text size, can be changed in Control Panel). By default small is 16, large 32.
             This function can be used with windows of any process.
             </remarks>
-            <seealso cref="T:Au.Icons"/>
+            <seealso cref="T:Au.Icon_"/>
         </member>
         <member name="M:Au.Wnd.Misc.GetClassLong(Au.Wnd,System.Int32)">
             <summary>
@@ -19803,13 +19844,22 @@
             Default registry key, used when the key argument is null or @"\" or starts with @"\".
             </summary>
         </member>
+        <member name="P:Au.Registry_.HKEY_CURRENT_USER">
+            
+        </member>
+        <member name="P:Au.Registry_.HKEY_CLASSES_ROOT">
+            
+        </member>
+        <member name="P:Au.Registry_.HKEY_LOCAL_MACHINE">
+            
+        </member>
         <member name="M:Au.Registry_.ParseKeyString(System.String@)">
             <summary>
             Parses registry key string and returns hive as RegistryKey.
-            If key starts with "HKEY_", removes hive name from it and returns that hive. For example, if key is @"HKEY_LOCAL_MACHINE\Software\Test", sets key=@"Software\Test" and returns Registry.LocalMachine.
-            Else if key is null or @"\", sets key=Registry_.AuKey (@"Software\Au") and returns Registry.CurrentUser.
-            Else if key starts with @"\", prepends Registry_.AuKey (@"Software\Au") and returns Registry.CurrentUser.
-            Else just returns Registry.CurrentUser.
+            If key starts with "HKEY_", removes hive name from it and returns that hive. For example, if key is @"HKEY_LOCAL_MACHINE\Software\Test", sets key=@"Software\Test" and returns HKEY_LOCAL_MACHINE.
+            Else if key is null or @"\", sets key=Registry_.AuKey (@"Software\Au") and returns HKEY_CURRENT_USER.
+            Else if key starts with @"\", prepends Registry_.AuKey (@"Software\Au") and returns HKEY_CURRENT_USER.
+            Else just returns HKEY_CURRENT_USER.
             Valid hive names: "HKEY_CURRENT_USER", "HKEY_LOCAL_MACHINE", "HKEY_CLASSES_ROOT", "HKEY_USERS", "HKEY_PERFORMANCE_DATA" or "HKEY_CURRENT_CONFIG".
             </summary>
             <param name="key">Registry key. Can start with a hive name.</param>
@@ -19974,18 +20024,18 @@
             <exception cref="T:System.Exception">Exceptions thrown by <see cref="M:Au.Registry_.Open(System.String,Microsoft.Win32.RegistryKey)"/>.</exception>
             <exception cref="T:System.ComponentModel.Win32Exception">The value exists but failed to get it, for example the specified size is smaller than registry data size.</exception>
         </member>
-        <member name="T:Au.Icons">
+        <member name="T:Au.Icon_">
             <summary>
             Gets icons for files etc.
             </summary>
             <seealso cref="T:Au.Util.IconsAsync"/>
         </member>
-        <member name="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)">
-            <inheritdoc cref="M:Au.Icons.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>
+        <member name="M:Au.Icon_.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)">
+            <inheritdoc cref="M:Au.Icon_.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>
             <returns>Returns icon handle, or default(IntPtr) if failed.</returns>
-            <remarks>Later call <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
+            <remarks>Later call <see cref="M:Au.Icon_.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
         </member>
-        <member name="M:Au.Icons.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)">
+        <member name="M:Au.Icon_.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)">
             <summary>
             Gets file icon.
             Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, flags etc.
@@ -20006,18 +20056,18 @@
             <param name="flags"></param>
             <seealso cref="M:Au.Wnd.Misc.GetIconHandle(Au.Wnd,System.Boolean)"/>
         </member>
-        <member name="M:Au.Icons.GetFileIconImage(System.String,System.Int32,Au.Types.GIFlags)">
-            <inheritdoc cref="M:Au.Icons.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>
+        <member name="M:Au.Icon_.GetFileIconImage(System.String,System.Int32,Au.Types.GIFlags)">
+            <inheritdoc cref="M:Au.Icon_.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>
             <remarks>
-            Calls <see cref="M:Au.Icons.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/> and converts to Bitmap.
+            Calls <see cref="M:Au.Icon_.GetFileIconHandle(System.String,System.Int32,Au.Types.GIFlags)"/> and converts to Bitmap.
             </remarks>
         </member>
-        <member name="M:Au.Icons.GetPidlIconHandle(Au.Shell.Pidl,System.Int32)">
-            <inheritdoc cref="M:Au.Icons.GetPidlIcon(Au.Shell.Pidl,System.Int32)"/>
+        <member name="M:Au.Icon_.GetPidlIconHandle(Au.Shell.Pidl,System.Int32)">
+            <inheritdoc cref="M:Au.Icon_.GetPidlIcon(Au.Shell.Pidl,System.Int32)"/>
             <returns>Returns icon handle, or default(IntPtr) if failed.</returns>
-            <remarks>Later call <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
+            <remarks>Later call <see cref="M:Au.Icon_.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
         </member>
-        <member name="M:Au.Icons.GetPidlIcon(Au.Shell.Pidl,System.Int32)">
+        <member name="M:Au.Icon_.GetPidlIcon(Au.Shell.Pidl,System.Int32)">
             <summary>
             Gets icon of a file or other shell object specified as ITEMIDLIST.
             </summary>
@@ -20025,22 +20075,22 @@
             <param name="pidl">ITEMIDLIST pointer (PIDL).</param>
             <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>
         </member>
-        <member name="M:Au.Icons.GetPidlIconImage(Au.Shell.Pidl,System.Int32)">
-            <inheritdoc cref="M:Au.Icons.GetPidlIcon(Au.Shell.Pidl,System.Int32)"/>
-            <remarks>Calls <see cref="M:Au.Icons.GetPidlIconHandle(Au.Shell.Pidl,System.Int32)"/> and converts to Bitmap.</remarks>
+        <member name="M:Au.Icon_.GetPidlIconImage(Au.Shell.Pidl,System.Int32)">
+            <inheritdoc cref="M:Au.Icon_.GetPidlIcon(Au.Shell.Pidl,System.Int32)"/>
+            <remarks>Calls <see cref="M:Au.Icon_.GetPidlIconHandle(Au.Shell.Pidl,System.Int32)"/> and converts to Bitmap.</remarks>
         </member>
-        <member name="M:Au.Icons.GetShellIconSize(Au.Types.IconSize)">
+        <member name="M:Au.Icon_.GetShellIconSize(Au.Types.IconSize)">
             <summary>
             Gets the width and height of shell icons of standard sizes - small, large, extra large and jumbo.
             Jumbo is always 256. Others depend on text size (DPI) that can be changed in Control Panel. If text size is 100%, they usually are 16, 32, 48.
             </summary>
         </member>
-        <member name="M:Au.Icons.LoadIconHandle(System.String,System.Int32,System.Int32)">
-            <inheritdoc cref="M:Au.Icons.LoadIcon(System.String,System.Int32,System.Int32)"/>
+        <member name="M:Au.Icon_.LoadIconHandle(System.String,System.Int32,System.Int32)">
+            <inheritdoc cref="M:Au.Icon_.LoadIcon(System.String,System.Int32,System.Int32)"/>
             <returns>Returns icon handle, or default(IntPtr) if failed.</returns>
-            <remarks>Later call <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
+            <remarks>Later call <see cref="M:Au.Icon_.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
         </member>
-        <member name="M:Au.Icons.LoadIcon(System.String,System.Int32,System.Int32)">
+        <member name="M:Au.Icon_.LoadIcon(System.String,System.Int32,System.Int32)">
             <summary>
             Extracts icon from file that contains it.
             </summary>
@@ -20049,12 +20099,12 @@
             <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
             <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>
         </member>
-        <member name="M:Au.Icons.GetStockIconHandle(Au.Types.StockIcon,System.Int32)">
-            <inheritdoc cref="M:Au.Icons.GetStockIcon(Au.Types.StockIcon,System.Int32)"/>
+        <member name="M:Au.Icon_.GetStockIconHandle(Au.Types.StockIcon,System.Int32)">
+            <inheritdoc cref="M:Au.Icon_.GetStockIcon(Au.Types.StockIcon,System.Int32)"/>
             <returns>Returns icon handle, or default(IntPtr) if failed.</returns>
-            <remarks>Later call <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
+            <remarks>Later call <see cref="M:Au.Icon_.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
         </member>
-        <member name="M:Au.Icons.GetStockIcon(Au.Types.StockIcon,System.Int32)">
+        <member name="M:Au.Icon_.GetStockIcon(Au.Types.StockIcon,System.Int32)">
             <summary>
             Gets a shell stock icon.
             </summary>
@@ -20062,12 +20112,12 @@
             <param name="icon">Shell stock icon id.</param>
             <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>
         </member>
-        <member name="M:Au.Icons.GetAppIconHandle(System.Int32)">
-            <inheritdoc cref="M:Au.Icons.GetAppIcon(System.Int32)"/>
+        <member name="M:Au.Icon_.GetAppIconHandle(System.Int32)">
+            <inheritdoc cref="M:Au.Icon_.GetAppIcon(System.Int32)"/>
             <returns>Returns native icon handle, or default(IntPtr) if there are no icons.</returns>
             <remarks>The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.</remarks>
         </member>
-        <member name="M:Au.Icons.GetAppIcon(System.Int32)">
+        <member name="M:Au.Icon_.GetAppIcon(System.Int32)">
             <summary>
             Gets the first icon from unmanaged resources of this app.
             If the entry assembly of this appdomain is dll with icon, gets that icon; else gets exe icon.
@@ -20075,12 +20125,12 @@
             <returns>Returns null if there are no icons.</returns>
             <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>
         </member>
-        <member name="M:Au.Icons.CreateIconHandle(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})">
-            <inheritdoc cref="M:Au.Icons.CreateIcon(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})"/>
+        <member name="M:Au.Icon_.CreateIconHandle(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})">
+            <inheritdoc cref="M:Au.Icon_.CreateIcon(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})"/>
             <returns>Returns native icon handle.</returns>
-            <remarks>Later call <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
+            <remarks>Later call <see cref="M:Au.Icon_.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
         </member>
-        <member name="M:Au.Icons.CreateIcon(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})">
+        <member name="M:Au.Icon_.CreateIcon(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})">
             <summary>
             Creates icon at run time.
             </summary>
@@ -20088,21 +20138,21 @@
             <param name="height"></param>
             <param name="drawCallback">Called to draw icon. If null, the icon will be completely transparent.</param>
         </member>
-        <member name="M:Au.Icons.DestroyIconHandle(System.IntPtr)">
+        <member name="M:Au.Icon_.DestroyIconHandle(System.IntPtr)">
             <summary>
             Destroys native icon.
             Calls API <msdn>DestroyIcon</msdn>. Does nothing if iconHandle is default(IntPtr).
             </summary>
         </member>
-        <member name="M:Au.Icons.HandleToIcon(System.IntPtr,System.Boolean)">
+        <member name="M:Au.Icon_.HandleToIcon(System.IntPtr,System.Boolean)">
             <summary>
             Converts unmanaged icon to Icon object.
             Returns null if hIcon is default(IntPtr).
             </summary>
             <param name="hIcon">Icon handle.</param>
-            <param name="destroyIcon">If true (default), the returned variable owns the unmanaged icon and destroys it when disposing. If false, the returned variable just uses the unmanaged icon and will not destroy; the caller later should destroy it with <see cref="M:Au.Icons.DestroyIconHandle(System.IntPtr)"/>.</param>
+            <param name="destroyIcon">If true (default), the returned variable owns the unmanaged icon and destroys it when disposing. If false, the returned variable just uses the unmanaged icon and will not destroy; the caller later should destroy it with <see cref="M:Au.Icon_.DestroyIconHandle(System.IntPtr)"/>.</param>
         </member>
-        <member name="M:Au.Icons.HandleToImage(System.IntPtr,System.Boolean)">
+        <member name="M:Au.Icon_.HandleToImage(System.IntPtr,System.Boolean)">
             <summary>
             Converts unmanaged icon to Bitmap object and destroys the unmanaged icon.
             Returns null if hIcon is default(IntPtr) or if fails to convert.
@@ -20110,7 +20160,7 @@
             <param name="hIcon">Icon handle.</param>
             <param name="destroyIcon">If true (default), destroys the unmanaged icon.</param>
         </member>
-        <member name="M:Au.Icons.ParseIconLocation(System.String@,System.Int32@)">
+        <member name="M:Au.Icon_.ParseIconLocation(System.String@,System.Int32@)">
             <summary>
             Parses icon location string.
             Returns true if it includes icon index or resource id.
@@ -20119,41 +20169,41 @@
             <param name="index">Receives the number or 0.</param>
             <remarks>Also supports path enclosed in double quotes like "\"path\",index", and spaces between comma and index like "path, index".</remarks>
         </member>
-        <member name="T:Au.Icons.ImageCache">
+        <member name="T:Au.Icon_.ImageCache">
             <summary>
             Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
             </summary>
             <threadsafety static="true" instance="true"/>
             <seealso cref="T:Au.Util.IconsAsync"/>
         </member>
-        <member name="M:Au.Icons.ImageCache.#ctor(System.String,System.Int32)">
+        <member name="M:Au.Icon_.ImageCache.#ctor(System.String,System.Int32)">
             
         </member>
-        <member name="M:Au.Icons.ImageCache.Finalize">
+        <member name="M:Au.Icon_.ImageCache.Finalize">
             
         </member>
-        <member name="M:Au.Icons.ImageCache.Dispose">
+        <member name="M:Au.Icon_.ImageCache.Dispose">
             <summary>
-            Calls <see cref="M:Au.Icons.ImageCache.SaveCacheFileNow"/>.
+            Calls <see cref="M:Au.Icon_.ImageCache.SaveCacheFileNow"/>.
             </summary>
         </member>
-        <member name="M:Au.Icons.ImageCache.SaveCacheFileNow">
+        <member name="M:Au.Icon_.ImageCache.SaveCacheFileNow">
             <summary>
             Saves to the cache file now, if need.
             Don't need to call this explicitly. It is called by Dispose.
             </summary>
         </member>
-        <member name="M:Au.Icons.ImageCache.ClearCache">
+        <member name="M:Au.Icon_.ImageCache.ClearCache">
             <summary>
             Clears the memory cache and deletes the cache file.
             </summary>
         </member>
-        <member name="M:Au.Icons.ImageCache.GetImage(System.String,System.Boolean,Au.Types.GIFlags,System.Action{System.Drawing.Bitmap,System.Object},System.Object)">
+        <member name="M:Au.Icon_.ImageCache.GetImage(System.String,System.Boolean,Au.Types.GIFlags,System.Action{System.Drawing.Bitmap,System.Object},System.Object)">
             <summary>
             Gets file icon as <b>Bitmap</b>.
             If it is in the memory cache, gets it from there.
             Else if it is in the file cache, gets it from there and adds to the memory cache.
-            Else gets from file (uses <see cref="M:Au.Icons.GetFileIconImage(System.String,System.Int32,Au.Types.GIFlags)"/> and adds to the file cache and to the memory cache.
+            Else gets from file (uses <see cref="M:Au.Icon_.GetFileIconImage(System.String,System.Int32,Au.Types.GIFlags)"/> and adds to the file cache and to the memory cache.
             Returns null if <b>GetFileIconImage</b> failed, eg file does not exist.
             </summary>
             <param name="file">Any file or folder.</param>
@@ -20161,7 +20211,7 @@
             Get file type icon, depending on filename extension. Use this to avoid getting separate image object for each file of same type.
             This is ignored if filename extension is ".ico" or ".exe" or starts with ".exe," or ".dll,".
             </param>
-            <param name="giFlags">Flags for <see cref="M:Au.Icons.GetFileIconImage(System.String,System.Int32,Au.Types.GIFlags)"/>.</param>
+            <param name="giFlags">Flags for <see cref="M:Au.Icon_.GetFileIconImage(System.String,System.Int32,Au.Types.GIFlags)"/>.</param>
             <param name="autoUpdate">
             If not null, the cached image will be auto-updated when changed. Then will be called this function. It can update the image in UI.
             How it works: If this function finds cached image, it sets timer that after ~50 ms loads that icon/image from file again and compares with the cached image. If different, updates the cache. Does it once, not periodically.
@@ -20169,7 +20219,7 @@
             </param>
             <param name="auParam">Something to pass to the <paramref name="autoUpdate"/> callback function.</param>
         </member>
-        <member name="M:Au.Icons.ImageCache.GetImage(System.String,System.Func{System.Drawing.Bitmap},System.Action{System.Drawing.Bitmap,System.Object},System.Object,System.Boolean)">
+        <member name="M:Au.Icon_.ImageCache.GetImage(System.String,System.Func{System.Drawing.Bitmap},System.Action{System.Drawing.Bitmap,System.Object},System.Object,System.Boolean)">
             <summary>
             Gets any icon or image using callback function.
             If it is in the memory cache, gets it from there.
@@ -20178,8 +20228,8 @@
             Returns null if the callback function returns null.
             </summary>
             <param name="name">Some unique name. It is used to identify this image in cache.</param>
-            <param name="callback">Called to get image. To convert icon handle to image, use <see cref="M:Au.Icons.HandleToImage(System.IntPtr,System.Boolean)"/>.</param>
-            <param name="autoUpdate"><inheritdoc cref="M:Au.Icons.ImageCache.GetImage(System.String,System.Boolean,Au.Types.GIFlags,System.Action{System.Drawing.Bitmap,System.Object},System.Object)"/></param>
+            <param name="callback">Called to get image. To convert icon handle to image, use <see cref="M:Au.Icon_.HandleToImage(System.IntPtr,System.Boolean)"/>.</param>
+            <param name="autoUpdate"><inheritdoc cref="M:Au.Icon_.ImageCache.GetImage(System.String,System.Boolean,Au.Types.GIFlags,System.Action{System.Drawing.Bitmap,System.Object},System.Object)"/></param>
             <param name="auParam">Something to pass to the <paramref name="autoUpdate"/> callback function.</param>
             <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <paramref name="callback"/>.</param>
         </member>
@@ -20205,17 +20255,25 @@
             <summary>
             Code speed measurement. Easier to use than <see cref="T:System.Diagnostics.Stopwatch"/>.
             </summary>
-            <remarks>
-            Stores data in shared memory, therefore the same measurement can be used in multiple appdomains and even processes. See also <see cref="T:Au.Perf.Inst"/>.
-            </remarks>
+            <seealso cref="T:Au.Perf.Inst"/>.
         </member>
         <member name="T:Au.Perf.Inst">
             <summary>
             The same as <see cref="T:Au.Perf"/> class, but allows to have multiple independent speed measurements.
             </summary>
             <remarks>
-            Stores data in the variable, not in shared memory.
+            Stores data in the variable, not in a static variable.
             </remarks>
+        </member>
+        <member name="M:Au.Perf.Inst.Serialize">
+            <summary>
+            Converts this variable to string that can be used to create a copy of this variable with <see cref="M:Au.Perf.Inst.#ctor(System.String)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Perf.Inst.#ctor(System.String)">
+            <summary>
+            Initializes this variable as a copy of another variable that has been converted to string with <see cref="M:Au.Perf.Inst.Serialize"/>.
+            </summary>
         </member>
         <member name="P:Au.Perf.Inst.Incremental">
             <summary><inheritdoc cref="P:Au.Perf.Incremental"/></summary>
@@ -20242,23 +20300,23 @@
         </member>
         <member name="M:Au.Perf.Inst.First(System.Int32)">
             <summary>
-            Calls <see cref="M:Au.Perf.WakeCPU(System.Int32)"/> and <see cref="M:Au.Perf.Inst.First"/>.
+            Calls <see cref="M:Au.Perf.Cpu(System.Int32)"/> and <see cref="M:Au.Perf.Inst.First"/>.
             </summary>
         </member>
         <member name="M:Au.Perf.Inst.Next(System.Char)">
             <inheritdoc cref="M:Au.Perf.Next(System.Char)"/>
-        </member>
-        <member name="M:Au.Perf.Inst.Write">
-            <summary>
-            Formats a string from time values collected by calling <see cref="M:Au.Perf.Inst.First"/> and <see cref="M:Au.Perf.Inst.Next(System.Char)"/>, and shows it in the output.
-            The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
-            </summary>
         </member>
         <member name="M:Au.Perf.Inst.NW(System.Char)">
             <summary>
             Calls <see cref="M:Au.Perf.Inst.Next(System.Char)"/> and <see cref="M:Au.Perf.Inst.Write"/>.
             </summary>
             <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+        </member>
+        <member name="M:Au.Perf.Inst.Write">
+            <summary>
+            Formats a string from time values collected by calling <see cref="M:Au.Perf.Inst.First"/> and <see cref="M:Au.Perf.Inst.Next(System.Char)"/>, and shows it in the output.
+            The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
+            </summary>
         </member>
         <member name="M:Au.Perf.Inst.ToString">
             <summary>
@@ -20285,6 +20343,11 @@
         <member name="M:Au.Perf.Inst.ExecuteMulti(System.Int32,System.Int32,System.Action[])">
             <summary>
             <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
+            </summary>
+        </member>
+        <member name="F:Au.Perf.StaticInst">
+            <summary>
+            This static variable is used by the static functions.
             </summary>
         </member>
         <member name="M:Au.Perf.StartNew">
@@ -20322,7 +20385,7 @@
         </member>
         <member name="M:Au.Perf.First(System.Int32)">
             <summary>
-            Calls <see cref="M:Au.Perf.WakeCPU(System.Int32)"/> and <see cref="M:Au.Perf.First"/>.
+            Calls <see cref="M:Au.Perf.Cpu(System.Int32)"/> and <see cref="M:Au.Perf.First"/>.
             </summary>
         </member>
         <member name="M:Au.Perf.Next(System.Char)">
@@ -20333,6 +20396,12 @@
             Don't call <b>Next</b> more than 16 times after <b>First</b>, because the array has fixed size.
             </remarks>
             <param name="cMark">A character to mark this time in the results string, like "A=150".</param>
+        </member>
+        <member name="M:Au.Perf.NW(System.Char)">
+            <summary>
+            Calls <see cref="M:Au.Perf.Next(System.Char)"/> and <see cref="M:Au.Perf.Write"/>.
+            </summary>
+            <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
         </member>
         <member name="M:Au.Perf.Write">
             <summary>
@@ -20349,12 +20418,6 @@
             Perf.Write(); //speed:  timeOfCODE1  timeOfCODE2  (totalTime)
             ]]></code>
             </example>
-        </member>
-        <member name="M:Au.Perf.NW(System.Char)">
-            <summary>
-            Calls <see cref="M:Au.Perf.Next(System.Char)"/> and <see cref="M:Au.Perf.Write"/>.
-            </summary>
-            <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
         </member>
         <member name="M:Au.Perf.ToString">
             <summary>
@@ -20383,7 +20446,7 @@
             <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
             </summary>
         </member>
-        <member name="M:Au.Perf.WakeCPU(System.Int32)">
+        <member name="M:Au.Perf.Cpu(System.Int32)">
             <summary>
             Executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
             </summary>

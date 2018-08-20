@@ -38,11 +38,10 @@
 		<Menu_File>
 			<File_New>
 				<File_NewScript i="fileScript" hk="Ctrl+N"/>
+				<File_NewApp i="fileClass"/>
 				<File_NewClass i="fileClass"/>
 				<File_NewFolder i="folder"/>
-				<File_NewApp/>
-				<File_NewLibrary/>
-				<File_Templates dd=""/>
+				<sep/>
 				<File_Import t="Import..." i="open"/>
 			</File_New>
 			<sep/>
@@ -215,7 +214,6 @@
 	Users can change some button properties.
 	-->
 	<File>
-		<File_NewFolder i="NewFolder_16x"/>
 		<File_NewScript i="_new" dd="File_New"/>
 		<File_Properties i="properties"/>
 		<File_PreviousDocument i="back"/>

@@ -75,6 +75,15 @@ public class MetaReferences
 	/// </remarks>
 	public bool Resolve(string reference)
 	{
+		string alias = null;
+		int i = reference.IndexOf('=');
+		if(i >= 0) {
+			alias = reference.Remove(i);
+			reference = reference.Substring(i + 1);
+		}
+
+		//FUTURE: support COM and embedInteropTypes
+
 		var defRef = Compiler.DefaultReferences;
 		if(defRef.ContainsKey(reference)) return true;
 		if(_dict?.ContainsKey(reference) ?? false) return true;
@@ -85,7 +94,11 @@ public class MetaReferences
 
 		//foreach(var v in _refs) Print(v.FilePath);
 		var mr = _cache.Find(v => v.FilePath.Equals_(path, true));
-		if(mr == null) _cache.Add(mr = MetadataReference.CreateFromFile(path));
+		if(mr == null) {
+			MetadataReferenceProperties prop = alias == null ? default : new MetadataReferenceProperties(aliases: ImmutableArray.Create(alias));
+			mr = MetadataReference.CreateFromFile(path, prop);
+			_cache.Add(mr);
+		}
 
 		Refs.Add(mr);
 
@@ -99,28 +112,35 @@ public class MetaReferences
 	{
 		if(Empty(re)) return null;
 		if(Path_.IsFullPathExpandEnvVar(ref re)) {
-			return Files.ExistsAsFile(re) ? re : null;
+			return File_.ExistsAsFile(re) ? re : null;
 		}
 		string path, ext;
-		if(0 != re.EndsWith_(true, s_asmExt) || re.IndexOfAny(String_.Lib.pathSep) >= 0) {
+		if(0 != re.EndsWith_(true, s_asmExt)) {
 			foreach(var v in s_dirs) {
 				path = Path_.Combine(v, re);
-				if(Files.ExistsAsFile(path)) return path;
+				if(File_.ExistsAsFile(path)) return path;
 			}
 			ext = null;
 		} else ext = ".dll";
 
 		var d = RuntimeEnvironment.GetRuntimeDirectory();
 		path = d + re + ext;
-		if(Files.ExistsAsFile(path)) return path;
-		path = d + @"WPF\" + re + ext;
-		if(Files.ExistsAsFile(path)) return path;
+		if(File_.ExistsAsFile(path)) return path;
 
-		return GAC.FindAssembly(re);
+		bool isRelPath = re.IndexOfAny(String_.Lib.pathSep) >= 0;
+		if(!isRelPath) {
+			path = d + @"WPF\" + re + ext;
+			if(File_.ExistsAsFile(path)) return path;
+		}
 
-		//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
+		if(ext == null || isRelPath) path = null;
+		else path = GAC.FindAssembly(re);
 
 		//TODO: also look in DEVPATH env var, if config file contains <developmentMode developerInstallation="true"/>
+
+		return path;
+
+		//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
 	}
 	static string[] s_asmExt = new string[] { ".dll", ".exe" };
 	static string[] s_dirs = new string[] { Folders.ThisApp, Folders.ThisApp + "Libraries" };

@@ -96,7 +96,7 @@ namespace Au.Controls
 			string xmlFile = xmlFileCustomized, xmlVersion = null, outInfo = null;
 			for(int i = 0; i < 2; i++) {
 				if(i == 0) {
-					if(!Files.ExistsAsFile(xmlFile)) continue;
+					if(!File_.ExistsAsFile(xmlFile)) continue;
 				} else {
 					usesDefaultXML = true;
 					xmlFile = xmlFileDefault;
@@ -159,10 +159,10 @@ namespace Au.Controls
 		{
 			try {
 				if(ResetLayoutAfterRestart) {
-					Files.Delete(_xmlFile);
+					File_.Delete(_xmlFile);
 					return;
 				}
-				Files.CreateDirectoryFor(_xmlFile);
+				File_.CreateDirectoryFor(_xmlFile);
 				var sett = new XmlWriterSettings() {
 					OmitXmlDeclaration = true,
 					Indent = true,

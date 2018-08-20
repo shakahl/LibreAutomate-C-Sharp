@@ -171,9 +171,9 @@ partial class FilesModel
 		try {
 			//Perf.First();
 			var xr = new XElement("state");
-			xr.Add(new XElement("expanded", string.Join(" ", TV.AllNodes.Where(n => n.IsExpanded).Select(n => (n.Tag as FileNode).GUID))));
-			xr.Add(new XElement("open", string.Join(" ", OpenFiles.Select(f => f.GUID))));
-			if(_currentFile != null) xr.Add(new XElement("current", _currentFile.GUID));
+			xr.Add(new XElement("expanded", string.Join(" ", TV.AllNodes.Where(n => n.IsExpanded).Select(n => (n.Tag as FileNode).Guid))));
+			xr.Add(new XElement("open", string.Join(" ", OpenFiles.Select(f => f.Guid))));
+			if(_currentFile != null) xr.Add(new XElement("current", _currentFile.Guid));
 			//var sb = new StringBuilder();
 			//XElement x = new XElement("windows");
 			//Print(xr);
@@ -197,7 +197,7 @@ partial class FilesModel
 		//	2. SciControl handle must be created because _SetCurrentFile sets its text etc.
 		Debug.Assert(MainForm.IsHandleCreated);
 
-		if(!Files.ExistsAsFile(StateFile)) return;
+		if(!File_.ExistsAsFile(StateFile)) return;
 		try {
 			Save.LoadingState = true;
 			var xr = XElement.Load(StateFile);

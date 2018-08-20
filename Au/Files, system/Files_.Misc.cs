@@ -19,7 +19,7 @@ using static Au.NoClass;
 
 namespace Au
 {
-	partial class Files
+	partial class File_
 	{
 		/// <summary>
 		/// Miscellaneous file/directory functions.
@@ -154,7 +154,7 @@ namespace Au
 
 			//static char[] s_sep3 = new char[] { '\\', '/', '~' };
 #if false
-		//this is ~300 times slower than Files.Move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished. Move to Shell class.
+		//this is ~300 times slower than File_.Move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished. Move to Shell class.
 		public static void RenameFileOrDirectory(string path, string newName)
 		{
 			Perf.First();
@@ -350,9 +350,9 @@ namespace Au
 				{
 					int i = _IsSystem64PathIn32BitProcess(path);
 					if(i == 0) return path;
-					if(ifExistsOnlyThere && Files.ExistsAsAny(path)) return path;
+					if(ifExistsOnlyThere && File_.ExistsAsAny(path)) return path;
 					var s = path.ReplaceAt_(0, i, Folders.SystemX64);
-					if(ifExistsOnlyThere && !Files.ExistsAsAny(s)) return path;
+					if(ifExistsOnlyThere && !File_.ExistsAsAny(s)) return path;
 					return s;
 				}
 

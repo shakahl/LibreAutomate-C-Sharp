@@ -35,7 +35,7 @@ namespace Au.Util
 	/// <summary>
 	/// Gets native module handle.
 	/// </summary>
-	public static class ModuleHandle
+	public static class ModuleHandle_
 	{
 		/// <summary>
 		/// Gets native module handle of type's assembly.
@@ -73,7 +73,7 @@ namespace Au.Util
 		/// </summary>
 		public static IntPtr OfAuDll()
 		{
-			return Marshal.GetHINSTANCE(typeof(ModuleHandle).Module);
+			return Marshal.GetHINSTANCE(typeof(ModuleHandle_).Module);
 		}
 
 		/// <summary>
@@ -128,10 +128,11 @@ namespace Au.Util
 		}
 		static Assembly _appdomainAssembly;
 
-		/// <summary>
-		/// Returns true if Au.dll is installed in the global assembly cache.
-		/// </summary>
-		internal static bool LibIsAuInGAC => typeof(Assembly_).Assembly.GlobalAssemblyCache;
+		//not used. Don't add Au to GAC, because then appdomains start very slowly, don't know why.
+		///// <summary>
+		///// Returns true if Au.dll is installed in the global assembly cache.
+		///// </summary>
+		//internal static bool LibIsAuInGAC => typeof(Assembly_).Assembly.GlobalAssemblyCache;
 
 		/// <summary>
 		/// Returns true if Au.dll is compiled to native code using ngen.exe.
@@ -144,14 +145,25 @@ namespace Au.Util
 		/// Returns true if assembly asm is compiled to native code using ngen.exe.
 		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
+		[MethodImpl(MethodImplOptions.NoOptimization|MethodImplOptions.NoInlining)]
 		public static bool IsAssemblyNgened(Assembly asm)
 		{
 			var s = asm.CodeBase;
-			if(asm.GlobalAssemblyCache) return s.Contains("/GAC_MSIL/"); //faster and maybe more reliable, but works only with GAC assemblies
+			//if(asm.GlobalAssemblyCache) return s.Contains("/GAC_MSIL/"); //faster and maybe more reliable, but works only with GAC assemblies
 			s = Path.GetFileName(s);
 			s = s.Insert(s.LastIndexOf('.') + 1, "ni.");
 			return default != Api.GetModuleHandle(s);
 		}
+
+		//much slower first time when ngened. Also it is undocumented that GetModuleFileName returns 0 if non-ngened (LOAD_LIBRARY_AS_DATAFILE?).
+		//[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
+		//public static unsafe bool IsAssemblyNgened2(Assembly asm)
+		//{
+		//	var module =asm.GetLoadedModules()[0];
+		//	var h = Marshal.GetHINSTANCE(module); //slow first time, especially when ngened
+		//	var b = stackalloc char[4];
+		//	return 0 != Api.GetModuleFileName(h, b, 4);
+		//}
 	}
 
 	//currently not used

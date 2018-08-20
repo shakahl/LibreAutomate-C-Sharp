@@ -66,7 +66,7 @@ namespace Au
 				//size and speed of "image:" and "~:": "image:" usually is bigger by 10-20% and faster by ~25%
 			} else {
 				image = Path_.Normalize(image, Folders.ThisAppImages);
-				if(!Files.ExistsAsFile(image))
+				if(!File_.ExistsAsFile(image))
 					o = Util.Resources_.GetAppResource(Path_.GetFileNameWithoutExtension(image));
 				if(o == null) o = Image.FromFile(image);
 				R = o as Bitmap;
@@ -238,7 +238,7 @@ namespace Au
 		/// <item>Bitmap - image object in memory.</item>
 		/// <item>IEnumerable of string, int/ColorInt/Color, Bitmap or object - multiple images or colors. Action - find any. To create a different action can be used callback function (parameter <paramref name="also"/>).</item>
 		/// </list>
-		/// Icons are not supported directly, but you can use <see cref="Icons.GetFileIconImage"/> or <see cref="Icons.HandleToImage"/>.
+		/// Icons are not supported directly, but you can use <see cref="Icon_.GetFileIconImage"/> or <see cref="Icon_.HandleToImage"/>.
 		/// Transparent and partially transparent pixels are not compared. For example, when you capture a non-rectangular area image, the image actually is rectangular, but pixels outside of its captured area are transparent and therefore not compared. Also you can draw transparent areas with an image editor that supports it, for example Paint.NET.
 		/// </param>
 		/// <param name="flags"></param>

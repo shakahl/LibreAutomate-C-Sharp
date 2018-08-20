@@ -27,52 +27,52 @@ using Microsoft.CodeAnalysis;
 class ErrBuilder
 {
 	StringBuilder _b;
-	FileNode _f;
-	string _code, _link;
-
-	public void SetFile(FileNode f, string code)
-	{
-		_f = f;
-		_code = code;
-	}
+	int _nErrors, _nWarnings;
 
 	/// <summary>
 	/// Adds compiler error message with a link that opens the C# file and goes to that position.
 	/// </summary>
-	public void Add(Diagnostic d) => Add(d.ToString());
+	public void AddErrorOrWarning(Diagnostic d, FileNode fMain)
+	{
+		var s = d.ToString();
+		if(s.RegexMatch_(@"^(\S{22}) (.+)\((\d+),(\d+)\)(:.+)", out var m)) {
+			_StartAdd(isWarning: d.Severity != DiagnosticSeverity.Error);
+			var guid = m[1].Value;
+			//var name = guid == fMain.Guid ? null : m[2].Value.Limit_(20);
+			var name = m[2].Value.Limit_(20);
+			_b.AppendFormat("<_open {0}|{2}|{3}>{1}({2},{3})<>{4}", guid, name, m[3].Value, m[4].Value, m[5].Value);
+		} else {
+			AddError(fMain, s);
+		}
+	}
 
 	/// <summary>
-	/// Adds compiler-generated or other error message.
-	/// Adds link to open the C# file. If s starts with "(line,column)", adds link to go to that place in code.
+	/// Adds error message with a link that opens the C# file but does not go to a position.
 	/// </summary>
-	/// <param name="s">
-	/// Error message.
-	/// If not compiler-generated, should be like "error AU0001: error message". Use other overloads if want to add position info to the link.
-	/// </param>
-	public void Add(string s)
+	public void AddError(FileNode f, string s)
 	{
 		_StartAdd();
-		if(0 != s.RegexReplace_(@"^\((\d+),(\d+)\)", _link, out s, 1)) _b.Append(s); //compiler-generated
-		else _b.AppendFormat("<_open {0}>{1}<>: {2}", _f.GUID, _f.Name, s);
+		_b.AppendFormat("<_open {0}>{1}<>: {2}", f.Guid, f.Name, s);
 	}
 
 	/// <summary>
 	/// Adds error message with a link that opens the C# file and goes to the specified position.
 	/// </summary>
+	/// <param name="f">C# file.</param>
+	/// <param name="code">f code.</param>
 	/// <param name="pos">Position in code.</param>
-	/// <param name="message">Text to append. Should be like "error AU0001: error message".</param>
+	/// <param name="message">Text to append. Example: "error AU0001: error message".</param>
 	/// <param name="formatArgs">If not null/empty, calls StringBuilder.AppendFormat(message, formatArgs).</param>
-	public void Add(int pos, string message, params object[] formatArgs)
+	public void AddError(FileNode f, string code, int pos, string message, params object[] formatArgs)
 	{
 		_StartAdd();
 		int line = 0, lineStart;
 		for(int i = 0; ; i++) {
 			lineStart = i;
-			i = _code.IndexOf('\n', i); if(i >= pos || i < 0) break;
+			i = code.IndexOf('\n', i); if(i >= pos || i < 0) break;
 			line++;
 		}
-		//Print(line, lineStart, pos-lineStart);
-		_Append(line, pos - lineStart, message, formatArgs);
+		_Append(f, line, pos - lineStart, message, formatArgs);
 	}
 
 	/// <summary>
@@ -81,27 +81,45 @@ class ErrBuilder
 	/// <param name="pos">Position in code.</param>
 	/// <param name="message">Text to append. Should be like "error AU0001: error message".</param>
 	/// <param name="formatArgs">If not null/empty, calls StringBuilder.AppendFormat(message, formatArgs).</param>
-	public void Add(Microsoft.CodeAnalysis.Text.LinePosition pos, string message, params object[] formatArgs)
+	public void AddError(FileNode f, Microsoft.CodeAnalysis.Text.LinePosition pos, string message, params object[] formatArgs) //FUTURE: delete if unused
 	{
 		_StartAdd();
-		_Append(pos.Line, pos.Character, message, formatArgs);
+		_Append(f, pos.Line, pos.Character, message, formatArgs);
 	}
 
-	void _StartAdd()
+	void _StartAdd(bool isWarning = false)
 	{
-		if(_b == null) {
-			_b = new StringBuilder("<>");
-			_link = "<_open " + _f.GUID + "|$1|$2>$0<>";
-		} else _b.AppendLine();
+		if(_b == null) _b = new StringBuilder("<>");
+		else _b.AppendLine();
+
+		if(isWarning) _nWarnings++; else _nErrors++;
 	}
 
-	void _Append(int line, int col, string message, params object[] formatArgs)
+	void _Append(FileNode f, int line, int col, string message, params object[] formatArgs)
 	{
-		_b.AppendFormat("<_open {0}|{1}|{2}>({1},{2})<>: ", _f.GUID, ++line, ++col);
+		_Append(f.Guid, f.Name, line, col, message, formatArgs);
+	}
+
+	void _Append(string guid, string name, int line, int col, string message, params object[] formatArgs)
+	{
+		_b.AppendFormat("<_open {0}|{2}|{3}>{1}({2},{3})<>: ", guid, name, ++line, ++col);
 		if((formatArgs?.Length ?? 0) != 0) _b.AppendFormat(message, formatArgs); else _b.Append(message);
 	}
 
 	public bool IsEmpty => _b == null;
 
 	public override string ToString() => _b?.ToString();
+
+	public void PrintAll()
+	{
+		if(IsEmpty) return;
+		var b = new StringBuilder("<><Z ");
+		b.Append(_nErrors != 0 ? "#F0E080>" : "#A0E0A0>");
+		b.Append("Compilation: ");
+		if(_nErrors != 0) b.Append(_nErrors).Append(" errors").Append(_nWarnings != 0 ? ", " : "");
+		if(_nWarnings != 0) b.Append(_nWarnings).Append(" warnings");
+		b.Append("<>");
+		Print(b.ToString());
+		Print(ToString());
+	}
 }

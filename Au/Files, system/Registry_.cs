@@ -29,12 +29,21 @@ namespace Au
 		/// </summary>
 		public const string AuKey = @"Software\Au";
 
+		///
+		public static RegistryKey HKEY_CURRENT_USER => Registry.CurrentUser;
+
+		///
+		public static RegistryKey HKEY_CLASSES_ROOT => Registry.ClassesRoot;
+
+		///
+		public static RegistryKey HKEY_LOCAL_MACHINE => Registry.LocalMachine;
+
 		/// <summary>
 		/// Parses registry key string and returns hive as RegistryKey.
-		/// If key starts with "HKEY_", removes hive name from it and returns that hive. For example, if key is @"HKEY_LOCAL_MACHINE\Software\Test", sets key=@"Software\Test" and returns Registry.LocalMachine.
-		/// Else if key is null or @"\", sets key=Registry_.AuKey (@"Software\Au") and returns Registry.CurrentUser.
-		/// Else if key starts with @"\", prepends Registry_.AuKey (@"Software\Au") and returns Registry.CurrentUser.
-		/// Else just returns Registry.CurrentUser.
+		/// If key starts with "HKEY_", removes hive name from it and returns that hive. For example, if key is @"HKEY_LOCAL_MACHINE\Software\Test", sets key=@"Software\Test" and returns HKEY_LOCAL_MACHINE.
+		/// Else if key is null or @"\", sets key=Registry_.AuKey (@"Software\Au") and returns HKEY_CURRENT_USER.
+		/// Else if key starts with @"\", prepends Registry_.AuKey (@"Software\Au") and returns HKEY_CURRENT_USER.
+		/// Else just returns HKEY_CURRENT_USER.
 		/// Valid hive names: "HKEY_CURRENT_USER", "HKEY_LOCAL_MACHINE", "HKEY_CLASSES_ROOT", "HKEY_USERS", "HKEY_PERFORMANCE_DATA" or "HKEY_CURRENT_CONFIG".
 		/// </summary>
 		/// <param name="key">Registry key. Can start with a hive name.</param>

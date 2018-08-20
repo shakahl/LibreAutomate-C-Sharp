@@ -183,7 +183,7 @@ namespace Au.Tools
 					break;
 				case "WindowDC":
 					if(_image != null) {
-						_errorProvider.Icon = Icons.GetStockIcon(StockIcon.INFO, 16);
+						_errorProvider.Icon = Icon_.GetStockIcon(StockIcon.INFO, 16);
 						_errorProvider.SetError(_bTest, "After changing 'Window can be in background' may need to capture again.\nClick Test. If not found, click Capture.");
 					}
 					break;

@@ -544,17 +544,17 @@ namespace Au
 		}
 
 		/// <summary>
-		/// If this string is longer than <paramref name="limit"/>, returns its substring 0 to <paramref name="limit"/>-3 with appended "...".
+		/// If this string is longer than <paramref name="limit"/>, returns its substring 0 to <paramref name="limit"/>-1 with appended '…' character.
 		/// Else returns this string.
 		/// </summary>
 		public static string Limit_(this string t, int limit)
 		{
 			int k = t.Length;
-			if(limit < 3) limit = 3;
+			if(limit < 1) limit = 1;
 			if(k <= limit) return t;
-			return t.Remove(limit - 3) + "...";
+			return t.Remove(limit - 1) + "…";
 		}
-		//CONSIDER: if string looks like path, insert the "..." in the middle.
+		//CONSIDER: if string looks like path, insert "…" in the middle.
 		//	Don't need it in Escape_, because path cannot contain characters that need to be escaped.
 
 		/// <summary>
@@ -563,7 +563,7 @@ namespace Au
 		/// If the string contains these characters, replaces and returns new string. Else returns this string.
 		/// </summary>
 		/// <param name="t">This string.</param>
-		/// <param name="limit">If the final string is longer than <paramref name="limit"/>, get its substring 0 to <paramref name="limit"/>-3 with appended "...". The enclosing "" are not counted.</param>
+		/// <param name="limit">If the final string is longer than <paramref name="limit"/>, get its substring 0 to <paramref name="limit"/>-1 with appended '…' character. The enclosing "" are not counted.</param>
 		/// <param name="quote">Enclose in "".</param>
 		public static string Escape_(this string t, int limit = 0, bool quote = false)
 		{
@@ -571,8 +571,7 @@ namespace Au
 			if(len == 0) return quote ? "\"\"" : t;
 
 			if(limit > 0) {
-				if(limit < 3) limit = 3;
-				if(len > limit) len = limit - 3; else limit = 0;
+				if(len > limit) len = limit - 1; else limit = 0;
 			}
 
 			for(i = 0; i < len; i++) {
@@ -602,7 +601,7 @@ namespace Au
 					if(limit > 0 && b.Length - (quote ? 1 : 0) >= len) break;
 				}
 
-				if(limit > 0) b.Append("...");
+				if(limit > 0) b.Append('…');
 				if(quote) b.Append('\"');
 				return b.ToString();
 			}

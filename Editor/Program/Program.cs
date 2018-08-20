@@ -44,7 +44,7 @@ static class Program
 
 #if !DEBUG
 			var fProfile = Folders.ThisAppDataLocal + "ProfileOptimization";
-			Files.CreateDirectory(fProfile);
+			File_.CreateDirectory(fProfile);
 			ProfileOptimization.SetProfileRoot(fProfile);
 			ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 640 -> 470 ms (ngen 267). Makes compiler startup faster 4000 -> 2500 (ngen 670).
 			Perf.Next();

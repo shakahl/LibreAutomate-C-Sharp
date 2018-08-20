@@ -89,6 +89,10 @@
     </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.IO.Compression">
+      <HintPath>..\_\Compiler\System.IO.Compression.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.4.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
@@ -113,10 +117,28 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <None Include="Test\tree.csx" />
     <Compile Include="Run\ErrBuilder.cs" />
-    <Compile Include="Run\Meta.cs" />
+    <Compile Include="Run\MetaComments.cs" />
     <Compile Include="Run\MetaReferences.cs" />
     <Compile Include="Run\Compiler.cs" />
+    <None Include="Templates\Projects\App project\App.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Templates\Class.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Templates\Projects\Library project\Library.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Templates\Projects\App project\Class2.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Compile Include="Run\XCompiled.cs" />
+    <None Include="Templates\App.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Test\tree.cs" />
     <Compile Include="UI\CmdHandlers.cs" />
     <Compile Include="Edit\PanelEdit.cs">
       <SubType>Component</SubType>
@@ -124,7 +146,9 @@
     <Compile Include="Files\_FormNewCollection.cs" />
     <Compile Include="Program\CommandLine.cs" />
     <Compile Include="Program\ProgramSettings.cs" />
-    <None Include="Default\files\Script 1.cs" />
+    <None Include="Default\files\Script1.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="Files\FileNode-file.cs" />
     <Compile Include="Files\FileNode.cs" />
     <Compile Include="Files\FilesModel.cs" />
@@ -190,7 +214,9 @@
       <Name>Au.Tools</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Service Include="{508349B6-6B84-4DF5-91F0-309BEEBAD82D}" />
+  </ItemGroup>
   <ItemGroup>
     <Content Include="Default\files.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -252,8 +278,12 @@
     <Content Include="Resources\fileScript.png" />
     <None Include="Resources\project.png" />
     <Content Include="Resources\qm.ico" />
+    <None Include="Templates\include\usings.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>$(TargetDir)kill_Au.Editor.exe</PreBuildEvent>

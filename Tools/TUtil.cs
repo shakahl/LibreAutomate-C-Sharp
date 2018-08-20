@@ -420,6 +420,9 @@ namespace Au.Tools
 			//Print(code);
 			//Perf.First();
 
+			//TODO: don't use the Scripting assemblies. Use CodeAnalysis directly.
+
+			//FUTURE: #line
 			var b = new StringBuilder();
 			if(activateWindow) b.Append("((Wnd)(LPARAM)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
 			b.AppendLine("var _p_ = Perf.StartNew();");
@@ -469,7 +472,7 @@ namespace Au.Tools
 			double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of Wnd.Find and Object.Find
 			string sTime;
 			if(lastLine == 1 && lines[0].Length == 6) sTime = t1.ToString_() + " ms"; //only Wnd.Find: "Wnd w;\r\nw = Wnd.Find(...);"
-			else sTime = t0.ToString_() + "+" + t1.ToString_() + " ms";
+			else sTime = t0.ToString_() + " + " + t1.ToString_() + " ms";
 
 			if(r.obj is Wnd w1 && w1.Is0) r.obj = null;
 			if(r.obj != null) {

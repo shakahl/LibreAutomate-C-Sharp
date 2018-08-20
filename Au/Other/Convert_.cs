@@ -14,6 +14,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 //using System.Xml.Linq;
 using System.IO.Compression;
+using System.Security.Cryptography;
 
 using Au.Types;
 using static Au.NoClass;
@@ -186,58 +187,129 @@ namespace Au
 		#region MD5 fast
 
 		/// <summary>
-		/// Computes MD5 hash of binary data.
-		/// The same as Hash(..., "MD5") but much faster.
+		/// Computes MD5 hash of some data.
+		/// Multiple datas can be hashed, producing single result.
+		/// Call <b>Add</b> one or more times. Finally use <see cref="Hash"/> to get result.
 		/// </summary>
-		public static byte[] HashMD5(byte[] a)
+		/// <remarks>
+		/// Faster than the static <b>Hash</b> functions.
+		/// </remarks>
+		[StructLayout(LayoutKind.Explicit)]
+		public struct MD5Hash //MD5_CTX + _state
 		{
-			try {
-				Api.MD5Init(out Api.MD5_CTX x);
-				Api.MD5Update(ref x, a, a.Length);
-				Api.MD5Final(ref x);
+			[FieldOffset(88)] MD5HashResult _result;
+			[FieldOffset(104)] long _state; //1 inited/added, 2 finalled
 
+			/// <summary>Adds data.</summary>
+			/// <exception cref="ArgumentNullException">data is null.</exception>
+			/// <exception cref="ArgumentOutOfRangeException">size &lt; 0.</exception>
+			public void Add(void* data, int size)
+			{
+				if(data == null) throw new ArgumentNullException();
+				if(size < 0) throw new ArgumentOutOfRangeException();
+				if(_state != 1) { Api.MD5Init(out this); _state = 1; }
+				Api.MD5Update(ref this, data, size);
+			}
+
+			/// <summary>Adds data.</summary>
+			/// <exception cref="ArgumentNullException">data is null.</exception>
+			public void Add(byte[] data)
+			{
+				if(data == null) throw new ArgumentNullException();
+				fixed (byte* p = data) Add(p, data.Length);
+			}
+
+			/// <summary>Adds data.</summary>
+			/// <exception cref="ArgumentNullException">data is null.</exception>
+			/// <remarks>Adds UTF8 bytes, not UTF16 characters.</remarks>
+			public void Add(string data) => Add(Encoding.UTF8.GetBytes(data));
+
+			//rejected. Better use unsafe address, then will not need to copy data.
+			///// <summary>Adds data.</summary>
+			//public void Add<T>(T data) where T: unmanaged
+			//{
+			//	Add(&data, sizeof(T));
+			//}
+
+			/// <summary>
+			/// Computes final hash of datas added with <b>Add</b>.
+			/// </summary>
+			/// <exception cref="InvalidOperationException"><b>Add</b> was not called.</exception>
+			/// <remarks>
+			/// Resets state, so that if <b>Add</b> called again, it will start adding new datas.
+			/// </remarks>
+			public MD5HashResult Hash
+			{
+				get
+				{
+					if(_state != 2) {
+						if(_state != 1) throw new InvalidOperationException();
+						Api.MD5Final(ref this);
+						_state = 2;
+					}
+					return _result;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Result of <see cref="MD5Hash.Hash"/>.
+		/// It is 16 bytes stored in 2 long fields r1 and r2.
+		/// If need, can be converted to byte[] with <see cref="ToArray"/> or to hex string with <see cref="ToString"/>.
+		/// </summary>
+		[Serializable]
+		public struct MD5HashResult :IEquatable<MD5HashResult>
+		{
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+			public long r1, r2;
+
+			public bool Equals(MD5HashResult other) => this == other;
+
+			public static bool operator ==(MD5HashResult h1, MD5HashResult h2) => h1.r1 == h2.r1 && h1.r2 == h2.r2;
+			public static bool operator !=(MD5HashResult h1, MD5HashResult h2) => !(h1 == h2);
+
+			//rejected: not much shorter than hex.
+			//public string ToBase64() => Convert.ToBase64String(ToArray());
+
+			public override int GetHashCode() => r1.GetHashCode() ^ r2.GetHashCode();
+
+			public override bool Equals(object obj) => obj is MD5HashResult && (MD5HashResult)obj == this;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+			/// <summary>
+			/// Converts this to hex string of Length = 32.
+			/// </summary>
+			public override unsafe string ToString()
+			{
+				var t = this;
+				return HexEncode(&t, sizeof(MD5HashResult));
+			}
+
+			/// <summary>
+			/// Converts this to byte[16].
+			/// </summary>
+			public byte[] ToArray()
+			{
 				var r = new byte[16];
-				Marshal.Copy((IntPtr)(&x.r1), r, 0, 16);
+				fixed (byte* p = r) {
+					*(long*)p = r1;
+					*(long*)(p + 8) = r2;
+				}
 				return r;
-
-				//speed: slightly slower than QM2 (it uses MD5x too).
 			}
-			catch { //the API are undocumented and may be removed in the future
-				Debug.Assert(false);
-				return Hash(a, "MD5");
 
-				//speed: 9 times slower than the above code. Could use a static variable to make 2 times faster.
-				//First time 3700, the above code 1700.
+			/// <summary>
+			/// Creates MD5HashResult from hex string returned by <see cref="ToString"/>.
+			/// Returns false if some parameter is invalid. Does not throw exception.
+			/// </summary>
+			public static bool FromString(string s, int startIndex, int length, out MD5HashResult r)
+			{
+				if(s == null || length != 32 || (uint)startIndex > s.Length - 32) { r = default; return false; }
+				MD5HashResult rr;
+				HexDecode(s, &rr, 16, startIndex);
+				r = rr;
+				return true;
 			}
-		}
-
-		/// <summary>
-		/// Computes MD5 hash of string.
-		/// The same as Hash(..., "MD5") but much faster.
-		/// </summary>
-		/// <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
-		public static byte[] HashMD5(string s)
-		{
-			return HashMD5(Encoding.UTF8.GetBytes(s));
-		}
-
-		/// <summary>
-		/// Computes MD5 hash of binary data and converts to hex string.
-		/// The same as Hash(..., "MD5") but much faster.
-		/// </summary>
-		public static string HashMD5Hex(byte[] a, bool upperCase = false)
-		{
-			return HexEncode(HashMD5(a), upperCase);
-		}
-
-		/// <summary>
-		/// Computes MD5 hash of string and converts to hex string.
-		/// The same as Hash(..., "MD5") but much faster.
-		/// </summary>
-		/// <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
-		public static string HashMD5Hex(string s, bool upperCase = false)
-		{
-			return HexEncode(HashMD5(s), upperCase);
 		}
 
 		#endregion
@@ -245,49 +317,47 @@ namespace Au
 		#region hash other
 
 		/// <summary>
-		/// Computes binary data hash using a specified cryptographic algorithm.
+		/// Computes binary data hash using the specified cryptographic algorithm.
 		/// </summary>
 		/// <param name="a"></param>
-		/// <param name="algorithm">Algorithm name, eg "SHA256". <see cref="System.Security.Cryptography.CryptoConfig"/></param>
+		/// <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="CryptoConfig"/>.</param>
 		public static byte[] Hash(byte[] a, string algorithm)
 		{
-			using(var x = (System.Security.Cryptography.HashAlgorithm)System.Security.Cryptography.CryptoConfig.CreateFromName(algorithm)) {
+			using(var x = (HashAlgorithm)CryptoConfig.CreateFromName(algorithm)) {
 				return x.ComputeHash(a);
 			}
 		}
 
 		/// <summary>
-		/// Computes string hash using a specified cryptographic algorithm.
+		/// Computes string hash using the specified cryptographic algorithm.
 		/// </summary>
 		/// <param name="s"></param>
-		/// <param name="algorithm">Algorithm name, eg "SHA256". <see cref="System.Security.Cryptography.CryptoConfig"/></param>
-		/// <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
+		/// <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="CryptoConfig"/>.</param>
+		/// <remarks>Uses UTF8 bytes, not UTF16 bytes.</remarks>
 		public static byte[] Hash(string s, string algorithm)
 		{
 			return Hash(Encoding.UTF8.GetBytes(s), algorithm);
 		}
 
 		/// <summary>
-		/// Computes binary data hash using a specified cryptographic algorithm and converts to hex string.
+		/// Computes binary data hash using the specified cryptographic algorithm and converts to hex string.
 		/// </summary>
 		/// <param name="a"></param>
-		/// <param name="algorithm">Algorithm name, eg "SHA256". <see cref="System.Security.Cryptography.CryptoConfig"/></param>
-		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
-		public static string HashHex(byte[] a, string algorithm, bool upperCase = false)
+		/// <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="CryptoConfig"/>.</param>
+		public static string HashHex(byte[] a, string algorithm)
 		{
-			return HexEncode(Hash(a, algorithm), upperCase);
+			return HexEncode(Hash(a, algorithm));
 		}
 
 		/// <summary>
-		/// Computes string hash using a specified cryptographic algorithm and converts to hex string.
+		/// Computes string hash using the specified cryptographic algorithm and converts to hex string.
 		/// </summary>
 		/// <param name="s"></param>
-		/// <param name="algorithm">Algorithm name, eg "SHA256". <see cref="System.Security.Cryptography.CryptoConfig"/></param>
-		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
-		/// <remarks>The hash is of UTF8 bytes, not of UTF16 bytes.</remarks>
-		public static string HashHex(string s, string algorithm, bool upperCase = false)
+		/// <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="CryptoConfig"/>.</param>
+		/// <remarks>Uses UTF8 bytes, not UTF16 bytes.</remarks>
+		public static string HashHex(string s, string algorithm)
 		{
-			return HexEncode(Hash(s, algorithm), upperCase);
+			return HexEncode(Hash(s, algorithm));
 		}
 
 		#endregion
@@ -599,9 +669,9 @@ namespace Au
 		/// Standard Base64 strings cannot be used in file paths and URLs, because can contain characters '/' and '+'. This function replaces them with '_' and '-'. Also trims "==" at the end.
 		/// Such string can be parsed with <b>Convert_</b> class functions, not with <b>Convert</b> class functions.
 		/// </remarks>
-		public static string GuidToBase64Filename(Guid guid)
+		public static string GuidToBase64Filename(in Guid guid)
 		{
-			return Convert.ToBase64String(guid.ToByteArray()).TrimEnd('=').Replace("/", "_").Replace("+", "-");
+			return Convert.ToBase64String(guid.ToByteArray()).TrimEnd('=').Replace('/', '_').Replace('+', '-');
 		}
 
 		#endregion

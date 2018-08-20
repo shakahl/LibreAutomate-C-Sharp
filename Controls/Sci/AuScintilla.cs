@@ -271,7 +271,7 @@ namespace Au.Controls
 			{
 				if(s_dllPath == null) {
 					s_dllPath = Folders.ThisApp + @"Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
-					if(!Files.ExistsAsFile(s_dllPath)) { //in designer?
+					if(!File_.ExistsAsFile(s_dllPath)) { //in designer?
 						s_dllPath = @"Q:\app\Au\_\Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
 					}
 				}

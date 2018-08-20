@@ -178,17 +178,19 @@ class PanelOutput :Control
 		{
 			//Print(s);
 			var a = s.Split('|');
-			var fn = isGuid ? Model.FindByGUID(a[0]) : Model.FindFile(a[0]);
+			var fn = isGuid ? Model.FindByGUID(a[0]) : Model.Find(a[0], false);
 			if(fn == null) return;
 			Model.SetCurrentFile(fn);
+			var doc = Panels.Editor.ActiveDoc;
+			doc.Focus();
 			if(a.Length == 1) return;
 			int line = a[1].ToInt_(0) - 1; if(line < 0) return;
 			int column = a.Length == 2 ? -1 : a[2].ToInt_() - 1;
 
-			var t = Panels.Editor.ActiveDoc.ST;
+			var t = doc.ST;
 			int i = t.LineStart(line);
 			if(column > 0) i = t.Call(SCI_POSITIONRELATIVE, i, column); //not SCI_FINDCOLUMN, it calculates tabs
-			t.Call(SCI_GOTOPOS, i);
+			t.GoToPos(i);
 		}
 	}
 }

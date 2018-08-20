@@ -8,6 +8,9 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 
+//TODO: move Form_ to Au. Eg to Classes.cs.
+//TODO: enable themes and correct text rendering.
+
 namespace Au.Controls
 {
 	/// <summary>

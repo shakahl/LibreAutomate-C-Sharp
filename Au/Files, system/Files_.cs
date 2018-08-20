@@ -32,7 +32,7 @@ namespace Au
 	/// Most functions support only full path. Most of them throw <b>ArgumentException</b> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe; it was relevant only in DOS era.
 	/// Most functions support extended-length paths (longer than 259). Such local paths should have @"\\?\" prefix, like @"\\?\C:\...". Such network path should be like @"\\?\UNC\server\share\...". See <see cref="Path_.PrefixLongPath"/>, <see cref="Path_.PrefixLongPathIfNeed"/>. Many functions support long paths even without prefix.
 	/// </remarks>
-	public static partial class Files
+	public static partial class File_
 	{
 		#region attributes, exists, search, enum
 
@@ -1019,7 +1019,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string path = @"D:\Test\new\test.txt";
-		/// Files.CreateDirectoryFor(path);
+		/// File_.CreateDirectoryFor(path);
 		/// File.WriteAllText(path, "text"); //would fail if directory @"D:\Test\new" does not exist
 		/// ]]></code>
 		/// </example>
@@ -1122,7 +1122,7 @@ namespace Au.Types
 {
 	/// <summary>
 	/// File system entry type - file, directory, and whether it exists.
-	/// Returned by <see cref="Files.ExistsAs"/>.
+	/// Returned by <see cref="File_.ExistsAs"/>.
 	/// </summary>
 	public enum FileDir
 	{
@@ -1136,7 +1136,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// File system entry type - file, directory, symbolic link, whether it exists and is accessible.
-	/// Returned by <see cref="Files.ExistsAs2"/>.
+	/// Returned by <see cref="File_.ExistsAs2"/>.
 	/// The enum value NotFound is 0; AccessDenied is negative ((int)0x80000000); other values are greater than 0.
 	/// </summary>
 	public enum FileDir2
@@ -1156,7 +1156,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="Files.GetAttributes"/> and some other functions.
+	/// Flags for <see cref="File_.GetAttributes"/> and some other functions.
 	/// </summary>
 	[Flags]
 	public enum FAFlags
@@ -1173,7 +1173,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// File or directory properties. Used with <see cref="Files.GetProperties"/>.
+	/// File or directory properties. Used with <see cref="File_.GetProperties"/>.
 	/// </summary>
 	public struct FileProperties
 	{
@@ -1194,7 +1194,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// flags for <see cref="Files.EnumDirectory"/>.
+	/// flags for <see cref="File_.EnumDirectory"/>.
 	/// </summary>
 	[Flags]
 	public enum FEFlags
@@ -1247,7 +1247,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// flags for <see cref="Files.Copy"/> and some other similar functions.
+	/// flags for <see cref="File_.Copy"/> and some other similar functions.
 	/// Used only when copying directory.
 	/// </summary>
 	[Flags]
@@ -1270,7 +1270,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Contains name and other main properties of a file or subdirectory retrieved by <see cref="Files.EnumDirectory"/>.
+	/// Contains name and other main properties of a file or subdirectory retrieved by <see cref="File_.EnumDirectory"/>.
 	/// The values are not changed after creating the variable.
 	/// </summary>
 	public class FEFile
@@ -1338,7 +1338,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// What to do if the destination directory contains a file or directory with the same name as the source file or directory when copying, moving or renaming.
-	/// Used with <see cref="Files.Copy"/>, <see cref="Files.Move"/> and similar functions.
+	/// Used with <see cref="File_.Copy"/>, <see cref="File_.Move"/> and similar functions.
 	/// When renaming or moving, if the destination is the same as the source, these options are ignored and the destination is simply renamed. For example when renaming "file.txt" to "FILE.TXT".
 	/// </summary>
 	public enum IfExists

@@ -16,14 +16,17 @@ using System.Runtime.ExceptionServices;
 using Au.Types;
 using static Au.NoClass;
 
+//rejected: store the static instance in shared memory. This is how it was implemented initially.
+//	Then would be easy to measure speed of appdomain or process startup.
+//	However then too slow Perf startup (JIT + opening shared memory), eg 5 ms vs 1 ms. With process memory 3-4 ms.
+//	Now we instead use Serialize, pass the string eg as command line args, then in that appdomain/process create new Inst variable.
+
 namespace Au
 {
 	/// <summary>
 	/// Code speed measurement. Easier to use than <see cref="Stopwatch"/>.
 	/// </summary>
-	/// <remarks>
-	/// Stores data in shared memory, therefore the same measurement can be used in multiple appdomains and even processes. See also <see cref="Inst"/>.
-	/// </remarks>
+	/// <seealso cref="Inst"/>.
 	[DebuggerStepThrough]
 	public static unsafe class Perf
 	{
@@ -31,7 +34,7 @@ namespace Au
 		/// The same as <see cref="Perf"/> class, but allows to have multiple independent speed measurements.
 		/// </summary>
 		/// <remarks>
-		/// Stores data in the variable, not in shared memory.
+		/// Stores data in the variable, not in a static variable.
 		/// </remarks>
 		public unsafe struct Inst
 		{
@@ -44,36 +47,59 @@ namespace Au
 			static Inst()
 			{
 				//Prevent JIT delay when calling Next etc if not ngened.
-				if(!Util.Assembly_.LibIsAuNgened) {
-					Stopwatch.GetTimestamp(); //maybe the .NET assembly not ngened
-#if false
-					//RuntimeHelpers.PrepareMethod(typeof(Perf).GetMethod("First", Array.Empty<Type>()).MethodHandle);
-					//RuntimeHelpers.PrepareMethod(typeof(Perf.Inst).GetMethod("First", Array.Empty<Type>()).MethodHandle);
-					RuntimeHelpers.PrepareMethod(typeof(Perf).GetMethod("Next").MethodHandle);
-					RuntimeHelpers.PrepareMethod(typeof(Perf.Inst).GetMethod("Next").MethodHandle);
-					RuntimeHelpers.PrepareMethod(typeof(Perf).GetMethod("NW").MethodHandle);
-					RuntimeHelpers.PrepareMethod(typeof(Perf.Inst).GetMethod("NW").MethodHandle);
-					//This works, but the first time is still 2, or 1 if compiling First too.
-#else
-					Perf.Next(); Perf.NW(); Perf.First(); //JIT-compiles everything we need. _canWrite prevents calling Output.Write.
+				//if(!Util.Assembly_.LibIsAuNgened) { //unnecessary and makes slower
+				Stopwatch.GetTimestamp(); //maybe the .NET assembly not ngened
+#if true //works too, similar speed
+				var t = typeof(Perf.Inst);
+				RuntimeHelpers.PrepareMethod(t.GetMethod("Next").MethodHandle);
+				RuntimeHelpers.PrepareMethod(t.GetMethod("NW").MethodHandle);
+#if DEBUG //else these methods are inlined
+				t = typeof(Perf);
+				RuntimeHelpers.PrepareMethod(t.GetMethod("Next").MethodHandle);
+				RuntimeHelpers.PrepareMethod(t.GetMethod("NW").MethodHandle);
 #endif
-					//speed: 5 ms. The slowest part is creating shared memory. Also JITing and calling IsAuNgened takes time.
-					//With PrepareMethod also 5 ms. It also creates shared memory.
-				}
-				_canWrite = true;
+#else
+				Perf.Next(); Perf.NW(); Perf.First(); //JIT-compiles everything we need. s_canWrite prevents calling Output.Write etc.
+#endif
+				//}
+				s_enabled = true;
+
+				//JIT speed: 1 ms.
 			}
 
-			static bool _canWrite;
+			static bool s_enabled;
+			const int _nElem = 16;
 
-			//BE CAREFUL: this struct is in shared memory. Max allowed size is 256-32. Currently used 184.
-
+			fixed long _a[_nElem];
+			fixed char _aMark[_nElem];
 			volatile int _counter;
 			bool _incremental;
 			int _nMeasurements; //used with incremental to display n measurements and average times
 			long _time0;
-			const int _nElem = 16;
-			fixed long _a[_nElem];
-			fixed char _aMark[_nElem];
+
+			/// <summary>
+			/// Converts this variable to string that can be used to create a copy of this variable with <see cref="Inst(String)"/>.
+			/// </summary>
+			[MethodImpl(MethodImplOptions.NoOptimization)]
+			public string Serialize()
+			{
+				var si = sizeof(Inst);
+				var b = new byte[si];
+				fixed (long* p = _a) Marshal.Copy((IntPtr)p, b, 0, si);
+				return Convert.ToBase64String(b);
+			}
+
+			/// <summary>
+			/// Initializes this variable as a copy of another variable that has been converted to string with <see cref="Serialize"/>.
+			/// </summary>
+			[MethodImpl(MethodImplOptions.NoOptimization)]
+			public Inst(string serialized) : this()
+			{
+				var si = sizeof(Inst);
+				var b = Convert.FromBase64String(serialized);
+				if(b.Length == si)
+					fixed (long* p = _a) Marshal.Copy(b, 0, (IntPtr)p, si);
+			}
 
 			/// <summary><inheritdoc cref="Perf.Incremental"/></summary>
 			/// <example>
@@ -108,7 +134,7 @@ namespace Au
 			/// <inheritdoc cref="Perf.First()"/>
 			public void First()
 			{
-				if(!_canWrite) return; //called by ctor. This prevents overwriting Inst in shared memory if it was used in another domain or process.
+				if(!s_enabled) return; //called by the static ctor
 				_time0 = Stopwatch.GetTimestamp();
 				//QueryPerformanceCounter(out _time0);
 				_counter = 0;
@@ -116,26 +142,34 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Calls <see cref="WakeCPU"/> and <see cref="First()"/>.
+			/// Calls <see cref="Cpu"/> and <see cref="First()"/>.
 			/// </summary>
 			public void First(int timeSpeedUpCPU)
 			{
-				WakeCPU(timeSpeedUpCPU);
+				Cpu(timeSpeedUpCPU);
 				First();
 			}
 
 			/// <inheritdoc cref="Perf.Next"/>
 			public void Next(char cMark = '\0')
 			{
-				if(!_canWrite) return; //called by ctor. This prevents overwriting Inst in shared memory if it was used in another domain or process.
+				if(!s_enabled) return; //called by the static ctor
 				int n = _counter; if(n >= _nElem) return;
 				_counter++;
 				fixed (long* p = _a) {
 					var t = Stopwatch.GetTimestamp() - _time0;
 					if(_incremental) p[n] += t; else p[n] = t;
-					fixed (char* c = _aMark) c[n] = cMark;
+					//fixed (char* c = _aMark) c[n] = cMark;
+					char* c = (char*)(p + _nElem); c[n] = cMark;
 				}
 			}
+
+			/// <summary>
+			/// Calls <see cref="Next"/> and <see cref="Write"/>.
+			/// </summary>
+			/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			public void NW(char cMark = '\0') { Next(cMark); Write(); }
 
 			/// <summary>
 			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>, and shows it in the output.
@@ -143,16 +177,9 @@ namespace Au
 			/// </summary>
 			public void Write()
 			{
-				if(!_canWrite) return;
-				var s = ToString();
-				if(s != null) Output.Write(s);
+				if(!s_enabled) return; //called by the static ctor
+				Output.Write(ToString());
 			}
-
-			/// <summary>
-			/// Calls <see cref="Next"/> and <see cref="Write"/>.
-			/// </summary>
-			/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
-			public void NW(char cMark = '\0') { Next(cMark); Write(); }
 
 			/// <summary>
 			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>.
@@ -254,7 +281,10 @@ namespace Au
 			}
 		}
 
-		static Inst* _SM => &Util.LibSharedMemory.Ptr->perf;
+		/// <summary>
+		/// This static variable is used by the static functions.
+		/// </summary>
+		public static Inst StaticInst;
 
 		/// <summary>
 		/// Creates and returns new <see cref="Inst"/> variable and calls its <see cref="Inst.First"/>.
@@ -289,20 +319,19 @@ namespace Au
 		/// </example>
 		public static bool Incremental
 		{
-			get => _SM->Incremental;
-			set { _SM->Incremental = value; }
+			get => StaticInst.Incremental;
+			set => StaticInst.Incremental = value;
 		}
-		//CONSIDER: this is confusing: this process starts with Incremental = true if previous process used it and the shared memory survived
 
 		/// <summary>
 		/// Stores current time in the first element of an internal array.
 		/// </summary>
-		public static void First() { _SM->First(); }
+		public static void First() => StaticInst.First();
 
 		/// <summary>
-		/// Calls <see cref="WakeCPU"/> and <see cref="First()"/>.
+		/// Calls <see cref="Cpu"/> and <see cref="First()"/>.
 		/// </summary>
-		public static void First(int timeSpeedUpCPU) { _SM->First(timeSpeedUpCPU); }
+		public static void First(int timeSpeedUpCPU) => StaticInst.First(timeSpeedUpCPU);
 
 		/// <summary>
 		/// Stores current time in next element of an internal array.
@@ -311,7 +340,13 @@ namespace Au
 		/// Don't call <b>Next</b> more than 16 times after <b>First</b>, because the array has fixed size.
 		/// </remarks>
 		/// <param name="cMark">A character to mark this time in the results string, like "A=150".</param>
-		public static void Next(char cMark = '\0') { _SM->Next(cMark); }
+		public static void Next(char cMark = '\0') => StaticInst.Next(cMark);
+
+		/// <summary>
+		/// Calls <see cref="Next"/> and <see cref="Write"/>.
+		/// </summary>
+		/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+		public static void NW(char cMark = '\0') => StaticInst.NW(cMark);
 
 		/// <summary>
 		/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>, and shows it in the output.
@@ -327,40 +362,34 @@ namespace Au
 		/// Perf.Write(); //speed:  timeOfCODE1  timeOfCODE2  (totalTime)
 		/// ]]></code>
 		/// </example>
-		public static void Write() { _SM->Write(); }
-
-		/// <summary>
-		/// Calls <see cref="Next"/> and <see cref="Write"/>.
-		/// </summary>
-		/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
-		public static void NW(char cMark = '\0') { _SM->NW(cMark); }
+		public static void Write() => StaticInst.Write();
 
 		/// <summary>
 		/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>.
 		/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 		/// </summary>
-		public static new string ToString() => _SM->ToString();
+		public static new string ToString() => StaticInst.ToString();
 
 		/// <summary>
 		/// Return array of time values collected by calling <see cref="First"/> and <see cref="Next"/>.
 		/// Each element is the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 		/// </summary>
-		public static long[] ToArray() => _SM->ToArray();
+		public static long[] ToArray() => StaticInst.ToArray();
 
 		/// <summary>
 		/// Gets the number of microseconds between <see cref="First"/> and the last <see cref="Next"/>.
 		/// </summary>
-		public static long TimeTotal => _SM->TimeTotal;
+		public static long TimeTotal => StaticInst.TimeTotal;
 
 		/// <summary>
 		/// Executes <paramref name="code"/> (lambda) <paramref name="count"/> times, and then calls <see cref="Next"/>.
 		/// </summary>
-		public static void Execute(int count, Action code) { _SM->Execute(count, code); }
+		public static void Execute(int count, Action code) => StaticInst.Execute(count, code);
 
 		/// <summary>
 		/// <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
 		/// </summary>
-		public static void ExecuteMulti(int countAll, int countEach, params Action[] codes) { _SM->ExecuteMulti(countAll, countEach, codes); }
+		public static void ExecuteMulti(int countAll, int countEach, params Action[] codes) => StaticInst.ExecuteMulti(countAll, countEach, codes);
 
 		/// <summary>
 		/// Executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
@@ -372,7 +401,7 @@ namespace Au
 		/// You can make CPU speed constant in Control Panel -> Power Options -> ... Advanced -> Processor power management -> Minimum or maximum power state.
 		/// There are programs that show current CPU speed. For example HWMonitor.
 		/// </remarks>
-		public static void WakeCPU(int timeMilliseconds = 200)
+		public static void Cpu(int timeMilliseconds = 200)
 		{
 			int n = 0;
 			for(long t0 = Time.Microseconds; Time.Microseconds - t0 < timeMilliseconds * 1000L; n++) { }

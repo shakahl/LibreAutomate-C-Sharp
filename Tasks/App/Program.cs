@@ -109,7 +109,7 @@ namespace Au.Tasks
 			if(add) {
 				_trayIcon = new NotifyIcon();
 				//_trayIcon.Icon = Properties.Resources.trayIcon; //28 ms first time
-				_trayIcon.Icon = Icons.GetAppIcon((int)IconSize.SysSmall);
+				_trayIcon.Icon = Icon_.GetAppIcon((int)IconSize.SysSmall);
 				_trayIcon.Text = "QM# Tasks";
 				_trayIcon.MouseClick += _trayIcon_MouseClick;
 				_trayIcon.Visible = true;
@@ -286,7 +286,7 @@ namespace Au.Tasks
 		{
 			Perf.First();
 			string outDir = Folders.LocalAppData + @"Au\ScriptDll\";
-			Files.CreateDirectory(outDir);
+			File_.CreateDirectory(outDir);
 			string outFile = outDir + Path_.GetFileNameWithoutExtension(csFile) + ".exe";
 			//Print(csFile, dllFile);
 

@@ -56,7 +56,7 @@ namespace Au
 				_isl = new Api.ShellLink() as Api.IShellLink;
 				_ipf = _isl as Api.IPersistFile;
 				_lnkPath = lnkPath;
-				if(mode != Api.STGM_WRITE && (mode == Api.STGM_READ || Files.ExistsAsFile(_lnkPath))) {
+				if(mode != Api.STGM_WRITE && (mode == Api.STGM_READ || File_.ExistsAsFile(_lnkPath))) {
 					AuException.ThrowIfHresultNot0(_ipf.Load(_lnkPath, mode), "*open");
 					_isOpen = true;
 				}
@@ -106,9 +106,9 @@ namespace Au
 			/// </remarks>
 			public void Save()
 			{
-				if(_changedHotkey && !_isOpen && Files.ExistsAsFile(_lnkPath)) _UnregisterHotkey(_lnkPath);
+				if(_changedHotkey && !_isOpen && File_.ExistsAsFile(_lnkPath)) _UnregisterHotkey(_lnkPath);
 
-				Files.CreateDirectoryFor(_lnkPath);
+				File_.CreateDirectoryFor(_lnkPath);
 				AuException.ThrowIfHresultNot0(_ipf.Save(_lnkPath, true), "*save");
 			}
 
@@ -294,12 +294,12 @@ namespace Au
 			/// </summary>
 			/// <param name="lnkPath">.lnk file path.</param>
 			/// <exception cref="AuException">Failed to unregister hotkey.</exception>
-			/// <exception cref="Exception">Exceptions of <see cref="Files.Delete(string, bool)"/>.</exception>
+			/// <exception cref="Exception">Exceptions of <see cref="File_.Delete(string, bool)"/>.</exception>
 			public static void Delete(string lnkPath)
 			{
-				if(!Files.ExistsAsFile(lnkPath)) return;
+				if(!File_.ExistsAsFile(lnkPath)) return;
 				_UnregisterHotkey(lnkPath);
-				Files.Delete(lnkPath);
+				File_.Delete(lnkPath);
 			}
 
 			#endregion
@@ -308,7 +308,7 @@ namespace Au
 			/// <exception cref="AuException">Failed to open or save.</exception>
 			static void _UnregisterHotkey(string lnkPath)
 			{
-				Debug.Assert(Files.ExistsAsFile(lnkPath));
+				Debug.Assert(File_.ExistsAsFile(lnkPath));
 				using(var x = OpenOrCreate(lnkPath)) {
 					var k = x.Hotkey;
 					if(k != 0) {
@@ -363,9 +363,9 @@ namespace Au
 				//GetWorkingDirectory and GetIconLocation get raw path, and envronment variables such as %ProgramFiles% are expanded to (x86) in 32-bit process.
 				if(Ver.Is32BitProcessOn64BitOS) {
 					if(_pf == null) { string s = Folders.ProgramFilesX86; _pf = s + "\\"; }
-					if(R.StartsWith_(_pf, true) && !Files.ExistsAsAny(R)) {
+					if(R.StartsWith_(_pf, true) && !File_.ExistsAsAny(R)) {
 						var s2 = R.Remove(_pf.Length - 7, 6);
-						if(Files.ExistsAsAny(s2)) R = s2;
+						if(File_.ExistsAsAny(s2)) R = s2;
 						//info: "C:\\Program Files (x86)\\" in English, "C:\\Programme (x86)\\" in German etc.
 						//never mind: System32 folder also has similar problem, because of redirection.
 						//note: ShellExecuteEx also has this problem.

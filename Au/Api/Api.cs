@@ -983,23 +983,14 @@ namespace Au.Types
 		internal static extern uint NtQueryTimerResolution(out uint maxi, out uint mini, out uint current);
 		//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
 
-		internal struct MD5_CTX
-		{
-			long _1, _2, _3, _4, _5, _6, _7, _8, _9, _10, _11;
-			public long r1, r2;
-			//public fixed byte r[16]; //same speed, maybe slightly slower
-			//[MarshalAs(UnmanagedType.ByValArray, SizeConst = 16)]
-			//public byte[] r; //slow like .NET API
-		}
+		[DllImport("ntdll.dll")]
+		internal static extern void MD5Init(out Convert_.MD5Hash context);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Init(out MD5_CTX context);
+		internal static extern void MD5Update(ref Convert_.MD5Hash context, void* data, int dataLen);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Update(ref MD5_CTX context, byte[] data, int dataLen);
-
-		[DllImport("ntdll.dll")]
-		internal static extern void MD5Final(ref MD5_CTX context);
+		internal static extern void MD5Final(ref Convert_.MD5Hash context);
 
 
 

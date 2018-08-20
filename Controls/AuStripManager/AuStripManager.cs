@@ -102,7 +102,7 @@ namespace Au.Controls
 			try { _xStrips = XElement.Load(xmlFile); }
 			catch(Exception ex) { AuDialog.ShowError("Failed to load file", ex.ToString()); throw; }
 			XElement xCustom = null;
-			if(Files.ExistsAsFile(_xmlFileCustom)) {
+			if(File_.ExistsAsFile(_xmlFileCustom)) {
 				try { xCustom = XElement.Load(_xmlFileCustom); }
 				catch(Exception e) { Print("Failed to load file", _xmlFileCustom, e.Message); }
 			}
@@ -326,7 +326,7 @@ namespace Au.Controls
 
 			Image im = null;
 			if(x.Attribute_(out s, "i2")) { //custom image as icon file
-				im = Icons.GetFileIconImage(s, (int)IconSize.SysSmall, GIFlags.SearchPath);
+				im = Icon_.GetFileIconImage(s, (int)IconSize.SysSmall, GIFlags.SearchPath);
 				if(im == null) Print($"Failed to get {(isMenu ? "menu item" : "toolbar button")} {x.Name} icon from file {s}\n\tTo fix this, right-click it and select Properties...");
 				//SHOULDDO: async or cache
 			}
@@ -471,7 +471,7 @@ namespace Au.Controls
 #if true
 			//save
 			try {
-				Files.CreateDirectoryFor(_xmlFileCustom);
+				File_.CreateDirectoryFor(_xmlFileCustom);
 				xStripsCustom.Save(_xmlFileCustom);
 			}
 			catch(Exception e) {

@@ -29,7 +29,7 @@ namespace Au.Util
 	/// At first call <see cref="Add"/> (for each file) or <see cref="AddRange"/>. Then call <see cref="GetAllAsync"/>.
 	/// Create a callback function of type <see cref="Callback"/> and pass its delegate to <b>GetAllAsync</b>.
 	/// </remarks>
-	/// <seealso cref="Icons.ImageCache"/>
+	/// <seealso cref="Icon_.ImageCache"/>
 	public sealed class IconsAsync :IDisposable
 	{
 		//never mind:
@@ -42,7 +42,7 @@ namespace Au.Util
 		/// <summary>
 		/// Adds a file path to an internal collection.
 		/// </summary>
-		/// <param name="file">File path etc. See <see cref="Icons.GetFileIcon"/>.</param>
+		/// <param name="file">File path etc. See <see cref="Icon_.GetFileIcon"/>.</param>
 		/// <param name="obj">Something to pass to your callback function together with icon handle for this file.</param>
 		public void Add(string file, object obj)
 		{
@@ -74,7 +74,7 @@ namespace Au.Util
 		/// <param name="flags"><see cref="GIFlags"/></param>
 		/// <param name="objCommon">Something to pass to callback functions.</param>
 		/// <remarks>
-		/// After this function returns, icons are asynchronously extracted with <see cref="Icons.GetFileIconHandle"/>, and callback called with icon handle (or default(IntPtr) if failed).
+		/// After this function returns, icons are asynchronously extracted with <see cref="Icon_.GetFileIconHandle"/>, and callback called with icon handle (or default(IntPtr) if failed).
 		/// The callback is called in this thread. This thread must have a message loop (eg Application.Run).
 		/// If you'll need more icons, you can add more files and call this function again with the same <b>IconsAsync</b> instance, even if getting old icons if still not finished.
 		/// </remarks>
@@ -133,7 +133,7 @@ namespace Au.Util
 					}
 						//Thread.Sleep(10);
 						var k = d.state as Result;
-					k.hIcon = Icons.GetFileIconHandle(k.file, _iconSize, _iconFlags);
+					k.hIcon = Icon_.GetFileIconHandle(k.file, _iconSize, _iconFlags);
 
 						//var hi = GetFileIconHandle(k.file, _iconSize, _iconFlags);
 						//if(0!=(_iconFlags&IconFlags.NeedImage) && _nPending>20) { /*Print(_nPending);*/ k.image = HandleToImage(hi); } else k.hIcon = hi;
@@ -286,7 +286,7 @@ namespace Au.Util
 			/// <summary>obj passed to <see cref="Add(string, object)"/>.</summary>
 			public object obj;
 
-			/// <summary>Icon handle. To get managed object from it, use <b>Icons.HandleToX</b> functions; else finally call <see cref="Icons.DestroyIconHandle"/>. Can be default(IntPtr).</summary>
+			/// <summary>Icon handle. To get managed object from it, use <b>Icons.HandleToX</b> functions; else finally call <see cref="Icon_.DestroyIconHandle"/>. Can be default(IntPtr).</summary>
 			public IntPtr hIcon;
 
 			/// <summary>Icon converted to Image object, if used IconFlags.NeedImage and the thread pool decided to convert handle to Image. You should call Dispose() when finished using it. Can be null.</summary>

@@ -77,6 +77,18 @@ namespace Au.Controls
 		}
 
 		/// <summary>
+		/// Calls a Scintilla message that sets a string which is passed using wParam.
+		/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
+		/// Don't call this function from another thread.
+		/// </summary>
+		public int SetString(int sciMessage, string wParam, LPARAM lParam)
+		{
+			fixed (byte* s = _ToUtf8(wParam)) {
+				return SC.Call(sciMessage, lParam, s);
+			}
+		}
+
+		/// <summary>
 		/// Calls a Scintilla message and passes two strings using wParam and lParam.
 		/// wParam0lParam must be like "WPARAM\0LPARAM". Asserts if no '\0'.
 		/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
@@ -320,9 +332,15 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets text length. It is the number of UTF8 bytes, not characters.
+		/// Gets text length (SCI_GETTEXTLENGTH) in UTF8 bytes.
 		/// </summary>
-		public int TextLengthBytes { get => Call(SCI_GETTEXTLENGTH); }
+		public int TextLengthBytes => Call(SCI_GETTEXTLENGTH);
+
+		/// <summary>
+		/// Gets or sets current caret position (SCI_GETCURRENTPOS/SCI_SETEMPTYSELECTION) in UTF8 bytes.
+		/// The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
+		/// </summary>
+		public int PositionBytes { get => Call(SCI_GETCURRENTPOS); set => Call(SCI_SETEMPTYSELECTION, value); }
 
 		/// <summary>
 		/// Gets line index from character position (UTF8 bytes).
@@ -501,6 +519,25 @@ namespace Au.Controls
 		{
 			using(new _NoReadonly(this))
 				SetString(SCI_INSERTTEXT, pos, s);
+		}
+
+		/// <summary>
+		/// SCI_GOTOPOS and ensures visible.
+		/// </summary>
+		public void GoToPos(int pos)
+		{
+			Call(SCI_GOTOPOS, pos);
+			int line = Call(SCI_LINEFROMPOSITION, pos);
+			Call(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
+		}
+
+		/// <summary>
+		/// SCI_GOTOLINE and ensures visible.
+		/// </summary>
+		public void GoToLine(int line)
+		{
+			Call(SCI_GOTOLINE, line);
+			Call(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
 		}
 	}
 }

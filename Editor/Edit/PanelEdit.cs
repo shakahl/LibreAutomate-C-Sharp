@@ -177,7 +177,7 @@ partial class PanelEdit :Control
 		//Print("<><c 0x8000>one\0two</c>");
 
 
-		//foreach(var f in Files.EnumDirectory(Folders.ProgramFiles, FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
+		//foreach(var f in File_.EnumDirectory(Folders.ProgramFiles, FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
 		//	if(f.IsDirectory) continue;
 		//	if(0 == f.Name.EndsWith_(true, ".png", ".bmp", ".jpg", ".gif", ".ico")) continue;
 		//	//Print(f.FullPath);
@@ -195,6 +195,10 @@ partial class PanelEdit :Control
 	{
 		public readonly FileNode FN;
 
+		const int c_marginFold = 0;
+		const int c_marginLineNumbers = 1;
+		const int c_marginMarkers = 2; //breakpoints etc
+
 		public SciCode(FileNode file)
 		{
 			//_edit = edit;
@@ -210,12 +214,19 @@ partial class PanelEdit :Control
 		{
 			base.OnHandleCreated(e);
 
-			ST.MarginWidth(1, 30);
+			int dpi = Au.Util.Dpi.BaseDPI;
+
+			Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
+			ST.MarginWidth(c_marginLineNumbers, 40 * dpi / 96);
+			//Call(SCI_SETMARGINTYPEN, c_marginMarkers, SC_MARGIN_SYMBOL);
+			//ST.MarginWidth(c_marginMarkers, 0);
+
 			ST.StyleFont(STYLE_DEFAULT, "Courier New", 8);
 			ST.StyleClearAll();
 
 			//_SetLexer(LexLanguage.SCLEX_CPP);
 			ST.SetLexerCpp();
+			_InitFolding();
 		}
 
 		//protected override void OnMouseDown(MouseEventArgs e)
@@ -264,37 +275,16 @@ partial class PanelEdit :Control
 			case NOTIF.SCN_MODIFIED:
 
 				break;
+			case NOTIF.SCN_MARGINCLICK:
+				if(n.margin == c_marginFold) {
+					_FoldLines(null, n.position);
+					//TODO: save
+				}
+				break;
 			}
 
 			base.OnSciNotify(ref n);
 		}
-
-		//void _SetLexer(LexLanguage lang)
-		//{
-		//	if(lang == _currentLexer) return;
-		//	_currentLexer = lang;
-
-		//	if(lang == LexLanguage.SCLEX_CPP) {
-		//		ST.SetLexerCpp();
-		//		return;
-		//	}
-
-		//	ST.StyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
-		//	Call(SCI_SETLEXER, (int)lang);
-
-		//	const int colorComment = 0x8000;
-		//	const int colorString = 0xA07040;
-		//	const int colorNumber = 0xA04000;
-		//	const int colorDoc = 0x606060;
-		//	switch(lang) {
-		//	case LexLanguage.SCLEX_CPP:
-		//		ST.StyleForeColor((int)LexCppStyles.SCE_C_COMMENT, colorComment); //  /*...*/
-
-		//		//... (see SciText.SetLexerCpp)
-		//		break;
-		//	}
-		//}
-		//LexLanguage _currentLexer;
 
 		public bool IsUnsaved => 0 != Call(SCI_GETMODIFY);
 
@@ -310,6 +300,70 @@ partial class PanelEdit :Control
 				}
 				Call(SCI_SETSAVEPOINT);
 				//Print("saved");
+			}
+			return true;
+		}
+
+		void _InitFolding()
+		{
+			ST.SetStringString(SCI_SETPROPERTY, "fold\0" + "1");
+			ST.SetStringString(SCI_SETPROPERTY, "fold.comment\0" + "1");
+			ST.SetStringString(SCI_SETPROPERTY, "fold.preprocessor\0" + "1");
+			ST.SetStringString(SCI_SETPROPERTY, "fold.cpp.preprocessor.at.else\0" + "1");
+#if false
+			ST.SetStringString(SCI_SETPROPERTY, "fold.cpp.syntax.based\0" + "0");
+#else
+			//ST.SetStringString(SCI_SETPROPERTY, "fold.at.else\0" + "1");
+#endif
+			ST.SetStringString(SCI_SETPROPERTY, "fold.cpp.explicit.start\0" + "//{{"); //default is //{
+			ST.SetStringString(SCI_SETPROPERTY, "fold.cpp.explicit.end\0" + "//}}");
+
+			Call(SCI_SETMARGINTYPEN, c_marginFold, SC_MARGIN_SYMBOL);
+			Call(SCI_SETMARGINMASKN, c_marginFold, SC_MASK_FOLDERS);
+			Call(SCI_SETMARGINSENSITIVEN, c_marginFold, 1);
+
+			Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS);
+			Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS);
+			Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE);
+			Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER);
+			Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED);
+			Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED);
+			Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER);
+			for(int i = 25; i < 32; i++) {
+				Call(SCI_MARKERSETFORE, i, 0xffffff);
+				Call(SCI_MARKERSETBACK, i, 0x808080);
+				//Call(SCI_MARKERSETBACKSELECTED, i, i == SC_MARKNUM_FOLDER ? 0xFF0000 : 0x808080); //why dos not work?
+			}
+			//Call(SCI_MARKERENABLEHIGHLIGHT, 1); //why dos not work?
+
+			Call(SCI_SETFOLDFLAGS, SC_FOLDFLAG_LINEAFTER_CONTRACTED);
+			Call(SCI_FOLDDISPLAYTEXTSETSTYLE, SC_FOLDDISPLAYTEXT_STANDARD);
+			ST.StyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
+
+			Call(SCI_SETMARGINCURSORN, c_marginFold, SC_CURSORARROW);
+
+			int wid = Call(SCI_TEXTHEIGHT) - 4;
+			ST.MarginWidth(c_marginFold, Math.Max(wid, 12));
+		}
+
+		bool _FoldLines(bool? fold, int startPos)
+		{
+			int line = Call(SCI_LINEFROMPOSITION, startPos);
+			if(0 == (Call(SCI_GETFOLDLEVEL, line) & SC_FOLDLEVELHEADERFLAG)) return false;
+			bool isExpanded = 0 != Call(SCI_GETFOLDEXPANDED, line);
+			if(fold.HasValue && fold.GetValueOrDefault() != isExpanded) return false;
+			if(isExpanded) {
+				string s = ST.LineText(line), s2 = "";
+				if(s.Contains("//{{")) s2 = "... }}"; else if(s.Contains("/*")) s2 = "... */";
+				ST.SetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
+				//move caret out of contracted region
+				int pos = ST.PositionBytes;
+				if(pos > startPos) {
+					int i = ST.LineEnd(Call(SCI_GETLASTCHILD, line, -1));
+					if(pos <= i) ST.PositionBytes = startPos;
+				}
+			} else {
+				Call(SCI_TOGGLEFOLD, line);
 			}
 			return true;
 		}

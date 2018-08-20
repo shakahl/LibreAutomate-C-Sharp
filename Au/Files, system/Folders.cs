@@ -31,7 +31,7 @@ namespace Au
 	/// Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like "_Win8" which means that the folder is unavailable on older Windows.
 	/// Some known folders, although supported and registerd, may be still not created.
 	/// 
-	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="Shell.Pidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes Shell, Shell.Pidl, Icons) but not with .NET or native functions.
+	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="Shell.Pidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes Shell, Shell.Pidl, Icon_) but not with .NET or native functions.
 	///
 	/// Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
 	/// The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
@@ -287,7 +287,7 @@ namespace Au
 			get
 			{
 				if(__appTemp == null) __appTemp = Path.GetTempPath() + _DefaultAppSubDir;
-				Files.CreateDirectory(__appTemp);
+				File_.CreateDirectory(__appTemp);
 				return __appTemp;
 			}
 			set
@@ -308,7 +308,7 @@ namespace Au
 			get
 			{
 				if(__appDocuments == null) __appDocuments = Documents + _DefaultAppSubDir;
-				Files.CreateDirectory(__appDocuments);
+				File_.CreateDirectory(__appDocuments);
 				return __appDocuments;
 			}
 			set
@@ -329,7 +329,7 @@ namespace Au
 			get
 			{
 				if(__appData == null) __appData = RoamingAppData + _DefaultAppSubDir;
-				Files.CreateDirectory(__appData);
+				File_.CreateDirectory(__appData);
 				return __appData;
 			}
 			set
@@ -350,7 +350,7 @@ namespace Au
 			get
 			{
 				if(__appDataLocal == null) __appDataLocal = LocalAppData + _DefaultAppSubDir;
-				Files.CreateDirectory(__appDataLocal);
+				File_.CreateDirectory(__appDataLocal);
 				return __appDataLocal;
 			}
 			set
@@ -384,7 +384,7 @@ namespace Au
 		/// <summary>
 		/// Gets or sets path of images (icons etc) folder of this application.
 		/// Default is ThisApp + "Images".
-		/// Functions of these classes will look for image there: Icons, AuMenu, AuToolbar, WinImage, possibly some other.
+		/// Functions of these classes will look for image there: Icon_, AuMenu, AuToolbar, WinImage, possibly some other.
 		/// </summary>
 		public static FolderPath ThisAppImages
 		{
@@ -407,7 +407,7 @@ namespace Au
 		/// If this process is 32-bit and OS is 64-bit, when it uses the <see cref="System"/> folder path (@"C:\WINDOWS\system32"), the OS in most cases redirects it to @"C:\Windows\SysWOW64", which contains 32-bit versions of program files. Use SystemX64 when you want to avoid the redirection and access the true System32 folder which on 64-bit OS contains 64-bit program files.
 		/// More info in class help.
 		/// </remarks>
-		/// <seealso cref="Files.Misc.DisableRedirection"/>
+		/// <seealso cref="File_.Misc.DisableRedirection"/>
 		/// <seealso cref="Ver.Is32BitProcessOn64BitOS"/>
 		public static FolderPath SystemX64 => __SystemX64 ?? (__SystemX64 = Ver.Is32BitProcessOn64BitOS ? (FolderPath)(Windows + "Sysnative") : System);
 		static string __SystemX64;

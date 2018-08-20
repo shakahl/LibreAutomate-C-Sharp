@@ -46,7 +46,7 @@ partial class FilesModel
 			var d = new FolderBrowserDialog();
 			d.Description = "Location. In the selected folder will be created the main folder of the collection.";
 			d.ShowNewFolderButton = true;
-			d.SelectedPath = Files.ExistsAsDirectory(textLocation.Text) ? textLocation.Text : (string)Folders.ThisAppDocuments;
+			d.SelectedPath = File_.ExistsAsDirectory(textLocation.Text) ? textLocation.Text : (string)Folders.ThisAppDocuments;
 			if(d.ShowDialog(this) != DialogResult.OK) return;
 			textLocation.Text = d.SelectedPath;
 		}
@@ -56,7 +56,7 @@ partial class FilesModel
 			var ok = true;
 			var path = textPath.Text;
 			if(!Path_.IsFullPath(path)) ok = false;
-			else if(Files.ExistsAsAny(path)) {
+			else if(File_.ExistsAsAny(path)) {
 				AuDialog.ShowError("Already exists", path, owner: this);
 				ok = false;
 			}

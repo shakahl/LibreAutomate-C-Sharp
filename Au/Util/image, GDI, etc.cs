@@ -299,7 +299,7 @@ namespace Au.Util
 			var s = Folders.Temp + Guid.NewGuid().ToString();
 			File.WriteAllBytes(s, cursorData);
 			var c = LoadCursorFromFile(s, size);
-			Files.Delete(s);
+			File_.Delete(s);
 			return c;
 
 			//If want to avoid temp file, can use CreateIconFromResourceEx.

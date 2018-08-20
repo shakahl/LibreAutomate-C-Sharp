@@ -172,7 +172,7 @@ namespace Au
 			/// Does not copy the icon; don't dispose it while the window is alive.
 			/// Use this function only with windows of current process.
 			/// </summary>
-			/// <seealso cref="Icons"/>
+			/// <seealso cref="Icon_"/>
 			public static void SetIconHandle(Wnd w, IntPtr iconHandle, bool size32 = false)
 			{
 				w.Send(Api.WM_SETICON, size32, iconHandle);
@@ -180,7 +180,7 @@ namespace Au
 
 			/// <summary>
 			/// Gets icon that is displayed in window title bar and in its taskbar button.
-			/// Returns icon handle if successful, else default(IntPtr). Later call <see cref="Icons.DestroyIconHandle"/> or <see cref="Icons.HandleToImage"/>.
+			/// Returns icon handle if successful, else default(IntPtr). Later call <see cref="Icon_.DestroyIconHandle"/> or <see cref="Icon_.HandleToImage"/>.
 			/// </summary>
 			/// <param name="w"></param>
 			/// <param name="size32">Get 32x32 icon. If false, gets 16x16 icon.</param>
@@ -188,14 +188,14 @@ namespace Au
 			/// Icon size depends on DPI (text size, can be changed in Control Panel). By default small is 16, large 32.
 			/// This function can be used with windows of any process.
 			/// </remarks>
-			/// <seealso cref="Icons"/>
+			/// <seealso cref="Icon_"/>
 			public static IntPtr GetIconHandle(Wnd w, bool size32 = false)
 			{
 				int size = Api.GetSystemMetrics(size32 ? Api.SM_CXICON : Api.SM_CXSMICON);
 
 				//support Windows Store apps
 				if(1 == _GetWindowsStoreAppId(w, out var appId, true)) {
-					IntPtr hi = Icons.GetFileIconHandle(appId, size);
+					IntPtr hi = Icon_.GetFileIconHandle(appId, size);
 					if(hi != default) return hi;
 				}
 

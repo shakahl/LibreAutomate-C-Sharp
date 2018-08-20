@@ -471,53 +471,6 @@ namespace Project.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to static class Program
-        ///{
-        ///[STAThread]
-        ///static void Main(string[] args)
-        ///{
-        ///	Print(&quot;test&quot;);
-        ///
-        ///
-        ///
-        ///}
-        ///}.
-        /// </summary>
-        internal static string TemplateApp {
-            get {
-                return ResourceManager.GetString("TemplateApp", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to /// &lt;summary&gt;
-        ////// Example class.
-        ////// &lt;/summary&gt;
-        ////// &lt;example&gt;
-        ////// Static functions.
-        ////// &lt;code&gt;&lt;![CDATA[
-        ////// int i = Example.StaticProperty1;
-        ////// string s = Example.StaticProperty2;
-        ////// Example.StaticProperty2 = &quot;new value&quot;;
-        ////// Example.StaticMethod(10, &quot;optional argument&quot;);
-        ////// Example.StaticMethod(10);
-        ////// ]]&gt;&lt;/code&gt;
-        ////// Instance.
-        ////// &lt;code&gt;&lt;![CDATA[
-        ////// var x = new Example(&quot;Name&quot;);
-        ////// int i = x.Property1;
-        ////// x.Property3 = &quot;test&quot;;
-        ////// x.Method1();
-        ////// var s = x.Method2(&quot;test &quot;, 2);
-        ////// [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string TemplateClass {
-            get {
-                return ResourceManager.GetString("TemplateClass", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap tip {

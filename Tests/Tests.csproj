@@ -97,9 +97,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="TestCompiler.cs" />
-    <Compile Include="Unused currently\Form1.cs">
+    <None Include="Unused currently\Form1.cs">
       <SubType>Form</SubType>
-    </Compile>
+    </None>
     <Compile Include="Unused currently\Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>

@@ -26,7 +26,7 @@ namespace Au
 	/// Gets icons for files etc.
 	/// </summary>
 	/// <seealso cref="Util.IconsAsync"/>
-	public static class Icons
+	public static class Icon_
 	{
 		/// <inheritdoc cref="GetFileIcon"/>
 		/// <returns>Returns icon handle, or default(IntPtr) if failed.</returns>
@@ -124,7 +124,7 @@ namespace Au
 
 			if(isPath) {
 				if(searchPath) {
-					file = Files.SearchPath(file, Folders.ThisAppImages);
+					file = File_.SearchPath(file, Folders.ThisAppImages);
 					if(file == null) return default; //ignore getDefaultIfFails
 				}
 				file = Path_.UnprefixLongPath(file);
@@ -136,7 +136,7 @@ namespace Au
 				if(extractFromFile || ext > 0) {
 					R = LoadIconHandle(file, index, size);
 					if(R != default || extractFromFile) return R;
-					switch(Files.ExistsAs(file, true)) {
+					switch(File_.ExistsAs(file, true)) {
 					case FileDir.NotFound:
 						return default;
 					case FileDir.File:
@@ -164,7 +164,7 @@ namespace Au
 			//But now, after other optimizations applied, in real life makes faster just 10-20%.
 #if false
 			//if(0==(flags&IconFlags.Shell)){
-			string progId = isShellPath ? null : Files.Misc.GetFileTypeOrProtocolRegistryKey(file, isFileType, isURL);
+			string progId = isShellPath ? null : File_.Misc.GetFileTypeOrProtocolRegistryKey(file, isFileType, isURL);
 
 			RegistryKey rk = (progId == null) ? null : Registry_.Open(progId, Registry.ClassesRoot);
 			//Print(file, progId, isFileType, isURL, rk != null);
@@ -173,7 +173,7 @@ namespace Au
 				//Unregistered file type/protocol, no extension, folder, ::{CLSID}, shell:AppsFolder\WinStoreAppId, or no progId key in HKCR
 				//Print(@"unregistered", file, progId);
 				if(progId != null) goto gr; //the file type is known, but no progid key in HKCR. Let shell API figure out. Rare.
-				if(isExt || (isPath && Files.FileExists(file))) return GetStockIconHandle(StockIcon.DOCNOASSOC, size);
+				if(isExt || (isPath && File_.FileExists(file))) return GetStockIconHandle(StockIcon.DOCNOASSOC, size);
 				goto gr;
 			}
 
@@ -439,7 +439,7 @@ namespace Au
 		/// <remarks>The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.</remarks>
 		internal static IntPtr GetAppIconHandle(int size)
 		{
-			var h = Util.ModuleHandle.OfAppIcon(); if(h == default) return default;
+			var h = Util.ModuleHandle_.OfAppIcon(); if(h == default) return default;
 			size = _NormalizeIconSizeParameter(size);
 			return Api.LoadImage(h, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
 
@@ -626,7 +626,7 @@ namespace Au
 					_dirty = false;
 					_x = null;
 					_table = null;
-					Files.Delete(_cacheFile);
+					File_.Delete(_cacheFile);
 				}
 			}
 
@@ -654,7 +654,7 @@ namespace Au
 				if(useExt) {
 					var ext = Path_.GetExtension(file);
 					if(ext.Length == 0) {
-						if(Files.ExistsAsDirectory(file)) ext = file;
+						if(File_.ExistsAsDirectory(file)) ext = file;
 						else ext = ".no-ext";
 					} else {
 						//ext = ext.ToLower_();
@@ -676,7 +676,7 @@ namespace Au
 			/// Returns null if the callback function returns null.
 			/// </summary>
 			/// <param name="name">Some unique name. It is used to identify this image in cache.</param>
-			/// <param name="callback">Called to get image. To convert icon handle to image, use <see cref="Icons.HandleToImage"/>.</param>
+			/// <param name="callback">Called to get image. To convert icon handle to image, use <see cref="Icon_.HandleToImage"/>.</param>
 			/// <param name="autoUpdate"><inheritdoc cref="GetImage(string, bool, GIFlags, Action{Bitmap, object}, object)"/></param>
 			/// <param name="auParam">Something to pass to the <paramref name="autoUpdate"/> callback function.</param>
 			/// <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <paramref name="callback"/>.</param>
@@ -698,7 +698,7 @@ namespace Au
 					if(R == null) {
 						//is in file cache?
 						try {
-							if(_x == null && Files.ExistsAsFile(_cacheFile)) {
+							if(_x == null && File_.ExistsAsFile(_cacheFile)) {
 								_x = XElement.Load(_cacheFile);
 								if(_iconSize != _x.Attribute_("size", 0) || Util.Dpi.BaseDPI != _x.Attribute_("dpi", 0)) {
 									_x = null;
@@ -862,7 +862,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="Icons.GetFileIcon"/> and similar functions.
+	/// Flags for <see cref="Icon_.GetFileIcon"/> and similar functions.
 	/// </summary>
 	[Flags]
 	public enum GIFlags
@@ -873,7 +873,7 @@ namespace Au.Types
 		LiteralPath = 1,
 
 		/// <summary>
-		/// If file is not full path, call <see cref="Files.SearchPath"/>.
+		/// If file is not full path, call <see cref="File_.SearchPath"/>.
 		/// Without this flag searches only in <see cref="Folders.ThisAppImages"/>; with this flag also searches there first.
 		/// </summary>
 		SearchPath = 2,
@@ -902,7 +902,7 @@ namespace Au.Types
 	/// <summary>
 	/// Standard icon sizes.
 	/// </summary>
-	/// <seealso cref="Icons.GetShellIconSize"/>
+	/// <seealso cref="Icon_.GetShellIconSize"/>
 	/// <tocexclude />
 	public enum IconSize //note: this is not in Au.Types, because then difficult to find, because often need to cast to int
 	{
@@ -938,7 +938,7 @@ namespace Au.Types
 
 #pragma warning disable 1591 //missing XML documentation
 	/// <summary><msdn>SHSTOCKICONID</msdn></summary>
-	/// <seealso cref="Icons.GetStockIcon"/>
+	/// <seealso cref="Icon_.GetStockIcon"/>
 	public enum StockIcon
 	{
 		DOCNOASSOC,

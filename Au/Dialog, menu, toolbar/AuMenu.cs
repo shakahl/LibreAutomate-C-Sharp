@@ -122,7 +122,7 @@ namespace Au
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="onClick">Callback function. Called when clicked the menu item.</param>
 		/// <param name="icon">Can be:
-		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icons.GetFileIcon"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="BaseMT.IconFlags" r=""/>.
+		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icon_.GetFileIcon"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="BaseMT.IconFlags" r=""/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// Icon, Image, Folders.FolderPath.
@@ -1117,7 +1117,7 @@ namespace Au.Types
 		//}
 
 		/// <summary>
-		/// Flags to pass to <see cref="Icons.GetFileIcon"/>. See <see cref="GIFlags"/>.
+		/// Flags to pass to <see cref="Icon_.GetFileIcon"/>. See <see cref="GIFlags"/>.
 		/// </summary>
 		/// <remarks>
 		/// This property is applied to all items.
@@ -1244,7 +1244,7 @@ namespace Au.Types
 			//Image im = r.image;
 			//if(im == null && r.hIcon != default) im = Icons.HandleToImage(r.hIcon);
 
-			Image im = Icons.HandleToImage(r.hIcon, true);
+			Image im = Icon_.HandleToImage(r.hIcon, true);
 
 			//if(im != null) _SetItemIcon(ts, item, im);
 			if(im != null) {
@@ -1353,7 +1353,7 @@ namespace Au.Types
 						}
 					}
 				}
-				if(filename2 != null && filename2.EndsWith_(".exe", true)) return Files.SearchPath(filename2);
+				if(filename2 != null && filename2.EndsWith_(".exe", true)) return File_.SearchPath(filename2);
 			}
 			catch(Exception ex) { Debug_.Print(ex); }
 			return null;

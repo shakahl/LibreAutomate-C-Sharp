@@ -38,7 +38,7 @@ partial class PanelFiles
 		var name = "QM# fileS.cs";
 
 		//var n = _c.AllNodes.ElementAt(2);
-		var f = _model.FindFileOrFolder(name);
+		var f = _model.Find(name, null);
 		//Print(f);
 		if(f == null) { Print("not found"); return; }
 		//var n = _c.FindNodeByTag(f);
@@ -55,20 +55,20 @@ partial class PanelFiles
 		m["ScrollTo"] = o => _c.ScrollTo(n);
 		m["Find"] = o =>
 		{
-			Print(_model.FindFileOrFolder("QM3 function flags.cs"));
-			Print(_model.FindFileOrFolder(@"\Function ideAs\Acc.path.cs"));
-			Print(_model.FindFileOrFolder("mono compiler"));
-			Print(_model.FindFileOrFolder(@"\oLd\mono compiler"));
+			Print(_model.Find("QM3 function flags.cs", false));
+			Print(_model.Find(@"\Function ideAs\Acc.path.cs", false));
+			Print(_model.Find("mono compiler", false));
+			Print(_model.Find(@"\oLd\mono compiler", false));
 			Print("-----");
-			Print(_model.FindFile("QM3 function flags.cs"));
-			Print(_model.FindFile(@"\Function ideAs\Acc.path.cs"));
-			Print(_model.FindFile("mono compiler"));
-			Print(_model.FindFile(@"\oLd\mono compiler"));
+			Print(_model.Find("QM3 function flags.cs", false));
+			Print(_model.Find(@"\Function ideAs\Acc.path.cs", false));
+			Print(_model.Find("mono compiler", false));
+			Print(_model.Find(@"\oLd\mono compiler", false));
 			Print("-----");
-			Print(_model.FindFolder("QM3 function flags.cs"));
-			Print(_model.FindFolder(@"\Function ideAs\Acc.path.cs"));
-			Print(_model.FindFolder("mono compiler"));
-			Print(_model.FindFolder(@"\oLd\mono compiler"));
+			Print(_model.Find("QM3 function flags.cs", true));
+			Print(_model.Find(@"\Function ideAs\Acc.path.cs", true));
+			Print(_model.Find("mono compiler", true));
+			Print(_model.Find(@"\oLd\mono compiler", true));
 		};
 		m["FullUpdate"] = o => _c.FullUpdate();
 		m["HideEditor"] = o => _c.HideEditor();
@@ -155,20 +155,20 @@ partial class PanelFiles
 		};
 		m["ItemPath"] = o =>
 		{
-			f = _model.FindFileOrFolder("obsolete");
+			f = _model.Find("obsolete", null);
 			Print(f?.ItemPath);
-			f = _model.FindFileOrFolder("Zip_to_WEB");
+			f = _model.Find("Zip_to_WEB", null);
 			Print(f?.ItemPath);
-			f = _model.FindFileOrFolder("tips.txt");
+			f = _model.Find("tips.txt", null);
 			Print(f?.ItemPath);
 		};
 		m["FilePath"] = o =>
 		{
-			f = _model.FindFileOrFolder("obsolete");
+			f = _model.Find("obsolete", null);
 			Print(f?.FilePath);
-			f = _model.FindFileOrFolder("Zip_to_WEB");
+			f = _model.Find("Zip_to_WEB", null);
 			Print(f?.FilePath);
-			f = _model.FindFileOrFolder("tips.txt");
+			f = _model.Find("tips.txt", null);
 			Print(f?.FilePath);
 		};
 		m["delete icon cache"] = o => { FilesModel.IconCache.ClearCache(); _c.Invalidate(); };

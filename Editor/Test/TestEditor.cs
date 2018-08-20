@@ -20,6 +20,7 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 using static Program;
+using Au.Controls;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -32,14 +33,49 @@ partial class EForm
 {
 	internal void TestEditor()
 	{
-		var f = new Au.Tools.Form_Wnd();
-		//var f = new Au.Tools.Form_Acc();
-		//var f = new Au.Tools.Form_WinImage();
-		//Wnd.GetWnd.Root.Activate();100.ms();
-		f.Show(this);
-		//f.ShowDialog();
-		//f.Dispose();
-		f.FormClosed += (unu, sed) => Print(f.DialogResult, f.ResultCode);
+		var doc = Panels.Editor.ActiveDoc;
+		var t = doc.ST;
+		var s = doc.Text;
+
+		Output.Clear();
+		Model.Save.TextNowIfNeed();
+		Print(Compiler.ConvertCodeScriptToApp(Model.CurrentFile));
+
+		//Print("<><code>" + s + "</code>");
+
+		//if(0!=t.Call(Sci.SCI_GETLINEVISIBLE, 2)) {
+		//	t.Call(Sci.SCI_HIDELINES, 1, 3);
+		//} else {
+		//	t.Call(Sci.SCI_SHOWLINES, 1, 3);
+		//}
+
+		//t.Call(Sci.SCI_FOLDALL, 2);
+
+		//t.StyleHidden(22, true);
+		//t.StyleBackColor(22, Color.BlueViolet);
+		//doc.Call(Sci.SCI_STARTSTYLING, 0);
+		//doc.Call(Sci.SCI_SETSTYLING, 10, 22);
+
+
+
+		//var a = s.SplitLines_();
+		//bool? folder = default; switch(a[1]) { case "1": folder = true; break; case "0": folder = false; break; }
+		////Print(Model.Find(a[0], folder));
+		////var fn = Model.Find("test scripts", true);
+		////var fn = Model.Find("folder1", true);
+		//var fn = Model.Root;
+		//Print(fn.FindRelative(a[0], folder));
+
+		//return;
+
+		//var f = new Au.Tools.Form_Wnd();
+		////var f = new Au.Tools.Form_Acc();
+		////var f = new Au.Tools.Form_WinImage();
+		////Wnd.GetWnd.Root.Activate();100.ms();
+		//f.Show(this);
+		////f.ShowDialog();
+		////f.Dispose();
+		//f.FormClosed += (unu, sed) => Print(f.DialogResult, f.ResultCode);
 
 
 		//Panels.Status.SetText("same thread\r\nline2\r\nline3");

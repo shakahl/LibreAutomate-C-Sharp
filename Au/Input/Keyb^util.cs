@@ -97,8 +97,10 @@ namespace Au
 			//named keys
 			//names start with an uppercase letter and must have at least 2 other anycase letters, except: Up, AltG (RAl), PageU (PgU), PageD (PgD).
 			KKey k = 0;
-			var t = Util.LibTables.LowerCase;
-			char c1 = t[s[i + 1]], c2 = len > 2 ? t[s[i + 2]] : ' ', c3 = len > 3 ? t[s[i + 3]] : ' ', c4 = len > 4 ? t[s[i + 4]] : ' ';
+			char c1 = Char.ToLowerInvariant(s[i + 1]), //note: Util.LibTables.LowerCase would make startup slow
+				c2 = len > 2 ? Char.ToLowerInvariant(s[i + 2]) : ' ',
+				c3 = len > 3 ? Char.ToLowerInvariant(s[i + 3]) : ' ',
+				c4 = len > 4 ? Char.ToLowerInvariant(s[i + 4]) : ' ';
 			uint u = (uint)c1 << 16 | c2;
 			switch(c) {
 			case 'A':
@@ -175,8 +177,12 @@ namespace Au
 
 			if(c >= 'A' && c <= 'Z') {
 				var s1 = s.Substring(i, len);
+#if false
 				if(Enum.TryParse(s1, true, out KKey r1)) return r1;
 				if(Enum.TryParse(s1, true, out System.Windows.Forms.Keys r2) && (uint)r2 <= 0xff) return (KKey)r2;
+#else //20-50 times faster and less garbage. Good JIT speed.
+				return _FindKeyInEnums(s1);
+#endif
 			}
 			return 0;
 
@@ -186,6 +192,35 @@ namespace Au
 		static IEnumerable<RXGroup> _SplitKeysString(string keys) => s_rxKeys.FindAllG(keys ?? "");
 		//KeyName | #n | *r | *down | *up | +( | $( | nonspace char
 		static readonly Regex_ s_rxKeys = new Regex_(@"[A-Z]\w*|#\S|\*\s*(?:\d+|down|up)\b|[+$]\s*\(|\S");
+
+		static System.Collections.Hashtable s_htEnum; //with Dictionary much slower JIT
+		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+		static KKey _FindKeyInEnums(string key)
+		{
+			if(s_htEnum == null) {
+				var t = new System.Collections.Hashtable(220, StringComparer.OrdinalIgnoreCase);
+				var a1 = typeof(KKey).GetFields();
+				for(int j = 1; j < a1.Length; j++) { //note: start from 1 to skip the default value__, it gives exception
+					t.Add(a1[j].Name, a1[j].GetRawConstantValue());
+				}
+				var a2 = typeof(System.Windows.Forms.Keys).GetFields();
+				for(int j = 4; j < a2.Length; j++) { //skip value__, KeyCode, Modifiers, None
+					var v = a2[j];
+					//Print(v.Name);
+					if(t.ContainsKey(v.Name)) continue;
+					//Print(j);
+					var k = v.GetRawConstantValue();
+					if((uint)(int)k < 0xff) t.Add(v.Name, k);
+				}
+				//Print(a1.Length, a2.Length, s_htEnum.Count); //216
+				s_htEnum = t;
+			}
+			var r = s_htEnum[key];
+			if(r == null) return 0;
+			if(r is byte) return (KKey)(byte)r;
+			return (KKey)(int)r;
+			//note: GetRawConstantValue gets byte for KKey, int for Keys. GetValue(null) gets of enum type.
+		}
 
 		static ArgumentException _ArgumentException_ErrorInKeysString(string keys, int i, int len)
 		{

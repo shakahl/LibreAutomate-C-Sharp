@@ -36,7 +36,7 @@ namespace Au
 		/// Usually known folders are used like <c>string path = Folders.Documents + "file.txt"</c>. It's easier and faster. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
 		/// To get known folder path, this function calls <see cref="Folders.GetFolder"/>.
 		///
-		/// This function is called by many functions of classes Path_, Files, Shell, Icons, some others, therefore all they support environment variables and known folders in path string.
+		/// This function is called by many functions of classes Path_, File_, Shell, Icon_, some others, therefore all they support environment variables and known folders in path string.
 		/// </remarks>
 		public static string ExpandEnvVar(string path)
 		{
@@ -839,11 +839,11 @@ namespace Au
 		/// <param name="isDirectory">The path is for a directory. The number is always appended at the very end, not before .extension.</param>
 		public static string MakeUnique(string path, bool isDirectory)
 		{
-			if(!Files.ExistsAsAny(path)) return path;
+			if(!File_.ExistsAsAny(path)) return path;
 			string ext = isDirectory ? null : GetExtension(path, out path);
 			for(int i = 2; ; i++) {
 				var s = path + " " + i + ext;
-				if(!Files.ExistsAsAny(s)) return s;
+				if(!File_.ExistsAsAny(s)) return s;
 			}
 		}
 	}

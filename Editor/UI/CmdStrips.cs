@@ -55,9 +55,8 @@ static class Strips
 		tbCustom2 = _strips.Toolbars["Custom2"];
 
 		//get submenus that will be filled later or used separately etc
-		_strips.Submenus["File_Templates"].Opening += _MenuOpening_Templates;
+		(ddFileNew = _strips.Submenus["File_New"]).Opening += (o, e) => Panels.Files.FillMenuNew(o as ToolStripDropDownMenu);
 		_strips.Submenus["File_RecentCollections"].Opening += (o, e) => Panels.Files.FillMenuRecentCollections(o as ToolStripDropDownMenu);
-		(ddFileNew = _strips.Submenus["File_New"]).Opening += _MenuOpening_New;
 		_strips.Submenus["Tools_Panels"].Opening += (se, da) => Panels.PanelManager.AddShowPanelsToMenu(se as ToolStripDropDown, false, true);
 		_strips.Submenus["Tools_Toolbars"].Opening += (se, da) => Panels.PanelManager.AddShowPanelsToMenu(se as ToolStripDropDown, true, true);
 		ddFile = _strips.Submenus["Menu_File"];
@@ -95,29 +94,6 @@ static class Strips
 			//TestCompiler.TestParsing();
 		});
 #endif
-	}
-
-	/// <summary>
-	/// Currently not used.
-	/// </summary>
-	static void _MenuOpening_New(object sender, CancelEventArgs e)
-	{
-		var dd = sender as ToolStripDropDownMenu;
-		dd.SuspendLayout();
-
-		dd.ResumeLayout();
-	}
-
-	/// <summary>
-	/// Fills submenu File -> New -> Templates.
-	/// </summary>
-	static void _MenuOpening_Templates(object sender, CancelEventArgs e)
-	{
-		var dd = sender as ToolStripDropDownMenu;
-		dd.SuspendLayout();
-		//dd.Items.Clear();
-		//TODO
-		dd.ResumeLayout();
 	}
 
 	/// <summary>

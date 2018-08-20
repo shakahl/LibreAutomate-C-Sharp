@@ -802,7 +802,7 @@ namespace Au
 			}
 
 			if(_c.hMainIcon == default && Options.UseAppIcon) SetIcon(DIcon.App);
-			if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = Util.ModuleHandle.OfAppIcon();
+			if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = Util.ModuleHandle_.OfAppIcon();
 			//info: DIcon.App is IDI_APPLICATION (32512).
 			//Although MSDN does not mention that IDI_APPLICATION can be used when hInstance is NULL, it works. Even works for many other undocumented system resource ids, eg 100.
 			//Non-NULL hInstance is ignored for the icons specified as TD_x. It is documented and logical.

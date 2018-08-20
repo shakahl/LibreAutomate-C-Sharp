@@ -274,7 +274,7 @@ namespace Au
 		{
 			lock(_lockObj1) {
 				if(_hFile == null) {
-					try { Files.Delete(_logFile); } catch { }
+					try { File_.Delete(_logFile); } catch { }
 				} else {
 					_hFile.Clear();
 				}

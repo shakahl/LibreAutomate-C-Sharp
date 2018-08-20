@@ -15,6 +15,10 @@ namespace Tests
 		public Form1()
 		{
 			InitializeComponent();
+
+			webBrowser1.ScriptErrorsSuppressed = true;
+			//webBrowser1.Navigate("http://www.youtube.com");
+			webBrowser1.Navigate("http://www.yahoo.com");
 		}
 	}
 }

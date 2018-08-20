@@ -65,10 +65,9 @@ class CmdHandlers :IGStripManagerCallbacks
 		#region add to _dict
 
 		_dict.Add(nameof(File_NewScript), File_NewScript);
+		_dict.Add(nameof(File_NewApp), File_NewApp);
 		_dict.Add(nameof(File_NewClass), File_NewClass);
 		_dict.Add(nameof(File_NewFolder), File_NewFolder);
-		_dict.Add(nameof(File_NewApp), File_NewApp);
-		_dict.Add(nameof(File_NewLibrary), File_NewLibrary);
 		_dict.Add(nameof(File_Import), File_Import);
 		_dict.Add(nameof(File_Disable), File_Disable);
 		_dict.Add(nameof(File_Rename), File_Rename);
@@ -184,33 +183,30 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void File_NewScript()
 	{
-		Model.NewItem(FileNode.NewItemTemplate.Script);
-	}
-
-	public void File_NewClass()
-	{
-		Model.NewItem(FileNode.NewItemTemplate.Class);
-	}
-
-	public void File_NewFolder()
-	{
-		Model.NewItem(FileNode.NewItemTemplate.Folder);
+		Model.NewItem("Script");
 	}
 
 	public void File_NewApp()
 	{
-		Model.NewItem(FileNode.NewItemTemplate.AppProject);
+		Model.NewItem(@"App.cs");
 	}
 
-	public void File_NewLibrary()
+	public void File_NewClass()
 	{
-		Model.NewItem(FileNode.NewItemTemplate.LibraryProject);
+		Model.NewItem("Class.cs");
+	}
+
+	public void File_NewFolder()
+	{
+		Model.NewItem("Folder");
 	}
 
 	public void File_Import()
 	{
 		Model.ImportFiles();
 	}
+
+	//TODO: File_ConvertScript: to app, to app project
 
 	public void File_Disable()
 	{

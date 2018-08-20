@@ -27,7 +27,7 @@ public partial class Test
 	static ImageList _TestCreateImageList()
 	{
 		var il = new ImageList();
-		IntPtr hi = Icons.GetFileIconHandle(@"q:\app\browse.ico", 16);
+		IntPtr hi = Icon_.GetFileIconHandle(@"q:\app\browse.ico", 16);
 		//il.Images.Add("k1", Icon.FromHandle(hi));
 		il.Images.Add("k0", Icon.FromHandle(hi).ToBitmap());
 		Api.DestroyIcon(hi);
@@ -352,7 +352,7 @@ public partial class Test
 
 			////Task.Run(() =>
 			////{
-			//	var hi = Files.GetIconHandle(f);
+			//	var hi = Icon_.GetIconHandle(f);
 			//	if(hi != default) Api.DestroyIcon(hi);
 			//	else Print("no icon: " + f);
 			////});

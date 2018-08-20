@@ -230,7 +230,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
 		/// <param name="t">Image type and string format.</param>
-		/// <param name="searchPath">Use <see cref="Files.SearchPath"/></param>
+		/// <param name="searchPath">Use <see cref="File_.SearchPath"/></param>
 		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="Folders.ThisAppImages"/>.</remarks>
 		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false)
 		{
@@ -241,12 +241,12 @@ namespace Au.Controls
 				case ImageType.PngGifJpg:
 				case ImageType.Cur:
 					if(searchPath) {
-						s = Files.SearchPath(s, Folders.ThisAppImages);
+						s = File_.SearchPath(s, Folders.ThisAppImages);
 						if(s == null) return null;
 					} else {
 						if(!Path_.IsFullPathExpandEnvVar(ref s)) return null;
 						s = Path_.Normalize(s, Folders.ThisAppImages);
-						if(!Files.ExistsAsFile(s)) return null;
+						if(!File_.ExistsAsFile(s)) return null;
 					}
 					break;
 				}
@@ -313,7 +313,7 @@ namespace Au.Controls
 				siz = Api.GetSystemMetrics(Api.SM_CXCURSOR);
 				//note: if LR_DEFAULTSIZE, uses SM_CXCURSOR, normally 32. It may be not what Explorer displays eg in Cursors folder. But without it gets the first cursor, which often is large, eg 128.
 			} else {
-				hi = Icons.GetFileIconHandle(s, 16, searchPath ? GIFlags.SearchPath : 0);
+				hi = Icon_.GetFileIconHandle(s, 16, searchPath ? GIFlags.SearchPath : 0);
 				siz = 16;
 			}
 			if(hi == default) return null;
@@ -392,7 +392,7 @@ namespace Au.Controls
 			case ImageType.Resource:
 				return path;
 			case ImageType.PngGifJpg:
-				path = Files.SearchPath(path, Folders.ThisAppImages); if(path == null) return null;
+				path = File_.SearchPath(path, Folders.ThisAppImages); if(path == null) return null;
 				try { return "image:" + Convert.ToBase64String(File.ReadAllBytes(path)); }
 				catch(Exception ex) { Debug_.Print(ex.Message); return null; }
 			}

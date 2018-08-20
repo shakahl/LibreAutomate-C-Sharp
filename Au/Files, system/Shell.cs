@@ -43,7 +43,7 @@ namespace Au
 		/// <param name="file">
 		/// What to run. Can be:
 		/// Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>Folders.System + "notepad.exe"</c>, <c>@"%Folders.System%\notepad.exe"</c>.
-		/// Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="Files.SearchPath"/>.
+		/// Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="File_.SearchPath"/>.
 		/// Path relative to <see cref="Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
 		/// Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
@@ -198,13 +198,13 @@ namespace Au
 					//Process.Run supports long path prefix, except when the exe is .NET.
 					if(!runConsole) file = Path_.UnprefixLongPath(file);
 
-					if(Files.Misc.DisableRedirection.IsSystem64PathIn32BitProcess(file) && !Files.ExistsAsAny(file)) {
-						file = Files.Misc.DisableRedirection.GetNonRedirectedSystemPath(file);
+					if(File_.Misc.DisableRedirection.IsSystem64PathIn32BitProcess(file) && !File_.ExistsAsAny(file)) {
+						file = File_.Misc.DisableRedirection.GetNonRedirectedSystemPath(file);
 					}
 				} else if(!Path_.IsUrl(file)) {
 					//ShellExecuteEx searches everywhere except in app folder.
 					//Process.Run prefers current directory.
-					var s2 = Files.SearchPath(file);
+					var s2 = File_.SearchPath(file);
 					if(s2 != null) {
 						file = s2;
 						isFullPath = true;
@@ -225,7 +225,7 @@ namespace Au
 		/// <param name="file">
 		/// Path or name of an .exe or .bat file. Can be:
 		/// Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>Folders.System + "x.exe"</c>, <c>@"%Folders.System%\x.exe"</c>.
-		/// Filename, like <c>"x.exe"</c>. The function calls <see cref="Files.SearchPath"/>.
+		/// Filename, like <c>"x.exe"</c>. The function calls <see cref="File_.SearchPath"/>.
 		/// Path relative to <see cref="Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="Path_.ExpandEnvVar"/>.
 		/// </param>

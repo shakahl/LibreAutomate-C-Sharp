@@ -37,10 +37,10 @@ partial class FileNode
 		x.AddAnnotation(this);
 
 		if(!isRoot) {
-			var guid = this.GUID;
+			var guid = this.Guid;
 			g1:
 			if(guid == null || guid.Length != 22) {
-				var g = Guid.NewGuid();
+				var g = System.Guid.NewGuid();
 				guid = Convert_.GuidToBase64Filename(g);
 				_x.SetAttributeValue("g", guid);
 				_model.Save?.CollectionLater(); //_model.Save is null when importing this collection
@@ -79,14 +79,42 @@ partial class FileNode
 		get => _x.Attribute_("n");
 	}
 
-	public string GUID
+	/// <summary>
+	/// GUID as Base64 string, as it is stored in collection file.
+	/// </summary>
+	public string Guid
 	{
 		get => _x.Attribute_("g");
 	}
 
-	public string HexGUID
+	/// <summary>
+	/// Gets <see cref="Guid"/> converted to hex string.
+	/// </summary>
+	public unsafe string GuidHex
 	{
-		get => Convert_.HexEncode(Convert_.Base64Decode(GUID));
+		//get => Convert_.HexEncode(Convert_.Base64Decode(GUID));
+		get
+		{
+			var g = GuidStruct;
+			return Convert_.HexEncode(&g, sizeof(Guid));
+		}
+	}
+
+	/// <summary>
+	/// Gets <see cref="Guid"/> converted to <b>Guid</b> struct.
+	/// </summary>
+	public unsafe Guid GuidStruct
+	{
+		get
+		{
+			var s = Guid;
+			Debug.Assert(s.Length == 22);
+			fixed (char* p = s) {
+				Guid g;
+				Convert_.Base64Decode(p, s.Length, &g, sizeof(Guid));
+				return g;
+			}
+		}
 	}
 
 #if TEST_MANY_COLUMNS
@@ -133,7 +161,7 @@ partial class FileNode
 #endif
 
 	/// <summary>
-	/// Returns item path in XML, like @"\Folder\Name.cs" or @"\Name.cs".
+	/// Returns item path in collection and XML, like @"\Folder\Name.cs" or @"\Name.cs".
 	/// </summary>
 	public string ItemPath
 	{
@@ -192,60 +220,117 @@ partial class FileNode
 		get => FromX(_x.PreviousElement_());
 	}
 
-	//fileFolder: 0 any, 1 file, 2 folder
-	FileNode _FindDescendant(string name, int fileFolder)
+	/// <summary>
+	/// Finds descendant file or folder by name or @"\relative path".
+	/// Returns null if not found; also if name is null/"".
+	/// </summary>
+	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
+	/// <param name="folder">true - folder, false - file, null - any.</param>
+	public FileNode FindDescendant(string name, bool? folder)
 	{
 		if(Empty(name)) return null;
-		XElement x;
-		if(name[0] == '\\') {
-			var a = name.Split_("\\", SegFlags.NoEmpty); //TODO: use Segment_, it is faster and garbageless
-			if(a.Length == 0) return null;
-			x = _x;
-			for(int i = 0; i < a.Length; i++) {
-				var s = a[i];
-				if(i == a.Length - 1) {
-					var xx = x;
-					x = x.Element_((fileFolder == 2) ? "d" : "f", "n", s, true);
-					if(x == null && fileFolder == 0) x = xx.Element_("d", "n", s, true);
-				} else {
-					x = x.Element_("d", "n", s, true);
-				}
-				if(x == null) break;
-			}
-		} else {
-			g2: x = _x.Descendant_((fileFolder == 2) ? "d" : "f", "n", name, true);
-			if(x == null && fileFolder == 0) { fileFolder = 2; goto g2; }
-		}
+		if(name[0] == '\\') return _FindRelative(name, folder);
+		var x = _x.Descendant_(folder.GetValueOrDefault() ? "d" : "f", "n", name, true);
+		if(x == null && !folder.HasValue) x = _x.Descendant_("d", "n", name, true);
 		return FromX(x);
 
 		//FUTURE: support XPath: x = _x.XPathSelectElement(name);
 	}
 
-	/// <summary>
-	/// Finds descendant by name or @"\relative path".
-	/// </summary>
-	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
-	public FileNode FindDescendantFileOrFolder(string name)
+	FileNode _FindRelative(string name, bool? folder)
 	{
-		return _FindDescendant(name, 0);
+		if(name.StartsWith_(@"\\")) return null;
+		var x = _x; int lastSegEnd = -1;
+		foreach(var seg in name.Segments_(@"\", SegFlags.NoEmpty)) {
+			var s = seg.Value;
+			if((lastSegEnd = seg.EndOffset) == name.Length) {
+				var xx = x;
+				x = x.Element_(folder.GetValueOrDefault() ? "d" : "f", "n", s, true);
+				if(x == null && !folder.HasValue) x = xx.Element_("d", "n", s, true);
+			} else {
+				x = x.Element_("d", "n", s, true);
+			}
+			if(x == null) return null;
+		}
+		if(lastSegEnd != name.Length) return null; //prevents finding when name is "" or @"\" or @"xxx\".
+		return FromX(x);
 	}
 
 	/// <summary>
-	/// Finds descendant file by name or @"\relative path".
+	/// Finds file or folder by name or path relative to: this folder, parent folder (if this is file) or root (if relativePath starts with @"\").
+	/// Returns null if not found; also if name is null/"".
 	/// </summary>
-	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
-	public FileNode FindDescendantFile(string name)
+	/// <param name="relativePath">Examples: "name", @"subfolder\name", @".\subfolder\name", @"..\parent\name", @"\root path\name".</param>
+	/// <param name="folder">true - folder, false - file, null - any.</param>
+	public FileNode FindRelative(string relativePath, bool? folder)
 	{
-		return _FindDescendant(name, 1);
+		if(!IsFolder) return Parent.FindRelative(relativePath, folder);
+		var s = relativePath;
+		if(Empty(s)) return null;
+		FileNode p = this;
+		if(s[0] == '\\') p = Root;
+		else if(s[0] == '.') {
+			int i = 0;
+			for(; s.EqualsAt_(i, @"..\"); i += 3) { p = p.Parent; if(p == null) return null; }
+			if(i == 0 && s.StartsWith_(@".\")) i = 2;
+			if(i != 0) {
+				if(i == s.Length) return (p == Root || !(folder ?? true)) ? null : p;
+				s = s.Substring(i);
+			}
+		}
+		return p._FindRelative(s, folder);
 	}
 
 	/// <summary>
-	/// Finds descendant folder by name or @"\relative path".
+	/// Finds ancestor (including self) project folder and its main file.
+	/// If folder not found, returns false; sets both out variables = null.
+	/// If folder found but file not, returns null; sets folder = valid, file = null.
 	/// </summary>
-	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
-	public FileNode FindDescendantFolder(string name)
+	public bool FindProject(out FileNode folder, out FileNode main)
 	{
-		return _FindDescendant(name, 2);
+		folder = main = null;
+		for(var x = IsFolder ? _x : _x.Parent; x != Root.Xml; x = x.Parent) {
+			if(!x.Attribute_(out string guid, "project")) continue;
+			folder = FromX(x);
+			x = x.Descendant_("f", "g", guid);
+			if(x == null) break;
+			main = FromX(x);
+			return true;
+		}
+		return false;
+
+		//note: could use Model.FindByGUID instead. It can be faster when the main is somewhere far and deep, because uses GuidMap.
+		//	But in most cases the main will be the first node or near.
+	}
+
+	/// <summary>
+	/// Gets all .cs files of this project folder.
+	/// </summary>
+	/// <param name="fSkip">Skip this file.</param>
+	public IEnumerable<FileNode> EnumProjectFiles(FileNode fSkip = null)
+	{
+		foreach(var v in _x.Descendants("f")) {
+			//Print(v);
+			var f = FromX(v);
+			if(f != fSkip && f.Name.EndsWith_(".cs", true)) yield return f;
+		}
+	}
+
+	public bool IsProjectFolder => IsFolder && _x.HasAttribute_("project");
+
+	/// <summary>
+	/// Gets whether this is folder, script, .cs or other file.
+	/// </summary>
+	public ENodeType NodeType
+	{
+		get
+		{
+			if(IsFolder) return ENodeType.Folder;
+			var s = Name;
+			if(s.EndsWith_(".cs", true)) return ENodeType.CS;
+			if(s.IndexOf('.') < 0) return ENodeType.Script;
+			return ENodeType.Other;
+		}
 	}
 
 	/// <summary>
@@ -349,4 +434,12 @@ partial class FileNode
 	{
 		return Name;
 	}
+}
+
+enum ENodeType
+{
+	Folder,
+	Script,
+	CS,
+	Other,
 }

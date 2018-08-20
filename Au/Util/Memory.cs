@@ -78,11 +78,13 @@ namespace Au.Util
 		[FieldOffset(16)]
 		internal OutputServer.LibSharedMemoryData outp; //now sizeof 2, reserve 16
 		[FieldOffset(32)]
+#if PERF_SM
 		internal Perf.Inst perf; //now sizeof 184, reserve 256-32
 		[FieldOffset(256)]
+#endif
 		byte _futureStructPlaceholder;
 
-		#endregion
+#endregion
 
 		/// <summary>
 		/// Shared memory size.
@@ -97,7 +99,9 @@ namespace Au.Util
 		static LibSharedMemory()
 		{
 			Debug.Assert(sizeof(OutputServer.LibSharedMemoryData) <= 16);
+#if PERF_SM
 			Debug.Assert(sizeof(Perf.Inst) <= 256 - 32);
+#endif
 
 			_sm = (LibSharedMemory*)SharedMemory.CreateOrGet("Au_SM_0x10000", Size, out var created);
 #if DEBUG
@@ -129,7 +133,7 @@ namespace Au.Util
 	[DebuggerStepThrough]
 	unsafe struct LibProcessMemory
 	{
-		#region variables used by our library classes
+#region variables used by our library classes
 		//Be careful with types whose sizes are different in 32 and 64 bit process. Use long and cast to IntPtr etc.
 
 		//public int test;
@@ -137,8 +141,9 @@ namespace Au.Util
 		internal LibWorkarounds.ProcessVariables workarounds;
 		internal ThreadPoolSTA.ProcessVariables threadPool;
 		//internal Thread_.ProcessVariables thread_;
+		//internal Perf.Inst perf;
 
-		#endregion
+#endregion
 
 		/// <summary>
 		/// Gets pointer to the memory.

@@ -32,11 +32,12 @@ partial class FilesModel :ITreeModel
 	public readonly string CollectionFile;
 	public readonly string CollectionDirectory;
 	public readonly string FilesDirectory;
-	public readonly string CacheDirectory;
+	public readonly string TempDirectory;
 	public readonly string StateFile;
 	public readonly Dictionary<string, FileNode> GuidMap;
 	public readonly List<FileNode> OpenFiles;
 	public readonly AutoSave Save;
+	public readonly Compiler.XCompiled Compiled;
 
 	/// <summary>
 	/// 
@@ -51,8 +52,8 @@ partial class FilesModel :ITreeModel
 		CollectionFile = Path_.Normalize(file);
 		CollectionDirectory = Path_.GetDirectoryPath(CollectionFile);
 		FilesDirectory = CollectionDirectory + @"\files";
-		CacheDirectory = CollectionDirectory + @"\cache";
-		Files.CreateDirectory(FilesDirectory);
+		TempDirectory = CollectionDirectory + @"\.temp";
+		File_.CreateDirectory(FilesDirectory);
 		StateFile = CollectionDirectory + @"\state.xml";
 
 		Xml = XElement.Load(CollectionFile);
@@ -63,6 +64,7 @@ partial class FilesModel :ITreeModel
 		if(TV != null) { //null when importing
 			OpenFiles = new List<FileNode>();
 			Save = new AutoSave(this);
+			Compiled = new Compiler.XCompiled(this);
 			_InitClickSelect();
 			_InitDragDrop();
 			_InitWatcher();
@@ -101,7 +103,7 @@ partial class FilesModel :ITreeModel
 	NodeIcon _ncIcon;
 	NodeTextBox _ncName;
 
-	public static Icons.ImageCache IconCache = new Icons.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
+	public static Icon_.ImageCache IconCache = new Icon_.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
 
 	//Called by FilesPanel
 	public void InitNodeControls(NodeIcon icon, NodeTextBox name)
@@ -126,37 +128,22 @@ partial class FilesModel :ITreeModel
 
 		if(_myClipboard.Contains(f)) return EResources.GetImageUseCache("cut");
 
-		bool isLeaf = node.IsLeaf, isScript=isLeaf;
-#if true
-		//var p = new Perf.Inst(true);
-		if(isLeaf) {
-			bool isPath = f.IsLink(out string s);
-			if(!isPath) s = f.Name;
-			int i = Path_.FindExtension(s);
-			if(i >= 0) isScript = false;
-			if(!(isScript || s.EndsWith_(".cs", true))) {
-				//p.Next();
-				if(!isPath) s = f.FilePath;
-				var r = IconCache.GetImage(s, true);
-				//r.SetResolution(96f, 96f);
-				//Print(r.Size, r.PhysicalDimension, r.HorizontalResolution, r.VerticalResolution);
-				//p.NW();
-				return r;
-			}
-		}
-#endif
+		Debug.Assert(node.IsLeaf != f.IsFolder);
 		string k;
-		if(isLeaf) {
-			if(isScript) k = "fileScript";
-			else k = "fileClass";
-		} else {
-			if(f.Xml.HasAttribute_("project")) k = "project";
+		switch(f.NodeType) {
+		case ENodeType.Folder:
+			if(f.IsProjectFolder) k = "project";
 			else if(node.IsExpanded) k = "folderOpen";
 			else k = "folder";
+			break;
+		case ENodeType.Script: k = "fileScript"; break;
+		case ENodeType.CS: k = "fileClass"; break;
+		default:
+			if(!f.IsLink(out string s)) s = f.FilePath;
+			return IconCache.GetImage(s, true);
 		}
 		return EResources.GetImageUseCache(k);
 	}
-	static readonly string[] s_csExt = new string[] { ".cs", ".csx" };
 
 	private void _ncName_DrawText(object sender, DrawEventArgs e)
 	{
@@ -181,7 +168,7 @@ partial class FilesModel :ITreeModel
 
 	#region ITreeModel
 
-	public IEnumerable GetChildren(object nodeTag)
+	IEnumerable ITreeModel.GetChildren(object nodeTag)
 	{
 		if(nodeTag == null) return Root.Children;
 		var f = nodeTag as FileNode;
@@ -189,7 +176,7 @@ partial class FilesModel :ITreeModel
 		return f.Children;
 	}
 
-	public bool IsLeaf(object nodeTag)
+	bool ITreeModel.IsLeaf(object nodeTag)
 	{
 		var f = nodeTag as FileNode;
 		//Print("IsLeaf", f);
@@ -222,7 +209,7 @@ partial class FilesModel :ITreeModel
 		NodesInserted?.Invoke(this, _TreeModelEventArgs(f));
 	}
 
-	public void OnStructureChanged()
+	internal void OnStructureChanged()
 	{
 		StructureChanged?.Invoke(this, new TreePathEventArgs(TreePath.Empty));
 	}
@@ -240,27 +227,10 @@ partial class FilesModel :ITreeModel
 	/// Finds file or folder by name or @"\relative path".
 	/// </summary>
 	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
-	public FileNode FindFileOrFolder(string name)
+	/// <param name="folder">true - folder, false - file, null - any.</param>
+	public FileNode Find(string name, bool? folder)
 	{
-		return Root.FindDescendantFileOrFolder(name);
-	}
-
-	/// <summary>
-	/// Finds file by name or @"\relative path".
-	/// </summary>
-	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
-	public FileNode FindFile(string name)
-	{
-		return Root.FindDescendantFile(name);
-	}
-
-	/// <summary>
-	/// Finds folder by name or @"\relative path".
-	/// </summary>
-	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
-	public FileNode FindFolder(string name)
-	{
-		return Root.FindDescendantFolder(name);
+		return Root.FindDescendant(name, folder);
 	}
 
 	public FileNode FindByGUID(string guid)
@@ -390,6 +360,8 @@ partial class FilesModel :ITreeModel
 	/// If null, closes current and removes from OpenFiles.</param>
 	void _SetCurrentFile(FileNode f)
 	{
+		//note: sync with UnloadingCollection.
+
 		if(_disableSetCurrentFile && _currentFile != null) return;
 		if(f == _currentFile) return;
 		//Print(f);
@@ -427,6 +399,19 @@ partial class FilesModel :ITreeModel
 		Panels.Open.UpdateCurrent(f);
 
 		Save.StateLater();
+	}
+
+	/// <summary>
+	/// Called by <see cref="PanelFiles.LoadCollection"/> before opening another collection and disposing this.
+	/// Saves all, closes document, sets current file = null.
+	/// </summary>
+	public void UnloadingCollection()
+	{
+		//note: sync with _SetCurrentFile(null).
+
+		Save.AllNowIfNeed();
+		Panels.Editor.Open(null);
+		_currentFile = null;
 	}
 
 	/// <summary>
@@ -525,12 +510,12 @@ partial class FilesModel :ITreeModel
 		return r;
 	}
 
-	public void NewItem(FileNode.NewItemTemplate template)
+	public void NewItem(string template)
 	{
 		var target = _GetInsertPos(out var pos);
 		var f = FileNode.NewItem(this, target, pos, template);
 		if(f == null) return;
-		if(template != FileNode.NewItemTemplate.Folder) SetCurrentFile(f);
+		if(!f.IsFolder) SetCurrentFile(f);
 	}
 
 	public void RenameSelected()
@@ -567,7 +552,7 @@ partial class FilesModel :ITreeModel
 			//	If fails, it's not so important, therefore this can be after deleting XML.
 			Task.Run(() =>
 			{
-				try { Files.Delete(paths, true); }
+				try { File_.Delete(paths, true); }
 				catch(Exception ex) { Print(ex.Message); return; }
 			});
 		}
@@ -720,7 +705,7 @@ partial class FilesModel :ITreeModel
 		try {
 			//create new folder for collection's items
 			if(target == null) target = _GetInsertPos(out pos);
-			target = FileNode.NewItem(this, target, pos, FileNode.NewItemTemplate.Folder, Path_.GetFileName(collDir));
+			target = FileNode.NewItem(this, target, pos, "Folder", Path_.GetFileName(collDir));
 			if(target == null) return;
 
 			var m = new FilesModel(null, xmlFile);
@@ -780,7 +765,7 @@ partial class FilesModel :ITreeModel
 			var fd = this.FilesDirectory;
 			if(!fromCollectionDir) {
 				if(s.StartsWith_(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromCollectionDir = true;
-				else if(!dirsDropped) dirsDropped = Files.ExistsAsDirectory(s);
+				else if(!dirsDropped) dirsDropped = File_.ExistsAsDirectory(s);
 			}
 		}
 		int r;
@@ -811,7 +796,7 @@ partial class FilesModel :ITreeModel
 
 			foreach(var s in a) {
 				bool isDir;
-				var itIs = Files.ExistsAs2(s, true);
+				var itIs = File_.ExistsAs2(s, true);
 				if(itIs == FileDir2.File) isDir = false;
 				else if(itIs == FileDir2.Directory && r != 1) isDir = true;
 				else continue; //skip symlinks or if does not exist
@@ -824,7 +809,7 @@ partial class FilesModel :ITreeModel
 					//var newPath = newParentPath + "\\" + name;
 					if(fromCollectionDir) { //already exists?
 						var relPath = s.Substring(this.FilesDirectory.Length);
-						var fExists = this.FindFileOrFolder(relPath);
+						var fExists = this.Find(relPath, null);
 						if(fExists != null) {
 							fExists.FileMove(target, pos);
 							continue;
@@ -832,8 +817,8 @@ partial class FilesModel :ITreeModel
 					}
 					if(isDir) _AddDirToXml(s, x);
 					try {
-						if(r == 2) Files.CopyTo(s, newParentPath, IfExists.Fail);
-						else Files.MoveTo(s, newParentPath, IfExists.Fail);
+						if(r == 2) File_.CopyTo(s, newParentPath, IfExists.Fail);
+						else File_.MoveTo(s, newParentPath, IfExists.Fail);
 					}
 					catch(Exception ex) { Print(ex.Message); continue; }
 				}
@@ -852,7 +837,7 @@ partial class FilesModel :ITreeModel
 
 		void _AddDirToXml(string path, XElement x)
 		{
-			foreach(var u in Files.EnumDirectory(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
+			foreach(var u in File_.EnumDirectory(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
 				bool isDir = u.IsDirectory;
 				var x2 = new XElement(isDir ? "d" : "f", new XAttribute("n", u.Name));
 				x.Add(x2);
@@ -971,12 +956,12 @@ partial class FilesModel :ITreeModel
 	/// </summary>
 	/// <param name="name">Default name of the collection.</param>
 	/// <param name="location">Default parent directory of the main directory of the collection.</param>
-	public string GetDirectoryPathForNewCollection(string name = null, string location = null)
+	public static string GetDirectoryPathForNewCollection(string name = null, string location = null)
 	{
 		var f = new _FormNewCollection();
 		f.textName.Text = name;
 		f.textLocation.Text = location ?? Folders.ThisAppDocuments;
-		if(f.ShowDialog(TV) != DialogResult.OK) return null;
+		if(f.ShowDialog() != DialogResult.OK) return null;
 		return f.textPath.Text;
 	}
 
@@ -1001,9 +986,9 @@ partial class FilesModel :ITreeModel
 
 		string filesDir = collDir + @"\files";
 		try {
-			Files.CreateDirectory(filesDir);
+			File_.CreateDirectory(filesDir);
 			foreach(var f in a) {
-				if(!f.IsLink()) Files.CopyTo(f.FilePath, filesDir);
+				if(!f.IsLink()) File_.CopyTo(f.FilePath, filesDir);
 			}
 			x.Save(collDir + @"\files.xml");
 		}
@@ -1078,7 +1063,7 @@ partial class FilesModel :ITreeModel
 	public static bool IsCollectionDirectory(string s)
 	{
 		string xmlFile = s + @"\files.xml";
-		if(Files.ExistsAsFile(xmlFile) && Files.ExistsAsDirectory(s + @"\files")) {
+		if(File_.ExistsAsFile(xmlFile) && File_.ExistsAsDirectory(s + @"\files")) {
 			try { return XElement.Load(xmlFile).Name == "files"; } catch { }
 		}
 		return false;

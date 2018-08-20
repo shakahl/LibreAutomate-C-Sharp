@@ -256,16 +256,12 @@ partial class PanelFiles :Control
 		g1:
 		try {
 			//CONSIDER: use different logic. Now silently creates empty files, it's not always good. Add parameter createNew. If false, show error if file not found.
-			if(!Files.ExistsAsFile(xmlFile)) {
-				if(!Files.ExistsAsDirectory(Path_.GetDirectoryPath(xmlFile))) throw new DirectoryNotFoundException("Folder does not exist.");
-				Files.CopyTo(Folders.ThisApp + @"Default\files", collDir);
-				Files.Copy(Folders.ThisApp + @"Default\files.xml", xmlFile);
+			if(!File_.ExistsAsFile(xmlFile)) {
+				File_.CopyTo(Folders.ThisApp + @"Default\files", collDir);
+				File_.Copy(Folders.ThisApp + @"Default\files.xml", xmlFile);
 			}
 
-			if(_model != null) {
-				_model.Save.AllNowIfNeed(); //before SetCurrentFile
-				_model.SetCurrentFile(null);
-			}
+			_model?.UnloadingCollection(); //saves all, closes document, sets current file = null
 
 			m = new FilesModel(_c, xmlFile);
 			m.InitNodeControls(_ccIcon, _ccName);
@@ -323,7 +319,12 @@ partial class PanelFiles :Control
 	{
 		var d = new OpenFileDialog() { Title = "Open collection", Filter = "files.xml|files.xml" };
 		if(d.ShowDialog(this) != DialogResult.OK) return null;
-		return LoadCollection(Path_.GetDirectoryPath(d.FileName));
+		var filesXml = d.FileName;
+		if(!Path_.GetFileName(filesXml).Equals_("files.xml", true)) {
+			AuDialog.ShowError("Must be files.xml");
+			return null;
+		}
+		return LoadCollection(Path_.GetDirectoryPath(filesXml));
 	}
 
 	/// <summary>
@@ -332,7 +333,7 @@ partial class PanelFiles :Control
 	/// </summary>
 	public FilesModel LoadNewCollection()
 	{
-		var path = _model.GetDirectoryPathForNewCollection();
+		var path = FilesModel.GetDirectoryPathForNewCollection();
 		if(path == null) return null;
 		return LoadCollection(path);
 	}
@@ -362,7 +363,7 @@ partial class PanelFiles :Control
 			var aRem = new List<XElement>();
 			foreach(var x2 in x1.Elements("f")) {
 				var path = x2.Attribute_("n");
-				if(dd.Items.Count == 20 || !Files.ExistsAsDirectory(path)) {
+				if(dd.Items.Count == 20 || !File_.ExistsAsDirectory(path)) {
 					aRem.Add(x2);
 					continue;
 				}
@@ -378,4 +379,50 @@ partial class PanelFiles :Control
 			}
 		}
 	}
+
+	/// <summary>
+	/// Adds templates to File -> New.
+	/// </summary>
+	public void FillMenuNew(ToolStripDropDownMenu ddm)
+	{
+		if(_newMenuDone) return; _newMenuDone = true;
+
+		var templDir = Folders.ThisApp + @"Templates";
+		_CreateMenu(templDir, ddm, 0);
+
+		void _CreateMenu(string dir, ToolStripDropDownMenu ddParent, int level)
+		{
+			ddParent.SuspendLayout();
+			int i = level == 0 ? 3 : 0;
+			foreach(var v in File_.EnumDirectory(dir, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
+				bool isProject = false;
+				string name = v.Name;
+				if(v.IsDirectory) {
+					if(level == 0 && name.Equals_("include", true)) continue;
+					if(isProject = name.EndsWith_(" project", true)) name = name.Remove(name.Length - 8);
+				} else {
+					if(level == 0 && 0 != name.Equals_(true, "Script", "App.cs", "Class.cs")) continue;
+				}
+
+				bool isFolder = v.IsDirectory && !isProject;
+				var item = new ToolStripMenuItem(isFolder ? name : ("New " + name), null,
+					(unu,sed)=> Model.NewItem(v.FullPath.Substring(templDir.Length+1)));
+				if(isFolder) {
+					var ddSub = new ToolStripDropDownMenu();
+					item.DropDown = ddSub;
+					_CreateMenu(dir + "\\" + name, ddSub, level + 1);
+				} else {
+					string si = null;
+					if(isProject) si = "project";
+					else if(Path_.FindExtension(name) < 0) si = "fileScript";
+					else if(name.EndsWith_(".cs", true)) si = "fileClass";
+					Bitmap im = si != null ? EResources.GetImageUseCache(si) : FilesModel.IconCache.GetImage(v.FullPath, true);
+					if(im != null) item.Image = im;
+				}
+				ddParent.Items.Insert(i++, item);
+			}
+			ddParent.ResumeLayout();
+		}
+	}
+	bool _newMenuDone;
 }

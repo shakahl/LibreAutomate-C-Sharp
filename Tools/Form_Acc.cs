@@ -817,7 +817,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 
 				//if(!allUsers) {
 				string jabswitch = dir + @"\bin\jabswitch.exe", sout = null;
-				if(!Files.ExistsAsFile(jabswitch)) return (false, "Cannot find jabswitch.exe.");
+				if(!File_.ExistsAsFile(jabswitch)) return (false, "Cannot find jabswitch.exe.");
 				try {
 					Shell.RunConsole(out sout, jabswitch, en ? "-enable" : "-disable");
 					sout = sout?.Trim();
@@ -832,8 +832,8 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 				sout += "\r\nRestart Java apps to apply the new settings.";
 
 				string dll64 = Folders.SystemX64 + "WindowsAccessBridge-64.dll", dll32 = Folders.SystemX86 + "WindowsAccessBridge-32.dll";
-				if(!Files.ExistsAsFile(dll64)) sout += "\r\n\r\nWarning: dll not found: " + dll64 + ".  64-bit apps will not be able to use AOs of Java apps. Install 64-bit Java too.";
-				if(!Files.ExistsAsFile(dll32)) sout += "\r\n\r\nNote: dll not found: " + dll32 + ".  32-bit apps will not be able to use AOs of Java apps. Install 32-bit Java too.";
+				if(!File_.ExistsAsFile(dll64)) sout += "\r\n\r\nWarning: dll not found: " + dll64 + ".  64-bit apps will not be able to use AOs of Java apps. Install 64-bit Java too.";
+				if(!File_.ExistsAsFile(dll32)) sout += "\r\n\r\nNote: dll not found: " + dll32 + ".  32-bit apps will not be able to use AOs of Java apps. Install 32-bit Java too.";
 
 				return (true, sout);
 
