@@ -444,11 +444,11 @@ namespace Au.Tools
 			if(Empty(ResultCode)) this.DialogResult = DialogResult.Cancel;
 		}
 
-		private async void _bTest_Click(object sender, EventArgs e)
+		private void _bTest_Click(object sender, EventArgs e)
 		{
 			_errorProvider.Clear();
 			var (code, wndVar) = _FormatCode(true); if(code == null) return;
-			await TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as WinImage).RectInScreen, activateWindow: true);
+			TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as WinImage).RectInScreen, activateWindow: true);
 		}
 
 		#endregion

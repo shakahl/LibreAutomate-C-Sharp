@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Windows.Forms;
-//using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -45,7 +43,7 @@ namespace Au.Util
 				if(s.Length - 3 <= ni.Length || !s.EqualsAt_(3, ni)) continue;
 				int j = 3 + ni.Length;
 				char c = s[j]; if(c != ' ') break;
-				s=s.Substring(j + 1);
+				s = s.Substring(j + 1);
 				return i + 1;
 			}
 			return -1;
@@ -78,6 +76,72 @@ namespace Au.Util
 				s = b.LibToStringCached(j);
 			}
 			return s;
+		}
+
+		/// <summary>
+		/// Converts array of command line arguments to string that can be passed to functions like <see cref="Shell.Run"/> or <see cref="Process.Start"/>.
+		/// Returns null if a is null or has 0 elements.
+		/// </summary>
+		/// <param name="a"></param>
+		public static string CommandLineFromArray(string[] a)
+		{
+			if(a == null || a.Length == 0) return null;
+			StringBuilder b = null;
+			foreach(var v in a) {
+				int esc = 0;
+				if(Empty(v)) esc = 1; else if(v.IndexOf('\"') >= 0) esc = 2; else foreach(var c in v) if(c <= ' ') { esc = 1; break; }
+				if(esc == 0 && a.Length == 1) return a[0];
+				if(b == null) b = new StringBuilder(); else b.Append(' ');
+				if(esc == 0) b.Append(v);
+				else {
+					b.Append('\"');
+					var s = v;
+					if(esc == 2) {
+						if(s.IndexOf_(@"\""") < 0) s = s.Replace(@"""", @"\""");
+						else s = s.RegexReplace_(@"(\\*)""", @"$1$1\""");
+					}
+					if(s.EndsWith_('\\')) s = s.RegexReplace_(@"(\\+)$", "$1$1");
+					b.Append(s).Append('\"');
+				}
+			}
+			return b.ToString();
+		}
+
+		/// <summary>
+		/// Parses command line arguments.
+		/// Calls API <msdn>CommandLineToArgvW</msdn>.
+		/// Returns empty array if s is null or "".
+		/// </summary>
+		public static unsafe string[] CommandLineToArray(string s)
+		{
+			if(Empty(s)) return Array.Empty<string>();
+			char** p = Api.CommandLineToArgvW(s, out int n);
+			var a = new string[n];
+			for(int i = 0; i < n; i++) a[i] = new string(p[i]);
+			Api.LocalFree(p);
+			return a;
+		}
+
+		/// <summary>
+		/// If string contains a number at startIndex, gets that number as int, also gets the string part that follows it, and returns true.
+		/// For example, for string "25text" or "25 text" gets num = 25, tail = "text".
+		/// Everything else is the same as with <see cref="String_.ToInt_(string, int, out int, STIFlags)"/>.
+		/// </summary>
+		/// <param name="s"></param>
+		/// <param name="num">Receives the number. Receives 0 if no number.</param>
+		/// <param name="tail">Receives the string part that follows the number, or "". Receives null if no number. Can be this variable.</param>
+		/// <param name="startIndex">Offset in this string where to start parsing.</param>
+		/// <param name="flags"></param>
+		public static bool ParseIntAndString_(string s, out int num, out string tail, int startIndex = 0, STIFlags flags = 0)
+		{
+			num = s.ToInt_(startIndex, out int end, flags);
+			if(end == 0) {
+				tail = null;
+				return false;
+			}
+			if(end < s.Length && s[end] == ' ') end++;
+			tail = s.Substring(end);
+			return true;
 		}
 	}
 }

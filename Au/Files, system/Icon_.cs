@@ -1055,7 +1055,7 @@ namespace Au.Types
 
 	//	public Icon GetIcon(int size)
 	//	{
-	//		if(GetIconOrImage(size) is Bitmap b) return Icons.HandleToIcon(b.GetHicon());
+	//		if(GetIconOrImage(size) is Bitmap b) return Icon_.HandleToIcon(b.GetHicon());
 	//		return null;
 	//	}
 
@@ -1064,11 +1064,11 @@ namespace Au.Types
 	//		switch(Value) {
 	//		case Icon k: return k;
 	//		case Image k: return k;
-	//		case string k: return Icons.GetFileIcon(k, size);
-	//		case ValueTuple<string, GIFlags> k: return Icons.GetFileIcon(k.Item1, size, k.Item2);
-	//		case ValueTuple<string, int> k: return Icons.LoadIcon(k.Item1, k.Item2, size);
-	//		case Shell.Pidl k: return Icons.GetPidlIcon(k, size);
-	//		case StockIcon k: return Icons.GetStockIcon(k, size);
+	//		case string k: return Icon_.GetFileIcon(k, size);
+	//		case ValueTuple<string, GIFlags> k: return Icon_.GetFileIcon(k.Item1, size, k.Item2);
+	//		case ValueTuple<string, int> k: return Icon_.LoadIcon(k.Item1, k.Item2, size);
+	//		case Shell.Pidl k: return Icon_.GetPidlIcon(k, size);
+	//		case StockIcon k: return Icon_.GetStockIcon(k, size);
 	//		}
 	//		return null;
 	//	}

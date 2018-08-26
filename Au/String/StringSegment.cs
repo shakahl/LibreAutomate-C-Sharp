@@ -562,22 +562,22 @@ namespace Au.Types
 	/// </summary>
 	public static class Separators
 	{
-		//note: all strings are Base64 GUIDs and have length 22.
-
 		/// <summary>
-		/// Specifies that separators are all characters for which <see cref="char.IsWhiteSpace(char)"/> returns true.
+		/// Specifies that separators are spaces, tabs, newlines and other characters for which <see cref="char.IsWhiteSpace(char)"/> returns true.
 		/// </summary>
-		public const string Whitespace = "WZlkGrJUMUutrbSK3s6Crw";
+		public const string Whitespace = "SSlkGrJUMUutrbSK3s6Crw";
 
 		/// <summary>
 		/// Specifies that separators are all characters for which <see cref="char.IsLetterOrDigit(char)"/> returns false.
 		/// </summary>
-		public const string Word = "CcVL0EtrK0ShqYWb4n1CmA";
+		public const string Word = "WWVL0EtrK0ShqYWb4n1CmA";
 
 		/// <summary>
 		/// Specifies that separators are substrings "\r\n", as well as single characters '\r' and '\n'.
 		/// </summary>
-		public const string Line = "sKeg5AWCNkGTZDkWuyEa2g";
+		public const string Line = "LLeg5AWCNkGTZDkWuyEa2g";
+
+		//note: all must be of length 22.
 	}
 
 	/// <summary>

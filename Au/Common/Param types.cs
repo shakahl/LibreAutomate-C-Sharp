@@ -329,7 +329,7 @@ namespace Au.Types
 			{
 				int cy = Api.GetSystemMetrics(Api.SM_CYCURSOR);
 				var p = Au.Mouse.XY;
-				if(Util.Cursors_.GetCurrentCursor(out var hCursor) && Api.GetIconInfo(hCursor, out var u)) {
+				if(Util.Cursor_.GetCurrentCursor(out var hCursor) && Api.GetIconInfo(hCursor, out var u)) {
 					if(u.hbmColor != default) Api.DeleteObject(u.hbmColor);
 					if(u.hbmMask != default) Api.DeleteObject(u.hbmMask);
 

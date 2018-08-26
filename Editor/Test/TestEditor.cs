@@ -22,10 +22,6 @@ using static Au.NoClass;
 using static Program;
 using Au.Controls;
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using System.Collections.Immutable;
-
 #if TEST
 partial class ThisIsNotAFormFile { }
 
@@ -37,9 +33,15 @@ partial class EForm
 		var t = doc.ST;
 		var s = doc.Text;
 
-		Output.Clear();
-		Model.Save.TextNowIfNeed();
-		Print(Compiler.ConvertCodeScriptToApp(Model.CurrentFile));
+		//Output.Clear();
+		//Model.Save.TextNowIfNeed();
+		//Compiler.ConvertCodeScriptToApp(Model.CurrentFile);
+
+		//t.PositionBytes = 8;
+		//Print(t.PositionBytes);
+		//return;
+
+		
 
 		//Print("<><code>" + s + "</code>");
 
@@ -57,8 +59,7 @@ partial class EForm
 		//doc.Call(Sci.SCI_SETSTYLING, 10, 22);
 
 
-
-		//var a = s.SplitLines_();
+		var a = s.SplitLines_();
 		//bool? folder = default; switch(a[1]) { case "1": folder = true; break; case "0": folder = false; break; }
 		////Print(Model.Find(a[0], folder));
 		////var fn = Model.Find("test scripts", true);
@@ -66,20 +67,44 @@ partial class EForm
 		//var fn = Model.Root;
 		//Print(fn.FindRelative(a[0], folder));
 
-		//return;
+		Print(Model.FindByFilePath(a[0]));
 
-		//var f = new Au.Tools.Form_Wnd();
-		////var f = new Au.Tools.Form_Acc();
-		////var f = new Au.Tools.Form_WinImage();
-		////Wnd.GetWnd.Root.Activate();100.ms();
-		//f.Show(this);
-		////f.ShowDialog();
-		////f.Dispose();
+		//if(!s_test1) {
+		//	s_test1 = true;
+		//	AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
+		//	AppDomain.CurrentDomain.AssemblyResolve += CurrentDomain_AssemblyResolve;
+		//}
+
+		//Print(AppDomain.CurrentDomain.GetAssemblies());
+		return;
+
+		var f = new Au.Tools.Form_Wnd(Wnd.Find("Quick*"));
+		//var f = new Au.Tools.Form_Acc();
+		//var f = new Au.Tools.Form_WinImage();
+		//Wnd.GetWnd.Root.Activate();100.ms();
+		f.Show(this);
+		//f.ShowDialog();
+		//f.Dispose();
 		//f.FormClosed += (unu, sed) => Print(f.DialogResult, f.ResultCode);
 
 
 		//Panels.Status.SetText("same thread\r\nline2\r\nline3");
 		//Task.Run(() => { 2.s(); Panels.Status.SetText("other thread, WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"); });
+	}
+	static bool s_test1;
+
+	private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+	{
+		Print("resolve", args.Name, args.RequestingAssembly);
+		foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) if(v.FullName == args.Name) { Print("already loaded"); return v; }
+
+
+		return null;
+	}
+
+	private void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
+	{
+		Print("load", args.LoadedAssembly);
 	}
 
 	void SetHookToMonitorCreatedWindowsOfThisThread()
@@ -93,29 +118,29 @@ partial class EForm
 	}
 	static Au.Util.WinHook _hook;
 
-	public static void TestParsing()
-	{
-		var code = Panels.Editor.ActiveDoc.Text;
+	//public static void TestParsing()
+	//{
+	//	var code = Panels.Editor.ActiveDoc.Text;
 
-		var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Au.dll" };
-		//var sRef = new string[] { typeof(object).Assembly.Location };
+	//	var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Au.dll" };
+	//	//var sRef = new string[] { typeof(object).Assembly.Location };
 
-		var references = new List<PortableExecutableReference>();
-		foreach(var s in sRef) {
-			//references.Add(MetadataReference.CreateFromFile())
-			references.Add(MetadataReference.CreateFromFile(s));
-		}
+	//	var references = new List<PortableExecutableReference>();
+	//	foreach(var s in sRef) {
+	//		//references.Add(MetadataReference.CreateFromFile())
+	//		references.Add(MetadataReference.CreateFromFile(s));
+	//	}
 
-		//Microsoft.CodeAnalysis.Text.SourceText.From()
-		//var po=new CSharpParseOptions(LanguageVersion.)
-		var tree = CSharpSyntaxTree.ParseText(code);
+	//	//Microsoft.CodeAnalysis.Text.SourceText.From()
+	//	//var po=new CSharpParseOptions(LanguageVersion.)
+	//	var tree = CSharpSyntaxTree.ParseText(code);
 
-		//Print(tree.);
+	//	//Print(tree.);
 
 
 
-		//var options = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true);
-		//var compilation = CSharpCompilation.Create(name, new[] { tree }, references, options);
-	}
+	//	//var options = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true);
+	//	//var compilation = CSharpCompilation.Create(name, new[] { tree }, references, options);
+	//}
 }
 #endif

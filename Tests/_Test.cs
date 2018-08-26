@@ -6121,8 +6121,8 @@ REE`");
 
 		//Print(Mouse.WaitForCursor(-10, MCursor.IBeam));
 
-		//Au.Util.Cursors_.GetCurrentCursor(out var hcur);
-		//var hash = Au.Util.Cursors_.HashCursor(hcur);
+		//Au.Util.Cursor_.GetCurrentCursor(out var hcur);
+		//var hash = Au.Util.Cursor_.HashCursor(hcur);
 		////3.s();
 		////Print(Mouse.WaitForCursor(-10, hash));
 		//Print(Mouse.WaitForCursor(-10, hash, true));
@@ -6817,8 +6817,8 @@ REE`");
 		var s = @"C:\WINDOWS\Cursors\aero_busy.ani";
 		//var s = @"C:\WINDOWS\Cursors\aero_busy_xl.ani";
 		s = @"Q:\app\IDC_CROSS_RED.cur";
-		//f.Cursor = Au.Util.Cursors_.LoadCursorFromFile(s);
-		f.Cursor = Au.Util.Cursors_.LoadCursorFromMemory(File.ReadAllBytes(s));
+		//f.Cursor = Au.Util.Cursor_.LoadCursorFromFile(s);
+		f.Cursor = Au.Util.Cursor_.LoadCursorFromMemory(File.ReadAllBytes(s));
 		//f.Cursor = new Cursor(s);
 		f.ShowDialog();
 	}
@@ -6843,7 +6843,7 @@ REE`");
 
 	static void _TestIconMemory()
 	{
-		//var k = Icons.GetStockIcon(StockIcon.DESKTOPPC, 32);
+		//var k = Icon_.GetStockIcon(StockIcon.DESKTOPPC, 32);
 		var k = new _TestHookFinalizer();
 		//GCInterceptor.RegisterGCEvent(k, hash => Print(hash), k);
 		Au.Util.GC_.AddObjectMemoryPressure(k, 100);
@@ -6877,9 +6877,9 @@ REE`");
 			}
 			int size = 32;
 			//Perf.First();
-			//var k = Icons.GetStockIcon(StockIcon.DESKTOPPC, size);
+			//var k = Icon_.GetStockIcon(StockIcon.DESKTOPPC, size);
 			var k = Icon_.GetFileIcon(@"q:\app\qm.exe", size);
-			//var k = Icons.GetFileIcon(@"q:\app\macro.ico", size);
+			//var k = Icon_.GetFileIcon(@"q:\app\macro.ico", size);
 			//Perf.Next();
 			//size/=2;
 			//Au.Util.GCMemoryPressure.Add(k, 1000+ size * size);
@@ -6902,7 +6902,7 @@ REE`");
 		f.BackgroundImageLayout = ImageLayout.None;
 
 		var k = c.GetImage(sf, true, 0, (im, ob) => { Print(im, ob); f.BackgroundImage = im; }, 5);
-		//var k = c.GetImage("DESKTOPPC", () => Icons.GetStockIconHandle(StockIcon.DESKTOPPC, 16));
+		//var k = c.GetImage("DESKTOPPC", () => Icon_.GetStockIconHandle(StockIcon.DESKTOPPC, 16));
 		if(k == null) return;
 
 		f.BackgroundImage = k;
@@ -7055,14 +7055,14 @@ REE`");
 		//Osd.ShowText(s, 30, textColor: Color.Honeydew, backColor: Color.DarkBlue);
 		//Osd.ShowText("Test OSD", 30, PopupXY.Mouse, SystemIcons.Information);
 		//Osd.ShowText(s, 30, icon: SystemIcons.Information);
-		//Osd.ShowText("Test OSD", 30, icon: Icons.GetStockIcon(StockIcon.HELP, 16));
-		//Osd.ShowText("Test OSD", 30, icon: Icons.GetAppIcon(16));
-		//Osd.ShowText("Test OSD", 30, icon: Icons.LoadIcon(@"q:\app\qm.exe", 1, 16));
-		//Osd.ShowText("Test OSD", 30, icon: Icons.GetFileIcon(@"q:\app\qm.exe,1", 16));
-		//Osd.ShowText("Test OSD", 30, icon: Icons.GetPidlIcon(Folders.VirtualPidl.AddNewPrograms, 16));
+		//Osd.ShowText("Test OSD", 30, icon: Icon_.GetStockIcon(StockIcon.HELP, 16));
+		//Osd.ShowText("Test OSD", 30, icon: Icon_.GetAppIcon(16));
+		//Osd.ShowText("Test OSD", 30, icon: Icon_.LoadIcon(@"q:\app\qm.exe", 1, 16));
+		//Osd.ShowText("Test OSD", 30, icon: Icon_.GetFileIcon(@"q:\app\qm.exe,1", 16));
+		//Osd.ShowText("Test OSD", 30, icon: Icon_.GetPidlIcon(Folders.VirtualPidl.AddNewPrograms, 16));
 
-		//var ico = Icons.CreateIcon(32, 32);
-		//var ic = Icons.CreateIcon(32, 32, g =>
+		//var ico = Icon_.CreateIcon(32, 32);
+		//var ic = Icon_.CreateIcon(32, 32, g =>
 		//{
 		//	g.Clear(Color.Bisque);
 		//	g.SmoothingMode = SmoothingMode.HighQuality;
@@ -7786,6 +7786,85 @@ REE`");
 	//	}
 	//}
 
+	static void TestCompiler2()
+	{
+		//var f = new Au.Tools.Form_Wnd(Wnd.Find("Quick*"));
+		//f.ShowDialog();
+
+		string code =
+@"static int Hoo() { return 3; }";
+
+		Au.Compiler.Scripting.Result r = null;
+		Perf.First();
+		for(int i = 0; i < 5; i++) {
+			if(!Au.Compiler.Scripting.Compile(code, out r, true, true)) { Print(r.errors); return; }
+			Perf.Next();
+
+		}
+		Perf.Write();
+		Print(r.method.Invoke(null, null));
+	}
+
+	static void TestArrayExtensions()
+	{
+		//throw new Exception();
+
+		//var a = new int[] { 100, 101, 102 };
+		////a = a.RemoveAt_(0);
+		//a = a.Insert_(1, -1);
+		//Print(a);
+
+		var a = new string[] { "", "one", "two ooo", "thr \"ee\"", @"four\",  @"fi ve\",  @"fi ve\\", @"si ""x""\", @"si \""x""", @"si \\""x""", "se\r\nven"};
+		Print(a);
+
+		var s = Au.Util.StringMisc.CommandLineFromArray(a);
+		Print($"<><c 0xff0000>{s}</c>");
+
+		Print(Au.Util.StringMisc.CommandLineToArray(s));
+
+		//var si = new ProcessStartInfo(@"q:\app\au\_\Au.Task.exe") { UseShellExecute = false, Arguments = s };
+		//Process.Start(si);
+	}
+
+	static void TestResources()
+	{
+		//var v = Project.Properties.Resources.SciLexer;
+		//var v = Au.Util.Resources_.GetAppResource("SciLexer");
+		//var v = Project.Properties.Resources.tips;
+		//var v = Au.Util.Resources_.GetAppResource("tips");
+		//var v = Project.Properties.Resources.il_icons;
+		//Print(v?.GetType());
+
+		//Print(File_.Misc.CalculateDirectorySize(Folders.ThisApp));
+		100.ms();
+
+		//var file = @"Q:\Test\copy.txt";
+		////file = @"Q:\Test\qm small icon.png";
+		////file = @".jpg";
+		////file = @"Q:\Test\x.qml";
+		//file = @"Q:\Test\catlog.txt-";
+		//file = ".cur";
+		//if(File_.Misc.GetMimeContentType(file, out var mime, true)) Print(mime);
+		//else Print("FAILED");
+
+		//Print(System.Web.MimeMapping.GetMimeMapping(file));
+
+		//var h = new HashSet<string>();
+		//foreach(var v in File_.EnumDirectory(Folders.ProgramFilesX86, FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
+		//	if(v.IsDirectory) continue;
+		//	if(!h.Add(Path_.GetExtension(v.Name).ToLower_())) continue;
+		//	var file = v.FullPath;
+		//	if(!File_.Misc.GetMimeContentType(file, out var mime, false)) mime = "FAILED";
+		//	var mime2 =System.Web.MimeMapping.GetMimeMapping(file);
+		//	if(mime == mime2 ||(mime=="FAILED" && mime2== "application/octet-stream")) continue;
+		//	Print($"{Path_.GetExtension(file),-15}   {mime,-30}, {mime2}");
+		//}
+
+		//var x = Project.Properties.Resources.macro;
+		//x = new Icon(x, 16, 16);
+		//Osd.ShowText("text", icon: x, showMode: OsdShowMode.Wait);
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -7807,6 +7886,9 @@ REE`");
 		try {
 #if true
 
+			TestResources();
+			//TestArrayExtensions();
+			//TestCompiler2();
 			//TestWebBrowserLeaks();
 			//Cpu();
 			//var t1 = Time.Microseconds;

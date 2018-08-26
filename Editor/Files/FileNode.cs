@@ -21,14 +21,15 @@ using Au.Types;
 using static Au.NoClass;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
+using Au.Compiler;
 
-partial class FileNode
+partial class FileNode :ICollectionFile
 {
 	FilesModel _model;
 	XElement _x;
 
-	public FilesModel Model { get => _model; }
-	public XElement Xml { get => _x; }
+	public FilesModel Model  => _model;
+	public XElement Xml  => _x;
 
 	public FileNode(FilesModel model, XElement x, bool isRoot = false)
 	{
@@ -39,9 +40,9 @@ partial class FileNode
 		if(!isRoot) {
 			var guid = this.Guid;
 			g1:
-			if(guid == null || guid.Length != 22) {
+			if(guid == null || guid.Length != 32) {
 				var g = System.Guid.NewGuid();
-				guid = Convert_.GuidToBase64Filename(g);
+				guid = Convert_.GuidToHex(g);
 				_x.SetAttributeValue("g", guid);
 				_model.Save?.CollectionLater(); //_model.Save is null when importing this collection
 			}
@@ -60,11 +61,11 @@ partial class FileNode
 		}
 	}
 
-	public bool HasChildren { get => _x.HasElements; }
-	public IEnumerable<FileNode> Children { get => _x.Elements().Select(x => FromX(x)); }
+	public bool HasChildren  => _x.HasElements;
+	public IEnumerable<FileNode> Children  => _x.Elements().Select(x => FromX(x));
 
-	//public bool IsFolder { get => _x.Name == "d"; }
-	public bool IsFolder { get => _x.Name != "f"; } //"d" or "files" (Root)
+	//public bool IsFolder  => _x.Name == "d"; }
+	public bool IsFolder  => _x.Name != "f"; //"d" or "files" (Root)
 
 	/// <summary>
 	/// Returns true if f is not null and this is its ancestor.
@@ -80,41 +81,11 @@ partial class FileNode
 	}
 
 	/// <summary>
-	/// GUID as Base64 string, as it is stored in collection file.
+	/// GUID as hex string of 32 length, as it is stored in collection file.
 	/// </summary>
 	public string Guid
 	{
 		get => _x.Attribute_("g");
-	}
-
-	/// <summary>
-	/// Gets <see cref="Guid"/> converted to hex string.
-	/// </summary>
-	public unsafe string GuidHex
-	{
-		//get => Convert_.HexEncode(Convert_.Base64Decode(GUID));
-		get
-		{
-			var g = GuidStruct;
-			return Convert_.HexEncode(&g, sizeof(Guid));
-		}
-	}
-
-	/// <summary>
-	/// Gets <see cref="Guid"/> converted to <b>Guid</b> struct.
-	/// </summary>
-	public unsafe Guid GuidStruct
-	{
-		get
-		{
-			var s = Guid;
-			Debug.Assert(s.Length == 22);
-			fixed (char* p = s) {
-				Guid g;
-				Convert_.Base64Decode(p, s.Length, &g, sizeof(Guid));
-				return g;
-			}
-		}
 	}
 
 #if TEST_MANY_COLUMNS
@@ -334,6 +305,11 @@ partial class FileNode
 	}
 
 	/// <summary>
+	/// True if <see cref="NodeType"/> is Script.
+	/// </summary>
+	public bool IsScript => NodeType == ENodeType.Script;
+
+	/// <summary>
 	/// Returns FileNode from x annotation.
 	/// </summary>
 	/// <param name="x">Can be null.</param>
@@ -428,12 +404,41 @@ partial class FileNode
 	}
 
 	/// <summary>
+	/// Gets text from file or editor.
+	/// </summary>
+	/// <param name="editorTextIfCurrent">If this is current item, gets editor text.</param>
+	public string GetText(bool editorTextIfCurrent = false)
+	{
+		if(editorTextIfCurrent && this == _model.CurrentFile) {
+			return Panels.Editor.ActiveDoc.Text;
+		}
+		return File.ReadAllText(FilePath);
+	}
+
+	/// <summary>
 	/// Returns Name.
 	/// </summary>
 	public override string ToString()
 	{
 		return Name;
 	}
+
+	#region Au.Compiler.ICollectionFile
+
+	public ICollectionFiles IcfCollection => _model;
+
+	public ICollectionFile IcfFindRelative(string relativePath, bool? folder) => FindRelative(relativePath, folder);
+
+	public bool IcfFindProject(out ICollectionFile folder, out ICollectionFile main)
+	{
+		if(!FindProject(out var f, out var m)) { folder = null; main = null; return false; }
+		folder = f; main = m;
+		return true;
+	}
+
+	public IEnumerable<ICollectionFile> IcfEnumProjectFiles(ICollectionFile fSkip = null) => EnumProjectFiles(fSkip as FileNode);
+
+	#endregion
 }
 
 enum ENodeType

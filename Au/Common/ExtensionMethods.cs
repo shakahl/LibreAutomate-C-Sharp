@@ -376,6 +376,45 @@ namespace Au.Types
 
 		#endregion
 
+		#region array
+
+		/// <summary>
+		/// Creates a copy of this array with one removed element.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="t"></param>
+		/// <param name="index"></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static T[] RemoveAt_<T>(this T[] t, int index)
+		{
+			if((uint)index >= t.Length) throw new ArgumentOutOfRangeException();
+			int n = t.Length - 1;
+			var r = new T[n];
+			for(int i = 0; i < index; i++) r[i] = t[i];
+			for(int i = index; i < n; i++) r[i] = t[i + 1];
+			return r;
+		}
+
+		/// <summary>
+		/// Creates a copy of this array with one inserted element.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="t"></param>
+		/// <param name="index"></param>
+		/// <param name="value"></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static T[] Insert_<T>(this T[] t, int index, T value = default)
+		{
+			if((uint)index > t.Length) throw new ArgumentOutOfRangeException();
+			var r = new T[t.Length + 1];
+			for(int i = 0; i < index; i++) r[i] = t[i];
+			for(int i = index; i < t.Length; i++) r[i + 1] = t[i];
+			r[index] = value;
+			return r;
+		}
+
+		#endregion
+
 		#region internal
 
 

@@ -467,12 +467,12 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void Run_Compile()
 	{
-		Compiler.CompileAndRun(Model.CurrentFile, false);
+		Run.CompileAndRun(Model.CurrentFile, false);
 	}
 
 	public void Run_Run()
 	{
-		Compiler.CompileAndRun(Model.CurrentFile, true);
+		Run.CompileAndRun(Model.CurrentFile, true);
 	}
 
 	public void Run_End()

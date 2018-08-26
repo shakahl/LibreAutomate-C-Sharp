@@ -423,10 +423,10 @@ namespace Au.Tools
 			else ResultUseControl = !_con.Is0 && _IsChecked("Control");
 		}
 
-		private async void _bTest_Click(object sender, EventArgs ea)
+		private void _bTest_Click(object sender, EventArgs ea)
 		{
 			var (code, wndVar) = _FormatCode(true); if(code == null) return;
-			await TUtil.RunTestFindObject(code, wndVar, _wnd, _bTest, _lSpeed, o =>
+			TUtil.RunTestFindObject(code, wndVar, _wnd, _bTest, _lSpeed, o =>
 			{
 				var w = (Wnd)o;
 				var r = w.Rect;

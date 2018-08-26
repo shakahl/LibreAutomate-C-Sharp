@@ -437,10 +437,10 @@ namespace Au.Tools
 			if(Empty(ResultCode)) this.DialogResult = DialogResult.Cancel;
 		}
 
-		private async void _bTest_Click(object sender, EventArgs ea)
+		private void _bTest_Click(object sender, EventArgs ea)
 		{
 			var (code, wndVar) = _FormatCode(true); if(code == null) return;
-			var r = await TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as Acc).Rect);
+			var r = TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as Acc).Rect);
 
 			if(r.obj is Acc a && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
 				if(!a.MiscFlags.Has_(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {

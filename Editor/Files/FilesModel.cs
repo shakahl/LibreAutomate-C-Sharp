@@ -24,7 +24,7 @@ using static Program;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
-partial class FilesModel :ITreeModel
+partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 {
 	public readonly TreeViewAdv TV;
 	public readonly FileNode Root;
@@ -32,12 +32,11 @@ partial class FilesModel :ITreeModel
 	public readonly string CollectionFile;
 	public readonly string CollectionDirectory;
 	public readonly string FilesDirectory;
-	public readonly string TempDirectory;
+	//public readonly string TempDirectory;
 	public readonly string StateFile;
 	public readonly Dictionary<string, FileNode> GuidMap;
 	public readonly List<FileNode> OpenFiles;
 	public readonly AutoSave Save;
-	public readonly Compiler.XCompiled Compiled;
 
 	/// <summary>
 	/// 
@@ -52,19 +51,18 @@ partial class FilesModel :ITreeModel
 		CollectionFile = Path_.Normalize(file);
 		CollectionDirectory = Path_.GetDirectoryPath(CollectionFile);
 		FilesDirectory = CollectionDirectory + @"\files";
-		TempDirectory = CollectionDirectory + @"\.temp";
+		//TempDirectory = CollectionDirectory + @"\.temp";
 		File_.CreateDirectory(FilesDirectory);
 		StateFile = CollectionDirectory + @"\state.xml";
 
 		Xml = XElement.Load(CollectionFile);
 
-		GuidMap = new Dictionary<string, FileNode>();
+		GuidMap = new Dictionary<string, FileNode>(StringComparer.OrdinalIgnoreCase);
 		Root = new FileNode(this, Xml, true); //recursively creates whole model tree
 
 		if(TV != null) { //null when importing
 			OpenFiles = new List<FileNode>();
 			Save = new AutoSave(this);
-			Compiled = new Compiler.XCompiled(this);
 			_InitClickSelect();
 			_InitDragDrop();
 			_InitWatcher();
@@ -221,23 +219,50 @@ partial class FilesModel :ITreeModel
 
 	#endregion
 
+	#region Au.Compiler.ICollectionFiles
+
+	public object IcfCompilerContext { get; set; }
+
+	public string IcfFilesDirectory => FilesDirectory;
+
+	public string IcfCollectionDirectory => CollectionDirectory;
+
+	public Au.Compiler.ICollectionFile IcfFindByGUID(string guid) => FindByGUID(guid);
+
+	#endregion
+
 	#region find
 
 	/// <summary>
 	/// Finds file or folder by name or @"\relative path".
 	/// </summary>
-	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
+	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs". Case-insensitive.</param>
 	/// <param name="folder">true - folder, false - file, null - any.</param>
 	public FileNode Find(string name, bool? folder)
 	{
 		return Root.FindDescendant(name, folder);
 	}
 
+	/// <summary>
+	/// Finds file or folder by its GUID.
+	/// </summary>
+	/// <param name="guid">Hex GUID (lenght 32). Case-insensitive.</param>
 	public FileNode FindByGUID(string guid)
 	{
 		if(GuidMap.TryGetValue(guid, out var f)) return f;
 		Debug_.Print("GUID not found: " + guid);
 		return null;
+	}
+
+	/// <summary>
+	/// Finds file or folder by its file path (<see cref="FileNode.FilePath"/>).
+	/// </summary>
+	/// <param name="guid">Full path of a collection file or of a linked external file.</param>
+	public FileNode FindByFilePath(string path)
+	{
+		var d = FilesDirectory;
+		if(path.Length > d.Length && path.StartsWith_(d, true) && path[d.Length] == '\\') return Root.FindDescendant(path.Substring(d.Length), null);
+		return FileNode.FromX(Root.Xml.Descendant_("f", "path", path, true));
 	}
 
 	#endregion
@@ -758,11 +783,11 @@ partial class FilesModel :ITreeModel
 		for(int i = 0; i < a.Length; i++) {
 			var s = a[i] = Path_.Normalize(a[i]);
 			if(s.IndexOf_(@"\$RECYCLE.BIN\", true) > 0) {
-				AuDialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{this.FilesDirectory}\">collection folder</a> or other normal folder.",
+				AuDialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">collection folder</a> or other normal folder.",
 					icon: DIcon.Info, owner: TV, onLinkClick: e => Shell.TryRun(e.LinkHref));
 				return;
 			}
-			var fd = this.FilesDirectory;
+			var fd = FilesDirectory;
 			if(!fromCollectionDir) {
 				if(s.StartsWith_(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromCollectionDir = true;
 				else if(!dirsDropped) dirsDropped = File_.ExistsAsDirectory(s);
@@ -808,7 +833,7 @@ partial class FilesModel :ITreeModel
 				} else {
 					//var newPath = newParentPath + "\\" + name;
 					if(fromCollectionDir) { //already exists?
-						var relPath = s.Substring(this.FilesDirectory.Length);
+						var relPath = s.Substring(FilesDirectory.Length);
 						var fExists = this.Find(relPath, null);
 						if(fExists != null) {
 							fExists.FileMove(target, pos);
@@ -1009,7 +1034,7 @@ partial class FilesModel :ITreeModel
 
 	void _InitWatcher()
 	{
-		_watcher = new FileSystemWatcher(this.FilesDirectory);
+		_watcher = new FileSystemWatcher(FilesDirectory);
 		_watcher.IncludeSubdirectories = true;
 		_watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite;
 		_watcher.Changed += _watcher_Changed;

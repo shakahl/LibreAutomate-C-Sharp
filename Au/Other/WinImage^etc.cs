@@ -353,7 +353,7 @@ namespace Au
 				TopLevel = true; //optional
 				StartPosition = FormStartPosition.Manual;
 				Text = "Au.WinImage.CaptureUI";
-				Cursor = _cursor = Util.Cursors_.LoadCursorFromMemory(Properties.Resources.red_cross_cursor, 32);
+				Cursor = _cursor = Util.Cursor_.LoadCursorFromMemory(Properties.Resources.red_cross_cursor, 32);
 			}
 
 			protected override CreateParams CreateParams

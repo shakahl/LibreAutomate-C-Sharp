@@ -1,4 +1,4 @@
-﻿#region usings
+﻿//{{ usings
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,4 +14,4 @@ using System.Linq;
 using Au;
 using Au.Types;
 using static Au.NoClass;
-#endregion
+//}}

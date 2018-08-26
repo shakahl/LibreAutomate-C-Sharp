@@ -50,8 +50,38 @@ class PanelOutput :Control
 			if(m.Type != Au.Util.OutputServer.MessageType.Write) return;
 			_history.Enqueue(m);
 			if(_history.Count > 50) _history.Dequeue();
+
+			//Output.LibWriteQM2(s);
+
+			//create links in compilation errors/warnings or run time stack trace
+			var s = m.Text;
+			if(s.Length >= 22) {
+				if(s.StartsWith_("<><Z #") && s.EqualsAt_(12, ">Compilation: ")) { //compilation
+					if(s_rx1 == null) s_rx1 = new Regex_(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
+					m.Text = s_rx1.Replace(s, x =>
+					{
+						var f = Model.FindByFilePath(x[1].Value);
+						if(f == null) return x[0].Value;
+						return $"<_open {f.Guid}|{x[3].Value}|{x[4].Value}>{f.Name}{x[2].Value}<>: ";
+					});
+				} else if(s.Contains(":line ")) { //stack trace
+					if(s_rx2 == null) s_rx2 = new Regex_(@"(?m)^(\s+at .+) in (.+?):line (\d+)$");
+					var s2 = s_rx2.Replace(s, x =>
+					{
+						var f = Model.FindByFilePath(x[2].Value);
+						if(f == null) return x[0].Value;
+						var line = x[3].Value;
+						return $"{x[1].Value.Limit_(70)} in <_open {f.Guid}|{line}>{f.Name}<>:line {line}";
+					});
+					if(!ReferenceEquals(s, s2)) {
+						if(!s2.StartsWith_("<>")) s2 = "<>" + s2;
+						m.Text = s2;
+					}
+				}
+			}
 		});
 	}
+	static Regex_ s_rx1, s_rx2;
 
 	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 

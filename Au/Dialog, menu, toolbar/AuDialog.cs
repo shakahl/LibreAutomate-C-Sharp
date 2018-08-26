@@ -410,7 +410,7 @@ namespace Au
 
 			static string _ParseSingleString(string s, ref int id, bool dontSplit)
 			{
-				if(!dontSplit && s.ToIntAndString_(out var i, out string r)) id = i; else { r = s; id++; }
+				if(!dontSplit && Util.StringMisc.ParseIntAndString_(s, out var i, out string r)) id = i; else { r = s; id++; }
 				r = r.Trim(String_.Lib.lineSep); //API does not like newline at start, etc
 				if(r.Length == 0) r = " "; //else API exception
 				else r = r.Replace("\r\n", "\n"); //API adds 2 newlines for \r\n. Only for custom buttons, not for other controls/parts.

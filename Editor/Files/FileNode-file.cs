@@ -190,6 +190,8 @@ partial class FileNode
 	{
 		Debug.Assert(!Empty(template));
 
+		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
+
 		int i;
 		string text = "";
 		bool isFolder = template == "Folder";
@@ -197,12 +199,11 @@ partial class FileNode
 			string templFile = s_dirTemplates + template;
 			switch(File_.ExistsAs(templFile, true)) {
 			case FileDir.Directory: isFolder = true; break;
-			case FileDir.File: text = _NI_GetTemplateText(templFile); break;
+			case FileDir.File: text = _NI_GetTemplateText(templFile, template, newParent); break;
 			}
 		}
 
 		var xNew = new XElement(isFolder ? "d" : "f");
-		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
 
 		//create unique name
 		if(name == null) {
@@ -251,7 +252,7 @@ partial class FileNode
 		return fnMain;
 	}
 
-	static string _NI_GetTemplateText(string templFile)
+	static string _NI_GetTemplateText(string templFile, string template, FileNode newParent)
 	{
 		string s = File.ReadAllText(templFile);
 		//replace //"#include file" with text of file from "include" subfolder
@@ -261,7 +262,24 @@ partial class FileNode
 			if(File_.ExistsAsFile(si)) return File.ReadAllText(si);
 			return null;
 		});
+
 		//SHOULDDO: when adding classes to library project, if the main file contains a namespace, add that namespace in the new file too.
+		if(template == "Class.cs" && newParent.FindProject(out var projFolder, out var projMain)) {
+			//in project don't need meta 'run TestScript'
+			var meta =
+@"/* meta
+//run TestScript
+*/
+";
+			if(s.StartsWith_(meta)) s = s.Substring(meta.Length);
+
+			//wrap in same namespace as in projMain
+			var rx = @"(?m)^namespace [\w\.]+";
+			if(!s.RegexIsMatch_(rx) && projMain.GetText(true).RegexMatch_(rx, 0, out var ns)) {
+				s = s.RegexReplace_(@"(?ms)^public class .+\}", ns + "\r\n{\r\n$0\r\n}", 1);
+			}
+		}
+
 		return s;
 	}
 
@@ -313,10 +331,5 @@ partial class FileNode
 		_model.Save.CollectionLater();
 		return true;
 	}
-
-	#region templates
-
-
-	#endregion
 
 }

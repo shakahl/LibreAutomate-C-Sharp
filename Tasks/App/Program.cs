@@ -142,7 +142,7 @@ namespace Au.Tasks
 			if(add) {
 				x.uFlags = Api.NIF_ICON | Api.NIF_MESSAGE | Api.NIF_TIP;
 				//x.hIcon = Properties.Resources.trayIcon.Handle; //27-28 ms (later in this appdomain - 0.25 ms)
-				x.hIcon = Icons.GetAppIconHandle((int)IconSize.SysSmall);
+				x.hIcon = Icon_.GetAppIconHandle((int)IconSize.SysSmall);
 				x.uCallbackMessage = Api.WM_USER + 3;
 				x.szTip = "QM# Tasks";
 				//Perf.Next();

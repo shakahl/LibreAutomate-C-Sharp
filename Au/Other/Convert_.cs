@@ -525,6 +525,41 @@ namespace Au
 		//	//	Cannot use GCHandle.AddrOfPinnedObject because it gets address of own copy of the variable.
 		//}
 
+		/// <summary>
+		/// Converts Guid struct to hex string without {}-.
+		/// </summary>
+		/// <param name="guid"></param>
+		/// <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+		public static unsafe string GuidToHex(Guid guid, bool upperCase = false)
+		{
+			return HexEncode(&guid, sizeof(Guid), upperCase);
+		}
+
+		/// <summary>
+		/// Converts hex GUID string to Guid struct.
+		/// Returns false if s is null or not a hex string of 32 length.
+		/// </summary>
+		public static unsafe bool GuidFromHex(string s, out Guid guid)
+		{
+			Guid g;
+			if(s != null && s.Length == 32)
+				fixed (char* p = s) {
+					if(HexDecode(p, 32, &g, sizeof(Guid)) == sizeof(Guid)) { guid = g; return true; }
+				}
+			guid = default;
+			return false;
+		}
+
+		/// <summary>
+		/// Converts hex GUID string to Guid struct.
+		/// </summary>
+		/// <exception cref="ArgumentException">guid is null or not hex string of 32 length.</exception>
+		public static unsafe Guid GuidFromHex(string s)
+		{
+			if(GuidFromHex(s, out var g)) return g;
+			throw new ArgumentException("expected hex GUID string of 32 length");
+		}
+
 		#endregion
 
 		#region base64
@@ -661,18 +696,19 @@ namespace Au
 			}
 		}
 
-		/// <summary>
-		/// Converts GUID to string that can be used in file paths and URLs.
-		/// </summary>
-		/// <param name="guid"></param>
-		/// <remarks>
-		/// Standard Base64 strings cannot be used in file paths and URLs, because can contain characters '/' and '+'. This function replaces them with '_' and '-'. Also trims "==" at the end.
-		/// Such string can be parsed with <b>Convert_</b> class functions, not with <b>Convert</b> class functions.
-		/// </remarks>
-		public static string GuidToBase64Filename(in Guid guid)
-		{
-			return Convert.ToBase64String(guid.ToByteArray()).TrimEnd('=').Replace('/', '_').Replace('+', '-');
-		}
+		//rejected, because such GUID is case-sensitive, but filenames usually aren't.
+		///// <summary>
+		///// Converts GUID to string that can be used in file paths and URLs.
+		///// </summary>
+		///// <param name="guid"></param>
+		///// <remarks>
+		///// Standard Base64 strings cannot be used in file paths and URLs, because can contain characters '/' and '+'. This function replaces them with '_' and '-'. Also trims "==" at the end.
+		///// Such string can be parsed with <b>Convert_</b> class functions, not with <b>Convert</b> class functions.
+		///// </remarks>
+		//public static string GuidToBase64Filename(in Guid guid)
+		//{
+		//	return Convert.ToBase64String(guid.ToByteArray()).TrimEnd('=').Replace('/', '_').Replace('+', '-');
+		//}
 
 		#endregion
 

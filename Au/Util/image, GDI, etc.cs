@@ -246,7 +246,7 @@ namespace Au.Util
 	/// <summary>
 	/// Helps to load cursors, etc.
 	/// </summary>
-	public static class Cursors_
+	public static class Cursor_
 	{
 		/// <summary>
 		/// Loads cursor from file.
@@ -280,7 +280,7 @@ namespace Au.Util
 				var fi = typeof(Cursor).GetField("ownHandle", BindingFlags.NonPublic | BindingFlags.Instance);
 				Debug.Assert(fi != null);
 				fi?.SetValue(R, true);
-				Util.GC_.AddObjectMemoryPressure(R, 1000); //see comments in Icons.HandleToIcon
+				Util.GC_.AddObjectMemoryPressure(R, 1000); //see comments in Icon_.HandleToIcon
 			}
 			return R;
 		}

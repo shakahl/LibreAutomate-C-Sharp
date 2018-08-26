@@ -1662,6 +1662,25 @@
             The enum type must be of size 4 (default).
             </summary>
         </member>
+        <member name="M:Au.Types.ExtensionMethods.RemoveAt_``1(``0[],System.Int32)">
+            <summary>
+            Creates a copy of this array with one removed element.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="t"></param>
+            <param name="index"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Insert_``1(``0[],System.Int32,``0)">
+            <summary>
+            Creates a copy of this array with one inserted element.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="t"></param>
+            <param name="index"></param>
+            <param name="value"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
         <member name="T:Au.Types.WICFlags">
             <summary>
             Flags for <see cref="M:Au.WinImage.CaptureUI(Au.Types.WICResult@,Au.Types.WICFlags,Au.Types.AnyWnd)"/>.
@@ -2104,7 +2123,7 @@
         </member>
         <member name="F:Au.Types.Separators.Whitespace">
             <summary>
-            Specifies that separators are all characters for which <see cref="M:System.Char.IsWhiteSpace(System.Char)"/> returns true.
+            Specifies that separators are spaces, tabs, newlines and other characters for which <see cref="M:System.Char.IsWhiteSpace(System.Char)"/> returns true.
             </summary>
         </member>
         <member name="F:Au.Types.Separators.Word">
@@ -5662,7 +5681,7 @@
             <summary>obj passed to <see cref="M:Au.Util.IconsAsync.Add(System.String,System.Object)"/>.</summary>
         </member>
         <member name="F:Au.Util.IconsAsync.Result.hIcon">
-            <summary>Icon handle. To get managed object from it, use <b>Icons.HandleToX</b> functions; else finally call <see cref="M:Au.Icon_.DestroyIconHandle(System.IntPtr)"/>. Can be default(IntPtr).</summary>
+            <summary>Icon handle. To get managed object from it, use <b>Icon_.HandleToX</b> functions; else finally call <see cref="M:Au.Icon_.DestroyIconHandle(System.IntPtr)"/>. Can be default(IntPtr).</summary>
         </member>
         <member name="M:Au.Util.IconsAsync.Result.#ctor(System.String,System.Object)">
             <summary>Icon converted to Image object, if used IconFlags.NeedImage and the thread pool decided to convert handle to Image. You should call Dispose() when finished using it. Can be null.</summary>
@@ -5990,6 +6009,14 @@
             </summary>
             <value>The length.</value>
         </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
+        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -6058,25 +6085,26 @@
             The code must be in Au, to avoid loading the program assembly into the new appdomain. Now Au is loaded instead.
             </summary>
         </member>
-        <member name="M:Au.Util.LibRunAsm.RunInNewAppDomain(System.String,System.Object,System.Boolean,System.String[],System.String)">
+        <member name="M:Au.Util.LibRunAsm.RunInNewAppDomain(System.String,System.String,System.Int32,System.String[],System.String)">
             <summary>
             Executes assembly in new appdomain in this thread.
             Handles exceptions.
             </summary>
             <param name="name">Appdomain name.</param>
-            <param name="asmPathOrBytes">String (path) or byte[] (assembly in memory).</param>
-            <param name="isScript"></param>
+            <param name="asmFile">Full path of assembly file.</param>
+            <param name="pdbOffset">0 or offset of portable PDB in file.</param>
             <param name="args">To pass to Main.</param>
             <param name="config">Config file path.</param>
         </member>
-        <member name="M:Au.Util.LibRunAsm.RunHere(System.Object,System.Boolean,System.String[])">
+        <member name="M:Au.Util.LibRunAsm.RunHere(System.String,System.Int32,System.String[],System.Boolean)">
             <summary>
             Executes assembly in this appdomain in this thread.
             Handles exceptions.
             </summary>
-            <param name="asmPathOrBytes">String (path) or byte[] (assembly in memory).</param>
-            <param name="isScript"></param>
+            <param name="asmFile">Full path of assembly file.</param>
+            <param name="pdbOffset">0 or offset of portable PDB in file.</param>
             <param name="args">To pass to Main.</param>
+            <param name="reThrow">Don't handle exceptions.</param>
         </member>
         <member name="T:Au.Util.StringMisc">
             <summary>
@@ -6104,6 +6132,32 @@
             Character '&amp;' is used to underline next character in displayed text of dialog controls and menu items. Two '&amp;' are used to display single '&amp;'.
             The underline is displayed when using the keyboard (eg Alt key) to select dialog controls and menu items.
             </remarks>
+        </member>
+        <member name="M:Au.Util.StringMisc.CommandLineFromArray(System.String[])">
+            <summary>
+            Converts array of command line arguments to string that can be passed to functions like <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.SRFlags,Au.Types.SRMore)"/> or <see cref="M:System.Diagnostics.Process.Start"/>.
+            Returns null if a is null or has 0 elements.
+            </summary>
+            <param name="a"></param>
+        </member>
+        <member name="M:Au.Util.StringMisc.CommandLineToArray(System.String)">
+            <summary>
+            Parses command line arguments.
+            Calls API <msdn>CommandLineToArgvW</msdn>.
+            Returns empty array if s is null or "".
+            </summary>
+        </member>
+        <member name="M:Au.Util.StringMisc.ParseIntAndString_(System.String,System.Int32@,System.String@,System.Int32,Au.Types.STIFlags)">
+            <summary>
+            If string contains a number at startIndex, gets that number as int, also gets the string part that follows it, and returns true.
+            For example, for string "25text" or "25 text" gets num = 25, tail = "text".
+            Everything else is the same as with <see cref="M:Au.String_.ToInt_(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/>.
+            </summary>
+            <param name="s"></param>
+            <param name="num">Receives the number. Receives 0 if no number.</param>
+            <param name="tail">Receives the string part that follows the number, or "". Receives null if no number. Can be this variable.</param>
+            <param name="startIndex">Offset in this string where to start parsing.</param>
+            <param name="flags"></param>
         </member>
         <member name="T:Au.Util.LibScreenDC">
             <summary>
@@ -6199,12 +6253,12 @@
             Creates and manages native font handle.
             </summary>
         </member>
-        <member name="T:Au.Util.Cursors_">
+        <member name="T:Au.Util.Cursor_">
             <summary>
             Helps to load cursors, etc.
             </summary>
         </member>
-        <member name="M:Au.Util.Cursors_.LoadCursorFromFile(System.String,System.Int32)">
+        <member name="M:Au.Util.Cursor_.LoadCursorFromFile(System.String,System.Int32)">
             <summary>
             Loads cursor from file.
             Returns null if fails.
@@ -6215,7 +6269,7 @@
             This function exists because <see cref="T:System.Windows.Forms.Cursor"/> constructors don't support colors, ani cursors and custom size.
             </remarks>
         </member>
-        <member name="M:Au.Util.Cursors_.HandleToCursor(System.IntPtr,System.Boolean)">
+        <member name="M:Au.Util.Cursor_.HandleToCursor(System.IntPtr,System.Boolean)">
             <summary>
             Converts unmanaged cursor to Cursor object.
             Returns null if hCur is default(IntPtr).
@@ -6223,7 +6277,7 @@
             <param name="hCursor">Cursor handle.</param>
             <param name="destroyCursor">If true (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If false, the returned variable just uses the unmanaged cursor and will not destroy; if need, the caller later should destroy it with API <msdn>DestroyCursor</msdn>.</param>
         </member>
-        <member name="M:Au.Util.Cursors_.LoadCursorFromMemory(System.Byte[],System.Int32)">
+        <member name="M:Au.Util.Cursor_.LoadCursorFromMemory(System.Byte[],System.Int32)">
             <summary>
             Creates cursor from cursor file data in memory, for example from a managed resource.
             Returns null if fails.
@@ -6234,14 +6288,14 @@
             This function exists because <see cref="T:System.Windows.Forms.Cursor"/> constructors don't support colors, ani cursors and custom size.
             </remarks>
         </member>
-        <member name="M:Au.Util.Cursors_.HashCursor(System.IntPtr)">
+        <member name="M:Au.Util.Cursor_.HashCursor(System.IntPtr)">
             <summary>
             Calculates 64-bit FNV1 hash of a mouse cursor's mask bitmap.
             Returns 0 if fails.
             </summary>
-            <param name="hCursor">Native cursor handle. See <see cref="M:Au.Util.Cursors_.GetCurrentCursor(System.IntPtr@)"/>.</param>
+            <param name="hCursor">Native cursor handle. See <see cref="M:Au.Util.Cursor_.GetCurrentCursor(System.IntPtr@)"/>.</param>
         </member>
-        <member name="M:Au.Util.Cursors_.GetCurrentCursor(System.IntPtr@)">
+        <member name="M:Au.Util.Cursor_.GetCurrentCursor(System.IntPtr@)">
             <summary>
             Gets the native handle of the current mouse cursor.
             Returns false if the cursor is currently invisible.
@@ -11145,13 +11199,23 @@
             </remarks>
             <seealso cref="M:Au.String_.Segments_(System.String,System.String,Au.Types.SegFlags)"/>
         </member>
-        <member name="M:Au.String_.CountLines_(System.String,System.Boolean)">
+        <member name="M:Au.String_.LineCount_(System.String,System.Boolean)">
             <summary>
             Returns the number of lines.
             Counts line separators "\r\n", "\n", "\r".
             </summary>
             <param name="t"></param>
             <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
+        </member>
+        <member name="M:Au.String_.LineIndex_(System.String,System.Int32,System.Int32@)">
+            <summary>
+            Converts character index in whole string to line index and character index in that line.
+            Returns 0-based line index.
+            </summary>
+            <param name="t"></param>
+            <param name="index">Character index in whole string.</param>
+            <param name="indexInLine">Receives 0-based character index in that line.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
         <member name="M:Au.String_.ToLower_(System.String)">
             <summary>
@@ -11238,18 +11302,6 @@
             <summary>
             This <see cref="M:Au.String_.ToLong_(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/> overload does not have parameters.
             </summary>
-        </member>
-        <member name="M:Au.String_.ToIntAndString_(System.String,System.Int32@,System.String@,System.Int32,Au.Types.STIFlags)">
-            <summary>
-            If this string contains a number at startIndex, gets that number as int, also gets the string part that follows it, and returns true.
-            For example, for string "25text" or "25 text" gets num = 25, tail = "text".
-            Everything else is the same as with <see cref="M:Au.String_.ToInt_(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/>.
-            </summary>
-            <param name="t"></param>
-            <param name="num">Receives the number. Receives 0 if no number.</param>
-            <param name="tail">Receives the string part that follows the number, or "". Receives null if no number. Can be this variable.</param>
-            <param name="startIndex">Offset in this string where to start parsing.</param>
-            <param name="flags"></param>
         </member>
         <member name="M:Au.String_.ToDouble_(System.String,System.Boolean)">
             <summary>
@@ -11837,6 +11889,19 @@
             Calls <see cref="M:Au.File_.Misc.DisableRedirection.Revert"/>.
             </summary>
         </member>
+        <member name="M:Au.File_.Misc.CalculateDirectorySize(System.String,Au.Types.FEFlags)">
+            <summary>
+            Calls <see cref="M:Au.File_.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> and returns sum of all file sizes.
+            With default flags, it includes sizes of all descendant files, in this directory and all subdirectories except in inaccessible [sub]directories.
+            </summary>
+            <param name="path">Full path.</param>
+            <param name="flags"><b>EnumDirectory</b> flags.</param>
+            <exception cref="T:System.Exception"><see cref="M:Au.File_.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> exceptions. By default, no exceptions if used full path and the directory exists.</exception>
+            <remarks>
+            This function is slow if the directory is large.
+            Don't use this function for files (throws exception) and drives (instead use <see cref="T:System.IO.DriveInfo"/>, it's fast and includes sizes of Recycle Bin and other protected hidden system directories).
+            </remarks>
+        </member>
         <member name="M:Au.File_._DisableDeviceNotReadyMessageBox">
             <summary>
             Adds SEM_FAILCRITICALERRORS to the error mode of this process, as MSDN recommends. Does this once in appdomain.
@@ -12150,19 +12215,6 @@
             note: path must be normalized.
             </summary>
         </member>
-        <member name="M:Au.File_.CalculateDirectorySize(System.String,Au.Types.FEFlags)">
-            <summary>
-            Calls <see cref="M:Au.File_.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> and returns sum of all file sizes.
-            With default flags, it includes sizes of all descendant files, in this directory and all subdirectories except in inaccessible [sub]directories.
-            </summary>
-            <param name="path">Full path.</param>
-            <param name="flags">EnumDirectory flags.</param>
-            <exception cref="T:System.Exception"><see cref="M:Au.File_.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> exceptions. By default, no exceptions if used full path and the directory exists.</exception>
-            <remarks>
-            This function is slow if the directory is large.
-            Don't use this function for files (throws exception) and drives (instead use <see cref="T:System.IO.DriveInfo"/>, it's fast and includes sizes of Recycle Bin and other protected hidden system directories).
-            </remarks>
-        </member>
         <member name="M:Au.File_.CreateDirectory(System.String,System.String)">
             <summary>
             Creates new directory if does not exists.
@@ -12346,7 +12398,7 @@
         <member name="M:Au.Shell.Pidl.ToHexString">
             <summary>
             Returns string ":: HexEncodedITEMIDLIST".
-            It can be used with some functions of this library, mostly of classes Shell, Shell.Pidl and Icons. Cannot be used with native and .NET functions.
+            It can be used with some functions of this library, mostly of classes Shell, Shell.Pidl and Icon_. Cannot be used with native and .NET functions.
             Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
             </summary>
         </member>
@@ -14328,7 +14380,7 @@
             Waits for a nonstandard mouse cursor (pointer) visible.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
-            <param name="cursorHash">Cursor hash, as returned by <see cref="M:Au.Util.Cursors_.HashCursor(System.IntPtr)"/>.</param>
+            <param name="cursorHash">Cursor hash, as returned by <see cref="M:Au.Util.Cursor_.HashCursor(System.IntPtr)"/>.</param>
             <param name="not">Wait until this cursor disappears.</param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
@@ -14580,6 +14632,25 @@
             <param name="resultBuffer"></param>
             <param name="bufferSize"></param>
         </member>
+        <member name="M:Au.Convert_.GuidToHex(System.Guid,System.Boolean)">
+            <summary>
+            Converts Guid struct to hex string without {}-.
+            </summary>
+            <param name="guid"></param>
+            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+        </member>
+        <member name="M:Au.Convert_.GuidFromHex(System.String,System.Guid@)">
+            <summary>
+            Converts hex GUID string to Guid struct.
+            Returns false if s is null or not a hex string of 32 length.
+            </summary>
+        </member>
+        <member name="M:Au.Convert_.GuidFromHex(System.String)">
+            <summary>
+            Converts hex GUID string to Guid struct.
+            </summary>
+            <exception cref="T:System.ArgumentException">guid is null or not hex string of 32 length.</exception>
+        </member>
         <member name="M:Au.Convert_.Base64Decode(System.Char*,System.Int32,System.Void*,System.Int32)">
             <summary>
             Converts Base64 UTF-16 string to binary data (bytes). Stores it in caller's memory buffer.
@@ -14605,16 +14676,6 @@
             3. No exception when string length is not multiple of 4, eg if does not contain '=' characters for padding. 
             
             This library does not have Base64-encode functions. Use <see cref="M:System.Convert.ToBase64String(System.Byte[])"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.Convert_.GuidToBase64Filename(System.Guid@)">
-            <summary>
-            Converts GUID to string that can be used in file paths and URLs.
-            </summary>
-            <param name="guid"></param>
-            <remarks>
-            Standard Base64 strings cannot be used in file paths and URLs, because can contain characters '/' and '+'. This function replaces them with '_' and '-'. Also trims "==" at the end.
-            Such string can be parsed with <b>Convert_</b> class functions, not with <b>Convert</b> class functions.
             </remarks>
         </member>
         <member name="M:Au.Convert_.Compress(System.Byte[])">

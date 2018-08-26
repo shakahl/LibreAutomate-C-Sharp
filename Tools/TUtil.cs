@@ -1,5 +1,3 @@
-#define USE_CODEANALYSIS_REF
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -19,11 +17,6 @@ using System.Drawing;
 using System.Linq;
 //using System.Xml.Linq;
 
-#if USE_CODEANALYSIS_REF
-using Microsoft.CodeAnalysis.CSharp.Scripting;
-using Microsoft.CodeAnalysis.Scripting;
-#endif
-
 using Au;
 using Au.Types;
 using static Au.NoClass;
@@ -32,7 +25,7 @@ namespace Au.Tools
 {
 	internal static class TUtil
 	{
-		#region text
+#region text
 
 		/// <summary>
 		/// Appends ', ' and string argument to this StringBuilder.
@@ -176,9 +169,9 @@ namespace Au.Tools
 			return s;
 		}
 
-		#endregion
+#endregion
 
-		#region misc
+#region misc
 
 		/// <summary>
 		/// Gets control id. Returns true if it can be used to identify the control in window wWindow.
@@ -196,9 +189,9 @@ namespace Au.Tools
 			return true;
 		}
 
-		#endregion
+#endregion
 
-		#region OnScreenRect
+#region OnScreenRect
 
 		/// <summary>
 		/// Creates standard <see cref="OsdRect"/>.
@@ -231,9 +224,9 @@ namespace Au.Tools
 			});
 		}
 
-		#endregion
+#endregion
 
-		#region capture
+#region capture
 
 		/// <summary>
 		/// Common code for tools that capture UI objects with F3.
@@ -355,40 +348,6 @@ namespace Au.Tools
 
 		#region test
 
-		//Namespaces and references for 'also' lambda, to use when testing.
-		//FUTURE: user-defined imports and references. Probably as script header, where can bu used #r, #load, using, etc.
-		static string[] s_testImports = { "Au", "Au.Types", "Au.NoClass", "System", "System.Collections.Generic", "System.Text.RegularExpressions", "System.Windows.Forms", "System.Drawing", "System.Linq" };
-		static Assembly[] s_testReferences = { Assembly.GetAssembly(typeof(Wnd)) }; //info: somehow don't need to add System.Windows.Forms, System.Drawing. TODO: test linq and regex
-
-#if USE_CODEANALYSIS_REF
-		//C# script compiler setup:
-		//Install nuget package Microsoft.CodeAnalysis.CSharp.Scripting.
-		//The easy way:
-		//	Install it in Au.Tools.
-		//	Problem - cluttering: it installs about 25 packages, adds them to References, to the main output folder, etc.
-		//Workaround:
-		//	Install it in another solution (Compiler) that contains single project (Compiler).
-		//	In Compiler project set output = subfolder "Compiler" of the main output folder "_".
-		//	Compile the Compiler project. It adds all the dlls to the "Compiler" subfolder.
-		//	In exe app.config add: configuration/runtime/assemblyBinding: <probing privatePath="Compiler"/>
-		//	In Au.Tools add references from the "Compiler" subfolder:
-		//		Microsoft.CodeAnalysis, Microsoft.CodeAnalysis.CSharp.Scripting, Microsoft.CodeAnalysis.Scripting, System.Collections.Immutable.
-		//		In reference assembly options, for each assembly make "copy local" = false.
-		//		In the future may need more if we'll use more code.
-		//	Issues:
-		//		Adds System.Collections.Immutable.dll to the main output folder.
-		//			Tried to edit app.config etc, unsuccessfully.
-		//			Workaround (rejected): add reference System.Collections.Immutable.dll to the exe project too (although not used), and make "copy local" = false.
-		//			Good: Editor project doesn't add it, if it uses these references directly (for scripting).
-		//		Also, in app.config must be:
-		//			<assemblyBinding xmlns = "urn:schemas-microsoft-com:asm.v1" >
-		//				<probing privatePath="Compiler"/>
-		//				<dependentAssembly>
-		//					<assemblyIdentity name = "System.Collections.Immutable" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
-		//					<bindingRedirect oldVersion = "0.0.0.0-1.2.1.0" newVersion="1.2.1.0" />
-		//				</dependentAssembly>
-		//			</assemblyBinding>
-
 		/// <summary>
 		/// Executes test code that finds an object in window.
 		/// Returns the found object and the speed.
@@ -410,7 +369,7 @@ namespace Au.Tools
 		/// var r = await TUtil.RunTestFindObject(code, _wndVar, _wnd, _bTest, _lSpeed, o => (o as Acc).Rect);
 		/// ]]></code>
 		/// </example>
-		internal static async Task<TestFindObjectResults> RunTestFindObject(
+		internal static TestFindObjectResults RunTestFindObject(
 			string code, string wndVar, Wnd wnd, Button bTest, Label lSpeed, Func<object, RECT> getRect, bool activateWindow = false)
 		{
 			if(Empty(code)) return default;
@@ -420,10 +379,9 @@ namespace Au.Tools
 			//Print(code);
 			//Perf.First();
 
-			//TODO: don't use the Scripting assemblies. Use CodeAnalysis directly.
-
 			//FUTURE: #line
 			var b = new StringBuilder();
+			b.AppendLine(@"static object[] __TestFunc__() {");
 			if(activateWindow) b.Append("((Wnd)(LPARAM)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
 			b.AppendLine("var _p_ = Perf.StartNew();");
 			var lines = code.SplitLines_(true);
@@ -431,26 +389,26 @@ namespace Au.Tools
 			for(int i = 0; i < lastLine; i++) b.AppendLine(lines[i]);
 			b.AppendLine("_p_.Next(); var _a_ =");
 			b.AppendLine(lines[lastLine]);
-			b.AppendLine($"_p_.Next(); return (_p_.ToArray(), _a_, {wndVar});");
+			b.AppendLine($"_p_.Next(); return new object[] {{ _p_.ToArray(), _a_, {wndVar} }};");
+			b.AppendLine("\r\n}");
 			code = b.ToString(); //Print(code);
 
 			(long[] speed, object obj, Wnd wnd) r = default;
 			bool ok = false;
 			try {
 				bTest.Enabled = false;
-				var so = ScriptOptions.Default.WithReferences(s_testReferences).WithImports(s_testImports);
-				r = await CSharpScript.EvaluateAsync<(long[], object, Wnd)>(code, so);
-				ok = true;
+				if(!Au.Compiler.Scripting.Compile(code, out var c, wrap: true, load: true)) {
+					Debug_.Print("---- CODE ----\r\n" + code + "--------------");
+					AuDialog.ShowError("Errors in code", c.errors, owner: form, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: code*/);
+				} else {
+					var rr=(object[])c.method.Invoke(null, null); //use array because fails to cast tuple, probably because in that assembly it is new type
+					r = ((long[])rr[0], rr[1], (Wnd)rr[2]);
+					ok = true;
+				}
 
-				//note: although named Async, the script runs in this thread.
+				//note: the script runs in this thread.
 				//	Bad: blocks current UI thread. But maybe not so bad.
 				//	Good: we get valid Acc result. Else it would be marshalled for a script thread.
-			}
-			catch(CompilationErrorException e) {
-				var es = String.Join("\r\n", e.Diagnostics);
-				//lastLine += 3; es = es.RegexReplace_($@"(?m)^\({lastLine},", $"({lastLine - 1},"); //correct the line number of the last line, because we inserted one line before it; cannot insert at the end of previous line because it can end with comments
-				Print("---- CODE ----\r\n" + code + "--------------");
-				AuDialog.ShowError(e.GetType().Name, es, owner: form, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: code*/);
 			}
 			catch(NotFoundException) {
 				AuDialog.ShowInfo("Window not found", owner: form, flags: DFlags.OwnerCenter);
@@ -460,7 +418,6 @@ namespace Au.Tools
 				AuDialog.ShowError(e.GetType().Name, e.Message, owner: form, flags: DFlags.OwnerCenter);
 			}
 			finally {
-				GC.Collect(); //GC does not work with compiler. Task Manager shows 53 MB. After several times can be 300 MB. This makes 22 MB.
 				bTest.Enabled = true;
 			}
 			if(!ok) return default;
@@ -507,8 +464,6 @@ namespace Au.Tools
 			}
 			return new TestFindObjectResults() { obj = r.obj, speed = r.speed[1] };
 		}
-#endif
-		//FUTURE: ngen C# compiler assemblies. Now each Windows update unngens most of them.
 
 		internal struct TestFindObjectResults
 		{
@@ -516,7 +471,7 @@ namespace Au.Tools
 			public long speed;
 		}
 
-		#endregion
+#endregion
 	}
 
 	//public static class Test

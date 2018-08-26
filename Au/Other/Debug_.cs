@@ -142,9 +142,7 @@ namespace Au
 		/// Does nothing if Opt.Debug.<see cref="OptDebug.Verbose" r=""/> == false.
 		/// When flags are valid, this function is very fast (inline, no calls).
 		/// </remarks>
-#pragma warning disable CS3024 // Constraint type is not CLS-compliant (IConvertible uses uint)
-		internal static void LibCheckFlagsOpt<T>(T flags, T goodFlags) where T : struct, IComparable, IFormattable, IConvertible
-#pragma warning restore CS3024 // Constraint type is not CLS-compliant
+		internal static void LibCheckFlagsOpt<T>(T flags, T goodFlags) where T : Enum
 		{
 			//FUTURE: if this is really often useful, make it public. If not used - remove.
 

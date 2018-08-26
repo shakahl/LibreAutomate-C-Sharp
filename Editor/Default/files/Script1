@@ -1,0 +1,6 @@
+//This is a C# script.
+//To compile and run it, click the Run button on the toolbar.
+
+Print("This function writes text and variables to the output pane.");
+
+AuDialog.Show("Example", "This function shows standard dialog box.");

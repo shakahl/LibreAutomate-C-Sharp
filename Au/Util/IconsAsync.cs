@@ -286,7 +286,7 @@ namespace Au.Util
 			/// <summary>obj passed to <see cref="Add(string, object)"/>.</summary>
 			public object obj;
 
-			/// <summary>Icon handle. To get managed object from it, use <b>Icons.HandleToX</b> functions; else finally call <see cref="Icon_.DestroyIconHandle"/>. Can be default(IntPtr).</summary>
+			/// <summary>Icon handle. To get managed object from it, use <b>Icon_.HandleToX</b> functions; else finally call <see cref="Icon_.DestroyIconHandle"/>. Can be default(IntPtr).</summary>
 			public IntPtr hIcon;
 
 			/// <summary>Icon converted to Image object, if used IconFlags.NeedImage and the thread pool decided to convert handle to Image. You should call Dispose() when finished using it. Can be null.</summary>

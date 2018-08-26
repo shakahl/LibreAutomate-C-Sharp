@@ -20,7 +20,7 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// Adds extension methods to <see cref="String"/>.
+	/// Adds extension methods to <see cref="string"/>.
 	/// </summary>
 	/// <remarks>
 	/// Also adds StringComparison.Ordinal[IgnoreCase] versions of .NET String methods that use StringComparison.CurrentCulture by default. See https://msdn.microsoft.com/en-us/library/ms973919.aspx
@@ -180,7 +180,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="String.IndexOf(string, StringComparison)"/>. Uses ordinal comparison.
+		/// Calls <see cref="string.IndexOf(string, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
 		public static int IndexOf_(this string t, string value, bool ignoreCase = false)
@@ -189,7 +189,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="String.IndexOf(string, int, StringComparison)"/>. Uses ordinal comparison.
+		/// Calls <see cref="string.IndexOf(string, int, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
@@ -199,7 +199,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="String.IndexOf(string, int, int, StringComparison)"/>. Uses ordinal comparison.
+		/// Calls <see cref="string.IndexOf(string, int, int, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/> or <paramref name="count"/>.</exception>
@@ -212,7 +212,7 @@ namespace Au
 		//rejected: IndexOfAny_, LastIndexOfAny_ and Trim_ that would use string instead of char[]. Not so often used. For speed/garbage it's better to use static char[].
 
 		/// <summary>
-		/// Returns <see cref="String.Length"/>. If this string is null, returns 0.
+		/// Returns <see cref="string.Length"/>. If this string is null, returns 0.
 		/// </summary>
 		public static int Length_(this string t) => t?.Length ?? 0;
 
@@ -265,9 +265,9 @@ namespace Au
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
-		public static int CountLines_(this string t, bool preferMore = false)
+		public static int LineCount_(this string t, bool preferMore = false)
 		{
-			if(Empty(t)) return preferMore ? 1 : 0;
+			if(t.Length == 0) return preferMore ? 1 : 0;
 			int i = 0, n = 1;
 			for(; i < t.Length; i++) {
 				char c = t[i];
@@ -282,7 +282,34 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="String.ToLowerInvariant"/>.
+		/// Converts character index in whole string to line index and character index in that line.
+		/// Returns 0-based line index.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="index">Character index in whole string.</param>
+		/// <param name="indexInLine">Receives 0-based character index in that line.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static int LineIndex_(this string t, int index, out int indexInLine)
+		{
+			if((uint)index > t.Length) throw new ArgumentOutOfRangeException();
+			int line = 0, lineStart = 0;
+			for(int i = 0; i < index; i++) {
+				char c = t[i];
+				if(c > '\r') continue;
+				if(c != '\n') {
+					if(c != '\r') continue;
+					if(i < t.Length - 1 && t[i + 1] == '\n') continue;
+				}
+
+				lineStart = i + 1;
+				line++;
+			}
+			indexInLine = index - lineStart;
+			return line;
+		}
+
+		/// <summary>
+		/// Calls <see cref="string.ToLowerInvariant"/>.
 		/// </summary>
 		public static string ToLower_(this string t)
 		{
@@ -290,7 +317,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="String.ToUpperInvariant"/>.
+		/// Calls <see cref="string.ToUpperInvariant"/>.
 		/// </summary>
 		public static string ToUpper_(this string t)
 		{
@@ -474,28 +501,6 @@ namespace Au
 			if(c >= 'A' && c <= 'F') return c - ('A' - 10);
 			if(c >= 'a' && c <= 'f') return c - ('a' - 10);
 			return -1;
-		}
-
-		/// <summary>
-		/// If this string contains a number at startIndex, gets that number as int, also gets the string part that follows it, and returns true.
-		/// For example, for string "25text" or "25 text" gets num = 25, tail = "text".
-		/// Everything else is the same as with <see cref="ToInt_(string, int, out int, STIFlags)"/>.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="num">Receives the number. Receives 0 if no number.</param>
-		/// <param name="tail">Receives the string part that follows the number, or "". Receives null if no number. Can be this variable.</param>
-		/// <param name="startIndex">Offset in this string where to start parsing.</param>
-		/// <param name="flags"></param>
-		public static bool ToIntAndString_(this string t, out int num, out string tail, int startIndex = 0, STIFlags flags = 0)
-		{
-			num = ToInt_(t, startIndex, out int end, flags);
-			if(end == 0) {
-				tail = null;
-				return false;
-			}
-			if(end < t.Length && t[end] == ' ') end++;
-			tail = t.Substring(end);
-			return true;
 		}
 
 		/// <summary>

@@ -1,4 +1,7 @@
-﻿//#include usings.txt
+﻿/* meta
+//run TestScript
+*/
+//#include usings.txt
 
 public class Class1
 {
@@ -7,8 +10,10 @@ public class Class1
 
 	}
 
-	static void _PrivateFunction1()
+	public static void Function2()
 	{
 
 	}
+
+
 }

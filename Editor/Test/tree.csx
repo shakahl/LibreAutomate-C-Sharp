@@ -1,3 +1,8 @@
-int @i = 8;
-int a, b;
-int a = 8, b = 9;
+int k = 5;
+ref int r = ref k;
+
+ref int Met()
+{
+	return ref s_i;
+}
+static int s_i = 77;

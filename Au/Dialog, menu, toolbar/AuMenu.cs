@@ -1242,7 +1242,7 @@ namespace Au.Types
 
 			//Print(r.image, r.hIcon);
 			//Image im = r.image;
-			//if(im == null && r.hIcon != default) im = Icons.HandleToImage(r.hIcon);
+			//if(im == null && r.hIcon != default) im = Icon_.HandleToImage(r.hIcon);
 
 			Image im = Icon_.HandleToImage(r.hIcon, true);
 

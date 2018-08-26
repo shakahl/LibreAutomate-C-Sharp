@@ -22,6 +22,8 @@ using Au.Types;
 using static Au.NoClass;
 using Au.Util;
 
+//TODO: tags like print and dialog must support escaped text. Eg now cannot be multiline, because the hidden style adds empty lines.
+
 /*
 Most tags are like in QM2.
 

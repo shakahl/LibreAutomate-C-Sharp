@@ -244,7 +244,7 @@ namespace Au
 
 			/// <summary>
 			/// Returns string ":: HexEncodedITEMIDLIST".
-			/// It can be used with some functions of this library, mostly of classes Shell, Shell.Pidl and Icons. Cannot be used with native and .NET functions.
+			/// It can be used with some functions of this library, mostly of classes Shell, Shell.Pidl and Icon_. Cannot be used with native and .NET functions.
 			/// Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
 			/// </summary>
 			public string ToHexString()

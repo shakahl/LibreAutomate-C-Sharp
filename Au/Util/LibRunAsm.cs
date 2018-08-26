@@ -14,8 +14,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Windows.Forms;
-//using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -36,33 +34,19 @@ namespace Au.Util
 		/// Handles exceptions.
 		/// </summary>
 		/// <param name="name">Appdomain name.</param>
-		/// <param name="asmPathOrBytes">String (path) or byte[] (assembly in memory).</param>
-		/// <param name="isScript"></param>
+		/// <param name="asmFile">Full path of assembly file.</param>
+		/// <param name="pdbOffset">0 or offset of portable PDB in file.</param>
 		/// <param name="args">To pass to Main.</param>
 		/// <param name="config">Config file path.</param>
 		[HandleProcessCorruptedStateExceptions]
-		internal static void RunInNewAppDomain(string name, object asmPathOrBytes, bool isScript, string[] args = null, string config = null)
+		internal static void RunInNewAppDomain(string name, string asmFile, int pdbOffset, string[] args = null, string config = null)
 		{
-			bool doCallback = asmPathOrBytes is byte[] || !Keyb.IsCtrl; //TODO
+#if true
+			var t = typeof(_DomainManager);
+			AppDomainSetup se = new AppDomainSetup { AppDomainManagerAssembly = t.Assembly.FullName, AppDomainManagerType = t.FullName };
+			if(config != null) se.ConfigurationFile = config; //default is AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
 
-			AppDomainSetup se = null;
-			if(doCallback || config != null) {
-				se = new AppDomainSetup();
-				if(doCallback) {
-					var t = typeof(_DomainManager);
-					se.AppDomainManagerAssembly = t.Assembly.FullName;
-					se.AppDomainManagerType = t.FullName;
-				}
-				if(config != null) se.ConfigurationFile = config; //default is AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
-
-				//r.LoaderOptimization = LoaderOptimization.MultiDomainHost, //instead use [LoaderOptimization] on Program.Main().
-				//r.ApplicationBase= AppDomain.CurrentDomain.SetupInformation.ApplicationBase, //default
-				//r.AppDomainInitializer
-			}
-			//Perf.Next();
 			var ad = AppDomain.CreateDomain(name, null, se);
-			//Perf.Next();
-			//ad.FirstChanceException += Ad_FirstChanceException;
 			ad.UnhandledException += _ad_UnhandledException; //works only for threads of that appdomain started by Thread.Start. Does not work for its primary thread, Task.Run threads and corrupted state exceptions.
 
 			if(args == null) { //TODO
@@ -70,34 +54,41 @@ namespace Au.Util
 				args = new string[] { Perf.StaticInst.Serialize() };
 			}
 
-			if(doCallback) {
-				var ty = typeof(_ADRun);
-				//ad.CreateInstance(ty.Assembly.FullName, ty.FullName);
-				var v = ad.CreateInstanceAndUnwrap(ty.Assembly.FullName, ty.FullName) as _ADRun;
-				v.Run(asmPathOrBytes, isScript, args);
-				AppDomain.Unload(ad);
-			} else {
-				try {
-					ad.ExecuteAssembly(asmPathOrBytes as string, args);
-				}
-				catch(Exception e) when(!(e is ThreadAbortException)) {
-					//TODO: remove part of stack trace.
-					//TODO: unmangle stack trace of script. Or don't use script.
-					//TODO: for AuException we have: System.Runtime.Serialization.SerializationException: Type 'Au.Types.AuException' in assembly 'Au, Version=1.0.0.0, Culture=neutral, PublicKeyToken=112db45ebd62e36d' is not marked as serializable.
-					Print(e);
-				}
-				finally {
-					//Debug_.Print("unloading");
-					AppDomain.Unload(ad);
-					//Debug_.Print("unloaded");
-				}
+			var ty = typeof(_ADRun);
+			//ad.CreateInstance(ty.Assembly.FullName, ty.FullName);
+			var v = ad.CreateInstanceAndUnwrap(ty.Assembly.FullName, ty.FullName) as _ADRun;
+			v.Run(asmFile, pdbOffset, args);
+			AppDomain.Unload(ad);
+#else //similar speed. Not used, mostly because locks the assembly file.
+			AppDomainSetup se = null;
+			if(config != null) {
+				se = new AppDomainSetup { ConfigurationFile = config }; //default is AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
 			}
+			var ad = AppDomain.CreateDomain(name, null, se);
+			ad.UnhandledException += _ad_UnhandledException; //works only for threads of that appdomain started by Thread.Start. Does not work for its primary thread, Task.Run threads and corrupted state exceptions.
+
+			if(args == null) { //TODO
+				Perf.Next('x');
+				args = new string[] { Perf.StaticInst.Serialize() };
+			}
+
+			try {
+				ad.ExecuteAssembly(asmFile as string, args);
+			}
+			catch(Exception e) when(!(e is ThreadAbortException)) {
+				Print(e.ToString());
+				//problems with stack trace and nonserializable exceptions
+			}
+			finally {
+				AppDomain.Unload(ad);
+			}
+#endif
 		}
 
 		private static void _ad_UnhandledException(object sender, UnhandledExceptionEventArgs e)
 		{
 			//Print("Ad_UnhandledException:");
-			Print(e.ExceptionObject);
+			Print(e.ExceptionObject.ToString());
 		}
 
 		//private static void _ad_FirstChanceException(object sender, FirstChanceExceptionEventArgs e)
@@ -107,22 +98,28 @@ namespace Au.Util
 
 		class _ADRun :MarshalByRefObject
 		{
-			public void Run(object asmPathOrBytes, bool isScript, string[] args)
+			public void Run(string asmFile, int pdbOffset, string[] args)
 			{
-				_Run(asmPathOrBytes, isScript, args, true);
+				_Run(asmFile, pdbOffset, args, true);
 			}
 		}
 
-		//TODO: remove inMemoryAssembly-related stuff if unused.
-		//TODO: remove parameter isScript from all functions in this file if not used.
-
 		[HandleProcessCorruptedStateExceptions]
-		static void _Run(object asmPathOrBytes, bool isScript, string[] args, bool inAD)
+		static void _Run(string asmFile, int pdbOffset, string[] args, bool inAD, bool reThrow = false)
 		{
-			Assembly a = null;
-			if(asmPathOrBytes is string s) asmPathOrBytes = File.ReadAllBytes(s); //avoid locking. Also 15% faster. AppDomainSetup.ShadowCopyFiles cannot be used here.
-			a = Assembly.Load(asmPathOrBytes as byte[]);
-			asmPathOrBytes = null;
+			byte[] bAsm, bPdb = null;
+			if(pdbOffset > 0) {
+				using(var stream = File.OpenRead(asmFile)) {
+					stream.Read(bAsm = new byte[pdbOffset], 0, pdbOffset);
+					stream.Read(bPdb = new byte[stream.Length - pdbOffset], 0, bPdb.Length);
+				}
+			} else {
+				bAsm = File.ReadAllBytes(asmFile);
+				var pdb = Path.ChangeExtension(asmFile, "pdb");
+				if(File_.ExistsAsFile(pdb)) bPdb = File.ReadAllBytes(pdb);
+			}
+			var a = Assembly.Load(bAsm, bPdb);
+			bAsm = bPdb = null;
 
 			if(inAD) {
 				var ad = AppDomain.CurrentDomain;
@@ -137,7 +134,7 @@ namespace Au.Util
 				if(useArgs) {
 					if(args == null) args = Array.Empty<string>();
 #if STANDARD_SCRIPT
-				} else if(isScript && args != null) {
+				} else if(args != null) {
 					//if standard script, set __script__.args. Our compiler adds class __script__ with static string[] args, and adds __script__ to usings.
 					a.GetType("__script__")?.GetField("args", BindingFlags.SetField | BindingFlags.Static | BindingFlags.NonPublic)?.SetValue(null, args);
 #endif
@@ -157,7 +154,8 @@ namespace Au.Util
 			}
 			catch(TargetInvocationException te) {
 				var e = te.InnerException;
-				Print(e);
+				if(reThrow) throw e;
+				Print(e.ToString());
 			}
 			catch(Exception e) when(!_IsSilentException(e)) {
 				Debug_.Print(e);
@@ -188,12 +186,13 @@ namespace Au.Util
 		/// Executes assembly in this appdomain in this thread.
 		/// Handles exceptions.
 		/// </summary>
-		/// <param name="asmPathOrBytes">String (path) or byte[] (assembly in memory).</param>
-		/// <param name="isScript"></param>
+		/// <param name="asmFile">Full path of assembly file.</param>
+		/// <param name="pdbOffset">0 or offset of portable PDB in file.</param>
 		/// <param name="args">To pass to Main.</param>
-		internal static void RunHere(object asmPathOrBytes, bool isScript, string[] args = null)
+		/// <param name="reThrow">Don't handle exceptions.</param>
+		internal static void RunHere(string asmFile, int pdbOffset, string[] args = null, bool reThrow = false)
 		{
-			_Run(asmPathOrBytes, isScript, args, false);
+			_Run(asmFile, pdbOffset, args, false, reThrow);
 		}
 	}
 }
