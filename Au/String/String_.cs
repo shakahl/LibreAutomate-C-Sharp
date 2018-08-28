@@ -23,9 +23,7 @@ namespace Au
 	/// Adds extension methods to <see cref="string"/>.
 	/// </summary>
 	/// <remarks>
-	/// Also adds StringComparison.Ordinal[IgnoreCase] versions of .NET String methods that use StringComparison.CurrentCulture by default. See https://msdn.microsoft.com/en-us/library/ms973919.aspx
-	/// Extension method names have suffix _.
-	/// Most of these extension methods throw <b>NullReferenceException</b> if called for a string variable that is null.
+	/// Some .NET String methods use StringComparison.CurrentCulture by default, while others don't. It is confusing, dangerous (easy to make bugs), slower and rarely useful. Microsoft recommends to specify StringComparison.Ordinal[IgnoreCase] explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx. This class adds their versions that use StringComparison.Ordinal[IgnoreCase]. Same name, with prefix "_". For example, StartsWith uses StringComparison.CurrentCulture, and StartsWith_ uses StringComparison.Ordinal[IgnoreCase].
 	/// </remarks>
 	public static unsafe partial class String_
 	{
@@ -34,8 +32,8 @@ namespace Au
 		/// </summary>
 		public static bool Equals_(this string t, string value, bool ignoreCase = false)
 		{
-			if((object)t == null) throw new NullReferenceException();
-			if((object)value == null || t.Length != value.Length) return false;
+			if(t is null) throw new NullReferenceException();
+			if(value is null || t.Length != value.Length) return false;
 			//if(ReferenceEquals(t, value)) return true;
 			fixed (char* a = t, b = value) return _Equals(a, b, t.Length, ignoreCase);
 		}
@@ -112,8 +110,8 @@ namespace Au
 
 		static void _ThrowIfNull(string t, string value)
 		{
-			if((object)t == null) throw new NullReferenceException();
-			if((object)value == null) throw new ArgumentNullException();
+			if(t is null) throw new NullReferenceException();
+			if(value is null) throw new ArgumentNullException();
 		}
 
 		/// <summary>
@@ -622,6 +620,16 @@ namespace Au
 				if(t[i] > 0x7f) return false;
 			}
 			return true;
+		}
+
+		/// <summary>
+		/// Converts this string to '\0'-terminated char[].
+		/// </summary>
+		public static char[] ToCharArray_(this string t)
+		{
+			var c = new char[t.Length + 1];
+			for(int i = 0; i < t.Length; i++) c[i] = t[i];
+			return c;
 		}
 
 		internal static class Lib

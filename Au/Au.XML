@@ -6009,14 +6009,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -10879,9 +10871,7 @@
             Adds extension methods to <see cref="T:System.String"/>.
             </summary>
             <remarks>
-            Also adds StringComparison.Ordinal[IgnoreCase] versions of .NET String methods that use StringComparison.CurrentCulture by default. See https://msdn.microsoft.com/en-us/library/ms973919.aspx
-            Extension method names have suffix _.
-            Most of these extension methods throw <b>NullReferenceException</b> if called for a string variable that is null.
+            Some .NET String methods use StringComparison.CurrentCulture by default, while others don't. It is confusing, dangerous (easy to make bugs), slower and rarely useful. Microsoft recommends to specify StringComparison.Ordinal[IgnoreCase] explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx. This class adds their versions that use StringComparison.Ordinal[IgnoreCase]. Same name, with prefix "_". For example, StartsWith uses StringComparison.CurrentCulture, and StartsWith_ uses StringComparison.Ordinal[IgnoreCase].
             </remarks>
         </member>
         <member name="M:Au.String_.RegexIsMatch_(System.String,System.String,Au.Types.RXFlags)">
@@ -11344,6 +11334,11 @@
         <member name="M:Au.String_.IsAscii_(System.String)">
             <summary>
             Returns true if this string is "" or contains only ASCII characters.
+            </summary>
+        </member>
+        <member name="M:Au.String_.ToCharArray_(System.String)">
+            <summary>
+            Converts this string to '\0'-terminated char[].
             </summary>
         </member>
         <member name="F:Au.String_.Lib.lineSep">

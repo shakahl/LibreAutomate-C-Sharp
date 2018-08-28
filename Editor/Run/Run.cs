@@ -35,5 +35,17 @@ static class Run
 		if(!(nodeType == ENodeType.Script || nodeType == ENodeType.CS)) return;
 
 		Compiler.CompileAndRun(f, run, args);
+
+		//int n = s_test1 ? 100 : 1; s_test1 = true;
+
+		//Print("start");
+		//for(int i = 0; i < n; i++) {
+		//	if(!Compiler.CompileAndRun(f, run, args, CRFlags.Wait)) return;
+		//	Time.SleepDoEvents(1);
+		//}
+		//Print("end");
+
+		//GC.Collect();
 	}
+	//static bool s_test1;
 }

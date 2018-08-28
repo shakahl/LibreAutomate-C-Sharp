@@ -77,7 +77,7 @@ namespace Au.Compiler
 				r.outputType = MetaComments.DefaultOutputType(isScript);
 
 				string asmFile;
-				if(value != null && value.StartsWith_("|=")) {
+				if(r.notInCache = (value != null && value.StartsWith_("|="))) {
 					iPipe = value.IndexOf('|', 2); if(iPipe < 0) iPipe = value.Length;
 					asmFile = value.Substring(2, iPipe - 2);
 				} else asmFile = CacheDirectory + "\\" + f.Guid;
@@ -135,9 +135,11 @@ namespace Au.Compiler
 							switch(s[0]) { case 'c': case 'd': case 'k': case 'm': case 'x': case 's': case 'o': break; default: return false; }
 							var f2 = _coll.IcfFindByGUID(value.Substring(offs, s.EndOffset - offs));
 							if(f2 == null) return false;
+							if(_IsFileModified(f2)) return false;
 							switch(s[0]) {
-							case 'o': r.config = f2.FilePath; break;
-							default: if(_IsFileModified(f2)) return false; break;
+							case 'o': //config. f2 is the source config file, and now we need the destination.
+								r.config = asmFile + ".config";
+								break;
 							}
 							break;
 						}
@@ -167,6 +169,7 @@ namespace Au.Compiler
 			/// <param name="f"></param>
 			/// <param name="outFile">The output assembly.</param>
 			/// <param name="m"></param>
+			/// <param name="mtaThread">No [STAThread].</param>
 			public void AddCompiled(ICollectionFile f, string outFile, MetaComments m, bool mtaThread)
 			{
 				if(_data == null) {

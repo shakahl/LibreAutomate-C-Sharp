@@ -44,7 +44,7 @@ namespace Au.Compiler
 	/// When compiling multiple files (project, or using option 'c'), only the main file can contain all options. Other files can contain only 'r', 'c', 'resource' and 'run'.
 	/// </remarks>
 	/// <example>
-	/// References
+	/// <h3>References</h3>
 	/// <code><![CDATA[
 	/// r System.Assembly //.NET/GAC assembly reference. Without ".dll".
 	/// r Other.Assembly.dll //other assembly reference. With ".dll" or ".exe". The file must be in the main Au folder or its subfolder Libraries.
@@ -53,7 +53,7 @@ namespace Au.Compiler
 	/// ]]></code>
 	/// Don't need to specify these references: mscorlib, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
 	/// 
-	/// Other C# files to compile together
+	/// <h3>Other C# files to compile together</h3>
 	/// <code><![CDATA[
 	/// c file.cs //file in this C# file's folder. It must be regular C# file (.cs), not C# script. Should not contain Main function.
 	/// c folder\file.cs //path relative to this C# file's folder
@@ -63,7 +63,7 @@ namespace Au.Compiler
 	/// ]]></code>
 	/// The file must be in this collection. Or it can be a link (in collection) to an external file. The same is true with most other options.
 	/// 
-	/// Files to add to managed resources
+	/// <h3>Files to add to managed resources</h3>
 	/// <code><![CDATA[
 	/// resource file.png //can be filename or relative path, like with 'c'
 	/// resource file.txt /string //text file. Must be single space before /.
@@ -76,17 +76,21 @@ namespace Au.Compiler
 	/// In meta comments: <c>resource file.ico</c>. Code: <c>var icon = new Icon(Au.Util.Resources_.GetAppResource("qm.ico") as Icon, 16, 16);</c>
 	/// In meta comments: <c>resource file.cur</c>. Code: <c>var cursor = Au.Util.Cursor_.LoadCursorFromMemory(Au.Util.Resources_.GetAppResource("file.cur") as byte[]);</c>
 	/// 
-	/// Settings used when compiling
+	/// <h3>Settings used when compiling</h3>
 	/// <code><![CDATA[
 	/// debug true|false //if true (default), don't optimize code; also define preprocessor symbol DEBUG. It usually makes startup faster (faster JIT compiling), but low-level code slower.
 	/// warningLevel 1 //compiler warning level, 0 (none) to 4 (all). Default: 4.
 	/// disableWarnings 3009,162 //don't show these compiler warnings
 	/// define SYMBOL1,SYMBOL2 //define preprocessor symbols that can be used with #if etc. Symbol DEBUG is always defined if not using option 'debug' false. Symbol TRACE is always defined.
-	/// preBuild file /arguments //run this script/app before compiling. Its args[0] will be the full path of the output assembly file. If /arguments used, other args elements will be the arguments, parsed like a command line. The script runs in the main thread of the compiler, and the compiler waits and does not respond during that time. To stop compilation, let the script throw an exception. 
-	/// postBuild file /arguments //run this script/app after compiling successfully. Everything else is like with option 'preBuild'.
+	/// preBuild file /arguments //run this script/app before compiling. More info below.
+	/// postBuild file /arguments //run this script/app after compiling successfully. More info below.
 	/// ]]></code>
+	/// About options 'preBuild' and 'postBuild':
+	/// The script/app runs in compiler's thread. Compiler waits and does not respond during that time. To stop compilation, let the script throw an exception.
+	/// The script/app has variable string[] args. If there is no /arguments, args[0] is the output assembly file, full path. Else args contains the specified arguments, parsed like a command line. In arguments you can use these variables:
+	/// $(outputFile) -  the output assembly file, full path; $(sourceFile) - the C# file, full path; $(sourceName) - name of the C# file; $(sourceGuid) - GUID of the C# file; $(outputPath) - meta option 'outputPath', default ""; $(debug) - meta option 'debug', default "true".
 	/// 
-	/// Settings used to execute the compiled script or app. Here a|b|c means a or b or c.
+	/// <h3>Settings used to execute the compiled script or app. Here a|b|c means a or b or c.</h3>
 	/// <code><![CDATA[
 	/// isolation process|appDomain|thread|hostThread //in what process, app domain and thread to execute the assembly. In the list, the isolation level is from highest to lowest, and the startup speed is from lowest to highest. Default: appDomain. Use process when need 32-bit process or different UAC integrity level; also for scripts/apps that may kill the host process. Use thread for scripts that must start as quickly as possible; the thread is in the host Au process; note: then assemblies cannot be unloaded, therefore can create big memory leaks when developing the script (compiling new code frequently). Use hostThread only for scripts/apps that must interact with the host app in its main thread; it also has the memory leak problem, and can easily make the host app unstable/unresponsive.
 	/// uac user|admin|uiAccess|low|host //UAC integrity level of the process. Default: host (the same as of the host process).
@@ -97,12 +101,12 @@ namespace Au.Compiler
 	/// ]]></code>
 	/// These options are applied only when the script/app is started from an Au process, not when it runs as independent exe program.
 	/// 
-	/// Other
+	/// <h3>Other</h3>
 	/// <code><![CDATA[
-	/// config app.config //use this configuration file for the output assembly. Can be filename or relative path, like with 'c'. Config file not used if 'isolation' is thread or hostThread. When 'isolation' is appDomain (default), if a config file is not specified, is used host's config file.
+	/// config app.config //use this configuration file when the output assembly file is executed. Can be filename or relative path, like with 'c'. The file is copied to the output directory unmodified but renamed to match the assembly name. This option cannot be used with dll or 'isolation' thread/hostThread. If not specified, will be used host program's config file.
 	/// ]]></code>
 	/// 
-	/// To create .exe file, at least option 'outputPath' must be specified
+	/// <h3>To create .exe file, at least option 'outputPath' must be specified</h3>
 	/// <code><![CDATA[
 	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Can be full path or relative path like with 'c'. If not specified, and 'outputType' is dll, uses %Folders.ThisApp%\Libraries.
 	/// outputType app|console|dll //type of the output assembly file. Default: app (Windows application) for scripts, dll for .cs files. Scripts cannot be dll.
@@ -121,6 +125,10 @@ namespace Au.Compiler
 	/// If option 'resFile' specified, adds resources from the file, and cannot add other resources; error if also specified 'icon' or 'manifest'.
 	/// If 'manifest' and 'resFile' not specified when creating .exe file, adds manifest from file "default.exe.manifest" in the main Au folder, if exists.
 	/// If 'resFile' not specified when creating .exe or .dll file, adds version resource, with values collected from attributes such as [assembly: AssemblyVersion("...")]; see how it is in Visual Studio projects, in file Properties\AssemblyInfo.cs.
+	/// 
+	/// Currently not implemented:
+	/// Options uac, runAlone, maxInstances. Sripts/apps run with the same UAC integrity level as the program that started them. Running instances are unlimited.
+	/// Running script/app mananagemet. Users cannot see what scripts/apps are running, and cannot end them easily.
 	/// </example>
 	class MetaComments
 	{
@@ -363,7 +371,7 @@ namespace Au.Compiler
 		public void _ParseFile(ICollectionFile f, bool isMain)
 		{
 			string code = File.ReadAllText(f.FilePath); //FUTURE: why so slow when file contains 17_000_000 empty lines? 230-1600 ms (it seems makes so much garbage that triggers GC). QM2 reads+converts to UTF16 in 55 ms.
-			Perf.Next();
+			//Perf.Next();
 			if(Empty(code)) return;
 
 			bool isScript = false;

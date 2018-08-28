@@ -819,9 +819,9 @@ namespace Au
 				//k.autoUpdated?.Invoke(b, k.auParam);
 
 				//Print(k.auParam);
-				Perf.First();
+				//Perf.First();
 				k.autoUpdated?.Invoke(b, k.auParam);
-				Perf.NW();
+				//Perf.NW();
 			}
 
 			class _AUData

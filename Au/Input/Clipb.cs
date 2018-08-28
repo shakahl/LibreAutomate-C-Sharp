@@ -565,7 +565,7 @@ namespace Au
 
 			public void Save(bool debug = false)
 			{
-				var p1 = new Perf.Inst(); //will need if debug==true
+				var p1 = new Perf.Inst(); //will need if debug==true. Don't delete the Perf statements, they are used by a public function.
 				bool allFormats = OptKey.RestoreClipboardAllFormats || debug;
 				string[] exceptFormats = OptKey.RestoreClipboardExceptFormats;
 

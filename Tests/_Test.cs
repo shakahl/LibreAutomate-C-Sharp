@@ -62,6 +62,8 @@ using System.Reflection.Emit;
 using System.Net;
 using System.Net.NetworkInformation;
 
+using System.Configuration;
+
 using Au.Types;
 using Au.Util;
 using Au.Controls;
@@ -7865,6 +7867,28 @@ REE`");
 		//Osd.ShowText("text", icon: x, showMode: OsdShowMode.Wait);
 	}
 
+	static void TestConfigSettings()
+	{
+		//var s = Project.Properties.Settings.Default.Moo;
+		//Print(s);
+		//Project.Properties.Settings.Default.Moo = "NNNew";
+		//s = Project.Properties.Settings.Default.Moo;
+		//Print(s);
+		//Project.Properties.Settings.Default.Save();
+
+		//ConfigurationManager.
+
+		//var x = new Project.Properties.Settings();
+		//Print(x["Moo"]);
+		//Print(s_sett["Moo"]);
+
+		//var config = @"Q:\app\Au\Tests\Unused currently\App2.config";
+		//AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
+		//Print(ConfigurationManager.AppSettings["name"]);
+	}
+
+	//static Project.Properties.Settings s_sett = (Project.Properties.Settings)System.Configuration.ApplicationSettingsBase.Synchronized(new Project.Properties.Settings());
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -7886,7 +7910,8 @@ REE`");
 		try {
 #if true
 
-			TestResources();
+			TestConfigSettings();
+			//TestResources();
 			//TestArrayExtensions();
 			//TestCompiler2();
 			//TestWebBrowserLeaks();

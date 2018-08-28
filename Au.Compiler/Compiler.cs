@@ -1,4 +1,5 @@
 //#define STANDARD_SCRIPT
+//#define TEST_STARTUP_SPEED
 
 using System;
 using System.Collections.Generic;
@@ -14,58 +15,70 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Windows.Forms;
-//using System.Drawing;
 using System.Linq;
 
-using Au;
 using Au.Types;
 using static Au.NoClass;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-//using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using Microsoft.CodeAnalysis.Emit;
 using System.Resources;
 
-//TODO: delete all Print in this and related files.
-
 namespace Au.Compiler
 {
+	/// <summary>
+	/// Flags for <see cref="Compiler.CompileAndRun"/>.
+	/// </summary>
+	[Flags]
+	public enum CRFlags
+	{
+		/// <summary>
+		/// Run in this tread and wait, regardless of meta option 'isolation'. Don't handle exceptions. Ignore meta 'run'.
+		/// </summary>
+		RunInThisThread = 1,
+
+		/// <summary>
+		/// Wait until ends.
+		/// Don't need this flags with flag RunInThisThread.
+		/// </summary>
+		Wait = 2,
+	}
+
 	public static partial class Compiler
 	{
 		/// <summary>
-		/// Compiles C# file or its project if need. Optionally executes.
+		/// Compiles and/or executes C# file or its project.
 		/// Returns false if failed to compile or cannot execute (eg is dll).
 		/// </summary>
 		/// <param name="f">C# script or .cs file.</param>
 		/// <param name="run">If true, compiles if need and executes. If false, always compiles and does not execute.</param>
 		/// <param name="args">To pass to Main.</param>
-		/// <param name="inThisThread">Run in this tread and wait, regardless of meta option 'isolation'. Don't handle exceptions. Ignore meta 'run'.</param>
+		/// <param name="inThisThread"></param>
 		/// <remarks>
 		/// Must be always called in the main UI thread (Thread.CurrentThread.ManagedThreadId == 1), because calls its file collection functions.
 		/// 
 		/// Adds <see cref="DefaultReferences"/>. For scripts adds <see cref="DefaultUsings"/>.
 		/// </remarks>
-		public static bool CompileAndRun(ICollectionFile f, bool run, string[] args = null, bool inThisThread = false)
+		public static bool CompileAndRun(ICollectionFile f, bool run, string[] args = null, CRFlags flags = 0)
 		{
 			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
 
-			//Output.Clear(); //TODO
+			//Output.Clear();
 			//Perf.Cpu();
 			//200.ms();
-			Perf.First();
+			//Perf.First();
 
 			if(f.IcfFindProject(out var projFolder, out var projMain)) f = projMain;
 
 			CompResults r = default;
-			//Perf.First();
+			//Perf.Next();
 			var cache = XCompiled.OfCollection(f.IcfCollection);
 			bool isCompiled = run && cache.IsCompiled(f, out r, projFolder);
-			//Perf.NW(); Print(isCompiled);
-			//isCompiled = false;//TODO
+			//Perf.Next('i');
+			////Perf.Write(); Print(isCompiled);
+			//isCompiled = false;
 			if(!isCompiled) {
 				bool ok = false;
 				try {
@@ -76,14 +89,6 @@ namespace Au.Compiler
 				}
 				finally {
 					LibSetTimerGC();
-
-					//problem 1: GC does not work automatically with PortableExecutableReference data.
-					//	After first compilation Task Manager shows 40 MB. After several times, if we don't cache, can be 300 MB.
-					//	Explicit GC collect makes 21 MB.
-					//problem 2: Compiling is much slower if we always create all PortableExecutableReference.
-					//	We can cache them, but then always 40 MB.
-					//Solution: cache them in a WeakReference, and set timer to do GC collect after eg 30 s.
-					//	Then, if compiling frequently, compiling is fast, also don't need frequent explicit GC collect. For 30 s we have constant 40 MB, then 21 MB.
 				}
 
 				if(!ok) {
@@ -94,6 +99,7 @@ namespace Au.Compiler
 				if(!run) return true;
 			}
 
+			bool inThisThread = flags.Has_(CRFlags.RunInThisThread);
 			if(r.run != null && !inThisThread) {
 				if(args == null) args = new string[] { r.file }; else args = args.Insert_(0, r.file);
 				return CompileAndRun(r.run, true, args);
@@ -105,22 +111,33 @@ namespace Au.Compiler
 			}
 			if(r.maxInstances == 0) return false;
 
-			Perf.Next();
+#if TEST_STARTUP_SPEED
+			if(r.isolation != EIsolation.appDomain && args == null) args = new string[] { Perf.StaticInst.Serialize() };
+			//if(args == null) args = new string[] { Time.Microseconds.ToString() };
+#endif
+
 			if(r.isolation == EIsolation.hostThread || inThisThread) {
 				Au.Util.LibRunAsm.RunHere(r.file, r.pdbOffset, args, reThrow: inThisThread);
-			} else if(r.isolation == EIsolation.process) {
+				return true;
+			}
 
-				args = new string[] { Perf.StaticInst.Serialize() }; //TODO
-
+			bool wait = flags.Has_(CRFlags.Wait);
+			if(r.isolation == EIsolation.process) {
 				string exe = r.file;
 				if(!r.notInCache) {
 					exe = exe + "|" + r.pdbOffset.ToString();
 					if(args == null) args = new string[] { exe }; else args = args.Insert_(0, exe);
 					exe = Folders.ThisApp + "Au.Task.exe";
 				}
-
-				var si = new ProcessStartInfo(exe) { UseShellExecute = false, Arguments = Au.Util.StringMisc.CommandLineFromArray(args) };
-				Process.Start(si);
+				var aa = Au.Util.StringMisc.CommandLineFromArray(args);
+#if true
+				var si = new ProcessStartInfo(exe, aa) { UseShellExecute = false };
+				var process = Process.Start(si);
+				if(wait) process.WaitForExit();
+				//speed: 127 hot, 170 cold. Same speed with API CreateProcess.
+#else
+				CUtil.StartProcess(exe, aa, wait);
+#endif
 			} else {
 				var thread = new Thread(() =>
 				{
@@ -132,20 +149,43 @@ namespace Au.Compiler
 				});
 				if(!r.mtaThread) thread.SetApartmentState(ApartmentState.STA);
 				thread.Start();
+				if(wait) thread.Join();
 			}
+
+			//TODO: implement uac, runAlone, maxInstances. All others now are fully implemented.
+
+			//startup speed, ms:
+			//hot: hostThread 1, thread 1.6, domain 34, process 127 (112 without AV)
+			//cold: hostThread 3.2, thread 4.5, domain 75, process 170
+			//QM2 hot: thread 0.3, process 27 (17 without AV)
+
+			//FUTURE: try appdomain pool:
+			//	Always have 2-4 waiting threads+appdomains without a loaded script assembly. When need to run, then load, run and exit/unload.
+			//	Maybe also create similar process pool, but only if explicitly specified.
 
 			return true;
 		}
 
 		/// <summary>
-		/// If Thread.CurrentThread.ManagedThreadId == 1, sets timer to call GC.Collect after 30 s.
+		/// If Thread.CurrentThread.ManagedThreadId == 1, sets timer to call GC.Collect after 10 s.
 		/// </summary>
 		internal static void LibSetTimerGC()
 		{
+			//problem 1: GC does not start automatically to release PortableExecutableReference data, many MB. Probably most of it is unmanaged memory.
+			//	After first compilation Task Manager shows 40 MB. After several times can be 300 MB.
+			//	Explicit GC collect makes 21 MB.
+			//problem 2: Compiling is much slower if we always create all PortableExecutableReference.
+			//	We can cache them, but then always 40 MB.
+			//Solution: cache them in a WeakReference, and set timer to do GC collect after eg 10 s.
+			//	Then, if compiling frequently, compiling is fast, also don't need frequent explicit GC collect. For 10 s we have constant 40 MB, then 21 MB.
+
 			if(Thread.CurrentThread.ManagedThreadId != 1) return;
-			if(t_timerGC == null) t_timerGC = new Timer_(() => GC.Collect());
-			t_timerGC.Start(30_000, true);
-			//TODO: test: minimize working set. Only first time.
+			if(t_timerGC == null) t_timerGC = new Timer_(() =>
+			{
+				GC.Collect();
+				//GC.WaitForPendingFinalizers(); SetProcessWorkingSetSize(Process_.CurrentProcessHandle, -1, -1);
+			});
+			t_timerGC.Start(10_000, true);
 		}
 		static Timer_ t_timerGC;
 
@@ -169,35 +209,33 @@ namespace Au.Compiler
 			/// <summary>The assembly is normal .exe or .dll file, not in cache. If exe, its dependencies were copied to its directory.</summary>
 			public bool notInCache;
 			/// <summary>In cache assembly files we append portable PDB to the assemby at this offset.</summary>
-			public int pdbOffset; //TODO: join with file
+			public int pdbOffset;
 		}
 
 		static bool _Compile(ICollectionFile f, out CompResults r, ICollectionFile projFolder)
 		{
 			r = default;
-			Perf.First();
+			//Perf.Next();
 
 			var m = new MetaComments();
 			if(!m.Parse(f, projFolder, true)) return false;
 			if(m.Files == null) return false; //empty text
 			var err = m.Errors;
-			Perf.Next('m');
+			//Perf.Next('m');
 
 			XCompiled cache = XCompiled.OfCollection(f.IcfCollection);
-			string outPath = null, outFileNoExt = null, outFile = null, fileName, fileExt = null;
+			string outPath = null, outFile = null, fileName;
 			if(m.OutputPath != null) {
 				outPath = m.OutputPath; //info: the directory is already created
-				fileName = m.Name;
-				fileExt = m.OutputType == EOutputType.dll ? ".dll" : ".exe";
+				fileName = m.Name + (m.OutputType == EOutputType.dll ? ".dll" : ".exe");
 			} else {
 				outPath = cache.CacheDirectory;
 				File_.CreateDirectory(outPath);
 				fileName = f.Guid;
 			}
-			outFileNoExt = Path_.Combine(outPath, fileName);
-			outFile = outFileNoExt + fileExt;
+			outFile = outPath + "\\" + fileName;
 
-			if(m.PreBuild.f != null && !_RunPrePostBuildScript(m.PreBuild, outFile)) return false;
+			if(m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
 
 			var langVer = LanguageVersion.Latest;
 			string[] usings = null;
@@ -260,9 +298,8 @@ internal static string[] args = System.Array.Empty<string>();
 ", new CSharpParseOptions(langVer)) as CSharpSyntaxTree;
 			trees.Add(treeAdd);
 #endif
-			Perf.Next('t');
+			//Perf.Next('t');
 
-			//TODO: autodetect: if script or contains Main, it is app, else dll.
 			OutputKind ot;
 			switch(m.OutputType) {
 			case EOutputType.dll: ot = OutputKind.DynamicallyLinkedLibrary; break;
@@ -283,15 +320,15 @@ internal static string[] args = System.Array.Empty<string>();
 			   );
 
 			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, options);
-			Perf.Next('c');
+			//Perf.Next('c');
 
-			string pdbFile = null, xdFile = null, configFile = null;
+			string pdbFile = null, xdFile = null;
 			Stream pdbStream = null, xdStream = null;
 			EmitOptions eOpt = null;
 
 			//create debug info always. It is used for run-time error links.
 			if(m.OutputPath != null) {
-				pdbStream = File.Create(pdbFile = outFileNoExt + ".pdb");
+				pdbStream = File.Create(pdbFile = Path.ChangeExtension(outFile, "pdb"));
 				eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Pdb, pdbFilePath: pdbFile);
 				//eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb, pdbFilePath: pdbFile); //smaller, but not all tools support it
 			} else {
@@ -316,7 +353,7 @@ internal static string[] args = System.Array.Empty<string>();
 			if(pdbStream is FileStream) pdbStream.Dispose();
 			xdStream?.Dispose();
 			resNat?.Dispose(); //info: compiler disposes resMan
-			Perf.Next('e');
+			//Perf.Next('e');
 
 			var diag = emitResult.Diagnostics;
 			if(!diag.IsEmpty) {
@@ -354,23 +391,25 @@ internal static string[] args = System.Array.Empty<string>();
 
 			//copy non-.NET references to the output directory
 			if(m.OutputPath != null && m.OutputType != EOutputType.dll) {
-				Perf.Next();
+				//Perf.Next();
 				_CopyReferenceFiles(m);
 			}
 
-			if(m.ConfigFile != null && m.Isolation == EIsolation.process) { //TODO: finish
-				configFile = m.ConfigFile.FilePath;
-				_CopyFileIfNeed(configFile, outPath + "\\" + Path_.GetFileName(configFile));
+			//copy config file to the output directory
+			var configFile = outFile + ".config";
+			if(m.ConfigFile != null) {
+				_CopyFileIfNeed(m.ConfigFile.FilePath, r.config = configFile);
+			} else if(File_.ExistsAsFile(configFile, true)) {
+				File_.Delete(configFile);
 			}
 
-			if(m.PostBuild.f != null && !_RunPrePostBuildScript(m.PostBuild, outFile)) return false;
+			if(m.PostBuild.f != null && !_RunPrePostBuildScript(true, m, outFile)) return false;
 
 			//Perf.First();
 			cache.AddCompiled(f, outFile, m, r.mtaThread);
 			//Perf.NW();
 
 			r.name = m.Name;
-			r.config = configFile;
 			r.outputType = m.OutputType;
 			r.isolation = m.Isolation;
 			r.uac = m.Uac;
@@ -379,7 +418,7 @@ internal static string[] args = System.Array.Empty<string>();
 			r.run = m.Run;
 			r.notInCache = m.OutputPath != null;
 
-			Perf.NW();
+			//Perf.NW();
 			return true;
 		}
 
@@ -532,9 +571,6 @@ internal static string[] args = System.Array.Empty<string>();
 			{"System.Core", typeof(HashSet<>).Assembly.Location},
 			{"System.Windows.Forms", typeof(System.Windows.Forms.Form).Assembly.Location},
 			{"System.Drawing", typeof(System.Drawing.Point).Assembly.Location},
-			//{"System.Xml", typeof(System.Xml.XmlNode).Assembly.Location},
-			//{"System.Xml.Linq", typeof(System.Xml.Linq.XElement).Assembly.Location},
-			//{"System.Net.Http", typeof(System.Net.Http.HttpClient).Assembly.Location},
 			{"Au.dll", typeof(Wnd).Assembly.Location},
 
 			//info: don't need to add System.ValueTuple.
@@ -565,8 +601,6 @@ internal static string[] args = System.Array.Empty<string>();
 			"System.Windows.Forms",
 			"System.Drawing",
 			"System.Linq",
-			//"System.Xml.Linq",
-			//"System.Net.Http",
 			"Au",
 			"Au.Types",
 			"Au.NoClass",
@@ -615,7 +649,7 @@ internal static string[] args = System.Array.Empty<string>();
 		/// </remarks>
 		static string _TransformScriptCode(CSharpSyntaxTree tree, string code, bool compiling, ErrBuilder err, ICollectionFile f)
 		{
-			Perf.Next('1');
+			//Perf.Next('1');
 
 			var aliases = new List<SyntaxNode>();
 			var usings = new List<SyntaxNode>();
@@ -623,9 +657,9 @@ internal static string[] args = System.Array.Empty<string>();
 			var members = new List<SyntaxNode>();
 			var statements = new List<SyntaxNode>();
 
-			Perf.Next('2');
+			//Perf.Next('2');
 			var root = tree.GetCompilationUnitRoot();
-			Perf.Next('3');
+			//Perf.Next('3');
 			foreach(var v in root.ChildNodes()) {
 				switch(v.Kind()) {
 				case SyntaxKind.ExternAliasDirective:
@@ -652,7 +686,7 @@ internal static string[] args = System.Array.Empty<string>();
 					break;
 				}
 			}
-			Perf.Next('4');
+			//Perf.Next('4');
 
 			//Print("<><Z 0xc000>globals:<>");
 			//Print(globals);
@@ -704,7 +738,7 @@ void _Main(string[] args) {");
 
 			code = b.ToString();
 			//Print(code);
-			Perf.Next('5');
+			//Perf.Next('5');
 			return code;
 
 			void _Append(SyntaxNode sn)
@@ -772,14 +806,34 @@ void _Main(string[] args) {");
 			return s;
 		}
 
-		static bool _RunPrePostBuildScript(MetaFileAndString x, string outFile)
+		static bool _RunPrePostBuildScript(bool post, MetaComments m, string outFile)
 		{
-			string[] args;
-			if(x.s == null) args = new string[] { outFile };
-			else args = Au.Util.StringMisc.CommandLineToArray(x.s).Insert_(0, outFile);
-			//FUTURE: expand variables like in Visual Studio, eg "$(name)", "$(debug)". Take most values from meta.
-			
-			return CompileAndRun(x.f, true, args, true);
+			var x = post ? m.PostBuild : m.PreBuild;
+			string[] a;
+			if(x.s == null) a = new string[] { outFile };
+			else {
+				a = Au.Util.StringMisc.CommandLineToArray(x.s);
+
+				//replace variables like $(variable)
+				var f = m.Files[0].f;
+				if(s_rx1 == null) s_rx1 = new Regex_(@"\$\((\w+)\)");
+				string _ReplFunc(RXMatch k)
+				{
+					switch(k[1].Value) {
+					case "outputFile": return outFile;
+					case "sourceFile": return f.FilePath;
+					case "sourceName": return f.Name;
+					case "sourceGuid": return f.Guid;
+					case "outputPath": return m.OutputPath;
+					case "debug": return m.IsDebug ? "true" : "false";
+					default: throw new ArgumentException("error in meta: unknown variable " + k.Value);
+					}
+				}
+				for(int i = 0; i < a.Length; i++) a[i] = s_rx1.Replace(a[i], _ReplFunc);
+			}
+
+			return CompileAndRun(x.f, true, a, CRFlags.RunInThisThread);
 		}
+		static Regex_ s_rx1;
 	}
 }

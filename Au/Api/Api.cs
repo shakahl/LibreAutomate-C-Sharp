@@ -989,8 +989,8 @@ namespace Au.Types
 
 		#region other
 
-		[DllImport("uxtheme.dll", PreserveSig = true)]
-		internal static extern int SetWindowTheme(Wnd hwnd, string pszSubAppName, string pszSubIdList);
+		//[DllImport("uxtheme.dll", PreserveSig = true)]
+		//internal static extern int SetWindowTheme(Wnd hwnd, string pszSubAppName, string pszSubIdList);
 
 
 		[DllImport("msi.dll", EntryPoint = "#217")]
@@ -1010,8 +1010,9 @@ namespace Au.Types
 		[DllImport("hhctrl.ocx", EntryPoint = "HtmlHelpW")]
 		internal static extern Wnd HtmlHelp(Wnd hwndCaller, string pszFile, int uCommand, LPARAM dwData);
 
-		[DllImport("urlmon.dll", PreserveSig = true)]
-		internal static extern int FindMimeFromData(IntPtr pBC, string pwzUrl, byte[] pBuffer, int cbSize, string pwzMimeProposed, uint dwMimeFlags, out string ppwzMimeOut, uint dwReserved);
+
+		//[DllImport("urlmon.dll", PreserveSig = true)]
+		//internal static extern int FindMimeFromData(IntPtr pBC, string pwzUrl, byte[] pBuffer, int cbSize, string pwzMimeProposed, uint dwMimeFlags, out string ppwzMimeOut, uint dwReserved);
 
 		#endregion
 

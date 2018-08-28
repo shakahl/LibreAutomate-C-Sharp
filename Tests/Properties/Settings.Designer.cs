@@ -22,5 +22,26 @@ namespace Project.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("tttttttest")]
+        public string Moo {
+            get {
+                return ((string)(this["Moo"]));
+            }
+            set {
+                this["Moo"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("kkkkko")]
+        public string App {
+            get {
+                return ((string)(this["App"]));
+            }
+        }
     }
 }

@@ -1,4 +1,5 @@
 //#define STANDARD_SCRIPT
+//#define TEST_STARTUP_SPEED
 
 using System;
 using System.Collections.Generic;
@@ -49,17 +50,24 @@ namespace Au.Util
 			var ad = AppDomain.CreateDomain(name, null, se);
 			ad.UnhandledException += _ad_UnhandledException; //works only for threads of that appdomain started by Thread.Start. Does not work for its primary thread, Task.Run threads and corrupted state exceptions.
 
-			if(args == null) { //TODO
-				Perf.Next('x');
+#if TEST_STARTUP_SPEED
+			if(args == null) {
+				Perf.Next('d');
 				args = new string[] { Perf.StaticInst.Serialize() };
 			}
+#endif
 
-			var ty = typeof(_ADRun);
-			//ad.CreateInstance(ty.Assembly.FullName, ty.FullName);
-			var v = ad.CreateInstanceAndUnwrap(ty.Assembly.FullName, ty.FullName) as _ADRun;
-			v.Run(asmFile, pdbOffset, args);
-			AppDomain.Unload(ad);
+			try {
+				var ty = typeof(_ADRun);
+				var v = ad.CreateInstanceAndUnwrap(ty.Assembly.FullName, ty.FullName) as _ADRun;
+				v.Run(asmFile, pdbOffset, args);
+			}
+			finally {
+				AppDomain.Unload(ad);
+			}
+
 #else //similar speed. Not used, mostly because locks the assembly file.
+
 			AppDomainSetup se = null;
 			if(config != null) {
 				se = new AppDomainSetup { ConfigurationFile = config }; //default is AppDomain.CurrentDomain.SetupInformation.ConfigurationFile
@@ -67,10 +75,12 @@ namespace Au.Util
 			var ad = AppDomain.CreateDomain(name, null, se);
 			ad.UnhandledException += _ad_UnhandledException; //works only for threads of that appdomain started by Thread.Start. Does not work for its primary thread, Task.Run threads and corrupted state exceptions.
 
-			if(args == null) { //TODO
-				Perf.Next('x');
+#if TEST_STARTUP_SPEED
+			if(args == null) {
+				Perf.Next('d');
 				args = new string[] { Perf.StaticInst.Serialize() };
 			}
+#endif
 
 			try {
 				ad.ExecuteAssembly(asmFile as string, args);
@@ -107,28 +117,29 @@ namespace Au.Util
 		[HandleProcessCorruptedStateExceptions]
 		static void _Run(string asmFile, int pdbOffset, string[] args, bool inAD, bool reThrow = false)
 		{
-			byte[] bAsm, bPdb = null;
-			if(pdbOffset > 0) {
-				using(var stream = File.OpenRead(asmFile)) {
-					stream.Read(bAsm = new byte[pdbOffset], 0, pdbOffset);
-					stream.Read(bPdb = new byte[stream.Length - pdbOffset], 0, bPdb.Length);
-				}
-			} else {
-				bAsm = File.ReadAllBytes(asmFile);
-				var pdb = Path.ChangeExtension(asmFile, "pdb");
-				if(File_.ExistsAsFile(pdb)) bPdb = File.ReadAllBytes(pdb);
-			}
-			var a = Assembly.Load(bAsm, bPdb);
-			bAsm = bPdb = null;
-
-			if(inAD) {
-				var ad = AppDomain.CurrentDomain;
-				if(ad.DomainManager is _DomainManager dm) dm.LibEntryAssembly = a;
-				//Print(Assembly.GetEntryAssembly());
-			}
-
+			Assembly asm;
 			try {
-				var entryPoint = a.EntryPoint;
+				byte[] bAsm, bPdb = null;
+				if(pdbOffset > 0) {
+					using(var stream = File.OpenRead(asmFile)) {
+						stream.Read(bAsm = new byte[pdbOffset], 0, pdbOffset);
+						stream.Read(bPdb = new byte[stream.Length - pdbOffset], 0, bPdb.Length);
+					}
+				} else {
+					bAsm = File.ReadAllBytes(asmFile);
+					var pdb = Path.ChangeExtension(asmFile, "pdb");
+					if(File_.ExistsAsFile(pdb)) bPdb = File.ReadAllBytes(pdb);
+				}
+				asm = Assembly.Load(bAsm, bPdb);
+				bAsm = bPdb = null;
+
+				if(inAD) {
+					var ad = AppDomain.CurrentDomain;
+					if(ad.DomainManager is _DomainManager dm) dm.LibEntryAssembly = asm;
+					//Print(Assembly.GetEntryAssembly());
+				}
+
+				var entryPoint = asm.EntryPoint;
 
 				bool useArgs = entryPoint.GetParameters().Length != 0;
 				if(useArgs) {
@@ -137,6 +148,8 @@ namespace Au.Util
 				} else if(args != null) {
 					//if standard script, set __script__.args. Our compiler adds class __script__ with static string[] args, and adds __script__ to usings.
 					a.GetType("__script__")?.GetField("args", BindingFlags.SetField | BindingFlags.Static | BindingFlags.NonPublic)?.SetValue(null, args);
+
+					//if standard script, will need to run triggers in this func. Depends on how we'll implement them.
 #endif
 				}
 
@@ -149,19 +162,15 @@ namespace Au.Util
 					//del(args);
 					////With delegate, exceptions are thrown differently: without TargetInvocationException, but stack includes this (caller) method.
 				}
-
-				//TODO: if standard script, run triggers if need. Depends on how we'll implement them.
 			}
 			catch(TargetInvocationException te) {
 				var e = te.InnerException;
 				if(reThrow) throw e;
 				Print(e.ToString());
 			}
-			catch(Exception e) when(!_IsSilentException(e)) {
+			catch(Exception e) when(!(e is ThreadAbortException || reThrow)) {
 				Debug_.Print(e);
 			}
-
-			bool _IsSilentException(Exception e) => e is ThreadAbortException /*|| e is AppDomainUnloadedException*/;
 
 			//see also: TaskScheduler.UnobservedTaskException event.
 			//	tested: the event works.

@@ -29,6 +29,17 @@ partial class EForm
 {
 	internal void TestEditor()
 	{
+		var th = new Thread(()=>
+		{
+			Thread.Sleep(-1);
+		});
+		th.SetApartmentState(ApartmentState.STA);
+		th.IsBackground = true;
+		th.Start();
+
+		return;
+
+
 		var doc = Panels.Editor.ActiveDoc;
 		var t = doc.ST;
 		var s = doc.Text;
