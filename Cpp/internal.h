@@ -59,6 +59,8 @@ enum InProcAction : char {
 	IPA_AccGetWindow,
 	IPA_AccGetHtml,
 	IPA_AccEnableChrome,
+
+	//IPA_StartProcess = 100,
 };
 
 //Common fields of parameters-marshaling structures.

@@ -209,8 +209,7 @@ class PanelOutput :Control
 			//Print(s);
 			var a = s.Split('|');
 			var fn = isGuid ? Model.FindByGUID(a[0]) : Model.Find(a[0], false);
-			if(fn == null) return;
-			Model.SetCurrentFile(fn);
+			if(fn == null || !Model.SetCurrentFile(fn)) return;
 			var doc = Panels.Editor.ActiveDoc;
 			doc.Focus();
 			if(a.Length == 1) return;

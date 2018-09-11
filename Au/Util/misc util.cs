@@ -145,7 +145,7 @@ namespace Au.Util
 		/// Returns true if assembly asm is compiled to native code using ngen.exe.
 		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.NoOptimization|MethodImplOptions.NoInlining)]
+		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
 		public static bool IsAssemblyNgened(Assembly asm)
 		{
 			var s = asm.CodeBase;
@@ -212,12 +212,12 @@ namespace Au.Util
 	//	///// <param name="iunkFrom">COM object as IUnknown.</param>
 	//	///// <param name="iTo">Receives the requested COM interface pointer.</param>
 	//	///// <param name="riid">Interface GUID.</param>
-	//	//internal static unsafe bool QueryInterface<T>(IntPtr iunkFrom, out T iTo, Guid riid) where T : struct
+	//	//internal static unsafe bool QueryInterface<T>(IntPtr iunkFrom, out T iTo, Guid riid) where T : unmanaged
 	//	//{
-	//	//	if(Unsafe.SizeOf<T>() != IntPtr.Size) throw new ArgumentException();
+	//	//	if(sizeof(T) != IntPtr.Size) throw new ArgumentException();
 	//	//	iTo = default;
 	//	//	if(0 != Marshal.QueryInterface(iunkFrom, ref riid, out IntPtr ip) || ip == default) return false;
-	//	//	iTo = Unsafe.Read<T>(&ip);
+	//	//	var v=*(T*)&ip; iTo=v;
 	//	//	return true;
 	//	//}
 
@@ -231,13 +231,13 @@ namespace Au.Util
 	//	///// <param name="iTo">Receives the requested COM interface pointer.</param>
 	//	///// <param name="guidService">Service GUID. If it is the same as riid, you can use other overload.</param>
 	//	///// <param name="riid">Interface GUID.</param>
-	//	//internal static unsafe bool QueryService<T>(IntPtr iunkFrom, out T iTo, in Guid guidService, in Guid riid) where T:struct
+	//	//internal static unsafe bool QueryService<T>(IntPtr iunkFrom, out T iTo, in Guid guidService, in Guid riid) where T: unmanaged
 	//	//{
-	//	//	if(Unsafe.SizeOf<T>() != IntPtr.Size) throw new ArgumentException();
+	//	//	if(sizeof(T) != IntPtr.Size) throw new ArgumentException();
 	//	//	if(iunkFrom==default) throw new ArgumentNullException();
 	//	//	iTo = default;
 	//	//	if(0 != Api.IUnknown_QueryService(iunkFrom, guidService, riid, out IntPtr ip) || ip==default) return false;
-	//	//	iTo=Unsafe.Read<T>(&ip);
+	//	//	var v=*(T*)&ip; iTo=v;
 	//	//	return true;
 	//	//}
 
@@ -331,7 +331,7 @@ namespace Au.Util
 		static ResourceManager _appResourceManager;
 		static CultureInfo _appResourceCulture;
 
-		//rejected: now we have Unsafe.SizeOf<T>().
+		//rejected: now in generic methods we can use sizeof(T) if with 'unmanaged' constraint. Or Unsafe.SizeOf<T>().
 		///// <summary>
 		///// Do not call. Use class TypeSize, which caches the type size.
 		///// This is used by TypeSize, not in it, because it is a generic type...
@@ -448,15 +448,6 @@ namespace Au.Util
 	/// </summary>
 	public class WaitableTimer :WaitHandle
 	{
-		[DllImport("kernel32.dll", EntryPoint = "CreateWaitableTimerW", SetLastError = true)]
-		static extern SafeWaitHandle CreateWaitableTimer(Api.SECURITY_ATTRIBUTES lpTimerAttributes, bool bManualReset, string lpTimerName);
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		static extern bool SetWaitableTimer(SafeWaitHandle hTimer, ref long lpDueTime, int lPeriod = 0, IntPtr pfnCompletionRoutine = default, IntPtr lpArgToCompletionRoutine = default, bool fResume = false);
-
-		[DllImport("kernel32.dll", EntryPoint = "OpenWaitableTimerW", SetLastError = true)]
-		static extern SafeWaitHandle OpenWaitableTimer(uint dwDesiredAccess, bool bInheritHandle, string lpTimerName);
-
 		WaitableTimer() { }
 
 		/// <summary>
@@ -467,7 +458,7 @@ namespace Au.Util
 		/// <exception cref="AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
 		public static WaitableTimer Create(bool manualReset = false, string timerName = null)
 		{
-			var h = CreateWaitableTimer(Api.SECURITY_ATTRIBUTES.Common, manualReset, timerName);
+			var h = Api.CreateWaitableTimer(Api.SECURITY_ATTRIBUTES.Common, manualReset, timerName);
 			if(h.IsInvalid) {
 				var ex = new AuException(0, "*create timer");
 				h.SetHandleAsInvalid();
@@ -487,7 +478,7 @@ namespace Au.Util
 		/// <exception cref="AuException">Failed. For example, the timer does not exist.</exception>
 		public static WaitableTimer Open(string timerName, uint access = Api.TIMER_MODIFY_STATE | Api.SYNCHRONIZE, bool inheritHandle = false, bool noException = false)
 		{
-			var h = OpenWaitableTimer(access, inheritHandle, timerName);
+			var h = Api.OpenWaitableTimer(access, inheritHandle, timerName);
 			if(h.IsInvalid) {
 				var e = Native.GetError();
 				h.SetHandleAsInvalid();
@@ -513,7 +504,7 @@ namespace Au.Util
 		public bool Set(long dueTime, int period = 0)
 		{
 			if(dueTime > 0) dueTime = -checked(dueTime * 10000);
-			return SetWaitableTimer(this.SafeWaitHandle, ref dueTime, period, default, default, false);
+			return Api.SetWaitableTimer(this.SafeWaitHandle, ref dueTime, period, default, default, false);
 		}
 
 		/// <summary>
@@ -525,7 +516,7 @@ namespace Au.Util
 		public bool SetAbsolute(DateTime dueTime, int period = 0)
 		{
 			var t = dueTime.ToFileTimeUtc();
-			return SetWaitableTimer(this.SafeWaitHandle, ref t, period, default, default, false);
+			return Api.SetWaitableTimer(this.SafeWaitHandle, ref t, period, default, default, false);
 		}
 	}
 
@@ -541,10 +532,120 @@ namespace Au.Util
 		/// <param name="topic">Topic file name, like "M_Au_Acc_Find" or "0248143b-a0dd-4fa1-84f9-76831db6714a".</param>
 		public static void AuHelp(string topic)
 		{
-			var s = Folders.ThisApp + "Help/Au Help.chm::/html/" + topic + ".htm";
+			var s = Folders.ThisAppBS + "Help/Au Help.chm::/html/" + topic + ".htm";
 			Api.HtmlHelp(Api.GetDesktopWindow(), s, 0, 0); //HH_DISPLAY_TOPIC
 		}
 
+	}
+
+	/// <summary>
+	/// Manages a kernel handle.
+	/// Must be disposed.
+	/// Has static functions to open process handle.
+	/// </summary>
+	internal struct LibKernelHandle :IDisposable
+	{
+		IntPtr _h;
+
+		///
+		public IntPtr Handle => _h;
+
+		public static implicit operator IntPtr(LibKernelHandle p) { return p._h; }
+
+		///
+		public bool Is0 => _h == default;
+
+		/// <summary>
+		/// Attaches a kernel handle to this new variable.
+		/// No exception when handle is invalid.
+		/// </summary>
+		/// <param name="handle"></param>
+		public LibKernelHandle(IntPtr handle) { _h = handle; }
+
+		///
+		public void Dispose()
+		{
+			if(_h != default && _h != (IntPtr)(-1)) Api.CloseHandle(_h);
+			_h = default;
+		}
+
+		/// <summary>
+		/// Opens process handle.
+		/// Calls API OpenProcess.
+		/// Returns default if fails. Supports Native.GetError().
+		/// </summary>
+		/// <param name="processId">Process id.</param>
+		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
+		public static LibKernelHandle OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
+		{
+			if(processId == 0) { Native.SetError(Api.ERROR_INVALID_PARAMETER); return default; }
+			_OpenProcess(out var h, processId, desiredAccess);
+			return new LibKernelHandle(h);
+		}
+
+		/// <summary>
+		/// Opens window's process handle.
+		/// This overload is more powerful: if API OpenProcess fails, it tries API GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
+		/// Returns default if fails. Supports Native.GetError().
+		/// </summary>
+		/// <param name="w"></param>
+		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
+		public static LibKernelHandle OpenProcess(Wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
+		{
+			int pid = w.ProcessId; if(pid == 0) return default;
+			_OpenProcess(out var h, pid, desiredAccess, w);
+			return new LibKernelHandle(h);
+		}
+
+		static bool _OpenProcess(out IntPtr R, int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default)
+		{
+			R = Api.OpenProcess(desiredAccess, false, processId);
+			if(R != default) return true;
+			if(processWindow.Is0) return false;
+			if(0 != (desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE))) return false;
+			int e = Native.GetError();
+			if(Process_.UacInfo.ThisProcess.IsUIAccess) R = Api.GetProcessHandleFromHwnd(processWindow);
+			if(R != default) return true;
+			Api.SetLastError(e);
+			return false;
+		}
+	}
+
+	/// <summary>
+	/// Kernel handle that is derived from WaitHandle.
+	/// When don't need to wait, use <see cref="LibKernelHandle"/>, it's more lightweight and has more creation methods.
+	/// </summary>
+	internal class LibKernelWaitHandle :WaitHandle
+	{
+		public LibKernelWaitHandle(IntPtr nativeHandle, bool owndHandle)
+		{
+			base.SafeWaitHandle = new SafeWaitHandle(nativeHandle, owndHandle);
+		}
+	}
+
+	/// <summary>
+	/// Security-related functions, such as enabling privileges.
+	/// </summary>
+	public static class Security_
+	{
+		/// <summary>
+		/// Enables or disables a privilege for this process.
+		/// Returns false if fails. Supports <see cref="Native.GetError"/>.
+		/// </summary>
+		/// <param name="privilegeName"></param>
+		/// <param name="enable"></param>
+		public static bool SetPrivilege(string privilegeName, bool enable)
+		{
+			Api.OpenProcessToken(Api.GetCurrentProcess(), Api.TOKEN_ADJUST_PRIVILEGES, out IntPtr hToken);
+			try {
+				var p = new Api.TOKEN_PRIVILEGES { PrivilegeCount = 1, Privileges = new Api.LUID_AND_ATTRIBUTES { Attributes = enable ? 2u : 0 } }; //SE_PRIVILEGE_ENABLED
+				if(!Api.LookupPrivilegeValue(null, privilegeName, out p.Privileges.Luid)) return false;
+				Api.AdjustTokenPrivileges(hToken, false, p, 0, null, default);
+				if(0 != Native.GetError()) return false;
+			}
+			finally { Api.CloseHandle(hToken); }
+			return true;
+		}
 	}
 
 	/// <summary>

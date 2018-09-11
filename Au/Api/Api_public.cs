@@ -6,6 +6,7 @@ using Au.Types;
 using static Au.NoClass;
 
 #pragma warning disable 1591 //missing XML documentation
+#pragma warning disable 649, 169 //field never assigned/used
 
 namespace Au.Types
 {
@@ -130,7 +131,6 @@ namespace Au.Types
 			public RECT rcCaret;
 		}
 
-#pragma warning disable 649, 169 //field never assigned/used
 		/// <summary><msdn>CREATESTRUCT</msdn></summary>
 		/// <remarks>
 		/// lpszClass is unavailable, because often it is atom. Instead use <see cref="Wnd.ClassName"/>.
@@ -155,7 +155,6 @@ namespace Au.Types
 
 			//tested and documented: hook can change only x y cx cy.
 		}
-#pragma warning restore 649, 169
 
 		/// <summary><msdn>MOUSEHOOKSTRUCT</msdn></summary>
 		/// <tocexclude />

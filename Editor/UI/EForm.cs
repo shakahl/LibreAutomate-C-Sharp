@@ -85,19 +85,32 @@ partial class EForm :Form
 
 	protected override void OnFormClosed(FormClosedEventArgs e)
 	{
+		IsClosed = true;
+		CloseReason = e.CloseReason;
 		base.OnFormClosed(e);
 		Panels.Files.UnloadOnFormClosed();
 	}
+
+	/// <summary>
+	/// The OnFormClosed override sets this property before unloading collection etc.
+	/// </summary>
+	public bool IsClosed { get; private set; }
+
+	/// <summary>
+	/// The OnFormClosed override sets this property before unloading collection etc.
+	/// </summary>
+	public CloseReason CloseReason { get; private set; }
 
 	protected override void WndProc(ref Message m)
 	{
 		Wnd w = (Wnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
 		//var s = m.ToString();
 
-		//switch(msg) {
-		//case Api.WM_CREATE:
-		//	break;
-		//}
+		switch(m.Msg) {
+		case Au.LibRun.AuTask.WM_TASK_ENDED: //WM_USER+900
+			Model?.Running.TaskEnded(m.WParam);
+			return;
+		}
 
 		base.WndProc(ref m);
 
@@ -118,6 +131,14 @@ partial class EForm :Form
 			break;
 		}
 	}
+
+	/// <summary>
+	/// WM_USER+n messages.
+	/// </summary>
+	//internal enum EMsg
+	//{
+	//	xxx = Api.WM_USER + 100,
+	//}
 
 	protected override bool ProcessCmdKey(ref Message msg, Keys k)
 	{
@@ -192,7 +213,7 @@ public static class Panels
 #endif
 
 		var m = PanelManager = new AuDockPanel();
-		m.Create(Folders.ThisApp + @"Default\Panels.xml", Folders.ThisAppDocuments + @"!Settings\Panels.xml",
+		m.Create(Folders.ThisAppBS + @"Default\Panels.xml", Folders.ThisAppDocuments + @"!Settings\Panels.xml",
 			Editor, Files, Output, Find, Open, Running, Recent,
 #if TEST
 			c,

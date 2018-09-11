@@ -58,6 +58,7 @@ namespace Au
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="more">Allows to specify more parameters.</param>
+		/// <exception cref="ArgumentException">Used more.Verb and flag Admin.</exception>
 		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
 		/// <remarks>
 		/// It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
@@ -82,6 +83,12 @@ namespace Au
 			x.cbSize = Api.SizeOf(x);
 			x.fMask = Api.SEE_MASK_NOZONECHECKS | Api.SEE_MASK_NOASYNC | Api.SEE_MASK_NOCLOSEPROCESS | Api.SEE_MASK_CONNECTNETDRV | Api.SEE_MASK_UNICODE;
 			x.nShow = Api.SW_SHOWNORMAL;
+
+			if(flags.Has_(SRFlags.Admin)) {
+				if(more?.Verb != null && !more.Verb.Equals_("runas", true)) throw new ArgumentException("Cannot use Verb with flag Admin");
+				x.lpVerb = "runas";
+			}
+
 			if(more != null) {
 				x.lpVerb = more.Verb;
 				x.lpDirectory = Path_.ExpandEnvVar(more.WorkingDirectory);
@@ -126,9 +133,9 @@ namespace Au
 			var R = new SRResult();
 			bool waitForExit = 0 != (flags & SRFlags.WaitForExit);
 			bool needHandle = flags.Has_(SRFlags.NeedProcessHandle);
-			Process_.LibProcessWaitHandle ph = null;
+			Util.LibKernelWaitHandle ph = null;
 			if(x.hProcess != default) {
-				if(waitForExit || needHandle) ph = new Process_.LibProcessWaitHandle(x.hProcess);
+				if(waitForExit || needHandle) ph = new Util.LibKernelWaitHandle(x.hProcess, true);
 				if(!waitForExit) R.ProcessId = Process_.ProcessIdFromHandle(x.hProcess);
 			}
 
@@ -332,6 +339,12 @@ namespace Au.Types
 		/// Get process handle (<see cref="SRResult.ProcessHandle"/>), if possible.
 		/// </summary>
 		NeedProcessHandle = 4,
+
+		/// <summary>
+		/// Run as administrator, probably with UAC consent dialog.
+		/// Uses verb "runas", therefore other verb cannot be specified.
+		/// </summary>
+		Admin = 8,
 	}
 
 	/// <summary>
@@ -349,7 +362,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// File's right-click menu command, also known as verb. For example "edit", "print", "properties". The default verb is bold in the menu.
-		/// Not all menu items will work. Some may have different name than in the menu. Use verb "RunAs" for "Run as administrator".
+		/// Not all menu items will work. Some may have different name than in the menu.
 		/// </summary>
 		public string Verb;
 

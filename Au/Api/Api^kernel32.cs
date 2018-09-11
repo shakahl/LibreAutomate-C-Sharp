@@ -66,6 +66,9 @@ namespace Au.Types
 		internal static extern bool QueryFullProcessImageName(IntPtr hProcess, bool nativeFormat, [Out] char[] lpExeName, ref int lpdwSize);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern uint ResumeThread(IntPtr hThread);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr CreateFileMapping(IntPtr hFile, SECURITY_ATTRIBUTES lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
 
 		//[DllImport("kernel32.dll", EntryPoint = "OpenFileMappingW", SetLastError = true)]
@@ -433,6 +436,12 @@ namespace Au.Types
 		[DllImport("kernel32.dll", EntryPoint = "ExpandEnvironmentStringsW")]
 		internal static extern int ExpandEnvironmentStrings(string lpSrc, [Out] char[] lpDst, int nSize);
 
+		[DllImport("kernel32.dll", EntryPoint = "GetEnvironmentStringsW")]
+		internal static extern IntPtr GetEnvironmentStrings();
+
+		[DllImport("kernel32.dll", EntryPoint = "FreeEnvironmentStringsW")]
+		internal static extern bool FreeEnvironmentStrings(IntPtr penv);
+
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern int GetProcessId(IntPtr Process);
 
@@ -565,6 +574,7 @@ namespace Au.Types
 		}
 
 
+		internal const uint THREAD_TERMINATE = 0x1;
 		internal const uint THREAD_QUERY_LIMITED_INFORMATION = 0x800;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
@@ -572,6 +582,9 @@ namespace Au.Types
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool GetThreadTimes(IntPtr hThread, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool TerminateThread(IntPtr hThread, int dwExitCode);
 
 		internal const uint GMEM_FIXED = 0x0;
 		internal const uint GMEM_MOVEABLE = 0x2;
@@ -603,6 +616,50 @@ namespace Au.Types
 
 		[DllImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
 		internal static extern IntPtr FindResource(IntPtr hModule, LPARAM lpName, LPARAM lpType);
+
+		internal struct PROCESS_INFORMATION :IDisposable
+		{
+			public IntPtr hProcess;
+			public IntPtr hThread;
+			public int dwProcessId;
+			public int dwThreadId;
+
+			public void Dispose()
+			{
+				CloseHandle(hThread);
+				CloseHandle(hProcess);
+			}
+		}
+
+		[DllImport("kernel32.dll", EntryPoint = "CreateProcessW", SetLastError = true)]
+		internal static extern bool CreateProcess(string lpApplicationName, char[] lpCommandLine, SECURITY_ATTRIBUTES lpProcessAttributes, SECURITY_ATTRIBUTES lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
+
+		[DllImport("advapi32.dll", EntryPoint = "CreateProcessAsUserW", SetLastError = true)]
+		internal static extern bool CreateProcessAsUser(IntPtr hToken, string lpApplicationName, char[] lpCommandLine, SECURITY_ATTRIBUTES lpProcessAttributes, SECURITY_ATTRIBUTES lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
+
+		[DllImport("kernel32.dll", EntryPoint = "CreateWaitableTimerW", SetLastError = true)]
+		internal static extern SafeWaitHandle CreateWaitableTimer(SECURITY_ATTRIBUTES lpTimerAttributes, bool bManualReset, string lpTimerName);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool SetWaitableTimer(SafeWaitHandle hTimer, ref long lpDueTime, int lPeriod = 0, IntPtr pfnCompletionRoutine = default, IntPtr lpArgToCompletionRoutine = default, bool fResume = false);
+
+		[DllImport("kernel32.dll", EntryPoint = "OpenWaitableTimerW", SetLastError = true)]
+		internal static extern SafeWaitHandle OpenWaitableTimer(uint dwDesiredAccess, bool bInheritHandle, string lpTimerName);
+
+		[DllImport("kernel32.dll", EntryPoint = "WaitNamedPipeW", SetLastError = true)]
+		internal static extern bool WaitNamedPipe(string lpNamedPipeName, int nTimeOut);
+
+		[DllImport("kernel32.dll", EntryPoint = "CallNamedPipeW", SetLastError = true)]
+		internal static extern bool CallNamedPipe(string lpNamedPipeName, void* lpInBuffer, int nInBufferSize, out byte lpOutBuffer, int nOutBufferSize, out int lpBytesRead, int nTimeOut);
+
+		//[DllImport("kernel32.dll", SetLastError = true)]
+		//internal static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out int ClientProcessId);
+
+		[DllImport("kernel32.dll")]
+		internal static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
+
+		[DllImport("kernel32.dll")]
+		internal static extern bool QueryPerformanceFrequency(out long lpFrequency);
 
 	}
 }

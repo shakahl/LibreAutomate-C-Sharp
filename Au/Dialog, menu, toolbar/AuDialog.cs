@@ -155,13 +155,17 @@ namespace Au
 		/// </summary>
 		public static class Options
 		{
+			//SHOULDDO: in Au.Editor and Au.Tasks don't allow scripts to change static options in main appdomain.
+			//	Maybe then change thread options instead.
+			//	Or add method Lock().
+
 			/// <summary>
 			/// Default title bar text.
-			/// Default value - current appdomain name. In exe it is exe file name like "example.exe".
+			/// Default value - <see cref="Script.Name"/>. In exe it is exe file name like "Example.exe".
 			/// </summary>
 			public static string DefaultTitle
 			{
-				get => _defaultTitle ?? AppDomain.CurrentDomain.FriendlyName;
+				get => _defaultTitle ?? Script.Name;
 				set { _defaultTitle = value; }
 			}
 			static string _defaultTitle;
@@ -941,10 +945,15 @@ namespace Au
 				if(before) {
 					_screen = Screen;
 					if(_screen.IsNull && _c.hwndParent.Is0) _screen = Options.DefaultScreen;
-					if(!_screen.IsNull) _screen = _screen.GetScreen();
+					if(!_screen.IsNull) _SP_SetScreen();
 				} else if(isXY || !_screen.IsNull) _dlg.MoveInScreen(_x, _y, _screen);
 			} else if(isXY && !before) _dlg.Move(_x, _y);
 		}
+
+		//Use this function to avoid loading Forms assembly when don't need (in most cases). GetScreen returns Screen, which is in Forms assembly.
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		void _SP_SetScreen() { _screen = _screen.GetScreen(); }
+
 		Screen_ _screen;
 
 		int _CallbackProc(Wnd w, TDApi.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data)
@@ -1932,6 +1941,7 @@ namespace Au.Types
 		/// It is the first native icon of the entry assembly of this appdomain; if there are no icons - of the program file of this process (if it's different); if there are no icons too - the default program icon.
 		/// </summary>
 		App = Api.IDI_APPLICATION
+		//TODO: it seems this does not work for appdomain
 	}
 
 	/// <summary>

@@ -16,34 +16,44 @@ using System.Runtime.ExceptionServices;
 using Au;
 using Au.Types;
 using static Au.NoClass;
+using Au.LibRun;
 
 namespace Au.Task
 {
 	static class Program
 	{
-		/// <summary>
-		/// The main entry point for the application.
-		/// </summary>
 		[STAThread]
 		static void Main(string[] args)
 		{
-			//Output.LibUseQM2 = true;
-			//Print(Environment.CommandLine);
-			//Print(args);
-			//return;
+			if(args.Length < 4) return;
+			string name = args[0], asm = args[1];
+			int pdbOffset = args[2].ToInt_();
+			int flags = args[3].ToInt_();
+			if(args.Length == 4) args = null; else args = args.RemoveAt_(0, 4);
 
-			if(args.Length == 0) return;
-			string asm = args[0];
-			if(args.Length == 1) args = null; else args = args.RemoveAt_(0);
+			Script.Name = name;
+			//AppDomain.CurrentDomain.SetData("APP_NAME", name); //does not work. How to change appdomain name?
 
-			int pdbOffset = 0;
-			int i = asm.IndexOf('|') + 1;
-			if(i > 0) { pdbOffset = asm.ToInt_(i); asm = asm.Remove(i - 1); }
+			if(0 != (flags & 1)) { //hasConfig
+				var config = asm + ".config";
+				if(File_.ExistsAsFile(config, true)) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
+			}
 
-			var config = asm + ".config";
-			if(File_.ExistsAsFile(config, true)) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
+			var threadName = "[script] " + name;
+			if(0 != (flags & 2)) { //mtaThread
+				var t = new Thread(() => _Thread(threadName, asm, pdbOffset, args));
+				t.Start();
+				t.Join();
+			} else {
+				_Thread(threadName, asm, pdbOffset, args);
+			}
+		}
 
-			Au.Util.LibRunAsm.RunHere(asm, pdbOffset, args);
+		static void _Thread(string threadName, string asm, int pdbOffset, string[] args)
+		{
+			Thread.CurrentThread.Name = threadName;
+			try { RunAsm.RunHere(RIsolation.process, asm, pdbOffset, args); }
+			catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
 		}
 	}
 }

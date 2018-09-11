@@ -98,6 +98,7 @@ namespace Au
 		/// <summary>
 		/// Gets the window handle as Wnd from a System.Windows.Forms.Control (or Form etc) variable.
 		/// Returns default(Wnd) if w is null or the handle is still not created.
+		/// Should be called in c thread. Calls <see cref="System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="System.Windows.Forms.Control.Handle"/>.
 		/// </summary>
 		public static explicit operator Wnd(System.Windows.Forms.Control c) => new Wnd(c == null || !c.IsHandleCreated ? default : c.Handle);
 
@@ -2389,15 +2390,9 @@ namespace Au
 			get
 			{
 				if(Ver.Is64BitOS) {
-					int pid = ProcessId; if(pid == 0) return false;
-					IntPtr ph = default;
-					try {
-						ph = Api.OpenProcess(Api.PROCESS_QUERY_LIMITED_INFORMATION, false, pid);
-						if(ph == default || !Api.IsWow64Process(ph, out var is32bit)) return false;
+					using(var ph = Util.LibKernelHandle.OpenProcess(this)) {
+						if(ph.Is0 || !Api.IsWow64Process(ph, out var is32bit)) return false;
 						if(!is32bit) return true;
-					}
-					finally {
-						if(ph != default) Api.CloseHandle(ph);
 					}
 				}
 				Native.ClearError();

@@ -138,6 +138,9 @@ HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sRe
 				case InProcAction::IPA_AccEnableChrome:
 					hr = AccEnableChrome2(p);
 					break;
+				//case InProcAction::IPA_StartProcess:
+				//	Print(L"IPA_StartProcess");
+				//	break;
 				}
 				return hr;
 			}

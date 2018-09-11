@@ -257,8 +257,8 @@ partial class PanelFiles :Control
 		try {
 			//CONSIDER: use different logic. Now silently creates empty files, it's not always good. Add parameter createNew. If false, show error if file not found.
 			if(!File_.ExistsAsFile(xmlFile)) {
-				File_.CopyTo(Folders.ThisApp + @"Default\files", collDir);
-				File_.Copy(Folders.ThisApp + @"Default\files.xml", xmlFile);
+				File_.CopyTo(Folders.ThisAppBS + @"Default\files", collDir);
+				File_.Copy(Folders.ThisAppBS + @"Default\files.xml", xmlFile);
 			}
 
 			_model?.UnloadingCollection(); //saves all, closes document, sets current file = null
@@ -387,7 +387,7 @@ partial class PanelFiles :Control
 	{
 		if(_newMenuDone) return; _newMenuDone = true;
 
-		var templDir = Folders.ThisApp + @"Templates";
+		var templDir = Folders.ThisAppBS + @"Templates";
 		_CreateMenu(templDir, ddm, 0);
 
 		void _CreateMenu(string dir, ToolStripDropDownMenu ddParent, int level)
@@ -416,7 +416,7 @@ partial class PanelFiles :Control
 					if(isProject) si = "project";
 					else if(Path_.FindExtension(name) < 0) si = "fileScript";
 					else if(name.EndsWith_(".cs", true)) si = "fileClass";
-					Bitmap im = si != null ? EResources.GetImageUseCache(si) : FilesModel.IconCache.GetImage(v.FullPath, true);
+					Bitmap im = si != null ? EResources.GetImageUseCache(si) : FileNode.IconCache.GetImage(v.FullPath, true);
 					if(im != null) item.Image = im;
 				}
 				ddParent.Items.Insert(i++, item);

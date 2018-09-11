@@ -173,7 +173,6 @@ namespace Au.Controls
 					x.WriteStartElement("panels");
 					_firstSplit.Save(x);
 					x.WriteEndDocument();
-					x.Close();
 				}
 				//#if DEBUG
 				//			Print(File.ReadAllText(_xmlFile));

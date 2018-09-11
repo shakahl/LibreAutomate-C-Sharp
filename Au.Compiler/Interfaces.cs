@@ -39,8 +39,6 @@ namespace Au.Compiler
 
 		ICollectionFile IcfFindRelative(string relativePath, bool? folder);
 
-		bool IcfFindProject(out ICollectionFile folder, out ICollectionFile main);
-
 		IEnumerable<ICollectionFile> IcfEnumProjectFiles(ICollectionFile fSkip = null);
 	}
 

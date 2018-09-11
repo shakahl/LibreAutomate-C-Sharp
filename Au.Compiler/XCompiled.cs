@@ -63,7 +63,7 @@ namespace Au.Compiler
 			/// <param name="projFolder">Project folder or null. If not null, f must be its main file.</param>
 			public bool IsCompiled(ICollectionFile f, out CompResults r, ICollectionFile projFolder)
 			{
-				r = default;
+				r = new CompResults();
 
 				if(_data == null && !_Open()) return false;
 
@@ -110,8 +110,14 @@ namespace Au.Compiler
 						case 'n':
 							r.maxInstances = value.ToInt_(offs);
 							break;
+						case 'b':
+							r.prefer32bit = true;
+							break;
 						case 'z':
 							r.mtaThread = true;
+							break;
+						case 'd':
+							r.pdbOffset = value.ToInt_(offs);
 							break;
 						case 'p':
 							isProject = true;
@@ -132,13 +138,13 @@ namespace Au.Compiler
 							if(_IsFileModified2(dll)) return false;
 							break;
 						default:
-							switch(s[0]) { case 'c': case 'd': case 'k': case 'm': case 'x': case 's': case 'o': break; default: return false; }
+							switch(s[0]) { case 'c': case 'x': case 'k': case 'm': case 'y': case 's': case 'o': break; default: return false; }
 							var f2 = _coll.IcfFindByGUID(value.Substring(offs, s.EndOffset - offs));
 							if(f2 == null) return false;
 							if(_IsFileModified(f2)) return false;
 							switch(s[0]) {
-							case 'o': //config. f2 is the source config file, and now we need the destination.
-								r.config = asmFile + ".config";
+							case 'o': //f2 is the source config file
+								r.hasConfig = true;
 								break;
 							}
 							break;
@@ -169,28 +175,31 @@ namespace Au.Compiler
 			/// <param name="f"></param>
 			/// <param name="outFile">The output assembly.</param>
 			/// <param name="m"></param>
+			/// <param name="pdbOffset"></param>
 			/// <param name="mtaThread">No [STAThread].</param>
-			public void AddCompiled(ICollectionFile f, string outFile, MetaComments m, bool mtaThread)
+			public void AddCompiled(ICollectionFile f, string outFile, MetaComments m, int pdbOffset, bool mtaThread)
 			{
 				if(_data == null) {
 					_data = new Dictionary<string, string>();
 				}
 
 				/*
-	GUIDmain|=path.exe|t2|i2|u2|a2|n2|z|pMD5project|cGUIDcode|dGUIDresource|kGUIDicon|mGUIDmanifest|xGUIDres|sGUIDsign|oGUIDconfig|*ref
+	GUIDmain|=path.exe|t2|i2|u2|a2|n2|b|z|d|pMD5project|cGUIDcode|dGUIDresource|kGUIDicon|mGUIDmanifest|xGUIDres|sGUIDsign|oGUIDconfig|*ref
 	= - outFile
 	t - outputType
 	i - isolation
 	u - uac
 	a - runAlone
 	n - maxInstances
+	b - prefer32bit
 	z - mtaThread
+	d - pdbOffset
 	p - MD5 of guid of all project files except main
 	c - c
-	d - resource
+	x - resource
 	k - icon
 	m - manifest
-	x - res
+	y - res
 	s - sign
 	o - config
 	* - r
@@ -201,10 +210,12 @@ namespace Au.Compiler
 					if(m.OutputPath != null) b.Append("|=").Append(outFile); //else f.Guid in cache
 					if(m.OutputType != MetaComments.DefaultOutputType(m.IsScript)) b.Append("|t").Append((int)m.OutputType);
 					if(m.Isolation != EIsolation.appDomain) b.Append("|i").Append((int)m.Isolation);
-					if(m.Uac != EUac.host) b.Append("|u").Append((int)m.Uac);
+					if(m.Uac != EUac.same) b.Append("|u").Append((int)m.Uac);
 					if(m.RunAlone != MetaComments.DefaultRunAlone(m.IsScript)) b.Append("|a").Append((int)m.RunAlone);
 					if(m.MaxInstances != MetaComments.DefaultMaxInstances(m.IsScript)) b.Append("|n").Append(m.MaxInstances);
+					if(m.Prefer32Bit) b.Append("|b");
 					if(mtaThread) b.Append("|z");
+					if(pdbOffset != 0) b.Append("|d").Append(pdbOffset);
 
 					int nAll = m.Files.Count, nNoC = nAll - m.CountC;
 					if(nNoC > 1) { //add MD5 hash of project files, except main
@@ -216,10 +227,10 @@ namespace Au.Compiler
 						b.Append("|p").Append(md.Hash.ToString());
 					}
 					for(int i = nNoC; i < nAll; i++) _AppendFile("|c", m.Files[i].f); //guids of C# files added through meta 'c'
-					if(m.ResourceFiles != null) foreach(var v in m.ResourceFiles) _AppendFile("|d", v.f); //guids of 'resource' files
+					if(m.ResourceFiles != null) foreach(var v in m.ResourceFiles) _AppendFile("|x", v.f); //guids of 'resource' files
 					_AppendFile("|k", m.IconFile);
 					_AppendFile("|m", m.ManifestFile);
-					_AppendFile("|x", m.ResFile);
+					_AppendFile("|y", m.ResFile);
 					_AppendFile("|s", m.SignFile);
 					_AppendFile("|o", m.ConfigFile);
 
@@ -229,7 +240,7 @@ namespace Au.Compiler
 					if(refs.Count > j) {
 						//string netDir = Folders.Windows + @"Microsoft.NET\";
 						string netDir = Folders.NetFrameworkRuntime; //no GAC
-						var appDir = (string)Folders.ThisApp + @"\";
+						var appDir = Folders.ThisAppBS;
 						for(; j < refs.Count; j++) {
 							var s1 = refs[j].FilePath;
 							if(s1.StartsWith_(netDir, true)) continue;

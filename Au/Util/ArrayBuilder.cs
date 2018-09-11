@@ -23,21 +23,19 @@ namespace Au.Util
 	/// Like List or StringBuilder, used as a temporary variable-size array to create final fixed-size array.
 	/// To avoid much garbage (and many reallocations when growing), uses native memory heap. See <see cref="NativeHeap"/>.
 	/// Must be explicitly disposed to free the native memory. Does not have a finalizer because is struct (to avoid garbage).
-	/// Does not support reference types. Does not call Dispose.
+	/// Does not support reference types. Does not call T.Dispose.
 	/// </summary>
 	//[DebuggerStepThrough]
-	internal unsafe struct LibArrayBuilder<T> :IDisposable where T : struct
+	internal unsafe struct LibArrayBuilder<T> :IDisposable where T : unmanaged
 	{
-		void* _p;
+		T* _p;
 		int _len, _cap;
 
 		static int s_minCap;
 
-		static int _TypeSize => Unsafe.SizeOf<T>(); //optimized to the constant value, except in static ctor (why?)
-
 		static LibArrayBuilder()
 		{
-			var r = 16384 / Unsafe.SizeOf<T>(); //above 16384 the memory allocation API become >=2 times slower
+			var r = 16384 / sizeof(T); //above 16384 the memory allocation API become >=2 times slower
 			if(r > 500) r = 500; else if(r < 8) r = 8;
 			s_minCap = r;
 
@@ -45,15 +43,12 @@ namespace Au.Util
 			//	Normally there are 200-400 windows on my PC, rarely > 500.
 		}
 
-		public void Dispose()
-		{
-			Free();
-		}
+		public void Dispose() => Free();
 
 		/// <summary>
 		/// Gets array memory address (address of element 0).
 		/// </summary>
-		public void* Ptr => _p;
+		public T* Ptr => _p;
 
 		/// <summary>
 		/// Gets the number of elements.
@@ -63,7 +58,7 @@ namespace Au.Util
 		/// <summary>
 		/// Gets the number of bytes in the array (Count*sizeof(T)).
 		/// </summary>
-		public int ByteCount => _len * _TypeSize;
+		public int ByteCount => _len * sizeof(T);
 
 		/// <summary>
 		/// Gets or sets the total number of elements (not bytes) the internal memory can hold without resizing.
@@ -76,7 +71,7 @@ namespace Au.Util
 			{
 				if(value != _cap) {
 					if(value < _len) throw new ArgumentOutOfRangeException();
-					_p = NativeHeap.ReAlloc(_p, value * _TypeSize);
+					_p = (T*)NativeHeap.ReAlloc(_p, value * sizeof(T));
 					_cap = value;
 				}
 			}
@@ -89,11 +84,11 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="count">Element count.</param>
 		/// <param name="zeroInit">Set all bytes = 0. If false, the memory is uninitialized, ie random byte values. Default true. Slower when true.</param>
-		public void* Alloc(int count, bool zeroInit = true)
+		public T* Alloc(int count, bool zeroInit = true)
 		{
 			if(_cap != 0) Free();
 			int cap = Math.Max(count, s_minCap);
-			_p = NativeHeap.Alloc(cap * _TypeSize, zeroInit);
+			_p = (T*)NativeHeap.Alloc(cap * sizeof(T), zeroInit);
 			_cap = cap; _len = count;
 			return _p;
 		}
@@ -109,10 +104,10 @@ namespace Au.Util
 		/// The new memory usually is at a new location. The preserved elements are copied there.
 		/// Sets Count=count. To allocate more memory without changing Count, change Capacity instead.
 		/// </remarks>
-		public void* ReAlloc(int count, bool zeroInit = true)
+		public T* ReAlloc(int count, bool zeroInit = true)
 		{
 			int cap = Math.Max(count, s_minCap);
-			_p = NativeHeap.ReAlloc(_p, cap * _TypeSize, zeroInit);
+			_p = (T*)NativeHeap.ReAlloc(_p, cap * sizeof(T), zeroInit);
 			_cap = cap; _len = count;
 			return _p;
 		}
@@ -135,15 +130,7 @@ namespace Au.Util
 		public void AddR(in T value)
 		{
 			if(_len == _cap) _EnsureCapacity();
-			void* dest = (byte*)_p + _TypeSize * _len;
-			//Unsafe.Copy(dest, ref value); //cannot be used because the parameter is 'in'
-			//Unsafe.Write(dest, value);
-			Unsafe.AsRef<T>(dest) = value;
-			_len++;
-
-			//tested the Unsafe calls, 64-bit:
-			//	T = long. All 3 compiled identically, 2 instructions.
-			//	T = RECT. Copy and AsRef identic, 2 instructions. Write 4 instructions.
+			_p[_len++] = value;
 		}
 
 		/// <summary>
@@ -152,18 +139,7 @@ namespace Au.Util
 		public void Add(T value)
 		{
 			if(_len == _cap) _EnsureCapacity();
-			void* dest = (byte*)_p + _TypeSize * _len;
-			Unsafe.Copy(dest, ref value);
-			//Unsafe.Write(dest, value);
-			//Unsafe.AsRef<T>(dest) = value;
-			_len++;
-
-			//tested the Unsafe calls, 64-bit:
-			//	T = long. All 3 compiled identically, 1 instruction.
-			//	T = RECT. Everything same as with ref, because value actually is passed by ref.
-			//32-bit:
-			//	T = long. All 3 compiled identically, 4 instructions.
-			//	T = RECT. All 3 compiled almost identically, Copy and Write 8 instructions, AsRef 9 instructions.
+			_p[_len++] = value;
 		}
 
 		/// <summary>
@@ -172,8 +148,7 @@ namespace Au.Util
 		public ref T Add()
 		{
 			if(_len == _cap) _EnsureCapacity();
-			void* dest = (byte*)_p + _TypeSize * _len;
-			ref T r = ref Unsafe.AsRef<T>(dest);
+			ref T r = ref _p[_len];
 			r = default;
 			_len++;
 			return ref r;
@@ -198,7 +173,7 @@ namespace Au.Util
 			get
 			{
 				if((uint)i >= (uint)_len) _ThrowBadIndex();
-				return ref Unsafe.AsRef<T>((byte*)_p + _TypeSize * i);
+				return ref _p[i];
 			}
 		}
 
@@ -215,8 +190,7 @@ namespace Au.Util
 		{
 			if(_len == 0) return Array.Empty<T>();
 			var r = new T[_len];
-			for(int i = 0, n = _len; i < n; i++)
-				r[i] = Unsafe.Read<T>((byte*)_p + i * _TypeSize);
+			for(int i = 0; i < r.Length; i++) r[i] = _p[i];
 			return r;
 		}
 	}

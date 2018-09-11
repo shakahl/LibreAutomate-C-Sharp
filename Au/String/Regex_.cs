@@ -456,7 +456,7 @@ namespace Au
 				_regex = regex; _subject = s; _group = group;
 				if(!_GetStartEnd(s, more, out _from, out _to)) throw new ArgumentNullException(nameof(s));
 				_matchFlags = regex._GetMatchFlags(more);
-				if(_matchFlags.HasAny_(RXMatchFlags.PARTIAL_SOFT | RXMatchFlags.PARTIAL_HARD))
+				if(0 != (_matchFlags & (RXMatchFlags.PARTIAL_SOFT | RXMatchFlags.PARTIAL_HARD)))
 					throw new ArgumentException("This function does not support PARTIAL_ flags.", nameof(more));
 				_maxCount = maxCount;
 				foundCount = _rc = 0;
@@ -493,7 +493,7 @@ namespace Au
 					_from++;
 					//also skip the second part of surrogate pair
 					if(_from < _to && (_subject[_from] & 0xfc00) == 0xdc00) {
-						if(_regex._InfoAllOptions.Has_(RXFlags.UTF)) _from++;
+						if(0 != (_regex._InfoAllOptions & RXFlags.UTF)) _from++;
 						//CONSIDER: pcre2_substitute() skips whole \r\n too. Should we too?
 						//	tested: .NET doesn't skip neither \r\n nor surrogate.
 					}

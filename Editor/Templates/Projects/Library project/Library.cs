@@ -3,7 +3,6 @@ outputType dll
 outputPath %Folders.ThisApp%\Libraries
 //debug false
 //xmlDoc
-//run TestScript
 */
 //#include usings.txt
 

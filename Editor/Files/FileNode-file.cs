@@ -176,7 +176,7 @@ partial class FileNode
 	/// Does not open it.
 	/// </summary>
 	/// <param name="model"></param>
-	/// <param name="target"></param>
+	/// <param name="target">Can be null, then adds at the top.</param>
 	/// <param name="pos"></param>
 	/// <param name="template">
 	/// Item type and template.
@@ -190,6 +190,11 @@ partial class FileNode
 	{
 		Debug.Assert(!Empty(template));
 
+		if(target == null) {
+			var root = model.Root;
+			target = root.FirstChild;
+			if(target != null) pos = NodePosition.Before; else { target = root; pos = NodePosition.Inside; }
+		}
 		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
 
 		int i;
@@ -227,12 +232,12 @@ partial class FileNode
 		f._Common_MoveCopyNew(target, pos);
 
 		if(isFolder && template.EndsWith_(" project", true)) {
-			var sm = Path.GetFileName(template); sm = sm.Remove(sm.Length - 8) + ".cs"; //name of project's main file
+			var sm = Path.GetFileName(template); sm = sm.Remove(sm.Length - 8); //name of project's main file, without ".cs"
 			return _NI_FillProjectFolder(model, f, s_dirTemplates + template, sm);
 		}
 		return f;
 	}
-	static string s_dirTemplates = Folders.ThisApp + @"Templates\";
+	static string s_dirTemplates = Folders.ThisAppBS + @"Templates\";
 
 	static FileNode _NI_FillProjectFolder(FilesModel model, FileNode fnParent, string dirParent, string mainName)
 	{
@@ -242,10 +247,13 @@ partial class FileNode
 			if(v.IsDirectory) {
 				_NI_FillProjectFolder(model, f, v.FullPath, null);
 			} else {
-				if(mainName != null && v.Name.Equals_(mainName, true)) {
-					mainName = null;
-					fnParent.Xml.SetAttributeValue("project", f.Guid);
-					fnMain = f;
+				if(mainName != null) {
+					var s1 = v.Name;
+					if(s1.Equals_(mainName, true) || Path_.GetFileNameWithoutExtension(s1).Equals_(mainName, true)) {
+						mainName = null;
+						fnParent.Xml.SetAttributeValue("project", f.Guid);
+						fnMain = f;
+					}
 				}
 			}
 		}
@@ -263,17 +271,8 @@ partial class FileNode
 			return null;
 		});
 
-		//SHOULDDO: when adding classes to library project, if the main file contains a namespace, add that namespace in the new file too.
+		//when adding classes to library project, if the main file contains a namespace, add that namespace in the new file too.
 		if(template == "Class.cs" && newParent.FindProject(out var projFolder, out var projMain)) {
-			//in project don't need meta 'run TestScript'
-			var meta =
-@"/* meta
-//run TestScript
-*/
-";
-			if(s.StartsWith_(meta)) s = s.Substring(meta.Length);
-
-			//wrap in same namespace as in projMain
 			var rx = @"(?m)^namespace [\w\.]+";
 			if(!s.RegexIsMatch_(rx) && projMain.GetText(true).RegexMatch_(rx, 0, out var ns)) {
 				s = s.RegexReplace_(@"(?ms)^public class .+\}", ns + "\r\n{\r\n$0\r\n}", 1);

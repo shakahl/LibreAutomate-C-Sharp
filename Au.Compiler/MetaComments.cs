@@ -41,7 +41,7 @@ namespace Au.Compiler
 	/// Options and values must match case, except filenames/paths. No "", no escaping.
 	/// The same option can be several times with different values, for example to specify several references.
 	/// All available options are in the examples below. The //comments in option lines are used only for documentation here; not allowed in real meta comments.
-	/// When compiling multiple files (project, or using option 'c'), only the main file can contain all options. Other files can contain only 'r', 'c', 'resource' and 'run'.
+	/// When compiling multiple files (project, or using option 'c'), only the main file can contain all options. Other files can contain only 'r', 'c', 'resource'.
 	/// </remarks>
 	/// <example>
 	/// <h3>References</h3>
@@ -92,14 +92,19 @@ namespace Au.Compiler
 	/// 
 	/// <h3>Settings used to execute the compiled script or app. Here a|b|c means a or b or c.</h3>
 	/// <code><![CDATA[
-	/// isolation process|appDomain|thread|hostThread //in what process, app domain and thread to execute the assembly. In the list, the isolation level is from highest to lowest, and the startup speed is from lowest to highest. Default: appDomain. Use process when need 32-bit process or different UAC integrity level; also for scripts/apps that may kill the host process. Use thread for scripts that must start as quickly as possible; the thread is in the host Au process; note: then assemblies cannot be unloaded, therefore can create big memory leaks when developing the script (compiling new code frequently). Use hostThread only for scripts/apps that must interact with the host app in its main thread; it also has the memory leak problem, and can easily make the host app unstable/unresponsive.
-	/// uac user|admin|uiAccess|low|host //UAC integrity level of the process. Default: host (the same as of the host process).
-	/// prefer32bit //run in 32-bit process. Default: 64-bit or 32-bit, the same as Windows.
+	/// isolation process|appDomain|thread|hostThread //in what process, app domain and thread to execute the assembly. Default: appDomain.
+	/// uac same|user|admin //UAC integrity level (IL). Default: same. If the specified IL does not match that of the host process, the script runs in other host process.
+	/// prefer32bit true|false //32-bit process. Default: false. In any case, the assembly is AnyCPU and can load AnyCPU dlls. Must be isolation process.
 	/// runAlone yes|no|wait //if yes - don't run this script/app if a run-alone script/app (this or other) is running; wait - run when it ends. Default: yes for scripts, no for apps.
 	/// maxInstances 1 //maximum number of running instances of this script/app. Unlimited if -1. Default: 1 for scripts, unlimited for apps. Can be 0.
-	/// run file //run this script/app instead. Its args[0] will be the full path of the output assembly file.
 	/// ]]></code>
-	/// These options are applied only when the script/app is started from an Au process, not when it runs as independent exe program.
+	/// These options are applied only when the script/app is started from an Au process, not when it runs as independent exe program. Except prefer32bit.
+	/// About isolation:
+	/// appDomain (default) - the script runs in new AppDomain. It is like a subprocess in current process. Also it runs in new thread.
+	/// process - the script runs in other process. Slower startup. For example, can be used for scripts/apps that may kill the host process or hang and cannot be ended; also with option 'prefer32bit'.
+	/// thread - the script runs in new thread in the main AppDomain of host process. 
+	/// hostThread - the script runs in the main thread of host process. Almost never need it. If the script is not carefully programmed, can easily make the host process unstable/unresponsive.
+	/// When isolation is thread or hostThread, the script assembly is not unloaded until host process exits. Good: 1. Fast startup. 2. Values of static variables are retained when the script runs multiple times, until it is recompiled (when code modified). Bad: can create quite big memory leak when compiling the script frequently, because old assembly versions cannot be unloaded until host process exits; used reference assemblies also cannot be unloaded.
 	/// 
 	/// <h3>Other</h3>
 	/// <code><![CDATA[
@@ -126,9 +131,9 @@ namespace Au.Compiler
 	/// If 'manifest' and 'resFile' not specified when creating .exe file, adds manifest from file "default.exe.manifest" in the main Au folder, if exists.
 	/// If 'resFile' not specified when creating .exe or .dll file, adds version resource, with values collected from attributes such as [assembly: AssemblyVersion("...")]; see how it is in Visual Studio projects, in file Properties\AssemblyInfo.cs.
 	/// 
-	/// Currently not implemented:
-	/// Options uac, runAlone, maxInstances. Sripts/apps run with the same UAC integrity level as the program that started them. Running instances are unlimited.
-	/// Running script/app mananagemet. Users cannot see what scripts/apps are running, and cannot end them easily.
+	/// About thread apartment type:
+	/// For scripts it is STA, and cannot be changed.
+	/// For apps it is STA if the Main function has [STAThread] attribute; or if using meta option isolation hostThread. Else it is MTA.
 	/// </example>
 	class MetaComments
 	{
@@ -232,11 +237,6 @@ namespace Au.Compiler
 		public MetaFileAndString PostBuild { get; private set; }
 
 		/// <summary>
-		/// Meta option 'run'.
-		/// </summary>
-		public ICollectionFile Run { get; private set; }
-
-		/// <summary>
 		/// Meta option 'isolation'.
 		/// Default: appDomain.
 		/// </summary>
@@ -244,7 +244,7 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// Meta option 'uac'.
-		/// Default: host.
+		/// Default: same.
 		/// </summary>
 		public EUac Uac { get; private set; }
 
@@ -324,17 +324,20 @@ namespace Au.Compiler
 		/// </summary>
 		public int EndOfMeta { get; private set; }
 
+		EMPFlags _flags;
+
 		/// <summary>
 		/// Extracts meta comments from all C# files of this compilation, including project files and files added through meta option 'c'.
 		/// Returns false if there are errors. Then use <see cref="Errors"/>.
 		/// </summary>
 		/// <param name="f">Main C# file. If projFolder not null, must be the main file of the project.</param>
 		/// <param name="projFolder">Project folder of the main file, or null if it is not in a project.</param>
-		/// <param name="printErrors">Call <see cref="ErrBuilder.PrintAll"/>.</param>
-		public bool Parse(ICollectionFile f, ICollectionFile projFolder, bool printErrors)
+		/// <param name="flags"></param>
+		public bool Parse(ICollectionFile f, ICollectionFile projFolder, EMPFlags flags)
 		{
 			Debug.Assert(Errors == null); //cannot be called multiple times
 			Errors = new ErrBuilder();
+			_flags = flags;
 
 			_ParseFile(f, true);
 
@@ -344,14 +347,15 @@ namespace Au.Compiler
 
 			if(_filesC != null) {
 				foreach(var ff in _filesC) {
-					if(Files.Exists(o => o.f == ff)) continue; //slow, much garbage (delegate) //TODO: test
+					if(Files.Exists(o => o.f == ff)) continue;
 					_ParseFile(ff, false);
 				}
 			}
 
 			_FinalCheckOptions();
+
 			if(!Errors.IsEmpty) {
-				if(printErrors) Errors.PrintAll();
+				if(flags.Has_(EMPFlags.PrintErrors)) Errors.PrintAll();
 				return false;
 			}
 
@@ -371,7 +375,6 @@ namespace Au.Compiler
 		public void _ParseFile(ICollectionFile f, bool isMain)
 		{
 			string code = File.ReadAllText(f.FilePath); //FUTURE: why so slow when file contains 17_000_000 empty lines? 230-1600 ms (it seems makes so much garbage that triggers GC). QM2 reads+converts to UTF16 in 55 ms.
-			//Perf.Next();
 			if(Empty(code)) return;
 
 			bool isScript = false;
@@ -452,23 +455,18 @@ namespace Au.Compiler
 				_filesC.Add(ff);
 				return;
 			case "resource":
-				var fs1= _GetFileAndString(value, iValue); if(fs1.f == null) return;
+				var fs1 = _GetFileAndString(value, iValue); if(fs1.f == null) return;
 				if(ResourceFiles == null) ResourceFiles = new List<MetaFileAndString>();
 				else if(ResourceFiles.Exists(o => o.f == fs1.f && o.s == fs1.s)) return;
 				ResourceFiles.Add(fs1);
 				return;
-			//FUTURE: support wildcard:
-			// resource *.png //add to managed resources all matching files in this C# file's folder.
-			// resource Resources\*.png //add to managed resources all matching files in a subfolder of this C# file's folder.
-			case "run":
-				if(_isMain) {
-					Run = _GetFile(value, iValue);
-					if(Run == _fn) Run = null;
-				}
-				return;
+				//FUTURE: support wildcard:
+				// resource *.png //add to managed resources all matching files in this C# file's folder.
+				// resource Resources\*.png //add to managed resources all matching files in a subfolder of this C# file's folder.
+				//Support folder (add all in folder).
 			}
 			if(!_isMain) {
-				_Error(iKey, $"in this file only these options can be used: 'r', 'c', 'resource', 'run'. Others only in the main file of the compilation - {Files[0].f.Name}.");
+				_Error(iKey, $"in this file only these options can be used: 'r', 'c', 'resource'. Others only in the main file of the compilation - {Files[0].f.Name}.");
 				return;
 			}
 
@@ -500,14 +498,17 @@ namespace Au.Compiler
 			case "outputPath":
 #if STANDARD_SCRIPT
 				//scripts can be .exe, but we don't allow it, because there is no way to set args, [STAThread], triggers.
-				if(IsScript) _Error(iKey, "scripts cannot have option outputPath. If want to create .exe, use App or App project (menu -> File -> New)."); else
+				if(IsScript) _Error(iKey, "scripts cannot have option outputPath. If want to create .exe, use App or App/Script project (menu -> File -> New)."); else
 #endif
 				OutputPath = _GetOutPath(value, iValue); //and creates directory if need
 				break;
 			case "outputType":
 				if(_Enum(out EOutputType ot, value, iValue)) {
-					if(ot == EOutputType.dll && IsScript) _Error(iValue, "cannot create dll from script");
-					else OutputType = ot;
+					OutputType = ot;
+					if(ot == EOutputType.dll) {
+						if(IsScript) _Error(iValue, "cannot create dll from script");
+						else if(OutputPath == null) OutputPath = Folders.ThisAppBS + "Libraries";
+					}
 				}
 				break;
 			case "isolation":
@@ -523,11 +524,11 @@ namespace Au.Compiler
 				if(_TrueFalse(out bool is32, value, iValue)) Prefer32Bit = is32;
 				break;
 			case "runAlone":
-				_usedNonDllOption = true;
+				_usedNonDllOption = _usedLimits = true;
 				if(_Enum(out ERunAlone runAlone, value, iValue)) RunAlone = runAlone;
 				break;
 			case "maxInstances":
-				_usedNonDllOption = true;
+				_usedNonDllOption = _usedLimits = true;
 				MaxInstances = value.ToInt_();
 				break;
 			case "config":
@@ -604,7 +605,7 @@ namespace Au.Compiler
 		ICollectionFile _GetFile(string s, int errPos)
 		{
 			var f = _fn.IcfFindRelative(s, false);
-			if(f == null) { _Error(errPos, "file does not exist: " + s + " (must be in this collection)"); return null; }
+			if(f == null) { _Error(errPos, $"file '{s}' does not exist in this collection"); return null; }
 			if(!Au.File_.ExistsAsFile(s = f.FilePath, true)) { _Error(errPos, "file does not exist: " + s); return null; }
 			return f;
 		}
@@ -641,7 +642,6 @@ namespace Au.Compiler
 				break;
 			case EOutputType.dll:
 				if(_usedNonDllOption) return _Error(0, "with outputType dll cannot use isolation, uac, prefer32bit, runAlone, maxInstances, config, manifest");
-				if(OutputPath == null) OutputPath = Folders.ThisApp + "Libraries";
 				break;
 			}
 
@@ -652,11 +652,16 @@ namespace Au.Compiler
 
 			switch(Isolation) {
 			case EIsolation.thread:
+				if(OutputPath != null || ConfigFile != null) return _Error(0, "with isolation thread cannot use: outputPath, config");
+				break;
 			case EIsolation.hostThread:
-				if(OutputPath != null) return _Error(0, "with isolation thread cannot use outputPath");
-				if(ConfigFile != null) return _Error(0, "with isolation thread cannot use config");
+				if(OutputPath != null || ConfigFile != null || Uac != EUac.same || _usedLimits) return _Error(0, "with isolation hostThread cannot use: outputPath, config, uac, runAlone, maxInstances");
 				break;
 			}
+
+			if(Prefer32Bit && Isolation != EIsolation.process) return _Error(0, "if prefer32bit true, need isolation process");
+
+			if(RunAlone != ERunAlone.no && (uint)MaxInstances > 1) return _Error(0, "must be either runAlone no or maxInstances 1 or 0");
 
 			//if(OutputPath == null && OutputType!= EOutputType.dll) {
 			//	//FUTURE: show warning if used non-.NET/GAC/Au refs
@@ -665,7 +670,7 @@ namespace Au.Compiler
 			return true;
 		}
 
-		bool _usedNonDllOption;
+		bool _usedNonDllOption, _usedLimits;
 	}
 
 	struct MetaCSharpFile
@@ -688,7 +693,19 @@ namespace Au.Compiler
 
 	public enum EIsolation { appDomain, process, thread, hostThread }
 
-	public enum EUac { host, user, admin, uiAccess, low }
+	public enum EUac { same, user, admin }
 
 	public enum ERunAlone { yes, no, wait }
+
+	/// <summary>
+	/// Flags for <see cref="MetaComments.Parse"/>
+	/// </summary>
+	[Flags]
+	public enum EMPFlags
+	{
+		/// <summary>
+		/// Call <see cref="ErrBuilder.PrintAll"/>.
+		/// </summary>
+		PrintErrors = 1,
+	}
 }

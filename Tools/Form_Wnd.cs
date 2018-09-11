@@ -664,7 +664,7 @@ namespace Au.Tools
 					b.Append("<i>Is64Bit<>:    ").AppendLine(w.Is64Bit.ToString());
 					var uac = Process_.UacInfo.GetOfProcess(pid);
 					b.Append("<i><help T_Au_Process__UacInfo>UAC<> IL, elevation<>:    ")
-						.Append(uac.IntegrityLevelAndUIAccess.ToString())
+						.Append(uac.IntegrityLevel.ToString())
 						.Append(", ").AppendLine(uac.Elevation.ToString());
 
 					//if control's process or thread is different...

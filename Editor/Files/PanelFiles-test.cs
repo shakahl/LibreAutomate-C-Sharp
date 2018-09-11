@@ -171,7 +171,7 @@ partial class PanelFiles
 			f = _model.Find("tips.txt", null);
 			Print(f?.FilePath);
 		};
-		m["delete icon cache"] = o => { FilesModel.IconCache.ClearCache(); _c.Invalidate(); };
+		m["delete icon cache"] = o => { FileNode.IconCache.ClearCache(); _c.Invalidate(); };
 		m.Separator();
 
 		m.Show();

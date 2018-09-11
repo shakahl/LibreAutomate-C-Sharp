@@ -36,6 +36,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	public readonly string StateFile;
 	public readonly Dictionary<string, FileNode> GuidMap;
 	public readonly List<FileNode> OpenFiles;
+	public readonly RunningTasks Running;
 	public readonly AutoSave Save;
 
 	/// <summary>
@@ -61,8 +62,9 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		Root = new FileNode(this, Xml, true); //recursively creates whole model tree
 
 		if(TV != null) { //null when importing
-			OpenFiles = new List<FileNode>();
 			Save = new AutoSave(this);
+			OpenFiles = new List<FileNode>();
+			Running = new RunningTasks();
 			_InitClickSelect();
 			_InitDragDrop();
 			_InitWatcher();
@@ -81,6 +83,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		if(Save != null) { //null when importing
 
 			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
+			Running.Dispose();
 			Save.Dispose();
 			_UninitWatcher();
 			_UninitClickSelect();
@@ -100,8 +103,6 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 
 	NodeIcon _ncIcon;
 	NodeTextBox _ncName;
-
-	public static Icon_.ImageCache IconCache = new Icon_.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
 
 	//Called by FilesPanel
 	public void InitNodeControls(NodeIcon icon, NodeTextBox name)
@@ -123,24 +124,10 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	{
 		var f = node.Tag as FileNode;
 		//Print(f);
+		Debug.Assert(node.IsLeaf != f.IsFolder);
 
 		if(_myClipboard.Contains(f)) return EResources.GetImageUseCache("cut");
-
-		Debug.Assert(node.IsLeaf != f.IsFolder);
-		string k;
-		switch(f.NodeType) {
-		case ENodeType.Folder:
-			if(f.IsProjectFolder) k = "project";
-			else if(node.IsExpanded) k = "folderOpen";
-			else k = "folder";
-			break;
-		case ENodeType.Script: k = "fileScript"; break;
-		case ENodeType.CS: k = "fileClass"; break;
-		default:
-			if(!f.IsLink(out string s)) s = f.FilePath;
-			return IconCache.GetImage(s, true);
-		}
-		return EResources.GetImageUseCache(k);
+		return f.GetIcon(node.IsExpanded);
 	}
 
 	private void _ncName_DrawText(object sender, DrawEventArgs e)
@@ -263,6 +250,16 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		var d = FilesDirectory;
 		if(path.Length > d.Length && path.StartsWith_(d, true) && path[d.Length] == '\\') return Root.FindDescendant(path.Substring(d.Length), null);
 		return FileNode.FromX(Root.Xml.Descendant_("f", "path", path, true));
+	}
+
+	/// <summary>
+	/// Finds all files (and not folders) that have the specified name.
+	/// Returns empty array if not found.
+	/// </summary>
+	/// <param name="name">File name. If starts with backslash, works like <see cref="Find"/>.</param>
+	public FileNode[] FindAll(string name)
+	{
+		return Root.FindAllDescendantFiles(name);
 	}
 
 	#endregion
@@ -449,10 +446,11 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 
 	/// <summary>
 	/// Selects the node and opens its file in the code editor.
+	/// Returns false if failed to select, for example if f is a folder.
 	/// </summary>
 	/// <param name="f">Can be null to set 'no current file, empty editor'.</param>
 	/// <param name="doNotChangeSelection"></param>
-	public void SetCurrentFile(FileNode f, bool doNotChangeSelection = false)
+	public bool SetCurrentFile(FileNode f, bool doNotChangeSelection = false)
 	{
 		if(!doNotChangeSelection && f != null) {
 			_disableSetCurrentFile = true;
@@ -460,6 +458,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 			_disableSetCurrentFile = false;
 		}
 		if(_currentFile != f) _SetCurrentFile(f);
+		return _currentFile == f;
 	}
 
 	public FileNode[] SelectedItems { get => TV.SelectedNodes.Select(tn => tn.Tag as FileNode).ToArray(); }
@@ -488,13 +487,18 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		  };
 		m.Closed += onClosed;
 
-		m.ShowAsContextMenu_();
-		_msgLoop.Loop();
-		if(TV.SelectedNodes.Count < 2) {
-			if(_currentFile == null) TV.ClearSelection(); else _currentFile.SelectSingle();
+		_inContextMenu = true;
+		try {
+			m.ShowAsContextMenu_();
+			_msgLoop.Loop();
+			if(TV.SelectedNodes.Count < 2) {
+				if(_currentFile == null) TV.ClearSelection(); else _currentFile.SelectSingle();
+			}
 		}
+		finally { _inContextMenu = false; }
 	}
 	Au.Util.MessageLoop _msgLoop = new Au.Util.MessageLoop();
+	bool _inContextMenu;
 
 	private void _TV_Expanded(object sender, TreeViewAdvEventArgs e)
 	{
@@ -521,9 +525,11 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	/// </summary>
 	FileNode _GetInsertPos(out NodePosition pos, bool askIntoFolder = false)
 	{
+		//TODO: use _inContextMenu here. If it is false, and askIntoFolder, show dialog with 2 or 3 options: top, above selected, in selected folder.
+
 		FileNode r;
 		var c = TV.CurrentNode;
-		if(c == null) { //probably empty treeview
+		if(c == null) { //empty treeview?
 			r = Root;
 			pos = NodePosition.Inside;
 		} else {
@@ -535,12 +541,20 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		return r;
 	}
 
-	public void NewItem(string template)
+	public FileNode NewItem(string template, string name = null)
 	{
-		var target = _GetInsertPos(out var pos);
-		var f = FileNode.NewItem(this, target, pos, template);
-		if(f == null) return;
+		var pos = NodePosition.Inside;
+		var target = _inContextMenu ? _GetInsertPos(out pos) : null;
+		return NewItem(target, pos, template, name);
+	}
+
+	/// <inheritdoc cref="FileNode.NewItem"/>
+	public FileNode NewItem(FileNode target, NodePosition pos, string template, string name = null)
+	{
+		var f = FileNode.NewItem(this, target, pos, template, name);
+		if(f == null) return null;
 		if(!f.IsFolder) SetCurrentFile(f);
+		return f;
 	}
 
 	public void RenameSelected()

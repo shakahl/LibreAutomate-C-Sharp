@@ -132,22 +132,22 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Checks flags and throws ArgumentException if some flags are invalid. The message includes valid flag names.
+		/// Checks flags and throws ArgumentException if some flags are invalid. The error message includes valid flag names.
 		/// </summary>
 		/// <param name="flags">Flags to check.</param>
 		/// <param name="goodFlags">Valid flags.</param>
-		/// <typeparam name="T">The enum type used for flags.</typeparam>
 		/// <remarks>
 		/// Can be used in functions that have an enum flags parameter but not all passed flags are valid for that function or object state.
 		/// Does nothing if Opt.Debug.<see cref="OptDebug.Verbose" r=""/> == false.
-		/// When flags are valid, this function is very fast (inline, no calls).
+		/// When flags are valid, this function is fast.
 		/// </remarks>
-		internal static void LibCheckFlagsOpt<T>(T flags, T goodFlags) where T : Enum
+		internal static unsafe void LibCheckFlagsOpt<T>(T flags, T goodFlags) where T : unmanaged, Enum
 		{
 			//FUTURE: if this is really often useful, make it public. If not used - remove.
 
-			int a = Unsafe.As<T, int>(ref flags);
-			int b = Unsafe.As<T, int>(ref goodFlags);
+			Debug.Assert(sizeof(T) == 4);
+			int a = *(int*)&flags;
+			int b = *(int*)&goodFlags;
 			if(a != (a & b)) _CheckFlagsOpt(typeof(T), b);
 		}
 

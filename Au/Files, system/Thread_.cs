@@ -26,7 +26,7 @@ namespace Au
 	/// <summary>
 	/// Thread functions. Extends <see cref="Thread"/>.
 	/// </summary>
-	public class Thread_
+	public static class Thread_
 	{
 		/// <summary>
 		/// Gets native thread id of this thread.
@@ -61,5 +61,16 @@ namespace Au
 			}
 		}
 
+		/// <summary>
+		/// Calls API OpenThread and TerminateThread.
+		/// If it is a managed thread, at first need to set its IsBackground = true.
+		/// </summary>
+		/// <param name="nativeId"></param>
+		internal static void LibTerminate(int nativeId)
+		{
+			var th = Api.OpenThread(Api.THREAD_TERMINATE, false, nativeId); if(th == default) return;
+			Api.TerminateThread(th, 0);
+			Api.CloseHandle(th);
+		}
 	}
 }

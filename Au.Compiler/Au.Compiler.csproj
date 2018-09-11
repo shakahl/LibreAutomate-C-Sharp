@@ -68,7 +68,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Compiler.cs" />
-    <Compile Include="CUtil.cs" />
     <Compile Include="ErrBuilder.cs" />
     <Compile Include="Interfaces.cs" />
     <Compile Include="MetaComments.cs" />

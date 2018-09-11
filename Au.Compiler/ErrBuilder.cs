@@ -132,7 +132,7 @@ namespace Au.Compiler
 			//header line
 			_b.AppendFormat("<><Z #{0}>Compilation: ", ErrorCount != 0 ? "F0E080" : "A0E0A0");
 			if(ErrorCount != 0) _b.Append(ErrorCount).Append(" errors").Append(WarningCount != 0 ? ", " : "");
-			if(WarningCount != 0) _b.Append(WarningCount).Append(@" warnings <print To disable certain warnings in part of code: #pragma warning disable CS0168, 649 ...code lines... #pragma warning restore. Or in whole compilation: /* meta disableWarnings CS0168, 649 */ (the first line).>?<>");
+			if(WarningCount != 0) _b.Append(WarningCount).Append(@" warnings <print Examples of disabling certain warnings: 1. #pragma warning disable 168, 649 ... #pragma warning restore. 2. /* meta disableWarnings 168, 649 */. The first disables in several lines of code; can be anywhere in code. The second disables in whole compilation; meta comments must be at the very start of code.>?<>");
 			_b.AppendLine("<>");
 			
 			//errors and warnings

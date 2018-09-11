@@ -29,15 +29,16 @@ partial class EForm
 {
 	internal void TestEditor()
 	{
-		var th = new Thread(()=>
-		{
-			Thread.Sleep(-1);
-		});
-		th.SetApartmentState(ApartmentState.STA);
-		th.IsBackground = true;
-		th.Start();
 
-		return;
+		//var th = new Thread(()=>
+		//{
+		//	Thread.Sleep(-1);
+		//});
+		//th.SetApartmentState(ApartmentState.STA);
+		//th.IsBackground = true;
+		//th.Start();
+
+		//return;
 
 
 		var doc = Panels.Editor.ActiveDoc;
@@ -78,7 +79,8 @@ partial class EForm
 		//var fn = Model.Root;
 		//Print(fn.FindRelative(a[0], folder));
 
-		Print(Model.FindByFilePath(a[0]));
+		//Print(Model.FindByFilePath(a[0]));
+		Print(Model.FindAll(a[0]));
 
 		//if(!s_test1) {
 		//	s_test1 = true;

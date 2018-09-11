@@ -18,7 +18,7 @@ using static Au.NoClass;
 
 namespace Au
 {
-	//CONSIDER: Move to Util, if rarely used in scripts.
+	//CONSIDER: Move to Util. Probably rarely used in scripts.
 	//CONSIDER: Try to add InterProcessVariables too. Because scripts often run in separate processes.
 
 	/// <summary>

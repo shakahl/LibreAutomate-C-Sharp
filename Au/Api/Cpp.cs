@@ -24,7 +24,7 @@ namespace Au.Types
 		static Cpp()
 		{
 			string s = Ver.Is64BitProcess ? @"Dll\64bit\AuCpp.dll" : @"Dll\32bit\AuCpp.dll";
-			if(default != Api.LoadLibrary(Folders.ThisApp + s)) return; //normal
+			if(default != Api.LoadLibrary(Folders.ThisAppBS + s)) return; //normal
 			if(default != Api.LoadLibrary(Folders.ThisAppTemp + s)) return; //extracted from resources
 			if(default != Api.LoadLibrary("AuCpp.dll")) return; //exe directory, system 32 or 64 bit directory, %PATH%, current directory
 			if(default != Api.LoadLibrary(@"Q:\app\Au\_\" + s)) return; //my project output directory
@@ -145,6 +145,11 @@ namespace Au.Types
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern char* Cpp_LowercaseTable();
+
+		// PROCESS
+
+		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern int Cpp_StartProcess(string exeFile, string args, string workingDir, string environment, out BSTR sResult);
 
 		// TEST
 

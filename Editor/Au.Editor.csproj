@@ -76,9 +76,6 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=4.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.4.4.0\lib\netstandard2.0\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Drawing" />
@@ -103,14 +100,14 @@
     <None Include="Templates\Projects\Library project\Library.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Templates\Projects\App project\Class1.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="Templates\App.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Test\tree.cs" />
     <Compile Include="Run\Run.cs" />
+    <None Include="Templates\Projects\Script project\Script">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Compile Include="UI\CmdHandlers.cs" />
     <Compile Include="Edit\PanelEdit.cs">
       <SubType>Component</SubType>
@@ -124,29 +121,28 @@
     <Compile Include="Files\FileNode-file.cs" />
     <Compile Include="Files\FileNode.cs" />
     <Compile Include="Files\FilesModel.cs" />
-    <Compile Include="Tools\PanelFind.cs">
+    <Compile Include="Panels\PanelFind.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Tools\PanelOpen.cs">
+    <Compile Include="Panels\PanelOpen.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Tools\PanelOutput.cs">
+    <Compile Include="Panels\PanelOutput.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Tools\PanelRecent.cs">
+    <Compile Include="Panels\PanelRecent.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Tools\PanelRunning.cs">
+    <Compile Include="Panels\PanelRunning.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Tools\PanelStatus.cs">
+    <Compile Include="Panels\PanelStatus.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Util\EApi.cs" />
     <Compile Include="Util\EUtil.cs" />
     <Compile Include="Files\PanelFiles-test.cs" />
     <Compile Include="Test\TestEditor.cs" />
-    <None Include="packages.config" />
     <None Include="Properties\Au.pfx" />
     <Compile Include="Files\PanelFiles.cs" />
     <Compile Include="UI\EForm.cs">
@@ -258,6 +254,7 @@
     <None Include="Templates\include\usings.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Resources\qm_running.ico" />
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
   <ItemGroup />

@@ -143,7 +143,7 @@ namespace Au.Util
 		//internal Thread_.ProcessVariables thread_;
 		//internal Perf.Inst perf;
 
-#endregion
+		#endregion
 
 		/// <summary>
 		/// Gets pointer to the memory.
@@ -293,7 +293,7 @@ namespace Au.Util
 		/// Allocates new or gets "cached" array of type T of length n or more.
 		/// The returned array is managed by a WeakReference&lt;T[]&gt; variable provided by the caller. Its contents is undefined.
 		/// </summary>
-		/// <typeparam name="T">Any value type, for example char, byte, RECT.</typeparam>
+		/// <typeparam name="T">Any simple value type, for example char, byte, RECT.</typeparam>
 		/// <param name="n">
 		/// How many elements you need.
 		/// If array in the WeakReference variable is null or too small, creates new array and stores it there.
@@ -307,11 +307,11 @@ namespace Au.Util
 		/// The WeakReference variable allows the array to be garbage-collected if it is not used when GC runs. It is automatic and safe. Next time this function will create new array.
 		/// Actually this function is a wrapper for WeakReference&lt;T[]&gt; functions TryGetTarget/SetTarget. Makes it easier to use.
 		/// </remarks>
-		public static T[] Get<T>(int n, ref WeakReference<T[]> weakReference) where T : struct
+		public static unsafe T[] Get<T>(int n, ref WeakReference<T[]> weakReference) where T : unmanaged
 		{
 			//if(threadStaticWeakReference != null && !threadStaticWeakReference.TryGetTarget(out var test)) Print("collected"); test = null;
 
-			if(Unsafe.SizeOf<T>() <= 2) { //info: don't concern about speed. In Release this is removed completely by the compiler.
+			if(sizeof(T) <= 2) { //info: don't concern about speed. In Release this is removed completely by the compiler.
 				if(n < 300) n = 300;
 				n++; //for safety add 1 for terminating '\0'. See also code 'r.Length - 1' in LibChar etc.
 			}

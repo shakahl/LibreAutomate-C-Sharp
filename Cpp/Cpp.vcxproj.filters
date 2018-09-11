@@ -28,6 +28,9 @@
     <Filter Include="Source Files\Acc">
       <UniqueIdentifier>{2173271c-7256-4ff0-8dd2-a9016fd326db}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\other">
+      <UniqueIdentifier>{e8318082-67dd-44f1-8bfd-e6fc6d1f1758}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="test.cpp">
@@ -71,6 +74,9 @@
     </ClCompile>
     <ClCompile Include="acc web.cpp">
       <Filter>Source Files\Acc</Filter>
+    </ClCompile>
+    <ClCompile Include="start process.cpp">
+      <Filter>Source Files\other</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

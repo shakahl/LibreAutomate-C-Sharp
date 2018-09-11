@@ -269,8 +269,15 @@ namespace Au
 		/// Unlike <see cref="ThisProcess"/>, this path can be different for each appdomain; it is set when creating the AppDomain.
 		/// See also <see cref="Application.ExecutablePath"/>, it gets full path (with file name) of appdomain's entry assembly.
 		/// </remarks>
-		public static FolderPath ThisApp => __App ?? (__App = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\'));
+		public static FolderPath ThisApp => __App ?? (__App = ThisAppBS.TrimEnd('\\'));
 		static string __App;
+
+		/// <summary>
+		/// <see cref="ThisApp"/> with appended backslash character.
+		/// Note: returns string, not FolderPath like other functions.
+		/// </summary>
+		public static string ThisAppBS => __AppBS ?? (__AppBS = AppDomain.CurrentDomain.BaseDirectory);
+		static string __AppBS;
 
 		//Differences from Application.xAppDataPath: no version, no ClickOnce support.
 		static string _DefaultAppSubDir => __defaultAppSubDir ?? (__defaultAppSubDir = /*Application.CompanyName + "\\" + */Application.ProductName);
@@ -390,7 +397,7 @@ namespace Au
 		{
 			get
 			{
-				if(__appImages == null) __appImages = ThisApp + "Images";
+				if(__appImages == null) __appImages = ThisAppBS + "Images";
 				return __appImages;
 			}
 			set

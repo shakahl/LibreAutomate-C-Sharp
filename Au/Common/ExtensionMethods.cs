@@ -21,11 +21,11 @@ using System.Linq;
 using System.Xml.Linq;
 using System.Security; //for XML comments
 using System.Globalization;
-using System.Windows.Forms;
 
 using Au.Types;
 using static Au.NoClass;
 
+//note: be careful when adding functions to this class. See comments in ExtensionMethods_Forms.cs.
 
 namespace Au.Types
 {
@@ -34,103 +34,6 @@ namespace Au.Types
 	/// </summary>
 	public static partial class ExtensionMethods
 	{
-		#region Control
-
-		/// <summary>
-		/// If control handle still not created, creates handle.
-		/// Like <see cref="Control.CreateHandle"/>, which is protected.
-		/// Unlike <see cref="Control.CreateControl"/>, creates handle even if invisible, and does not create child control handles.
-		/// </summary>
-		public static void CreateHandle_(this Control t)
-		{
-			if(!t.IsHandleCreated) {
-				var h = t.Handle;
-			}
-		}
-
-		/// <summary>
-		/// Gets mouse cursor position in client area coordinates.
-		/// Returns default(POINT) if handle not created.
-		/// </summary>
-		public static POINT MouseClientXY_(this Control t)
-		{
-			return ((Wnd)t).MouseClientXY;
-		}
-
-		/// <summary>
-		/// Gets mouse cursor position in window coordinates.
-		/// </summary>
-		public static POINT MouseWindowXY_(this Control t)
-		{
-			POINT p = Mouse.XY;
-			POINT k = t.Location;
-			return (p.x - k.x, p.y - k.y);
-		}
-
-		/// <summary>
-		/// Sets the textual cue, or tip, that is displayed by the control when it does not have text.
-		/// Sends API <msdn>EM_SETCUEBANNER</msdn>.
-		/// Does nothing if Multiline.
-		/// </summary>
-		public static void SetCueBanner_(this TextBox t, string text, bool showWhenFocused = false)
-		{
-			Debug.Assert(!t.Multiline);
-			_SetCueBanner_(t, Api.EM_SETCUEBANNER, showWhenFocused, text);
-		}
-
-		/// <summary>
-		/// Sets the textual cue, or tip, that is displayed by the edit control when it does not have text.
-		/// Sends API <msdn>CB_SETCUEBANNER</msdn>.
-		/// </summary>
-		public static void SetCueBanner_(this ComboBox t, string text)
-		{
-			_SetCueBanner_(t, Api.CB_SETCUEBANNER, false, text);
-		}
-
-		static void _SetCueBanner_(Control c, int message, bool showWhenFocused, string text)
-		{
-			if(c.IsHandleCreated) {
-				((Wnd)c).SendS(message, showWhenFocused, text);
-			} else if(!Empty(text)) {
-				c.HandleCreated += (unu, sed) => _SetCueBanner_(c, message, showWhenFocused, text);
-			}
-		}
-
-		/// <summary>
-		/// Creates a control, sets its commonly used properties (Bounds, Text, tooltip, Anchor) and adds it to the Controls collection of this.
-		/// </summary>
-		/// <typeparam name="T">Control class.</typeparam>
-		/// <param name="t"></param>
-		/// <param name="x">Left.</param>
-		/// <param name="y">Top.</param>
-		/// <param name="width">Width.</param>
-		/// <param name="height">Height.</param>
-		/// <param name="text">The <see cref="Control.Text"/> property.</param>
-		/// <param name="tooltip">Tooltip text.
-		/// This function creates a ToolTip component and assigns it to the Tag property of this.</param>
-		/// <param name="anchor">The <see cref="Control.Anchor"/> property.</param>
-		public static T Add_<T>(this ContainerControl t, int x, int y, int width, int height, string text = null, string tooltip = null, AnchorStyles anchor = AnchorStyles.None/*, string name = null*/) where T : Control, new()
-		{
-			var c = new T();
-			//if(!Empty(name)) c.Name = name;
-			c.Bounds = new System.Drawing.Rectangle(x, y, width, height);
-			if(anchor != AnchorStyles.None) c.Anchor = anchor;
-			if(text != null) c.Text = text;
-			if(!Empty(tooltip)) {
-				var tt = t.Tag as ToolTip;
-				if(tt == null) {
-					t.Tag = tt = new ToolTip();
-					//t.Disposed += (o, e) => Print((o as ContainerControl).Tag as ToolTip);
-					//t.Disposed += (o, e) => ((o as ContainerControl).Tag as ToolTip)?.Dispose(); //it seems tooltip is auto-disposed when its controls are disposed. Anyway, this event is only if the form is disposed explicitly, but nobody does it.
-				}
-				tt.SetToolTip(c, tooltip);
-			}
-			t.Controls.Add(c);
-			return c;
-		}
-
-		#endregion
-
 		#region Xml
 
 		/// <summary>
@@ -230,7 +133,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets the first found descendant element that has the specified attribute.
+		/// Finds the first descendant element that has the specified attribute.
 		/// Returns null if not found.
 		/// </summary>
 		/// <param name="t"></param>
@@ -248,6 +151,24 @@ namespace Au.Types
 			return null;
 
 			//speed: several times faster than XPathSelectElement
+		}
+
+		/// <summary>
+		/// Finds all descendant elements that have the specified attribute.
+		/// Returns null if not found.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="name">Element name. If null, can be any name.</param>
+		/// <param name="attributeName">Attribute name.</param>
+		/// <param name="attributeValue">Attribute value. If null, can be any value.</param>
+		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
+		public static IEnumerable<XElement> Descendants_(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
+		{
+			foreach(var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
+				var a = el.Attribute(attributeName); if(a == null) continue;
+				if(attributeValue != null && !a.Value.Equals_(attributeValue, ignoreCase)) continue;
+				yield return el;
+			}
 		}
 
 		/// <summary>
@@ -350,28 +271,90 @@ namespace Au.Types
 		#region enum
 
 		/// <summary>
-		/// Returns true if this enum variable has flag(s) f (all bits).
-		/// Compiled as inlined code <c>(t &amp; flag) == flags</c>. The same as Enum.HasFlag, but much much faster.
-		/// The enum type must be of size 4 (default).
+		/// Returns true if this enum variable has all flag bits specified in <paramref name="flag"/>.
+		/// The same as Enum.HasFlag, but much faster.
 		/// </summary>
-		public static bool Has_<T>(this T t, T flag) where T : Enum
+		/// <param name="t"></param>
+		/// <param name="flag">One or more flags.</param>
+		public static unsafe bool Has_<T>(this T t, T flag) where T : unmanaged, Enum
 		{
-			//return (t & flag) == flag; //error, although C# 7.3 supports Enum constraint
-			int a = Unsafe.As<T, int>(ref t);
-			int b = Unsafe.As<T, int>(ref flag);
-			return (a & b) == b;
+			//return (t & flag) == flag; //error, although C# 7.3 supports Enum constraint.
+			//return ((int)t & (int)flag) == (int)flag; //error too
+			switch(sizeof(T)) {
+			case 4:
+				int t4 = *(int*)&t, f4 = *(int*)&flag;
+				return (t4 & f4) == f4;
+			case 8:
+				long t8 = *(long*)&t, f8 = *(long*)&flag;
+				return (t8 & f8) == f8;
+			case 2:
+				int t2 = *(ushort*)&t, f2 = *(ushort*)&flag;
+				return (t2 & f2) == f2;
+			default:
+				Debug.Assert(sizeof(T) == 1);
+				int t1 = *(byte*)&t, f1 = *(byte*)&flag;
+				return (t1 & f1) == f1;
+			}
+			//This is not so nicely optimized as with Unsafe.dll, but the switch is optimized away. Native code contains only the case for T size. In other funcs too.
 		}
 
 		/// <summary>
-		/// Returns true if this enum variable has one or more flag bits specified in f.
-		/// Compiled as inlined code <c>(t &amp; flags) != 0</c>. This is different from Enum.HasFlag.
-		/// The enum type must be of size 4 (default).
+		/// Returns true if this enum variable has one or more flag bits specified in <paramref name="flags"/>.
 		/// </summary>
-		public static bool HasAny_<T>(this T t, T flags) where T : Enum
+		/// <param name="t"></param>
+		/// <param name="flags">One or more flags.</param>
+		public static unsafe bool HasAny_<T>(this T t, T flags) where T : unmanaged, Enum
 		{
-			int a = Unsafe.As<T, int>(ref t);
-			int b = Unsafe.As<T, int>(ref flags);
-			return (a & b) != 0;
+			switch(sizeof(T)) {
+			case 4:
+				return (*(int*)&t & *(int*)&flags) != 0;
+			case 8:
+				return (*(long*)&t & *(long*)&flags) != 0;
+			case 2:
+				return (*(ushort*)&t & *(ushort*)&flags) != 0;
+			default:
+				Debug.Assert(sizeof(T) == 1);
+				return (*(byte*)&t & *(byte*)&flags) != 0;
+			}
+		}
+
+		/// <summary>
+		/// Adds or removes a flag.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="flag">One or more flags to add or remove.</param>
+		/// <param name="add">If true, adds flag, else removes flag.</param>
+		public static unsafe void SetFlag_<T>(ref this T t, T flag, bool add) where T : unmanaged, Enum
+		{
+			T tt = t;
+			switch(sizeof(T)) {
+			case 4: {
+					int a = *(int*)&tt, b = *(int*)&flag;
+					if(add) a |= b; else a &= ~b;
+					*(int*)&tt = a;
+				}
+				break;
+			case 8: {
+					long a = *(long*)&tt, b = *(long*)&flag;
+					if(add) a |= b; else a &= ~b;
+					*(long*)&tt = a;
+				}
+				break;
+			case 2: {
+					int a = *(ushort*)&tt, b = *(ushort*)&flag;
+					if(add) a |= b; else a &= ~b;
+					*(ushort*)&tt = (ushort)a;
+				}
+				break;
+			default: {
+					Debug.Assert(sizeof(T) == 1);
+					int a = *(byte*)&tt, b = *(byte*)&flag;
+					if(add) a |= b; else a &= ~b;
+					*(byte*)&tt = (byte)a;
+				}
+				break;
+			}
+			t = tt;
 		}
 
 		#endregion
@@ -379,19 +362,20 @@ namespace Au.Types
 		#region array
 
 		/// <summary>
-		/// Creates a copy of this array with one removed element.
+		/// Creates a copy of this array with one or more removed elements.
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="t"></param>
 		/// <param name="index"></param>
+		/// <param name="count"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public static T[] RemoveAt_<T>(this T[] t, int index)
+		public static T[] RemoveAt_<T>(this T[] t, int index, int count = 1)
 		{
-			if((uint)index >= t.Length) throw new ArgumentOutOfRangeException();
-			int n = t.Length - 1;
+			if((uint)index > t.Length || count < 0 || index + count > t.Length) throw new ArgumentOutOfRangeException();
+			int n = t.Length - count;
 			var r = new T[n];
 			for(int i = 0; i < index; i++) r[i] = t[i];
-			for(int i = index; i < n; i++) r[i] = t[i + 1];
+			for(int i = index; i < n; i++) r[i] = t[i + count];
 			return r;
 		}
 
@@ -410,6 +394,26 @@ namespace Au.Types
 			for(int i = 0; i < index; i++) r[i] = t[i];
 			for(int i = index; i < t.Length; i++) r[i + 1] = t[i];
 			r[index] = value;
+			return r;
+		}
+
+		/// <summary>
+		/// Creates a copy of this array with several inserted elements.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="t"></param>
+		/// <param name="index"></param>
+		/// <param name="values"></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static T[] Insert_<T>(this T[] t, int index, params T[] values)
+		{
+			if((uint)index > t.Length) throw new ArgumentOutOfRangeException();
+			int n = values?.Length ?? 0; if(n == 0) return t;
+
+			var r = new T[t.Length + n];
+			for(int i = 0; i < index; i++) r[i] = t[i];
+			for(int i = index; i < t.Length; i++) r[i + n] = t[i];
+			for(int i = 0; i < n; i++) r[i + index] = values[i];
 			return r;
 		}
 

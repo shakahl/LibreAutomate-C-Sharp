@@ -1,7 +1,4 @@
-﻿/* meta
-//run TestScript
-*/
-//#include usings.txt
+﻿//#include usings.txt
 
 public class Class1
 {

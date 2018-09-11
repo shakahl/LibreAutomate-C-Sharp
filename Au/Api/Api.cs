@@ -8,6 +8,8 @@ using Microsoft.Win32.SafeHandles;
 
 //[assembly: DefaultDllImportSearchPaths(DllImportSearchPath.System32|DllImportSearchPath.UserDirectories)]
 
+#pragma warning disable 649, 169 //field never assigned/used
+
 namespace Au.Types
 {
 	[DebuggerStepThrough]
@@ -21,13 +23,13 @@ namespace Au.Types
 		/// Returns Marshal.SizeOf(typeof(T)).
 		/// Speed: the same (in Release config) as Marshal.SizeOf(typeof(T)), and 2 times faster than Marshal.SizeOf(v).
 		/// </summary>
-		internal static int SizeOf<T>(T v) { return Marshal.SizeOf(typeof(T)); }
+		internal static int SizeOf<T>(T v) => Marshal.SizeOf<T>();
 
 		/// <summary>
 		/// Gets the native size of a type.
 		/// Returns Marshal.SizeOf(typeof(T)).
 		/// </summary>
-		internal static int SizeOf<T>() { return Marshal.SizeOf(typeof(T)); }
+		internal static int SizeOf<T>() => Marshal.SizeOf<T>();
 
 		/// <summary>
 		/// Gets dll module handle (Api.GetModuleHandle) or loads dll (Api.LoadLibrary), and returns unmanaged exported function address (Api.GetProcAddress).
@@ -42,36 +44,24 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Calls <see cref="GetProcAddress(string, string)"/> (loads dll or gets handle) and <see cref="Marshal.GetDelegateForFunctionPointer"/>.
+		/// Calls <see cref="GetProcAddress(string, string)"/> (loads dll or gets handle) and <see cref="Marshal.GetDelegateForFunctionPointer{TDelegate}(IntPtr)"/>.
 		/// </summary>
 		internal static bool GetDelegate<T>(out T deleg, string dllName, string funcName) where T : class
 		{
-			deleg = null;
-			IntPtr fa = GetProcAddress(dllName, funcName); if(fa == default) return false;
-			deleg = Unsafe.As<T>(Marshal.GetDelegateForFunctionPointer(fa, typeof(T)));
+			IntPtr fa = GetProcAddress(dllName, funcName); if(fa == default) { deleg = null; return false; }
+			deleg = Marshal.GetDelegateForFunctionPointer<T>(fa);
 			return deleg != null;
 		}
 
 		/// <summary>
-		/// Calls API <see cref="GetProcAddress(IntPtr, string)"/> and <see cref="Marshal.GetDelegateForFunctionPointer"/>.
+		/// Calls API <see cref="GetProcAddress(IntPtr, string)"/> and <see cref="Marshal.GetDelegateForFunctionPointer{TDelegate}(IntPtr)"/>.
 		/// </summary>
 		internal static bool GetDelegate<T>(out T deleg, IntPtr hModule, string funcName) where T : class
 		{
 			deleg = null;
 			IntPtr fa = GetProcAddress(hModule, funcName); if(fa == default) return false;
-			deleg = Unsafe.As<T>(Marshal.GetDelegateForFunctionPointer(fa, typeof(T)));
+			deleg = Marshal.GetDelegateForFunctionPointer<T>(fa);
 			return deleg != null;
-		}
-
-		/// <summary>
-		/// Calls <see cref="Marshal.GetDelegateForFunctionPointer"/>.
-		/// </summary>
-		/// <typeparam name="T">Delegate type.</typeparam>
-		/// <param name="f">Unmanaged function address.</param>
-		/// <param name="deleg">Receives managed delegate of type T.</param>
-		internal static void GetDelegate<T>(IntPtr f, out T deleg) where T : class
-		{
-			deleg = Unsafe.As<T>(Marshal.GetDelegateForFunctionPointer(f, typeof(T)));
 		}
 
 		/// <summary>
@@ -213,6 +203,12 @@ namespace Au.Types
 
 		#region advapi32
 
+		[DllImport("advapi32.dll")]
+		internal static extern int RegSetValueEx(IntPtr hKey, string lpValueName, int Reserved, Microsoft.Win32.RegistryValueKind dwType, void* lpData, int cbData);
+
+		[DllImport("advapi32.dll")]
+		internal static extern int RegQueryValueEx(IntPtr hKey, string lpValueName, IntPtr Reserved, out Microsoft.Win32.RegistryValueKind dwType, void* lpData, ref int cbData);
+
 		internal const uint TOKEN_WRITE = STANDARD_RIGHTS_WRITE | TOKEN_ADJUST_PRIVILEGES | TOKEN_ADJUST_GROUPS | TOKEN_ADJUST_DEFAULT;
 		internal const uint TOKEN_SOURCE_LENGTH = 8;
 		internal const uint TOKEN_READ = STANDARD_RIGHTS_READ | TOKEN_QUERY;
@@ -293,11 +289,54 @@ namespace Au.Types
 		[DllImport("advapi32.dll")]
 		internal static extern uint* GetSidSubAuthority(IntPtr pSid, uint nSubAuthority);
 
-		[DllImport("advapi32.dll")]
-		internal static extern int RegSetValueEx(IntPtr hKey, string lpValueName, int Reserved, Microsoft.Win32.RegistryValueKind dwType, void* lpData, int cbData);
+		internal enum SECURITY_IMPERSONATION_LEVEL
+		{
+			SecurityAnonymous,
+			SecurityIdentification,
+			SecurityImpersonation,
+			SecurityDelegation
+		}
 
-		[DllImport("advapi32.dll")]
-		internal static extern int RegQueryValueEx(IntPtr hKey, string lpValueName, IntPtr Reserved, out Microsoft.Win32.RegistryValueKind dwType, void* lpData, ref int cbData);
+		internal enum TOKEN_TYPE
+		{
+			TokenPrimary = 1,
+			TokenImpersonation
+		}
+
+		[DllImport("advapi32.dll", SetLastError = true)]
+		internal static extern bool DuplicateTokenEx(IntPtr hExistingToken, uint dwDesiredAccess, SECURITY_ATTRIBUTES lpTokenAttributes, SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, out IntPtr phNewToken);
+
+		internal const uint CREATE_SUSPENDED = 0x4;
+		internal const uint CREATE_UNICODE_ENVIRONMENT = 0x400;
+
+		[DllImport("advapi32.dll", SetLastError = true)]
+		internal static extern bool CreateProcessWithTokenW(IntPtr hToken, uint dwLogonFlags, string lpApplicationName, char[] lpCommandLine, uint dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
+
+		internal struct LUID
+		{
+			public uint LowPart;
+			public int HighPart;
+		}
+
+		[DllImport("advapi32.dll", EntryPoint = "LookupPrivilegeValueW", SetLastError = true)]
+		internal static extern bool LookupPrivilegeValue(string lpSystemName, string lpName, out LUID lpLuid);
+
+		[StructLayout(LayoutKind.Sequential, Pack = 4)]
+		internal struct LUID_AND_ATTRIBUTES
+		{
+			public LUID Luid;
+			public uint Attributes;
+		}
+
+		internal struct TOKEN_PRIVILEGES
+		{
+			public int PrivilegeCount;
+			/*[MarshalAs(UnmanagedType.ByValArray, SizeConst = 1)]*/
+			public LUID_AND_ATTRIBUTES Privileges;
+		}
+
+		[DllImport("advapi32.dll", SetLastError = true)]
+		internal static extern bool AdjustTokenPrivileges(IntPtr TokenHandle, bool DisableAllPrivileges, in TOKEN_PRIVILEGES NewState, uint BufferLength, [Out] TOKEN_PRIVILEGES[] PreviousState, IntPtr ReturnLength);
 
 		[StructLayout(LayoutKind.Sequential)]
 		internal sealed class SECURITY_ATTRIBUTES :IDisposable
@@ -307,13 +346,18 @@ namespace Au.Types
 			public int bInheritHandle;
 
 			/// <summary>
-			/// Creates SECURITY_ATTRIBUTES that allows UAC low integrity level processes to open the kernel object.
+			/// Creates SECURITY_ATTRIBUTES from string security descriptor.
 			/// </summary>
-			public SECURITY_ATTRIBUTES()
+			public SECURITY_ATTRIBUTES(string securityDescriptor)
 			{
 				nLength = IntPtr.Size * 3;
-				if(!ConvertStringSecurityDescriptorToSecurityDescriptor("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)", 1, out lpSecurityDescriptor)) throw new AuException(0, "SECURITY_ATTRIBUTES");
+				if(!ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptor, 1, out lpSecurityDescriptor)) throw new AuException(0, "SECURITY_ATTRIBUTES");
 			}
+
+			/// <summary>
+			/// Creates SECURITY_ATTRIBUTES that allows UAC low integrity level processes to open the kernel object.
+			/// </summary>
+			public SECURITY_ATTRIBUTES() :this("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)") { }
 
 			public void Dispose()
 			{
@@ -375,10 +419,10 @@ namespace Au.Types
 		}
 
 		[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
-		internal static extern LPARAM SHGetFileInfo(string pszPath, uint dwFileAttributes, ref SHFILEINFO psfi, int cbFileInfo, uint uFlags);
+		internal static extern LPARAM SHGetFileInfo(string pszPath, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
 
 		[DllImport("shell32.dll", EntryPoint = "SHGetFileInfoW")]
-		internal static extern LPARAM SHGetFileInfo(IntPtr pidl, uint dwFileAttributes, ref SHFILEINFO psfi, int cbFileInfo, uint uFlags);
+		internal static extern LPARAM SHGetFileInfo(IntPtr pidl, uint dwFileAttributes, out SHFILEINFO psfi, int cbFileInfo, uint uFlags);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
 		internal static extern int SHGetDesktopFolder(out IShellFolder ppshf);
@@ -476,7 +520,7 @@ namespace Au.Types
 		internal const uint NIIF_RESPECT_QUIET_TIME = 0x80;
 
 		[DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW")]
-		internal static extern bool Shell_NotifyIcon(int dwMessage, ref NOTIFYICONDATA lpData);
+		internal static extern bool Shell_NotifyIcon(int dwMessage, in NOTIFYICONDATA lpData);
 
 		//internal struct SHSTOCKICONINFO
 		//{
@@ -673,7 +717,7 @@ namespace Au.Types
 		//}
 
 		[DllImport("shell32.dll", EntryPoint = "SHFileOperationW")]
-		internal static extern int SHFileOperation(ref SHFILEOPSTRUCT lpFileOp);
+		internal static extern int SHFileOperation(in SHFILEOPSTRUCT lpFileOp);
 
 		[DllImport("shell32.dll", EntryPoint = "DragQueryFileW")]
 		internal static extern int DragQueryFile(IntPtr hDrop, int iFile, char* lpszFile, int cch);

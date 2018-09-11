@@ -13,7 +13,7 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
+using System.Linq;
 
 using Au;
 using Au.Types;
@@ -188,7 +188,7 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void File_NewApp()
 	{
-		Model.NewItem(@"App.cs");
+		Model.NewItem("App.cs");
 	}
 
 	public void File_NewClass()
@@ -467,17 +467,23 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void Run_Compile()
 	{
-		Run.CompileAndRun(Model.CurrentFile, false);
+		Run.CompileAndRun(false, Model.CurrentFile);
 	}
 
 	public void Run_Run()
 	{
-		Run.CompileAndRun(Model.CurrentFile, true);
+		Run.CompileAndRun(true, Model.CurrentFile);
 	}
 
 	public void Run_End()
 	{
-
+		var running = Model.Running;
+		if(running.EndTasksOf(Model.CurrentFile)) return;
+		var t = running.GetRunningAlone(); if(t == null) return;
+		var m = new AuMenu();
+		m.Add("End task:", null).Enabled = false;
+		m[t.f.Name] = o => running.EndTask(t);
+		m.Show(MainForm);
 	}
 
 	public void Run_Pause()

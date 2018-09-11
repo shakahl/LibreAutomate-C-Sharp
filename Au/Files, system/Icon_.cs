@@ -289,8 +289,7 @@ namespace Au
 					uint fl = Api.SHGFI_SYSICONINDEX | Api.SHGFI_SHELLICONSIZE;
 					if(ilIndex == Api.SHIL_SMALL) fl |= Api.SHGFI_SMALLICON;
 					if(isPidl) fl |= Api.SHGFI_PIDL; else fl |= Api.SHGFI_USEFILEATTRIBUTES;
-					var x = new Api.SHFILEINFO();
-					il = Api.SHGetFileInfo(pidl, 0, ref x, Api.SizeOf(x), fl);
+					il = Api.SHGetFileInfo(pidl, 0, out var x, Api.SizeOf<Api.SHFILEINFO>(), fl);
 					if(il != default) index = x.iIcon;
 					//Marshal.Release(il); //undocumented, but without it IImageList refcount grows. Probably it's ok, because it is static, never deleted until process exits.
 				}

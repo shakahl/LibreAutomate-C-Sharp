@@ -38,21 +38,13 @@
         </member>
         <member name="M:Au.Types.Api.GetDelegate``1(``0@,System.String,System.String)">
             <summary>
-            Calls <see cref="M:Au.Types.Api.GetProcAddress(System.String,System.String)"/> (loads dll or gets handle) and <see cref="M:System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer(System.IntPtr,System.Type)"/>.
+            Calls <see cref="M:Au.Types.Api.GetProcAddress(System.String,System.String)"/> (loads dll or gets handle) and <see cref="M:System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer``1(System.IntPtr)"/>.
             </summary>
         </member>
         <member name="M:Au.Types.Api.GetDelegate``1(``0@,System.IntPtr,System.String)">
             <summary>
-            Calls API <see cref="M:Au.Types.Api.GetProcAddress(System.IntPtr,System.String)"/> and <see cref="M:System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer(System.IntPtr,System.Type)"/>.
+            Calls API <see cref="M:Au.Types.Api.GetProcAddress(System.IntPtr,System.String)"/> and <see cref="M:System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer``1(System.IntPtr)"/>.
             </summary>
-        </member>
-        <member name="M:Au.Types.Api.GetDelegate``1(System.IntPtr,``0@)">
-            <summary>
-            Calls <see cref="M:System.Runtime.InteropServices.Marshal.GetDelegateForFunctionPointer(System.IntPtr,System.Type)"/>.
-            </summary>
-            <typeparam name="T">Delegate type.</typeparam>
-            <param name="f">Unmanaged function address.</param>
-            <param name="deleg">Receives managed delegate of type T.</param>
         </member>
         <member name="M:Au.Types.Api.ReleaseComObject``1(``0)">
             <summary>
@@ -62,6 +54,11 @@
         <member name="M:Au.Types.Api.SetDIBitsToDevice(System.IntPtr,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Void*,System.Void*,System.UInt32)">
             <summary>
             lpbmi can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
+            </summary>
+        </member>
+        <member name="M:Au.Types.Api.SECURITY_ATTRIBUTES.#ctor(System.String)">
+            <summary>
+            Creates SECURITY_ATTRIBUTES from string security descriptor.
             </summary>
         </member>
         <member name="M:Au.Types.Api.SECURITY_ATTRIBUTES.#ctor">
@@ -300,6 +297,42 @@
         <member name="T:Au.Types.AccProperties">
             <summary>
             Used with <see cref="M:Au.Acc.GetProperties(System.String,Au.Types.AccProperties@)"/>.
+            </summary>
+        </member>
+        <member name="T:Au.Types.ExtensionMethods_Forms">
+            <summary>
+            Adds extension methods to some .NET classes.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods_Forms.CreateHandle_(System.Windows.Forms.Control)">
+            <summary>
+            If control handle still not created, creates handle.
+            Like <see cref="M:System.Windows.Forms.Control.CreateHandle"/>, which is protected.
+            Unlike <see cref="M:System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible, and does not create child control handles.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods_Forms.MouseClientXY_(System.Windows.Forms.Control)">
+            <summary>
+            Gets mouse cursor position in client area coordinates.
+            Returns default(POINT) if handle not created.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods_Forms.MouseWindowXY_(System.Windows.Forms.Control)">
+            <summary>
+            Gets mouse cursor position in window coordinates.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods_Forms.SetCueBanner_(System.Windows.Forms.TextBox,System.String,System.Boolean)">
+            <summary>
+            Sets the textual cue, or tip, that is displayed by the control when it does not have text.
+            Sends API <msdn>EM_SETCUEBANNER</msdn>.
+            Does nothing if Multiline.
+            </summary>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods_Forms.SetCueBanner_(System.Windows.Forms.ComboBox,System.String)">
+            <summary>
+            Sets the textual cue, or tip, that is displayed by the edit control when it does not have text.
+            Sends API <msdn>CB_SETCUEBANNER</msdn>.
             </summary>
         </member>
         <member name="T:Au.Types.BIEvents">
@@ -1482,52 +1515,6 @@
             <exception cref="T:Au.Types.NotFoundException">Image not found (this variable is null).</exception>
             <exception cref="T:System.InvalidOperationException">area is Bitmap.</exception>
         </member>
-        <member name="M:Au.Types.ExtensionMethods.CreateHandle_(System.Windows.Forms.Control)">
-            <summary>
-            If control handle still not created, creates handle.
-            Like <see cref="M:System.Windows.Forms.Control.CreateHandle"/>, which is protected.
-            Unlike <see cref="M:System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible, and does not create child control handles.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.MouseClientXY_(System.Windows.Forms.Control)">
-            <summary>
-            Gets mouse cursor position in client area coordinates.
-            Returns default(POINT) if handle not created.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.MouseWindowXY_(System.Windows.Forms.Control)">
-            <summary>
-            Gets mouse cursor position in window coordinates.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.SetCueBanner_(System.Windows.Forms.TextBox,System.String,System.Boolean)">
-            <summary>
-            Sets the textual cue, or tip, that is displayed by the control when it does not have text.
-            Sends API <msdn>EM_SETCUEBANNER</msdn>.
-            Does nothing if Multiline.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.SetCueBanner_(System.Windows.Forms.ComboBox,System.String)">
-            <summary>
-            Sets the textual cue, or tip, that is displayed by the edit control when it does not have text.
-            Sends API <msdn>CB_SETCUEBANNER</msdn>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ExtensionMethods.Add_``1(System.Windows.Forms.ContainerControl,System.Int32,System.Int32,System.Int32,System.Int32,System.String,System.String,System.Windows.Forms.AnchorStyles)">
-            <summary>
-            Creates a control, sets its commonly used properties (Bounds, Text, tooltip, Anchor) and adds it to the Controls collection of this.
-            </summary>
-            <typeparam name="T">Control class.</typeparam>
-            <param name="t"></param>
-            <param name="x">Left.</param>
-            <param name="y">Top.</param>
-            <param name="width">Width.</param>
-            <param name="height">Height.</param>
-            <param name="text">The <see cref="P:System.Windows.Forms.Control.Text"/> property.</param>
-            <param name="tooltip">Tooltip text.
-            This function creates a ToolTip component and assigns it to the Tag property of this.</param>
-            <param name="anchor">The <see cref="P:System.Windows.Forms.Control.Anchor"/> property.</param>
-        </member>
         <member name="M:Au.Types.ExtensionMethods.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
             <summary>
             Gets XML attribute value.
@@ -1589,7 +1576,18 @@
         </member>
         <member name="M:Au.Types.ExtensionMethods.Descendant_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Xml.Linq.XName,System.String,System.Boolean)">
             <summary>
-            Gets the first found descendant element that has the specified attribute.
+            Finds the first descendant element that has the specified attribute.
+            Returns null if not found.
+            </summary>
+            <param name="t"></param>
+            <param name="name">Element name. If null, can be any name.</param>
+            <param name="attributeName">Attribute name.</param>
+            <param name="attributeValue">Attribute value. If null, can be any value.</param>
+            <param name="ignoreCase">Case-insensitive attributeValue.</param>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Descendants_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Xml.Linq.XName,System.String,System.Boolean)">
+            <summary>
+            Finds all descendant elements that have the specified attribute.
             Returns null if not found.
             </summary>
             <param name="t"></param>
@@ -1650,25 +1648,35 @@
         </member>
         <member name="M:Au.Types.ExtensionMethods.Has_``1(``0,``0)">
             <summary>
-            Returns true if this enum variable has flag(s) f (all bits).
-            Compiled as inlined code <c>(t &amp; flag) == flags</c>. The same as Enum.HasFlag, but much much faster.
-            The enum type must be of size 4 (default).
+            Returns true if this enum variable has all flag bits specified in <paramref name="flag"/>.
+            The same as Enum.HasFlag, but much faster.
             </summary>
+            <param name="t"></param>
+            <param name="flag">One or more flags.</param>
         </member>
         <member name="M:Au.Types.ExtensionMethods.HasAny_``1(``0,``0)">
             <summary>
-            Returns true if this enum variable has one or more flag bits specified in f.
-            Compiled as inlined code <c>(t &amp; flags) != 0</c>. This is different from Enum.HasFlag.
-            The enum type must be of size 4 (default).
+            Returns true if this enum variable has one or more flag bits specified in <paramref name="flags"/>.
             </summary>
+            <param name="t"></param>
+            <param name="flags">One or more flags.</param>
         </member>
-        <member name="M:Au.Types.ExtensionMethods.RemoveAt_``1(``0[],System.Int32)">
+        <member name="M:Au.Types.ExtensionMethods.SetFlag_``1(``0@,``0,System.Boolean)">
             <summary>
-            Creates a copy of this array with one removed element.
+            Adds or removes a flag.
+            </summary>
+            <param name="t"></param>
+            <param name="flag">One or more flags to add or remove.</param>
+            <param name="add">If true, adds flag, else removes flag.</param>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.RemoveAt_``1(``0[],System.Int32,System.Int32)">
+            <summary>
+            Creates a copy of this array with one or more removed elements.
             </summary>
             <typeparam name="T"></typeparam>
             <param name="t"></param>
             <param name="index"></param>
+            <param name="count"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
         <member name="M:Au.Types.ExtensionMethods.Insert_``1(``0[],System.Int32,``0)">
@@ -1679,6 +1687,16 @@
             <param name="t"></param>
             <param name="index"></param>
             <param name="value"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.Insert_``1(``0[],System.Int32,``0[])">
+            <summary>
+            Creates a copy of this array with several inserted elements.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="t"></param>
+            <param name="index"></param>
+            <param name="values"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
         <member name="T:Au.Types.WICFlags">
@@ -2847,6 +2865,12 @@
             Get process handle (<see cref="P:Au.Types.SRResult.ProcessHandle"/>), if possible.
             </summary>
         </member>
+        <member name="F:Au.Types.SRFlags.Admin">
+            <summary>
+            Run as administrator, probably with UAC consent dialog.
+            Uses verb "runas", therefore other verb cannot be specified.
+            </summary>
+        </member>
         <member name="T:Au.Types.SRMore">
             <summary>
             More parameters for <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.SRFlags,Au.Types.SRMore)"/>.
@@ -2863,7 +2887,7 @@
         <member name="F:Au.Types.SRMore.Verb">
             <summary>
             File's right-click menu command, also known as verb. For example "edit", "print", "properties". The default verb is bold in the menu.
-            Not all menu items will work. Some may have different name than in the menu. Use verb "RunAs" for "Run as administrator".
+            Not all menu items will work. Some may have different name than in the menu.
             </summary>
         </member>
         <member name="F:Au.Types.SRMore.OwnerWindow">
@@ -5598,6 +5622,458 @@
             ]]></code>
             </example>
         </member>
+        <member name="T:Au.Process_">
+            <summary>
+            Process functions. Extends <see cref="T:System.Diagnostics.Process"/>.
+            </summary>
+        </member>
+        <member name="T:Au.Process_.UacInfo">
+            <summary>
+            Holds an access token (security info) of a process and provides various security info, eg UAC integrity level.
+            </summary>
+        </member>
+        <member name="M:Au.Process_.UacInfo.Finalize">
+            
+        </member>
+        <member name="M:Au.Process_.UacInfo.Dispose">
+            
+        </member>
+        <member name="P:Au.Process_.UacInfo.UnsafeTokenHandle">
+            <summary>
+            The access token handle.
+            </summary>
+            <remarks>
+            The handle is managed by this variable and will be closed when disposing or GC-collecting it. Use <see cref="M:System.GC.KeepAlive(System.Object)"/> where need.
+            </remarks>
+        </member>
+        <member name="P:Au.Process_.UacInfo.Failed">
+            <summary>
+            Returns true if the last called property function failed.
+            Normally it should never fail. Only <see cref="M:Au.Process_.UacInfo.GetOfProcess(System.Int32)"/> can fail (then it returns null).
+            </summary>
+        </member>
+        <member name="T:Au.Process_.UacInfo.ElevationType">
+            <summary>
+            <see cref="P:Au.Process_.UacInfo.Elevation"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.ElevationType.Unknown">
+            <summary>Failed to get. Normally it never happens; only <see cref="M:Au.Process_.UacInfo.GetOfProcess(System.Int32)"/> can fail (then it returns null).</summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.ElevationType.Default">
+            <summary>All processes in this user session run as admin, or all as standard user. Can be: non-administrator user session; service session; UAC is turned off.</summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.ElevationType.Full">
+            <summary>Runs as administrator (High or System integrity level).</summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.ElevationType.Limited">
+            <summary>Runs as standard user (Medium, UIAccess or Low integrity level) in administrator user session.</summary>
+        </member>
+        <member name="P:Au.Process_.UacInfo.Elevation">
+            <summary>
+            Gets the <see cref="T:Au.Process_.UacInfo">UAC</see> elevation type of the process.
+            This property is rarely useful. Use other properties of this class.
+            </summary>
+        </member>
+        <member name="P:Au.Process_.UacInfo.IsUIAccess">
+            <summary>
+            Returns true if the process has <see cref="T:Au.Process_.UacInfo">uiAccess</see> property.
+            A uiAccess process can access/automate all windows of processes running in the same user session.
+            </summary>
+            <remarks>
+            Most processes don't have this property. They cannot access/automate windows of higher integrity level (High, System, uiAccess) processes and Windows 8 store apps. For example, cannot send keys and Windows messages.
+            Note: High IL (admin) processes also can have this property, therefore <c>IsUIAccess</c> is not the same as <c>IntegrityLevel==IL.UIAccess</c> (<see cref="P:Au.Process_.UacInfo.IntegrityLevel"/> returns <b>UIAccess</b> only for Medium+uiAccess processes; for High+uiAccess processes it returns <b>High</b>). Some Windows API work slightly differently with uiAccess and non-uiAccess admin processes.
+            This property is rarely useful. Instead use other properties of this class.
+            </remarks>
+        </member>
+        <member name="T:Au.Process_.UacInfo.IL">
+            <summary>
+            <see cref="P:Au.Process_.UacInfo.IntegrityLevel"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.IL.Untrusted">
+            <summary>The most limited rights. Very rare.</summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.IL.Low">
+            <summary>Very limited rights. Used by Internet Explorer tab processes, Windows Store apps.</summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.IL.Medium">
+            <summary>Limited rights. Most processes (unless UAC turned off).</summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.IL.UIAccess">
+            <summary>Medium IL + can access/automate High IL windows (user interface).</summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.IL.High">
+            <summary>Most rights. Processes that run as administrator.</summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.IL.System">
+            <summary>Almost all rights. Services, some system processes.</summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.IL.Protected">
+            <summary>Undocumented. Rare.</summary>
+        </member>
+        <member name="F:Au.Process_.UacInfo.IL.Unknown">
+            <summary>Failed to get IL. Unlikely.</summary>
+        </member>
+        <member name="P:Au.Process_.UacInfo.IntegrityLevel">
+            <summary>
+            Gets the <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level (IL) of the process.
+            </summary>
+            <remarks>
+            IL from lowest to highest value: Untrusted, Low, Medium, UIAccess, High, System, Protected, Unknown.
+            The IL enum member values can be used like <c>if(x.IntegrityLevel > IL.Medium) ...</c> .
+            If UAC is turned off, most non-service processes on administrator account have High IL; on non-administrator - Medium.
+            </remarks>
+        </member>
+        <member name="M:Au.Process_.UacInfo.GetOfProcess(System.Int32)">
+            <summary>
+            Opens process access token and creates/returns new <see cref="T:Au.Process_.UacInfo"/> variable that holds it. Then you can use its properties.
+            Returns null if failed. For example fails for services and some other processes if current process is not administrator.
+            To get <b>UacInfo</b> of this process, instead use <see cref="P:Au.Process_.UacInfo.ThisProcess"/>.
+            </summary>
+            <param name="processId">Process id. If you have a window, use <see cref="P:Au.Wnd.ProcessId"/>.</param>
+        </member>
+        <member name="P:Au.Process_.UacInfo.ThisProcess">
+            <summary>
+            Gets <see cref="T:Au.Process_.UacInfo"/> variable for this process.
+            </summary>
+        </member>
+        <member name="P:Au.Process_.UacInfo.IsAdmin">
+            <summary>
+            Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by <see cref="T:Au.Process_.UacInfo">UAC</see>.
+            This function for example can be used to check whether you can write to protected locations in the file system and registry.
+            </summary>
+        </member>
+        <member name="P:Au.Process_.UacInfo.IsUacDisabled">
+            <summary>
+            Returns true if <see cref="T:Au.Process_.UacInfo">UAC</see> is disabled (turned off) on this Windows 7 computer.
+            On Windows 8 and 10 UAC cannot be disabled, although you can disable UAC elevation consent dialogs.
+            </summary>
+        </member>
+        <member name="T:Au.Process_.Memory">
+            <summary>
+            Allocates, writes and reads memory in other process.
+            </summary>
+            <remarks>
+            Objects of this class must be disposed. Example: <c>using(var pm=new Process_.Memory(...)) { ... }</c>.
+            </remarks>
+        </member>
+        <member name="M:Au.Process_.Memory.Finalize">
+            
+        </member>
+        <member name="M:Au.Process_.Memory.Dispose">
+            
+        </member>
+        <member name="P:Au.Process_.Memory.ProcessHandle">
+            <summary>
+            Process handle.
+            Opened with access PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE.
+            </summary>
+        </member>
+        <member name="P:Au.Process_.Memory.Mem">
+            <summary>
+            Address of memory allocated in that process.
+            </summary>
+            <remarks>
+            The address is invalid in this process.
+            </remarks>
+        </member>
+        <member name="M:Au.Process_.Memory.SetMem(System.IntPtr,System.Boolean)">
+            <summary>
+            Sets an address of memory in that process that is to be used by the read and write functions.
+            </summary>
+            <param name="mem">A memory address in that process.</param>
+            <param name="freeWhenDisposing">
+            Let the Dispose method (or finalizer) call API <msdn>VirtualFreeEx</msdn> to free mem. The memory must be allocated with API <msdn>VirtualAllocEx</msdn> (by any process) or <msdn>VirtualAlloc</msdn> (by that process).
+            If false, mem can be any memory in that process, and this variable will not free it. Alternatively you can use <see cref="M:Au.Process_.Memory.ReadOther(System.IntPtr,System.Void*,System.Int32)"/> and <see cref="M:Au.Process_.Memory.WriteOther(System.IntPtr,System.Void*,System.Int32)"/>.</param>
+            <exception cref="T:System.InvalidOperationException">This variable already has Mem, unless it was set by this function with <paramref name="freeWhenDisposing"/> = false.</exception>
+            <remarks>
+            This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with <paramref name="freeWhenDisposing"/> = true.
+            </remarks>
+        </member>
+        <member name="M:Au.Process_.Memory.#ctor(Au.Wnd,System.Int32)">
+            <summary>
+            Opens window's process handle and optionally allocates memory in that process.
+            </summary>
+            <param name="w">A window in that process.</param>
+            <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
+            <remarks>This is the preferred constructor when the process has windows. It works with windows of <see cref="T:Au.Process_.UacInfo">UAC</see> High integrity level when this process is Medium+uiAccess.</remarks>
+            <exception cref="T:Au.Types.WndException">w invalid.</exception>
+            <exception cref="T:Au.Types.AuException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
+        </member>
+        <member name="M:Au.Process_.Memory.#ctor(System.Int32,System.Int32)">
+            <summary>
+            Opens window's process handle and optionally allocates memory in that process.
+            </summary>
+            <param name="processId">Process id.</param>
+            <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
+            <exception cref="T:Au.Types.AuException">Failed to open process handle (usually because of <see cref="T:Au.Process_.UacInfo">UAC</see>) or allocate memory.</exception>
+        </member>
+        <member name="M:Au.Process_.Memory.WriteUnicodeString(System.String,System.Int32)">
+            <summary>
+            Copies a string from this process to the memory allocated in that process by the constructor.
+            In that process the string is written as '\0'-terminated UTF-16 string. For it is used (s.Length+1)*2 bytes of memory in that process (+1 for the '\0', *2 because UTF-16 character size is 2 bytes).
+            Returns false if fails.
+            </summary>
+            <param name="s">A string in this process.</param>
+            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
+        </member>
+        <member name="M:Au.Process_.Memory.WriteAnsiString(System.String,System.Int32,System.Text.Encoding)">
+            <summary>
+            Copies a string from this process to the memory allocated in that process by the constructor.
+            In that process the string is written as '\0'-terminated ANSI string, in default or specified encoding.
+            Returns false if fails.
+            </summary>
+            <param name="s">A string in this process. Normal C# string (UTF-16), not ANSI.</param>
+            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
+            <param name="enc">If null, uses system's default ANSI encoding.</param>
+        </member>
+        <member name="M:Au.Process_.Memory.ReadUnicodeString(System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Copies a string from the memory in that process allocated by the constructor to this process.
+            Returns the copied string, or null if fails.
+            In that process the string must be in Unicode UTF-16 format (ie not ANSI).
+            </summary>
+            <param name="nChars">Number of characters to copy. In both processes a character is 2 bytes.</param>
+            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
+            <param name="findLength">Find true string length by searching for '\0' character in nChars range. If false, the returned string is of nChars length even if contains '\0' characters.</param>
+        </member>
+        <member name="M:Au.Process_.Memory.LibReadUnicodeStringCached(System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            The same as <see cref="M:Au.Process_.Memory.ReadUnicodeString(System.Int32,System.Int32,System.Boolean)"/> but uses our StringCache.
+            </summary>
+        </member>
+        <member name="M:Au.Process_.Memory.ReadAnsiString(System.Int32,System.Int32,System.Boolean,System.Text.Encoding)">
+            <summary>
+            Copies a string from the memory in that process allocated by the constructor to this process.
+            Returns the copies string, or null if fails.
+            In that process the string must be in ANSI format (ie not Unicode UTF-16).
+            </summary>
+            <param name="nBytes">Number bytes to copy. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
+            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
+            <param name="findLength">Find true string length by searching for '\0' character in nBytes range of the ANSI string.</param>
+            <param name="enc">If null, uses system's default ANSI encoding.</param>
+        </member>
+        <member name="M:Au.Process_.Memory.Write(System.Void*,System.Int32,System.Int32)">
+            <summary>
+            Copies a value-type variable or other memory from this process to the memory in that process allocated by the constructor.
+            Returns false if fails.
+            </summary>
+            <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
+            <param name="nBytes">Number of bytes to copy.</param>
+            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
+        </member>
+        <member name="M:Au.Process_.Memory.WriteOther(System.IntPtr,System.Void*,System.Int32)">
+            <summary>
+            Copies a value-type variable or other memory from this process to a known memory address in that process.
+            Returns false if fails.
+            </summary>
+            <param name="ptrDestinationInThatProcess">Memory address in that process where to copy memory from this process.</param>
+            <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
+            <param name="nBytes">Number of bytes to copy.</param>
+            <seealso cref="M:Au.Process_.Memory.SetMem(System.IntPtr,System.Boolean)"/>
+        </member>
+        <member name="M:Au.Process_.Memory.Read(System.Void*,System.Int32,System.Int32)">
+            <summary>
+            Copies from the memory in that process allocated by the constructor to a value-type variable or other memory in this process.
+            Returns false if fails.
+            </summary>
+            <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
+            <param name="nBytes">Number of bytes to copy.</param>
+            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
+        </member>
+        <member name="M:Au.Process_.Memory.ReadOther(System.IntPtr,System.Void*,System.Int32)">
+            <summary>
+            Copies from a known memory address in that process to a value-type variable or other memory in this process.
+            Returns false if fails.
+            </summary>
+            <param name="ptrSourceInThatProcess">Memory address in that process from where to copy memory.</param>
+            <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
+            <param name="nBytes">Number of bytes to copy.</param>
+            <seealso cref="M:Au.Process_.Memory.SetMem(System.IntPtr,System.Boolean)"/>
+        </member>
+        <member name="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Gets process executable file name (like "notepad.exe") or full path.
+            Returns null if fails.
+            </summary>
+            <param name="processId">Process id.</param>
+            <param name="fullPath">
+            Get full path.
+            Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
+            </param>
+            <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if <paramref name="fullPath"/> is true.</param>
+            <seealso cref="P:Au.Wnd.ProgramName"/>
+            <seealso cref="P:Au.Wnd.ProgramFilePath"/>
+            <seealso cref="P:Au.Wnd.ProcessId"/>
+        </member>
+        <member name="M:Au.Process_.LibProcessInfo.GetName(System.Boolean)">
+            <summary>
+            Gets process executable file name (like "notepad.exe"). Not full path.
+            If contains looks like a DOS path and !cannotOpen, tries to unexpand DOS path.
+            Don't call multiple times, because always converts from raw char*.
+            </summary>
+        </member>
+        <member name="M:Au.Process_.AllProcesses(System.Boolean)">
+            <summary>
+            Gets basic info of all processes: name, id, session id.
+            </summary>
+            <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
+            <exception cref="T:Au.Types.AuException">Failed. Unlikely.</exception>
+        </member>
+        <member name="M:Au.Process_.GetProcessIds(System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Gets process ids of all processes of the specified program.
+            Returns array containing 0 or more elements.
+            </summary>
+            <param name="processName">
+            Process executable file name, like "notepad.exe".
+            String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+            </param>
+            <param name="fullPath">
+            <paramref name="processName"/> is full path.
+            Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
+            </param>
+            <param name="ofThisSession">Get processes only of this user session.</param>
+            <exception cref="T:System.ArgumentException">
+            processName is "" or null.
+            Invalid wildcard expression ("**options " or regular expression).
+            </exception>
+        </member>
+        <member name="M:Au.Process_.GetProcessId(System.String,System.Boolean,System.Boolean)">
+            <inheritdoc cref="M:Au.Process_.GetProcessIds(System.String,System.Boolean,System.Boolean)"/>
+            <summary>
+            Gets process id of the first found process of the specified program.
+            Returns 0 if not found.
+            </summary>
+        </member>
+        <member name="P:Au.Process_.CurrentProcessId">
+            <summary>
+            Calls API <msdn>GetCurrentProcessId</msdn>.
+            </summary>
+        </member>
+        <member name="P:Au.Process_.CurrentProcessHandle">
+            <summary>
+            Returns current process handle.
+            Calls API <msdn>GetCurrentProcess</msdn>.
+            Don't need to close the handle.
+            </summary>
+        </member>
+        <member name="M:Au.Process_.ProcessIdFromHandle(System.IntPtr)">
+            <summary>
+            Gets process id from handle.
+            Returns 0 if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Calls API <msdn>GetProcessId</msdn>.
+            </summary>
+            <param name="processHandle">Process handle.</param>
+        </member>
+        <member name="M:Au.Process_.GetSessionId(System.Int32)">
+            <summary>
+            Gets user session id of process.
+            Returns -1 if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Calls API <msdn>ProcessIdToSessionId</msdn>.
+            </summary>
+            <param name="processId">Process id.</param>
+        </member>
+        <member name="P:Au.Process_.CurrentSessionId">
+            <summary>
+            Gets user session id of this process.
+            Calls API <msdn>ProcessIdToSessionId</msdn> and <msdn>GetCurrentProcessId</msdn>.
+            </summary>
+        </member>
+        <member name="M:Au.Process_.GetVersionInfo(System.Int32)">
+            <summary>
+            Gets version info of process executable file.
+            Return null if fails.
+            </summary>
+            <param name="processId">Process id.</param>
+        </member>
+        <member name="M:Au.Process_.GetDescription(System.Int32)">
+            <summary>
+            Gets description of process executable file.
+            Return null if fails.
+            </summary>
+            <param name="processId">Process id.</param>
+            <remarks>
+            Calls <see cref="M:Au.Process_.GetVersionInfo(System.Int32)"/> and <see cref="P:System.Diagnostics.FileVersionInfo.FileDescription"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Process_._ParamsForCreateProcess(System.String,System.String,System.Boolean)">
+            <summary>
+            Creates lpCommandLine for CreateProcess, as char[] like "\"exeFile\" args\0".
+            Also creates default lpCurrentDirectory (directory of exeFile), flags and STARTUPINFO (with flag STARTF_FORCEOFFFEEDBACK).
+            </summary>
+            <param name="exeFile">Path of program file, or filename/relative in Folders.ThisApp. Uses Path_.Normalize. Can be null, but not recommended.</param>
+            <param name="args">Command line arguments or null.</param>
+            <param name="suspended">Add flag CREATE_SUSPENDED.</param>
+        </member>
+        <member name="M:Au.Process_.LibStart(System.String,System.String,Au.Types.Api.PROCESS_INFORMATION@,System.Boolean,System.Boolean)">
+            <summary>
+            Starts process using API CreateProcess, without the feedback hourglass cursor.
+            </summary>
+            <remarks>
+            If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
+            </remarks>
+        </member>
+        <member name="M:Au.Process_.LibStart(System.String,System.String,System.Boolean)">
+            <summary>
+            Starts process using API CreateProcess, without the feedback hourglass cursor.
+            </summary>
+            <param name="exeFile"></param>
+            <param name="args"></param>
+            <param name="inheritUiaccess"></param>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <remarks>
+            If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
+            </remarks>
+        </member>
+        <member name="F:Au.Process_.EStartFlags.NeedProcessObject">
+            <summary>
+            Returns Process object.
+            If no this flag, closes process handle and returns null.
+            </summary>
+        </member>
+        <member name="F:Au.Process_.EStartFlags.InheritEnvVar">
+            <summary>
+            Inherit environment variables.
+            </summary>
+        </member>
+        <member name="M:Au.Process_.LibStartUserIL(System.String,System.String,Au.Process_.EStartFlags)">
+            <summary>
+            Starts process user process (UAC) from this admin process.
+            </summary>
+            <param name="exeFile"></param>
+            <param name="args"></param>
+            <param name="flags"></param>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <remarks>
+            Asserts and fails if this is not admin/system process. Caller should at first call Process_.UacInfo.IsAdmin or Process_.UacInfo.ThisProcess.IntegrityLevel.
+            Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
+            </remarks>
+        </member>
+        <member name="T:Au.Process_._NetProcessObject">
+            <summary>
+            Creates new .NET Process object with attached handle and/or id.
+            </summary>
+        </member>
+        <member name="P:Au.Process_._NetProcessObject.IsFast">
+            <summary>
+            Returns true if can create such object in a fast/reliable way. Else <see cref="M:Au.Process_._NetProcessObject.Create(System.IntPtr,System.Int32)"/> will use Process.GetProcessById.
+            It depends on .NET framework version, because uses private methods of Process class through reflection.
+            </summary>
+        </member>
+        <member name="M:Au.Process_._NetProcessObject.Create(System.IntPtr,System.Int32)">
+            <summary>
+            Creates new .NET Process object with attached handle and/or id.
+            Can be specified both handle and id, or one of them (then .NET will open process or get id from handle when need).
+            </summary>
+        </member>
+        <member name="M:Au.Process_._NetProcessObject.Create(Au.Types.Api.PROCESS_INFORMATION@,System.Boolean)">
+            <summary>
+            Creates new .NET Process object with attached handle and id.
+            Closes thread handle. If suspended, resumes thread.
+            </summary>
+        </member>
         <member name="T:Au.Util.IconsAsync">
             <summary>
             Gets file icons asynchronously.
@@ -6009,6 +6485,14 @@
             </summary>
             <value>The length.</value>
         </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
+        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -6070,33 +6554,6 @@
             </summary>
             <param name="operandType">Defines the type of operand.</param>
             <returns>The size in bytes of the operand type.</returns>
-        </member>
-        <member name="T:Au.Util.LibRunAsm">
-            <summary>
-            Used by other Au projects to execute script assembly in new appdomain etc.
-            The code must be in Au, to avoid loading the program assembly into the new appdomain. Now Au is loaded instead.
-            </summary>
-        </member>
-        <member name="M:Au.Util.LibRunAsm.RunInNewAppDomain(System.String,System.String,System.Int32,System.String[],System.String)">
-            <summary>
-            Executes assembly in new appdomain in this thread.
-            Handles exceptions.
-            </summary>
-            <param name="name">Appdomain name.</param>
-            <param name="asmFile">Full path of assembly file.</param>
-            <param name="pdbOffset">0 or offset of portable PDB in file.</param>
-            <param name="args">To pass to Main.</param>
-            <param name="config">Config file path.</param>
-        </member>
-        <member name="M:Au.Util.LibRunAsm.RunHere(System.String,System.Int32,System.String[],System.Boolean)">
-            <summary>
-            Executes assembly in this appdomain in this thread.
-            Handles exceptions.
-            </summary>
-            <param name="asmFile">Full path of assembly file.</param>
-            <param name="pdbOffset">0 or offset of portable PDB in file.</param>
-            <param name="args">To pass to Main.</param>
-            <param name="reThrow">Don't handle exceptions.</param>
         </member>
         <member name="T:Au.Util.StringMisc">
             <summary>
@@ -6724,7 +7181,7 @@
             Like List or StringBuilder, used as a temporary variable-size array to create final fixed-size array.
             To avoid much garbage (and many reallocations when growing), uses native memory heap. See <see cref="T:Au.Util.NativeHeap"/>.
             Must be explicitly disposed to free the native memory. Does not have a finalizer because is struct (to avoid garbage).
-            Does not support reference types. Does not call Dispose.
+            Does not support reference types. Does not call T.Dispose.
             </summary>
         </member>
         <member name="P:Au.Util.LibArrayBuilder`1.Ptr">
@@ -7086,7 +7543,7 @@
             Allocates new or gets "cached" array of type T of length n or more.
             The returned array is managed by a WeakReference&lt;T[]&gt; variable provided by the caller. Its contents is undefined.
             </summary>
-            <typeparam name="T">Any value type, for example char, byte, RECT.</typeparam>
+            <typeparam name="T">Any simple value type, for example char, byte, RECT.</typeparam>
             <param name="n">
             How many elements you need.
             If array in the WeakReference variable is null or too small, creates new array and stores it there.
@@ -7545,6 +8002,66 @@
             </summary>
             <param name="topic">Topic file name, like "M_Au_Acc_Find" or "0248143b-a0dd-4fa1-84f9-76831db6714a".</param>
         </member>
+        <member name="T:Au.Util.LibKernelHandle">
+            <summary>
+            Manages a kernel handle.
+            Must be disposed.
+            Has static functions to open process handle.
+            </summary>
+        </member>
+        <member name="P:Au.Util.LibKernelHandle.Handle">
+            
+        </member>
+        <member name="P:Au.Util.LibKernelHandle.Is0">
+            
+        </member>
+        <member name="M:Au.Util.LibKernelHandle.#ctor(System.IntPtr)">
+            <summary>
+            Attaches a kernel handle to this new variable.
+            No exception when handle is invalid.
+            </summary>
+            <param name="handle"></param>
+        </member>
+        <member name="M:Au.Util.LibKernelHandle.Dispose">
+            
+        </member>
+        <member name="M:Au.Util.LibKernelHandle.OpenProcess(System.Int32,System.UInt32)">
+            <summary>
+            Opens process handle.
+            Calls API OpenProcess.
+            Returns default if fails. Supports Native.GetError().
+            </summary>
+            <param name="processId">Process id.</param>
+            <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
+        </member>
+        <member name="M:Au.Util.LibKernelHandle.OpenProcess(Au.Wnd,System.UInt32)">
+            <summary>
+            Opens window's process handle.
+            This overload is more powerful: if API OpenProcess fails, it tries API GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
+            Returns default if fails. Supports Native.GetError().
+            </summary>
+            <param name="w"></param>
+            <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
+        </member>
+        <member name="T:Au.Util.LibKernelWaitHandle">
+            <summary>
+            Kernel handle that is derived from WaitHandle.
+            When don't need to wait, use <see cref="T:Au.Util.LibKernelHandle"/>, it's more lightweight and has more creation methods.
+            </summary>
+        </member>
+        <member name="T:Au.Util.Security_">
+            <summary>
+            Security-related functions, such as enabling privileges.
+            </summary>
+        </member>
+        <member name="M:Au.Util.Security_.SetPrivilege(System.String,System.Boolean)">
+            <summary>
+            Enables or disables a privilege for this process.
+            Returns false if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            </summary>
+            <param name="privilegeName"></param>
+            <param name="enable"></param>
+        </member>
         <member name="T:Au.Util.LibAttachThreadInput">
             <summary>
             Calls API <msdn>AttachThreadInput</msdn> to attach/detach thread input.
@@ -7611,6 +8128,13 @@
             Returns true if this thread has a .NET message loop (Forms or WPF).
             </summary>
             <seealso cref="M:Au.Wnd.GetWnd.ThreadWindows(System.Int32,System.Boolean,System.Boolean)"/>
+        </member>
+        <member name="M:Au.Thread_.LibTerminate(System.Int32)">
+            <summary>
+            Calls API OpenThread and TerminateThread.
+            If it is a managed thread, at first need to set its IsBackground = true.
+            </summary>
+            <param name="nativeId"></param>
         </member>
         <member name="T:Au.BlockUserInput">
             <summary>
@@ -10220,6 +10744,16 @@
             Sets to use QM2 as the output server.
             </summary>
         </member>
+        <member name="M:Au.Output.LibClearQM2">
+            <summary>
+            Clears QM2 output pane.
+            </summary>
+        </member>
+        <member name="M:Au.Output.LibWriteQM2(System.Object)">
+            <summary>
+            Writes line to QM2.
+            </summary>
+        </member>
         <member name="M:Au.Output._WriteToQM2(System.String)">
             <param name="s">If null, clears output.</param>
         </member>
@@ -11706,6 +12240,141 @@
             <param name="flags"></param>
             <seealso cref="M:Au.String_.Segments_(System.String,System.String,Au.Types.SegFlags)"/>
         </member>
+        <member name="T:Au.LibRun.RunAsm">
+            <summary>
+            Used by other Au projects to execute script assembly in new appdomain etc.
+            The code must be in Au, to avoid loading the program assembly into the new appdomain. Now Au is loaded instead.
+            </summary>
+        </member>
+        <member name="M:Au.LibRun.RunAsm._WaitReady">
+            <summary>
+            Does not allow to start tasks more frequently than we can prepare appdomains.
+            </summary>
+        </member>
+        <member name="M:Au.LibRun.RunAsm.LibRunInAppDomain(Au.LibRun.AuTask,Au.LibRun.RParams)">
+            <summary>
+            Executes assembly in new appdomain in new thread.
+            Handles exceptions.
+            </summary>
+        </member>
+        <member name="M:Au.LibRun.RunAsm.RunHere(Au.LibRun.RIsolation,System.String,System.Int32,System.String[],Au.LibRun.RHFlags)">
+            <summary>
+            Executes assembly in this appdomain in this thread. Must be main appdomain.
+            Handles exceptions.
+            </summary>
+            <param name="caller">Must be hostThread or process.</param>
+            <param name="asmFile">Full path of assembly file.</param>
+            <param name="pdbOffset">0 or offset of portable PDB in file.</param>
+            <param name="args">To pass to Main.</param>
+            <param name="flags"></param>
+        </member>
+        <member name="M:Au.LibRun.RunAsm.LibRunHere(System.Reflection.Assembly,System.String[])">
+            <summary>
+            Internal. To run in main appdomain and nonmain thread.
+            </summary>
+        </member>
+        <member name="M:Au.LibRun.RunAsm.LibLoadAssembly(System.String,System.Int32,System.Boolean)">
+            <summary>
+            Loads script assembly or finds loaded.
+            </summary>
+            <param name="asmFile"></param>
+            <param name="pdbOffset"></param>
+            <param name="orFindLoaded">Don't load the same unchanged assembly multiple times into the same appdomain. Must be called in main thread.</param>
+            <exception cref="T:System.Exception">Exceptions of FileStream and Assembly.Load.</exception>
+        </member>
+        <member name="T:Au.LibRun.RunAsm._LoadedScriptAssembly">
+            <summary>
+            Remembers and finds script assemblies loaded in this appdomain, to avoid loading the same unchanged assembly multiple times.
+            Used when isolation is thread or hostThread.
+            </summary>
+        </member>
+        <member name="T:Au.LibRun.RIsolation">
+            <summary>
+            Caller of RunAsm.RunHere etc.
+            </summary>
+        </member>
+        <member name="T:Au.LibRun.RHFlags">
+            <summary>
+            Flags for RunAsm.RunHere.
+            </summary>
+        </member>
+        <member name="F:Au.LibRun.RHFlags.DontHandleExceptions">
+            <summary>
+            Don't handle exceptions.
+            </summary>
+        </member>
+        <member name="T:Au.LibRun.RFlags">
+            <summary>
+            RParams.flags.
+            </summary>
+        </member>
+        <member name="T:Au.LibRun.RParams">
+            <summary>
+            Parameters for AuTask.Run.
+            </summary>
+        </member>
+        <member name="T:Au.LibRun.AuTask">
+            <summary>
+            Contains properties of a running automation task that are used in editor and Au.Tasks.
+            Starts task, notifies when it is ended, ends it when asked.
+            </summary>
+        </member>
+        <member name="M:Au.LibRun.AuTask.#ctor(System.Int32,Au.LibRun.IAuTaskManager)">
+            <param name="taskId"></param>
+            <param name="manager">We'll notify it when task ended.</param>
+        </member>
+        <member name="M:Au.LibRun.AuTask.Run(Au.LibRun.RParams)">
+            <summary>
+            Starts task in new process, appdomain or thread.
+            If returns true, the task is successfully started. However it can be already ended (unlikely); then IsRunning is false.
+            </summary>
+            <param name="x">Parameters to start the task.</param>
+        </member>
+        <member name="M:Au.LibRun.AuTask.SetTaskStartedInOtherProcess(System.Boolean)">
+            <summary>
+            If task started in other process, call this function instead of Run.
+            </summary>
+            <param name="admin"></param>
+        </member>
+        <member name="M:Au.LibRun.AuTask.GetTaskStartedInOtherProcess(System.Boolean@)">
+            <summary>
+            If task started in other process, returns true and gets whether it is admin process.
+            </summary>
+            <param name="admin"></param>
+        </member>
+        <member name="F:Au.LibRun.AuTask.WM_TASK_ENDED">
+            <summary>
+            When task ended, this message is posted to the manager window, with wParam=taskId.
+            </summary>
+        </member>
+        <member name="P:Au.LibRun.AuTask.IsRunning">
+            <summary>
+            False if task is already ended or still not started.
+            </summary>
+        </member>
+        <member name="M:Au.LibRun.AuTask.End(System.Boolean)">
+            <summary>
+            Ends this task (thread or process), if running.
+            Returns true if ended now or was not running.
+            </summary>
+            <param name="onProgramExit">Terminate threads that cannot be ended normally.</param>
+            <remarks>
+            It it is process, kills it instantly.
+            Else calls Thread.Abort etc; it may end thread now or later or never. Waits briefly, but does not throw exception etc if not ended.
+            Don't call this func to end tasks started through other process. It can only end locally started task.
+            </remarks>
+        </member>
+        <member name="P:Au.LibRun.IAuTaskManager.Window">
+            <summary>
+            Manager window. If not Is0, will post WM_TASK_ENDED to it.
+            </summary>
+        </member>
+        <member name="M:Au.LibRun.IAuTaskManager.TaskEnded(System.Int32)">
+            <summary>
+            Called when ending thread (in that thread) and when ended process (in threadpool thread).
+            </summary>
+            <param name="taskId"></param>
+        </member>
         <member name="T:Au.InterDomainVariables">
             <summary>
             Inter-domain variables. Allows to share values by all app domains of this process.
@@ -12586,6 +13255,7 @@
             </param>
             <param name="flags"></param>
             <param name="more">Allows to specify more parameters.</param>
+            <exception cref="T:System.ArgumentException">Used more.Verb and flag Admin.</exception>
             <exception cref="T:Au.Types.AuException">Failed. For example, the file does not exist.</exception>
             <remarks>
             It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
@@ -13275,15 +13945,6 @@
             Calculates angle degrees from coordinates x and y.
             </summary>
         </member>
-        <member name="M:Au.Math_.SetFlag``1(``0@,``0,System.Boolean)">
-            <summary>
-            Adds or removes an enum flag.
-            </summary>
-            <typeparam name="T">enum. Must be of size 4 (default).</typeparam>
-            <param name="enumVariable">Enum variable to modify.</param>
-            <param name="flag">One or more flags to add or remove.</param>
-            <param name="add">If true, adds flag to enumVariable, else removes flag from enumVariable.</param>
-        </member>
         <member name="T:Au.NamespaceDoc">
             <summary>
             This namespace contains main classes of this library.
@@ -13385,6 +14046,12 @@
             Unlike <see cref="P:Au.Folders.ThisProcess"/>, this path can be different for each appdomain; it is set when creating the AppDomain.
             See also <see cref="P:System.Windows.Forms.Application.ExecutablePath"/>, it gets full path (with file name) of appdomain's entry assembly.
             </remarks>
+        </member>
+        <member name="P:Au.Folders.ThisAppBS">
+            <summary>
+            <see cref="P:Au.Folders.ThisApp"/> with appended backslash character.
+            Note: returns string, not FolderPath like other functions.
+            </summary>
         </member>
         <member name="P:Au.Folders.ThisAppTemp">
             <summary>
@@ -14831,15 +15498,14 @@
         </member>
         <member name="M:Au.Debug_.LibCheckFlagsOpt``1(``0,``0)">
             <summary>
-            Checks flags and throws ArgumentException if some flags are invalid. The message includes valid flag names.
+            Checks flags and throws ArgumentException if some flags are invalid. The error message includes valid flag names.
             </summary>
             <param name="flags">Flags to check.</param>
             <param name="goodFlags">Valid flags.</param>
-            <typeparam name="T">The enum type used for flags.</typeparam>
             <remarks>
             Can be used in functions that have an enum flags parameter but not all passed flags are valid for that function or object state.
             Does nothing if Opt.Debug.<see cref="P:Au.Types.OptDebug.Verbose" r=""/> == false.
-            When flags are valid, this function is very fast (inline, no calls).
+            When flags are valid, this function is fast.
             </remarks>
         </member>
         <member name="P:Au.Debug_.IsAuDebugConfiguration">
@@ -14864,409 +15530,6 @@
         <member name="M:Au.Debug_.LibMemorySetAnchor">
             <summary>
             Memorizes current managed memory size, so that next call to another <b>LibMemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
-            </summary>
-        </member>
-        <member name="T:Au.Process_">
-            <summary>
-            Process functions. Extends <see cref="T:System.Diagnostics.Process"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)">
-            <summary>
-            Gets process executable file name (like "notepad.exe") or full path.
-            Returns null if fails.
-            </summary>
-            <param name="processId">Process id.</param>
-            <param name="fullPath">
-            Get full path.
-            Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
-            </param>
-            <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if <paramref name="fullPath"/> is true.</param>
-            <seealso cref="P:Au.Wnd.ProgramName"/>
-            <seealso cref="P:Au.Wnd.ProgramFilePath"/>
-            <seealso cref="P:Au.Wnd.ProcessId"/>
-        </member>
-        <member name="M:Au.Process_.LibProcessInfo.GetName(System.Boolean)">
-            <summary>
-            Gets process executable file name (like "notepad.exe"). Not full path.
-            If contains looks like a DOS path and !cannotOpen, tries to unexpand DOS path.
-            Don't call multiple times, because always converts from raw char*.
-            </summary>
-        </member>
-        <member name="M:Au.Process_.AllProcesses(System.Boolean)">
-            <summary>
-            Gets basic info of all processes: name, id, session id.
-            </summary>
-            <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
-            <exception cref="T:Au.Types.AuException">Failed. Unlikely.</exception>
-        </member>
-        <member name="M:Au.Process_.GetProcessIds(System.String,System.Boolean,System.Boolean)">
-            <summary>
-            Gets process ids of all processes of the specified program.
-            Returns array containing 0 or more elements.
-            </summary>
-            <param name="processName">
-            Process executable file name, like "notepad.exe".
-            String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
-            </param>
-            <param name="fullPath">
-            <paramref name="processName"/> is full path.
-            Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
-            </param>
-            <param name="ofThisSession">Get processes only of this user session.</param>
-            <exception cref="T:System.ArgumentException">
-            processName is "" or null.
-            Invalid wildcard expression ("**options " or regular expression).
-            </exception>
-        </member>
-        <member name="M:Au.Process_.GetProcessId(System.String,System.Boolean,System.Boolean)">
-            <inheritdoc cref="M:Au.Process_.GetProcessIds(System.String,System.Boolean,System.Boolean)"/>
-            <summary>
-            Gets process id of the first found process of the specified program.
-            Returns 0 if not found.
-            </summary>
-        </member>
-        <member name="P:Au.Process_.CurrentProcessId">
-            <summary>
-            Calls API <msdn>GetCurrentProcessId</msdn>.
-            </summary>
-        </member>
-        <member name="P:Au.Process_.CurrentProcessHandle">
-            <summary>
-            Returns current process handle.
-            Calls API <msdn>GetCurrentProcess</msdn>.
-            Don't need to close the handle.
-            </summary>
-        </member>
-        <member name="M:Au.Process_.ProcessIdFromHandle(System.IntPtr)">
-            <summary>
-            Gets process id from handle.
-            Returns 0 if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
-            Calls API <msdn>GetProcessId</msdn>.
-            </summary>
-            <param name="processHandle">Process handle.</param>
-        </member>
-        <member name="M:Au.Process_.GetSessionId(System.Int32)">
-            <summary>
-            Gets user session id of process.
-            Returns -1 if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
-            Calls API <msdn>ProcessIdToSessionId</msdn>.
-            </summary>
-            <param name="processId">Process id.</param>
-        </member>
-        <member name="P:Au.Process_.CurrentSessionId">
-            <summary>
-            Gets user session id of this process.
-            Calls API <msdn>ProcessIdToSessionId</msdn> and <msdn>GetCurrentProcessId</msdn>.
-            </summary>
-        </member>
-        <member name="M:Au.Process_.GetVersionInfo(System.Int32)">
-            <summary>
-            Gets version info of process executable file.
-            Return null if fails.
-            </summary>
-            <param name="processId">Process id.</param>
-        </member>
-        <member name="M:Au.Process_.GetDescription(System.Int32)">
-            <summary>
-            Gets description of process executable file.
-            Return null if fails.
-            </summary>
-            <param name="processId">Process id.</param>
-            <remarks>
-            Calls <see cref="M:Au.Process_.GetVersionInfo(System.Int32)"/> and <see cref="P:System.Diagnostics.FileVersionInfo.FileDescription"/>.
-            </remarks>
-        </member>
-        <member name="T:Au.Process_.LibProcessHandle">
-            <summary>
-            Opens and manages a process handle.
-            Must be disposed.
-            </summary>
-        </member>
-        <member name="P:Au.Process_.LibProcessHandle.Handle">
-            
-        </member>
-        <member name="P:Au.Process_.LibProcessHandle.Is0">
-            
-        </member>
-        <member name="M:Au.Process_.LibProcessHandle.Dispose">
-            
-        </member>
-        <member name="M:Au.Process_.LibProcessHandle.#ctor(System.IntPtr)">
-            <summary>
-            Attaches a kernel handle to this new variable.
-            No exception when handle is invalid.
-            </summary>
-            <param name="handle"></param>
-        </member>
-        <member name="M:Au.Process_.LibProcessHandle.FromId(System.Int32,System.UInt32)">
-            <summary>
-            Opens process handle.
-            Calls API OpenProcess.
-            Returns null if fails. Supports Native.GetError().
-            </summary>
-            <param name="processId">Process id.</param>
-            <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
-        </member>
-        <member name="M:Au.Process_.LibProcessHandle.FromWnd(Au.Wnd,System.UInt32)">
-            <summary>
-            Opens window's process handle.
-            This overload is more powerful: if API OpenProcess fails, it tries GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
-            Returns null if fails. Supports Native.GetError().
-            </summary>
-            <param name="w"></param>
-            <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
-        </member>
-        <member name="T:Au.Process_.LibProcessWaitHandle">
-            <summary>
-            Process handle that is derived from WaitHandle.
-            When don't need to wait, use LibProcessHandle, it's more lightweight and has more creation methods.
-            </summary>
-        </member>
-        <member name="T:Au.Process_.Memory">
-            <summary>
-            Allocates, writes and reads memory in other process.
-            </summary>
-            <remarks>
-            Objects of this class must be disposed. Example: <c>using(var pm=new Process_.Memory(...)) { ... }</c>.
-            </remarks>
-        </member>
-        <member name="M:Au.Process_.Memory.Finalize">
-            
-        </member>
-        <member name="M:Au.Process_.Memory.Dispose">
-            
-        </member>
-        <member name="P:Au.Process_.Memory.ProcessHandle">
-            <summary>
-            Process handle.
-            Opened with access PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE.
-            </summary>
-        </member>
-        <member name="P:Au.Process_.Memory.Mem">
-            <summary>
-            Address of memory allocated in that process.
-            </summary>
-            <remarks>
-            The address is invalid in this process.
-            </remarks>
-        </member>
-        <member name="M:Au.Process_.Memory.SetMem(System.IntPtr,System.Boolean)">
-            <summary>
-            Sets an address of memory in that process that is to be used by the read and write functions.
-            </summary>
-            <param name="mem">A memory address in that process.</param>
-            <param name="freeWhenDisposing">
-            Let the Dispose method (or finalizer) call API <msdn>VirtualFreeEx</msdn> to free mem. The memory must be allocated with API <msdn>VirtualAllocEx</msdn> (by any process) or <msdn>VirtualAlloc</msdn> (by that process).
-            If false, mem can be any memory in that process, and this variable will not free it. Alternatively you can use <see cref="M:Au.Process_.Memory.ReadOther(System.IntPtr,System.Void*,System.Int32)"/> and <see cref="M:Au.Process_.Memory.WriteOther(System.IntPtr,System.Void*,System.Int32)"/>.</param>
-            <exception cref="T:System.InvalidOperationException">This variable already has Mem, unless it was set by this function with <paramref name="freeWhenDisposing"/> = false.</exception>
-            <remarks>
-            This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with <paramref name="freeWhenDisposing"/> = true.
-            </remarks>
-        </member>
-        <member name="M:Au.Process_.Memory.#ctor(Au.Wnd,System.Int32)">
-            <summary>
-            Opens window's process handle and optionally allocates memory in that process.
-            </summary>
-            <param name="w">A window in that process.</param>
-            <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-            <remarks>This is the preferred constructor when the process has windows. It works with windows of <see cref="T:Au.Process_.UacInfo">UAC</see> High integrity level when this process is Medium+uiAccess.</remarks>
-            <exception cref="T:Au.Types.WndException">w invalid.</exception>
-            <exception cref="T:Au.Types.AuException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
-        </member>
-        <member name="M:Au.Process_.Memory.#ctor(System.Int32,System.Int32)">
-            <summary>
-            Opens window's process handle and optionally allocates memory in that process.
-            </summary>
-            <param name="processId">Process id.</param>
-            <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-            <exception cref="T:Au.Types.AuException">Failed to open process handle (usually because of <see cref="T:Au.Process_.UacInfo">UAC</see>) or allocate memory.</exception>
-        </member>
-        <member name="M:Au.Process_.Memory.WriteUnicodeString(System.String,System.Int32)">
-            <summary>
-            Copies a string from this process to the memory allocated in that process by the constructor.
-            In that process the string is written as '\0'-terminated UTF-16 string. For it is used (s.Length+1)*2 bytes of memory in that process (+1 for the '\0', *2 because UTF-16 character size is 2 bytes).
-            Returns false if fails.
-            </summary>
-            <param name="s">A string in this process.</param>
-            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-        </member>
-        <member name="M:Au.Process_.Memory.WriteAnsiString(System.String,System.Int32,System.Text.Encoding)">
-            <summary>
-            Copies a string from this process to the memory allocated in that process by the constructor.
-            In that process the string is written as '\0'-terminated ANSI string, in default or specified encoding.
-            Returns false if fails.
-            </summary>
-            <param name="s">A string in this process. Normal C# string (UTF-16), not ANSI.</param>
-            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-            <param name="enc">If null, uses system's default ANSI encoding.</param>
-        </member>
-        <member name="M:Au.Process_.Memory.ReadUnicodeString(System.Int32,System.Int32,System.Boolean)">
-            <summary>
-            Copies a string from the memory in that process allocated by the constructor to this process.
-            Returns the copied string, or null if fails.
-            In that process the string must be in Unicode UTF-16 format (ie not ANSI).
-            </summary>
-            <param name="nChars">Number of characters to copy. In both processes a character is 2 bytes.</param>
-            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-            <param name="findLength">Find true string length by searching for '\0' character in nChars range. If false, the returned string is of nChars length even if contains '\0' characters.</param>
-        </member>
-        <member name="M:Au.Process_.Memory.LibReadUnicodeStringCached(System.Int32,System.Int32,System.Boolean)">
-            <summary>
-            The same as <see cref="M:Au.Process_.Memory.ReadUnicodeString(System.Int32,System.Int32,System.Boolean)"/> but uses our StringCache.
-            </summary>
-        </member>
-        <member name="M:Au.Process_.Memory.ReadAnsiString(System.Int32,System.Int32,System.Boolean,System.Text.Encoding)">
-            <summary>
-            Copies a string from the memory in that process allocated by the constructor to this process.
-            Returns the copies string, or null if fails.
-            In that process the string must be in ANSI format (ie not Unicode UTF-16).
-            </summary>
-            <param name="nBytes">Number bytes to copy. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
-            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-            <param name="findLength">Find true string length by searching for '\0' character in nBytes range of the ANSI string.</param>
-            <param name="enc">If null, uses system's default ANSI encoding.</param>
-        </member>
-        <member name="M:Au.Process_.Memory.Write(System.Void*,System.Int32,System.Int32)">
-            <summary>
-            Copies a value-type variable or other memory from this process to the memory in that process allocated by the constructor.
-            Returns false if fails.
-            </summary>
-            <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
-            <param name="nBytes">Number of bytes to copy.</param>
-            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-        </member>
-        <member name="M:Au.Process_.Memory.WriteOther(System.IntPtr,System.Void*,System.Int32)">
-            <summary>
-            Copies a value-type variable or other memory from this process to a known memory address in that process.
-            Returns false if fails.
-            </summary>
-            <param name="ptrDestinationInThatProcess">Memory address in that process where to copy memory from this process.</param>
-            <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
-            <param name="nBytes">Number of bytes to copy.</param>
-            <seealso cref="M:Au.Process_.Memory.SetMem(System.IntPtr,System.Boolean)"/>
-        </member>
-        <member name="M:Au.Process_.Memory.Read(System.Void*,System.Int32,System.Int32)">
-            <summary>
-            Copies from the memory in that process allocated by the constructor to a value-type variable or other memory in this process.
-            Returns false if fails.
-            </summary>
-            <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
-            <param name="nBytes">Number of bytes to copy.</param>
-            <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-        </member>
-        <member name="M:Au.Process_.Memory.ReadOther(System.IntPtr,System.Void*,System.Int32)">
-            <summary>
-            Copies from a known memory address in that process to a value-type variable or other memory in this process.
-            Returns false if fails.
-            </summary>
-            <param name="ptrSourceInThatProcess">Memory address in that process from where to copy memory.</param>
-            <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
-            <param name="nBytes">Number of bytes to copy.</param>
-            <seealso cref="M:Au.Process_.Memory.SetMem(System.IntPtr,System.Boolean)"/>
-        </member>
-        <member name="T:Au.Process_.UacInfo">
-            <summary>
-            Holds an access token (security info) of a process and provides various security info, eg UAC integrity level.
-            </summary>
-        </member>
-        <member name="M:Au.Process_.UacInfo.Finalize">
-            
-        </member>
-        <member name="M:Au.Process_.UacInfo.Dispose">
-            
-        </member>
-        <member name="P:Au.Process_.UacInfo.UnsafeTokenHandle">
-            <summary>
-            The access token handle.
-            </summary>
-            <remarks>
-            The handle is managed by this variable and will be closed when disposing or GC-collecting it. Use <see cref="M:System.GC.KeepAlive(System.Object)"/> where need.
-            </remarks>
-        </member>
-        <member name="P:Au.Process_.UacInfo.Failed">
-            <summary>
-            Returns true if the last called property function failed.
-            Normally it should never fail. Only <see cref="M:Au.Process_.UacInfo.GetOfProcess(System.Int32)"/> can fail (then it returns null).
-            </summary>
-        </member>
-        <member name="T:Au.Process_.UacInfo.IL">
-            <summary>
-            <see cref="P:Au.Process_.UacInfo.IntegrityLevel"/>.
-            </summary>
-            <tocexclude />
-        </member>
-        <member name="T:Au.Process_.UacInfo.ElevationType">
-            <summary>
-            <see cref="P:Au.Process_.UacInfo.Elevation"/>.
-            </summary>
-            <tocexclude />
-        </member>
-        <member name="P:Au.Process_.UacInfo.Elevation">
-            <summary>
-            Gets the <see cref="T:Au.Process_.UacInfo">UAC</see> elevation type of the process.
-            Elevation types:
-            Full - runs as administrator (High or System integrity level).
-            Limited - runs as standard user (Medium, Medium+UIAccess or Low integrity level) on administrator user session.
-            Default - all processes in this user session run as admin, or all as standard user. Can be: non-administrator user session; service session; UAC is turned off.
-            Unknown - failed to get. Normally it never happens; only <see cref="M:Au.Process_.UacInfo.GetOfProcess(System.Int32)"/> can fail (then it returns null).
-            This property is rarely useful. Instead use other properties of this class.
-            </summary>
-        </member>
-        <member name="P:Au.Process_.UacInfo.IsUIAccess">
-            <summary>
-            Returns true if the process has <see cref="T:Au.Process_.UacInfo">uiAccess</see> property.
-            A uiAccess process can access/automate all windows of processes running in the same user session.
-            Most processes don't have this property. They cannot access/automate windows of higher integrity level (High, System, uiAccess) processes and Windows 8 store apps. For example, cannot send keys and Windows messages.
-            Note: High IL (admin) processes also can have this property, therefore <c>IsUIAccess</c> is not the same as <c>IntegrityLevelAndUIAccess==IL.UIAccess</c> (<see cref="P:Au.Process_.UacInfo.IntegrityLevelAndUIAccess"/> returns <b>UIAccess</b> only for Medium+uiAccess processes; for High+uiAccess processes it returns <b>High</b>). Some Windows API work slightly differently with uiAccess and non-uiAccess admin processes.
-            This property is rarely useful. Instead use other properties of this class.
-            </summary>
-        </member>
-        <member name="P:Au.Process_.UacInfo.IntegrityLevel">
-            <summary>
-            Gets the <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level (IL) of the process.
-            IL from lowest to highest value:
-            	<b>Untrusted</b> - the most limited rights. Very rare.
-            	<b>Low</b> - very limited rights. Used by Internet Explorer tab processes, Windows Store apps.
-            	<b>Medium</b> - limited rights. Most processes (unless UAC turned off).
-            	<b>UIAccess</b> - Medium IL + can access/automate High IL windows (user interface).
-            		Note: Only the <see cref="P:Au.Process_.UacInfo.IntegrityLevelAndUIAccess"/> property can return <b>UIAccess</b>. This property returns <b>High</b> instead (the same as in Process Explorer).
-            	<b>High</b> - most rights. Processes that run as administrator.
-            	<b>System</b> - almost all rights. Services, some system processes.
-            	<b>Protected</b> - undocumented. Rare.
-            	<b>Unknown</b> - failed to get IL. Unlikely.
-            The IL enum member values can be used like <c>if(x.IntegrityLevel > IL.Medium) ...</c> .
-            If UAC is turned off, most non-service processes on administrator account have High IL; on non-administrator - Medium.
-            </summary>
-        </member>
-        <member name="P:Au.Process_.UacInfo.IntegrityLevelAndUIAccess">
-            <summary>
-            The same as <see cref="P:Au.Process_.UacInfo.IntegrityLevel"/>, but can return <b>UIAccess</b>.
-            </summary>
-        </member>
-        <member name="M:Au.Process_.UacInfo.GetOfProcess(System.Int32)">
-            <summary>
-            Opens process access token and creates/returns new <see cref="T:Au.Process_.UacInfo"/> variable that holds it. Then you can use its properties.
-            Returns null if failed. For example fails for services and some other processes if current process is not administrator.
-            To get <b>UacInfo</b> of this process, instead use <see cref="P:Au.Process_.UacInfo.ThisProcess"/>.
-            </summary>
-            <param name="processId">Process id. If you have a window, use <see cref="P:Au.Wnd.ProcessId"/>.</param>
-        </member>
-        <member name="P:Au.Process_.UacInfo.ThisProcess">
-            <summary>
-            Gets <see cref="T:Au.Process_.UacInfo"/> variable for this process.
-            </summary>
-        </member>
-        <member name="P:Au.Process_.UacInfo.IsAdmin">
-            <summary>
-            Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by <see cref="T:Au.Process_.UacInfo">UAC</see>.
-            This function for example can be used to check whether you can write to protected locations in the file system and registry.
-            </summary>
-        </member>
-        <member name="P:Au.Process_.UacInfo.IsUacDisabled">
-            <summary>
-            Returns true if <see cref="T:Au.Process_.UacInfo">UAC</see> is disabled (turned off) on this Windows 7 computer.
-            On Windows 8 and 10 UAC cannot be disabled, although you can disable UAC elevation consent dialogs.
             </summary>
         </member>
         <member name="T:Au.AuDialog">
@@ -15310,7 +15573,7 @@
         <member name="P:Au.AuDialog.Options.DefaultTitle">
             <summary>
             Default title bar text.
-            Default value - current appdomain name. In exe it is exe file name like "example.exe".
+            Default value - <see cref="P:Au.Script.Name"/>. In exe it is exe file name like "Example.exe".
             </summary>
         </member>
         <member name="P:Au.AuDialog.Options.RtlLayout">
@@ -16156,6 +16419,13 @@
             The 'set' function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="P:Au.CsvTable.ColumnCount"/>.
             </remarks>
         </member>
+        <member name="M:Au.CsvTable.AddRow(System.String[])">
+            <summary>
+            Adds new row and sets its fields.
+            </summary>
+            <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its <b>Length</b> is less than <see cref="P:Au.CsvTable.ColumnCount"/>. Adds new columns if array <b>Length</b> (or the number of string arguments) is greater than ColumnCount.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
         <member name="M:Au.CsvTable.InsertRow(System.Int32,System.String[])">
             <summary>
             Inserts new row and sets its fields.
@@ -16426,6 +16696,7 @@
             <summary>
             Gets the window handle as Wnd from a System.Windows.Forms.Control (or Form etc) variable.
             Returns default(Wnd) if w is null or the handle is still not created.
+            Should be called in c thread. Calls <see cref="P:System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="P:System.Windows.Forms.Control.Handle"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.op_Explicit(System.Windows.Window)~Au.Wnd">
@@ -18782,6 +19053,7 @@
         <member name="P:Au.Wnd.GetWnd.Shell">
             <summary>
             Calls API <msdn>GetShellWindow</msdn>. It gets a window of the shell process (usually process "explorer", class name "Progman").
+            Returns default(Wnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
             </summary>
             <remarks>
             It can be the window that contains desktop icons (see <see cref="P:Au.Wnd.GetWnd.Desktop"/>) or other window of the same thread.
@@ -18792,9 +19064,9 @@
             Gets the desktop window that displays desktop icons and wallpaper in its child control <see cref="P:Au.Wnd.GetWnd.DesktopControl"/>.
             </summary>
             <remarks>
-            The "Show Desktop" command (Win+D) activates this window.
-            <note>It is not API <msdn>GetDesktopWindow</msdn> (see <see cref="P:Au.Wnd.GetWnd.Root"/>)</note>
+            <note>It is not API <msdn>GetDesktopWindow</msdn> (<see cref="P:Au.Wnd.GetWnd.Root"/>)</note>
             <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+            Returns default(Wnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
             </remarks>
         </member>
         <member name="P:Au.Wnd.GetWnd.DesktopControl">
@@ -18803,6 +19075,7 @@
             </summary>
             <remarks>
             <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+            Returns default(Wnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
             </remarks>
         </member>
         <member name="M:Au.Wnd.GetWnd.IsMainWindow(Au.Wnd,System.Boolean,System.Boolean)">
@@ -20294,6 +20567,11 @@
             Base class of user main script class. Manages script options, calling script methods on launch/trigger, etc.
             </summary>
         </member>
+        <member name="P:Au.Script.Name">
+            <summary>
+            Gets current automation script/app name or <see cref="P:System.AppDomain.FriendlyName"/>.
+            </summary>
+        </member>
         <member name="M:Au.Script.CallFirstMethod">
             <summary>
             Calls the first non-static method of the derived class.
@@ -20320,16 +20598,6 @@
             <remarks>
             Stores data in the variable, not in a static variable.
             </remarks>
-        </member>
-        <member name="M:Au.Perf.Inst.Serialize">
-            <summary>
-            Converts this variable to string that can be used to create a copy of this variable with <see cref="M:Au.Perf.Inst.#ctor(System.String)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Perf.Inst.#ctor(System.String)">
-            <summary>
-            Initializes this variable as a copy of another variable that has been converted to string with <see cref="M:Au.Perf.Inst.Serialize"/>.
-            </summary>
         </member>
         <member name="P:Au.Perf.Inst.Incremental">
             <summary><inheritdoc cref="P:Au.Perf.Incremental"/></summary>

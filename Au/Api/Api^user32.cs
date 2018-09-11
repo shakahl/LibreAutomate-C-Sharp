@@ -175,9 +175,6 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern LPARAM DispatchMessage(in Native.MSG lpmsg);
 
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool WaitMessage();
-
 		internal const uint PM_NOREMOVE = 0x0;
 		internal const uint PM_REMOVE = 0x1;
 		internal const uint PM_NOYIELD = 0x2;

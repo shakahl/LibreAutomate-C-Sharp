@@ -334,6 +334,13 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Adds new row and sets its fields.
+		/// </summary>
+		/// <param name="fields">Row fields. Can be a string array or multiple string arguments. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>. Adds new columns if array <b>Length</b> (or the number of string arguments) is greater than ColumnCount.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public void AddRow(params string[] fields) => InsertRow(-1, fields);
+
+		/// <summary>
 		/// Inserts new row and sets its fields.
 		/// </summary>
 		/// <param name="index">0-based row index. If negative or equal to <see cref="RowCount"/>, adds to the end.</param>

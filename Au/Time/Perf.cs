@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define PREPAREMETHOD
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -19,7 +21,8 @@ using static Au.NoClass;
 //rejected: store the static instance in shared memory. This is how it was implemented initially.
 //	Then would be easy to measure speed of appdomain or process startup.
 //	However then too slow Perf startup (JIT + opening shared memory), eg 5 ms vs 1 ms. With process memory 3-4 ms.
-//	Now we instead use Serialize, pass the string eg as command line args, then in that appdomain/process create new Inst variable.
+//	Also rejected Serialize: pass the string eg as command line args, then in that appdomain/process create new Inst variable.
+//	Instead use Time.Microseconds, eg with command line.
 
 namespace Au
 {
@@ -38,19 +41,12 @@ namespace Au
 		/// </remarks>
 		public unsafe struct Inst
 		{
-			//[DllImport("kernel32.dll")]
-			//static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
-
-			//[DllImport("kernel32.dll")]
-			//static extern bool QueryPerformanceFrequency(out long lpFrequency);
-
 			static Inst()
 			{
 				//Prevent JIT delay when calling Next etc if not ngened.
 				//if(!Util.Assembly_.LibIsAuNgened) { //unnecessary and makes slower
-				Stopwatch.GetTimestamp(); //maybe the .NET assembly not ngened
-#if true //works too, similar speed
-				var t = typeof(Perf.Inst);
+#if PREPAREMETHOD
+				var t = typeof(Inst);
 				RuntimeHelpers.PrepareMethod(t.GetMethod("Next").MethodHandle);
 				RuntimeHelpers.PrepareMethod(t.GetMethod("NW").MethodHandle);
 #if DEBUG //else these methods are inlined
@@ -58,16 +54,17 @@ namespace Au
 				RuntimeHelpers.PrepareMethod(t.GetMethod("Next").MethodHandle);
 				RuntimeHelpers.PrepareMethod(t.GetMethod("NW").MethodHandle);
 #endif
-#else
-				Perf.Next(); Perf.NW(); Perf.First(); //JIT-compiles everything we need. s_canWrite prevents calling Output.Write etc.
-#endif
-				//}
+#else //similar speed
+				Perf.Next(); Perf.NW(); Perf.First(); //JIT-compiles everything we need. s_enabled prevents calling Output.Write etc.
 				s_enabled = true;
+#endif
 
 				//JIT speed: 1 ms.
 			}
 
+#if !PREPAREMETHOD
 			static bool s_enabled;
+#endif
 			const int _nElem = 16;
 
 			fixed long _a[_nElem];
@@ -76,30 +73,6 @@ namespace Au
 			bool _incremental;
 			int _nMeasurements; //used with incremental to display n measurements and average times
 			long _time0;
-
-			/// <summary>
-			/// Converts this variable to string that can be used to create a copy of this variable with <see cref="Inst(String)"/>.
-			/// </summary>
-			[MethodImpl(MethodImplOptions.NoOptimization)]
-			public string Serialize()
-			{
-				var si = sizeof(Inst);
-				var b = new byte[si];
-				fixed (long* p = _a) Marshal.Copy((IntPtr)p, b, 0, si);
-				return Convert.ToBase64String(b);
-			}
-
-			/// <summary>
-			/// Initializes this variable as a copy of another variable that has been converted to string with <see cref="Serialize"/>.
-			/// </summary>
-			[MethodImpl(MethodImplOptions.NoOptimization)]
-			public Inst(string serialized) : this()
-			{
-				var si = sizeof(Inst);
-				var b = Convert.FromBase64String(serialized);
-				if(b.Length == si)
-					fixed (long* p = _a) Marshal.Copy(b, 0, (IntPtr)p, si);
-			}
 
 			/// <summary><inheritdoc cref="Perf.Incremental"/></summary>
 			/// <example>
@@ -134,9 +107,11 @@ namespace Au
 			/// <inheritdoc cref="Perf.First()"/>
 			public void First()
 			{
+#if !PREPAREMETHOD
 				if(!s_enabled) return; //called by the static ctor
-				_time0 = Stopwatch.GetTimestamp();
-				//QueryPerformanceCounter(out _time0);
+#endif
+				//info: we don't use Stopwatch because it loads System.dll, which can take 15 ms and make speed measurement incorrect and confusing in some cases.
+				Api.QueryPerformanceCounter(out _time0);
 				_counter = 0;
 				_nMeasurements++;
 			}
@@ -153,11 +128,13 @@ namespace Au
 			/// <inheritdoc cref="Perf.Next"/>
 			public void Next(char cMark = '\0')
 			{
+#if !PREPAREMETHOD
 				if(!s_enabled) return; //called by the static ctor
+#endif
 				int n = _counter; if(n >= _nElem) return;
 				_counter++;
 				fixed (long* p = _a) {
-					var t = Stopwatch.GetTimestamp() - _time0;
+					Api.QueryPerformanceCounter(out long pc); long t = pc - _time0;
 					if(_incremental) p[n] += t; else p[n] = t;
 					//fixed (char* c = _aMark) c[n] = cMark;
 					char* c = (char*)(p + _nElem); c[n] = cMark;
@@ -177,7 +154,9 @@ namespace Au
 			/// </summary>
 			public void Write()
 			{
+#if !PREPAREMETHOD
 				if(!s_enabled) return; //called by the static ctor
+#endif
 				Output.Write(ToString());
 			}
 
@@ -209,16 +188,14 @@ namespace Au
 			void _Results(int n, StringBuilder b, long[] a)
 			{
 				if(n == 0) return;
-				double freq = 1000000.0 / Stopwatch.Frequency;
-				//long _f; QueryPerformanceFrequency(out _f); double freq = 1000000.0 / _f;
 				bool average = false; int nMeasurements = 1;
 
 				fixed (long* p = _a) fixed (char* c = _aMark) {
 					g1:
 					double t = 0d, tPrev = 0d;
 					for(int i = 0; i < n; i++) {
-						t = freq * p[i];
-						double d = t - tPrev; tPrev = t; //could add 0.5 to round up, but assume that Stopwatch.GetTimestamp() call time is 0 - 0.5.
+						t = Time.s_freqMCS * p[i];
+						double d = t - tPrev; tPrev = t; //could add 0.5 to round up, but assume that QueryPerformanceCounter call time is 0 - 0.5.
 						if(average) d /= nMeasurements;
 						long dLong = (long)d;
 						if(b != null) {
@@ -254,8 +231,7 @@ namespace Au
 					int n = _counter;
 					if(n == 0) return 0;
 					if(n > _nElem) n = _nElem;
-					double freq = 1000000.0 / Stopwatch.Frequency;
-					fixed (long* p = _a) { return (long)(freq * p[n - 1]); }
+					fixed (long* p = _a) { return (long)(Time.s_freqMCS * p[n - 1]); }
 				}
 			}
 
@@ -279,12 +255,37 @@ namespace Au
 					Write();
 				}
 			}
+
+			//rejected. It's easier to use Time.Microseconds in the same way.
+			///// <summary>
+			///// Converts this variable to string that can be used to create a copy of this variable with <see cref="Inst(string)"/>.
+			///// </summary>
+			//[MethodImpl(MethodImplOptions.NoOptimization)]
+			//public string Serialize()
+			//{
+			//	var si = sizeof(Inst);
+			//	var b = new byte[si];
+			//	fixed (long* p = _a) Marshal.Copy((IntPtr)p, b, 0, si);
+			//	return Convert.ToBase64String(b);
+			//}
+			///// <summary>
+			///// Initializes this variable as a copy of another variable that has been converted to string with <see cref="Serialize"/>.
+			///// </summary>
+			//[MethodImpl(MethodImplOptions.NoOptimization)]
+			//public Inst(string serialized) : this()
+			//{
+			//	var si = sizeof(Inst);
+			//	var b = Convert.FromBase64String(serialized);
+			//	if(b.Length == si)
+			//		fixed (long* p = _a) Marshal.Copy(b, 0, (IntPtr)p, si);
+			//}
 		}
 
 		/// <summary>
 		/// This static variable is used by the static functions.
 		/// </summary>
-		public static Inst StaticInst;
+		static Inst StaticInst;
+		//rejected: public. Needed for Serialize. Maybe in the future will be implemented somehow differently.
 
 		/// <summary>
 		/// Creates and returns new <see cref="Inst"/> variable and calls its <see cref="Inst.First"/>.

@@ -116,8 +116,9 @@ namespace Au
 
 			public int IsShellWindow(Wnd w)
 			{
+				if(w.Is0) return 0;
 				Wnd wDesk = GetWnd.Shell; //fast
-				if(w == wDesk) return 1; //Progman. Usually other window (WorkerW) is active when desktop active.
+				if(w == wDesk) return 1; //Progman. Other window (WorkerW) may be active when desktop active.
 
 				//cache because GetWindowThreadProcessId quite slow
 				if(w.Handle != _w) { _w = w.Handle; _tidW = Api.GetWindowThreadProcessId(w, out _pidW); }

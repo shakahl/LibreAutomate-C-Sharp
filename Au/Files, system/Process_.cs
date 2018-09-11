@@ -14,7 +14,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Linq;
-using System.Security.Principal;
 
 using Au.Types;
 using static Au.NoClass;
@@ -24,7 +23,7 @@ namespace Au
 	/// <summary>
 	/// Process functions. Extends <see cref="Process"/>.
 	/// </summary>
-	public static unsafe class Process_
+	public static unsafe partial class Process_
 	{
 		/// <summary>
 		/// Gets process executable file name (like "notepad.exe") or full path.
@@ -44,7 +43,7 @@ namespace Au
 			if(processId == 0) return null;
 			string R = null;
 
-			using(var ph = LibProcessHandle.FromId(processId)) {
+			using(var ph = Util.LibKernelHandle.OpenProcess(processId)) {
 				if(!ph.Is0) {
 					//In non-admin process fails if the process is of another user session.
 					//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
@@ -225,7 +224,7 @@ namespace Au
 				}
 				string R = Util.StringCache.LibAdd(namePtr, nameLen);
 				if(!cannotOpen && Path_.LibIsPossiblyDos(R)) {
-					using(var ph = LibProcessHandle.FromId(processID)) {
+					using(var ph = Util.LibKernelHandle.OpenProcess(processID)) {
 						if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
 							R = _GetFileName(Path_.LibExpandDosPath(s));
 						}
@@ -394,7 +393,7 @@ namespace Au
 		{
 			var s = GetName(processId, true);
 			if(s != null) {
-				try { return FileVersionInfo.GetVersionInfo(s); } catch {  }
+				try { return FileVersionInfo.GetVersionInfo(s); } catch { }
 			}
 			return null;
 		}
@@ -410,683 +409,197 @@ namespace Au
 		public static string GetDescription(int processId) => GetVersionInfo(processId)?.FileDescription;
 
 		/// <summary>
-		/// Opens and manages a process handle.
-		/// Must be disposed.
+		/// Creates lpCommandLine for CreateProcess, as char[] like "\"exeFile\" args\0".
+		/// Also creates default lpCurrentDirectory (directory of exeFile), flags and STARTUPINFO (with flag STARTF_FORCEOFFFEEDBACK).
 		/// </summary>
-		internal struct LibProcessHandle :IDisposable
+		/// <param name="exeFile">Path of program file, or filename/relative in Folders.ThisApp. Uses Path_.Normalize. Can be null, but not recommended.</param>
+		/// <param name="args">Command line arguments or null.</param>
+		/// <param name="suspended">Add flag CREATE_SUSPENDED.</param>
+		static (char[] cl, string dir, uint flags, Api.STARTUPINFO si) _ParamsForCreateProcess(string exeFile, string args, bool suspended)
 		{
-			//note: this must be struct, not class, because in some cases used very frequently and would create much garbage.
+			if(exeFile != null) exeFile = Path_.Normalize(exeFile, Folders.ThisApp, PNFlags.DoNotExpandDosPath | PNFlags.DoNotPrefixLongPath);
 
-			IntPtr _h;
+			Api.STARTUPINFO si = default;
+			si.cb = Api.SizeOf<Api.STARTUPINFO>();
+			si.dwFlags = 0x00000080; //STARTF_FORCEOFFFEEDBACK
 
-			///
-			public IntPtr Handle => _h;
+			string s; if(args == null) s = "\"" + exeFile + "\"" + "\0"; else s = "\"" + exeFile + "\" " + args + "\0";
 
-			///
-			public bool Is0 { get { return _h == default; } }
+			uint flags = Api.CREATE_UNICODE_ENVIRONMENT;
+			if(suspended) flags |= Api.CREATE_SUSPENDED;
 
-			///
-			public void Dispose()
-			{
-				if(_h != default) { Api.CloseHandle(_h); _h = default; }
-			}
-
-			/// <summary>
-			/// Attaches a kernel handle to this new variable.
-			/// No exception when handle is invalid.
-			/// </summary>
-			/// <param name="handle"></param>
-			public LibProcessHandle(IntPtr handle) { _h = handle; }
-
-			/// <summary>
-			/// Opens process handle.
-			/// Calls API OpenProcess.
-			/// Returns null if fails. Supports Native.GetError().
-			/// </summary>
-			/// <param name="processId">Process id.</param>
-			/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
-			public static LibProcessHandle FromId(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
-			{
-				_Open(out var h, processId, desiredAccess);
-				return new LibProcessHandle(h);
-			}
-
-			/// <summary>
-			/// Opens window's process handle.
-			/// This overload is more powerful: if API OpenProcess fails, it tries GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
-			/// Returns null if fails. Supports Native.GetError().
-			/// </summary>
-			/// <param name="w"></param>
-			/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
-			public static LibProcessHandle FromWnd(Wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
-			{
-				_Open(out var h, w.ProcessId, desiredAccess, w);
-				return new LibProcessHandle(h);
-			}
-
-			static bool _Open(out IntPtr R, int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default)
-			{
-				R = default;
-				int e = 0;
-				if(processId != 0) {
-					R = Api.OpenProcess(desiredAccess, false, processId);
-					if(R != default) return true;
-					e = Native.GetError();
-				}
-				if(!processWindow.Is0) {
-					if((desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE)) == 0
-					&& UacInfo.ThisProcess.IsUIAccess
-					) R = Api.GetProcessHandleFromHwnd(processWindow);
-
-					if(R != default) return true;
-					Api.SetLastError(e);
-				}
-				return false;
-			}
-
-			public static implicit operator IntPtr(LibProcessHandle p) { return p._h; }
+			return (s.ToCharArray(), Path_.GetDirectoryPath(exeFile), flags, si);
 		}
 
 		/// <summary>
-		/// Process handle that is derived from WaitHandle.
-		/// When don't need to wait, use LibProcessHandle, it's more lightweight and has more creation methods.
-		/// </summary>
-		internal class LibProcessWaitHandle :WaitHandle
-		{
-			public LibProcessWaitHandle(IntPtr nativeHandle, bool owndHandle = true)
-			{
-				base.SafeWaitHandle = new Microsoft.Win32.SafeHandles.SafeWaitHandle(nativeHandle, owndHandle);
-			}
-		}
-
-		/// <summary>
-		/// Allocates, writes and reads memory in other process.
+		/// Starts process using API CreateProcess, without the feedback hourglass cursor.
 		/// </summary>
 		/// <remarks>
-		/// Objects of this class must be disposed. Example: <c>using(var pm=new Process_.Memory(...)) { ... }</c>.
+		/// If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
 		/// </remarks>
-		public sealed unsafe class Memory :IDisposable
+		internal static bool LibStart(string exeFile, string args, out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool suspended = false)
 		{
-			LibProcessHandle _hproc;
-			HandleRef _HprocHR => new HandleRef(this, _hproc);
+			var x = _ParamsForCreateProcess(exeFile, args, suspended);
 
-			///
-			~Memory() { _Dispose(); }
-
-			///
-			public void Dispose()
-			{
-				_Dispose();
-				GC.SuppressFinalize(this);
+			if(inheritUiaccess && Api.OpenProcessToken(CurrentProcessHandle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out var hToken)) {
+				bool ok = Api.CreateProcessAsUser(hToken, null, x.cl, null, null, false, x.flags, default, x.dir, x.si, out pi);
+				Api.CloseHandle(hToken);
+				return ok;
+			} else {
+				return Api.CreateProcess(null, x.cl, null, null, false, x.flags, default, x.dir, x.si, out pi);
 			}
-
-			void _Dispose()
-			{
-				if(_hproc.Is0) return;
-				if(Mem != default) {
-					var mem = Mem; Mem = default;
-					if(!_doNotFree) {
-						if(!Api.VirtualFreeEx(_HprocHR, mem)) PrintWarning("Failed to free process memory. " + Native.GetErrorMessage());
-					}
-				}
-				_hproc.Dispose();
-			}
-
-			/// <summary>
-			/// Process handle.
-			/// Opened with access PROCESS_VM_OPERATION | PROCESS_VM_READ | PROCESS_VM_WRITE.
-			/// </summary>
-			public IntPtr ProcessHandle => _hproc;
-
-			/// <summary>
-			/// Address of memory allocated in that process.
-			/// </summary>
-			/// <remarks>
-			/// The address is invalid in this process.
-			/// </remarks>
-			public IntPtr Mem { get; private set; }
-
-			/// <summary>
-			/// Sets an address of memory in that process that is to be used by the read and write functions.
-			/// </summary>
-			/// <param name="mem">A memory address in that process.</param>
-			/// <param name="freeWhenDisposing">
-			/// Let the Dispose method (or finalizer) call API <msdn>VirtualFreeEx</msdn> to free mem. The memory must be allocated with API <msdn>VirtualAllocEx</msdn> (by any process) or <msdn>VirtualAlloc</msdn> (by that process).
-			/// If false, mem can be any memory in that process, and this variable will not free it. Alternatively you can use <see cref="ReadOther"/> and <see cref="WriteOther"/>.</param>
-			/// <exception cref="InvalidOperationException">This variable already has Mem, unless it was set by this function with <paramref name="freeWhenDisposing"/> = false.</exception>
-			/// <remarks>
-			/// This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with <paramref name="freeWhenDisposing"/> = true.
-			/// </remarks>
-			public void SetMem(IntPtr mem, bool freeWhenDisposing)
-			{
-				if(Mem != default && !_doNotFree) throw new InvalidOperationException();
-				_doNotFree = !freeWhenDisposing;
-				Mem = mem;
-			}
-			bool _doNotFree;
-
-			void _Alloc(int pid, Wnd w, int nBytes)
-			{
-				string err = null;
-				const uint fl = Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE;
-				_hproc = w.Is0 ? LibProcessHandle.FromId(pid, fl) : LibProcessHandle.FromWnd(w, fl);
-				if(_hproc.Is0) { err = "Failed to open process handle."; goto ge; }
-
-				if(nBytes != 0) {
-					Mem = Api.VirtualAllocEx(_HprocHR, default, nBytes);
-					if(Mem == default) { err = "Failed to allocate process memory."; goto ge; }
-				}
-				return;
-				ge:
-				var e = new AuException(0, err);
-				_Dispose();
-				throw e;
-			}
-
-			/// <summary>
-			/// Opens window's process handle and optionally allocates memory in that process.
-			/// </summary>
-			/// <param name="w">A window in that process.</param>
-			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <remarks>This is the preferred constructor when the process has windows. It works with windows of <see cref="UacInfo">UAC</see> High integrity level when this process is Medium+uiAccess.</remarks>
-			/// <exception cref="WndException">w invalid.</exception>
-			/// <exception cref="AuException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
-			public Memory(Wnd w, int nBytes)
-			{
-				w.ThrowIfInvalid();
-				_Alloc(0, w, nBytes);
-			}
-
-			/// <summary>
-			/// Opens window's process handle and optionally allocates memory in that process.
-			/// </summary>
-			/// <param name="processId">Process id.</param>
-			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <exception cref="AuException">Failed to open process handle (usually because of <see cref="UacInfo">UAC</see>) or allocate memory.</exception>
-			public Memory(int processId, int nBytes)
-			{
-				_Alloc(processId, default, nBytes);
-			}
-
-			/// <summary>
-			/// Copies a string from this process to the memory allocated in that process by the constructor.
-			/// In that process the string is written as '\0'-terminated UTF-16 string. For it is used (s.Length+1)*2 bytes of memory in that process (+1 for the '\0', *2 because UTF-16 character size is 2 bytes).
-			/// Returns false if fails.
-			/// </summary>
-			/// <param name="s">A string in this process.</param>
-			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-			public bool WriteUnicodeString(string s, int offsetBytes = 0)
-			{
-				if(Mem == default) return false;
-				if(Empty(s)) return true;
-				fixed (char* p = s) {
-					return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, p, (s.Length + 1) * 2, null);
-				}
-			}
-
-			/// <summary>
-			/// Copies a string from this process to the memory allocated in that process by the constructor.
-			/// In that process the string is written as '\0'-terminated ANSI string, in default or specified encoding.
-			/// Returns false if fails.
-			/// </summary>
-			/// <param name="s">A string in this process. Normal C# string (UTF-16), not ANSI.</param>
-			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-			/// <param name="enc">If null, uses system's default ANSI encoding.</param>
-			public bool WriteAnsiString(string s, int offsetBytes = 0, Encoding enc = null)
-			{
-				if(Mem == default) return false;
-				if(Empty(s)) return true;
-				if(enc == null) enc = Encoding.Default;
-				var a = enc.GetBytes(s + "\0");
-				fixed (byte* p = a) {
-					return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, p, a.Length, null);
-				}
-			}
-
-			string _ReadString(bool ansiString, int nChars, int offsetBytes, bool findLength, Encoding enc = null, bool cache = false)
-			{
-				if(Mem == default) return null;
-				int na = nChars; if(!ansiString) na *= 2;
-				var b = Util.Buffers.LibChar((na + 1) / 2);
-				fixed (char* p = b.A) {
-					if(!Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, p, na, null)) return null;
-					if(findLength) {
-						if(ansiString) nChars = Util.LibCharPtr.Length((byte*)p, nChars);
-						else nChars = Util.LibCharPtr.Length(p, nChars);
-					}
-				}
-				if(ansiString) return b.LibToStringFromAnsi(nChars, enc);
-				if(cache) return b.LibToStringCached(nChars);
-				return b.ToString(nChars);
-			}
-
-			/// <summary>
-			/// Copies a string from the memory in that process allocated by the constructor to this process.
-			/// Returns the copied string, or null if fails.
-			/// In that process the string must be in Unicode UTF-16 format (ie not ANSI).
-			/// </summary>
-			/// <param name="nChars">Number of characters to copy. In both processes a character is 2 bytes.</param>
-			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-			/// <param name="findLength">Find true string length by searching for '\0' character in nChars range. If false, the returned string is of nChars length even if contains '\0' characters.</param>
-			public string ReadUnicodeString(int nChars, int offsetBytes = 0, bool findLength = false)
-			{
-				return _ReadString(false, nChars, offsetBytes, findLength);
-			}
-
-			/// <summary>
-			/// The same as <see cref="ReadUnicodeString"/> but uses our StringCache.
-			/// </summary>
-			internal string LibReadUnicodeStringCached(int nChars, int offsetBytes = 0, bool findLength = false)
-			{
-				return _ReadString(false, nChars, offsetBytes, findLength, cache: true);
-			}
-
-			/// <summary>
-			/// Copies a string from the memory in that process allocated by the constructor to this process.
-			/// Returns the copies string, or null if fails.
-			/// In that process the string must be in ANSI format (ie not Unicode UTF-16).
-			/// </summary>
-			/// <param name="nBytes">Number bytes to copy. In that process a character is 1 or more bytes (depending on encoding). In this process will be 2 bytes (normal C# string).</param>
-			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-			/// <param name="findLength">Find true string length by searching for '\0' character in nBytes range of the ANSI string.</param>
-			/// <param name="enc">If null, uses system's default ANSI encoding.</param>
-			public string ReadAnsiString(int nBytes, int offsetBytes = 0, bool findLength = false, Encoding enc = null)
-			{
-				return _ReadString(true, nBytes, offsetBytes, findLength, enc);
-			}
-
-			/// <summary>
-			/// Copies a value-type variable or other memory from this process to the memory in that process allocated by the constructor.
-			/// Returns false if fails.
-			/// </summary>
-			/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
-			/// <param name="nBytes">Number of bytes to copy.</param>
-			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-			public bool Write(void* ptr, int nBytes, int offsetBytes = 0)
-			{
-				if(Mem == default) return false;
-				return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, ptr, nBytes, null);
-			}
-
-			/// <summary>
-			/// Copies a value-type variable or other memory from this process to a known memory address in that process.
-			/// Returns false if fails.
-			/// </summary>
-			/// <param name="ptrDestinationInThatProcess">Memory address in that process where to copy memory from this process.</param>
-			/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
-			/// <param name="nBytes">Number of bytes to copy.</param>
-			/// <seealso cref="SetMem"/>
-			public bool WriteOther(IntPtr ptrDestinationInThatProcess, void* ptr, int nBytes)
-			{
-				return Api.WriteProcessMemory(_HprocHR, ptrDestinationInThatProcess, ptr, nBytes, null);
-			}
-
-			/// <summary>
-			/// Copies from the memory in that process allocated by the constructor to a value-type variable or other memory in this process.
-			/// Returns false if fails.
-			/// </summary>
-			/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
-			/// <param name="nBytes">Number of bytes to copy.</param>
-			/// <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
-			public bool Read(void* ptr, int nBytes, int offsetBytes = 0)
-			{
-				if(Mem == default) return false;
-				return Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, ptr, nBytes, null);
-			}
-
-			/// <summary>
-			/// Copies from a known memory address in that process to a value-type variable or other memory in this process.
-			/// Returns false if fails.
-			/// </summary>
-			/// <param name="ptrSourceInThatProcess">Memory address in that process from where to copy memory.</param>
-			/// <param name="ptr">Unsafe address of a value type variable or other memory in this process.</param>
-			/// <param name="nBytes">Number of bytes to copy.</param>
-			/// <seealso cref="SetMem"/>
-			public bool ReadOther(IntPtr ptrSourceInThatProcess, void* ptr, int nBytes)
-			{
-				return Api.ReadProcessMemory(_HprocHR, ptrSourceInThatProcess, ptr, nBytes, null);
-			}
-
-			//Cannot get pointer if generic type. Could try Marshal.StructureToPtr etc but I don't like it. Didn't test Unsafe.
-			//public bool Write<T>(ref T v, int offsetBytes = 0) where T : struct
-			//{
-			//	int n = Marshal.SizeOf(v.GetType());
-			//	return Write(&v, n, offsetBytes);
-			//	Marshal.StructureToPtr(v, m, false); ...
-			//}
 		}
 
 		/// <summary>
-		/// Holds an access token (security info) of a process and provides various security info, eg UAC integrity level.
+		/// Starts process using API CreateProcess, without the feedback hourglass cursor.
 		/// </summary>
-		public sealed class UacInfo :IDisposable
+		/// <param name="exeFile"></param>
+		/// <param name="args"></param>
+		/// <param name="inheritUiaccess"></param>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <remarks>
+		/// If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
+		/// </remarks>
+		internal static Process LibStart(string exeFile, string args, bool inheritUiaccess = false)
 		{
-			#region IDisposable Support
+			bool canMod = _NetProcessObject.IsFast;
+			if(!LibStart(exeFile, args, out var pi, inheritUiaccess, suspended: !canMod)) throw new AuException(0, $"Failed to start process '{exeFile}'");
+			return _NetProcessObject.Create(pi, suspended: !canMod);
+		}
 
-			void _Dispose()
-			{
-				if(_htoken != default) { Api.CloseHandle(_htoken); _htoken = default; }
+		[Flags]
+		internal enum EStartFlags
+		{
+			/// <summary>
+			/// Returns Process object.
+			/// If no this flag, closes process handle and returns null.
+			/// </summary>
+			NeedProcessObject = 1,
+
+			/// <summary>
+			/// Inherit environment variables.
+			/// </summary>
+			InheritEnvVar = 2,
+		}
+
+		/// <summary>
+		/// Starts process user process (UAC) from this admin process.
+		/// </summary>
+		/// <param name="exeFile"></param>
+		/// <param name="args"></param>
+		/// <param name="flags"></param>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <remarks>
+		/// Asserts and fails if this is not admin/system process. Caller should at first call Process_.UacInfo.IsAdmin or Process_.UacInfo.ThisProcess.IntegrityLevel.
+		/// Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
+		/// </remarks>
+		internal static Process LibStartUserIL(string exeFile, string args, EStartFlags flags)
+		{
+			Debug.Assert(UacInfo.IsAdmin); //cannot set privilege if user or uiAccess
+			if(!Util.Security_.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
+
+			bool retry = false;
+			g1:
+			var w = Api.GetShellWindow();
+			if(w.Is0) { //if Explorer process killed or crashed, wait until it restarts
+				if(!WaitFor.Condition(2, () => !Api.GetShellWindow().Is0)) throw new AuException($"Cannot start process '{exeFile}' as user. There is no shell process.");
+				500.ms();
+				w = Api.GetShellWindow();
 			}
 
-			///
-			~UacInfo() { _Dispose(); }
-
-			///
-			public void Dispose()
-			{
-				_Dispose();
-				GC.SuppressFinalize(this);
+			IntPtr hShellToken = default, hPrimaryToken = default, envStrings = default;
+			var hShellProcess = Au.Util.LibKernelHandle.OpenProcess(w);
+			if(hShellProcess.Is0) {
+				if(retry) goto ge;
+				retry = true; 500.ms(); goto g1;
 			}
-			#endregion
 
-			IntPtr _htoken;
-			HandleRef _HtokenHR => new HandleRef(this, _htoken);
+			Api.PROCESS_INFORMATION pi = default;
+			try {
+				if(!Api.OpenProcessToken(hShellProcess, Api.TOKEN_DUPLICATE, out hShellToken)) goto ge;
+				const uint access = Api.TOKEN_QUERY | Api.TOKEN_ASSIGN_PRIMARY | Api.TOKEN_DUPLICATE | Api.TOKEN_ADJUST_DEFAULT | Api.TOKEN_ADJUST_SESSIONID;
+				if(!Api.DuplicateTokenEx(hShellToken, access, null, Api.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation, Api.TOKEN_TYPE.TokenPrimary, out hPrimaryToken)) goto ge;
 
+				bool needObject = flags.Has_(EStartFlags.NeedProcessObject);
+				bool suspended = needObject && !_NetProcessObject.IsFast;
+				var x = _ParamsForCreateProcess(exeFile, args, suspended: suspended);
+				envStrings = flags.Has_(EStartFlags.InheritEnvVar) ? Api.GetEnvironmentStrings() : default;
+
+				if(!Api.CreateProcessWithTokenW(hPrimaryToken, 0, null, x.cl, x.flags, envStrings, x.dir, x.si, out pi)) goto ge;
+
+				if(needObject) return _NetProcessObject.Create(pi, suspended: suspended);
+				pi.Dispose();
+				return null;
+			}
+			finally {
+				if(envStrings != default) Api.FreeEnvironmentStrings(envStrings);
+				Api.CloseHandle(hPrimaryToken);
+				Api.CloseHandle(hShellToken);
+				hShellProcess.Dispose();
+			}
+
+			ge: throw new AuException(0, $"Failed to start process '{exeFile}' as user");
+		}
+
+		/// <summary>
+		/// Creates new .NET Process object with attached handle and/or id.
+		/// </summary>
+		static class _NetProcessObject
+		{
 			/// <summary>
-			/// The access token handle.
+			/// Returns true if can create such object in a fast/reliable way. Else <see cref="Create"/> will use Process.GetProcessById.
+			/// It depends on .NET framework version, because uses private methods of Process class through reflection.
 			/// </summary>
-			/// <remarks>
-			/// The handle is managed by this variable and will be closed when disposing or GC-collecting it. Use <see cref="GC.KeepAlive"/> where need.
-			/// </remarks>
-			public IntPtr UnsafeTokenHandle => _htoken;
+			public static bool IsFast { get; } = _CanSetHandleId();
 
-			/// <summary>
-			/// Returns true if the last called property function failed.
-			/// Normally it should never fail. Only <see cref="GetOfProcess"/> can fail (then it returns null).
-			/// </summary>
-			public bool Failed { get; private set; }
-
-#pragma warning disable 1591 //XML doc
-			/// <summary>
-			/// <see cref="IntegrityLevel"/>.
-			/// </summary>
-			/// <tocexclude />
-			public enum IL { Untrusted, Low, Medium, UIAccess, High, System, Protected, Unknown = 100 }
-
-			/// <summary>
-			/// <see cref="Elevation"/>.
-			/// </summary>
-			/// <tocexclude />
-			public enum ElevationType { Unknown, Default, Full, Limited }
-#pragma warning restore 1591
-
-			ElevationType _Elevation; byte _haveElevation;
-			/// <summary>
-			/// Gets the <see cref="UacInfo">UAC</see> elevation type of the process.
-			/// Elevation types:
-			/// Full - runs as administrator (High or System integrity level).
-			/// Limited - runs as standard user (Medium, Medium+UIAccess or Low integrity level) on administrator user session.
-			/// Default - all processes in this user session run as admin, or all as standard user. Can be: non-administrator user session; service session; UAC is turned off.
-			/// Unknown - failed to get. Normally it never happens; only <see cref="GetOfProcess"/> can fail (then it returns null).
-			/// This property is rarely useful. Instead use other properties of this class.
-			/// </summary>
-			public ElevationType Elevation
+			public static bool _CanSetHandleId()
 			{
-				get
-				{
-					if(_haveElevation == 0) {
-						unsafe {
-							ElevationType elev;
-							if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenElevationType, &elev, 4, out var siz)) _haveElevation = 2;
-							else {
-								_haveElevation = 1;
-								_Elevation = elev;
-							}
-						}
-					}
-					if(Failed = (_haveElevation == 2)) return ElevationType.Unknown;
-					return _Elevation;
+				const BindingFlags flags = BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod;
+				s_mi1 = typeof(Process).GetMethod("SetProcessHandle", flags);
+				s_mi2 = typeof(Process).GetMethod("SetProcessId", flags);
+				if(s_mi1 != null && s_mi2 != null) return true;
+				Debug.Assert(false);
+				return false;
+			}
+			static MethodInfo s_mi1, s_mi2;
+
+			/// <summary>
+			/// Creates new .NET Process object with attached handle and/or id.
+			/// Can be specified both handle and id, or one of them (then .NET will open process or get id from handle when need).
+			/// </summary>
+			public static Process Create(IntPtr handle, int id)
+			{
+				if(!IsFast) {
+					if(id == 0) id = ProcessIdFromHandle(handle);
+					return Process.GetProcessById(id); //3 ms, much garbage, gets all processes, can throw
 				}
-			}
 
-			bool _isUIAccess; byte _haveIsUIAccess;
-			/// <summary>
-			/// Returns true if the process has <see cref="UacInfo">uiAccess</see> property.
-			/// A uiAccess process can access/automate all windows of processes running in the same user session.
-			/// Most processes don't have this property. They cannot access/automate windows of higher integrity level (High, System, uiAccess) processes and Windows 8 store apps. For example, cannot send keys and Windows messages.
-			/// Note: High IL (admin) processes also can have this property, therefore <c>IsUIAccess</c> is not the same as <c>IntegrityLevelAndUIAccess==IL.UIAccess</c> (<see cref="IntegrityLevelAndUIAccess"/> returns <b>UIAccess</b> only for Medium+uiAccess processes; for High+uiAccess processes it returns <b>High</b>). Some Windows API work slightly differently with uiAccess and non-uiAccess admin processes.
-			/// This property is rarely useful. Instead use other properties of this class.
-			/// </summary>
-			public bool IsUIAccess
-			{
-				get
-				{
-					if(_haveIsUIAccess == 0) {
-						unsafe {
-							uint uia;
-							if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenUIAccess, &uia, 4, out var siz)) _haveIsUIAccess = 2;
-							else {
-								_haveIsUIAccess = 1;
-								_isUIAccess = uia != 0;
-							}
-						}
-					}
-					if(Failed = (_haveIsUIAccess == 2)) return false;
-					return _isUIAccess;
+				var p = new Process();
+				var o = new object[1];
+				if(handle != default) {
+					o[0] = new Microsoft.Win32.SafeHandles.SafeProcessHandle(handle, true);
+					s_mi1.Invoke(p, o);
 				}
-			}
-
-			//not very useful. Returns false for ApplicationFrameWindow. Can use Wnd.IsWindows10StoreApp.
-			///// <summary>
-			///// Returns true if the process is a Windows Store app.
-			///// </summary>
-			//public unsafe bool IsAppContainer
-			//{
-			//	get
-			//	{
-			//		if(!Ver.MinWin8) return false;
-			//		uint isac;
-			//		if(Failed = !Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIsAppContainer, &isac, 4, out var siz)) return false;
-			//		return isac != 0;
-			//	}
-			//}
-
-#pragma warning disable 649
-			struct TOKEN_MANDATORY_LABEL { internal IntPtr Sid; internal uint Attributes; }
-#pragma warning restore 649
-			const uint SECURITY_MANDATORY_UNTRUSTED_RID = 0x00000000;
-			const uint SECURITY_MANDATORY_LOW_RID = 0x00001000;
-			const uint SECURITY_MANDATORY_MEDIUM_RID = 0x00002000;
-			const uint SECURITY_MANDATORY_MEDIUM_PLUS_RID = SECURITY_MANDATORY_MEDIUM_RID + 0x100;
-			const uint SECURITY_MANDATORY_HIGH_RID = 0x00003000;
-			const uint SECURITY_MANDATORY_SYSTEM_RID = 0x00004000;
-			const uint SECURITY_MANDATORY_PROTECTED_PROCESS_RID = 0x00005000;
-
-			IL _integrityLevel; byte _haveIntegrityLevel;
-			/// <summary>
-			/// Gets the <see cref="UacInfo">UAC</see> integrity level (IL) of the process.
-			/// IL from lowest to highest value:
-			///		<b>Untrusted</b> - the most limited rights. Very rare.
-			///		<b>Low</b> - very limited rights. Used by Internet Explorer tab processes, Windows Store apps.
-			///		<b>Medium</b> - limited rights. Most processes (unless UAC turned off).
-			///		<b>UIAccess</b> - Medium IL + can access/automate High IL windows (user interface).
-			///			Note: Only the <see cref="IntegrityLevelAndUIAccess"/> property can return <b>UIAccess</b>. This property returns <b>High</b> instead (the same as in Process Explorer).
-			///		<b>High</b> - most rights. Processes that run as administrator.
-			///		<b>System</b> - almost all rights. Services, some system processes.
-			///		<b>Protected</b> - undocumented. Rare.
-			///		<b>Unknown</b> - failed to get IL. Unlikely.
-			/// The IL enum member values can be used like <c>if(x.IntegrityLevel > IL.Medium) ...</c> .
-			/// If UAC is turned off, most non-service processes on administrator account have High IL; on non-administrator - Medium.
-			/// </summary>
-			public IL IntegrityLevel
-			{
-				get => _GetIntegrityLevel(false);
+				if(id != 0) {
+					o[0] = id;
+					s_mi2.Invoke(p, o);
+				}
+				return p;
 			}
 
 			/// <summary>
-			/// The same as <see cref="IntegrityLevel"/>, but can return <b>UIAccess</b>.
+			/// Creates new .NET Process object with attached handle and id.
+			/// Closes thread handle. If suspended, resumes thread.
 			/// </summary>
-			public IL IntegrityLevelAndUIAccess
+			public static Process Create(in Api.PROCESS_INFORMATION pi, bool suspended)
 			{
-				get => _GetIntegrityLevel(true);
-			}
-
-			IL _GetIntegrityLevel(bool andUIAccess)
-			{
-				if(_haveIntegrityLevel == 0) {
-					unsafe {
-						Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, null, 0, out var siz);
-						if(Native.GetError() != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
-						else {
-							var b = stackalloc byte[(int)siz];
-							var tml = (TOKEN_MANDATORY_LABEL*)b;
-							if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tml, siz, out siz)) _haveIntegrityLevel = 2;
-							uint x = *Api.GetSidSubAuthority(tml->Sid, (uint)(*Api.GetSidSubAuthorityCount(tml->Sid) - 1));
-
-							if(x < SECURITY_MANDATORY_LOW_RID) _integrityLevel = IL.Untrusted;
-							else if(x < SECURITY_MANDATORY_MEDIUM_RID) _integrityLevel = IL.Low;
-							else if(x < SECURITY_MANDATORY_HIGH_RID) _integrityLevel = IL.Medium;
-							else if(x < SECURITY_MANDATORY_SYSTEM_RID) {
-								if(IsUIAccess && Elevation != ElevationType.Full) _integrityLevel = IL.UIAccess; //fast. Note: don't use if(andUIAccess) here.
-								else _integrityLevel = IL.High;
-							} else if(x < SECURITY_MANDATORY_PROTECTED_PROCESS_RID) _integrityLevel = IL.System;
-							else _integrityLevel = IL.Protected;
-						}
-					}
-				}
-				if(Failed = (_haveIntegrityLevel == 2)) return IL.Unknown;
-				if(!andUIAccess && _integrityLevel == IL.UIAccess) return IL.High;
-				return _integrityLevel;
-			}
-
-			UacInfo(IntPtr hToken) { _htoken = hToken; }
-
-			static UacInfo _Create(IntPtr hProcess)
-			{
-				if(!Api.OpenProcessToken(hProcess, Api.TOKEN_QUERY | Api.TOKEN_QUERY_SOURCE, out var hToken)) return null;
-				return new UacInfo(hToken);
-			}
-
-			/// <summary>
-			/// Opens process access token and creates/returns new <see cref="UacInfo"/> variable that holds it. Then you can use its properties.
-			/// Returns null if failed. For example fails for services and some other processes if current process is not administrator.
-			/// To get <b>UacInfo</b> of this process, instead use <see cref="ThisProcess"/>.
-			/// </summary>
-			/// <param name="processId">Process id. If you have a window, use <see cref="Wnd.ProcessId"/>.</param>
-			public static UacInfo GetOfProcess(int processId)
-			{
-				if(processId == 0) return null;
-				using(var hp = LibProcessHandle.FromId(processId)) {
-					if(hp.Is0) return null;
-					return _Create(hp);
-				}
-			}
-
-			/// <summary>
-			/// Gets <see cref="UacInfo"/> variable for this process.
-			/// </summary>
-			public static UacInfo ThisProcess
-			{
-				get
-				{
-					if(_thisProcess == null) {
-						_thisProcess = _Create(Api.GetCurrentProcess());
-						Debug.Assert(_thisProcess != null);
-					}
-					return _thisProcess;
-				}
-			}
-			static UacInfo _thisProcess;
-
-			/// <summary>
-			/// Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by <see cref="UacInfo">UAC</see>.
-			/// This function for example can be used to check whether you can write to protected locations in the file system and registry.
-			/// </summary>
-			public static bool IsAdmin
-			{
-				get
-				{
-					if(!_haveIsAdmin) {
-						try {
-							WindowsIdentity id = WindowsIdentity.GetCurrent();
-							WindowsPrincipal principal = new WindowsPrincipal(id);
-							_isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
-						}
-						catch { }
-						_haveIsAdmin = true;
-					}
-					return _isAdmin;
-				}
-			}
-			static bool _isAdmin, _haveIsAdmin;
-
-			/*
-			public struct SID_IDENTIFIER_AUTHORITY
-			{
-				public byte b0, b1, b2, b3, b4, b5;
-			}
-
-			[DllImport("advapi32.dll")]
-			public static extern bool AllocateAndInitializeSid(in SID_IDENTIFIER_AUTHORITY pIdentifierAuthority, byte nSubAuthorityCount, uint nSubAuthority0, uint nSubAuthority1, uint nSubAuthority2, uint nSubAuthority3, uint nSubAuthority4, uint nSubAuthority5, uint nSubAuthority6, uint nSubAuthority7, out IntPtr pSid);
-
-			[DllImport("advapi32.dll")]
-			public static extern bool CheckTokenMembership(IntPtr TokenHandle, IntPtr SidToCheck, out bool IsMember);
-
-			[DllImport("advapi32.dll")]
-			public static extern IntPtr FreeSid(IntPtr pSid);
-
-			public const int SECURITY_BUILTIN_DOMAIN_RID = 32;
-			public const int DOMAIN_ALIAS_RID_ADMINS = 544;
-
-			//This is from CheckTokenMembership reference.
-			//In QM2 it is very fast, but here quite slow first time, although then becomes the fastest. Advapi32.dll is already loaded, but maybe it loads other dlls.
-			//IsUserAnAdmin first time can be slowest. It loads shell32.dll.
-			//The .NET principal etc first time usually is fastest, althoug later is slower several times.
-			//All 3 tested on admin and user accounts, also when UAC is turned off, also with System IL.
-			public static bool IsAdmin
-			{
-				get
-				{
-					var NtAuthority = new SID_IDENTIFIER_AUTHORITY() { b5 = 5 }; //SECURITY_NT_AUTHORITY
-					IntPtr AdministratorsGroup;
-					if(!AllocateAndInitializeSid(NtAuthority, 2,
-						SECURITY_BUILTIN_DOMAIN_RID, DOMAIN_ALIAS_RID_ADMINS,
-						0, 0, 0, 0, 0, 0,
-						out AdministratorsGroup
-						))
-						return false;
-					bool R;
-					if(!CheckTokenMembership(default, AdministratorsGroup, out R)) R = false;
-					FreeSid(AdministratorsGroup);
-					return R;
-				}
-			}
-			*/
-
-			/// <summary>
-			/// Returns true if <see cref="UacInfo">UAC</see> is disabled (turned off) on this Windows 7 computer.
-			/// On Windows 8 and 10 UAC cannot be disabled, although you can disable UAC elevation consent dialogs.
-			/// </summary>
-			public static bool IsUacDisabled
-			{
-				get
-				{
-					if(!_haveIsUacDisabled) {
-						_isUacDisabled = _IsUacDisabled();
-						_haveIsUacDisabled = true;
-					}
-					return _isUacDisabled;
-				}
-			}
-
-			static bool _isUacDisabled, _haveIsUacDisabled;
-			static bool _IsUacDisabled()
-			{
-				if(Ver.MinWin8) return false; //UAC cannot be disabled
-				UacInfo x = ThisProcess;
-				switch(x.Elevation) {
-				case ElevationType.Full:
-				case ElevationType.Limited:
-					return false;
-				}
-				if(x.IsUIAccess) return false;
-
-				int r = 1;
 				try {
-					r = (int)Microsoft.Win32.Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System", "EnableLUA", 1);
+					return Create(pi.hProcess, pi.dwProcessId);
 				}
-				catch { }
-				return r == 0;
+				finally {
+					if(suspended) Api.ResumeThread(pi.hThread);
+					Api.CloseHandle(pi.hThread);
+				}
 			}
 		}
 	}

@@ -27,9 +27,8 @@ using System.Collections;
 
 class PanelOpen :Control, ITreeModel
 {
-	//ListView _c;
 	_TreeViewAdv _c;
-	//NodeIcon _ccIcon;
+	NodeIcon _ccIcon;
 	NodeTextBox _ccName;
 
 	public PanelOpen()
@@ -44,11 +43,12 @@ class PanelOpen :Control, ITreeModel
 		_c.ShowNodeToolTips = true;
 		_c.FullRowSelect = true;
 
-		//_ccIcon = new NodeIcon();
-		//_c.NodeControls.Add(_ccIcon);
-		//_ccIcon.LeftMargin = 0;
-		//_ccIcon.ScaleMode = ImageScaleMode.ScaleUp;
-		//_ccIcon.DpiStretch = true;
+		_ccIcon = new NodeIcon();
+		_c.NodeControls.Add(_ccIcon);
+		_ccIcon.LeftMargin = 0;
+		_ccIcon.ScaleMode = ImageScaleMode.ScaleUp;
+		_ccIcon.DpiStretch = true;
+		_ccIcon.ValueNeeded = node => (node.Tag as FileNode).GetIcon();
 
 		_ccName = new NodeTextBox();
 		_c.NodeControls.Add(_ccName);

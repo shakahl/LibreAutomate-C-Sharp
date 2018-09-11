@@ -384,7 +384,10 @@ namespace Au.Util
 
 						if(cc == null) cbFunc();
 						//else if(cc.IsHandleCreated) cc.BeginInvoke(cbFunc); //unsafe: _messages can accumulate too much if callback is very slow
-						else if(cc.IsHandleCreated) cc.Invoke(cbFunc);
+						else if(cc.IsHandleCreated) {
+							try { cc.Invoke(cbFunc); }
+							catch(InvalidAsynchronousStateException) { } //The destination thread no longer exists.
+						}
 					}
 
 					if(isTimerEvent) period = 50; //check after 50 ms, to avoid 1000 ms delay in case a client did not set timer because _SM->IsTimer was still 1 although the timer was already signaled
@@ -519,7 +522,7 @@ namespace Au
 
 			Api.GetSystemTimeAsFileTime(out var time);
 
-			string caller = _domainName;
+			string caller = _domainName; //TODO: use Script.Name?
 #if NEED_CALLER
 			if(OutputServer.LibNeedCallerMethod) {
 				//info: this func always called from WriteDirectly, which is usually called through Writer, Write, Print, etc. But it is public and can be called directly.

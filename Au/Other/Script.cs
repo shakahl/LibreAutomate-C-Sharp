@@ -19,14 +19,36 @@ using static Au.NoClass;
 //CONSIDER: add an option to inject and execute the script in any process/thread.
 //	[assembly: Inject("firefox.exe", windowName="* - Firefox")]
 
+//TODO: remove what is not used. Edit class xmldoc.
 namespace Au
 {
 	/// <summary>
 	/// Base class of user main script class. Manages script options, calling script methods on launch/trigger, etc.
 	/// </summary>
-	[DebuggerStepThrough]
+	//[DebuggerStepThrough]
 	public class Script
 	{
+		/// <summary>
+		/// Gets current automation script/app name or <see cref="AppDomain.FriendlyName"/>.
+		/// </summary>
+		public static string Name
+		{
+			get
+			{
+				if(s_name != null) return s_name;
+				if(t_name != null) return t_name;
+				var s = Thread.CurrentThread.Name;
+				if(s != null && s.StartsWith_("[script] ")) return t_name = s.Substring(9);
+				return s_name = AppDomain.CurrentDomain.FriendlyName;
+			}
+			internal set
+			{
+				s_name = value;
+			}
+		}
+		static string s_name;
+		[ThreadStatic] static string t_name;
+
 		/// <summary>
 		/// Calls the first non-static method of the derived class.
 		/// The method must have 0 parameters.

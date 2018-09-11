@@ -43,7 +43,7 @@ class ProgramSettings
 			try {
 				if(File_.ExistsAsAny(_settFile))
 					AuDialog.ShowWarning("Failed to load settings", $"Will backup '{_settFile}' and use default settings.", expandedText: ex1.Message);
-				File_.Copy(Folders.ThisApp + @"Default\Settings.xml", _settFile, IfExists.RenameExisting);
+				File_.Copy(Folders.ThisAppBS + @"Default\Settings.xml", _settFile, IfExists.RenameExisting);
 				_x = XElement.Load(_settFile);
 			}
 			catch(Exception ex2) {

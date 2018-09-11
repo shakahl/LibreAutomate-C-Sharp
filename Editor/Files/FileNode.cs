@@ -191,6 +191,11 @@ partial class FileNode :ICollectionFile
 		get => FromX(_x.PreviousElement_());
 	}
 
+	public FileNode FirstChild
+	{
+		get => FromX(_x.Elements().FirstOrDefault());
+	}
+
 	/// <summary>
 	/// Finds descendant file or folder by name or @"\relative path".
 	/// Returns null if not found; also if name is null/"".
@@ -205,6 +210,7 @@ partial class FileNode :ICollectionFile
 		if(x == null && !folder.HasValue) x = _x.Descendant_("d", "n", name, true);
 		return FromX(x);
 
+		//TODO: support "<GUID>comments"
 		//FUTURE: support XPath: x = _x.XPathSelectElement(name);
 	}
 
@@ -250,6 +256,24 @@ partial class FileNode :ICollectionFile
 			}
 		}
 		return p._FindRelative(s, folder);
+	}
+
+	/// <summary>
+	/// Finds all descendant files (and not folders) that have the specified name.
+	/// Returns empty array if not found.
+	/// </summary>
+	/// <param name="name">File name. If starts with backslash, works like <see cref="FindDescendant"/>.</param>
+	public FileNode[] FindAllDescendantFiles(string name)
+	{
+		if(!Empty(name)) {
+			if(name[0] == '\\') {
+				var f1 = _FindRelative(name, false);
+				if(f1 != null) return new FileNode[] { f1 };
+			} else {
+				return _x.Descendants_("f", "n", name, true).Select(x => FromX(x)).ToArray();
+			}
+		}
+		return Array.Empty<FileNode>();
 	}
 
 	/// <summary>
@@ -376,6 +400,7 @@ partial class FileNode :ICollectionFile
 			if(node == root) return TreePath.Empty;
 			var stack = new Stack<object>(); //use Stack because its ToArray creates array in reverse order
 			while(node != root) {
+				Debug.Assert(node != null); //once was nullreference exception, after deleting several items and then selecting an item quickly, don't know why
 				stack.Push(node);
 				node = node.Parent;
 			}
@@ -415,6 +440,31 @@ partial class FileNode :ICollectionFile
 		return File.ReadAllText(FilePath);
 	}
 
+	public Bitmap GetIcon(bool expandedFolder = false)
+	{
+		string k;
+		switch(NodeType) {
+		case ENodeType.Folder:
+			if(IsProjectFolder) k = "project";
+			else if(expandedFolder) k = "folderOpen";
+			else k = "folder";
+			break;
+		case ENodeType.Script: k = "fileScript"; break;
+		case ENodeType.CS: k = "fileClass"; break;
+		default:
+			if(!IsLink(out string s)) s = FilePath;
+			return IconCache.GetImage(s, true);
+		}
+		return EResources.GetImageUseCache(k);
+	}
+
+	public static Icon_.ImageCache IconCache = new Icon_.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
+
+	/// <summary>
+	/// Formats _open link tag to open this file.
+	/// </summary>
+	public string LinkTag => $"<_open {Guid}>{Name}<>";
+
 	/// <summary>
 	/// Returns Name.
 	/// </summary>
@@ -428,13 +478,6 @@ partial class FileNode :ICollectionFile
 	public ICollectionFiles IcfCollection => _model;
 
 	public ICollectionFile IcfFindRelative(string relativePath, bool? folder) => FindRelative(relativePath, folder);
-
-	public bool IcfFindProject(out ICollectionFile folder, out ICollectionFile main)
-	{
-		if(!FindProject(out var f, out var m)) { folder = null; main = null; return false; }
-		folder = f; main = m;
-		return true;
-	}
 
 	public IEnumerable<ICollectionFile> IcfEnumProjectFiles(ICollectionFile fSkip = null) => EnumProjectFiles(fSkip as FileNode);
 

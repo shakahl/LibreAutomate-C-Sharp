@@ -332,6 +332,7 @@ namespace Au
 
 			/// <summary>
 			/// Calls API <msdn>GetShellWindow</msdn>. It gets a window of the shell process (usually process "explorer", class name "Progman").
+			/// Returns default(Wnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
 			/// </summary>
 			/// <remarks>
 			/// It can be the window that contains desktop icons (see <see cref="Desktop"/>) or other window of the same thread.
@@ -342,9 +343,9 @@ namespace Au
 			/// Gets the desktop window that displays desktop icons and wallpaper in its child control <see cref="DesktopControl"/>.
 			/// </summary>
 			/// <remarks>
-			/// The "Show Desktop" command (Win+D) activates this window.
-			/// <note>It is not API <msdn>GetDesktopWindow</msdn> (see <see cref="Root"/>)</note>
+			/// <note>It is not API <msdn>GetDesktopWindow</msdn> (<see cref="Root"/>)</note>
 			/// <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+			/// Returns default(Wnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
 			/// </remarks>
 			public static Wnd Desktop => _Desktop(out var lv);
 
@@ -353,6 +354,7 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
+			/// Returns default(Wnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
 			/// </remarks>
 			public static Wnd DesktopControl { get { _Desktop(out var lv); return lv; } }
 
@@ -370,7 +372,6 @@ namespace Au
 			}
 
 			//FUTURE:
-			//public static Wnd AuManager =>
 			//public static Wnd AuEditor =>
 			//public static Wnd AuCodeEditControl =>
 
@@ -413,7 +414,7 @@ namespace Au
 				} else if(Ver.MinWin8) {
 					if((exStyle & Native.WS_EX.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(Native.WS.CAPTION)) {
 						if(!allDesktops && (exStyle & Native.WS_EX.TOPMOST) != 0) return false; //skip store apps
-						if(GetWnd.Shell.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) return false; //skip captionless shell windows
+						if(Shell.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) return false; //skip captionless shell windows
 					}
 					//On Win8 impossible to get next window like Alt+Tab.
 					//	All store apps are topmost, covering non-topmost desktop windows.

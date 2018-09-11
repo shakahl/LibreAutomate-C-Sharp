@@ -381,12 +381,17 @@ namespace Au
 		/// <summary>
 		/// Sets to use QM2 as the output server.
 		/// </summary>
-#if DEBUG
-		public
-#else
-		internal
-#endif
-		static bool LibUseQM2 { get; set; }
+		internal static bool LibUseQM2 { get; set; }
+
+		/// <summary>
+		/// Clears QM2 output pane.
+		/// </summary>
+		internal static void LibClearQM2() => _WriteToQM2(null);
+
+		/// <summary>
+		/// Writes line to QM2.
+		/// </summary>
+		internal static void LibWriteQM2(object o) => _WriteToQM2(o?.ToString() ?? "");
 
 		/// <param name="s">If null, clears output.</param>
 		static void _WriteToQM2(string s)
@@ -398,9 +403,5 @@ namespace Au
 			_hwndQM2.SendS(Api.WM_SETTEXT, -1, s);
 		}
 		static Wnd _hwndQM2;
-
-		internal static void LibWriteQM2(object o) => _WriteToQM2(o?.ToString() ?? "");
-
-		internal static void LibClearQM2() => _WriteToQM2(null);
 	}
 }

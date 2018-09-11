@@ -25,8 +25,15 @@ namespace Au
 	[DebuggerStepThrough]
 	public static class Time
 	{
-		static double _freqMCS = 1000000.0 / Stopwatch.Frequency;
-		static double _freqMS = 1000.0 / Stopwatch.Frequency;
+		//info: we don't use Stopwatch because it loads System.dll, which can take 15 ms and make speed measurement incorrect and confusing in some cases.
+		static Time()
+		{
+			if(Api.QueryPerformanceFrequency(out long f)) {
+				s_freqMCS = 1_000_000d / f;
+				s_freqMS = 1000d / f;
+			}
+		}
+		internal static double s_freqMCS, s_freqMS; //s_freqMCS used by Perf too
 
 		/// <summary>
 		/// Gets the number of microseconds elapsed since Windows startup.
@@ -36,7 +43,8 @@ namespace Au
 		/// Independent of computer clock time changes.
 		/// MSDN article: <msdn>Acquiring high-resolution time stamps</msdn>.
 		/// </remarks>
-		public static long Microseconds => (long)(Stopwatch.GetTimestamp() * _freqMCS);
+		public static long Microseconds { get { Api.QueryPerformanceCounter(out var t); return (long)(t * s_freqMCS); } }
+
 
 		/// <summary>
 		/// Gets the number of milliseconds elapsed since Windows startup.
@@ -46,7 +54,7 @@ namespace Au
 		/// Similar to <see cref="Environment.TickCount"/>, but more precise (1 ms) and returns a 64-bit value.
 		/// Independent of computer clock time changes.
 		/// </remarks>
-		public static long Milliseconds => (long)(Stopwatch.GetTimestamp() * _freqMS);
+		public static long Milliseconds { get { Api.QueryPerformanceCounter(out var t); return (long)(t * s_freqMS); } }
 		//public static long Milliseconds => Api.GetTickCount64(); //15 ms precision. On current OS and hardware, QueryPerformanceCounter is reliable and almost as fast.
 
 		/// <summary>

@@ -99,7 +99,7 @@ static partial class Test
 	{
 		//TestProcessStartSpeed(); return;
 
-		_EnableVisualStylesEtc();
+		//_EnableVisualStylesEtc();
 #if true
 		TestMain();
 #elif true
@@ -1492,14 +1492,14 @@ static partial class Test
 	}
 
 
-	static void TestDllInProcThisThread()
-	{
-		var f = new Form();
-		f.Text = "Form55";
-		var b = f.Add_<Button>(4, 4, 100, 30, "Five");
-		f.Click += (unu, sed) => { TestDllInProc(); };
-		f.ShowDialog();
-	}
+	//static void TestDllInProcThisThread()
+	//{
+	//	var f = new Form();
+	//	f.Text = "Form55";
+	//	var b = f.Add_<Button>(4, 4, 100, 30, "Five");
+	//	f.Click += (unu, sed) => { TestDllInProc(); };
+	//	f.ShowDialog();
+	//}
 
 	static void TestDllInProc()
 	{
@@ -7811,18 +7811,22 @@ REE`");
 	{
 		//throw new Exception();
 
-		//var a = new int[] { 100, 101, 102 };
-		////a = a.RemoveAt_(0);
+		var a = new int[] { 100, 101, 102 };
+		//a = a.RemoveAt_(0);
 		//a = a.Insert_(1, -1);
-		//Print(a);
-
-		var a = new string[] { "", "one", "two ooo", "thr \"ee\"", @"four\",  @"fi ve\",  @"fi ve\\", @"si ""x""\", @"si \""x""", @"si \\""x""", "se\r\nven"};
+		a = a.Insert_(1, -1, -2);
+		Print(a);
+		Print("---");
+		a = a.RemoveAt_(0, 2);
 		Print(a);
 
-		var s = Au.Util.StringMisc.CommandLineFromArray(a);
-		Print($"<><c 0xff0000>{s}</c>");
+		//var a = new string[] { "", "one", "two ooo", "thr \"ee\"", @"four\",  @"fi ve\",  @"fi ve\\", @"si ""x""\", @"si \""x""", @"si \\""x""", "se\r\nven"};
+		//Print(a);
 
-		Print(Au.Util.StringMisc.CommandLineToArray(s));
+		//var s = Au.Util.StringMisc.CommandLineFromArray(a);
+		//Print($"<><c 0xff0000>{s}</c>");
+
+		//Print(Au.Util.StringMisc.CommandLineToArray(s));
 
 		//var si = new ProcessStartInfo(@"q:\app\au\_\Au.Task.exe") { UseShellExecute = false, Arguments = s };
 		//Process.Start(si);
@@ -7889,6 +7893,132 @@ REE`");
 
 	//static Project.Properties.Settings s_sett = (Project.Properties.Settings)System.Configuration.ApplicationSettingsBase.Synchronized(new Project.Properties.Settings());
 
+	static void TestStartProcessFromShell()
+	{
+		string exe = Folders.System + "notepad.exe";
+
+		//int hr = Cpp.Cpp_StartProcess(exe, null, null, null, out BSTR bResult);
+		//Print(hr, bResult);
+	}
+
+	static void TestGCHandle()
+	{
+		object o1 = new object(), o2 = new object();
+
+		for(int i = 0; i < 20; i++) {
+			var h = GCHandle.Alloc((0==(i&1)) ? o1 : o2);
+			Print((IntPtr)h);
+			h.Free();
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static bool TestEnumHas(DFlags f)
+	{
+		return f.Has_(DFlags.CommandLinks);
+	}
+
+	static void TestEnumHas2()
+	{
+		Print(1);
+		var w = Wnd.Find("Quick*");
+		//var v = InterDomainVariables.GetVariable(<string>("test");
+	}
+
+	static void TestFileOpenWaitLocked()
+	{
+		var file = Folders.Temp + "test.txt";
+
+		Task.Run(() =>
+		{
+			try {
+				for(int i = 0; i < 100; i++) {
+					using(var f = File.OpenWrite(file)) {
+						f.WriteByte(1);
+						5.ms();
+					}
+					5.ms();
+				}
+			}
+			catch(Exception e) { Debug_.Print(e.ToString()); }
+		});
+
+		Task.Run(() =>
+		{
+			10.ms();
+			try {
+				for(int i = 0; i < 100; i++) {
+					using(var f = File.OpenRead(file)) {
+						f.ReadByte();
+					}
+					12.ms();
+				}
+			}
+			catch(Exception e) { Debug_.Print(e.ToString()); }
+		}).Wait();
+
+		Print("OK");
+	}
+
+	delegate int _tIsWindow(Wnd w);
+
+	[Flags] enum EInt { one=1, two=2 };
+	[Flags] enum ELong :long { one=1, two=2 };
+	[Flags] enum EByte :byte { one=1, two=2 };
+	[Flags] enum EShort :short { one=1, two=2 };
+
+	static void TestAuDialogLoadingForms()
+	{
+		//var k = new LibArrayBuilder<int>();
+		//k.Add(1);
+		//k.Add(2);
+		//k.Add() = 3;
+		//k.Add() = 4;
+		//int i = 5;
+		//k.AddR(in i);
+		//k.AddR(in i);
+		//Print(k.ToArray());
+		//Print("---");
+		//Print(k[0], k[1], k[2]);
+
+		//Print("--");
+		//EInt i = EInt.two;
+		//if(i.Has_(EInt.two))
+		//	Print("int");
+
+		//ELong l = ELong.two;
+		//if(l.Has_(ELong.two))
+		//	Print("long");
+
+		//EShort s = EShort.two;
+		//if(s.Has_(EShort.two))
+		//	Print("short");
+
+		//EByte b = EByte.two;
+		//if(b.Has_(EByte.two))
+		//	Print("byte");
+
+		AFFlags e = 0;
+		e.SetFlag_(AFFlags.ClientArea | AFFlags.MenuToo, true);
+		Print(e);
+		e.SetFlag_(AFFlags.MenuToo, false);
+		Print(e);
+
+		//AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
+		//AuDialog.ShowEx(secondsTimeout: 1);
+		//Print("---");
+		//foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) Print(v);
+		//Print("---");
+	}
+
+	private static void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
+	{
+		var a =args.LoadedAssembly;
+		Print(a);
+		if(a.FullName.StartsWith_("System.Runtime.CompilerServices.Unsafe")) {
+			Print(1);
+		}
+	}
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -7904,13 +8034,18 @@ REE`");
 		Output.RedirectConsoleOutput = true;
 		if(!Output.IsWritingToConsole) {
 			Output.Clear();
-			//100.ms();
+			100.ms();
 		}
 
 		try {
 #if true
 
-			TestConfigSettings();
+			//TestAuDialogLoadingForms();
+			//TestFileOpenWaitLocked();
+			//TestEnumHas2();
+			//TestGCHandle();
+			//TestStartProcessFromShell();
+			//TestConfigSettings();
 			//TestResources();
 			//TestArrayExtensions();
 			//TestCompiler2();
