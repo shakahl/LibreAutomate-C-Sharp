@@ -50,16 +50,29 @@ namespace Au
 		/// <summary>
 		/// Returns true if this thread has a .NET message loop (Forms or WPF).
 		/// </summary>
+		/// <param name="isWPF">Has WPF message loop and no Forms message loop.</param>
+		/// <remarks>
+		/// Unlike calling <b>Application.MessageLoop</b> etc directly, this function does not cause to load Forms and WPF dlls.
+		/// </remarks>
 		/// <seealso cref="Wnd.GetWnd.ThreadWindows"/>
-		public static bool IsUI
+		public static bool HasMessageLoop(out bool isWPF)
 		{
-			get
-			{
-				if(System.Windows.Forms.Application.MessageLoop) return true;
-				if(System.Windows.Threading.Dispatcher.FromThread(Thread.CurrentThread) != null) return true;
-				return false;
-			}
+			//info: we don't call .NET functions directly to avoid loading assemblies.
+
+			isWPF = false;
+			int f = Util.Assembly_.LibIsLoadedFormsWpf();
+			if(0 != (f & 1) && _HML_Forms()) return true;
+			if(0 != (f & 2) && _HML_Wpf()) return isWPF = true;
+			return false;
 		}
+
+		/// <inheritdoc cref="HasMessageLoop(out bool)"/>
+		public static bool HasMessageLoop() => HasMessageLoop(out _);
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		static bool _HML_Forms() => System.Windows.Forms.Application.MessageLoop;
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		static bool _HML_Wpf() => System.Windows.Threading.Dispatcher.FromThread(Thread.CurrentThread) != null;
 
 		/// <summary>
 		/// Calls API OpenThread and TerminateThread.

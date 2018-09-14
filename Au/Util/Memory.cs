@@ -156,38 +156,15 @@ namespace Au.Util
 		internal const int Size = 0x10000;
 
 		[DebuggerStepThrough]
+		static LibProcessMemory()
+		{
 #if true
-		static LibProcessMemory()
-		{
 			Ptr = (LibProcessMemory*)InterDomainVariables.GetVariable("Au_LibProcessMemory", () => Api.VirtualAlloc(default, Size));
-		}
-		//This is slower (especially if using InterDomainVariables first time in domain) but not so bizarre as with window class. And less code.
 #else
-		static LibProcessMemory()
-		{
-			string name = "Au_LibMem";
-
-			var x = new Api.WNDCLASSEX(); x.cbSize = Api.SizeOf(x);
-			if(0 == Api.GetClassInfoEx(default, name, ref x)) {
-				x.lpfnWndProc = Api.VirtualAlloc(default, Size); //much faster when need to zero memory
-				if(x.lpfnWndProc == default) throw new OutOfMemoryException(name);
-
-				x.style = Api.CS_GLOBALCLASS;
-				x.lpszClassName = Marshal.StringToHGlobalUni(name);
-				bool ok = 0 != Api.RegisterClassEx(x);
-
-				if(ok) {
-					//Api.InitializeSRWLock(&((LibProcessMemory*)x.lpfnWndProc)->_lock);
-					//Api.InitializeCriticalSection(&((LibProcessMemory*)x.lpfnWndProc)->_cs);
-				} else {
-					if(0 == Api.GetClassInfoEx(default, name, ref x)) throw new OutOfMemoryException(name);
-				}
-
-				Marshal.FreeHGlobal(x.lpszClassName);
-			}
-			Ptr = (LibProcessMemory*)x.lpfnWndProc;
-		}
+			//SHOULDDO: try AuCpp dll. Then can store tables in dll shared memory; then we'll have max 2 copies of it - in 64-bit dll and in 32-bit dll. But slower startup.
+			//	Also try shared memory for tables.
 #endif
+		}
 	}
 
 	/// <summary>

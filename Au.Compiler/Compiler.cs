@@ -145,10 +145,9 @@ namespace Au.Compiler
 
 			if(m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
 
-			var langVer = LanguageVersion.Latest;
 			string[] usings = null;
 			var trees = new List<CSharpSyntaxTree>(m.Files.Count + 1);
-			var po = new CSharpParseOptions(langVer,
+			var po = new CSharpParseOptions(LanguageVersion.Latest,
 				m.XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None,
 				m.IsScript ? SourceCodeKind.Script : SourceCodeKind.Regular,
 				m.Defines);
@@ -161,17 +160,9 @@ namespace Au.Compiler
 		if(m.IsScript) {
 			usings = s_usingsForScript;
 			var treeAdd = CSharpSyntaxTree.ParseText(
-@"using System.Runtime.InteropServices;
-[module: DefaultCharSet(CharSet.Unicode)]
-static class __script__ {
+@"static class __script__ {
 internal static string[] args = System.Array.Empty<string>();
-}", new CSharpParseOptions(langVer)) as CSharpSyntaxTree;
-			trees.Add(treeAdd);
-		} else {
-			var treeAdd = CSharpSyntaxTree.ParseText(
-@"using System.Runtime.InteropServices;
-[module: DefaultCharSet(CharSet.Unicode)]
-", new CSharpParseOptions(langVer)) as CSharpSyntaxTree;
+}", new CSharpParseOptions(LanguageVersion.Latest)) as CSharpSyntaxTree;
 			trees.Add(treeAdd);
 		}
 #else
@@ -198,13 +189,6 @@ internal static string[] args = System.Array.Empty<string>();
 				}
 				trees.Add(tree);
 			}
-
-			//add [module: DefaultCharSet(CharSet.Unicode)]. Don't allow to override, because files added through meta c would not know it.
-			var treeAdd = CSharpSyntaxTree.ParseText(
-@"using System.Runtime.InteropServices;
-[module: DefaultCharSet(CharSet.Unicode)]
-", new CSharpParseOptions(langVer)) as CSharpSyntaxTree;
-			trees.Add(treeAdd);
 #endif
 			//Perf.Next('t');
 
@@ -237,6 +221,8 @@ internal static string[] args = System.Array.Empty<string>();
 			EmitOptions eOpt = null;
 
 			if(needOutputFiles) {
+				_AddAttributes(ref compilation, ot != OutputKind.DynamicallyLinkedLibrary && m.Isolation != EIsolation.hostThread && m.Isolation != EIsolation.thread);
+
 				//create debug info always. It is used for run-time error links.
 				pdbStream = new MemoryStream();
 				if(m.OutputPath != null) {
@@ -342,6 +328,48 @@ internal static string[] args = System.Array.Empty<string>();
 
 			//Perf.NW();
 			return true;
+		}
+
+		/// <summary>
+		/// Adds some attributes if not specified in code.
+		/// Adds: [module: DefaultCharSet(CharSet.Unicode)];
+		/// If needVersionEtc, also adds: AssemblyCompany, AssemblyProduct, AssemblyInformationalVersion. To avoid exception in Application.ProductName etc when the entry assembly is loaded from byte[].
+		/// </summary>
+		static void _AddAttributes(ref CSharpCompilation compilation, bool needVersionEtc)
+		{
+			int needAttr = 0x100;
+
+			foreach(var v in compilation.SourceModule.GetAttributes()) {
+				//Print(v.AttributeClass.Name);
+				switch(v.AttributeClass.Name) {
+				case "DefaultCharSetAttribute": needAttr &= ~0x100; break;
+				}
+			}
+
+			if(needVersionEtc) {
+				needAttr |= 7;
+				foreach(var v in compilation.Assembly.GetAttributes()) {
+					//Print(v.AttributeClass.Name);
+					switch(v.AttributeClass.Name) {
+					case "AssemblyCompanyAttribute": needAttr &= ~1; break;
+					case "AssemblyProductAttribute": needAttr &= ~2; break;
+					case "AssemblyInformationalVersionAttribute": needAttr &= ~4; break;
+					}
+				}
+			}
+
+			if(needAttr != 0) {
+				using(new Util.LibStringBuilder(out var sb)) {
+					sb.AppendLine("using System.Reflection;using System.Runtime.InteropServices;");
+					if(0 != (needAttr & 0x100)) sb.AppendLine("[module: DefaultCharSet(CharSet.Unicode)]");
+					if(0 != (needAttr & 1)) sb.AppendLine("[assembly: AssemblyCompany(\"Au\")]");
+					if(0 != (needAttr & 2)) sb.AppendLine("[assembly: AssemblyProduct(\"Script\")]");
+					if(0 != (needAttr & 4)) sb.AppendLine("[assembly: AssemblyInformationalVersion(\"0\")]");
+
+					var tree = CSharpSyntaxTree.ParseText(sb.ToString(), new CSharpParseOptions(LanguageVersion.Latest)) as CSharpSyntaxTree;
+					compilation = compilation.AddSyntaxTrees(tree);
+				}
+			}
 		}
 
 		static ResourceDescription[] _CreateManagedResources(MetaComments m)
@@ -640,6 +668,7 @@ internal static string[] args = System.Array.Empty<string>();
 				if(compiling) b.AppendLine("\r\n#line 3 \"<wrapper>\"");
 			}
 			if(!compiling) b.AppendLine();
+			//TODO: if is meta outputPath and isolation process, add exception handling. Now does not show exception in editor's output. In Task.exe too.
 			b.AppendLine(
 @"sealed unsafe partial class App {
 [STAThread] static void Main(string[] args) { new App()._Main(args); }

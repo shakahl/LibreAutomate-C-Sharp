@@ -7766,7 +7766,7 @@ REE`");
 		//Print(n);
 	}
 
-	static int s_mfgytr=8;
+	static int s_mfgytr = 8;
 
 	static ref int Bure()
 	{
@@ -7906,7 +7906,7 @@ REE`");
 		object o1 = new object(), o2 = new object();
 
 		for(int i = 0; i < 20; i++) {
-			var h = GCHandle.Alloc((0==(i&1)) ? o1 : o2);
+			var h = GCHandle.Alloc((0 == (i & 1)) ? o1 : o2);
 			Print((IntPtr)h);
 			h.Free();
 		}
@@ -7962,12 +7962,12 @@ REE`");
 
 	delegate int _tIsWindow(Wnd w);
 
-	[Flags] enum EInt { one=1, two=2 };
-	[Flags] enum ELong :long { one=1, two=2 };
-	[Flags] enum EByte :byte { one=1, two=2 };
-	[Flags] enum EShort :short { one=1, two=2 };
+	[Flags] enum EInt { one = 1, two = 2 };
+	[Flags] enum ELong :long { one = 1, two = 2 };
+	[Flags] enum EByte :byte { one = 1, two = 2 };
+	[Flags] enum EShort :short { one = 1, two = 2 };
 
-	static void TestAuDialogLoadingForms()
+	static void TestEnumExtMethodsAndArrayBuilder()
 	{
 		//var k = new LibArrayBuilder<int>();
 		//k.Add(1);
@@ -7998,27 +7998,147 @@ REE`");
 		//if(b.Has_(EByte.two))
 		//	Print("byte");
 
-		AFFlags e = 0;
-		e.SetFlag_(AFFlags.ClientArea | AFFlags.MenuToo, true);
-		Print(e);
-		e.SetFlag_(AFFlags.MenuToo, false);
-		Print(e);
+		//AFFlags e = 0;
+		//e.SetFlag_(AFFlags.ClientArea | AFFlags.MenuToo, true);
+		//Print(e);
+		//e.SetFlag_(AFFlags.MenuToo, false);
+		//Print(e);
+	}
 
-		//AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static void TestAuLoadingFormsAssembly()
+	{
+		_ = typeof(Stopwatch).Assembly; //System, +17 ms
+		_ = typeof(System.Linq.Enumerable).Assembly; //System.Core, +18 ms
+		Print("NEW");
+
+		//Perf.Cpu();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	Perf.First();
+		//	//Thread_.LibIsLoadedFormsWpf();
+		//	"fffff".StartsWith_("ff", true);
+		//	//var s = Convert_.HexEncode(new byte[] { 1, 2 });
+		//	//Perf.First();
+		//	//var b = Convert_.HexDecode(s);
+		//	//Print(b);
+
+		//	Perf.NW();
+		//}
+
+
+		//return;
+
+		AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
+		//if(Keyb.IsCtrl) Print("ctrl");
 		//AuDialog.ShowEx(secondsTimeout: 1);
-		//Print("---");
-		//foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) Print(v);
-		//Print("---");
+
+		//Print(Thread_.LibIsLoadedFormsWpf());
+
+		//var t = typeof(Application);
+		//bool u = Thread_.IsUI;
+		//Print(u);
+
+		//var f = new Form();
+		//f.Click += (unu, sed) => Print(Thread_.IsUI);
+		////Application.Run(f);
+		//f.ShowDialog(); f.Dispose();
+
+		//Print(Thread_.LibIsLoadedFormsWpf());
+
+		//var m = new Au.Util.MessageLoop();
+		//Timer_.After(2000, () => m.Stop());
+		////Timer_.After(2000, () => Api.PostQuitMessage(0));
+		////Timer_.After(2000, () => Wnd.Misc.PostThreadMessage(Api.WM_QUIT));
+		//m.Loop();
+
+		//var m = new AuMenu();
+		//m["one"] = o => Print(o);
+		//m.Show();
+
+		//Osd.ShowText("TEST", showMode: OsdShowMode.Wait);
+		//var m = new Osd();
+
+		//Perf.First();
+		//var k = new Keyb(null);
+		//Perf.Next();
+		//for(int i = 0; i < 5; i++) {
+		//	k.AddKeys("Left");
+		//	//k.AddKeys("VolumeUp");
+		//	Perf.Next();
+		//}
+		//Perf.NW();
+
+		Print("FINALLY");
+		foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) Print(v);
 	}
 
 	private static void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
 	{
-		var a =args.LoadedAssembly;
+		var a = args.LoadedAssembly;
 		Print(a);
-		if(a.FullName.StartsWith_("System.Runtime.CompilerServices.Unsafe")) {
-			Print(1);
+		if(a.FullName.StartsWith_("System.Windows.Forms")) {
+			//Print(1);
 		}
 	}
+
+	static unsafe void _TestExceptionInInteropCallback()
+	{
+		using(Au.Util.WinHook.ThreadGetMessage(x =>
+		{
+			Print(x.msg->ToString(), x.PM_NOREMOVE);
+			//throw new AuException("TEST");
+		})) {
+			Timer_.Every(1000, () =>
+		{
+			Print(1);
+			//throw new AuException("TEST");
+			//Thread.CurrentThread.Abort();
+		});
+			MessageBox.Show("");
+			//AuDialog.Show();
+			//AuDialog.ShowEx(secondsTimeout: 10);
+			Print("thread OK");
+		}
+
+		//EnumWindows((w, param) =>
+		//{
+		//	//Thread.Sleep(100);
+		//	//Thread.CurrentThread.Abort();
+		//	throw new AuException("TEST");
+		//	Print(w);
+		//	return true;
+		//}, 0);
+	}
+	[DllImport("user32.dll")]
+	internal static extern bool EnumWindows(Api.WNDENUMPROC lpEnumFunc, LPARAM lParam);
+
+	static unsafe void TestExceptionInInteropCallback()
+	{
+		AppDomain.CurrentDomain.UnhandledException += (_, __) => { Print("UE", __.ExceptionObject); };
+
+		var t = new Thread(_TestExceptionInInteropCallback);
+		t.SetApartmentState(ApartmentState.STA);
+		t.Start();
+		1500.ms();
+		t.Abort();
+		t.Join();
+		Print("main OK");
+	}
+
+	static void TestFoldersSetOnce()
+	{
+		Print(Folders.ThisAppTemp);
+		//Folders.ThisAppTemp = @"C:\Users\G\AppData\Local\Temp\Au2";
+		//Folders.ThisAppTemp = @"C:\Users\G\AppData\Local\Temp\Au2";
+		//Print(Folders.ThisAppTemp);
+
+		Print(Folders.ThisAppDocuments);
+		Print(Folders.ThisAppData);
+		Print(Folders.ThisAppDataLocal);
+		Print(Folders.ThisAppDataCommon);
+		Print(Folders.ThisAppImages);
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -8040,7 +8160,9 @@ REE`");
 		try {
 #if true
 
-			//TestAuDialogLoadingForms();
+			//TestAuLoadingFormsAssembly();
+			//TestFoldersSetOnce();
+			//TestExceptionInInteropCallback();
 			//TestFileOpenWaitLocked();
 			//TestEnumHas2();
 			//TestGCHandle();

@@ -88,6 +88,8 @@ namespace Au
 				return 0;
 			}
 
+			//FUTURE: virtual-key code, eg ^50
+
 			//F keys
 			if(c == 'F' && Char_.IsAsciiDigit(s[i + 1])) {
 				int n = s.ToInt_(i + 1, out int e, STIFlags.NoHex);
@@ -179,7 +181,7 @@ namespace Au
 				var s1 = s.Substring(i, len);
 #if false
 				if(Enum.TryParse(s1, true, out KKey r1)) return r1;
-				if(Enum.TryParse(s1, true, out System.Windows.Forms.Keys r2) && (uint)r2 <= 0xff) return (KKey)r2;
+				//if(Enum.TryParse(s1, true, out System.Windows.Forms.Keys r2) && (uint)r2 <= 0xff) return (KKey)r2;
 #else //20-50 times faster and less garbage. Good JIT speed.
 				return _FindKeyInEnums(s1);
 #endif
@@ -189,30 +191,37 @@ namespace Au
 			bool _U(char cc1, char cc2) { return u == ((uint)cc1 << 16 | cc2); }
 		}
 
-		static IEnumerable<RXGroup> _SplitKeysString(string keys) => s_rxKeys.FindAllG(keys ?? "");
+		static IEnumerable<RXGroup> _SplitKeysString(string keys) =>
+			(s_rxKeys ?? (s_rxKeys = new Regex_(@"[A-Z]\w*|#\S|\*\s*(?:\d+|down|up)\b|[+$]\s*\(|\S")))
+			.FindAllG(keys ?? "");
 		//KeyName | #n | *r | *down | *up | +( | $( | nonspace char
-		static readonly Regex_ s_rxKeys = new Regex_(@"[A-Z]\w*|#\S|\*\s*(?:\d+|down|up)\b|[+$]\s*\(|\S");
+		static Regex_ s_rxKeys;
+		//SHOULDDO: don't use Regex_.
 
 		static System.Collections.Hashtable s_htEnum; //with Dictionary much slower JIT
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
 		static KKey _FindKeyInEnums(string key)
 		{
 			if(s_htEnum == null) {
-				var t = new System.Collections.Hashtable(220, StringComparer.OrdinalIgnoreCase);
+				var t = new System.Collections.Hashtable(160 /*220*/, StringComparer.OrdinalIgnoreCase);
 				var a1 = typeof(KKey).GetFields();
 				for(int j = 1; j < a1.Length; j++) { //note: start from 1 to skip the default value__, it gives exception
 					t.Add(a1[j].Name, a1[j].GetRawConstantValue());
 				}
-				var a2 = typeof(System.Windows.Forms.Keys).GetFields();
-				for(int j = 4; j < a2.Length; j++) { //skip value__, KeyCode, Modifiers, None
-					var v = a2[j];
-					//Print(v.Name);
-					if(t.ContainsKey(v.Name)) continue;
-					//Print(j);
-					var k = v.GetRawConstantValue();
-					if((uint)(int)k < 0xff) t.Add(v.Name, k);
-				}
-				//Print(a1.Length, a2.Length, s_htEnum.Count); //216
+
+				//rejected. Better avoid loading Forms dll. All useful keys are in KKey. For others can use virtual-key codes.
+				//var a2 = typeof(System.Windows.Forms.Keys).GetFields();
+				//for(int j = 4; j < a2.Length; j++) { //skip value__, KeyCode, Modifiers, None
+				//	var v = a2[j];
+				//	//Print(v.Name);
+				//	if(t.ContainsKey(v.Name)) continue;
+				//	var k = v.GetRawConstantValue();
+				//	if((uint)(int)k >= 0xff) continue;
+				//	Print(v.Name, j);
+				//	t.Add(v.Name, k);
+				//}
+
+				//Print(a1.Length, /*a2.Length,*/ t.Count); //216 with Keys enum, 156 without
 				s_htEnum = t;
 			}
 			var r = s_htEnum[key];

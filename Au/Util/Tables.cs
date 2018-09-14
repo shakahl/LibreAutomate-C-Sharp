@@ -73,7 +73,7 @@ namespace Au.Util
 			internal byte* HexTable()
 			{
 				if(_hexPtr == null) {
-					fixed(byte* t = _hexArr) {
+					fixed (byte* t = _hexArr) {
 						for(int u = 0; u < 55; u++) {
 							char c = (char)(u + '0');
 							if(c >= '0' && c <= '9') t[u] = (byte)u;
@@ -88,29 +88,34 @@ namespace Au.Util
 			}
 		}
 
-		//info: this pattern of accessing a table is fastest. Optimized code accesses the table directly,
-		//	like 'movzx eax,byte ptr [eax+0E073C0h]', where 0E073C0h is table address and eax is index.
-		//	Even if we at first store it in a local variable, which is needed because not in all cases the code will be optimized in such way.
-
 		/// <summary>
 		/// Gets native-memory char[0x10000] containing lower-case versions of the first 0x10000 characters.
-		/// Auto-creates when called first time. The memory is shared by appdomains.
+		/// Auto-creates when called first time in process. The memory is shared by appdomains.
 		/// </summary>
-		static char* _lowerCaseTable = Cpp.Cpp_LowercaseTable();
-		internal static char* LowerCase => _lowerCaseTable;
+		internal static char* LowerCase
+		{
+			get { var v = _lcTable; if(v == null) _lcTable = v = Cpp.Cpp_LowercaseTable(); return v; } //why operator ?? cannot be used with pointers?
+		}
+		static char* _lcTable;
 
 		/// <summary>
 		/// Gets table for <see cref="Convert_.Base64Decode(char*, int, void*, int)"/> and co.
-		/// Auto-creates when called first time. The memory is shared by appdomains.
+		/// Auto-creates when called first time in process. The memory is shared by appdomains.
 		/// </summary>
-		internal static byte* Base64 { get; } = _Base64Table;
-		static byte* _Base64Table => LibProcessMemory.Ptr->tables.Base64Table();
+		internal static byte* Base64
+		{
+			get { var v = _Base64Table; if(v == null) _Base64Table = v = LibProcessMemory.Ptr->tables.Base64Table(); return v; }
+		}
+		static byte* _Base64Table;
 
 		/// <summary>
 		/// Gets table for <see cref="Convert_.HexDecode(string, void*, int, int)"/> and co.
-		/// Auto-creates when called first time. The memory is shared by appdomains.
+		/// Auto-creates when called first time in process. The memory is shared by appdomains.
 		/// </summary>
-		internal static byte* Hex { get; } = _HexTable;
-		static byte* _HexTable => LibProcessMemory.Ptr->tables.HexTable();
+		internal static byte* Hex
+		{
+			get { var v = _HexTable; if(v == null) _HexTable = v = LibProcessMemory.Ptr->tables.HexTable(); return v; }
+		}
+		static byte* _HexTable;
 	}
 }

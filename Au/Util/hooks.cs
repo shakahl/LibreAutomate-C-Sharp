@@ -308,34 +308,49 @@ namespace Au.Util
 
 		LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam)
 		{
-			if(code >= 0) {
-				switch(_proc2) {
-				case Func<HookData.Keyboard, bool> p:
-					if(p(new HookData.Keyboard(this, lParam))) return 1; //info: wParam is message, but it is not useful, everything is in lParam
-					break;
-				case Func<HookData.Mouse, bool> p:
-					if(p(new HookData.Mouse(this, wParam, lParam))) return 1;
-					break;
-				case Func<HookData.ThreadCbt, bool> p:
-					if(p(new HookData.ThreadCbt(this, code, wParam, lParam))) return 1;
-					break;
-				case Action<HookData.ThreadGetMessage> p:
-					p(new HookData.ThreadGetMessage(this, wParam, lParam));
-					break;
-				case Func<HookData.ThreadKeyboard, bool> p:
-					if(p(new HookData.ThreadKeyboard(this, code, wParam, lParam))) return 1;
-					break;
-				case Func<HookData.ThreadMouse, bool> p:
-					if(p(new HookData.ThreadMouse(this, code, wParam, lParam))) return 1;
-					break;
-				case Action<HookData.ThreadCallWndProc> p:
-					p(new HookData.ThreadCallWndProc(this, wParam, lParam));
-					break;
-				case Action<HookData.ThreadCallWndProcRet> p:
-					p(new HookData.ThreadCallWndProcRet(this, wParam, lParam));
-					break;
+			try {
+				if(code >= 0) {
+					switch(_proc2) {
+					case Func<HookData.Keyboard, bool> p:
+						if(p(new HookData.Keyboard(this, lParam))) return 1; //info: wParam is message, but it is not useful, everything is in lParam
+						break;
+					case Func<HookData.Mouse, bool> p:
+						if(p(new HookData.Mouse(this, wParam, lParam))) return 1;
+						break;
+					case Func<HookData.ThreadCbt, bool> p:
+						if(p(new HookData.ThreadCbt(this, code, wParam, lParam))) return 1;
+						break;
+					case Action<HookData.ThreadGetMessage> p:
+						p(new HookData.ThreadGetMessage(this, wParam, lParam));
+						break;
+					case Func<HookData.ThreadKeyboard, bool> p:
+						if(p(new HookData.ThreadKeyboard(this, code, wParam, lParam))) return 1;
+						break;
+					case Func<HookData.ThreadMouse, bool> p:
+						if(p(new HookData.ThreadMouse(this, code, wParam, lParam))) return 1;
+						break;
+					case Action<HookData.ThreadCallWndProc> p:
+						p(new HookData.ThreadCallWndProc(this, wParam, lParam));
+						break;
+					case Action<HookData.ThreadCallWndProcRet> p:
+						p(new HookData.ThreadCallWndProcRet(this, wParam, lParam));
+						break;
+					}
 				}
 			}
+			catch(ThreadAbortException ex) {
+				Thread.ResetAbort();
+				Dispose();
+				Debug_.Print("ThreadAbortException");
+				var t = Thread.CurrentThread;
+				Task.Run(() => { Thread.Sleep(50); t.Abort(ex.ExceptionState); });
+				return 0;
+			}
+			catch(Exception ex) { PrintWarning("Unhandled exception in hook procedure. " + ex.ToString()); }
+			//info: on any exception .NET would terminate process, even on ThreadAbortException.
+			//	This prevents it when using eg AuDialog. But now when eg MessageBox.Show; I don't know how to prevent it.
+			//TODO: do the same for HookAcc
+
 			return Api.CallNextHookEx(default, code, wParam, lParam);
 
 			//FUTURE: for LL hooks, measure time and warn if slow. OS may unhook. Warn if the timeout in the registry is too small.
@@ -952,6 +967,7 @@ namespace Au.Util
 		void _HookProc(IntPtr hHook, AccEVENT aEvent, Wnd wnd, int idObject, int idChild, int idThread, int eventTime)
 		{
 			_proc2(new HookData.AccHookData(this, aEvent, wnd, idObject, idChild, idThread, eventTime));
+			//TODO: handle exceptions
 		}
 	}
 }

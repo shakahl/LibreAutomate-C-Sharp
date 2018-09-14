@@ -33,7 +33,7 @@ namespace Au.Util
 	}
 
 	/// <summary>
-	/// Gets native module handle.
+	/// Gets native module handle, or path from handle.
 	/// </summary>
 	public static class ModuleHandle_
 	{
@@ -103,6 +103,20 @@ namespace Au.Util
 			return s_hmodAppIcon == (IntPtr)1 ? default : s_hmodAppIcon;
 		}
 		static IntPtr s_hmodAppIcon;
+
+		/// <summary>
+		/// Gets full path of dll or exe file from its native handle.
+		/// Returns null if fails. Supports <see cref="Native.GetError"/>.
+		/// Calls API <msdn>GetModuleFileName</msdn>.
+		/// </summary>
+		public static string GetFilePath(IntPtr hModule)
+		{
+			for(int na = 300; ; na *= 2) {
+				var b = Buffers.LibChar(ref na);
+				int n = Api.GetModuleFileName(default, b, na);
+				if(n < na) return n == 0 ? null : b.ToString(n);
+			}
+		}
 	}
 
 	/// <summary>
@@ -164,6 +178,37 @@ namespace Au.Util
 		//	var b = stackalloc char[4];
 		//	return 0 != Api.GetModuleFileName(h, b, 4);
 		//}
+
+		/// <summary>
+		/// Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
+		/// </summary>
+		internal static int LibIsLoadedFormsWpf()
+		{
+			if(s_isLoadedFormsWpf == 0) {
+				lock("zjm5R47f7UOmgyHUVZaf1w") {
+					if(s_isLoadedFormsWpf == 0) {
+						var ad = AppDomain.CurrentDomain;
+						var a = ad.GetAssemblies();
+						foreach(var v in a) {
+							_FlagFromName(v);
+							if(s_isLoadedFormsWpf == 3) return 3;
+						}
+						ad.AssemblyLoad += (_, x) => _FlagFromName(x.LoadedAssembly);
+						s_isLoadedFormsWpf |= 0x100;
+					}
+				}
+			}
+
+			return s_isLoadedFormsWpf & 3;
+
+			void _FlagFromName(Assembly a)
+			{
+				string s = a.FullName; //fast, cached. GetName can be slow because not cached.
+				if(0 == (s_isLoadedFormsWpf & 1) && s.StartsWith_("System.Windows.Forms,")) s_isLoadedFormsWpf |= 1;
+				else if(0 == (s_isLoadedFormsWpf & 2) && s.StartsWith_("WindowsBase,")) s_isLoadedFormsWpf |= 2;
+			}
+		}
+		static volatile int s_isLoadedFormsWpf;
 	}
 
 	//currently not used

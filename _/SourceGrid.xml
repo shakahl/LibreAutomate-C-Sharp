@@ -7944,12 +7944,6 @@
             Message showed with the DeleteSelectedRows method. Set to null to not show any message.
             </summary>
         </member>
-        <member name="M:SourceGrid.Extensions.PingGrids.PingGrid.DeleteSelectedRows">
-            <summary>
-            Delete all the selected rows.
-            </summary>
-            <returns>Returns true if one or more row is deleted otherwise false.</returns>
-        </member>
         <member name="M:SourceGrid.Extensions.PingGrids.PingGrid.AutoSizeCells">
             <summary>
             AutoSize the columns based on the visible range and autosize the rows based on it's contents.

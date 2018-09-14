@@ -376,8 +376,9 @@ namespace SourceGrid
 		/// <returns>Returns true if one or more row is deleted otherwise false.</returns>
 		public virtual bool DeleteSelectedRows()
 		{
-			if (string.IsNullOrEmpty(mDeleteQuestionMessage) ||
-			    System.Windows.Forms.MessageBox.Show(this, mDeleteQuestionMessage, System.Windows.Forms.Application.ProductName, System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes)
+			//Au: Application.ProductName can throw
+			if(string.IsNullOrEmpty(mDeleteQuestionMessage) ||
+			    System.Windows.Forms.MessageBox.Show(this, mDeleteQuestionMessage, /*System.Windows.Forms.Application.ProductName*/ "", System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes)
 			{
 				foreach (int gridRow in Selection.GetSelectionRegion().GetRowsIndex())
 				{

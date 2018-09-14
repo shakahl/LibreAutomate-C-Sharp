@@ -756,7 +756,7 @@
             </remarks>
         </member>
         <member name="F:Au.Types.OsdShowMode.Auto">
-            <summary>Depends on <see cref="P:Au.Thread_.IsUI"/>. If it is true, uses <b>ThisThread</b>, else <b>WeakThread</b>. Does not wait.</summary>
+            <summary>Depends on <see cref="M:Au.Thread_.HasMessageLoop(System.Boolean@)"/>. If it is true, uses <b>ThisThread</b>, else <b>WeakThread</b>. Does not wait.</summary>
         </member>
         <member name="F:Au.Types.OsdShowMode.ThisThread">
             <summary>
@@ -6485,14 +6485,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -7353,22 +7345,22 @@
             Multiple appdomains share the same tables.
             </summary>
         </member>
-        <member name="F:Au.Util.LibTables._lowerCaseTable">
+        <member name="P:Au.Util.LibTables.LowerCase">
             <summary>
             Gets native-memory char[0x10000] containing lower-case versions of the first 0x10000 characters.
-            Auto-creates when called first time. The memory is shared by appdomains.
+            Auto-creates when called first time in process. The memory is shared by appdomains.
             </summary>
         </member>
         <member name="P:Au.Util.LibTables.Base64">
             <summary>
             Gets table for <see cref="M:Au.Convert_.Base64Decode(System.Char*,System.Int32,System.Void*,System.Int32)"/> and co.
-            Auto-creates when called first time. The memory is shared by appdomains.
+            Auto-creates when called first time in process. The memory is shared by appdomains.
             </summary>
         </member>
         <member name="P:Au.Util.LibTables.Hex">
             <summary>
             Gets table for <see cref="M:Au.Convert_.HexDecode(System.String,System.Void*,System.Int32,System.Int32)"/> and co.
-            Auto-creates when called first time. The memory is shared by appdomains.
+            Auto-creates when called first time in process. The memory is shared by appdomains.
             </summary>
         </member>
         <member name="T:Au.Util.AppDomain_">
@@ -7655,7 +7647,7 @@
         </member>
         <member name="M:Au.Util.MessageLoop.Stop">
             <summary>
-            Ends the message loop, causing Loop() to return.
+            Ends the message loop, causing <see cref="M:Au.Util.MessageLoop.Loop"/> to return.
             </summary>
         </member>
         <member name="T:Au.Util.LibEnsureWindowsFormsSynchronizationContext">
@@ -7812,7 +7804,7 @@
         </member>
         <member name="T:Au.Util.ModuleHandle_">
             <summary>
-            Gets native module handle.
+            Gets native module handle, or path from handle.
             </summary>
         </member>
         <member name="M:Au.Util.ModuleHandle_.OfType(System.Type)">
@@ -7850,6 +7842,13 @@
             Returns default(IntPtr) if there are no native icons.
             </summary>
         </member>
+        <member name="M:Au.Util.ModuleHandle_.GetFilePath(System.IntPtr)">
+            <summary>
+            Gets full path of dll or exe file from its native handle.
+            Returns null if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Calls API <msdn>GetModuleFileName</msdn>.
+            </summary>
+        </member>
         <member name="T:Au.Util.Assembly_">
             <summary>
             Assembly functions.
@@ -7871,6 +7870,11 @@
             <summary>
             Returns true if assembly asm is compiled to native code using ngen.exe.
             It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
+            </summary>
+        </member>
+        <member name="M:Au.Util.Assembly_.LibIsLoadedFormsWpf">
+            <summary>
+            Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
             </summary>
         </member>
         <member name="T:Au.Util.Resources_">
@@ -8123,11 +8127,18 @@
             Don't need to close the handle.
             </remarks>
         </member>
-        <member name="P:Au.Thread_.IsUI">
+        <member name="M:Au.Thread_.HasMessageLoop(System.Boolean@)">
             <summary>
             Returns true if this thread has a .NET message loop (Forms or WPF).
             </summary>
+            <param name="isWPF">Has WPF message loop and no Forms message loop.</param>
+            <remarks>
+            Unlike calling <b>Application.MessageLoop</b> etc directly, this function does not cause to load Forms and WPF dlls.
+            </remarks>
             <seealso cref="M:Au.Wnd.GetWnd.ThreadWindows(System.Int32,System.Boolean,System.Boolean)"/>
+        </member>
+        <member name="M:Au.Thread_.HasMessageLoop">
+            <inheritdoc cref="M:Au.Thread_.HasMessageLoop(System.Boolean@)"/>
         </member>
         <member name="M:Au.Thread_.LibTerminate(System.Int32)">
             <summary>
@@ -9414,7 +9425,7 @@
             </item>
             <item>
             <description>Other keys</description>
-            <description>Names of enum <see cref="T:Au.Types.KKey"/> or <see cref="T:System.Windows.Forms.Keys"/> members.</description>
+            <description>Names of enum <see cref="T:Au.Types.KKey"/> members.</description>
             <description>Start with an uppercase character.
             Example: <c>Key("BrowserBack", KKey.BrowserBack);</c>
             </description>
@@ -14044,68 +14055,85 @@
             </summary>
             <remarks>
             Unlike <see cref="P:Au.Folders.ThisProcess"/>, this path can be different for each appdomain; it is set when creating the AppDomain.
-            See also <see cref="P:System.Windows.Forms.Application.ExecutablePath"/>, it gets full path (with file name) of appdomain's entry assembly.
             </remarks>
         </member>
         <member name="P:Au.Folders.ThisAppBS">
             <summary>
             <see cref="P:Au.Folders.ThisApp"/> with appended backslash character.
-            Note: returns string, not FolderPath like other functions.
+            Note: returns string, not <see cref="T:Au.Folders.FolderPath"/> like other functions.
             </summary>
         </member>
         <member name="P:Au.Folders.ThisAppTemp">
             <summary>
             Gets or sets path of the temporary files folder of this application.
-            Default is Folders.Temp + Application.ProductName.
-            The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
-            The 'get' function creates the folder if does not exist.
+            Default is Folders.Temp + "Au".
             </summary>
+            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <remarks>
+            The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
+            Creates the folder if does not exist.
+            </remarks>
         </member>
         <member name="P:Au.Folders.ThisAppDocuments">
             <summary>
             Gets or sets path of user document files folder of this application.
-            Default is Folders.Documents + Application.ProductName.
-            The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
-            The 'get' function creates the folder if does not exist.
+            Default is Folders.Documents + "Au".
             </summary>
+            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <remarks>
+            The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
+            Creates the folder if does not exist when 'set' or 'get' function called first time in app.
+            </remarks>
         </member>
         <member name="P:Au.Folders.ThisAppData">
             <summary>
             Gets or sets path of private files folder of this application on this user account.
-            Default is Folders.RoamingAppData + Application.ProductName.
-            The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
-            The 'get' function creates the folder if does not exist.
+            Default is Folders.RoamingAppData + "Au".
             </summary>
+            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <remarks>
+            The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
+            Creates the folder if does not exist when 'set' or 'get' function called first time in app.
+            </remarks>
         </member>
         <member name="P:Au.Folders.ThisAppDataLocal">
             <summary>
             Gets or sets path of local (non-roaming) private files folder of this application on this user account.
-            Default is Folders.LocalAppData + Application.ProductName.
-            The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
-            The 'get' function creates the folder if does not exist.
+            Default is Folders.LocalAppData + "Au".
             </summary>
+            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <remarks>
+            The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
+            Creates the folder if does not exist when 'set' or 'get' function called first time in app.
+            </remarks>
         </member>
         <member name="P:Au.Folders.ThisAppDataCommon">
             <summary>
             Gets or sets path of common (all users) private files folder of this application.
-            Default is Folders.ProgramData + Application.ProductName.
-            The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
+            Default is Folders.ProgramData + "Au".
+            </summary>
+            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <remarks>
+            The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
             Note: the ProgramData folder has special permissions. Programs running not as administrator usually cannot write there.
             This function does not auto-create the folder; usually it is created when installing the application.
-            </summary>
-        </member>
-        <member name="P:Au.Folders.ThisProcess">
-            <summary>
-            Folder containing the program file of this process.
-            Calls <see cref="P:System.Windows.Forms.Application.StartupPath"/>.
-            Unlike <see cref="P:Au.Folders.ThisApp"/>, this path is the same for all app domains of this process.
-            </summary>
+            </remarks>
         </member>
         <member name="P:Au.Folders.ThisAppImages">
             <summary>
             Gets or sets path of images (icons etc) folder of this application.
             Default is ThisApp + "Images".
+            </summary>
+            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <remarks>
             Functions of these classes will look for image there: Icon_, AuMenu, AuToolbar, WinImage, possibly some other.
+            This function does not auto-create the folder; usually it is created when installing the application.
+            </remarks>
+        </member>
+        <member name="P:Au.Folders.ThisProcess">
+            <summary>
+            Folder containing the program file of this process.
+            Unlike <see cref="P:Au.Folders.ThisApp"/>, this path is the same in all app domains of this process.
             </summary>
         </member>
         <member name="P:Au.Folders.SystemX64">
@@ -14187,12 +14215,18 @@
             Or known folder canonical name. See <see cref="M:Au.Folders.GetKnownFolders"/>. If has prefix "Virtual.", gets ":: HexEncodedITEMIDLIST". Much slower, but allows to get paths of folders registered by applications.
             </param>
         </member>
+        <member name="T:Au.Folders.FolderPath">
+            <summary>
+            Most functions of <see cref="T:Au.Folders"/> class return a value of this type.
+            Contains folder path (string) and has operator + to append a string with backslash if need. Has implicit conversions from/to string.
+            </summary>
+        </member>
         <member name="M:Au.Folders.FolderPath.op_Addition(Au.Folders.FolderPath,System.String)">
             <summary>
             Calls <see cref="M:Au.Path_.Combine(System.String,System.String,System.Boolean,System.Boolean)"/>(fp, append).
             Example: <c>string s = Folders.Desktop + "file.txt";</c>
             </summary>
-            <exception cref="T:Au.Types.AuException">f is empty. Most likely, used code <c>Folders.X + "append"</c> and failed to get X.</exception>
+            <exception cref="T:Au.Types.AuException">fp is empty. Most likely, used code <c>Folders.X + "append"</c> and Folders.X failed to get folder path.</exception>
         </member>
         <member name="T:Au.AuToolbar">
             <summary>
@@ -14498,7 +14532,7 @@
         <member name="P:Au.AuMenu.ModalAlways">
             <summary>
             If true, <b>Show</b> always waits until the menu is closed.
-            If false, does not wait if the thread has a .NET message loop (<see cref="P:Au.Thread_.IsUI"/>==true).
+            If false, does not wait if the thread has a .NET message loop (<see cref="M:Au.Thread_.HasMessageLoop(System.Boolean@)"/>).
             </summary>
         </member>
         <member name="P:Au.AuMenu.ActivateMenuWindow">
@@ -17097,7 +17131,7 @@
             <summary>
             Creates native/unmanaged window.
             Calls API <msdn>CreateWindowEx</msdn>.
-            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Nullable{System.Boolean},System.Boolean)"/>.
+            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Boolean,System.Boolean)"/>.
             Usually don't need to specify hInstance.
             </summary>
         </member>
@@ -17105,14 +17139,14 @@
             <summary>
             Creates native/unmanaged window like <see cref="M:Au.Wnd.Misc.CreateWindow(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> and sets font.
             If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
-            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Nullable{System.Boolean},System.Boolean)"/>.
+            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Boolean,System.Boolean)"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.Misc.CreateMessageWindow(System.String)">
             <summary>
             Creates native/unmanaged <msdn>message-only window</msdn>.
             Styles: WS_POPUP, WS_EX_NOACTIVATE.
-            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Nullable{System.Boolean},System.Boolean)"/>.
+            Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Boolean,System.Boolean)"/>.
             </summary>
             <param name="className">Window class name. Can be any existing class.</param>
         </member>
@@ -17122,7 +17156,7 @@
             Calls API <msdn>DestroyWindow</msdn>.
             Returns false if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
-            <seealso cref="M:Au.Wnd.Close(System.Nullable{System.Boolean},System.Boolean)"/>
+            <seealso cref="M:Au.Wnd.Close(System.Boolean,System.Boolean)"/>
         </member>
         <member name="M:Au.Wnd.Misc.GetWindowsStoreAppId(Au.Wnd,System.Boolean,System.Boolean)">
             <summary>
@@ -18509,7 +18543,7 @@
             Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetDescription(System.Int32)"/>.
             </summary>
         </member>
-        <member name="M:Au.Wnd.Close(System.Nullable{System.Boolean},System.Boolean)">
+        <member name="M:Au.Wnd.Close(System.Boolean,System.Boolean)">
             <summary>
             Closes the window.
             Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if <paramref name="noWait"/>==true.
@@ -18517,7 +18551,6 @@
             <param name="noWait">
             If true, does not wait until the window is closed.
             If false, waits about 1 s (depends on window type etc) until the window is destroyed or disabled.
-            If null (default), waits (as if false) if <see cref="P:Au.Thread_.IsUI"/> returns false.
             </param>
             <param name="useXButton">
             If false (default), uses API message <msdn>WM_CLOSE</msdn>.
@@ -18827,7 +18860,7 @@
             <remarks>
             Calls API <msdn>EnumThreadWindows</msdn>.
             </remarks>
-            <seealso cref="P:Au.Thread_.IsUI"/>
+            <seealso cref="M:Au.Thread_.HasMessageLoop(System.Boolean@)"/>
         </member>
         <member name="M:Au.Wnd.GetWnd.#ctor(Au.Wnd)">
             

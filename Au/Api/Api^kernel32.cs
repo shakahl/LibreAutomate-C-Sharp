@@ -661,5 +661,7 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern bool QueryPerformanceFrequency(out long lpFrequency);
 
+		[DllImport("kernel32.dll", EntryPoint = "GetModuleFileNameW", SetLastError = true)]
+		internal static extern int GetModuleFileName(IntPtr hModule, char[] lpFilename, int nSize);
 	}
 }

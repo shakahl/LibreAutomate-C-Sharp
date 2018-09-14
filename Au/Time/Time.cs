@@ -446,11 +446,16 @@ namespace Au
 				//	Usually we can safely ignore it. But not good if the same timer id is reused for another timer. Tested on Win10: OS does not reuse ids soon.
 			}
 			if(t._singlePeriod) t.Stop();
-			
-			switch(t._action) {
-			case Action<Timer_> f: f(t); break;
-			case Action f: f(); break;
+
+			try {
+				switch(t._action) {
+				case Action<Timer_> f: f(t); break;
+				case Action f: f(); break;
+				}
 			}
+			catch(ThreadAbortException) { t.Stop(); }
+			catch(Exception ex) { PrintWarning("Unhandled exception in timer procedure. " + ex.ToString()); }
+			//info: OS handles exceptions in timer procedure.
 		}
 
 		/// <summary>

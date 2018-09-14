@@ -530,7 +530,7 @@ namespace Au
 			/// <remarks>
 			/// Calls API <msdn>EnumThreadWindows</msdn>.
 			/// </remarks>
-			/// <seealso cref="Thread_.IsUI"/>
+			/// <seealso cref="Thread_.HasMessageLoop"/>
 			public static Wnd[] ThreadWindows(int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				if(threadId == 0) throw new ArgumentException("0 threadId.");

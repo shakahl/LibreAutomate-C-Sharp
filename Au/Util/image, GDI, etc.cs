@@ -13,7 +13,7 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Drawing;
-using System.Windows.Forms;
+using Forms = System.Windows.Forms;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -255,9 +255,9 @@ namespace Au.Util
 		/// <param name="file">.cur or .ani file. If not full path, uses <see cref="Folders.ThisAppImages"/>.</param>
 		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI (the "text size" system setting).</param>
 		/// <remarks>
-		/// This function exists because <see cref="Cursor"/> constructors don't support colors, ani cursors and custom size.
+		/// This function exists because <see cref="Forms.Cursor"/> constructors don't support colors, ani cursors and custom size.
 		/// </remarks>
-		public static Cursor LoadCursorFromFile(string file, int size = 0)
+		public static Forms.Cursor LoadCursorFromFile(string file, int size = 0)
 		{
 			file = Path_.Normalize(file, Folders.ThisAppImages);
 			if(file == null) return null;
@@ -272,15 +272,15 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="hCursor">Cursor handle.</param>
 		/// <param name="destroyCursor">If true (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If false, the returned variable just uses the unmanaged cursor and will not destroy; if need, the caller later should destroy it with API <msdn>DestroyCursor</msdn>.</param>
-		public static Cursor HandleToCursor(IntPtr hCursor, bool destroyCursor = true)
+		public static Forms.Cursor HandleToCursor(IntPtr hCursor, bool destroyCursor = true)
 		{
 			if(hCursor == default) return null;
-			var R = new Cursor(hCursor);
+			var R = new Forms.Cursor(hCursor);
 			if(destroyCursor) {
-				var fi = typeof(Cursor).GetField("ownHandle", BindingFlags.NonPublic | BindingFlags.Instance);
+				var fi = typeof(Forms.Cursor).GetField("ownHandle", BindingFlags.NonPublic | BindingFlags.Instance);
 				Debug.Assert(fi != null);
 				fi?.SetValue(R, true);
-				Util.GC_.AddObjectMemoryPressure(R, 1000); //see comments in Icon_.HandleToIcon
+				GC_.AddObjectMemoryPressure(R, 1000); //see comments in Icon_.HandleToIcon
 			}
 			return R;
 		}
@@ -292,9 +292,9 @@ namespace Au.Util
 		/// <param name="cursorData">Data of .cur or .ani file.</param>
 		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI (the "text size" system setting).</param>
 		/// <remarks>
-		/// This function exists because <see cref="Cursor"/> constructors don't support colors, ani cursors and custom size.
+		/// This function exists because <see cref="Forms.Cursor"/> constructors don't support colors, ani cursors and custom size.
 		/// </remarks>
-		public static Cursor LoadCursorFromMemory(byte[] cursorData, int size = 0)
+		public static Forms.Cursor LoadCursorFromMemory(byte[] cursorData, int size = 0)
 		{
 			var s = Folders.Temp + Guid.NewGuid().ToString();
 			File.WriteAllBytes(s, cursorData);

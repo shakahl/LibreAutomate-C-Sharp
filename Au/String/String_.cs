@@ -64,6 +64,8 @@ namespace Au
 			}
 			return true;
 			gFalse: return false;
+
+			//CONSIDER: if possible, don't use LibTables, because makes startup slower, eg by 5 ms when not ngened, 2.5 ms when ngened.
 		}
 
 		/// <summary>

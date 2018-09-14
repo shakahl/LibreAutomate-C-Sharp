@@ -1,5 +1,5 @@
 //#define STANDARD_SCRIPT
-//#define TEST_STARTUP_SPEED
+#define TEST_STARTUP_SPEED
 
 using System;
 using System.Collections.Generic;
@@ -444,6 +444,8 @@ namespace Au.LibRun
 
 					_threadOrProcess = p;
 				} else if(x.Has(RFlags.isThread)) {
+					//TODO: don't support isolation thread. Too unsafe. Can change static variables used by editor and other tasks. Eg in Au.Folders, Au.AuDialog.
+
 					var asm = RunAsm.LibLoadAssembly(x.asmFile, x.pdbOffset, true);
 
 					var t = new Thread(() =>
@@ -497,7 +499,7 @@ namespace Au.LibRun
 		//Runs in main thread.
 		internal static void LibThreadStart(Thread t, bool mtaThread)
 		{
-			t.IsBackground = true; //TODO: test. Also then don't need to set it when terminating task. Maybe even don't need to terminate.
+			//t.IsBackground = true; //TODO: test. Also then don't need to set it when terminating task. Maybe even don't need to terminate.
 			if(!mtaThread) t.SetApartmentState(ApartmentState.STA);
 			t.Start();
 		}
@@ -551,27 +553,24 @@ namespace Au.LibRun
 				//Perf.First();
 				Task.Run(() => t.Abort());
 				//Perf.Next();
-				if(!t.Join(100) && _nativeThreadId != 0) {
+				if(!t.Join(150) && _nativeThreadId != 0) {
 					//try to close thread windows
 					bool hasVisible = false;
 					foreach(var w in Wnd.GetWnd.ThreadWindows(_nativeThreadId, sortFirstVisible: true)) {
 						//Print(w);
 						bool visible = w.IsVisible;
 						if(visible) hasVisible = true; else if(hasVisible) break;
-						w.Close(false);
+						w.Close(noWait: true);
 						//never mind: cannot close dialogs etc that have no X button or it is disabled. Could post Enter key, but it is dangerous.
 					}
 					//when closing program, terminate threads that cannot be aborted normally
-					if(!t.Join(100) && onProgramExit) {
+					if(!t.Join(150) && onProgramExit) {
 						try { t.IsBackground = true; } catch(Exception ex) { Debug_.Print(ex); }
 						Thread_.LibTerminate(_nativeThreadId);
 					}
 				}
 				//Perf.NW();
-				//TODO: twice program crashed. Now cannot reproduce.
-				//	No error message, just 'wait' cursor for several s.
-				//	Was isolation thread; before was isolation appDomain, and ended without crashing.
-				//	The script shows AuDialog(OK|Cancel).
+				//TODO: too dangerous to Abort. Can kill process.
 				break;
 			case Process p:
 				try { p.Kill(); } catch(Exception ex) { Debug_.Print(ex); }

@@ -76,7 +76,7 @@ namespace Au
 				}
 
 				//covers whole monitor rect?
-				rm = System.Windows.Forms.Screen.FromHandle(Handle).Bounds; //fast except first time, because uses caching
+				rm = System.Windows.Forms.Screen.FromHandle(Handle).Bounds; //fast except first time, because uses caching //SHOULDDO: avoid loading Forms dll
 				if(r.left > rm.left || r.top > rm.top || r.right < rm.right || r.bottom < rm.bottom - 1) return false; //info: -1 for inactive Chrome
 
 				//is it desktop?

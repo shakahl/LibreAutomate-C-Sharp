@@ -2722,7 +2722,6 @@ namespace Au
 		/// <param name="noWait">
 		/// If true, does not wait until the window is closed.
 		/// If false, waits about 1 s (depends on window type etc) until the window is destroyed or disabled.
-		/// If null (default), waits (as if false) if <see cref="Thread_.IsUI"/> returns false.
 		/// </param>
 		/// <param name="useXButton">
 		/// If false (default), uses API message <msdn>WM_CLOSE</msdn>.
@@ -2740,14 +2739,14 @@ namespace Au
 		/// Wnd.FindAll("* Notepad", "Notepad").ForEach(t => t.Close());
 		/// ]]></code>
 		/// </example>
-		public bool Close(bool? noWait = null, bool useXButton = false)
+		public bool Close(bool noWait = false, bool useXButton = false)
 		{
 			if(!IsAlive) return true;
 
 			int msg = Api.WM_CLOSE; uint wparam = 0; if(useXButton) { msg = Api.WM_SYSCOMMAND; wparam = Api.SC_CLOSE; }
 
 			if(IsOfThisThread) {
-				if(noWait.GetValueOrDefault()) Post(msg, wparam);
+				if(noWait) Post(msg, wparam);
 				else Send(msg, wparam);
 				return true;
 			}
@@ -2773,8 +2772,8 @@ namespace Au
 				if(!useXButton) ok = Post(Api.WM_SYSCOMMAND, Api.SC_CLOSE); //UAC blocks WM_CLOSE but not WM_SYSCOMMAND
 			}
 
-			if(!noWait.HasValue) noWait = Thread_.IsUI;
-			if(noWait.GetValueOrDefault()) return true;
+			//if(!noWait.HasValue) noWait = Thread_.IsUI; //rejected
+			if(noWait) return true;
 
 			if(ok) {
 				for(int i = 0; i < 100; i++) {

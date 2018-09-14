@@ -594,7 +594,7 @@ namespace Au
 		/// </item>
 		/// <item>
 		/// <description>Other keys</description>
-		/// <description>Names of enum <see cref="KKey"/> or <see cref="System.Windows.Forms.Keys"/> members.</description>
+		/// <description>Names of enum <see cref="KKey"/> members.</description>
 		/// <description>Start with an uppercase character.
 		/// Example: <c>Key("BrowserBack", KKey.BrowserBack);</c>
 		/// </description>

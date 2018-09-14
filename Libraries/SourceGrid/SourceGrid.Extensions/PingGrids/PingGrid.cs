@@ -337,28 +337,29 @@ namespace SourceGrid.Extensions.PingGrids
 			set{mDeleteQuestionMessage = value;}
 		}
 		
-		/// <summary>
-		/// Delete all the selected rows.
-		/// </summary>
-		/// <returns>Returns true if one or more row is deleted otherwise false.</returns>
-		[Obsolete]
-		public virtual bool DeleteSelectedRows()
-		{
-			if (string.IsNullOrEmpty(mDeleteQuestionMessage) ||
-			    System.Windows.Forms.MessageBox.Show(this, mDeleteQuestionMessage, System.Windows.Forms.Application.ProductName, System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes)
-			{
-				foreach (int gridRow in Selection.GetSelectionRegion().GetRowsIndex())
-				{
-					int dataIndex = Rows.IndexToDataSourceIndex(gridRow);
-					//if (dataIndex < DataSource.Count)
-					//	DataSource.RemoveAt(dataIndex);
-				}
+		//Au: unsafe, unused
+		///// <summary>
+		///// Delete all the selected rows.
+		///// </summary>
+		///// <returns>Returns true if one or more row is deleted otherwise false.</returns>
+		//[Obsolete]
+		//public virtual bool DeleteSelectedRows()
+		//{
+		//	if (string.IsNullOrEmpty(mDeleteQuestionMessage) ||
+		//	    System.Windows.Forms.MessageBox.Show(this, mDeleteQuestionMessage, System.Windows.Forms.Application.ProductName, System.Windows.Forms.MessageBoxButtons.YesNo, System.Windows.Forms.MessageBoxIcon.Question) == System.Windows.Forms.DialogResult.Yes)
+		//	{
+		//		foreach (int gridRow in Selection.GetSelectionRegion().GetRowsIndex())
+		//		{
+		//			int dataIndex = Rows.IndexToDataSourceIndex(gridRow);
+		//			//if (dataIndex < DataSource.Count)
+		//			//	DataSource.RemoveAt(dataIndex);
+		//		}
 				
-				return true;
-			}
+		//		return true;
+		//	}
 			
-			return false;
-		}
+		//	return false;
+		//}
 		
 		/// <summary>
 		/// AutoSize the columns based on the visible range and autosize the rows based on it's contents.

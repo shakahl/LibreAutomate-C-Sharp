@@ -463,7 +463,7 @@ namespace Au
 			//Perf.Next();
 
 			_isOwned = control != null;
-			_isModal = ModalAlways ? true : !Thread_.IsUI;
+			_isModal = ModalAlways ? true : !Thread_.HasMessageLoop();
 
 			_inOurShow = true;
 			switch(overload) {
@@ -501,7 +501,7 @@ namespace Au
 
 		/// <summary>
 		/// If true, <b>Show</b> always waits until the menu is closed.
-		/// If false, does not wait if the thread has a .NET message loop (<see cref="Thread_.IsUI"/>==true).
+		/// If false, does not wait if the thread has a .NET message loop (<see cref="Thread_.HasMessageLoop"/>).
 		/// </summary>
 		public bool ModalAlways { get; set; }
 		//note: don't allow to make non-modal when there is no message loop, because it can crash Windows if the programmer does not create a loop then, and it is not useful.

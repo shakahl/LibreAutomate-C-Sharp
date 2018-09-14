@@ -11,7 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
 //using System.Linq;
 
 using Au.Types;
@@ -195,29 +194,29 @@ namespace Au
 		[DebuggerStepThrough]
 		public static class Virtual
 		{
-			public static FolderPath AddNewPrograms { get { return _GetV(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04); } }
-			public static FolderPath Apps_Win8 { get { return _GetV(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58); } }
-			public static FolderPath AppUpdates { get { return _GetV(0xa305ce99, 0xf527492b, 0x8b1a7e76, 0xfa98d6e4); } }
-			public static FolderPath ChangeRemovePrograms { get { return _GetV(0xdf7266ac, 0x92744867, 0x8d553bd6, 0x61de872d); } }
-			public static FolderPath Computer { get { return _GetV(0x0AC0837C, 0xBBF8452A, 0x850D79D0, 0x8E667CA7); } }
-			public static FolderPath Conflict { get { return _GetV(0x4bfefb45, 0x347d4006, 0xa5beac0c, 0xb0567192); } }
-			public static FolderPath Connections { get { return _GetV(0x6F0CD92B, 0x2E9745D1, 0x88FFB0D1, 0x86B8DEDD); } }
-			public static FolderPath ControlPanel { get { return _GetV(0x82A74AEB, 0xAEB4465C, 0xA014D097, 0xEE346D63); } }
-			public static FolderPath Games { get { return _GetV(0xCAC52C1A, 0xB53D4edc, 0x92D76B2E, 0x8AC19434); } }
-			public static FolderPath HomeGroup { get { return _GetV(0x52528A6B, 0xB9E34ADD, 0xB60D588C, 0x2DBA842D); } }
-			public static FolderPath HomeGroupCurrentUser_Win8 { get { return _GetV(0x9B74B6A3, 0x0DFD4f11, 0x9E785F78, 0x00F2E772); } }
-			public static FolderPath Internet { get { return _GetV(0x4D9F7874, 0x4E0C4904, 0x967B40B0, 0xD20C3E4B); } }
-			public static FolderPath Network { get { return _GetV(0xD20BEEC4, 0x5CA84905, 0xAE3BBF25, 0x1EA09B53); } }
-			public static FolderPath Printers { get { return _GetV(0x76FC4E2D, 0xD6AD4519, 0xA66337BD, 0x56068185); } }
-			public static FolderPath RecycleBin { get { return _GetV(0xB7534046, 0x3ECB4C18, 0xBE4E64CD, 0x4CB7D6AC); } }
-			public static FolderPath SEARCH_CSC { get { return _GetV(0xee32e446, 0x31ca4aba, 0x814fa5eb, 0xd2fd6d5e); } }
-			public static FolderPath SearchHome { get { return _GetV(0x190337d1, 0xb8ca4121, 0xa6396d47, 0x2d16972a); } }
-			public static FolderPath SEARCH_MAPI { get { return _GetV(0x98ec0e18, 0x20984d44, 0x86446697, 0x9315a281); } }
-			public static FolderPath SyncManager { get { return _GetV(0x43668BF8, 0xC14E49B2, 0x97C97477, 0x84D784B7); } }
-			public static FolderPath SyncResults { get { return _GetV(0x289a9a43, 0xbe444057, 0xa41b587a, 0x76d7e7f9); } }
-			public static FolderPath SyncSetup { get { return _GetV(0x0F214138, 0xB1D34a90, 0xBBA927CB, 0xC0C5389A); } }
-			public static FolderPath UsersFiles { get { return _GetV(0xf3ce0f7c, 0x49014acc, 0x8648d5d4, 0x4b04ef8f); } }
-			public static FolderPath UsersLibraries { get { return _GetV(0xA302545D, 0xDEFF464b, 0xABE861C8, 0x648D939B); } }
+			public static FolderPath AddNewPrograms => _GetV(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04);
+			public static FolderPath Apps_Win8 => _GetV(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58);
+			public static FolderPath AppUpdates => _GetV(0xa305ce99, 0xf527492b, 0x8b1a7e76, 0xfa98d6e4);
+			public static FolderPath ChangeRemovePrograms => _GetV(0xdf7266ac, 0x92744867, 0x8d553bd6, 0x61de872d);
+			public static FolderPath Computer => _GetV(0x0AC0837C, 0xBBF8452A, 0x850D79D0, 0x8E667CA7);
+			public static FolderPath Conflict => _GetV(0x4bfefb45, 0x347d4006, 0xa5beac0c, 0xb0567192);
+			public static FolderPath Connections => _GetV(0x6F0CD92B, 0x2E9745D1, 0x88FFB0D1, 0x86B8DEDD);
+			public static FolderPath ControlPanel => _GetV(0x82A74AEB, 0xAEB4465C, 0xA014D097, 0xEE346D63);
+			public static FolderPath Games => _GetV(0xCAC52C1A, 0xB53D4edc, 0x92D76B2E, 0x8AC19434);
+			public static FolderPath HomeGroup => _GetV(0x52528A6B, 0xB9E34ADD, 0xB60D588C, 0x2DBA842D);
+			public static FolderPath HomeGroupCurrentUser_Win8 => _GetV(0x9B74B6A3, 0x0DFD4f11, 0x9E785F78, 0x00F2E772);
+			public static FolderPath Internet => _GetV(0x4D9F7874, 0x4E0C4904, 0x967B40B0, 0xD20C3E4B);
+			public static FolderPath Network => _GetV(0xD20BEEC4, 0x5CA84905, 0xAE3BBF25, 0x1EA09B53);
+			public static FolderPath Printers => _GetV(0x76FC4E2D, 0xD6AD4519, 0xA66337BD, 0x56068185);
+			public static FolderPath RecycleBin => _GetV(0xB7534046, 0x3ECB4C18, 0xBE4E64CD, 0x4CB7D6AC);
+			public static FolderPath SEARCH_CSC => _GetV(0xee32e446, 0x31ca4aba, 0x814fa5eb, 0xd2fd6d5e);
+			public static FolderPath SearchHome => _GetV(0x190337d1, 0xb8ca4121, 0xa6396d47, 0x2d16972a);
+			public static FolderPath SEARCH_MAPI => _GetV(0x98ec0e18, 0x20984d44, 0x86446697, 0x9315a281);
+			public static FolderPath SyncManager => _GetV(0x43668BF8, 0xC14E49B2, 0x97C97477, 0x84D784B7);
+			public static FolderPath SyncResults => _GetV(0x289a9a43, 0xbe444057, 0xa41b587a, 0x76d7e7f9);
+			public static FolderPath SyncSetup => _GetV(0x0F214138, 0xB1D34a90, 0xBBA927CB, 0xC0C5389A);
+			public static FolderPath UsersFiles => _GetV(0xf3ce0f7c, 0x49014acc, 0x8648d5d4, 0x4b04ef8f);
+			public static FolderPath UsersLibraries => _GetV(0xA302545D, 0xDEFF464b, 0xABE861C8, 0x648D939B);
 		}
 
 		/// <summary>
@@ -226,29 +225,29 @@ namespace Au
 		[DebuggerStepThrough]
 		public static class VirtualPidl
 		{
-			public static Shell.Pidl AddNewPrograms { get { return _GetVI(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04); } }
-			public static Shell.Pidl Apps_Win8 { get { return _GetVI(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58); } }
-			public static Shell.Pidl AppUpdates { get { return _GetVI(0xa305ce99, 0xf527492b, 0x8b1a7e76, 0xfa98d6e4); } }
-			public static Shell.Pidl ChangeRemovePrograms { get { return _GetVI(0xdf7266ac, 0x92744867, 0x8d553bd6, 0x61de872d); } }
-			public static Shell.Pidl Computer { get { return _GetVI(0x0AC0837C, 0xBBF8452A, 0x850D79D0, 0x8E667CA7); } }
-			public static Shell.Pidl Conflict { get { return _GetVI(0x4bfefb45, 0x347d4006, 0xa5beac0c, 0xb0567192); } }
-			public static Shell.Pidl Connections { get { return _GetVI(0x6F0CD92B, 0x2E9745D1, 0x88FFB0D1, 0x86B8DEDD); } }
-			public static Shell.Pidl ControlPanel { get { return _GetVI(0x82A74AEB, 0xAEB4465C, 0xA014D097, 0xEE346D63); } }
-			public static Shell.Pidl Games { get { return _GetVI(0xCAC52C1A, 0xB53D4edc, 0x92D76B2E, 0x8AC19434); } }
-			public static Shell.Pidl HomeGroup { get { return _GetVI(0x52528A6B, 0xB9E34ADD, 0xB60D588C, 0x2DBA842D); } }
-			public static Shell.Pidl HomeGroupCurrentUser_Win8 { get { return _GetVI(0x9B74B6A3, 0x0DFD4f11, 0x9E785F78, 0x00F2E772); } }
-			public static Shell.Pidl Internet { get { return _GetVI(0x4D9F7874, 0x4E0C4904, 0x967B40B0, 0xD20C3E4B); } }
-			public static Shell.Pidl Network { get { return _GetVI(0xD20BEEC4, 0x5CA84905, 0xAE3BBF25, 0x1EA09B53); } }
-			public static Shell.Pidl Printers { get { return _GetVI(0x76FC4E2D, 0xD6AD4519, 0xA66337BD, 0x56068185); } }
-			public static Shell.Pidl RecycleBin { get { return _GetVI(0xB7534046, 0x3ECB4C18, 0xBE4E64CD, 0x4CB7D6AC); } }
-			public static Shell.Pidl SEARCH_CSC { get { return _GetVI(0xee32e446, 0x31ca4aba, 0x814fa5eb, 0xd2fd6d5e); } }
-			public static Shell.Pidl SearchHome { get { return _GetVI(0x190337d1, 0xb8ca4121, 0xa6396d47, 0x2d16972a); } }
-			public static Shell.Pidl SEARCH_MAPI { get { return _GetVI(0x98ec0e18, 0x20984d44, 0x86446697, 0x9315a281); } }
-			public static Shell.Pidl SyncManager { get { return _GetVI(0x43668BF8, 0xC14E49B2, 0x97C97477, 0x84D784B7); } }
-			public static Shell.Pidl SyncResults { get { return _GetVI(0x289a9a43, 0xbe444057, 0xa41b587a, 0x76d7e7f9); } }
-			public static Shell.Pidl SyncSetup { get { return _GetVI(0x0F214138, 0xB1D34a90, 0xBBA927CB, 0xC0C5389A); } }
-			public static Shell.Pidl UsersFiles { get { return _GetVI(0xf3ce0f7c, 0x49014acc, 0x8648d5d4, 0x4b04ef8f); } }
-			public static Shell.Pidl UsersLibraries { get { return _GetVI(0xA302545D, 0xDEFF464b, 0xABE861C8, 0x648D939B); } }
+			public static Shell.Pidl AddNewPrograms => _GetVI(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04);
+			public static Shell.Pidl Apps_Win8 => _GetVI(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58);
+			public static Shell.Pidl AppUpdates => _GetVI(0xa305ce99, 0xf527492b, 0x8b1a7e76, 0xfa98d6e4);
+			public static Shell.Pidl ChangeRemovePrograms => _GetVI(0xdf7266ac, 0x92744867, 0x8d553bd6, 0x61de872d);
+			public static Shell.Pidl Computer => _GetVI(0x0AC0837C, 0xBBF8452A, 0x850D79D0, 0x8E667CA7);
+			public static Shell.Pidl Conflict => _GetVI(0x4bfefb45, 0x347d4006, 0xa5beac0c, 0xb0567192);
+			public static Shell.Pidl Connections => _GetVI(0x6F0CD92B, 0x2E9745D1, 0x88FFB0D1, 0x86B8DEDD);
+			public static Shell.Pidl ControlPanel => _GetVI(0x82A74AEB, 0xAEB4465C, 0xA014D097, 0xEE346D63);
+			public static Shell.Pidl Games => _GetVI(0xCAC52C1A, 0xB53D4edc, 0x92D76B2E, 0x8AC19434);
+			public static Shell.Pidl HomeGroup => _GetVI(0x52528A6B, 0xB9E34ADD, 0xB60D588C, 0x2DBA842D);
+			public static Shell.Pidl HomeGroupCurrentUser_Win8 => _GetVI(0x9B74B6A3, 0x0DFD4f11, 0x9E785F78, 0x00F2E772);
+			public static Shell.Pidl Internet => _GetVI(0x4D9F7874, 0x4E0C4904, 0x967B40B0, 0xD20C3E4B);
+			public static Shell.Pidl Network => _GetVI(0xD20BEEC4, 0x5CA84905, 0xAE3BBF25, 0x1EA09B53);
+			public static Shell.Pidl Printers => _GetVI(0x76FC4E2D, 0xD6AD4519, 0xA66337BD, 0x56068185);
+			public static Shell.Pidl RecycleBin => _GetVI(0xB7534046, 0x3ECB4C18, 0xBE4E64CD, 0x4CB7D6AC);
+			public static Shell.Pidl SEARCH_CSC => _GetVI(0xee32e446, 0x31ca4aba, 0x814fa5eb, 0xd2fd6d5e);
+			public static Shell.Pidl SearchHome => _GetVI(0x190337d1, 0xb8ca4121, 0xa6396d47, 0x2d16972a);
+			public static Shell.Pidl SEARCH_MAPI => _GetVI(0x98ec0e18, 0x20984d44, 0x86446697, 0x9315a281);
+			public static Shell.Pidl SyncManager => _GetVI(0x43668BF8, 0xC14E49B2, 0x97C97477, 0x84D784B7);
+			public static Shell.Pidl SyncResults => _GetVI(0x289a9a43, 0xbe444057, 0xa41b587a, 0x76d7e7f9);
+			public static Shell.Pidl SyncSetup => _GetVI(0x0F214138, 0xB1D34a90, 0xBBA927CB, 0xC0C5389A);
+			public static Shell.Pidl UsersFiles => _GetVI(0xf3ce0f7c, 0x49014acc, 0x8648d5d4, 0x4b04ef8f);
+			public static Shell.Pidl UsersLibraries => _GetVI(0xA302545D, 0xDEFF464b, 0xABE861C8, 0x648D939B);
 		}
 
 		#endregion
@@ -258,8 +257,8 @@ namespace Au
 		/// <summary>
 		/// Temp folder (temporary files) of this user account.
 		/// </summary>
-		public static FolderPath Temp => __Temp ?? (__Temp = Path.GetTempPath().TrimEnd('\\'));
-		static string __Temp;
+		public static FolderPath Temp => __temp ?? (__temp = Path.GetTempPath().TrimEnd('\\'));
+		static string __temp;
 
 		/// <summary>
 		/// Folder containing assemblies of this appdomain.
@@ -267,145 +266,149 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Unlike <see cref="ThisProcess"/>, this path can be different for each appdomain; it is set when creating the AppDomain.
-		/// See also <see cref="Application.ExecutablePath"/>, it gets full path (with file name) of appdomain's entry assembly.
 		/// </remarks>
-		public static FolderPath ThisApp => __App ?? (__App = ThisAppBS.TrimEnd('\\'));
-		static string __App;
+		public static FolderPath ThisApp => __thisApp ?? (__thisApp = ThisAppBS.TrimEnd('\\'));
+		static string __thisApp;
 
 		/// <summary>
 		/// <see cref="ThisApp"/> with appended backslash character.
-		/// Note: returns string, not FolderPath like other functions.
+		/// Note: returns string, not <see cref="FolderPath"/> like other functions.
 		/// </summary>
 		public static string ThisAppBS => __AppBS ?? (__AppBS = AppDomain.CurrentDomain.BaseDirectory);
 		static string __AppBS;
 
-		//Differences from Application.xAppDataPath: no version, no ClickOnce support.
-		static string _DefaultAppSubDir => __defaultAppSubDir ?? (__defaultAppSubDir = /*Application.CompanyName + "\\" + */Application.ProductName);
-		static string __defaultAppSubDir;
+		const string c_defaultAppSubDir = "Au";
+		//note: don't use Application.ProductName etc. It loads Forms, throws if dynamic assembly, etc.
+
+		#region set auto/once
+
+		static string _SetAuto(ref string propVar, string value, bool create)
+		{
+			lock(_lock) {
+				if(propVar == null) {
+					propVar = value;
+					if(create) File_.CreateDirectory(value);
+				}
+			}
+			return propVar;
+		}
+		static readonly object _lock = new object();
+
+		static void _SetOnce(ref string propVar, string value, bool create, [CallerMemberName]string propName = null)
+		{
+			lock(_lock) {
+				if(propVar != null) throw new InvalidOperationException("Folders." + propName + " is already set.");
+				propVar = value;
+				if(create) File_.CreateDirectory(value);
+			}
+		}
+
+		#endregion
 
 		/// <summary>
 		/// Gets or sets path of the temporary files folder of this application.
-		/// Default is Folders.Temp + Application.ProductName.
-		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
-		/// The 'get' function creates the folder if does not exist.
+		/// Default is Folders.Temp + "Au".
 		/// </summary>
+		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <remarks>
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
+		/// Creates the folder if does not exist.
+		/// </remarks>
 		public static FolderPath ThisAppTemp
 		{
-			get
-			{
-				if(__appTemp == null) __appTemp = Path.GetTempPath() + _DefaultAppSubDir;
-				File_.CreateDirectory(__appTemp);
-				return __appTemp;
-			}
-			set
-			{
-				__appTemp = value;
-			}
+			get => __thisAppTemp ?? _SetAuto(ref __thisAppTemp, Temp + c_defaultAppSubDir, create: true);
+			set => _SetOnce(ref __thisAppTemp, value, create: true);
 		}
-		static string __appTemp;
+		static string __thisAppTemp;
 
 		/// <summary>
 		/// Gets or sets path of user document files folder of this application.
-		/// Default is Folders.Documents + Application.ProductName.
-		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
-		/// The 'get' function creates the folder if does not exist.
+		/// Default is Folders.Documents + "Au".
 		/// </summary>
+		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <remarks>
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
+		/// Creates the folder if does not exist when 'set' or 'get' function called first time in app.
+		/// </remarks>
 		public static FolderPath ThisAppDocuments
 		{
-			get
-			{
-				if(__appDocuments == null) __appDocuments = Documents + _DefaultAppSubDir;
-				File_.CreateDirectory(__appDocuments);
-				return __appDocuments;
-			}
-			set
-			{
-				__appDocuments = value;
-			}
+			get => __thisAppDocuments ?? _SetAuto(ref __thisAppDocuments, Documents + c_defaultAppSubDir, create: true);
+			set => _SetOnce(ref __thisAppDocuments, value, create: true);
 		}
-		static string __appDocuments;
+		static string __thisAppDocuments;
 
 		/// <summary>
 		/// Gets or sets path of private files folder of this application on this user account.
-		/// Default is Folders.RoamingAppData + Application.ProductName.
-		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
-		/// The 'get' function creates the folder if does not exist.
+		/// Default is Folders.RoamingAppData + "Au".
 		/// </summary>
+		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <remarks>
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
+		/// Creates the folder if does not exist when 'set' or 'get' function called first time in app.
+		/// </remarks>
 		public static FolderPath ThisAppData
 		{
-			get
-			{
-				if(__appData == null) __appData = RoamingAppData + _DefaultAppSubDir;
-				File_.CreateDirectory(__appData);
-				return __appData;
-			}
-			set
-			{
-				__appData = value;
-			}
+			get => __thisAppData ?? _SetAuto(ref __thisAppData, RoamingAppData + c_defaultAppSubDir, create: true);
+			set => _SetOnce(ref __thisAppData, value, create: true);
 		}
-		static string __appData;
+		static string __thisAppData;
 
 		/// <summary>
 		/// Gets or sets path of local (non-roaming) private files folder of this application on this user account.
-		/// Default is Folders.LocalAppData + Application.ProductName.
-		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
-		/// The 'get' function creates the folder if does not exist.
+		/// Default is Folders.LocalAppData + "Au".
 		/// </summary>
+		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <remarks>
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
+		/// Creates the folder if does not exist when 'set' or 'get' function called first time in app.
+		/// </remarks>
 		public static FolderPath ThisAppDataLocal
 		{
-			get
-			{
-				if(__appDataLocal == null) __appDataLocal = LocalAppData + _DefaultAppSubDir;
-				File_.CreateDirectory(__appDataLocal);
-				return __appDataLocal;
-			}
-			set
-			{
-				__appDataLocal = value;
-			}
+			get => __thisAppDataLocal ?? _SetAuto(ref __thisAppDataLocal, LocalAppData + c_defaultAppSubDir, create: true);
+			set => _SetOnce(ref __thisAppDataLocal, value, create: true);
 		}
-		static string __appDataLocal;
+		static string __thisAppDataLocal;
 
 		/// <summary>
 		/// Gets or sets path of common (all users) private files folder of this application.
-		/// Default is Folders.ProgramData + Application.ProductName.
-		/// The 'set' function does not change system settings, it just remembers a string that will be later returned by the 'get' function in this appdomain.
+		/// Default is Folders.ProgramData + "Au".
+		/// </summary>
+		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <remarks>
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
 		/// Note: the ProgramData folder has special permissions. Programs running not as administrator usually cannot write there.
 		/// This function does not auto-create the folder; usually it is created when installing the application.
-		/// </summary>
+		/// </remarks>
 		public static FolderPath ThisAppDataCommon
 		{
-			get => __appDataCommon ?? (__appDataCommon = ProgramData + _DefaultAppSubDir);
-			set { __appDataCommon = value; }
+			get => __thisAppDataCommon ?? _SetAuto(ref __thisAppDataCommon, ProgramData + c_defaultAppSubDir, create: false);
+			set => _SetOnce(ref __thisAppDataCommon, value, create: false);
 		}
-		static string __appDataCommon;
-
-		/// <summary>
-		/// Folder containing the program file of this process.
-		/// Calls <see cref="Application.StartupPath"/>.
-		/// Unlike <see cref="ThisApp"/>, this path is the same for all app domains of this process.
-		/// </summary>
-		public static FolderPath ThisProcess => Application.StartupPath;
+		static string __thisAppDataCommon;
 
 		/// <summary>
 		/// Gets or sets path of images (icons etc) folder of this application.
 		/// Default is ThisApp + "Images".
-		/// Functions of these classes will look for image there: Icon_, AuMenu, AuToolbar, WinImage, possibly some other.
 		/// </summary>
+		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <remarks>
+		/// Functions of these classes will look for image there: Icon_, AuMenu, AuToolbar, WinImage, possibly some other.
+		/// This function does not auto-create the folder; usually it is created when installing the application.
+		/// </remarks>
 		public static FolderPath ThisAppImages
 		{
-			get
-			{
-				if(__appImages == null) __appImages = ThisAppBS + "Images";
-				return __appImages;
-			}
-			set
-			{
-				__appImages = value;
-			}
+			get => __thisAppImages ?? _SetAuto(ref __thisAppImages, ThisAppBS + "Images", create: false);
+			set => _SetOnce(ref __thisAppImages, value, create: false);
 		}
-		static string __appImages;
+		static string __thisAppImages;
+
+		/// <summary>
+		/// Folder containing the program file of this process.
+		/// Unlike <see cref="ThisApp"/>, this path is the same in all app domains of this process.
+		/// </summary>
+		public static FolderPath ThisProcess => __thisProcess ?? (__thisProcess = Path_.GetDirectoryPath(Util.ModuleHandle_.GetFilePath(default)));
+		static string __thisProcess;
+		//public static FolderPath ThisProcess => Application.StartupPath; //no, loads Forms assembly
 
 		/// <summary>
 		/// Gets non-redirected path of the System32 folder.
@@ -422,6 +425,7 @@ namespace Au
 		/// <summary>More info in class help.</summary>
 		public static FolderPath ProgramFilesX64 => __ProgramFilesX64 ?? (__ProgramFilesX64 = Ver.Is32BitProcessOn64BitOS ? EnvVar("ProgramW6432") : ProgramFiles);
 		static string __ProgramFilesX64;
+
 		/// <summary>More info in class help.</summary>
 		public static FolderPath ProgramFilesCommonX64 => __ProgramFilesCommonX64 ?? (__ProgramFilesCommonX64 = Ver.Is32BitProcessOn64BitOS ? EnvVar("CommonProgramW6432") : ProgramFilesCommon);
 		static string __ProgramFilesCommonX64;
@@ -430,8 +434,8 @@ namespace Au
 		/// <summary>
 		/// Returns <see cref="RuntimeEnvironment.GetRuntimeDirectory"/> without '\\' at the end.
 		/// </summary>
-		public static FolderPath NetFrameworkRuntime => __NetFrameworkRuntime ?? (__NetFrameworkRuntime = RuntimeEnvironment.GetRuntimeDirectory().TrimEnd('\\'));
-		static string __NetFrameworkRuntime;
+		public static FolderPath NetFrameworkRuntime => __netFrameworkRuntime ?? (__netFrameworkRuntime = RuntimeEnvironment.GetRuntimeDirectory().TrimEnd('\\'));
+		static string __netFrameworkRuntime;
 
 		/// <summary>
 		/// Gets CD/DVD drive path, like @"D:\".
@@ -812,20 +816,24 @@ namespace Au
 
 		#endregion
 
+		/// <summary>
+		/// Most functions of <see cref="Folders"/> class return a value of this type.
+		/// Contains folder path (string) and has operator + to append a string with backslash if need. Has implicit conversions from/to string.
+		/// </summary>
 		public struct FolderPath
 		{
 			string _path;
 			FolderPath(string path) { _path = path; }
 
-			public static implicit operator FolderPath(string path) { return new FolderPath(path); }
-			public static implicit operator string(FolderPath f) { return f._path; }
-			public override string ToString() { return _path; }
+			public static implicit operator FolderPath(string path) => new FolderPath(path);
+			public static implicit operator string(FolderPath f) => f._path;
+			public override string ToString() => _path;
 
 			/// <summary>
 			/// Calls <see cref="Path_.Combine"/>(fp, append).
 			/// Example: <c>string s = Folders.Desktop + "file.txt";</c>
 			/// </summary>
-			/// <exception cref="AuException">f is empty. Most likely, used code <c>Folders.X + "append"</c> and failed to get X.</exception>
+			/// <exception cref="AuException">fp is empty. Most likely, used code <c>Folders.X + "append"</c> and Folders.X failed to get folder path.</exception>
 			public static string operator +(FolderPath fp, string append)
 			{
 				if(Empty(fp._path)) throw new AuException("No folder path.");

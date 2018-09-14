@@ -31,17 +31,18 @@ namespace Au.Util
 		/// </summary>
 		public unsafe void Loop()
 		{
-			using(new Util.LibEnsureWindowsFormsSynchronizationContext(true)) {
+			bool isForms = 0 != (1 & Assembly_.LibIsLoadedFormsWpf());
+			using(isForms ? new LibEnsureWindowsFormsSynchronizationContext(true) : null) {
 				_loopEndEvent = Api.CreateEvent(default, true, false, null);
 				try {
-					Application.DoEvents(); //info: with Time.DoEvents something does not work, don't remember, maybe AuMenu.
+					_DoEvents();
 
 					for(; ; ) {
-						var ev =_loopEndEvent;
+						var ev = _loopEndEvent;
 						int k = Api.MsgWaitForMultipleObjectsEx(1, &ev, 100, Api.QS_ALLINPUT, Api.MWMO_INPUTAVAILABLE);
 						if(k == Api.WAIT_TIMEOUT) continue; //we don't use INFINITE, because then does not respond to Thread.Abort
 
-						Application.DoEvents();
+						_DoEvents();
 						if(k == Api.WAIT_OBJECT_0 || k == Api.WAIT_FAILED) break; //note: this is after DoEvents because may be posted messages when stopping loop. Although it seems that MsgWaitForMultipleObjects returns events after all messages.
 
 						if(Api.PeekMessage(out var _, default, Api.WM_QUIT, Api.WM_QUIT, Api.PM_NOREMOVE)) break; //DoEvents() reposts it. If we don't break, MsgWaitForMultipleObjects retrieves it before (instead) the event, causing endless loop.
@@ -52,10 +53,19 @@ namespace Au.Util
 					_loopEndEvent = default;
 				}
 			}
+
+			void _DoEvents()
+			{
+				if(isForms) _DoEventsForms(); //info: with Time.DoEvents something does not work, don't remember, maybe AuMenu.
+				else Time.DoEvents();
+			}
 		}
 
+		[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading Forms + several other dlls
+		void _DoEventsForms() => Application.DoEvents();
+
 		/// <summary>
-		/// Ends the message loop, causing Loop() to return.
+		/// Ends the message loop, causing <see cref="Loop"/> to return.
 		/// </summary>
 		public void Stop()
 		{
@@ -82,6 +92,7 @@ namespace Au.Util
 		/// See class help.
 		/// </summary>
 		/// <param name="onlyIfAutoInstall">Do nothing if WindowsFormsSynchronizationContext.AutoInstall==false. Normally WindowsFormsSynchronizationContext.AutoInstall is true (default).</param>
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		public LibEnsureWindowsFormsSynchronizationContext(bool onlyIfAutoInstall = false)
 		{
 			if(onlyIfAutoInstall && !WindowsFormsSynchronizationContext.AutoInstall) return;
@@ -102,6 +113,7 @@ namespace Au.Util
 			if(_prevAutoInstall) WindowsFormsSynchronizationContext.AutoInstall = false;
 		}
 
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		public void Dispose()
 		{
 #if DEBUG
@@ -124,6 +136,7 @@ namespace Au.Util
 		/// Use this instead of creating instance when will not need to restore previous synchronization context.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">This thread has a synchronization context other than WindowsFormsSynchronizationContext or null. Or it is null and thread's GetApartmentState is not STA.</exception>
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static WindowsFormsSynchronizationContext EnsurePermanently()
 		{
 			var c = SynchronizationContext.Current;

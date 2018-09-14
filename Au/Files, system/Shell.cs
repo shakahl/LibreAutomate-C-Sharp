@@ -142,7 +142,7 @@ namespace Au
 			try {
 				Api.AllowSetForegroundWindow(Api.ASFW_ANY);
 
-				if(x.lpVerb != null && !Thread_.IsUI)
+				if(x.lpVerb != null && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
 					Thread.CurrentThread.Join(50); //need min 5-10 for file Properties. And not Sleep.
 
 				if(ph != null) {
@@ -159,7 +159,7 @@ namespace Au
 					else if(x.hProcess != default) Api.CloseHandle(x.hProcess);
 				}
 			}
-			
+
 			return R;
 
 			//tested: works well in MTA thread.

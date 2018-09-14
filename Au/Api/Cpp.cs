@@ -23,14 +23,18 @@ namespace Au.Types
 	{
 		static Cpp()
 		{
+			if(default != Api.GetModuleHandle("AuCpp.dll")) return; //probably loaded in other appdomain
+
 			string s = Ver.Is64BitProcess ? @"Dll\64bit\AuCpp.dll" : @"Dll\32bit\AuCpp.dll";
 			if(default != Api.LoadLibrary(Folders.ThisAppBS + s)) return; //normal
+			var p = Environment.GetEnvironmentVariable("Au.Path"); if(p != null && default != Api.LoadLibrary(Path_.Combine(p, s))) return; //%Au.Path%
 			if(default != Api.LoadLibrary(Folders.ThisAppTemp + s)) return; //extracted from resources
 			if(default != Api.LoadLibrary("AuCpp.dll")) return; //exe directory, system 32 or 64 bit directory, %PATH%, current directory
-			if(default != Api.LoadLibrary(@"Q:\app\Au\_\" + s)) return; //my project output directory
+
 			throw new AuException(0, "*load AuCpp.dll");
 
-			//PROBLEM: the dll is unavailable if running in a nonstandard environment, eg VS C# Interactive (then Folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\ManagedLanguages\VBCSharp\InteractiveComponents").
+			//note: the dll is unavailable if running in a nonstandard environment, eg VS C# Interactive (then Folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\ManagedLanguages\VBCSharp\InteractiveComponents").
+			//	Workaround: set %Au.Path% = the main Au directory and restart Windows.
 		}
 
 		//speed:

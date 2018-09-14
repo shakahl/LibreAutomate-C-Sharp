@@ -12,7 +12,7 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
+using System.Windows.Forms; //SHOULDDO: avoid loading Forms dll. Now from it uses TextRenderer and Screen.
 using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
@@ -600,7 +600,7 @@ namespace Au
 			}
 			bool thisThread = false, wait = false;
 			switch(ShowMode) {
-			case OsdShowMode.Auto: thisThread = Thread_.IsUI; break;
+			case OsdShowMode.Auto: thisThread = Thread_.HasMessageLoop(); break;
 			case OsdShowMode.ThisThread: thisThread = true; break;
 			case OsdShowMode.Wait: thisThread = wait = true; break;
 			}
@@ -869,7 +869,7 @@ namespace Au.Types
 	/// </remarks>
 	public enum OsdShowMode
 	{
-		/// <summary>Depends on <see cref="Thread_.IsUI"/>. If it is true, uses <b>ThisThread</b>, else <b>WeakThread</b>. Does not wait.</summary>
+		/// <summary>Depends on <see cref="Thread_.HasMessageLoop"/>. If it is true, uses <b>ThisThread</b>, else <b>WeakThread</b>. Does not wait.</summary>
 		Auto,
 
 		/// <summary>
