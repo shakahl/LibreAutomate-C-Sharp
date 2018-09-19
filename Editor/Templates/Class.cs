@@ -1,14 +1,11 @@
 ﻿//#include usings.txt
 
-public class Class1
-{
-	public static void Function1()
-	{
+public class Class1 {
+	public static void Function1() {
 
 	}
 
-	public static void Function2()
-	{
+	public static void Function2() {
 
 	}
 

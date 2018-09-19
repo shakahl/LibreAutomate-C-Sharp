@@ -52,16 +52,19 @@ namespace Au.Util
 
 		/// <summary>
 		/// Gets native module handle of an assembly.
-		/// If the assembly consists of multiple modules, gets its first loaded module.
+		/// Returns default(IntPtr) if <paramref name="asm"/> is null or if the assembly is in-memory (loaded from byte[]) or dynamic.
 		/// </summary>
 		public static IntPtr OfAssembly(Assembly asm)
 		{
-			return asm == null ? default : Marshal.GetHINSTANCE(asm.GetLoadedModules()[0]);
+			if(asm == null || asm.IsDynamic || asm.Location.Length == 0) return default; //Location.Length == 0 if in-memory; it would throw if dynamic.
+			var h = Marshal.GetHINSTANCE(asm.ManifestModule);
+			if(h == (IntPtr)(-1)) h = default; //MSDN lies that it returns -1 for in-memory. It returns some invalid value.
+			return h;
 		}
 
 		/// <summary>
 		/// Gets native module handle of the entry assembly of this appdomain.
-		/// If the assembly consists of multiple modules, gets its first loaded module.
+		/// Returns default(IntPtr) if the assembly is in-memory (loaded from byte[]) or dynamic.
 		/// </summary>
 		public static IntPtr OfAppDomainEntryAssembly()
 		{
@@ -84,25 +87,26 @@ namespace Au.Util
 			return Api.GetModuleHandle(null);
 		}
 
-		/// <summary>
-		/// Gets native module handle of the assembly containing native icon that can be displayed as icon of this app.
-		/// Some API functions need it when you use <msdn>IDI_APPLICATION</msdn>.
-		/// If the entry assembly of this appdomain is dll with icon, gets dll handle; else gets exe handle.
-		/// Returns default(IntPtr) if there are no native icons.
-		/// </summary>
-		public static IntPtr OfAppIcon()
-		{
-			if(s_hmodAppIcon == default) {
-				IntPtr h = OfAppDomainEntryAssembly();
-				if(h == default || default == Api.FindResource(h, Api.IDI_APPLICATION, 14)) { //RT_GROUP_ICON
-					h = OfProcessExe();
-					if(default == Api.FindResource(h, Api.IDI_APPLICATION, 14)) h = (IntPtr)1;
-				}
-				s_hmodAppIcon = h;
-			}
-			return s_hmodAppIcon == (IntPtr)1 ? default : s_hmodAppIcon;
-		}
-		static IntPtr s_hmodAppIcon;
+		//rejected. For script appdomains we use in-memory assemblies. They don't have a module handle (Marshal.GetHINSTANCE returns an invalid value). Use OfProcessExe.
+		///// <summary>
+		///// Gets native module handle of the assembly containing native icon that can be displayed as icon of this app.
+		///// Some API functions need it when you use <msdn>IDI_APPLICATION</msdn>.
+		///// If the entry assembly of this appdomain is dll with icon, gets dll handle; else gets exe handle.
+		///// Returns default(IntPtr) if there are no native icons.
+		///// </summary>
+		//public static IntPtr OfAppIcon()
+		//{
+		//	if(s_hmodAppIcon == default) {
+		//		IntPtr h = OfAppDomainEntryAssembly();
+		//		if(h == default || default == Api.FindResource(h, Api.IDI_APPLICATION, 14)) { //RT_GROUP_ICON
+		//			h = OfProcessExe();
+		//			if(default == Api.FindResource(h, Api.IDI_APPLICATION, 14)) h = (IntPtr)1;
+		//		}
+		//		s_hmodAppIcon = h;
+		//	}
+		//	return s_hmodAppIcon == (IntPtr)1 ? default : s_hmodAppIcon;
+		//}
+		//static IntPtr s_hmodAppIcon;
 
 		/// <summary>
 		/// Gets full path of dll or exe file from its native handle.
@@ -152,7 +156,7 @@ namespace Au.Util
 		/// Returns true if Au.dll is compiled to native code using ngen.exe.
 		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
-		internal static bool LibIsAuNgened => IsAssemblyNgened(typeof(Assembly_).Assembly);
+		internal static bool LibIsAuNgened => IsNgened(typeof(Assembly_).Assembly);
 		//tested: Module.GetPEKind always gets ILOnly.
 
 		/// <summary>
@@ -160,11 +164,11 @@ namespace Au.Util
 		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
-		public static bool IsAssemblyNgened(Assembly asm)
+		public static bool IsNgened(Assembly asm)
 		{
 			var s = asm.CodeBase;
 			//if(asm.GlobalAssemblyCache) return s.Contains("/GAC_MSIL/"); //faster and maybe more reliable, but works only with GAC assemblies
-			s = Path.GetFileName(s);
+			s = Path_.GetFileName(s);
 			s = s.Insert(s.LastIndexOf('.') + 1, "ni.");
 			return default != Api.GetModuleHandle(s);
 		}

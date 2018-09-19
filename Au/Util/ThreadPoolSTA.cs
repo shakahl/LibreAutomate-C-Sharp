@@ -231,11 +231,7 @@ namespace Au.Util
 			_env.Pool = p->pool;
 			_env.CleanupGroup = CreateThreadpoolCleanupGroup();
 
-			if(AppDomain.CurrentDomain.IsDefaultAppDomain()) AppDomain.CurrentDomain.ProcessExit += _CurrentDomain_DomainExit;
-			else AppDomain.CurrentDomain.DomainUnload += _CurrentDomain_DomainExit;
-			AppDomain.CurrentDomain.UnhandledException += _CurrentDomain_DomainExit;
-			//We subscribe to UnhandledException because ProcessExit is missing on exception.
-			//If non-default domain, on exception normally we receive DomainExit and not UnhandledException, because default domain handles domain exceptions. But somebody may create domains without domain exception handling.
+			AppDomain_.Exit += _CurrentDomain_DomainExit;
 		}
 
 		static void _CurrentDomain_DomainExit(object sender, EventArgs e)

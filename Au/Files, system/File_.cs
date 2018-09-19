@@ -1096,7 +1096,84 @@ namespace Au
 		/// Returns true if character c == '\\' || c == '/'.
 		/// </summary>
 		static bool _IsSepChar(char c) { return c == '\\' || c == '/'; }
-#endregion
+		#endregion
+
+		#region open
+
+		/// <summary>
+		/// This function can be used to safely open a file that may be temporarily locked, for example used by another process or thread. Waits while the file is locked.
+		/// </summary>
+		/// <returns>Returns the return value of the lambda <paramref name="f"/>.</returns>
+		/// <param name="f">Lambda that calls a function that creates, opens or opens/reads/closes a file.</param>
+		/// <param name="timeoutMS">Wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
+		/// <exception cref="ArgumentOutOfRangeException">timeoutMS less than -1.</exception>
+		/// <exception cref="Exception">Exceptions thrown by the called function.</exception>
+		/// <remarks>
+		/// This function calls the lambda and handles <b>IOException</b>. If the exception indicates that the file is locked, waits and retries in loop.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// var s1 = File.ReadAllText(file); //unsafe. Exception if the file is locked.
+		/// 
+		/// var s2 = File_.OpenWithFunc(() => File.ReadAllText(file)); //safe. Waits while the file is locked.
+		/// 
+		/// using(var f = File_.OpenWithFunc(() => File.OpenText(file))) { //safe. Waits while the file is locked.
+		/// 	var s3 = f.ReadToEnd();
+		/// }
+		/// 
+		/// using(var f = File_.OpenWithFunc(() => File.Create(file))) { //safe. Waits while the file is locked.
+		/// 	f.WriteByte(1);
+		/// }
+		/// ]]></code>
+		/// </example>
+		public static T OpenWithFunc<T>(Func<T> f, int timeoutMS = 5000)
+		{
+			if(timeoutMS < -1) throw new ArgumentOutOfRangeException();
+			long t1 = Time.Milliseconds;
+			g1:
+			try {
+				return f();
+			}
+			catch(IOException e) when(_OpenExceptionFilter(e, timeoutMS, t1)) {
+				Thread.Sleep(15);
+				goto g1;
+			}
+		}
+
+		/// <inheritdoc cref="OpenWithFunc"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// File.WriteAllText(file, "TEXT"); //unsafe. Exception if the file is locked.
+		/// 
+		/// File_.OpenWithAction(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
+		/// ]]></code>
+		/// </example>
+		public static void OpenWithAction(Action f, int timeoutMS = 5000)
+		{
+			if(timeoutMS < -1) throw new ArgumentOutOfRangeException();
+			long t1 = Time.Milliseconds;
+			g1:
+			try {
+				f();
+			}
+			catch(IOException e) when(_OpenExceptionFilter(e, timeoutMS, t1)) {
+				Thread.Sleep(15);
+				goto g1;
+			}
+		}
+
+		static bool _OpenExceptionFilter(IOException e, int timeoutMS, long t1)
+		{
+			switch(e.HResult & 0xffff) {
+			case Api.ERROR_SHARING_VIOLATION:
+			case Api.ERROR_LOCK_VIOLATION:
+			case Api.ERROR_USER_MAPPED_FILE:
+				return timeoutMS < 0 || Time.Milliseconds - t1 < timeoutMS;
+			default: return false;
+			}
+		}
+
+		#endregion
 	}
 }
 

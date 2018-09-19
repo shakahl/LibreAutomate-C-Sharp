@@ -586,4 +586,99 @@ namespace Au.Util
 			}
 		}
 	}
+
+	/// <summary>
+	/// Binary-serializes and deserializes multiple values of types int and string.
+	/// Much faster than BinaryFormatter, CSV, etc.
+	/// </summary>
+	internal static unsafe class LibSerializer
+	{
+		/// <summary>
+		/// Type of input and output values of <see cref="LibSerializer"/> functions.
+		/// Has implicit conversions from/to int and string.
+		/// </summary>
+		public struct Value
+		{
+			public string s;
+			public int i;
+			public int _isString;
+
+			public bool IsString => _isString != 0;
+
+			Value(int i) { this.i = i; s = null; _isString = 0; }
+			Value(string s) { this.s = s; i = 0; _isString = 1; }
+
+			public static implicit operator Value(int i) => new Value(i);
+			public static implicit operator Value(string s) => new Value(s);
+
+			public static implicit operator string(Value a) => a.s;
+			public static implicit operator int(Value a) => a.i;
+		}
+
+		/// <summary>
+		/// Serializes multiple values of types int and string.
+		/// The returned array can be passed to <see cref="Deserialize"/>.
+		/// </summary>
+		public static byte[] Serialize(params Value[] a)
+		{
+			int size = 4;
+			for(int i = 0; i < a.Length; i++) {
+				if(!a[i].IsString) size += 5;
+				else if(a[i].s == null) size++;
+				else size += 5 + a[i].s.Length * 2;
+			}
+			var ab = new byte[size];
+			fixed (byte* b0 = ab) {
+				byte* b = b0;
+				*(int*)b = a.Length; b += 4;
+				for(int i = 0; i < a.Length; i++) {
+					if(!a[i].IsString) {
+						*b++ = 1;
+						*(int*)b = a[i].i;
+						b += 4;
+					} else if(a[i].s != null) {
+						*b++ = 2;
+						var s = a[i].s;
+						*(int*)b = s.Length; b += 4;
+						var c = (char*)b;
+						for(int j = 0; j < s.Length; j++) c[j] = s[j];
+						b += s.Length * 2;
+					} else {
+						b++;
+					}
+				}
+				Debug.Assert((b - b0) == size);
+			}
+			return ab;
+		}
+
+		/// <summary>
+		/// Deserializes values serialized by <see cref="Serialize"/>.
+		/// Returns array of values passed to <b>Serialize</b>.
+		/// </summary>
+		public static Value[] Deserialize(byte[] serialized)
+		{
+			fixed (byte* b0 = serialized) {
+				byte* b = b0;
+				int n = *(int*)b; b += 4;
+				var a = new Value[n];
+				for(int i = 0; i < n; i++) {
+					switch(*b++) {
+					case 1:
+						a[i] = *(int*)b; b += 4;
+						break;
+					case 2:
+						int len = *(int*)b; b += 4;
+						a[i] = new string((char*)b, 0, len);
+						b += len * 2;
+						break;
+					case 0:
+						break;
+					default: throw new ArgumentException();
+					}
+				}
+				return a;
+			}
+		}
+	}
 }

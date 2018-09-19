@@ -59,26 +59,25 @@ class RunningTasks2 :IAuTaskManager
 		foreach(var v in s_hung) v.Dispose(true);
 	}
 
-	public byte RunTask(int taskId, CsvTable c)
+	public byte RunTask(int taskId, Au.Util.LibSerializer.Value[] a)
 	{
 		var rt = new AuTask(taskId, this);
-		var p = new RParams();
+		var p = new RParams(a[3], a[4], a[5], null, a[7], (RFlags)a[8].i);
 
-		for(int i=2; i<c.RowCount; i++) {
-			var v = c[i, 1];
-			switch(c[i, 0]) {
-			case "flags": p.flags = (RFlags)v.ToInt_(); break;
-			case "name": p.name = v; break;
-			case "file": p.asmFile = v; break;
-			case "pdb": p.pdbOffset = v.ToInt_(); break;
-			case "exe": p.exeFile = v; break;
-			case "args":
-				if(p.Has(RFlags.isProcess)) p.args = v;
-				else p.args = Au.Util.StringMisc.CommandLineToArray(v);
-				break;
-			}
-			//TODO: test all options
+		string args = a[6];
+		if(args != null) {
+			if(p.Has(RFlags.isProcess)) p.args = args;
+			else p.args = Au.Util.StringMisc.CommandLineToArray(args);
 		}
+		//Print(taskId);
+		//Print((Wnd)(LPARAM)a[2].i);
+		//Print(p.name);
+		//Print(p.asmFile);
+		//Print(p.exeFile);
+		//Print(p.args);
+		//Print(p.pdbOffset);
+		//Print(p.flags);
+		//return 2; //test IPC speed
 
 		if(!rt.Run(p)) return 0;
 		if(!rt.IsRunning) return 2;

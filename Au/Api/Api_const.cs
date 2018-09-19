@@ -18,6 +18,7 @@ namespace Au.Types
 		internal const int ERROR_NO_MORE_FILES = 18;
 		internal const int ERROR_NOT_READY = 21;
 		internal const int ERROR_SHARING_VIOLATION = 32;
+		internal const int ERROR_LOCK_VIOLATION = 33;
 		internal const int ERROR_HANDLE_EOF = 38;
 		internal const int ERROR_BAD_NETPATH = 53;
 		internal const int ERROR_BAD_NET_NAME = 67;
@@ -28,6 +29,7 @@ namespace Au.Types
 		internal const int ERROR_DIR_NOT_EMPTY = 145;
 		internal const int ERROR_ALREADY_EXISTS = 183;
 		internal const int ERROR_DIRECTORY = 267;
+		internal const int ERROR_USER_MAPPED_FILE = 1224;
 		internal const int ERROR_PRIVILEGE_NOT_HELD = 1314;
 		internal const int ERROR_INVALID_WINDOW_HANDLE = 1400;
 		internal const int ERROR_TIMEOUT = 1460;

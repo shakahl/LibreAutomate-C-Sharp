@@ -438,19 +438,20 @@ namespace Au
 		/// <remarks>The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.</remarks>
 		internal static IntPtr GetAppIconHandle(int size)
 		{
-			var h = Util.ModuleHandle_.OfAppIcon(); if(h == default) return default;
+			//var h = Util.ModuleHandle_.OfAppIcon();
+			var h = Util.ModuleHandle_.OfProcessExe();
+			if(h == default) return default;
 			size = _NormalizeIconSizeParameter(size);
 			return Api.LoadImage(h, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
 
 			//This is not 100% reliable because the icon id 32512 (IDI_APPLICATION) is undocumented.
 			//I could not find a .NET method to get icon directly from native resources of assembly.
 			//Could use the resource emumeration API...
-			//info: MSDN says that LR_SHARED gets cached icon regardless of size argument, but it is not true. Caches each size separately. Tested on Win 10, 7, XP.
+			//info: MSDN lies that with LR_SHARED gets a cached icon regardless of size argument. Caches each size separately. Tested on Win 10, 7, XP.
 		}
 
 		/// <summary>
-		/// Gets the first icon from unmanaged resources of this app.
-		/// If the entry assembly of this appdomain is dll with icon, gets that icon; else gets exe icon.
+		/// Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
 		/// </summary>
 		/// <returns>Returns null if there are no icons.</returns>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="IconSize"/>, cast to int.</param>

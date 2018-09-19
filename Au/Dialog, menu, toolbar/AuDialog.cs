@@ -806,7 +806,8 @@ namespace Au
 			}
 
 			if(_c.hMainIcon == default && Options.UseAppIcon) SetIcon(DIcon.App);
-			if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = Util.ModuleHandle_.OfAppIcon();
+			//if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = Util.ModuleHandle_.OfAppIcon();
+			if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = Util.ModuleHandle_.OfProcessExe();
 			//info: DIcon.App is IDI_APPLICATION (32512).
 			//Although MSDN does not mention that IDI_APPLICATION can be used when hInstance is NULL, it works. Even works for many other undocumented system resource ids, eg 100.
 			//Non-NULL hInstance is ignored for the icons specified as TD_x. It is documented and logical.
@@ -1937,11 +1938,10 @@ namespace Au.Types
 		Shield = 0xfffc,
 
 		/// <summary>
-		/// Your application icon.
-		/// It is the first native icon of the entry assembly of this appdomain; if there are no icons - of the program file of this process (if it's different); if there are no icons too - the default program icon.
+		/// Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
+		/// If there are no icons - the default program icon.
 		/// </summary>
 		App = Api.IDI_APPLICATION
-		//TODO: it seems this does not work for appdomain
 	}
 
 	/// <summary>

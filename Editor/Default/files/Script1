@@ -3,4 +3,4 @@
 
 Print("This function writes text and variables to the output pane.");
 
-AuDialog.Show("Example", "This function shows standard dialog box.");
+AuDialog.Show("Example", "Message box.");

@@ -45,7 +45,7 @@ static class Run
 	public static void CompileAndRun(bool run, FileNode f, string[] args = null)
 	{
 #if TEST_STARTUP_SPEED
-		args = new string[] { Time.Microseconds.ToString() };
+		args = new string[] { Time.Microseconds.ToString() }; //and in script use this code: Print(Time.Microseconds-Convert.ToInt64(args[0]));
 #endif
 
 		Model.Save.TextNowIfNeed();
@@ -61,11 +61,11 @@ static class Run
 		bool ok = Compiler.Compile(run, out var r, f, projFolder);
 
 		if(run && r.outputType == EOutputType.dll) { //info: if run dll, compiler sets r.outputType and returns false
-			if(!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("_runClass", _LinkRunClassFile); }
+			if(!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _LinkRunClassFile); }
 			var guid = f.Guid;
 			var s1 = projFolder != null ? "library" : "file";
-			var s2 = projFolder != null ? "" : $", project (<_runClass 2|{guid}>create<>) or <c green>outputType app<> (<_runClass 1|{guid}>add<>)";
-			Print($"<>Cannot run '{f.Name}'. It is a class {s1} without a test script (<_runClass 3|{guid}>create<>){s2}.");
+			var s2 = projFolder != null ? "" : $", project (<+runClass 2|{guid}>create<>) or <c green>outputType app<> (<+runClass 1|{guid}>add<>)";
+			Print($"<>Cannot run '{f.Name}'. It is a class {s1} without a test script (<+runClass 3|{guid}>create<>){s2}.");
 			return;
 		}
 
@@ -77,7 +77,7 @@ static class Run
 			return;
 		}
 
-		Model.Running.RunCompiled(f, r, args);
+		Tasks.RunCompiled(f, r, args);
 	}
 
 	static void _LinkRunClassFile(string s)
@@ -175,30 +175,30 @@ class RunningTasks :IAuTaskManager
 
 	public IEnumerable<RunningTask> Items => _a;
 
-	public RunningTasks()
+	public RunningTasks(Wnd wManager)
 	{
+		_wManager = wManager; //MainForm
 		_a = new List<RunningTask>();
 		_q = new Queue<_WaitingTask>();
 		_recent = new List<RecentTask>();
-		_wManager = (Wnd)MainForm;
 		Timer1s += _Timer1s; //updates UI
 		Wnd.Misc.UacEnableMessages(AuTask.WM_TASK_ENDED);
 	}
 
-	public void Dispose()
+	public void OnCollectionClosed()
 	{
-		_disposed = true;
 		bool onExit = MainForm.IsClosed;
 
-		Timer1s -= _Timer1s;
+		if(onExit) {
+			_disposed = true;
+			Timer1s -= _Timer1s;
+		}
 
 		for(int i = _a.Count - 1; i >= 0; i--) {
 			_EndTask(_a[i], onExit: onExit);
 		}
 
-		//TODO: when not on program exit, store somewhere hung scripts, so can terminate threads when program will exit. Or terminate now, with a warning.
-
-		_a.Clear();
+		if(onExit) _a.Clear();
 		_q.Clear();
 		_recent.Clear();
 
@@ -229,7 +229,7 @@ class RunningTasks :IAuTaskManager
 
 		int taskId = (int)wParam;
 		int i = _Find(taskId);
-		if(i < 0) { Debug_.Print("not found"); return; } //possible (see task process start code), but unlikely
+		if(i < 0) { Debug_.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
 
 		var rt = _a[i];
 		_a.RemoveAt(i);
@@ -339,15 +339,12 @@ class RunningTasks :IAuTaskManager
 					default: Debug_.Print(Native.GetErrorMessage()); continue;
 					}
 				}
-				Perf.Next();
-				string csv =
-$@"end,{rt.taskId.ToString()}
-wnd,{MainForm.Handle.ToString()}";
-				fixed (char* p = csv) if(Api.CallNamedPipe(pipeName, p, csv.Length * 2, out R, 1, out int nRead, 1000)) break;
+				var b = Au.Util.LibSerializer.Serialize(2, rt.taskId, (int)_wManager.Handle);
+				fixed (byte* p = b) if(Api.CallNamedPipe(pipeName, p, b.Length, out R, 1, out int nRead, 1000)) break;
 				Debug_.Print(Native.GetErrorMessage());
 			}
 		} else {
-			rt.End(MainForm.IsClosed);
+			rt.End(onExit);
 		}
 	}
 
@@ -413,13 +410,15 @@ wnd,{MainForm.Handle.ToString()}";
 
 		var uac = r.uac; //same - run the task in this process or in new process started directly; admin - in/through admin Au.Tasks; user - in user Au.Tasks.
 		if(uac != EUac.same) {
+			//Print(Process_.UacInfo.IsUacDisabled, Process_.UacInfo.ThisProcess.IntegrityLevel);
 			if(Process_.UacInfo.IsUacDisabled) {
-				uac = EUac.same; //TODO: what if we run in System/Protected and need user?
+				uac = EUac.same;
+				//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
+				//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
 			} else {
-				switch(Process_.UacInfo.ThisProcess.IntegrityLevel) {
+				var IL = Process_.UacInfo.ThisProcess.IntegrityLevel;
+				switch(IL) {
 				case Process_.UacInfo.IL.High:
-				case Process_.UacInfo.IL.System: //TODO: test. If cannot run as user, don't allow meta uac user.
-				case Process_.UacInfo.IL.Protected:
 					if(uac == EUac.admin) uac = EUac.same;
 					else if(r.isolation == EIsolation.process) { uac = EUac.same; flags |= RFlags.userProcess; }
 					break;
@@ -427,13 +426,18 @@ wnd,{MainForm.Handle.ToString()}";
 					if(uac == EUac.user) uac = EUac.same;
 					break;
 				case Process_.UacInfo.IL.UIAccess:
-					if(uac == EUac.user && r.isolation == EIsolation.process) { uac = EUac.same; flags |= RFlags.noUiAccess; }
+					if(uac == EUac.user) { flags |= RFlags.noUiAccess; if(r.isolation == EIsolation.process) uac = EUac.same; }
 					break;
 				case Process_.UacInfo.IL.Low:
 				case Process_.UacInfo.IL.Untrusted:
 				case Process_.UacInfo.IL.Unknown:
-					uac = EUac.same;
-					break;
+				//uac = EUac.same;
+				//break;
+				case Process_.UacInfo.IL.System:
+				case Process_.UacInfo.IL.Protected:
+					Print($"<>Cannot run {f.LinkTag}. Meta option <c green>uac {uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
+					return false;
+					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
 				}
 			}
 		}
@@ -451,25 +455,16 @@ wnd,{MainForm.Handle.ToString()}";
 #endif
 			if(rt.IsRunning) _Add(rt);
 		} else {
-			var c = new CsvTable() { ColumnCount = 2 };
-			c.AddRow("run", rt.taskId.ToString());
-			c.AddRow("wnd", MainForm.Handle.ToString());
-			c.AddRow("flags", ((int)flags).ToString());
-			c.AddRow("name", r.name);
-			c.AddRow("file", r.file);
-			c.AddRow("pdb", r.pdbOffset.ToString());
-			if(exeFile != null) c.AddRow("exe", exeFile);
-			else if(args != null) argsString = Au.Util.StringMisc.CommandLineFromArray(args);
-			//argsString= new string('A', 500001); //test long string
-			if(argsString != null) {
-				if(argsString.Length > 500000) { Print($"<>Error: {f.LinkTag} command line arguments string too long, max 500000."); return false; }
-				c.AddRow("args", argsString);
-			}
-			var csv = c.ToString();
-			//Print(csv);
+			//Perf.First();
+			flags |= RFlags.remote;
+			if(args != null) argsString = Au.Util.StringMisc.CommandLineFromArray(args);
+			if((argsString?.Length ?? 0) > 500000) { Print($"<>Error: {f.LinkTag} command line arguments string too long, max 500000."); return false; }
+			var asmFile = exeFile == null ? r.file : null;
+
+			var b = Au.Util.LibSerializer.Serialize(1, rt.taskId, (int)_wManager.Handle, r.name, asmFile, exeFile, argsString, r.pdbOffset, (int)flags);
 
 			bool admin = uac == EUac.admin;
-			byte R = _RunInAuTasksProcess(admin, csv);
+			byte R = _RunInAuTasksProcess(b, admin, 0 != (flags & RFlags.noUiAccess));
 			if(R != 1) return R != 0; //2 if already ended
 			rt.SetTaskStartedInOtherProcess(admin);
 			_Add(rt);
@@ -479,14 +474,12 @@ wnd,{MainForm.Handle.ToString()}";
 	}
 
 	/// <summary>
-	/// Starts task in Au.Tasks process. Starts process if need. Sends csv through pipe.
+	/// Starts task in Au.Tasks process. Starts process if need. Sends b through pipe.
 	/// Returns: 0 failed, 1 started, 2 started but already ended.
 	/// </summary>
-	/// <param name="admin"></param>
-	/// <param name="csv"></param>
-	static unsafe byte _RunInAuTasksProcess(bool admin, string csv)
+	static unsafe byte _RunInAuTasksProcess(byte[] b, bool admin, bool fromUIAccess)
 	{
-		Perf.First();
+		//Perf.Next();
 #if true
 		var pipeName = _GetPipeName(admin);
 		//pipeName = @"\\.\pipe\Au.Tasks-H-2"; //test from other user session. Works.
@@ -495,7 +488,7 @@ wnd,{MainForm.Handle.ToString()}";
 			if(!Api.WaitNamedPipe(pipeName, 1000)) {
 				switch(Native.GetError()) {
 				case Api.ERROR_FILE_NOT_FOUND:
-					if(!_StartAuTasksProcess(admin)) return 0;
+					if(!_StartAuTasksProcess(admin, fromUIAccess)) return 0;
 					if(!WaitFor.Condition(10, () => Api.WaitNamedPipe(pipeName, -1))) continue;
 					break;
 				default:
@@ -503,8 +496,8 @@ wnd,{MainForm.Handle.ToString()}";
 					continue;
 				}
 			}
-			Perf.Next();
-			fixed (char* p = csv) if(Api.CallNamedPipe(pipeName, p, csv.Length * 2, out R, 1, out int nRead, 1000)) break;
+			//Perf.Next();
+			fixed (byte* p = b) if(Api.CallNamedPipe(pipeName, p, b.Length, out R, 1, out int nRead, 1000)) break;
 			Debug_.Print(Native.GetErrorMessage());
 		}
 		if(nTry == 0) {
@@ -516,19 +509,19 @@ wnd,{MainForm.Handle.ToString()}";
 		//pipeName = "Au.Tasks-H-2"; //test from other user session. Works.
 		int ok;
 		using(var pipe = new NamedPipeClientStream(pipeName)) {
-			Perf.Next();
+			//Perf.Next();
 
 			int nTry = 3, timeout = 100;
 			for(; nTry > 0; nTry--) {
 				//if(!Api.WaitNamedPipe(@"\\.\pipe\" + pipeName, 1000) && Native.GetError() == Api.ERROR_FILE_NOT_FOUND) {
-				//	_StartAuTasksProcess(needAdmin);
+				//	_StartAuTasksProcess(admin, fromUIAccess);
 				//}
 				try {
 					pipe.Connect(timeout);
 				}
 				catch(TimeoutException ex) {
 					Debug_.Print(ex);
-					_StartAuTasksProcess(needAdmin);
+					_StartAuTasksProcess(admin, fromUIAccess);
 					timeout = 10_000;
 					continue;
 				}
@@ -544,15 +537,15 @@ wnd,{MainForm.Handle.ToString()}";
 				return 0;
 			}
 
-			Perf.Next();
+			//Perf.Next();
 			var writer = new StreamWriter(pipe, new UnicodeEncoding(false, false));
 			writer.Write(csv); writer.Flush();
-			Perf.Next();
+			//Perf.Next();
 			ok = pipe.ReadByte();
-			Perf.Next();
+			//Perf.Next();
 		}
 #endif
-		Perf.NW();
+		//Perf.NW();
 		//Print(R);
 		return R;
 	}
@@ -561,12 +554,13 @@ wnd,{MainForm.Handle.ToString()}";
 
 	static string _GetPipeName(bool admin) => @"\\.\pipe\Au.Tasks-" + (admin ? "H-" : "M-") + Process_.CurrentSessionId.ToString();
 
-	static bool _StartAuTasksProcess(bool admin)
+	static bool _StartAuTasksProcess(bool admin, bool fromUIAccess)
 	{
 		try {
 			var tasksPath = Folders.ThisAppBS + "Au.Tasks.exe";
 			if(admin) Shell.Run(tasksPath, null, SRFlags.Admin);
-			else Process_.LibStartUserIL(tasksPath, null, 0);
+			else if(fromUIAccess) Process_.LibStart(tasksPath, null, inheritUiaccess: false);
+			else Process_.LibStartUserIL(tasksPath, null);
 		}
 		catch(AuException ex) { Print(c_errorRunAuTasks + "\r\n\t" + ex.Message); return false; } //eg user cancelled the UAC consent dialog
 		return true;
@@ -626,7 +620,7 @@ wnd,{MainForm.Handle.ToString()}";
 	{
 		if(IsRunning(f)) return;
 		int i = _RecentFind(f);
-		Debug.Assert(i >= 0); if(i < 0) return;
+		Debug.Assert(i >= 0 || f.Model != Model); if(i < 0) return;
 		_recent[i].running = false;
 	}
 

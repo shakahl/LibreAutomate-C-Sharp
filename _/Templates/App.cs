@@ -3,14 +3,15 @@ outputType app
 */
 //#include usings.txt
 
-partial class App
-{
-	[STAThread] static void Main(string[] args) { new App()._Main(args); }
-	void _Main(string[] args)
-	{
-		Print("test");
+class App :AuAppBase {
+[STAThread] static void Main(string[] args) { new App()._Main(args); }
+
+void _Main(string[] args) {
+	Print("test");
+	
+	
+	
+}
 
 
-
-	}
 }

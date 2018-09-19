@@ -80,7 +80,7 @@ class PanelRecent :Control, ITreeModel
 	{
 		//Debug_.PrintFunc();
 		Debug.Assert(nodeTag == null);
-		return Model?.Running.Recent;
+		return Tasks.Recent;
 	}
 
 	public bool IsLeaf(object nodeTag)

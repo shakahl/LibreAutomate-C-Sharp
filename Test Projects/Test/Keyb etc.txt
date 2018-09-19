@@ -1,0 +1,1025 @@
+﻿
+	[DllImport("user32.dll")]
+	internal static unsafe extern bool GetKeyboardState(sbyte* lpKeyState);
+
+	public static unsafe KMod GetMod(KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
+	{
+		var a = stackalloc sbyte[256];
+		GetKeyboardState(a);
+		if(a[17] >= 0) modifierKeys &= ~KMod.Ctrl;
+		if(a[16] >= 0) modifierKeys &= ~KMod.Shift;
+		if(a[18] >= 0) modifierKeys &= ~KMod.Alt;
+		if((a[91] >= 0 && a[92] >= 0)) modifierKeys &= ~KMod.Win;
+		return modifierKeys;
+	}
+
+	static void TestGetMod()
+	{
+		//Print(GetMod());
+		//Print(Keyb.IsMod());
+		Print(Keyb.GetMod());
+
+		Perf.Cpu(100);
+		for(int i1 = 0; i1 < 5; i1++) {
+			int n2 = 1000;
+			Perf.First();
+			for(int i2 = 0; i2 < n2; i2++) { Keyb.IsMod(); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { GetMod(); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { Keyb.GetMod(); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { }
+			Perf.NW();
+		}
+
+	}
+
+	//static void TestAttachThreadInput()
+	//{
+	//	var w = Wnd.Find("FileZilla").ChildById(-31791).OrThrow();
+	//	//using(new LibAttachThreadInput(w.ThreadId, out bool ok)) {
+	//	//	Print(ok);
+	//	//}
+	//	w.Focus();
+	//}
+
+	//static void TestLibThreadCpuSwitcher()
+	//{
+	//	//Task.Run(() => Perf.SpinCPU(300));
+	//	//Task.Run(() => Perf.SpinCPU(300));
+	//	//Task.Run(() => Perf.SpinCPU(300));
+	//	//Task.Run(() => Perf.SpinCPU(300));
+	//	10.ms();
+	//	using(var ts = new LibThreadSwitcher()) {
+	//		for(int i = 0; i < 15; i++) {
+	//			Perf.First();
+	//			if(!ts.Switch()) Print("failed");
+	//			Perf.NW();
+	//		}
+	//	}
+	//}
+
+	static void TestBlockUserInput()
+	{
+		//using(new BlockUserInput(BIEvents.All)) {
+		//	Print("blocked");
+		//	5.s();
+		//}
+		//Print("unblocked");
+		//return;
+
+		//100.ms();
+		//using(var bi = new BlockUserInput()) {
+		//	for(int i = 0; i < 5; i++) {
+		//		bi.Start(BIEvents.Keys);
+		//		100.ms();
+		//		bi.Stop();
+		//		100.ms();
+		//	}
+		//}
+		//for(int i = 0; i < 5; i++) {
+		//	using(var bi = new BlockUserInput(BIEvents.Keys)) 100.ms();
+		//	100.ms();
+		//}
+
+		//Task.Run(() => {
+		//	for(int i = 0; i < 100; i++) {
+		//		100.ms();
+		//		GC.Collect();
+		//	}
+		//});
+
+		//BlockUserInput.DoNotBlockKeys = new Keys[] { Keys.A, Keys.B };
+
+		//using(var bi = new BlockUserInput(BIEvents.Keys)) {
+		//using(var bi = new BlockUserInput(BIEvents.MouseClicks|BIEvents.MouseMoving)) {
+		using(var bi = new BlockUserInput(BIEvents.All)) {
+			//bi.Dispose();
+			//bi.Stop();
+			//bi.Start(BIEvents.Keys);
+			bi.ResendBlockedKeys = true;
+			//bi.ResumeAfterCtrlAltDelete = true;
+			//15.s();
+
+			5.s();
+			//Shell.Run(@"C:\Program Files\Process Hacker 2\ProcessHacker.exe");
+			//AuDialog.ShowEx(secondsTimeout: 5);
+			//Print("> inner");
+			//using(var bk = new BlockUserInput()) {
+			//	bk.ResendBlockedKeys = true;
+			//	bk.Start(BIEvents.Keys);
+			//	5.s();
+			//}
+			//Print("< inner");
+			//5.s();
+
+			//3.s();
+			//bi.Pause = true;
+			//3.s();
+			//bi.Pause = false;
+			//3.s();
+
+			//AuDialog.Show("started");
+			//bi.Stop();
+			//AuDialog.Show("stopped");
+		}
+
+		//var t = new Thread(() =>
+		//  {
+		//	  var bi = new BlockUserInput(BIEvents.Keys);
+		//	  500.ms();
+		//  });
+		//t.Start();
+		//AuDialog.Show("started");
+
+		Print("END");
+	}
+
+	static void TestIsKey()
+	{
+		for(int i = 1; i < 255; i++) {
+			var k = (KKey)i;
+			var s = k.ToString(); if(Empty(s) || s.Contains(",")) continue;
+			//Print($"{k,-20} {Keyb.IsKeyPressed(k)}, {Keyb.IsKeyToggled(k)}");
+			Print($"{k,-20} {Keyb.GetKeyState(k):X4} {Keyb.GetAsyncKeyState(k):X4}");
+		}
+	}
+
+	static string _CreateLongText(int len)
+	{
+		var b = new StringBuilder(len + 30);
+		while(b.Length < len) {
+			if(b.Length > 0) b.Append(' ');
+			b.Append(b.Length);
+		}
+		return b.ToString();
+	}
+
+	static void TestKey()
+	{
+		//Key("RShift*down");
+		//100.ms();
+		//Print(Keyb.GetKeyState(Keys.ShiftKey), Keyb.GetKeyState(Keys.LShiftKey), Keyb.GetKeyState(Keys.RShiftKey));
+		//Key("RShift*up");
+		//Print(Keyb.GetKeyState(Keys.ShiftKey), Keyb.GetKeyState(Keys.LShiftKey), Keyb.GetKeyState(Keys.RShiftKey));
+
+		//Key("RCtrl*down");
+		//100.ms();
+		//Print(Keyb.GetKeyState(Keys.ControlKey), Keyb.GetKeyState(Keys.LControlKey), Keyb.GetKeyState(Keys.RControlKey));
+		//Key("Ctrl*up");
+		//Print(Keyb.GetKeyState(Keys.ControlKey), Keyb.GetKeyState(Keys.LControlKey), Keyb.GetKeyState(Keys.RControlKey));
+
+		//Opt.Key.NoModOff = true;
+		////Key("Alt*down");
+		//1100.ms();
+		//Print(Keyb.GetKeyState(Keys.Menu), Keyb.GetKeyState(Keys.LMenu), Keyb.GetKeyState(Keys.RMenu));
+		////Key("Alt*up");
+		////Print(Keyb.GetKeyState(Keys.Menu), Keyb.GetKeyState(Keys.LMenu), Keyb.GetKeyState(Keys.RMenu));
+
+		//return;
+
+		//Key("RWin*down");
+		//100.ms();
+		//Print(Keyb.GetKeyState(Keys.LWin), Keyb.GetKeyState(Keys.RWin));
+		//Key("RWin*up");
+		//Print(Keyb.GetKeyState(Keys.LWin), Keyb.GetKeyState(Keys.RWin));
+
+		//return;
+
+		//TestKParam(() => Print(1));
+
+		//if(Time.LibSleepPrecision.Current < 15) throw new Exception("s");
+		//AuDialog.Show(""+Time.LibSleepPrecision.Current);
+		////Print(System.Configuration.ConfigurationSettings.AppSettings.AllKeys);
+		//return;
+
+		//PrintHex(Keyb._GetKeyboardLayoutOfActiveThread()); return;
+
+		//var k = new Keyb();
+		//k.Key("a");
+
+		var wa = Wnd.Active;
+		//var w = Wnd.Find("Quick*").OrThrow();
+		//var w = Wnd.Find("* Writer").OrThrow();
+		//var w = Wnd.Find("* Word*").OrThrow();
+		//var w = Wnd.Find("Dialog").OrThrow();
+		//var w = Wnd.Find("*Notepad").OrThrow();
+		//w.Activate();
+		if(wa.Name.Like_("*Studio ")) Wnd.SwitchActiveWindow();
+		100.ms();
+
+		//new Keyb(Opt.Key).AddKeys("Tab Ctrl+V Alt+E+P Alt+(E P) Ctrl+Shift+Left Left*3 Space a , 5 #5 $abc Enter").Send();
+		//new Keyb(Opt.Key).AddKeys("Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc Enter").AddText("Abc ").Send();
+
+		//Key("ab", 1000, "cd", 2000);
+		//Opt.Key.TextOption = KTextOption.Keys;
+		//Text("aą2");
+
+		//Key("Alt+Tab", 100, "", "text");
+		//Key("Alt+Tab", "text");
+
+		////Opt.Key.SleepFinally = 20;
+		//Opt.Key.KeySpeed = 100;
+		////Key("ab");
+		////Key("a Ctrl+b c d");
+		//Key("Ctrl+c");
+		////Key("Ctrl+Alt+c");
+		////Key("Alt+a+b+c z");
+		////Key("Alt+a+b+c");
+		////Key("Alt+(a b)");
+		////Key("Alt+(a b) c");
+		////Key("A*down A*up");
+		////Key("A*down");
+		////Key("A*up");
+		////Key("A*3");
+		////Key("A+*3");
+		////Key("A", 10, "B");
+		////Key("Ctrl+", 20, "B");
+		////Key("Ctrl*down A*down Ctrl*up A*up");
+		////Key("Shift+", "text");
+
+		////Opt.Key.TextOption = KTextOption.Keys;
+		////for(int i = 0; i < 5; i++) {
+		////	//Text("One Two Three Four Five Six Seven Eight Nine Ten\r\n");
+		////	Text("OneTwoThreeFourFive ");
+		////}
+		//return;
+
+		//Text("abCD$,ąĄ", "keys Enter");
+		//Key(1000, "", "abCD$,ąĄ", "keys Enter");
+
+		//Opt.Key.SleepFinally = 0;
+		////Opt.Key.TextSpeed=0;
+		//var s =_CreateLongText(100);
+		//Print(s.Length);
+		//Perf.First();
+		//Text(s, "Enter");
+		//Perf.NW();
+
+		//Key(Keys.BrowserBack);
+		//Key("BrowserBack");
+
+		//for(int i = 0; i < 5; i++) {
+		//	Perf.First();
+		//	Clipb.Clear();
+		//	//Clipb.SetText("fff");
+		//	//300.ms();
+		//	Perf.Next();
+		//	//20.ms();
+		//	Key("Ctrl+C");
+		//	Perf.NW();
+		//	300.ms();
+		//}
+		//return;
+
+		//var b = new Keyb(null);
+		//b.SleepFinally = 0;
+		//b.KeySpeed = 0;
+		//for(int i = 0; i < 5; i++) {
+		//	Clipb.Clear();
+		//	20.ms();
+		//	b.Add("Ctrl+C");
+		//	//int t = 1;
+		//	////b.Add("Ctrl*down", 1, "C*down", 1, "C*up", 0, "Ctrl*up");
+		//	//b.Add("Ctrl*down", 1, "C*down", 1, "Ctrl*up", 0, "C*up");
+		//	//b.AddKey(Keys.ControlKey).AddKeys("+").AddKey(Keys.A);
+		//	//Perf.First();
+		//	b.Send();
+		//	//Perf.NW();
+		//	200.ms();
+		//	Print(Clipb.GetText());
+		//}
+		Print("END");
+
+		//Opt.Key.KeySpeed = 1;
+		//Text("Some Text, Some Text, Some Text, Some Text, Some Text, Some Text, Some Text, Some Text\r\n");
+		//Key("$some Spa $text, $some Spa $text, $some Spa $text, $some Spa $text, $some Spa $text, $some Spa $text, $some Spa $text, Enter");
+		return;
+
+		//Opt.Key.SleepFinally = 100;
+		//Opt.Key.Hook = () => new OptKey() { SleepFinally = 100 };
+		//Opt.Key.Hook = o =>
+		//{
+		//	Print(o.w);
+		//	Wnd w = o.w.Window;
+		//	if(w.Name?.StartsWith_("Unti") ?? false) o.opt.KeySpeed = 500;
+		//	//opt.TextOption = KTextOption.Keys;
+		//	//opt.SleepFinally = 1000;
+		//	//opt.TextSpeed = 500;
+		//};
+
+		var x = new Keyb(Opt.Key);
+
+		//2.s();
+		//Action actNotepad = () => Wnd.Find("*Notepad").Activate();
+		//Action actQm = () => Wnd.Find("Quick M*").Activate();
+		//x.Add("abc Space", actNotepad, "some text", actQm, "Enter");
+		//x.Add("abc Space", "some text", 1d, "Enter", 2.5);
+		//x.AddText("a"); x.AddText("b"); x.AddText("c");
+		x.AddText("a"); x.AddCallback(() => Print(1)); x.AddText("c");
+		//x.Add("Alt+Tab");
+		//x.Add("Ctrl+S a", 1000, "Esc*2");
+		Perf.First();
+		for(int i = 0; i < 1; i++) {
+			x.Send();
+			//x.Send(true);
+			Perf.Next();
+		}
+		Perf.Write();
+		//x.Key("Enter", "Tab", "Enter");
+		//x.Text("Left");
+
+		return;
+
+		//x.AddChar('a').AddChar('B');
+		//x.AddText("Test");
+		//x.AddKeys("Ctrl+A Tab*33 T * 33k b* Num* ab c Alt+(A B) Alt + (A B) #- #+ #* # #hk h#*#4 #**55 F12 FF kNow **");
+		//x.AddKeys("Shift+A");
+		//x.AddKeys("Shift+A qwertyuiopasdfghjklzxcvbnm");
+		//x.AddKeys("Ctrl+Shift+A");
+		//x.AddKeys("B*3");
+		//x.AddKeys("Shift+C*3");
+		//x.AddKeys("Shift+M"); x.Send(); x.Send(); x.Send();
+		//x.AddKeys("Shift+M"); for(int i=0; i<3; i++) x.Send(true);
+		//x.AddKeys("Shift+"); x.Send(); Print(1); x.AddKeys("k"); x.Send();
+		//x.AddEvents("Shift+", Keys.K, (45, false));
+		//x.AddKeys("Ctrl LCtrl RCtrl Alt+a LAlt+a RAlt+a Shift LShift RShift");
+		//x.AddKeys("ab Esc 1 2 RCtrl Right Shift+A Alt+(fe)");
+		//x.AddText("one\rtwo\nthree\r\nfour ąč");
+		//x.AddKeys("Ctrl+A Del");
+		//x.AddKeys(@"Tab qwertyuiop Enter asdfghjkl Enter zxcvbnm Enter `1234567890-= Enter []\;',./ Enter #/#*#-#+#.#0#1#2#3#4#5#6#7#8#9");
+		//x.AddKeys("F1 F12 F24 Back");
+		//x.AddKeys("F1 F12 F24 Back Backspace BAC NumLock NUM");
+		//x.AddKeys("Alt AltG App Add Bac Ctr Con Cap Del Dec Div Dow Ent End Esc Hom Ins");
+		//x.AddKeys("Lef LSh LCt LCo LAl LWi Rig RSh RCt RCo RAl RWi Ret");
+		//x.AddKeys("Men Mul Num PgU PageU PgD PageD Pau Pri PRT Shi Spa Scr Sub Tab Up Win");
+		//x.AddKeys("$send$input $4");
+		//x.AddKeys("$send$(input)");
+		//x.AddText("𑀠-𑀡-𑀢-𑀣-𑀤-𑀥-𑀦-𑀧-𑀨-𑀩-𑀪-𑀫-𑀬-𑀭-𑀮-𑀯");
+		//x.AddKeysText("", "𑀠-𑀡-𑀢-𑀣", 1000, "", "-𑀤-𑀥");
+		//Keyb.Common.TextSpeed = 100;
+		//Keyb.Common.TimeTextCharSent = 1;
+		//x.AddText("123 β, 𑀨-𑀪-𑀫.");
+		//x.AddText("123456789").AddSleep(400).AddText(" 123456789\r\n");
+		//x.AddText("a β 123 ƱʍЧ.");
+		//x.AddKeys("Enter", 10);
+		//Keyb.Common.TextOption = KTextOption.Keys;
+		//x.AddKeys("-");
+		//x.AddText("abc");
+		//x.AddKeys("Shift+(");
+
+		//var s = new StringBuilder();
+		//for(int i = 0; ; i++) {
+		//	int len = s.Length; if(len > 1000) break;
+		//	s.Append(len).Append(" 123456789 123456789 123456789 123456789 123456789 βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ\r\n");
+		//	//s+="123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 1234567-\r\n"
+		//	//	+ "βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱʍЧ βƱ-\r\n";
+		//}
+		//x.AddText(s.ToString());
+
+		////x.AddText("a\r\nBcDE\n\r");
+		//x.AddText("aąAĄβƱʍЧ\r\n");
+		//x.AddText("abc");
+
+		//x.Add("Tab", 1000, Keys.A, (Action)(() => Print(1)), "Tab-");
+
+		Action click = () => Mouse.Click();
+		//x.Add("Shift+", click);
+		//x.Add("Shift+(", click);
+		//x.Add("Shift+(", click, ")");
+		//x.Add("Shift+", (Action)(() => Mouse.Click()));
+		//x.Add("Shift+", click, "a");
+		//x.Add("Shift+", Keys.A, "a");
+		//x.Add("Shift+", 500, "a");
+		//x.Add("Shift+", "text", "a");
+		//x.Add("Shift+", 500);
+		//x.Add(Keys.A, "*3");
+		x.Add("Shift*down", click, "*up");
+
+
+		Perf.First();
+		x.Send();
+		//Keyb.Common.KeySpeed = 0;
+		//for(int i = 0; i < 8; i++) {
+		//	x.Send(true);
+		//}
+		//SendKeys.SendWait(s);
+		Perf.NW();
+
+		//100.ms();
+		//wa.Activate();
+	}
+
+	static void TestKeybExamples()
+	{
+
+		//var k = new Keyb(Opt.Static.Key);
+		//k.KeySpeed = 50;
+		//k.AddKeys("Tab // Space").AddRepeat(3).AddText("text").AddKey(Keys.Enter).AddSleep(500);
+		//k.Send(); //sends and clears the variable
+		//k.Add("Tab // Space*3", "text", Keys.Enter, 500); //does the same as the above k.Add... line
+		//for(int i = 0; i < 5; i++) k.Send(true); //does not clear the variable
+
+		//Keyb.Key("Ctrl+Shift+Left"); //press Ctrl+Shift+Left
+
+		//Opt.Key.KeySpeed = 300; //set options for static functions
+		//Keyb.Key("Ctrl+A Del Tab*3", "text", "Enter", 500); //press Ctrl+A, press Del, press Tab 3 times, send text, press Enter, wait 100 ms
+
+		//Keyb.Text("text\r\n"); //send text that ends with newline
+		//Keyb.Text("text", "Enter", 300); //send text, press Enter, wait 300 ms
+
+		Text("Key and Text can be used without the \"Keyb.\" prefix.");
+		Key("Enter");
+	}
+
+	static void TestClipb()
+	{
+		//Clipb.SetText("qwe");
+
+		//var s = Clipb.GetText();
+		//Print((object)s);
+
+
+		//Perf.SpinCPU(100);
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	Perf.First();
+		//	string s = Clipb.GetText();
+		//	Perf.NW();
+		//	Print((object)s);
+		//	100.ms();
+		//}
+
+	}
+
+	static void TestPaste()
+	{
+		var wa = Wnd.Active;
+		if(wa.Name.Like_("*Studio ")) Wnd.SwitchActiveWindow();
+		100.ms();
+
+		Opt.Key.TextOption = KTextOption.Paste;
+		Opt.Key.PasteEnter = true;
+		Opt.Key.SleepFinally = 0;
+		//Opt.Key.RestoreClipboard = true;
+		OptKey.RestoreClipboardAllFormats = true;
+		//OptKey.RestoreClipboardExceptFormats = new string[] { "Rich Text Format" };
+
+		//Opt.Key.Hook = o =>
+		//{
+		//	Print(o.w);
+		//	o.opt.PasteEnter = true;
+		//};
+
+		//Text("a\r\n");
+		//return;
+
+		var a = new string[] { "One ", "Two ", "Three\r\n", };
+		//var a = new string[] { "One\r\n", "Two\r\n", "Three\r\n", };
+		Perf.First();
+		for(int i = 0; i < a.Length; i++) {
+			//Paste("Paste\r\n");
+			//Paste(a[i]);
+			Text(a[i]);
+			Perf.Next();
+			//100.ms();
+			//Wnd.Focused.Send(0);
+			//Perf.Next();
+			//break;
+		}
+		Perf.Write();
+
+		//Paste("Paste\r\n");
+		//Text("Text\r\n");
+		//Paste("Text\r\n", "Tab keys");
+		//Text("Text\r\n", "Tab keys");
+		//Key("a");
+		Print("END");
+	}
+
+	static void TestCopy()
+	{
+		//Api.OpenClipboard(default);
+		//for(int format = 0; 0 != (format = Api.EnumClipboardFormats(format));) {
+		//	Print(Clipb.LibGetFormatName(format));
+		//}
+		//Api.CloseClipboard();
+		//return;
+
+		//Print(Clipb.GetText());
+		//return;
+
+		var wa = Wnd.Active;
+		//if(wa.Name.Like_("*Studio ")) Wnd.Misc.SwitchActiveWindow();
+		100.ms();
+
+		//Opt.Key.SleepFinally = 0;
+		//Opt.Key.Hook = o =>
+		//{
+		//	Print(o.w);
+		//	o.opt.PasteEnter = true;
+		//};
+
+		//Text("a\r\n");
+		//return;
+
+		//Opt.Key.RestoreClipboard = false;
+		OptKey.RestoreClipboardAllFormats = true;
+		//OptKey.RestoreClipboardExceptFormats = new string[] { "Rich Text Format" };
+
+		//OptKey.PrintClipboard();
+		////return;
+		//Print("---");
+
+		//for(int i = 0; i < 1; i++) {
+		//	Perf.First();
+		//	var s = Clipb.CopyText();
+		//	Perf.NW();
+		//	Print(s);
+		//	100.ms();
+		//	//break;
+		//}
+
+		//Print("---");
+		//OptKey.PrintClipboard();
+		//Print(Clipb.GetText());
+
+		var af = new object[] { 0, 1, 7, 13, "Rich Text Format", "HTML Format", "text/html", "FileName", "FileNameW", "DwHt" };
+		foreach(var v in af) {
+			int f = 0; if(v is int ii) f = ii; else f = ClipFormats.Register(v as string);
+			Clipb.CopyData(() => { var s = Clipb.Data.GetText(f); Print(v, s ?? "<NO>"); });
+		}
+
+		//Print(Clipb.CopyText());
+		//Clipb.CopyData(() => Print(Clipb.GetText()));
+		//Clipb.CopyData(() => Print(Clipboard.GetText()));
+
+		Print("END");
+	}
+
+	static void TestPasteFormat()
+	{
+		//var g = Image.FromFile(@"q:\app\il_qm.bmp");
+		//Clipboard.SetImage(g);
+
+		//return;
+
+		//		var html=@"Version:0.9
+		//StartHTML:00000146
+		//EndHTML:00000281
+		//StartFragment:00000180
+		//EndFragment:00000245
+		//SourceURL:http://www.quickmacros.com/index.html
+		//<html><body>
+		//<!--StartFragment--><a href=""http://www.quickmacros.com/features.html"">Screenshot</a><!--EndFragment-->
+		//</body>
+		//</html>";
+		var html = "<i>italy</i>";
+		html = "[<i>ąčę</i>]";
+		html = "<html><body>[<i>ą č ę</i>]</body></html>";
+		html = "<html><body>[<i>ą č ę</i>]</body></html>";
+
+		//Clipb.SetText("Text");
+		//Clipb.SetData(new(int, object)[] { (0, "Text2") });
+		//Clipb.SetData(new(int, object)[] { (Api.CF_TEXT, "ASCII") });
+		//Clipb.SetData(new(int, object)[] { (Clipb.Misc.RtfFormat, @"{\rtf1 rtf\par}"), (0, "Text") });
+		//Clipb.SetData(new(int, object)[] { (Clipb.Misc.HtmlFormat, html), (0, "Text") });
+		//Clipb.SetData(new(int, object)[] { (Clipb.Misc.HtmlFormat, html), (0, "Text") });
+		//Clipb.SetData(new(int, object)[] { (Clipb.Misc.RtfFormat, @"{\rtf1 rtf\par}"), (Clipb.Misc.HtmlFormat, "<html><body>text <a href='http://www.quickmacros.com'>Quick Macros</a> text</body></html>"), (0, "Text") });
+		//Clipb.SetData(new(int, object)[] { (1, "Text ą č ę") });
+		//Clipb.SetData(new(int, object)[] { (1, ("Text ąčę", Encoding.GetEncoding(1257))) });
+		//Clipb.SetData(new(int, object)[] { (0, g) });
+		//new Clipb.Data().AddText("text").AddImage(g).SetClipboard();
+		//new Clipb.Data().AddCsvTable(new CsvTable("onę,\"t\"\"w\"\"\r\no\"\r\nth     r\tee,<four>")).SetClipboard();
+
+		//Clipb.Paste("text");
+		//Clipb.PasteData(new Clipb.Data().AddText("text2"));
+		//Clipb.PasteData(new Clipb.Data().AddImage(g));
+
+		//var b = WinImage.Capture(new RECT(100, 100, 100, 100, true));
+		//Wnd.Misc.SwitchActiveWindow();
+		//Clipb.PasteData(new Clipb.Data().AddImage(b));
+
+		//	new Clipb.Data().AddFiles(@"C:\Users\G\Documents\Book1.xls", @"C:\Users\G\Documents\dictionary.xls").SetClipboard();
+
+		return;
+
+		var wa = Wnd.Active;
+		if(wa.Name.Like_("*Studio ")) Wnd.SwitchActiveWindow();
+		100.ms();
+
+		Opt.Key.PasteEnter = true;
+		Opt.Key.SleepFinally = 0;
+		OptKey.RestoreClipboardAllFormats = true;
+
+		//Opt.Key.Hook = o =>
+		//{
+		//	Print(o.w);
+		//	o.opt.SleepFinally=1000;
+		//};
+
+		Clipb.PasteText("Paste\r\n");
+
+		Print("END");
+	}
+
+	static void TestCreateHtmlFormatData()
+	{
+		Clipb.Data.LibCreateHtmlFormatData("<i>italy</i>");
+		Clipb.Data.LibCreateHtmlFormatData("<html><body><i>italy</i></body></html>");
+		Clipb.Data.LibCreateHtmlFormatData("<html><body><!--StartFragment--><i>italy</i><!--EndFragment--></body></html>");
+
+		//Clipb.Data.CreateHtmlFormatData("ac");
+		//Clipb.Data.CreateHtmlFormatData("ač");
+		//Clipb.Data.CreateHtmlFormatData("<html><body><!--StartFragment-->ac<!--EndFragment--></body></html>");
+		//Clipb.Data.CreateHtmlFormatData("<html><body><!--StartFragment-->ač<!--EndFragment--></body></html>");
+		//Clipb.Data.CreateHtmlFormatData("ac<html><body><!--StartFragment-->ac<!--EndFragment--></body></html>");
+		//Clipb.Data.CreateHtmlFormatData("ač<html><body><!--StartFragment-->ač<!--EndFragment--></body></html>");
+	}
+
+	static void TestClipbGetText()
+	{
+		int ubo = ClipFormats.Register("Ubo", Encoding.UTF32);
+
+		//var af = new object[] {0, 1, 7, 13, "Rich Text Format", "HTML Format", "text/html", "FileName", "FileNameW", "DwHt", "Ubo"};
+		//foreach(var v in af) {
+		//	int f = 0; if(v is int ii) f = ii; else f = ClipFormats.Register(v as string);
+		//	var s = Clipb.GetText(f);
+		//	Print(v, s ?? "<NO>");
+		//}
+
+		int th = ClipFormats.Register("text/html");
+		int fn = ClipFormats.Register("FileName", Encoding.Default);
+
+		new Clipb.Data().AddText("text0").AddText("text1", 1).AddText("text7", 7)//.AddText("text13", 13)
+			.AddRtf("rtf").AddHtml("html").AddText("text/html", th).AddText("FileName", fn).AddText("Ubo", ubo)
+			.SetClipboard();
+	}
+
+	static void TestClipbDataGet()
+	{
+		//Print(Clipb.Text);
+		//Clipb.Text = "moo";
+
+		//var b = Clipb.Data.GetImage();
+		//if(b == null) { Print("null"); return; }
+
+		////var f2 = Folders.Temp + "test.png";
+		////b.Save(f2);
+		////Shell.Run(f2);
+
+		//var f = new Form();
+		//var k = new PictureBox();
+		//k.SizeMode = PictureBoxSizeMode.AutoSize;
+		//k.Image = b;
+		//f.Controls.Add(k);
+		//f.ShowDialog();
+
+		//Print(Clipb.Data.GetBinary(1).Length);
+		//Print(Clipb.Data.GetFiles());
+		//Print(Clipb.Data.GetRtf());
+
+		//var s = Clipb.Data.GetHtml(out int fs, out int fl, out string sourceURL); if(s == null) return;
+		//Print(s); Print(fs, fl, sourceURL); Print(s.Substring(fs, fl));
+
+		//		var csv = @"onę 𑀱,""t""""Q"""" 'A'
+		//o""
+		//th     r	ee,<four>";
+		//		var t = new CsvTable(csv);
+		//var s = t.ToHtmlTable();
+
+		//var s = t.ToXml();
+		//Print(s);
+		//var f = ClipFormats.Register("XML Spreadsheet", Encoding.UTF8);
+		//new Clipb.Data().AddText(s, f).SetClipboard();
+
+		//Print(t.ToHtmlTable2());
+		//Print("----");
+		//Print(XmlToHtml(s));
+
+		//new Clipb.Data().AddCsvTable(t).SetClipboard();
+
+		//Clipb.Data.
+		//new Clipb.Data().
+
+	}
+
+	static void TestClipbDataContains()
+	{
+		//Print(Clipb.Data.Contains(ClipFormats.Rtf));
+		//Print(Clipb.Data.Contains(ClipFormats.Rtf, ClipFormats.Text));
+
+		//string text = null; Bitmap image = null; string[] files = null;
+		//Clipb.CopyData(() => { text = Clipb.Data.GetText(); image = Clipb.Data.GetImage(); files = Clipb.Data.GetFiles(); });
+		//if(text == null) Print("no text in clipboard"); else Print(text);
+		//if(image == null) Print("no image in clipboard"); else Print(image.Size);
+		//if(files == null) Print("no files in clipboard"); else Print(files);
+
+		//Clipb.PasteData(new Clipb.Data().AddHtml("<b>text</b>").AddText("text"));
+		//string html = null, text = null;
+		//Clipb.CopyData(() => { html = Clipb.Data.GetHtml(); text = Clipb.Data.GetText(); });
+		//Print(text); Print(html);
+		//var image = Clipb.Data.GetImage();
+		//if(image == null) Print("no image in clipboard"); else Print(image.Size);
+
+	}
+
+	static void TestPrintNoQuot()
+	{
+		//Print("aaa\r\nbbb");
+		//Print("simple", "aaa\r\nbbb", null);
+		Print(new string[] { "simple", "aaa\r\nbbb", null });
+	}
+
+	static void TestKeybFinally()
+	{
+		var wa = Wnd.Active;
+		if(wa.Name.Like_("*Studio ")) Wnd.SwitchActiveWindow();
+		100.ms();
+
+		//Key("Tab abc Enter*2 Back");
+
+		//Opt.Key.PasteEnter = true;
+		//Paste("text\r\n");
+
+		//Keyb.Key("Tab", 70000);
+		//Key("#1#+#2", (Keys.Enter, 0, true));
+		//Key("Shift+(A Ctrl+B)");
+		//Key("Shift+(A*5)");
+		//Key("Shift+", Keys.Left, "*3");
+		//Key(null, "key F1 using scan code:", (0x3B, false));
+		//Key("keys", 500, "", "text");
+
+		//Action click = () => Mouse.Click(); Key("Shift+", click);
+		//Key("Left", 500, "Right");
+		//Key("", "numpad Enter:", (Keys.Enter, 0, true));
+		//Key("Ctrl+Alt+Del");
+		//Key("Win+L");
+
+		//Key("A F2 Ctrl+Shift+A Enter*2"); //keys A, F2, Ctrl+Shift+A, Enter Enter
+
+		//Key("Shift+A*3"); //Shift down, A 3 times, Shift up
+		////Key("Shift+", Keys.A, Keys.B); //press Shift+A, B
+		////Key("Shift+(", Keys.A, 500, Keys.B, ")");
+		new Keyb(null).Add("keys", "text").Send();
+		return;
+
+		//Press key Enter.
+		Keyb.Key("Enter");
+
+		//The same as above. The "Keyb." prefix is optional.
+		Key("Enter");
+
+		//Press keys Ctrl+A.
+		Key("Ctrl+A");
+
+		//Ctrl+Alt+Shift+Win+A.
+		Key("Ctrl+Alt+Shift+Win+A");
+
+		//Alt down, E, P, Alt up.
+		Key("Alt+(E P)");
+
+		//Alt down, E, P, Alt up.
+		Key("Alt*down E P Alt*up");
+
+		//Press key End, key Backspace 3 times, send text "Text".
+		Key("End Back*3", "Text");
+
+		//Press Tab n times, send text "user", press Tab, send text "password", press Enter.
+		int n = 5;
+		Key($"Tab*{n}", "user", "Tab", "password", "Enter");
+
+		//Send text "Text".
+		Text("Text");
+
+		//Send text "user", press Tab, send text "password", press Enter.
+		Text("user", "Tab", "password", "Enter");
+
+		//Press Ctrl+V, wait 500 ms, press Enter.
+		Key("Ctrl+V", 500, "Enter");
+
+		//Press Ctrl+V, wait 500 ms, send text "Text".
+		Key("Ctrl+V", 500, "", "Text");
+
+		//F2, Ctrl+K, Left 3 times, Space, A, comma, 5, numpad 5, Shift+A, B, C, BrowserBack.
+		Key("F2 Ctrl+K Left*3 Space a , 5 #5 $abc", Keys.BrowserBack);
+
+		//Shift down, A 3 times, Shift up.
+		Key("Shift+A*3");
+
+		//Shift down, A 3 times, Shift up.
+		Key("Shift+", Keys.A, "*3");
+
+		//Shift down, A, wait 500 ms, B, Shift up.
+		Key("Shift+(", Keys.A, 500, Keys.B, ")");
+
+		//Send keys and text slowly.
+		Opt.Key.KeySpeed = Opt.Key.TextSpeed = 50;
+		Key("keys$:Space 123456789 Space 123456789 ,Space", "text: 123456789 123456789\n");
+
+		//Ctrl+click
+		Action click = () => Mouse.Click();
+		Key("Ctrl+", click);
+
+		//Ctrl+drag
+		Action drag = () => { using(Mouse.LeftDown()) Mouse.MoveRelative(0, 50); };
+		Key("Ctrl+", drag);
+
+		//Ctrl+drag, poor man's version
+		Key("Ctrl*down");
+		using(Mouse.LeftDown()) Mouse.MoveRelative(0, 50);
+		Key("Ctrl*up");
+	}
+
+	//static void TestTimeKeyPressedInt()
+	//{
+	//	Wnd.Find("Quick*").Activate();
+	//	100.ms();
+	//	Opt.Key.SleepFinally = 0;
+	//	Opt.Key.KeySpeed = Opt.Key.TextSpeed = 50;
+
+	//	Perf.First();
+	//	for(int i = 0; i < 1; i++) {
+	//		Key("keys$:Space 123456789 Space 123456789 ,Space", "text: 123456789 123456789\n");
+	//		Perf.Next();
+	//	}
+	//	Perf.Write();
+	//}
+
+	static void TestKeyOwnThread()
+	{
+		var f = new Form();
+		var b = new Button() { Text = "Key" };
+		var t = new TextBox() { Top = 100 };
+		var c = new Button() { Text = "Close", Left = 100 };
+		f.Controls.Add(b);
+		f.Controls.Add(t);
+		f.Controls.Add(c); f.CancelButton = c;
+
+		b.Click += async (unu, sed) =>
+		{
+			//Key("Tab", "text", 2000, "Esc"); //incorrect; may work or not; the form does not respond until Key returns
+			await Task.Run(() => { Key("Tab", "text", 2000, "Esc"); }); //correct
+		};
+
+		f.ShowDialog();
+	}
+
+	//public static class Options
+	//{
+	//	public static OptKey Key { get { return _key; } }
+	//	[ThreadStatic] static OptKey _key;
+	//}
+
+	static void TestAuOptions()
+	{
+		//Opt.Static.Key.KeySpeed = 7;
+
+		//Opt.Mouse.ClickSpeed = 1000;
+		//for(int i = 0; i < 1; i++) {
+		//	Perf.First();
+		//	//Mouse.Click();
+		//	Mouse.DoubleClick();
+		//	Perf.NW();
+		//	600.ms();
+		//}
+
+		//var w = Wnd.Find("*Notepad").OrThrow();
+		////Opt.Mouse.Relaxed = true;
+		//Mouse.Move(w, 200, 200);
+
+		//Opt.Static.Mouse.ClickSpeed = 5;
+		//Print(Opt.Static.Mouse.ClickSpeed);
+		//Print("----");
+		//Print(Opt.Mouse.ClickSpeed);
+		//using(Opt.Temp.Mouse) {
+		//	Opt.Mouse.ClickSpeed = 100;
+		//	Print(Opt.Mouse.ClickSpeed);
+		//} //here restored automatically
+		//Print(Opt.Mouse.ClickSpeed);
+
+		//Opt.Static.Key.KeySpeed = 10;
+		//Print(Opt.Key.KeySpeed);
+		//Opt.Key.KeySpeed = 22;
+		//Print(Opt.Key.KeySpeed);
+		//using(Opt.Temp.Key) {
+		//	Opt.Key.KeySpeed = 5;
+		//	Print(Opt.Key.KeySpeed);
+		//} //here restored automatically
+		//Print(Opt.Key.KeySpeed);
+
+		//Opt.Debug.Verbose = false;
+		//Opt.Debug.DisableWarnings("Exam*");
+		//PrintWarning("Example");
+		//PrintWarning("Example");
+
+		//Opt.Debug.Verbose = true;
+		//PrintWarning("one");
+		//using(Opt.Debug.DisableWarnings("*")) {
+		//	PrintWarning("two");
+		//}
+		//PrintWarning("three");
+
+		//Opt.Mouse.MoveSpeed = 30;
+		//Opt.Mouse.ClickSpeed = 100;
+		//Opt.Mouse.ClickSleepFinally = 100;
+		//Opt.Mouse.MoveSleepFinally = 100;
+		//Perf.First();
+		////Mouse.MoveRelative(100, 1000);
+		////Mouse.Move(Coord.Center, Coord.MaxInside);
+		//Mouse.Click(Coord.Center, Coord.Center);
+		////Mouse.Click();
+		//Perf.NW();
+
+		//Wnd.Find("Quick*").Activate();
+		////Opt.Key.KeySpeed = 10;
+		//Opt.Key.KeySpeed = 0;
+		//Opt.Key.SleepFinally = 500;
+		//Key("$coord.$center, $coord.$max$inside", "Coord.Center, Coord.MaxInside\n");
+		//Print("END");
+
+		//Clipb.CopyText(false, )
+	}
+
+	static void _TestKeybClipbMouseOwnWindow()
+	{
+		//Opt.Key.SleepFinally = 3000;
+		Opt.Key.KeySpeed = 1000;
+		Perf.First();
+		//Time.Sleep(2000);
+		//Time.SleepDoEvents(2000);
+		//Paste("text");
+		//Key("one", 3000, "two");
+		//Key("one");
+		//Opt.Mouse.MoveSpeed = 100;
+		//Mouse.Click(Wnd.Active, 100, 100);
+		Perf.NW();
+	}
+
+	static void TestKeybClipbMouseOwnWindow()
+	{
+		var f = new Form();
+		var t = new TextBox();
+		f.Controls.Add(t);
+		//f.Click += (unu, sed) => _TestKeybClipbMouseOwnWindow();
+		Timer_.After(500, () => _TestKeybClipbMouseOwnWindow());
+		f.ShowDialog();
+	}
+
+	//public static bool WaitForKey(double secondsTimeout, KKey key)
+	//{
+	//	bool ok = false;
+	//	using(WinHook.Keyboard(x => ok = x.IsKey(key))) {
+	//		return WaitFor.MessagesAndCondition(secondsTimeout, () => ok);
+	//	}
+	//}
+
+	static void TestRegisterHotkey()
+	{
+		var f = new FormRegisterHotkey();
+		f.ShowDialog();
+	}
+
+	class FormRegisterHotkey :Form
+	{
+		RegisterHotkey _hk1, _hk2;
+
+		protected override void WndProc(ref Message m)
+		{
+			switch(m.Msg) {
+			case Api.WM_CREATE: //0x1
+				bool r1 = _hk2.Register(1, "Ctrl+Alt+F10", this);
+				bool r2 = _hk1.Register(2, (KMod.Ctrl | KMod.Shift, KKey.D), this); //Ctrl+Shift+D
+				Print(r1, r2);
+				break;
+			case Api.WM_DESTROY: //0x2
+				_hk1.Unregister();
+				_hk2.Unregister();
+				break;
+			case RegisterHotkey.WM_HOTKEY:
+				Print(m.WParam);
+				break;
+			}
+			base.WndProc(ref m);
+		}
+	}
+
+	static object koooo;
+	static unsafe void TestKeySpeedWithEnum()
+	{
+		Perf.Next();
+		koooo = "dd";
+
+		var k = new Keyb(null);
+		Perf.Cpu();
+		for(int i1 = 0; i1 < 5; i1++) {
+			int n2 = 100;
+			Perf.First();
+			//for(int i2 = 0; i2 < n2; i2++) { k.AddKeys("Down"); }
+			for(int i2 = 0; i2 < n2; i2++) { if(0 == Keyb.Misc.ParseKeyName("Down")) throw new ArgumentException(); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { if(0 == Keyb.Misc.ParseKeyName("VolumeUp")) throw new ArgumentException(); }
+			//for(int i2 = 0; i2 < n2; i2++) { if(0 == Keyb.Misc.ParseKeyName("Attn")) throw new ArgumentException(); }
+			Perf.NW();
+		}
+	}

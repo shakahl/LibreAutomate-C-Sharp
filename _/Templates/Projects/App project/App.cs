@@ -9,16 +9,15 @@ outputType app
 [assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
 //[assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.7.2")]
 
-partial class App
-{
-	[STAThread] static void Main(string[] args) { new App()._Main(args); }
-	void _Main(string[] args)
-	{
-		Print("test");
+class App :AuAppBase {
+[STAThread] static void Main(string[] args) { new App()._Main(args); }
 
-
-
-	}
+void _Main(string[] args) {
+	Print("test");
+	
+	
+	
+}
 
 
 }

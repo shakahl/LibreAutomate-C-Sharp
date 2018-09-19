@@ -282,7 +282,7 @@ internal static string[] args = System.Array.Empty<string>();
 
 				//create assembly file
 				asmStream.Position = 0;
-				using(var fileStream = File.Create(outFile, (int)asmStream.Length)) { //TODO: wait if locked.
+				using(var fileStream = File_.OpenWithFunc(() => File.Create(outFile, (int)asmStream.Length))) {
 					asmStream.CopyTo(fileStream);
 
 					pdbStream.Position = 0;
@@ -333,7 +333,7 @@ internal static string[] args = System.Array.Empty<string>();
 		/// <summary>
 		/// Adds some attributes if not specified in code.
 		/// Adds: [module: DefaultCharSet(CharSet.Unicode)];
-		/// If needVersionEtc, also adds: AssemblyCompany, AssemblyProduct, AssemblyInformationalVersion. To avoid exception in Application.ProductName etc when the entry assembly is loaded from byte[].
+		/// If needVersionEtc, also adds: AssemblyCompany, AssemblyProduct, AssemblyInformationalVersion. It is to avoid exception in Application.ProductName etc when the entry assembly is loaded from byte[].
 		/// </summary>
 		static void _AddAttributes(ref CSharpCompilation compilation, bool needVersionEtc)
 		{
@@ -668,9 +668,8 @@ internal static string[] args = System.Array.Empty<string>();
 				if(compiling) b.AppendLine("\r\n#line 3 \"<wrapper>\"");
 			}
 			if(!compiling) b.AppendLine();
-			//TODO: if is meta outputPath and isolation process, add exception handling. Now does not show exception in editor's output. In Task.exe too.
 			b.AppendLine(
-@"sealed unsafe partial class App {
+@"sealed unsafe partial class App :AuAppBase {
 [STAThread] static void Main(string[] args) { new App()._Main(args); }
 void _Main(string[] args) {");
 			if(compiling) b.AppendLine("#line default\r\n");

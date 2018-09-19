@@ -107,9 +107,6 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="AuStripManager\AuStripManager.cs" />
-    <Compile Include="Other\Form_.cs">
-      <SubType>Form</SubType>
-    </Compile>
     <Compile Include="Other\ScrollableControl_.cs">
       <SubType>Component</SubType>
     </Compile>

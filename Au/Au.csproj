@@ -70,7 +70,7 @@
     <Compile Include="Acc\Acc_types.cs" />
     <Compile Include="Acc\Acc_find.cs" />
     <Compile Include="Acc\Acc.cs" />
-    <Compile Include="Common\ExtensionMethods_Forms.cs" />
+    <Compile Include="Common\Forms.cs" />
     <Compile Include="Files, system\Process_.UacInfo.cs" />
     <Compile Include="Files, system\Process_.Memory.cs" />
     <Compile Include="Util\IconsAsync.cs" />

@@ -33,6 +33,8 @@ static class Program
 	{
 		//Output.LibUseQM2 = true; Output.Clear();
 
+		//Process.GetCurrentProcess().ProcessorAffinity = (IntPtr)1; //test how works with 1 CPU
+
 		//hide hourglass cursor. Parent process cannot do it if uses shellexecute.
 		//rejected. Slower startup. Then .NET creates new thread with GDI+ hook window.
 		//Wnd.Misc.PostThreadMessage(0); Api.GetMessage(out var m, default, 0, 0);
@@ -83,9 +85,7 @@ static class Program
 						}
 						byte R = 0;
 						if(len > 0) {
-							string s;
-							fixed (byte* p = b) s = new string((char*)p, 0, len / 2);
-							R = _Action(s);
+							R = _Action(b);
 						}
 						pipe.WriteByte(R);
 					}
@@ -112,14 +112,13 @@ static class Program
 		}
 	}
 
-	static byte _Action(string s)
+	static byte _Action(byte[] b)
 	{
 		//Print(s);
 		try {
-			var c = new CsvTable(s);
-			if(c.ColumnCount != 2 || c[1, 0] != "wnd") return 0;
-			int taskId = c.GetInt(0, 1);
-			Wnd wEditor = (Wnd)(LPARAM)c.GetInt(1, 1);
+			var a=Au.Util.LibSerializer.Deserialize(b);
+			int taskId = a[1];
+			Wnd wEditor = (Wnd)(LPARAM)a[2].i;
 
 			var tasks = s_tasks;
 			if(tasks == null || tasks.Window != wEditor) {
@@ -128,9 +127,9 @@ static class Program
 				t.Start(tasks);
 			}
 
-			switch(c[0, 0]) {
-			case "run": return tasks.RunTask(taskId, c);
-			case "end": return tasks.EndTask(taskId);
+			switch(a[0].i) {
+			case 1: return tasks.RunTask(taskId, a);
+			case 2: return tasks.EndTask(taskId);
 			}
 		}
 		catch(Exception ex) { Debug_.Print(ex); }

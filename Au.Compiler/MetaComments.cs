@@ -81,7 +81,7 @@ namespace Au.Compiler
 	/// debug true|false //if true (default), don't optimize code; also define preprocessor symbol DEBUG. It usually makes startup faster (faster JIT compiling), but low-level code slower.
 	/// warningLevel 1 //compiler warning level, 0 (none) to 4 (all). Default: 4.
 	/// disableWarnings 3009,162 //don't show these compiler warnings
-	/// define SYMBOL1,SYMBOL2 //define preprocessor symbols that can be used with #if etc. Symbol DEBUG is always defined if not using option 'debug' false. Symbol TRACE is always defined.
+	/// define SYMBOL1,SYMBOL2 //define preprocessor symbols that can be used with #if etc. These symbols are added implicitly: TRACE - always; DEBUG - if there is no option 'debug' false; EXE - if used options 'outputPath' and 'isolation' process, which means that the assembly is normal exe file and runs not in a host process.
 	/// preBuild file /arguments //run this script/app before compiling. More info below.
 	/// postBuild file /arguments //run this script/app after compiling successfully. More info below.
 	/// ]]></code>
@@ -359,10 +359,8 @@ namespace Au.Compiler
 				return false;
 			}
 
-			if(IsDebug && (Defines == null || !Defines.Contains("DEBUG"))) {
-				if(Defines == null) Defines = new List<string>();
-				Defines.Add("DEBUG");
-			}
+			if(IsDebug && !Defines.Contains("DEBUG")) Defines.Add("DEBUG");
+			if(OutputPath != null && Isolation == EIsolation.process) Defines.Add("EXE");
 
 			return true;
 		}
@@ -387,9 +385,9 @@ namespace Au.Compiler
 				IsScript = isScript;
 
 				IsDebug = DefaultIsDebug;
-				Defines = DefaultDefines;
 				WarningLevel = DefaultWarningLevel;
-				DisableWarnings = DefaultDisableWarnings;
+				DisableWarnings = DefaultDisableWarnings != null ? new List<string>(DefaultDisableWarnings) : new List<string>();
+				Defines = DefaultDefines != null ? new List<string>(DefaultDefines) : new List<string>();
 				RunAlone = DefaultRunAlone(isScript);
 				MaxInstances = DefaultMaxInstances(isScript);
 				OutputType = DefaultOutputType(isScript);
@@ -480,13 +478,9 @@ namespace Au.Compiler
 				else _Error(iValue, "must be 0 - 4");
 				break;
 			case "disableWarnings":
-				if(DisableWarnings == null) DisableWarnings = new List<string>();
-				else if(DisableWarnings == DefaultDisableWarnings) DisableWarnings = new List<string>(DefaultDisableWarnings);
 				DisableWarnings.AddRange(value.Split_(", ", SegFlags.NoEmpty));
 				break;
 			case "define":
-				if(Defines == null) Defines = new List<string>();
-				else if(Defines == DefaultDefines) Defines = new List<string>(DefaultDefines);
 				Defines.AddRange(value.Split_(", ", SegFlags.NoEmpty));
 				break;
 			case "preBuild":

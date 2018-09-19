@@ -80,7 +80,7 @@ partial class EForm
 		//Print(fn.FindRelative(a[0], folder));
 
 		//Print(Model.FindByFilePath(a[0]));
-		Print(Model.FindAll(a[0]));
+		//Print(Model.FindAll(a[0]));
 
 		//if(!s_test1) {
 		//	s_test1 = true;
@@ -89,7 +89,7 @@ partial class EForm
 		//}
 
 		//Print(AppDomain.CurrentDomain.GetAssemblies());
-		return;
+		//return;
 
 		var f = new Au.Tools.Form_Wnd(Wnd.Find("Quick*"));
 		//var f = new Au.Tools.Form_Acc();

@@ -546,7 +546,7 @@ namespace Au.Controls
 				}
 
 				//read tag name
-				if(*s == '_') s++;
+				ch = *s; if(ch == '_' || ch == '+') s++;
 				while(Char_.IsAsciiAlpha(*s)) s++;
 				int tagLen = (int)(s - tag);
 				if(tagLen == 0) goto ge;
@@ -663,10 +663,11 @@ namespace Au.Controls
 					break;
 				default:
 					//user-defined tag or unknown.
-					//user-defined tags must start with '_'.
-					//don't hide unknown tags, unless start with '_'. Can be either misspelled (hiding would make harder to debug) or not intended for us (forgot <_>).
-					if(ch != '_') goto ge;
-					//if(!_userLinkTags.ContainsKey(linkTag = new string((sbyte*)tag, 0, tagLen))) goto ge; //no, it makes slower and creates garbage. Also would need to look in the static dictionary too. It's not so important to check now because we use '_' prefix.
+					//user-defined tags must start with '+'.
+					//don't hide unknown tags, unless start with '+'. Can be either misspelled (hiding would make harder to debug) or not intended for us (forgot <_>).
+					if(ch != '+') goto ge;
+					//if(!_userLinkTags.ContainsKey(linkTag = new string((sbyte*)tag, 0, tagLen))) goto ge; //no, it makes slower and creates garbage. Also would need to look in the static dictionary too. It's not so important to check now because we use '+' prefix.
+					//info: initially was used '_', not '+'. But it creates more problems. Eg C# stack trace can contain "... at App.<>c.<_Main>b__1_0() ...".
 					linkTag = "";
 					userTag = true;
 					break;
@@ -692,8 +693,6 @@ namespace Au.Controls
 				if(noEndTag) continue;
 
 				if(!style.IsEmpty) {
-					Debug.Assert(!noEndTag);
-
 					//merge nested style with ancestors
 					int k = currentStyle;
 					if(k >= STYLE_FIRST_EX) style.Merge(_styles[k - STYLE_FIRST_EX]);
@@ -825,7 +824,7 @@ namespace Au.Controls
 			var s = _t.RangeText(iTag, pos);
 			//Print(iTag, iText, pos, s);
 			//get tag, attribute and text
-			if(!s.RegexMatch_(@"(?s)^<(\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
+			if(!s.RegexMatch_(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
 			string tag = m[1].Value, attr = m[2].Value ?? m[3].Value ?? m[4].Value;
 			//Print($"'{tag}'  '{attr}'  '{m[4].Value}'");
 
@@ -868,7 +867,7 @@ namespace Au.Controls
 				break;
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
-				//others are unregistered tags. Only if start with '_' (others are displayed as text).
+				//others are unregistered tags. Only if start with '+' (others are displayed as text).
 				if(Opt.Debug.Verbose) AuDialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
 				break;
 			}
@@ -881,13 +880,13 @@ namespace Au.Controls
 		/// Adds (registers) a user-defined link tag for this control.
 		/// </summary>
 		/// <param name="name">
-		/// Tag name, like "_myTag".
-		/// Must start with '_'. Other characters must be 'a'-'z', 'A'-'Z'. Case-sensitive.
+		/// Tag name, like "+myTag".
+		/// Must start with '+'. Other characters must be 'a'-'z', 'A'-'Z'. Case-sensitive.
 		/// Or can be one of predefined link tags, if you want to override or implement it (some are not implemented by the control).
 		/// If already exists, replaces the delegate.
 		/// </param>
 		/// <param name="a">
-		/// A delegate to a callback function (probably you'll use a lambda) that is called on link click.
+		/// A delegate of a callback function (probably you'll use a lambda) that is called on link click.
 		/// It's string parameter contains tag's attribute (if "&lt;name "attribute"&gt;TEXT&lt;&gt;) or link text (if "&lt;name&gt;TEXT&lt;&gt;).
 		/// The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
 		/// </param>
@@ -901,13 +900,13 @@ namespace Au.Controls
 		/// Adds (registers) a user-defined link tag for all controls.
 		/// </summary>
 		/// <param name="name">
-		/// Tag name, like "_myTag".
-		/// Must start with '_'. Other characters must be 'a'-'z', 'A'-'Z'. Case-sensitive.
+		/// Tag name, like "+myTag".
+		/// Must start with '+'. Other characters must be 'a'-'z', 'A'-'Z'. Case-sensitive.
 		/// Or can be one of predefined link tags, if you want to override or implement it (some are not implemented by the control).
 		/// If already exists, replaces the delegate.
 		/// </param>
 		/// <param name="a">
-		/// A delegate to a callback function (probably you'll use a lambda) that is called on link click.
+		/// A delegate of a callback function (probably you'll use a lambda) that is called on link click.
 		/// It's string parameter contains tag's attribute (if "&lt;name "attribute"&gt;TEXT&lt;&gt;) or link text (if "&lt;name&gt;TEXT&lt;&gt;).
 		/// The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
 		/// </param>

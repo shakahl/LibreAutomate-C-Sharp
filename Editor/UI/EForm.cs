@@ -65,6 +65,7 @@ partial class EForm :Form
 	protected override void OnLoad(EventArgs e)
 	{
 		//Perf.Next();
+		Tasks = new RunningTasks((Wnd)this);
 		Panels.Files.LoadCollection(CommandLine.CollectionDirectory);
 
 		//Perf.Next();
@@ -108,7 +109,7 @@ partial class EForm :Form
 
 		switch(m.Msg) {
 		case Au.LibRun.AuTask.WM_TASK_ENDED: //WM_USER+900
-			Model?.Running.TaskEnded(m.WParam);
+			Tasks.TaskEnded(m.WParam);
 			return;
 		}
 

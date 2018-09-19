@@ -729,8 +729,8 @@ namespace Au.Tools
 
 			_commonInfos = new CommonInfos(_info);
 
-			_info.Tags.AddLinkTag("_resetInfo", _ => _SetFormInfo(null));
-			_info.Tags.AddLinkTag("_jab", _ => Java.EnableDisableJabUI(this));
+			_info.Tags.AddLinkTag("+resetInfo", _ => _SetFormInfo(null));
+			_info.Tags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
 		}
 
 		string _propError;
@@ -777,9 +777,9 @@ Example: pa ne2 ch3. The 2 means 2 times (ne ne). The 3 means 3-rd child (-3 wou
 If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns null or throws exception, depending on the 'Exception...' checkbox.";
 		const string c_infoLevel = @"<b>level<> - 0-based level of the AO in the object tree. Or min and max levels. Default 0 1000. Relative to the window, control (if used <b>class<> or <b>id<>) or web page (role prefix <b>web:<> etc).";
 		const string c_infoFirefox = @"To make much faster in Firefox, disable its multiprocess feature: open URL <link firefox.exe|about:config>about:config<>, set <b>browser.tabs.remote.autostart<> = <b>false<>, restart Firefox. More info in <help T_Au_Acc>Acc<> help.
-<_resetInfo>X<>";
-		const string c_infoJava = @"If there are no AOs in this window, need to <_jab>enable<> Java Access Bridge etc. More info in <help T_Au_Acc>Acc<> help.
-<_resetInfo>X<>";
+<+resetInfo>X<>";
+		const string c_infoJava = @"If there are no AOs in this window, need to <+jab>enable<> Java Access Bridge etc. More info in <help T_Au_Acc>Acc<> help.
+<+resetInfo>X<>";
 
 		#endregion
 

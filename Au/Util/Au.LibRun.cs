@@ -1,5 +1,6 @@
 //#define STANDARD_SCRIPT
-#define TEST_STARTUP_SPEED
+//#define TEST_STARTUP_SPEED
+//#define PRELOAD_PROCESS //not impl
 
 using System;
 using System.Collections.Generic;
@@ -58,7 +59,7 @@ namespace Au.LibRun
 				AppDomainSetup se = new AppDomainSetup { AppDomainManagerAssembly = auAsmName, AppDomainManagerType = ty.FullName };
 
 				var ad = AppDomain.CreateDomain("Au.Script", null, se);
-				ad.UnhandledException += _ad_UnhandledException; //works only for threads of that appdomain started by Thread.Start. Does not work for its primary thread, Task.Run threads and corrupted state exceptions.
+				//ad.UnhandledException += (_, e) => Print(e.ExceptionObject); //no. We instead use AuAppBase class, then it also works when script runs as normal exe, ie not in a host process.
 #if TEST_STARTUP_SPEED
 				_perfPrepare.Next();
 #endif
@@ -124,7 +125,7 @@ namespace Au.LibRun
 				RuntimeHelpers.PrepareMethod(typeof(RunAsm).GetMethod(nameof(LibLoadAssembly), BindingFlags.Static | BindingFlags.NonPublic).MethodHandle);
 				RuntimeHelpers.PrepareMethod(typeof(RunAsm).GetMethod(nameof(_Run), BindingFlags.Static | BindingFlags.NonPublic).MethodHandle);
 #if TEST_STARTUP_SPEED
-				_ = Time.Microseconds;
+				_ = Time.Microseconds; //JIT
 #endif
 
 				//load some .NET assemblies into this appdomain, it is very slow.
@@ -169,12 +170,6 @@ namespace Au.LibRun
 			internal Assembly LibEntryAssembly;
 		}
 
-		private static void _ad_UnhandledException(object sender, UnhandledExceptionEventArgs e)
-		{
-			//Print("Ad_UnhandledException:");
-			Print(e.ExceptionObject.ToString()); //TODO: include Script.Name etc
-		}
-
 		[HandleProcessCorruptedStateExceptions]
 		static void _Run(RIsolation caller, Assembly asm, string[] args, RHFlags flags)
 		{
@@ -202,7 +197,8 @@ namespace Au.LibRun
 			catch(TargetInvocationException te) {
 				var e = te.InnerException;
 				if(0 != (flags & RHFlags.DontHandleExceptions)) throw e;
-				Print(e.ToString());
+				//Print(e);
+				AuAppBase.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
 			}
 
 			//see also: TaskScheduler.UnobservedTaskException event.
@@ -235,12 +231,21 @@ namespace Au.LibRun
 				//prepare next AD after some time.
 				//	Don't do it now, because may interfere with script. Eg if script loads assemblies simultaneously, it must wait and therefore starts slower.
 				s_ra = null;
-				if(s_timerPrepareNextAD == null) s_timerPrepareNextAD = new Timer_(() =>
-				{
-					/*Print("TIMER");*/
+				if(x.Has(RFlags.remote)) {
+					//in Au.Tasks process.
+					//	Cannot use timer, and don't need. This thread waits for pipe connection and doesn't dispatch messages.
+					//Thread.Sleep(50); //no, better don't sleep. Then the task often ends before editor knows that it is started. It's OK but I don't like it.
 					s_ra = new RunAsm(false, false);
-				});
-				s_timerPrepareNextAD.Start(50, true);
+				} else {
+					//in editor process.
+					//	Could use the same code as above, but better use timer. For example if script uses Print, would display the text with a delay.
+					if(s_timerPrepareNextAD == null) s_timerPrepareNextAD = new Timer_(() =>
+					{
+						//Print("TIMER");
+						s_ra = new RunAsm(false, false);
+					});
+					s_timerPrepareNextAD.Start(50, true);
+				}
 			}
 			return R;
 
@@ -265,7 +270,7 @@ namespace Au.LibRun
 		}
 
 		/// <summary>
-		/// Internal. To run in main appdomain and nonmain thread.
+		/// Internal. To run in main appdomain in nonmain thread.
 		/// </summary>
 		internal static void LibRunHere(Assembly asm, string[] args)
 		{
@@ -288,8 +293,10 @@ namespace Au.LibRun
 			if(orFindLoaded) asm = lsa.Find(asmFile);
 
 			if(asm == null) {
+				//return Assembly.LoadFrom(asmFile); //test
+
 				byte[] bAsm, bPdb = null;
-				using(var stream = File.OpenRead(asmFile)) { //TODO: wait if locked.
+				using(var stream = File_.OpenWithFunc(() => File.OpenRead(asmFile))) {
 					bAsm = new byte[pdbOffset > 0 ? pdbOffset : stream.Length];
 					stream.Read(bAsm, 0, bAsm.Length);
 					try {
@@ -363,9 +370,6 @@ namespace Au.LibRun
 	[Flags]
 	internal enum RHFlags
 	{
-		/// <summary>
-		/// Don't handle exceptions.
-		/// </summary>
 		DontHandleExceptions = 1,
 	}
 
@@ -375,7 +379,13 @@ namespace Au.LibRun
 	[Flags]
 	internal enum RFlags
 	{
-		isProcess = 1, isThread = 2, mtaThread = 4, hasConfig = 8, noUiAccess = 16, userProcess = 32
+		isProcess = 1, //isolation process
+		isThread = 2, //isolation thread
+		mtaThread = 4, //no [STAThread]
+		hasConfig = 8, //has config file
+		noUiAccess = 16, //start process simply, without inheriting uiAccess
+		userProcess = 32, //start medium IL process from high IL process
+		remote = 64, //runs in Au.Tasks.exe process, not in editor process
 	}
 
 	/// <summary>
@@ -435,8 +445,9 @@ namespace Au.LibRun
 				if(x.Has(RFlags.isProcess)) {
 					Process p;
 					var args = x.args as string;
-					if(x.Has(RFlags.userProcess)) p = Process_.LibStartUserIL(x.exeFile, args, Process_.EStartFlags.NeedProcessObject);
-					else p = Process_.LibStart(x.exeFile, args, inheritUiaccess: !x.Has(RFlags.noUiAccess)); //SHOULDDO: actually Process is not necessary, need just handle. But now easier.
+					if(x.Has(RFlags.userProcess)) p = Process_.LibStartUserIL(x.exeFile, args, needProcessObject: true);
+					else p = Process_.LibStart(x.exeFile, args, inheritUiaccess: !x.Has(RFlags.noUiAccess), needProcessObject: true);
+					//SHOULDDO: actually Process is not necessary, need just handle. But now easier.
 					p.EnableRaisingEvents = true; //tested: does not throw when process already ended. But can throw for other reasons.
 
 					p.Exited += (unu, sed) => LibTaskEnded(); //info: the event is in a threadpool thread and does not give the Process object
@@ -444,8 +455,6 @@ namespace Au.LibRun
 
 					_threadOrProcess = p;
 				} else if(x.Has(RFlags.isThread)) {
-					//TODO: don't support isolation thread. Too unsafe. Can change static variables used by editor and other tasks. Eg in Au.Folders, Au.AuDialog.
-
 					var asm = RunAsm.LibLoadAssembly(x.asmFile, x.pdbOffset, true);
 
 					var t = new Thread(() =>
@@ -457,7 +466,7 @@ namespace Au.LibRun
 						finally { LibTaskEnded(); }
 					});
 					LibThreadStart(t, x.Has(RFlags.mtaThread));
-					
+
 					_threadOrProcess = t;
 				} else {
 					_threadOrProcess = RunAsm.LibRunInAppDomain(this, x);
@@ -466,15 +475,6 @@ namespace Au.LibRun
 			catch(Exception ex) { Print(ex); return false; }
 
 			return true;
-
-			//startup speed, ms:
-			//hot: hostThread 1, thread 1.6, domain 34, process 127 (112 without AV)
-			//cold: hostThread 3.2, thread 4.5, domain 75, process 170
-			//QM2 hot: thread 0.3, process 27 (17 without AV)
-
-			//FUTURE: try appdomain pool:
-			//	Always have 2-4 waiting threads+appdomains without a loaded script assembly. When need to run, then load, run and exit/unload.
-			//	Maybe also create similar process pool, but only if explicitly specified.
 		}
 
 		/// <summary>
@@ -499,7 +499,7 @@ namespace Au.LibRun
 		//Runs in main thread.
 		internal static void LibThreadStart(Thread t, bool mtaThread)
 		{
-			//t.IsBackground = true; //TODO: test. Also then don't need to set it when terminating task. Maybe even don't need to terminate.
+			t.IsBackground = true; //or on exit woud need to abort the waiting thread of prepared appdomain
 			if(!mtaThread) t.SetApartmentState(ApartmentState.STA);
 			t.Start();
 		}
@@ -516,9 +516,13 @@ namespace Au.LibRun
 		{
 			if(_threadOrProcess is Process p) p.Dispose();
 			if(_threadOrProcess == null) {
-				Debug_.Print("LibTaskEnded called before _threadOrProcess is set. It's OK, but not perfect.");
-				for(int i = 0; i < 10 && _threadOrProcess == null; i++) Thread.Sleep(15);
-				//Not error if even now null. In editor process it is not null when the message arrives. In Au.Tasks process would not remove one dictionary item.
+				Thread.Sleep(10);
+				if(_threadOrProcess == null) {
+					Debug_.Print("LibTaskEnded called before _threadOrProcess is set. It's OK, but should be rare, mostly with 1-core CPU.");
+					for(int i = 0; i < 10 && _threadOrProcess == null; i++) Thread.Sleep(15);
+					//Not error if even now null. In editor process it is not null when the message arrives. In Au.Tasks process would not remove one dictionary item.
+					Debug_.PrintIf(_threadOrProcess == null, "_threadOrProcess is null");
+				}
 			}
 			_threadOrProcess = null; _nativeThreadId = 0;
 			_manager.TaskEnded(taskId);
@@ -543,7 +547,7 @@ namespace Au.LibRun
 		/// <param name="onProgramExit">Terminate threads that cannot be ended normally.</param>
 		/// <remarks>
 		/// It it is process, kills it instantly.
-		/// Else calls Thread.Abort etc; it may end thread now or later or never. Waits briefly, but does not throw exception etc if not ended.
+		/// Else closes thread windows, calls Thread.Abort, etc; it may end thread now or later or never. Waits briefly, but does not throw exception etc if not ended.
 		/// Don't call this func to end tasks started through other process. It can only end locally started task.
 		/// </remarks>
 		public bool End(bool onProgramExit)
@@ -551,26 +555,51 @@ namespace Au.LibRun
 			switch(_threadOrProcess) {
 			case Thread t:
 				//Perf.First();
-				Task.Run(() => t.Abort());
-				//Perf.Next();
-				if(!t.Join(150) && _nativeThreadId != 0) {
-					//try to close thread windows
+				int waitMS = onProgramExit ? 150 : 500;
+				//try to close thread windows
+				bool hasWindows = false;
+				int tid = _nativeThreadId;
+				if(tid != 0) {
 					bool hasVisible = false;
-					foreach(var w in Wnd.GetWnd.ThreadWindows(_nativeThreadId, sortFirstVisible: true)) {
+					foreach(var w in Wnd.GetWnd.ThreadWindows(tid, sortFirstVisible: true)) {
 						//Print(w);
 						bool visible = w.IsVisible;
 						if(visible) hasVisible = true; else if(hasVisible) break;
+						hasWindows = true;
 						w.Close(noWait: true);
 						//never mind: cannot close dialogs etc that have no X button or it is disabled. Could post Enter key, but it is dangerous.
 					}
-					//when closing program, terminate threads that cannot be aborted normally
-					if(!t.Join(150) && onProgramExit) {
-						try { t.IsBackground = true; } catch(Exception ex) { Debug_.Print(ex); }
-						Thread_.LibTerminate(_nativeThreadId);
+					if(hasWindows) {
+						if(t.Join(waitMS)) break;
+						if(!onProgramExit) {
+							hasWindows = false;
+							var a = new List<Wnd>();
+							foreach(var w in Wnd.GetWnd.ThreadWindows(tid)) {
+								hasWindows = true;
+								if(w.IsVisible) a.Add(w);
+							}
+							if(hasWindows) {
+								_PrintFailed(t, "Its windows cannot be closed safely");
+								if(a.Count != 0) {
+									Print("\tVisible windows:");
+									foreach(var w in a) Print("\t\t" + w.ToString());
+								}
+							}
+						}
 					}
 				}
+				//abort thread
+				if(!hasWindows) { //too dangerous to abort thread with windows. Can kill process. Much lower possibility if no windows.
+					Task.Run(() => t.Abort()); //Abort can wait
+					if(t.Join(waitMS)) break;
+					if(!onProgramExit) _PrintFailed(t, "It is executing unmanaged code and will end upon returning to managed code");
+				}
+				//terminate thread
+				if(onProgramExit && _nativeThreadId != 0) {
+					try { t.IsBackground = true; } catch(Exception ex) { Debug_.Print(ex); }
+					Thread_.LibTerminate(_nativeThreadId);
+				}
 				//Perf.NW();
-				//TODO: too dangerous to Abort. Can kill process.
 				break;
 			case Process p:
 				try { p.Kill(); } catch(Exception ex) { Debug_.Print(ex); }
@@ -580,6 +609,12 @@ namespace Au.LibRun
 				break;
 			}
 			return _threadOrProcess == null;
+
+			void _PrintFailed(Thread t, string s)
+			{
+				var name = t.Name; if(name != null && name.StartsWith_("[script] ")) name = name.Substring(9);
+				Print($"Failed to end task '{name}'. {s}. Tips: to end task easily, run it in separate process: add meta option isolation process; to end all tasks now, exit this program.");
+			}
 		}
 	}
 
@@ -595,5 +630,66 @@ namespace Au.LibRun
 		/// </summary>
 		/// <param name="taskId"></param>
 		void TaskEnded(int taskId);
+	}
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// This class is used in automation script/app files as base of their main class. Adds some features.
+	/// </summary>
+	/// <remarks>
+	/// This class adds these features:
+	/// 1. Static constructor subscribes to <see cref="AppDomain.UnhandledException"/> event. On unhandled exception prints exception info. Without this class not all unhandled exceptions would be printed.
+	/// 2. Provides function OnUnhandledException. The script/app can override it.
+	/// 
+	/// More features may be added in the future.
+	/// </remarks>
+	public abstract class AuAppBase
+	{
+		static AuAppBase()
+		{
+			AppDomain.CurrentDomain.UnhandledException += (ad, e) =>
+			{
+				if((ad as AppDomain).Id != AppDomain.CurrentDomain.Id) return; //avoid printing twice if subscribed in main and other appdomain
+				OnHostHandledException(e);
+
+				//Does not see exceptions:
+				//1. thrown in the primary thread of a non-primary appdomain. Workaround: our host process uses try/catch.
+				//2. thrown in Task.Run etc threads. It's OK. .NET handles exceptions silently, unless something waits for the task.
+				//3. corrupted state exceptions. Tried [HandleProcessCorruptedStateExceptions] etc, unsuccessfully. Never mind.
+
+				//This is used for:
+				//1. Exceptions thrown in non-primary threads.
+				//2. Exceptions thrown in non-hosted exe process.
+				//Other exceptions are handled by the host program with try/catch.
+				//Works well with all meta isolation/outputPath combinations.
+			};
+		}
+
+		static AuAppBase s_instance;
+		[ThreadStatic] static AuAppBase t_instance; //for isolation thread
+
+		///
+		protected AuAppBase()
+		{
+			t_instance = this;
+			s_instance = this;
+		}
+
+		/// <summary>
+		/// Prints exception info.
+		/// Override this function to intercept unhandled exceptions. Call the base function if want to print exception info as usually.
+		/// </summary>
+		/// <param name="e"></param>
+		protected virtual void OnUnhandledException(UnhandledExceptionEventArgs e) => Print(e.ExceptionObject);
+
+		internal static void OnHostHandledException(UnhandledExceptionEventArgs e)
+		{
+			if(e.ExceptionObject is ThreadAbortException) return;
+			var k = t_instance ?? s_instance;
+			if(k != null) k.OnUnhandledException(e);
+			else Print(e.ExceptionObject);
+		}
 	}
 }

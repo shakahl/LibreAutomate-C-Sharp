@@ -477,12 +477,11 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void Run_End()
 	{
-		var running = Model.Running;
-		if(running.EndTasksOf(Model.CurrentFile)) return;
-		var t = running.GetRunningAlone(); if(t == null) return;
+		if(Tasks.EndTasksOf(Model.CurrentFile)) return;
+		var t = Tasks.GetRunningAlone(); if(t == null) return;
 		var m = new AuMenu();
 		m.Add("End task:", null).Enabled = false;
-		m[t.f.Name] = o => running.EndTask(t);
+		m[t.f.Name] = o => Tasks.EndTask(t);
 		m.Show(MainForm);
 	}
 

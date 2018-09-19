@@ -29,7 +29,7 @@ using static Program;
 partial class FilesModel
 {
 #endif
-	class _FormNewCollection :Au.Controls.Form_
+	class _FormNewCollection :Form_
 	{
 		public _FormNewCollection()
 		{

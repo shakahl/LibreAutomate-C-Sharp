@@ -436,6 +436,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
+		/// Later caller must close handles in pi, eg pi.Dispose.
 		/// </remarks>
 		internal static bool LibStart(string exeFile, string args, out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool suspended = false)
 		{
@@ -456,44 +457,33 @@ namespace Au
 		/// <param name="exeFile"></param>
 		/// <param name="args"></param>
 		/// <param name="inheritUiaccess"></param>
+		/// <param name="needProcessObject">Return Process object. If false (default), returns null.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
 		/// </remarks>
-		internal static Process LibStart(string exeFile, string args, bool inheritUiaccess = false)
+		internal static Process LibStart(string exeFile, string args, bool inheritUiaccess = false, bool needProcessObject = false)
 		{
-			bool canMod = _NetProcessObject.IsFast;
-			if(!LibStart(exeFile, args, out var pi, inheritUiaccess, suspended: !canMod)) throw new AuException(0, $"Failed to start process '{exeFile}'");
-			return _NetProcessObject.Create(pi, suspended: !canMod);
-		}
-
-		[Flags]
-		internal enum EStartFlags
-		{
-			/// <summary>
-			/// Returns Process object.
-			/// If no this flag, closes process handle and returns null.
-			/// </summary>
-			NeedProcessObject = 1,
-
-			/// <summary>
-			/// Inherit environment variables.
-			/// </summary>
-			InheritEnvVar = 2,
+			bool suspended = needProcessObject && !_NetProcessObject.IsFast;
+			if(!LibStart(exeFile, args, out var pi, inheritUiaccess, suspended: suspended)) throw new AuException(0, $"Failed to start process '{exeFile}'");
+			if(needProcessObject) return _NetProcessObject.Create(pi, suspended: suspended);
+			pi.Dispose();
+			return null;
 		}
 
 		/// <summary>
-		/// Starts process user process (UAC) from this admin process.
+		/// Starts UAC Medium integrity level process from this admin process.
 		/// </summary>
 		/// <param name="exeFile"></param>
 		/// <param name="args"></param>
-		/// <param name="flags"></param>
+		/// <param name="needProcessObject">Return Process object. If false (default), returns null.</param>
+		/// <param name="inheritEnvVar">Inherit environment variables.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Asserts and fails if this is not admin/system process. Caller should at first call Process_.UacInfo.IsAdmin or Process_.UacInfo.ThisProcess.IntegrityLevel.
 		/// Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
 		/// </remarks>
-		internal static Process LibStartUserIL(string exeFile, string args, EStartFlags flags)
+		internal static Process LibStartUserIL(string exeFile, string args, bool needProcessObject = false, bool inheritEnvVar = false)
 		{
 			Debug.Assert(UacInfo.IsAdmin); //cannot set privilege if user or uiAccess
 			if(!Util.Security_.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
@@ -520,14 +510,13 @@ namespace Au
 				const uint access = Api.TOKEN_QUERY | Api.TOKEN_ASSIGN_PRIMARY | Api.TOKEN_DUPLICATE | Api.TOKEN_ADJUST_DEFAULT | Api.TOKEN_ADJUST_SESSIONID;
 				if(!Api.DuplicateTokenEx(hShellToken, access, null, Api.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation, Api.TOKEN_TYPE.TokenPrimary, out hPrimaryToken)) goto ge;
 
-				bool needObject = flags.Has_(EStartFlags.NeedProcessObject);
-				bool suspended = needObject && !_NetProcessObject.IsFast;
+				bool suspended = needProcessObject && !_NetProcessObject.IsFast;
 				var x = _ParamsForCreateProcess(exeFile, args, suspended: suspended);
-				envStrings = flags.Has_(EStartFlags.InheritEnvVar) ? Api.GetEnvironmentStrings() : default;
+				envStrings = inheritEnvVar ? Api.GetEnvironmentStrings() : default;
 
 				if(!Api.CreateProcessWithTokenW(hPrimaryToken, 0, null, x.cl, x.flags, envStrings, x.dir, x.si, out pi)) goto ge;
 
-				if(needObject) return _NetProcessObject.Create(pi, suspended: suspended);
+				if(needProcessObject) return _NetProcessObject.Create(pi, suspended: suspended);
 				pi.Dispose();
 				return null;
 			}

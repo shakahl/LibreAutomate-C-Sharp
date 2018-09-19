@@ -135,6 +135,7 @@ namespace Au.Util
 		//[HandleProcessCorruptedStateExceptions, System.Security.SecurityCritical] ;;tried to enable this event for corrupted state exceptions, but does not work
 		static void _CurrentDomain_DomainExit(object sender, EventArgs e)
 		{
+			if(e is UnhandledExceptionEventArgs u && !u.IsTerminating) return;
 			var k = _eventADE;
 			if(k != null) try { k(sender, e); } catch { }
 		}

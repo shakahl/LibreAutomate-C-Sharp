@@ -461,9 +461,9 @@ partial class FileNode :ICollectionFile
 	public static Icon_.ImageCache IconCache = new Icon_.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
 
 	/// <summary>
-	/// Formats _open link tag to open this file.
+	/// Formats +open link tag to open this file.
 	/// </summary>
-	public string LinkTag => $"<_open {Guid}>{Name}<>";
+	public string LinkTag => $"<+open {Guid}>{Name}<>";
 
 	/// <summary>
 	/// Returns Name.

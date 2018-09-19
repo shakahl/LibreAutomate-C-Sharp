@@ -44,7 +44,7 @@ namespace Au.Tools
 		public CommonInfos(AuInfoBox control)
 		{
 			_control = control;
-			_control.Tags.AddLinkTag("_examples", what => _Examples(what));
+			_control.Tags.AddLinkTag("+examples", what => _Examples(what));
 		}
 
 		/// <summary>
@@ -78,7 +78,7 @@ namespace Au.Tools
 		}
 
 		const string c_infoWildex = @"
-The text is <help 0248143b-a0dd-4fa1-84f9-76831db6714a>wildcard expression<>. <_examples wildex>Examples<>.
+The text is <help 0248143b-a0dd-4fa1-84f9-76831db6714a>wildcard expression<>. <+examples wildex>Examples<>.
 Regular expression info: <link https://www.pcre.org/current/doc/html/pcre2pattern.html>syntax</link>, <link https://www.pcre.org/current/doc/html/pcre2syntax.html>syntax summary</link>, <link http://www.rexegg.com/>rexegg.com</link>, <link https://www.regular-expressions.info/>regular-expressions.info</link>.
 Can be verbatim string. Examples: <c brown>@""C:\Example""<>,  <c brown>@""**rc regular expression""<>.";
 	}

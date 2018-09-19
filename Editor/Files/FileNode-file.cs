@@ -232,7 +232,7 @@ partial class FileNode
 		f._Common_MoveCopyNew(target, pos);
 
 		if(isFolder && template.EndsWith_(" project", true)) {
-			var sm = Path.GetFileName(template); sm = sm.Remove(sm.Length - 8); //name of project's main file, without ".cs"
+			var sm = Path_.GetFileName(template); sm = sm.Remove(sm.Length - 8); //name of project's main file, without ".cs"
 			return _NI_FillProjectFolder(model, f, s_dirTemplates + template, sm);
 		}
 		return f;

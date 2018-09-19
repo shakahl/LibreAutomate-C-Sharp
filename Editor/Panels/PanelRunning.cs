@@ -74,7 +74,7 @@ class PanelRunning :Control, ITreeModel
 	{
 		//Debug_.PrintFunc();
 		Debug.Assert(nodeTag == null);
-		return Model?.Running.Items;
+		return Tasks.Items;
 	}
 
 	public bool IsLeaf(object nodeTag)
@@ -96,19 +96,20 @@ class PanelRunning :Control, ITreeModel
 		if(e.ModifierKeys != 0) return;
 		var t = e.Node.Tag as RunningTask;
 		var f = t.f;
+		bool ofThisModel = f.Model == Model;
 		switch(e.Button) {
 		case MouseButtons.Left:
-			Model.SetCurrentFile(f);
+			if(ofThisModel) Model.SetCurrentFile(f);
 			break;
 		case MouseButtons.Right:
 			var name = f.Name;
 			var m = new AuMenu();
-			m["End thread of '" + name + "'"] = o => Model.Running.EndTask(t);
-			m["End all threads of '" + name + "'"] = o => Model.Running.EndTasksOf(f);
+			m["End thread of '" + name + "'"] = o => Tasks.EndTask(t);
+			m["End all threads of '" + name + "'"] = o => Tasks.EndTasksOf(f);
 			m.Show(_c);
 			break;
 		case MouseButtons.Middle:
-			Model.CloseFile(f);
+			if(ofThisModel) Model.CloseFile(f);
 			break;
 		}
 	}

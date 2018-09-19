@@ -335,6 +335,36 @@
             Sends API <msdn>CB_SETCUEBANNER</msdn>.
             </summary>
         </member>
+        <member name="T:Au.Types.Form_">
+            <summary>
+            Can be used as base class for forms when you want to use correct dialog font and correct auto-scaling when high DPI.
+            </summary>
+            <remarks>
+            Sets these properties:
+            Font = SystemFonts.MessageBoxFont; //usually Segoe UI, 9pt //default font of Form is MS Sans Serif, 8.25pt
+            AutoScaleMode = AutoScaleMode.Font;
+            
+            The Visual Studio form designer uses these properties as default. It also adds 'this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);', it's OK.
+            note:
+            	Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font).
+            	Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form at run time.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.Form_.#ctor">
+            
+        </member>
+        <member name="P:Au.Types.Form_.IsPopup">
+            <summary>
+            Adds WS_POPUP style. Also prevents activating an unrelated window when closing this active owned nonmodal form.
+            Set it before creating; later does nothing.
+            </summary>
+        </member>
+        <member name="P:Au.Types.Form_.CreateParams">
+            
+        </member>
+        <member name="M:Au.Types.Form_.OnFormClosed(System.Windows.Forms.FormClosedEventArgs)">
+            
+        </member>
         <member name="T:Au.Types.BIEvents">
             <summary>
             Used with <see cref="T:Au.BlockUserInput"/> class to specify what user input types to block (keys, mouse).
@@ -2220,6 +2250,28 @@
             </summary>
             <param name="maxCount">The maximum number of substrings to get. If negative (default), gets all.</param>
         </member>
+        <member name="T:Au.Types.AuAppBase">
+            <summary>
+            This class is used in automation script/app files as base of their main class. Adds some features.
+            </summary>
+            <remarks>
+            This class adds these features:
+            1. Static constructor subscribes to <see cref="E:System.AppDomain.UnhandledException"/> event. On unhandled exception prints exception info. Without this class not all unhandled exceptions would be printed.
+            2. Provides function OnUnhandledException. The script/app can override it.
+            
+            More features may be added in the future.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.AuAppBase.#ctor">
+            
+        </member>
+        <member name="M:Au.Types.AuAppBase.OnUnhandledException(System.UnhandledExceptionEventArgs)">
+            <summary>
+            Prints exception info.
+            Override this function to intercept unhandled exceptions. Call the base function if want to print exception info as usually.
+            </summary>
+            <param name="e"></param>
+        </member>
         <member name="T:Au.Types.HookData">
             <summary>
             Contains types of hook data for hook procedures installed by <see cref="T:Au.Util.WinHook"/> and <see cref="T:Au.Util.AccHook"/>.
@@ -3037,6 +3089,12 @@
             <param name="errorCode">Windows API error code or HRESULT.</param>
             <param name="message">Main message. The message of the error code will be appended to it.</param>
         </member>
+        <member name="M:Au.Types.AuException.GetObjectData(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            
+        </member>
+        <member name="M:Au.Types.AuException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            
+        </member>
         <member name="T:Au.Types.WndException">
             <summary>
             Exception thrown mostly by <see cref="T:Au.Wnd"/> functions.
@@ -3086,6 +3144,12 @@
         <member name="P:Au.Types.WndException.Message">
             <summary> Gets error message. </summary>
         </member>
+        <member name="M:Au.Types.WndException.GetObjectData(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            
+        </member>
+        <member name="M:Au.Types.WndException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            
+        </member>
         <member name="T:Au.Types.NotFoundException">
             <summary>
             Functions that search for an object can throw this exception when not found.
@@ -3100,6 +3164,9 @@
             <summary>
             Sets Message = message.
             </summary>
+        </member>
+        <member name="M:Au.Types.NotFoundException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
+            
         </member>
         <member name="T:Au.Types.LPARAM">
             <summary>
@@ -3871,8 +3938,8 @@
         </member>
         <member name="F:Au.Types.DIcon.App">
             <summary>
-            Your application icon.
-            It is the first native icon of the entry assembly of this appdomain; if there are no icons - of the program file of this process (if it's different); if there are no icons too - the default program icon.
+            Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
+            If there are no icons - the default program icon.
             </summary>
         </member>
         <member name="T:Au.Types.DEdit">
@@ -6013,38 +6080,30 @@
             </summary>
             <remarks>
             If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
+            Later caller must close handles in pi, eg pi.Dispose.
             </remarks>
         </member>
-        <member name="M:Au.Process_.LibStart(System.String,System.String,System.Boolean)">
+        <member name="M:Au.Process_.LibStart(System.String,System.String,System.Boolean,System.Boolean)">
             <summary>
             Starts process using API CreateProcess, without the feedback hourglass cursor.
             </summary>
             <param name="exeFile"></param>
             <param name="args"></param>
             <param name="inheritUiaccess"></param>
+            <param name="needProcessObject">Return Process object. If false (default), returns null.</param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
             If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
             </remarks>
         </member>
-        <member name="F:Au.Process_.EStartFlags.NeedProcessObject">
+        <member name="M:Au.Process_.LibStartUserIL(System.String,System.String,System.Boolean,System.Boolean)">
             <summary>
-            Returns Process object.
-            If no this flag, closes process handle and returns null.
-            </summary>
-        </member>
-        <member name="F:Au.Process_.EStartFlags.InheritEnvVar">
-            <summary>
-            Inherit environment variables.
-            </summary>
-        </member>
-        <member name="M:Au.Process_.LibStartUserIL(System.String,System.String,Au.Process_.EStartFlags)">
-            <summary>
-            Starts process user process (UAC) from this admin process.
+            Starts UAC Medium integrity level process from this admin process.
             </summary>
             <param name="exeFile"></param>
             <param name="args"></param>
-            <param name="flags"></param>
+            <param name="needProcessObject">Return Process object. If false (default), returns null.</param>
+            <param name="inheritEnvVar">Inherit environment variables.</param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
             Asserts and fails if this is not admin/system process. Caller should at first call Process_.UacInfo.IsAdmin or Process_.UacInfo.ThisProcess.IntegrityLevel.
@@ -7635,6 +7694,30 @@
             <param name="obj">An object of any type.</param>
             <param name="size">Unmanaged memory size. It is passed to <b>GC.AddMemoryPressure</b> and <b>GC.RemoveMemoryPressure</b>.</param>
         </member>
+        <member name="T:Au.Util.LibSerializer">
+            <summary>
+            Binary-serializes and deserializes multiple values of types int and string.
+            Much faster than BinaryFormatter, CSV, etc.
+            </summary>
+        </member>
+        <member name="T:Au.Util.LibSerializer.Value">
+            <summary>
+            Type of input and output values of <see cref="T:Au.Util.LibSerializer"/> functions.
+            Has implicit conversions from/to int and string.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibSerializer.Serialize(Au.Util.LibSerializer.Value[])">
+            <summary>
+            Serializes multiple values of types int and string.
+            The returned array can be passed to <see cref="M:Au.Util.LibSerializer.Deserialize(System.Byte[])"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibSerializer.Deserialize(System.Byte[])">
+            <summary>
+            Deserializes values serialized by <see cref="M:Au.Util.LibSerializer.Serialize(Au.Util.LibSerializer.Value[])"/>.
+            Returns array of values passed to <b>Serialize</b>.
+            </summary>
+        </member>
         <member name="T:Au.Util.MessageLoop">
             <summary>
             A message loop, alternative to Application.Run which does not support nested loops.
@@ -7815,13 +7898,13 @@
         <member name="M:Au.Util.ModuleHandle_.OfAssembly(System.Reflection.Assembly)">
             <summary>
             Gets native module handle of an assembly.
-            If the assembly consists of multiple modules, gets its first loaded module.
+            Returns default(IntPtr) if <paramref name="asm"/> is null or if the assembly is in-memory (loaded from byte[]) or dynamic.
             </summary>
         </member>
         <member name="M:Au.Util.ModuleHandle_.OfAppDomainEntryAssembly">
             <summary>
             Gets native module handle of the entry assembly of this appdomain.
-            If the assembly consists of multiple modules, gets its first loaded module.
+            Returns default(IntPtr) if the assembly is in-memory (loaded from byte[]) or dynamic.
             </summary>
         </member>
         <member name="M:Au.Util.ModuleHandle_.OfAuDll">
@@ -7832,14 +7915,6 @@
         <member name="M:Au.Util.ModuleHandle_.OfProcessExe">
             <summary>
             Gets native module handle of the program file of this process.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ModuleHandle_.OfAppIcon">
-            <summary>
-            Gets native module handle of the assembly containing native icon that can be displayed as icon of this app.
-            Some API functions need it when you use <msdn>IDI_APPLICATION</msdn>.
-            If the entry assembly of this appdomain is dll with icon, gets dll handle; else gets exe handle.
-            Returns default(IntPtr) if there are no native icons.
             </summary>
         </member>
         <member name="M:Au.Util.ModuleHandle_.GetFilePath(System.IntPtr)">
@@ -7866,7 +7941,7 @@
             It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
             </summary>
         </member>
-        <member name="M:Au.Util.Assembly_.IsAssemblyNgened(System.Reflection.Assembly)">
+        <member name="M:Au.Util.Assembly_.IsNgened(System.Reflection.Assembly)">
             <summary>
             Returns true if assembly asm is compiled to native code using ngen.exe.
             It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
@@ -12281,7 +12356,7 @@
         </member>
         <member name="M:Au.LibRun.RunAsm.LibRunHere(System.Reflection.Assembly,System.String[])">
             <summary>
-            Internal. To run in main appdomain and nonmain thread.
+            Internal. To run in main appdomain in nonmain thread.
             </summary>
         </member>
         <member name="M:Au.LibRun.RunAsm.LibLoadAssembly(System.String,System.Int32,System.Boolean)">
@@ -12307,11 +12382,6 @@
         <member name="T:Au.LibRun.RHFlags">
             <summary>
             Flags for RunAsm.RunHere.
-            </summary>
-        </member>
-        <member name="F:Au.LibRun.RHFlags.DontHandleExceptions">
-            <summary>
-            Don't handle exceptions.
             </summary>
         </member>
         <member name="T:Au.LibRun.RFlags">
@@ -12371,7 +12441,7 @@
             <param name="onProgramExit">Terminate threads that cannot be ended normally.</param>
             <remarks>
             It it is process, kills it instantly.
-            Else calls Thread.Abort etc; it may end thread now or later or never. Waits briefly, but does not throw exception etc if not ended.
+            Else closes thread windows, calls Thread.Abort, etc; it may end thread now or later or never. Waits briefly, but does not throw exception etc if not ended.
             Don't call this func to end tasks started through other process. It can only end locally started task.
             </remarks>
         </member>
@@ -12950,6 +13020,44 @@
             <summary>
             Returns true if character c == '\\' || c == '/'.
             </summary>
+        </member>
+        <member name="M:Au.File_.OpenWithFunc``1(System.Func{``0},System.Int32)">
+            <summary>
+            This function can be used to safely open a file that may be temporarily locked, for example used by another process or thread. Waits while the file is locked.
+            </summary>
+            <returns>Returns the return value of the lambda <paramref name="f"/>.</returns>
+            <param name="f">Lambda that calls a function that creates, opens or opens/reads/closes a file.</param>
+            <param name="timeoutMS">Wait max this number of milliseconds. Can be <see cref="F:System.Threading.Timeout.Infinite"/> (-1).</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">timeoutMS less than -1.</exception>
+            <exception cref="T:System.Exception">Exceptions thrown by the called function.</exception>
+            <remarks>
+            This function calls the lambda and handles <b>IOException</b>. If the exception indicates that the file is locked, waits and retries in loop.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            var s1 = File.ReadAllText(file); //unsafe. Exception if the file is locked.
+            
+            var s2 = File_.OpenWithFunc(() => File.ReadAllText(file)); //safe. Waits while the file is locked.
+            
+            using(var f = File_.OpenWithFunc(() => File.OpenText(file))) { //safe. Waits while the file is locked.
+            	var s3 = f.ReadToEnd();
+            }
+            
+            using(var f = File_.OpenWithFunc(() => File.Create(file))) { //safe. Waits while the file is locked.
+            	f.WriteByte(1);
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.File_.OpenWithAction(System.Action,System.Int32)">
+            <inheritdoc cref="M:Au.File_.OpenWithFunc``1(System.Func{``0},System.Int32)"/>
+            <example>
+            <code><![CDATA[
+            File.WriteAllText(file, "TEXT"); //unsafe. Exception if the file is locked.
+            
+            File_.OpenWithAction(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
+            ]]></code>
+            </example>
         </member>
         <member name="T:Au.Shell">
             <summary>
@@ -20481,8 +20589,7 @@
         </member>
         <member name="M:Au.Icon_.GetAppIcon(System.Int32)">
             <summary>
-            Gets the first icon from unmanaged resources of this app.
-            If the entry assembly of this appdomain is dll with icon, gets that icon; else gets exe icon.
+            Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
             </summary>
             <returns>Returns null if there are no icons.</returns>
             <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>

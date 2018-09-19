@@ -77,6 +77,8 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Acc, tools, etc.txt" />
+    <Content Include="Keyb etc.txt" />
     <Content Include="Properties\function.ico" />
     <Content Include="_TestOld.txt" />
   </ItemGroup>

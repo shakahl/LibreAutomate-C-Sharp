@@ -36,7 +36,6 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	public readonly string StateFile;
 	public readonly Dictionary<string, FileNode> GuidMap;
 	public readonly List<FileNode> OpenFiles;
-	public readonly RunningTasks Running;
 	public readonly AutoSave Save;
 
 	/// <summary>
@@ -64,7 +63,6 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		if(TV != null) { //null when importing
 			Save = new AutoSave(this);
 			OpenFiles = new List<FileNode>();
-			Running = new RunningTasks();
 			_InitClickSelect();
 			_InitDragDrop();
 			_InitWatcher();
@@ -83,7 +81,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		if(Save != null) { //null when importing
 
 			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
-			Running.Dispose();
+			Tasks.OnCollectionClosed();
 			Save.Dispose();
 			_UninitWatcher();
 			_UninitClickSelect();

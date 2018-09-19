@@ -62,7 +62,7 @@ class PanelOutput :Control
 					{
 						var f = Model.FindByFilePath(x[1].Value);
 						if(f == null) return x[0].Value;
-						return $"<_open {f.Guid}|{x[3].Value}|{x[4].Value}>{f.Name}{x[2].Value}<>: ";
+						return $"<+open {f.Guid}|{x[3].Value}|{x[4].Value}>{f.Name}{x[2].Value}<>: ";
 					});
 				} else if(s.Contains(":line ")) { //stack trace
 					if(s_rx2 == null) s_rx2 = new Regex_(@"(?m)^(\s+at .+) in (.+?):line (\d+)$");
@@ -71,13 +71,14 @@ class PanelOutput :Control
 						var f = Model.FindByFilePath(x[2].Value);
 						if(f == null) return x[0].Value;
 						var line = x[3].Value;
-						return $"{x[1].Value.Limit_(70)} in <_open {f.Guid}|{line}>{f.Name}<>:line {line}";
+						return $"{x[1].Value.Limit_(70)} in <+open {f.Guid}|{line}>{f.Name}<>:line {line}";
 					});
 					if(!ReferenceEquals(s, s2)) {
 						if(!s2.StartsWith_("<>")) s2 = "<>" + s2;
 						m.Text = s2;
 					}
 				}
+				//SHOULDDO: escape non-link text with <_>...</_>.
 			}
 		});
 	}
@@ -171,7 +172,7 @@ class PanelOutput :Control
 			InitImagesStyle = ImagesStyle.ImageTag;
 
 			SciTags.AddCommonLinkTag("open", s => _OpenLink(false, s));
-			SciTags.AddCommonLinkTag("_open", s => _OpenLink(true, s));
+			SciTags.AddCommonLinkTag("+open", s => _OpenLink(true, s));
 		}
 
 		protected override void OnHandleCreated(EventArgs e)

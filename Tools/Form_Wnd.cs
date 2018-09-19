@@ -629,14 +629,14 @@ namespace Au.Tools
 				if(wcp == 2 && c.Is0) wcp = 1;
 				if(!w.IsAlive) return "";
 				if(wcp == 1) { //window
-					b.AppendLine("<Z #B0E0B0><b>Window<>    <_switch 2>Control<>    <_switch 3>Process<><>");
+					b.AppendLine("<Z #B0E0B0><b>Window<>    <+switch 2>Control<>    <+switch 3>Process<><>");
 					if(wClass == null) {
 						wClass = w.ClassName;
 						wName = w.Name;
 					}
 					_Common(false, b, w, wName, wClass);
 				} else if(wcp == 2) { //control
-					b.AppendLine("<Z #B0E0B0><_switch 1>Window<>    <b>Control<>    <_switch 3>Process<><>");
+					b.AppendLine("<Z #B0E0B0><+switch 1>Window<>    <b>Control<>    <+switch 3>Process<><>");
 					if(c.IsAlive) {
 						if(cClass == null) {
 							cClass = c.ClassName;
@@ -650,7 +650,7 @@ namespace Au.Tools
 						_Common(true, b, c, cName, cClass);
 					}
 				} else { //program
-					b.AppendLine("<Z #B0E0B0><_switch 1>Window<>    <_switch 2>Control<>    <b>Process<><>");
+					b.AppendLine("<Z #B0E0B0><+switch 1>Window<>    <+switch 2>Control<>    <b>Process<><>");
 					g1:
 					if(wProg == null) {
 						wProg = w.ProgramName;
@@ -698,13 +698,13 @@ namespace Au.Tools
 					if(!Empty(cWF)) b.Append("<i>NameWinForms<>:    ").AppendLine(cWF);
 					if(!Empty(cText)) b.Append("<i>ControlText<>:    ").Append("<_>").Append(cText.Escape_(10000, true)).AppendLine("</_>");
 					b.Append("<i>ControlId<>:    ").AppendLine(cId.ToString());
-					b.AppendFormat("<_rect {0}><i>RectInWindow<><>:    ", sh).AppendLine(w.RectInWindow.ToString());
+					b.AppendFormat("<+rect {0}><i>RectInWindow<><>:    ", sh).AppendLine(w.RectInWindow.ToString());
 				} else {
 					var wo = w.Owner;
-					if(!wo.Is0) b.AppendFormat("<_rect {0}><i>Owner<><>:    ", wo.Handle.ToString()).AppendLine(wo.ToString());
-					b.AppendFormat("<_rect {0}><i>Rect<><>:    ", sh).AppendLine(w.Rect.ToString());
+					if(!wo.Is0) b.AppendFormat("<+rect {0}><i>Owner<><>:    ", wo.Handle.ToString()).AppendLine(wo.ToString());
+					b.AppendFormat("<+rect {0}><i>Rect<><>:    ", sh).AppendLine(w.Rect.ToString());
 				}
-				b.AppendFormat("<_rect {0} 1><i>ClientRect<><>:    ", sh).AppendLine(w.ClientRect.ToString());
+				b.AppendFormat("<+rect {0} 1><i>ClientRect<><>:    ", sh).AppendLine(w.ClientRect.ToString());
 				var style = w.Style;
 				s = (style & (Native.WS)0xffff0000).ToString();
 				if(isCon) s = s.Replace("MINIMIZEBOX", "GROUP").Replace("MAXIMIZEBOX", "TABSTOP");
@@ -746,12 +746,12 @@ namespace Au.Tools
 		{
 			if(_wiWCP == 0) {
 				_wiWCP = 1;
-				_winInfo.Tags.AddLinkTag("_switch", s =>
+				_winInfo.Tags.AddLinkTag("+switch", s =>
 				{
 					_wiWCP = s.ToInt_();
                     _SetText(default);
 				});
-				_winInfo.Tags.AddLinkTag("_rect", s =>
+				_winInfo.Tags.AddLinkTag("+rect", s =>
 				{
 					var w = (Wnd)(LPARAM)s.ToInt_(0, out int e);
 					int client = s.ToInt_(e);
@@ -796,7 +796,7 @@ namespace Au.Tools
 
 			_commonInfos = new CommonInfos(_info);
 
-			_info.Tags.AddLinkTag("_resetInfo", _ => _SetFormInfo(null));
+			_info.Tags.AddLinkTag("+resetInfo", _ => _SetFormInfo(null));
 		}
 
 		string _propError;

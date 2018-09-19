@@ -22,6 +22,7 @@ using System.Runtime;
 using Au;
 using Au.Types;
 using static Au.NoClass;
+using System.Runtime.Remoting;
 
 static class Program
 {
@@ -40,6 +41,8 @@ static class Program
 		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
 		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
 		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb_big();
+
+		//Process.GetCurrentProcess().ProcessorAffinity = (IntPtr)1; //test how works with 1 CPU
 
 		Perf.First();
 
@@ -79,6 +82,7 @@ static class Program
 	internal static ProgramSettings Settings;
 	internal static EForm MainForm;
 	internal static FilesModel Model;
+	internal static RunningTasks Tasks;
 
 	internal static event Action Timer1s;
 
