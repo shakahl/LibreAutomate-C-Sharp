@@ -20,7 +20,7 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 using Aga.Controls.Tree;
-using Aga.Controls.Tree.NodeControls;
+using LiteDB;
 
 partial class FileNode
 {
@@ -54,11 +54,11 @@ partial class FileNode
 				File_.Rename(this.FilePath, name, IfExists.Fail);
 			}
 			catch(Exception ex) { Print(ex.Message); return false; }
-			//if(IsLink(out string sp)) _x.SetAttributeValue("path", Path_.GetDirectoryPath(sp, true) + name); //if we would rename the taget file
+			//if(IsLink(out string sp)) _x.SetAttributeValue(s_xnPath, Path_.GetDirectoryPath(sp, true) + name); //if we would rename the target file
 		}
 
-		_x.SetAttributeValue("n", name);
-		if(notifyControl) UpdateControl(true);
+		_x.SetAttributeValue(XN.n, name);
+		if(notifyControl) UpdateControlRow();
 		_model.Save.CollectionLater();
 		return true;
 	}
@@ -148,12 +148,12 @@ partial class FileNode
 	{
 		//clone XML (with attributes and descendants) and set unique GUIDs
 		var xNew = new XElement(_x);
-		foreach(var v in xNew.DescendantsAndSelf()) v.SetAttributeValue("g", null); //will auto-create
+		foreach(var v in xNew.DescendantsAndSelf()) v.SetAttributeValue(XN.g, null); //will auto-create
 
 		//create unique name
 		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
 		string name = CreateNameUniqueInFolder(newParent, Name, this.IsFolder);
-		xNew.SetAttributeValue("n", name);
+		xNew.SetAttributeValue(XN.n, name);
 
 		//copy file or directory
 		if(!IsLink()) {
@@ -208,7 +208,7 @@ partial class FileNode
 			}
 		}
 
-		var xNew = new XElement(isFolder ? "d" : "f");
+		var xNew = new XElement(isFolder ? XN.d : XN.f);
 
 		//create unique name
 		if(name == null) {
@@ -217,7 +217,7 @@ partial class FileNode
 			if(!isFolder && (i = name.LastIndexOf('.')) > 0) name = name.Insert(i, "1"); else name += "1";
 		}
 		name = CreateNameUniqueInFolder(newParent, name, isFolder);
-		xNew.SetAttributeValue("n", name);
+		xNew.SetAttributeValue(XN.n, name);
 
 		//create file or folder
 		try {
@@ -251,7 +251,7 @@ partial class FileNode
 					var s1 = v.Name;
 					if(s1.Equals_(mainName, true) || Path_.GetFileNameWithoutExtension(s1).Equals_(mainName, true)) {
 						mainName = null;
-						fnParent.Xml.SetAttributeValue("project", f.Guid);
+						fnParent.Xml.SetAttributeValue(XN.project, f.Guid);
 						fnMain = f;
 					}
 				}
@@ -299,31 +299,34 @@ partial class FileNode
 
 		bool _Exists(string s)
 		{
-			if(null != folder.Xml.Element_(null, "n", s, true)) return true;
+			if(null != folder.Xml.Element_(null, XN.n, s, true)) return true;
 			if(File_.ExistsAsAny(folder.FilePath + "\\" + s)) return true; //orphaned file?
 			return false;
 		}
 	}
 
 	/// <summary>
-	/// Deletes this item and optionally its file. If folder - deletes descendants too.
-	/// Before deleting, calls CloseFile (for descendants too).
-	/// By default does not delete the link target file.
+	/// Deletes this item and optionally its file. If folder, deletes descendants too. Closes documents in code editor.
 	/// </summary>
-	public bool FileDelete(bool tryRecycleBin = true, bool doNotDeleteFile = false, bool canDeleteLinkTarget = false)
+	public bool FileDelete(bool doNotDeleteFile = false, bool tryRecycleBin = true, bool canDeleteLinkTarget = false)
 	{
-		var e = _x.DescendantsAndSelf().Select(v => FromX(v));
+		var e = Descendants(true);
 
-		foreach(var f in e) _model.CloseFile(f);
+		_model.CloseFiles(e);
 
 		if(!doNotDeleteFile && (canDeleteLinkTarget || !IsLink())) {
-			try {
-				File_.Delete(this.FilePath, tryRecycleBin);
-			}
+			try { File_.Delete(this.FilePath, tryRecycleBin); }
 			catch(Exception ex) { Print(ex.Message); return false; }
+		} else {
+			Print($"<>File not deleted: <explore>{FilePath}<>");
 		}
 
-		foreach(var f in e) _model.GuidMap.Remove(f.Guid);
+		foreach(var f in e) {
+			var guid = f.Guid;
+			_model.TableEdit?.Delete(guid);
+			_model.GuidMap.Remove(guid);
+		}
+
 		_model.OnNodeRemoved(this);
 		_x.Remove();
 

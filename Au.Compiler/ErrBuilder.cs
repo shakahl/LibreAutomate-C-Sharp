@@ -132,8 +132,19 @@ namespace Au.Compiler
 			//header line
 			_b.AppendFormat("<><Z #{0}>Compilation: ", ErrorCount != 0 ? "F0E080" : "A0E0A0");
 			if(ErrorCount != 0) _b.Append(ErrorCount).Append(" errors").Append(WarningCount != 0 ? ", " : "");
-			if(WarningCount != 0) _b.Append(WarningCount).Append(@" warnings <print Examples of disabling certain warnings: 1. #pragma warning disable 168, 649 ... #pragma warning restore. 2. /* meta disableWarnings 168, 649 */. The first disables in several lines of code; can be anywhere in code. The second disables in whole compilation; meta comments must be at the very start of code.>?<>");
+			if(WarningCount != 0) _b.Append(WarningCount).Append(
+@" warnings <fold>	Example of disabling some warnings in several lines of code:
+<code>		#pragma warning disable 168, 649
+		code
+		code
+		#pragma warning restore
+</code>	Example of disabling some warnings in whole compilation (at the very start of code):
+<code>		/* meta
+		disableWarnings 168, 649
+		*/
+</code>	Also look in program options, maybe you can disable some warnings in all scripts.</fold>");
 			_b.AppendLine("<>");
+			//FUTURE: this should be <help>, not <fold>.
 			
 			//errors and warnings
 			_b.Append(s);

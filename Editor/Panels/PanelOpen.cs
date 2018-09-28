@@ -57,6 +57,7 @@ class PanelOpen :Control, ITreeModel
 		_ccName.ValueNeeded = node => (node.Tag as FileNode).Name;
 
 		_c.NodeMouseClick += _c_NodeMouseClick;
+		_c.NodeMouseDoubleClick += _c_NodeMouseClick;
 
 		this.Controls.Add(_c);
 	}
@@ -66,32 +67,27 @@ class PanelOpen :Control, ITreeModel
 	public void UpdateList()
 	{
 		//Debug_.PrintFunc();
-		//Perf.First();
-		//_c.Model = null; _c.Model = this; //works, but slightly slower and maybe less correct
+		bool cmdPrevDisable = (Model?.OpenFiles.Count ?? 0) < 2;
+		if(cmdPrevDisable != _cmdPrevDisabled) {
+			_cmdPrevDisabled = cmdPrevDisable;
+			Strips.EnableCmd(nameof(CmdHandlers.File_PreviousDocument), !cmdPrevDisable);
+		}
 		if(_c.Model == null) _c.Model = this; else StructureChanged?.Invoke(this, new TreePathEventArgs(TreePath.Empty));
-		//Perf.NW();
 	}
+	bool _cmdPrevDisabled;
 
 	public void UpdateCurrent(FileNode fn)
 	{
+		//Debug_.PrintFunc();
 		if(fn == null) _c.ClearSelection();
 		else _c.SelectedNode = _c.FindNodeByTag(fn);
-		//Debug_.PrintFunc();
 	}
 
 	#region ITreeModel
 
-	public IEnumerable GetChildren(object nodeTag)
-	{
-		//Debug_.PrintFunc();
-		Debug.Assert(nodeTag == null);
-		return Model?.OpenFiles.AsEnumerable().Reverse();
-	}
+	public IEnumerable GetChildren(object nodeTag) => Model?.OpenFiles;
 
-	public bool IsLeaf(object nodeTag)
-	{
-		return true;
-	}
+	public bool IsLeaf(object nodeTag) => true;
 
 #pragma warning disable 67
 	public event EventHandler<TreeModelEventArgs> NodesChanged;
@@ -115,7 +111,7 @@ class PanelOpen :Control, ITreeModel
 			//_c.BeginInvoke(new Action(() => _ItemRightClicked(f)));
 			break;
 		case MouseButtons.Middle:
-			Model.CloseFile(f);
+			Model.CloseFile(f, true);
 			break;
 		}
 	}

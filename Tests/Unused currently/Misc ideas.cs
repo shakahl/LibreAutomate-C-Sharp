@@ -124,4 +124,19 @@ static partial class Test
 	}
 
 	//public delegate string FuncSS(string s);
+
+
+
+	/*
+	print(...); //Output.Write(...);
+	key(...); //Keyb.Key(...);
+	tkey(...); //Keyb.Text(...); //or txt
+	paste(...); //Keyb.Paste(...);
+	msgbox(...); //AuDialog.Show(...);
+	click(...); //Mouse.Click(...);
+	mmove(...); //Mouse.Move(...);
+	run(...); //Shell.Run(...);
+	act(...); //Wnd.Activate(...);
+	win(...); //Wnd.Find(...);
+	*/
 }

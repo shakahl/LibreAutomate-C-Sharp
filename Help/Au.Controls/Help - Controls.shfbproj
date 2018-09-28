@@ -35,7 +35,8 @@
     <VisibleItems>InheritedMembers, Protected, ProtectedInternalAsProtected</VisibleItems>
     <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <DocumentationSources>
-      <DocumentationSource sourceFile="..\..\Controls\Au.Controls.csproj" xmlns="" />
+      <DocumentationSource sourceFile="..\..\Controls\bin\Release\Au.Controls.dll" />
+      <DocumentationSource sourceFile="..\..\Controls\bin\Release\Au.Controls.xml" />
     </DocumentationSources>
     <SaveComponentCacheCapacity>100</SaveComponentCacheCapacity>
     <BuildAssemblerVerbosity>OnlyWarningsAndErrors</BuildAssemblerVerbosity>
@@ -67,7 +68,10 @@
       <PlugInConfig id="LineBreaks" enabled="True" xmlns="">
         <configuration />
       </PlugInConfig>
-<PlugInConfig id="Table of Contents Exclusion" enabled="True" xmlns=""><configuration /></PlugInConfig></PlugInConfigurations>
+      <PlugInConfig id="Table of Contents Exclusion" enabled="True" xmlns="">
+        <configuration />
+      </PlugInConfig>
+    </PlugInConfigurations>
   </PropertyGroup>
   <!-- There are no properties for these groups.  AnyCPU needs to appear in order for Visual Studio to perform
 			 the build.  The others are optional common platform types that may appear. -->

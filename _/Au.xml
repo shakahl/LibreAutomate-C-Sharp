@@ -1477,6 +1477,11 @@
             ]]></code>
             </example>
         </member>
+        <member name="M:Au.Types.ExtensionMethods.ToStringWithoutStack_(System.Exception)">
+            <summary>
+            Returns string containing exception type name and message.
+            </summary>
+        </member>
         <member name="M:Au.Types.ExtensionMethods.MouseMove(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
             <inheritdoc cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>
             <summary>
@@ -4659,6 +4664,12 @@
             The number in string is hexadecimal without a prefix, like "1A".
             </summary>
         </member>
+        <member name="F:Au.Types.STIFlags.DoNotSkipSpaces">
+            <summary>
+            If string starts with a space, return 0.
+            For example, if string is " 5" return 0, not 5. 
+            </summary>
+        </member>
         <member name="T:Au.Acc">
             <summary>
             Accessible object.
@@ -6425,9 +6436,9 @@
             To convert to string: <c>DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime().ToString()</c>.
             </summary>
         </member>
-        <member name="P:Au.Util.OutputServer.Message.Domain">
+        <member name="P:Au.Util.OutputServer.Message.Caller">
             <summary>
-            The name of the appdomain that called the Write/Print/etc method.
+            The <see cref="P:Au.Script.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
             Used with MessageType.Write.
             </summary>
         </member>
@@ -6544,6 +6555,14 @@
             </summary>
             <value>The length.</value>
         </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
+        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -6658,6 +6677,15 @@
             <param name="tail">Receives the string part that follows the number, or "". Receives null if no number. Can be this variable.</param>
             <param name="startIndex">Offset in this string where to start parsing.</param>
             <param name="flags"></param>
+        </member>
+        <member name="M:Au.Util.StringMisc.StringToIntArray(System.String)">
+            <summary>
+            Creates int[] from string containing space-separated numbers, like "4 100 -8 0x10".
+            </summary>
+            <param name="s">Decimal or/and hexadecimal numbers separated by single space. If null or "", returns empty array.</param>
+            <remarks>
+            For vice versa use <c>string.Join(" ", array)</c>.
+            </remarks>
         </member>
         <member name="T:Au.Util.LibScreenDC">
             <summary>
@@ -7067,6 +7095,14 @@
         </member>
         <member name="M:Au.Util.WinHook.Finalize">
             
+        </member>
+        <member name="M:Au.Util.WinHook.LibOnException(System.Exception,System.IDisposable)">
+            <summary>
+            Call on any catched exception in a hook procedure.
+            Returns true if it is ThreadAbortException.
+            </summary>
+            <param name="e"></param>
+            <param name="hook">On ThreadAbortException calls hook.Dispose.</param>
         </member>
         <member name="T:Au.Util.AccHook">
             <summary>
@@ -13049,13 +13085,13 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.File_.OpenWithAction(System.Action,System.Int32)">
+        <member name="M:Au.File_.OpenWithFunc(System.Action,System.Int32)">
             <inheritdoc cref="M:Au.File_.OpenWithFunc``1(System.Func{``0},System.Int32)"/>
             <example>
             <code><![CDATA[
             File.WriteAllText(file, "TEXT"); //unsafe. Exception if the file is locked.
             
-            File_.OpenWithAction(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
+            File_.OpenWithFunc(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
             ]]></code>
             </example>
         </member>
@@ -16459,24 +16495,17 @@
             CSV is a text format used to store a single table of data in human-readable/editable way.
             It is a list of lines (called rows or records) containing one or more values (called fields or cells) separated by a separator character.
             There is no strictly defined CSV standard. <b>CsvTable</b> uses these rules:
-            	Fields containg <see cref="P:Au.CsvTable.Separator"/> characters (default ','), <see cref="P:Au.CsvTable.Quote"/> characters (default '"') and multiple lines must be enclosed in <see cref="P:Au.CsvTable.Quote"/> characters. Example: "ab, cd".
-            	Each Quote character in such fields must be escaped (replaced) with two <see cref="P:Au.CsvTable.Quote"/> characters. Example: "ab ""cd"" ef".
-            	Fields that start or end with ASCII space or tab characters must be enclosed in <see cref="P:Au.CsvTable.Quote"/> characters, unless <see cref="P:Au.CsvTable.TrimSpaces"/> is false. Example: " ab ".
-            	Rows in CSV text can have different field count.
+            	Fields containg separator characters (default ','), quote characters (default '"') and multiple lines are enclosed in quote characters. Example: "ab, cd".
+            	Each quote character in such fields is escaped (replaced) with two quote characters. Example: "ab ""cd"" ef".
+            	If a field value starts or ends with ASCII space or tab characters, it is enclosed in quote characters. Example: " ab ". Or use parameter <i>trimSpaces</i> false when parsing.
+            	Rows in CSV text can have different field count. All rows in in-memory CSV table have equal field count.
             </remarks>
         </member>
         <member name="M:Au.CsvTable.#ctor">
-            
-        </member>
-        <member name="M:Au.CsvTable.#ctor(System.String)">
             <summary>
-            Initializes a new <see cref="T:Au.CsvTable"/> instance and parses CSV text, the same as <see cref="M:Au.CsvTable.FromString(System.String)"/>.
+            Initializes new <see cref="T:Au.CsvTable"/> variable that can be used to add rows.
+            To create new variables from CSV text, file or dictionary, instead use static functions, for example <see cref="M:Au.CsvTable.Parse(System.String,System.Char,System.Char,System.Boolean)"/>.
             </summary>
-            <param name="csv">CSV text.</param>
-            <exception cref="T:Au.Types.AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
-            <remarks>
-            Uses default <see cref="P:Au.CsvTable.Separator"/>, <see cref="P:Au.CsvTable.Quote"/> and <see cref="P:Au.CsvTable.TrimSpaces"/> values (',', '"', true).
-            </remarks>
         </member>
         <member name="P:Au.CsvTable.Data">
             <summary>
@@ -16491,34 +16520,28 @@
         </member>
         <member name="P:Au.CsvTable.Separator">
             <summary>
-            Sets or gets the field separator character used when parsing and composing CSV text.
+            Sets or gets the field separator character used when composing CSV text.
             Initially it is ','.
             </summary>
         </member>
         <member name="P:Au.CsvTable.Quote">
             <summary>
-            Sets or gets the quote character used when parsing and composing CSV text.
+            Sets or gets the quote character used when composing CSV text.
             Initially it is '"'.
             </summary>
         </member>
-        <member name="P:Au.CsvTable.TrimSpaces">
+        <member name="M:Au.CsvTable.Parse(System.String,System.Char,System.Char,System.Boolean)">
             <summary>
-            Whether to ignore ASCII space and tab characters at the beginning and end of fields when parsing CSV.
-            Initially true.
-            </summary>
-        </member>
-        <member name="M:Au.CsvTable.FromString(System.String)">
-            <summary>
-            Parses CSV text and stores all data in internal <b>List</b> of string arrays.
+            Parses CSV string and creates new <see cref="T:Au.CsvTable"/> variable that contains all data in internal <b>List</b> of string arrays.
             </summary>
             <param name="csv">
             CSV text.
-            If rows in CSV text have different field count, the longest row sets the <see cref="P:Au.CsvTable.ColumnCount"/> property and all row array lenghts; array elements of missing CSV fields will be null.
+            If rows in CSV text have different field count, the longest row sets the <see cref="P:Au.CsvTable.ColumnCount"/> property and lenghts of all row arrays; array elements of missing CSV fields will be null.
             </param>
+            <param name="separator">Field separator character used in CSV text. Default ','.</param>
+            <param name="quote">Character used in CSV text to enclose some fields. Default '"'.</param>
+            <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
             <exception cref="T:Au.Types.AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
-            <remarks>
-            Depends on these properties: <see cref="P:Au.CsvTable.Separator"/> (initially ','), <see cref="P:Au.CsvTable.Quote"/> (initially '"'), <see cref="P:Au.CsvTable.TrimSpaces"/> (initially true).
-            </remarks>
         </member>
         <member name="M:Au.CsvTable.ToString">
             <summary>
@@ -16592,26 +16615,74 @@
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <exception cref="T:System.ArgumentException"></exception>
         </member>
-        <member name="M:Au.CsvTable.FromFile(System.String)">
+        <member name="M:Au.CsvTable.Load(System.String,System.Char,System.Char,System.Boolean)">
             <summary>
             Loads and parses a CSV file.
             </summary>
-            <param name="file"></param>
+            <param name="file">Full path of CSV file.</param>
+            <param name="separator">Field separator character used in CSV text. Default ','.</param>
+            <param name="quote">Character used in CSV text to enclose some fields. Default '"'.</param>
+            <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
             <exception cref="T:Au.Types.AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.IO.File.ReadAllText(System.String)"/>.</exception>
             <remarks>
-            Calls <see cref="M:System.IO.File.ReadAllText(System.String)"/> and <see cref="M:Au.CsvTable.FromString(System.String)"/>.
+            Calls <see cref="M:System.IO.File.ReadAllText(System.String)"/> and <see cref="M:Au.CsvTable.Parse(System.String,System.Char,System.Char,System.Boolean)"/>. Also uses <see cref="M:Au.File_.OpenWithFunc(System.Action,System.Int32)"/>.
             </remarks>
         </member>
-        <member name="M:Au.CsvTable.ToFile(System.String)">
+        <member name="M:Au.CsvTable.Save(System.String)">
             <summary>
             Composes CSV and saves to file.
             </summary>
-            <param name="file"></param>
+            <param name="file">Full path of CSV file.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.IO.File.WriteAllText(System.String,System.String)"/>.</exception>
             <remarks>
-            Calls <see cref="M:Au.CsvTable.ToString"/> and <see cref="M:System.IO.File.WriteAllText(System.String,System.String)"/>.
+            Calls <see cref="M:Au.CsvTable.ToString"/> and <see cref="M:System.IO.File.WriteAllText(System.String,System.String)"/>. Also uses <see cref="M:Au.File_.OpenWithFunc(System.Action,System.Int32)"/>.
             </remarks>
+        </member>
+        <member name="M:Au.CsvTable.FromDictionary(System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Creates 2-column CSV table from dictionary keys and values of type string.
+            </summary>
+            <param name="d"></param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Au.CsvTable.FromDictionary``1(System.Collections.Generic.Dictionary{System.String,``0},System.Func{``0,System.String})">
+            <summary>
+            Creates 2-column CSV table from dictionary keys and values of any type, using a callback function to convert values to string.
+            </summary>
+            <param name="d"></param>
+            <param name="valueToString">Callback function that converts value of type T to string.</param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+        </member>
+        <member name="M:Au.CsvTable.FromDictionary``1(System.Collections.Generic.Dictionary{System.String,``0},System.Int32,System.Action{``0,System.String[]})">
+            <summary>
+            Creates CSV table of any column count from dictionary keys and values of any type, using a callback function to convert values to cell strings.
+            </summary>
+            <param name="d"></param>
+            <param name="columnCount">CSV column count. Must be 2 or more.</param>
+            <param name="valueToCells">Callback function that converts value of type T to one or more strings and puts them in row array elements starting from index 1. At index 0 is key.</param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">columnCount less than 2.</exception>
+        </member>
+        <member name="M:Au.CsvTable.ToDictionary(System.Boolean,System.Boolean)">
+            <summary>
+            Creates dictionary from this 2-column CSV table.
+            </summary>
+            <param name="ignoreCase">Case-insensitive dictionary keys.</param>
+            <param name="ignoreDuplicates">Don't throw exception if column 0 contains duplicate strings. Replace old value with new value.</param>
+            <exception cref="T:System.InvalidOperationException"><b>ColumnCount</b> not 2.</exception>
+            <exception cref="T:System.ArgumentException">Column 0 contains duplicate strings.</exception>
+        </member>
+        <member name="M:Au.CsvTable.ToDictionary``1(System.Boolean,System.Boolean,System.Func{System.String[],``0})">
+            <summary>
+            Creates dictionary from this CSV table of any column count, using a callback function to convert cell strings to dictionary values of any type.
+            </summary>
+            <param name="ignoreCase">Case-insensitive dictionary keys.</param>
+            <param name="ignoreDuplicates">Don't throw exception if column 0 contains duplicate strings. Replace old value with new value.</param>
+            <param name="rowToValue">Callback function that converts one or more cell strings to single value of type T. The array is whole row; element 0 is key, and usually is not used.</param>
+            <exception cref="T:System.ArgumentNullException"></exception>
+            <exception cref="T:System.InvalidOperationException"><b>ColumnCount</b> less than 2.</exception>
+            <exception cref="T:System.ArgumentException">Column 0 contains duplicate strings.</exception>
         </member>
         <member name="M:Au.CsvTable.SetInt(System.Int32,System.Int32,System.Int32,System.Boolean)">
             <summary>
@@ -20729,7 +20800,6 @@
             <summary>
             Code speed measurement. Easier to use than <see cref="T:System.Diagnostics.Stopwatch"/>.
             </summary>
-            <seealso cref="T:Au.Perf.Inst"/>.
         </member>
         <member name="T:Au.Perf.Inst">
             <summary>

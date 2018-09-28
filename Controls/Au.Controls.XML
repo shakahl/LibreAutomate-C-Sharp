@@ -926,7 +926,7 @@
             Links and text formatting is specified in control text using tags similar to HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
             
             For most tags use this format: <c><![CDATA[<tag>text<>]]></c> or <c><![CDATA[<tag attribute>text<>]]></c>. Attribute can be enclosed in ' or " (must be enclosed if contains &gt;).
-            For these tags use different format: <c><![CDATA[<_>literal text</_>]]></c>, <c><![CDATA[<code>code</code>]]></c>, <c><![CDATA[<image "attribute">]]></c>.
+            For these tags use different format: <c><![CDATA[<_>literal text</_>]]></c>, <c><![CDATA[<code>code</code>]]></c>, <c><![CDATA[<fold>text</fold>]]></c>, <c><![CDATA[<image "attribute">]]></c>.
             Tags can be nested, like <c><![CDATA[<b><c green>text<><>]]></c> or <c><![CDATA[<b>text <c green>text<> text<>]]></c>.
             
             Simple formatting tags:
@@ -981,10 +981,6 @@
             <description><c><![CDATA[<mono>text<>]]></c></description>
             <description>Monospace font.</description>
             </item>
-            <item>
-            <description><c><![CDATA[<hidden>text<>]]></c></description>
-            <description>Hidden text.</description>
-            </item>
             </list>
             
             Links:
@@ -1021,35 +1017,6 @@
             </item>
             <item>
             <description>
-            <para><c><![CDATA[<dialog text>link text<>]]></c></para>
-            <para><c><![CDATA[<dialog text1|text2>link text<>]]></c></para>
-            </description>
-            <description>
-            Shows dialog.
-            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.
-            </description>
-            </item>
-            <item>
-            <description>
-            <para><c><![CDATA[<tooltip text>link text<>]]></c></para>
-            <para><c><![CDATA[<tooltip text|secondsTimeout>link text<>]]></c></para>
-            </description>
-            <description>
-            Shows tooltip.
-            Calls <see cref="M:Au.Osd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/>.
-            </description>
-            </item>
-            <item>
-            <description>
-            <c><![CDATA[<print text>link text<>]]></c>
-            </description>
-            <description>
-            Shows text in output.
-            Calls <see cref="M:Au.NoClass.Print(System.String)" r=""/>.
-            </description>
-            </item>
-            <item>
-            <description>
             <c><![CDATA[<help M_Au_Wnd_Find>link text<>]]></c>
             </description>
             <description>
@@ -1062,17 +1029,30 @@
             <description>
             <para><c><![CDATA[<open document>link text<>]]></c></para>
             <para><c><![CDATA[<open>document<>]]></c></para>
+            <para><c><![CDATA[<open document|5>link text<>]]></c></para>
+            <para><c><![CDATA[<open document|5|15>link text<>]]></c></para>
             </description>
             <description>
             Should open a document or script or some other item in the program.
             This control does not implement this tag. If used, it must be implemented by the program.
             See <see cref="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>, <see cref="M:Au.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})"/>.
+            The 5 is 1-based line index; 15 is 1-based character index in line.
+            </description>
+            </item>
+            <item>
+            <description>
+            <para><c><![CDATA[<explore>C:\files\example<>]]></c></para>
+            </description>
+            <description>
+            Selects file or folder in File Explorer.
+            Calls function <see cref="M:Au.Shell.SelectFileInExplorer(System.String)"/>.
             </description>
             </item>
             <item>
             <description>
             <para><c><![CDATA[<script script>link text<>]]></c></para>
             <para><c><![CDATA[<script>script<>]]></c></para>
+            <para><c><![CDATA[<script script|args0|args1>link text<>]]></c></para>
             </description>
             <description>
             Should run/execute a script.
@@ -1098,6 +1078,12 @@
             <description>Colored C# code. Tags in it are ignored.</description>
             </item>
             <item>
+            <description><c><![CDATA[<fold>text</fold>]]></c></description>
+            <description>
+            Folded (hidden) lines. Adds a link to unfold (show).
+            </description>
+            </item>
+            <item>
             <description>
             <para><c><![CDATA[<image "c:\images\example.png">]]></c></para>
             <para><c><![CDATA[<image "c:\files\example.txt">]]></c></para>
@@ -1111,8 +1097,8 @@
             Supports images of formats: png, bmp, jpg, gif, ico (only 16x16).
             For other file types and folders displays small file icon.
             Supports managed image resources of the entry assembly. Not icons.
-            Image file data is encoded as Base64 string. For it can be used dialog<br/>
-            "Find image or color in window" (form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll)<br/>
+            Image file data is encoded as Base64 string. For it can be used dialog
+            "Find image or color in window" (form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll)
             or function Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
             </description>
             </item>
@@ -1797,27 +1783,6 @@
             If not found, returns empty List.
             </summary>
             <param name="name">XML tag.</param>
-        </member>
-        <member name="T:Au.Controls.Form_">
-            <summary>
-            Can be used as base class for forms when you want to use correct dialog font and correct auto-scaling when high DPI.
-            </summary>
-            <remarks>
-            Sets these properties:
-            Font = SystemFonts.MessageBoxFont; //usually Segoe UI, 9pt //default font of Form is MS Sans Serif, 8.25pt
-            AutoScaleMode = AutoScaleMode.Font;
-            
-            Form designer uses these properties as default. It also adds 'this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);', its OK.
-            note:
-            	Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font).
-            	Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form.
-            </remarks>
-        </member>
-        <member name="P:Au.Controls.Form_.IsPopup">
-            <summary>
-            Adds WS_POPUP style. Also prevents activating an unrelated window when closing this active owned nonmodal form.
-            Set it before creating; later does nothing.
-            </summary>
         </member>
         <member name="T:Au.Controls.ScrollableControl_">
             <summary>

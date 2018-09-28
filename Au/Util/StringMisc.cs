@@ -143,5 +143,22 @@ namespace Au.Util
 			tail = s.Substring(end);
 			return true;
 		}
+
+		/// <summary>
+		/// Creates int[] from string containing space-separated numbers, like "4 100 -8 0x10".
+		/// </summary>
+		/// <param name="s">Decimal or/and hexadecimal numbers separated by single space. If null or "", returns empty array.</param>
+		/// <remarks>
+		/// For vice versa use <c>string.Join(" ", array)</c>.
+		/// </remarks>
+		public static int[] StringToIntArray(string s)
+		{
+			if(Empty(s)) return Array.Empty<int>();
+			int n = 1; foreach(var v in s) if(v == ' ') n++;
+			var a = new int[n];
+			a[0] = s.ToInt_(0, STIFlags.DoNotSkipSpaces);
+			for(int i = 0, j = 0; j < s.Length;) if(s[j++] == ' ') a[++i] = s.ToInt_(j, STIFlags.DoNotSkipSpaces);
+			return a;
+		}
 	}
 }

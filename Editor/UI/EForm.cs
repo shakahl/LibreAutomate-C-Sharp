@@ -71,7 +71,7 @@ partial class EForm :Form
 		//Perf.Next();
 		Timer_.After(1, () =>
 		{
-			Perf.Next();
+			Perf.Next('P');
 			Perf.Write();
 			//AuDialog.Show(Perf.ToString(), IsWinEventHookInstalled(EVENT_OBJECT_CREATE).ToString()); //IsWinEventHookInstalled always true (false positive, as documented)
 			//GC.Collect();
@@ -82,6 +82,8 @@ partial class EForm :Form
 		});
 
 		base.OnLoad(e);
+
+		IsLoaded = true;
 	}
 
 	protected override void OnFormClosed(FormClosedEventArgs e)
@@ -91,6 +93,11 @@ partial class EForm :Form
 		base.OnFormClosed(e);
 		Panels.Files.UnloadOnFormClosed();
 	}
+
+	/// <summary>
+	/// The OnLoad override sets this property after loading collection etc.
+	/// </summary>
+	public bool IsLoaded { get; private set; }
 
 	/// <summary>
 	/// The OnFormClosed override sets this property before unloading collection etc.
@@ -110,6 +117,10 @@ partial class EForm :Form
 		switch(m.Msg) {
 		case Au.LibRun.AuTask.WM_TASK_ENDED: //WM_USER+900
 			Tasks.TaskEnded(m.WParam);
+			return;
+		case Api.WM_ACTIVATE: //restore focused control correctly
+			if(Math_.LoUshort(wParam) == 0) _wFocus = Wnd.ThisThread.Focused;
+			else if(_wFocus.IsAlive) Wnd.ThisThread.Focus(_wFocus);
 			return;
 		}
 
@@ -132,6 +143,8 @@ partial class EForm :Form
 			break;
 		}
 	}
+
+	Wnd _wFocus;
 
 	/// <summary>
 	/// WM_USER+n messages.
@@ -184,6 +197,15 @@ partial class EForm :Form
 		}
 	}
 
+	public void SetTitle()
+	{
+		const string app = "QM#";
+		string title;
+		if(Model == null) title = app;
+		else if(Model.CurrentFile == null) title = app + " - " + Model.CollectionName;
+		else title = app + " - " + Model.CollectionName + " - " + Model.CurrentFile.ItemPath;
+		Text = title;
+	}
 }
 
 public static class Panels

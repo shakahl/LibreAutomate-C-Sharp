@@ -121,7 +121,7 @@ namespace Au.Controls
 					//tested: XML can be added to Application Settings, but var xml=Properties.Settings.Default.PanelsXML takes 61 MILLIseconds.
 				}
 				catch(Exception e) {
-					var sErr = $"Failed to load file:\r\n\t{xmlFile}\r\n\tError: {e.Message} ({e.GetType()})";
+					var sErr = $"Failed to load file:\r\n\t{xmlFile}\r\n\t{e.ToStringWithoutStack_()})";
 					if(usesDefaultXML) {
 						_xmlFile = null;
 						AuDialog.ShowError("Cannot load panel/toolbar layout.", $"{sErr}\r\n\r\nReinstall the application.");

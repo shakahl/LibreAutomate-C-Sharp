@@ -22,17 +22,15 @@ using Au.Types;
 using static Au.NoClass;
 using Au.Util;
 
-//TODO: tags like print and dialog must support escaped text. Eg now cannot be multiline, because the hidden style adds empty lines.
-
 /*
 Most tags are like in QM2.
 
 NEW TAGS:
    <bi> - bold italic.
    <mono> - monospace font.
-   <hidden> - hidden.
    <size n> - font size (1-127).
-   <tooltip> - Osd.ShowText.
+   <fold> - collapsed lines.
+   <explore> - select file in File Explorer.
 
 NEW PARAMETERS:
    <c ColorName> - .NET color name for text color. Also color can be #RRGGBB.
@@ -40,22 +38,20 @@ NEW PARAMETERS:
    <Z ColorName> - .NET color name for background color, whole line. Also color can be #RRGGBB.
 
 RENAMED TAGS:
-	<dialog>, was <mes>.
-	<print>, was <out>.
 	<script>, was <macro>.
 
 REMOVED TAGS:
 	<tip>.
+	<mes>, <out>. Now use <fold>.
 
 DIFFERENT SYNTAX:
 	Most tags can be closed with <> or </> or </anything>.
-		Except these: <_>text</_>, <code>code</code>.
+		Except these: <_>text</_>, <code>code</code>, <fold>text</fold>.
 		No closing tag: <image>.
 	Attributes can be enclosed with "" or '' or non-enclosed (except for <image>).
 		Does not support escape sequences. An attribute ends with "> (if starts with ") or '> (if starts with ') or > (if non-enclosed).
 		In QM2 need "" for most; some can be non-enclosed. QM2 supports escape sequences.
 	Link tag attribute parts now are separated with "|". In QM2 was " /".
-		New: <dialog "big text|small text">
 
 OTHER CHANGES:
 	Supports user-defined link tags. Need to provide delegates of functions that implement them. Use SciTags.AddCommonLinkTag or SciTags.AddLinkTag.
@@ -85,7 +81,7 @@ namespace Au.Controls
 	/// Links and text formatting is specified in control text using tags similar to HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
 	/// 
 	/// For most tags use this format: <c><![CDATA[<tag>text<>]]></c> or <c><![CDATA[<tag attribute>text<>]]></c>. Attribute can be enclosed in ' or " (must be enclosed if contains &gt;).
-	/// For these tags use different format: <c><![CDATA[<_>literal text</_>]]></c>, <c><![CDATA[<code>code</code>]]></c>, <c><![CDATA[<image "attribute">]]></c>.
+	/// For these tags use different format: <c><![CDATA[<_>literal text</_>]]></c>, <c><![CDATA[<code>code</code>]]></c>, <c><![CDATA[<fold>text</fold>]]></c>, <c><![CDATA[<image "attribute">]]></c>.
 	/// Tags can be nested, like <c><![CDATA[<b><c green>text<><>]]></c> or <c><![CDATA[<b>text <c green>text<> text<>]]></c>.
 	/// 
 	/// Simple formatting tags:
@@ -140,10 +136,6 @@ namespace Au.Controls
 	/// <description><c><![CDATA[<mono>text<>]]></c></description>
 	/// <description>Monospace font.</description>
 	/// </item>
-	/// <item>
-	/// <description><c><![CDATA[<hidden>text<>]]></c></description>
-	/// <description>Hidden text.</description>
-	/// </item>
 	/// </list>
 	/// 
 	/// Links:
@@ -180,35 +172,6 @@ namespace Au.Controls
 	/// </item>
 	/// <item>
 	/// <description>
-	/// <para><c><![CDATA[<dialog text>link text<>]]></c></para>
-	/// <para><c><![CDATA[<dialog text1|text2>link text<>]]></c></para>
-	/// </description>
-	/// <description>
-	/// Shows dialog.
-	/// Calls <see cref="AuDialog.Show"/>.
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <description>
-	/// <para><c><![CDATA[<tooltip text>link text<>]]></c></para>
-	/// <para><c><![CDATA[<tooltip text|secondsTimeout>link text<>]]></c></para>
-	/// </description>
-	/// <description>
-	/// Shows tooltip.
-	/// Calls <see cref="Osd.ShowText"/>.
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <description>
-	/// <c><![CDATA[<print text>link text<>]]></c>
-	/// </description>
-	/// <description>
-	/// Shows text in output.
-	/// Calls <see cref="Print(string)" r=""/>.
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <description>
 	/// <c><![CDATA[<help M_Au_Wnd_Find>link text<>]]></c>
 	/// </description>
 	/// <description>
@@ -221,17 +184,30 @@ namespace Au.Controls
 	/// <description>
 	/// <para><c><![CDATA[<open document>link text<>]]></c></para>
 	/// <para><c><![CDATA[<open>document<>]]></c></para>
+	/// <para><c><![CDATA[<open document|5>link text<>]]></c></para>
+	/// <para><c><![CDATA[<open document|5|15>link text<>]]></c></para>
 	/// </description>
 	/// <description>
 	/// Should open a document or script or some other item in the program.
 	/// This control does not implement this tag. If used, it must be implemented by the program.
 	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
+	/// The 5 is 1-based line index; 15 is 1-based character index in line.
+	/// </description>
+	/// </item>
+	/// <item>
+	/// <description>
+	/// <para><c><![CDATA[<explore>C:\files\example<>]]></c></para>
+	/// </description>
+	/// <description>
+	/// Selects file or folder in File Explorer.
+	/// Calls function <see cref="Shell.SelectFileInExplorer"/>.
 	/// </description>
 	/// </item>
 	/// <item>
 	/// <description>
 	/// <para><c><![CDATA[<script script>link text<>]]></c></para>
 	/// <para><c><![CDATA[<script>script<>]]></c></para>
+	/// <para><c><![CDATA[<script script|args0|args1>link text<>]]></c></para>
 	/// </description>
 	/// <description>
 	/// Should run/execute a script.
@@ -257,6 +233,12 @@ namespace Au.Controls
 	/// <description>Colored C# code. Tags in it are ignored.</description>
 	/// </item>
 	/// <item>
+	/// <description><c><![CDATA[<fold>text</fold>]]></c></description>
+	/// <description>
+	/// Folded (hidden) lines. Adds a link to unfold (show).
+	/// </description>
+	/// </item>
+	/// <item>
 	/// <description>
 	/// <para><c><![CDATA[<image "c:\images\example.png">]]></c></para>
 	/// <para><c><![CDATA[<image "c:\files\example.txt">]]></c></para>
@@ -270,8 +252,8 @@ namespace Au.Controls
 	/// Supports images of formats: png, bmp, jpg, gif, ico (only 16x16).
 	/// For other file types and folders displays small file icon.
 	/// Supports managed image resources of the entry assembly. Not icons.
-	/// Image file data is encoded as Base64 string. For it can be used dialog<br/>
-	/// "Find image or color in window" (form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll)<br/>
+	/// Image file data is encoded as Base64 string. For it can be used dialog
+	/// "Find image or color in window" (form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll)
 	/// or function Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
 	/// </description>
 	/// </item>
@@ -305,7 +287,6 @@ namespace Au.Controls
 			public bool Italic { get => 0 != (u2 & 0x4000000); set { if(value) u2 |= 0x4000000; else u2 &= unchecked((uint)~0x4000000); } }
 			public bool Underline { get => 0 != (u2 & 0x8000000); set { if(value) u2 |= 0x8000000; else u2 &= unchecked((uint)~0x8000000); } }
 			public bool Eol { get => 0 != (u2 & 0x10000000); set { if(value) u2 |= 0x10000000; else u2 &= unchecked((uint)~0x10000000); } }
-			public bool Hidden { get => 0 != (u2 & 0x20000000); set { if(value) u2 |= 0x20000000; else u2 &= unchecked((uint)~0x20000000); } }
 			public bool Hotspot { get => 0 != (u2 & 0x40000000); set { if(value) u2 |= 0x40000000; else u2 &= unchecked((uint)~0x40000000); } }
 			public bool Mono { get => 0 != (u2 & 0x80000000); set { if(value) u2 |= 0x80000000; else u2 &= unchecked((uint)~0x80000000); } }
 
@@ -326,7 +307,7 @@ namespace Au.Controls
 		AuScintilla _c;
 		SciText _t;
 		List<_TagStyle> _styles = new List<_TagStyle>();
-		List<short> _stack = new List<short>();
+		List<int> _stack = new List<int>();
 
 		internal SciTags(AuScintilla c)
 		{
@@ -345,7 +326,6 @@ namespace Au.Controls
 				if(st.Bold) _t.StyleBold(j, true);
 				if(st.Italic) _t.StyleItalic(j, true);
 				if(st.Underline) _t.StyleUnderline(j, true);
-				if(st.Hidden) _t.StyleHidden(j, true);
 				if(st.Mono) _t.StyleFont(j, "Courier New");
 				if(st.Hotspot) _t.StyleHotspot(j, true);
 				int size = st.Size;
@@ -500,6 +480,7 @@ namespace Au.Controls
 			byte currentStyle = STYLE_DEFAULT;
 			_stack.Clear();
 			List<POINT> codes = null;
+			List<POINT> folds = null;
 
 			while(s < sEnd) {
 				//find '<'
@@ -528,7 +509,11 @@ namespace Au.Controls
 						}
 						currentStyle = (byte)i;
 					} else {
-
+						i &= 0x7fffffff;
+						if(s - tag == 6 && LibCharPtr.AsciiStartsWith(tag + 1, "fold")) {
+							(folds ?? (folds = new List<POINT>())).Add((i, (int)(t - s0)));
+							//if(s < sEnd && *s != '\r' && *s != '\n') _WriteString("\r\n", STYLE_DEFAULT); //no, can be an end of tag there
+						}
 					}
 					continue;
 				}
@@ -569,9 +554,11 @@ namespace Au.Controls
 				}
 
 				//tags
-				_TagStyle style = new _TagStyle();
+				_TagStyle style = default;
 				bool hideTag = false, noEndTag = false, userTag = false;
 				string linkTag = null;
+				int stackInt = 0;
+				int i2;
 				ch = *tag;
 				switch(tagLen << 16 | ch) {
 				case 1 << 16 | 'b':
@@ -593,7 +580,7 @@ namespace Au.Controls
 					if(attr == null) goto ge;
 					int color;
 					if(Char_.IsAsciiDigit(*attr)) color = Api.strtoi(attr);
-					else if(*attr=='#') color = Api.strtoi(attr+1, radix: 16);
+					else if(*attr == '#') color = Api.strtoi(attr + 1, radix: 16);
 					else {
 						var c = Color.FromName(new string((sbyte*)attr, 0, attrLen));
 						if(c.A == 0) break; //invalid color name
@@ -602,34 +589,34 @@ namespace Au.Controls
 					if(ch == 'c') style.Color = color; else style.BackColor = color;
 					if(ch == 'Z') style.Eol = true;
 					break;
-				case 6 << 16 | 'h':
-					if(LibCharPtr.AsciiStartsWith(tag + 1, "idden")) style.Hidden = true;
+				case 4 << 16 | 's':
+					if(attr == null) goto ge;
+					if(LibCharPtr.AsciiStartsWith(tag + 1, "ize")) style.Size = Api.strtoi(attr);
 					else goto ge;
 					break;
 				case 4 << 16 | 'm':
 					if(LibCharPtr.AsciiStartsWith(tag + 1, "ono")) style.Mono = true;
 					else goto ge;
 					break;
-				case 4 << 16 | 's':
-					if(attr == null) goto ge;
-					if(LibCharPtr.AsciiStartsWith(tag + 1, "ize")) style.Size = Api.strtoi(attr);
-					else goto ge;
-					break;
+				//case 6 << 16 | 'h': //rejected. Not useful; does not hide newlines.
+				//	if(LibCharPtr.AsciiStartsWith(tag + 1, "idden")) style.Hidden = true;
+				//	else goto ge;
+				//	break;
 				case 5 << 16 | 'i':
 					if(attr == null) goto ge;
 					if(LibCharPtr.AsciiStartsWith(tag + 1, "mage")) hideTag = noEndTag = true;
 					else goto ge;
 					break;
 				case 1 << 16 | '_': //<_>text where tags are ignored</_>
-					int i1 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), "</_>"); //use </_> because <> is much more often used, eg as operator or our tag ending. Could also support <> if </_> not found, but it is not good.
-					if(i1 < 0) goto ge;
-					while(i1-- > 0) _Write(*s++, currentStyle);
+					i2 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), "</_>"); if(i2 < 0) goto ge;
+					//use </_> because <> is much more often used, eg as operator or our tag ending. Could also support <> if </_> not found, but it is not good.
+					while(i2-- > 0) _Write(*s++, currentStyle);
 					s += 4;
 					//hasTags = true;
 					continue;
 				case 4 << 16 | 'c': //<code>code</code>
-					int i2 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), "</code>");
-					if(i2 < 0) goto ge;
+					if(!LibCharPtr.AsciiStartsWith(tag + 1, "ode")) goto ge;
+					i2 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), "</code>"); if(i2 < 0) goto ge;
 					if(codes == null) codes = new List<POINT>();
 					int iStartCode = (int)(t - s0);
 					codes.Add((iStartCode, iStartCode + i2));
@@ -637,23 +624,25 @@ namespace Au.Controls
 					s += 7;
 					hasTags = true;
 					continue;
+				case 4 << 16 | 'f': //<fold>text</fold>
+					if(!LibCharPtr.AsciiStartsWith(tag + 1, "old")) goto ge;
+					stackInt = (int)(t - s0);
+					//add 'expand/collapse' link in this line. Max 6 characters, because overwriting "<fold>".
+					_WriteString(" ", STYLE_HIDDEN); //it is how we later detect links
+					_WriteString(">>", _GetStyleIndex(new _TagStyle { Hotspot = true, Underline = true, Color = 0x80FF }, currentStyle));
+					_WriteString("\r\n", currentStyle); //let the folded text start from next line
+					break;
 				case 4 << 16 | 'l':
 					linkTag = "link";
 					break;
 				case 6 << 16 | 'g':
 					linkTag = "google";
 					break;
-				case 6 << 16 | 'd':
-					linkTag = "dialog";
-					break;
-				case 5 << 16 | 'p':
-					linkTag = "print";
-					break;
 				case 4 << 16 | 'h':
 					linkTag = "help";
 					break;
-				case 7 << 16 | 't':
-					linkTag = "tooltip";
+				case 7 << 16 | 'e':
+					linkTag = "explore";
 					break;
 				case 4 << 16 | 'o':
 					linkTag = "open";
@@ -693,32 +682,13 @@ namespace Au.Controls
 				if(noEndTag) continue;
 
 				if(!style.IsEmpty) {
-					//merge nested style with ancestors
-					int k = currentStyle;
-					if(k >= STYLE_FIRST_EX) style.Merge(_styles[k - STYLE_FIRST_EX]);
-					for(int j = _stack.Count - 1; j > 0; j--) {
-						k = _stack[j];
-						if(k < 0) continue; //a non-styled tag
-						k &= 0xff; //remove other possible flags
-						if(k >= STYLE_FIRST_EX) style.Merge(_styles[k - STYLE_FIRST_EX]);
-					}
-
-					//find or add style
-					int i, n = _styles.Count;
-					for(i = 0; i < n; i++) if(_styles[i].Equals(style)) break;
-					if(i == NUM_STYLES_EX) {
-						i = currentStyle;
-						//CONSIDER: overwrite old styles added in previous calls. Now we just clear styles when control text cleared.
-					} else {
-						if(i == n) _styles.Add(style);
-						i += STYLE_FIRST_EX;
-					}
+					byte si = _GetStyleIndex(style, currentStyle);
 					_stack.Add(currentStyle);
-					currentStyle = (byte)(i);
+					currentStyle = si;
 				} else {
-					int k = 0x8000; //no-style flag
-
-					_stack.Add((short)k);
+					int k = unchecked((int)0x80000000); //no-style flag
+					k |= stackInt;
+					_stack.Add(k);
 				}
 
 				continue;
@@ -739,6 +709,19 @@ namespace Au.Controls
 			if(!hasTags) return;
 
 			int endStyled = 0, prevLen = append ? _t.TextLengthBytes - len : 0;
+
+			if(folds != null) {
+				for(int i = folds.Count - 1; i >= 0; i--) { //need reverse for nested folds
+					var v = folds[i];
+					int lineStart = _c.Call(SCI_LINEFROMPOSITION, v.x + prevLen), lineEnd = _c.Call(SCI_LINEFROMPOSITION, v.y + prevLen);
+					int level = _c.Call(SCI_GETFOLDLEVEL, lineStart) & SC_FOLDLEVELNUMBERMASK;
+					_c.Call(SCI_SETFOLDLEVEL, lineStart, level | SC_FOLDLEVELHEADERFLAG);
+					for(int j = lineStart + 1; j <= lineEnd; j++) _c.Call(SCI_SETFOLDLEVEL, j, level + 1);
+					_c.Call(SCI_FOLDLINE, lineStart);
+				}
+
+			}
+
 			if(codes != null) {
 				//info: tested various ways to add code coloured by a lexer, and only this way works. And it is good. Fast etc.
 				//	At first need to add non-styled text (SCI_COLOURISE does not work if the text is already styled).
@@ -780,6 +763,36 @@ namespace Au.Controls
 			{
 				*t++ = ch; *r++ = style;
 			}
+
+			void _WriteString(string ss, byte style)
+			{
+				for(int i_ = 0; i_ < ss.Length; i_++) _Write((byte)ss[i_], style);
+			}
+		}
+
+		byte _GetStyleIndex(_TagStyle style, byte currentStyle)
+		{
+			//merge nested style with ancestors
+			int k = currentStyle;
+			if(k >= STYLE_FIRST_EX) style.Merge(_styles[k - STYLE_FIRST_EX]);
+			for(int j = _stack.Count - 1; j > 0; j--) {
+				k = _stack[j];
+				if(k < 0) continue; //a non-styled tag
+				k &= 0xff; //remove other possible flags
+				if(k >= STYLE_FIRST_EX) style.Merge(_styles[k - STYLE_FIRST_EX]);
+			}
+
+			//find or add style
+			int i, n = _styles.Count;
+			for(i = 0; i < n; i++) if(_styles[i].Equals(style)) break;
+			if(i == NUM_STYLES_EX) {
+				i = currentStyle;
+				//CONSIDER: overwrite old styles added in previous calls. Now we just clear styles when control text cleared.
+			} else {
+				if(i == n) _styles.Add(style);
+				i += STYLE_FIRST_EX;
+			}
+			return (byte)i;
 		}
 
 		void _SetLexer(LexLanguage lang)
@@ -810,7 +823,7 @@ namespace Au.Controls
 			if(Keyb.IsAlt) return;
 
 			int iTag, iText, k;
-			//to find beginning of link text (after <tag>), search for STYLE__HIDDEN before
+			//to find beginning of link text (after <tag>), search for STYLE_HIDDEN before
 			for(iText = pos; iText > 0; iText--) if(_t.GetStyleAt(iText - 1) == STYLE_HIDDEN) break;
 			if(iText == 0) return;
 			//to find beginning of <tag>, search for some other style before
@@ -823,6 +836,13 @@ namespace Au.Controls
 			//get text <tag>LinkText
 			var s = _t.RangeText(iTag, pos);
 			//Print(iTag, iText, pos, s);
+
+			//is it <fold>?
+			if(s == " >>") {
+				int line = _c.Call(SCI_LINEFROMPOSITION, iTag);
+				_c.Call(SCI_TOGGLEFOLD, line);
+				return;
+			}
 			//get tag, attribute and text
 			if(!s.RegexMatch_(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
 			string tag = m[1].Value, attr = m[2].Value ?? m[3].Value ?? m[4].Value;
@@ -853,17 +873,11 @@ namespace Au.Controls
 			case "google":
 				Shell.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
-			case "dialog":
-				AuDialog.Show(one ? null : s1, one ? s1 : s2, owner: _c);
-				break;
-			case "tooltip":
-				Osd.ShowText(s1, one ? 0 : s2.ToInt_(), PopupXY.Mouse);
-				break;
-			case "print":
-				Print(attr);
-				break;
 			case "help":
 				Util.Help.AuHelp(attr);
+				break;
+			case "explore":
+				Shell.SelectFileInExplorer(attr);
 				break;
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.

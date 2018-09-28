@@ -112,6 +112,7 @@
     </Compile>
     <Compile Include="Other\ToolStripSpringBox.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Util, Api\CUtil.cs" />
     <Compile Include="Util, Api\ImageUtil.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -130,6 +131,7 @@
   <ItemGroup>
     <None Include="AuStripManager\AuStripManagerPropertiesDialog.resx">
       <DependentUpon>AuStripManagerPropertiesDialog.cs</DependentUpon>
+      <SubType>Designer</SubType>
     </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

@@ -33,7 +33,7 @@ namespace Au.Compiler
 
 		string FilePath { get; }
 
-		bool IsScript { get; }
+		bool IcfIsScript { get; }
 
 		ICollectionFiles IcfCollection { get; }
 

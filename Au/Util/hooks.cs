@@ -338,22 +338,34 @@ namespace Au.Util
 					}
 				}
 			}
-			catch(ThreadAbortException ex) {
-				Thread.ResetAbort();
-				Dispose();
-				Debug_.Print("ThreadAbortException");
-				var t = Thread.CurrentThread;
-				Task.Run(() => { Thread.Sleep(50); t.Abort(ex.ExceptionState); });
-				return 0;
-			}
-			catch(Exception ex) { PrintWarning("Unhandled exception in hook procedure. " + ex.ToString()); }
+			catch(Exception ex) { if(LibOnException(ex, this)) return 0; }
 			//info: on any exception .NET would terminate process, even on ThreadAbortException.
-			//	This prevents it when using eg AuDialog. But now when eg MessageBox.Show; I don't know how to prevent it.
-			//TODO: do the same for HookAcc
+			//	This prevents it when using eg AuDialog. But not when eg MessageBox.Show; I don't know how to prevent it.
 
 			return Api.CallNextHookEx(default, code, wParam, lParam);
 
 			//FUTURE: for LL hooks, measure time and warn if slow. OS may unhook. Warn if the timeout in the registry is too small.
+		}
+
+		/// <summary>
+		/// Call on any catched exception in a hook procedure.
+		/// Returns true if it is ThreadAbortException.
+		/// </summary>
+		/// <param name="e"></param>
+		/// <param name="hook">On ThreadAbortException calls hook.Dispose.</param>
+		internal static bool LibOnException(Exception e, IDisposable hook)
+		{
+			if(e is ThreadAbortException eta) {
+				Thread.ResetAbort();
+				hook.Dispose();
+				Debug_.Print("ThreadAbortException");
+				var t = Thread.CurrentThread;
+				Task.Run(() => { Thread.Sleep(50); t.Abort(eta.ExceptionState); });
+				return true;
+			}
+
+			PrintWarning("Unhandled exception in hook procedure. " + e.ToString());
+			return false;
 		}
 	}
 }
@@ -966,8 +978,10 @@ namespace Au.Util
 
 		void _HookProc(IntPtr hHook, AccEVENT aEvent, Wnd wnd, int idObject, int idChild, int idThread, int eventTime)
 		{
-			_proc2(new HookData.AccHookData(this, aEvent, wnd, idObject, idChild, idThread, eventTime));
-			//TODO: handle exceptions
+			try {
+				_proc2(new HookData.AccHookData(this, aEvent, wnd, idObject, idChild, idThread, eventTime));
+			}
+			catch(Exception ex) { WinHook.LibOnException(ex, this); }
 		}
 	}
 }

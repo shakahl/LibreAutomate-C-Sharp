@@ -576,7 +576,7 @@ namespace Au
 			try {
 				Find(w, role, null, prop, flags, also: o => { Print(o); return false; });
 			}
-			catch(Exception ex) { Print($"!exception! {ex.GetType().Name} {ex.Message}"); }
+			catch(Exception ex) { Print($"!exception! {ex.ToStringWithoutStack_()}"); }
 		}
 	}
 }

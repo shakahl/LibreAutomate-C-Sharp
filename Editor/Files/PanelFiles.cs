@@ -59,7 +59,7 @@ partial class PanelFiles :Control
 		_c.ShowNodeToolTips = true;
 		_c.FullRowSelect = true;
 		//_c.HideSelection = true;
-		//_c.ShowPlusMinus = false; _c.ShowLines = false;
+		_c.ShowPlusMinus = false; _c.ShowLines = false; //also disables editing on 2 clicks, it is more annoying than useful
 		//_c.ShiftFirstNode = true;
 		//_c.Indent /= 2;
 		//_c.ShowLines = false;
@@ -82,9 +82,11 @@ partial class PanelFiles :Control
 		//p.NW();
 	}
 
-	public TreeViewAdv TV { get => _c; }
+	public TreeViewAdv Control { get => _c; }
 
 	public FilesModel Model { get => _model; }
+
+	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 
 	#region columns and node controls
 
@@ -261,7 +263,7 @@ partial class PanelFiles :Control
 				File_.Copy(Folders.ThisAppBS + @"Default\files.xml", xmlFile);
 			}
 
-			_model?.UnloadingCollection(); //saves all, closes document, sets current file = null
+			_model?.UnloadingCollection(); //saves all, closes documents, sets current file = null
 
 			m = new FilesModel(_c, xmlFile);
 			m.InitNodeControls(_ccIcon, _ccName);
@@ -273,31 +275,32 @@ partial class PanelFiles :Control
 			//Print($"Failed to load '{collDir}'. {ex.Message}");
 			switch(AuDialog.ShowError("Failed to load collection", collDir,
 				"1 Retry|2 Load another|3 Create new|0 Cancel",
-				owner: this, expandedText: ex.Message)) {
+				owner: this, expandedText: ex.ToString())) {
 			case 1: goto g1;
 			case 2: m = LoadAnotherCollection(); break;
 			case 3: m = LoadNewCollection(); break;
 			}
 			if(m != null) return m;
-			if(_model == null) Environment.Exit(1);
+			if(_model != null) return _model;
+			Environment.Exit(1);
 		}
 
 		oldModel?.Dispose();
 		Program.Model = _model = m;
-		MainForm.Text = "QM# - " + collDir;
 
 		//CONSIDER: unexpand path
 		if(Settings.Set("collection", collDir)) {
 			//add to recent
 			lock(Settings) {
 				var x1 = Settings.XmlOf("recent", true);
-				var x2 = x1.Element_("f", "n", collDir, true);
+				var x2 = x1.Element_(XN.f, XN.n, collDir, true);
 				if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
-				if(x2 == null) x1.AddFirst(new XElement("f", new XAttribute("n", collDir)));
+				if(x2 == null) x1.AddFirst(new XElement(XN.f, new XAttribute(XN.n, collDir)));
 			}
 		}
 
 		m.LoadState();
+		if(m.CurrentFile==null) MainForm.SetTitle();
 
 		return _model;
 	}
@@ -342,9 +345,9 @@ partial class PanelFiles :Control
 	{
 		lock(Settings) {
 			var x1 = Settings.XmlOf("recent", true);
-			var x2 = x1.Element_("f", "n", file, true);
+			var x2 = x1.Element_(XN.f, XN.n, file, true);
 			if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
-			if(x2 == null) x1.AddFirst(new XElement("f", new XAttribute("n", file)));
+			if(x2 == null) x1.AddFirst(new XElement(XN.f, new XAttribute(XN.n, file)));
 		}
 	}
 
@@ -361,8 +364,8 @@ partial class PanelFiles :Control
 			dd.Items.Clear();
 			bool currentOK = false;
 			var aRem = new List<XElement>();
-			foreach(var x2 in x1.Elements("f")) {
-				var path = x2.Attribute_("n");
+			foreach(var x2 in x1.Elements(XN.f)) {
+				var path = x2.Attribute_(XN.n);
 				if(dd.Items.Count == 20 || !File_.ExistsAsDirectory(path)) {
 					aRem.Add(x2);
 					continue;

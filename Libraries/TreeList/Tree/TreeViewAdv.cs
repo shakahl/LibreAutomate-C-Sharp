@@ -366,7 +366,7 @@ namespace Aga.Controls.Tree
 			while(Selection.Count > 0) {
 				var t = Selection[0];
 				t.IsSelected = false;
-				Selection.Remove(t); //hack
+				Selection.Remove(t); //_hack
 			}
 		}
 
@@ -379,16 +379,16 @@ namespace Aga.Controls.Tree
 			base.OnSizeChanged(e);
 		}
 
-		//protected override void OnHandleCreated(EventArgs e)
-		//{
-		//	//Print("OnHandleCreated");
-		//	base.OnHandleCreated(e);
-		//	UpdateScrollBars();
-		//}
+		protected override void OnHandleCreated(EventArgs e)
+		{
+			base.OnHandleCreated(e);
+			if(ItemCount > 0) UpdateScrollBars();
+		}
 
 		public void UpdateScrollBars()
 		{
 			if(!IsHandleCreated) return;
+			//Print("UpdateScrollBars", ItemCount);
 			for(int i = 2; i >= 0; i--) {
 				SetScrollInfo(true, Math.Max(RowCount - 1, 0), _rowLayout.PageRowCount, true);
 				SetScrollInfo(false, ContentWidth, Math.Max(DisplayRectangle.Width, 0), true);

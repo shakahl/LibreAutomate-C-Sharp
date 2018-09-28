@@ -505,7 +505,6 @@ namespace Au.Controls
 						eh = (object sender, PaintEventArgs e) =>
 							{
 								_manager.Paint -= eh;
-								//Print(1);
 								//SetDockState(_DockState.Floating);
 								Timer_.After(200, () => SetDockState(_DockState.Floating));
 							};

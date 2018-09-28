@@ -71,7 +71,7 @@ namespace Au.Compiler
 				//Debug_.Print(value);
 				int iPipe = 0;
 
-				bool isScript = f.IsScript;
+				bool isScript = f.IcfIsScript;
 				r.maxInstances = MetaComments.DefaultMaxInstances(isScript);
 				r.runAlone = MetaComments.DefaultRunAlone(isScript);
 				r.outputType = MetaComments.DefaultOutputType(isScript);

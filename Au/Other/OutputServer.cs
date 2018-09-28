@@ -173,9 +173,9 @@ namespace Au.Util
 
 #if NEED_CALLER
 			/// <summary>
-			/// The name of the appdomain that called the Write/Print/etc method.
+			/// The <see cref="Script.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
 			/// Used with MessageType.Write.
-			/// If <see cref="NeedCallerMethod"/> is true, also includes the caller method. Format: "appdomain:type.method".
+			/// If <see cref="NeedCallerMethod"/> is true, also includes the caller method. Format: "scriptname:type.method".
 			/// </summary>
 			public string Caller { get; }
 
@@ -188,17 +188,17 @@ namespace Au.Util
 			}
 #else
 			/// <summary>
-			/// The name of the appdomain that called the Write/Print/etc method.
+			/// The <see cref="Script.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
 			/// Used with MessageType.Write.
 			/// </summary>
-			public string Domain { get; }
+			public string Caller { get; }
 
-			internal Message(MessageType type, string text, long time, string domain)
+			internal Message(MessageType type, string text, long time, string caller)
 			{
 				Type = type;
 				Text = text;
 				TimeUtc = time;
-				Domain = domain;
+				Caller = caller;
 			}
 #endif
 		}
@@ -522,7 +522,7 @@ namespace Au
 
 			Api.GetSystemTimeAsFileTime(out var time);
 
-			string caller = _domainName; //TODO: use Script.Name?
+			string caller = Script.Name;
 #if NEED_CALLER
 			if(OutputServer.LibNeedCallerMethod) {
 				//info: this func always called from WriteDirectly, which is usually called through Writer, Write, Print, etc. But it is public and can be called directly.
@@ -545,7 +545,6 @@ namespace Au
 			if(loc != null) loc.LibLocalWrite(s, time, caller);
 			else s_client.WriteLine(s, time, caller);
 		}
-		static string _domainName = AppDomain.CurrentDomain.FriendlyName; //cache because the property returns new string object everytime. Maybe the name can be changed, but unlikely somebody would know and do it, never mind.
 
 		static void _ClearToOutputServer()
 		{

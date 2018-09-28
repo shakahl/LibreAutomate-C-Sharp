@@ -40,7 +40,6 @@ namespace Au
 			Output.Write(value);
 			//note: need this overload. Cannot use Write(object) for strings because string is IEnumerable<char> and we have overload with IEnumerable<T>.
 		}
-		//CONSIDER: PrintColor.
 
 		/// <summary>
 		/// Writes value of any type to the output.

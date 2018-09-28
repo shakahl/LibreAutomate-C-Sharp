@@ -375,12 +375,11 @@ namespace Au.Compiler
 			string code = File.ReadAllText(f.FilePath); //FUTURE: why so slow when file contains 17_000_000 empty lines? 230-1600 ms (it seems makes so much garbage that triggers GC). QM2 reads+converts to UTF16 in 55 ms.
 			if(Empty(code)) return;
 
-			bool isScript = false;
-			string name = f.Name;
-			if(name.EndsWith_(".cs", true)) name = name.Remove(name.Length - 3);
-			else isScript = true;
+			bool isScript = f.IcfIsScript;
 
 			if(_isMain = isMain) {
+				string name = f.Name;
+				if(!isScript) name = name.Remove(name.Length - 3);
 				Name = name;
 				IsScript = isScript;
 

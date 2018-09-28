@@ -25,11 +25,20 @@ using Au.Compiler;
 
 partial class FileNode :ICollectionFile
 {
+	//[Flags]
+	//enum _NodeFlags
+	//{
+	//	Deleted=1,
+	//	InDisposedColl=2,
+	//	//Link=4,
+	//}
+
 	FilesModel _model;
 	XElement _x;
+	//_NodeFlags _nflags;
 
-	public FilesModel Model  => _model;
-	public XElement Xml  => _x;
+	public FilesModel Model => _model;
+	public XElement Xml => _x;
 
 	public FileNode(FilesModel model, XElement x, bool isRoot = false)
 	{
@@ -38,12 +47,22 @@ partial class FileNode :ICollectionFile
 		x.AddAnnotation(this);
 
 		if(!isRoot) {
+			if(_x.Name != XN.d) {
+				var name = Name;
+				if(Empty(name)) { Debug_.Print(_x); return; }
+				if(name.EndsWith_(".cs", true)) NodeType = ENodeType.CS;
+				else if(name.IndexOf('.') < 0) NodeType = ENodeType.Script;
+				else NodeType = ENodeType.Other;
+
+				//if(_x.HasAttribute_(s_xnPath)) _nflags |= _NodeFlags.Link;
+			}
+
 			var guid = this.Guid;
 			g1:
-			if(guid == null || guid.Length != 32) {
+			if(guid == null || guid.Length != 32) { //probably new item
 				var g = System.Guid.NewGuid();
 				guid = Convert_.GuidToHex(g);
-				_x.SetAttributeValue("g", guid);
+				_x.SetAttributeValue(XN.g, guid);
 				_model.Save?.CollectionLater(); //_model.Save is null when importing this collection
 			}
 			try {
@@ -56,80 +75,93 @@ partial class FileNode :ICollectionFile
 			}
 		}
 
-		foreach(var xx in x.Elements()) {
-			new FileNode(model, xx);
+		if(IsFolder) {
+			foreach(var xx in x.Elements()) {
+				new FileNode(model, xx);
+			}
 		}
 	}
 
-	public bool HasChildren  => _x.HasElements;
-	public IEnumerable<FileNode> Children  => _x.Elements().Select(x => FromX(x));
-
-	//public bool IsFolder  => _x.Name == "d"; }
-	public bool IsFolder  => _x.Name != "f"; //"d" or "files" (Root)
+	/// <summary>
+	/// Gets whether this is folder, script, .cs or other file.
+	/// </summary>
+	public ENodeType NodeType { get; private set; }
 
 	/// <summary>
-	/// Returns true if f is not null and this is its ancestor.
+	/// true if folder or root.
 	/// </summary>
-	public bool ContainsDescendant(FileNode f)
-	{
-		return f != null && f._x.Ancestors().Contains(_x);
-	}
+	public bool IsFolder => NodeType == ENodeType.Folder;
 
-	public string Name
-	{
-		get => _x.Attribute_("n");
-	}
+	/// <summary>
+	/// File name with extension.
+	/// </summary>
+	public string Name => _x.Attribute_(XN.n);
 
 	/// <summary>
 	/// GUID as hex string of 32 length, as it is stored in collection file.
 	/// </summary>
-	public string Guid
+	public string Guid => _x.Attribute_(XN.g);
+
+	/// <summary>
+	/// true if is external file, ie not in this collection folder.
+	/// </summary>
+	public bool IsLink() => _x.HasAttribute_(XN.path);
+
+	/// <summary>
+	/// true if is external file, ie not in this collection folder.
+	/// </summary>
+	public bool IsLink(out string targetPath) => _x.Attribute_(out targetPath, XN.path);
+
+	public TreeViewAdv Control => _model.TV;
+
+	/// <summary>
+	/// Returns FileNode from x annotation.
+	/// </summary>
+	/// <param name="x">Can be null.</param>
+	internal static FileNode FromX(XElement x) => x?.Annotation<FileNode>();
+
+	public FileNode Root => _model.Root;
+
+	public FileNode Parent => FromX(_x.Parent);
+
+	public FileNode Next => FromX(_x.NextElement_());
+
+	public FileNode Previous => FromX(_x.PreviousElement_());
+
+	public FileNode FirstChild => FromX(_x.Elements().FirstOrDefault());
+
+	public bool HasChildren => _x.HasElements;
+
+	public IEnumerable<FileNode> Children => _x.Elements().Select(x => FromX(x));
+
+	public IEnumerable<FileNode> Descendants(bool andSelf)
 	{
-		get => _x.Attribute_("g");
+		var e = andSelf ? _x.DescendantsAndSelf() : _x.Descendants();
+		return e.Select(v => FromX(v));
 	}
 
-#if TEST_MANY_COLUMNS
-				public bool Checked
-				{
-					get;
-					set;
-				}
+	/// <summary>
+	/// Returns true if f is a descendant of this. Can be null.
+	/// </summary>
+	public bool ContainsDescendant(FileNode f) => f?._x.Ancestors().Contains(_x) ?? false;
 
-				public object Combo
-				{
-					get; set;
-					//get { return "test"; }
-					//set { }
-				}
+	public bool IsDeleted
+	{
+		get
+		{
+			for(XElement x = _x, xRoot = Root.Xml; x != xRoot;) { //can be in deleted folder, then this.Parent!=null
+				x = x.Parent;
+				if(x == null) return true;
+			}
+			return false;
+		}
+	}
 
-				public RegexOptions ComboEnum
-				{
-					get; set;
-					//get { return "test"; }
-					//set { }
-				}
-
-				public decimal Decimal
-				{
-					get; set;
-					//get { return "10.5"; }
-					//set { }
-				}
-
-				public int Integer
-				{
-					get; set;
-					//get { return "10"; }
-					//set { }
-				}
-
-				public decimal UpDown
-				{
-					get; set;
-					//get { return "10"; }
-					//set { }
-				}
-#endif
+	/// <summary>
+	/// true if is in current collection and not deleted.
+	/// </summary>
+	public bool IsInCurrentCollection => _model == Program.Model && !IsDeleted;
+	//note: currently not used and not tested.
 
 	/// <summary>
 	/// Returns item path in collection and XML, like @"\Folder\Name.cs" or @"\Name.cs".
@@ -141,9 +173,10 @@ partial class FileNode :ICollectionFile
 			XElement x = _x, xRoot = Root.Xml;
 			var a = new Stack<string>();
 			while(x != xRoot) {
-				a.Push(x.Attribute_("n"));
+				a.Push(x.Attribute_(XN.n));
 				a.Push("\\");
 				x = x.Parent;
+				if(x == null) return null; //deleted
 			}
 			return string.Concat(a);
 		}
@@ -157,43 +190,10 @@ partial class FileNode :ICollectionFile
 		get
 		{
 			if(this == Root) return _model.FilesDirectory;
+			if(IsDeleted) return null;
 			if(IsLink(out string path)) return path;
 			return _model.FilesDirectory + ItemPath;
 		}
-	}
-
-	public bool IsLink() { return _x.HasAttribute_("path"); }
-
-	public bool IsLink(out string targetPath) { return _x.Attribute_(out targetPath, "path"); }
-
-	public TreeViewAdv Control
-	{
-		get => _model.TV;
-	}
-
-	public FileNode Root
-	{
-		get => _model.Root;
-	}
-
-	public FileNode Parent
-	{
-		get => FromX(_x.Parent);
-	}
-
-	public FileNode Next
-	{
-		get => FromX(_x.NextElement_());
-	}
-
-	public FileNode Previous
-	{
-		get => FromX(_x.PreviousElement_());
-	}
-
-	public FileNode FirstChild
-	{
-		get => FromX(_x.Elements().FirstOrDefault());
 	}
 
 	/// <summary>
@@ -206,11 +206,11 @@ partial class FileNode :ICollectionFile
 	{
 		if(Empty(name)) return null;
 		if(name[0] == '\\') return _FindRelative(name, folder);
-		var x = _x.Descendant_(folder.GetValueOrDefault() ? "d" : "f", "n", name, true);
-		if(x == null && !folder.HasValue) x = _x.Descendant_("d", "n", name, true);
+		var x = _x.Descendant_(folder.GetValueOrDefault() ? XN.d : XN.f, XN.n, name, true);
+		if(x == null && !folder.HasValue) x = _x.Descendant_(XN.d, XN.n, name, true);
 		return FromX(x);
 
-		//TODO: support "<GUID>comments"
+		//FUTURE: support "<GUID>comments"
 		//FUTURE: support XPath: x = _x.XPathSelectElement(name);
 	}
 
@@ -222,10 +222,10 @@ partial class FileNode :ICollectionFile
 			var s = seg.Value;
 			if((lastSegEnd = seg.EndOffset) == name.Length) {
 				var xx = x;
-				x = x.Element_(folder.GetValueOrDefault() ? "d" : "f", "n", s, true);
-				if(x == null && !folder.HasValue) x = xx.Element_("d", "n", s, true);
+				x = x.Element_(folder.GetValueOrDefault() ? XN.d : XN.f, XN.n, s, true);
+				if(x == null && !folder.HasValue) x = xx.Element_(XN.d, XN.n, s, true);
 			} else {
-				x = x.Element_("d", "n", s, true);
+				x = x.Element_(XN.d, XN.n, s, true);
 			}
 			if(x == null) return null;
 		}
@@ -270,7 +270,7 @@ partial class FileNode :ICollectionFile
 				var f1 = _FindRelative(name, false);
 				if(f1 != null) return new FileNode[] { f1 };
 			} else {
-				return _x.Descendants_("f", "n", name, true).Select(x => FromX(x)).ToArray();
+				return _x.Descendants_(XN.f, XN.n, name, true).Select(x => FromX(x)).ToArray();
 			}
 		}
 		return Array.Empty<FileNode>();
@@ -285,9 +285,9 @@ partial class FileNode :ICollectionFile
 	{
 		folder = main = null;
 		for(var x = IsFolder ? _x : _x.Parent; x != Root.Xml; x = x.Parent) {
-			if(!x.Attribute_(out string guid, "project")) continue;
+			if(!x.Attribute_(out string guid, XN.project)) continue;
 			folder = FromX(x);
-			x = x.Descendant_("f", "g", guid);
+			x = x.Descendant_(XN.f, XN.g, guid);
 			if(x == null) break;
 			main = FromX(x);
 			return true;
@@ -304,46 +304,17 @@ partial class FileNode :ICollectionFile
 	/// <param name="fSkip">Skip this file.</param>
 	public IEnumerable<FileNode> EnumProjectFiles(FileNode fSkip = null)
 	{
-		foreach(var v in _x.Descendants("f")) {
+		foreach(var v in _x.Descendants(XN.f)) {
 			//Print(v);
 			var f = FromX(v);
-			if(f != fSkip && f.Name.EndsWith_(".cs", true)) yield return f;
+			if(f != fSkip && f.NodeType == ENodeType.CS) yield return f;
 		}
 	}
 
-	public bool IsProjectFolder => IsFolder && _x.HasAttribute_("project");
+	public bool IsProjectFolder => IsFolder && _x.HasAttribute_(XN.project);
 
 	/// <summary>
-	/// Gets whether this is folder, script, .cs or other file.
-	/// </summary>
-	public ENodeType NodeType
-	{
-		get
-		{
-			if(IsFolder) return ENodeType.Folder;
-			var s = Name;
-			if(s.EndsWith_(".cs", true)) return ENodeType.CS;
-			if(s.IndexOf('.') < 0) return ENodeType.Script;
-			return ENodeType.Other;
-		}
-	}
-
-	/// <summary>
-	/// True if <see cref="NodeType"/> is Script.
-	/// </summary>
-	public bool IsScript => NodeType == ENodeType.Script;
-
-	/// <summary>
-	/// Returns FileNode from x annotation.
-	/// </summary>
-	/// <param name="x">Can be null.</param>
-	internal static FileNode FromX(XElement x)
-	{
-		return x?.Annotation<FileNode>();
-	}
-
-	/// <summary>
-	/// Unselects all and selects this.
+	/// Unselects all and selects this. Does not open document.
 	/// If this is root, just unselects all.
 	/// </summary>
 	public void SelectSingle()
@@ -365,14 +336,14 @@ partial class FileNode :ICollectionFile
 	}
 
 	/// <summary>
-	/// Call this to update control view when changed node data (text, image, checked, color, etc).
-	/// Calls <see cref="FilesModel.OnNodeChanged"/>.
+	/// Call this to update/redraw control row view when changed node data (text, image, checked, color, etc) and don't need to change row height.
 	/// </summary>
-	/// <param name="justInvalidateRow">Just invalidate row rectangle. Much faster. Use when don't need to change row height.</param>
-	public void UpdateControl(bool justInvalidateRow = false)
-	{
-		_model.OnNodeChanged(this, justInvalidateRow);
-	}
+	public void UpdateControlRow() => Control.UpdateNode(TreeNodeAdv);
+
+	/// <summary>
+	/// Call this to update/redraw control view when changed node data (text, image, etc) and need to change row height.
+	/// </summary>
+	public void UpdateControlRowHeight() => _model.OnNodeChanged(this);
 
 	/// <summary>
 	/// Gets control's object of this item.
@@ -383,9 +354,12 @@ partial class FileNode :ICollectionFile
 		{
 			var c = Control;
 			if(this == Root) return c.Root;
-			return c.FindNode(TreePath, true);
+			var tp = TreePath;
+			if(tp == null) return null; //deleted node
+			return c.FindNode(tp, true);
 
-			//note: don't use c.FindNodeByTag. It does not find nodes in folders that were never expanded, unless c.LoadOnDemand is false.
+			//CONSIDER: cache in a field. But can be difficult to manage. Currently this func is not called frequently.
+			//note: don't use c.FindNodeByTag. It does not find in never-expanded folders, unless c.LoadOnDemand is false. And slower.
 		}
 	}
 
@@ -396,15 +370,13 @@ partial class FileNode :ICollectionFile
 	{
 		get
 		{
-			FileNode node = this, root = Root;
-			if(node == root) return TreePath.Empty;
-			var stack = new Stack<object>(); //use Stack because its ToArray creates array in reverse order
-			while(node != root) {
-				Debug.Assert(node != null); //once was nullreference exception, after deleting several items and then selecting an item quickly, don't know why
-				stack.Push(node);
-				node = node.Parent;
-			}
-			return new TreePath(stack.ToArray());
+			int n = 0;
+			for(XElement x = _x, root = Root.Xml; x != root; x = x.Parent, n++)
+				if(x == null) return null; //deleted node
+			if(n == 0) return TreePath.Empty; //root
+			var a = new object[n];
+			for(var x = _x; n > 0;) { a[--n] = FromX(x); x = x.Parent; }
+			return new TreePath(a);
 		}
 	}
 
@@ -443,17 +415,21 @@ partial class FileNode :ICollectionFile
 	public Bitmap GetIcon(bool expandedFolder = false)
 	{
 		string k;
-		switch(NodeType) {
-		case ENodeType.Folder:
-			if(IsProjectFolder) k = "project";
-			else if(expandedFolder) k = "folderOpen";
-			else k = "folder";
-			break;
-		case ENodeType.Script: k = "fileScript"; break;
-		case ENodeType.CS: k = "fileClass"; break;
-		default:
-			if(!IsLink(out string s)) s = FilePath;
-			return IconCache.GetImage(s, true);
+		if(IsDeleted) {
+			k = "delete";
+		} else {
+			switch(NodeType) {
+			case ENodeType.Folder:
+				if(IsProjectFolder) k = "project";
+				else if(expandedFolder) k = "folderOpen";
+				else k = "folder";
+				break;
+			case ENodeType.Script: k = "fileScript"; break;
+			case ENodeType.CS: k = "fileClass"; break;
+			default:
+				if(!IsLink(out string s)) s = FilePath;
+				return IconCache.GetImage(s, true);
+			}
 		}
 		return EResources.GetImageUseCache(k);
 	}
@@ -481,7 +457,52 @@ partial class FileNode :ICollectionFile
 
 	public IEnumerable<ICollectionFile> IcfEnumProjectFiles(ICollectionFile fSkip = null) => EnumProjectFiles(fSkip as FileNode);
 
+	public bool IcfIsScript => NodeType == ENodeType.Script;
+
 	#endregion
+
+#if TEST_MANY_COLUMNS
+				public bool Checked
+				{
+					get;
+					set;
+				}
+
+				public object Combo
+				{
+					get; set;
+					//get { return "test"; }
+					//set { }
+				}
+
+				public RegexOptions ComboEnum
+				{
+					get; set;
+					//get { return "test"; }
+					//set { }
+				}
+
+				public decimal Decimal
+				{
+					get; set;
+					//get { return "10.5"; }
+					//set { }
+				}
+
+				public int Integer
+				{
+					get; set;
+					//get { return "10"; }
+					//set { }
+				}
+
+				public decimal UpDown
+				{
+					get; set;
+					//get { return "10"; }
+					//set { }
+				}
+#endif
 }
 
 enum ENodeType
@@ -490,4 +511,14 @@ enum ENodeType
 	Script,
 	CS,
 	Other,
+}
+
+/// <summary>
+/// Static XName instances for XML tag/attribute names used in this app.
+/// XML functions much faster with XName than with string. When with string, .NET looks for it in its static hashtable.
+/// The variable names match the strings.
+/// </summary>
+class XN
+{
+	public static readonly XName f = "f", d = "d", n = "n", g = "g", path = "path", project = "project", run = "run";
 }

@@ -114,7 +114,7 @@ class PanelRecent :Control, ITreeModel
 			//m.Show(_c);
 			break;
 		case MouseButtons.Middle:
-			Model.CloseFile(f);
+			Model.CloseFile(f, true);
 			break;
 		}
 	}

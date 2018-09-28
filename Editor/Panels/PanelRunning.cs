@@ -109,7 +109,7 @@ class PanelRunning :Control, ITreeModel
 			m.Show(_c);
 			break;
 		case MouseButtons.Middle:
-			if(ofThisModel) Model.CloseFile(f);
+			if(ofThisModel) Model.CloseFile(f, true);
 			break;
 		}
 	}

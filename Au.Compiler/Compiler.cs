@@ -64,8 +64,8 @@ namespace Au.Compiler
 				try {
 					ok = _Compile(forRun, f, out r, projFolder);
 				}
-				catch(Exception e) {
-					Print($"Failed to compile '{f.Name}'. {e.GetType().Name}, {e.Message}");
+				catch(Exception ex) {
+					Print($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack_()}");
 				}
 				finally {
 					LibSetTimerGC();
@@ -412,8 +412,7 @@ internal static string[] args = System.Array.Empty<string>();
 						o = File.ReadAllText(path);
 						break;
 					case "strings":
-						var csv = new CsvTable();
-						csv.FromFile(path);
+						var csv = CsvTable.Load(path);
 						if(csv.ColumnCount != 2) throw new ArgumentException("CSV must contain 2 columns separated with ,");
 						foreach(var row in csv.Data) {
 							rw.AddResource(row[0], row[1]);
@@ -468,7 +467,7 @@ internal static string[] args = System.Array.Empty<string>();
 
 		static void _ResourceException(Exception e, MetaComments m, ICollectionFile curFile)
 		{
-			var em = e.GetType().Name + ", " + e.Message;
+			var em = e.ToStringWithoutStack_();
 			var err = m.Errors;
 			var f = m.Files[0].f;
 			if(curFile == null) err.AddError(f, "Failed to add resources. " + em);
@@ -732,7 +731,7 @@ void _Main(string[] args) {");
 		/// <param name="f">Script.</param>
 		public static string ConvertCodeScriptToApp(ICollectionFile f)
 		{
-			Debug.Assert(f.IsScript);
+			Debug.Assert(f.IcfIsScript);
 			var m = new MetaComments();
 			if(!m.Parse(f, null, EMPFlags.PrintErrors)) return null;
 			if(m.Files == null) return ""; //empty text

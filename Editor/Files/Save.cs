@@ -20,13 +20,14 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 using static Program;
+using LiteDB;
 
 partial class FilesModel
 {
 	public class AutoSave
 	{
 		FilesModel _model;
-		int _collAfterS, _stateAfterS, _curFileAfterS;
+		int _collAfterS, _stateAfterS, _textAfterS;
 		internal bool LoadingState;
 
 		public AutoSave(FilesModel model)
@@ -45,7 +46,7 @@ partial class FilesModel
 			//must be all saved or unchanged
 			Debug.Assert(_collAfterS == 0);
 			Debug.Assert(_stateAfterS == 0);
-			Debug.Assert(_curFileAfterS == 0);
+			Debug.Assert(_textAfterS == 0);
 		}
 
 		/// <summary>
@@ -73,7 +74,7 @@ partial class FilesModel
 		/// <param name="afterS">Timer time, seconds.</param>
 		public void TextLater(int afterS = 60)
 		{
-			if(_curFileAfterS < 1 || _curFileAfterS > afterS) _curFileAfterS = afterS;
+			if(_textAfterS < 1 || _textAfterS > afterS) _textAfterS = afterS;
 		}
 
 		/// <summary>
@@ -94,10 +95,13 @@ partial class FilesModel
 
 		/// <summary>
 		/// If editor text is set to save (TextLater), saves it now.
+		/// Also saves markers, folding, etc, unless onlyText is true.
 		/// </summary>
-		public void TextNowIfNeed()
+		public void TextNowIfNeed(bool onlyText = false)
 		{
-			if(_curFileAfterS > 0) _SaveTextNow();
+			if(_textAfterS > 0) _SaveTextNow();
+			if(onlyText) return;
+			Panels.Editor.SaveEditorData();
 		}
 
 		void _SaveCollectionNow()
@@ -116,10 +120,10 @@ partial class FilesModel
 
 		void _SaveTextNow()
 		{
-			_curFileAfterS = 0;
+			_textAfterS = 0;
 			Debug.Assert(_model != null); if(_model == null) return;
 			Debug.Assert(Panels.Editor.IsOpen);
-			if(!Panels.Editor.Save()) _curFileAfterS = 300; //if fails, retry later
+			if(!Panels.Editor.SaveText()) _textAfterS = 300; //if fails, retry later
 		}
 
 		/// <summary>
@@ -136,7 +140,7 @@ partial class FilesModel
 		{
 			if(_collAfterS > 0 && --_collAfterS == 0) _SaveCollectionNow();
 			if(_stateAfterS > 0 && --_stateAfterS == 0) _SaveStateNow();
-			if(_curFileAfterS > 0 && --_curFileAfterS == 0) _SaveTextNow();
+			if(_textAfterS > 0 && --_textAfterS == 0) _SaveTextNow();
 		}
 
 		void _MainForm_VisibleChanged(object sender, EventArgs e)
@@ -168,21 +172,20 @@ partial class FilesModel
 	/// </summary>
 	bool _SaveStateNow()
 	{
+		if(TableMics == null) return true;
 		try {
-			//Perf.First();
-			var xr = new XElement("state");
-			xr.Add(new XElement("expanded", string.Join(" ", TV.AllNodes.Where(n => n.IsExpanded).Select(n => (n.Tag as FileNode).Guid))));
-			xr.Add(new XElement("open", string.Join(" ", OpenFiles.Select(f => f.Guid))));
-			if(_currentFile != null) xr.Add(new XElement("current", _currentFile.Guid));
-			//var sb = new StringBuilder();
-			//XElement x = new XElement("windows");
-			//Print(xr);
-			xr.Save(this.StateFile);
-			//Perf.NW();
+			TableMics.Upsert(new DBMisc("expanded", string.Join(" ", TV.AllNodes.Where(n => n.IsExpanded).Select(n => (n.Tag as FileNode).Guid))));
+
+			using(new Au.Util.LibStringBuilder(out var b)) {
+				var a = OpenFiles;
+				b.Append(a.IndexOf(_currentFile));
+				foreach(var v in a) b.Append(' ').Append(v.Guid);
+				TableMics.Upsert(new DBMisc("open", b.ToString()));
+			}
 			return true;
 		}
-		catch(Exception ex) { //XElement.Save exceptions are undocumented
-			AuDialog.ShowError("Failed to save file states", StateFile, expandedText: ex.Message);
+		catch(Exception ex) {
+			Debug_.Print(ex);
 			return false;
 		}
 	}
@@ -197,43 +200,75 @@ partial class FilesModel
 		//	2. SciControl handle must be created because _SetCurrentFile sets its text etc.
 		Debug.Assert(MainForm.IsHandleCreated);
 
-		if(!File_.ExistsAsFile(StateFile)) return;
+		if(TableMics == null) return;
 		try {
 			Save.LoadingState = true;
-			var xr = XElement.Load(StateFile);
+
 			//expanded folders
-			var s = xr.Element("expanded")?.Value;
+			var s = TableMics.FindById("expanded")?.s;
 			if(!Empty(s)) {
-				//Perf.First();
 				TV.BeginUpdate();
 				foreach(var guid in s.Segments_(" ")) {
 					var fn = this.FindByGUID(guid.Value);
-					if(fn == null) continue; //unexpected, but it's ok, we'll rebuild XML eventually
-					fn.TreeNodeAdv.Expand();
+					fn?.TreeNodeAdv.Expand();
 				}
 				TV.EndUpdate();
-				//Perf.NW();
 			}
+
 			//open files
-			s = xr.Element("open")?.Value;
+			s = TableMics.FindById("open")?.s;
 			if(!Empty(s)) {
+				//format: indexOfActiveDocOrMinusOne GUID1 GUID2 ...
+				int i = -2, iActive = s.ToInt_();
+				FileNode fnActive = null;
 				//Perf.First();
 				foreach(var guid in s.Segments_(" ")) {
-					var fn = this.FindByGUID(guid.Value);
-					if(fn == null) continue;
+					i++; if(i < 0) continue;
+					var fn = this.FindByGUID(guid.Value); if(fn == null) continue;
 					OpenFiles.Add(fn);
+					if(i == iActive) fnActive = fn;
 				}
-				Panels.Open.UpdateList();
+				//Perf.Next();
+				if(fnActive == null || !_SetCurrentFile(fnActive)) Panels.Open.UpdateList();
 				//Perf.NW();
-			}
-			s = xr.Element("current")?.Value;
-			if(!Empty(s)) {
-				var fn = this.FindByGUID(s);
-				if(fn != null) _SetCurrentFile(fn);
 			}
 		}
 		catch(Exception ex) { Debug_.Print(ex.Message); }
 		finally { Save.LoadingState = false; }
 	}
+}
 
+/// <summary>
+/// Type of LiteDB database editor.db table 'misc' items.
+/// In that table we save expanded folders, open documents, etc.
+/// </summary>
+class DBMisc
+{
+	public string id { get; set; }
+	public string s { get; set; }
+
+	public DBMisc() { } //need for LiteDB
+	public DBMisc(string id, string s) { this.id = id; this.s = s; }
+}
+
+class DBEdit
+{
+	//info:
+	//	LiteDB uses only properties, not fields.
+	//	The unique id property must be named Id or id or _id or have [BsonId].
+
+	public string id { get; set; }
+	public List<int> folding { get; set; }
+	public List<int> bookmarks { get; set; }
+	public List<int> breakpoints { get; set; }
+
+#if DEBUG
+	public override string ToString()
+	{
+		var s1 = folding == null ? "null" : string.Join(" ", folding);
+		var s2 = bookmarks == null ? "null" : string.Join(" ", bookmarks);
+		var s3 = breakpoints == null ? "null" : string.Join(" ", breakpoints);
+		return $"folding={s1},  bookmarks={s2},  breakpoints={s3}";
+	}
+#endif
 }

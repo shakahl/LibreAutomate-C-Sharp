@@ -22,21 +22,27 @@ using static Au.NoClass;
 using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
+using LiteDB;
 
 partial class PanelEdit :Control
 {
-	List<SciCode> _docs = new List<SciCode>(); //documents that are actually open currently. Note that FilesModel.OpenFiles contains these and possibly more.
+	List<SciCode> _docs = new List<SciCode>(); //documents that are actually open currently. Note: FilesModel.OpenFiles contains not only these.
 	SciCode _activeDoc;
 
 	public AuScintilla ActiveDoc => _activeDoc;
+
+	public bool IsOpen => _activeDoc != null;
 
 	public PanelEdit()
 	{
 		this.Name = "Code";
 		this.BackColor = SystemColors.AppWorkspace;
+	}
 
-		_UpdateUI_IsOpen(); //never mind: makes startup slower by ~4ms (later, when enabling toolbars etc)
-
+	protected override void OnHandleCreated(EventArgs e)
+	{
+		base.OnHandleCreated(e);
+		_UpdateUI_IsOpen();
 	}
 
 	protected override void OnGotFocus(EventArgs e) { _activeDoc?.Focus(); }
@@ -44,84 +50,165 @@ partial class PanelEdit :Control
 	//public SciControl SC { get => _activeDoc; }
 
 	/// <summary>
-	/// If f is null, closes current file and destroys its control.
-	/// Else hides current file's control, and:
-	///		If f is already open, unhides its control.
-	///		Else loads f text and creates control. If fails, does not change anything.
+	///	If f is already open, unhides its control.
+	///	Else loads f text and creates control. If fails, does not change anything.
+	/// Hides current file's control.
+	/// Returns false if failed to read file.
+	/// Does not save text of previously active document.
 	/// </summary>
 	/// <param name="f"></param>
 	public bool Open(FileNode f)
 	{
 		Debug.Assert(MainForm.IsHandleCreated);
+		Debug.Assert(f != null);
 
-		if(f == null) {
-			if(_activeDoc == null) return true;
-			_activeDoc.Dispose();
-			_docs.Remove(_activeDoc);
-			_activeDoc = null;
+		if(f == _activeDoc?.FN) return true;
+		bool focus = _activeDoc != null ? _activeDoc.Focused : false;
+		var doc = _docs.Find(v => v.FN == f);
+		if(doc != null) {
+			if(_activeDoc != null) _activeDoc.Visible = false;
+			_activeDoc = doc;
+			_activeDoc.Visible = true;
 		} else {
-			bool focus = _activeDoc != null ? _activeDoc.Focused : false;
-			var doc = _docs.Find(v => v.FN == f);
-			if(doc != null) {
-				if(_activeDoc != null) _activeDoc.Visible = false;
-				_activeDoc = doc;
-				_activeDoc.Visible = true;
-			} else {
-				string s = null;
-				try {
-					s = File.ReadAllText(f.FilePath);
-				}
-				catch(Exception ex) { Print(ex.Message); return false; }
-
-				if(_activeDoc != null) _activeDoc.Visible = false;
-				doc = new SciCode(f);
-				_docs.Add(doc);
-				_activeDoc = doc;
-				this.Controls.Add(doc);
-				//doc.CreateHandle_(); //info: not auto-created because not Visible
-				doc.ST.SetText(s, noUndo: true, noNotif: true);
+			string s = null;
+			try {
+				s = File.ReadAllText(f.FilePath);
 			}
-			if(focus) _activeDoc.Focus();
+			catch(Exception ex) { Print(ex.Message); return false; }
+
+			if(_activeDoc != null) _activeDoc.Visible = false;
+			doc = new SciCode(f);
+			_docs.Add(doc);
+			_activeDoc = doc;
+			this.Controls.Add(doc);
+			//doc.CreateHandle_(); //info: not auto-created because not Visible
+			doc.ST.SetText(s, noUndo: true, noNotif: true);
+			doc.LoadEditorData();
 		}
+		if(focus) _activeDoc.Focus();
 
-		bool wasOpen = IsOpen;
-		IsOpen = _activeDoc != null;
-		if(IsOpen != wasOpen) _UpdateUI_IsOpen();
+		_UpdateUI_IsOpen();
 		return true;
 	}
-
-	public bool Save()
-	{
-		if(IsOpen) return _activeDoc.Save();
-		return true;
-	}
-
-	public bool IsOpen { get; private set; }
-
-	//public bool IsModified { get => _activeDoc.IsModified; }
 
 	/// <summary>
-	/// Updates all UI (toolbars etc) depending on IsOpen.
+	/// If f is open, closes its document and destroys its control.
+	/// f can be any, not necessary the active document.
+	/// Saves text before closing the active document.
+	/// Does not show another document when closed the active document.
 	/// </summary>
-	void _UpdateUI_IsOpen()
+	/// <param name="f"></param>
+	public void Close(FileNode f)
 	{
-		bool isOpen = IsOpen;
+		Debug.Assert(f != null);
+		SciCode doc;
+		if(f == _activeDoc?.FN) {
+			Model.Save.TextNowIfNeed();
+			doc = _activeDoc;
+			_activeDoc = null;
+		} else {
+			doc = _docs.Find(v => v.FN == f);
+			if(doc == null) return;
+		}
+		doc.Dispose();
+		_docs.Remove(doc);
+		_UpdateUI_IsOpen();
+	}
+
+	/// <summary>
+	/// Closes all documents and destroys controls.
+	/// </summary>
+	public void CloseAll(bool saveTextIfNeed)
+	{
+		if(saveTextIfNeed) Model.Save.TextNowIfNeed();
+		_activeDoc = null;
+		foreach(var doc in _docs) doc.Dispose();
+		_docs.Clear();
+		_UpdateUI_IsOpen();
+	}
+
+	public bool SaveText()
+	{
+		return _activeDoc?.SaveText() ?? true;
+	}
+
+	public void SaveEditorData()
+	{
+		_activeDoc?.SaveEditorData();
+	}
+
+	//public bool IsModified { get => _activeDoc?.IsModified ?? false; }
+
+	/// <summary>
+	/// Enables/disables Edit and Run toolbars/menus and some other UI parts depending on whether a document is open in editor.
+	/// </summary>
+	void _UpdateUI_IsOpen(bool asynchronously = true)
+	{
+		bool enable = _activeDoc != null;
+		if(enable != _uiDisabled_IsOpen) return;
+
+		if(asynchronously) {
+			BeginInvoke(new Action(() => _UpdateUI_IsOpen(false)));
+			return;
+		}
+		_uiDisabled_IsOpen = !enable;
 
 		//toolbars
-		Strips.tbEdit.Enabled = isOpen;
-		Strips.tbRun.Enabled = isOpen;
+		Strips.tbEdit.Enabled = enable;
+		Strips.tbRun.Enabled = enable;
+		//menus
+		Strips.Menubar.Items["Menu_Edit"].Enabled = enable;
+		Strips.Menubar.Items["Menu_Run"].Enabled = enable;
 		//toolbar buttons
-		Strips.tbFile.Items["File_Properties"].Enabled = isOpen;
-		//top-level menu items
-		Strips.Menubar.Items["Menu_Edit"].Enabled = isOpen;
-		Strips.Menubar.Items["Menu_Run"].Enabled = isOpen;
+		Strips.tbFile.Items["File_Properties"].Enabled = enable;
 		//drop-down menu items and submenus
 		//don't disable these because can right-click...
-		//Strips.ddFile.Items["File_Disable"].Enabled = isOpen;
-		//Strips.ddFile.Items["File_Rename"].Enabled = isOpen;
-		//Strips.ddFile.Items["File_Delete"].Enabled = isOpen;
-		//Strips.ddFile.Items["File_Properties"].Enabled = isOpen;
-		//Strips.ddFile.Items["File_More"].Enabled = isOpen;
+		//Strips.ddFile.Items["File_Disable"].Enabled = enable;
+		//Strips.ddFile.Items["File_Rename"].Enabled = enable;
+		//Strips.ddFile.Items["File_Delete"].Enabled = enable;
+		//Strips.ddFile.Items["File_Properties"].Enabled = enable;
+		//Strips.ddFile.Items["File_More"].Enabled = enable;
+	}
+	bool _uiDisabled_IsOpen;
+
+	/// <summary>
+	/// Enables/disables commands (toolbar buttons, menu items) depending on document state such as "can undo".
+	/// Called on SCN_UPDATEUI.
+	/// </summary>
+	void _UpdateUI_Cmd()
+	{
+		EUpdateUI disable = 0;
+		var d = _activeDoc;
+		if(d == null) return; //we disable the toolbar and menu
+		if(0 == d.Call(SCI_CANUNDO)) disable |= EUpdateUI.Undo;
+		if(0 == d.Call(SCI_CANREDO)) disable |= EUpdateUI.Redo;
+		if(0 != d.Call(SCI_GETSELECTIONEMPTY)) disable |= EUpdateUI.Copy;
+		if(disable.Has_(EUpdateUI.Copy) || 0 != d.Call(SCI_GETREADONLY)) disable |= EUpdateUI.Cut;
+		//if(0 == d.Call(SCI_CANPASTE)) disable |= EUpdateUI.Paste; //rejected. Often slow. Also need to see on focused etc.
+
+		var dif = disable ^ _cmdDisabled; if(dif == 0) return;
+
+		//Print(dif);
+		_cmdDisabled = disable;
+		if(dif.Has_(EUpdateUI.Undo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Undo), !disable.Has_(EUpdateUI.Undo));
+		if(dif.Has_(EUpdateUI.Redo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Redo), !disable.Has_(EUpdateUI.Redo));
+		if(dif.Has_(EUpdateUI.Cut)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Cut), !disable.Has_(EUpdateUI.Cut));
+		if(dif.Has_(EUpdateUI.Copy)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Copy), !disable.Has_(EUpdateUI.Copy));
+		//if(dif.Has_(EUpdateUI.Paste)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Paste), !disable.Has_(EUpdateUI.Paste));
+
+	}
+
+	EUpdateUI _cmdDisabled;
+
+	[Flags]
+	enum EUpdateUI
+	{
+		Undo = 1,
+		Redo = 2,
+		Cut = 4,
+		Copy = 8,
+		//Paste = 16,
+
 	}
 
 	public unsafe void Test()
@@ -226,8 +313,20 @@ partial class PanelEdit :Control
 
 			//_SetLexer(LexLanguage.SCLEX_CPP);
 			ST.SetLexerCpp();
-			_InitFolding();
+			_FoldingInit();
 		}
+
+		//protected override void Dispose(bool disposing)
+		//{
+		//	Output.LibWriteQM2($"Dispose disposing={disposing} IsHandleCreated={IsHandleCreated} Visible={Visible}");
+		//	base.Dispose(disposing);
+		//}
+
+		//protected override void OnVisibleChanged(EventArgs e)
+		//{
+		//	if(!Visible) Output.LibWriteQM2("hide");
+		//	base.OnVisibleChanged(e);
+		//}
 
 		//protected override void OnMouseDown(MouseEventArgs e)
 		//{
@@ -275,10 +374,13 @@ partial class PanelEdit :Control
 			case NOTIF.SCN_MODIFIED:
 
 				break;
+			case NOTIF.SCN_UPDATEUI:
+				//Print((uint)n.updated);
+				if(0 != (n.updated & 3)) Panels.Editor._UpdateUI_Cmd();
+				break;
 			case NOTIF.SCN_MARGINCLICK:
 				if(n.margin == c_marginFold) {
-					_FoldLines(null, n.position);
-					//TODO: save
+					_FoldingOnMarginClick(null, n.position);
 				}
 				break;
 			}
@@ -286,9 +388,19 @@ partial class PanelEdit :Control
 			base.OnSciNotify(ref n);
 		}
 
+		protected override void WndProc(ref Message m)
+		{
+			switch(m.Msg) {
+			case Api.WM_SETFOCUS:
+				Model?.OnEditorFocused();
+				break;
+			}
+			base.WndProc(ref m);
+		}
+
 		public bool IsUnsaved => 0 != Call(SCI_GETMODIFY);
 
-		public bool Save()
+		public bool SaveText()
 		{
 			if(IsUnsaved) {
 				try {
@@ -304,7 +416,76 @@ partial class PanelEdit :Control
 			return true;
 		}
 
-		void _InitFolding()
+		#region editor data
+
+		DBEdit _savedED;
+
+		internal void LoadEditorData()
+		{
+			_savedED = Model.TableEdit?.FindById(FN.Guid);
+			_savedED?.folding?.ForEach(line => Call(SCI_FOLDLINE, line));
+			_savedED?.bookmarks?.ForEach(line => Call(SCI_MARKERADDSET, line, 1));
+			_savedED?.breakpoints?.ForEach(line => Call(SCI_MARKERADDSET, line, 2));
+
+			//speed with LiteDB: load or save: first time ngened min 31 ms, non-ngened min 105 ms; then 1 ms.
+			//speed with PersistentDictionary (ESENT): load: first time 250 ms, then 95 ms; save 120 ms. Don't remember whether ngened.
+		}
+
+		internal void SaveEditorData()
+		{
+			List<int> folding = _savedED?.folding, bookmarks = _savedED?.bookmarks, breakpoints = _savedED?.breakpoints;
+			bool changed = false;
+			if(_GetLineDataToSave(0, ref folding)) changed = true;
+			if(_GetLineDataToSave(1, ref bookmarks)) changed = true;
+			if(_GetLineDataToSave(2, ref breakpoints)) changed = true;
+
+			if(changed) {
+				if(_savedED == null) _savedED = new DBEdit { id = FN.Guid };
+				_savedED.folding = folding;
+				_savedED.bookmarks = bookmarks;
+				_savedED.breakpoints = breakpoints;
+				Model.TableEdit?.Upsert(_savedED);
+			}
+		}
+
+		/// <summary>
+		/// Gets indices of lines containing markers or contracted folding points.
+		/// Returns true if changed and need to save.
+		/// </summary>
+		/// <param name="marker">If 0, uses SCI_CONTRACTEDFOLDNEXT. Else uses SCI_MARKERNEXT; it is markerMask.</param>
+		/// <param name="saved">On input - previously saved line indices; can be null or empty if none. On output - current line indices; null if was null and returned false.</param>
+		bool _GetLineDataToSave(int marker, ref List<int> saved)
+		{
+			bool changed = false; int nContracted = 0;
+			var a = saved;
+			for(int i = 0; ; i++, nContracted++) {
+				if(marker == 0) i = Call(SCI_CONTRACTEDFOLDNEXT, i);
+				else i = Call(SCI_MARKERNEXT, i, marker);
+				if(i < 0) break;
+
+				if(a == null) {
+					changed = true;
+					a = new List<int>();
+				} else if(!changed) {
+					if(nContracted < a.Count && a[nContracted] == i) continue;
+					changed = true;
+					a.RemoveRange(nContracted, a.Count - nContracted);
+				}
+				a.Add(i);
+			}
+			if(!changed && a != null && nContracted < a.Count) {
+				changed = true;
+				a.RemoveRange(nContracted, a.Count - nContracted);
+			}
+			saved = a;
+			return changed;
+		}
+
+		#endregion
+
+		#region folding
+
+		void _FoldingInit()
 		{
 			ST.SetStringString(SCI_SETPROPERTY, "fold\0" + "1");
 			ST.SetStringString(SCI_SETPROPERTY, "fold.comment\0" + "1");
@@ -346,7 +527,7 @@ partial class PanelEdit :Control
 			ST.MarginWidth(c_marginFold, Math.Max(wid, 12));
 		}
 
-		bool _FoldLines(bool? fold, int startPos)
+		bool _FoldingOnMarginClick(bool? fold, int startPos)
 		{
 			int line = Call(SCI_LINEFROMPOSITION, startPos);
 			if(0 == (Call(SCI_GETFOLDLEVEL, line) & SC_FOLDLEVELHEADERFLAG)) return false;
@@ -363,9 +544,11 @@ partial class PanelEdit :Control
 					if(pos <= i) ST.PositionBytes = startPos;
 				}
 			} else {
-				Call(SCI_TOGGLEFOLD, line);
+				Call(SCI_FOLDLINE, line, 1);
 			}
 			return true;
 		}
+
+		#endregion
 	}
 }

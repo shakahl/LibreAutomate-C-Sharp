@@ -50,8 +50,8 @@
 			<File_Delete i="delete" hkText="Delete"/>
 			<File_Properties t="Properties..." i="properties" hk="Ctrl+P"/>
 			<File_OpenClose t="Open/Close">
-				<File_Open/>
-				<File_OpenInNewWindow/>
+				<File_Open hkText="Enter"/>
+				<!--<File_OpenInNewWindow/>-->
 				<File_OpenInDefaultApp/>
 				<File_SelectInExplorer/>
 				<sep/>
@@ -59,7 +59,7 @@
 				<File_CloseAll/>
 				<File_CollapseFolders/>
 				<sep/>
-				<File_PreviousDocument i="back"/>
+				<File_PreviousDocument i="back" hk="Ctrl+Tab"/>
 			</File_OpenClose>
 			<File_More>
 				<File_Cut hkText="Ctrl+X"/>
@@ -88,12 +88,12 @@
 			<File_Exit hkText="Alt+F4"/>
 		</Menu_File>
 		<Menu_Edit>
-			<Edit_Undo i="undo"/>
-			<Edit_Redo i="redo"/>
+			<Edit_Undo i="undo" hkText="Ctrl+Z"/>
+			<Edit_Redo i="redo" hkText="Ctrl+Y"/>
 			<sep/>
-			<Edit_Cut i="cut"/>
-			<Edit_Copy i="copy"/>
-			<Edit_Paste i="paste"/>
+			<Edit_Cut i="cut" hkText="Ctrl+X"/>
+			<Edit_Copy i="copy" hkText="Ctrl+C"/>
+			<Edit_Paste i="paste" hkText="Ctrl+V"/>
 			<sep/>
 			<Edit_Find i="find"/>
 			<Edit_FindReferences/>

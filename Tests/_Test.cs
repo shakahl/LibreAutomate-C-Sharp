@@ -100,190 +100,6 @@ static partial class Test
 
 
 
-	static unsafe void TestWinHook()
-	{
-		////using Au.Util;
-		//var stop = false;
-		//using(WinHook.Keyboard(x =>
-		//{
-		//	Print(x);
-		//	if(x.vkCode == KKey.Escape) { stop = true; return true; } //return true to cancel the event
-		//	return false;
-		//})) {
-		//	MessageBox.Show("Low-level keyboard hook.", "Test");
-		//	//or
-		//	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for Esc key
-		//	//Print("the end");
-		//}
-
-		////using Au.Util;
-		//var stop = false;
-		//using(WinHook.Mouse(x =>
-		//{
-		//	Print(x);
-		//	if(x.Event == HookData.MouseEvent.RightButton) { stop = x.IsButtonUp; return true; } //return true to cancel the event
-		//	return false;
-		//})) {
-		//	MessageBox.Show("Low-level mouse hook.", "Test");
-		//	//or
-		//	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for right-click
-		//	//Print("the end");
-		//}
-
-		////using Au.Util;
-		//using(WinHook.ThreadCbt(x =>
-		//{
-		//	Print(x.code);
-		//	switch(x.code) {
-		//	case HookData.CbtEvent.ACTIVATE:
-		//		Print(x.ActivationInfo(out _, out _));
-		//		break;
-		//	case HookData.CbtEvent.CREATEWND:
-		//		Print(x.CreationInfo(out var c, out _), c->x, c->lpszName);
-		//		break;
-		//	case HookData.CbtEvent.CLICKSKIPPED:
-		//		Print(x.MouseInfo(out var m), m->pt, m->hwnd);
-		//		break;
-		//	case HookData.CbtEvent.KEYSKIPPED:
-		//		Print(x.KeyInfo(out _));
-		//		break;
-		//	case HookData.CbtEvent.SETFOCUS:
-		//		Print(x.FocusInfo(out Wnd wPrev), wPrev);
-		//		break;
-		//	case HookData.CbtEvent.MOVESIZE:
-		//		Print(x.MoveSizeInfo(out var r), r->ToString());
-		//		break;
-		//	case HookData.CbtEvent.MINMAX:
-		//		Print(x.MinMaxInfo(out var state), state);
-		//		break;
-		//	case HookData.CbtEvent.DESTROYWND:
-		//		Print((Wnd)x.wParam);
-		//		break;
-		//	}
-		//	return false;
-		//})) {
-		//	MessageBox.Show("CBT hook.", "Test", MessageBoxButtons.OKCancel);
-		//	//new Form().ShowDialog(); //to test MINMAX
-		//}
-
-		//Timer_.After(1000, t => { Wnd.Misc.PostThreadMessage(Api.WM_APP); Api.PeekMessage(out var mk, default, 0, 0, Api.PM_NOREMOVE); Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE); });
-
-		////using Au.Util;
-		//using(WinHook.ThreadGetMessage(x =>
-		//{
-		//	Print(x.msg->ToString(), x.PM_NOREMOVE);
-		//})) MessageBox.Show("hook");
-
-		////using Au.Util;
-		//using(WinHook.ThreadKeyboard(x =>
-		//{
-		//	Print(x.key, 0 != (x.lParam & 0x80000000) ? "up" : "", x.lParam, x.PM_NOREMOVE);
-		//	return false;
-		//})) MessageBox.Show("hook");
-
-		////using Au.Util;
-		//using(WinHook.ThreadMouse(x =>
-		//{
-		//	Print(x.message, x.m->pt, x.m->hwnd, x.PM_NOREMOVE);
-		//	return false;
-		//})) MessageBox.Show("hook");
-
-		//Task.Run(() => { 1.s(); Wnd.Find(className: "#32770").Send(Api.WM_APP + 87); });
-
-		////using Au.Util;
-		//using(WinHook.ThreadCallWndProc(x =>
-		//{
-		//	ref var m = ref *x.msg;
-		//	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam);
-		//	Print(mm, x.sentByOtherThread);
-		//})) MessageBox.Show("hook");
-
-		////using Au.Util;
-		//using(WinHook.ThreadCallWndProcRet(x =>
-		//{
-		//	ref var m = ref *x.msg;
-		//	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam); mm.Result = m.lResult;
-		//	Print(mm, x.sentByOtherThread);
-		//})) MessageBox.Show("hook");
-
-		//Print(WaitForKey2(-5, KKey.Left));
-
-		//using(var x = new OnScreenRect()) {
-		//	x.Rect = new RECT(100, 100, 200, 200, true);
-		//	x.Color = Color.SlateBlue;
-		//	x.Thickness = 4;
-		//	x.Show(true);
-		//	for(int i = 0; i < 6; i++) {
-		//		300.ms();
-		//		x.Visible = !x.Visible;
-		//	}
-		//}
-
-		//var h = WinHook.ThreadCbt(x =>
-		// {
-
-		//	 return false;
-		// });
-		//MessageBox.Show("hook");
-
-		//AuDialog.ShowEx("test", secondsTimeout: 5);
-
-		//using(var b = new BlockUserInput(BIEvents.MouseClicks)) {
-		//	//AuDialog.Show(buttons: "OK|Cancel");
-		//	AuDialog.ShowTextInput(out var s, editType: DEdit.Multiline);
-		//}
-	}
-
-	static void _TestGetAccFromHook()
-	{
-		try {
-			//Api.ReplyMessage(0);
-			Print(Acc.FromMouse());
-		}
-		catch(Exception e) { Print(e.Message); }
-	}
-
-	static void TestAccHook()
-	{
-		//using Au.Util;
-		bool stop = false;
-		using(new AccHook(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
-		{
-			Print(x.wnd);
-			var a = x.GetAcc();
-			Print(a);
-			if(x.wnd.ClassNameIs("Shell_TrayWnd")) stop = true;
-		})) {
-			MessageBox.Show("hook");
-			//or
-			//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
-			//Print("the end");
-		}
-
-		//using(var b = new BlockUserInput(BIEvents.Keys)) {
-		//	//AuDialog.Show(buttons: "OK|Cancel");
-		//	AuDialog.ShowTextInput(out var s, editType: DEdit.Multiline);
-		//}
-	}
-
-	class _TestHookFinalizer :IDisposable
-	{
-		public int x = 8;
-		public override string ToString()
-		{
-			return "x=" + x;
-		}
-
-		public void Dispose()
-		{
-			GC.SuppressFinalize(this);
-		}
-
-		~_TestHookFinalizer() => Print("~_TestHookFinalizer");
-
-
-	}
-
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void TestAuLoadingFormsAssembly()
 	{
@@ -419,7 +235,7 @@ static partial class Test
 						50.ms();
 					}
 					//File.WriteAllText(file, "TEXT"); //unsafe. Exception if the file is locked.
-					//File_.OpenWithAction(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
+					//File_.OpenWithFunc(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
 				}
 			}
 			catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
@@ -451,16 +267,61 @@ static partial class Test
 		Print("OK");
 	}
 
+	static void TestCsvDictionary()
+	{
+		//		var csv =
+		//@"A1, "" 3 5  12 100 ""
+		//		A2,4 100 -8 0x10";
+		//		var x = new CsvTable(csv);
+		//		//var d = x.Data.ToDictionary(row => row[0], row => row[1], StringComparer.OrdinalIgnoreCase);
+		//		//var d = x.Data.ToDictionary(row => row[0], row => Au.Util.StringMisc.StringToIntArray(row[1]), StringComparer.OrdinalIgnoreCase);
+		//		var d = x.ToDictionary(true, s => Au.Util.StringMisc.StringToIntArray(s));
+		//		//Print(d);
+		//		foreach(var v in d) Print(v.Key, string.Join(" ", v.Value));
+		//		x.FromDictionary(d, v => string.Join(" ", v));
+		//		Print(x);
+
+		var csv =
+@"A1, 5
+a1,-8";
+		var x = CsvTable.Parse(csv);
+		//var d = x.ToDictionary(true, true);
+		//Print(d);
+		//x = CsvTable.FromDictionary(d);
+		//Print(x);
+		//var d = x.ToDictionary(true, false, s => s.ToInt_()); //rejected
+		var d = x.ToDictionary(true, true, row => row[1].ToInt_());
+		Print(d);
+		//x = CsvTable.FromDictionary(d, v => v.ToString());
+		x = CsvTable.FromDictionary(d, 2, (v, r) => r[1] = v.ToString());
+		//x = CsvTable.FromDictionary(d, 3, (v, r) => { r[1] = v.ToString(); r[2] = "TEST"; });
+		Print(x);
+
+		//var f = Folders.Temp + "test2.csv";
+		//var x = CsvTable.Parse(csv);
+		//x.Save(f);
+		//x = CsvTable.Load(f);
+		//Print(x);
+
+		//var f = Folders.Temp + "test2.csv";
+		//var x = CsvTable.Parse(csv);
+		//x.Save(f);
+		//x = CsvTable.Load(f);
+		//Print(x);
+
+	}
+
+	//static void TestAssocQS()
+	//{
+	//	Print(Api.AssocQueryString(".cs"));
+	//}
+
+
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
-		//MessageBox.Show(""); return;
-		//OutputFormExample.Main(); return;
-		//Output.IgnoreConsole = true;
-#if DEBUG
 		//Output.IgnoreConsole = true;
 		//Output.LogFile=@"Q:\Test\Au"+IntPtr.Size*8+".log";
-#endif
 		Output.LibUseQM2 = true;
 		Output.RedirectConsoleOutput = true;
 		if(!Output.IsWritingToConsole) {
@@ -471,40 +332,11 @@ static partial class Test
 		try {
 #if true
 
-			TestFileOpenWaitLocked();
+			//TestAssocQS();
+			//TestCsvDictionary();
+			//TestFileOpenWaitLocked();
 			//TestAuLoadingFormsAssembly();
-			//TestFoldersSetOnce();
 			//TestExceptionInInteropCallback();
-			//TestEnumHas2();
-			//TestGCHandle();
-			//TestStartProcessFromShell();
-			//TestConfigSettings();
-			//TestResources();
-			//TestArrayExtensions();
-			//TestCompiler2();
-			//TestWebBrowserLeaks();
-			//Cpu();
-			//var t1 = Time.Microseconds;
-			//TestPerfWithoutSM(t1);
-			//TestKeySpeedWithEnum();
-			//TestFileWriteLineSpeed();
-			//TestTaskExceptions();
-			//TestAutotext();
-			//TestCompiler();
-			//TestMenuAutoIcons();
-			//TestToolWnd();
-			//TestSciSetText();
-			//TestWndGet();
-			//TestToolWinImage();
-			//TestWFEtc();
-			//TestWndFindContainsRoleName();
-			//TestAccFindParamNavig();
-			//TestThrowAndWait();
-			//TestToolWinImageCode();
-			//TestWinImageCapture();
-			//Au.Tools.Test.OsdRect();
-			//TestOsd();
-			//TestFormClose();
 #else
 			try {
 
@@ -540,33 +372,6 @@ static partial class Test
 #endif
 		}
 		catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
-
-
-		/*
-
-		using static AuAlias;
-
-		say(...); //Output.Write(...); //or print
-		key(...); //Keyb.Key(...);
-		tkey(...); //Keyb.Text(...); //or txt
-		paste(...); //Keyb.Paste(...);
-		msgbox(...); //AuDialog.Show(...);
-		wait(...); //Time.Wait(...);
-		click(...); //Mouse.Click(...);
-		mmove(...); //Mouse.Move(...);
-		run(...); //Shell.Run(...);
-		act(...); //Wnd.Activate(...);
-		win(...); //Wnd.Find(...);
-		speed=...; //Script.Speed=...;
-
-		using(Script.TempOptions(speed
-
-		*/
-
-		//l.Perf.First();
-		//l.AuDialog.Show("f");
-		//l.Util.LibDebug_.PrintLoadedAssemblies();
-		//Print(l.DIcon.Info);
 
 	}
 }

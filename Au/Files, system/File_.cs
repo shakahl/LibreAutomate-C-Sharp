@@ -1140,15 +1140,15 @@ namespace Au
 			}
 		}
 
-		/// <inheritdoc cref="OpenWithFunc"/>
+		/// <inheritdoc cref="OpenWithFunc{T}(Func{T}, int)"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// File.WriteAllText(file, "TEXT"); //unsafe. Exception if the file is locked.
 		/// 
-		/// File_.OpenWithAction(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
+		/// File_.OpenWithFunc(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
 		/// ]]></code>
 		/// </example>
-		public static void OpenWithAction(Action f, int timeoutMS = 5000)
+		public static void OpenWithFunc(Action f, int timeoutMS = 5000)
 		{
 			if(timeoutMS < -1) throw new ArgumentOutOfRangeException();
 			long t1 = Time.Milliseconds;

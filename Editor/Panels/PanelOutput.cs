@@ -173,6 +173,7 @@ class PanelOutput :Control
 
 			SciTags.AddCommonLinkTag("open", s => _OpenLink(false, s));
 			SciTags.AddCommonLinkTag("+open", s => _OpenLink(true, s));
+			SciTags.AddCommonLinkTag("script", s => _RunScript(s));
 		}
 
 		protected override void OnHandleCreated(EventArgs e)
@@ -221,6 +222,14 @@ class PanelOutput :Control
 			int i = t.LineStart(line);
 			if(column > 0) i = t.Call(SCI_POSITIONRELATIVE, i, column); //not SCI_FINDCOLUMN, it calculates tabs
 			t.GoToPos(i);
+		}
+
+		void _RunScript(string s)
+		{
+			var a = s.Split('|');
+			var fn = Model.Find(a[0], false);
+			if(fn == null) return;
+			Run.CompileAndRun(true, fn, a.Length == 1 ? null : a.RemoveAt_(0));
 		}
 	}
 }

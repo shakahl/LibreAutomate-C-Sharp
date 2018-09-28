@@ -48,12 +48,12 @@ static class Run
 		args = new string[] { Time.Microseconds.ToString() }; //and in script use this code: Print(Time.Microseconds-Convert.ToInt64(args[0]));
 #endif
 
-		Model.Save.TextNowIfNeed();
+		Model.Save.TextNowIfNeed(onlyText: true);
 
 		if(f == null) return;
 		g1:
 		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
-		if(run && f.Xml.Attribute_(out string guid2, "run")) { var f2 = Model.FindByGUID(guid2); if(f2 != null) { f = f2; goto g1; } } //useful for library
+		if(run && f.Xml.Attribute_(out string guid2, XN.run)) { var f2 = Model.FindByGUID(guid2); if(f2 != null) { f = f2; goto g1; } } //useful for library
 
 		var nodeType = f.NodeType;
 		if(!(nodeType == ENodeType.Script || nodeType == ENodeType.CS)) return;
@@ -103,7 +103,7 @@ outputType app
 			s = f.Name; s = "test " + s.Remove(s.Length - 3); //suggested name
 			if(!AuDialog.ShowTextInput(out var name, "Set test script", "Name of new test script", editText: s, owner: MainForm)) return;
 			if(!_NewItem(out var f2, out bool isProject, "Script", name)) return;
-			f.Xml.SetAttributeValue("run", f2.Guid);
+			f.Xml.SetAttributeValue(XN.run, f2.Guid);
 			//set meta to make easier
 			if(f2 != Model.CurrentFile) return;
 			if(isProject) s =

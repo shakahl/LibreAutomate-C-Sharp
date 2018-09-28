@@ -823,7 +823,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 					sout = sout?.Trim();
 				}
 				catch(Exception ex) {
-					return (false, ex.GetType().Name + ", " + ex.Message);
+					return (false, ex.ToStringWithoutStack_());
 				}
 				//} else {
 				//never mind

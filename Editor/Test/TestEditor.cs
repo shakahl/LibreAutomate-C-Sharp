@@ -23,6 +23,9 @@ using static Program;
 using Au.Controls;
 
 #if TEST
+
+#pragma warning disable 169
+
 partial class ThisIsNotAFormFile { }
 
 partial class EForm
@@ -89,6 +92,9 @@ partial class EForm
 		//}
 
 		//Print(AppDomain.CurrentDomain.GetAssemblies());
+		//return;
+
+		//for(int i = 0; i < 5; i++) Print((uint)doc.Call(Sci.SCI_GETFOLDLEVEL, i));
 		//return;
 
 		var f = new Au.Tools.Form_Wnd(Wnd.Find("Quick*"));

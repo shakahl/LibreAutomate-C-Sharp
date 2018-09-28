@@ -357,7 +357,7 @@ namespace Au.Types
 			/// <summary>
 			/// Creates SECURITY_ATTRIBUTES that allows UAC low integrity level processes to open the kernel object.
 			/// </summary>
-			public SECURITY_ATTRIBUTES() :this("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)") { }
+			public SECURITY_ATTRIBUTES() : this("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)") { }
 
 			public void Dispose()
 			{
@@ -770,9 +770,19 @@ namespace Au.Types
 		//}
 
 		//[DllImport("shlwapi.dll", PreserveSig = true, EntryPoint = "AssocQueryStringW")]
-		//internal static extern int AssocQueryString(uint flags, ASSOCSTR str, string pszAssoc, string pszExtra, char* pszOut, ref int pcchOut);
+		//internal static extern int AssocQueryString(uint flags, /*ASSOCSTR*/ int str, string pszAssoc, string pszExtra, char[] pszOut, ref int pcchOut);
 
-
+		///// <summary>
+		///// Returns executable path of file type.
+		///// </summary>
+		///// <param name="dotExt"></param>
+		//internal static string AssocQueryString(string dotExt/*, ASSOCSTR what = ASSOCSTR.ASSOCSTR_EXECUTABLE*/)
+		//{
+		//	var b = Util.Buffers.LibChar(300, out var n);
+		//	int hr = AssocQueryString(0x20, 2, dotExt, null, b, ref n); //ASSOCF_NOTRUNCATE
+		//	if(hr == E_POINTER) hr = AssocQueryString(0x20, 2, dotExt, null, b = Util.Buffers.LibChar(n), ref n);
+		//	return hr == 0 ? b.ToString(n) : null;
+		//}
 
 
 		#endregion

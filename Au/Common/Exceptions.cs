@@ -313,5 +313,13 @@ namespace Au.Types
 		/// </example>
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static WinImage OrThrow(this WinImage x) => x ?? throw new NotFoundException("Not found (WinImage).");
+
+		/// <summary>
+		/// Returns string containing exception type name and message.
+		/// </summary>
+		public static string ToStringWithoutStack_(this Exception t)
+		{
+			return t.GetType().Name + ", " + t.Message;
+		}
 	}
 }

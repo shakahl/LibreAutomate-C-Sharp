@@ -78,10 +78,10 @@ partial class PanelFiles
 		m["Add"] = o =>
 		{
 #if false
-					var x = new XElement("f", new XAttribute("n", "NEW"));
+			var x = new XElement(XN.f, new XAttribute(XN.n, "NEW"));
 #else
-			var x = new XElement("d", new XAttribute("n", "NEW DIR"));
-			x.Add(new XElement("f", new XAttribute("n", "NEW FILE")));
+			var x = new XElement(XN.d, new XAttribute(XN.n, "NEW DIR"));
+			x.Add(new XElement(XN.f, new XAttribute(XN.n, "NEW FILE")));
 #endif
 			var k = new FileNode(_model, x);
 			//f.AddChildOrSibling(k);

@@ -74,7 +74,7 @@ class CmdHandlers :IGStripManagerCallbacks
 		_dict.Add(nameof(File_Delete), File_Delete);
 		_dict.Add(nameof(File_Properties), File_Properties);
 		_dict.Add(nameof(File_Open), File_Open);
-		_dict.Add(nameof(File_OpenInNewWindow), File_OpenInNewWindow);
+		//_dict.Add(nameof(File_OpenInNewWindow), File_OpenInNewWindow);
 		_dict.Add(nameof(File_OpenInDefaultApp), File_OpenInDefaultApp);
 		_dict.Add(nameof(File_SelectInExplorer), File_SelectInExplorer);
 		_dict.Add(nameof(File_PreviousDocument), File_PreviousDocument);
@@ -206,11 +206,10 @@ class CmdHandlers :IGStripManagerCallbacks
 		Model.ImportFiles();
 	}
 
-	//TODO: File_ConvertScript: to app, to app project
+	//FUTURE: File_ConvertScript: to app, to app project
 
 	public void File_Disable()
 	{
-		Debug_.PrintFunc();
 
 	}
 
@@ -226,7 +225,6 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void File_Properties()
 	{
-		Debug_.PrintFunc();
 
 	}
 
@@ -235,10 +233,10 @@ class CmdHandlers :IGStripManagerCallbacks
 		Model.OpenSelected(1);
 	}
 
-	public void File_OpenInNewWindow()
-	{
-		Model.OpenSelected(2);
-	}
+	//public void File_OpenInNewWindow()
+	//{
+	//	Model.OpenSelected(2);
+	//}
 
 	public void File_OpenInDefaultApp()
 	{
@@ -252,8 +250,8 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void File_PreviousDocument()
 	{
-		Debug_.PrintFunc();
-
+		var a = Model.OpenFiles;
+		if(a.Count > 1) Model.SetCurrentFile(a[1]);
 	}
 
 	public void File_Close()
@@ -352,27 +350,27 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void Edit_Undo()
 	{
-
+		Panels.Editor.ActiveDoc.Call(Sci.SCI_UNDO);
 	}
 
 	public void Edit_Redo()
 	{
-
+		Panels.Editor.ActiveDoc.Call(Sci.SCI_REDO);
 	}
 
 	public void Edit_Cut()
 	{
-
+		Panels.Editor.ActiveDoc.Call(Sci.SCI_CUT);
 	}
 
 	public void Edit_Copy()
 	{
-
+		Panels.Editor.ActiveDoc.Call(Sci.SCI_COPY);
 	}
 
 	public void Edit_Paste()
 	{
-
+		Panels.Editor.ActiveDoc.Call(Sci.SCI_PASTE);
 	}
 
 	public void Edit_Find()
