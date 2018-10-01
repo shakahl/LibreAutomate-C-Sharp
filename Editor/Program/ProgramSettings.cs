@@ -37,14 +37,14 @@ class ProgramSettings
 	{
 		_settFile = Folders.ThisAppDocuments + @"!Settings\Settings.xml";
 		try {
-			_x = XElement.Load(_settFile);
+			_x = XElement_.Load(_settFile);
 		}
 		catch(Exception ex1) {
 			try {
 				if(File_.ExistsAsAny(_settFile))
 					AuDialog.ShowWarning("Failed to load settings", $"Will backup '{_settFile}' and use default settings.", expandedText: ex1.Message);
 				File_.Copy(Folders.ThisAppBS + @"Default\Settings.xml", _settFile, IfExists.RenameExisting);
-				_x = XElement.Load(_settFile);
+				_x = XElement_.Load(_settFile);
 			}
 			catch(Exception ex2) {
 				AuDialog.ShowError("Failed to load settings", "Try again or reinstall the application.", expandedText: ex2.Message);
@@ -65,7 +65,7 @@ class ProgramSettings
 	{
 		if(_isDirty) {
 			lock(this) {
-				_x.Save(_settFile);
+				_x.Save_(_settFile);
 			}
 			_isDirty = false;
 			//Debug_.Print("settings saved");

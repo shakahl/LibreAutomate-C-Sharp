@@ -30,7 +30,7 @@ namespace Au
 		/// </summary>
 		/// <param name="path">Any string. Can be null.</param>
 		/// <remarks>
-		/// Supports known folder names as you can get with <see cref="Folders"/> class properties.
+		/// Supports known folder names. See <see cref="Folders"/>.
 		/// Example: @"%Folders.Documents%\file.txt".
 		/// Example: @"%Folders.Virtual.ControlPanel%" //gets ":: HexEncodedITEMIDLIST".
 		/// Usually known folders are used like <c>string path = Folders.Documents + "file.txt"</c>. It's easier and faster. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
@@ -353,13 +353,13 @@ namespace Au
 		/// <summary>
 		/// Makes normal full path from path that can contain special substrings etc.
 		/// The sequence of actions:
-		/// 1. If path starts with '%' character, expands environment variables (see <see cref="ExpandEnvVar"/>).
+		/// 1. If path starts with '%' character, expands environment variables and special folder names. See <see cref="ExpandEnvVar"/>.
 		/// 2. If path is not full path but looks like URL, and used flag CanBeUrl, returns path.
 		/// 3. If path is not full path, and defaultParentDirectory is not null/"", combines path with ExpandEnvVar(defaultParentDirectory).
 		/// 4. If path is not full path, throws exception.
 		/// 5. Calls API <msdn>GetFullPathName</msdn>. It replaces '/' with '\\', replaces multiple '\\' to single (where need), processes @"\.." etc, trims spaces, etc.
-		/// 6. If no flag DoNotExpandDosPath, if looks like a DOS path (contains '~' etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example @"c:\progra~1" to @"c:\program files". It is slow. It converts path only if the file exists.
-		/// 7. If no flag DoNotRemoveEndSeparator, removes '\\' character at the end, unless it is a drive path (eg @"C:\").
+		/// 6. If no flag DoNotExpandDosPath, if path looks like a short DOS path version (contains '~' etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example @"c:\progra~1" to @"c:\program files". It is slow. It converts path only if the file exists.
+		/// 7. If no flag DoNotRemoveEndSeparator, removes '\\' character at the end, unless it is like @"C:\".
 		/// 8. Appends '\\' character if ends with a drive name (eg "C:" -> @"C:\").
 		/// 9. If no flag DoNotPrefixLongPath, calls <see cref="PrefixLongPathIfNeed"/>, which adds @"\\?\" etc prefix if path is very long.
 		/// </summary>
@@ -417,6 +417,34 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Prepares path for passing to API that support "..", DOS path etc.
+		/// Calls ExpandEnvVar, _AddRemoveSep, PrefixLongPathIfNeed. Optionally throws if !IsFullPath(path).
+		/// </summary>
+		/// <exception cref="ArgumentException">Not full path (only if throwIfNotFullPath is true).</exception>
+		internal static string LibNormalizeMinimally(string path, bool throwIfNotFullPath)
+		{
+			var s = ExpandEnvVar(path);
+			Debug.Assert(!LibIsShellPath(s) && !IsUrl(s));
+			if(throwIfNotFullPath && !IsFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
+			s = _AddRemoveSep(s);
+			s = PrefixLongPathIfNeed(s);
+			return s;
+		}
+
+		/// <summary>
+		/// Prepares path for passing to .NET file functions.
+		/// Calls ExpandEnvVar, _AddRemoveSep. Throws if !IsFullPath(path).
+		/// </summary>
+		/// <exception cref="ArgumentException">Not full path.</exception>
+		internal static string LibNormalizeForNET(string path)
+		{
+			var s = ExpandEnvVar(path);
+			Debug.Assert(!LibIsShellPath(s) && !IsUrl(s));
+			if(!IsFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
+			return _AddRemoveSep(s);
+		}
+
+		/// <summary>
 		/// Calls API GetLongPathName.
 		/// Does not check whether s contains '~' character etc. Note: the API is slow.
 		/// </summary>
@@ -458,22 +486,6 @@ namespace Au
 				}
 			}
 			return false;
-		}
-
-		/// <summary>
-		/// Prepares path for passing to API that support "..", DOS path etc.
-		/// Calls ExpandEnvVar, _AddRemoveSep, PrefixLongPathIfNeed. Optionally throws if !IsFullPath(path).
-		/// </summary>
-		/// <exception cref="ArgumentException">Not full path (only if throwIfNotFullPath is true).</exception>
-		internal static string LibNormalizeMinimally(string path, bool throwIfNotFullPath)
-		{
-			var s = path;
-			s = ExpandEnvVar(s);
-			Debug.Assert(!LibIsShellPath(s) && !IsUrl(s));
-			if(throwIfNotFullPath && !IsFullPath(s)) throw new ArgumentException("Expected full path.");
-			s = _AddRemoveSep(s);
-			s = PrefixLongPathIfNeed(s);
-			return s;
 		}
 
 		/// <summary>

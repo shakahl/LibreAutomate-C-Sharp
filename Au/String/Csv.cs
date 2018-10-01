@@ -373,34 +373,36 @@ namespace Au
 		/// <summary>
 		/// Loads and parses a CSV file.
 		/// </summary>
-		/// <param name="file">Full path of CSV file.</param>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>.</param>
 		/// <param name="separator">Field separator character used in CSV text. Default ','.</param>
 		/// <param name="quote">Character used in CSV text to enclose some fields. Default '"'.</param>
 		/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
-		/// <exception cref="AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
+		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText(string)"/>.</exception>
+		/// <exception cref="AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
 		/// <remarks>
-		/// Calls <see cref="File.ReadAllText(string)"/> and <see cref="Parse"/>. Also uses <see cref="File_.OpenWithFunc"/>.
+		/// Calls <see cref="File.ReadAllText(string)"/> and <see cref="Parse"/>. Also uses <see cref="File_.WaitIfLocked"/>.
 		/// </remarks>
 		public static CsvTable Load(string file, char separator = ',', char quote = '"', bool trimSpaces = true)
 		{
-			var csv = File_.OpenWithFunc(() => File.ReadAllText(file));
+			var csv = File_.LoadText(file);
 			return Parse(csv, separator, quote, trimSpaces);
 		}
 
 		/// <summary>
 		/// Composes CSV and saves to file.
 		/// </summary>
-		/// <param name="file">Full path of CSV file.</param>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>. The file can exist or not; this function overwrites it.</param>
+		/// <param name="backup">Create backup file named file + "~backup".</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.WriteAllText(string, string)"/>.</exception>
 		/// <remarks>
-		/// Calls <see cref="ToString"/> and <see cref="File.WriteAllText(string, string)"/>. Also uses <see cref="File_.OpenWithFunc"/>.
+		/// Calls <see cref="ToString"/> and <see cref="File.WriteAllText(string, string)"/>. Also uses <see cref="File_.Save"/>.
 		/// </remarks>
-		public void Save(string file)
+		public void Save(string file, bool backup = false)
 		{
-			var s = ToString();
-			File_.OpenWithFunc(() => File.WriteAllText(file, s));
-			//FUTURE: flags: append, safe, safe+backup
+			var csv = ToString();
+			File_.Save(file, csv, backup);
 		}
 
 		/// <summary>

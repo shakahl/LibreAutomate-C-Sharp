@@ -372,7 +372,7 @@ namespace Au.Compiler
 		/// <param name="isMain">If false, it is a file added through meta option 'c'.</param>
 		public void _ParseFile(ICollectionFile f, bool isMain)
 		{
-			string code = File.ReadAllText(f.FilePath); //FUTURE: why so slow when file contains 17_000_000 empty lines? 230-1600 ms (it seems makes so much garbage that triggers GC). QM2 reads+converts to UTF16 in 55 ms.
+			string code = File_.LoadText(f.FilePath);
 			if(Empty(code)) return;
 
 			bool isScript = f.IcfIsScript;

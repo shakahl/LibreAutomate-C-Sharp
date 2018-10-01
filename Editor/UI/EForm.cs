@@ -55,6 +55,8 @@ partial class EForm :Form
 
 		Application.AddMessageFilter(new _AppMessageFilter());
 
+		//Print(IsHandleCreated); foreach(Control v in Controls) if(v.IsHandleCreated) Print(v);
+
 		//Perf.Next();
 
 		//#if DEBUG
@@ -71,10 +73,21 @@ partial class EForm :Form
 		//Perf.Next();
 		Timer_.After(1, () =>
 		{
+			//Windows bug: if user clicks a window after our app started but before activated,
+			//	our window is at Z bottom and there is no taskbar button.
+			var w = (Wnd)Handle;
+			if(w.IsVisible && !w.IsActive) {
+				Debug_.Print("window inactive");
+				Wnd.Misc.TaskbarButton.Add(w);
+				Wnd.Misc.TaskbarButton.Flash(w, 5);
+			}
+
 			Perf.Next('P');
 			Perf.Write();
 			//AuDialog.Show(Perf.ToString(), IsWinEventHookInstalled(EVENT_OBJECT_CREATE).ToString()); //IsWinEventHookInstalled always true (false positive, as documented)
 			//GC.Collect();
+
+			//Print(Wnd.Active);
 
 			CommandLine.OnAfterCreatedFormAndOpenedCollection();
 

@@ -409,7 +409,7 @@ partial class FileNode :ICollectionFile
 		if(editorTextIfCurrent && this == _model.CurrentFile) {
 			return Panels.Editor.ActiveDoc.Text;
 		}
-		return File.ReadAllText(FilePath);
+		return File_.LoadText(FilePath);
 	}
 
 	public Bitmap GetIcon(bool expandedFolder = false)

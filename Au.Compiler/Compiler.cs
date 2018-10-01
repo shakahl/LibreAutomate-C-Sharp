@@ -235,7 +235,7 @@ internal static string[] args = System.Array.Empty<string>();
 					//adds < 1 KB; almost the same compiling speed. Separate pdb file is 14 KB; 2 times slower compiling, slower loading.
 				}
 
-				if(m.XmlDocFile != null) xdStream = File.Create(xdFile = Path_.Normalize(m.XmlDocFile, outPath));
+				if(m.XmlDocFile != null) xdStream = File_.WaitIfLocked(() => File.Create(xdFile = Path_.Normalize(m.XmlDocFile, outPath)));
 
 				resMan = _CreateManagedResources(m);
 				if(err.ErrorCount != 0) { err.PrintAll(); return false; }
@@ -282,7 +282,7 @@ internal static string[] args = System.Array.Empty<string>();
 
 				//create assembly file
 				asmStream.Position = 0;
-				using(var fileStream = File_.OpenWithFunc(() => File.Create(outFile, (int)asmStream.Length))) {
+				using(var fileStream = File_.WaitIfLocked(() => File.Create(outFile, (int)asmStream.Length))) {
 					asmStream.CopyTo(fileStream);
 
 					pdbStream.Position = 0;
@@ -290,7 +290,7 @@ internal static string[] args = System.Array.Empty<string>();
 						pdbStream.CopyTo(fileStream);
 						r.pdbOffset = (int)asmStream.Length;
 					} else {
-						using(var v = File.Create(pdbFile)) pdbStream.CopyTo(v);
+						using(var v = File_.WaitIfLocked(() => File.Create(pdbFile))) pdbStream.CopyTo(v);
 					}
 				}
 				r.file = outFile;
@@ -404,12 +404,12 @@ internal static string[] args = System.Array.Empty<string>();
 						//	o = Au.Util.Cursor_.LoadCursorFromFile(path); //error: Stock cursors cannot be serialized
 						//	break;
 						default:
-							o = File.ReadAllBytes(path);
+							o = File_.LoadBytes(path);
 							break;
 						}
 						break;
 					case "string":
-						o = File.ReadAllText(path);
+						o = File_.LoadText(path);
 						break;
 					case "strings":
 						var csv = CsvTable.Load(path);

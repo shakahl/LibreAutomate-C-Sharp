@@ -66,7 +66,7 @@ namespace Au
 				//size and speed of "image:" and "~:": "image:" usually is bigger by 10-20% and faster by ~25%
 			} else {
 				image = Path_.Normalize(image, Folders.ThisAppImages);
-				if(!File_.ExistsAsFile(image))
+				if(!File_.ExistsAsFile(image, true))
 					o = Util.Resources_.GetAppResource(Path_.GetFileNameWithoutExtension(image));
 				if(o == null) o = Image.FromFile(image);
 				R = o as Bitmap;

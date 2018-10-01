@@ -278,7 +278,7 @@ namespace Au.Compiler
 			{
 				if(_data != null) return true;
 				if(!File_.ExistsAsFile(_file)) return false;
-				string sData = File.ReadAllText(_file);
+				string sData = File_.LoadText(_file);
 				foreach(var s in sData.Segments_("\n\r", SegFlags.NoEmpty)) {
 					if(_data == null) {
 						//first line contains .NET framework version and Au.dll version, like 12345|1.2.3.4
@@ -307,7 +307,7 @@ namespace Au.Compiler
 			void _Save()
 			{
 				File_.CreateDirectory(CacheDirectory);
-				using(var b = File.CreateText(_file)) {
+				using(var b = File_.WaitIfLocked(() => File.CreateText(_file))) {
 					b.WriteLine(s_frameworkVersion + "|" + s_auVersion);
 					foreach(var v in _data) {
 						if(v.Value == null) b.WriteLine(v.Key); else { b.Write(v.Key); b.WriteLine(v.Value); }

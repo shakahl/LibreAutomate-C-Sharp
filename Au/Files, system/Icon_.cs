@@ -567,8 +567,6 @@ namespace Au
 			//note: API PathParseIconLocation has bugs. Eg splits "path,5moreText". Or from "path, 5" removes ", 5" and returns 0.
 		}
 
-		//FUTURE: also need class IconCache.
-
 		/// <summary>
 		/// Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
 		/// </summary>
@@ -611,7 +609,7 @@ namespace Au
 					lock(this) {
 						if(_dirty) {
 							_dirty = false;
-							_x.Save(_cacheFile);
+							File_.WaitIfLocked(() => _x.Save(_cacheFile));
 						}
 					}
 				}
@@ -699,7 +697,7 @@ namespace Au
 						//is in file cache?
 						try {
 							if(_x == null && File_.ExistsAsFile(_cacheFile)) {
-								_x = XElement.Load(_cacheFile);
+								_x = XElement_.Load(_cacheFile);
 								if(_iconSize != _x.Attribute_("size", 0) || Util.Dpi.BaseDPI != _x.Attribute_("dpi", 0)) {
 									_x = null;
 									Debug_.Print("info: cleared icon cache");

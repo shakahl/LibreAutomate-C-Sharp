@@ -99,11 +99,11 @@ namespace Au.Controls
 
 			_xmlFileDefault = xmlFile;
 			_xmlFileCustom = xmlFileCustom;
-			try { _xStrips = XElement.Load(xmlFile); }
+			try { _xStrips = XElement_.Load(xmlFile); }
 			catch(Exception ex) { AuDialog.ShowError("Failed to load file", ex.ToString()); throw; }
 			XElement xCustom = null;
 			if(File_.ExistsAsFile(_xmlFileCustom)) {
-				try { xCustom = XElement.Load(_xmlFileCustom); }
+				try { xCustom = XElement_.Load(_xmlFileCustom); }
 				catch(Exception e) { Print("Failed to load file", _xmlFileCustom, e.Message); }
 			}
 
@@ -420,7 +420,7 @@ namespace Au.Controls
 		/// </summary>
 		void _DiffCustom()
 		{
-			var xStripsDefault = XElement.Load(_xmlFileDefault);
+			var xStripsDefault = XElement_.Load(_xmlFileDefault);
 			var xStripsCustom = new XElement("strips");
 			string s;
 
@@ -472,7 +472,7 @@ namespace Au.Controls
 			//save
 			try {
 				File_.CreateDirectoryFor(_xmlFileCustom);
-				xStripsCustom.Save(_xmlFileCustom);
+				xStripsCustom.Save_(_xmlFileCustom);
 			}
 			catch(Exception e) {
 				Print("Failed to save XML file", _xmlFileCustom, e.Message);

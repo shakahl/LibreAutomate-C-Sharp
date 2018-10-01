@@ -157,7 +157,7 @@ partial class FilesModel
 		try {
 			//Print("saving");
 			//Perf.First();
-			Xml.Save(CollectionFile);
+			Xml.Save_(CollectionFile);
 			//Perf.NW();
 			return true;
 		}

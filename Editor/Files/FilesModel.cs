@@ -59,7 +59,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		FilesDirectory = CollectionDirectory + @"\files";
 		if(!importing) File_.CreateDirectory(FilesDirectory);
 
-		Xml = File_.OpenWithFunc(() => XElement.Load(CollectionFile)); //info: caller handles exceptions
+		Xml = XElement_.Load(CollectionFile); //info: caller handles exceptions
 
 		GuidMap = new Dictionary<string, FileNode>(StringComparer.OrdinalIgnoreCase);
 		Root = new FileNode(this, Xml, true); //recursively creates whole model tree
@@ -70,7 +70,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 				//Create LiteDatabase with the Stream ctor.
 				//	The filepath ctor is lazy and does not throw when file is locked or readonly etc; would throw later in unexpected places.
 				//	To open file, LiteDB uses the same function and arguments as this code, but does not wait/retry if temporarily locked.
-				var stream = File_.OpenWithFunc(() => new FileStream(_dbFile, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, System.IO.FileOptions.RandomAccess), 1000);
+				var stream = File_.WaitIfLocked(() => new FileStream(_dbFile, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, System.IO.FileOptions.RandomAccess));
 				_db = new LiteDatabase(stream, disposeStream: true);
 				TableMics = _db.GetCollection<DBMisc>();
 				TableEdit = _db.GetCollection<DBEdit>();
@@ -1055,7 +1055,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	{
 		string xmlFile = s + @"\files.xml";
 		if(File_.ExistsAsFile(xmlFile) && File_.ExistsAsDirectory(s + @"\files")) {
-			try { return XElement.Load(xmlFile).Name == "files"; } catch { }
+			try { return XElement_.Load(xmlFile).Name == "files"; } catch { }
 		}
 		return false;
 	}

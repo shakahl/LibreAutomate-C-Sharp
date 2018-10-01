@@ -222,45 +222,45 @@ namespace Au
 		/// Calls API <msdn>SendMessageTimeout</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public bool SendTimeout(int timeoutMS, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
+		public bool SendTimeout(int millisecondsTimeout, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
 			Debug.Assert(!Is0);
-			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, timeoutMS, out LPARAM R);
+			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out LPARAM R);
 		}
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public bool SendTimeout(int timeoutMS, out LPARAM result, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
+		public bool SendTimeout(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
 			Debug.Assert(!Is0);
 			result = 0;
-			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, timeoutMS, out result);
+			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out result);
 		}
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public bool SendTimeoutS(int timeoutMS, out LPARAM result, int message, LPARAM wParam, string lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
+		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, string lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
 			Debug.Assert(!Is0);
 			result = 0;
 			fixed (char* p = lParam)
-				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, timeoutMS, out result);
+				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, millisecondsTimeout, out result);
 		}
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is char[].
 		/// Returns its return value (false if failed). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public bool SendTimeoutS(int timeoutMS, out LPARAM result, int message, LPARAM wParam, char[] lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
+		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, char[] lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
 			Debug.Assert(!Is0);
 			result = 0;
 			fixed (char* p = lParam)
-				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, timeoutMS, out result);
+				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, millisecondsTimeout, out result);
 		}
 
 		/// <summary>

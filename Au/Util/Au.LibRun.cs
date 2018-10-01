@@ -296,7 +296,7 @@ namespace Au.LibRun
 				//return Assembly.LoadFrom(asmFile); //test
 
 				byte[] bAsm, bPdb = null;
-				using(var stream = File_.OpenWithFunc(() => File.OpenRead(asmFile))) {
+				using(var stream = File_.WaitIfLocked(() => File.OpenRead(asmFile))) {
 					bAsm = new byte[pdbOffset > 0 ? pdbOffset : stream.Length];
 					stream.Read(bAsm, 0, bAsm.Length);
 					try {

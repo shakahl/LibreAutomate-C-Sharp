@@ -72,7 +72,7 @@ partial class PanelEdit :Control
 		} else {
 			string s = null;
 			try {
-				s = File.ReadAllText(f.FilePath);
+				s = File_.LoadText(f.FilePath);
 			}
 			catch(Exception ex) { Print(ex.Message); return false; }
 
@@ -404,7 +404,7 @@ partial class PanelEdit :Control
 		{
 			if(IsUnsaved) {
 				try {
-					File.WriteAllText(FN.FilePath, this.Text);
+					File_.Save(FN.FilePath, this.Text);
 				}
 				catch(Exception ex) {
 					Print(ex.Message);

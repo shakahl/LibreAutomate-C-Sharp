@@ -70,9 +70,11 @@
     <Compile Include="Acc\Acc_types.cs" />
     <Compile Include="Acc\Acc_find.cs" />
     <Compile Include="Acc\Acc.cs" />
-    <Compile Include="Common\Forms.cs" />
+    <Compile Include="Common\ExtForms.cs" />
+    <Compile Include="Common\ExtXml.cs" />
     <Compile Include="Files, system\Process_.UacInfo.cs" />
     <Compile Include="Files, system\Process_.Memory.cs" />
+    <Compile Include="Other\SQLite.cs" />
     <Compile Include="Util\IconsAsync.cs" />
     <Compile Include="Files, system\Thread_.cs" />
     <Compile Include="Input\BlockInput.cs" />

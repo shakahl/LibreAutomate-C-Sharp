@@ -362,7 +362,7 @@ namespace Au
 			try {
 				if(0 != (flags & FEFlags.DisableRedirection)) redir.Disable();
 
-				for(;;) {
+				for(; ; ) {
 					if(isFirst) {
 						isFirst = false;
 						var path2 = ((path.Length <= Path_.MaxDirectoryPathLength - 2) ? path : Path_.PrefixLongPath(path)) + @"\*";
@@ -891,7 +891,7 @@ namespace Au
 				if(ec == 0) {
 					//notify shell. Else, if it was open in Explorer, it shows an error message box.
 					//Info: .NET does not notify; SHFileOperation does.
-					_ShellNotify(Api.SHCNE_RMDIR, path);
+					LibShellNotify(Api.SHCNE_RMDIR, path);
 					return type;
 				}
 				Debug_.Print("Using _DeleteShell.");
@@ -1043,9 +1043,10 @@ namespace Au
 			return true;
 		}
 
-		static void _ShellNotify(uint @event, string path, string path2 = null)
+		internal static void LibShellNotify(uint @event, string path, string path2 = null)
 		{
-			ThreadPool.QueueUserWorkItem(_ => Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2));
+			//ThreadPool.QueueUserWorkItem(_ => Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2)); //no, this process may end soon
+			Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2);
 		}
 
 		/// <summary>
@@ -1101,12 +1102,12 @@ namespace Au
 		#region open
 
 		/// <summary>
-		/// This function can be used to safely open a file that may be temporarily locked, for example used by another process or thread. Waits while the file is locked.
+		/// This function can be used to safely open a file that may be temporarily locked (used by another process or thread). Waits while the file is locked.
 		/// </summary>
 		/// <returns>Returns the return value of the lambda <paramref name="f"/>.</returns>
 		/// <param name="f">Lambda that calls a function that creates, opens or opens/reads/closes a file.</param>
-		/// <param name="timeoutMS">Wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
-		/// <exception cref="ArgumentOutOfRangeException">timeoutMS less than -1.</exception>
+		/// <param name="millisecondsTimeout">Wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="millisecondsTimeout"/> less than -1.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the called function.</exception>
 		/// <remarks>
 		/// This function calls the lambda and handles <b>IOException</b>. If the exception indicates that the file is locked, waits and retries in loop.
@@ -1115,61 +1116,163 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s1 = File.ReadAllText(file); //unsafe. Exception if the file is locked.
 		/// 
-		/// var s2 = File_.OpenWithFunc(() => File.ReadAllText(file)); //safe. Waits while the file is locked.
+		/// var s2 = File_.WaitIfLocked(() => File.ReadAllText(file)); //safe. Waits while the file is locked.
 		/// 
-		/// using(var f = File_.OpenWithFunc(() => File.OpenText(file))) { //safe. Waits while the file is locked.
+		/// using(var f = File_.WaitIfLocked(() => File.OpenText(file))) { //safe. Waits while the file is locked.
 		/// 	var s3 = f.ReadToEnd();
 		/// }
 		/// 
-		/// using(var f = File_.OpenWithFunc(() => File.Create(file))) { //safe. Waits while the file is locked.
+		/// using(var f = File_.WaitIfLocked(() => File.Create(file))) { //safe. Waits while the file is locked.
 		/// 	f.WriteByte(1);
 		/// }
 		/// ]]></code>
 		/// </example>
-		public static T OpenWithFunc<T>(Func<T> f, int timeoutMS = 5000)
+		public static T WaitIfLocked<T>(Func<T> f, int millisecondsTimeout = 2000)
 		{
-			if(timeoutMS < -1) throw new ArgumentOutOfRangeException();
+			if(millisecondsTimeout < -1) throw new ArgumentOutOfRangeException();
 			long t1 = Time.Milliseconds;
 			g1:
 			try {
 				return f();
 			}
-			catch(IOException e) when(_OpenExceptionFilter(e, timeoutMS, t1)) {
+			catch(IOException e) when(_WL_ExceptionFilter(e, millisecondsTimeout, t1)) {
 				Thread.Sleep(15);
 				goto g1;
 			}
 		}
 
-		/// <inheritdoc cref="OpenWithFunc{T}(Func{T}, int)"/>
+		/// <inheritdoc cref="WaitIfLocked{T}(Func{T}, int)"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// File.WriteAllText(file, "TEXT"); //unsafe. Exception if the file is locked.
 		/// 
-		/// File_.OpenWithFunc(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
+		/// File_.WaitIfLocked(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
 		/// ]]></code>
 		/// </example>
-		public static void OpenWithFunc(Action f, int timeoutMS = 5000)
+		public static void WaitIfLocked(Action f, int millisecondsTimeout = 2000)
 		{
-			if(timeoutMS < -1) throw new ArgumentOutOfRangeException();
+			if(millisecondsTimeout < -1) throw new ArgumentOutOfRangeException();
 			long t1 = Time.Milliseconds;
 			g1:
 			try {
 				f();
 			}
-			catch(IOException e) when(_OpenExceptionFilter(e, timeoutMS, t1)) {
+			catch(IOException e) when(_WL_ExceptionFilter(e, millisecondsTimeout, t1)) {
 				Thread.Sleep(15);
 				goto g1;
 			}
 		}
 
-		static bool _OpenExceptionFilter(IOException e, int timeoutMS, long t1)
+		static bool _WL_ExceptionFilter(IOException e, int millisecondsTimeout, long t1)
 		{
 			switch(e.HResult & 0xffff) {
 			case Api.ERROR_SHARING_VIOLATION:
 			case Api.ERROR_LOCK_VIOLATION:
 			case Api.ERROR_USER_MAPPED_FILE:
-				return timeoutMS < 0 || Time.Milliseconds - t1 < timeoutMS;
+				return millisecondsTimeout < 0 || Time.Milliseconds - t1 < millisecondsTimeout;
 			default: return false;
+			}
+		}
+
+		/// <summary>
+		/// Loads text file in a safer way.
+		/// Uses <see cref="File.ReadAllText(string)"/> and <see cref="WaitIfLocked{T}(Func{T}, int)"/>.
+		/// </summary>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>.</param>
+		/// <param name="encoding">Text encoding in file. Default <b>Encoding.UTF8</b>.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText(string)"/>.</exception>
+		public static string LoadText(string file, Encoding encoding = null)
+		{
+			file = Path_.LibNormalizeForNET(file);
+			return WaitIfLocked(() => File.ReadAllText(file, encoding ?? Encoding.UTF8));
+			//FUTURE: why ReadAllText so slow when file contains 17_000_000 empty lines?
+			//	230 - 1600 ms. It seems makes so much garbage that triggers GC.
+			//	QM2 reads+converts to UTF16 in 55 ms.
+		}
+
+		/// <summary>
+		/// Loads file in a safer way.
+		/// Uses <see cref="File.ReadAllBytes(string)"/> and <see cref="WaitIfLocked{T}(Func{T}, int)"/>.
+		/// </summary>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes(string)"/>.</exception>
+		public static byte[] LoadBytes(string file)
+		{
+			file = Path_.LibNormalizeForNET(file);
+			return WaitIfLocked(() => File.ReadAllBytes(file));
+		}
+
+		/// <summary>
+		/// Writes text to a file like <see cref="File.WriteAllText"/> but in a safer way.
+		/// </summary>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>. The file can exist or not; this function overwrites it.</param>
+		/// <param name="text">Text to write. This functions uses <see cref="File.WriteAllText"/>.</param>
+		/// <param name="backup">Create backup file named file + "~backup".</param>
+		/// <param name="lockedWaitMS">If cannot open file because it is open by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
+		/// <param name="encoding">Text encoding in file. Default <b>Encoding.UTF8</b>.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="File.WriteAllText"/> and <see cref="File.Replace"/>.</exception>
+		/// <remarks>
+		/// The file-write functions provided by .NET and Windows API are unreliable, because:
+		/// 1. Fails and throws exception if the file is temporarily open by another process or thread without sharing.
+		/// 2. Can corrupt file data. If this thread, process, PC or disk dies while writing, may write only part of data or just make empty file. Usually it happens when PC is turned off incorrectly.
+		/// To protect from 1, this functions uses <see cref="WaitIfLocked"/>. It waits/retries if the file is temporarily open/locked.
+		/// To protect from 2, this function writes to a temporary file and renames/replaces the specified file using API <msdn>ReplaceFile</msdn>. Although not completely atomic, it ensures that file data is not corrupt; if cannot write all data, does not change existing file data.
+		/// </remarks>
+		public static void Save(string file, string text, bool backup = false, int lockedWaitMS = 2000, Encoding encoding = null)
+		{
+			_Save(file, text ?? "", backup, lockedWaitMS, encoding);
+		}
+
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+		/// <inheritdoc cref="Save(string, string, bool, int, Encoding)"/>
+		/// <summary>
+		/// Writes data to a file like <see cref="File.WriteAllBytes"/> but in a safer way.
+		/// </summary>
+		/// <param name="bytes">Data to write. This functions uses <see cref="File.WriteAllBytes"/>.</param>
+		public static void Save(string file, byte[] bytes, bool backup = false, int lockedWaitMS = 2000)
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+		{
+			_Save(file, bytes ?? throw new ArgumentNullException(), backup, lockedWaitMS);
+		}
+
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+		/// <inheritdoc cref="Save(string, string, bool, int, Encoding)"/>
+		/// <summary>
+		/// Writes any data to a file in a safe way, using a callback function.
+		/// </summary>
+		/// <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file; the file does not exist.</param>
+		public static void Save(string file, Action<string> writer, bool backup = false, int lockedWaitMS = 2000)
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+		{
+			_Save(file, writer ?? throw new ArgumentNullException(), backup, lockedWaitMS);
+		}
+
+		static void _Save(string file, object data, bool backup, int lockedWaitMS, Encoding encoding = null)
+		{
+			file = Path_.Normalize(file, null, PNFlags.DoNotPrefixLongPath);
+			var temp = Path_.GetDirectoryPath(file, true) + Convert_.GuidToHex(Guid.NewGuid());
+
+			switch(data) {
+			case string text:
+				File.WriteAllText(temp, text, encoding ?? Encoding.UTF8);
+				break;
+			case byte[] bytes:
+				File.WriteAllBytes(temp, bytes);
+				break;
+			case Action<string> func:
+				func(temp);
+				break;
+			}
+
+			if(ExistsAsFile(file, true)) {
+				string back = backup ? (file + "~backup") : null;
+				WaitIfLocked(() => File.Replace(temp, file, back, true), lockedWaitMS);
+				if(backup) LibShellNotify(Api.SHCNE_RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
+			} else {
+				Move(temp, file, IfExists.Delete);
 			}
 		}
 

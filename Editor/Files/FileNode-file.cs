@@ -223,7 +223,7 @@ partial class FileNode
 		try {
 			var path = newParent.FilePath + "\\" + name;
 			if(isFolder) File_.CreateDirectory(path);
-			else File.WriteAllText(path, text);
+			else File_.Save(path, text);
 		}
 		catch(Exception ex) { Print(ex.Message); return null; }
 
@@ -262,12 +262,12 @@ partial class FileNode
 
 	static string _NI_GetTemplateText(string templFile, string template, FileNode newParent)
 	{
-		string s = File.ReadAllText(templFile);
+		string s = File_.LoadText(templFile);
 		//replace //"#include file" with text of file from "include" subfolder
 		s = s.RegexReplace_(@"(?m)^//#include +(.+)$", m =>
 		{
 			var si = s_dirTemplates + @"include\" + m[1];
-			if(File_.ExistsAsFile(si)) return File.ReadAllText(si);
+			if(File_.ExistsAsFile(si)) return File_.LoadText(si);
 			return null;
 		});
 

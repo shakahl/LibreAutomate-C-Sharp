@@ -33,6 +33,8 @@ namespace Au.Controls
 		ToolTip _toolTip; //tooltip for panel captions and tab buttons
 		string _xmlFile; //used to save panel layout later
 		Dictionary<string, Control> _initControls; //used to find controls specified in XML. Temporary, just for _Panel ctors called by Create().
+		string _asmVersion;
+
 		const int _splitterWidth = 4; //default splitter width. Also used for toolbar caption width.
 
 		protected override void Dispose(bool disposing)
@@ -71,9 +73,10 @@ namespace Au.Controls
 			_aPanel = new List<_Panel>();
 			_paintTools = new _PainTools(this);
 			_toolTip = new ToolTip();
+			_asmVersion = Assembly.GetCallingAssembly().GetName().Version.ToString();
 
 			_xmlFile = xmlFileCustomized;
-			_LoadXmlAndCreateLayout(xmlFileDefault, xmlFileCustomized, Assembly.GetCallingAssembly().GetName().Version.ToString());
+			_LoadXmlAndCreateLayout(xmlFileDefault, xmlFileCustomized);
 
 			SuspendLayout();
 			this.SetStyle(ControlStyles.ContainerControl | ControlStyles.ResizeRedraw | ControlStyles.Opaque | ControlStyles.OptimizedDoubleBuffer, true); //default: UserPaint, AllPaintingInWmPaint; not OptimizedDoubleBuffer, DoubleBuffer, Opaque. Opaque prevents erasing background, which prevents flickering when moving a splitter.
@@ -85,7 +88,7 @@ namespace Au.Controls
 		}
 
 		//Loads and parses XML. Creates the _aX lists, _firstSplit and the tree structure.
-		void _LoadXmlAndCreateLayout(string xmlFileDefault, string xmlFileCustomized, string asmVersion)
+		void _LoadXmlAndCreateLayout(string xmlFileDefault, string xmlFileCustomized)
 		{
 			//We have 1 or 2 XML files containing panel/toolbar layout.
 			//xmlFileDefault contains default XML. It eg can be in Folders.ThisApp.
@@ -102,8 +105,10 @@ namespace Au.Controls
 					xmlFile = xmlFileDefault;
 				}
 
+				bool fileLoaded = false;
 				try {
-					var x = XElement.Load(xmlFile);
+					var x = XElement_.Load(xmlFile);
+					fileLoaded = true;
 					if(!usesDefaultXML) xmlVersion = x.Attribute_("version");
 					x = x.Element("split");
 
@@ -121,27 +126,27 @@ namespace Au.Controls
 					//tested: XML can be added to Application Settings, but var xml=Properties.Settings.Default.PanelsXML takes 61 MILLIseconds.
 				}
 				catch(Exception e) {
-					var sErr = $"Failed to load file:\r\n\t{xmlFile}\r\n\t{e.ToStringWithoutStack_()})";
+					var sErr = $"Failed to load file '{xmlFile}'.\r\n\t{e.ToStringWithoutStack_()}";
 					if(usesDefaultXML) {
 						_xmlFile = null;
 						AuDialog.ShowError("Cannot load panel/toolbar layout.", $"{sErr}\r\n\r\nReinstall the application.");
 						Environment.Exit(1);
 					} else {
 						//probably in this version there are less panels, most likely when downgraded. Or the file is corrupt.
-						if(xmlVersion != asmVersion) outInfo = "Info: this application version resets the panel/toolbar layout, sorry.";
-						else PrintWarning(sErr);
+						if(fileLoaded && xmlVersion != _asmVersion) outInfo = "Info: this application version resets the panel/toolbar layout, sorry.";
+						else PrintWarning(sErr, -1);
 					}
 					_aSplit.Clear(); _aTab.Clear(); _aPanel.Clear();
 				}
 			}
 
-			//if(usesDefaultXML || xmlVersion == asmVersion) return;
+			//if(usesDefaultXML || xmlVersion == _asmVersion) return;
 			if(outInfo != null) Print(outInfo);
 		}
 
 		void _GetPanelXmlFromDefaultFile(string defFile)
 		{
-			var xml = XElement.Load(defFile);
+			var xml = XElement_.Load(defFile);
 
 			foreach(var c in _initControls.Values) {
 				if(_aPanel.Exists(v => v.Content == c)) continue;
@@ -168,21 +173,22 @@ namespace Au.Controls
 					Indent = true,
 					IndentChars = "\t"
 				};
-				using(var x = XmlWriter.Create(_xmlFile, sett)) {
-					x.WriteStartDocument();
-					x.WriteStartElement("panels");
-					_firstSplit.Save(x);
-					x.WriteEndDocument();
-				}
-				//#if DEBUG
-				//			Print(File.ReadAllText(_xmlFile));
-				//			//File.Delete(_xmlFile);
-				//			File.Delete(_xmlFile + ".xml");
-				//			File.Move(_xmlFile, _xmlFile + ".xml");
-				//#endif
+				File_.Save(_xmlFile, temp =>
+				{
+					using(var x = XmlWriter.Create(temp, sett)) {
+						x.WriteStartDocument();
+						x.WriteStartElement("panels");
+						x.WriteAttributeString("version", _asmVersion);
+						_firstSplit.Save(x);
+						x.WriteEndDocument();
+					}
+				});
 			}
-			catch {
-				//Print(e);
+			catch(Exception ex) {
+#if DEBUG
+				Output.LibWriteQM2(ex);
+#endif
+				//Print(ex);
 				//these don't work, maybe because now is closing app. Never mind, unlikely to fail, and not very important.
 				//AuDialog.ShowError("Failed to save panel/toolbar layout", _xmlFile, DFlags.Wider, expandedText: e.ToString());
 				//MessageBox.Show("aaaa");
