@@ -95,13 +95,13 @@
     </Compile>
     <None Include="packages.config" />
     <None Include="Test\tree.csx" />
-    <None Include="Templates\Projects\App project\App.cs">
+    <None Include="Templates\New Project\%40App\!App.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Templates\Class.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Templates\Projects\Library project\Library.cs">
+    <None Include="Templates\New Project\%40Library\!Library.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Templates\App.cs">
@@ -109,7 +109,7 @@
     </None>
     <None Include="Test\tree.cs" />
     <Compile Include="Run\Run.cs" />
-    <None Include="Templates\Projects\Script project\Script">
+    <None Include="Templates\New Project\%40Script\!Script">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="UI\CmdHandlers.cs" />
@@ -259,6 +259,9 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\qm_running.ico" />
+    <None Include="Templates\New File\TextFile.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
   <ItemGroup />

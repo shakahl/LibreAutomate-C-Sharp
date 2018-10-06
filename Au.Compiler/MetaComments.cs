@@ -63,6 +63,13 @@ namespace Au.Compiler
 	/// ]]></code>
 	/// The file must be in this collection. Or it can be a link (in collection) to an external file. The same is true with most other options.
 	/// 
+	/// <h3>References to libraries created in this collection</h3>
+	/// <code><![CDATA[
+	/// library folder\file.cs
+	/// ]]></code>
+	/// Compiles the .cs file or its project and uses the output dll file like with option r. It is like a "project reference" in Visual Studio.
+	/// The .cs file must produce a dll file; see options outputType and outputPath below. The .cs file can be in a library project or not.
+	/// 
 	/// <h3>Files to add to managed resources</h3>
 	/// <code><![CDATA[
 	/// resource file.png //can be filename or relative path, like with 'c'
@@ -88,7 +95,7 @@ namespace Au.Compiler
 	/// About options 'preBuild' and 'postBuild':
 	/// The script/app runs in compiler's thread. Compiler waits and does not respond during that time. To stop compilation, let the script throw an exception.
 	/// The script/app has variable string[] args. If there is no /arguments, args[0] is the output assembly file, full path. Else args contains the specified arguments, parsed like a command line. In arguments you can use these variables:
-	/// $(outputFile) -  the output assembly file, full path; $(sourceFile) - the C# file, full path; $(sourceName) - name of the C# file; $(sourceGuid) - GUID of the C# file; $(outputPath) - meta option 'outputPath', default ""; $(debug) - meta option 'debug', default "true".
+	/// $(outputFile) -  the output assembly file, full path; $(sourceFile) - the C# file, full path; $(source) - path of the C# file in collection, eg "\folder\file.cs"; $(outputPath) - meta option 'outputPath', default ""; $(debug) - meta option 'debug', default "true".
 	/// 
 	/// <h3>Settings used to execute the compiled script or app. Here a|b|c means a or b or c.</h3>
 	/// <code><![CDATA[
@@ -224,7 +231,13 @@ namespace Au.Compiler
 		/// Unique resource files added through meta option 'resource' in all C# files of this compilation.
 		/// null if none.
 		/// </summary>
-		public List<MetaFileAndString> ResourceFiles { get; private set; }
+		public List<MetaFileAndString> Resources { get; private set; }
+
+		/// <summary>
+		/// Meta option 'library'.
+		/// null if none.
+		/// </summary>
+		public List<ICollectionFile> Libraries { get; private set; }
 
 		/// <summary>
 		/// Meta option 'preBuild'.
@@ -373,8 +386,6 @@ namespace Au.Compiler
 		public void _ParseFile(ICollectionFile f, bool isMain)
 		{
 			string code = File_.LoadText(f.FilePath);
-			if(Empty(code)) return;
-
 			bool isScript = f.IcfIsScript;
 
 			if(_isMain = isMain) {
@@ -394,6 +405,7 @@ namespace Au.Compiler
 				Files = new List<MetaCSharpFile>();
 				References = new MetaReferences();
 			}
+
 			Files.Add(new MetaCSharpFile(f, code));
 
 			_fn = f;
@@ -431,14 +443,13 @@ namespace Au.Compiler
 				default: _Error(iValue, "value cannot be empty"); return;
 				}
 			}
-
+			g1:
 			switch(key) {
 			case "r":
 				try {
 					if(!References.Resolve(value)) {
 						_Error(iValue, "reference assembly not found: " + value); //FUTURE: need more info, or link to Help
 					}
-					//FUTURE: support "project references": if value ends with ".cs", and the ".cs" file is the main file of a dll project, build the dll if need.
 				}
 				catch(Exception e) {
 					_Error(iValue, "exception: " + e.Message); //unlikely. If bad format, will be error later, without position info.
@@ -453,9 +464,9 @@ namespace Au.Compiler
 				return;
 			case "resource":
 				var fs1 = _GetFileAndString(value, iValue); if(fs1.f == null) return;
-				if(ResourceFiles == null) ResourceFiles = new List<MetaFileAndString>();
-				else if(ResourceFiles.Exists(o => o.f == fs1.f && o.s == fs1.s)) return;
-				ResourceFiles.Add(fs1);
+				if(Resources == null) Resources = new List<MetaFileAndString>();
+				else if(Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) return;
+				Resources.Add(fs1);
 				return;
 				//FUTURE: support wildcard:
 				// resource *.png //add to managed resources all matching files in this C# file's folder.
@@ -468,6 +479,9 @@ namespace Au.Compiler
 			}
 
 			switch(key) {
+			case "library":
+				if(_Library(ref value, iValue)) { key = "r"; goto g1; }
+				break;
 			case "debug":
 				if(_TrueFalse(out bool isDebug, value, iValue)) IsDebug = isDebug;
 				break;
@@ -625,6 +639,19 @@ namespace Au.Compiler
 
 			Au.File_.CreateDirectory(s);
 			return s;
+		}
+
+		bool _Library(ref string value, int iValue)
+		{
+			var f = _GetFile(value, iValue); if(f == null) return false;
+			if(f.IcfFindProject(out var projFolder, out var projMain)) f = projMain;
+			if(!Compiler.Compile(false, out var r, f, projFolder)) return _Error(iValue, "failed to compile library");
+			if(r.file == null) return _Error(iValue, "the main library code file must have meta outputPath or outputType dll");
+			//Print(r.outputType, r.file);
+			if(r.outputType != EOutputType.dll) return false; //not error, just compile that script/app
+			value = r.file;
+			(Libraries ?? (Libraries = new List<ICollectionFile>())).Add(f); //for XCompiled
+			return true;
 		}
 
 		bool _FinalCheckOptions()

@@ -62,7 +62,7 @@ class PanelOutput :Control
 					{
 						var f = Model.FindByFilePath(x[1].Value);
 						if(f == null) return x[0].Value;
-						return $"<+open {f.Guid}|{x[3].Value}|{x[4].Value}>{f.Name}{x[2].Value}<>: ";
+						return $"<open \"{f.IdStringWithColl}|{x[3].Value}|{x[4].Value}\">{f.Name}{x[2].Value}<>: ";
 					});
 				} else if(s.Contains(":line ")) { //stack trace
 					if(s_rx2 == null) s_rx2 = new Regex_(@"(?m)^(\s+at .+) in (.+?):line (\d+)$");
@@ -71,7 +71,7 @@ class PanelOutput :Control
 						var f = Model.FindByFilePath(x[2].Value);
 						if(f == null) return x[0].Value;
 						var line = x[3].Value;
-						return $"{x[1].Value.Limit_(70)} in <+open {f.Guid}|{line}>{f.Name}<>:line {line}";
+						return $"{x[1].Value.Limit_(70)} in <open \"{f.IdStringWithColl}|{line}\">{f.Name}<>:line {line}";
 					});
 					if(!ReferenceEquals(s, s2)) {
 						if(!s2.StartsWith_("<>")) s2 = "<>" + s2;
@@ -171,8 +171,7 @@ class PanelOutput :Control
 			InitTagsStyle = TagsStyle.AutoWithPrefix;
 			InitImagesStyle = ImagesStyle.ImageTag;
 
-			SciTags.AddCommonLinkTag("open", s => _OpenLink(false, s));
-			SciTags.AddCommonLinkTag("+open", s => _OpenLink(true, s));
+			SciTags.AddCommonLinkTag("open", s => _OpenLink(s));
 			SciTags.AddCommonLinkTag("script", s => _RunScript(s));
 		}
 
@@ -206,11 +205,11 @@ class PanelOutput :Control
 			base.OnMouseUp(e);
 		}
 
-		void _OpenLink(bool isGuid, string s)
+		void _OpenLink(string s)
 		{
 			//Print(s);
 			var a = s.Split('|');
-			var fn = isGuid ? Model.FindByGUID(a[0]) : Model.Find(a[0], false);
+			var fn = Model.Find(a[0], false);
 			if(fn == null || !Model.SetCurrentFile(fn)) return;
 			var doc = Panels.Editor.ActiveDoc;
 			doc.Focus();

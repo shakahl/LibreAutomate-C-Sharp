@@ -64,7 +64,7 @@ using System.Net.NetworkInformation;
 using System.Configuration;
 
 using Au.Types;
-using Au.Util;
+//using Au.Util;
 using Au.Controls;
 
 using System.Dynamic;
@@ -224,7 +224,7 @@ static partial class Test
 
 	static void TestFileOpenWaitLocked()
 	{
-		var file = Folders.Temp + "test.txt";
+		var file = @"Q:\test\test.txt";
 
 		Task.Run(() =>
 		{
@@ -234,7 +234,7 @@ static partial class Test
 					//using(var f = File.Create(file)) {
 					using(var f = File_.WaitIfLocked(() => File.Create(file))) {
 						f.WriteByte(1);
-						50.ms();
+						7.ms();
 					}
 					//File.WriteAllText(file, "TEXT"); //unsafe. Exception if the file is locked.
 					//File_.WaitIfLocked(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
@@ -252,6 +252,7 @@ static partial class Test
 					//using(var f = File.OpenRead(file)) {
 					using(var f = File_.WaitIfLocked(() => File.OpenRead(file))) {
 						f.ReadByte();
+						5.ms();
 					}
 					//var s1 = File.ReadAllText(file); //unsafe. Exception if the file is locked.
 					//var s2 = File_.WaitIfLocked(() => File.ReadAllText(file)); //safe. Waits while the file is locked.
@@ -311,35 +312,6 @@ a1,-8";
 		//x = CsvTable.Load(f);
 		//Print(x);
 
-	}
-
-	//static void TestAssocQS()
-	//{
-	//	Print(Api.AssocQueryString(".cs"));
-	//}
-
-	static void TestFileReplace()
-	{
-		//Print(Path.GetRandomFileName());
-		//Print(Path.GetTempFileName());
-
-		//File_.Save(@"Q:\Test\test.txt", "d", true);
-		//File_.Save(@"Q:\Test\test.txt", "d", true, encoding: Encoding.Unicode);
-		//File_.Save(@"Q:\Test\test.txt", new byte[] { 65, 66, 70 }, true);
-		//var x = XElement.Parse("<a><b>mmm</b></a>");
-		//File_.Save(@"Q:\Test\test.txt", temp => x.Save(temp));
-		//x.Save_(@"Q:\Test\test.txt", true);
-		//while(true) {
-		//	int i = AuDialog.Show(buttons: "1Backup|2No backup|0Cancel");
-		//	if(i == 0) break;
-		//	Perf.First();
-		//	File_.Save(@"Q:\Test\test.txt", "data", i==1);
-		//	Perf.NW();
-		//}
-		Print("OK");
-
-		//XElement e;e.Save();
-		//XDocument d;d.Save()
 	}
 
 	static unsafe void TestDB()
@@ -479,48 +451,48 @@ a1,-8";
 
 
 
-#region test sqlite
+	#region test sqlite
 
-//	static void TestSqlite()
-//	{
-//		var sb = new StringBuilder();
+	//	static void TestSqlite()
+	//	{
+	//		var sb = new StringBuilder();
 
-//		Perf.Next();
-//		var file = @"Q:\test\sqlite.db";
-//		bool isNew = !File_.ExistsAsFile(file);
-//		Perf.Next();
+	//		Perf.Next();
+	//		var file = @"Q:\test\sqlite.db";
+	//		bool isNew = !File_.ExistsAsFile(file);
+	//		Perf.Next();
 
-//		using(var db = new SQLiteConnection(file)) {
-//			Perf.Next();
+	//		using(var db = new SQLiteConnection(file)) {
+	//			Perf.Next();
 
-//			if(isNew) {
-//				db.CreateTable<Stock>();
+	//			if(isNew) {
+	//				db.CreateTable<Stock>();
 
-//				var s = db.Insert(new Stock() {
-//					Symbol = "one"
-//				});
-//				Perf.Next();
-//			}
+	//				var s = db.Insert(new Stock() {
+	//					Symbol = "one"
+	//				});
+	//				Perf.Next();
+	//			}
 
-//			for(int i = 0; i < 5; i++) {
-//#if true
-//				//var query = db.Table<Stock>().Where(v => v.Symbol.StartsWith("A"));
+	//			for(int i = 0; i < 5; i++) {
+	//#if true
+	//				//var query = db.Table<Stock>().Where(v => v.Symbol.StartsWith("A"));
 
-//				var query = db.Table<Stock>();
-//				foreach(var stock in query)
-//					sb.AppendLine("Stock: " + stock.Symbol);
-//#else
-//				foreach(var stock in db.Query<Stock>("select * from Stock"))
-//					sb.AppendLine("Stock: " + stock.Symbol);
-//#endif
-//				Perf.Next();
-//			}
-//		}
-//		Perf.NW();
+	//				var query = db.Table<Stock>();
+	//				foreach(var stock in query)
+	//					sb.AppendLine("Stock: " + stock.Symbol);
+	//#else
+	//				foreach(var stock in db.Query<Stock>("select * from Stock"))
+	//					sb.AppendLine("Stock: " + stock.Symbol);
+	//#endif
+	//				Perf.Next();
+	//			}
+	//		}
+	//		Perf.NW();
 
-//		Print(sb);
-//	}
-//#endif
+	//		Print(sb);
+	//	}
+	//#endif
 
 	static void TestSqlite()
 	{
@@ -591,6 +563,695 @@ a1,-8";
 
 	#endregion
 
+	#region
+
+	class TAttr
+	{
+		internal TAttr _next;
+	}
+
+	class TAttr<T> :TAttr
+	{
+		public T Value { get; set; }
+		public static implicit operator T(TAttr<T> a) => a.Value;
+		//public static implicit operator T(TAttr<T> a, T value) => a.Value = value;
+
+		public override string ToString()
+		{
+			return Value.ToString();
+		}
+	}
+
+	class TAttrOne :TAttr<string> { }
+	class TAttrTwo :TAttr<int> { }
+
+	class TFile3
+	{
+		TFolder3 _parent;
+		TFile3 _next;
+		string _name;
+		TAttr _lastAttr;
+
+		//public void SetAttr<AttrType, ValueType>(ValueType value) where AttrType : XAttr
+		//{
+		//	var a = Attr<AttrType>();
+		//	if(a == null) {
+
+		//	}
+		//	a.V
+		//}
+
+		//public T Attr<T>() where T : XAttr
+		//{
+		//	XAttr a = _lastAttr;
+		//	if(a != null) {
+		//		do {
+		//			a = a._next;
+		//			if(a is T r) return r;
+		//		} while(a != _lastAttr);
+		//	}
+		//	return null;
+		//}
+
+		//public bool Attr<T>(out T value) where T : XAttr
+		//{
+		//	XAttr a = _lastAttr;
+		//	if(a != null) {
+		//		do {
+		//			a = a._next;
+		//			if(a is T r) { value = r; return true; }
+		//		} while(a != _lastAttr);
+		//	}
+		//	value = default;
+		//	return false;
+		//}
+
+		public T Attr<T>(bool add = false) where T : TAttr, new()
+		{
+			//find
+			TAttr a = _lastAttr;
+			if(a != null) {
+				do {
+					a = a._next;
+					if(a is T r) return r;
+				} while(a != _lastAttr);
+			}
+			if(!add) return null;
+			//add
+			var t = new T();
+			if(_lastAttr != null) {
+				t._next = _lastAttr._next; //= first
+				_lastAttr._next = t;
+			} else {
+				t._next = t;
+			}
+			_lastAttr = t;
+			return t;
+		}
+
+		public void SetAttr<T>(ETA attr, T value)
+		{
+
+		}
+
+		//public bool GetAttr<T>(ETA attr, out T value)
+		//{
+
+		//}
+	}
+
+	enum ETA { One, Two }
+
+	class TFolder3 :TFile3
+	{
+		TFile3 _firstChild;
+	}
+
+	static void TestXFile2()
+	{
+		//var f = new TFile();
+		////f.SetAttr<XAttrOne>("test");
+		////f.SetAttr<XAttrOne, string>("test");
+		//f.Attr<TAttrOne>(true).Value = "test";
+		//f.Attr<TAttrTwo>(true).Value = 5;
+		//f.Attr<TAttrTwo>(true).Value = 7;
+		//string s = f.Attr<TAttrOne>();
+		//int i = f.Attr<TAttrTwo>();
+		//Print(s, f.Attr<TAttrOne>(), i, f.Attr<TAttrTwo>());
+
+		//Debug_.LibMemorySetAnchor();
+
+		////for(int i = 0; i < 1024; i++) {
+		////	var v = new TFile2();
+		////	v._id = i;
+		////	v._flags = i;
+		////	v._name = new string('a', 10);
+		////	//v.Value = null;
+
+		////	//var a = new TAttrOne[4];
+		////}
+
+		//var d = new Dictionary<int, TFile2>(1024);
+
+		//Debug_.LibMemoryPrint();
+	}
+
+	#endregion
+
+#if false
+	class TFile
+	{
+		_Folder _parent;
+		TFile _next;
+		int _id;
+		_F _flags;
+		string _name;
+		object _misc; //null or rarely used data
+
+		class TMisc
+		{
+			public string iconOrLinkTarget;
+			public object run; //string id or TFile
+		}
+
+		[Flags]
+		enum _F
+		{
+			Folder = 1,
+			Link = 2,
+		}
+
+		TFile() { } //for _Folder
+
+		//reads XML attributes and sets fields except _next
+		TFile(XmlReader r, bool isFolder)
+		{
+			if(isFolder) _flags = _F.Folder;
+			string linkTarget = null, iconPath = null, runId = null;
+			do {
+				//Print(r.Name, r.Value);
+				string an = r.Name, av = r.Value;
+				//Print(an, av);
+				if(av.Length == 0) throw new XmlException("empty attribute " + an);
+				switch(an) {
+				case "n":
+					_name = av;
+					break;
+				case "i":
+					_id = av.ToInt_();
+					break;
+				case "f":
+					_flags |= (_F)av.ToInt_() & ~(_F.Folder | _F.Link);
+					break;
+				case "path":
+					if(!isFolder) { linkTarget = av; _flags |= _F.Link; }
+					break;
+				case "icon":
+					iconPath = av;
+					break;
+				case "run":
+					if(!isFolder) runId = av;
+					break;
+				default:
+					PrintWarning("unknown XML attribute " + an, -1);
+					continue;
+				}
+			} while(r.MoveToNextAttribute());
+			if(Empty(_name)) throw new XmlException("no n attribute");
+			//if(_id == 0) throw new XmlException("no i attribute"); //no, it may be exported, then will need new id
+
+			var iconOrLink = linkTarget ?? iconPath;
+			if(runId != null) {
+				var m = new TMisc { run = runId, iconOrLinkTarget = iconOrLink };
+				_misc = m;
+			} else _misc = iconOrLink;
+
+			//Print(this);
+		}
+
+		public static TFile Load(string file)
+		{
+			Perf.Next();
+			var xs = new XmlReaderSettings() { IgnoreComments = true, IgnoreProcessingInstructions = true, IgnoreWhitespace = true };
+			using(var r = File_.WaitIfLocked(() => XmlReader.Create(file, xs))) {
+				Perf.Next();
+				r.MoveToContent();
+				var root = new _Folder();
+				root.ReadContent(r);
+				Perf.NW();
+				return root;
+			}
+		}
+
+		class _Folder :TFile
+		{
+			internal TFile _lastChild;
+
+			//root node
+			public _Folder()
+			{
+				_flags = _F.Folder;
+				//_next = this;
+			}
+
+			public _Folder(XmlReader x) : base(x, true) { }
+
+			public void ReadContent(XmlReader r)
+			{
+				var parent = this;
+				//int n = 0;
+				while(r.Read()) {
+					//Print(r.NodeType);
+					var nodeType = r.NodeType;
+					if(nodeType == XmlNodeType.Element) {
+						//Print($"{new string(' ', r.Depth)}{r.Name} {(r["n"])}");
+						bool isFolder = false;
+						string tag = r.Name;
+						switch(tag) {
+						case "f": break;
+						case "d": isFolder = true; break;
+						default: throw new XmlException("unknown tag " + tag);
+						}
+						if(!r.MoveToFirstAttribute()) throw new XmlException("no attributes");
+						TFile f; _Folder d = null;
+						if(isFolder) f = d = new _Folder(r);
+						else f = new TFile(r, false);
+						parent.Add(f);
+						r.MoveToElement();
+						if(!r.IsEmptyElement) {
+							if(isFolder) parent = d;
+							else if(!r.Read() || r.NodeType != XmlNodeType.EndElement) throw new XmlException("f element with content"); //can be <f ...></f>
+						}
+						//n++;
+					} else if(nodeType == XmlNodeType.EndElement) {
+						if(parent == this) break;
+						parent = parent._parent;
+					}
+				}
+				//Print(n);
+			}
+
+			public void Add(TFile f)
+			{
+				Debug.Assert(IsFolder);
+				Debug.Assert(f != null);
+				Debug.Assert(f._parent == null);
+				Debug.Assert(f != RootAncestor);
+				f._parent = this;
+				var last = _lastChild;
+				if(last == null) { //our first child!
+					f._next = f; //f now is LastChild and FirstChild
+				} else {
+					f._next = last._next; //_next of LastChild is FirstChild
+					last._next = f;
+				}
+				_lastChild = f;
+			}
+
+			public void Remove(TFile f)
+			{
+				Debug.Assert(f._parent == this);
+				TFile p = _lastChild;
+				while(p._next != f) p = p._next;
+				if(p == f) {
+					_lastChild = null;
+				} else {
+					if(_lastChild == f) _lastChild = p;
+					p._next = f._next;
+				}
+				f._parent = null;
+				f._next = null;
+			}
+			//info: code from XContainer.RemoveNode
+		}
+
+		public bool IsFolder => 0 != (_flags & _F.Folder);
+
+		public bool IsLink => 0 != (_flags & _F.Link);
+
+		/// <summary>
+		/// Returns parent, or null if this is Root.
+		/// </summary>
+		public TFile Parent => _parent;
+
+		/// <summary>
+		/// Returns the root ancestor. Its Parent is null.
+		/// If this is root, returns this.
+		/// </summary>
+		public TFile RootAncestor
+		{
+			get
+			{
+				var p = this;
+				while(p._parent != null) p = p._parent;
+				return p;
+				//TODO: ModelRoot => _model.Root
+			}
+		}
+
+		/// <summary>
+		/// Gets the last child of this folder, or null if no children.
+		/// </summary>
+		public TFile LastChild => (this as _Folder)?._lastChild;
+
+		/// <summary>
+		/// Gets the first child of this folder, or null if no children.
+		/// </summary>
+		public TFile FirstChild => LastChild?._next;
+
+		public TFile Next => _parent == null || this == _parent._lastChild ? null : _next;
+		//info: code from XContainer.NextNode
+
+		public TFile Previous
+		{
+			get
+			{
+				if(_parent == null) return null;
+				TFile n = _parent._lastChild._next;
+				TFile p = null;
+				while(n != this) {
+					p = n;
+					n = n._next;
+				}
+				return p;
+			}
+		}
+		//info: code from XContainer.PreviousNode
+
+		public IEnumerable<TFile> Children(bool andSelf)
+		{
+			if(andSelf) yield return this;
+			var last = LastChild;
+			if(last != null) {
+				var f = last;
+				do {
+					f = f._next;
+					yield return f;
+				} while(f != last);
+			}
+		}
+		//info: code from XContainer.Nodes
+
+		public IEnumerable<TFile> Descendants(bool andSelf)
+		{
+			if(andSelf) yield return this;
+			var last = LastChild;
+			var f = this;
+			while(true) {
+				TFile first;
+				if(f.IsFolder && (first = f.FirstChild) != null) {
+					f = first;
+				} else {
+					while(f != null && f != this && f == f._parent._lastChild) f = f._parent;
+					if(f == null || f == this) break;
+					f = f._next;
+				}
+				yield return f;
+			}
+		}
+		//info: code from XContainer.GetDescendantNodes
+
+		public void Remove() => _parent?.Remove(this);
+
+		/// <summary>
+		/// Returns link target path.
+		/// Don't call for non-links.
+		/// </summary>
+		public string LinkTarget
+		{
+			get
+			{
+				Debug.Assert(IsLink);
+				if(_misc is string s) return s;
+				return (_misc as TMisc).iconOrLinkTarget;
+			}
+		}
+
+		/// <summary>
+		/// Returns custom icon path or link target path or null.
+		/// For links always returns null; use LinkTarget.
+		/// </summary>
+		public string IconPath
+		{
+			get
+			{
+				if(!IsLink)
+					switch(_misc) {
+					case string s: return s;
+					case TMisc m: return m.iconOrLinkTarget;
+					}
+				return null;
+			}
+		}
+
+#if DEBUG
+		public override string ToString()
+		{
+			string fd = IsFolder ? "d" : "f";
+			return $"{fd} {_name} {_id}";
+		}
+#endif
+
+		void _SaveNode(XmlWriter x)
+		{
+			bool isFolder = IsFolder;
+			x.WriteStartElement(isFolder ? "d" : "f");
+			//name, id
+			x.WriteAttributeString("n", _name);
+			if(_id != 0) x.WriteAttributeString("i", _id.ToString());
+			//icon path or link target
+			string icon;
+			if(IsLink) x.WriteAttributeString("path", LinkTarget);
+			else if((icon = IconPath) != null) x.WriteAttributeString("icon", icon);
+			//run
+			if(_misc is TMisc m) {
+				string runId = null;
+				switch(m.run) {
+				case string s: runId = s; break;
+				case TFile fr: runId = fr._id.ToString(); break;
+				}
+				if(runId != null) x.WriteAttributeString("run", runId);
+			}
+			//folder descendants
+			if(isFolder) {
+				foreach(var v in Children(false)) v._SaveNode(x);
+			}
+			x.WriteEndElement();
+		}
+
+		public void Save(XmlWriter x)
+		{
+			Debug.Assert(_parent == null && IsFolder); //must be root
+			x.WriteStartDocument();
+			x.WriteStartElement("files");
+			foreach(var v in Children(false)) v._SaveNode(x);
+			x.WriteEndDocument();
+		}
+
+		public void Save(string file)
+		{
+			var sett = new XmlWriterSettings() {
+				OmitXmlDeclaration = true,
+				Indent = true,
+				IndentChars = "\t"
+			};
+			File_.Save(file, temp =>
+			{
+				using(var x = XmlWriter.Create(temp, sett)) {
+					Save(x);
+				}
+			});
+		}
+	}
+#endif
+
+	class TFile :Au.Util.TreeBase<TFile>
+	{
+		public string Name { get; set; }
+		public int Id { get; private set; }
+		public bool IsFolder { get; private set; }
+
+		public TFile(string name, int id, bool isFolder) { Name = name; Id = id; IsFolder = isFolder; }
+
+		//XML element -> TFile object
+		TFile(XmlReader x, TFile parent)
+		{
+			if(parent == null) { //the root XML element
+				if(x.Name != "example") throw new ArgumentException("XML root element name must be example");
+				IsFolder = true;
+			} else {
+				switch(x.Name) {
+				case "e": break;
+				case "f": IsFolder = true; break;
+				default: throw new ArgumentException("XML element name must be e or f");
+				}
+				while(x.MoveToNextAttribute()) {
+					var v = x.Value;
+					switch(x.Name) {
+					case "name": Name = v; break;
+					case "id": Id = v.ToInt_(); break;
+					}
+				}
+				if(Empty(Name)) throw new ArgumentException("no name attribute in XML");
+				if(Id == 0) throw new ArgumentException("no id attribute in XML");
+			}
+		}
+
+		public static TFile Load(string file) => XmlLoad(file, (x, p) => new TFile(x, p));
+
+		public void Save(string file) => XmlSave(file, (x, n) => n._XmlWrite(x));
+
+		//TFile object -> XML element
+		void _XmlWrite(XmlWriter x)
+		{
+			if(Parent == null) {
+				x.WriteStartElement("example");
+			} else {
+				x.WriteStartElement(IsFolder ? "f" : "e");
+				x.WriteAttributeString("name", Name);
+				x.WriteAttributeString("id", Id.ToString());
+			}
+		}
+
+		public override string ToString() => $"{new string(' ', Level)}{(IsFolder ? 'f' : 'e')} {Name} ({Id})";
+	}
+
+	static void TestTFile()
+	{
+		//string file = @"Q:\Test\ok\files2.xml";
+
+		//Perf.First();
+		//var t = TFile.Load(file);
+
+		TFile t = new TFile(null, 0, true); //root
+		TFile n1, n2;
+		//test AddChild
+		t.AddChild(new TFile("one", 1, false));
+		t.AddChild(n1 = new TFile("two", 2, true)); //folder
+		n1.AddChild(new TFile("three", 3, false)); //in folder
+		n1.AddChild(new TFile("four", 4, false)); //in folder
+		t.AddChild(new TFile("five", 5, false), true); //first child
+		//test AddSibling
+		t.AddChild(n2 = new TFile("six", 6, false));
+		n2.AddSibling(new TFile("seven", 7, false), false); //before six
+		n2.AddSibling(new TFile("eith", 8, false), true); //after six (now at the end)
+		n1.FirstChild.AddSibling(new TFile("nine", 9, false), false); //before three in folder
+		n1.AddSibling(n2 = new TFile("ten", 10, false), true); //after folder two
+
+		//Print(t.Children(false));
+		Print(t.Descendants(true));
+		//Print("LINQ");
+		//Print(t.Descendants().FirstOrDefault(k => k.Name == "seven"));
+		//Print(t.Descendants().Where(k => k.Level > 1));
+		//Print("ANCESTORS");
+		var n3 = t.Descendants().FirstOrDefault(k => k.Name == "three");
+		////Print(n3.Ancestors());
+		//Print(n3.AncestorsReverse());
+		//Print("NAVIGATE");
+		////Print(n2.Parent, n3.Parent, t.Parent, t.RootAncestor, n2.RootAncestor);
+		////Print(t.FirstChild, t.LastChild, n1.FirstChild, n1.LastChild, n3.FirstChild, n3.LastChild);
+		//Print(t.Next, t.Previous, n1.Next, n1.Previous, n3.Next, n3.Previous, n3.Previous.Previous, n3.Next.Next);
+		//Print("HAS");
+		//Print(t.HasChildren, t.HasParent, n1.HasChildren, n1.HasParent, n2.HasChildren, n2.HasParent);
+		//Print("REMOVE");
+		////n2.Remove();
+		//n1.Remove();
+		//Print(t.Descendants(true));
+		//Print(n1.HasChildren, n1.HasParent, n1.Next, n1.Previous);
+		Print("IsDescendantOf");
+		//Print(t.IsDescendantOf(n1), t.IsDescendantOf(t));
+		Print(n3.IsDescendantOf(n1), n1.IsDescendantOf(n3));
+
+		t.Save(@"Q:\Test\ok\files3.xml");
+
+
+
+
+
+
+
+		//#region MyTree
+		//var x = MyTree.Load(@"Q:\test\example.xml");
+
+		//Perf.Cpu();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int n2 = 1000;
+		//	Perf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { foreach(var n in x.Children()) { if(n == null) Print("null"); } }
+		//	Perf.NW();
+		//	Thread.Sleep(10);
+		//}
+		//#endregion
+	}
+
+	#region TreeBase examples
+
+	/* meta r System.Xml */
+	//using System.Xml;
+
+	class MyTree :Au.Util.TreeBase<MyTree>
+	{
+		public string Name { get; set; }
+		public int Id { get; private set; }
+		public bool IsFolder { get; private set; }
+
+		public MyTree(string name, int id, bool isFolder) { Name = name; Id = id; IsFolder = isFolder; }
+
+		//XML element -> MyTree object
+		MyTree(XmlReader x, MyTree parent)
+		{
+			if(parent == null) { //the root XML element
+				if(x.Name != "example") throw new ArgumentException("XML root element name must be example");
+				IsFolder = true;
+			} else {
+				switch(x.Name) {
+				case "e": break;
+				case "f": IsFolder = true; break;
+				default: throw new ArgumentException("XML element name must be e or f");
+				}
+#if true //two ways of reading attributes
+				Name = x["name"];
+				Id = x["id"].ToInt_();
+#else
+				while(x.MoveToNextAttribute()) {
+					var v = x.Value;
+					switch(x.Name) {
+					case "name": Name = v; break;
+					case "id": Id = v.ToInt_(); break;
+					}
+				}
+#endif
+				if(Empty(Name)) throw new ArgumentException("no name attribute in XML");
+				if(Id == 0) throw new ArgumentException("no id attribute in XML");
+			}
+		}
+
+		public static MyTree Load(string file) => XmlLoad(file, (x, p) => new MyTree(x, p));
+
+		public void Save(string file) => XmlSave(file, (x, n) => n._XmlWrite(x));
+
+		//MyTree object -> XML element
+		void _XmlWrite(XmlWriter x)
+		{
+			if(Parent == null) {
+				x.WriteStartElement("example");
+			} else {
+				x.WriteStartElement(IsFolder ? "f" : "e");
+				x.WriteAttributeString("name", Name);
+				x.WriteAttributeString("id", Id.ToString());
+			}
+		}
+
+		public override string ToString() => $"{new string(' ', Level)}{(IsFolder ? 'f' : 'e')} {Name} ({Id})";
+	}
+
+	static void TNodeExample()
+	{
+		/*
+		<example>
+		  <e name="one" id="1" />
+		  <f name="two" id="112">
+			<e name="three" id="113" />
+			<e name="four" id="114" />
+			<f name="five" id="120">
+			  <e name="six" id="121" />
+			  <e name="seven" id="122" />
+			</f>
+		  </f>
+		  <f name="eight" id="217" />
+		  <e name="ten" id="144" />
+		</example>
+		*/
+
+		var x = MyTree.Load(@"Q:\test\example.xml");
+		foreach(MyTree n in x.Descendants(true)) Print(n);
+		//Print(x.Descendants().FirstOrDefault(k => k.Name == "seven")); //use LINQ to find a descendant
+		//Print(x.Descendants().Where(k => k.Level > 1)); //use LINQ to find some descendants
+		x.Save(@"Q:\test\example2.xml");
+	}
+
+	#endregion
+
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
@@ -600,20 +1261,23 @@ a1,-8";
 		Output.RedirectConsoleOutput = true;
 		if(!Output.IsWritingToConsole) {
 			Output.Clear();
-			100.ms();
+			//100.ms();
 		}
+		//AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
 
 		try {
 #if true
 
 			//Perf.Cpu();
-			//AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
-			Perf.First();
-			TestSqlite();
+			//TNodeExample();
+			TestTFile();
+
+			//Perf.Cpu();
+			//Perf.First();
+			//TestSqlite();
 			//AuDialog.Show();
 
 			//TestDB();
-			//TestFileReplace();
 			//TestAssocQS();
 			//TestCsvDictionary();
 			//TestFileOpenWaitLocked();

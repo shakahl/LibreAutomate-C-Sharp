@@ -424,7 +424,7 @@ namespace Au.Util
 			_messages.Enqueue(m);
 		}
 
-		//static int _GetMessageMemorySize(Message m) => 50 + (m.Text?.Length ?? 0) * 2;
+		//static int _GetMessageMemorySize(Message m) => 50 + m.Text.Length_() * 2;
 		//int _memSize;
 
 		/// <summary>

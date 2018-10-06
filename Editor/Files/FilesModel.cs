@@ -30,17 +30,21 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	public readonly TreeViewAdv TV;
 	public readonly FileNode Root;
 	public readonly XElement Xml;
+	public readonly string CollectionSN; //sequence number of collection open in this process: 1, 2...
+	static int s_collectionSN;
 	public readonly string CollectionFile;
 	public readonly string CollectionDirectory;
 	public readonly string CollectionName;
 	public readonly string FilesDirectory;
 	public readonly AutoSave Save;
-	public readonly Dictionary<string, FileNode> GuidMap;
+	public readonly Dictionary<long, FileNode> IdMap;
 	public readonly List<FileNode> OpenFiles;
 	readonly string _dbFile;
 	readonly LiteDatabase _db;
-	public readonly LiteCollection<DBMisc> TableMics;
+	public readonly LiteCollection<DBMisc> TableMisc;
 	public readonly LiteCollection<DBEdit> TableEdit;
+	readonly bool _importing;
+	readonly bool _initedFully;
 
 	/// <summary>
 	/// 
@@ -51,20 +55,34 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	/// <exception cref="Exception">XElement.Load exceptions. And possibly more.</exception>
 	public FilesModel(TreeViewAdv c, string file)
 	{
-		bool importing = c == null;
+		_importing = c == null;
 		TV = c;
+
 		CollectionFile = Path_.Normalize(file);
+		var perf=Perf.StartNew();
+		Xml = XElement_.Load(CollectionFile); //info: caller handles exceptions
+		perf.NW('L'); //TODO
+
 		CollectionDirectory = Path_.GetDirectoryPath(CollectionFile);
 		CollectionName = Path_.GetFileName(CollectionDirectory);
 		FilesDirectory = CollectionDirectory + @"\files";
-		if(!importing) File_.CreateDirectory(FilesDirectory);
+		if(!_importing) {
+			File_.CreateDirectory(FilesDirectory);
+			Save = new AutoSave(this);
+		}
 
-		Xml = XElement_.Load(CollectionFile); //info: caller handles exceptions
+		//rejected: CollectionId. Maybe in the future. Now use CollectionSN instead.
+		//if(!Xml.Attribute_(out string collId, XN.g)) {
+		//	collId = Convert_.GuidToHex(Guid.NewGuid());
+		//	Save?.CollectionLater();
+		//}
+		//CollectionId = collId;
+		CollectionSN = (++s_collectionSN).ToString();
 
-		GuidMap = new Dictionary<string, FileNode>(StringComparer.OrdinalIgnoreCase);
+		IdMap = new Dictionary<long, FileNode>();
 		Root = new FileNode(this, Xml, true); //recursively creates whole model tree
 
-		if(!importing) {
+		if(!_importing) {
 			_dbFile = CollectionDirectory + @"\editor.db";
 			try {
 				//Create LiteDatabase with the Stream ctor.
@@ -72,29 +90,31 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 				//	To open file, LiteDB uses the same function and arguments as this code, but does not wait/retry if temporarily locked.
 				var stream = File_.WaitIfLocked(() => new FileStream(_dbFile, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, System.IO.FileOptions.RandomAccess));
 				_db = new LiteDatabase(stream, disposeStream: true);
-				TableMics = _db.GetCollection<DBMisc>();
+				TableMisc = _db.GetCollection<DBMisc>();
 				TableEdit = _db.GetCollection<DBEdit>();
 			}
 			catch(Exception ex) {
-				TableMics = null; TableEdit = null;
+				TableMisc = null; TableEdit = null;
 				_db?.Dispose(); _db = null;
 				Print($"Failed to open file 'editor.db'. Will not load/save: list of open files, expanded folders, markers, folding.\r\n\t{ex.ToStringWithoutStack_()}");
 			}
-			Save = new AutoSave(this);
 			OpenFiles = new List<FileNode>();
 			_InitClickSelect();
 			_InitDragDrop();
 			_InitWatcher();
 		}
+		_initedFully = true;
 	}
 
 	public void Dispose()
 	{
-		if(Save != null) { //null when importing
-
-			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
+		if(_importing) return;
+		if(_initedFully) {
 			Tasks.OnCollectionClosed();
-			Save.Dispose();
+			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
+		}
+		Save?.Dispose();
+		if(_initedFully) {
 			_UninitWatcher();
 			_UninitClickSelect();
 			_UninitDragDrop();
@@ -228,37 +248,61 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 
 	public string IcfCollectionDirectory => CollectionDirectory;
 
-	public Au.Compiler.ICollectionFile IcfFindByGUID(string guid) => FindByGUID(guid);
+	public Au.Compiler.ICollectionFile IcfFindById(long id) => FindById(id);
 
 	#endregion
 
 	#region find
 
 	/// <summary>
-	/// Finds file or folder by name or @"\relative path".
+	/// Finds file or folder by name or @"\relative path" or id.
 	/// </summary>
-	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs". Case-insensitive.</param>
+	/// <param name="name">
+	/// Can be:
+	/// Name like "name.cs".
+	/// Relative path like @"\name.cs" or @"\subfolder\name.cs".
+	/// &lt;id&gt; - enclosed <see cref="FileNode.IdString"/>.
+	/// &lt;id.CollectionSN&gt; - <see cref="FileNode.IdStringWithColl"/>.
+	/// 
+	/// Case-insensitive. If enclosed in &lt;&gt;, can be followed by any text.
+	/// </param>
 	/// <param name="folder">true - folder, false - file, null - any.</param>
 	public FileNode Find(string name, bool? folder)
 	{
+		if(name != null && name.Length > 0 && name[0] == '<') {
+			long id = name.ToLong_(1, out int numEnd);
+			if(numEnd > 0 && name.Length > numEnd) {
+				char ch = name[numEnd];
+				if(ch == '>') return FindById(id);
+				if(ch == '.' && name.Length > ++numEnd + CollectionSN.Length && name[numEnd + CollectionSN.Length] == '>') {
+					if(name.EqualsAt_(numEnd, CollectionSN)) return FindById(id);
+				}
+			}
+			return null;
+		}
 		return Root.FindDescendant(name, folder);
 	}
 
 	/// <summary>
-	/// Finds file or folder by its GUID.
+	/// Finds file or folder by its <see cref="FileNode.Id"/>.
 	/// </summary>
-	/// <param name="guid">Hex GUID (lenght 32). Case-insensitive.</param>
-	public FileNode FindByGUID(string guid)
+	public FileNode FindById(long id)
 	{
-		if(GuidMap.TryGetValue(guid, out var f)) return f;
-		Debug_.Print("GUID not found: " + guid);
+		if(IdMap.TryGetValue(id, out var f)) return f;
+		Debug_.Print("id not found: " + id);
 		return null;
 	}
 
 	/// <summary>
+	/// Finds file or folder by its <see cref="FileNode.IdString"/>.
+	/// Note: it must not be as returned by <see cref="FileNode.IdStringWithColl"/>.
+	/// </summary>
+	public FileNode FindById(string id) => FindById(id.ToLong_());
+
+	/// <summary>
 	/// Finds file or folder by its file path (<see cref="FileNode.FilePath"/>).
 	/// </summary>
-	/// <param name="guid">Full path of a collection file or of a linked external file.</param>
+	/// <param name="path">Full path of a collection file or of a linked external file.</param>
 	public FileNode FindByFilePath(string path)
 	{
 		var d = FilesDirectory;
@@ -270,7 +314,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	/// Finds all files (and not folders) that have the specified name.
 	/// Returns empty array if not found.
 	/// </summary>
-	/// <param name="name">File name. If starts with backslash, works like <see cref="Find"/>.</param>
+	/// <param name="name">File name. If starts with backslash, works like <see cref="Find"/>. Does not support <see cref="FileNode.IdStringWithColl"/> string.</param>
 	public FileNode[] FindAll(string name)
 	{
 		return Root.FindAllDescendantFiles(name);
@@ -527,8 +571,10 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	{
 		var f = FileNode.NewItem(this, target, pos, template, name);
 		if(f == null) return null;
-		if(f.IsFolder) f.SelectSingle();
-		else SetCurrentFile(f);
+		if(f.IsFolder) {
+			if(f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main);
+			else f.SelectSingle();
+		} else SetCurrentFile(f);
 		return f;
 	}
 
@@ -548,10 +594,34 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		var r = AuDialog.ShowEx("Deleting", text, "1 OK|0 Cancel", owner: TV, checkBox: "Don't delete file", expandedText: expandedText);
 		if(r.Button == 0) return;
 
-		//close file (if folder - descendants), delete XML and editor data, delete files
 		foreach(var f in a) {
-			f.FileDelete(doNotDeleteFile: r.IsChecked); //info: and saves everything, now and/or later
+			_Delete(f, doNotDeleteFile: r.IsChecked); //info: and saves everything, now and/or later
 		}
+	}
+
+	bool _Delete(FileNode f, bool doNotDeleteFile = false, bool tryRecycleBin = true, bool canDeleteLinkTarget = false)
+	{
+		var e = f.Descendants(true);
+
+		CloseFiles(e);
+
+		if(!doNotDeleteFile && (canDeleteLinkTarget || !f.IsLink())) {
+			try { File_.Delete(f.FilePath, tryRecycleBin); } //FUTURE: use other thread, because very slow. Or better move to folder 'deleted'.
+			catch(Exception ex) { Print(ex.Message); return false; }
+		} else {
+			Print($"<>File not deleted: <explore>{f.FilePath}<>");
+		}
+
+		foreach(var k in e) {
+			TableEdit?.Delete(k.Id);
+			IdMap.Remove(k.Id);
+		}
+
+		OnNodeRemoved(f);
+		f.Xml.Remove();
+
+		Save.CollectionLater();
+		return true;
 	}
 
 	public void CutCopySelected(bool cut)
@@ -970,7 +1040,10 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		var x = new XElement("files");
 		foreach(var f in a) {
 			var xx = new XElement(f.Xml);
-			foreach(var v in xx.DescendantsAndSelf()) v.SetAttributeValue(XN.g, null);
+			foreach(var v in xx.DescendantsAndSelf()) {
+				v.SetAttributeValue(XN.i, null);
+				v.SetAttributeValue(XN.run, null);
+			}
 			x.Add(xx);
 		}
 		//Print(x);

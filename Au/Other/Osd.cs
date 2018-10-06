@@ -621,7 +621,7 @@ namespace Au
 			if(!_rectIsSet) base.Rect = Measure();
 
 			int t = SecondsTimeout;
-			if(t == 0) t = Math.Min(Text?.Length ?? 0, 1000) / 10 + 3; //calc time from text length
+			if(t == 0) t = Math.Min(Text.Length_(), 1000) / 10 + 3; //calc time from text length
 			base.Show();
 			if(sync) {
 				if(t < 0) t = 0; else t = -t;

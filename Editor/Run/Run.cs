@@ -53,19 +53,20 @@ static class Run
 		if(f == null) return;
 		g1:
 		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
-		if(run && f.Xml.Attribute_(out string guid2, XN.run)) { var f2 = Model.FindByGUID(guid2); if(f2 != null) { f = f2; goto g1; } } //useful for library
 
-		var nodeType = f.NodeType;
-		if(!(nodeType == ENodeType.Script || nodeType == ENodeType.CS)) return;
+		//can be set to run other script/app instead.
+		//	Useful for library projects. Single files have other alternatives - move to a script project or move code to a script file.
+		if(run && f.Xml.Attribute_(out long idRun, XN.run)) {
+			var f2 = Model.FindById(idRun);
+			if(f2 != null) { f = f2; goto g1; }
+		}
+
+		if(!f.IsCodeFile) return;
 
 		bool ok = Compiler.Compile(run, out var r, f, projFolder);
 
 		if(run && r.outputType == EOutputType.dll) { //info: if run dll, compiler sets r.outputType and returns false
-			if(!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _LinkRunClassFile); }
-			var guid = f.Guid;
-			var s1 = projFolder != null ? "library" : "file";
-			var s2 = projFolder != null ? "" : $", project (<+runClass 2|{guid}>create<>) or <c green>outputType app<> (<+runClass 1|{guid}>add<>)";
-			Print($"<>Cannot run '{f.Name}'. It is a class {s1} without a test script (<+runClass 3|{guid}>create<>){s2}.");
+			_OnRunClassFile(f, projFolder);
 			return;
 		}
 
@@ -80,11 +81,21 @@ static class Run
 		Tasks.RunCompiled(f, r, args);
 	}
 
+	static void _OnRunClassFile(FileNode f, FileNode projFolder)
+	{
+		if(!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _LinkRunClassFile); }
+		var ids = f.IdStringWithColl;
+		var s1 = projFolder != null ? "library" : "file";
+		var s2 = projFolder != null ? "" : $", project (<+runClass \"2|{ids}\">create<>) or <c green>outputType app<> (<+runClass \"1|{ids}\">add<>)";
+		Print($"<>Cannot run '{f.Name}'. It is a class {s1} without a test script (<+runClass \"3|{ids}\">create<>){s2}.");
+	}
+
 	static void _LinkRunClassFile(string s)
 	{
 		int action = s.ToInt_(); //1 add meta outputType app, 2 create Script project, 3 create new test script and set "run" attribute
-		var f = Model.FindByGUID(s.Substring(2)); if(f == null) return;
-
+		var f = Model.Find(s.Substring(2), null); if(f == null) return;
+		FileNode f2 = null;
+		string text = null;
 		if(action == 1) {
 			if(!Model.SetCurrentFile(f)) return;
 			var doc = Panels.Editor.ActiveDoc;
@@ -97,31 +108,22 @@ outputType app
 
 ");
 		} else if(action == 2) {
-			if(!_NewItem(out var f2, out _, @"Projects\Script project")) return;
+			if(!_NewItem(out f2, out _, @"New Project\@Script")) return;
 			f.FileMove(f2, Aga.Controls.Tree.NodePosition.After);
+			text = "Class1.Function1();\r\n";
 		} else {
-			s = f.Name; s = "test " + s.Remove(s.Length - 3); //suggested name
-			if(!AuDialog.ShowTextInput(out var name, "Set test script", "Name of new test script", editText: s, owner: MainForm)) return;
-			if(!_NewItem(out var f2, out bool isProject, "Script", name)) return;
-			f.Xml.SetAttributeValue(XN.run, f2.Guid);
-			//set meta to make easier
-			if(f2 != Model.CurrentFile) return;
-			if(isProject) s =
+			s = f.Name; s = "test " + s.Remove(s.Length - 3);
+			if(!_NewItem(out f2, out bool isProject, "Script", s)) return;
+			f.Xml.SetAttributeValue(XN.run, f2.IdString);
+			text =
 $@"/* meta
-//r AssemblyName.dll
-//or
-//c {f.ItemPath}
+{(isProject ? "library" : "c")} {f.ItemPath}
 */
 
+{(isProject ? "Library." : "")}Class1.Function1();
 ";
-			else s =
-$@"/* meta
-c {f.ItemPath}
-*/
-
-";
-			Panels.Editor.ActiveDoc.ST.SetText(s);
 		}
+		if(text != null && f2 == Model.CurrentFile) Panels.Editor.ActiveDoc.ST.SetText(text);
 
 		//Creates new item above f or f's project folder.
 		bool _NewItem(out FileNode ni, out bool isProject, string template, string name = null)
@@ -458,7 +460,7 @@ class RunningTasks :IAuTaskManager
 			//Perf.First();
 			flags |= RFlags.remote;
 			if(args != null) argsString = Au.Util.StringMisc.CommandLineFromArray(args);
-			if((argsString?.Length ?? 0) > 500000) { Print($"<>Error: {f.LinkTag} command line arguments string too long, max 500000."); return false; }
+			if(argsString.Length_() > 500000) { Print($"<>Error: {f.LinkTag} command line arguments string too long, max 500000."); return false; }
 			var asmFile = exeFile == null ? r.file : null;
 
 			var b = Au.Util.LibSerializer.Serialize(1, rt.taskId, (int)_wManager.Handle, r.name, asmFile, exeFile, argsString, r.pdbOffset, (int)flags);

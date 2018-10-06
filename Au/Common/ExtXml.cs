@@ -80,14 +80,16 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to float (<see cref="String_.ToFloat_"/>).
-		/// If the attribute does not exist, returns defaultValue.
-		/// If the attribute value is empty or is not a valid float number, returns 0F.
+		/// Gets attribute value converted to long (<see cref="String_.ToLong_(string)"/>).
+		/// If the attribute does not exist, sets value=0 and returns false.
+		/// If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
 		/// </summary>
-		public static float Attribute_(this XElement t, XName name, float defaultValue)
+		public static bool Attribute_(this XElement t, out long value, XName name)
 		{
 			var x = t.Attribute(name);
-			return x != null ? x.Value.ToFloat_() : defaultValue;
+			if(x == null) { value = 0; return false; }
+			value = x.Value.ToLong_();
+			return true;
 		}
 
 		/// <summary>

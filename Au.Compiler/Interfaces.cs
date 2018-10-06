@@ -27,9 +27,13 @@ namespace Au.Compiler
 {
 	public interface ICollectionFile
 	{
-		string Guid { get; }
+		long Id { get; }
+
+		string IdString { get; }
 
 		string Name { get; }
+
+		string ItemPath { get; }
 
 		string FilePath { get; }
 
@@ -40,6 +44,8 @@ namespace Au.Compiler
 		ICollectionFile IcfFindRelative(string relativePath, bool? folder);
 
 		IEnumerable<ICollectionFile> IcfEnumProjectFiles(ICollectionFile fSkip = null);
+
+		bool IcfFindProject(out ICollectionFile folder, out ICollectionFile main);
 	}
 
 	public interface ICollectionFiles
@@ -54,6 +60,6 @@ namespace Au.Compiler
 
 		string IcfCollectionDirectory { get; }
 
-		ICollectionFile IcfFindByGUID(string guid);
+		ICollectionFile IcfFindById(long id);
 	}
 }

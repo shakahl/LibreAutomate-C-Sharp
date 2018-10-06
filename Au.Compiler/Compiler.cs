@@ -116,7 +116,6 @@ namespace Au.Compiler
 
 			var m = new MetaComments();
 			if(!m.Parse(f, projFolder, EMPFlags.PrintErrors)) return false;
-			if(m.Files == null) return false; //empty text
 			var err = m.Errors;
 			//Perf.Next('m');
 
@@ -138,7 +137,7 @@ namespace Au.Compiler
 				} else {
 					outPath = cache.CacheDirectory;
 					File_.CreateDirectory(outPath);
-					fileName = f.Guid;
+					fileName = f.IdString;
 				}
 				outFile = outPath + "\\" + fileName;
 			}
@@ -154,7 +153,7 @@ namespace Au.Compiler
 
 #if STANDARD_SCRIPT
 		foreach(var f1 in m.Files) {
-			var tree = CSharpSyntaxTree.ParseText(f1.code, po, f1.f.Guid + " " + f1.f.Name, Encoding.UTF8) as CSharpSyntaxTree;
+			var tree = CSharpSyntaxTree.ParseText(f1.code, po, f1.f.IdString + " " + f1.f.Name, Encoding.UTF8) as CSharpSyntaxTree;
 			trees.Add(tree);
 		}
 		if(m.IsScript) {
@@ -374,7 +373,7 @@ internal static string[] args = System.Array.Empty<string>();
 
 		static ResourceDescription[] _CreateManagedResources(MetaComments m)
 		{
-			var a = m.ResourceFiles;
+			var a = m.Resources;
 			if(a == null || a.Count == 0) return null;
 			var stream = new MemoryStream();
 			var rw = new ResourceWriter(stream);
@@ -734,11 +733,10 @@ void _Main(string[] args) {");
 			Debug.Assert(f.IcfIsScript);
 			var m = new MetaComments();
 			if(!m.Parse(f, null, EMPFlags.PrintErrors)) return null;
-			if(m.Files == null) return ""; //empty text
 			var err = m.Errors;
 			var code = m.Files[0].code;
 			var po = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.None, SourceCodeKind.Script, m.Defines);
-			var tree = CSharpSyntaxTree.ParseText(code, po, f.Guid + " " + f.Name, Encoding.UTF8) as CSharpSyntaxTree;
+			var tree = CSharpSyntaxTree.ParseText(code, po, f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
 			if(err.AddAllAndPrint(tree, f)) return null;
 
 			var s = _TransformScriptCode(tree, code, false, err, f);
@@ -772,8 +770,7 @@ void _Main(string[] args) {");
 					switch(k[1].Value) {
 					case "outputFile": return outFile;
 					case "sourceFile": return f.FilePath;
-					case "sourceName": return f.Name;
-					case "sourceGuid": return f.Guid;
+					case "source": return f.ItemPath;
 					case "outputPath": return m.OutputPath;
 					case "debug": return m.IsDebug ? "true" : "false";
 					default: throw new ArgumentException("error in meta: unknown variable " + k.Value);

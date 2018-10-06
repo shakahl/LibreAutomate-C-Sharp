@@ -156,9 +156,9 @@ partial class FilesModel
 	{
 		try {
 			//Print("saving");
-			//Perf.First();
+			var perf = Perf.StartNew();
 			Xml.Save_(CollectionFile);
-			//Perf.NW();
+			perf.NW('S'); //TODO
 			return true;
 		}
 		catch(Exception ex) { //XElement.Save exceptions are undocumented
@@ -172,15 +172,15 @@ partial class FilesModel
 	/// </summary>
 	bool _SaveStateNow()
 	{
-		if(TableMics == null) return true;
+		if(TableMisc == null) return true;
 		try {
-			TableMics.Upsert(new DBMisc("expanded", string.Join(" ", TV.AllNodes.Where(n => n.IsExpanded).Select(n => (n.Tag as FileNode).Guid))));
+			TableMisc.Upsert(new DBMisc("expanded", string.Join(" ", TV.AllNodes.Where(n => n.IsExpanded).Select(n => (n.Tag as FileNode).IdString))));
 
 			using(new Au.Util.LibStringBuilder(out var b)) {
 				var a = OpenFiles;
 				b.Append(a.IndexOf(_currentFile));
-				foreach(var v in a) b.Append(' ').Append(v.Guid);
-				TableMics.Upsert(new DBMisc("open", b.ToString()));
+				foreach(var v in a) b.Append(' ').Append(v.IdString);
+				TableMisc.Upsert(new DBMisc("open", b.ToString()));
 			}
 			return true;
 		}
@@ -200,31 +200,31 @@ partial class FilesModel
 		//	2. SciControl handle must be created because _SetCurrentFile sets its text etc.
 		Debug.Assert(MainForm.IsHandleCreated);
 
-		if(TableMics == null) return;
+		if(TableMisc == null) return;
 		try {
 			Save.LoadingState = true;
 
 			//expanded folders
-			var s = TableMics.FindById("expanded")?.s;
+			var s = TableMisc.FindById("expanded")?.s;
 			if(!Empty(s)) {
 				TV.BeginUpdate();
-				foreach(var guid in s.Segments_(" ")) {
-					var fn = this.FindByGUID(guid.Value);
+				foreach(var seg in s.Segments_(" ")) {
+					var fn = this.FindById(seg.Value);
 					fn?.TreeNodeAdv.Expand();
 				}
 				TV.EndUpdate();
 			}
 
 			//open files
-			s = TableMics.FindById("open")?.s;
+			s = TableMisc.FindById("open")?.s;
 			if(!Empty(s)) {
-				//format: indexOfActiveDocOrMinusOne GUID1 GUID2 ...
+				//format: indexOfActiveDocOrMinusOne id1 id2 ...
 				int i = -2, iActive = s.ToInt_();
 				FileNode fnActive = null;
 				//Perf.First();
-				foreach(var guid in s.Segments_(" ")) {
+				foreach(var seg in s.Segments_(" ")) {
 					i++; if(i < 0) continue;
-					var fn = this.FindByGUID(guid.Value); if(fn == null) continue;
+					var fn = this.FindById(seg.Value); if(fn == null) continue;
 					OpenFiles.Add(fn);
 					if(i == iActive) fnActive = fn;
 				}
@@ -244,11 +244,12 @@ partial class FilesModel
 /// </summary>
 class DBMisc
 {
-	public string id { get; set; }
+	[BsonId]
+	public string name { get; set; }
 	public string s { get; set; }
 
 	public DBMisc() { } //need for LiteDB
-	public DBMisc(string id, string s) { this.id = id; this.s = s; }
+	public DBMisc(string name, string s) { this.name = name; this.s = s; }
 }
 
 class DBEdit
@@ -257,7 +258,7 @@ class DBEdit
 	//	LiteDB uses only properties, not fields.
 	//	The unique id property must be named Id or id or _id or have [BsonId].
 
-	public string id { get; set; }
+	public long id { get; set; }
 	public List<int> folding { get; set; }
 	public List<int> bookmarks { get; set; }
 	public List<int> breakpoints { get; set; }

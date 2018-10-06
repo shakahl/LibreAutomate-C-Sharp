@@ -72,7 +72,7 @@ partial class PanelFiles
 		};
 		m["FullUpdate"] = o => _c.FullUpdate();
 		m["HideEditor"] = o => _c.HideEditor();
-		m["Delete"] = o => f.FileDelete();
+		//m["Delete"] = o => f.FileDelete();
 		//m["Clear"] = o => _model.Clear();
 		m["StructureChanged"] = o => _model.OnStructureChanged();
 		m["Add"] = o =>

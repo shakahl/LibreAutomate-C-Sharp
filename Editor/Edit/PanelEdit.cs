@@ -422,7 +422,7 @@ partial class PanelEdit :Control
 
 		internal void LoadEditorData()
 		{
-			_savedED = Model.TableEdit?.FindById(FN.Guid);
+			_savedED = Model.TableEdit?.FindById(FN.Id);
 			_savedED?.folding?.ForEach(line => Call(SCI_FOLDLINE, line));
 			_savedED?.bookmarks?.ForEach(line => Call(SCI_MARKERADDSET, line, 1));
 			_savedED?.breakpoints?.ForEach(line => Call(SCI_MARKERADDSET, line, 2));
@@ -440,7 +440,7 @@ partial class PanelEdit :Control
 			if(_GetLineDataToSave(2, ref breakpoints)) changed = true;
 
 			if(changed) {
-				if(_savedED == null) _savedED = new DBEdit { id = FN.Guid };
+				if(_savedED == null) _savedED = new DBEdit { id = FN.Id };
 				_savedED.folding = folding;
 				_savedED.bookmarks = bookmarks;
 				_savedED.breakpoints = breakpoints;

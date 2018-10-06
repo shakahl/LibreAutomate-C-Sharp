@@ -35,6 +35,7 @@ partial class FileNode :ICollectionFile
 
 	FilesModel _model;
 	XElement _x;
+	long _id;
 	//_NodeFlags _nflags;
 
 	public FilesModel Model => _model;
@@ -57,20 +58,20 @@ partial class FileNode :ICollectionFile
 				//if(_x.HasAttribute_(s_xnPath)) _nflags |= _NodeFlags.Link;
 			}
 
-			var guid = this.Guid;
+			_id = this.IdString?.ToLong_() ?? 0;
 			g1:
-			if(guid == null || guid.Length != 32) { //probably new item
-				var g = System.Guid.NewGuid();
-				guid = Convert_.GuidToHex(g);
-				_x.SetAttributeValue(XN.g, guid);
+			if(_id == 0) { //probably new item
+				var m = _model.IdMap;
+				_id = (m.Count > 0 ? m.Keys.Max() : 0) + 1; //TODO
+				_x.SetAttributeValue(XN.i, _id.ToString());
 				_model.Save?.CollectionLater(); //_model.Save is null when importing this collection
 			}
 			try {
-				_model.GuidMap.Add(guid, this);
+				_model.IdMap.Add(_id, this);
 			}
 			catch(ArgumentException) {
-				PrintWarning("Duplicate GUID of '" + this.ItemPath + "'. Creating new.");
-				guid = null;
+				PrintWarning($"Duplicate id of '{ItemPath}'. Creating new.");
+				_id = 0;
 				goto g1;
 			}
 		}
@@ -93,14 +94,27 @@ partial class FileNode :ICollectionFile
 	public bool IsFolder => NodeType == ENodeType.Folder;
 
 	/// <summary>
+	/// true if <see cref="NodeType"/> is Script or CS.
+	/// </summary>
+	public bool IsCodeFile => NodeType == ENodeType.Script || NodeType == ENodeType.CS;
+
+	/// <summary>
 	/// File name with extension.
 	/// </summary>
 	public string Name => _x.Attribute_(XN.n);
 
+	public long Id => _id;
+
 	/// <summary>
-	/// GUID as hex string of 32 length, as it is stored in collection file.
+	/// <see cref="Id"/> as string.
 	/// </summary>
-	public string Guid => _x.Attribute_(XN.g);
+	public string IdString => _x.Attribute_(XN.i);
+
+	/// <summary>
+	/// Formats string "&lt;<see cref="Id"/>.<see cref="FilesModel.CollectionSN"/>&gt;".
+	/// Such string can be passed to <see cref="FilesModel.Find"/>.
+	/// </summary>
+	public string IdStringWithColl => $"<{IdString}.{_model.CollectionSN}>";
 
 	/// <summary>
 	/// true if is external file, ie not in this collection folder.
@@ -171,7 +185,7 @@ partial class FileNode :ICollectionFile
 		get
 		{
 			XElement x = _x, xRoot = Root.Xml;
-			var a = new Stack<string>();
+			var a = new Stack<string>(); //SHOULDDO: optimize; eg use common Stack
 			while(x != xRoot) {
 				a.Push(x.Attribute_(XN.n));
 				a.Push("\\");
@@ -210,7 +224,7 @@ partial class FileNode :ICollectionFile
 		if(x == null && !folder.HasValue) x = _x.Descendant_(XN.d, XN.n, name, true);
 		return FromX(x);
 
-		//FUTURE: support "<GUID>comments"
+		//FUTURE: support "<id>comments", "<collectionId.id>comments"
 		//FUTURE: support XPath: x = _x.XPathSelectElement(name);
 	}
 
@@ -278,24 +292,20 @@ partial class FileNode :ICollectionFile
 
 	/// <summary>
 	/// Finds ancestor (including self) project folder and its main file.
-	/// If folder not found, returns false; sets both out variables = null.
-	/// If folder found but file not, returns null; sets folder = valid, file = null.
+	/// If both found, sets folder and main and returns true. If some not found, sets folder=null, main=null, and returns false.
 	/// </summary>
 	public bool FindProject(out FileNode folder, out FileNode main)
 	{
 		folder = main = null;
-		for(var x = IsFolder ? _x : _x.Parent; x != Root.Xml; x = x.Parent) {
-			if(!x.Attribute_(out string guid, XN.project)) continue;
-			folder = FromX(x);
-			x = x.Descendant_(XN.f, XN.g, guid);
-			if(x == null) break;
-			main = FromX(x);
+		XElement xRoot = Root.Xml, x = IsFolder ? _x : _x.Parent;
+		for(; x != xRoot && x != null; x = x.Parent) {
+			var t = FromX(x);
+			if(!t.IsProjectFolder(out main)) continue;
+			if(main == null) break;
+			folder = t;
 			return true;
 		}
 		return false;
-
-		//note: could use Model.FindByGUID instead. It can be faster when the main is somewhere far and deep, because uses GuidMap.
-		//	But in most cases the main will be the first node or near.
 	}
 
 	/// <summary>
@@ -311,7 +321,26 @@ partial class FileNode :ICollectionFile
 		}
 	}
 
-	public bool IsProjectFolder => IsFolder && _x.HasAttribute_(XN.project);
+	/// <summary>
+	/// Returns true if this is a folder and Name starts with '@'.
+	/// </summary>
+	/// <param name="main">Receives the main code file or null. It is the first direct child code file.</param>
+	public bool IsProjectFolder(out FileNode main)
+	{
+		main = null;
+		if(IsProjectFolder()) {
+			foreach(var x in _x.Elements()) {
+				var f = FromX(x);
+				if(f.IsCodeFile) { main = f; return true; }
+			}
+		}
+		return false;
+	}
+
+	/// <summary>
+	/// Returns true if this is a folder and Name starts with '@'.
+	/// </summary>
+	public bool IsProjectFolder() => IsFolder && Name[0] == '@';
 
 	/// <summary>
 	/// Unselects all and selects this. Does not open document.
@@ -420,8 +449,8 @@ partial class FileNode :ICollectionFile
 		} else {
 			switch(NodeType) {
 			case ENodeType.Folder:
-				if(IsProjectFolder) k = "project";
-				else if(expandedFolder) k = "folderOpen";
+				//if(IsProjectFolder()) k = "project"; else //rejected. Name starts with '@' character, it's visible without a different icon.
+				if(expandedFolder) k = "folderOpen";
 				else k = "folder";
 				break;
 			case ENodeType.Script: k = "fileScript"; break;
@@ -437,9 +466,9 @@ partial class FileNode :ICollectionFile
 	public static Icon_.ImageCache IconCache = new Icon_.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
 
 	/// <summary>
-	/// Formats +open link tag to open this file.
+	/// Formats &lt;open&gt; link tag to open this file.
 	/// </summary>
-	public string LinkTag => $"<+open {Guid}>{Name}<>";
+	public string LinkTag => $"<open \"{IdStringWithColl}\">{Name}<>";
 
 	/// <summary>
 	/// Returns Name.
@@ -451,13 +480,20 @@ partial class FileNode :ICollectionFile
 
 	#region Au.Compiler.ICollectionFile
 
+	public bool IcfIsScript => NodeType == ENodeType.Script;
+
 	public ICollectionFiles IcfCollection => _model;
 
 	public ICollectionFile IcfFindRelative(string relativePath, bool? folder) => FindRelative(relativePath, folder);
 
 	public IEnumerable<ICollectionFile> IcfEnumProjectFiles(ICollectionFile fSkip = null) => EnumProjectFiles(fSkip as FileNode);
 
-	public bool IcfIsScript => NodeType == ENodeType.Script;
+	public bool IcfFindProject(out ICollectionFile folder, out ICollectionFile main)
+	{
+		if(!FindProject(out var fo, out var ma)) { folder = main = null; return false; }
+		folder = fo; main = ma;
+		return true;
+	}
 
 	#endregion
 
@@ -520,5 +556,5 @@ enum ENodeType
 /// </summary>
 class XN
 {
-	public static readonly XName f = "f", d = "d", n = "n", g = "g", path = "path", project = "project", run = "run";
+	public static readonly XName f = "f", d = "d", n = "n", i = "i", path = "path", run = "run";
 }

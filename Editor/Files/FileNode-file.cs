@@ -146,9 +146,9 @@ partial class FileNode
 	/// <param name="newModel">Used when importing collection.</param>
 	internal FileNode FileCopy(FileNode target, NodePosition pos, FilesModel newModel = null)
 	{
-		//clone XML (with attributes and descendants) and set unique GUIDs
+		//clone XML (with attributes and descendants) and set unique ids
 		var xNew = new XElement(_x);
-		foreach(var v in xNew.DescendantsAndSelf()) v.SetAttributeValue(XN.g, null); //will auto-create
+		foreach(var v in xNew.DescendantsAndSelf()) v.SetAttributeValue(XN.i, null); //will auto-create new ids
 
 		//create unique name
 		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
@@ -183,12 +183,13 @@ partial class FileNode
 	/// Can be filename or relative path of a file or folder from the Templates folder.
 	/// Examples: "Script", "Class.cs", "Text.txt", "Subfolder", "Subfolder\File.cs".
 	/// If "Folder", creates simple folder. If the file/folder does not exist, creates script or class (.cs) or other file.
+	/// If folder name starts with '@', creates multi-file project from template if exists. To sort the main code file first, its name can start with '!' character.
 	/// Files without extension are considered C# scripts.
 	/// </param>
 	/// <param name="name">If not null, creates with this name (made unique). Else gets name from template. In any case, makes unique name.</param>
 	public static FileNode NewItem(FilesModel model, FileNode target, NodePosition pos, string template, string name = null)
 	{
-		Debug.Assert(!Empty(template));
+		Debug.Assert(!Empty(template)); if(Empty(template)) return null;
 
 		if(target == null) {
 			var root = model.Root;
@@ -201,7 +202,7 @@ partial class FileNode
 		string text = "";
 		bool isFolder = template == "Folder";
 		if(!isFolder) {
-			string templFile = s_dirTemplates + template;
+			string templFile = s_dirTemplatesBS + template;
 			switch(File_.ExistsAs(templFile, true)) {
 			case FileDir.Directory: isFolder = true; break;
 			case FileDir.File: text = _NI_GetTemplateText(templFile, template, newParent); break;
@@ -231,33 +232,24 @@ partial class FileNode
 		var f = new FileNode(model, xNew);
 		f._Common_MoveCopyNew(target, pos);
 
-		if(isFolder && template.EndsWith_(" project", true)) {
-			var sm = Path_.GetFileName(template); sm = sm.Remove(sm.Length - 8); //name of project's main file, without ".cs"
-			return _NI_FillProjectFolder(model, f, s_dirTemplates + template, sm);
+		if(isFolder && Path_.GetFileName(template)[0] == '@') {
+			_NI_FillProjectFolder(model, f, s_dirTemplatesBS + template);
 		}
 		return f;
 	}
-	static string s_dirTemplates = Folders.ThisAppBS + @"Templates\";
+	static string s_dirTemplatesBS = Folders.ThisAppBS + @"Templates\";
 
-	static FileNode _NI_FillProjectFolder(FilesModel model, FileNode fnParent, string dirParent, string mainName)
+	static void _NI_FillProjectFolder(FilesModel model, FileNode fnParent, string dirParent)
 	{
-		FileNode fnMain = null;
 		foreach(var v in File_.EnumDirectory(dirParent, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
-			var f = NewItem(model, fnParent, NodePosition.Inside, v.FullPath.Substring(s_dirTemplates.Length), v.Name);
-			if(v.IsDirectory) {
-				_NI_FillProjectFolder(model, f, v.FullPath, null);
-			} else {
-				if(mainName != null) {
-					var s1 = v.Name;
-					if(s1.Equals_(mainName, true) || Path_.GetFileNameWithoutExtension(s1).Equals_(mainName, true)) {
-						mainName = null;
-						fnParent.Xml.SetAttributeValue(XN.project, f.Guid);
-						fnMain = f;
-					}
-				}
-			}
+			bool isFolder = v.IsDirectory;
+			var name = v.Name;
+			if(isFolder && name[0] == '@') continue; //error, project in project
+			if(name[0] == '!' && name.Length > 1) name = name.Substring(1); //!name can be used to make the file sorted first; then it will become the main file of project.
+			string template = v.FullPath.Substring(s_dirTemplatesBS.Length);
+			var f = NewItem(model, fnParent, NodePosition.Inside, template, name);
+			if(isFolder) _NI_FillProjectFolder(model, f, v.FullPath);
 		}
-		return fnMain;
 	}
 
 	static string _NI_GetTemplateText(string templFile, string template, FileNode newParent)
@@ -266,7 +258,7 @@ partial class FileNode
 		//replace //"#include file" with text of file from "include" subfolder
 		s = s.RegexReplace_(@"(?m)^//#include +(.+)$", m =>
 		{
-			var si = s_dirTemplates + @"include\" + m[1];
+			var si = s_dirTemplatesBS + @"include\" + m[1];
 			if(File_.ExistsAsFile(si)) return File_.LoadText(si);
 			return null;
 		});
@@ -303,35 +295,6 @@ partial class FileNode
 			if(File_.ExistsAsAny(folder.FilePath + "\\" + s)) return true; //orphaned file?
 			return false;
 		}
-	}
-
-	/// <summary>
-	/// Deletes this item and optionally its file. If folder, deletes descendants too. Closes documents in code editor.
-	/// </summary>
-	public bool FileDelete(bool doNotDeleteFile = false, bool tryRecycleBin = true, bool canDeleteLinkTarget = false)
-	{
-		var e = Descendants(true);
-
-		_model.CloseFiles(e);
-
-		if(!doNotDeleteFile && (canDeleteLinkTarget || !IsLink())) {
-			try { File_.Delete(this.FilePath, tryRecycleBin); }
-			catch(Exception ex) { Print(ex.Message); return false; }
-		} else {
-			Print($"<>File not deleted: <explore>{FilePath}<>");
-		}
-
-		foreach(var f in e) {
-			var guid = f.Guid;
-			_model.TableEdit?.Delete(guid);
-			_model.GuidMap.Remove(guid);
-		}
-
-		_model.OnNodeRemoved(this);
-		_x.Remove();
-
-		_model.Save.CollectionLater();
-		return true;
 	}
 
 }

@@ -134,6 +134,7 @@
     <Compile Include="String\wildcard.cs" />
     <Compile Include="Dialog, menu, toolbar\AuDialog.cs" />
     <Compile Include="String\Csv.cs" />
+    <Compile Include="Util\TreeBase.cs" />
     <Compile Include="Wnd\Wnd_wait.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

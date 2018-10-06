@@ -32,11 +32,12 @@ namespace Au
 		/// </summary>
 		public static bool Equals_(this string t, string value, bool ignoreCase = false)
 		{
-			if(t is null) throw new NullReferenceException();
-			if(value is null || t.Length != value.Length) return false;
-			//if(ReferenceEquals(t, value)) return true;
-			fixed (char* a = t, b = value) return _Equals(a, b, t.Length, ignoreCase);
+			int len = t.Length; //NullReferenceException
+			if(value is null || len != value.Length) return false;
+			//if(ReferenceEquals(t, value)) return true; //rare
+			fixed (char* a = t, b = value) return _Equals(a, b, len, ignoreCase);
 		}
+		//TODO: Equals_(string value), EqualsI_(string value), Equals_(bool ignoreCase = false, params string[] strings).
 
 		static bool _Equals(char* a, char* b, int len, bool ignoreCase)
 		{
@@ -64,8 +65,6 @@ namespace Au
 			}
 			return true;
 			gFalse: return false;
-
-			//CONSIDER: if possible, don't use LibTables, because makes startup slower, eg by 5 ms when not ngened, 2.5 ms when ngened.
 		}
 
 		/// <summary>
@@ -85,9 +84,8 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
 		public static bool EqualsAt_(this string t, int startIndex, string value, bool ignoreCase = false)
 		{
-			_ThrowIfNull(t, value);
-			if((uint)startIndex > t.Length) throw new ArgumentOutOfRangeException();
-			int n = value.Length;
+			if((uint)startIndex > t.Length) throw new ArgumentOutOfRangeException(); //and NullReferenceException
+			int n = value?.Length ?? throw new ArgumentNullException();
 			if(n > t.Length - startIndex) return false;
 			fixed (char* a = t, b = value) return _Equals(a + startIndex, b, n, ignoreCase);
 		}
@@ -110,21 +108,15 @@ namespace Au
 			fixed (char* a = s1, b = s2) return _Equals(a + i1, b + i2, len, ignoreCase);
 		}
 
-		static void _ThrowIfNull(string t, string value)
-		{
-			if(t is null) throw new NullReferenceException();
-			if(value is null) throw new ArgumentNullException();
-		}
-
 		/// <summary>
 		/// Compares the end of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
 		public static bool EndsWith_(this string t, string value, bool ignoreCase = false)
 		{
-			_ThrowIfNull(t, value);
-			int n = value.Length; if(n > t.Length) return false;
-			fixed (char* a = t, b = value) return _Equals(a + t.Length - n, b, n, ignoreCase);
+			int tLen = t.Length; //NullReferenceException
+			int n = value?.Length ?? throw new ArgumentNullException(); if(n > tLen) return false;
+			fixed (char* a = t, b = value) return _Equals(a + tLen - n, b, n, ignoreCase);
 		}
 
 		/// <summary>
@@ -154,8 +146,8 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
 		public static bool StartsWith_(this string t, string value, bool ignoreCase = false)
 		{
-			_ThrowIfNull(t, value);
-			int n = value.Length; if(n > t.Length) return false;
+			int tLen = t.Length; //NullReferenceException
+			int n = value?.Length ?? throw new ArgumentNullException(); if(n > tLen) return false;
 			fixed (char* a = t, b = value) return _Equals(a, b, n, ignoreCase);
 		}
 

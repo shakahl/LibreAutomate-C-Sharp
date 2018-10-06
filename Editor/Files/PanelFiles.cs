@@ -60,12 +60,12 @@ partial class PanelFiles :Control
 		_c.FullRowSelect = true;
 		//_c.HideSelection = true;
 		_c.ShowPlusMinus = false; _c.ShowLines = false; //also disables editing on 2 clicks, it is more annoying than useful
-		//_c.ShiftFirstNode = true;
-		//_c.Indent /= 2;
-		//_c.ShowLines = false;
-		//_c.BackColor = Color.DarkGreen;
-		//_c.ForeColor = Color.Yellow;
-		//_c.LineColor = Color.Red;
+														//_c.ShiftFirstNode = true;
+														//_c.Indent /= 2;
+														//_c.ShowLines = false;
+														//_c.BackColor = Color.DarkGreen;
+														//_c.ForeColor = Color.Yellow;
+														//_c.LineColor = Color.Red;
 		_c.AllowDrop = true;
 		_c.DisplayDraggingNodes = true;
 
@@ -300,7 +300,7 @@ partial class PanelFiles :Control
 		}
 
 		m.LoadState();
-		if(m.CurrentFile==null) MainForm.SetTitle();
+		if(m.CurrentFile == null) MainForm.SetTitle();
 
 		return _model;
 	}
@@ -339,16 +339,6 @@ partial class PanelFiles :Control
 		var path = FilesModel.GetDirectoryPathForNewCollection();
 		if(path == null) return null;
 		return LoadCollection(path);
-	}
-
-	void _AddToRecentCollections(string file)
-	{
-		lock(Settings) {
-			var x1 = Settings.XmlOf("recent", true);
-			var x2 = x1.Element_(XN.f, XN.n, file, true);
-			if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
-			if(x2 == null) x1.AddFirst(new XElement(XN.f, new XAttribute(XN.n, file)));
-		}
 	}
 
 	/// <summary>
@@ -402,21 +392,21 @@ partial class PanelFiles :Control
 				string name = v.Name;
 				if(v.IsDirectory) {
 					if(level == 0 && name.Equals_("include", true)) continue;
-					if(isProject = name.EndsWith_(" project", true)) name = name.Remove(name.Length - 8);
+					if(isProject = (name[0] == '@')) name = name.Substring(1);
 				} else {
 					if(level == 0 && 0 != name.Equals_(true, "Script", "App.cs", "Class.cs")) continue;
 				}
 
 				bool isFolder = v.IsDirectory && !isProject;
-				var item = new ToolStripMenuItem(isFolder ? name : ("New " + name), null,
-					(unu,sed)=> Model.NewItem(v.FullPath.Substring(templDir.Length+1)));
+				var item = new ToolStripMenuItem(name, null, (unu, sed) => Model.NewItem(v.FullPath.Substring(templDir.Length + 1)));
 				if(isFolder) {
 					var ddSub = new ToolStripDropDownMenu();
 					item.DropDown = ddSub;
 					_CreateMenu(dir + "\\" + name, ddSub, level + 1);
 				} else {
 					string si = null;
-					if(isProject) si = "project";
+					//if(isProject) si = "project";
+					if(isProject) si = "folder";
 					else if(Path_.FindExtension(name) < 0) si = "fileScript";
 					else if(name.EndsWith_(".cs", true)) si = "fileClass";
 					Bitmap im = si != null ? EResources.GetImageUseCache(si) : FileNode.IconCache.GetImage(v.FullPath, true);

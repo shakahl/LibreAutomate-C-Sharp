@@ -404,11 +404,11 @@
             If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
             </summary>
         </member>
-        <member name="M:Au.Types.XElement_.Attribute_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Single)">
+        <member name="M:Au.Types.XElement_.Attribute_(System.Xml.Linq.XElement,System.Int64@,System.Xml.Linq.XName)">
             <summary>
-            Gets attribute value converted to float (<see cref="M:Au.String_.ToFloat_(System.String,System.Boolean)"/>).
-            If the attribute does not exist, returns defaultValue.
-            If the attribute value is empty or is not a valid float number, returns 0F.
+            Gets attribute value converted to long (<see cref="M:Au.String_.ToLong_(System.String)"/>).
+            If the attribute does not exist, sets value=0 and returns false.
+            If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
             </summary>
         </member>
         <member name="M:Au.Types.XElement_.Attribute_(System.Xml.Linq.XElement,System.Single@,System.Xml.Linq.XName)">
@@ -13170,12 +13170,13 @@
             <param name="lockedWaitMS">If cannot open file because it is open by another process etc, wait max this number of milliseconds. Can be <see cref="F:System.Threading.Timeout.Infinite"/> (-1).</param>
             <param name="encoding">Text encoding in file. Default <b>Encoding.UTF8</b>.</param>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:System.IO.File.WriteAllText(System.String,System.String)"/> and <see cref="M:System.IO.File.Replace(System.String,System.String,System.String)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of the file-write function.</exception>
+            <exception cref="T:System.IO.IOException">Failed to replace file. The file-write function also can thow it.</exception>
             <remarks>
             The file-write functions provided by .NET and Windows API are unreliable, because:
-            1. Fails and throws exception if the file is temporarily open by another process or thread without sharing.
+            1. Fails if the file is temporarily open by another process or thread without sharing.
             2. Can corrupt file data. If this thread, process, PC or disk dies while writing, may write only part of data or just make empty file. Usually it happens when PC is turned off incorrectly.
-            To protect from 1, this functions uses <see cref="M:Au.File_.WaitIfLocked(System.Action,System.Int32)"/>. It waits/retries if the file is temporarily open/locked.
+            To protect from 1, this functions waits/retries if the file is temporarily open/locked, like <see cref="M:Au.File_.WaitIfLocked(System.Action,System.Int32)"/>.
             To protect from 2, this function writes to a temporary file and renames/replaces the specified file using API <msdn>ReplaceFile</msdn>. Although not completely atomic, it ensures that file data is not corrupt; if cannot write all data, does not change existing file data.
             </remarks>
         </member>
@@ -13191,7 +13192,7 @@
             <summary>
             Writes any data to a file in a safe way, using a callback function.
             </summary>
-            <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file; the file does not exist.</param>
+            <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file, which normally does not exist.</param>
         </member>
         <member name="T:Au.Shell">
             <summary>

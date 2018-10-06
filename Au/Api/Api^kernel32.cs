@@ -533,6 +533,9 @@ namespace Au.Types
 		[DllImport("kernel32.dll", EntryPoint = "CreateDirectoryExW", SetLastError = true)]
 		internal static extern bool CreateDirectoryEx(string lpTemplateDirectory, string lpNewDirectory, IntPtr lpSecurityAttributes); //ref SECURITY_ATTRIBUTES
 
+		[DllImport("kernel32.dll", EntryPoint = "ReplaceFileW", SetLastError = true)]
+		internal static extern bool ReplaceFile(string lpReplacedFileName, string lpReplacementFileName, string lpBackupFileName, uint dwReplaceFlags, IntPtr lpExclude = default, IntPtr lpReserved = default);
+
 		[DllImport("kernel32.dll", EntryPoint = "GlobalAddAtomW")]
 		internal static extern ushort GlobalAddAtom(string lpString);
 

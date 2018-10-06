@@ -28,7 +28,7 @@ namespace Au.Compiler
 		{
 			ICollectionFiles _coll;
 			string _file;
-			Dictionary<string, string> _data;
+			Dictionary<long, string> _data;
 
 			public string CacheDirectory { get; }
 
@@ -67,7 +67,7 @@ namespace Au.Compiler
 
 				if(_data == null && !_Open()) return false;
 
-				if(!_data.TryGetValue(f.Guid, out string value)) return false;
+				if(!_data.TryGetValue(f.Id, out string value)) return false;
 				//Debug_.Print(value);
 				int iPipe = 0;
 
@@ -80,7 +80,7 @@ namespace Au.Compiler
 				if(r.notInCache = (value != null && value.StartsWith_("|="))) {
 					iPipe = value.IndexOf('|', 2); if(iPipe < 0) iPipe = value.Length;
 					asmFile = value.Substring(2, iPipe - 2);
-				} else asmFile = CacheDirectory + "\\" + f.Guid;
+				} else asmFile = CacheDirectory + "\\" + f.IdString;
 				//Print(asmFile);
 
 				if(!File_.GetProperties(asmFile, out var asmProp, FAFlags.UseRawPath)) return false;
@@ -126,8 +126,8 @@ namespace Au.Compiler
 								Convert_.MD5Hash md = default;
 								foreach(var f1 in projFolder.IcfEnumProjectFiles(f)) {
 									if(_IsFileModified(f1)) return false;
-									var g = Convert_.GuidFromHex(f1.Guid);
-									md.Add(&g, sizeof(Guid));
+									long id = f1.Id;
+									md.Add(&id, 8);
 								}
 								if(md.Hash != md5) return false;
 							}
@@ -137,17 +137,31 @@ namespace Au.Compiler
 							if(!Path_.IsFullPath(dll)) dll = Folders.ThisApp + dll;
 							if(_IsFileModified2(dll)) return false;
 							break;
-						default:
-							switch(s[0]) { case 'c': case 'x': case 'k': case 'm': case 'y': case 's': case 'o': break; default: return false; }
-							var f2 = _coll.IcfFindByGUID(value.Substring(offs, s.EndOffset - offs));
+						case 'l':
+						case 'c':
+						case 'x':
+						case 'k':
+						case 'm':
+						case 'y':
+						case 's':
+						case 'o':
+							var f2 = _coll.IcfFindById(value.ToLong_(offs));
 							if(f2 == null) return false;
-							if(_IsFileModified(f2)) return false;
-							switch(s[0]) {
-							case 'o': //f2 is the source config file
-								r.hasConfig = true;
-								break;
+							if(s[0] == 'l') {
+								if(f2.IcfFindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
+								//Print(f2, projFolder2);
+								if(!IsCompiled(f2, out _, projFolder2)) return false;
+								//Print("library is compiled");
+							} else {
+								if(_IsFileModified(f2)) return false;
+								switch(s[0]) {
+								case 'o': //f2 is the source config file
+									r.hasConfig = true;
+									break;
+								}
 							}
 							break;
+						default: return false;
 						}
 					}
 				}
@@ -180,11 +194,11 @@ namespace Au.Compiler
 			public void AddCompiled(ICollectionFile f, string outFile, MetaComments m, int pdbOffset, bool mtaThread)
 			{
 				if(_data == null) {
-					_data = new Dictionary<string, string>();
+					_data = new Dictionary<long, string>();
 				}
 
 				/*
-	GUIDmain|=path.exe|t2|i2|u2|a2|n2|b|z|d|pMD5project|cGUIDcode|dGUIDresource|kGUIDicon|mGUIDmanifest|xGUIDres|sGUIDsign|oGUIDconfig|*ref
+	IDmain|=path.exe|t2|i2|u2|a2|n2|b|z|d|pMD5project|cIDcode|lIDlibrary|dIDresource|kIDicon|mIDmanifest|xIDres|sIDsign|oIDconfig|*ref
 	= - outFile
 	t - outputType
 	i - isolation
@@ -194,8 +208,9 @@ namespace Au.Compiler
 	b - prefer32bit
 	z - mtaThread
 	d - pdbOffset
-	p - MD5 of guid of all project files except main
+	p - MD5 of ID of all project files except main
 	c - c
+	l - library
 	x - resource
 	k - icon
 	m - manifest
@@ -207,7 +222,7 @@ namespace Au.Compiler
 
 				string value = null;
 				using(new Au.Util.LibStringBuilder(out var b)) {
-					if(m.OutputPath != null) b.Append("|=").Append(outFile); //else f.Guid in cache
+					if(m.OutputPath != null) b.Append("|=").Append(outFile); //else f.Id in cache
 					if(m.OutputType != MetaComments.DefaultOutputType(m.IsScript)) b.Append("|t").Append((int)m.OutputType);
 					if(m.Isolation != EIsolation.appDomain) b.Append("|i").Append((int)m.Isolation);
 					if(m.Uac != EUac.same) b.Append("|u").Append((int)m.Uac);
@@ -221,13 +236,14 @@ namespace Au.Compiler
 					if(nNoC > 1) { //add MD5 hash of project files, except main
 						Convert_.MD5Hash md = default;
 						for(int i = 1; i < nNoC; i++) {
-							var g = Convert_.GuidFromHex(m.Files[i].f.Guid);
-							md.Add(&g, sizeof(Guid));
+							long idi = m.Files[i].f.Id;
+							md.Add(&idi, 8);
 						}
 						b.Append("|p").Append(md.Hash.ToString());
 					}
-					for(int i = nNoC; i < nAll; i++) _AppendFile("|c", m.Files[i].f); //guids of C# files added through meta 'c'
-					if(m.ResourceFiles != null) foreach(var v in m.ResourceFiles) _AppendFile("|x", v.f); //guids of 'resource' files
+					for(int i = nNoC; i < nAll; i++) _AppendFile("|c", m.Files[i].f); //ids of C# files added through meta 'c'
+					if(m.Libraries != null) foreach(var v in m.Libraries) _AppendFile("|l", v); //ids of meta 'library' files
+					if(m.Resources != null) foreach(var v in m.Resources) _AppendFile("|x", v.f); //ids of meta 'resource' files
 					_AppendFile("|k", m.IconFile);
 					_AppendFile("|m", m.ManifestFile);
 					_AppendFile("|y", m.ResFile);
@@ -253,14 +269,14 @@ namespace Au.Compiler
 
 					void _AppendFile(string opt, ICollectionFile f_)
 					{
-						if(f_ != null) b.Append(opt).Append(f_.Guid);
+						if(f_ != null) b.Append(opt).Append(f_.IdString);
 					}
 				}
 
-				var guid = f.Guid;
-				if(_data.TryGetValue(guid, out var oldValue) && value == oldValue) { /*Debug_.Print("same");*/ return; }
+				long id = f.Id;
+				if(_data.TryGetValue(id, out var oldValue) && value == oldValue) { /*Debug_.Print("same");*/ return; }
 				//Debug_.Print("different");
-				_data[guid] = value;
+				_data[id] = value;
 				_Save();
 			}
 
@@ -271,7 +287,7 @@ namespace Au.Compiler
 			public void Remove(ICollectionFile f)
 			{
 				if(_data == null && !_Open()) return;
-				if(_data.Remove(f.Guid)) _Save();
+				if(_data.Remove(f.Id)) _Save();
 			}
 
 			bool _Open()
@@ -288,14 +304,11 @@ namespace Au.Compiler
 																								 //Print(frameworkVersion, s_frameworkVersion, auVersion, s_auVersion);
 							goto g1;
 						}
-						_data = new Dictionary<string, string>(sData.LineCount_());
+						_data = new Dictionary<long, string>(sData.LineCount_());
 						continue;
 					}
-					const int guidLength = 32; //hex GUID length
-					if(s.Length < guidLength) goto g1;
-					string s1, s2 = null;
-					if(s.Length == guidLength) s1 = s.Value; else { s1 = s.Substring(0, guidLength); s2 = s.Substring(guidLength); }
-					_data[s1] = s2;
+					long id = sData.ToLong_(s.Offset, out int idEnd);
+					_data[id] = s.EndOffset > idEnd ? sData.Substring(idEnd, s.EndOffset - idEnd) : null;
 				}
 				if(_data == null) return false; //empty file
 				return true;

@@ -1129,16 +1129,10 @@ namespace Au
 		/// </example>
 		public static T WaitIfLocked<T>(Func<T> f, int millisecondsTimeout = 2000)
 		{
-			if(millisecondsTimeout < -1) throw new ArgumentOutOfRangeException();
-			long t1 = Time.Milliseconds;
+			var w = new _LockedWaiter(millisecondsTimeout);
 			g1:
-			try {
-				return f();
-			}
-			catch(IOException e) when(_WL_ExceptionFilter(e, millisecondsTimeout, t1)) {
-				Thread.Sleep(15);
-				goto g1;
-			}
+			try { return f(); }
+			catch(IOException e) when(w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
 		}
 
 		/// <inheritdoc cref="WaitIfLocked{T}(Func{T}, int)"/>
@@ -1151,27 +1145,40 @@ namespace Au
 		/// </example>
 		public static void WaitIfLocked(Action f, int millisecondsTimeout = 2000)
 		{
-			if(millisecondsTimeout < -1) throw new ArgumentOutOfRangeException();
-			long t1 = Time.Milliseconds;
+			var w = new _LockedWaiter(millisecondsTimeout);
 			g1:
-			try {
-				f();
-			}
-			catch(IOException e) when(_WL_ExceptionFilter(e, millisecondsTimeout, t1)) {
-				Thread.Sleep(15);
-				goto g1;
-			}
+			try { f(); }
+			catch(IOException e) when(w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
 		}
 
-		static bool _WL_ExceptionFilter(IOException e, int millisecondsTimeout, long t1)
+		struct _LockedWaiter
 		{
-			switch(e.HResult & 0xffff) {
-			case Api.ERROR_SHARING_VIOLATION:
-			case Api.ERROR_LOCK_VIOLATION:
-			case Api.ERROR_USER_MAPPED_FILE:
-				return millisecondsTimeout < 0 || Time.Milliseconds - t1 < millisecondsTimeout;
-			default: return false;
+			int _timeout;
+			long _t0;
+
+			public _LockedWaiter(int millisecondsTimeout)
+			{
+				if(millisecondsTimeout < -1) throw new ArgumentOutOfRangeException();
+				_timeout = millisecondsTimeout;
+				_t0 = Time.Milliseconds;
 			}
+
+			public bool ExceptionFilter(IOException e) => ExceptionFilter(e.HResult & 0xffff);
+
+			public bool ExceptionFilter(int ec)
+			{
+				//Print((uint)ec);
+				switch(ec) {
+				case Api.ERROR_SHARING_VIOLATION:
+				case Api.ERROR_LOCK_VIOLATION:
+				case Api.ERROR_USER_MAPPED_FILE:
+				case Api.ERROR_UNABLE_TO_REMOVE_REPLACED: //ReplaceFile or File.Replace
+					return _timeout < 0 || Time.Milliseconds - _t0 < _timeout;
+				default: return false;
+				}
+			}
+
+			public void Sleep() => Thread.Sleep(15);
 		}
 
 		/// <summary>
@@ -1213,12 +1220,13 @@ namespace Au
 		/// <param name="lockedWaitMS">If cannot open file because it is open by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 		/// <param name="encoding">Text encoding in file. Default <b>Encoding.UTF8</b>.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="File.WriteAllText"/> and <see cref="File.Replace"/>.</exception>
+		/// <exception cref="Exception">Exceptions of the file-write function.</exception>
+		/// <exception cref="IOException">Failed to replace file. The file-write function also can thow it.</exception>
 		/// <remarks>
 		/// The file-write functions provided by .NET and Windows API are unreliable, because:
-		/// 1. Fails and throws exception if the file is temporarily open by another process or thread without sharing.
+		/// 1. Fails if the file is temporarily open by another process or thread without sharing.
 		/// 2. Can corrupt file data. If this thread, process, PC or disk dies while writing, may write only part of data or just make empty file. Usually it happens when PC is turned off incorrectly.
-		/// To protect from 1, this functions uses <see cref="WaitIfLocked"/>. It waits/retries if the file is temporarily open/locked.
+		/// To protect from 1, this functions waits/retries if the file is temporarily open/locked, like <see cref="WaitIfLocked"/>.
 		/// To protect from 2, this function writes to a temporary file and renames/replaces the specified file using API <msdn>ReplaceFile</msdn>. Although not completely atomic, it ensures that file data is not corrupt; if cannot write all data, does not change existing file data.
 		/// </remarks>
 		public static void Save(string file, string text, bool backup = false, int lockedWaitMS = 2000, Encoding encoding = null)
@@ -1243,36 +1251,51 @@ namespace Au
 		/// <summary>
 		/// Writes any data to a file in a safe way, using a callback function.
 		/// </summary>
-		/// <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file; the file does not exist.</param>
+		/// <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file, which normally does not exist.</param>
 		public static void Save(string file, Action<string> writer, bool backup = false, int lockedWaitMS = 2000)
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		{
 			_Save(file, writer ?? throw new ArgumentNullException(), backup, lockedWaitMS);
 		}
+		//TODO: rename the string overload to SaveText; remove the byte[] overloads.
 
 		static void _Save(string file, object data, bool backup, int lockedWaitMS, Encoding encoding = null)
 		{
 			file = Path_.Normalize(file, null, PNFlags.DoNotPrefixLongPath);
-			var temp = Path_.GetDirectoryPath(file, true) + Convert_.GuidToHex(Guid.NewGuid());
+			string temp = file + "~temp";
+			string back = file + "~backup"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc
 
-			switch(data) {
-			case string text:
-				File.WriteAllText(temp, text, encoding ?? Encoding.UTF8);
-				break;
-			case byte[] bytes:
-				File.WriteAllBytes(temp, bytes);
-				break;
-			case Action<string> func:
-				func(temp);
-				break;
+			var w = new _LockedWaiter(lockedWaitMS);
+			g1:
+			try {
+				switch(data) {
+				case string text:
+					File.WriteAllText(temp, text, encoding ?? Encoding.UTF8);
+					break;
+				case byte[] bytes:
+					File.WriteAllBytes(temp, bytes);
+					break;
+				case Action<string> func:
+					func(temp);
+					break;
+				}
 			}
+			catch(IOException e) when(w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
 
+			w = new _LockedWaiter(lockedWaitMS);
+			g2:
+			string es = null;
 			if(ExistsAsFile(file, true)) {
-				string back = backup ? (file + "~backup") : null;
-				WaitIfLocked(() => File.Replace(temp, file, back, true), lockedWaitMS);
-				if(backup) LibShellNotify(Api.SHCNE_RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
+				if(!Api.ReplaceFile(file, temp, back, 6)) es = "ReplaceFile failed"; //random ERROR_UNABLE_TO_REMOVE_REPLACED; _LockedWaiter knows it
+				else if(backup) LibShellNotify(Api.SHCNE_RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
+				else if(!Api.DeleteFile(back)) Debug_.Print(Native.GetErrorMessage()); //maybe should wait/retry if failed, but never noticed
 			} else {
-				Move(temp, file, IfExists.Delete);
+				if(!Api.MoveFileEx(temp, file, Api.MOVEFILE_REPLACE_EXISTING)) es = "MoveFileEx failed";
+			}
+			if(es != null) {
+				int ec = Native.GetError();
+				if(w.ExceptionFilter(ec)) { w.Sleep(); goto g2; }
+				throw new IOException(es, ec);
 			}
 		}
 

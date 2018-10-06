@@ -97,6 +97,16 @@ partial class EForm
 		//for(int i = 0; i < 5; i++) Print((uint)doc.Call(Sci.SCI_GETFOLDLEVEL, i));
 		//return;
 
+		//Panels.Status.SetText("same thread\r\nline2\r\nline3");
+		//Task.Run(() => { 2.s(); Panels.Status.SetText("other thread, WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"); });
+
+		//TestTools();
+		//TestReplaceFile();
+	}
+	static bool s_test1;
+
+	void TestTools()
+	{
 		var f = new Au.Tools.Form_Wnd(Wnd.Find("Quick*"));
 		//var f = new Au.Tools.Form_Acc();
 		//var f = new Au.Tools.Form_WinImage();
@@ -106,11 +116,25 @@ partial class EForm
 		//f.Dispose();
 		//f.FormClosed += (unu, sed) => Print(f.DialogResult, f.ResultCode);
 
-
-		//Panels.Status.SetText("same thread\r\nline2\r\nline3");
-		//Task.Run(() => { 2.s(); Panels.Status.SetText("other thread, WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM"); });
 	}
-	static bool s_test1;
+
+	void TestReplaceFile()
+	{
+		var settFile = Folders.ThisAppDocuments + @"!Settings\Settings2.xml";
+		lock(Settings) {
+			for(int i = 0; i < 300; i++) {
+				try {
+					Settings.Set("test", i);
+					Settings.Xml.Save_(settFile);
+				}catch(Exception e) {
+					Print(e.ToStringWithoutStack_(), (uint)e.HResult, i);
+					break;
+				}
+				1.ms();
+			}
+		}
+		Print("OK");
+	}
 
 	private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
 	{
