@@ -102,6 +102,7 @@ partial class EForm
 
 		//TestTools();
 		//TestReplaceFile();
+
 	}
 	static bool s_test1;
 

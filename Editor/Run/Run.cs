@@ -56,8 +56,8 @@ static class Run
 
 		//can be set to run other script/app instead.
 		//	Useful for library projects. Single files have other alternatives - move to a script project or move code to a script file.
-		if(run && f.Xml.Attribute_(out long idRun, XN.run)) {
-			var f2 = Model.FindById(idRun);
+		if(run) {
+			var f2 = f.RunOther;
 			if(f2 != null) { f = f2; goto g1; }
 		}
 
@@ -114,7 +114,7 @@ outputType app
 		} else {
 			s = f.Name; s = "test " + s.Remove(s.Length - 3);
 			if(!_NewItem(out f2, out bool isProject, "Script", s)) return;
-			f.Xml.SetAttributeValue(XN.run, f2.IdString);
+			f.RunOther = f2;
 			text =
 $@"/* meta
 {(isProject ? "library" : "c")} {f.ItemPath}
@@ -385,8 +385,8 @@ class RunningTasks :IAuTaskManager
 			if(wait) {
 				_q.Enqueue(new _WaitingTask(f, r, args));
 			} else if(runAloneTask != null) {
-				string reason = (runAloneTask.f == f) ? "it is already" : $"{runAloneTask.f.LinkTag} is";
-				Print($"<>Cannot run {f.LinkTag} because {reason} running.\r\n\tYou may want to add meta option <c green>runAlone no<> and <c green>maxInstances -1<>. Or <c green>runAlone wait<>.");
+				string reason = (runAloneTask.f == f) ? "it is already" : $"{runAloneTask.f.SciLink} is";
+				Print($"<>Cannot run {f.SciLink} because {reason} running.\r\n\tYou may want to add meta option <c green>runAlone no<> and <c green>maxInstances -1<>. Or <c green>runAlone wait<>.");
 			}
 			return false;
 		}
@@ -437,7 +437,7 @@ class RunningTasks :IAuTaskManager
 				//break;
 				case Process_.UacInfo.IL.System:
 				case Process_.UacInfo.IL.Protected:
-					Print($"<>Cannot run {f.LinkTag}. Meta option <c green>uac {uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
+					Print($"<>Cannot run {f.SciLink}. Meta option <c green>uac {uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
 					return false;
 					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
 				}
@@ -460,7 +460,7 @@ class RunningTasks :IAuTaskManager
 			//Perf.First();
 			flags |= RFlags.remote;
 			if(args != null) argsString = Au.Util.StringMisc.CommandLineFromArray(args);
-			if(argsString.Length_() > 500000) { Print($"<>Error: {f.LinkTag} command line arguments string too long, max 500000."); return false; }
+			if(argsString.Length_() > 500000) { Print($"<>Error: {f.SciLink} command line arguments string too long, max 500000."); return false; }
 			var asmFile = exeFile == null ? r.file : null;
 
 			var b = Au.Util.LibSerializer.Serialize(1, rt.taskId, (int)_wManager.Handle, r.name, asmFile, exeFile, argsString, r.pdbOffset, (int)flags);

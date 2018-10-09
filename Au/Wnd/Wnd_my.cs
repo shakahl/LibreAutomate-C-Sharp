@@ -168,7 +168,7 @@ namespace Au
 				{
 					lock("jU0tLiIbtE6KWg5aCu7RDg") {
 						string interDomainVarName = "jU0tLiIbtE6KWg5aCu7RDg" + className.ToLower_();
-						if(!InterDomainVariables.GetVariable(interDomainVarName, out ushort atom)) {
+						if(!Util.InterDomainVariables.GetVariable(interDomainVarName, out ushort atom)) {
 							var x = new Api.WNDCLASSEX(ex);
 
 							fixed (char* pCN = className) {
@@ -180,7 +180,7 @@ namespace Au
 								if(atom == 0) throw new Win32Exception();
 							}
 
-							InterDomainVariables.SetVariable(interDomainVarName, atom);
+							Util.InterDomainVariables.SetVariable(interDomainVarName, atom);
 						}
 						return atom;
 					}

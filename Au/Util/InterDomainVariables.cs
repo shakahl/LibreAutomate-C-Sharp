@@ -16,9 +16,11 @@ using System.Runtime.ExceptionServices;
 using Au.Types;
 using static Au.NoClass;
 
-namespace Au
+namespace Au.Util
 {
-	//CONSIDER: Move to Util. Probably rarely used in scripts.
+	//CONSIDER: reject in the future, if not useful in scripts.
+	//	Now in this library used in 3 places; don't need MarshalByRef. Can be implemented in AuCpp.dll.
+	//	Now internal. Could be public, and initially was. See whether it will be useful in scripts.
 	//CONSIDER: Try to add InterProcessVariables too. Because scripts often run in separate processes.
 
 	/// <summary>
@@ -31,7 +33,7 @@ namespace Au
 	/// 2. Has [Serializable] attribute. The stored value is a copy, not reference. For example int, IntPtr, string, arrays, List, Dictionary.
 	/// </remarks>
 	[DebuggerStepThrough]
-	public static class InterDomainVariables
+	internal static class InterDomainVariables
 	{
 #if true
 		/// <summary>

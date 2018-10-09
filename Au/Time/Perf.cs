@@ -234,26 +234,27 @@ namespace Au
 				}
 			}
 
-			/// <summary>
-			/// Executes <paramref name="code"/> (lambda) <paramref name="count"/> times, and then calls <see cref="Next"/>.
-			/// </summary>
-			public void Execute(int count, Action code)
-			{
-				while(count-- > 0) code();
-				Next();
-			}
+			//rejected: Not very useful. Not very easy to understand the purpose. Adds some overhead.
+			///// <summary>
+			///// Executes <paramref name="code"/> (lambda) <paramref name="count"/> times, and then calls <see cref="Next"/>.
+			///// </summary>
+			//public void Execute(int count, Action code)
+			//{
+			//	while(count-- > 0) code();
+			//	Next();
+			//}
 
-			/// <summary>
-			/// <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
-			/// </summary>
-			public void ExecuteMulti(int countAll, int countEach, params Action[] codes)
-			{
-				while(countAll-- > 0) {
-					First();
-					foreach(Action a in codes) Execute(countEach, a);
-					Write();
-				}
-			}
+			///// <summary>
+			///// <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
+			///// </summary>
+			//public void ExecuteMulti(int countAll, int countEach, params Action[] codes)
+			//{
+			//	while(countAll-- > 0) {
+			//		First();
+			//		foreach(Action a in codes) Execute(countEach, a);
+			//		Write();
+			//	}
+			//}
 
 			//rejected. It's easier to use Time.Microseconds in the same way.
 			///// <summary>
@@ -382,16 +383,6 @@ namespace Au
 		public static long TimeTotal => StaticInst.TimeTotal;
 
 		/// <summary>
-		/// Executes <paramref name="code"/> (lambda) <paramref name="count"/> times, and then calls <see cref="Next"/>.
-		/// </summary>
-		public static void Execute(int count, Action code) => StaticInst.Execute(count, code);
-
-		/// <summary>
-		/// <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
-		/// </summary>
-		public static void ExecuteMulti(int countAll, int countEach, params Action[] codes) => StaticInst.ExecuteMulti(countAll, countEach, codes);
-
-		/// <summary>
 		/// Executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
 		/// </summary>
 		/// <param name="timeMilliseconds">How long to speed up CPU, milliseconds. The minimal required time probably is about 100 ms, but depends on CPU.</param>
@@ -407,5 +398,16 @@ namespace Au
 			for(long t0 = Time.Microseconds; Time.Microseconds - t0 < timeMilliseconds * 1000L; n++) { }
 			//Print(n);
 		}
+
+		//rejected: Not very useful. Not very easy to understand the purpose. Adds some overhead.
+		///// <summary>
+		///// Executes <paramref name="code"/> (lambda) <paramref name="count"/> times, and then calls <see cref="Next"/>.
+		///// </summary>
+		//public static void Execute(int count, Action code) => StaticInst.Execute(count, code);
+
+		///// <summary>
+		///// <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
+		///// </summary>
+		//public static void ExecuteMulti(int countAll, int countEach, params Action[] codes) => StaticInst.ExecuteMulti(countAll, countEach, codes);
 	}
 }

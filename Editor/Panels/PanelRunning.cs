@@ -96,10 +96,9 @@ class PanelRunning :Control, ITreeModel
 		if(e.ModifierKeys != 0) return;
 		var t = e.Node.Tag as RunningTask;
 		var f = t.f;
-		bool ofThisModel = f.Model == Model;
 		switch(e.Button) {
 		case MouseButtons.Left:
-			if(ofThisModel) Model.SetCurrentFile(f);
+			Model.SetCurrentFile(f);
 			break;
 		case MouseButtons.Right:
 			var name = f.Name;
@@ -109,7 +108,7 @@ class PanelRunning :Control, ITreeModel
 			m.Show(_c);
 			break;
 		case MouseButtons.Middle:
-			if(ofThisModel) Model.CloseFile(f, true);
+			Model.CloseFile(f, true);
 			break;
 		}
 	}

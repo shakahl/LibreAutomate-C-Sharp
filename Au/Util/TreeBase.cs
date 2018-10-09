@@ -158,14 +158,20 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Returns true if this node is a descendant of node n (if node n is an ancestor of this node).
+		/// Returns true if this node is a descendant of node n.
 		/// </summary>
-		/// <param name="n"></param>
+		/// <param name="n">Can be null.</param>
 		public bool IsDescendantOf(T n)
 		{
 			for(var p = _parent; p != null; p = p._parent) if(p == n) return true;
 			return false;
 		}
+
+		/// <summary>
+		/// Returns true if this node is an ancestor of node n.
+		/// </summary>
+		/// <param name="n">Can be null.</param>
+		public bool IsAncestorOf(T n) => n?.IsDescendantOf(this as T) ?? false;
 
 		/// <summary>
 		/// Returns true if <see cref="Parent"/> is not null.
@@ -220,7 +226,7 @@ namespace Au.Util
 
 		void _AddCommon(T n)
 		{
-			if(!(n != null && n._parent == null && n != RootAncestor)) throw new ArgumentException();
+			if(n == null || n._parent != null || n == RootAncestor) throw new ArgumentException();
 			n._parent = this as T;
 		}
 
@@ -416,6 +422,7 @@ namespace Au.Util
 		/// <example><see cref="TreeBase{T}"/></example>
 		protected static T XmlLoad(XmlReader x, XmlNodeReader nodeReader)
 		{
+			if(x == null || nodeReader == null) throw new ArgumentNullException();
 			T root = null, parent = null;
 			while(x.Read()) {
 				var nodeType = x.NodeType;
@@ -440,20 +447,21 @@ namespace Au.Util
 		/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>.</param>
 		/// <param name="nodeWriter">Callback function that writes node's XML start element (see <see cref="XmlWriter.WriteStartElement(string)"/>) and attributes (see <see cref="XmlWriter.WriteAttributeString(string, string)"/>). Must not write children and end element. Also should not write value, unless your reader knows how to read it.</param>
 		/// <param name="sett">XML formatting settings. Optional.</param>
+		/// <param name="children">If not null, writes these nodes as if they were children of this node.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="XmlWriter.Create(string)"/> and other <b>XmlWriter</b> methods.</exception>
 		/// <remarks>
 		/// Uses <see cref="File_.Save"/>. It ensures that existing file data is not damaged on exception etc.
 		/// </remarks>
 		/// <example><see cref="TreeBase{T}"/></example>
-		protected void XmlSave(string file, XmlNodeWriter nodeWriter, XmlWriterSettings sett = null)
+		protected void XmlSave(string file, XmlNodeWriter nodeWriter, XmlWriterSettings sett = null, IEnumerable<T> children = null)
 		{
 			file = Path_.LibNormalizeForNET(file);
 			if(sett == null) sett = new XmlWriterSettings() { OmitXmlDeclaration = true, Indent = true, IndentChars = "  " };
 			File_.Save(file, temp =>
 			{
 				using(var x = XmlWriter.Create(temp, sett)) {
-					XmlSave(x, nodeWriter);
+					XmlSave(x, nodeWriter, children);
 				}
 			});
 		}
@@ -463,13 +471,21 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="x"></param>
 		/// <param name="nodeWriter"></param>
-		/// <remarks>More info: <see cref="XmlSave(string, XmlNodeWriter, XmlWriterSettings)"/>.</remarks>
+		/// <param name="children"></param>
+		/// <remarks>More info: <see cref="XmlSave(string, XmlNodeWriter, XmlWriterSettings, IEnumerable{T})"/>.</remarks>
 		/// <exception cref="Exception">Exceptions of <b>XmlWriter</b> methods.</exception>
 		/// <example><see cref="TreeBase{T}"/></example>
-		protected void XmlSave(XmlWriter x, XmlNodeWriter nodeWriter)
+		protected void XmlSave(XmlWriter x, XmlNodeWriter nodeWriter, IEnumerable<T> children = null)
 		{
+			if(x == null || nodeWriter == null) throw new ArgumentNullException();
 			x.WriteStartDocument();
-			_XmlWrite(x, nodeWriter);
+			if(children == null) {
+				_XmlWrite(x, nodeWriter);
+			} else {
+				nodeWriter(x, this as T);
+				foreach(var n in children) n._XmlWrite(x, nodeWriter);
+				x.WriteEndElement();
+			}
 			x.WriteEndDocument();
 		}
 

@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-using System.Xml;
+using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -147,4 +147,14 @@ static class EResources
 	{
 		return Project.Properties.Resources.ResourceManager.GetObject(name, Project.Properties.Resources.Culture) as Bitmap;
 	}
+}
+
+/// <summary>
+/// Static XName instances for XML tag/attribute names used in this app.
+/// XML functions much faster with XName than with string. When with string, .NET looks for it in its static hashtable.
+/// The variable names match the strings.
+/// </summary>
+class XN
+{
+	public static readonly XName f = "f", n = "n";
 }

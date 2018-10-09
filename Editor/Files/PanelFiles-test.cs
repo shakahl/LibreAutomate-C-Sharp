@@ -77,15 +77,6 @@ partial class PanelFiles
 		m["StructureChanged"] = o => _model.OnStructureChanged();
 		m["Add"] = o =>
 		{
-#if false
-			var x = new XElement(XN.f, new XAttribute(XN.n, "NEW"));
-#else
-			var x = new XElement(XN.d, new XAttribute(XN.n, "NEW DIR"));
-			x.Add(new XElement(XN.f, new XAttribute(XN.n, "NEW FILE")));
-#endif
-			var k = new FileNode(_model, x);
-			//f.AddChildOrSibling(k);
-			f.AddChildOrSibling(k, NodePosition.After);
 		};
 		m["GetNodeBounds"] = o =>
 		{

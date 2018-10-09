@@ -200,6 +200,11 @@ namespace Au
 			[FieldOffset(88)] MD5HashResult _result;
 			[FieldOffset(104)] long _state; //1 inited/added, 2 finalled
 
+			/// <summary>
+			/// true if no data was added.
+			/// </summary>
+			public bool IsEmpty => _state == 0;
+
 			/// <summary>Adds data.</summary>
 			/// <exception cref="ArgumentNullException">data is null.</exception>
 			/// <exception cref="ArgumentOutOfRangeException">size &lt; 0.</exception>

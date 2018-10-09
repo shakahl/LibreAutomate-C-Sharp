@@ -22,7 +22,6 @@ using static Au.NoClass;
 using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
-using LiteDB;
 
 partial class PanelEdit :Control
 {
@@ -60,7 +59,7 @@ partial class PanelEdit :Control
 	public bool Open(FileNode f)
 	{
 		Debug.Assert(MainForm.IsHandleCreated);
-		Debug.Assert(f != null);
+		Debug.Assert(!Model.IsAlien(f));
 
 		if(f == _activeDoc?.FN) return true;
 		bool focus = _activeDoc != null ? _activeDoc.Focused : false;
@@ -422,7 +421,7 @@ partial class PanelEdit :Control
 
 		internal void LoadEditorData()
 		{
-			_savedED = Model.TableEdit?.FindById(FN.Id);
+			_savedED = Model.TableEdit?.FindById((int)FN.Id);
 			_savedED?.folding?.ForEach(line => Call(SCI_FOLDLINE, line));
 			_savedED?.bookmarks?.ForEach(line => Call(SCI_MARKERADDSET, line, 1));
 			_savedED?.breakpoints?.ForEach(line => Call(SCI_MARKERADDSET, line, 2));
@@ -440,7 +439,7 @@ partial class PanelEdit :Control
 			if(_GetLineDataToSave(2, ref breakpoints)) changed = true;
 
 			if(changed) {
-				if(_savedED == null) _savedED = new DBEdit { id = FN.Id };
+				if(_savedED == null) _savedED = new DBEdit { id = (int)FN.Id };
 				_savedED.folding = folding;
 				_savedED.bookmarks = bookmarks;
 				_savedED.breakpoints = breakpoints;

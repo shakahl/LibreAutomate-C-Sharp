@@ -27,7 +27,7 @@ namespace Au.Compiler
 {
 	public interface ICollectionFile
 	{
-		long Id { get; }
+		uint Id { get; }
 
 		string IdString { get; }
 
@@ -60,6 +60,6 @@ namespace Au.Compiler
 
 		string IcfCollectionDirectory { get; }
 
-		ICollectionFile IcfFindById(long id);
+		ICollectionFile IcfFindById(uint id);
 	}
 }

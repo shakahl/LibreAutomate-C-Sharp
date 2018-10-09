@@ -28,7 +28,7 @@ namespace Au.Compiler
 		{
 			ICollectionFiles _coll;
 			string _file;
-			Dictionary<long, string> _data;
+			Dictionary<uint, string> _data;
 
 			public string CacheDirectory { get; }
 
@@ -126,10 +126,10 @@ namespace Au.Compiler
 								Convert_.MD5Hash md = default;
 								foreach(var f1 in projFolder.IcfEnumProjectFiles(f)) {
 									if(_IsFileModified(f1)) return false;
-									long id = f1.Id;
-									md.Add(&id, 8);
+									uint id = f1.Id;
+									md.Add(&id, 4);
 								}
-								if(md.Hash != md5) return false;
+								if(md.IsEmpty || md.Hash != md5) return false;
 							}
 							break;
 						case '*':
@@ -145,7 +145,7 @@ namespace Au.Compiler
 						case 'y':
 						case 's':
 						case 'o':
-							var f2 = _coll.IcfFindById(value.ToLong_(offs));
+							var f2 = _coll.IcfFindById((uint)value.ToLong_(offs));
 							if(f2 == null) return false;
 							if(s[0] == 'l') {
 								if(f2.IcfFindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
@@ -194,7 +194,7 @@ namespace Au.Compiler
 			public void AddCompiled(ICollectionFile f, string outFile, MetaComments m, int pdbOffset, bool mtaThread)
 			{
 				if(_data == null) {
-					_data = new Dictionary<long, string>();
+					_data = new Dictionary<uint, string>();
 				}
 
 				/*
@@ -236,8 +236,8 @@ namespace Au.Compiler
 					if(nNoC > 1) { //add MD5 hash of project files, except main
 						Convert_.MD5Hash md = default;
 						for(int i = 1; i < nNoC; i++) {
-							long idi = m.Files[i].f.Id;
-							md.Add(&idi, 8);
+							uint idi = m.Files[i].f.Id;
+							md.Add(&idi, 4);
 						}
 						b.Append("|p").Append(md.Hash.ToString());
 					}
@@ -273,7 +273,7 @@ namespace Au.Compiler
 					}
 				}
 
-				long id = f.Id;
+				uint id = f.Id;
 				if(_data.TryGetValue(id, out var oldValue) && value == oldValue) { /*Debug_.Print("same");*/ return; }
 				//Debug_.Print("different");
 				_data[id] = value;
@@ -283,11 +283,16 @@ namespace Au.Compiler
 			/// <summary>
 			/// Removes saved f data, so that next time <see cref="IsCompiled"/> will return false.
 			/// </summary>
-			/// <param name="f"></param>
-			public void Remove(ICollectionFile f)
+			public void Remove(ICollectionFile f, bool deleteAsmFile)
 			{
 				if(_data == null && !_Open()) return;
-				if(_data.Remove(f.Id)) _Save();
+				if(_data.Remove(f.Id)) {
+					_Save();
+					if(deleteAsmFile) {
+						try { File_.Delete(CacheDirectory + "\\" + f.IdString); }
+						catch(Exception ex) { Debug_.Print(ex); }
+					}
+				}
 			}
 
 			bool _Open()
@@ -304,10 +309,11 @@ namespace Au.Compiler
 																								 //Print(frameworkVersion, s_frameworkVersion, auVersion, s_auVersion);
 							goto g1;
 						}
-						_data = new Dictionary<long, string>(sData.LineCount_());
+						_data = new Dictionary<uint, string>(sData.LineCount_());
 						continue;
 					}
-					long id = sData.ToLong_(s.Offset, out int idEnd);
+					uint id = (uint)sData.ToLong_(s.Offset, out int idEnd);
+					Debug.Assert(null != _coll.IcfFindById(id));
 					_data[id] = s.EndOffset > idEnd ? sData.Substring(idEnd, s.EndOffset - idEnd) : null;
 				}
 				if(_data == null) return false; //empty file
@@ -335,6 +341,11 @@ namespace Au.Compiler
 				try { File_.Delete(CacheDirectory); }
 				catch(AuException e) { PrintWarning(e.ToString(), -1); }
 			}
+		}
+
+		public static void OnFileDeleted(ICollectionFiles coll, ICollectionFile f)
+		{
+			XCompiled.OfCollection(coll).Remove(f, true);
 		}
 	}
 }

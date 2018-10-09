@@ -114,7 +114,7 @@ namespace Au
 		public static bool IsFullPath(string path)
 		{
 			var s = path;
-			int len = (s == null) ? 0 : s.Length;
+			int len = s.Length_();
 
 			if(len >= 2) {
 				if(s[1] == ':' && Char_.IsAsciiAlpha(s[0])) {

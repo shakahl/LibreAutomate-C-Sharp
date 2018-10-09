@@ -106,13 +106,6 @@ class PanelRecent :Control, ITreeModel
 		case MouseButtons.Left:
 			Model.SetCurrentFile(f);
 			break;
-		case MouseButtons.Right:
-			//var name = f.Name;
-			//var m = new AuMenu();
-			//m["End thread of '" + name + "'"] = o => Model.Running.EndTask(t.threadOrProcess);
-			//m["End all threads of '" + name + "'"] = o => Model.Running.EndTasksOf(f);
-			//m.Show(_c);
-			break;
 		case MouseButtons.Middle:
 			Model.CloseFile(f, true);
 			break;

@@ -122,7 +122,6 @@
     <None Include="Default\files\Script1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Compile Include="Files\FileNode-file.cs" />
     <Compile Include="Files\FileNode.cs" />
     <Compile Include="Files\FilesModel.cs" />
     <Compile Include="Panels\PanelFind.cs">

@@ -769,229 +769,6 @@ a1,-8";
 			//Print(this);
 		}
 
-		public static TFile Load(string file)
-		{
-			Perf.Next();
-			var xs = new XmlReaderSettings() { IgnoreComments = true, IgnoreProcessingInstructions = true, IgnoreWhitespace = true };
-			using(var r = File_.WaitIfLocked(() => XmlReader.Create(file, xs))) {
-				Perf.Next();
-				r.MoveToContent();
-				var root = new _Folder();
-				root.ReadContent(r);
-				Perf.NW();
-				return root;
-			}
-		}
-
-		class _Folder :TFile
-		{
-			internal TFile _lastChild;
-
-			//root node
-			public _Folder()
-			{
-				_flags = _F.Folder;
-				//_next = this;
-			}
-
-			public _Folder(XmlReader x) : base(x, true) { }
-
-			public void ReadContent(XmlReader r)
-			{
-				var parent = this;
-				//int n = 0;
-				while(r.Read()) {
-					//Print(r.NodeType);
-					var nodeType = r.NodeType;
-					if(nodeType == XmlNodeType.Element) {
-						//Print($"{new string(' ', r.Depth)}{r.Name} {(r["n"])}");
-						bool isFolder = false;
-						string tag = r.Name;
-						switch(tag) {
-						case "f": break;
-						case "d": isFolder = true; break;
-						default: throw new XmlException("unknown tag " + tag);
-						}
-						if(!r.MoveToFirstAttribute()) throw new XmlException("no attributes");
-						TFile f; _Folder d = null;
-						if(isFolder) f = d = new _Folder(r);
-						else f = new TFile(r, false);
-						parent.Add(f);
-						r.MoveToElement();
-						if(!r.IsEmptyElement) {
-							if(isFolder) parent = d;
-							else if(!r.Read() || r.NodeType != XmlNodeType.EndElement) throw new XmlException("f element with content"); //can be <f ...></f>
-						}
-						//n++;
-					} else if(nodeType == XmlNodeType.EndElement) {
-						if(parent == this) break;
-						parent = parent._parent;
-					}
-				}
-				//Print(n);
-			}
-
-			public void Add(TFile f)
-			{
-				Debug.Assert(IsFolder);
-				Debug.Assert(f != null);
-				Debug.Assert(f._parent == null);
-				Debug.Assert(f != RootAncestor);
-				f._parent = this;
-				var last = _lastChild;
-				if(last == null) { //our first child!
-					f._next = f; //f now is LastChild and FirstChild
-				} else {
-					f._next = last._next; //_next of LastChild is FirstChild
-					last._next = f;
-				}
-				_lastChild = f;
-			}
-
-			public void Remove(TFile f)
-			{
-				Debug.Assert(f._parent == this);
-				TFile p = _lastChild;
-				while(p._next != f) p = p._next;
-				if(p == f) {
-					_lastChild = null;
-				} else {
-					if(_lastChild == f) _lastChild = p;
-					p._next = f._next;
-				}
-				f._parent = null;
-				f._next = null;
-			}
-			//info: code from XContainer.RemoveNode
-		}
-
-		public bool IsFolder => 0 != (_flags & _F.Folder);
-
-		public bool IsLink => 0 != (_flags & _F.Link);
-
-		/// <summary>
-		/// Returns parent, or null if this is Root.
-		/// </summary>
-		public TFile Parent => _parent;
-
-		/// <summary>
-		/// Returns the root ancestor. Its Parent is null.
-		/// If this is root, returns this.
-		/// </summary>
-		public TFile RootAncestor
-		{
-			get
-			{
-				var p = this;
-				while(p._parent != null) p = p._parent;
-				return p;
-				//TODO: ModelRoot => _model.Root
-			}
-		}
-
-		/// <summary>
-		/// Gets the last child of this folder, or null if no children.
-		/// </summary>
-		public TFile LastChild => (this as _Folder)?._lastChild;
-
-		/// <summary>
-		/// Gets the first child of this folder, or null if no children.
-		/// </summary>
-		public TFile FirstChild => LastChild?._next;
-
-		public TFile Next => _parent == null || this == _parent._lastChild ? null : _next;
-		//info: code from XContainer.NextNode
-
-		public TFile Previous
-		{
-			get
-			{
-				if(_parent == null) return null;
-				TFile n = _parent._lastChild._next;
-				TFile p = null;
-				while(n != this) {
-					p = n;
-					n = n._next;
-				}
-				return p;
-			}
-		}
-		//info: code from XContainer.PreviousNode
-
-		public IEnumerable<TFile> Children(bool andSelf)
-		{
-			if(andSelf) yield return this;
-			var last = LastChild;
-			if(last != null) {
-				var f = last;
-				do {
-					f = f._next;
-					yield return f;
-				} while(f != last);
-			}
-		}
-		//info: code from XContainer.Nodes
-
-		public IEnumerable<TFile> Descendants(bool andSelf)
-		{
-			if(andSelf) yield return this;
-			var last = LastChild;
-			var f = this;
-			while(true) {
-				TFile first;
-				if(f.IsFolder && (first = f.FirstChild) != null) {
-					f = first;
-				} else {
-					while(f != null && f != this && f == f._parent._lastChild) f = f._parent;
-					if(f == null || f == this) break;
-					f = f._next;
-				}
-				yield return f;
-			}
-		}
-		//info: code from XContainer.GetDescendantNodes
-
-		public void Remove() => _parent?.Remove(this);
-
-		/// <summary>
-		/// Returns link target path.
-		/// Don't call for non-links.
-		/// </summary>
-		public string LinkTarget
-		{
-			get
-			{
-				Debug.Assert(IsLink);
-				if(_misc is string s) return s;
-				return (_misc as TMisc).iconOrLinkTarget;
-			}
-		}
-
-		/// <summary>
-		/// Returns custom icon path or link target path or null.
-		/// For links always returns null; use LinkTarget.
-		/// </summary>
-		public string IconPath
-		{
-			get
-			{
-				if(!IsLink)
-					switch(_misc) {
-					case string s: return s;
-					case TMisc m: return m.iconOrLinkTarget;
-					}
-				return null;
-			}
-		}
-
-#if DEBUG
-		public override string ToString()
-		{
-			string fd = IsFolder ? "d" : "f";
-			return $"{fd} {_name} {_id}";
-		}
-#endif
-
 		void _SaveNode(XmlWriter x)
 		{
 			bool isFolder = IsFolder;
@@ -1017,30 +794,6 @@ a1,-8";
 				foreach(var v in Children(false)) v._SaveNode(x);
 			}
 			x.WriteEndElement();
-		}
-
-		public void Save(XmlWriter x)
-		{
-			Debug.Assert(_parent == null && IsFolder); //must be root
-			x.WriteStartDocument();
-			x.WriteStartElement("files");
-			foreach(var v in Children(false)) v._SaveNode(x);
-			x.WriteEndDocument();
-		}
-
-		public void Save(string file)
-		{
-			var sett = new XmlWriterSettings() {
-				OmitXmlDeclaration = true,
-				Indent = true,
-				IndentChars = "\t"
-			};
-			File_.Save(file, temp =>
-			{
-				using(var x = XmlWriter.Create(temp, sett)) {
-					Save(x);
-				}
-			});
 		}
 	}
 #endif
@@ -1252,6 +1005,31 @@ a1,-8";
 
 	#endregion
 
+	static void TestUnusedKey()
+	{
+		int n = 10000;
+		var d = new Dictionary<int, string>(n);
+		for(int i = 0; i < n; i++) {
+			d.Add(i, "");
+		}
+
+		Perf.Cpu();
+		for(int i1 = 0; i1 < 5; i1++) {
+			int r1 = 0, r2=0;
+			Perf.First();
+			//var k = d.Keys;
+			for(int i=1; i<int.MaxValue; i++) {
+				if(!d.ContainsKey(i)) { r1 = i; break; }
+			}
+			Perf.Next();
+			//r2= Enumerable.Range(0, int.MaxValue).Except(d.Keys).FirstOrDefault(); //slow
+			r2 = d.Keys.Max() + 1;
+			Perf.NW();
+			Print(r1, r2);
+			Thread.Sleep(10);
+		}
+	}
+
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
@@ -1268,9 +1046,10 @@ a1,-8";
 		try {
 #if true
 
+			TestUnusedKey();
 			//Perf.Cpu();
 			//TNodeExample();
-			TestTFile();
+			//TestTFile();
 
 			//Perf.Cpu();
 			//Perf.First();

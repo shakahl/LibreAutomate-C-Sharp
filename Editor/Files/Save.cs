@@ -157,7 +157,7 @@ partial class FilesModel
 		try {
 			//Print("saving");
 			var perf = Perf.StartNew();
-			Xml.Save_(CollectionFile);
+			Root.Save(CollectionFile);
 			perf.NW('S'); //TODO
 			return true;
 		}
@@ -174,7 +174,7 @@ partial class FilesModel
 	{
 		if(TableMisc == null) return true;
 		try {
-			TableMisc.Upsert(new DBMisc("expanded", string.Join(" ", TV.AllNodes.Where(n => n.IsExpanded).Select(n => (n.Tag as FileNode).IdString))));
+			TableMisc.Upsert(new DBMisc("expanded", string.Join(" ", _control.AllNodes.Where(n => n.IsExpanded).Select(n => (n.Tag as FileNode).IdString))));
 
 			using(new Au.Util.LibStringBuilder(out var b)) {
 				var a = OpenFiles;
@@ -196,7 +196,7 @@ partial class FilesModel
 	public void LoadState()
 	{
 		//Call LoadState when form loaded, ie when control handles created but form still invisible. Because:
-		//	1. TV does not update scrollbars if folders expanded before creating handle.
+		//	1. _control does not update scrollbars if folders expanded before creating handle.
 		//	2. SciControl handle must be created because _SetCurrentFile sets its text etc.
 		Debug.Assert(MainForm.IsHandleCreated);
 
@@ -207,12 +207,12 @@ partial class FilesModel
 			//expanded folders
 			var s = TableMisc.FindById("expanded")?.s;
 			if(!Empty(s)) {
-				TV.BeginUpdate();
+				_control.BeginUpdate();
 				foreach(var seg in s.Segments_(" ")) {
-					var fn = this.FindById(seg.Value);
+					var fn = FindById(seg.Value);
 					fn?.TreeNodeAdv.Expand();
 				}
-				TV.EndUpdate();
+				_control.EndUpdate();
 			}
 
 			//open files
@@ -224,7 +224,7 @@ partial class FilesModel
 				//Perf.First();
 				foreach(var seg in s.Segments_(" ")) {
 					i++; if(i < 0) continue;
-					var fn = this.FindById(seg.Value); if(fn == null) continue;
+					var fn = FindById(seg.Value); if(fn == null) continue;
 					OpenFiles.Add(fn);
 					if(i == iActive) fnActive = fn;
 				}
@@ -258,7 +258,7 @@ class DBEdit
 	//	LiteDB uses only properties, not fields.
 	//	The unique id property must be named Id or id or _id or have [BsonId].
 
-	public long id { get; set; }
+	public int id { get; set; }
 	public List<int> folding { get; set; }
 	public List<int> bookmarks { get; set; }
 	public List<int> breakpoints { get; set; }

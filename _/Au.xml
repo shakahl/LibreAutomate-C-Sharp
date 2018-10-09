@@ -7207,6 +7207,91 @@
         <member name="M:Au.Util.AccHook.Finalize">
             
         </member>
+        <member name="T:Au.Util.InterDomainVariables">
+            <summary>
+            Inter-domain variables. Allows to share values by all app domains of this process.
+            </summary>
+            <remarks>
+            Similar to environment variables, but supports more types and does not inherit parent process variables; the speed is similar.
+            Supports not all types. The type must have one of these properties:
+            1. Derived from MarshalByRefObject. The stored value is a virtual reference (proxy), not a copy. The owner domain must be still alive when other domains access (call methods etc) the retrieved value, else AppDomainUnloadedException.
+            2. Has [Serializable] attribute. The stored value is a copy, not reference. For example int, IntPtr, string, arrays, List, Dictionary.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.InterDomainVariables.SetVariable(System.String,System.Object)">
+            <summary>
+            Adds or modifies an inter-domain variable.
+            </summary>
+            <param name="name">Name. Can be any unique string, for example a GUID string. Case-sensitive.</param>
+            <param name="value">Value.</param>
+            <exception cref="T:System.Runtime.Serialization.SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
+        </member>
+        <member name="M:Au.Util.InterDomainVariables.GetVariable(System.String)">
+            <summary>
+            Gets the value of an inter-domain variable.
+            Returns null if the variable does not exist. Else returns the value as object; need a cast.
+            </summary>
+            <param name="name">Name. Case-sensitive.</param>
+        </member>
+        <member name="M:Au.Util.InterDomainVariables.GetVariable``1(System.String,``0@)">
+            <summary>
+            Gets the value of an inter-domain variable.
+            Returns true if the variable exists and is not null.
+            </summary>
+            <param name="name">Name. Case-sensitive.</param>
+            <param name="value">Receives the value. If the variable does not exist, receives the default value of that type (for reference types it is null).</param>
+            <exception cref="T:System.InvalidCastException">Bad value type.</exception>
+        </member>
+        <member name="M:Au.Util.InterDomainVariables.GetVariable``1(System.String,System.Func{``0})">
+            <summary>
+            Gets the value of an inter-domain variable.
+            If the variable does not exist or is null, calls a callback function that provides an initial value; then sets the variable = the initial value.
+            Thread-safe.
+            </summary>
+            <param name="name">Name. Case-sensitive.</param>
+            <param name="initValue">A callback function delegate (eg lambda) that is called when the variable does not exist or is null. It must return an initial value.</param>
+            <exception cref="T:System.Runtime.Serialization.SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
+            <exception cref="T:System.InvalidCastException">Bad value type.</exception>
+            <remarks>
+            Be careful with types derived from MarshalByRefObject. If the object does not exist, your callback function creates it in this appdomain. Maybe this appdomain is not where you want it to live. Instead use SetVariable and another overload of GetVariable.
+            </remarks>
+            <example><code>int test = InterDomainVariables.GetVariable("test", () => 10);</code></example>
+        </member>
+        <member name="M:Au.Util.InterDomainVariables.DefaultDomainVariable``1(System.String,System.Boolean@)">
+            <summary>
+            Gets a reference to an object that lives in default appdomain. Auto-creates new object there if does not exist.
+            The object can be used in any appdomain. When a non-default domain calls its methods, the call is marshaled to the default domain and executed there.
+            </summary>
+            <typeparam name="T">The type must be derived from MarshalByRefObject and have default constructor.</typeparam>
+            <param name="name">Inter-domain variable name. Any unique string. Case-sensitive.</param>
+            <param name="createdNew">Receives true if now created new object, false if the object alrady existed.</param>
+            <remarks>
+            Thread-safe.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            static DefDomainVar s_idvTest = InterDomainVariables.DefaultDomainVariable<DefDomainVar>(nameof(s_idvTest));
+            
+            static void Main()
+            {
+            	s_idvTest.Method(7);
+            }
+            
+            class DefDomainVar :MarshalByRefObject
+            {
+            	public void Method(int param)
+            	{
+            		Print(param, AppDomain.CurrentDomain.FriendlyName);
+            	}
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Util.InterDomainVariables.DefaultDomainVariable``1(System.String)">
+            <summary>
+            The same as <see cref="M:Au.Util.InterDomainVariables.DefaultDomainVariable``1(System.String,System.Boolean@)"/>, just does not have the bool parameter.
+            </summary>
+        </member>
         <member name="T:Au.Util.Recording">
             <summary>
             Functions for keyboard/mouse/etc recorder tools.
@@ -7308,6 +7393,276 @@
             <param name="p">Native string.</param>
             <param name="len">p length. Returns false if it is != s.Length.</param>
             <param name="s">Managed string.</param>
+        </member>
+        <member name="T:Au.Util.TreeBase`1">
+            <summary>
+            Base class for tree classes.
+            The tree can be loaded/saved as XML.
+            </summary>
+            <remarks>
+            Implemented in the same way as <see cref="T:System.Xml.Linq.XContainer"/>.
+            </remarks>
+            <example>
+            Shows how to declare a TreeBase-derived class, load tree of nodes from an XML file, print descendant nodes, save the tree to an XML file.
+            <code><![CDATA[
+            /* meta r System.Xml */
+            using System.Xml;
+            
+            class MyTree :Au.Util.TreeBase<MyTree>
+            {
+            	public string Name { get; set; }
+            	public int Id { get; private set; }
+            	public bool IsFolder { get; private set; }
+            
+            	public MyTree(string name, int id, bool isFolder) { Name = name; Id = id; IsFolder = isFolder; }
+            
+            	//XML element -> MyTree object
+            	MyTree(XmlReader x, MyTree parent)
+            	{
+            		if(parent == null) { //the root XML element
+            			if(x.Name != "example") throw new ArgumentException("XML root element name must be example");
+            			IsFolder = true;
+            		} else {
+            			switch(x.Name) {
+            			case "e": break;
+            			case "f": IsFolder = true; break;
+            			default: throw new ArgumentException("XML element name must be e or f");
+            			}
+            #if true //two ways of reading attributes
+            			Name = x["name"];
+            			Id = x["id"].ToInt_();
+            #else
+            			while(x.MoveToNextAttribute()) {
+            				var v = x.Value;
+            				switch(x.Name) {
+            				case "name": Name = v; break;
+            				case "id": Id = v.ToInt_(); break;
+            				}
+            			}
+            #endif
+            			if(Empty(Name)) throw new ArgumentException("no name attribute in XML");
+            			if(Id == 0) throw new ArgumentException("no id attribute in XML");
+            		}
+            	}
+            
+            	public static MyTree Load(string file) => XmlLoad(file, (x, p) => new MyTree(x, p));
+            
+            	public void Save(string file) => XmlSave(file, (x, n) => n._XmlWrite(x));
+            
+            	//MyTree object -> XML element
+            	void _XmlWrite(XmlWriter x)
+            	{
+            		if(Parent == null) {
+            			x.WriteStartElement("example");
+            		} else {
+            			x.WriteStartElement(IsFolder ? "f" : "e");
+            			x.WriteAttributeString("name", Name);
+            			x.WriteAttributeString("id", Id.ToString());
+            		}
+            	}
+            
+            	public override string ToString() => $"{new string(' ', Level)}{(IsFolder ? 'f' : 'e')} {Name} ({Id})";
+            }
+            
+            static void TNodeExample()
+            {
+            	/*
+            	<example>
+            	  <e name="one" id="1" />
+            	  <f name="two" id="112">
+            		<e name="three" id="113" />
+            		<e name="four" id="114" />
+            		<f name="five" id="120">
+            		  <e name="six" id="121" />
+            		  <e name="seven" id="122" />
+            		</f>
+            	  </f>
+            	  <f name="eight" id="217" />
+            	  <e name="ten" id="144" />
+            	</example>
+            	*/
+            
+            	var x = MyTree.Load(@"Q:\test\example.xml");
+            	foreach(MyTree n in x.Descendants(true)) Print(n);
+            	//Print(x.Descendants().FirstOrDefault(k => k.Name == "seven")); //find a descendant
+            	//Print(x.Descendants().Where(k => k.Level > 2)); //find some descendants
+            	x.Save(@"Q:\test\example2.xml");
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.Util.TreeBase`1.Parent">
+            <summary>
+            Returns the parent node. Can be null.
+            </summary>
+        </member>
+        <member name="P:Au.Util.TreeBase`1.RootAncestor">
+            <summary>
+            Returns the root ancestor node. Its <see cref="P:Au.Util.TreeBase`1.Parent"/> is null.
+            Returns this node if its <b>Parent</b> is null.
+            </summary>
+        </member>
+        <member name="P:Au.Util.TreeBase`1.Level">
+            <summary>
+            Gets the number of ancestors (parent, its parent and so on).
+            </summary>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.IsDescendantOf(`0)">
+            <summary>
+            Returns true if this node is a descendant of node n.
+            </summary>
+            <param name="n">Can be null.</param>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.IsAncestorOf(`0)">
+            <summary>
+            Returns true if this node is an ancestor of node n.
+            </summary>
+            <param name="n">Can be null.</param>
+        </member>
+        <member name="P:Au.Util.TreeBase`1.HasParent">
+            <summary>
+            Returns true if <see cref="P:Au.Util.TreeBase`1.Parent"/> is not null.
+            </summary>
+        </member>
+        <member name="P:Au.Util.TreeBase`1.HasChildren">
+            <summary>
+            Returns true if this node has child nodes.
+            </summary>
+        </member>
+        <member name="P:Au.Util.TreeBase`1.LastChild">
+            <summary>
+            Gets the last child node, or null if none.
+            </summary>
+        </member>
+        <member name="P:Au.Util.TreeBase`1.FirstChild">
+            <summary>
+            Gets the first child node, or null if none.
+            </summary>
+        </member>
+        <member name="P:Au.Util.TreeBase`1.Next">
+            <summary>
+            Gets next sibling node, or null if none.
+            </summary>
+        </member>
+        <member name="P:Au.Util.TreeBase`1.Previous">
+            <summary>
+            Gets previous sibling node, or null if none.
+            </summary>
+            <remarks>
+            Can be slow if there are many siblings. This class does not have a 'previous' field and therefore has to walk the linked list of siblings.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.AddChild(`0,System.Boolean)">
+            <summary>
+            Adds node n to this node as a child.
+            </summary>
+            <param name="n"></param>
+            <param name="first">Insert n as the first child node. If false (default), appends to the end.</param>
+            <exception cref="T:System.ArgumentException">n is null, or has parent (need to <see cref="M:Au.Util.TreeBase`1.Remove"/> at first), or is this node, or an ancestor of this node.</exception>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.AddSibling(`0,System.Boolean)">
+            <summary>
+            Inserts node n before or after this node as a sibling.
+            </summary>
+            <param name="n"></param>
+            <param name="after">Insert n after this node. If false (default), inserts before this node.</param>
+            <exception cref="T:System.ArgumentException"><inheritdoc cref="M:Au.Util.TreeBase`1.AddChild(`0,System.Boolean)"/></exception>
+            <exception cref="T:System.InvalidOperationException">This node does not have parent (<see cref="P:Au.Util.TreeBase`1.Parent"/> is null).</exception>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.Remove">
+            <summary>
+            Removes this node from its parent.
+            </summary>
+            <remarks>
+            After removing, the <see cref="P:Au.Util.TreeBase`1.Parent"/> property is null.
+            Does nothing if <b>Parent</b> is null.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.Ancestors(System.Boolean,System.Boolean)">
+            <summary>
+            Gets ancestor nodes (parent, its parent and so on).
+            The order is from <see cref="P:Au.Util.TreeBase`1.Parent"/> to <see cref="P:Au.Util.TreeBase`1.RootAncestor"/>.
+            </summary>
+            <param name="andSelf">Include this node.</param>
+            <param name="noRoot">Don't include <see cref="P:Au.Util.TreeBase`1.RootAncestor"/>.</param>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.AncestorsReverse(System.Boolean,System.Boolean)">
+            <summary>
+            Gets ancestor nodes in reverse order than <see cref="M:Au.Util.TreeBase`1.Ancestors(System.Boolean,System.Boolean)"/>.
+            </summary>
+            <param name="andSelf">Include this node. Default false.</param>
+            <param name="noRoot">Don't include <see cref="P:Au.Util.TreeBase`1.RootAncestor"/>.</param>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.Children(System.Boolean)">
+            <summary>
+            Gets all direct child nodes.
+            </summary>
+            <param name="andSelf">Include this node. Default false.</param>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.Descendants(System.Boolean)">
+            <summary>
+            Gets all descendant nodes (direct children, their children and so on).
+            </summary>
+            <param name="andSelf">Include this node. Default false.</param>
+        </member>
+        <member name="T:Au.Util.TreeBase`1.XmlNodeReader">
+            <summary>
+            Used with <see cref="M:Au.Util.TreeBase`1.XmlLoad(System.String,Au.Util.TreeBase{`0}.XmlNodeReader)"/>
+            </summary>
+        </member>
+        <member name="T:Au.Util.TreeBase`1.XmlNodeWriter">
+            <summary>
+            Used with <see cref="M:Au.Util.TreeBase`1.XmlSave(System.String,Au.Util.TreeBase{`0}.XmlNodeWriter,System.Xml.XmlWriterSettings,System.Collections.Generic.IEnumerable{`0})"/>
+            </summary>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.XmlLoad(System.String,Au.Util.TreeBase{`0}.XmlNodeReader)">
+            <summary>
+            Loads XML file and creates tree of nodes from it.
+            Returns the root node.
+            </summary>
+            <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>.</param>
+            <param name="nodeReader">Callback function that reads current XML element and creates/returns new node. See example.</param>
+            <exception cref="T:System.ArgumentException">Not full path.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.XmlReader.Create(System.String)"/>.</exception>
+            <exception cref="T:System.Xml.XmlException">An error occurred while parsing the XML.</exception>
+            <example><see cref="T:Au.Util.TreeBase`1"/></example>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.XmlLoad(System.Xml.XmlReader,Au.Util.TreeBase{`0}.XmlNodeReader)">
+            <summary>
+            Reads XML and creates tree of nodes.
+            Returns the root node.
+            </summary>
+            <param name="x"></param>
+            <param name="nodeReader"></param>
+            <exception cref="T:System.Xml.XmlException">An error occurred while parsing the XML.</exception>
+            <remarks>More info: <see cref="M:Au.Util.TreeBase`1.XmlLoad(System.String,Au.Util.TreeBase{`0}.XmlNodeReader)"/>.</remarks>
+            <example><see cref="T:Au.Util.TreeBase`1"/></example>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.XmlSave(System.String,Au.Util.TreeBase{`0}.XmlNodeWriter,System.Xml.XmlWriterSettings,System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            Saves tree of nodes (this and descendants) to an XML file.
+            </summary>
+            <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>.</param>
+            <param name="nodeWriter">Callback function that writes node's XML start element (see <see cref="M:System.Xml.XmlWriter.WriteStartElement(System.String)"/>) and attributes (see <see cref="M:System.Xml.XmlWriter.WriteAttributeString(System.String,System.String)"/>). Must not write children and end element. Also should not write value, unless your reader knows how to read it.</param>
+            <param name="sett">XML formatting settings. Optional.</param>
+            <param name="children">If not null, writes these nodes as if they were children of this node.</param>
+            <exception cref="T:System.ArgumentException">Not full path.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.XmlWriter.Create(System.String)"/> and other <b>XmlWriter</b> methods.</exception>
+            <remarks>
+            Uses <see cref="M:Au.File_.Save(System.String,System.String,System.Boolean,System.Int32,System.Text.Encoding)"/>. It ensures that existing file data is not damaged on exception etc.
+            </remarks>
+            <example><see cref="T:Au.Util.TreeBase`1"/></example>
+        </member>
+        <member name="M:Au.Util.TreeBase`1.XmlSave(System.Xml.XmlWriter,Au.Util.TreeBase{`0}.XmlNodeWriter,System.Collections.Generic.IEnumerable{`0})">
+            <summary>
+            Writes tree of nodes (this and descendants) to an <see cref="T:System.Xml.XmlWriter"/>.
+            </summary>
+            <param name="x"></param>
+            <param name="nodeWriter"></param>
+            <param name="children"></param>
+            <remarks>More info: <see cref="M:Au.Util.TreeBase`1.XmlSave(System.String,Au.Util.TreeBase{`0}.XmlNodeWriter,System.Xml.XmlWriterSettings,System.Collections.Generic.IEnumerable{`0})"/>.</remarks>
+            <exception cref="T:System.Exception">Exceptions of <b>XmlWriter</b> methods.</exception>
+            <example><see cref="T:Au.Util.TreeBase`1"/></example>
         </member>
         <member name="T:Au.Util.LibArrayBuilder`1">
             <summary>
@@ -12538,91 +12893,6 @@
             </summary>
             <param name="taskId"></param>
         </member>
-        <member name="T:Au.InterDomainVariables">
-            <summary>
-            Inter-domain variables. Allows to share values by all app domains of this process.
-            </summary>
-            <remarks>
-            Similar to environment variables, but supports more types and does not inherit parent process variables; the speed is similar.
-            Supports not all types. The type must have one of these properties:
-            1. Derived from MarshalByRefObject. The stored value is a virtual reference (proxy), not a copy. The owner domain must be still alive when other domains access (call methods etc) the retrieved value, else AppDomainUnloadedException.
-            2. Has [Serializable] attribute. The stored value is a copy, not reference. For example int, IntPtr, string, arrays, List, Dictionary.
-            </remarks>
-        </member>
-        <member name="M:Au.InterDomainVariables.SetVariable(System.String,System.Object)">
-            <summary>
-            Adds or modifies an inter-domain variable.
-            </summary>
-            <param name="name">Name. Can be any unique string, for example a GUID string. Case-sensitive.</param>
-            <param name="value">Value.</param>
-            <exception cref="T:System.Runtime.Serialization.SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
-        </member>
-        <member name="M:Au.InterDomainVariables.GetVariable(System.String)">
-            <summary>
-            Gets the value of an inter-domain variable.
-            Returns null if the variable does not exist. Else returns the value as object; need a cast.
-            </summary>
-            <param name="name">Name. Case-sensitive.</param>
-        </member>
-        <member name="M:Au.InterDomainVariables.GetVariable``1(System.String,``0@)">
-            <summary>
-            Gets the value of an inter-domain variable.
-            Returns true if the variable exists and is not null.
-            </summary>
-            <param name="name">Name. Case-sensitive.</param>
-            <param name="value">Receives the value. If the variable does not exist, receives the default value of that type (for reference types it is null).</param>
-            <exception cref="T:System.InvalidCastException">Bad value type.</exception>
-        </member>
-        <member name="M:Au.InterDomainVariables.GetVariable``1(System.String,System.Func{``0})">
-            <summary>
-            Gets the value of an inter-domain variable.
-            If the variable does not exist or is null, calls a callback function that provides an initial value; then sets the variable = the initial value.
-            Thread-safe.
-            </summary>
-            <param name="name">Name. Case-sensitive.</param>
-            <param name="initValue">A callback function delegate (eg lambda) that is called when the variable does not exist or is null. It must return an initial value.</param>
-            <exception cref="T:System.Runtime.Serialization.SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
-            <exception cref="T:System.InvalidCastException">Bad value type.</exception>
-            <remarks>
-            Be careful with types derived from MarshalByRefObject. If the object does not exist, your callback function creates it in this appdomain. Maybe this appdomain is not where you want it to live. Instead use SetVariable and another overload of GetVariable.
-            </remarks>
-            <example><code>int test = InterDomainVariables.GetVariable("test", () => 10);</code></example>
-        </member>
-        <member name="M:Au.InterDomainVariables.DefaultDomainVariable``1(System.String,System.Boolean@)">
-            <summary>
-            Gets a reference to an object that lives in default appdomain. Auto-creates new object there if does not exist.
-            The object can be used in any appdomain. When a non-default domain calls its methods, the call is marshaled to the default domain and executed there.
-            </summary>
-            <typeparam name="T">The type must be derived from MarshalByRefObject and have default constructor.</typeparam>
-            <param name="name">Inter-domain variable name. Any unique string. Case-sensitive.</param>
-            <param name="createdNew">Receives true if now created new object, false if the object alrady existed.</param>
-            <remarks>
-            Thread-safe.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            static DefDomainVar s_idvTest = InterDomainVariables.DefaultDomainVariable<DefDomainVar>(nameof(s_idvTest));
-            
-            static void Main()
-            {
-            	s_idvTest.Method(7);
-            }
-            
-            class DefDomainVar :MarshalByRefObject
-            {
-            	public void Method(int param)
-            	{
-            		Print(param, AppDomain.CurrentDomain.FriendlyName);
-            	}
-            }
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.InterDomainVariables.DefaultDomainVariable``1(System.String)">
-            <summary>
-            The same as <see cref="M:Au.InterDomainVariables.DefaultDomainVariable``1(System.String,System.Boolean@)"/>, just does not have the bool parameter.
-            </summary>
-        </member>
         <member name="T:Au.File_">
             <summary>
             File system functions.
@@ -15448,6 +15718,11 @@
             <remarks>
             Faster than the static <b>Hash</b> functions.
             </remarks>
+        </member>
+        <member name="P:Au.Convert_.MD5Hash.IsEmpty">
+            <summary>
+            true if no data was added.
+            </summary>
         </member>
         <member name="M:Au.Convert_.MD5Hash.Add(System.Void*,System.Int32)">
             <summary>Adds data.</summary>
@@ -20978,16 +21253,6 @@
             Gets the number of microseconds between <see cref="M:Au.Perf.Inst.First"/> and the last <see cref="M:Au.Perf.Inst.Next(System.Char)"/>.
             </summary>
         </member>
-        <member name="M:Au.Perf.Inst.Execute(System.Int32,System.Action)">
-            <summary>
-            Executes <paramref name="code"/> (lambda) <paramref name="count"/> times, and then calls <see cref="M:Au.Perf.Inst.Next(System.Char)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Perf.Inst.ExecuteMulti(System.Int32,System.Int32,System.Action[])">
-            <summary>
-            <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
-            </summary>
-        </member>
         <member name="F:Au.Perf.StaticInst">
             <summary>
             This static variable is used by the static functions.
@@ -21077,16 +21342,6 @@
         <member name="P:Au.Perf.TimeTotal">
             <summary>
             Gets the number of microseconds between <see cref="M:Au.Perf.First"/> and the last <see cref="M:Au.Perf.Next(System.Char)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Perf.Execute(System.Int32,System.Action)">
-            <summary>
-            Executes <paramref name="code"/> (lambda) <paramref name="count"/> times, and then calls <see cref="M:Au.Perf.Next(System.Char)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Perf.ExecuteMulti(System.Int32,System.Int32,System.Action[])">
-            <summary>
-            <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
             </summary>
         </member>
         <member name="M:Au.Perf.Cpu(System.Int32)">

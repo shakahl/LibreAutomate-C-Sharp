@@ -72,7 +72,7 @@ namespace Au.Compiler
 				}
 
 				if(!ok) {
-					cache.Remove(f);
+					cache.Remove(f, false);
 					return false;
 				}
 			}
