@@ -98,7 +98,7 @@ namespace Au.Util
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		public static bool EndsWith(char* p, int len, string s, bool ignoreCase)
 		{
-			if(p == null || len<s.Length) return false;
+			if(p == null || len < s.Length) return false;
 			p += len - s.Length;
 			if(ignoreCase) {
 				var t = LibTables.LowerCase;
@@ -144,6 +144,20 @@ namespace Au.Util
 			}
 			return true;
 		}
+
+		/// <summary>
+		/// Returns true if unmanaged ANSI string p and string s are equal. Case-sensitive.
+		/// </summary>
+		/// <param name="p">'\0'-terminated ANSI string. Can be null.</param>
+		/// <param name="s">Must contain only ASCII characters. Cannot be null.</param>
+		public static bool AsciiEquals(byte* p, string s) => AsciiStartsWith(p, s) && p[s.Length] == 0;
+
+		/// <summary>
+		/// Returns true if unmanaged ANSI string p and string s are equal. Case-insensitive.
+		/// </summary>
+		/// <param name="p">'\0'-terminated ANSI string. Can be null.</param>
+		/// <param name="s">Must contain only ASCII characters. Cannot be null.</param>
+		public static bool AsciiEqualsI(byte* p, string s) => AsciiStartsWithI(p, s) && p[s.Length] == 0;
 
 		/// <summary>
 		/// Finds character in unmanaged ANSI string which can be binary.
@@ -216,6 +230,19 @@ namespace Au.Util
 			int i;
 			for(i = 0; i < s.Length; i++) if(s[i] != p[i]) break;
 			return i == s.Length;
+		}
+
+		/// <summary>
+		/// Case-sensitive compares native ANSI string with managed ANSI string and returns true if they are equal.
+		/// </summary>
+		/// <param name="p">Native string.</param>
+		/// <param name="s">Managed string.</param>
+		public static bool Equals(byte* p, byte[] s)
+		{
+			if(p == null) return s == null; if(s == null) return false;
+			int i;
+			for(i = 0; i < s.Length; i++) if(s[i] != p[i]) return false;
+			return p[i] == 0;
 		}
 	}
 }

@@ -20,7 +20,6 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 using static Program;
-using LiteDB;
 
 partial class FilesModel
 {
@@ -172,19 +171,24 @@ partial class FilesModel
 	/// </summary>
 	bool _SaveStateNow()
 	{
-		if(TableMisc == null) return true;
+		if(DB == null) return true;
 		try {
-			TableMisc.Upsert(new DBMisc("expanded", string.Join(" ", _control.AllNodes.Where(n => n.IsExpanded).Select(n => (n.Tag as FileNode).IdString))));
+			using(var trans = DB.Transaction()) {
+				DB.Execute("REPLACE INTO _misc VALUES ('expanded',?)",
+					string.Join(" ", _control.AllNodes.Where(n => n.IsExpanded).Select(n => (n.Tag as FileNode).IdString)));
 
-			using(new Au.Util.LibStringBuilder(out var b)) {
-				var a = OpenFiles;
-				b.Append(a.IndexOf(_currentFile));
-				foreach(var v in a) b.Append(' ').Append(v.IdString);
-				TableMisc.Upsert(new DBMisc("open", b.ToString()));
+				using(new Au.Util.LibStringBuilder(out var b)) {
+					var a = OpenFiles;
+					b.Append(a.IndexOf(_currentFile));
+					foreach(var v in a) b.Append(' ').Append(v.IdString); //FUTURE: also save current position and scroll position, eg "id.pos.scroll"
+					DB.Execute("REPLACE INTO _misc VALUES ('open',?)", b.ToString());
+				}
+
+				trans.Commit();
 			}
 			return true;
 		}
-		catch(Exception ex) {
+		catch(SLException ex) {
 			Debug_.Print(ex);
 			return false;
 		}
@@ -200,13 +204,12 @@ partial class FilesModel
 		//	2. SciControl handle must be created because _SetCurrentFile sets its text etc.
 		Debug.Assert(MainForm.IsHandleCreated);
 
-		if(TableMisc == null) return;
+		if(DB == null) return;
 		try {
 			Save.LoadingState = true;
 
 			//expanded folders
-			var s = TableMisc.FindById("expanded")?.s;
-			if(!Empty(s)) {
+			if(DB.Get(out string s, "SELECT data FROM _misc WHERE key='expanded'") && !Empty(s)) {
 				_control.BeginUpdate();
 				foreach(var seg in s.Segments_(" ")) {
 					var fn = FindById(seg.Value);
@@ -216,8 +219,7 @@ partial class FilesModel
 			}
 
 			//open files
-			s = TableMisc.FindById("open")?.s;
-			if(!Empty(s)) {
+			if(DB.Get(out s, "SELECT data FROM _misc WHERE key='open'") && !Empty(s)) {
 				//format: indexOfActiveDocOrMinusOne id1 id2 ...
 				int i = -2, iActive = s.ToInt_();
 				FileNode fnActive = null;
@@ -233,32 +235,13 @@ partial class FilesModel
 				//Perf.NW();
 			}
 		}
-		catch(Exception ex) { Debug_.Print(ex.Message); }
+		catch(Exception ex) { Debug_.Print(ex); }
 		finally { Save.LoadingState = false; }
 	}
 }
 
-/// <summary>
-/// Type of LiteDB database editor.db table 'misc' items.
-/// In that table we save expanded folders, open documents, etc.
-/// </summary>
-class DBMisc
-{
-	[BsonId]
-	public string name { get; set; }
-	public string s { get; set; }
-
-	public DBMisc() { } //need for LiteDB
-	public DBMisc(string name, string s) { this.name = name; this.s = s; }
-}
-
 class DBEdit
 {
-	//info:
-	//	LiteDB uses only properties, not fields.
-	//	The unique id property must be named Id or id or _id or have [BsonId].
-
-	public int id { get; set; }
 	public List<int> folding { get; set; }
 	public List<int> bookmarks { get; set; }
 	public List<int> breakpoints { get; set; }

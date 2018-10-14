@@ -237,6 +237,40 @@ namespace Au.Types
 
 		#endregion
 
+		#region StringBuilder
+
+		/// <summary>
+		/// Appends string as new correctly formatted sentence.
+		/// Returns this.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="s"></param>
+		/// <param name="noUcase">Don't make the first character uppercase.</param>
+		/// <remarks>
+		/// If s is null or "", does nothing.
+		/// If this is not empty, appends space.
+		/// If s starts with a lowercase character, makes it uppercase, unless this ends with a character other than '.'.
+		/// Appends '.' if s does not end with '.', ';', ':', ',', '!' or '?'.
+		/// </remarks>
+		public static StringBuilder AppendSentence(this StringBuilder t, string s, bool noUcase = false)
+		{
+			if(!Empty(s)) {
+				bool makeUcase = !noUcase && Char.IsLower(s[0]);
+				if(t.Length > 0) {
+					if(makeUcase && t[t.Length - 1] != '.') makeUcase = false;
+					t.Append(' ');
+				}
+				if(makeUcase) { t.Append(Char.ToUpper(s[0])).Append(s, 1, s.Length - 1); } else t.Append(s);
+				switch(s[s.Length - 1]) {
+				case '.': case ';': case ':': case ',': case '!': case '?': break;
+				default: t.Append('.'); break;
+				}
+			}
+			return t;
+		}
+
+		#endregion
+
 		#region internal
 
 

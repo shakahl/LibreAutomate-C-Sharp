@@ -23,7 +23,6 @@ using static Au.NoClass;
 using static Program;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
-using LiteDB;
 
 partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 {
@@ -40,9 +39,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	readonly Dictionary<uint, FileNode> _idMap;
 	public readonly List<FileNode> OpenFiles;
 	readonly string _dbFile;
-	readonly LiteDatabase _db;
-	public readonly LiteCollection<DBMisc> TableMisc;
-	public readonly LiteCollection<DBEdit> TableEdit;
+	public readonly SqliteDB DB;
 	readonly bool _importing;
 	readonly bool _initedFully;
 
@@ -73,20 +70,15 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		perf.NW('L'); //TODO
 
 		if(!_importing) {
-			_dbFile = CollectionDirectory + @"\editor.db";
+			_dbFile = CollectionDirectory + @"\settings.db";
 			try {
-				//Create LiteDatabase with the Stream ctor.
-				//	The filepath ctor is lazy and does not throw when file is locked or readonly etc; would throw later in unexpected places.
-				//	To open file, LiteDB uses the same function and arguments as this code, but does not wait/retry if temporarily locked.
-				var stream = File_.WaitIfLocked(() => new FileStream(_dbFile, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, System.IO.FileOptions.RandomAccess));
-				_db = new LiteDatabase(stream, disposeStream: true);
-				TableMisc = _db.GetCollection<DBMisc>();
-				TableEdit = _db.GetCollection<DBEdit>();
+				DB = new SqliteDB(_dbFile, sql:
+					"CREATE TABLE IF NOT EXISTS _misc (key TEXT PRIMARY KEY, data TEXT);" +
+					"CREATE TABLE IF NOT EXISTS _editor (id INTEGER PRIMARY KEY, folding BLOB, bookmarks BLOB, breakpoints BLOB);"
+					);
 			}
 			catch(Exception ex) {
-				TableMisc = null; TableEdit = null;
-				_db?.Dispose(); _db = null;
-				Print($"Failed to open file 'editor.db'. Will not load/save: list of open files, expanded folders, markers, folding.\r\n\t{ex.ToStringWithoutStack_()}");
+				Print($"Failed to open file '{_dbFile}'. Will not load/save: list of open files, expanded folders, markers, folding.\r\n\t{ex.ToStringWithoutStack_()}");
 			}
 			OpenFiles = new List<FileNode>();
 			_InitClickSelect();
@@ -109,7 +101,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 			_UninitClickSelect();
 			_UninitDragDrop();
 			_UninitNodeControls();
-			_db?.Dispose();
+			DB?.Dispose();
 		}
 		_control = null;
 	}
@@ -651,7 +643,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 
 		foreach(var k in e) {
 			if(_myClipboard.Contains(k)) _myClipboard.Clear();
-			TableEdit?.Delete((int)k.Id);
+			try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch(SLException ex) { Debug_.Print(ex); }
 			Au.Compiler.Compiler.OnFileDeleted(this, k);
 			_idMap[k.Id] = null;
 			k.IsDeleted = true;

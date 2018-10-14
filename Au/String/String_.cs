@@ -607,6 +607,11 @@ namespace Au
 		//FUTURE: Unescape()
 
 		/// <summary>
+		/// Replaces all "'" with "''".
+		/// </summary>
+		public static string SqlEscape_(this string t) => t.Replace("'", "''");
+
+		/// <summary>
 		/// Returns true if this string is "" or contains only ASCII characters.
 		/// </summary>
 		public static bool IsAscii_(this string t)

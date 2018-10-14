@@ -47,7 +47,7 @@ using VB = Microsoft.VisualBasic.FileIO;
 //using ImapX;
 
 //using System.Data.SQLite; //very slow (loads many assemblies, even Forms) and much work to use
-using SQLite; //SQLite-net
+//using SQLite; //SQLite-net
 
 //using CsvHelper;
 
@@ -68,7 +68,7 @@ using Au.Types;
 using Au.Controls;
 
 using System.Dynamic;
-using LiteDB;
+//using LiteDB;
 
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
 
@@ -314,140 +314,140 @@ a1,-8";
 
 	}
 
-	static unsafe void TestDB()
-	{
-		string fileS = @"Q:\test\guid string.db";
-		string fileB = @"Q:\test\guid binary.db";
-		string fileL = @"Q:\test\guid long.db";
-		string fileS2 = @"Q:\test\guid string2.db";
-		var fileQ = @"Q:\test\sqlite.db";
-		int n = 1000;
+//	static unsafe void TestDB()
+//	{
+//		string fileS = @"Q:\test\guid string.db";
+//		string fileB = @"Q:\test\guid binary.db";
+//		string fileL = @"Q:\test\guid long.db";
+//		string fileS2 = @"Q:\test\guid string2.db";
+//		var fileQ = @"Q:\test\sqlite.db";
+//		int n = 1000;
 
-		File_.Delete(fileS);
-		File_.Delete(fileB);
-		File_.Delete(fileL);
-		File_.Delete(fileS2);
-		File_.Delete(fileQ);
+//		File_.Delete(fileS);
+//		File_.Delete(fileB);
+//		File_.Delete(fileL);
+//		File_.Delete(fileS2);
+//		File_.Delete(fileQ);
 
-		var a = new List<_GuidS>();
-		for(int i = 0; i < n; i++) {
-			var x = new _GuidS() { id = Convert_.GuidToHex(Guid.NewGuid()) };
-			a.Add(x);
-		}
+//		var a = new List<_GuidS>();
+//		for(int i = 0; i < n; i++) {
+//			var x = new _GuidS() { id = Convert_.GuidToHex(Guid.NewGuid()) };
+//			a.Add(x);
+//		}
 
-		Perf.First();
-#if false
-		using(var db = new LiteDatabase(fileL)) {
-			var col = db.GetCollection<_GuidL>();
-			for(int i = 0; i < n; i++) {
-				var g =Convert_.GuidFromHex(a[i].id);
-				var x = new _GuidL() { id = *(long*)&g };
-				col.Upsert(x);
-			}
-		}
-		Perf.Next();
+//		Perf.First();
+//#if false
+//		using(var db = new LiteDatabase(fileL)) {
+//			var col = db.GetCollection<_GuidL>();
+//			for(int i = 0; i < n; i++) {
+//				var g =Convert_.GuidFromHex(a[i].id);
+//				var x = new _GuidL() { id = *(long*)&g };
+//				col.Upsert(x);
+//			}
+//		}
+//		Perf.Next();
 
-		using(var db = new LiteDatabase(fileB)) {
-			var col = db.GetCollection<_GuidB>();
-			for(int i = 0; i < n; i++) {
-				var g = Convert_.GuidFromHex(a[i].id);
-				var x = new _GuidB() { id = g };
-				col.Upsert(x);
-			}
-		}
-		Perf.Next();
+//		using(var db = new LiteDatabase(fileB)) {
+//			var col = db.GetCollection<_GuidB>();
+//			for(int i = 0; i < n; i++) {
+//				var g = Convert_.GuidFromHex(a[i].id);
+//				var x = new _GuidB() { id = g };
+//				col.Upsert(x);
+//			}
+//		}
+//		Perf.Next();
 
-		using(var db = new LiteDatabase(fileS)) {
-			var col = db.GetCollection<_GuidS>();
-			for(int i = 0; i < n; i++) {
-				var x = new _GuidS() { id = a[i].id };
-				col.Upsert(x);
-			}
-		}
-		Perf.Next();
+//		using(var db = new LiteDatabase(fileS)) {
+//			var col = db.GetCollection<_GuidS>();
+//			for(int i = 0; i < n; i++) {
+//				var x = new _GuidS() { id = a[i].id };
+//				col.Upsert(x);
+//			}
+//		}
+//		Perf.Next();
 
-		using(var db = new LiteDatabase(fileS2)) {
-			//Perf.Next();
-			var col = db.GetCollection<_GuidS>();
-			col.Upsert(a);
-		}
-		Perf.Next();
-#endif
-		//System.Data.SQLite. Very slow to load.
-		//using(var db = new SQLiteConnection($"Data Source={fileQ};Version=3;")) {
-		//	db.Open();
-		//	using(var trans = db.BeginTransaction()) {
-		//		//string sql = "create table test (guid TEXT PRIMARY KEY, name TEXT, etc TEXT, flags INT, a1, a2, i2 INT, s2 TEXT, s3 TEXT)";
-		//		string sql = "create table test (guid BLOB PRIMARY KEY, name TEXT, etc TEXT, flags INT, a1, a2, i2 INT, s2 TEXT, s3 TEXT)";
-		//		var command = new SQLiteCommand(sql, db, trans);
-		//		command.ExecuteNonQuery();
-		//		Perf.Next();
+//		using(var db = new LiteDatabase(fileS2)) {
+//			//Perf.Next();
+//			var col = db.GetCollection<_GuidS>();
+//			col.Upsert(a);
+//		}
+//		Perf.Next();
+//#endif
+//		//System.Data.SQLite. Very slow to load.
+//		//using(var db = new SQLiteConnection($"Data Source={fileQ};Version=3;")) {
+//		//	db.Open();
+//		//	using(var trans = db.BeginTransaction()) {
+//		//		//string sql = "create table test (guid TEXT PRIMARY KEY, name TEXT, etc TEXT, flags INT, a1, a2, i2 INT, s2 TEXT, s3 TEXT)";
+//		//		string sql = "create table test (guid BLOB PRIMARY KEY, name TEXT, etc TEXT, flags INT, a1, a2, i2 INT, s2 TEXT, s3 TEXT)";
+//		//		var command = new SQLiteCommand(sql, db, trans);
+//		//		command.ExecuteNonQuery();
+//		//		Perf.Next();
 
-		//		sql = "insert into test values (?,?,?,?,?,?,?,?,?)";
-		//		command = new SQLiteCommand(sql, db, trans);
-		//		var p = command.Parameters;
-		//		for(int i = 0; i < n; i++) {
-		//			var v = a[i];
-		//			//p.AddWithValue("guid", v.id);
-		//			p.AddWithValue("guid", Convert_.GuidFromHex(v.id));
+//		//		sql = "insert into test values (?,?,?,?,?,?,?,?,?)";
+//		//		command = new SQLiteCommand(sql, db, trans);
+//		//		var p = command.Parameters;
+//		//		for(int i = 0; i < n; i++) {
+//		//			var v = a[i];
+//		//			//p.AddWithValue("guid", v.id);
+//		//			p.AddWithValue("guid", Convert_.GuidFromHex(v.id));
 
-		//			p.AddWithValue("name", v.name);
-		//			p.AddWithValue("etc", v.etc);
-		//			p.AddWithValue("flags", v.flags);
-		//			p.AddWithValue("a1", "moo");
-		//			p.AddWithValue("a2", "");
-		//			p.AddWithValue("i2", v.i2);
-		//			p.AddWithValue("s2", v.s2);
-		//			p.AddWithValue("s3", v.s3);
+//		//			p.AddWithValue("name", v.name);
+//		//			p.AddWithValue("etc", v.etc);
+//		//			p.AddWithValue("flags", v.flags);
+//		//			p.AddWithValue("a1", "moo");
+//		//			p.AddWithValue("a2", "");
+//		//			p.AddWithValue("i2", v.i2);
+//		//			p.AddWithValue("s2", v.s2);
+//		//			p.AddWithValue("s3", v.s3);
 
-		//			command.ExecuteNonQuery();
-		//			p.Clear();
-		//		}
+//		//			command.ExecuteNonQuery();
+//		//			p.Clear();
+//		//		}
 
-		//		trans.Commit();
-		//	}
-		//}
+//		//		trans.Commit();
+//		//	}
+//		//}
 
-		Perf.NW();
-	}
+//		Perf.NW();
+//	}
 
-	class _GuidBase
-	{
-		public string name { get; set; }
-		public string etc { get; set; }
-		public int flags { get; set; }
-		public int[] a1 { get; set; }
-		public string[] a2 { get; set; }
-		public int i2 { get; set; }
-		public string s2 { get; set; }
-		public string s3 { get; set; }
+	//class _GuidBase
+	//{
+	//	public string name { get; set; }
+	//	public string etc { get; set; }
+	//	public int flags { get; set; }
+	//	public int[] a1 { get; set; }
+	//	public string[] a2 { get; set; }
+	//	public int i2 { get; set; }
+	//	public string s2 { get; set; }
+	//	public string s3 { get; set; }
 
-		public _GuidBase()
-		{
-			name = "test name";
-			etc = "test etc";
-			flags = 1000;
-			a2 = new string[] { "mmmmmmmmmmmm" };
-			i2 = 8;
-			s2 = "ddddddd";
-		}
-	}
+	//	public _GuidBase()
+	//	{
+	//		name = "test name";
+	//		etc = "test etc";
+	//		flags = 1000;
+	//		a2 = new string[] { "mmmmmmmmmmmm" };
+	//		i2 = 8;
+	//		s2 = "ddddddd";
+	//	}
+	//}
 
-	class _GuidS :_GuidBase
-	{
-		public string id { get; set; }
-	}
+	//class _GuidS :_GuidBase
+	//{
+	//	public string id { get; set; }
+	//}
 
-	class _GuidB :_GuidBase
-	{
-		public Guid id { get; set; }
-	}
+	//class _GuidB :_GuidBase
+	//{
+	//	public Guid id { get; set; }
+	//}
 
-	class _GuidL :_GuidBase
-	{
-		[PrimaryKey, AutoIncrement]
-		public long id { get; set; }
-	}
+	//class _GuidL :_GuidBase
+	//{
+	//	[PrimaryKey, AutoIncrement]
+	//	public long id { get; set; }
+	//}
 
 
 
@@ -460,7 +460,84 @@ a1,-8";
 	//		Perf.Next();
 	//		var file = @"Q:\test\sqlite.db";
 	//		bool isNew = !File_.ExistsAsFile(file);
-	//		Perf.Next();
+//	static void TestSqliteNet()
+//	{
+//		Perf.Next();
+//#if false
+//		string fileS = @"Q:\test\guid string.db";
+
+//		var stream = File_.WaitIfLocked(() => new FileStream(fileS, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, System.IO.FileOptions.RandomAccess));
+//		using(var db = new LiteDatabase(stream, disposeStream: true)) {
+//			Perf.Next();
+//			var col = db.GetCollection<_GuidS>();
+//			Perf.Next();
+//			int n = col.Count();
+//			Perf.Next();
+//		}
+//#else
+//		var file = @"Q:\test\sqlite.db";
+//		File_.Delete(file);
+//		bool isNew = !File_.ExistsAsFile(file);
+
+//		using(var db = new SQLiteConnection(file)) {
+//			Perf.Next();
+
+//			for(int j = 0; j < 1; j++) {
+//				if(isNew) {
+//					//var m = db.GetMapping<Stock>();
+//					//m.
+
+
+//					db.CreateTable<Stock>();
+//					isNew = false;
+//					//db.CreateTable<Stock>(CreateFlags.ImplicitPK);
+//				} else {
+//					db.DeleteAll<Stock>();
+//				}
+
+//				var x = new Stock { Symbol = "one" };
+//				//x.folding = new List<int> { 3, 5 };
+//				x.folding = new int[] { 3, 5 };
+//				//x.Symbol = new string('A', 500);
+//				var p = Perf.StartNew();
+//				db.BeginTransaction();
+//				for(int i = 0; i < 1; i++) {
+//#if false
+//					db.
+//#else
+//					//Print(SQLite3.LastInsertRowid(db.Handle));
+//					x.id = i + 1;
+//					db.Insert(x);
+//					//Print(x.id);
+//#endif
+//				}
+//				db.Commit();
+//				p.NW();
+//			}
+//			Perf.Next();
+
+//			//return;
+//			//AuDialog.Show();
+
+//			for(int i = 0; i < 1; i++) {
+//#if true
+//				//var query = db.Table<Stock>().Where(v => v.Symbol.StartsWith("A"));
+
+//				var query = db.Table<Stock>();
+//				foreach(var stock in query) {
+//					Print(stock.Symbol);
+//					//Print(stock.folding);
+//				}
+//#else
+//						foreach(var stock in db.Query<Stock>("select * from Stock"))
+//							sb.AppendLine("Stock: " + stock.Symbol);
+//#endif
+//			}
+//			Perf.Next();
+//		}
+//#endif
+//		Perf.NW();
+//	}	//		Perf.Next();
 
 	//		using(var db = new SQLiteConnection(file)) {
 	//			Perf.Next();
@@ -494,309 +571,20 @@ a1,-8";
 	//	}
 	//#endif
 
-	static void TestSqlite()
-	{
-		Perf.Next();
-#if false
-		string fileS = @"Q:\test\guid string.db";
 
-		var stream = File_.WaitIfLocked(() => new FileStream(fileS, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, System.IO.FileOptions.RandomAccess));
-		using(var db = new LiteDatabase(stream, disposeStream: true)) {
-			Perf.Next();
-			var col = db.GetCollection<_GuidS>();
-			Perf.Next();
-			int n = col.Count();
-			Perf.Next();
-		}
-#else
-		var file = @"Q:\test\sqlite.db";
-		//File_.Delete(file);
-		bool isNew = !File_.ExistsAsFile(file);
 
-		using(var db = new SQLiteConnection(file)) {
-			Perf.Next();
-
-			for(int j = 0; j < 1; j++) {
-				if(isNew) {
-					db.CreateTable<Stock>();
-					isNew = false;
-					//db.CreateTable<Stock>(CreateFlags.ImplicitPK);
-				} else {
-					db.DeleteAll<Stock>();
-				}
-
-				var x = new Stock { Symbol = "one" };
-				x.Symbol = new string('A', 500);
-				for(int i = 0; i < 5; i++) {
-					//Print(SQLite3.LastInsertRowid(db.Handle));
-					//x.id = i + 10;
-					db.Insert(x);
-					Print(x.id);
-				}
-			}
-			Perf.Next();
-
-			for(int i = 0; i < 1; i++) {
-#if true
-				//var query = db.Table<Stock>().Where(v => v.Symbol.StartsWith("A"));
-
-				var query = db.Table<Stock>();
-				foreach(var stock in query) { }
-				//Print(stock.Symbol);
-#else
-						foreach(var stock in db.Query<Stock>("select * from Stock"))
-							sb.AppendLine("Stock: " + stock.Symbol);
-#endif
-			}
-			Perf.Next();
-		}
-#endif
-		Perf.NW();
-	}
-
-	public class Stock
-	{
-		[PrimaryKey, AutoIncrement]
-		public long id { get; set; }
-		public string Symbol { get; set; }
-	}
+	//public class Stock
+	//{
+	//	[PrimaryKey]
+	//	public long id { get; set; }
+	//	public string Symbol { get; set; }
+	//	//public List<int> folding { get; set; }
+	//	public int[] folding { get; set; }
+	//}
 
 	#endregion
 
-	#region
-
-	class TAttr
-	{
-		internal TAttr _next;
-	}
-
-	class TAttr<T> :TAttr
-	{
-		public T Value { get; set; }
-		public static implicit operator T(TAttr<T> a) => a.Value;
-		//public static implicit operator T(TAttr<T> a, T value) => a.Value = value;
-
-		public override string ToString()
-		{
-			return Value.ToString();
-		}
-	}
-
-	class TAttrOne :TAttr<string> { }
-	class TAttrTwo :TAttr<int> { }
-
-	class TFile3
-	{
-		TFolder3 _parent;
-		TFile3 _next;
-		string _name;
-		TAttr _lastAttr;
-
-		//public void SetAttr<AttrType, ValueType>(ValueType value) where AttrType : XAttr
-		//{
-		//	var a = Attr<AttrType>();
-		//	if(a == null) {
-
-		//	}
-		//	a.V
-		//}
-
-		//public T Attr<T>() where T : XAttr
-		//{
-		//	XAttr a = _lastAttr;
-		//	if(a != null) {
-		//		do {
-		//			a = a._next;
-		//			if(a is T r) return r;
-		//		} while(a != _lastAttr);
-		//	}
-		//	return null;
-		//}
-
-		//public bool Attr<T>(out T value) where T : XAttr
-		//{
-		//	XAttr a = _lastAttr;
-		//	if(a != null) {
-		//		do {
-		//			a = a._next;
-		//			if(a is T r) { value = r; return true; }
-		//		} while(a != _lastAttr);
-		//	}
-		//	value = default;
-		//	return false;
-		//}
-
-		public T Attr<T>(bool add = false) where T : TAttr, new()
-		{
-			//find
-			TAttr a = _lastAttr;
-			if(a != null) {
-				do {
-					a = a._next;
-					if(a is T r) return r;
-				} while(a != _lastAttr);
-			}
-			if(!add) return null;
-			//add
-			var t = new T();
-			if(_lastAttr != null) {
-				t._next = _lastAttr._next; //= first
-				_lastAttr._next = t;
-			} else {
-				t._next = t;
-			}
-			_lastAttr = t;
-			return t;
-		}
-
-		public void SetAttr<T>(ETA attr, T value)
-		{
-
-		}
-
-		//public bool GetAttr<T>(ETA attr, out T value)
-		//{
-
-		//}
-	}
-
-	enum ETA { One, Two }
-
-	class TFolder3 :TFile3
-	{
-		TFile3 _firstChild;
-	}
-
-	static void TestXFile2()
-	{
-		//var f = new TFile();
-		////f.SetAttr<XAttrOne>("test");
-		////f.SetAttr<XAttrOne, string>("test");
-		//f.Attr<TAttrOne>(true).Value = "test";
-		//f.Attr<TAttrTwo>(true).Value = 5;
-		//f.Attr<TAttrTwo>(true).Value = 7;
-		//string s = f.Attr<TAttrOne>();
-		//int i = f.Attr<TAttrTwo>();
-		//Print(s, f.Attr<TAttrOne>(), i, f.Attr<TAttrTwo>());
-
-		//Debug_.LibMemorySetAnchor();
-
-		////for(int i = 0; i < 1024; i++) {
-		////	var v = new TFile2();
-		////	v._id = i;
-		////	v._flags = i;
-		////	v._name = new string('a', 10);
-		////	//v.Value = null;
-
-		////	//var a = new TAttrOne[4];
-		////}
-
-		//var d = new Dictionary<int, TFile2>(1024);
-
-		//Debug_.LibMemoryPrint();
-	}
-
-	#endregion
-
-#if false
-	class TFile
-	{
-		_Folder _parent;
-		TFile _next;
-		int _id;
-		_F _flags;
-		string _name;
-		object _misc; //null or rarely used data
-
-		class TMisc
-		{
-			public string iconOrLinkTarget;
-			public object run; //string id or TFile
-		}
-
-		[Flags]
-		enum _F
-		{
-			Folder = 1,
-			Link = 2,
-		}
-
-		TFile() { } //for _Folder
-
-		//reads XML attributes and sets fields except _next
-		TFile(XmlReader r, bool isFolder)
-		{
-			if(isFolder) _flags = _F.Folder;
-			string linkTarget = null, iconPath = null, runId = null;
-			do {
-				//Print(r.Name, r.Value);
-				string an = r.Name, av = r.Value;
-				//Print(an, av);
-				if(av.Length == 0) throw new XmlException("empty attribute " + an);
-				switch(an) {
-				case "n":
-					_name = av;
-					break;
-				case "i":
-					_id = av.ToInt_();
-					break;
-				case "f":
-					_flags |= (_F)av.ToInt_() & ~(_F.Folder | _F.Link);
-					break;
-				case "path":
-					if(!isFolder) { linkTarget = av; _flags |= _F.Link; }
-					break;
-				case "icon":
-					iconPath = av;
-					break;
-				case "run":
-					if(!isFolder) runId = av;
-					break;
-				default:
-					PrintWarning("unknown XML attribute " + an, -1);
-					continue;
-				}
-			} while(r.MoveToNextAttribute());
-			if(Empty(_name)) throw new XmlException("no n attribute");
-			//if(_id == 0) throw new XmlException("no i attribute"); //no, it may be exported, then will need new id
-
-			var iconOrLink = linkTarget ?? iconPath;
-			if(runId != null) {
-				var m = new TMisc { run = runId, iconOrLinkTarget = iconOrLink };
-				_misc = m;
-			} else _misc = iconOrLink;
-
-			//Print(this);
-		}
-
-		void _SaveNode(XmlWriter x)
-		{
-			bool isFolder = IsFolder;
-			x.WriteStartElement(isFolder ? "d" : "f");
-			//name, id
-			x.WriteAttributeString("n", _name);
-			if(_id != 0) x.WriteAttributeString("i", _id.ToString());
-			//icon path or link target
-			string icon;
-			if(IsLink) x.WriteAttributeString("path", LinkTarget);
-			else if((icon = IconPath) != null) x.WriteAttributeString("icon", icon);
-			//run
-			if(_misc is TMisc m) {
-				string runId = null;
-				switch(m.run) {
-				case string s: runId = s; break;
-				case TFile fr: runId = fr._id.ToString(); break;
-				}
-				if(runId != null) x.WriteAttributeString("run", runId);
-			}
-			//folder descendants
-			if(isFolder) {
-				foreach(var v in Children(false)) v._SaveNode(x);
-			}
-			x.WriteEndElement();
-		}
-	}
-#endif
+	#region test TreeBase
 
 	class TFile :Au.Util.TreeBase<TFile>
 	{
@@ -864,7 +652,7 @@ a1,-8";
 		n1.AddChild(new TFile("three", 3, false)); //in folder
 		n1.AddChild(new TFile("four", 4, false)); //in folder
 		t.AddChild(new TFile("five", 5, false), true); //first child
-		//test AddSibling
+													   //test AddSibling
 		t.AddChild(n2 = new TFile("six", 6, false));
 		n2.AddSibling(new TFile("seven", 7, false), false); //before six
 		n2.AddSibling(new TFile("eith", 8, false), true); //after six (now at the end)
@@ -916,6 +704,8 @@ a1,-8";
 		//}
 		//#endregion
 	}
+
+	#endregion
 
 	#region TreeBase examples
 
@@ -1015,10 +805,10 @@ a1,-8";
 
 		Perf.Cpu();
 		for(int i1 = 0; i1 < 5; i1++) {
-			int r1 = 0, r2=0;
+			int r1 = 0, r2 = 0;
 			Perf.First();
 			//var k = d.Keys;
-			for(int i=1; i<int.MaxValue; i++) {
+			for(int i = 1; i < int.MaxValue; i++) {
 				if(!d.ContainsKey(i)) { r1 = i; break; }
 			}
 			Perf.Next();
@@ -1029,6 +819,191 @@ a1,-8";
 			Thread.Sleep(10);
 		}
 	}
+
+	static unsafe void TestGetBoxedPointer()
+	{
+		POINT g = (10, 20);
+		object v = g;
+		//v = new int[] { 30, 40 };
+		var h = GCHandle.Alloc(v, GCHandleType.Pinned);
+		var p = (int*)h.AddrOfPinnedObject();
+		Print(p[0], p[1], p[-1], p[-2]);
+		Print((long)p);
+
+		//var h2 = GCHandle.Alloc(v, GCHandleType.Pinned);
+		//var p2 = (int*)h2.AddrOfPinnedObject();
+		//Print((long)p2);
+
+		//var t = v.GetType();
+		//Print(t.);
+
+		//int[] x = new int[10];
+		//Type type = x.GetType();
+		//if(type.IsArray) {
+		//	Type typeOfElement = type.GetElementType();
+		//	int length = 0; // how do I get array's length????
+		//}
+	}
+
+	static unsafe void TestSqlite()
+	{
+		//Sqlite.Test(); return;
+
+		var file = @"Q:\test\sqlite.db";
+		File_.Delete(file);
+		bool isNew = !File_.ExistsAsFile(file);
+
+		Perf.Cpu();
+		string dbsql = null;
+		//dbsql = "PRAGMA encoding='UTF-16'";
+		using(var db = new SqliteDB(file, sql: dbsql)) {
+			db.Execute("CREATE TABLE test(id INTEGER PRIMARY KEY, name TEXT, re REAL, ąčę BLOB, i64 INTEGER)");
+
+			db.Execute("BEGIN");
+			using(var p = db.Statement("INSERT INTO test VALUES(?, $name, :do, ?, @ąčę);")) {
+				//using(var p = new Sqlite.Statement(db, "INSERT INTO test VALUES(?, $name, :do, zeroblob(8), @ąčę);")) {
+				p.Bind(1, 1);
+				//p.Bind(1, 20).Bind(2, "hhhhhhhhhhh").Bind(3, 4.55);
+				//p.BindZeroBlob(4, 10);
+				var a = new byte[] { 1, 2, 3 };
+				//p.Bind(4, a);
+				//fixed(byte* bp=a) p.Bind(4, bp, 2);
+				//p.BindStruct(4, 123456789012.5m); //decimal
+				//p.BindStruct(4, Guid.NewGuid());
+				//p.Bind(5, true);
+				//p.Bind(5, 123456789012);
+				//p.Bind(5, DateTime.Now, true);
+				//p.Bind(2, "HHHH");
+				//p.Bind("$name", "HHHH");
+				//p.Bind(5, AccROLE.APPLICATION);
+				//p.Bind(5, _ELong.Test);
+				//p.Bind(5, _EByte.Test);
+				//p.Bind(5, true);
+				//p.Bind(3, 0.58);
+				//p.BindStruct("@ąčę", new POINT(10, 80));
+				//p.Step();
+
+				//p.BindAll(1, "text", 5.2, a, _EByte.Test);
+				//p.BindAll(1, "text", 5.2f, Guid.NewGuid(), true);
+				//p.BindAll(1, "text", 5.2, 123456m, DateTime.UtcNow.ToBinary());
+				p.Step();
+
+				//p.Reset(clearBindings: false);
+				//p.Bind(1, 100).Bind(":do", 9.4);
+				//p.Step();
+
+				//p.Reset();
+				//p.Bind(1, 1000).BindStruct(4, Guid.NewGuid());
+				////var m = new byte[2, 2] { { 1, 2 },{ 3, 4 } };
+				////p.Bind(4, m);
+				//p.Step();
+
+				//p.Reset();
+				//p.BindAll(123456789012, null, 1.2f, Guid.NewGuid(), _ELong.Test);
+				//p.Step();
+
+				//Perf.First();
+				//for(int i = 0; i < 1000; i++) {
+				//	p.Reset();
+				//	p.Bind(1, i).Bind(2, new string('i', i));
+				//	p.Step();
+				//	if(i == 0) Perf.Next();
+				//}
+				//Perf.NW();
+			}
+			db.Execute("COMMIT");
+
+			//var a1 = new byte[] { 1, 2, 3 };
+			//db.Execute("INSERT INTO test VALUES(?, ?, ?, ?, ?);", 5, "exec", -0.1, a1, 123456789012345);
+
+			//if(db.Get(out string vi, "SELECT name FROM test WHERE id=?", 1)) Print(vi); else Print("NOT FOUND");
+			//if(db.Get(out List<byte> vi, "SELECT ąčę FROM test WHERE id=?", 1)) Print(vi); else Print("NOT FOUND");
+			//if(db.Get(out long vi, "SELECT i64 FROM test WHERE id=?", 1)) Print(DateTime.FromBinary(vi).ToLocalTime()); else Print("NOT FOUND");
+			//if(db.GetStruct(out decimal vi, "SELECT ąčę FROM test WHERE id=?", 1)) Print(vi); else Print("NOT FOUND");
+
+			//using(var p = new Sqlite.Statement(db, "SELECT name FROM test WHERE id=1")) {
+			////using(var p = new Sqlite.Statement(db, "SELECT i64 FROM test WHERE id=1")) {
+			////using(var p = new Sqlite.Statement(db, "SELECT re FROM test WHERE id=1")) {
+			////using(var p = new Sqlite.Statement(db, "SELECT ąčę FROM test WHERE id=1")) {
+			//	Perf.First(); bool was = false;
+			//	if(p.Step()) {
+			//		var v = p.GetText("name");
+			//		Print((object)v);
+			//		//var v = p.GetInt(0);
+			//		//var v = p.GetBool(0);
+			//		//var v = p.GetDouble(0);
+			//		//var v = p.GetDateTime(0, true);
+			//		//Print(v);
+			//		//var v = (int*)p.GetBlob(0, out int n);
+			//		//Print(n, v[0], v[1]);
+			//		//var v = p.GetArray<int>(0);
+			//		//var v = p.GetList<int>(0);
+			//		//var v = p.GetStruct<POINT>(0);
+			//		//Print(v);
+
+			//		//Print(p.ColumnCount, p.ColumnName(0), p.ColumnIndex("ąčę"));
+			//	}
+			//	Perf.NW();
+			//}
+
+			//using(var p = new Sqlite.Statement(db, "SELECT name FROM test")) {
+			//	Perf.First(); bool was = false;
+			//	while(p.Step()) {
+			//		var s = p.GetText(0);
+			//		if(!was) { was = true; Perf.Next(); }
+			//		//Print(s);
+			//	}
+			//	Perf.NW();
+			//}
+		}
+		Print("OK");
+	}
+	enum _ELong :long { Test = 123456789012 }
+	enum _EByte :byte { Test = 5 }
+
+	static void TestSqliteExamples()
+	{
+		//open database file
+		using(var db = new SqliteDB(@"Q:\test\sqlite.db")) {
+			//create table
+			db.Execute("CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY, name TEXT, x INT, guid BLOB, array BLOB)");
+
+			//add 2 rows of data
+			using(var trans = db.Transaction()) { //optional, but makes much faster when making multiple changes, and ensures that all or none of these changes are written to the database
+				using(var p = db.Statement("INSERT OR REPLACE INTO test VALUES(?, ?, :x, ?, ?)")) {
+					//assume we want to add values of these variables to the database table
+					int id = 1; string name = "TEXT"; long x = -10; Guid guid = Guid.NewGuid(); int[] arr = new int[] { 1, 2, 3 };
+					//add first row
+					p.Bind(1, id);
+					p.Bind(2, name).BindStruct(4, guid).Bind(5, arr);
+					p.Bind(":x", x);
+					p.Step();
+					//add second row
+					p.Reset().Bind(1, 2).Bind(":x", 123456789012345).Step(); //unbound columns are null
+				}
+				//update single row
+				db.Execute("UPDATE test SET name=?2 WHERE id=?1", 2, "two");
+				//write all this to database
+				trans.Commit();
+			}
+
+			//get data
+			using(var p = db.Statement("SELECT * FROM test")) {
+				while(p.Step()) { //for each row of results
+					Print(p.GetInt(0), p.GetText(1), p.GetLong(2));
+					Print(p.GetStruct<Guid>("guid"));
+					Print(p.GetArray<int>("array"));
+					Print("----");
+				}
+			}
+			//get single value
+			if(db.Get(out string s1, "SELECT name FROM test WHERE id=?", 1)) Print(s1); else Print("not found");
+			if(db.Get(out int i1, "PRAGMA page_size")) Print(i1);
+		}
+
+		Print("OK");
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -1045,15 +1020,16 @@ a1,-8";
 
 		try {
 #if true
+			//var d = DateTime.Now;
+			//Print(d, d.Ticks, d.ToBinary());
+			//d = DateTime.UtcNow;
+			//Print(d, d.Ticks, d.ToBinary());
 
-			TestUnusedKey();
 			//Perf.Cpu();
-			//TNodeExample();
-			//TestTFile();
-
-			//Perf.Cpu();
-			//Perf.First();
+			Perf.First();
 			//TestSqlite();
+			//TestSqliteExamples();
+			//TestGetBoxedPointer();
 			//AuDialog.Show();
 
 			//TestDB();

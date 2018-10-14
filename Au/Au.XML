@@ -515,6 +515,233 @@
             </summary>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.Linq.XDocument.Save(System.String)"/> and <see cref="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>.</exception>
         </member>
+        <member name="T:Au.Types.SLTransaction">
+            <summary>
+            A SQLite transaction or savepoint. The main purpose is to automatically rollback if not explicitly committed.
+            Usage: <c>using(var trans = new SLTransaction(db)) { ... trans.Commit(); }</c>
+            </summary>
+        </member>
+        <member name="P:Au.Types.SLTransaction.SqlOfDispose">
+            <summary>
+            Gets or sets SQL to execute when disposing this variable if not called <see cref="M:Au.Types.SLTransaction.Commit(System.String)"/> or <see cref="M:Au.Types.SLTransaction.Rollback(System.String)"/>.
+            Initially = parameter <c>sqlOfDispose</c> of constructor.
+            </summary>
+        </member>
+        <member name="M:Au.Types.SLTransaction.#ctor(Au.SqliteDB,System.String,System.String)">
+            <summary>
+            Begins a SQLite transaction and prepares for automatic rollback if not explicitly committed.
+            Usage: <c>using(var trans = new SLTransaction(db)) { ... trans.Commit(); }</c>
+            </summary>
+            <param name="db"></param>
+            <param name="sql">SQL to execute now. Default "BEGIN". For nested transaction use "SAVEPOINT name".</param>
+            <param name="sqlOfDispose">SQL to execute when disposing this variable if not called <see cref="M:Au.Types.SLTransaction.Commit(System.String)"/> or <see cref="M:Au.Types.SLTransaction.Rollback(System.String)"/>. Default "ROLLBACK". For nested transaction use "ROLLBACK TO name". See also: <see cref="P:Au.Types.SLTransaction.SqlOfDispose"/>.</param>
+            <exception cref="T:Au.Types.SLException">Failed to execute sql.</exception>
+        </member>
+        <member name="M:Au.Types.SLTransaction.Dispose">
+            <summary>
+            Calls <see cref="M:Au.Types.SLTransaction.Rollback(System.String)"/> if not called <see cref="M:Au.Types.SLTransaction.Commit(System.String)"/> or <see cref="M:Au.Types.SLTransaction.Rollback(System.String)"/>.
+            </summary>
+            <exception cref="T:Au.Types.SLException">Failed to execute <see cref="P:Au.Types.SLTransaction.SqlOfDispose"/>.</exception>
+        </member>
+        <member name="M:Au.Types.SLTransaction.Rollback(System.String)">
+            <summary>
+            Executes a rollback SQL (if in transaction) and disables <see cref="M:Au.Types.SLTransaction.Dispose"/>.
+            Usually don't need to call this function explicitly. It is implicitly called when disposing this variable if the transaction was not committed.
+            </summary>
+            <param name="sql">SQL to execute. Default: <see cref="P:Au.Types.SLTransaction.SqlOfDispose"/>.</param>
+            <exception cref="T:Au.Types.SLException">Failed to execute sql.</exception>
+        </member>
+        <member name="M:Au.Types.SLTransaction.Commit(System.String)">
+            <summary>
+            Executes a commit SQL and disables <see cref="M:Au.Types.SLTransaction.Dispose"/>.
+            </summary>
+            <param name="sql">SQL to execute. Default "COMMIT". For nested transaction use "RELEASE name".</param>
+            <exception cref="T:Au.Types.SLException">Failed to execute sql.</exception>
+        </member>
+        <member name="T:Au.Types.SLIndexOrName">
+            <summary>
+            Used for parameter types of some <see cref="T:Au.SqliteStatement"/> functions.
+            Has implicit conversions from int and string. If int, the value is interpreted as index. If string - as name.
+            </summary>
+        </member>
+        <member name="T:Au.Types.SLException">
+            <summary>
+            Exception thrown by <see cref="T:Au.SqliteDB"/>, <see cref="T:Au.SqliteStatement"/> and related types.
+            </summary>
+        </member>
+        <member name="P:Au.Types.SLException.ErrorCode">
+            <summary>
+            The called SQLite API function returned this error code.
+            </summary>
+        </member>
+        <member name="T:Au.Types.SLFlags">
+            <summary>
+            Flags for <see cref="T:Au.SqliteDB"/> constructor.
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLFlags.ReadWriteCreate">
+            <summary>Defaut flags. Includes SQLITE_OPEN_READWRITE and SQLITE_OPEN_CREATE.</summary>
+        </member>
+        <member name="T:Au.Types.SLError">
+            <summary>
+            SQLite API error codes. Also two success codes - Row and Done.
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Ok">
+            <summary>
+            Successful result
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Error">
+            <summary>
+            SQL error or missing database
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Internal">
+            <summary>
+            Internal logic error in SQLite
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Perm">
+            <summary>
+            Access permission denied
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Abort">
+            <summary>
+            Callback routine requested an abort
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Busy">
+            <summary>
+            The database file is locked
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Locked">
+            <summary>
+            A table in the database is locked
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.NoMem">
+            <summary>
+            A malloc() failed
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.ReadOnly">
+            <summary>
+            Attempt to write a readonly database
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Interrupt">
+            <summary>
+            Operation terminated by sqlite3_interrupt()
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.IoErr">
+            <summary>
+            Some kind of disk I/O error occurred
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Corrupt">
+            <summary>
+            The database disk image is malformed
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.NotFound">
+            <summary>
+            Unknown opcode in sqlite3_file_control()
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Full">
+            <summary>
+            Insertion failed because database is full
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.CantOpen">
+            <summary>
+            Unable to open the database file
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Protocol">
+            <summary>
+            Database lock protocol error
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Empty">
+            <summary>
+            Database is empty
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Schema">
+            <summary>
+            The database schema changed
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.TooBig">
+            <summary>
+            String or BLOB exceeds size limit
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Constraint">
+            <summary>
+            Abort due to constraint violation
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Mismatch">
+            <summary>
+            Data type mismatch
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Misuse">
+            <summary>
+            Library used incorrectly
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.NoLfs">
+            <summary>
+            Uses OS features not supported on host
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Auth">
+            <summary>
+            Authorization denied
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Format">
+            <summary>
+            Auxiliary database format error
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Range">
+            <summary>
+            2nd parameter to sqlite3_bind out of range
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.NotADb">
+            <summary>
+            File opened that is not a database file
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Notice">
+            <summary>
+            Notifications from sqlite3_log()
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Warning">
+            <summary>
+            Warnings from sqlite3_log()
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Row">
+            <summary>
+            sqlite3_step() has another row ready
+            </summary>
+        </member>
+        <member name="F:Au.Types.SLError.Done">
+            <summary>
+            sqlite3_step() has finished executing
+            </summary>
+        </member>
         <member name="T:Au.Types.BIEvents">
             <summary>
             Used with <see cref="T:Au.BlockUserInput"/> class to specify what user input types to block (keys, mouse).
@@ -1779,6 +2006,21 @@
             <param name="index"></param>
             <param name="values"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Types.ExtensionMethods.AppendSentence(System.Text.StringBuilder,System.String,System.Boolean)">
+            <summary>
+            Appends string as new correctly formatted sentence.
+            Returns this.
+            </summary>
+            <param name="t"></param>
+            <param name="s"></param>
+            <param name="noUcase">Don't make the first character uppercase.</param>
+            <remarks>
+            If s is null or "", does nothing.
+            If this is not empty, appends space.
+            If s starts with a lowercase character, makes it uppercase, unless this ends with a character other than '.'.
+            Appends '.' if s does not end with '.', ';', ':', ',', '!' or '?'.
+            </remarks>
         </member>
         <member name="T:Au.Types.WICFlags">
             <summary>
@@ -6190,6 +6432,419 @@
             Closes thread handle. If suspended, resumes thread.
             </summary>
         </member>
+        <member name="T:Au.SqliteDB">
+            <summary>
+            A SQLite database connection.
+            Creates/opens/closes database file or in-memory database. Executes SQL, etc.
+            </summary>
+            <remarks>
+            This class wraps a SQLite API object sqlite3* and related sqlite3_x functions. They are documented perfectly in the SQLite website.
+            Uses this unmanaged dll: Folders.ThisApp + @"Dll\64bit\sqlite3.dll". In 32-bit process - "32bit" instead of "64bit".
+            </remarks>
+            <seealso cref="T:Au.SqliteStatement"/>
+            <example>
+            <code><![CDATA[
+            //open database file
+            using(var db = new SqliteDB(@"Q:\test\sqlite.db")) {
+            	//create table
+            	db.Execute("CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY, name TEXT, x INT, guid BLOB, array BLOB)");
+            	
+            	//add 2 rows of data
+            	using(var trans = db.Transaction()) { //optional, but makes much faster when making multiple changes, and ensures that all or none of these changes are written to the database
+            		using(var p = db.Statement("INSERT OR REPLACE INTO test VALUES(?, ?, :x, ?, ?)")) {
+            			//assume we want to add values of these variables to the database table
+            			int id = 1; string name = "TEXT"; long x = -10; Guid guid = Guid.NewGuid(); int[] arr = new int[] { 1, 2, 3 };
+            			//add first row
+            			p.Bind(1, id);
+            			p.Bind(2, name).BindStruct(4, guid).Bind(5, arr);
+            			p.Bind(":x", x);
+            			p.Step();
+            			//add second row
+            			p.Reset().Bind(1, 2).Bind(":x", 123456789012345).Step(); //unbound columns are null
+            		}
+            		//update single row
+            		db.Execute("UPDATE test SET name=?2 WHERE id=?1", 2, "two");
+            		//write all this to database
+            		trans.Commit();
+            	}
+            
+            	//get data
+            	using(var p = db.Statement("SELECT * FROM test")) {
+            		while(p.Step()) { //for each row of results
+            			Print(p.GetInt(0), p.GetText(1), p.GetLong(2));
+            			Print(p.GetStruct<Guid>("guid"));
+            			Print(p.GetArray<int>("array"));
+            			Print("----");
+            		}
+            	}
+            	//get single value
+            	if(db.Get(out string s1, "SELECT name FROM test WHERE id=?", 1)) Print(s1); else Print("not found");
+            	if(db.Get(out int i1, "PRAGMA page_size")) Print(i1);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.SqliteDB.#ctor(System.String,Au.Types.SLFlags,System.String)">
+            <summary>
+            Opens or creates a database file.
+            </summary>
+            <param name="file">
+            Database file.
+            Special strings:
+            ":memory:" - create a private, temporary in-memory database.
+            "" - create a private, temporary on-disk database.
+            Starts with "file:" - see sqlite3_open_v2 documentation in SQLite website.
+            If not one of above special strings, must be full path, and can contain environment variables etc, see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>
+            </param>
+            <param name="flags">sqlite3_open_v2 flags, documanted in SQLite website. Default: read-write, create file if does not exist (and parent directory).</param>
+            <param name="sql">
+            SQL to execute. For example, one or more ;-separated PRAGMA statements to configure the database connection. Or even "CREATE TABLE IF NOT EXISTS ...".
+            This function also always executes "PRAGMA foreign_keys=ON;PRAGMA secure_delete=ON;".
+            </param>
+            <exception cref="T:System.ArgumentException">Not full path.</exception>
+            <exception cref="T:Au.Types.SLException">Failed to open database or execute sql.</exception>
+            <remarks>
+            Calls sqlite3_open_v2.
+            <note type="note">If a variable of this class is used by multiple threads, use <c>lock(variable) {  }</c> where need.</note>
+            </remarks>
+        </member>
+        <member name="M:Au.SqliteDB.Dispose">
+            <summary>
+            Calls sqlite3_close_v2.
+            If fails, prints warning.
+            </summary>
+        </member>
+        <member name="M:Au.SqliteDB.Finalize">
+            
+        </member>
+        <member name="M:Au.SqliteDB.op_Implicit(Au.SqliteDB)~System.IntPtr">
+            <summary>sqlite3*</summary>
+        </member>
+        <member name="P:Au.SqliteDB.Handle">
+            <summary>sqlite3*</summary>
+        </member>
+        <member name="M:Au.SqliteDB.Execute(System.String)">
+            <summary>
+            Calls sqlite3_exec to execute one or more SQL statements that don't return data.
+            </summary>
+            <param name="sql">SQL statement, or several ;-separated statements.</param>
+            <exception cref="T:Au.Types.SLException">Failed to execute sql.</exception>
+        </member>
+        <member name="M:Au.SqliteDB.Execute(System.String,System.Object[])">
+            <summary>
+            Executes single SQL statement that does not return data. Binds values.
+            </summary>
+            <param name="sql">Single SQL statement.</param>
+            <param name="bind">
+            Values that will replace ? characters in sql.
+            Read about SQL parameters in SQLite website. Supported types: <see cref="M:Au.SqliteStatement.BindAll(System.Object[])"/>. Example: <see cref="T:Au.SqliteDB"/>.
+            </param>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+            <exception cref="T:System.NotSupportedException">sql contains more than single SQL statement.</exception>
+        </member>
+        <member name="M:Au.SqliteDB.Statement(System.String)">
+            <summary>
+            Returns <c>new Statement(this, sql)</c>.
+            </summary>
+            <param name="sql">Single SQL statement. This function does not execute it.</param>
+            <seealso cref="T:Au.SqliteStatement"/>
+        </member>
+        <member name="M:Au.SqliteDB.Statement(System.String,System.Object[])">
+            <summary>
+            Returns <c>new Statement(this, sql).BindAll(bind)</c>.
+            </summary>
+            <param name="sql">Single SQL statement. This function does not execute it.</param>
+            <param name="bind">
+            Values that will replace ? characters in sql. Optional.
+            Read about SQL parameters in SQLite website. Supported types: <see cref="M:Au.SqliteStatement.BindAll(System.Object[])"/>. Example: <see cref="T:Au.SqliteDB"/>.
+            </param>
+            <seealso cref="T:Au.SqliteStatement"/>
+            <seealso cref="M:Au.SqliteStatement.BindAll(System.Object[])"/>
+        </member>
+        <member name="M:Au.SqliteDB.Get(System.Int32@,System.String,System.Object[])">
+            <summary>
+            Executes single SQL statement and gets single value.
+            Returns false if the statement returned no data.
+            </summary>
+            <param name="value">Receives data.</param>
+            <param name="sql">SQL statement.</param>
+            <param name="bind">
+            Values that will replace ? characters in sql.
+            Read about SQL parameters in SQLite website. Supported types: <see cref="M:Au.SqliteStatement.BindAll(System.Object[])"/>. Example: <see cref="T:Au.SqliteDB"/>.
+            </param>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+            <exception cref="T:System.NotSupportedException">sql contains more than single SQL statement.</exception>
+            <remarks>
+            The Get(out int, ...) overload also can be used to get uint, short, ushort, byte, sbyte, enum. Will need to cast from int.
+            The Get(out long, ...) overload also can be used to get ulong, 64-bit enum, maybe DateTime.
+            The Get(out double, ...) overload also can be used to get float.
+            Use <see cref="M:Au.SqliteDB.GetStruct``1(``0@,System.String,System.Object[])"/> for other value types - decimal, Guid, Rect, etc.
+            </remarks>
+        </member>
+        <member name="M:Au.SqliteDB.Get(System.Int64@,System.String,System.Object[])">
+            <inheritdoc cref="M:Au.SqliteDB.Get(System.Int32@,System.String,System.Object[])"/>
+        </member>
+        <member name="M:Au.SqliteDB.Get(System.Boolean@,System.String,System.Object[])">
+            <inheritdoc cref="M:Au.SqliteDB.Get(System.Int32@,System.String,System.Object[])"/>
+        </member>
+        <member name="M:Au.SqliteDB.Get(System.Double@,System.String,System.Object[])">
+            <inheritdoc cref="M:Au.SqliteDB.Get(System.Int32@,System.String,System.Object[])"/>
+        </member>
+        <member name="M:Au.SqliteDB.Get(System.String@,System.String,System.Object[])">
+            <inheritdoc cref="M:Au.SqliteDB.Get(System.Int32@,System.String,System.Object[])"/>
+        </member>
+        <member name="M:Au.SqliteDB.Get``1(``0[]@,System.String,System.Object[])">
+            <inheritdoc cref="M:Au.SqliteDB.Get(System.Int32@,System.String,System.Object[])"/>
+        </member>
+        <member name="M:Au.SqliteDB.Get``1(System.Collections.Generic.List{``0}@,System.String,System.Object[])">
+            <inheritdoc cref="M:Au.SqliteDB.Get(System.Int32@,System.String,System.Object[])"/>
+        </member>
+        <member name="M:Au.SqliteDB.GetStruct``1(``0@,System.String,System.Object[])">
+            <inheritdoc cref="M:Au.SqliteDB.Get(System.Int32@,System.String,System.Object[])"/>
+        </member>
+        <member name="P:Au.SqliteDB.LastInsertRowid">
+            <summary>
+            sqlite3_last_insert_rowid.
+            </summary>
+        </member>
+        <member name="P:Au.SqliteDB.Changes">
+            <summary>
+            sqlite3_changes.
+            </summary>
+        </member>
+        <member name="P:Au.SqliteDB.IsInTransaction">
+            <summary>
+            0 == sqlite3_get_autocommit.
+            </summary>
+        </member>
+        <member name="M:Au.SqliteDB.Transaction(System.String,System.String)">
+            <summary>
+            Returns <c>new SLTransaction(this, sql, sqlOfDispose)</c>.
+            See <see cref="M:Au.Types.SLTransaction.#ctor(Au.SqliteDB,System.String,System.String)"/>.
+            </summary>
+            <param name="sql">SQL to execute now. Default "BEGIN".</param>
+            <param name="sqlOfDispose">SQL to execute when disposing the <b>SLTransaction</b> variable. Default "ROLLBACK".</param>
+        </member>
+        <member name="P:Au.SqliteDB.IsUtf16">
+            <summary>
+            Returns true if default database text encoding is not UTF-8.
+            </summary>
+        </member>
+        <member name="T:Au.SqliteStatement">
+            <summary>
+            Creates and executes a SQLite prepared statement.
+            </summary>
+            <threadsafety static="true" instance="false"/>
+            <remarks>
+            This class wraps a SQLite API object sqlite3_stmt* and related sqlite3_x functions. They are documented perfectly in the SQLite website.
+            More info and example: <see cref="T:Au.SqliteDB"/>.
+            <note type="important">A variable of this class can be used by multiple threads, but not simultaneously. Use <c>lock(database) {  }</c> where need.</note>
+            </remarks>
+        </member>
+        <member name="M:Au.SqliteStatement.#ctor(Au.SqliteDB,System.String,System.Boolean)">
+            <summary>
+            Calls sqlite3_prepare16_v3.
+            </summary>
+            <param name="db"></param>
+            <param name="sql">Single SQL statement.</param>
+            <param name="persistent">Use flag SQLITE_PREPARE_PERSISTENT.</param>
+            <exception cref="T:System.ArgumentNullException">db is null.</exception>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+            <exception cref="T:System.NotSupportedException">sql contains more than single SQL statement.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Dispose">
+            <summary>
+            Calls sqlite3_finalize.
+            </summary>
+        </member>
+        <member name="M:Au.SqliteStatement.Finalize">
+            
+        </member>
+        <member name="M:Au.SqliteStatement.op_Implicit(Au.SqliteStatement)~System.IntPtr">
+            <summary>sqlite3_stmt*</summary>
+        </member>
+        <member name="P:Au.SqliteStatement.Handle">
+            <summary>sqlite3_stmt*</summary>
+        </member>
+        <member name="P:Au.SqliteStatement.DB">
+            
+        </member>
+        <member name="M:Au.SqliteStatement.Step">
+            <summary>
+            Calls sqlite3_step.
+            Returns true if results data available (sqlite3_step returned SQLITE_ROW).
+            </summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Reset(System.Boolean,System.Boolean)">
+            <summary>
+            Calls sqlite3_reset and/or sqlite3_clear_bindings. Returns self.
+            </summary>
+            <param name="resetStatement">Call sqlite3_reset. Default true.</param>
+            <param name="clearBindings">Call sqlite3_clear_bindings. Default true.</param>
+        </member>
+        <member name="M:Au.SqliteStatement.Bind(Au.Types.SLIndexOrName,System.Int32)">
+            <summary>Calls sqlite3_bind_int. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Bind(Au.Types.SLIndexOrName,System.UInt32)">
+            <summary>Calls sqlite3_bind_int. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Bind(Au.Types.SLIndexOrName,System.Int64)">
+            <summary>Calls sqlite3_bind_int64. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Bind(Au.Types.SLIndexOrName,System.UInt64)">
+            <summary>Calls sqlite3_bind_int64. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Bind(Au.Types.SLIndexOrName,System.Boolean)">
+            <summary>Calls sqlite3_bind_int(value ? 1 : 0). Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Bind``1(Au.Types.SLIndexOrName,``0)">
+            <summary>Binds an enum value as int or long. Calls sqlite3_bind_int or sqlite3_bind_int64. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Bind(Au.Types.SLIndexOrName,System.Double)">
+            <summary>Calls sqlite3_bind_double. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Bind(Au.Types.SLIndexOrName,System.String)">
+            <summary>Calls sqlite3_bind_text16. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Bind(Au.Types.SLIndexOrName,System.Void*,System.Int64)">
+            <summary>Calls sqlite3_bind_blob64. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Bind``1(Au.Types.SLIndexOrName,``0[])">
+            <summary>Calls sqlite3_bind_blob64. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.Bind``1(Au.Types.SLIndexOrName,System.Collections.Generic.List{``0})">
+            <summary>Calls sqlite3_bind_blob64. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+        </member>
+        <member name="M:Au.SqliteStatement.BindStruct``1(Au.Types.SLIndexOrName,``0)">
+            <summary>Binds a value as blob. Calls sqlite3_bind_blob64. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+            <remarks>Can be any value type that does not contain fields of reference types. Examples: Guid, Point, int, decimal.</remarks>
+        </member>
+        <member name="M:Au.SqliteStatement.BindNull(Au.Types.SLIndexOrName)">
+            <summary>Calls sqlite3_bind_null. Returns self.</summary>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+            <remarks>Usually don't need to call this function. Unset parameter values are null. The Bind(string/void*/Array/List) functions set null too if the value is null.</remarks>
+        </member>
+        <member name="M:Au.SqliteStatement.BindObject(System.Int32,System.Object)">
+            <summary>
+            Used by <see cref="M:Au.SqliteStatement.BindAll(System.Object[])"/>.
+            </summary>
+        </member>
+        <member name="M:Au.SqliteStatement.BindAll(System.Object[])">
+            <summary>
+            Binds multiple values of any supported types.
+            Returns self.
+            </summary>
+            <param name="values">
+            Values that will replace ? characters in sql.
+            Read about SQL parameters in SQLite website. Example: <see cref="T:Au.SqliteDB"/>.
+            Supported types:
+            int, uint, byte, sbyte, short, ushort - calls sqlite3_bind_int.
+            bool - calls sqlite3_bind_int(true?1:0).
+            long, ulong - calls sqlite3_bind_int64.
+            double, float - calls sqlite3_bind_double.
+            string - calls sqlite3_bind_text16.
+            decimal - calls sqlite3_bind_blob64.
+            Guid - calls sqlite3_bind_blob64.
+            An enum type - calls sqlite3_bind_int or sqlite3_bind_int64.
+            </param>
+            <exception cref="T:System.NotSupportedException">A value is of an unsupported type.</exception>
+            <exception cref="T:Au.Types.SLException">Failed.</exception>
+            <remarks>
+            For each parameter calls a <b>sqlite3_bind_x</b> function depending on type. Uses index 1, 2 and so on.
+            This function is an alternative to calling <b>BindX</b> functions for each parameter. However it supports less types and adds boxing overhead.
+            Does not call sqlite3_reset and sqlite3_clear_bindings. If need, call <see cref="M:Au.SqliteStatement.Reset(System.Boolean,System.Boolean)"/> before.
+            </remarks>
+        </member>
+        <member name="M:Au.SqliteStatement.GetInt(Au.Types.SLIndexOrName)">
+            <summary>
+            Returns <c>sqlite3_column_int(column)</c>.
+            </summary>
+            <remarks>
+            Use this function to get integer values of size 4, 2 or 1 bytes: int, uint, short, ushort, byte, sbyte, enum.
+            </remarks>
+        </member>
+        <member name="M:Au.SqliteStatement.GetLong(Au.Types.SLIndexOrName)">
+            <summary>
+            Returns <c>sqlite3_column_int64(column)</c>.
+            </summary>
+            <remarks>
+            Use this function to get integer values of size 8 bytes: long, ulong, 64-bit enum, maybe DateTime.
+            </remarks>
+        </member>
+        <member name="M:Au.SqliteStatement.GetBool(Au.Types.SLIndexOrName)">
+            <summary>
+            Returns <c>sqlite3_column_int64(column) != 0</c>.
+            </summary>
+        </member>
+        <member name="M:Au.SqliteStatement.GetDouble(Au.Types.SLIndexOrName)">
+            <summary>
+            Returns <c>sqlite3_column_double(column)</c>.
+            </summary>
+        </member>
+        <member name="M:Au.SqliteStatement.GetText(Au.Types.SLIndexOrName)">
+            <summary>
+            Returns <c>sqlite3_column_text(column)</c> as string.
+            </summary>
+        </member>
+        <member name="M:Au.SqliteStatement.GetBlob(Au.Types.SLIndexOrName,System.Int32@)">
+            <summary>
+            Returns <c>sqlite3_column_blob(column)</c> and gets blob size.
+            </summary>
+            <param name="column"></param>
+            <param name="nBytes">Blob size.</param>
+        </member>
+        <member name="M:Au.SqliteStatement.GetArray``1(Au.Types.SLIndexOrName)">
+            <summary>
+            Returns <c>sqlite3_column_blob(column)</c> as array.
+            </summary>
+        </member>
+        <member name="M:Au.SqliteStatement.GetList``1(Au.Types.SLIndexOrName)">
+            <summary>
+            Returns <c>sqlite3_column_blob(column)</c> as List.
+            </summary>
+        </member>
+        <member name="M:Au.SqliteStatement.GetStruct``1(Au.Types.SLIndexOrName)">
+            <summary>
+            Returns <c>sqlite3_column_blob(column)</c> as a variable of any value type that does not have fields of reference types.
+            </summary>
+        </member>
+        <member name="P:Au.SqliteStatement.ColumnCount">
+            <summary>
+            sqlite3_column_count.
+            </summary>
+        </member>
+        <member name="M:Au.SqliteStatement.ColumnName(System.Int32)">
+            <summary>
+            sqlite3_column_name.
+            </summary>
+        </member>
+        <member name="M:Au.SqliteStatement.ColumnIndex(System.String)">
+            <summary>
+            Finds column by name in results.
+            Returns 0-based index, or -1 if not found.
+            </summary>
+            <param name="name">Column name in results, as returned by sqlite3_column_name. Case-sensitive.</param>
+        </member>
+        <member name="M:Au.SqliteStatement._WarnGet(System.String)">
+            <summary>
+            Called by GetX functions when sqlite3_column_x returns null/0.
+            Shows warning if sqlite3_errcode is not 0 or Row.
+            Does not throw exception because it is not thread-safe.
+            </summary>
+            <param name="func"></param>
+        </member>
         <member name="T:Au.Util.IconsAsync">
             <summary>
             Gets file icons asynchronously.
@@ -6600,6 +7255,14 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
+        </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
         </member>
         <member name="T:Au.Util.ILReader">
             <summary>
@@ -7361,6 +8024,20 @@
             <param name="p">'\0'-terminated ANSI string. Can be null.</param>
             <param name="s">Must contain only ASCII characters. Cannot be null.</param>
         </member>
+        <member name="M:Au.Util.LibCharPtr.AsciiEquals(System.Byte*,System.String)">
+            <summary>
+            Returns true if unmanaged ANSI string p and string s are equal. Case-sensitive.
+            </summary>
+            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
+            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
+        </member>
+        <member name="M:Au.Util.LibCharPtr.AsciiEqualsI(System.Byte*,System.String)">
+            <summary>
+            Returns true if unmanaged ANSI string p and string s are equal. Case-insensitive.
+            </summary>
+            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
+            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
+        </member>
         <member name="M:Au.Util.LibCharPtr.AsciiFindChar(System.Byte*,System.Int32,System.Byte)">
             <summary>
             Finds character in unmanaged ANSI string which can be binary.
@@ -7384,6 +8061,13 @@
             </summary>
             <param name="p">Native string.</param>
             <param name="len">p length. Returns false if it is != s.Length.</param>
+            <param name="s">Managed string.</param>
+        </member>
+        <member name="M:Au.Util.LibCharPtr.Equals(System.Byte*,System.Byte[])">
+            <summary>
+            Case-sensitive compares native ANSI string with managed ANSI string and returns true if they are equal.
+            </summary>
+            <param name="p">Native string.</param>
             <param name="s">Managed string.</param>
         </member>
         <member name="T:Au.Util.TreeBase`1">
@@ -12379,6 +13063,11 @@
             <param name="t">This string.</param>
             <param name="limit">If the final string is longer than <paramref name="limit"/>, get its substring 0 to <paramref name="limit"/>-1 with appended '…' character. The enclosing "" are not counted.</param>
             <param name="quote">Enclose in "".</param>
+        </member>
+        <member name="M:Au.String_.SqlEscape_(System.String)">
+            <summary>
+            Replaces all "'" with "''".
+            </summary>
         </member>
         <member name="M:Au.String_.IsAscii_(System.String)">
             <summary>
@@ -21347,1063 +22036,6 @@
             You can make CPU speed constant in Control Panel -> Power Options -> ... Advanced -> Processor power management -> Minimum or maximum power state.
             There are programs that show current CPU speed. For example HWMonitor.
             </remarks>
-        </member>
-        <member name="F:SQLite.CreateFlags.None">
-            <summary>
-            Use the default creation options
-            </summary>
-        </member>
-        <member name="F:SQLite.CreateFlags.ImplicitPK">
-            <summary>
-            Create a primary key index for a property called 'Id' (case-insensitive).
-            This avoids the need for the [PrimaryKey] attribute.
-            </summary>
-        </member>
-        <member name="F:SQLite.CreateFlags.ImplicitIndex">
-            <summary>
-            Create indices for properties ending in 'Id' (case-insensitive).
-            </summary>
-        </member>
-        <member name="F:SQLite.CreateFlags.AllImplicit">
-            <summary>
-            Create a primary key for a property called 'Id' and
-            create an indices for properties ending in 'Id' (case-insensitive).
-            </summary>
-        </member>
-        <member name="F:SQLite.CreateFlags.AutoIncPK">
-            <summary>
-            Force the primary key property to be auto incrementing.
-            This avoids the need for the [AutoIncrement] attribute.
-            The primary key property on the class should have type int or long.
-            </summary>
-        </member>
-        <member name="F:SQLite.CreateFlags.FullTextSearch3">
-            <summary>
-            Create virtual table using FTS3
-            </summary>
-        </member>
-        <member name="F:SQLite.CreateFlags.FullTextSearch4">
-            <summary>
-            Create virtual table using FTS4
-            </summary>
-        </member>
-        <member name="T:SQLite.SQLiteConnection">
-            <summary>
-            An open connection to a SQLite database.
-            </summary>
-        </member>
-        <member name="P:SQLite.SQLiteConnection.DatabasePath">
-            <summary>
-            Gets the database path used by this connection.
-            </summary>
-        </member>
-        <member name="P:SQLite.SQLiteConnection.LibVersionNumber">
-            <summary>
-            Gets the SQLite library version number. 3007014 would be v3.7.14
-            </summary>
-        </member>
-        <member name="P:SQLite.SQLiteConnection.TimeExecution">
-            <summary>
-            Whether Trace lines should be written that show the execution time of queries.
-            </summary>
-        </member>
-        <member name="P:SQLite.SQLiteConnection.Trace">
-            <summary>
-            Whether to writer queries to <see cref="P:SQLite.SQLiteConnection.Tracer"/> during execution.
-            </summary>
-            <value>The tracer.</value>
-        </member>
-        <member name="P:SQLite.SQLiteConnection.Tracer">
-            <summary>
-            The delegate responsible for writing trace lines.
-            </summary>
-            <value>The tracer.</value>
-        </member>
-        <member name="P:SQLite.SQLiteConnection.StoreDateTimeAsTicks">
-            <summary>
-            Whether to store DateTime properties as ticks (true) or strings (false).
-            </summary>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.#ctor(System.String,System.Boolean,System.Object)">
-            <summary>
-            Constructs a new SQLiteConnection and opens a SQLite database specified by databasePath.
-            </summary>
-            <param name="databasePath">
-            Specifies the path to the database file.
-            </param>
-            <param name="storeDateTimeAsTicks">
-            Specifies whether to store DateTime properties as ticks (true) or strings (false). You
-            absolutely do want to store them as Ticks in all new projects. The value of false is
-            only here for backwards compatibility. There is a *significant* speed advantage, with no
-            down sides, when setting storeDateTimeAsTicks = true.
-            If you use DateTimeOffset properties, it will be always stored as ticks regardingless
-            the storeDateTimeAsTicks parameter.
-            </param>
-            <param name="key">
-            Specifies the encryption key to use on the database. Should be a string or a byte[].
-            </param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.#ctor(System.String,SQLite.SQLiteOpenFlags,System.Boolean,System.Object)">
-            <summary>
-            Constructs a new SQLiteConnection and opens a SQLite database specified by databasePath.
-            </summary>
-            <param name="databasePath">
-            Specifies the path to the database file.
-            </param>
-            <param name="openFlags">
-            Flags controlling how the connection should be opened.
-            </param>
-            <param name="storeDateTimeAsTicks">
-            Specifies whether to store DateTime properties as ticks (true) or strings (false). You
-            absolutely do want to store them as Ticks in all new projects. The value of false is
-            only here for backwards compatibility. There is a *significant* speed advantage, with no
-            down sides, when setting storeDateTimeAsTicks = true.
-            If you use DateTimeOffset properties, it will be always stored as ticks regardingless
-            the storeDateTimeAsTicks parameter.
-            </param>
-            <param name="key">
-            Specifies the encryption key to use on the database. Should be a string or a byte[].
-            </param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Quote(System.String)">
-            <summary>
-            Convert an input string to a quoted SQL string that can be safely used in queries.
-            </summary>
-            <returns>The quoted string.</returns>
-            <param name="unsafeString">The unsafe string to quote.</param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.SetKey(System.String)">
-            <summary>
-            Sets the key used to encrypt/decrypt the database with "pragma key = ...".
-            This must be the first thing you call before doing anything else with this connection
-            if your database is encrypted.
-            This only has an effect if you are using the SQLCipher nuget package.
-            </summary>
-            <param name="key">Ecryption key plain text that is converted to the real encryption key using PBKDF2 key derivation</param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.SetKey(System.Byte[])">
-            <summary>
-            Sets the key used to encrypt/decrypt the database.
-            This must be the first thing you call before doing anything else with this connection
-            if your database is encrypted.
-            This only has an effect if you are using the SQLCipher nuget package.
-            </summary>
-            <param name="key">256-bit (32 byte) ecryption key data</param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.EnableLoadExtension(System.Boolean)">
-            <summary>
-            Enable or disable extension loading.
-            </summary>
-        </member>
-        <member name="P:SQLite.SQLiteConnection.BusyTimeout">
-            <summary>
-            Sets a busy handler to sleep the specified amount of time when a table is locked.
-            The handler will sleep multiple times until a total time of <see cref="P:SQLite.SQLiteConnection.BusyTimeout"/> has accumulated.
-            </summary>
-        </member>
-        <member name="P:SQLite.SQLiteConnection.TableMappings">
-            <summary>
-            Returns the mappings from types to tables that the connection
-            currently understands.
-            </summary>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.GetMapping(System.Type,SQLite.CreateFlags)">
-            <summary>
-            Retrieves the mapping that is automatically generated for the given type.
-            </summary>
-            <param name="type">
-            The type whose mapping to the database is returned.
-            </param>
-            <param name="createFlags">
-            Optional flags allowing implicit PK and indexes based on naming conventions
-            </param>
-            <returns>
-            The mapping represents the schema of the columns of the database and contains
-            methods to set and get properties of objects.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.GetMapping``1(SQLite.CreateFlags)">
-            <summary>
-            Retrieves the mapping that is automatically generated for the given type.
-            </summary>
-            <param name="createFlags">
-            Optional flags allowing implicit PK and indexes based on naming conventions
-            </param>
-            <returns>
-            The mapping represents the schema of the columns of the database and contains
-            methods to set and get properties of objects.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.DropTable``1">
-            <summary>
-            Executes a "drop table" on the database.  This is non-recoverable.
-            </summary>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.DropTable(SQLite.TableMapping)">
-            <summary>
-            Executes a "drop table" on the database.  This is non-recoverable.
-            </summary>
-            <param name="map">
-            The TableMapping used to identify the table.
-            </param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateTable``1(SQLite.CreateFlags)">
-            <summary>
-            Executes a "create table if not exists" on the database. It also
-            creates any specified indexes on the columns of the table. It uses
-            a schema automatically generated from the specified type. You can
-            later access this schema by calling GetMapping.
-            </summary>
-            <returns>
-            Whether the table was created or migrated.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateTable(System.Type,SQLite.CreateFlags)">
-            <summary>
-            Executes a "create table if not exists" on the database. It also
-            creates any specified indexes on the columns of the table. It uses
-            a schema automatically generated from the specified type. You can
-            later access this schema by calling GetMapping.
-            </summary>
-            <param name="ty">Type to reflect to a database table.</param>
-            <param name="createFlags">Optional flags allowing implicit PK and indexes based on naming conventions.</param>
-            <returns>
-            Whether the table was created or migrated.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateTables``2(SQLite.CreateFlags)">
-            <summary>
-            Executes a "create table if not exists" on the database for each type. It also
-            creates any specified indexes on the columns of the table. It uses
-            a schema automatically generated from the specified type. You can
-            later access this schema by calling GetMapping.
-            </summary>
-            <returns>
-            Whether the table was created or migrated for each type.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateTables``3(SQLite.CreateFlags)">
-            <summary>
-            Executes a "create table if not exists" on the database for each type. It also
-            creates any specified indexes on the columns of the table. It uses
-            a schema automatically generated from the specified type. You can
-            later access this schema by calling GetMapping.
-            </summary>
-            <returns>
-            Whether the table was created or migrated for each type.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateTables``4(SQLite.CreateFlags)">
-            <summary>
-            Executes a "create table if not exists" on the database for each type. It also
-            creates any specified indexes on the columns of the table. It uses
-            a schema automatically generated from the specified type. You can
-            later access this schema by calling GetMapping.
-            </summary>
-            <returns>
-            Whether the table was created or migrated for each type.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateTables``5(SQLite.CreateFlags)">
-            <summary>
-            Executes a "create table if not exists" on the database for each type. It also
-            creates any specified indexes on the columns of the table. It uses
-            a schema automatically generated from the specified type. You can
-            later access this schema by calling GetMapping.
-            </summary>
-            <returns>
-            Whether the table was created or migrated for each type.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateTables(SQLite.CreateFlags,System.Type[])">
-            <summary>
-            Executes a "create table if not exists" on the database for each type. It also
-            creates any specified indexes on the columns of the table. It uses
-            a schema automatically generated from the specified type. You can
-            later access this schema by calling GetMapping.
-            </summary>
-            <returns>
-            Whether the table was created or migrated for each type.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateIndex(System.String,System.String,System.String[],System.Boolean)">
-            <summary>
-            Creates an index for the specified table and columns.
-            </summary>
-            <param name="indexName">Name of the index to create</param>
-            <param name="tableName">Name of the database table</param>
-            <param name="columnNames">An array of column names to index</param>
-            <param name="unique">Whether the index should be unique</param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateIndex(System.String,System.String,System.String,System.Boolean)">
-            <summary>
-            Creates an index for the specified table and column.
-            </summary>
-            <param name="indexName">Name of the index to create</param>
-            <param name="tableName">Name of the database table</param>
-            <param name="columnName">Name of the column to index</param>
-            <param name="unique">Whether the index should be unique</param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateIndex(System.String,System.String,System.Boolean)">
-            <summary>
-            Creates an index for the specified table and column.
-            </summary>
-            <param name="tableName">Name of the database table</param>
-            <param name="columnName">Name of the column to index</param>
-            <param name="unique">Whether the index should be unique</param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateIndex(System.String,System.String[],System.Boolean)">
-            <summary>
-            Creates an index for the specified table and columns.
-            </summary>
-            <param name="tableName">Name of the database table</param>
-            <param name="columnNames">An array of column names to index</param>
-            <param name="unique">Whether the index should be unique</param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateIndex``1(System.Linq.Expressions.Expression{System.Func{``0,System.Object}},System.Boolean)">
-            <summary>
-            Creates an index for the specified object property.
-            e.g. CreateIndex&lt;Client&gt;(c => c.Name);
-            </summary>
-            <typeparam name="T">Type to reflect to a database table.</typeparam>
-            <param name="property">Property to index</param>
-            <param name="unique">Whether the index should be unique</param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.GetTableInfo(System.String)">
-            <summary>
-            Query the built-in sqlite table_info table for a specific tables columns.
-            </summary>
-            <returns>The columns contains in the table.</returns>
-            <param name="tableName">Table name.</param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.NewCommand">
-            <summary>
-            Creates a new SQLiteCommand. Can be overridden to provide a sub-class.
-            </summary>
-            <seealso cref="M:SQLite.SQLiteCommand.OnInstanceCreated(System.Object)"/>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.CreateCommand(System.String,System.Object[])">
-            <summary>
-            Creates a new SQLiteCommand given the command text with arguments. Place a '?'
-            in the command text for each of the arguments.
-            </summary>
-            <param name="cmdText">
-            The fully escaped SQL.
-            </param>
-            <param name="ps">
-            Arguments to substitute for the occurences of '?' in the command text.
-            </param>
-            <returns>
-            A <see cref="T:SQLite.SQLiteCommand"/>
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Execute(System.String,System.Object[])">
-            <summary>
-            Creates a SQLiteCommand given the command text (SQL) with arguments. Place a '?'
-            in the command text for each of the arguments and then executes that command.
-            Use this method instead of Query when you don't expect rows back. Such cases include
-            INSERTs, UPDATEs, and DELETEs.
-            You can set the Trace or TimeExecution properties of the connection
-            to profile execution.
-            </summary>
-            <param name="query">
-            The fully escaped SQL.
-            </param>
-            <param name="args">
-            Arguments to substitute for the occurences of '?' in the query.
-            </param>
-            <returns>
-            The number of rows modified in the database as a result of this execution.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.ExecuteScalar``1(System.String,System.Object[])">
-            <summary>
-            Creates a SQLiteCommand given the command text (SQL) with arguments. Place a '?'
-            in the command text for each of the arguments and then executes that command.
-            Use this method when return primitive values.
-            You can set the Trace or TimeExecution properties of the connection
-            to profile execution.
-            </summary>
-            <param name="query">
-            The fully escaped SQL.
-            </param>
-            <param name="args">
-            Arguments to substitute for the occurences of '?' in the query.
-            </param>
-            <returns>
-            The number of rows modified in the database as a result of this execution.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Query``1(System.String,System.Object[])">
-            <summary>
-            Creates a SQLiteCommand given the command text (SQL) with arguments. Place a '?'
-            in the command text for each of the arguments and then executes that command.
-            It returns each row of the result using the mapping automatically generated for
-            the given type.
-            </summary>
-            <param name="query">
-            The fully escaped SQL.
-            </param>
-            <param name="args">
-            Arguments to substitute for the occurences of '?' in the query.
-            </param>
-            <returns>
-            An enumerable with one result for each row returned by the query.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.DeferredQuery``1(System.String,System.Object[])">
-            <summary>
-            Creates a SQLiteCommand given the command text (SQL) with arguments. Place a '?'
-            in the command text for each of the arguments and then executes that command.
-            It returns each row of the result using the mapping automatically generated for
-            the given type.
-            </summary>
-            <param name="query">
-            The fully escaped SQL.
-            </param>
-            <param name="args">
-            Arguments to substitute for the occurences of '?' in the query.
-            </param>
-            <returns>
-            An enumerable with one result for each row returned by the query.
-            The enumerator (retrieved by calling GetEnumerator() on the result of this method)
-            will call sqlite3_step on each call to MoveNext, so the database
-            connection must remain open for the lifetime of the enumerator.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Query(SQLite.TableMapping,System.String,System.Object[])">
-            <summary>
-            Creates a SQLiteCommand given the command text (SQL) with arguments. Place a '?'
-            in the command text for each of the arguments and then executes that command.
-            It returns each row of the result using the specified mapping. This function is
-            only used by libraries in order to query the database via introspection. It is
-            normally not used.
-            </summary>
-            <param name="map">
-            A <see cref="T:SQLite.TableMapping"/> to use to convert the resulting rows
-            into objects.
-            </param>
-            <param name="query">
-            The fully escaped SQL.
-            </param>
-            <param name="args">
-            Arguments to substitute for the occurences of '?' in the query.
-            </param>
-            <returns>
-            An enumerable with one result for each row returned by the query.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.DeferredQuery(SQLite.TableMapping,System.String,System.Object[])">
-            <summary>
-            Creates a SQLiteCommand given the command text (SQL) with arguments. Place a '?'
-            in the command text for each of the arguments and then executes that command.
-            It returns each row of the result using the specified mapping. This function is
-            only used by libraries in order to query the database via introspection. It is
-            normally not used.
-            </summary>
-            <param name="map">
-            A <see cref="T:SQLite.TableMapping"/> to use to convert the resulting rows
-            into objects.
-            </param>
-            <param name="query">
-            The fully escaped SQL.
-            </param>
-            <param name="args">
-            Arguments to substitute for the occurences of '?' in the query.
-            </param>
-            <returns>
-            An enumerable with one result for each row returned by the query.
-            The enumerator (retrieved by calling GetEnumerator() on the result of this method)
-            will call sqlite3_step on each call to MoveNext, so the database
-            connection must remain open for the lifetime of the enumerator.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Table``1">
-            <summary>
-            Returns a queryable interface to the table represented by the given type.
-            </summary>
-            <returns>
-            A queryable object that is able to translate Where, OrderBy, and Take
-            queries into native SQL.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Get``1(System.Object)">
-            <summary>
-            Attempts to retrieve an object with the given primary key from the table
-            associated with the specified type. Use of this method requires that
-            the given type have a designated PrimaryKey (using the PrimaryKeyAttribute).
-            </summary>
-            <param name="pk">
-            The primary key.
-            </param>
-            <returns>
-            The object with the given primary key. Throws a not found exception
-            if the object is not found.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Get(System.Object,SQLite.TableMapping)">
-            <summary>
-            Attempts to retrieve an object with the given primary key from the table
-            associated with the specified type. Use of this method requires that
-            the given type have a designated PrimaryKey (using the PrimaryKeyAttribute).
-            </summary>
-            <param name="pk">
-            The primary key.
-            </param>
-            <param name="map">
-            The TableMapping used to identify the table.
-            </param>
-            <returns>
-            The object with the given primary key. Throws a not found exception
-            if the object is not found.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Get``1(System.Linq.Expressions.Expression{System.Func{``0,System.Boolean}})">
-            <summary>
-            Attempts to retrieve the first object that matches the predicate from the table
-            associated with the specified type.
-            </summary>
-            <param name="predicate">
-            A predicate for which object to find.
-            </param>
-            <returns>
-            The object that matches the given predicate. Throws a not found exception
-            if the object is not found.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Find``1(System.Object)">
-            <summary>
-            Attempts to retrieve an object with the given primary key from the table
-            associated with the specified type. Use of this method requires that
-            the given type have a designated PrimaryKey (using the PrimaryKeyAttribute).
-            </summary>
-            <param name="pk">
-            The primary key.
-            </param>
-            <returns>
-            The object with the given primary key or null
-            if the object is not found.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Find(System.Object,SQLite.TableMapping)">
-            <summary>
-            Attempts to retrieve an object with the given primary key from the table
-            associated with the specified type. Use of this method requires that
-            the given type have a designated PrimaryKey (using the PrimaryKeyAttribute).
-            </summary>
-            <param name="pk">
-            The primary key.
-            </param>
-            <param name="map">
-            The TableMapping used to identify the table.
-            </param>
-            <returns>
-            The object with the given primary key or null
-            if the object is not found.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Find``1(System.Linq.Expressions.Expression{System.Func{``0,System.Boolean}})">
-            <summary>
-            Attempts to retrieve the first object that matches the predicate from the table
-            associated with the specified type.
-            </summary>
-            <param name="predicate">
-            A predicate for which object to find.
-            </param>
-            <returns>
-            The object that matches the given predicate or null
-            if the object is not found.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.FindWithQuery``1(System.String,System.Object[])">
-            <summary>
-            Attempts to retrieve the first object that matches the query from the table
-            associated with the specified type.
-            </summary>
-            <param name="query">
-            The fully escaped SQL.
-            </param>
-            <param name="args">
-            Arguments to substitute for the occurences of '?' in the query.
-            </param>
-            <returns>
-            The object that matches the given predicate or null
-            if the object is not found.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.FindWithQuery(SQLite.TableMapping,System.String,System.Object[])">
-            <summary>
-            Attempts to retrieve the first object that matches the query from the table
-            associated with the specified type.
-            </summary>
-            <param name="map">
-            The TableMapping used to identify the table.
-            </param>
-            <param name="query">
-            The fully escaped SQL.
-            </param>
-            <param name="args">
-            Arguments to substitute for the occurences of '?' in the query.
-            </param>
-            <returns>
-            The object that matches the given predicate or null
-            if the object is not found.
-            </returns>
-        </member>
-        <member name="P:SQLite.SQLiteConnection.IsInTransaction">
-            <summary>
-            Whether <see cref="M:SQLite.SQLiteConnection.BeginTransaction"/> has been called and the database is waiting for a <see cref="M:SQLite.SQLiteConnection.Commit"/>.
-            </summary>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.BeginTransaction">
-            <summary>
-            Begins a new transaction. Call <see cref="M:SQLite.SQLiteConnection.Commit"/> to end the transaction.
-            </summary>
-            <example cref="T:System.InvalidOperationException">Throws if a transaction has already begun.</example>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.SaveTransactionPoint">
-             <summary>
-             Creates a savepoint in the database at the current point in the transaction timeline.
-             Begins a new transaction if one is not in progress.
-            
-             Call <see cref="M:SQLite.SQLiteConnection.RollbackTo(System.String)"/> to undo transactions since the returned savepoint.
-             Call <see cref="M:SQLite.SQLiteConnection.Release(System.String)"/> to commit transactions after the savepoint returned here.
-             Call <see cref="M:SQLite.SQLiteConnection.Commit"/> to end the transaction, committing all changes.
-             </summary>
-             <returns>A string naming the savepoint.</returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Rollback">
-            <summary>
-            Rolls back the transaction that was begun by <see cref="M:SQLite.SQLiteConnection.BeginTransaction"/> or <see cref="M:SQLite.SQLiteConnection.SaveTransactionPoint"/>.
-            </summary>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.RollbackTo(System.String)">
-            <summary>
-            Rolls back the savepoint created by <see cref="M:SQLite.SQLiteConnection.BeginTransaction"/> or SaveTransactionPoint.
-            </summary>
-            <param name="savepoint">The name of the savepoint to roll back to, as returned by <see cref="M:SQLite.SQLiteConnection.SaveTransactionPoint"/>.  If savepoint is null or empty, this method is equivalent to a call to <see cref="M:SQLite.SQLiteConnection.Rollback"/></param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.RollbackTo(System.String,System.Boolean)">
-            <summary>
-            Rolls back the transaction that was begun by <see cref="M:SQLite.SQLiteConnection.BeginTransaction"/>.
-            </summary>
-            <param name="savepoint">The name of the savepoint to roll back to, as returned by <see cref="M:SQLite.SQLiteConnection.SaveTransactionPoint"/>.  If savepoint is null or empty, this method is equivalent to a call to <see cref="M:SQLite.SQLiteConnection.Rollback"/></param>
-            <param name="noThrow">true to avoid throwing exceptions, false otherwise</param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Release(System.String)">
-             <summary>
-             Releases a savepoint returned from <see cref="M:SQLite.SQLiteConnection.SaveTransactionPoint"/>.  Releasing a savepoint
-                makes changes since that savepoint permanent if the savepoint began the transaction,
-                or otherwise the changes are permanent pending a call to <see cref="M:SQLite.SQLiteConnection.Commit"/>.
-            
-             The RELEASE command is like a COMMIT for a SAVEPOINT.
-             </summary>
-             <param name="savepoint">The name of the savepoint to release.  The string should be the result of a call to <see cref="M:SQLite.SQLiteConnection.SaveTransactionPoint"/></param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Commit">
-            <summary>
-            Commits the transaction that was begun by <see cref="M:SQLite.SQLiteConnection.BeginTransaction"/>.
-            </summary>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.RunInTransaction(System.Action)">
-            <summary>
-            Executes <paramref name="action"/> within a (possibly nested) transaction by wrapping it in a SAVEPOINT. If an
-            exception occurs the whole transaction is rolled back, not just the current savepoint. The exception
-            is rethrown.
-            </summary>
-            <param name="action">
-            The <see cref="T:System.Action"/> to perform within a transaction. <paramref name="action"/> can contain any number
-            of operations on the connection but should never call <see cref="M:SQLite.SQLiteConnection.BeginTransaction"/> or
-            <see cref="M:SQLite.SQLiteConnection.Commit"/>.
-            </param>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.InsertAll(System.Collections.IEnumerable,System.Boolean)">
-            <summary>
-            Inserts all specified objects.
-            </summary>
-            <param name="objects">
-            An <see cref="T:System.Collections.IEnumerable"/> of the objects to insert.
-            <param name="runInTransaction"/>
-            A boolean indicating if the inserts should be wrapped in a transaction.
-            </param>
-            <returns>
-            The number of rows added to the table.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.InsertAll(System.Collections.IEnumerable,System.String,System.Boolean)">
-            <summary>
-            Inserts all specified objects.
-            </summary>
-            <param name="objects">
-            An <see cref="T:System.Collections.IEnumerable"/> of the objects to insert.
-            </param>
-            <param name="extra">
-            Literal SQL code that gets placed into the command. INSERT {extra} INTO ...
-            </param>
-            <param name="runInTransaction">
-            A boolean indicating if the inserts should be wrapped in a transaction.
-            </param>
-            <returns>
-            The number of rows added to the table.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.InsertAll(System.Collections.IEnumerable,System.Type,System.Boolean)">
-            <summary>
-            Inserts all specified objects.
-            </summary>
-            <param name="objects">
-            An <see cref="T:System.Collections.IEnumerable"/> of the objects to insert.
-            </param>
-            <param name="objType">
-            The type of object to insert.
-            </param>
-            <param name="runInTransaction">
-            A boolean indicating if the inserts should be wrapped in a transaction.
-            </param>
-            <returns>
-            The number of rows added to the table.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Insert(System.Object)">
-            <summary>
-            Inserts the given object (and updates its
-            auto incremented primary key if it has one).
-            The return value is the number of rows added to the table.
-            </summary>
-            <param name="obj">
-            The object to insert.
-            </param>
-            <returns>
-            The number of rows added to the table.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.InsertOrReplace(System.Object)">
-            <summary>
-            Inserts the given object (and updates its
-            auto incremented primary key if it has one).
-            The return value is the number of rows added to the table.
-            If a UNIQUE constraint violation occurs with
-            some pre-existing object, this function deletes
-            the old object.
-            </summary>
-            <param name="obj">
-            The object to insert.
-            </param>
-            <returns>
-            The number of rows modified.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Insert(System.Object,System.Type)">
-            <summary>
-            Inserts the given object (and updates its
-            auto incremented primary key if it has one).
-            The return value is the number of rows added to the table.
-            </summary>
-            <param name="obj">
-            The object to insert.
-            </param>
-            <param name="objType">
-            The type of object to insert.
-            </param>
-            <returns>
-            The number of rows added to the table.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.InsertOrReplace(System.Object,System.Type)">
-            <summary>
-            Inserts the given object (and updates its
-            auto incremented primary key if it has one).
-            The return value is the number of rows added to the table.
-            If a UNIQUE constraint violation occurs with
-            some pre-existing object, this function deletes
-            the old object.
-            </summary>
-            <param name="obj">
-            The object to insert.
-            </param>
-            <param name="objType">
-            The type of object to insert.
-            </param>
-            <returns>
-            The number of rows modified.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Insert(System.Object,System.String)">
-            <summary>
-            Inserts the given object (and updates its
-            auto incremented primary key if it has one).
-            The return value is the number of rows added to the table.
-            </summary>
-            <param name="obj">
-            The object to insert.
-            </param>
-            <param name="extra">
-            Literal SQL code that gets placed into the command. INSERT {extra} INTO ...
-            </param>
-            <returns>
-            The number of rows added to the table.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Insert(System.Object,System.String,System.Type)">
-            <summary>
-            Inserts the given object (and updates its
-            auto incremented primary key if it has one).
-            The return value is the number of rows added to the table.
-            </summary>
-            <param name="obj">
-            The object to insert.
-            </param>
-            <param name="extra">
-            Literal SQL code that gets placed into the command. INSERT {extra} INTO ...
-            </param>
-            <param name="objType">
-            The type of object to insert.
-            </param>
-            <returns>
-            The number of rows added to the table.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Update(System.Object)">
-            <summary>
-            Updates all of the columns of a table using the specified object
-            except for its primary key.
-            The object is required to have a primary key.
-            </summary>
-            <param name="obj">
-            The object to update. It must have a primary key designated using the PrimaryKeyAttribute.
-            </param>
-            <returns>
-            The number of rows updated.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Update(System.Object,System.Type)">
-            <summary>
-            Updates all of the columns of a table using the specified object
-            except for its primary key.
-            The object is required to have a primary key.
-            </summary>
-            <param name="obj">
-            The object to update. It must have a primary key designated using the PrimaryKeyAttribute.
-            </param>
-            <param name="objType">
-            The type of object to insert.
-            </param>
-            <returns>
-            The number of rows updated.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.UpdateAll(System.Collections.IEnumerable,System.Boolean)">
-            <summary>
-            Updates all specified objects.
-            </summary>
-            <param name="objects">
-            An <see cref="T:System.Collections.IEnumerable"/> of the objects to insert.
-            </param>
-            <param name="runInTransaction">
-            A boolean indicating if the inserts should be wrapped in a transaction
-            </param>
-            <returns>
-            The number of rows modified.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Delete(System.Object)">
-            <summary>
-            Deletes the given object from the database using its primary key.
-            </summary>
-            <param name="objectToDelete">
-            The object to delete. It must have a primary key designated using the PrimaryKeyAttribute.
-            </param>
-            <returns>
-            The number of rows deleted.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Delete``1(System.Object)">
-            <summary>
-            Deletes the object with the specified primary key.
-            </summary>
-            <param name="primaryKey">
-            The primary key of the object to delete.
-            </param>
-            <returns>
-            The number of objects deleted.
-            </returns>
-            <typeparam name='T'>
-            The type of object.
-            </typeparam>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.Delete(System.Object,SQLite.TableMapping)">
-            <summary>
-            Deletes the object with the specified primary key.
-            </summary>
-            <param name="primaryKey">
-            The primary key of the object to delete.
-            </param>
-            <param name="map">
-            The TableMapping used to identify the table.
-            </param>
-            <returns>
-            The number of objects deleted.
-            </returns>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.DeleteAll``1">
-            <summary>
-            Deletes all the objects from the specified table.
-            WARNING WARNING: Let me repeat. It deletes ALL the objects from the
-            specified table. Do you really want to do that?
-            </summary>
-            <returns>
-            The number of objects deleted.
-            </returns>
-            <typeparam name='T'>
-            The type of objects to delete.
-            </typeparam>
-        </member>
-        <member name="M:SQLite.SQLiteConnection.DeleteAll(SQLite.TableMapping)">
-            <summary>
-            Deletes all the objects from the specified table.
-            WARNING WARNING: Let me repeat. It deletes ALL the objects from the
-            specified table. Do you really want to do that?
-            </summary>
-            <param name="map">
-            The TableMapping used to identify the table.
-            </param>
-            <returns>
-            The number of objects deleted.
-            </returns>
-        </member>
-        <member name="T:SQLite.SQLiteConnectionString">
-            <summary>
-            Represents a parsed connection string.
-            </summary>
-        </member>
-        <member name="P:SQLite.TableAttribute.WithoutRowId">
-             <summary>
-             Flag whether to create the table without rowid (see https://sqlite.org/withoutrowid.html)
-            
-             The default is <c>false</c> so that sqlite adds an implicit <c>rowid</c> to every table created.
-             </summary>
-        </member>
-        <member name="T:SQLite.CollationAttribute">
-            <summary>
-            Select the collating sequence to use on a column.
-            "BINARY", "NOCASE", and "RTRIM" are supported.
-            "BINARY" is the default.
-            </summary>
-        </member>
-        <member name="M:SQLite.SQLiteCommand.OnInstanceCreated(System.Object)">
-            <summary>
-            Invoked every time an instance is loaded from the database.
-            </summary>
-            <param name='obj'>
-            The newly created object.
-            </param>
-            <remarks>
-            This can be overridden in combination with the <see cref="M:SQLite.SQLiteConnection.NewCommand"/>
-            method to hook into the life-cycle of objects.
-            </remarks>
-        </member>
-        <member name="T:SQLite.PreparedSqlLiteInsertCommand">
-            <summary>
-            Since the insert never changed, we only need to prepare once.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.Where(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})">
-            <summary>
-            Filters the query based on a predicate.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.Delete">
-            <summary>
-            Delete all the rows that match this query.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.Delete(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})">
-            <summary>
-            Delete all the rows that match this query and the given predicate.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.Take(System.Int32)">
-            <summary>
-            Yields a given number of elements from the query and then skips the remainder.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.Skip(System.Int32)">
-            <summary>
-            Skips a given number of elements from the query and then yields the remainder.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.ElementAt(System.Int32)">
-            <summary>
-            Returns the element at a given index
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.OrderBy``1(System.Linq.Expressions.Expression{System.Func{`0,``0}})">
-            <summary>
-            Order the query results according to a key.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.OrderByDescending``1(System.Linq.Expressions.Expression{System.Func{`0,``0}})">
-            <summary>
-            Order the query results according to a key.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.ThenBy``1(System.Linq.Expressions.Expression{System.Func{`0,``0}})">
-            <summary>
-            Order the query results according to a key.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.ThenByDescending``1(System.Linq.Expressions.Expression{System.Func{`0,``0}})">
-            <summary>
-            Order the query results according to a key.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.CompileNullBinaryExpression(System.Linq.Expressions.BinaryExpression,SQLite.TableQuery{`0}.CompileResult)">
-            <summary>
-            Compiles a BinaryExpression where one of the parameters is null.
-            </summary>
-            <param name="expression">The expression to compile</param>
-            <param name="parameter">The non-null parameter</param>
-        </member>
-        <member name="M:SQLite.TableQuery`1.Count">
-            <summary>
-            Execute SELECT COUNT(*) on the query
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.Count(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})">
-            <summary>
-            Execute SELECT COUNT(*) on the query with an additional WHERE clause.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.ToList">
-            <summary>
-            Queries the database and returns the results as a List.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.ToArray">
-            <summary>
-            Queries the database and returns the results as an array.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.First">
-            <summary>
-            Returns the first element of this query.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.FirstOrDefault">
-            <summary>
-            Returns the first element of this query, or null if no element is found.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.First(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})">
-            <summary>
-            Returns the first element of this query that matches the predicate.
-            </summary>
-        </member>
-        <member name="M:SQLite.TableQuery`1.FirstOrDefault(System.Linq.Expressions.Expression{System.Func{`0,System.Boolean}})">
-            <summary>
-            Returns the first element of this query that matches the predicate, or null
-            if no element is found.
-            </summary>
         </member>
     </members>
 </doc>

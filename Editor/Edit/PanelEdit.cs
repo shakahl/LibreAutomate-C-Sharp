@@ -13,8 +13,8 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Linq;
-using System.Xml.Linq;
+//using System.Linq;
+//using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -421,10 +421,21 @@ partial class PanelEdit :Control
 
 		internal void LoadEditorData()
 		{
-			_savedED = Model.TableEdit?.FindById((int)FN.Id);
-			_savedED?.folding?.ForEach(line => Call(SCI_FOLDLINE, line));
-			_savedED?.bookmarks?.ForEach(line => Call(SCI_MARKERADDSET, line, 1));
-			_savedED?.breakpoints?.ForEach(line => Call(SCI_MARKERADDSET, line, 2));
+			var db = Model.DB; if(db == null) return;
+			try {
+				using(var p = db.Statement("SELECT folding,bookmarks,breakpoints FROM _editor WHERE id=?", FN.Id)) {
+					if(p.Step()) {
+						List<int> folding = p.GetList<int>(0), bookmarks = p.GetList<int>(1), breakpoints = p.GetList<int>(2);
+						if(folding != null || bookmarks != null || breakpoints != null) {
+							folding?.ForEach(line => Call(SCI_FOLDLINE, line));
+							bookmarks?.ForEach(line => Call(SCI_MARKERADDSET, line, 1));
+							breakpoints?.ForEach(line => Call(SCI_MARKERADDSET, line, 2));
+							_savedED = new DBEdit { folding = folding, bookmarks = bookmarks, breakpoints = breakpoints };
+						}
+					}
+				}
+			}
+			catch(SLException ex) { Debug_.Print(ex); }
 
 			//speed with LiteDB: load or save: first time ngened min 31 ms, non-ngened min 105 ms; then 1 ms.
 			//speed with PersistentDictionary (ESENT): load: first time 250 ms, then 95 ms; save 120 ms. Don't remember whether ngened.
@@ -432,6 +443,8 @@ partial class PanelEdit :Control
 
 		internal void SaveEditorData()
 		{
+			var db = Model.DB; if(db == null) return;
+
 			List<int> folding = _savedED?.folding, bookmarks = _savedED?.bookmarks, breakpoints = _savedED?.breakpoints;
 			bool changed = false;
 			if(_GetLineDataToSave(0, ref folding)) changed = true;
@@ -439,11 +452,16 @@ partial class PanelEdit :Control
 			if(_GetLineDataToSave(2, ref breakpoints)) changed = true;
 
 			if(changed) {
-				if(_savedED == null) _savedED = new DBEdit { id = (int)FN.Id };
+				if(_savedED == null) _savedED = new DBEdit();
 				_savedED.folding = folding;
 				_savedED.bookmarks = bookmarks;
 				_savedED.breakpoints = breakpoints;
-				Model.TableEdit?.Upsert(_savedED);
+				try {
+					using(var p = db.Statement("REPLACE INTO _editor (id,folding,bookmarks,breakpoints) VALUES (?,?,?,?)")) {
+						p.Bind(1, FN.Id).Bind(2, _savedED.folding).Bind(3, _savedED.bookmarks).Bind(4, _savedED.breakpoints).Step();
+					}
+				}
+				catch(SLException ex) { Debug_.Print(ex); }
 			}
 		}
 
