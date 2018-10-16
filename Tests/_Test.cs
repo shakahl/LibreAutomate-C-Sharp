@@ -314,102 +314,102 @@ a1,-8";
 
 	}
 
-//	static unsafe void TestDB()
-//	{
-//		string fileS = @"Q:\test\guid string.db";
-//		string fileB = @"Q:\test\guid binary.db";
-//		string fileL = @"Q:\test\guid long.db";
-//		string fileS2 = @"Q:\test\guid string2.db";
-//		var fileQ = @"Q:\test\sqlite.db";
-//		int n = 1000;
+	//	static unsafe void TestDB()
+	//	{
+	//		string fileS = @"Q:\test\guid string.db";
+	//		string fileB = @"Q:\test\guid binary.db";
+	//		string fileL = @"Q:\test\guid long.db";
+	//		string fileS2 = @"Q:\test\guid string2.db";
+	//		var fileQ = @"Q:\test\sqlite.db";
+	//		int n = 1000;
 
-//		File_.Delete(fileS);
-//		File_.Delete(fileB);
-//		File_.Delete(fileL);
-//		File_.Delete(fileS2);
-//		File_.Delete(fileQ);
+	//		File_.Delete(fileS);
+	//		File_.Delete(fileB);
+	//		File_.Delete(fileL);
+	//		File_.Delete(fileS2);
+	//		File_.Delete(fileQ);
 
-//		var a = new List<_GuidS>();
-//		for(int i = 0; i < n; i++) {
-//			var x = new _GuidS() { id = Convert_.GuidToHex(Guid.NewGuid()) };
-//			a.Add(x);
-//		}
+	//		var a = new List<_GuidS>();
+	//		for(int i = 0; i < n; i++) {
+	//			var x = new _GuidS() { id = Convert_.GuidToHex(Guid.NewGuid()) };
+	//			a.Add(x);
+	//		}
 
-//		Perf.First();
-//#if false
-//		using(var db = new LiteDatabase(fileL)) {
-//			var col = db.GetCollection<_GuidL>();
-//			for(int i = 0; i < n; i++) {
-//				var g =Convert_.GuidFromHex(a[i].id);
-//				var x = new _GuidL() { id = *(long*)&g };
-//				col.Upsert(x);
-//			}
-//		}
-//		Perf.Next();
+	//		Perf.First();
+	//#if false
+	//		using(var db = new LiteDatabase(fileL)) {
+	//			var col = db.GetCollection<_GuidL>();
+	//			for(int i = 0; i < n; i++) {
+	//				var g =Convert_.GuidFromHex(a[i].id);
+	//				var x = new _GuidL() { id = *(long*)&g };
+	//				col.Upsert(x);
+	//			}
+	//		}
+	//		Perf.Next();
 
-//		using(var db = new LiteDatabase(fileB)) {
-//			var col = db.GetCollection<_GuidB>();
-//			for(int i = 0; i < n; i++) {
-//				var g = Convert_.GuidFromHex(a[i].id);
-//				var x = new _GuidB() { id = g };
-//				col.Upsert(x);
-//			}
-//		}
-//		Perf.Next();
+	//		using(var db = new LiteDatabase(fileB)) {
+	//			var col = db.GetCollection<_GuidB>();
+	//			for(int i = 0; i < n; i++) {
+	//				var g = Convert_.GuidFromHex(a[i].id);
+	//				var x = new _GuidB() { id = g };
+	//				col.Upsert(x);
+	//			}
+	//		}
+	//		Perf.Next();
 
-//		using(var db = new LiteDatabase(fileS)) {
-//			var col = db.GetCollection<_GuidS>();
-//			for(int i = 0; i < n; i++) {
-//				var x = new _GuidS() { id = a[i].id };
-//				col.Upsert(x);
-//			}
-//		}
-//		Perf.Next();
+	//		using(var db = new LiteDatabase(fileS)) {
+	//			var col = db.GetCollection<_GuidS>();
+	//			for(int i = 0; i < n; i++) {
+	//				var x = new _GuidS() { id = a[i].id };
+	//				col.Upsert(x);
+	//			}
+	//		}
+	//		Perf.Next();
 
-//		using(var db = new LiteDatabase(fileS2)) {
-//			//Perf.Next();
-//			var col = db.GetCollection<_GuidS>();
-//			col.Upsert(a);
-//		}
-//		Perf.Next();
-//#endif
-//		//System.Data.SQLite. Very slow to load.
-//		//using(var db = new SQLiteConnection($"Data Source={fileQ};Version=3;")) {
-//		//	db.Open();
-//		//	using(var trans = db.BeginTransaction()) {
-//		//		//string sql = "create table test (guid TEXT PRIMARY KEY, name TEXT, etc TEXT, flags INT, a1, a2, i2 INT, s2 TEXT, s3 TEXT)";
-//		//		string sql = "create table test (guid BLOB PRIMARY KEY, name TEXT, etc TEXT, flags INT, a1, a2, i2 INT, s2 TEXT, s3 TEXT)";
-//		//		var command = new SQLiteCommand(sql, db, trans);
-//		//		command.ExecuteNonQuery();
-//		//		Perf.Next();
+	//		using(var db = new LiteDatabase(fileS2)) {
+	//			//Perf.Next();
+	//			var col = db.GetCollection<_GuidS>();
+	//			col.Upsert(a);
+	//		}
+	//		Perf.Next();
+	//#endif
+	//		//System.Data.SQLite. Very slow to load.
+	//		//using(var db = new SQLiteConnection($"Data Source={fileQ};Version=3;")) {
+	//		//	db.Open();
+	//		//	using(var trans = db.BeginTransaction()) {
+	//		//		//string sql = "create table test (guid TEXT PRIMARY KEY, name TEXT, etc TEXT, flags INT, a1, a2, i2 INT, s2 TEXT, s3 TEXT)";
+	//		//		string sql = "create table test (guid BLOB PRIMARY KEY, name TEXT, etc TEXT, flags INT, a1, a2, i2 INT, s2 TEXT, s3 TEXT)";
+	//		//		var command = new SQLiteCommand(sql, db, trans);
+	//		//		command.ExecuteNonQuery();
+	//		//		Perf.Next();
 
-//		//		sql = "insert into test values (?,?,?,?,?,?,?,?,?)";
-//		//		command = new SQLiteCommand(sql, db, trans);
-//		//		var p = command.Parameters;
-//		//		for(int i = 0; i < n; i++) {
-//		//			var v = a[i];
-//		//			//p.AddWithValue("guid", v.id);
-//		//			p.AddWithValue("guid", Convert_.GuidFromHex(v.id));
+	//		//		sql = "insert into test values (?,?,?,?,?,?,?,?,?)";
+	//		//		command = new SQLiteCommand(sql, db, trans);
+	//		//		var p = command.Parameters;
+	//		//		for(int i = 0; i < n; i++) {
+	//		//			var v = a[i];
+	//		//			//p.AddWithValue("guid", v.id);
+	//		//			p.AddWithValue("guid", Convert_.GuidFromHex(v.id));
 
-//		//			p.AddWithValue("name", v.name);
-//		//			p.AddWithValue("etc", v.etc);
-//		//			p.AddWithValue("flags", v.flags);
-//		//			p.AddWithValue("a1", "moo");
-//		//			p.AddWithValue("a2", "");
-//		//			p.AddWithValue("i2", v.i2);
-//		//			p.AddWithValue("s2", v.s2);
-//		//			p.AddWithValue("s3", v.s3);
+	//		//			p.AddWithValue("name", v.name);
+	//		//			p.AddWithValue("etc", v.etc);
+	//		//			p.AddWithValue("flags", v.flags);
+	//		//			p.AddWithValue("a1", "moo");
+	//		//			p.AddWithValue("a2", "");
+	//		//			p.AddWithValue("i2", v.i2);
+	//		//			p.AddWithValue("s2", v.s2);
+	//		//			p.AddWithValue("s3", v.s3);
 
-//		//			command.ExecuteNonQuery();
-//		//			p.Clear();
-//		//		}
+	//		//			command.ExecuteNonQuery();
+	//		//			p.Clear();
+	//		//		}
 
-//		//		trans.Commit();
-//		//	}
-//		//}
+	//		//		trans.Commit();
+	//		//	}
+	//		//}
 
-//		Perf.NW();
-//	}
+	//		Perf.NW();
+	//	}
 
 	//class _GuidBase
 	//{
@@ -460,84 +460,84 @@ a1,-8";
 	//		Perf.Next();
 	//		var file = @"Q:\test\sqlite.db";
 	//		bool isNew = !File_.ExistsAsFile(file);
-//	static void TestSqliteNet()
-//	{
-//		Perf.Next();
-//#if false
-//		string fileS = @"Q:\test\guid string.db";
+	//	static void TestSqliteNet()
+	//	{
+	//		Perf.Next();
+	//#if false
+	//		string fileS = @"Q:\test\guid string.db";
 
-//		var stream = File_.WaitIfLocked(() => new FileStream(fileS, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, System.IO.FileOptions.RandomAccess));
-//		using(var db = new LiteDatabase(stream, disposeStream: true)) {
-//			Perf.Next();
-//			var col = db.GetCollection<_GuidS>();
-//			Perf.Next();
-//			int n = col.Count();
-//			Perf.Next();
-//		}
-//#else
-//		var file = @"Q:\test\sqlite.db";
-//		File_.Delete(file);
-//		bool isNew = !File_.ExistsAsFile(file);
+	//		var stream = File_.WaitIfLocked(() => new FileStream(fileS, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, System.IO.FileOptions.RandomAccess));
+	//		using(var db = new LiteDatabase(stream, disposeStream: true)) {
+	//			Perf.Next();
+	//			var col = db.GetCollection<_GuidS>();
+	//			Perf.Next();
+	//			int n = col.Count();
+	//			Perf.Next();
+	//		}
+	//#else
+	//		var file = @"Q:\test\sqlite.db";
+	//		File_.Delete(file);
+	//		bool isNew = !File_.ExistsAsFile(file);
 
-//		using(var db = new SQLiteConnection(file)) {
-//			Perf.Next();
+	//		using(var db = new SQLiteConnection(file)) {
+	//			Perf.Next();
 
-//			for(int j = 0; j < 1; j++) {
-//				if(isNew) {
-//					//var m = db.GetMapping<Stock>();
-//					//m.
+	//			for(int j = 0; j < 1; j++) {
+	//				if(isNew) {
+	//					//var m = db.GetMapping<Stock>();
+	//					//m.
 
 
-//					db.CreateTable<Stock>();
-//					isNew = false;
-//					//db.CreateTable<Stock>(CreateFlags.ImplicitPK);
-//				} else {
-//					db.DeleteAll<Stock>();
-//				}
+	//					db.CreateTable<Stock>();
+	//					isNew = false;
+	//					//db.CreateTable<Stock>(CreateFlags.ImplicitPK);
+	//				} else {
+	//					db.DeleteAll<Stock>();
+	//				}
 
-//				var x = new Stock { Symbol = "one" };
-//				//x.folding = new List<int> { 3, 5 };
-//				x.folding = new int[] { 3, 5 };
-//				//x.Symbol = new string('A', 500);
-//				var p = Perf.StartNew();
-//				db.BeginTransaction();
-//				for(int i = 0; i < 1; i++) {
-//#if false
-//					db.
-//#else
-//					//Print(SQLite3.LastInsertRowid(db.Handle));
-//					x.id = i + 1;
-//					db.Insert(x);
-//					//Print(x.id);
-//#endif
-//				}
-//				db.Commit();
-//				p.NW();
-//			}
-//			Perf.Next();
+	//				var x = new Stock { Symbol = "one" };
+	//				//x.folding = new List<int> { 3, 5 };
+	//				x.folding = new int[] { 3, 5 };
+	//				//x.Symbol = new string('A', 500);
+	//				var p = Perf.StartNew();
+	//				db.BeginTransaction();
+	//				for(int i = 0; i < 1; i++) {
+	//#if false
+	//					db.
+	//#else
+	//					//Print(SQLite3.LastInsertRowid(db.Handle));
+	//					x.id = i + 1;
+	//					db.Insert(x);
+	//					//Print(x.id);
+	//#endif
+	//				}
+	//				db.Commit();
+	//				p.NW();
+	//			}
+	//			Perf.Next();
 
-//			//return;
-//			//AuDialog.Show();
+	//			//return;
+	//			//AuDialog.Show();
 
-//			for(int i = 0; i < 1; i++) {
-//#if true
-//				//var query = db.Table<Stock>().Where(v => v.Symbol.StartsWith("A"));
+	//			for(int i = 0; i < 1; i++) {
+	//#if true
+	//				//var query = db.Table<Stock>().Where(v => v.Symbol.StartsWith("A"));
 
-//				var query = db.Table<Stock>();
-//				foreach(var stock in query) {
-//					Print(stock.Symbol);
-//					//Print(stock.folding);
-//				}
-//#else
-//						foreach(var stock in db.Query<Stock>("select * from Stock"))
-//							sb.AppendLine("Stock: " + stock.Symbol);
-//#endif
-//			}
-//			Perf.Next();
-//		}
-//#endif
-//		Perf.NW();
-//	}	//		Perf.Next();
+	//				var query = db.Table<Stock>();
+	//				foreach(var stock in query) {
+	//					Print(stock.Symbol);
+	//					//Print(stock.folding);
+	//				}
+	//#else
+	//						foreach(var stock in db.Query<Stock>("select * from Stock"))
+	//							sb.AppendLine("Stock: " + stock.Symbol);
+	//#endif
+	//			}
+	//			Perf.Next();
+	//		}
+	//#endif
+	//		Perf.NW();
+	//	}	//		Perf.Next();
 
 	//		using(var db = new SQLiteConnection(file)) {
 	//			Perf.Next();
@@ -1004,6 +1004,146 @@ a1,-8";
 		Print("OK");
 	}
 
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	//static bool _TestCollectionEmpty(int[] a)
+	static bool _TestCollectionEmpty(List<int> a)
+	{
+		return Empty(a);
+	}
+
+	static void TestCollectionEmpty()
+	{
+		//int[] a = new int[0];
+		//var a = new List<int>();
+		////a.Add(1);
+		////a = null;
+		//Print(_TestCollectionEmpty(a));
+
+		//var d = new Dictionary<int, string> { { 1, "" } };
+		//d = null;
+		//Print(Empty(d));
+	}
+
+	public enum FileTextEncoding
+	{
+		/// <summary>Not a text file.</summary>
+		Binary = 0,
+
+		/// <summary>UTF-8 without BOM or ASCII.</summary>
+		Utf8NoBOM = 1,
+
+		/// <summary>UTF-8 with BOM (3 bytes).</summary>
+		Utf8BOM = 1 | (3 << 4),
+
+		/// <summary>ANSI, unknown code page.</summary>
+		Ansi = 2,
+
+		/// <summary>UTF-16 without BOM.</summary>
+		Utf16NoBOM = 3,
+
+		/// <summary>UTF-16 with BOM (2 bytes).</summary>
+		Utf16BOM = 3 | (2 << 4),
+
+		/// <summary>UTF-16 with big endian BOM (2 bytes).</summary>
+		Utf16BigEndian = 4 | (2 << 4),
+
+		/// <summary>UTF-32 with BOM (4 bytes).</summary>
+		Utf32BOM = 5 | (4 << 4),
+
+		/// <summary>UTF-32 with big endian BOM (4 bytes).</summary>
+		Utf32BigEndian = 6 | (4 << 4),
+
+		//rejected. .NET does not save/load with UTF-7 BOM, so we too. Can be different BOM length.
+		///// <summary>UTF-7 with BOM.</summary>
+		//Utf7BOM,
+	}
+
+	static unsafe Encoding _DetectFileTextEncoding(byte* s, int len, out FileTextEncoding fte, out int bomLength)
+	{
+		var t = _DetectFileTextEncoding(s, len);
+		bomLength = (int)t >> 4;
+		fte = t;
+		switch(t) {
+		case FileTextEncoding.Ansi: return Encoding.Default;
+		case FileTextEncoding.Utf8BOM: case FileTextEncoding.Utf8NoBOM: return Encoding.UTF8;
+		case FileTextEncoding.Utf16BOM: case FileTextEncoding.Utf16NoBOM: return Encoding.Unicode;
+		case FileTextEncoding.Utf16BigEndian: return Encoding.BigEndianUnicode;
+		case FileTextEncoding.Utf32BOM: case FileTextEncoding.Utf32BigEndian: return Encoding.UTF32;
+		}
+		return null; //Binary
+	}
+
+	static unsafe FileTextEncoding _DetectFileTextEncoding(byte* s, int len)
+	{
+		if(len == 0) return FileTextEncoding.Utf8NoBOM;
+		if(len == 1) return s[0] == 0 ? FileTextEncoding.Binary : (s[0] < 128 ? FileTextEncoding.Utf8NoBOM : FileTextEncoding.Ansi);
+		if(len >= 3 && s[0] == 0xEF && s[1] == 0xBB && s[2] == 0xBF) return FileTextEncoding.Utf8BOM;
+		//bool canBe16 = 0 == (fileSize & 1), canBe32 = 0 == (fileSize & 3); //rejected. .NET ignores it too.
+		if(s[0] == 0xFF && s[1] == 0xFE) {
+			if(len >= 4 && s[2] == 0 && s[3] == 0) return FileTextEncoding.Utf32BOM;
+			return FileTextEncoding.Utf16BOM;
+		}
+		if(s[0] == 0xFE && s[1] == 0xFF) return FileTextEncoding.Utf16BigEndian;
+		if(len >= 4 && *(uint*)s == 0xFFFE0000) return FileTextEncoding.Utf32BigEndian;
+		if(Au.Util.LibCharPtr.Length(s, len) == len) { //no '\0'
+			byte* p = s, pe = s + len; for(; p < pe; p++) if(*p >= 128) break; //is ASCII?
+			if(p < pe && 0 == Api.MultiByteToWideChar(Api.CP_UTF8, Api.MB_ERR_INVALID_CHARS, s, len, null, 0)) return FileTextEncoding.Ansi;
+			return FileTextEncoding.Utf8NoBOM;
+		}
+		var u = (char*)s; len /= 2;
+		if(Au.Util.LibCharPtr.Length(u, len) == len) //no '\0'
+			if(0 != Api.WideCharToMultiByte(Api.CP_UTF8, Api.WC_ERR_INVALID_CHARS, u, len, null, 0, default, null)) return FileTextEncoding.Utf16NoBOM;
+		return FileTextEncoding.Binary;
+	}
+
+	static unsafe void TestDetectFileTextEncoding()
+	{
+		//byte* s = stackalloc byte[10000];
+
+		string file = @"Q:\test\ansi.txt";
+		//string file = @"Q:\test\application_edit.ico";
+		string text = "ABąč";
+		//File.WriteAllText(file, text);
+		//File.WriteAllText(file, text, Encoding.UTF8);
+		File.WriteAllText(file, text, Encoding.UTF32);
+		//File.WriteAllText(file, text, Encoding.GetEncoding(1257));
+		return;
+
+		var k = Encoding.Unicode.GetBytes(text);
+		k = k.Insert_<byte>(0, 0xff, 0xfe);
+		k = k.Insert_<byte>(k.Length, 65);
+		File.WriteAllBytes(file, k);
+		Print(File.ReadAllText(file));// return;
+
+		Print("---- bytes ----");
+		Print(File.ReadAllBytes(file));
+		Print("------------");
+
+		using(var r = File.OpenRead(file)) {
+			var fileSize = r.Length;
+			int len = (int)Math.Min(fileSize, 65_000);
+			var b = new byte[len];
+			len = r.Read(b, 0, len);
+			//Print(len);
+			fixed (byte* p = b) {
+				var fte = _DetectFileTextEncoding(p, len);
+				Print(fte);
+			}
+		}
+
+		////var s = File.ReadAllText(file, Encoding.Default);
+		//if(File_.GetProperties(file, out var p)) Print(p.Size);
+		//Print("bytes:");
+		//Print(File.ReadAllBytes(file));
+		//Print("---");
+		////var s = File.ReadAllText(file);
+		////Print(s);
+		//var x = File.OpenText(file);
+		//Print(x.Peek());
+		//Print(x.CurrentEncoding);
+		//Print(x.ReadToEnd());
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -1020,13 +1160,12 @@ a1,-8";
 
 		try {
 #if true
-			//var d = DateTime.Now;
-			//Print(d, d.Ticks, d.ToBinary());
-			//d = DateTime.UtcNow;
-			//Print(d, d.Ticks, d.ToBinary());
 
+
+			TestDetectFileTextEncoding();
+			//TestCollectionEmpty();
 			//Perf.Cpu();
-			Perf.First();
+			//Perf.First();
 			//TestSqlite();
 			//TestSqliteExamples();
 			//TestGetBoxedPointer();

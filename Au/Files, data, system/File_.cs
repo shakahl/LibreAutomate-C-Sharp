@@ -1270,7 +1270,9 @@ namespace Au
 			try {
 				switch(data) {
 				case string text:
-					File.WriteAllText(temp, text, encoding ?? Encoding.UTF8);
+					//File.WriteAllText(temp, text, encoding ?? Encoding.UTF8); //no, it saves with BOM
+					if(encoding != null) File.WriteAllText(temp, text, encoding);
+					else File.WriteAllText(temp, text);
 					break;
 				case byte[] bytes:
 					File.WriteAllBytes(temp, bytes);

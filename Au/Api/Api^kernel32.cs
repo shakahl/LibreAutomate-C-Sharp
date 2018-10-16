@@ -249,6 +249,8 @@ namespace Au.Types
 		internal static extern bool HeapFree(IntPtr hHeap, uint dwFlags, void* lpMem);
 
 		internal const int CP_UTF8 = 65001;
+		internal const uint MB_ERR_INVALID_CHARS = 0x8;
+		internal const uint WC_ERR_INVALID_CHARS = 0x80;
 
 		[DllImport("kernel32.dll")]
 		internal static extern int MultiByteToWideChar(uint CodePage, uint dwFlags, byte* lpMultiByteStr, int cbMultiByte, char* lpWideCharStr, int cchWideChar);

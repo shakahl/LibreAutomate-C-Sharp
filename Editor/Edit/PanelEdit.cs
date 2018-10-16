@@ -69,20 +69,18 @@ partial class PanelEdit :Control
 			_activeDoc = doc;
 			_activeDoc.Visible = true;
 		} else {
-			string s = null;
-			try {
-				s = File_.LoadText(f.FilePath);
-			}
-			catch(Exception ex) { Print(ex.Message); return false; }
+			byte[] text = null;
+			SciText.FileLoaderSaver fls = default;
+			try { text = fls.Load(f.FilePath); }
+			catch(Exception ex) { Print("Failed to open file. " + ex.Message); }
+			if(text == null) return false;
 
 			if(_activeDoc != null) _activeDoc.Visible = false;
-			doc = new SciCode(f);
+			doc = new SciCode(f, fls);
 			_docs.Add(doc);
 			_activeDoc = doc;
 			this.Controls.Add(doc);
-			//doc.CreateHandle_(); //info: not auto-created because not Visible
-			doc.ST.SetText(s, noUndo: true, noNotif: true);
-			doc.LoadEditorData();
+			doc.Init(text);
 		}
 		if(focus) _activeDoc.Focus();
 
@@ -280,20 +278,23 @@ partial class PanelEdit :Control
 	class SciCode :AuScintilla
 	{
 		public readonly FileNode FN;
+		SciText.FileLoaderSaver _fls;
 
 		const int c_marginFold = 0;
 		const int c_marginLineNumbers = 1;
 		const int c_marginMarkers = 2; //breakpoints etc
 
-		public SciCode(FileNode file)
+		public SciCode(FileNode file, SciText.FileLoaderSaver fls)
 		{
 			//_edit = edit;
 			FN = file;
+			_fls = fls;
 
 			this.Dock = DockStyle.Fill;
 			this.AccessibleName = "Code";
 
 			InitImagesStyle = ImagesStyle.AnyString;
+			if(fls.IsBinary) InitReadOnlyAlways = true;
 		}
 
 		protected override void OnHandleCreated(EventArgs e)
@@ -310,9 +311,11 @@ partial class PanelEdit :Control
 			ST.StyleFont(STYLE_DEFAULT, "Courier New", 8);
 			ST.StyleClearAll();
 
-			//_SetLexer(LexLanguage.SCLEX_CPP);
-			ST.SetLexerCpp();
-			_FoldingInit();
+			if(FN.IsCodeFile) {
+				//_SetLexer(LexLanguage.SCLEX_CPP);
+				ST.SetLexerCpp();
+				_FoldingInit();
+			}
 		}
 
 		//protected override void Dispose(bool disposing)
@@ -350,11 +353,11 @@ partial class PanelEdit :Control
 		protected override void OnSciNotify(ref SCNotification n)
 		{
 			//switch(n.nmhdr.code) {
-			//case NOTIF.SCN_PAINTED:
-			//case NOTIF.SCN_UPDATEUI:
-			//case NOTIF.SCN_FOCUSIN:
-			//case NOTIF.SCN_FOCUSOUT:
-			//	break;
+			////case NOTIF.SCN_PAINTED:
+			////case NOTIF.SCN_UPDATEUI:
+			////case NOTIF.SCN_FOCUSIN:
+			////case NOTIF.SCN_FOCUSOUT:
+			////	break;
 			//case NOTIF.SCN_MODIFIED:
 			//	Print(n.nmhdr.code, n.modificationType);
 			//	break;
@@ -374,6 +377,7 @@ partial class PanelEdit :Control
 
 				break;
 			case NOTIF.SCN_UPDATEUI:
+				if(_initDeferred) { _initDeferred = false; _InitDeferred(); }
 				//Print((uint)n.updated);
 				if(0 != (n.updated & 3)) Panels.Editor._UpdateUI_Cmd();
 				break;
@@ -389,6 +393,7 @@ partial class PanelEdit :Control
 
 		protected override void WndProc(ref Message m)
 		{
+			//Print(m);
 			switch(m.Msg) {
 			case Api.WM_SETFOCUS:
 				Model?.OnEditorFocused();
@@ -402,64 +407,71 @@ partial class PanelEdit :Control
 		public bool SaveText()
 		{
 			if(IsUnsaved) {
-				try {
-					File_.Save(FN.FilePath, this.Text);
-				}
-				catch(Exception ex) {
-					Print(ex.Message);
-					return false;
-				}
+				try { _fls.Save(ST, FN.FilePath); }
+				catch(Exception ex) { Print(ex.Message); return false; }
 				Call(SCI_SETSAVEPOINT);
 				//Print("saved");
 			}
 			return true;
 		}
 
+		internal void Init(byte[] text)
+		{
+			_fls.SetText(ST, text);
+			_initDeferred = true; //now folding does not work well. The first place where it works is SCN_UPDATEUI.
+		}
+
 		#region editor data
 
-		DBEdit _savedED;
+		Convert_.MD5HashResult _savedMD5;
+		bool _initDeferred;
 
-		internal void LoadEditorData()
+		unsafe void _InitDeferred()
 		{
 			var db = Model.DB; if(db == null) return;
 			try {
-				using(var p = db.Statement("SELECT folding,bookmarks,breakpoints FROM _editor WHERE id=?", FN.Id)) {
+				using(var p = db.Statement("SELECT lines FROM _editor WHERE id=?", FN.Id)) {
 					if(p.Step()) {
-						List<int> folding = p.GetList<int>(0), bookmarks = p.GetList<int>(1), breakpoints = p.GetList<int>(2);
-						if(folding != null || bookmarks != null || breakpoints != null) {
-							folding?.ForEach(line => Call(SCI_FOLDLINE, line));
-							bookmarks?.ForEach(line => Call(SCI_MARKERADDSET, line, 1));
-							breakpoints?.ForEach(line => Call(SCI_MARKERADDSET, line, 2));
-							_savedED = new DBEdit { folding = folding, bookmarks = bookmarks, breakpoints = breakpoints };
+						var a = p.GetList<int>(0);
+						if(a != null) {
+							Convert_.MD5Hash md5 = default;
+							foreach(var v in a) { //info: a is not empty, because SQLite then would returns null
+								md5.Add(&v, 4);
+								int line = v & 0x7FFFFFF, marker = v >> 27 & 31;
+								if(marker == 31) _FoldingFoldLine(line, true);
+								else Call(SCI_MARKERADDSET, line, 1 << marker);
+							}
+							_savedMD5 = md5.Hash;
 						}
 					}
 				}
 			}
 			catch(SLException ex) { Debug_.Print(ex); }
-
-			//speed with LiteDB: load or save: first time ngened min 31 ms, non-ngened min 105 ms; then 1 ms.
-			//speed with PersistentDictionary (ESENT): load: first time 250 ms, then 95 ms; save 120 ms. Don't remember whether ngened.
 		}
 
-		internal void SaveEditorData()
+		internal unsafe void SaveEditorData()
 		{
 			var db = Model.DB; if(db == null) return;
-
-			List<int> folding = _savedED?.folding, bookmarks = _savedED?.bookmarks, breakpoints = _savedED?.breakpoints;
-			bool changed = false;
-			if(_GetLineDataToSave(0, ref folding)) changed = true;
-			if(_GetLineDataToSave(1, ref bookmarks)) changed = true;
-			if(_GetLineDataToSave(2, ref breakpoints)) changed = true;
-
-			if(changed) {
-				if(_savedED == null) _savedED = new DBEdit();
-				_savedED.folding = folding;
-				_savedED.bookmarks = bookmarks;
-				_savedED.breakpoints = breakpoints;
+			var a = new List<int>();
+			_GetLineDataToSave(31, a);
+			_GetLineDataToSave(0, a);
+			_GetLineDataToSave(1, a);
+			Convert_.MD5HashResult hash;
+			if(a.Count > 0) {
+				Convert_.MD5Hash md5 = default;
+				foreach(var v in a) md5.Add(&v, 4);
+				hash = md5.Hash;
+			} else hash = default;
+			if(hash != _savedMD5) {
 				try {
-					using(var p = db.Statement("REPLACE INTO _editor (id,folding,bookmarks,breakpoints) VALUES (?,?,?,?)")) {
-						p.Bind(1, FN.Id).Bind(2, _savedED.folding).Bind(3, _savedED.bookmarks).Bind(4, _savedED.breakpoints).Step();
+					if(a.Count == 0) {
+						db.Execute("DELETE FROM _editor WHERE id=?", FN.Id);
+					} else {
+						using(var p = db.Statement("REPLACE INTO _editor (id,lines) VALUES (?,?)")) {
+							p.Bind(1, FN.Id).Bind(2, a).Step();
+						}
 					}
+					_savedMD5 = hash;
 				}
 				catch(SLException ex) { Debug_.Print(ex); }
 			}
@@ -467,35 +479,18 @@ partial class PanelEdit :Control
 
 		/// <summary>
 		/// Gets indices of lines containing markers or contracted folding points.
-		/// Returns true if changed and need to save.
 		/// </summary>
-		/// <param name="marker">If 0, uses SCI_CONTRACTEDFOLDNEXT. Else uses SCI_MARKERNEXT; it is markerMask.</param>
-		/// <param name="saved">On input - previously saved line indices; can be null or empty if none. On output - current line indices; null if was null and returned false.</param>
-		bool _GetLineDataToSave(int marker, ref List<int> saved)
+		/// <param name="marker">If 31, uses SCI_CONTRACTEDFOLDNEXT. Else uses SCI_MARKERNEXT; must be 0...24 (markers 25-31 are used for folding).</param>
+		/// <param name="saved">Receives line indices | marker in high-order 5 bits.</param>
+		void _GetLineDataToSave(int marker, List<int> a)
 		{
-			bool changed = false; int nContracted = 0;
-			var a = saved;
-			for(int i = 0; ; i++, nContracted++) {
-				if(marker == 0) i = Call(SCI_CONTRACTEDFOLDNEXT, i);
-				else i = Call(SCI_MARKERNEXT, i, marker);
-				if(i < 0) break;
-
-				if(a == null) {
-					changed = true;
-					a = new List<int>();
-				} else if(!changed) {
-					if(nContracted < a.Count && a[nContracted] == i) continue;
-					changed = true;
-					a.RemoveRange(nContracted, a.Count - nContracted);
-				}
-				a.Add(i);
+			Debug.Assert((uint)marker < 32); //we have 5 bits for marker
+			for(int i = 0; ; i++) {
+				if(marker == 31) i = Call(SCI_CONTRACTEDFOLDNEXT, i);
+				else i = Call(SCI_MARKERNEXT, 1 << i, marker);
+				if((uint)i > 0x7FFFFFF) break; //-1 if no more; ensure we have 5 high-order bits for marker; max 134 M lines.
+				a.Add(i | (marker << 27));
 			}
-			if(!changed && a != null && nContracted < a.Count) {
-				changed = true;
-				a.RemoveRange(nContracted, a.Count - nContracted);
-			}
-			saved = a;
-			return changed;
 		}
 
 		#endregion
@@ -551,9 +546,7 @@ partial class PanelEdit :Control
 			bool isExpanded = 0 != Call(SCI_GETFOLDEXPANDED, line);
 			if(fold.HasValue && fold.GetValueOrDefault() != isExpanded) return false;
 			if(isExpanded) {
-				string s = ST.LineText(line), s2 = "";
-				if(s.Contains("//{{")) s2 = "... }}"; else if(s.Contains("/*")) s2 = "... */";
-				ST.SetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
+				_FoldingFoldLine(line, false);
 				//move caret out of contracted region
 				int pos = ST.PositionBytes;
 				if(pos > startPos) {
@@ -564,6 +557,15 @@ partial class PanelEdit :Control
 				Call(SCI_FOLDLINE, line, 1);
 			}
 			return true;
+		}
+
+		void _FoldingFoldLine(int line, bool startup)
+		{
+			string s = ST.LineText(line), s2 = "";
+			if(s.Contains("//{{")) s2 = "... }}";
+			else if(s.Contains("/*")) s2 = "... */";
+			else if(startup) { Call(SCI_FOLDLINE, line); return; } //slightly faster
+			ST.SetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
 		}
 
 		#endregion

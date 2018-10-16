@@ -155,9 +155,7 @@ partial class FilesModel
 	{
 		try {
 			//Print("saving");
-			var perf = Perf.StartNew();
 			Root.Save(CollectionFile);
-			perf.NW('S'); //TODO
 			return true;
 		}
 		catch(Exception ex) { //XElement.Save exceptions are undocumented
@@ -238,21 +236,4 @@ partial class FilesModel
 		catch(Exception ex) { Debug_.Print(ex); }
 		finally { Save.LoadingState = false; }
 	}
-}
-
-class DBEdit
-{
-	public List<int> folding { get; set; }
-	public List<int> bookmarks { get; set; }
-	public List<int> breakpoints { get; set; }
-
-#if DEBUG
-	public override string ToString()
-	{
-		var s1 = folding == null ? "null" : string.Join(" ", folding);
-		var s2 = bookmarks == null ? "null" : string.Join(" ", bookmarks);
-		var s3 = breakpoints == null ? "null" : string.Join(" ", breakpoints);
-		return $"folding={s1},  bookmarks={s2},  breakpoints={s3}";
-	}
-#endif
 }

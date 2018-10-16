@@ -215,6 +215,7 @@ namespace Au
 				if(_state != 1) { Api.MD5Init(out this); _state = 1; }
 				Api.MD5Update(ref this, data, size);
 			}
+			//TODO: T data
 
 			/// <summary>Adds data.</summary>
 			/// <exception cref="ArgumentNullException">data is null.</exception>

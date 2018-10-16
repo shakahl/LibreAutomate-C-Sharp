@@ -189,7 +189,7 @@ namespace Au.Controls
 
 			public _NoUndoNotif(SciText t, bool noUndo, bool noNotif)
 			{
-				Debug.Assert(!((noUndo | noNotif) && t.SC.InitReadOnlyAlways));
+				if(t.SC.InitReadOnlyAlways) noUndo = noNotif = false;
 				_t = t;
 				_noUndo = noUndo && 0 != _t.Call(SCI_GETUNDOCOLLECTION);
 				_noNotif = noNotif;
@@ -211,10 +211,12 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Removes all text (SCI_CLEARALL).
-		/// For InitReadOnlyAlways controls, noUndo and noNotif must be false (asserts), because Undo and notifications are disabled when creating control.
 		/// </summary>
 		/// <param name="noUndo">Cannot be undone; clear Undo buffer.</param>
 		/// <param name="noNotif">Don't send 'modified' notifications.</param>
+		/// <remarks>
+		/// Ignores noUndo and noNotif if InitReadOnlyAlways, because then Undo and notifications are disabled when creating control.
+		/// </remarks>
 		public void ClearText(bool noUndo = false, bool noNotif = false)
 		{
 			using(new _NoUndoNotif(this, noUndo, noNotif))
@@ -224,12 +226,14 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Replaces all text.
-		/// For InitReadOnlyAlways controls, noUndo and noNotif must be false (asserts), because Undo and notifications are disabled when creating control.
 		/// </summary>
 		/// <param name="s">Text.</param>
 		/// <param name="noUndo">Cannot be undone; clear Undo buffer.</param>
 		/// <param name="noNotif">Don't send 'modified' notifications.</param>
 		/// <param name="ignoreTags">Don't parse tags, regardless of SC.TagsStyle.</param>
+		/// <remarks>
+		/// Ignores noUndo and noNotif if InitReadOnlyAlways, because then Undo and notifications are disabled when creating control.
+		/// </remarks>
 		public void SetText(string s, bool noUndo = false, bool noNotif = false, bool ignoreTags = false)
 		{
 			using(new _NoUndoNotif(this, noUndo, noNotif)) {
@@ -253,6 +257,43 @@ namespace Au.Controls
 				return s.StartsWith_("<>");
 			}
 			return false;
+		}
+
+		///// <summary>
+		///// Replaces all text.
+		///// Does not parse tags.
+		///// </summary>
+		///// <param name="s">Text.</param>
+		///// <param name="startIndex"></param>
+		///// <param name="noUndo">Cannot be undone; clear Undo buffer.</param>
+		///// <param name="noNotif">Don't send 'modified' notifications.</param>
+		///// <remarks>
+		///// Ignores noUndo and noNotif if InitReadOnlyAlways, because then Undo and notifications are disabled when creating control.
+		///// </remarks>
+		//public void SetTextUtf8(byte[] s, int startIndex = 0, bool noUndo = false, bool noNotif = false)
+		//{
+		//	using(new _NoUndoNotif(this, noUndo, noNotif)) {
+		//		LibSetText(s, startIndex);
+		//	}
+		//}
+
+		/// <summary>
+		/// Sets UTF8 text.
+		/// Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+		/// </summary>
+		internal void LibSetText(byte[] s, int startIndex)
+		{
+			fixed (byte* p = s) LibSetText(p + startIndex);
+		}
+
+		/// <summary>
+		/// Sets UTF8 text.
+		/// Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+		/// </summary>
+		internal void LibSetText(byte* s)
+		{
+			using(new _NoReadonly(this))
+				Call(SCI_SETTEXT, 0, s);
 		}
 
 		/// <summary>
@@ -311,16 +352,6 @@ namespace Au.Controls
 
 		//	if(append) Call(SCI_GOTOPOS, TextLengthBytes);
 		//}
-
-		/// <summary>
-		/// Sets UTF8 text.
-		/// Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
-		/// </summary>
-		internal void LibSetText(byte* s)
-		{
-			using(new _NoReadonly(this))
-				Call(SCI_SETTEXT, 0, s);
-		}
 
 		/// <summary>
 		/// Gets all text.
@@ -538,6 +569,177 @@ namespace Au.Controls
 		{
 			Call(SCI_GOTOLINE, line);
 			Call(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
+		}
+
+		public struct FileLoaderSaver
+		{
+			_Encoding _enc;
+
+			public bool IsBinary => _enc == _Encoding.Binary;
+
+			/// <summary>
+			/// Loads file as UTF-8.
+			/// Returns byte[] that must be pased to <see cref="SetText"/>.
+			/// </summary>
+			/// <param name="file">To pass to File.OpenRead.</param>
+			/// <exception cref="Exception">Exceptions of File.OpenRead, File.Read, Encoding.Convert.</exception>
+			/// <remarks>
+			/// Supports any encoding (UTF-8, UTF-16, etc), BOM. Remembers it for Save.
+			/// If UTF-8 with BOM, the returned array contains BOM (to avoid copying), and <b>SetText</b> knows it.
+			/// If file data is binary or file size is more than 100_000_000, the returned text shows error message or image. Then <b>SetText</b> makes the control read-only; <b>Save</b> throws exception.
+			/// </remarks>
+			public byte[] Load(string file)
+			{
+				_enc = _Encoding.Binary;
+				if(0 != Path_.GetExtension(file).Equals_(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani"))
+					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"");
+
+				using(var fr = File_.WaitIfLocked(() => File.OpenRead(file))) {
+					var fileSize = fr.Length;
+					if(fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.");
+					int trySize = (int)Math.Min(fileSize, 65_000);
+					var b = new byte[trySize];
+					trySize = fr.Read(b, 0, trySize);
+					fixed (byte* p = b) _enc = _DetectEncoding(p, trySize);
+					//Print(_enc);
+					if(_enc == _Encoding.Binary) return Encoding.UTF8.GetBytes("//Cannot edit. The file is binary, not text.");
+					int bomLength = (int)_enc >> 4;
+
+					if(fileSize > trySize) {
+						var old = b; b = new byte[fileSize]; Array.Copy(old, b, trySize);
+						fr.Read(b, trySize, (int)fileSize - trySize);
+					}
+
+					Encoding e = _NetEncoding();
+					if(e != null) b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength);
+					return b;
+				}
+			}
+
+			Encoding _NetEncoding()
+			{
+				switch(_enc) {
+				case _Encoding.Ansi: return Encoding.Default;
+				case _Encoding.Utf16BOM: case _Encoding.Utf16NoBOM: return Encoding.Unicode;
+				case _Encoding.Utf16BE: return Encoding.BigEndianUnicode;
+				case _Encoding.Utf32BOM: return Encoding.UTF32;
+				case _Encoding.Utf32BE: return new UTF32Encoding(true, false);
+				}
+				return null;
+			}
+
+			static unsafe _Encoding _DetectEncoding(byte* s, int len)
+			{
+				if(len == 0) return _Encoding.Utf8NoBOM;
+				if(len == 1) return s[0] == 0 ? _Encoding.Binary : (s[0] < 128 ? _Encoding.Utf8NoBOM : _Encoding.Ansi);
+				if(len >= 3 && s[0] == 0xEF && s[1] == 0xBB && s[2] == 0xBF) return _Encoding.Utf8BOM;
+				//bool canBe16 = 0 == (fileSize & 1), canBe32 = 0 == (fileSize & 3); //rejected. .NET ignores it too.
+				if(s[0] == 0xFF && s[1] == 0xFE) {
+					if(len >= 4 && s[2] == 0 && s[3] == 0) return _Encoding.Utf32BOM;
+					return _Encoding.Utf16BOM;
+				}
+				if(s[0] == 0xFE && s[1] == 0xFF) return _Encoding.Utf16BE;
+				if(len >= 4 && *(uint*)s == 0xFFFE0000) return _Encoding.Utf32BE;
+				if(Au.Util.LibCharPtr.Length(s, len) == len) { //no '\0'
+					byte* p = s, pe = s + len; for(; p < pe; p++) if(*p >= 128) break; //is ASCII?
+					if(p < pe && 0 == Api.MultiByteToWideChar(Api.CP_UTF8, Api.MB_ERR_INVALID_CHARS, s, len, null, 0)) return _Encoding.Ansi;
+					return _Encoding.Utf8NoBOM;
+				}
+				var u = (char*)s; len /= 2;
+				if(Au.Util.LibCharPtr.Length(u, len) == len) //no '\0'
+					if(0 != Api.WideCharToMultiByte(Api.CP_UTF8, Api.WC_ERR_INVALID_CHARS, u, len, null, 0, default, null)) return _Encoding.Utf16NoBOM;
+				return _Encoding.Binary;
+			}
+
+			enum _Encoding :byte
+			{
+				/// <summary>Not a text file, or loading failed, or not initialized.</summary>
+				Binary = 0, //must be 0
+
+				/// <summary>ASCII or UTF-8 without BOM.</summary>
+				Utf8NoBOM = 1,
+
+				/// <summary>UTF-8 with BOM (3 bytes).</summary>
+				Utf8BOM = 1 | (3 << 4),
+
+				/// <summary>ANSI containing non-ASCII characters, unknown code page.</summary>
+				Ansi = 2,
+
+				/// <summary>UTF-16 without BOM.</summary>
+				Utf16NoBOM = 3,
+
+				/// <summary>UTF-16 with BOM (2 bytes).</summary>
+				Utf16BOM = 3 | (2 << 4),
+
+				/// <summary>UTF-16 with big endian BOM (2 bytes).</summary>
+				Utf16BE = 4 | (2 << 4),
+
+				/// <summary>UTF-32 with BOM (4 bytes).</summary>
+				Utf32BOM = 5 | (4 << 4),
+
+				/// <summary>UTF-32 with big endian BOM (4 bytes).</summary>
+				Utf32BE = 6 | (4 << 4),
+
+				//rejected. .NET does not save/load with UTF-7 BOM, so we too. Several different BOM of different length.
+				///// <summary>UTF-7 with BOM.</summary>
+				//Utf7BOM,
+			}
+
+			/// <summary>
+			/// Sets control text.
+			/// If the file is binary or too big, shows error message or image, makes the control read-only, and returns false. Else returns true.
+			/// </summary>
+			/// <param name="sci">Control's ST.</param>
+			/// <param name="text">Returned by <b>Load</b>.</param>
+			public unsafe bool SetText(SciText sci, byte[] text)
+			{
+				using(new _NoUndoNotif(sci, true, true)) {
+					sci.LibSetText(text, _enc == _Encoding.Utf8BOM ? 3 : 0);
+				}
+				if(_enc != _Encoding.Binary) return true;
+				sci.Call(SCI_SETREADONLY, 1);
+				return false;
+			}
+
+			/// <summary>
+			/// Saves control text with the same encoding/BOM as loaded.
+			/// </summary>
+			/// <param name="sci">Control's ST.</param>
+			/// <param name="file">To pass to File.OpenRead.</param>
+			/// <exception cref="Exception">Exceptions of File.OpenRead, File.Read, Encoding.Convert.</exception>
+			/// <exception cref="InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
+			public unsafe void Save(SciText sci, string file)
+			{
+				if(_enc == _Encoding.Binary) throw new InvalidOperationException();
+
+				//_enc = _Encoding.Utf32BOM; //test
+
+				int len = sci.TextLengthBytes;
+				int bom = (int)_enc >> 4;
+				if(bom == 2 || bom == 4) bom = 1; //1 UTF16 or UTF32 character
+				var b = LibByte(len + bom);
+
+				fixed (byte* p = b) sci.Call(SCI_GETTEXT, len + 1, p + bom);
+
+				Encoding e = _NetEncoding();
+				if(e != null) {
+					if(bom != 0) b[0] = 0; //clear BOM placeholder
+					b = Encoding.Convert(Encoding.UTF8, e, b, 0, len + bom);
+					len = b.Length;
+					switch(_enc) {
+					case _Encoding.Utf16BOM: case _Encoding.Utf32BOM: b[0] = 0xFF; b[1] = 0xFE; break;
+					case _Encoding.Utf16BE: b[0] = 0xFE; b[1] = 0xFF; break;
+					case _Encoding.Utf32BE: b[2] = 0xFE; b[3] = 0xFF; break;
+					}
+				} else if(bom == 3) {
+					len += 3;
+					b[0] = 0xEF; b[1] = 0xBB; b[2] = 0xBF;
+				} //else bom 0
+
+				//for(int i = 0; i < len; i++) Print(b[i]); return; //test
+
+				File_.Save(file, temp => { using(var fs = File.OpenWrite(temp)) { fs.Write(b, 0, len); } });
+			}
 		}
 	}
 }

@@ -622,20 +622,36 @@
         <member name="M:Au.Controls.SciText.ClearText(System.Boolean,System.Boolean)">
             <summary>
             Removes all text (SCI_CLEARALL).
-            For InitReadOnlyAlways controls, noUndo and noNotif must be false (asserts), because Undo and notifications are disabled when creating control.
             </summary>
             <param name="noUndo">Cannot be undone; clear Undo buffer.</param>
             <param name="noNotif">Don't send 'modified' notifications.</param>
+            <remarks>
+            Ignores noUndo and noNotif if InitReadOnlyAlways, because then Undo and notifications are disabled when creating control.
+            </remarks>
         </member>
         <member name="M:Au.Controls.SciText.SetText(System.String,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Replaces all text.
-            For InitReadOnlyAlways controls, noUndo and noNotif must be false (asserts), because Undo and notifications are disabled when creating control.
             </summary>
             <param name="s">Text.</param>
             <param name="noUndo">Cannot be undone; clear Undo buffer.</param>
             <param name="noNotif">Don't send 'modified' notifications.</param>
             <param name="ignoreTags">Don't parse tags, regardless of SC.TagsStyle.</param>
+            <remarks>
+            Ignores noUndo and noNotif if InitReadOnlyAlways, because then Undo and notifications are disabled when creating control.
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.SciText.LibSetText(System.Byte[],System.Int32)">
+            <summary>
+            Sets UTF8 text.
+            Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.LibSetText(System.Byte*)">
+            <summary>
+            Sets UTF8 text.
+            Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+            </summary>
         </member>
         <member name="M:Au.Controls.SciText.AppendText(System.String,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
@@ -651,12 +667,6 @@
             <summary>
             Appends UTF8 text of specified length.
             Does not append newline (s should contain it). Does not parse tags. Moves current position and scrolls to the end.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.LibSetText(System.Byte*)">
-            <summary>
-            Sets UTF8 text.
-            Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
             </summary>
         </member>
         <member name="M:Au.Controls.SciText.GetText">
@@ -792,6 +802,63 @@
             <summary>
             SCI_GOTOLINE and ensures visible.
             </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.FileLoaderSaver.Load(System.String)">
+            <summary>
+            Loads file as UTF-8.
+            Returns byte[] that must be pased to <see cref="M:Au.Controls.SciText.FileLoaderSaver.SetText(Au.Controls.SciText,System.Byte[])"/>.
+            </summary>
+            <param name="file">To pass to File.OpenRead.</param>
+            <exception cref="T:System.Exception">Exceptions of File.OpenRead, File.Read, Encoding.Convert.</exception>
+            <remarks>
+            Supports any encoding (UTF-8, UTF-16, etc), BOM. Remembers it for Save.
+            If UTF-8 with BOM, the returned array contains BOM (to avoid copying), and <b>SetText</b> knows it.
+            If file data is binary or file size is more than 100_000_000, the returned text shows error message or image. Then <b>SetText</b> makes the control read-only; <b>Save</b> throws exception.
+            </remarks>
+        </member>
+        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Binary">
+            <summary>Not a text file, or loading failed, or not initialized.</summary>
+        </member>
+        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf8NoBOM">
+            <summary>ASCII or UTF-8 without BOM.</summary>
+        </member>
+        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf8BOM">
+            <summary>UTF-8 with BOM (3 bytes).</summary>
+        </member>
+        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Ansi">
+            <summary>ANSI containing non-ASCII characters, unknown code page.</summary>
+        </member>
+        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf16NoBOM">
+            <summary>UTF-16 without BOM.</summary>
+        </member>
+        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf16BOM">
+            <summary>UTF-16 with BOM (2 bytes).</summary>
+        </member>
+        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf16BE">
+            <summary>UTF-16 with big endian BOM (2 bytes).</summary>
+        </member>
+        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf32BOM">
+            <summary>UTF-32 with BOM (4 bytes).</summary>
+        </member>
+        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf32BE">
+            <summary>UTF-32 with big endian BOM (4 bytes).</summary>
+        </member>
+        <member name="M:Au.Controls.SciText.FileLoaderSaver.SetText(Au.Controls.SciText,System.Byte[])">
+            <summary>
+            Sets control text.
+            If the file is binary or too big, shows error message or image, makes the control read-only, and returns false. Else returns true.
+            </summary>
+            <param name="sci">Control's ST.</param>
+            <param name="text">Returned by <b>Load</b>.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.FileLoaderSaver.Save(Au.Controls.SciText,System.String)">
+            <summary>
+            Saves control text with the same encoding/BOM as loaded.
+            </summary>
+            <param name="sci">Control's ST.</param>
+            <param name="file">To pass to File.OpenRead.</param>
+            <exception cref="T:System.Exception">Exceptions of File.OpenRead, File.Read, Encoding.Convert.</exception>
+            <exception cref="T:System.InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
         </member>
         <member name="T:Au.Controls.AuScintilla">
             <summary>

@@ -9973,6 +9973,11 @@
             The same as string.IsNullOrEmpty.
             </summary>
         </member>
+        <member name="M:Au.NoClass.Empty(System.Collections.ICollection)">
+            <summary>
+            Returns true if the collection (array, List, etc) is null or empty.
+            </summary>
+        </member>
         <member name="T:Au.Keyb">
             <summary>
             Keyboard functions: send virtual keystrokes and text to the active window, get key states.

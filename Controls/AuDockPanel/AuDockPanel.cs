@@ -187,6 +187,8 @@ namespace Au.Controls
 			catch(Exception ex) {
 #if DEBUG
 				Output.LibWriteQM2(ex);
+#else
+				_ = ex;
 #endif
 				//Print(ex);
 				//these don't work, maybe because now is closing app. Never mind, unlikely to fail, and not very important.
@@ -195,10 +197,8 @@ namespace Au.Controls
 			}
 		}
 
-		int _CaptionHeight
-		{
-			get
-			{
+		int _CaptionHeight {
+			get {
 				if(__captionHeight == 0) {
 					var fh = this.Font.Height; //not FontHeight, it caches the value and it is not auto updated on font change
 					__captionHeight = Math.Max(fh, Au.Util.Dpi.ScaleInt(16)) + 2; //16 for icon, 2 for padding

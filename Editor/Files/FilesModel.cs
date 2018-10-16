@@ -65,20 +65,19 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		}
 		_idMap = new Dictionary<uint, FileNode>();
 
-		var perf = Perf.StartNew();
 		Root = FileNode.Load(CollectionFile, this); //recursively creates whole model tree; caller handles exceptions
-		perf.NW('L'); //TODO
 
 		if(!_importing) {
 			_dbFile = CollectionDirectory + @"\settings.db";
 			try {
 				DB = new SqliteDB(_dbFile, sql:
+					//"PRAGMA journal_mode=WAL;" + //no, it does more bad than good
 					"CREATE TABLE IF NOT EXISTS _misc (key TEXT PRIMARY KEY, data TEXT);" +
-					"CREATE TABLE IF NOT EXISTS _editor (id INTEGER PRIMARY KEY, folding BLOB, bookmarks BLOB, breakpoints BLOB);"
+					"CREATE TABLE IF NOT EXISTS _editor (id INTEGER PRIMARY KEY, lines BLOB);"
 					);
 			}
 			catch(Exception ex) {
-				Print($"Failed to open file '{_dbFile}'. Will not load/save: list of open files, expanded folders, markers, folding.\r\n\t{ex.ToStringWithoutStack_()}");
+				Print($"Failed to open file '{_dbFile}'. Will not load/save collection settings, including lists of open files, expanded folders, markers, folding.\r\n\t{ex.ToStringWithoutStack_()}");
 			}
 			OpenFiles = new List<FileNode>();
 			_InitClickSelect();

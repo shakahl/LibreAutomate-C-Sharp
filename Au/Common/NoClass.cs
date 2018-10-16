@@ -216,5 +216,10 @@ namespace Au
 		/// The same as string.IsNullOrEmpty.
 		/// </summary>
 		public static bool Empty(string s) => (s?.Length ?? 0) == 0;
+
+		/// <summary>
+		/// Returns true if the collection (array, List, etc) is null or empty.
+		/// </summary>
+		public static bool Empty(System.Collections.ICollection a) => (a?.Count ?? 0) == 0;
 	}
 }
