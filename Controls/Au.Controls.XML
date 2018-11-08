@@ -853,7 +853,7 @@
         </member>
         <member name="M:Au.Controls.SciText.FileLoaderSaver.Save(Au.Controls.SciText,System.String)">
             <summary>
-            Saves control text with the same encoding/BOM as loaded.
+            Saves control text with the same encoding/BOM as loaded. Uses <see cref="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>.
             </summary>
             <param name="sci">Control's ST.</param>
             <param name="file">To pass to File.OpenRead.</param>

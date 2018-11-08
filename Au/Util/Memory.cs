@@ -84,7 +84,7 @@ namespace Au.Util
 #endif
 		byte _futureStructPlaceholder;
 
-#endregion
+		#endregion
 
 		/// <summary>
 		/// Shared memory size.
@@ -133,7 +133,7 @@ namespace Au.Util
 	[DebuggerStepThrough]
 	unsafe struct LibProcessMemory
 	{
-#region variables used by our library classes
+		#region variables used by our library classes
 		//Be careful with types whose sizes are different in 32 and 64 bit process. Use long and cast to IntPtr etc.
 
 		//public int test;
@@ -588,7 +588,7 @@ namespace Au.Util
 	}
 
 	/// <summary>
-	/// Binary-serializes and deserializes multiple values of types int and string.
+	/// Binary-serializes and deserializes multiple values of types int, string, string[] and null.
 	/// Much faster than BinaryFormatter, CSV, etc.
 	/// </summary>
 	internal static unsafe class LibSerializer
@@ -599,55 +599,75 @@ namespace Au.Util
 		/// </summary>
 		public struct Value
 		{
-			public string s;
-			public int i;
-			public int _isString;
+			internal object _o;
+			internal int _i;
+			internal int _type; //0 null, 1 int, 2 string, 3 string[]
 
-			public bool IsString => _isString != 0;
-
-			Value(int i) { this.i = i; s = null; _isString = 0; }
-			Value(string s) { this.s = s; i = 0; _isString = 1; }
+			Value(int i) { _o = null; _i = i; _type = 1; }
+			Value(object o, int type) { _o = o; _i = 0; _type = o != null ? type : 0; }
 
 			public static implicit operator Value(int i) => new Value(i);
-			public static implicit operator Value(string s) => new Value(s);
+			public static implicit operator Value(string s) => new Value(s, 2);
+			public static implicit operator Value(string[] a) => new Value(a, 3);
 
-			public static implicit operator string(Value a) => a.s;
-			public static implicit operator int(Value a) => a.i;
+			public static implicit operator int(Value a) => a._i;
+			public static implicit operator string(Value a) => a._o as string;
+			public static implicit operator string[] (Value a) => a._o as string[];
 		}
 
 		/// <summary>
-		/// Serializes multiple values of types int and string.
+		/// Serializes multiple values of types int, string, string[] and null.
 		/// The returned array can be passed to <see cref="Deserialize"/>.
 		/// </summary>
 		public static byte[] Serialize(params Value[] a)
 		{
 			int size = 4;
 			for(int i = 0; i < a.Length; i++) {
-				if(!a[i].IsString) size += 5;
-				else if(a[i].s == null) size++;
-				else size += 5 + a[i].s.Length * 2;
+				size++;
+				switch(a[i]._type) {
+				case 1: size += 4; break;
+				case 2: size += 4 + (a[i]._o as string).Length * 2; break;
+				case 3:
+					int z = 4;
+					foreach(var v in a[i]._o as string[]) z += 4 + v.Length_() * 2;
+					size += z;
+					break;
+				}
 			}
 			var ab = new byte[size];
 			fixed (byte* b0 = ab) {
 				byte* b = b0;
 				*(int*)b = a.Length; b += 4;
 				for(int i = 0; i < a.Length; i++) {
-					if(!a[i].IsString) {
-						*b++ = 1;
-						*(int*)b = a[i].i;
+					var ty = a[i]._type;
+					*b++ = (byte)ty;
+					switch(ty) {
+					case 1:
+						*(int*)b = a[i]._i;
 						b += 4;
-					} else if(a[i].s != null) {
-						*b++ = 2;
-						var s = a[i].s;
-						*(int*)b = s.Length; b += 4;
-						var c = (char*)b;
-						for(int j = 0; j < s.Length; j++) c[j] = s[j];
-						b += s.Length * 2;
-					} else {
-						b++;
+						break;
+					case 2:
+						var s = a[i]._o as string;
+						_AddString(s);
+						break;
+					case 3:
+						var k = a[i]._o as string[];
+						*(int*)b = k.Length; b += 4;
+						foreach(var v in k) _AddString(v);
+						break;
 					}
 				}
 				Debug.Assert((b - b0) == size);
+
+				void _AddString(string s)
+				{
+					int len = s?.Length ?? -1;
+					*(int*)b = len; b += 4;
+					if(len == -1) return;
+					var c = (char*)b;
+					for(int j = 0; j < s.Length; j++) c[j] = s[j];
+					b += s.Length * 2;
+				}
 			}
 			return ab;
 		}
@@ -664,20 +684,32 @@ namespace Au.Util
 				var a = new Value[n];
 				for(int i = 0; i < n; i++) {
 					switch(*b++) {
+					case 0:
+						break;
 					case 1:
 						a[i] = *(int*)b; b += 4;
 						break;
 					case 2:
-						int len = *(int*)b; b += 4;
-						a[i] = new string((char*)b, 0, len);
-						b += len * 2;
+						a[i] = _GetString();
 						break;
-					case 0:
+					case 3:
+						var k = new string[*(int*)b]; b += 4;
+						for(int j = 0; j < k.Length; j++) k[j] = _GetString();
+						a[i] = k;
 						break;
 					default: throw new ArgumentException();
 					}
 				}
 				return a;
+
+				string _GetString()
+				{
+					int len = *(int*)b; b += 4;
+					if(len == -1) return null;
+					var R = new string((char*)b, 0, len);
+					b += len * 2;
+					return R;
+				}
 			}
 		}
 	}

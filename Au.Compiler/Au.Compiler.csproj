@@ -69,7 +69,7 @@
   <ItemGroup>
     <Compile Include="Compiler.cs" />
     <Compile Include="ErrBuilder.cs" />
-    <Compile Include="Interfaces.cs" />
+    <Compile Include="Comp-interfaces.cs" />
     <Compile Include="MetaComments.cs" />
     <Compile Include="MetaReferences.cs" />
     <Compile Include="Scripting.cs" />

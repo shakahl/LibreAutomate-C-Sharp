@@ -102,16 +102,31 @@ namespace Au.Compiler
 	/// isolation process|appDomain|thread|hostThread //in what process, app domain and thread to execute the assembly. Default: appDomain.
 	/// uac same|user|admin //UAC integrity level (IL). Default: same. If the specified IL does not match that of the host process, the script runs in other host process.
 	/// prefer32bit true|false //32-bit process. Default: false. In any case, the assembly is AnyCPU and can load AnyCPU dlls. Must be isolation process.
-	/// runAlone yes|no|wait //if yes - don't run this script/app if a run-alone script/app (this or other) is running; wait - run when it ends. Default: yes for scripts, no for apps.
-	/// maxInstances 1 //maximum number of running instances of this script/app. Unlimited if -1. Default: 1 for scripts, unlimited for apps. Can be 0.
+	/// runUnattended true|false - the task is designed to run unattended. It can run simultaneously with other tasks and have multiple instances, ignores the "End task" hotkey, does not change the tray icon. More info below.
+	/// ifRunning leave|wait|restart|restartOrWait|run //defines what to do if another task is running. More info below.
 	/// ]]></code>
-	/// These options are applied only when the script/app is started from an Au process, not when it runs as independent exe program. Except prefer32bit.
+	/// Here word "task" is used for "script or app that is running or should start".
+	/// These options are applied only when the task is started from an Au process, not when it runs as independent exe program. Except prefer32bit.
+	/// 
 	/// About isolation:
-	/// appDomain (default) - the script runs in new AppDomain. It is like a subprocess in current process. Also it runs in new thread.
-	/// process - the script runs in other process. Slower startup. For example, can be used for scripts/apps that may kill the host process or hang and cannot be ended; also with option 'prefer32bit'.
-	/// thread - the script runs in new thread in the main AppDomain of host process. 
-	/// hostThread - the script runs in the main thread of host process. Almost never need it. If the script is not carefully programmed, can easily make the host process unstable/unresponsive.
-	/// When isolation is thread or hostThread, the script assembly is not unloaded until host process exits. Good: 1. Fast startup. 2. Values of static variables are retained when the script runs multiple times, until it is recompiled (when code modified). Bad: can create quite big memory leak when compiling the script frequently, because old assembly versions cannot be unloaded until host process exits; used reference assemblies also cannot be unloaded.
+	/// appDomain (default) - the task runs in new AppDomain. It is like a subprocess in current process. Also it runs in new thread.
+	/// process - the task runs in other process. Slower startup. For example, can be used for scripts/apps that may kill the host process or hang and cannot be ended; also with option 'prefer32bit'.
+	/// thread - the task runs in new thread in the main AppDomain of host process. 
+	/// hostThread - the task runs in the main thread of host process. Almost never need it. If the script/app is not carefully programmed, can easily make the host process unstable/unresponsive.
+	/// When isolation is thread or hostThread, the task assembly is not unloaded until host process exits. Good: 1. Fast startup. 2. Values of static variables are retained when the task runs multiple times, until it is recompiled (when code modified). Bad: can create quite big memory leak when compiling the script/app frequently, because old assembly versions cannot be unloaded until host process exits; used reference assemblies also cannot be unloaded.
+	/// 
+	/// About runUnattended:
+	/// false (default; let's call it "supervised task") - the task has these properties: 1. Cannot run simultaneously with other supervised tasks; 2. Can be ended with the "End task" hotkey; 3. Changes the tray icon. Such tasks are used: to automate a window, especially when used keyboard/mouse functions; to test new code; when creating any new script or app (later you make it unattended if need). To start such tasks you usually use the Run button or a keyboard/mouse trigger, sometimes a window trigger, and probably never such triggers as file or scheduler.
+	/// true (let's call it "unattended task") - the task does not have the 1-3 properties of supervised tasks. It can run simultaneously with other tasks (see also option 'ifRunning'). It does not change the tray icon and cannot be ended with the "End task" hotkey. Such tasks are used: to run simultaneously with any tasks (supervised, unattended, other instances of self); to protect the task from the "End task" hotkey; as background tasks that wait for some event or watch for some condition; as collections of global or application-specific small/fast functions that can be executed with method triggers, toolbars and autotexts (such triggers etc work only when the task is running; they are faster because don't need to start new task).
+	/// 
+	/// About ifRunning:
+	/// Defines what to do if another task is running. What is "another task": for a supervised task it is "a supervised task"; for an unattended task it is "another instance of this task".
+	/// leave - don't run. No warning.
+	/// wait - run later, when that task ends.
+	/// restart - end that task and run. If cannot end it, this option works like 'unspecified'. Cannot end it if the task is not responding or if it is not the same script/app.
+	/// restartOrWait - same as 'restart', but works like 'wait' if cannot end that task.
+	/// run - run new task instance. The tasks run simultaneously. This option can be used only with unattended tasks.
+	/// unspecified (default) - same as 'leave'. Prints a warning when cannot run.
 	/// 
 	/// <h3>Other</h3>
 	/// <code><![CDATA[
@@ -201,7 +216,7 @@ namespace Au.Compiler
 		/// <summary>
 		/// Meta option 'config'.
 		/// </summary>
-		public ICollectionFile ConfigFile { get; private set; }
+		public IWorkspaceFile ConfigFile { get; private set; }
 
 		/// <summary>
 		/// All meta errors of all files. Includes meta syntax errors, file 'not found' errors, exceptions.
@@ -220,7 +235,7 @@ namespace Au.Compiler
 		/// </summary>
 		public List<MetaCSharpFile> Files { get; private set; }
 
-		List<ICollectionFile> _filesC; //files added through meta option 'c'. Finally parsed and added to Files.
+		List<IWorkspaceFile> _filesC; //files added through meta option 'c'. Finally parsed and added to Files.
 
 		/// <summary>
 		/// Count of files added through meta option 'c'. They are at the end of <see cref="Files"/>.
@@ -237,7 +252,7 @@ namespace Au.Compiler
 		/// Meta option 'library'.
 		/// null if none.
 		/// </summary>
-		public List<ICollectionFile> Libraries { get; private set; }
+		public List<IWorkspaceFile> Libraries { get; private set; }
 
 		/// <summary>
 		/// Meta option 'preBuild'.
@@ -268,41 +283,31 @@ namespace Au.Compiler
 		public bool Prefer32Bit { get; private set; }
 
 		/// <summary>
-		/// Meta option 'runAlone'.
-		/// Default: true for scripts, false for others.
+		/// Meta option 'runUnattended'.
+		/// Default: false.
 		/// </summary>
-		public ERunAlone RunAlone { get; private set; }
+		public bool RunUnattended { get; private set; }
 
 		/// <summary>
-		/// Gets default meta option 'runAlone' value. It is yes if isScript, else no.
+		/// Meta option 'ifRunning'.
+		/// Default: 'unspecified' ('leave' + warning).
 		/// </summary>
-		public static ERunAlone DefaultRunAlone(bool isScript) => isScript ? ERunAlone.yes : ERunAlone.no;
-
-		/// <summary>
-		/// Gets default meta option 'maxInstances' value. It is 1 if isScript, else -1 (unlimited).
-		/// </summary>
-		public static int DefaultMaxInstances(bool isScript) => isScript ? 1 : -1;
-
-		/// <summary>
-		/// Meta option 'maxInstances'.
-		/// Default: 1 for scripts, -1 for others (unlimited).
-		/// </summary>
-		public int MaxInstances { get; private set; }
+		public EIfRunning IfRunning { get; private set; }
 
 		/// <summary>
 		/// Meta option 'icon'.
 		/// </summary>
-		public ICollectionFile IconFile { get; private set; }
+		public IWorkspaceFile IconFile { get; private set; }
 
 		/// <summary>
 		/// Meta option 'manifest'.
 		/// </summary>
-		public ICollectionFile ManifestFile { get; private set; }
+		public IWorkspaceFile ManifestFile { get; private set; }
 
 		/// <summary>
 		/// Meta option 'res'.
 		/// </summary>
-		public ICollectionFile ResFile { get; private set; }
+		public IWorkspaceFile ResFile { get; private set; }
 
 		/// <summary>
 		/// Meta option 'outputPath'.
@@ -324,7 +329,7 @@ namespace Au.Compiler
 		/// <summary>
 		/// Meta option 'sign'.
 		/// </summary>
-		public ICollectionFile SignFile { get; private set; }
+		public IWorkspaceFile SignFile { get; private set; }
 
 		/// <summary>
 		/// Meta 'xmlDoc'.
@@ -346,7 +351,7 @@ namespace Au.Compiler
 		/// <param name="f">Main C# file. If projFolder not null, must be the main file of the project.</param>
 		/// <param name="projFolder">Project folder of the main file, or null if it is not in a project.</param>
 		/// <param name="flags"></param>
-		public bool Parse(ICollectionFile f, ICollectionFile projFolder, EMPFlags flags)
+		public bool Parse(IWorkspaceFile f, IWorkspaceFile projFolder, EMPFlags flags)
 		{
 			Debug.Assert(Errors == null); //cannot be called multiple times
 			Errors = new ErrBuilder();
@@ -383,7 +388,7 @@ namespace Au.Compiler
 		/// </summary>
 		/// <param name="f"></param>
 		/// <param name="isMain">If false, it is a file added through meta option 'c'.</param>
-		public void _ParseFile(ICollectionFile f, bool isMain)
+		public void _ParseFile(IWorkspaceFile f, bool isMain)
 		{
 			string code = File_.LoadText(f.FilePath);
 			bool isScript = f.IcfIsScript;
@@ -398,8 +403,6 @@ namespace Au.Compiler
 				WarningLevel = DefaultWarningLevel;
 				DisableWarnings = DefaultDisableWarnings != null ? new List<string>(DefaultDisableWarnings) : new List<string>();
 				Defines = DefaultDefines != null ? new List<string>(DefaultDefines) : new List<string>();
-				RunAlone = DefaultRunAlone(isScript);
-				MaxInstances = DefaultMaxInstances(isScript);
 				OutputType = DefaultOutputType(isScript);
 
 				Files = new List<MetaCSharpFile>();
@@ -422,7 +425,7 @@ namespace Au.Compiler
 		}
 
 		bool _isMain;
-		ICollectionFile _fn;
+		IWorkspaceFile _fn;
 		string _code;
 
 		void _ParseOption(string code, in StringSegment seg)
@@ -456,9 +459,9 @@ namespace Au.Compiler
 				}
 				return;
 			case "c":
-				if(!value.EndsWith_(".cs", true)) { _Error(iValue, "must be .cs file"); return; }
+				if(!value.EndsWithI_(".cs")) { _Error(iValue, "must be .cs file"); return; }
 				var ff = _GetFile(value, iValue); if(ff == null) return;
-				if(_filesC == null) _filesC = new List<ICollectionFile>();
+				if(_filesC == null) _filesC = new List<IWorkspaceFile>();
 				else if(_filesC.Contains(ff)) return;
 				_filesC.Add(ff);
 				return;
@@ -503,6 +506,7 @@ namespace Au.Compiler
 				PostBuild = _GetFileAndString(value, iValue);
 				break;
 			case "outputPath":
+				_usedNonHostThreadOption = true;
 #if STANDARD_SCRIPT
 				//scripts can be .exe, but we don't allow it, because there is no way to set args, [STAThread], triggers.
 				if(IsScript) _Error(iKey, "scripts cannot have option outputPath. If want to create .exe, use App or App/Script project (menu -> File -> New)."); else
@@ -523,23 +527,23 @@ namespace Au.Compiler
 				if(_Enum(out EIsolation isolation, value, iValue)) Isolation = isolation;
 				break;
 			case "uac":
-				_usedNonDllOption = true;
+				_usedNonDllOption = _usedNonHostThreadOption = true;
 				if(_Enum(out EUac uac, value, iValue)) Uac = uac;
 				break;
 			case "prefer32bit":
 				_usedNonDllOption = true;
 				if(_TrueFalse(out bool is32, value, iValue)) Prefer32Bit = is32;
 				break;
-			case "runAlone":
-				_usedNonDllOption = _usedLimits = true;
-				if(_Enum(out ERunAlone runAlone, value, iValue)) RunAlone = runAlone;
+			case "runUnattended":
+				_usedNonDllOption = _usedNonHostThreadOption = true;
+				if(_TrueFalse(out bool runUnat, value, iValue)) RunUnattended = runUnat;
 				break;
-			case "maxInstances":
-				_usedNonDllOption = _usedLimits = true;
-				MaxInstances = value.ToInt_();
+			case "ifRunning":
+				_usedNonDllOption = _usedNonHostThreadOption = true;
+				if(_Enum(out EIfRunning ifR, value, iValue)) IfRunning = ifR;
 				break;
 			case "config":
-				_usedNonDllOption = true;
+				_usedNonDllOption = _usedNonHostThreadOption = true;
 				ConfigFile = _GetFile(value, iValue);
 				break;
 			case "manifest":
@@ -609,7 +613,7 @@ namespace Au.Compiler
 			return false;
 		}
 
-		ICollectionFile _GetFile(string s, int errPos)
+		IWorkspaceFile _GetFile(string s, int errPos)
 		{
 			var f = _fn.IcfFindRelative(s, false);
 			if(f == null) { _Error(errPos, $"file '{s}' does not exist in this collection"); return null; }
@@ -632,7 +636,7 @@ namespace Au.Compiler
 		{
 			s = s.TrimEnd('\\');
 			if(!Path_.IsFullPathExpandEnvVar(ref s)) {
-				if(s.StartsWith_('\\')) s = _fn.IcfCollection.IcfFilesDirectory + s;
+				if(s.StartsWith_('\\')) s = _fn.IcfWorkspace.IcfFilesDirectory + s;
 				else s = Path_.GetDirectoryPath(_fn.FilePath, true) + s;
 			}
 			s = Path_.LibNormalize(s, noExpandEV: true);
@@ -650,7 +654,7 @@ namespace Au.Compiler
 			//Print(r.outputType, r.file);
 			if(r.outputType != EOutputType.dll) return false; //not error, just compile that script/app
 			value = r.file;
-			(Libraries ?? (Libraries = new List<ICollectionFile>())).Add(f); //for XCompiled
+			(Libraries ?? (Libraries = new List<IWorkspaceFile>())).Add(f); //for XCompiled
 			return true;
 		}
 
@@ -661,7 +665,7 @@ namespace Au.Compiler
 				if(Isolation != EIsolation.process) return _Error(0, "if outputType console, need isolation process");
 				break;
 			case EOutputType.dll:
-				if(_usedNonDllOption) return _Error(0, "with outputType dll cannot use isolation, uac, prefer32bit, runAlone, maxInstances, config, manifest");
+				if(_usedNonDllOption) return _Error(0, "with outputType dll cannot use isolation, uac, prefer32bit, runUnattended, ifRunning, config, manifest");
 				break;
 			}
 
@@ -675,13 +679,13 @@ namespace Au.Compiler
 				if(OutputPath != null || ConfigFile != null) return _Error(0, "with isolation thread cannot use: outputPath, config");
 				break;
 			case EIsolation.hostThread:
-				if(OutputPath != null || ConfigFile != null || Uac != EUac.same || _usedLimits) return _Error(0, "with isolation hostThread cannot use: outputPath, config, uac, runAlone, maxInstances");
+				if(_usedNonHostThreadOption) return _Error(0, "with isolation hostThread cannot use: outputPath, config, uac, runUnattended, ifRunning");
 				break;
 			}
 
 			if(Prefer32Bit && Isolation != EIsolation.process) return _Error(0, "if prefer32bit true, need isolation process");
 
-			if(RunAlone != ERunAlone.no && (uint)MaxInstances > 1) return _Error(0, "must be either runAlone no or maxInstances 1 or 0");
+			if(IfRunning == EIfRunning.run && !RunUnattended) return _Error(0, "if ifRunning run, need runUnattended true");
 
 			//if(OutputPath == null && OutputType!= EOutputType.dll) {
 			//	//FUTURE: show warning if used non-.NET/GAC/Au refs
@@ -690,23 +694,23 @@ namespace Au.Compiler
 			return true;
 		}
 
-		bool _usedNonDllOption, _usedLimits;
+		bool _usedNonDllOption, _usedNonHostThreadOption;
 	}
 
 	struct MetaCSharpFile
 	{
-		public ICollectionFile f;
+		public IWorkspaceFile f;
 		public string code;
 
-		public MetaCSharpFile(ICollectionFile f, string code) { this.f = f; this.code = code; }
+		public MetaCSharpFile(IWorkspaceFile f, string code) { this.f = f; this.code = code; }
 	}
 
 	struct MetaFileAndString
 	{
-		public ICollectionFile f;
+		public IWorkspaceFile f;
 		public string s;
 
-		public MetaFileAndString(ICollectionFile f, string s) { this.f = f; this.s = s; }
+		public MetaFileAndString(IWorkspaceFile f, string s) { this.f = f; this.s = s; }
 	}
 
 	public enum EOutputType { app, console, dll }
@@ -715,7 +719,7 @@ namespace Au.Compiler
 
 	public enum EUac { same, user, admin }
 
-	public enum ERunAlone { yes, no, wait }
+	public enum EIfRunning { unspecified, leave, wait, restart, restartOrWait, run }
 
 	/// <summary>
 	/// Flags for <see cref="MetaComments.Parse"/>

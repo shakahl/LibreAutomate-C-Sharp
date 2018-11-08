@@ -145,7 +145,7 @@ namespace Au
 						return GetStockIconHandle(siid, size);
 						//case FileDir.Directory: //folder name ends with .ico etc
 					}
-				} else if(file.EndsWith_(".lnk", true)) {
+				} else if(file.EndsWithI_(".lnk")) {
 					R = _GetLnkIcon(file, size);
 					if(R != default) return R;
 					//Print("_GetLnkIcon failed", file);
@@ -656,7 +656,7 @@ namespace Au
 						else ext = ".no-ext";
 					} else {
 						//ext = ext.ToLower_();
-						if(ext.Equals_(".ico", true) || ext.Equals_(".exe", true) || ext.StartsWith_(".exe,", true) || ext.StartsWith_(".dll,", true)) ext = file;
+						if(ext.EqualsI_(".ico") || ext.EqualsI_(".exe") || ext.StartsWithI_(".exe,") || ext.StartsWithI_(".dll,")) ext = file;
 					}
 					file = ext;
 				} else if(Path_.IsFullPathExpandEnvVar(ref file)) {

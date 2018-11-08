@@ -52,8 +52,7 @@ namespace Au.LibRun
 #endif
 			_hurry = hurry;
 			_eventStart = new AutoResetEvent(false);
-			_thread = new Thread(() =>
-			{
+			_thread = new Thread(() => {
 				var ty = typeof(_DomainManager);
 				var auAsmName = ty.Assembly.FullName;
 				AppDomainSetup se = new AppDomainSetup { AppDomainManagerAssembly = auAsmName, AppDomainManagerType = ty.FullName };
@@ -63,7 +62,7 @@ namespace Au.LibRun
 #if TEST_STARTUP_SPEED
 				_perfPrepare.Next();
 #endif
-				bool taskStarted = false;
+				bool taskStarted = false, aborted = false;
 				try {
 					var v = ad.CreateInstanceAndUnwrap(auAsmName, typeof(_ADRun).FullName) as _ADRun;
 					if(!_hurry) v.PrepareOptional();
@@ -80,11 +79,25 @@ namespace Au.LibRun
 
 					v.RunInAD(_name, _asmFile, _pdbOffset, _args, _hasConfig);
 				}
-				catch(Exception e) when(!(e is ThreadAbortException)) {
-					Print(e);
+				catch(ThreadAbortException) {
+					//Print("ThreadAbortException");
+					aborted = true;
+				}
+				catch(Exception e) /*when(!(e is ThreadAbortException))*/ {
+					Print(e.ToStringWithoutStack_());
 				}
 				finally {
-					AppDomain.Unload(ad);
+					//SHOULDDO: need something better. Should wait for foreground threads, etc. But it seems .NET does not support it.
+					for(int i = 0; ; i = 1) {
+						long t0 = Time.Milliseconds;
+						try { AppDomain.Unload(ad); }
+						catch(CannotUnloadAppDomainException) { //normally thrown after 10 s
+							if(i == 0 && !aborted) Print($"<>Cannot unload AppDomain '{_name}'. Probably some of its threads cannot be aborted now because is executing unmanaged code. Tip: add meta option <c green>isolation process<>.");
+							if(Time.Milliseconds - t0 > 2500) continue;
+						}
+						catch(Exception e2) { Print(e2.ToStringWithoutStack_()); }
+						break;
+					}
 					if(taskStarted) _task.LibTaskEnded();
 				}
 #if TEST_STARTUP_SPEED
@@ -239,8 +252,7 @@ namespace Au.LibRun
 				} else {
 					//in editor process.
 					//	Could use the same code as above, but better use timer. For example if script uses Print, would display the text with a delay.
-					if(s_timerPrepareNextAD == null) s_timerPrepareNextAD = new Timer_(() =>
-					{
+					if(s_timerPrepareNextAD == null) s_timerPrepareNextAD = new Timer_(() => {
 						//Print("TIMER");
 						s_ra = new RunAsm(false, false);
 					});
@@ -445,9 +457,9 @@ namespace Au.LibRun
 				if(x.Has(RFlags.isProcess)) {
 					Process p;
 					var args = x.args as string;
-					if(x.Has(RFlags.userProcess)) p = Process_.LibStartUserIL(x.exeFile, args, needProcessObject: true);
-					else p = Process_.LibStart(x.exeFile, args, inheritUiaccess: !x.Has(RFlags.noUiAccess), needProcessObject: true);
-					//SHOULDDO: actually Process is not necessary, need just handle. But now easier.
+					if(x.Has(RFlags.userProcess)) p = Process_.LibStartUserIL(x.exeFile, args, ret: Process_.EStartReturn.Process) as Process;
+					else p = Process_.LibStart(x.exeFile, args, inheritUiaccess: !x.Has(RFlags.noUiAccess), ret: Process_.EStartReturn.Process) as Process;
+					//TODO: actually Process is not necessary. Need just handle, and LibStartX can return WaitHandle.
 					p.EnableRaisingEvents = true; //tested: does not throw when process already ended. But can throw for other reasons.
 
 					p.Exited += (unu, sed) => LibTaskEnded(); //info: the event is in a threadpool thread and does not give the Process object
@@ -457,8 +469,7 @@ namespace Au.LibRun
 				} else if(x.Has(RFlags.isThread)) {
 					var asm = RunAsm.LibLoadAssembly(x.asmFile, x.pdbOffset, true);
 
-					var t = new Thread(() =>
-					{
+					var t = new Thread(() => {
 						try {
 							LibThreadStarted(x.name);
 							RunAsm.LibRunHere(asm, x.args as string[]);
@@ -546,7 +557,7 @@ namespace Au.LibRun
 		/// </summary>
 		/// <param name="onProgramExit">Terminate threads that cannot be ended normally.</param>
 		/// <remarks>
-		/// It it is process, kills it instantly.
+		/// If it is process, kills it instantly.
 		/// Else closes thread windows, calls Thread.Abort, etc; it may end thread now or later or never. Waits briefly, but does not throw exception etc if not ended.
 		/// Don't call this func to end tasks started through other process. It can only end locally started task.
 		/// </remarks>
@@ -592,7 +603,7 @@ namespace Au.LibRun
 				if(!hasWindows) { //too dangerous to abort thread with windows. Can kill process. Much lower possibility if no windows.
 					Task.Run(() => t.Abort()); //Abort can wait
 					if(t.Join(waitMS)) break;
-					if(!onProgramExit) _PrintFailed(t, "It is executing unmanaged code and will end upon returning to managed code");
+					if(!onProgramExit) _PrintFailed(t, "Probably it is executing unmanaged code and will end upon returning to managed code");
 				}
 				//terminate thread
 				if(onProgramExit && _nativeThreadId != 0) {
@@ -602,8 +613,11 @@ namespace Au.LibRun
 				//Perf.NW();
 				break;
 			case Process p:
-				try { p.Kill(); } catch(Exception ex) { Debug_.Print(ex); }
-				break;
+				try { p.Kill(); }
+				catch(Exception ex) { Debug_.Print(ex); break; }
+				//if(!onProgramExit) p.WaitForExit(1000); //bad
+				//note: _threadOrProcess now probably still not null. If need, caller can wait for WM_TASK_ENDED.
+				return true;
 			case string _:
 				Debug.Assert(false);
 				break;
@@ -613,7 +627,7 @@ namespace Au.LibRun
 			void _PrintFailed(Thread t, string s)
 			{
 				var name = t.Name; if(name != null && name.StartsWith_("[script] ")) name = name.Substring(9);
-				Print($"Failed to end task '{name}'. {s}. Tips: to end task easily, run it in separate process: add meta option isolation process; to end all tasks now, exit this program.");
+				Print($"<>Failed to end task '{name}'. {s}. Tips: to end task easily, run it in separate process: add meta option <c green>isolation process<>; to end all tasks now, exit this program.");
 			}
 		}
 	}
@@ -649,8 +663,7 @@ namespace Au.Types
 	{
 		static AuAppBase()
 		{
-			AppDomain.CurrentDomain.UnhandledException += (ad, e) =>
-			{
+			AppDomain.CurrentDomain.UnhandledException += (ad, e) => {
 				if((ad as AppDomain).Id != AppDomain.CurrentDomain.Id) return; //avoid printing twice if subscribed in main and other appdomain
 				OnHostHandledException(e);
 
@@ -675,7 +688,15 @@ namespace Au.Types
 		{
 			t_instance = this;
 			s_instance = this;
+
+			//Au.Triggers.Trigger.Run(this);
 		}
+
+		/// <summary>
+		/// Waits for trigger events specified in function attributes like <c>[Trigger.Hotkey("Ctrl+K")]</c>. On events calls that functions and continues to wait.
+		/// </summary>
+		public void RunTriggers() => Au.Triggers.Trigger.Run(this);
+		//TODO: remove if not useful
 
 		/// <summary>
 		/// Prints exception info.

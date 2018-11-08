@@ -311,6 +311,16 @@
             Unlike <see cref="M:System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible, and does not create child control handles.
             </summary>
         </member>
+        <member name="M:Au.Types.ExtensionMethods_Forms.CreateControl_(System.Windows.Forms.Control)">
+            <summary>
+            Creates handle of this control/form and descendant controls.
+            Unlike Control.CreateHandle, works when invisible.
+            </summary>
+            <remarks>
+            Uses similar code as .NET Controls.cs internal void CreateControl(bool fIgnoreVisible).
+            Does not support controls with created handles. Asserts and throws. Would need to set parent handle, but it is a private method. That is why this func is not public.
+            </remarks>
+        </member>
         <member name="M:Au.Types.ExtensionMethods_Forms.MouseClientXY_(System.Windows.Forms.Control)">
             <summary>
             Gets mouse cursor position in client area coordinates.
@@ -485,7 +495,7 @@
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.Linq.XElement.Load(System.String)"/>.</exception>
         </member>
         <member name="M:Au.Types.XElement_.Save_(System.Xml.Linq.XElement,System.String,System.Boolean,System.Nullable{System.Xml.Linq.SaveOptions})">
-            <inheritdoc cref="M:Au.File_.Save(System.String,System.String,System.Boolean,System.Int32,System.Text.Encoding)"/>
+            <inheritdoc cref="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>
             <summary>
             Saves XML to a file in a safer way.
             Uses <see cref="M:System.Xml.Linq.XElement.Save(System.String,System.Xml.Linq.SaveOptions)"/> and <see cref="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>.
@@ -508,12 +518,42 @@
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.Linq.XDocument.Load(System.String)"/>.</exception>
         </member>
         <member name="M:Au.Types.XDocument_.Save_(System.Xml.Linq.XDocument,System.String,System.Boolean,System.Nullable{System.Xml.Linq.SaveOptions})">
-            <inheritdoc cref="M:Au.File_.Save(System.String,System.String,System.Boolean,System.Int32,System.Text.Encoding)"/>
+            <inheritdoc cref="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>
             <summary>
             Saves XML to a file in a safer way.
             Uses <see cref="M:System.Xml.Linq.XDocument.Save(System.String)"/> and <see cref="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>
             </summary>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.Linq.XDocument.Save(System.String)"/> and <see cref="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>.</exception>
+        </member>
+        <member name="T:Au.Types.UacIL">
+            <summary>
+            UAC integrity level.
+            See <see cref="P:Au.Process_.UacInfo.IntegrityLevel"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.UacIL.Untrusted">
+            <summary>The most limited rights. Very rare.</summary>
+        </member>
+        <member name="F:Au.Types.UacIL.Low">
+            <summary>Very limited rights. Used by Internet Explorer tab processes, Windows Store apps.</summary>
+        </member>
+        <member name="F:Au.Types.UacIL.Medium">
+            <summary>Limited rights. Most processes (unless UAC turned off).</summary>
+        </member>
+        <member name="F:Au.Types.UacIL.UIAccess">
+            <summary>Medium IL + can access/automate High IL windows (user interface).</summary>
+        </member>
+        <member name="F:Au.Types.UacIL.High">
+            <summary>Most rights. Processes that run as administrator.</summary>
+        </member>
+        <member name="F:Au.Types.UacIL.System">
+            <summary>Almost all rights. Services, some system processes.</summary>
+        </member>
+        <member name="F:Au.Types.UacIL.Protected">
+            <summary>Undocumented. Rare.</summary>
+        </member>
+        <member name="F:Au.Types.UacIL.Unknown">
+            <summary>Failed to get IL. Unlikely.</summary>
         </member>
         <member name="T:Au.Types.SLTransaction">
             <summary>
@@ -2558,6 +2598,11 @@
         <member name="M:Au.Types.AuAppBase.#ctor">
             
         </member>
+        <member name="M:Au.Types.AuAppBase.RunTriggers">
+            <summary>
+            Waits for trigger events specified in function attributes like <c>[Trigger.Hotkey("Ctrl+K")]</c>. On events calls that functions and continues to wait.
+            </summary>
+        </member>
         <member name="M:Au.Types.AuAppBase.OnUnhandledException(System.UnhandledExceptionEventArgs)">
             <summary>
             Prints exception info.
@@ -4148,32 +4193,32 @@
         <member name="F:Au.Types.Wildex.WildType.Text">
             <summary>
             Simple text (option t, or no *? characters and no t r R options).
-            Match() calls <see cref="M:Au.String_.Equals_(System.String,System.String,System.Boolean)"/>.
+            <b>Match</b> calls <see cref="M:Au.String_.Equals_(System.String,System.String,System.Boolean)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.Wildex.WildType.Wildcard">
             <summary>
             Wildcard (has *? characters and no t r R options).
-            Match() calls <see cref="M:Au.String_.Like_(System.String,System.String,System.Boolean)"/>.
+            <b>Match</b> calls <see cref="M:Au.String_.Like_(System.String,System.String,System.Boolean)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.Wildex.WildType.RegexPcre">
             <summary>
             PCRE regular expression (option r).
-            Match() calls <see cref="M:Au.Regex_.IsMatch(System.String,Au.Types.RXMore)"/>.
+            <b>Match</b> calls <see cref="M:Au.Regex_.IsMatch(System.String,Au.Types.RXMore)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.Wildex.WildType.RegexNet">
             <summary>
             .NET egular expression (option R).
-            Match() calls <see cref="M:System.Text.RegularExpressions.Regex.IsMatch(System.String)"/>.
+            <b>Match</b> calls <see cref="M:System.Text.RegularExpressions.Regex.IsMatch(System.String)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.Wildex.WildType.Multi">
             <summary>
             Multiple parts (option m).
-            Match() calls Match() for each part (see <see cref="P:Au.Types.Wildex.MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
-            If you want to implement a different logic, call Match() for each <see cref="P:Au.Types.Wildex.MultiArray"/> element (instead of calling Match() for this variable).
+            <b>Match</b> calls <b>Match</b> for each part (see <see cref="P:Au.Types.Wildex.MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
+            If you want to implement a different logic, call <b>Match</b> for each <see cref="P:Au.Types.Wildex.MultiArray"/> element (instead of calling <b>Match</b> for this variable).
             </summary>
         </member>
         <member name="P:Au.Types.Wildex.Text">
@@ -6052,35 +6097,6 @@
             This property is rarely useful. Instead use other properties of this class.
             </remarks>
         </member>
-        <member name="T:Au.Process_.UacInfo.IL">
-            <summary>
-            <see cref="P:Au.Process_.UacInfo.IntegrityLevel"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Process_.UacInfo.IL.Untrusted">
-            <summary>The most limited rights. Very rare.</summary>
-        </member>
-        <member name="F:Au.Process_.UacInfo.IL.Low">
-            <summary>Very limited rights. Used by Internet Explorer tab processes, Windows Store apps.</summary>
-        </member>
-        <member name="F:Au.Process_.UacInfo.IL.Medium">
-            <summary>Limited rights. Most processes (unless UAC turned off).</summary>
-        </member>
-        <member name="F:Au.Process_.UacInfo.IL.UIAccess">
-            <summary>Medium IL + can access/automate High IL windows (user interface).</summary>
-        </member>
-        <member name="F:Au.Process_.UacInfo.IL.High">
-            <summary>Most rights. Processes that run as administrator.</summary>
-        </member>
-        <member name="F:Au.Process_.UacInfo.IL.System">
-            <summary>Almost all rights. Services, some system processes.</summary>
-        </member>
-        <member name="F:Au.Process_.UacInfo.IL.Protected">
-            <summary>Undocumented. Rare.</summary>
-        </member>
-        <member name="F:Au.Process_.UacInfo.IL.Unknown">
-            <summary>Failed to get IL. Unlikely.</summary>
-        </member>
         <member name="P:Au.Process_.UacInfo.IntegrityLevel">
             <summary>
             Gets the <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level (IL) of the process.
@@ -6382,26 +6398,26 @@
             Later caller must close handles in pi, eg pi.Dispose.
             </remarks>
         </member>
-        <member name="M:Au.Process_.LibStart(System.String,System.String,System.Boolean,System.Boolean)">
+        <member name="M:Au.Process_.LibStart(System.String,System.String,System.Boolean,Au.Process_.EStartReturn)">
             <summary>
             Starts process using API CreateProcess, without the feedback hourglass cursor.
             </summary>
             <param name="exeFile"></param>
             <param name="args"></param>
             <param name="inheritUiaccess"></param>
-            <param name="needProcessObject">Return Process object. If false (default), returns null.</param>
+            <param name="ret">What to return.</param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
             If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
             </remarks>
         </member>
-        <member name="M:Au.Process_.LibStartUserIL(System.String,System.String,System.Boolean,System.Boolean)">
+        <member name="M:Au.Process_.LibStartUserIL(System.String,System.String,Au.Process_.EStartReturn,System.Boolean)">
             <summary>
             Starts UAC Medium integrity level process from this admin process.
             </summary>
             <param name="exeFile"></param>
             <param name="args"></param>
-            <param name="needProcessObject">Return Process object. If false (default), returns null.</param>
+            <param name="ret">What to return.</param>
             <param name="inheritEnvVar">Inherit environment variables.</param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
@@ -6601,6 +6617,11 @@
         <member name="M:Au.SqliteDB.GetStruct``1(``0@,System.String,System.Object[])">
             <inheritdoc cref="M:Au.SqliteDB.Get(System.Int32@,System.String,System.Object[])"/>
         </member>
+        <member name="M:Au.SqliteDB.Any(System.String,System.Object[])">
+            <inheritdoc cref="M:Au.SqliteDB.Get(System.Int32@,System.String,System.Object[])"/>
+            <summary>Executes single SQL statement and returns true if it returns at least one row of data.</summary>
+            <remarks>This function is similar to the <b>GetX</b> functions, but it does not retrieve the data.</remarks>
+        </member>
         <member name="P:Au.SqliteDB.LastInsertRowid">
             <summary>
             sqlite3_last_insert_rowid.
@@ -6623,6 +6644,12 @@
             </summary>
             <param name="sql">SQL to execute now. Default "BEGIN".</param>
             <param name="sqlOfDispose">SQL to execute when disposing the <b>SLTransaction</b> variable. Default "ROLLBACK".</param>
+        </member>
+        <member name="M:Au.SqliteDB.TableExists(System.String)">
+            <summary>
+            Returns true if the table exists.
+            </summary>
+            <param name="table">Table name.</param>
         </member>
         <member name="P:Au.SqliteDB.IsUtf16">
             <summary>
@@ -6844,6 +6871,17 @@
             Does not throw exception because it is not thread-safe.
             </summary>
             <param name="func"></param>
+        </member>
+        <member name="T:Au.Triggers.NamespaceDoc">
+            <summary>
+            Triggers.
+            </summary>
+        </member>
+        <member name="M:Au.Triggers.Trigger.Run(System.Object)">
+            <summary>
+            Waits for trigger events specified in function attributes like <c>[Trigger.Hotkey("Ctrl+K")]</c>. On events calls that functions and continues to wait.
+            </summary>
+            <param name="app">Object instance for calling non-static functions. Can be typeof(Class) if all functions are static. Only functions of that class will be called.</param>
         </member>
         <member name="T:Au.Util.IconsAsync">
             <summary>
@@ -7255,14 +7293,6 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
-        </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
         </member>
         <member name="T:Au.Util.ILReader">
             <summary>
@@ -8325,7 +8355,7 @@
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.XmlWriter.Create(System.String)"/> and other <b>XmlWriter</b> methods.</exception>
             <remarks>
-            Uses <see cref="M:Au.File_.Save(System.String,System.String,System.Boolean,System.Int32,System.Text.Encoding)"/>. It ensures that existing file data is not damaged on exception etc.
+            Uses <see cref="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>. It ensures that existing file data is not damaged on exception etc.
             </remarks>
             <example><see cref="T:Au.Util.TreeBase`1"/></example>
         </member>
@@ -8809,7 +8839,7 @@
         </member>
         <member name="T:Au.Util.LibSerializer">
             <summary>
-            Binary-serializes and deserializes multiple values of types int and string.
+            Binary-serializes and deserializes multiple values of types int, string, string[] and null.
             Much faster than BinaryFormatter, CSV, etc.
             </summary>
         </member>
@@ -8821,7 +8851,7 @@
         </member>
         <member name="M:Au.Util.LibSerializer.Serialize(Au.Util.LibSerializer.Value[])">
             <summary>
-            Serializes multiple values of types int and string.
+            Serializes multiple values of types int, string, string[] and null.
             The returned array can be passed to <see cref="M:Au.Util.LibSerializer.Deserialize(System.Byte[])"/>.
             </summary>
         </member>
@@ -9275,6 +9305,40 @@
             Returns true if AttachThreadInput succeeded and this variable is not disposed.
             </summary>
         </member>
+        <member name="M:Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin(System.String,System.String,System.String,System.String)">
+            <summary>
+            Creates or updates a trigerless task that executes a program as administrator.
+            This process must be admin.
+            You can use <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/> to run the task.
+            </summary>
+            <param name="taskFolder">
+            <inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/>
+            This function creates the folder (and ancestors) if does not exist.
+            </param>
+            <param name="taskName"><inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/></param>
+            <param name="programFile">Full path of an exe file. This function does not normalize it.</param>
+            <param name="args">Command line arguments. Can contain literal substrings $(Arg0), $(Arg1), ..., $(Arg32) that will be replaced by <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/>.</param>
+            <exception cref="T:System.UnauthorizedAccessException">Probably because this process is not admin.</exception>
+            <exception cref="T:System.Exception"></exception>
+        </member>
+        <member name="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])">
+            <summary>
+            Runs a task. Does not wait.
+            Returns process id.
+            </summary>
+            <param name="taskFolder">Can be like @"\Folder" or "Folder" or @"\" or "" or null.</param>
+            <param name="taskName">Can be like "Name" or @"\Folder\Name" or @"Folder\Name".</param>
+            <param name="args">Replacement values for substrings $(Arg0), $(Arg1), ..., $(Arg32) in 'create task' args. See <msdn>IRegisteredTask.Run</msdn>.</param>
+            <exception cref="T:System.Exception">Failed. Probably the task does not exist.</exception>
+        </member>
+        <member name="M:Au.Util.LibTaskScheduler.TaskExists(System.String,System.String)">
+            <summary>
+            Returns true if the task exists.
+            </summary>
+            <param name="taskFolder"><inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/></param>
+            <param name="taskName"><inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/></param>
+            <exception cref="T:System.Exception">Failed.</exception>
+        </member>
         <member name="M:Au.Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc">
             <summary>
             A workaround for:
@@ -9334,6 +9398,17 @@
             If it is a managed thread, at first need to set its IsBackground = true.
             </summary>
             <param name="nativeId"></param>
+        </member>
+        <member name="M:Au.Thread_.Start(System.Threading.ThreadStart,System.Boolean,System.Boolean,System.String)">
+            <summary>
+            Starts new thread: creates new <see cref="T:System.Threading.Thread"/> object, sets some properties and calls <see cref="M:System.Threading.Thread.Start"/>.
+            Returns the <b>Thread</b> variable.
+            </summary>
+            <param name="threadProc">Thread procedure. Parameter <i>start</i> of <b>Thread</b> constructor.</param>
+            <param name="background">If true (default), sets <see cref="P:System.Threading.Thread.IsBackground"/> = true.</param>
+            <param name="sta">If true (default), calls <see cref="M:System.Threading.Thread.SetApartmentState(System.Threading.ApartmentState)"/>(ApartmentState.STA).</param>
+            <param name="name">If not null, sets <see cref="P:System.Threading.Thread.Name"/> = name.</param>
+            <exception cref="T:System.OutOfMemoryException"></exception>
         </member>
         <member name="T:Au.BlockUserInput">
             <summary>
@@ -12811,6 +12886,11 @@
             Compares this and other string. Returns true if equal. Uses ordinal comparison.
             </summary>
         </member>
+        <member name="M:Au.String_.EqualsI_(System.String,System.String)">
+            <summary>
+            Compares this and other string. Returns true if equal. Uses ordinal case-insensitive comparison.
+            </summary>
+        </member>
         <member name="M:Au.String_.Equals_(System.String,System.Boolean,System.String[])">
             <summary>
             Calls <see cref="M:Au.String_.Equals_(System.String,System.String,System.Boolean)"/> for each string specified in the argument list until it returns true.
@@ -12821,7 +12901,7 @@
             <summary>
             Compares part of this string with other string. Returns true if equal. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException"><paramref name="value"/> is null.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="s"/> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
         </member>
         <member name="M:Au.String_.EqualsAt_(System.String,System.Int32,System.Boolean,System.String[])">
@@ -12836,7 +12916,13 @@
             <summary>
             Compares the end of this string with other string. Returns true if equal. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException"><paramref name="value"/> is null.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="s"/> is null.</exception>
+        </member>
+        <member name="M:Au.String_.EndsWithI_(System.String,System.String)">
+            <summary>
+            Compares the end of this string with other string. Returns true if equal. Uses ordinal case-insensitive comparison.
+            </summary>
+            <exception cref="T:System.ArgumentNullException"><paramref name="s"/> is null.</exception>
         </member>
         <member name="M:Au.String_.EndsWith_(System.String,System.Boolean,System.String[])">
             <summary>
@@ -12855,7 +12941,13 @@
             <summary>
             Compares the beginning of this string with other string. Returns true if equal. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException"><paramref name="value"/> is null.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="s"/> is null.</exception>
+        </member>
+        <member name="M:Au.String_.StartsWithI_(System.String,System.String)">
+            <summary>
+            Compares the beginning of this string with other string. Returns true if equal. Uses ordinal case-insensitive comparison.
+            </summary>
+            <exception cref="T:System.ArgumentNullException"><paramref name="s"/> is null.</exception>
         </member>
         <member name="M:Au.String_.StartsWith_(System.String,System.Boolean,System.String[])">
             <summary>
@@ -12874,20 +12966,20 @@
             <summary>
             Calls <see cref="M:System.String.IndexOf(System.String,System.StringComparison)"/>. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException"><paramref name="value"/> is null.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="s"/> is null.</exception>
         </member>
         <member name="M:Au.String_.IndexOf_(System.String,System.String,System.Int32,System.Boolean)">
             <summary>
             Calls <see cref="M:System.String.IndexOf(System.String,System.Int32,System.StringComparison)"/>. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException"><paramref name="value"/> is null.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="s"/> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
         </member>
         <member name="M:Au.String_.IndexOf_(System.String,System.String,System.Int32,System.Int32,System.Boolean)">
             <summary>
             Calls <see cref="M:System.String.IndexOf(System.String,System.Int32,System.Int32,System.StringComparison)"/>. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException"><paramref name="value"/> is null.</exception>
+            <exception cref="T:System.ArgumentNullException"><paramref name="s"/> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/> or <paramref name="count"/>.</exception>
         </member>
         <member name="M:Au.String_.Length_(System.String)">
@@ -13069,17 +13161,12 @@
             <param name="limit">If the final string is longer than <paramref name="limit"/>, get its substring 0 to <paramref name="limit"/>-1 with appended '…' character. The enclosing "" are not counted.</param>
             <param name="quote">Enclose in "".</param>
         </member>
-        <member name="M:Au.String_.SqlEscape_(System.String)">
-            <summary>
-            Replaces all "'" with "''".
-            </summary>
-        </member>
         <member name="M:Au.String_.IsAscii_(System.String)">
             <summary>
             Returns true if this string is "" or contains only ASCII characters.
             </summary>
         </member>
-        <member name="M:Au.String_.ToCharArray_(System.String)">
+        <member name="M:Au.String_.ToCharArray0_(System.String)">
             <summary>
             Converts this string to '\0'-terminated char[].
             </summary>
@@ -13563,7 +13650,7 @@
             </summary>
             <param name="onProgramExit">Terminate threads that cannot be ended normally.</param>
             <remarks>
-            It it is process, kills it instantly.
+            If it is process, kills it instantly.
             Else closes thread windows, calls Thread.Abort, etc; it may end thread now or later or never. Waits briefly, but does not throw exception etc if not ended.
             Don't call this func to end tasks started through other process. It can only end locally started task.
             </remarks>
@@ -14116,15 +14203,14 @@
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.IO.File.ReadAllBytes(System.String)"/>.</exception>
         </member>
-        <member name="M:Au.File_.Save(System.String,System.String,System.Boolean,System.Int32,System.Text.Encoding)">
+        <member name="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)">
             <summary>
-            Writes text to a file like <see cref="M:System.IO.File.WriteAllText(System.String,System.String)"/> but in a safer way.
+            Writes any data to a file in a safe way, using a callback function.
             </summary>
             <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>. The file can exist or not; this function overwrites it.</param>
-            <param name="text">Text to write. This functions uses <see cref="M:System.IO.File.WriteAllText(System.String,System.String)"/>.</param>
+            <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file. The file normally does not exist, but can.</param>
             <param name="backup">Create backup file named file + "~backup".</param>
             <param name="lockedWaitMS">If cannot open file because it is open by another process etc, wait max this number of milliseconds. Can be <see cref="F:System.Threading.Timeout.Infinite"/> (-1).</param>
-            <param name="encoding">Text encoding in file. Default <b>Encoding.UTF8</b>.</param>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:System.Exception">Exceptions of the file-write function.</exception>
             <exception cref="T:System.IO.IOException">Failed to replace file. The file-write function also can thow it.</exception>
@@ -14136,19 +14222,20 @@
             To protect from 2, this function writes to a temporary file and renames/replaces the specified file using API <msdn>ReplaceFile</msdn>. Although not completely atomic, it ensures that file data is not corrupt; if cannot write all data, does not change existing file data.
             </remarks>
         </member>
-        <member name="M:Au.File_.Save(System.String,System.Byte[],System.Boolean,System.Int32)">
-            <inheritdoc cref="M:Au.File_.Save(System.String,System.String,System.Boolean,System.Int32,System.Text.Encoding)"/>
+        <member name="M:Au.File_.SaveText(System.String,System.String,System.Boolean,System.Int32,System.Text.Encoding)">
+            <inheritdoc cref="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>
             <summary>
-            Writes data to a file like <see cref="M:System.IO.File.WriteAllBytes(System.String,System.Byte[])"/> but in a safer way.
+            Writes text to a file in a safe way, using <see cref="M:System.IO.File.WriteAllText(System.String,System.String)"/>.
             </summary>
-            <param name="bytes">Data to write. This functions uses <see cref="M:System.IO.File.WriteAllBytes(System.String,System.Byte[])"/>.</param>
+            <param name="text">Text to write.</param>
+            <param name="encoding">Text encoding in file. Default is UTF-8 without BOM.</param>
         </member>
-        <member name="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)">
-            <inheritdoc cref="M:Au.File_.Save(System.String,System.String,System.Boolean,System.Int32,System.Text.Encoding)"/>
+        <member name="M:Au.File_.SaveBytes(System.String,System.Byte[],System.Boolean,System.Int32)">
+            <inheritdoc cref="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>
             <summary>
-            Writes any data to a file in a safe way, using a callback function.
+            Writes data to a file in a safe way, using <see cref="M:System.IO.File.WriteAllBytes(System.String,System.Byte[])"/>.
             </summary>
-            <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file, which normally does not exist.</param>
+            <param name="bytes">Data to write.</param>
         </member>
         <member name="T:Au.Shell">
             <summary>
@@ -16415,6 +16502,9 @@
             <exception cref="T:System.ArgumentNullException">data is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">size &lt; 0.</exception>
         </member>
+        <member name="M:Au.Convert_.MD5Hash.Add``1(``0)">
+            <summary>Adds data.</summary>
+        </member>
         <member name="M:Au.Convert_.MD5Hash.Add(System.Byte[])">
             <summary>Adds data.</summary>
             <exception cref="T:System.ArgumentNullException">data is null.</exception>
@@ -17706,7 +17796,7 @@
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.IO.File.WriteAllText(System.String,System.String)"/>.</exception>
             <remarks>
-            Calls <see cref="M:Au.CsvTable.ToString"/> and <see cref="M:System.IO.File.WriteAllText(System.String,System.String)"/>. Also uses <see cref="M:Au.File_.Save(System.String,System.String,System.Boolean,System.Int32,System.Text.Encoding)"/>.
+            Calls <see cref="M:Au.CsvTable.ToString"/> and <see cref="M:System.IO.File.WriteAllText(System.String,System.String)"/>. Also uses <see cref="M:Au.File_.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>.
             </remarks>
         </member>
         <member name="M:Au.CsvTable.FromDictionary(System.Collections.Generic.Dictionary{System.String,System.String})">
@@ -18489,29 +18579,35 @@
         </member>
         <member name="M:Au.Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA">
             <summary>
-            Calls API <msdn>ChangeWindowMessageFilter</msdn> to enable receiving WM_COPYDATA message from lower <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level processes, for example if you'll use <see cref="M:Au.Wnd.Misc.InterProcessGetData(Au.Types.LPARAM,System.Int32@)"/>.
+            Calls API <msdn>ChangeWindowMessageFilter</msdn> to enable receiving WM_COPYDATA message from lower <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level processes, for example if you'll use <see cref="M:Au.Wnd.Misc.InterProcessGetData(Au.Types.LPARAM,System.String@,System.Byte[]@,System.Func{System.Int32,System.Boolean})"/>.
             Call this once in process.
             </summary>
         </member>
         <member name="M:Au.Wnd.Misc.InterProcessSendData(Au.Wnd,System.Int32,System.String,Au.Wnd)">
             <summary>
             Sends data to a window of another process using message <msdn>WM_COPYDATA</msdn>.
-            Returns true if the window received the message and returned true from its window procedure.
-            See also: <see cref="M:Au.Wnd.Misc.InterProcessGetData(Au.Types.LPARAM,System.Int32@)"/>.
+            Returns the return value of API <msdn>SendMessage</msdn>. It is the return value of the receiving window procedure, or 0 if failed.
+            See also: <see cref="M:Au.Wnd.Misc.InterProcessGetData(Au.Types.LPARAM,System.String@,System.Byte[]@,System.Func{System.Int32,System.Boolean})"/>.
             </summary>
-            <param name="w">The window of that process that will receive the message.</param>
-            <param name="stringId">An integer identifier of the string, to store in COPYDATASTRUCT.dwData.</param>
-            <param name="s">String containing data of any format. Can have '\0' characters.</param>
+            <param name="w">The window.</param>
+            <param name="dataId">Data id. It is COPYDATASTRUCT.dwData.</param>
+            <param name="s">Data. Can contain '\0' characters.</param>
             <param name="wSender">Optional. A window of this process that sends the message. The receiving window procedure receives it in wParam.</param>
             <seealso cref="T:Au.Util.SharedMemory"/>
         </member>
-        <member name="M:Au.Wnd.Misc.InterProcessGetData(Au.Types.LPARAM,System.Int32@)">
+        <member name="M:Au.Wnd.Misc.InterProcessSendData(Au.Wnd,System.Int32,System.Byte[],Au.Wnd)">
+            <inheritdoc cref="M:Au.Wnd.Misc.InterProcessSendData(Au.Wnd,System.Int32,System.String,Au.Wnd)"/>
+        </member>
+        <member name="M:Au.Wnd.Misc.InterProcessGetData(Au.Types.LPARAM,System.String@,System.Byte[]@,System.Func{System.Int32,System.Boolean})">
             <summary>
             Gets data stored in <msdn>COPYDATASTRUCT</msdn> structure received by a window procedure with <msdn>WM_COPYDATA</msdn> message.
+            Returns data id (COPYDATASTRUCT.dwData).
             See also: <see cref="M:Au.Wnd.Misc.InterProcessSendData(Au.Wnd,System.Int32,System.String,Au.Wnd)"/>, <see cref="M:Au.Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA"/>.
             </summary>
             <param name="lParam">lParam of the window procedure when it received WM_COPYDATA message. It is COPYDATASTRUCT pointer.</param>
-            <param name="stringId">Receives string id stored in COPYDATASTRUCT.dwData.</param>
+            <param name="dataS">Receives data as string, or null if isByteArray returns true.</param>
+            <param name="dataA">Receives data as byte[], or null if isByteArray returns false.</param>
+            <param name="isByteArray">Receives data id (COPYDATASTRUCT.dwData) and must return false to get string (dataS), true to get byte[] (dataA).</param>
             <remarks>
             <note type="note"><see cref="T:Au.Process_.UacInfo">UAC</see> blocks messages sent from processes of lower integrity level. Call <see cref="M:Au.Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA"/> before (once).</note>
             </remarks>
@@ -19654,7 +19750,7 @@
         </member>
         <member name="P:Au.Wnd.ClassName">
             <summary>
-            Gets class name.
+            Gets window class name.
             Returns null if fails, eg if the window is closed. Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
         </member>
@@ -21845,26 +21941,13 @@
         </member>
         <member name="T:Au.Script">
             <summary>
-            Base class of user main script class. Manages script options, calling script methods on launch/trigger, etc.
+            
             </summary>
         </member>
         <member name="P:Au.Script.Name">
             <summary>
             Gets current automation script/app name or <see cref="P:System.AppDomain.FriendlyName"/>.
             </summary>
-        </member>
-        <member name="M:Au.Script.CallFirstMethod">
-            <summary>
-            Calls the first non-static method of the derived class.
-            The method must have 0 parameters.
-            </summary>
-        </member>
-        <member name="M:Au.Script.CallTriggerMethod(System.String,System.Object)">
-            <summary>
-            Calls a non-static method of the derived class by name.
-            </summary>
-            <param name="name">Method name. The method must have 0 or 1 parameter.</param>
-            <param name="eventData">An argument.</param>
         </member>
         <member name="T:Au.Perf">
             <summary>

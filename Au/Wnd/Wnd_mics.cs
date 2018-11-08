@@ -283,18 +283,28 @@ namespace Au
 
 			/// <summary>
 			/// Sends data to a window of another process using message <msdn>WM_COPYDATA</msdn>.
-			/// Returns true if the window received the message and returned true from its window procedure.
+			/// Returns the return value of API <msdn>SendMessage</msdn>. It is the return value of the receiving window procedure, or 0 if failed.
 			/// See also: <see cref="InterProcessGetData"/>.
 			/// </summary>
-			/// <param name="w">The window of that process that will receive the message.</param>
-			/// <param name="stringId">An integer identifier of the string, to store in COPYDATASTRUCT.dwData.</param>
-			/// <param name="s">String containing data of any format. Can have '\0' characters.</param>
+			/// <param name="w">The window.</param>
+			/// <param name="dataId">Data id. It is COPYDATASTRUCT.dwData.</param>
+			/// <param name="s">Data. Can contain '\0' characters.</param>
 			/// <param name="wSender">Optional. A window of this process that sends the message. The receiving window procedure receives it in wParam.</param>
 			/// <seealso cref="Util.SharedMemory"/>
-			public static unsafe bool InterProcessSendData(Wnd w, int stringId, string s, Wnd wSender = default)
+			public static unsafe LPARAM InterProcessSendData(Wnd w, int dataId, string s, Wnd wSender = default)
 			{
-				var c = new Api.COPYDATASTRUCT() { dwData = stringId, cbData = s.Length * 2 };
+				var c = new Api.COPYDATASTRUCT() { dwData = dataId, cbData = s.Length * 2 };
 				fixed (char* p = s) {
+					c.lpData = p;
+					return w.Send(Api.WM_COPYDATA, wSender.Handle, &c);
+				}
+			}
+
+			/// <inheritdoc cref="InterProcessSendData(Wnd, int, string, Wnd)"/>
+			public static unsafe LPARAM InterProcessSendData(Wnd w, int dataId, byte[] a, Wnd wSender = default)
+			{
+				var c = new Api.COPYDATASTRUCT() { dwData = dataId, cbData = a.Length };
+				fixed (byte* p = a) {
 					c.lpData = p;
 					return w.Send(Api.WM_COPYDATA, wSender.Handle, &c);
 				}
@@ -302,18 +312,29 @@ namespace Au
 
 			/// <summary>
 			/// Gets data stored in <msdn>COPYDATASTRUCT</msdn> structure received by a window procedure with <msdn>WM_COPYDATA</msdn> message.
+			/// Returns data id (COPYDATASTRUCT.dwData).
 			/// See also: <see cref="InterProcessSendData"/>, <see cref="InterProcessEnableReceivingWM_COPYDATA"/>.
 			/// </summary>
 			/// <param name="lParam">lParam of the window procedure when it received WM_COPYDATA message. It is COPYDATASTRUCT pointer.</param>
-			/// <param name="stringId">Receives string id stored in COPYDATASTRUCT.dwData.</param>
+			/// <param name="dataS">Receives data as string, or null if isByteArray returns true.</param>
+			/// <param name="dataA">Receives data as byte[], or null if isByteArray returns false.</param>
+			/// <param name="isByteArray">Receives data id (COPYDATASTRUCT.dwData) and must return false to get string (dataS), true to get byte[] (dataA).</param>
 			/// <remarks>
 			/// <note type="note"><see cref="Process_.UacInfo">UAC</see> blocks messages sent from processes of lower integrity level. Call <see cref="InterProcessEnableReceivingWM_COPYDATA"/> before (once).</note>
 			/// </remarks>
-			public static unsafe string InterProcessGetData(LPARAM lParam, out int stringId)
+			public static unsafe int InterProcessGetData(LPARAM lParam, out string dataS, out byte[] dataA, Func<int, bool> isByteArray)
 			{
 				var c = (Api.COPYDATASTRUCT*)lParam;
-				stringId = (int)c->dwData;
-				return new string((char*)c->lpData, 0, c->cbData / 2);
+				int id = (int)c->dwData;
+				if(isByteArray(id)) {
+					dataS = null;
+					dataA = new byte[c->cbData];
+					Marshal.Copy((IntPtr)c->lpData, dataA, 0, dataA.Length);
+				} else {
+					dataA = null;
+					dataS = new string((char*)c->lpData, 0, c->cbData / 2);
+				}
+				return id;
 			}
 
 			/// <summary>

@@ -215,14 +215,16 @@ namespace Au
 				if(_state != 1) { Api.MD5Init(out this); _state = 1; }
 				Api.MD5Update(ref this, data, size);
 			}
-			//TODO: T data
+
+			/// <summary>Adds data.</summary>
+			public void Add<T>(T data) where T : unmanaged
+				=> Add(&data, sizeof(T));
 
 			/// <summary>Adds data.</summary>
 			/// <exception cref="ArgumentNullException">data is null.</exception>
 			public void Add(byte[] data)
 			{
-				if(data == null) throw new ArgumentNullException();
-				fixed (byte* p = data) Add(p, data.Length);
+				fixed (byte* p = data) Add(p, data?.Length ?? 0);
 			}
 
 			/// <summary>Adds data.</summary>
@@ -244,10 +246,8 @@ namespace Au
 			/// <remarks>
 			/// Resets state, so that if <b>Add</b> called again, it will start adding new datas.
 			/// </remarks>
-			public MD5HashResult Hash
-			{
-				get
-				{
+			public MD5HashResult Hash {
+				get {
 					if(_state != 2) {
 						if(_state != 1) throw new InvalidOperationException();
 						Api.MD5Final(ref this);

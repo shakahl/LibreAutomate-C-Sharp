@@ -76,6 +76,7 @@
     <Compile Include="Files, data, system\Process_.Memory.cs" />
     <Compile Include="Files, data, system\Sqlite.cs" />
     <Compile Include="Files, data, system\Sqlite^API.cs" />
+    <Compile Include="Scripts, triggers\Trigger def.cs" />
     <Compile Include="Util\IconsAsync.cs" />
     <Compile Include="Files, data, system\Thread_.cs" />
     <Compile Include="Input\BlockInput.cs" />
@@ -103,7 +104,7 @@
     <Compile Include="String\Regex_.cs" />
     <Compile Include="String\StringSegment.cs" />
     <Compile Include="Util\ILReader.cs" />
-    <Compile Include="Util\Au.LibRun.cs" />
+    <Compile Include="Scripts, triggers\Au.LibRun.cs" />
     <Compile Include="Util\StringMisc.cs" />
     <Compile Include="Util\image, GDI, etc.cs" />
     <Compile Include="Util\hooks.cs" />
@@ -168,7 +169,7 @@
     <Compile Include="Files, data, system\File_.cs" />
     <Compile Include="Files, data, system\Icon_.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Other\Script.cs" />
+    <Compile Include="Scripts, triggers\Script.cs" />
     <Compile Include="String\String_.cs" />
     <Compile Include="Time\Perf.cs" />
     <Compile Include="Api\Api_const.cs" />

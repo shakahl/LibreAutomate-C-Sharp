@@ -85,5 +85,46 @@ namespace Au
 			Api.TerminateThread(th, 0);
 			Api.CloseHandle(th);
 		}
+
+		/// <summary>
+		/// Starts new thread: creates new <see cref="Thread"/> object, sets some properties and calls <see cref="Thread.Start"/>.
+		/// Returns the <b>Thread</b> variable.
+		/// </summary>
+		/// <param name="threadProc">Thread procedure. Parameter <i>start</i> of <b>Thread</b> constructor.</param>
+		/// <param name="background">If true (default), sets <see cref="Thread.IsBackground"/> = true.</param>
+		/// <param name="sta">If true (default), calls <see cref="Thread.SetApartmentState"/>(ApartmentState.STA).</param>
+		/// <param name="name">If not null, sets <see cref="Thread.Name"/> = name.</param>
+		/// <exception cref="OutOfMemoryException"></exception>
+		public static Thread Start(ThreadStart threadProc, bool background = true, bool sta = true, string name = null)
+		{
+			var t = new Thread(threadProc);
+			if(background) t.IsBackground = true;
+			if(sta) t.SetApartmentState(ApartmentState.STA);
+			if(name != null) t.Name = name;
+			t.Start();
+			return t;
+		}
+
+		//rejected: rarely used.
+		///// <summary>
+		///// Starts new thread: creates new <see cref="Thread"/> object, sets some properties and calls <see cref="Thread.Start"/>.
+		///// Returns the <b>Thread</b> variable.
+		///// </summary>
+		///// <param name="threadProc">Thread procedure. Parameter <i>start</i> of <b>Thread</b> constructor.</param>
+		///// <param name="background">If true (default), sets <see cref="Thread.IsBackground"/> = true.</param>
+		///// <param name="sta">If true (default), sets <see cref="Thread.SetApartmentState"/>(ApartmentState.STA).</param>
+		///// <param name="name">If not null, sets <see cref="Thread.Name"/> = name.</param>
+		///// <param name="stackSize">Parameter <i>maxStackSize</i> of <b>Thread</b> constructor.</param>
+		///// <param name="parameter">Parameter <i>parameter</i> of <b>Thread.Start</b>.</param>
+		///// <exception cref="Exception">Exceptions of <b>Thread</b> constructor and <see cref="Thread.Start"/>.</exception>
+		//public static Thread Start(ParameterizedThreadStart threadProc, bool background = true, bool sta = true, string name = null, int stackSize = 0, object parameter = null)
+		//{
+		//	var t = new Thread(threadProc, stackSize);
+		//	if(background) t.IsBackground = true;
+		//	if(sta) t.SetApartmentState(ApartmentState.STA);
+		//	if(name != null) t.Name = name;
+		//	t.Start(parameter);
+		//	return t;
+		//}
 	}
 }

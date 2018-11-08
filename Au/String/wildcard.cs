@@ -324,32 +324,32 @@ namespace Au.Types
 		{
 			/// <summary>
 			/// Simple text (option t, or no *? characters and no t r R options).
-			/// Match() calls <see cref="String_.Equals_(string, string, bool)"/>.
+			/// <b>Match</b> calls <see cref="String_.Equals_(string, string, bool)"/>.
 			/// </summary>
 			Text,
 
 			/// <summary>
 			/// Wildcard (has *? characters and no t r R options).
-			/// Match() calls <see cref="String_.Like_(string, string, bool)"/>.
+			/// <b>Match</b> calls <see cref="String_.Like_(string, string, bool)"/>.
 			/// </summary>
 			Wildcard,
 
 			/// <summary>
 			/// PCRE regular expression (option r).
-			/// Match() calls <see cref="Regex_.IsMatch"/>.
+			/// <b>Match</b> calls <see cref="Regex_.IsMatch"/>.
 			/// </summary>
 			RegexPcre,
 
 			/// <summary>
 			/// .NET egular expression (option R).
-			/// Match() calls <see cref="Regex.IsMatch(string)"/>.
+			/// <b>Match</b> calls <see cref="Regex.IsMatch(string)"/>.
 			/// </summary>
 			RegexNet,
 
 			/// <summary>
 			/// Multiple parts (option m).
-			/// Match() calls Match() for each part (see <see cref="MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
-			/// If you want to implement a different logic, call Match() for each <see cref="MultiArray"/> element (instead of calling Match() for this variable).
+			/// <b>Match</b> calls <b>Match</b> for each part (see <see cref="MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
+			/// If you want to implement a different logic, call <b>Match</b> for each <see cref="MultiArray"/> element (instead of calling <b>Match</b> for this variable).
 			/// </summary>
 			Multi,
 		}

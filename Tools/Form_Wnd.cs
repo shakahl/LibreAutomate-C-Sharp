@@ -727,7 +727,7 @@ namespace Au.Tools
 				}
 				b.Append("<i>Prop[\"...\"]<>:    "); bool isProp = false;
 				foreach(var p in w.Prop.GetList()) {
-					if(p.Key.StartsWith_("#")) continue;
+					if(p.Key.StartsWith_('#')) continue;
 					if(!isProp) isProp = true; else b.Append(", ");
 					b.Append(p.Key).Append(" = ").Append(p.Value.ToString());
 				}
@@ -805,7 +805,7 @@ namespace Au.Tools
 		{
 			if(info == null) {
 				info = c_infoForm;
-			} else if(info.EndsWith_("$")) {
+			} else if(info.EndsWith_('$')) {
 				_commonInfos.SetTextWithWildexInfo(info.Remove(info.Length - 1));
 				return;
 			}

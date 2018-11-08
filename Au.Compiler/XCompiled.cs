@@ -26,23 +26,23 @@ namespace Au.Compiler
 		/// </summary>
 		unsafe class XCompiled
 		{
-			ICollectionFiles _coll;
+			IWorkspaceFiles _coll;
 			string _file;
 			Dictionary<uint, string> _data;
 
 			public string CacheDirectory { get; }
 
-			public static XCompiled OfCollection(ICollectionFiles coll)
+			public static XCompiled OfCollection(IWorkspaceFiles coll)
 			{
 				var cc = coll.IcfCompilerContext;
 				if(cc == null) coll.IcfCompilerContext = cc = new XCompiled(coll);
 				return cc as XCompiled;
 			}
 
-			public XCompiled(ICollectionFiles coll)
+			public XCompiled(IWorkspaceFiles coll)
 			{
 				_coll = coll;
-				CacheDirectory = _coll.IcfCollectionDirectory + @"\.compiled";
+				CacheDirectory = _coll.IcfWorkspaceDirectory + @"\.compiled";
 				_file = CacheDirectory + @"\compiled.log";
 			}
 
@@ -61,7 +61,7 @@ namespace Au.Compiler
 			/// <param name="f"></param>
 			/// <param name="r">Receives file path and execution options.</param>
 			/// <param name="projFolder">Project folder or null. If not null, f must be its main file.</param>
-			public bool IsCompiled(ICollectionFile f, out CompResults r, ICollectionFile projFolder)
+			public bool IsCompiled(IWorkspaceFile f, out CompResults r, IWorkspaceFile projFolder)
 			{
 				r = new CompResults();
 
@@ -72,8 +72,6 @@ namespace Au.Compiler
 				int iPipe = 0;
 
 				bool isScript = f.IcfIsScript;
-				r.maxInstances = MetaComments.DefaultMaxInstances(isScript);
-				r.runAlone = MetaComments.DefaultRunAlone(isScript);
 				r.outputType = MetaComments.DefaultOutputType(isScript);
 
 				string asmFile;
@@ -105,10 +103,10 @@ namespace Au.Compiler
 							r.uac = (EUac)value.ToInt_(offs);
 							break;
 						case 'a':
-							r.runAlone = (ERunAlone)value.ToInt_(offs);
+							r.runUnattended = true;
 							break;
 						case 'n':
-							r.maxInstances = value.ToInt_(offs);
+							r.ifRunning = (EIfRunning)value.ToInt_(offs);
 							break;
 						case 'b':
 							r.prefer32bit = true;
@@ -126,8 +124,7 @@ namespace Au.Compiler
 								Convert_.MD5Hash md = default;
 								foreach(var f1 in projFolder.IcfEnumProjectFiles(f)) {
 									if(_IsFileModified(f1)) return false;
-									uint id = f1.Id;
-									md.Add(&id, 4);
+									md.Add(f1.Id);
 								}
 								if(md.IsEmpty || md.Hash != md5) return false;
 							}
@@ -172,7 +169,7 @@ namespace Au.Compiler
 				r.name = f.Name; if(!isScript) r.name = r.name.Remove(r.name.Length - 3);
 				return true;
 
-				bool _IsFileModified(ICollectionFile f_) => _IsFileModified2(f_.FilePath);
+				bool _IsFileModified(IWorkspaceFile f_) => _IsFileModified2(f_.FilePath);
 
 				bool _IsFileModified2(string path_)
 				{
@@ -191,7 +188,7 @@ namespace Au.Compiler
 			/// <param name="m"></param>
 			/// <param name="pdbOffset"></param>
 			/// <param name="mtaThread">No [STAThread].</param>
-			public void AddCompiled(ICollectionFile f, string outFile, MetaComments m, int pdbOffset, bool mtaThread)
+			public void AddCompiled(IWorkspaceFile f, string outFile, MetaComments m, int pdbOffset, bool mtaThread)
 			{
 				if(_data == null) {
 					_data = new Dictionary<uint, string>();
@@ -203,12 +200,12 @@ namespace Au.Compiler
 	t - outputType
 	i - isolation
 	u - uac
-	a - runAlone
-	n - maxInstances
+	a - runUnattended
+	n - ifRunning
 	b - prefer32bit
 	z - mtaThread
 	d - pdbOffset
-	p - MD5 of ID of all project files except main
+	p - MD5 of Id of all project files except main
 	c - c
 	l - library
 	x - resource
@@ -226,8 +223,8 @@ namespace Au.Compiler
 					if(m.OutputType != MetaComments.DefaultOutputType(m.IsScript)) b.Append("|t").Append((int)m.OutputType);
 					if(m.Isolation != EIsolation.appDomain) b.Append("|i").Append((int)m.Isolation);
 					if(m.Uac != EUac.same) b.Append("|u").Append((int)m.Uac);
-					if(m.RunAlone != MetaComments.DefaultRunAlone(m.IsScript)) b.Append("|a").Append((int)m.RunAlone);
-					if(m.MaxInstances != MetaComments.DefaultMaxInstances(m.IsScript)) b.Append("|n").Append(m.MaxInstances);
+					if(m.RunUnattended) b.Append("|a");
+					if(m.IfRunning != EIfRunning.unspecified) b.Append("|n").Append((int)m.IfRunning);
 					if(m.Prefer32Bit) b.Append("|b");
 					if(mtaThread) b.Append("|z");
 					if(pdbOffset != 0) b.Append("|d").Append(pdbOffset);
@@ -235,10 +232,7 @@ namespace Au.Compiler
 					int nAll = m.Files.Count, nNoC = nAll - m.CountC;
 					if(nNoC > 1) { //add MD5 hash of project files, except main
 						Convert_.MD5Hash md = default;
-						for(int i = 1; i < nNoC; i++) {
-							uint idi = m.Files[i].f.Id;
-							md.Add(&idi, 4);
-						}
+						for(int i = 1; i < nNoC; i++) md.Add(m.Files[i].f.Id);
 						b.Append("|p").Append(md.Hash.ToString());
 					}
 					for(int i = nNoC; i < nAll; i++) _AppendFile("|c", m.Files[i].f); //ids of C# files added through meta 'c'
@@ -259,15 +253,15 @@ namespace Au.Compiler
 						var appDir = Folders.ThisAppBS;
 						for(; j < refs.Count; j++) {
 							var s1 = refs[j].FilePath;
-							if(s1.StartsWith_(netDir, true)) continue;
-							if(s1.StartsWith_(appDir, true)) s1 = s1.Substring(appDir.Length);
+							if(s1.StartsWithI_(netDir)) continue;
+							if(s1.StartsWithI_(appDir)) s1 = s1.Substring(appDir.Length);
 							b.Append("|*").Append(s1);
 						}
 					}
 
 					if(b.Length != 0) value = b.ToString();
 
-					void _AppendFile(string opt, ICollectionFile f_)
+					void _AppendFile(string opt, IWorkspaceFile f_)
 					{
 						if(f_ != null) b.Append(opt).Append(f_.IdString);
 					}
@@ -283,7 +277,7 @@ namespace Au.Compiler
 			/// <summary>
 			/// Removes saved f data, so that next time <see cref="IsCompiled"/> will return false.
 			/// </summary>
-			public void Remove(ICollectionFile f, bool deleteAsmFile)
+			public void Remove(IWorkspaceFile f, bool deleteAsmFile)
 			{
 				if(_data == null && !_Open()) return;
 				if(_data.Remove(f.Id)) {
@@ -343,7 +337,7 @@ namespace Au.Compiler
 			}
 		}
 
-		public static void OnFileDeleted(ICollectionFiles coll, ICollectionFile f)
+		public static void OnFileDeleted(IWorkspaceFiles coll, IWorkspaceFile f)
 		{
 			XCompiled.OfCollection(coll).Remove(f, true);
 		}

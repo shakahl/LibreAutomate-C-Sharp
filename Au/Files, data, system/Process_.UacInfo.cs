@@ -160,36 +160,6 @@ namespace Au
 			const uint SECURITY_MANDATORY_PROTECTED_PROCESS_RID = 0x00005000;
 
 			/// <summary>
-			/// <see cref="IntegrityLevel"/>.
-			/// </summary>
-			public enum IL
-			{
-				/// <summary>The most limited rights. Very rare.</summary>
-				Untrusted,
-
-				/// <summary>Very limited rights. Used by Internet Explorer tab processes, Windows Store apps.</summary>
-				Low,
-
-				/// <summary>Limited rights. Most processes (unless UAC turned off).</summary>
-				Medium,
-
-				/// <summary>Medium IL + can access/automate High IL windows (user interface).</summary>
-				UIAccess,
-
-				/// <summary>Most rights. Processes that run as administrator.</summary>
-				High,
-
-				/// <summary>Almost all rights. Services, some system processes.</summary>
-				System,
-
-				/// <summary>Undocumented. Rare.</summary>
-				Protected,
-
-				/// <summary>Failed to get IL. Unlikely.</summary>
-				Unknown = 100
-			}
-
-			/// <summary>
 			/// Gets the <see cref="UacInfo">UAC</see> integrity level (IL) of the process.
 			/// </summary>
 			/// <remarks>
@@ -197,8 +167,8 @@ namespace Au
 			/// The IL enum member values can be used like <c>if(x.IntegrityLevel > IL.Medium) ...</c> .
 			/// If UAC is turned off, most non-service processes on administrator account have High IL; on non-administrator - Medium.
 			/// </remarks>
-			public IL IntegrityLevel => _GetIntegrityLevel();
-			IL _GetIntegrityLevel()
+			public UacIL IntegrityLevel => _GetIntegrityLevel();
+			UacIL _GetIntegrityLevel()
 			{
 				if(_haveIntegrityLevel == 0) {
 					unsafe {
@@ -210,21 +180,21 @@ namespace Au
 							if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tml, siz, out siz)) _haveIntegrityLevel = 2;
 							uint x = *Api.GetSidSubAuthority(tml->Sid, (uint)(*Api.GetSidSubAuthorityCount(tml->Sid) - 1));
 
-							if(x < SECURITY_MANDATORY_LOW_RID) _integrityLevel = IL.Untrusted;
-							else if(x < SECURITY_MANDATORY_MEDIUM_RID) _integrityLevel = IL.Low;
-							else if(x < SECURITY_MANDATORY_HIGH_RID) _integrityLevel = IL.Medium;
+							if(x < SECURITY_MANDATORY_LOW_RID) _integrityLevel = UacIL.Untrusted;
+							else if(x < SECURITY_MANDATORY_MEDIUM_RID) _integrityLevel = UacIL.Low;
+							else if(x < SECURITY_MANDATORY_HIGH_RID) _integrityLevel = UacIL.Medium;
 							else if(x < SECURITY_MANDATORY_SYSTEM_RID) {
-								if(IsUIAccess && Elevation != ElevationType.Full) _integrityLevel = IL.UIAccess; //fast. Note: don't use if(andUIAccess) here.
-								else _integrityLevel = IL.High;
-							} else if(x < SECURITY_MANDATORY_PROTECTED_PROCESS_RID) _integrityLevel = IL.System;
-							else _integrityLevel = IL.Protected;
+								if(IsUIAccess && Elevation != ElevationType.Full) _integrityLevel = UacIL.UIAccess; //fast. Note: don't use if(andUIAccess) here.
+								else _integrityLevel = UacIL.High;
+							} else if(x < SECURITY_MANDATORY_PROTECTED_PROCESS_RID) _integrityLevel = UacIL.System;
+							else _integrityLevel = UacIL.Protected;
 						}
 					}
 				}
-				if(Failed = (_haveIntegrityLevel == 2)) return IL.Unknown;
+				if(Failed = (_haveIntegrityLevel == 2)) return UacIL.Unknown;
 				return _integrityLevel;
 			}
-			IL _integrityLevel; byte _haveIntegrityLevel;
+			UacIL _integrityLevel; byte _haveIntegrityLevel;
 
 			UacInfo(IntPtr hToken) { _htoken = hToken; }
 
@@ -367,4 +337,40 @@ namespace Au
 			}
 		}
 	}
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// UAC integrity level.
+	/// See <see cref="Process_.UacInfo.IntegrityLevel"/>.
+	/// </summary>
+	public enum UacIL
+	{
+		/// <summary>The most limited rights. Very rare.</summary>
+		Untrusted,
+
+		/// <summary>Very limited rights. Used by Internet Explorer tab processes, Windows Store apps.</summary>
+		Low,
+
+		/// <summary>Limited rights. Most processes (unless UAC turned off).</summary>
+		Medium,
+
+		/// <summary>Medium IL + can access/automate High IL windows (user interface).</summary>
+		UIAccess,
+
+		/// <summary>Most rights. Processes that run as administrator.</summary>
+		High,
+
+		/// <summary>Almost all rights. Services, some system processes.</summary>
+		System,
+
+		/// <summary>Undocumented. Rare.</summary>
+		Protected,
+
+		/// <summary>Failed to get IL. Unlikely.</summary>
+		Unknown = 100
+	}
+
+
 }

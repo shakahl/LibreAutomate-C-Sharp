@@ -363,7 +363,7 @@ namespace Au
 				//GetWorkingDirectory and GetIconLocation get raw path, and envronment variables such as %ProgramFiles% are expanded to (x86) in 32-bit process.
 				if(Ver.Is32BitProcessOn64BitOS) {
 					if(_pf == null) { string s = Folders.ProgramFilesX86; _pf = s + "\\"; }
-					if(R.StartsWith_(_pf, true) && !File_.ExistsAsAny(R)) {
+					if(R.StartsWithI_(_pf) && !File_.ExistsAsAny(R)) {
 						var s2 = R.Remove(_pf.Length - 7, 6);
 						if(File_.ExistsAsAny(s2)) R = s2;
 						//info: "C:\\Program Files (x86)\\" in English, "C:\\Programme (x86)\\" in German etc.

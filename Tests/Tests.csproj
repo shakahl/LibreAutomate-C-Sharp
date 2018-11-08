@@ -105,6 +105,7 @@
     <Compile Include="Unused currently\FormMenu.Designer.cs">
       <DependentUpon>FormMenu.cs</DependentUpon>
     </Compile>
+    <None Include="Unused currently\HotkeyTriggers.cs" />
     <Compile Include="Unused currently\Misc ideas.cs" />
     <None Include="Unused currently\SQLite.cs" />
     <Compile Include="_Test.cs" />

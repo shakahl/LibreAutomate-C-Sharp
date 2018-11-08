@@ -25,6 +25,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 using System.Resources;
 using Au.LibRun;
+using System.Collections.Immutable;
 
 namespace Au.Compiler
 {
@@ -50,11 +51,11 @@ namespace Au.Compiler
 		///		If forRun, does not compile (just parses meta), sets r.outputType=dll and returns false.
 		///		Else compiles but does not create output files.
 		/// </remarks>
-		public static bool Compile(bool forRun, out CompResults r, ICollectionFile f, ICollectionFile projFolder = null)
+		public static bool Compile(bool forRun, out CompResults r, IWorkspaceFile f, IWorkspaceFile projFolder = null)
 		{
 			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
 			r = null;
-			var cache = XCompiled.OfCollection(f.IcfCollection);
+			var cache = XCompiled.OfCollection(f.IcfWorkspace);
 			bool isCompiled = forRun && cache.IsCompiled(f, out r, projFolder);
 
 			//Print("isCompiled=" + isCompiled);
@@ -72,6 +73,7 @@ namespace Au.Compiler
 				}
 
 				if(!ok) {
+					f.IcfTriggers(null);
 					cache.Remove(f, false);
 					return false;
 				}
@@ -92,8 +94,8 @@ namespace Au.Compiler
 			public EOutputType outputType;
 			public EIsolation isolation;
 			public EUac uac;
-			public ERunAlone runAlone;
-			public int maxInstances;
+			public EIfRunning ifRunning;
+			public bool runUnattended;
 			public bool prefer32bit;
 
 			/// <summary>Has config file this.file + ".config".</summary>
@@ -109,7 +111,7 @@ namespace Au.Compiler
 			public int pdbOffset;
 		}
 
-		static bool _Compile(bool forRun, ICollectionFile f, out CompResults r, ICollectionFile projFolder)
+		static bool _Compile(bool forRun, IWorkspaceFile f, out CompResults r, IWorkspaceFile projFolder)
 		{
 			r = new CompResults();
 			//Perf.Next();
@@ -127,7 +129,7 @@ namespace Au.Compiler
 				return false;
 			}
 
-			XCompiled cache = XCompiled.OfCollection(f.IcfCollection);
+			XCompiled cache = XCompiled.OfCollection(f.IcfWorkspace);
 			string outPath = null, outFile = null;
 			if(needOutputFiles) {
 				string fileName;
@@ -313,15 +315,18 @@ internal static string[] args = System.Array.Empty<string>();
 			if(m.PostBuild.f != null && !_RunPrePostBuildScript(true, m, outFile)) return false;
 
 			//Perf.First();
-			if(needOutputFiles) cache.AddCompiled(f, outFile, m, r.pdbOffset, r.mtaThread);
+			if(needOutputFiles) {
+				if(m.OutputType != EOutputType.dll) _Triggers(f, compilation);
+				cache.AddCompiled(f, outFile, m, r.pdbOffset, r.mtaThread);
+			}
 			//Perf.NW();
 
 			r.name = m.Name;
 			r.outputType = m.OutputType;
 			r.isolation = m.Isolation;
 			r.uac = m.Uac;
-			r.runAlone = m.RunAlone;
-			r.maxInstances = m.MaxInstances;
+			r.ifRunning = m.IfRunning;
+			r.runUnattended = m.RunUnattended;
 			r.prefer32bit = m.Prefer32Bit;
 			r.notInCache = m.OutputPath != null;
 
@@ -371,13 +376,41 @@ internal static string[] args = System.Array.Empty<string>();
 			}
 		}
 
+		static void _Triggers(IWorkspaceFile fMain, CSharpCompilation compilation)
+		{
+			List<CompTriggerData> a = null;
+			_Triggers2(compilation.Assembly.GetAttributes(), null);
+			var entry = compilation.GetEntryPoint(default);
+			foreach(var m in entry.ContainingType.GetMembers()) {
+				if(m.Kind != SymbolKind.Method || !m.CanBeReferencedByName || m.IsExtern || m == entry) continue;
+				_Triggers2(m.GetAttributes(), m.Name);
+			}
+			fMain.IcfTriggers(a);
+
+			void _Triggers2(ImmutableArray<AttributeData> attributes, string method)
+			{
+				foreach(var v in attributes) {
+					var c = v.AttributeClass;
+					var t1 = c.ContainingType; if(t1 == null || t1.Name != "Trigger") continue;
+					var ca = v.ConstructorArguments;
+					var na = v.NamedArguments;
+					int n1 = ca.Length, n2 = na.Length;
+					var k = new KeyValuePair<string, object>[n1 + n2];
+					for(int i = 0; i < n1; i++) k[i] = new KeyValuePair<string, object>(null, ca[i].Value);
+					for(int i = 0; i < n2; i++) k[i + n1] = new KeyValuePair<string, object>(na[i].Key, na[i].Value.Value);
+
+					(a ?? (a = new List<CompTriggerData>())).Add(new CompTriggerData(method, c.Name, k));
+				}
+			}
+		}
+
 		static ResourceDescription[] _CreateManagedResources(MetaComments m)
 		{
 			var a = m.Resources;
 			if(a == null || a.Count == 0) return null;
 			var stream = new MemoryStream();
 			var rw = new ResourceWriter(stream);
-			ICollectionFile curFile = null;
+			IWorkspaceFile curFile = null;
 			try {
 				foreach(var v in a) {
 					curFile = v.f;
@@ -448,7 +481,7 @@ internal static string[] args = System.Array.Empty<string>();
 
 			if(m.IconFile == null && manifestPath == null && m.ResFile == null && m.OutputPath == null) return null;
 			Stream manStream = null, icoStream = null;
-			ICollectionFile curFile = null;
+			IWorkspaceFile curFile = null;
 			try {
 				if(m.ResFile != null) return File.OpenRead((curFile = m.ResFile).FilePath);
 				if(manifestPath != null) { curFile = manifest; manStream = File.OpenRead(manifestPath); }
@@ -464,7 +497,7 @@ internal static string[] args = System.Array.Empty<string>();
 			}
 		}
 
-		static void _ResourceException(Exception e, MetaComments m, ICollectionFile curFile)
+		static void _ResourceException(Exception e, MetaComments m, IWorkspaceFile curFile)
 		{
 			var em = e.ToStringWithoutStack_();
 			var err = m.Errors;
@@ -488,7 +521,7 @@ internal static string[] args = System.Array.Empty<string>();
 				string netDir = Folders.Windows + @"Microsoft.NET\";
 				for(; i < refs.Count; i++) {
 					var s1 = refs[i].FilePath;
-					if(s1.StartsWith_(netDir, true)) continue;
+					if(s1.StartsWithI_(netDir)) continue;
 					var s2 = m.OutputPath + "\\" + Path_.GetFileName(s1);
 					//Print(s1, s2);
 					_CopyFileIfNeed(s1, s2);
@@ -531,7 +564,7 @@ internal static string[] args = System.Array.Empty<string>();
 		/// <summary>
 		/// These usings are added to script code, before scripts's usings.
 		/// </summary>
-		public const string DefaultUsings = @"using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq; using Au; using Au.Types; using static Au.NoClass;";
+		public const string DefaultUsings = @"using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq; using Au; using Au.Types; using static Au.NoClass; using Au.Triggers;";
 
 #if STANDARD_SCRIPT
 		//Implicit usings for scripts.
@@ -552,6 +585,7 @@ internal static string[] args = System.Array.Empty<string>();
 			"Au",
 			"Au.Types",
 			"Au.NoClass",
+			"Au.Triggers",
 			"__script__", //static class in file added when compiling, to make args available
 			//speed: many usings makes compiling slower, but not as much as many references.
 		};
@@ -595,7 +629,7 @@ internal static string[] args = System.Array.Empty<string>();
 		///			Probably more difficult to implement intellisense.
 		///	Now the script is standard C# script, except variable scope.
 		/// </remarks>
-		static string _TransformScriptCode(CSharpSyntaxTree tree, string code, bool compiling, ErrBuilder err, ICollectionFile f)
+		static string _TransformScriptCode(CSharpSyntaxTree tree, string code, bool compiling, ErrBuilder err, IWorkspaceFile f)
 		{
 			//Perf.Next('1');
 
@@ -728,7 +762,7 @@ void _Main(string[] args) {");
 		/// The caller should save text before, because gets text from file, not from editor.
 		/// </summary>
 		/// <param name="f">Script.</param>
-		public static string ConvertCodeScriptToApp(ICollectionFile f)
+		public static string ConvertCodeScriptToApp(IWorkspaceFile f)
 		{
 			Debug.Assert(f.IcfIsScript);
 			var m = new MetaComments();
@@ -802,8 +836,7 @@ void _Main(string[] args) {");
 			//	Then, if compiling frequently, compiling is fast, also don't need frequent explicit GC collect. For 10 s we have constant 40 MB, then 21 MB.
 
 			if(Thread.CurrentThread.ManagedThreadId != 1) return;
-			if(t_timerGC == null) t_timerGC = new Timer_(() =>
-			{
+			if(t_timerGC == null) t_timerGC = new Timer_(() => {
 				GC.Collect();
 				//GC.WaitForPendingFinalizers(); SetProcessWorkingSetSize(Process_.CurrentProcessHandle, -1, -1);
 			});

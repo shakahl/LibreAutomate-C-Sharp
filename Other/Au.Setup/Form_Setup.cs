@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define WEB_SETUP
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Text;
@@ -23,12 +25,15 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 
-public partial class Form1 :Form
+public partial class Form_Setup :Form
 {
-	public Form1()
+	string _dir;
+
+	public Form_Setup()
 	{
 		InitializeComponent();
 
+#if WEB_SETUP
 		var f = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 		var auDll = f + @"\Au.dll";
 		if(!File.Exists(auDll)) {
@@ -37,14 +42,29 @@ public partial class Form1 :Form
 				//and maybe more
 			}
 		}
-		//TODO: later download Au.Setup.zip (program files) with UI/progress. Unzip directly into the program folder.
+		//_TODO: later download Au.Setup.zip (program files) with UI/progress. Unzip directly into the program folder.
+#endif
 
+		_TestInit();
 	}
 
-	protected override void OnClick(EventArgs e)
+	void _TestInit()
 	{
-		base.OnClick(e);
-
-		AuDialog.Show("Au");
+		//_destDir = @"Q:\app\au\_\";
+		_dir = Folders.ThisAppBS;
 	}
+
+	private void button1_Click(object sender, EventArgs e)
+	{
+		Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin("Au", "Au.Tasks", _dir + "Au.Tasks.exe", "$(Arg0)");
+
+		Close();
+	}
+
+	//protected override void OnClick(EventArgs e)
+	//{
+	//	base.OnClick(e);
+
+	//	AuDialog.Show("Au");
+	//}
 }

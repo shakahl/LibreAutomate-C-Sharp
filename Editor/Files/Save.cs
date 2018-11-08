@@ -26,7 +26,7 @@ partial class FilesModel
 	public class AutoSave
 	{
 		FilesModel _model;
-		int _collAfterS, _stateAfterS, _textAfterS;
+		int _workspaceAfterS, _stateAfterS, _textAfterS;
 		internal bool LoadingState;
 
 		public AutoSave(FilesModel model)
@@ -43,7 +43,7 @@ partial class FilesModel
 			MainForm.VisibleChanged -= _MainForm_VisibleChanged;
 
 			//must be all saved or unchanged
-			Debug.Assert(_collAfterS == 0);
+			Debug.Assert(_workspaceAfterS == 0);
 			Debug.Assert(_stateAfterS == 0);
 			Debug.Assert(_textAfterS == 0);
 		}
@@ -52,9 +52,9 @@ partial class FilesModel
 		/// Sets timer to save files.xml later, if not already set.
 		/// </summary>
 		/// <param name="afterS">Timer time, seconds.</param>
-		public void CollectionLater(int afterS = 5)
+		public void WorkspaceLater(int afterS = 5)
 		{
-			if(_collAfterS < 1 || _collAfterS > afterS) _collAfterS = afterS;
+			if(_workspaceAfterS < 1 || _workspaceAfterS > afterS) _workspaceAfterS = afterS;
 		}
 
 		/// <summary>
@@ -77,11 +77,11 @@ partial class FilesModel
 		}
 
 		/// <summary>
-		/// If files.xml is set to save (CollectionLater), saves it now.
+		/// If files.xml is set to save (WorkspaceLater), saves it now.
 		/// </summary>
-		public void CollectionNowIfNeed()
+		public void WorkspaceNowIfNeed()
 		{
-			if(_collAfterS > 0) _SaveCollectionNow();
+			if(_workspaceAfterS > 0) _SaveWorkspaceNow();
 		}
 
 		/// <summary>
@@ -103,11 +103,11 @@ partial class FilesModel
 			Panels.Editor.SaveEditorData();
 		}
 
-		void _SaveCollectionNow()
+		void _SaveWorkspaceNow()
 		{
-			_collAfterS = 0;
+			_workspaceAfterS = 0;
 			Debug.Assert(_model != null); if(_model == null) return;
-			if(!_model._SaveCollectionNow()) _collAfterS = 60; //if fails, retry later
+			if(!_model._SaveWorkspaceNow()) _workspaceAfterS = 60; //if fails, retry later
 		}
 
 		void _SaveStateNow()
@@ -126,18 +126,18 @@ partial class FilesModel
 		}
 
 		/// <summary>
-		/// Calls CollectionNowIfNeed, StateNowIfNeed, TextNowIfNeed.
+		/// Calls WorkspaceNowIfNeed, StateNowIfNeed, TextNowIfNeed.
 		/// </summary>
 		public void AllNowIfNeed()
 		{
-			CollectionNowIfNeed();
+			WorkspaceNowIfNeed();
 			StateNowIfNeed();
 			TextNowIfNeed();
 		}
 
 		void _Program_Timer1s()
 		{
-			if(_collAfterS > 0 && --_collAfterS == 0) _SaveCollectionNow();
+			if(_workspaceAfterS > 0 && --_workspaceAfterS == 0) _SaveWorkspaceNow();
 			if(_stateAfterS > 0 && --_stateAfterS == 0) _SaveStateNow();
 			if(_textAfterS > 0 && --_textAfterS == 0) _SaveTextNow();
 		}
@@ -151,15 +151,15 @@ partial class FilesModel
 	/// <summary>
 	/// Used only by the Save class.
 	/// </summary>
-	bool _SaveCollectionNow()
+	bool _SaveWorkspaceNow()
 	{
 		try {
 			//Print("saving");
-			Root.Save(CollectionFile);
+			Root.Save(WorkspaceFile);
 			return true;
 		}
 		catch(Exception ex) { //XElement.Save exceptions are undocumented
-			AuDialog.ShowError("Failed to save", CollectionFile, expandedText: ex.Message);
+			AuDialog.ShowError("Failed to save", WorkspaceFile, expandedText: ex.Message);
 			return false;
 		}
 	}
@@ -193,7 +193,7 @@ partial class FilesModel
 	}
 
 	/// <summary>
-	/// Called at the end of opening this collection.
+	/// Called at the end of opening this workspace.
 	/// </summary>
 	public void LoadState()
 	{

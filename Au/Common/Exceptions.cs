@@ -97,7 +97,7 @@ namespace Au.Types
 					int k = m.Length - 1;
 					if(m[k] == '*') m = m.Substring(0, k) + commonPostfix;
 				}
-				if(!m.EndsWith_(".")) m = m + ".";
+				if(!m.EndsWith_('.')) m = m + ".";
 			}
 
 			if(appendMessage == null && NativeErrorCode != 0) appendMessage = Native.GetErrorMessage(NativeErrorCode);

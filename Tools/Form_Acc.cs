@@ -739,7 +739,7 @@ namespace Au.Tools
 		{
 			if(info == null) {
 				info = c_infoForm;
-			} else if(info.EndsWith_("$")) {
+			} else if(info.EndsWith_('$')) {
 				_commonInfos.SetTextWithWildexInfo(info.Remove(info.Length - 1));
 				return;
 			}

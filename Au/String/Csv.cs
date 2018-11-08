@@ -402,7 +402,7 @@ namespace Au
 		public void Save(string file, bool backup = false)
 		{
 			var csv = ToString();
-			File_.Save(file, csv, backup);
+			File_.SaveText(file, csv, backup);
 		}
 
 		/// <summary>

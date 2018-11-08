@@ -291,6 +291,16 @@ namespace Au
 			}
 		}
 
+		/// <inheritdoc cref="Get(out int, string, object[])"/>
+		/// <summary>Executes single SQL statement and returns true if it returns at least one row of data.</summary>
+		/// <remarks>This function is similar to the <b>GetX</b> functions, but it does not retrieve the data.</remarks>
+		public bool Any(string sql, params object[] bind)
+		{
+			using(var p = Statement(sql, bind)) {
+				return p.Step();
+			}
+		}
+
 		#endregion
 
 		/// <summary>
@@ -316,6 +326,15 @@ namespace Au
 		/// <param name="sqlOfDispose">SQL to execute when disposing the <b>SLTransaction</b> variable. Default "ROLLBACK".</param>
 		public SLTransaction Transaction(string sql = "BEGIN", string sqlOfDispose = "ROLLBACK")
 			=> new SLTransaction(this, sql, sqlOfDispose);
+
+		/// <summary>
+		/// Returns true if the table exists.
+		/// </summary>
+		/// <param name="table">Table name.</param>
+		public bool TableExists(string table)
+		{
+			return Any($"SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", table);
+		}
 
 		#region util
 

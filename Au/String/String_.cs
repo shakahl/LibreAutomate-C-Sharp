@@ -30,14 +30,18 @@ namespace Au
 		/// <summary>
 		/// Compares this and other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
-		public static bool Equals_(this string t, string value, bool ignoreCase = false)
+		public static bool Equals_(this string t, string s, bool ignoreCase = false)
 		{
 			int len = t.Length; //NullReferenceException
-			if(value is null || len != value.Length) return false;
-			//if(ReferenceEquals(t, value)) return true; //rare
-			fixed (char* a = t, b = value) return _Equals(a, b, len, ignoreCase);
+			if(s is null || len != s.Length) return false;
+			//if(ReferenceEquals(t, s)) return true; //rare
+			fixed (char* a = t, b = s) return _Equals(a, b, len, ignoreCase);
 		}
-		//TODO: Equals_(string value), EqualsI_(string value), Equals_(bool ignoreCase = false, params string[] strings).
+
+		/// <summary>
+		/// Compares this and other string. Returns true if equal. Uses ordinal case-insensitive comparison.
+		/// </summary>
+		public static bool EqualsI_(this string t, string s) => Equals_(t, s, true);
 
 		static bool _Equals(char* a, char* b, int len, bool ignoreCase)
 		{
@@ -80,14 +84,14 @@ namespace Au
 		/// <summary>
 		/// Compares part of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
+		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
-		public static bool EqualsAt_(this string t, int startIndex, string value, bool ignoreCase = false)
+		public static bool EqualsAt_(this string t, int startIndex, string s, bool ignoreCase = false)
 		{
 			if((uint)startIndex > t.Length) throw new ArgumentOutOfRangeException(); //and NullReferenceException
-			int n = value?.Length ?? throw new ArgumentNullException();
+			int n = s?.Length ?? throw new ArgumentNullException();
 			if(n > t.Length - startIndex) return false;
-			fixed (char* a = t, b = value) return _Equals(a + startIndex, b, n, ignoreCase);
+			fixed (char* a = t, b = s) return _Equals(a + startIndex, b, n, ignoreCase);
 		}
 
 		/// <summary>
@@ -111,13 +115,19 @@ namespace Au
 		/// <summary>
 		/// Compares the end of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
-		public static bool EndsWith_(this string t, string value, bool ignoreCase = false)
+		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+		public static bool EndsWith_(this string t, string s, bool ignoreCase = false)
 		{
 			int tLen = t.Length; //NullReferenceException
-			int n = value?.Length ?? throw new ArgumentNullException(); if(n > tLen) return false;
-			fixed (char* a = t, b = value) return _Equals(a + tLen - n, b, n, ignoreCase);
+			int n = s?.Length ?? throw new ArgumentNullException(); if(n > tLen) return false;
+			fixed (char* a = t, b = s) return _Equals(a + tLen - n, b, n, ignoreCase);
 		}
+
+		/// <summary>
+		/// Compares the end of this string with other string. Returns true if equal. Uses ordinal case-insensitive comparison.
+		/// </summary>
+		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+		public static bool EndsWithI_(this string t, string s) => EndsWith_(t, s, true);
 
 		/// <summary>
 		/// Calls <see cref="EndsWith_(string, string, bool)"/> for each string specified in the argument list until it returns true.
@@ -134,22 +144,28 @@ namespace Au
 		/// Returns true if this string ends with the specified character.
 		/// Fast, case-sensitive.
 		/// </summary>
-		public static bool EndsWith_(this string t, char value)
+		public static bool EndsWith_(this string t, char c)
 		{
 			int i = t.Length - 1;
-			return i >= 0 && t[i] == value;
+			return i >= 0 && t[i] == c;
 		}
 
 		/// <summary>
 		/// Compares the beginning of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
-		public static bool StartsWith_(this string t, string value, bool ignoreCase = false)
+		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+		public static bool StartsWith_(this string t, string s, bool ignoreCase = false)
 		{
 			int tLen = t.Length; //NullReferenceException
-			int n = value?.Length ?? throw new ArgumentNullException(); if(n > tLen) return false;
-			fixed (char* a = t, b = value) return _Equals(a, b, n, ignoreCase);
+			int n = s?.Length ?? throw new ArgumentNullException(); if(n > tLen) return false;
+			fixed (char* a = t, b = s) return _Equals(a, b, n, ignoreCase);
 		}
+
+		/// <summary>
+		/// Compares the beginning of this string with other string. Returns true if equal. Uses ordinal case-insensitive comparison.
+		/// </summary>
+		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+		public static bool StartsWithI_(this string t, string s) => StartsWith_(t, s, true);
 
 		/// <summary>
 		/// Calls <see cref="StartsWith_(string, string, bool)"/> for each string specified in the argument list until it returns true.
@@ -166,38 +182,38 @@ namespace Au
 		/// Returns true if this string starts with the specified character.
 		/// Fast, case-sensitive.
 		/// </summary>
-		public static bool StartsWith_(this string t, char value)
+		public static bool StartsWith_(this string t, char c)
 		{
-			return t.Length > 0 && t[0] == value;
+			return t.Length > 0 && t[0] == c;
 		}
 
 		/// <summary>
 		/// Calls <see cref="string.IndexOf(string, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
-		public static int IndexOf_(this string t, string value, bool ignoreCase = false)
+		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+		public static int IndexOf_(this string t, string s, bool ignoreCase = false)
 		{
-			return t.IndexOf(value, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 
 		/// <summary>
 		/// Calls <see cref="string.IndexOf(string, int, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
+		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
-		public static int IndexOf_(this string t, string value, int startIndex, bool ignoreCase = false)
+		public static int IndexOf_(this string t, string s, int startIndex, bool ignoreCase = false)
 		{
-			return t.IndexOf(value, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			return t.IndexOf(s, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 
 		/// <summary>
 		/// Calls <see cref="string.IndexOf(string, int, int, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="value"/> is null.</exception>
+		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/> or <paramref name="count"/>.</exception>
-		public static int IndexOf_(this string t, string value, int startIndex, int count, bool ignoreCase = false)
+		public static int IndexOf_(this string t, string s, int startIndex, int count, bool ignoreCase = false)
 		{
-			return t.IndexOf(value, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			return t.IndexOf(s, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 
 		//rejected: LastIndexOf_. Rarely used.
@@ -524,17 +540,17 @@ namespace Au
 		/// Returns a new string in which a specified string replaces a specified count of characters at a specified position in this instance.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/> or <paramref name="count"/>.</exception>
-		public static string ReplaceAt_(this string t, int startIndex, int count, string value)
+		public static string ReplaceAt_(this string t, int startIndex, int count, string s)
 		{
-			return t.Remove(startIndex, count).Insert(startIndex, value);
+			return t.Remove(startIndex, count).Insert(startIndex, s);
 
 			//slightly slower, 1 more allocations
-			//return t.Substring(0, startIndex) + value + t.Substring(startIndex + count);
+			//return t.Substring(0, startIndex) + s + t.Substring(startIndex + count);
 
 			//maybe less garbage (didn't measure), but slightly slower
 			//using(new Util.LibStringBuilder(out var b)) {
 			//	if(startIndex != 0) b.Append(t, 0, startIndex);
-			//	b.Append(value);
+			//	b.Append(s);
 			//	int i = startIndex + count, n = t.Length - i;
 			//	if(n != 0) b.Append(t, i, n);
 			//	return b.ToString();
@@ -606,10 +622,11 @@ namespace Au
 		}
 		//FUTURE: Unescape()
 
-		/// <summary>
-		/// Replaces all "'" with "''".
-		/// </summary>
-		public static string SqlEscape_(this string t) => t.Replace("'", "''");
+		//rejected
+		///// <summary>
+		///// Replaces all "'" with "''".
+		///// </summary>
+		//public static string SqlEscape_(this string t) => t.Replace("'", "''");
 
 		/// <summary>
 		/// Returns true if this string is "" or contains only ASCII characters.
@@ -625,7 +642,7 @@ namespace Au
 		/// <summary>
 		/// Converts this string to '\0'-terminated char[].
 		/// </summary>
-		public static char[] ToCharArray_(this string t)
+		public static char[] ToCharArray0_(this string t)
 		{
 			var c = new char[t.Length + 1];
 			for(int i = 0; i < t.Length; i++) c[i] = t[i];

@@ -85,7 +85,7 @@ namespace Au
 			x.nShow = Api.SW_SHOWNORMAL;
 
 			if(flags.Has_(SRFlags.Admin)) {
-				if(more?.Verb != null && !more.Verb.Equals_("runas", true)) throw new ArgumentException("Cannot use Verb with flag Admin");
+				if(more?.Verb != null && !more.Verb.EqualsI_("runas")) throw new ArgumentException("Cannot use Verb with flag Admin");
 				x.lpVerb = "runas";
 			}
 

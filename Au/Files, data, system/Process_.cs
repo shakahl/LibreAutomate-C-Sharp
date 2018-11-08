@@ -457,18 +457,37 @@ namespace Au
 		/// <param name="exeFile"></param>
 		/// <param name="args"></param>
 		/// <param name="inheritUiaccess"></param>
-		/// <param name="needProcessObject">Return Process object. If false (default), returns null.</param>
+		/// <param name="ret">What to return.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
 		/// </remarks>
-		internal static Process LibStart(string exeFile, string args, bool inheritUiaccess = false, bool needProcessObject = false)
+		internal static object LibStart(string exeFile, string args, bool inheritUiaccess = false, EStartReturn ret = 0)
 		{
-			bool suspended = needProcessObject && !_NetProcessObject.IsFast;
+			bool suspended = ret == EStartReturn.Process && !_NetProcessObject.IsFast;
 			if(!LibStart(exeFile, args, out var pi, inheritUiaccess, suspended: suspended)) throw new AuException(0, $"Failed to start process '{exeFile}'");
-			if(needProcessObject) return _NetProcessObject.Create(pi, suspended: suspended);
+			return _LibReturn(pi, ret, suspended);
+		}
+
+		static object _LibReturn(in Api.PROCESS_INFORMATION pi, EStartReturn ret, bool suspended)
+		{
+			switch(ret) {
+			case EStartReturn.Process:
+				return _NetProcessObject.Create(pi, suspended: suspended);
+			case EStartReturn.WaitHandle:
+				Api.CloseHandle(pi.hThread);
+				return new Util.LibKernelWaitHandle(pi.hProcess, true);
+			}
 			pi.Dispose();
 			return null;
+		}
+
+		internal enum EStartReturn
+		{
+			Null,
+			//NativeHandle,
+			WaitHandle,
+			Process,
 		}
 
 		/// <summary>
@@ -476,14 +495,14 @@ namespace Au
 		/// </summary>
 		/// <param name="exeFile"></param>
 		/// <param name="args"></param>
-		/// <param name="needProcessObject">Return Process object. If false (default), returns null.</param>
+		/// <param name="ret">What to return.</param>
 		/// <param name="inheritEnvVar">Inherit environment variables.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Asserts and fails if this is not admin/system process. Caller should at first call Process_.UacInfo.IsAdmin or Process_.UacInfo.ThisProcess.IntegrityLevel.
 		/// Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
 		/// </remarks>
-		internal static Process LibStartUserIL(string exeFile, string args, bool needProcessObject = false, bool inheritEnvVar = false)
+		internal static object LibStartUserIL(string exeFile, string args, EStartReturn ret = 0, bool inheritEnvVar = false)
 		{
 			Debug.Assert(UacInfo.IsAdmin); //cannot set privilege if user or uiAccess
 			if(!Util.Security_.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
@@ -498,7 +517,7 @@ namespace Au
 			}
 
 			IntPtr hShellToken = default, hPrimaryToken = default, envStrings = default;
-			var hShellProcess = Au.Util.LibKernelHandle.OpenProcess(w);
+			var hShellProcess = Util.LibKernelHandle.OpenProcess(w);
 			if(hShellProcess.Is0) {
 				if(retry) goto ge;
 				retry = true; 500.ms(); goto g1;
@@ -510,15 +529,13 @@ namespace Au
 				const uint access = Api.TOKEN_QUERY | Api.TOKEN_ASSIGN_PRIMARY | Api.TOKEN_DUPLICATE | Api.TOKEN_ADJUST_DEFAULT | Api.TOKEN_ADJUST_SESSIONID;
 				if(!Api.DuplicateTokenEx(hShellToken, access, null, Api.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation, Api.TOKEN_TYPE.TokenPrimary, out hPrimaryToken)) goto ge;
 
-				bool suspended = needProcessObject && !_NetProcessObject.IsFast;
+				bool suspended = ret == EStartReturn.Process && !_NetProcessObject.IsFast;
 				var x = _ParamsForCreateProcess(exeFile, args, suspended: suspended);
 				envStrings = inheritEnvVar ? Api.GetEnvironmentStrings() : default;
 
 				if(!Api.CreateProcessWithTokenW(hPrimaryToken, 0, null, x.cl, x.flags, envStrings, x.dir, x.si, out pi)) goto ge;
 
-				if(needProcessObject) return _NetProcessObject.Create(pi, suspended: suspended);
-				pi.Dispose();
-				return null;
+				return _LibReturn(pi, ret, suspended);
 			}
 			finally {
 				if(envStrings != default) Api.FreeEnvironmentStrings(envStrings);

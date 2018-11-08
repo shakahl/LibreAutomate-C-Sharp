@@ -66,13 +66,71 @@ using System.Configuration;
 using Au.Types;
 //using Au.Util;
 using Au.Controls;
+using Au.Triggers;
 
 using System.Dynamic;
+using System.Security.Principal;
 //using LiteDB;
 
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
 
 #pragma warning disable 162, 168, 169, 219, 649 //unreachable code, unused var/field
+
+
+//[assembly: Trigger.Hotkey("F4")]
+
+//class App :AuAppBase
+//{
+//	static App()
+//	{
+//		Output.LibUseQM2 = true;
+//		Output.RedirectConsoleOutput = true;
+//		if(!Output.IsWritingToConsole) {
+//			Output.Clear();
+//			//100.ms();
+//		}
+//	}
+
+//	//[Trigger.Hotkey("Ctrl+-")]
+//	[STAThread] static void Main(string[] args) { new App()._Main(args); }
+//	//[STAThread] static void Main(string[] args) { var a = new App(); a._Main(args); a.RunTriggers(); }
+
+//	//[Trigger.Hotkey("Ctrl+-")]
+//	void _Main(string[] args)
+//	{
+//		try {
+//			Print("main");
+//			RunTriggers();
+//			//Trigger.Run(this);
+//			//Trigger.Run(typeof(App));
+//			//TestTriggers();
+//		}
+//		catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
+
+//	}
+
+//	static void TestTriggers()
+//	{
+//		//Trigger.Hotkey["Ctrl+U"] = m => { Print("target"); };
+
+
+//		AuDialog.Show();
+//	}
+
+//	[Trigger.Hotkey("Ctrl+K")]
+//	void TrigOne(HotkeyTriggers.Message m)
+//	{
+//		Print(1);
+//	}
+
+//	[Trigger.Hotkey("Ctrl+M")]
+//	static void TrigTwo()
+//	{
+//		Print(1);
+//	}
+//}
+
+
 
 [System.Security.SuppressUnmanagedCodeSecurity]
 static partial class Test
@@ -180,17 +238,15 @@ static partial class Test
 
 	static unsafe void _TestExceptionInInteropCallback()
 	{
-		using(Au.Util.WinHook.ThreadGetMessage(x =>
-		{
+		using(Au.Util.WinHook.ThreadGetMessage(x => {
 			Print(x.msg->ToString(), x.PM_NOREMOVE);
 			//throw new AuException("TEST");
 		})) {
-			Timer_.Every(1000, () =>
-		{
-			Print(1);
-			//throw new AuException("TEST");
-			//Thread.CurrentThread.Abort();
-		});
+			Timer_.Every(1000, () => {
+				Print(1);
+				//throw new AuException("TEST");
+				//Thread.CurrentThread.Abort();
+			});
 			MessageBox.Show("");
 			//AuDialog.Show();
 			//AuDialog.ShowEx(secondsTimeout: 10);
@@ -226,8 +282,7 @@ static partial class Test
 	{
 		var file = @"Q:\test\test.txt";
 
-		Task.Run(() =>
-		{
+		Task.Run(() => {
 			try {
 				var t = Time.Milliseconds;
 				while(Time.Milliseconds - t < 1200) {
@@ -243,8 +298,7 @@ static partial class Test
 			catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
 		});
 
-		Task.Run(() =>
-		{
+		Task.Run(() => {
 			10.ms();
 			try {
 				var t = Time.Milliseconds;
@@ -1144,6 +1198,62 @@ a1,-8";
 		//Print(x.ReadToEnd());
 	}
 
+	static void TestEditAndContinue()
+	{
+		Print(1);
+	}
+
+	static void TestThreadStart()
+	{
+		//var t = new Thread(() => {
+
+		//});
+		//var t = Thread_.Start(() => { });
+		//Print(t.IsBackground, t.GetApartmentState());
+		//t.Start();
+
+		Osd.ShowText("test");
+		AuDialog.Show();
+	}
+
+
+	static void TestUacTS()
+	{
+#if false
+		//Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin(@"Au", "test UAC 2", Folders.System + "cmd.exe");
+		Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin(@"Au", "test UAC", @"Q:\My QM\test_ts_UAC.exe", "test: $(Arg0)");
+#else
+		Print(Au.Util.LibTaskScheduler.TaskExists(@"\Au", "test UAC"));
+		//Print(Au.Util.LibTaskScheduler.RunTask(@"\Au", "test UAC", "moo"));
+
+		//Au.Util.LibTaskScheduler.RunTask(@"\Quick Macros", "test UAC"); //works
+		//Au.Util.LibTaskScheduler.RunTask(@"Quick Macros", "test UAC"); //works
+		//Au.Util.LibTaskScheduler.RunTask(@"\", @"\Quick Macros\test UAC"); //works
+		//Au.Util.LibTaskScheduler.RunTask(@"", @"\Quick Macros\test UAC"); //works
+		//Au.Util.LibTaskScheduler.RunTask(null, @"\Quick Macros\test UAC"); //works
+		//Au.Util.LibTaskScheduler.RunTask(null, @"Quick Macros\test UAC"); //works
+#endif
+
+		//Perf.Cpu();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	Perf.First();
+		//	Au.Util.LibTaskScheduler.RunTask(@"\Quick Macros", "test UAC");
+		//	Perf.NW();
+		//	Thread.Sleep(1000);
+		//}
+	}
+
+	static void TestLibSerialize()
+	{
+		var b = Au.Util.LibSerializer.Serialize(3, (string)null, "test", new string[] { "one", "two" }, 4);
+		var a = Au.Util.LibSerializer.Deserialize(b);
+		Print((int)a[0]);
+		Print((string)a[1]);
+		Print((string)a[2]);
+		Print((string[])a[3]);
+		Print((int)a[4]);
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -1161,8 +1271,11 @@ a1,-8";
 		try {
 #if true
 
-
-			TestDetectFileTextEncoding();
+			TestLibSerialize();
+			//TestUacTS();
+			//TestThreadStart();
+			//TestEditAndContinue();
+			//TestDetectFileTextEncoding();
 			//TestCollectionEmpty();
 			//Perf.Cpu();
 			//Perf.First();

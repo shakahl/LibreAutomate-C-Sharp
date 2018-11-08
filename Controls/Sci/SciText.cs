@@ -702,7 +702,7 @@ namespace Au.Controls
 			}
 
 			/// <summary>
-			/// Saves control text with the same encoding/BOM as loaded.
+			/// Saves control text with the same encoding/BOM as loaded. Uses <see cref="File_.Save"/>.
 			/// </summary>
 			/// <param name="sci">Control's ST.</param>
 			/// <param name="file">To pass to File.OpenRead.</param>

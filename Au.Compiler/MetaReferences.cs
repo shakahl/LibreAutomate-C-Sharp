@@ -101,7 +101,7 @@ namespace Au.Compiler
 			//foreach(var v in _refs) Print(v.FilePath);
 			PortableExecutableReference mr;
 			lock(s_refsWR) {
-				mr = _cache.Find(v => v.FilePath.Equals_(path, true));
+				mr = _cache.Find(v => v.FilePath.EqualsI_(path));
 				if(mr == null) {
 					MetadataReferenceProperties prop = alias == null ? default : new MetadataReferenceProperties(aliases: ImmutableArray.Create(alias));
 					mr = MetadataReference.CreateFromFile(path, prop);
@@ -161,7 +161,7 @@ namespace Au.Compiler
 		public void RemoveBadReference(string errorMessage)
 		{
 			if(errorMessage.RegexMatch_(@"'(.+?)'", 1, out var path))
-				lock(s_refsWR) { _cache.RemoveAll(v => v.FilePath.Equals_(path, true)); }
+				lock(s_refsWR) { _cache.RemoveAll(v => v.FilePath.EqualsI_(path)); }
 		}
 	}
 

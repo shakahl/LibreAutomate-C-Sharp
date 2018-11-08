@@ -71,19 +71,20 @@
 				<sep/>
 				<File_PrintSetup t="Print Page Setup..."/>
 				<File_Print t="Print..."/>
+				<sep/>
+				<File_SaveNow i="save" hk="Ctrl+S"/>
 			</File_More>
 			<sep/>
-			<File_Collection>
-				<File_RecentCollections dd=""/>
-				<File_OpenCollection t="Open Collection..."/>
-				<File_NewCollection t="New Collection..."/>
-				<File_ExportCollection t="Export Selected as Collection..."/>
-				<File_ImportCollection t="Import Collection..."/>
+			<File_Workspace>
+				<File_RecentWorkspaces dd=""/>
+				<File_OpenWorkspace t="Open Workspace..."/>
+				<File_NewWorkspace t="New Workspace..."/>
+				<File_ExportWorkspace t="Export Selected as Workspace..."/>
+				<File_ImportWorkspace t="Import Workspace..."/>
 				<sep/>
-				<File_FindInCollections t="Find in Other Collections..."/>
-				<File_CollectionProperties t="Collection Properties..."/>
-				<File_SaveAllNow i="save" hk="Ctrl+S"/>
-			</File_Collection>
+				<File_FindInWorkspaces t="Find in Other Workspaces..."/>
+				<File_WorkspaceProperties t="Workspace Properties..."/>
+			</File_Workspace>
 			<sep/>
 			<File_Exit hkText="Alt+F4"/>
 		</Menu_File>
@@ -217,7 +218,7 @@
 		<File_NewScript i="_new" dd="File_New"/>
 		<File_Properties i="properties"/>
 		<File_PreviousDocument i="back"/>
-		<File_SaveAllNow i="save"/>
+		<File_SaveNow i="save"/>
 	</File>
 	<Edit>
 		<Edit_Find i="find"/>

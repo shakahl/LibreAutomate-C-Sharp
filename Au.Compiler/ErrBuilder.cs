@@ -49,7 +49,7 @@ namespace Au.Compiler
 		/// This and other AddX functions add line like "[C:\path\file.cs(line,column)]: message" or "[C:\path\file.cs]: message".
 		/// Then our OutputServer.SetNotifications callback will convert the "[...]" part to a link.
 		/// </remarks>
-		public void AddErrorOrWarning(Diagnostic d, ICollectionFile fMain)
+		public void AddErrorOrWarning(Diagnostic d, IWorkspaceFile fMain)
 		{
 			var s = d.ToString();
 			int i = d.Location.IsInSource ? s.IndexOf_("): ") + 1 : 0;
@@ -64,7 +64,7 @@ namespace Au.Compiler
 		/// <summary>
 		/// Adds error message with a link that opens the C# file but does not go to a position.
 		/// </summary>
-		public void AddError(ICollectionFile f, string message)
+		public void AddError(IWorkspaceFile f, string message)
 		{
 			_StartAdd();
 			_b.AppendFormat("[{0}]: {1}", f.FilePath, message);
@@ -78,7 +78,7 @@ namespace Au.Compiler
 		/// <param name="pos">Position in code.</param>
 		/// <param name="message">Text to append. Example: "error: message".</param>
 		/// <param name="formatArgs">If not null/empty, calls StringBuilder.AppendFormat(message, formatArgs).</param>
-		public void AddError(ICollectionFile f, string code, int pos, string message, params object[] formatArgs)
+		public void AddError(IWorkspaceFile f, string code, int pos, string message, params object[] formatArgs)
 		{
 			_StartAdd();
 			int line = code.LineIndex_(pos, out var col);
@@ -91,7 +91,7 @@ namespace Au.Compiler
 		/// <param name="pos">Position in code.</param>
 		/// <param name="message">Text to append. Example: "error: message".</param>
 		/// <param name="formatArgs">If not null/empty, calls StringBuilder.AppendFormat(message, formatArgs).</param>
-		public void AddError(ICollectionFile f, Microsoft.CodeAnalysis.Text.LinePosition pos, string message, params object[] formatArgs)
+		public void AddError(IWorkspaceFile f, Microsoft.CodeAnalysis.Text.LinePosition pos, string message, params object[] formatArgs)
 		{
 			_StartAdd();
 			_Append(f, pos.Line, pos.Character, message, formatArgs);
@@ -105,7 +105,7 @@ namespace Au.Compiler
 			if(isWarning) WarningCount++; else ErrorCount++;
 		}
 
-		void _Append(ICollectionFile f, int line, int col, string message, params object[] formatArgs)
+		void _Append(IWorkspaceFile f, int line, int col, string message, params object[] formatArgs)
 		{
 			_Append(f.FilePath, line, col, message, formatArgs);
 		}
@@ -160,7 +160,7 @@ namespace Au.Compiler
 		/// <param name="tree"></param>
 		/// <param name="f"></param>
 		/// <param name="printWarnings">Add warnings too (but print only if error).</param>
-		public bool AddAllAndPrint(SyntaxTree tree, ICollectionFile f, bool printWarnings = false)
+		public bool AddAllAndPrint(SyntaxTree tree, IWorkspaceFile f, bool printWarnings = false)
 		{
 			foreach(var v in tree.GetDiagnostics()) {
 				if(v.Severity == DiagnosticSeverity.Error || printWarnings) AddErrorOrWarning(v, f);

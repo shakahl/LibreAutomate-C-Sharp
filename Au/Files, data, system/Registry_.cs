@@ -51,7 +51,7 @@ namespace Au
 		public static RegistryKey ParseKeyString(ref string key)
 		{
 			if(key == null) key = @"\";
-			if(key.StartsWith_(@"\")) {
+			if(key.StartsWith_('\\')) {
 				key = (key.Length == 1) ? AuKey : AuKey + key;
 				return Registry.CurrentUser;
 			}

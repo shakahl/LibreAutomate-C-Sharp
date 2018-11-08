@@ -24,51 +24,52 @@ using static Program;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
-partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
+partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 {
 	TreeViewAdv _control;
 	public TreeViewAdv TreeControl => _control;
 	public readonly FileNode Root;
-	public readonly int CollectionSN; //sequence number of collection open in this process: 1, 2...
-	static int s_collectionSN;
-	public readonly string CollectionFile;
-	public readonly string CollectionDirectory;
-	public readonly string CollectionName;
+	public readonly int WorkspaceSN; //sequence number of workspace open in this process: 1, 2...
+	static int s_workspaceSN;
+	public readonly string WorkspaceFile;
+	public readonly string WorkspaceDirectory;
+	public readonly string WorkspaceName;
 	public readonly string FilesDirectory;
 	public readonly AutoSave Save;
 	readonly Dictionary<uint, FileNode> _idMap;
 	public readonly List<FileNode> OpenFiles;
 	readonly string _dbFile;
 	public readonly SqliteDB DB;
+	readonly TriggersUI _triggers;
 	readonly bool _importing;
 	readonly bool _initedFully;
 
 	/// <summary>
 	/// 
 	/// </summary>
-	/// <param name="c">Tree control. Can be null, for example when importing collection.</param>
-	/// <param name="file">Collection file (XML).</param>
+	/// <param name="c">Tree control. Can be null, for example when importing workspace.</param>
+	/// <param name="file">Workspace file (XML).</param>
 	/// <exception cref="ArgumentException">Invalid or not full path.</exception>
 	/// <exception cref="Exception">XElement.Load exceptions. And possibly more.</exception>
 	public FilesModel(TreeViewAdv c, string file)
 	{
 		_importing = c == null;
 		_control = c;
-		CollectionFile = Path_.Normalize(file);
-		CollectionDirectory = Path_.GetDirectoryPath(CollectionFile);
-		CollectionName = Path_.GetFileName(CollectionDirectory);
-		FilesDirectory = CollectionDirectory + @"\files";
+		WorkspaceFile = Path_.Normalize(file);
+		WorkspaceDirectory = Path_.GetDirectoryPath(WorkspaceFile);
+		WorkspaceName = Path_.GetFileName(WorkspaceDirectory);
+		FilesDirectory = WorkspaceDirectory + @"\files";
 		if(!_importing) {
-			CollectionSN = ++s_collectionSN;
+			WorkspaceSN = ++s_workspaceSN;
 			File_.CreateDirectory(FilesDirectory);
 			Save = new AutoSave(this);
 		}
 		_idMap = new Dictionary<uint, FileNode>();
 
-		Root = FileNode.Load(CollectionFile, this); //recursively creates whole model tree; caller handles exceptions
+		Root = FileNode.Load(WorkspaceFile, this); //recursively creates whole model tree; caller handles exceptions
 
 		if(!_importing) {
-			_dbFile = CollectionDirectory + @"\settings.db";
+			_dbFile = WorkspaceDirectory + @"\settings.db";
 			try {
 				DB = new SqliteDB(_dbFile, sql:
 					//"PRAGMA journal_mode=WAL;" + //no, it does more bad than good
@@ -77,12 +78,13 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 					);
 			}
 			catch(Exception ex) {
-				Print($"Failed to open file '{_dbFile}'. Will not load/save collection settings, including lists of open files, expanded folders, markers, folding.\r\n\t{ex.ToStringWithoutStack_()}");
+				Print($"Failed to open file '{_dbFile}'. Will not load/save workspace settings, including lists of open files, expanded folders, markers, folding.\r\n\t{ex.ToStringWithoutStack_()}");
 			}
 			OpenFiles = new List<FileNode>();
 			_InitClickSelect();
 			_InitDragDrop();
 			_InitWatcher();
+			_triggers=new TriggersUI(this);
 		}
 		_initedFully = true;
 	}
@@ -91,7 +93,8 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	{
 		if(_importing) return;
 		if(_initedFully) {
-			Tasks.OnCollectionClosed();
+			_triggers.Dispose();
+			Tasks.OnWorkspaceClosed();
 			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
 		}
 		Save?.Dispose();
@@ -222,15 +225,15 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 
 	#endregion
 
-	#region Au.Compiler.ICollectionFiles
+	#region Au.Compiler.IWorkspaceFiles
 
 	public object IcfCompilerContext { get; set; }
 
 	public string IcfFilesDirectory => FilesDirectory;
 
-	public string IcfCollectionDirectory => CollectionDirectory;
+	public string IcfWorkspaceDirectory => WorkspaceDirectory;
 
-	public Au.Compiler.ICollectionFile IcfFindById(uint id) => FindById(id);
+	public Au.Compiler.IWorkspaceFile IcfFindById(uint id) => FindById(id);
 
 	#endregion
 
@@ -243,7 +246,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	/// Can be:
 	/// Name like "name.cs".
 	/// Relative path like @"\name.cs" or @"\subfolder\name.cs".
-	/// &lt;id&gt; - enclosed <see cref="FileNode.IdString"/>, or <see cref="FileNode.IdStringWithColl"/>.
+	/// &lt;id&gt; - enclosed <see cref="FileNode.IdString"/>, or <see cref="FileNode.IdStringWithWorkspace"/>.
 	/// 
 	/// Case-insensitive. If enclosed in &lt;&gt;, can be followed by any text.
 	/// </param>
@@ -276,7 +279,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 				id = 0;
 				goto g1;
 			}
-			Save?.CollectionLater(); //null when importing this collection
+			Save?.WorkspaceLater(); //null when importing this workspace
 		}
 		try { _idMap.Add(id, f); }
 		catch(ArgumentException) {
@@ -296,11 +299,11 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	/// <summary>
 	/// Finds file or folder by its <see cref="FileNode.Id"/>.
 	/// Returns null if id is 0 or not found.
-	/// id can contain <see cref="CollectionSN"/> in high-order int.
+	/// id can contain <see cref="WorkspaceSN"/> in high-order int.
 	/// </summary>
 	public FileNode FindById(long id)
 	{
-		int idc = (int)(id >> 32); if(idc != 0 && idc != CollectionSN) return null;
+		int idc = (int)(id >> 32); if(idc != 0 && idc != WorkspaceSN) return null;
 		uint idf = (uint)id;
 		if(idf == 0) return null;
 		if(_idMap.TryGetValue(idf, out var f)) {
@@ -313,20 +316,20 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 
 	/// <summary>
 	/// Finds file or folder by its <see cref="FileNode.IdString"/>.
-	/// Note: it must not be as returned by <see cref="FileNode.IdStringWithColl"/>.
+	/// Note: it must not be as returned by <see cref="FileNode.IdStringWithWorkspace"/>.
 	/// </summary>
 	public FileNode FindById(string id) => FindById(id.ToLong_());
 
 	/// <summary>
 	/// Finds file or folder by its file path (<see cref="FileNode.FilePath"/>).
 	/// </summary>
-	/// <param name="path">Full path of a collection file or of a linked external file.</param>
+	/// <param name="path">Full path of a file in this workspace or of a linked external file.</param>
 	public FileNode FindByFilePath(string path)
 	{
 		var d = FilesDirectory;
-		if(path.Length > d.Length && path.StartsWith_(d, true) && path[d.Length] == '\\') //is in collection folder
+		if(path.Length > d.Length && path.StartsWithI_(d) && path[d.Length] == '\\') //is in workspace folder
 			return Root.FindDescendant(path.Substring(d.Length), null);
-		foreach(var f in Root.Descendants()) if(f.IsLink && path.Equals_(f.LinkTarget, true)) return f;
+		foreach(var f in Root.Descendants()) if(f.IsLink && path.EqualsI_(f.LinkTarget)) return f;
 		return null;
 	}
 
@@ -334,7 +337,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	/// Finds all files (and not folders) that have the specified name.
 	/// Returns empty array if not found.
 	/// </summary>
-	/// <param name="name">File name. If starts with backslash, works like <see cref="Find"/>. Does not support <see cref="FileNode.IdStringWithColl"/> string.</param>
+	/// <param name="name">File name. If starts with backslash, works like <see cref="Find"/>. Does not support <see cref="FileNode.IdStringWithWorkspace"/> string.</param>
 	public FileNode[] FindAll(string name)
 	{
 		return Root.FindAllDescendantFiles(name);
@@ -379,7 +382,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	}
 
 	/// <summary>
-	/// Returns true if f is null or isn't in this collection or is deleted.
+	/// Returns true if f is null or isn't in this workspace or is deleted.
 	/// </summary>
 	public bool IsAlien(FileNode f) => f?.Model != this || f.IsDeleted;
 
@@ -425,10 +428,10 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	}
 
 	/// <summary>
-	/// Called by <see cref="PanelFiles.LoadCollection"/> before opening another collection and disposing this.
+	/// Called by <see cref="PanelFiles.LoadWorkspace"/> before opening another workspace and disposing this.
 	/// Saves all, closes documents, sets _currentFile = null.
 	/// </summary>
-	public void UnloadingCollection()
+	public void UnloadingWorkspace()
 	{
 		Save.AllNowIfNeed();
 		_currentFile = null;
@@ -528,7 +531,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		try {
 			m.ShowAsContextMenu_();
 			_msgLoop.Loop();
-			if(_control == null) return; //loaded another collection
+			if(_control == null) return; //loaded another workspace
 			if(f != _currentFile && _control.SelectedNodes.Count < 2) {
 				if(_currentFile == null) _control.ClearSelection();
 				//else if(_control.SelectedNode == f.TreeNodeAdv) _currentFile.SelectSingle(); //no. Breaks renaming, etc. We'll do it on editor focused.
@@ -652,7 +655,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		f.Remove();
 		//FUTURE: call event to update other controls.
 
-		Save.CollectionLater();
+		Save.WorkspaceLater();
 		return true;
 	}
 
@@ -843,12 +846,12 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 			_MultiCopyMove(copy, a, target, pos);
 		} else if(e.Data.GetDataPresent(DataFormats.FileDrop)) {
 			var a = (string[])e.Data.GetData(DataFormats.FileDrop);
-			if(a.Length == 1 && IsCollectionDirectory(a[0])) {
-				switch(AuDialog.ShowEx("Collection", a[0],
-					"1 Open collection|2 Import collection|0 Cancel",
+			if(a.Length == 1 && IsWorkspaceDirectory(a[0])) {
+				switch(AuDialog.ShowEx("Workspace", a[0],
+					"1 Open workspace|2 Import workspace|0 Cancel",
 					flags: DFlags.Wider, footerText: GetSecurityInfo(true))) {
-				case 1: Timer_.After(1, () => Panels.Files.LoadCollection(a[0])); break;
-				case 2: ImportCollection(a[0], target, pos); break;
+				case 1: Timer_.After(1, () => Panels.Files.LoadWorkspace(a[0])); break;
+				case 2: ImportWorkspace(a[0], target, pos); break;
 				}
 				return;
 			}
@@ -861,7 +864,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	#region import, move, copy
 
 	/// <summary>
-	/// Imports one or more files into the collection.
+	/// Imports one or more files into the workspace.
 	/// </summary>
 	/// <param name="a">Files. If null, shows dialog to select files.</param>
 	public void ImportFiles(string[] a = null)
@@ -870,7 +873,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 			Print("Info: To import files, you can also drag and drop from a folder window.");
 			var d = new OpenFileDialog();
 			d.Multiselect = true;
-			d.Title = "Import files to the collection";
+			d.Title = "Import files to the workspace";
 			if(d.ShowDialog(MainForm) != DialogResult.OK) return;
 			a = d.FileNames;
 		}
@@ -880,25 +883,25 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	}
 
 	/// <summary>
-	/// Imports another collection into this collection.
+	/// Imports another workspace into this workspace.
 	/// </summary>
-	/// <param name="collDir">Collection directory. If null, shows dialog to select.</param>
+	/// <param name="wsDir">Workspace directory. If null, shows dialog to select.</param>
 	/// <param name="target">If null, calls _GetInsertPos.</param>
 	/// <param name="pos">Used when target is not null.</param>
-	public void ImportCollection(string collDir = null, FileNode target = null, NodePosition pos = 0)
+	public void ImportWorkspace(string wsDir = null, FileNode target = null, NodePosition pos = 0)
 	{
 		string xmlFile;
-		if(collDir != null) xmlFile = collDir + @"\files.xml";
+		if(wsDir != null) xmlFile = wsDir + @"\files.xml";
 		else {
-			var d = new OpenFileDialog() { Title = "Import collection", Filter = "files.xml|files.xml" };
+			var d = new OpenFileDialog() { Title = "Import workspace", Filter = "files.xml|files.xml" };
 			if(d.ShowDialog(MainForm) != DialogResult.OK) return;
-			collDir = Path_.GetDirectoryPath(xmlFile = d.FileName);
+			wsDir = Path_.GetDirectoryPath(xmlFile = d.FileName);
 		}
 
 		try {
-			//create new folder for collection's items
+			//create new folder for workspace's items
 			if(target == null) target = _GetInsertPos(out pos);
-			target = FileNode.NewItem(this, target, pos, "Folder", Path_.GetFileName(collDir));
+			target = FileNode.NewItem(this, target, pos, "Folder", Path_.GetFileName(wsDir));
 			if(target == null) return;
 
 			var m = new FilesModel(null, xmlFile);
@@ -908,12 +911,12 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 
 			target.SelectSingle();
 
-			Print($"Info: Imported collection '{collDir}' to folder '{target.Name}'.\r\n\t{GetSecurityInfo()}");
+			Print($"Info: Imported workspace '{wsDir}' to folder '{target.Name}'.\r\n\t{GetSecurityInfo()}");
 		}
 		catch(Exception ex) { Print(ex.Message); }
 	}
 
-	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, NodePosition pos, bool importingCollection = false)
+	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, NodePosition pos, bool importingWorkspace = false)
 	{
 		_control.ClearSelection();
 		_control.BeginUpdate();
@@ -921,7 +924,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 			bool movedCurrentFile = false;
 			var a2 = new List<FileNode>(a.Length);
 			foreach(var f in (pos == NodePosition.After) ? a.Reverse() : a) {
-				if(!importingCollection && !this.IsMyFileNode(f)) continue; //deleted?
+				if(!importingWorkspace && !this.IsMyFileNode(f)) continue; //deleted?
 				if(copy) {
 					var fCopied = f.FileCopy(target, pos, this);
 					if(fCopied != null) a2.Add(fCopied);
@@ -946,33 +949,33 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 
 	void _ImportFiles(bool copy, string[] a, FileNode target, NodePosition pos)
 	{
-		bool fromCollectionDir = false, dirsDropped = false;
+		bool fromWorkspaceDir = false, dirsDropped = false;
 		for(int i = 0; i < a.Length; i++) {
 			var s = a[i] = Path_.Normalize(a[i]);
 			if(s.IndexOf_(@"\$RECYCLE.BIN\", true) > 0) {
-				AuDialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">collection folder</a> or other normal folder.",
+				AuDialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
 					icon: DIcon.Info, owner: _control, onLinkClick: e => Shell.TryRun(e.LinkHref));
 				return;
 			}
 			var fd = FilesDirectory;
-			if(!fromCollectionDir) {
-				if(s.StartsWith_(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromCollectionDir = true;
+			if(!fromWorkspaceDir) {
+				if(s.StartsWithI_(fd) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromWorkspaceDir = true;
 				else if(!dirsDropped) dirsDropped = File_.ExistsAsDirectory(s);
 			}
 		}
 		int r;
 		if(copy) {
-			if(fromCollectionDir) {
-				AuDialog.ShowInfo("Files from collection folder", "Ctrl not supported."); //not implemented
+			if(fromWorkspaceDir) {
+				AuDialog.ShowInfo("Files from workspace folder", "Ctrl not supported."); //not implemented
 				return;
 			}
 			r = 2; //copy
-		} else if(fromCollectionDir) {
+		} else if(fromWorkspaceDir) {
 			r = 3; //move
 		} else {
 			string ins1 = dirsDropped ? "\nFolders not supported." : null;
 			r = AuDialog.ShowEx("Import files", string.Join("\n", a),
-			$"1 Add as a link to the external file{ins1}|2 Copy to the collection folder|3 Move to the collection folder|0 Cancel",
+			$"1 Add as a link to the external file{ins1}|2 Copy to the workspace folder|3 Move to the workspace folder|0 Cancel",
 			flags: DFlags.CommandLinks | DFlags.Wider, owner: _control, footerText: GetSecurityInfo(true));
 			if(r == 0) return;
 		}
@@ -998,7 +1001,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 					k = new FileNode(this, name, false, s); //CONSIDER: unexpand
 				} else {
 					//var newPath = newParentPath + "\\" + name;
-					if(fromCollectionDir) { //already exists?
+					if(fromWorkspaceDir) { //already exists?
 						var relPath = s.Substring(FilesDirectory.Length);
 						var fExists = this.Find(relPath, null);
 						if(fExists != null) {
@@ -1024,7 +1027,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 		}
 		catch(Exception ex) { Print(ex.Message); }
 		finally { _control.EndUpdate(); }
-		Save.CollectionLater();
+		Save.WorkspaceLater();
 
 		void _AddDir(string path, FileNode parent)
 		{
@@ -1048,15 +1051,15 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	#region export
 
 	/// <summary>
-	/// Shows dialog to get path for new or exporting collection.
-	/// Returns collection's directory path.
+	/// Shows dialog to get path for new or exporting workspace.
+	/// Returns workspace's directory path.
 	/// Does not create any files/directories.
 	/// </summary>
-	/// <param name="name">Default name of the collection.</param>
-	/// <param name="location">Default parent directory of the main directory of the collection.</param>
-	public static string GetDirectoryPathForNewCollection(string name = null, string location = null)
+	/// <param name="name">Default name of the workspace.</param>
+	/// <param name="location">Default parent directory of the main directory of the workspace.</param>
+	public static string GetDirectoryPathForNewWorkspace(string name = null, string location = null)
 	{
-		var f = new _FormNewCollection();
+		var f = new _FormNewWorkspace();
 		f.textName.Text = name;
 		f.textLocation.Text = location ?? Folders.ThisAppDocuments;
 		if(f.ShowDialog() != DialogResult.OK) return null;
@@ -1071,21 +1074,21 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 
 		if(a.Length == 1 && a[0].IsFolder && a[0].HasChildren) a = a[0].Children().ToArray();
 
-		var collDir = GetDirectoryPathForNewCollection(name, location); if(collDir == null) return false;
-		string filesDir = collDir + @"\files";
+		var wsDir = GetDirectoryPathForNewWorkspace(name, location); if(wsDir == null) return false;
+		string filesDir = wsDir + @"\files";
 		try {
 			File_.CreateDirectory(filesDir);
 			foreach(var f in a) {
 				if(!f.IsLink) File_.CopyTo(f.FilePath, filesDir);
 			}
-			FileNode.Export(a, collDir + @"\files.xml");
+			FileNode.Export(a, wsDir + @"\files.xml");
 		}
 		catch(Exception ex) {
-			Print(ex.Message);
+			Print(ex);
 			return false;
 		}
 
-		Shell.SelectFileInExplorer(collDir);
+		Shell.SelectFileInExplorer(wsDir);
 		return true;
 	}
 
@@ -1147,9 +1150,9 @@ partial class FilesModel :ITreeModel, Au.Compiler.ICollectionFiles
 	public bool IsMyFileNode(FileNode f) { return Root.IsAncestorOf(f); }
 
 	/// <summary>
-	/// Returns true if s is path of a collection directory.
+	/// Returns true if s is path of a workspace directory.
 	/// </summary>
-	public static bool IsCollectionDirectory(string s)
+	public static bool IsWorkspaceDirectory(string s)
 	{
 		string xmlFile = s + @"\files.xml";
 		if(File_.ExistsAsFile(xmlFile) && File_.ExistsAsDirectory(s + @"\files")) {

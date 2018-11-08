@@ -580,6 +580,8 @@ namespace Au
 		/// </summary>
 		public bool IsActive => !Is0 && this == Api.GetForegroundWindow();
 
+		//FUTURE: static bool IsActiveAny(list of Wnd or Finder).
+
 		/// <summary>
 		/// Returns true if this window is the active (foreground) window.
 		/// If this is <see cref="GetWnd.Root"/>, returns true if there is no active window.

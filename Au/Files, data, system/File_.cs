@@ -293,7 +293,7 @@ namespace Au
 				if(nr > na) na = nr; else if(nr > 0) return b.ToString(nr); else break;
 			}
 
-			if(path.EndsWith_(".exe", true) && path.IndexOfAny(String_.Lib.pathSep) < 0) {
+			if(path.EndsWithI_(".exe") && path.IndexOfAny(String_.Lib.pathSep) < 0) {
 				try {
 					string rk = @"Software\Microsoft\Windows\CurrentVersion\App Paths\" + path;
 					if(Registry_.GetString(out path, "", rk) || Registry_.GetString(out path, "", rk, Registry.LocalMachine)) {
@@ -437,9 +437,9 @@ namespace Au
 						if((flags & FEFlags.SkipHiddenSystem) != 0) continue;
 						//skip Recycle Bin etc. It is useless, prevents copying drives, etc.
 						if(isDir && path.EndsWith_(':')) {
-							if(name.Equals_("$Recycle.Bin", true)) continue;
-							if(name.Equals_("System Volume Information", true)) continue;
-							if(name.Equals_("Recovery", true)) continue;
+							if(name.EqualsI_("$Recycle.Bin")) continue;
+							if(name.EqualsI_("System Volume Information")) continue;
+							if(name.EqualsI_("Recovery")) continue;
 						}
 					}
 
@@ -1212,13 +1212,12 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Writes text to a file like <see cref="File.WriteAllText"/> but in a safer way.
+		/// Writes any data to a file in a safe way, using a callback function.
 		/// </summary>
 		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>. The file can exist or not; this function overwrites it.</param>
-		/// <param name="text">Text to write. This functions uses <see cref="File.WriteAllText"/>.</param>
+		/// <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file. The file normally does not exist, but can.</param>
 		/// <param name="backup">Create backup file named file + "~backup".</param>
 		/// <param name="lockedWaitMS">If cannot open file because it is open by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
-		/// <param name="encoding">Text encoding in file. Default <b>Encoding.UTF8</b>.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of the file-write function.</exception>
 		/// <exception cref="IOException">Failed to replace file. The file-write function also can thow it.</exception>
@@ -1229,35 +1228,33 @@ namespace Au
 		/// To protect from 1, this functions waits/retries if the file is temporarily open/locked, like <see cref="WaitIfLocked"/>.
 		/// To protect from 2, this function writes to a temporary file and renames/replaces the specified file using API <msdn>ReplaceFile</msdn>. Although not completely atomic, it ensures that file data is not corrupt; if cannot write all data, does not change existing file data.
 		/// </remarks>
-		public static void Save(string file, string text, bool backup = false, int lockedWaitMS = 2000, Encoding encoding = null)
+		public static void Save(string file, Action<string> writer, bool backup = false, int lockedWaitMS = 2000)
+		{
+			_Save(file, writer ?? throw new ArgumentNullException(), backup, lockedWaitMS);
+		}
+
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+		/// <inheritdoc cref="Save"/>
+		/// <summary>
+		/// Writes text to a file in a safe way, using <see cref="File.WriteAllText"/>.
+		/// </summary>
+		/// <param name="text">Text to write.</param>
+		/// <param name="encoding">Text encoding in file. Default is UTF-8 without BOM.</param>
+		public static void SaveText(string file, string text, bool backup = false, int lockedWaitMS = 2000, Encoding encoding = null)
 		{
 			_Save(file, text ?? "", backup, lockedWaitMS, encoding);
 		}
 
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-		/// <inheritdoc cref="Save(string, string, bool, int, Encoding)"/>
+		/// <inheritdoc cref="Save"/>
 		/// <summary>
-		/// Writes data to a file like <see cref="File.WriteAllBytes"/> but in a safer way.
+		/// Writes data to a file in a safe way, using <see cref="File.WriteAllBytes"/>.
 		/// </summary>
-		/// <param name="bytes">Data to write. This functions uses <see cref="File.WriteAllBytes"/>.</param>
-		public static void Save(string file, byte[] bytes, bool backup = false, int lockedWaitMS = 2000)
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+		/// <param name="bytes">Data to write.</param>
+		public static void SaveBytes(string file, byte[] bytes, bool backup = false, int lockedWaitMS = 2000)
 		{
 			_Save(file, bytes ?? throw new ArgumentNullException(), backup, lockedWaitMS);
 		}
-
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-		/// <inheritdoc cref="Save(string, string, bool, int, Encoding)"/>
-		/// <summary>
-		/// Writes any data to a file in a safe way, using a callback function.
-		/// </summary>
-		/// <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file, which normally does not exist.</param>
-		public static void Save(string file, Action<string> writer, bool backup = false, int lockedWaitMS = 2000)
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-		{
-			_Save(file, writer ?? throw new ArgumentNullException(), backup, lockedWaitMS);
-		}
-		//TODO: rename the string overload to SaveText; remove the byte[] overloads.
 
 		static void _Save(string file, object data, bool backup, int lockedWaitMS, Encoding encoding = null)
 		{

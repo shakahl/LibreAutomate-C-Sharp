@@ -56,7 +56,7 @@ static class Strips
 
 		//get submenus that will be filled later or used separately etc
 		(ddFileNew = _strips.Submenus["File_New"]).Opening += (o, e) => Panels.Files.FillMenuNew(o as ToolStripDropDownMenu);
-		_strips.Submenus["File_RecentCollections"].Opening += (o, e) => Panels.Files.FillMenuRecentCollections(o as ToolStripDropDownMenu);
+		_strips.Submenus["File_RecentWorkspaces"].Opening += (o, e) => Panels.Files.FillMenuRecentWorkspaces(o as ToolStripDropDownMenu);
 		_strips.Submenus["Tools_Panels"].Opening += (se, da) => Panels.PanelManager.AddShowPanelsToMenu(se as ToolStripDropDown, false, true);
 		_strips.Submenus["Tools_Toolbars"].Opening += (se, da) => Panels.PanelManager.AddShowPanelsToMenu(se as ToolStripDropDown, true, true);
 		ddFile = _strips.Submenus["Menu_File"];

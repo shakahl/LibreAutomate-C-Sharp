@@ -24,7 +24,7 @@ using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 using Au.Compiler;
 
-partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
+partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
 {
 	#region types
 
@@ -50,7 +50,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	[Flags]
 	enum _Flags :byte
 	{
-
+		HasTriggers = 1,
 	}
 
 	class _Misc
@@ -71,11 +71,10 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	_Flags _flags;
 	object _misc; //null or icon path (string) or TMisc
 
-	FileNode() { }
-
-	void _CtorSetTypeEtc(bool isFolder, string linkTarget) {
+	void _CtorSetTypeEtc(bool isFolder, string linkTarget)
+	{
 		if(!isFolder) {
-			if(_name.EndsWith_(".cs", true)) _type = _Type.CsFile;
+			if(_name.EndsWithI_(".cs")) _type = _Type.CsFile;
 			else if(_name.IndexOf('.') < 0) _type = _Type.Script;
 			else _type = _Type.NotCodeFile;
 
@@ -87,7 +86,8 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	}
 
 	//this ctor is used when creating new item
-	public FileNode(FilesModel model, string name, bool isFolder, string linkTarget = null) {
+	public FileNode(FilesModel model, string name, bool isFolder, string linkTarget = null)
+	{
 		_model = model;
 		_name = name;
 		_id = _model.AddGetId(this);
@@ -96,7 +96,8 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 
 	//this ctor is used when copying or importing.
 	//Deep-copies fields from f, except _model, _name, _id (generates new) and run.
-	FileNode(FilesModel model, FileNode f, string name) {
+	FileNode(FilesModel model, FileNode f, string name)
+	{
 		_model = model;
 		_name = name;
 		_type = f._type;
@@ -107,7 +108,8 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	}
 
 	//this ctor is used when reading XML file
-	FileNode(XmlReader x, FileNode parent, FilesModel model) {
+	FileNode(XmlReader x, FileNode parent, FilesModel model)
+	{
 		_model = model;
 		if(parent == null) { //the root XML element
 			if(x.Name != "files") throw new ArgumentException("XML root element name must be 'files'");
@@ -143,10 +145,11 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 
 	public void Save(string file) => XmlSave(file, (x, n) => n._XmlWrite(x, false));
 
-	void _XmlWrite(XmlWriter x, bool exporting) {
+	void _XmlWrite(XmlWriter x, bool exporting)
+	{
 		if(Parent == null) {
 			x.WriteStartElement("files");
-			x.WriteAttributeString("max-i", _model.MaxId.ToString());
+			if(_model != null) x.WriteAttributeString("max-i", _model.MaxId.ToString()); //null when exporting
 		} else {
 			x.WriteStartElement(IsFolder ? "d" : "f");
 			x.WriteAttributeString("n", _name);
@@ -160,12 +163,14 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 
 	public static void Export(FileNode[] a, string file) => new FileNode().XmlSave(file, (x, n) => n._XmlWrite(x, true), children: a);
 
+	FileNode() { } //used by Export
+
 	#endregion
 
 	#region properties
 
 	/// <summary>
-	/// Gets collection that contains this file.
+	/// Gets workspace that contains this file.
 	/// </summary>
 	public FilesModel Model => _model;
 
@@ -176,7 +181,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 
 	/// <summary>
 	/// Gets treeview control that displays this file.
-	/// Returns null if this collection is unloaded.
+	/// Returns null if this workspace is unloaded.
 	/// </summary>
 	public TreeViewAdv TreeControl => _model.TreeControl;
 
@@ -196,7 +201,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	public string Name => _name;
 
 	/// <summary>
-	/// Unique id in this collection. To find faster, with database, etc.
+	/// Unique id in this workspace. To find faster, with database, etc.
 	/// Root id is 0.
 	/// Ids of deleted items are not reused.
 	/// </summary>
@@ -208,18 +213,18 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	public string IdString => _id.ToString();
 
 	/// <summary>
-	/// Formats string like "&lt;0x10000000A&gt;", with <see cref="Id"/> in low-order int and <see cref="FilesModel.CollectionSN"/> in high-order int.
+	/// Formats string like "&lt;0x10000000A&gt;", with <see cref="Id"/> in low-order int and <see cref="FilesModel.WorkspaceSN"/> in high-order int.
 	/// Such string can be passed to <see cref="FilesModel.Find"/>.
 	/// </summary>
-	public string IdStringWithColl => "<0x" + (_id | ((long)_model.CollectionSN << 32)).ToString("X") + ">";
+	public string IdStringWithWorkspace => "<0x" + (_id | ((long)_model.WorkspaceSN << 32)).ToString("X") + ">";
 
 	/// <summary>
 	/// Formats SciTags &lt;open&gt; link tag to open this file.
 	/// </summary>
-	public string SciLink => $"<open \"{IdStringWithColl}\">{_name}<>";
+	public string SciLink => $"<open \"{IdStringWithWorkspace}\">{_name}<>";
 
 	/// <summary>
-	/// true if is external file, ie not in this collection folder.
+	/// true if is external file, ie not in this workspace folder.
 	/// </summary>
 	public bool IsLink => 0 != (_state & _State.Link);
 
@@ -228,7 +233,8 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	/// </summary>
 	public string LinkTarget => IsLink ? ((_misc is _Misc m) ? m.iconOrLinkTarget : (_misc as string)) : null;
 
-	_Misc _GetSetMisc(bool create) {
+	_Misc _GetSetMisc(bool create)
+	{
 		if(!(_misc is _Misc m)) {
 			if(!create) return null;
 			m = new _Misc { iconOrLinkTarget = _misc as string };
@@ -239,14 +245,14 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 
 	/// <summary>
 	/// Gets or sets custom icon path or null. For links always returns null; use LinkTarget.
-	/// The setter will save collection.
+	/// The setter will save workspace.
 	/// </summary>
 	public string CustomIcon {
 		get => IsLink ? null : ((_misc is _Misc m) ? m.iconOrLinkTarget : (_misc as string));
 		set {
 			Debug.Assert(!IsLink);
 			if(_misc is _Misc m) m.iconOrLinkTarget = value; else _misc = value;
-			_model.Save.CollectionLater();
+			_model.Save.WorkspaceLater();
 			//FUTURE: call event to update other controls. It probably will be event of FilesModel.
 		}
 	}
@@ -255,7 +261,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 
 	/// <summary>
 	/// Gets or sets other item to run instead of this. None if null.
-	/// The setter will save collection.
+	/// The setter will save workspace.
 	/// </summary>
 	public FileNode RunOther {
 		get {
@@ -266,7 +272,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 			uint runId = value?._id ?? 0;
 			var m = _GetSetMisc(runId != 0); if(m == null) return;
 			m.runOther = runId;
-			_model.Save.CollectionLater();
+			_model.Save.WorkspaceLater();
 		}
 	}
 
@@ -279,17 +285,18 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	}
 
 	/// <summary>
-	/// true if is deleted or is not in current collection.
+	/// true if is deleted or is not in current workspace.
 	/// </summary>
 	public bool IsAlien => IsDeleted || _model != Program.Model;
 
 	/// <summary>
-	/// Returns item path in collection and XML, like @"\Folder\Name.cs" or @"\Name.cs".
+	/// Returns item path in workspace and XML, like @"\Folder\Name.cs" or @"\Name.cs".
 	/// Returns null if this item is deleted.
 	/// </summary>
 	public string ItemPath => _ItemPath();
 
-	string _ItemPath(string prefix = null) {
+	string _ItemPath(string prefix = null)
+	{
 		var a = t_pathStack ?? (t_pathStack = new Stack<string>());
 		a.Clear();
 		for(FileNode f = this, root = Root; f != root; f = f.Parent) {
@@ -351,6 +358,20 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	public static Icon_.ImageCache IconCache = new Icon_.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
 
 	/// <summary>
+	/// Gets or sets 'has triggers' flag.
+	/// The setter will save workspace.
+	/// </summary>
+	public bool HasTriggers {
+		get => 0 != (_flags & _Flags.HasTriggers);
+		set {
+			if(value != HasTriggers) {
+				_flags.SetFlag_(_Flags.HasTriggers, value);
+				_model.Save.WorkspaceLater();
+			}
+		}
+	}
+
+	/// <summary>
 	/// Returns Name.
 	/// </summary>
 	public override string ToString() => _name;
@@ -365,13 +386,15 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	/// </summary>
 	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
 	/// <param name="folder">true - folder, false - file, null - any.</param>
-	public FileNode FindDescendant(string name, bool? folder) {
+	public FileNode FindDescendant(string name, bool? folder)
+	{
 		if(Empty(name)) return null;
 		if(name[0] == '\\') return _FindRelative(name, folder);
 		return _FindIn(Descendants(), name, folder, true);
 	}
 
-	static FileNode _FindIn(IEnumerable<FileNode> e, string name, bool? folder, bool preferFile) {
+	static FileNode _FindIn(IEnumerable<FileNode> e, string name, bool? folder, bool preferFile)
+	{
 		if(preferFile) {
 			if(!folder.GetValueOrDefault()) { //any or file
 				var f = _FindIn(e, name, false); if(f != null) return f;
@@ -381,17 +404,19 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 			}
 		} else {
 			if(folder.HasValue) return _FindIn(e, name, folder.GetValueOrDefault());
-			foreach(var f in e) if(f._name.Equals_(name, true)) return f;
+			foreach(var f in e) if(f._name.EqualsI_(name)) return f;
 		}
 		return null;
 	}
 
-	static FileNode _FindIn(IEnumerable<FileNode> e, string name, bool folder) {
-		foreach(var f in e) if(f.IsFolder == folder && f._name.Equals_(name, true)) return f;
+	static FileNode _FindIn(IEnumerable<FileNode> e, string name, bool folder)
+	{
+		foreach(var f in e) if(f.IsFolder == folder && f._name.EqualsI_(name)) return f;
 		return null;
 	}
 
-	FileNode _FindRelative(string name, bool? folder) {
+	FileNode _FindRelative(string name, bool? folder)
+	{
 		if(name.StartsWith_(@"\\")) return null;
 		var f = this; int lastSegEnd = -1;
 		foreach(var seg in name.Segments_(@"\", SegFlags.NoEmpty)) {
@@ -413,7 +438,8 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	/// </summary>
 	/// <param name="relativePath">Examples: "name", @"subfolder\name", @".\subfolder\name", @"..\parent\name", @"\root path\name".</param>
 	/// <param name="folder">true - folder, false - file, null - any.</param>
-	public FileNode FindRelative(string relativePath, bool? folder) {
+	public FileNode FindRelative(string relativePath, bool? folder)
+	{
 		if(!IsFolder) return Parent.FindRelative(relativePath, folder);
 		var s = relativePath;
 		if(Empty(s)) return null;
@@ -436,13 +462,14 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	/// Returns empty array if not found.
 	/// </summary>
 	/// <param name="name">File name. If starts with backslash, works like <see cref="FindDescendant"/>.</param>
-	public FileNode[] FindAllDescendantFiles(string name) {
+	public FileNode[] FindAllDescendantFiles(string name)
+	{
 		if(!Empty(name)) {
 			if(name[0] == '\\') {
 				var f1 = _FindRelative(name, false);
 				if(f1 != null) return new FileNode[] { f1 };
 			} else {
-				return Descendants().Where(k => !k.IsFolder && k._name.Equals_(name, true)).ToArray();
+				return Descendants().Where(k => !k.IsFolder && k._name.EqualsI_(name)).ToArray();
 			}
 		}
 		return Array.Empty<FileNode>();
@@ -452,7 +479,8 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	/// Finds ancestor (including self) project folder and its main file.
 	/// If both found, sets folder and main and returns true. If some not found, sets folder=null, main=null, and returns false.
 	/// </summary>
-	public bool FindProject(out FileNode folder, out FileNode main) {
+	public bool FindProject(out FileNode folder, out FileNode main)
+	{
 		folder = main = null;
 		for(FileNode r = Root, f = IsFolder ? this : Parent; f != r && f != null; f = f.Parent) {
 			if(!f.IsProjectFolder(out main)) continue;
@@ -467,7 +495,8 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	/// Returns true if this is a folder and Name starts with '@'.
 	/// </summary>
 	/// <param name="main">Receives the main code file or null. It is the first direct child code file.</param>
-	public bool IsProjectFolder(out FileNode main) {
+	public bool IsProjectFolder(out FileNode main)
+	{
 		main = null;
 		if(IsProjectFolder()) {
 			foreach(var f in Children()) {
@@ -484,24 +513,47 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 
 	#endregion
 
-	#region Au.Compiler.ICollectionFile
+	#region Au.Compiler.IWorkspaceFile
 
 	public bool IcfIsScript => _type == _Type.Script;
 
-	public ICollectionFiles IcfCollection => _model;
+	public IWorkspaceFiles IcfWorkspace => _model;
 
-	public ICollectionFile IcfFindRelative(string relativePath, bool? folder) => FindRelative(relativePath, folder);
+	public IWorkspaceFile IcfFindRelative(string relativePath, bool? folder) => FindRelative(relativePath, folder);
 
-	public IEnumerable<ICollectionFile> IcfEnumProjectFiles(ICollectionFile fSkip = null) {
+	public IEnumerable<IWorkspaceFile> IcfEnumProjectFiles(IWorkspaceFile fSkip = null)
+	{
 		foreach(var f in Descendants()) {
 			if(f._type == _Type.CsFile && f != fSkip) yield return f;
 		}
 	}
 
-	public bool IcfFindProject(out ICollectionFile folder, out ICollectionFile main) {
+	public bool IcfFindProject(out IWorkspaceFile folder, out IWorkspaceFile main)
+	{
 		if(!FindProject(out var fo, out var ma)) { folder = main = null; return false; }
 		folder = fo; main = ma;
 		return true;
+	}
+
+	/// <summary>
+	/// Compiler calls this func at the end of compilation.
+	/// </summary>
+	/// <param name="a">
+	/// One or more triggers.
+	/// null if there are no triggers or if failed to compile.
+	/// If a[i].method==null, it is [assembly: ...].
+	/// </param>
+	public void IcfTriggers(List<CompTriggerData> a)
+	{
+		if(a == null) {
+			//Print("remove");
+			return;
+		}
+
+		foreach(var v in a) {
+			Print(v.method, v.triggerType, string.Join(" ", v.args));
+			//foreach(var u in v.triggerArgs) Print(u.ToString());
+		}
 	}
 
 	#endregion
@@ -559,7 +611,8 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	/// Unselects all and selects this. Does not open document.
 	/// If this is root, just unselects all.
 	/// </summary>
-	public void SelectSingle() {
+	public void SelectSingle()
+	{
 		var c = TreeControl;
 		if(this == Root) c.ClearSelection();
 		else if(!IsAlien) c.SelectedNode = TreeNodeAdv;
@@ -631,7 +684,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 		try {
 			var path = newParent.FilePath + "\\" + name;
 			if(isFolder) File_.CreateDirectory(path);
-			else File_.Save(path, text);
+			else File_.SaveText(path, text);
 		}
 		catch(Exception ex) { Print(ex.Message); return null; }
 
@@ -663,8 +716,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	{
 		string s = File_.LoadText(templFile);
 		//replace //"#include file" with text of file from "include" subfolder
-		s = s.RegexReplace_(@"(?m)^//#include +(.+)$", m =>
-		{
+		s = s.RegexReplace_(@"(?m)^//#include +(.+)$", m => {
 			var si = s_dirTemplatesBS + @"include\" + m[1];
 			if(File_.ExistsAsFile(si)) return File_.LoadText(si);
 			return null;
@@ -727,7 +779,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 				if(ext.Length > 0) name += ext;
 			} else if(_name.IndexOf('.') < 0) {
 				name = name.Replace('.', ';');
-			} else if(_name.EndsWith_(".cs", true) != name.EndsWith_(".cs", true)) {
+			} else if(_name.EndsWithI_(".cs") != name.EndsWithI_(".cs")) {
 				name += Path_.GetExtension(_name);
 			}
 		}
@@ -743,7 +795,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 
 		_name = name;
 		if(notifyControl) UpdateControlRow();
-		_model.Save.CollectionLater();
+		_model.Save.WorkspaceLater();
 		return true;
 	}
 
@@ -805,13 +857,13 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	}
 
 	/// <summary>
-	/// Adds f to the tree, updates control, optionally sets to save collection.
+	/// Adds f to the tree, updates control, optionally sets to save workspace.
 	/// </summary>
-	public void AddChildOrSibling(FileNode f, NodePosition inBeforeAfter, bool setSaveCollection)
+	public void AddChildOrSibling(FileNode f, NodePosition inBeforeAfter, bool setSaveWorkspace)
 	{
 		if(inBeforeAfter == NodePosition.Inside) AddChild(f); else AddSibling(f, inBeforeAfter == NodePosition.After);
 		_model.OnNodeInserted(f);
-		if(setSaveCollection) _model.Save.CollectionLater();
+		if(setSaveWorkspace) _model.Save.WorkspaceLater();
 	}
 
 	/// <summary>
@@ -821,7 +873,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, ICollectionFile
 	/// </summary>
 	/// <param name="target"></param>
 	/// <param name="pos"></param>
-	/// <param name="newModel">Used when importing collection.</param>
+	/// <param name="newModel">Used when importing workspace.</param>
 	internal FileNode FileCopy(FileNode target, NodePosition pos, FilesModel newModel = null)
 	{
 		//create unique name

@@ -334,7 +334,7 @@ namespace Au
 				{
 					if(!Ver.Is32BitProcessOn64BitOS) return 0;
 					string sysDir = Folders.System;
-					if(!path.StartsWith_(sysDir, true)) return 0;
+					if(!path.StartsWithI_(sysDir)) return 0;
 					int len = sysDir.Length;
 					if(path.Length > len && !Path_.LibIsSepChar(path[len])) return 0;
 					return len;

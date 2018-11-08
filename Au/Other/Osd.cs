@@ -608,10 +608,7 @@ namespace Au
 				_Show(wait);
 			} else {
 				//Task.Run(() => ShowWait()); //works too, but cannot use StrongThread
-				var t = new Thread(o => (o as Osd)._Show(true));
-				t.IsBackground = ShowMode != OsdShowMode.StrongThread;
-				t.SetApartmentState(ApartmentState.STA);
-				t.Start(this);
+				Thread_.Start(() => _Show(true), ShowMode != OsdShowMode.StrongThread);
 				WaitFor.Condition(30, () => IsHandleCreated);
 			}
 		}

@@ -2414,7 +2414,7 @@ namespace Au
 		/// </summary>
 		public bool IsHungGhost
 		{
-			get => IsHung && ClassNameIs("Ghost.exe") && ProgramName.Equals_("DWM.exe", true);
+			get => IsHung && ClassNameIs("Ghost.exe") && ProgramName.EqualsI_("DWM.exe");
 			//Class is "Ghost", exe is "DWM" (even if no Aero), text sometimes ends with "(Not Responding)".
 			//IsHungWindow returns true for ghost window, although it is not actually hung. It is the fastest.
 		}
@@ -2428,7 +2428,7 @@ namespace Au
 		internal void LibUacCheckAndThrow(string prefix = null)
 		{
 			if(!Is0 && IsUacAccessDenied) {
-				if(prefix == null) prefix = "Failed. The"; else if(prefix.EndsWith_(".")) prefix += " The"; //this is to support prefix used by Mouse.Move: "The active"
+				if(prefix == null) prefix = "Failed. The"; else if(prefix.EndsWith_('.')) prefix += " The"; //this is to support prefix used by Mouse.Move: "The active"
 				throw new AuException(Api.ERROR_ACCESS_DENIED, prefix + " window's process has a higher UAC integrity level (admin or uiAccess) than this process.");
 			}
 		}
@@ -2476,7 +2476,7 @@ namespace Au
 		#region text, class, program
 
 		/// <summary>
-		/// Gets class name.
+		/// Gets window class name.
 		/// Returns null if fails, eg if the window is closed. Supports <see cref="Native.GetError"/>.
 		/// </summary>
 		public string ClassName

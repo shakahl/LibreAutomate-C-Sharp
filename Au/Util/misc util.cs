@@ -16,6 +16,7 @@ using System.Reflection.Emit;
 using Microsoft.Win32.SafeHandles;
 using System.Resources;
 using System.Globalization;
+using System.Security.Principal;
 
 using Au.Types;
 using static Au.NoClass;
@@ -826,4 +827,103 @@ namespace Au.Util
 	//[DllImport("kernel32.dll", SetLastError = true)]
 	//internal static extern LPARAM SetThreadAffinityMask(IntPtr hThread, LPARAM dwThreadAffinityMask);
 	//}
+
+	internal static class LibTaskScheduler
+	{
+		static string _UserSidString => WindowsIdentity.GetCurrent().User.ToString();
+		static string _UserSddlString => "D:AI(A;;FA;;;SY)(A;;FA;;;BA)(A;;FA;;;" + _UserSidString + ")";
+		static string c_allUsersSddlString = "D:AI(A;;FA;;;SY)(A;;FA;;;BA)(A;;FA;;;BU)";
+
+		static Api.ITaskFolder _GetOrCreateFolder(Api.ITaskService ts, string taskFolder)
+		{
+			Api.ITaskFolder tf;
+			try { tf = ts.GetFolder(taskFolder); }
+			catch(FileNotFoundException) { tf = ts.GetFolder(null).CreateFolder(taskFolder, c_allUsersSddlString); }
+			return tf;
+		}
+
+		/// <summary>
+		/// Creates or updates a trigerless task that executes a program as administrator.
+		/// This process must be admin.
+		/// You can use <see cref="RunTask"/> to run the task.
+		/// </summary>
+		/// <param name="taskFolder">
+		/// <inheritdoc cref="RunTask"/>
+		/// This function creates the folder (and ancestors) if does not exist.
+		/// </param>
+		/// <param name="taskName"><inheritdoc cref="RunTask"/></param>
+		/// <param name="programFile">Full path of an exe file. This function does not normalize it.</param>
+		/// <param name="args">Command line arguments. Can contain literal substrings $(Arg0), $(Arg1), ..., $(Arg32) that will be replaced by <see cref="RunTask"/>.</param>
+		/// <exception cref="UnauthorizedAccessException">Probably because this process is not admin.</exception>
+		/// <exception cref="Exception"></exception>
+		public static void CreateTaskToRunProgramAsAdmin(string taskFolder, string taskName, string programFile, string args = null)
+		{
+			var xml =
+$@"<?xml version='1.0' encoding='UTF-16'?>
+<Task version='1.3' xmlns='http://schemas.microsoft.com/windows/2004/02/mit/task'>
+
+<RegistrationInfo>
+<Author>Au</Author>
+</RegistrationInfo>
+
+<Principals>
+<Principal id='Author'>
+<RunLevel>HighestAvailable</RunLevel>
+</Principal>
+</Principals>
+
+<Settings>
+<DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+<StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+<ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+<Priority>5</Priority>
+</Settings>
+
+<Actions Context='Author'>
+<Exec>
+<Command>{programFile}</Command>
+<Arguments>{args}</Arguments>
+</Exec>
+</Actions>
+
+</Task>";
+			var ts = new Api.TaskScheduler() as Api.ITaskService;
+			ts.Connect();
+			var tf = _GetOrCreateFolder(ts, taskFolder);
+			tf.RegisterTask(taskName, xml, Api.TASK_CREATION.TASK_CREATE_OR_UPDATE, null, null, Api.TASK_LOGON_TYPE.TASK_LOGON_INTERACTIVE_TOKEN, _UserSddlString);
+		}
+
+		/// <summary>
+		/// Runs a task. Does not wait.
+		/// Returns process id.
+		/// </summary>
+		/// <param name="taskFolder">Can be like @"\Folder" or "Folder" or @"\" or "" or null.</param>
+		/// <param name="taskName">Can be like "Name" or @"\Folder\Name" or @"Folder\Name".</param>
+		/// <param name="args">Replacement values for substrings $(Arg0), $(Arg1), ..., $(Arg32) in 'create task' args. See <msdn>IRegisteredTask.Run</msdn>.</param>
+		/// <exception cref="Exception">Failed. Probably the task does not exist.</exception>
+		public static int RunTask(string taskFolder, string taskName, params string[] args)
+		{
+			if(Empty(args)) args = null;
+			var ts = new Api.TaskScheduler() as Api.ITaskService;
+			ts.Connect();
+			var rt = ts.GetFolder(taskFolder).GetTask(taskName).Run(args);
+			rt.get_EnginePID(out int pid);
+			return pid;
+		}
+
+		/// <summary>
+		/// Returns true if the task exists.
+		/// </summary>
+		/// <param name="taskFolder"><inheritdoc cref="RunTask"/></param>
+		/// <param name="taskName"><inheritdoc cref="RunTask"/></param>
+		/// <exception cref="Exception">Failed.</exception>
+		public static bool TaskExists(string taskFolder, string taskName)
+		{
+			var ts = new Api.TaskScheduler() as Api.ITaskService;
+			ts.Connect();
+			try { ts.GetFolder(taskFolder).GetTask(taskName); }
+			catch(FileNotFoundException) { return false; }
+			return true;
+		}
+	}
 }

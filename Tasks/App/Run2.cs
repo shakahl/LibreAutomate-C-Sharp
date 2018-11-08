@@ -62,7 +62,7 @@ class RunningTasks2 :IAuTaskManager
 	public byte RunTask(int taskId, Au.Util.LibSerializer.Value[] a)
 	{
 		var rt = new AuTask(taskId, this);
-		var p = new RParams(a[3], a[4], a[5], null, a[7], (RFlags)a[8].i);
+		var p = new RParams(a[3], a[4], a[5], null, a[7], (RFlags)a[8]._i);
 
 		string args = a[6];
 		if(args != null) {
@@ -86,9 +86,13 @@ class RunningTasks2 :IAuTaskManager
 		return 1;
 	}
 
+	/// <summary>
+	/// Ends task. Returns 1 if ended or was not running, or 2 if could not end now.
+	/// </summary>
+	/// <param name="taskId"></param>
 	public byte EndTask(int taskId)
 	{
-		if(_d.TryGetValue(taskId, out var rt)) rt.End(false);
+		if(_d.TryGetValue(taskId, out var rt) && !rt.End(false)) return 2;
 		return 1;
 	}
 }

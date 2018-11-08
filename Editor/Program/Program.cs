@@ -15,14 +15,12 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
-//using System.Configuration;
 using System.Xml.Linq;
 using System.Runtime;
 
 using Au;
 using Au.Types;
 using static Au.NoClass;
-using System.Runtime.Remoting;
 
 static class Program
 {
@@ -36,12 +34,7 @@ static class Program
 	{
 		//try {
 
-		//RunUac.Test(); return;
 		//_Test(); return;
-		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
-		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
-		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb_big();
-
 		//Process.GetCurrentProcess().ProcessorAffinity = (IntPtr)1; //test how works with 1 CPU
 
 		Perf.First();
@@ -64,14 +57,14 @@ static class Program
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 
-		Application.EnableVisualStyles();
+		//Application.EnableVisualStyles(); //we have manifest
 		Application.SetCompatibleTextRenderingDefault(false);
-
-		Timer_.Every(1000, () => Timer1s?.Invoke());
 
 		Settings = new ProgramSettings();
 
-		Application.Run(new EForm()); //info: EForm ctor sets Program.MainForm
+		Timer_.Every(1000, () => Timer1s?.Invoke());
+
+		EForm.RunApplication();
 
 		OutputServer.Stop();
 		//}
@@ -100,5 +93,11 @@ static class Program
 
 	static void _Test()
 	{
+		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
+		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
+		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb_big();
+
+		//RunUac.Test();
+
 	}
 }

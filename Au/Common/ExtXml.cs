@@ -218,12 +218,12 @@ namespace Au.Types
 			return File_.WaitIfLocked(() => XElement.Load(file, options));
 		}
 
-		/// <inheritdoc cref="File_.Save(string, string, bool, int, Encoding)"/>
+		/// <inheritdoc cref="File_.Save"/>
 		/// <summary>
 		/// Saves XML to a file in a safer way.
-		/// Uses <see cref="XElement.Save(string, SaveOptions)"/> and <see cref="File_.Save(string, Action{string}, bool, int)"/>.
+		/// Uses <see cref="XElement.Save(string, SaveOptions)"/> and <see cref="File_.Save"/>.
 		/// </summary>
-		/// <exception cref="Exception">Exceptions of <see cref="XElement.Save"/> and <see cref="File_.Save(string, Action{string}, bool, int)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="XElement.Save"/> and <see cref="File_.Save"/>.</exception>
 		public static void Save_(this XElement t, string file, bool backup = false, SaveOptions? options = default)
 		{
 			File_.Save(file, temp =>
@@ -252,12 +252,12 @@ namespace Au.Types
 			return File_.WaitIfLocked(() => XDocument.Load(file, options));
 		}
 
-		/// <inheritdoc cref="File_.Save(string, string, bool, int, Encoding)"/>
+		/// <inheritdoc cref="File_.Save"/>
 		/// <summary>
 		/// Saves XML to a file in a safer way.
-		/// Uses <see cref="XDocument.Save(string)"/> and <see cref="File_.Save(string, Action{string}, bool, int)"/>
+		/// Uses <see cref="XDocument.Save(string)"/> and <see cref="File_.Save"/>
 		/// </summary>
-		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Save"/> and <see cref="File_.Save(string, Action{string}, bool, int)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Save"/> and <see cref="File_.Save"/>.</exception>
 		public static void Save_(this XDocument t, string file, bool backup = false, SaveOptions? options = default)
 		{
 			File_.Save(file, temp =>

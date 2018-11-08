@@ -25,7 +25,7 @@ using static Au.NoClass;
 
 namespace Au.Compiler
 {
-	public interface ICollectionFile
+	public interface IWorkspaceFile
 	{
 		uint Id { get; }
 
@@ -39,16 +39,18 @@ namespace Au.Compiler
 
 		bool IcfIsScript { get; }
 
-		ICollectionFiles IcfCollection { get; }
+		IWorkspaceFiles IcfWorkspace { get; }
 
-		ICollectionFile IcfFindRelative(string relativePath, bool? folder);
+		IWorkspaceFile IcfFindRelative(string relativePath, bool? folder);
 
-		IEnumerable<ICollectionFile> IcfEnumProjectFiles(ICollectionFile fSkip = null);
+		IEnumerable<IWorkspaceFile> IcfEnumProjectFiles(IWorkspaceFile fSkip = null);
 
-		bool IcfFindProject(out ICollectionFile folder, out ICollectionFile main);
+		bool IcfFindProject(out IWorkspaceFile folder, out IWorkspaceFile main);
+
+		void IcfTriggers(List<CompTriggerData> a);
 	}
 
-	public interface ICollectionFiles
+	public interface IWorkspaceFiles
 	{
 		/// <summary>
 		/// Data used by compiler. It sets and gets this property.
@@ -58,8 +60,22 @@ namespace Au.Compiler
 
 		string IcfFilesDirectory { get; }
 
-		string IcfCollectionDirectory { get; }
+		string IcfWorkspaceDirectory { get; }
 
-		ICollectionFile IcfFindById(uint id);
+		IWorkspaceFile IcfFindById(uint id);
+	}
+
+	public struct CompTriggerData
+	{
+		public string method;
+		public string triggerType;
+		public KeyValuePair<string, object>[] args;
+
+		public CompTriggerData(string method, string attribute, KeyValuePair<string, object>[] args)
+		{
+			this.method = method;
+			triggerType = attribute.Remove(attribute.Length - 9); //remove suffix "Attribute"
+			this.args = args;
+		}
 	}
 }

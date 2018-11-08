@@ -493,6 +493,7 @@ namespace Au
 		/// </summary>
 		/// <seealso cref="DefaultMultiShow"/>
 		public bool MultiShow { get; set; } = DefaultMultiShow;
+		//FUTURE: try, even if false, maybe it is possible to just destroy menu window and not fully dispose, so that the menu can be reshown.
 
 		/// <summary>
 		/// Default <see cref="MultiShow"/> value for new <b>AuMenu</b> instances.
@@ -1045,10 +1046,7 @@ namespace Au.Types
 				break;
 			case MTThread.StaThread:
 			case MTThread.StaBackgroundThread:
-				var t = new Thread(() => _ExecItem(sender, x));
-				t.SetApartmentState(ApartmentState.STA);
-				if(x.threadOpt == MTThread.StaBackgroundThread) t.IsBackground = true;
-				t.Start();
+				Thread_.Start(() => _ExecItem(sender, x), x.threadOpt == MTThread.StaBackgroundThread);
 				break;
 			}
 		}
@@ -1353,7 +1351,7 @@ namespace Au.Types
 						}
 					}
 				}
-				if(filename2 != null && filename2.EndsWith_(".exe", true)) return File_.SearchPath(filename2);
+				if(filename2 != null && filename2.EndsWithI_(".exe")) return File_.SearchPath(filename2);
 			}
 			catch(Exception ex) { Debug_.Print(ex); }
 			return null;

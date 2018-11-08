@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define ADMIN_TRIGGERS
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -107,8 +109,7 @@ static class Program
 			AuDialog.ShowError("Exception", ex.ToString());
 		}
 		finally {
-			s_tasks?.Dispose(true);
-			RunningTasks2.FinishOffHungTasks();
+			EditorProcessContext.Shutdown();
 		}
 	}
 
@@ -116,35 +117,29 @@ static class Program
 	{
 		//Print(s);
 		try {
-			var a=Au.Util.LibSerializer.Deserialize(b);
-			int taskId = a[1];
-			Wnd wEditor = (Wnd)(LPARAM)a[2].i;
-
-			var tasks = s_tasks;
-			if(tasks == null || tasks.Window != wEditor) {
-				s_tasks = tasks = new RunningTasks2(wEditor);
-				var t = new Thread(_EditorWatcherThread) { IsBackground = true };
-				t.Start(tasks);
-			}
-
-			switch(a[0].i) {
-			case 1: return tasks.RunTask(taskId, a);
-			case 2: return tasks.EndTask(taskId);
+			var a = Au.Util.LibSerializer.Deserialize(b);
+			var epc = EditorProcessContext.GetEPC((Wnd)(LPARAM)a[1]._i);
+			int action = a[0]._i;
+			if(action <= 100) { //task actions
+				var tasks = epc.Tasks;
+				int taskId = a[2];
+				switch(action) {
+				case 1: return tasks.RunTask(taskId, a);
+				case 2: return tasks.EndTask(taskId);
+				}
+#if ADMIN_TRIGGERS
+			} else if(action <= 200) { //trigger actions
+				var trig = epc.Triggers;
+				switch(action) {
+				case 101: trig.Start(a[2]); break;
+				case 102: trig.Stop(); break;
+				}
+				return 1;
+#endif
 			}
 		}
 		catch(Exception ex) { Debug_.Print(ex); }
 		return 0;
-	}
-
-	static RunningTasks2 s_tasks;
-
-	//Ends tasks when editor process exits.
-	static void _EditorWatcherThread(object o)
-	{
-		var tasks = o as RunningTasks2;
-		try { tasks.Window.WaitForClosed(0, true); } catch(Exception ex) { Debug_.Print(ex); return; }
-		tasks.Dispose(false);
-		if(tasks == s_tasks) s_tasks = null;
 	}
 
 	//rejected. There are other ways to use this process to UAC-elevate malware, eg write script in collection, inject dll in editor, manipulate editor.
@@ -168,4 +163,60 @@ static class Program
 	//}
 	//static int s_secPid;
 	//static long s_secTime;
+}
+
+class EditorProcessContext
+{
+	public RunningTasks2 Tasks { get; private set; }
+#if ADMIN_TRIGGERS
+	public TriggersInTasks Triggers { get; private set; }
+#endif
+
+	static EditorProcessContext s_epc;
+
+	public static EditorProcessContext GetEPC(Wnd wEditor)
+	{
+		lock(typeof(EditorProcessContext)) {
+			if(s_epc == null || s_epc.Tasks.Window != wEditor) {
+				s_epc?._Dispose(false);
+				s_epc = new EditorProcessContext(wEditor);
+			}
+			return s_epc;
+		}
+	}
+
+	public static void Shutdown()
+	{
+		lock(typeof(EditorProcessContext)) s_epc?._Dispose(true);
+		RunningTasks2.FinishOffHungTasks();
+	}
+
+	EditorProcessContext(Wnd wEditor)
+	{
+		Tasks = new RunningTasks2(wEditor);
+#if ADMIN_TRIGGERS
+		Triggers = new TriggersInTasks(wEditor);
+#endif
+		var t = new Thread(_EditorWatcherThread) { IsBackground = true };
+		t.Start();
+	}
+
+	void _Dispose(bool onExit)
+	{
+#if ADMIN_TRIGGERS
+		Triggers.Dispose();
+#endif
+		Tasks.Dispose(onExit);
+	}
+
+	//Ends tasks etc when editor process exits.
+	void _EditorWatcherThread()
+	{
+		try { Tasks.Window.WaitForClosed(0, true); } //waits for process handle
+		catch(Exception ex) { Debug_.Print(ex); return; }
+		lock(typeof(EditorProcessContext)) {
+			_Dispose(false);
+			if(s_epc == this) s_epc = null;
+		}
+	}
 }

@@ -53,6 +53,28 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// Creates handle of this control/form and descendant controls.
+		/// Unlike Control.CreateHandle, works when invisible.
+		/// </summary>
+		/// <remarks>
+		/// Uses similar code as .NET Controls.cs internal void CreateControl(bool fIgnoreVisible).
+		/// Does not support controls with created handles. Asserts and throws. Would need to set parent handle, but it is a private method. That is why this func is not public.
+		/// </remarks>
+		internal static void CreateControl_(this Control t/*, int level = 0*/)
+		{
+			//Print(new string(' ', level) + t.ToString());
+			Debug.Assert(!t.IsHandleCreated); if(t.IsHandleCreated) throw new InvalidOperationException("Control handle already created: " + t);
+			t.CreateHandle_();
+			if(t.HasChildren) {
+				var cc = t.Controls;
+				var a = new Control[cc.Count]; cc.CopyTo(a, 0);
+				foreach(var c in a) {
+					CreateControl_(c/*, level+1*/);
+				}
+			}
+		}
+
+		/// <summary>
 		/// Gets mouse cursor position in client area coordinates.
 		/// Returns default(POINT) if handle not created.
 		/// </summary>
@@ -167,10 +189,8 @@ namespace Au.Types
 		public bool IsPopup { get; set; }
 
 		///
-		protected override CreateParams CreateParams
-		{
-			get
-			{
+		protected override CreateParams CreateParams {
+			get {
 				var p = base.CreateParams;
 				if(IsPopup) {
 					if(((Native.WS)p.Style).Has_(Native.WS.CHILD)) p.Style &= ~unchecked((int)Native.WS.POPUP); //probably in designer

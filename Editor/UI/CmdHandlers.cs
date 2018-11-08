@@ -88,13 +88,13 @@ class CmdHandlers :IGStripManagerCallbacks
 		_dict.Add(nameof(File_CopyFullPath), File_CopyFullPath);
 		_dict.Add(nameof(File_PrintSetup), File_PrintSetup);
 		_dict.Add(nameof(File_Print), File_Print);
-		_dict.Add(nameof(File_OpenCollection), File_OpenCollection);
-		_dict.Add(nameof(File_NewCollection), File_NewCollection);
-		_dict.Add(nameof(File_ExportCollection), File_ExportCollection);
-		_dict.Add(nameof(File_ImportCollection), File_ImportCollection);
-		_dict.Add(nameof(File_FindInCollections), File_FindInCollections);
-		_dict.Add(nameof(File_CollectionProperties), File_CollectionProperties);
-		_dict.Add(nameof(File_SaveAllNow), File_SaveAllNow);
+		_dict.Add(nameof(File_OpenWorkspace), File_OpenWorkspace);
+		_dict.Add(nameof(File_NewWorkspace), File_NewWorkspace);
+		_dict.Add(nameof(File_ExportWorkspace), File_ExportWorkspace);
+		_dict.Add(nameof(File_ImportWorkspace), File_ImportWorkspace);
+		_dict.Add(nameof(File_FindInWorkspaces), File_FindInWorkspaces);
+		_dict.Add(nameof(File_WorkspaceProperties), File_WorkspaceProperties);
+		_dict.Add(nameof(File_SaveNow), File_SaveNow);
 		_dict.Add(nameof(File_Exit), File_Exit);
 		_dict.Add(nameof(Edit_Undo), Edit_Undo);
 		_dict.Add(nameof(Edit_Redo), Edit_Redo);
@@ -304,37 +304,37 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	}
 
-	public void File_OpenCollection()
+	public void File_OpenWorkspace()
 	{
-		Panels.Files.LoadAnotherCollection();
+		Panels.Files.LoadAnotherWorkspace();
 	}
 
-	public void File_NewCollection()
+	public void File_NewWorkspace()
 	{
-		Panels.Files.LoadNewCollection();
+		Panels.Files.LoadNewWorkspace();
 	}
 
-	public void File_ExportCollection()
+	public void File_ExportWorkspace()
 	{
 		Model.ExportSelected();
 	}
 
-	public void File_ImportCollection()
+	public void File_ImportWorkspace()
 	{
-		Model.ImportCollection();
+		Model.ImportWorkspace();
 	}
 
-	public void File_FindInCollections()
-	{
-
-	}
-
-	public void File_CollectionProperties()
+	public void File_FindInWorkspaces()
 	{
 
 	}
 
-	public void File_SaveAllNow()
+	public void File_WorkspaceProperties()
+	{
+
+	}
+
+	public void File_SaveNow()
 	{
 		Model?.Save.AllNowIfNeed();
 	}
@@ -476,7 +476,7 @@ class CmdHandlers :IGStripManagerCallbacks
 	public void Run_End()
 	{
 		if(Tasks.EndTasksOf(Model.CurrentFile)) return;
-		var t = Tasks.GetRunningAlone(); if(t == null) return;
+		var t = Tasks.GetRunningSupervised(); if(t == null) return;
 		var m = new AuMenu();
 		m.Add("End task:", null).Enabled = false;
 		m[t.f.Name] = o => Tasks.EndTask(t);

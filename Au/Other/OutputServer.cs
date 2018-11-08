@@ -256,11 +256,10 @@ namespace Au.Util
 		void _CreateTimerAndThread()
 		{
 			try {
-				if(_isGlobal) _timer = Util.WaitableTimer.Create(false, LibTimerName);
-				else _timer = Util.WaitableTimer.Create();
+				if(_isGlobal) _timer = WaitableTimer.Create(false, LibTimerName);
+				else _timer = WaitableTimer.Create();
 
-				var th = new Thread(_Thread) { IsBackground = true };
-				th.Start();
+				Thread_.Start(_Thread, sta: false);
 			}
 			catch {
 				if(_isGlobal) { _mailslot.Close(); _mailslot = null; }

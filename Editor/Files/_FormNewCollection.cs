@@ -29,9 +29,9 @@ using static Program;
 partial class FilesModel
 {
 #endif
-	class _FormNewCollection :Form_
+	class _FormNewWorkspace :Form_
 	{
-		public _FormNewCollection()
+		public _FormNewWorkspace()
 		{
 			InitializeComponent();
 
@@ -44,7 +44,7 @@ partial class FilesModel
 		private void _ButtonBrowse_Click(object sender, EventArgs e)
 		{
 			var d = new FolderBrowserDialog();
-			d.Description = "Location. In the selected folder will be created the main folder of the collection.";
+			d.Description = "Location. In the selected folder will be created the main folder of the workspace.";
 			d.ShowNewFolderButton = true;
 			d.SelectedPath = File_.ExistsAsDirectory(textLocation.Text) ? textLocation.Text : (string)Folders.ThisAppDocuments;
 			if(d.ShowDialog(this) != DialogResult.OK) return;
@@ -182,7 +182,7 @@ partial class FilesModel
 			this.textPath.TabIndex = 6;
 			this.textPath.TabStop = false;
 			// 
-			// _FormNewCollection
+			// _FormNewWorkspace
 			// 
 			this.AcceptButton = this.buttonOK;
 			this.CancelButton = this.buttonCancel;
@@ -198,11 +198,11 @@ partial class FilesModel
 			this.Controls.Add(this.buttonOK);
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
-			this.Name = "_FormNewCollection";
+			this.Name = "_FormNewWorkspace";
 			this.ShowIcon = false;
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
-			this.Text = "New Collection";
+			this.Text = "New Workspace";
 			this.ResumeLayout(false);
 			this.PerformLayout();
 

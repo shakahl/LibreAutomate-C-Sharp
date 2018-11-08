@@ -55,10 +55,18 @@ class PanelRunning :Control, ITreeModel
 		_ccName.LeftMargin = 0;
 		//_ccName.Trimming = StringTrimming.EllipsisCharacter;
 		_ccName.ValueNeeded = node => (node.Tag as RunningTask).f.Name;
+		_ccName.DrawText += _ccName_DrawText;
 
 		_c.NodeMouseClick += _c_NodeMouseClick;
 
 		this.Controls.Add(_c);
+	}
+
+	private void _ccName_DrawText(object sender, DrawEventArgs e)
+	{
+		var t = e.Node.Tag as RunningTask;
+		//if(!t.isUnattended) e.TextColor = Color.FromArgb(unchecked((int)0xFFD040D0));
+		if(!t.isUnattended) e.TextColor = Color.Green;
 	}
 
 	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
@@ -75,6 +83,7 @@ class PanelRunning :Control, ITreeModel
 		//Debug_.PrintFunc();
 		Debug.Assert(nodeTag == null);
 		return Tasks.Items;
+		//FUTURE: also add folder with queed items.
 	}
 
 	public bool IsLeaf(object nodeTag)

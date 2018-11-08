@@ -68,6 +68,7 @@ partial class PanelEdit :Control
 			if(_activeDoc != null) _activeDoc.Visible = false;
 			_activeDoc = doc;
 			_activeDoc.Visible = true;
+			_UpdateUI_Cmd();
 		} else {
 			byte[] text = null;
 			SciText.FileLoaderSaver fls = default;
@@ -417,6 +418,7 @@ partial class PanelEdit :Control
 
 		internal void Init(byte[] text)
 		{
+			if(!IsHandleCreated) CreateHandle();
 			_fls.SetText(ST, text);
 			_initDeferred = true; //now folding does not work well. The first place where it works is SCN_UPDATEUI.
 		}
@@ -434,14 +436,13 @@ partial class PanelEdit :Control
 					if(p.Step()) {
 						var a = p.GetList<int>(0);
 						if(a != null) {
-							Convert_.MD5Hash md5 = default;
-							foreach(var v in a) { //info: a is not empty, because SQLite then would returns null
-								md5.Add(&v, 4);
+							_savedMD5 = _Hash(a);
+							for(int i = a.Count - 1; i >= 0; i--) { //must be in reverse order, else does not work
+								int v = a[i];
 								int line = v & 0x7FFFFFF, marker = v >> 27 & 31;
-								if(marker == 31) _FoldingFoldLine(line, true);
+								if(marker == 31) _FoldingFoldLine(line);
 								else Call(SCI_MARKERADDSET, line, 1 << marker);
 							}
-							_savedMD5 = md5.Hash;
 						}
 					}
 				}
@@ -449,20 +450,24 @@ partial class PanelEdit :Control
 			catch(SLException ex) { Debug_.Print(ex); }
 		}
 
-		internal unsafe void SaveEditorData()
+		static unsafe Convert_.MD5HashResult _Hash(List<int> a)
+		{
+			if(a.Count == 0) return default;
+			Convert_.MD5Hash md5 = default;
+			foreach(var v in a) md5.Add(v);
+			return md5.Hash;
+		}
+
+		internal void SaveEditorData()
 		{
 			var db = Model.DB; if(db == null) return;
 			var a = new List<int>();
-			_GetLineDataToSave(31, a);
 			_GetLineDataToSave(0, a);
 			_GetLineDataToSave(1, a);
-			Convert_.MD5HashResult hash;
-			if(a.Count > 0) {
-				Convert_.MD5Hash md5 = default;
-				foreach(var v in a) md5.Add(&v, 4);
-				hash = md5.Hash;
-			} else hash = default;
+			_GetLineDataToSave(31, a);
+			var hash = _Hash(a);
 			if(hash != _savedMD5) {
+				//Print("changed");
 				try {
 					if(a.Count == 0) {
 						db.Execute("DELETE FROM _editor WHERE id=?", FN.Id);
@@ -546,7 +551,7 @@ partial class PanelEdit :Control
 			bool isExpanded = 0 != Call(SCI_GETFOLDEXPANDED, line);
 			if(fold.HasValue && fold.GetValueOrDefault() != isExpanded) return false;
 			if(isExpanded) {
-				_FoldingFoldLine(line, false);
+				_FoldingFoldLine(line);
 				//move caret out of contracted region
 				int pos = ST.PositionBytes;
 				if(pos > startPos) {
@@ -559,13 +564,21 @@ partial class PanelEdit :Control
 			return true;
 		}
 
-		void _FoldingFoldLine(int line, bool startup)
+		void _FoldingFoldLine(int line)
 		{
 			string s = ST.LineText(line), s2 = "";
-			if(s.Contains("//{{")) s2 = "... }}";
-			else if(s.Contains("/*")) s2 = "... */";
-			else if(startup) { Call(SCI_FOLDLINE, line); return; } //slightly faster
-			ST.SetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
+			for(int i = 0; i < s.Length; i++) {
+				char c = s[i];
+				if(c == '{') { s2 = "... }"; break; }
+				if(c == '/' && i < s.Length - 1) {
+					c = s[i + 1];
+					if(c == '*') { s2 = "... */"; break; }
+					if(i < s.Length - 3 && c == '/' && s[i + 2] == '{' && s[i + 3] == '{') { s2 = "... }}"; break; }
+				}
+			}
+			//problem: quite slow. At startup ~250 mcs. The above code is fast.
+			if(s2.Length == 0) Call(SCI_FOLDLINE, line); //slightly faster
+			else ST.SetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
 		}
 
 		#endregion
