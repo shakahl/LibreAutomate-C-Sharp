@@ -454,7 +454,7 @@ namespace Au
 				}
 			}
 			catch(ThreadAbortException) { t.Stop(); }
-			catch(Exception ex) { PrintWarning("Unhandled exception in timer procedure. " + ex.ToString()); }
+			catch(Exception ex) { PrintWarning(ex.ToString(), -1); }
 			//info: OS handles exceptions in timer procedure.
 		}
 

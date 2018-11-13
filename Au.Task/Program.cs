@@ -37,7 +37,7 @@ namespace Au.Task
 		static extern bool ReadFile(IntPtr hFile, char[] lpBuffer, int nNumberOfBytesToRead, out int lpNumberOfBytesRead, IntPtr lpOverlapped);
 #endif
 
-		[STAThread]
+		//[STAThread] //we use TrySetApartmentState instead
 		static void Main(string[] args)
 		{
 #if PRELOAD_PROCESS
@@ -55,27 +55,22 @@ namespace Au.Task
 			if(args.Length == 4) args = null; else args = args.RemoveAt_(0, 4);
 #endif
 
-			Script.Name = name;
+			AuTask.Name = name;
+
+			if(0 == (flags & 2)) { //!mtaThread (script has [STAThread])
+				Thread.CurrentThread.TrySetApartmentState(ApartmentState.Unknown);
+				Thread.CurrentThread.TrySetApartmentState(ApartmentState.STA);
+				//this is undocumented, but works if we set ApartmentState.Unknown at first.
+				//With [STAThread] the process initially has 6 threads.
+				//Without [STAThread] the process has 4 threads (5 after ~25 s), even if we set STA now. Also now slightly faster.
+			}
 
 			if(0 != (flags & 1)) { //hasConfig
 				var config = asm + ".config";
 				if(File_.ExistsAsFile(config, true)) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
 			}
 
-			var threadName = "[script] " + name;
-			if(0 != (flags & 2)) { //mtaThread
-				var t = new Thread(() => _Thread(threadName, asm, pdbOffset, args));
-				t.Start();
-				t.Join();
-			} else {
-				_Thread(threadName, asm, pdbOffset, args);
-			}
-		}
-
-		static void _Thread(string threadName, string asm, int pdbOffset, string[] args)
-		{
-			Thread.CurrentThread.Name = threadName;
-			try { RunAsm.RunHere(RIsolation.process, asm, pdbOffset, args); }
+			try { RunAsm.Run(asm, args, pdbOffset); }
 			catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
 		}
 	}

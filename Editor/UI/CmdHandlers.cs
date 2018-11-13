@@ -183,22 +183,22 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void File_NewScript()
 	{
-		Model.NewItem("Script");
+		Model.NewItem("Script", beginEdit: true);
 	}
 
 	public void File_NewApp()
 	{
-		Model.NewItem("App.cs");
+		Model.NewItem("App.cs", beginEdit: true);
 	}
 
 	public void File_NewClass()
 	{
-		Model.NewItem("Class.cs");
+		Model.NewItem("Class.cs", beginEdit: true);
 	}
 
 	public void File_NewFolder()
 	{
-		Model.NewItem("Folder");
+		Model.NewItem("Folder", beginEdit: true);
 	}
 
 	public void File_Import()

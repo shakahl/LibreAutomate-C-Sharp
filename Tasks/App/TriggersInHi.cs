@@ -23,25 +23,25 @@ using Au.Types;
 using static Au.NoClass;
 using Au.Triggers;
 
-class TriggersInTasks
+class TriggersInHi
 {
 	Triggers _triggers;
 
-	public TriggersInTasks(Wnd wManager)
+	public TriggersInHi(Wnd wManager)
 	{
-		Output.LibWriteQM2("TriggersInTasks ctor");
+		Output.LibWriteQM2("TriggersInHi ctor");
 
 	}
 
 	public void Dispose()
 	{
-		Output.LibWriteQM2("TriggersInTasks.Dispose");
+		Output.LibWriteQM2("TriggersInHi.Dispose");
 		Stop();
 	}
 
 	public void Start(string dbPath)
 	{
-		Output.LibWriteQM2("TriggersInTasks.Start, " + dbPath);
+		Output.LibWriteQM2("TriggersInHi.Start, " + dbPath);
 		Debug.Assert(_triggers == null);
 		_triggers = new Triggers(dbPath);
 
@@ -50,7 +50,7 @@ class TriggersInTasks
 	public void Stop()
 	{
 		if(_triggers != null) {
-			Output.LibWriteQM2("TriggersInTasks.Stop");
+			Output.LibWriteQM2("TriggersInHi.Stop");
 			_triggers.Dispose();
 			_triggers = null;
 		}

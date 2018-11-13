@@ -226,9 +226,8 @@ class PanelOutput :Control
 		void _RunScript(string s)
 		{
 			var a = s.Split('|');
-			var fn = Model.Find(a[0], false);
-			if(fn == null) return;
-			Run.CompileAndRun(true, fn, a.Length == 1 ? null : a.RemoveAt_(0));
+			var f = Model.Find(a[0], false); if(f == null) return;
+			Run.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt_(0));
 		}
 	}
 }

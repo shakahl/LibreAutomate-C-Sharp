@@ -111,7 +111,7 @@ partial class EForm :Form
 	/// </summary>
 	void _LoadContent()
 	{
-		Tasks = new RunningTasks((Wnd)this);
+		Tasks = new RunningTasks();
 		Panels.Files.LoadWorkspace(CommandLine.WorkspaceDirectory);
 		Debug.Assert(!((Wnd)this).IsVisible);
 		IsLoaded = true;
@@ -169,8 +169,8 @@ partial class EForm :Form
 		//Print(m);
 
 		switch(m.Msg) {
-		case Au.LibRun.AuTask.WM_TASK_ENDED: //WM_USER+900
-			Tasks.TaskEnded(m.WParam);
+		case RunningTasks.WM_TASK_ENDED: //WM_USER+900
+			Tasks.TaskEnded2(m.WParam);
 			return;
 		case Api.WM_ACTIVATE:
 			int isActive = Math_.LoUshort(wParam); //0 inactive, 1 active, 2 click-active

@@ -306,11 +306,8 @@ namespace Au.Types
 		[DllImport("advapi32.dll", SetLastError = true)]
 		internal static extern bool DuplicateTokenEx(IntPtr hExistingToken, uint dwDesiredAccess, SECURITY_ATTRIBUTES lpTokenAttributes, SECURITY_IMPERSONATION_LEVEL ImpersonationLevel, TOKEN_TYPE TokenType, out IntPtr phNewToken);
 
-		internal const uint CREATE_SUSPENDED = 0x4;
-		internal const uint CREATE_UNICODE_ENVIRONMENT = 0x400;
-
 		[DllImport("advapi32.dll", SetLastError = true)]
-		internal static extern bool CreateProcessWithTokenW(IntPtr hToken, uint dwLogonFlags, string lpApplicationName, char[] lpCommandLine, uint dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
+		internal static extern bool CreateProcessWithTokenW(IntPtr hToken, uint dwLogonFlags, string lpApplicationName, char[] lpCommandLine, uint dwCreationFlags, string lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
 
 		internal struct LUID
 		{
@@ -830,20 +827,20 @@ namespace Au.Types
 		[DllImport("ole32.dll", PreserveSig = true)]
 		internal static extern int PropVariantClear(ref PROPVARIANT pvar);
 
-		internal enum APTTYPE
-		{
-			APTTYPE_CURRENT = -1,
-			APTTYPE_STA,
-			APTTYPE_MTA,
-			APTTYPE_NA,
-			APTTYPE_MAINSTA
-		}
+		//internal enum APTTYPE
+		//{
+		//	APTTYPE_CURRENT = -1,
+		//	APTTYPE_STA,
+		//	APTTYPE_MTA,
+		//	APTTYPE_NA,
+		//	APTTYPE_MAINSTA
+		//}
 
-		[DllImport("ole32.dll", PreserveSig = true)]
-		internal static extern int CoGetApartmentType(out APTTYPE pAptType, out int pAptQualifier);
+		//[DllImport("ole32.dll", PreserveSig = true)]
+		//internal static extern int CoGetApartmentType(out APTTYPE pAptType, out int pAptQualifier);
 
-		[DllImport("ole32.dll", PreserveSig = true)]
-		internal static extern int OleInitialize(IntPtr pvReserved);
+		//[DllImport("ole32.dll", PreserveSig = true)]
+		//internal static extern int OleInitialize(IntPtr pvReserved);
 
 
 

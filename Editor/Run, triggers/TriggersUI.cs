@@ -40,9 +40,9 @@ class TriggersUI
 	{
 		var dbPath = model.WorkspaceDirectory + @"\triggers.db";
 #if ADMIN_TRIGGERS
-		_useAdminProcess = Settings.Get("triggersAdmin", false) && IpcWithTasks.CanRunTasksAs(true);
+		_useAdminProcess = Settings.Get("triggersAdmin", false) && IpcWithHI.CanRunHi();
 		if(_useAdminProcess) {
-			IpcWithTasks.Call(true, 101, (int)MainForm.Handle, dbPath);
+			IpcWithHI.Call(101, (int)MainForm.Handle, dbPath);
 		} else {
 #endif
 		_triggers = new Triggers(dbPath);
@@ -63,7 +63,7 @@ class TriggersUI
 	{
 #if ADMIN_TRIGGERS
 		if(_useAdminProcess) {
-			IpcWithTasks.CallIfRunning(true, 102, (int)MainForm.Handle);
+			IpcWithHI.CallIfRunning(102, (int)MainForm.Handle);
 		} else {
 #endif
 		_triggers.Dispose();

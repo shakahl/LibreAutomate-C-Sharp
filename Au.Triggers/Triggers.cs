@@ -38,7 +38,7 @@ namespace Au.Triggers
 			try {
 				_db = new SqliteDB(dbPath, SLFlags.SQLITE_OPEN_READONLY | SLFlags.SQLITE_OPEN_NOMUTEX);
 			}
-			catch(SLException ex) { Print(ex); return; }
+			catch(SLException ex) { if(File_.ExistsAsAny(dbPath)) Print(ex); return; }
 
 			//start thread
 			_endEvent = new AutoResetEvent(false);
@@ -47,12 +47,15 @@ namespace Au.Triggers
 
 		public void Dispose()
 		{
+			if(_db == null) return;
+
 			//end thread
 			_endEvent.Set();
 			_thread.Join();
 
 			//close database
-			_db.Dispose(); _db = null;
+			_db.Dispose();
+			_db = null;
 		}
 
 		void _Thread()

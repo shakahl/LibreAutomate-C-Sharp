@@ -56,7 +56,7 @@ public partial class Form_Setup :Form
 
 	private void button1_Click(object sender, EventArgs e)
 	{
-		Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin("Au", "Au.Tasks", _dir + "Au.Tasks.exe", "$(Arg0)");
+		Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin("Au", "Au.HI", _dir + "Au.HI.exe", "$(Arg0)");
 
 		Close();
 	}

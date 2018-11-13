@@ -155,17 +155,13 @@ namespace Au
 		/// </summary>
 		public static class Options
 		{
-			//SHOULDDO: in Au.Editor and Au.Tasks don't allow scripts to change static options in main appdomain.
-			//	Maybe then change thread options instead.
-			//	Or add method Lock().
-
 			/// <summary>
 			/// Default title bar text.
-			/// Default value - <see cref="Script.Name"/>. In exe it is exe file name like "Example.exe".
+			/// Default value - <see cref="AuTask.Name"/>. In exe it is exe file name like "Example.exe".
 			/// </summary>
 			public static string DefaultTitle
 			{
-				get => _defaultTitle ?? Script.Name;
+				get => _defaultTitle ?? AuTask.Name;
 				set { _defaultTitle = value; }
 			}
 			static string _defaultTitle;

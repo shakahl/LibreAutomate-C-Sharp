@@ -347,6 +347,111 @@ namespace Au
 				//}
 				//static WinFormsControlNames _prev; static uint _prevPID; static long _prevTime; static object _prevLock = new object(); //cache
 			}
+
+			/// <summary>
+			/// Makes easier to send and receive data to/from other processes using message <msdn>WM_COPYDATA</msdn>.
+			/// </summary>
+			/// <remarks>
+			/// This struct is <msdn>COPYDATASTRUCT</msdn>.
+			/// <note type="note">By default <see cref="Process_.UacInfo">UAC</see> blocks messages sent from processes of lower integrity level. Call <see cref="EnableReceivingWM_COPYDATA"/> if need.</note>
+			/// </remarks>
+			/// <seealso cref="Util.SharedMemory"/>
+			/// <seealso cref="System.IO.Pipes.NamedPipeServerStream"/>
+			public unsafe struct CopyDataStruct
+			{
+				//COPYDATASTRUCT fields
+				LPARAM _dwData;
+				int _cbData;
+				void* _lpData;
+
+				#region send
+
+				/// <summary>
+				/// Sends string to a window of another process using API <msdn>SendMessage</msdn>(<msdn>WM_COPYDATA</msdn>).
+				/// </summary>
+				/// <returns><b>SendMessage</b>'s return value.</returns>
+				/// <param name="w">The window.</param>
+				/// <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
+				/// <param name="s">Data. Can contain '\0' characters.</param>
+				/// <param name="wParam">wParam of WM_COPYDATA. Optional.</param>
+				public static LPARAM SendString(Wnd w, int dataId, string s, LPARAM wParam = default)
+				{
+					fixed (char* p = s) {
+						var c = new CopyDataStruct { _dwData = dataId, _cbData = s.Length * 2, _lpData = p };
+						return w.Send(Api.WM_COPYDATA, wParam, &c);
+					}
+				}
+
+				/// <inheritdoc cref="SendString"/>
+				/// <summary>
+				/// Sends byte[] to a window of another process using API <msdn>SendMessage</msdn>(<msdn>WM_COPYDATA</msdn>).
+				/// </summary>
+				public static unsafe LPARAM SendBytes(Wnd w, int dataId, byte[] a, LPARAM wParam = default)
+				{
+					fixed (byte* p = a) {
+						var c = new CopyDataStruct { _dwData = dataId, _cbData = a.Length, _lpData = p };
+						return w.Send(Api.WM_COPYDATA, wParam, &c);
+					}
+				}
+
+				#endregion
+
+				#region receive
+
+				/// <summary>
+				/// Initializes this variable from <i>lParam</i> of a received <msdn>WM_COPYDATA</msdn> message.
+				/// Then you can call methods and properties of this variable to get data in managed format.
+				/// </summary>
+				/// <param name="lParam"><i>lParam</i> of a <msdn>WM_COPYDATA</msdn> message received in a window procedure. It is <msdn>COPYDATASTRUCT</msdn> pointer.</param>
+				public CopyDataStruct(LPARAM lParam)
+				{
+					var p = (CopyDataStruct*)lParam;
+					_dwData = p->_dwData; _cbData = p->_cbData; _lpData = p->_lpData;
+				}
+
+				/// <summary>
+				/// Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.
+				/// </summary>
+				public int DataId { get => (int)_dwData; set => _dwData = value; }
+
+				/// <summary>
+				/// Unmanaged data pointer. It is <msdn>COPYDATASTRUCT.lpData</msdn>.
+				/// </summary>
+				public void* RawData { get => _lpData; set => _lpData = value; }
+
+				/// <summary>
+				/// Unmanaged data size. It is <msdn>COPYDATASTRUCT.cbData</msdn>.
+				/// </summary>
+				public int RawDataSize { get => _cbData; set => _cbData = value; }
+
+				/// <summary>
+				/// Gets received data as string.
+				/// </summary>
+				public string GetString()
+				{
+					return new string((char*)_lpData, 0, _cbData / 2);
+				}
+
+				/// <summary>
+				/// Gets received data as byte[].
+				/// </summary>
+				public byte[] GetBytes()
+				{
+					var a = new byte[_cbData];
+					Marshal.Copy((IntPtr)_lpData, a, 0, a.Length);
+					return a;
+				}
+
+				/// <summary>
+				/// Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower <see cref="Process_.UacInfo">UAC</see> integrity level processes.
+				/// </summary>
+				public static void EnableReceivingWM_COPYDATA()
+				{
+					Api.ChangeWindowMessageFilter(Api.WM_COPYDATA, 1);
+				}
+
+				#endregion
+			}
 		}
 	}
 }

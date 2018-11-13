@@ -33,16 +33,20 @@ static class Run
 {
 	/// <summary>
 	/// Compiles and/or executes C# file or its project.
+	/// If <paramref name="run"/> is false, returns 1 if compiled, 0 if failed to compile.
+	/// Else returns: process id if started now, 0 if failed, (int)AuTask.ERunResult.deferred if scheduled to run later, (int)AuTask.ERunResult.editorThread if runs in editor thread.
 	/// </summary>
 	/// <param name="run">If true, compiles if need and executes. If false, always compiles and does not execute.</param>
 	/// <param name="f">C# file (script or .cs). Does nothing if null or not C# file.</param>
 	/// <param name="args">To pass to Main.</param>
+	/// <param name="noDefer">Don't schedule to run later.</param>
+	/// <param name="pipeName">Pipe name for AuTask.WriteResult.</param>
 	/// <remarks>
 	/// Saves editor text if need.
 	/// Calls <see cref="Compiler.Compile"/>.
 	/// Must be always called in the main UI thread (Thread.CurrentThread.ManagedThreadId == 1), because calls its file model functions.
 	/// </remarks>
-	public static void CompileAndRun(bool run, FileNode f, string[] args = null)
+	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string pipeName = null)
 	{
 #if TEST_STARTUP_SPEED
 		args = new string[] { Time.Microseconds.ToString() }; //and in script use this code: Print(Time.Microseconds-Convert.ToInt64(args[0]));
@@ -50,7 +54,7 @@ static class Run
 
 		Model.Save.TextNowIfNeed(onlyText: true);
 
-		if(f == null) return;
+		if(f == null) return 0;
 		g1:
 		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
 
@@ -61,24 +65,24 @@ static class Run
 			if(f2 != null) { f = f2; goto g1; }
 		}
 
-		if(!f.IsCodeFile) return;
+		if(!f.IsCodeFile) return 0;
 
 		bool ok = Compiler.Compile(run, out var r, f, projFolder);
 
 		if(run && r.outputType == EOutputType.dll) { //info: if run dll, compiler sets r.outputType and returns false
 			_OnRunClassFile(f, projFolder);
-			return;
+			return 0;
 		}
 
-		if(!ok) return;
-		if(!run) return;
+		if(!ok) return 0;
+		if(!run) return 1;
 
-		if(r.isolation == EIsolation.hostThread) {
-			RunAsm.RunHere(RIsolation.hostThread, r.file, r.pdbOffset, args);
-			return;
+		if(r.runMode == ERunMode.editorThread) {
+			RunAsm.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread);
+			return (int)AuTask.ERunResult.editorThread;
 		}
 
-		Tasks.RunCompiled(f, r, args);
+		return Tasks.RunCompiled(f, r, args, noDefer, pipeName);
 	}
 
 	static void _OnRunClassFile(FileNode f, FileNode projFolder)
@@ -137,20 +141,114 @@ $@"/* meta
 	static bool s_isRegisteredLinkRCF;
 }
 
-class RunningTask :AuTask
+/// <summary>
+/// A running automation task.
+/// Starts/ends task, watches/notifies when ended.
+/// </summary>
+class RunningTask
 {
+	volatile WaitHandle _process;
 	public readonly FileNode f;
+	public readonly int taskId;
 	public readonly bool isUnattended;
 
-	public RunningTask(FileNode f, IAuTaskManager manager, bool isUnattended) : base(++s_taskId, manager)
+	static int s_taskId;
+
+	public RunningTask(FileNode f, bool isUnattended)
 	{
-		this.f = f; this.isUnattended = isUnattended;
+		this.f = f;
+		taskId = ++s_taskId;
+		this.isUnattended = isUnattended;
 	}
 
-	static int s_taskId;
+	public enum EStartProcess { normal, admin, userFromAdmin, uiAccess }
+
+	/// <summary>
+	/// Starts task in new process.
+	/// Returns process id, or 0 if fails. However the process can be already ended (unlikely); then IsRunning is false.
+	/// </summary>
+	public int Run(EStartProcess sp, string exeFile, string args, string pipeName)
+	{
+		//#if TEST_STARTUP_SPEED
+		//			args = args as string + " " + Time.Microseconds.ToString();
+		//			//Debug_.LibMemoryPrint(false);
+		//#endif
+
+		int pid;
+		try {
+			Process_.StartResult psr = null;
+			if(pipeName != null) pipeName = "AuTask.WriteResult.pipe=" + pipeName;
+			switch(sp) {
+			case EStartProcess.admin:
+				if(args.Length_() > 500000) { Print($"<>Error: {f.SciLink} command line arguments string too long."); return 0; }
+				pid = IpcWithHI.Call(1, (int)MainForm.Handle, exeFile, args, pipeName);
+				if(pid == 0) return pid;
+				_process = Au.Util.LibKernelWaitHandle.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_TERMINATE);
+				Debug.Assert(_process != null);
+				goto g1;
+			case EStartProcess.userFromAdmin:
+				psr = Process_.LibStartUserIL(exeFile, args, pipeName, Process_.StartResult.Need.WaitHandle);
+				break;
+			default:
+				psr = Process_.LibStart(exeFile, args, sp == EStartProcess.uiAccess, pipeName, Process_.StartResult.Need.WaitHandle);
+				break;
+			}
+			pid = psr.pid;
+			_process = psr.waitHandle;
+			g1:
+			RegisteredWaitHandle rwh = null;
+			rwh = ThreadPool.RegisterWaitForSingleObject(_process, (context, wasSignaled) => {
+				rwh.Unregister(_process);
+				var p = _process; _process = null;
+				p.Dispose();
+				Tasks.TaskEnded1(taskId);
+			}, null, -1, true);
+		}
+		catch(Exception ex) { Print(ex); return 0; }
+
+		return pid;
+	}
+
+	/// <summary>
+	/// False if task is already ended or still not started.
+	/// </summary>
+	//public bool IsRunning => _process != null;
+	public bool IsRunning {
+		get {
+			var p = _process;
+			if(p == null) return false;
+			return 0 != Api.WaitForSingleObject(p.SafeWaitHandle.DangerousGetHandle(), 0);
+		}
+	}
+
+	/// <summary>
+	/// Ends this task (kills process), if running.
+	/// Returns false if fails, unlikely.
+	/// </summary>
+	/// <param name="onProgramExit">Called on program exit. Returns true even if fails. Does not wait.</param>
+	public bool End(bool onProgramExit)
+	{
+		var p = _process;
+		if(p != null) {
+			var h = p.SafeWaitHandle.DangerousGetHandle();
+			bool ok = Api.TerminateProcess(h, -1);
+			if(onProgramExit) return true;
+			if(ok) {
+				if(0 != Api.WaitForSingleObject(h, 2000)) { Debug_.Print("process not terminated"); return false; }
+			} else {
+				var s = Native.GetErrorMessage();
+				if(0 != Api.WaitForSingleObject(h, 0)) { Debug_.Print(s); return false; }
+			}
+			//note: TerminateProcess kills process not immediately. Need at least several ms.
+		}
+		return true;
+	}
 }
 
-class RunningTasks :IAuTaskManager
+/// <summary>
+/// Manages running automation tasks.
+/// </summary>
+class RunningTasks
 {
 	class _WaitingTask
 	{
@@ -168,23 +266,17 @@ class RunningTasks :IAuTaskManager
 	readonly List<_WaitingTask> _q; //not Queue because may need to remove item at any index
 	bool _updateUI;
 	volatile bool _disposed;
-	Wnd _wManager;
-
-	#region ITaskManager
-	public Wnd Window => _disposed ? default : _wManager;
-	public void TaskEnded(int taskId) { }
-	#endregion
+	Wnd _wMain;
 
 	public IEnumerable<RunningTask> Items => _a;
 
-	public RunningTasks(Wnd wManager)
+	public RunningTasks()
 	{
-		_wManager = wManager; //MainForm
 		_a = new List<RunningTask>();
 		_q = new List<_WaitingTask>();
 		_recent = new List<RecentTask>();
+		_wMain = (Wnd)MainForm;
 		Timer1s += _Timer1s; //updates UI
-		Wnd.Misc.UacEnableMessages(AuTask.WM_TASK_ENDED);
 	}
 
 	public void OnWorkspaceClosed()
@@ -221,11 +313,25 @@ class RunningTasks :IAuTaskManager
 	}
 
 	/// <summary>
-	/// Removes an ended task from the 'running' and 'recent' lists. If a task is queued and can run, starts it.
-	/// When task ended, its thread or Process.Exited event handler posts to MainForm message EForm.EMsg.TaskEnded with task id in wParam. MainForm calls this function.
-	/// When task ended in Au.Tasks, it posts message to our MainForm in the same way.
+	/// Called in a threadpool thread when a task process exited.
 	/// </summary>
-	internal void TaskEnded(IntPtr wParam)
+	/// <param name="taskId"></param>
+	internal void TaskEnded1(int taskId)
+	{
+		if(_disposed) return;
+		_wMain.Post(WM_TASK_ENDED, taskId);
+	}
+
+	/// <summary>
+	/// When task ended, this message is posted to MainForm, with wParam=taskId.
+	/// </summary>
+	public const int WM_TASK_ENDED = Api.WM_USER + 900;
+
+	/// <summary>
+	/// Removes an ended task from the 'running' and 'recent' lists. If a task is queued and can run, starts it.
+	/// When task ended, TaskEnded1 posts to MainForm message WM_TASK_ENDED with task id in wParam. MainForm calls this function.
+	/// </summary>
+	internal void TaskEnded2(IntPtr wParam)
 	{
 		if(_disposed) return;
 
@@ -271,60 +377,60 @@ class RunningTasks :IAuTaskManager
 	RunningTask _GetRunning(FileNode f)
 	{
 		for(int i = 0; i < _a.Count; i++) {
-			if(_a[i].f == f) return _a[i];
+			var r = _a[i];
+			if(r.f == f && r.IsRunning) return r;
 		}
 		return null;
 	}
 
 	/// <summary>
-	/// Returns all running files.
-	/// For files that have multiple tasks is added 1 item in the list.
-	/// Each time creates new list; caller can modify it.
-	/// </summary>
-	public List<FileNode> GetRunningFiles()
-	{
-		var a = new List<FileNode>(_a.Count);
-		for(int i = 0; i < _a.Count; i++) {
-			var t = _a[i];
-			if(!a.Contains(t.f)) a.Add(t.f);
-		}
-		return a;
-	}
-
-	/// <summary>
-	/// Gets the running task that does not have meta runUnattended true. Returns null if no such task.
+	/// Gets the supervised running task (meta runMode supervised or unspecified). Returns null if no such task.
 	/// </summary>
 	public RunningTask GetRunningSupervised()
 	{
 		for(int i = 0; i < _a.Count; i++) {
-			var t = _a[i];
-			if(!t.isUnattended) return t;
+			var r = _a[i];
+			if(!r.isUnattended && r.IsRunning) return r;
 		}
 		return null;
 	}
 
+	//currently not used
+	///// <summary>
+	///// Returns all running files.
+	///// For files that have multiple tasks is added 1 item in the list.
+	///// Each time creates new list; caller can modify it.
+	///// </summary>
+	//public List<FileNode> GetRunningFiles()
+	//{
+	//	var a = new List<FileNode>(_a.Count);
+	//	for(int i = 0; i < _a.Count; i++) {
+	//		var t = _a[i];
+	//		if(!a.Contains(t.f)) a.Add(t.f);
+	//	}
+	//	return a;
+	//}
+
 	/// <summary>
-	/// Tries to end all tasks of file f.
+	/// Ends all tasks of file f.
 	/// Returns true if was running.
-	/// Can fail, for example if the thread is in a waiting API or shows a dialog without x button. Does not throw exception.
 	/// </summary>
 	/// <param name="f">Can be null.</param>
 	public bool EndTasksOf(FileNode f)
 	{
 		bool wasRunning = false;
 		for(int i = _a.Count - 1; i >= 0; i--) {
-			if(_a[i].f != f) continue;
-			_EndTask(_a[i]);
+			var r = _a[i];
+			if(r.f != f || !r.IsRunning) continue;
+			_EndTask(r);
 			wasRunning = true;
 		}
 		return wasRunning;
 	}
 
 	/// <summary>
-	/// Tries to end single task, if still running.
-	/// Can fail, for example if the thread is in a waiting API or shows a dialog without x button. Does not throw exception. Does not wait.
+	/// Ends single task, if still running.
 	/// </summary>
-	/// <param name="rt"></param>
 	public void EndTask(RunningTask rt)
 	{
 		if(_a.Contains(rt)) _EndTask(rt);
@@ -333,114 +439,78 @@ class RunningTasks :IAuTaskManager
 	bool _EndTask(RunningTask rt, bool onExit = false)
 	{
 		Debug.Assert(_a.Contains(rt));
-		if(rt.GetTaskStartedInOtherProcess(out bool admin)) {
-			if(onExit) return true; //Au.Tasks process watches us and ends tasks when this process exits, either normally or when killed or crashed
-			byte R = IpcWithTasks.CallIfRunning(admin, 2, (int)_wManager.Handle, rt.taskId);
-			return R == 1 || R == 255;
-		} else {
-			return rt.End(onExit);
-		}
+		return rt.End(onExit);
 	}
 
 	bool _CanRunNow(FileNode f, Compiler.CompResults r, out RunningTask running)
 	{
 		running = null;
-		if(r.runUnattended) {
-			if(r.ifRunning == EIfRunning.run) return true;
-			running = _GetRunning(f);
-		} else {
-			running = GetRunningSupervised();
+		switch(r.runMode) {
+		case ERunMode.supervised: running = GetRunningSupervised(); break;
+		case ERunMode.unattendedSingle: running = _GetRunning(f); break;
+		default: return true;
 		}
 		return running == null;
 	}
 
 	/// <summary>
-	/// Executes the compiled assembly.
-	/// Returns false if cannot execute now (see meta runUnattended/ifRunning). Then, if ifRunning waitX, adds to the queue to execute later. Also returns false if fails to start thread/process.
+	/// Executes the compiled assembly in new process.
+	/// Returns: process id if started now, 0 if failed, (int)AuTask.ERunResult.deferred if scheduled to run later.
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="r"></param>
 	/// <param name="args"></param>
+	/// <param name="noDefer">Don't schedule to run later. If cannot run now, just return 0.</param>
+	/// <param name="pipeName">Pipe name for AuTask.WriteResult.</param>
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
-	public bool RunCompiled(FileNode f, Compiler.CompResults r, string[] args, bool ignoreLimits = false)
+	public int RunCompiled(FileNode f, Compiler.CompResults r, string[] args, bool noDefer = false, string pipeName = null, bool ignoreLimits = false)
 	{
+		g1:
 		if(!ignoreLimits && !_CanRunNow(f, r, out var running)) {
 			switch(r.ifRunning) {
 			case EIfRunning.restart:
 			case EIfRunning.restartOrWait:
-				if(running.f == f) {
-					if(_EndTask(running)) {
-						//Our thread will receive posted WM_TASK_ENDED later. Until that, _CanRunNow returns false.
-						//We can either wait/get WM_TASK_ENDED now, or schedule the task to run in WM_TASK_ENDED handler. Probably the later is better.
-#if true
-						goto case EIfRunning.wait;
-#else
-						for(int i = 0; i < 10; i++) {
-							bool msgOK = false;
-							while(Api.PeekMessage(out var m1, this.Window, AuTask.WM_TASK_ENDED, AuTask.WM_TASK_ENDED, Api.PM_REMOVE)) {
-								Api.DispatchMessage(m1);
-								if(m1.wParam == running.taskId) { msgOK = true; break; }
-							}
-							if(msgOK) break;
-							if(i == 0 && 0 == Api.MsgWaitForMultipleObjectsEx(0, null, 50, Api.QS_ALLPOSTMESSAGE, 0)) continue; //makes slightly faster
-							Thread.Sleep(10 + i);
-							Debug_.PrintIf(i > 1, "need to wait");
-						}
-						if(_CanRunNow(f, r, out running)) goto gRun;
-						Debug_.Print("_CanRunNow returned false");
-#endif
-					}
-				}
-				if(r.ifRunning == EIfRunning.restart) goto case EIfRunning.unspecified;
-				goto case EIfRunning.wait;
+				if(running.f == f && _EndTask(running)) goto g1;
+				if(r.ifRunning == EIfRunning.restartOrWait) goto case EIfRunning.wait;
+				goto case EIfRunning.unspecified;
 			case EIfRunning.wait:
+				if(noDefer) goto case EIfRunning.unspecified;
 				_q.Insert(0, new _WaitingTask(f, r, args));
-				break;
+				return (int)AuTask.ERunResult.deferred;
 			case EIfRunning.unspecified:
 				string s1 = (running.f == f) ? "it" : $"{running.f.SciLink}";
-				Print($"<>Cannot start {f.SciLink} because {s1} is running. You may want to add meta option <c green>runUnattended true<> or/and <c green>ifRunning leave|wait|restart|restartOrWait|run<>.");
+				Print($"<>Cannot start {f.SciLink} because {s1} is running. Consider meta options <c green>runMode<>, <c green>ifRunning<>.");
 				break;
 			}
-			return false;
-		}
-		//gRun:
-		var rt = new RunningTask(f, this, r.runUnattended);
-		RFlags flags = 0;
-		if(r.isolation == EIsolation.process) flags |= RFlags.isProcess;
-		if(r.isolation == EIsolation.thread) flags |= RFlags.isThread;
-		if(r.mtaThread) flags |= RFlags.mtaThread;
-		if(r.hasConfig) flags |= RFlags.hasConfig;
-
-		string exeFile = null, argsString = null;
-		if(r.isolation == EIsolation.process) {
-			exeFile = r.file;
-			if(!r.notInCache) {
-				int iFlags = r.hasConfig ? 1 : 0; if(r.mtaThread) iFlags |= 2;
-				string spo = r.pdbOffset.ToString(), sFlags = iFlags.ToString();
-				if(args == null) args = new string[] { r.name, exeFile, spo, sFlags }; else args = args.Insert_(0, r.name, exeFile, spo, sFlags);
-				exeFile = Folders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");
-			}
-			if(args != null) { argsString = Au.Util.StringMisc.CommandLineFromArray(args); args = null; }
+			return 0;
 		}
 
-		var uac = r.uac; //same - run the task in this process or in new process started directly; admin - in/through admin Au.Tasks; user - in user Au.Tasks.
-		if(uac != EUac.same) {
-			if(Process_.UacInfo.IsUacDisabled) {
-				uac = EUac.same;
-				//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
-				//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
+		var rt = new RunningTask(f, r.runMode != ERunMode.supervised);
+
+		string exeFile = r.file, argsString = null;
+		if(!r.notInCache) {
+			int iFlags = r.hasConfig ? 1 : 0; if(r.mtaThread) iFlags |= 2;
+			string spo = r.pdbOffset.ToString(), sFlags = iFlags.ToString();
+			if(args == null) args = new string[] { r.name, exeFile, spo, sFlags }; else args = args.Insert_(0, r.name, exeFile, spo, sFlags);
+			exeFile = Folders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");
+		}
+		if(args != null) argsString = Au.Util.StringMisc.CommandLineFromArray(args);
+
+		RunningTask.EStartProcess sp = RunningTask.EStartProcess.normal;
+		if(!Process_.UacInfo.IsUacDisabled) {
+			//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
+			//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
+			var IL = Process_.UacInfo.ThisProcess.IntegrityLevel;
+			if(r.uac == EUac.same) {
+				if(IL == UacIL.UIAccess) sp = RunningTask.EStartProcess.uiAccess;
 			} else {
-				var IL = Process_.UacInfo.ThisProcess.IntegrityLevel;
 				switch(IL) {
-				case UacIL.High:
-					if(uac == EUac.admin) uac = EUac.same;
-					else if(r.isolation == EIsolation.process) { uac = EUac.same; flags |= RFlags.userProcess; }
-					break;
 				case UacIL.Medium:
-					if(uac == EUac.user) uac = EUac.same;
-					break;
 				case UacIL.UIAccess:
-					if(uac == EUac.user) { flags |= RFlags.noUiAccess; if(r.isolation == EIsolation.process) uac = EUac.same; }
+					if(r.uac == EUac.admin) sp = RunningTask.EStartProcess.admin;
+					break;
+				case UacIL.High:
+					if(r.uac == EUac.user) sp = RunningTask.EStartProcess.userFromAdmin;
 					break;
 				case UacIL.Low:
 				case UacIL.Untrusted:
@@ -449,40 +519,25 @@ class RunningTasks :IAuTaskManager
 				//break;
 				case UacIL.System:
 				case UacIL.Protected:
-					Print($"<>Cannot run {f.SciLink}. Meta option <c green>uac {uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
-					return false;
+					Print($"<>Cannot run {f.SciLink}. Meta option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
+					return 0;
 					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
 				}
 			}
 		}
-		//Print(uac, flags);
 
-		if(uac == EUac.same) {
-			var p = new RParams(r.name, r.file, exeFile, argsString ?? (object)args, r.pdbOffset, flags);
+		//Perf.First();
+		int pid;
 #if true
-			if(!rt.Run(p)) return false;
+		pid = rt.Run(sp, exeFile, argsString, pipeName); if(pid == 0) return 0;
 #else
-			var p1 = Perf.StartNew();
-			for(int i = 0; i < 8; i++) if(!rt.Run(p, this)) return false;
-			//for(int i = 0; i < 8; i++) { if(!rt.Run(p, this)) return false; Thread.Sleep(20); }
-			p1.NW('R');
+		var p1 = Perf.StartNew();
+		for(int i = 0; i < 8; i++) pid=rt.Run(sp, exeFile, argsString, pipeName);
+		//for(int i = 0; i < 8; i++) { pid=rt.Run(sp, exeFile, argsString, pipeName); Thread.Sleep(20); }
+		p1.NW('R');
 #endif
-			if(rt.IsRunning) _Add(rt);
-		} else {
-			//Perf.First();
-			flags |= RFlags.remote;
-			if(args != null) argsString = Au.Util.StringMisc.CommandLineFromArray(args);
-			if(argsString.Length_() > 500000) { Print($"<>Error: {f.SciLink} command line arguments string too long, max 500000."); return false; }
-			var asmFile = exeFile == null ? r.file : null;
-
-			bool admin = uac == EUac.admin;
-			byte R = IpcWithTasks.Call(admin, 1, (int)_wManager.Handle, rt.taskId, r.name, asmFile, exeFile, argsString, r.pdbOffset, (int)flags);
-			if(R != 1) return R != 0; //0 failed, 1 started, 2 started but already ended
-			rt.SetTaskStartedInOtherProcess(admin);
-			_Add(rt);
-		}
-
-		return true;
+		_Add(rt);
+		return pid;
 	}
 
 	int _Find(int taskId)

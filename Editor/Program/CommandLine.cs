@@ -78,7 +78,7 @@ static class CommandLine
 			break;
 		}
 		if(cmd != 0) {
-			Wnd.Misc.InterProcessSendData(w, cmd, s);
+			Wnd.Misc.CopyDataStruct.SendString(w, cmd, s);
 		}
 		return true;
 	}
@@ -91,7 +91,7 @@ static class CommandLine
 		}
 		catch(Exception ex) { Print(ex.Message); }
 
-		Wnd.Misc.InterProcessEnableReceivingWM_COPYDATA();
+		Wnd.Misc.CopyDataStruct.EnableReceivingWM_COPYDATA();
 		Wnd.Misc.MyWindow.RegisterClass(c_msgClass);
 		_msgWnd = new MsgWindow();
 		_msgWnd.CreateMessageWindow(c_msgClass);
@@ -129,8 +129,11 @@ static class CommandLine
 
 	static unsafe LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)
 	{
-		//Wnd wSender = (Wnd)wParam;
-		int action = Wnd.Misc.InterProcessGetData(lParam, out var s, out var b, dataId => dataId >= 100);
+		var c = new Wnd.Misc.CopyDataStruct(lParam);
+		int action = c.DataId;
+		bool isString = action < 100;
+		string s = isString ? c.GetString() : null;
+		byte[] b = isString ? null : c.GetBytes();
 		switch(action) {
 		case 1:
 			Model.ImportWorkspace(s);
@@ -142,25 +145,26 @@ static class CommandLine
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show task dialog
 			Model.ImportFiles(s.Split_("\0"));
 			break;
-		case 99: { //run script from command line; sent by Au.CL.exe
-				var a = Au.Util.StringMisc.CommandLineToArray(s);
-				if(a.Length == 0) return 0;
-				var script = a[0];
-				var f = Model?.Find(script, false);
-				if(f == null) { Print($"Command line: script '{script}' not found."); return 2; }
-				a = a.Length == 1 ? null : a.RemoveAt_(0);
-				Run.CompileAndRun(true, f, a);
-				//TODO: support start+wait
+		case 99: //run script from Au.CL.exe command line
+		case 100: //run script from script (AuTask.Run/RunWait)
+			int mode = (int)wParam; //1 - wait, 3 - wait and get AuTask.WriteResult output
+			string script; string[] args; string pipeName = null;
+			if(action == 99) {
+				var a = Au.Util.StringMisc.CommandLineToArray(s); if(a.Length == 0) return 0;
+				int nRemove = 0;
+				if(0 != (mode & 2)) pipeName = a[nRemove++];
+				script = a[nRemove++];
+				args = a.Length == nRemove ? null : a.RemoveAt_(0, nRemove);
+			} else {
+				var d = Au.Util.LibSerializer.Deserialize(b);
+				script = d[0]; args = d[1]; pipeName = d[2];
 			}
-			break;
-		case 100: { //run script from script
-				var a = Au.Util.LibSerializer.Deserialize(b);
-				var script = a[0];
-				var f = Model?.Find(script, false);
-				if(f == null) return 2; //let the caller script throw 'script not found' exception
-				Run.CompileAndRun(true, f, a[1]);
+			var f = Model?.Find(script, false);
+			if(f == null) {
+				if(action == 99) Print($"Command line: script '{script}' not found."); //else the caller script will throw exception
+				return (int)AuTask.ERunResult.notFound;
 			}
-			break;
+			return Run.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), pipeName: pipeName);
 		default:
 			Debug.Assert(false);
 			return 0;

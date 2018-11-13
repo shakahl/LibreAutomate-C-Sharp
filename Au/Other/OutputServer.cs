@@ -173,7 +173,7 @@ namespace Au.Util
 
 #if NEED_CALLER
 			/// <summary>
-			/// The <see cref="Script.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
+			/// The <see cref="AuTask.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
 			/// Used with MessageType.Write.
 			/// If <see cref="NeedCallerMethod"/> is true, also includes the caller method. Format: "scriptname:type.method".
 			/// </summary>
@@ -188,7 +188,7 @@ namespace Au.Util
 			}
 #else
 			/// <summary>
-			/// The <see cref="Script.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
+			/// The <see cref="AuTask.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
 			/// Used with MessageType.Write.
 			/// </summary>
 			public string Caller { get; }
@@ -521,7 +521,7 @@ namespace Au
 
 			Api.GetSystemTimeAsFileTime(out var time);
 
-			string caller = Script.Name;
+			string caller = AuTask.Name;
 #if NEED_CALLER
 			if(OutputServer.LibNeedCallerMethod) {
 				//info: this func always called from WriteDirectly, which is usually called through Writer, Write, Print, etc. But it is public and can be called directly.

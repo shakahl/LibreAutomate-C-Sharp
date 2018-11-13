@@ -398,7 +398,7 @@ partial class PanelFiles :Control
 				}
 
 				bool isFolder = v.IsDirectory && !isProject;
-				var item = new ToolStripMenuItem(name, null, (unu, sed) => Model.NewItem(v.FullPath.Substring(templDir.Length + 1)));
+				var item = new ToolStripMenuItem(name, null, (unu, sed) => Model.NewItem(v.FullPath.Substring(templDir.Length + 1), beginEdit: true));
 				if(isFolder) {
 					var ddSub = new ToolStripDropDownMenu();
 					item.DropDown = ddSub;

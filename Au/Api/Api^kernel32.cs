@@ -66,6 +66,9 @@ namespace Au.Types
 		internal static extern bool QueryFullProcessImageName(IntPtr hProcess, bool nativeFormat, [Out] char[] lpExeName, ref int lpdwSize);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool TerminateProcess(IntPtr hProcess, int uExitCode);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern uint ResumeThread(IntPtr hThread);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
@@ -261,31 +264,6 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern int WideCharToMultiByte(uint CodePage, uint dwFlags, char* lpWideCharStr, int cchWideChar, byte* lpMultiByteStr, int cbMultiByte, IntPtr lpDefaultChar, int* lpUsedDefaultChar);
 
-		internal struct STARTUPINFO
-		{
-			public int cb;
-			public IntPtr lpReserved;
-			public IntPtr lpDesktop;
-			public IntPtr lpTitle;
-			public int dwX;
-			public int dwY;
-			public int dwXSize;
-			public int dwYSize;
-			public int dwXCountChars;
-			public int dwYCountChars;
-			public uint dwFillAttribute;
-			public uint dwFlags;
-			public ushort wShowWindow;
-			public ushort cbReserved2;
-			public IntPtr lpReserved2;
-			public IntPtr hStdInput;
-			public IntPtr hStdOutput;
-			public IntPtr hStdError;
-		}
-
-		[DllImport("kernel32.dll", EntryPoint = "GetStartupInfoW")]
-		internal static extern void GetStartupInfo(out STARTUPINFO lpStartupInfo);
-
 		internal const uint FILE_READ_DATA = 0x1;
 		internal const uint FILE_LIST_DIRECTORY = 0x1;
 		internal const uint FILE_WRITE_DATA = 0x2;
@@ -439,10 +417,10 @@ namespace Au.Types
 		internal static extern int ExpandEnvironmentStrings(string lpSrc, [Out] char[] lpDst, int nSize);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetEnvironmentStringsW")]
-		internal static extern IntPtr GetEnvironmentStrings();
+		internal static extern char* GetEnvironmentStrings();
 
 		[DllImport("kernel32.dll", EntryPoint = "FreeEnvironmentStringsW")]
-		internal static extern bool FreeEnvironmentStrings(IntPtr penv);
+		internal static extern bool FreeEnvironmentStrings(char* penv);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern int GetProcessId(IntPtr Process);
@@ -619,8 +597,39 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern int SleepEx(int dwMilliseconds, bool bAlertable);
 
-		[DllImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
-		internal static extern IntPtr FindResource(IntPtr hModule, LPARAM lpName, LPARAM lpType);
+		//[DllImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
+		//internal static extern IntPtr FindResource(IntPtr hModule, LPARAM lpName, LPARAM lpType);
+
+		[DllImport("kernel32.dll", EntryPoint = "GetStartupInfoW")]
+		internal static extern void GetStartupInfo(out STARTUPINFO lpStartupInfo);
+
+		internal struct STARTUPINFO
+		{
+			public int cb;
+			public IntPtr lpReserved;
+			public IntPtr lpDesktop;
+			public IntPtr lpTitle;
+			public int dwX;
+			public int dwY;
+			public int dwXSize;
+			public int dwYSize;
+			public int dwXCountChars;
+			public int dwYCountChars;
+			public uint dwFillAttribute;
+			public uint dwFlags;
+			public ushort wShowWindow;
+			public ushort cbReserved2;
+			public IntPtr lpReserved2;
+			public IntPtr hStdInput;
+			public IntPtr hStdOutput;
+			public IntPtr hStdError;
+		}
+
+		internal struct STARTUPINFOEX
+		{
+			public STARTUPINFO StartupInfo;
+			public IntPtr lpAttributeList;
+		}
 
 		internal struct PROCESS_INFORMATION :IDisposable
 		{
@@ -636,11 +645,19 @@ namespace Au.Types
 			}
 		}
 
+		//CreateProcess flags
+		internal const uint CREATE_SUSPENDED = 0x4;
+		internal const uint CREATE_UNICODE_ENVIRONMENT = 0x400;
+		internal const uint EXTENDED_STARTUPINFO_PRESENT = 0x80000;
+		//STARTUPINFO flags
+		internal const uint STARTF_FORCEOFFFEEDBACK = 0x80;
+		//internal const uint STARTF_USESTDHANDLES = 0x100;
+
 		[DllImport("kernel32.dll", EntryPoint = "CreateProcessW", SetLastError = true)]
-		internal static extern bool CreateProcess(string lpApplicationName, char[] lpCommandLine, SECURITY_ATTRIBUTES lpProcessAttributes, SECURITY_ATTRIBUTES lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
+		internal static extern bool CreateProcess(string lpApplicationName, char[] lpCommandLine, SECURITY_ATTRIBUTES lpProcessAttributes, SECURITY_ATTRIBUTES lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, string lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
 
 		[DllImport("advapi32.dll", EntryPoint = "CreateProcessAsUserW", SetLastError = true)]
-		internal static extern bool CreateProcessAsUser(IntPtr hToken, string lpApplicationName, char[] lpCommandLine, SECURITY_ATTRIBUTES lpProcessAttributes, SECURITY_ATTRIBUTES lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, IntPtr lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
+		internal static extern bool CreateProcessAsUser(IntPtr hToken, string lpApplicationName, char[] lpCommandLine, SECURITY_ATTRIBUTES lpProcessAttributes, SECURITY_ATTRIBUTES lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, string lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateWaitableTimerW", SetLastError = true)]
 		internal static extern SafeWaitHandle CreateWaitableTimer(SECURITY_ATTRIBUTES lpTimerAttributes, bool bManualReset, string lpTimerName);
@@ -655,7 +672,7 @@ namespace Au.Types
 		internal static extern bool WaitNamedPipe(string lpNamedPipeName, int nTimeOut);
 
 		[DllImport("kernel32.dll", EntryPoint = "CallNamedPipeW", SetLastError = true)]
-		internal static extern bool CallNamedPipe(string lpNamedPipeName, void* lpInBuffer, int nInBufferSize, out byte lpOutBuffer, int nOutBufferSize, out int lpBytesRead, int nTimeOut);
+		internal static extern bool CallNamedPipe(string lpNamedPipeName, void* lpInBuffer, int nInBufferSize, out int lpOutBuffer, int nOutBufferSize, out int lpBytesRead, int nTimeOut);
 
 		//[DllImport("kernel32.dll", SetLastError = true)]
 		//internal static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out int ClientProcessId);
@@ -668,5 +685,26 @@ namespace Au.Types
 
 		[DllImport("kernel32.dll", EntryPoint = "GetModuleFileNameW", SetLastError = true)]
 		internal static extern int GetModuleFileName(IntPtr hModule, char[] lpFilename, int nSize);
+
+		internal const uint PIPE_ACCESS_INBOUND = 0x1;
+		internal const uint PIPE_TYPE_MESSAGE = 0x4;
+		internal const uint PIPE_READMODE_MESSAGE = 0x2;
+		internal const uint PIPE_REJECT_REMOTE_CLIENTS = 0x8;
+
+		[DllImport("kernel32.dll", EntryPoint = "CreateNamedPipeW", SetLastError = true)]
+		internal static extern SafeFileHandle CreateNamedPipe(string lpName, uint dwOpenMode, uint dwPipeMode, uint nMaxInstances, uint nOutBufferSize, uint nInBufferSize, uint nDefaultTimeOut, SECURITY_ATTRIBUTES lpSecurityAttributes);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool ConnectNamedPipe(SafeFileHandle hNamedPipe, ref OVERLAPPED lpOverlapped);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool DisconnectNamedPipe(SafeFileHandle hNamedPipe);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool GetOverlappedResult(SafeFileHandle hFile, ref OVERLAPPED lpOverlapped, out int lpNumberOfBytesTransferred, bool bWait);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool CancelIo(SafeFileHandle hFile);
+
 	}
 }

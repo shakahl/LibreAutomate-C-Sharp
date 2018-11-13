@@ -1,7 +1,6 @@
 ﻿/* meta
 outputType app
 //outputPath %Folders.ThisAppDocuments%\App1
-//isolation process
 //debug false
 */
 //#include usings.txt

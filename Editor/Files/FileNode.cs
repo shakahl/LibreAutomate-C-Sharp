@@ -618,6 +618,11 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		else if(!IsAlien) c.SelectedNode = TreeNodeAdv;
 	}
 
+	public bool IsSelected {
+		get => TreeNodeAdv?.IsSelected ?? false; //TEST: maybe faster _model.SelectedItems.Contains(this);
+		set => TreeNodeAdv.IsSelected = value;
+	}
+
 	/// <summary>
 	/// Call this to update/redraw control row view when changed node data (text, image, checked, color, etc) and don't need to change row height.
 	/// </summary>
@@ -794,8 +799,9 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		}
 
 		_name = name;
-		if(notifyControl) UpdateControlRow();
 		_model.Save.WorkspaceLater();
+		if(notifyControl) UpdateControlRow();
+		if(this == _model.CurrentFile) Program.MainForm.SetTitle();
 		return true;
 	}
 

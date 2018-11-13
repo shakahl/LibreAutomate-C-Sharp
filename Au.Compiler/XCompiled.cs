@@ -96,17 +96,14 @@ namespace Au.Compiler
 						case 't':
 							r.outputType = (EOutputType)value.ToInt_(offs);
 							break;
-						case 'i':
-							r.isolation = (EIsolation)value.ToInt_(offs);
-							break;
-						case 'u':
-							r.uac = (EUac)value.ToInt_(offs);
-							break;
 						case 'a':
-							r.runUnattended = true;
+							r.runMode = (ERunMode)value.ToInt_(offs);
 							break;
 						case 'n':
 							r.ifRunning = (EIfRunning)value.ToInt_(offs);
+							break;
+						case 'u':
+							r.uac = (EUac)value.ToInt_(offs);
 							break;
 						case 'b':
 							r.prefer32bit = true;
@@ -195,13 +192,12 @@ namespace Au.Compiler
 				}
 
 				/*
-	IDmain|=path.exe|t2|i2|u2|a2|n2|b|z|d|pMD5project|cIDcode|lIDlibrary|dIDresource|kIDicon|mIDmanifest|xIDres|sIDsign|oIDconfig|*ref
+	IDmain|=path.exe|tN|aN|nN|uN|b|z|dN|pMD5project|cIDcode|lIDlibrary|dIDresource|kIDicon|mIDmanifest|xIDres|sIDsign|oIDconfig|*ref
 	= - outFile
 	t - outputType
-	i - isolation
-	u - uac
-	a - runUnattended
+	a - runMode
 	n - ifRunning
+	u - uac
 	b - prefer32bit
 	z - mtaThread
 	d - pdbOffset
@@ -221,10 +217,9 @@ namespace Au.Compiler
 				using(new Au.Util.LibStringBuilder(out var b)) {
 					if(m.OutputPath != null) b.Append("|=").Append(outFile); //else f.Id in cache
 					if(m.OutputType != MetaComments.DefaultOutputType(m.IsScript)) b.Append("|t").Append((int)m.OutputType);
-					if(m.Isolation != EIsolation.appDomain) b.Append("|i").Append((int)m.Isolation);
-					if(m.Uac != EUac.same) b.Append("|u").Append((int)m.Uac);
-					if(m.RunUnattended) b.Append("|a");
+					if(m.RunMode != ERunMode.supervised) b.Append("|a").Append((int)m.RunMode);
 					if(m.IfRunning != EIfRunning.unspecified) b.Append("|n").Append((int)m.IfRunning);
+					if(m.Uac != EUac.same) b.Append("|u").Append((int)m.Uac);
 					if(m.Prefer32Bit) b.Append("|b");
 					if(mtaThread) b.Append("|z");
 					if(pdbOffset != 0) b.Append("|d").Append(pdbOffset);

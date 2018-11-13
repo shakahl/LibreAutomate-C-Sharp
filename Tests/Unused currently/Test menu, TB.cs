@@ -32,7 +32,6 @@ public partial class Test
 		il.Images.Add("k0", Icon.FromHandle(hi).ToBitmap());
 		Api.DestroyIcon(hi);
 		//il.Images.Add(SystemIcons.Exclamation); //distorted
-		//il.Images.Add(Au.Tasks.Properties.Resources.qm_running); //distorted, as well as with ToBitmap(), because the resource manager adds big icon
 		il.Images.Add(new Icon(SystemIcons.Exclamation, 16, 16)); //distorted, the same
 		return il;
 	}

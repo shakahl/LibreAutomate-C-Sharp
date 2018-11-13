@@ -409,101 +409,101 @@ namespace Au
 		public static string GetDescription(int processId) => GetVersionInfo(processId)?.FileDescription;
 
 		/// <summary>
-		/// Creates lpCommandLine for CreateProcess, as char[] like "\"exeFile\" args\0".
-		/// Also creates default lpCurrentDirectory (directory of exeFile), flags and STARTUPINFO (with flag STARTF_FORCEOFFFEEDBACK).
+		/// Creates correct arguments for CreateProcess:
+		/// lpCommandLine, as char[] like "\"exeFile\" args\0";
+		/// lpCurrentDirectory = directory of exeFile;
+		/// flags CREATE_UNICODE_ENVIRONMENT and optionally CREATE_SUSPENDED;
+		/// STARTUPINFO with flag STARTF_FORCEOFFFEEDBACK;
+		/// optionally lpEnvironment.
 		/// </summary>
-		/// <param name="exeFile">Path of program file, or filename/relative in Folders.ThisApp. Uses Path_.Normalize. Can be null, but not recommended.</param>
-		/// <param name="args">Command line arguments or null.</param>
+		/// <param name="exeFile">Full path of program file, or filename/relative in <see cref="Folders.ThisApp"/>. Uses <see cref="Path_.Normalize"/>.</param>
+		/// <param name="args">null or command line arguments.</param>
+		/// <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", are passed only these variables.</param>
 		/// <param name="suspended">Add flag CREATE_SUSPENDED.</param>
-		static (char[] cl, string dir, uint flags, Api.STARTUPINFO si) _ParamsForCreateProcess(string exeFile, string args, bool suspended)
+		static (char[] cl, string dir, uint flags, Api.STARTUPINFO si) _ParamsForCreateProcess
+			(string exeFile, string args, ref string envVar, bool suspended)
 		{
-			if(exeFile != null) exeFile = Path_.Normalize(exeFile, Folders.ThisApp, PNFlags.DoNotExpandDosPath | PNFlags.DoNotPrefixLongPath);
+			exeFile = Path_.Normalize(exeFile, Folders.ThisApp, PNFlags.DoNotExpandDosPath | PNFlags.DoNotPrefixLongPath);
 
 			Api.STARTUPINFO si = default;
 			si.cb = Api.SizeOf<Api.STARTUPINFO>();
-			si.dwFlags = 0x00000080; //STARTF_FORCEOFFFEEDBACK
+			si.dwFlags = Api.STARTF_FORCEOFFFEEDBACK;
 
 			string s; if(args == null) s = "\"" + exeFile + "\"" + "\0"; else s = "\"" + exeFile + "\" " + args + "\0";
 
 			uint flags = Api.CREATE_UNICODE_ENVIRONMENT;
 			if(suspended) flags |= Api.CREATE_SUSPENDED;
 
+			if(envVar != null && !envVar.EndsWith_("\0\0")) {
+				var es = Api.GetEnvironmentStrings();
+				int len1; for(var k = es; ; k++) if(k[0] == 0 && k[1] == 0) { len1 = (int)(k - es) + 2; break; }
+				int len2 = envVar.Length;
+				var t = new string('\0', len1 + len2);
+				fixed (char* p = t) {
+					Api.memcpy(p, es, --len1 * 2);
+					for(int i = 0; i < envVar.Length; i++) p[len1 + i] = envVar[i];
+				}
+				envVar = t;
+				Api.FreeEnvironmentStrings(es);
+			}
+
 			return (s.ToCharArray(), Path_.GetDirectoryPath(exeFile), flags, si);
 		}
 
 		/// <summary>
-		/// Starts process using API CreateProcess, without the feedback hourglass cursor.
+		/// Starts process using API CreateProcess or CreateProcessAsUser, without the feedback hourglass cursor.
 		/// </summary>
-		/// <remarks>
-		/// If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
-		/// Later caller must close handles in pi, eg pi.Dispose.
-		/// </remarks>
-		internal static bool LibStart(string exeFile, string args, out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool suspended = false)
+		/// <param name="pi">Receives CreateProcessX results. Will need to close handles in pi, eg pi.Dispose.</param>
+		/// <param name="exeFile">Full path of program file, or filename/relative in <see cref="Folders.ThisApp"/>. Uses <see cref="Path_.Normalize"/>.</param>
+		/// <param name="args">null or command line arguments.</param>
+		/// <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", are passed only these variables.</param>
+		/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
+		/// <param name="suspended">Add flag CREATE_SUSPENDED.</param>
+		internal static bool LibStartLL(out Api.PROCESS_INFORMATION pi, string exeFile, string args, bool inheritUiaccess = false, string envVar = null, bool suspended = false)
 		{
-			var x = _ParamsForCreateProcess(exeFile, args, suspended);
+			var x = _ParamsForCreateProcess(exeFile, args, ref envVar, suspended);
 
 			if(inheritUiaccess && Api.OpenProcessToken(CurrentProcessHandle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out var hToken)) {
-				bool ok = Api.CreateProcessAsUser(hToken, null, x.cl, null, null, false, x.flags, default, x.dir, x.si, out pi);
+				bool ok = Api.CreateProcessAsUser(hToken, null, x.cl, null, null, false, x.flags, envVar, x.dir, x.si, out pi);
 				Api.CloseHandle(hToken);
 				return ok;
 			} else {
-				return Api.CreateProcess(null, x.cl, null, null, false, x.flags, default, x.dir, x.si, out pi);
+				return Api.CreateProcess(null, x.cl, null, null, false, x.flags, envVar, x.dir, x.si, out pi);
 			}
 		}
 
 		/// <summary>
-		/// Starts process using API CreateProcess, without the feedback hourglass cursor.
+		/// Starts process using API CreateProcess or CreateProcessAsUser, without the feedback hourglass cursor.
 		/// </summary>
-		/// <param name="exeFile"></param>
-		/// <param name="args"></param>
-		/// <param name="inheritUiaccess"></param>
-		/// <param name="ret">What to return.</param>
+		/// <param name="exeFile">Full path of program file, or filename/relative in <see cref="Folders.ThisApp"/>. Uses <see cref="Path_.Normalize"/>.</param>
+		/// <param name="args">null or command line arguments.</param>
+		/// <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", are passed only these variables.</param>
+		/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
+		/// <param name="need">Which field to set in <b>StartResult</b>.</param>
 		/// <exception cref="AuException">Failed.</exception>
-		/// <remarks>
-		/// If exeFile not null, calls Path_.Normalize(exeFile, Folders.ThisApp); also uses it for lpCurrentDirectory.
-		/// </remarks>
-		internal static object LibStart(string exeFile, string args, bool inheritUiaccess = false, EStartReturn ret = 0)
+		internal static StartResult LibStart(string exeFile, string args, bool inheritUiaccess = false, string envVar = null, StartResult.Need need = 0)
 		{
-			bool suspended = ret == EStartReturn.Process && !_NetProcessObject.IsFast;
-			if(!LibStart(exeFile, args, out var pi, inheritUiaccess, suspended: suspended)) throw new AuException(0, $"Failed to start process '{exeFile}'");
-			return _LibReturn(pi, ret, suspended);
-		}
-
-		static object _LibReturn(in Api.PROCESS_INFORMATION pi, EStartReturn ret, bool suspended)
-		{
-			switch(ret) {
-			case EStartReturn.Process:
-				return _NetProcessObject.Create(pi, suspended: suspended);
-			case EStartReturn.WaitHandle:
-				Api.CloseHandle(pi.hThread);
-				return new Util.LibKernelWaitHandle(pi.hProcess, true);
-			}
-			pi.Dispose();
-			return null;
-		}
-
-		internal enum EStartReturn
-		{
-			Null,
-			//NativeHandle,
-			WaitHandle,
-			Process,
+			bool suspended = need == StartResult.Need.NetProcess && !_NetProcessObject.IsFast;
+			if(!LibStartLL(out var pi, exeFile, args, inheritUiaccess, envVar, suspended: suspended)) throw new AuException(0, $"Failed to start process '{exeFile}'");
+			return new StartResult(pi, need, suspended);
 		}
 
 		/// <summary>
 		/// Starts UAC Medium integrity level process from this admin process.
 		/// </summary>
-		/// <param name="exeFile"></param>
-		/// <param name="args"></param>
-		/// <param name="ret">What to return.</param>
-		/// <param name="inheritEnvVar">Inherit environment variables.</param>
+		/// <param name="exeFile">Full path of program file, or filename/relative in <see cref="Folders.ThisApp"/>. Uses <see cref="Path_.Normalize"/>.</param>
+		/// <param name="args">null or command line arguments.</param>
+		/// <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", are passed only these variables.</param>
+		/// <param name="need">Which field to set in <b>StartResult</b>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Asserts and fails if this is not admin/system process. Caller should at first call Process_.UacInfo.IsAdmin or Process_.UacInfo.ThisProcess.IntegrityLevel.
 		/// Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
 		/// </remarks>
-		internal static object LibStartUserIL(string exeFile, string args, EStartReturn ret = 0, bool inheritEnvVar = false)
+		internal static StartResult LibStartUserIL(string exeFile, string args, string envVar = null, StartResult.Need need = 0)
 		{
+			//CONSIDER: use Task Scheduler if possible.
+
 			Debug.Assert(UacInfo.IsAdmin); //cannot set privilege if user or uiAccess
 			if(!Util.Security_.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
 
@@ -516,7 +516,7 @@ namespace Au
 				w = Api.GetShellWindow();
 			}
 
-			IntPtr hShellToken = default, hPrimaryToken = default, envStrings = default;
+			IntPtr hShellToken = default, hPrimaryToken = default;
 			var hShellProcess = Util.LibKernelHandle.OpenProcess(w);
 			if(hShellProcess.Is0) {
 				if(retry) goto ge;
@@ -529,16 +529,14 @@ namespace Au
 				const uint access = Api.TOKEN_QUERY | Api.TOKEN_ASSIGN_PRIMARY | Api.TOKEN_DUPLICATE | Api.TOKEN_ADJUST_DEFAULT | Api.TOKEN_ADJUST_SESSIONID;
 				if(!Api.DuplicateTokenEx(hShellToken, access, null, Api.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation, Api.TOKEN_TYPE.TokenPrimary, out hPrimaryToken)) goto ge;
 
-				bool suspended = ret == EStartReturn.Process && !_NetProcessObject.IsFast;
-				var x = _ParamsForCreateProcess(exeFile, args, suspended: suspended);
-				envStrings = inheritEnvVar ? Api.GetEnvironmentStrings() : default;
+				bool suspended = need == StartResult.Need.NetProcess && !_NetProcessObject.IsFast;
+				var x = _ParamsForCreateProcess(exeFile, args, ref envVar, suspended: suspended);
 
-				if(!Api.CreateProcessWithTokenW(hPrimaryToken, 0, null, x.cl, x.flags, envStrings, x.dir, x.si, out pi)) goto ge;
+				if(!Api.CreateProcessWithTokenW(hPrimaryToken, 0, null, x.cl, x.flags, envVar, x.dir, x.si, out pi)) goto ge;
 
-				return _LibReturn(pi, ret, suspended);
+				return new StartResult(pi, need, suspended);
 			}
 			finally {
-				if(envStrings != default) Api.FreeEnvironmentStrings(envStrings);
 				Api.CloseHandle(hPrimaryToken);
 				Api.CloseHandle(hShellToken);
 				hShellProcess.Dispose();
@@ -548,9 +546,47 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Results of LibStart and LibStartUserIL.
+		/// </summary>
+		internal class StartResult
+		{
+			public int pid;
+			public WaitHandle waitHandle;
+			public Process netProcess;
+
+			/// <summary>
+			/// Which field to set.
+			/// </summary>
+			public enum Need
+			{
+				None,
+				//NativeHandle,
+				WaitHandle,
+				NetProcess,
+			}
+
+			public StartResult(in Api.PROCESS_INFORMATION pi, Need need, bool suspended)
+			{
+				pid = pi.dwProcessId;
+				switch(need) {
+				case Need.NetProcess:
+					netProcess = _NetProcessObject.Create(pi, suspended: suspended);
+					break;
+				case Need.WaitHandle:
+					Api.CloseHandle(pi.hThread);
+					waitHandle = new Util.LibKernelWaitHandle(pi.hProcess, true);
+					break;
+				default:
+					pi.Dispose();
+					break;
+				}
+			}
+		}
+
+		/// <summary>
 		/// Creates new .NET Process object with attached handle and/or id.
 		/// </summary>
-		static class _NetProcessObject
+		static class _NetProcessObject //FUTURE: remove if unused
 		{
 			/// <summary>
 			/// Returns true if can create such object in a fast/reliable way. Else <see cref="Create"/> will use Process.GetProcessById.

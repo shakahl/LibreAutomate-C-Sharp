@@ -511,7 +511,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 	public void SelectDeselectItem(FileNode f, bool select)
 	{
 		if(IsAlien(f)) return;
-		f.TreeNodeAdv.IsSelected = select;
+		f.IsSelected = select;
 	}
 
 	void _ItemRightClicked(FileNode f)
@@ -590,15 +590,15 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 		return r;
 	}
 
-	public FileNode NewItem(string template, string name = null)
+	public FileNode NewItem(string template, string name = null, bool beginEdit = false)
 	{
 		var pos = NodePosition.Inside;
 		var target = _inContextMenu ? _GetInsertPos(out pos) : null;
-		return NewItem(target, pos, template, name);
+		return NewItem(target, pos, template, name, beginEdit);
 	}
 
 	/// <inheritdoc cref="FileNode.NewItem"/>
-	public FileNode NewItem(FileNode target, NodePosition pos, string template, string name = null)
+	public FileNode NewItem(FileNode target, NodePosition pos, string template, string name = null, bool beginEdit = false)
 	{
 		var f = FileNode.NewItem(this, target, pos, template, name);
 		if(f == null) return null;
@@ -606,6 +606,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 			if(f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main);
 			else f.SelectSingle();
 		} else SetCurrentFile(f);
+		if(beginEdit && f.IsSelected) RenameSelected();
 		return f;
 	}
 
@@ -938,7 +939,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 			}
 			if(movedCurrentFile) _control.EnsureVisible(_currentFile.TreeNodeAdv);
 			if(pos != NodePosition.Inside || target.TreeNodeAdv.IsExpanded) {
-				foreach(var f in a2) f.TreeNodeAdv.IsSelected = true;
+				foreach(var f in a2) f.IsSelected = true;
 			}
 		}
 		catch(Exception ex) { Print(ex.Message); }
@@ -1018,7 +1019,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 					catch(Exception ex) { Print(ex.Message); continue; }
 				}
 				target.AddChildOrSibling(k, pos, false);
-				if(select) k.TreeNodeAdv.IsSelected = true;
+				if(select) k.IsSelected = true;
 			}
 
 			var (nf2, nd2) = _CountFilesFolders();

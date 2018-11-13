@@ -93,14 +93,12 @@ namespace Au
 		/// <param name="threadProc">Thread procedure. Parameter <i>start</i> of <b>Thread</b> constructor.</param>
 		/// <param name="background">If true (default), sets <see cref="Thread.IsBackground"/> = true.</param>
 		/// <param name="sta">If true (default), calls <see cref="Thread.SetApartmentState"/>(ApartmentState.STA).</param>
-		/// <param name="name">If not null, sets <see cref="Thread.Name"/> = name.</param>
 		/// <exception cref="OutOfMemoryException"></exception>
-		public static Thread Start(ThreadStart threadProc, bool background = true, bool sta = true, string name = null)
+		public static Thread Start(ThreadStart threadProc, bool background = true, bool sta = true)
 		{
 			var t = new Thread(threadProc);
 			if(background) t.IsBackground = true;
 			if(sta) t.SetApartmentState(ApartmentState.STA);
-			if(name != null) t.Name = name;
 			t.Start();
 			return t;
 		}

@@ -28,7 +28,9 @@ namespace Au.Types
 		internal const int ERROR_INVALID_NAME = 123;
 		internal const int ERROR_DIR_NOT_EMPTY = 145;
 		internal const int ERROR_ALREADY_EXISTS = 183;
+		internal const int ERROR_MORE_DATA = 234;
 		internal const int ERROR_DIRECTORY = 267;
+		internal const int ERROR_IO_PENDING = 997;
 		internal const int ERROR_UNABLE_TO_REMOVE_REPLACED = 1175;
 		internal const int ERROR_USER_MAPPED_FILE = 1224;
 		internal const int ERROR_PRIVILEGE_NOT_HELD = 1314;

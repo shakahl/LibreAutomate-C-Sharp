@@ -29,7 +29,7 @@ static class Program
 	/// </summary>
 	[STAThread]
 	//[LoaderOptimization(LoaderOptimization.MultiDomain)] //shares all assemblies; does not unload assemblies; very slow assembly startup.
-	[LoaderOptimization(LoaderOptimization.MultiDomainHost)] //shares only GAC assemblies; unloads non-GAC assemblies. Makes loading some assemblies slightly faster, but eg Forms much slower (60 -> 100 ms).
+	//[LoaderOptimization(LoaderOptimization.MultiDomainHost)] //shares only GAC assemblies; unloads non-GAC assemblies. Makes loading some assemblies slightly faster, but eg Forms much slower (60 -> 100 ms).
 	static void Main(string[] args)
 	{
 		//try {

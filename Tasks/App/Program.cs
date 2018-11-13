@@ -29,8 +29,6 @@ static class Program
 	//internal const uint PIPE_READMODE_MESSAGE = 0x2;
 	//internal const uint PIPE_REJECT_REMOTE_CLIENTS = 0x8;
 
-	static bool s_isAdmin;
-
 	static unsafe void Main(string[] args)
 	{
 		//Output.LibUseQM2 = true; Output.Clear();
@@ -41,14 +39,12 @@ static class Program
 		//rejected. Slower startup. Then .NET creates new thread with GDI+ hook window.
 		//Wnd.Misc.PostThreadMessage(0); Api.GetMessage(out var m, default, 0, 0);
 
-		s_isAdmin = Process_.UacInfo.IsAdmin;
-
 		NamedPipeServerStream pipe = null;
 		//need to set security, else nonadmin client cannot connect. Now only low IL processes can't.
 #if false //works too, but slightly slower when not ngened
 		//var sa = Api.SECURITY_ATTRIBUTES.Common; //no security, eg allows low IL processes to write
 		var sa = new Api.SECURITY_ATTRIBUTES("D:(A;;0x12019b;;;AU)"); //like of PipeSecurity that allows ReadWrite for AuthenticatedUserSid
-		var pipeName = @"\\.\pipe\Au.Tasks-" + (b_isAdmin ? "H-" : "M-") + Process_.CurrentSessionId.ToString();
+		var pipeName = @"\\.\pipe\Au.HI-" + Process_.CurrentSessionId.ToString();
 		var h = CreateNamedPipe(pipeName, PIPE_ACCESS_DUPLEX, PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_REJECT_REMOTE_CLIENTS, 1, 0, 0, 0, sa);
 		if(h == (IntPtr)(-1)) {
 			if(Native.GetError() == Api.ERROR_ACCESS_DENIED) return; //a simple way to implement single-instance process
@@ -57,7 +53,7 @@ static class Program
 		}
 		pipe = new NamedPipeServerStream(PipeDirection.InOut, false, false, new Microsoft.Win32.SafeHandles.SafePipeHandle(h, true));
 #else
-		var pipeName = "Au.Tasks-" + (s_isAdmin ? "H-" : "M-") + Process_.CurrentSessionId.ToString();
+		var pipeName = "Au.HI-" + Process_.CurrentSessionId.ToString();
 		try {
 			var ps = new PipeSecurity();
 			var sid = new System.Security.Principal.SecurityIdentifier(System.Security.Principal.WellKnownSidType.AuthenticatedUserSid, null);
@@ -74,7 +70,7 @@ static class Program
 				for(; ; ) {
 					pipe.WaitForConnection();
 					try {
-						//if(s_isAdmin && !_Security(pipe)) continue;
+						//if(!_Security(pipe)) continue;
 						int len = 0;
 						for(; ; ) {
 							int n = pipe.Read(b, len, b.Length - len);
@@ -85,11 +81,11 @@ static class Program
 							b.CopyTo(t, 0);
 							b = t;
 						}
-						byte R = 0;
+						int R = 0;
 						if(len > 0) {
 							R = _Action(b);
 						}
-						pipe.WriteByte(R);
+						pipe.Write(BitConverter.GetBytes(R), 0, 4);
 					}
 					catch(IOException ex) { //probably client process terminated while we worked, and the pipe is now broken
 #if DEBUG
@@ -113,7 +109,7 @@ static class Program
 		}
 	}
 
-	static byte _Action(byte[] b)
+	static int _Action(byte[] b)
 	{
 		//Print(s);
 		try {
@@ -121,11 +117,20 @@ static class Program
 			var epc = EditorProcessContext.GetEPC((Wnd)(LPARAM)a[1]._i);
 			int action = a[0]._i;
 			if(action <= 100) { //task actions
-				var tasks = epc.Tasks;
-				int taskId = a[2];
 				switch(action) {
-				case 1: return tasks.RunTask(taskId, a);
-				case 2: return tasks.EndTask(taskId);
+				case 1:
+					if(Process_.LibStartLL(out var pi, a[2], a[3])) {
+						int R = pi.dwProcessId;
+						pi.Dispose();
+						return R;
+						//CONSIDER: try to set parent process = editor. But only if LibStartUserIL sets parent=editor and not explorer.
+						//	API:
+						//	EXTENDED_STARTUPINFO_PRESENT, STARTUPINFOEX
+						//	InitializeProcThreadAttributeList
+						//	UpdateProcThreadAttribute(PROC_THREAD_ATTRIBUTE_PARENT_PROCESS).
+						//	DeleteProcThreadAttributeList
+					}
+					return 0;
 				}
 #if ADMIN_TRIGGERS
 			} else if(action <= 200) { //trigger actions
@@ -142,7 +147,8 @@ static class Program
 		return 0;
 	}
 
-	//rejected. There are other ways to use this process to UAC-elevate malware, eg write script in collection, inject dll in editor, manipulate editor.
+	//rejected. There are other ways to use this process to UAC-elevate malware, eg write script or assembly in workspace directory, set editor text and run, inject dll in editor.
+	//	CONSIDER: add option 'Secure': run editor as admin, protect workspace directory, only admin processes can open pipe.
 	///// <summary>
 	///// Gets pipe client process id, and returns false if its program is in other folder than this program.
 	///// It is to prevent unknown programs to use this process to UAC-elevate themselves.
@@ -167,17 +173,26 @@ static class Program
 
 class EditorProcessContext
 {
-	public RunningTasks2 Tasks { get; private set; }
+	public Wnd Window { get; private set; }
 #if ADMIN_TRIGGERS
-	public TriggersInTasks Triggers { get; private set; }
+	public TriggersInHi Triggers { get; private set; }
 #endif
-
 	static EditorProcessContext s_epc;
+
+	EditorProcessContext(Wnd wEditor)
+	{
+		Window = wEditor;
+#if ADMIN_TRIGGERS
+		Triggers = new TriggersInHi(wEditor);
+#endif
+		var t = new Thread(_EditorWatcherThread) { IsBackground = true };
+		t.Start();
+	}
 
 	public static EditorProcessContext GetEPC(Wnd wEditor)
 	{
 		lock(typeof(EditorProcessContext)) {
-			if(s_epc == null || s_epc.Tasks.Window != wEditor) {
+			if(s_epc == null || s_epc.Window != wEditor) {
 				s_epc?._Dispose(false);
 				s_epc = new EditorProcessContext(wEditor);
 			}
@@ -188,17 +203,6 @@ class EditorProcessContext
 	public static void Shutdown()
 	{
 		lock(typeof(EditorProcessContext)) s_epc?._Dispose(true);
-		RunningTasks2.FinishOffHungTasks();
-	}
-
-	EditorProcessContext(Wnd wEditor)
-	{
-		Tasks = new RunningTasks2(wEditor);
-#if ADMIN_TRIGGERS
-		Triggers = new TriggersInTasks(wEditor);
-#endif
-		var t = new Thread(_EditorWatcherThread) { IsBackground = true };
-		t.Start();
 	}
 
 	void _Dispose(bool onExit)
@@ -206,13 +210,12 @@ class EditorProcessContext
 #if ADMIN_TRIGGERS
 		Triggers.Dispose();
 #endif
-		Tasks.Dispose(onExit);
 	}
 
 	//Ends tasks etc when editor process exits.
 	void _EditorWatcherThread()
 	{
-		try { Tasks.Window.WaitForClosed(0, true); } //waits for process handle
+		try { Window.WaitForClosed(0, true); } //waits for process handle
 		catch(Exception ex) { Debug_.Print(ex); return; }
 		lock(typeof(EditorProcessContext)) {
 			_Dispose(false);

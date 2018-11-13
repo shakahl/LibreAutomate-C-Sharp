@@ -54,7 +54,7 @@ namespace Au
 		/// Path of any file or folder.
 		/// URL, like "http://..." or "mailto:a@b.c" or "file:///path".
 		/// ITEMIDLIST like ":: HexEncodedITEMIDLIST". It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="Shell.Pidl.ToHexString"/>.
-		/// Shell object parsing name, like @"::{CLSID-1}\::{CLSID-2}" or "shell:AppsFolder\WinStoreAppId".
+		/// Shell object parsing name, like @"::{CLSID-1}\::{CLSID-2}" or @"shell:AppsFolder\WinStoreAppId".
 		/// File type like ".txt" or URL protocol like "http:".
 		/// If it is a file containing multiple icons (eg exe, dll), can be specified icon index like "path,index" or native icon resource id like "path,-id".
 		/// If not full path, the function will look in <see cref="Folders.ThisAppImages"/>. See also <see cref="GIFlags"/>.

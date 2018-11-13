@@ -644,7 +644,7 @@
         <member name="M:Au.Controls.SciText.LibSetText(System.Byte[],System.Int32)">
             <summary>
             Sets UTF8 text.
-            Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+            Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
             </summary>
         </member>
         <member name="M:Au.Controls.SciText.LibSetText(System.Byte*)">

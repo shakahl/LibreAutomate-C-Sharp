@@ -671,6 +671,20 @@ namespace Au.Util
 		{
 			base.SafeWaitHandle = new SafeWaitHandle(nativeHandle, owndHandle);
 		}
+
+		/// <summary>
+		/// Opens process handle.
+		/// Returns null if failed.
+		/// </summary>
+		/// <param name="pid"></param>
+		/// <param name="desiredAccess"></param>
+		public static LibKernelWaitHandle FromProcessId(int pid, uint desiredAccess)
+		{
+			LibKernelWaitHandle wh = null;
+			try { wh = new LibKernelWaitHandle(LibKernelHandle.OpenProcess(pid, desiredAccess), true); }
+			catch(Exception ex) { Debug_.Print(ex); }
+			return wh;
+		}
 	}
 
 	/// <summary>

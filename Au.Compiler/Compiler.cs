@@ -92,10 +92,9 @@ namespace Au.Compiler
 			public string file;
 
 			public EOutputType outputType;
-			public EIsolation isolation;
-			public EUac uac;
+			public ERunMode runMode;
 			public EIfRunning ifRunning;
-			public bool runUnattended;
+			public EUac uac;
 			public bool prefer32bit;
 
 			/// <summary>Has config file this.file + ".config".</summary>
@@ -222,7 +221,7 @@ internal static string[] args = System.Array.Empty<string>();
 			EmitOptions eOpt = null;
 
 			if(needOutputFiles) {
-				_AddAttributes(ref compilation, ot != OutputKind.DynamicallyLinkedLibrary && m.Isolation != EIsolation.hostThread && m.Isolation != EIsolation.thread);
+				_AddAttributes(ref compilation, ot != OutputKind.DynamicallyLinkedLibrary && m.RunMode != ERunMode.editorThread);
 
 				//create debug info always. It is used for run-time error links.
 				pdbStream = new MemoryStream();
@@ -276,7 +275,7 @@ internal static string[] args = System.Array.Empty<string>();
 
 			if(needOutputFiles) {
 				//If there is no [STAThread], will need MTA thread.
-				if(!m.IsScript && ot != OutputKind.DynamicallyLinkedLibrary && m.Isolation != EIsolation.hostThread) {
+				if(!m.IsScript && ot != OutputKind.DynamicallyLinkedLibrary && m.RunMode != ERunMode.editorThread) {
 					bool hasSTAThread = compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.STAThreadAttribute") ?? false;
 					if(!hasSTAThread) r.mtaThread = true;
 				}
@@ -323,10 +322,9 @@ internal static string[] args = System.Array.Empty<string>();
 
 			r.name = m.Name;
 			r.outputType = m.OutputType;
-			r.isolation = m.Isolation;
-			r.uac = m.Uac;
 			r.ifRunning = m.IfRunning;
-			r.runUnattended = m.RunUnattended;
+			r.runMode = m.RunMode;
+			r.uac = m.Uac;
 			r.prefer32bit = m.Prefer32Bit;
 			r.notInCache = m.OutputPath != null;
 
@@ -790,11 +788,11 @@ void _Main(string[] args) {");
 		static bool _RunPrePostBuildScript(bool post, MetaComments m, string outFile)
 		{
 			var x = post ? m.PostBuild : m.PreBuild;
-			string[] a; //arguments
+			string[] args;
 			if(x.s == null) {
-				a = new string[] { outFile };
+				args = new string[] { outFile };
 			} else {
-				a = Au.Util.StringMisc.CommandLineToArray(x.s);
+				args = Au.Util.StringMisc.CommandLineToArray(x.s);
 
 				//replace variables like $(variable)
 				var f = m.Files[0].f;
@@ -810,14 +808,14 @@ void _Main(string[] args) {");
 					default: throw new ArgumentException("error in meta: unknown variable " + k.Value);
 					}
 				}
-				for(int i = 0; i < a.Length; i++) a[i] = s_rx1.Replace(a[i], _ReplFunc);
+				for(int i = 0; i < args.Length; i++) args[i] = s_rx1.Replace(args[i], _ReplFunc);
 			}
 
 			bool ok = Compile(true, out var r, x.f);
 			if(r.outputType == EOutputType.dll) throw new ArgumentException($"error in meta: '{x.f.Name}' is not script/app");
 			if(!ok) return false;
 
-			RunAsm.RunHere(RIsolation.hostThread, r.file, r.pdbOffset, a, RHFlags.DontHandleExceptions);
+			RunAsm.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread | RAFlags.DontHandleExceptions);
 			return true;
 		}
 		static Regex_ s_rx1;

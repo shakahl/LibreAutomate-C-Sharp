@@ -88,7 +88,7 @@ namespace Au.Compiler
 	/// debug true|false //if true (default), don't optimize code; also define preprocessor symbol DEBUG. It usually makes startup faster (faster JIT compiling), but low-level code slower.
 	/// warningLevel 1 //compiler warning level, 0 (none) to 4 (all). Default: 4.
 	/// disableWarnings 3009,162 //don't show these compiler warnings
-	/// define SYMBOL1,SYMBOL2 //define preprocessor symbols that can be used with #if etc. These symbols are added implicitly: TRACE - always; DEBUG - if there is no option 'debug' false; EXE - if used options 'outputPath' and 'isolation' process, which means that the assembly is normal exe file and runs not in a host process.
+	/// define SYMBOL1,SYMBOL2 //define preprocessor symbols that can be used with #if etc. These symbols are added implicitly: TRACE - always; DEBUG - if there is no option 'debug' false; EXE - if used options 'outputPath', which means that the assembly is normal exe file that runs not in a host process.
 	/// preBuild file /arguments //run this script/app before compiling. More info below.
 	/// postBuild file /arguments //run this script/app after compiling successfully. More info below.
 	/// ]]></code>
@@ -97,40 +97,40 @@ namespace Au.Compiler
 	/// The script/app has variable string[] args. If there is no /arguments, args[0] is the output assembly file, full path. Else args contains the specified arguments, parsed like a command line. In arguments you can use these variables:
 	/// $(outputFile) -  the output assembly file, full path; $(sourceFile) - the C# file, full path; $(source) - path of the C# file in collection, eg "\folder\file.cs"; $(outputPath) - meta option 'outputPath', default ""; $(debug) - meta option 'debug', default "true".
 	/// 
-	/// <h3>Settings used to execute the compiled script or app. Here a|b|c means a or b or c.</h3>
+	/// <h3>Settings used to run the compiled script or app. Here a|b|c means a or b or c.</h3>
 	/// <code><![CDATA[
-	/// isolation process|appDomain|thread|hostThread //in what process, app domain and thread to execute the assembly. Default: appDomain.
-	/// uac same|user|admin //UAC integrity level (IL). Default: same. If the specified IL does not match that of the host process, the script runs in other host process.
-	/// prefer32bit true|false //32-bit process. Default: false. In any case, the assembly is AnyCPU and can load AnyCPU dlls. Must be isolation process.
-	/// runUnattended true|false - the task is designed to run unattended. It can run simultaneously with other tasks and have multiple instances, ignores the "End task" hotkey, does not change the tray icon. More info below.
-	/// ifRunning leave|wait|restart|restartOrWait|run //defines what to do if another task is running. More info below.
+	/// runMode supervised|unattendedSingle|unattendedMulti|editorThread - whether the task can be easily ended, multiple instances, etc. Default: supervised. More info below.
+	/// ifRunning cancel|wait|restart|restartOrWait //whether/how to start new task if a task is running. Default: cancel. More info below.
+	/// uac same|user|admin //UAC integrity level of the script process. Default: same. More info below.
+	/// prefer32bit true|false //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit dlls and AnyCPU dlls, but not 64-bit dlls. Default: false.
 	/// ]]></code>
 	/// Here word "task" is used for "script or app that is running or should start".
-	/// These options are applied only when the task is started from an Au process, not when it runs as independent exe program. Except prefer32bit.
+	/// Options 'runMode', 'ifRunning' and 'uac' are applied only when the task is started from Au editor, not when it runs as independent exe program.
 	/// 
-	/// About isolation:
-	/// appDomain (default) - the task runs in new AppDomain. It is like a subprocess in current process. Also it runs in new thread.
-	/// process - the task runs in other process. Slower startup. For example, can be used for scripts/apps that may kill the host process or hang and cannot be ended; also with option 'prefer32bit'.
-	/// thread - the task runs in new thread in the main AppDomain of host process. 
-	/// hostThread - the task runs in the main thread of host process. Almost never need it. If the script/app is not carefully programmed, can easily make the host process unstable/unresponsive.
-	/// When isolation is thread or hostThread, the task assembly is not unloaded until host process exits. Good: 1. Fast startup. 2. Values of static variables are retained when the task runs multiple times, until it is recompiled (when code modified). Bad: can create quite big memory leak when compiling the script/app frequently, because old assembly versions cannot be unloaded until host process exits; used reference assemblies also cannot be unloaded.
+	/// About runMode:
+	/// supervised (default) - the task has these properties: 1. Cannot run simultaneously with other supervised tasks (see also option 'ifRunning'); 2. Can be ended with the "End task" hotkey; 3. Changes the tray icon.
+	/// unattendedSingle - unattended single-instance task. More info below. See also option 'ifRunning'.
+	/// unattendedMulti - unattended multi-instance task. Multiple task instances can run simultaneously. Option 'ifRunning' not used.
+	/// editorThread - run the task in the main UI thread of the editor process. This is an advanced option, and rarely used. Can be used to create editor extensions. The user cannot see and end the task. Creates memory leaks when executing recompiled assemblies (eg after editing the script/app), because old assembly versions cannot be unloaded until process exits.
 	/// 
-	/// About runUnattended:
-	/// false (default; let's call it "supervised task") - the task has these properties: 1. Cannot run simultaneously with other supervised tasks; 2. Can be ended with the "End task" hotkey; 3. Changes the tray icon. Such tasks are used: to automate a window, especially when used keyboard/mouse functions; to test new code; when creating any new script or app (later you make it unattended if need). To start such tasks you usually use the Run button or a keyboard/mouse trigger, sometimes a window trigger, and probably never such triggers as file or scheduler.
-	/// true (let's call it "unattended task") - the task does not have the 1-3 properties of supervised tasks. It can run simultaneously with other tasks (see also option 'ifRunning'). It does not change the tray icon and cannot be ended with the "End task" hotkey. Such tasks are used: to run simultaneously with any tasks (supervised, unattended, other instances of self); to protect the task from the "End task" hotkey; as background tasks that wait for some event or watch for some condition; as collections of global or application-specific small/fast functions that can be executed with method triggers, toolbars and autotexts (such triggers etc work only when the task is running; they are faster because don't need to start new task).
+	/// Unattended tasks don't have the 1-3 properties of supervised tasks. Such tasks are used: to run simultaneously with any tasks (supervised, unattended, other instances of self); to protect the task from the "End task" hotkey; as background tasks that wait for some event or watch for some condition; as collections of global or application-specific methods that can be executed with method triggers, toolbars and autotexts.
 	/// 
 	/// About ifRunning:
-	/// Defines what to do if another task is running. What is "another task": for a supervised task it is "a supervised task"; for an unattended task it is "another instance of this task".
-	/// leave - don't run. No warning.
+	/// Defines whether/how to start new task if a task is running. What is "another task": if runMode supervised (default), it is "a supervised task"; if runMode unattendedSingle, it is "another instance of this task"; with other run modes this option cannot be used.
+	/// unspecified (default) - don't run. Print a warning.
+	/// cancel - don't run. Don't print a warning.
 	/// wait - run later, when that task ends.
-	/// restart - end that task and run. If cannot end it, this option works like 'unspecified'. Cannot end it if the task is not responding or if it is not the same script/app.
-	/// restartOrWait - same as 'restart', but works like 'wait' if cannot end that task.
-	/// run - run new task instance. The tasks run simultaneously. This option can be used only with unattended tasks.
-	/// unspecified (default) - same as 'leave'. Prints a warning when cannot run.
+	/// restart - if that task is of this script/app, end it and run. Else like 'unspecified' (when both tasks are supervised).
+	/// restartOrWait - if that task is of this script/app, end it and run. Else like 'wait'. Cannot be used with unattended tasks.
+	/// 
+	/// About uac:
+	/// same (default) - the task process has the same UAC integrity level as of the editor process, probably Medium.
+	/// user - the task process has UAC integrity level Medium, like most applications. Such tasks cannot automate windows of processes that run as administrator, cannot modify some directories and registry keys, etc.
+	/// admin - the task process has UAC integrity level High, also known as "runs as administrator" or "elevated". Normally it starts without a UAC consent screen/dialog. Such tasks don't have the above limitations, but can have some others, for example cannot automate some apps through COM.
 	/// 
 	/// <h3>Other</h3>
 	/// <code><![CDATA[
-	/// config app.config //use this configuration file when the output assembly file is executed. Can be filename or relative path, like with 'c'. The file is copied to the output directory unmodified but renamed to match the assembly name. This option cannot be used with dll or 'isolation' thread/hostThread. If not specified, will be used host program's config file.
+	/// config app.config //use this configuration file when the output assembly file is executed. Can be filename or relative path, like with 'c'. The file is copied to the output directory unmodified but renamed to match the assembly name. This option cannot be used with dll. If not specified, will be used host program's config file.
 	/// ]]></code>
 	/// 
 	/// <h3>To create .exe file, at least option 'outputPath' must be specified</h3>
@@ -153,9 +153,9 @@ namespace Au.Compiler
 	/// If 'manifest' and 'resFile' not specified when creating .exe file, adds manifest from file "default.exe.manifest" in the main Au folder, if exists.
 	/// If 'resFile' not specified when creating .exe or .dll file, adds version resource, with values collected from attributes such as [assembly: AssemblyVersion("...")]; see how it is in Visual Studio projects, in file Properties\AssemblyInfo.cs.
 	/// 
-	/// About thread apartment type:
+	/// About thread COM apartment type:
 	/// For scripts it is STA, and cannot be changed.
-	/// For apps it is STA if the Main function has [STAThread] attribute; or if using meta option isolation hostThread. Else it is MTA.
+	/// For apps it is STA if the Main function has [STAThread] attribute; or if using meta option runMode editorThread. Else it is MTA.
 	/// </example>
 	class MetaComments
 	{
@@ -265,10 +265,16 @@ namespace Au.Compiler
 		public MetaFileAndString PostBuild { get; private set; }
 
 		/// <summary>
-		/// Meta option 'isolation'.
-		/// Default: appDomain.
+		/// Meta option 'runMode'.
+		/// Default: supervised.
 		/// </summary>
-		public EIsolation Isolation { get; private set; }
+		public ERunMode RunMode { get; private set; }
+
+		/// <summary>
+		/// Meta option 'ifRunning'.
+		/// Default: 'unspecified' ('cancel' + warning).
+		/// </summary>
+		public EIfRunning IfRunning { get; private set; }
 
 		/// <summary>
 		/// Meta option 'uac'.
@@ -281,18 +287,6 @@ namespace Au.Compiler
 		/// Default: false.
 		/// </summary>
 		public bool Prefer32Bit { get; private set; }
-
-		/// <summary>
-		/// Meta option 'runUnattended'.
-		/// Default: false.
-		/// </summary>
-		public bool RunUnattended { get; private set; }
-
-		/// <summary>
-		/// Meta option 'ifRunning'.
-		/// Default: 'unspecified' ('leave' + warning).
-		/// </summary>
-		public EIfRunning IfRunning { get; private set; }
 
 		/// <summary>
 		/// Meta option 'icon'.
@@ -378,7 +372,7 @@ namespace Au.Compiler
 			}
 
 			if(IsDebug && !Defines.Contains("DEBUG")) Defines.Add("DEBUG");
-			if(OutputPath != null && Isolation == EIsolation.process) Defines.Add("EXE");
+			if(OutputPath != null && !Defines.Contains("EXE")) Defines.Add("EXE");
 
 			return true;
 		}
@@ -505,15 +499,8 @@ namespace Au.Compiler
 			case "postBuild":
 				PostBuild = _GetFileAndString(value, iValue);
 				break;
-			case "outputPath":
-				_usedNonHostThreadOption = true;
-#if STANDARD_SCRIPT
-				//scripts can be .exe, but we don't allow it, because there is no way to set args, [STAThread], triggers.
-				if(IsScript) _Error(iKey, "scripts cannot have option outputPath. If want to create .exe, use App or App/Script project (menu -> File -> New)."); else
-#endif
-				OutputPath = _GetOutPath(value, iValue); //and creates directory if need
-				break;
 			case "outputType":
+				_cantRunInEditor = true;
 				if(_Enum(out EOutputType ot, value, iValue)) {
 					OutputType = ot;
 					if(ot == EOutputType.dll) {
@@ -522,32 +509,36 @@ namespace Au.Compiler
 					}
 				}
 				break;
-			case "isolation":
-				_usedNonDllOption = true;
-				if(_Enum(out EIsolation isolation, value, iValue)) Isolation = isolation;
+			case "outputPath":
+				_cantRunInEditor = true;
+#if STANDARD_SCRIPT
+				//scripts can be .exe, but we don't allow it, because there is no way to set args, [STAThread], triggers.
+				if(IsScript) _Error(iKey, "scripts cannot have option outputPath. If want to create .exe, use App or App/Script project (menu -> File -> New)."); else
+#endif
+				OutputPath = _GetOutPath(value, iValue); //and creates directory if need
+				break;
+			case "runMode":
+				_cantBeDll = true;
+				if(_Enum(out ERunMode rm, value, iValue)) RunMode = rm;
+				break;
+			case "ifRunning":
+				_cantBeDll = _cantRunInEditor = _cantRunMulti = true;
+				if(_Enum(out EIfRunning ifR, value, iValue)) IfRunning = ifR;
 				break;
 			case "uac":
-				_usedNonDllOption = _usedNonHostThreadOption = true;
+				_cantBeDll = _cantRunInEditor = true;
 				if(_Enum(out EUac uac, value, iValue)) Uac = uac;
 				break;
 			case "prefer32bit":
-				_usedNonDllOption = true;
+				_cantBeDll = _cantRunInEditor = true;
 				if(_TrueFalse(out bool is32, value, iValue)) Prefer32Bit = is32;
 				break;
-			case "runUnattended":
-				_usedNonDllOption = _usedNonHostThreadOption = true;
-				if(_TrueFalse(out bool runUnat, value, iValue)) RunUnattended = runUnat;
-				break;
-			case "ifRunning":
-				_usedNonDllOption = _usedNonHostThreadOption = true;
-				if(_Enum(out EIfRunning ifR, value, iValue)) IfRunning = ifR;
-				break;
 			case "config":
-				_usedNonDllOption = _usedNonHostThreadOption = true;
+				_cantBeDll = _cantRunInEditor = true;
 				ConfigFile = _GetFile(value, iValue);
 				break;
 			case "manifest":
-				_usedNonDllOption = true;
+				_cantBeDll = _cantRunInEditor = true;
 				if(ManifestFile != null) _Error(iKey, "cannot add multiple manifests");
 				else ManifestFile = _GetFile(value, iValue);
 				break;
@@ -660,32 +651,25 @@ namespace Au.Compiler
 
 		bool _FinalCheckOptions()
 		{
-			switch(OutputType) {
-			case EOutputType.console:
-				if(Isolation != EIsolation.process) return _Error(0, "if outputType console, need isolation process");
-				break;
-			case EOutputType.dll:
-				if(_usedNonDllOption) return _Error(0, "with outputType dll cannot use isolation, uac, prefer32bit, runUnattended, ifRunning, config, manifest");
-				break;
-			}
-
 			if(ResFile != null) {
 				if(IconFile != null) return _Error(0, "cannot add both res file and icon");
 				if(ManifestFile != null) return _Error(0, "cannot add both res file and manifest");
 			}
 
-			switch(Isolation) {
-			case EIsolation.thread:
-				if(OutputPath != null || ConfigFile != null) return _Error(0, "with isolation thread cannot use: outputPath, config");
-				break;
-			case EIsolation.hostThread:
-				if(_usedNonHostThreadOption) return _Error(0, "with isolation hostThread cannot use: outputPath, config, uac, runUnattended, ifRunning");
-				break;
+			if(OutputType == EOutputType.dll && _cantBeDll)
+				return _Error(0, "with outputType dll cannot use runMode, ifRunning, uac, prefer32bit, config, manifest");
+
+			switch(RunMode) {
+			case ERunMode.unattendedMulti when _cantRunMulti:
+				return _Error(0, "with runMode unattendedMulti cannot use ifRunning");
+			case ERunMode.unattendedSingle when IfRunning == EIfRunning.restartOrWait:
+				return _Error(0, "with runMode unattendedSingle cannot use ifRunning restartOrWait. Use ifRunning restart.");
+			case ERunMode.editorThread when _cantRunInEditor:
+				return _Error(0, "with runMode editorThread cannot use outputType, outputPath, ifRunning, uac, prefer32bit, config, manifest");
 			}
 
-			if(Prefer32Bit && Isolation != EIsolation.process) return _Error(0, "if prefer32bit true, need isolation process");
-
-			if(IfRunning == EIfRunning.run && !RunUnattended) return _Error(0, "if ifRunning run, need runUnattended true");
+			if(RunMode == ERunMode.editorThread && _cantRunInEditor)
+				return _Error(0, "with runMode editorThread cannot use outputType, outputPath, ifRunning, uac, prefer32bit, config, manifest");
 
 			//if(OutputPath == null && OutputType!= EOutputType.dll) {
 			//	//FUTURE: show warning if used non-.NET/GAC/Au refs
@@ -694,7 +678,7 @@ namespace Au.Compiler
 			return true;
 		}
 
-		bool _usedNonDllOption, _usedNonHostThreadOption;
+		bool _cantBeDll, _cantRunInEditor, _cantRunMulti;
 	}
 
 	struct MetaCSharpFile
@@ -715,11 +699,11 @@ namespace Au.Compiler
 
 	public enum EOutputType { app, console, dll }
 
-	public enum EIsolation { appDomain, process, thread, hostThread }
-
 	public enum EUac { same, user, admin }
 
-	public enum EIfRunning { unspecified, leave, wait, restart, restartOrWait, run }
+	public enum ERunMode { supervised, unattendedSingle, unattendedMulti, editorThread }
+
+	public enum EIfRunning { unspecified, cancel, wait, restart, restartOrWait }
 
 	/// <summary>
 	/// Flags for <see cref="MetaComments.Parse"/>

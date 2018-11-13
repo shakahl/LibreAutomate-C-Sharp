@@ -279,10 +279,12 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Sets UTF8 text.
-		/// Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+		/// Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
 		/// </summary>
 		internal void LibSetText(byte[] s, int startIndex)
 		{
+			Debug.Assert(s.Length > 0 && s[s.Length - 1] == 0);
+			Debug.Assert((uint)startIndex < s.Length);
 			fixed (byte* p = s) LibSetText(p + startIndex);
 		}
 
@@ -592,26 +594,26 @@ namespace Au.Controls
 			{
 				_enc = _Encoding.Binary;
 				if(0 != Path_.GetExtension(file).Equals_(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani"))
-					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"");
+					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"\0");
 
 				using(var fr = File_.WaitIfLocked(() => File.OpenRead(file))) {
 					var fileSize = fr.Length;
-					if(fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.");
+					if(fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.\0");
 					int trySize = (int)Math.Min(fileSize, 65_000);
-					var b = new byte[trySize];
+					var b = new byte[trySize + 1];
 					trySize = fr.Read(b, 0, trySize);
 					fixed (byte* p = b) _enc = _DetectEncoding(p, trySize);
 					//Print(_enc);
-					if(_enc == _Encoding.Binary) return Encoding.UTF8.GetBytes("//Cannot edit. The file is binary, not text.");
+					if(_enc == _Encoding.Binary) return Encoding.UTF8.GetBytes("//Cannot edit. The file is binary, not text.\0");
 					int bomLength = (int)_enc >> 4;
 
 					if(fileSize > trySize) {
-						var old = b; b = new byte[fileSize]; Array.Copy(old, b, trySize);
+						var old = b; b = new byte[fileSize + 1]; Array.Copy(old, b, trySize);
 						fr.Read(b, trySize, (int)fileSize - trySize);
 					}
 
 					Encoding e = _NetEncoding();
-					if(e != null) b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength);
+					if(e != null) b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength + 1);
 					return b;
 				}
 			}

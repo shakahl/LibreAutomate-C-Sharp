@@ -175,13 +175,10 @@ namespace Au.Util
 			void _Callback()
 			{
 				//set STA
-#if false
-				//This is faster than CoGetApartmentType/CoInitializeEx/OleInitialize.
-				//But then in 'domain.DoCallBack(() => { Application.Exit(); });' sometimes strange exceptions in .NET internal func ThreadContext.ExitCommon().
-
-				var apState = Application.OleRequired();
+#if false //this is the documented/legal way, but then in 'domain.DoCallBack(() => { Application.Exit(); });' sometimes strange exceptions in .NET internal func ThreadContext.ExitCommon().
+				var apState = System.Windows.Forms.Application.OleRequired();
 				Debug.Assert(apState == ApartmentState.STA);
-#else
+#elif false //works, but slower (JIT etc)
 				int hr = Api.CoGetApartmentType(out var apt, out var aptq); //cannot use [ThreadStatic] because thread pool is shared by appdomains
 				if(hr == 0 && apt != Api.APTTYPE.APTTYPE_STA) {
 					hr = Api.OleInitialize(default);
@@ -190,6 +187,9 @@ namespace Au.Util
 				}
 				Debug.Assert(hr == 0);
 				Debug.Assert(Thread.CurrentThread.GetApartmentState() == ApartmentState.STA);
+#else //works, fast, but undocumented
+				bool ok = Thread.CurrentThread.TrySetApartmentState(ApartmentState.STA);
+				Debug.Assert(ok);
 #endif
 
 				try {

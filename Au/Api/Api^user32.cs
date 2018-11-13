@@ -52,18 +52,6 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "InternalGetWindowText", SetLastError = true)]
 		internal static extern int InternalGetWindowText(Wnd hWnd, [Out] char[] pString, int cchMaxCount);
 
-		internal struct COPYDATASTRUCT
-		{
-			public LPARAM dwData;
-			public int cbData;
-			public void* lpData;
-
-			public COPYDATASTRUCT(LPARAM dwData, int cbData, void* lpData)
-			{
-				this.dwData = dwData; this.cbData = cbData; this.lpData = lpData;
-			}
-		}
-
 		[DllImport("user32.dll")]
 		internal static extern bool IsWindow(Wnd hWnd);
 
