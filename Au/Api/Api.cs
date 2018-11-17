@@ -351,11 +351,6 @@ namespace Au.Types
 				if(!ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptor, 1, out lpSecurityDescriptor)) throw new AuException(0, "SECURITY_ATTRIBUTES");
 			}
 
-			/// <summary>
-			/// Creates SECURITY_ATTRIBUTES that allows UAC low integrity level processes to open the kernel object.
-			/// </summary>
-			public SECURITY_ATTRIBUTES() : this("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)") { }
-
 			public void Dispose()
 			{
 				if(lpSecurityDescriptor != null) {
@@ -366,7 +361,16 @@ namespace Au.Types
 
 			~SECURITY_ATTRIBUTES() => Dispose();
 
-			public static SECURITY_ATTRIBUTES Common = new SECURITY_ATTRIBUTES();
+			/// <summary>
+			/// Creates SECURITY_ATTRIBUTES that allows UAC low IL processes to open the kernel object.
+			/// </summary>
+			public static readonly SECURITY_ATTRIBUTES ForLowIL = new SECURITY_ATTRIBUTES("D:NO_ACCESS_CONTROLS:(ML;;NW;;;LW)");
+
+			/// <summary>
+			/// Creates SECURITY_ATTRIBUTES that allows UAC medium IL processes to open the pipe.
+			/// Like of PipeSecurity that allows ReadWrite for AuthenticatedUserSid.
+			/// </summary>
+			public static readonly SECURITY_ATTRIBUTES ForPipes = new SECURITY_ATTRIBUTES("D:(A;;0x12019b;;;AU)");
 		}
 
 		[DllImport("advapi32.dll", EntryPoint = "ConvertStringSecurityDescriptorToSecurityDescriptorW", SetLastError = true)]

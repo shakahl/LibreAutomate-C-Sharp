@@ -61,9 +61,15 @@
             Creates SECURITY_ATTRIBUTES from string security descriptor.
             </summary>
         </member>
-        <member name="M:Au.Types.Api.SECURITY_ATTRIBUTES.#ctor">
+        <member name="F:Au.Types.Api.SECURITY_ATTRIBUTES.ForLowIL">
             <summary>
-            Creates SECURITY_ATTRIBUTES that allows UAC low integrity level processes to open the kernel object.
+            Creates SECURITY_ATTRIBUTES that allows UAC low IL processes to open the kernel object.
+            </summary>
+        </member>
+        <member name="F:Au.Types.Api.SECURITY_ATTRIBUTES.ForPipes">
+            <summary>
+            Creates SECURITY_ATTRIBUTES that allows UAC medium IL processes to open the pipe.
+            Like of PipeSecurity that allows ReadWrite for AuthenticatedUserSid.
             </summary>
         </member>
         <member name="M:Au.Types.Cpp.Cpp_AccFromWindow(System.Int32,Au.Wnd,Au.Types.AccOBJID,Au.Types.Cpp.Cpp_Acc@,Au.Types.BSTR@)">
@@ -7309,14 +7315,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -7598,7 +7596,7 @@
             </summary>
             <remarks>
             The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="P:Au.Opt.WaitFor"/>).
-            The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Uninstall</b>) or with the 'using' pattern.
+            The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Uninstall</b> in the same thread) or with the 'using' pattern. Else this process may crash.
             </remarks>
         </member>
         <member name="M:Au.Util.WinHook.Keyboard(System.Func{Au.Types.HookData.Keyboard,System.Boolean})">
@@ -8876,6 +8874,13 @@
             <summary>
             Serializes multiple values of types int, string, string[] and null.
             The returned array can be passed to <see cref="M:Au.Util.LibSerializer.Deserialize(System.Byte[])"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibSerializer.SerializeWithSize(Au.Util.LibSerializer.Value[])">
+            <summary>
+            Serializes multiple values of types int, string, string[] and null.
+            Unlike <see cref="M:Au.Util.LibSerializer.Serialize(Au.Util.LibSerializer.Value[])"/>, in the first 4 bytes writes the size of data that follows.
+            Can be used with pipes or other streams where data size is initially unknown: read 4 bytes as <c>int dataSize</c>; <c>var b=new byte[dataSize]</c>, read it, pass b to <see cref="M:Au.Util.LibSerializer.Deserialize(System.Byte[])"/>. 
             </summary>
         </member>
         <member name="M:Au.Util.LibSerializer.Deserialize(System.Byte[])">
@@ -13580,15 +13585,6 @@
             <param name="args">To pass to Main.</param>
             <param name="pdbOffset">0 or offset of portable PDB in assembly file.</param>
             <param name="flags"></param>
-        </member>
-        <member name="M:Au.LibRun.RunAsm.LibLoadAssembly(System.String,System.Int32,System.Boolean)">
-            <summary>
-            Loads script assembly or finds loaded.
-            </summary>
-            <param name="asmFile"></param>
-            <param name="pdbOffset"></param>
-            <param name="orFindLoaded">Don't load the same unchanged assembly multiple times into the same appdomain. Must be called in main thread.</param>
-            <exception cref="T:System.Exception">Exceptions of FileStream and Assembly.Load.</exception>
         </member>
         <member name="T:Au.LibRun.RunAsm._LoadedScriptAssembly">
             <summary>

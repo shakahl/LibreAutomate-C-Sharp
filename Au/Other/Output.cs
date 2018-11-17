@@ -366,7 +366,7 @@ namespace Au
 		/// <param name="openExisting">Use OPEN_EXISTING. If false, uses CREATE_ALWAYS.</param>
 		internal static SafeFileHandle LibCreateFile(string name, bool openExisting)
 		{
-			var h = Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, null, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
+			var h = Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, default, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
 			if(h.IsInvalid) {
 				var e = Native.GetError();
 				h.SetHandleAsInvalid();

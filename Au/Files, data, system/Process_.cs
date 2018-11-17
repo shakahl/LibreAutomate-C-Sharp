@@ -484,7 +484,7 @@ namespace Au
 		internal static StartResult LibStart(string exeFile, string args, bool inheritUiaccess = false, string envVar = null, StartResult.Need need = 0)
 		{
 			bool suspended = need == StartResult.Need.NetProcess && !_NetProcessObject.IsFast;
-			if(!LibStartLL(out var pi, exeFile, args, inheritUiaccess, envVar, suspended: suspended)) throw new AuException(0, $"Failed to start process '{exeFile}'");
+			if(!LibStartLL(out var pi, exeFile, args, inheritUiaccess, envVar, suspended: suspended)) throw new AuException(0, $"*start process '{exeFile}'");
 			return new StartResult(pi, need, suspended);
 		}
 
@@ -542,7 +542,7 @@ namespace Au
 				hShellProcess.Dispose();
 			}
 
-			ge: throw new AuException(0, $"Failed to start process '{exeFile}' as user");
+			ge: throw new AuException(0, $"*start process '{exeFile}' as user");
 		}
 
 		/// <summary>

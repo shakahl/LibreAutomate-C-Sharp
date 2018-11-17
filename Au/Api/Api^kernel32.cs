@@ -331,13 +331,15 @@ namespace Au.Types
 		internal const uint FILE_FLAG_OPEN_REQUIRING_OPLOCK = 0x40000;
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
-		internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, SECURITY_ATTRIBUTES lpSecurityAttributes, int creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default);
+		internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, int creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default);
+
+		//note: not using parameter types SECURITY_ATTRIBUTES and OVERLAPPED* because it makes JIT-compiling much slower in some time-critical places.
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool WriteFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToWrite, out int lpNumberOfBytesWritten, OVERLAPPED* lpOverlapped = null);
+		internal static extern bool ReadFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToRead, out int lpNumberOfBytesRead, void* lpOverlapped = null);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool ReadFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToRead, out int lpNumberOfBytesRead, OVERLAPPED* lpOverlapped = null);
+		internal static extern bool WriteFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToWrite, out int lpNumberOfBytesWritten, void* lpOverlapped = null);
 
 		internal struct OVERLAPPED
 		{
@@ -668,15 +670,6 @@ namespace Au.Types
 		[DllImport("kernel32.dll", EntryPoint = "OpenWaitableTimerW", SetLastError = true)]
 		internal static extern SafeWaitHandle OpenWaitableTimer(uint dwDesiredAccess, bool bInheritHandle, string lpTimerName);
 
-		[DllImport("kernel32.dll", EntryPoint = "WaitNamedPipeW", SetLastError = true)]
-		internal static extern bool WaitNamedPipe(string lpNamedPipeName, int nTimeOut);
-
-		[DllImport("kernel32.dll", EntryPoint = "CallNamedPipeW", SetLastError = true)]
-		internal static extern bool CallNamedPipe(string lpNamedPipeName, void* lpInBuffer, int nInBufferSize, out int lpOutBuffer, int nOutBufferSize, out int lpBytesRead, int nTimeOut);
-
-		//[DllImport("kernel32.dll", SetLastError = true)]
-		//internal static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out int ClientProcessId);
-
 		[DllImport("kernel32.dll")]
 		internal static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
 
@@ -687,6 +680,7 @@ namespace Au.Types
 		internal static extern int GetModuleFileName(IntPtr hModule, char[] lpFilename, int nSize);
 
 		internal const uint PIPE_ACCESS_INBOUND = 0x1;
+		internal const uint PIPE_ACCESS_OUTBOUND = 0x2;
 		internal const uint PIPE_TYPE_MESSAGE = 0x4;
 		internal const uint PIPE_READMODE_MESSAGE = 0x2;
 		internal const uint PIPE_REJECT_REMOTE_CLIENTS = 0x8;
@@ -695,7 +689,7 @@ namespace Au.Types
 		internal static extern SafeFileHandle CreateNamedPipe(string lpName, uint dwOpenMode, uint dwPipeMode, uint nMaxInstances, uint nOutBufferSize, uint nInBufferSize, uint nDefaultTimeOut, SECURITY_ATTRIBUTES lpSecurityAttributes);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool ConnectNamedPipe(SafeFileHandle hNamedPipe, ref OVERLAPPED lpOverlapped);
+		internal static extern bool ConnectNamedPipe(SafeFileHandle hNamedPipe, OVERLAPPED* lpOverlapped);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool DisconnectNamedPipe(SafeFileHandle hNamedPipe);
@@ -705,6 +699,15 @@ namespace Au.Types
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool CancelIo(SafeFileHandle hFile);
+
+		[DllImport("kernel32.dll", EntryPoint = "WaitNamedPipeW", SetLastError = true)]
+		internal static extern bool WaitNamedPipe(string lpNamedPipeName, int nTimeOut);
+
+		[DllImport("kernel32.dll", EntryPoint = "CallNamedPipeW", SetLastError = true)]
+		internal static extern bool CallNamedPipe(string lpNamedPipeName, void* lpInBuffer, int nInBufferSize, out int lpOutBuffer, int nOutBufferSize, out int lpBytesRead, int nTimeOut);
+
+		//[DllImport("kernel32.dll", SetLastError = true)]
+		//internal static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out int ClientProcessId);
 
 	}
 }

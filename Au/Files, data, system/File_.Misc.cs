@@ -121,7 +121,7 @@ namespace Au
 			{
 				path = Path_.LibNormalizeMinimally(path, false);
 				fileId = new FileId();
-				using(var h = Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, null, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS)) {
+				using(var h = Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS)) {
 					if(h.IsInvalid) return false;
 					if(!Api.GetFileInformationByHandle(h, out var k)) return false;
 					fileId.VolumeSerialNumber = (int)k.dwVolumeSerialNumber;

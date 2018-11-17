@@ -45,7 +45,7 @@ namespace Au.Util
 			lock("AF2liKVWtEej+lRYCx0scQ") {
 				string interDomainVarName = "AF2liKVWtEej+lRYCx0scQ" + name.ToLower_();
 				if(!InterDomainVariables.GetVariable(name, out IntPtr t)) {
-					var hm = Api.CreateFileMapping((IntPtr)(~0), Api.SECURITY_ATTRIBUTES.Common, Api.PAGE_READWRITE, 0, size, name);
+					var hm = Api.CreateFileMapping((IntPtr)(~0), Api.SECURITY_ATTRIBUTES.ForLowIL, Api.PAGE_READWRITE, 0, size, name);
 					if(hm == default) goto ge;
 					created = Native.GetError() != Api.ERROR_ALREADY_EXISTS;
 					t = Api.MapViewOfFile(hm, 0x000F001F, 0, 0, 0);
@@ -619,9 +619,19 @@ namespace Au.Util
 		/// Serializes multiple values of types int, string, string[] and null.
 		/// The returned array can be passed to <see cref="Deserialize"/>.
 		/// </summary>
-		public static byte[] Serialize(params Value[] a)
+		public static byte[] Serialize(params Value[] a) => _Serialize(false, a);
+
+		/// <summary>
+		/// Serializes multiple values of types int, string, string[] and null.
+		/// Unlike <see cref="Serialize"/>, in the first 4 bytes writes the size of data that follows.
+		/// Can be used with pipes or other streams where data size is initially unknown: read 4 bytes as <c>int dataSize</c>; <c>var b=new byte[dataSize]</c>, read it, pass b to <see cref="Deserialize"/>. 
+		/// </summary>
+		public static byte[] SerializeWithSize(params Value[] a) => _Serialize(true, a);
+
+		static byte[] _Serialize(bool withSize, Value[] a)
 		{
 			int size = 4;
+			if(withSize) size += 4;
 			for(int i = 0; i < a.Length; i++) {
 				size++;
 				switch(a[i]._type) {
@@ -637,6 +647,7 @@ namespace Au.Util
 			var ab = new byte[size];
 			fixed (byte* b0 = ab) {
 				byte* b = b0;
+				if(withSize) { *(int*)b = ab.Length - 4; b += 4; }
 				*(int*)b = a.Length; b += 4;
 				for(int i = 0; i < a.Length; i++) {
 					var ty = a[i]._type;

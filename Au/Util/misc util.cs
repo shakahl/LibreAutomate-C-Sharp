@@ -508,7 +508,7 @@ namespace Au.Util
 		/// <exception cref="AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
 		public static WaitableTimer Create(bool manualReset = false, string timerName = null)
 		{
-			var h = Api.CreateWaitableTimer(Api.SECURITY_ATTRIBUTES.Common, manualReset, timerName);
+			var h = Api.CreateWaitableTimer(Api.SECURITY_ATTRIBUTES.ForLowIL, manualReset, timerName);
 			if(h.IsInvalid) {
 				var ex = new AuException(0, "*create timer");
 				h.SetHandleAsInvalid();

@@ -138,7 +138,7 @@ namespace Au
 			{
 				var tid = Thread_.NativeId;
 				pipeName = @"\\.\pipe\Au.CL-" + tid.ToString();
-				var sa = new Api.SECURITY_ATTRIBUTES("D:(A;;0x12019b;;;AU)"); //like of PipeSecurity that allows ReadWrite for AuthenticatedUserSid
+				var sa = Api.SECURITY_ATTRIBUTES.ForPipes;
 				_hPipe = Api.CreateNamedPipe(pipeName,
 					Api.PIPE_ACCESS_INBOUND | Api.FILE_FLAG_OVERLAPPED, //use async pipe because also need to wait for task process exit
 					Api.PIPE_TYPE_MESSAGE | Api.PIPE_READMODE_MESSAGE | Api.PIPE_REJECT_REMOTE_CLIENTS,
@@ -156,11 +156,11 @@ namespace Au
 					var ha = new WaitHandle[2] { ev, hProcess };
 					for(bool useSB = false; ; useSB = results == null) {
 						var o = new Api.OVERLAPPED { hEvent = ev.SafeWaitHandle.DangerousGetHandle() };
-						if(!Api.ConnectNamedPipe(_hPipe, ref o)) {
+						if(!Api.ConnectNamedPipe(_hPipe, &o)) {
 							int e = Native.GetError(); if(e != Api.ERROR_IO_PENDING) break;
 							int wr = WaitHandle.WaitAny(ha);
 							if(wr != 0) { Api.CancelIo(_hPipe); R = true; break; } //task ended
-							if(!Api.GetOverlappedResult(_hPipe, ref o, out _, false)) break;
+							if(!Api.GetOverlappedResult(_hPipe, ref o, out _, false)) { Api.DisconnectNamedPipe(_hPipe); break; }
 						}
 
 						if(b == null) b = (char*)Util.NativeHeap.Alloc(bLen);
@@ -234,7 +234,7 @@ namespace Au
 			if(pipeName == null) return false;
 			if(!Empty(s)) {
 				if(!Api.WaitNamedPipe(pipeName, 3000)) goto ge;
-				using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_WRITE, 0, null, Api.OPEN_EXISTING, 0)) {
+				using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, 0)) {
 					if(pipe.IsInvalid) goto ge;
 					fixed (char* p = s) if(!Api.WriteFile(pipe, p, s.Length * 2, out int nWritten, null)) goto ge;
 				}

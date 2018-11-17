@@ -24,6 +24,7 @@ namespace Au.Types
 		internal const int ERROR_BAD_NET_NAME = 67;
 		internal const int ERROR_FILE_EXISTS = 80;
 		internal const int ERROR_INVALID_PARAMETER = 87;
+		internal const int ERROR_SEM_TIMEOUT = 121;
 		internal const int ERROR_INSUFFICIENT_BUFFER = 122;
 		internal const int ERROR_INVALID_NAME = 123;
 		internal const int ERROR_DIR_NOT_EMPTY = 145;

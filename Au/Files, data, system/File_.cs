@@ -1156,6 +1156,7 @@ namespace Au
 			int _timeout;
 			long _t0;
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public _LockedWaiter(int millisecondsTimeout)
 			{
 				if(millisecondsTimeout < -1) throw new ArgumentOutOfRangeException();
@@ -1165,6 +1166,7 @@ namespace Au
 
 			public bool ExceptionFilter(IOException e) => ExceptionFilter(e.HResult & 0xffff);
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public bool ExceptionFilter(int ec)
 			{
 				//Print((uint)ec);

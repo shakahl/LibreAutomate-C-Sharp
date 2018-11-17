@@ -40,7 +40,31 @@ namespace Au.LibRun
 		[HandleProcessCorruptedStateExceptions]
 		public static void Run(string asmFile, string[] args, int pdbOffset, RAFlags flags = 0)
 		{
-			var asm = LibLoadAssembly(asmFile, pdbOffset, 0 != (flags & RAFlags.InEditorThread));
+			bool findLoaded = 0 != (flags & RAFlags.InEditorThread);
+			_LoadedScriptAssembly lsa = default;
+			Assembly asm = findLoaded ? lsa.Find(asmFile) : null;
+			if(asm == null) {
+				byte[] bAsm, bPdb = null;
+				using(var stream = File_.WaitIfLocked(() => File.OpenRead(asmFile))) {
+					bAsm = new byte[pdbOffset > 0 ? pdbOffset : stream.Length];
+					stream.Read(bAsm, 0, bAsm.Length);
+					try {
+						if(pdbOffset > 0) {
+							bPdb = new byte[stream.Length - pdbOffset];
+							stream.Read(bPdb, 0, bPdb.Length);
+						} else {
+							var s1 = Path.ChangeExtension(asmFile, "pdb");
+							if(File_.ExistsAsFile(s1)) bPdb = File.ReadAllBytes(s1);
+						}
+					}
+					catch(Exception ex) { bPdb = null; Debug_.Print(ex); } //not very important
+				}
+				asm = Assembly.Load(bAsm, bPdb);
+				if(findLoaded) lsa.Add(asmFile, asm);
+
+				//never mind: it's possible that we load newer compiled assembly version of script than intended.
+			}
+
 			try {
 				var entryPoint = asm.EntryPoint ?? throw new InvalidOperationException("assembly without entry point (function Main)");
 
@@ -77,47 +101,6 @@ namespace Au.LibRun
 		}
 
 		/// <summary>
-		/// Loads script assembly or finds loaded.
-		/// </summary>
-		/// <param name="asmFile"></param>
-		/// <param name="pdbOffset"></param>
-		/// <param name="orFindLoaded">Don't load the same unchanged assembly multiple times into the same appdomain. Must be called in main thread.</param>
-		/// <exception cref="Exception">Exceptions of FileStream and Assembly.Load.</exception>
-		internal static Assembly LibLoadAssembly(string asmFile, int pdbOffset, bool orFindLoaded)
-		{
-			Debug.Assert(!orFindLoaded || (Thread.CurrentThread.ManagedThreadId == 1));
-
-			Assembly asm = null;
-			_LoadedScriptAssembly lsa = default;
-			if(orFindLoaded) asm = lsa.Find(asmFile);
-
-			if(asm == null) {
-				//return Assembly.LoadFrom(asmFile); //test
-
-				byte[] bAsm, bPdb = null;
-				using(var stream = File_.WaitIfLocked(() => File.OpenRead(asmFile))) {
-					bAsm = new byte[pdbOffset > 0 ? pdbOffset : stream.Length];
-					stream.Read(bAsm, 0, bAsm.Length);
-					try {
-						if(pdbOffset > 0) {
-							bPdb = new byte[stream.Length - pdbOffset];
-							stream.Read(bPdb, 0, bPdb.Length);
-						} else {
-							var s1 = Path.ChangeExtension(asmFile, "pdb");
-							if(File_.ExistsAsFile(s1)) bPdb = File.ReadAllBytes(s1);
-						}
-					}
-					catch(Exception ex) { bPdb = null; Debug_.Print(ex); } //not very important
-				}
-				asm = Assembly.Load(bAsm, bPdb);
-				if(orFindLoaded) lsa.Add(asmFile, asm);
-			}
-			return asm;
-
-			//never mind: it's possible that we load newer compiled assembly version of script than intended.
-		}
-
-		/// <summary>
 		/// Remembers and finds script assemblies loaded in this appdomain, to avoid loading the same unchanged assembly multiple times.
 		/// </summary>
 		struct _LoadedScriptAssembly
@@ -131,6 +114,7 @@ namespace Au.LibRun
 			static Dictionary<string, _Asm> _d;
 			DateTime _fileTime;
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			public Assembly Find(string asmFile)
 			{
 				if(_d == null) _d = new Dictionary<string, _Asm>(StringComparer.OrdinalIgnoreCase);
@@ -143,6 +127,7 @@ namespace Au.LibRun
 				return null;
 			}
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
 			public void Add(string asmFile, Assembly asm)
 			{
 				if(_fileTime == default) return; //File_.GetProperties failed

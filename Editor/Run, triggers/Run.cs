@@ -1,4 +1,4 @@
-//#define TEST_STARTUP_SPEED
+#define TEST_STARTUP_SPEED
 
 using System;
 using System.Collections.Generic;
@@ -40,13 +40,13 @@ static class Run
 	/// <param name="f">C# file (script or .cs). Does nothing if null or not C# file.</param>
 	/// <param name="args">To pass to Main.</param>
 	/// <param name="noDefer">Don't schedule to run later.</param>
-	/// <param name="pipeName">Pipe name for AuTask.WriteResult.</param>
+	/// <param name="wrPipeName">Pipe name for AuTask.WriteResult.</param>
 	/// <remarks>
 	/// Saves editor text if need.
 	/// Calls <see cref="Compiler.Compile"/>.
 	/// Must be always called in the main UI thread (Thread.CurrentThread.ManagedThreadId == 1), because calls its file model functions.
 	/// </remarks>
-	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string pipeName = null)
+	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null)
 	{
 #if TEST_STARTUP_SPEED
 		args = new string[] { Time.Microseconds.ToString() }; //and in script use this code: Print(Time.Microseconds-Convert.ToInt64(args[0]));
@@ -82,7 +82,7 @@ static class Run
 			return (int)AuTask.ERunResult.editorThread;
 		}
 
-		return Tasks.RunCompiled(f, r, args, noDefer, pipeName);
+		return Tasks.RunCompiled(f, r, args, noDefer, wrPipeName);
 	}
 
 	static void _OnRunClassFile(FileNode f, FileNode projFolder)
@@ -154,59 +154,20 @@ class RunningTask
 
 	static int s_taskId;
 
-	public RunningTask(FileNode f, bool isUnattended)
+	public RunningTask(FileNode f, WaitHandle hProcess, bool isUnattended)
 	{
-		this.f = f;
 		taskId = ++s_taskId;
+		this.f = f;
+		_process = hProcess;
 		this.isUnattended = isUnattended;
-	}
 
-	public enum EStartProcess { normal, admin, userFromAdmin, uiAccess }
-
-	/// <summary>
-	/// Starts task in new process.
-	/// Returns process id, or 0 if fails. However the process can be already ended (unlikely); then IsRunning is false.
-	/// </summary>
-	public int Run(EStartProcess sp, string exeFile, string args, string pipeName)
-	{
-		//#if TEST_STARTUP_SPEED
-		//			args = args as string + " " + Time.Microseconds.ToString();
-		//			//Debug_.LibMemoryPrint(false);
-		//#endif
-
-		int pid;
-		try {
-			Process_.StartResult psr = null;
-			if(pipeName != null) pipeName = "AuTask.WriteResult.pipe=" + pipeName;
-			switch(sp) {
-			case EStartProcess.admin:
-				if(args.Length_() > 500000) { Print($"<>Error: {f.SciLink} command line arguments string too long."); return 0; }
-				pid = IpcWithHI.Call(1, (int)MainForm.Handle, exeFile, args, pipeName);
-				if(pid == 0) return pid;
-				_process = Au.Util.LibKernelWaitHandle.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_TERMINATE);
-				Debug.Assert(_process != null);
-				goto g1;
-			case EStartProcess.userFromAdmin:
-				psr = Process_.LibStartUserIL(exeFile, args, pipeName, Process_.StartResult.Need.WaitHandle);
-				break;
-			default:
-				psr = Process_.LibStart(exeFile, args, sp == EStartProcess.uiAccess, pipeName, Process_.StartResult.Need.WaitHandle);
-				break;
-			}
-			pid = psr.pid;
-			_process = psr.waitHandle;
-			g1:
-			RegisteredWaitHandle rwh = null;
-			rwh = ThreadPool.RegisterWaitForSingleObject(_process, (context, wasSignaled) => {
-				rwh.Unregister(_process);
-				var p = _process; _process = null;
-				p.Dispose();
-				Tasks.TaskEnded1(taskId);
-			}, null, -1, true);
-		}
-		catch(Exception ex) { Print(ex); return 0; }
-
-		return pid;
+		RegisteredWaitHandle rwh = null;
+		rwh = ThreadPool.RegisterWaitForSingleObject(_process, (context, wasSignaled) => {
+			rwh.Unregister(_process);
+			var p = _process; _process = null;
+			p.Dispose();
+			Tasks.TaskEnded1(taskId);
+		}, null, -1, true);
 	}
 
 	/// <summary>
@@ -461,9 +422,9 @@ class RunningTasks
 	/// <param name="r"></param>
 	/// <param name="args"></param>
 	/// <param name="noDefer">Don't schedule to run later. If cannot run now, just return 0.</param>
-	/// <param name="pipeName">Pipe name for AuTask.WriteResult.</param>
+	/// <param name="wrPipeName">Pipe name for AuTask.WriteResult.</param>
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
-	public int RunCompiled(FileNode f, Compiler.CompResults r, string[] args, bool noDefer = false, string pipeName = null, bool ignoreLimits = false)
+	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args, bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false)
 	{
 		g1:
 		if(!ignoreLimits && !_CanRunNow(f, r, out var running)) {
@@ -485,37 +446,28 @@ class RunningTasks
 			return 0;
 		}
 
-		var rt = new RunningTask(f, r.runMode != ERunMode.supervised);
-
-		string exeFile = r.file, argsString = null;
-		if(!r.notInCache) {
-			int iFlags = r.hasConfig ? 1 : 0; if(r.mtaThread) iFlags |= 2;
-			string spo = r.pdbOffset.ToString(), sFlags = iFlags.ToString();
-			if(args == null) args = new string[] { r.name, exeFile, spo, sFlags }; else args = args.Insert_(0, r.name, exeFile, spo, sFlags);
-			exeFile = Folders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");
-		}
-		if(args != null) argsString = Au.Util.StringMisc.CommandLineFromArray(args);
-
-		RunningTask.EStartProcess sp = RunningTask.EStartProcess.normal;
+		_SpUac uac = _SpUac.normal; int preIndex = 0;
 		if(!Process_.UacInfo.IsUacDisabled) {
 			//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
 			//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
 			var IL = Process_.UacInfo.ThisProcess.IntegrityLevel;
 			if(r.uac == EUac.same) {
-				if(IL == UacIL.UIAccess) sp = RunningTask.EStartProcess.uiAccess;
+				switch(IL) {
+				case UacIL.High: preIndex = 1; break;
+				case UacIL.UIAccess: uac = _SpUac.uiAccess; preIndex = 2; break;
+				}
 			} else {
 				switch(IL) {
 				case UacIL.Medium:
 				case UacIL.UIAccess:
-					if(r.uac == EUac.admin) sp = RunningTask.EStartProcess.admin;
+					if(r.uac == EUac.admin) uac = _SpUac.admin;
 					break;
 				case UacIL.High:
-					if(r.uac == EUac.user) sp = RunningTask.EStartProcess.userFromAdmin;
+					if(r.uac == EUac.user) uac = _SpUac.userFromAdmin;
 					break;
 				case UacIL.Low:
 				case UacIL.Untrusted:
 				case UacIL.Unknown:
-				//uac = EUac.same;
 				//break;
 				case UacIL.System:
 				case UacIL.Protected:
@@ -523,21 +475,128 @@ class RunningTasks
 					return 0;
 					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
 				}
+				if(r.uac == EUac.admin) preIndex = 1;
 			}
 		}
 
-		//Perf.First();
-		int pid;
-#if true
-		pid = rt.Run(sp, exeFile, argsString, pipeName); if(pid == 0) return 0;
-#else
-		var p1 = Perf.StartNew();
-		for(int i = 0; i < 8; i++) pid=rt.Run(sp, exeFile, argsString, pipeName);
-		//for(int i = 0; i < 8; i++) { pid=rt.Run(sp, exeFile, argsString, pipeName); Thread.Sleep(20); }
-		p1.NW('R');
-#endif
+		string exeFile, argsString;
+		_Preloaded pre = null; byte[] taskParams = null;
+		if(r.notInCache) {
+			exeFile = r.file;
+			argsString = args == null ? null : Au.Util.StringMisc.CommandLineFromArray(args);
+		} else {
+			exeFile = Folders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");
+
+			int iFlags = r.hasConfig ? 1 : 0; if(r.mtaThread) iFlags |= 2;
+			taskParams = Au.Util.LibSerializer.SerializeWithSize(r.name, r.file, r.pdbOffset, iFlags, args, wrPipeName);
+			wrPipeName = null;
+
+			if(r.prefer32bit && Ver.Is64BitOS) preIndex += 3;
+			pre = s_preloaded[preIndex] ?? (s_preloaded[preIndex] = new _Preloaded(preIndex));
+			argsString = pre.pipeName;
+		}
+
+		int pid; WaitHandle hProcess = null; bool disconnectPipe = false;
+		try {
+			//Perf.First();
+			var pp = pre?.hProcess;
+			if(pp != null && 0 != Api.WaitForSingleObject(pp.SafeWaitHandle.DangerousGetHandle(), 0)) { //preloaded process exists
+				hProcess = pp; pid = pre.pid;
+				pre.hProcess = null; pre.pid = 0;
+			} else {
+				if(pp != null) { pp.Dispose(); pre.hProcess = null; pre.pid = 0; } //preloaded process existed but somehow ended
+				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName);
+			}
+			Api.AllowSetForegroundWindow(pid);
+
+			if(pre != null) {
+				//Perf.First();
+				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent.SafeWaitHandle.DangerousGetHandle() };
+				if(!Api.ConnectNamedPipe(pre.hPipe, &o)) {
+					int e = Native.GetError(); if(e != Api.ERROR_IO_PENDING) throw new AuException(e);
+					int wr = WaitHandle.WaitAny(new WaitHandle[2] { pre.overlappedEvent, hProcess });
+					if(wr != 0) { Api.CancelIo(pre.hPipe); throw new AuException("*start task. Preloaded task process ended"); }
+					disconnectPipe = true;
+					if(!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AuException(0);
+				}
+				//Perf.Next();
+				fixed (byte* p = taskParams) if(!Api.WriteFile(pre.hPipe, p, taskParams.Length, out _)) throw new AuException(0);
+				//Perf.Next();
+				Api.DisconnectNamedPipe(pre.hPipe); disconnectPipe = false;
+				//Perf.NW('e');
+
+				//start preloaded process for next task. Let it wait for pipe connection.
+				try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
+				catch(Exception ex) { Debug_.Print(ex); }
+			}
+		}
+		catch(Exception ex) {
+			Print(ex);
+			if(disconnectPipe) Api.DisconnectNamedPipe(pre.hPipe);
+			hProcess?.Dispose();
+			return 0;
+		}
+
+		var rt = new RunningTask(f, hProcess, r.runMode != ERunMode.supervised);
 		_Add(rt);
 		return pid;
+	}
+
+	class _Preloaded
+	{
+		public readonly string pipeName;
+		public readonly Microsoft.Win32.SafeHandles.SafeFileHandle hPipe;
+		public readonly ManualResetEvent overlappedEvent;
+		public WaitHandle hProcess;
+		public int pid;
+
+		public _Preloaded(int index)
+		{
+			pipeName = $@"\\.\pipe\Au.preload-{Api.GetCurrentProcessId()}-{index}";
+			var sa = Api.SECURITY_ATTRIBUTES.ForPipes;
+			hPipe = Api.CreateNamedPipe(pipeName,
+				Api.PIPE_ACCESS_OUTBOUND | Api.FILE_FLAG_OVERLAPPED, //use async pipe because editor would hang if task process exited without connecting. Same speed.
+				Api.PIPE_TYPE_MESSAGE | Api.PIPE_REJECT_REMOTE_CLIENTS,
+				1, 0, 0, 0, sa);
+			overlappedEvent = new ManualResetEvent(false);
+		}
+	}
+	_Preloaded[] s_preloaded = new _Preloaded[6]; //user, admin, uiAccess, user32, admin32, uiAccess32
+
+	/// <summary>
+	/// How _StartProcess must start process.
+	/// Note: it is not UAC IL of the process.
+	/// </summary>
+	enum _SpUac
+	{
+		normal, //start process of same IL as this process, but without uiAccess. It is how CreateProcess API works.
+		admin, //start admin process from this user or uiAccess process
+		userFromAdmin, //start user process from this admin process
+		uiAccess, //start uiAccess process from this uiAccess process
+	}
+
+	/// <summary>
+	/// Starts task process.
+	/// Returns (processId, processHandle). Throws if failed.
+	/// </summary>
+	static (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName)
+	{
+		if(wrPipeName != null) wrPipeName = "AuTask.WriteResult.pipe=" + wrPipeName;
+		if(uac == _SpUac.admin) {
+			if(args.Length_() > 500000) throw new ArgumentException($"Command line arguments string too long."); //TODO
+			int pid = IpcWithHI.Call(1, (int)MainForm.Handle, exeFile, args, wrPipeName);
+			if(pid != 0) {
+				var hProcess = Au.Util.LibKernelWaitHandle.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_TERMINATE);
+				Debug.Assert(hProcess != null);
+				if(hProcess != null) return (pid, hProcess);
+			}
+			throw new AuException($"*start process '{exeFile}'");
+		} else {
+			var psr = uac == _SpUac.userFromAdmin
+				? Process_.LibStartUserIL(exeFile, args, wrPipeName, Process_.StartResult.Need.WaitHandle)
+				: Process_.LibStart(exeFile, args, uac == _SpUac.uiAccess, wrPipeName, Process_.StartResult.Need.WaitHandle);
+			return (psr.pid, psr.waitHandle);
+		}
 	}
 
 	int _Find(int taskId)

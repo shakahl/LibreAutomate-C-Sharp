@@ -230,7 +230,7 @@ namespace Au.Util
 		{
 			lock(this) {
 				if(_isGlobal) {
-					var m = Api.CreateMailslot(LibMailslotName, 0, 0, Api.SECURITY_ATTRIBUTES.Common);
+					var m = Api.CreateMailslot(LibMailslotName, 0, 0, Api.SECURITY_ATTRIBUTES.ForLowIL);
 					if(m.IsInvalid) {
 						var e = Native.GetError();
 						m.SetHandleAsInvalid();

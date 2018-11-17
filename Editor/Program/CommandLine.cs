@@ -164,7 +164,7 @@ static class CommandLine
 				if(action == 99) Print($"Command line: script '{script}' not found."); //else the caller script will throw exception
 				return (int)AuTask.ERunResult.notFound;
 			}
-			return Run.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), pipeName: pipeName);
+			return Run.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
 		default:
 			Debug.Assert(false);
 			return 0;

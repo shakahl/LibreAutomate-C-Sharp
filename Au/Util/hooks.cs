@@ -27,7 +27,7 @@ namespace Au.Util
 	/// </summary>
 	/// <remarks>
 	/// The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="Opt.WaitFor"/>).
-	/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Uninstall</b>) or with the 'using' pattern.
+	/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Uninstall</b> in the same thread) or with the 'using' pattern. Else this process may crash.
 	/// </remarks>
 	public class WinHook :IDisposable
 	{

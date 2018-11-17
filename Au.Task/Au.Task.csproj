@@ -54,6 +54,7 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Program.cs" />
@@ -94,7 +95,8 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>if $(PlatformName) == x86 (
+    <PreBuildEvent>$(TargetDir)kill_Au.Editor.exe
+if $(PlatformName) == x86 (
   copy "$(TargetPath)" "$(SolutionDir)_\Au.Task32.exe" /y
 )</PreBuildEvent>
   </PropertyGroup>
