@@ -341,6 +341,11 @@ bool InjectDll(HWND w, out HWND& wAgent, DWORD tid, DWORD pid)
 //Calls InjectDll.
 EXPORT void WINAPI Cpp_RunDllW(HWND hwnd, HINSTANCE hinst, STR lpszCmdLine, int nCmdShow) //note: with W
 {
+	//if(!*lpszCmdLine) { //was used by LibStartUserIL when testing the Task Scheduler way
+	//	Sleep(1000);
+	//	return;
+	//}
+
 	//Printf(L"Cpp_RunDllW, %i, %s", IsThisProcess64Bit(), lpszCmdLine);
 	LPWSTR s2;
 	HWND w = (HWND)(LPARAM)strtoi(lpszCmdLine, &s2), wAgent;

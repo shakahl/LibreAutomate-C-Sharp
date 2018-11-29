@@ -265,7 +265,7 @@ namespace Au
 
 			/// <summary>
 			/// Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
-			/// It allows processes of lower <see cref="Process_.UacInfo">UAC</see> integrity level to send these messages to this process.
+			/// It allows processes of lower <see cref="Uac">UAC</see> integrity level to send these messages to this process.
 			/// </summary>
 			public static void UacEnableMessages(params int[] messages)
 			{

@@ -130,6 +130,8 @@ namespace Au.Controls
 
 			if(AccessibleName == null) AccessibleName = Name;
 
+			if(this.AllowDrop) Api.RevokeDragDrop((Wnd)this);
+
 			base.OnHandleCreated(e);
 		}
 
@@ -379,6 +381,6 @@ namespace Au.Controls
         //[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden), EditorBrowsable(EditorBrowsableState.Never)]
         //[Obsolete("Use ST.SetText or ST.SetTextNewDocument", true)] //because we don't know how to set text, with undo or as new document
         //public new virtual string Text { get; set; }
-        public new virtual string Text { get => ST.GetText(); }
+        public new virtual string Text => ST.GetText();
     }
 }

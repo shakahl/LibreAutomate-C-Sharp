@@ -277,12 +277,12 @@ namespace Au.Controls
 
 			//u1
 			public int Color { get => (int)(u1 & 0xffffff); set => u1 = (u1 & 0xff000000) | ((uint)value & 0xffffff) | 0x1000000; }
-			public bool HasColor { get => 0 != (u1 & 0x1000000); }
+			public bool HasColor => 0 != (u1 & 0x1000000);
 			public int Size { get => (int)(u1 >> 25); set => u1 = (u1 & 0x1ffffff) | ((uint)Math_.MinMax(value, 0, 127) << 25); }
 
 			//u2
 			public int BackColor { get => (int)(u2 & 0xffffff); set => u2 = (u2 & 0xff000000) | ((uint)value & 0xffffff) | 0x1000000; }
-			public bool HasBackColor { get => 0 != (u2 & 0x1000000); }
+			public bool HasBackColor => 0 != (u2 & 0x1000000);
 			public bool Bold { get => 0 != (u2 & 0x2000000); set { if(value) u2 |= 0x2000000; else u2 &= unchecked((uint)~0x2000000); } }
 			public bool Italic { get => 0 != (u2 & 0x4000000); set { if(value) u2 |= 0x4000000; else u2 &= unchecked((uint)~0x4000000); } }
 			public bool Underline { get => 0 != (u2 & 0x8000000); set { if(value) u2 |= 0x8000000; else u2 &= unchecked((uint)~0x8000000); } }
@@ -301,7 +301,7 @@ namespace Au.Controls
 				if(HasBackColor) t2 &= 0xff000000;
 				u2 |= t2;
 			}
-			public bool IsEmpty { get => u1 == 0 & u2 == 0; }
+			public bool IsEmpty => u1 == 0 & u2 == 0;
 		}
 
 		AuScintilla _c;

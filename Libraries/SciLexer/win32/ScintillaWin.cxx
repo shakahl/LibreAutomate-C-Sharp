@@ -381,6 +381,8 @@ public:
 	STDMETHODIMP DragLeave();
 	STDMETHODIMP Drop(LPDATAOBJECT pIDataSource, DWORD grfKeyState,
 	                  POINTL pt, PDWORD pdwEffect);
+	//Au
+	void AuDragDrop(int action, Sci_DragDropData* r);
 
 	/// Implement important part of IDataObject
 	STDMETHODIMP GetData(FORMATETC *pFEIn, STGMEDIUM *pSTM);
@@ -1765,6 +1767,11 @@ sptr_t ScintillaWin::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam
 		case SCI_ISXINMARGIN:
 			return PointInSelMargin(Point(wParam, lParam));
 
+			//Au
+		case SCI_DRAGDROP:
+			AuDragDrop(wParam, (Sci_DragDropData*)lParam);
+			break;
+
 		default:
 			return ScintillaBase::WndProc(iMessage, wParam, lParam);
 		}
@@ -3067,6 +3074,23 @@ STDMETHODIMP ScintillaWin::DragLeave() {
 		errorStatus = SC_STATUS_FAILURE;
 	}
 	return E_FAIL;
+}
+
+//Au
+void ScintillaWin::AuDragDrop(int action, Sci_DragDropData* r) {
+	SelectionPosition pos; if(r!=nullptr) pos=SPositionFromLocation(Point::FromInts(r->x, r->y), false, false, UserVirtualSpace());
+	switch(action) {
+	case 1: //over
+		SetDragPosition(pos);
+		break;
+	case 2: //drop
+		SetDragPosition(SelectionPosition(invalidPosition));
+		DropAt(pos, r->text, r->len, !r->copy, false);
+		break;
+	case 3: //leave
+		SetDragPosition(SelectionPosition(invalidPosition));
+		break;
+	}
 }
 
 STDMETHODIMP ScintillaWin::Drop(LPDATAOBJECT pIDataSource, DWORD grfKeyState,

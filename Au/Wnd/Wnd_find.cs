@@ -505,7 +505,7 @@ namespace Au
 			/// Calls API <msdn>EnumWindows</msdn>.
 			/// <note>The list can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows"/>.</note>
 			/// By default array elements are sorted to match the Z order.
-			/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <see cref="Process_.UacInfo">UAC</see> integrity level uiAccess; to get such windows you can use <see cref="FindFast"/>.
+			/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <see cref="Uac">UAC</see> integrity level uiAccess; to get such windows you can use <see cref="FindFast"/>.
 			/// </remarks>
 			/// <seealso cref="FindAll"/>
 			public static Wnd[] AllWindows(bool onlyVisible = false, bool sortFirstVisible = false)

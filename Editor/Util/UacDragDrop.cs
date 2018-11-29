@@ -1,0 +1,381 @@
+using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Text;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
+using System.Windows.Forms;
+//using System.Drawing;
+//using System.Linq;
+//using System.Xml.Linq;
+
+using Au;
+using Au.Types;
+using static Au.NoClass;
+
+class UacDragDrop
+{
+	public class AdminProcess
+	{
+		Au.Util.AccHook _hook; //SYSTEM_CAPTURESTART
+		Timer_ _timer; //tracks mouse etc
+		bool _isDragMode; //is in drag-drop
+		bool _isProcess2; //is our non-admin process started
+		int _endCounter; //delays ending drag mode
+
+		static AdminProcess s_inst;
+
+		//Called with on=true when main form becomes visible.
+		//Called with on=false when hidden or closed.
+		public static void Enable(bool on)
+		{
+			if(on == (s_inst != null)) return;
+			if(on) {
+				if(Uac.OfThisProcess.Elevation != UacElevation.Full) return;
+				s_inst = new AdminProcess();
+			} else {
+				s_inst._Dispose();
+				s_inst = null;
+			}
+		}
+
+		AdminProcess()
+		{
+			_timer = new Timer_(() => _Timer());
+
+			//use hook to detect when drag-drop started
+			_hook = new Au.Util.AccHook(AccEVENT.SYSTEM_CAPTURESTART, AccEVENT.SYSTEM_CAPTURESTART, d => {
+				_EndedDragMode();
+				if(0 == d.wnd.ClassNameIs("CLIPBRDWNDCLASS", "DragWindow")) return;
+				_StartedDragMode();
+			}, flags: AccHookFlags.SKIPOWNPROCESS);
+
+			//note: we don't use SYSTEM_CAPTUREEND. It's too early and sometimes missing.
+			//tested: no EVENT_SYSTEM_DRAGDROPSTART events.
+			//info: classname "DragWindow" is of Windows Store, eg Edge.
+			//rejected: int pid = d.wnd.ProcessId; using(var u = Uac.OfProcess(pid)) { if(u == null || u.Elevation == UacElevation.Full) return; }
+		}
+
+		void _Dispose()
+		{
+			_hook.Dispose();
+			_EndedDragMode();
+		}
+
+		void _StartedDragMode()
+		{
+			//Print("START");
+			_isDragMode = true;
+			_endCounter = 0;
+			_wTransparent = default;
+			_wWindow = default;
+			_wTargetControl = default;
+			_data = null;
+			_timer.Start(30, false);
+		}
+
+		void _EndedDragMode()
+		{
+			if(!_isDragMode) return;
+			//Print("END");
+			_isDragMode = _isProcess2 = false;
+			_timer.Stop();
+			if(!_wTransparent.Is0) _wTransparent.Post(Api.WM_USER); //let it close self
+		}
+
+		static bool _IsMousePressed => Keyb.GetAsyncKeyState(KKey.MouseLeft) < 0 || Keyb.GetAsyncKeyState(KKey.MouseRight) < 0;
+		//static bool _IsMousePressed => Mouse.IsPressed(MButtons.Left | MButtons.Right); //somehow unreliable when in drag mode
+
+		//Every 30 ms while in drag mode.
+		void _Timer()
+		{
+			if(!_isDragMode) return;
+
+			//when mouse released, end drag mode with ~100 ms delay
+			if(!_IsMousePressed) {
+				if(++_endCounter == 4) _EndedDragMode();
+				return;
+			}
+			_endCounter = 0;
+			//end drag mode if _wTransparent died, eg did not find useful data on drag enter
+			if(!_wTransparent.Is0 && !_wTransparent.IsAlive) {
+				_EndedDragMode();
+				return;
+			}
+
+			var w = Wnd.FromMouse(WXYFlags.NeedWindow);
+			if(!_isProcess2) {
+				if(!w.IsOfThisProcess) return;
+				//Print("drag");
+				_isProcess2 = true;
+				_wWindow = w;
+				Process_.LibStartUserIL("Au.Editor.exe", "/d " + CommandLine.MsgWnd.Handle.ToString());
+				//Process_.LibStartUserIL("Au.Editor.exe", $"/d {CommandLine.MsgWnd.Handle.ToString()} {Time.Milliseconds}"); //test process startup speed
+			} else if(w != _wTransparent) {
+				_wWindow = w;
+				_SetTransparentSizeZorder();
+			}
+		}
+
+		Wnd _wTransparent; //our transparent non-admin window
+		Wnd _wWindow; //current our top-level admin window covered by _wTransparent
+
+		//Called in admin process. Non-admin process may not be able to zorder its window above admin windows.
+		void _SetTransparentSizeZorder()
+		{
+			if(_wWindow.IsOfThisProcess) {
+				var r = _wWindow.Rect;
+				_wTransparent.MoveLL(r.left, r.top, r.Width, r.Height);
+				_wTransparent.ZorderAbove(_wWindow);
+			} else {
+				_wTransparent.MoveLL(0, 0, 0, 0);
+			}
+		}
+
+		//SendMessage from _wTransparent on WM_CREATE.
+		public static void OnTransparentWindowCreated(Wnd wTransparent)
+		{
+			var x = s_inst;
+			if(x?._isDragMode ?? false) {
+				x._wTransparent = wTransparent;
+				x._SetTransparentSizeZorder();
+			} else wTransparent.Post(Api.WM_USER); //let it close self
+		}
+
+		public static DragDropEffects OnDragEvent(int event_, int keyState, byte[] b = null) => s_inst?._OnDragEvent(event_, keyState, b) ?? 0;
+		DragDropEffects _OnDragEvent(int event_, int keyState, byte[] b)
+		{
+			if(!_isDragMode) return 0;
+			DDEvent ev = (DDEvent)event_;
+			//if(ev != DDEvent.Over) Print(ev);
+			if(ev == DDEvent.Enter) {
+				var a = Au.Util.LibSerializer.Deserialize(b);
+				_allowedEffects = (DragDropEffects)(int)a[0];
+				_keyState = a[1];
+				_data = new DataObject();
+				var t = new _DDData { files = a[2], shell = a[3], text = a[4], linkName = a[5] };
+				if(t.files != null) _data.SetData("FileDrop", t.files);
+				if(t.shell != null) _data.SetData("Shell IDList Array", t.shell);
+				if(t.text != null) _data.SetData("UnicodeText", t.text);
+				if(t.linkName != null) _data.SetData("FileGroupDescriptorW", t.linkName);
+			} else {
+				_keyState = keyState;
+			}
+
+			DragDropEffects ef = 0;
+			if(ev != DDEvent.Leave) {
+				var p = Mouse.XY;
+				var w = _wWindow.ChildFromXY(p, screenXY: true);
+				if(w.Is0) w = _wWindow;
+				if(w != _wTargetControl && !_wTargetControl.Is0) {
+					_InvokeDDHandler(_wTargetControl, DDEvent.Leave);
+					_wTargetControl = default;
+				}
+				if(!w.Is0 && w.IsOfThisProcess && w.IsEnabledReally) {
+					if(ev != 0 && _wTargetControl.Is0) {
+						if(ev == DDEvent.Over) ev = 0;
+						else _InvokeDDHandler(w, DDEvent.Enter, p);
+					}
+					ef = _InvokeDDHandler(_wTargetControl = w, ev, p);
+				}
+			} else if(!_wTargetControl.Is0) {
+				_InvokeDDHandler(_wTargetControl, ev);
+			}
+
+			if(ev >= DDEvent.Drop) { _wTargetControl = default; }
+
+			return ef;
+		}
+
+		//data etc sent by _wTransparent on OnDragEnter. Then used here on enter/over/drop.
+		DataObject _data;
+		DragDropEffects _allowedEffects;
+		int _keyState; //set on enter, then updated on over/drop
+
+		Wnd _wTargetControl; //control or form from mouse
+
+		//If the control alows drop, calls its OnDragEnter/Over/Drop/Leave through reflection.
+		DragDropEffects _InvokeDDHandler(Wnd w, DDEvent ev, POINT p = default)
+		{
+			//Print(ev, w);
+			var c = Control.FromHandle(w.Handle); //is it thread-safe? It seems yes.
+			if(c == null || !c.AllowDrop) return 0; //thread-safe
+
+			if(_miEnter == null) {
+				var t = typeof(Control);
+				var bf = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.InvokeMethod;
+				_miEnter = t.GetMethod("OnDragEnter", bf);
+				_miOver = t.GetMethod("OnDragOver", bf);
+				_miDrop = t.GetMethod("OnDragDrop", bf);
+				_miLeave = t.GetMethod("OnDragLeave", bf);
+			}
+
+			if(ev == DDEvent.Leave) {
+				_Invoke(_miLeave, EventArgs.Empty);
+				return 0;
+			}
+
+			var e = new DragEventArgs(_data, _keyState, p.x, p.y, _allowedEffects, DragDropEffects.None);
+			MethodInfo mi;
+			switch(ev) {
+			case DDEvent.Enter: mi = _miEnter; break;
+			case DDEvent.Over: mi = _miOver; break;
+			default: mi = _miDrop; break;
+			}
+			_Invoke(mi, e);
+			return e.Effect;
+
+			void _Invoke(MethodInfo method, object arg)
+			{
+				if(c.InvokeRequired) {
+					c.Invoke(new MethodInvoker(() => method.Invoke(c, new object[] { arg })));
+				} else {
+					method.Invoke(c, new object[] { arg });
+				}
+			}
+		}
+		MethodInfo _miEnter, _miOver, _miDrop, _miLeave; //MethodInfo cache
+	}
+
+	//Drag-drop events.
+	public enum DDEvent { Enter, Over, Drop, Leave }
+
+	//A form in non-admin process that accepts drag-drop events and relays to the admin process.
+	//Covers our admin window. Almost transparent.
+	public class NonAdminProcess : Form
+	{
+		//Called from Main() in non-admin process when command line starts with /d.
+		public static void MainDD(string[] args)
+		{
+			//Print("NonAdminProcess");
+			var msgWnd = (Wnd)(LPARAM)args[1].ToInt_();
+
+			var f = new NonAdminProcess(msgWnd);
+			f.ShowDialog();
+			f.Dispose();
+			//Print("exit");
+		}
+
+		Wnd _msgWnd; //message-only IPC window in admin process
+
+		NonAdminProcess(Wnd msgWnd)
+		{
+			_msgWnd = msgWnd;
+			Text = "Au.DropTarget";
+			AllowDrop = true;
+			AutoScaleMode = AutoScaleMode.None;
+			FormBorderStyle = FormBorderStyle.None;
+			StartPosition = FormStartPosition.Manual;
+			Opacity = 0.05;
+			//Opacity = 0.7;
+			Bounds = default; //on WM_CREATE we'll send message to the admin process, let it set size and Z order
+		}
+
+		protected override CreateParams CreateParams {
+			get {
+				CreateParams k = base.CreateParams;
+				k.ExStyle = (int)(Native.WS_EX.LAYERED | Native.WS_EX.NOACTIVATE | Native.WS_EX.TOOLWINDOW | Native.WS_EX.TOPMOST);
+				k.Style = unchecked((int)(Native.WS.POPUP | Native.WS.DISABLED));
+				return k;
+			}
+		}
+
+		protected override bool ShowWithoutActivation => true;
+
+		protected override void WndProc(ref Message m)
+		{
+			switch(m.Msg) {
+			case Api.WM_CREATE:
+				_msgWnd.Send(Api.WM_USER, 10, m.HWnd);
+				Api.SetTimer((Wnd)m.HWnd, 1, 1000, null);
+				break;
+			case Api.WM_TIMER:
+				if(!_msgWnd.IsAlive) Hide();
+				break;
+			case Api.WM_USER: //admin posts it when ended drag mode
+				Hide();
+				//Print("WM_USER");
+				break;
+			}
+			base.WndProc(ref m);
+
+			//test process startup speed. About 300 ms. Ngened slower.
+			//if(m.Msg == Api.WM_SHOWWINDOW && m.WParam != default) Print(Time.Milliseconds - Environment.GetCommandLineArgs()[3].ToLong_());
+		}
+
+		bool _enteredOnce;
+
+		protected override void OnDragEnter(DragEventArgs e)
+		{
+			if(_enteredOnce) {
+				OnDragOver(e);
+				return;
+			}
+			_enteredOnce = true;
+
+			_DDData r = default;
+			if(r.GetData(e.Data)) {
+				var b = Au.Util.LibSerializer.Serialize((int)e.AllowedEffect, e.KeyState, r.files, r.shell, r.text, r.linkName);
+				e.Effect = (DragDropEffects)(int)Wnd.Misc.CopyDataStruct.SendBytes(_msgWnd, 110, b);
+			} else {
+				Hide();
+			}
+		}
+
+		protected override void OnDragOver(DragEventArgs e)
+		{
+			e.Effect = (DragDropEffects)(int)_msgWnd.Send(Api.WM_USER, (int)DDEvent.Over, e.KeyState);
+		}
+
+		protected override void OnDragDrop(DragEventArgs e)
+		{
+			Hide();
+			e.Effect = (DragDropEffects)(int)_msgWnd.Send(Api.WM_USER, (int)DDEvent.Drop, e.KeyState);
+		}
+
+		protected override void OnDragLeave(EventArgs e)
+		{
+			_msgWnd.Send(Api.WM_USER, (int)DDEvent.Leave);
+		}
+	}
+
+	struct _DDData
+	{
+		public string[] files;
+		public byte[] shell, linkName;
+		public string text;
+
+		public bool GetData(IDataObject d)
+		{
+			//foreach(var v in d.GetFormats()) Print(v, d.GetData(v, false)?.GetType()); Print("--");
+			try {
+				if(d.GetDataPresent(DataFormats.FileDrop, false)) { //files
+					files = d.GetData(DataFormats.FileDrop, false) as string[]; if(files == null) return false;
+				} else if(d.GetDataPresent("Shell IDList Array", false)) { //any shell objects
+					if(!(d.GetData("Shell IDList Array", false) is MemoryStream m)) return false;
+					shell = m.ToArray();
+				} else if(d.GetDataPresent("UnicodeText", false)) { //text or URL
+					text = d.GetData("UnicodeText", false) as string; if(text == null) return false;
+					if(d.GetDataPresent("FileGroupDescriptorW", true)) { //link text. All browsers.
+						if(!(d.GetData("FileGroupDescriptorW", false) is MemoryStream m)) return false;
+						linkName = m.ToArray();
+					}
+				} else return false;
+				return true;
+			}
+			catch(Exception ex) { Debug_.Print(ex); return false; }
+
+			//note: MemoryStream.GetBuffer says "UnauthorizedAccessException: MemoryStream's internal buffer cannot be accessed"
+			//info: if from IE, GetData returns null for all formats.
+		}
+	}
+
+}

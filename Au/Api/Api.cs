@@ -632,8 +632,11 @@ namespace Au.Types
 		[DllImport("shell32.dll", PreserveSig = true)]
 		internal static extern int SHOpenFolderAndSelectItems(HandleRef pidlFolder, uint cidl, IntPtr[] apidl, uint dwFlags);
 
-		[DllImport("shell32.dll")]
+		[DllImport("shell32.dll", EntryPoint = "#152")]
 		internal static extern int ILGetSize(IntPtr pidl);
+
+		[DllImport("shell32.dll", EntryPoint = "#25")]
+		internal static extern IntPtr ILCombine(IntPtr pidl1, IntPtr pidl2);
 
 		internal const uint FO_MOVE = 0x1;
 		internal const uint FO_COPY = 0x2;
@@ -846,7 +849,8 @@ namespace Au.Types
 		//[DllImport("ole32.dll", PreserveSig = true)]
 		//internal static extern int OleInitialize(IntPtr pvReserved);
 
-
+		[DllImport("ole32.dll", PreserveSig = true)]
+		internal static extern int RevokeDragDrop(Wnd hwnd);
 
 
 		#endregion

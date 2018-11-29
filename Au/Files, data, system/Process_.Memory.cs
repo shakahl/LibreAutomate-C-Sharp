@@ -110,7 +110,7 @@ namespace Au
 			/// </summary>
 			/// <param name="w">A window in that process.</param>
 			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <remarks>This is the preferred constructor when the process has windows. It works with windows of <see cref="UacInfo">UAC</see> High integrity level when this process is Medium+uiAccess.</remarks>
+			/// <remarks>This is the preferred constructor when the process has windows. It works with windows of <see cref="Uac">UAC</see> High integrity level when this process is Medium+uiAccess.</remarks>
 			/// <exception cref="WndException">w invalid.</exception>
 			/// <exception cref="AuException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
 			public Memory(Wnd w, int nBytes)
@@ -124,7 +124,7 @@ namespace Au
 			/// </summary>
 			/// <param name="processId">Process id.</param>
 			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <exception cref="AuException">Failed to open process handle (usually because of <see cref="UacInfo">UAC</see>) or allocate memory.</exception>
+			/// <exception cref="AuException">Failed to open process handle (usually because of <see cref="Uac">UAC</see>) or allocate memory.</exception>
 			public Memory(int processId, int nBytes)
 			{
 				_Alloc(processId, default, nBytes);

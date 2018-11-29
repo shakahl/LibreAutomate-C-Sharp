@@ -75,7 +75,7 @@ namespace Au.Controls
 		public Dictionary<string, ToolStripDropDownMenu> Submenus { get; }
 
 
-		public XElement Xml { get => _xStrips; }
+		public XElement Xml => _xStrips;
 
 		/// <param name="form">Form used as owner of dialog boxes.</param>
 		/// <param name="callbacks"></param>

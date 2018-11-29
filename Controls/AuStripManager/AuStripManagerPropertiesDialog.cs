@@ -31,7 +31,7 @@ namespace Au.Controls
 	public partial class AuStripManager
 	{
 #endif
-	class AuStripManagerPropertiesDialog :Form_
+	class AuStripManagerPropertiesDialog : Form_
 	{
 		AuStripManager _man;
 		XElement _x;
@@ -47,7 +47,7 @@ namespace Au.Controls
 			InitializeComponent();
 
 			this.toolTip1.InitialDelay = 50; //TextBox tooltip bug workaround
-			this.Text = "Properties - " + x.Name;
+			this.Text = (isMenu ? "Menu item " : "Button ") + x.Name;
 
 			textText.Text = x.Attribute_("t2");
 			comboColor.Text = x.Attribute_("color");
@@ -457,6 +457,9 @@ namespace Au.Controls
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.CancelButton = this.button2;
 			this.ClientSize = new System.Drawing.Size(503, 313);
+			this.FormBorderStyle = FormBorderStyle.FixedDialog;
+			this.MaximizeBox = false;
+			this.MinimizeBox = false;
 			this.Controls.Add(this.groupHotkey);
 			this.Controls.Add(this.comboColor);
 			this.Controls.Add(this.button2);

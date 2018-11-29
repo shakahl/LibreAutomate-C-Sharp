@@ -112,8 +112,8 @@ namespace Au.Controls
 				if(newLS != oldLS) ts.LayoutStyle = newLS;
 			}
 
-			internal override int MinimalWidth { get => _minWidth; }
-			internal override int MinimalHeight { get => _minHeight; }
+			internal override int MinimalWidth => _minWidth;
+			internal override int MinimalHeight => _minHeight;
 			int _minWidth, _minHeight;
 		}
 
@@ -243,7 +243,7 @@ namespace Au.Controls
 			public void Focus() { Show(true); }
 			#endregion
 
-			internal override bool IsTabbedPanel { get => this.ParentTab != null; }
+			internal override bool IsTabbedPanel => this.ParentTab != null;
 
 			internal override void InvalidateCaption()
 			{

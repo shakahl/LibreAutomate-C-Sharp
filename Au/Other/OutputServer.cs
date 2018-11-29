@@ -334,6 +334,7 @@ namespace Au.Util
 
 						if(_isGlobal) { //read messages from mailslot and add to _messages. Else messages are added directly to _messages.
 							while(Api.GetMailslotInfo(_mailslot, null, out var nextSize, out var msgCount) && msgCount > 0) {
+								//note: GetMailslotInfo makes Process Hacker show constant 24 B/s I/O total rate. Does not depend on period.
 								fixed (byte* b0 = Buffers.LibByte(nextSize + 4)) {
 									var b = b0; //+4 for "\r\n"
 									bool ok = Api.ReadFile(_mailslot, b, nextSize, out var readSize) && readSize == nextSize;

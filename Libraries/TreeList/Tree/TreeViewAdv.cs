@@ -45,7 +45,8 @@ namespace Aga.Controls.Tree
 
 		[Category("Action")]
 		public event ItemDragEventHandler ItemDrag;
-		private void OnItemDrag(MouseButtons buttons, object item)
+		//Au: made protected virtual. Why these functions are private?
+		protected virtual void OnItemDrag(MouseButtons buttons, object item)
 		{
 			if(ItemDrag != null)
 				ItemDrag(this, new ItemDragEventArgs(buttons, item));

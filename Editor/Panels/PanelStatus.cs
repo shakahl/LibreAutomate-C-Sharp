@@ -1,6 +1,4 @@
-﻿//#define MOUSE_INFO_FAST_RESPONSE
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -27,12 +25,6 @@ using Au.Controls;
 class PanelStatus :Control
 {
 	AuScintilla _c;
-	POINT _p;
-#if MOUSE_INFO_FAST_RESPONSE
-	Timer_ _timer;
-	bool _isMyTimer;
-	int _timerStopCounter;
-#endif
 
 	public PanelStatus()
 	{
@@ -53,10 +45,7 @@ class PanelStatus :Control
 
 		this.Controls.Add(_c);
 
-#if MOUSE_INFO_FAST_RESPONSE
-		_timer = new Timer_(_MouseInfo);
-#endif
-		Timer1s += _Program_Timer1s;
+		MousePosChangedWhenProgramVisible += _MouseInfo;
 	}
 
 	private void _c_HandleCreated(object sender, EventArgs e)
@@ -73,7 +62,7 @@ class PanelStatus :Control
 	protected override void Dispose(bool disposing)
 	{
 		//Print(disposing);
-		Program.Timer1s -= _Program_Timer1s;
+		MousePosChangedWhenProgramVisible -= _MouseInfo;
 		base.Dispose(disposing);
 	}
 
@@ -88,38 +77,8 @@ class PanelStatus :Control
 		_c.ST.SetText(text);
 	}
 
-	private void _Program_Timer1s()
+	unsafe void _MouseInfo(POINT p)
 	{
-#if MOUSE_INFO_FAST_RESPONSE
-		if(_isMyTimer) return;
-#endif
-		if(!Visible) return;
-		_MouseInfo(null);
-	}
-
-	unsafe void _MouseInfo(Timer_ timer)
-	{
-		var p = Mouse.XY;
-		bool noChange = p == _p;
-#if MOUSE_INFO_FAST_RESPONSE
-		if(noChange) {
-			if(_isMyTimer && ++_timerStopCounter >= 30) {
-				_timer.Stop();
-				_isMyTimer = false;
-				//Print("stop");
-			}
-		} else {
-			if(!_isMyTimer) {
-				_timer.Start(100, false);
-				_isMyTimer = true;
-				//Print("start");
-			}
-			_timerStopCounter = 0;
-		}
-#endif
-		if(noChange) return;
-		_p = p;
-
 		using(new Au.Util.LibStringBuilder(out var b, 1000)) {
 
 			b.Append(p.x).Append("\n").Append(p.y);

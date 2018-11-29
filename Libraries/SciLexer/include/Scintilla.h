@@ -1115,6 +1115,14 @@ struct Sci_AnnotationDrawCallbackData
 typedef int(__stdcall*Sci_AnnotationDrawCallback)(void* cbParam, Sci_AnnotationDrawCallbackData& c);
 #define SCI_SETANNOTATIONDRAWCALLBACK 9504
 #define SCI_ISXINMARGIN 9506
+#define SCI_DRAGDROP 9507
+struct Sci_DragDropData
+{
+	int x, y;
+	char* text;
+	int len;
+	int copy; //bool
+};
 //these not impl
 //#define SC_DOCUMENT_USERDATA_OFFSET 12
 //#define SC_DOCUMENT_USERDATA_SIZE 4

@@ -1,4 +1,4 @@
-#define ADMIN_TRIGGERS
+//#define ADMIN_TRIGGERS
 
 using System;
 using System.Collections.Generic;

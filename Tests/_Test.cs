@@ -23,6 +23,7 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using System.Collections.Concurrent;
 using System.Runtime.ExceptionServices;
+using System.Security.AccessControl;
 
 using Au;
 using static Au.NoClass;
@@ -294,8 +295,7 @@ static partial class Test
 					//File.WriteAllText(file, "TEXT"); //unsafe. Exception if the file is locked.
 					//File_.WaitIfLocked(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
 				}
-			}
-			catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
+			} catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
 		});
 
 		Task.Run(() => {
@@ -317,8 +317,7 @@ static partial class Test
 					//	f.WriteByte(1);
 					//}
 				}
-			}
-			catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
+			} catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
 		}).Wait();
 
 		Print("OK");
@@ -640,7 +639,7 @@ a1,-8";
 
 	#region test TreeBase
 
-	class TFile :Au.Util.TreeBase<TFile>
+	class TFile : Au.Util.TreeBase<TFile>
 	{
 		public string Name { get; set; }
 		public int Id { get; private set; }
@@ -766,7 +765,7 @@ a1,-8";
 	/* meta r System.Xml */
 	//using System.Xml;
 
-	class MyTree :Au.Util.TreeBase<MyTree>
+	class MyTree : Au.Util.TreeBase<MyTree>
 	{
 		public string Name { get; set; }
 		public int Id { get; private set; }
@@ -1012,8 +1011,8 @@ a1,-8";
 		}
 		Print("OK");
 	}
-	enum _ELong :long { Test = 123456789012 }
-	enum _EByte :byte { Test = 5 }
+	enum _ELong : long { Test = 123456789012 }
+	enum _EByte : byte { Test = 5 }
 
 	static void TestSqliteExamples()
 	{
@@ -1223,7 +1222,7 @@ a1,-8";
 		//Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin(@"Au", "test UAC 2", Folders.System + "cmd.exe");
 		Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin(@"Au", "test UAC", @"Q:\My QM\test_ts_UAC.exe", "test: $(Arg0)");
 #else
-		Print(Au.Util.LibTaskScheduler.TaskExists(@"\Au", "test UAC"));
+		//Print(Au.Util.LibTaskScheduler.TaskExists(@"\Au", "test UAC"));
 		//Print(Au.Util.LibTaskScheduler.RunTask(@"\Au", "test UAC", "moo"));
 
 		//Au.Util.LibTaskScheduler.RunTask(@"\Quick Macros", "test UAC"); //works
@@ -1241,6 +1240,10 @@ a1,-8";
 		//	Perf.NW();
 		//	Thread.Sleep(1000);
 		//}
+
+		var s = Folders.System + "notepad.exe";
+		//Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "High", UacIL.High, s);
+		Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "Medium", UacIL.Medium, s);
 	}
 
 	static void TestLibSerialize()
@@ -1254,6 +1257,91 @@ a1,-8";
 		Print((int)a[4]);
 	}
 
+	static void _SetDirectorySecurity(string path, bool secure)
+	{
+		var ds = Directory.GetAccessControl(path);
+
+		//disable or enable security inheritance
+		if(secure != ds.AreAccessRulesProtected) {
+			ds.SetAccessRuleProtection(secure, true);
+			Directory.SetAccessControl(path, ds);
+			if(secure) ds = Directory.GetAccessControl(path);
+		}
+		if(!secure) return;
+
+		var u = new NTAccount("G");
+		ds.PurgeAccessRules(u);
+		ds.AddAccessRule(new FileSystemAccessRule(u, FileSystemRights.ReadAndExecute, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+		Directory.SetAccessControl(path, ds);
+	}
+
+	static void TestFolderSecurity2()
+	{
+		//bool secure = false;
+
+		var path = Folders.Documents + @"Au\Secure";
+		if(Directory.Exists(path)) Directory.Delete(path);
+		Directory.CreateDirectory(path);
+
+		_SetDirectorySecurity(path, true);
+		return;
+
+		//var x = new DirectorySecurity(Folders.Documents + @"Au", AccessControlSections.All);
+		//x.RemoveAccessRule(new FileSystemAccessRule("G", FileSystemRights.Modify, AccessControlType.Allow));
+		//Directory.CreateDirectory(s, x);
+
+		var ds = Directory.GetAccessControl(path);
+
+		if(!ds.AreAccessRulesProtected) { //if security inherited from parent
+			ds.SetAccessRuleProtection(true, true); //disable inheritance
+			Directory.SetAccessControl(path, ds);
+			ds = Directory.GetAccessControl(path);
+		}
+
+		//var rules = ds.GetAccessRules(true, true, typeof(NTAccount));
+		//foreach(FileSystemAccessRule rule in rules) {
+		//	var k = rule.IdentityReference as NTAccount;
+		//	Print(k.Value);
+		//	//Print(rule.IdentityReference.Value);
+		//	//if(rule.IdentityReference.Value == @"Q7C\G")
+		//	//	ds.RemoveAccessRuleSpecific(rule);
+		//}
+
+		var u = new NTAccount("G");
+		ds.PurgeAccessRules(u);
+		ds.AddAccessRule(new FileSystemAccessRule(u, FileSystemRights.ReadAndExecute, InheritanceFlags.ContainerInherit | InheritanceFlags.ObjectInherit, PropagationFlags.None, AccessControlType.Allow));
+
+		Directory.SetAccessControl(path, ds);
+
+	}
+
+	static void TestFolderSecurity()
+	{
+		string path = Folders.ProgramFiles;
+		var ds = Directory.GetAccessControl(path);
+
+		var rules = ds.GetAccessRules(true, true, typeof(NTAccount));
+		foreach(FileSystemAccessRule rule in rules) {
+			var k = rule.IdentityReference as NTAccount;
+			Print(k.Value);
+			//Print(rule.IdentityReference.Value);
+			//if(rule.IdentityReference.Value == @"Q7C\G")
+			//	ds.RemoveAccessRuleSpecific(rule);
+		}
+
+	}
+
+	static void TestSerializeBytes()
+	{
+		var b = new byte[] { 1, 2, 3 };
+		var sa = new string[] { "one", null, "three" };
+		var x = Au.Util.LibSerializer.Serialize(5, b, sa, "text");
+		var a = Au.Util.LibSerializer.Deserialize(x);
+		int i = a[0]; Print(i);
+		byte[] c = a[1]; Print(c);
+		string[] sa2 = a[2]; Print(sa2);
+		string s = a[3]; Print(s);
+	}
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -1271,8 +1359,19 @@ a1,-8";
 		try {
 #if true
 
-			TestLibSerialize();
+
+			//TestSerializeBytes();
+
+			//var w = Wnd.Find("Portable*").OrThrow();
+			//var c = w.ChildById(3077).OrThrow();
+			//Print(c.IsEnabled, c.IsEnabledReally);
+
+			//var u = Uac.OfThisProcess;
+			//Print($"IsUacDisabled={Uac.IsUacDisabled}, IsAdmin={Uac.IsAdmin}, Elevation={u.Elevation}, IL={u.IntegrityLevel}, IsUIAccess={u.IsUIAccess}");
+
 			//TestUacTS();
+			//TestFolderSecurity();
+			//TestLibSerialize();
 			//TestThreadStart();
 			//TestEditAndContinue();
 			//TestDetectFileTextEncoding();
@@ -1323,8 +1422,7 @@ a1,-8";
 				Cpp.Cpp_Unload();
 			}
 #endif
-		}
-		catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
+		} catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
 
 	}
 }

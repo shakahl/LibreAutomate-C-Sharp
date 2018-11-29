@@ -279,7 +279,7 @@ namespace Au
 		/// </item>
 		/// <item>
 		/// "***wfName " - use .NET Windows Forms Control Name property.
-		/// To get it this function uses <see cref="Misc.WinFormsControlNames"/>. It is slower and can fail because of <see cref="Process_.UacInfo">UAC</see>.
+		/// To get it this function uses <see cref="Misc.WinFormsControlNames"/>. It is slower and can fail because of <see cref="Uac">UAC</see>.
 		/// </item>
 		/// <item>
 		/// "***id " (like "***id 15") - use control id.

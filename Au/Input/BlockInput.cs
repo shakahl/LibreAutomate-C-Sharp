@@ -28,7 +28,7 @@ namespace Au
 	/// Does not block:
 	/// <list type="bullet">
 	/// <item>In windows of the same thread that started blocking. For example, if your script shows a message box, the user can click its buttons.</item>
-	/// <item>In windows of higher <see cref="Process_.UacInfo">UAC</see> integrity level (IL) processes, unless this process has uiAccess IL.</item>
+	/// <item>In windows of higher <see cref="Uac">UAC</see> integrity level (IL) processes, unless this process has uiAccess IL.</item>
 	/// <item>In special screens such as when you press Ctrl+Alt+Delete or when you launch and admin program. See also <see cref="ResumeAfterCtrlAltDelete"/>.</item>
 	/// <item>Some Windows hotkeys, such as Ctrl+Alt+Delete and Win+L.</item>
 	/// <item><see cref="DoNotBlockKeys"/> keys.</item>
@@ -245,7 +245,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Continue blocking when returned from a special screen where blocking is disabled: Ctrl+Alt+Delete, <see cref="Process_.UacInfo">UAC</see> consent, etc.
+		/// Continue blocking when returned from a special screen where blocking is disabled: Ctrl+Alt+Delete, <see cref="Uac">UAC</see> consent, etc.
 		/// </summary>
 		public bool ResumeAfterCtrlAltDelete { get; set; }
 
@@ -253,7 +253,7 @@ namespace Au
 		/// Record blocked keys, and play back when stopped blocking.
 		/// </summary>
 		/// <remarks>
-		/// Will not play back if: 1. The blocking time is &gt;= 10 seconds. 2. Detected Ctrl+Alt+Delete, <see cref="Process_.UacInfo">UAC</see> consent or some other special screen. 3. Called <see cref="Pause"/>.
+		/// Will not play back if: 1. The blocking time is &gt;= 10 seconds. 2. Detected Ctrl+Alt+Delete, <see cref="Uac">UAC</see> consent or some other special screen. 3. Called <see cref="Pause"/>.
 		/// </remarks>
 		public bool ResendBlockedKeys { get; set; }
 

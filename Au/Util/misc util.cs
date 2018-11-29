@@ -133,10 +133,8 @@ namespace Au.Util
 		/// Gets the entry assembly of this appdomain.
 		/// Normally instead can be used <see cref="Assembly.GetEntryAssembly"/>, but it returns null if appdomain launched through <see cref="AppDomain.DoCallBack"/>.
 		/// </summary>
-		public static Assembly EntryAssembly
-		{
-			get
-			{
+		public static Assembly EntryAssembly {
+			get {
 				if(_appdomainAssembly == null) {
 					var asm = Assembly.GetEntryAssembly(); //fails if this domain launched through DoCallBack
 					if(asm == null) asm = AppDomain.CurrentDomain.GetAssemblies()[1]; //[0] is mscorlib, 1 should be our assembly
@@ -332,8 +330,7 @@ namespace Au.Util
 		/// If not set, it will look for resource where name ends with ".Resources.resources". If there is no such resources, uses the first.
 		/// To see embedded resource file names you can use this code: <c>Print(System.Reflection.Assembly.GetEntryAssembly().GetManifestResourceNames()</c>.
 		/// </summary>
-		public static string AppResourcesName
-		{
+		public static string AppResourcesName {
 			get => s_appResourcesName;
 			set { if(value != s_appResourcesName) { s_appResourcesName = value; _appResourceManager = null; } }
 		}
@@ -427,10 +424,8 @@ namespace Au.Util
 		/// Gets DPI of the primary screen.
 		/// On newer Windows versions, users can change DPI without logoff-logon. This function gets the setting that was after logon.
 		/// </summary>
-		public static int BaseDPI
-		{
-			get
-			{
+		public static int BaseDPI {
+			get {
 				if(_baseDPI == 0) {
 					using(var dcs = new LibScreenDC(0)) _baseDPI = Api.GetDeviceCaps(dcs, 90); //LOGPIXELSY
 				}
@@ -496,7 +491,7 @@ namespace Au.Util
 	/// More info: API <msdn>CreateWaitableTimer</msdn>.
 	/// Note: will need to dispose.
 	/// </summary>
-	public class WaitableTimer :WaitHandle
+	public class WaitableTimer : WaitHandle
 	{
 		WaitableTimer() { }
 
@@ -593,7 +588,7 @@ namespace Au.Util
 	/// Must be disposed.
 	/// Has static functions to open process handle.
 	/// </summary>
-	internal struct LibKernelHandle :IDisposable
+	internal struct LibKernelHandle : IDisposable
 	{
 		IntPtr _h;
 
@@ -654,7 +649,7 @@ namespace Au.Util
 			if(processWindow.Is0) return false;
 			if(0 != (desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE))) return false;
 			int e = Native.GetError();
-			if(Process_.UacInfo.ThisProcess.IsUIAccess) R = Api.GetProcessHandleFromHwnd(processWindow);
+			if(Uac.OfThisProcess.IsUIAccess) R = Api.GetProcessHandleFromHwnd(processWindow);
 			if(R != default) return true;
 			Api.SetLastError(e);
 			return false;
@@ -665,11 +660,11 @@ namespace Au.Util
 	/// Kernel handle that is derived from WaitHandle.
 	/// When don't need to wait, use <see cref="LibKernelHandle"/>, it's more lightweight and has more creation methods.
 	/// </summary>
-	internal class LibKernelWaitHandle :WaitHandle
+	internal class LibKernelWaitHandle : WaitHandle
 	{
-		public LibKernelWaitHandle(IntPtr nativeHandle, bool owndHandle)
+		public LibKernelWaitHandle(IntPtr nativeHandle, bool ownsHandle)
 		{
-			base.SafeWaitHandle = new SafeWaitHandle(nativeHandle, owndHandle);
+			base.SafeWaitHandle = new SafeWaitHandle(nativeHandle, ownsHandle);
 		}
 
 		/// <summary>
@@ -700,15 +695,15 @@ namespace Au.Util
 		/// <param name="enable"></param>
 		public static bool SetPrivilege(string privilegeName, bool enable)
 		{
-			Api.OpenProcessToken(Api.GetCurrentProcess(), Api.TOKEN_ADJUST_PRIVILEGES, out IntPtr hToken);
-			try {
-				var p = new Api.TOKEN_PRIVILEGES { PrivilegeCount = 1, Privileges = new Api.LUID_AND_ATTRIBUTES { Attributes = enable ? 2u : 0 } }; //SE_PRIVILEGE_ENABLED
-				if(!Api.LookupPrivilegeValue(null, privilegeName, out p.Privileges.Luid)) return false;
+			bool ok = false;
+			var p = new Api.TOKEN_PRIVILEGES { PrivilegeCount = 1, Privileges = new Api.LUID_AND_ATTRIBUTES { Attributes = enable ? 2u : 0 } }; //SE_PRIVILEGE_ENABLED
+			if(Api.LookupPrivilegeValue(null, privilegeName, out p.Privileges.Luid)) {
+				Api.OpenProcessToken(Api.GetCurrentProcess(), Api.TOKEN_ADJUST_PRIVILEGES, out IntPtr hToken);
 				Api.AdjustTokenPrivileges(hToken, false, p, 0, null, default);
-				if(0 != Native.GetError()) return false;
+				ok = 0 == Native.GetError();
+				Api.CloseHandle(hToken);
 			}
-			finally { Api.CloseHandle(hToken); }
-			return true;
+			return ok;
 		}
 	}
 
@@ -716,7 +711,7 @@ namespace Au.Util
 	/// Calls API <msdn>AttachThreadInput</msdn> to attach/detach thread input.
 	/// Constructor attaches thread input of this thread to that of the specified thread. <b>Dispose</b> detaches.
 	/// </summary>
-	internal struct LibAttachThreadInput :IDisposable
+	internal struct LibAttachThreadInput : IDisposable
 	{
 		int _tidThis, _tidAttach;
 
@@ -844,20 +839,20 @@ namespace Au.Util
 
 	internal static class LibTaskScheduler
 	{
-		static string _UserSidString => WindowsIdentity.GetCurrent().User.ToString();
-		static string _UserSddlString => "D:AI(A;;FA;;;SY)(A;;FA;;;BA)(A;;FA;;;" + _UserSidString + ")";
-		static string c_allUsersSddlString = "D:AI(A;;FA;;;SY)(A;;FA;;;BA)(A;;FA;;;BU)";
+		static string _SidCurrentUser => WindowsIdentity.GetCurrent().User.ToString();
+		static string _SddlCurrentUserReadExecute => "D:AI(A;;FA;;;SY)(A;;FA;;;BA)(A;;GRGX;;;" + _SidCurrentUser + ")";
+		static string c_sddlEveryoneReadExecute = "D:AI(A;;FA;;;SY)(A;;FA;;;BA)(A;;GRGX;;;WD)";
 
-		static Api.ITaskFolder _GetOrCreateFolder(Api.ITaskService ts, string taskFolder)
+		static Api.ITaskFolder _GetOrCreateFolder(Api.ITaskService ts, string taskFolder, out bool createdNew)
 		{
 			Api.ITaskFolder tf;
-			try { tf = ts.GetFolder(taskFolder); }
-			catch(FileNotFoundException) { tf = ts.GetFolder(null).CreateFolder(taskFolder, c_allUsersSddlString); }
+			try { tf = ts.GetFolder(taskFolder); createdNew = false; }
+			catch(FileNotFoundException) { tf = ts.GetFolder(null).CreateFolder(taskFolder, c_sddlEveryoneReadExecute); createdNew = true; }
 			return tf;
 		}
 
 		/// <summary>
-		/// Creates or updates a trigerless task that executes a program as administrator.
+		/// Creates or updates a trigerless task that executes a program as system, admin or user.
 		/// This process must be admin.
 		/// You can use <see cref="RunTask"/> to run the task.
 		/// </summary>
@@ -867,11 +862,14 @@ namespace Au.Util
 		/// </param>
 		/// <param name="taskName"><inheritdoc cref="RunTask"/></param>
 		/// <param name="programFile">Full path of an exe file. This function does not normalize it.</param>
+		/// <param name="IL">Can be System, High or Medium. If System, runs in SYSTEM account. Else in creator's account.</param>
 		/// <param name="args">Command line arguments. Can contain literal substrings $(Arg0), $(Arg1), ..., $(Arg32) that will be replaced by <see cref="RunTask"/>.</param>
 		/// <exception cref="UnauthorizedAccessException">Probably because this process is not admin.</exception>
 		/// <exception cref="Exception"></exception>
-		public static void CreateTaskToRunProgramAsAdmin(string taskFolder, string taskName, string programFile, string args = null)
+		public static void CreateTaskToRunProgramOnDemand(string taskFolder, string taskName, UacIL IL, string programFile, string args = null)
 		{
+			var userId = IL == UacIL.System ? "<UserId>S-1-5-18</UserId>" : null;
+			var runLevel = IL == UacIL.High ? "<RunLevel>HighestAvailable</RunLevel>" : null;
 			var xml =
 $@"<?xml version='1.0' encoding='UTF-16'?>
 <Task version='1.3' xmlns='http://schemas.microsoft.com/windows/2004/02/mit/task'>
@@ -882,11 +880,13 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 
 <Principals>
 <Principal id='Author'>
-<RunLevel>HighestAvailable</RunLevel>
+{userId}
+{runLevel}
 </Principal>
 </Principals>
 
 <Settings>
+<MultipleInstancesPolicy>Parallel</MultipleInstancesPolicy>
 <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
 <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
 <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
@@ -903,8 +903,14 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 </Task>";
 			var ts = new Api.TaskScheduler() as Api.ITaskService;
 			ts.Connect();
-			var tf = _GetOrCreateFolder(ts, taskFolder);
-			tf.RegisterTask(taskName, xml, Api.TASK_CREATION.TASK_CREATE_OR_UPDATE, null, null, Api.TASK_LOGON_TYPE.TASK_LOGON_INTERACTIVE_TOKEN, _UserSddlString);
+			var tf = _GetOrCreateFolder(ts, taskFolder, out bool createdNew);
+			if(!createdNew) tf.DeleteTask(taskName, 0); //we use DeleteTask/TASK_CREATE, because TASK_CREATE_OR_UPDATE does not update task file's security
+			var logonType = IL == UacIL.System ? Api.TASK_LOGON_TYPE.TASK_LOGON_SERVICE_ACCOUNT : Api.TASK_LOGON_TYPE.TASK_LOGON_INTERACTIVE_TOKEN;
+			var sddl = IL == UacIL.System ? c_sddlEveryoneReadExecute : _SddlCurrentUserReadExecute;
+			tf.RegisterTask(taskName, xml, Api.TASK_CREATION.TASK_CREATE, null, null, logonType, sddl);
+
+			//note: cannot create a task that runs only in current interactive session, regardless of user.
+			//	Tried INTERACTIVE: userId "S-1-5-4", logonType TASK_LOGON_GROUP. But then runs in all logged in sessions.
 		}
 
 		/// <summary>
@@ -913,14 +919,15 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 		/// </summary>
 		/// <param name="taskFolder">Can be like @"\Folder" or "Folder" or @"\" or "" or null.</param>
 		/// <param name="taskName">Can be like "Name" or @"\Folder\Name" or @"Folder\Name".</param>
+		/// <param name="joinArgs">Join args into single arg for $(Arg0).</param>
 		/// <param name="args">Replacement values for substrings $(Arg0), $(Arg1), ..., $(Arg32) in 'create task' args. See <msdn>IRegisteredTask.Run</msdn>.</param>
 		/// <exception cref="Exception">Failed. Probably the task does not exist.</exception>
-		public static int RunTask(string taskFolder, string taskName, params string[] args)
+		public static int RunTask(string taskFolder, string taskName, bool joinArgs, params string[] args)
 		{
-			if(Empty(args)) args = null;
+			object a; if(Empty(args)) a = null; else if(joinArgs) a = StringMisc.CommandLineFromArray(args); else a = args;
 			var ts = new Api.TaskScheduler() as Api.ITaskService;
 			ts.Connect();
-			var rt = ts.GetFolder(taskFolder).GetTask(taskName).Run(args);
+			var rt = ts.GetFolder(taskFolder).GetTask(taskName).Run(a);
 			rt.get_EnginePID(out int pid);
 			return pid;
 		}

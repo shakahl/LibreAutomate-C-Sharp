@@ -803,10 +803,15 @@
             SCI_GOTOLINE and ensures visible.
             </summary>
         </member>
+        <member name="P:Au.Controls.SciText.IsReadonly">
+            <summary>
+            SCI_GETREADONLY.
+            </summary>
+        </member>
         <member name="M:Au.Controls.SciText.FileLoaderSaver.Load(System.String)">
             <summary>
             Loads file as UTF-8.
-            Returns byte[] that must be pased to <see cref="M:Au.Controls.SciText.FileLoaderSaver.SetText(Au.Controls.SciText,System.Byte[])"/>.
+            Returns byte[] that must be passed to <see cref="M:Au.Controls.SciText.FileLoaderSaver.SetText(Au.Controls.SciText,System.Byte[])"/>.
             </summary>
             <param name="file">To pass to File.OpenRead.</param>
             <exception cref="T:System.Exception">Exceptions of File.OpenRead, File.Read, Encoding.Convert.</exception>

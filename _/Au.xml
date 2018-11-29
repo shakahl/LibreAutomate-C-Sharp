@@ -122,7 +122,7 @@
             <summary>
             Search without loading dll into the target process.
             Disadvantages: 1. Much slower. 2. Some properties are not supported, for example HTML attributes (while searching and later). 3. And more.
-            Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level, Firefox web page if its multiprocess feature is not disabled.
+            Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher <see cref="T:Au.Uac">UAC</see> integrity level, Firefox web page if its multiprocess feature is not disabled.
             Some windows have child controls that belong to a different process or thread than the window. Example - Internet Explorer. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control(s) and search in it/them. For it can be used one of: 1. With Internet Explorer use role prefix "web:". 2. Find the control with <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/> and search in it. 3. Use <see cref="M:Au.Acc.Finder.Find(Au.Wnd,Au.Wnd.ChildFinder)"/>.
             Don't need this flag when searching in Acc (then it is inherited from the Acc variable).
             See also: <see cref="P:Au.Acc.MiscFlags"/>.
@@ -534,14 +534,14 @@
         <member name="T:Au.Types.UacIL">
             <summary>
             UAC integrity level.
-            See <see cref="P:Au.Process_.UacInfo.IntegrityLevel"/>.
+            See <see cref="P:Au.Uac.IntegrityLevel"/>.
             </summary>
         </member>
         <member name="F:Au.Types.UacIL.Untrusted">
-            <summary>The most limited rights. Very rare.</summary>
+            <summary>The most limited rights. Rare.</summary>
         </member>
         <member name="F:Au.Types.UacIL.Low">
-            <summary>Very limited rights. Used by Internet Explorer tab processes, Windows Store apps.</summary>
+            <summary>Very limited rights. Used by web browser tab processes, Windows Store apps.</summary>
         </member>
         <member name="F:Au.Types.UacIL.Medium">
             <summary>Limited rights. Most processes (unless UAC turned off).</summary>
@@ -560,6 +560,26 @@
         </member>
         <member name="F:Au.Types.UacIL.Unknown">
             <summary>Failed to get IL. Unlikely.</summary>
+        </member>
+        <member name="T:Au.Types.UacElevation">
+            <summary>
+            <see cref="P:Au.Uac.Elevation"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.UacElevation.Unknown">
+            <summary>Failed to get. Normally it never happens.</summary>
+        </member>
+        <member name="F:Au.Types.UacElevation.Default">
+            <summary>
+            Processes in this user session cannot be elevated.
+            Can be: non-administrator user session (processes have limited rights); service session (processes have all rights); UAC is turned off (most processes have administrator rights).
+            </summary>
+        </member>
+        <member name="F:Au.Types.UacElevation.Full">
+            <summary>Runs as administrator (High or System integrity level), and UAC is not turned off. Also known as "elevated".</summary>
+        </member>
+        <member name="F:Au.Types.UacElevation.Limited">
+            <summary>Runs as standard user (Medium, UIAccess or Low integrity level) in administrator user session (because of UAC).</summary>
         </member>
         <member name="T:Au.Types.SLTransaction">
             <summary>
@@ -4627,7 +4647,7 @@
             Uses API <msdn>EnumPropsEx</msdn>.
             </summary>
             <remarks>
-            Returns 0-length list if fails. Fails if invalid window or access denied (<see cref="T:Au.Process_.UacInfo">UAC</see>). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns 0-length list if fails. Fails if invalid window or access denied (<see cref="T:Au.Uac">UAC</see>). Supports <see cref="M:Au.Types.Native.GetError"/>.
             </remarks>
         </member>
         <member name="M:Au.Types.WProp.ToString">
@@ -5604,7 +5624,7 @@
             Using flag <see cref="F:Au.Types.AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
             </exception>
             <exception cref="T:Au.Types.WndException">Invalid window.</exception>
-            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Uac">UAC</see> integrity level process.</exception>
         </member>
         <member name="M:Au.Acc.Finder.Find(Au.Acc)">
             <summary>
@@ -5620,7 +5640,7 @@
             Using flag <see cref="F:Au.Types.AFFlags.UIA"/>.
             <see cref="P:Au.Acc.SimpleElementId"/> is not 0.
             </exception>
-            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Uac">UAC</see> integrity level process.</exception>
         </member>
         <member name="M:Au.Acc.Finder.Wait(System.Double,Au.Wnd)">
             <summary>
@@ -5774,7 +5794,7 @@
              Using flag <see cref="F:Au.Types.AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
              </exception>
              <exception cref="T:Au.Types.WndException">Invalid window (if the function has parameter <paramref name="w"/>).</exception>
-             <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
+             <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Uac">UAC</see> integrity level process.</exception>
              <remarks>
              To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.Form_Acc</b> in Au.Tools.dll.
              
@@ -5942,7 +5962,7 @@
             <param name="objid">Window part id. Default AccOBJID.WINDOW. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
             <param name="flags">Flags.</param>
             <exception cref="T:Au.Types.WndException">Invalid window.</exception>
-            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Uac">UAC</see> integrity level process.</exception>
             <exception cref="T:System.ArgumentException"><paramref name="objid"/> is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
         </member>
         <member name="M:Au.Acc.FromXY(Au.Types.POINT,Au.Types.AXYFlags)">
@@ -5954,7 +5974,7 @@
             Tip: When need coordinates relative to another screen or/and the work area, use <see cref="M:Au.Types.Coord.Normalize(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.Types.Screen_,System.Boolean,System.Boolean)"/> or tuple (x, y, workArea) etc. Example: <c>var a = Acc.FromXY((x, y, true));</c>. Also when need <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.
             </param>
             <param name="flags"></param>
-            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Uac">UAC</see> integrity level process.</exception>
             <remarks>
             Uses API <msdn>AccessibleObjectFromPoint</msdn>.
             </remarks>
@@ -5965,7 +5985,7 @@
             Uses API <msdn>AccessibleObjectFromPoint</msdn>.
             </summary>
             <param name="flags"></param>
-            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level process.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher <see cref="T:Au.Uac">UAC</see> integrity level process.</exception>
         </member>
         <member name="M:Au.Acc.Focused(System.Boolean)">
             <summary>
@@ -6039,23 +6059,18 @@
             ]]></code>
             </example>
         </member>
-        <member name="T:Au.Process_">
-            <summary>
-            Process functions. Extends <see cref="T:System.Diagnostics.Process"/>.
-            </summary>
-        </member>
-        <member name="T:Au.Process_.UacInfo">
+        <member name="T:Au.Uac">
             <summary>
             Holds an access token (security info) of a process and provides various security info, eg UAC integrity level.
             </summary>
         </member>
-        <member name="M:Au.Process_.UacInfo.Finalize">
+        <member name="M:Au.Uac.Finalize">
             
         </member>
-        <member name="M:Au.Process_.UacInfo.Dispose">
+        <member name="M:Au.Uac.Dispose">
             
         </member>
-        <member name="P:Au.Process_.UacInfo.UnsafeTokenHandle">
+        <member name="P:Au.Uac.UnsafeTokenHandle">
             <summary>
             The access token handle.
             </summary>
@@ -6063,49 +6078,31 @@
             The handle is managed by this variable and will be closed when disposing or GC-collecting it. Use <see cref="M:System.GC.KeepAlive(System.Object)"/> where need.
             </remarks>
         </member>
-        <member name="P:Au.Process_.UacInfo.Failed">
+        <member name="P:Au.Uac.Failed">
             <summary>
             Returns true if the last called property function failed.
-            Normally it should never fail. Only <see cref="M:Au.Process_.UacInfo.GetOfProcess(System.Int32)"/> can fail (then it returns null).
+            Normally it should never fail. Only <see cref="M:Au.Uac.OfProcess(System.Int32)"/> can fail (then it returns null).
             </summary>
         </member>
-        <member name="T:Au.Process_.UacInfo.ElevationType">
+        <member name="P:Au.Uac.Elevation">
             <summary>
-            <see cref="P:Au.Process_.UacInfo.Elevation"/>.
+            Gets the <see cref="T:Au.Uac">UAC</see> elevation type of the process.
             </summary>
         </member>
-        <member name="F:Au.Process_.UacInfo.ElevationType.Unknown">
-            <summary>Failed to get. Normally it never happens; only <see cref="M:Au.Process_.UacInfo.GetOfProcess(System.Int32)"/> can fail (then it returns null).</summary>
-        </member>
-        <member name="F:Au.Process_.UacInfo.ElevationType.Default">
-            <summary>All processes in this user session run as admin, or all as standard user. Can be: non-administrator user session; service session; UAC is turned off.</summary>
-        </member>
-        <member name="F:Au.Process_.UacInfo.ElevationType.Full">
-            <summary>Runs as administrator (High or System integrity level).</summary>
-        </member>
-        <member name="F:Au.Process_.UacInfo.ElevationType.Limited">
-            <summary>Runs as standard user (Medium, UIAccess or Low integrity level) in administrator user session.</summary>
-        </member>
-        <member name="P:Au.Process_.UacInfo.Elevation">
+        <member name="P:Au.Uac.IsUIAccess">
             <summary>
-            Gets the <see cref="T:Au.Process_.UacInfo">UAC</see> elevation type of the process.
-            This property is rarely useful. Use other properties of this class.
-            </summary>
-        </member>
-        <member name="P:Au.Process_.UacInfo.IsUIAccess">
-            <summary>
-            Returns true if the process has <see cref="T:Au.Process_.UacInfo">uiAccess</see> property.
+            Returns true if the process has <see cref="T:Au.Uac">uiAccess</see> property.
             A uiAccess process can access/automate all windows of processes running in the same user session.
             </summary>
             <remarks>
             Most processes don't have this property. They cannot access/automate windows of higher integrity level (High, System, uiAccess) processes and Windows 8 store apps. For example, cannot send keys and Windows messages.
-            Note: High IL (admin) processes also can have this property, therefore <c>IsUIAccess</c> is not the same as <c>IntegrityLevel==IL.UIAccess</c> (<see cref="P:Au.Process_.UacInfo.IntegrityLevel"/> returns <b>UIAccess</b> only for Medium+uiAccess processes; for High+uiAccess processes it returns <b>High</b>). Some Windows API work slightly differently with uiAccess and non-uiAccess admin processes.
+            Note: High IL (admin) processes also can have this property, therefore <c>IsUIAccess</c> is not the same as <c>IntegrityLevel==IL.UIAccess</c> (<see cref="P:Au.Uac.IntegrityLevel"/> returns <b>UIAccess</b> only for Medium+uiAccess processes; for High+uiAccess processes it returns <b>High</b>). Some Windows API work slightly differently with uiAccess and non-uiAccess admin processes.
             This property is rarely useful. Instead use other properties of this class.
             </remarks>
         </member>
-        <member name="P:Au.Process_.UacInfo.IntegrityLevel">
+        <member name="P:Au.Uac.IntegrityLevel">
             <summary>
-            Gets the <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level (IL) of the process.
+            Gets the <see cref="T:Au.Uac">UAC</see> integrity level (IL) of the process.
             </summary>
             <remarks>
             IL from lowest to highest value: Untrusted, Low, Medium, UIAccess, High, System, Protected, Unknown.
@@ -6113,29 +6110,33 @@
             If UAC is turned off, most non-service processes on administrator account have High IL; on non-administrator - Medium.
             </remarks>
         </member>
-        <member name="M:Au.Process_.UacInfo.GetOfProcess(System.Int32)">
+        <member name="M:Au.Uac.OfProcess(System.Int32)">
             <summary>
-            Opens process access token and creates/returns new <see cref="T:Au.Process_.UacInfo"/> variable that holds it. Then you can use its properties.
+            Opens process access token and creates/returns new <see cref="T:Au.Uac"/> variable that holds it. Then you can use its properties.
             Returns null if failed. For example fails for services and some other processes if current process is not administrator.
-            To get <b>UacInfo</b> of this process, instead use <see cref="P:Au.Process_.UacInfo.ThisProcess"/>.
+            To get <b>Uac</b> of this process, use <see cref="P:Au.Uac.OfThisProcess"/>.
             </summary>
             <param name="processId">Process id. If you have a window, use <see cref="P:Au.Wnd.ProcessId"/>.</param>
         </member>
-        <member name="P:Au.Process_.UacInfo.ThisProcess">
+        <member name="P:Au.Uac.OfThisProcess">
             <summary>
-            Gets <see cref="T:Au.Process_.UacInfo"/> variable for this process.
+            Gets <see cref="T:Au.Uac"/> variable for this process.
             </summary>
         </member>
-        <member name="P:Au.Process_.UacInfo.IsAdmin">
+        <member name="P:Au.Uac.IsAdmin">
             <summary>
-            Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by <see cref="T:Au.Process_.UacInfo">UAC</see>.
+            Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by <see cref="T:Au.Uac">UAC</see>.
             This function for example can be used to check whether you can write to protected locations in the file system and registry.
             </summary>
         </member>
-        <member name="P:Au.Process_.UacInfo.IsUacDisabled">
+        <member name="P:Au.Uac.IsUacDisabled">
             <summary>
-            Returns true if <see cref="T:Au.Process_.UacInfo">UAC</see> is disabled (turned off) on this Windows 7 computer.
-            On Windows 8 and 10 UAC cannot be disabled, although you can disable UAC elevation consent dialogs.
+            Returns true if <see cref="T:Au.Uac">UAC</see> is disabled (turned off) completely (not just disabled UAC consent screeen/dialog).
+            </summary>
+        </member>
+        <member name="T:Au.Process_">
+            <summary>
+            Process functions. Extends <see cref="T:System.Diagnostics.Process"/>.
             </summary>
         </member>
         <member name="T:Au.Process_.Memory">
@@ -6185,7 +6186,7 @@
             </summary>
             <param name="w">A window in that process.</param>
             <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-            <remarks>This is the preferred constructor when the process has windows. It works with windows of <see cref="T:Au.Process_.UacInfo">UAC</see> High integrity level when this process is Medium+uiAccess.</remarks>
+            <remarks>This is the preferred constructor when the process has windows. It works with windows of <see cref="T:Au.Uac">UAC</see> High integrity level when this process is Medium+uiAccess.</remarks>
             <exception cref="T:Au.Types.WndException">w invalid.</exception>
             <exception cref="T:Au.Types.AuException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
         </member>
@@ -6195,7 +6196,7 @@
             </summary>
             <param name="processId">Process id.</param>
             <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-            <exception cref="T:Au.Types.AuException">Failed to open process handle (usually because of <see cref="T:Au.Process_.UacInfo">UAC</see>) or allocate memory.</exception>
+            <exception cref="T:Au.Types.AuException">Failed to open process handle (usually because of <see cref="T:Au.Uac">UAC</see>) or allocate memory.</exception>
         </member>
         <member name="M:Au.Process_.Memory.WriteUnicodeString(System.String,System.Int32)">
             <summary>
@@ -6424,7 +6425,7 @@
         </member>
         <member name="M:Au.Process_.LibStartUserIL(System.String,System.String,System.String,Au.Process_.StartResult.Need)">
             <summary>
-            Starts UAC Medium integrity level process from this admin process.
+            Starts UAC Medium integrity level (IL) process from this admin process.
             </summary>
             <param name="exeFile">Full path of program file, or filename/relative in <see cref="P:Au.Folders.ThisApp"/>. Uses <see cref="M:Au.Path_.Normalize(System.String,System.String,Au.Types.PNFlags)"/>.</param>
             <param name="args">null or command line arguments.</param>
@@ -6432,8 +6433,9 @@
             <param name="need">Which field to set in <b>StartResult</b>.</param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
-            Asserts and fails if this is not admin/system process. Caller should at first call Process_.UacInfo.IsAdmin or Process_.UacInfo.ThisProcess.IntegrityLevel.
+            Actually the process will have the same IL and user session as the shell process (normally explorer).
             Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
+            Asserts and fails if this is not admin/system process. Caller should at first call <see cref="P:Au.Uac.IsAdmin"/> or <see cref="P:Au.Uac.IntegrityLevel"/>.
             </remarks>
         </member>
         <member name="T:Au.Process_.StartResult">
@@ -7315,6 +7317,14 @@
             </summary>
             <value>The length.</value>
         </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
+        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -7406,7 +7416,7 @@
         </member>
         <member name="M:Au.Util.StringMisc.CommandLineFromArray(System.String[])">
             <summary>
-            Converts array of command line arguments to string that can be passed to functions like <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.SRFlags,Au.Types.SRMore)"/> or <see cref="M:System.Diagnostics.Process.Start"/>.
+            Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.SRFlags,Au.Types.SRMore)"/>, <see cref="M:System.Diagnostics.Process.Start"/>.
             Returns null if a is null or has 0 elements.
             </summary>
             <param name="a"></param>
@@ -8860,7 +8870,7 @@
         </member>
         <member name="T:Au.Util.LibSerializer">
             <summary>
-            Binary-serializes and deserializes multiple values of types int, string, string[] and null.
+            Binary-serializes and deserializes multiple values of types int, string, string[], byte[] and null.
             Much faster than BinaryFormatter, CSV, etc.
             </summary>
         </member>
@@ -9341,29 +9351,31 @@
             Returns true if AttachThreadInput succeeded and this variable is not disposed.
             </summary>
         </member>
-        <member name="M:Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin(System.String,System.String,System.String,System.String)">
+        <member name="M:Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand(System.String,System.String,Au.Types.UacIL,System.String,System.String)">
             <summary>
-            Creates or updates a trigerless task that executes a program as administrator.
+            Creates or updates a trigerless task that executes a program as system, admin or user.
             This process must be admin.
-            You can use <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/> to run the task.
+            You can use <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/> to run the task.
             </summary>
             <param name="taskFolder">
-            <inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/>
+            <inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>
             This function creates the folder (and ancestors) if does not exist.
             </param>
-            <param name="taskName"><inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/></param>
+            <param name="taskName"><inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/></param>
             <param name="programFile">Full path of an exe file. This function does not normalize it.</param>
-            <param name="args">Command line arguments. Can contain literal substrings $(Arg0), $(Arg1), ..., $(Arg32) that will be replaced by <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/>.</param>
+            <param name="IL">Can be System, High or Medium. If System, runs in SYSTEM account. Else in creator's account.</param>
+            <param name="args">Command line arguments. Can contain literal substrings $(Arg0), $(Arg1), ..., $(Arg32) that will be replaced by <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
             <exception cref="T:System.UnauthorizedAccessException">Probably because this process is not admin.</exception>
             <exception cref="T:System.Exception"></exception>
         </member>
-        <member name="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])">
+        <member name="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])">
             <summary>
             Runs a task. Does not wait.
             Returns process id.
             </summary>
             <param name="taskFolder">Can be like @"\Folder" or "Folder" or @"\" or "" or null.</param>
             <param name="taskName">Can be like "Name" or @"\Folder\Name" or @"Folder\Name".</param>
+            <param name="joinArgs">Join args into single arg for $(Arg0).</param>
             <param name="args">Replacement values for substrings $(Arg0), $(Arg1), ..., $(Arg32) in 'create task' args. See <msdn>IRegisteredTask.Run</msdn>.</param>
             <exception cref="T:System.Exception">Failed. Probably the task does not exist.</exception>
         </member>
@@ -9371,8 +9383,8 @@
             <summary>
             Returns true if the task exists.
             </summary>
-            <param name="taskFolder"><inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/></param>
-            <param name="taskName"><inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.String[])"/></param>
+            <param name="taskFolder"><inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/></param>
+            <param name="taskName"><inheritdoc cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/></param>
             <exception cref="T:System.Exception">Failed.</exception>
         </member>
         <member name="M:Au.Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc">
@@ -9456,7 +9468,7 @@
             Does not block:
             <list type="bullet">
             <item>In windows of the same thread that started blocking. For example, if your script shows a message box, the user can click its buttons.</item>
-            <item>In windows of higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level (IL) processes, unless this process has uiAccess IL.</item>
+            <item>In windows of higher <see cref="T:Au.Uac">UAC</see> integrity level (IL) processes, unless this process has uiAccess IL.</item>
             <item>In special screens such as when you press Ctrl+Alt+Delete or when you launch and admin program. See also <see cref="P:Au.BlockUserInput.ResumeAfterCtrlAltDelete"/>.</item>
             <item>Some Windows hotkeys, such as Ctrl+Alt+Delete and Win+L.</item>
             <item><see cref="P:Au.BlockUserInput.DoNotBlockKeys"/> keys.</item>
@@ -9511,7 +9523,7 @@
         </member>
         <member name="P:Au.BlockUserInput.ResumeAfterCtrlAltDelete">
             <summary>
-            Continue blocking when returned from a special screen where blocking is disabled: Ctrl+Alt+Delete, <see cref="T:Au.Process_.UacInfo">UAC</see> consent, etc.
+            Continue blocking when returned from a special screen where blocking is disabled: Ctrl+Alt+Delete, <see cref="T:Au.Uac">UAC</see> consent, etc.
             </summary>
         </member>
         <member name="P:Au.BlockUserInput.ResendBlockedKeys">
@@ -9519,7 +9531,7 @@
             Record blocked keys, and play back when stopped blocking.
             </summary>
             <remarks>
-            Will not play back if: 1. The blocking time is &gt;= 10 seconds. 2. Detected Ctrl+Alt+Delete, <see cref="T:Au.Process_.UacInfo">UAC</see> consent or some other special screen. 3. Called <see cref="P:Au.BlockUserInput.Pause"/>.
+            Will not play back if: 1. The blocking time is &gt;= 10 seconds. 2. Detected Ctrl+Alt+Delete, <see cref="T:Au.Uac">UAC</see> consent or some other special screen. 3. Called <see cref="P:Au.BlockUserInput.Pause"/>.
             </remarks>
         </member>
         <member name="P:Au.BlockUserInput.DoNotBlockInjectedExtraInfo">
@@ -10884,7 +10896,7 @@
             
             This function should not be used to automate windows of own thread. In most cases it works, but strange problems are possible, because while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. See the last example.
             
-            Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See <see cref="T:Au.Process_.UacInfo">UAC</see>.
+            Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See <see cref="T:Au.Uac">UAC</see>.
             
             The mouse button codes/names (eg <see cref="F:Au.Types.KKey.MouseLeft"/>) cannot be used to click. For it can be used callback, like in the "Ctrl+click" example.
             </remarks>
@@ -14027,7 +14039,7 @@
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
             If the directory already exists, this function does nothing, and returns false.
-            Else, at first it creates missing parent/ancestor directories, then creates the specified (path) directory.
+            Else, at first it creates missing parent/ancestor directories, then creates the specified directory.
             To create the specified directory, calls API <msdn>CreateDirectory</msdn> or <msdn>CreateDirectoryEx</msdn> (if templateDirectory is not null).
             </remarks>
         </member>
@@ -14175,17 +14187,20 @@
         </member>
         <member name="T:Au.Shell.Pidl">
             <summary>
-            Manages an ITEMIDLIST structure that is used with shell API to identify files and other shell objects. Like a file-system path, but not string.
+            Manages an ITEMIDLIST structure that is used with shell API to identify files and other shell objects instead of a file-system path.
             </summary>
             <remarks>
-            When calling shell API, virtual objects can be identified only by ITEMIDLIST. Some API also support "parsing name", which usually looks like "::{CLSID-1}\::{CLSID-2}". File-system objects can be identified by path as well as by ITEMIDLIST. URLs can be identified by URL as well as by ITEMIDLIST.
+            Wraps an ITEMIDLIST*, also known as PIDL or LPITEMIDLIST. In C# it is IntPtr.
+            When calling shell API, virtual objects can be identified only by ITEMIDLIST*. Some API also support "parsing name", which may look like "::{CLSID-1}\::{CLSID-2}". File-system objects can be identified by path as well as by ITEMIDLIST*. URLs can be identified by URL as well as by ITEMIDLIST*.
             
-            The ITEMIDLIST structure is in unmanaged memory, therefore this class implements IDisposable.
+            The ITEMIDLIST structure is in unmanaged memory. You should always dispose Pidl variables.
+            
+            This class has only ITEMIDLIST functions that are used in this library. Look for other functions in the MSDN library. Many of them are named with IL prefix, like ILClone, ILGetSize, ILFindLastID.
             </remarks>
         </member>
         <member name="P:Au.Shell.Pidl.UnsafePtr">
             <summary>
-            Gets the ITEMIDLIST pointer (PIDL).
+            Gets the ITEMIDLIST* (PIDL).
             </summary>
             <remarks>
             The ITEMIDLIST memory is managed by this variable and will be freed when disposing or GC-collecting it. Use <see cref="M:System.GC.KeepAlive(System.Object)"/> where need.
@@ -14193,7 +14208,7 @@
         </member>
         <member name="P:Au.Shell.Pidl.HandleRef">
             <summary>
-            Gets the ITEMIDLIST pointer (PIDL).
+            Gets the ITEMIDLIST* (PIDL).
             </summary>
             <remarks>
             Use to pass to API where the parameter type is HandlePtr. It is safer than <see cref="P:Au.Shell.Pidl.UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
@@ -14209,10 +14224,20 @@
             Assigns an ITEMIDLIST to this variable.
             </summary>
             <param name="pidl">
-            ITEMIDLIST pointer (PIDL).
+            ITEMIDLIST* (PIDL).
             It can be created by any API that creates ITEMIDLIST. They allocate the memory with API CoTaskMemAlloc.
             This variable will finally free it with Marshal.FreeCoTaskMem.
             </param>
+        </member>
+        <member name="M:Au.Shell.Pidl.#ctor(System.IntPtr,System.IntPtr)">
+            <summary>
+            Combines two ITEMIDLIST (parent and child) and assigns the result to this variable.
+            </summary>
+            <param name="pidlAbsolute">Absolute PIDL (parent folder).</param>
+            <param name="pidlRelative">Relative PIDL (child object).</param>
+            <remarks>
+            Does not free <paramref name="pidlAbsolute"/> and <paramref name="pidlRelative"/>.
+            </remarks>
         </member>
         <member name="M:Au.Shell.Pidl.Dispose">
             <summary>
@@ -14243,7 +14268,7 @@
         </member>
         <member name="M:Au.Shell.Pidl.LibFromString(System.String,System.Boolean)">
             <summary>
-            The same as <see cref="M:Au.Shell.Pidl.FromString(System.String,System.Boolean)"/>, just returns unmanaged ITEMIDLIST pointer (PIDL).
+            The same as <see cref="M:Au.Shell.Pidl.FromString(System.String,System.Boolean)"/>, but returns unmanaged ITEMIDLIST* (PIDL).
             Later need to free it with Marshal.FreeCoTaskMem.
             </summary>
             <param name="s"></param>
@@ -14269,9 +14294,9 @@
             Calls <msdn>SHGetNameFromIDList</msdn>.
             </remarks>
         </member>
-        <member name="M:Au.Shell.Pidl.LibToShellString(System.IntPtr,Au.Types.Native.SIGDN,System.Boolean)">
+        <member name="M:Au.Shell.Pidl.ToShellString2(System.IntPtr,Au.Types.Native.SIGDN,System.Boolean)">
             <summary>
-            The same as <see cref="M:Au.Shell.Pidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>, just uses an ITEMIDLIST pointer that is not stored in a Pidl variable.
+            The same as <see cref="M:Au.Shell.Pidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>, but uses an ITEMIDLIST* that is not stored in a Pidl variable.
             </summary>
         </member>
         <member name="M:Au.Shell.Pidl.ToString">
@@ -14281,9 +14306,9 @@
             Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
             </summary>
         </member>
-        <member name="M:Au.Shell.Pidl.LibToString(System.IntPtr)">
+        <member name="M:Au.Shell.Pidl.ToString2(System.IntPtr)">
             <summary>
-            The same as <see cref="M:Au.Shell.Pidl.ToString"/>, just uses an ITEMIDLIST pointer that is not stored in a Pidl variable.
+            The same as <see cref="M:Au.Shell.Pidl.ToString"/>, but uses an ITEMIDLIST* that is not stored in a Pidl variable.
             </summary>
         </member>
         <member name="M:Au.Shell.Pidl.ToHexString">
@@ -14293,9 +14318,9 @@
             Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
             </summary>
         </member>
-        <member name="M:Au.Shell.Pidl.LibToHexString(System.IntPtr)">
+        <member name="M:Au.Shell.Pidl.ToHexString2(System.IntPtr)">
             <summary>
-            The same as <see cref="M:Au.Shell.Pidl.ToHexString"/>, just uses an ITEMIDLIST pointer that is not stored in a Pidl variable.
+            The same as <see cref="M:Au.Shell.Pidl.ToHexString"/>, but uses an ITEMIDLIST* that is not stored in a Pidl variable.
             </summary>
         </member>
         <member name="T:Au.Shell.Shortcut">
@@ -15824,7 +15849,7 @@
             Tip: When need coordinates relative to another screen or/and the work area, use <see cref="M:Au.Types.Coord.Normalize(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.Types.Screen_,System.Boolean,System.Boolean)"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.Move((x, y, true));</c>.
             </param>
             <exception cref="T:System.ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-            <exception cref="T:Au.Types.AuException">Failed to move the cursor to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception if option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
+            <exception cref="T:Au.Types.AuException">Failed to move the cursor to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="T:Au.Uac">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception if option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
             <remarks>
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
@@ -15904,7 +15929,7 @@
             <param name="dx">X offset from LastMoveXY.x.</param>
             <param name="dy">Y offset from LastMoveXY.y.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-            <exception cref="T:Au.Types.AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
+            <exception cref="T:Au.Types.AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="T:Au.Uac">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
             <remarks>
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed" r=""/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally" r=""/>, <see cref="P:Au.Types.OptMouse.Relaxed" r=""/>.
             </remarks>
@@ -15918,7 +15943,7 @@
             <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
             <exception cref="T:System.ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">The last x y is not in screen. No exception option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-            <exception cref="T:Au.Types.AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
+            <exception cref="T:Au.Types.AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="T:Au.Uac">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
             <remarks>
             Uses <see cref="P:Au.Opt.Mouse"/>: <see cref="P:Au.Types.OptMouse.Relaxed" r=""/> (only for the last movement; always relaxed in intermediate movements).
             </remarks>
@@ -17829,7 +17854,7 @@
             <item>If a function does not follow these rules, it is mentioned in function documentation.</item>
             </list>
             
-            Many functions fail if the window's process has a higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
+            Many functions fail if the window's process has a higher <see cref="T:Au.Uac">UAC</see> integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
             
             The Wnd type can be used with native Windows API functions without casting. Use Wnd for the parameter type in the declaration, like <c>[DllImport(...)] static extern bool NativeFunction(Wnd hWnd, ...)</c>.
             
@@ -18233,7 +18258,7 @@
             </summary>
             <param name="w">Any top-level or child window of that process.</param>
             <exception cref="T:Au.Types.WndException">w invalid.</exception>
-            <exception cref="T:Au.Types.AuException">Failed to allocate process memory (see <see cref="T:Au.Process_.Memory"/>) needed to get control names, usually because of <see cref="T:Au.Process_.UacInfo">UAC</see>.</exception>
+            <exception cref="T:Au.Types.AuException">Failed to allocate process memory (see <see cref="T:Au.Process_.Memory"/>) needed to get control names, usually because of <see cref="T:Au.Uac">UAC</see>.</exception>
         </member>
         <member name="M:Au.Wnd.Misc.WinFormsControlNames.GetControlName(Au.Wnd)">
             <summary>
@@ -18263,7 +18288,7 @@
             </summary>
             <remarks>
             This struct is <msdn>COPYDATASTRUCT</msdn>.
-            <note type="note">By default <see cref="T:Au.Process_.UacInfo">UAC</see> blocks messages sent from processes of lower integrity level. Call <see cref="M:Au.Wnd.Misc.CopyDataStruct.EnableReceivingWM_COPYDATA"/> if need.</note>
+            <note type="note">By default <see cref="T:Au.Uac">UAC</see> blocks messages sent from processes of lower integrity level. Call <see cref="M:Au.Wnd.Misc.CopyDataStruct.EnableReceivingWM_COPYDATA"/> if need.</note>
             </remarks>
             <seealso cref="T:Au.Util.SharedMemory"/>
             <seealso cref="T:System.IO.Pipes.NamedPipeServerStream"/>
@@ -18318,7 +18343,7 @@
         </member>
         <member name="M:Au.Wnd.Misc.CopyDataStruct.EnableReceivingWM_COPYDATA">
             <summary>
-            Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level processes.
+            Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower <see cref="T:Au.Uac">UAC</see> integrity level processes.
             </summary>
         </member>
         <member name="T:Au.Wnd.Misc.MyWindow">
@@ -18340,6 +18365,7 @@
             Creates window.
             Calls API <msdn>CreateWindowEx</msdn>.
             Returns false if failed, for example className is not registered.
+            See also: <see cref="M:Au.Wnd.Misc.MyWindow.RegisterClass(System.String,Au.Wnd.Misc.MyWindow.WndClassEx)"/>, <see cref="P:Au.Wnd.Misc.MyWindow.Handle"/>.
             </summary>
             <param name="className">The name of any window class existing in this process. You can register a class with <see cref="M:Au.Wnd.Misc.MyWindow.RegisterClass(System.String,Au.Wnd.Misc.MyWindow.WndClassEx)"/> or use any other class.</param>
             <param name="name">Window name or null.</param>
@@ -18568,7 +18594,7 @@
         <member name="M:Au.Wnd.Misc.UacEnableMessages(System.Int32[])">
             <summary>
             Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
-            It allows processes of lower <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level to send these messages to this process.
+            It allows processes of lower <see cref="T:Au.Uac">UAC</see> integrity level to send these messages to this process.
             </summary>
         </member>
         <member name="M:Au.Wnd.Misc.PrintMsg(System.Windows.Forms.Message@,System.Int32[])">
@@ -18742,11 +18768,15 @@
         </member>
         <member name="P:Au.Wnd.IsEnabled">
             <summary>
-            Gets the enabled state.
-            Returns true if the window is enabled.
-            Returns false if is disabled or is a child of disabled parent.
-            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
-            Calls API <msdn>IsWindowEnabled</msdn>.
+            Returns true if the window is enabled for mouse and keyboard input.
+            Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Calls API <msdn>IsWindowEnabled</msdn>. It does not check whether the parent window is disabled.
+            </summary>
+        </member>
+        <member name="P:Au.Wnd.IsEnabledReally">
+            <summary>
+            Returns true if the window and its ancestors are enabled for mouse and keyboard input.
+            Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.Enable(System.Boolean)">
@@ -18969,7 +18999,7 @@
             </remarks>
             <exception cref="T:Au.Types.WndException">
             Invalid handle; disabled; failed to set focus; failed to activate parent window.
-            Fails to set focus when the target process is admin or uiAccess and this process isn't (see <see cref="T:Au.Process_.UacInfo">UAC</see>).
+            Fails to set focus when the target process is admin or uiAccess and this process isn't (see <see cref="T:Au.Uac">UAC</see>).
             </exception>
             <seealso cref="P:Au.Wnd.Focused"/>
             <seealso cref="P:Au.Wnd.IsFocused"/>
@@ -19702,7 +19732,7 @@
         </member>
         <member name="P:Au.Wnd.IsUacAccessDenied">
             <summary>
-            Returns true if <see cref="T:Au.Process_.UacInfo">UAC</see> would not allow to automate the window.
+            Returns true if <see cref="T:Au.Uac">UAC</see> would not allow to automate the window.
             It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.
             </summary>
             <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
@@ -19975,7 +20005,7 @@
             </item>
             <item>
             "***wfName " - use .NET Windows Forms Control Name property.
-            To get it this function uses <see cref="T:Au.Wnd.Misc.WinFormsControlNames"/>. It is slower and can fail because of <see cref="T:Au.Process_.UacInfo">UAC</see>.
+            To get it this function uses <see cref="T:Au.Wnd.Misc.WinFormsControlNames"/>. It is slower and can fail because of <see cref="T:Au.Uac">UAC</see>.
             </item>
             <item>
             "***id " (like "***id 15") - use control id.
@@ -20144,7 +20174,7 @@
             Calls API <msdn>EnumWindows</msdn>.
             <note>The list can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="M:Au.Wnd.GetWnd.MainWindows(System.Boolean)"/>.</note>
             By default array elements are sorted to match the Z order.
-            On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess; to get such windows you can use <see cref="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)"/>.
+            On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <see cref="T:Au.Uac">UAC</see> integrity level uiAccess; to get such windows you can use <see cref="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)"/>.
             </remarks>
             <seealso cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
         </member>
@@ -20421,7 +20451,7 @@
             Returns false if it is invisible, cloaked, owned, toolwindow, menu, etc.
             </summary>
             <param name="w"></param>
-            <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
+            <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Uac">UAC</see> integrity level uiAccess).</param>
             <param name="skipMinimized">Return false if w is minimized.</param>
         </member>
         <member name="M:Au.Wnd.GetWnd.MainWindows(System.Boolean)">
@@ -20429,7 +20459,7 @@
             Gets main windows, ie those that probably are in the Windows taskbar.
             Returns array containing 0 or more Wnd.
             </summary>
-            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
+            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Uac">UAC</see> integrity level uiAccess).</param>
             <remarks>
             Uses <see cref="M:Au.Wnd.GetWnd.IsMainWindow(Au.Wnd,System.Boolean,System.Boolean)"/>.
             Does not match the order of buttons in the Windows taskbar.
@@ -20441,7 +20471,7 @@
             Returns default(Wnd) if there are no such windows.
             </summary>
             <param name="w">Start from this window. If default(Wnd), starts from the top of the Z order.</param>
-            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level uiAccess).</param>
+            <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has <see cref="T:Au.Uac">UAC</see> integrity level uiAccess).</param>
             <param name="skipMinimized">Skip minimized windows.</param>
             <param name="retryFromTop">If w is not default(Wnd) and there are no matching windows after it, retry from the top of the Z order. Then can return w.</param>
             <remarks>
@@ -20593,7 +20623,7 @@
             <remarks>
             Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
             This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <msdn>RealChildWindowFromPoint</msdn>. Also does not skip disabled controls. All this is not true with flag Raw.
-            This function is not very fast. Fastest when used flag NeedWindow. Flag Raw also makes it faster.
+            This function is not very fast, probably 0.3 - 1 ms.
             </remarks>
         </member>
         <member name="M:Au.Wnd.FromMouse(Au.Types.WXYFlags)">
@@ -20609,15 +20639,15 @@
             </summary>
             <param name="x">X coordinate in the client area of this window. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="y">Y coordinate in the client area of this window. Can be <b>Coord.Reverse</b> etc.</param>
-            <param name="directChild">Get direct child, not a child of a child and so on.</param>
             <param name="screenXY">x y are relative to the pimary screen, not to the client area.</param>
+            <param name="directChild">Get direct child, not a child of a child and so on.</param>
             <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
         </member>
         <member name="M:Au.Wnd.ChildFromXY(Au.Types.POINT,System.Boolean,System.Boolean)">
             <inheritdoc cref="M:Au.Wnd.ChildFromXY(Au.Types.Coord,Au.Types.Coord,System.Boolean,System.Boolean)"/>
             <param name="p">Coordinates in the client area of this window.</param>
-            <param name="directChild">Get direct child, not a child of a child and so on.</param>
             <param name="screenXY">p is relative to the pimary screen, not to the client area.</param>
+            <param name="directChild">Get direct child, not a child of a child and so on.</param>
         </member>
         <member name="M:Au.Wnd._SiblingXY(Au.Wnd._SibXY,System.Int32,System.Int32,System.Boolean)">
             <summary>
@@ -20951,7 +20981,7 @@
             A window that has an owner window is always on top of it.
             Don't call this for controls, they don't have an owner window.
             The 'get' function returns default(Wnd) if this window isn't owned or is invalid. Supports <see cref="M:Au.Types.Native.GetError"/>.
-            The 'set' function can fail, eg if the owner's process has higher <see cref="T:Au.Process_.UacInfo">UAC</see> integrity level.
+            The 'set' function can fail, eg if the owner's process has higher <see cref="T:Au.Uac">UAC</see> integrity level.
             </remarks>
         </member>
         <member name="P:Au.Wnd.Window">

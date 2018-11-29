@@ -33,6 +33,7 @@ namespace Au.Controls
 		public delegate int Sci_AnnotationDrawCallback(void* cbParam, ref Sci_AnnotationDrawCallbackData d);
 		public const int SCI_SETANNOTATIONDRAWCALLBACK = 9504;
 		public const int SCI_ISXINMARGIN = 9506;
+		public const int SCI_DRAGDROP = 9507;
 		//these not impl
 		//public const int SC_DOCUMENT_USERDATA_OFFSET= 12;
 		//public const int SC_DOCUMENT_USERDATA_SIZE= 4;
@@ -46,6 +47,13 @@ namespace Au.Controls
 			public byte* text;
 			public int textLen, line, annotLine;
 		};
+		public struct Sci_DragDropData
+		{
+			public int x, y;
+			public byte* text;
+			public int len;
+			public int copy; //bool
+		}
 #pragma warning restore 649
 		#endregion
 

@@ -32,22 +32,40 @@ static class Program
 	//[LoaderOptimization(LoaderOptimization.MultiDomainHost)] //shares only GAC assemblies; unloads non-GAC assemblies. Makes loading some assemblies slightly faster, but eg Forms much slower (60 -> 100 ms).
 	static void Main(string[] args)
 	{
+		if(args.Length > 0 && args[0] == "/d") {
+			UacDragDrop.NonAdminProcess.MainDD(args);
+			return;
+		}
+
+		//restart as admin if started as non-admin on admin user account
+		if(args.Length > 0 && args[0] == "/n") {
+			args = args.RemoveAt_(0);
+		} else if(!Uac.IsAdmin && Uac.OfThisProcess.Elevation == UacElevation.Limited) {
+			if(_RestartAsAdmin(args)) return;
+		}
+		//speed with restarting is the same as when runs as non-admin. The fastest is when started as admin. Because faster when runs as admin.
+
+		_Main(args);
+	}
+
+	static void _Main(string[] args)
+	{
+		Perf.First();
+
 		//try {
 
 		//_Test(); return;
 		//Process.GetCurrentProcess().ProcessorAffinity = (IntPtr)1; //test how works with 1 CPU
 
-		Perf.First();
-
-#if !DEBUG
-		var fProfile = Folders.ThisAppDataLocal + "ProfileOptimization";
-		File_.CreateDirectory(fProfile);
-		ProfileOptimization.SetProfileRoot(fProfile);
-		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 640 -> 470 ms (ngen 267). Makes compiler startup faster 4000 -> 2500 (ngen 670).
-		Perf.Next();
-#endif
-
 		if(CommandLine.OnProgramStarted(args)) return;
+
+		//#if !DEBUG //TODO
+		//		var fProfile = Folders.ThisAppDataLocal + "ProfileOptimization";
+		//		File_.CreateDirectory(fProfile);
+		//		ProfileOptimization.SetProfileRoot(fProfile);
+		//		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 650 -> 560 ms. Makes compiler startup faster 4000 -> 2500 (ngen 670).
+		//		Perf.Next();
+		//#endif
 
 		OutputServer.NoNewline = true;
 		OutputServer.Start();
@@ -62,7 +80,10 @@ static class Program
 
 		Settings = new ProgramSettings();
 
-		Timer_.Every(1000, () => Timer1s?.Invoke());
+		Timer_.Every(1000, t => _TimerProc(t));
+		//note: timer can make Process Hacker show constant CPU, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, 0 of 1000.
+		//Timer1s += () => Print("1 s");
+		//Timer1sOr025s += () => Print("0.25 s");
 
 		EForm.RunApplication();
 
@@ -77,7 +98,48 @@ static class Program
 	internal static FilesModel Model;
 	internal static RunningTasks Tasks;
 
+	/// <summary>
+	/// Timer with 1 s period.
+	/// </summary>
 	internal static event Action Timer1s;
+
+	/// <summary>
+	/// Timer with 1 s period when main window hidden and 0.25 s period when visible.
+	/// </summary>
+	internal static event Action Timer1sOr025s;
+
+	/// <summary>
+	/// True if Timer1sOr025s fires every 0.25 s (when main window visible), false if every 1 s (when hidden).
+	/// </summary>
+	internal static bool IsTimer025 => s_timerCounter > 0;
+	static uint s_timerCounter;
+
+	static void _TimerProc(Timer_ t)
+	{
+		bool needFast = (MainForm?.IsLoaded ?? false) && MainForm.Visible;
+		if(needFast != (s_timerCounter > 0)) t.Start(needFast ? 250 : 1000, false);
+		if(needFast) {
+			Timer1sOr025s?.Invoke();
+			s_timerCounter++;
+			if(MousePosChangedWhenProgramVisible != null) {
+				var p = Mouse.XY;
+				if(p != s_mousePos) {
+					s_mousePos = p;
+					MousePosChangedWhenProgramVisible(p);
+				}
+			}
+		} else s_timerCounter = 0;
+		if(0 == (s_timerCounter & 3)) Timer1s?.Invoke();
+	}
+	static POINT s_mousePos;
+
+	/// <summary>
+	/// When cursor position changed while the main window is visible.
+	/// Called at max 0.25 s rate, not for each change.
+	/// Cursor can be in any window. Does not depend on UAC.
+	/// Receives cursor position in screen.
+	/// </summary>
+	internal static event Action<POINT> MousePosChangedWhenProgramVisible;
 
 	internal struct Stock
 	{
@@ -89,6 +151,21 @@ static class Program
 		}
 
 		public static Font FontNormal, FontBold;
+	}
+
+	static bool _RestartAsAdmin(string[] args)
+	{
+		if(Debugger.IsAttached) return false;
+		try {
+			//int pid = 
+			Au.Util.LibTaskScheduler.RunTask(@"Au", "Au.Editor", true, args);
+			//Api.AllowSetForegroundWindow(pid); //fails and has no sense, because it's Au.CL.exe running as SYSTEM
+		}
+		catch(Exception ex) { //probably this program is not installed (no scheduled task)
+			Debug_.Dialog(ex);
+			return false;
+		}
+		return true;
 	}
 
 	static void _Test()

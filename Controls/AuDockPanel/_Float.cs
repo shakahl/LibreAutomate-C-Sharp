@@ -90,7 +90,7 @@ namespace Au.Controls
 			/// <summary>
 			/// 1. Prevents activating window when showing. 2. Allows to show ToolTip for inactive window.
 			/// </summary>
-			protected override bool ShowWithoutActivation { get => true; }
+			protected override bool ShowWithoutActivation => true;
 
 			protected override void OnGotFocus(EventArgs e)
 			{
@@ -204,7 +204,7 @@ namespace Au.Controls
 					}
 				}
 
-				protected override bool ShowWithoutActivation { get => true; }
+				protected override bool ShowWithoutActivation => true;
 
 				protected override void OnPaint(PaintEventArgs e)
 				{

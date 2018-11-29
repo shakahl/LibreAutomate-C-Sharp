@@ -23,7 +23,7 @@ using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
 
-partial class PanelEdit :Control
+partial class PanelEdit : Control
 {
 	List<SciCode> _docs = new List<SciCode>(); //documents that are actually open currently. Note: FilesModel.OpenFiles contains not only these.
 	SciCode _activeDoc;
@@ -46,7 +46,7 @@ partial class PanelEdit :Control
 
 	protected override void OnGotFocus(EventArgs e) { _activeDoc?.Focus(); }
 
-	//public SciControl SC { get => _activeDoc; }
+	//public SciControl SC => _activeDoc;
 
 	/// <summary>
 	///	If f is already open, unhides its control.
@@ -135,7 +135,7 @@ partial class PanelEdit :Control
 		_activeDoc?.SaveEditorData();
 	}
 
-	//public bool IsModified { get => _activeDoc?.IsModified ?? false; }
+	//public bool IsModified => _activeDoc?.IsModified ?? false;
 
 	/// <summary>
 	/// Enables/disables Edit and Run toolbars/menus and some other UI parts depending on whether a document is open in editor.
@@ -181,7 +181,7 @@ partial class PanelEdit :Control
 		if(0 == d.Call(SCI_CANUNDO)) disable |= EUpdateUI.Undo;
 		if(0 == d.Call(SCI_CANREDO)) disable |= EUpdateUI.Redo;
 		if(0 != d.Call(SCI_GETSELECTIONEMPTY)) disable |= EUpdateUI.Copy;
-		if(disable.Has_(EUpdateUI.Copy) || 0 != d.Call(SCI_GETREADONLY)) disable |= EUpdateUI.Cut;
+		if(disable.Has_(EUpdateUI.Copy) || d.ST.IsReadonly) disable |= EUpdateUI.Cut;
 		//if(0 == d.Call(SCI_CANPASTE)) disable |= EUpdateUI.Paste; //rejected. Often slow. Also need to see on focused etc.
 
 		var dif = disable ^ _cmdDisabled; if(dif == 0) return;
@@ -276,7 +276,7 @@ partial class PanelEdit :Control
 
 
 
-	class SciCode :AuScintilla
+	class SciCode : AuScintilla
 	{
 		public readonly FileNode FN;
 		SciText.FileLoaderSaver _fls;
@@ -293,6 +293,7 @@ partial class PanelEdit :Control
 
 			this.Dock = DockStyle.Fill;
 			this.AccessibleName = "Code";
+			this.AllowDrop = true;
 
 			InitImagesStyle = ImagesStyle.AnyString;
 			if(fls.IsBinary) InitReadOnlyAlways = true;
@@ -579,6 +580,222 @@ partial class PanelEdit :Control
 			//problem: quite slow. At startup ~250 mcs. The above code is fast.
 			if(s2.Length == 0) Call(SCI_FOLDLINE, line); //slightly faster
 			else ST.SetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
+		}
+
+		#endregion
+
+		#region drag drop
+
+		enum _DD_DataType { None, Text, Files, Shell, Link, Script };
+		_DD_DataType _drag;
+
+		protected override void OnDragEnter(DragEventArgs e)
+		{
+			var d = e.Data;
+			//foreach(var v in d.GetFormats()) Print(v, d.GetData(v, false)?.GetType()); Print("--");
+			_drag = 0;
+			if(d.GetDataPresent("Aga.Controls.Tree.TreeNodeAdv[]", false)) _drag = _DD_DataType.Script;
+			else if(d.GetDataPresent("FileDrop", false)) _drag = _DD_DataType.Files;
+			else if(d.GetDataPresent("Shell IDList Array", false)) _drag = _DD_DataType.Shell;
+			else if(d.GetDataPresent("UnicodeText", false))
+				_drag = d.GetDataPresent("FileGroupDescriptorW", false) ? _DD_DataType.Link : _DD_DataType.Text;
+			e.Effect = _DD_GetEffect(e);
+			base.OnDragEnter(e);
+		}
+
+		protected override void OnDragOver(DragEventArgs e)
+		{
+			if((e.Effect = _DD_GetEffect(e)) != 0) _DD_Over(e);
+			base.OnDragOver(e);
+		}
+
+		protected override void OnDragDrop(DragEventArgs e)
+		{
+			if((e.Effect = _DD_GetEffect(e)) != 0) _DD_Drop(e);
+			_drag = 0;
+			base.OnDragDrop(e);
+		}
+
+		protected override void OnDragLeave(EventArgs e)
+		{
+			if(_drag != 0) {
+				_drag = 0;
+				Call(SCI_DRAGDROP, 3);
+			}
+			base.OnDragLeave(e);
+		}
+
+		Point _DD_GetDropPos(DragEventArgs e)
+		{
+			var p = this.PointToClient(new Point(e.X, e.Y));
+			if(_drag != _DD_DataType.Text) { //if files etc, drop as lines, not anywhere
+				int pos = Call(SCI_POSITIONFROMPOINT, p.X, p.Y);
+				pos = ST.LineStartFromPosition(pos);
+				p.X = Call(SCI_POINTXFROMPOSITION, 0, pos);
+				p.Y = Call(SCI_POINTYFROMPOSITION, 0, pos);
+			}
+			return p;
+		}
+
+		unsafe void _DD_Over(DragEventArgs e)
+		{
+			var p = _DD_GetDropPos(e);
+			var z = new Sci_DragDropData { x = p.X, y = p.Y };
+			Call(SCI_DRAGDROP, 1, &z);
+
+			//FUTURE: auto-scroll
+		}
+
+		unsafe void _DD_Drop(DragEventArgs e)
+		{
+			string s = null, menuVar = null; StringBuilder t = null;
+			if(_drag != _DD_DataType.Text) {
+				t = new StringBuilder();
+				ST.GetText().RegexMatch_(@"\b(\w+)\s*=\s*new\s+Au(?:Menu|Toolbar)", 1, out menuVar);
+			}
+
+			var d = e.Data;
+			switch(_drag) {
+			case _DD_DataType.Text:
+				s = d.GetData("UnicodeText", false) as string;
+				break;
+			case _DD_DataType.Files:
+				var paths = d.GetData("FileDrop", false) as string[];
+				if(paths != null) {
+					foreach(var path in paths) {
+						bool isLnk = path.EndsWithI_(".lnk");
+						if(isLnk) t.Append("//");
+						var name = Path_.GetFileNameWithoutExtension(path);
+						_AppendFile(path, name);
+						if(isLnk) {
+							try {
+								var g = Shell.Shortcut.Open(path);
+								string target = g.TargetAnyType, args = null;
+								if(target.StartsWith_("::")) {
+									using(var pidl = Shell.Pidl.FromString(target))
+										name = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
+								} else {
+									args = g.Arguments;
+									if(!target.EndsWithI_(".exe") || name.IndexOf_("Shortcut") >= 0)
+										name = Path_.GetFileNameWithoutExtension(target);
+								}
+								_AppendFile(target, name, args);
+							}
+							catch(AuException) { break; }
+						}
+					}
+					s = t.ToString();
+				}
+				break;
+			case _DD_DataType.Shell:
+				_DD_GetShell(d, out var shells, out var names);
+				if(shells != null) {
+					for(int i = 0; i < shells.Length; i++) {
+						_AppendFile(shells[i], names[i]);
+					}
+					s = t.ToString();
+				}
+				break;
+			case _DD_DataType.Link:
+				_DD_GetLink(d, out s, out var s2);
+				if(s != null) {
+					_AppendFile(s, s2);
+					s = t.ToString();
+				}
+				break;
+			case _DD_DataType.Script:
+				var nodes = d.GetData("Aga.Controls.Tree.TreeNodeAdv[]", false) as Aga.Controls.Tree.TreeNodeAdv[];
+				if(nodes != null) {
+					foreach(var tn in nodes) {
+						var fn = tn.Tag as FileNode; if(!fn.IsCodeFile) continue;
+						_AppendFile(fn.ItemPath, fn.Name, null, true);
+					}
+					s = t.ToString();
+				}
+				break;
+			}
+
+			if(!Empty(s)) {
+				((Wnd)FindForm()).ActivateLL();
+				Focus();
+				var p = _DD_GetDropPos(e);
+				var z = new Sci_DragDropData { x = p.X, y = p.Y };
+				var b = Convert_.Utf8FromString(s);
+				fixed (byte* bp = b) {
+					z.text = bp;
+					z.len = b.Length - 1;
+					if(_drag != _DD_DataType.Text || 0 == (e.Effect & DragDropEffects.Move)) z.copy = 1;
+					Call(SCI_DRAGDROP, 2, &z);
+				}
+			} else {
+				Call(SCI_DRAGDROP, 3);
+			}
+
+			void _AppendFile(string path, string name, string args = null, bool isScript = false)
+			{
+				name = name.Escape_();
+				if(menuVar != null) t.Append(menuVar).Append("[\"").Append(name).Append("\"] =o=> ");
+				t.Append(isScript ? "AuTask.Run(@\"" : "Shell.Run(@\"").Append(path);
+				if(!Empty(args)) t.Append("\", \"").Append(args.Escape_());
+				t.Append("\");");
+				if(menuVar == null && !isScript && (path.StartsWith_("::") || path.IndexOf_(name, true) < 0)) t.Append(" //").Append(name);
+				t.AppendLine();
+				//FUTURE: add unexpanded path version
+			}
+		}
+
+		DragDropEffects _DD_GetEffect(DragEventArgs e)
+		{
+			if(_drag == 0) return 0;
+			if(ST.IsReadonly) return 0;
+			var ae = e.AllowedEffect;
+			DragDropEffects r = 0;
+			switch(e.KeyState & (4 | 8 | 32)) { case 0: r = DragDropEffects.Move; break; case 8: r = DragDropEffects.Copy; break; default: return 0; }
+			if(_drag == _DD_DataType.Text) return 0 != (ae & r) ? r : ae;
+			if(0 != (ae & DragDropEffects.Link)) r = DragDropEffects.Link;
+			else if(0 != (ae & DragDropEffects.Copy)) r = DragDropEffects.Copy;
+			else r = ae;
+			return r;
+		}
+
+		static unsafe void _DD_GetShell(IDataObject d, out string[] shells, out string[] names)
+		{
+			shells = names = null;
+			var b = _DD_GetByteArray(d, "Shell IDList Array"); if(b == null) return;
+			fixed (byte* p = b) {
+				int* pi = (int*)p;
+				int n = *pi++; if(n < 1) return;
+				shells = new string[n]; names = new string[n];
+				IntPtr pidlFolder = (IntPtr)(p + *pi++);
+				for(int i = 0; i < n; i++) {
+					using(var pidl = new Shell.Pidl(pidlFolder, (IntPtr)(p + pi[i]))) {
+						shells[i] = pidl.ToString();
+						names[i] = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
+					}
+				}
+			}
+		}
+
+		static unsafe void _DD_GetLink(IDataObject d, out string url, out string text)
+		{
+			url = text = null;
+			var b = _DD_GetByteArray(d, "FileGroupDescriptorW"); if(b == null) return;
+			fixed (byte* p = b) { //FILEGROUPDESCRIPTORW
+				if(*(int*)p != 1) return; //count of FILEDESCRIPTORW
+				var s = new string((char*)(p + 76));
+				if(!s.EndsWithI_(".url")) return;
+				url = d.GetData("UnicodeText", false) as string;
+				if(url != null) text = s.Remove(s.Length - 4);
+			}
+		}
+
+		static byte[] _DD_GetByteArray(IDataObject d, string format)
+		{
+			switch(d.GetData(format, false)) {
+			case byte[] b: return b; //when d is created from data transferred from non-admin process to this admin process by UacDragDrop
+			case MemoryStream m: return m.ToArray(); //original .NET DataObject. Probably this process is non-admin.
+			}
+			return null;
 		}
 
 		#endregion

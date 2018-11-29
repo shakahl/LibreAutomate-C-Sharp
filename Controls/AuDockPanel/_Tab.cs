@@ -99,16 +99,16 @@ namespace Au.Controls
 				this.SetActiveItem(item1.IsDocked ? item1 : item2);
 			}
 
-			//internal string Text { get => this.ActiveItem?.Text; }
+			//internal string Text => this.ActiveItem?.Text;
 
 			public override string ToString()
 			{
 				return this.AccName;
 			}
 
-			internal int DockedItemCount { get => _dockedItemCount; }
+			internal int DockedItemCount => _dockedItemCount;
 
-			internal bool ShowsTabButtons { get => _dockedItemCount >= 2; }
+			internal bool ShowsTabButtons => _dockedItemCount >= 2;
 
 			internal Rectangle CaptionBoundsExceptButtons
 			{

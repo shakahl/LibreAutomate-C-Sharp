@@ -164,7 +164,7 @@ namespace Au.Controls
 			return Convert_.LibUtf8FromString(s, ref t_byte, utf8Length);
 		}
 
-		struct _NoReadonly :IDisposable
+		struct _NoReadonly : IDisposable
 		{
 			SciText _t;
 			bool _ro;
@@ -182,7 +182,7 @@ namespace Au.Controls
 			}
 		}
 
-		struct _NoUndoNotif :IDisposable
+		struct _NoUndoNotif : IDisposable
 		{
 			SciText _t;
 			bool _noUndo, _noNotif;
@@ -473,7 +473,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Gets the number of lines.
 		/// </summary>
-		public int LineCount { get => Call(SCI_GETLINECOUNT); }
+		public int LineCount => Call(SCI_GETLINECOUNT);
 
 		/// <summary>
 		/// Gets annotation text of line.
@@ -573,6 +573,11 @@ namespace Au.Controls
 			Call(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
 		}
 
+		/// <summary>
+		/// SCI_GETREADONLY.
+		/// </summary>
+		public bool IsReadonly => 0 != Call(SCI_GETREADONLY);
+
 		public struct FileLoaderSaver
 		{
 			_Encoding _enc;
@@ -581,7 +586,7 @@ namespace Au.Controls
 
 			/// <summary>
 			/// Loads file as UTF-8.
-			/// Returns byte[] that must be pased to <see cref="SetText"/>.
+			/// Returns byte[] that must be passed to <see cref="SetText"/>.
 			/// </summary>
 			/// <param name="file">To pass to File.OpenRead.</param>
 			/// <exception cref="Exception">Exceptions of File.OpenRead, File.Read, Encoding.Convert.</exception>
@@ -600,20 +605,20 @@ namespace Au.Controls
 					var fileSize = fr.Length;
 					if(fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.\0");
 					int trySize = (int)Math.Min(fileSize, 65_000);
-					var b = new byte[trySize + 1];
+					var b = new byte[trySize + 4];
 					trySize = fr.Read(b, 0, trySize);
 					fixed (byte* p = b) _enc = _DetectEncoding(p, trySize);
-					//Print(_enc);
 					if(_enc == _Encoding.Binary) return Encoding.UTF8.GetBytes("//Cannot edit. The file is binary, not text.\0");
 					int bomLength = (int)_enc >> 4;
+					//Print(_enc, bomLength, fileSize);
 
 					if(fileSize > trySize) {
-						var old = b; b = new byte[fileSize + 1]; Array.Copy(old, b, trySize);
+						var old = b; b = new byte[fileSize + 4]; Array.Copy(old, b, trySize);
 						fr.Read(b, trySize, (int)fileSize - trySize);
 					}
 
 					Encoding e = _NetEncoding();
-					if(e != null) b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength + 1);
+					if(e != null) b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength + e.GetByteCount("\0"));
 					return b;
 				}
 			}
@@ -642,7 +647,9 @@ namespace Au.Controls
 				}
 				if(s[0] == 0xFE && s[1] == 0xFF) return _Encoding.Utf16BE;
 				if(len >= 4 && *(uint*)s == 0xFFFE0000) return _Encoding.Utf32BE;
-				if(Au.Util.LibCharPtr.Length(s, len) == len) { //no '\0'
+				int zeroAt = Au.Util.LibCharPtr.Length(s, len);
+				if(zeroAt == len - 1) len--; //WordPad saves .rtf files with '\0' at the end
+				if(zeroAt == len) { //no '\0'
 					byte* p = s, pe = s + len; for(; p < pe; p++) if(*p >= 128) break; //is ASCII?
 					if(p < pe && 0 == Api.MultiByteToWideChar(Api.CP_UTF8, Api.MB_ERR_INVALID_CHARS, s, len, null, 0)) return _Encoding.Ansi;
 					return _Encoding.Utf8NoBOM;
@@ -653,7 +660,7 @@ namespace Au.Controls
 				return _Encoding.Binary;
 			}
 
-			enum _Encoding :byte
+			enum _Encoding : byte
 			{
 				/// <summary>Not a text file, or loading failed, or not initialized.</summary>
 				Binary = 0, //must be 0

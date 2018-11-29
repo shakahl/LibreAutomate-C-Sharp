@@ -750,7 +750,7 @@ namespace Au
 		/// 
 		/// This function should not be used to automate windows of own thread. In most cases it works, but strange problems are possible, because while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. See the last example.
 		/// 
-		/// Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See <see cref="Process_.UacInfo">UAC</see>.
+		/// Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See <see cref="Uac">UAC</see>.
 		/// 
 		/// The mouse button codes/names (eg <see cref="KKey.MouseLeft"/>) cannot be used to click. For it can be used callback, like in the "Ctrl+click" example.
 		/// </remarks>

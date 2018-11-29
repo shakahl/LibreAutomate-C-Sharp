@@ -84,32 +84,32 @@ namespace Au.Types
 		/// <summary>
 		/// The number of groups in the regular expression, + 1 for the whole match.
 		/// </summary>
-		public int GroupCountPlusOne { get => _groups.Length; }
+		public int GroupCountPlusOne => _groups.Length;
 
 		/// <summary>
 		/// Start offset of the match in the subject string. The same as that of group 0.
 		/// </summary>
-		public int Index { get => _groups[0].Index; }
+		public int Index => _groups[0].Index;
 
 		/// <summary>
 		/// <see cref="Index"/> + <see cref="Length"/>. The same as that of group 0.
 		/// </summary>
-		public int EndIndex { get => _groups[0].EndIndex; }
+		public int EndIndex => _groups[0].EndIndex;
 
 		/// <summary>
 		/// Length of the match in the subject string. The same as that of group 0.
 		/// </summary>
-		public int Length { get => _groups[0].Length; }
+		public int Length => _groups[0].Length;
 
 		/// <summary>
 		/// The match (substring) in the subject string. The same as that of group 0.
 		/// </summary>
-		public string Value { get => _groups[0].Value; }
+		public string Value => _groups[0].Value;
 
 		/// <summary>
 		/// The subject string in which this match was found.
 		/// </summary>
-		public string Subject { get => _groups[0].LibSubject; }
+		public string Subject => _groups[0].LibSubject;
 
 		/// <summary>
 		/// Returns <see cref="Value"/>.

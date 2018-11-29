@@ -793,7 +793,7 @@ namespace Au
 				if(man.GetFolderByName(folderName, out kf) != 0) return null;
 				if(isVirtual) {
 					if(0 != kf.GetIDList(0, out IntPtr pidl)) return null;
-					R = Shell.Pidl.LibToHexString(pidl);
+					R = Shell.Pidl.ToHexString2(pidl);
 					Marshal.FreeCoTaskMem(pidl);
 				} else {
 					if(0 != kf.GetPath(0, out R)) return null;

@@ -31,7 +31,7 @@ using static Au.NoClass;
 using static Program;
 using Au.Controls;
 
-partial class EForm :Form
+partial class EForm : Form
 {
 #if RUNHIDDEN_WINDOWPOSCHANGING
 	bool _canShow;
@@ -130,6 +130,10 @@ partial class EForm :Form
 #endif
 
 		Timer_.After(1, () => {
+			var s = CommandLine.TestArg;
+			if(s != null) {
+				Print(Time.Microseconds - Convert.ToInt64(s));
+			}
 			Perf.Next('P');
 			Perf.Write();
 
@@ -144,6 +148,7 @@ partial class EForm :Form
 		IsClosed = true;
 		CloseReason = e.CloseReason;
 		base.OnFormClosed(e);
+		UacDragDrop.AdminProcess.Enable(false);
 		Panels.Files.UnloadOnFormClosed();
 	}
 
@@ -162,6 +167,27 @@ partial class EForm :Form
 	/// </summary>
 	public CloseReason CloseReason { get; private set; }
 
+	protected override void OnVisibleChanged(EventArgs e)
+	{
+		//Output.LibWriteQM2($"_canShow={_canShow}, _visibleOnce={_visibleOnce}, Visible={Visible}");
+#if RUNHIDDEN_WINDOWPOSCHANGING
+		if(!_canShow) return;
+#endif
+		bool visible = Visible;
+		if(!_visibleOnce && visible) {
+			_visibleOnce = true;
+			Api.SetForegroundWindow((Wnd)this);
+			//Output.LibWriteQM2("VISIBLE");
+			VisibleFirstTime?.Invoke();
+			VisibleFirstTime = null;
+		}
+		UacDragDrop.AdminProcess.Enable(visible);
+		base.OnVisibleChanged(e);
+	}
+	bool _visibleOnce;
+
+	public event Action VisibleFirstTime;
+
 	protected override unsafe void WndProc(ref Message m)
 	{
 		Wnd w = (Wnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
@@ -174,7 +200,7 @@ partial class EForm :Form
 			return;
 		case Api.WM_ACTIVATE:
 			int isActive = Math_.LoUshort(wParam); //0 inactive, 1 active, 2 click-active
-			if(isActive == 1 && !w.IsActive) {
+			if(isActive == 1 && !w.IsActive && !Api.SetForegroundWindow(w)) {
 				//workaround for Windows bug:
 				//	If clicked a window after our app started but before w activated, w is at Z bottom and in some cases there is no taskbar button.
 				Debug_.Print("window inactive");
@@ -190,9 +216,12 @@ partial class EForm :Form
 			if(!_canShow) {
 				var wp = (Api.WINDOWPOS*)lParam;
 				wp->flags &= ~Native.SWP.SHOWWINDOW; wp->flags |= Native.SWP.NOACTIVATE | Native.SWP.NOZORDER;
+				base.DefWndProc(ref m);
+				return;
 			}
 			break;
 		case EMsg.WM_EDITOR_CANSHOW:
+			Visible = false;
 			_canShow = true;
 			return;
 #endif
@@ -250,7 +279,7 @@ partial class EForm :Form
 	/// <summary>
 	/// Modifies message loop of this thread, for all forms.
 	/// </summary>
-	class _AppMessageFilter :IMessageFilter
+	class _AppMessageFilter : IMessageFilter
 	{
 		public bool PreFilterMessage(ref Message m)
 		{

@@ -50,7 +50,7 @@ static unsafe class Program
 		string asmFile; int pdbOffset, flags;
 
 		if(args.Length != 1) return;
-		string pipeName = args[0]; //if(!pipeName.StartsWith_(@"\\.\pipe\Au.preload-")) return;
+		string pipeName = args[0]; //if(!pipeName.StartsWith_(@"\\.\pipe\Au.Task-")) return;
 
 		int nr = 0;
 #if false

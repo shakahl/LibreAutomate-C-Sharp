@@ -57,7 +57,7 @@
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject />
+    <StartupObject>Program</StartupObject>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
@@ -84,12 +84,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Files\Save.cs" />
+    <Compile Include="Files\TreeViewFiles.cs" />
     <Compile Include="Properties\GlobalSuppressions.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="Util\UacDragDrop.cs" />
     <None Include="packages.config" />
     <None Include="Test\tree.csx" />
     <None Include="Templates\New Project\%40App\!App.cs">
@@ -105,7 +107,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Test\tree.cs" />
-    <Compile Include="Run, triggers\IPC.cs" />
     <Compile Include="Run, triggers\TriggersUI.cs" />
     <Compile Include="Run, triggers\Run.cs" />
     <None Include="Templates\New Project\%40Script\!Script">

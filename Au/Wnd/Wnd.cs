@@ -40,7 +40,7 @@ namespace Au
 	/// <item>If a function does not follow these rules, it is mentioned in function documentation.</item>
 	/// </list>
 	/// 
-	/// Many functions fail if the window's process has a higher <see cref="Process_.UacInfo">UAC</see> integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
+	/// Many functions fail if the window's process has a higher <see cref="Uac">UAC</see> integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
 	/// 
 	/// The Wnd type can be used with native Windows API functions without casting. Use Wnd for the parameter type in the declaration, like <c>[DllImport(...)] static extern bool NativeFunction(Wnd hWnd, ...)</c>.
 	/// 
@@ -56,7 +56,7 @@ namespace Au
 	/// ]]></code>
 	/// </example>
 	[Serializable]
-	public unsafe partial struct Wnd :IEquatable<Wnd>
+	public unsafe partial struct Wnd : IEquatable<Wnd>
 	{
 #if false
 		/// Why Wnd is struct, not class:
@@ -431,10 +431,8 @@ namespace Au
 		/// <seealso cref="IsVisibleAndNotCloaked"/>
 		/// <seealso cref="Show"/>
 		/// <seealso cref="Activate()"/>
-		public bool IsVisibleEx
-		{
-			get
-			{
+		public bool IsVisibleEx {
+			get {
 				if(!Api.IsWindowVisible(this)) return false;
 
 				var style = Style;
@@ -505,15 +503,24 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the enabled state.
-		/// Returns true if the window is enabled.
-		/// Returns false if is disabled or is a child of disabled parent.
-		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
-		/// Calls API <msdn>IsWindowEnabled</msdn>.
+		/// Returns true if the window is enabled for mouse and keyboard input.
+		/// Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
+		/// Calls API <msdn>IsWindowEnabled</msdn>. It does not check whether the parent window is disabled.
 		/// </summary>
-		public bool IsEnabled
-		{
-			get => Api.IsWindowEnabled(this);
+		public bool IsEnabled => Api.IsWindowEnabled(this);
+
+		/// <summary>
+		/// Returns true if the window and its ancestors are enabled for mouse and keyboard input.
+		/// Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
+		/// </summary>
+		public bool IsEnabledReally {
+			get {
+				for(var w = this; ;) {
+					if(!Api.IsWindowEnabled(w)) return false;
+					w = w.Get.DirectParent; if(w.Is0) break;
+				}
+				return true;
+			}
 		}
 
 		/// <summary>
@@ -536,10 +543,8 @@ namespace Au
 		/// On Windows 7 returns 0 because there is no "cloaked window" feature.
 		/// </summary>
 		/// <seealso cref="IsCloaked"/>
-		public int IsCloakedGetState
-		{
-			get
-			{
+		public int IsCloakedGetState {
+			get {
 				if(!Ver.MinWin8) return 0;
 				int cloaked = 0;
 				int hr = Api.DwmGetWindowAttribute(this, Api.DWMWA.CLOAKED, &cloaked, 4);
@@ -553,8 +558,7 @@ namespace Au
 		/// Windows 10 uses window cloaking mostly to hide windows on inactive desktops. Windows 8 - mostly to hide Metro app windows.
 		/// </summary>
 		/// <seealso cref="IsCloakedGetState"/>
-		public bool IsCloaked
-		{
+		public bool IsCloaked {
 			get => IsCloakedGetState != 0;
 		}
 
@@ -567,8 +571,7 @@ namespace Au
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>IsIconic</msdn>.
 		/// </summary>
-		public bool IsMinimized
-		{
+		public bool IsMinimized {
 			get => Api.IsIconic(this);
 		}
 
@@ -577,8 +580,7 @@ namespace Au
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// Calls API <msdn>IsZoomed</msdn>.
 		/// </summary>
-		public bool IsMaximized
-		{
+		public bool IsMaximized {
 			get => Api.IsZoomed(this);
 		}
 
@@ -1082,7 +1084,7 @@ namespace Au
 		/// </remarks>
 		/// <exception cref="WndException">
 		/// Invalid handle; disabled; failed to set focus; failed to activate parent window.
-		/// Fails to set focus when the target process is admin or uiAccess and this process isn't (see <see cref="Process_.UacInfo">UAC</see>).
+		/// Fails to set focus when the target process is admin or uiAccess and this process isn't (see <see cref="Uac">UAC</see>).
 		/// </exception>
 		/// <seealso cref="Focused"/>
 		/// <seealso cref="IsFocused"/>
@@ -1138,10 +1140,8 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="Focus"/>
 		/// <seealso cref="IsFocused"/>
-		public static Wnd Focused
-		{
-			get
-			{
+		public static Wnd Focused {
+			get {
 				Misc.GetGUIThreadInfo(out var g);
 				return g.hwndFocus;
 			}
@@ -1257,10 +1257,8 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="GetRect"/>. Returns default(RECT) if fails (eg window closed).
 		/// </remarks>
-		public RECT Rect
-		{
-			get
-			{
+		public RECT Rect {
+			get {
 				GetRect(out RECT r);
 				return r;
 			}
@@ -1273,10 +1271,8 @@ namespace Au
 		/// Calls <see cref="GetSize"/>. Returns default(SIZE) if fails (eg window closed).
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		public SIZE Size
-		{
-			get
-			{
+		public SIZE Size {
+			get {
 				GetSize(out SIZE z);
 				return z;
 			}
@@ -1286,8 +1282,7 @@ namespace Au
 		/// Gets horizontal position in screen coordinates.
 		/// </summary>
 		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
-		public int X
-		{
+		public int X {
 			get => Rect.left;
 		}
 
@@ -1295,8 +1290,7 @@ namespace Au
 		/// Gets vertical position in screen coordinates.
 		/// </summary>
 		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
-		public int Y
-		{
+		public int Y {
 			get => Rect.top;
 		}
 
@@ -1304,8 +1298,7 @@ namespace Au
 		/// Gets width.
 		/// </summary>
 		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
-		public int Width
-		{
+		public int Width {
 			get => Rect.Width;
 		}
 
@@ -1313,8 +1306,7 @@ namespace Au
 		/// Gets height.
 		/// </summary>
 		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
-		public int Height
-		{
+		public int Height {
 			get => Rect.Height;
 		}
 
@@ -1361,10 +1353,8 @@ namespace Au
 		/// The left and top fields are always 0. The right and bottom fields are the width and height of the client area.
 		/// Calls <see cref="GetClientRect"/>. Returns default(RECT) if fails (eg window closed).
 		/// </remarks>
-		public RECT ClientRect
-		{
-			get
-			{
+		public RECT ClientRect {
+			get {
 				GetClientRect(out RECT r);
 				return r;
 			}
@@ -1376,10 +1366,8 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="GetClientRect"/>. Returns default(RECT) if fails (eg window closed).
 		/// </remarks>
-		public RECT ClientRectInScreen
-		{
-			get
-			{
+		public RECT ClientRectInScreen {
+			get {
 				GetClientRect(out RECT r, true);
 				return r;
 			}
@@ -1392,10 +1380,8 @@ namespace Au
 		/// The same as <see cref="ClientRect"/>, just the return type is different.
 		/// Calls <see cref="GetClientSize"/>. Returns default(SIZE) if fails (eg window closed).
 		/// </remarks>
-		public SIZE ClientSize
-		{
-			get
-			{
+		public SIZE ClientSize {
+			get {
 				GetClientSize(out SIZE z);
 				return z;
 			}
@@ -1405,8 +1391,7 @@ namespace Au
 		/// Gets client area width.
 		/// </summary>
 		/// <remarks>Calls <see cref="GetClientSize"/>.</remarks>
-		public int ClientWidth
-		{
+		public int ClientWidth {
 			get => ClientSize.width;
 		}
 
@@ -1414,8 +1399,7 @@ namespace Au
 		/// Gets client area height.
 		/// </summary>
 		/// <remarks>Calls <see cref="GetClientSize"/>.</remarks>
-		public int ClientHeight
-		{
+		public int ClientHeight {
 			get => ClientSize.height;
 		}
 
@@ -1655,10 +1639,8 @@ namespace Au
 		/// <summary>
 		/// Returns mouse pointer position relative to the client area of this window.
 		/// </summary>
-		public POINT MouseClientXY
-		{
-			get
-			{
+		public POINT MouseClientXY {
+			get {
 				Api.GetCursorPos(out var p);
 				if(!MapScreenToClient(ref p)) p = default;
 				return p;
@@ -1999,8 +1981,7 @@ namespace Au
 		/// If this window handle is default(Wnd) or invalid, gets the primary screen.
 		/// Calls <see cref="Screen_.ScreenFromWindow"/>.
 		/// </summary>
-		public System.Windows.Forms.Screen Screen
-		{
+		public System.Windows.Forms.Screen Screen {
 			get => Screen_.ScreenFromWindow(this);
 		}
 
@@ -2162,8 +2143,7 @@ namespace Au
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		/// <seealso cref="HasStyle"/>
 		/// <seealso cref="SetStyle"/>
-		public Native.WS Style
-		{
+		public Native.WS Style {
 			get => (Native.WS)(uint)GetWindowLong(Native.GWL.STYLE);
 		}
 
@@ -2174,8 +2154,7 @@ namespace Au
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
 		/// <seealso cref="HasExStyle"/>
 		/// <seealso cref="SetExStyle"/>
-		public Native.WS_EX ExStyle
-		{
+		public Native.WS_EX ExStyle {
 			get => (Native.WS_EX)(uint)GetWindowLong(Native.GWL.EXSTYLE);
 		}
 
@@ -2307,8 +2286,7 @@ namespace Au
 		/// The 'get' function supports <see cref="Native.GetError"/>.
 		/// </summary>
 		/// <exception cref="WndException">Failed (only 'set' function).</exception>
-		public int ControlId
-		{
+		public int ControlId {
 			get => Api.GetDlgCtrlID(this);
 			set { SetWindowLong(Native.GWL.ID, value); }
 		}
@@ -2385,10 +2363,8 @@ namespace Au
 		/// If <see cref="Ver.Is64BitOS"/> is true, calls API <msdn>GetWindowThreadProcessId</msdn>, <msdn>OpenProcess</msdn> and <msdn>IsWow64Process</msdn>.
 		/// <note>If you know that the window belongs to current process, instead use <see cref="Environment.Is64BitProcess"/> or <c>IntPtr.Size==8</c>. This function is much slower.</note>
 		/// </summary>
-		public bool Is64Bit
-		{
-			get
-			{
+		public bool Is64Bit {
+			get {
 				if(Ver.Is64BitOS) {
 					using(var ph = Util.LibKernelHandle.OpenProcess(this)) {
 						if(ph.Is0 || !Api.IsWow64Process(ph, out var is32bit)) return false;
@@ -2412,8 +2388,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if the window is a ghost window that the system creates over a hung (not responding) window to allow the user to minimally interact with it.
 		/// </summary>
-		public bool IsHungGhost
-		{
+		public bool IsHungGhost {
 			get => IsHung && ClassNameIs("Ghost.exe") && ProgramName.EqualsI_("DWM.exe");
 			//Class is "Ghost", exe is "DWM" (even if no Aero), text sometimes ends with "(Not Responding)".
 			//IsHungWindow returns true for ghost window, although it is not actually hung. It is the fastest.
@@ -2434,41 +2409,39 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if <see cref="Process_.UacInfo">UAC</see> would not allow to automate the window.
+		/// Returns true if <see cref="Uac">UAC</see> would not allow to automate the window.
 		/// It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public bool IsUacAccessDenied
-		{
-			get
-			{
+		public bool IsUacAccessDenied {
+			get {
 				Native.ClearError();
 				Api.RemoveProp(this, 0);
 				return Native.GetError() == Api.ERROR_ACCESS_DENIED; //documented
 			}
 		}
 
-		//These are not useful. Use IsAccessDenied or class Process_.UacInfo.
+		//These are not useful. Use IsAccessDenied or class Uac.
 		///// <summary>
 		///// Gets UAC integrity level of window's process.
-		///// Returns IL.Unknown if fails.
+		///// Returns UacIL.Unknown if fails.
 		///// This function considers UIAccess equal to High.
-		///// See also: class Process_.UacInfo.
+		///// See also: class Uac.
 		///// </summary>
-		//public Process_.UacInfo.IL UacIntegrityLevel
+		//public UacIL UacIntegrityLevel
 		//{
-		//	get { var p = Process_.UacInfo.GetOfProcess(ProcessId); return p == null ? UacInfo.IL.Unknown : p.IntegrityLevel; }
+		//	get { var p = Uac.OfProcess(ProcessId); return p == null ? UacIL.Unknown : p.IntegrityLevel; }
 		//}
 
 		///// <summary>
 		///// Returns true if window's process has higher UAC integrity level (IL) than current process.
 		///// Returns true if fails to open process handle, which usually means that the process has higher integrity level.
 		///// This function considers UIAccess equal to High.
-		///// See also: class Process_.UacInfo.
+		///// See also: class Uac.
 		///// </summary>
 		//public bool UacIntegrityLevelIsHigher
 		//{
-		//	get => UacIntegrityLevel > Process_.UacInfo.ThisProcess.IntegrityLevel;
+		//	get => UacIntegrityLevel > Uac.OfThisProcess.IntegrityLevel;
 		//}
 
 		#endregion
@@ -2479,10 +2452,8 @@ namespace Au
 		/// Gets window class name.
 		/// Returns null if fails, eg if the window is closed. Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		public string ClassName
-		{
-			get
-			{
+		public string ClassName {
+			get {
 				const int stackSize = 260;
 				var b = stackalloc char[stackSize]; //tested: same speed with Util.Buffers
 				int n = Api.GetClassName(this, b, stackSize);
@@ -2916,13 +2887,12 @@ namespace Au.Types
 		/// Uses API <msdn>EnumPropsEx</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Returns 0-length list if fails. Fails if invalid window or access denied (<see cref="Process_.UacInfo">UAC</see>). Supports <see cref="Native.GetError"/>.
+		/// Returns 0-length list if fails. Fails if invalid window or access denied (<see cref="Uac">UAC</see>). Supports <see cref="Native.GetError"/>.
 		/// </remarks>
 		public Dictionary<string, LPARAM> GetList()
 		{
 			var a = new Dictionary<string, LPARAM>();
-			Api.EnumPropsEx(_w, (w, name, data, p) =>
-			{
+			Api.EnumPropsEx(_w, (w, name, data, p) => {
 				string s;
 				if((long)name < 0x10000) s = "#" + (int)name; else s = Marshal.PtrToStringUni(name);
 				a.Add(s, data);

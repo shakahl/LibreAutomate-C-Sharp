@@ -662,10 +662,11 @@ namespace Au.Tools
 					b.Append("<i>ProcessId<>:    ").AppendLine(pid.ToString());
 					b.Append("<i>ThreadId<>:    ").AppendLine(tid.ToString());
 					b.Append("<i>Is64Bit<>:    ").AppendLine(w.Is64Bit.ToString());
-					var uac = Process_.UacInfo.GetOfProcess(pid);
-					b.Append("<i><help T_Au_Process__UacInfo>UAC<> IL, elevation<>:    ")
-						.Append(uac.IntegrityLevel.ToString())
-						.Append(", ").AppendLine(uac.Elevation.ToString());
+					using(var uac = Uac.OfProcess(pid)) {
+						b.Append("<i><help T_Au_Process__UacInfo>UAC<> IL, elevation<>:    ")
+							.Append(uac.IntegrityLevel.ToString())
+							.Append(", ").AppendLine(uac.Elevation.ToString());
+					}
 
 					//if control's process or thread is different...
 					if(!c.Is0) {

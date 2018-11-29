@@ -983,7 +983,7 @@ namespace Au
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// If the directory already exists, this function does nothing, and returns false.
-		/// Else, at first it creates missing parent/ancestor directories, then creates the specified (path) directory.
+		/// Else, at first it creates missing parent/ancestor directories, then creates the specified directory.
 		/// To create the specified directory, calls API <msdn>CreateDirectory</msdn> or <msdn>CreateDirectoryEx</msdn> (if templateDirectory is not null).
 		/// </remarks>
 		public static bool CreateDirectory(string path, string templateDirectory = null)

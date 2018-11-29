@@ -423,12 +423,12 @@ namespace Au.Controls
 			/// <summary>
 			/// If hit test on a tabbed _Panel, returns its parent _Tab, else null.
 			/// </summary>
-			internal _Tab ParentTab { get => gp?.ParentTab; }
+			internal _Tab ParentTab => gp?.ParentTab;
 
 			/// <summary>
 			/// If hit test on a _ContentNode, returns it, else null.
 			/// </summary>
-			internal _ContentNode ContentNode { get => gt ?? gp as _ContentNode; }
+			internal _ContentNode ContentNode => gt ?? gp as _ContentNode;
 		}
 
 		/// <summary>

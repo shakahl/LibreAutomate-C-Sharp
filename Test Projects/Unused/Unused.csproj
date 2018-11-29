@@ -35,6 +35,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="App\IPC.cs" />
     <Compile Include="Library\Api_COM_wrap.cs" />
     <Compile Include="Library\Rejected\AuToobar with ImageCache.cs" />
     <Compile Include="Library\BitList.cs" />

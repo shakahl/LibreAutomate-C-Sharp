@@ -124,9 +124,9 @@ namespace Au.Compiler
 	/// restartOrWait - if that task is of this script/app, end it and run. Else like 'wait'. Cannot be used with unattended tasks.
 	/// 
 	/// About uac:
-	/// same (default) - the task process has the same UAC integrity level as of the editor process, probably Medium.
+	/// same (default) - the task process has the same UAC integrity level as of the editor process.
 	/// user - the task process has UAC integrity level Medium, like most applications. Such tasks cannot automate windows of processes that run as administrator, cannot modify some directories and registry keys, etc.
-	/// admin - the task process has UAC integrity level High, also known as "runs as administrator" or "elevated". Normally it starts without a UAC consent screen/dialog. Such tasks don't have the above limitations, but can have some others, for example cannot automate some apps through COM.
+	/// admin - the task process has UAC integrity level High, also known as "runs as administrator" or "elevated". Such tasks don't have the above limitations, but can have some others, for example cannot automate some apps through COM.
 	/// 
 	/// <h3>Other</h3>
 	/// <code><![CDATA[

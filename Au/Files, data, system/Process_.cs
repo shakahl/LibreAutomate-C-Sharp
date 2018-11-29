@@ -112,7 +112,7 @@ namespace Au
 			static extern void WTSFreeMemory(LibProcessInfo* memory);
 		}
 #else //the .NET Process class uses this. But it creates about 0.4 MB of garbage.
-		struct _AllProcesses :IDisposable
+		struct _AllProcesses : IDisposable
 		{
 			LibProcessInfo* _p;
 
@@ -489,7 +489,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Starts UAC Medium integrity level process from this admin process.
+		/// Starts UAC Medium integrity level (IL) process from this admin process.
 		/// </summary>
 		/// <param name="exeFile">Full path of program file, or filename/relative in <see cref="Folders.ThisApp"/>. Uses <see cref="Path_.Normalize"/>.</param>
 		/// <param name="args">null or command line arguments.</param>
@@ -497,53 +497,69 @@ namespace Au
 		/// <param name="need">Which field to set in <b>StartResult</b>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
-		/// Asserts and fails if this is not admin/system process. Caller should at first call Process_.UacInfo.IsAdmin or Process_.UacInfo.ThisProcess.IntegrityLevel.
+		/// Actually the process will have the same IL and user session as the shell process (normally explorer).
 		/// Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
+		/// Asserts and fails if this is not admin/system process. Caller should at first call <see cref="Uac.IsAdmin"/> or <see cref="Uac.IntegrityLevel"/>.
 		/// </remarks>
 		internal static StartResult LibStartUserIL(string exeFile, string args, string envVar = null, StartResult.Need need = 0)
 		{
-			//CONSIDER: use Task Scheduler if possible.
+			if(s_userToken == null) {
+				Debug.Assert(Uac.IsAdmin); //else cannot set privilege
+				if(!Util.Security_.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
 
-			Debug.Assert(UacInfo.IsAdmin); //cannot set privilege if user or uiAccess
-			if(!Util.Security_.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
+				//Perf.First();
+#if false //works, but slow, eg 60 ms, even if we don't create task everytime
+				var s = $"\"{Folders.ThisAppBS}Dll\\{(Ver.Is64BitProcess ? "64" : "32")}bit\\AuCpp.dll\",Cpp_RunDll";
+				Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, Folders.System + "rundll32.exe", s);
+				//Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, Folders.System + "notepad.exe"); //slow too
+				//Perf.Next();
+				int pid = Au.Util.LibTaskScheduler.RunTask("Au", "rundll32");
+				//Perf.Next();
+				//Print(pid);
+				var hUserProcess = Util.LibKernelHandle.OpenProcess(pid);
+				//Print((IntPtr)hUserProcess);
+				if(hUserProcess.Is0) goto ge;
+#else
+				bool retry = false;
+				g1:
+				var w = Api.GetShellWindow();
+				if(w.Is0) { //if Explorer process killed or crashed, wait until it restarts
+					if(!WaitFor.Condition(2, () => !Api.GetShellWindow().Is0)) throw new AuException($"Cannot start process '{exeFile}' as user. There is no shell process.");
+					500.ms();
+					w = Api.GetShellWindow();
+				}
 
-			bool retry = false;
-			g1:
-			var w = Api.GetShellWindow();
-			if(w.Is0) { //if Explorer process killed or crashed, wait until it restarts
-				if(!WaitFor.Condition(2, () => !Api.GetShellWindow().Is0)) throw new AuException($"Cannot start process '{exeFile}' as user. There is no shell process.");
-				500.ms();
-				w = Api.GetShellWindow();
+				var hUserProcess = Util.LibKernelHandle.OpenProcess(w);
+				if(hUserProcess.Is0) {
+					if(retry) goto ge;
+					retry = true; 500.ms(); goto g1;
+				}
+
+				//two other ways:
+				//1. Enum processes and find one that has Medium IL. Unreliable, eg its token may be modified.
+				//2. Start a service process. Let it start a Medium IL process like in QM2. Because LocalSystem can get token with WTSQueryUserToken.
+				//tested: does not work with GetTokenInformation(TokenLinkedToken). Even if would work, in non-admin session it is wrong token.
+#endif
+				//Perf.NW();
+
+				if(Api.OpenProcessToken(hUserProcess, Api.TOKEN_DUPLICATE, out var hShellToken)) {
+					const uint access = Api.TOKEN_QUERY | Api.TOKEN_ASSIGN_PRIMARY | Api.TOKEN_DUPLICATE | Api.TOKEN_ADJUST_DEFAULT | Api.TOKEN_ADJUST_SESSIONID;
+					if(Api.DuplicateTokenEx(hShellToken, access, null, Api.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation, Api.TOKEN_TYPE.TokenPrimary, out var userToken))
+						s_userToken = new Microsoft.Win32.SafeHandles.SafeAccessTokenHandle(userToken);
+					Api.CloseHandle(hShellToken);
+				}
+				Api.CloseHandle(hUserProcess);
+				if(s_userToken == null) goto ge;
 			}
 
-			IntPtr hShellToken = default, hPrimaryToken = default;
-			var hShellProcess = Util.LibKernelHandle.OpenProcess(w);
-			if(hShellProcess.Is0) {
-				if(retry) goto ge;
-				retry = true; 500.ms(); goto g1;
-			}
-
-			Api.PROCESS_INFORMATION pi = default;
-			try {
-				if(!Api.OpenProcessToken(hShellProcess, Api.TOKEN_DUPLICATE, out hShellToken)) goto ge;
-				const uint access = Api.TOKEN_QUERY | Api.TOKEN_ASSIGN_PRIMARY | Api.TOKEN_DUPLICATE | Api.TOKEN_ADJUST_DEFAULT | Api.TOKEN_ADJUST_SESSIONID;
-				if(!Api.DuplicateTokenEx(hShellToken, access, null, Api.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation, Api.TOKEN_TYPE.TokenPrimary, out hPrimaryToken)) goto ge;
-
-				bool suspended = need == StartResult.Need.NetProcess && !_NetProcessObject.IsFast;
-				var x = _ParamsForCreateProcess(exeFile, args, ref envVar, suspended: suspended);
-
-				if(!Api.CreateProcessWithTokenW(hPrimaryToken, 0, null, x.cl, x.flags, envVar, x.dir, x.si, out pi)) goto ge;
-
-				return new StartResult(pi, need, suspended);
-			}
-			finally {
-				Api.CloseHandle(hPrimaryToken);
-				Api.CloseHandle(hShellToken);
-				hShellProcess.Dispose();
-			}
+			bool suspended = need == StartResult.Need.NetProcess && !_NetProcessObject.IsFast;
+			var x = _ParamsForCreateProcess(exeFile, args, ref envVar, suspended: suspended);
+			if(!Api.CreateProcessWithTokenW(s_userToken.DangerousGetHandle(), 0, null, x.cl, x.flags, envVar, x.dir, x.si, out var pi)) goto ge;
+			return new StartResult(pi, need, suspended);
 
 			ge: throw new AuException(0, $"*start process '{exeFile}' as user");
 		}
+		static Microsoft.Win32.SafeHandles.SafeAccessTokenHandle s_userToken;
 
 		/// <summary>
 		/// Results of LibStart and LibStartUserIL.

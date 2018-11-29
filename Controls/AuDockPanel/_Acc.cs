@@ -41,7 +41,7 @@ namespace Au.Controls
 				return AccObj;
 			}
 
-			internal string AccName { get => _gc.AccName; }
+			internal string AccName => _gc.AccName;
 		}
 
 		partial class _Node
@@ -58,22 +58,22 @@ namespace Au.Controls
 
 		partial class _Panel
 		{
-			internal override string AccName { get => Name; }
-			internal override string AccDescription { get => ToolTipText; }
+			internal override string AccName => Name;
+			internal override string AccDescription => ToolTipText;
 
 		}
 
 		partial class _Tab
 		{
-			internal override string AccName { get => "Tab group " + _manager._aTab.IndexOf(this); }
-			internal override string AccDescription { get => string.Join(", ", this.Items.Select(v => v.AccName)); }
+			internal override string AccName => "Tab group " + _manager._aTab.IndexOf(this);
+			internal override string AccDescription => string.Join(", ", this.Items.Select(v => v.AccName));
 
 		}
 
 		partial class _Split
 		{
-			internal override string AccName { get => "Splitter " + _manager._aSplit.IndexOf(this); }
-			internal override string AccDescription { get => (this.IsVerticalSplit ? "Vertical" : "Horizontal"); }
+			internal override string AccName => "Splitter " + _manager._aSplit.IndexOf(this);
+			internal override string AccDescription => (this.IsVerticalSplit ? "Vertical" : "Horizontal");
 
 		}
 
@@ -93,13 +93,13 @@ namespace Au.Controls
 				_gf = ownerControl as _Float;
 			}
 
-			//public override AccessibleRole Role { get => AccessibleRole.Client; }
+			//public override AccessibleRole Role => AccessibleRole.Client;
 
-			public override string Name { get => (_gf == null) ? "Panels" : _gf.AccName; }
+			public override string Name => (_gf == null) ? "Panels" : _gf.AccName;
 
-			public override AccessibleStates State { get => AccessibleStates.None; } //default is Focusable
+			public override AccessibleStates State => AccessibleStates.None; //default is Focusable
 
-			//public override Rectangle Bounds { get => base.Bounds; }
+			//public override Rectangle Bounds => base.Bounds;
 
 			public override AccessibleObject HitTest(int x, int y)
 			{
@@ -167,9 +167,9 @@ namespace Au.Controls
 				return null;
 			}
 
-			//public override AccessibleObject Parent { get => base.Parent; }
+			//public override AccessibleObject Parent => base.Parent;
 
-			//public override string DefaultAction { get => base.DefaultAction; }
+			//public override string DefaultAction => base.DefaultAction;
 		}
 
 		/// <summary>
@@ -197,7 +197,7 @@ namespace Au.Controls
 				}
 			}
 
-			public override string Name { get => _gn.AccName; }
+			public override string Name => _gn.AccName;
 
 			public override AccessibleStates State
 			{
@@ -242,7 +242,7 @@ namespace Au.Controls
 				}
 			}
 
-			public override string Description { get => _gn.AccDescription; }
+			public override string Description => _gn.AccDescription;
 
 			public override string DefaultAction
 			{

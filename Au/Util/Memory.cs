@@ -505,7 +505,7 @@ namespace Au.Util
 	/// This is a modified copy of the .NET internal StringBuilderCache class.
 	/// The cache uses 2 [ThreadLocal] StringBuilder instances, which allows 1 nesting level. Not error to use deeper nesting level, but then gets new StringBuilder, not from the cache.
 	/// </remarks>
-	internal struct LibStringBuilder :IDisposable
+	internal struct LibStringBuilder : IDisposable
 	{
 		StringBuilder _sb;
 
@@ -588,7 +588,7 @@ namespace Au.Util
 	}
 
 	/// <summary>
-	/// Binary-serializes and deserializes multiple values of types int, string, string[] and null.
+	/// Binary-serializes and deserializes multiple values of types int, string, string[], byte[] and null.
 	/// Much faster than BinaryFormatter, CSV, etc.
 	/// </summary>
 	internal static unsafe class LibSerializer
@@ -599,21 +599,25 @@ namespace Au.Util
 		/// </summary>
 		public struct Value
 		{
-			internal object _o;
-			internal int _i;
-			internal int _type; //0 null, 1 int, 2 string, 3 string[]
+			public object Obj;
+			public int Int;
+			public VType Type;
 
-			Value(int i) { _o = null; _i = i; _type = 1; }
-			Value(object o, int type) { _o = o; _i = 0; _type = o != null ? type : 0; }
+			Value(int i) { Obj = null; Int = i; Type = VType.Int; }
+			Value(object o, VType type) { Obj = o; Int = 0; Type = o != null ? type : VType.Null; }
 
 			public static implicit operator Value(int i) => new Value(i);
-			public static implicit operator Value(string s) => new Value(s, 2);
-			public static implicit operator Value(string[] a) => new Value(a, 3);
+			public static implicit operator Value(string s) => new Value(s, VType.String);
+			public static implicit operator Value(string[] a) => new Value(a, VType.StringArray);
+			public static implicit operator Value(byte[] a) => new Value(a, VType.ByteArray);
 
-			public static implicit operator int(Value a) => a._i;
-			public static implicit operator string(Value a) => a._o as string;
-			public static implicit operator string[] (Value a) => a._o as string[];
+			public static implicit operator int(Value a) => a.Int;
+			public static implicit operator string(Value a) => a.Obj as string;
+			public static implicit operator string[] (Value a) => a.Obj as string[];
+			public static implicit operator byte[] (Value a) => a.Obj as byte[];
 		}
+
+		public enum VType { Null, Int, String, StringArray, ByteArray }
 
 		/// <summary>
 		/// Serializes multiple values of types int, string, string[] and null.
@@ -634,14 +638,15 @@ namespace Au.Util
 			if(withSize) size += 4;
 			for(int i = 0; i < a.Length; i++) {
 				size++;
-				switch(a[i]._type) {
-				case 1: size += 4; break;
-				case 2: size += 4 + (a[i]._o as string).Length * 2; break;
-				case 3:
+				switch(a[i].Type) {
+				case VType.Int: size += 4; break;
+				case VType.String: size += 4 + (a[i].Obj as string).Length * 2; break;
+				case VType.StringArray:
 					int z = 4;
-					foreach(var v in a[i]._o as string[]) z += 4 + v.Length_() * 2;
+					foreach(var v in a[i].Obj as string[]) z += 4 + v.Length_() * 2;
 					size += z;
 					break;
+				case VType.ByteArray: size += 4 + (a[i].Obj as byte[]).Length; break;
 				}
 			}
 			var ab = new byte[size];
@@ -650,21 +655,30 @@ namespace Au.Util
 				if(withSize) { *(int*)b = ab.Length - 4; b += 4; }
 				*(int*)b = a.Length; b += 4;
 				for(int i = 0; i < a.Length; i++) {
-					var ty = a[i]._type;
+					var ty = a[i].Type;
 					*b++ = (byte)ty;
 					switch(ty) {
-					case 1:
-						*(int*)b = a[i]._i;
+					case VType.Int:
+						*(int*)b = a[i].Int;
 						b += 4;
 						break;
-					case 2:
-						var s = a[i]._o as string;
+					case VType.String:
+						var s = a[i].Obj as string;
 						_AddString(s);
 						break;
-					case 3:
-						var k = a[i]._o as string[];
+					case VType.StringArray:
+						var k = a[i].Obj as string[];
 						*(int*)b = k.Length; b += 4;
-						foreach(var v in k) _AddString(v);
+						foreach(var v in k) {
+							if(v != null) _AddString(v);
+							else { *(int*)b = -1; b += 4; }
+						}
+						break;
+					case VType.ByteArray:
+						var u = a[i].Obj as byte[];
+						*(int*)b = u.Length; b += 4;
+						u.CopyTo(ab, b - b0);
+						b += u.Length;
 						break;
 					}
 				}
@@ -672,9 +686,7 @@ namespace Au.Util
 
 				void _AddString(string s)
 				{
-					int len = s?.Length ?? -1;
-					*(int*)b = len; b += 4;
-					if(len == -1) return;
+					*(int*)b = s.Length; b += 4;
 					var c = (char*)b;
 					for(int j = 0; j < s.Length; j++) c[j] = s[j];
 					b += s.Length * 2;
@@ -694,19 +706,25 @@ namespace Au.Util
 				int n = *(int*)b; b += 4;
 				var a = new Value[n];
 				for(int i = 0; i < n; i++) {
-					switch(*b++) {
-					case 0:
+					switch((VType)(*b++)) {
+					case VType.Null:
 						break;
-					case 1:
+					case VType.Int:
 						a[i] = *(int*)b; b += 4;
 						break;
-					case 2:
+					case VType.String:
 						a[i] = _GetString();
 						break;
-					case 3:
+					case VType.StringArray:
 						var k = new string[*(int*)b]; b += 4;
 						for(int j = 0; j < k.Length; j++) k[j] = _GetString();
 						a[i] = k;
+						break;
+					case VType.ByteArray:
+						var u = new byte[*(int*)b]; b += 4;
+						Array.Copy(serialized, b - b0, u, 0, u.Length);
+						b += u.Length;
+						a[i] = u;
 						break;
 					default: throw new ArgumentException();
 					}

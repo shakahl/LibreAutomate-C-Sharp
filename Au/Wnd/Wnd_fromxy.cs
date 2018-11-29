@@ -37,7 +37,7 @@ namespace Au
 		/// <remarks>
 		/// Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
 		/// This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <msdn>RealChildWindowFromPoint</msdn>. Also does not skip disabled controls. All this is not true with flag Raw.
-		/// This function is not very fast. Fastest when used flag NeedWindow. Flag Raw also makes it faster.
+		/// This function is not very fast, probably 0.3 - 1 ms.
 		/// </remarks>
 		public static Wnd FromXY(POINT p, WXYFlags flags = 0)
 		{
@@ -60,11 +60,11 @@ namespace Au
 				//None of the API uses WM_NCHITTEST+HTTRANSPARENT. Tested only with TL of other processes.
 				//AccessibleObjectFromPoint.get_Parent in most cases gets the most correct window/control, but it is dirty, unreliable and often very slow, because sends WM_GETOBJECT etc.
 				//speed:
-				//RealChildWindowFromPoint is the fastest. About 5 mcs.
-				//ChildWindowFromPointEx is 50% slower.
+				//RealChildWindowFromPoint is the fastest.
+				//ChildWindowFromPointEx is slower.
 				//WindowFromPoint is 4 times slower; .Window does not make significantly slower.
 				//AccessibleObjectFromPoint.get_Parent often is of RealChildWindowFromPoint speed, but often much slower than all others.
-				//IUIAutomation.FromPoint super slow, 6-10 ms. Getting window handle from it is not easy, > 0.5 ms.
+				//IUIAutomation.FromPoint very slow. Getting window handle from it is not easy, > 0.5 ms.
 			}
 
 			w = Api.WindowFromPoint(p);
@@ -104,10 +104,10 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X coordinate in the client area of this window. Can be <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y coordinate in the client area of this window. Can be <b>Coord.Reverse</b> etc.</param>
-		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
 		/// <param name="screenXY">x y are relative to the pimary screen, not to the client area.</param>
+		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
-		public Wnd ChildFromXY(Coord x, Coord y, bool directChild = false, bool screenXY = false)
+		public Wnd ChildFromXY(Coord x, Coord y, bool screenXY = false, bool directChild = false)
 		{
 			ThrowIfInvalid();
 			POINT p = screenXY ? Coord.Normalize(x, y) : Coord.NormalizeInWindow(x, y, this);
@@ -116,9 +116,9 @@ namespace Au
 
 		/// <inheritdoc cref="ChildFromXY(Coord, Coord, bool, bool)"/>
 		/// <param name="p">Coordinates in the client area of this window.</param>
-		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
 		/// <param name="screenXY">p is relative to the pimary screen, not to the client area.</param>
-		public Wnd ChildFromXY(POINT p, bool directChild, bool screenXY)
+		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
+		public Wnd ChildFromXY(POINT p, bool screenXY = false, bool directChild = false)
 		{
 			ThrowIfInvalid();
 			return _ChildFromXY(p, directChild, screenXY);

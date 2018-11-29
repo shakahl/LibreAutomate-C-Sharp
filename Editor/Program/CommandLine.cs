@@ -31,6 +31,7 @@ static class CommandLine
 	{
 		string s = null;
 		int cmd = 0;
+		bool activateWnd = true;
 		if(a.Length > 0) {
 			//Print(a);
 
@@ -42,7 +43,11 @@ static class CommandLine
 				for(int i = 0; i < a.Length; i++) {
 					s = a[i];
 					switch(s) {
+					case "/test":
+						if(++i < a.Length) TestArg = a[i];
+						break;
 					//case "/x":
+					//	activateWnd = false;
 					//	if(cmd != 0 || ++i == a.Length) { Console.WriteLine("/x used incorrectly"); return true; }
 					//	cmd = ;
 					//	break;
@@ -64,24 +69,38 @@ static class CommandLine
 			}
 		}
 
+		//single instance
+		s_mutex = new Mutex(true, "Au.Mutex.1", out bool createdNew);
+		if(createdNew) return false;
+
 		var w = Wnd.FindFast(null, c_msgClass);
-		if(w.Is0) return false;
+		if(!w.Is0) {
+			if(activateWnd) {
+				Wnd wMain = (Wnd)w.Send(Api.WM_USER);
+				if(!wMain.Is0) {
+					try { wMain.Activate(); }
+					catch { }
+				}
+			}
 
-		if(a.Length == 0) { //activate main window
-			Wnd wMain = (Wnd)w.Send(Api.WM_USER);
-			if(!wMain.Is0) wMain.ActivateLL();
-		}
-
-		switch(cmd) {
-		case 3: //import files
-			s = string.Join("\0", a);
-			break;
-		}
-		if(cmd != 0) {
-			Wnd.Misc.CopyDataStruct.SendString(w, cmd, s);
+			switch(cmd) {
+			case 3: //import files
+				s = string.Join("\0", a);
+				break;
+			}
+			if(cmd != 0) {
+				Wnd.Misc.CopyDataStruct.SendString(w, cmd, s);
+			}
 		}
 		return true;
 	}
+
+	static Mutex s_mutex;
+
+	/// <summary>
+	/// null or argument after "/test".
+	/// </summary>
+	public static string TestArg;
 
 	public static void OnAfterCreatedFormAndOpenedWorkspace()
 	{
@@ -91,9 +110,9 @@ static class CommandLine
 		}
 		catch(Exception ex) { Print(ex.Message); }
 
-		Wnd.Misc.CopyDataStruct.EnableReceivingWM_COPYDATA();
+		Wnd.Misc.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER);
 		Wnd.Misc.MyWindow.RegisterClass(c_msgClass);
-		_msgWnd = new MsgWindow();
+		_msgWnd = new _MsgWindow();
 		_msgWnd.CreateMessageWindow(c_msgClass);
 	}
 
@@ -106,21 +125,36 @@ static class CommandLine
 	static string[] _importFiles;
 
 	const string c_msgClass = "Au.Editor.Msg";
-	static MsgWindow _msgWnd;
+	static _MsgWindow _msgWnd;
 
-	class MsgWindow :Wnd.Misc.MyWindow
+	/// <summary>
+	/// The message-only window.
+	/// Don't call before the program is fully inited and OnAfterCreatedFormAndOpenedWorkspace called.
+	/// </summary>
+	public static Wnd MsgWnd => _msgWnd.Handle;
+
+	class _MsgWindow : Wnd.Misc.MyWindow
 	{
 		protected override LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
 		{
 			switch(message) {
 			case Api.WM_COPYDATA:
 				if(MainForm.IsClosed) return default;
-				try { return _WmCopyData(wParam, lParam); }
-				catch(Exception ex) { Print(ex.Message); }
+				try { return _WmCopyData(wParam, lParam); } catch(Exception ex) { Print(ex.Message); }
 				return default;
-			case Api.WM_USER: //return main form window handle
+			case Api.WM_USER:
 				if(MainForm.IsClosed) return default;
-				return MainForm.Handle;
+				int i = (int)wParam;
+				switch(i) {
+				case 0:
+					return MainForm.Handle; //return main form window handle
+				case 1: case 2: case 3: //received from our non-admin drop-target process on OnDragOver/Drop/Leave
+					return (int)UacDragDrop.AdminProcess.OnDragEvent(i, (int)lParam);
+				case 10:
+					UacDragDrop.AdminProcess.OnTransparentWindowCreated((Wnd)lParam);
+					break;
+				}
+				return 0;
 			}
 
 			return base.WndProc(w, message, wParam, lParam);
@@ -165,6 +199,8 @@ static class CommandLine
 				return (int)AuTask.ERunResult.notFound;
 			}
 			return Run.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
+		case 110: //received from our non-admin drop-target process on OnDragEnter
+			return (int)UacDragDrop.AdminProcess.OnDragEvent(0, 0, b);
 		default:
 			Debug.Assert(false);
 			return 0;

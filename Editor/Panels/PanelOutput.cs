@@ -28,7 +28,7 @@ class PanelOutput :Control
 	SciOutput _c;
 	Queue<Au.Util.OutputServer.Message> _history;
 
-	//public SciControl Output { get => _c; }
+	//public SciControl Output => _c;
 
 	public PanelOutput()
 	{

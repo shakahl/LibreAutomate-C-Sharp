@@ -135,7 +135,7 @@ namespace Au
 			/// Using flag <see cref="AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
 			/// </exception>
 			/// <exception cref="WndException">Invalid window.</exception>
-			/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Process_.UacInfo">UAC</see> integrity level process.</exception>
+			/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Uac">UAC</see> integrity level process.</exception>
 			public bool Find(Wnd w)
 			{
 				return _FindOrWait(w, 0, false);
@@ -154,7 +154,7 @@ namespace Au
 			/// Using flag <see cref="AFFlags.UIA"/>.
 			/// <see cref="SimpleElementId"/> is not 0.
 			/// </exception>
-			/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Process_.UacInfo">UAC</see> integrity level process.</exception>
+			/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Uac">UAC</see> integrity level process.</exception>
 			public bool Find(Acc a)
 			{
 				return _FindOrWait(a, 0, false);
@@ -431,7 +431,7 @@ namespace Au
 		/// Using flag <see cref="AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
 		/// </exception>
 		/// <exception cref="WndException">Invalid window (if the function has parameter <paramref name="w"/>).</exception>
-		/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Process_.UacInfo">UAC</see> integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Uac">UAC</see> integrity level process.</exception>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.Form_Acc</b> in Au.Tools.dll.
 		/// 

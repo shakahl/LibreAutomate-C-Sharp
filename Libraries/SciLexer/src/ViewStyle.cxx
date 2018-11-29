@@ -424,7 +424,7 @@ void ViewStyle::ResetDefaultStyle() {
 //Au: added from and to. Replaced whole function.
 //info: to is not included.
 void ViewStyle::ClearStyles(int from, int to) {
-	int n = styles.size();
+	int n = (int)styles.size();
 	if (to == 0 || to > n) to = n;
 	// Reset all styles to be like the default style
 	for (int i = from; i < to; i++) {

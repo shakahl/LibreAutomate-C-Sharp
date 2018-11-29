@@ -22,19 +22,22 @@ namespace Au
 	partial class Shell
 	{
 		/// <summary>
-		/// Manages an ITEMIDLIST structure that is used with shell API to identify files and other shell objects. Like a file-system path, but not string.
+		/// Manages an ITEMIDLIST structure that is used with shell API to identify files and other shell objects instead of a file-system path.
 		/// </summary>
 		/// <remarks>
-		/// When calling shell API, virtual objects can be identified only by ITEMIDLIST. Some API also support "parsing name", which usually looks like "::{CLSID-1}\::{CLSID-2}". File-system objects can be identified by path as well as by ITEMIDLIST. URLs can be identified by URL as well as by ITEMIDLIST.
+		/// Wraps an ITEMIDLIST*, also known as PIDL or LPITEMIDLIST. In C# it is IntPtr.
+		/// When calling shell API, virtual objects can be identified only by ITEMIDLIST*. Some API also support "parsing name", which may look like "::{CLSID-1}\::{CLSID-2}". File-system objects can be identified by path as well as by ITEMIDLIST*. URLs can be identified by URL as well as by ITEMIDLIST*.
 		/// 
-		/// The ITEMIDLIST structure is in unmanaged memory, therefore this class implements IDisposable.
+		/// The ITEMIDLIST structure is in unmanaged memory. You should always dispose Pidl variables.
+		/// 
+		/// This class has only ITEMIDLIST functions that are used in this library. Look for other functions in the MSDN library. Many of them are named with IL prefix, like ILClone, ILGetSize, ILFindLastID.
 		/// </remarks>
 		public unsafe sealed class Pidl :IDisposable
 		{
 			IntPtr _pidl;
 
 			/// <summary>
-			/// Gets the ITEMIDLIST pointer (PIDL).
+			/// Gets the ITEMIDLIST* (PIDL).
 			/// </summary>
 			/// <remarks>
 			/// The ITEMIDLIST memory is managed by this variable and will be freed when disposing or GC-collecting it. Use <see cref="GC.KeepAlive"/> where need.
@@ -42,7 +45,7 @@ namespace Au
 			public IntPtr UnsafePtr => _pidl;
 
 			/// <summary>
-			/// Gets the ITEMIDLIST pointer (PIDL).
+			/// Gets the ITEMIDLIST* (PIDL).
 			/// </summary>
 			/// <remarks>
 			/// Use to pass to API where the parameter type is HandlePtr. It is safer than <see cref="UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
@@ -58,11 +61,21 @@ namespace Au
 			/// Assigns an ITEMIDLIST to this variable.
 			/// </summary>
 			/// <param name="pidl">
-			/// ITEMIDLIST pointer (PIDL).
+			/// ITEMIDLIST* (PIDL).
 			/// It can be created by any API that creates ITEMIDLIST. They allocate the memory with API CoTaskMemAlloc.
 			/// This variable will finally free it with Marshal.FreeCoTaskMem.
 			/// </param>
 			public Pidl(IntPtr pidl) => _pidl = pidl;
+
+			/// <summary>
+			/// Combines two ITEMIDLIST (parent and child) and assigns the result to this variable.
+			/// </summary>
+			/// <param name="pidlAbsolute">Absolute PIDL (parent folder).</param>
+			/// <param name="pidlRelative">Relative PIDL (child object).</param>
+			/// <remarks>
+			/// Does not free <paramref name="pidlAbsolute"/> and <paramref name="pidlRelative"/>.
+			/// </remarks>
+			public Pidl(IntPtr pidlAbsolute, IntPtr pidlRelative) => _pidl = Api.ILCombine(pidlAbsolute, pidlRelative);
 
 			/// <summary>
 			/// Frees the ITEMIDLIST with Marshal.FreeCoTaskMem and clears this variable.
@@ -113,7 +126,7 @@ namespace Au
 			}
 
 			/// <summary>
-			/// The same as <see cref="FromString"/>, just returns unmanaged ITEMIDLIST pointer (PIDL).
+			/// The same as <see cref="FromString"/>, but returns unmanaged ITEMIDLIST* (PIDL).
 			/// Later need to free it with Marshal.FreeCoTaskMem.
 			/// </summary>
 			/// <param name="s"></param>
@@ -158,15 +171,15 @@ namespace Au
 			/// </remarks>
 			public string ToShellString(Native.SIGDN stringType, bool throwIfFailed = false)
 			{
-				var R = LibToShellString(_pidl, stringType, throwIfFailed);
+				var R = ToShellString2(_pidl, stringType, throwIfFailed);
 				GC.KeepAlive(this);
 				return R;
 			}
 
 			/// <summary>
-			/// The same as <see cref="ToShellString"/>, just uses an ITEMIDLIST pointer that is not stored in a Pidl variable.
+			/// The same as <see cref="ToShellString"/>, but uses an ITEMIDLIST* that is not stored in a Pidl variable.
 			/// </summary>
-			internal static string LibToShellString(IntPtr pidl, Native.SIGDN stringType, bool throwIfFailed = false)
+			public static string ToShellString2(IntPtr pidl, Native.SIGDN stringType, bool throwIfFailed = false)
 			{
 				if(pidl == default) return null;
 				var hr = Api.SHGetNameFromIDList(pidl, stringType, out string R);
@@ -182,16 +195,16 @@ namespace Au
 			/// </summary>
 			public override string ToString()
 			{
-				var R = LibToString(_pidl);
+				var R = ToString2(_pidl);
 				GC.KeepAlive(this);
 				return R;
 			}
 
 #if true
 			/// <summary>
-			/// The same as <see cref="ToString"/>, just uses an ITEMIDLIST pointer that is not stored in a Pidl variable.
+			/// The same as <see cref="ToString"/>, but uses an ITEMIDLIST* that is not stored in a Pidl variable.
 			/// </summary>
-			internal static string LibToString(IntPtr pidl)
+			public static string ToString2(IntPtr pidl)
 			{
 				if(pidl == default) return null;
 				Api.IShellItem si = null;
@@ -206,7 +219,7 @@ namespace Au
 					}
 				}
 				finally { Api.ReleaseComObject(si); }
-				return LibToHexString(pidl);
+				return ToHexString2(pidl);
 			}
 			//this version is 40% slower with non-virtual objects (why?), but with virtual objects same speed as SIGDN_DESKTOPABSOLUTEPARSING.
 			//The fastest (update: actually not) version would be to call LibToShellString(SIGDN_DESKTOPABSOLUTEPARSING), and then call LibToHexString if it returns not a path or URL. But it is unreliable, because can return string in any format, eg "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
@@ -249,15 +262,15 @@ namespace Au
 			/// </summary>
 			public string ToHexString()
 			{
-				var R = LibToHexString(_pidl);
+				var R = ToHexString2(_pidl);
 				GC.KeepAlive(this);
 				return R;
 			}
 
 			/// <summary>
-			/// The same as <see cref="ToHexString"/>, just uses an ITEMIDLIST pointer that is not stored in a Pidl variable.
+			/// The same as <see cref="ToHexString"/>, but uses an ITEMIDLIST* that is not stored in a Pidl variable.
 			/// </summary>
-			internal static string LibToHexString(IntPtr pidl)
+			public static string ToHexString2(IntPtr pidl)
 			{
 				if(pidl == default) return null;
 				int n = Api.ILGetSize(pidl) - 2; //API gets size with the terminating '\0' (2 bytes)

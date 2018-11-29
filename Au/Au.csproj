@@ -72,7 +72,7 @@
     <Compile Include="Acc\Acc.cs" />
     <Compile Include="Common\ExtForms.cs" />
     <Compile Include="Common\ExtXml.cs" />
-    <Compile Include="Files, data, system\Process_.UacInfo.cs" />
+    <Compile Include="Files, data, system\Uac.cs" />
     <Compile Include="Files, data, system\Process_.Memory.cs" />
     <Compile Include="Files, data, system\Sqlite.cs" />
     <Compile Include="Files, data, system\Sqlite^API.cs" />

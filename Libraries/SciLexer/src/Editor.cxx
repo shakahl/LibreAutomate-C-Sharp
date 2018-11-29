@@ -7158,7 +7158,7 @@ sptr_t Editor::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam) {
 		return vs.ms.size();
 
 	case SCI_STYLECLEARALL:
-		vs.ClearStyles(wParam, lParam); //Au: added wParam, lParam (from/to)
+		vs.ClearStyles((int)wParam, (int)lParam); //Au: added wParam, lParam (from/to)
 		InvalidateStyleRedraw();
 		break;
 

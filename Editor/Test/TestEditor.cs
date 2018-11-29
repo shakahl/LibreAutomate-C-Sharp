@@ -32,6 +32,8 @@ partial class EForm
 {
 	internal void TestEditor()
 	{
+		TestDragDrop();
+		return;
 
 		//var th = new Thread(()=>
 		//{
@@ -106,6 +108,50 @@ partial class EForm
 	}
 	static bool s_test1;
 
+	void TestDragDrop()
+	{
+		//var f = new DDForm();
+		//f.Show();
+
+		Thread_.Start(() => {
+			var f = new DDForm();
+			var c = new TextBox(); f.Controls.Add(c);
+			f.ShowDialog();
+			f.Dispose();
+		});
+	}
+
+	class DDForm : Form
+	{
+		public DDForm()
+		{
+			AllowDrop = true;
+			StartPosition = FormStartPosition.Manual;
+			Location = new Point(1250, 1350);
+		}
+
+		protected override void OnDragEnter(DragEventArgs d)
+		{
+			Print("enter", d.AllowedEffect);
+			d.Effect = d.AllowedEffect;
+			base.OnDragEnter(d);
+		}
+
+		protected override void OnDragOver(DragEventArgs d)
+		{
+			Print("over", d.AllowedEffect);
+			d.Effect = d.AllowedEffect;
+			base.OnDragOver(d);
+		}
+
+		protected override void OnDragDrop(DragEventArgs d)
+		{
+			Print("drop", d.AllowedEffect);
+			d.Effect = d.AllowedEffect;
+			base.OnDragDrop(d);
+		}
+	}
+
 	void TestTools()
 	{
 		var f = new Au.Tools.Form_Wnd(Wnd.Find("Quick*"));
@@ -119,48 +165,37 @@ partial class EForm
 
 	}
 
-	void TestReplaceFile()
-	{
-		var settFile = Folders.ThisAppDocuments + @"!Settings\Settings2.xml";
-		lock(Settings) {
-			for(int i = 0; i < 300; i++) {
-				try {
-					Settings.Set("test", i);
-					Settings.Xml.Save_(settFile);
-				}catch(Exception e) {
-					Print(e.ToStringWithoutStack_(), (uint)e.HResult, i);
-					break;
-				}
-				1.ms();
-			}
-		}
-		Print("OK");
-	}
+	//void TestReplaceFile()
+	//{
+	//	var settFile = Folders.ThisAppDocuments + @"!Settings\Settings2.xml";
+	//	lock(Settings) {
+	//		for(int i = 0; i < 300; i++) {
+	//			try {
+	//				Settings.Set("test", i);
+	//				Settings.Xml.Save_(settFile);
+	//			}catch(Exception e) {
+	//				Print(e.ToStringWithoutStack_(), (uint)e.HResult, i);
+	//				break;
+	//			}
+	//			1.ms();
+	//		}
+	//	}
+	//	Print("OK");
+	//}
 
-	private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
-	{
-		Print("resolve", args.Name, args.RequestingAssembly);
-		foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) if(v.FullName == args.Name) { Print("already loaded"); return v; }
+	//private Assembly CurrentDomain_AssemblyResolve(object sender, ResolveEventArgs args)
+	//{
+	//	Print("resolve", args.Name, args.RequestingAssembly);
+	//	foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) if(v.FullName == args.Name) { Print("already loaded"); return v; }
 
 
-		return null;
-	}
+	//	return null;
+	//}
 
-	private void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
-	{
-		Print("load", args.LoadedAssembly);
-	}
-
-	void SetHookToMonitorCreatedWindowsOfThisThread()
-	{
-		_hook = Au.Util.WinHook.ThreadCbt(x =>
-		{
-			if(x.code == HookData.CbtEvent.CREATEWND) Print((Wnd)x.wParam);
-			return false;
-		});
-		Application.ApplicationExit += (unu, sed) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with WinHook) 
-	}
-	static Au.Util.WinHook _hook;
+	//private void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
+	//{
+	//	Print("load", args.LoadedAssembly);
+	//}
 
 	//public static void TestParsing()
 	//{
@@ -186,5 +221,16 @@ partial class EForm
 	//	//var options = new CSharpCompilationOptions(OutputKind.WindowsApplication, allowUnsafe: true);
 	//	//var compilation = CSharpCompilation.Create(name, new[] { tree }, references, options);
 	//}
+
+	void SetHookToMonitorCreatedWindowsOfThisThread()
+	{
+		_hook = Au.Util.WinHook.ThreadCbt(x =>
+		{
+			if(x.code == HookData.CbtEvent.CREATEWND) Print((Wnd)x.wParam);
+			return false;
+		});
+		Application.ApplicationExit += (unu, sed) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with WinHook) 
+	}
+	static Au.Util.WinHook _hook;
 }
 #endif

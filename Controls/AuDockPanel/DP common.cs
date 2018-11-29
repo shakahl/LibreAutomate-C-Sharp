@@ -84,7 +84,7 @@ namespace Au.Controls
 		abstract partial class _Node
 		{
 			protected readonly AuDockPanel _manager;
-			internal AuDockPanel Manager { get => _manager; }
+			internal AuDockPanel Manager => _manager;
 
 			internal _Split ParentSplit; //null if new panel added in this app version
 			internal Rectangle Bounds; //in current parent Control client area
@@ -101,16 +101,16 @@ namespace Au.Controls
 			/// Returns true if is docked in main window or in a floating tab.
 			/// </summary>
 			/// <seealso cref="_ContentNode.IsDockedOn"/>
-			internal bool IsDocked { get => DockState == _DockState.Docked; }
-			internal bool IsHidden { get => DockState == _DockState.Hidden; }
+			internal bool IsDocked => DockState == _DockState.Docked;
+			internal bool IsHidden => DockState == _DockState.Hidden;
 
-			internal virtual Control ParentControl { get => _manager; }
+			internal virtual Control ParentControl => _manager;
 			internal virtual void Paint(Graphics g) { }
 			internal virtual void UpdateLayout(Rectangle r) { }
 			internal void UpdateLayout() { UpdateLayout(this.Bounds); }
-			internal virtual Rectangle RectangleInScreen { get => _manager.RectangleToScreen(this.Bounds); }
-			internal virtual int MinimalWidth { get => 0; }
-			internal virtual int MinimalHeight { get => 0; }
+			internal virtual Rectangle RectangleInScreen => _manager.RectangleToScreen(this.Bounds);
+			internal virtual int MinimalWidth => 0;
+			internal virtual int MinimalHeight => 0;
 			internal virtual void Save(XmlWriter x) { }
 		}
 
@@ -137,7 +137,7 @@ namespace Au.Controls
 			internal Rectangle CaptionBounds; //in current parent client area. If _Tab, it is whole caption area (includes child panel buttons); else if _Tab child panel and there are more visible siblings, only its button; else whole caption area.
 			internal Rectangle SavedFloatingBounds; //when docked etc, contains bounds when was floating, to restore when floating again
 			protected Control _parentControl;
-			internal override Control ParentControl { get => _parentControl; } //_manager or a _Float
+			internal override Control ParentControl => _parentControl; //_manager or a _Float
 			internal _DockState SavedVisibleDockState; //when hidden, in what state to show
 
 			internal _ContentNode(AuDockPanel manager, _Split parentSplit) : base(manager, parentSplit)
@@ -147,13 +147,13 @@ namespace Au.Controls
 
 			internal bool IsDockedOn(Control parent) { return this.IsDocked && this.ParentControl == parent; }
 
-			internal bool IsFloating { get => DockState == _DockState.Floating; }
-			//internal bool IsAutoHide { get => DockState == _DockState.AutoHide; }
-			//internal bool IsFloatingOrAutoHide { get => IsFloating || IsAutoHide; }
+			internal bool IsFloating => DockState == _DockState.Floating;
+			//internal bool IsAutoHide => DockState == _DockState.AutoHide;
+			//internal bool IsFloatingOrAutoHide => IsFloating || IsAutoHide;
 
-			internal virtual bool IsTabbedPanel { get => false; }
+			internal virtual bool IsTabbedPanel => false;
 
-			internal override Rectangle RectangleInScreen { get => this.ParentControl.RectangleToScreen(this.Bounds); }
+			internal override Rectangle RectangleInScreen => this.ParentControl.RectangleToScreen(this.Bounds);
 
 			internal override void UpdateLayout(Rectangle r)
 			{

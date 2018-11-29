@@ -47,6 +47,7 @@ namespace Au
 				/// Creates window.
 				/// Calls API <msdn>CreateWindowEx</msdn>.
 				/// Returns false if failed, for example className is not registered.
+				/// See also: <see cref="RegisterClass"/>, <see cref="Handle"/>.
 				/// </summary>
 				/// <param name="className">The name of any window class existing in this process. You can register a class with <see cref="RegisterClass"/> or use any other class.</param>
 				/// <param name="name">Window name or null.</param>

@@ -275,7 +275,7 @@ namespace Au
 				/// </summary>
 				/// <param name="w">Any top-level or child window of that process.</param>
 				/// <exception cref="WndException">w invalid.</exception>
-				/// <exception cref="AuException">Failed to allocate process memory (see <see cref="Process_.Memory"/>) needed to get control names, usually because of <see cref="Process_.UacInfo">UAC</see>.</exception>
+				/// <exception cref="AuException">Failed to allocate process memory (see <see cref="Process_.Memory"/>) needed to get control names, usually because of <see cref="Uac">UAC</see>.</exception>
 				public WinFormsControlNames(Wnd w)
 				{
 					_pm = new Process_.Memory(w, 4096); //throws
@@ -353,7 +353,7 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// This struct is <msdn>COPYDATASTRUCT</msdn>.
-			/// <note type="note">By default <see cref="Process_.UacInfo">UAC</see> blocks messages sent from processes of lower integrity level. Call <see cref="EnableReceivingWM_COPYDATA"/> if need.</note>
+			/// <note type="note">By default <see cref="Uac">UAC</see> blocks messages sent from processes of lower integrity level. Call <see cref="EnableReceivingWM_COPYDATA"/> if need.</note>
 			/// </remarks>
 			/// <seealso cref="Util.SharedMemory"/>
 			/// <seealso cref="System.IO.Pipes.NamedPipeServerStream"/>
@@ -443,7 +443,7 @@ namespace Au
 				}
 
 				/// <summary>
-				/// Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower <see cref="Process_.UacInfo">UAC</see> integrity level processes.
+				/// Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower <see cref="Uac">UAC</see> integrity level processes.
 				/// </summary>
 				public static void EnableReceivingWM_COPYDATA()
 				{

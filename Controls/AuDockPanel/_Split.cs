@@ -321,7 +321,7 @@ namespace Au.Controls
 				return SplitterBounds.Contains(x, y);
 			}
 
-			internal bool IsSplitterVisible { get => _dockedChildCount == 2; }
+			internal bool IsSplitterVisible => _dockedChildCount == 2;
 
 			internal void OnChildUndocked(_Node gn)
 			{

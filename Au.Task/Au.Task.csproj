@@ -95,7 +95,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>$(TargetDir)kill_Au.Editor.exe
+    <PreBuildEvent>$(SolutionDir)_\kill_Au.Editor.exe
 if $(PlatformName) == x86 (
   copy "$(TargetPath)" "$(SolutionDir)_\Au.Task32.exe" /y
 )</PreBuildEvent>

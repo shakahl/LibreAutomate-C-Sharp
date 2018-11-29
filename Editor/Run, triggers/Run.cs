@@ -1,4 +1,4 @@
-#define TEST_STARTUP_SPEED
+//#define TEST_STARTUP_SPEED
 
 using System;
 using System.Collections.Generic;
@@ -237,7 +237,7 @@ class RunningTasks
 		_q = new List<_WaitingTask>();
 		_recent = new List<RecentTask>();
 		_wMain = (Wnd)MainForm;
-		Timer1s += _Timer1s; //updates UI
+		Timer1sOr025s += _TimerUpdateUI;
 	}
 
 	public void OnWorkspaceClosed()
@@ -246,7 +246,7 @@ class RunningTasks
 
 		if(onExit) {
 			_disposed = true;
-			Timer1s -= _Timer1s;
+			Timer1sOr025s -= _TimerUpdateUI;
 		}
 
 		for(int i = _a.Count - 1; i >= 0; i--) {
@@ -316,7 +316,7 @@ class RunningTasks
 		_updateUI = true;
 	}
 
-	void _Timer1s()
+	void _TimerUpdateUI()
 	{
 		if(!_updateUI || !MainForm.Visible) return;
 		_UpdatePanels();
@@ -447,10 +447,10 @@ class RunningTasks
 		}
 
 		_SpUac uac = _SpUac.normal; int preIndex = 0;
-		if(!Process_.UacInfo.IsUacDisabled) {
+		if(!Uac.IsUacDisabled) {
 			//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
 			//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
-			var IL = Process_.UacInfo.ThisProcess.IntegrityLevel;
+			var IL = Uac.OfThisProcess.IntegrityLevel;
 			if(r.uac == EUac.same) {
 				switch(IL) {
 				case UacIL.High: preIndex = 1; break;
@@ -526,8 +526,10 @@ class RunningTasks
 				//Perf.NW('e');
 
 				//start preloaded process for next task. Let it wait for pipe connection.
-				try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
-				catch(Exception ex) { Debug_.Print(ex); }
+				if(uac != _SpUac.admin) { //we don't want second UAC consent
+					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
+					catch(Exception ex) { Debug_.Print(ex); }
+				}
 			}
 		}
 		catch(Exception ex) {
@@ -552,12 +554,11 @@ class RunningTasks
 
 		public _Preloaded(int index)
 		{
-			pipeName = $@"\\.\pipe\Au.preload-{Api.GetCurrentProcessId()}-{index}";
-			var sa = Api.SECURITY_ATTRIBUTES.ForPipes;
+			pipeName = $@"\\.\pipe\Au.Task-{Api.GetCurrentProcessId()}-{index}";
 			hPipe = Api.CreateNamedPipe(pipeName,
 				Api.PIPE_ACCESS_OUTBOUND | Api.FILE_FLAG_OVERLAPPED, //use async pipe because editor would hang if task process exited without connecting. Same speed.
 				Api.PIPE_TYPE_MESSAGE | Api.PIPE_REJECT_REMOTE_CLIENTS,
-				1, 0, 0, 0, sa);
+				1, 0, 0, 0, null);
 			overlappedEvent = new ManualResetEvent(false);
 		}
 	}
@@ -583,14 +584,11 @@ class RunningTasks
 	{
 		if(wrPipeName != null) wrPipeName = "AuTask.WriteResult.pipe=" + wrPipeName;
 		if(uac == _SpUac.admin) {
-			if(args.Length_() > 500000) throw new ArgumentException($"Command line arguments string too long."); //TODO
-			int pid = IpcWithHI.Call(1, (int)MainForm.Handle, exeFile, args, wrPipeName);
-			if(pid != 0) {
-				var hProcess = Au.Util.LibKernelWaitHandle.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_TERMINATE);
-				Debug.Assert(hProcess != null);
-				if(hProcess != null) return (pid, hProcess);
-			}
-			throw new AuException($"*start process '{exeFile}'");
+			if(wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable AuTask.WriteResult"); //cannot pass environment variables. //rare //FUTURE
+			var k = Shell.Run(exeFile, args, SRFlags.Admin | SRFlags.NeedProcessHandle);
+			return (k.ProcessId, k.ProcessHandle);
+			//note: don't try to start task without UAC consent. It is not secure.
+			//	Normally Au editor runs as admin in admin user account, and don't need to go through this.
 		} else {
 			var psr = uac == _SpUac.userFromAdmin
 				? Process_.LibStartUserIL(exeFile, args, wrPipeName, Process_.StartResult.Need.WaitHandle)

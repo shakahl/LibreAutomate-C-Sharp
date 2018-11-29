@@ -14,7 +14,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
-using System.Xml.Linq;
+//using System.Xml.Linq;
 using System.Collections;
 
 using Au;
@@ -24,10 +24,10 @@ using static Program;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
-partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
+partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 {
-	TreeViewAdv _control;
-	public TreeViewAdv TreeControl => _control;
+	TreeViewFiles _control;
+	public TreeViewFiles TreeControl => _control;
 	public readonly FileNode Root;
 	public readonly int WorkspaceSN; //sequence number of workspace open in this process: 1, 2...
 	static int s_workspaceSN;
@@ -51,7 +51,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// <param name="file">Workspace file (XML).</param>
 	/// <exception cref="ArgumentException">Invalid or not full path.</exception>
 	/// <exception cref="Exception">XElement.Load exceptions. And possibly more.</exception>
-	public FilesModel(TreeViewAdv c, string file)
+	public FilesModel(TreeViewFiles c, string file)
 	{
 		_importing = c == null;
 		_control = c;
@@ -82,9 +82,8 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 			}
 			OpenFiles = new List<FileNode>();
 			_InitClickSelect();
-			_InitDragDrop();
 			_InitWatcher();
-			_triggers=new TriggersUI(this);
+			_triggers = new TriggersUI(this);
 		}
 		_initedFully = true;
 	}
@@ -101,78 +100,10 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 		if(_initedFully) {
 			_UninitWatcher();
 			_UninitClickSelect();
-			_UninitDragDrop();
-			_UninitNodeControls();
 			DB?.Dispose();
 		}
 		_control = null;
 	}
-
-	#region node controls
-
-	NodeIcon _ncIcon;
-	NodeTextBox _ncName;
-
-	//Called by FilesPanel
-	public void InitNodeControls(NodeIcon icon, NodeTextBox name)
-	{
-		_ncIcon = icon;
-		_ncName = name;
-		_ncIcon.ValueNeeded = _ncIcon_ValueNeeded;
-		_ncName.ValueNeeded = node => (node.Tag as FileNode).Name;
-		_ncName.ValuePushed = (node, value) => { (node.Tag as FileNode).FileRename(value as string, false); };
-		_ncName.DrawText += _ncName_DrawText;
-		_control.RowDraw += _TV_RowDraw;
-	}
-
-	void _UninitNodeControls()
-	{
-		_ncName.DrawText -= _ncName_DrawText;
-		_control.RowDraw -= _TV_RowDraw;
-	}
-
-	private object _ncIcon_ValueNeeded(TreeNodeAdv node)
-	{
-		var f = node.Tag as FileNode;
-		//Print(f);
-		Debug.Assert(node.IsLeaf != f.IsFolder);
-
-		if(_myClipboard.Contains(f)) return EResources.GetImageUseCache(_myClipboard.cut ? "cut" : "copy");
-		return f.GetIcon(node.IsExpanded);
-	}
-
-	private void _ncName_DrawText(object sender, DrawEventArgs e)
-	{
-		var f = e.Node.Tag as FileNode;
-		if(f.IsFolder) return;
-		if(f == _currentFile) {
-			e.Font = Stock.FontBold;
-			//e.TextColor = Color.DarkBlue;
-			if(e.Node.IsSelected && e.Context.DrawSelection == DrawSelectionMode.None && _IsTextBlack)
-				e.BackgroundBrush = Brushes.LightGoldenrodYellow; //yellow text rect in selected-inactive
-		}
-	}
-
-	private void _TV_RowDraw(object sender, TreeViewRowDrawEventArgs e)
-	{
-		var f = e.Node.Tag as FileNode;
-		if(f.IsFolder) return;
-		if(!e.Node.IsSelected && OpenFiles.Contains(f)) {
-			var g = e.Graphics;
-			var r = e.RowRect; //why width 0?
-			var cr = g.VisibleClipBounds;
-			r.X = (int)cr.X; r.Width = (int)cr.Width;
-			if(_IsTextBlack) g.FillRectangle(Brushes.LightGoldenrodYellow, r);
-			//if(f == _currentFile) {
-			//	r.Width--; r.Height--;
-			//	g.DrawRectangle(SystemPens.ControlDark, r);
-			//}
-		}
-	}
-
-	static bool _IsTextBlack => (uint)SystemColors.WindowText.ToArgb() == 0xFF000000; //if not high-contrast theme
-
-	#endregion
 
 	#region ITreeModel
 
@@ -520,11 +451,10 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 		var m = Strips.ddFile;
 
 		ToolStripDropDownClosedEventHandler onClosed = null;
-		onClosed = (sender, e) =>
-		  {
-			  (sender as ToolStripDropDownMenu).Closed -= onClosed;
-			  _msgLoop.Stop();
-		  };
+		onClosed = (sender, e) => {
+			(sender as ToolStripDropDownMenu).Closed -= onClosed;
+			_msgLoop.Stop();
+		};
 		m.Closed += onClosed;
 
 		_inContextMenu = true;
@@ -566,6 +496,7 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 		case Keys.Control | Keys.X: CutCopySelected(true); break;
 		case Keys.Control | Keys.C: CutCopySelected(false); break;
 		case Keys.Control | Keys.V: Paste(); break;
+		case Keys.Escape: _myClipboard.Clear(); break;
 		}
 	}
 
@@ -689,11 +620,17 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 			nodes = null;
 		}
 
-		public bool IsEmpty { get => nodes == null; }
+		public bool IsEmpty => nodes == null;
 
 		public bool Contains(FileNode f) { return !IsEmpty && nodes.Contains(f); }
 	}
 	_MyClipboard _myClipboard;
+
+	public bool IsInPrivateClipboard(FileNode f, out bool cut)
+	{
+		if(_myClipboard.Contains(f)) { cut = _myClipboard.cut; return true; }
+		return cut = false;
+	}
 
 	public void Paste()
 	{
@@ -766,103 +703,28 @@ partial class FilesModel :ITreeModel, Au.Compiler.IWorkspaceFiles
 
 	#endregion
 
-	#region drag-drop
+	#region import, move, copy
 
-	void _InitDragDrop()
+	void _OnDragDrop(TreeNodeAdv[] nodes, string[] files, bool copy, DropPosition dropPos)
 	{
-		_control.ItemDrag += _TV_ItemDrag;
-		_control.DragOver += _TV_DragOver;
-		_control.DragDrop += _TV_DragDrop;
-	}
-
-	void _UninitDragDrop()
-	{
-		_control.ItemDrag -= _TV_ItemDrag;
-		_control.DragOver -= _TV_DragOver;
-		_control.DragDrop -= _TV_DragDrop;
-	}
-
-	private void _TV_ItemDrag(object sender, ItemDragEventArgs e)
-	{
-		if(e.Button != MouseButtons.Left) return;
-		_control.DoDragDropSelectedNodes(DragDropEffects.Move | DragDropEffects.Copy);
-	}
-
-	private void _TV_DragOver(object sender, DragEventArgs e)
-	{
-		e.Effect = DragDropEffects.None;
-		var effect = e.AllowedEffect;
-		bool copy = (e.KeyState & 8) != 0;
-		if(copy) effect &= ~(DragDropEffects.Link | DragDropEffects.Move);
-		if(0 == (effect & (DragDropEffects.Link | DragDropEffects.Move | DragDropEffects.Copy))) return;
-
-		var nTarget = _control.DropPosition.Node; if(nTarget == null) return;
-
-		//can drop TreeNodeAdv and files
-		TreeNodeAdv[] nodes = null;
-		if(e.Data.GetDataPresent(typeof(TreeNodeAdv[]))) {
-			nodes = e.Data.GetData(typeof(TreeNodeAdv[])) as TreeNodeAdv[];
-			if(nodes?[0].Tree != _control) return;
-			if(!copy) effect &= ~DragDropEffects.Copy;
-		} else if(e.Data.GetDataPresent(DataFormats.FileDrop)) {
-		} else return;
-
-		var fTarget = nTarget.Tag as FileNode;
-		bool isFolder = fTarget.IsFolder;
-		bool isInside = _control.DropPosition.Position == NodePosition.Inside;
-
-		//prevent selecting whole non-folder item. Make either above or below.
-		if(isFolder) _control.DragDropBottomEdgeSensivity = _control.DragDropTopEdgeSensivity = 0.3f; //default
-		else _control.DragDropBottomEdgeSensivity = _control.DragDropTopEdgeSensivity = 0.51f;
-
-		//can drop here?
-		if(!copy && nodes != null) {
-			foreach(TreeNodeAdv n in nodes) {
-				var f = n.Tag as FileNode;
-				if(!f.CanMove(fTarget, _control.DropPosition.Position)) return;
-			}
-		}
-
-		//expand-collapse folder on right-click. However this does not work when dragging files, because Explorer then ends the drag-drop.
-		if(isFolder && isInside) {
-			var ks = e.KeyState & 3;
-			if(ks == 3 && _dragKeyStateForFolderExpand != 3) {
-				if(nTarget.IsExpanded) nTarget.Collapse(); else nTarget.Expand();
-			}
-			_dragKeyStateForFolderExpand = ks;
-		}
-
-		e.Effect = effect;
-	}
-
-	int _dragKeyStateForFolderExpand;
-
-	private void _TV_DragDrop(object sender, DragEventArgs e)
-	{
-		bool copy = (e.KeyState & 8) != 0;
-		var pos = _control.DropPosition.Position;
-		var target = _control.DropPosition.Node.Tag as FileNode;
-		if(e.Data.GetDataPresent(typeof(TreeNodeAdv[]))) {
-			var a = (e.Data.GetData(typeof(TreeNodeAdv[])) as TreeNodeAdv[]).Select(tn => tn.Tag as FileNode).ToArray();
+		var pos = dropPos.Position;
+		var target = dropPos.Node.Tag as FileNode;
+		if(nodes != null) {
+			var a = nodes.Select(tn => tn.Tag as FileNode).ToArray();
 			_MultiCopyMove(copy, a, target, pos);
-		} else if(e.Data.GetDataPresent(DataFormats.FileDrop)) {
-			var a = (string[])e.Data.GetData(DataFormats.FileDrop);
-			if(a.Length == 1 && IsWorkspaceDirectory(a[0])) {
-				switch(AuDialog.ShowEx("Workspace", a[0],
+		} else {
+			if(files.Length == 1 && IsWorkspaceDirectory(files[0])) {
+				switch(AuDialog.ShowEx("Workspace", files[0],
 					"1 Open workspace|2 Import workspace|0 Cancel",
 					flags: DFlags.Wider, footerText: GetSecurityInfo(true))) {
-				case 1: Timer_.After(1, () => Panels.Files.LoadWorkspace(a[0])); break;
-				case 2: ImportWorkspace(a[0], target, pos); break;
+				case 1: Timer_.After(1, () => Panels.Files.LoadWorkspace(files[0])); break;
+				case 2: ImportWorkspace(files[0], target, pos); break;
 				}
 				return;
 			}
-			_ImportFiles(copy, a, target, pos);
+			_ImportFiles(copy, files, target, pos);
 		}
 	}
-
-	#endregion
-
-	#region import, move, copy
 
 	/// <summary>
 	/// Imports one or more files into the workspace.
