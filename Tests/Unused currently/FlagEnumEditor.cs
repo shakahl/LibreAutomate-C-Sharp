@@ -161,7 +161,7 @@ namespace Utils
 			}
 
 			//auto-height
-			this.Font = SystemFonts.MessageBoxFont;
+			this.Font = Au.Util.SystemFonts_.Regular;
 			var r = this.GetItemRectangle(0);
 			int h = this.Items.Count * r.Height, hMax = Screen_.PrimaryWorkArea.Height / 2 - r.Height - 10;
 			this.ClientSize = new Size(r.Width, Math.Min(h, hMax));

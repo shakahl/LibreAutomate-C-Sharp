@@ -395,14 +395,16 @@ partial class PanelEdit : Control
 
 		protected override void WndProc(ref Message m)
 		{
+			//var w = (Wnd)m.HWnd;
 			//Print(m);
 			switch(m.Msg) {
 			case Api.WM_SETFOCUS:
-				Model?.OnEditorFocused();
+				if(!_noModelEnsureCurrentSelected) Model?.EnsureCurrentSelected();
 				break;
 			}
 			base.WndProc(ref m);
 		}
+		bool _noModelEnsureCurrentSelected;
 
 		public bool IsUnsaved => 0 != Call(SCI_GETMODIFY);
 
@@ -554,10 +556,10 @@ partial class PanelEdit : Control
 			if(isExpanded) {
 				_FoldingFoldLine(line);
 				//move caret out of contracted region
-				int pos = ST.PositionBytes;
+				int pos = ST.CurrentPositionBytes;
 				if(pos > startPos) {
 					int i = ST.LineEnd(Call(SCI_GETLASTCHILD, line, -1));
-					if(pos <= i) ST.PositionBytes = startPos;
+					if(pos <= i) ST.CurrentPositionBytes = startPos;
 				}
 			} else {
 				Call(SCI_FOLDLINE, line, 1);
@@ -625,21 +627,21 @@ partial class PanelEdit : Control
 			base.OnDragLeave(e);
 		}
 
-		Point _DD_GetDropPos(DragEventArgs e)
+		Point _DD_GetDropPos(DragEventArgs e, out int pos)
 		{
 			var p = this.PointToClient(new Point(e.X, e.Y));
 			if(_drag != _DD_DataType.Text) { //if files etc, drop as lines, not anywhere
-				int pos = Call(SCI_POSITIONFROMPOINT, p.X, p.Y);
+				pos = Call(SCI_POSITIONFROMPOINT, p.X, p.Y);
 				pos = ST.LineStartFromPosition(pos);
 				p.X = Call(SCI_POINTXFROMPOSITION, 0, pos);
 				p.Y = Call(SCI_POINTYFROMPOSITION, 0, pos);
-			}
+			} else pos = 0;
 			return p;
 		}
 
 		unsafe void _DD_Over(DragEventArgs e)
 		{
-			var p = _DD_GetDropPos(e);
+			var p = _DD_GetDropPos(e, out _);
 			var z = new Sci_DragDropData { x = p.X, y = p.Y };
 			Call(SCI_DRAGDROP, 1, &z);
 
@@ -648,10 +650,17 @@ partial class PanelEdit : Control
 
 		unsafe void _DD_Drop(DragEventArgs e)
 		{
-			string s = null, menuVar = null; StringBuilder t = null;
+			var xy = _DD_GetDropPos(e, out int pos);
+			string s = null; StringBuilder t = null;
+			int endOfMeta = 0; bool inMeta = false; string menuVar = null;
+
 			if(_drag != _DD_DataType.Text) {
 				t = new StringBuilder();
-				ST.GetText().RegexMatch_(@"\b(\w+)\s*=\s*new\s+Au(?:Menu|Toolbar)", 1, out menuVar);
+				if(FN.IsCodeFile) {
+					var text = ST.GetText();
+					if(Au.Compiler.MetaComments.FindMetaComments(text, out endOfMeta) && pos > 0 && pos < endOfMeta) inMeta = true;
+					else if(pos > endOfMeta) text.RegexMatch_(@"\b(\w+)\s*=\s*new\s+Au(?:Menu|Toolbar)", 1, out menuVar, 0, new RXMore(endOfMeta, pos));
+				}
 			}
 
 			var d = e.Data;
@@ -665,7 +674,7 @@ partial class PanelEdit : Control
 					foreach(var path in paths) {
 						bool isLnk = path.EndsWithI_(".lnk");
 						if(isLnk) t.Append("//");
-						var name = Path_.GetFileNameWithoutExtension(path);
+						var name = Path_.GetFileName(path, true);
 						_AppendFile(path, name);
 						if(isLnk) {
 							try {
@@ -677,7 +686,7 @@ partial class PanelEdit : Control
 								} else {
 									args = g.Arguments;
 									if(!target.EndsWithI_(".exe") || name.IndexOf_("Shortcut") >= 0)
-										name = Path_.GetFileNameWithoutExtension(target);
+										name = Path_.GetFileName(target, true);
 								}
 								_AppendFile(target, name, args);
 							}
@@ -707,8 +716,8 @@ partial class PanelEdit : Control
 				var nodes = d.GetData("Aga.Controls.Tree.TreeNodeAdv[]", false) as Aga.Controls.Tree.TreeNodeAdv[];
 				if(nodes != null) {
 					foreach(var tn in nodes) {
-						var fn = tn.Tag as FileNode; if(!fn.IsCodeFile) continue;
-						_AppendFile(fn.ItemPath, fn.Name, null, true);
+						var fn = tn.Tag as FileNode;
+						_AppendFile(fn.ItemPath, fn.Name, null, fn);
 					}
 					s = t.ToString();
 				}
@@ -716,10 +725,7 @@ partial class PanelEdit : Control
 			}
 
 			if(!Empty(s)) {
-				((Wnd)FindForm()).ActivateLL();
-				Focus();
-				var p = _DD_GetDropPos(e);
-				var z = new Sci_DragDropData { x = p.X, y = p.Y };
+				var z = new Sci_DragDropData { x = xy.X, y = xy.Y };
 				var b = Convert_.Utf8FromString(s);
 				fixed (byte* bp = b) {
 					z.text = bp;
@@ -727,20 +733,55 @@ partial class PanelEdit : Control
 					if(_drag != _DD_DataType.Text || 0 == (e.Effect & DragDropEffects.Move)) z.copy = 1;
 					Call(SCI_DRAGDROP, 2, &z);
 				}
+				if(!Focused && ((Wnd)(FindForm())).IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
+					_noModelEnsureCurrentSelected = true; //don't scroll treeview to currentfile
+					Focus();
+					_noModelEnsureCurrentSelected = false;
+				}
 			} else {
 				Call(SCI_DRAGDROP, 3);
 			}
 
-			void _AppendFile(string path, string name, string args = null, bool isScript = false)
+			void _AppendFile(string path, string name, string args = null, FileNode fn = null)
 			{
-				name = name.Escape_();
-				if(menuVar != null) t.Append(menuVar).Append("[\"").Append(name).Append("\"] =o=> ");
-				t.Append(isScript ? "AuTask.Run(@\"" : "Shell.Run(@\"").Append(path);
-				if(!Empty(args)) t.Append("\", \"").Append(args.Escape_());
-				t.Append("\");");
-				if(menuVar == null && !isScript && (path.StartsWith_("::") || path.IndexOf_(name, true) < 0)) t.Append(" //").Append(name);
+				if(!FN.IsCodeFile) {
+					t.Append(path);
+				} else if(inMeta) {
+					string opt = "//";
+					switch(_drag) {
+					case _DD_DataType.Files:
+						opt = File_.ExistsAsDirectory(path) ? "outputPath " : "r ";
+						break;
+					case _DD_DataType.Script:
+						if(fn.IsFolder) {
+							if(fn.IsProjectFolder(out fn)) { opt = "library "; path = fn.ItemPath; }
+						} else if(!fn.IsScript) {
+							if(!fn.IsCodeFile) opt = "resource ";
+							else if(fn.FindProject(out _, out var fMain) && fn == fMain) opt = "library ";
+							else opt = "c ";
+						}
+						break;
+					}
+					//make relative path
+					var p2 = FN.ItemPath; int i = p2.LastIndexOf('\\') + 1;
+					if(0 == string.CompareOrdinal(path, 0, p2, 0, i)) path = path.Substring(i);
+
+					t.Append(opt).Append(path);
+				} else {
+					name = name.Escape_();
+					if(menuVar != null) t.Append(menuVar).Append("[\"").Append(name).Append("\"] =o=> ");
+					bool isFN = fn != null;
+					if(isFN && !fn.IsCodeFile) {
+						t.Append("//").Append(path);
+					} else {
+						t.Append(isFN ? "AuTask.Run(@\"" : "Shell.Run(@\"").Append(path);
+						if(!Empty(args)) t.Append("\", \"").Append(args.Escape_());
+						t.Append("\");");
+						if(menuVar == null && !isFN && (path.StartsWith_("::") || path.IndexOf_(name, true) < 0)) t.Append(" //").Append(name);
+						//FUTURE: add unexpanded path version
+					}
+				}
 				t.AppendLine();
-				//FUTURE: add unexpanded path version
 			}
 		}
 

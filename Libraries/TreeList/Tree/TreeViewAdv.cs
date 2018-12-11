@@ -23,9 +23,9 @@ namespace Aga.Controls.Tree
 	/// <see cref="CheckBox"/>, Icon, Label... Drag and Drop highlighting. Load on
 	/// demand of nodes. Incremental search of nodes.
 	/// </summary>
-	public partial class TreeViewAdv :Au.Controls.ScrollableControl_
+	public partial class TreeViewAdv : Au.Controls.ScrollableControl_
 	{
-		private const int LeftMargin = 7;
+		int LeftMargin => ShowPlusMinus ? 5 : 0; //au: was private const int LeftMargin = 7;
 		internal const int ItemDragSensivity = 4;
 		private const int DividerWidth = 9;
 		private const int DividerCorrectionGap = -2;
@@ -150,35 +150,37 @@ namespace Aga.Controls.Tree
 
 		[Category("Behavior")]
 		public event EventHandler<TreeViewRowDrawEventArgs> RowDraw;
-		protected virtual void OnRowDraw(PaintEventArgs e, TreeNodeAdv node, DrawContext context, int row, Rectangle rowRect)
+		protected virtual void OnRowDraw(PaintEventArgs e, TreeNodeAdv node, ref DrawContext context, int row, Rectangle rowRect)
 		{
+			//au: made context ref. Then the override can make more changes. Also it is 48 bytes.
 			if(RowDraw != null) {
 				TreeViewRowDrawEventArgs args = new TreeViewRowDrawEventArgs(e.Graphics, e.ClipRectangle, node, context, row, rowRect);
 				RowDraw(this, args);
 			}
 		}
 
-		/// <summary>
-		/// Fires when control is going to draw. Can be used to change text or back color
-		/// </summary>
-		[Category("Behavior")]
-		public event EventHandler<DrawEventArgs> DrawControl;
+		//au: removed because: 1. Duplicates the BaseTextControl.[On]DrawText. 2. OnDrawControl not called if DrawControl==null; it's confusing.
+		///// <summary>
+		///// Fires when control is going to draw. Can be used to change text or back color
+		///// </summary>
+		//[Category("Behavior")]
+		//public event EventHandler<DrawEventArgs> DrawControl;
 
-		internal bool DrawControlMustBeFired()
-		{
-			return DrawControl != null;
-		}
+		//internal bool DrawControlMustBeFired()
+		//{
+		//	return DrawControl != null;
+		//}
 
-		internal void FireDrawControl(DrawEventArgs args)
-		{
-			OnDrawControl(args);
-		}
+		//internal void FireDrawControl(DrawEventArgs args)
+		//{
+		//	OnDrawControl(args);
+		//}
 
-		protected virtual void OnDrawControl(DrawEventArgs args)
-		{
-			if(DrawControl != null)
-				DrawControl(this, args);
-		}
+		//protected virtual void OnDrawControl(DrawEventArgs args)
+		//{
+		//	if(DrawControl != null)
+		//		DrawControl(this, args);
+		//}
 
 
 		[Category("Drag Drop")]
@@ -210,9 +212,10 @@ namespace Aga.Controls.Tree
 			_columns = new TreeColumnCollection(this);
 			_toolTip = new ToolTip();
 
-			_measureContext = new DrawContext();
+			//_measureContext = new DrawContext();
 			//_measureContext.Font = Font; //au: will set in OnFontChanged
-			_measureContext.Graphics = Graphics.FromImage(new Bitmap(1, 1));
+			//_measureContext.Graphics = Graphics.FromImage(new Bitmap(1, 1));
+			_measureContext.Graphics = Graphics.FromHwndInternal(default); //au
 
 			Input = new NormalInputState(this);
 			CreateNodes();
@@ -407,11 +410,9 @@ namespace Aga.Controls.Tree
 			base.OnScroll(si);
 		}
 
-		protected override CreateParams CreateParams
-		{
+		protected override CreateParams CreateParams {
 			[SecurityPermission(SecurityAction.LinkDemand, Flags = SecurityPermissionFlag.UnmanagedCode)]
-			get
-			{
+			get {
 				CreateParams res = base.CreateParams;
 				switch(BorderStyle) {
 				case BorderStyle.FixedSingle:
@@ -945,7 +946,7 @@ namespace Aga.Controls.Tree
 		{
 			if(node.Tag != null && list.ContainsKey(node.Tag)) {
 				node.IsExpanded = true;
-				foreach(var child in node.Children)
+				foreach(var child in node.Nodes)
 					RestoreExpandedNodes(child, list);
 			}
 		}
@@ -954,7 +955,7 @@ namespace Aga.Controls.Tree
 		{
 			if(node.IsExpanded && node.Tag != null) {
 				list.Add(node.Tag, null);
-				foreach(var child in node.Children)
+				foreach(var child in node.Nodes)
 					SaveExpandedNodes(child, list);
 			}
 		}

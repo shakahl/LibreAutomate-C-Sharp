@@ -6,34 +6,33 @@ using Aga.Controls.Tree.NodeControls;
 
 namespace Aga.Controls.Tree
 {
-	public class AutoRowHeightLayout :IRowLayout
+	//au: why was public?
+	class AutoRowHeightLayout : IRowLayout
 	{
 		private DrawContext _measureContext;
 		private TreeViewAdv _treeView;
-		private List<Rectangle> _rowCache;
+		private List<Point> _rowCache; //au: was Rectangle, although only 2 fields used
 
 		public AutoRowHeightLayout(TreeViewAdv treeView, int rowHeight)
 		{
-			_rowCache = new List<Rectangle>();
+			_rowCache = new List<Point>();
 			_treeView = treeView;
 			PreferredRowHeight = rowHeight;
-			_measureContext = new DrawContext();
-			_measureContext.Graphics = Graphics.FromImage(new Bitmap(1, 1));
+			//_measureContext = new DrawContext();
+			//_measureContext.Graphics = Graphics.FromImage(new Bitmap(1, 1));
+			_measureContext.Graphics = Graphics.FromHwndInternal(default); //au
 			//SHOULDDO: dispose _measureContext.Graphics
 		}
 
 		private int _rowHeight;
-		public int PreferredRowHeight
-		{
+		public int PreferredRowHeight {
 			get { return _rowHeight; }
 			set { _rowHeight = value; }
 		}
 
 
-		public int PageRowCount
-		{
-			get
-			{
+		public int PageRowCount {
+			get {
 				if(_treeView.RowCount == 0)
 					return 0;
 				else {
@@ -49,10 +48,8 @@ namespace Aga.Controls.Tree
 			}
 		}
 
-		public int CurrentPageSize
-		{
-			get
-			{
+		public int CurrentPageSize {
+			get {
 				if(_treeView.RowCount == 0)
 					return 0;
 				else {
@@ -72,18 +69,19 @@ namespace Aga.Controls.Tree
 		{
 			if(rowNo >= _rowCache.Count) {
 				int count = _rowCache.Count;
-				int y = count > 0 ? _rowCache[count - 1].Bottom : 0;
+				int y = 0; if(count > 0) { var p = _rowCache[count - 1]; y = p.X + p.Y; }
 				for(int i = count; i <= rowNo; i++) {
 					int height = GetRowHeight(i);
-					_rowCache.Add(new Rectangle(0, y, 0, height));
+					_rowCache.Add(new Point(y, height));
 					y += height;
 				}
 				if(rowNo < _rowCache.Count - 1)
 					return Rectangle.Empty;
 			}
-			if(rowNo >= 0 && rowNo < _rowCache.Count)
-				return _rowCache[rowNo];
-			else
+			if(rowNo >= 0 && rowNo < _rowCache.Count) {
+				var p=_rowCache[rowNo];
+				return new Rectangle(0, p.X, 0, p.Y);
+			} else
 				return Rectangle.Empty;
 		}
 
@@ -96,11 +94,9 @@ namespace Aga.Controls.Tree
 					_measureContext.Font = _treeView.Font;
 					foreach(NodeControl nc in _treeView.NodeControls) {
 						int h = nc.GetActualSize(node, _measureContext).Height;
-						if(h > res)
-							res = h;
+						if(h > res) res = h;
 					}
-					if(res < 16) res = 16;
-					node.Height = res + 1;
+					node.Height = res;
 				}
 				return node.Height.Value;
 			} else

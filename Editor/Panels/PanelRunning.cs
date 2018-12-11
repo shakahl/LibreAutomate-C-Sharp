@@ -45,14 +45,12 @@ class PanelRunning :Control, ITreeModel
 
 		_ccIcon = new NodeIcon();
 		_c.NodeControls.Add(_ccIcon);
-		_ccIcon.LeftMargin = 0;
 		_ccIcon.ScaleMode = ImageScaleMode.ScaleUp;
 		_ccIcon.DpiStretch = true;
 		_ccIcon.ValueNeeded = node => (node.Tag as RunningTask).f.GetIcon();
 
 		_ccName = new NodeTextBox();
 		_c.NodeControls.Add(_ccName);
-		_ccName.LeftMargin = 0;
 		//_ccName.Trimming = StringTrimming.EllipsisCharacter;
 		_ccName.ValueNeeded = node => (node.Tag as RunningTask).f.Name;
 		_ccName.DrawText += _ccName_DrawText;
@@ -65,8 +63,7 @@ class PanelRunning :Control, ITreeModel
 	private void _ccName_DrawText(object sender, DrawEventArgs e)
 	{
 		var t = e.Node.Tag as RunningTask;
-		//if(!t.isUnattended) e.TextColor = Color.FromArgb(unchecked((int)0xFFD040D0));
-		if(!t.isUnattended) e.TextColor = Color.Green;
+		e.TextColor = t.isBlue ? Color.Blue : Color.Green;
 	}
 
 	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }

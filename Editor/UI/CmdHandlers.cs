@@ -20,8 +20,9 @@ using Au.Types;
 using static Au.NoClass;
 using static Program;
 using Au.Controls;
+using Au.Tools;
 
-class CmdHandlers :IGStripManagerCallbacks
+class CmdHandlers : IGStripManagerCallbacks
 {
 	internal delegate void CmdHandler();
 	Dictionary<string, CmdHandler> _dict = new Dictionary<string, CmdHandler>(200);
@@ -49,7 +50,7 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public Image GetImage(string imageName)
 	{
-		return EResources.GetImageUseCache(imageName);
+		return EdResources.GetImageUseCache(imageName);
 	}
 
 	public void ItemAdding(ToolStripItem item, ToolStrip owner)
@@ -118,6 +119,9 @@ class CmdHandlers :IGStripManagerCallbacks
 		_dict.Add(nameof(Edit_WrapLines), Edit_WrapLines);
 		_dict.Add(nameof(Edit_LineNumbers), Edit_LineNumbers);
 		_dict.Add(nameof(Edit_IndentationGuides), Edit_IndentationGuides);
+		_dict.Add(nameof(Code_Wnd), Code_Wnd);
+		_dict.Add(nameof(Code_Acc), Code_Acc);
+		_dict.Add(nameof(Code_WinImage), Code_WinImage);
 		_dict.Add(nameof(Run_Run), Run_Run);
 		_dict.Add(nameof(Run_End), Run_End);
 		_dict.Add(nameof(Run_Pause), Run_Pause);
@@ -225,7 +229,7 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	public void File_Properties()
 	{
-
+		Model.Properties();
 	}
 
 	public void File_Open()
@@ -461,6 +465,49 @@ class CmdHandlers :IGStripManagerCallbacks
 
 	#endregion
 
+	#region menu Code
+
+	/// <summary>
+	/// Shows non-modal tool form and on OK inserts its result code in the active document. If readonly - prints in the output.
+	/// </summary>
+	/// <param name="f"></param>
+	static void _ShowTool(ToolForm f)
+	{
+		f.FormClosed += (unu, e) => {
+			if(e.CloseReason == CloseReason.UserClosing && f.DialogResult == DialogResult.OK) {
+				var s = f.ResultCode;
+				var d = Panels.Editor.ActiveDoc;
+				var t = d.ST;
+				if(t.IsReadonly) {
+					Print(s);
+				} else {
+					d.Focus();
+					int i = t.LineStartFromPosition(t.CurrentPositionBytes);
+					s += "\r\n";
+					t.ReplaceSel(s, i);
+				}
+			}
+		};
+		f.Show(MainForm);
+	}
+
+	public void Code_Wnd()
+	{
+		_ShowTool(new Form_Wnd());
+	}
+
+	public void Code_Acc()
+	{
+		_ShowTool(new Form_Acc());
+	}
+
+	public void Code_WinImage()
+	{
+		_ShowTool(new Form_WinImage());
+	}
+
+	#endregion
+
 	#region menu Run
 
 	public void Run_Compile()
@@ -476,7 +523,7 @@ class CmdHandlers :IGStripManagerCallbacks
 	public void Run_End()
 	{
 		if(Tasks.EndTasksOf(Model.CurrentFile)) return;
-		var t = Tasks.GetRunningSupervised(); if(t == null) return;
+		var t = Tasks.GetGreenTask(); if(t == null) return;
 		var m = new AuMenu();
 		m.Add("End task:", null).Enabled = false;
 		m[t.f.Name] = o => Tasks.EndTask(t);

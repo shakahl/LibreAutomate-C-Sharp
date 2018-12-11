@@ -171,7 +171,7 @@ partial class PanelFiles :Control
 				var mi = dd.Items.Add(path, null, (o, u) => LoadWorkspace(o.ToString()));
 				if(!currentOK && (path == current)) {
 					currentOK = true;
-					mi.Font = Stock.FontBold;
+					mi.Font = EdStock.FontBold;
 				}
 			}
 			dd.ResumeLayout();
@@ -217,7 +217,7 @@ partial class PanelFiles :Control
 					if(isProject) si = "folder";
 					else if(Path_.FindExtension(name) < 0) si = "fileScript";
 					else if(name.EndsWithI_(".cs")) si = "fileClass";
-					Bitmap im = si != null ? EResources.GetImageUseCache(si) : FileNode.IconCache.GetImage(v.FullPath, true);
+					Bitmap im = si != null ? EdResources.GetImageUseCache(si) : FileNode.IconCache.GetImage(v.FullPath, true);
 					if(im != null) item.Image = im;
 				}
 				ddParent.Items.Insert(i++, item);

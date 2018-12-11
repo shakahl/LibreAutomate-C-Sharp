@@ -28,15 +28,15 @@ LRESULT CALLBACK KeyHookProc(int code, WPARAM wParam, LPARAM lParam)
 		SetEvent(ev);
 		CloseHandle(ev);
 	}
-	g1:
+g1:
 	return CallNextHookEx(0, code, wParam, lParam);
 }
 
 EXPORT HHOOK Cpp_InputSync(int action, int tid, HHOOK hh)
 {
 	if(action == 1) {
-		auto hh=SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, GetCurrentModuleHandle(), tid);
-		if(hh==0 && tid!=0) hh=SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, GetCurrentModuleHandle(), 0); //console. GetWindowThreadProcessId lies. To get real id probably need to enumerate threads and call EnumThreadWindows for each. Too slow.
+		auto hh = SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, GetCurrentModuleHandle(), tid);
+		if(hh == 0 && tid != 0) hh = SetWindowsHookExW(WH_KEYBOARD, KeyHookProc, GetCurrentModuleHandle(), 0); //console. GetWindowThreadProcessId lies. To get real id probably need to enumerate threads and call EnumThreadWindows for each. Too slow.
 		return hh;
 	} else if(action == 2) {
 		UnhookWindowsHookEx(hh);
@@ -145,7 +145,7 @@ void TestStringBuilder()
 	static const STR rundll = L"\\SysWOW64\\rundll32.exe \"";
 	static const STR bits = L"32";
 
-	b<<L"kkk"<<L' '<<5<<',';
+	b << L"kkk" << L' ' << 5 << ',';
 	b.AppendChar(' ');
 	b.AppendChar(L' ');
 
@@ -618,208 +618,212 @@ public:
 	}
 };
 
+void _TestIAccessibleImpl();
+
 EXPORT void Cpp_Test()
 {
-	//CHandle hRead, hWrite;
-	//if(!CreatePipe(&hRead.m_h, &hWrite.m_h, null, 0)) return;
-	//Printf(L"%p %p", hRead.m_h, hWrite.m_h);
+	//_TestIAccessibleImpl();
+		//CHandle hRead, hWrite;
+		//if(!CreatePipe(&hRead.m_h, &hWrite.m_h, null, 0)) return;
+		//Printf(L"%p %p", hRead.m_h, hWrite.m_h);
 
 
-	//HWND w = FindWindowW(L"QM_Editor", null);
-	//wnd::PrintWnd(w);
-	////Print(wnd::ClassNameIs(w, L"QM_Editor"));
-	////Print(wnd::ClassNameIs(w, L"QM_Edito"));
-	////Print(wnd::ClassNameIs(w, L"QM_*"));
-	////Print(wnd::ClassNameIs(w, L"-QM_*"));
+		//HWND w = FindWindowW(L"QM_Editor", null);
+		//wnd::PrintWnd(w);
+		////Print(wnd::ClassNameIs(w, L"QM_Editor"));
+		////Print(wnd::ClassNameIs(w, L"QM_Edito"));
+		////Print(wnd::ClassNameIs(w, L"QM_*"));
+		////Print(wnd::ClassNameIs(w, L"-QM_*"));
 
-	//str::Wildex x;
-	////STR s = L"**k kkk";
-	////STR s = L"**r (kkk";
-	//STR s = L"QM_Editor";
-	//s=L"**t QM_Editor";
-	////s=L"**r .+r$";
-	//s=L"**m moo||QM_Editor";
-	//s=L"**n QM_Editor-";
-	//s=L"**m *_Editor";
-	//s=L"**m moo||**r .+r$";
-	//s=L"**m moo||**r .+r$||**n *i*";
-	//Bstr es;
-	//if(!x.Parse(s, wcslen(s), true, &es)) {
-	//	Print(es); return;
-	//}
-	//Print(wnd::ClassNameIs(w, x));
-	//Print(x.Match(L"QM_Editor", 9));
+		//str::Wildex x;
+		////STR s = L"**k kkk";
+		////STR s = L"**r (kkk";
+		//STR s = L"QM_Editor";
+		//s=L"**t QM_Editor";
+		////s=L"**r .+r$";
+		//s=L"**m moo||QM_Editor";
+		//s=L"**n QM_Editor-";
+		//s=L"**m *_Editor";
+		//s=L"**m moo||**r .+r$";
+		//s=L"**m moo||**r .+r$||**n *i*";
+		//Bstr es;
+		//if(!x.Parse(s, wcslen(s), true, &es)) {
+		//	Print(es); return;
+		//}
+		//Print(wnd::ClassNameIs(w, x));
+		//Print(x.Match(L"QM_Editor", 9));
 
-	//str::StringBuilder t;
-	////STR s = L"TEST";
-	//LPWSTR s = L"TEST";
-	//t.Append(s);
-	//Print(t);
+		//str::StringBuilder t;
+		////STR s = L"TEST";
+		//LPWSTR s = L"TEST";
+		//t.Append(s);
+		//Print(t);
 
-	//Move2 t1;
-	//t1.m = 5;
+		//Move2 t1;
+		//t1.m = 5;
 
-	////Move2 t2 = t1;
-	////Move2 t2; t2 = t1;
+		////Move2 t2 = t1;
+		////Move2 t2; t2 = t1;
 
-	////Move2 t2 = std::move(t1);
-	//Move2 t2; t2 = std::move(t1);
+		////Move2 t2 = std::move(t1);
+		//Move2 t2; t2 = std::move(t1);
 
-	//Printf(L"%i %i", t1.m, t2.m);
+		//Printf(L"%i %i", t1.m, t2.m);
 
-	//str::StringBuilder b;
-	////b.Append(L"---");
-	////b.Append(L"123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 ");
-	//for(int i = 0; i < 1000; i++) {
-	//	b << i;
-	//	b << L"    ";
-	//}
-	//
-	//Print(b);
+		//str::StringBuilder b;
+		////b.Append(L"---");
+		////b.Append(L"123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 123456789 ");
+		//for(int i = 0; i < 1000; i++) {
+		//	b << i;
+		//	b << L"    ";
+		//}
+		//
+		//Print(b);
 
-	//for(int i = 0; i < 5; i++) {
-	//	Sleep(100);
-	//	Perf.First();
-	//	Smart<IStream> x;
-	//	CreateStreamOnHGlobal(0, true, &x);
-	//	for(int j = 0; j < 100000; j++) if(x->Write("abcdefgh", 8, null)) { Print("failed"); return; }
+		//for(int i = 0; i < 5; i++) {
+		//	Sleep(100);
+		//	Perf.First();
+		//	Smart<IStream> x;
+		//	CreateStreamOnHGlobal(0, true, &x);
+		//	for(int j = 0; j < 100000; j++) if(x->Write("abcdefgh", 8, null)) { Print("failed"); return; }
 
-	//	Perf.NW();
+		//	Perf.NW();
 
-	//	DWORD size = 0; istream::GetSize(x, size); Print(size);
-	//}
-
-
-	//eKKK e = eKKK::One | eKKK::Two;
-	//eKKK e = eKKK::One;
-
-	//Print(!!e);
-
-	////if(e&eKKK::One) Print(1);
-	//if((bool)(e & eKKK::One)) Print(1);
-	//if(ALL(e, eKKK::One)) Print(2);
-	//if((bool)(e & (eKKK::One | eKKK::Four))) Print(3);
-	////if(ANY(e, eKKK::One, eKKK::Four)) Print(4);
-	//if(ANY(e, eKKK::One | eKKK::Four)) Print(4);
-
-	//eAF2 f = eAF::eAF2::InWebPage| eAF::eAF2::Java;
-
-	//Printf(L"%*sa", 4, L"");
-
-	//HWND w = FindWindowW(L"QM_Editor", null);
-	////int x = 7;
-	////wnd::EnumChildWindows(w, [](HWND c) { wnd::PrintWnd(c); return true; });
-
-	//STR s_testSTR = L"thames";
-
-	//Print(str::Switch(s_testSTR, 6, { L"moo", L"te", L"thames", L"notin" }));
-
-	////Print(wnd::ClassNameIs(w, { L"moo", L"qm_*itor", L"khy" }));
-
-	//TestStringBuilder();
-
-	//Bstr b1;
-	//Print((void*)b1.m_str);
-	//Bstr b2(L"test");
-	//Print(b2);
-
-	//Bstr s;
-	//Print(wnd::ClassName(w, s));
-	//Print(s);
-	//Print(wnd::Name(w, s));
-	//Print(s);
-
-	//Print(sizeof(CSimpleArray<int>));
-	//Print(sizeof(CAtlArray<int>));
-	//Print(sizeof(std::vector<int>));
-	//Print(sizeof(std::array<int, 100>));
-
-	//Print(str::Switch(L"two", 3, L"one", L"two", L"three", null));
-
-	//#if true
-	//	eTest t = eTest::One | eTest::Two;
-	//	//eTest t = eTest::Two;
-	//	//t = (eTest)0;
-	//	Print(t); //error if 'enum class'
-	//	Print((int)t);
-	//
-	//	if(t) Print("t is not 0"); //error if 'enum class'
-	//	if(t&eTest::Two) Print("has Two"); //error if 'enum class'
-	//	if(!t) Print("t is 0");
-	//	if(!!t) Print("t is not 0");
-	//	if(!!(t&eTest::Two)) Print("has Two");
-	//
-	//	if((t&eTest::Two) == eTest::Two) Print("has Two");
-	//	t |= eTest::Four;
-	//	if((t&(eTest::Two | eTest::Four)) == (eTest::Two | eTest::Four)) Print("has (Two|Four)");
-	//	Print((int)(t&~eTest::Two));
-	//#else
-	//	eTest t = One | Two;
-	//	//eTest t = Two;
-	//	Print(t);
-	//	if(t&Two) Print("has Two");
-	//	if(t&Two == Two) Print("has Two");
-	//	t |= Four;
-	//	if(t&(Two | Four) == (Two | Four)) Print("has (Two|Four)");
-	//	Print(t&~Two);
-	//#endif
-	//
-	//	POINT p = {}, pp=p;
-	//	//int p = 5, pp = p;
-	//	//p |= pp;
-	//	//if(!p) Print(1);
-
-	//Print(sizeof(std::wstring));
-	//Print(sizeof(CString));
-
-	//Perf.First();
-	//for(size_t i = 0; i < 100000; i++) {
-	////for(size_t i = 0; i < 1; i++) {
-	//	Voo(L"1234567890");
-	//	//Voo(null);
-	//}
-	//Perf.NW();
-
-	//static TestTL s;
-	//static thread_local TestTL t;
-
-	//CSimpleMap<int, int> m;
-	//m.Add(1, 10);
-	//m.Add(2, 20);
-	//Print(m.FindKey(2));
-
-	//void* p = null;
-	//for(int i = 1; i < 20; i++) {
-	//	p = _recalloc(p, i, 8);
-	//	Printf(L"%i %p", i, p);
-	//}
-
-	//CAtlMap<int, int> m;
+		//	DWORD size = 0; istream::GetSize(x, size); Print(size);
+		//}
 
 
-	//CAtlList<int> _a;
-	//_a.AddTail(1);
-	//_a.AddTail(2);
-	//for(auto pos = _a.GetHeadPosition(); pos != null;) {
-	//	Print(_a.GetNext(ref pos));
-	//}
+		//eKKK e = eKKK::One | eKKK::Two;
+		//eKKK e = eKKK::One;
 
-	//PRINTHEX(10);
-	//PRINTF(L"%s %i", L"MOO", 10);
+		//Print(!!e);
 
-	////Print(IsOS64Bit());
+		////if(e&eKKK::One) Print(1);
+		//if((bool)(e & eKKK::One)) Print(1);
+		//if(ALL(e, eKKK::One)) Print(2);
+		//if((bool)(e & (eKKK::One | eKKK::Four))) Print(3);
+		////if(ANY(e, eKKK::One, eKKK::Four)) Print(4);
+		//if(ANY(e, eKKK::One | eKKK::Four)) Print(4);
 
-	////HWND w = FindWindow(L"Chrome_WidgetWin_1", null);
-	//HWND w = FindWindow(L"QM_Editor", null);
-	//if(!w) {
-	//	Print("window not found");
-	//	return;
-	//}
-	//DWORD pid, tid = GetWindowThreadProcessId(w, &pid);
-	////bool is64bit, ok = IsProcess64Bit(pid, is64bit);
-	////Printf(L"ok=%i is64=%i", ok, is64bit);
+		//eAF2 f = eAF::eAF2::InWebPage| eAF::eAF2::Java;
 
-	//Bstr s;
+		//Printf(L"%*sa", 4, L"");
+
+		//HWND w = FindWindowW(L"QM_Editor", null);
+		////int x = 7;
+		////wnd::EnumChildWindows(w, [](HWND c) { wnd::PrintWnd(c); return true; });
+
+		//STR s_testSTR = L"thames";
+
+		//Print(str::Switch(s_testSTR, 6, { L"moo", L"te", L"thames", L"notin" }));
+
+		////Print(wnd::ClassNameIs(w, { L"moo", L"qm_*itor", L"khy" }));
+
+		//TestStringBuilder();
+
+		//Bstr b1;
+		//Print((void*)b1.m_str);
+		//Bstr b2(L"test");
+		//Print(b2);
+
+		//Bstr s;
+		//Print(wnd::ClassName(w, s));
+		//Print(s);
+		//Print(wnd::Name(w, s));
+		//Print(s);
+
+		//Print(sizeof(CSimpleArray<int>));
+		//Print(sizeof(CAtlArray<int>));
+		//Print(sizeof(std::vector<int>));
+		//Print(sizeof(std::array<int, 100>));
+
+		//Print(str::Switch(L"two", 3, L"one", L"two", L"three", null));
+
+		//#if true
+		//	eTest t = eTest::One | eTest::Two;
+		//	//eTest t = eTest::Two;
+		//	//t = (eTest)0;
+		//	Print(t); //error if 'enum class'
+		//	Print((int)t);
+		//
+		//	if(t) Print("t is not 0"); //error if 'enum class'
+		//	if(t&eTest::Two) Print("has Two"); //error if 'enum class'
+		//	if(!t) Print("t is 0");
+		//	if(!!t) Print("t is not 0");
+		//	if(!!(t&eTest::Two)) Print("has Two");
+		//
+		//	if((t&eTest::Two) == eTest::Two) Print("has Two");
+		//	t |= eTest::Four;
+		//	if((t&(eTest::Two | eTest::Four)) == (eTest::Two | eTest::Four)) Print("has (Two|Four)");
+		//	Print((int)(t&~eTest::Two));
+		//#else
+		//	eTest t = One | Two;
+		//	//eTest t = Two;
+		//	Print(t);
+		//	if(t&Two) Print("has Two");
+		//	if(t&Two == Two) Print("has Two");
+		//	t |= Four;
+		//	if(t&(Two | Four) == (Two | Four)) Print("has (Two|Four)");
+		//	Print(t&~Two);
+		//#endif
+		//
+		//	POINT p = {}, pp=p;
+		//	//int p = 5, pp = p;
+		//	//p |= pp;
+		//	//if(!p) Print(1);
+
+		//Print(sizeof(std::wstring));
+		//Print(sizeof(CString));
+
+		//Perf.First();
+		//for(size_t i = 0; i < 100000; i++) {
+		////for(size_t i = 0; i < 1; i++) {
+		//	Voo(L"1234567890");
+		//	//Voo(null);
+		//}
+		//Perf.NW();
+
+		//static TestTL s;
+		//static thread_local TestTL t;
+
+		//CSimpleMap<int, int> m;
+		//m.Add(1, 10);
+		//m.Add(2, 20);
+		//Print(m.FindKey(2));
+
+		//void* p = null;
+		//for(int i = 1; i < 20; i++) {
+		//	p = _recalloc(p, i, 8);
+		//	Printf(L"%i %p", i, p);
+		//}
+
+		//CAtlMap<int, int> m;
+
+
+		//CAtlList<int> _a;
+		//_a.AddTail(1);
+		//_a.AddTail(2);
+		//for(auto pos = _a.GetHeadPosition(); pos != null;) {
+		//	Print(_a.GetNext(ref pos));
+		//}
+
+		//PRINTHEX(10);
+		//PRINTF(L"%s %i", L"MOO", 10);
+
+		////Print(IsOS64Bit());
+
+		////HWND w = FindWindow(L"Chrome_WidgetWin_1", null);
+		//HWND w = FindWindow(L"QM_Editor", null);
+		//if(!w) {
+		//	Print("window not found");
+		//	return;
+		//}
+		//DWORD pid, tid = GetWindowThreadProcessId(w, &pid);
+		////bool is64bit, ok = IsProcess64Bit(pid, is64bit);
+		////Printf(L"ok=%i is64=%i", ok, is64bit);
+
+		//Bstr s;
+
 }
 
 //#include "IAccessible2.h"
@@ -837,6 +841,183 @@ EXPORT void Cpp_Test()
 //	//long n;
 //	//if(a2->get_nExtendedStates(&n)) { Print("get_nExtendedStates failed"); return; } //fails
 //	//Print(n);
+//}
+
+//class MyAcc :IAccessible
+//{
+//	HWND _w;
+//
+//public:
+//	MyAcc(HWND w) {
+//		_w = w;
+//	}
+//#pragma region
+//	// Inherited via IAccessible
+//	virtual HRESULT __stdcall QueryInterface(REFIID riid, void ** ppvObject) override
+//	{
+//		if(riid == IID_IUnknown || riid == IID_IDispatch || riid == IID_IAccessible) {
+//			*ppvObject = this;
+//			return 0;
+//		}
+//		*ppvObject = 0;
+//		return E_NOINTERFACE;
+//	}
+//	virtual ULONG __stdcall AddRef(void) override
+//	{
+//		return 1;
+//	}
+//	virtual ULONG __stdcall Release(void) override
+//	{
+//		return 1;
+//	}
+//	virtual HRESULT __stdcall GetTypeInfoCount(UINT * pctinfo) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo ** ppTInfo) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall GetIDsOfNames(REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult, EXCEPINFO * pExcepInfo, UINT * puArgErr) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//#pragma endregion
+//	virtual HRESULT __stdcall get_accParent(IDispatch ** ppdispParent) override
+//	{
+//		Print(__FUNCTION__);
+//		return AccessibleObjectFromWindow(_w, 0, IID_IAccessible, (void**)ppdispParent);
+//	}
+//	virtual HRESULT __stdcall get_accChildCount(long * pcountChildren) override
+//	{
+//		Print(__FUNCTION__);
+//		*pcountChildren = 2;
+//		return 0;
+//	}
+//	virtual HRESULT __stdcall get_accChild(VARIANT varChild, IDispatch ** ppdispChild) override
+//	{
+//		Print(__FUNCTION__);
+//		*ppdispChild = 0;
+//		if(varChild.vt != VT_I4)return E_INVALIDARG;
+//		return S_FALSE;
+//	}
+//	virtual HRESULT __stdcall get_accName(VARIANT varChild, BSTR * pszName) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall get_accValue(VARIANT varChild, BSTR * pszValue) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall get_accDescription(VARIANT varChild, BSTR * pszDescription) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall get_accRole(VARIANT varChild, VARIANT * pvarRole) override
+//	{
+//		Print(__FUNCTION__);
+//		pvarRole->vt = VT_I4; pvarRole->lVal = varChild.lVal == 0 ? ROLE_SYSTEM_LIST : ROLE_SYSTEM_LISTITEM;
+//		return 0;
+//	}
+//	virtual HRESULT __stdcall get_accState(VARIANT varChild, VARIANT * pvarState) override
+//	{
+//		Print(__FUNCTION__);
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall get_accHelp(VARIANT varChild, BSTR * pszHelp) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall get_accHelpTopic(BSTR * pszHelpFile, VARIANT varChild, long * pidTopic) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall get_accKeyboardShortcut(VARIANT varChild, BSTR * pszKeyboardShortcut) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall get_accFocus(VARIANT * pvarChild) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall get_accSelection(VARIANT * pvarChildren) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall get_accDefaultAction(VARIANT varChild, BSTR * pszDefaultAction) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall accSelect(long flagsSelect, VARIANT varChild) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall accLocation(long * pxLeft, long * pyTop, long * pcxWidth, long * pcyHeight, VARIANT varChild) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall accNavigate(long navDir, VARIANT varStart, VARIANT * pvarEndUpAt) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall accHitTest(long xLeft, long yTop, VARIANT * pvarChild) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall accDoDefaultAction(VARIANT varChild) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall put_accName(VARIANT varChild, BSTR szName) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//	virtual HRESULT __stdcall put_accValue(VARIANT varChild, BSTR szValue) override
+//	{
+//		return E_NOTIMPL;
+//	}
+//};
+//
+//MyAcc* m;
+//
+//LRESULT __stdcall _WndProc(HWND w, UINT msg, WPARAM wParam, LPARAM lParam) {
+//
+//	//Print(msg);
+//	switch(msg) {
+//	case WM_DESTROY:
+//		PostQuitMessage(0);
+//		break;
+//	case WM_GETOBJECT:
+//		Print((int)lParam);
+//		if((int)lParam == OBJID_CLIENT) {
+//			if(m == null) m = new MyAcc(w);
+//			return LresultFromObject(IID_IAccessible, wParam, (LPUNKNOWN)m);
+//		}
+//		break;
+//	}
+//
+//	return DefWindowProcW(w, msg, wParam, lParam);
+//}
+//
+//void _TestIAccessibleImpl() {
+//
+//	WNDCLASSEXW x = {};
+//	x.cbSize = sizeof(x);
+//	x.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+//	x.hCursor = LoadCursor(0, (STR)IDC_ARROW);
+//	x.lpszClassName = L"Montejo";
+//	x.lpfnWndProc = _WndProc;
+//	auto atom = RegisterClassExW(&x);
+//	auto w = CreateWindowExW(0, (STR)atom, L"Gooo", WS_VISIBLE | WS_POPUPWINDOW | WS_CAPTION, 500, 300, 300, 300, 0, 0, 0, 0);
+//	MSG m;
+//	while(GetMessageW(&m, 0, 0, 0) > 0) {
+//		TranslateMessage(&m);
+//		DispatchMessageW(&m);
+//	}
 //}
 
 #endif //#if _DEBUG

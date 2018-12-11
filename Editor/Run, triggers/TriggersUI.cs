@@ -25,6 +25,8 @@ using static Au.NoClass;
 using Au.Triggers;
 using static Program;
 
+//TODO: if registry "Control Panel\Desktop:LowLevelHooksTimeout" < 5000, print a note with a link to correct it.
+
 class TriggersUI
 {
 	readonly Triggers _triggers;

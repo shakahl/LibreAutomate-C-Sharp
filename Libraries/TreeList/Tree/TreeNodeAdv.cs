@@ -10,7 +10,7 @@ namespace Aga.Controls.Tree
 	public sealed partial class TreeNodeAdv :ISerializable
 	{
 		#region NodeCollection
-		private class NodeCollection :Collection<TreeNodeAdv>
+		public class NodeCollection :Collection<TreeNodeAdv>
 		{
 			private TreeNodeAdv _owner;
 
@@ -294,12 +294,14 @@ namespace Aga.Controls.Tree
 			get { return _nodes; }
 		}
 
-		private ReadOnlyCollection<TreeNodeAdv> _children;
+		//au: removed _children to save memory
+		//private ReadOnlyCollection<TreeNodeAdv> _children;
 		public ReadOnlyCollection<TreeNodeAdv> Children
 		{
 			get
 			{
-				return _children;
+				//return _children;
+				return new ReadOnlyCollection<TreeNodeAdv>(_nodes);
 			}
 		}
 
@@ -343,7 +345,7 @@ namespace Aga.Controls.Tree
 			_row = -1;
 			_tree = tree;
 			_nodes = new NodeCollection(this);
-			_children = new ReadOnlyCollection<TreeNodeAdv>(_nodes);
+			//_children = new ReadOnlyCollection<TreeNodeAdv>(_nodes);
 			_tag = tag;
 		}
 

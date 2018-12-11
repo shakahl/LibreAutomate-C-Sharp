@@ -69,9 +69,11 @@ namespace Au.Controls
 		/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public int SetString(int sciMessage, LPARAM wParam, string lParam)
+		public int SetString(int sciMessage, LPARAM wParam, string lParam, bool useUtf8LengthForWparam = false)
 		{
-			fixed (byte* s = _ToUtf8(lParam)) {
+			int len = 0;
+			fixed (byte* s = _ToUtf8(lParam, &len)) {
+				if(useUtf8LengthForWparam) wParam = len;
 				return SC.Call(sciMessage, wParam, s);
 			}
 		}
@@ -111,7 +113,7 @@ namespace Au.Controls
 		/// <param name="sciMessage"></param>
 		/// <param name="wParam"></param>
 		/// <param name="bufferSize">
-		/// How much UTF8 bytes to allocate for Scintilla to store the text.
+		/// How much UTF-8 bytes to allocate for Scintilla to store the text.
 		/// If -1 (default), at first calls sciMessage with lParam=0 (null buffer), let it return required buffer size. Then it can get binary string (with '\0' characters).
 		/// If 0, returns "" and does not call the message.
 		/// If positive, it can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0'). Then it cannot get binary string (with '\0' characters).
@@ -124,7 +126,7 @@ namespace Au.Controls
 			fixed (byte* b = LibByte(bufferSize)) {
 				b[bufferSize] = 0;
 				Call(sciMessage, wParam, b);
-				Debug.Assert(b[bufferSize] == 0); if(b[bufferSize] != 0) Environment.FailFast("SciText.CallS");
+				Debug.Assert(b[bufferSize] == 0);
 				int len = Au.Util.LibCharPtr.Length(b, bufferSize);
 				return _FromUtf8(b, len);
 			}
@@ -136,7 +138,7 @@ namespace Au.Controls
 		/// <param name="sciMessage"></param>
 		/// <param name="wParam"></param>
 		/// <param name="utf8Length">
-		/// Known length (bytes) of the result UTF8 string, without the terminating '\0' character.
+		/// Known length (bytes) of the result UTF-8 string, without the terminating '\0' character.
 		/// If 0, returns "" and does not call the message.
 		/// Cannot be negative.
 		/// </param>
@@ -149,7 +151,7 @@ namespace Au.Controls
 			fixed (byte* b = LibByte(utf8Length)) {
 				b[utf8Length] = 0;
 				Call(sciMessage, wParam, b);
-				Debug.Assert(b[utf8Length] == 0); if(b[utf8Length] != 0) Environment.FailFast("SciText.CallS");
+				Debug.Assert(b[utf8Length] == 0);
 				return _FromUtf8(b, utf8Length);
 			}
 		}
@@ -163,6 +165,25 @@ namespace Au.Controls
 		{
 			return Convert_.LibUtf8FromString(s, ref t_byte, utf8Length);
 		}
+
+		/// <summary>
+		/// Converts UTF-16 position to UTF-8 position.
+		/// Note: currently actually UTF-32. Will need to replace SCI_POSITIONRELATIVE with SCI_POSITIONRELATIVECODEUNITS.
+		/// </summary>
+		public int CountBytesFromChars(int charsPos) => charsPos > 0 ? Call(SCI_POSITIONRELATIVE, 0, charsPos) : 0;
+
+		/// <summary>
+		/// Counts a number of UTF-16 characters before or after the UTF-8 position and return that UTF-8 position.
+		/// Note: currently actually UTF-32. Will need to replace SCI_POSITIONRELATIVE with SCI_POSITIONRELATIVECODEUNITS.
+		/// charsRelative can be negative.
+		/// </summary>
+		public int CountBytesFromChars(int bytesPos, int charsRelative) => Call(SCI_POSITIONRELATIVE, bytesPos, charsRelative);
+
+		/// <summary>
+		/// Returns the number of UTF-16 characters between two UTF-8 positions.
+		/// Note: currently actually UTF-32. Will need to replace SCI_COUNTCHARACTERS with SCI_COUNTCODEUNITS.
+		/// </summary>
+		public int CountBytesToChars(int bytesStart, int bytesEnd) => Call(SCI_COUNTCHARACTERS, bytesStart, bytesEnd);
 
 		struct _NoReadonly : IDisposable
 		{
@@ -278,8 +299,9 @@ namespace Au.Controls
 		//}
 
 		/// <summary>
-		/// Sets UTF8 text.
+		/// Sets UTF-8 text.
 		/// Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+		/// s must end with 0. Asserts.
 		/// </summary>
 		internal void LibSetText(byte[] s, int startIndex)
 		{
@@ -289,7 +311,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Sets UTF8 text.
+		/// Sets UTF-8 text.
 		/// Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
 		/// </summary>
 		internal void LibSetText(byte* s)
@@ -325,7 +347,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Appends UTF8 text of specified length.
+		/// Appends UTF-8 text of specified length.
 		/// Does not append newline (s should contain it). Does not parse tags. Moves current position and scrolls to the end.
 		/// </summary>
 		internal void LibAddText(bool append, byte* s, int lenToAppend)
@@ -339,7 +361,7 @@ namespace Au.Controls
 
 		//not used now
 		///// <summary>
-		///// Appends styled UTF8 text of specified length.
+		///// Appends styled UTF-8 text of specified length.
 		///// Does not append newline (s should contain it). Does not parse tags. Moves current position and scrolls to the end.
 		///// Uses SCI_ADDSTYLEDTEXT. Caller does not have to move cursor to the end.
 		///// lenToAppend is length in bytes, not in cells.
@@ -365,18 +387,18 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets text length (SCI_GETTEXTLENGTH) in UTF8 bytes.
+		/// Gets text length (SCI_GETTEXTLENGTH) in UTF-8 bytes.
 		/// </summary>
 		public int TextLengthBytes => Call(SCI_GETTEXTLENGTH);
 
 		/// <summary>
-		/// Gets or sets current caret position (SCI_GETCURRENTPOS/SCI_SETEMPTYSELECTION) in UTF8 bytes.
+		/// Gets or sets current caret position (SCI_GETCURRENTPOS/SCI_SETEMPTYSELECTION) in UTF-8 bytes.
 		/// The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
 		/// </summary>
-		public int PositionBytes { get => Call(SCI_GETCURRENTPOS); set => Call(SCI_SETEMPTYSELECTION, value); }
+		public int CurrentPositionBytes { get => Call(SCI_GETCURRENTPOS); set => Call(SCI_SETEMPTYSELECTION, value); }
 
 		/// <summary>
-		/// Gets line index from character position (UTF8 bytes).
+		/// Gets line index from character position (UTF-8 bytes).
 		/// </summary>
 		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
 		public int LineIndexFromPosition(int pos)
@@ -386,7 +408,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets line start position (UTF8 bytes) from line index.
+		/// Gets line start position (UTF-8 bytes) from line index.
 		/// </summary>
 		/// <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
 		public int LineStart(int line)
@@ -398,7 +420,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets line end position (UTF8 bytes) from line index.
+		/// Gets line end position (UTF-8 bytes) from line index.
 		/// </summary>
 		/// <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
 		/// <param name="withRN">Include \r\n.</param>
@@ -410,7 +432,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets line start position from any position. Both are in UTF8 bytes.
+		/// Gets line start position from any position. Both are in UTF-8 bytes.
 		/// </summary>
 		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
 		public int LineStartFromPosition(int pos)
@@ -419,7 +441,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets line end position from any position. Both are in UTF8 bytes.
+		/// Gets line end position from any position. Both are in UTF-8 bytes.
 		/// </summary>
 		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
 		/// <param name="withRN">Include \r\n.</param>
@@ -445,8 +467,8 @@ namespace Au.Controls
 		/// <summary>
 		/// Gets range text.
 		/// </summary>
-		/// <param name="from">Start index (UTF8 bytes). If less than 0, uses 0.</param>
-		/// <param name="to">End index (UTF8 bytes). If less than 0, uses TextLengthBytes.</param>
+		/// <param name="from">Start index (UTF-8 bytes). If less than 0, uses 0.</param>
+		/// <param name="to">End index (UTF-8 bytes). If less than 0, uses TextLengthBytes.</param>
 		public string RangeText(int from, int to)
 		{
 			if(from < 0) from = 0;
@@ -521,8 +543,8 @@ namespace Au.Controls
 		/// Moves 'from' to the start of its line, and 'to' to the end of its line.
 		/// Does not change 'to' if it is at a line start.
 		/// </summary>
-		/// <param name="from">Start index (UTF8 bytes).</param>
-		/// <param name="to">End index (UTF8 bytes).</param>
+		/// <param name="from">Start index (UTF-8 bytes).</param>
+		/// <param name="to">End index (UTF-8 bytes).</param>
 		/// <param name="withRN">Include "\r\n".</param>
 		public void RangeToFullLines(ref int from, ref int to, bool withRN = false)
 		{
@@ -534,8 +556,8 @@ namespace Au.Controls
 		/// <summary>
 		/// SCI_DELETERANGE.
 		/// </summary>
-		/// <param name="pos">Start index (UTF8 bytes).</param>
-		/// <param name="length">Length (UTF8 bytes).</param>
+		/// <param name="pos">Start index (UTF-8 bytes).</param>
+		/// <param name="length">Length (UTF-8 bytes).</param>
 		public void DeleteRange(int pos, int length)
 		{
 			using(new _NoReadonly(this))
@@ -545,13 +567,47 @@ namespace Au.Controls
 		/// <summary>
 		/// SCI_INSERTTEXT.
 		/// Does not parse tags.
+		/// Does not change current selection; for it use <see cref="ReplaceSel"/>.
 		/// </summary>
-		/// <param name="pos">Start index (UTF8 bytes).</param>
-		/// <param name="s"></param>
+		/// <param name="pos">Start index (UTF-8 bytes). If -1, uses current position.</param>
+		/// <param name="s">Replacement text. Can be null.</param>
 		public void InsertText(int pos, string s)
 		{
 			using(new _NoReadonly(this))
 				SetString(SCI_INSERTTEXT, pos, s);
+		}
+
+		/// <summary>
+		/// Replaces text range.
+		/// Does not parse tags.
+		/// </summary>
+		/// <param name="s">Replacement text. Can be null.</param>
+		/// <param name="pos">Start index. By default UTF-8 bytes.</param>
+		/// <param name="length">Length. By default UTF-8 bytes.</param>
+		/// <param name="posChars">pos is in UTF-16 characters.</param>
+		/// <param name="lengthChars">length is in UTF-16 characters.</param>
+		public void ReplaceRange(int pos, int length, string s, bool posChars = false, bool lengthChars = false)
+		{
+			using(new _NoReadonly(this)) {
+				if(posChars) pos = CountBytesFromChars(pos);
+				int end = lengthChars ? CountBytesFromChars(pos, length) : pos + length;
+				Call(SCI_SETTARGETRANGE, pos, end);
+				SetString(SCI_REPLACETARGET, 0, s, true);
+			}
+		}
+
+		/// <summary>
+		/// SCI_REPLACESEL.
+		/// Does not parse tags.
+		/// If read-only, asserts and fails (unlike most other functions that change text).
+		/// </summary>
+		/// <param name="s">Replacement text. Can be null.</param>
+		/// <param name="pos">Start index (UTF-8 bytes). If -1 (default), replaces current selection; else at first goes to pos.</param>
+		public void ReplaceSel(string s, int pos = -1)
+		{
+			Debug.Assert(!IsReadonly);
+			if(pos >= 0) GoToPos(pos);
+			SetString(SCI_REPLACESEL, 0, s);
 		}
 
 		/// <summary>

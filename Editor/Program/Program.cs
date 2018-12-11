@@ -85,7 +85,7 @@ static class Program
 		//Timer1s += () => Print("1 s");
 		//Timer1sOr025s += () => Print("0.25 s");
 
-		EForm.RunApplication();
+		EdForm.RunApplication();
 
 		OutputServer.Stop();
 		//}
@@ -94,7 +94,7 @@ static class Program
 
 	internal static Au.Util.OutputServer OutputServer = new Au.Util.OutputServer(true);
 	internal static ProgramSettings Settings;
-	internal static EForm MainForm;
+	internal static EdForm MainForm;
 	internal static FilesModel Model;
 	internal static RunningTasks Tasks;
 
@@ -140,18 +140,6 @@ static class Program
 	/// Receives cursor position in screen.
 	/// </summary>
 	internal static event Action<POINT> MousePosChangedWhenProgramVisible;
-
-	internal struct Stock
-	{
-		static Stock()
-		{
-			FontNormal = SystemFonts.MessageBoxFont;
-			FontBold = new Font(FontNormal, FontStyle.Bold);
-
-		}
-
-		public static Font FontNormal, FontBold;
-	}
 
 	static bool _RestartAsAdmin(string[] args)
 	{

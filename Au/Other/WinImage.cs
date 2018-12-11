@@ -67,7 +67,7 @@ namespace Au
 			} else {
 				image = Path_.Normalize(image, Folders.ThisAppImages);
 				if(!File_.ExistsAsFile(image, true))
-					o = Util.Resources_.GetAppResource(Path_.GetFileNameWithoutExtension(image));
+					o = Util.Resources_.GetAppResource(Path_.GetFileName(image, true));
 				if(o == null) o = Image.FromFile(image);
 				R = o as Bitmap;
 				if(R == null) throw new ArgumentException("Bad image format."); //Image but not Bitmap

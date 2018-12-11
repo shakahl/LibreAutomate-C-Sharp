@@ -306,101 +306,105 @@ namespace Au
 		#endregion
 
 		/// <summary>
-		/// Gets or sets path of the temporary files folder of this application.
+		/// Gets or sets path of folder "temporary files of this application".
 		/// Default is Folders.Temp + "Au".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
 		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
 		/// Creates the folder if does not exist.
 		/// </remarks>
-		public static FolderPath ThisAppTemp
-		{
+		public static FolderPath ThisAppTemp {
 			get => __thisAppTemp ?? _SetAuto(ref __thisAppTemp, Temp + c_defaultAppSubDir, create: true);
 			set => _SetOnce(ref __thisAppTemp, value, create: true);
 		}
 		static string __thisAppTemp;
 
 		/// <summary>
-		/// Gets or sets path of user document files folder of this application.
+		/// Gets or sets path of folder "user document files of this application".
 		/// Default is Folders.Documents + "Au".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
 		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
 		/// Creates the folder if does not exist when 'set' or 'get' function called first time in app.
 		/// </remarks>
-		public static FolderPath ThisAppDocuments
-		{
+		public static FolderPath ThisAppDocuments {
 			get => __thisAppDocuments ?? _SetAuto(ref __thisAppDocuments, Documents + c_defaultAppSubDir, create: true);
 			set => _SetOnce(ref __thisAppDocuments, value, create: true);
 		}
 		static string __thisAppDocuments;
 
 		/// <summary>
-		/// Gets or sets path of private files folder of this application on this user account.
+		/// Gets or sets path of folder "private files of this application of this user account".
 		/// Default is Folders.RoamingAppData + "Au".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
 		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
 		/// Creates the folder if does not exist when 'set' or 'get' function called first time in app.
 		/// </remarks>
-		public static FolderPath ThisAppData
-		{
+		public static FolderPath ThisAppData {
 			get => __thisAppData ?? _SetAuto(ref __thisAppData, RoamingAppData + c_defaultAppSubDir, create: true);
 			set => _SetOnce(ref __thisAppData, value, create: true);
 		}
 		static string __thisAppData;
 
 		/// <summary>
-		/// Gets or sets path of local (non-roaming) private files folder of this application on this user account.
+		/// Gets or sets path of folder "local (non-roaming) private files of this application of this user account".
 		/// Default is Folders.LocalAppData + "Au".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
 		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
 		/// Creates the folder if does not exist when 'set' or 'get' function called first time in app.
 		/// </remarks>
-		public static FolderPath ThisAppDataLocal
-		{
+		public static FolderPath ThisAppDataLocal {
 			get => __thisAppDataLocal ?? _SetAuto(ref __thisAppDataLocal, LocalAppData + c_defaultAppSubDir, create: true);
 			set => _SetOnce(ref __thisAppDataLocal, value, create: true);
 		}
 		static string __thisAppDataLocal;
 
 		/// <summary>
-		/// Gets or sets path of common (all users) private files folder of this application.
+		/// Gets or sets path of folder "common (all users) private files of this application".
 		/// Default is Folders.ProgramData + "Au".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
 		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
 		/// Note: the ProgramData folder has special permissions. Programs running not as administrator usually cannot write there.
 		/// This function does not auto-create the folder; usually it is created when installing the application.
 		/// </remarks>
-		public static FolderPath ThisAppDataCommon
-		{
+		public static FolderPath ThisAppDataCommon {
 			get => __thisAppDataCommon ?? _SetAuto(ref __thisAppDataCommon, ProgramData + c_defaultAppSubDir, create: false);
 			set => _SetOnce(ref __thisAppDataCommon, value, create: false);
 		}
 		static string __thisAppDataCommon;
 
 		/// <summary>
-		/// Gets or sets path of images (icons etc) folder of this application.
-		/// Default is ThisApp + "Images".
+		/// Gets or sets path of folder "images (icons etc) of this application".
+		/// Default is ThisAppBS + "Images".
 		/// </summary>
-		/// <exception cref="InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
-		/// Functions of these classes will look for image there: Icon_, AuMenu, AuToolbar, WinImage, possibly some other.
+		/// Used by functions of these classes: Icon_, AuMenu, AuToolbar, WinImage, possibly some other.
 		/// This function does not auto-create the folder; usually it is created when installing the application.
 		/// </remarks>
-		public static FolderPath ThisAppImages
-		{
+		public static FolderPath ThisAppImages {
 			get => __thisAppImages ?? _SetAuto(ref __thisAppImages, ThisAppBS + "Images", create: false);
 			set => _SetOnce(ref __thisAppImages, value, create: false);
 		}
 		static string __thisAppImages;
+
+		/// <summary>
+		/// Gets folder of current workspace.
+		/// Available only in the Au editor process. Elsewhere null.
+		/// </summary>
+		public static FolderPath Workspace {
+			get => __workspace;
+			internal set => __workspace = value;
+		}
+		static string __workspace;
 
 		/// <summary>
 		/// Folder containing the program file of this process.
@@ -441,10 +445,8 @@ namespace Au
 		/// Gets CD/DVD drive path, like @"D:\".
 		/// Returns null if unavailable.
 		/// </summary>
-		public static FolderPath CdDvdDrive
-		{
-			get
-			{
+		public static FolderPath CdDvdDrive {
+			get {
 				foreach(DriveInfo di in DriveInfo.GetDrives()) {
 					if(di.DriveType == DriveType.CDRom) return di.Name;
 				}
@@ -566,7 +568,7 @@ namespace Au
 		static extern int SHGetKnownFolderIDList(in KNOWNFOLDERID rfid, KNOWN_FOLDER_FLAG dwFlags, IntPtr hToken, out IntPtr ppidl);
 
 		[Flags]
-		enum KNOWN_FOLDER_FLAG :uint
+		enum KNOWN_FOLDER_FLAG : uint
 		{
 			KF_FLAG_SIMPLE_IDLIST = 0x00000100,
 			KF_FLAG_NOT_PARENT_RELATIVE = 0x00000200,
@@ -729,8 +731,7 @@ namespace Au
 			IntPtr ipIds = default;
 			try {
 				if(man.GetFolderIds(out ipIds, out uint nIds) != 0) return null;
-				unsafe
-				{
+				unsafe {
 					Guid* gp = (Guid*)ipIds;
 					for(uint i = 0; i < nIds; i++) {
 						IKnownFolder kf = null;

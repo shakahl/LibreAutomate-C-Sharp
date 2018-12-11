@@ -100,10 +100,9 @@ namespace Au
 			public static Wnd CreateWindowAndSetFont(string className, string name = null, Native.WS style = 0, Native.WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
 			{
 				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
-				if(!w.Is0) SetFontHandle(w, (customFontHandle == default) ? _msgBoxFont : customFontHandle);
+				if(!w.Is0) SetFontHandle(w, (customFontHandle == default) ? Util.LibNativeFont.RegularCached : customFontHandle);
 				return w;
 			}
-			static Util.LibNativeFont _msgBoxFont = new Util.LibNativeFont(System.Drawing.SystemFonts.MessageBoxFont.ToHfont());
 
 			/// <summary>
 			/// Creates native/unmanaged <msdn>message-only window</msdn>.

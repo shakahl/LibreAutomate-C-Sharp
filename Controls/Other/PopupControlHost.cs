@@ -32,10 +32,10 @@ using static Au.NoClass;
 namespace Au.Controls
 {
 	/// <summary>
-	/// Represents a pop-up window.
+	/// A pop-up window that works as a host for a child control.
 	/// </summary>
 	[ToolboxItem(false)]
-	internal partial class LibPopup :ToolStripDropDown
+	public class PopupControlHost :ToolStripDropDown
 	{
 		#region " Fields & Properties "
 
@@ -74,8 +74,8 @@ namespace Au.Controls
 
 		ToolStripControlHost _host;
 		Control _opener;
-		LibPopup _ownerPopup;
-		LibPopup _childPopup;
+		PopupControlHost _ownerPopup;
+		PopupControlHost _childPopup;
 		bool _resizableTop;
 		bool _resizableLeft;
 
@@ -107,7 +107,7 @@ namespace Au.Controls
 
 		/// <param name="content">The content of the pop-up.</param>
 		/// <exception cref="T:System.ArgumentNullException"><paramref name="content" /> is <code>null</code>.</exception>
-		public LibPopup(Control content)
+		public PopupControlHost(Control content)
 		{
 			Content = content ?? throw new ArgumentNullException("content");
 			FocusOnOpen = true;
@@ -142,10 +142,6 @@ namespace Au.Controls
 
 		#region " Methods "
 
-		/// <summary>
-		/// Raises the <see cref="E:System.Windows.Forms.ToolStripItem.VisibleChanged"/> event.
-		/// </summary>
-		/// <param name="e">An <see cref="T:System.EventArgs"/> that contains the event data.</param>
 		protected override void OnVisibleChanged(EventArgs e)
 		{
 			base.OnVisibleChanged(e);
@@ -186,7 +182,7 @@ namespace Au.Controls
 			}
 			flags = flags | (Api.AnimationFlags.Mask & (Api.AnimationFlags)(int)_flags);
 			var w = (Wnd)this;
-			w.ZorderTopmost();
+			//if(Visible) w.ZorderTopmost(); //don't need, this.TopMost is true
 			Api.AnimateWindow(w, AnimationDuration, flags);
 		}
 
@@ -229,19 +225,16 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Shows the pop-up window below the specified control.
+		/// Shows the pop-up window below or above the specified anchor control.
 		/// </summary>
-		/// <param name="control">The control below which the pop-up will be shown.</param>
-		/// <remarks>
-		/// When there is no space below the specified control, the pop-up control is shown above it.
-		/// </remarks>
-		/// <exception cref="T:System.ArgumentNullException"><paramref name="control"/> is <code>null</code>.</exception>
-		public void Show(Control control)
+		/// <param name="anchor">The control below/above which the pop-up will be shown.</param>
+		/// <exception cref="T:System.ArgumentNullException"><paramref name="anchor"/> is <code>null</code>.</exception>
+		public void Show(Control anchor)
 		{
-			if(control == null) {
+			if(anchor == null) {
 				throw new ArgumentNullException("control");
 			}
-			Show(control, control.ClientRectangle);
+			Show(anchor, anchor.ClientRectangle);
 		}
 
 		/// <summary>
@@ -269,24 +262,21 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Shows the pop-up window below the specified area of the specified control.
+		/// Shows the pop-up window below or above the specified area of the specified control.
 		/// </summary>
-		/// <param name="control">The control used to compute screen location of specified area.</param>
-		/// <param name="area">The area of control below which the pop-up will be shown.</param>
-		/// <remarks>
-		/// When there is no space below specified area, the pop-up control is shown above it.
-		/// </remarks>
-		/// <exception cref="T:System.ArgumentNullException"><paramref name="control"/> is <code>null</code>.</exception>
-		public void Show(Control control, Rectangle area)
+		/// <param name="anchor">The control used to compute screen location of specified area.</param>
+		/// <param name="area">The area of control below/above which the pop-up will be shown.</param>
+		/// <exception cref="T:System.ArgumentNullException"><paramref name="anchor"/> is <code>null</code>.</exception>
+		public void Show(Control anchor, Rectangle area)
 		{
-			if(control == null) {
+			if(anchor == null) {
 				throw new ArgumentNullException("control");
 			}
-			_SetOwnerItem(control);
+			_SetOwnerItem(anchor);
 
 			_resizableTop = _resizableLeft = false;
-			Point location = control.PointToScreen(new Point(area.Left, area.Top + area.Height));
-			Rectangle screen = Screen.FromControl(control).WorkingArea;
+			Point location = anchor.PointToScreen(new Point(area.Left, area.Top + area.Height));
+			Rectangle screen = Screen.FromControl(anchor).WorkingArea;
 			if(location.X + Size.Width > (screen.Left + screen.Width)) {
 				_resizableLeft = true;
 				location.X = (screen.Left + screen.Width) - Size.Width;
@@ -295,26 +285,26 @@ namespace Au.Controls
 				_resizableTop = true;
 				location.Y -= Size.Height + area.Height;
 			}
-			location = control.PointToClient(location);
-			Show(control, location, ToolStripDropDownDirection.BelowRight);
+			location = anchor.PointToClient(location);
+			Show(anchor, location, ToolStripDropDownDirection.BelowRight);
 		}
 
-		void _SetOwnerItem(Control control)
+		void _SetOwnerItem(Control anchor)
 		{
-			if(control == null) {
+			if(anchor == null) {
 				return;
 			}
-			if(control is LibPopup) {
-				LibPopup popupControl = control as LibPopup;
+			if(anchor is PopupControlHost) {
+				PopupControlHost popupControl = anchor as PopupControlHost;
 				_ownerPopup = popupControl;
 				_ownerPopup._childPopup = this;
 				OwnerItem = popupControl.Items[0];
 				return;
 			} else if(_opener == null) {
-				_opener = control;
+				_opener = anchor;
 			}
-			if(control.Parent != null) {
-				_SetOwnerItem(control.Parent);
+			if(anchor.Parent != null) {
+				_SetOwnerItem(anchor.Parent);
 			}
 		}
 
@@ -365,11 +355,43 @@ namespace Au.Controls
 
 		#endregion
 
+		private System.ComponentModel.IContainer components;
+
+		protected override void Dispose(bool disposing)
+		{
+			if(disposing) {
+				if(components != null) {
+					components.Dispose();
+				}
+				if(Content != null) {
+					System.Windows.Forms.Control _content = Content;
+					Content = null;
+					_content.Dispose();
+				}
+			}
+			base.Dispose(disposing);
+		}
+
+		private void InitializeComponent()
+		{
+			components = new System.ComponentModel.Container();
+		}
+
+
+		//protected override void WndProc(ref Message m)
+		//{
+		//	if(m.Msg == Api.WM_ACTIVATE && m.WParam!=default) {
+		//		PrintWarning("activate");
+		//	}
+		//	base.WndProc(ref m);
+		//}
+
+
 		/// <summary>
 		/// Types of animation of the pop-up window.
 		/// </summary>
 		[Flags]
-		internal enum PopupAnimations
+		public enum PopupAnimations
 		{
 			/// <summary>
 			/// Uses no animation.

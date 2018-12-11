@@ -84,6 +84,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			_InitClickSelect();
 			_InitWatcher();
 			_triggers = new TriggersUI(this);
+			Folders.Workspace = WorkspaceDirectory;
 		}
 		_initedFully = true;
 	}
@@ -473,9 +474,11 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	Au.Util.MessageLoop _msgLoop = new Au.Util.MessageLoop();
 	bool _inContextMenu;
 
-	public void OnEditorFocused()
+	//Called when editor control focused, etc.
+	public void EnsureCurrentSelected()
 	{
-		if(_currentFile != null && _control.SelectedNode?.Tag != _currentFile && _control.SelectedNodes.Count < 2) _currentFile.SelectSingle();
+		//if(_currentFile != null && _control.SelectedNode?.Tag != _currentFile && _control.SelectedNodes.Count < 2) _currentFile.SelectSingle();
+		if(_currentFile != null && _control.SelectedNode?.Tag != _currentFile) _currentFile.SelectSingle();
 	}
 
 	private void _TV_Expanded(object sender, TreeViewAdvEventArgs e)
@@ -486,7 +489,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 
 	#endregion
 
-	#region hotkeys, new, delete, open/close (menu commands), cut/copy/paste
+	#region hotkeys, new, delete, open/close (menu commands), cut/copy/paste, properties
 
 	private void _TV_KeyDown(object sender, KeyEventArgs e)
 	{
@@ -664,7 +667,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			//	//FUTURE
 			//	break;
 			case 3:
-				if(f.IcfIsScript) goto case 1; //CONSIDER: maybe use .csx extension, then can open in Visual Studio. Now even if we find VS path and open, we have two problems: opens new VS process; no colors/intellisense.
+				if(f.IsScript) goto case 1; //CONSIDER: maybe use .csx extension, then can open in Visual Studio. Now even if we find VS path and open, we have two problems: opens new VS process; no colors/intellisense.
 				Shell.Run(f.FilePath);
 				break;
 			case 4:
@@ -699,6 +702,22 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			_control.CollapseAll();
 			break;
 		}
+	}
+
+	public void Properties()
+	{
+		FileNode f = null;
+		if(_inContextMenu) {
+			var a = SelectedItems;
+			if(a.Length == 1) f = a[0];
+		} else {
+			EnsureCurrentSelected();
+			f = _currentFile;
+		}
+		if(f == null) return;
+		if(f.IsCodeFile) new EdCodeFileProperties(f).Show(MainForm);
+		//else if(f.IsFolder) new EdFolderProperties(f).Show(MainForm);
+		//else new EdOtherFileProperties(f).Show(MainForm);
 	}
 
 	#endregion
@@ -933,7 +952,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	{
 		var a = SelectedItems; if(a.Length < 1) return false;
 
-		string name = a[0].Name; if(!a[0].IsFolder) name = Path_.GetFileNameWithoutExtension(name);
+		string name = a[0].Name; if(!a[0].IsFolder) name = Path_.GetFileName(name, true);
 
 		if(a.Length == 1 && a[0].IsFolder && a[0].HasChildren) a = a[0].Children().ToArray();
 

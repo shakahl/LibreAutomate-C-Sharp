@@ -1055,15 +1055,11 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexIsMatch_(this string s, string rx, RXFlags flags = 0)
+		public static bool RegexIsMatch_(this string s, string rx, RXFlags flags = 0, RXMore more = null)
 		{
-			//note: don't need 'more' parameter for static functions.
-			//	from/to rarely used;
-			//	matchFlags makes no sense because can be set in flags.
-
 			if(s == null) return false;
 			var x = _cache.AddOrGet(rx, flags);
-			return x.IsMatch(s);
+			return x.IsMatch(s, more);
 		}
 
 		/// <summary>
@@ -1074,11 +1070,11 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexMatch_(this string s, string rx, out RXMatch result, RXFlags flags = 0)
+		public static bool RegexMatch_(this string s, string rx, out RXMatch result, RXFlags flags = 0, RXMore more = null)
 		{
 			if(s == null) { result = null; return false; }
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Match(s, out result);
+			return x.Match(s, out result, more);
 		}
 
 		/// <summary>
@@ -1090,10 +1086,10 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="group"/>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexMatch_(this string s, string rx, int group, out string result, RXFlags flags = 0)
+		public static bool RegexMatch_(this string s, string rx, int group, out string result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.MatchS(s, out result, group);
+			return x.MatchS(s, out result, group, more);
 		}
 
 		/// <summary>
@@ -1104,10 +1100,10 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static IEnumerable<RXMatch> RegexFindAll_(this string s, string rx, RXFlags flags = 0)
+		public static IEnumerable<RXMatch> RegexFindAll_(this string s, string rx, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAll(s);
+			return x.FindAll(s, more);
 		}
 
 		/// <summary>
@@ -1118,10 +1114,10 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexFindAll_(this string s, string rx, out RXMatch[] result, RXFlags flags = 0)
+		public static bool RegexFindAll_(this string s, string rx, out RXMatch[] result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAll(s, out result);
+			return x.FindAll(s, out result, more);
 		}
 
 		/// <summary>
@@ -1133,10 +1129,10 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="group"/>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static IEnumerable<string> RegexFindAll_(this string s, string rx, int group, RXFlags flags = 0)
+		public static IEnumerable<string> RegexFindAll_(this string s, string rx, int group, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAllS(s, group);
+			return x.FindAllS(s, group, more);
 		}
 
 		/// <summary>
@@ -1148,10 +1144,10 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="group"/>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexFindAll_(this string s, string rx, int group, out string[] result, RXFlags flags = 0)
+		public static bool RegexFindAll_(this string s, string rx, int group, out string[] result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAllS(s, out result, group);
+			return x.FindAllS(s, out result, group, more);
 		}
 
 		/// <summary>
@@ -1162,10 +1158,10 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string RegexReplace_(this string s, string rx, string repl, int maxCount = -1, RXFlags flags = 0)
+		public static string RegexReplace_(this string s, string rx, string repl, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(s, repl, maxCount);
+			return x.Replace(s, repl, maxCount, more);
 		}
 
 		/// <summary>
@@ -1176,10 +1172,10 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static int RegexReplace_(this string s, string rx, string repl, out string result, int maxCount = -1, RXFlags flags = 0)
+		public static int RegexReplace_(this string s, string rx, string repl, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(s, repl, out result, maxCount);
+			return x.Replace(s, repl, out result, maxCount, more);
 		}
 
 		/// <summary>
@@ -1190,10 +1186,10 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string RegexReplace_(this string s, string rx, Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0)
+		public static string RegexReplace_(this string s, string rx, Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(s, replFunc, maxCount);
+			return x.Replace(s, replFunc, maxCount, more);
 		}
 
 		/// <summary>
@@ -1204,10 +1200,10 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static int RegexReplace_(this string s, string rx, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0)
+		public static int RegexReplace_(this string s, string rx, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(s, replFunc, out result, maxCount);
+			return x.Replace(s, replFunc, out result, maxCount, more);
 		}
 
 		/// <summary>
@@ -1217,10 +1213,10 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string[] RegexSplit_(this string s, string rx, int maxCount = 0, RXFlags flags = 0)
+		public static string[] RegexSplit_(this string s, string rx, int maxCount = 0, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Split(s, maxCount);
+			return x.Split(s, maxCount, more);
 		}
 
 		static _RegexCache _cache = new _RegexCache();

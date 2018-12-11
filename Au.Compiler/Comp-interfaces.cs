@@ -37,13 +37,13 @@ namespace Au.Compiler
 
 		string FilePath { get; }
 
-		bool IcfIsScript { get; }
+		bool IsScript { get; }
 
 		IWorkspaceFiles IcfWorkspace { get; }
 
 		IWorkspaceFile IcfFindRelative(string relativePath, bool? folder);
 
-		IEnumerable<IWorkspaceFile> IcfEnumProjectFiles(IWorkspaceFile fSkip = null);
+		IEnumerable<IWorkspaceFile> IcfEnumProjectCsFiles(IWorkspaceFile fSkip = null);
 
 		bool IcfFindProject(out IWorkspaceFile folder, out IWorkspaceFile main);
 

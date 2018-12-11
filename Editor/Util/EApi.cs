@@ -21,7 +21,7 @@ using static Au.NoClass;
 
 #pragma warning disable 649 //member not used
 
-static class EApi
+static class EdApi
 {
 
 

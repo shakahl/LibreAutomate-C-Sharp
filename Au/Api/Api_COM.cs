@@ -214,6 +214,63 @@ namespace Au.Types
 		//{
 		//}
 
+		//[ComImport, Guid("618736e0-3c3d-11cf-810c-00aa00389b71")]
+		//internal interface IAccessible
+		//{
+		//	[PreserveSig] int get_accParent(out IAccessible a);
+		//	int get_accChildCount();
+		//	[PreserveSig] int get_accChild(object varChild, out IAccessible a);
+		//	string get_accName(object varChild);
+		//	string get_accValue(object varChild);
+		//	string get_accDescription(object varChild);
+		//	object get_accRole(object varChild);
+		//	object get_accState(object varChild);
+		//	string get_accHelp(object varChild);
+		//	int get_accHelpTopic(out string pszHelpFile, object varChild);
+		//	string get_accKeyboardShortcut(object varChild);
+		//	object get_accFocus();
+		//	object get_accSelection();
+		//	string get_accDefaultAction(object varChild);
+		//	void accSelect(int flagsSelect, object varChild);
+		//	void accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, object varChild);
+		//	object accNavigate(int navDir, object varStart);
+		//	object accHitTest(int xLeft, int yTop);
+		//	void accDoDefaultAction(object varChild);
+		//	void put_accName(object varChild, string szName);
+		//	void put_accValue(object varChild, string szValue);
+
+		//	//[PreserveSig] int get_accParent(out IAccessible ppdispParent);
+		//	//[PreserveSig] int get_accChildCount(out int pcountChildren);
+		//	//[PreserveSig] int get_accChild(object varChild, out IAccessible ppdispChild);
+		//	//[PreserveSig] int get_accName(object varChild, char** pszName);
+		//	//[PreserveSig] int get_accValue(object varChild, char** pszValue);
+		//	//[PreserveSig] int get_accDescription(object varChild, char** pszDescription);
+		//	//[PreserveSig] int get_accRole(object varChild, out object pvarRole);
+		//	//[PreserveSig] int get_accState(object varChild, out object pvarState);
+		//	//[PreserveSig] int get_accHelp(object varChild, char** pszHelp);
+		//	//[PreserveSig] int get_accHelpTopic(char** pszHelpFile, object varChild, out int pidTopic);
+		//	//[PreserveSig] int get_accKeyboardShortcut(object varChild, char** pszKeyboardShortcut);
+		//	//[PreserveSig] int get_accFocus(out object pvarChild);
+		//	//[PreserveSig] int get_accSelection(out object pvarChildren);
+		//	//[PreserveSig] int get_accDefaultAction(object varChild, char** pszDefaultAction);
+		//	//[PreserveSig] int accSelect(int flagsSelect, object varChild);
+		//	//[PreserveSig] int accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, object varChild);
+		//	//[PreserveSig] int accNavigate(int navDir, object varStart, out object pvarEndUpAt);
+		//	//[PreserveSig] int accHitTest(int xLeft, int yTop, out object pvarChild);
+		//	//[PreserveSig] int accDoDefaultAction(object varChild);
+		//	//[PreserveSig] int put_accName(object varChild, string szName);
+		//	//[PreserveSig] int put_accValue(object varChild, string szValue);
+		//}
+
+		//[ComImport, Guid("00020404-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		//internal interface IEnumVARIANT
+		//{
+		//	[PreserveSig] int Next(uint celt, ref object rgVar, ref uint pCeltFetched);
+		//	[PreserveSig] int Skip(uint celt);
+		//	[PreserveSig] int Reset();
+		//	[PreserveSig] int Clone(out IEnumVARIANT ppEnum);
+		//}
+
 
 		[ComImport, Guid("0f87369f-a4e5-4cfc-bd3e-73e6154572dd"), ClassInterface(ClassInterfaceType.None)]
 		internal class TaskScheduler { }

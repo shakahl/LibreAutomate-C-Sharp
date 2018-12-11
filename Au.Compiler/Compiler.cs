@@ -525,6 +525,10 @@ internal static string[] args = System.Array.Empty<string>();
 					_CopyFileIfNeed(s1, s2);
 				}
 			}
+
+			//also copy C++ dlls
+			_CopyFileIfNeed(Folders.ThisAppBS + @"dll\64bit\AuCpp.dll", m.OutputPath + @"\dll\64bit\AuCpp.dll");
+			_CopyFileIfNeed(Folders.ThisAppBS + @"dll\32bit\AuCpp.dll", m.OutputPath + @"\dll\32bit\AuCpp.dll");
 		}
 
 		static void _CopyFileIfNeed(string sFrom, string sTo)
@@ -762,7 +766,7 @@ void _Main(string[] args) {");
 		/// <param name="f">Script.</param>
 		public static string ConvertCodeScriptToApp(IWorkspaceFile f)
 		{
-			Debug.Assert(f.IcfIsScript);
+			Debug.Assert(f.IsScript);
 			var m = new MetaComments();
 			if(!m.Parse(f, null, EMPFlags.PrintErrors)) return null;
 			var err = m.Errors;

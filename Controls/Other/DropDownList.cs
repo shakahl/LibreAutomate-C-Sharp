@@ -21,6 +21,8 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 
+//SHOULDDO: now something activates _popup when mouse entered (in some forms) or eg pressed an arrow key.
+
 namespace Au.Controls
 {
 	/// <summary>
@@ -28,7 +30,7 @@ namespace Au.Controls
 	/// </summary>
 	public class DropDownList :IDisposable
 	{
-		LibPopup _popup;
+		PopupControlHost _popup;
 		ListView _lv;
 		int _itemHeight;
 
@@ -40,7 +42,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Gets the popup control.
 		/// </summary>
-		internal LibPopup LibPopup => _popup;
+		public PopupControlHost Popup => _popup;
 
 		/// <summary>
 		/// Sets list items.
@@ -92,9 +94,9 @@ namespace Au.Controls
 			};
 			_lv.Columns.Add(null, 0);
 
-			_popup = new LibPopup(_lv) {
+			_popup = new PopupControlHost(_lv) {
 				FocusOnOpen = false,
-				ShowingAnimation = LibPopup.PopupAnimations.TopToBottom | LibPopup.PopupAnimations.Roll,
+				ShowingAnimation = PopupControlHost.PopupAnimations.TopToBottom | PopupControlHost.PopupAnimations.Roll,
 				AnimationDuration = 0, //system default, same as standard combobox
 			};
 		}
@@ -192,6 +194,15 @@ namespace Au.Controls
 				_lvi = new ListViewItem();
 			}
 
+			protected override void OnHandleCreated(EventArgs e)
+			{
+				//workaround: tooltips are below topmost parent window
+				var tt = (Wnd)((Wnd)this).Send(0x104E); //LVM_GETTOOLTIPS
+				tt.ZorderTopmost();
+
+				base.OnHandleCreated(e);
+			}
+
 			protected override void OnRetrieveVirtualItem(RetrieveVirtualItemEventArgs e)
 			{
 				_lvi.Text = _p.Items[e.ItemIndex];
@@ -228,7 +239,8 @@ namespace Au.Controls
 			//{
 			//	//Wnd.Misc.PrintMsg(m, Api.WM_REFLECT|Api.WM_NOTIFY);
 			//	//if(m.Msg < Api.WM_USER) Wnd.Misc.PrintMsg(m);
-			//	if(m.Msg == Api.WM_CREATE || m.Msg == Api.WM_DESTROY) Wnd.Misc.PrintMsg(m);
+			//	//if(m.Msg == Api.WM_CREATE || m.Msg == Api.WM_DESTROY) Wnd.Misc.PrintMsg(m);
+			//	Wnd.Misc.PrintMsg(m);
 
 			//	//if(m.Msg == Api.WM_MOUSEACTIVATE) {
 			//	//	Print("WM_MOUSEACTIVATE 1");

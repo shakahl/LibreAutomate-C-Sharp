@@ -772,6 +772,9 @@ namespace Au.Controls
 		public const int SCI_POSITIONBEFORE = 2417;
 		public const int SCI_POSITIONAFTER = 2418;
 		public const int SCI_POSITIONRELATIVE = 2670;
+		//TODO: SCI_POSITIONRELATIVE and SCI_COUNTCHARACTERS use UTF-32.
+		//	Replace with SCI_POSITIONRELATIVECODEUNITS and SCI_COUNTCODEUNITS.
+		//	In our Scintilla version they are unavailable. Need to upgrade and reapply all modifications.
 		public const int SCI_COPYRANGE = 2419;
 		public const int SCI_COPYTEXT = 2420;
 		public const int SC_SEL_STREAM = 0;

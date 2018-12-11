@@ -29,6 +29,13 @@ namespace Aga.Controls.Tree
 			set { _font = value; }
 		}
 
+		private NodeControl _currentEditorOwner;
+		public NodeControl CurrentEditorOwner
+		{
+			get { return _currentEditorOwner; }
+			set { _currentEditorOwner = value; }
+		}
+
 		private DrawSelectionMode _drawSelection;
 		public DrawSelectionMode DrawSelection
 		{
@@ -41,13 +48,6 @@ namespace Aga.Controls.Tree
 		{
 			get { return _drawFocus; }
 			set { _drawFocus = value; }
-		}
-
-		private NodeControl _currentEditorOwner;
-		public NodeControl CurrentEditorOwner
-		{
-			get { return _currentEditorOwner; }
-			set { _currentEditorOwner = value; }
 		}
 
 		private bool _enabled;

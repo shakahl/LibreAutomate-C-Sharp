@@ -610,13 +610,14 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets filename with extension.
+		/// Gets filename with or without extension.
 		/// Returns "" if there is no filename.
 		/// Returns null if path is null.
 		/// </summary>
 		/// <param name="path">Path or filename. Can be null.</param>
+		/// <param name="withoutExtension">Remove extension, unless <paramref name="path"/> ends with '\\' or '/'.</param>
 		/// <remarks>
-		/// Similar to <see cref="Path.GetFileName"/>. Some diferences: does not throw exceptions; if ends with '\\' or '/', gets part before it, eg "B" from @"C:\A\B\".
+		/// Similar to <see cref="Path.GetFileName"/> and <see cref="Path.GetFileNameWithoutExtension"/>. Some diferences: does not throw exceptions; if ends with '\\' or '/', gets part before it, eg "B" from @"C:\A\B\".
 		/// Supports separators '\\' and '/'.
 		/// Also supports URL and shell parsing names like @"::{CLSID-1}\0\::{CLSID-2}".
 		/// Example paths and results:
@@ -636,23 +637,7 @@ namespace Au
 		/// "" -> "".
 		/// null -> null.
 		/// </code>
-		/// </remarks>
-		public static string GetFileName(string path)
-		{
-			return _GetPathPart(path, _PathPart.NameWithExt);
-		}
-
-		/// <summary>
-		/// Gets filename without extension.
-		/// Returns "" if there is no filename.
-		/// Returns null if path is null.
-		/// </summary>
-		/// <param name="path">Path or filename. Can be null.</param>
-		/// <remarks>
-		/// Similar to <see cref="Path.GetFileNameWithoutExtension"/> Some diferences: does not throw exceptions; if ends with '\\' or '/', gets part before it, eg "B" from @"C:\A\B\" (then does not remove extension from it because it is a directory name).
-		/// Supports separators '\\' and '/'.
-		/// Also supports URL and shell parsing names like @"::{CLSID-1}\0\::{CLSID-2}".
-		/// Example paths and results:
+		/// Example paths and results when <paramref name="withoutExtension"/> true:
 		/// <code>
 		/// @"C:\A\B\file.txt" -> "file".
 		/// "file.txt" -> "file".
@@ -660,19 +645,13 @@ namespace Au
 		/// @"C:\A\B" -> "B".
 		/// @"C:\A\B\" -> "B".
 		/// @"C:\A\B.B\" -> "B.B".
-		/// @"C:\" -> "".
-		/// @"C:" -> "".
-		/// @"\\network\share" -> "share".
 		/// @"C:\aa\file.txt:alt.stream" -> "file.txt:alt".
 		/// "http://a.b.c" -> "a.b".
-		/// "::{A}\::{B}" -> "::{B}".
-		/// "" -> "".
-		/// null -> null.
 		/// </code>
 		/// </remarks>
-		public static string GetFileNameWithoutExtension(string path)
+		public static string GetFileName(string path, bool withoutExtension=false)
 		{
-			return _GetPathPart(path, _PathPart.NameWithoutExt);
+			return _GetPathPart(path, withoutExtension? _PathPart.NameWithoutExt : _PathPart.NameWithExt);
 		}
 
 		/// <summary>

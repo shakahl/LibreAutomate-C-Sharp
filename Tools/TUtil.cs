@@ -483,4 +483,13 @@ namespace Au.Tools
 	//		AuDialog.Show();
 	//	}
 	//}
+
+	/// <summary>
+	/// All tool forms of this library should inherit from this class and override its virtual functions.
+	/// </summary>
+	public class ToolForm :Form_
+	{
+		public virtual string ResultCode { get; protected set; }
+
+	}
 }

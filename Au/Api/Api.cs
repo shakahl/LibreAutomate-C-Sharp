@@ -876,7 +876,12 @@ namespace Au.Types
 		[DllImport("oleacc.dll")]
 		internal static extern IntPtr GetProcessHandleFromHwnd(Wnd hwnd);
 
+		//[DllImport("oleacc.dll")]
+		////internal static extern LPARAM LresultFromObject(in Guid riid, LPARAM wParam, [MarshalAs(UnmanagedType.IUnknown)] Object punk);
+		//internal static extern LPARAM LresultFromObject(in Guid riid, LPARAM wParam, IntPtr punk);
 
+		//[DllImport("oleacc.dll", PreserveSig = true)]
+		//internal static extern int AccessibleObjectFromWindow(Wnd hwnd, int dwId, in Guid riid, out IAccessible ppvObject);
 
 
 		#endregion

@@ -31,7 +31,7 @@ using static Au.NoClass;
 using static Program;
 using Au.Controls;
 
-partial class EForm : Form
+partial class EdForm : Form
 {
 #if RUNHIDDEN_WINDOWPOSCHANGING
 	bool _canShow;
@@ -40,7 +40,7 @@ partial class EForm : Form
 	public static void RunApplication()
 	{
 #if RUNHIDDEN_WINDOWPOSCHANGING
-		Application.Run(new EForm());
+		Application.Run(new EdForm());
 #else
 		Application.Run(new _AppContext());
 #endif
@@ -51,7 +51,7 @@ partial class EForm : Form
 	{
 		public _AppContext()
 		{
-			var f = new EForm();
+			var f = new EdForm();
 			f.CreateControl_();
 			f._LoadContent();
 			if(_StartsVisible) this.MainForm = f;
@@ -62,7 +62,7 @@ partial class EForm : Form
 
 	static bool _StartsVisible => true; //TODO: if commandline /v
 
-	public EForm()
+	public EdForm()
 	{
 		//Output.LibUseQM2 = true; Output.Clear();
 
@@ -73,7 +73,7 @@ partial class EForm : Form
 		Program.MainForm = this;
 
 		this.SuspendLayout();
-		this.Font = Stock.FontNormal;
+		this.Font = EdStock.FontRegular;
 		this.AutoScaleMode = AutoScaleMode.None;
 		this.StartPosition = FormStartPosition.Manual;
 		this.Location = new Point(100, 100);
@@ -359,14 +359,14 @@ public static class Panels
 			Strips.Menubar, Strips.tbFile, Strips.tbEdit, Strips.tbRun, Strips.tbTools, Strips.tbHelp, Strips.tbCustom1, Strips.tbCustom2
 			);
 		//info: would be easier to specify these in the default XML, but then cannot change in new app versions.
-		m.GetPanel(Open).Init("Currently open files", EResources.GetImageUseCache("open"));
-		m.GetPanel(Output).Init("Errors and other information", EResources.GetImageUseCache("output"));
-		m.GetPanel(Find).Init("Find files, text, triggers", EResources.GetImageUseCache("find"));
+		m.GetPanel(Open).Init("Currently open files", EdResources.GetImageUseCache("open"));
+		m.GetPanel(Output).Init("Errors and other information", EdResources.GetImageUseCache("output"));
+		m.GetPanel(Find).Init("Find files, text, triggers", EdResources.GetImageUseCache("find"));
 		m.GetPanel(Files).Init("All scripts and other files of current workspace");
 		m.GetPanel(Running).Init("Running scripts");
 		m.GetPanel(Recent).Init("Recent running scripts");
 #if TEST
-		m.GetPanel(c).Init("New panel", EResources.GetImageUseCache("paste"));
+		m.GetPanel(c).Init("New panel", EdResources.GetImageUseCache("paste"));
 #endif
 	}
 }

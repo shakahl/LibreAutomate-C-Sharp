@@ -25,7 +25,7 @@ using static Au.NoClass;
 /// Extension methods for .NET classes.
 /// See also <see cref="ExtensionMethods"/>.
 /// </summary>
-static class EDotNetExtensions
+static class EdNetExtensions
 {
 	/// <summary>
 	/// Shows ToolStripDropDownMenu menu at current mouse position, like it would be a ContextMenuStrip menu.
@@ -42,7 +42,7 @@ static class EDotNetExtensions
 
 	///// <summary>
 	///// Checks or unchecks item by name.
-	///// See also: <see cref="EForm.CheckCmd"/>
+	///// See also: <see cref="EdForm.CheckCmd"/>
 	///// </summary>
 	///// <exception cref="NullReferenceException">Item does not exist.</exception>
 	//public static void CheckItem(this ToolStripDropDownMenu t, string itemName, bool check)
@@ -52,9 +52,9 @@ static class EDotNetExtensions
 
 }
 
-static class EResources
+static class EdResources
 {
-	static EResources()
+	static EdResources()
 	{
 		//this makes the first access of managed resources 3 times faster. Then app starts ~10 ms faster. Default culture is en-US.
 		Project.Properties.Resources.Culture = System.Globalization.CultureInfo.InvariantCulture;
@@ -147,6 +147,23 @@ static class EResources
 	{
 		return Project.Properties.Resources.ResourceManager.GetObject(name, Project.Properties.Resources.Culture) as Bitmap;
 	}
+}
+
+/// <summary>
+/// Various cached GDI objects etc.
+/// </summary>
+static class EdStock
+{
+	/// <summary>
+	/// Cached standard font used by most windows and controls.
+	/// On Windows 10 it is "Segoe UI" 9 by default.
+	/// </summary>
+	public static Font FontRegular = Au.Util.SystemFonts_.Regular;
+
+	/// <summary>
+	/// Bold version of <see cref="Regular"/> font.
+	/// </summary>
+	public static Font FontBold = Au.Util.SystemFonts_.Bold;
 }
 
 /// <summary>

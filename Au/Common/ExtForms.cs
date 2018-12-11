@@ -173,13 +173,26 @@ namespace Au.Types
 	///		Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font).
 	///		Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form at run time.
 	/// </remarks>
-	public class Form_ :Form
+	public class Form_ : Form
 	{
+		Font _font;
+
 		///
 		public Form_()
 		{
-			this.Font = SystemFonts.MessageBoxFont; //must be before 'AutoScaleMode = ...'
+			_font = Util.SystemFonts_.Regular;
+			this.Font = _font; //must be before 'AutoScaleMode = ...'
 			this.AutoScaleMode = AutoScaleMode.Font;
+		}
+
+		///
+		protected override void Dispose(bool disposing)
+		{
+			if(disposing) {
+				//Print("Dispose");
+				_font.Dispose();
+			}
+			base.Dispose(disposing);
 		}
 
 		/// <summary>

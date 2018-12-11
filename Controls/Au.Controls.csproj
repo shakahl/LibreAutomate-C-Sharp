@@ -63,11 +63,8 @@
     <Compile Include="Other\ParamGrid.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Other\LibPopup.cs">
+    <Compile Include="Other\PopupControlHost.cs">
       <SubType>Component</SubType>
-    </Compile>
-    <Compile Include="Other\LibPopup.designer.cs">
-      <DependentUpon>LibPopup.cs</DependentUpon>
     </Compile>
     <Compile Include="Other\DropDownList.cs" />
     <Compile Include="Sci\AuInfoBox.cs">

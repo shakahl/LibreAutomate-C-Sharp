@@ -31,7 +31,7 @@ namespace Au.Controls
 	/// 2-column grid control similar to a propertygrid but more flexible.
 	/// Used in many code tools to edit function arguments etc. For example in "Find window or control".
 	/// </summary>
-	public class ParamGrid :SG.Grid
+	public class ParamGrid : SG.Grid
 	{
 		Editors.TextBox _editor;
 		SG.Cells.Controllers.ToolTipText _controllerTooltip0, _controllerTooltip1;
@@ -163,7 +163,7 @@ namespace Au.Controls
 			}
 		}
 
-		class _CellController :SG.Cells.Controllers.ControllerBase
+		class _CellController : SG.Cells.Controllers.ControllerBase
 		{
 			public override void OnValueChanged(SG.CellContext sender, EventArgs e)
 			{
@@ -287,7 +287,7 @@ namespace Au.Controls
 		/// Simple editable text cell.
 		/// Adds to SG.Cells.Cell: property Info.
 		/// </summary>
-		public class EditCell :SG.Cells.Cell
+		public class EditCell : SG.Cells.Cell
 		{
 			public EditCell(string value) : base(value, typeof(string)) { }
 
@@ -297,7 +297,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Editable text cell with drop-down button that shows drop-down list similar to combo box.
 		/// </summary>
-		public class ComboCell :EditCell
+		public class ComboCell : EditCell
 		{
 			string[] _items;
 			Func<string[]> _callback;
@@ -328,15 +328,13 @@ namespace Au.Controls
 					g._comboDD = p = new DropDownList();
 
 					//prevent showing drop-down again when the user clicks the drop-down button to close it
-					p.LibPopup.VisibleChanged += (unu, sed) =>
-					{
-						if(g._comboDD.LibPopup.Visible) g._comboNoDD = true;
+					p.Popup.VisibleChanged += (unu, sed) => {
+						if(g._comboDD.Popup.Visible) g._comboNoDD = true;
 						else ((Wnd)g).Post(Api.WM_USER + 10); //WndProc will set _comboNoDD = false
 					};
 				}
 				p.Items = items;
-				p.OnSelected = pp =>
-				{
+				p.OnSelected = pp => {
 					t.Value = pp.ResultString;
 					if(!pp.ResultWasKey) g.ZEndEdit(cancel: false);
 				};
@@ -417,7 +415,7 @@ namespace Au.Controls
 		}
 
 		//Combo button that does not make the cell taller.
-		class _ComboButton :DevAge.Drawing.VisualElements.DropDownButtonThemed
+		class _ComboButton : DevAge.Drawing.VisualElements.DropDownButtonThemed
 		{
 			public _ComboButton()
 			{
@@ -513,45 +511,45 @@ namespace Au.Controls
 						t = new EditCell(value?.ToString()) { Editor = _editor, Info = info };
 						break;
 					case EditType.TextButton: {
-							var ed = new Editors.TextBoxButton(typeof(string)) { EditableMode = c_editableMode };
-							ed.Control.TextBox.Multiline = true;
-							t = new EditCell(value?.ToString()) { Editor = ed, Info = info };
-							ed.Control.DialogOpen += buttonAction;
-						}
-						break;
+						var ed = new Editors.TextBoxButton(typeof(string)) { EditableMode = c_editableMode };
+						ed.Control.TextBox.Multiline = true;
+						t = new EditCell(value?.ToString()) { Editor = ed, Info = info };
+						ed.Control.DialogOpen += buttonAction;
+					}
+					break;
 					case EditType.Button: {
-							t = new SG.Cells.Button(value?.ToString());
-							var ev = new SG.Cells.Controllers.Button();
-							ev.Executed += buttonAction;
-							t.Controller.AddController(ev);
-							viewType = _ViewType.Button;
-						}
-						break;
+						t = new SG.Cells.Button(value?.ToString());
+						var ev = new SG.Cells.Controllers.Button();
+						ev.Executed += buttonAction;
+						t.Controller.AddController(ev);
+						viewType = _ViewType.Button;
+					}
+					break;
 					default: { //combo
-							string[] a = null; Func<string[]> callback = null;
-							switch(value) {
-							case string s: a = s.Split_("|"); break;
-							case string[] sa: a = sa; break;
-							case List<string> sl: a = sl.ToArray(); break;
-							case Func<string[]> callb: callback = callb; break;
-							}
-							if(etype == EditType.ComboList) {
-								var ed = new Editors.ComboBox(typeof(string), a, false) { EditableMode = c_editableMode };
-								var cb = ed.Control;
-								cb.DropDownStyle = ComboBoxStyle.DropDownList;
-								cb.SelectionChangeCommitted += (unu, sed) => ZEndEdit(false);
-								if(buttonAction != null) cb.DropDown += buttonAction;
-								t = new EditCell(comboIndex >= 0 ? a[comboIndex] : "") { Editor = ed, Info = info };
-							} else {
-								var ed = _editor;
-								var cc = (callback != null) ? new ComboCell(callback) : new ComboCell(a, comboIndex);
-								cc.Editor = ed;
-								cc.Info = info;
-								t = cc;
-								viewType = _ViewType.Combo;
-							}
+						string[] a = null; Func<string[]> callback = null;
+						switch(value) {
+						case string s: a = s.Split_("|"); break;
+						case string[] sa: a = sa; break;
+						case List<string> sl: a = sl.ToArray(); break;
+						case Func<string[]> callb: callback = callb; break;
 						}
-						break;
+						if(etype == EditType.ComboList) {
+							var ed = new Editors.ComboBox(typeof(string), a, false) { EditableMode = c_editableMode };
+							var cb = ed.Control;
+							cb.DropDownStyle = ComboBoxStyle.DropDownList;
+							cb.SelectionChangeCommitted += (unu, sed) => ZEndEdit(false);
+							if(buttonAction != null) cb.DropDown += buttonAction;
+							t = new EditCell(comboIndex >= 0 ? a[comboIndex] : "") { Editor = ed, Info = info };
+						} else {
+							var ed = _editor;
+							var cc = (callback != null) ? new ComboCell(callback) : new ComboCell(a, comboIndex);
+							cc.Editor = ed;
+							cc.Info = info;
+							t = cc;
+							viewType = _ViewType.Combo;
+						}
+					}
+					break;
 					}
 					t.AddController(_controllerTooltip1);
 					t.View = _GetView(viewType);
@@ -577,7 +575,7 @@ namespace Au.Controls
 		/// <param name="name">Readonly text in column 0 (checkbox or label).</param>
 		/// <param name="value">
 		/// string.
-		/// For combo can be string like "one|two|three" or string[] List of string.
+		/// For combo can be string like "one|two|three" or string[] or List of string.
 		/// For editable combo also can be Func&lt;string[]&gt; callback that returns items. Called before each dropdown.
 		/// </param>
 		/// <param name="check">Checked or not. If null, adds label instead of checkbox.</param>
@@ -585,7 +583,7 @@ namespace Au.Controls
 		/// <param name="info"><see cref="ZShowEditInfo"/> text.</param>
 		/// <param name="insertAt"></param>
 		/// <param name="etype">Edit cell control type.</param>
-		/// <param name="buttonAction">Button click action when etype is Button or TextButton; required.</param>
+		/// <param name="buttonAction">Button click action when etype is Button, TextButton or ComboList; required if Button/TextButton.</param>
 		/// <param name="comboIndex">If not -1, selects this combo box item.</param>
 		public int ZAdd(string key, string name, object value = null, bool? check = false, string tt = null, string info = null, int insertAt = -1,
 			EditType etype = EditType.Text, EventHandler buttonAction = null, int comboIndex = -1)
@@ -645,16 +643,14 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Checks or unchecks.
-		/// Use only for flags and optionals, not for required.
+		/// Does nothing if no checkbox.
 		/// </summary>
 		/// <param name="row">Row index. If negative, asserts and returns.</param>
 		/// <param name="check"></param>
 		public void ZCheck(int row, bool check)
 		{
 			Debug.Assert(row >= 0); if(row < 0) return;
-			var cb = this[row, 0] as SG.Cells.CheckBox;
-			Debug.Assert(cb != null);
-			cb.Checked = check;
+			if(this[row, 0] is SG.Cells.CheckBox cb) cb.Checked = check;
 		}
 
 		/// <summary>
@@ -724,7 +720,7 @@ namespace Au.Controls
 		public string ZGetCellText(string rowKey, int column) => ZGetCellText(ZFindRow(rowKey), column);
 
 		/// <summary>
-		/// Changes cell text or checkbox label.
+		/// Changes cell text or checkbox label. Ends editing.
 		/// </summary>
 		/// <param name="row">Row index. If negative, asserts and returns null.</param>
 		/// <param name="column">Column index.</param>
@@ -740,7 +736,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Changes cell value or checkbox label.
+		/// Changes cell value or checkbox label. Ends editing.
 		/// </summary>
 		/// <param name="rowKey">Row key. If not found, asserts and returns null.</param>
 		/// <param name="column">Column index.</param>

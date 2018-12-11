@@ -369,6 +369,9 @@
         <member name="M:Au.Types.Form_.#ctor">
             
         </member>
+        <member name="M:Au.Types.Form_.Dispose(System.Boolean)">
+            
+        </member>
         <member name="P:Au.Types.Form_.IsPopup">
             <summary>
             Adds WS_POPUP style. Also prevents activating an unrelated window when closing this active owned nonmodal form.
@@ -2141,7 +2144,7 @@
         <member name="T:Au.Types.RXMatch">
             <summary>
             Regular expression match info.
-            Used with <see cref="T:Au.Regex_"/> class functions and String extension methods like <see cref="M:Au.String_.RegexMatch_(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags)"/>.
+            Used with <see cref="T:Au.Regex_"/> class functions and String extension methods like <see cref="M:Au.String_.RegexMatch_(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,Au.Types.RXMore)"/>.
             </summary>
             <remarks>
             Contains info about a regular expression match found in the subject string: index, length, substring, etc.
@@ -7317,14 +7320,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -7541,6 +7536,54 @@
         <member name="T:Au.Util.LibNativeFont">
             <summary>
             Creates and manages native font handle.
+            </summary>
+        </member>
+        <member name="P:Au.Util.LibNativeFont.RegularCached">
+            <summary>
+            Cached standard font used by most windows and controls.
+            On Windows 10 it is "Segoe UI" 9 by default.
+            </summary>
+        </member>
+        <member name="P:Au.Util.LibNativeFont.Verdana9Cached">
+            <summary>
+            Cached font "Verdana" 9.
+            Used eg by AuDialog for input Edit control.
+            </summary>
+        </member>
+        <member name="T:Au.Util.SystemFonts_">
+            <summary>
+            Provides various versions of standard font.
+            </summary>
+            <remarks>
+            Extends <see cref="T:System.Drawing.SystemFonts"/>. Much faster.
+            The properties return non-cached <b>Font</b> objects. It's safe to dispose them. They are cloned from a single cached <see cref="P:System.Drawing.SystemFonts.MessageBoxFont"/>.
+            </remarks>
+        </member>
+        <member name="F:Au.Util.SystemFonts_.LibRegularCached">
+            <summary>
+            The cached font from which are cloned other fonts.
+            Use carefully, to avoid accidental disposing; don't use for Font objects that can be accessed by any code.
+            </summary>
+        </member>
+        <member name="P:Au.Util.SystemFonts_.Regular">
+            <summary>
+            Standard font used by most windows and controls.
+            On Windows 10 it is "Segoe UI" 9 by default.
+            </summary>
+        </member>
+        <member name="P:Au.Util.SystemFonts_.Bold">
+            <summary>
+            Bold version of <see cref="P:Au.Util.SystemFonts_.Regular"/> font.
+            </summary>
+        </member>
+        <member name="P:Au.Util.SystemFonts_.Italic">
+            <summary>
+            Italic version of <see cref="P:Au.Util.SystemFonts_.Regular"/> font.
+            </summary>
+        </member>
+        <member name="P:Au.Util.SystemFonts_.Underline">
+            <summary>
+            Underlined version of <see cref="P:Au.Util.SystemFonts_.Regular"/> font.
             </summary>
         </member>
         <member name="T:Au.Util.Cursor_">
@@ -12734,7 +12777,7 @@
             Some .NET String methods use StringComparison.CurrentCulture by default, while others don't. It is confusing, dangerous (easy to make bugs), slower and rarely useful. Microsoft recommends to specify StringComparison.Ordinal[IgnoreCase] explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx. This class adds their versions that use StringComparison.Ordinal[IgnoreCase]. Same name, with prefix "_". For example, StartsWith uses StringComparison.CurrentCulture, and StartsWith_ uses StringComparison.Ordinal[IgnoreCase].
             </remarks>
         </member>
-        <member name="M:Au.String_.RegexIsMatch_(System.String,System.String,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexIsMatch_(System.String,System.String,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Returns true if this string matches PCRE regular expression <paramref name="rx"/>.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.IsMatch(System.String,Au.Types.RXMore)"/>.
@@ -12743,7 +12786,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.String_.RegexMatch_(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexMatch_(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Returns true if this string matches PCRE regular expression <paramref name="rx"/>.
             Gets match info as <see cref="T:Au.Types.RXMatch"/>.
@@ -12753,7 +12796,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.String_.RegexMatch_(System.String,System.String,System.Int32,System.String@,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexMatch_(System.String,System.String,System.Int32,System.String@,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Returns true if this string matches PCRE regular expression <paramref name="rx"/>.
             Gets whole match or some group, as string.
@@ -12764,7 +12807,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <paramref name="group"/>.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.String_.RegexFindAll_(System.String,System.String,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexFindAll_(System.String,System.String,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Finds all match instances of PCRE regular expression <paramref name="rx"/>.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXMatch"/>&gt; object that can be used with foreach.
@@ -12774,7 +12817,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.String_.RegexFindAll_(System.String,System.String,Au.Types.RXMatch[]@,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexFindAll_(System.String,System.String,Au.Types.RXMatch[]@,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Finds all match instances of PCRE regular expression <paramref name="rx"/>. Gets array of <see cref="T:Au.Types.RXMatch"/>.
             Returns true if found 1 or more matches.
@@ -12784,7 +12827,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.String_.RegexFindAll_(System.String,System.String,System.Int32,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexFindAll_(System.String,System.String,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Finds all match instances of PCRE regular expression <paramref name="rx"/>.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXGroup"/>&gt; object that can be used with foreach.
@@ -12795,7 +12838,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <paramref name="group"/>.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.String_.RegexFindAll_(System.String,System.String,System.Int32,System.String[]@,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexFindAll_(System.String,System.String,System.Int32,System.String[]@,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Finds all match instances of PCRE regular expression <paramref name="rx"/>. Gets array of strings.
             Returns true if found 1 or more matches.
@@ -12806,7 +12849,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <paramref name="group"/>.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.String,System.Int32,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.String,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <paramref name="rx"/>.
             Returns the result string.
@@ -12816,7 +12859,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.String,System.String@,System.Int32,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.String,System.String@,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <paramref name="rx"/>.
             Returns the number of replacements made.
@@ -12826,7 +12869,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <paramref name="rx"/>. Uses a callback function.
             Returns the result string.
@@ -12836,7 +12879,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <paramref name="rx"/>. Uses a callback function.
             Returns the number of replacements made.
@@ -12846,7 +12889,7 @@
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.String_.RegexSplit_(System.String,System.String,System.Int32,Au.Types.RXFlags)">
+        <member name="M:Au.String_.RegexSplit_(System.String,System.String,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
             Returns array of substrings delimited by PCRE regular expression <paramref name="rx"/> matches.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.Split(System.String,System.Int32,Au.Types.RXMore)"/>.
@@ -14864,15 +14907,16 @@
             </summary>
             <param name="name">Any string. Example: "name.txt". Can be null.</param>
         </member>
-        <member name="M:Au.Path_.GetFileName(System.String)">
+        <member name="M:Au.Path_.GetFileName(System.String,System.Boolean)">
             <summary>
-            Gets filename with extension.
+            Gets filename with or without extension.
             Returns "" if there is no filename.
             Returns null if path is null.
             </summary>
             <param name="path">Path or filename. Can be null.</param>
+            <param name="withoutExtension">Remove extension, unless <paramref name="path"/> ends with '\\' or '/'.</param>
             <remarks>
-            Similar to <see cref="M:System.IO.Path.GetFileName(System.String)"/>. Some diferences: does not throw exceptions; if ends with '\\' or '/', gets part before it, eg "B" from @"C:\A\B\".
+            Similar to <see cref="M:System.IO.Path.GetFileName(System.String)"/> and <see cref="M:System.IO.Path.GetFileNameWithoutExtension(System.String)"/>. Some diferences: does not throw exceptions; if ends with '\\' or '/', gets part before it, eg "B" from @"C:\A\B\".
             Supports separators '\\' and '/'.
             Also supports URL and shell parsing names like @"::{CLSID-1}\0\::{CLSID-2}".
             Example paths and results:
@@ -14892,20 +14936,7 @@
             "" -> "".
             null -> null.
             </code>
-            </remarks>
-        </member>
-        <member name="M:Au.Path_.GetFileNameWithoutExtension(System.String)">
-            <summary>
-            Gets filename without extension.
-            Returns "" if there is no filename.
-            Returns null if path is null.
-            </summary>
-            <param name="path">Path or filename. Can be null.</param>
-            <remarks>
-            Similar to <see cref="M:System.IO.Path.GetFileNameWithoutExtension(System.String)"/> Some diferences: does not throw exceptions; if ends with '\\' or '/', gets part before it, eg "B" from @"C:\A\B\" (then does not remove extension from it because it is a directory name).
-            Supports separators '\\' and '/'.
-            Also supports URL and shell parsing names like @"::{CLSID-1}\0\::{CLSID-2}".
-            Example paths and results:
+            Example paths and results when <paramref name="withoutExtension"/> true:
             <code>
             @"C:\A\B\file.txt" -> "file".
             "file.txt" -> "file".
@@ -14913,14 +14944,8 @@
             @"C:\A\B" -> "B".
             @"C:\A\B\" -> "B".
             @"C:\A\B.B\" -> "B.B".
-            @"C:\" -> "".
-            @"C:" -> "".
-            @"\\network\share" -> "share".
             @"C:\aa\file.txt:alt.stream" -> "file.txt:alt".
             "http://a.b.c" -> "a.b".
-            "::{A}\::{B}" -> "::{B}".
-            "" -> "".
-            null -> null.
             </code>
             </remarks>
         </member>
@@ -15313,10 +15338,10 @@
         </member>
         <member name="P:Au.Folders.ThisAppTemp">
             <summary>
-            Gets or sets path of the temporary files folder of this application.
+            Gets or sets path of folder "temporary files of this application".
             Default is Folders.Temp + "Au".
             </summary>
-            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <exception cref="T:System.InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
             <remarks>
             The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
             Creates the folder if does not exist.
@@ -15324,10 +15349,10 @@
         </member>
         <member name="P:Au.Folders.ThisAppDocuments">
             <summary>
-            Gets or sets path of user document files folder of this application.
+            Gets or sets path of folder "user document files of this application".
             Default is Folders.Documents + "Au".
             </summary>
-            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <exception cref="T:System.InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
             <remarks>
             The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
             Creates the folder if does not exist when 'set' or 'get' function called first time in app.
@@ -15335,10 +15360,10 @@
         </member>
         <member name="P:Au.Folders.ThisAppData">
             <summary>
-            Gets or sets path of private files folder of this application on this user account.
+            Gets or sets path of folder "private files of this application of this user account".
             Default is Folders.RoamingAppData + "Au".
             </summary>
-            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <exception cref="T:System.InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
             <remarks>
             The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
             Creates the folder if does not exist when 'set' or 'get' function called first time in app.
@@ -15346,10 +15371,10 @@
         </member>
         <member name="P:Au.Folders.ThisAppDataLocal">
             <summary>
-            Gets or sets path of local (non-roaming) private files folder of this application on this user account.
+            Gets or sets path of folder "local (non-roaming) private files of this application of this user account".
             Default is Folders.LocalAppData + "Au".
             </summary>
-            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <exception cref="T:System.InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
             <remarks>
             The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
             Creates the folder if does not exist when 'set' or 'get' function called first time in app.
@@ -15357,10 +15382,10 @@
         </member>
         <member name="P:Au.Folders.ThisAppDataCommon">
             <summary>
-            Gets or sets path of common (all users) private files folder of this application.
+            Gets or sets path of folder "common (all users) private files of this application".
             Default is Folders.ProgramData + "Au".
             </summary>
-            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <exception cref="T:System.InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
             <remarks>
             The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
             Note: the ProgramData folder has special permissions. Programs running not as administrator usually cannot write there.
@@ -15369,14 +15394,20 @@
         </member>
         <member name="P:Au.Folders.ThisAppImages">
             <summary>
-            Gets or sets path of images (icons etc) folder of this application.
-            Default is ThisApp + "Images".
+            Gets or sets path of folder "images (icons etc) of this application".
+            Default is ThisAppBS + "Images".
             </summary>
-            <exception cref="T:System.InvalidOperationException">This property is already set (called 'set' function) or used (called 'get' function).</exception>
+            <exception cref="T:System.InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
             <remarks>
-            Functions of these classes will look for image there: Icon_, AuMenu, AuToolbar, WinImage, possibly some other.
+            Used by functions of these classes: Icon_, AuMenu, AuToolbar, WinImage, possibly some other.
             This function does not auto-create the folder; usually it is created when installing the application.
             </remarks>
+        </member>
+        <member name="P:Au.Folders.Workspace">
+            <summary>
+            Gets folder of current workspace.
+            Available only in the Au editor process. Elsewhere null.
+            </summary>
         </member>
         <member name="P:Au.Folders.ThisProcess">
             <summary>
@@ -15767,7 +15798,7 @@
         <member name="P:Au.AuMenu.MultiShow">
             <summary>
             If false, disposes the menu when it is closed.
-            If true, does not dispose. Then you can call <b>Show</b> multiple times for the same object.
+            If true, does not dispose. Then you can call <b>Show</b> again and again.
             Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control.
             </summary>
             <seealso cref="P:Au.AuMenu.DefaultMultiShow"/>

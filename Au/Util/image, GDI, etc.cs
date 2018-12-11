@@ -27,7 +27,7 @@ namespace Au.Util
 	/// Helps to get and release screen DC with the 'using(...){...}' pattern.
 	/// Uses API GetDC and ReleaseDC.
 	/// </summary>
-	internal struct LibScreenDC :IDisposable
+	internal struct LibScreenDC : IDisposable
 	{
 		IntPtr _dc;
 
@@ -41,7 +41,7 @@ namespace Au.Util
 	/// Uses API GetDC and ReleaseDC.
 	/// If w is default(Wnd), gets screen DC.
 	/// </summary>
-	internal struct LibWindowDC :IDisposable, IDeviceContext
+	internal struct LibWindowDC : IDisposable, IDeviceContext
 	{
 		IntPtr _dc;
 		Wnd _w;
@@ -65,7 +65,7 @@ namespace Au.Util
 	/// Helps to create and delete screen DC with the 'using(...){...}' pattern.
 	/// Uses API CreateCompatibleDC and DeleteDC.
 	/// </summary>
-	internal struct LibCompatibleDC :IDisposable, IDeviceContext
+	internal struct LibCompatibleDC : IDisposable, IDeviceContext
 	{
 		IntPtr _dc;
 
@@ -75,7 +75,7 @@ namespace Au.Util
 
 		public void Dispose() => ReleaseHdc();
 
-		public IntPtr GetHdc()=> _dc;
+		public IntPtr GetHdc() => _dc;
 
 		public void ReleaseHdc()
 		{
@@ -88,7 +88,7 @@ namespace Au.Util
 	/// Creates and manages native bitmap handle and memory DC (GDI device context).
 	/// The bitmap is selected in the DC.
 	/// </summary>
-	public sealed class MemoryBitmap :IDisposable, IDeviceContext
+	public sealed class MemoryBitmap : IDisposable, IDeviceContext
 	{
 		IntPtr _dc, _bm, _oldbm;
 
@@ -210,7 +210,7 @@ namespace Au.Util
 	/// <summary>
 	/// Creates and manages native font handle.
 	/// </summary>
-	internal sealed class LibNativeFont :IDisposable
+	internal sealed class LibNativeFont : IDisposable
 	{
 		public IntPtr Handle { get; private set; }
 		public int HeightOnScreen { get; private set; }
@@ -241,6 +241,66 @@ namespace Au.Util
 				}
 			}
 		}
+
+		/// <summary>
+		/// Cached standard font used by most windows and controls.
+		/// On Windows 10 it is "Segoe UI" 9 by default.
+		/// </summary>
+		internal static LibNativeFont RegularCached => _regular ?? (_regular = new LibNativeFont(SystemFonts_.LibRegularCached.ToHfont()));
+		static LibNativeFont _regular;
+
+		/// <summary>
+		/// Cached font "Verdana" 9.
+		/// Used eg by AuDialog for input Edit control.
+		/// </summary>
+		internal static LibNativeFont Verdana9Cached => _verdana ?? (_verdana = new LibNativeFont("Verdana", 9, true));
+		static LibNativeFont _verdana;
+	}
+
+	/// <summary>
+	/// Provides various versions of standard font.
+	/// </summary>
+	/// <remarks>
+	/// Extends <see cref="SystemFonts"/>. Much faster.
+	/// The properties return non-cached <b>Font</b> objects. It's safe to dispose them. They are cloned from a single cached <see cref="SystemFonts.MessageBoxFont"/>.
+	/// </remarks>
+	public static class SystemFonts_
+	{
+		//info: we don't return cached Font objects, because we cannot protect them from disposing. The Font class is sealed.
+		//	SystemFonts too, always creates new object.
+		//	But eg Brushes and SystemBrushes use cached object. It is not protected from disposing (would be exception later).
+
+		//static SystemFonts_()
+		//{
+		//	SystemEvents.UserPreferenceChanged += (unu, sed) => LibRegularCached = SystemFonts.MessageBoxFont; //never mind
+		//}
+
+		/// <summary>
+		/// The cached font from which are cloned other fonts.
+		/// Use carefully, to avoid accidental disposing; don't use for Font objects that can be accessed by any code.
+		/// </summary>
+		internal static Font LibRegularCached = SystemFonts.MessageBoxFont; //>200 mcs
+
+		/// <summary>
+		/// Standard font used by most windows and controls.
+		/// On Windows 10 it is "Segoe UI" 9 by default.
+		/// </summary>
+		public static Font Regular => LibRegularCached.Clone() as Font; //5-22 mcs
+
+		/// <summary>
+		/// Bold version of <see cref="Regular"/> font.
+		/// </summary>
+		public static Font Bold => new Font(LibRegularCached, FontStyle.Bold); //slightly slower than Clone
+
+		/// <summary>
+		/// Italic version of <see cref="Regular"/> font.
+		/// </summary>
+		public static Font Italic => new Font(LibRegularCached, FontStyle.Italic);
+
+		/// <summary>
+		/// Underlined version of <see cref="Regular"/> font.
+		/// </summary>
+		public static Font Underline => new Font(LibRegularCached, FontStyle.Underline);
 	}
 
 	/// <summary>

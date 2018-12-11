@@ -30,7 +30,7 @@ using Aga.Controls.Tree.NodeControls;
 
 namespace Au.Tools
 {
-	public partial class Form_Wnd :Form_
+	public partial class Form_Wnd : ToolForm
 	{
 		Wnd _wnd, _con;
 		TUtil.CaptureWindowEtcWithHotkey _capt;
@@ -414,7 +414,7 @@ namespace Au.Tools
 		/// <summary>
 		/// When OK clicked, contains C# code.
 		/// </summary>
-		public string ResultCode { get; private set; }
+		public override string ResultCode { get; protected set; }
 
 		private void _bOK_Click(object sender, EventArgs e)
 		{
@@ -497,20 +497,19 @@ namespace Au.Tools
 
 			_ccName = new NodeTextBox();
 			_tree.NodeControls.Add(_ccName);
-			_ccName.LeftMargin = 0;
 
 			_ccName.ValueNeeded = node =>
 			{
 				var k = node.Tag as _WndNode;
 				return k.DisplayText;
 			};
+			_ccName.DrawText += _ccName_DrawText;
 
 			_tree.NodeMouseClick += _tree_NodeMouseClick;
 			_tree.KeyDown += _tree_KeyDown;
-			_tree.DrawControl += _tree_DrawControl;
 		}
 
-		private void _tree_DrawControl(object sender, DrawEventArgs e)
+		private void _ccName_DrawText(object sender, DrawEventArgs e)
 		{
 			var a = e.Node.Tag as _WndNode;
 			if(e.Node.IsSelected) {

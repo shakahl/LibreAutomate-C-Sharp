@@ -120,7 +120,12 @@
 				<Edit_IndentationGuides/>
 			</Edit_View>
 		</Menu_Edit>
-		<Menu_Run>
+    <Menu_Code>
+      <Code_Wnd/>
+      <Code_Acc/>
+      <Code_WinImage/>
+    </Menu_Code>
+    <Menu_Run>
 			<Run_Run i="run"/>
 			<Run_End i="deb_end"/>
 			<Run_Pause i="back2"/>
@@ -217,8 +222,9 @@
 	<File>
 		<File_NewScript i="_new" dd="File_New"/>
 		<File_Properties i="properties"/>
-		<File_PreviousDocument i="back"/>
 		<File_SaveNow i="save"/>
+		<sep/>
+		<File_PreviousDocument i="back"/>
 	</File>
 	<Edit>
 		<Edit_Find i="find"/>

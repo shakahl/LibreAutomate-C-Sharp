@@ -150,16 +150,16 @@ class RunningTask
 	volatile WaitHandle _process;
 	public readonly FileNode f;
 	public readonly int taskId;
-	public readonly bool isUnattended;
+	public readonly bool isBlue;
 
 	static int s_taskId;
 
-	public RunningTask(FileNode f, WaitHandle hProcess, bool isUnattended)
+	public RunningTask(FileNode f, WaitHandle hProcess, bool isBlue)
 	{
 		taskId = ++s_taskId;
 		this.f = f;
 		_process = hProcess;
-		this.isUnattended = isUnattended;
+		this.isBlue = isBlue;
 
 		RegisteredWaitHandle rwh = null;
 		rwh = ThreadPool.RegisterWaitForSingleObject(_process, (context, wasSignaled) => {
@@ -345,13 +345,13 @@ class RunningTasks
 	}
 
 	/// <summary>
-	/// Gets the supervised running task (meta runMode supervised or unspecified). Returns null if no such task.
+	/// Gets the "green" running task (meta runMode green or unspecified). Returns null if no such task.
 	/// </summary>
-	public RunningTask GetRunningSupervised()
+	public RunningTask GetGreenTask()
 	{
 		for(int i = 0; i < _a.Count; i++) {
 			var r = _a[i];
-			if(!r.isUnattended && r.IsRunning) return r;
+			if(!r.isBlue && r.IsRunning) return r;
 		}
 		return null;
 	}
@@ -407,8 +407,8 @@ class RunningTasks
 	{
 		running = null;
 		switch(r.runMode) {
-		case ERunMode.supervised: running = GetRunningSupervised(); break;
-		case ERunMode.unattendedSingle: running = _GetRunning(f); break;
+		case ERunMode.green: running = GetGreenTask(); break;
+		case ERunMode.blueSingle: running = _GetRunning(f); break;
 		default: return true;
 		}
 		return running == null;
@@ -539,7 +539,7 @@ class RunningTasks
 			return 0;
 		}
 
-		var rt = new RunningTask(f, hProcess, r.runMode != ERunMode.supervised);
+		var rt = new RunningTask(f, hProcess, r.runMode != ERunMode.green);
 		_Add(rt);
 		return pid;
 	}

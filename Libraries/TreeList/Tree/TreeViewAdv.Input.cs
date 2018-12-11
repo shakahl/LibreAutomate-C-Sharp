@@ -48,6 +48,15 @@ namespace Aga.Controls.Tree
 			}
 		}
 
+		//au
+		/// <summary>
+		/// Can be used to simulate key down event, even if the control is not focused.
+		/// </summary>
+		public void OnKeyDown2(KeyEventArgs e)
+		{
+			OnKeyDown(e);
+		}
+
 		protected override void OnKeyDown(KeyEventArgs e)
 		{
 			base.OnKeyDown(e);

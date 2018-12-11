@@ -18,22 +18,23 @@ namespace Aga.Controls.Tree
 			if(!Columns.Contains(column)) return;
 
 			int res = 0;
-			for(int row = 0; row < RowCount; row++) {
-				if(row < RowMap.Count) {
-					int w = 0;
-					TreeNodeAdv node = RowMap[row];
-					foreach(NodeControl nc in NodeControls) {
-						if(nc.ParentColumn == column)
-							w += nc.GetActualSize(node, _measureContext).Width;
-					}
-					res = Math.Max(res, w);
+			foreach(var node in RowMap) {
+				int w = 0;
+				foreach(NodeControl nc in NodeControls) {
+					if(nc.ParentColumn == column)
+						w += nc.GetActualSize(node, _measureContext).Width;
 				}
+				res = Math.Max(res, w);
 			}
 
 			if(res > 0) {
 				if(column.Index == 0) res += 6;
 				column.Width = res + 4;
 			}
+
+			//au: does not work well:
+			//	Does not add the width of the lines/boxes area.
+			//	Does not add the indent of items in expanded folders.
 		}
 
 		private void CreateLinePen()
@@ -119,7 +120,7 @@ namespace Aga.Controls.Tree
 			}
 			context.DrawFocus = Focused && CurrentNode == node;
 
-			OnRowDraw(e, node, context, row, rowRect);
+			OnRowDraw(e, node, ref context, row, rowRect);
 
 			if(FullRowSelect) {
 				context.DrawFocus = false;

@@ -101,7 +101,7 @@
             <param name="name">Readonly text in column 0 (checkbox or label).</param>
             <param name="value">
             string.
-            For combo can be string like "one|two|three" or string[] List of string.
+            For combo can be string like "one|two|three" or string[] or List of string.
             For editable combo also can be Func&lt;string[]&gt; callback that returns items. Called before each dropdown.
             </param>
             <param name="check">Checked or not. If null, adds label instead of checkbox.</param>
@@ -109,7 +109,7 @@
             <param name="info"><see cref="E:Au.Controls.ParamGrid.ZShowEditInfo"/> text.</param>
             <param name="insertAt"></param>
             <param name="etype">Edit cell control type.</param>
-            <param name="buttonAction">Button click action when etype is Button or TextButton; required.</param>
+            <param name="buttonAction">Button click action when etype is Button, TextButton or ComboList; required if Button/TextButton.</param>
             <param name="comboIndex">If not -1, selects this combo box item.</param>
         </member>
         <member name="M:Au.Controls.ParamGrid.ZAddCheck(System.String,System.String,System.Boolean,System.String,System.Int32)">
@@ -154,7 +154,7 @@
         <member name="M:Au.Controls.ParamGrid.ZCheck(System.Int32,System.Boolean)">
             <summary>
             Checks or unchecks.
-            Use only for flags and optionals, not for required.
+            Does nothing if no checkbox.
             </summary>
             <param name="row">Row index. If negative, asserts and returns.</param>
             <param name="check"></param>
@@ -207,7 +207,7 @@
         </member>
         <member name="M:Au.Controls.ParamGrid.ZSetCellText(System.Int32,System.Int32,System.String)">
             <summary>
-            Changes cell text or checkbox label.
+            Changes cell text or checkbox label. Ends editing.
             </summary>
             <param name="row">Row index. If negative, asserts and returns null.</param>
             <param name="column">Column index.</param>
@@ -215,7 +215,7 @@
         </member>
         <member name="M:Au.Controls.ParamGrid.ZSetCellText(System.String,System.Int32,System.String)">
             <summary>
-            Changes cell value or checkbox label.
+            Changes cell value or checkbox label. Ends editing.
             </summary>
             <param name="rowKey">Row key. If not found, asserts and returns null.</param>
             <param name="column">Column index.</param>
@@ -268,67 +268,61 @@
             Disables or enables cell (can be checkbox).
             </summary>
         </member>
-        <member name="T:Au.Controls.LibPopup">
+        <member name="T:Au.Controls.PopupControlHost">
             <summary>
-            Represents a pop-up window.
+            A pop-up window that works as a host for a child control.
             </summary>
         </member>
-        <member name="P:Au.Controls.LibPopup.Content">
+        <member name="P:Au.Controls.PopupControlHost.Content">
             <summary>
             Gets the content of the pop-up.
             </summary>
         </member>
-        <member name="P:Au.Controls.LibPopup.ShowingAnimation">
+        <member name="P:Au.Controls.PopupControlHost.ShowingAnimation">
             <summary>
             Determines which animation to use while showing the pop-up window.
             </summary>
         </member>
-        <member name="P:Au.Controls.LibPopup.HidingAnimation">
+        <member name="P:Au.Controls.PopupControlHost.HidingAnimation">
             <summary>
             Determines which animation to use while hiding the pop-up window.
             </summary>
         </member>
-        <member name="P:Au.Controls.LibPopup.AnimationDuration">
+        <member name="P:Au.Controls.PopupControlHost.AnimationDuration">
             <summary>
             Determines the duration of the animation.
             </summary>
         </member>
-        <member name="P:Au.Controls.LibPopup.FocusOnOpen">
+        <member name="P:Au.Controls.PopupControlHost.FocusOnOpen">
             <summary>
             Gets or sets a value indicating whether the content should receive the focus after the pop-up has been opened.
             </summary>
             <value><c>true</c> if the content should be focused after the pop-up has been opened; otherwise, <c>false</c>.</value>
             <remarks>If the FocusOnOpen property is set to <c>false</c>, then pop-up cannot use the fade effect.</remarks>
         </member>
-        <member name="P:Au.Controls.LibPopup.AcceptAlt">
+        <member name="P:Au.Controls.PopupControlHost.AcceptAlt">
             <summary>
             Gets or sets a value indicating whether pressing the alt key should close the pop-up.
             </summary>
             <value><c>true</c> if pressing the alt key does not close the pop-up; otherwise, <c>false</c>.</value>
         </member>
-        <member name="P:Au.Controls.LibPopup.MinimumSize">
+        <member name="P:Au.Controls.PopupControlHost.MinimumSize">
             <summary>
             Gets or sets a minimum size of the pop-up.
             </summary>
             <returns>An ordered pair of type <see cref="T:System.Drawing.Size" /> representing the width and height of a rectangle.</returns>
         </member>
-        <member name="P:Au.Controls.LibPopup.MaximumSize">
+        <member name="P:Au.Controls.PopupControlHost.MaximumSize">
             <summary>
             Gets or sets a maximum size of the pop-up.
             </summary>
             <returns>An ordered pair of type <see cref="T:System.Drawing.Size" /> representing the width and height of a rectangle.</returns>
         </member>
-        <member name="M:Au.Controls.LibPopup.#ctor(System.Windows.Forms.Control)">
+        <member name="M:Au.Controls.PopupControlHost.#ctor(System.Windows.Forms.Control)">
             <param name="content">The content of the pop-up.</param>
             <exception cref="T:System.ArgumentNullException"><paramref name="content" /> is <code>null</code>.</exception>
         </member>
-        <member name="M:Au.Controls.LibPopup.OnVisibleChanged(System.EventArgs)">
-            <summary>
-            Raises the <see cref="E:System.Windows.Forms.ToolStripItem.VisibleChanged"/> event.
-            </summary>
-            <param name="e">An <see cref="T:System.EventArgs"/> that contains the event data.</param>
-        </member>
-        <member name="M:Au.Controls.LibPopup.ProcessDialogKey(System.Windows.Forms.Keys)">
+        <member name="M:Au.Controls.PopupControlHost.ProcessDialogKey(System.Windows.Forms.Keys)">
             <summary>
             Processes a dialog box key.
             </summary>
@@ -337,22 +331,19 @@
             true if the key was processed by the control; otherwise, false.
             </returns>
         </member>
-        <member name="M:Au.Controls.LibPopup.UpdateRegion">
+        <member name="M:Au.Controls.PopupControlHost.UpdateRegion">
             <summary>
             Updates the pop-up region.
             </summary>
         </member>
-        <member name="M:Au.Controls.LibPopup.Show(System.Windows.Forms.Control)">
+        <member name="M:Au.Controls.PopupControlHost.Show(System.Windows.Forms.Control)">
             <summary>
-            Shows the pop-up window below the specified control.
+            Shows the pop-up window below or above the specified anchor control.
             </summary>
-            <param name="control">The control below which the pop-up will be shown.</param>
-            <remarks>
-            When there is no space below the specified control, the pop-up control is shown above it.
-            </remarks>
-            <exception cref="T:System.ArgumentNullException"><paramref name="control"/> is <code>null</code>.</exception>
+            <param name="anchor">The control below/above which the pop-up will be shown.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="anchor"/> is <code>null</code>.</exception>
         </member>
-        <member name="M:Au.Controls.LibPopup.Show(System.Drawing.Rectangle)">
+        <member name="M:Au.Controls.PopupControlHost.Show(System.Drawing.Rectangle)">
             <summary>
             Shows the pop-up window below the specified area.
             </summary>
@@ -361,87 +352,67 @@
             When there is no space below specified area, the pop-up control is shown above it.
             </remarks>
         </member>
-        <member name="M:Au.Controls.LibPopup.Show(System.Windows.Forms.Control,System.Drawing.Rectangle)">
+        <member name="M:Au.Controls.PopupControlHost.Show(System.Windows.Forms.Control,System.Drawing.Rectangle)">
             <summary>
-            Shows the pop-up window below the specified area of the specified control.
+            Shows the pop-up window below or above the specified area of the specified control.
             </summary>
-            <param name="control">The control used to compute screen location of specified area.</param>
-            <param name="area">The area of control below which the pop-up will be shown.</param>
-            <remarks>
-            When there is no space below specified area, the pop-up control is shown above it.
-            </remarks>
-            <exception cref="T:System.ArgumentNullException"><paramref name="control"/> is <code>null</code>.</exception>
+            <param name="anchor">The control used to compute screen location of specified area.</param>
+            <param name="area">The area of control below/above which the pop-up will be shown.</param>
+            <exception cref="T:System.ArgumentNullException"><paramref name="anchor"/> is <code>null</code>.</exception>
         </member>
-        <member name="T:Au.Controls.LibPopup.PopupAnimations">
+        <member name="T:Au.Controls.PopupControlHost.PopupAnimations">
             <summary>
             Types of animation of the pop-up window.
             </summary>
         </member>
-        <member name="F:Au.Controls.LibPopup.PopupAnimations.None">
+        <member name="F:Au.Controls.PopupControlHost.PopupAnimations.None">
             <summary>
             Uses no animation.
             </summary>
         </member>
-        <member name="F:Au.Controls.LibPopup.PopupAnimations.LeftToRight">
+        <member name="F:Au.Controls.PopupControlHost.PopupAnimations.LeftToRight">
             <summary>
             Animates the window from left to right. This flag can be used with roll or slide animation.
             </summary>
         </member>
-        <member name="F:Au.Controls.LibPopup.PopupAnimations.RightToLeft">
+        <member name="F:Au.Controls.PopupControlHost.PopupAnimations.RightToLeft">
             <summary>
             Animates the window from right to left. This flag can be used with roll or slide animation.
             </summary>
         </member>
-        <member name="F:Au.Controls.LibPopup.PopupAnimations.TopToBottom">
+        <member name="F:Au.Controls.PopupControlHost.PopupAnimations.TopToBottom">
             <summary>
             Animates the window from top to bottom. This flag can be used with roll or slide animation.
             </summary>
         </member>
-        <member name="F:Au.Controls.LibPopup.PopupAnimations.BottomToTop">
+        <member name="F:Au.Controls.PopupControlHost.PopupAnimations.BottomToTop">
             <summary>
             Animates the window from bottom to top. This flag can be used with roll or slide animation.
             </summary>
         </member>
-        <member name="F:Au.Controls.LibPopup.PopupAnimations.Center">
+        <member name="F:Au.Controls.PopupControlHost.PopupAnimations.Center">
             <summary>
             Makes the window appear to collapse inward if it is hiding or expand outward if the window is showing.
             </summary>
         </member>
-        <member name="F:Au.Controls.LibPopup.PopupAnimations.Slide">
+        <member name="F:Au.Controls.PopupControlHost.PopupAnimations.Slide">
             <summary>
             Uses a slide animation.
             </summary>
         </member>
-        <member name="F:Au.Controls.LibPopup.PopupAnimations.Blend">
+        <member name="F:Au.Controls.PopupControlHost.PopupAnimations.Blend">
             <summary>
             Uses a fade effect.
             </summary>
         </member>
-        <member name="F:Au.Controls.LibPopup.PopupAnimations.Roll">
+        <member name="F:Au.Controls.PopupControlHost.PopupAnimations.Roll">
             <summary>
             Uses a roll animation.
             </summary>
         </member>
-        <member name="F:Au.Controls.LibPopup.PopupAnimations.SystemDefault">
+        <member name="F:Au.Controls.PopupControlHost.PopupAnimations.SystemDefault">
             <summary>
             Uses a default animation.
-            </summary>
-        </member>
-        <member name="F:Au.Controls.LibPopup.components">
-            <summary>
-            Required designer variable.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.LibPopup.Dispose(System.Boolean)">
-            <summary>
-            Clean up any resources being used.
-            </summary>
-            <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-        </member>
-        <member name="M:Au.Controls.LibPopup.InitializeComponent">
-            <summary>
-            Required method for Designer support - do not modify 
-            the contents of this method with the code editor.
             </summary>
         </member>
         <member name="T:Au.Controls.DropDownList">
@@ -449,7 +420,7 @@
             Drop-down list window, similar to a menu.
             </summary>
         </member>
-        <member name="P:Au.Controls.DropDownList.LibPopup">
+        <member name="P:Au.Controls.DropDownList.Popup">
             <summary>
             Gets the popup control.
             </summary>
@@ -567,7 +538,7 @@
             Don't call this function from another thread.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciText.SetString(System.Int32,Au.Types.LPARAM,System.String)">
+        <member name="M:Au.Controls.SciText.SetString(System.Int32,Au.Types.LPARAM,System.String,System.Boolean)">
             <summary>
             Calls a Scintilla message that sets a string which is passed using lParam.
             If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
@@ -597,7 +568,7 @@
             <param name="sciMessage"></param>
             <param name="wParam"></param>
             <param name="bufferSize">
-            How much UTF8 bytes to allocate for Scintilla to store the text.
+            How much UTF-8 bytes to allocate for Scintilla to store the text.
             If -1 (default), at first calls sciMessage with lParam=0 (null buffer), let it return required buffer size. Then it can get binary string (with '\0' characters).
             If 0, returns "" and does not call the message.
             If positive, it can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0'). Then it cannot get binary string (with '\0' characters).
@@ -611,13 +582,32 @@
             <param name="sciMessage"></param>
             <param name="wParam"></param>
             <param name="utf8Length">
-            Known length (bytes) of the result UTF8 string, without the terminating '\0' character.
+            Known length (bytes) of the result UTF-8 string, without the terminating '\0' character.
             If 0, returns "" and does not call the message.
             Cannot be negative.
             </param>
             <remarks>
             This function can get binary string (with '\0' characters).
             </remarks>
+        </member>
+        <member name="M:Au.Controls.SciText.CountBytesFromChars(System.Int32)">
+            <summary>
+            Converts UTF-16 position to UTF-8 position.
+            Note: currently actually UTF-32. Will need to replace SCI_POSITIONRELATIVE with SCI_POSITIONRELATIVECODEUNITS.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.CountBytesFromChars(System.Int32,System.Int32)">
+            <summary>
+            Counts a number of UTF-16 characters before or after the UTF-8 position and return that UTF-8 position.
+            Note: currently actually UTF-32. Will need to replace SCI_POSITIONRELATIVE with SCI_POSITIONRELATIVECODEUNITS.
+            charsRelative can be negative.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.CountBytesToChars(System.Int32,System.Int32)">
+            <summary>
+            Returns the number of UTF-16 characters between two UTF-8 positions.
+            Note: currently actually UTF-32. Will need to replace SCI_COUNTCHARACTERS with SCI_COUNTCODEUNITS.
+            </summary>
         </member>
         <member name="M:Au.Controls.SciText.ClearText(System.Boolean,System.Boolean)">
             <summary>
@@ -643,13 +633,14 @@
         </member>
         <member name="M:Au.Controls.SciText.LibSetText(System.Byte[],System.Int32)">
             <summary>
-            Sets UTF8 text.
+            Sets UTF-8 text.
             Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+            s must end with 0. Asserts.
             </summary>
         </member>
         <member name="M:Au.Controls.SciText.LibSetText(System.Byte*)">
             <summary>
-            Sets UTF8 text.
+            Sets UTF-8 text.
             Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
             </summary>
         </member>
@@ -665,7 +656,7 @@
         </member>
         <member name="M:Au.Controls.SciText.LibAddText(System.Boolean,System.Byte*,System.Int32)">
             <summary>
-            Appends UTF8 text of specified length.
+            Appends UTF-8 text of specified length.
             Does not append newline (s should contain it). Does not parse tags. Moves current position and scrolls to the end.
             </summary>
         </member>
@@ -676,43 +667,43 @@
         </member>
         <member name="P:Au.Controls.SciText.TextLengthBytes">
             <summary>
-            Gets text length (SCI_GETTEXTLENGTH) in UTF8 bytes.
+            Gets text length (SCI_GETTEXTLENGTH) in UTF-8 bytes.
             </summary>
         </member>
-        <member name="P:Au.Controls.SciText.PositionBytes">
+        <member name="P:Au.Controls.SciText.CurrentPositionBytes">
             <summary>
-            Gets or sets current caret position (SCI_GETCURRENTPOS/SCI_SETEMPTYSELECTION) in UTF8 bytes.
+            Gets or sets current caret position (SCI_GETCURRENTPOS/SCI_SETEMPTYSELECTION) in UTF-8 bytes.
             The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
             </summary>
         </member>
         <member name="M:Au.Controls.SciText.LineIndexFromPosition(System.Int32)">
             <summary>
-            Gets line index from character position (UTF8 bytes).
+            Gets line index from character position (UTF-8 bytes).
             </summary>
             <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineStart(System.Int32)">
             <summary>
-            Gets line start position (UTF8 bytes) from line index.
+            Gets line start position (UTF-8 bytes) from line index.
             </summary>
             <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineEnd(System.Int32,System.Boolean)">
             <summary>
-            Gets line end position (UTF8 bytes) from line index.
+            Gets line end position (UTF-8 bytes) from line index.
             </summary>
             <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
             <param name="withRN">Include \r\n.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineStartFromPosition(System.Int32)">
             <summary>
-            Gets line start position from any position. Both are in UTF8 bytes.
+            Gets line start position from any position. Both are in UTF-8 bytes.
             </summary>
             <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineEndFromPosition(System.Int32,System.Boolean,System.Boolean)">
             <summary>
-            Gets line end position from any position. Both are in UTF8 bytes.
+            Gets line end position from any position. Both are in UTF-8 bytes.
             </summary>
             <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
             <param name="withRN">Include \r\n.</param>
@@ -728,8 +719,8 @@
             <summary>
             Gets range text.
             </summary>
-            <param name="from">Start index (UTF8 bytes). If less than 0, uses 0.</param>
-            <param name="to">End index (UTF8 bytes). If less than 0, uses TextLengthBytes.</param>
+            <param name="from">Start index (UTF-8 bytes). If less than 0, uses 0.</param>
+            <param name="to">End index (UTF-8 bytes). If less than 0, uses TextLengthBytes.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineHeight(System.Int32)">
             <summary>
@@ -774,24 +765,45 @@
             Moves 'from' to the start of its line, and 'to' to the end of its line.
             Does not change 'to' if it is at a line start.
             </summary>
-            <param name="from">Start index (UTF8 bytes).</param>
-            <param name="to">End index (UTF8 bytes).</param>
+            <param name="from">Start index (UTF-8 bytes).</param>
+            <param name="to">End index (UTF-8 bytes).</param>
             <param name="withRN">Include "\r\n".</param>
         </member>
         <member name="M:Au.Controls.SciText.DeleteRange(System.Int32,System.Int32)">
             <summary>
             SCI_DELETERANGE.
             </summary>
-            <param name="pos">Start index (UTF8 bytes).</param>
-            <param name="length">Length (UTF8 bytes).</param>
+            <param name="pos">Start index (UTF-8 bytes).</param>
+            <param name="length">Length (UTF-8 bytes).</param>
         </member>
         <member name="M:Au.Controls.SciText.InsertText(System.Int32,System.String)">
             <summary>
             SCI_INSERTTEXT.
             Does not parse tags.
+            Does not change current selection; for it use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String,System.Int32)"/>.
             </summary>
-            <param name="pos">Start index (UTF8 bytes).</param>
-            <param name="s"></param>
+            <param name="pos">Start index (UTF-8 bytes). If -1, uses current position.</param>
+            <param name="s">Replacement text. Can be null.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.ReplaceRange(System.Int32,System.Int32,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Replaces text range.
+            Does not parse tags.
+            </summary>
+            <param name="s">Replacement text. Can be null.</param>
+            <param name="pos">Start index. By default UTF-8 bytes.</param>
+            <param name="length">Length. By default UTF-8 bytes.</param>
+            <param name="posChars">pos is in UTF-16 characters.</param>
+            <param name="lengthChars">length is in UTF-16 characters.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.ReplaceSel(System.String,System.Int32)">
+            <summary>
+            SCI_REPLACESEL.
+            Does not parse tags.
+            If read-only, asserts and fails (unlike most other functions that change text).
+            </summary>
+            <param name="s">Replacement text. Can be null.</param>
+            <param name="pos">Start index (UTF-8 bytes). If -1 (default), replaces current selection; else at first goes to pos.</param>
         </member>
         <member name="M:Au.Controls.SciText.GoToPos(System.Int32)">
             <summary>

@@ -1243,9 +1243,9 @@ namespace Au
 			if(_c.pszContent == null) _c.pszContent = "";
 			if(_c.pszExpandedInformation != null && _editType == DEdit.Multiline) _SetFlag(TDF_.EXPAND_FOOTER_AREA, true);
 
-			//create font and calculate control height
+			//create or get cached font and calculate control height
 			//note: don't use system messagebox font. AuDialog API does not depend on it.
-			_editFont = new Util.LibNativeFont("Verdana", 9, true);
+			_editFont = Util.LibNativeFont.Verdana9Cached;
 		}
 
 		void _EditControlUpdate(bool onlyZorder = false)
@@ -1373,9 +1373,6 @@ namespace Au
 			case Api.WM_APP + 111: //async update edit control pos
 				_EditControlUpdate(wParam != 0);
 				return 1;
-			case Api.WM_DESTROY:
-				_editFont.Dispose();
-				break;
 			}
 			return 0;
 			//tested: WM_GETDLGCODE, no results.

@@ -33,9 +33,27 @@ namespace Aga.Controls.Tree
 			if(AccObj == null) AccObj = new AccContainer(this, this);
 			return AccObj;
 		}
+
+		/// <summary>
+		/// Max count of accessible objects that can be created for items.
+		/// Default 1000.
+		/// </summary>
+		/// <remarks>
+		/// Controls with large number of visible items consume much memory for accessible objects, because of very inefficient accessibility implementation of .NET. For example 120 MB of physical memory for 10000 items. Luckily accessible objects are created only when/if some accessibility/automation/etc app wants to use them.
+		/// This property limits the number of accessible objects when some app wants to get all objects, but not when wants to get object from point or the focused/selected object.
+		/// </remarks>
+		public int AccessibleCount { get; set; } = 1000;
+
+		//Tried to implement so that items would have only childID, not IAccessible. Failed. Although the same algorithm works well in C++, tested.
+		//At first tried to implement (override) IAccessible (defined by .NET, need reference Accessibility).
+		//	Our methods are called OK, but clients cannot get children. Probably because .NET implements IEnumVARIANT which gets 0 children. Failed to override IEnumVARIANT; it's internal, and our IEnumVARIANT is ignored. Tried ICustomQueryInterface but it does not work.
+		//Then tried to override WM_GETOBJECT, like I would do it in C++, and like .NET does.
+		//	It works well if client calls AccesibleObjectFromWindow(OBJID_CLIENT). But if calls OBJID_WINDOW and AccessibleChildren, somehow the CLIENT object is not ours.
+		//The source codes are in QM2 macros TVAcc.csX.
+		//Tested how much memory for AO uses DataGrid control with the same number of items. More than 2 times more. It implements AO for rows and cells, therefore the AO count is *2.
 	}
 
-	class AccContainer :Control.ControlAccessibleObject
+	class AccContainer : Control.ControlAccessibleObject
 	{
 		TreeViewAdv _tva;
 		AccHeader _accHeader;
@@ -45,17 +63,13 @@ namespace Aga.Controls.Tree
 			_tva = tva;
 		}
 
-		public override AccessibleRole Role { get => AccessibleRole.List; }
-
-		//public override string Name { get => ; } //inherits control WINDOW name
-
-		//public override AccessibleStates State { get => AccessibleStates.Focusable; } //default is Focusable
+		public override AccessibleRole Role => AccessibleRole.List;
 
 		public override int GetChildCount()
 		{
-			int n = _tva.RowCount;
+			int n = Math.Min(_tva.RowCount, _tva.AccessibleCount);
 			if(_tva.UseColumns) n++;
-			return n; //same as public ItemCount
+			return n;
 		}
 
 		public override AccessibleObject GetChild(int index)
@@ -68,30 +82,25 @@ namespace Aga.Controls.Tree
 			return _tva.RowMap[index].Acc;
 		}
 
-		AccHeader _AccHeader { get => _accHeader ?? (_accHeader = new AccHeader(_tva)); }
+		AccHeader _AccHeader => _accHeader ?? (_accHeader = new AccHeader(_tva));
 
 		public override AccessibleObject HitTest(int x, int y)
 		{
 			var p = _tva.PointToClient(new Point(x, y));
-			if(p.Y >= 0 && p.Y < _tva.ColumnHeaderHeight) return _AccHeader;
+			if(!_tva.ClientRectangle.Contains(p)) return null;
+			if(p.Y < _tva.ColumnHeaderHeight) return _AccHeader;
 			var tn = _tva.GetNodeAt(p);
 			if(tn != null) return tn.Acc;
 			return this;
 		}
 
-		public override AccessibleObject GetFocused()
-		{
-			return _tva.CurrentNode?.Acc;
-		}
+		public override AccessibleObject GetFocused() => _tva.CurrentNode?.Acc;
 
-		public override AccessibleObject GetSelected()
-		{
-			return _tva.SelectedNode?.Acc;
-		}
+		public override AccessibleObject GetSelected() => _tva.SelectedNode?.Acc;
 	}
 
 
-	class AccNode :AccessibleObject
+	class AccNode : AccessibleObject
 	{
 		TreeNodeAdv _tn;
 
@@ -100,12 +109,10 @@ namespace Aga.Controls.Tree
 			_tn = tn;
 		}
 
-		public override AccessibleRole Role { get => AccessibleRole.ListItem; }
+		public override AccessibleRole Role => AccessibleRole.ListItem;
 
-		public override Rectangle Bounds
-		{
-			get
-			{
+		public override Rectangle Bounds {
+			get {
 				var tva = _tn.Tree;
 				return tva.RectangleToScreen(tva.GetNodeBoundsInClient(_tn));
 			}
@@ -118,25 +125,21 @@ namespace Aga.Controls.Tree
 			return null;
 		}
 
-		public override int GetChildCount() { return 0; }
+		public override int GetChildCount() => 0;
 
-		public override AccessibleObject Parent { get => _tn.Tree.AccObj; }
+		public override AccessibleObject Parent => _tn.Tree.AccObj;
 
 		public override AccessibleObject Navigate(AccessibleNavigation navdir)
 		{
 			switch(navdir) {
-			case AccessibleNavigation.Next:
-				return _tn.NextNode?.Acc;
-			case AccessibleNavigation.Previous:
-				return _tn.PreviousNode?.Acc;
+			case AccessibleNavigation.Next: return _tn.NextNode?.Acc;
+			case AccessibleNavigation.Previous: return _tn.PreviousNode?.Acc;
 			}
 			return base.Navigate(navdir);
 		}
 
-		public override string Name
-		{
-			get
-			{
+		public override string Name {
+			get {
 				var tva = _tn.Tree;
 				foreach(var c in tva.NodeControls) {
 					if(c is BaseTextControl t) {
@@ -149,10 +152,8 @@ namespace Aga.Controls.Tree
 			}
 		}
 
-		public override string Description
-		{
-			get
-			{
+		public override string Description {
+			get {
 				var tva = _tn.Tree;
 				using(new Au.Util.LibStringBuilder(out var b)) {
 					b.Append(_tn.IsLeaf ? "item" : "folder");
@@ -176,10 +177,8 @@ namespace Aga.Controls.Tree
 			}
 		}
 
-		public override AccessibleStates State
-		{
-			get
-			{
+		public override AccessibleStates State {
+			get {
 				var tva = _tn.Tree;
 				var r = AccessibleStates.Selectable | AccessibleStates.Focusable;
 				if(tva.SelectionMode != TreeSelectionMode.Single) r |= AccessibleStates.MultiSelectable;
@@ -187,26 +186,27 @@ namespace Aga.Controls.Tree
 				if(_tn == tva.CurrentNode) r |= AccessibleStates.Focused;
 				if(!_tn.IsVisible) r |= AccessibleStates.Invisible;
 				if(!_tn.IsLeaf) r |= _tn.IsExpanded ? AccessibleStates.Expanded : AccessibleStates.Collapsed;
-				if(_IsOffscreen()) r |= AccessibleStates.Offscreen;
+				//if(_IsOffscreen()) r |= AccessibleStates.Offscreen;
 				return r;
 			}
 		}
 
-		bool _IsOffscreen()
-		{
-			var tva = _tn.Tree;
-			int i = _tn.Index, first = tva.FirstVisibleRow;
-			if(i < first) return true;
-			int last = first + tva.RowLayout.PageRowCount;
-			if(i < last) return false;
-			if(i > last) return true;
-			//possibly partially visible
-			var r = tva.RowLayout.GetRowBounds(i);
-			int y = r.Y + r.Height * 2 / 3;
-			return y - tva.OffsetY > tva.DisplayRectangle.Height;
-		}
+		//rejected
+		//bool _IsOffscreen()
+		//{
+		//	var tva = _tn.Tree;
+		//	int i = _tn.Row, first = tva.FirstVisibleRow;
+		//	if(i < first) return true;
+		//	int last = first + tva.RowLayout.PageRowCount;
+		//	if(i < last) return false;
+		//	if(i > last) return true;
+		//	//possibly partially visible
+		//	var r = tva.RowLayout.GetRowBounds(i);
+		//	int y = r.Y + r.Height * 2 / 3;
+		//	return y - tva.OffsetY > tva.DisplayRectangle.Height;
+		//}
 
-		public override string DefaultAction { get => _tn.IsLeaf ? "Select" : (_tn.IsExpanded ? "Collapse" : "Expand"); }
+		public override string DefaultAction => _tn.IsLeaf ? "Select" : (_tn.IsExpanded ? "Collapse" : "Expand");
 
 		public override void DoDefaultAction()
 		{
@@ -240,11 +240,11 @@ namespace Aga.Controls.Tree
 	{
 		AccNode _acc;
 
-		internal AccNode Acc { get => _acc ?? (_acc = new AccNode(this)); }
+		internal AccNode Acc => _acc ?? (_acc = new AccNode(this));
 	}
 
 
-	class AccHeader :AccessibleObject
+	class AccHeader : AccessibleObject
 	{
 		TreeViewAdv _tva;
 
@@ -253,13 +253,11 @@ namespace Aga.Controls.Tree
 			_tva = tva;
 		}
 
-		//never mind: should be LIST containgg children COLUMNHEADER. Now we just format column names in Description.
-		public override AccessibleRole Role { get => AccessibleRole.ColumnHeader; }
+		//never mind: should be LIST containing children COLUMNHEADER. Now we just format column names in Description.
+		public override AccessibleRole Role => AccessibleRole.ColumnHeader;
 
-		public override Rectangle Bounds
-		{
-			get
-			{
+		public override Rectangle Bounds {
+			get {
 				var r = _tva.GetColumnBounds(_tva.Columns.Count - 1);
 				r = new Rectangle(0, 0, r.Right, _tva.ColumnHeaderHeight);
 				r.X -= _tva.OffsetX;
@@ -273,18 +271,16 @@ namespace Aga.Controls.Tree
 			return null;
 		}
 
-		public override int GetChildCount() { return 0; }
+		public override int GetChildCount() => 0;
 
-		public override AccessibleObject Parent { get => _tva.AccObj; }
+		public override AccessibleObject Parent => _tva.AccObj;
 
-		public override AccessibleStates State { get => AccessibleStates.None; }
+		public override AccessibleStates State => AccessibleStates.None;
 
-		public override string Name { get => "Header"; }
+		public override string Name => "Header";
 
-		public override string Description
-		{
-			get
-			{
+		public override string Description {
+			get {
 				using(new Au.Util.LibStringBuilder(out var b)) {
 					foreach(var col in _tva.Columns) {
 						if(!col.IsVisible) continue;

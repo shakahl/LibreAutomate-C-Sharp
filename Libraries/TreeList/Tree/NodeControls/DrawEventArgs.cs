@@ -20,12 +20,13 @@ namespace Aga.Controls.Tree.NodeControls
 			set { _backgroundBrush = value; }
 		}
 
-		private Font _font;
-		public Font Font
-		{
-			get { return _font; }
-			set { _font = value; }
-		}
+		//au: instead use FontNeeded delegate
+		//private Font _font;
+		//public Font Font
+		//{
+		//	get { return _font; }
+		//	set { _font = value; }
+		//}
 
 		private Color _textColor;
 		public Color TextColor

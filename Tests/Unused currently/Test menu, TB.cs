@@ -202,9 +202,9 @@ public partial class Test
 		m.LastMenuItem.ShortcutKeys = Keys.Control | Keys.K;
 		m.Add(new ToolStripSeparator());
 
-		//this code works, but the control width is several pixels
 		//var ed =new TextBox();
 		//ed.Width = 100;
+		//ed.MinimumSize = ed.Size; //else the control width is several pixels
 		//var host =new ToolStripControlHost(ed, "host");
 		//host.Width = 100;
 		//m.Add(host);

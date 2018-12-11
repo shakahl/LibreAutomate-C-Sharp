@@ -37,7 +37,6 @@ namespace Aga.Controls.Tree.NodeControls
 		public NodeCheckBox(string propertyName)
 		{
 			DataPropertyName = propertyName;
-			LeftMargin = 0;
 		}
 
 		public override Size MeasureSize(TreeNodeAdv node, DrawContext context)

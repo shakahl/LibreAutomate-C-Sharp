@@ -76,6 +76,7 @@
     <Reference Include="System" />
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Drawing" />
@@ -91,7 +92,17 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="UI\EdProperties.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\EdProperties.Designer.cs">
+      <DependentUpon>EdProperties.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Util\EdMetaCommentsParser.cs" />
     <Compile Include="Util\UacDragDrop.cs" />
+    <EmbeddedResource Include="UI\EdProperties.resx">
+      <DependentUpon>EdProperties.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Test\tree.csx" />
     <None Include="Templates\New Project\%40App\!App.cs">
@@ -143,12 +154,12 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Util\EApi.cs" />
-    <Compile Include="Util\EUtil.cs" />
+    <Compile Include="Util\EdUtil.cs" />
     <Compile Include="Files\PanelFiles-test.cs" />
     <Compile Include="Test\TestEditor.cs" />
     <None Include="Properties\Au.pfx" />
     <Compile Include="Files\PanelFiles.cs" />
-    <Compile Include="UI\EForm.cs">
+    <Compile Include="UI\EdForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Program\Program.cs" />
@@ -184,6 +195,10 @@
     <ProjectReference Include="..\Controls\Au.Controls.csproj">
       <Project>{4c53ea3e-d770-41ac-9a19-381b840cd14a}</Project>
       <Name>Au.Controls</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Libraries\SourceGrid\SourceGrid.csproj">
+      <Project>{2A5A1657-DBA8-4117-8E2A-9F1236ACE9E2}</Project>
+      <Name>SourceGrid</Name>
     </ProjectReference>
     <ProjectReference Include="..\Libraries\TreeList\TreeList.csproj">
       <Project>{e73bb233-d88b-44a7-a98f-d71ee158381d}</Project>

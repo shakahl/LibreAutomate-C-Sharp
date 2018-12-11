@@ -24,7 +24,7 @@ using SG = SourceGrid;
 
 namespace Au.Tools
 {
-	public partial class Form_WinImage :Form_
+	public partial class Form_WinImage : ToolForm
 	{
 		Wnd _wnd, _con;
 		bool _useCon;
@@ -436,7 +436,7 @@ namespace Au.Tools
 		/// <summary>
 		/// When OK clicked, contains C# code.
 		/// </summary>
-		public string ResultCode { get; private set; }
+		public override string ResultCode { get; protected set; }
 
 		private void _bOK_Click(object sender, EventArgs e)
 		{

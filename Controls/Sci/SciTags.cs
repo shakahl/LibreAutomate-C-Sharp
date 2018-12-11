@@ -426,10 +426,7 @@ namespace Au.Controls
 			int len = _c.ST.TextLengthBytes;
 			if(len > 4 * 1024 * 1024) {
 				len = _c.ST.LineStartFromPosition(len / 2);
-				if(len > 0) {
-					_c.ST.DeleteRange(0, len);
-					_c.ST.InsertText(0, "...\r\n");
-				}
+				if(len > 0) _c.ST.ReplaceRange(0, len, "...\r\n");
 			}
 
 			if(hasTags) AddText(s, true, true);

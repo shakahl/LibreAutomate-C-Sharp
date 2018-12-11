@@ -295,7 +295,8 @@ static partial class Test
 					//File.WriteAllText(file, "TEXT"); //unsafe. Exception if the file is locked.
 					//File_.WaitIfLocked(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
 				}
-			} catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
+			}
+			catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
 		});
 
 		Task.Run(() => {
@@ -317,7 +318,8 @@ static partial class Test
 					//	f.WriteByte(1);
 					//}
 				}
-			} catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
+			}
+			catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
 		}).Wait();
 
 		Print("OK");
@@ -1257,6 +1259,18 @@ a1,-8";
 		Print((int)a[4]);
 	}
 
+	static void TestSerializeBytes()
+	{
+		var b = new byte[] { 1, 2, 3 };
+		var sa = new string[] { "one", null, "three" };
+		var x = Au.Util.LibSerializer.Serialize(5, b, sa, "text");
+		var a = Au.Util.LibSerializer.Deserialize(x);
+		int i = a[0]; Print(i);
+		byte[] c = a[1]; Print(c);
+		string[] sa2 = a[2]; Print(sa2);
+		string s = a[3]; Print(s);
+	}
+
 	static void _SetDirectorySecurity(string path, bool secure)
 	{
 		var ds = Directory.GetAccessControl(path);
@@ -1331,17 +1345,137 @@ a1,-8";
 
 	}
 
-	static void TestSerializeBytes()
+	static void TestPopupList()
 	{
-		var b = new byte[] { 1, 2, 3 };
-		var sa = new string[] { "one", null, "three" };
-		var x = Au.Util.LibSerializer.Serialize(5, b, sa, "text");
-		var a = Au.Util.LibSerializer.Deserialize(x);
-		int i = a[0]; Print(i);
-		byte[] c = a[1]; Print(c);
-		string[] sa2 = a[2]; Print(sa2);
-		string s = a[3]; Print(s);
+		Application.SetCompatibleTextRenderingDefault(false);
+		var f = new Form { Text = "Nikn", Font = Au.Util.SystemFonts_.Regular, StartPosition = FormStartPosition.Manual, Location = new Point(300, 300) };
+		var t = new TextBox { Width = 120, Left = 20 }; f.Controls.Add(t);
+		var b = new Button { Text = "button", Left = 200 }; f.Controls.Add(b);
+		var bOK = new ButtonOK { Left = 10, Top=230 }; f.Controls.Add(bOK); f.AcceptButton = bOK;
+		var bCancel = new ButtonCancel { Left = 90, Top=230 }; f.Controls.Add(bCancel); f.CancelButton = bCancel;
+
+		var p = new PopupList();
+		p.DoNotCloseWhenAppDeactivated = true;
+		p.MultiShow = true;
+		//p.FixedWidth = true;
+		//p.ComboBoxAnimation = true;
+
+#if false
+		//var a = new string[] { "One 123456789 123456789", "Folder", "Three", "Four", "W" };
+		//var a = new string[] { "One 123456789 123456789", "Folder", "Three", "Fo\r\nur", "Fo\r\nur", "Fo\r\nur", "Fo\r\nur" };
+		var icon =Icon_.GetFileIconImage(@"q:\app\ontop.ico", 16);
+		var a = new PLItem[] {
+			new PLItem("Done 123456789 123456789"){},
+			new PLItem("Two"){CheckType=PLCheckType.Box},
+			new PLItem("Three"){CheckType=PLCheckType.Row,Checked=true},
+			new PLItem("Three 123456789 123456789"){Icon=icon},
+			new PLItem("Three 123456789 123456789"){Icon=icon, CheckType=PLCheckType.Row},
+			new PLItem("Disabled"){Disabled=true},
+			new PLItem("Disabled + checkbox"){Disabled=true,CheckType=PLCheckType.Box},
+			new PLItem("W Text color"){TextColor=Color.BlueViolet},
+			new PLItem("W Text color, disabled"){TextColor=Color.DarkGoldenrod, Disabled=true},
+			new PLItem("Back color"){BackgroundBrush=Brushes.GreenYellow},
+			new PLItem("Back color, disabled"){BackgroundBrush=Brushes.MediumOrchid, Disabled=true},
+			new PLItem("Bold"){BoldFont=true},
+			new PLItem("Tooltip"){TooltipText="Tooltip text"},
+		};
+#else
+		var a = new string[10_000];
+		for(int i = 0; i < a.Length; i++) a[i] = "a";
+		//var a = new string[1000];
+		//for(int i = 0; i < a.Length; i++) a[i] = "QwertyuiopAsdfghjk ZXCVBNMQWERTYIOPASDFGHJKL" + i;
+#endif
+		p.Items = a;
+
+		p.Selected += k => Print("Selected", k.ResultItem, k.ResultIndex, k.ResultWasKey, k.PopupWindow.Visible, k.PopupWindow.IsHandleCreated);
+		//p.PopupWindow.FormClosed += (unu2, sed2) => Print("CLOSED", p.ResultItem, p.PopupWindow.Visible, p.PopupWindow.IsHandleCreated);
+		p.Closed += k => {
+			Print("Closed", k.ResultItem, k.PopupWindow.IsHandleCreated);
+			//Timer_.After(1000, () => p.Show(t));
+			//p.PopupWindow.Close();
+		};
+
+		f.Load += (unu, sed) => {
+			//var tt = new TextBox { Width = 150, Height = 25 };
+			//Timer_.After(50, () => {
+			//	var m = new AuMenu();
+			//	m["ddd"] = o => Print(o);
+			//	tt.MinimumSize = tt.Size;
+			//	var h = new ToolStripControlHost(tt);
+			//	m.Add(h);
+			//	m.Show(f, 100, 100);
+			//});
+
+			Timer_.After(200, () => {
+				//t.Visible = false;
+				p.Show(t);
+				//p.Show(new Rectangle(200, 500, 0, 0));
+				//p.Show(f, new Rectangle(50, 100, 0, 0));
+			});
+
+			//Timer_.After(500, tim => {
+			//	//p.Show(t);
+			//	p.Show(new Rectangle(200, 500, 0, 0));
+			//});
+		};
+		//f.TopMost = true;
+
+		//Timer_.After(2000, () => {
+		t.Click += (unu, sed) => {
+			p.ComboBoxAnimation = true;
+			p.Show(t);
+
+			//var f2 = new Form { Text = "Two", Font = SystemFonts.MessageBoxFont };
+			//var t2 = new TextBox { Width = 120, Left = 20 }; f2.Controls.Add(t2);
+			//Timer_.After(500, () => p.Show(t2));
+			//f2.ShowDialog(); f2.Dispose();
+		};
+
+#if true
+		Application.Run(f);
+		//AuDialog.Show();
+#else
+		var f2 = new Form();
+		f2.Click += (unu, sed) => f.ShowDialog();
+		Application.Run(f2);
+#endif
 	}
+
+	class PLItem : IPopupListItem
+	{
+		public string TooltipText { get; set; }
+		public Image Icon { get; set; }
+		public Brush BackgroundBrush { get; set; }
+		public ColorInt TextColor { get; set; }
+		public PLCheckType CheckType { get; set; }
+		public bool Checked { get; set; }
+		public bool Disabled { get; set; }
+		public bool BoldFont { get; set; }
+		public int Group { get; set; }
+
+		public PLItem(string text)
+		{
+			Text = text;
+		}
+		public string Text { get; set; }
+		public override string ToString() => Text;
+	}
+
+	class Hin
+	{
+		string a,b,c,d;
+	}
+
+	static unsafe void TestGetObjectSize()
+	{
+		//object obj = new Aga.Controls.Tree.TreeNodeAdv(""); //TreeNodeAdv 128
+		//obj = new System.Collections.ObjectModel.ReadOnlyCollection<string>(new List<string>());
+		var t = typeof(List<Aga.Controls.Tree.TreeNodeAdv>);
+		RuntimeTypeHandle th = t.TypeHandle;
+		int size = Marshal.ReadInt32(th.Value, 4);
+		Print(size);
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -1359,16 +1493,11 @@ a1,-8";
 		try {
 #if true
 
-
+			//Thread_.Start(() => { for(; ; ) { 1.s(); GC.Collect(); } });
+			//Cpp.Cpp_Test();
+			TestGetObjectSize();
+			//TestPopupList();
 			//TestSerializeBytes();
-
-			//var w = Wnd.Find("Portable*").OrThrow();
-			//var c = w.ChildById(3077).OrThrow();
-			//Print(c.IsEnabled, c.IsEnabledReally);
-
-			//var u = Uac.OfThisProcess;
-			//Print($"IsUacDisabled={Uac.IsUacDisabled}, IsAdmin={Uac.IsAdmin}, Elevation={u.Elevation}, IL={u.IntegrityLevel}, IsUIAccess={u.IsUIAccess}");
-
 			//TestUacTS();
 			//TestFolderSecurity();
 			//TestLibSerialize();
@@ -1422,7 +1551,8 @@ a1,-8";
 				Cpp.Cpp_Unload();
 			}
 #endif
-		} catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
+		}
+		catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
 
 	}
 }

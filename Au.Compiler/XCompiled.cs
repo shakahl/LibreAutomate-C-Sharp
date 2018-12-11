@@ -71,7 +71,7 @@ namespace Au.Compiler
 				//Debug_.Print(value);
 				int iPipe = 0;
 
-				bool isScript = f.IcfIsScript;
+				bool isScript = f.IsScript;
 				r.outputType = MetaComments.DefaultOutputType(isScript);
 
 				string asmFile;
@@ -119,7 +119,7 @@ namespace Au.Compiler
 							if(projFolder != null) {
 								if(!Convert_.MD5HashResult.FromString(value, offs, s.EndOffset - offs, out var md5)) return false;
 								Convert_.MD5Hash md = default;
-								foreach(var f1 in projFolder.IcfEnumProjectFiles(f)) {
+								foreach(var f1 in projFolder.IcfEnumProjectCsFiles(f)) {
 									if(_IsFileModified(f1)) return false;
 									md.Add(f1.Id);
 								}
@@ -217,7 +217,7 @@ namespace Au.Compiler
 				using(new Au.Util.LibStringBuilder(out var b)) {
 					if(m.OutputPath != null) b.Append("|=").Append(outFile); //else f.Id in cache
 					if(m.OutputType != MetaComments.DefaultOutputType(m.IsScript)) b.Append("|t").Append((int)m.OutputType);
-					if(m.RunMode != ERunMode.supervised) b.Append("|a").Append((int)m.RunMode);
+					if(m.RunMode != ERunMode.green) b.Append("|a").Append((int)m.RunMode);
 					if(m.IfRunning != EIfRunning.unspecified) b.Append("|n").Append((int)m.IfRunning);
 					if(m.Uac != EUac.same) b.Append("|u").Append((int)m.Uac);
 					if(m.Prefer32Bit) b.Append("|b");

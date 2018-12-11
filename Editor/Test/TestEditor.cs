@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -21,6 +21,7 @@ using Au.Types;
 using static Au.NoClass;
 using static Program;
 using Au.Controls;
+using static Au.Controls.Sci;
 
 #if TEST
 
@@ -28,11 +29,12 @@ using Au.Controls;
 
 partial class ThisIsNotAFormFile { }
 
-partial class EForm
+partial class EdForm
 {
 	internal void TestEditor()
 	{
-		TestDragDrop();
+		TestMC();
+		//TestDragDrop();
 		return;
 
 		//var th = new Thread(()=>
@@ -58,7 +60,7 @@ partial class EForm
 		//Print(t.PositionBytes);
 		//return;
 
-		
+
 
 		//Print("<><code>" + s + "</code>");
 
@@ -107,6 +109,26 @@ partial class EForm
 
 	}
 	static bool s_test1;
+
+	void TestMC()
+	{
+		//var code = Model.CurrentFile.GetText();
+
+		var t=Panels.Editor.ActiveDoc.ST;
+		//Perf.First();
+		//t.ReplaceRange(2, 4, "NEW TEXT");
+		//t.ReplaceRange(2, 4, "NEW TEXT", true, true);
+		//t.DeleteRange(2, 3);
+		//t.InsertText(2, "TEXT");
+		//Perf.NW();
+
+		//var s=t.GetText();
+		//Print(s.Length, s, t.Call(SCI_POSITIONRELATIVE, 0, 1), t.Call(SCI_COUNTCHARACTERS, 0, 4));
+
+		foreach(var f in Model.Root.Descendants()) {
+			if(f.IsLibrary) Print(f.ItemPath);
+		}
+	}
 
 	void TestDragDrop()
 	{
@@ -224,8 +246,7 @@ partial class EForm
 
 	void SetHookToMonitorCreatedWindowsOfThisThread()
 	{
-		_hook = Au.Util.WinHook.ThreadCbt(x =>
-		{
+		_hook = Au.Util.WinHook.ThreadCbt(x => {
 			if(x.code == HookData.CbtEvent.CREATEWND) Print((Wnd)x.wParam);
 			return false;
 		});

@@ -488,7 +488,7 @@ namespace Au
 
 		/// <summary>
 		/// If false, disposes the menu when it is closed.
-		/// If true, does not dispose. Then you can call <b>Show</b> multiple times for the same object.
+		/// If true, does not dispose. Then you can call <b>Show</b> again and again.
 		/// Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control.
 		/// </summary>
 		/// <seealso cref="DefaultMultiShow"/>

@@ -24,12 +24,12 @@ using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 using Au.Compiler;
 
-partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
+partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 {
 	#region types
 
 	//File type. Not saved in XML. We get Folder from XML tag (d folder, f file), others from filename extension.
-	enum _Type :byte
+	enum _Type : byte
 	{
 		Folder, //must be 0
 		Script,
@@ -39,7 +39,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
 
 	//Not saved in XML.
 	[Flags]
-	enum _State :byte
+	enum _State : byte
 	{
 		Link = 1,
 		Deleted = 2,
@@ -48,7 +48,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
 
 	//Saved in XML.
 	[Flags]
-	enum _Flags :byte
+	enum _Flags : byte
 	{
 		HasTriggers = 1,
 	}
@@ -196,6 +196,16 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	public bool IsCodeFile => _type == _Type.Script || _type == _Type.CsFile;
 
 	/// <summary>
+	/// true if script file (and not .cs).
+	/// </summary>
+	public bool IsScript => _type == _Type.Script;
+
+	/// <summary>
+	/// true if .cs file, aka "class file".
+	/// </summary>
+	public bool IsCS => _type == _Type.CsFile;
+
+	/// <summary>
 	/// File name with extension.
 	/// </summary>
 	public string Name => _name;
@@ -325,14 +335,18 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
 
 	/// <summary>
 	/// Gets text from file or editor.
+	/// Returns "" if file not found.
 	/// </summary>
-	/// <param name="editorTextIfCurrent">If this is current item, gets editor text.</param>
-	public string GetText(bool editorTextIfCurrent = false)
+	/// <param name="saved">Always get text from file. If false (default), gets editor text if this is current file.</param>
+	/// <param name="warningIfNotFound">Print warning if file not found.</param>
+	public string GetText(bool saved = false, bool warningIfNotFound = false)
 	{
-		if(editorTextIfCurrent && this == _model.CurrentFile) {
+		if(!saved && this == _model.CurrentFile) {
 			return Panels.Editor.ActiveDoc.Text;
 		}
-		return File_.LoadText(FilePath);
+		try { return File_.LoadText(FilePath); }
+		catch(FileNotFoundException ex) { if(warningIfNotFound) PrintWarning(ex.Message, -1); }
+		return "";
 	}
 
 	public Bitmap GetIcon(bool expandedFolder = false)
@@ -352,7 +366,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
 				return IconCache.GetImage(LinkTarget ?? FilePath, true);
 			}
 		}
-		return EResources.GetImageUseCache(k);
+		return EdResources.GetImageUseCache(k);
 	}
 
 	public static Icon_.ImageCache IconCache = new Icon_.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
@@ -492,13 +506,13 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	}
 
 	/// <summary>
-	/// Returns true if this is a folder and Name starts with '@'.
+	/// Returns true if this is a folder and Name starts with '@' and contains main code file.
 	/// </summary>
-	/// <param name="main">Receives the main code file or null. It is the first direct child code file.</param>
+	/// <param name="main">Receives the main code file. It is the first direct child code file.</param>
 	public bool IsProjectFolder(out FileNode main)
 	{
 		main = null;
-		if(IsProjectFolder()) {
+		if(IsFolder && _name[0] == '@') {
 			foreach(var f in Children()) {
 				if(f.IsCodeFile) { main = f; return true; }
 			}
@@ -507,21 +521,32 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	}
 
 	/// <summary>
-	/// Returns true if this is a folder and Name starts with '@'.
+	/// Returns true if this is a class library.
+	/// Note: can be slow, because loads file text if .cs file.
 	/// </summary>
-	public bool IsProjectFolder() => IsFolder && _name[0] == '@';
+	public bool IsLibrary {
+		get {
+			if(_type != _Type.CsFile) return false;
+			var code = GetText();
+			if(!MetaComments.FindMetaComments(code, out int endOfMeta)) return false;
+			bool hasOP = false;
+			foreach(var v in MetaComments.EnumOptions(code, endOfMeta)) {
+				if(v.NameIs("outputType")) return v.ValueIs("dll");
+				if(v.NameIs("outputPath")) hasOP = true;
+			}
+			return hasOP;
+		}
+	}
 
 	#endregion
 
 	#region Au.Compiler.IWorkspaceFile
 
-	public bool IcfIsScript => _type == _Type.Script;
-
 	public IWorkspaceFiles IcfWorkspace => _model;
 
 	public IWorkspaceFile IcfFindRelative(string relativePath, bool? folder) => FindRelative(relativePath, folder);
 
-	public IEnumerable<IWorkspaceFile> IcfEnumProjectFiles(IWorkspaceFile fSkip = null)
+	public IEnumerable<IWorkspaceFile> IcfEnumProjectCsFiles(IWorkspaceFile fSkip = null)
 	{
 		foreach(var f in Descendants()) {
 			if(f._type == _Type.CsFile && f != fSkip) yield return f;
@@ -730,7 +755,7 @@ partial class FileNode :Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		//when adding classes to library project, if the main file contains a namespace, add that namespace in the new file too.
 		if(template == "Class.cs" && newParent.FindProject(out var projFolder, out var projMain)) {
 			var rx = @"(?m)^namespace [\w\.]+";
-			if(!s.RegexIsMatch_(rx) && projMain.GetText(true).RegexMatch_(rx, 0, out var ns)) {
+			if(!s.RegexIsMatch_(rx) && projMain.GetText().RegexMatch_(rx, 0, out var ns)) {
 				s = s.RegexReplace_(@"(?ms)^public class .+\}", ns + "\r\n{\r\n$0\r\n}", 1);
 			}
 		}

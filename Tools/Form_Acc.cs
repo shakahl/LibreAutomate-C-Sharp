@@ -29,7 +29,7 @@ using Aga.Controls.Tree.NodeControls;
 
 namespace Au.Tools
 {
-	public partial class Form_Acc :Form_
+	public partial class Form_Acc : ToolForm
 	{
 		Acc _acc;
 		Wnd _wnd, _con;
@@ -429,7 +429,7 @@ namespace Au.Tools
 		/// <summary>
 		/// When OK clicked, contains C# code.
 		/// </summary>
-		public string ResultCode { get; private set; }
+		public override string ResultCode { get; protected set; }
 
 		private void _bOK_Click(object sender, EventArgs e)
 		{
@@ -580,7 +580,6 @@ namespace Au.Tools
 
 			_ccName = new NodeTextBox();
 			_tree.NodeControls.Add(_ccName);
-			_ccName.LeftMargin = 0;
 			//_ccName.Trimming = StringTrimming.EllipsisCharacter;
 
 			_ccName.ValueNeeded = node =>
@@ -589,13 +588,13 @@ namespace Au.Tools
 				//Print(a.a);
 				return a.DisplayText;
 			};
+			_ccName.DrawText += _ccName_DrawText;
 
 			_tree.NodeMouseClick += _tree_NodeMouseClick;
 			_tree.KeyDown += _tree_KeyDown;
-			_tree.DrawControl += _tree_DrawControl;
 		}
 
-		private void _tree_DrawControl(object sender, DrawEventArgs e)
+		private void _ccName_DrawText(object sender, DrawEventArgs e)
 		{
 			var a = e.Node.Tag as _AccNode;
 			//Print(a.a);

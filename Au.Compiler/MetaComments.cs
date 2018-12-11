@@ -37,7 +37,7 @@ namespace Au.Compiler
 	/// //comments
 	/// */
 	/// ]]></code>
-	/// Options can be separated with newlines or |. Option and values can be separated with spaces or =. Example: /* meta option1=value1 | option2=value2 */
+	/// Options can be separated with newlines or |. Option and value can be separated with spaces. Example: /* meta option1 value1 | option2 value2 */
 	/// Options and values must match case, except filenames/paths. No "", no escaping.
 	/// The same option can be several times with different values, for example to specify several references.
 	/// All available options are in the examples below. The //comments in option lines are used only for documentation here; not allowed in real meta comments.
@@ -48,7 +48,7 @@ namespace Au.Compiler
 	/// <code><![CDATA[
 	/// r System.Assembly //.NET/GAC assembly reference. Without ".dll".
 	/// r Other.Assembly.dll //other assembly reference. With ".dll" or ".exe". The file must be in the main Au folder or its subfolder Libraries.
-	/// r assembly path.dll //other assembly reference using full path or path relative to the main Au folder. May be problem locating them at run time.
+	/// r C:\X\Y\file.dll //other assembly reference using full path or path relative to the main Au folder. May be problem finding it at run time.
 	/// r Alias=X.dll //assembly reference that can be used with C# keyword 'extern alias'.
 	/// ]]></code>
 	/// Don't need to specify these references: mscorlib, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
@@ -99,39 +99,35 @@ namespace Au.Compiler
 	/// 
 	/// <h3>Settings used to run the compiled script or app. Here a|b|c means a or b or c.</h3>
 	/// <code><![CDATA[
-	/// runMode supervised|unattendedSingle|unattendedMulti|editorThread - whether the task can be easily ended, multiple instances, etc. Default: supervised. More info below.
+	/// runMode green|blueSingle|blueMulti|editorThread - whether the task can be easily ended, multiple instances, etc. Default: green. More info below.
 	/// ifRunning cancel|wait|restart|restartOrWait //whether/how to start new task if a task is running. Default: cancel. More info below.
 	/// uac same|user|admin //UAC integrity level of the script process. Default: same. More info below.
 	/// prefer32bit true|false //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit dlls and AnyCPU dlls, but not 64-bit dlls. Default: false.
+	/// config app.config //use this configuration file when the output assembly file is executed. Can be filename or relative path, like with 'c'. The file is copied to the output directory unmodified but renamed to match the assembly name. This option cannot be used with dll. If not specified, will be used host program's config file.
 	/// ]]></code>
 	/// Here word "task" is used for "script or app that is running or should start".
 	/// Options 'runMode', 'ifRunning' and 'uac' are applied only when the task is started from Au editor, not when it runs as independent exe program.
 	/// 
 	/// About runMode:
-	/// supervised (default) - the task has these properties: 1. Cannot run simultaneously with other supervised tasks (see also option 'ifRunning'); 2. Can be ended with the "End task" hotkey; 3. Changes the tray icon.
-	/// unattendedSingle - unattended single-instance task. More info below. See also option 'ifRunning'.
-	/// unattendedMulti - unattended multi-instance task. Multiple task instances can run simultaneously. Option 'ifRunning' not used.
+	/// green (default) - supervised task. It has these properties: 1. Cannot run simultaneously with other green tasks (see also option 'ifRunning'); 2. Can be ended with the "End task" hotkey; 3. Changes the tray icon. 4. Green in the "Running" pane.
+	/// blueSingle - unattended single-instance task. More info below. See also option 'ifRunning'.
+	/// blueMulti - unattended multi-instance task. Multiple task instances can run simultaneously. Option 'ifRunning' not used.
 	/// editorThread - run the task in the main UI thread of the editor process. This is an advanced option, and rarely used. Can be used to create editor extensions. The user cannot see and end the task. Creates memory leaks when executing recompiled assemblies (eg after editing the script/app), because old assembly versions cannot be unloaded until process exits.
 	/// 
-	/// Unattended tasks don't have the 1-3 properties of supervised tasks. Such tasks are used: to run simultaneously with any tasks (supervised, unattended, other instances of self); to protect the task from the "End task" hotkey; as background tasks that wait for some event or watch for some condition; as collections of global or application-specific methods that can be executed with method triggers, toolbars and autotexts.
+	/// Blue tasks don't have the 1-3 properties of green tasks. Such tasks are used: to run simultaneously with any tasks (green, blue, other instances of self); to protect the task from the "End task" hotkey; as background tasks that wait for some event or watch for some condition; as collections of global or application-specific methods that can be executed with method triggers, toolbars and autotexts.
 	/// 
 	/// About ifRunning:
-	/// Defines whether/how to start new task if a task is running. What is "another task": if runMode supervised (default), it is "a supervised task"; if runMode unattendedSingle, it is "another instance of this task"; with other run modes this option cannot be used.
+	/// Defines whether/how to start new task if a task is running. What is "another task": if runMode green (default), it is "a green task"; if runMode blueSingle, it is "another instance of this task"; with other run modes this option cannot be used.
 	/// unspecified (default) - don't run. Print a warning.
 	/// cancel - don't run. Don't print a warning.
 	/// wait - run later, when that task ends.
-	/// restart - if that task is of this script/app, end it and run. Else like 'unspecified' (when both tasks are supervised).
-	/// restartOrWait - if that task is of this script/app, end it and run. Else like 'wait'. Cannot be used with unattended tasks.
+	/// restart - if that task is of this script/app, end it and run. Else like 'unspecified' (when both tasks are green).
+	/// restartOrWait - if that task is of this script/app, end it and run. Else like 'wait'. Cannot be used with blue tasks.
 	/// 
 	/// About uac:
 	/// same (default) - the task process has the same UAC integrity level as of the editor process.
 	/// user - the task process has UAC integrity level Medium, like most applications. Such tasks cannot automate windows of processes that run as administrator, cannot modify some directories and registry keys, etc.
 	/// admin - the task process has UAC integrity level High, also known as "runs as administrator" or "elevated". Such tasks don't have the above limitations, but can have some others, for example cannot automate some apps through COM.
-	/// 
-	/// <h3>Other</h3>
-	/// <code><![CDATA[
-	/// config app.config //use this configuration file when the output assembly file is executed. Can be filename or relative path, like with 'c'. The file is copied to the output directory unmodified but renamed to match the assembly name. This option cannot be used with dll. If not specified, will be used host program's config file.
-	/// ]]></code>
 	/// 
 	/// <h3>To create .exe file, at least option 'outputPath' must be specified</h3>
 	/// <code><![CDATA[
@@ -266,7 +262,7 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// Meta option 'runMode'.
-		/// Default: supervised.
+		/// Default: green.
 		/// </summary>
 		public ERunMode RunMode { get; private set; }
 
@@ -332,6 +328,11 @@ namespace Au.Compiler
 		public string XmlDocFile { get; private set; }
 
 		/// <summary>
+		/// Which options are specified.
+		/// </summary>
+		public EMSpecified Specified { get; private set; }
+
+		/// <summary>
 		/// If there is meta, gets character position after */. Else 0.
 		/// </summary>
 		public int EndOfMeta { get; private set; }
@@ -354,7 +355,7 @@ namespace Au.Compiler
 			_ParseFile(f, true);
 
 			if(projFolder != null) {
-				foreach(var ff in projFolder.IcfEnumProjectFiles(f)) _ParseFile(ff, false);
+				foreach(var ff in projFolder.IcfEnumProjectCsFiles(f)) _ParseFile(ff, false);
 			}
 
 			if(_filesC != null) {
@@ -382,10 +383,10 @@ namespace Au.Compiler
 		/// </summary>
 		/// <param name="f"></param>
 		/// <param name="isMain">If false, it is a file added through meta option 'c'.</param>
-		public void _ParseFile(IWorkspaceFile f, bool isMain)
+		void _ParseFile(IWorkspaceFile f, bool isMain)
 		{
 			string code = File_.LoadText(f.FilePath);
-			bool isScript = f.IcfIsScript;
+			bool isScript = f.IsScript;
 
 			if(_isMain = isMain) {
 				string name = f.Name;
@@ -408,41 +409,29 @@ namespace Au.Compiler
 			_fn = f;
 			_code = code;
 
-			if(code.Length < 10 || !code.StartsWith_("/* meta") || code[7] > ' ') return;
-			int i = 8, iTo = code.IndexOf_("*/", i); if(iTo < 0) return;
-			if(isMain) EndOfMeta = iTo + 2;
+			if(!FindMetaComments(code, out int endOf)) return;
+			if(isMain) EndOfMeta = endOf;
 
-			foreach(var seg in code.Segments_(i, iTo - i, "\r\n|", SegFlags.NoEmpty)) {
-				seg.Trim();
-				if(seg.Length != 0 && !seg.StartsWith("//")) _ParseOption(code, seg);
-			}
+			foreach(var t in EnumOptions(code, endOf)) _ParseOption(t.Name(), t.Value(), t.nameStart, t.valueStart);
 		}
 
 		bool _isMain;
 		IWorkspaceFile _fn;
 		string _code;
 
-		void _ParseOption(string code, in StringSegment seg)
+		void _ParseOption(string name, string value, int iName, int iValue)
 		{
-			//simply split to get key and value
-			bool _IsSep(char c1) => c1 <= ' ' || c1 == '=';
-			int i = seg.Offset, iKey = i, iEnd = seg.EndOffset;
-			while(i < iEnd && !_IsSep(code[i])) i++;
-			string key = code.Substring(iKey, i - iKey);
-			while(i < iEnd && _IsSep(code[i])) i++;
-			int iValue = i;
-			string value = code.Substring(iValue, iEnd - iValue);
-			//Print($"'{key}'  '{value}'");
-
 			if(value.Length == 0) {
-				switch(key) {
+				switch(name) {
 				case "outputPath": case "xmlDoc": break;
 				default: _Error(iValue, "value cannot be empty"); return;
 				}
 			}
-			g1:
-			switch(key) {
+
+			bool isLibrary = false; g1:
+			switch(name) {
 			case "r":
+				if(!isLibrary) Specified |= EMSpecified.r;
 				try {
 					if(!References.Resolve(value)) {
 						_Error(iValue, "reference assembly not found: " + value); //FUTURE: need more info, or link to Help
@@ -453,6 +442,7 @@ namespace Au.Compiler
 				}
 				return;
 			case "c":
+				Specified |= EMSpecified.c;
 				if(!value.EndsWithI_(".cs")) { _Error(iValue, "must be .cs file"); return; }
 				var ff = _GetFile(value, iValue); if(ff == null) return;
 				if(_filesC == null) _filesC = new List<IWorkspaceFile>();
@@ -460,6 +450,7 @@ namespace Au.Compiler
 				_filesC.Add(ff);
 				return;
 			case "resource":
+				Specified |= EMSpecified.resource;
 				var fs1 = _GetFileAndString(value, iValue); if(fs1.f == null) return;
 				if(Resources == null) Resources = new List<MetaFileAndString>();
 				else if(Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) return;
@@ -471,35 +462,43 @@ namespace Au.Compiler
 				//Support folder (add all in folder).
 			}
 			if(!_isMain) {
-				_Error(iKey, $"in this file only these options can be used: 'r', 'c', 'resource'. Others only in the main file of the compilation - {Files[0].f.Name}.");
+				_Error(iName, $"in this file only these options can be used: 'r', 'c', 'resource'. Others only in the main file of the compilation - {Files[0].f.Name}.");
 				return;
 			}
 
-			switch(key) {
+			switch(name) {
 			case "library":
-				if(_Library(ref value, iValue)) { key = "r"; goto g1; }
+				Specified |= EMSpecified.library;
+				if(_Library(ref value, iValue)) { name = "r"; isLibrary = true; goto g1; }
 				break;
 			case "debug":
+				Specified |= EMSpecified.debug;
 				if(_TrueFalse(out bool isDebug, value, iValue)) IsDebug = isDebug;
 				break;
 			case "warningLevel":
+				Specified |= EMSpecified.warningLevel;
 				int wl = value.ToInt_();
 				if(wl >= 0 && wl <= 4) WarningLevel = wl;
 				else _Error(iValue, "must be 0 - 4");
 				break;
 			case "disableWarnings":
+				Specified |= EMSpecified.disableWarnings;
 				DisableWarnings.AddRange(value.Split_(", ", SegFlags.NoEmpty));
 				break;
 			case "define":
+				Specified |= EMSpecified.define;
 				Defines.AddRange(value.Split_(", ", SegFlags.NoEmpty));
 				break;
 			case "preBuild":
+				Specified |= EMSpecified.preBuild;
 				PreBuild = _GetFileAndString(value, iValue);
 				break;
 			case "postBuild":
+				Specified |= EMSpecified.postBuild;
 				PostBuild = _GetFileAndString(value, iValue);
 				break;
 			case "outputType":
+				Specified |= EMSpecified.outputType;
 				_cantRunInEditor = true;
 				if(_Enum(out EOutputType ot, value, iValue)) {
 					OutputType = ot;
@@ -510,6 +509,7 @@ namespace Au.Compiler
 				}
 				break;
 			case "outputPath":
+				Specified |= EMSpecified.outputPath;
 				_cantRunInEditor = true;
 #if STANDARD_SCRIPT
 				//scripts can be .exe, but we don't allow it, because there is no way to set args, [STAThread], triggers.
@@ -518,55 +518,65 @@ namespace Au.Compiler
 				OutputPath = _GetOutPath(value, iValue); //and creates directory if need
 				break;
 			case "runMode":
+				Specified |= EMSpecified.runMode;
 				_cantBeDll = true;
 				if(_Enum(out ERunMode rm, value, iValue)) RunMode = rm;
 				break;
 			case "ifRunning":
+				Specified |= EMSpecified.ifRunning;
 				_cantBeDll = _cantRunInEditor = _cantRunMulti = true;
 				if(_Enum(out EIfRunning ifR, value, iValue)) IfRunning = ifR;
 				break;
 			case "uac":
+				Specified |= EMSpecified.uac;
 				_cantBeDll = _cantRunInEditor = true;
 				if(_Enum(out EUac uac, value, iValue)) Uac = uac;
 				break;
 			case "prefer32bit":
+				Specified |= EMSpecified.prefer32bit;
 				_cantBeDll = _cantRunInEditor = true;
 				if(_TrueFalse(out bool is32, value, iValue)) Prefer32Bit = is32;
 				break;
 			case "config":
+				Specified |= EMSpecified.config;
 				_cantBeDll = _cantRunInEditor = true;
 				ConfigFile = _GetFile(value, iValue);
 				break;
 			case "manifest":
+				Specified |= EMSpecified.manifest;
 				_cantBeDll = _cantRunInEditor = true;
-				if(ManifestFile != null) _Error(iKey, "cannot add multiple manifests");
+				if(ManifestFile != null) _Error(iName, "cannot add multiple manifests");
 				else ManifestFile = _GetFile(value, iValue);
 				break;
 			case "icon":
-				if(IconFile != null) _Error(iKey, "cannot add multiple icons");
+				Specified |= EMSpecified.icon;
+				if(IconFile != null) _Error(iName, "cannot add multiple icons");
 				else IconFile = _GetFile(value, iValue);
 				break;
 			case "resFile":
-				if(ResFile != null) _Error(iKey, "cannot add multiple res files");
+				Specified |= EMSpecified.resFile;
+				if(ResFile != null) _Error(iName, "cannot add multiple res files");
 				else ResFile = _GetFile(value, iValue);
 				break;
 			case "sign":
+				Specified |= EMSpecified.sign;
 				SignFile = _GetFile(value, iValue);
 				break;
 			case "xmlDoc":
+				Specified |= EMSpecified.xmlDoc;
 				XmlDocFile = value.Length != 0 ? value : (Name + ".xml");
 				break;
 			//case "targetFramework": //need to use references of that framework? Where to get them at run time? Or just add [assembly: TargetFramework(...)]?
 			//	break;
 			//case "version": //will be auto-created from [assembly: AssemblyVersion] etc
 			//	break;
-			//case "include": //FUTURE
+			//case "include": //CONSIDER
 			//	// include file //include options from this file. Can be filename or relative path, like with 'c'.
 			//	//CONSIDER: also add "using", it can be useful with "include"; or add regular usings from the included file; also [assembly: ] and [module: ].
 			//	//CONSIDER: allow to have one .cs file to be compiled with all. Eg it can contain [module: DefaultCharSet(CharSet.Unicode)].
 			//	break;
 			default:
-				_Error(iKey, "unknown meta option");
+				_Error(iName, "unknown meta option");
 				break;
 			}
 
@@ -660,16 +670,13 @@ namespace Au.Compiler
 				return _Error(0, "with outputType dll cannot use runMode, ifRunning, uac, prefer32bit, config, manifest");
 
 			switch(RunMode) {
-			case ERunMode.unattendedMulti when _cantRunMulti:
-				return _Error(0, "with runMode unattendedMulti cannot use ifRunning");
-			case ERunMode.unattendedSingle when IfRunning == EIfRunning.restartOrWait:
-				return _Error(0, "with runMode unattendedSingle cannot use ifRunning restartOrWait. Use ifRunning restart.");
+			case ERunMode.blueMulti when _cantRunMulti:
+				return _Error(0, "with runMode blueMulti cannot use ifRunning");
+			case ERunMode.blueSingle when IfRunning == EIfRunning.restartOrWait:
+				return _Error(0, "with runMode blueSingle cannot use ifRunning restartOrWait. Use ifRunning restart.");
 			case ERunMode.editorThread when _cantRunInEditor:
 				return _Error(0, "with runMode editorThread cannot use outputType, outputPath, ifRunning, uac, prefer32bit, config, manifest");
 			}
-
-			if(RunMode == ERunMode.editorThread && _cantRunInEditor)
-				return _Error(0, "with runMode editorThread cannot use outputType, outputPath, ifRunning, uac, prefer32bit, config, manifest");
 
 			//if(OutputPath == null && OutputType!= EOutputType.dll) {
 			//	//FUTURE: show warning if used non-.NET/GAC/Au refs
@@ -679,6 +686,61 @@ namespace Au.Compiler
 		}
 
 		bool _cantBeDll, _cantRunInEditor, _cantRunMulti;
+
+		/// <summary>
+		/// Returns true if code starts with metacomments "/* meta ... */".
+		/// </summary>
+		/// <param name="code">Code. Can be null.</param>
+		/// <param name="endOfMetacomments">Receives the very end of metacomments.</param>
+		public static bool FindMetaComments(string code, out int endOfMetacomments)
+		{
+			endOfMetacomments = 0;
+			if(code.Length_() < 10 || !code.StartsWith_("/* meta") || code[7] > ' ') return false;
+			int iTo = code.IndexOf_("*/", 8); if(iTo < 0) return false;
+			endOfMetacomments = iTo + 2;
+			return true;
+		}
+
+		/// <summary>
+		/// Parses metacomments and returns offsets of all option names and values in code.
+		/// </summary>
+		/// <param name="code">Code that starts with metacomments "/* meta ... */".</param>
+		/// <param name="endOfMetacomments">The very end of metacomments, returned by <see cref="FindMetaComments"/>.</param>
+		public static IEnumerable<Token> EnumOptions(string code, int endOfMetacomments)
+		{
+			for(int i = 8, iEnd = endOfMetacomments - 2; i < iEnd;) {
+				Token t = default;
+				for(; i < iEnd; i++) { char c = code[i]; if(c > ' ' && c != '|') break; } //find next option
+				if(!(code[i] == '/' && code[i + 1] == '/')) { //if not comments
+					t.nameStart = i;
+					while(i < iEnd && code[i] > ' ') i++; //find separator after name
+					t.nameLen = i - t.nameStart;
+					while(i < iEnd && code[i] <= ' ') i++; //find value
+					t.valueStart = i;
+				}
+				for(; i < iEnd; i++) { char c = code[i]; if(c == '\r' || c == '\n' || c == '|') break; } //find separator after value
+				if(t.nameLen > 0) { //else comments or end
+					int j = i; while(j > t.valueStart && code[j - 1] <= ' ') j--; //rtrim
+					t.valueLen = j - t.valueStart;
+					t.code = code;
+					yield return t;
+				}
+			}
+		}
+
+		/// <summary>
+		/// <see cref="EnumOptions"/>.
+		/// </summary>
+		public struct Token
+		{
+			public int nameStart, nameLen, valueStart, valueLen;
+			public string code;
+
+			public string Name() => code.Substring(nameStart, nameLen);
+			public string Value() => code.Substring(valueStart, valueLen);
+			public bool NameIs(string s) => s.Length == nameLen && code.EqualsAt_(nameStart, s);
+			public bool ValueIs(string s) => s.Length == valueLen && code.EqualsAt_(valueStart, s);
+		}
 	}
 
 	struct MetaCSharpFile
@@ -701,7 +763,7 @@ namespace Au.Compiler
 
 	public enum EUac { same, user, admin }
 
-	public enum ERunMode { supervised, unattendedSingle, unattendedMulti, editorThread }
+	public enum ERunMode { green, blueSingle, blueMulti, editorThread }
 
 	public enum EIfRunning { unspecified, cancel, wait, restart, restartOrWait }
 
@@ -715,5 +777,37 @@ namespace Au.Compiler
 		/// Call <see cref="ErrBuilder.PrintAll"/>.
 		/// </summary>
 		PrintErrors = 1,
+
+		///// <summary>
+		///// Used for file Properties dialog etc, not when compiling.
+		///// </summary>
+		//ForFileProperties = 2,
+	}
+
+	[Flags]
+	public enum EMSpecified //FUTURE: use or remove
+	{
+		runMode = 1,
+		ifRunning = 2,
+		uac = 4,
+		prefer32bit = 8,
+		config = 0x10,
+		debug = 0x20,
+		warningLevel = 0x40,
+		disableWarnings = 0x80,
+		define = 0x100,
+		preBuild = 0x200,
+		postBuild = 0x400,
+		r = 0x800,
+		library = 0x1000,
+		c = 0x2000,
+		resource = 0x4000,
+		outputPath = 0x8000,
+		outputType = 0x10000,
+		icon = 0x20000,
+		manifest = 0x40000,
+		resFile = 0x80000,
+		sign = 0x100000,
+		xmlDoc = 0x200000,
 	}
 }

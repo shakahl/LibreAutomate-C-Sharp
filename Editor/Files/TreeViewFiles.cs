@@ -108,7 +108,7 @@ partial class FilesModel
 
 			_ccIcon = new NodeIcon();
 			this.NodeControls.Add(_ccIcon);
-			_ccIcon.LeftMargin = 0;
+			_ccIcon.LeftMargin = 5; //default 1
 			_ccIcon.ScaleMode = ImageScaleMode.ScaleUp;
 			_ccIcon.DpiStretch = true;
 			_ccIcon.ValueNeeded = _ccIcon_ValueNeeded;
@@ -116,9 +116,9 @@ partial class FilesModel
 			_ccName = new NodeTextBox();
 			this.NodeControls.Add(_ccName);
 			_ccName.EditEnabled = true;
-			_ccName.LeftMargin = 0;
 			_ccName.ValueNeeded = node => (node.Tag as FileNode).Name;
 			_ccName.ValuePushed = (node, value) => { (node.Tag as FileNode).FileRename(value as string, false); };
+			_ccName.FontNeeded = node => node.Tag == _model.CurrentFile ? EdStock.FontBold : null;
 			_ccName.DrawText += _ccName_DrawText;
 
 #if TEST_MANY_COLUMNS
@@ -229,7 +229,7 @@ partial class FilesModel
 			//Print(f);
 			Debug.Assert(node.IsLeaf != f.IsFolder);
 
-			if(_model.IsInPrivateClipboard(f, out bool cut)) return EResources.GetImageUseCache(cut ? "cut" : "copy");
+			if(_model.IsInPrivateClipboard(f, out bool cut)) return EdResources.GetImageUseCache(cut ? "cut" : "copy");
 			return f.GetIcon(node.IsExpanded);
 		}
 
@@ -238,21 +238,20 @@ partial class FilesModel
 			var f = e.Node.Tag as FileNode;
 			if(f.IsFolder) return;
 			if(f == _model.CurrentFile) {
-				e.Font = Program.Stock.FontBold;
 				//e.TextColor = Color.DarkBlue;
 				if(e.Node.IsSelected && e.Context.DrawSelection == DrawSelectionMode.None && _IsTextBlack)
 					e.BackgroundBrush = Brushes.LightGoldenrodYellow; //yellow text rect in selected-inactive
 			}
 		}
 
-		protected override void OnRowDraw(PaintEventArgs e, TreeNodeAdv node, DrawContext context, int row, Rectangle rowRect)
+		protected override void OnRowDraw(PaintEventArgs e, TreeNodeAdv node, ref DrawContext context, int row, Rectangle rowRect)
 		{
 			var f = node.Tag as FileNode;
 			if(f.IsFolder) return;
 			if(!node.IsSelected && _model.OpenFiles.Contains(f)) { //draw yellow background for open files
 				var g = e.Graphics;
 				var r = rowRect; //why width 0?
-				var cr = g.VisibleClipBounds;
+				var cr = g.VisibleClipBounds; //TODO: see TreeViewAdv.DrawRow, it creates Rectangle differently
 				r.X = (int)cr.X; r.Width = (int)cr.Width;
 				if(_IsTextBlack) g.FillRectangle(Brushes.LightGoldenrodYellow, r);
 				//if(f == _model.CurrentFile) {
@@ -260,7 +259,7 @@ partial class FilesModel
 				//	g.DrawRectangle(SystemPens.ControlDark, r);
 				//}
 			}
-			base.OnRowDraw(e, node, context, row, rowRect);
+			base.OnRowDraw(e, node, ref context, row, rowRect);
 		}
 
 		static bool _IsTextBlack => (uint)SystemColors.WindowText.ToArgb() == 0xFF000000; //if not high-contrast theme
