@@ -25,6 +25,7 @@
 	/// </summary>
 	private void InitializeComponent()
 	{
+			this.components = new System.ComponentModel.Container();
 			this._bOK = new Au.Controls.ButtonOK();
 			this._bCancel = new Au.Controls.ButtonCancel();
 			this._info = new Au.Controls.AuInfoBox();
@@ -35,6 +36,7 @@
 			this._bAddLib = new System.Windows.Forms.Button();
 			this._bAddRefOther = new System.Windows.Forms.Button();
 			this._bAddRefNet = new System.Windows.Forms.Button();
+			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
@@ -156,9 +158,13 @@
 			this._bAddRefNet.Name = "_bAddRefNet";
 			this._bAddRefNet.Size = new System.Drawing.Size(168, 24);
 			this._bAddRefNet.TabIndex = 1;
-			this._bAddRefNet.Text = "Add .NET/GAC reference...";
+			this._bAddRefNet.Text = "Add .NET reference...";
 			this._bAddRefNet.UseVisualStyleBackColor = true;
 			this._bAddRefNet.Click += new System.EventHandler(this._bAddRefNet_Click);
+			// 
+			// _toolTip
+			// 
+			this._toolTip.IsBalloon = true;
 			// 
 			// EdCodeFileProperties
 			// 
@@ -197,4 +203,5 @@
 	private System.Windows.Forms.Button _bAddResource;
 	private System.Windows.Forms.Button _bAddClass;
 	private System.Windows.Forms.Button _bAddRefOther;
+	private System.Windows.Forms.ToolTip _toolTip;
 }

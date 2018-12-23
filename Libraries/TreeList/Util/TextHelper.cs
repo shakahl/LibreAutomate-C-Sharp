@@ -8,15 +8,15 @@ namespace Aga.Controls
 {
 	public static class TextHelper
 	{
-		public static StringAlignment TranslateAligment(HorizontalAlignment alignment)
-		{
-			if (alignment == HorizontalAlignment.Left)
-				return StringAlignment.Near;
-			else if (alignment == HorizontalAlignment.Right)
-				return StringAlignment.Far;
-			else
-				return StringAlignment.Center;
-		}
+		//public static StringAlignment TranslateAligment(HorizontalAlignment alignment)
+		//{
+		//	if (alignment == HorizontalAlignment.Left)
+		//		return StringAlignment.Near;
+		//	else if (alignment == HorizontalAlignment.Right)
+		//		return StringAlignment.Far;
+		//	else
+		//		return StringAlignment.Center;
+		//}
 
         public static TextFormatFlags TranslateAligmentToFlag(HorizontalAlignment alignment)
         {

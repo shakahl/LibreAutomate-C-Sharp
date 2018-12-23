@@ -69,6 +69,8 @@
     <Win32Resource>
     </Win32Resource>
   </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup />
   <PropertyGroup>
     <ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
   </PropertyGroup>

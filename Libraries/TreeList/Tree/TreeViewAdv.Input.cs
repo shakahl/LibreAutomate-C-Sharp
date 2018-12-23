@@ -368,7 +368,7 @@ namespace Aga.Controls.Tree
 			if(btc != null && btc.DisplayHiddenContentInToolTip && String.IsNullOrEmpty(msg)) {
 				//SHOULDDO: now no tooltip for multiline when TrimMultiLine true
 				Size ms = btc.GetActualSize(args.Node, _measureContext);
-				if(ms.Width > args.ControlBounds.Size.Width || ms.Height > args.ControlBounds.Size.Height
+				if(ms.Width > args.ControlBounds.Width || ms.Height > args.ControlBounds.Height
 					|| args.ControlBounds.Right - OffsetX > DisplayRectangle.Width)
 					msg = btc.GetLabel(args.Node);
 			}

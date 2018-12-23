@@ -53,16 +53,20 @@ static class Run
 #endif
 
 		Model.Save.TextNowIfNeed(onlyText: true);
+		Model.Save.WorkspaceNowIfNeed(); //because the script may kill editor, eg if runs in editor thread
 
 		if(f == null) return 0;
-		g1:
 		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
 
 		//can be set to run other script/app instead.
 		//	Useful for library projects. Single files have other alternatives - move to a script project or move code to a script file.
 		if(run) {
-			var f2 = f.RunOther;
-			if(f2 != null) { f = f2; goto g1; }
+			var f2 = f.TestScript;
+			if(f2 != null) {
+				if(!f2.FindProject(out projFolder, out projMain)) f = f2;
+				else if(projMain != f) f = projMain;
+				else { Print($"<>The test script {f2.SciLink} cannot be in the project folder {projFolder.SciLink}"); return 0; }
+			}
 		}
 
 		if(!f.IsCodeFile) return 0;
@@ -118,7 +122,7 @@ outputType app
 		} else {
 			s = f.Name; s = "test " + s.Remove(s.Length - 3);
 			if(!_NewItem(out f2, out bool isProject, "Script", s)) return;
-			f.RunOther = f2;
+			f.TestScript = f2;
 			text =
 $@"/* meta
 {(isProject ? "library" : "c")} {f.ItemPath}
@@ -487,7 +491,9 @@ class RunningTasks
 		} else {
 			exeFile = Folders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");
 
-			int iFlags = r.hasConfig ? 1 : 0; if(r.mtaThread) iFlags |= 2;
+			int iFlags = r.hasConfig ? 1 : 0;
+			if(r.mtaThread) iFlags |= 2;
+			if(r.outputType == EOutputType.console) iFlags |= 4;
 			taskParams = Au.Util.LibSerializer.SerializeWithSize(r.name, r.file, r.pdbOffset, iFlags, args, wrPipeName);
 			wrPipeName = null;
 

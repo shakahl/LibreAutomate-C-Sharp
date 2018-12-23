@@ -39,15 +39,15 @@ namespace Au.Compiler
 
 		bool IsScript { get; }
 
-		IWorkspaceFiles IcfWorkspace { get; }
+		IWorkspaceFiles IwfWorkspace { get; }
 
-		IWorkspaceFile IcfFindRelative(string relativePath, bool? folder);
+		IWorkspaceFile IwfFindRelative(string relativePath, bool? folder);
 
-		IEnumerable<IWorkspaceFile> IcfEnumProjectCsFiles(IWorkspaceFile fSkip = null);
+		IEnumerable<IWorkspaceFile> IwfEnumProjectCsFiles(IWorkspaceFile fSkip = null);
 
-		bool IcfFindProject(out IWorkspaceFile folder, out IWorkspaceFile main);
+		bool IwfFindProject(out IWorkspaceFile folder, out IWorkspaceFile main);
 
-		void IcfTriggers(List<CompTriggerData> a);
+		void IwfTriggers(List<CompTriggerData> a);
 	}
 
 	public interface IWorkspaceFiles
@@ -56,13 +56,13 @@ namespace Au.Compiler
 		/// Data used by compiler. It sets and gets this property.
 		/// Implementation: public object IcfCompilerContext { get; set; }
 		/// </summary>
-		object IcfCompilerContext { get; set; }
+		object IwfCompilerContext { get; set; }
 
-		string IcfFilesDirectory { get; }
+		string IwfFilesDirectory { get; }
 
-		string IcfWorkspaceDirectory { get; }
+		string IwfWorkspaceDirectory { get; }
 
-		IWorkspaceFile IcfFindById(uint id);
+		IWorkspaceFile IwfFindById(uint id);
 	}
 
 	public struct CompTriggerData

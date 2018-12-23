@@ -37,6 +37,9 @@
   <ItemGroup>
     <Compile Include="App\IPC.cs" />
     <Compile Include="Library\Api_COM_wrap.cs" />
+    <Compile Include="Library\PopupControlHost.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Library\Rejected\AuToobar with ImageCache.cs" />
     <Compile Include="Library\BitList.cs" />
     <Compile Include="Library\Ftp upload with progress.cs" />

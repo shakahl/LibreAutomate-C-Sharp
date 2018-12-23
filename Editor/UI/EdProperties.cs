@@ -27,21 +27,29 @@ using Au.Compiler;
 
 partial class EdCodeFileProperties : Form_
 {
-	FileNode _f;
+	FileNode _f, _fProjectFolder;
 	EdMetaCommentsParser _meta;
+	bool _isCS;
+	_Role _role;
+
+	enum _Role
+	{
+		miniProgram, exeProgram, editorExtension, classLibrary, classFile
+	}
 
 	public EdCodeFileProperties(FileNode f)
 	{
 		InitializeComponent();
 
 		_f = f;
-		this.Text = _f.Name + " Properties";
+		f.FindProject(out _fProjectFolder, out _);
+		_isCS = f.IsCS;
 
-		//note: this.StartPosition = FormStartPosition.CenterParent; does not work with Form.Show.
+		this.Text = _f.Name + " Properties";
 
 		var owner = MainForm;
 		var p = owner.PointToScreen(owner.ClientRectangle.Location);
-		this.Location = new Point(p.X + 100, p.Y + 100);
+		this.Location = new Point(p.X + 100, p.Y + 100); //note: this.StartPosition = FormStartPosition.CenterParent; does not work with Form.Show.
 	}
 
 	protected override void OnLoad(EventArgs e)
@@ -54,17 +62,25 @@ partial class EdCodeFileProperties : Form_
 		//_FillGrid2();
 	}
 
-	protected override void OnFormClosed(FormClosedEventArgs e)
-	{
-		_ddList?.Dispose();
-		base.OnFormClosed(e);
-	}
+	//protected override void OnFormClosed(FormClosedEventArgs e)
+	//{
+	//	base.OnFormClosed(e);
+	//}
 
 	void _FillGrid()
 	{
 		var g = _grid;
+
+		if(_meta.runMode == "editorThread") _role = _Role.editorExtension;
+		else if(_isCS && (_meta.outputType == null || _meta.outputType == "dll")) _role = _meta.outputPath == null ? _Role.classFile : _Role.classLibrary;
+		else _role = _meta.outputPath == null ? _Role.miniProgram : _Role.exeProgram;
+
+		var roles = _isCS ? "Mini program|Exe program|Editor extension|Class library|Class file" : "Mini program|Exe program|Editor extension";
+		g.ZAdd(null, "Role", roles, null, etype: ParamGrid.EditType.ComboList, comboIndex: (int)_role);
+
 		g.ZAddHeaderRow("Run");
-		_AddCombo("runMode", "green|blueSingle|blueMulti|editorThread", _meta.runMode);
+		_AddEdit("testScript", _f.TestScript?.ItemPath);
+		_AddCombo("runMode", "green|blueSingle|blueMulti", _meta.runMode);
 		_AddCombo("ifRunning", "cancel|wait|restart|restartOrWait", _meta.ifRunning);
 		_AddCombo("uac", "same|user|admin", _meta.uac);
 		_AddCombo("prefer32bit", "false|true", _meta.prefer32bit);
@@ -73,35 +89,36 @@ partial class EdCodeFileProperties : Form_
 		g.ZAddHeaderRow("Compile");
 		_AddCombo("debug", "true|false", _meta.debug);
 		_AddCombo("warningLevel", "4|3|2|1|0", _meta.warningLevel);
-		_AddEdit("disableWarnings", _meta.disableWarnings);
+		_AddEdit("noWarnings", _meta.noWarnings);
 		_AddEdit("define", _meta.define);
 		_AddEdit("preBuild", _meta.preBuild);
 		_AddEdit("postBuild", _meta.postBuild);
 
-		g.ZAddHeaderRow("Exe");
-		//_AddEdit("outputPath", _meta.outputPath);
+		g.ZAddHeaderRow("Assembly");
 		_AddOutputPath("outputPath", _meta.outputPath);
-		_AddCombo("outputType", "app|console|dll", _meta.outputType);
+		_AddCombo("outputType", "app|console", _meta.outputType, noCheckbox: _isCS);
 		_AddEdit("icon", _meta.icon);
 		_AddEdit("manifest", _meta.manifest);
 		_AddEdit("resFile", _meta.resFile);
-		_AddEdit("sign", _meta.sign);
 		_AddEdit("xmlDoc", _meta.xmlDoc);
+		_AddEdit("sign", _meta.sign);
+
+		_SelectRole();
 
 		g.ZAutoSize();
 
-		g.ZValueChanged += _G_ZValueChanged;
+		g.ZValueChanged += _grid_ZValueChanged;
 
-		void _AddCombo(string name, string values, string select, string tt = null, string info = null)
+		void _AddCombo(string name, string values, string select, string tt = null, string info = null, bool noCheckbox = false)
 		{
 			var a = values.Split_("|");
 			bool isSpecified = select != null;
-			int iSelect;
+			int iSelect = 0;
 			if(isSpecified) {
-				iSelect = -1;
 				for(int i = 0; i < a.Length; i++) if(a[i] == select) { iSelect = i; break; }
-			} else iSelect = 0;
-			g.ZAdd(null, name, values, isSpecified, tt, info, -1, ParamGrid.EditType.ComboList, comboIndex: iSelect);
+			}
+			bool? check = isSpecified; if(noCheckbox) check = null;
+			g.ZAdd(null, name, values, check, tt, info, -1, ParamGrid.EditType.ComboList, comboIndex: iSelect);
 		}
 
 		void _AddEdit(string name, string text, string tt = null, string info = null)
@@ -112,10 +129,10 @@ partial class EdCodeFileProperties : Form_
 
 		void _AddOutputPath(string tt = null, string info = null)
 		{
-			bool isSpecified = _meta.outputPath != null;
-			g.ZAdd(null, "outputPath", _meta.outputPath, isSpecified, tt, info, etype: ParamGrid.EditType.TextButton, buttonAction: (sender, sed) => {
+			g.ZAdd(null, "outputPath", _meta.outputPath, null, tt, info, etype: ParamGrid.EditType.TextButton, buttonAction: (sender, sed) => {
 				var m = new AuMenu();
 				m[@"%Folders.Workspace%\bin"] = o => _SetEditCellText(o.ToString());
+				if(_isCS) m[@"%Folders.ThisApp%\Libraries"] = o => _SetEditCellText(o.ToString());
 				m["Browse..."] = o => {
 					var f = new FolderBrowserDialog { SelectedPath = Folders.ThisAppDocuments, ShowNewFolderButton = true };
 					if(f.ShowDialog(this) == DialogResult.OK) _SetEditCellText(f.SelectedPath);
@@ -134,10 +151,36 @@ partial class EdCodeFileProperties : Form_
 		}
 	}
 
-	private void _G_ZValueChanged(SourceGrid.CellContext cc)
+	void _SelectRole()
 	{
-		//uncheck if selected default value. The control checks when changed.
+		string hide;
+		switch(_role) {
+		case _Role.miniProgram: hide = "testScript outputPath icon-xmlDoc"; break;
+		case _Role.exeProgram: hide = "testScript"; break;
+		case _Role.editorExtension: hide = "Run-config outputPath-xmlDoc"; break;
+		case _Role.classLibrary: hide = "runMode-config outputType manifest"; break;
+		default: hide = "runMode-"; break;
+		}
+		_grid.ZShowRows(true, "Run-", hide);
+		_bAddLib.Enabled = _role != _Role.classFile;
+	}
+
+	private void _grid_ZValueChanged(SourceGrid.CellContext cc)
+	{
+		var g = _grid;
 		var p = cc.Position;
+		int row = p.Row;
+
+		if(row == 0) { //role
+			var cb = cc.Cell.Editor as SourceGrid.Cells.Editors.ComboBox;
+			_role = (_Role)cb.Control.SelectedIndex;
+			_SelectRole();
+			return;
+		}
+
+		//Print(p.Column, p.Row, cc.IsEditing());
+
+		//uncheck if selected default value. The control checks when changed.
 		if(p.Column == 1 && cc.IsEditing()) {
 			bool uncheck = false;
 			switch(cc.Cell.Editor) {
@@ -148,24 +191,78 @@ partial class EdCodeFileProperties : Form_
 				if(Empty(cc.Value as string)) uncheck = true;
 				break;
 			}
-			if(uncheck) _grid.ZCheck(p.Row, false);
+			if(uncheck) g.ZCheck(row, false);
 		}
+
+		var rk = g.ZGetRowKey(row);
+
+		//Print(p.Column, row, g.ZIsChecked(row));
+
+		//if runMode blueMulti, cannot use ifRunning
+		switch(rk) {
+		case "runMode":
+			bool multi = _Get("runMode") == "blueMulti";
+			g.ZEnableRow(row + 1, !multi, multi);
+			break;
+		}
+
+		//if runMode blueSingle, cannot be ifRunning restartOrWait
+		switch(rk) {
+		case "runMode":
+		case "ifRunning":
+			if(_Get("ifRunning") == "restartOrWait" && _Get("runMode") == "blueSingle") g.ZSetCellText("ifRunning", 1, "restart");
+			break;
+		}
+
+		if(p.Column == 0 && g.ZIsChecked(row)) {
+			switch(rk) {
+			case "icon":
+			case "manifest":
+				g.ZCheck("resFile", false);
+				break;
+			case "resFile":
+				g.ZCheck("icon", false);
+				g.ZCheck("manifest", false);
+				break;
+			}
+		}
+
+		//	_toolTip.SetToolTip(g, "Must be .cs file");
 	}
 
-	void _GetGrid()
+	string _Get(string name)
+	{
+		if(_grid.ZGetValue(name, out var s1, false, true)) return s1 ?? "";
+		return null;
+	}
+
+	bool _GetGrid()
 	{
 		var g = _grid;
+
+		//test script
+		FileNode fts = null;
+		if(g.ZGetValue("testScript", out var sts, true, true)) {
+			fts = _f.FindRelative(sts, false);
+			if(fts == null) { AuDialog.ShowError("Test script not found", sts); return false; }
+		}
+		_f.TestScript = fts;
+
+		//info: _Get returns null if hidden
+
 		_meta.runMode = _Get("runMode");
 		_meta.ifRunning = _Get("ifRunning");
 		_meta.uac = _Get("uac");
 		_meta.prefer32bit = _Get("prefer32bit");
 		_meta.config = _Get("config");
+
 		_meta.debug = _Get("debug");
 		_meta.warningLevel = _Get("warningLevel");
-		_meta.disableWarnings = _Get("disableWarnings");
+		_meta.noWarnings = _Get("noWarnings");
 		_meta.define = _Get("define");
 		_meta.preBuild = _Get("preBuild");
 		_meta.postBuild = _Get("postBuild");
+
 		_meta.outputPath = _Get("outputPath");
 		_meta.outputType = _Get("outputType");
 		_meta.icon = _Get("icon");
@@ -174,47 +271,25 @@ partial class EdCodeFileProperties : Form_
 		_meta.sign = _Get("sign");
 		_meta.xmlDoc = _Get("xmlDoc");
 
-		string _Get(string name)
-		{
-			if(g.ZGetValue(name, out var s1, false)) return s1;
-			return null;
+		if(_role != _Role.classFile) {
+			switch(_role) {
+			case _Role.editorExtension:
+				_meta.runMode = "editorThread";
+				break;
+			case _Role.exeProgram:
+			case _Role.classLibrary:
+				if(Empty(_meta.outputPath)) _meta.outputPath = _role == _Role.exeProgram ? @"%Folders.Workspace%\bin" : @"%Folders.ThisApp%\Libraries";
+				break;
+			}
+			if(_isCS && _meta.outputType == null) _meta.outputType = _role == _Role.classLibrary ? "dll" : "app";
+			if(_meta.config == "") _meta.config = "App.config";
+			var name = Path_.GetFileName(_f.Name, true);
+			if(_meta.xmlDoc == "") _meta.xmlDoc = name + ".xml";
+			if(_meta.manifest == "") _meta.manifest = name + ".exe.manifest";
 		}
+
+		return true;
 	}
-
-	//void _FillGrid2()
-	//{
-	//	var g = _grid2;
-	//	g.ZAddHeaderRow("Files");
-	//	_AddList("r", _meta.r);
-	//	_AddList("library", _meta.library);
-	//	_AddList("c", _meta.c);
-	//	_AddList("resource", _meta.resource);
-
-	//	g.ZAutoSize();
-
-	//	void _AddList(string name, List<string> a)
-	//	{
-	//		g.ZAdd(null, name, a != null ? string.Join("\r\n", a) + "\r\n" : "\r\n", null);
-	//	}
-	//}
-
-	//void _GetGrid2()
-	//{
-	//	var g = _grid2;
-	//	_meta.r = _Get("r");
-	//	_meta.library = _Get("library");
-	//	_meta.c = _Get("c");
-	//	_meta.resource = _Get("resource");
-
-	//	List<string> _Get(string name)
-	//	{
-	//		if(g.ZGetValue(name, out var s1, false)) {
-	//			var a = s1.SplitLines_(true);
-	//			if(a.Length != 0) return new List<string>(a);
-	//		}
-	//		return null;
-	//	}
-	//}
 
 	private void _bOK_Click(object sender, EventArgs e)
 	{
@@ -222,7 +297,7 @@ partial class EdCodeFileProperties : Form_
 		var t = Panels.Editor.ActiveDoc.ST;
 		var code = t.GetText();
 		MetaComments.FindMetaComments(code, out int endOf);
-		_GetGrid();
+		if(!_GetGrid()) { this.DialogResult = DialogResult.None; return; };
 		//_GetGrid2();
 		var s = _meta.Format(endOf == 0);
 		if(s.Length == 0) {
@@ -230,7 +305,8 @@ partial class EdCodeFileProperties : Form_
 			else if(code.EqualsAt_(endOf, "\r\n\r\n")) endOf += 4;
 			else if(code.EqualsAt_(endOf, "\r\n")) endOf += 2;
 		}
-		t.ReplaceRange(0, endOf, s, true, true);
+		if(s.Length == endOf && s == t.RangeText(0, endOf, SciFromTo.ToIsChars)) return;
+		t.ReplaceRange(0, endOf, s, SciFromTo.ToIsChars);
 	}
 
 	private void _bAddRefNet_Click(object sender, EventArgs e) => _AddReference(true);
@@ -254,13 +330,19 @@ partial class EdCodeFileProperties : Form_
 	}
 
 	private void _bAddLib_Click(object sender, EventArgs e)
-		=> _AddLibClassResource(f => (f.IsProjectFolder(out var fm) && fm.IsLibrary) ? fm : null, _meta.library, "class library projects", sender);
+		=> _AddLibClassResource(
+			f => (f.IsProjectFolder(out var fm) && f != _fProjectFolder && fm.GetCsFileType() == FileNode.ECsType.Library) ? fm : null,
+			_meta.library, "class library projects", sender);
 
 	private void _bAddClass_Click(object sender, EventArgs e)
-		=> _AddLibClassResource(f => (f.IsCS && !f.FindProject(out _, out _)) ? f : null, _meta.c, "class files", sender);
+		=> _AddLibClassResource(
+			f => (_isCS && !f.FindProject(out _, out _) && f != _f && f.GetCsFileType() != FileNode.ECsType.App) ? f : null,
+			_meta.c, "class files", sender);
 
 	private void _bAddResource_Click(object sender, EventArgs e)
-		=> _AddLibClassResource(f => !(f.IsFolder || f.IsCodeFile) ? f : null, _meta.resource, "resource files", sender);
+		=> _AddLibClassResource(
+			f => !(f.IsFolder || f.IsCodeFile) ? f : null,
+			_meta.resource, "resource files", sender);
 
 	void _AddLibClassResource(Func<FileNode, FileNode> filter, List<string> metaList, string ifNone, object button)
 	{
@@ -273,30 +355,10 @@ partial class EdCodeFileProperties : Form_
 		}
 		if(a.Count > 0) {
 			a.Sort();
-			if(_ddList == null) _ddList = new DropDownList { OnSelected = dd => metaList.Add(dd.ResultString) };
-			_ddList.Items = a.ToArray();
-			_ddList.Show(button as Control);
+			var dd = new PopupList { ComboBoxAnimation = true };
+			dd.Selected += o => metaList.Add(o.ResultItem as string);
+			dd.Items = a.ToArray();
+			dd.Show(button as Control);
 		} else AuDialog.Show($"No {ifNone} found in this workspace");
 	}
-	DropDownList _ddList;
-
-	//void _AddLibClassResource(Func<FileNode, FileNode> filter, List<string> metaList, string ifNone)
-	//{
-	//	var a = new List<(FileNode, string)>();
-	//	foreach(var f in Model.Root.Descendants()) {
-	//		var f2 = filter(f);
-	//		if(f2 != null) a.Add((f2, f2.ItemPath));
-	//	}
-	//	var m = new AuMenu();
-	//	if(a.Count > 0) {
-	//		a.Sort((v1, v2) => string.Compare(v1.Item2, v2.Item2, StringComparison.OrdinalIgnoreCase));
-	//		foreach(var v in a) {
-	//			var f = v.Item1;
-	//			var path = v.Item2;
-	//			m[path, f.GetIcon()] = o => metaList.Add(path);
-	//			if(metaList.Contains(path, StringComparer.OrdinalIgnoreCase)) m.LastMenuItem.Enabled = false;
-	//		}
-	//	} else m.Add($"No {ifNone} found in this workspace", null).Enabled = false;
-	//	m.Show(this);
-	//}
 }

@@ -167,6 +167,27 @@ namespace Au.Controls
 		}
 
 		/// <summary>
+		/// Depending on flags, converts <i>from</i> and/or <i>to</i> from characters to UTF-8 bytes etc.
+		/// </summary>
+		/// <param name="from"></param>
+		/// <param name="to">If -1, and no <b>ToIsLength</b>, uses <see cref="TextLengthBytes"/>.</param>
+		/// <param name="flags"></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		void _NormalizeRange(ref int from, ref int to, SciFromTo flags)
+		{
+			bool isLen = flags.Has_(SciFromTo.ToIsLength);
+			if(from < 0 || to < (isLen ? 0 : -1) || (!isLen && to < from)) throw new ArgumentOutOfRangeException();
+			if(flags.Has_(SciFromTo.FromIsChars)) from = CountBytesFromChars(from);
+			if(to < 0) to = TextLengthBytes;
+			else if(flags.Has_(SciFromTo.ToIsChars)) {
+				if(isLen) to = CountBytesFromChars(from, to);
+				else to = CountBytesFromChars(to);
+			} else {
+				if(isLen) to += from;
+			}
+		}
+
+		/// <summary>
 		/// Converts UTF-16 position to UTF-8 position.
 		/// Note: currently actually UTF-32. Will need to replace SCI_POSITIONRELATIVE with SCI_POSITIONRELATIVECODEUNITS.
 		/// </summary>
@@ -465,25 +486,6 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Gets range text.
-		/// </summary>
-		/// <param name="from">Start index (UTF-8 bytes). If less than 0, uses 0.</param>
-		/// <param name="to">End index (UTF-8 bytes). If less than 0, uses TextLengthBytes.</param>
-		public string RangeText(int from, int to)
-		{
-			if(from < 0) from = 0;
-			if(to < 0) to = TextLengthBytes;
-			Debug.Assert(to >= from);
-			int n = to - from; if(n <= 0) return "";
-			fixed (byte* b = LibByte(n)) {
-				var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = b };
-				int r = Call(SCI_GETTEXTRANGE, 0, &tr);
-				Debug.Assert(r == n);
-				return _FromUtf8(b, r);
-			}
-		}
-
-		/// <summary>
 		/// Gets line height.
 		/// Currently all lines are the same height.
 		/// </summary>
@@ -582,17 +584,35 @@ namespace Au.Controls
 		/// Does not parse tags.
 		/// </summary>
 		/// <param name="s">Replacement text. Can be null.</param>
-		/// <param name="pos">Start index. By default UTF-8 bytes.</param>
-		/// <param name="length">Length. By default UTF-8 bytes.</param>
-		/// <param name="posChars">pos is in UTF-16 characters.</param>
-		/// <param name="lengthChars">length is in UTF-16 characters.</param>
-		public void ReplaceRange(int pos, int length, string s, bool posChars = false, bool lengthChars = false)
+		/// <param name="from">Start index. By default UTF-8 bytes.</param>
+		/// <param name="to">End index. By default UTF-8 bytes. If -1, uses control text length.</param>
+		/// <param name="flags"></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public void ReplaceRange(int from, int to, string s, SciFromTo flags = 0)
 		{
 			using(new _NoReadonly(this)) {
-				if(posChars) pos = CountBytesFromChars(pos);
-				int end = lengthChars ? CountBytesFromChars(pos, length) : pos + length;
-				Call(SCI_SETTARGETRANGE, pos, end);
+				_NormalizeRange(ref from, ref to, flags);
+				Call(SCI_SETTARGETRANGE, from, to);
 				SetString(SCI_REPLACETARGET, 0, s, true);
+			}
+		}
+
+		/// <summary>
+		/// Gets range text.
+		/// </summary>
+		/// <param name="from">Start index. By default UTF-8 bytes.</param>
+		/// <param name="to">End index. By default UTF-8 bytes. If -1, uses control text length.</param>
+		/// <param name="flags"></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public string RangeText(int from, int to, SciFromTo flags = 0)
+		{
+			_NormalizeRange(ref from, ref to, flags);
+			int n = to - from; if(n == 0) return "";
+			fixed (byte* b = LibByte(n)) {
+				var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = b };
+				int r = Call(SCI_GETTEXTRANGE, 0, &tr);
+				Debug.Assert(r == n);
+				return _FromUtf8(b, r);
 			}
 		}
 
@@ -806,5 +826,14 @@ namespace Au.Controls
 				File_.Save(file, temp => { using(var fs = File.OpenWrite(temp)) { fs.Write(b, 0, len); } });
 			}
 		}
+	}
+
+	[Flags]
+	public enum SciFromTo
+	{
+		FromIsChars = 1,
+		ToIsChars = 2,
+		BothChars = 3,
+		ToIsLength = 4,
 	}
 }

@@ -59,20 +59,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Au\ScrollableControl_.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Tree\TVAcc.cs">
       <SubType>Component</SubType>
     </Compile>
     <None Include="Properties\Au.pfx" />
     <None Include="removed\GifDecoder.cs" />
     <None Include="removed\PerformanceAnalyzer.cs" />
-    <Compile Include="ResourceHelper.cs" />
-    <Compile Include="StringCollectionEditor.cs" />
+    <Compile Include="Util\ResourceHelper.cs" />
+    <Compile Include="Util\StringCollectionEditor.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="BitmapHelper.cs" />
+    <Compile Include="Util\BitmapHelper.cs" />
     <None Include="removed\Threading\AbortableThreadPool.cs" />
     <None Include="removed\Threading\WorkItemStatus.cs" />
     <None Include="removed\Threading\WorkItem.cs" />
@@ -87,7 +90,7 @@
     <Compile Include="Tree\NodeControls\NodeDecimalTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="NumericTextBox.cs">
+    <Compile Include="Tree\NodeControls\NumericTextBox.cs">
       <SubType>Component</SubType>
     </Compile>
     <None Include="removed\ExpandingIcon.cs">
@@ -119,7 +122,7 @@
       <SubType>Component</SubType>
     </Compile>
     <None Include="removed\IncrementalSearch.cs" />
-    <Compile Include="TextHelper.cs" />
+    <Compile Include="Util\TextHelper.cs" />
     <Compile Include="Tree\TreeViewAdv.Properties.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -217,10 +220,6 @@
     <ProjectReference Include="..\..\Au\Au.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
       <Name>Au</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Controls\Au.Controls.csproj">
-      <Project>{4c53ea3e-d770-41ac-9a19-381b840cd14a}</Project>
-      <Name>Au.Controls</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

@@ -67,7 +67,7 @@ namespace Au
 				if(contains is string s) { //accessible object. Format: "'role' name" or "name".
 					if(s.Length == 0) return;
 					string role = null, name = s;
-					if(s.RegexMatch_(@"^'(.+?)?' (.+)?$", out var m)) { role = m[1].Value; name = m[2].Value; }
+					if(s.RegexMatch_(@"^'(.+?)?' ((?s).+)?$", out var m)) { role = m[1].Value; name = m[2].Value; }
 					_contains = new Acc.Finder(role, name, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
 				} else if(contains is Acc.Finder || contains is ChildFinder || contains is System.Drawing.Image) _contains = contains;
 				else throw new ArgumentException("Bad type.", nameof(contains));

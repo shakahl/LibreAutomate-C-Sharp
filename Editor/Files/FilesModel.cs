@@ -159,13 +159,13 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 
 	#region Au.Compiler.IWorkspaceFiles
 
-	public object IcfCompilerContext { get; set; }
+	public object IwfCompilerContext { get; set; }
 
-	public string IcfFilesDirectory => FilesDirectory;
+	public string IwfFilesDirectory => FilesDirectory;
 
-	public string IcfWorkspaceDirectory => WorkspaceDirectory;
+	public string IwfWorkspaceDirectory => WorkspaceDirectory;
 
-	public Au.Compiler.IWorkspaceFile IcfFindById(uint id) => FindById(id);
+	public Au.Compiler.IWorkspaceFile IwfFindById(uint id) => FindById(id);
 
 	#endregion
 
@@ -752,7 +752,6 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public void ImportFiles(string[] a = null)
 	{
 		if(a == null) {
-			Print("Info: To import files, you can also drag and drop from a folder window.");
 			var d = new OpenFileDialog();
 			d.Multiselect = true;
 			d.Title = "Import files to the workspace";

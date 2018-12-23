@@ -26,7 +26,7 @@ class EdMetaCommentsParser
 {
 	FileNode _fn;
 	public string runMode, ifRunning, uac, prefer32bit, config,
-		debug, warningLevel, disableWarnings, define, preBuild, postBuild,
+		debug, warningLevel, noWarnings, define, preBuild, postBuild,
 		outputPath, outputType, icon, manifest, resFile, sign, xmlDoc;
 	List<string> _r, _library, _c, _resource;
 
@@ -56,7 +56,7 @@ class EdMetaCommentsParser
 		case "config": config = value; break;
 		case "debug": debug = value; break;
 		case "warningLevel": warningLevel = value; break;
-		case "disableWarnings": disableWarnings = value; break;
+		case "noWarnings": noWarnings = value; break;
 		case "define": define = value; break;
 		case "preBuild": preBuild = value; break;
 		case "postBuild": postBuild = value; break;
@@ -97,7 +97,7 @@ class EdMetaCommentsParser
 		_Append("config", config, true);
 		_Append("debug", debug);
 		_Append("warningLevel", warningLevel);
-		_Append("disableWarnings", disableWarnings);
+		_Append("noWarnings", noWarnings);
 		_Append("define", define);
 		_Append("preBuild", preBuild, true);
 		_Append("postBuild", postBuild, true);
@@ -119,7 +119,7 @@ class EdMetaCommentsParser
 
 		void _Append(string name, string value, bool relativePath = false)
 		{
-			if(!Empty(value) && value.IndexOf('|') < 0) {
+			if(value != null) {
 				if(relativePath && dir != null && value.StartsWithI_(dir)) value = value.Substring(dir.Length);
 				b.Append(name).Append(' ').AppendLine(value);
 			}

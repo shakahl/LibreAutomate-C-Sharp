@@ -248,7 +248,7 @@ namespace Aga.Controls.Tree
 			Size textSize = TextRenderer.MeasureText(gr, Header, font, innerBounds.Size, _baseHeaderFlags);
 
 			if(SortOrder != SortOrder.None) {
-				int tw = Math.Min(textSize.Width, innerBounds.Size.Width);
+				int tw = Math.Min(textSize.Width, innerBounds.Width);
 
 				int x = 0;
 				if(TextAlign == HorizontalAlignment.Left)

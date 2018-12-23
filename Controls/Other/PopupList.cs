@@ -37,7 +37,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <remarks>
 		/// Must be set before calling <b>Show</b>.
-		/// Item type can be string or other type. Its <b>ToString</b> is called to get display text.
+		/// Item type can be string or other type. Its <b>ToString</b> is called to get display text. Items can be of different types.
 		/// Item type can implement <see cref="IPopupListItem"/> interface if need checkboxes, colors, etc.
 		/// </remarks>
 		public object[] Items { get; set; }
@@ -171,8 +171,7 @@ namespace Au.Controls
 			_ = PopupWindow; //auto-creates _w and _c objects if null or disposed
 
 			if(MultiShow && _c.IsHandleCreated) {
-				var n0 = _c.Root.Children.FirstOrDefault();//TODO
-				_c.SelectedNode = n0; //make CurrentNode=the first node and reset vertical scrollbar. Never mind: does not reset horizontal scrollbar.
+				if(_c.Root.TryGetFirstChild(out var n0)) _c.SelectedNode = n0; //make CurrentNode=the first node and reset vertical scrollbar. Never mind: does not reset horizontal scrollbar.
 				_c.ClearSelection();
 			}
 
@@ -197,12 +196,14 @@ namespace Au.Controls
 			bool hasVertSB = false;
 
 			int width = 0, height = 2;
-			var font = _w.FontRegular;
+			Font fontNormal = _w.Font;
 			foreach(var v in Items) {
+				var e = v as IPopupListItem;
+				var font = (e?.BoldFont ?? false) ? _w.FontBold : fontNormal;
 				var z = TextRenderer.MeasureText(v.ToString(), font);
 				z.Width += _c._ccText.LeftMargin;
 				z.Height += 2; if(z.Height < 17) z.Height = 17;
-				if(v is IPopupListItem e) {
+				if(e != null) {
 					if(e.CheckType != default) z.Width += NodeCheckBox.ImageSize + _c._ccCheck.LeftMargin;
 					var im = e.Icon;
 					if(im != null) {
@@ -227,6 +228,7 @@ namespace Au.Controls
 			r.Y = down ? ra.Bottom : ra.Top - height;
 			_w.Bounds = r;
 
+			_c.Model = null;
 			_c.Model = _c;
 
 			_w.ShowPopup(anchor, !down);
@@ -264,8 +266,8 @@ namespace Au.Controls
 				break;
 			case Api.WM_SYSKEYDOWN: _Close(); break;
 			case Api.WM_LBUTTONDOWN:
-			case Api.WM_RBUTTONDOWN:
 			case Api.WM_NCLBUTTONDOWN:
+			case Api.WM_RBUTTONDOWN:
 			case Api.WM_NCRBUTTONDOWN:
 			case Api.WM_MBUTTONDOWN:
 			case Api.WM_NCMBUTTONDOWN:
@@ -322,25 +324,32 @@ namespace Au.Controls
 			var node = e.Node;
 			if(node.Tag is IPopupListItem x) {
 				if(x.Disabled) return;
-				if(x.CheckType != default) {
-					bool box = e.Control is NodeCheckBox;
-					switch(x.CheckType) {
-					case PLCheckType.Box:
-						if(!box) break;
-						return;
-					case PLCheckType.Row:
-						if(!box) _ToggleCheckbox(node, x);
-						return;
-					}
+				switch(x.CheckType) {
+				case PLCheckType.Row:
+				case PLCheckType.Box when e.Control is NodeCheckBox:
+					_ToggleCheckbox(node, x);
+					return;
 				}
 			}
 			_Selected(node, false);
 		}
 
-		void _ToggleCheckbox(TreeNodeAdv n, IPopupListItem x)
+		void _ToggleCheckbox(TreeNodeAdv node, IPopupListItem x)
 		{
-			x.Checked ^= true;
-			_c.UpdateNode(n);
+			int group = x.Group;
+			bool check = !x.Checked;
+			if(!check && group < 0) return;
+			x.Checked = check;
+			_c.UpdateNode(node);
+			if(group != 0 && check && Items != null) {
+				foreach(var v in Items) {
+					if(v != x && v is IPopupListItem y && y.Group == group && y.Checked) {
+						y.Checked = false;
+						var n2 = _c.FindNodeByTag(v);
+						if(n2 != null) _c.UpdateNode(n2);
+					}
+				}
+			}
 		}
 
 		class _Window : Form
@@ -351,8 +360,7 @@ namespace Au.Controls
 			bool _showedOnce;
 			bool _up;
 
-			public Font FontRegular => _font;
-			public Font FontBold => _fontBold ?? (_fontBold = Util.SystemFonts_.Bold);
+			public Font FontBold => _fontBold ?? (_fontBold = new Font(Font, FontStyle.Bold)); //clone not _font, because caller may change Font
 
 			public _Window(PopupList p)
 			{
@@ -475,6 +483,7 @@ namespace Au.Controls
 			internal NodeCheckBox _ccCheck;
 			internal NodeIcon _ccIcon;
 			internal NodeTextBox _ccText;
+			ToolTip _tooltip;
 
 			public _Control(PopupList p)
 			{
@@ -492,11 +501,8 @@ namespace Au.Controls
 
 				_ccCheck = new NodeCheckBox();
 				_ccCheck.LeftMargin = 4;
-				_ccCheck.EditEnabled = true;
 				_ccCheck.IsVisibleValueNeeded = o => o.Tag is IPopupListItem e && e.CheckType != default;
 				_ccCheck.ValueNeeded = o => o.Tag is IPopupListItem e && e.Checked ? CheckState.Checked : default;
-				_ccCheck.ValuePushed = (o, v) => { if(o.Tag is IPopupListItem e) e.Checked = (CheckState)v != default; };
-				_ccCheck.IsEditEnabledValueNeeded = o => o.Tag is IPopupListItem e && e.Disabled ? false : true;
 				NodeControls.Add(_ccCheck);
 
 				_ccIcon = new NodeIcon();
@@ -513,28 +519,34 @@ namespace Au.Controls
 				_ccText.ValueNeeded = node => node.Tag;
 				_ccText.FontNeeded = node => (node.Tag is IPopupListItem x && x.BoldFont) ? _p._w.FontBold : null;
 				_ccText.DrawText += _ccText_DrawText;
-				_ccText.NeedDrawTextEvent = node => node.Tag is IPopupListItem x && (x.TextColor != default || (x.Disabled && x.BackgroundBrush == null));
+				_ccText.NeedDrawTextEvent = node => node.Tag is IPopupListItem x && (x.TextColor != default || (x.Disabled && x.BackColor == default));
 				NodeControls.Add(_ccText);
 
-#if false//TODO
-			UseColumns = true;
-			var _columnName = new TreeColumn("Name", 200);
-			this.Columns.Add(_columnName);
-			_ccText.ParentColumn = _columnName;
+#if false //test column header and multiple columns
+				UseColumns = true;
+				var _columnName = new TreeColumn("Name", 50);
+				this.Columns.Add(_columnName);
+				_ccText.ParentColumn = _columnName;
 
-			//Timer_.Every(1000, () => AutoSizeColumn(_columnName));
+				//var _cc2 = new NodeTextBox();
+				//_cc2.ValueNeeded = node => "2";
+				//NodeControls.Add(_cc2);
+				//var _col2 = new TreeColumn("Two", 50);
+				//this.Columns.Add(_col2);
+				//_cc2.ParentColumn = _col2;
 #endif
-
 			}
+
+			#region drawing
 
 			protected override void OnRowDraw(PaintEventArgs e, TreeNodeAdv node, ref DrawContext context, int row, Rectangle rowRect)
 			{
 				//if(context.DrawSelection == DrawSelectionMode.Inactive) context.DrawSelection = DrawSelectionMode.Active;
 
 				if(node.Tag is IPopupListItem x) {
-					if(x.BackgroundBrush != null) {
+					if(x.BackColor != default) {
 						var r = new Rectangle(OffsetX, rowRect.Y, ClientSize.Width, rowRect.Height);
-						e.Graphics.FillRectangle(x.BackgroundBrush, r);
+						using(var brush = new SolidBrush((Color)x.BackColor)) e.Graphics.FillRectangle(brush, r);
 					}
 				}
 
@@ -546,42 +558,63 @@ namespace Au.Controls
 				var node = e.Node;
 				if(node.Tag is IPopupListItem x) {
 					if(x.TextColor != default && e.Context.DrawSelection == DrawSelectionMode.None) e.TextColor = (Color)x.TextColor;
-					else if(x.Disabled && x.BackgroundBrush == null) e.TextColor = SystemColors.GrayText;
+					else if(x.Disabled && x.BackColor == default) e.TextColor = SystemColors.GrayText;
 				}
 			}
 
-			//protected override void WndProc(ref Message m)
-			//{
-			//	//switch(m.Msg) {
-			//	//case Api.WM_MOUSEMOVE:
-			//	//	return;
-			//	//}
+			#endregion
 
-			//	base.WndProc(ref m);
-			//}
+			#region mouse move-selection and tooltip
 
 			protected override void OnMouseMove(MouseEventArgs e)
 			{
 				var n = this.GetNodeAt(e.Location);
-				if(n?.Tag is IPopupListItem x && x.Disabled) n = null;
-				SelectedNode = n;
+				bool nodeChanged = n != _mouseNode; _mouseNode = n;
+				string tooltipText = null;
+				if(n != null) {
+					if(n.Tag is IPopupListItem x) {
+						tooltipText = x.TooltipText;
+						if(x.Disabled) n = null;
+					}
+					SelectedNode = n;
+				}
+				if(nodeChanged) _SetTooltip(tooltipText);
 				base.OnMouseMove(e);
 			}
+			TreeNodeAdv _mouseNode;
+
+			void _SetTooltip(string text)
+			{
+				if(!Empty(text)) {
+					if(_tooltip == null) _tooltip = new ToolTip { IsBalloon = true, AutoPopDelay = 30000, ShowAlways = true };
+					_tooltip.Active = false;
+					_tooltip.SetToolTip(this, text);
+					_tooltip.Active = true;
+				} else
+					_tooltip?.SetToolTip(this, null);
+
+				//info: it seems the tooltip window is automatically destroyed when this control destroyed.
+			}
+
+			protected override void OnMouseLeave(EventArgs e)
+			{
+				_mouseNode = null;
+				base.OnMouseLeave(e);
+			}
+
+			#endregion
+
+			#region ITreeModel
 
 			public IEnumerable GetChildren(object nodeTag)
 			{
-				//if(nodeTag != null) return new string[] { "Four", "Five 123456789" };
 				return _p.Items;
 			}
 
 			public bool IsLeaf(object nodeTag)
 			{
-				//Print(nodeTag, _IsFolder(nodeTag));
-				//return !_IsFolder(nodeTag); //TODO
 				return true;
 			}
-
-			//bool _IsFolder(object nodeTag) => nodeTag as string == "Folder";
 
 #pragma warning disable 67
 			public event EventHandler<TreeModelEventArgs> NodesChanged;
@@ -589,23 +622,70 @@ namespace Au.Controls
 			public event EventHandler<TreeModelEventArgs> NodesRemoved;
 			public event EventHandler<TreePathEventArgs> StructureChanged;
 #pragma warning restore 67
-			//TODO: why the control uses these events?
-			//TODO: why the control uses so much memory? See QM2 macro "TreeViewAdv memory".
+
+			#endregion
 		}
 	}
 
+	/// <summary>
+	/// Can be used for <see cref="PopupList.Items"/> when need row colors, icon, checkbox, tooltip, etc.
+	/// </summary>
+	/// <remarks>
+	/// Most of properties in this interface have only 'get' function, but your class that implement it also can add 'set' functions. Example: <c>public bool Disabled { get; set; }</c>. Only the <b>Checked</b> property has 'set' function, and the popup list calls it when the user changes checkbox state.
+	/// </remarks>
 	public interface IPopupListItem
 	{
-		string TooltipText { get; set; }
-		Image Icon { get; set; }
-		Brush BackgroundBrush { get; set; }
-		ColorInt TextColor { get; set; } //not Color, to save memory
-		PLCheckType CheckType { get; set; }
+		/// <summary>
+		/// Balloon tooltip text.
+		/// </summary>
+		string TooltipText { get; }
+
+		/// <summary>
+		/// Row icon.
+		/// </summary>
+		Image Icon { get; }
+
+		/// <summary>
+		/// Row background color.
+		/// </summary>
+		ColorInt BackColor { get; }
+
+		/// <summary>
+		/// Text color.
+		/// </summary>
+		ColorInt TextColor { get; }
+
+		/// <summary>
+		/// Adds checkbox.
+		/// If <b>Row</b>, the row is used to toggle checkbox and not to select the item.
+		/// If <b>Box</b>, the row is used to toggle checkbox or select the item, depending where you click.
+		/// In any case the checkbox also can be toggled with the Space key.
+		/// </summary>
+		PLCheckType CheckType { get; }
+
+		/// <summary>
+		/// The checkbox is checked.
+		/// Changed when the user changes checkbox state.
+		/// </summary>
 		bool Checked { get; set; }
-		bool Disabled { get; set; }
-		bool BoldFont { get; set; }
-		//bool ItalicFont { get; set; }
-		int Group { get; set; }
+
+		/// <summary>
+		/// The user cannot select, check or uncheck the row.
+		/// Also its text is gray, unless is used <see cref="TextColor"/> or <see cref="BackColor"/>.
+		/// </summary>
+		bool Disabled { get; }
+
+		/// <summary>
+		/// Draw item text using bold font.
+		/// </summary>
+		bool BoldFont { get; }
+
+		/// <summary>
+		/// Checkbox group id.
+		/// If not 0, when the user makes the checkbox checked, other items that have the same group id are automatically unchecked.
+		/// If negative, the user cannot uncheck the checked item.
+		/// </summary>
+		short Group { get; }
 	}
 
 	/// <summary>
@@ -613,8 +693,19 @@ namespace Au.Controls
 	/// </summary>
 	public enum PLCheckType : byte
 	{
+		/// <summary>
+		/// No checkbox.
+		/// </summary>
 		None,
+
+		/// <summary>
+		/// The row is used to toggle checkbox and not to select the item.
+		/// </summary>
 		Row,
+
+		/// <summary>
+		/// The row is used to toggle checkbox or select the item, depending where you click.
+		/// </summary>
 		Box,
 	}
 }

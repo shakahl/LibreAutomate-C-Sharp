@@ -1,16 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
+using static Au.NoClass;
 
 namespace Aga.Controls.Tree
 {
 	[Serializable]
-	public sealed partial class TreeNodeAdv :ISerializable
+	public sealed partial class TreeNodeAdv : ISerializable
 	{
 		#region NodeCollection
-		public class NodeCollection :Collection<TreeNodeAdv>
+		public class NodeCollection : Collection<TreeNodeAdv>
 		{
 			private TreeNodeAdv _owner;
 
@@ -105,33 +107,27 @@ namespace Aga.Controls.Tree
 		#region Properties
 
 		private TreeViewAdv _tree;
-		public TreeViewAdv Tree
-		{
+		public TreeViewAdv Tree {
 			get { return _tree; }
 		}
 
 		private int _row;
-		public int Row
-		{
+		public int Row {
 			get { return _row; }
 			internal set { _row = value; }
 		}
 
 		private int _index = -1;
-		public int Index
-		{
-			get
-			{
+		public int Index {
+			get {
 				return _index;
 			}
 		}
 
 		private bool _isSelected;
-		public bool IsSelected
-		{
+		public bool IsSelected {
 			get { return _isSelected; }
-			set
-			{
+			set {
 				if(_isSelected != value) {
 					if(Tree.IsMyNode(this)) {
 						//_tree.OnSelectionChanging
@@ -154,10 +150,8 @@ namespace Aga.Controls.Tree
 		/// <summary>
 		/// Returns true if all parent nodes of this node are expanded.
 		/// </summary>
-		internal bool IsVisible
-		{
-			get
-			{
+		internal bool IsVisible {
+			get {
 				TreeNodeAdv node = _parent;
 				while(node != null) {
 					if(!node.IsExpanded)
@@ -169,25 +163,21 @@ namespace Aga.Controls.Tree
 		}
 
 		private bool _isLeaf;
-		public bool IsLeaf
-		{
+		public bool IsLeaf {
 			get { return _isLeaf; }
 			internal set { _isLeaf = value; }
 		}
 
 		private bool _isExpandedOnce;
-		public bool IsExpandedOnce
-		{
+		public bool IsExpandedOnce {
 			get { return _isExpandedOnce; }
 			internal set { _isExpandedOnce = value; }
 		}
 
 		private bool _isExpanded;
-		public bool IsExpanded
-		{
+		public bool IsExpanded {
 			get { return _isExpanded; }
-			set
-			{
+			set {
 				if(value)
 					Expand();
 				else
@@ -201,15 +191,12 @@ namespace Aga.Controls.Tree
 		}
 
 		private TreeNodeAdv _parent;
-		public TreeNodeAdv Parent
-		{
+		public TreeNodeAdv Parent {
 			get { return _parent; }
 		}
 
-		public int Level
-		{
-			get
-			{
+		public int Level {
+			get {
 				if(_parent == null)
 					return 0;
 				else
@@ -217,10 +204,8 @@ namespace Aga.Controls.Tree
 			}
 		}
 
-		public TreeNodeAdv PreviousNode
-		{
-			get
-			{
+		public TreeNodeAdv PreviousNode {
+			get {
 				if(_parent != null) {
 					int index = Index;
 					if(index > 0)
@@ -230,121 +215,127 @@ namespace Aga.Controls.Tree
 			}
 		}
 
-		public TreeNodeAdv NextNode
-		{
-			get
-			{
+		public TreeNodeAdv NextNode {
+			get {
 				if(_parent != null) {
 					int index = Index;
-					if(index < _parent.Nodes.Count - 1)
+					if(index < _parent.ChildCount - 1)
 						return _parent.Nodes[index + 1];
 				}
 				return null;
 			}
 		}
 
-		internal TreeNodeAdv BottomNode
-		{
-			get
-			{
-				TreeNodeAdv parent = this.Parent;
-				if(parent != null) {
-					if(parent.NextNode != null)
-						return parent.NextNode;
-					else
-						return parent.BottomNode;
-				}
+		internal TreeNodeAdv BottomNode {
+			get {
+				if(_parent != null) return _parent.NextNode ?? _parent.BottomNode;
 				return null;
 			}
 		}
 
-		internal TreeNodeAdv NextVisibleNode
-		{
-			get
-			{
-				if(IsExpanded && Nodes.Count > 0)
-					return Nodes[0];
-				else {
-					TreeNodeAdv nn = NextNode;
-					if(nn != null)
-						return nn;
-					else
-						return BottomNode;
-				}
+		internal TreeNodeAdv NextVisibleNode {
+			get {
+				if(IsExpanded && TryGetFirstChild(out var n)) return n;
+				return NextNode ?? BottomNode;
 			}
 		}
 
-		public bool CanExpand
-		{
-			get
-			{
-				return (Nodes.Count > 0 || (!IsExpandedOnce && !IsLeaf));
+		public bool CanExpand {
+			get {
+				return (HasChildren || (!IsExpandedOnce && !IsLeaf));
 			}
 		}
 
 		private object _tag;
-		public object Tag
-		{
+		public object Tag {
 			get { return _tag; }
 		}
 
 		private Collection<TreeNodeAdv> _nodes;
-		internal Collection<TreeNodeAdv> Nodes
+		internal Collection<TreeNodeAdv> Nodes => _nodes;
+
+		//au
+		#region au
+		class _EmptyNodeCollection : Collection<TreeNodeAdv>
 		{
-			get { return _nodes; }
+#if DEBUG
+			protected override void InsertItem(int index, TreeNodeAdv item)
+			{
+				Debug.Assert(false);
+			}
+#endif
+		}
+		static _EmptyNodeCollection s_emptyNodes = new _EmptyNodeCollection();
+
+		internal Collection<TreeNodeAdv> GetOrCreateNodes()
+		{
+			//if(_nodes == s_emptyColl) Print("GetOrCreateNodes");
+			if(_nodes == s_emptyNodes) _nodes = new NodeCollection(this);
+			return _nodes;
 		}
 
-		//au: removed _children to save memory
-		//private ReadOnlyCollection<TreeNodeAdv> _children;
-		public ReadOnlyCollection<TreeNodeAdv> Children
+		public int ChildCount => _nodes.Count;
+
+		internal bool HasChildren => _nodes.Count != 0;
+
+		/// <summary>
+		/// If has children, gets first child node and returns true.
+		/// </summary>
+		/// <param name="node"></param>
+		public bool TryGetFirstChild(out TreeNodeAdv node)
 		{
-			get
-			{
+			if(_nodes.Count == 0) { node = null; return false; }
+			node = _nodes[0]; return true;
+		}
+
+		//private ReadOnlyCollection<TreeNodeAdv> _children;
+		public ReadOnlyCollection<TreeNodeAdv> Children {
+			get {
 				//return _children;
+				if(!HasChildren) return s_emptyChildren;
 				return new ReadOnlyCollection<TreeNodeAdv>(_nodes);
 			}
 		}
+		static ReadOnlyCollection<TreeNodeAdv> s_emptyChildren = new ReadOnlyCollection<TreeNodeAdv>(new List<TreeNodeAdv>());
+		#endregion
 
 		private int? _rightBounds;
-		internal int? RightBounds
-		{
+		internal int? RightBounds {
 			get { return _rightBounds; }
 			set { _rightBounds = value; }
 		}
 
 		private int? _height;
-		internal int? Height
-		{
+		internal int? Height {
 			get { return _height; }
 			set { _height = value; }
 		}
 
 		private bool _isExpandingNow;
-		internal bool IsExpandingNow
-		{
+		internal bool IsExpandingNow {
 			get { return _isExpandingNow; }
 			set { _isExpandingNow = value; }
 		}
 
 		private bool _autoExpandOnStructureChanged = false;
-		public bool AutoExpandOnStructureChanged
-		{
+		public bool AutoExpandOnStructureChanged {
 			get { return _autoExpandOnStructureChanged; }
 			set { _autoExpandOnStructureChanged = value; }
 		}
 
 		#endregion
 
-		public TreeNodeAdv(object tag)
-			: this(null, tag)
-		{
-		}
+		//au
+		//public TreeNodeAdv(object tag)
+		//	: this(null, tag)
+		//{
+		//}
 
 		internal TreeNodeAdv(TreeViewAdv tree, object tag)
 		{
 			_row = -1;
 			_tree = tree;
-			_nodes = new NodeCollection(this);
+			_nodes = s_emptyNodes; //_nodes = new NodeCollection(this); //au: will create on demand
 			//_children = new ReadOnlyCollection<TreeNodeAdv>(_nodes);
 			_tag = tag;
 		}
@@ -408,7 +399,7 @@ namespace Aga.Controls.Tree
 
 			for(int i = 0; i < nodesCount; i++) {
 				TreeNodeAdv child = (TreeNodeAdv)info.GetValue("Child" + i, typeof(TreeNodeAdv));
-				Nodes.Add(child);
+				this.GetOrCreateNodes().Add(child);
 			}
 
 		}
@@ -417,11 +408,12 @@ namespace Aga.Controls.Tree
 		public void GetObjectData(SerializationInfo info, StreamingContext context)
 		{
 			info.AddValue("IsExpanded", IsExpanded);
-			info.AddValue("NodesCount", Nodes.Count);
+			int nodesCount = ChildCount;
+			info.AddValue("NodesCount", nodesCount);
 			if((Tag != null) && Tag.GetType().IsSerializable)
 				info.AddValue("Tag", Tag, Tag.GetType());
 
-			for(int i = 0; i < Nodes.Count; i++)
+			for(int i = 0; i < nodesCount; i++)
 				info.AddValue("Child" + i, Nodes[i], typeof(TreeNodeAdv));
 
 		}

@@ -10,9 +10,7 @@ namespace Aga.Controls.Tree.NodeControls
 {
 	public abstract class BaseTextControl : EditableControl
 	{
-		private TextFormatFlags _baseFormatFlags;
 		private TextFormatFlags _formatFlags;
-		private StringFormat _format;
 
 		#region Properties
 
@@ -74,19 +72,14 @@ namespace Aga.Controls.Tree.NodeControls
 
 		protected BaseTextControl()
 		{
-			_format = new StringFormat(StringFormatFlags.LineLimit | StringFormatFlags.NoClip | StringFormatFlags.FitBlackBox | StringFormatFlags.MeasureTrailingSpaces);
-			_baseFormatFlags = TextFormatFlags.PreserveGraphicsClipping |
-						   TextFormatFlags.PreserveGraphicsTranslateTransform;
 			SetFormatFlags();
 			LeftMargin = 1; //au: was 3
 		}
 
 		private void SetFormatFlags()
 		{
-			_format.Alignment = TextHelper.TranslateAligment(TextAlign);
-			_format.Trimming = Trimming;
-
-			_formatFlags = _baseFormatFlags | TextHelper.TranslateAligmentToFlag(TextAlign)
+			_formatFlags = TextFormatFlags.PreserveGraphicsClipping | TextFormatFlags.PreserveGraphicsTranslateTransform
+				| TextHelper.TranslateAligmentToFlag(TextAlign)
 				| TextHelper.TranslateTrimmingToFlag(Trimming);
 		}
 
@@ -176,6 +169,10 @@ namespace Aga.Controls.Tree.NodeControls
 			} else {
 				TextRenderer.DrawText(context.Graphics, label, font, bounds, textColor, _formatFlags);
 			}
+			//note: when drawing frequently, eg scrolling, TextRenderer.DrawText adds several magabytes of used memory.
+			//	It seems it is later released by GC and then does not grow again. Multiple controls don't add more memory than single.
+			//	Graphics.DrawString and GDI API don't have this problem.
+			//Also TextRenderer.DrawText is several times slower than Graphics.DrawString. Makes OnPaint ~3 times slower, eg 5 -> 15 ms.
 		}
 
 		private void CreateBrushes(TreeNodeAdv node, DrawContext context, string text, out Brush backgroundBrush, out Color textColor, out Font font, ref string label)
@@ -237,14 +234,6 @@ namespace Aga.Controls.Tree.NodeControls
 		public void SetLabel(TreeNodeAdv node, string value)
 		{
 			SetValue(node, value);
-		}
-
-		protected override void Dispose(bool disposing)
-		{
-			base.Dispose(disposing);
-			if(disposing) {
-				_format.Dispose();
-			}
 		}
 
 		/// <summary>

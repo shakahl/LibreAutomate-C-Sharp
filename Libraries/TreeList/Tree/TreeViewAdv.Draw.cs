@@ -45,66 +45,56 @@ namespace Aga.Controls.Tree
 
 		protected override void OnPaint(PaintEventArgs e)
 		{
-			//var p = Perf.StartNew();
-
-			DrawContext context = new DrawContext();
-			context.Graphics = e.Graphics;
-			context.Font = this.Font;
-			context.Enabled = Enabled;
+			DrawContext context = new DrawContext {
+				Graphics = e.Graphics,
+				Font = this.Font,
+				Enabled = Enabled
+			};
 
 			int y = 0;
+			var rClip = e.ClipRectangle;
 
 			if(UseColumns) {
 				DrawColumnHeaders(e.Graphics);
 				y += ColumnHeaderHeight;
-				if(Columns.Count == 0 || e.ClipRectangle.Bottom <= y)
+				if(Columns.Count == 0 || rClip.Bottom <= y)
 					return;
 			}
-			//p.Next();
 
 			int firstRowY = _rowLayout.GetRowBounds(FirstVisibleRow).Y;
 			y -= firstRowY;
 
-			//Print(e.ClipRectangle);
+			Pen linePen = null; int lineRight = 0, lineBottom = 0;
+			if(GridLineStyle != 0) {
+				linePen = SystemPens.InactiveBorder;
+				var cb = e.Graphics.ClipBounds; lineRight = (int)cb.Right; lineBottom = (int)cb.Bottom;
+			}
+			bool focused = Focused;
 
 			e.Graphics.ResetTransform();
 			e.Graphics.TranslateTransform(-OffsetX, y);
 			for(int row = FirstVisibleRow; row < RowCount; row++) {
 				Rectangle rowRect = _rowLayout.GetRowBounds(row);
-				if(rowRect.Bottom + y <= e.ClipRectangle.Top) continue;
-				if(rowRect.Y + y >= e.ClipRectangle.Bottom) break;
-				//Print(row, rowRect.Y + y, rowRect.Bottom + y);
-				DrawRow(e, ref context, row, rowRect);
+				if(rowRect.Bottom + y <= rClip.Top) continue;
+				if(rowRect.Y + y >= rClip.Bottom) break;
+				DrawRow(e, ref context, row, rowRect, linePen, focused, lineRight);
 			}
-			//Rectangle displayRect = DisplayRectangle;
-			//for(int row = FirstVisibleRow; row < RowCount; row++) {
-			//	Rectangle rowRect = _rowLayout.GetRowBounds(row);
-			//	if(rowRect.Y + y > displayRect.Bottom)
-			//		break;
-			//	else
-			//		DrawRow(e, ref context, row, rowRect);
-			//}
-			//p.Next();
 
 			if((GridLineStyle & GridLineStyle.Vertical) == GridLineStyle.Vertical && UseColumns)
-				DrawVerticalGridLines(e.Graphics, firstRowY);
-			//p.Next();
+				DrawVerticalGridLines(e.Graphics, firstRowY, linePen, lineBottom);
 
 			if(_dropPosition.Node != null && DragMode && HighlightDropPosition)
 				DrawDropMark(e.Graphics);
 
 			e.Graphics.ResetTransform();
-			//p.Next();
 
 			if(DragMode && _dragBitmap != null)
 				e.Graphics.DrawImage(_dragBitmap, PointToClient(MousePosition));
-			//p.NW();
 
-			//au:
 			base.OnPaint(e);
 		}
 
-		private void DrawRow(PaintEventArgs e, ref DrawContext context, int row, Rectangle rowRect)
+		private void DrawRow(PaintEventArgs e, ref DrawContext context, int row, Rectangle rowRect, Pen linePen, bool focused, int lineRight)
 		{
 			TreeNodeAdv node = RowMap[row];
 			context.DrawSelection = DrawSelectionMode.None;
@@ -113,12 +103,12 @@ namespace Aga.Controls.Tree
 				if((_dropPosition.Node == node) && _dropPosition.Position == NodePosition.Inside && HighlightDropPosition)
 					context.DrawSelection = DrawSelectionMode.Active;
 			} else {
-				if(node.IsSelected && Focused)
+				if(node.IsSelected && focused)
 					context.DrawSelection = DrawSelectionMode.Active;
-				else if(node.IsSelected && !Focused && !HideSelection)
+				else if(node.IsSelected && !focused && !HideSelection)
 					context.DrawSelection = DrawSelectionMode.Inactive;
 			}
-			context.DrawFocus = Focused && CurrentNode == node;
+			context.DrawFocus = focused && CurrentNode == node;
 
 			OnRowDraw(e, node, ref context, row, rowRect);
 
@@ -137,7 +127,7 @@ namespace Aga.Controls.Tree
 			}
 
 			if((GridLineStyle & GridLineStyle.Horizontal) == GridLineStyle.Horizontal)
-				e.Graphics.DrawLine(SystemPens.InactiveBorder, 0, rowRect.Bottom - 1, e.Graphics.ClipBounds.Right, rowRect.Bottom - 1);
+				e.Graphics.DrawLine(linePen, 0, rowRect.Bottom - 1, lineRight, rowRect.Bottom - 1);
 
 			if(ShowLines)
 				DrawLines(e.Graphics, node, rowRect);
@@ -145,13 +135,13 @@ namespace Aga.Controls.Tree
 			DrawNode(node, context);
 		}
 
-		private void DrawVerticalGridLines(Graphics gr, int y)
+		private void DrawVerticalGridLines(Graphics gr, int y, Pen linePen, int lineBottom)
 		{
 			int x = 0;
 			foreach(TreeColumn c in Columns) {
 				if(c.IsVisible) {
 					x += c.Width;
-					gr.DrawLine(SystemPens.InactiveBorder, x - 1, y, x - 1, gr.ClipBounds.Bottom);
+					gr.DrawLine(linePen, x - 1, y, x - 1, lineBottom);
 				}
 			}
 		}

@@ -163,7 +163,8 @@ namespace Aga.Controls.Tree
 		/// <summary>
 		/// Number of all visible nodes (which parent is expanded)
 		/// </summary>
-		internal int RowCount
+		[Browsable(false)]
+		public int RowCount
 		{
 			get
 			{
@@ -585,12 +586,11 @@ namespace Aga.Controls.Tree
 		{
 			get
 			{
-				if(_root.Nodes.Count > 0) {
-					TreeNodeAdv node = _root.Nodes[0];
+				if(_root.TryGetFirstChild(out var node)) {
 					while(node != null) {
 						yield return node;
-						if(node.Nodes.Count > 0)
-							node = node.Nodes[0];
+						if(node.TryGetFirstChild(out var n))
+							node = n;
 						else if(node.NextNode != null)
 							node = node.NextNode;
 						else
@@ -669,12 +669,6 @@ namespace Aga.Controls.Tree
 		{
 			get { return _currentNode; }
 			internal set { _currentNode = value; }
-		}
-
-		[Browsable(false)]
-		public int ItemCount
-		{
-			get { return RowMap.Count; }
 		}
 
 		#endregion

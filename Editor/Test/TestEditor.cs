@@ -126,7 +126,8 @@ partial class EdForm
 		//Print(s.Length, s, t.Call(SCI_POSITIONRELATIVE, 0, 1), t.Call(SCI_COUNTCHARACTERS, 0, 4));
 
 		foreach(var f in Model.Root.Descendants()) {
-			if(f.IsLibrary) Print(f.ItemPath);
+			var k = f.GetCsFileType();
+			if(k!= default) Print(k, f.ItemPath);
 		}
 	}
 

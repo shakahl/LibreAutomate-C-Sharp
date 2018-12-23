@@ -210,7 +210,7 @@ namespace Aga.Controls.Tree
 			_selection = new List<TreeNodeAdv>();
 			_readonlySelection = new ReadOnlyCollection<TreeNodeAdv>(_selection);
 			_columns = new TreeColumnCollection(this);
-			_toolTip = new ToolTip();
+			_toolTip = new ToolTip { ShowAlways = true };
 
 			//_measureContext = new DrawContext();
 			//_measureContext.Font = Font; //au: will set in OnFontChanged
@@ -386,7 +386,7 @@ namespace Aga.Controls.Tree
 		protected override void OnHandleCreated(EventArgs e)
 		{
 			base.OnHandleCreated(e);
-			if(ItemCount > 0) UpdateScrollBars();
+			if(RowCount > 0) UpdateScrollBars();
 		}
 
 		public void UpdateScrollBars()
@@ -584,10 +584,8 @@ namespace Aga.Controls.Tree
 			SelectionStart = null;
 			_root = new TreeNodeAdv(this, null);
 			_root.IsExpanded = true;
-			if(_root.Nodes.Count > 0)
-				CurrentNode = _root.Nodes[0];
-			else
-				CurrentNode = null;
+			_root.TryGetFirstChild(out var node);
+			CurrentNode = node;
 		}
 
 		internal void ReadChilds(TreeNodeAdv parentNode)
@@ -624,10 +622,11 @@ namespace Aga.Controls.Tree
 
 		private void AddNode(TreeNodeAdv parent, int index, TreeNodeAdv node)
 		{
-			if(index >= 0 && index < parent.Nodes.Count)
-				parent.Nodes.Insert(index, node);
+			var pn = parent.GetOrCreateNodes();
+			if(index >= 0 && index < pn.Count)
+				pn.Insert(index, node);
 			else
-				parent.Nodes.Add(node);
+				pn.Add(node);
 
 			node.IsLeaf = Model.IsLeaf(node.Tag);
 			if(node.IsLeaf)
@@ -700,8 +699,8 @@ namespace Aga.Controls.Tree
 
 		internal void SetIsExpandedRecursive(TreeNodeAdv root, bool value)
 		{
-			for(int i = 0; i < root.Nodes.Count; i++) {
-				TreeNodeAdv node = root.Nodes[i];
+			if(!root.HasChildren) return;
+			foreach(var node in root.Nodes) {
 				node.IsExpanded = value;
 				SetIsExpandedRecursive(node, value);
 			}
@@ -847,8 +846,7 @@ namespace Aga.Controls.Tree
 			if(!root.IsExpandedOnce && readChilds)
 				ReadChilds(root);
 
-			for(int i = 0; i < root.Nodes.Count; i++) {
-				TreeNodeAdv node = root.Nodes[i];
+			foreach(var node in root.Nodes) {
 				if(node.Tag == path.FullPath[level]) {
 					if(level == path.FullPath.Length - 1)
 						return node;
@@ -857,6 +855,7 @@ namespace Aga.Controls.Tree
 				}
 			}
 			return null;
+			//TODO: can be optimized to not enumerate childless nodes?
 		}
 
 		public TreeNodeAdv FindNodeByTag(object tag)
@@ -866,7 +865,7 @@ namespace Aga.Controls.Tree
 
 		private TreeNodeAdv FindNodeByTag(TreeNodeAdv root, object tag)
 		{
-			foreach(TreeNodeAdv node in root.Nodes) {
+			foreach(var node in root.Nodes) {
 				if(node.Tag == tag)
 					return node;
 				TreeNodeAdv res = FindNodeByTag(node, tag);
@@ -874,6 +873,7 @@ namespace Aga.Controls.Tree
 					return res;
 			}
 			return null;
+			//TODO: can be optimized to not enumerate childless nodes?
 		}
 
 		public void SelectAllNodes()
@@ -882,7 +882,7 @@ namespace Aga.Controls.Tree
 			try {
 				if(SelectionMode == TreeSelectionMode.MultiSameParent) {
 					if(CurrentNode != null) {
-						foreach(TreeNodeAdv n in CurrentNode.Parent.Nodes)
+						foreach(var n in CurrentNode.Parent.Nodes)
 							n.IsSelected = true;
 					}
 				} else if(SelectionMode == TreeSelectionMode.Multi) {
@@ -969,13 +969,13 @@ namespace Aga.Controls.Tree
 					list.Sort();
 					for(int n = list.Count - 1; n >= 0; n--) {
 						int index = list[n];
-						if(index >= 0 && index <= parent.Nodes.Count)
+						if(index >= 0 && index <= parent.ChildCount)
 							parent.Nodes.RemoveAt(index);
 						else
 							throw new ArgumentOutOfRangeException("Index out of range");
 					}
 				} else {
-					for(int i = parent.Nodes.Count - 1; i >= 0; i--) {
+					for(int i = parent.ChildCount - 1; i >= 0; i--) {
 						for(int n = 0; n < e.Children.Length; n++)
 							if(parent.Nodes[i].Tag == e.Children[n]) {
 								parent.Nodes.RemoveAt(i);
@@ -1016,15 +1016,16 @@ namespace Aga.Controls.Tree
 		private delegate void UpdateContentWidthDelegate(TreeModelEventArgs e, TreeNodeAdv parent);
 		private void ClearNodesSize(TreeModelEventArgs e, TreeNodeAdv parent)
 		{
+			var cc = parent.ChildCount;
 			if(e.Indices != null) {
 				foreach(int index in e.Indices) {
-					if(index >= 0 && index < parent.Nodes.Count) {
+					if(index >= 0 && index < cc) {
 						TreeNodeAdv node = parent.Nodes[index];
 						node.Height = node.RightBounds = null;
 					} else
 						throw new ArgumentOutOfRangeException("Index out of range");
 				}
-			} else {
+			} else if(cc > 0) {
 				foreach(TreeNodeAdv node in parent.Nodes) {
 					foreach(object obj in e.Children)
 						if(node.Tag == obj) {

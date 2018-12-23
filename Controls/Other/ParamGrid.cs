@@ -82,7 +82,7 @@ namespace Au.Controls
 		protected override void OnHandleDestroyed(EventArgs e)
 		{
 			if(this._comboDD != null) {
-				this._comboDD.Dispose();
+				this._comboDD.PopupWindow.Dispose();
 				this._comboDD = null;
 			}
 			base.OnHandleDestroyed(e);
@@ -186,7 +186,7 @@ namespace Au.Controls
 
 				if(sender.Cell.Editor is Editors.ComboBox cb) { //read-only combo. The grid shows a ComboBox control.
 					cb.Control.DroppedDown = true;
-				} else if(sender.Cell is ComboCell cc) { //editable combo. We show DropDownList _comboDD. With ComboBox too ugly and limited, eg cannot edit multiline.
+				} else if(sender.Cell is ComboCell cc) { //editable combo. We show PopupList _comboDD. With ComboBox too ugly and limited, eg cannot edit multiline.
 					var g = cc.Grid as ParamGrid;
 					var t = (cc.Editor as Editors.TextBox).Control;
 					t.Width -= cc.MeasuredButtonWidth; //don't hide the drop-down button
@@ -325,24 +325,24 @@ namespace Au.Controls
 				var t = (this.Editor as Editors.TextBox).Control;
 				t.Update(); g.Update(); //paint controls before the popup animation, to avoid flickering
 				if(p == null) {
-					g._comboDD = p = new DropDownList();
+					g._comboDD = p = new PopupList { MultiShow = true, ComboBoxAnimation = true };
 
 					//prevent showing drop-down again when the user clicks the drop-down button to close it
-					p.Popup.VisibleChanged += (unu, sed) => {
-						if(g._comboDD.Popup.Visible) g._comboNoDD = true;
+					p.PopupWindow.VisibleChanged += (se1, sed) => {
+						if((se1 as Control).Visible) g._comboNoDD = true;
 						else ((Wnd)g).Post(Api.WM_USER + 10); //WndProc will set _comboNoDD = false
 					};
 				}
 				p.Items = items;
-				p.OnSelected = pp => {
-					t.Value = pp.ResultString;
+				p.Selected += pp => {
+					t.Value = pp.ResultItem as string;
 					if(!pp.ResultWasKey) g.ZEndEdit(cancel: false);
 				};
 				var r = g.PositionToRectangle(new SG.Position(Row.Index, Column.Index));
 				p.Show(g, r);
 			}
 		}
-		DropDownList _comboDD;
+		PopupList _comboDD;
 		bool _comboNoDD;
 
 		enum _ViewType
@@ -533,14 +533,14 @@ namespace Au.Controls
 						case List<string> sl: a = sl.ToArray(); break;
 						case Func<string[]> callb: callback = callb; break;
 						}
-						if(etype == EditType.ComboList) {
+						if(etype == EditType.ComboList) { //read-only
 							var ed = new Editors.ComboBox(typeof(string), a, false) { EditableMode = c_editableMode };
 							var cb = ed.Control;
 							cb.DropDownStyle = ComboBoxStyle.DropDownList;
 							cb.SelectionChangeCommitted += (unu, sed) => ZEndEdit(false);
 							if(buttonAction != null) cb.DropDown += buttonAction;
 							t = new EditCell(comboIndex >= 0 ? a[comboIndex] : "") { Editor = ed, Info = info };
-						} else {
+						} else { //editable
 							var ed = _editor;
 							var cc = (callback != null) ? new ComboCell(callback) : new ComboCell(a, comboIndex);
 							cc.Editor = ed;
@@ -571,7 +571,7 @@ namespace Au.Controls
 		/// Adds row with checkbox (or label) and editable cell.
 		/// Returns row index.
 		/// </summary>
-		/// <param name="key">Row's Tag property. If null, uses <paramref name="name"/>. Used by <see cref="ZGetValue(string, out string, bool)"/> and other functions.</param>
+		/// <param name="key">Row's Tag property. If null, uses <paramref name="name"/>. Used with functions that have <i>rowKey</i> parameter.</param>
 		/// <param name="name">Readonly text in column 0 (checkbox or label).</param>
 		/// <param name="value">
 		/// string.
@@ -595,7 +595,7 @@ namespace Au.Controls
 		/// Adds row with only checkbox (without an editable cell).
 		/// Returns row index.
 		/// </summary>
-		/// <param name="key">Row's Tag property. If null, uses <paramref name="name"/>. Used by <see cref="ZGetValue(string, out string, bool)"/> and other functions.</param>
+		/// <param name="key">Row's Tag property. If null, uses <paramref name="name"/>. Used with functions that have <i>rowKey</i> parameter.</param>
 		/// <param name="name">Checkbox text.</param>
 		/// <param name="check"></param>
 		/// <param name="tt">Tooltip text.</param>
@@ -613,7 +613,7 @@ namespace Au.Controls
 		/// <param name="check">Checked or not. If null, adds label instead of checkbox.</param>
 		/// <param name="tt">Tooltip text.</param>
 		/// <param name="insertAt"></param>
-		/// <param name="key">Row's Tag property. If null, uses <paramref name="name"/>. Used by <see cref="ZGetValue(string, out string, bool)"/> and other functions.</param>
+		/// <param name="key">Row's Tag property. If null, uses <paramref name="name"/>. Used with functions that have <i>rowKey</i> parameter.</param>
 		public int ZAddHeaderRow(string name, bool? check = null, string tt = null, int insertAt = -1, string key = null)
 		{
 			return _AddRow(key, name, null, check, _RowType.Header, tt, null, insertAt);
@@ -627,10 +627,11 @@ namespace Au.Controls
 		/// <summary>
 		/// Returns true if the row is checked or required.
 		/// </summary>
-		/// <param name="row">Row index. If negative, asserts and returns false.</param>
+		/// <param name="row">Row index.</param>
+		/// <exception cref="ArgumentException"></exception>
 		public bool ZIsChecked(int row)
 		{
-			Debug.Assert(row >= 0); if(row < 0) return false;
+			_ThrowIfRowInvalid(row);
 			if(this[row, 0] is SG.Cells.CheckBox cb) return cb.Checked.GetValueOrDefault();
 			return this[row, 0].View == _views[(int)_ViewType.Readonly]; //required; else header row
 		}
@@ -638,18 +639,20 @@ namespace Au.Controls
 		/// <summary>
 		/// Returns true if the row is checked or required.
 		/// </summary>
-		/// <param name="rowKey">Row key. If not found, asserts and returns false.</param>
+		/// <param name="rowKey">Row key.</param>
+		/// <exception cref="ArgumentException"></exception>
 		public bool ZIsChecked(string rowKey) => ZIsChecked(ZFindRow(rowKey));
 
 		/// <summary>
 		/// Checks or unchecks.
 		/// Does nothing if no checkbox.
 		/// </summary>
-		/// <param name="row">Row index. If negative, asserts and returns.</param>
+		/// <param name="row">Row index.</param>
 		/// <param name="check"></param>
+		/// <exception cref="ArgumentException"></exception>
 		public void ZCheck(int row, bool check)
 		{
-			Debug.Assert(row >= 0); if(row < 0) return;
+			_ThrowIfRowInvalid(row);
 			if(this[row, 0] is SG.Cells.CheckBox cb) cb.Checked = check;
 		}
 
@@ -657,22 +660,33 @@ namespace Au.Controls
 		/// Checks or unchecks.
 		/// Use only for flags and optionals, not for required.
 		/// </summary>
-		/// <param name="rowKey">Row key. If not found, asserts and returns.</param>
+		/// <param name="rowKey">Row key.</param>
 		/// <param name="check"></param>
+		/// <exception cref="ArgumentException"></exception>
 		public void ZCheck(string rowKey, bool check) => ZCheck(ZFindRow(rowKey), check);
+
+		/// <summary>
+		/// Checks or unchecks if rowKey exists.
+		/// Use only for flags and optionals, not for required.
+		/// </summary>
+		/// <param name="rowKey">Row key.</param>
+		/// <param name="check"></param>
 		public void ZCheckIfExists(string rowKey, bool check) { int i = ZFindRow(rowKey); if(i >= 0) ZCheck(i, check); }
 
 		/// <summary>
 		/// If the row is checked or required, gets its value and returns true.
 		/// </summary>
-		/// <param name="row">Row index. If negative, asserts and returns false.</param>
+		/// <param name="row">Row index.</param>
 		/// <param name="value"></param>
 		/// <param name="falseIfEmpty">Return false if the value is empty (null).</param>
-		public bool ZGetValue(int row, out string value, bool falseIfEmpty)
+		/// <param name="falseIfHidden">Return false if the row is hidden.</param>
+		/// <exception cref="ArgumentException"></exception>
+		public bool ZGetValue(int row, out string value, bool falseIfEmpty, bool falseIfHidden = false)
 		{
 			value = null;
-			Debug.Assert(row >= 0); if(row < 0) return false;
+			_ThrowIfRowInvalid(row);
 			if(!ZIsChecked(row)) return false;
+			if(falseIfHidden && !Rows[row].Visible) return false;
 			value = ZGetCellText(row, 1);
 			if(falseIfEmpty && value == null) return false;
 			return true;
@@ -681,10 +695,13 @@ namespace Au.Controls
 		/// <summary>
 		/// If the row is checked or required, gets its value and returns true.
 		/// </summary>
-		/// <param name="rowKey">Row key. If not found, asserts returns false.</param>
+		/// <param name="rowKey">Row key.</param>
 		/// <param name="value"></param>
 		/// <param name="falseIfEmpty">Return false if the value is empty (null).</param>
-		public bool ZGetValue(string rowKey, out string value, bool falseIfEmpty) => ZGetValue(ZFindRow(rowKey), out value, falseIfEmpty);
+		/// <param name="falseIfHidden">Return false if the row is hidden.</param>
+		/// <exception cref="ArgumentException"></exception>
+		public bool ZGetValue(string rowKey, out string value, bool falseIfEmpty, bool falseIfHidden = false)
+			=> ZGetValue(ZFindRow(rowKey), out value, falseIfEmpty, falseIfHidden);
 
 		/// <summary>
 		/// If the row exists and is checked or required, gets its value and returns true.
@@ -692,11 +709,12 @@ namespace Au.Controls
 		/// <param name="rowKey">Row key. If not found, returns false.</param>
 		/// <param name="value"></param>
 		/// <param name="falseIfEmpty">Return false if the value is empty (null).</param>
-		public bool ZGetValueIfExists(string rowKey, out string value, bool falseIfEmpty)
+		/// <param name="falseIfHidden">Return false if the row is hidden.</param>
+		public bool ZGetValueIfExists(string rowKey, out string value, bool falseIfEmpty, bool falseIfHidden = false)
 		{
 			int row = ZFindRow(rowKey);
 			if(row < 0) { value = null; return false; }
-			return ZGetValue(row, out value, falseIfEmpty);
+			return ZGetValue(row, out value, falseIfEmpty, falseIfHidden);
 		}
 
 		/// <summary>
@@ -704,9 +722,10 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="row">Row index. If negative, asserts and returns null.</param>
 		/// <param name="column">Column index.</param>
+		/// <exception cref="ArgumentException"></exception>
 		public string ZGetCellText(int row, int column)
 		{
-			Debug.Assert(row >= 0); if(row < 0) return null;
+			_ThrowIfRowInvalid(row);
 			var c = this[row, column];
 			if(column == 0 && c is SG.Cells.CheckBox cb) return cb.Caption;
 			return c.Value as string;
@@ -717,17 +736,19 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="rowKey">Row key. If not found, asserts and returns null.</param>
 		/// <param name="column">Column index.</param>
+		/// <exception cref="ArgumentException"></exception>
 		public string ZGetCellText(string rowKey, int column) => ZGetCellText(ZFindRow(rowKey), column);
 
 		/// <summary>
 		/// Changes cell text or checkbox label. Ends editing.
 		/// </summary>
-		/// <param name="row">Row index. If negative, asserts and returns null.</param>
+		/// <param name="row">Row index.</param>
 		/// <param name="column">Column index.</param>
 		/// <param name="text"></param>
+		/// <exception cref="ArgumentException"></exception>
 		public void ZSetCellText(int row, int column, string text)
 		{
-			Debug.Assert(row >= 0); if(row < 0) return;
+			_ThrowIfRowInvalid(row);
 			ZEndEdit(row, column, true);
 			var c = this[row, column];
 			if(c is SG.Cells.CheckBox cb) cb.Caption = text;
@@ -738,9 +759,10 @@ namespace Au.Controls
 		/// <summary>
 		/// Changes cell value or checkbox label. Ends editing.
 		/// </summary>
-		/// <param name="rowKey">Row key. If not found, asserts and returns null.</param>
+		/// <param name="rowKey">Row key.</param>
 		/// <param name="column">Column index.</param>
 		/// <param name="text"></param>
+		/// <exception cref="ArgumentException"></exception>
 		public void ZSetCellText(string rowKey, int column, string text) => ZSetCellText(ZFindRow(rowKey), column, text);
 
 		/// <summary>
@@ -753,6 +775,23 @@ namespace Au.Controls
 				if(this.Rows[r].Tag as string == rowKey) return r;
 			}
 			return -1;
+		}
+
+		/// <summary>
+		/// Finds row by row key and returns row index.
+		/// Returns -1 if not found.
+		/// </summary>
+		public int ZFindRow(in StringSegment rowKey)
+		{
+			for(int r = 0, n = this.RowsCount; r < n; r++) {
+				if(this.Rows[r].Tag as string == rowKey) return r;
+			}
+			return -1;
+		}
+
+		void _ThrowIfRowInvalid(int row)
+		{
+			if((uint)row >= this.RowsCount) throw new ArgumentException("invalid row");
 		}
 
 		/// <summary>
@@ -791,9 +830,10 @@ namespace Au.Controls
 		/// <summary>
 		/// If editing the specified cell, gets cell context and returns true.
 		/// </summary>
+		/// <exception cref="ArgumentException"></exception>
 		public bool ZIsEditing(int row, int col, out SG.CellContext c)
 		{
-			Debug.Assert(row >= 0);
+			_ThrowIfRowInvalid(row);
 			c = new SG.CellContext(this, new SG.Position(row, col));
 			if(c.Cell != null && c.IsEditing()) return true;
 			c = default;
@@ -814,6 +854,7 @@ namespace Au.Controls
 		/// <summary>
 		/// If editing the specified cell, ends editing and returns true.
 		/// </summary>
+		/// <exception cref="ArgumentException"></exception>
 		public bool ZEndEdit(int row, int col, bool cancel)
 		{
 			if(!ZIsEditing(row, col, out var c)) return false;
@@ -821,19 +862,64 @@ namespace Au.Controls
 			return true;
 		}
 
-		public void ZShowRows(bool visible, int from, int to)
+		/// <summary>
+		/// Hides or unhides one or more rows.
+		/// </summary>
+		/// <param name="visible"></param>
+		/// <param name="from">Index of the first row in the range.</param>
+		/// <param name="count">Count of rows in the range. If -1, until the end.</param>
+		/// <param name="fromOpposite"></param>
+		/// <param name="countOpposite">With fromOpposite specifies range to hide if visible==true or show if visible==false. Faster than calling this function 2 times.</param>
+		/// <exception cref="ArgumentException"></exception>
+		public void ZShowRows(bool visible, int from, int count, int fromOpposite = 0, int countOpposite = 0)
 		{
-			if(to < 0) to = RowsCount;
+			//TODO: throw if invalid
+			int to = count < 0 ? RowsCount : from + count;
+			int toOpposite = countOpposite < 0 ? RowsCount : fromOpposite + countOpposite;
 			for(int i = from; i < to; i++) Rows.ShowRow(i, visible);
+			for(int i = fromOpposite; i < toOpposite; i++) Rows.ShowRow(i, !visible);
+			if(visible || toOpposite > fromOpposite) this.Rows.AutoSize(false);
+			RecalcCustomScrollBars();
+		}
+
+		/// <summary>
+		/// Hides or/and unhides one or more rows and row ranges.
+		/// </summary>
+		/// <param name="visible"></param>
+		/// <param name="rows">Row keys separated by space. Can include ranges separated by -. Example: "one four-nine". If starts or ends with -, the range starts with row 0 or ends with the last row. Example: "three-".</param>
+		/// <param name="rowsOpposite">The same as <paramref name="rows"/>, but the <paramref name="visible"/> parameter has opposite meaning (hide if true, show if false). Faster than calling this function 2 times.</param>
+		/// <exception cref="ArgumentException"></exception>
+		public void ZShowRows(bool visible, string rows, string rowsOpposite = null)
+		{
+			bool madeVisible = false;
+			g1:
+			int prevRow = -1;
+			foreach(var s in rows.Segments_(" -", SegFlags.NoEmpty)) {
+				int row = ZFindRow(s); if(row < 0) throw new ArgumentException("invalid row " + s.ToString());
+				if(s.Offset > 0 && rows[s.Offset - 1] == '-') _ShowRange(row);
+				Rows.ShowRow(row, visible);
+				prevRow = row;
+				madeVisible |= visible;
+			}
+			if(rows.EndsWith_('-')) _ShowRange(RowsCount);
+
+			void _ShowRange(int toRow) { while(++prevRow < toRow) Rows.ShowRow(prevRow, visible); }
+
+			if(rowsOpposite != null) {
+				rows = rowsOpposite; rowsOpposite = null; visible ^= true; goto g1;
+			}
+
+			if(madeVisible) this.Rows.AutoSize(false);
 			RecalcCustomScrollBars();
 		}
 
 		/// <summary>
 		/// Disables or enables cell (can be checkbox).
 		/// </summary>
+		/// <exception cref="ArgumentException"></exception>
 		public void ZEnableCell(int row, int col, bool enable)
 		{
-			Debug.Assert(row >= 0); if(row < 0) return;
+			_ThrowIfRowInvalid(row);
 			if(!enable) ZEndEdit(row, col, true);
 			var c = this[row, col];
 			var e = c.Editor; if(e == null) return;
@@ -845,8 +931,27 @@ namespace Au.Controls
 		/// <summary>
 		/// Disables or enables cell (can be checkbox).
 		/// </summary>
+		/// <exception cref="ArgumentException"></exception>
 		public void ZEnableCell(string rowKey, int col, bool enable)
 			=> ZEnableCell(ZFindRow(rowKey), col, enable);
+
+		/// <summary>
+		/// Disables or enables row cells.
+		/// </summary>
+		/// <exception cref="ArgumentException"></exception>
+		public void ZEnableRow(int row, bool enable, bool uncheck = false)
+		{
+			if(uncheck) ZCheck(row, false);
+			ZEnableCell(row, 0, enable);
+			ZEnableCell(row, 1, enable);
+		}
+
+		/// <summary>
+		/// Disables or enables row cells.
+		/// </summary>
+		/// <exception cref="ArgumentException"></exception>
+		public void ZEnableRow(string rowKey, bool enable, bool uncheck = false)
+			=> ZEnableRow(ZFindRow(rowKey), enable, uncheck);
 
 		#endregion
 

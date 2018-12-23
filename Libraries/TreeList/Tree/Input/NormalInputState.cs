@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace Aga.Controls.Tree
 {
-	internal class NormalInputState :InputState
+	internal class NormalInputState : InputState
 	{
 		private bool _mouseDownFlag = false;
 
@@ -15,16 +15,16 @@ namespace Aga.Controls.Tree
 
 		public override void KeyDown(KeyEventArgs args)
 		{
-			if(Tree.CurrentNode == null && Tree.Root.Nodes.Count > 0)
-				Tree.CurrentNode = Tree.Root.Nodes[0];
+			if(Tree.CurrentNode == null && Tree.Root.TryGetFirstChild(out var first))
+				Tree.CurrentNode = first;
 
 			if(Tree.CurrentNode != null) {
 				switch(args.KeyCode) {
 				case Keys.Right:
 					if(!Tree.CurrentNode.IsExpanded)
 						Tree.CurrentNode.IsExpanded = true;
-					else if(Tree.CurrentNode.Nodes.Count > 0)
-						FocusRow(Tree.CurrentNode.Nodes[0]);
+					else if(Tree.CurrentNode.TryGetFirstChild(out var n0))
+						FocusRow(n0);
 					args.Handled = true;
 					break;
 				case Keys.Left:

@@ -36,7 +36,7 @@ namespace Aga.Controls.Tree.NodeControls
 
 		protected override Size CalculateEditorSize(EditorContext context)
 		{
-			var width = Parent.UseColumns ? context.Bounds.Size.Width : Au.Util.Dpi.ScaleInt(EditorWidth);
+			var width = Parent.UseColumns ? context.Bounds.Width : Au.Util.Dpi.ScaleInt(EditorWidth);
 			var height = (context.Editor is CheckedListBox c) ? (Au.Util.Dpi.ScaleInt(c.PreferredHeight) + c.Items.Count * 2) : context.Bounds.Height;
 			return new Size(width, height);
 		}

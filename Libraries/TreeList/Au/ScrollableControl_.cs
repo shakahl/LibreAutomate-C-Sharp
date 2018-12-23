@@ -14,7 +14,6 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-//using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -45,7 +44,7 @@ namespace Au.Controls
 		}
 
 		[DllImport("user32.dll")]
-		internal static extern int SetScrollInfo(Wnd hwnd, bool vert, [In] ref SCROLLINFO lpsi, bool redraw);
+		internal static extern int SetScrollInfo(Wnd hwnd, bool vert, in SCROLLINFO lpsi, bool redraw);
 
 		[DllImport("user32.dll")]
 		internal static extern bool GetScrollInfo(Wnd hwnd, bool vert, ref SCROLLINFO lpsi);
@@ -143,11 +142,11 @@ namespace Au.Controls
 		void _SetScrollInfo()
 		{
 			if(_h.fMask != 0) {
-				SetScrollInfo((Wnd)this, false, ref _h, true);
+				SetScrollInfo((Wnd)this, false, _h, true);
 				_h.fMask = 0;
 			}
 			if(_v.fMask != 0) {
-				SetScrollInfo((Wnd)this, true, ref _v, true);
+				SetScrollInfo((Wnd)this, true, _v, true);
 				_v.fMask = 0;
 			}
 		}
@@ -191,7 +190,7 @@ namespace Au.Controls
 			if(i < k.nMin) i = k.nMin;
 			k.nPos = i;
 			k.fMask = SIF_POS;
-			SetScrollInfo((Wnd)this, vert, ref k, true);
+			SetScrollInfo((Wnd)this, vert, k, true);
 
 			//if(vert) _v = k; else _h = k;
 

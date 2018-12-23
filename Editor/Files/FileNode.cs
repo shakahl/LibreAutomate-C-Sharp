@@ -273,14 +273,19 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// Gets or sets other item to run instead of this. None if null.
 	/// The setter will save workspace.
 	/// </summary>
-	public FileNode RunOther {
+	public FileNode TestScript {
 		get {
 			uint runId = _RunOtherId;
-			return runId != 0 ? _model.FindById(runId) : null;
+			if(runId != 0) {
+				var f = _model.FindById(runId); if(f != null) return f;
+				TestScript = null;
+			}
+			return null;
 		}
 		set {
 			uint runId = value?._id ?? 0;
 			var m = _GetSetMisc(runId != 0); if(m == null) return;
+			if(m.runOther == runId) return;
 			m.runOther = runId;
 			_model.Save.WorkspaceLater();
 		}
@@ -521,39 +526,50 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	}
 
 	/// <summary>
-	/// Returns true if this is a class library.
+	/// Gets .cs file type from metacomments.
 	/// Note: can be slow, because loads file text if .cs file.
 	/// </summary>
-	public bool IsLibrary {
-		get {
-			if(_type != _Type.CsFile) return false;
-			var code = GetText();
-			if(!MetaComments.FindMetaComments(code, out int endOfMeta)) return false;
-			bool hasOP = false;
-			foreach(var v in MetaComments.EnumOptions(code, endOfMeta)) {
-				if(v.NameIs("outputType")) return v.ValueIs("dll");
-				if(v.NameIs("outputPath")) hasOP = true;
-			}
-			return hasOP;
+	public ECsType GetCsFileType()
+	{
+		if(_type != _Type.CsFile) return ECsType.None;
+		var code = GetText();
+		if(!MetaComments.FindMetaComments(code, out int endOfMeta)) return ECsType.Class;
+		bool hasOP = false;
+		foreach(var v in MetaComments.EnumOptions(code, endOfMeta)) {
+			if(v.NameIs("outputType")) return v.ValueIs("dll") ? ECsType.Library : ECsType.App;
+			if(v.NameIs("outputPath")) hasOP = true;
 		}
+		return hasOP ? ECsType.Library : ECsType.Class;
+	}
+
+	public enum ECsType
+	{
+		/// <summary>Not .cs file.</summary>
+		None,
+		/// <summary>Has meta outputType app/console.</summary>
+		App,
+		/// <summary>Has meta outputType dll, or outputPath without outputType.</summary>
+		Library,
+		/// <summary>No meta outputType or outputPath.</summary>
+		Class,
 	}
 
 	#endregion
 
 	#region Au.Compiler.IWorkspaceFile
 
-	public IWorkspaceFiles IcfWorkspace => _model;
+	public IWorkspaceFiles IwfWorkspace => _model;
 
-	public IWorkspaceFile IcfFindRelative(string relativePath, bool? folder) => FindRelative(relativePath, folder);
+	public IWorkspaceFile IwfFindRelative(string relativePath, bool? folder) => FindRelative(relativePath, folder);
 
-	public IEnumerable<IWorkspaceFile> IcfEnumProjectCsFiles(IWorkspaceFile fSkip = null)
+	public IEnumerable<IWorkspaceFile> IwfEnumProjectCsFiles(IWorkspaceFile fSkip = null)
 	{
 		foreach(var f in Descendants()) {
 			if(f._type == _Type.CsFile && f != fSkip) yield return f;
 		}
 	}
 
-	public bool IcfFindProject(out IWorkspaceFile folder, out IWorkspaceFile main)
+	public bool IwfFindProject(out IWorkspaceFile folder, out IWorkspaceFile main)
 	{
 		if(!FindProject(out var fo, out var ma)) { folder = main = null; return false; }
 		folder = fo; main = ma;
@@ -568,7 +584,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// null if there are no triggers or if failed to compile.
 	/// If a[i].method==null, it is [assembly: ...].
 	/// </param>
-	public void IcfTriggers(List<CompTriggerData> a)
+	public void IwfTriggers(List<CompTriggerData> a)
 	{
 		if(a == null) {
 			//Print("remove");
@@ -907,6 +923,8 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// <param name="newModel">Used when importing workspace.</param>
 	internal FileNode FileCopy(FileNode target, NodePosition pos, FilesModel newModel = null)
 	{
+		_model.Save.TextNowIfNeed(true);
+
 		//create unique name
 		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
 		string name = CreateNameUniqueInFolder(newParent, _name, IsFolder);
@@ -938,47 +956,4 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	}
 
 	#endregion
-
-#if TEST_MANY_COLUMNS
-				public bool Checked
-				{
-					get;
-					set;
-				}
-
-				public object Combo
-				{
-					get; set;
-					//get { return "test"; }
-					//set { }
-				}
-
-				public RegexOptions ComboEnum
-				{
-					get; set;
-					//get { return "test"; }
-					//set { }
-				}
-
-				public decimal Decimal
-				{
-					get; set;
-					//get { return "10.5"; }
-					//set { }
-				}
-
-				public int Integer
-				{
-					get; set;
-					//get { return "10"; }
-					//set { }
-				}
-
-				public decimal UpDown
-				{
-					get; set;
-					//get { return "10"; }
-					//set { }
-				}
-#endif
 }

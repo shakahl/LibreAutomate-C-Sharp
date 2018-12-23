@@ -140,7 +140,7 @@ namespace Au.Compiler
 		#pragma warning restore
 </code>	Example of disabling some warnings in whole compilation (at the very start of code):
 <code>		/* meta
-		disableWarnings 168, 649
+		noWarnings 168, 649
 		*/
 </code>	Also look in program options, maybe you can disable some warnings in all scripts.</fold>");
 			_b.AppendLine("<>");

@@ -8,7 +8,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Project</RootNamespace>
-    <AssemblyName>Tests</AssemblyName>
+    <AssemblyName>Au.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
@@ -94,8 +94,6 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="PopupList.cs" />
-    <Compile Include="PopupList2.cs" />
     <Compile Include="Unused currently\FlagEnumEditor.cs">
       <SubType>Component</SubType>
     </Compile>

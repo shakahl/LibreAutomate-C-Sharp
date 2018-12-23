@@ -1354,13 +1354,7 @@ a1,-8";
 		var bOK = new ButtonOK { Left = 10, Top=230 }; f.Controls.Add(bOK); f.AcceptButton = bOK;
 		var bCancel = new ButtonCancel { Left = 90, Top=230 }; f.Controls.Add(bCancel); f.CancelButton = bCancel;
 
-		var p = new PopupList();
-		p.DoNotCloseWhenAppDeactivated = true;
-		p.MultiShow = true;
-		//p.FixedWidth = true;
-		//p.ComboBoxAnimation = true;
-
-#if false
+#if true
 		//var a = new string[] { "One 123456789 123456789", "Folder", "Three", "Four", "W" };
 		//var a = new string[] { "One 123456789 123456789", "Folder", "Three", "Fo\r\nur", "Fo\r\nur", "Fo\r\nur", "Fo\r\nur" };
 		var icon =Icon_.GetFileIconImage(@"q:\app\ontop.ico", 16);
@@ -1374,17 +1368,32 @@ a1,-8";
 			new PLItem("Disabled + checkbox"){Disabled=true,CheckType=PLCheckType.Box},
 			new PLItem("W Text color"){TextColor=Color.BlueViolet},
 			new PLItem("W Text color, disabled"){TextColor=Color.DarkGoldenrod, Disabled=true},
-			new PLItem("Back color"){BackgroundBrush=Brushes.GreenYellow},
-			new PLItem("Back color, disabled"){BackgroundBrush=Brushes.MediumOrchid, Disabled=true},
+			new PLItem("Back color"){BackColor=Color.GreenYellow},
+			new PLItem("Back color, disabled"){BackColor=Color.MediumOrchid, Disabled=true},
 			new PLItem("Bold"){BoldFont=true},
 			new PLItem("Tooltip"){TooltipText="Tooltip text"},
+			new PLItem("Tooltip2 wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww"){TooltipText="Multi\r\nLine"},
+			new PLItem("Group 1"){CheckType=PLCheckType.Row, Group=1,Checked=true},
+			new PLItem("Group 2"){CheckType=PLCheckType.Row, Group=1},
+			new PLItem("Group 3"){CheckType=PLCheckType.Row, Group=1},
+			new PLItem("-Group 1"){CheckType=PLCheckType.Row, Group=-1,Checked=true},
+			new PLItem("-Group 2"){CheckType=PLCheckType.Row, Group=-1},
 		};
 #else
-		var a = new string[10_000];
+		var a = new string[300];
 		for(int i = 0; i < a.Length; i++) a[i] = "a";
 		//var a = new string[1000];
 		//for(int i = 0; i < a.Length; i++) a[i] = "QwertyuiopAsdfghjk ZXCVBNMQWERTYIOPASDFGHJKL" + i;
 #endif
+
+		var p = new PopupList();
+		p.DoNotCloseWhenAppDeactivated = true;
+		//p.MultiShow = true;
+		//p.FixedWidth = true;
+		//p.ComboBoxAnimation = true;
+		//p.PopupWindow.Font = new Font("Courier New", 14);
+		//p.PopupWindow.Font = new Font("Verdana", 8);
+		//p.PopupWindow.Font = new Font("MS Sans Serif", 8.25f);
 		p.Items = a;
 
 		p.Selected += k => Print("Selected", k.ResultItem, k.ResultIndex, k.ResultWasKey, k.PopupWindow.Visible, k.PopupWindow.IsHandleCreated);
@@ -1411,6 +1420,8 @@ a1,-8";
 				p.Show(t);
 				//p.Show(new Rectangle(200, 500, 0, 0));
 				//p.Show(f, new Rectangle(50, 100, 0, 0));
+
+				//for(int i = 0; i < 10; i++) _ShowPL(f, a, i);
 			});
 
 			//Timer_.After(500, tim => {
@@ -1441,17 +1452,29 @@ a1,-8";
 #endif
 	}
 
+	static void _ShowPL(Form f, string[] a, int i)
+	{
+		var p = new PopupList();
+		p.DoNotCloseWhenAppDeactivated = true;
+		p.MultiShow = true;
+		//p.FixedWidth = true;
+		//p.ComboBoxAnimation = true;
+		p.Items = a;
+		var r = new Rectangle(i * 100, 50, 90, 0);
+		p.Show(f, r);
+	}
+
 	class PLItem : IPopupListItem
 	{
 		public string TooltipText { get; set; }
 		public Image Icon { get; set; }
-		public Brush BackgroundBrush { get; set; }
+		public ColorInt BackColor { get; set; }
 		public ColorInt TextColor { get; set; }
 		public PLCheckType CheckType { get; set; }
 		public bool Checked { get; set; }
 		public bool Disabled { get; set; }
 		public bool BoldFont { get; set; }
-		public int Group { get; set; }
+		public short Group { get; set; }
 
 		public PLItem(string text)
 		{
@@ -1476,6 +1499,13 @@ a1,-8";
 		Print(size);
 	}
 
+	static void TestOptimizeTreeViewAdv()
+	{
+		var w = Wnd.FindFast(null, "QM_Editor").OrThrow();
+		var f = new Au.Tools.Form_Wnd(w);
+		Application.Run(f);
+	}
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -1492,11 +1522,12 @@ a1,-8";
 
 		try {
 #if true
-
 			//Thread_.Start(() => { for(; ; ) { 1.s(); GC.Collect(); } });
-			//Cpp.Cpp_Test();
-			TestGetObjectSize();
+
+			//TestOptimizeTreeViewAdv();
 			//TestPopupList();
+			//TestGetObjectSize();
+			//Cpp.Cpp_Test();
 			//TestSerializeBytes();
 			//TestUacTS();
 			//TestFolderSecurity();

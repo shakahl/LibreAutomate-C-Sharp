@@ -319,7 +319,7 @@ namespace Au.Tools
 
 			if(g.RowsCount != 0) {
 				int i = g.ZFindRow("Control");
-				if(g.Rows[i].Visible == noCon) g.ZShowRows(!noCon, i, g.Rows.Count - 1);
+				if(g.Rows[i].Visible == noCon) g.ZShowRows(!noCon, i, -1);
 				return;
 			}
 

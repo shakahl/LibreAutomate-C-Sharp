@@ -43,7 +43,7 @@ namespace Au.Compiler
 		/// <param name="f">C# file. If projFolder used, must be the main file of the project.</param>
 		/// <param name="projFolder">null or project folder.</param>
 		/// <remarks>
-		/// Must be always called in the main UI thread (Thread.CurrentThread.ManagedThreadId == 1), because calls its file collection functions.
+		/// Must be always called in the main UI thread (Thread.CurrentThread.ManagedThreadId == 1).
 		/// 
 		/// Adds <see cref="DefaultReferences"/>. For scripts adds <see cref="DefaultUsings"/>.
 		/// 
@@ -55,7 +55,7 @@ namespace Au.Compiler
 		{
 			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
 			r = null;
-			var cache = XCompiled.OfCollection(f.IcfWorkspace);
+			var cache = XCompiled.OfCollection(f.IwfWorkspace);
 			bool isCompiled = forRun && cache.IsCompiled(f, out r, projFolder);
 
 			//Print("isCompiled=" + isCompiled);
@@ -73,7 +73,7 @@ namespace Au.Compiler
 				}
 
 				if(!ok) {
-					f.IcfTriggers(null);
+					f.IwfTriggers(null);
 					cache.Remove(f, false);
 					return false;
 				}
@@ -128,7 +128,7 @@ namespace Au.Compiler
 				return false;
 			}
 
-			XCompiled cache = XCompiled.OfCollection(f.IcfWorkspace);
+			XCompiled cache = XCompiled.OfCollection(f.IwfWorkspace);
 			string outPath = null, outFile = null;
 			if(needOutputFiles) {
 				string fileName;
@@ -137,10 +137,10 @@ namespace Au.Compiler
 					fileName = m.Name + (m.OutputType == EOutputType.dll ? ".dll" : ".exe");
 				} else {
 					outPath = cache.CacheDirectory;
-					File_.CreateDirectory(outPath);
 					fileName = f.IdString;
 				}
 				outFile = outPath + "\\" + fileName;
+				File_.CreateDirectory(outPath);
 			}
 
 			if(m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
@@ -206,7 +206,7 @@ internal static string[] args = System.Array.Empty<string>();
 			   allowUnsafe: true,
 			   platform: m.Prefer32Bit ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
 			   warningLevel: m.WarningLevel,
-			   specificDiagnosticOptions: m.DisableWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(Char_.IsAsciiDigit(wa[0]) ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
+			   specificDiagnosticOptions: m.NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(Char_.IsAsciiDigit(wa[0]) ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
 			   cryptoKeyFile: m.SignFile?.FilePath, //also need strongNameProvider
 			   strongNameProvider: m.SignFile == null ? null : new DesktopStrongNameProvider()
 			   );
@@ -383,7 +383,7 @@ internal static string[] args = System.Array.Empty<string>();
 				if(m.Kind != SymbolKind.Method || !m.CanBeReferencedByName || m.IsExtern || m == entry) continue;
 				_Triggers2(m.GetAttributes(), m.Name);
 			}
-			fMain.IcfTriggers(a);
+			fMain.IwfTriggers(a);
 
 			void _Triggers2(ImmutableArray<AttributeData> attributes, string method)
 			{

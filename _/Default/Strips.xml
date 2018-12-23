@@ -42,7 +42,8 @@
 				<File_NewClass i="fileClass"/>
 				<File_NewFolder i="folder"/>
 				<sep/>
-				<File_Import t="Import..." i="open"/>
+				<File_Import t="Import..." i="open" tt="Copy, move or link a file to this workspace.
+&#xA;Another way: drag and drop from a folder window."/>
 			</File_New>
 			<sep/>
 			<File_Disable/>
@@ -223,8 +224,6 @@
 		<File_NewScript i="_new" dd="File_New"/>
 		<File_Properties i="properties"/>
 		<File_SaveNow i="save"/>
-		<sep/>
-		<File_PreviousDocument i="back"/>
 	</File>
 	<Edit>
 		<Edit_Find i="find"/>
@@ -263,11 +262,11 @@
 		<Help_Reference i="help"/>
 		<!-- note: don't use combo, it adds ~12 ms of startup time -->
 		<Help_Find type="edit" cue="Find help, functions, tools" tt="Enter - search.
-Esc - focus the code editor.
-Down arrow - recent.
-Middle click - clear.
-F1 - function help.
-F2 - function definition."/>
+&#xA;Esc - focus the code editor.
+&#xA;Down arrow - recent.
+&#xA;Middle click - clear.
+&#xA;F1 - function help.
+&#xA;F2 - function definition."/>
 	</Help>
 
 	<!--

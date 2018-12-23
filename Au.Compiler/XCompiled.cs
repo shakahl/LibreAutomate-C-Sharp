@@ -34,15 +34,15 @@ namespace Au.Compiler
 
 			public static XCompiled OfCollection(IWorkspaceFiles coll)
 			{
-				var cc = coll.IcfCompilerContext;
-				if(cc == null) coll.IcfCompilerContext = cc = new XCompiled(coll);
+				var cc = coll.IwfCompilerContext;
+				if(cc == null) coll.IwfCompilerContext = cc = new XCompiled(coll);
 				return cc as XCompiled;
 			}
 
 			public XCompiled(IWorkspaceFiles coll)
 			{
 				_coll = coll;
-				CacheDirectory = _coll.IcfWorkspaceDirectory + @"\.compiled";
+				CacheDirectory = _coll.IwfWorkspaceDirectory + @"\.compiled";
 				_file = CacheDirectory + @"\compiled.log";
 			}
 
@@ -119,7 +119,7 @@ namespace Au.Compiler
 							if(projFolder != null) {
 								if(!Convert_.MD5HashResult.FromString(value, offs, s.EndOffset - offs, out var md5)) return false;
 								Convert_.MD5Hash md = default;
-								foreach(var f1 in projFolder.IcfEnumProjectCsFiles(f)) {
+								foreach(var f1 in projFolder.IwfEnumProjectCsFiles(f)) {
 									if(_IsFileModified(f1)) return false;
 									md.Add(f1.Id);
 								}
@@ -139,10 +139,11 @@ namespace Au.Compiler
 						case 'y':
 						case 's':
 						case 'o':
-							var f2 = _coll.IcfFindById((uint)value.ToLong_(offs));
+							var f2 = _coll.IwfFindById((uint)value.ToLong_(offs));
 							if(f2 == null) return false;
 							if(s[0] == 'l') {
-								if(f2.IcfFindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
+								if(f2.IwfFindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
+								if(f2 == f) return false; //will be compiler error "circular reference"
 								//Print(f2, projFolder2);
 								if(!IsCompiled(f2, out _, projFolder2)) return false;
 								//Print("library is compiled");
@@ -302,7 +303,7 @@ namespace Au.Compiler
 						continue;
 					}
 					uint id = (uint)sData.ToLong_(s.Offset, out int idEnd);
-					Debug.Assert(null != _coll.IcfFindById(id));
+					Debug.Assert(null != _coll.IwfFindById(id));
 					_data[id] = s.EndOffset > idEnd ? sData.Substring(idEnd, s.EndOffset - idEnd) : null;
 				}
 				if(_data == null) return false; //empty file

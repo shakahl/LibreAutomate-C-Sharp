@@ -1,4 +1,0 @@
-The Libraries folder is for third-party assemblies that can be used in scripts as references specified like //\\r FileName.dll.
-Scripts also can use assemblies from the main Au folder.
-When a reference is specified without .dll (like //\\r FileName), it must be in the .NET framework runtime folder or in GAC.
-Also references can be specified using full path or path relative to the main Au folder, but may be problems locating them at run time.

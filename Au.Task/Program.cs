@@ -92,6 +92,8 @@ static unsafe class Program
 		bool mtaThread = 0 != (flags & 2); //app without [STAThread]
 		if(mtaThread == s_isSTA) _SetComApartment(mtaThread ? ApartmentState.MTA : ApartmentState.STA);
 
+		if(0 != (flags & 4)) AllocConsole(); //outputType console
+
 		if(0 != (flags & 1)) { //hasConfig
 			var config = asmFile + ".config";
 			if(File_.ExistsAsFile(config, true)) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
@@ -190,4 +192,8 @@ static unsafe class Program
 		});
 	}
 	static Au.Util.WinHook s_hook;
+
+	[DllImport("kernel32.dll")]
+	internal static extern bool AllocConsole();
+
 }
