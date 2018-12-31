@@ -1,0 +1,76 @@
+﻿/* meta
+//most properties of scripts and .cs files are saved in meta comments like here, at the very start of code
+ifRunning restart
+r System.Numerics
+*/
+
+//This script file shows how C# script syntax is different from standard C# syntax.
+//Everything is optional. A script can contain just single code line, such as Print("hello");.
+//But sooner or later you'll need something more. Then this script shows how/where to add it.
+//If you want to use standard C# syntax, create a .cs file: menu File -> New -> New App or New Class.
+
+//Here can be file-level code in this order: #define, extern alias, using, [attributes]. It is standard C#.
+using System.Numerics;
+
+//Imagine this code here:
+//class App :AuAppBase {
+//[STAThread] static void Main(string[] args) { new App()._Main(args); }
+
+//Variables declared with a modifier (private, static, etc) are fields of the imaginary class App. Must be above main code.
+private int _field = 3;
+static int _staticField = 4;
+
+//Imagine this code here:
+//void _Main(string[] args) {
+
+//Main code. It is code of the imaginary function _Main.
+int localVariable = 5;
+Print(Function1(localVariable)); //call Function1 and print its return value in the output pane
+
+//Script can contain functions. They are members of the imaginary class App.
+int Function1(int x) {
+	return x + _field; //in functions can be used fields of the imaginary class App
+}
+
+//Script can contain classes. They are inside the imaginary class App.
+class NestedClass {
+	public void Function2() {
+		Print(_staticField); //in nested classes can be directly used static fields of the main class
+	}
+}
+
+//Functions and classes can be mixed with main code.
+var x = new NestedClass();
+x.Function2();
+
+//Class-level declarations can be mixed with main code. Except fields.
+[DllImport("kernel32.dll")]
+static extern int GetTickCount();
+
+Print(GetTickCount());
+
+//Want a "nested function" that can use locals of _Main? It must be in a { } code block (if, for, etc, or just { } alone).
+{
+void _NestedFunc() { Print(localVariable); }
+_NestedFunc();
+
+//{ } code blocks cannot contain class-level declarations. It is standard C# code.
+}
+
+
+//When compiling a script, the compiler adds the imaginary code (class App, functions Main, _Main, some usings, etc)
+// and then compiles the transformed code as standard C# code. To see how that code looks: menu File -> New -> New App.
+
+//This program uses non-standard C# script syntax. Main differences:
+//1. Meta comments.
+//2. Directives #r and #load are not supported. Instead use meta comments r and c.
+//3. Variables declared without a modifier (private, static, etc) are not visible in functions.
+//4. The compiler adds some commonly used 'using' directives. You can see them in App code (menu File -> New -> New App).
+//5. Adds attribute [STAThread].
+//6. Allows to access command line arguments through the args variable.
+
+//When compiling scripts and .cs files this program adds:
+//1. References: mscorlib, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
+//2. Attributes: [module: DefaultCharSet(CharSet.Unicode)], some version attributes.
+
+//This program uses C# version 7.3 and .NET Framework version 4.7.2.

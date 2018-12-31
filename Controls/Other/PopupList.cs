@@ -64,27 +64,27 @@ namespace Au.Controls
 		public bool MultiShow { get; set; }
 
 		/// <summary>
-		/// When the popup window hidden.
+		/// Called when the popup window hidden.
 		/// If an item selected, the <b>ResultX</b> properties contain selection info, else null/-1/false.
 		/// </summary>
-		public event Action<PopupList> Closed;
+		public Action<PopupList> ClosedAction { get; set; }
 
 		/// <summary>
-		/// When an item selected.
-		/// The event handler can use the <b>ResultX</b> properties to get selection info.
+		/// Called when an item selected.
+		/// The handler can use the <b>ResultX</b> properties to get selection info.
 		/// The popup window is already hidden.
 		/// </summary>
-		public event Action<PopupList> Selected;
+		public Action<PopupList> SelectedAction { get; set; }
 
 		/// <summary>
 		/// Gets the selected item.
-		/// Call this from <see cref="Selected"/> event handler.
+		/// Call this from <see cref="SelectedAction"/> callback.
 		/// </summary>
 		public object ResultItem { get; private set; }
 
 		/// <summary>
 		/// Gets the selected index.
-		/// Call this from <see cref="Selected"/> event handler.
+		/// Call this from <see cref="SelectedAction"/> callback.
 		/// </summary>
 		public int ResultIndex {
 			get {
@@ -164,7 +164,7 @@ namespace Au.Controls
 
 			int n = Items?.Length ?? 0;
 			if(n == 0) {
-				Closed?.Invoke(this);
+				ClosedAction?.Invoke(this);
 				return;
 			}
 
@@ -289,7 +289,7 @@ namespace Au.Controls
 			ResultItem = node.Tag;
 			ResultWasKey = isKey;
 			_Close();
-			Selected?.Invoke(this);
+			SelectedAction?.Invoke(this);
 		}
 
 		//returns true to steal the key
@@ -464,7 +464,7 @@ namespace Au.Controls
 				_isVisible = visible;
 
 				if(!visible) {
-					_p.Closed?.Invoke(_p);
+					_p.ClosedAction?.Invoke(_p);
 					if(!onDestroy && !_p.MultiShow) _p._w.Close();
 				} else {
 					//show with standard combobox animation

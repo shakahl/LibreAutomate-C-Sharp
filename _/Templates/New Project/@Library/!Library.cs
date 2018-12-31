@@ -1,8 +1,7 @@
 ﻿/* meta
-outputType dll
+role classLibrary
 outputPath %Folders.ThisApp%\Libraries
 //debug false
-//xmlDoc
 */
 //#include usings.txt
 

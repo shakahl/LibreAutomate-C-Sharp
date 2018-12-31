@@ -362,9 +362,9 @@ public static class Panels
 		m.GetPanel(Open).Init("Currently open files", EdResources.GetImageUseCache("open"));
 		m.GetPanel(Output).Init("Errors and other information", EdResources.GetImageUseCache("output"));
 		m.GetPanel(Find).Init("Find files, text, triggers", EdResources.GetImageUseCache("find"));
-		m.GetPanel(Files).Init("All scripts and other files of current workspace");
-		m.GetPanel(Running).Init("Running scripts");
-		m.GetPanel(Recent).Init("Recent running scripts");
+		m.GetPanel(Files).Init("All files of this workspace");
+		m.GetPanel(Running).Init("Running tasks");
+		m.GetPanel(Recent).Init("Recent tasks");
 #if TEST
 		m.GetPanel(c).Init("New panel", EdResources.GetImageUseCache("paste"));
 #endif

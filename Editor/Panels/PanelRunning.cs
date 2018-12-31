@@ -109,8 +109,8 @@ class PanelRunning :Control, ITreeModel
 		case MouseButtons.Right:
 			var name = f.Name;
 			var m = new AuMenu();
-			m["End thread of '" + name + "'"] = o => Tasks.EndTask(t);
-			m["End all threads of '" + name + "'"] = o => Tasks.EndTasksOf(f);
+			m["End task '" + name + "'"] = o => Tasks.EndTask(t);
+			m["End all '" + name + "'"] = o => Tasks.EndTasksOf(f);
 			m.Show(_c);
 			break;
 		case MouseButtons.Middle:

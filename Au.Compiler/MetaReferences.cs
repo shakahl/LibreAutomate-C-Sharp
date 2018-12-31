@@ -29,7 +29,7 @@ namespace Au.Compiler
 	/// Cache requires many MB of unmanaged memory, therefore is cleared (all unloaded) by GC. A reference to a MetaReferences variable prevents unloading.
 	/// For each compilation create a MetaReferences variable. Compilations can be in different threads, but a variable must be used in same thread as created.
 	/// </summary>
-	public class MetaReferences
+	class MetaReferences
 	{
 		static WeakReference<List<PortableExecutableReference>> s_refsWR = new WeakReference<List<PortableExecutableReference>>(null);
 		List<PortableExecutableReference> _cache; //all references resolved by any variables, + default. In s_refsWR.
@@ -75,26 +75,26 @@ namespace Au.Compiler
 		/// <param name="reference">Assembly name (like "System.Something") or filename (like "My.dll") or path.</param>
 		/// <exception cref="Exception">Some unexpected exception, eg failed to load the found file.</exception>
 		/// <remarks>
-		/// If used filename without full path, searches in <see cref="Folders.ThisApp"/>, subfolder "Libraries", <paramref name="dirs"/>, <see cref="Folders.NetFrameworkRuntime"/> and GAC.
-		/// If used assembly name without ".dll", ".exe", '\\' or '/', searches only in <see cref="Folders.NetFrameworkRuntime"/> and GAC.
+		/// If used filename without full path, searches in <see cref="Folders.ThisApp"/>, subfolder "Libraries", <see cref="Folders.NetFrameworkRuntime"/> and GAC.
+		/// If used assembly name without ".dll", ".exe" or ", Version=", searches only in <see cref="Folders.NetFrameworkRuntime"/> and GAC.
+		/// If contains", Version=", searches only in GAC.
+		/// Can be "Alias=X.dll" - assembly reference that can be used with C# keyword 'extern alias'.
 		/// Loads the file but does not parse. If bad format, error later when compiling.
 		/// </remarks>
-		public bool Resolve(string reference)
+		public bool Resolve(string reference, bool isCOM)
 		{
 			string alias = null;
 			int i = reference.IndexOf('=');
-			if(i >= 0) {
+			if(i >= 0 && !(i > 9 && reference.EqualsAt_(i - 9, ", Version"))) {
 				alias = reference.Remove(i);
 				reference = reference.Substring(i + 1);
 			}
 
-			//FUTURE: support COM and embedInteropTypes
-
 			var defRef = Compiler.DefaultReferences;
-			if(defRef.ContainsKey(reference)) return true;
+			if(!isCOM && defRef.ContainsKey(reference)) return true;
 			if(_dict?.ContainsKey(reference) ?? false) return true;
 
-			var path = _ResolvePath(reference);
+			var path = _ResolvePath(reference, isCOM);
 			if(path == null) return false;
 			path = Path_.LibNormalize(path);
 
@@ -103,7 +103,10 @@ namespace Au.Compiler
 			lock(s_refsWR) {
 				mr = _cache.Find(v => v.FilePath.EqualsI_(path));
 				if(mr == null) {
-					MetadataReferenceProperties prop = alias == null ? default : new MetadataReferenceProperties(aliases: ImmutableArray.Create(alias));
+					MetadataReferenceProperties prop = alias == null && !isCOM
+						? default
+						: new MetadataReferenceProperties(aliases: alias == null ? default : ImmutableArray.Create(alias), embedInteropTypes: isCOM);
+
 					mr = MetadataReference.CreateFromFile(path, prop);
 					_cache.Add(mr);
 				}
@@ -117,19 +120,22 @@ namespace Au.Compiler
 			return true;
 		}
 
-		static string _ResolvePath(string re)
+		static string _ResolvePath(string re, bool isCOM)
 		{
 			if(Empty(re)) return null;
-			if(Path_.IsFullPathExpandEnvVar(ref re)) {
-				return File_.ExistsAsFile(re) ? re : null;
-			}
-			string path, ext;
+			bool isFull = Path_.IsFullPathExpandEnvVar(ref re);
+			if(!isFull && isCOM) { isFull = true; re = Folders.Workspace + @".interop\" + re; }
+			if(isFull) return File_.ExistsAsFile(re) ? re : null;
+
+			string path, ext; int i;
 			if(0 != re.EndsWith_(true, s_asmExt)) {
 				foreach(var v in s_dirs) {
 					path = Path_.Combine(v, re);
 					if(File_.ExistsAsFile(path)) return path;
 				}
 				ext = null;
+			} else if((i = re.IndexOf_(", Version=")) > 0) {
+				return GAC.FindAssembly(re.Remove(i), re);
 			} else ext = ".dll";
 
 			var d = RuntimeEnvironment.GetRuntimeDirectory();
@@ -165,7 +171,8 @@ namespace Au.Compiler
 		}
 	}
 
-	static class GAC
+	[System.Security.SuppressUnmanagedCodeSecurity]
+	public static class GAC
 	{
 		[ComImport, InterfaceType(ComInterfaceType.InterfaceIsIUnknown), Guid("e707dcde-d1cd-11d2-bab9-00c04f8eceae")]
 		interface IAssemblyCache
@@ -182,6 +189,8 @@ namespace Au.Compiler
 			[PreserveSig] int _U2();
 			[PreserveSig] int _U3();
 			[PreserveSig] int GetDisplayName(char* pDisplayName, ref int pccDisplayName, ASM_DISPLAY_FLAGS displayFlags);
+			[PreserveSig] int _U4();
+			[PreserveSig] int GetName(ref int lpcwBuffer, char* pwzName);
 			//...
 		}
 
@@ -243,15 +252,16 @@ namespace Au.Compiler
 
 		static unsafe string _GetAssemblyPath(string assemblyName)
 		{
+			var p = Perf.StartNew();
 			ASSEMBLY_INFO x = default;
 			x.cbAssemblyInfo = Api.SizeOf<ASSEMBLY_INFO>();
 			x.cchBuf = 1024;
 			var b = stackalloc char[x.cchBuf];
 			x.currentAssemblyPath = b;
-
-			IAssemblyCache ac = null;
+			IAssemblyCache ac = null; //tested: static var does not make faster. The slow part is QueryAssemblyInfo.
 			_HR(CreateAssemblyCache(out ac, 0));
 			_HR(ac.QueryAssemblyInfo(0, assemblyName, ref x));
+			Marshal.ReleaseComObject(ac);
 
 			return new string(b);
 		}
@@ -261,10 +271,17 @@ namespace Au.Compiler
 			IAssemblyEnum _e;
 			bool _done;
 
+			public _AssemblyEnum()
+			{
+				_HR(CreateAssemblyEnum(out _e, default, null, ASM_CACHE_FLAGS.GAC, default));
+				//tested: fails with ASM_CACHE_ROOT_EX. It is only for GetCachePath, it is documented.
+			}
+
 			public _AssemblyEnum(string sAsmName)
 			{
-				_HR(CreateAssemblyNameObject(out var asmName, sAsmName, CREATE_ASM_NAME_OBJ_FLAGS.PARSE_DISPLAY_NAME, default));
-				_HR(CreateAssemblyEnum(out _e, default, asmName, ASM_CACHE_FLAGS.GAC, default));
+				_HR(CreateAssemblyNameObject(out var an, sAsmName, CREATE_ASM_NAME_OBJ_FLAGS.PARSE_DISPLAY_NAME, default));
+				_HR(CreateAssemblyEnum(out _e, default, an, ASM_CACHE_FLAGS.GAC, default));
+				Marshal.ReleaseComObject(an);
 			}
 
 			public unsafe string GetNextAssembly(ASM_DISPLAY_FLAGS flags)
@@ -276,7 +293,7 @@ namespace Au.Compiler
 					if(asmName != null) {
 						int n = 300;
 						var b = stackalloc char[n + 1];
-						_HR(asmName.GetDisplayName(b, ref n, flags));
+						_HR(flags == 0 ? asmName.GetName(ref n, b) : asmName.GetDisplayName(b, ref n, flags));
 						R = new string(b); //n is with null, undocumented
 					}
 
@@ -286,19 +303,54 @@ namespace Au.Compiler
 			}
 		}
 
-		public static string FindAssembly(string asmName)
+		/// <summary>
+		/// Finds assembly by name or name/version in GAC and returns file path. Returns null if not found.
+		/// </summary>
+		/// <param name="asmName">Assembly name without version.</param>
+		/// <param name="withVersion">If null, gets highest assembly version. Else gets assembly of exactly this version; must be like "Name, Version=1.2.3" and not like "Name,  version = 1.2.3".</param>
+		public static string FindAssembly(string asmName, string withVersion = null)
 		{
 			var asmEnum = new _AssemblyEnum(asmName);
 
 			string highestVersion = null;
 			for(; ; ) {
 				var s = asmEnum.GetNextAssembly(ASM_DISPLAY_FLAGS.VERSION); if(s == null) break;
-				//Print(s);
+				if(withVersion != null) {
+					if(s == withVersion) return _GetAssemblyPath(s);
+					continue;
+				}
 				if(highestVersion == null || string.Compare(s, highestVersion) > 0) highestVersion = s;
 			}
 
 			if(highestVersion != null) return _GetAssemblyPath(highestVersion);
 			return null;
 		}
+
+		public static IEnumerable<string> EnumAssemblies(bool withVersion)
+		{
+			var e = new _AssemblyEnum();
+			while(true) {
+				var s = e.GetNextAssembly(withVersion ? ASM_DISPLAY_FLAGS.VERSION : 0);
+				if(s == null) yield break;
+
+				//SHOULDDO: skip assemblies of old CLR versions.
+				//	For it can use _GetAssemblyPath. Old versions are in other folder. But makes slower 200 ms -> 700 ms.
+				//	I could not find other ways.
+				//var path = _GetAssemblyPath(s);
+
+				yield return s;
+			}
+		}
+
+		//public static unsafe void TestGetCachePath()
+		//{
+		//	var cp = stackalloc char[1001]; int n = 1000;
+		//	int hr = GetCachePath((ASM_CACHE_FLAGS)0x80, cp, ref n); //ASM_CACHE_ROOT_EX
+		//	if(hr != 0) { Print(hr); return; }
+		//	var s = new string(cp);
+		//	Print(s); //OK
+		//}
+		//[DllImport("fusion.dll")]
+		//static extern unsafe int GetCachePath(ASM_CACHE_FLAGS flags, char* path, ref int ccPath);
 	}
 }

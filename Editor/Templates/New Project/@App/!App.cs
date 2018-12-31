@@ -1,7 +1,5 @@
 ﻿/* meta
-outputType app
-//outputPath %Folders.ThisAppDocuments%\App1
-//debug false
+role miniProgram
 */
 //#include usings.txt
 

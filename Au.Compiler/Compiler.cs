@@ -47,8 +47,8 @@ namespace Au.Compiler
 		/// 
 		/// Adds <see cref="DefaultReferences"/>. For scripts adds <see cref="DefaultUsings"/>.
 		/// 
-		/// If f is not script/app/dll:
-		///		If forRun, does not compile (just parses meta), sets r.outputType=dll and returns false.
+		/// If f role is classFile:
+		///		If forRun, does not compile (just parses meta), sets r.role=classFile and returns false.
 		///		Else compiles but does not create output files.
 		/// </remarks>
 		public static bool Compile(bool forRun, out CompResults r, IWorkspaceFile f, IWorkspaceFile projFolder = null)
@@ -91,11 +91,12 @@ namespace Au.Compiler
 			/// <summary>Full path of assembly file.</summary>
 			public string file;
 
-			public EOutputType outputType;
+			public ERole role;
 			public ERunMode runMode;
 			public EIfRunning ifRunning;
 			public EUac uac;
 			public bool prefer32bit;
+			public bool console;//TODO: test
 
 			/// <summary>Has config file this.file + ".config".</summary>
 			public bool hasConfig;
@@ -120,11 +121,11 @@ namespace Au.Compiler
 			var err = m.Errors;
 			//Perf.Next('m');
 
-			bool needOutputFiles = !(m.OutputType == EOutputType.dll && m.OutputPath == null);
+			bool needOutputFiles = m.Role != ERole.classFile;
 
-			//if for run, don't compile if f is not executable, unless creating dll
+			//if for run, don't compile if f role is classFile
 			if(forRun && !needOutputFiles) {
-				r.outputType = EOutputType.dll;
+				r.role = ERole.classFile;
 				return false;
 			}
 
@@ -134,7 +135,7 @@ namespace Au.Compiler
 				string fileName;
 				if(m.OutputPath != null) {
 					outPath = m.OutputPath; //info: the directory is already created
-					fileName = m.Name + (m.OutputType == EOutputType.dll ? ".dll" : ".exe");
+					fileName = m.Name + (m.Role == ERole.classLibrary ? ".dll" : ".exe");
 				} else {
 					outPath = cache.CacheDirectory;
 					fileName = f.IdString;
@@ -146,7 +147,7 @@ namespace Au.Compiler
 			if(m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
 
 			string[] usings = null;
-			var trees = new List<CSharpSyntaxTree>(m.Files.Count + 1);
+			var trees = new List<CSharpSyntaxTree>(m.CodeFiles.Count + 1);
 			var po = new CSharpParseOptions(LanguageVersion.Latest,
 				m.XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None,
 				m.IsScript ? SourceCodeKind.Script : SourceCodeKind.Regular,
@@ -167,7 +168,7 @@ internal static string[] args = System.Array.Empty<string>();
 		}
 #else
 			bool transform = m.IsScript;
-			foreach(var f1 in m.Files) {
+			foreach(var f1 in m.CodeFiles) {
 				var tree = CSharpSyntaxTree.ParseText(f1.code, po, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
 				//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), Visual Studio debugger, etc.
 				//	Our OutputServer.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
@@ -192,17 +193,15 @@ internal static string[] args = System.Array.Empty<string>();
 #endif
 			//Perf.Next('t');
 
-			OutputKind ot;
-			switch(m.OutputType) {
-			case EOutputType.dll: ot = OutputKind.DynamicallyLinkedLibrary; break;
-			case EOutputType.console: ot = OutputKind.ConsoleApplication; break;
-			default: ot = OutputKind.WindowsApplication; break;
-			}
+			OutputKind oKind;
+			if(m.Role == ERole.classLibrary || m.Role == ERole.classFile) oKind = OutputKind.DynamicallyLinkedLibrary;
+			else if(m.Console) oKind = OutputKind.ConsoleApplication;
+			else oKind = OutputKind.WindowsApplication;
 
 			var options = new CSharpCompilationOptions(
-			   ot,
+			   oKind,
 			   usings: usings,
-			   optimizationLevel: m.IsDebug ? OptimizationLevel.Debug : OptimizationLevel.Release, //speed: compile the same, load Release slightly slower. Default Debug.
+			   optimizationLevel: m.Optimize ? OptimizationLevel.Release : OptimizationLevel.Debug, //speed: compile the same, load Release slightly slower. Default Debug.
 			   allowUnsafe: true,
 			   platform: m.Prefer32Bit ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
 			   warningLevel: m.WarningLevel,
@@ -221,7 +220,7 @@ internal static string[] args = System.Array.Empty<string>();
 			EmitOptions eOpt = null;
 
 			if(needOutputFiles) {
-				_AddAttributes(ref compilation, ot != OutputKind.DynamicallyLinkedLibrary && m.RunMode != ERunMode.editorThread);
+				_AddAttributes(ref compilation, needVersionEtc: m.Role == ERole.miniProgram || m.Role == ERole.exeProgram);
 
 				//create debug info always. It is used for run-time error links.
 				pdbStream = new MemoryStream();
@@ -275,7 +274,7 @@ internal static string[] args = System.Array.Empty<string>();
 
 			if(needOutputFiles) {
 				//If there is no [STAThread], will need MTA thread.
-				if(!m.IsScript && ot != OutputKind.DynamicallyLinkedLibrary && m.RunMode != ERunMode.editorThread) {
+				if(!m.IsScript && (m.Role == ERole.miniProgram || m.Role == ERole.exeProgram)) {
 					bool hasSTAThread = compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.STAThreadAttribute") ?? false;
 					if(!hasSTAThread) r.mtaThread = true;
 				}
@@ -296,7 +295,7 @@ internal static string[] args = System.Array.Empty<string>();
 				r.file = outFile;
 
 				//copy non-.NET references to the output directory
-				if(m.OutputPath != null && m.OutputType != EOutputType.dll) {
+				if(m.Role == ERole.exeProgram) {
 					//Perf.Next();
 					_CopyReferenceFiles(m);
 				}
@@ -315,17 +314,18 @@ internal static string[] args = System.Array.Empty<string>();
 
 			//Perf.First();
 			if(needOutputFiles) {
-				if(m.OutputType != EOutputType.dll) _Triggers(f, compilation);
+				if(m.Role != ERole.classLibrary) _Triggers(f, compilation);
 				cache.AddCompiled(f, outFile, m, r.pdbOffset, r.mtaThread);
 			}
 			//Perf.NW();
 
 			r.name = m.Name;
-			r.outputType = m.OutputType;
+			r.role = m.Role;
 			r.ifRunning = m.IfRunning;
 			r.runMode = m.RunMode;
 			r.uac = m.Uac;
 			r.prefer32bit = m.Prefer32Bit;
+			r.console = m.Console;
 			r.notInCache = m.OutputPath != null;
 
 			//Perf.NW();
@@ -469,10 +469,9 @@ internal static string[] args = System.Array.Empty<string>();
 		{
 			var manifest = m.ManifestFile;
 
-			//add default manifest if need
 			string manifestPath = null;
 			if(manifest != null) manifestPath = manifest.FilePath;
-			else if(m.OutputPath != null && m.OutputType != EOutputType.dll && m.ResFile == null) {
+			else if(m.Role == ERole.exeProgram && m.ResFile == null) { //add default manifest if need
 				manifestPath = Folders.ThisAppBS + "default.exe.manifest"; //don't: uac
 				if(!File_.ExistsAsFile(manifestPath)) manifestPath = null;
 			}
@@ -499,7 +498,7 @@ internal static string[] args = System.Array.Empty<string>();
 		{
 			var em = e.ToStringWithoutStack_();
 			var err = m.Errors;
-			var f = m.Files[0].f;
+			var f = m.CodeFiles[0].f;
 			if(curFile == null) err.AddError(f, "Failed to add resources. " + em);
 			else err.AddError(f, $"Failed to add resource '{curFile.Name}'. " + em);
 		}
@@ -770,7 +769,7 @@ void _Main(string[] args) {");
 			var m = new MetaComments();
 			if(!m.Parse(f, null, EMPFlags.PrintErrors)) return null;
 			var err = m.Errors;
-			var code = m.Files[0].code;
+			var code = m.CodeFiles[0].code;
 			var po = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.None, SourceCodeKind.Script, m.Defines);
 			var tree = CSharpSyntaxTree.ParseText(code, po, f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
 			if(err.AddAllAndPrint(tree, f)) return null;
@@ -799,16 +798,16 @@ void _Main(string[] args) {");
 				args = Au.Util.StringMisc.CommandLineToArray(x.s);
 
 				//replace variables like $(variable)
-				var f = m.Files[0].f;
+				var f = m.CodeFiles[0].f;
 				if(s_rx1 == null) s_rx1 = new Regex_(@"\$\((\w+)\)");
 				string _ReplFunc(RXMatch k)
 				{
 					switch(k[1].Value) {
-					case "outputFile": return outFile;
-					case "sourceFile": return f.FilePath;
 					case "source": return f.ItemPath;
+					case "outputFile": return outFile;
 					case "outputPath": return m.OutputPath;
-					case "debug": return m.IsDebug ? "true" : "false";
+					case "optimize": return m.Optimize ? "true" : "false";
+					case "role": return m.Role.ToString();
 					default: throw new ArgumentException("error in meta: unknown variable " + k.Value);
 					}
 				}
@@ -816,7 +815,7 @@ void _Main(string[] args) {");
 			}
 
 			bool ok = Compile(true, out var r, x.f);
-			if(r.outputType == EOutputType.dll) throw new ArgumentException($"error in meta: '{x.f.Name}' is not script/app");
+			if(r.role != ERole.editorExtension) throw new ArgumentException($"meta of '{x.f.Name}' must contain role editorExtension");
 			if(!ok) return false;
 
 			RunAsm.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread | RAFlags.DontHandleExceptions);

@@ -25,27 +25,41 @@
 	/// </summary>
 	private void InitializeComponent()
 	{
-			this.components = new System.ComponentModel.Container();
 			this._bOK = new Au.Controls.ButtonOK();
 			this._bCancel = new Au.Controls.ButtonCancel();
 			this._info = new Au.Controls.AuInfoBox();
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this._grid = new Au.Controls.ParamGrid();
-			this._bAddResource = new System.Windows.Forms.Button();
+			this.groupBox3 = new System.Windows.Forms.GroupBox();
+			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this.label5 = new System.Windows.Forms.Label();
+			this._bAddComBrowse = new System.Windows.Forms.Button();
+			this.label3 = new System.Windows.Forms.Label();
+			this.label2 = new System.Windows.Forms.Label();
+			this.label1 = new System.Windows.Forms.Label();
+			this._bAddBrowseNet = new System.Windows.Forms.Button();
+			this._bAddBrowseOther = new System.Windows.Forms.Button();
+			this._bAddGacNewest = new System.Windows.Forms.Button();
+			this._bAddGacVersion = new System.Windows.Forms.Button();
+			this._bAddMyLibraryProject = new System.Windows.Forms.Button();
+			this._bAddComRegistry = new System.Windows.Forms.Button();
+			this.label4 = new System.Windows.Forms.Label();
+			this.groupBox2 = new System.Windows.Forms.GroupBox();
 			this._bAddClass = new System.Windows.Forms.Button();
-			this._bAddLib = new System.Windows.Forms.Button();
-			this._bAddRefOther = new System.Windows.Forms.Button();
-			this._bAddRefNet = new System.Windows.Forms.Button();
-			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
+			this._bAddResource = new System.Windows.Forms.Button();
+			this._tFindInList = new System.Windows.Forms.TextBox();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
 			this.splitContainer1.SuspendLayout();
+			this.groupBox3.SuspendLayout();
+			this.groupBox1.SuspendLayout();
+			this.groupBox2.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// _bOK
 			// 
-			this._bOK.Location = new System.Drawing.Point(224, 408);
+			this._bOK.Location = new System.Drawing.Point(144, 304);
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
 			this._bOK.TabIndex = 0;
@@ -53,7 +67,7 @@
 			// 
 			// _bCancel
 			// 
-			this._bCancel.Location = new System.Drawing.Point(304, 408);
+			this._bCancel.Location = new System.Drawing.Point(224, 304);
 			this._bCancel.Name = "_bCancel";
 			this._bCancel.Size = new System.Drawing.Size(72, 24);
 			this._bCancel.TabIndex = 1;
@@ -66,12 +80,12 @@
 			this._info.DisableModifiedNotifications = false;
 			this._info.Location = new System.Drawing.Point(8, 8);
 			this._info.Name = "_info";
-			this._info.Size = new System.Drawing.Size(600, 56);
+			this._info.Size = new System.Drawing.Size(600, 104);
 			this._info.TabIndex = 7;
 			// 
 			// splitContainer1
 			// 
-			this.splitContainer1.Location = new System.Drawing.Point(8, 72);
+			this.splitContainer1.Location = new System.Drawing.Point(8, 120);
 			this.splitContainer1.Name = "splitContainer1";
 			// 
 			// splitContainer1.Panel1
@@ -80,11 +94,9 @@
 			// 
 			// splitContainer1.Panel2
 			// 
-			this.splitContainer1.Panel2.Controls.Add(this._bAddResource);
-			this.splitContainer1.Panel2.Controls.Add(this._bAddClass);
-			this.splitContainer1.Panel2.Controls.Add(this._bAddLib);
-			this.splitContainer1.Panel2.Controls.Add(this._bAddRefOther);
-			this.splitContainer1.Panel2.Controls.Add(this._bAddRefNet);
+			this.splitContainer1.Panel2.Controls.Add(this.groupBox3);
+			this.splitContainer1.Panel2.Controls.Add(this._bOK);
+			this.splitContainer1.Panel2.Controls.Add(this._bCancel);
 			this.splitContainer1.Size = new System.Drawing.Size(600, 328);
 			this.splitContainer1.SplitterDistance = 300;
 			this.splitContainer1.TabIndex = 8;
@@ -112,69 +124,207 @@
 			this._grid.ToolTipText = "";
 			this._grid.ZAddHidden = false;
 			// 
-			// _bAddResource
+			// groupBox3
 			// 
-			this._bAddResource.Location = new System.Drawing.Point(0, 96);
-			this._bAddResource.Name = "_bAddResource";
-			this._bAddResource.Size = new System.Drawing.Size(168, 24);
-			this._bAddResource.TabIndex = 1;
-			this._bAddResource.Text = "Add resource...";
-			this._bAddResource.UseVisualStyleBackColor = true;
-			this._bAddResource.Click += new System.EventHandler(this._bAddResource_Click);
+			this.groupBox3.Controls.Add(this.groupBox1);
+			this.groupBox3.Controls.Add(this.label4);
+			this.groupBox3.Controls.Add(this.groupBox2);
+			this.groupBox3.Controls.Add(this._tFindInList);
+			this.groupBox3.Location = new System.Drawing.Point(8, 0);
+			this.groupBox3.Name = "groupBox3";
+			this.groupBox3.Size = new System.Drawing.Size(224, 280);
+			this.groupBox3.TabIndex = 6;
+			this.groupBox3.TabStop = false;
+			this.groupBox3.Text = "Add meta r, com, pr, c, resource";
+			// 
+			// groupBox1
+			// 
+			this.groupBox1.Controls.Add(this.label5);
+			this.groupBox1.Controls.Add(this._bAddComBrowse);
+			this.groupBox1.Controls.Add(this.label3);
+			this.groupBox1.Controls.Add(this.label2);
+			this.groupBox1.Controls.Add(this.label1);
+			this.groupBox1.Controls.Add(this._bAddBrowseNet);
+			this.groupBox1.Controls.Add(this._bAddBrowseOther);
+			this.groupBox1.Controls.Add(this._bAddGacNewest);
+			this.groupBox1.Controls.Add(this._bAddGacVersion);
+			this.groupBox1.Controls.Add(this._bAddMyLibraryProject);
+			this.groupBox1.Controls.Add(this._bAddComRegistry);
+			this.groupBox1.Location = new System.Drawing.Point(8, 24);
+			this.groupBox1.Name = "groupBox1";
+			this.groupBox1.Size = new System.Drawing.Size(208, 152);
+			this.groupBox1.TabIndex = 2;
+			this.groupBox1.TabStop = false;
+			this.groupBox1.Text = "Add assembly reference";
+			// 
+			// label5
+			// 
+			this.label5.AutoSize = true;
+			this.label5.Location = new System.Drawing.Point(8, 124);
+			this.label5.Name = "label5";
+			this.label5.Size = new System.Drawing.Size(24, 15);
+			this.label5.TabIndex = 9;
+			this.label5.Text = "My";
+			// 
+			// _bAddComBrowse
+			// 
+			this._bAddComBrowse.Location = new System.Drawing.Point(128, 88);
+			this._bAddComBrowse.Name = "_bAddComBrowse";
+			this._bAddComBrowse.Size = new System.Drawing.Size(72, 24);
+			this._bAddComBrowse.TabIndex = 8;
+			this._bAddComBrowse.Text = "Browse...";
+			this._bAddComBrowse.UseVisualStyleBackColor = true;
+			this._bAddComBrowse.Click += new System.EventHandler(this._bAddComBrowse_Click);
+			// 
+			// label3
+			// 
+			this.label3.AutoSize = true;
+			this.label3.Location = new System.Drawing.Point(8, 92);
+			this.label3.Name = "label3";
+			this.label3.Size = new System.Drawing.Size(35, 15);
+			this.label3.TabIndex = 7;
+			this.label3.Text = "COM";
+			// 
+			// label2
+			// 
+			this.label2.AutoSize = true;
+			this.label2.Location = new System.Drawing.Point(8, 60);
+			this.label2.Name = "label2";
+			this.label2.Size = new System.Drawing.Size(31, 15);
+			this.label2.TabIndex = 6;
+			this.label2.Text = "GAC";
+			// 
+			// label1
+			// 
+			this.label1.AutoSize = true;
+			this.label1.Location = new System.Drawing.Point(8, 28);
+			this.label1.Name = "label1";
+			this.label1.Size = new System.Drawing.Size(45, 15);
+			this.label1.TabIndex = 5;
+			this.label1.Text = "Browse";
+			// 
+			// _bAddBrowseNet
+			// 
+			this._bAddBrowseNet.Location = new System.Drawing.Point(56, 24);
+			this._bAddBrowseNet.Name = "_bAddBrowseNet";
+			this._bAddBrowseNet.Size = new System.Drawing.Size(72, 24);
+			this._bAddBrowseNet.TabIndex = 1;
+			this._bAddBrowseNet.Text = ".NET...";
+			this._bAddBrowseNet.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+			this._bAddBrowseNet.UseVisualStyleBackColor = true;
+			this._bAddBrowseNet.Click += new System.EventHandler(this._bAddBrowse_Click);
+			// 
+			// _bAddBrowseOther
+			// 
+			this._bAddBrowseOther.Location = new System.Drawing.Point(128, 24);
+			this._bAddBrowseOther.Name = "_bAddBrowseOther";
+			this._bAddBrowseOther.Size = new System.Drawing.Size(72, 24);
+			this._bAddBrowseOther.TabIndex = 1;
+			this._bAddBrowseOther.Text = "Other...";
+			this._bAddBrowseOther.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+			this._bAddBrowseOther.UseVisualStyleBackColor = true;
+			this._bAddBrowseOther.Click += new System.EventHandler(this._bAddBrowse_Click);
+			// 
+			// _bAddGacNewest
+			// 
+			this._bAddGacNewest.Location = new System.Drawing.Point(56, 56);
+			this._bAddGacNewest.Name = "_bAddGacNewest";
+			this._bAddGacNewest.Size = new System.Drawing.Size(72, 24);
+			this._bAddGacNewest.TabIndex = 1;
+			this._bAddGacNewest.Text = "Newest...";
+			this._bAddGacNewest.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+			this._bAddGacNewest.UseVisualStyleBackColor = true;
+			this._bAddGacNewest.Click += new System.EventHandler(this._bAddGac_Click);
+			// 
+			// _bAddGacVersion
+			// 
+			this._bAddGacVersion.Location = new System.Drawing.Point(128, 56);
+			this._bAddGacVersion.Name = "_bAddGacVersion";
+			this._bAddGacVersion.Size = new System.Drawing.Size(72, 24);
+			this._bAddGacVersion.TabIndex = 1;
+			this._bAddGacVersion.Text = "Version...";
+			this._bAddGacVersion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+			this._bAddGacVersion.UseVisualStyleBackColor = true;
+			this._bAddGacVersion.Click += new System.EventHandler(this._bAddGac_Click);
+			// 
+			// _bAddMyLibraryProject
+			// 
+			this._bAddMyLibraryProject.Location = new System.Drawing.Point(56, 120);
+			this._bAddMyLibraryProject.Name = "_bAddMyLibraryProject";
+			this._bAddMyLibraryProject.Size = new System.Drawing.Size(144, 24);
+			this._bAddMyLibraryProject.TabIndex = 1;
+			this._bAddMyLibraryProject.Text = "Library project...";
+			this._bAddMyLibraryProject.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+			this._bAddMyLibraryProject.UseVisualStyleBackColor = true;
+			this._bAddMyLibraryProject.Click += new System.EventHandler(this._bAddMyLibraryProject_Click);
+			// 
+			// _bAddComRegistry
+			// 
+			this._bAddComRegistry.Location = new System.Drawing.Point(56, 88);
+			this._bAddComRegistry.Name = "_bAddComRegistry";
+			this._bAddComRegistry.Size = new System.Drawing.Size(72, 24);
+			this._bAddComRegistry.TabIndex = 1;
+			this._bAddComRegistry.Text = "Registry...";
+			this._bAddComRegistry.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+			this._bAddComRegistry.UseVisualStyleBackColor = true;
+			this._bAddComRegistry.Click += new System.EventHandler(this._bAddComRegistry_Click);
+			// 
+			// label4
+			// 
+			this.label4.AutoSize = true;
+			this.label4.Location = new System.Drawing.Point(16, 252);
+			this.label4.Name = "label4";
+			this.label4.Size = new System.Drawing.Size(66, 15);
+			this.label4.TabIndex = 5;
+			this.label4.Text = "Find in lists";
+			// 
+			// groupBox2
+			// 
+			this.groupBox2.Controls.Add(this._bAddClass);
+			this.groupBox2.Controls.Add(this._bAddResource);
+			this.groupBox2.Location = new System.Drawing.Point(8, 184);
+			this.groupBox2.Name = "groupBox2";
+			this.groupBox2.Size = new System.Drawing.Size(208, 56);
+			this.groupBox2.TabIndex = 3;
+			this.groupBox2.TabStop = false;
+			this.groupBox2.Text = "Add file";
 			// 
 			// _bAddClass
 			// 
-			this._bAddClass.Location = new System.Drawing.Point(0, 72);
+			this._bAddClass.Location = new System.Drawing.Point(8, 24);
 			this._bAddClass.Name = "_bAddClass";
-			this._bAddClass.Size = new System.Drawing.Size(168, 24);
+			this._bAddClass.Size = new System.Drawing.Size(88, 24);
 			this._bAddClass.TabIndex = 1;
-			this._bAddClass.Text = "Add class file...";
+			this._bAddClass.Text = "Class file...";
+			this._bAddClass.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddClass.UseVisualStyleBackColor = true;
 			this._bAddClass.Click += new System.EventHandler(this._bAddClass_Click);
 			// 
-			// _bAddLib
+			// _bAddResource
 			// 
-			this._bAddLib.Location = new System.Drawing.Point(0, 48);
-			this._bAddLib.Name = "_bAddLib";
-			this._bAddLib.Size = new System.Drawing.Size(168, 24);
-			this._bAddLib.TabIndex = 1;
-			this._bAddLib.Text = "Add project reference...";
-			this._bAddLib.UseVisualStyleBackColor = true;
-			this._bAddLib.Click += new System.EventHandler(this._bAddLib_Click);
+			this._bAddResource.Location = new System.Drawing.Point(112, 24);
+			this._bAddResource.Name = "_bAddResource";
+			this._bAddResource.Size = new System.Drawing.Size(88, 24);
+			this._bAddResource.TabIndex = 1;
+			this._bAddResource.Text = "Resource...";
+			this._bAddResource.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+			this._bAddResource.UseVisualStyleBackColor = true;
+			this._bAddResource.Click += new System.EventHandler(this._bAddResource_Click);
 			// 
-			// _bAddRefOther
+			// _tFindInList
 			// 
-			this._bAddRefOther.Location = new System.Drawing.Point(0, 24);
-			this._bAddRefOther.Name = "_bAddRefOther";
-			this._bAddRefOther.Size = new System.Drawing.Size(168, 24);
-			this._bAddRefOther.TabIndex = 1;
-			this._bAddRefOther.Text = "Add other reference...";
-			this._bAddRefOther.UseVisualStyleBackColor = true;
-			this._bAddRefOther.Click += new System.EventHandler(this._bAddRefOther_Click);
-			// 
-			// _bAddRefNet
-			// 
-			this._bAddRefNet.Location = new System.Drawing.Point(0, 0);
-			this._bAddRefNet.Name = "_bAddRefNet";
-			this._bAddRefNet.Size = new System.Drawing.Size(168, 24);
-			this._bAddRefNet.TabIndex = 1;
-			this._bAddRefNet.Text = "Add .NET reference...";
-			this._bAddRefNet.UseVisualStyleBackColor = true;
-			this._bAddRefNet.Click += new System.EventHandler(this._bAddRefNet_Click);
-			// 
-			// _toolTip
-			// 
-			this._toolTip.IsBalloon = true;
+			this._tFindInList.Location = new System.Drawing.Point(96, 248);
+			this._tFindInList.Name = "_tFindInList";
+			this._tFindInList.Size = new System.Drawing.Size(112, 23);
+			this._tFindInList.TabIndex = 4;
 			// 
 			// EdCodeFileProperties
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(616, 441);
+			this.ClientSize = new System.Drawing.Size(616, 455);
 			this.Controls.Add(this.splitContainer1);
 			this.Controls.Add(this._info);
-			this.Controls.Add(this._bCancel);
-			this.Controls.Add(this._bOK);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.IsPopup = true;
 			this.MaximizeBox = false;
@@ -187,6 +337,11 @@
 			this.splitContainer1.Panel2.ResumeLayout(false);
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
 			this.splitContainer1.ResumeLayout(false);
+			this.groupBox3.ResumeLayout(false);
+			this.groupBox3.PerformLayout();
+			this.groupBox1.ResumeLayout(false);
+			this.groupBox1.PerformLayout();
+			this.groupBox2.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 	}
@@ -198,10 +353,22 @@
 	private Au.Controls.AuInfoBox _info;
 	private System.Windows.Forms.SplitContainer splitContainer1;
 	private Au.Controls.ParamGrid _grid;
-	private System.Windows.Forms.Button _bAddRefNet;
-	private System.Windows.Forms.Button _bAddLib;
+	private System.Windows.Forms.Button _bAddBrowseNet;
+	private System.Windows.Forms.Button _bAddMyLibraryProject;
 	private System.Windows.Forms.Button _bAddResource;
 	private System.Windows.Forms.Button _bAddClass;
-	private System.Windows.Forms.Button _bAddRefOther;
-	private System.Windows.Forms.ToolTip _toolTip;
+	private System.Windows.Forms.Button _bAddBrowseOther;
+	private System.Windows.Forms.Button _bAddGacNewest;
+	private System.Windows.Forms.Button _bAddComRegistry;
+	private System.Windows.Forms.Button _bAddGacVersion;
+	private System.Windows.Forms.GroupBox groupBox2;
+	private System.Windows.Forms.GroupBox groupBox1;
+	private System.Windows.Forms.TextBox _tFindInList;
+	private System.Windows.Forms.Label label4;
+	private System.Windows.Forms.Label label5;
+	private System.Windows.Forms.Button _bAddComBrowse;
+	private System.Windows.Forms.Label label3;
+	private System.Windows.Forms.Label label2;
+	private System.Windows.Forms.Label label1;
+	private System.Windows.Forms.GroupBox groupBox3;
 }

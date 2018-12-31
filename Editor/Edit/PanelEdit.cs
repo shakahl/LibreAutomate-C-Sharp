@@ -754,10 +754,10 @@ partial class PanelEdit : Control
 						break;
 					case _DD_DataType.Script:
 						if(fn.IsFolder) {
-							if(fn.IsProjectFolder(out fn)) { opt = "library "; path = fn.ItemPath; }
+							if(fn.IsProjectFolder(out fn)) { opt = "pr "; path = fn.ItemPath; }
 						} else if(!fn.IsScript) {
 							if(!fn.IsCodeFile) opt = "resource ";
-							else if(fn.FindProject(out _, out var fMain) && fn == fMain) opt = "library ";
+							else if(fn.FindProject(out _, out var fMain) && fn == fMain) opt = "pr ";
 							else opt = "c ";
 						}
 						break;

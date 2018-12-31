@@ -126,7 +126,7 @@ partial class EdForm
 		//Print(s.Length, s, t.Call(SCI_POSITIONRELATIVE, 0, 1), t.Call(SCI_COUNTCHARACTERS, 0, 4));
 
 		foreach(var f in Model.Root.Descendants()) {
-			var k = f.GetCsFileType();
+			var k = f.GetCsFileRole();
 			if(k!= default) Print(k, f.ItemPath);
 		}
 	}

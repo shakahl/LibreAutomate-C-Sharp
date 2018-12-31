@@ -16435,6 +16435,12 @@
             Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
             </summary>
         </member>
+        <member name="M:Au.Convert_.HashFnv1``1(``0)">
+            <summary>
+            32-bit FNV-1 hash.
+            Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
+            </summary>
+        </member>
         <member name="M:Au.Convert_.HashFnv1_64(System.String)">
             <summary>
             64-bit FNV-1 hash.
@@ -16451,6 +16457,11 @@
             </summary>
         </member>
         <member name="M:Au.Convert_.HashFnv1_64(System.Byte*,System.Int32)">
+            <summary>
+            64-bit FNV-1 hash.
+            </summary>
+        </member>
+        <member name="M:Au.Convert_.HashFnv1_64``1(``0)">
             <summary>
             64-bit FNV-1 hash.
             </summary>
@@ -21985,7 +21996,7 @@
             <returns>
             Native process id of the task process.
             Returns 0 if task start is deferred because a script is running (see meta option ifRunning).
-            Returns 0 if the script has meta option runMode editorThread; then waits until the task ends.
+            Returns 0 if role editorExtension; then waits until the task ends.
             </returns>
             <param name="script">Script/app file name, or path like @"\Folder\Script5".</param>
             <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>

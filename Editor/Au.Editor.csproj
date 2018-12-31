@@ -282,6 +282,9 @@
     <None Include="Templates\New File\TextFile.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Templates\Help\C# script syntax">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
   <ItemGroup />

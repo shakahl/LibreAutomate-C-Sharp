@@ -1,5 +1,5 @@
 ﻿/* meta
-outputType app
+role miniProgram
 */
 //#include usings.txt
 

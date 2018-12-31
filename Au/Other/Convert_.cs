@@ -81,6 +81,13 @@ namespace Au
 		}
 
 		/// <summary>
+		/// 32-bit FNV-1 hash.
+		/// Useful for fast hash table and checksum use, not cryptography. Similar to CRC32; faster but creates more collisions.
+		/// </summary>
+		public static int HashFnv1<T>(T data) where T : unmanaged
+				=> HashFnv1((byte*)&data, sizeof(T));
+
+		/// <summary>
 		/// 64-bit FNV-1 hash.
 		/// </summary>
 		public static long HashFnv1_64(string data)
@@ -125,6 +132,12 @@ namespace Au
 
 			return (long)hash;
 		}
+
+		/// <summary>
+		/// 64-bit FNV-1 hash.
+		/// </summary>
+		public static long HashFnv1_64<T>(T data) where T : unmanaged
+				=> HashFnv1_64((byte*)&data, sizeof(T));
 
 		/// <summary>
 		/// FNV-1 hash, modified to make faster with long strings (then takes every n-th character).

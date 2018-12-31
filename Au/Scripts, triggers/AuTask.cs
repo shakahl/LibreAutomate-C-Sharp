@@ -52,7 +52,7 @@ namespace Au
 		/// <returns>
 		/// Native process id of the task process.
 		/// Returns 0 if task start is deferred because a script is running (see meta option ifRunning).
-		/// Returns 0 if the script has meta option runMode editorThread; then waits until the task ends.
+		/// Returns 0 if role editorExtension; then waits until the task ends.
 		/// </returns>
 		/// <param name="script">Script/app file name, or path like @"\Folder\Script5".</param>
 		/// <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>

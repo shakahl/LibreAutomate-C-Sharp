@@ -526,31 +526,32 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	}
 
 	/// <summary>
-	/// Gets .cs file type from metacomments.
+	/// Gets .cs file role from metacomments.
 	/// Note: can be slow, because loads file text if .cs file.
 	/// </summary>
-	public ECsType GetCsFileType()
+	public ECsRole GetCsFileRole()
 	{
-		if(_type != _Type.CsFile) return ECsType.None;
+		if(_type != _Type.CsFile) return ECsRole.None;
 		var code = GetText();
-		if(!MetaComments.FindMetaComments(code, out int endOfMeta)) return ECsType.Class;
-		bool hasOP = false;
+		if(!MetaComments.FindMetaComments(code, out int endOfMeta)) return ECsRole.Class;
 		foreach(var v in MetaComments.EnumOptions(code, endOfMeta)) {
-			if(v.NameIs("outputType")) return v.ValueIs("dll") ? ECsType.Library : ECsType.App;
-			if(v.NameIs("outputPath")) hasOP = true;
+			if(!v.NameIs("role")) continue;
+			if(v.ValueIs("classLibrary")) return ECsRole.Library;
+			if(v.ValueIs("classFile")) break;
+			return ECsRole.App;
 		}
-		return hasOP ? ECsType.Library : ECsType.Class;
+		return ECsRole.Class;
 	}
-
-	public enum ECsType
+	
+	public enum ECsRole
 	{
 		/// <summary>Not .cs file.</summary>
 		None,
-		/// <summary>Has meta outputType app/console.</summary>
+		/// <summary>Has meta role miniProgram/exeProgram/editorExtension.</summary>
 		App,
-		/// <summary>Has meta outputType dll, or outputPath without outputType.</summary>
+		/// <summary>Has meta role classLibrary.</summary>
 		Library,
-		/// <summary>No meta outputType or outputPath.</summary>
+		/// <summary>Has meta role classFile, or no meta role.</summary>
 		Class,
 	}
 
@@ -768,7 +769,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 			return null;
 		});
 
-		//when adding classes to library project, if the main file contains a namespace, add that namespace in the new file too.
+		//when adding classes to a library project, if the main file contains a namespace, add that namespace in the new file too.
 		if(template == "Class.cs" && newParent.FindProject(out var projFolder, out var projMain)) {
 			var rx = @"(?m)^namespace [\w\.]+";
 			if(!s.RegexIsMatch_(rx) && projMain.GetText().RegexMatch_(rx, 0, out var ns)) {

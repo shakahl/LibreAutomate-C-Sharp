@@ -92,7 +92,7 @@ static unsafe class Program
 		bool mtaThread = 0 != (flags & 2); //app without [STAThread]
 		if(mtaThread == s_isSTA) _SetComApartment(mtaThread ? ApartmentState.MTA : ApartmentState.STA);
 
-		if(0 != (flags & 4)) AllocConsole(); //outputType console
+		if(0 != (flags & 4)) AllocConsole(); //meta console true
 
 		if(0 != (flags & 1)) { //hasConfig
 			var config = asmFile + ".config";

@@ -352,29 +352,29 @@
             If true, does not destroy. Then next <b>Show</b> reuses the same window. To destroy the window: <c>x.PopupWindow.Close();</c>.
             </summary>
         </member>
-        <member name="E:Au.Controls.PopupList.Closed">
+        <member name="P:Au.Controls.PopupList.ClosedAction">
             <summary>
-            When the popup window hidden.
+            Called when the popup window hidden.
             If an item selected, the <b>ResultX</b> properties contain selection info, else null/-1/false.
             </summary>
         </member>
-        <member name="E:Au.Controls.PopupList.Selected">
+        <member name="P:Au.Controls.PopupList.SelectedAction">
             <summary>
-            When an item selected.
-            The event handler can use the <b>ResultX</b> properties to get selection info.
+            Called when an item selected.
+            The handler can use the <b>ResultX</b> properties to get selection info.
             The popup window is already hidden.
             </summary>
         </member>
         <member name="P:Au.Controls.PopupList.ResultItem">
             <summary>
             Gets the selected item.
-            Call this from <see cref="E:Au.Controls.PopupList.Selected"/> event handler.
+            Call this from <see cref="P:Au.Controls.PopupList.SelectedAction"/> callback.
             </summary>
         </member>
         <member name="P:Au.Controls.PopupList.ResultIndex">
             <summary>
             Gets the selected index.
-            Call this from <see cref="E:Au.Controls.PopupList.Selected"/> event handler.
+            Call this from <see cref="P:Au.Controls.PopupList.SelectedAction"/> callback.
             </summary>
         </member>
         <member name="P:Au.Controls.PopupList.ResultWasKey">

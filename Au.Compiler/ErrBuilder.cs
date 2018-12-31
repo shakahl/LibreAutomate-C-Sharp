@@ -51,13 +51,13 @@ namespace Au.Compiler
 		/// </remarks>
 		public void AddErrorOrWarning(Diagnostic d, IWorkspaceFile fMain)
 		{
+			_StartAdd(isWarning: d.Severity != DiagnosticSeverity.Error);
 			var s = d.ToString();
 			int i = d.Location.IsInSource ? s.IndexOf_("): ") + 1 : 0;
 			if(i > 0) {
-				_StartAdd(isWarning: d.Severity != DiagnosticSeverity.Error);
 				_b.AppendFormat("[{0}]{1}", s.Remove(i), s.Substring(i));
 			} else {
-				AddError(fMain, s);
+				_b.AppendFormat("[{0}]: {1}", fMain.FilePath, s);
 			}
 		}
 
@@ -145,7 +145,7 @@ namespace Au.Compiler
 </code>	Also look in program options, maybe you can disable some warnings in all scripts.</fold>");
 			_b.AppendLine("<>");
 			//FUTURE: this should be <help>, not <fold>.
-			
+
 			//errors and warnings
 			_b.Append(s);
 

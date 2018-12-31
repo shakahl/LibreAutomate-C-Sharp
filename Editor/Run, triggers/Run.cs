@@ -73,7 +73,7 @@ static class Run
 
 		bool ok = Compiler.Compile(run, out var r, f, projFolder);
 
-		if(run && r.outputType == EOutputType.dll) { //info: if run dll, compiler sets r.outputType and returns false
+		if(run && (r.role == ERole.classFile || r.role == ERole.classLibrary)) { //info: if classFile, compiler sets r.role and returns false (does not compile)
 			_OnRunClassFile(f, projFolder);
 			return 0;
 		}
@@ -81,7 +81,7 @@ static class Run
 		if(!ok) return 0;
 		if(!run) return 1;
 
-		if(r.runMode == ERunMode.editorThread) {
+		if(r.role == ERole.editorExtension) {
 			RunAsm.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread);
 			return (int)AuTask.ERunResult.editorThread;
 		}
@@ -93,14 +93,13 @@ static class Run
 	{
 		if(!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _LinkRunClassFile); }
 		var ids = f.IdStringWithWorkspace;
-		var s1 = projFolder != null ? "library" : "file";
-		var s2 = projFolder != null ? "" : $", project (<+runClass \"2|{ids}\">create<>) or <c green>outputType app<> (<+runClass \"1|{ids}\">add<>)";
-		Print($"<>Cannot run '{f.Name}'. It is a class {s1} without a test script (<+runClass \"3|{ids}\">create<>){s2}.");
+		var s2 = projFolder != null ? "" : $", project (<+runClass \"2|{ids}\">create<>) or program role (<+runClass \"1|{ids}\">add<>)";
+		Print($"<>Cannot run '{f.Name}'. It is a class file without a test script (<+runClass \"3|{ids}\">create<>){s2}.");
 	}
 
 	static void _LinkRunClassFile(string s)
 	{
-		int action = s.ToInt_(); //1 add meta outputType app, 2 create Script project, 3 create new test script and set "run" attribute
+		int action = s.ToInt_(); //1 add meta role miniProgram, 2 create Script project, 3 create new test script and set "run" attribute
 		var f = Model.Find(s.Substring(2), null); if(f == null) return;
 		FileNode f2 = null;
 		string text = null;
@@ -111,7 +110,7 @@ static class Run
 			t.GoToPos(0);
 			t.SetString(Sci.SCI_INSERTTEXT, 0,
 @"/* meta
-outputType app
+role miniProgram
 */
 
 ");
@@ -125,7 +124,7 @@ outputType app
 			f.TestScript = f2;
 			text =
 $@"/* meta
-{(isProject ? "library" : "c")} {f.ItemPath}
+{(isProject ? "pr" : "c")} {f.ItemPath}
 */
 
 {(isProject ? "Library." : "")}Class1.Function1();
@@ -412,7 +411,7 @@ class RunningTasks
 		running = null;
 		switch(r.runMode) {
 		case ERunMode.green: running = GetGreenTask(); break;
-		case ERunMode.blueSingle: running = _GetRunning(f); break;
+		case ERunMode.blue when r.ifRunning != EIfRunning.runIfBlue: running = _GetRunning(f); break;
 		default: return true;
 		}
 		return running == null;
@@ -437,12 +436,12 @@ class RunningTasks
 			case EIfRunning.restartOrWait:
 				if(running.f == f && _EndTask(running)) goto g1;
 				if(r.ifRunning == EIfRunning.restartOrWait) goto case EIfRunning.wait;
-				goto case EIfRunning.unspecified;
+				goto case EIfRunning.runIfBlue;
 			case EIfRunning.wait:
-				if(noDefer) goto case EIfRunning.unspecified;
+				if(noDefer) goto case EIfRunning.runIfBlue;
 				_q.Insert(0, new _WaitingTask(f, r, args));
 				return (int)AuTask.ERunResult.deferred;
-			case EIfRunning.unspecified:
+			case EIfRunning.runIfBlue:
 				string s1 = (running.f == f) ? "it" : $"{running.f.SciLink}";
 				Print($"<>Cannot start {f.SciLink} because {s1} is running. Consider meta options <c green>runMode<>, <c green>ifRunning<>.");
 				break;
@@ -455,7 +454,7 @@ class RunningTasks
 			//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
 			//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
 			var IL = Uac.OfThisProcess.IntegrityLevel;
-			if(r.uac == EUac.same) {
+			if(r.uac == EUac.inherit) {
 				switch(IL) {
 				case UacIL.High: preIndex = 1; break;
 				case UacIL.UIAccess: uac = _SpUac.uiAccess; preIndex = 2; break;
@@ -493,7 +492,7 @@ class RunningTasks
 
 			int iFlags = r.hasConfig ? 1 : 0;
 			if(r.mtaThread) iFlags |= 2;
-			if(r.outputType == EOutputType.console) iFlags |= 4;
+			if(r.console) iFlags |= 4;
 			taskParams = Au.Util.LibSerializer.SerializeWithSize(r.name, r.file, r.pdbOffset, iFlags, args, wrPipeName);
 			wrPipeName = null;
 

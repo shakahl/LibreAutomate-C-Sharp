@@ -72,7 +72,7 @@ namespace Au.Compiler
 				int iPipe = 0;
 
 				bool isScript = f.IsScript;
-				r.outputType = MetaComments.DefaultOutputType(isScript);
+				r.role = MetaComments.DefaultRole(isScript);
 
 				string asmFile;
 				if(r.notInCache = (value != null && value.StartsWith_("|="))) {
@@ -86,7 +86,7 @@ namespace Au.Compiler
 
 				if(_IsFileModified(f)) return false;
 
-				bool isProject = false;
+				bool isMultiFileProject = false;
 				if(value != null && iPipe < value.Length) {
 					iPipe++;
 					foreach(var s in value.Segments_(iPipe, value.Length - iPipe, "|", SegFlags.NoEmpty)) {
@@ -94,7 +94,7 @@ namespace Au.Compiler
 						int offs = s.Offset + 1;
 						switch(s[0]) {
 						case 't':
-							r.outputType = (EOutputType)value.ToInt_(offs);
+							r.role = (ERole)value.ToInt_(offs);
 							break;
 						case 'a':
 							r.runMode = (ERunMode)value.ToInt_(offs);
@@ -108,6 +108,9 @@ namespace Au.Compiler
 						case 'b':
 							r.prefer32bit = true;
 							break;
+						case 'q':
+							r.console = true;
+							break;
 						case 'z':
 							r.mtaThread = true;
 							break;
@@ -115,7 +118,7 @@ namespace Au.Compiler
 							r.pdbOffset = value.ToInt_(offs);
 							break;
 						case 'p':
-							isProject = true;
+							isMultiFileProject = true;
 							if(projFolder != null) {
 								if(!Convert_.MD5HashResult.FromString(value, offs, s.EndOffset - offs, out var md5)) return false;
 								Convert_.MD5Hash md = default;
@@ -160,7 +163,10 @@ namespace Au.Compiler
 						}
 					}
 				}
-				if(isProject != (projFolder != null)) return false;
+				if(isMultiFileProject != (projFolder != null)) {
+					if(projFolder == null) return false;
+					foreach(var f1 in projFolder.IwfEnumProjectCsFiles(f)) return false; //project with single file?
+				}
 				//Debug_.Print("compiled");
 
 				r.file = asmFile;
@@ -193,18 +199,19 @@ namespace Au.Compiler
 				}
 
 				/*
-	IDmain|=path.exe|tN|aN|nN|uN|b|z|dN|pMD5project|cIDcode|lIDlibrary|dIDresource|kIDicon|mIDmanifest|xIDres|sIDsign|oIDconfig|*ref
+	IDmain|=path.exe|tN|aN|nN|uN|b|q|z|dN|pMD5project|cIDcode|lIDlibrary|xIDresource|kIDicon|mIDmanifest|yIDres|sIDsign|oIDconfig|*ref
 	= - outFile
-	t - outputType
+	t - role
 	a - runMode
 	n - ifRunning
 	u - uac
 	b - prefer32bit
+	q - console
 	z - mtaThread
 	d - pdbOffset
 	p - MD5 of Id of all project files except main
 	c - c
-	l - library
+	l - pr
 	x - resource
 	k - icon
 	m - manifest
@@ -215,24 +222,25 @@ namespace Au.Compiler
 				*/
 
 				string value = null;
-				using(new Au.Util.LibStringBuilder(out var b)) {
+				using(new Util.LibStringBuilder(out var b)) {
 					if(m.OutputPath != null) b.Append("|=").Append(outFile); //else f.Id in cache
-					if(m.OutputType != MetaComments.DefaultOutputType(m.IsScript)) b.Append("|t").Append((int)m.OutputType);
-					if(m.RunMode != ERunMode.green) b.Append("|a").Append((int)m.RunMode);
-					if(m.IfRunning != EIfRunning.unspecified) b.Append("|n").Append((int)m.IfRunning);
-					if(m.Uac != EUac.same) b.Append("|u").Append((int)m.Uac);
+					if(m.Role != MetaComments.DefaultRole(m.IsScript)) b.Append("|t").Append((int)m.Role);
+					if(m.RunMode != default) b.Append("|a").Append((int)m.RunMode);
+					if(m.IfRunning != default) b.Append("|n").Append((int)m.IfRunning);
+					if(m.Uac != default) b.Append("|u").Append((int)m.Uac);
 					if(m.Prefer32Bit) b.Append("|b");
+					if(m.Console) b.Append("|q");
 					if(mtaThread) b.Append("|z");
 					if(pdbOffset != 0) b.Append("|d").Append(pdbOffset);
 
-					int nAll = m.Files.Count, nNoC = nAll - m.CountC;
+					int nAll = m.CodeFiles.Count, nNoC = nAll - m.CountC;
 					if(nNoC > 1) { //add MD5 hash of project files, except main
 						Convert_.MD5Hash md = default;
-						for(int i = 1; i < nNoC; i++) md.Add(m.Files[i].f.Id);
+						for(int i = 1; i < nNoC; i++) md.Add(m.CodeFiles[i].f.Id);
 						b.Append("|p").Append(md.Hash.ToString());
 					}
-					for(int i = nNoC; i < nAll; i++) _AppendFile("|c", m.Files[i].f); //ids of C# files added through meta 'c'
-					if(m.Libraries != null) foreach(var v in m.Libraries) _AppendFile("|l", v); //ids of meta 'library' files
+					for(int i = nNoC; i < nAll; i++) _AppendFile("|c", m.CodeFiles[i].f); //ids of C# files added through meta 'c'
+					if(m.ProjectReferences != null) foreach(var v in m.ProjectReferences) _AppendFile("|l", v); //ids of meta 'pr' files
 					if(m.Resources != null) foreach(var v in m.Resources) _AppendFile("|x", v.f); //ids of meta 'resource' files
 					_AppendFile("|k", m.IconFile);
 					_AppendFile("|m", m.ManifestFile);

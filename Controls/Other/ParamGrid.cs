@@ -34,6 +34,7 @@ namespace Au.Controls
 	public class ParamGrid : SG.Grid
 	{
 		Editors.TextBox _editor;
+		_CellController _controller;
 		SG.Cells.Controllers.ToolTipText _controllerTooltip0, _controllerTooltip1;
 
 		const SG.EditableMode c_editableMode = SG.EditableMode.SingleClick | SG.EditableMode.F2Key | SG.EditableMode.AnyKey; //double click -> single click. See also OnMouseDown.
@@ -50,7 +51,7 @@ namespace Au.Controls
 			var c = _editor.Control;
 			c.Multiline = true; //let all rows have the same multiline editor, even if the value cannot be multiline
 
-			this.Controller.AddController(new _CellController());
+			this.Controller.AddController(_controller = new _CellController(this));
 			this.Controller.AddController(SG.Cells.Controllers.Resizable.ResizeWidth); //we resize width and height automatically, but the user may want to resize width. This is like in VS.
 			_controllerTooltip0 = new SG.Cells.Controllers.ToolTipText() /*{ IsBalloon = true }*/;
 			_controllerTooltip1 = new SG.Cells.Controllers.ToolTipText();
@@ -165,55 +166,79 @@ namespace Au.Controls
 
 		class _CellController : SG.Cells.Controllers.ControllerBase
 		{
-			public override void OnValueChanged(SG.CellContext sender, EventArgs e)
+			ParamGrid _grid;
+
+			public _CellController(ParamGrid grid)
 			{
-				base.OnValueChanged(sender, e);
-
-				var grid = sender.Grid as ParamGrid;
-
-				var pos = sender.Position;
-				if(pos.Column == 1) {
-					grid.Rows.AutoSizeRow(pos.Row);
-					if(sender.IsEditing()) grid.ZCheck(pos.Row, true); //note: this alone would interfere with the user clicking the checkbox of this row. OnMouseDown prevents it.
-				}
-
-				grid.ZOnValueChanged(sender);
+				_grid = grid;
 			}
 
-			public override void OnEditStarted(SG.CellContext sender, EventArgs e)
+			public override void OnValueChanged(SG.CellContext c, EventArgs e)
+			{
+				base.OnValueChanged(c, e);
+
+				var pos = c.Position;
+				if(pos.Column == 1) {
+					_grid.Rows.AutoSizeRow(pos.Row);
+					if(c.IsEditing()) _grid.ZCheck(pos.Row, true); //note: this alone would interfere with the user clicking the checkbox of this row. OnMouseDown prevents it.
+				}
+
+				_grid.ZOnValueChanged(c);
+			}
+
+			public override void OnEditStarted(SG.CellContext c, EventArgs e)
 			{
 				//Debug_.PrintFunc();
 
-				if(sender.Cell.Editor is Editors.ComboBox cb) { //read-only combo. The grid shows a ComboBox control.
+				if(c.Cell.Editor is Editors.ComboBox cb) { //read-only combo. The grid shows a ComboBox control.
 					cb.Control.DroppedDown = true;
-				} else if(sender.Cell is ComboCell cc) { //editable combo. We show PopupList _comboDD. With ComboBox too ugly and limited, eg cannot edit multiline.
-					var g = cc.Grid as ParamGrid;
+				} else if(c.Cell is ComboCell cc) { //editable combo. We show PopupList _comboDD. With ComboBox too ugly and limited, eg cannot edit multiline.
 					var t = (cc.Editor as Editors.TextBox).Control;
 					t.Width -= cc.MeasuredButtonWidth; //don't hide the drop-down button
-					if(g._clickX >= t.Right) cc.ShowDropDown(); //clicked the drop-down button
+					if(_grid._clickX >= t.Right) cc.ShowDropDown(); //clicked the drop-down button
 				}
 
-				base.OnEditStarted(sender, e);
+				base.OnEditStarted(c, e);
 
-				_ShowEditInfo(sender, true);
+				_ShowEditInfo(c, true);
 			}
 
-			public override void OnEditEnded(SG.CellContext sender, EventArgs e)
+			public override void OnEditEnded(SG.CellContext c, EventArgs e)
 			{
-				var g = sender.Grid as ParamGrid;
-				_ShowEditInfo(sender, false);
+				_ShowEditInfo(c, false);
 
-				base.OnEditEnded(sender, e);
+				base.OnEditEnded(c, e);
 			}
 
 			void _ShowEditInfo(SG.CellContext c, bool show)
 			{
 				var t = c.Cell as EditCell;
-				if(t?.Info != null) {
-					var g = c.Grid as ParamGrid;
-					g.ZOnShowEditInfo(c, show ? t.Info : null);
-				}
+				if(t?.Info != null) _grid.ZOnShowEditInfo(c, show ? t.Info : null);
 			}
+
+			//public override void OnMouseEnter(SG.CellContext c, EventArgs e)
+			//{
+			//	var row = c.Position.Row; //if(row == _hoverRow) return;
+			//	_hoverRow = row;
+
+			//	if(_hoverTimer == null) _hoverTimer = new Timer_(t => {
+			//		if(_hoverRow < 0) return;
+			//		Print(_hoverRow);
+			//	});
+			//	_hoverTimer.Start(1000, true);
+
+			//	base.OnMouseEnter(c, e);
+			//}
+
+			//public override void OnMouseLeave(SG.CellContext c, EventArgs e)
+			//{
+			//	_hoverRow = -1;
+			//	_hoverTimer.Stop();
+			//	base.OnMouseLeave(c, e);
+			//}
+
+			//Timer_ _hoverTimer;
+			//int _hoverRow = -1;
 		}
 
 		protected override void OnMouseDown(MouseEventArgs e)
@@ -334,7 +359,7 @@ namespace Au.Controls
 					};
 				}
 				p.Items = items;
-				p.Selected += pp => {
+				p.SelectedAction = pp => {
 					t.Value = pp.ResultItem as string;
 					if(!pp.ResultWasKey) g.ZEndEdit(cancel: false);
 				};

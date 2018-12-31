@@ -71,6 +71,9 @@ using Au.Triggers;
 
 using System.Dynamic;
 using System.Security.Principal;
+using Microsoft.Win32;
+using System.Runtime.InteropServices.ComTypes;
+using System.Numerics;
 //using LiteDB;
 
 //[assembly: SecurityPermission(SecurityAction.RequestMinimum, Execution = true)]
@@ -1351,13 +1354,13 @@ a1,-8";
 		var f = new Form { Text = "Nikn", Font = Au.Util.SystemFonts_.Regular, StartPosition = FormStartPosition.Manual, Location = new Point(300, 300) };
 		var t = new TextBox { Width = 120, Left = 20 }; f.Controls.Add(t);
 		var b = new Button { Text = "button", Left = 200 }; f.Controls.Add(b);
-		var bOK = new ButtonOK { Left = 10, Top=230 }; f.Controls.Add(bOK); f.AcceptButton = bOK;
-		var bCancel = new ButtonCancel { Left = 90, Top=230 }; f.Controls.Add(bCancel); f.CancelButton = bCancel;
+		var bOK = new ButtonOK { Left = 10, Top = 230 }; f.Controls.Add(bOK); f.AcceptButton = bOK;
+		var bCancel = new ButtonCancel { Left = 90, Top = 230 }; f.Controls.Add(bCancel); f.CancelButton = bCancel;
 
 #if true
 		//var a = new string[] { "One 123456789 123456789", "Folder", "Three", "Four", "W" };
 		//var a = new string[] { "One 123456789 123456789", "Folder", "Three", "Fo\r\nur", "Fo\r\nur", "Fo\r\nur", "Fo\r\nur" };
-		var icon =Icon_.GetFileIconImage(@"q:\app\ontop.ico", 16);
+		var icon = Icon_.GetFileIconImage(@"q:\app\ontop.ico", 16);
 		var a = new PLItem[] {
 			new PLItem("Done 123456789 123456789"){},
 			new PLItem("Two"){CheckType=PLCheckType.Box},
@@ -1396,9 +1399,9 @@ a1,-8";
 		//p.PopupWindow.Font = new Font("MS Sans Serif", 8.25f);
 		p.Items = a;
 
-		p.Selected += k => Print("Selected", k.ResultItem, k.ResultIndex, k.ResultWasKey, k.PopupWindow.Visible, k.PopupWindow.IsHandleCreated);
+		p.SelectedAction = k => Print("Selected", k.ResultItem, k.ResultIndex, k.ResultWasKey, k.PopupWindow.Visible, k.PopupWindow.IsHandleCreated);
 		//p.PopupWindow.FormClosed += (unu2, sed2) => Print("CLOSED", p.ResultItem, p.PopupWindow.Visible, p.PopupWindow.IsHandleCreated);
-		p.Closed += k => {
+		p.ClosedAction = k => {
 			Print("Closed", k.ResultItem, k.PopupWindow.IsHandleCreated);
 			//Timer_.After(1000, () => p.Show(t));
 			//p.PopupWindow.Close();
@@ -1486,7 +1489,7 @@ a1,-8";
 
 	class Hin
 	{
-		string a,b,c,d;
+		string a, b, c, d;
 	}
 
 	static unsafe void TestGetObjectSize()
@@ -1504,6 +1507,123 @@ a1,-8";
 		var w = Wnd.FindFast(null, "QM_Editor").OrThrow();
 		var f = new Au.Tools.Form_Wnd(w);
 		Application.Run(f);
+	}
+
+	//static void TestReferenceCOM()
+	//{
+	//	var w = Wnd.Find("Quick *").OrThrow();
+	//	w = w.ChildById(2212).OrThrow();
+	//	Accessibility.IAccessible a = null;
+	//	if(0 != AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, out a)) throw new Exception("failed");
+	//	var s = a.accName[1];
+	//	Print(s);
+	//}
+	//[DllImport("oleacc.dll", PreserveSig = true)]
+	//internal static extern int AccessibleObjectFromWindow(Wnd hwnd, uint dwId, in Guid riid, out Accessibility.IAccessible ppvObject);
+	//internal static Guid IID_IAccessible = new Guid(0x618736E0, 0x3C3D, 0x11CF, 0x81, 0x0C, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
+	//internal const uint OBJID_CLIENT = 0xFFFFFFFC;
+
+	static void TestReferenceCOM2()
+	{
+		//var e = new Excel.Application();
+		////Print(e);
+		//e.Visible = true;
+		//AuDialog.Show();
+		//e.Quit();
+
+		//Print(typeof(ServicesManagerLib.enControlsAccepted).GetEnumNames());
+
+		//int hr = QueryPathOfRegTypeLib(new Guid("{00000200-0000-0010-8000-00AA006D2EA4}"), 2, 0, 0, out var s);
+		//int hr = QueryPathOfRegTypeLib(new Guid("{000204EF-0000-0000-C000-000000000046}"), 6, 0, 9, out var s);
+		//if(hr == 0) Print(s); else Print(Native.GetErrorMessage(hr));
+
+		Perf.First();
+		var a = new List<_RegTypelib>(1000);
+		using(var tlKey = Registry.ClassesRoot.OpenSubKey("TypeLib")) { //guids
+			foreach(var sGuid in tlKey.GetSubKeyNames()) {
+				if(sGuid.Length != 38) continue;
+				//Print(sGuid);
+				using(var guidKey = tlKey.OpenSubKey(sGuid)) { //versions
+					foreach(var sVer in guidKey.GetSubKeyNames()) {
+						using(var verKey = guidKey.OpenSubKey(sVer)) {
+							if(verKey.GetValue("") is string description) {
+								var text = description + ", " + sVer;
+								foreach(var sLocale in verKey.GetSubKeyNames()) {
+									if(sLocale[0] < '0' || sLocale[0] > '9') continue;
+									var r = new _RegTypelib { guid = sGuid, text = text, version = sVer, locale = sLocale };
+									a.Add(r);
+								}
+							} //else Print(sGuid); //some Microsoft typelibs. VS does not show these too.
+						}
+					}
+				}
+			}
+		}
+		Perf.NW(); //87000, with locale 118000
+		a.Sort((x, y) => string.Compare(x.text, y.text, true));
+
+		//Print(a.Count); return;
+		foreach(var r in a) {
+			//Print(r.text);
+#if true
+			int hr = r.Load(out var tl);
+#else
+			if(!Guid.TryParse(r.guid, out var guid)) continue;
+			var ver = _RegTypelibParseVersion(r.version);
+			var lcid = (uint)r.locale.ToInt_(0, STIFlags.IsHexWithout0x);
+			int hr = LoadRegTypeLib(guid, ver.major, ver.minor, lcid, out var tl);
+#endif
+			if(hr != 0) { Print($"<><c 0xff>{r.text}, {r.version}, {r.locale}, {r.guid}, {Native.GetErrorMessage(hr)}</c>"); continue; }
+			Marshal.ReleaseComObject(tl);
+		}
+	}
+
+	[DllImport("oleaut32.dll", EntryPoint = "#164", PreserveSig = true)]
+	internal static extern int QueryPathOfRegTypeLib(in Guid guid, ushort wMaj, ushort wMin, uint lcid, [MarshalAs(UnmanagedType.BStr)] out string lpbstrPathName);
+
+	private enum RegKind
+	{
+		RegKind_Default = 0,
+		RegKind_Register = 1,
+		RegKind_None = 2
+	}
+
+	[DllImport("oleaut32.dll", EntryPoint = "#183", PreserveSig = true)]
+	static extern int LoadTypeLibEx(string szFile, RegKind regkind, out ITypeLib pptlib);
+
+	[DllImport("oleaut32.dll", EntryPoint = "#162", PreserveSig = true)]
+	internal static extern int LoadRegTypeLib(in Guid rguid, ushort wVerMajor, ushort wVerMinor, uint lcid, out ITypeLib pptlib);
+
+	class _RegTypelib
+	{
+		public string text, guid, version, locale;
+
+		public override string ToString() => text;
+
+		public int Load(out ITypeLib tl)
+		{
+			tl = null; string path = null; int hr = 1;
+			var k0 = $@"TypeLib\{guid}\{version}\{locale}\win";
+			for(int i = 0; i < 2; i++) {
+				var bits = Ver.Is64BitProcess == (i == 0) ? "64" : "32";
+				using(var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits)) {
+					path = hk?.GetValue("") as string;
+					if(path == null) continue;
+					path = path.Trim('\"');
+				}
+				hr = LoadTypeLibEx(path, RegKind.RegKind_None, out tl);
+				if(hr == 0 && tl == null) hr = 1;
+				if(hr == 0) break;
+			}
+			return hr;
+		}
+	}
+
+	static (ushort major, ushort minor) _RegTypelibParseVersion(string version)
+	{
+		int verMinor = 0, verMajor = version.ToInt_(0, out int iEnd, STIFlags.IsHexWithout0x);
+		if(iEnd < version.Length && version[iEnd] == '.') verMinor = version.ToInt_(iEnd + 1, STIFlags.IsHexWithout0x);
+		return ((ushort)verMajor, (ushort)verMinor);
 	}
 
 
@@ -1524,6 +1644,9 @@ a1,-8";
 #if true
 			//Thread_.Start(() => { for(; ; ) { 1.s(); GC.Collect(); } });
 
+			BigInteger k = BigInteger.Parse("123456789012345678901234567890");
+
+			TestReferenceCOM2();
 			//TestOptimizeTreeViewAdv();
 			//TestPopupList();
 			//TestGetObjectSize();

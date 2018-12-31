@@ -39,22 +39,23 @@ namespace Au.Compiler
 	/// ]]></code>
 	/// Options and values must match case, except filenames/paths. No "enclosing", no escaping.
 	/// Some options can be several times with different values, for example to specify several references.
-	/// When compiling multiple files (project, or using option 'c'), only the main file can contain all options. Other files can contain only 'r', 'c', 'resource'.
+	/// When compiling multiple files (project, or using option 'c'), only the main file can contain all options. Other files can contain only 'r', 'c', 'resource', 'com'.
 	/// All available options are in the examples below. Here a|b|c means a or b or c. The //comments after options are not allowed in real meta comments.
 	/// </remarks>
 	/// <example>
 	/// <h3>References</h3>
 	/// <code><![CDATA[
-	/// r System.Assembly //.NET/GAC assembly reference. Without ".dll".
-	/// r Other.Assembly.dll //other assembly reference. With ".dll" or ".exe". The file must be in the main Au folder or its subfolder Libraries.
-	/// r C:\X\Y\file.dll //other assembly reference using full path or path relative to the main Au folder. May be problem finding it at run time.
-	/// r Alias=X.dll //assembly reference that can be used with C# keyword 'extern alias'.
+	/// r Assembly //.NET/GAC assembly reference. Without ".dll".
+	/// r Assembly.dll //other assembly reference. With ".dll" or ".exe". The file must be in the main Au folder or its subfolder Libraries.
+	/// r C:\X\Y\Assembly.dll //other assembly reference using full path or path relative to the main Au folder. May be problem finding it at run time.
+	/// r Assembly, Version=4.0.0.0 //GAC assembly of specific version. The ", Version=" part must be exactly as in the example. If version unspecified and there are several assemblies of different versions in GAC, is used assembly of the highest version.
+	/// r Alias=Assembly.dll //assembly reference that can be used with C# keyword 'extern alias'.
 	/// ]]></code>
 	/// Don't need to specify these references: mscorlib, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
 	/// 
 	/// <h3>Other C# files to compile together</h3>
 	/// <code><![CDATA[
-	/// c file.cs //file in this C# file's folder. It must be regular C# file (.cs), not C# script. Should not contain Main function.
+	/// c file.cs //file in this C# file's folder. It must be .cs file, not C# script. Should not contain Main function.
 	/// c folder\file.cs //path relative to this C# file's folder
 	/// c .\folder\file.cs //the same as above
 	/// c ..\folder\file.cs //path relative to the parent folder
@@ -64,9 +65,17 @@ namespace Au.Compiler
 	/// 
 	/// <h3>References to libraries created in this workspace</h3>
 	/// <code><![CDATA[
-	/// library folder\file.cs
+	/// pr \folder\file.cs
 	/// ]]></code>
 	/// Compiles the .cs file or its project and uses the output dll file like with option r. It is like a "project reference" in Visual Studio.
+	/// 
+	/// <h3>References to COM interop assemblies (.NET assemblies converted from COM type libraries)</h3>
+	/// <code><![CDATA[
+	/// com Accessibility 1.1 44782f49.dll
+	/// ]]></code>
+	/// How this different from option r:
+	/// 1. If not full path, must be in @"%Folders.Workspace%\.interop".
+	/// 2. The interop assembly is used only when compiling, not at run time. It contains only metadata, not code. The compiler copies used parts of metadata to the output assembly. The real code is in native COM dll, which at run time must be registered as COM component and must match the bitness (64-bit or 32-bit) of the process that uses it. 
 	/// 
 	/// <h3>Files to add to managed resources</h3>
 	/// <code><![CDATA[
@@ -78,68 +87,71 @@ namespace Au.Compiler
 	/// Suffix /string or /strings - string. Extension .png, .bmp, .jpg, .jpeg, .gif, .tif or .tiff - Bitmap. Extension .ico - Icon. Other - byte[].
 	/// Examples of loading resources at run time:
 	/// In meta comments: <c>resource \images\file.png</c>. Code: <c>var bitmap = Au.Util.Resources_.GetAppResource("file.png") as Bitmap;</c>
-	/// In meta comments: <c>resource file.ico</c>. Code: <c>var icon = new Icon(Au.Util.Resources_.GetAppResource("qm.ico") as Icon, 16, 16);</c>
+	/// In meta comments: <c>resource file.ico</c>. Code: <c>var icon = new Icon(Au.Util.Resources_.GetAppResource("file.ico") as Icon, 16, 16);</c>
 	/// In meta comments: <c>resource file.cur</c>. Code: <c>var cursor = Au.Util.Cursor_.LoadCursorFromMemory(Au.Util.Resources_.GetAppResource("file.cur") as byte[]);</c>
 	/// 
 	/// <h3>Settings used when compiling</h3>
 	/// <code><![CDATA[
-	/// debug true|false //if true (default), don't optimize code; also define preprocessor symbol DEBUG. It usually makes startup faster (faster JIT compiling), but low-level code slower.
+	/// optimize false|true //if false (default), don't optimize code; also define DEBUG constant; this is known as "Debug configuration". If true, optimizes code; then low-level code is faster, but startup (JIT) is slower; can be difficult to debug; this is known as "Release configuration".
+	/// define SYMBOL1,SYMBOL2 //define preprocessor symbols that can be used with #if etc. These are added implicitly: TRACE - always; DEBUG - if not used option 'optimize' true.
 	/// warningLevel 1 //compiler warning level, 0 (none) to 4 (all). Default: 4.
 	/// noWarnings 3009,162 //don't show these compiler warnings
-	/// define SYMBOL1,SYMBOL2 //define preprocessor symbols that can be used with #if etc. These symbols are added implicitly: TRACE - always; DEBUG - if there is no option 'debug' false; EXE - if used option 'outputPath', which means that the assembly is normal exe file that runs not in a host process.
 	/// preBuild file /arguments //run this script/app before compiling. More info below.
-	/// postBuild file /arguments //run this script/app after compiling successfully. More info below.
+	/// postBuild file /arguments //run this script/app after compiled successfully. More info below.
 	/// ]]></code>
 	/// About options 'preBuild' and 'postBuild':
-	/// The script/app runs in compiler's thread. Compiler waits and does not respond during that time. To stop compilation, let the script throw an exception.
-	/// The script/app has variable string[] args. If there is no /arguments, args[0] is the output assembly file, full path. Else args contains the specified arguments, parsed like a command line. In arguments you can use these variables:
-	/// $(outputFile) -  the output assembly file, full path; $(sourceFile) - the C# file, full path; $(source) - path of the C# file in workspace, eg "\folder\file.cs"; $(outputPath) - meta option 'outputPath', default ""; $(debug) - meta option 'debug', default "true".
+	/// The script/app must have meta option role editorExtension. It runs in compiler's thread. Compiler waits and does not respond during that time. To stop compilation, let the script throw an exception.
+	/// The script/app has parameter (variable) string[] args. If there is no /arguments, args[0] is the output assembly file, full path. Else args contains the specified arguments, parsed like a command line. In arguments you can use these variables:
+	/// $(outputFile) -  the output assembly file, full path; $(sourceFile) - the C# file, full path; $(source) - path of the C# file in workspace, eg "\folder\file.cs"; $(outputPath) - meta option 'outputPath', default ""; $(optimize) - meta option 'optimize', default "false".
 	/// 
 	/// <h3>Settings used to run the compiled script or app</h3>
 	/// <code><![CDATA[
-	/// runMode green|blueSingle|blueMulti|editorThread - whether the task can be easily ended, multiple instances, etc. Default: green. More info below.
-	/// ifRunning cancel|wait|restart|restartOrWait //whether/how to start new task if a task is running. Default: cancel. More info below.
-	/// uac same|user|admin //UAC integrity level of the script process. Default: same. More info below.
-	/// prefer32bit true|false //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit dlls and AnyCPU dlls, but not 64-bit dlls. Default: false.
-	/// config app.config //use this configuration file when the output assembly file is executed. Can be filename or relative path, like with 'c'. The file is copied to the output directory unmodified but renamed to match the assembly name. This option cannot be used with dll. If not specified, will be used host program's config file.
+	/// runMode green|blue - whether tasks can run simultaneously, etc. Default: green. More info below.
+	/// ifRunning runIfBlue|cancel|wait|restart|restartOrWait //whether/how to start new task if a task is running. Default: unspecified. More info below.
+	/// uac inherit|user|admin //UAC integrity level (IL) of the task process. Default: inherit. More info below.
+	/// prefer32bit false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
+	/// config app.config //let the running task use this configuration file. Can be filename or relative path, like with 'c'. The file is copied to the output directory unmodified but renamed to match the assembly name. This option cannot be used with dll. If not specified, will be used host program's config file.
 	/// ]]></code>
 	/// Here word "task" is used for "script or app that is running or should start".
-	/// Options 'runMode', 'ifRunning' and 'uac' are applied only when the task is started from Au editor, not when it runs as independent exe program.
+	/// Options 'runMode', 'ifRunning' and 'uac' are applied only when the task is started from editor, not when it runs as independent exe program.
 	/// 
 	/// About runMode:
-	/// green (default) - supervised task. It has these properties: 1. Cannot run simultaneously with other green tasks (see also option 'ifRunning'); 2. Can be ended with the "End task" hotkey; 3. Changes the tray icon. 4. Green in the "Running" pane.
-	/// blueSingle - unattended single-instance task. More info below. See also option 'ifRunning'.
-	/// blueMulti - unattended multi-instance task. Multiple task instances can run simultaneously. Option 'ifRunning' not used.
-	/// editorThread - run the task in the main UI thread of the editor process. This is an advanced option, and rarely used. Can be used to create editor extensions. The user cannot see and end the task. Creates memory leaks when executing recompiled assemblies (eg after editing the script/app), because old assembly versions cannot be unloaded until process exits.
-	/// 
-	/// Blue tasks don't have the 1-3 properties of green tasks. Such tasks are used: to run simultaneously with any tasks (green, blue, other instances of self); to protect the task from the "End task" hotkey; as background tasks that wait for some event or watch for some condition; contain multiple methods that can be executed with method triggers, toolbars and autotexts.
+	/// Multiple green tasks cannot run simultaneously. Multiple blue tasks can run simultaneously. See also option 'ifRunning'.
+	/// The task also is green or blue in the ""Running"" pane. Green tasks change the tray icon and use the ""End task"" hotkey; blue tasks don't.
+	/// Blue tasks are used: to run simultaneously with any tasks (green, blue, other instances of self); to protect the task from the "End task" hotkey; as background tasks that wait for some event or watch for some condition; contain multiple methods that can be executed with method triggers, toolbars and autotexts.
 	/// 
 	/// About ifRunning:
-	/// Defines whether/how to start new task if a task is running. What is "another task": if runMode green (default), it is "a green task"; if runMode blueSingle, it is "another instance of this task"; with other run modes this option cannot be used.
-	/// unspecified (default) - don't run. Print a warning.
+	/// Defines whether/how to start new task if a task is running. What is "another task": if runMode green (default), it is "a green task"; else it is "another instance of this task".
+	/// runIfBlue (default) - if runMode blue, run simultaneously. Else don't run; print a warning.
 	/// cancel - don't run. Don't print a warning.
 	/// wait - run later, when that task ends.
-	/// restart - if that task is of this script/app, end it and run. Else like 'unspecified' (when both tasks are green).
-	/// restartOrWait - if that task is of this script/app, end it and run. Else like 'wait'. Cannot be used with blue tasks.
+	/// restart - if that task is another instance of this task, end it and run. Else like runIfBlue.
+	/// restartOrWait - if that task is another instance of this green task, end it and run. Else wait.
 	/// 
 	/// About uac:
-	/// same (default) - the task process has the same UAC integrity level as of the editor process.
-	/// user - the task process has UAC integrity level Medium, like most applications. Such tasks cannot automate windows of processes that run as administrator, cannot modify some directories and registry keys, etc.
-	/// admin - the task process has UAC integrity level High, also known as "runs as administrator" or "elevated". Such tasks don't have the above limitations, but can have some others, for example cannot automate some apps through COM.
+	/// inherit (default) - the task process has the same UAC integrity level (IL) as the editor process.
+	/// user - Medium IL, like most applications. The task cannot automate high IL process windows, write some files, change some settings, etc.
+	/// admin - High IL, aka ""administrator"", ""elevated"". The task has many rights, but cannot automate some apps through COM, etc.
 	/// 
-	/// <h3>To create .exe or .dll file, at least option 'outputPath' must be specified</h3>
+	/// <h3>Settings used to create assembly file</h3>
 	/// <code><![CDATA[
-	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Can be full path or relative path like with 'c'.
-	/// outputType app|console|dll //type of the output assembly file. Default: app (Windows application) for scripts, dll for .cs files. Scripts cannot be dll.
+	/// role miniProgram|exeProgram|editorExtension|classLibrary|classFile //purpose of this C# file. Also the type of the output assembly file (exe, dll, none). Default: miniProgram for scripts, classFile for .cs files. Scripts cannot be classLibrary and classFile; .cs files can be any. More info below.
+	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %Folders.Workspace%\bin. Default for classLibrary: %Folders.ThisApp%\Libraries.
+	/// console false|true //let the program run with console
 	/// icon file.ico //icon of the .exe/.dll file. Can be filename or relative path, like with 'c'.
 	/// manifest file.manifest //manifest file of the .exe file. Can be filename or relative path, like with 'c'.
 	/// resFile file.res //file containing native resources to add to the .exe/.dll file. Can be filename or relative path, like with 'c'.
-	/// sign file.snk //sign the output .exe/.dll file with a strong name using this .snk file. Can be filename or relative path, like with 'c'. 
-	/// xmlDoc file.xml //create XML documentation file from XML comments. If not full path, creates in the 'outputPath' directory.
+	/// sign file.snk //sign the output assembly with a strong name using this .snk file. Can be filename or relative path, like with 'c'. 
+	/// xmlDoc file.xml //create this XML documentation file from XML comments. If not full path, creates in the 'outputPath' directory.
 	/// ]]></code>
-	/// If used option 'outputPath', creates .exe or .dll file, named like this C# file. Else creates a temporary file in subfolder ".compiled" of the workspace folder.
 	/// 
-	/// Full path can be used with 'r', 'outputPath' and 'xmlDoc'. It can start with and environment variable or special folder name, like <c>%Folders.ThisAppDocuments%\file.exe</c>.
+	/// About role:
+	/// If role is 'exeProgram' or 'classLibrary', creates .exe or .dll file, named like this C# file.
+	/// If role is 'miniProgram' (default for scripts) or 'editorExtension', creates a temporary assembly file in subfolder ".compiled" of the workspace folder.
+	/// If role is 'classFile' (default for .cs files) does not create any output files from this C# file. Its purpose is to be compiled together with other C# code files.
+	/// If role is 'editorExtension', the task runs in the main UI thread of the editor process. Rarely used. Can be used to create editor extensions. The user cannot see and end the task. Creates memory leaks when executing recompiled assemblies (eg after editing the script/app), because old assembly versions cannot be unloaded until process exits.
+	/// 
+	/// Full path can be used with 'r', 'com', 'outputPath' and 'xmlDoc'. It can start with an environment variable or special folder name, like <c>%Folders.ThisAppDocuments%\file.exe</c>.
 	/// Files used with other options ('c', 'resource' etc) must be in this workspace.
 	/// 
 	/// About native resources:
@@ -149,7 +161,7 @@ namespace Au.Compiler
 	/// 
 	/// About thread COM apartment type:
 	/// For scripts it is STA, and cannot be changed.
-	/// For apps it is STA if the Main function has [STAThread] attribute; or if using meta option runMode editorThread. Else it is MTA.
+	/// For apps it is STA if the Main function has [STAThread] attribute; or if role editorExtension. Else it is MTA.
 	/// </example>
 	class MetaComments
 	{
@@ -164,15 +176,15 @@ namespace Au.Compiler
 		public bool IsScript { get; private set; }
 
 		/// <summary>
-		/// Meta option 'debug'.
-		/// Default: <see cref="DefaultIsDebug"/> (default true).
+		/// Meta option 'optimize'.
+		/// Default: <see cref="DefaultOptimize"/> (default false).
 		/// </summary>
-		public bool IsDebug { get; private set; }
+		public bool Optimize { get; private set; }
 
 		/// <summary>
-		/// Gets or sets default meta option 'debug' value. Initially true.
+		/// Gets or sets default meta option 'optimize' value. Initially false.
 		/// </summary>
-		public static bool DefaultIsDebug { get; set; } = true;
+		public static bool DefaultOptimize { get; set; }
 
 		/// <summary>
 		/// Meta option 'define'.
@@ -218,21 +230,27 @@ namespace Au.Compiler
 		public ErrBuilder Errors { get; private set; }
 
 		/// <summary>
-		/// Default references and unique references added through meta option 'r' in all C# files of this compilation.
+		/// Default references and unique references added through meta options 'r', 'com' and 'pr' in all C# files of this compilation.
 		/// Use References.<see cref="MetaReferences.Refs"/>.
 		/// </summary>
 		public MetaReferences References { get; private set; }
 
 		/// <summary>
+		/// Project main files added through meta option 'pr'. Used by XCompiled.
+		/// null if none.
+		/// </summary>
+		public List<IWorkspaceFile> ProjectReferences { get; private set; }
+
+		/// <summary>
 		/// All C# files of this compilation.
 		/// The main C# file, then other files of its project, and at the end all unique C# files added through meta option 'c' (see <see cref="CountC"/>).
 		/// </summary>
-		public List<MetaCSharpFile> Files { get; private set; }
+		public List<MetaCodeFile> CodeFiles { get; private set; }
 
 		List<IWorkspaceFile> _filesC; //files added through meta option 'c'. Finally parsed and added to Files.
 
 		/// <summary>
-		/// Count of files added through meta option 'c'. They are at the end of <see cref="Files"/>.
+		/// Count of files added through meta option 'c'. They are at the end of <see cref="CodeFiles"/>.
 		/// </summary>
 		public int CountC => _filesC?.Count ?? 0;
 
@@ -241,12 +259,6 @@ namespace Au.Compiler
 		/// null if none.
 		/// </summary>
 		public List<MetaFileAndString> Resources { get; private set; }
-
-		/// <summary>
-		/// Meta option 'library'.
-		/// null if none.
-		/// </summary>
-		public List<IWorkspaceFile> Libraries { get; private set; }
 
 		/// <summary>
 		/// Meta option 'preBuild'.
@@ -266,13 +278,13 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// Meta option 'ifRunning'.
-		/// Default: 'unspecified' ('cancel' + warning).
+		/// Default: runIfBlue.
 		/// </summary>
 		public EIfRunning IfRunning { get; private set; }
 
 		/// <summary>
 		/// Meta option 'uac'.
-		/// Default: same.
+		/// Default: inherit.
 		/// </summary>
 		public EUac Uac { get; private set; }
 
@@ -281,6 +293,12 @@ namespace Au.Compiler
 		/// Default: false.
 		/// </summary>
 		public bool Prefer32Bit { get; private set; }
+
+		/// <summary>
+		/// Meta option 'console'.
+		/// Default: false.
+		/// </summary>
+		public bool Console { get; private set; }
 
 		/// <summary>
 		/// Meta option 'icon'.
@@ -304,15 +322,15 @@ namespace Au.Compiler
 		public string OutputPath { get; private set; }
 
 		/// <summary>
-		/// Meta option 'outputType'.
-		/// Default: exe.
+		/// Meta option 'role'.
+		/// Default: miniProgram if script, else classFile.
 		/// </summary>
-		public EOutputType OutputType { get; private set; }
+		public ERole Role { get; private set; }
 
 		/// <summary>
-		/// Gets default meta option 'outputType' value. It is app if isScript, else dll.
+		/// Gets default meta option 'role' value. It is miniProgram if isScript, else classFile.
 		/// </summary>
-		public static EOutputType DefaultOutputType(bool isScript) => isScript ? EOutputType.app : EOutputType.dll;
+		public static ERole DefaultRole(bool isScript) => isScript ? ERole.miniProgram : ERole.classFile;
 
 		/// <summary>
 		/// Meta option 'sign'.
@@ -358,7 +376,7 @@ namespace Au.Compiler
 
 			if(_filesC != null) {
 				foreach(var ff in _filesC) {
-					if(Files.Exists(o => o.f == ff)) continue;
+					if(CodeFiles.Exists(o => o.f == ff)) continue;
 					_ParseFile(ff, false);
 				}
 			}
@@ -370,8 +388,8 @@ namespace Au.Compiler
 				return false;
 			}
 
-			if(IsDebug && !Defines.Contains("DEBUG")) Defines.Add("DEBUG");
-			if(OutputPath != null && !Defines.Contains("EXE")) Defines.Add("EXE");
+			if(!Optimize && !Defines.Contains("DEBUG")) Defines.Add("DEBUG");
+			//if(Role == ERole.exeProgram && !Defines.Contains("EXE")) Defines.Add("EXE"); //rejected
 
 			return true;
 		}
@@ -392,17 +410,17 @@ namespace Au.Compiler
 				Name = name;
 				IsScript = isScript;
 
-				IsDebug = DefaultIsDebug;
+				Optimize = DefaultOptimize;
 				WarningLevel = DefaultWarningLevel;
 				NoWarnings = DefaultNoWarnings != null ? new List<string>(DefaultNoWarnings) : new List<string>();
 				Defines = DefaultDefines != null ? new List<string>(DefaultDefines) : new List<string>();
-				OutputType = DefaultOutputType(isScript);
+				Role = DefaultRole(isScript);
 
-				Files = new List<MetaCSharpFile>();
+				CodeFiles = new List<MetaCodeFile>();
 				References = new MetaReferences();
 			}
 
-			Files.Add(new MetaCSharpFile(f, code));
+			CodeFiles.Add(new MetaCodeFile(f, code));
 
 			_fn = f;
 			_code = code;
@@ -421,12 +439,17 @@ namespace Au.Compiler
 		{
 			if(value.Length == 0) { _Error(iValue, "value cannot be empty"); return; }
 
-			bool isLibrary = false; g1:
 			switch(name) {
 			case "r":
-				if(!isLibrary) Specified |= EMSpecified.r;
+			case "com":
+			case "pr" when _isMain:
+				if(name[0] == 'p') {
+					Specified |= EMSpecified.pr;
+					if(!_PR(ref value, iValue)) return;
+				}
+
 				try {
-					if(!References.Resolve(value)) {
+					if(!References.Resolve(value, name[0]=='c')) {
 						_Error(iValue, "reference assembly not found: " + value); //FUTURE: need more info, or link to Help
 					}
 				}
@@ -435,7 +458,6 @@ namespace Au.Compiler
 				}
 				return;
 			case "c":
-				Specified |= EMSpecified.c;
 				if(!value.EndsWithI_(".cs")) { _Error(iValue, "must be .cs file"); return; }
 				var ff = _GetFile(value, iValue); if(ff == null) return;
 				if(_filesC == null) _filesC = new List<IWorkspaceFile>();
@@ -443,7 +465,6 @@ namespace Au.Compiler
 				_filesC.Add(ff);
 				return;
 			case "resource":
-				Specified |= EMSpecified.resource;
 				var fs1 = _GetFileAndString(value, iValue); if(fs1.f == null) return;
 				if(Resources == null) Resources = new List<MetaFileAndString>();
 				else if(Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) return;
@@ -455,18 +476,18 @@ namespace Au.Compiler
 				//Support folder (add all in folder).
 			}
 			if(!_isMain) {
-				_Error(iName, $"in this file only these options can be used: 'r', 'c', 'resource'. Others only in the main file of the compilation - {Files[0].f.Name}.");
+				_Error(iName, $"in this file only these options can be used: 'r', 'c', 'resource', 'com'. Others only in the main file of the compilation - {CodeFiles[0].f.Name}.");
 				return;
 			}
 
 			switch(name) {
-			case "library":
-				Specified |= EMSpecified.library;
-				if(_Library(ref value, iValue)) { name = "r"; isLibrary = true; goto g1; }
+			case "optimize":
+				_Specified(EMSpecified.optimize, iName);
+				if(_TrueFalse(out bool optim, value, iValue)) Optimize = optim;
 				break;
-			case "debug":
-				_Specified(EMSpecified.debug, iName);
-				if(_TrueFalse(out bool isDebug, value, iValue)) IsDebug = isDebug;
+			case "define":
+				Specified |= EMSpecified.define;
+				Defines.AddRange(value.Split_(",; ", SegFlags.NoEmpty));
 				break;
 			case "warningLevel":
 				_Specified(EMSpecified.warningLevel, iName);
@@ -476,11 +497,7 @@ namespace Au.Compiler
 				break;
 			case "noWarnings":
 				Specified |= EMSpecified.noWarnings;
-				NoWarnings.AddRange(value.Split_(", ", SegFlags.NoEmpty));
-				break;
-			case "define":
-				Specified |= EMSpecified.define;
-				Defines.AddRange(value.Split_(", ", SegFlags.NoEmpty));
+				NoWarnings.AddRange(value.Split_(",; ", SegFlags.NoEmpty));
 				break;
 			case "preBuild":
 				_Specified(EMSpecified.preBuild, iName);
@@ -490,11 +507,11 @@ namespace Au.Compiler
 				_Specified(EMSpecified.postBuild, iName);
 				PostBuild = _GetFileAndString(value, iValue);
 				break;
-			case "outputType":
-				_Specified(EMSpecified.outputType, iName);
-				if(_Enum(out EOutputType ot, value, iValue)) {
-					OutputType = ot;
-					if(ot == EOutputType.dll && IsScript) _Error(iValue, "outputType dll can be only in .cs file");
+			case "role":
+				_Specified(EMSpecified.role, iName);
+				if(_Enum(out ERole ro, value, iValue)) {
+					Role = ro;
+					if(IsScript && (ro == ERole.classFile || Role == ERole.classLibrary)) _Error(iValue, "role classFile and classLibrary can be only in .cs file");
 				}
 				break;
 			case "outputPath":
@@ -520,6 +537,10 @@ namespace Au.Compiler
 			case "prefer32bit":
 				_Specified(EMSpecified.prefer32bit, iName);
 				if(_TrueFalse(out bool is32, value, iValue)) Prefer32Bit = is32;
+				break;
+			case "console":
+				_Specified(EMSpecified.console, iName);
+				if(_TrueFalse(out bool con, value, iValue)) Console = con;
 				break;
 			case "config":
 				_Specified(EMSpecified.config, iName);
@@ -628,39 +649,50 @@ namespace Au.Compiler
 			return Path_.LibNormalize(s, noExpandEV: true);
 		}
 
-		bool _Library(ref string value, int iValue)
+		bool _PR(ref string value, int iValue)
 		{
 			var f = _GetFile(value, iValue); if(f == null) return false;
 			if(f.IwfFindProject(out var projFolder, out var projMain)) f = projMain;
-			foreach(var v in Files) if(v.f == f) return _Error(iValue, "circular reference");
+			foreach(var v in CodeFiles) if(v.f == f) return _Error(iValue, "circular reference");
 			if(!Compiler.Compile(false, out var r, f, projFolder)) return _Error(iValue, "failed to compile library");
-			if(r.file == null) return _Error(iValue, "the main library code file must have meta outputPath");
-			//Print(r.outputType, r.file);
-			if(r.outputType != EOutputType.dll) return false; //not error, just compile that script/app
+			//Print(r.role, r.file);
+			if(r.role != ERole.classLibrary) return _Error(iValue, "it is not a class library (no meta role classLibrary)");
 			value = r.file;
-			(Libraries ?? (Libraries = new List<IWorkspaceFile>())).Add(f); //for XCompiled
+			(ProjectReferences ?? (ProjectReferences = new List<IWorkspaceFile>())).Add(f); //for XCompiled
 			return true;
 		}
 
 		bool _FinalCheckOptions()
 		{
+			switch(Role) {
+			case ERole.miniProgram:
+				if(Specified.HasAny_(EMSpecified.outputPath))
+					return _Error(0, "with role miniProgram (default role of script files) cannot use outputPath");
+				break;
+			case ERole.exeProgram:
+				if(OutputPath == null) OutputPath = @"%Folders.Workspace%\bin";
+				break;
+			case ERole.editorExtension:
+				if(Specified.HasAny_(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
+					| EMSpecified.config | EMSpecified.manifest | EMSpecified.console | EMSpecified.outputPath))
+					return _Error(0, "with role editorExtension cannot use runMode, ifRunning, uac, prefer32bit, config, manifest, console, outputPath");
+				break;
+			case ERole.classLibrary:
+				if(Specified.HasAny_(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
+					| EMSpecified.config | EMSpecified.manifest | EMSpecified.console))
+					return _Error(0, "with role classLibrary cannot use runMode, ifRunning, uac, prefer32bit, config, manifest, console");
+				if(OutputPath == null) OutputPath = @"%Folders.ThisApp%\Libraries";
+				break;
+			case ERole.classFile:
+				if(Specified != 0) return _Error(0, "with role classFile (default role of .cs files) can be used only c, r, resource, com");
+				break;
+			}
+
+			if(RunMode == ERunMode.blue && IfRunning == EIfRunning.restartOrWait) return _Error(0, "with runMode blue cannot use ifRunning restartOrWait");
+
 			if(ResFile != null) {
 				if(IconFile != null) return _Error(0, "cannot add both res file and icon");
 				if(ManifestFile != null) return _Error(0, "cannot add both res file and manifest");
-			}
-
-			var ro1 = EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit | EMSpecified.config | EMSpecified.manifest;
-
-			if(OutputType == EOutputType.dll && Specified.HasAny_(ro1 | EMSpecified.runMode))
-				return _Error(0, "in non-executable .cs file cannot use runMode, ifRunning, uac, prefer32bit, config, manifest");
-
-			switch(RunMode) {
-			case ERunMode.blueMulti when Specified.Has_(EMSpecified.ifRunning):
-				return _Error(0, "with runMode blueMulti cannot use ifRunning");
-			case ERunMode.blueSingle when IfRunning == EIfRunning.restartOrWait:
-				return _Error(0, "with runMode blueSingle cannot use ifRunning restartOrWait");
-			case ERunMode.editorThread when Specified.HasAny_(ro1 | EMSpecified.outputType | EMSpecified.outputPath):
-				return _Error(0, "with runMode editorThread cannot use outputType, outputPath, ifRunning, uac, prefer32bit, config, manifest");
 			}
 
 			return true;
@@ -724,12 +756,12 @@ namespace Au.Compiler
 		}
 	}
 
-	struct MetaCSharpFile
+	struct MetaCodeFile
 	{
 		public IWorkspaceFile f;
 		public string code;
 
-		public MetaCSharpFile(IWorkspaceFile f, string code) { this.f = f; this.code = code; }
+		public MetaCodeFile(IWorkspaceFile f, string code) { this.f = f; this.code = code; }
 	}
 
 	struct MetaFileAndString
@@ -740,13 +772,13 @@ namespace Au.Compiler
 		public MetaFileAndString(IWorkspaceFile f, string s) { this.f = f; this.s = s; }
 	}
 
-	public enum EOutputType { app, console, dll }
+	public enum ERole { miniProgram, exeProgram, editorExtension, classLibrary, classFile }
 
-	public enum EUac { same, user, admin }
+	public enum EUac { inherit, user, admin }
 
-	public enum ERunMode { green, blueSingle, blueMulti, editorThread }
+	public enum ERunMode { green, blue }
 
-	public enum EIfRunning { unspecified, cancel, wait, restart, restartOrWait }
+	public enum EIfRunning { runIfBlue, cancel, wait, restart, restartOrWait }
 
 	/// <summary>
 	/// Flags for <see cref="MetaComments.Parse"/>
@@ -773,22 +805,20 @@ namespace Au.Compiler
 		uac = 4,
 		prefer32bit = 8,
 		config = 0x10,
-		debug = 0x20,
-		warningLevel = 0x40,
+		optimize = 0x20,
+		define = 0x40,
 		noWarnings = 0x80,
-		define = 0x100,
+		warningLevel = 0x100,
 		preBuild = 0x200,
 		postBuild = 0x400,
-		r = 0x800,
-		library = 0x1000,
-		c = 0x2000,
-		resource = 0x4000,
-		outputPath = 0x8000,
-		outputType = 0x10000,
-		icon = 0x20000,
-		manifest = 0x40000,
-		resFile = 0x80000,
-		sign = 0x100000,
-		xmlDoc = 0x200000,
+		outputPath = 0x800,
+		role = 0x1000,
+		icon = 0x2000,
+		manifest = 0x4000,
+		resFile = 0x8000,
+		sign = 0x10000,
+		xmlDoc = 0x20000,
+		console = 0x40000,
+		pr = 0x80000,
 	}
 }
