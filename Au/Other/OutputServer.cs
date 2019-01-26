@@ -201,6 +201,15 @@ namespace Au.Util
 				Caller = caller;
 			}
 #endif
+			///
+			public override string ToString()
+			{
+				//in editor used for output history
+
+				if(Type != MessageType.Write) return "";
+				var k = DateTime.FromFileTimeUtc(TimeUtc).ToLocalTime();
+				return $"{k.ToString()}  |  {Caller}\r\n{Text}";
+			}
 		}
 
 		//info:
@@ -476,10 +485,8 @@ namespace Au.Util
 		/// <summary>
 		/// Gets mailslot name like @"\\.\mailslot\Au.Output\" + sessionId.
 		/// </summary>
-		internal static string LibMailslotName
-		{
-			get
-			{
+		internal static string LibMailslotName {
+			get {
 				if(_mailslotName == null) {
 					_mailslotName = @"\\.\mailslot\Au.Output\" + Process_.CurrentSessionId.ToString();
 				}
@@ -579,7 +586,7 @@ namespace Au
 						if(lenS != 0) fixed (char* p = s) Api.memcpy(b + 10 + lenCaller * 2, p, lenS * 2); //s
 
 						g1:
-						ok = Api.WriteFile(_mailslot, b, lenAll, out var nWritten);
+						ok = Api.WriteFile(_mailslot, b, lenAll);
 						if(!ok && _ReopenMailslot()) goto g1;
 					}
 
@@ -603,7 +610,7 @@ namespace Au
 
 					g1:
 					byte b = (byte)OutputServer.MessageType.Clear;
-					bool ok = Api.WriteFile(_mailslot, &b, 1, out var nWritten);
+					bool ok = Api.WriteFile(_mailslot, &b, 1);
 					if(!ok && _ReopenMailslot()) goto g1;
 					Debug.Assert(ok);
 

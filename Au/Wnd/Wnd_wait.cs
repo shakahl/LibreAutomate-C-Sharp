@@ -57,11 +57,11 @@ namespace Au
 		/// </example>
 		public static Wnd Wait(double secondsTimeout, bool active,
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-			string name = null, string className = null, WFEtc programEtc = default,
+			string name = null, string className = null, WF3 program = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		{
-			var f = new Finder(name, className, programEtc, flags, also, contains);
+			var f = new Finder(name, className, program, flags, also, contains);
 			var to = new WaitFor.Loop(secondsTimeout);
 			for(; ; ) {
 				if(active) {
@@ -125,15 +125,15 @@ namespace Au
 		/// </remarks>
 		public static bool WaitNot(double secondsTimeout,
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-			string name = null, string className = null, WFEtc programEtc = default,
+			string name = null, string className = null, WF3 program = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		{
-			var f = new Finder(name, className, programEtc, flags, also, contains);
+			var f = new Finder(name, className, program, flags, also, contains);
 			return WaitNot(secondsTimeout, f, out _);
 		}
 
-		/// <inheritdoc cref="WaitNot(double, string, string, WFEtc, WFFlags, Func{Wnd, bool}, object)"/>
+		/// <inheritdoc cref="WaitNot(double, string, string, WF3, WFFlags, Func{Wnd, bool}, object)"/>
 		/// <summary>
 		/// Waits until window does not exist.
 		/// </summary>

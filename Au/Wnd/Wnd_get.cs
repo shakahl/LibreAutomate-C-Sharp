@@ -215,10 +215,8 @@ namespace Au
 			/// <remarks>
 			/// Supports <see cref="Native.GetError"/>.
 			/// </remarks>
-			public Wnd DirectParent
-			{
-				get
-				{
+			public Wnd DirectParent {
+				get {
 					Wnd R = Api.GetParent(_w);
 					if(R.Is0 || R == Api.GetWindow(_w, Api.GW_OWNER) || R == Root) return default;
 					return R;
@@ -362,7 +360,7 @@ namespace Au
 			{
 				Wnd w = Shell;
 				var f = new ChildFinder(className: "SysListView32");
-				if(!f.Find(w)) w = Wnd.Find(null, "WorkerW", WFEtc.Thread(w.ThreadId), also: t => f.Find(t));
+				if(!f.Find(w)) w = Wnd.Find(null, "WorkerW", WF3.Thread(w.ThreadId), also: t => f.Find(t));
 				lvControl = f.Result;
 				return w;
 
@@ -528,8 +526,7 @@ namespace Au
 		/// The 'get' function returns default(Wnd) if this window isn't owned or is invalid. Supports <see cref="Native.GetError"/>.
 		/// The 'set' function can fail, eg if the owner's process has higher <see cref="Uac">UAC</see> integrity level.
 		/// </remarks>
-		public Wnd Owner
-		{
+		public Wnd Owner {
 			get => Api.GetWindow(this, Api.GW_OWNER);
 			set { SetWindowLong(Native.GWL.HWNDPARENT, (LPARAM)value); }
 		}
@@ -539,10 +536,8 @@ namespace Au
 		/// If this is a top-level window, returns this. Returns default(Wnd) if this window is invalid.
 		/// </summary>
 		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
-		public Wnd Window
-		{
-			get
-			{
+		public Wnd Window {
+			get {
 				var w = Api.GetAncestor(this, Api.GA_ROOT);
 				if(w.Is0 && this == GetWnd.Root) w = this;
 				return w;
@@ -586,10 +581,8 @@ namespace Au
 		/// Returns true if this window is the active (foreground) window.
 		/// If this is <see cref="GetWnd.Root"/>, returns true if there is no active window.
 		/// </summary>
-		internal bool LibIsActiveOrNoActiveAndThisIsWndRoot
-		{
-			get
-			{
+		internal bool LibIsActiveOrNoActiveAndThisIsWndRoot {
+			get {
 				if(Is0) return false;
 				var f = Api.GetForegroundWindow();
 				return this == (f.Is0 ? GetWnd.Root : f);

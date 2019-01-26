@@ -16,11 +16,16 @@ using System.Runtime.ExceptionServices;
 using Au.Types;
 using static Au.NoClass;
 
+//CONSIDER: instead use standard C# STA pool code.
+//	Initially I rejected it because each appdomain that uses it creates 4 threads. But now we rarely have multiple appdomains.
+//	Initially automation tasks by default were executed in appdomains. Later appdomains were completely rejected because unstable.
+
 namespace Au.Util
 {
 	/// <summary>
 	/// Thread pool where COM can be used. Initializes thread COM as single-thread-apartment.
 	/// </summary>
+	[System.Security.SuppressUnmanagedCodeSecurity]
 	internal static unsafe class ThreadPoolSTA
 	{
 		/// <summary>

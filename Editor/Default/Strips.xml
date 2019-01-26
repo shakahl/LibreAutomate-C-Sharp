@@ -187,7 +187,7 @@
 				<Tools_Output_WrapLines/>
 				<Tools_Output_WhiteSpace/>
 				<sep/>
-				<Tools_Output_Topmost/>
+				<Tools_Output_Topmost t="Topmost When Floating"/>
 			</Tools_Output>
 			<Tools_StatusBar>
 				<Tools_Statusbar_Floating/>

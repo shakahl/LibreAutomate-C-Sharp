@@ -232,14 +232,14 @@ namespace Au.Types
 		///
 		public override void GetObjectData(SerializationInfo info, StreamingContext context)
 		{
-			info.AddValue("Window", (int)Window.Handle);
+			info.AddValue("Window", (int)Window);
 			base.GetObjectData(info, context);
 		}
 
 		///
 		protected WndException(SerializationInfo info, StreamingContext context) : base(info, context)
 		{
-			Window = (Wnd)(LPARAM)info.GetInt32("Window");
+			Window = (Wnd)info.GetInt32("Window");
 		}
 
 		#endregion

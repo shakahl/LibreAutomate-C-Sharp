@@ -27,6 +27,9 @@ using Aga.Controls.Tree.NodeControls;
 
 //FUTURE: support Edge better. Eg can find without UIA. See the workaround.
 
+//TODO: include winforms name. Eg in paint.net now does not find buttons and even toolbars; QM2 finds toolbar using wfName.
+//TODO: if checked state, activate window before test. Else different FOCUSED etc.
+
 namespace Au.Tools
 {
 	public partial class Form_Acc : ToolForm
@@ -445,7 +448,7 @@ namespace Au.Tools
 			if(r.obj is Acc a && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
 				if(!a.MiscFlags.Has_(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {
 					//need full path. Run("firefox.exe") fails if firefox is not properly installed.
-					string ffInfo = c_infoFirefox, ffPath = _wnd.ProgramFilePath;
+					string ffInfo = c_infoFirefox, ffPath = _wnd.ProgramPath;
 					if(ffPath != null) ffInfo = ffInfo.Replace("firefox.exe", ffPath);
 					_SetFormInfo(ffInfo);
 				}

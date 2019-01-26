@@ -20,19 +20,17 @@ using System.Runtime.ExceptionServices;
 using Au;
 using Au.Types;
 using static Au.NoClass;
-using System.Drawing;
-using System.Windows.Forms;
 
 namespace Au.Triggers
 {
-	public class Triggers
+	public class TriggerEngines
 	{
 		Thread _thread;
 		AutoResetEvent _endEvent;
 		SqliteDB _db;
-		//HotkeyTriggers _trigHotkey;
+		//HotkeyTriggersEngine _trigHotkey;
 
-		public Triggers(string dbPath)
+		public TriggerEngines(string dbPath)
 		{
 			//open database of triggers
 			try {
@@ -60,7 +58,7 @@ namespace Au.Triggers
 
 		void _Thread()
 		{
-			var hotkey = new HotkeyTriggers();
+			var hotkey = new HotkeyTriggersEngine();
 			lock(_db) {
 				hotkey.Start(_db);
 			}
@@ -79,7 +77,7 @@ namespace Au.Triggers
 		public string method;
 	}
 
-	public class HotkeyTriggers :ITriggerEngine
+	public class HotkeyTriggersEngine :ITriggerEngine
 	{
 		Au.Util.WinHook _hook;
 		Dictionary<int, object> _d;
@@ -144,25 +142,25 @@ namespace Au.Triggers
 
 		#endregion
 
-		#region UI
+		//#region UI
 
-		public void FormInit(Form parent)
-		{
+		//public void FormInit(Form parent)
+		//{
 			
-		}
+		//}
 
-		public void FormOK()
-		{
+		//public void FormOK()
+		//{
 			
-		}
+		//}
 
-		public void Help()
-		{
+		//public void Help()
+		//{
 			
-		}
+		//}
 
-		public Icon Icon { get; set; }
+		//public Icon Icon { get; set; }
 
-		#endregion
+		//#endregion
 	}
 }

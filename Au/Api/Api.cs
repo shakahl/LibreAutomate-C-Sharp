@@ -1033,6 +1033,19 @@ namespace Au.Types
 
 		#region ntdll
 
+		internal struct RTL_OSVERSIONINFOW
+		{
+			public int dwOSVersionInfoSize;
+			public uint dwMajorVersion;
+			public uint dwMinorVersion;
+			public uint dwBuildNumber;
+			public uint dwPlatformId;
+			public fixed char szCSDVersion[128];
+		}
+
+		[DllImport("ntdll.dll", ExactSpelling = true)]
+		internal static extern int RtlGetVersion(ref RTL_OSVERSIONINFOW lpVersionInformation);
+
 		[DllImport("ntdll.dll")]
 		internal static extern uint NtQueryTimerResolution(out uint maxi, out uint mini, out uint current);
 		//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
@@ -1045,6 +1058,35 @@ namespace Au.Types
 
 		[DllImport("ntdll.dll")]
 		internal static extern void MD5Final(ref Convert_.MD5Hash context);
+
+		internal struct SYSTEM_PROCESS_INFORMATION
+		{
+			internal uint NextEntryOffset;
+			internal uint NumberOfThreads;
+			long SpareLi1;
+			long SpareLi2;
+			long SpareLi3;
+			internal long CreateTime;
+			internal long UserTime;
+			internal long KernelTime;
+
+			internal ushort NameLength;   // UNICODE_STRING   
+			internal ushort MaximumNameLength;
+			internal IntPtr NamePtr;     // This will point into the data block returned by NtQuerySystemInformation
+
+			internal int BasePriority;
+			internal IntPtr UniqueProcessId;
+			internal IntPtr InheritedFromUniqueProcessId;
+			internal uint HandleCount;
+			internal uint SessionId;
+
+			//unused members
+		}
+
+		internal const int STATUS_INFO_LENGTH_MISMATCH = unchecked((int)0xC0000004);
+
+		[DllImport("ntdll.dll")]
+		internal static extern int NtQuerySystemInformation(int five, SYSTEM_PROCESS_INFORMATION* SystemInformation, int SystemInformationLength, out int ReturnLength);
 
 
 

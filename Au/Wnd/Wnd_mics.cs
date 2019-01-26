@@ -23,8 +23,9 @@ namespace Au
 	public partial struct Wnd
 	{
 		/// <summary>
-		/// Contains miscellaneous static window-related functions and classes, rarely used or useful only for programmers.
+		/// Contains miscellaneous static window-related functions and classes. Rarely used, or useful only for programmers.
 		/// </summary>
+		[System.Security.SuppressUnmanagedCodeSecurity]
 		public static partial class Misc
 		{
 			/// <summary>
@@ -325,10 +326,6 @@ namespace Au
 			/// <summary>API <msdn>DefSubclassProc</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#413")]
 			public static extern LPARAM DefSubclassProc(Wnd hWnd, uint uMsg, LPARAM wParam, LPARAM lParam);
-
-			/// <summary>API <msdn>DefWindowProc</msdn></summary>
-			[DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
-			public static extern LPARAM DefWindowProc(Wnd hWnd, uint Msg, LPARAM wParam, LPARAM lParam);
 		}
 	}
 }

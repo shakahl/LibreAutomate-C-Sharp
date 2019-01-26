@@ -31,9 +31,9 @@ namespace Au
 		///
 		public OsdWindow()
 		{
-			_w = new WndClass(this);
+			_w = new Wnd.Misc.MyWindow(WndProc);
 		}
-		WndClass _w;
+		Wnd.Misc.MyWindow _w; //TODO: _wClass. And Wnd _w.
 
 		/// <summary>Destroys the OSD window.</summary>
 		protected virtual void Dispose(bool disposing)
@@ -180,11 +180,11 @@ namespace Au
 			//register window class if need. Need another class if shadow.
 			string cn; byte regMask;
 			if(Shadow) { cn = "Au.OSD2"; regMask = 2; } else { cn = "Au.OSD"; regMask = 1; }
-			if((_isWinClassRegistered & regMask) == 0) {
+			if((s_isWinClassRegistered & regMask) == 0) {
 				var ce = new Wnd.Misc.MyWindow.WndClassEx() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, hbrBackground = default(IntPtr) };
 				if(Shadow) ce.style |= Api.CS_DROPSHADOW;
 				Wnd.Misc.MyWindow.RegisterClass(cn, ce);
-				_isWinClassRegistered |= regMask;
+				s_isWinClassRegistered |= regMask;
 			}
 
 			var es = Native.WS_EX.TOOLWINDOW | Native.WS_EX.TOPMOST | Native.WS_EX.LAYERED | Native.WS_EX.TRANSPARENT | Native.WS_EX.NOACTIVATE;
@@ -194,7 +194,7 @@ namespace Au
 			if(!_r.Is0) _w.Handle.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
 			return _w.Handle;
 		}
-		static byte _isWinClassRegistered;
+		static byte s_isWinClassRegistered;
 
 		/// <summary>
 		/// Called when the OSD window receives a message.
@@ -227,18 +227,7 @@ namespace Au
 				break;
 			}
 
-			return _w.WndProc2(w, message, wParam, lParam);
-		}
-
-		class WndClass :Wnd.Misc.MyWindow
-		{
-			OsdWindow _osd;
-
-			public WndClass(OsdWindow osd) => _osd = osd;
-
-			protected override LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam) => _osd.WndProc(w, message, wParam, lParam);
-
-			public LPARAM WndProc2(Wnd w, int message, LPARAM wParam, LPARAM lParam) => base.WndProc(w, message, wParam, lParam);
+			return _w.DefWndProc(w, message, wParam, lParam);
 		}
 
 		/// <summary>
@@ -285,7 +274,7 @@ namespace Au
 		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.</param>
 		public static void CloseAll(string name = null)
 		{
-			foreach(var w in Wnd.FindAll(name, "**m Au.OSD||Au.OSD2", WFEtc.Process(Process_.CurrentProcessId))) w.Close(noWait: true);
+			foreach(var w in Wnd.FindAll(name, "**m Au.OSD||Au.OSD2", WF3.Process(Process_.CurrentProcessId))) w.Close(noWait: true);
 		}
 	}
 
@@ -608,8 +597,10 @@ namespace Au
 				_Show(wait);
 			} else {
 				//Task.Run(() => ShowWait()); //works too, but cannot use StrongThread
-				Thread_.Start(() => _Show(true), ShowMode != OsdShowMode.StrongThread);
+				Thread_.Start(() => _Show(true), ShowMode == OsdShowMode.WeakThread);
 				WaitFor.Condition(30, () => IsHandleCreated);
+
+				//CONSIDER: make smaller timeout when main thread ended if OsdShowMode.Auto
 			}
 		}
 
@@ -866,7 +857,7 @@ namespace Au.Types
 	/// </remarks>
 	public enum OsdShowMode
 	{
-		/// <summary>Depends on <see cref="Thread_.HasMessageLoop"/>. If it is true, uses <b>ThisThread</b>, else <b>WeakThread</b>. Does not wait.</summary>
+		/// <summary>Depends on <see cref="Thread_.HasMessageLoop"/>. If it is true, uses <b>ThisThread</b>, else <b>StrongThread</b>. Does not wait.</summary>
 		Auto,
 
 		/// <summary>

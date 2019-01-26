@@ -62,9 +62,7 @@ namespace Au
 		/// </summary>
 		[Conditional("DEBUG")]
 		public static void Print(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
-		{
-			_Print(text, cp, cln, cmn);
-		}
+			=> _Print(text, cp, cln, cmn);
 
 		/// <summary>
 		/// If condition is true, calls <see cref="Output.Write"/> to show some debug info. Also shows current function name/file/line.
@@ -83,7 +81,22 @@ namespace Au
 		/// The optional argument is not used explicitly.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void PrintFunc([CallerMemberName] string name = null) { Output.Write(name); }
+		public static void PrintFunc([CallerMemberName] string name = null)
+			=> Output.Write(name);
+
+		/// <summary>
+		/// In DEBUG config prints Native.GetErrorMessage().
+		/// </summary>
+		[Conditional("DEBUG")]
+		internal static void LibPrintNativeError([CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+			=> _Print(Native.GetErrorMessage(), cp, cln, cmn);
+
+		/// <summary>
+		/// In DEBUG config prints Native.GetErrorMessage(code).
+		/// </summary>
+		[Conditional("DEBUG")]
+		internal static void LibPrintNativeError(int code, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+			=> _Print(Native.GetErrorMessage(code), cp, cln, cmn);
 
 		/// <summary>
 		/// Calls <see cref="AuDialog.Show"/> to show some debug info.
@@ -178,10 +191,8 @@ namespace Au
 		/// <summary>
 		/// Returns true if using Debug configuration of Au.dll.
 		/// </summary>
-		public static bool IsAuDebugConfiguration
-		{
-			get
-			{
+		public static bool IsAuDebugConfiguration {
+			get {
 #if DEBUG
 				return true;
 #else

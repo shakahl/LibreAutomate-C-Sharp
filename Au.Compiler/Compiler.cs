@@ -24,7 +24,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 using System.Resources;
-using Au.LibRun;
 using System.Collections.Immutable;
 
 namespace Au.Compiler
@@ -818,7 +817,7 @@ void _Main(string[] args) {");
 			if(r.role != ERole.editorExtension) throw new ArgumentException($"meta of '{x.f.Name}' must contain role editorExtension");
 			if(!ok) return false;
 
-			RunAsm.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread | RAFlags.DontHandleExceptions);
+			RunAssembly.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread | RAFlags.DontHandleExceptions);
 			return true;
 		}
 		static Regex_ s_rx1;

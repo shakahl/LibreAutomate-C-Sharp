@@ -196,7 +196,7 @@ namespace Au
 			if(Opt.Debug.IsWarningDisabled(text)) return;
 
 			if(!Opt.Debug.Verbose) {
-				var t = Time.Milliseconds;
+				var t = Api.GetTickCount64();
 				if(t - s_warningTime < 1000) return;
 				s_warningTime = t;
 			}

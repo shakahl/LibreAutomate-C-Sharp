@@ -93,6 +93,8 @@ namespace Au
 		public static explicit operator IntPtr(Wnd w) => w.Handle;
 		public static explicit operator Wnd(LPARAM hwnd) => new Wnd((void*)hwnd);
 		public static explicit operator LPARAM(Wnd w) => w._h;
+		public static explicit operator Wnd(int hwnd) => new Wnd((void*)hwnd);
+		public static explicit operator int(Wnd w) => (int)w._h;
 		public static implicit operator Wnd(Native.HWND hwnd) => new Wnd((void*)(int)hwnd);
 
 		/// <summary>
@@ -2664,22 +2666,31 @@ namespace Au
 		/// <summary>
 		/// Gets filename of process executable file, like "notepad.exe".
 		/// Return null if fails.
-		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetName"/>.
 		/// </summary>
-		public string ProgramName => Process_.GetName(ProcessId);
+		/// <remarks>
+		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetName"/>.
+		/// This function is much slower than getting window name or class name. Don't use code like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>. Instead use <c>var s=w.ProgramName; if(s=="A" || s=="B")</c>.
+		/// </remarks>
+		public string ProgramName => Process_.LibGetNameCached(this, ProcessId);
 
 		/// <summary>
 		/// Gets full path of process executable file.
 		/// Return null if fails.
-		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetName"/>.
 		/// </summary>
-		public string ProgramFilePath => Process_.GetName(ProcessId, true);
+		/// <remarks>
+		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetName"/>.
+		/// This function is much slower than getting window name or class name. Don't use code like <c>if(w.ProgramPath=="A" || w.ProgramPath=="B")</c>. Instead use <c>var s=w.ProgramPath; if(s=="A" || s=="B")</c>.
+		/// </remarks>
+		public string ProgramPath => Process_.LibGetNameCached(this, ProcessId, true);
 
 		/// <summary>
 		/// Gets description of process executable file.
 		/// Return null if fails.
-		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetDescription"/>.
 		/// </summary>
+		/// <remarks>
+		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetDescription"/>.
+		/// This function is slow. Much slower than <see cref="ProgramName"/>.
+		/// </remarks>
 		public string ProgramDescription => Process_.GetDescription(ProcessId);
 
 		#endregion
@@ -2787,11 +2798,11 @@ namespace Au
 		///// Returns the number of found windows.
 		///// </summary>
 		//public static int CloseAll(
-		//	string name, string className = null, WFEtc programEtc = default,
+		//	string name, string className = null, WFEtc program = default,
 		//	WFFlags flags = 0, Func<Wnd, bool> f = null, object contains = null
 		//	)
 		//{
-		//	var a = FindAll(name, className, programEtc, flags, f, contains);
+		//	var a = FindAll(name, className, program, flags, f, contains);
 		//	foreach(Wnd w in a) w.Close();
 		//	return a.Count;
 		//}

@@ -146,7 +146,6 @@ namespace Au.Types
 
 		[DllImport("user32.dll", EntryPoint = "CallWindowProcW")]
 		internal static extern LPARAM CallWindowProc(LPARAM lpPrevWndFunc, Wnd hWnd, int Msg, LPARAM wParam, LPARAM lParam);
-		//internal static extern LPARAM CallWindowProc(Native.WNDPROC lpPrevWndFunc, Wnd hWnd, int Msg, LPARAM wParam, LPARAM lParam);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool DestroyWindow(Wnd hWnd);
@@ -155,7 +154,7 @@ namespace Au.Types
 		internal static extern void PostQuitMessage(int nExitCode);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int GetMessage(out Native.MSG lpMsg, Wnd hWnd, int wMsgFilterMin, int wMsgFilterMax);
+		internal static extern int GetMessage(out Native.MSG lpMsg, Wnd hWnd = default, int wMsgFilterMin = 0, int wMsgFilterMax = 0);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool TranslateMessage(in Native.MSG lpMsg);
@@ -742,7 +741,7 @@ namespace Au.Types
 		}
 
 		[Flags]
-		internal enum IMFlags :uint
+		internal enum IMFlags : uint
 		{
 			Move = 1,
 			LeftDown = 2, LeftUp = 4,
@@ -1118,7 +1117,7 @@ namespace Au.Types
 		internal static extern bool UnhookWinEvent(IntPtr hWinEventHook);
 
 		[Flags]
-		internal enum AnimationFlags :uint
+		internal enum AnimationFlags : uint
 		{
 			Roll = 0x0000, // Uses a roll animation.
 			HorizontalPositive = 0x00001, // Animates the window from left to right. This flag can be used with roll or slide animation.

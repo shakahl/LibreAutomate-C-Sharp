@@ -30,8 +30,8 @@ namespace Au
 	{
 		static Ver()
 		{
-			var x = new RTL_OSVERSIONINFOW(); x.dwOSVersionInfoSize = Api.SizeOf(x);
-			if(0 == RtlGetVersion(ref x)) {
+			Api.RTL_OSVERSIONINFOW x = default; x.dwOSVersionInfoSize = Api.SizeOf(x);
+			if(0 == Api.RtlGetVersion(ref x)) {
 				_winver = Math_.MakeUshort(x.dwMinorVersion, x.dwMajorVersion);
 				//use this because Environment.OSVersion.Version (GetVersionEx) lies, even if we have correct manifest when is debugger present
 			} else {
@@ -51,19 +51,6 @@ namespace Au
 		static readonly int _winver;
 		static readonly bool _minWin8, _minWin8_1, _minWin10;
 		static readonly bool _is64BitOS, _isWow64;
-
-		struct RTL_OSVERSIONINFOW
-		{
-			public int dwOSVersionInfoSize;
-			public uint dwMajorVersion;
-			public uint dwMinorVersion;
-			public uint dwBuildNumber;
-			public uint dwPlatformId;
-			public fixed char szCSDVersion[128];
-		}
-
-		[DllImport("ntdll.dll", ExactSpelling = true)]
-		static extern int RtlGetVersion(ref RTL_OSVERSIONINFOW lpVersionInformation);
 
 		/// <summary>
 		/// Gets classic Windows major+minor version value:

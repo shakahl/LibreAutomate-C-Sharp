@@ -67,7 +67,6 @@
     </Compile>
     <None Include="Properties\Au.pfx" />
     <None Include="removed\GifDecoder.cs" />
-    <None Include="removed\PerformanceAnalyzer.cs" />
     <Compile Include="Util\ResourceHelper.cs" />
     <Compile Include="Util\StringCollectionEditor.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -76,10 +75,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Util\BitmapHelper.cs" />
-    <None Include="removed\Threading\AbortableThreadPool.cs" />
-    <None Include="removed\Threading\WorkItemStatus.cs" />
-    <None Include="removed\Threading\WorkItem.cs" />
-    <None Include="removed\TimeCounter.cs" />
     <Compile Include="Tree\Input\ReorderColumnState.cs" />
     <None Include="removed\ListModel.cs" />
     <Compile Include="Tree\NodeControls\EditEventArgs.cs" />

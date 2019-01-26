@@ -24,14 +24,14 @@ namespace Au
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class AuToolbar :BaseMT
+	public class AuToolbar : BaseMT
 	{
 		static AuToolbar()
 		{
 			Wnd.Misc.MyWindow.RegisterClass("AuToolbar");
 		}
 
-		WndClass _wClass;
+		Wnd.Misc.MyWindow _wClass;
 		Wnd _w;
 		ToolStrip_ _ts;
 
@@ -55,8 +55,7 @@ namespace Au
 		/// t["Two", @"icon file path"] = o => { Print(o); AuDialog.Show(o.ToString()); };
 		/// t.LastItem.ToolTipText = "tooltip";
 		/// </code></example>
-		public Action<MTClickArgs> this[string text, object icon = null]
-		{
+		public Action<MTClickArgs> this[string text, object icon = null] {
 			set { Add(text, value, icon); }
 		}
 
@@ -117,8 +116,7 @@ namespace Au
 			return item;
 		}
 
-		ToolStripItemCollection _Items
-		{
+		ToolStripItemCollection _Items {
 			get => _ts.Items;
 		}
 
@@ -142,7 +140,7 @@ namespace Au
 			//RECT r = Screen.PrimaryScreen.WorkingArea; r.Inflate(-2, -2); r.top += 4;
 			RECT r = (0, 0, 200, 200);
 
-			_wClass = new WndClass(this);
+			_wClass = new Wnd.Misc.MyWindow(WndProc);
 			if(!_wClass.Create("AuToolbar", null, style, exStyle, r.top, r.left, r.Width, r.Height)) throw new Win32Exception();
 			Perf.Next();
 
@@ -154,11 +152,9 @@ namespace Au
 			//then caller will add buttons etc and call Visible=true, which calls _ts.ResumeLayout and _ts.CreateControl
 		}
 
-		public bool Visible
-		{
+		public bool Visible {
 			get => _w.IsVisible;
-			set
-			{
+			set {
 				_GetIconsAsync(_ts);
 				if(!_ts.Created) {
 					_ts.ResumeLayout();
@@ -183,50 +179,38 @@ namespace Au
 		public Wnd MainWnd => _w;
 
 
-		class WndClass :Wnd.Misc.MyWindow
+		protected virtual LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
 		{
-			AuToolbar _x;
-
-			public WndClass(AuToolbar x)
-			{
-				_x = x;
+			switch(message) {
+			case Api.WM_NCCREATE:
+				_w = w;
+				break;
 			}
 
-			protected override LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
-			{
-				switch(message) {
-				case Api.WM_NCCREATE:
-					_x._w = w;
-					break;
-				}
+			var R = _wClass.DefWndProc(w, message, wParam, lParam);
 
-				var R = base.WndProc(w, message, wParam, lParam);
-
-				switch(message) {
-				case Api.WM_PAINT:
-					//Print("painted");
-					//if(!_focusedOnce) {
-					//	Perf.NW();
-					//	_focusedOnce = true;
-					//	if(!_ts.Focused) _ts.Focus(); //solves problem when in native window: the first button-click does not work. This takes several milliseconds therefore is after painting. But here it is much slower and can create problems, eg flickering, more slow startup of next toolbar.
-					//}
-					break;
-				}
-				return R;
+			switch(message) {
+			case Api.WM_PAINT:
+				//Print("painted");
+				//if(!_focusedOnce) {
+				//	Perf.NW();
+				//	_focusedOnce = true;
+				//	if(!_ts.Focused) _ts.Focus(); //solves problem when in native window: the first button-click does not work. This takes several milliseconds therefore is after painting. But here it is much slower and can create problems, eg flickering, more slow startup of next toolbar.
+				//}
+				break;
 			}
+			return R;
 		}
 
 
-		class ToolStrip_ :ToolStrip, _IAuToolStrip
+		class ToolStrip_ : ToolStrip, _IAuToolStrip
 		{
 			AuToolbar _parent;
 
 			internal ToolStrip_(AuToolbar parent) { _parent = parent; }
 
-			protected override CreateParams CreateParams
-			{
-				get
-				{
+			protected override CreateParams CreateParams {
+				get {
 					//Print("CreateParams");
 					var p = base.CreateParams;
 					if(_parent != null) { //this prop is called 3 times, first time before ctor

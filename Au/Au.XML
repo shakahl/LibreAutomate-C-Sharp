@@ -1232,7 +1232,7 @@
             </remarks>
         </member>
         <member name="F:Au.Types.OsdShowMode.Auto">
-            <summary>Depends on <see cref="M:Au.Thread_.HasMessageLoop(System.Boolean@)"/>. If it is true, uses <b>ThisThread</b>, else <b>WeakThread</b>. Does not wait.</summary>
+            <summary>Depends on <see cref="M:Au.Thread_.HasMessageLoop(System.Boolean@)"/>. If it is true, uses <b>ThisThread</b>, else <b>StrongThread</b>. Does not wait.</summary>
         </member>
         <member name="F:Au.Types.OsdShowMode.ThisThread">
             <summary>
@@ -2076,6 +2076,15 @@
             <param name="values"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
+        <member name="M:Au.Types.ExtensionMethods.RemoveWhere_``2(System.Collections.Generic.Dictionary{``0,``1},System.Func{System.Collections.Generic.KeyValuePair{``0,``1},System.Boolean})">
+            <summary>
+            Removes items based on a predicate. For example, all items that have certain value.
+            </summary>
+            <typeparam name="TKey"></typeparam>
+            <typeparam name="TValue"></typeparam>
+            <param name="t"></param>
+            <param name="predicate"></param>
+        </member>
         <member name="M:Au.Types.ExtensionMethods.AppendSentence(System.Text.StringBuilder,System.String,System.Boolean)">
             <summary>
             Appends string as new correctly formatted sentence.
@@ -2626,11 +2635,6 @@
         </member>
         <member name="M:Au.Types.AuAppBase.#ctor">
             
-        </member>
-        <member name="M:Au.Types.AuAppBase.RunTriggers">
-            <summary>
-            Waits for trigger events specified in function attributes like <c>[Trigger.Hotkey("Ctrl+K")]</c>. On events calls that functions and continues to wait.
-            </summary>
         </member>
         <member name="M:Au.Types.AuAppBase.OnUnhandledException(System.UnhandledExceptionEventArgs)">
             <summary>
@@ -4163,7 +4167,7 @@
         <member name="T:Au.Types.Wildex">
             <summary>
             This class implements <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink> parsing and matching (comparing).
-            Typically used in 'find' functions. For example, <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> uses it to compare window name, class name and program.
+            Typically used in 'find' functions. For example, <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> uses it to compare window name, class name and program.
             The 'find' function creates a Wildex instance (which parses the wildcard expression), then calls <see cref="M:Au.Types.Wildex.Match(System.String)"/> for each item (eg window) to compare some its property text.
             </summary>
             <exception cref="T:System.ArgumentException">Invalid "**options " or regular expression.</exception>
@@ -4699,7 +4703,7 @@
         </member>
         <member name="T:Au.Types.WFFlags">
             <summary>
-            'flags' parameter of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            'flags' parameter of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.WFFlags.HiddenToo">
@@ -4714,29 +4718,43 @@
             Cloaked are windows hidden not in the classic way, therefore Wnd.IsVisible does not detect it, but Wnd.IsCloaked detects. For example, windows on inactive Windows 10 virtual desktops; inactive Windows Store apps on Windows 8.
             </summary>
         </member>
-        <member name="T:Au.Types.WFEtc">
+        <member name="T:Au.Types.WF3">
             <summary>
-            <i>programEtc</i> of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            <i>program</i> of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Program name, process id, thread id or owner window handle.
             </summary>
         </member>
-        <member name="M:Au.Types.WFEtc.op_Implicit(System.String)~Au.Types.WFEtc">
+        <member name="M:Au.Types.WF3.op_Implicit(System.String)~Au.Types.WF3">
             <summary>Program name like "notepad.exe", or null.</summary>
         </member>
-        <member name="M:Au.Types.WFEtc.Process(System.Int32)">
+        <member name="M:Au.Types.WF3.Process(System.Int32)">
             <summary>Process id.</summary>
         </member>
-        <member name="M:Au.Types.WFEtc.Thread(System.Int32)">
+        <member name="M:Au.Types.WF3.Thread(System.Int32)">
             <summary>Thread id.</summary>
         </member>
-        <member name="M:Au.Types.WFEtc.Owner(Au.Types.AnyWnd)">
+        <member name="M:Au.Types.WF3.Owner(Au.Types.AnyWnd)">
             <summary>Owner window.</summary>
         </member>
-        <member name="M:Au.Types.WFEtc.GetValue(Au.Types.Wildex@,System.Int32@,System.Int32@,Au.Wnd@)">
+        <member name="M:Au.Types.WF3.GetValue(Au.Types.Wildex@,System.Int32@,System.Int32@,Au.Wnd@)">
             <summary>
             Gets program name or process id or thread id or owner window.
             Other variables will be null/0.
             </summary>
-            <exception cref="T:System.ArgumentException">The value is "" or 0.</exception>
+            <exception cref="T:System.ArgumentException">The value is "" or 0 or contains \ or /.</exception>
+        </member>
+        <member name="P:Au.Types.WF3.IsEmpty">
+            <summary>
+            Returns true if nothing was assigned to this variable.
+            </summary>
+        </member>
+        <member name="T:Au.Types.WFCache">
+            <summary>
+            Can be used with <see cref="M:Au.Wnd.Finder.IsMatch(Au.Wnd,Au.Types.WFCache)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.WFCache.#ctor(System.Boolean)">
+            <param name="cacheName">Cache window name. Should be true if window name can be changed while this variable is used. Window class and program are always cached because cannot be changed.</param>
         </member>
         <member name="T:Au.Types.SUBCLASSPROC">
             <summary>API <msdn>SUBCLASSPROC</msdn></summary>
@@ -5010,6 +5028,28 @@
         <member name="T:Au.Types.StockIcon">
             <summary><msdn>SHSTOCKICONID</msdn></summary>
             <seealso cref="M:Au.Icon_.GetStockIcon(Au.Types.StockIcon,System.Int32)"/>
+        </member>
+        <member name="T:Au.Types.ATRole">
+            <summary>
+            <see cref="P:Au.AuTask.Role"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.ATRole.ExeProgram">
+            <summary>
+            The task runs as normal .exe program.
+            It can be started from editor or not. It can run on computers where editor not installed.
+            </summary>
+        </member>
+        <member name="F:Au.Types.ATRole.MiniProgram">
+            <summary>
+            The task runs in Au.Task.exe process.
+            It can be started only from editor.
+            </summary>
+        </member>
+        <member name="F:Au.Types.ATRole.EditorExtension">
+            <summary>
+            The task runs in editor process.
+            </summary>
         </member>
         <member name="T:Au.Types.STIFlags">
             <summary>
@@ -6295,9 +6335,17 @@
             Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
             </param>
             <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if <paramref name="fullPath"/> is true.</param>
+            <remarks>
+            This function is much slower than getting window name or class name.
+            </remarks>
             <seealso cref="P:Au.Wnd.ProgramName"/>
-            <seealso cref="P:Au.Wnd.ProgramFilePath"/>
+            <seealso cref="P:Au.Wnd.ProgramPath"/>
             <seealso cref="P:Au.Wnd.ProcessId"/>
+        </member>
+        <member name="M:Au.Process_.LibGetNameCached(Au.Wnd,System.Int32,System.Boolean)">
+            <summary>
+            Same as GetName, but faster when called several times for same window, like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>.
+            </summary>
         </member>
         <member name="M:Au.Process_.LibProcessInfo.GetName(System.Boolean)">
             <summary>
@@ -6903,11 +6951,74 @@
             Triggers.
             </summary>
         </member>
-        <member name="M:Au.Triggers.Trigger.Run(System.Object)">
+        <member name="T:Au.Triggers.TriggerArgs">
             <summary>
-            Waits for trigger events specified in function attributes like <c>[Trigger.Hotkey("Ctrl+K")]</c>. On events calls that functions and continues to wait.
+            Base of trigger action argument classes of all trigger types. For example HotkeyTriggerArgs.
             </summary>
-            <param name="app">Object instance for calling non-static functions. Can be typeof(Class) if all functions are static. Only functions of that class will be called.</param>
+        </member>
+        <member name="M:Au.Triggers.Scopes.Match(System.Int32,Au.Wnd,Au.Types.WFCache)">
+            <summary>
+            Returns true if index==0 or w matches the scope.
+            </summary>
+            <param name="index">0 or 1-based index of window scope.</param>
+            <param name="w"></param>
+            <param name="cache"></param>
+        </member>
+        <member name="T:Au.Triggers.TriggersServer">
+            <summary>
+            Manages trigger engines in editor process.
+            Communicates with multiple task processes.
+            </summary>
+            <remarks>
+            Works in a separate STA thread. Trigger engines can use it for hooks.
+            To receive data from task processes, uses a message-only window and WM_COPYDATA/WM_USER.
+            To send data to task processes, uses pipes created by task processes.
+            </remarks>
+        </member>
+        <member name="M:Au.Triggers.TriggersServer.RemoveTaskTriggers(System.Int32)">
+            <summary>
+            Called by RunningTasks.TaskEnded2.
+            </summary>
+            <param name="processId"></param>
+        </member>
+        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.Shared">
+            <summary>
+            Allow other apps to receive the key too, as if it is not a hotkey.
+            Without this flag, other apps receive only modifier keys.
+            </summary>
+        </member>
+        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.Up">
+            <summary>
+            Run the action when all hotkey keys (key and modifiers) are released.
+            Without this flag, the action runs when the non-modifier key pressed down.
+            </summary>
+        </member>
+        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.ModLeft">
+            <summary>
+            Run the action only when using left-side modifier keys.
+            </summary>
+        </member>
+        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.ModRight">
+            <summary>
+            Run the action only when using right-side modifier keys.
+            </summary>
+        </member>
+        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.IgnoreOtherMod">
+            <summary>
+            Run the action even if other (unspecified in trigger) modifier keys are pressed.
+            For example, if trigger is ["Ins"], the action will run when the Ins key is pressed alone or with any combination of modifiers. If trigger is ["Ctrl+Ins"], the action will run on Ctrl+Ins alone or with any combination of Shift, Alt, Win.
+            </summary>
+        </member>
+        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.DoNotReleaseMod">
+            <summary>
+            Don't release modifier keys.
+            Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="M:Au.Keyb.GetMod(Au.Types.KMod)"/> (and any such functions in any app) will not know that the key is physically pressed.
+            </summary>
+        </member>
+        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.Disabled">
+            <summary>
+            The trigger is temporarily disabled.
+            </summary>
         </member>
         <member name="T:Au.Util.IconsAsync">
             <summary>
@@ -7207,6 +7318,9 @@
             Used with MessageType.Write.
             </summary>
         </member>
+        <member name="M:Au.Util.OutputServer.Message.ToString">
+            
+        </member>
         <member name="M:Au.Util.OutputServer.#ctor(System.Boolean)">
             <param name="isGlobal">
             If true, will receive output from all appdomains and processes that don't have local server.
@@ -7319,14 +7433,6 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
-        </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
         </member>
         <member name="T:Au.Util.ILReader">
             <summary>
@@ -7929,7 +8035,7 @@
             <code><![CDATA[
             //using Au.Util;
             bool stop = false;
-            using(new AccHook(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
+            using(new Au.Util.AccHook(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
             {
             	Print(x.wnd);
             	var a = x.GetAcc();
@@ -8922,7 +9028,9 @@
         <member name="T:Au.Util.LibSerializer">
             <summary>
             Binary-serializes and deserializes multiple values of types int, string, string[], byte[] and null.
-            Much faster than BinaryFormatter, CSV, etc.
+            Used mostly for sending parameters for IPC through pipe etc.
+            Similar to BinaryWriter, but faster and less garbage. Much faster than BinaryFormatter, CSV, etc.
+            Serializes all values into a byte[] in single call. If need to append, use BinaryWriter instead.
             </summary>
         </member>
         <member name="T:Au.Util.LibSerializer.Value">
@@ -13634,12 +13742,12 @@
             <param name="flags"></param>
             <seealso cref="M:Au.String_.Segments_(System.String,System.String,Au.Types.SegFlags)"/>
         </member>
-        <member name="T:Au.LibRun.RunAsm">
+        <member name="T:Au.RunAssembly">
             <summary>
             Used by other Au projects to execute a script assembly.
             </summary>
         </member>
-        <member name="M:Au.LibRun.RunAsm.Run(System.String,System.String[],System.Int32,Au.LibRun.RAFlags)">
+        <member name="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.RAFlags)">
             <summary>
             Executes assembly in this appdomain in this thread. Must be main appdomain.
             Handles exceptions.
@@ -13649,14 +13757,14 @@
             <param name="pdbOffset">0 or offset of portable PDB in assembly file.</param>
             <param name="flags"></param>
         </member>
-        <member name="T:Au.LibRun.RunAsm._LoadedScriptAssembly">
+        <member name="T:Au.RunAssembly._LoadedScriptAssembly">
             <summary>
             Remembers and finds script assemblies loaded in this appdomain, to avoid loading the same unchanged assembly multiple times.
             </summary>
         </member>
-        <member name="T:Au.LibRun.RAFlags">
+        <member name="T:Au.RAFlags">
             <summary>
-            Flags for RunAsm.Run.
+            Flags for <see cref="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.RAFlags)"/>.
             </summary>
         </member>
         <member name="T:Au.File_">
@@ -14565,7 +14673,7 @@
             Uses API <msdn>ShellExecuteEx</msdn>.
             Similar to <see cref="M:System.Diagnostics.Process.Start(System.String,System.String)"/>.
             </remarks>
-            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
+            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
             <example>
             Run notepad and wait for its window.
             <code><![CDATA[
@@ -14589,7 +14697,7 @@
             </remarks>
             <seealso cref="M:Au.NoClass.PrintWarning(System.String,System.Int32,System.String)"/>
             <seealso cref="M:Au.Types.OptDebug.DisableWarnings(System.String[])"/>
-            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
+            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
         </member>
         <member name="M:Au.Shell.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
             <summary>
@@ -16829,6 +16937,16 @@
             The optional argument is not used explicitly.
             </summary>
         </member>
+        <member name="M:Au.Debug_.LibPrintNativeError(System.String,System.Int32,System.String)">
+            <summary>
+            In DEBUG config prints Native.GetErrorMessage().
+            </summary>
+        </member>
+        <member name="M:Au.Debug_.LibPrintNativeError(System.Int32,System.String,System.Int32,System.String)">
+            <summary>
+            In DEBUG config prints Native.GetErrorMessage(code).
+            </summary>
+        </member>
         <member name="M:Au.Debug_.Dialog(System.Object,System.String,System.Int32,System.String)">
             <summary>
             Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/> to show some debug info.
@@ -17004,7 +17122,7 @@
             <param name="asCommandLinks">Custom buttons style. If false - row of classic buttons. If true - column of command-link buttons that can have multiline text.</param>
             <param name="customButtons">
             Additional custom buttons. All will be custom, even if named "OK" etc.
-            List of labels without ids. Can be string like "One|Two|..." or or string[] or List&lt;string&gt;.
+            List of labels without ids. Can be string like "One|Two|..." or string[] or List&lt;string&gt;.
             Button ids will be 1, 2, ... .
             <see cref="P:Au.AuDialog.DefaultButton"/> will be 1. You can change it later.
             </param>
@@ -17518,7 +17636,7 @@
             Returns results packed in a <see cref="T:Au.Types.DResult"/> variable. Its Button property is id of the selected button, which is its 1-based index in the list; it is 0 if clicked the X (close window) button or pressed Esc.
             The return value can be assigned to an int variable or used in switch; then it is the id (1-based index or 0).
             </summary>
-            <param name="list">List items (buttons). Can be string like "One|Two|Three" or or string[] or List&lt;string&gt;. See <see cref="M:Au.AuDialog.SetButtons(System.String,System.Boolean,Au.Types.MultiString)"/>.</param>
+            <param name="list">List items (buttons). Can be string like "One|Two|Three" or string[] or List&lt;string&gt;. See <see cref="M:Au.AuDialog.SetButtons(System.String,System.Boolean,Au.Types.MultiString)"/>.</param>
             <param name="text1">Main instruction. Bigger font.</param>
             <param name="text2">Text below main instruction.</param>
             <param name="flags"></param>
@@ -17920,12 +18038,12 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
-            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
+        <member name="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
             Waits until window exists, is visible (optionally) and active (optionally).
             Returns window handle. On timeout returns default(Wnd) if <paramref name="secondsTimeout"/> is negative; else exception.
-            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, after that time interval returns default(Wnd).
@@ -17959,7 +18077,7 @@
             Waits until any of specified windows exists, is visible (optionally) and active (optionally).
             Returns window handle. On timeout returns default(Wnd) if <paramref name="secondsTimeout"/> is negative; else exception.
             </summary>
-            <param name="secondsTimeout"><inheritdoc cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/></param>
+            <param name="secondsTimeout"><inheritdoc cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/></param>
             <param name="active">The window must be the active window (<see cref="P:Au.Wnd.Active"/>), and not minimized.</param>
             <param name="windows">One or more variables containing window properties.</param>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
@@ -17973,24 +18091,24 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Wnd.WaitNot(System.Double,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
-            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
+        <member name="M:Au.Wnd.WaitNot(System.Double,System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
             Waits until window does not exist.
-            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
             <param name="secondsTimeout"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></param>
             <returns><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></returns>
             <exception cref="T:System.TimeoutException"><inheritdoc cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/></exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
             <remarks>
             By default ignores invisible windows. Use flag <see cref="F:Au.Types.WFFlags.HiddenToo"/> if need.
             If you have a window's Wnd variable, to wait until it is closed use <see cref="M:Au.Wnd.WaitForClosed(System.Double,System.Boolean)"/> instead.
-            Examples: <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Examples: <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </remarks>
         </member>
         <member name="M:Au.Wnd.WaitNot(System.Double,Au.Wnd.Finder,Au.Wnd@)">
-            <inheritdoc cref="M:Au.Wnd.WaitNot(System.Double,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
+            <inheritdoc cref="M:Au.Wnd.WaitNot(System.Double,System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
             Waits until window does not exist.
             </summary>
@@ -18175,7 +18293,7 @@
         </member>
         <member name="T:Au.Wnd.Misc">
             <summary>
-            Contains miscellaneous static window-related functions and classes, rarely used or useful only for programmers.
+            Contains miscellaneous static window-related functions and classes. Rarely used, or useful only for programmers.
             </summary>
         </member>
         <member name="M:Au.Wnd.Misc.PostThreadMessage(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
@@ -18398,12 +18516,20 @@
         </member>
         <member name="T:Au.Wnd.Misc.MyWindow">
             <summary>
-            Creates window and allows your derived class to replace its window procedure.
+            Creates window and allows you to replace its window procedure.
             </summary>
             <remarks>
             Similar to <see cref="T:System.Windows.Forms.NativeWindow"/>, but more lightweight and does not change the class name.
             Can register a new window class or extend (subclass) an existing class.
             </remarks>
+        </member>
+        <member name="M:Au.Wnd.Misc.MyWindow.#ctor(Au.Types.Native.WNDPROC)">
+            <summary>
+            Sets window procedure of your window class.
+            It shoud call <see cref="M:Au.Wnd.Misc.MyWindow.DefWndProc(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/> and return its return value. Except when don't need default processing.
+            More info: <msdn>Window Procedures</msdn>.
+            </summary>
+            <seealso cref="M:Au.Wnd.Misc.PrintMsg(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,System.Int32[])"/>
         </member>
         <member name="P:Au.Wnd.Misc.MyWindow.Handle">
             <summary>
@@ -18428,32 +18554,31 @@
             <param name="parent">Owner or parent window, or default.</param>
             <param name="controlId">Control id or 0.</param>
             <remarks>
-            Your derived class should override <see cref="M:Au.Wnd.Misc.MyWindow.WndProc(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/>, which calls the window procedure of window class <paramref name="className"/>.
             The window will be destroyed in these cases: 1. Called <see cref="M:Au.Wnd.Misc.MyWindow.Destroy"/>. 2. Closed by the user or some program/script. 3. When this thread ends. 4. This function called again (then destroys old window and creates new).
             </remarks>
         </member>
-        <member name="M:Au.Wnd.Misc.MyWindow.CreateMessageWindow(System.String)">
+        <member name="M:Au.Wnd.Misc.MyWindow.CreateMessageWindow(System.String,System.String)">
             <summary>
-            Creates <msdn>message-only window</msdn>.
-            Styles: WS_POPUP, WS_EX_NOACTIVATE.
+            Creates <msdn>message-only window</msdn> with styles WS_POPUP, WS_EX_NOACTIVATE.
             More info: <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.Misc.MyWindow.Destroy">
             <summary>
             Destroys the window.
+            </summary>
+            <remarks>
             Calls API <msdn>DestroyWindow</msdn>.
             Does nothing if the window is already destroyed, for example closed by the user.
             If the window is not destroyed explicitly, the system destroys it when its thread ends.
-            </summary>
+            Must be called from window's thread.
+            </remarks>
         </member>
-        <member name="M:Au.Wnd.Misc.MyWindow.WndProc(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Wnd.Misc.MyWindow.DefWndProc(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
-            Calls the window procedure of the window class (see <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/>) and manages the lifetime of this variable.
-            Your derived class should override this function, call base.WndProc and return its return value, except when don't need default processing.
+            Calls the native window procedure of the window class.
             More info: <msdn>Window Procedures</msdn>.
             </summary>
-            <seealso cref="M:Au.Wnd.Misc.PrintMsg(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,System.Int32[])"/>
         </member>
         <member name="M:Au.Wnd.Misc.MyWindow.RegisterClass(System.String,Au.Wnd.Misc.MyWindow.WndClassEx)">
             <summary>
@@ -18470,7 +18595,7 @@
             <remarks>
             Calls API <msdn>RegisterClassEx</msdn>.
             The class then can be used in all appdomains of this process. To create windows, use <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/>.
-            Each class derived from MyWindow provides its own window procedure (overrides <see cref="M:Au.Wnd.Misc.MyWindow.WndProc(Au.Wnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/>). Windows created not with <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/> use API <msdn>DefWindowProc</msdn> as window procedure, and therefore are not useful.
+            You provide a window procedure when creating a MyWindow variable. Windows created not with <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/> use API <msdn>DefWindowProc</msdn> as window procedure, and therefore are not useful.
             The window class remains registered until this process ends. Don't need to unregister.
             This function can be called multiple times for the same class, for example called once in each appdomain. Next time it just returns class atom.
             Thread-safe.
@@ -18487,7 +18612,7 @@
             <summary>
             Finds a message-only window and returns its handle as Wnd. Returns default(Wnd) if not found.
             Calls API <msdn>FindWindowEx</msdn>.
-            Faster than <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>, which does not find message-only windows.
+            Faster than <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>, which does not find message-only windows.
             Can be used only when you know full name and/or class name.
             Finds hidden windows too.
             </summary>
@@ -18682,9 +18807,6 @@
         </member>
         <member name="M:Au.Wnd.Misc.DefSubclassProc(Au.Wnd,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>API <msdn>DefSubclassProc</msdn></summary>
-        </member>
-        <member name="M:Au.Wnd.Misc.DefWindowProc(Au.Wnd,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
-            <summary>API <msdn>DefWindowProc</msdn></summary>
         </member>
         <member name="M:Au.Wnd.ThrowIf0">
             <summary>
@@ -19910,22 +20032,31 @@
             <summary>
             Gets filename of process executable file, like "notepad.exe".
             Return null if fails.
-            Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)"/>.
             </summary>
+            <remarks>
+            Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)"/>.
+            This function is much slower than getting window name or class name. Don't use code like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>. Instead use <c>var s=w.ProgramName; if(s=="A" || s=="B")</c>.
+            </remarks>
         </member>
-        <member name="P:Au.Wnd.ProgramFilePath">
+        <member name="P:Au.Wnd.ProgramPath">
             <summary>
             Gets full path of process executable file.
             Return null if fails.
-            Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)"/>.
             </summary>
+            <remarks>
+            Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)"/>.
+            This function is much slower than getting window name or class name. Don't use code like <c>if(w.ProgramPath=="A" || w.ProgramPath=="B")</c>. Instead use <c>var s=w.ProgramPath; if(s=="A" || s=="B")</c>.
+            </remarks>
         </member>
         <member name="P:Au.Wnd.ProgramDescription">
             <summary>
             Gets description of process executable file.
             Return null if fails.
-            Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetDescription(System.Int32)"/>.
             </summary>
+            <remarks>
+            Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetDescription(System.Int32)"/>.
+            This function is slow. Much slower than <see cref="P:Au.Wnd.ProgramName"/>.
+            </remarks>
         </member>
         <member name="M:Au.Wnd.Close(System.Boolean,System.Boolean)">
             <summary>
@@ -20226,7 +20357,7 @@
             By default array elements are sorted to match the Z order.
             On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <see cref="T:Au.Uac">UAC</see> integrity level uiAccess; to get such windows you can use <see cref="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)"/>.
             </remarks>
-            <seealso cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
+            <seealso cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
         </member>
         <member name="M:Au.Wnd.GetWnd.ThreadWindows(System.Int32,System.Boolean,System.Boolean)">
             <summary>
@@ -20806,20 +20937,20 @@
             Contains top-level window properties and can be used to find the window.
             </summary>
             <remarks>
-            Can be used instead of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> or <see cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Can be used instead of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/> or <see cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             These codes are equivalent:
             <code>Wnd w = Wnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);</code>
             <code>var p = new Wnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
             Also can find in a list of windows.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.Finder.#ctor(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+        <member name="M:Au.Wnd.Finder.#ctor(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
             <summary>
-            See <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            See <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
             <exception cref="T:System.ArgumentException">
             className is "". To match any, use null.
-            programEtc is "" or 0. To match any, use null.
+            program is "" or 0 or contains \ or /. To match any, use null.
             Invalid wildcard expression ("**options " or regular expression).
             </exception>
         </member>
@@ -20830,7 +20961,7 @@
         </member>
         <member name="M:Au.Wnd.Finder.Find">
             <summary>
-            Finds the specified window, like <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Finds the specified window, like <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             Returns true if found.
             The <see cref="P:Au.Wnd.Finder.Result"/> property will be the window.
             </summary>
@@ -20845,7 +20976,7 @@
         </member>
         <member name="M:Au.Wnd.Finder.FindAll">
             <summary>
-            Finds all matching windows, like <see cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Finds all matching windows, like <see cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             Returns array containing 0 or more window handles as Wnd.
             </summary>
         </member>
@@ -20856,21 +20987,23 @@
             </summary>
             <param name="a">Array or list of windows, for example returned by <see cref="M:Au.Wnd.GetWnd.AllWindows(System.Boolean,System.Boolean)"/>.</param>
         </member>
-        <member name="M:Au.Wnd.Finder._FindInList(Au.Wnd._WndList,System.Action{Au.Wnd})">
+        <member name="M:Au.Wnd.Finder._FindInList(Au.Wnd._WndList,System.Action{Au.Wnd},Au.Types.WFCache)">
             <summary>
             Returns index of matching element or -1.
             Returns -1 if using getAll.
             </summary>
             <param name="a">List of Wnd. Does not dispose it.</param>
             <param name="getAll">If not null, calls it for all matching and returns -1.</param>
+            <param name="cache"></param>
         </member>
-        <member name="M:Au.Wnd.Finder.IsMatch(Au.Wnd)">
+        <member name="M:Au.Wnd.Finder.IsMatch(Au.Wnd,Au.Types.WFCache)">
             <summary>
             Returns true if window w properties match the specified properties.
             </summary>
-            <param name="w">A top-level window. Can be 0/invalid, then returns false.</param>
+            <param name="w">A top-level window. If 0 or invalid, returns false.</param>
+            <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in <paramref name="cache"/>; next time it gets these strings from <paramref name="cache"/>.</param>
         </member>
-        <member name="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+        <member name="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
              <summary>
              Finds a top-level window and returns its handle as Wnd.
              Returns default(Wnd) if not found. See examples.
@@ -20885,11 +21018,11 @@
              String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
              null means 'can be any'. Cannot be "".
              </param>
-             <param name="programEtc">
+             <param name="program">
              Program file name, like "notepad.exe".
              String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
              null means 'can be any'. Cannot be "". Cannot be path.
-             Or <see cref="M:Au.Types.WFEtc.Process(System.Int32)"/>(process id), <see cref="M:Au.Types.WFEtc.Thread(System.Int32)"/>(thread id), <see cref="M:Au.Types.WFEtc.Owner(Au.Types.AnyWnd)"/>(owner window).
+             Or <see cref="M:Au.Types.WF3.Process(System.Int32)"/>(process id), <see cref="M:Au.Types.WF3.Thread(System.Int32)"/>(thread id), <see cref="M:Au.Types.WF3.Owner(Au.Types.AnyWnd)"/>(owner window).
              See <see cref="P:Au.Wnd.ProcessId"/>, <see cref="P:Au.Process_.CurrentProcessId"/>, <see cref="P:Au.Wnd.ThreadId"/>, <see cref="P:Au.Thread_.NativeId"/>, <see cref="P:Au.Wnd.Owner"/>.
              </param>
              <param name="flags"></param>
@@ -20918,7 +21051,7 @@
              </remarks>
              <exception cref="T:System.ArgumentException">
              <paramref name="className"/> is "". To match any, use null.
-             <paramref name="programEtc"/> is "" or 0. To match any, use null.
+             <paramref name="program"/> is "" or 0 or contains \ or /. To match any, use null.
              Invalid wildcard expression ("**options " or regular expression).
              </exception>
              <example>
@@ -20933,12 +21066,12 @@
              </code>
              </example>
         </member>
-        <member name="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
-            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
+        <member name="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
+            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
             Finds all matching windows.
             Returns array containing 0 or more window handles as Wnd.
-            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
             <remarks>
             The list is sorted to match the Z order, however hidden windows (when using <see cref="F:Au.Types.WFFlags.HiddenToo"/>) are always after visible windows.
@@ -20965,7 +21098,7 @@
             <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
             <remarks>
             Calls API <msdn>FindWindowEx</msdn>.
-            Faster than <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>, which uses API <msdn>EnumWindows</msdn>.
+            Faster than <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>, which uses API <msdn>EnumWindows</msdn>.
             Can be used only full name and/or class name.
             Finds hidden windows too.
             To find message-only windows use <see cref="M:Au.Wnd.Misc.FindMessageWindow(System.String,System.String,Au.Wnd)"/> instead.
@@ -20973,14 +21106,14 @@
             It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)">
-            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
+        <member name="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)">
+            <inheritdoc cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
             <summary>
-            Finds a top-level window (<see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.SRFlags,Au.Types.SRMore)"/>.
+            Finds a top-level window (<see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.SRFlags,Au.Types.SRMore)"/>.
             Returns window handle as Wnd. Returns default(Wnd) if not found (if <paramref name="runWaitS"/> is negative; else exception).
             </summary>
             <param name="run">Callback function. See example.</param>
-            <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</param>
+            <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</param>
             <param name="needActiveWindow">Finally the window must be active. Default: true.</param>
             <exception cref="T:System.TimeoutException"><paramref name="runWaitS"/> time has expired. Not thrown if <paramref name="runWaitS"/> &lt;= 0.</exception>
             <remarks>
@@ -21001,7 +21134,7 @@
         </member>
         <member name="T:Au.Wnd._WndList">
             <summary>
-            An enumerable list of Wnd for <see cref="M:Au.Wnd.Finder._FindInList(Au.Wnd._WndList,System.Action{Au.Wnd})"/> and <see cref="M:Au.Wnd.ChildFinder._FindInList(Au.Wnd,Au.Wnd._WndList,System.Action{Au.Wnd})"/>.
+            An enumerable list of Wnd for <see cref="M:Au.Wnd.Finder._FindInList(Au.Wnd._WndList,System.Action{Au.Wnd},Au.Types.WFCache)"/> and <see cref="M:Au.Wnd.ChildFinder._FindInList(Au.Wnd,Au.Wnd._WndList,System.Action{Au.Wnd})"/>.
             Holds Util.LibArrayBuilder or IEnumerator or single Wnd or none.
             Must be disposed if it is Util.LibArrayBuilder or IEnumerator, else disposing is optional.
             </summary>
@@ -21102,6 +21235,18 @@
             Uses API <msdn>QueryPerformanceCounter</msdn>.
             Similar to <see cref="P:System.Environment.TickCount"/>, but more precise (1 ms) and returns a 64-bit value.
             Independent of computer clock time changes.
+            This function is used to measure time difference with 1 ms precision. It is slower than <see cref="P:Au.Time.MillisecondsFast"/>, and returns slightly different value (incorrect time); after several days the difference may become 1 minute or more.
+            </remarks>
+        </member>
+        <member name="P:Au.Time.MillisecondsFast">
+            <summary>
+            Gets the number of milliseconds elapsed since Windows startup.
+            </summary>
+            <remarks>
+            Uses API <msdn>GetTickCount64</msdn>.
+            Like <see cref="P:System.Environment.TickCount"/>, but returns a 64-bit value.
+            The precision is 1-16 milliseconds. For better precision use <see cref="P:Au.Time.Milliseconds"/> or <see cref="P:Au.Time.Microseconds"/>. But they are slower.
+            Independent of computer clock time changes.
             </remarks>
         </member>
         <member name="P:Au.Time.MillisecondsWithoutComputerSleepTime">
@@ -21110,7 +21255,7 @@
             </summary>
             <remarks>
             Uses API <msdn>QueryUnbiasedInterruptTime</msdn>.
-            The precision is 1-16 milliseconds.
+            The precision is 1-16 milliseconds. The speed is similar to <see cref="P:Au.Time.Milliseconds"/>.
             Independent of computer clock time changes.
             </remarks>
         </member>
@@ -21372,7 +21517,7 @@
             Contains functions to wait for a user-defined condition or variable.
             </summary>
             <remarks>
-            Specialized 'wait for' functions are in other classes, for example <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WFEtc,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
+            Specialized 'wait for' functions are in other classes, for example <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             
             All 'wait for' functions have a <i>secondsTimeout</i> parameter. It is the maximal time to wait, seconds. If it is 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, then stops waiting and returns default value of that type (false, etc).
             
@@ -21985,8 +22130,14 @@
         </member>
         <member name="P:Au.AuTask.Name">
             <summary>
-            In an automation task process return script/app file name without extension.
+            In an automation task process returns script/app file name without extension.
             In other processes and non-default appdomains returns <see cref="P:System.AppDomain.FriendlyName"/>.
+            </summary>
+        </member>
+        <member name="P:Au.AuTask.Role">
+            <summary>
+            In an automation task process tells whether the task runs in host process (default), editor process or own .exe process. It matches meta role.
+            In other processes always returns <b>ExeProgram</b>.
             </summary>
         </member>
         <member name="M:Au.AuTask.Run(System.String,System.String[])">
@@ -22079,11 +22230,6 @@
         <member name="M:Au.Perf.Inst.First">
             <inheritdoc cref="M:Au.Perf.First"/>
         </member>
-        <member name="M:Au.Perf.Inst.First(System.Int32)">
-            <summary>
-            Calls <see cref="M:Au.Perf.Cpu(System.Int32)"/> and <see cref="M:Au.Perf.Inst.First"/>.
-            </summary>
-        </member>
         <member name="M:Au.Perf.Inst.Next(System.Char)">
             <inheritdoc cref="M:Au.Perf.Next(System.Char)"/>
         </member>
@@ -22091,7 +22237,7 @@
             <summary>
             Calls <see cref="M:Au.Perf.Inst.Next(System.Char)"/> and <see cref="M:Au.Perf.Inst.Write"/>.
             </summary>
-            <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+            <param name="cMark">A character to add to the results string like "A=150".</param>
         </member>
         <member name="M:Au.Perf.Inst.Write">
             <summary>
@@ -22154,11 +22300,6 @@
             Stores current time in the first element of an internal array.
             </summary>
         </member>
-        <member name="M:Au.Perf.First(System.Int32)">
-            <summary>
-            Calls <see cref="M:Au.Perf.Cpu(System.Int32)"/> and <see cref="M:Au.Perf.First"/>.
-            </summary>
-        </member>
         <member name="M:Au.Perf.Next(System.Char)">
             <summary>
             Stores current time in next element of an internal array.
@@ -22172,7 +22313,7 @@
             <summary>
             Calls <see cref="M:Au.Perf.Next(System.Char)"/> and <see cref="M:Au.Perf.Write"/>.
             </summary>
-            <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+            <param name="cMark">A character to add to the results string like "A=150".</param>
         </member>
         <member name="M:Au.Perf.Write">
             <summary>

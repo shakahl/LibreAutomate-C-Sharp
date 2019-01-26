@@ -1289,7 +1289,7 @@ namespace Au
 			if(ExistsAsFile(file, true)) {
 				if(!Api.ReplaceFile(file, temp, back, 6)) es = "ReplaceFile failed"; //random ERROR_UNABLE_TO_REMOVE_REPLACED; _LockedWaiter knows it
 				else if(backup) LibShellNotify(Api.SHCNE_RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
-				else if(!Api.DeleteFile(back)) Debug_.Print(Native.GetErrorMessage()); //maybe should wait/retry if failed, but never noticed
+				else if(!Api.DeleteFile(back)) Debug_.LibPrintNativeError(); //maybe should wait/retry if failed, but never noticed
 			} else {
 				if(!Api.MoveFileEx(temp, file, Api.MOVEFILE_REPLACE_EXISTING)) es = "MoveFileEx failed";
 			}

@@ -46,7 +46,7 @@ namespace Au
 		{
 			int hr = Cpp.Cpp_AccGetInt(this, 'w', out var i);
 			GC.KeepAlive(this);
-			w = (Wnd)(LPARAM)i;
+			w = (Wnd)i;
 			return hr;
 		}
 
@@ -813,7 +813,7 @@ namespace Au
 					switch(props[i]) {
 					case 'r': result.Rect = len > 0 ? *(RECT*)p : default; break;
 					case 's': result.State = len > 0 ? *(AccSTATE*)p : default; break;
-					case 'w': result.WndContainer = len > 0 ? (Wnd)(LPARAM)(*(int*)p) : default; break;
+					case 'w': result.WndContainer = len > 0 ? (Wnd)(*(int*)p) : default; break;
 					case '@': result.HtmlAttributes = _AttributesToDictionary(p, len); break;
 					default:
 						var s = (len == 0) ? "" : new string(p, 0, len);

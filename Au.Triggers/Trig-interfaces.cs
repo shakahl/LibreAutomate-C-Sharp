@@ -39,13 +39,13 @@ namespace Au.Triggers
 
 		#endregion
 
-		#region UI
+		//#region UI
 
-		void FormInit(System.Windows.Forms.Form parent);
-		void FormOK();
-		void Help();
-		System.Drawing.Icon Icon { get; set; }
+		//void FormInit(System.Windows.Forms.Form parent);
+		//void FormOK();
+		//void Help();
+		//System.Drawing.Icon Icon { get; set; }
 
-		#endregion
+		//#endregion
 	}
 }

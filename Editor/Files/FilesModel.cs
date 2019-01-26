@@ -40,7 +40,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public readonly List<FileNode> OpenFiles;
 	readonly string _dbFile;
 	public readonly SqliteDB DB;
-	readonly TriggersUI _triggers;
+	//readonly TriggersUI _triggers;
 	readonly bool _importing;
 	readonly bool _initedFully;
 
@@ -83,7 +83,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			OpenFiles = new List<FileNode>();
 			_InitClickSelect();
 			_InitWatcher();
-			_triggers = new TriggersUI(this);
+			//_triggers = new TriggersUI(this);
 			Folders.Workspace = WorkspaceDirectory;
 		}
 		_initedFully = true;
@@ -93,7 +93,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	{
 		if(_importing) return;
 		if(_initedFully) {
-			_triggers.Dispose();
+			//_triggers.Dispose();
 			Tasks.OnWorkspaceClosed();
 			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
 		}

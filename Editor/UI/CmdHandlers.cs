@@ -710,7 +710,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Tools_Output_History()
 	{
-
+		Panels.Output.History();
 	}
 
 	public void Tools_Output_LogWindowEvents()

@@ -27,7 +27,6 @@ using static Au.NoClass;
 using static Program;
 using Au.Compiler;
 using Au.Controls;
-using Au.LibRun;
 
 static class Run
 {
@@ -82,7 +81,7 @@ static class Run
 		if(!run) return 1;
 
 		if(r.role == ERole.editorExtension) {
-			RunAsm.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread);
+			RunAssembly.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread);
 			return (int)AuTask.ERunResult.editorThread;
 		}
 
@@ -91,13 +90,13 @@ static class Run
 
 	static void _OnRunClassFile(FileNode f, FileNode projFolder)
 	{
-		if(!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _LinkRunClassFile); }
+		if(!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _SciLink_RunClassFile); }
 		var ids = f.IdStringWithWorkspace;
 		var s2 = projFolder != null ? "" : $", project (<+runClass \"2|{ids}\">create<>) or program role (<+runClass \"1|{ids}\">add<>)";
 		Print($"<>Cannot run '{f.Name}'. It is a class file without a test script (<+runClass \"3|{ids}\">create<>){s2}.");
 	}
 
-	static void _LinkRunClassFile(string s)
+	static void _SciLink_RunClassFile(string s)
 	{
 		int action = s.ToInt_(); //1 add meta role miniProgram, 2 create Script project, 3 create new test script and set "run" attribute
 		var f = Model.Find(s.Substring(2), null); if(f == null) return;
@@ -153,6 +152,7 @@ class RunningTask
 	volatile WaitHandle _process;
 	public readonly FileNode f;
 	public readonly int taskId;
+	public readonly int processId;
 	public readonly bool isBlue;
 
 	static int s_taskId;
@@ -162,6 +162,7 @@ class RunningTask
 		taskId = ++s_taskId;
 		this.f = f;
 		_process = hProcess;
+		processId = Api.GetProcessId(hProcess.SafeWaitHandle.DangerousGetHandle());
 		this.isBlue = isBlue;
 
 		RegisteredWaitHandle rwh = null;
@@ -306,6 +307,7 @@ class RunningTasks
 		var rt = _a[i];
 		_a.RemoveAt(i);
 		_RecentEnded(rt.f);
+		Au.Triggers.TriggersServer.Instance?.RemoveTaskTriggers(rt.processId);
 
 		for(int j = _q.Count - 1; j >= 0; j--) {
 			var t = _q[j];
@@ -484,7 +486,7 @@ class RunningTasks
 
 		string exeFile, argsString;
 		_Preloaded pre = null; byte[] taskParams = null;
-		if(r.notInCache) {
+		if(r.notInCache) { //meta role exeProgram
 			exeFile = r.file;
 			argsString = args == null ? null : Au.Util.StringMisc.CommandLineFromArray(args);
 		} else {
@@ -525,7 +527,7 @@ class RunningTasks
 					if(!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AuException(0);
 				}
 				//Perf.Next();
-				fixed (byte* p = taskParams) if(!Api.WriteFile(pre.hPipe, p, taskParams.Length, out _)) throw new AuException(0);
+				if(!Api.WriteFile(pre.hPipe, taskParams)) throw new AuException(0);
 				//Perf.Next();
 				Api.DisconnectNamedPipe(pre.hPipe); disconnectPipe = false;
 				//Perf.NW('e');

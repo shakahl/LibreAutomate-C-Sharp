@@ -82,7 +82,7 @@ namespace Au
 			}
 
 			if(getExePathIfNotWinStoreApp) {
-				appId = w.ProgramFilePath;
+				appId = w.ProgramPath;
 				if(appId != null) return 2;
 			}
 
@@ -144,7 +144,7 @@ namespace Au
 			internal static class WinFlags
 			{
 				static readonly ushort s_atom = Api.GlobalAddAtom("Au.WFlags"); //atom is much faster than string
-				//note: cannot delete atom, eg in static dtor. Deletes even if currently used by a window prop, making the prop useless.
+																				//note: cannot delete atom, eg in static dtor. Deletes even if currently used by a window prop, making the prop useless.
 
 				internal static bool Set(Wnd w, WFlags flags, SetAddRemove setAddRem = SetAddRemove.Set)
 				{
@@ -171,6 +171,40 @@ namespace Au
 				}
 			}
 
+			//internal class LastWndProps
+			//{
+			//	Wnd _w;
+			//	long _time;
+			//	string _class, _programName, _programPath;
+			//	int _tid, _pid;
+
+			//	void _GetCommon(Wnd w)
+			//	{
+			//		var t = Time.Milliseconds;
+			//		if(w != _w || t - _time > 100) { _w = w; _class = _programName= _programPath = null; _tid = _pid = 0; }
+			//		_time = t;
+			//	}
+
+			//	//internal string GetName(Wnd w) { _GetCommon(w); return _name; }
+
+			//	internal string GetClass(Wnd w) { _GetCommon(w); return _class; }
+
+			//	internal string GetProgram(Wnd w, bool fullPath) { _GetCommon(w); return fullPath ? _programPath : _programName; }
+
+			//	internal int GetTidPid(Wnd w, out int pid) { _GetCommon(w); pid = _pid; return _tid; }
+
+			//	//internal void SetName(string s) => _name = s;
+
+			//	internal void SetClass(string s) => _class = s;
+
+			//	internal void SetProgram(string s, bool fullPath) { if(fullPath) _programPath = s; else _programName = s; }
+
+			//	internal void SetTidPid(int tid, int pid) { _tid = tid; _pid = pid; }
+
+			//	[ThreadStatic] static LastWndProps _ofThread;
+			//	internal static LastWndProps OfThread => _ofThread ?? (_ofThread = new LastWndProps());
+			//}
+
 			internal static Wnd CreateMessageWindowDefWndProc()
 			{
 				if(s_atomDWP == 0) s_atomDWP = Misc.MyWindow.RegisterClass(c_wndClassDWP);
@@ -185,7 +219,7 @@ namespace Au
 			/// </summary>
 			public static bool IsSpecHwnd(Wnd w)
 			{
-				int i = (int)(LPARAM)w;
+				int i = (int)w;
 				return (i <= 1 && i >= -3) || i == 0xffff;
 			}
 		}

@@ -17,7 +17,6 @@ using System.IO.Pipes;
 using Au;
 using Au.Types;
 using static Au.NoClass;
-using Au.LibRun;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 //[System.Security.SuppressUnmanagedCodeSecurity]
@@ -75,12 +74,11 @@ static unsafe class Program
 		}
 		//Perf.First();
 		using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
-			if(pipe.IsInvalid) { Debug_.Print(Native.GetErrorMessage()); return; }
+			if(pipe.IsInvalid) { Debug_.LibPrintNativeError(); return; }
 			//Perf.Next();
 			int size; if(!Api.ReadFile(pipe, &size, 4, out nr, default) || nr != 4) return;
 			//Perf.Next();
-			var b = new byte[size];
-			fixed (byte* p = b) if(!Api.ReadFile(pipe, p, b.Length, out nr, default) || nr != size) return;
+			if(!Api.ReadFile(pipe, out var b, size, out nr) || nr != size) return;
 			//Perf.Next();
 			var a = Au.Util.LibSerializer.Deserialize(b);
 			AuTask.Name = a[0]; asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4];
@@ -92,7 +90,7 @@ static unsafe class Program
 		bool mtaThread = 0 != (flags & 2); //app without [STAThread]
 		if(mtaThread == s_isSTA) _SetComApartment(mtaThread ? ApartmentState.MTA : ApartmentState.STA);
 
-		if(0 != (flags & 4)) AllocConsole(); //meta console true
+		if(0 != (flags & 4)) Api.AllocConsole(); //meta console true
 
 		if(0 != (flags & 1)) { //hasConfig
 			var config = asmFile + ".config";
@@ -102,7 +100,7 @@ static unsafe class Program
 		if(s_hook == null) _Hook();
 
 		//Perf.Next();
-		try { RunAsm.Run(asmFile, args, pdbOffset); }
+		try { RunAssembly.Run(asmFile, args, pdbOffset); }
 		catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
 		finally { s_hook?.Dispose(); }
 	}
@@ -114,7 +112,7 @@ static unsafe class Program
 
 		//JIT slowest-to-JIT methods
 		if(!Au.Util.Assembly_.LibIsAuNgened) {
-			RuntimeHelpers.PrepareMethod(typeof(RunAsm).GetMethod(nameof(RunAsm.Run), BindingFlags.Static | BindingFlags.Public).MethodHandle);
+			RuntimeHelpers.PrepareMethod(typeof(RunAssembly).GetMethod(nameof(RunAssembly.Run), BindingFlags.Static | BindingFlags.Public).MethodHandle);
 			RuntimeHelpers.PrepareMethod(typeof(Au.Util.LibSerializer).GetMethod("Deserialize", BindingFlags.Static | BindingFlags.Public).MethodHandle);
 			File_.WaitIfLocked(() => (FileStream)null);
 		}
@@ -123,8 +121,8 @@ static unsafe class Program
 		//	Initially we have only mscorlib and Au.
 		//	note: actually loads these assemblies when JIT-compiling this method.
 		//	note: .NET serializes loading of assemblies. If one thread is loading, other thread waits. Not tested with processes.
-		_ = typeof(Stopwatch).Assembly;
-		_ = typeof(System.Linq.Enumerable).Assembly;
+		_ = typeof(Stopwatch).Assembly; //System
+		_ = typeof(System.Linq.Enumerable).Assembly; //System.Core
 
 		_Hook();
 	}
@@ -192,8 +190,5 @@ static unsafe class Program
 		});
 	}
 	static Au.Util.WinHook s_hook;
-
-	[DllImport("kernel32.dll")]
-	internal static extern bool AllocConsole();
 
 }

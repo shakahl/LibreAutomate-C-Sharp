@@ -147,30 +147,30 @@ namespace Au.Types
 			T tt = t;
 			switch(sizeof(T)) {
 			case 4: {
-					int a = *(int*)&tt, b = *(int*)&flag;
-					if(add) a |= b; else a &= ~b;
-					*(int*)&tt = a;
-				}
-				break;
+				int a = *(int*)&tt, b = *(int*)&flag;
+				if(add) a |= b; else a &= ~b;
+				*(int*)&tt = a;
+			}
+			break;
 			case 8: {
-					long a = *(long*)&tt, b = *(long*)&flag;
-					if(add) a |= b; else a &= ~b;
-					*(long*)&tt = a;
-				}
-				break;
+				long a = *(long*)&tt, b = *(long*)&flag;
+				if(add) a |= b; else a &= ~b;
+				*(long*)&tt = a;
+			}
+			break;
 			case 2: {
-					int a = *(ushort*)&tt, b = *(ushort*)&flag;
-					if(add) a |= b; else a &= ~b;
-					*(ushort*)&tt = (ushort)a;
-				}
-				break;
+				int a = *(ushort*)&tt, b = *(ushort*)&flag;
+				if(add) a |= b; else a &= ~b;
+				*(ushort*)&tt = (ushort)a;
+			}
+			break;
 			default: {
-					Debug.Assert(sizeof(T) == 1);
-					int a = *(byte*)&tt, b = *(byte*)&flag;
-					if(add) a |= b; else a &= ~b;
-					*(byte*)&tt = (byte)a;
-				}
-				break;
+				Debug.Assert(sizeof(T) == 1);
+				int a = *(byte*)&tt, b = *(byte*)&flag;
+				if(add) a |= b; else a &= ~b;
+				*(byte*)&tt = (byte)a;
+			}
+			break;
 			}
 			t = tt;
 		}
@@ -233,6 +233,34 @@ namespace Au.Types
 			for(int i = index; i < t.Length; i++) r[i + n] = t[i];
 			for(int i = 0; i < n; i++) r[i + index] = values[i];
 			return r;
+		}
+
+		internal static unsafe void WriteInt_(this byte[] t, int x, int index)
+		{
+			if(index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
+			fixed (byte* p = t) *(int*)(p + index) = x;
+		}
+
+		internal static unsafe int ReadInt_(this byte[] t, int index)
+		{
+			if(index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
+			fixed (byte* p = t) return *(int*)(p + index);
+		}
+
+		#endregion
+
+		#region IEnumerable
+
+		/// <summary>
+		/// Removes items based on a predicate. For example, all items that have certain value.
+		/// </summary>
+		/// <typeparam name="TKey"></typeparam>
+		/// <typeparam name="TValue"></typeparam>
+		/// <param name="t"></param>
+		/// <param name="predicate"></param>
+		public static void RemoveWhere_<TKey, TValue>(this Dictionary<TKey, TValue> t, Func<KeyValuePair<TKey, TValue>, bool> predicate)
+		{
+			foreach(var k in t.Where(predicate).Select(kv => kv.Key).ToList()) { t.Remove(k); }
 		}
 
 		#endregion

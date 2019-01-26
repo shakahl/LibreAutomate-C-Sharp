@@ -276,7 +276,12 @@ namespace Au.Controls
 			}
 			return false;
 
-			//tested: somehow wheel scrolling is automatically correct.
+			//TODO: implement wheel scrolling.
+			//	On Windows 10 it works automatically because of this Windows setting: Settings/Mouse/Scroll inactive windows....
+			//	Window 7 does not have this setting.
+			//	But for it each list window must have a LL mouse hook. Or getmsg hook for this thread.
+			//	Probably better implement it in whole app. Anyway, this class rarely used when this thrad is not focused.
+			//	Or implement using a LL hook only when this thrad is not focused.
 		}
 
 		void _Close()

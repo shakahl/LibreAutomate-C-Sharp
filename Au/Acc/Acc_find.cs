@@ -254,7 +254,7 @@ namespace Au
 									switch(_resultProp) {
 									case 'r': ResultProperty = *(RECT*)p; break;
 									case 's': ResultProperty = *(AccSTATE*)p; break;
-									case 'w': ResultProperty = (Wnd)(LPARAM)(*(int*)p); break;
+									case 'w': ResultProperty = (Wnd)(*(int*)p); break;
 									case '@': ResultProperty = _AttributesToDictionary(p, sResult.Length); break;
 									}
 								}

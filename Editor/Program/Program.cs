@@ -52,25 +52,22 @@ static class Program
 	{
 		Perf.First();
 
-		//try {
-
-		//_Test(); return;
+		//Test(); return;
 		//Process.GetCurrentProcess().ProcessorAffinity = (IntPtr)1; //test how works with 1 CPU
+		//Task.Run(() => { while(true) { Thread.Sleep(1000); GC.Collect(); } });
 
 		if(CommandLine.OnProgramStarted(args)) return;
 
-		//#if !DEBUG //TODO
-		//		var fProfile = Folders.ThisAppDataLocal + "ProfileOptimization";
-		//		File_.CreateDirectory(fProfile);
-		//		ProfileOptimization.SetProfileRoot(fProfile);
-		//		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 650 -> 560 ms. Makes compiler startup faster 4000 -> 2500 (ngen 670).
-		//		Perf.Next();
-		//#endif
+#if !DEBUG
+		var fProfile = Folders.ThisAppDataLocal + "ProfileOptimization";
+		File_.CreateDirectory(fProfile);
+		ProfileOptimization.SetProfileRoot(fProfile);
+		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 680 -> 560 ms. Makes compiler startup faster 4000 -> 2500 (ngen 670).
+		Perf.Next();
+#endif
 
 		OutputServer.NoNewline = true;
 		OutputServer.Start();
-
-		//Task.Run(() => { while(true) { Thread.Sleep(1000); GC.Collect(); } });
 
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
@@ -88,8 +85,6 @@ static class Program
 		EdForm.RunApplication();
 
 		OutputServer.Stop();
-		//}
-		//catch(Exception e) { Print(e); }
 	}
 
 	internal static Au.Util.OutputServer OutputServer = new Au.Util.OutputServer(true);
@@ -156,7 +151,7 @@ static class Program
 		return true;
 	}
 
-	static void _Test()
+	internal static void Test()
 	{
 		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
 		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
@@ -164,5 +159,12 @@ static class Program
 
 		//RunUac.Test();
 
+		//Output.LibUseQM2 = true; Output.Clear();
+		//using(var h = Au.Util.WinHook.Keyboard(k => {
+		//	Print($"{k.Key}, {!k.IsUp}");
+		//	if(k.Key == KKey.Up && !k.IsUp) 400.ms();
+
+		//	return false;
+		//})) AuDialog.Show("hook");
 	}
 }

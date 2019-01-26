@@ -47,16 +47,16 @@ namespace Au
 			/// </summary>
 			/// <exception cref="ArgumentException">
 			/// className is "". To match any, use null.
-			/// programEtc is "" or 0. To match any, use null.
+			/// program is "" or 0 or contains \ or /. To match any, use null.
 			/// Invalid wildcard expression ("**options " or regular expression).
 			/// </exception>
 			public Finder(
-				string name = null, string className = null, WFEtc programEtc = default,
+				string name = null, string className = null, WF3 program = default,
 				WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 			{
 				_name = name;
 				if(className != null) _className = className.Length != 0 ? className : throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
-				programEtc.GetValue(out _program, out _processId, out _threadId, out _owner);
+				program.GetValue(out _program, out _processId, out _threadId, out _owner);
 				_flags = flags;
 				_also = also;
 				if(contains != null) _ParseContains(contains);
@@ -144,7 +144,8 @@ namespace Au
 			/// </summary>
 			/// <param name="a">List of Wnd. Does not dispose it.</param>
 			/// <param name="getAll">If not null, calls it for all matching and returns -1.</param>
-			int _FindInList(_WndList a, Action<Wnd> getAll = null)
+			/// <param name="cache"></param>
+			int _FindInList(_WndList a, Action<Wnd> getAll = null, WFCache cache = null)
 			{
 				Result = default;
 				if(a.Type == _WndList.ListType.None) return -1;
@@ -171,18 +172,25 @@ namespace Au
 						if(_owner != w.Owner) continue;
 					}
 
+					cache?.Begin(w);
+
 					if(_name != null) {
-						if(!_name.Match(w.GetText(false, false))) continue;
+						var s = cache != null && cache.CacheName ? (cache.Name ?? (cache.Name = w.GetText(false, false))) : w.GetText(false, false);
+						if(!_name.Match(s)) continue;
 						//note: name is before classname. It makes faster in slowest cases (HiddenToo), because most windows are nameless.
 					}
 
 					if(_className != null) {
-						if(!_className.Match(w.ClassName)) continue;
+						var s = cache != null ? (cache.Class ?? (cache.Class = w.ClassName)) : w.ClassName;
+						if(!_className.Match(s)) continue;
 					}
 
 					int pid = 0, tid = 0;
 					if(_program != null || _processId != 0 || isTid) {
-						tid = w.GetThreadProcessId(out pid);
+						if(cache != null) {
+							if(cache.Tid == 0) cache.Tid = w.GetThreadProcessId(out cache.Pid);
+							tid = cache.Tid; pid = cache.Pid;
+						} else tid = w.GetThreadProcessId(out pid);
 						if(tid == 0) continue;
 						//speed: with foreign processes the same speed as getting name or class name. Much faster if same process.
 					}
@@ -221,8 +229,9 @@ namespace Au
 						} else {
 							if(pids != null && pids.Contains(pid)) continue; //is known bad pid?
 
-							//string pname = Process_.GetName(pid, 0!=(_flags&WFFlags.ProgramPath), true);
-							string pname = Process_.GetName(pid, false, true);
+							string pname = cache != null ? (cache.Program ?? (cache.Program = _Program())) : _Program();
+							string _Program() => Process_.GetName(pid, false, true);
+							//string _Program() => Process_.GetName(pid, 0!=(_flags&WFFlags.ProgramPath), true);
 
 							if(pname == null) {
 								//if(0!=(_flags&WFFlags.ProgramPath)) continue;
@@ -254,7 +263,8 @@ namespace Au
 						switch(_contains) {
 						case Acc.Finder f: found = f.Find(w); break;
 						case ChildFinder f: found = f.Find(w); break;
-						case System.Drawing.Image f: found = null != WinImage.Find(w, f, WIFlags.WindowDC); break; //FUTURE: optimize
+						//case System.Drawing.Image f: found = null != WinImage.Find(w, f, WIFlags.WindowDC); break;
+						default: found = _FIL_Image(w, _contains); break; //avoid loading System.Drawing.dll
 						}
 						if(!found) continue;
 					}
@@ -271,13 +281,21 @@ namespace Au
 				return -1;
 			}
 
+			[MethodImpl(MethodImplOptions.NoInlining)]
+			static bool _FIL_Image(Wnd w, object contains)
+			{
+				var im = contains as System.Drawing.Image;
+				return null != WinImage.Find(w, im, WIFlags.WindowDC); //FUTURE: optimize
+			}
+
 			/// <summary>
 			/// Returns true if window w properties match the specified properties.
 			/// </summary>
-			/// <param name="w">A top-level window. Can be 0/invalid, then returns false.</param>
-			public bool IsMatch(Wnd w)
+			/// <param name="w">A top-level window. If 0 or invalid, returns false.</param>
+			/// <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in <paramref name="cache"/>; next time it gets these strings from <paramref name="cache"/>.</param>
+			public bool IsMatch(Wnd w, WFCache cache = null)
 			{
-				return 0 == _FindInList(new _WndList(w));
+				return 0 == _FindInList(new _WndList(w), cache: cache);
 			}
 		}
 
@@ -295,11 +313,11 @@ namespace Au
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// null means 'can be any'. Cannot be "".
 		/// </param>
-		/// <param name="programEtc">
+		/// <param name="program">
 		/// Program file name, like "notepad.exe".
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// null means 'can be any'. Cannot be "". Cannot be path.
-		/// Or <see cref="WFEtc.Process"/>(process id), <see cref="WFEtc.Thread"/>(thread id), <see cref="WFEtc.Owner"/>(owner window).
+		/// Or <see cref="WF3.Process"/>(process id), <see cref="WF3.Thread"/>(thread id), <see cref="WF3.Owner"/>(owner window).
 		/// See <see cref="ProcessId"/>, <see cref="Process_.CurrentProcessId"/>, <see cref="ThreadId"/>, <see cref="Thread_.NativeId"/>, <see cref="Owner"/>.
 		/// </param>
 		/// <param name="flags"></param>
@@ -328,7 +346,7 @@ namespace Au
 		/// </remarks>
 		/// <exception cref="ArgumentException">
 		/// <paramref name="className"/> is "". To match any, use null.
-		/// <paramref name="programEtc"/> is "" or 0. To match any, use null.
+		/// <paramref name="program"/> is "" or 0 or contains \ or /. To match any, use null.
 		/// Invalid wildcard expression ("**options " or regular expression).
 		/// </exception>
 		/// <example>
@@ -344,10 +362,10 @@ namespace Au
 		/// </example>
 		[MethodImpl(MethodImplOptions.NoInlining)] //inlined code makes harder to debug using disassembly
 		public static Wnd Find(
-			string name = null, string className = null, WFEtc programEtc = default,
+			string name = null, string className = null, WF3 program = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 		{
-			var f = new Finder(name, className, programEtc, flags, also, contains);
+			var f = new Finder(name, className, program, flags, also, contains);
 			f.Find();
 			//LastFind = f;
 			return f.Result;
@@ -383,10 +401,10 @@ namespace Au
 		/// <seealso cref="GetWnd.MainWindows"/>
 		/// <seealso cref="GetWnd.ThreadWindows"/>
 		public static Wnd[] FindAll(
-			string name = null, string className = null, WFEtc programEtc = default,
+			string name = null, string className = null, WF3 program = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 		{
-			var f = new Finder(name, className, programEtc, flags, also, contains);
+			var f = new Finder(name, className, program, flags, also, contains);
 			var a = f.FindAll();
 			//LastFind = f;
 			return a;
@@ -476,13 +494,13 @@ namespace Au
 		/// </example>
 		public static Wnd FindOrRun(
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-			string name = null, string className = null, WFEtc programEtc = default,
+			string name = null, string className = null, WF3 program = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null,
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 			Action run = null, double runWaitS = 60.0, bool needActiveWindow = true)
 		{
 			Wnd w = default;
-			var f = new Finder(name, className, programEtc, flags, also, contains);
+			var f = new Finder(name, className, program, flags, also, contains);
 			if(f.Find()) {
 				w = f.Result;
 				if(needActiveWindow) w.Activate();
@@ -596,7 +614,7 @@ namespace Au
 			[ThreadStatic] static WeakReference<List<Wnd>> t_sort;
 
 			//Used for API EnumWindows etc lParam instead of lambda, to avoid garbage.
-			struct _WndEnum :IDisposable
+			struct _WndEnum : IDisposable
 			{
 				public Util.LibArrayBuilder<Wnd> a;
 				Wnd _wParent;
@@ -648,13 +666,13 @@ namespace Au
 					bool ok = false;
 					switch(_api) {
 					case EnumWindowsAPI.EnumWindows:
-						ok = EnumWindows(_wndEnumProc, ref this);
+						ok = _Api.EnumWindows(_wndEnumProc, ref this);
 						break;
 					case EnumWindowsAPI.EnumThreadWindows:
-						ok = EnumThreadWindows(threadId, _wndEnumProc, ref this);
+						ok = _Api.EnumThreadWindows(threadId, _wndEnumProc, ref this);
 						break;
 					case EnumWindowsAPI.EnumChildWindows:
-						ok = EnumChildWindows(_wParent, _wndEnumProc, ref this);
+						ok = _Api.EnumChildWindows(_wParent, _wndEnumProc, ref this);
 						break;
 					}
 					return ok;
@@ -670,14 +688,18 @@ namespace Au
 					*/
 				}
 
-				[DllImport("user32.dll", SetLastError = true)]
-				static extern bool EnumWindows(WndEnumProcT lpEnumFunc, ref _WndEnum d);
+				[System.Security.SuppressUnmanagedCodeSecurity] //why not allowed on struct?
+				class _Api
+				{
+					[DllImport("user32.dll", SetLastError = true)]
+					internal static extern bool EnumWindows(WndEnumProcT lpEnumFunc, ref _WndEnum d);
 
-				[DllImport("user32.dll", SetLastError = true)]
-				static extern bool EnumThreadWindows(int dwThreadId, WndEnumProcT lpfn, ref _WndEnum d);
+					[DllImport("user32.dll", SetLastError = true)]
+					internal static extern bool EnumThreadWindows(int dwThreadId, WndEnumProcT lpfn, ref _WndEnum d);
 
-				[DllImport("user32.dll", SetLastError = true)]
-				static extern bool EnumChildWindows(Wnd hWndParent, WndEnumProcT lpEnumFunc, ref _WndEnum d);
+					[DllImport("user32.dll", SetLastError = true)]
+					internal static extern bool EnumChildWindows(Wnd hWndParent, WndEnumProcT lpEnumFunc, ref _WndEnum d);
+				}
 			}
 		}
 
@@ -686,7 +708,7 @@ namespace Au
 		/// Holds Util.LibArrayBuilder or IEnumerator or single Wnd or none.
 		/// Must be disposed if it is Util.LibArrayBuilder or IEnumerator, else disposing is optional.
 		/// </summary>
-		struct _WndList :IDisposable
+		struct _WndList : IDisposable
 		{
 			internal enum ListType { None, ArrayBuilder, Enumerator, SingleWnd }
 
@@ -776,36 +798,40 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// <i>programEtc</i> of <see cref="Wnd.Find"/>.
+	/// <i>program</i> of <see cref="Wnd.Find"/>.
+	/// Program name, process id, thread id or owner window handle.
 	/// </summary>
-	public struct WFEtc
+	public struct WF3
 	{
 		object _o;
-		WFEtc(object o) => _o = o;
+		WF3(object o) => _o = o;
 
 		/// <summary>Program name like "notepad.exe", or null.</summary>
-		public static implicit operator WFEtc(string program) => new WFEtc(program);
+		public static implicit operator WF3(string program) => new WF3(program);
 
 		/// <summary>Process id.</summary>
-		public static WFEtc Process(int processId) => new WFEtc(processId);
+		public static WF3 Process(int processId) => new WF3(processId);
 
 		/// <summary>Thread id.</summary>
-		public static WFEtc Thread(int threadId) => new WFEtc((uint)threadId);
+		public static WF3 Thread(int threadId) => new WF3((uint)threadId);
 
 		/// <summary>Owner window.</summary>
-		public static WFEtc Owner(AnyWnd ownerWindow) => new WFEtc(ownerWindow);
+		public static WF3 Owner(AnyWnd ownerWindow) => new WF3(ownerWindow);
 
 		/// <summary>
 		/// Gets program name or process id or thread id or owner window.
 		/// Other variables will be null/0.
 		/// </summary>
-		/// <exception cref="ArgumentException">The value is "" or 0.</exception>
+		/// <exception cref="ArgumentException">The value is "" or 0 or contains \ or /.</exception>
 		public void GetValue(out Wildex program, out int pid, out int tid, out Wnd owner)
 		{
 			program = null; pid = 0; tid = 0; owner = default;
 			switch(_o) {
 			case string s:
+				//LibThrowIfInvalid(s);
 				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
+				if(s.IndexOfAny(String_.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
+				if(Path_.FindExtension(s) < 0) PrintWarning("Program name without .exe.");
 				program = s;
 				break;
 			case int i:
@@ -822,6 +848,41 @@ namespace Au.Types
 				owner = w;
 				break;
 			}
+		}
+
+		///// <exception cref="ArgumentException">The value is "" or 0 or contains \ or /.</exception>
+		//internal static void LibThrowIfInvalid(string s)
+		//{
+		//	if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
+		//	if(s.IndexOfAny(String_.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
+		//	if(Path_.FindExtension(s) < 0) PrintWarning("Program name without .exe.");
+		//}
+
+		/// <summary>
+		/// Returns true if nothing was assigned to this variable.
+		/// </summary>
+		public bool IsEmpty => _o == null;
+	}
+
+	/// <summary>
+	/// Can be used with <see cref="Wnd.Finder.IsMatch"/>.
+	/// </summary>
+	public class WFCache
+	{
+		Wnd _w;
+		long _time;
+		internal string Name, Class, Program;
+		internal int Tid, Pid;
+		internal bool CacheName;
+
+		/// <param name="cacheName">Cache window name. Should be true if window name can be changed while this variable is used. Window class and program are always cached because cannot be changed.</param>
+		public WFCache(bool cacheName) { CacheName = cacheName; }
+
+		internal void Begin(Wnd w)
+		{
+			var t = Api.GetTickCount64();
+			if(w != _w || t - _time > 1100) { _w = w; Name = Class = Program = null; Tid = Pid = 0; }
+			_time = t;
 		}
 	}
 }

@@ -655,7 +655,7 @@ namespace Au.Tools
 						wProg = w.ProgramName;
 					}
 					b.Append("<i>ProgramName<>:    ").AppendLine(wProg);
-					b.Append("<i>ProgramFilePath<>:    ").AppendLine(w.ProgramFilePath);
+					b.Append("<i>ProgramPath<>:    ").AppendLine(w.ProgramPath);
 					b.Append("<i>ProgramDescription<>:    ").AppendLine(w.ProgramDescription);
 					int pid = w.ProcessId, tid = w.ThreadId;
 					b.Append("<i>ProcessId<>:    ").AppendLine(pid.ToString());
@@ -753,7 +753,7 @@ namespace Au.Tools
 				});
 				_winInfo.Tags.AddLinkTag("+rect", s =>
 				{
-					var w = (Wnd)(LPARAM)s.ToInt_(0, out int e);
+					var w = (Wnd)s.ToInt_(0, out int e);
 					int client = s.ToInt_(e);
 					var r = client == 1 ? w.ClientRectInScreen : w.Rect;
 					TUtil.ShowOsdRect(r, limitToScreen: w.IsMaximized);

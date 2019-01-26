@@ -31,7 +31,10 @@ namespace Au.Types
 		internal static extern bool QueryUnbiasedInterruptTime(out long UnbiasedTime);
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateEventW", SetLastError = true)]
-		internal static extern IntPtr CreateEvent(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
+		internal static extern IntPtr CreateEvent2(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
+
+		internal static IntPtr CreateEvent(bool bManualReset)
+			=> CreateEvent2(default, bManualReset, false, null);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool SetEvent(IntPtr hEvent);
@@ -338,26 +341,36 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool ReadFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToRead, out int lpNumberOfBytesRead, void* lpOverlapped = null);
 
-		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool WriteFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToWrite, out int lpNumberOfBytesWritten, void* lpOverlapped = null);
+		internal static bool ReadFile(SafeFileHandle hFile, byte[] a, out int lpNumberOfBytesRead, void* lpOverlapped = null)
+		{
+			fixed (byte* p = a) return ReadFile(hFile, p, a.Length, out lpNumberOfBytesRead, lpOverlapped);
+		}
+
+		internal static bool ReadFile(SafeFileHandle hFile, out byte[] a, int size, out int lpNumberOfBytesRead, void* lpOverlapped = null)
+		{
+			a = new byte[size];
+			return ReadFile(hFile, a, out lpNumberOfBytesRead, lpOverlapped);
+		}
+
+		[DllImport("kernel32.dll", EntryPoint = "WriteFile", SetLastError = true)]
+		static extern bool _WriteFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToWrite, int* lpNumberOfBytesWritten, void* lpOverlapped);
+		//note: lpNumberOfBytesWritten can be null only if lpOverlapped is not null.
+
+		internal static bool WriteFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToWrite, int* lpNumberOfBytesWritten = null, void* lpOverlapped = null)
+		{
+			int u = 0; if(lpNumberOfBytesWritten == null && lpOverlapped == null) lpNumberOfBytesWritten = &u;
+			return _WriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
+		}
+
+		internal static bool WriteFile(SafeFileHandle hFile, byte[] a, int* lpNumberOfBytesWritten = null, void* lpOverlapped = null)
+		{
+			fixed (byte* p = a) return WriteFile(hFile, p, a.Length, lpNumberOfBytesWritten, lpOverlapped);
+		}
 
 		internal struct OVERLAPPED
 		{
-			public LPARAM Internal;
-			public LPARAM InternalHigh;
-
-			[StructLayout(LayoutKind.Explicit)]
-			internal struct TYPE_2
-			{
-				internal struct TYPE_1
-				{
-					public uint Offset;
-					public uint OffsetHigh;
-				}
-				[FieldOffset(0)] public TYPE_1 _1;
-				[FieldOffset(0)] public IntPtr Pointer;
-			}
-			public TYPE_2 _3;
+			LPARAM _1, _2;
+			int _3, _4;
 			public IntPtr hEvent;
 		}
 
@@ -681,6 +694,7 @@ namespace Au.Types
 
 		internal const uint PIPE_ACCESS_INBOUND = 0x1;
 		internal const uint PIPE_ACCESS_OUTBOUND = 0x2;
+		internal const uint PIPE_ACCESS_DUPLEX = 0x3;
 		internal const uint PIPE_TYPE_MESSAGE = 0x4;
 		internal const uint PIPE_READMODE_MESSAGE = 0x2;
 		internal const uint PIPE_REJECT_REMOTE_CLIENTS = 0x8;
@@ -703,11 +717,17 @@ namespace Au.Types
 		[DllImport("kernel32.dll", EntryPoint = "WaitNamedPipeW", SetLastError = true)]
 		internal static extern bool WaitNamedPipe(string lpNamedPipeName, int nTimeOut);
 
-		[DllImport("kernel32.dll", EntryPoint = "CallNamedPipeW", SetLastError = true)]
-		internal static extern bool CallNamedPipe(string lpNamedPipeName, void* lpInBuffer, int nInBufferSize, out int lpOutBuffer, int nOutBufferSize, out int lpBytesRead, int nTimeOut);
+		//[DllImport("kernel32.dll", EntryPoint = "CallNamedPipeW", SetLastError = true)]
+		//internal static extern bool CallNamedPipe(string lpNamedPipeName, void* lpInBuffer, int nInBufferSize, out int lpOutBuffer, int nOutBufferSize, out int lpBytesRead, int nTimeOut);
 
 		//[DllImport("kernel32.dll", SetLastError = true)]
 		//internal static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out int ClientProcessId);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool AllocConsole();
+
+		[DllImport("kernel32.dll")]
+		internal static extern long GetTickCount64();
 
 	}
 }

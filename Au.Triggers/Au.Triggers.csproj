@@ -52,7 +52,7 @@
   <ItemGroup>
     <Compile Include="Trig-interfaces.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Triggers.cs" />
+    <Compile Include="TriggerEngines.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\Au.pfx" />

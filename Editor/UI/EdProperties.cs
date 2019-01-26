@@ -813,7 +813,7 @@ Examples of loading resources at run time:
 	}
 	Wnd _infoWnd;
 	int _infoRow;
-	Point _infoXY;
+	//Point _infoXY;
 	Timer_ _infoTimer;
 	string _infoText, _infoTextPrev;
 	bool _gridEditMode;

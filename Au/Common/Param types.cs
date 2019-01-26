@@ -410,6 +410,7 @@ namespace Au.Types
 		public bool IsEmpty => _o == null;
 	}
 
+	//TODO: need a better name. If used only by AuDialog, maybe DStrings or DCustomButtons.
 	/// <summary>
 	/// Used for function parameters to specify multiple strings.
 	/// Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversion operators from these types.

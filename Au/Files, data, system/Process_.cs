@@ -35,13 +35,20 @@ namespace Au
 		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
 		/// </param>
 		/// <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if <paramref name="fullPath"/> is true.</param>
+		/// <remarks>
+		/// This function is much slower than getting window name or class name.
+		/// </remarks>
 		/// <seealso cref="Wnd.ProgramName"/>
-		/// <seealso cref="Wnd.ProgramFilePath"/>
+		/// <seealso cref="Wnd.ProgramPath"/>
 		/// <seealso cref="Wnd.ProcessId"/>
 		public static string GetName(int processId, bool fullPath = false, bool noSlowAPI = false)
 		{
 			if(processId == 0) return null;
 			string R = null;
+
+			//var t = Time.Microseconds;
+			//if(s_time != 0) Print(t - s_time);
+			//s_time = t;
 
 			using(var ph = Util.LibKernelHandle.OpenProcess(processId)) {
 				if(!ph.Is0) {
@@ -71,9 +78,42 @@ namespace Au
 
 			return R;
 
-			//Would be good to cache process names. But it's difficult because process id can be reused.
+			//Would be good to cache process names here. But process id can be reused quickly. Use LibGetNameCached instead.
 			//	tested: a process id is reused after creating ~100 processes (and waiting until exits). It takes ~2 s.
 			//	The window finder is optimized to call this once for each process and not for each window.
+		}
+
+		/// <summary>
+		/// Same as GetName, but faster when called several times for same window, like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>.
+		/// </summary>
+		internal static string LibGetNameCached(Wnd w, int processId, bool fullPath = false)
+		{
+			if(processId == 0) return null;
+			var cache = _LastWndProps.OfThread;
+			cache.Begin(w);
+			var R = fullPath ? cache.ProgramPath : cache.ProgramName;
+			if(R == null) {
+				R = GetName(processId, fullPath);
+				if(fullPath) cache.ProgramPath = R; else cache.ProgramName = R;
+			}
+			return R;
+		}
+
+		class _LastWndProps
+		{
+			Wnd _w;
+			long _time;
+			internal string ProgramName, ProgramPath;
+
+			internal void Begin(Wnd w)
+			{
+				var t = Api.GetTickCount64();
+				if(w != _w || t - _time > 300) { _w = w; ProgramName = ProgramPath = null; }
+				_time = t;
+			}
+
+			[ThreadStatic] static _LastWndProps _ofThread;
+			internal static _LastWndProps OfThread => _ofThread ?? (_ofThread = new _LastWndProps());
 		}
 
 		static bool _QueryFullProcessImageName(IntPtr hProcess, bool getFilename, out string s)
@@ -119,22 +159,22 @@ namespace Au
 			public _AllProcesses(out LibProcessInfo* pi, out int count)
 			{
 				_p = null;
-				SYSTEM_PROCESS_INFORMATION* b = null;
+				Api.SYSTEM_PROCESS_INFORMATION* b = null;
 				try {
 					for(int na = 300_000; ;) {
-						b = (SYSTEM_PROCESS_INFORMATION*)Util.NativeHeap.Alloc(na);
+						b = (Api.SYSTEM_PROCESS_INFORMATION*)Util.NativeHeap.Alloc(na);
 
-						int status = NtQuerySystemInformation(5, b, na, out na);
+						int status = Api.NtQuerySystemInformation(5, b, na, out na);
 						//Print(na); //eg 224000
 
 						if(status == 0) break;
-						if(status != STATUS_INFO_LENGTH_MISMATCH) throw new AuException(status);
+						if(status != Api.STATUS_INFO_LENGTH_MISMATCH) throw new AuException(status);
 						var t = b; b = null; Util.NativeHeap.Free(t);
 					}
 
-					SYSTEM_PROCESS_INFORMATION* p;
+					Api.SYSTEM_PROCESS_INFORMATION* p;
 					int nProcesses = 0, nbNames = 0;
-					for(p = b; p->NextEntryOffset != 0; p = (SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset)) {
+					for(p = b; p->NextEntryOffset != 0; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset)) {
 						nProcesses++;
 						nbNames += p->NameLength; //bytes, not chars
 					}
@@ -142,7 +182,7 @@ namespace Au
 					_p = (LibProcessInfo*)Util.NativeHeap.Alloc(nProcesses * sizeof(LibProcessInfo) + nbNames);
 					LibProcessInfo* r = _p;
 					char* names = (char*)(_p + nProcesses);
-					for(p = b; p->NextEntryOffset != 0; p = (SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
+					for(p = b; p->NextEntryOffset != 0; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
 						r->processID = (int)p->UniqueProcessId;
 						r->sessionID = (int)p->SessionId;
 						int len = p->NameLength / 2;
@@ -163,37 +203,6 @@ namespace Au
 			{
 				Util.NativeHeap.Free(_p);
 			}
-
-			[DllImport("ntdll.dll")]
-			static extern int NtQuerySystemInformation(int five, SYSTEM_PROCESS_INFORMATION* SystemInformation, int SystemInformationLength, out int ReturnLength);
-
-#pragma warning disable 649, 169 //unused fields
-			struct SYSTEM_PROCESS_INFORMATION
-			{
-				internal uint NextEntryOffset;
-				internal uint NumberOfThreads;
-				long SpareLi1;
-				long SpareLi2;
-				long SpareLi3;
-				internal long CreateTime;
-				internal long UserTime;
-				internal long KernelTime;
-
-				internal ushort NameLength;   // UNICODE_STRING   
-				internal ushort MaximumNameLength;
-				internal IntPtr NamePtr;     // This will point into the data block returned by NtQuerySystemInformation
-
-				internal int BasePriority;
-				internal IntPtr UniqueProcessId;
-				internal IntPtr InheritedFromUniqueProcessId;
-				internal uint HandleCount;
-				internal uint SessionId;
-
-				//unused members
-			}
-#pragma warning restore 649, 169
-
-			const int STATUS_INFO_LENGTH_MISMATCH = unchecked((int)0xC0000004);
 		}
 #endif
 

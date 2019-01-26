@@ -33,7 +33,7 @@ namespace Au.Util
 		{
 			bool isForms = 0 != (1 & Assembly_.LibIsLoadedFormsWpf());
 			using(isForms ? new LibEnsureWindowsFormsSynchronizationContext(true) : null) {
-				_loopEndEvent = Api.CreateEvent(default, true, false, null);
+				_loopEndEvent = Api.CreateEvent(true);
 				try {
 					_DoEvents();
 
@@ -175,7 +175,7 @@ namespace Au.Util
 			var x = new MsgArgs();
 			for(; ; ) {
 				if(Api.GetCapture() != w) return false;
-				if(Api.GetMessage(out x.Msg, default, 0, 0) <= 0) {
+				if(Api.GetMessage(out x.Msg) <= 0) {
 					if(x.Msg.message == Api.WM_QUIT) Api.PostQuitMessage((int)x.Msg.wParam);
 					break;
 				}

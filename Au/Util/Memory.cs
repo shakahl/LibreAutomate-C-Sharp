@@ -140,6 +140,7 @@ namespace Au.Util
 		internal LibTables.ProcessVariables tables; //sizeof = 200
 		internal LibWorkarounds.ProcessVariables workarounds;
 		internal ThreadPoolSTA.ProcessVariables threadPool;
+		internal ATRole taskRole;
 		//internal Thread_.ProcessVariables thread_;
 		//internal Perf.Inst perf;
 
@@ -589,7 +590,9 @@ namespace Au.Util
 
 	/// <summary>
 	/// Binary-serializes and deserializes multiple values of types int, string, string[], byte[] and null.
-	/// Much faster than BinaryFormatter, CSV, etc.
+	/// Used mostly for sending parameters for IPC through pipe etc.
+	/// Similar to BinaryWriter, but faster and less garbage. Much faster than BinaryFormatter, CSV, etc.
+	/// Serializes all values into a byte[] in single call. If need to append, use BinaryWriter instead.
 	/// </summary>
 	internal static unsafe class LibSerializer
 	{

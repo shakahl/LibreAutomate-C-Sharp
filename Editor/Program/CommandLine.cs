@@ -73,7 +73,7 @@ static class CommandLine
 		s_mutex = new Mutex(true, "Au.Mutex.1", out bool createdNew);
 		if(createdNew) return false;
 
-		var w = Wnd.FindFast(null, c_msgClass);
+		var w = Api.FindWindow("Au.Editor.Msg", null);
 		if(!w.Is0) {
 			if(activateWnd) {
 				Wnd wMain = (Wnd)w.Send(Api.WM_USER);
@@ -111,9 +111,11 @@ static class CommandLine
 		catch(Exception ex) { Print(ex.Message); }
 
 		Wnd.Misc.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER);
-		Wnd.Misc.MyWindow.RegisterClass(c_msgClass);
-		_msgWnd = new _MsgWindow();
-		_msgWnd.CreateMessageWindow(c_msgClass);
+		Wnd.Misc.MyWindow.RegisterClass("Au.Editor.Msg");
+		_msgWnd = new Wnd.Misc.MyWindow(_WndProc);
+		_msgWnd.CreateMessageWindow("Au.Editor.Msg");
+
+		Au.Triggers.TriggersServer.Start(false);
 	}
 
 	/// <summary>
@@ -124,8 +126,7 @@ static class CommandLine
 	static string _importWorkspace;
 	static string[] _importFiles;
 
-	const string c_msgClass = "Au.Editor.Msg";
-	static _MsgWindow _msgWnd;
+	static Wnd.Misc.MyWindow _msgWnd;
 
 	/// <summary>
 	/// The message-only window.
@@ -133,32 +134,31 @@ static class CommandLine
 	/// </summary>
 	public static Wnd MsgWnd => _msgWnd.Handle;
 
-	class _MsgWindow : Wnd.Misc.MyWindow
+	static LPARAM _WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
 	{
-		protected override LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
-		{
-			switch(message) {
-			case Api.WM_COPYDATA:
-				if(MainForm.IsClosed) return default;
-				try { return _WmCopyData(wParam, lParam); } catch(Exception ex) { Print(ex.Message); }
-				return default;
-			case Api.WM_USER:
-				if(MainForm.IsClosed) return default;
-				int i = (int)wParam;
-				switch(i) {
-				case 0:
-					return MainForm.Handle; //return main form window handle
-				case 1: case 2: case 3: //received from our non-admin drop-target process on OnDragOver/Drop/Leave
-					return (int)UacDragDrop.AdminProcess.OnDragEvent(i, (int)lParam);
-				case 10:
-					UacDragDrop.AdminProcess.OnTransparentWindowCreated((Wnd)lParam);
-					break;
-				}
-				return 0;
+		switch(message) {
+		case Api.WM_COPYDATA:
+			if(MainForm.IsClosed) return default;
+			try { return _WmCopyData(wParam, lParam); } catch(Exception ex) { Print(ex.Message); }
+			return default;
+		case Api.WM_USER:
+			if(MainForm.IsClosed) return default;
+			int i = (int)wParam;
+			switch(i) {
+			case 0:
+				return MainForm.Handle; //return main form window handle
+			case 1:
+			case 2:
+			case 3: //received from our non-admin drop-target process on OnDragOver/Drop/Leave
+				return (int)UacDragDrop.AdminProcess.OnDragEvent(i, (int)lParam);
+			case 10:
+				UacDragDrop.AdminProcess.OnTransparentWindowCreated((Wnd)lParam);
+				break;
 			}
-
-			return base.WndProc(w, message, wParam, lParam);
+			return 0;
 		}
+
+		return _msgWnd.DefWndProc(w, message, wParam, lParam);
 	}
 
 	static unsafe LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)

@@ -123,8 +123,8 @@ namespace DevAge.Drawing.VisualElements
         }
 
         [DllImport("USER32.dll")]
-        private static extern Int32 SendMessage(IntPtr hWnd, Int32 msg, Int32 wParam, IntPtr lParam);
-        private const int WM_USER = 0x0400;
+		private static extern Int32 SendMessage(IntPtr hWnd, Int32 msg, Int32 wParam, IntPtr lParam);
+		private const int WM_USER = 0x0400;
         private const int EM_FORMATRANGE = WM_USER + 57;
 
         /// <summary>
@@ -173,19 +173,19 @@ namespace DevAge.Drawing.VisualElements
             fr.rc = rc;
             fr.rcPage = rcPage;
 
-            // Non-Zero wParam means render, Zero means measure
-            Int32 wParam = (measureOnly ? 0 : 1);
+			// Non-Zero wParam means render, Zero means measure
+			Int32 wParam = (measureOnly ? 0 : 1);
 
-            // Allocate memory for the FORMATRANGE struct and
-            // copy the contents of our struct to this memory
-            IntPtr lParam = Marshal.AllocCoTaskMem(Marshal.SizeOf(fr));
+			// Allocate memory for the FORMATRANGE struct and
+			// copy the contents of our struct to this memory
+			IntPtr lParam = Marshal.AllocCoTaskMem(Marshal.SizeOf(fr));
             Marshal.StructureToPtr(fr, lParam, false);
 
-            // Send the actual Win32 message
-            int res = SendMessage(rtb.Handle, EM_FORMATRANGE, wParam, lParam);
+			// Send the actual Win32 message
+			int res = SendMessage(rtb.Handle, EM_FORMATRANGE, wParam, lParam);
 
-            // Free allocated memory
-            Marshal.FreeCoTaskMem(lParam);
+			// Free allocated memory
+			Marshal.FreeCoTaskMem(lParam);
 
             // and release the device context
             g.ReleaseHdc(hdc);
@@ -201,20 +201,20 @@ namespace DevAge.Drawing.VisualElements
         public void FormatRangeDone(DevAge.Windows.Forms.DevAgeRichTextBox RTB)
         {
             IntPtr lParam = new IntPtr(0);
-            SendMessage(RTB.Handle, EM_FORMATRANGE, 0, lParam);
-        }
+			SendMessage(RTB.Handle, EM_FORMATRANGE, 0, lParam);
+		}
 
-        #endregion
+		#endregion
 
-        #region Draw
+		#region Draw
 
-        /// <summary>
-        /// Helper method to get bitmap with size according its area and rotate flip type
-        /// </summary>
-        /// <param name="area"></param>
-        /// <param name="rotateFlipType"></param>
-        /// <returns></returns>
-        protected Bitmap GetBitmapArea(RectangleF area, RotateFlipType rotateFlipType)
+		/// <summary>
+		/// Helper method to get bitmap with size according its area and rotate flip type
+		/// </summary>
+		/// <param name="area"></param>
+		/// <param name="rotateFlipType"></param>
+		/// <returns></returns>
+		protected Bitmap GetBitmapArea(RectangleF area, RotateFlipType rotateFlipType)
         {
             int height = (int)area.Height;
             int width = (int)area.Width;

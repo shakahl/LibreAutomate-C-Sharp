@@ -501,7 +501,7 @@ namespace Au
 		/// <param name="asCommandLinks">Custom buttons style. If false - row of classic buttons. If true - column of command-link buttons that can have multiline text.</param>
 		/// <param name="customButtons">
 		/// Additional custom buttons. All will be custom, even if named "OK" etc.
-		/// List of labels without ids. Can be string like "One|Two|..." or or string[] or List&lt;string&gt;.
+		/// List of labels without ids. Can be string like "One|Two|..." or string[] or List&lt;string&gt;.
 		/// Button ids will be 1, 2, ... .
 		/// <see cref="DefaultButton"/> will be 1. You can change it later.
 		/// </param>
@@ -1708,7 +1708,7 @@ namespace Au
 		/// Returns results packed in a <see cref="DResult"/> variable. Its Button property is id of the selected button, which is its 1-based index in the list; it is 0 if clicked the X (close window) button or pressed Esc.
 		/// The return value can be assigned to an int variable or used in switch; then it is the id (1-based index or 0).
 		/// </summary>
-		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or or string[] or List&lt;string&gt;. See <see cref="SetButtons"/>.</param>
+		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or string[] or List&lt;string&gt;. See <see cref="SetButtons"/>.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="flags"></param>

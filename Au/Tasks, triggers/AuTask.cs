@@ -28,7 +28,7 @@ namespace Au
 	public static class AuTask
 	{
 		/// <summary>
-		/// In an automation task process return script/app file name without extension.
+		/// In an automation task process returns script/app file name without extension.
 		/// In other processes and non-default appdomains returns <see cref="AppDomain.FriendlyName"/>.
 		/// </summary>
 		public static string Name {
@@ -45,6 +45,15 @@ namespace Au
 		}
 		static string s_name;
 		//[ThreadStatic] static string t_name;
+
+		/// <summary>
+		/// In an automation task process tells whether the task runs in host process (default), editor process or own .exe process. It matches meta role.
+		/// In other processes always returns <b>ExeProgram</b>.
+		/// </summary>
+		public static unsafe ATRole Role {
+			get => Util.LibProcessMemory.Ptr->taskRole;
+			internal set => Util.LibProcessMemory.Ptr->taskRole = value;
+		}
 
 		/// <summary>
 		/// Starts an automation task. Does not wait.
@@ -138,11 +147,10 @@ namespace Au
 			{
 				var tid = Thread_.NativeId;
 				pipeName = @"\\.\pipe\Au.CL-" + tid.ToString();
-				var sa = Api.SECURITY_ATTRIBUTES.ForPipes;
 				_hPipe = Api.CreateNamedPipe(pipeName,
 					Api.PIPE_ACCESS_INBOUND | Api.FILE_FLAG_OVERLAPPED, //use async pipe because also need to wait for task process exit
 					Api.PIPE_TYPE_MESSAGE | Api.PIPE_READMODE_MESSAGE | Api.PIPE_REJECT_REMOTE_CLIENTS,
-					1, 0, 0, 0, sa);
+					1, 0, 0, 0, Api.SECURITY_ATTRIBUTES.ForPipes);
 				if(_hPipe.IsInvalid) { _hPipe = null; return false; }
 				return true;
 			}
@@ -211,7 +219,7 @@ namespace Au
 		internal static Wnd WndMsg {
 			get {
 				if(!s_wndMsg.IsAlive) {
-					s_wndMsg = Wnd.FindFast(null, "Au.Editor.Msg");
+					s_wndMsg = Api.FindWindow("Au.Editor.Msg", null);
 				}
 				return s_wndMsg;
 			}
@@ -236,12 +244,12 @@ namespace Au
 				if(!Api.WaitNamedPipe(pipeName, 3000)) goto ge;
 				using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, 0)) {
 					if(pipe.IsInvalid) goto ge;
-					fixed (char* p = s) if(!Api.WriteFile(pipe, p, s.Length * 2, out int nWritten, null)) goto ge;
+					fixed (char* p = s) if(!Api.WriteFile(pipe, p, s.Length * 2)) goto ge;
 				}
 			}
 			return true;
 			ge:
-			Debug_.Print(Native.GetErrorMessage());
+			Debug_.LibPrintNativeError();
 			return false;
 		}
 
@@ -292,5 +300,31 @@ namespace Au
 		//	}
 		//}
 
+	}
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// <see cref="AuTask.Role"/>.
+	/// </summary>
+	public enum ATRole
+	{
+		/// <summary>
+		/// The task runs as normal .exe program.
+		/// It can be started from editor or not. It can run on computers where editor not installed.
+		/// </summary>
+		ExeProgram,
+
+		/// <summary>
+		/// The task runs in Au.Task.exe process.
+		/// It can be started only from editor.
+		/// </summary>
+		MiniProgram,
+
+		/// <summary>
+		/// The task runs in editor process.
+		/// </summary>
+		EditorExtension,
 	}
 }

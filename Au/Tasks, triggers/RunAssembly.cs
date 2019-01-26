@@ -22,12 +22,12 @@ using System.Runtime.ExceptionServices;
 using Au.Types;
 using static Au.NoClass;
 
-namespace Au.LibRun
+namespace Au
 {
 	/// <summary>
 	/// Used by other Au projects to execute a script assembly.
 	/// </summary>
-	internal unsafe class RunAsm
+	internal unsafe class RunAssembly
 	{
 		/// <summary>
 		/// Executes assembly in this appdomain in this thread. Must be main appdomain.
@@ -64,6 +64,8 @@ namespace Au.LibRun
 
 				//never mind: it's possible that we load newer compiled assembly version of script than intended.
 			}
+
+			AuTask.Role = 0 != (flags & RAFlags.InEditorThread) ? ATRole.EditorExtension : ATRole.MiniProgram; //default ExeProgram
 
 			try {
 				var entryPoint = asm.EntryPoint ?? throw new InvalidOperationException("assembly without entry point (function Main)");
@@ -140,7 +142,7 @@ namespace Au.LibRun
 	}
 
 	/// <summary>
-	/// Flags for RunAsm.Run.
+	/// Flags for <see cref="RunAssembly.Run"/>.
 	/// </summary>
 	[Flags]
 	internal enum RAFlags
@@ -188,15 +190,7 @@ namespace Au.Types
 		protected AuAppBase()
 		{
 			s_instance = this;
-
-			//Au.Triggers.Trigger.Run(this);
 		}
-
-		/// <summary>
-		/// Waits for trigger events specified in function attributes like <c>[Trigger.Hotkey("Ctrl+K")]</c>. On events calls that functions and continues to wait.
-		/// </summary>
-		public void RunTriggers() => Au.Triggers.Trigger.Run(this);
-		//TODO: remove if not useful
 
 		/// <summary>
 		/// Prints exception info.

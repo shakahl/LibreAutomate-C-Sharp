@@ -37,6 +37,7 @@ namespace Au.Controls
 	/// 3. You cannot clear all annotations (SCI_ANNOTATIONCLEARALL).
 	/// 4. Setting annotation styles is currently not supported.
 	/// </remarks>
+	[System.Security.SuppressUnmanagedCodeSecurity]
 	public unsafe class SciImages
 	{
 		class _Image

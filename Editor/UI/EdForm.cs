@@ -1,11 +1,4 @@
-﻿//Defines what workaround to use for .NET inability to create hidden form.
-//If RUNHIDDEN_WINDOWPOSCHANGING, modifies setwindowpos flags on WM_WINDOWPOSCHANGING and overrides ShowWithoutActivation.
-//Else uses ApplicationContext and CreateControl_.
-//Both work. Similar speed, maybe RUNHIDDEN_WINDOWPOSCHANGING faster.
-//RUNHIDDEN_WINDOWPOSCHANGING has some advantages. Eg .NET creates handles of other controls that we create after CreateControl_.
-#define RUNHIDDEN_WINDOWPOSCHANGING
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections;
 using System.Text;
@@ -33,32 +26,10 @@ using Au.Controls;
 
 partial class EdForm : Form
 {
-#if RUNHIDDEN_WINDOWPOSCHANGING
-	bool _canShow;
-#endif
-
 	public static void RunApplication()
 	{
-#if RUNHIDDEN_WINDOWPOSCHANGING
 		Application.Run(new EdForm());
-#else
-		Application.Run(new _AppContext());
-#endif
 	}
-
-#if !RUNHIDDEN_WINDOWPOSCHANGING
-	class _AppContext :ApplicationContext
-	{
-		public _AppContext()
-		{
-			var f = new EdForm();
-			f.CreateControl_();
-			f._LoadContent();
-			if(_StartsVisible) this.MainForm = f;
-			else f.FormClosed += (unu, sed) => ExitThread();
-		}
-	}
-#endif
 
 	static bool _StartsVisible => true; //TODO: if commandline /v
 
@@ -93,10 +64,6 @@ partial class EdForm : Form
 
 		Application.AddMessageFilter(new _AppMessageFilter());
 
-#if RUNHIDDEN_WINDOWPOSCHANGING
-		if(_StartsVisible) _canShow = true;
-#endif
-
 		//Print(IsHandleCreated); foreach(Control v in Controls) if(v.IsHandleCreated) Print(v);
 
 		//Perf.Next();
@@ -107,27 +74,15 @@ partial class EdForm : Form
 	}
 
 	/// <summary>
-	/// Called after creating handles of form and controls.
+	/// Called after creating handles of form and controls, when form still invisible.
 	/// </summary>
-	void _LoadContent()
+	void _OnLoad()
 	{
 		Tasks = new RunningTasks();
 		Panels.Files.LoadWorkspace(CommandLine.WorkspaceDirectory);
-		Debug.Assert(!((Wnd)this).IsVisible);
+		Debug_.PrintIf(((Wnd)this).IsVisible, "BAD: form became visible while loading workspace");
 		IsLoaded = true;
 		//Perf.Next();
-	}
-
-	/// <summary>
-	/// Called when form shown first time, on WM_SHOWWINDOW.
-	/// </summary>
-	protected override void OnLoad(EventArgs e)
-	{
-		//Print("OnLoad");
-#if RUNHIDDEN_WINDOWPOSCHANGING
-		_LoadContent();
-		if(!_canShow) ((Wnd)this).Post(EMsg.WM_EDITOR_CANSHOW);
-#endif
 
 		Timer_.After(1, () => {
 			var s = CommandLine.TestArg;
@@ -139,8 +94,6 @@ partial class EdForm : Form
 
 			CommandLine.OnAfterCreatedFormAndOpenedWorkspace();
 		});
-
-		base.OnLoad(e);
 	}
 
 	protected override void OnFormClosed(FormClosedEventArgs e)
@@ -148,6 +101,7 @@ partial class EdForm : Form
 		IsClosed = true;
 		CloseReason = e.CloseReason;
 		base.OnFormClosed(e);
+		Au.Triggers.TriggersServer.Stop();
 		UacDragDrop.AdminProcess.Enable(false);
 		Panels.Files.UnloadOnFormClosed();
 	}
@@ -169,15 +123,9 @@ partial class EdForm : Form
 
 	protected override void OnVisibleChanged(EventArgs e)
 	{
-		//Output.LibWriteQM2($"_canShow={_canShow}, _visibleOnce={_visibleOnce}, Visible={Visible}");
-#if RUNHIDDEN_WINDOWPOSCHANGING
-		if(!_canShow) return;
-#endif
 		bool visible = Visible;
 		if(!_visibleOnce && visible) {
 			_visibleOnce = true;
-			Api.SetForegroundWindow((Wnd)this);
-			//Output.LibWriteQM2("VISIBLE");
 			VisibleFirstTime?.Invoke();
 			VisibleFirstTime = null;
 		}
@@ -191,7 +139,6 @@ partial class EdForm : Form
 	protected override unsafe void WndProc(ref Message m)
 	{
 		Wnd w = (Wnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
-		//var s = m.ToString();
 		//Print(m);
 
 		switch(m.Msg) {
@@ -201,8 +148,9 @@ partial class EdForm : Form
 		case Api.WM_ACTIVATE:
 			int isActive = Math_.LoUshort(wParam); //0 inactive, 1 active, 2 click-active
 			if(isActive == 1 && !w.IsActive && !Api.SetForegroundWindow(w)) {
-				//workaround for Windows bug:
-				//	If clicked a window after our app started but before w activated, w is at Z bottom and in some cases there is no taskbar button.
+				//Normally at startup always inactive, because started as admin from task scheduler. SetForegroundWindow sometimes works, sometimes not.
+				//TODO: SetForegroundWindow fails when started with Au.CL.exe /e
+				//workaround: If clicked a window after our app started but before w activated, w is at Z bottom and in some cases without taskbar button.
 				Debug_.Print("window inactive");
 				Wnd.Misc.TaskbarButton.Add(w);
 				if(!w.ActivateLL()) Wnd.Misc.TaskbarButton.Flash(w, 5);
@@ -211,27 +159,12 @@ partial class EdForm : Form
 			if(isActive == 0) _wFocus = Wnd.ThisThread.Focused;
 			else if(_wFocus.IsAlive) Wnd.ThisThread.Focus(_wFocus);
 			return;
-#if RUNHIDDEN_WINDOWPOSCHANGING
-		case Api.WM_WINDOWPOSCHANGING:
-			if(!_canShow) {
-				var wp = (Api.WINDOWPOS*)lParam;
-				wp->flags &= ~Native.SWP.SHOWWINDOW; wp->flags |= Native.SWP.NOACTIVATE | Native.SWP.NOZORDER;
-				base.DefWndProc(ref m);
-				return;
-			}
-			break;
-		case EMsg.WM_EDITOR_CANSHOW:
-			Visible = false;
-			_canShow = true;
-			return;
-#endif
 		}
 
 		base.WndProc(ref m);
 
 		switch(m.Msg) {
 		case Api.WM_CREATE:
-			//Print(w.Get.Children().Length); //0
 			if(Settings.Get("wndPos", out string wndPos))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 			break;
@@ -249,24 +182,24 @@ partial class EdForm : Form
 
 	Wnd _wFocus;
 
-	/// <summary>
-	/// WM_USER+n messages.
-	/// </summary>
-	internal static class EMsg
+	protected override void SetVisibleCore(bool value)
 	{
-		public const int WM_EDITOR_CANSHOW = Api.WM_USER + 100;
+		//Workaround for .NET inability to create hidden form normally.
+		//	note: while form invisible, .NET will not create handles of controls added after CreateControl_.
+		if(value && !IsHandleCreated) {
+			this.CreateControl_();
+			_OnLoad();
+			if(!_StartsVisible) return;
+		}
+		base.SetVisibleCore(value);
 	}
 
-#if RUNHIDDEN_WINDOWPOSCHANGING
-	protected override bool ShowWithoutActivation => !_canShow;
-#endif
-
-	protected override bool ProcessCmdKey(ref Message msg, Keys k)
-	{
-		//Print(k);
-
-		return base.ProcessCmdKey(ref msg, k);
-	}
+	///// <summary>
+	///// WM_USER+n messages.
+	///// </summary>
+	//internal static class EMsg
+	//{
+	//}
 
 	static void _DisableTabOrderOfControls(Control c)
 	{

@@ -1626,6 +1626,321 @@ a1,-8";
 		return ((ushort)verMajor, (ushort)verMinor);
 	}
 
+	static void TestDictionaryForTriggers()
+	{
+		int n2 = 1000;
+		var a0 = new int[n2];
+		var rand = new Random();
+		int kFind = 0;
+		for(int i = 0; i < a0.Length; i++) {
+			var k = rand.Next(0xffff);
+			while(a0.Contains(k)) k = rand.Next(0xffff);
+			a0[i] = k;
+			if(i == n2 / 2) kFind = k;
+		}
+
+		var a1 = new List<RECT>();
+		var a2 = new SortedList<int, RECT>();
+		var a3 = new Dictionary<int, RECT>();
+
+		Print("ADD");
+		Perf.Cpu();
+		for(int i1 = 0; i1 < 5; i1++) {
+			a1.Clear(); a2.Clear(); a3.Clear();
+			Perf.First();
+			for(int i2 = 0; i2 < n2; i2++) { var key = a0[i2]; a1.Add(new RECT(key, key, i2, 0, false)); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { var key = a0[i2]; a2.Add(key, new RECT(key, 0, i2, 0, false)); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { var key = a0[i2]; a3.Add(key, new RECT(key, 0, i2, 0, false)); }
+			Perf.NW();
+			Thread.Sleep(200);
+		}
+
+		//Print("FIND");
+		//Perf.Cpu();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int v1 = 0, v2 = 0, v3 = 0;
+
+		//	Perf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { for(int i = 0; i < a1.Count; i++) if(a1[i].left == kFind) { v1 = a1[i].top; break; } }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { if(a2.TryGetValue(kFind, out var r)) v2 = r.left; }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { if(a3.TryGetValue(kFind, out var r)) v3 = r.left; }
+		//	Perf.NW();
+		//	Print(v1, v2, v3);
+		//	Thread.Sleep(200);
+		//}
+
+		Print("REMOVE");
+		Perf.Cpu();
+		for(int i1 = 0; i1 < 5; i1++) {
+			int rFrom = n2 / 4, rTo = n2 - rFrom;
+
+			Perf.First();
+			//for(int i2 = 0; i2 < n2; i2++) { for(int i = a2.Count - 1; i >= 0; i--) { var g = a2[i].right; if(g >= rFrom && g < rTo) a2.RemoveAt(i); } }
+			//Perf.Next();
+			//foreach(var v in a3.Where(kv => { var g = kv.Value.right; return g >= rFrom && g < rTo; }).ToList()) { a3.Remove(v.Key); }
+			//foreach(var v in a3.Where(kv => { var g = kv.Value.right; return g >= rFrom && g < rTo; }).Select(kv2=>kv2.Key).ToList()) { a3.Remove(v); }
+			a3.RemoveWhere_(kv => { var g = kv.Value.right; return g >= rFrom && g < rTo; });
+			Perf.NW();
+			Print(a2.Count, a3.Count);
+			for(int i2 = rFrom; i2 < rTo; i2++) { var key = a0[i2]; a3.Add(key, new RECT(key, 0, i2, 0, false)); }
+			Print(a3.Count);
+			Thread.Sleep(200);
+		}
+	}
+
+	private static void X_DoWork(object sender, DoWorkEventArgs e)
+	{
+		var t = Thread.CurrentThread;
+		Print(Thread_.NativeId, t.IsBackground, t.IsThreadPoolThread, t.GetApartmentState(), e.Argument);
+	}
+
+	static void TestFormLoadVisible()
+	{
+		var f = new Form45();
+		//f.WindowState = FormWindowState.Maximized;
+
+		var b = new Button { Text = "kkk" };
+		f.Controls.Add(b);
+		var e = new TextBox { Left = 100 };
+		f.Controls.Add(e);
+
+		//Timer_.After(2000, () => Application.Exit());
+		Application.Run(f);
+	}
+
+	class Form45 : Form
+	{
+		protected override void OnLoad(EventArgs e)
+		{
+			Print("OnLoad", ((Wnd)this).IsVisible);
+			base.OnLoad(e);
+		}
+
+		protected override void OnVisibleChanged(EventArgs e)
+		{
+			//Output.LibWriteQM2($"_canShow={_canShow}, _visibleOnce={_visibleOnce}, Visible={Visible}");
+			Print("OnVisibleChanged");
+		}
+
+		bool _first;
+
+		//protected override void SetVisibleCore(bool value)
+		//{
+		//	Print("SetVisibleCore", value);
+		//	if(!_first) {
+		//		_first = true;
+		//		value = false;
+		//		//CreateHandle();
+		//		this.CreateControl_();
+
+		//		//void _CreateControls(Control parent)
+		//		//{
+		//		//	foreach(Control v in parent.Controls) {
+		//		//		v.
+		//		//	}
+		//		//}
+		//	}
+		//	base.SetVisibleCore(value);
+		//}
+
+		protected override void WndProc(ref Message m)
+		{
+			//Print(m);
+
+			base.WndProc(ref m);
+		}
+	}
+
+	static void TestWndFinderCache()
+	{
+		var a = new Wnd.Finder[10];
+		for(int i = 0; i < a.Length; i++) {
+			a[i] = new Wnd.Finder("Quick *", "QM_Editor", "qm.exe");
+			//a[i] = new Wnd.Finder("Quick *", "QM_Editor");
+		}
+		Wnd w = Wnd.Find("Quick *").OrThrow();
+
+		//for(int j = 0; j < 5; j++) {
+		//	int n = 0;
+		//	Perf.First();
+		//	var cache = new WFCache(true);
+		//	for(int i = 0; i < a.Length; i++) {
+		//		//if(a[i].IsMatch(w)) n++;
+		//		if(a[i].IsMatch(w, cache)) n++;
+		//	}
+		//	Perf.NW();
+		//	Print(n);
+		//	200.ms();
+		//}
+
+		//speed: 500, LibGetNameCached 250, WFCache 115
+		//JIT: 5.8, LibGetNameCached 6.5, WFCache 6.0
+
+
+		//Perf.Cpu();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int n2 = 10;
+		//	Perf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { var s = w.ProgramName; } //75/370, JIT 4.4;  cached: 80/135 , JIT 5.3
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { var s = w.ProgramPath; } //250/2000;  cached: 250/310
+		//	//Perf.Next();
+		//	//for(int i2 = 0; i2 < n2; i2++) { var s = w.ProgramDescription; }
+		//	//Perf.Next();
+		//	//for(int i2 = 0; i2 < n2; i2++) { var t = Time.Milliseconds; }
+		//	Perf.NW();
+		//	Thread.Sleep(200);
+		//}
+	}
+
+	//[DllImport("kernel32.dll")]
+	//internal static extern int GetTickCount();
+	[DllImport("winmm.dll")]
+	internal static extern int timeGetTime();
+
+	internal static double s_freqMCS, s_freqMS; //s_freqMCS used by Perf too
+	static long s_lastCorrectionTime;
+
+	//public static long Milliseconds {
+	//	get {
+	//		Api.QueryPerformanceCounter(out var t);
+
+	//		var r = (long)(t * s_freqMS);
+	//		var k = Api.GetTickCount64();
+	//		var d = r - k;
+	//		Print(s_freqMS, (double)k / t, d);
+	//		if(d>100 || d < -100) {
+	//			s_freqMS = (double)k / t;
+	//			r = (long)(t * s_freqMS);
+	//		}
+
+	//		return r;
+	//	}
+	//}
+	//public static long Milliseconds {
+	//	get {
+	//		Api.QueryPerformanceCounter(out var t);
+
+	//		var r = (long)(t * s_freqMS);
+	//		var k = Api.GetTickCount64();
+	//		var d = r - k;
+	//		//Print(s_freqMS, (double)k / t, d);
+	//		if(d>100 || d < -100) {
+	//			s_freqMS = (double)k / t;
+	//			r = (long)(t * s_freqMS);
+	//		}
+
+	//		return r;
+	//	}
+	//}
+	public static long Milliseconds {
+		get {
+			Api.QueryPerformanceCounter(out var t);
+
+			var r = (long)(t * s_freqMS);
+			if(s_lastCorrectionTime == 0 || r - s_lastCorrectionTime > 1000) {
+				var k = Api.GetTickCount64();
+				s_freqMS = (double)k / t;
+				r = (long)(t * s_freqMS);
+				s_lastCorrectionTime = r;
+			}
+
+			return r;
+		}
+	}
+
+	static void TestMillisecondsSpeed()
+	{
+		//var t1 = Time.Milliseconds;
+		//var t2 = Time.MillisecondsWithoutComputerSleepTime;
+		//var t3 = Time.LibTickCount;
+		//AuDialog.Show();
+
+		Print(Time.MillisecondsWithoutComputerSleepTime, Time.Milliseconds, Api.GetTickCount64(), timeGetTime());
+		Print(Time.MillisecondsWithoutComputerSleepTime, Time.Milliseconds, Api.GetTickCount64(), timeGetTime());
+		Print(Time.Milliseconds - Api.GetTickCount64());
+		Print(Milliseconds, Milliseconds - Api.GetTickCount64());
+
+		Perf.Cpu();
+		for(int i1 = 0; i1 < 10; i1++) {
+			int n2 = 1000;
+			Perf.First();
+			//for(int i2 = 0; i2 < n2; i2++) { var t1 = Stopwatch.GetTimestamp(); }
+			//Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { var t1 = Time.Milliseconds; }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { var t2 = Time.MillisecondsWithoutComputerSleepTime; }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { var t3 = Time.MillisecondsFast; }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { var t3 = Api.GetTickCount64(); }
+			//Perf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { var t1 = Milliseconds; }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { var t1 = Environment.TickCount; }
+			Perf.NW();
+			Thread.Sleep(200);
+		}
+	}
+
+	static void TestHooks()
+	{
+		//Output.LibUseQM2 = true; Output.Clear();
+
+		//using(var h = Au.Util.WinHook.Keyboard(k => {
+		//	Print($"{k.Key}, {!k.IsUp}");
+		//	if(k.Key == KKey.Up && !k.IsUp) {
+		//		1100.ms();
+		//		Print("<");
+		//	}
+
+		//	return false;
+		//})) AuDialog.Show("hook");
+
+
+		using(var h = Au.Util.WinHook.Mouse(k => {
+			if(k.IsWheel) {
+				Print(">");
+				800.ms();
+				Print("<");
+			}
+
+			return false;
+		})) AuDialog.Show("hook");
+	}
+
+	static void TestStackTrace()
+	{
+		var x = new StackTrace(0, true);
+		string s = x.ToString();
+		//Output.LibWriteQM2("'" + s + "'");
+		Print(s);
+
+		try {
+			throw new Exception("test");
+		}
+		catch(Exception e) {
+			s = e.ToString();
+			//Output.LibWriteQM2("'" + s + "'");
+			Print(s);
+		}
+	}
+
+	struct TContext
+	{
+		object _o;
+		TContext(object o) => _o = o;
+
+		public static implicit operator TContext(Wnd.Finder f) => new TContext(f);
+		public static implicit operator TContext(Wnd f) => new TContext(f);
+		public static implicit operator TContext(Func<bool> f) => new TContext(f);
+	}
+
+
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -1644,9 +1959,18 @@ a1,-8";
 #if true
 			//Thread_.Start(() => { for(; ; ) { 1.s(); GC.Collect(); } });
 
-			BigInteger k = BigInteger.Parse("123456789012345678901234567890");
+			//object o = () => true; //error
+			//object o = new Func<bool>(() => true); //OK
+			//TContext o = () => true; //error
+			//TContext o = new Func<bool>(() => true); //OK
 
-			TestReferenceCOM2();
+			TestStackTrace();
+			//TestHooks();
+			//TestMillisecondsSpeed();
+			//TestWndFinderCache();
+			//TestFormLoadVisible();
+			//TestDictionaryForTriggers();
+			//TestReferenceCOM2();
 			//TestOptimizeTreeViewAdv();
 			//TestPopupList();
 			//TestGetObjectSize();

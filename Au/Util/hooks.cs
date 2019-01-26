@@ -29,7 +29,7 @@ namespace Au.Util
 	/// The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="Opt.WaitFor"/>).
 	/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Uninstall</b> in the same thread) or with the 'using' pattern. Else this process may crash.
 	/// </remarks>
-	public class WinHook :IDisposable
+	public class WinHook : IDisposable
 	{
 		IntPtr _hh; //HHOOK
 		Api.HOOKPROC _proc1; //our intermediate dispatcher hook proc that calls _proc2
@@ -310,24 +310,29 @@ namespace Au.Util
 		{
 			try {
 				if(code >= 0) {
+					bool R = false;
+					long t1 = 0; int hookType = 0;
+
 					switch(_proc2) {
 					case Func<HookData.Keyboard, bool> p:
-						if(p(new HookData.Keyboard(this, lParam))) return 1; //info: wParam is message, but it is not useful, everything is in lParam
+						t1 = Api.GetTickCount64(); hookType = Api.WH_KEYBOARD_LL;
+						R = p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
 						break;
 					case Func<HookData.Mouse, bool> p:
-						if(p(new HookData.Mouse(this, wParam, lParam))) return 1;
+						t1 = Api.GetTickCount64(); hookType = Api.WH_MOUSE_LL;
+						R = p(new HookData.Mouse(this, wParam, lParam));
 						break;
 					case Func<HookData.ThreadCbt, bool> p:
-						if(p(new HookData.ThreadCbt(this, code, wParam, lParam))) return 1;
+						R = p(new HookData.ThreadCbt(this, code, wParam, lParam));
 						break;
 					case Action<HookData.ThreadGetMessage> p:
 						p(new HookData.ThreadGetMessage(this, wParam, lParam));
 						break;
 					case Func<HookData.ThreadKeyboard, bool> p:
-						if(p(new HookData.ThreadKeyboard(this, code, wParam, lParam))) return 1;
+						R = p(new HookData.ThreadKeyboard(this, code, wParam, lParam));
 						break;
 					case Func<HookData.ThreadMouse, bool> p:
-						if(p(new HookData.ThreadMouse(this, code, wParam, lParam))) return 1;
+						R = p(new HookData.ThreadMouse(this, code, wParam, lParam));
 						break;
 					case Action<HookData.ThreadCallWndProc> p:
 						p(new HookData.ThreadCallWndProc(this, wParam, lParam));
@@ -336,6 +341,21 @@ namespace Au.Util
 						p(new HookData.ThreadCallWndProcRet(this, wParam, lParam));
 						break;
 					}
+
+					//Prevent Windows unhooking the low-level key/mouse hook.
+					//	Hook proc must return in HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout ms, default 300.
+					//	Else Windows does not wait more, and kills the hook after several such events. Usually 6 keys or 11 mouse events.
+					//	Somehow does not unhook C# apps created by Visual Studio, although unhooks those created not by VS. Just applies the timeout.
+					if(hookType != 0 && (t1 = Api.GetTickCount64() - t1) > 250 /*&& t1 < 3000*/ && !Debugger.IsAttached) {
+						Api.UnhookWindowsHookEx(_hh);
+						_hh = Api.SetWindowsHookEx(hookType, _proc1, default, 0);
+						//FUTURE: print warning if t1 is >25 frequently.
+						//TODO: always print warning if > LowLevelHooksTimeout-50, especially if R=true, because then R may be ignored.
+						if(s_lowLevelHooksTimeout == 0 && !Registry_.GetInt(out s_lowLevelHooksTimeout, "LowLevelHooksTimeout", @"Control Panel\Desktop")) s_lowLevelHooksTimeout = 300;
+						Print(s_lowLevelHooksTimeout);
+					}
+
+					if(R) return 1;
 				}
 			}
 			catch(Exception ex) { if(LibOnException(ex, this)) return 0; }
@@ -343,9 +363,8 @@ namespace Au.Util
 			//	This prevents it when using eg AuDialog. But not when eg MessageBox.Show; I don't know how to prevent it.
 
 			return Api.CallNextHookEx(default, code, wParam, lParam);
-
-			//FUTURE: for LL hooks, measure time and warn if slow. OS may unhook. Warn if the timeout in the registry is too small.
 		}
+		static int s_lowLevelHooksTimeout;
 
 		/// <summary>
 		/// Call on any catched exception in a hook procedure.
@@ -418,10 +437,8 @@ namespace Au.Types
 			/// <summary>
 			/// If the key is a modifier key (Shift, Ctrl, Alt, Win), returns the modifier flag. Else returns 0.
 			/// </summary>
-			public KMod Mod
-			{
-				get
-				{
+			public KMod Mod {
+				get {
 					switch(vkCode) {
 					case KKey.Shift: case KKey.LShift: case KKey.RShift: return KMod.Shift;
 					case KKey.Ctrl: case KKey.LCtrl: case KKey.RCtrl: return KMod.Ctrl;
@@ -435,10 +452,8 @@ namespace Au.Types
 			/// <summary>
 			/// If <b>vkCode</b> is a left or right modifier key code (LShift, LCtrl, LAlt, RShift, RCtrl, RAlt, RWin), returns the common modifier key code (Shift, Ctrl, Alt, Win). Else returns <b>vkCode</b>.
 			/// </summary>
-			public KKey Key
-			{
-				get
-				{
+			public KKey Key {
+				get {
 					switch(vkCode) {
 					case KKey.LShift: case KKey.RShift: return KKey.Shift;
 					case KKey.LCtrl: case KKey.RCtrl: return KKey.Ctrl;
@@ -467,10 +482,8 @@ namespace Au.Types
 			/// <summary>
 			/// Converts flags to API SendInput flags KEYEVENTF_KEYUP and KEYEVENTF_EXTENDEDKEY.
 			/// </summary>
-			internal byte LibSendInputFlags
-			{
-				get
-				{
+			internal byte LibSendInputFlags {
+				get {
 					uint f = 0;
 					if(IsUp) f |= Api.KEYEVENTF_KEYUP;
 					if(IsExtended) f |= Api.KEYEVENTF_EXTENDEDKEY;
@@ -912,7 +925,7 @@ namespace Au.Util
 	/// <code><![CDATA[
 	/// //using Au.Util;
 	/// bool stop = false;
-	/// using(new AccHook(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
+	/// using(new Au.Util.AccHook(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
 	/// {
 	/// 	Print(x.wnd);
 	/// 	var a = x.GetAcc();
@@ -926,7 +939,7 @@ namespace Au.Util
 	/// }
 	/// ]]></code>
 	/// </example>
-	public class AccHook :IDisposable
+	public class AccHook : IDisposable
 	{
 		IntPtr _hh; //HHOOK
 		Api.WINEVENTPROC _proc1; //our intermediate hook proc that calls _proc2

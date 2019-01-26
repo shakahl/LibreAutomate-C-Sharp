@@ -181,8 +181,8 @@ namespace Au.Tools
 			id = wControl.ControlId;
 			if(id == 0 || id == -1 || id > 0xffff || id < -0xffff) return false;
 			//info: some apps use negative ids, eg FileZilla. Usually >= -0xffff. Id -1 is often used for group buttons and separators.
-			//if(id == (int)wControl.Handle) return false; //.NET forms, delphi. //possible coincidence //rejected, because window handles are > 0xffff
-			Debug.Assert((int)wControl.Handle > 0xffff);
+			//if(id == (int)wControl) return false; //.NET forms, delphi. //possible coincidence //rejected, because window handles are > 0xffff
+			Debug.Assert((int)wControl > 0xffff);
 
 			//if(wWindow.Child("***id " + id) != wControl) return false; //problem with combobox child Edit that all have id 1001
 			if(wWindow.ChildAll("***id " + id).Length != 1) return false; //note: searching only visible controls; else could find controls with same id in hidden pages of tabbed dialog.
@@ -382,7 +382,7 @@ namespace Au.Tools
 			//FUTURE: #line
 			var b = new StringBuilder();
 			b.AppendLine(@"static object[] __TestFunc__() {");
-			if(activateWindow) b.Append("((Wnd)(LPARAM)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
+			if(activateWindow) b.Append("((Wnd)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
 			b.AppendLine("var _p_ = Perf.StartNew();");
 			var lines = code.SplitLines_(true);
 			int lastLine = lines.Length - 1;

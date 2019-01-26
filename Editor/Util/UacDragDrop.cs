@@ -256,7 +256,7 @@ class UacDragDrop
 		public static void MainDD(string[] args)
 		{
 			//Print("NonAdminProcess");
-			var msgWnd = (Wnd)(LPARAM)args[1].ToInt_();
+			var msgWnd = (Wnd)args[1].ToInt_();
 
 			var f = new NonAdminProcess(msgWnd);
 			f.ShowDialog();

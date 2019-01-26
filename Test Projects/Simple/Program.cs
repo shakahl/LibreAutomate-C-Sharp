@@ -32,16 +32,27 @@ namespace Simple
 			//Console.WriteLine(Console.OutputEncoding);
 			Console.OutputEncoding = Encoding.UTF8;
 			//Console.OutputEncoding = Encoding.GetEncoding(1257); //baltic
-			for(int i = 0; i < 3; i++) {
-				Console.WriteLine($"{i}. out č ɛ");
-				Console.Error.WriteLine($"{i}. err č ɛ");
-				//Console.WriteLine($"{i}. out č");
-				//Console.Error.WriteLine($"{i}. err č");
-			}
+			//for(int i = 0; i < 3; i++) {
+			//	Console.WriteLine($"{i}. out č ɛ");
+			//	Console.Error.WriteLine($"{i}. err č ɛ");
+			//	//Console.WriteLine($"{i}. out č");
+			//	//Console.Error.WriteLine($"{i}. err č");
+			//}
 
 			//Console.WriteLine(GetThreadCount());
 
 			//Console.ReadKey();
+
+			using(var h = Au.Util.WinHook.Keyboard(k => {
+				Print($"{k.Key}, {!k.IsUp}");
+				if(k.Key == KKey.Up && !k.IsUp) {
+					1100.ms();
+					Print("<");
+				}
+
+				return false;
+			})) AuDialog.Show("hook");
+
 		}
 
 		internal struct THREADENTRY32

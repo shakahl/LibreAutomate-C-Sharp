@@ -88,8 +88,8 @@ namespace Au
 			_block = what;
 			_startTime = Time.Milliseconds;
 
-			_syncEvent = Api.CreateEvent(default, false, false, null);
-			_stopEvent = Api.CreateEvent(default, false, false, null);
+			_syncEvent = Api.CreateEvent(false);
+			_stopEvent = Api.CreateEvent(false);
 			_threadHandle = Api.OpenThread(Api.SYNCHRONIZE, false, _threadId = Api.GetCurrentThreadId());
 
 			ThreadPool.QueueUserWorkItem(_this => (_this as BlockUserInput)._ThreadProc(), this);

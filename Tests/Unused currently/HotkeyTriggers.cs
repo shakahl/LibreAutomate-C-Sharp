@@ -18,6 +18,7 @@ using System.Linq;
 using Au;
 using static Au.NoClass;
 
+#if false
 namespace Au.Triggers
 {
 	public class HotkeyTriggers
@@ -95,3 +96,4 @@ namespace Au.Triggers
 	}
 
 }
+#endif

@@ -115,14 +115,15 @@ namespace Au
 				_nMeasurements++;
 			}
 
-			/// <summary>
-			/// Calls <see cref="Cpu"/> and <see cref="First()"/>.
-			/// </summary>
-			public void First(int timeSpeedUpCPU)
-			{
-				Cpu(timeSpeedUpCPU);
-				First();
-			}
+			//rejected. See comments in static.
+			///// <summary>
+			///// Calls <see cref="Cpu"/> and <see cref="First()"/>.
+			///// </summary>
+			//public void First(int timeSpeedUpCPU)
+			//{
+			//	Cpu(timeSpeedUpCPU);
+			//	First();
+			//}
 
 			/// <inheritdoc cref="Perf.Next"/>
 			public void Next(char cMark = '\0')
@@ -143,7 +144,7 @@ namespace Au
 			/// <summary>
 			/// Calls <see cref="Next"/> and <see cref="Write"/>.
 			/// </summary>
-			/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+			/// <param name="cMark">A character to add to the results string like "A=150".</param>
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			public void NW(char cMark = '\0') { Next(cMark); Write(); }
 
@@ -329,10 +330,11 @@ namespace Au
 		/// </summary>
 		public static void First() => StaticInst.First();
 
-		/// <summary>
-		/// Calls <see cref="Cpu"/> and <see cref="First()"/>.
-		/// </summary>
-		public static void First(int timeSpeedUpCPU) => StaticInst.First(timeSpeedUpCPU);
+		//rejected. Unclear. Can confuse int timeSpeedUpCPU with char cMark.
+		///// <summary>
+		///// Calls <see cref="Cpu"/> and <see cref="First()"/>.
+		///// </summary>
+		//public static void First(int timeSpeedUpCPU) => StaticInst.First(timeSpeedUpCPU);
 
 		/// <summary>
 		/// Stores current time in next element of an internal array.
@@ -346,7 +348,7 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="Next"/> and <see cref="Write"/>.
 		/// </summary>
-		/// <param name="cMark">A character to mark that time in the results string, like "A=150".</param>
+		/// <param name="cMark">A character to add to the results string like "A=150".</param>
 		public static void NW(char cMark = '\0') => StaticInst.NW(cMark);
 
 		/// <summary>

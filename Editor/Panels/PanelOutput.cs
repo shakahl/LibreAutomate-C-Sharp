@@ -23,10 +23,11 @@ using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
 
-class PanelOutput :Control
+class PanelOutput : Control
 {
 	SciOutput _c;
 	Queue<Au.Util.OutputServer.Message> _history;
+	StringBuilder _sb;
 
 	//public SciControl Output => _c;
 
@@ -45,40 +46,64 @@ class PanelOutput :Control
 
 	void _GetServerMessages()
 	{
-		_c.Tags.OutputServerProcessMessages(OutputServer, m =>
-		{
+		_c.Tags.OutputServerProcessMessages(OutputServer, m => {
 			if(m.Type != Au.Util.OutputServer.MessageType.Write) return;
-			_history.Enqueue(m);
-			if(_history.Count > 50) _history.Dequeue();
 
-			//Output.LibWriteQM2(s);
-
-			//create links in compilation errors/warnings or run time stack trace
-			var s = m.Text;
+			//create links in compilation errors/warnings or run-time stack trace
+			var s = m.Text; int i;
 			if(s.Length >= 22) {
 				if(s.StartsWith_("<><Z #") && s.EqualsAt_(12, ">Compilation: ")) { //compilation
 					if(s_rx1 == null) s_rx1 = new Regex_(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
-					m.Text = s_rx1.Replace(s, x =>
-					{
+					m.Text = s_rx1.Replace(s, x => {
 						var f = Model.FindByFilePath(x[1].Value);
 						if(f == null) return x[0].Value;
 						return $"<open \"{f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}\">{f.Name}{x[2].Value}<>: ";
 					});
-				} else if(s.Contains(":line ")) { //stack trace
-					if(s_rx2 == null) s_rx2 = new Regex_(@"(?m)^(\s+at .+) in (.+?):line (\d+)$");
-					var s2 = s_rx2.Replace(s, x =>
-					{
-						var f = Model.FindByFilePath(x[2].Value);
-						if(f == null) return x[0].Value;
-						var line = x[3].Value;
-						return $"{x[1].Value.Limit_(70)} in <open \"{f.IdStringWithWorkspace}|{line}\">{f.Name}<>:line {line}";
-					});
-					if(!ReferenceEquals(s, s2)) {
-						if(!s2.StartsWith_("<>")) s2 = "<>" + s2;
-						m.Text = s2;
+				} else if((i = s.IndexOf("\n   at ") + 1) > 0 && s.IndexOf(":line ", i) > 0) { //stack trace with source file info
+					int j = s.LastIndexOf("\r\n   at App.Main(String[] args) in ");
+					if(j >= 0) j = s.IndexOf_("\r\n", j + 30);
+					if(j < 0) { j = s.Length; if(s.EndsWith_("\r\n")) j -= 2; } //include the Main line, because _Main may be missing
+					int stackLen = j - i;
+					if(_sb == null) _sb = new StringBuilder(s.Length + 2000); else _sb.Clear();
+					var b = _sb;
+					//Output.LibWriteQM2("'" + s + "'");
+					if(!s.StartsWith_("<>")) b.Append("<>");
+					b.Append(s, 0, i);
+					var rx = s_rx2; if(rx == null) s_rx2 = rx = new Regex_(@" in (.+?):line (?=\d+$)");
+					var rxm = new RXMore();
+					bool replaced = false;
+					foreach(var k in s.Segments_(i, stackLen, "\r\n", SegFlags.NoEmpty)) {
+						//Output.LibWriteQM2("'"+k+"'");
+						rxm.start = k.Offset + 6; rxm.end = k.EndOffset;
+						if(k.StartsWith("   at ") && rx.MatchG(s, out var g, 1, rxm)) { //note: no "   at " if this is an inner exception marker
+							var f = Model.FindByFilePath(g.Value);
+							if(f != null) {
+								int i1 = g.EndIndex + 6, len1 = k.EndOffset - i1;
+								b.Append("   at ").
+								Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
+								.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
+
+								bool isMain = k.StartsWith("   at App._Main(String[] args) in ");
+								if(!isMain || !f.IsScript) b.Append(", <_>").Append(s, k.Offset + 6, g.Index - k.Offset - 10).Append("</_>");
+								b.AppendLine();
+
+								replaced = true;
+								if(isMain) break;
+							}
+						}
 					}
+					if(replaced) {
+						b.Append("   <fold>   --- Raw stack trace ---\r\n<_>").Append(s, i, stackLen).Append("</_></fold>");
+						m.Text = b.ToString();
+					}
+					if(_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
 				}
-				//SHOULDDO: escape non-link text with <_>...</_>.
+			}
+
+			if(s.Length <= 10_000) { //* 50 = 1 MB
+				if(!ReferenceEquals(s, m.Text)) m = new Au.Util.OutputServer.Message(Au.Util.OutputServer.MessageType.Write, s, m.TimeUtc, m.Caller);
+				_history.Enqueue(m);
+				if(_history.Count > 50) _history.Dequeue();
 			}
 		});
 	}
@@ -89,6 +114,13 @@ class PanelOutput :Control
 	public void Clear() { _c.ST.ClearText(); }
 
 	public void Copy() { _c.Call(SCI_COPY); }
+
+	public void History()
+	{
+		var dd = new PopupList { Items = _history.ToArray() };
+		dd.SelectedAction = o => Print((o.ResultItem as Au.Util.OutputServer.Message).Text);
+		dd.Show(new Rectangle(Mouse.XY, default));
+	}
 
 	//not override void OnHandleCreated, because then _c handle still not created, and we need to Call
 	private void _c_HandleCreated(object sender, EventArgs e)
@@ -102,11 +134,9 @@ class PanelOutput :Control
 	}
 	bool _inInitSettings;
 
-	public bool WrapLines
-	{
+	public bool WrapLines {
 		get => Settings.Get("Tools_Output_WrapLines", false);
-		set
-		{
+		set {
 			Debug.Assert(!_inInitSettings || value);
 			if(!_inInitSettings) Settings.Set("Tools_Output_WrapLines", value);
 			//_c.Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END); //in SciControl.OnHandleCreated
@@ -116,11 +146,9 @@ class PanelOutput :Control
 		}
 	}
 
-	public bool WhiteSpace
-	{
+	public bool WhiteSpace {
 		get => Settings.Get("Tools_Output_WhiteSpace", false);
-		set
-		{
+		set {
 			Debug.Assert(!_inInitSettings || value);
 			if(!_inInitSettings) Settings.Set("Tools_Output_WhiteSpace", value);
 			_c.Call(SCI_SETWHITESPACEFORE, 1, 0xFF0080);
@@ -129,13 +157,11 @@ class PanelOutput :Control
 		}
 	}
 
-	public bool Topmost
-	{
+	public bool Topmost {
 		get => Settings.Get("Tools_Output_Topmost", false);
-		set
-		{
+		set {
 			var p = Panels.PanelManager.GetPanel(this);
-			if(value) p.Floating = true;
+			//if(value) p.Floating = true;
 			if(p.Floating) _SetTopmost(value);
 			Settings.Set("Tools_Output_Topmost", value);
 			Strips.CheckCmd("Tools_Output_Topmost", value);
@@ -163,7 +189,7 @@ class PanelOutput :Control
 		base.OnParentChanged(e);
 	}
 
-	class SciOutput :AuScintilla
+	class SciOutput : AuScintilla
 	{
 		public SciOutput()
 		{

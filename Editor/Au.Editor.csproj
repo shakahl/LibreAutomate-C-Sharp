@@ -120,7 +120,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Test\tree.cs" />
-    <Compile Include="Run, triggers\TriggersUI.cs" />
+    <None Include="Unused\TriggersUI.cs" />
     <Compile Include="Run, triggers\Run.cs" />
     <None Include="Templates\New Project\%40Script\!Script">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -185,10 +185,6 @@
       <Project>{f296fd5d-8399-4bb3-b01c-82ad96a50b44}</Project>
       <Name>Au.Compiler</Name>
       <Private>False</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\Au.Triggers\Au.Triggers.csproj">
-      <Project>{50642350-24d7-42c9-9916-d7f01f6bc16b}</Project>
-      <Name>Au.Triggers</Name>
     </ProjectReference>
     <ProjectReference Include="..\Au\Au.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
