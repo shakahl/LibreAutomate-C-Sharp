@@ -121,8 +121,7 @@ static unsafe class Program
 		//	Initially we have only mscorlib and Au.
 		//	note: actually loads these assemblies when JIT-compiling this method.
 		//	note: .NET serializes loading of assemblies. If one thread is loading, other thread waits. Not tested with processes.
-		_ = typeof(Stopwatch).Assembly; //System
-		_ = typeof(System.Linq.Enumerable).Assembly; //System.Core
+		_ = typeof(System.Linq.Enumerable).Assembly; //System.Core, System
 
 		_Hook();
 	}
@@ -131,7 +130,7 @@ static unsafe class Program
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _Prepare2()
 	{
-		_ = typeof(System.Windows.Forms.Control).Assembly; //also loads System.Drawing
+		_ = typeof(System.Windows.Forms.Control).Assembly; //System.Windows.Forms, System.Drawing
 
 		//SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1); //makes starting slower, eg non-ngened 7.5 -> 10.5 ms
 	}

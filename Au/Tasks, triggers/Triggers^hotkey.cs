@@ -63,7 +63,7 @@ namespace Au.Triggers
 			/// Don't release modifier keys.
 			/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="Keyb.GetMod"/> (and any such functions in any app) will not know that the key is physically pressed.
 			/// </summary>
-			DoNotReleaseMod = 32,
+			DontReleaseMod = 32,
 
 			/// <summary>
 			/// The trigger is temporarily disabled.
@@ -79,11 +79,22 @@ namespace Au.Triggers
 			//byte _unused; //The above 3 are 1-byte enums.
 		}
 
-		struct _TriggerEtc
+		class _TriggerEtc : TriggerBase
 		{
-			public Trigger trigger;
-			public int scope; //0 or Triggers.Of.Index
-			public Action<HotkeyTriggerArgs> action;
+			public readonly Trigger trigger;
+			public readonly int scope; //0 or Triggers.Of.Current
+
+			public _TriggerEtc(Trigger trigger, Action<HotkeyTriggerArgs> action) : base(action)
+			{
+				this.trigger = trigger;
+				this.scope = Triggers.Of.Current;
+			}
+
+			public override void Run(int data1, string data2, Wnd w)
+			{
+				var a = action as Action<HotkeyTriggerArgs>;
+				a(new HotkeyTriggerArgs(w, trigger.key, (KMod)data1, trigger.flags));
+			}
 		}
 
 		List<_TriggerEtc> _a = new List<_TriggerEtc>();
@@ -95,16 +106,16 @@ namespace Au.Triggers
 				if(!Keyb.Misc.ParseHotkeyString(hotkey, out var mod, out var key)) throw new ArgumentException("Invalid hotkey string.");
 				if(key == KKey.Delete && mod == (KMod.Ctrl | KMod.Alt) && !flags.Has_(TFlags.Shared)) throw new ArgumentException("With Ctrl+Alt+Delete need flag Shared.");
 				var t = new Trigger { key = key, mod = mod, flags = flags };
-				_a.Add(new _TriggerEtc { trigger = t, scope = Triggers.Of.Index, action = value });
+				_a.Add(new _TriggerEtc(t, value));
 			}
 		}
 
-		EEngineProcess ITriggers.EngineProcess => _a.Count > 0 ? EEngineProcess.Remote : EEngineProcess.None;
+		ETriggerEngineProcess ITriggers.EngineProcess => _a.Count > 0 ? ETriggerEngineProcess.Remote : ETriggerEngineProcess.None;
 
 		unsafe void ITriggers.Write(BinaryWriter w)
 		{
 			w.Write(_a.Count);
-			foreach(var v in _a) w.Write(*(int*)&v.trigger); //key, mod, flags; not window, action
+			foreach(var v in _a) { var t = v.trigger; w.Write(*(int*)&t); } //key, mod, flags; not window, action
 		}
 
 		bool ITriggers.CanRun(int action, int data1, string data2, Wnd w, WFCache cache)
@@ -116,11 +127,7 @@ namespace Au.Triggers
 			return true;
 		}
 
-		void ITriggers.Run(int action, int data1, string data2, Wnd w)
-		{
-			var v = _a[action];
-			v.action(new HotkeyTriggerArgs(w, v.trigger.key, (KMod)data1, v.trigger.flags));
-		}
+		TriggerBase ITriggers.GetAction(int action) => _a[action];
 	}
 
 	public class HotkeyTriggerArgs : TriggerArgs
@@ -135,7 +142,7 @@ namespace Au.Triggers
 		}
 	}
 
-	class HotkeyTriggersEngine : ITriggersEngine
+	class HotkeyTriggersEngine : ITriggerEngine
 	{
 		class _TriggerValue
 		{
@@ -157,7 +164,7 @@ namespace Au.Triggers
 			_d?.Clear();
 		}
 
-		unsafe void ITriggersEngine.AddTriggers(int pipeIndex, BinaryReader r, byte[] raw)
+		unsafe void ITriggerEngine.AddTriggers(int pipeIndex, BinaryReader r, byte[] raw)
 		{
 			if(_d == null) _d = new Dictionary<int, _TriggerValue>();
 			int n = r.ReadInt32(); //how many triggers
@@ -177,10 +184,9 @@ namespace Au.Triggers
 			if(KeyboardHook.Instance == null) KeyboardHook.Instance = new KeyboardHook();
 		}
 
-		void ITriggersEngine.RemoveTriggers(int pipeIndex)
+		void ITriggerEngine.RemoveTriggers(int pipeIndex)
 		{
-			//TODO: test
-			_Print("BEFORE");
+			//_Print("BEFORE");
 			var ar = new List<KeyValuePair<int, _TriggerValue>>();
 			foreach(var kv in _d) {
 				_TriggerValue v = kv.Value, vFirstOther = null, vLastOther = null;
@@ -195,16 +201,16 @@ namespace Au.Triggers
 				if(vFirstOther != kv.Value) ar.Add(new KeyValuePair<int, _TriggerValue>(kv.Key, vFirstOther));
 			}
 			foreach(var kv in ar) if(kv.Value == null) _d.Remove(kv.Key); else _d[kv.Key] = kv.Value;
-			_Print("AFTER");
+			//_Print("AFTER");
 
-			void _Print(string name)
-			{
-				Print(name);
-				foreach(var kv in _d) {
-					Print($"<><c green>{(KKey)(byte)kv.Key}, {(KMod)(byte)(kv.Key >> 8)}<>");
-					for(var u = kv.Value; u != null; u = u.next) Print($"pipe={u.pipeIndex}, action={u.action}");
-				}
-			}
+			//void _Print(string name)
+			//{
+			//	Print(name);
+			//	foreach(var kv in _d) {
+			//		Print($"<><c green>{(KKey)(byte)kv.Key}, {(KMod)(byte)(kv.Key >> 8)}<>");
+			//		for(var u = kv.Value; u != null; u = u.next) Print($"pipe={u.pipeIndex}, action={u.action}");
+			//	}
+			//}
 		}
 
 		internal bool HookProc(HookData.Keyboard k)
@@ -224,7 +230,7 @@ namespace Au.Triggers
 						ti.SendAdd(o.pipeIndex, o.action);
 					}
 					//Perf.NW();
-					return ti.Send(EType.Hotkey, (int)mod);
+					return ti.Send(ETriggerType.Hotkey, (int)mod);
 				}
 			}
 			return false;
@@ -239,12 +245,13 @@ namespace Au.Triggers
 
 		public KeyboardHook()
 		{
+			//Output.LibWriteQM2("ctor");
 			_hook = Util.WinHook.Keyboard(_Hook);
 		}
 
 		public void Dispose()
 		{
-			//TODO: is this called?
+			//Output.LibWriteQM2("disp");
 
 			_hook.Dispose(); _hook = null;
 			Instance = null;
@@ -253,9 +260,9 @@ namespace Au.Triggers
 		bool _Hook(HookData.Keyboard k)
 		{
 			var ti = TriggersServer.Instance;
-			var hotkey = ti[EType.Hotkey] as HotkeyTriggersEngine;
+			var hotkey = ti[ETriggerType.Hotkey] as HotkeyTriggersEngine;
 			if(hotkey?.HookProc(k) ?? false) return true;
-			var autotext = ti[EType.Autotext] as AutotextTriggersEngine;
+			var autotext = ti[ETriggerType.Autotext] as AutotextTriggersEngine;
 			if(autotext?.HookProc(k) ?? false) return true;
 			return false;
 		}

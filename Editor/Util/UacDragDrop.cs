@@ -118,7 +118,7 @@ class UacDragDrop
 				_isProcess2 = true;
 				_wWindow = w;
 				Process_.LibStartUserIL("Au.Editor.exe", "/d " + CommandLine.MsgWnd.Handle.ToString());
-				//Process_.LibStartUserIL("Au.Editor.exe", $"/d {CommandLine.MsgWnd.Handle.ToString()} {Time.Milliseconds}"); //test process startup speed
+				//Process_.LibStartUserIL("Au.Editor.exe", $"/d {CommandLine.MsgWnd.Handle.ToString()} {Time.PerfMilliseconds}"); //test process startup speed
 			} else if(w != _wTransparent) {
 				_wWindow = w;
 				_SetTransparentSizeZorder();
@@ -308,7 +308,7 @@ class UacDragDrop
 			base.WndProc(ref m);
 
 			//test process startup speed. About 300 ms. Ngened slower.
-			//if(m.Msg == Api.WM_SHOWWINDOW && m.WParam != default) Print(Time.Milliseconds - Environment.GetCommandLineArgs()[3].ToLong_());
+			//if(m.Msg == Api.WM_SHOWWINDOW && m.WParam != default) Print(Time.PerfMilliseconds - Environment.GetCommandLineArgs()[3].ToLong_());
 		}
 
 		bool _enteredOnce;

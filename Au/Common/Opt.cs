@@ -19,6 +19,8 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 
+//TODO: Opt.Reset();
+
 namespace Au
 {
 	/// <summary>
@@ -27,7 +29,7 @@ namespace Au
 	/// <remarks>
 	/// Some frequently used static functions of this library have some options (settings). For example <see cref="Keyb.Key"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead you can set options using static properties. This class contains several groups of options for functions of various classes. See examples.
 	/// 
-	/// There are two sets of identical or similar options - in class <b>Opt</b> and in its nested class <see cref="Opt.Static"/>:
+	/// There are two sets of identical or similar options - in class <b>Opt</b> and in class <see cref="Opt.Static"/>:
 	/// <list type="bullet">
 	/// <item><b>Opt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>Opt.Static</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).</item>
 	/// <item><b>Opt.Static</b> - static options. Contains initial property values for <b>Opt</b>. Normally you change them in your script template (in script initialization code) or at the very start of script. Don't change later, it's not thread-safe.</item>

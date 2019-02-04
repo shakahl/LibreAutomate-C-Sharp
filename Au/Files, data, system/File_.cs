@@ -133,7 +133,7 @@ namespace Au
 				attr = (FileAttributes)(-1);
 				break;
 			}
-			if(0 != (flags & FAFlags.DoNotThrow)) return false;
+			if(0 != (flags & FAFlags.DontThrow)) return false;
 			throw new AuException(ec, $"*get file attributes: '{path}'");
 
 			//tested:
@@ -151,7 +151,7 @@ namespace Au
 			if(!useRawPath) path = Path_.LibNormalizeMinimally(path, false);
 			_DisableDeviceNotReadyMessageBox();
 			attr = Api.GetFileAttributes(path);
-			if(attr == (FileAttributes)(-1) && !_GetAttributesOnError(path, FAFlags.DoNotThrow, out attr)) return false;
+			if(attr == (FileAttributes)(-1) && !_GetAttributesOnError(path, FAFlags.DontThrow, out attr)) return false;
 			if(!useRawPath && !Path_.IsFullPath(path)) { Native.SetError(Api.ERROR_FILE_NOT_FOUND); return false; }
 			return true;
 		}
@@ -625,7 +625,7 @@ namespace Au
 					ok = Api.CreateDirectoryEx(s1, s2, default);
 					if(!ok && 0 == (f.Attributes & FileAttributes.ReparsePoint)) ok = Api.CreateDirectory(s2, default);
 				} else {
-					if(merge && GetAttributes(s2, out var attr, FAFlags.DoNotThrow | FAFlags.UseRawPath)) {
+					if(merge && GetAttributes(s2, out var attr, FAFlags.DontThrow | FAFlags.UseRawPath)) {
 						const FileAttributes badAttr = FileAttributes.ReadOnly | FileAttributes.Hidden;
 						if(0 != (attr & FileAttributes.Directory)) _Delete(s2);
 						else if(0 != (attr & badAttr)) Api.SetFileAttributes(s2, attr & ~badAttr);
@@ -659,7 +659,7 @@ namespace Au
 		struct _SafeDeleteExistingDirectory
 		{
 			string _oldPath, _tempPath;
-			bool _doNotDelete;
+			bool _dontDelete;
 
 			/// <summary>
 			/// note: path must be normalized.
@@ -675,7 +675,7 @@ namespace Au
 					if(!ExistsAsAny(tempPath, true)) break;
 				}
 				if(!Api.MoveFileEx(path, tempPath, 0)) return false;
-				_oldPath = path; _tempPath = tempPath; _doNotDelete = doNotDelete;
+				_oldPath = path; _tempPath = tempPath; _dontDelete = doNotDelete;
 				return true;
 			}
 
@@ -684,7 +684,7 @@ namespace Au
 				if(_tempPath == null) return true;
 				if(!succeeded) {
 					if(!Api.MoveFileEx(_tempPath, _oldPath, 0)) return false;
-				} else if(!_doNotDelete) {
+				} else if(!_dontDelete) {
 					try { _Delete(_tempPath); } catch { return false; }
 				}
 				_oldPath = _tempPath = null;
@@ -1161,7 +1161,7 @@ namespace Au
 			{
 				if(millisecondsTimeout < -1) throw new ArgumentOutOfRangeException();
 				_timeout = millisecondsTimeout;
-				_t0 = Time.Milliseconds;
+				_t0 = Time.PerfMilliseconds;
 			}
 
 			public bool ExceptionFilter(IOException e) => ExceptionFilter(e.HResult & 0xffff);
@@ -1175,7 +1175,7 @@ namespace Au
 				case Api.ERROR_LOCK_VIOLATION:
 				case Api.ERROR_USER_MAPPED_FILE:
 				case Api.ERROR_UNABLE_TO_REMOVE_REPLACED: //ReplaceFile or File.Replace
-					return _timeout < 0 || Time.Milliseconds - _t0 < _timeout;
+					return _timeout < 0 || Time.PerfMilliseconds - _t0 < _timeout;
 				default: return false;
 				}
 			}
@@ -1260,7 +1260,7 @@ namespace Au
 
 		static void _Save(string file, object data, bool backup, int lockedWaitMS, Encoding encoding = null)
 		{
-			file = Path_.Normalize(file, null, PNFlags.DoNotPrefixLongPath);
+			file = Path_.Normalize(file, null, PNFlags.DontPrefixLongPath);
 			string temp = file + "~temp";
 			string back = file + "~backup"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc
 
@@ -1355,7 +1355,7 @@ namespace Au.Types
 		///Then, if you need error info, you can use <see cref="Native.GetError"/>. If the file/directory does not exist, it will return ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND or ERROR_NOT_READY.
 		///If failed and the native error code is ERROR_ACCESS_DENIED or ERROR_SHARING_VIOLATION, the returned attributes will be (FileAttributes)(-1). The file probably exists but is protected so that this process cannot access and use it. Else attributes will be 0.
 		///</summary>
-		DoNotThrow = 2,
+		DontThrow = 2,
 	}
 
 	/// <summary>

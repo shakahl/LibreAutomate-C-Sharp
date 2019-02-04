@@ -113,10 +113,10 @@ Green tasks change the tray icon and afraid the ""End task"" hotkey; blue tasks 
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");
-		_AddCombo("ifRunning", "runIfBlue|cancel|wait|restart|restartOrWait", _meta.ifRunning,
+		_AddCombo("ifRunning", "runIfBlue|dontRun|wait|restart|restartOrWait", _meta.ifRunning,
 @"<b>ifRunning</b> - whether/how to run if a task is running. Here ""a task"" means: if runMode green - ""a green task""; if runMode blue - ""another instance of this task"".
  • <i>runIfBlue</i> (default) - if runMode blue, run simultaneously. Else don't run; print a warning.
- • <i>cancel</i> - don't run. Don't print a warning.
+ • <i>dontRun</i> - don't run. Don't print a warning.
  • <i>wait</i> - run later, when that task ends.
  • <i>restart</i> - if that task is another instance of this task, end it and run. Else like runIfBlue.
  • <i>restartOrWait</i> - if that task is another instance of this task, end it and run. Else wait.

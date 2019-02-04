@@ -46,7 +46,7 @@ namespace Au
 			if(processId == 0) return null;
 			string R = null;
 
-			//var t = Time.Microseconds;
+			//var t = Time.PerfMicroseconds;
 			//if(s_time != 0) Print(t - s_time);
 			//s_time = t;
 
@@ -432,7 +432,7 @@ namespace Au
 		static (char[] cl, string dir, uint flags, Api.STARTUPINFO si) _ParamsForCreateProcess
 			(string exeFile, string args, ref string envVar, bool suspended)
 		{
-			exeFile = Path_.Normalize(exeFile, Folders.ThisApp, PNFlags.DoNotExpandDosPath | PNFlags.DoNotPrefixLongPath);
+			exeFile = Path_.Normalize(exeFile, Folders.ThisApp, PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath);
 
 			Api.STARTUPINFO si = default;
 			si.cb = Api.SizeOf<Api.STARTUPINFO>();

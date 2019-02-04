@@ -607,7 +607,7 @@ namespace Au
 						for(int i = 0; i < aVisible.Count; i++) d.a[i] = aVisible[i];
 					}
 
-					d.DoNotDisposeArray();
+					d.DontDisposeArray();
 					return d.a;
 				}
 			}
@@ -640,7 +640,7 @@ namespace Au
 					if(_disposeArray) a.Dispose();
 				}
 
-				public void DoNotDisposeArray() => _disposeArray = false;
+				public void DontDisposeArray() => _disposeArray = false;
 
 				delegate int WndEnumProcT(Wnd w, ref _WndEnum d);
 
@@ -830,8 +830,10 @@ namespace Au.Types
 			case string s:
 				//LibThrowIfInvalid(s);
 				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
-				if(s.IndexOfAny(String_.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
-				if(Path_.FindExtension(s) < 0) PrintWarning("Program name without .exe.");
+				if(!s.StartsWith_("**")) { //can be regex
+					if(s.IndexOfAny(String_.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
+					if(Path_.FindExtension(s) < 0 && !Wildex.HasWildcards(s)) PrintWarning("Program name without .exe.");
+				}
 				program = s;
 				break;
 			case int i:

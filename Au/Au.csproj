@@ -78,6 +78,7 @@
     <Compile Include="Files, data, system\Sqlite^API.cs" />
     <Compile Include="Tasks, triggers\Triggers.cs" />
     <Compile Include="Tasks, triggers\TriggersServer.cs" />
+    <Compile Include="Tasks, triggers\Triggers^actions.cs" />
     <Compile Include="Tasks, triggers\Triggers^autotext.cs" />
     <Compile Include="Tasks, triggers\Triggers^hotkey.cs" />
     <Compile Include="Tasks, triggers\Triggers^mouse.cs" />

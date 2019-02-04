@@ -117,7 +117,7 @@ namespace Au
 
 					if(!searchPath) {
 						if(!Path_.IsFullPath(file)) file = Folders.ThisAppImages + file;
-						file = Path_.LibNormalize(file, PNFlags.DoNotPrefixLongPath, noExpandEV: true);
+						file = Path_.LibNormalize(file, PNFlags.DontPrefixLongPath, noExpandEV: true);
 					}
 				}
 			}
@@ -790,9 +790,9 @@ namespace Au
 
 			static void _AutoUpdateTimer()
 			{
-				var t = Time.Milliseconds;
+				var t = Time.PerfMilliseconds;
 				while(t_auList.Count > 0) {
-					if(Time.Milliseconds - t > 20) return; //don't block UI thread
+					if(Time.PerfMilliseconds - t > 20) return; //don't block UI thread
 					var k = t_auList.Dequeue();
 					k.cache._AutoUpdateSingle(k);
 				}

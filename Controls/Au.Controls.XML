@@ -395,7 +395,7 @@
             Uses default combo box animation time. Ignored if !<see cref="P:System.Windows.Forms.SystemInformation.IsComboBoxAnimationEnabled"/>.
             </summary>
         </member>
-        <member name="P:Au.Controls.PopupList.DoNotCloseWhenAppDeactivated">
+        <member name="P:Au.Controls.PopupList.DontCloseWhenAppDeactivated">
             <summary>
             Don't hide the popup window when a window of another program is activated.
             </summary>

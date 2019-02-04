@@ -36,7 +36,7 @@ namespace Au.Util
 		Delegate _proc2; //caller's hook proc
 
 		/// <summary>
-		/// Installs low-level keyboard hook (WH_KEYBOARD_LL).
+		/// Installs a low-level keyboard hook (WH_KEYBOARD_LL).
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
@@ -52,7 +52,7 @@ namespace Au.Util
 		/// using(WinHook.Keyboard(x =>
 		/// {
 		/// 	Print(x);
-		/// 	if(x.vkCode == KKey.Escape) { stop = true; return true; } //return true to cancel the event
+		/// 	if(x.vkCode == KKey.Escape) { stop = true; return true; } //return true to suppress the event
 		/// 	return false;
 		/// })) {
 		/// 	MessageBox.Show("Low-level keyboard hook.", "Test");
@@ -66,7 +66,7 @@ namespace Au.Util
 			=> new WinHook(Api.WH_KEYBOARD_LL, hookProc, -1);
 
 		/// <summary>
-		/// Installs low-level mouse hook (WH_MOUSE_LL).
+		/// Installs a low-level mouse hook (WH_MOUSE_LL).
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
@@ -82,7 +82,7 @@ namespace Au.Util
 		/// using(WinHook.Mouse(x =>
 		/// {
 		/// 	Print(x);
-		/// 	if(x.Event == HookData.MouseEvent.RightButton) { stop = x.IsButtonUp; return true; } //return true to cancel the event
+		/// 	if(x.Event == HookData.MouseEvent.RightButton) { stop = x.IsButtonUp; return true; } //return true to suppress the event
 		/// 	return false;
 		/// })) {
 		/// 	MessageBox.Show("Low-level mouse hook.", "Test");
@@ -96,7 +96,7 @@ namespace Au.Util
 			=> new WinHook(Api.WH_MOUSE_LL, hookProc, -1);
 
 		/// <summary>
-		/// Installs WH_CBT hook for a thread of this process.
+		/// Installs a WH_CBT hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
@@ -149,7 +149,7 @@ namespace Au.Util
 			=> new WinHook(Api.WH_CBT, hookProc, threadId);
 
 		/// <summary>
-		/// Installs WH_GETMESSAGE hook for a thread of this process.
+		/// Installs a WH_GETMESSAGE hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
@@ -172,7 +172,7 @@ namespace Au.Util
 			=> new WinHook(Api.WH_GETMESSAGE, hookProc, threadId);
 
 		/// <summary>
-		/// Installs WH_GETMESSAGE hook for a thread of this process.
+		/// Installs a WH_GETMESSAGE hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
@@ -196,7 +196,7 @@ namespace Au.Util
 			=> new WinHook(Api.WH_KEYBOARD, hookProc, threadId);
 
 		/// <summary>
-		/// Installs WH_MOUSE hook for a thread of this process.
+		/// Installs a WH_MOUSE hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
@@ -220,7 +220,7 @@ namespace Au.Util
 			=> new WinHook(Api.WH_MOUSE, hookProc, threadId);
 
 		/// <summary>
-		/// Installs WH_CALLWNDPROC hook for a thread of this process.
+		/// Installs a WH_CALLWNDPROC hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
@@ -245,7 +245,7 @@ namespace Au.Util
 			=> new WinHook(Api.WH_CALLWNDPROC, hookProc, threadId);
 
 		/// <summary>
-		/// Installs WH_CALLWNDPROCRET hook for a thread of this process.
+		/// Installs a WH_CALLWNDPROCRET hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
@@ -292,11 +292,16 @@ namespace Au.Util
 		{
 			if(_hh != default) {
 				bool ok = Api.UnhookWindowsHookEx(_hh);
-				if(!ok) PrintWarning("Failed to unhook WinHook. " + Native.GetErrorMessage());
+				if(!ok) PrintWarning($"Failed to unhook WinHook ({_HookTypeStr}). {Native.GetErrorMessage()}");
 				_hh = default;
 				_proc2 = null;
 			}
 		}
+
+		///// <summary>
+		///// Don't print warning "Non-disposed WinHook variable".
+		///// </summary>
+		//public bool NoWarningNondisposed { get; set; }
 
 		/// <summary>
 		/// Calls <see cref="Unhook"/>.
@@ -304,7 +309,14 @@ namespace Au.Util
 		public void Dispose() { Unhook(); GC.SuppressFinalize(this); }
 
 		///
-		~WinHook() { if(_hh != default) PrintWarning("Non-disposed WinHook variable."); } //unhooking makes no sense
+		~WinHook()
+		{
+			//unhooking in finalizer thread makes no sense. Must unhook in same thread, else fails.
+			//if(_hh != default && !NoWarningNondisposed) PrintWarning($"Non-disposed WinHook ({_HookTypeStr}) variable."); //rejected. Eg when called Environment.Exit, finalizers are executed but finally code blocks not.
+			Debug_.PrintIf(_hh != default, $"Non-disposed WinHook ({_HookTypeStr}) variable.");
+		}
+
+		string _HookTypeStr => _proc2.GetType().GenericTypeArguments[0].Name;
 
 		LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam)
 		{
@@ -315,11 +327,11 @@ namespace Au.Util
 
 					switch(_proc2) {
 					case Func<HookData.Keyboard, bool> p:
-						t1 = Api.GetTickCount64(); hookType = Api.WH_KEYBOARD_LL;
+						t1 = Time.PerfMilliseconds; hookType = Api.WH_KEYBOARD_LL;
 						R = p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
 						break;
 					case Func<HookData.Mouse, bool> p:
-						t1 = Api.GetTickCount64(); hookType = Api.WH_MOUSE_LL;
+						t1 = Time.PerfMilliseconds; hookType = Api.WH_MOUSE_LL;
 						R = p(new HookData.Mouse(this, wParam, lParam));
 						break;
 					case Func<HookData.ThreadCbt, bool> p:
@@ -342,17 +354,26 @@ namespace Au.Util
 						break;
 					}
 
-					//Prevent Windows unhooking the low-level key/mouse hook.
-					//	Hook proc must return in HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout ms, default 300.
-					//	Else Windows does not wait more, and kills the hook after several such events. Usually 6 keys or 11 mouse events.
-					//	Somehow does not unhook C# apps created by Visual Studio, although unhooks those created not by VS. Just applies the timeout.
-					if(hookType != 0 && (t1 = Api.GetTickCount64() - t1) > 250 /*&& t1 < 3000*/ && !Debugger.IsAttached) {
+					//Prevent Windows disabling the low-level key/mouse hook.
+					//	Hook proc must return in HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout ms.
+					//		Default 300. On Win10 max 1000 (bigger registry value is ignored and used 1000).
+					//	On timeout Windows:
+					//		1. Does not wait more. Passes the event to the next hook etc, and we cannot return 1 to block the event.
+					//		2. Kills the hook after several such cases. Usually 6 keys or 11 mouse events.
+					//		3. Makes the hook useless: next times does not wait for it, and we cannot return 1 to block the event.
+					//	Somehow does not apply 2 and 3 to some apps, eg C# apps created by Visual Studio, although applies to those created not by VS. I did not find why.
+					if(hookType != 0 && (t1 = Time.PerfMilliseconds - t1) > 200 /*&& t1 < 5000*/ && !Debugger.IsAttached) {
+						if(t1 > LowLevelHooksTimeout - 50) {
+							var s1 = hookType == Api.WH_KEYBOARD_LL ? "keyboard" : "mouse";
+							var s2 = R ? $" On timeout the {s1} event is passed to the active window, other hooks, etc." : null;
+							//PrintWarning($"Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}"); //too slow first time
+							//Print($"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //first Print JIT 30 ms
+							ThreadPool.QueueUserWorkItem(s3 => Print(s3), $"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //fast if with false. But async print can be confusing.
+						}
+						//FUTURE: print warning if t1 is >25 frequently. Unhook and don't rehook if >LowLevelHooksTimeout-50 frequently.
+
 						Api.UnhookWindowsHookEx(_hh);
 						_hh = Api.SetWindowsHookEx(hookType, _proc1, default, 0);
-						//FUTURE: print warning if t1 is >25 frequently.
-						//TODO: always print warning if > LowLevelHooksTimeout-50, especially if R=true, because then R may be ignored.
-						if(s_lowLevelHooksTimeout == 0 && !Registry_.GetInt(out s_lowLevelHooksTimeout, "LowLevelHooksTimeout", @"Control Panel\Desktop")) s_lowLevelHooksTimeout = 300;
-						Print(s_lowLevelHooksTimeout);
 					}
 
 					if(R) return 1;
@@ -363,6 +384,27 @@ namespace Au.Util
 			//	This prevents it when using eg AuDialog. But not when eg MessageBox.Show; I don't know how to prevent it.
 
 			return Api.CallNextHookEx(default, code, wParam, lParam);
+		}
+
+		/// <summary>
+		/// Gets the max time in milliseconds allowed by Windows for low-level keyboard and mouse hook procedures.
+		/// </summary>
+		/// <remarks>
+		/// Gets registry value HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout.
+		/// If the registry value is missing, returns 300, because it is the default value used by Windows. If the registry value is more than 1000, returns 1000, because Windows 10 ignores bigger values.
+		/// If a hook procedure takes more time, Windows does not wait. Then the return value is ignored, and the event is passed to the active window, other hooks, etc. Also Windows may fully or partially disable the hook.
+		/// More info: <google>registry LowLevelHooksTimeout</google>.
+		/// </remarks>
+		static int LowLevelHooksTimeout {
+			get {
+				if(s_lowLevelHooksTimeout == 0) {
+					if(!Registry_.GetInt(out int i, "LowLevelHooksTimeout", @"Control Panel\Desktop")) i = 300; //default 300, tested on Win10 and 7
+					else if((uint)i > 1000) i = 1000; //Win10. On Win7 the limit is bigger. Not tested on Win8. On Win7/8 may be changed by a Windows update.
+					s_lowLevelHooksTimeout = i;
+				}
+				return s_lowLevelHooksTimeout;
+				//info: After changing the timeout in registry, it is not applied immediately. Need to log off/on.
+			}
 		}
 		static int s_lowLevelHooksTimeout;
 

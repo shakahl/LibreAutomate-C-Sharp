@@ -2105,7 +2105,7 @@ namespace Au.Types
 		/// <summary>
 		/// Your <see cref="AuDialog.ButtonClicked"/> event handler function can use this to prevent closing the dialog.
 		/// </summary>
-		public bool DoNotCloseDialog { set { returnValue = value ? 1 : 0; } }
+		public bool DontCloseDialog { set { returnValue = value ? 1 : 0; } }
 
 		/// <summary>
 		/// Gets or sets edit field text.

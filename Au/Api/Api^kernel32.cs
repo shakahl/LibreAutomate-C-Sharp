@@ -729,5 +729,7 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern long GetTickCount64();
 
+		[DllImport("kernel32.dll")]
+		internal static extern int GetTickCount();
 	}
 }

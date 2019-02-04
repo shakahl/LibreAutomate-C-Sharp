@@ -288,8 +288,8 @@ static partial class Test
 
 		Task.Run(() => {
 			try {
-				var t = Time.Milliseconds;
-				while(Time.Milliseconds - t < 1200) {
+				var t = Time.PerfMilliseconds;
+				while(Time.PerfMilliseconds - t < 1200) {
 					//using(var f = File.Create(file)) {
 					using(var f = File_.WaitIfLocked(() => File.Create(file))) {
 						f.WriteByte(1);
@@ -305,8 +305,8 @@ static partial class Test
 		Task.Run(() => {
 			10.ms();
 			try {
-				var t = Time.Milliseconds;
-				while(Time.Milliseconds - t < 1200) {
+				var t = Time.PerfMilliseconds;
+				while(Time.PerfMilliseconds - t < 1200) {
 					//using(var f = File.OpenRead(file)) {
 					using(var f = File_.WaitIfLocked(() => File.OpenRead(file))) {
 						f.ReadByte();
@@ -1390,7 +1390,7 @@ a1,-8";
 #endif
 
 		var p = new PopupList();
-		p.DoNotCloseWhenAppDeactivated = true;
+		p.DontCloseWhenAppDeactivated = true;
 		//p.MultiShow = true;
 		//p.FixedWidth = true;
 		//p.ComboBoxAnimation = true;
@@ -1458,7 +1458,7 @@ a1,-8";
 	static void _ShowPL(Form f, string[] a, int i)
 	{
 		var p = new PopupList();
-		p.DoNotCloseWhenAppDeactivated = true;
+		p.DontCloseWhenAppDeactivated = true;
 		p.MultiShow = true;
 		//p.FixedWidth = true;
 		//p.ComboBoxAnimation = true;
@@ -1791,7 +1791,7 @@ a1,-8";
 		//	//Perf.Next();
 		//	//for(int i2 = 0; i2 < n2; i2++) { var s = w.ProgramDescription; }
 		//	//Perf.Next();
-		//	//for(int i2 = 0; i2 < n2; i2++) { var t = Time.Milliseconds; }
+		//	//for(int i2 = 0; i2 < n2; i2++) { var t = Time.PerfMilliseconds; }
 		//	Perf.NW();
 		//	Thread.Sleep(200);
 		//}
@@ -1855,14 +1855,14 @@ a1,-8";
 
 	static void TestMillisecondsSpeed()
 	{
-		//var t1 = Time.Milliseconds;
-		//var t2 = Time.MillisecondsWithoutComputerSleepTime;
-		//var t3 = Time.LibTickCount;
+		//var t1 = Time.PerfMilliseconds;
+		//var t2 = Time.WinMillisecondsWithoutSleep;
+		//var t3 = Time.WinMilliseconds64;
 		//AuDialog.Show();
 
-		Print(Time.MillisecondsWithoutComputerSleepTime, Time.Milliseconds, Api.GetTickCount64(), timeGetTime());
-		Print(Time.MillisecondsWithoutComputerSleepTime, Time.Milliseconds, Api.GetTickCount64(), timeGetTime());
-		Print(Time.Milliseconds - Api.GetTickCount64());
+		Print(Time.WinMillisecondsWithoutSleep, Time.PerfMilliseconds, Api.GetTickCount64(), timeGetTime());
+		Print(Time.WinMillisecondsWithoutSleep, Time.PerfMilliseconds, Api.GetTickCount64(), timeGetTime());
+		Print(Time.PerfMilliseconds - Api.GetTickCount64());
 		Print(Milliseconds, Milliseconds - Api.GetTickCount64());
 
 		Perf.Cpu();
@@ -1871,11 +1871,11 @@ a1,-8";
 			Perf.First();
 			//for(int i2 = 0; i2 < n2; i2++) { var t1 = Stopwatch.GetTimestamp(); }
 			//Perf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { var t1 = Time.Milliseconds; }
+			for(int i2 = 0; i2 < n2; i2++) { var t1 = Time.PerfMilliseconds; }
 			Perf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { var t2 = Time.MillisecondsWithoutComputerSleepTime; }
+			for(int i2 = 0; i2 < n2; i2++) { var t2 = Time.WinMillisecondsWithoutSleep; }
 			Perf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { var t3 = Time.MillisecondsFast; }
+			for(int i2 = 0; i2 < n2; i2++) { var t3 = Time.WinMilliseconds64; }
 			Perf.Next();
 			for(int i2 = 0; i2 < n2; i2++) { var t3 = Api.GetTickCount64(); }
 			//Perf.Next();
@@ -1915,19 +1915,35 @@ a1,-8";
 
 	static void TestStackTrace()
 	{
-		var x = new StackTrace(0, true);
-		string s = x.ToString();
-		//Output.LibWriteQM2("'" + s + "'");
-		Print(s);
-
-		try {
-			throw new Exception("test");
-		}
-		catch(Exception e) {
-			s = e.ToString();
+		_ = typeof(System.Linq.Enumerable).Assembly;
+		//_ = typeof(Form).Assembly;
+		//Print(AppDomain.CurrentDomain.GetAssemblies());
+		//AuDialog.Show();
+		//10.s();
+		for(int i = 0; i < 5; i++) {
+			200.ms();
+			string s;
+			Perf.First();
+			var x = new StackTrace(0, true);
+			Perf.Next();
+			s = x.ToString();
+			Perf.NW();
 			//Output.LibWriteQM2("'" + s + "'");
 			Print(s);
+
+			//Perf.First();
+			//try {
+			//	throw new Exception("test");
+			//}
+			//catch(Exception e) {
+			//	Perf.Next();
+			//	s = e.ToString();
+			//	Perf.NW();
+			//	//Output.LibWriteQM2("'" + s + "'");
+			//	Print(s);
+			//}
 		}
+		//AuDialog.Show();
 	}
 
 	struct TContext
@@ -1940,7 +1956,256 @@ a1,-8";
 		public static implicit operator TContext(Func<bool> f) => new TContext(f);
 	}
 
+	static void TestAbortThreadAndContinue()
+	{
+		var t = Thread.CurrentThread;
+		Thread_.Start(() => {
+			for(int i = 0; i < 3; i++) {
+				1.s();
+				t.Abort();
+			}
+		});
 
+		for(int i = 0; i < 3; i++) {
+			try {
+				for(int j = 0; ; j++) { 300.ms(); Print(j); }
+			}
+			catch(Exception e) {
+				if(e is ThreadAbortException m) {
+					Print("reset");
+					Thread.ResetAbort();
+				}
+			}
+		}
+		Print("END");
+	}
+
+	static void TestDelegateInvoke()
+	{
+		//ThreadStart a1 = () => Print(1);
+		//Action a2 = () => Print(2);
+		ThreadStart a1 = () => Api.GetTickCount();
+		Action a2 = () => Api.GetTickCount();
+
+		_Tdi1(a1);
+		_Tdi2(a2);
+
+		Perf.Cpu();
+		for(int i1 = 0; i1 < 5; i1++) {
+			int n2 = 1000;
+			Perf.First();
+			for(int i2 = 0; i2 < n2; i2++) { _Tdi1(a1); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { _Tdi2(a2); }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { }
+			Perf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { }
+			Perf.NW();
+			Thread.Sleep(200);
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static void _Tdi1(ThreadStart a)
+	{
+		_Tdi3(a);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static void _Tdi2(Action a)
+	{
+		_Tdi3(a.Invoke);
+		//_Tdi3(()=>a()); //slower
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	static void _Tdi3(ThreadStart a)
+	{
+		a();
+	}
+
+	static void TestDelegateBeginInvoke()
+	{
+		Action a = () => Print(Thread_.NativeId, Thread.CurrentThread.IsThreadPoolThread);
+
+		a();
+		var r = a.BeginInvoke(null, null);
+		100.ms();
+		a.EndInvoke(r);
+		Print("END");
+	}
+
+	static void TestTasks()
+	{
+		var f = Task.Factory;
+		var a = new Task[20];
+		for(int i = 0; i < a.Length; i++) {
+			int j = i;
+			a[i] = f.StartNew(() => {
+				var t = Thread.CurrentThread;
+				if(t.GetApartmentState() != ApartmentState.STA) {
+					if(t.TrySetApartmentState(ApartmentState.Unknown)) t.TrySetApartmentState(ApartmentState.STA);
+				}
+				Print(j, Thread_.NativeId, t.IsThreadPoolThread, t.GetApartmentState());
+			}, TaskCreationOptions.LongRunning);
+			10.ms();
+		}
+		//500.ms();
+		AuDialog.Show();
+	}
+
+	//using System.Runtime.InteropServices;
+
+	[DllImport("user32.dll", EntryPoint = "SendMessageW", CharSet = CharSet.Unicode)]
+	internal static extern IntPtr SendMessageS(IntPtr hWnd, int Msg, uint wParam, string lParam);
+
+	[DllImport("user32.dll", EntryPoint = "FindWindowW", CharSet = CharSet.Unicode)]
+	internal static extern IntPtr FindWindow(string lpClassName, string lpWindowName);
+
+	static void TestQm2SendMessage()
+	{
+		var hwnd = FindWindow("QM_Editor", null);
+		if(hwnd == default(IntPtr)) return;
+		SendMessageS(hwnd, 12, 1, "Q ' M 'Macro295' C test C#");
+	}
+
+	static void TestTaskSpeed()
+	{
+		Print("----");
+
+		_ = typeof(Form).Assembly;
+		//_ = typeof(System.Linq.Enumerable);
+		//Print(AppDomain.CurrentDomain.GetAssemblies());
+		AppDomain.CurrentDomain.AssemblyLoad += (a, b) => {
+			var s = b.LoadedAssembly.GetName().Name;
+			if(s == "System.Windows.Forms") {
+				int stop = 1;
+			}
+			Print(s);
+		};
+
+		Perf.Cpu();
+		for(int i1 = 0; i1 < 5; i1++) {
+			Perf.First();
+			//Task.Run(() => Perf.NW()); //100
+			//ThreadPool.QueueUserWorkItem(o => Perf.NW()); //90
+			Au.Util.ThreadPoolSTA.SubmitCallback(null, o => Perf.NW()); //90
+			Thread.Sleep(200);
+		}
+		//Print(AppDomain.CurrentDomain.GetAssemblies());
+	}
+
+	class ActionThread : IDisposable
+	{
+		struct _Action { public Action action; public long time; }
+
+		Queue<_Action> _q;
+		Action _running;
+		IntPtr _event;
+		bool _disposed;
+
+		public void Run(Action ac, int ifRunningWaitMS, bool canWaitIfRunningOther = false)
+		{
+			if(_disposed) return;
+			if(_q == null) {
+				_q = new Queue<_Action>();
+				_event = Api.CreateEvent(false);
+				Thread_.Start(() => {
+					while(!_disposed && 0 == Api.WaitForSingleObject(_event, -1)) {
+						while(!_disposed) {
+							_Action x;
+							lock(_q) {
+								g1:
+								if(_q.Count == 0) { _running = null; break; }
+								x = _q.Dequeue();
+								if(x.time != 0 && Time.PerfMilliseconds > x.time) goto g1;
+								_running = x.action;
+							}
+							x.action();
+						}
+					}
+					Api.CloseHandle(_event);
+					Print("thread ended");
+				});
+			}
+
+			lock(_q) {
+				if(_running != null) {
+					if(ifRunningWaitMS == 0) return;
+					if(_running != ac && !canWaitIfRunningOther) return;
+				} else {
+					_running = ac;
+					//if(ifRunningWaitMS > 0 && ifRunningWaitMS < 1000000000) ifRunningWaitMS += 1000;
+				}
+				_q.Enqueue(new _Action { action = ac, time = ifRunningWaitMS <= 0 ? 0 : Time.PerfMilliseconds + ifRunningWaitMS });
+			}
+			Api.SetEvent(_event);
+		}
+
+		public void Dispose()
+		{
+			if(_disposed) return; _disposed = true;
+			GC.SuppressFinalize(this);
+			Api.SetEvent(_event);
+		}
+
+		~ActionThread() => Dispose();
+	}
+
+	static void TestActionThread()
+	{
+		var x = new ActionThread();
+
+		var f = new Form();
+
+		Action eh= ()=> {
+			Perf.First();
+			//x.Run(() => AuDialog.Show(), 2000);
+			x.Run(() => { Perf.NW(); 1000.ms(); }, -1);
+		};
+		f.MouseDown += (unu, sed) => eh();
+		f.KeyDown += (unu, sed) => eh();
+
+		f.ShowDialog();
+
+		x.Dispose();
+		1.s();
+		//AuDialog.Show("main end");
+	}
+
+	static void TestListForeach()
+	{
+		var a = new List<string>(10);
+		for(int i = 0; i < 10; i++) a.Add("asasa");
+		var b = new string[10];
+		for(int i = 0; i < 10; i++) b[i]="asasa";
+
+		for(int j = 0; j < 5; j++) {
+			//Debug_.LibMemorySetAnchor();
+			Perf.First();
+			for(int i = 0; i < 1000; i++) {
+				foreach(var v in b) if(v == "fff") Print("mmm");
+			}
+			Perf.Next();
+			//Debug_.LibMemoryPrint();
+
+			//Debug_.LibMemorySetAnchor();
+			for(int i = 0; i < 1000; i++) {
+				for(int k=0;k<a.Count;k++) if(a[k] == "fff") Print("mmm");
+			}
+			Perf.Next();
+			//Debug_.LibMemoryPrint();
+
+			//Debug_.LibMemorySetAnchor();
+			for(int i = 0; i < 1000; i++) {
+				foreach(var v in a) if(v == "fff") Print("mmm");
+			}
+			Perf.NW();
+			//Debug_.LibMemoryPrint();
+			200.ms();
+		}
+	}
 
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
@@ -1964,7 +2229,15 @@ a1,-8";
 			//TContext o = () => true; //error
 			//TContext o = new Func<bool>(() => true); //OK
 
-			TestStackTrace();
+			//TestListForeach();
+			//TestActionThread();
+			//TestTaskSpeed();
+			//TestQm2SendMessage();
+			//TestTasks();
+			//TestDelegateBeginInvoke();
+			//TestDelegateInvoke();
+			//TestAbortThreadAndContinue();
+			//TestStackTrace();
 			//TestHooks();
 			//TestMillisecondsSpeed();
 			//TestWndFinderCache();

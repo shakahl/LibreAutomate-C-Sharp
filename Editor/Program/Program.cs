@@ -55,6 +55,7 @@ static class Program
 		//Test(); return;
 		//Process.GetCurrentProcess().ProcessorAffinity = (IntPtr)1; //test how works with 1 CPU
 		//Task.Run(() => { while(true) { Thread.Sleep(1000); GC.Collect(); } });
+		//AppDomain.CurrentDomain.AssemblyLoad += (object sender, AssemblyLoadEventArgs ala) => Print(ala.LoadedAssembly);
 
 		if(CommandLine.OnProgramStarted(args)) return;
 

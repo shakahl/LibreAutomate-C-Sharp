@@ -32,11 +32,21 @@ namespace Au.Triggers
 			public string text;
 		}
 
-		struct _TriggerEtc
+		class _TriggerEtc : TriggerBase
 		{
-			public Trigger trigger;
-			public int scope; //0 or Triggers.Of.Index
-			public Action<AutotextTriggerArgs> action;
+			public readonly Trigger trigger;
+			public readonly int scope; //0 or Triggers.Of.Current
+
+			public _TriggerEtc(Trigger trigger, Action<AutotextTriggerArgs> action) : base(action)
+			{
+				this.trigger = trigger;
+				this.scope = Triggers.Of.Current;
+			}
+
+			public override void Run(int data1, string data2, Wnd w)
+			{
+				Print(data1, data2, w);
+			}
 		}
 
 		List<_TriggerEtc> _a = new List<_TriggerEtc>();
@@ -49,11 +59,11 @@ namespace Au.Triggers
 		public Action<AutotextTriggerArgs> this[string text] {
 			set {
 				var t = new Trigger { text = text };
-				_a.Add(new _TriggerEtc { trigger = t, scope = Triggers.Of.Index, action = value });
+				_a.Add(new _TriggerEtc(t, value));
 			}
 		}
 
-		EEngineProcess ITriggers.EngineProcess => _a.Count > 0 ? EEngineProcess.Remote : EEngineProcess.None;
+		ETriggerEngineProcess ITriggers.EngineProcess => _a.Count > 0 ? ETriggerEngineProcess.Remote : ETriggerEngineProcess.None;
 
 		void ITriggers.Write(BinaryWriter w)
 		{
@@ -68,14 +78,10 @@ namespace Au.Triggers
 			return true;
 		}
 
-		void ITriggers.Run(int action, int data1, string data2, Wnd w)
-		{
-			Print(action, data1, data2, w);
-		}
-
+		TriggerBase ITriggers.GetAction(int action) => _a[action];
 	}
 
-	class AutotextTriggersEngine : ITriggersEngine
+	class AutotextTriggersEngine : ITriggerEngine
 	{
 		class _TriggerValue
 		{
@@ -97,7 +103,7 @@ namespace Au.Triggers
 			_d?.Clear();
 		}
 
-		void ITriggersEngine.AddTriggers(int pipeIndex, BinaryReader r, byte[] raw)
+		void ITriggerEngine.AddTriggers(int pipeIndex, BinaryReader r, byte[] raw)
 		{
 			if(_d == null) _d = new Dictionary<string, object>();
 			int n = r.ReadInt32();
@@ -112,7 +118,7 @@ namespace Au.Triggers
 			}
 		}
 
-		void ITriggersEngine.RemoveTriggers(int pipe)
+		void ITriggerEngine.RemoveTriggers(int pipe)
 		{
 			//TODO
 		}

@@ -35,28 +35,53 @@ namespace Au.Triggers
 
 	public class Triggers
 	{
-		ITriggers[] _t = new ITriggers[(int)EType.Count];
+		ITriggers[] _t;
 		//ITriggers this[EType e] { get => _t[(int)e]; set => _t[(int)e] = value; }
-		ITriggers this[EType e] => _t[(int)e];
+		ITriggers this[ETriggerType e] => _t[(int)e];
 
-		Triggers() { }
+		Triggers() => _Init();
 
-		static Triggers _Instance => t_instance ?? (t_instance = new Triggers());
+		void _Init()
+		{
+			_t = new ITriggers[(int)ETriggerType.Count];
+			_scopes = new TriggerScopes();
+			_options = new TriggerOptions();
+			_threads = null; //will create on demand
+		}
+
+		/// <summary>
+		/// Gets the <see cref="Triggers"/> object of this thread.
+		/// </summary>
+		/// <remarks>
+		/// Rarely used.
+		/// </remarks>
+		public static Triggers Instance => t_instance ?? (t_instance = new Triggers());
 		[ThreadStatic] static Triggers t_instance;
 
-		public static Scopes Of => _Instance._scope ?? (_Instance._scope = new Scopes());
-		Scopes _scope;
+		public static TriggerScopes Of => Instance._scopes;
+		TriggerScopes _scopes;
 
-		ITriggers _Get(EType e)
+		/// <summary>
+		/// Allows to set some options for multiple triggers and their actions.
+		/// </summary>
+		/// <remarks>
+		/// More info and examples: <see cref="TriggerOptions"/>.
+		/// </remarks>
+		public static TriggerOptions Options => Instance._options;
+		TriggerOptions _options;
+
+		TriggerActionThreads _threads;
+
+		ITriggers _Get(ETriggerType e)
 		{
 			int i = (int)e;
 			//return (_t[i] ?? (_t[i] = new T())) as T; //error if T ctor is internal. But I cannot make it public. Another way - Activator.Create instance, but probably slow.
 			var t = _t[i];
 			if(t == null) {
 				switch(e) {
-				case EType.Hotkey: t = new HotkeyTriggers(); break;
-				case EType.Autotext: t = new AutotextTriggers(); break;
-				case EType.WindowCreated: t = new WindowCreatedTriggers(); break;
+				case ETriggerType.Hotkey: t = new HotkeyTriggers(); break;
+				case ETriggerType.Autotext: t = new AutotextTriggers(); break;
+				case ETriggerType.WindowActive: case ETriggerType.WindowVisible: t = new WindowTriggers(e); break;
 				default: Debug.Assert(false); break;
 				}
 				_t[i] = t;
@@ -64,34 +89,49 @@ namespace Au.Triggers
 			return t;
 		}
 
-		public static HotkeyTriggers Hotkey => _Instance._Get(EType.Hotkey) as HotkeyTriggers;
+		public static HotkeyTriggers Hotkey => Instance._Get(ETriggerType.Hotkey) as HotkeyTriggers;
 
-		public static AutotextTriggers Autotext => _Instance._Get(EType.Autotext) as AutotextTriggers;
+		public static AutotextTriggers Autotext => Instance._Get(ETriggerType.Autotext) as AutotextTriggers;
 
-		public static WindowCreatedTriggers WindowCreated => _Instance._Get(EType.WindowCreated) as WindowCreatedTriggers;
+		public static WindowTriggers WindowActive => Instance._Get(ETriggerType.WindowActive) as WindowTriggers;
 
-		private static void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
-		{
-			var a = args.LoadedAssembly;
-			Print(a);
-			if(a.FullName.StartsWith_("System.Drawing")) {
-				//Print(new StackTrace());
-				Debugger.Launch();
-			}
-		}
+		public static WindowTriggers WindowVisible => Instance._Get(ETriggerType.WindowVisible) as WindowTriggers;
 
-		public static void Run() => _Instance._Run();
+		//private static void CurrentDomain_AssemblyLoad(object sender, AssemblyLoadEventArgs args)
+		//{
+		//	var a = args.LoadedAssembly;
+		//	Print(a);
+		//	if(a.FullName.StartsWith_("System.Drawing")) {
+		//		//Print(new StackTrace());
+		//		Debugger.Launch();
+		//	}
+		//}
+
+		public static void Run() => Instance._Run();
 		unsafe void _Run()
 		{
-			AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
+			//AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
 
+			//to avoid big delay later when executing scopes first time while LL hook proc waits:
+			// load main .NET assemblies and JIT biggest methods now
+			if(_scopes.HasScopes) {
+				//ThreadPool.QueueUserWorkItem(_ => { //now starts faster, but later slightly slower in time-critical code
+				_ = typeof(System.Linq.Enumerable).Assembly; //System.Core, System
+				_ = typeof(System.Windows.Forms.Control).Assembly; //System.Windows.Forms, System.Drawing
+				if(!Util.Assembly_.LibIsAuNgened) {
+					new Wnd.Finder("*a").IsMatch(Wnd.Active); //45 -> 15 ms
+					_scopes.Match(0, default, null); //15 -> 6 ms
+				}
+				new StackTrace(0, true); //for PrintWarning
+										 //});
+			}
 
 			bool haveTriggers = false; int remoteMask = 0;
 			MemoryStream ms = null; BinaryWriter wr = null;
-			for(int i = 0; i < (int)EType.Count; i++) {
+			for(int i = 0; i < (int)ETriggerType.Count; i++) {
 				var t = _t[i]; if(t == null) continue;
-				var ep = t.EngineProcess; if(ep == EEngineProcess.None) continue;
-				if(ep == EEngineProcess.Remote) {
+				var ep = t.EngineProcess; if(ep == ETriggerEngineProcess.None) continue;
+				if(ep == ETriggerEngineProcess.Remote) {
 					remoteMask |= 1 << i;
 					if(ms == null) {
 						ms = new MemoryStream();
@@ -112,13 +152,19 @@ namespace Au.Triggers
 			Wnd wMsg = default;
 			bool useEditor = AuTask.Role != ATRole.ExeProgram;
 			if(useEditor) {
+				//SHOULDDO: pass wMsg when starting task.
 				wMsg = Api.FindWindow("Au.Triggers.Server", null);
-				if(wMsg.Is0) { Debug_.Print("Editor process not running."); useEditor = false; }
-				//TODO: if this process is admin, and editor isn't, useEditor=false.
-				//TODO: can pass wMsg when starting task.
+				if(wMsg.Is0) {
+					Debug_.Print("Au.Triggers.Server");
+					useEditor = false;
+				} else {
+					//if this process is admin, and editor isn't, useEditor=false.
+					var u = Uac.OfProcess(wMsg.ProcessId);
+					if(u != null && u.IntegrityLevel < UacIL.UIAccess && Uac.OfThisProcess.IntegrityLevel >= UacIL.UIAccess) useEditor = false;
+				}
 			}
 			if(!useEditor) {
-				lock(this) {
+				lock(this) { //TODO
 					if(TriggersServer.Instance == null) TriggersServer.Start(true);
 				}
 				wMsg = TriggersServer.Instance.MsgWnd;
@@ -132,8 +178,8 @@ namespace Au.Triggers
 				1, 0, 0, 0, Api.SECURITY_ATTRIBUTES.ForPipes);
 			if(pipe.IsInvalid) throw new AuException(0, "*CreateNamedPipe");
 			var ev = Api.CreateEvent(true);
-			_evEnd = Api.CreateEvent(false);
-			var ha = new IntPtr[2] { ev, _evEnd };
+			_evStop = Api.CreateEvent(false);
+			var ha = new IntPtr[2] { ev, _evStop };
 			byte* b = null;
 			try {
 				if(1 != Wnd.Misc.CopyDataStruct.SendBytes(wMsg, 1, ms.ToArray(), threadId)) { //_AddThreadTriggers(threadId, data)
@@ -164,11 +210,11 @@ namespace Au.Triggers
 						}
 						if(ec != 0) { Debug_.LibPrintNativeError(ec); break; }
 					}
-					var h = (IpcPipeData*)b;
+					var h = (TriggerPipeData*)b;
 					int nActions = h->nActions;
 					var wnd = (Wnd)h->hwnd;
 					int data1 = h->intData;
-					int data2Offset = sizeof(IpcPipeData) + (nActions * 4);
+					int data2Offset = sizeof(TriggerPipeData) + (nActions * 4);
 					Debug.Assert(size >= data2Offset);
 					string data2 = size == data2Offset ? null : new string((char*)(b + data2Offset), 0, (size - data2Offset) / 2);
 					var t = this[h->type];
@@ -181,46 +227,78 @@ namespace Au.Triggers
 					}
 					Api.WriteFile(pipe, &r, 4);
 					if(r != 0) {
-						Task.Run(() => t.Run(action, data1, data2, wnd));
-						//t.Run(action, data1, data2, wnd);
+						if(_threads == null) _threads = new TriggerActionThreads();
+						_threads.Run(t.GetAction(action), data1, data2, wnd);
 					}
 				}
 			}
 			finally {
-				Api.CloseHandle(_evEnd); _evEnd = default;
+				Api.CloseHandle(_evStop); _evStop = default;
 				Api.CloseHandle(ev);
 				pipe.Dispose();
 				Util.NativeHeap.Free(b);
+				_threads?.Dispose(); _threads = null;
 				if(threadId != 0) wMsg.Send(Api.WM_USER, 1, threadId); //_RemoveThreadTriggers(threadId)
 			}
 		}
 
 		internal static string PipeName(int threadId) => @"\\.\pipe\Au.Triggers-" + threadId.ToString();
 
-		public static void EndRun(bool clear = false)
+		/// <summary>
+		/// Stops watching for trigger events and causes <see cref="Run"/> to return.
+		/// </summary>
+		/// <remarks>
+		/// Rarely used.
+		/// Does not abort unfinished threads of trigger actions.
+		/// <note type="note">Don't call from a trigger action like this: <c>Triggers.Instance.Stop();</c>. The <b>Instance</b> then is of wrong thread. Instead call this in the main thread: <c>var ti=Triggers.Instance;</c> and then call this in a trigger action: <c>ti.Stop();</c>.</note>
+		/// </remarks>
+		public void Stop()
 		{
-			var ti = t_instance; if(ti == null) return;
-			if(ti._evEnd != default) Api.SetEvent(ti._evEnd);
-			if(clear) t_instance = null;
+			if(_evStop != default) Api.SetEvent(_evStop);
 		}
-		IntPtr _evEnd;
+		IntPtr _evStop;
+
+		/// <summary>
+		/// Clears all added triggers, scopes (<b>Triggers.Of</b>), options, etc.
+		/// </summary>
+		/// <remarks>
+		/// Rarely used.
+		/// </remarks>
+		/// <exception cref="InvalidOperationException">
+		/// Called from another thread. For example from a trigger action.
+		/// Or called while in <see cref="Run"/>. Call <see cref="Stop"/> at first; then call this function after <b>Run</b> returns.
+		/// </exception>
+		public void Clear()
+		{
+			if(this != t_instance || _evStop != default) throw new InvalidOperationException();
+			_Init();
+		}
 	}
 
-	enum EType
+	enum ETriggerType
 	{
 		Hotkey,
 		Autotext,
-		WindowCreated,
+
+		ServerCount,
+
+		WindowActive = ServerCount,
+		WindowVisible,
+
 		Count,
 
-		//future
+		//future. Move above ServerCount.
 		MouseEdge,
 		MouseArea,
 		MouseClick,
 		MouseWheel,
+
+		TimerAfter,
+		TimerEvery,
+		TimerAt,
 	}
 
-	enum EEngineProcess
+	enum ETriggerEngineProcess
 	{
 		None, //no triggers
 		Local, //in task process
@@ -229,16 +307,30 @@ namespace Au.Triggers
 
 	interface ITriggers
 	{
-		EEngineProcess EngineProcess { get; }
+		ETriggerEngineProcess EngineProcess { get; }
 		void Write(BinaryWriter w);
 		bool CanRun(int action, int data1, string data2, Wnd w, WFCache cache);
-		void Run(int action, int data1, string data2, Wnd w);
+		TriggerBase GetAction(int action);
 	}
 
-	interface ITriggersEngine : IDisposable
+	interface ITriggerEngine : IDisposable
 	{
 		void AddTriggers(int pipe, BinaryReader r, byte[] raw);
 		void RemoveTriggers(int pipe);
+	}
+
+	abstract class TriggerBase
+	{
+		public readonly Delegate action;
+		public readonly TOptions options;
+
+		public TriggerBase(Delegate action)
+		{
+			this.action = action;
+			this.options = Triggers.Options.Current;
+		}
+
+		public abstract void Run(int data1, string data2, Wnd w);
 	}
 
 	/// <summary>
@@ -249,15 +341,15 @@ namespace Au.Triggers
 
 	}
 
-	struct IpcPipeData
+	struct TriggerPipeData
 	{
 		public int nActions;
-		public EType type;
+		public ETriggerType type;
 		public int hwnd;
 		public int intData;
 	}
 
-	public class Scopes
+	public class TriggerScopes
 	{
 		class _Scope
 		{
@@ -271,9 +363,9 @@ namespace Au.Triggers
 		List<_Scope> _a;
 		int _index; //0 or _aw index + 1
 
-		internal int Index => _index;
+		internal int Current => _index; //CONSIDER: use public class object
 
-		internal Scopes() { }
+		internal TriggerScopes() { }
 
 		public void Reset(int index = 0) => _index = (uint)index <= (_a?.Count ?? 0) ? index : throw new ArgumentOutOfRangeException();
 
@@ -342,6 +434,8 @@ namespace Au.Triggers
 			return _index = _a.Count;
 		}
 
+		internal bool HasScopes => _a != null;
+
 		/// <summary>
 		/// Returns true if index==0 or w matches the scope.
 		/// </summary>
@@ -358,11 +452,11 @@ namespace Au.Triggers
 			long tLong = 0;
 			switch(x.o) {
 			case Wnd.Finder f:
-				tLong = Time.Milliseconds;
+				tLong = Time.PerfMilliseconds;
 				yes = f.IsMatch(w, cache);
 				break;
 			case Wnd.Finder[] af:
-				tLong = Time.Milliseconds;
+				tLong = Time.PerfMilliseconds;
 				foreach(var v in af) if(yes = v.IsMatch(w, cache)) break;
 				break;
 			case Wnd hwnd:
@@ -373,14 +467,14 @@ namespace Au.Triggers
 				break;
 			case Func<bool> ff:
 				if(x.andScope < 0 && !Match(-x.andScope, w, cache)) return false;
-				tLong = Time.Milliseconds;
+				tLong = Time.PerfMilliseconds;
 				yes = ff();
 				if(yes) andScope = x.andScope;
 				break;
 			}
 
 			if(tLong != 0) {
-				tLong = Time.Milliseconds - tLong;
+				tLong = Time.PerfMilliseconds - tLong;
 				uint tInt = (uint)Math.Min(tLong, 100_000_000), count = x.warningCounter++, avg, max;
 				if(count == 0) { //first time can be slow JIT etc
 					avg = tInt; //don't add t1 to x.warningTime first time
@@ -393,7 +487,9 @@ namespace Au.Triggers
 				//Print($"{x.warningCounter}, t={tInt}, avg={avg}, max={max}"); //max 250, 100 ... 25, 30 ... 25, 30 ... 25, ...
 				if(avg > max) {
 					var th = index == 1 ? "st" : (index == 2 ? "nd" : "th");
-					PrintWarning($"The {index}-{th} 'Triggers.Of' statement is too slow, in average {avg} ms. It slows down the trigger.");
+					//PrintWarning($"The {index}-{th} 'Triggers.Of' statement is too slow, in average {avg} ms. It slows down the trigger."); //too slow first time, ~40 ms
+					//Print($"Warning: The {index}-{th} 'Triggers.Of' statement is too slow, in average {avg} ms. It slows down the trigger.\r\n{new StackTrace(0, true)}"); //first Print JIT 30 ms
+					ThreadPool.QueueUserWorkItem(s1 => Print(s1), $"Warning: The {index}-{th} 'Triggers.Of' statement is too slow, in average {avg} ms. It slows down the trigger.\r\n{new StackTrace(0, true)}"); //4 ms. But async print can be confusing.
 				}
 				if(x.warningCounter >= 16) { x.warningCounter = 8; x.warningTime = avg * 8; }
 			}

@@ -47,7 +47,7 @@ namespace Au
 				if(_hproc.Is0) return;
 				if(Mem != default) {
 					var mem = Mem; Mem = default;
-					if(!_doNotFree) {
+					if(!_dontFree) {
 						if(!Api.VirtualFreeEx(_HprocHR, mem)) PrintWarning("Failed to free process memory. " + Native.GetErrorMessage());
 					}
 				}
@@ -81,11 +81,11 @@ namespace Au
 			/// </remarks>
 			public void SetMem(IntPtr mem, bool freeWhenDisposing)
 			{
-				if(Mem != default && !_doNotFree) throw new InvalidOperationException();
-				_doNotFree = !freeWhenDisposing;
+				if(Mem != default && !_dontFree) throw new InvalidOperationException();
+				_dontFree = !freeWhenDisposing;
 				Mem = mem;
 			}
-			bool _doNotFree;
+			bool _dontFree;
 
 			void _Alloc(int pid, Wnd w, int nBytes)
 			{

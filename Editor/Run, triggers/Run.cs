@@ -48,7 +48,7 @@ static class Run
 	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null)
 	{
 #if TEST_STARTUP_SPEED
-		args = new string[] { Time.Microseconds.ToString() }; //and in script use this code: Print(Time.Microseconds-Convert.ToInt64(args[0]));
+		args = new string[] { Time.PerfMicroseconds.ToString() }; //and in script use this code: Print(Time.Microseconds-Convert.ToInt64(args[0]));
 #endif
 
 		Model.Save.TextNowIfNeed(onlyText: true);
@@ -207,6 +207,7 @@ class RunningTask
 			//note: TerminateProcess kills process not immediately. Need at least several ms.
 		}
 		return true;
+		//TODO: release pressed keys.
 	}
 }
 

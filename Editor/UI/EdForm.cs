@@ -87,7 +87,7 @@ partial class EdForm : Form
 		Timer_.After(1, () => {
 			var s = CommandLine.TestArg;
 			if(s != null) {
-				Print(Time.Microseconds - Convert.ToInt64(s));
+				Print(Time.PerfMicroseconds - Convert.ToInt64(s));
 			}
 			Perf.Next('P');
 			Perf.Write();

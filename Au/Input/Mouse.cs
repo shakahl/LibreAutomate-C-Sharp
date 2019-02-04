@@ -99,9 +99,9 @@ namespace Au
 				double dist = Math.Sqrt(dxall * dxall + dyall * dyall);
 				if(dist > 1.5) {
 					double dtall = Math.Sqrt(dist) * speed + 9;
-					long t0 = Time.Milliseconds - 7, dt = 7;
+					long t0 = Time.PerfMilliseconds - 7, dt = 7;
 					int pdx = 0, pdy = 0;
-					for(; ; dt = Time.Milliseconds - t0) {
+					for(; ; dt = Time.PerfMilliseconds - t0) {
 						double dtfr = dt / dtall;
 						if(dtfr >= 1) break;
 

@@ -406,12 +406,12 @@ namespace Au
 					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
 				}
 
-				if(0 == (flags & PNFlags.DoNotExpandDosPath) && LibIsPossiblyDos(s)) s = LibExpandDosPath(s);
+				if(0 == (flags & PNFlags.DontExpandDosPath) && LibIsPossiblyDos(s)) s = LibExpandDosPath(s);
 
-				if(0 == (flags & PNFlags.DoNotRemoveEndSeparator)) s = _AddRemoveSep(s);
+				if(0 == (flags & PNFlags.DontRemoveEndSeparator)) s = _AddRemoveSep(s);
 				else if(_EndsWithDriveWithoutSep(s)) s = s + "\\";
 
-				if(0 == (flags & PNFlags.DoNotPrefixLongPath)) s = PrefixLongPathIfNeed(s);
+				if(0 == (flags & PNFlags.DontPrefixLongPath)) s = PrefixLongPathIfNeed(s);
 			}
 			return s;
 		}
@@ -849,13 +849,13 @@ namespace Au.Types
 	public enum PNFlags
 	{
 		/// <summary>Don't call API <msdn>GetLongPathName</msdn>.</summary>
-		DoNotExpandDosPath = 1,
+		DontExpandDosPath = 1,
 
 		/// <summary>Don't call <see cref="Path_.PrefixLongPathIfNeed"/>.</summary>
-		DoNotPrefixLongPath = 2,
+		DontPrefixLongPath = 2,
 
 		/// <summary>Don't remove '\\' character at the end.</summary>
-		DoNotRemoveEndSeparator = 4,
+		DontRemoveEndSeparator = 4,
 
 		/// <summary>If path is not a file-system path but looks like URL (eg "http:..." or "file:...") or starts with "::", don't throw exception and don't process more (only expand environment variables).</summary>
 		CanBeUrlOrShell = 8,

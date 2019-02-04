@@ -180,7 +180,7 @@ namespace Au
 
 			//	void _GetCommon(Wnd w)
 			//	{
-			//		var t = Time.Milliseconds;
+			//		var t = Time.PerfMilliseconds;
 			//		if(w != _w || t - _time > 100) { _w = w; _class = _programName= _programPath = null; _tid = _pid = 0; }
 			//		_time = t;
 			//	}

@@ -33,7 +33,7 @@ namespace Au
 		{
 			s = Path_.ExpandEnvVar(s);
 			if(!Path_.IsFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
-			return Path_.LibNormalize(s, PNFlags.DoNotPrefixLongPath, true);
+			return Path_.LibNormalize(s, PNFlags.DontPrefixLongPath, true);
 		}
 
 		/// <summary>
@@ -198,7 +198,7 @@ namespace Au
 			if(Empty(file)) throw new ArgumentException();
 			if(runConsole || !(isShellPath = Path_.LibIsShellPath(file))) {
 				if(isFullPath = Path_.IsFullPath(file)) {
-					var fl = runConsole ? PNFlags.DoNotExpandDosPath : PNFlags.DoNotExpandDosPath | PNFlags.DoNotPrefixLongPath;
+					var fl = runConsole ? PNFlags.DontExpandDosPath : PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath;
 					file = Path_.LibNormalize(file, fl, true);
 
 					//ShellExecuteEx supports long path prefix for exe but not for documents.

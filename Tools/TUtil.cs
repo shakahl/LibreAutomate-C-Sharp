@@ -284,7 +284,7 @@ namespace Au.Tools
 						{
 							//Don't capture too frequently.
 							//	Eg if the callback is very slow. Or if multiple timer messages are received without time interval (possible in some conditions).
-							long t1 = Time.Milliseconds, t2 = t1 - _prevTime; _prevTime = t1; if(t2 < 100) return;
+							long t1 = Time.PerfMilliseconds, t2 = t1 - _prevTime; _prevTime = t1; if(t2 < 100) return;
 
 							//show rect of UI object from mouse
 							Wnd w = Wnd.FromMouse(WXYFlags.NeedWindow);

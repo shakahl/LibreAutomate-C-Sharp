@@ -107,7 +107,7 @@ namespace Au.Compiler
 	/// <h3>Settings used to run the compiled script or app</h3>
 	/// <code><![CDATA[
 	/// runMode green|blue - whether tasks can run simultaneously, etc. Default: green. More info below.
-	/// ifRunning runIfBlue|cancel|wait|restart|restartOrWait //whether/how to start new task if a task is running. Default: unspecified. More info below.
+	/// ifRunning runIfBlue|dontRun|wait|restart|restartOrWait //whether/how to start new task if a task is running. Default: unspecified. More info below.
 	/// uac inherit|user|admin //UAC integrity level (IL) of the task process. Default: inherit. More info below.
 	/// prefer32bit false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
 	/// config app.config //let the running task use this configuration file. Can be filename or relative path, like with 'c'. The file is copied to the output directory unmodified but renamed to match the assembly name. This option cannot be used with dll. If not specified, will be used host program's config file.
@@ -123,7 +123,7 @@ namespace Au.Compiler
 	/// About ifRunning:
 	/// Defines whether/how to start new task if a task is running. What is "another task": if runMode green (default), it is "a green task"; else it is "another instance of this task".
 	/// runIfBlue (default) - if runMode blue, run simultaneously. Else don't run; print a warning.
-	/// cancel - don't run. Don't print a warning.
+	/// dontRun - don't run. Don't print a warning.
 	/// wait - run later, when that task ends.
 	/// restart - if that task is another instance of this task, end it and run. Else like runIfBlue.
 	/// restartOrWait - if that task is another instance of this green task, end it and run. Else wait.
@@ -449,7 +449,7 @@ namespace Au.Compiler
 				}
 
 				try {
-					if(!References.Resolve(value, name[0]=='c')) {
+					if(!References.Resolve(value, name[0] == 'c')) {
 						_Error(iValue, "reference assembly not found: " + value); //FUTURE: need more info, or link to Help
 					}
 				}
@@ -670,7 +670,7 @@ namespace Au.Compiler
 					return _Error(0, "with role miniProgram (default role of script files) cannot use outputPath");
 				break;
 			case ERole.exeProgram:
-				if(OutputPath == null) OutputPath = @"%Folders.Workspace%\bin";
+				if(OutputPath == null) OutputPath = Folders.Workspace + "bin";
 				break;
 			case ERole.editorExtension:
 				if(Specified.HasAny_(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
@@ -681,7 +681,7 @@ namespace Au.Compiler
 				if(Specified.HasAny_(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
 					| EMSpecified.config | EMSpecified.manifest | EMSpecified.console))
 					return _Error(0, "with role classLibrary cannot use runMode, ifRunning, uac, prefer32bit, config, manifest, console");
-				if(OutputPath == null) OutputPath = @"%Folders.ThisApp%\Libraries";
+				if(OutputPath == null) OutputPath = Folders.ThisApp + "Libraries";
 				break;
 			case ERole.classFile:
 				if(Specified != 0) return _Error(0, "with role classFile (default role of .cs files) can be used only c, r, resource, com");
@@ -778,7 +778,7 @@ namespace Au.Compiler
 
 	public enum ERunMode { green, blue }
 
-	public enum EIfRunning { runIfBlue, cancel, wait, restart, restartOrWait }
+	public enum EIfRunning { runIfBlue, dontRun, wait, restart, restartOrWait }
 
 	/// <summary>
 	/// Flags for <see cref="MetaComments.Parse"/>

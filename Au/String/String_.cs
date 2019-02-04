@@ -441,7 +441,7 @@ namespace Au
 				if(c == ' ') continue;
 				if(c < '\t' || c > '\r') break; //\t \n \v \f \r
 			}
-			if(i > startIndex && 0 != (flags & STIFlags.DoNotSkipSpaces)) return 0;
+			if(i > startIndex && 0 != (flags & STIFlags.DontSkipSpaces)) return 0;
 
 			//skip -+
 			bool minus = false;
@@ -686,7 +686,7 @@ namespace Au.Types
 		/// If string starts with a space, return 0.
 		/// For example, if string is " 5" return 0, not 5. 
 		/// </summary>
-		DoNotSkipSpaces = 4,
+		DontSkipSpaces = 4,
 	}
 
 }

@@ -123,7 +123,7 @@ namespace Au
 					_hasTimeout = true;
 					if(secondsTimeout > 0) _throw = true; else { _throw = false; secondsTimeout = -secondsTimeout; }
 					_timeRemaining = checked((long)(secondsTimeout * 1000d));
-					_timePrev = Time.MillisecondsWithoutComputerSleepTime;
+					_timePrev = Time.WinMillisecondsWithoutSleep;
 				}
 				_precisionIsSet = false;
 			}
@@ -162,7 +162,7 @@ namespace Au
 			public bool IsTimeout()
 			{
 				if(!_hasTimeout) return false;
-				var t = Time.MillisecondsWithoutComputerSleepTime;
+				var t = Time.WinMillisecondsWithoutSleep;
 				_timeRemaining -= t - _timePrev;
 				_timePrev = t;
 				if(_timeRemaining > 0) return false;
@@ -278,7 +278,7 @@ namespace Au
 
 					int timeSlice = (all && doEvents) ? 15 : 300; //support Thread.Abort: call API in loop with small timeout. //TODO: test
 					if(timeMS > 0) {
-						long timeNow = Time.MillisecondsWithoutComputerSleepTime;
+						long timeNow = Time.WinMillisecondsWithoutSleep;
 						if(timePrev > 0) timeMS -= timeNow - timePrev;
 						if(timeMS <= 0) return Api.WAIT_TIMEOUT;
 						if(timeSlice > timeMS) timeSlice = (int)timeMS;

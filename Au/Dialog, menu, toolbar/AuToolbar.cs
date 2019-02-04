@@ -162,7 +162,7 @@ namespace Au
 					Perf.Next();
 				}
 				_w.ShowLL(value);
-				_showTime = Time.Milliseconds;
+				_showTime = Time.PerfMilliseconds;
 			}
 		}
 
@@ -280,7 +280,7 @@ namespace Au
 				//Debug_.PrintFunc();
 				if(!_parent._w.IsActive && CanFocus && !Focused) {
 					//Print("focus");
-					long td = Time.Milliseconds - _parent._showTime - 500;
+					long td = Time.PerfMilliseconds - _parent._showTime - 500;
 					if(td < 0) { /*Debug_.Print("timer");*/ } //TODO: timer
 					else Focus();
 					//TODO: timer

@@ -19,6 +19,8 @@ using System.Reflection.Emit;
 using Au.Types;
 using static Au.NoClass;
 
+//TODO: AuMenu etc should have before/after delegate properties too. And dedicated threads. Like TriggerOptions.
+
 namespace Au
 {
 	/// <summary>

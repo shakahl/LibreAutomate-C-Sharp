@@ -37,6 +37,7 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="Wnd.ThreadId"/>
 		public static int NativeId => Api.GetCurrentThreadId();
+		//speed: fast, but several times slower than Thread.CurrentThread.ManagedThreadId. Caching in a ThreadStatic variable makes even slower.
 
 		/// <summary>
 		/// Returns native thread handle of this thread.
@@ -94,9 +95,9 @@ namespace Au
 		/// <param name="background">If true (default), sets <see cref="Thread.IsBackground"/> = true.</param>
 		/// <param name="sta">If true (default), calls <see cref="Thread.SetApartmentState"/>(ApartmentState.STA).</param>
 		/// <exception cref="OutOfMemoryException"></exception>
-		public static Thread Start(ThreadStart threadProc, bool background = true, bool sta = true)
+		public static Thread Start(Action threadProc, bool background = true, bool sta = true)
 		{
-			var t = new Thread(threadProc);
+			var t = new Thread(threadProc.Invoke);
 			if(background) t.IsBackground = true;
 			if(sta) t.SetApartmentState(ApartmentState.STA);
 			t.Start();

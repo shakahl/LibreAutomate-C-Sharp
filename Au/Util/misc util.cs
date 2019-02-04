@@ -774,7 +774,7 @@ namespace Au.Util
 	//	{
 	//		const int c_nTry = 2;
 	//		uint nProc = s_nProc;
-	//		long t0 = Time.Microseconds;
+	//		long t0 = Time.PerfMicroseconds;
 	//		bool switched, retry = false;
 	//		g2:
 	//		switched = false;
@@ -812,7 +812,7 @@ namespace Au.Util
 	//		}
 	//		g1:
 	//		if(switched) {
-	//			long t1 = Time.Microseconds;
+	//			long t1 = Time.PerfMicroseconds;
 	//			if(t1 - t0 < 400) {
 	//				//Print("-->", t1 - t0, retry);
 	//				if(!retry) { retry = true; goto g2; }

@@ -25,15 +25,30 @@ using static Au.NoClass;
 
 namespace Au.Triggers
 {
-	public abstract class WindowTriggers
+	public class WindowTriggers :ITriggers
 	{
-		struct _TriggerEtc
+		class _TriggerEtc : TriggerBase
 		{
-			public Wnd.Finder finder;
-			public Action<TriggerArgs> action;
+			public readonly Wnd.Finder finder;
+
+			public _TriggerEtc(Wnd.Finder finder, Action<AutotextTriggerArgs> action) : base(action)
+			{
+				this.finder = finder;
+			}
+
+			public override void Run(int data1, string data2, Wnd w)
+			{
+				Print(data1, data2, w);
+			}
 		}
 
+		ETriggerType _ttype;
 		List<_TriggerEtc> _a = new List<_TriggerEtc>();
+
+		internal WindowTriggers(ETriggerType ttype)
+		{
+			_ttype = ttype;
+		}
 
 		public Action<TriggerArgs> this[string name, string className = null, WF3 program = default, Func<Wnd, bool> also = null, object contains = null] {
 			set {
@@ -41,32 +56,15 @@ namespace Au.Triggers
 			}
 		}
 
-		private protected EEngineProcess EngineProcess => _a.Count > 0 ? EEngineProcess.Local : EEngineProcess.None;
+		ETriggerEngineProcess ITriggers.EngineProcess => _a.Count > 0 ? ETriggerEngineProcess.Local : ETriggerEngineProcess.None;
 
-		private protected void Write(BinaryWriter w)
+		void ITriggers.Write(BinaryWriter w)
 		{
 			//TODO: set hook
 		}
 
-	}
-
-	public class WindowCreatedTriggers : WindowTriggers, ITriggers
-	{
-		internal WindowCreatedTriggers()
-		{
-
-		}
-
-		EEngineProcess ITriggers.EngineProcess => base.EngineProcess;
-
-		void ITriggers.Write(BinaryWriter w) => base.Write(w);
-
 		bool ITriggers.CanRun(int action, int data1, string data2, Wnd w, WFCache cache) => true;
 
-		void ITriggers.Run(int action, int data1, string data2, Wnd w)
-		{
-			Print(action, data1, data2, w);
-		}
-
+		TriggerBase ITriggers.GetAction(int action) => _a[action];
 	}
 }

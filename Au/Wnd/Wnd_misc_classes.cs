@@ -335,12 +335,12 @@ namespace Au
 				//	if(!IsWinFormsControl(c)) return null;
 				//	uint pid = c.ProcessId; if(pid == 0) return null;
 				//	lock (_prevLock) {
-				//		if(pid != _prevPID || Time.Milliseconds - _prevTime > 1000) {
+				//		if(pid != _prevPID || Time.PerfMilliseconds - _prevTime > 1000) {
 				//			if(_prev != null) { _prev.Dispose(); _prev = null; }
 				//			try { _prev = new WinFormsControlNames(c); } catch { }
 				//			//Print("new");
 				//		} //else Print("cached");
-				//		_prevPID = pid; _prevTime = Time.Milliseconds;
+				//		_prevPID = pid; _prevTime = Time.PerfMilliseconds;
 				//		if(_prev == null) return null;
 				//		return _prev.GetControlNameOrText(c);
 				//	}

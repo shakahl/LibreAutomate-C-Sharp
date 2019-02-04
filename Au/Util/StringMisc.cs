@@ -156,8 +156,8 @@ namespace Au.Util
 			if(Empty(s)) return Array.Empty<int>();
 			int n = 1; foreach(var v in s) if(v == ' ') n++;
 			var a = new int[n];
-			a[0] = s.ToInt_(0, STIFlags.DoNotSkipSpaces);
-			for(int i = 0, j = 0; j < s.Length;) if(s[j++] == ' ') a[++i] = s.ToInt_(j, STIFlags.DoNotSkipSpaces);
+			a[0] = s.ToInt_(0, STIFlags.DontSkipSpaces);
+			for(int i = 0, j = 0; j < s.Length;) if(s[j++] == ' ') a[++i] = s.ToInt_(j, STIFlags.DontSkipSpaces);
 			return a;
 		}
 	}

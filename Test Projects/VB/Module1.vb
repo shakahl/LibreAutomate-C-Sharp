@@ -9,11 +9,15 @@ Imports Au.NoClass
 'Imports Au.Input
 Imports Au.Triggers
 
+Imports System.Runtime.InteropServices
+
 Module Module1
 
-	Sub Main()
+    Sub Main()
 
-        Triggers.Of.Window("moo")
+        TestQm2SendMessage()
+
+        'Triggers.Of.Window("moo")
 
         'Key("Tab")
 
@@ -39,5 +43,22 @@ Module Module1
         'Wnd.Find(className:="cass")
 
     End Sub
+
+    'Imports System.Runtime.InteropServices
+
+    <DllImport("user32.dll", EntryPoint:="SendMessageW", CharSet:=CharSet.Unicode)>
+    Function SendMessageS(hWnd As IntPtr, Msg As Int32, wParam As UInt32, lParam As String) As IntPtr
+    End Function
+
+    <DllImport("user32.dll", EntryPoint:="FindWindowW", CharSet:=CharSet.Unicode)>
+    Function FindWindow(lpClassName As String, lpWindowName As String) As IntPtr
+    End Function
+
+    Sub TestQm2SendMessage()
+        Dim hwnd = FindWindow("QM_Editor", Nothing)
+        If hwnd = IntPtr.Zero Then Return
+        SendMessageS(hwnd, 12, 1, "Q ' M 'Macro295' C test VB")
+    End Sub
+
 
 End Module

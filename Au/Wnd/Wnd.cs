@@ -2784,9 +2784,9 @@ namespace Au
 		//bool _IsBusy(int milliseconds)
 		//{
 		//	//Need to measure time. Cannot use just 2 ms timeout and ST return value because of the system timer default period 15.6 ms etc.
-		//	var t = Time.Microseconds;
+		//	var t = Time.PerfMicroseconds;
 		//	SendTimeout(5 + milliseconds, 0, flags: 0);
-		//	var d = Time.Microseconds - t;
+		//	var d = Time.PerfMicroseconds - t;
 		//	//Print(d);
 		//	return (d >= milliseconds * 1000L);
 		//}

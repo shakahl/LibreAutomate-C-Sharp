@@ -3254,13 +3254,13 @@
             flags for <see cref="M:Au.Path_.Normalize(System.String,System.String,Au.Types.PNFlags)"/>.
             </summary>
         </member>
-        <member name="F:Au.Types.PNFlags.DoNotExpandDosPath">
+        <member name="F:Au.Types.PNFlags.DontExpandDosPath">
             <summary>Don't call API <msdn>GetLongPathName</msdn>.</summary>
         </member>
-        <member name="F:Au.Types.PNFlags.DoNotPrefixLongPath">
+        <member name="F:Au.Types.PNFlags.DontPrefixLongPath">
             <summary>Don't call <see cref="M:Au.Path_.PrefixLongPathIfNeed(System.String)"/>.</summary>
         </member>
-        <member name="F:Au.Types.PNFlags.DoNotRemoveEndSeparator">
+        <member name="F:Au.Types.PNFlags.DontRemoveEndSeparator">
             <summary>Don't remove '\\' character at the end.</summary>
         </member>
         <member name="F:Au.Types.PNFlags.CanBeUrlOrShell">
@@ -4438,7 +4438,7 @@
             The event handler can set <b>returnValue</b>=1 to reset this.
             </summary>
         </member>
-        <member name="P:Au.Types.DEventArgs.DoNotCloseDialog">
+        <member name="P:Au.Types.DEventArgs.DontCloseDialog">
             <summary>
             Your <see cref="E:Au.AuDialog.ButtonClicked"/> event handler function can use this to prevent closing the dialog.
             </summary>
@@ -4807,7 +4807,7 @@
         <member name="F:Au.Types.FAFlags.UseRawPath">
             <summary>Pass path to the API as it is, without any normalizing and validating.</summary>
         </member>
-        <member name="F:Au.Types.FAFlags.DoNotThrow">
+        <member name="F:Au.Types.FAFlags.DontThrow">
             <summary>
             If failed, return false and don't throw exception.
             Then, if you need error info, you can use <see cref="M:Au.Types.Native.GetError"/>. If the file/directory does not exist, it will return ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND or ERROR_NOT_READY.
@@ -5066,7 +5066,7 @@
             The number in string is hexadecimal without a prefix, like "1A".
             </summary>
         </member>
-        <member name="F:Au.Types.STIFlags.DoNotSkipSpaces">
+        <member name="F:Au.Types.STIFlags.DontSkipSpaces">
             <summary>
             If string starts with a space, return 0.
             For example, if string is " 5" return 0, not 5. 
@@ -6951,12 +6951,50 @@
             Triggers.
             </summary>
         </member>
+        <member name="P:Au.Triggers.Triggers.Instance">
+            <summary>
+            Gets the <see cref="T:Au.Triggers.Triggers"/> object of this thread.
+            </summary>
+            <remarks>
+            Rarely used.
+            </remarks>
+        </member>
+        <member name="P:Au.Triggers.Triggers.Options">
+            <summary>
+            Allows to set some options for multiple triggers and their actions.
+            </summary>
+            <remarks>
+            More info and examples: <see cref="T:Au.Triggers.TriggerOptions"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Triggers.Triggers.Stop">
+            <summary>
+            Stops watching for trigger events and causes <see cref="M:Au.Triggers.Triggers.Run"/> to return.
+            </summary>
+            <remarks>
+            Rarely used.
+            Does not abort unfinished threads of trigger actions.
+            <note type="note">Don't call from a trigger action like this: <c>Triggers.Instance.Stop();</c>. The <b>Instance</b> then is of wrong thread. Instead call this in the main thread: <c>var ti=Triggers.Instance;</c> and then call this in a trigger action: <c>ti.Stop();</c>.</note>
+            </remarks>
+        </member>
+        <member name="M:Au.Triggers.Triggers.Clear">
+            <summary>
+            Clears all added triggers, scopes (<b>Triggers.Of</b>), options, etc.
+            </summary>
+            <remarks>
+            Rarely used.
+            </remarks>
+            <exception cref="T:System.InvalidOperationException">
+            Called from another thread. For example from a trigger action.
+            Or called while in <see cref="M:Au.Triggers.Triggers.Run"/>. Call <see cref="M:Au.Triggers.Triggers.Stop"/> at first; then call this function after <b>Run</b> returns.
+            </exception>
+        </member>
         <member name="T:Au.Triggers.TriggerArgs">
             <summary>
             Base of trigger action argument classes of all trigger types. For example HotkeyTriggerArgs.
             </summary>
         </member>
-        <member name="M:Au.Triggers.Scopes.Match(System.Int32,Au.Wnd,Au.Types.WFCache)">
+        <member name="M:Au.Triggers.TriggerScopes.Match(System.Int32,Au.Wnd,Au.Types.WFCache)">
             <summary>
             Returns true if index==0 or w matches the scope.
             </summary>
@@ -6980,6 +7018,104 @@
             Called by RunningTasks.TaskEnded2.
             </summary>
             <param name="processId"></param>
+        </member>
+        <member name="T:Au.Triggers.TriggerOptions">
+            <summary>
+            Allows to set some options for multiple triggers and their actions.
+            </summary>
+            <remarks>
+            You set options through a thread-static property <see cref="P:Au.Triggers.Triggers.Options"/>.
+            Changed options are applied to all triggers/actions added afterwards in this thread.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            Triggers.Options.RunActionInThreadPool(singleInstance: false);
+            Triggers.Options.BeforeAction = o => { Opt.Key.KeySpeed = 10; };
+            Triggers.Hotkey["Ctrl+K"] = o => Print(Opt.Key.KeySpeed); //10
+            Triggers.Hotkey["Ctrl+Shift+K"] = o => Print(Opt.Key.KeySpeed); //10
+            Triggers.Options.BeforeAction = o => { Opt.Key.KeySpeed = 20; };
+            Triggers.Hotkey["Ctrl+L"] = o => Print(Opt.Key.KeySpeed); //20
+            Triggers.Hotkey["Ctrl+Shift+L"] = o => Print(Opt.Key.KeySpeed); //20
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Triggers.TriggerOptions.RunActionInThread(System.Int32,System.Int32)">
+            <summary>
+            Run actions in a dedicated thread that does not end when actions end.
+            </summary>
+            <param name="thread">Any non-negative number that you want to use to identify the thread. Default 0.</param>
+            <param name="ifRunningWaitMS">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queed actions). If &gt; 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="thread"/> &lt; 0 or <paramref name="ifRunningWaitMS"/> &lt; -1.</exception>
+            <remarks>
+            Multiple actions in same thread cannot run simultaneously. Actions in different threads can run simultaneously.
+            There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => AuTask.RunWait("Other Script");</c>.
+            There is no "temporarily pause old running action to run new action" feature. As well as for scripts.
+            The thread has <see cref="F:System.Threading.ApartmentState.STA"/>.
+            The <b>RunActionInX</b> functions are mutually exclusive. Only the last called function is active. If none called, it is the same as called this function without arguments.
+            </remarks>
+        </member>
+        <member name="M:Au.Triggers.TriggerOptions.RunActionInNewThread(System.Boolean)">
+            <summary>
+            Run actions in new threads.
+            </summary>
+            <remarks>
+            Use if need to run actions simultaneously with other actions or other instances of self, especially if the action is long-running (maybe 5 s and more).
+            The thread has <see cref="F:System.Threading.ApartmentState.STA"/>.
+            The <b>RunActionInX</b> functions are mutually exclusive. Only the last called function is active.
+            </remarks>
+            <param name="singleInstance">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
+        </member>
+        <member name="M:Au.Triggers.TriggerOptions.RunActionInThreadPool(System.Boolean)">
+            <summary>
+            Run actions in thread pool threads.
+            </summary>
+            <remarks>
+            Use if need to run actions simultaneously with other actions or other instances of self, and the action is short-running (maybe less than 5 s) and don't need <see cref="F:System.Threading.ApartmentState.STA"/>.
+            Thread pool threads have <see cref="F:System.Threading.ApartmentState.MTA"/>.
+            The <b>RunActionInX</b> functions are mutually exclusive. Only the last called function is active.
+            </remarks>
+            <param name="singleInstance">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
+        </member>
+        <member name="P:Au.Triggers.TriggerOptions.BeforeAction">
+            <summary>
+            null or an action to run before the actual action.
+            For example can set Opt options.
+            </summary>
+            <example>
+            <code><![CDATA[
+            Triggers.Options.BeforeAction = o => { Opt.Key.KeySpeed = 20; Opt.Key.TextSpeed = 5; };
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.Triggers.TriggerOptions.AfterAction">
+            <summary>
+            null or an action to run after the actual action.
+            For example can log exception.
+            </summary>
+            <example>
+            <code><![CDATA[
+            Triggers.Options.AfterAction = o => { if(o.Exception!=null) Print(o.Exception.Message); else Print("completed successfully"); };
+            ]]></code>
+            </example>
+        </member>
+        <member name="T:Au.Triggers.TOBeforeArgs">
+            <summary>
+            Arguments for <see cref="P:Au.Triggers.TriggerOptions.BeforeAction"/>.
+            Currently does not contain any properties.
+            </summary>
+        </member>
+        <member name="T:Au.Triggers.TOAfterArgs">
+            <summary>
+            Arguments for <see cref="P:Au.Triggers.TriggerOptions.AfterAction"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Triggers.TOAfterArgs.Exception">
+            <summary>
+            If action ended with an exception, contains the exception. Else null.
+            </summary>
+        </member>
+        <member name="M:Au.Triggers.TOAfterArgs.#ctor(System.Exception)">
+            
         </member>
         <member name="F:Au.Triggers.HotkeyTriggers.TFlags.Shared">
             <summary>
@@ -7009,7 +7145,7 @@
             For example, if trigger is ["Ins"], the action will run when the Ins key is pressed alone or with any combination of modifiers. If trigger is ["Ctrl+Ins"], the action will run on Ctrl+Ins alone or with any combination of Shift, Alt, Win.
             </summary>
         </member>
-        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.DoNotReleaseMod">
+        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.DontReleaseMod">
             <summary>
             Don't release modifier keys.
             Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="M:Au.Keyb.GetMod(Au.Types.KMod)"/> (and any such functions in any app) will not know that the key is physically pressed.
@@ -7434,6 +7570,14 @@
             </summary>
             <value>The length.</value>
         </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
+        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -7768,7 +7912,7 @@
         </member>
         <member name="M:Au.Util.WinHook.Keyboard(System.Func{Au.Types.HookData.Keyboard,System.Boolean})">
             <summary>
-            Installs low-level keyboard hook (WH_KEYBOARD_LL).
+            Installs a low-level keyboard hook (WH_KEYBOARD_LL).
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
@@ -7784,7 +7928,7 @@
             using(WinHook.Keyboard(x =>
             {
             	Print(x);
-            	if(x.vkCode == KKey.Escape) { stop = true; return true; } //return true to cancel the event
+            	if(x.vkCode == KKey.Escape) { stop = true; return true; } //return true to suppress the event
             	return false;
             })) {
             	MessageBox.Show("Low-level keyboard hook.", "Test");
@@ -7797,7 +7941,7 @@
         </member>
         <member name="M:Au.Util.WinHook.Mouse(System.Func{Au.Types.HookData.Mouse,System.Boolean})">
             <summary>
-            Installs low-level mouse hook (WH_MOUSE_LL).
+            Installs a low-level mouse hook (WH_MOUSE_LL).
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
@@ -7813,7 +7957,7 @@
             using(WinHook.Mouse(x =>
             {
             	Print(x);
-            	if(x.Event == HookData.MouseEvent.RightButton) { stop = x.IsButtonUp; return true; } //return true to cancel the event
+            	if(x.Event == HookData.MouseEvent.RightButton) { stop = x.IsButtonUp; return true; } //return true to suppress the event
             	return false;
             })) {
             	MessageBox.Show("Low-level mouse hook.", "Test");
@@ -7826,7 +7970,7 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadCbt(System.Func{Au.Types.HookData.ThreadCbt,System.Boolean},System.Int32)">
             <summary>
-            Installs WH_CBT hook for a thread of this process.
+            Installs a WH_CBT hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
@@ -7878,7 +8022,7 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadGetMessage(System.Action{Au.Types.HookData.ThreadGetMessage},System.Int32)">
             <summary>
-            Installs WH_GETMESSAGE hook for a thread of this process.
+            Installs a WH_GETMESSAGE hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
@@ -7900,7 +8044,7 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadKeyboard(System.Func{Au.Types.HookData.ThreadKeyboard,System.Boolean},System.Int32)">
             <summary>
-            Installs WH_GETMESSAGE hook for a thread of this process.
+            Installs a WH_GETMESSAGE hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
@@ -7923,7 +8067,7 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadMouse(System.Func{Au.Types.HookData.ThreadMouse,System.Boolean},System.Int32)">
             <summary>
-            Installs WH_MOUSE hook for a thread of this process.
+            Installs a WH_MOUSE hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
@@ -7946,7 +8090,7 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadCallWndProc(System.Action{Au.Types.HookData.ThreadCallWndProc},System.Int32)">
             <summary>
-            Installs WH_CALLWNDPROC hook for a thread of this process.
+            Installs a WH_CALLWNDPROC hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
@@ -7970,7 +8114,7 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadCallWndProcRet(System.Action{Au.Types.HookData.ThreadCallWndProcRet},System.Int32)">
             <summary>
-            Installs WH_CALLWNDPROCRET hook for a thread of this process.
+            Installs a WH_CALLWNDPROCRET hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
@@ -8014,6 +8158,17 @@
         </member>
         <member name="M:Au.Util.WinHook.Finalize">
             
+        </member>
+        <member name="P:Au.Util.WinHook.LowLevelHooksTimeout">
+            <summary>
+            Gets the max time in milliseconds allowed by Windows for low-level keyboard and mouse hook procedures.
+            </summary>
+            <remarks>
+            Gets registry value HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout.
+            If the registry value is missing, returns 300, because it is the default value used by Windows. If the registry value is more than 1000, returns 1000, because Windows 10 ignores bigger values.
+            If a hook procedure takes more time, Windows does not wait. Then the return value is ignored, and the event is passed to the active window, other hooks, etc. Also Windows may fully or partially disable the hook.
+            More info: <google>registry LowLevelHooksTimeout</google>.
+            </remarks>
         </member>
         <member name="M:Au.Util.WinHook.LibOnException(System.Exception,System.IDisposable)">
             <summary>
@@ -9606,7 +9761,7 @@
             </summary>
             <param name="nativeId"></param>
         </member>
-        <member name="M:Au.Thread_.Start(System.Threading.ThreadStart,System.Boolean,System.Boolean)">
+        <member name="M:Au.Thread_.Start(System.Action,System.Boolean,System.Boolean)">
             <summary>
             Starts new thread: creates new <see cref="T:System.Threading.Thread"/> object, sets some properties and calls <see cref="M:System.Threading.Thread.Start"/>.
             Returns the <b>Thread</b> variable.
@@ -9630,7 +9785,7 @@
             <item>In windows of higher <see cref="T:Au.Uac">UAC</see> integrity level (IL) processes, unless this process has uiAccess IL.</item>
             <item>In special screens such as when you press Ctrl+Alt+Delete or when you launch and admin program. See also <see cref="P:Au.BlockUserInput.ResumeAfterCtrlAltDelete"/>.</item>
             <item>Some Windows hotkeys, such as Ctrl+Alt+Delete and Win+L.</item>
-            <item><see cref="P:Au.BlockUserInput.DoNotBlockKeys"/> keys.</item>
+            <item><see cref="P:Au.BlockUserInput.DontBlockKeys"/> keys.</item>
             <item>Keyboard hooks don't work in windows of this process if this process uses direct input or raw input API.</item>
             </list>
             
@@ -9693,21 +9848,21 @@
             Will not play back if: 1. The blocking time is &gt;= 10 seconds. 2. Detected Ctrl+Alt+Delete, <see cref="T:Au.Uac">UAC</see> consent or some other special screen. 3. Called <see cref="P:Au.BlockUserInput.Pause"/>.
             </remarks>
         </member>
-        <member name="P:Au.BlockUserInput.DoNotBlockInjectedExtraInfo">
+        <member name="P:Au.BlockUserInput.DontBlockInjectedExtraInfo">
             <summary>
-            Do not block software-generated key/mouse events if this extra info value was set when calling API <msdn>SendInput</msdn>.
-            The default value is the value used by functions of this library, that is why their events are not blocked. If changed, their events are blocked, unless <see cref="P:Au.BlockUserInput.DoNotBlockInjected"/> is true.
+            Don't block software-generated key/mouse events if this extra info value was set when calling API <msdn>SendInput</msdn>.
+            The default value is the value used by functions of this library, that is why their events are not blocked. If changed, their events are blocked, unless <see cref="P:Au.BlockUserInput.DontBlockInjected"/> is true.
             </summary>
         </member>
-        <member name="P:Au.BlockUserInput.DoNotBlockInjected">
+        <member name="P:Au.BlockUserInput.DontBlockInjected">
             <summary>
-            Do not block software-generated key/mouse events.
-            If false (default), only events generated by functions of this library are not blocked, unless <see cref="P:Au.BlockUserInput.DoNotBlockInjectedExtraInfo"/> is changed.
+            Don't block software-generated key/mouse events.
+            If false (default), only events generated by functions of this library are not blocked, unless <see cref="P:Au.BlockUserInput.DontBlockInjectedExtraInfo"/> is changed.
             </summary>
         </member>
-        <member name="P:Au.BlockUserInput.DoNotBlockKeys">
+        <member name="P:Au.BlockUserInput.DontBlockKeys">
             <summary>
-            Do not block these keys.
+            Don't block these keys.
             Default: { KKey.Pause, KKey.PrintScreen, KKey.F1 }.
             </summary>
             <remarks>
@@ -11889,7 +12044,7 @@
             <remarks>
             Some frequently used static functions of this library have some options (settings). For example <see cref="M:Au.Keyb.Key(System.Object[])"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead you can set options using static properties. This class contains several groups of options for functions of various classes. See examples.
             
-            There are two sets of identical or similar options - in class <b>Opt</b> and in its nested class <see cref="T:Au.Opt.Static"/>:
+            There are two sets of identical or similar options - in class <b>Opt</b> and in class <see cref="T:Au.Opt.Static"/>:
             <list type="bullet">
             <item><b>Opt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>Opt.Static</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).</item>
             <item><b>Opt.Static</b> - static options. Contains initial property values for <b>Opt</b>. Normally you change them in your script template (in script initialization code) or at the very start of script. Don't change later, it's not thread-safe.</item>
@@ -21215,47 +21370,61 @@
             <summary>
             Time functions. Get time, sleep/wait, doevents.
             </summary>
+            <seealso cref="T:Au.Perf"/>
             <seealso cref="T:Au.WaitFor"/>
         </member>
-        <member name="P:Au.Time.Microseconds">
+        <member name="P:Au.Time.PerfMicroseconds">
             <summary>
-            Gets the number of microseconds elapsed since Windows startup.
+            Gets the number of microseconds elapsed since Windows startup. Uses the high-resolution system timer.
             </summary>
             <remarks>
             Uses API <msdn>QueryPerformanceCounter</msdn>.
+            This function is used to measure time differences with 1 microsecond precision, like <c>var t1=Time.PerfMicroseconds; ... var t2=Time.PerfMicroseconds; var diff=t2-t1;</c>.
             Independent of computer clock time changes.
             MSDN article: <msdn>Acquiring high-resolution time stamps</msdn>.
             </remarks>
+            <seealso cref="T:Au.Perf"/>
         </member>
-        <member name="P:Au.Time.Milliseconds">
+        <member name="P:Au.Time.PerfMilliseconds">
             <summary>
-            Gets the number of milliseconds elapsed since Windows startup.
+            Gets the number of milliseconds elapsed since Windows startup. Uses the high-resolution system timer.
             </summary>
             <remarks>
             Uses API <msdn>QueryPerformanceCounter</msdn>.
-            Similar to <see cref="P:System.Environment.TickCount"/>, but more precise (1 ms) and returns a 64-bit value.
+            This function is used to measure time differences with 1 ms precision, like <c>var t1=Time.PerfMilliseconds; ... var t2=Time.PerfMilliseconds; var diff=t2-t1;</c>.
+            The return value equals <see cref="P:Au.Time.PerfMicroseconds"/>/1000 but is slightly different than of <see cref="P:Au.Time.WinMilliseconds64"/> and other similar functions of this library, Windows API and .NET. Never compare times returned by different functions.
             Independent of computer clock time changes.
-            This function is used to measure time difference with 1 ms precision. It is slower than <see cref="P:Au.Time.MillisecondsFast"/>, and returns slightly different value (incorrect time); after several days the difference may become 1 minute or more.
             </remarks>
         </member>
-        <member name="P:Au.Time.MillisecondsFast">
+        <member name="P:Au.Time.WinMilliseconds64">
             <summary>
             Gets the number of milliseconds elapsed since Windows startup.
             </summary>
             <remarks>
             Uses API <msdn>GetTickCount64</msdn>.
-            Like <see cref="P:System.Environment.TickCount"/>, but returns a 64-bit value.
-            The precision is 1-16 milliseconds. For better precision use <see cref="P:Au.Time.Milliseconds"/> or <see cref="P:Au.Time.Microseconds"/>. But they are slower.
+            Like <see cref="P:System.Environment.TickCount"/>, but returns a 64-bit value that does not overflow.
+            Uses the low-resolution system timer. Its period usually is 15.25 ms. When need to measure time differences with better precision, use <see cref="P:Au.Time.PerfMilliseconds"/> or <see cref="P:Au.Time.PerfMicroseconds"/>.
             Independent of computer clock time changes.
             </remarks>
         </member>
-        <member name="P:Au.Time.MillisecondsWithoutComputerSleepTime">
+        <member name="P:Au.Time.WinMilliseconds32">
             <summary>
-            Gets the number of milliseconds elapsed since Windows startup, not including the sleep/hibernate time.
+            Gets the number of milliseconds elapsed since Windows startup.
+            </summary>
+            <remarks>
+            Uses API <msdn>GetTickCount</msdn>.
+            The same as <see cref="P:System.Environment.TickCount"/>. Returns a 32-bit value that overflows after 24.9 days.
+            Uses the low-resolution system timer. Its period usually is 15.25 ms.
+            Independent of computer clock time changes.
+            </remarks>
+        </member>
+        <member name="P:Au.Time.WinMillisecondsWithoutSleep">
+            <summary>
+            Gets the number of milliseconds elapsed since Windows startup, not including the time when the computer sleeps or hibernates.
             </summary>
             <remarks>
             Uses API <msdn>QueryUnbiasedInterruptTime</msdn>.
-            The precision is 1-16 milliseconds. The speed is similar to <see cref="P:Au.Time.Milliseconds"/>.
+            Uses the low-resolution system timer. Its period usually is 15.25 ms.
             Independent of computer clock time changes.
             </remarks>
         </member>

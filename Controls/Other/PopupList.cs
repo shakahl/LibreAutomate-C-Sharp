@@ -118,7 +118,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Don't hide the popup window when a window of another program is activated.
 		/// </summary>
-		public bool DoNotCloseWhenAppDeactivated { get; set; }
+		public bool DontCloseWhenAppDeactivated { get; set; }
 
 		/// <summary>
 		/// Shows the popup list below or above the anchor control.
@@ -448,7 +448,7 @@ namespace Au.Controls
 					m.Result = (IntPtr)(((int)m.LParam >> 16 == Api.WM_LBUTTONDOWN) ? Api.MA_NOACTIVATE : Api.MA_NOACTIVATEANDEAT);
 					return;
 				case Api.WM_ACTIVATEAPP:
-					if(m.WParam == default && !_p.DoNotCloseWhenAppDeactivated) _p._Close();
+					if(m.WParam == default && !_p.DontCloseWhenAppDeactivated) _p._Close();
 					break;
 				}
 

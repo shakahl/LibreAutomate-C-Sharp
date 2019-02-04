@@ -21,11 +21,12 @@ namespace Au
 	/// <summary>
 	/// Time functions. Get time, sleep/wait, doevents.
 	/// </summary>
+	/// <seealso cref="Perf"/>
 	/// <seealso cref="WaitFor"/>
 	[DebuggerStepThrough]
 	public static class Time
 	{
-		//info: we don't use Stopwatch because it loads System.dll, which can take 15 ms and make speed measurement incorrect and confusing in some cases.
+		//info: we don't use Stopwatch because it loads System.dll, which is slow and can make speed measurement incorrect and confusing in some cases.
 
 #if false //makes some simplest functions much slower, eg MillisecondsFast.
 		static Time()
@@ -71,27 +72,29 @@ namespace Au
 #endif
 
 		/// <summary>
-		/// Gets the number of microseconds elapsed since Windows startup.
+		/// Gets the number of microseconds elapsed since Windows startup. Uses the high-resolution system timer.
 		/// </summary>
 		/// <remarks>
 		/// Uses API <msdn>QueryPerformanceCounter</msdn>.
+		/// This function is used to measure time differences with 1 microsecond precision, like <c>var t1=Time.PerfMicroseconds; ... var t2=Time.PerfMicroseconds; var diff=t2-t1;</c>.
 		/// Independent of computer clock time changes.
 		/// MSDN article: <msdn>Acquiring high-resolution time stamps</msdn>.
 		/// </remarks>
-		public static long Microseconds { get { Api.QueryPerformanceCounter(out var t); return (long)(t * s_freqMCS); } }
+		/// <seealso cref="Perf"/>
+		public static long PerfMicroseconds { get { Api.QueryPerformanceCounter(out var t); return (long)(t * s_freqMCS); } }
 
 		/// <summary>
-		/// Gets the number of milliseconds elapsed since Windows startup.
+		/// Gets the number of milliseconds elapsed since Windows startup. Uses the high-resolution system timer.
 		/// </summary>
 		/// <remarks>
 		/// Uses API <msdn>QueryPerformanceCounter</msdn>.
-		/// Similar to <see cref="Environment.TickCount"/>, but more precise (1 ms) and returns a 64-bit value.
+		/// This function is used to measure time differences with 1 ms precision, like <c>var t1=Time.PerfMilliseconds; ... var t2=Time.PerfMilliseconds; var diff=t2-t1;</c>.
+		/// The return value equals <see cref="PerfMicroseconds"/>/1000 but is slightly different than of <see cref="WinMilliseconds64"/> and other similar functions of this library, Windows API and .NET. Never compare times returned by different functions.
 		/// Independent of computer clock time changes.
-		/// This function is used to measure time difference with 1 ms precision. It is slower than <see cref="MillisecondsFast"/>, and returns slightly different value (incorrect time); after several days the difference may become 1 minute or more.
 		/// </remarks>
-		public static long Milliseconds { get { Api.QueryPerformanceCounter(out var t); return (long)(t * s_freqMS); } }
+		public static long PerfMilliseconds { get { Api.QueryPerformanceCounter(out var t); return (long)(t * s_freqMS); } }
 		//On current OS and hardware QueryPerformanceCounter is reliable and fast enough.
-		//Speed of 1000 calls when cold CPU: Milliseconds 97, MillisecondsWithoutComputerSleepTime 76, MillisecondsFast/GetTickCount64 12.
+		//Speed of 1000 calls when cold CPU: PerfMilliseconds 97, WinMillisecondsWithoutSleep 76, WinMilliseconds64/GetTickCount64 12.
 		//rejected: make corrections based on GetTickCount64. It makes slower and is not necessary.
 
 		/// <summary>
@@ -99,21 +102,32 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Uses API <msdn>GetTickCount64</msdn>.
-		/// Like <see cref="Environment.TickCount"/>, but returns a 64-bit value.
-		/// The precision is 1-16 milliseconds. For better precision use <see cref="Milliseconds"/> or <see cref="Microseconds"/>. But they are slower.
+		/// Like <see cref="Environment.TickCount"/>, but returns a 64-bit value that does not overflow.
+		/// Uses the low-resolution system timer. Its period usually is 15.25 ms. When need to measure time differences with better precision, use <see cref="PerfMilliseconds"/> or <see cref="PerfMicroseconds"/>.
 		/// Independent of computer clock time changes.
 		/// </remarks>
-		public static long MillisecondsFast => Api.GetTickCount64();
+		public static long WinMilliseconds64 => Api.GetTickCount64();
 
 		/// <summary>
-		/// Gets the number of milliseconds elapsed since Windows startup, not including the sleep/hibernate time.
+		/// Gets the number of milliseconds elapsed since Windows startup.
+		/// </summary>
+		/// <remarks>
+		/// Uses API <msdn>GetTickCount</msdn>.
+		/// The same as <see cref="Environment.TickCount"/>. Returns a 32-bit value that overflows after 24.9 days.
+		/// Uses the low-resolution system timer. Its period usually is 15.25 ms.
+		/// Independent of computer clock time changes.
+		/// </remarks>
+		public static int WinMilliseconds32 => Api.GetTickCount();
+
+		/// <summary>
+		/// Gets the number of milliseconds elapsed since Windows startup, not including the time when the computer sleeps or hibernates.
 		/// </summary>
 		/// <remarks>
 		/// Uses API <msdn>QueryUnbiasedInterruptTime</msdn>.
-		/// The precision is 1-16 milliseconds. The speed is similar to <see cref="Milliseconds"/>.
+		/// Uses the low-resolution system timer. Its period usually is 15.25 ms.
 		/// Independent of computer clock time changes.
 		/// </remarks>
-		public static long MillisecondsWithoutComputerSleepTime {
+		public static long WinMillisecondsWithoutSleep {
 			get {
 				if(!Api.QueryUnbiasedInterruptTime(out long t)) return Api.GetTickCount64();
 				return t / 10000;
@@ -144,9 +158,9 @@ namespace Au
 				Thread.Sleep(timeMilliseconds);
 			} else { //workaround for Thread.Sleep bug: if there are APC, returns too soon after sleep/hibernate.
 				g1:
-				long t = MillisecondsWithoutComputerSleepTime;
+				long t = WinMillisecondsWithoutSleep;
 				Thread.Sleep(timeMilliseconds);
-				t = timeMilliseconds - (MillisecondsWithoutComputerSleepTime - t);
+				t = timeMilliseconds - (WinMillisecondsWithoutSleep - t);
 				if(t >= 500) { timeMilliseconds = (int)t; goto g1; }
 			}
 		}
@@ -360,15 +374,15 @@ namespace Au
 			public static void TempSet1(int endAfterMS = 1111)
 			{
 				lock("2KgpjPxRck+ouUuRC4uBYg") {
-					s_TS1_EndTime = MillisecondsWithoutComputerSleepTime + endAfterMS;
+					s_TS1_EndTime = WinMillisecondsWithoutSleep + endAfterMS;
 					if(s_TS1_Obj == null) {
 						s_TS1_Obj = new LibSleepPrecision(1); //info: instead could call the API directly, but may need to auto-revoke using the finalizer
 						ThreadPool.QueueUserWorkItem(endAfterMS2 => {
-							Thread.Sleep((int)endAfterMS2); //note: don't use captured variables. It somehow creates new garbage all the time.
+							Thread.Sleep((int)endAfterMS2); //note: don't use captured variables. It creates new garbage all the time.
 							for(; ; ) {
 								int t;
 								lock("2KgpjPxRck+ouUuRC4uBYg") {
-									t = (int)(s_TS1_EndTime - MillisecondsWithoutComputerSleepTime);
+									t = (int)(s_TS1_EndTime - WinMillisecondsWithoutSleep);
 									if(t <= 0) {
 										s_TS1_Obj.Dispose();
 										s_TS1_Obj = null;

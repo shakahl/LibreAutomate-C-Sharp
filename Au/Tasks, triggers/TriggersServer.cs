@@ -61,14 +61,14 @@ namespace Au.Triggers
 			public SafeFileHandle pipe;
 			public int threadId, processId, mask;
 			public int bCapacity;
-			public IpcPipeData* b; //buffer for SendAdd/Send
+			public TriggerPipeData* b; //buffer for SendAdd/Send
 			public IntPtr threadHandle;
 
 			public _ThreadPipe(SafeFileHandle pipe, int threadId, int processId, int mask)
 			{
 				this.pipe = pipe; this.threadId = threadId; this.processId = processId; this.mask = mask;
 				threadHandle = new Util.LibKernelHandle(Api.OpenThread(Api.SYNCHRONIZE, false, threadId));
-				b = (IpcPipeData*)Util.NativeHeap.Alloc(bCapacity = 100);
+				b = (TriggerPipeData*)Util.NativeHeap.Alloc(bCapacity = 100);
 			}
 
 			public void Dispose()
@@ -81,13 +81,13 @@ namespace Au.Triggers
 
 		Wnd.Misc.MyWindow _msgWnd;
 		Thread _thread;
-		List<_ThreadPipe> _pipes = new List<_ThreadPipe>();
-		ITriggersEngine[] _te = new ITriggersEngine[(int)EType.Count];
+		List<_ThreadPipe> _pipes;
+		ITriggerEngine[] _te;
 		IntPtr _ev;
 		bool _inTaskProcess;
 		bool _addedToSend;
 
-		public ITriggersEngine this[EType e] { get => _te[(int)e]; private set => _te[(int)e] = value; }
+		public ITriggerEngine this[ETriggerType e] { get => _te[(int)e]; private set => _te[(int)e] = value; }
 
 		public static TriggersServer Instance => s_instance;
 		static TriggersServer s_instance;
@@ -99,8 +99,10 @@ namespace Au.Triggers
 		public TriggersServer(bool inTaskProcess)
 		{
 			_inTaskProcess = inTaskProcess;
-			this[EType.Hotkey] = new HotkeyTriggersEngine();
-			this[EType.Autotext] = new AutotextTriggersEngine();
+			_pipes = new List<_ThreadPipe>();
+			_te = new ITriggerEngine[(int)ETriggerType.ServerCount];
+			this[ETriggerType.Hotkey] = new HotkeyTriggersEngine();
+			this[ETriggerType.Autotext] = new AutotextTriggersEngine();
 			//TODO: create mouse engines
 
 			_thread = Thread_.Start(_Thread);
@@ -115,12 +117,9 @@ namespace Au.Triggers
 			_ev = Api.CreateEvent(true);
 
 			while(Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
-
-			foreach(var v in _te) v?.Dispose();
-			foreach(var v in _pipes) v?.Dispose();
-			Api.CloseHandle(_ev);
-			s_instance = null;
 		}
+
+		public Thread Thread => _thread;
 
 		public Wnd MsgWnd {
 			get {
@@ -136,6 +135,10 @@ namespace Au.Triggers
 			try {
 				switch(message) {
 				case Api.WM_DESTROY:
+					foreach(var v in _te) v.Dispose();
+					foreach(var v in _pipes) v?.Dispose();
+					Api.CloseHandle(_ev);
+					s_instance = null; //TODO: not thread-safe
 					Api.PostQuitMessage(0);
 					break;
 				case Api.WM_COPYDATA:
@@ -145,6 +148,9 @@ namespace Au.Triggers
 					switch(i) {
 					case 1:
 						return _RemoveThreadTriggers((int)lParam);
+					case 2:
+						_RemoveTaskTriggers((int)lParam);
+						break;
 					}
 					return 0;
 				}
@@ -182,9 +188,10 @@ namespace Au.Triggers
 
 			var tp = new _ThreadPipe(pipe, threadId, processId, mask);
 			int pipeIndex = _pipes.IndexOf(null); //Print(_pipes.Count, pipeIndex);
-			if(pipeIndex >= 0) _pipes[pipeIndex] = tp; else { pipeIndex = _pipes.Count; _pipes.Add(tp); }
-
-			for(int i = 0; i < (int)EType.Count; i++) if(0 != ((mask >> i) & 1)) _te[i].AddTriggers(pipeIndex, r, data);
+			lock(_pipes) {
+				if(pipeIndex >= 0) _pipes[pipeIndex] = tp; else { pipeIndex = _pipes.Count; _pipes.Add(tp); }
+			}
+			for(int i = 0; i < _te.Length; i++) if(0 != ((mask >> i) & 1)) _te[i].AddTriggers(pipeIndex, r, data);
 
 			return 1;
 		}
@@ -200,10 +207,22 @@ namespace Au.Triggers
 		{
 			//Print(pipeIndex);
 			var x = _pipes[pipeIndex];
-			for(int i = 0; i < (int)EType.Count; i++) if(0 != ((x.mask >> i) & 1)) _te[i].RemoveTriggers(pipeIndex);
+			for(int i = 0; i < _te.Length; i++) if(0 != ((x.mask >> i) & 1)) _te[i].RemoveTriggers(pipeIndex);
 			x.Dispose();
-			_pipes[pipeIndex] = null;
+			lock(_pipes) _pipes[pipeIndex] = null;
+			if(_inTaskProcess) {
+				bool used = false; foreach(var v in _pipes) { if(v != null) { used = true; break; } }
+				if(!used) _msgWnd.Destroy();
+			}
 			return 1;
+		}
+
+		void _RemoveTaskTriggers(int processId)
+		{
+			for(int i = _pipes.Count - 1; i >= 0; i--) {
+				var k = _pipes[i]; if(k == null || k.processId != processId) continue;
+				_RemovePipeTriggers(i);
+			}
 		}
 
 		/// <summary>
@@ -212,19 +231,20 @@ namespace Au.Triggers
 		/// <param name="processId"></param>
 		public void RemoveTaskTriggers(int processId)
 		{
-			//Print(processId);
-			for(int i = _pipes.Count - 1; i >= 0; i--) {
-				var k = _pipes[i]; if(k == null || k.processId != processId) continue;
-				//Print(i);
-				_RemovePipeTriggers(i);
+			bool hasTriggers = false;
+			lock(_pipes) {
+				foreach(var v in _pipes) if((v?.processId ?? 0) == processId) { hasTriggers = true; break; }
 			}
+			if(hasTriggers) _msgWnd.Handle.Post(Api.WM_USER, 2, processId);
+
+			//This function is called in the main thread. All other functions that use _pipes are called in our thread.
+			//	We lock _pipes only here and in functions that modify it.
 		}
 
 		public unsafe void SendBegin()
 		{
 			_addedToSend = false;
-			for(int i = 0; i < _pipes.Count; i++) {
-				var x = _pipes[i];
+			foreach(var x in _pipes) {
 				if(x != null) x.b->nActions = 0;
 			}
 		}
@@ -232,18 +252,18 @@ namespace Au.Triggers
 		public unsafe void SendAdd(int pipeIndex, int action)
 		{
 			var x = _pipes[pipeIndex];
-			int size = sizeof(IpcPipeData) + (x.b->nActions + 1) * 4;
-			if(size > x.bCapacity) x.b = (IpcPipeData*)Util.NativeHeap.ReAlloc(x.b, x.bCapacity *= 2);
+			int size = sizeof(TriggerPipeData) + (x.b->nActions + 1) * 4;
+			if(size > x.bCapacity) x.b = (TriggerPipeData*)Util.NativeHeap.ReAlloc(x.b, x.bCapacity *= 2);
 			var a = (int*)(x.b + 1);
 			a[x.b->nActions++] = action;
 			_addedToSend = true;
 		}
 
-		public unsafe bool Send(EType triggerType, int data1 = 0, string data2 = null)
+		public unsafe bool Send(ETriggerType triggerType, int data1 = 0, string data2 = null)
 		{
 			if(!_addedToSend) return false;
 			//Perf.First('W');
-			var wnd = (triggerType == EType.MouseClick || triggerType == EType.MouseWheel) ? Wnd.FromMouse(WXYFlags.NeedWindow) : Wnd.Active;
+			var wnd = (triggerType == ETriggerType.MouseClick || triggerType == ETriggerType.MouseWheel) ? Wnd.FromMouse(WXYFlags.NeedWindow) : Wnd.Active;
 			//Perf.Next();
 			for(int i = 0; i < _pipes.Count; i++) {
 				Perf.First();
@@ -252,10 +272,10 @@ namespace Au.Triggers
 				b->type = triggerType;
 				b->hwnd = (int)wnd;
 				b->intData = data1;
-				int size = sizeof(IpcPipeData) + b->nActions * 4;
+				int size = sizeof(TriggerPipeData) + b->nActions * 4;
 				if(data2 != null) {
 					int size2 = size + data2.Length * 2;
-					if(size2 > x.bCapacity) x.b = b = (IpcPipeData*)Util.NativeHeap.ReAlloc(b, size2 + 100);
+					if(size2 > x.bCapacity) x.b = b = (TriggerPipeData*)Util.NativeHeap.ReAlloc(b, size2 + 100);
 					fixed (char* p = data2) Api.memcpy((byte*)b + size, p, data2.Length * 2);
 					size = size2;
 				}

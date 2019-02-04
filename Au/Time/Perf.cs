@@ -22,7 +22,7 @@ using static Au.NoClass;
 //	Then would be easy to measure speed of appdomain or process startup.
 //	However then too slow Perf startup (JIT + opening shared memory), eg 5 ms vs 1 ms. With process memory 3-4 ms.
 //	Also rejected Serialize: pass the string eg as command line args, then in that appdomain/process create new Inst variable.
-//	Instead use Time.Microseconds, eg with command line.
+//	Instead use Time.PerfMicroseconds, eg with command line.
 
 namespace Au
 {
@@ -257,7 +257,7 @@ namespace Au
 			//	}
 			//}
 
-			//rejected. It's easier to use Time.Microseconds in the same way.
+			//rejected. It's easier to use Time.PerfMicroseconds in the same way.
 			///// <summary>
 			///// Converts this variable to string that can be used to create a copy of this variable with <see cref="Inst(string)"/>.
 			///// </summary>
@@ -397,7 +397,7 @@ namespace Au
 		public static void Cpu(int timeMilliseconds = 200)
 		{
 			int n = 0;
-			for(long t0 = Time.Microseconds; Time.Microseconds - t0 < timeMilliseconds * 1000L; n++) { }
+			for(long t0 = Time.PerfMicroseconds; Time.PerfMicroseconds - t0 < timeMilliseconds * 1000L; n++) { }
 			//Print(n);
 		}
 
