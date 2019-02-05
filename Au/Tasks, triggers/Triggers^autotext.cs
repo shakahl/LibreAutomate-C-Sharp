@@ -63,7 +63,8 @@ namespace Au.Triggers
 			}
 		}
 
-		ETriggerEngineProcess ITriggers.EngineProcess => _a.Count > 0 ? ETriggerEngineProcess.Remote : ETriggerEngineProcess.None;
+		bool ITriggers.HasTriggers => _a.Count > 0;
+		bool ITriggers.UsesServer => true;
 
 		void ITriggers.Write(BinaryWriter w)
 		{
@@ -81,7 +82,7 @@ namespace Au.Triggers
 		TriggerBase ITriggers.GetAction(int action) => _a[action];
 	}
 
-	class AutotextTriggersEngine : ITriggerEngine
+	class AutotextTriggersServer : ITriggersServer
 	{
 		class _TriggerValue
 		{
@@ -103,7 +104,7 @@ namespace Au.Triggers
 			_d?.Clear();
 		}
 
-		void ITriggerEngine.AddTriggers(int pipeIndex, BinaryReader r, byte[] raw)
+		void ITriggersServer.AddTriggers(int pipeIndex, BinaryReader r, byte[] raw)
 		{
 			if(_d == null) _d = new Dictionary<string, object>();
 			int n = r.ReadInt32();
@@ -118,7 +119,7 @@ namespace Au.Triggers
 			}
 		}
 
-		void ITriggerEngine.RemoveTriggers(int pipe)
+		void ITriggersServer.RemoveTriggers(int pipe)
 		{
 			//TODO
 		}

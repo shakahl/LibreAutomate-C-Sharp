@@ -129,9 +129,8 @@ namespace Au.Triggers
 			bool haveTriggers = false; int remoteMask = 0;
 			MemoryStream ms = null; BinaryWriter wr = null;
 			for(int i = 0; i < (int)ETriggerType.Count; i++) {
-				var t = _t[i]; if(t == null) continue;
-				var ep = t.EngineProcess; if(ep == ETriggerEngineProcess.None) continue;
-				if(ep == ETriggerEngineProcess.Remote) {
+				var t = _t[i]; if(t == null || !t.HasTriggers) continue;
+				if(t.UsesServer) {
 					remoteMask |= 1 << i;
 					if(ms == null) {
 						ms = new MemoryStream();
@@ -164,7 +163,7 @@ namespace Au.Triggers
 				}
 			}
 			if(!useEditor) {
-				lock(this) { //TODO
+				lock("8xBteR5Pp0y/uM63gGQuhw") {
 					if(TriggersServer.Instance == null) TriggersServer.Start(true);
 				}
 				wMsg = TriggersServer.Instance.MsgWnd;
@@ -211,6 +210,15 @@ namespace Au.Triggers
 						if(ec != 0) { Debug_.LibPrintNativeError(ec); break; }
 					}
 					var h = (TriggerPipeData*)b;
+
+					//TODO
+					if(*(int*)h == -100) {
+						//Print("test");
+						int nu = 0;
+						Api.WriteFile(pipe, &nu, 4);
+						continue;
+					}
+
 					int nActions = h->nActions;
 					var wnd = (Wnd)h->hwnd;
 					int data1 = h->intData;
@@ -222,7 +230,11 @@ namespace Au.Triggers
 					int* actions = (int*)(h + 1);
 					for(int i = 0; i < nActions; i++) {
 						action = actions[i];
-						//1500.ms(); //TODO
+						//if(action == 100) {//TODO
+						//	//Print("mouse");
+						//	break;
+						//}
+						 //1500.ms(); //TODO
 						if(t.CanRun(action, data1, data2, wnd, wndCache)) { r = i + 1; break; }
 					}
 					Api.WriteFile(pipe, &r, 4);
@@ -298,22 +310,16 @@ namespace Au.Triggers
 		TimerAt,
 	}
 
-	enum ETriggerEngineProcess
-	{
-		None, //no triggers
-		Local, //in task process
-		Remote, //in editor process
-	}
-
 	interface ITriggers
 	{
-		ETriggerEngineProcess EngineProcess { get; }
+		bool HasTriggers { get; }
+		bool UsesServer { get; }
 		void Write(BinaryWriter w);
 		bool CanRun(int action, int data1, string data2, Wnd w, WFCache cache);
 		TriggerBase GetAction(int action);
 	}
 
-	interface ITriggerEngine : IDisposable
+	interface ITriggersServer : IDisposable
 	{
 		void AddTriggers(int pipe, BinaryReader r, byte[] raw);
 		void RemoveTriggers(int pipe);

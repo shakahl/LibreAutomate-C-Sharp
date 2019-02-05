@@ -56,7 +56,8 @@ namespace Au.Triggers
 			}
 		}
 
-		ETriggerEngineProcess ITriggers.EngineProcess => _a.Count > 0 ? ETriggerEngineProcess.Local : ETriggerEngineProcess.None;
+		bool ITriggers.HasTriggers => _a.Count > 0;
+		bool ITriggers.UsesServer => false;
 
 		void ITriggers.Write(BinaryWriter w)
 		{

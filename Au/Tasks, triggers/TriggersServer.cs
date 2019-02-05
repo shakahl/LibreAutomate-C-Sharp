@@ -79,15 +79,15 @@ namespace Au.Triggers
 			}
 		}
 
-		Wnd.Misc.MyWindow _msgWnd;
-		Thread _thread;
-		List<_ThreadPipe> _pipes;
-		ITriggerEngine[] _te;
-		IntPtr _ev;
+		readonly Wnd.Misc.MyWindow _msgWnd;
+		readonly Thread _thread;
+		readonly List<_ThreadPipe> _pipes;
+		readonly ITriggersServer[] _ts;
+		IntPtr _event;
 		bool _inTaskProcess;
 		bool _addedToSend;
 
-		public ITriggerEngine this[ETriggerType e] { get => _te[(int)e]; private set => _te[(int)e] = value; }
+		public ITriggersServer this[ETriggerType e] { get => _ts[(int)e]; private set => _ts[(int)e] = value; }
 
 		public static TriggersServer Instance => s_instance;
 		static TriggersServer s_instance;
@@ -100,11 +100,13 @@ namespace Au.Triggers
 		{
 			_inTaskProcess = inTaskProcess;
 			_pipes = new List<_ThreadPipe>();
-			_te = new ITriggerEngine[(int)ETriggerType.ServerCount];
-			this[ETriggerType.Hotkey] = new HotkeyTriggersEngine();
-			this[ETriggerType.Autotext] = new AutotextTriggersEngine();
+			_ts = new ITriggersServer[(int)ETriggerType.ServerCount];
+			this[ETriggerType.Hotkey] = new HotkeyTriggersServer();
+			this[ETriggerType.Autotext] = new AutotextTriggersServer();
 			//TODO: create mouse engines
 
+			_msgWnd = new Wnd.Misc.MyWindow(_WndProc);
+			_event = Api.CreateEvent(true);
 			_thread = Thread_.Start(_Thread);
 		}
 
@@ -112,9 +114,9 @@ namespace Au.Triggers
 		{
 			string className = _inTaskProcess ? "Au.Triggers.Exe" : "Au.Triggers.Server";
 			Wnd.Misc.MyWindow.RegisterClass(className);
-			_msgWnd = new Wnd.Misc.MyWindow(_WndProc);
 			_msgWnd.CreateMessageWindow(className);
-			_ev = Api.CreateEvent(true);
+			Api.SetEvent(_event);
+			if(_inTaskProcess) Util.AppDomain_.Exit += (unu, sed) => _msgWnd.Handle.SendTimeout(1000, Api.WM_CLOSE); //unhook etc
 
 			while(Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
 		}
@@ -123,9 +125,8 @@ namespace Au.Triggers
 
 		public Wnd MsgWnd {
 			get {
-				g1:
-				var w = _msgWnd?.Handle ?? default;
-				if(w.Is0) { 1.ms(); goto g1; }
+				var w = _msgWnd.Handle;
+				if(w.Is0) { Api.WaitForSingleObject(_event, -1); w = _msgWnd.Handle; }
 				return w;
 			}
 		}
@@ -135,10 +136,10 @@ namespace Au.Triggers
 			try {
 				switch(message) {
 				case Api.WM_DESTROY:
-					foreach(var v in _te) v.Dispose();
+					foreach(var v in _ts) v.Dispose();
 					foreach(var v in _pipes) v?.Dispose();
-					Api.CloseHandle(_ev);
-					s_instance = null; //TODO: not thread-safe
+					Api.CloseHandle(_event);
+					s_instance = null;
 					Api.PostQuitMessage(0);
 					break;
 				case Api.WM_COPYDATA:
@@ -191,7 +192,7 @@ namespace Au.Triggers
 			lock(_pipes) {
 				if(pipeIndex >= 0) _pipes[pipeIndex] = tp; else { pipeIndex = _pipes.Count; _pipes.Add(tp); }
 			}
-			for(int i = 0; i < _te.Length; i++) if(0 != ((mask >> i) & 1)) _te[i].AddTriggers(pipeIndex, r, data);
+			for(int i = 0; i < _ts.Length; i++) if(0 != ((mask >> i) & 1)) _ts[i].AddTriggers(pipeIndex, r, data);
 
 			return 1;
 		}
@@ -207,13 +208,16 @@ namespace Au.Triggers
 		{
 			//Print(pipeIndex);
 			var x = _pipes[pipeIndex];
-			for(int i = 0; i < _te.Length; i++) if(0 != ((x.mask >> i) & 1)) _te[i].RemoveTriggers(pipeIndex);
+			for(int i = 0; i < _ts.Length; i++) if(0 != ((x.mask >> i) & 1)) _ts[i].RemoveTriggers(pipeIndex);
 			x.Dispose();
 			lock(_pipes) _pipes[pipeIndex] = null;
-			if(_inTaskProcess) {
-				bool used = false; foreach(var v in _pipes) { if(v != null) { used = true; break; } }
-				if(!used) _msgWnd.Destroy();
-			}
+
+			//rejected. Not thread-safe, etc.
+			//if(_inTaskProcess) {
+			//	bool used = false; foreach(var v in _pipes) { if(v != null) { used = true; break; } }
+			//	if(!used) _msgWnd.Destroy();
+			//}
+
 			return 1;
 		}
 
@@ -279,19 +283,51 @@ namespace Au.Triggers
 					fixed (char* p = data2) Api.memcpy((byte*)b + size, p, data2.Length * 2);
 					size = size2;
 				}
-				var o = new Api.OVERLAPPED { hEvent = _ev };
+				var o = new Api.OVERLAPPED { hEvent = _event };
 				if(!Api.WriteFile(x.pipe, b, size, null, &o) && !_Wait()) return false;
 				Perf.Next();
 				int r = 0;
-				o = new Api.OVERLAPPED { hEvent = _ev };
+				o = new Api.OVERLAPPED { hEvent = _event };
 				if(!Api.ReadFile(x.pipe, &r, 4, out _, &o) && !_Wait()) return false;
-				Perf.NW();
+				//Perf.NW();//TODO
 				if(r != 0) return true;
 
 				bool _Wait()
 				{
 					if(Native.GetError() != Api.ERROR_IO_PENDING) { Debug_.LibPrintNativeError(); return false; }
-					var ha = stackalloc IntPtr[2] { _ev, x.threadHandle };
+					var ha = stackalloc IntPtr[2] { _event, x.threadHandle };
+					for(; ; ) {
+						var r1 = Api.WaitForMultipleObjectsEx(2, ha, false, Timeout.Infinite, false);
+						if(r1 == 0) break;
+						Api.CancelIo(x.pipe);
+						if(r1 == 1) _RemovePipeTriggers(i); //probably TerminateThread
+						else Debug_.LibPrintNativeError(); //WAIT_FAILED
+						return false;
+						//note: not _ev.WaitOne. In STA thread it gets some messages, and then hook can reenter.
+					}
+					return true;
+				}
+			}
+			return false;
+		}
+
+		public unsafe bool SendHook(int data)
+		{
+			data = -100;
+			for(int i = 0; i < _pipes.Count; i++) {
+				var x = _pipes[i]; if(x == null) continue;
+				int size = 4;
+				var o = new Api.OVERLAPPED { hEvent = _event };
+				if(!Api.WriteFile(x.pipe, &data, size, null, &o) && !_Wait()) return false;
+				int r = 0;
+				o = new Api.OVERLAPPED { hEvent = _event };
+				if(!Api.ReadFile(x.pipe, &r, 4, out _, &o) && !_Wait()) return false;
+				if(r != 0) return true;
+
+				bool _Wait()
+				{
+					if(Native.GetError() != Api.ERROR_IO_PENDING) { Debug_.LibPrintNativeError(); return false; }
+					var ha = stackalloc IntPtr[2] { _event, x.threadHandle };
 					for(; ; ) {
 						var r1 = Api.WaitForMultipleObjectsEx(2, ha, false, Timeout.Infinite, false);
 						if(r1 == 0) break;

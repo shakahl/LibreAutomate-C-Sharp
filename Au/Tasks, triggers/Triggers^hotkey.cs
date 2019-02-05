@@ -110,7 +110,8 @@ namespace Au.Triggers
 			}
 		}
 
-		ETriggerEngineProcess ITriggers.EngineProcess => _a.Count > 0 ? ETriggerEngineProcess.Remote : ETriggerEngineProcess.None;
+		bool ITriggers.HasTriggers => _a.Count > 0;
+		bool ITriggers.UsesServer => true;
 
 		unsafe void ITriggers.Write(BinaryWriter w)
 		{
@@ -142,7 +143,7 @@ namespace Au.Triggers
 		}
 	}
 
-	class HotkeyTriggersEngine : ITriggerEngine
+	class HotkeyTriggersServer : ITriggersServer
 	{
 		class _TriggerValue
 		{
@@ -164,7 +165,7 @@ namespace Au.Triggers
 			_d?.Clear();
 		}
 
-		unsafe void ITriggerEngine.AddTriggers(int pipeIndex, BinaryReader r, byte[] raw)
+		unsafe void ITriggersServer.AddTriggers(int pipeIndex, BinaryReader r, byte[] raw)
 		{
 			if(_d == null) _d = new Dictionary<int, _TriggerValue>();
 			int n = r.ReadInt32(); //how many triggers
@@ -182,9 +183,14 @@ namespace Au.Triggers
 			}
 
 			if(KeyboardHook.Instance == null) KeyboardHook.Instance = new KeyboardHook();
+
+			//TODO
+			if(MouseHook.Instance == null) {
+				MouseHook.Instance = new MouseHook();
+			}
 		}
 
-		void ITriggerEngine.RemoveTriggers(int pipeIndex)
+		void ITriggersServer.RemoveTriggers(int pipeIndex)
 		{
 			//_Print("BEFORE");
 			var ar = new List<KeyValuePair<int, _TriggerValue>>();
@@ -215,24 +221,30 @@ namespace Au.Triggers
 
 		internal bool HookProc(HookData.Keyboard k)
 		{
-			if(!k.IsUp && k.Mod == 0) {
-				var mod = Keyb.GetMod();
-				var km = Math_.MakeUshort((int)k.vkCode, (int)mod);
-				//Print(k.vkCode, mod, km);
-				if(_d.TryGetValue(km, out var o)) {
-					//Print("trigger");
-					var ti = TriggersServer.Instance;
-					ti.SendBegin();
-					//Perf.First();
-					for(; o != null; o = o.next) {
-						//TODO: apply flags
-
-						ti.SendAdd(o.pipeIndex, o.action);
-					}
-					//Perf.NW();
-					return ti.Send(ETriggerType.Hotkey, (int)mod);
-				}
+			//TODO
+			if(Keyb.IsScrollLock) {
+				var ti = TriggersServer.Instance;
+				ti.SendHook(-100);
 			}
+
+			//if(!k.IsUp && k.Mod == 0) {
+			//	var mod = Keyb.GetMod();
+			//	var km = Math_.MakeUshort((int)k.vkCode, (int)mod);
+			//	//Print(k.vkCode, mod, km);
+			//	if(_d.TryGetValue(km, out var o)) {
+			//		//Print("trigger");
+			//		var ti = TriggersServer.Instance;
+			//		ti.SendBegin();
+			//		//Perf.First();
+			//		for(; o != null; o = o.next) {
+			//			//TODO: apply flags
+
+			//			ti.SendAdd(o.pipeIndex, o.action);
+			//		}
+			//		//Perf.NW();
+			//		return ti.Send(ETriggerType.Hotkey, (int)mod);
+			//	}
+			//}
 			return false;
 		}
 	}
@@ -252,7 +264,6 @@ namespace Au.Triggers
 		public void Dispose()
 		{
 			//Output.LibWriteQM2("disp");
-
 			_hook.Dispose(); _hook = null;
 			Instance = null;
 		}
@@ -260,9 +271,9 @@ namespace Au.Triggers
 		bool _Hook(HookData.Keyboard k)
 		{
 			var ti = TriggersServer.Instance;
-			var hotkey = ti[ETriggerType.Hotkey] as HotkeyTriggersEngine;
+			var hotkey = ti[ETriggerType.Hotkey] as HotkeyTriggersServer;
 			if(hotkey?.HookProc(k) ?? false) return true;
-			var autotext = ti[ETriggerType.Autotext] as AutotextTriggersEngine;
+			var autotext = ti[ETriggerType.Autotext] as AutotextTriggersServer;
 			if(autotext?.HookProc(k) ?? false) return true;
 			return false;
 		}

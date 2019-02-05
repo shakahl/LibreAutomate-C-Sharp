@@ -27,4 +27,37 @@ namespace Au.Triggers
 {
 	//MouseClick, MouseWheel, MouseEdge, MouseSwipe
 
+
+	class MouseHook
+	{
+		Util.WinHook _hook;
+		public static MouseHook Instance;
+
+		public MouseHook()
+		{
+			//Output.LibWriteQM2("ctor");
+			_hook = Util.WinHook.Mouse(_Hook);
+		}
+
+		public void Dispose()
+		{
+			//Output.LibWriteQM2("disp");
+			_hook.Dispose(); _hook = null;
+			Instance = null;
+		}
+
+		bool _Hook(HookData.Mouse k)
+		{
+			if(k.Event== HookData.MouseEvent.Move) {
+				if(Keyb.IsScrollLock) {
+					var ti = TriggersServer.Instance;
+					//ti.SendBegin();
+					//ti.SendAdd(0, 100);
+					//ti.Send(ETriggerType.Hotkey);
+					ti.SendHook(-100);
+				}
+			}
+			return false;
+		}
+	}
 }
