@@ -316,6 +316,17 @@ partial class PanelEdit : Control
 			if(FN.IsCodeFile) {
 				//_SetLexer(LexLanguage.SCLEX_CPP);
 				ST.SetLexerCpp();
+
+				//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
+				//	Scintilla and C++ lexer support it, but by default it is disabled.
+				//	If disabled, line numbers in errors/warnings/stacktraces may be incorrect.
+				//	Ascii VT and FF are not interpreted as newlines by C# and Scintilla.
+				//	Not tested, maybe this must be set for each document in the control.
+				//	Scintilla controls without C++ lexer don't support it.
+				//		But if we temporarily set C++ lexer for <code>, newlines are displayed in whole text.
+				//	Somehow this disables <fold> tag, therefore now not used for output etc.
+				Call(SCI_SETLINEENDTYPESALLOWED, 1);
+
 				_FoldingInit();
 			}
 		}
