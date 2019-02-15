@@ -331,7 +331,7 @@ namespace Au
 					}
 					b[n - 1] = 13; b[n++] = 10;
 
-					ok = Api.WriteFile(_h, b, n);
+					ok = Api.WriteFile(_h, b, n, out _);
 				}
 				if(!ok) {
 					string emsg = Native.GetErrorMessage();

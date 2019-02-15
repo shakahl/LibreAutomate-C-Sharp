@@ -433,7 +433,7 @@ namespace Au
 					case ValueTuple<int, bool> t:
 						AddKey(0, t.Item1, t.Item2);
 						break;
-					default: throw new ArgumentException("Bad type. Expected string, KKey, int, double, Action, (KKey, int, bool) or (int, bool).");
+					default: throw new ArgumentException("Unsupported object type. Expected string, KKey, int, double, Action, (KKey, int, bool) or (int, bool).");
 					}
 					wasKeysString = false;
 				}

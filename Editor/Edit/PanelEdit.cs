@@ -569,19 +569,25 @@ partial class PanelEdit : Control
 
 		void _FoldingFoldLine(int line)
 		{
+#if false
+			Call(SCI_FOLDLINE, line);
+#else
 			string s = ST.LineText(line), s2 = "";
 			for(int i = 0; i < s.Length; i++) {
 				char c = s[i];
 				if(c == '{') { s2 = "... }"; break; }
 				if(c == '/' && i < s.Length - 1) {
 					c = s[i + 1];
-					if(c == '*') { s2 = "... */"; break; }
-					if(i < s.Length - 3 && c == '/' && s[i + 2] == '{' && s[i + 3] == '{') { s2 = "... }}"; break; }
+					if(c == '*') break;
+					if(i < s.Length - 3 && c == '/' && s[i + 2] == '{' && s[i + 3] == '{') break;
+					//if(c == '*') { s2 = "... */"; break; }
+					//if(i < s.Length - 3 && c == '/' && s[i + 2] == '{' && s[i + 3] == '{') { s2 = "... }}"; break; }
 				}
 			}
 			//problem: quite slow. At startup ~250 mcs. The above code is fast.
 			if(s2.Length == 0) Call(SCI_FOLDLINE, line); //slightly faster
 			else ST.SetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
+#endif
 		}
 
 		#endregion

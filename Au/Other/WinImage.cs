@@ -532,7 +532,7 @@ namespace Au
 				case IEnumerable<System.Windows.Media.Color> e:
 					foreach(var color in e) _AddColor(color);
 					break;
-				default: throw new ArgumentException("Bad type.", nameof(image));
+				default: throw new ArgumentException("Unsupported object type.", nameof(image));
 				}
 
 				void _AddColor(ColorInt color) => _images.Add(new _Image(color));

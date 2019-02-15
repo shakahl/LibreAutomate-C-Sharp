@@ -2207,6 +2207,65 @@ a1,-8";
 		}
 	}
 
+	static void TestCastDelegate()
+	{
+		//Action<string> func_string = s => Print(s);
+		//Action<object> func_object;
+		//func_object = (Action<object>)func_string;
+		//func_object("te"); //System.InvalidCastException
+
+		Action<object> func_object = s => Print(s);
+		Action<string> func_string;
+		func_string = func_object;
+		func_string("te"); //OK
+	}
+
+	static void TestMulticastDelegate()
+	{
+		Action a=null;
+		a+=() => Print(1);
+		Action b = a;
+		a+=() => Print(2);
+		b+=() => Print(3);
+		Print("call a");
+		a();
+		Print("call b");
+		b();
+		Print("call b+a");
+		b += a;
+		b();
+		Print("call b=a");
+		b = a;
+		b();
+		//a.GetInvocationList
+
+	}
+
+	static void TestWndGroup()
+	{
+		//Wnd.Find("Quick*-").Activate();
+
+		//var f = new Wnd.Finder("Quick*");
+		//f.
+
+		//Print(Wnd.WaitAny(0, false, new Wnd.Finder("Quick*")));
+		Print(Wnd.WaitAny(10, true, "Quick*,,,'LISTITEM' one, two, three", "*Notepad"));
+		//Print(Wnd.WaitAny(10, true, "*one, two, three*\0", "*Notepad"));
+		//Print(Wnd.WaitNot(10, "*Notepad"));
+		//Print(Wnd.WaitNot(10, out _, ",,Notepad.exe"));
+	}
+
+	static void TestOutTuple(int k, out (bool, int) t)
+	{
+		t = (true, 1);
+	}
+
+	static Bitmap GetBitmap()
+	{
+		return null;
+	}
+
+
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
@@ -2229,6 +2288,20 @@ a1,-8";
 			//TContext o = () => true; //error
 			//TContext o = new Func<bool>(() => true); //OK
 
+			var pe = Perf.StartNew();
+			int i = 0;
+			if(Au.Util.Assembly_.LibIsAuNgened)i++; //60 if ngened, else 1200
+			pe.Next();
+			if(Au.Util.Assembly_.LibIsAuNgened) i++;
+			pe.Next();
+			if(Au.Util.Assembly_.LibIsAuNgened) i++;
+			pe.NW();
+			Print(i);
+
+			//Triggers.Of().
+			//TestWndGroup();
+			//TestMulticastDelegate();
+			//TestCastDelegate();
 			//TestListForeach();
 			//TestActionThread();
 			//TestTaskSpeed();

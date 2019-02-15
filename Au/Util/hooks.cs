@@ -34,6 +34,7 @@ namespace Au.Util
 		IntPtr _hh; //HHOOK
 		Api.HOOKPROC _proc1; //our intermediate dispatcher hook proc that calls _proc2
 		Delegate _proc2; //caller's hook proc
+		string _hookTypeString; //"Keyboard" etc
 
 		/// <summary>
 		/// Installs a low-level keyboard hook (WH_KEYBOARD_LL).
@@ -94,6 +95,9 @@ namespace Au.Util
 		/// </example>
 		public static WinHook Mouse(Func<HookData.Mouse, bool> hookProc)
 			=> new WinHook(Api.WH_MOUSE_LL, hookProc, -1);
+
+		internal static WinHook LibMouseRaw(Func<LPARAM, LPARAM, bool> hookProc)
+			=> new WinHook(Api.WH_MOUSE_LL, hookProc, -1, "Mouse");
 
 		/// <summary>
 		/// Installs a WH_CBT hook for a thread of this process.
@@ -276,13 +280,17 @@ namespace Au.Util
 		/// <param name="hookType">One of WH_ constants that are used with API <msdn>SetWindowsHookEx</msdn>.</param>
 		/// <param name="hookProc">Delegate of the hook procedure of correct type.</param>
 		/// <param name="tid">Thread id or: 0 (default) this thread, -1 global hook.</param>
+		/// <param name="hookTypeString"></param>
 		/// <exception cref="AuException">Failed.</exception>
-		WinHook(int hookType, Delegate hookProc, int tid = 0)
+		WinHook(int hookType, Delegate hookProc, int tid = 0, [CallerMemberName] string hookTypeString = null)
 		{
 			if(tid == 0) tid = Api.GetCurrentThreadId(); else if(tid == -1) tid = 0;
 			_hh = Api.SetWindowsHookEx(hookType, _proc1 = _HookProc, default, tid);
 			if(_hh == default) throw new AuException(0, "*set hook");
 			_proc2 = hookProc;
+			_hookTypeString = hookTypeString;
+
+			//info: don't need to JIT _HookProc for LL hooks of triggers, because we use CBT hook before it to create the message-only window.
 		}
 
 		/// <summary>
@@ -292,7 +300,7 @@ namespace Au.Util
 		{
 			if(_hh != default) {
 				bool ok = Api.UnhookWindowsHookEx(_hh);
-				if(!ok) PrintWarning($"Failed to unhook WinHook ({_HookTypeStr}). {Native.GetErrorMessage()}");
+				if(!ok) PrintWarning($"Failed to unhook WinHook ({_hookTypeString}). {Native.GetErrorMessage()}");
 				_hh = default;
 				_proc2 = null;
 			}
@@ -312,11 +320,9 @@ namespace Au.Util
 		~WinHook()
 		{
 			//unhooking in finalizer thread makes no sense. Must unhook in same thread, else fails.
-			//if(_hh != default && !NoWarningNondisposed) PrintWarning($"Non-disposed WinHook ({_HookTypeStr}) variable."); //rejected. Eg when called Environment.Exit, finalizers are executed but finally code blocks not.
-			Debug_.PrintIf(_hh != default, $"Non-disposed WinHook ({_HookTypeStr}) variable.");
+			//if(_hh != default && !NoWarningNondisposed) PrintWarning($"Non-disposed WinHook ({_hookTypeString}) variable."); //rejected. Eg when called Environment.Exit, finalizers are executed but finally code blocks not.
+			Debug_.PrintIf(_hh != default, $"Non-disposed WinHook ({_hookTypeString}) variable.");
 		}
-
-		string _HookTypeStr => _proc2.GetType().GenericTypeArguments[0].Name;
 
 		LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam)
 		{
@@ -333,6 +339,10 @@ namespace Au.Util
 					case Func<HookData.Mouse, bool> p:
 						t1 = Time.PerfMilliseconds; hookType = Api.WH_MOUSE_LL;
 						R = p(new HookData.Mouse(this, wParam, lParam));
+						break;
+					case Func<LPARAM, LPARAM, bool> p: //raw
+						t1 = Time.PerfMilliseconds; hookType = Api.WH_MOUSE_LL;
+						R = p(wParam, lParam);
 						break;
 					case Func<HookData.ThreadCbt, bool> p:
 						R = p(new HookData.ThreadCbt(this, code, wParam, lParam));
@@ -391,11 +401,11 @@ namespace Au.Util
 		/// </summary>
 		/// <remarks>
 		/// Gets registry value HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout.
-		/// If the registry value is missing, returns 300, because it is the default value used by Windows. If the registry value is more than 1000, returns 1000, because Windows 10 ignores bigger values.
+		/// If the registry value is missing, returns 300; it is the default value used by Windows. If the registry value is more than 1000, returns 1000, because Windows 10 ignores bigger values.
 		/// If a hook procedure takes more time, Windows does not wait. Then the return value is ignored, and the event is passed to the active window, other hooks, etc. Also Windows may fully or partially disable the hook.
 		/// More info: <google>registry LowLevelHooksTimeout</google>.
 		/// </remarks>
-		static int LowLevelHooksTimeout {
+		public static int LowLevelHooksTimeout {
 			get {
 				if(s_lowLevelHooksTimeout == 0) {
 					if(!Registry_.GetInt(out int i, "LowLevelHooksTimeout", @"Control Panel\Desktop")) i = 300; //default 300, tested on Win10 and 7
@@ -447,7 +457,7 @@ namespace Au.Types
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WinHook hook;
 
-			Api.KBDLLHOOKSTRUCT* _x;
+			readonly Api.KBDLLHOOKSTRUCT* _x;
 
 			internal Keyboard(WinHook hook, LPARAM lParam)
 			{
@@ -458,30 +468,35 @@ namespace Au.Types
 			/// <summary>
 			/// Is extended key.
 			/// </summary>
-			public bool IsExtended => 0 != (flags & Api.LLKHF_EXTENDED);
+			public bool IsExtended => 0 != (_x->flags & Api.LLKHF_EXTENDED);
 
 			/// <summary>
 			/// true if the event was generated by API such as <msdn>SendInput</msdn>.
 			/// false if the event was generated by the keyboard.
 			/// </summary>
-			public bool IsInjected => 0 != (flags & Api.LLKHF_INJECTED);
+			public bool IsInjected => 0 != (_x->flags & Api.LLKHF_INJECTED);
+
+			/// <summary>
+			/// true if the event was generated by functions of this library.
+			/// </summary>
+			public bool IsInjectedByAu => 0 != (_x->flags & Api.LLKHF_INJECTED) && _x->dwExtraInfo == Api.AuExtraInfo;
 
 			/// <summary>
 			/// Key Alt is pressed.
 			/// </summary>
-			public bool IsAlt => 0 != (flags & Api.LLKHF_ALTDOWN);
+			public bool IsAlt => 0 != (_x->flags & Api.LLKHF_ALTDOWN);
 
 			/// <summary>
 			/// Is key-up event.
 			/// </summary>
-			public bool IsUp => 0 != (flags & Api.LLKHF_UP);
+			public bool IsUp => 0 != (_x->flags & Api.LLKHF_UP);
 
 			/// <summary>
 			/// If the key is a modifier key (Shift, Ctrl, Alt, Win), returns the modifier flag. Else returns 0.
 			/// </summary>
 			public KMod Mod {
 				get {
-					switch(vkCode) {
+					switch((KKey)_x->vkCode) {
 					case KKey.Shift: case KKey.LShift: case KKey.RShift: return KMod.Shift;
 					case KKey.Ctrl: case KKey.LCtrl: case KKey.RCtrl: return KMod.Ctrl;
 					case KKey.Alt: case KKey.LAlt: case KKey.RAlt: return KMod.Alt;
@@ -496,13 +511,14 @@ namespace Au.Types
 			/// </summary>
 			public KKey Key {
 				get {
-					switch(vkCode) {
+					var vk = (KKey)_x->vkCode;
+					switch(vk) {
 					case KKey.LShift: case KKey.RShift: return KKey.Shift;
 					case KKey.LCtrl: case KKey.RCtrl: return KKey.Ctrl;
 					case KKey.LAlt: case KKey.RAlt: return KKey.Alt;
 					case KKey.RWin: return KKey.Win;
 					}
-					return vkCode;
+					return vk;
 				}
 			}
 
@@ -511,12 +527,13 @@ namespace Au.Types
 			/// </summary>
 			public bool IsKey(KKey key)
 			{
-				if(key == vkCode) return true;
+				var vk = (KKey)_x->vkCode;
+				if(key == vk) return true;
 				switch(key) {
-				case KKey.Shift: return vkCode == KKey.LShift || vkCode == KKey.RShift;
-				case KKey.Ctrl: return vkCode == KKey.LCtrl || vkCode == KKey.RCtrl;
-				case KKey.Alt: return vkCode == KKey.LAlt || vkCode == KKey.RAlt;
-				case KKey.Win: return vkCode == KKey.RWin;
+				case KKey.Shift: return vk == KKey.LShift || vk == KKey.RShift;
+				case KKey.Ctrl: return vk == KKey.LCtrl || vk == KKey.RCtrl;
+				case KKey.Alt: return vk == KKey.LAlt || vk == KKey.RAlt;
+				case KKey.Win: return vk == KKey.RWin;
 				}
 				return false;
 			}
@@ -549,7 +566,14 @@ namespace Au.Types
 			public int time => _x->time;
 			/// <summary><msdn>KBDLLHOOKSTRUCT</msdn></summary>
 			public LPARAM dwExtraInfo => _x->dwExtraInfo;
+
+			internal Api.KBDLLHOOKSTRUCT* LibNativeStructPtr => _x;
 		}
+
+		/// <summary>
+		/// Extra info value used by functions of this library that generate keyboard events. Low-level hooks receive it in <b>dwExtraInfo</b>.
+		/// </summary>
+		public const int AuExtraInfo = Api.AuExtraInfo;
 
 		/// <summary>
 		/// Hook data for the hook procedure installed by <see cref="WinHook.Mouse"/>.
@@ -560,8 +584,8 @@ namespace Au.Types
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WinHook hook;
 
-			Api.MSLLHOOKSTRUCT* _x;
-			uint _event;
+			readonly Api.MSLLHOOKSTRUCT* _x;
+			readonly uint _event;
 
 			internal Mouse(WinHook hook, LPARAM wParam, LPARAM lParam)
 			{
@@ -618,6 +642,11 @@ namespace Au.Types
 			/// </summary>
 			public bool IsInjected => 0 != (flags & Api.LLMHF_INJECTED);
 
+			/// <summary>
+			/// true if the event was generated by functions of this library.
+			/// </summary>
+			public bool IsInjectedByAu => IsInjected && dwExtraInfo == Api.AuExtraInfo;
+
 			///
 			public override string ToString()
 			{
@@ -635,6 +664,8 @@ namespace Au.Types
 			public int time => _x->time;
 			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>
 			public LPARAM dwExtraInfo => _x->dwExtraInfo;
+
+			internal Api.MSLLHOOKSTRUCT* LibNativeStructPtr => _x;
 		}
 
 		/// <summary>

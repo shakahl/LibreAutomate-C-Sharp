@@ -780,7 +780,7 @@ namespace Au.Types
 		/// <summary>
 		/// Extra info value of key and mouse events sent by functions of this library.
 		/// </summary>
-		internal const int AuExtraInfo = 0x71427fa5;
+		internal const int AuExtraInfo = 0x71427fa5; //TODO: public
 
 		//[DllImport("user32.dll", SetLastError = true)]
 		//internal static extern int SendInput(int cInputs, in INPUTKEY pInputs, int cbSize);
@@ -1092,6 +1092,18 @@ namespace Au.Types
 			public uint flags;
 			public int time;
 			public LPARAM dwExtraInfo;
+		}
+
+		internal struct MSLLHOOKSTRUCT2
+		{
+			public MSLLHOOKSTRUCT m; //must be first
+			public uint message;
+
+			public MSLLHOOKSTRUCT2(LPARAM wParam, LPARAM lParam)
+			{
+				m = *(MSLLHOOKSTRUCT*)lParam;
+				message = (uint)wParam;
+			}
 		}
 
 		internal struct CBTACTIVATESTRUCT

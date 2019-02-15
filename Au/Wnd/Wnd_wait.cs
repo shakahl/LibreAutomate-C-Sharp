@@ -57,11 +57,11 @@ namespace Au
 		/// </example>
 		public static Wnd Wait(double secondsTimeout, bool active,
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-			string name = null, string className = null, WF3 program = default,
+			string name = null, string cn = null, WF3 program = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		{
-			var f = new Finder(name, className, program, flags, also, contains);
+			var f = new Finder(name, cn, program, flags, also, contains);
 			var to = new WaitFor.Loop(secondsTimeout);
 			for(; ; ) {
 				if(active) {
@@ -81,7 +81,7 @@ namespace Au
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="Wait"/></param>
 		/// <param name="active">The window must be the active window (<see cref="Active"/>), and not minimized.</param>
-		/// <param name="windows">One or more variables containing window properties.</param>
+		/// <param name="windows">One or more variables containing window properties. Can be strings, see <see cref="Finder.op_Implicit(string)"/>.</param>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
 		/// By default ignores invisible windows. Use flag <see cref="WFFlags.HiddenToo"/> if need.
@@ -95,11 +95,12 @@ namespace Au
 		public static Wnd WaitAny(double secondsTimeout, bool active, params Finder[] windows)
 		{
 			foreach(var f in windows) f.Result = default;
+			WFCache cache = active && windows.Length > 1 ? new WFCache() : null;
 			var to = new WaitFor.Loop(secondsTimeout);
 			for(; ; ) {
 				if(active) {
 					Wnd w = Active;
-					foreach(var f in windows) if(f.IsMatch(w) && !w.IsMinimized) return w;
+					foreach(var f in windows) if(f.IsMatch(w, cache) && !w.IsMinimized) return w;
 				} else {
 					foreach(var f in windows) if(f.Find()) return f.Result;
 					//FUTURE: optimization: get list of windows once (Lib.EnumWindows2).
@@ -108,6 +109,12 @@ namespace Au
 				if(!to.Sleep()) return default;
 			}
 		}
+		//TODO: WaitAny ->
+		//	public static Wnd Wait(double secondsTimeout, bool active, out int index, params Finder[] windows)
+		//	But then probably intellisense shows it first.
+		//	Maybe use some Waiter class: var ww=new Wnd.Waiter(...); if(ww.Wait(...)) { Print(ww.Wnd, ww.index); }
+		//	Or add Wait methods to Finder: var f=new Wnd.Finder(...); if(f.Wait(...)) { Print(f.Wnd, f.index); }
+		//		But then 'wait any' methods must be static.
 
 		/// <inheritdoc cref="Find"/>
 		/// <summary>
@@ -125,23 +132,24 @@ namespace Au
 		/// </remarks>
 		public static bool WaitNot(double secondsTimeout,
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-			string name = null, string className = null, WF3 program = default,
+			string name = null, string cn = null, WF3 program = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		{
-			var f = new Finder(name, className, program, flags, also, contains);
-			return WaitNot(secondsTimeout, f, out _);
+			var f = new Finder(name, cn, program, flags, also, contains);
+			return WaitNot(secondsTimeout, out _, f);
 		}
+		//TODO: add: bool active. Also wait any. Maybe single function with params Finder[]. Also return array index.
 
 		/// <inheritdoc cref="WaitNot(double, string, string, WF3, WFFlags, Func{Wnd, bool}, object)"/>
 		/// <summary>
 		/// Waits until window does not exist.
 		/// </summary>
 		/// <param name="secondsTimeout"></param>
-		/// <param name="f">Window properties etc.</param>
-		/// <param name="wFound">On timeout receives the found window.</param>
+		/// <param name="wFound">On timeout receives the first found matching window that exists.</param>
+		/// <param name="f">Window properties etc. Can be string, see <see cref="Finder.op_Implicit(string)"/>.</param>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
-		public static bool WaitNot(double secondsTimeout, Finder f, out Wnd wFound)
+		public static bool WaitNot(double secondsTimeout, out Wnd wFound, Finder f)
 		{
 			wFound = default;
 			var to = new WaitFor.Loop(secondsTimeout);
@@ -155,9 +163,10 @@ namespace Au
 			}
 		}
 
-		/// <inheritdoc cref="WaitNot(double, Finder, out Wnd)"/>
-		public static bool WaitNot(double secondsTimeout, Finder f)
-			=> WaitNot(secondsTimeout, f, out _);
+		//rejected. Cannot use implicit conversion string to Finder.
+		///// <inheritdoc cref="WaitNot(double, Finder, out Wnd)"/>
+		//public static bool WaitNot(double secondsTimeout, Finder f)
+		//	=> WaitNot(secondsTimeout, out _, f);
 
 		//Not often used. It's easy with await Task.Run. Anyway, need to provide an example of similar size.
 		//public static async Task<Wnd> WaitAsync(double secondsTimeout, string name)
@@ -199,7 +208,7 @@ namespace Au
 		/// Print("minimized");
 		/// 
 		/// //wait until window w contains focused control classnamed "Edit"
-		/// var c = new Wnd.ChildFinder(className: "Edit");
+		/// var c = new Wnd.ChildFinder(cn: "Edit");
 		/// w.WaitForCondition(10, t => c.Find(t) && c.Result.IsFocused);
 		/// Print("control focused");
 		/// ]]></code>

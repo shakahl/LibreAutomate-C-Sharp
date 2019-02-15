@@ -308,7 +308,7 @@ class RunningTasks
 		var rt = _a[i];
 		_a.RemoveAt(i);
 		_RecentEnded(rt.f);
-		Au.Triggers.TriggersServer.Instance?.RemoveTaskTriggers(rt.processId);
+		Au.Triggers.HooksServer.Instance?.RemoveTask(rt.processId);
 
 		for(int j = _q.Count - 1; j >= 0; j--) {
 			var t = _q[j];
@@ -528,7 +528,7 @@ class RunningTasks
 					if(!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AuException(0);
 				}
 				//Perf.Next();
-				if(!Api.WriteFile(pre.hPipe, taskParams)) throw new AuException(0);
+				if(!Api.WriteFileArr(pre.hPipe, taskParams, out _)) throw new AuException(0);
 				//Perf.Next();
 				Api.DisconnectNamedPipe(pre.hPipe); disconnectPipe = false;
 				//Perf.NW('e');

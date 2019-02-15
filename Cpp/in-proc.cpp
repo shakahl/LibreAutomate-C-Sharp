@@ -488,7 +488,7 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 
 	if(tid == GetCurrentThreadId()) return (HRESULT)eError::WindowOfThisThread;
 	if(wnd::ClassNameIs(GetAncestor(w, GA_ROOT), { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" }))
-		return (HRESULT)eError::UseNotInProc;
+		return (HRESULT)eError::UseNotInProc; //tested: uiAccess does not help
 
 	static CHandle s_mutex(CreateMutexW(SecurityAttributes::Common(), false, L"AuCpp_MutexGAW"));
 	DWORD wfso = WaitForSingleObject(s_mutex, INFINITE);

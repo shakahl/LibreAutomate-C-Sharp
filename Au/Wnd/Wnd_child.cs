@@ -33,7 +33,7 @@ namespace Au
 		/// Find window that contains certain control, and get the control too.
 		/// <code><![CDATA[
 		/// var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
-		/// Wnd w = Wnd.Find(className: "#32770", also: t => f.Find(t));
+		/// Wnd w = Wnd.Find(cn: "#32770", also: t => f.Find(t));
 		/// Print(w);
 		/// Print(f.Result);
 		/// ]]></code>
@@ -55,11 +55,11 @@ namespace Au
 			/// See <see cref="Wnd.Child"/>.
 			/// </summary>
 			/// <exception cref="ArgumentException"><inheritdoc cref="Child"/></exception>
-			public ChildFinder(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
+			public ChildFinder(string name = null, string cn = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 			{
-				if(className != null) {
-					if(className.Length == 0) throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
-					_className = className;
+				if(cn != null) {
+					if(cn.Length == 0) throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
+					_className = cn;
 				}
 				if(name != null) {
 					switch(Util.StringMisc.ParseParam3Stars(ref name, "id", "text", "accName", "wfName"/*, "label"*/)) {
@@ -271,7 +271,7 @@ namespace Au
 		/// <list type="bullet">
 		/// <item>
 		/// "***text " - use <see cref="ControlText"/>.
-		/// It is slower and can be less reliable (because can get editable text), especially if className not used. It does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
+		/// Slower and can be less reliable (because can get editable text), especially if not used cn (class name). Does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// </item>
 		/// <item>
 		/// "***accName " - use <see cref="NameAcc"/>.
@@ -288,10 +288,11 @@ namespace Au
 		/// See also <see cref="ChildById"/>.</item>
 		/// </list>
 		/// </param>
-		/// <param name="className">
+		/// <param name="cn">
 		/// Control class name.
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// null means 'can be any'. Cannot be "".
+		/// You can see control class name etc in editor's status bar and dialog "Find window or control".
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
@@ -306,16 +307,16 @@ namespace Au
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <exception cref="ArgumentException">
 		/// <paramref name="name"/> starts with "***", but the prefix is invalid.
-		/// <paramref name="className"/> is "". To match any, use null.
+		/// <paramref name="cn"/> is "". To match any, use null.
 		/// Invalid wildcard expression ("**options " or regular expression).
 		/// </exception>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
 		/// </remarks>
-		public Wnd Child(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
+		public Wnd Child(string name = null, string cn = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 		{
 			//ThrowIfInvalid(); //will be called later
-			var f = new ChildFinder(name, className, flags, also, skip);
+			var f = new ChildFinder(name, cn, flags, also, skip);
 			f.Find(this);
 			return f.Result;
 		}
@@ -333,14 +334,14 @@ namespace Au
 		/// <code><![CDATA[
 		/// //find window that contains certain control, and get the control too
 		/// var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
-		/// Wnd w = Wnd.Find(className: "#32770", also: t => t.HasChild(f));
+		/// Wnd w = Wnd.Find(cn: "#32770", also: t => t.HasChild(f));
 		/// Print(w);
 		/// Print(f.Result);
 		/// ]]></code>
 		/// </example>
-		public bool HasChild(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
+		public bool HasChild(string name = null, string cn = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 		{
-			return default != Child(name, className, flags, also, skip);
+			return default != Child(name, cn, flags, also, skip);
 		}
 
 		/// <summary>
@@ -352,7 +353,7 @@ namespace Au
 		/// Find window that contains certain control, and get the control too.
 		/// <code><![CDATA[
 		/// var cf = new Wnd.ChildFinder("Password*", "Static"); //control properties
-		/// Wnd w = Wnd.Find(className: "#32770", also: t => t.HasChild(cf));
+		/// Wnd w = Wnd.Find(cn: "#32770", also: t => t.HasChild(cf));
 		/// Print(w);
 		/// Print(f.Result);
 		/// ]]></code>
@@ -371,7 +372,7 @@ namespace Au
 		/// Find window that contains certain accessible object (AO), and get the AO too.
 		/// <code><![CDATA[
 		/// var af = new Acc.Finder("BUTTON", "OK"); //AO properties
-		/// Wnd w = Wnd.Find(className: "#32770", also: t => t.HasAcc(af));
+		/// Wnd w = Wnd.Find(cn: "#32770", also: t => t.HasAcc(af));
 		/// Print(w);
 		/// Print(f.Result);
 		/// ]]></code>
@@ -430,10 +431,10 @@ namespace Au
 		/// In the returned list, hidden controls (when using WCFlags.HiddenToo) are always after visible controls.
 		/// </remarks>
 		/// <seealso cref="GetWnd.Children"/>
-		public Wnd[] ChildAll(string name = null, string className = null, WCFlags flags = 0, Func<Wnd, bool> also = null)
+		public Wnd[] ChildAll(string name = null, string cn = null, WCFlags flags = 0, Func<Wnd, bool> also = null)
 		{
 			//ThrowIfInvalid(); //will be called later
-			var f = new ChildFinder(name, className, flags, also);
+			var f = new ChildFinder(name, cn, flags, also);
 			return f.FindAll(this);
 		}
 
@@ -451,7 +452,7 @@ namespace Au
 		/// Full, case-insensitive. Wildcard etc not supported.
 		/// Must include the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// </param>
-		/// <param name="className">
+		/// <param name="cn">
 		/// Class name.
 		/// Use null to match any. Cannot be "".
 		/// Full, case-insensitive. Wildcard etc not supported.
@@ -460,14 +461,14 @@ namespace Au
 		/// <remarks>
 		/// Supports <see cref="Native.GetError"/>.
 		/// </remarks>
-		public Wnd ChildFast(string name, string className, Wnd wAfter = default)
+		public Wnd ChildFast(string name, string cn, Wnd wAfter = default)
 		{
 			//ThrowIfInvalid(); //no, it can be Message
 			if(Is0) {
 				Api.SetLastError(Api.ERROR_INVALID_WINDOW_HANDLE);
 				return default;
 			}
-			return Api.FindWindowEx(this, wAfter, className, name);
+			return Api.FindWindowEx(this, wAfter, cn, name);
 		}
 
 		public partial struct GetWnd
@@ -496,9 +497,9 @@ namespace Au
 			///// Faster than API EnumChildWindows.
 			///// Should be used only with windows of current thread. Else it is unreliable because, if some controls are zordered or destroyed while enumerating, some controls can be skipped or retrieved more than once.
 			///// </summary>
-			//public static Wnd[] DirectChildrenFastUnsafe(string className = null)
+			//public static Wnd[] DirectChildrenFastUnsafe(string cn = null)
 			//{
-			//	Wildex wild = className;
+			//	Wildex wild = cn;
 			//	var a = new List<Wnd>();
 			//	for(Wnd c = FirstChild; !c.Is0; c = c.Next) {
 			//		if(wild != null && !c._ClassNameIs(wild)) continue;
@@ -736,7 +737,7 @@ namespace Au
 		/// Calls <see cref="WButton.Click(bool)"/>.
 		/// </summary>
 		/// <param name="buttonName">Button name. This function calls <see cref="Child"/> to find the button.</param>
-		/// <param name="className">Button class name to pass to <see cref="Child"/>.</param>
+		/// <param name="cn">Button class name to pass to <see cref="Child"/>.</param>
 		/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException">Button not found.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Child"/> and <see cref="WButton.Click(bool)"/>.</exception>
@@ -745,9 +746,9 @@ namespace Au
 		/// Wnd.Find("Options").ButtonClick("Cancel");
 		/// ]]></code>
 		/// </example>
-		public void ButtonClick(string buttonName, string className = null, bool useAcc = false)
+		public void ButtonClick(string buttonName, string cn = null, bool useAcc = false)
 		{
-			var c = Child(buttonName, className);
+			var c = Child(buttonName, cn);
 			if(c.Is0) throw new NotFoundException(); //CONSIDER: try to find accessible object. Eg toolbar button.
 			c.AsButton.Click(useAcc);
 		}

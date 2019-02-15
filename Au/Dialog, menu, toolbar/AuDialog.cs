@@ -1272,7 +1272,7 @@ namespace Au
 			Wnd parent = _dlg; //don't use the DirectUIHWND control for it, it can create problems
 
 			//We'll hide the progress bar control and create our Edit control in its place.
-			Wnd prog = parent.Child(className: "msctls_progress32", flags: WCFlags.HiddenToo);
+			Wnd prog = parent.Child(cn: "msctls_progress32", flags: WCFlags.HiddenToo);
 			prog.GetRectInClientOf(parent, out r);
 
 			if(_editType == DEdit.Multiline) {
@@ -1306,16 +1306,16 @@ namespace Au
 			_editParent.SetWindowLong(Native.GWL.DWLP_DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder));
 
 			//Create Edit or ComboBox control.
-			string className = "Edit";
+			string cn = "Edit";
 			var style = Native.WS.CHILD | Native.WS.VISIBLE; //don't need WS_TABSTOP
 			switch(_editType) {
 			case DEdit.Text: style |= (Native.WS)Api.ES_AUTOHSCROLL; break;
 			case DEdit.Password: style |= (Native.WS)(Api.ES_PASSWORD | Api.ES_AUTOHSCROLL); break;
 			case DEdit.Number: style |= (Native.WS)(Api.ES_NUMBER | Api.ES_AUTOHSCROLL); break;
 			case DEdit.Multiline: style |= (Native.WS)(Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN) | Native.WS.VSCROLL; break;
-			case DEdit.Combo: style |= (Native.WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | Native.WS.VSCROLL; className = "ComboBox"; break;
+			case DEdit.Combo: style |= (Native.WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | Native.WS.VSCROLL; cn = "ComboBox"; break;
 			}
-			_editWnd = Wnd.Misc.CreateWindowAndSetFont(className, null, style, Native.WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent, customFontHandle: _editFont);
+			_editWnd = Wnd.Misc.CreateWindowAndSetFont(cn, null, style, Native.WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent, customFontHandle: _editFont);
 
 			//Init the control.
 			if(_editType == DEdit.Combo) {

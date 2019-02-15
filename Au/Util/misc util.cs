@@ -155,7 +155,8 @@ namespace Au.Util
 		/// Returns true if Au.dll is compiled to native code using ngen.exe.
 		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
-		internal static bool LibIsAuNgened => IsNgened(typeof(Assembly_).Assembly);
+		internal static bool LibIsAuNgened => (s_auNgened ?? (s_auNgened = IsNgened(typeof(Assembly_).Assembly))).GetValueOrDefault();
+		static bool? s_auNgened;
 		//tested: Module.GetPEKind always gets ILOnly.
 
 		/// <summary>
@@ -167,7 +168,7 @@ namespace Au.Util
 		{
 			var s = asm.CodeBase;
 			//if(asm.GlobalAssemblyCache) return s.Contains("/GAC_MSIL/"); //faster and maybe more reliable, but works only with GAC assemblies
-			s = Path_.GetFileName(s);
+			s = s.Substring(s.LastIndexOf('/') + 1);
 			s = s.Insert(s.LastIndexOf('.') + 1, "ni.");
 			return default != Api.GetModuleHandle(s);
 		}
@@ -212,6 +213,70 @@ namespace Au.Util
 			}
 		}
 		static volatile int s_isLoadedFormsWpf;
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		internal static void LibEnsureLoaded(bool systemCore, bool formsDrawing = false)
+		{
+			if(systemCore) _ = typeof(System.Linq.Enumerable).Assembly; //System.Core, System
+			if(formsDrawing) _ = typeof(System.Windows.Forms.Control).Assembly; //System.Windows.Forms, System.Drawing
+		}
+	}
+
+	/// <summary>
+	/// JIT-compiles methods.
+	/// </summary>
+	public static class Jit
+	{
+		const BindingFlags c_bindingFlags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly;
+
+		/// <summary>
+		/// JIT-compiles method.
+		/// Uses <see cref="RuntimeHelpers.PrepareMethod"/>.
+		/// </summary>
+		/// <param name="type">Type containing the method.</param>
+		/// <param name="method">Method name.</param>
+		/// <exception cref="ArgumentException">Method does not exist.</exception>
+		/// <exception cref="AmbiguousMatchException">Multiple overloads exist.</exception>
+		public static void Compile(Type type, string method)
+		{
+			var m = type.GetMethod(method, c_bindingFlags);
+			if(m == null) throw new ArgumentException($"Method {type.Name}.{method} does not exist.");
+			RuntimeHelpers.PrepareMethod(m.MethodHandle);
+			//tested: maybe MethodHandle.GetFunctionPointer can be used to detect whether the method is jited and assembly ngened.
+			//	Call GetFunctionPointer before and after PrepareMethod. If was not jited, the second call returns a different value.
+			//	Undocumented, therefore unreliable.
+		}
+
+		//rejected. Don't JIT-compile overloads.
+		///// <summary>
+		///// JIT-compiles a method overload.
+		///// Uses <see cref="RuntimeHelpers.PrepareMethod"/>.
+		///// </summary>
+		///// <param name="type">Type containing the method.</param>
+		///// <param name="method">Method name.</param>
+		///// <param name="paramTypes">Types of parameters of this overload.</param>
+		///// <exception cref="ArgumentException">Method does not exist.</exception>
+		///// <exception cref="AmbiguousMatchException">Multiple overloads exist that match <paramref name="paramTypes"/>.</exception>
+		//public static void Compile(Type type, string method, params Type[] paramTypes)
+		//{
+		//	var m = type.GetMethod(method, c_bindingFlags, null, paramTypes, null);
+		//	if(m == null) throw new ArgumentException($"Method {type.Name}.{method} does not exist.");
+		//	RuntimeHelpers.PrepareMethod(m.MethodHandle);
+		//	//tested: MethodHandle.GetFunctionPointer cannot be used to detect whether the method is jited.
+		//	//	Tried to find a faster way to detect whether the assembly is ngened.
+		//}
+
+		/// <summary>
+		/// JIT-compiles multiple methods of same type.
+		/// Uses <see cref="RuntimeHelpers.PrepareMethod"/>.
+		/// </summary>
+		/// <param name="type">Type containing the methods.</param>
+		/// <param name="methods">Method names.</param>
+		/// <exception cref="ArgumentException">Method does not exist.</exception>
+		public static void Compile(Type type, params string[] methods)
+		{
+			foreach(var v in methods) Compile(type, v);
+		}
 	}
 
 	//currently not used

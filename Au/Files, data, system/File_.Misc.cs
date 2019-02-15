@@ -152,7 +152,7 @@ namespace Au
 				return false;
 			}
 
-			//static char[] s_sep3 = new char[] { '\\', '/', '~' };
+			//static char[] s_sep3 = { '\\', '/', '~' };
 #if false
 		//this is ~300 times slower than File_.Move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished. Move to Shell class.
 		public static void RenameFileOrDirectory(string path, string newName)

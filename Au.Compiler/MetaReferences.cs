@@ -157,8 +157,8 @@ namespace Au.Compiler
 
 			//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
 		}
-		static readonly string[] s_asmExt = new string[] { ".dll", ".exe" };
-		static readonly string[] s_dirs = new string[] { Folders.ThisApp, Folders.ThisApp + "Libraries" };
+		static readonly string[] s_asmExt = { ".dll", ".exe" };
+		static readonly string[] s_dirs = { Folders.ThisApp, Folders.ThisApp + "Libraries" };
 
 		/// <summary>
 		/// Extracts path from compiler error message CS0009 and removes the reference from cache.

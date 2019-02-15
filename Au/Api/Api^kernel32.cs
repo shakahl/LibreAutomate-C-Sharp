@@ -339,32 +339,27 @@ namespace Au.Types
 		//note: not using parameter types SECURITY_ATTRIBUTES and OVERLAPPED* because it makes JIT-compiling much slower in some time-critical places.
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool ReadFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToRead, out int lpNumberOfBytesRead, void* lpOverlapped = null);
+		internal static extern bool ReadFile(SafeFileHandle hFile, void* lpBuffer, int nBytesToRead, out int nBytesRead, void* lpOverlapped = null);
 
-		internal static bool ReadFile(SafeFileHandle hFile, byte[] a, out int lpNumberOfBytesRead, void* lpOverlapped = null)
+		internal static bool ReadFileArr(SafeFileHandle hFile, byte[] a, out int nBytesRead, void* lpOverlapped = null)
 		{
-			fixed (byte* p = a) return ReadFile(hFile, p, a.Length, out lpNumberOfBytesRead, lpOverlapped);
+			fixed (byte* p = a) return ReadFile(hFile, p, a.Length, out nBytesRead, lpOverlapped);
 		}
 
-		internal static bool ReadFile(SafeFileHandle hFile, out byte[] a, int size, out int lpNumberOfBytesRead, void* lpOverlapped = null)
+		internal static bool ReadFileArr(SafeFileHandle hFile, out byte[] a, int size, out int nBytesRead, void* lpOverlapped = null)
 		{
 			a = new byte[size];
-			return ReadFile(hFile, a, out lpNumberOfBytesRead, lpOverlapped);
+			return ReadFileArr(hFile, a, out nBytesRead, lpOverlapped);
 		}
 
-		[DllImport("kernel32.dll", EntryPoint = "WriteFile", SetLastError = true)]
-		static extern bool _WriteFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToWrite, int* lpNumberOfBytesWritten, void* lpOverlapped);
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool WriteFile(SafeFileHandle hFile, void* lpBuffer, int nBytesToWrite, out int nBytesWritten, void* lpOverlapped = null);
 		//note: lpNumberOfBytesWritten can be null only if lpOverlapped is not null.
 
-		internal static bool WriteFile(SafeFileHandle hFile, void* lpBuffer, int nNumberOfBytesToWrite, int* lpNumberOfBytesWritten = null, void* lpOverlapped = null)
+		//note: don't use overloads, because we Jit.Compile("WriteFile").
+		internal static bool WriteFileArr(SafeFileHandle hFile, byte[] a, out int nBytesWritten, void* lpOverlapped = null)
 		{
-			int u = 0; if(lpNumberOfBytesWritten == null && lpOverlapped == null) lpNumberOfBytesWritten = &u;
-			return _WriteFile(hFile, lpBuffer, nNumberOfBytesToWrite, lpNumberOfBytesWritten, lpOverlapped);
-		}
-
-		internal static bool WriteFile(SafeFileHandle hFile, byte[] a, int* lpNumberOfBytesWritten = null, void* lpOverlapped = null)
-		{
-			fixed (byte* p = a) return WriteFile(hFile, p, a.Length, lpNumberOfBytesWritten, lpOverlapped);
+			fixed (byte* p = a) return WriteFile(hFile, p, a.Length, out nBytesWritten, lpOverlapped);
 		}
 
 		internal struct OVERLAPPED

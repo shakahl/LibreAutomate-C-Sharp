@@ -33,7 +33,7 @@ namespace Au
 		/// Find window that contains certain AO, and get the AO too.
 		/// <code><![CDATA[
 		/// var f = new Acc.Finder("BUTTON", "Apply"); //AO properties
-		/// Wnd w = Wnd.Find(className: "#32770", also: t => f.Find(t));
+		/// Wnd w = Wnd.Find(cn: "#32770", also: t => f.Find(t));
 		/// Print(w);
 		/// Print(f.Result);
 		/// ]]></code>

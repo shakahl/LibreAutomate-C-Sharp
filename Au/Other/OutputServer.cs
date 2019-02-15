@@ -586,7 +586,7 @@ namespace Au
 						if(lenS != 0) fixed (char* p = s) Api.memcpy(b + 10 + lenCaller * 2, p, lenS * 2); //s
 
 						g1:
-						ok = Api.WriteFile(_mailslot, b, lenAll);
+						ok = Api.WriteFile(_mailslot, b, lenAll, out _);
 						if(!ok && _ReopenMailslot()) goto g1;
 					}
 
@@ -610,7 +610,7 @@ namespace Au
 
 					g1:
 					byte b = (byte)OutputServer.MessageType.Clear;
-					bool ok = Api.WriteFile(_mailslot, &b, 1);
+					bool ok = Api.WriteFile(_mailslot, &b, 1, out _);
 					if(!ok && _ReopenMailslot()) goto g1;
 					Debug.Assert(ok);
 

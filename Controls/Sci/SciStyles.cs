@@ -261,6 +261,15 @@ namespace Au.Controls
 			//SetString(SCI_SETKEYWORDS, 3, "Au"); //types. Not using here.
 			//SetString(SCI_SETKEYWORDS, 4, "DEBUG TRACE"); //if used with #if, lexer knows which #if/#else branch to style. Not using here (see "lexer.cpp.track.preprocessor").
 			SetString(SCI_SETKEYWORDS, 5, "TO" + "DO SHOULD" + "DO CON" + "SIDER FU" + "TURE B" + "UG HA" + "CK");
+
+			//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
+			//	Scintilla and C++ lexer support it, but by default it is disabled.
+			//	If disabled, line numbers in errors/warnings/stacktraces may be incorrect.
+			//	Ascii VT and FF are not interpreted as newlines by C# and Scintilla.
+			//	Not tested, maybe this must be set for each document in the control.
+			//	Scintilla controls without C++ lexer don't support it.
+			//		But if we temporarily set C++ lexer for <code>, newlines are displayed in whole text.
+			Call(SCI_SETLINEENDTYPESALLOWED, 1);
 		}
 
 		#endregion

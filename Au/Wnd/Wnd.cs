@@ -51,7 +51,7 @@ namespace Au
 	/// Wnd w = Wnd.Find("* - Notepad");
 	/// if(w.Is0) { Print("window not found"); return; }
 	/// w.Activate();
-	/// Wnd c = w.Child(className: "Button");
+	/// Wnd c = w.Child(cn: "Button");
 	/// Print(c.Name);
 	/// ]]></code>
 	/// </example>
@@ -2465,11 +2465,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if the class name of this window matches className. Else returns false.
+		/// Returns true if the class name of this window matches cn. Else returns false.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="Native.GetError"/>.
 		/// </summary>
-		/// <param name="className">Class name. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>. Cannot be null.</param>
-		public bool ClassNameIs(string className) => ClassName.Like_(className, true);
+		/// <param name="cn">Class name. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>. Cannot be null.</param>
+		public bool ClassNameIs(string cn) => ClassName.Like_(cn, true);
 
 		/// <summary>
 		/// If the class name of this window matches one of strings in classNames, returns 1-based index of the string. Else returns 0.
@@ -2798,11 +2798,11 @@ namespace Au
 		///// Returns the number of found windows.
 		///// </summary>
 		//public static int CloseAll(
-		//	string name, string className = null, WFEtc program = default,
+		//	string name, string cn = null, WFEtc program = default,
 		//	WFFlags flags = 0, Func<Wnd, bool> f = null, object contains = null
 		//	)
 		//{
-		//	var a = FindAll(name, className, program, flags, f, contains);
+		//	var a = FindAll(name, cn, program, flags, f, contains);
 		//	foreach(Wnd w in a) w.Close();
 		//	return a.Count;
 		//}

@@ -167,7 +167,7 @@ namespace Au.Triggers
 
 	class TriggerActionThreads
 	{
-		public void Run(TriggerBase ta, int data1, string data2, Wnd w)
+		public void Run(TriggerBase ta, TriggerArgs args)
 		{
 			Action actionWrapper = () => {
 				var opt = ta.options;
@@ -184,7 +184,7 @@ namespace Au.Triggers
 					}
 #endif
 					Exception ex = null;
-					try { ta.Run(data1, data2, w); }
+					try { ta.Run(args); }
 					catch(Exception e1) when(!(e1 is ThreadAbortException)) { Print(ex = e1); }
 					opt.after?.Invoke(new TOAfterArgs(ex));
 				}

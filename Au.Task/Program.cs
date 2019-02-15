@@ -78,7 +78,7 @@ static unsafe class Program
 			//Perf.Next();
 			int size; if(!Api.ReadFile(pipe, &size, 4, out nr, default) || nr != 4) return;
 			//Perf.Next();
-			if(!Api.ReadFile(pipe, out var b, size, out nr) || nr != size) return;
+			if(!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
 			//Perf.Next();
 			var a = Au.Util.LibSerializer.Deserialize(b);
 			AuTask.Name = a[0]; asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4];
@@ -112,8 +112,8 @@ static unsafe class Program
 
 		//JIT slowest-to-JIT methods
 		if(!Au.Util.Assembly_.LibIsAuNgened) {
-			RuntimeHelpers.PrepareMethod(typeof(RunAssembly).GetMethod(nameof(RunAssembly.Run), BindingFlags.Static | BindingFlags.Public).MethodHandle);
-			RuntimeHelpers.PrepareMethod(typeof(Au.Util.LibSerializer).GetMethod("Deserialize", BindingFlags.Static | BindingFlags.Public).MethodHandle);
+			Au.Util.Jit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
+			Au.Util.Jit.Compile(typeof(Au.Util.LibSerializer), "Deserialize");
 			File_.WaitIfLocked(() => (FileStream)null);
 		}
 

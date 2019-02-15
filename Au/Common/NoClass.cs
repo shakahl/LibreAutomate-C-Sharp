@@ -176,7 +176,7 @@ namespace Au
 				//	let the caller escape it if wants, it's easy.
 			}
 		}
-		static readonly object[] s_oaNull = new object[] { null };
+		static readonly object[] s_oaNull = { null };
 
 		/// <summary>
 		/// Writes warning text to the output.

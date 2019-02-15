@@ -219,7 +219,7 @@ namespace Au
 		internal static Wnd WndMsg {
 			get {
 				if(!s_wndMsg.IsAlive) {
-					s_wndMsg = Api.FindWindow("Au.Editor.Msg", null);
+					s_wndMsg = Wnd.Misc.FindMessageWindow(null, "Au.Editor.Msg");
 				}
 				return s_wndMsg;
 			}
@@ -244,7 +244,7 @@ namespace Au
 				if(!Api.WaitNamedPipe(pipeName, 3000)) goto ge;
 				using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, 0)) {
 					if(pipe.IsInvalid) goto ge;
-					fixed (char* p = s) if(!Api.WriteFile(pipe, p, s.Length * 2)) goto ge;
+					fixed (char* p = s) if(!Api.WriteFile(pipe, p, s.Length * 2, out _)) goto ge;
 				}
 			}
 			return true;

@@ -90,7 +90,7 @@ partial class EdForm : Form
 				Print(Time.PerfMicroseconds - Convert.ToInt64(s));
 			}
 			Perf.Next('P');
-			Perf.Write();
+			//Perf.Write();
 
 			CommandLine.OnAfterCreatedFormAndOpenedWorkspace();
 		});
@@ -101,7 +101,7 @@ partial class EdForm : Form
 		IsClosed = true;
 		CloseReason = e.CloseReason;
 		base.OnFormClosed(e);
-		Au.Triggers.TriggersServer.Stop();
+		Au.Triggers.HooksServer.Stop();
 		UacDragDrop.AdminProcess.Enable(false);
 		Panels.Files.UnloadOnFormClosed();
 	}

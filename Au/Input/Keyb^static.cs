@@ -205,8 +205,7 @@ namespace Au
 		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
 		public static bool WaitForReleased(double secondsTimeout, params KKey[] keys)
 		{
-			return WaitFor.Condition(secondsTimeout, () =>
-			{
+			return WaitFor.Condition(secondsTimeout, () => {
 				foreach(var k in keys) if(GetKeyState(k) < 0) return false;
 				return true;
 			}, 2);
@@ -318,8 +317,7 @@ namespace Au
 			//SHOULDDO: if up and block: don't block if was pressed when starting to wait. Also in the Mouse func.
 
 			KKey R = 0;
-			using(Util.WinHook.Keyboard(x =>
-			{
+			using(Util.WinHook.Keyboard(x => {
 				if(key != 0 && !x.IsKey(key)) return false;
 				if(x.IsUp != up) {
 					if(up && block) { //key down when we are waiting for up. If block, now block down too.
@@ -448,9 +446,43 @@ namespace Au
 						KKey k = _KeynameToKey(s, g.Index, g.Length);
 						if(k == 0) return false;
 						var m = Lib.KeyToMod(k);
-						if(m != 0) mod |= m; else key = k;
+						if(m != 0) {
+							if((m & mod) != 0) return false;
+							mod |= m;
+						} else key = k;
 					} else if(g.Length != 1 || s[g.Index] != '+') return false;
 				}
+				return key != 0;
+			}
+
+			/// <summary>
+			/// Used for parsing of hotkey triggers and mouse trigger modifiers.
+			/// Like <see cref="ParseHotkeyString"/>, but supports 'any mod' (like "Shift?+K" or "?+K") and onlyMod.
+			/// onlyMod - if false, returns false if s is not "key" or "mod+key". Else returns false if s is not "mod" (used for mouse trigger mod).
+			/// </summary>
+			internal static bool LibParseHotkeyTriggerString(string s, out KMod mod, out KMod modAny, out KKey key, bool onlyMod)
+			{
+				key = 0; mod = 0; modAny = 0;
+				if(s == null) return false;
+				int i = 0; bool ignore = false;
+				foreach(var g in _SplitKeysString(s)) {
+					if(ignore) { ignore = false; continue; }
+					if(key != 0) return false;
+					if((i++ & 1) == 0) {
+						KKey k = _KeynameToKey(s, g.Index, g.Length);
+						if(k == 0) return false;
+						var m = Lib.KeyToMod(k);
+						if(m != 0) {
+							if((m & (mod | modAny)) != 0) return false;
+							if(ignore = g.EndIndex < s.Length && s[g.EndIndex] == '?') modAny |= m; //eg "Shift?+K"
+							else mod |= m;
+						} else {
+							if(i == 1 && g.Length == 1 && s[g.Index] == '?') modAny = (KMod)15; //eg "?+K"
+							else key = k;
+						}
+					} else if(g.Length != 1 || s[g.Index] != '+') return false;
+				}
+				if(onlyMod) return (mod | modAny) != 0 && key == 0;
 				return key != 0;
 			}
 

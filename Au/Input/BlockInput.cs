@@ -260,7 +260,7 @@ namespace Au
 
 		/// <summary>
 		/// Don't block software-generated key/mouse events if this extra info value was set when calling API <msdn>SendInput</msdn>.
-		/// The default value is the value used by functions of this library, that is why their events are not blocked. If changed, their events are blocked, unless <see cref="DontBlockInjected"/> is true.
+		/// The default value is the value used by functions of this library (see <see cref="HookData.AuExtraInfo"/>), that is why their events are not blocked. If changed, their events are blocked, unless <see cref="DontBlockInjected"/> is true.
 		/// </summary>
 		public int DontBlockInjectedExtraInfo { get; set; } = Api.AuExtraInfo;
 

@@ -73,7 +73,7 @@ static class CommandLine
 		s_mutex = new Mutex(true, "Au.Mutex.1", out bool createdNew);
 		if(createdNew) return false;
 
-		var w = Api.FindWindow("Au.Editor.Msg", null);
+		var w = Wnd.Misc.FindMessageWindow(null, "Au.Editor.Msg");
 		if(!w.Is0) {
 			if(activateWnd) {
 				Wnd wMain = (Wnd)w.Send(Api.WM_USER);
@@ -115,7 +115,7 @@ static class CommandLine
 		_msgWnd = new Wnd.Misc.MyWindow(_WndProc);
 		_msgWnd.CreateMessageWindow("Au.Editor.Msg");
 
-		Au.Triggers.TriggersServer.Start(false);
+		Au.Triggers.HooksServer.Start(false);
 	}
 
 	/// <summary>

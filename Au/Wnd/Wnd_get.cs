@@ -359,7 +359,7 @@ namespace Au
 			static Wnd _Desktop(out Wnd lvControl)
 			{
 				Wnd w = Shell;
-				var f = new ChildFinder(className: "SysListView32");
+				var f = new ChildFinder(cn: "SysListView32");
 				if(!f.Find(w)) w = Wnd.Find(null, "WorkerW", WF3.Thread(w.ThreadId), also: t => f.Find(t));
 				lvControl = f.Result;
 				return w;

@@ -175,6 +175,8 @@ internal static string[] args = System.Array.Empty<string>();
 				if(err.AddAllAndPrint(tree, f1.f, printWarnings: transform)) return false;
 				//info: if script, print warnings now, else #warning would not work
 
+				//Print("<parsing OK>");
+
 				if(transform) {
 					transform = false;
 					po = po.WithKind(SourceCodeKind.Regular);
@@ -611,7 +613,7 @@ internal static string[] args = System.Array.Empty<string>();
 		///		All variables in global code are fields, unless in { }. Their initialization behavior is different than in regular code. No warnings 'unused variable'.
 		///			Now variables declared without a modifier (private, static, const, etc) are locals, not fields. Also, they must be declared before other code.
 		///			Difficult to make it like in standard C# script. Need to transform eg 'var i=5;' to 'int i; i=5;' (note the 'var' -> 'int').
-		///		Cannot be partial class. Now the wrapper class is partial.
+		///		Cannot be partial class. Now the wrapper class is partial. The same with unsafe.
 		///		And maybe more, not discovered.
 		///	So, now we still have these not very important limitations:
 		///		ref locals must be in { }.
@@ -670,8 +672,8 @@ internal static string[] args = System.Array.Empty<string>();
 			}
 			//Perf.Next('4');
 
-			//Print("<><Z 0xc000>globals:<>");
-			//Print(globals);
+			//Print("<><Z 0xc000>usings:<>");
+			//Print(usings);
 			//Print("<><Z 0xc000>members:<>");
 			//Print(members);
 			//Print("<><Z 0xc000>statements:<>");

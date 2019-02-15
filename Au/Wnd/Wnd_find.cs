@@ -46,16 +46,16 @@ namespace Au
 			/// See <see cref="Wnd.Find"/>.
 			/// </summary>
 			/// <exception cref="ArgumentException">
-			/// className is "". To match any, use null.
+			/// cn is "". To match any, use null.
 			/// program is "" or 0 or contains \ or /. To match any, use null.
 			/// Invalid wildcard expression ("**options " or regular expression).
 			/// </exception>
 			public Finder(
-				string name = null, string className = null, WF3 program = default,
+				string name = null, string cn = null, WF3 program = default,
 				WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 			{
 				_name = name;
-				if(className != null) _className = className.Length != 0 ? className : throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
+				if(cn != null) _className = cn.Length != 0 ? cn : throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
 				program.GetValue(out _program, out _processId, out _threadId, out _owner);
 				_flags = flags;
 				_also = also;
@@ -70,8 +70,33 @@ namespace Au
 					if(s.RegexMatch_(@"^'(.+?)?' ((?s).+)?$", out var m)) { role = m[1].Value; name = m[2].Value; }
 					_contains = new Acc.Finder(role, name, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
 				} else if(contains is Acc.Finder || contains is ChildFinder || contains is System.Drawing.Image) _contains = contains;
-				else throw new ArgumentException("Bad type.", nameof(contains));
+				else throw new ArgumentException("Unsupported object type.", nameof(contains));
 			}
+
+			/// <summary>
+			/// Implicit conversion from string that can contain window name, class name, program and/or an accessible object.
+			/// Examples: "name,cn,program", "name", ",cn", ",,program", "name,cn", "name,,program", ",cn,program", "name,,,accName", "name,,,'accRole' accName".
+			/// </summary>
+			/// <param name="s">
+			/// One or more comma-separated window properties: name, class, program and/or an accessible object. Empty parts are considered null.
+			/// The same as parameters of <see cref="Wnd.Find"/> and the constructor. The first 3 comma-separated parts cannot contain commas.
+			/// Alternatively, parts can be separated by '\0' characters, like "name\0"+"cn\0"+"program\0"+"acc". Then parts can contain commas. Example: "*one, two, three*\0" (name with commas).
+			/// </param>
+			public static implicit operator Finder(string s)
+			{
+				string name = null, cn = null, prog = null, contains = null;
+				char[] sep = null; if(s.IndexOf('\0') >= 0) sep = s_sepZero; else if(s.IndexOf(',') >= 0) sep = s_sepComma;
+				if(sep == null) name = s;
+				else {
+					var ra = s.Split(sep, 4);
+					if(ra[0].Length > 0) name = ra[0];
+					if(ra[1].Length > 0) cn = ra[1];
+					if(ra.Length > 2 && ra[2].Length > 0) prog = ra[2];
+					if(ra.Length > 3 && ra[3].Length > 0) contains = ra[3];
+				}
+				return new Finder(name, cn, prog, contains: contains);
+			}
+			static readonly char[] s_sepComma = { ',' }, s_sepZero = { '\0' };
 
 			/// <summary>
 			/// The found window.
@@ -91,7 +116,7 @@ namespace Au
 
 			Util.LibArrayBuilder<Wnd> _AllWindows()
 			{
-				//FUTURE: optimization: if className not wildcard etc, at first find atom. If not found, don't search. If found, compare atom, not class name string.
+				//FUTURE: optimization: if cn not wildcard etc, at first find atom. If not found, don't search. If found, compare atom, not class name string.
 
 				var f = _threadId != 0 ? Lib.EnumWindowsAPI.EnumThreadWindows : Lib.EnumWindowsAPI.EnumWindows;
 				return Lib.EnumWindows2(f, 0 == (_flags & WFFlags.HiddenToo), true, wParent: _owner, threadId: _threadId);
@@ -308,10 +333,11 @@ namespace Au
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// null means 'can be any'. "" means 'must not have name'.
 		/// </param>
-		/// <param name="className">
+		/// <param name="cn">
 		/// Window class name.
 		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
 		/// null means 'can be any'. Cannot be "".
+		/// You can see window name, class name and program in editor's status bar and dialog "Find window or control".
 		/// </param>
 		/// <param name="program">
 		/// Program file name, like "notepad.exe".
@@ -345,7 +371,7 @@ namespace Au
 		/// To find message-only windows use <see cref="Misc.FindMessageWindow"/> instead.
 		/// </remarks>
 		/// <exception cref="ArgumentException">
-		/// <paramref name="className"/> is "". To match any, use null.
+		/// <paramref name="cn"/> is "". To match any, use null.
 		/// <paramref name="program"/> is "" or 0 or contains \ or /. To match any, use null.
 		/// Invalid wildcard expression ("**options " or regular expression).
 		/// </exception>
@@ -362,10 +388,10 @@ namespace Au
 		/// </example>
 		[MethodImpl(MethodImplOptions.NoInlining)] //inlined code makes harder to debug using disassembly
 		public static Wnd Find(
-			string name = null, string className = null, WF3 program = default,
+			string name = null, string cn = null, WF3 program = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 		{
-			var f = new Finder(name, className, program, flags, also, contains);
+			var f = new Finder(name, cn, program, flags, also, contains);
 			f.Find();
 			//LastFind = f;
 			return f.Result;
@@ -401,10 +427,10 @@ namespace Au
 		/// <seealso cref="GetWnd.MainWindows"/>
 		/// <seealso cref="GetWnd.ThreadWindows"/>
 		public static Wnd[] FindAll(
-			string name = null, string className = null, WF3 program = default,
+			string name = null, string cn = null, WF3 program = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 		{
-			var f = new Finder(name, className, program, flags, also, contains);
+			var f = new Finder(name, cn, program, flags, also, contains);
 			var a = f.FindAll();
 			//LastFind = f;
 			return a;
@@ -419,7 +445,7 @@ namespace Au
 		/// Use null to match any.
 		/// Full, case-insensitive. Wildcard etc not supported.
 		/// </param>
-		/// <param name="className">
+		/// <param name="cn">
 		/// Class name.
 		/// Use null to match any. Cannot be "".
 		/// Full, case-insensitive. Wildcard etc not supported.
@@ -428,43 +454,42 @@ namespace Au
 		/// <remarks>
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Find"/>, which uses API <msdn>EnumWindows</msdn>.
-		/// Can be used only full name and/or class name.
 		/// Finds hidden windows too.
 		/// To find message-only windows use <see cref="Misc.FindMessageWindow"/> instead.
 		/// Supports <see cref="Native.GetError"/>.
 		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
 		/// </remarks>
-		public static Wnd FindFast(string name, string className, Wnd wAfter = default)
+		public static Wnd FindFast(string name, string cn, Wnd wAfter = default)
 		{
-			return Api.FindWindowEx(default, wAfter, className, name);
+			return Api.FindWindowEx(default, wAfter, cn, name);
 		}
 
 		public static partial class Misc
 		{
 			/// <summary>
-			/// Finds a message-only window and returns its handle as Wnd. Returns default(Wnd) if not found.
-			/// Calls API <msdn>FindWindowEx</msdn>.
-			/// Faster than <see cref="Find"/>, which does not find message-only windows.
-			/// Can be used only when you know full name and/or class name.
-			/// Finds hidden windows too.
+			/// Finds a message-only window and returns its handle as Wnd.
+			/// Returns default(Wnd) if not found.
 			/// </summary>
 			/// <param name="name">
 			/// Name.
 			/// Use null to match any.
 			/// Full, case-insensitive. Wildcard etc not supported.
 			/// </param>
-			/// <param name="className">
+			/// <param name="cn">
 			/// Class name.
 			/// Use null to match any. Cannot be "".
 			/// Full, case-insensitive. Wildcard etc not supported.
 			/// </param>
 			/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
 			/// <remarks>
+			/// Calls API <msdn>FindWindowEx</msdn>.
+			/// Faster than <see cref="Find"/>, which does not find message-only windows.
+			/// Finds hidden windows too.
 			/// Supports <see cref="Native.GetError"/>.
 			/// </remarks>
-			public static Wnd FindMessageWindow(string name, string className, Wnd wAfter = default)
+			public static Wnd FindMessageWindow(string name, string cn, Wnd wAfter = default)
 			{
-				return Api.FindWindowEx(Native.HWND.MESSAGE, wAfter, className, name);
+				return Api.FindWindowEx(Native.HWND.MESSAGE, wAfter, cn, name);
 			}
 		}
 
@@ -494,13 +519,13 @@ namespace Au
 		/// </example>
 		public static Wnd FindOrRun(
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-			string name = null, string className = null, WF3 program = default,
+			string name = null, string cn = null, WF3 program = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null,
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 			Action run = null, double runWaitS = 60.0, bool needActiveWindow = true)
 		{
 			Wnd w = default;
-			var f = new Finder(name, className, program, flags, also, contains);
+			var f = new Finder(name, cn, program, flags, also, contains);
 			if(f.Find()) {
 				w = f.Result;
 				if(needActiveWindow) w.Activate();
@@ -786,7 +811,7 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// Can find hidden windows. See <see cref="Wnd.IsVisibleEx"/>.
-		/// Use this carefully. Always use className, not just name, because there are many hidden tooltip windows etc that could match the name.
+		/// Use this carefully. Always use cn, not just name, because there are many hidden tooltip windows etc that could match the name.
 		/// </summary>
 		HiddenToo = 1,
 
@@ -875,16 +900,37 @@ namespace Au.Types
 		long _time;
 		internal string Name, Class, Program;
 		internal int Tid, Pid;
-		internal bool CacheName;
 
-		/// <param name="cacheName">Cache window name. Should be true if window name can be changed while this variable is used. Window class and program are always cached because cannot be changed.</param>
-		public WFCache(bool cacheName) { CacheName = cacheName; }
+		/// <summary>
+		/// Cache window name.
+		/// </summary>
+		/// <remarks>
+		/// Should be true if window name can be changed while this variable is used. Window class and program are always cached because cannot be changed.
+		/// </remarks>
+		public bool CacheName { get; set; }
 
 		internal void Begin(Wnd w)
 		{
 			var t = Api.GetTickCount64();
-			if(w != _w || t - _time > 1100) { _w = w; Name = Class = Program = null; Tid = Pid = 0; }
-			_time = t;
+			if(w != _w || t - _time > 1100) {
+				Clear();
+				if(w.IsAlive) { _w = w; _time = t; }
+			}
+			//else if(CacheName && t - _time > 100) Name = null; //no, instead let call Clear if need
+		}
+
+		/// <summary>
+		/// Clears all cached properties, or only name.
+		/// </summary>
+		/// <remarks>
+		/// Usually don't need to call this function. It is implicitly called when the variable is used with a new window.
+		/// </remarks>
+		/// <param name="onlyName">Clear only name (because it may change, unlike other cached properties).</param>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		public void Clear(bool onlyName = false)
+		{
+			if(onlyName) Name = null;
+			else { _w = default; _time = 0; Name = Class = Program = null; Tid = Pid = 0; }
 		}
 	}
 }

@@ -1,8 +1,11 @@
-int k = 5;
-ref int r = ref k;
+#define THREAD
 
-ref int Met()
+Print(1);
+
+#if THREAD
 {
-	return ref s_i;
+#endif
+	Print(2);
+#if THREAD
 }
-static int s_i = 77;
+#endif

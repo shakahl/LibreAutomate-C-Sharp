@@ -45,13 +45,9 @@ namespace Au
 				//Prevent JIT delay when calling Next etc if not ngened.
 				//if(!Util.Assembly_.LibIsAuNgened) { //unnecessary and makes slower
 #if PREPAREMETHOD
-				var t = typeof(Inst);
-				RuntimeHelpers.PrepareMethod(t.GetMethod("Next").MethodHandle);
-				RuntimeHelpers.PrepareMethod(t.GetMethod("NW").MethodHandle);
+				Util.Jit.Compile(typeof(Inst), "Next", "NW");
 #if DEBUG //else these methods are inlined
-				t = typeof(Perf);
-				RuntimeHelpers.PrepareMethod(t.GetMethod("Next").MethodHandle);
-				RuntimeHelpers.PrepareMethod(t.GetMethod("NW").MethodHandle);
+				Util.Jit.Compile(typeof(Perf), "Next", "NW");
 #endif
 #else //similar speed
 				Perf.Next(); Perf.NW(); Perf.First(); //JIT-compiles everything we need. s_enabled prevents calling Output.Write etc.

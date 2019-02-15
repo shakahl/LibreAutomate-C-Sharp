@@ -39,6 +39,7 @@
     <NoWarn>3001,3002,3003,3009,419</NoWarn>
     <DocumentationFile>Au.XML</DocumentationFile>
     <LangVersion>latest</LangVersion>
+    <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
   <PropertyGroup>
     <SignAssembly>true</SignAssembly>
@@ -76,13 +77,14 @@
     <Compile Include="Files, data, system\Process_.Memory.cs" />
     <Compile Include="Files, data, system\Sqlite.cs" />
     <Compile Include="Files, data, system\Sqlite^API.cs" />
-    <Compile Include="Tasks, triggers\Triggers.cs" />
-    <Compile Include="Tasks, triggers\TriggersServer.cs" />
-    <Compile Include="Tasks, triggers\Triggers^actions.cs" />
-    <Compile Include="Tasks, triggers\Triggers^autotext.cs" />
-    <Compile Include="Tasks, triggers\Triggers^hotkey.cs" />
-    <Compile Include="Tasks, triggers\Triggers^mouse.cs" />
-    <Compile Include="Tasks, triggers\Triggers^window.cs" />
+    <Compile Include="Triggers\Triggers.cs" />
+    <Compile Include="Triggers\Triggers^hooks.cs" />
+    <Compile Include="Triggers\Triggers^actions.cs" />
+    <Compile Include="Triggers\Trigger.cs" />
+    <Compile Include="Triggers\Types\Tr autotext.cs" />
+    <Compile Include="Triggers\Types\Tr hotkey.cs" />
+    <Compile Include="Triggers\Types\Tr mouse.cs" />
+    <Compile Include="Triggers\Types\Tr window.cs" />
     <Compile Include="Util\IconsAsync.cs" />
     <Compile Include="Files, data, system\Thread_.cs" />
     <Compile Include="Input\BlockInput.cs" />
@@ -110,7 +112,7 @@
     <Compile Include="String\Regex_.cs" />
     <Compile Include="String\StringSegment.cs" />
     <Compile Include="Util\ILReader.cs" />
-    <Compile Include="Tasks, triggers\RunAssembly.cs" />
+    <Compile Include="Tasks\RunAssembly.cs" />
     <Compile Include="Util\StringMisc.cs" />
     <Compile Include="Util\image, GDI, etc.cs" />
     <Compile Include="Util\hooks.cs" />
@@ -175,7 +177,7 @@
     <Compile Include="Files, data, system\File_.cs" />
     <Compile Include="Files, data, system\Icon_.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tasks, triggers\AuTask.cs" />
+    <Compile Include="Tasks\AuTask.cs" />
     <Compile Include="String\String_.cs" />
     <Compile Include="Time\Perf.cs" />
     <Compile Include="Api\Api_const.cs" />

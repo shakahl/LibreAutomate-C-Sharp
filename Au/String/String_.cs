@@ -652,13 +652,13 @@ namespace Au
 		internal static class Lib
 		{
 			/// <summary>{ '\r', '\n' }</summary>
-			internal static char[] lineSep = new char[] { '\r', '\n' };
+			internal static readonly char[] lineSep = { '\r', '\n' };
 
 			/// <summary>{ '\\', '/' }</summary>
-			internal static char[] pathSep = new char[] { '\\', '/' };
+			internal static readonly char[] pathSep = { '\\', '/' };
 
 			///// <summary>{ '*', '?' }</summary>
-			//internal static char[] wildcard = new char[] { '*', '?' };
+			//internal static readonly char[] wildcard = { '*', '?' };
 
 		}
 	}

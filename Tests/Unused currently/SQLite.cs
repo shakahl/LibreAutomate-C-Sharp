@@ -2042,7 +2042,7 @@ namespace SQLite
 #if NETFX_CORE
 		static readonly string MetroStyleDataPath = Windows.Storage.ApplicationData.Current.LocalFolder.Path;
 
-        public static readonly string[] InMemoryDbPaths = new[]
+        public static readonly string[] InMemoryDbPaths =
         {
             ":memory:",
             "file::memory:"

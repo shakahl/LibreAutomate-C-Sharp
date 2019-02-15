@@ -250,7 +250,7 @@ namespace Au.Types
 			if(_type == WildType.Wildcard && !HasWildcards(w)) _type = WildType.Text;
 			_obj = w;
 		}
-		static string[] _splitMulti = new string[] { "||" };
+		static readonly string[] _splitMulti = { "||" };
 
 		/// <summary>
 		/// Creates new Wildex from wildcard expression string.
@@ -263,7 +263,7 @@ namespace Au.Types
 		{
 			if(wildcardExpression == null) return null;
 
-			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of Wnd.Find and Wnd.Child, where 'match any' is rare; but 'match any' is very often used for 'className' and 'program' parameters, where "" causes exception, so they will quickly learn.
+			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of Wnd.Find and Wnd.Child, where 'match any' is rare; but 'match any' is very often used for 'cn' and 'program' parameters, where "" causes exception, so they will quickly learn.
 			///// If the string is "", calls <see cref="PrintWarning"/>. To match "", use "**empty" instead.
 			//	if(wildcardExpression.Length == 0) PrintWarning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
 
