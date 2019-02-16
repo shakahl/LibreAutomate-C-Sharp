@@ -97,7 +97,7 @@ Default role for scripts is miniProgram; cannot be the last two. Default for .cs
 
 		g.ZAddHeaderRow("Run");
 		_AddEdit("testScript", _f.TestScript?.ItemPath,
-@"<b>testScript</b> - a script/app to run when you click the Run button.
+@"<b>testScript</b> - a script to run when you click the Run button.
 Can be path relative to this file (examples: Script5, Folder\Script5, ..\Folder\Script5) or path in the workspace (examples: \Script5, \Folder\Script5).
 
 Usually it is used to test this class file or class library. It can contain meta option <c green>c this file<> that adds this file to the compilation, or meta option <c green>pr this file<> that adds the output dll file as a reference assembly. The recommended way to add this option correctly and easily is to try to run this file and click a link that is then printed in the output.
@@ -179,10 +179,10 @@ This option is also applied to class files compiled together.
 See also <google C# #pragma warning>#pragma warning<>.
 ");
 		_AddEdit("preBuild", _meta.preBuild,
-@"<b>preBuild</b> - a script/app to run before compiling this code file.
+@"<b>preBuild</b> - a script to run before compiling this code file.
 Can be path relative to this file (examples: Script5, Folder\Script5, ..\Folder\Script5) or path in the workspace (examples: \Script5, \Folder\Script5).
 
-The script/app must have role editorExtension. It runs synchronously in compiler's thread. To stop compilation, let it throw an exception.
+The script must have role editorExtension. It runs synchronously in compiler's thread. To stop compilation, let it throw an exception.
 By default it receives full path of the assembly file in args[0]. If need more info, specify command line arguments, like in this example: Script5 /$(outputPath) $(optimize). The script will receive real values in args[0], args[1] and so on. You can use these variables:
  • $(source) - path of this C# code file in the workspace.
  • $(outputFile) - full path of the assembly file.
@@ -191,7 +191,7 @@ By default it receives full path of the assembly file in args[0]. If need more i
  • $(role) - meta option 'role'.
 ");
 		_AddEdit("postBuild", _meta.postBuild,
-@"<b>postBuild</b> - a script/app to run after compiling this code file successfully.
+@"<b>postBuild</b> - a script to run after compiling this code file successfully.
 Everything else is like with preBuild.
 ");
 
@@ -422,21 +422,17 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		MetaComments.FindMetaComments(code, out int endOf);
 
 		if(!_GetGrid()) { this.DialogResult = DialogResult.None; return; };
-		var s = _meta.Format(endOf == 0);
 
-		//preserve comments
-		if(endOf > 0 && code.RegexFindAll_("(?m)^ *//.+\r\n", 0, out string[] ac, 0, new RXMore(0, endOf))) {
-			if(s.Length == 0) s = "/* meta\r\n*/";
-			s = s.Insert(s.Length - 2, string.Join("", ac));
-		}
+		string append = null; if(endOf == 0) append = _f.IsScript ? " " : "\r\n\r\n";
+		var s = _meta.Format(append);
 
 		if(s.Length == 0) {
 			if(endOf == 0) return;
-			else if(code.EqualsAt_(endOf, "\r\n\r\n")) endOf += 4;
-			else if(code.EqualsAt_(endOf, "\r\n")) endOf += 2;
+			while(endOf < code.Length && code[endOf] <= ' ') endOf++;
+		} else if(s.Length == endOf) {
+			if(s == t.RangeText(0, endOf, SciFromTo.ToIsChars)) return; //did not change
 		}
 
-		if(s.Length == endOf && s == t.RangeText(0, endOf, SciFromTo.ToIsChars)) return; //did not change
 		t.ReplaceRange(0, endOf, s, SciFromTo.ToIsChars);
 	}
 
@@ -678,7 +674,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		const string c_cs = "This is a C# class file. It can contain standard C# code: one or more classes, namespaces, etc.";
 		_info.ST.SetText((_isCS ? c_cs : c_script) + @"
 
-This program saves most file properties in code as <i>meta comments<> - multiline comments starting with <c green>/* meta<> at the very start of code. You can change them here or in the code editor.
+This program saves most file properties in code as <i>meta comments<> - comments starting with <c green>/*/<> at the very start of code. You can change them here or in the code editor.
 
 Use Google when you don't know some words in help text or don't understand some options. Most such words and options are used in C#/.NET programming in Visual Studio etc.
 ");

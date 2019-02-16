@@ -1,5 +1,3 @@
-//#define STANDARD_SCRIPT
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -44,7 +42,7 @@ namespace Au.Compiler
 		/// <remarks>
 		/// Must be always called in the main UI thread (Thread.CurrentThread.ManagedThreadId == 1).
 		/// 
-		/// Adds <see cref="DefaultReferences"/>. For scripts adds <see cref="DefaultUsings"/>.
+		/// Adds <see cref="DefaultReferences"/>.
 		/// 
 		/// If f role is classFile:
 		///		If forRun, does not compile (just parses meta), sets r.role=classFile and returns false.
@@ -145,53 +143,35 @@ namespace Au.Compiler
 
 			if(m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
 
-			string[] usings = null;
 			var trees = new List<CSharpSyntaxTree>(m.CodeFiles.Count + 1);
 			var po = new CSharpParseOptions(LanguageVersion.Latest,
 				m.XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None,
-				m.IsScript ? SourceCodeKind.Script : SourceCodeKind.Regular,
+				SourceCodeKind.Regular,
 				m.Defines);
 
-#if STANDARD_SCRIPT
-		foreach(var f1 in m.Files) {
-			var tree = CSharpSyntaxTree.ParseText(f1.code, po, f1.f.IdString + " " + f1.f.Name, Encoding.UTF8) as CSharpSyntaxTree;
-			trees.Add(tree);
-		}
-		if(m.IsScript) {
-			usings = s_usingsForScript;
-			var treeAdd = CSharpSyntaxTree.ParseText(
-@"static class __script__ {
-internal static string[] args = System.Array.Empty<string>();
-}", new CSharpParseOptions(LanguageVersion.Latest)) as CSharpSyntaxTree;
-			trees.Add(treeAdd);
-		}
-#else
-			bool transform = m.IsScript;
 			foreach(var f1 in m.CodeFiles) {
-				var tree = CSharpSyntaxTree.ParseText(f1.code, po, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
+				string code = f1.code;
+				bool addedBraces = f1.f == f && f.IsScript; if(addedBraces) code += "\r\n}}"; //assume it is script without the closing }}
+
+				var tree = CSharpSyntaxTree.ParseText(code, po, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
 				//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), Visual Studio debugger, etc.
 				//	Our OutputServer.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
 
-				if(err.AddAllAndPrint(tree, f1.f, printWarnings: transform)) return false;
-				//info: if script, print warnings now, else #warning would not work
-
-				//Print("<parsing OK>");
-
-				if(transform) {
-					transform = false;
-					po = po.WithKind(SourceCodeKind.Regular);
-					var code2 = _TransformScriptCode(tree, f1.code, true, err, f1.f);
-					if(err.ErrorCount != 0) { err.PrintAll(); return false; }
-					tree = CSharpSyntaxTree.ParseText(code2, po, tree.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
-
-					//speed: adds 5% of total compilation time. Emit is 90%.
-
-					//Also tried to parse wrapper template and then ReplaceNode etc. To avoid parsing script code 2 times.
-					//	Same speed or slower. Much more difficult. Need #line too.
+				if(addedBraces) { //if the script has the closing } or }}, remove the added } or }}
+					int nErr = 0;
+					foreach(var v in tree.GetDiagnostics()) {
+						if(v.Severity == DiagnosticSeverity.Error && v.Id == "CS1022") nErr++; //"Type or namespace definition, or end-of-file expected"
+					}
+					if(nErr > 0) {
+						code = f1.code;
+						if(nErr == 1) code += "\r\n}";
+						tree = tree.WithChangedText(Microsoft.CodeAnalysis.Text.SourceText.From(code, Encoding.UTF8)) as CSharpSyntaxTree;
+						//fast, <50% of the first parsing time, <0.5% of total compilation time
+					}
 				}
+
 				trees.Add(tree);
 			}
-#endif
 			//Perf.Next('t');
 
 			OutputKind oKind;
@@ -201,7 +181,6 @@ internal static string[] args = System.Array.Empty<string>();
 
 			var options = new CSharpCompilationOptions(
 			   oKind,
-			   usings: usings,
 			   optimizationLevel: m.Optimize ? OptimizationLevel.Release : OptimizationLevel.Debug, //speed: compile the same, load Release slightly slower. Default Debug.
 			   allowUnsafe: true,
 			   platform: m.Prefer32Bit ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
@@ -275,7 +254,7 @@ internal static string[] args = System.Array.Empty<string>();
 
 			if(needOutputFiles) {
 				//If there is no [STAThread], will need MTA thread.
-				if(!m.IsScript && (m.Role == ERole.miniProgram || m.Role == ERole.exeProgram)) {
+				if(m.Role == ERole.miniProgram || m.Role == ERole.exeProgram) {
 					bool hasSTAThread = compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.STAThreadAttribute") ?? false;
 					if(!hasSTAThread) r.mtaThread = true;
 				}
@@ -375,6 +354,7 @@ internal static string[] args = System.Array.Empty<string>();
 			}
 		}
 
+		//TODO
 		static void _Triggers(IWorkspaceFile fMain, CSharpCompilation compilation)
 		{
 			List<CompTriggerData> a = null;
@@ -541,254 +521,6 @@ internal static string[] args = System.Array.Empty<string>();
 			File_.Copy(sFrom, sTo, IfExists.Delete);
 		}
 
-		#region default references and usings
-
-		/// <summary>
-		/// These references are added when compiling any script/app/library.
-		/// mscorlib, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
-		/// </summary>
-		public static readonly Dictionary<string, string> DefaultReferences = new Dictionary<string, string>
-		{
-			{"mscorlib", typeof(object).Assembly.Location},
-			{"System", typeof(Component).Assembly.Location},
-			{"System.Core", typeof(HashSet<>).Assembly.Location},
-			{"System.Windows.Forms", typeof(System.Windows.Forms.Form).Assembly.Location},
-			{"System.Drawing", typeof(System.Drawing.Point).Assembly.Location},
-			{"Au.dll", typeof(Wnd).Assembly.Location},
-
-			//info: don't need to add System.ValueTuple.
-			//speed: many references makes compiling much slower. We use temporary caching. Permanent caching would add many MB of process memory.
-		};
-
-		//note: DefaultReferences and DefaultUsings must be in sync. If there is no reference for an using, will be compiler error.
-		//	Also in usings.txt, which is used in new .cs file templates.
-
-		/// <summary>
-		/// These usings are added to script code, before scripts's usings.
-		/// </summary>
-		public const string DefaultUsings = @"using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq; using Au; using Au.Types; using static Au.NoClass; using Au.Triggers;";
-
-#if STANDARD_SCRIPT
-		//Implicit usings for scripts.
-		static readonly string[] s_usingsForScript =
-		{
-			"System",
-			"System.Collections.Generic",
-			"System.Text",
-			"System.Text.RegularExpressions",
-			"System.Diagnostics",
-			"System.Runtime.InteropServices",
-			"System.IO",
-			"System.Threading",
-			"System.Threading.Tasks",
-			"System.Windows.Forms",
-			"System.Drawing",
-			"System.Linq",
-			"Au",
-			"Au.Types",
-			"Au.NoClass",
-			"Au.Triggers",
-			"__script__", //static class in file added when compiling, to make args available
-			//speed: many usings makes compiling slower, but not as much as many references.
-		};
-#endif
-
-		#endregion
-
-		/// <summary>
-		/// Converts script code to regular C# class with default usings, App class, [STAThread]Main(string[] args){} and }.
-		/// Returns false if there are ##/#} errors; writes errors to err or prints in the output.
-		/// </summary>
-		/// <param name="f">Used only for error links.</param>
-		/// <param name="code">f text. Receives transformed text.</param>
-		/// <param name="compiling">Insert #line etc.</param>
-		/// <param name="err">If used, this func writes errors to it. Else prints errors in the output.</param>
-		/// <remarks>
-		/// Need it because of these limitations of standard C# script:
-		///		There is no normal Main, therefore cannot have string[] args (command line), [STAThread], etc.
-		///			It can be simulated, but not when runs as exe. Probably would need to not allow script exe.
-		///		Stack trace (eg on exception) contains lots of meaningless lines instead of void Main().
-		///		Cannot have ref locals in global code.
-		///			Now still problem, but smaller: ref locals can be used, but only if in { }.
-		///		All variables in global code are fields, unless in { }. Their initialization behavior is different than in regular code. No warnings 'unused variable'.
-		///			Now variables declared without a modifier (private, static, const, etc) are locals, not fields. Also, they must be declared before other code.
-		///			Difficult to make it like in standard C# script. Need to transform eg 'var i=5;' to 'int i; i=5;' (note the 'var' -> 'int').
-		///		Cannot be partial class. Now the wrapper class is partial. The same with unsafe.
-		///		And maybe more, not discovered.
-		///	So, now we still have these not very important limitations:
-		///		ref locals must be in { }.
-		///		Namespaces not allowed.
-		///	Also, I don't like parsing the same code 2 times, although only 5% slower. Inserting parsed syntaxnodes into wrapper tree is difficult and not faster.
-		///	Also I tried another way, but rejected:
-		///		If the script contains global code (usings etc) or class-level code (functions etc), let the user mark it, eg using directives.
-		///		What is good:
-		///			Don't need to parse 2 times. Just find the directives and split code using string functions, eg regex.
-		///			Supports ref locals and even namespaces.
-		///			Don't need 'private' etc modifiers for shared variables.
-		///		What is bad:
-		///			Users have to learn and remember to add these directives. Makes scripting less pleasant. The script is nonstandard, less elegant.
-		///			When users forget or misplace a directive, parser shows series of errors with weird descriptions. Eg if [DllImport...]... is in Main code.
-		///			Probably more difficult to implement intellisense.
-		///	Now the script is standard C# script, except variable scope.
-		/// </remarks>
-		static string _TransformScriptCode(CSharpSyntaxTree tree, string code, bool compiling, ErrBuilder err, IWorkspaceFile f)
-		{
-			//Perf.Next('1');
-
-			var aliases = new List<SyntaxNode>();
-			var usings = new List<SyntaxNode>();
-			var attributes = new List<SyntaxNode>();
-			var members = new List<SyntaxNode>();
-			var statements = new List<SyntaxNode>();
-
-			//Perf.Next('2');
-			var root = tree.GetCompilationUnitRoot();
-			//Perf.Next('3');
-			foreach(var v in root.ChildNodes()) {
-				switch(v.Kind()) {
-				case SyntaxKind.ExternAliasDirective:
-					aliases.Add(v);
-					break;
-				case SyntaxKind.UsingDirective:
-					usings.Add(v);
-					break;
-				case SyntaxKind.AttributeList:
-					attributes.Add(v);
-					break;
-				case SyntaxKind.GlobalStatement:
-					statements.Add(v);
-					break;
-				case SyntaxKind.FieldDeclaration:
-					var kind = v.ChildNodesAndTokens().First().Kind(); //Print(kind);
-					if(kind == SyntaxKind.VariableDeclaration) statements.Add(v); //int x; //let it be local variable
-					else if(statements.Count == 0) members.Add(v); //private|public|internal|protected|static|readonly|volatile|const int x; //let it be field or shared constant
-					else if(kind == SyntaxKind.ConstKeyword) statements.Add(v); //local constant
-					else err.AddError(f, tree.GetLineSpan(v.Span).StartLinePosition, "error: Field declarations in script must precede other statements. Fields in script are variables declared with a modifier: private, public, internal, protected, static, readonly, volatile. They can be used in all functions of the script."); //don't allow to mix field declarations with other code. Fields are inited first, and users can make errors if they don't know or forget it.
-					break;
-				default:
-					members.Add(v);
-					break;
-				}
-			}
-			//Perf.Next('4');
-
-			//Print("<><Z 0xc000>usings:<>");
-			//Print(usings);
-			//Print("<><Z 0xc000>members:<>");
-			//Print(members);
-			//Print("<><Z 0xc000>statements:<>");
-			//Print(statements);
-
-			var b = new StringBuilder();
-			int prevLine = -1;
-
-			if(aliases.Count != 0) {
-				foreach(var v in aliases) _Append(v);
-				b.AppendLine();
-			}
-			//info: append usings here, because CSharpCompilationOptions.usings is ignored if not script.
-			if(compiling) b.AppendLine(@"#line 1 ""<wrapper>""");
-			b.AppendLine(DefaultUsings);
-			if(usings.Count != 0) {
-				if(compiling) b.AppendLine("#line default\r\n");
-				prevLine = -2;
-				foreach(var v in usings) _Append(v);
-				if(compiling) b.AppendLine("\r\n#line 2 \"<wrapper>\"");
-			}
-			if(attributes.Count != 0) {
-				if(compiling) b.AppendLine("#line default\r\n");
-				prevLine = -2;
-				foreach(var v in attributes) _Append(v);
-				if(compiling) b.AppendLine("\r\n#line 3 \"<wrapper>\"");
-			}
-			if(!compiling) b.AppendLine();
-			b.AppendLine(
-@"sealed unsafe partial class App :AuAppBase {
-[STAThread] static void Main(string[] args) { new App()._Main(args); }
-void _Main(string[] args) {");
-			if(compiling) b.AppendLine("#line default\r\n");
-			prevLine = -2;
-			foreach(var v in statements) _Append(v);
-			if(compiling) b.AppendLine().AppendLine(@"#line 10 ""<wrapper>""");
-			b.AppendLine("}");
-			if(members.Count != 0) {
-				if(compiling) b.AppendLine("#line default\r\n");
-				prevLine = -2;
-				foreach(var v in members) _Append(v);
-				if(compiling) b.AppendLine("\r\n#line 11 \"<wrapper>\"");
-			}
-			b.AppendLine("}");
-			if(!compiling) b.Append(root.EndOfFileToken.ToFullString());
-
-			code = b.ToString();
-			//Print(code);
-			//Perf.Next('5');
-			return code;
-
-			void _Append(SyntaxNode sn)
-			{
-				var span = compiling ? sn.Span : sn.FullSpan;
-				if(compiling) {
-					//preserve #pragma warning
-					if(sn.HasStructuredTrivia) {
-						foreach(var v in sn.GetLeadingTrivia()) {
-							if(!v.IsKind(SyntaxKind.PragmaWarningDirectiveTrivia)) continue;
-							var sn2 = v.GetStructure() as PragmaWarningDirectiveTriviaSyntax;
-							if(sn2.IsActive) _Append(sn2);
-						}
-					}
-
-					var lineSpan = tree.GetLineSpan(span);
-					var start = lineSpan.StartLinePosition;
-					int line = start.Line, col = start.Character;
-					if(line != prevLine + 1) {
-						if(line == prevLine) {
-							b.Remove(b.Length - 2, 2);
-							for(int i = b.Length - 1; i >= 0 && b[i] != '\n'; i--) col--;
-						} else if(prevLine >= 0 && (uint)(line - prevLine) < 10) {
-							for(int i = line - prevLine - 1; i > 0; i--) b.AppendLine();
-						} else b.Append("#line ").Append(line + 1).AppendLine();
-					}
-					//prevLine = line; //does not support multiline statements
-					prevLine = lineSpan.EndLinePosition.Line;
-					if(col > 0) b.Append(' ', col);
-				}
-				b.Append(code, span.Start, span.Length);
-				if(compiling) b.AppendLine();
-			}
-		}
-
-		/// <summary>
-		/// Converts script code to app code.
-		/// If there are syntax errors, shows them (like when compiling) and returns null.
-		/// The caller should save text before, because gets text from file, not from editor.
-		/// </summary>
-		/// <param name="f">Script.</param>
-		public static string ConvertCodeScriptToApp(IWorkspaceFile f)
-		{
-			Debug.Assert(f.IsScript);
-			var m = new MetaComments();
-			if(!m.Parse(f, null, EMPFlags.PrintErrors)) return null;
-			var err = m.Errors;
-			var code = m.CodeFiles[0].code;
-			var po = new CSharpParseOptions(LanguageVersion.Latest, DocumentationMode.None, SourceCodeKind.Script, m.Defines);
-			var tree = CSharpSyntaxTree.ParseText(code, po, f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
-			if(err.AddAllAndPrint(tree, f)) return null;
-
-			var s = _TransformScriptCode(tree, code, false, err, f);
-			if(err.ErrorCount != 0) { err.PrintAll(); return null; }
-
-			if(m.EndOfMeta > 0 && !s.StartsWith_("/*")) { //inserted default usings before meta
-				int metaStart = s.IndexOf_("/*"), metaLength = m.EndOfMeta;
-				while(metaLength < code.Length && code[metaLength] <= ' ') metaLength++;
-				int metaEnd = metaStart + metaLength;
-				var b = new StringBuilder();
-				b.Append(s, metaStart, metaLength).Append(s, 0, metaStart).Append(s, metaEnd, s.Length - metaEnd);
-				s = b.ToString();
-			}
-			return s;
-		}
-
 		static bool _RunPrePostBuildScript(bool post, MetaComments m, string outFile)
 		{
 			var x = post ? m.PostBuild : m.PreBuild;
@@ -796,7 +528,7 @@ void _Main(string[] args) {");
 			if(x.s == null) {
 				args = new string[] { outFile };
 			} else {
-				args = Au.Util.StringMisc.CommandLineToArray(x.s);
+				args = Util.StringMisc.CommandLineToArray(x.s);
 
 				//replace variables like $(variable)
 				var f = m.CodeFiles[0].f;
@@ -845,5 +577,33 @@ void _Main(string[] args) {");
 			t_timerGC.Start(10_000, true);
 		}
 		static Timer_ t_timerGC;
+
+		#region default references and usings
+
+		/// <summary>
+		/// These references are added when compiling any script/library.
+		/// mscorlib, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
+		/// </summary>
+		public static readonly Dictionary<string, string> DefaultReferences = new Dictionary<string, string>
+		{
+			{"mscorlib", typeof(object).Assembly.Location},
+			{"System", typeof(Component).Assembly.Location},
+			{"System.Core", typeof(HashSet<>).Assembly.Location},
+			{"System.Windows.Forms", typeof(System.Windows.Forms.Form).Assembly.Location},
+			{"System.Drawing", typeof(System.Drawing.Point).Assembly.Location},
+			{"Au.dll", typeof(Wnd).Assembly.Location},
+
+			//speed: many references makes compiling much slower. We use temporary caching. Permanent caching would add many MB of process memory.
+		};
+
+		//note: DefaultReferences and using.txt/DefaultUsings must be in sync. If there is no reference for an using, will be compiler error.
+
+		/// <summary>
+		/// Usings for <see cref="Scripting.Compile"/>.
+		/// The same as in using.txt.
+		/// </summary>
+		public const string DefaultUsings = @"using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq; using Au; using Au.Types; using static Au.NoClass; using Au.Triggers;";
+
+		#endregion
 	}
 }

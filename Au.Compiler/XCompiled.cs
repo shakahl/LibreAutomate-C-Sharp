@@ -56,7 +56,7 @@ namespace Au.Compiler
 			static string s_auVersion;
 
 			/// <summary>
-			/// Called before executing script/app f. If returns true, don't need to compile.
+			/// Called before executing script f. If returns true, don't need to compile.
 			/// </summary>
 			/// <param name="f"></param>
 			/// <param name="r">Receives file path and execution options.</param>
@@ -185,7 +185,7 @@ namespace Au.Compiler
 			}
 
 			/// <summary>
-			/// Called when successfully compiled script/app f. Saves data that next time will be used by <see cref="IsCompiled"/>.
+			/// Called when successfully compiled script f. Saves data that next time will be used by <see cref="IsCompiled"/>.
 			/// </summary>
 			/// <param name="f"></param>
 			/// <param name="outFile">The output assembly.</param>

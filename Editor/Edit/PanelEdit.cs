@@ -56,7 +56,8 @@ partial class PanelEdit : Control
 	/// Does not save text of previously active document.
 	/// </summary>
 	/// <param name="f"></param>
-	public bool Open(FileNode f)
+	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
+	public bool Open(FileNode f, bool newFile)
 	{
 		Debug.Assert(MainForm.IsHandleCreated);
 		Debug.Assert(!Model.IsAlien(f));
@@ -81,7 +82,7 @@ partial class PanelEdit : Control
 			_docs.Add(doc);
 			_activeDoc = doc;
 			this.Controls.Add(doc);
-			doc.Init(text);
+			doc.Init(text, newFile);
 		}
 		if(focus) _activeDoc.Focus();
 
@@ -390,7 +391,7 @@ partial class PanelEdit : Control
 
 				break;
 			case NOTIF.SCN_UPDATEUI:
-				if(_initDeferred) { _initDeferred = false; _InitDeferred(); }
+				if(_initDeferred != null) { var f = _initDeferred; _initDeferred = null; f(); }
 				//Print((uint)n.updated);
 				if(0 != (n.updated & 3)) Panels.Editor._UpdateUI_Cmd();
 				break;
@@ -430,39 +431,42 @@ partial class PanelEdit : Control
 			return true;
 		}
 
-		internal void Init(byte[] text)
+		internal void Init(byte[] text, bool newFile)
 		{
 			if(!IsHandleCreated) CreateHandle();
 			_fls.SetText(ST, text);
-			_initDeferred = true; //now folding does not work well. The first place where it works is SCN_UPDATEUI.
+
+			//now folding does not work well. The first place where it works is SCN_UPDATEUI. Call _initDeferred there and set = null.
+			_initDeferred = () => {
+				var db = Model.DB; if(db == null) return;
+				try {
+					using(var p = db.Statement("SELECT lines FROM _editor WHERE id=?", FN.Id)) {
+						if(p.Step()) {
+							var a = p.GetList<int>(0);
+							if(a != null) {
+								_savedMD5 = _Hash(a);
+								for(int i = a.Count - 1; i >= 0; i--) { //must be in reverse order, else does not work
+									int v = a[i];
+									int line = v & 0x7FFFFFF, marker = v >> 27 & 31;
+									if(marker == 31) _FoldingFoldLine(line);
+									else Call(SCI_MARKERADDSET, line, 1 << marker);
+								}
+							}
+						} else if(newFile) {
+							//fold boilerplate code
+							//Call(SCI_FOLDALL); //does not fold nested
+							if(0 != (SC_FOLDLEVELHEADERFLAG & Call(SCI_GETFOLDLEVEL, 0))) Call(SCI_FOLDCHILDREN, 0);
+						}
+					}
+				}
+				catch(SLException ex) { Debug_.Print(ex); }
+			};
 		}
 
 		#region editor data
 
 		Convert_.MD5HashResult _savedMD5;
-		bool _initDeferred;
-
-		unsafe void _InitDeferred()
-		{
-			var db = Model.DB; if(db == null) return;
-			try {
-				using(var p = db.Statement("SELECT lines FROM _editor WHERE id=?", FN.Id)) {
-					if(p.Step()) {
-						var a = p.GetList<int>(0);
-						if(a != null) {
-							_savedMD5 = _Hash(a);
-							for(int i = a.Count - 1; i >= 0; i--) { //must be in reverse order, else does not work
-								int v = a[i];
-								int line = v & 0x7FFFFFF, marker = v >> 27 & 31;
-								if(marker == 31) _FoldingFoldLine(line);
-								else Call(SCI_MARKERADDSET, line, 1 << marker);
-							}
-						}
-					}
-				}
-			}
-			catch(SLException ex) { Debug_.Print(ex); }
-		}
+		Action _initDeferred;
 
 		static unsafe Convert_.MD5HashResult _Hash(List<int> a)
 		{
@@ -675,7 +679,7 @@ partial class PanelEdit : Control
 				t = new StringBuilder();
 				if(FN.IsCodeFile) {
 					var text = ST.GetText();
-					if(Au.Compiler.MetaComments.FindMetaComments(text, out endOfMeta) && pos > 0 && pos < endOfMeta) inMeta = true;
+					if(Au.Compiler.MetaComments.FindMetaComments(text, out endOfMeta) && pos < endOfMeta) inMeta = true;
 					else if(pos > endOfMeta) text.RegexMatch_(@"\b(\w+)\s*=\s*new\s+Au(?:Menu|Toolbar)", 1, out menuVar, 0, new RXMore(endOfMeta, pos));
 				}
 			}
@@ -764,7 +768,7 @@ partial class PanelEdit : Control
 				if(!FN.IsCodeFile) {
 					t.Append(path);
 				} else if(inMeta) {
-					string opt = "//";
+					string opt = null;
 					switch(_drag) {
 					case _DD_DataType.Files:
 						opt = File_.ExistsAsDirectory(path) ? "outputPath " : "r ";
@@ -779,11 +783,12 @@ partial class PanelEdit : Control
 						}
 						break;
 					}
+					if(opt == null) return;
 					//make relative path
 					var p2 = FN.ItemPath; int i = p2.LastIndexOf('\\') + 1;
 					if(0 == string.CompareOrdinal(path, 0, p2, 0, i)) path = path.Substring(i);
 
-					t.Append(opt).Append(path);
+					t.Append(opt).Append(path).Append(';');
 				} else {
 					name = name.Escape_();
 					if(menuVar != null) t.Append(menuVar).Append("[\"").Append(name).Append("\"] =o=> ");

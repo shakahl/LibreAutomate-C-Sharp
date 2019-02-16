@@ -51,6 +51,7 @@ class EdMetaCommentsParser
 	{
 		switch(name) {
 		case "role": role = value; break;
+		case "outputPath": outputPath = value; break;
 		case "runMode": runMode = value; break;
 		case "ifRunning": ifRunning = value; break;
 		case "uac": uac = value; break;
@@ -62,7 +63,6 @@ class EdMetaCommentsParser
 		case "define": define = value; break;
 		case "preBuild": preBuild = value; break;
 		case "postBuild": postBuild = value; break;
-		case "outputPath": outputPath = value; break;
 		case "console": console = value; break;
 		case "icon": icon = value; break;
 		case "manifest": manifest = value; break;
@@ -78,11 +78,10 @@ class EdMetaCommentsParser
 	}
 
 	/// <summary>
-	/// Formats metacomments string "/* meta ... */", optionally with 2 newlines.
+	/// Formats metacomments string "/*/ ... */".
 	/// Returns "" if there are no options.
 	/// </summary>
-	/// <param name="add2Newlines"></param>
-	public string Format(bool add2Newlines)
+	public string Format(string append)
 	{
 		//prepare to make relative paths
 		string dir = null;
@@ -92,8 +91,9 @@ class EdMetaCommentsParser
 			if(i > 1) dir = dir.Remove(i); else dir = null;
 		}
 
-		var b = new StringBuilder("/* meta\r\n");
+		var b = new StringBuilder("/*/ ");
 		_Append("role", role);
+		_Append("outputPath", outputPath);
 		_Append("runMode", runMode);
 		_Append("ifRunning", ifRunning);
 		_Append("uac", uac);
@@ -105,7 +105,6 @@ class EdMetaCommentsParser
 		_Append("define", define);
 		_Append("preBuild", preBuild, true);
 		_Append("postBuild", postBuild, true);
-		_Append("outputPath", outputPath);
 		_Append("console", console);
 		_Append("icon", icon, true);
 		_Append("manifest", manifest, true);
@@ -117,16 +116,16 @@ class EdMetaCommentsParser
 		_AppendList("pr", _pr);
 		_AppendList("c", _c, true);
 		_AppendList("resource", _resource, true);
-		if(b.Length == 9) return "";
+		if(b.Length == 4) return "";
 		b.Append("*/");
-		if(add2Newlines) b.AppendLine().AppendLine();
+		if(append != null) b.Append(append);
 		return b.ToString();
 
 		void _Append(string name, string value, bool relativePath = false)
 		{
 			if(value != null) {
 				if(relativePath && dir != null && value.StartsWithI_(dir)) value = value.Substring(dir.Length);
-				b.Append(name).Append(' ').AppendLine(value);
+				b.Append(name).Append(' ').Append(value).Append("; ");
 			}
 		}
 

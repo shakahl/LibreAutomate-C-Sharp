@@ -66,7 +66,6 @@ class CmdHandlers : IGStripManagerCallbacks
 		#region add to _dict
 
 		_dict.Add(nameof(File_NewScript), File_NewScript);
-		_dict.Add(nameof(File_NewApp), File_NewApp);
 		_dict.Add(nameof(File_NewClass), File_NewClass);
 		_dict.Add(nameof(File_NewFolder), File_NewFolder);
 		_dict.Add(nameof(File_Import), File_Import);
@@ -190,11 +189,6 @@ class CmdHandlers : IGStripManagerCallbacks
 		Model.NewItem("Script", beginEdit: true);
 	}
 
-	public void File_NewApp()
-	{
-		Model.NewItem("App.cs", beginEdit: true);
-	}
-
 	public void File_NewClass()
 	{
 		Model.NewItem("Class.cs", beginEdit: true);
@@ -209,8 +203,6 @@ class CmdHandlers : IGStripManagerCallbacks
 	{
 		Model.ImportFiles();
 	}
-
-	//FUTURE: File_ConvertScript: to app, to app project
 
 	public void File_Disable()
 	{

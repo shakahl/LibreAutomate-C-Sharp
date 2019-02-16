@@ -83,7 +83,7 @@ using System.Numerics;
 
 //[assembly: Trigger.Hotkey("F4")]
 
-//class App :AuAppBase
+//class App :AuApp
 //{
 //	static App()
 //	{
@@ -767,7 +767,7 @@ a1,-8";
 
 	#region TreeBase examples
 
-	/* meta r System.Xml */
+	/*/ r System.Xml */
 	//using System.Xml;
 
 	class MyTree : Au.Util.TreeBase<MyTree>

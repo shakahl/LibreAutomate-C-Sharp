@@ -32,7 +32,7 @@ namespace Au.Util
 	/// <example>
 	/// Shows how to declare a TreeBase-derived class, load tree of nodes from an XML file, print descendant nodes, save the tree to an XML file.
 	/// <code><![CDATA[
-	/// /* meta r System.Xml */
+	/// /*/ r System.Xml */
 	/// using System.Xml;
 	/// 
 	/// class MyTree :Au.Util.TreeBase<MyTree>

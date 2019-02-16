@@ -38,7 +38,6 @@
 		<Menu_File>
 			<File_New>
 				<File_NewScript i="fileScript" hk="Ctrl+N"/>
-				<File_NewApp i="fileClass"/>
 				<File_NewClass i="fileClass"/>
 				<File_NewFolder i="folder"/>
 				<sep/>

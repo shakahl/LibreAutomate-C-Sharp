@@ -57,7 +57,7 @@ static class Run
 		if(f == null) return 0;
 		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
 
-		//can be set to run other script/app instead.
+		//can be set to run other script instead.
 		//	Useful for library projects. Single files have other alternatives - move to a script project or move code to a script file.
 		if(run) {
 			var f2 = f.TestScript;
@@ -92,7 +92,7 @@ static class Run
 	{
 		if(!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _SciLink_RunClassFile); }
 		var ids = f.IdStringWithWorkspace;
-		var s2 = projFolder != null ? "" : $", project (<+runClass \"2|{ids}\">create<>) or program role (<+runClass \"1|{ids}\">add<>)";
+		var s2 = projFolder != null ? "" : $", project (<+runClass \"2|{ids}\">create<>) or role exeProgram (<+runClass \"1|{ids}\">add<>)";
 		Print($"<>Cannot run '{f.Name}'. It is a class file without a test script (<+runClass \"3|{ids}\">create<>){s2}.");
 	}
 
@@ -104,15 +104,7 @@ static class Run
 		string text = null;
 		if(action == 1) {
 			if(!Model.SetCurrentFile(f)) return;
-			var doc = Panels.Editor.ActiveDoc;
-			var t = doc.ST;
-			t.GoToPos(0);
-			t.SetString(Sci.SCI_INSERTTEXT, 0,
-@"/* meta
-role miniProgram
-*/
-
-");
+			Model.Properties();
 		} else if(action == 2) {
 			if(!_NewItem(out f2, out _, @"New Project\@Script")) return;
 			f.FileMove(f2, Aga.Controls.Tree.NodePosition.After);
@@ -122,9 +114,7 @@ role miniProgram
 			if(!_NewItem(out f2, out bool isProject, "Script", s)) return;
 			f.TestScript = f2;
 			text =
-$@"/* meta
-{(isProject ? "pr" : "c")} {f.ItemPath}
-*/
+$@"/* {(isProject ? "pr" : "c")} {f.ItemPath} */
 
 {(isProject ? "Library." : "")}Class1.Function1();
 ";

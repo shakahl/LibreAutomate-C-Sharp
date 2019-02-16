@@ -1,5 +1,3 @@
-//#define STANDARD_SCRIPT
-
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -24,23 +22,18 @@ using static Au.NoClass;
 namespace Au.Compiler
 {
 	/// <summary>
-	/// Extracts C# file/project settings, references, etc from comments in C# code.
+	/// Extracts C# file/project settings, references, etc from meta comments in C# code.
 	/// </summary>
 	/// <remarks>
 	/// To compile C# code, often need various settings, more files, etc. In Visual Studio you can set it in project Properties and Solution Explorer. In Au you can set it in C# code as meta comments.
-	/// Meta comments is a block of multiline comments that starts with <c>/* meta</c> and ends with <c>*/</c>. Must be at the very start of C# code. Example:
+	/// Meta comments is a block of comments that starts with <c>/*/</c> and ends with <c>*/</c>. Must be at the very start of C# code. Example:
 	/// <code><![CDATA[
-	/// /* meta
-	/// option1 value1
-	/// option2 value2
-	/// option2 value3
-	/// //comments
-	/// */
+	/// /*/ option1 value1; option2 value2; option2 value3 */
 	/// ]]></code>
 	/// Options and values must match case, except filenames/paths. No "enclosing", no escaping.
 	/// Some options can be several times with different values, for example to specify several references.
 	/// When compiling multiple files (project, or using option 'c'), only the main file can contain all options. Other files can contain only 'r', 'c', 'resource', 'com'.
-	/// All available options are in the examples below. Here a|b|c means a or b or c. The //comments after options are not allowed in real meta comments.
+	/// All available options are in the examples below. Here a|b|c means a or b or c. The //comments are not allowed in real meta comments.
 	/// </remarks>
 	/// <example>
 	/// <h3>References</h3>
@@ -96,15 +89,15 @@ namespace Au.Compiler
 	/// define SYMBOL1,SYMBOL2 //define preprocessor symbols that can be used with #if etc. These are added implicitly: TRACE - always; DEBUG - if not used option 'optimize' true.
 	/// warningLevel 1 //compiler warning level, 0 (none) to 4 (all). Default: 4.
 	/// noWarnings 3009,162 //don't show these compiler warnings
-	/// preBuild file /arguments //run this script/app before compiling. More info below.
-	/// postBuild file /arguments //run this script/app after compiled successfully. More info below.
+	/// preBuild file /arguments //run this script before compiling. More info below.
+	/// postBuild file /arguments //run this script after compiled successfully. More info below.
 	/// ]]></code>
 	/// About options 'preBuild' and 'postBuild':
-	/// The script/app must have meta option role editorExtension. It runs in compiler's thread. Compiler waits and does not respond during that time. To stop compilation, let the script throw an exception.
-	/// The script/app has parameter (variable) string[] args. If there is no /arguments, args[0] is the output assembly file, full path. Else args contains the specified arguments, parsed like a command line. In arguments you can use these variables:
+	/// The script must have meta option role editorExtension. It runs in compiler's thread. Compiler waits and does not respond during that time. To stop compilation, let the script throw an exception.
+	/// The script has parameter (variable) string[] args. If there is no /arguments, args[0] is the output assembly file, full path. Else args contains the specified arguments, parsed like a command line. In arguments you can use these variables:
 	/// $(outputFile) -  the output assembly file, full path; $(sourceFile) - the C# file, full path; $(source) - path of the C# file in workspace, eg "\folder\file.cs"; $(outputPath) - meta option 'outputPath', default ""; $(optimize) - meta option 'optimize', default "false".
 	/// 
-	/// <h3>Settings used to run the compiled script or app</h3>
+	/// <h3>Settings used to run the compiled script</h3>
 	/// <code><![CDATA[
 	/// runMode green|blue - whether tasks can run simultaneously, etc. Default: green. More info below.
 	/// ifRunning runIfBlue|dontRun|wait|restart|restartOrWait //whether/how to start new task if a task is running. Default: unspecified. More info below.
@@ -112,12 +105,12 @@ namespace Au.Compiler
 	/// prefer32bit false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
 	/// config app.config //let the running task use this configuration file. Can be filename or relative path, like with 'c'. The file is copied to the output directory unmodified but renamed to match the assembly name. This option cannot be used with dll. If not specified, will be used host program's config file.
 	/// ]]></code>
-	/// Here word "task" is used for "script or app that is running or should start".
+	/// Here word "task" is used for "script that is running or should start".
 	/// Options 'runMode', 'ifRunning' and 'uac' are applied only when the task is started from editor, not when it runs as independent exe program.
 	/// 
 	/// About runMode:
 	/// Multiple green tasks cannot run simultaneously. Multiple blue tasks can run simultaneously. See also option 'ifRunning'.
-	/// The task also is green or blue in the ""Running"" pane. Green tasks change the tray icon and use the ""End task"" hotkey; blue tasks don't.
+	/// The task also is green or blue in the "Running" pane. Green tasks change the tray icon and use the "End task" hotkey; blue tasks don't.
 	/// Blue tasks are used: to run simultaneously with any tasks (green, blue, other instances of self); to protect the task from the "End task" hotkey; as background tasks that wait for some event or watch for some condition; contain multiple methods that can be executed with method triggers, toolbars and autotexts.
 	/// 
 	/// About ifRunning:
@@ -131,11 +124,11 @@ namespace Au.Compiler
 	/// About uac:
 	/// inherit (default) - the task process has the same UAC integrity level (IL) as the editor process.
 	/// user - Medium IL, like most applications. The task cannot automate high IL process windows, write some files, change some settings, etc.
-	/// admin - High IL, aka ""administrator"", ""elevated"". The task has many rights, but cannot automate some apps through COM, etc.
+	/// admin - High IL, aka "administrator", "elevated". The task has many rights, but cannot automate some apps through COM, etc.
 	/// 
 	/// <h3>Settings used to create assembly file</h3>
 	/// <code><![CDATA[
-	/// role miniProgram|exeProgram|editorExtension|classLibrary|classFile //purpose of this C# file. Also the type of the output assembly file (exe, dll, none). Default: miniProgram for scripts, classFile for .cs files. Scripts cannot be classLibrary and classFile; .cs files can be any. More info below.
+	/// role miniProgram|exeProgram|editorExtension|classLibrary|classFile //purpose of this C# file. Also the type of the output assembly file (exe, dll, none). Default: miniProgram for scripts, classFile for .cs files. More info below.
 	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %Folders.Workspace%\bin. Default for classLibrary: %Folders.ThisApp%\Libraries.
 	/// console false|true //let the program run with console
 	/// icon file.ico //icon of the .exe/.dll file. Can be filename or relative path, like with 'c'.
@@ -146,10 +139,10 @@ namespace Au.Compiler
 	/// ]]></code>
 	/// 
 	/// About role:
-	/// If role is 'exeProgram' or 'classLibrary', creates .exe or .dll file, named like this C# file.
+	/// If role is 'exeProgram' or 'classLibrary', creates .exe or .dll file, named like this C# file, in 'outputPath' directory.
 	/// If role is 'miniProgram' (default for scripts) or 'editorExtension', creates a temporary assembly file in subfolder ".compiled" of the workspace folder.
 	/// If role is 'classFile' (default for .cs files) does not create any output files from this C# file. Its purpose is to be compiled together with other C# code files.
-	/// If role is 'editorExtension', the task runs in the main UI thread of the editor process. Rarely used. Can be used to create editor extensions. The user cannot see and end the task. Creates memory leaks when executing recompiled assemblies (eg after editing the script/app), because old assembly versions cannot be unloaded until process exits.
+	/// If role is 'editorExtension', the task runs in the main UI thread of the editor process. Rarely used. Can be used to create editor extensions. The user cannot see and end the task. Creates memory leaks when executing recompiled assemblies (eg after editing the script), because old assembly versions cannot be unloaded until process exits.
 	/// 
 	/// Full path can be used with 'r', 'com', 'outputPath' and 'xmlDoc'. It can start with an environment variable or special folder name, like <c>%Folders.ThisAppDocuments%\file.exe</c>.
 	/// Files used with other options ('c', 'resource' etc) must be in this workspace.
@@ -437,6 +430,7 @@ namespace Au.Compiler
 
 		void _ParseOption(string name, string value, int iName, int iValue)
 		{
+			//Print(name, value);
 			if(value.Length == 0) { _Error(iValue, "value cannot be empty"); return; }
 
 			switch(name) {
@@ -487,7 +481,7 @@ namespace Au.Compiler
 				break;
 			case "define":
 				Specified |= EMSpecified.define;
-				Defines.AddRange(value.Split_(",; ", SegFlags.NoEmpty));
+				Defines.AddRange(value.Split_(", ", SegFlags.NoEmpty));
 				break;
 			case "warningLevel":
 				_Specified(EMSpecified.warningLevel, iName);
@@ -497,7 +491,7 @@ namespace Au.Compiler
 				break;
 			case "noWarnings":
 				Specified |= EMSpecified.noWarnings;
-				NoWarnings.AddRange(value.Split_(",; ", SegFlags.NoEmpty));
+				NoWarnings.AddRange(value.Split_(", ", SegFlags.NoEmpty));
 				break;
 			case "preBuild":
 				_Specified(EMSpecified.preBuild, iName);
@@ -516,10 +510,6 @@ namespace Au.Compiler
 				break;
 			case "outputPath":
 				_Specified(EMSpecified.outputPath, iName);
-#if STANDARD_SCRIPT
-				//scripts can be .exe, but we don't allow it, because there is no way to set args, [STAThread], triggers.
-				if(IsScript) _Error(iKey, "scripts cannot have option outputPath. If want to create .exe, use App or App/Script project (menu -> File -> New)."); else
-#endif
 				OutputPath = _GetOutPath(value, iValue); //and creates directory if need
 				break;
 			case "runMode":
@@ -569,11 +559,6 @@ namespace Au.Compiler
 			//case "targetFramework": //need to use references of that framework? Where to get them at run time? Or just add [assembly: TargetFramework(...)]?
 			//	break;
 			//case "version": //will be auto-created from [assembly: AssemblyVersion] etc
-			//	break;
-			//case "include": //CONSIDER
-			//	// include file //include options from this file. Can be filename or relative path, like with 'c'.
-			//	//CONSIDER: also add "using", it can be useful with "include"; or add regular usings from the included file; also [assembly: ] and [module: ].
-			//	//CONSIDER: allow to have one .cs file to be compiled with all. Eg it can contain [module: DefaultCharSet(CharSet.Unicode)].
 			//	break;
 			default:
 				_Error(iName, "unknown meta option");
@@ -699,15 +684,15 @@ namespace Au.Compiler
 		}
 
 		/// <summary>
-		/// Returns true if code starts with metacomments "/* meta ... */".
+		/// Returns true if code starts with metacomments "/*/ ... */".
 		/// </summary>
 		/// <param name="code">Code. Can be null.</param>
 		/// <param name="endOfMetacomments">Receives the very end of metacomments.</param>
 		public static bool FindMetaComments(string code, out int endOfMetacomments)
 		{
 			endOfMetacomments = 0;
-			if(code.Length_() < 10 || !code.StartsWith_("/* meta") || code[7] > ' ') return false;
-			int iTo = code.IndexOf_("*/", 8); if(iTo < 0) return false;
+			if(code.Length_() < 5 || !code.StartsWith_("/*/")) return false;
+			int iTo = code.IndexOf_("*/", 3); if(iTo < 0) return false;
 			endOfMetacomments = iTo + 2;
 			return true;
 		}
@@ -715,30 +700,25 @@ namespace Au.Compiler
 		/// <summary>
 		/// Parses metacomments and returns offsets of all option names and values in code.
 		/// </summary>
-		/// <param name="code">Code that starts with metacomments "/* meta ... */".</param>
+		/// <param name="code">Code that starts with metacomments "/*/ ... */".</param>
 		/// <param name="endOfMetacomments">The very end of metacomments, returned by <see cref="FindMetaComments"/>.</param>
 		public static IEnumerable<Token> EnumOptions(string code, int endOfMetacomments)
 		{
-			for(int i = 8, iEnd = endOfMetacomments - 2; i < iEnd;) {
+			for(int i = 3, iEnd = endOfMetacomments - 2; i < iEnd; i++) {
 				Token t = default;
 				for(; i < iEnd; i++) if(code[i] > ' ') break; //find next option
-				if(!(code[i] == '/' && code[i + 1] == '/')) { //if not comments
-					t.nameStart = i;
-					while(i < iEnd && code[i] > ' ') i++; //find separator after name
-					t.nameLen = i - t.nameStart;
-					while(i < iEnd && code[i] <= ' ' && !_IsNewline(code[i])) i++; //find value
-					t.valueStart = i;
-				}
-				for(; i < iEnd; i++) if(_IsNewline(code[i])) break; //find newline after value
-				if(t.nameLen > 0) { //else comments or end
-					int j = i; while(j > t.valueStart && code[j - 1] <= ' ') j--; //rtrim
-					t.valueLen = j - t.valueStart;
-					t.code = code;
-					yield return t;
-				}
+				if(i == iEnd) break;
+				t.nameStart = i;
+				while(i < iEnd && code[i] > ' ') i++; //find separator after name
+				t.nameLen = i - t.nameStart;
+				while(i < iEnd && code[i] <= ' ') i++; //find value
+				t.valueStart = i;
+				for(; i < iEnd; i++) if(code[i] == ';') break; //find ; after value
+				int j = i; while(j > t.valueStart && code[j - 1] <= ' ') j--; //rtrim
+				t.valueLen = j - t.valueStart;
+				t.code = code;
+				yield return t;
 			}
-
-			bool _IsNewline(char c) => c == '\r' || c == '\n';
 		}
 
 		/// <summary>

@@ -139,9 +139,7 @@ namespace Au.Compiler
 		code
 		#pragma warning restore
 </code>	Example of disabling some warnings in whole compilation (at the very start of code):
-<code>		/* meta
-		noWarnings 168, 649
-		*/
+<code>		/*/ noWarnings 168, 649; */
 </code>	Also look in program options, maybe you can disable some warnings in all scripts.</fold>");
 			_b.AppendLine("<>");
 			//FUTURE: this should be <help>, not <fold>.
@@ -153,21 +151,22 @@ namespace Au.Compiler
 			Clear();
 		}
 
-		/// <summary>
-		/// If the SyntaxTree contains errors, prints them (<see cref="PrintAll"/>) and returns true.
-		/// In any case, prints errors and warnings.
-		/// </summary>
-		/// <param name="tree"></param>
-		/// <param name="f"></param>
-		/// <param name="printWarnings">Add warnings too (but print only if error).</param>
-		public bool AddAllAndPrint(SyntaxTree tree, IWorkspaceFile f, bool printWarnings = false)
-		{
-			foreach(var v in tree.GetDiagnostics()) {
-				if(v.Severity == DiagnosticSeverity.Error || printWarnings) AddErrorOrWarning(v, f);
-			}
-			if(ErrorCount == 0) return false;
-			PrintAll();
-			return true;
-		}
+		//currently not used.
+		///// <summary>
+		///// If the SyntaxTree contains errors, prints them (<see cref="PrintAll"/>) and returns true.
+		///// In any case, prints errors and warnings.
+		///// </summary>
+		///// <param name="tree"></param>
+		///// <param name="f"></param>
+		///// <param name="printWarnings">Add warnings too (but print only if error).</param>
+		//public bool AddAllAndPrint(SyntaxTree tree, IWorkspaceFile f, bool printWarnings = false)
+		//{
+		//	foreach(var v in tree.GetDiagnostics()) {
+		//		if(v.Severity == DiagnosticSeverity.Error || printWarnings) AddErrorOrWarning(v, f);
+		//	}
+		//	if(ErrorCount == 0) return false;
+		//	PrintAll();
+		//	return true;
+		//}
 	}
 }

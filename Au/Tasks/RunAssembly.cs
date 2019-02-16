@@ -1,6 +1,4 @@
-//#define STANDARD_SCRIPT
 //#define TEST_STARTUP_SPEED
-//#define PRELOAD_PROCESS //not impl
 
 using System;
 using System.Collections.Generic;
@@ -73,13 +71,6 @@ namespace Au
 				bool useArgs = entryPoint.GetParameters().Length != 0;
 				if(useArgs) {
 					if(args == null) args = Array.Empty<string>();
-#if STANDARD_SCRIPT
-				} else if(args != null) {
-					//if standard script, set __script__.args. Our compiler adds class __script__ with static string[] args, and adds __script__ to usings.
-					a.GetType("__script__")?.GetField("args", BindingFlags.SetField | BindingFlags.Static | BindingFlags.NonPublic)?.SetValue(null, args);
-
-					//if standard script, will need to run triggers in this func. Depends on how we'll implement them.
-#endif
 				}
 
 				if(useArgs) {
@@ -92,7 +83,7 @@ namespace Au
 				var e = te.InnerException;
 				if(0 != (flags & RAFlags.DontHandleExceptions)) throw e;
 				//Print(e);
-				AuAppBase.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
+				AuApp.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
 			}
 
 			//see also: TaskScheduler.UnobservedTaskException event.
@@ -155,18 +146,18 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// This class is used in automation script/app files as base of their main class. Adds some features.
+	/// This class is used in automation script files as base of their main class. Adds some features.
 	/// </summary>
 	/// <remarks>
 	/// This class adds these features:
 	/// 1. Static constructor subscribes to <see cref="AppDomain.UnhandledException"/> event. On unhandled exception prints exception info. Without this class not all unhandled exceptions would be printed.
-	/// 2. Provides function OnUnhandledException. The script/app can override it.
+	/// 2. Provides function OnUnhandledException. The script can override it.
 	/// 
 	/// More features may be added in the future.
 	/// </remarks>
-	public abstract class AuAppBase
+	public abstract class AuApp
 	{
-		static AuAppBase()
+		static AuApp()
 		{
 			AppDomain.CurrentDomain.UnhandledException += (ad, e) => {
 				if((ad as AppDomain).Id != AppDomain.CurrentDomain.Id) return; //avoid printing twice if subscribed in main and other appdomain
@@ -184,10 +175,10 @@ namespace Au.Types
 			};
 		}
 
-		static AuAppBase s_instance;
+		static AuApp s_instance;
 
 		///
-		protected AuAppBase()
+		protected AuApp()
 		{
 			s_instance = this;
 		}

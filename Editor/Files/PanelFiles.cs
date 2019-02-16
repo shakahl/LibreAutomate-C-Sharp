@@ -23,7 +23,7 @@ using static Program;
 
 partial class ThisIsNotAFormFile { }
 
-partial class PanelFiles :Control
+partial class PanelFiles : Control
 {
 	//idea: when file clicked, open it and show AuMenu of its functions (if > 1).
 
@@ -61,13 +61,14 @@ partial class PanelFiles :Control
 		var xmlFile = wsDir + @"\files.xml";
 		var oldModel = _model;
 		FilesModel m = null;
+		bool newFile = false;
 		g1:
 		try {
 			//SHOULDDO: if editor runs as admin, the workspace directory should be write-protected from non-admin user processes.
 
 			//CONSIDER: use different logic. Now silently creates empty files, it's not always good.
 			//	Add parameter createNew. If false, show error if file not found.
-			if(!File_.ExistsAsFile(xmlFile)) {
+			if(newFile = !File_.ExistsAsFile(xmlFile)) {
 				File_.CopyTo(Folders.ThisAppBS + @"Default\files", wsDir);
 				File_.Copy(Folders.ThisAppBS + @"Default\files.xml", xmlFile);
 			}
@@ -107,7 +108,8 @@ partial class PanelFiles :Control
 			}
 		}
 
-		m.LoadState();
+		if(newFile) m.SetCurrentFile(m.Root.FirstChild, newFile: true);
+		else m.LoadState();
 		if(m.CurrentFile == null) MainForm.SetTitle();
 
 		return _model;
@@ -202,7 +204,7 @@ partial class PanelFiles :Control
 					if(level == 0 && name.EqualsI_("include")) continue;
 					if(isProject = (name[0] == '@')) name = name.Substring(1);
 				} else {
-					if(level == 0 && 0 != name.Equals_(true, "Script", "App.cs", "Class.cs")) continue;
+					if(level == 0 && 0 != name.Equals_(true, "Script", "Class.cs")) continue;
 				}
 
 				bool isFolder = v.IsDirectory && !isProject;

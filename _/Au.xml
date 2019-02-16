@@ -2621,22 +2621,22 @@
             </summary>
             <param name="maxCount">The maximum number of substrings to get. If negative (default), gets all.</param>
         </member>
-        <member name="T:Au.Types.AuAppBase">
+        <member name="T:Au.Types.AuApp">
             <summary>
-            This class is used in automation script/app files as base of their main class. Adds some features.
+            This class is used in automation script files as base of their main class. Adds some features.
             </summary>
             <remarks>
             This class adds these features:
             1. Static constructor subscribes to <see cref="E:System.AppDomain.UnhandledException"/> event. On unhandled exception prints exception info. Without this class not all unhandled exceptions would be printed.
-            2. Provides function OnUnhandledException. The script/app can override it.
+            2. Provides function OnUnhandledException. The script can override it.
             
             More features may be added in the future.
             </remarks>
         </member>
-        <member name="M:Au.Types.AuAppBase.#ctor">
+        <member name="M:Au.Types.AuApp.#ctor">
             
         </member>
-        <member name="M:Au.Types.AuAppBase.OnUnhandledException(System.UnhandledExceptionEventArgs)">
+        <member name="M:Au.Types.AuApp.OnUnhandledException(System.UnhandledExceptionEventArgs)">
             <summary>
             Prints exception info.
             Override this function to intercept unhandled exceptions. Call the base function if want to print exception info as usually.
@@ -8564,7 +8564,7 @@
             <example>
             Shows how to declare a TreeBase-derived class, load tree of nodes from an XML file, print descendant nodes, save the tree to an XML file.
             <code><![CDATA[
-            /* meta r System.Xml */
+            /*/ r System.Xml */
             using System.Xml;
             
             class MyTree :Au.Util.TreeBase<MyTree>
@@ -22444,12 +22444,12 @@
         </member>
         <member name="T:Au.AuTask">
             <summary>
-            Automation task - a running script or app.
+            Automation task - a running script.
             </summary>
         </member>
         <member name="P:Au.AuTask.Name">
             <summary>
-            In an automation task process returns script/app file name without extension.
+            In an automation task process returns script file name without extension.
             In other processes and non-default appdomains returns <see cref="P:System.AppDomain.FriendlyName"/>.
             </summary>
         </member>
@@ -22468,7 +22468,7 @@
             Returns 0 if task start is deferred because a script is running (see meta option ifRunning).
             Returns 0 if role editorExtension; then waits until the task ends.
             </returns>
-            <param name="script">Script/app file name, or path like @"\Folder\Script5".</param>
+            <param name="script">Script file name, or path like @"\Folder\Script5".</param>
             <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
             <exception cref="T:System.IO.FileNotFoundException">Script file not found.</exception>
             <exception cref="T:Au.Types.AuException">Failed to start script.</exception>

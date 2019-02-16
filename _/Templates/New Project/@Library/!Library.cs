@@ -1,9 +1,5 @@
-﻿/* meta
-role classLibrary
-outputPath %Folders.ThisApp%\Libraries
-//debug false
-*/
-//#include usings.txt
+﻿/*/ role classLibrary; outputPath %Folders.ThisApp%\Libraries */
+//#include using.txt
 
 [assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
 //[assembly: System.Runtime.Versioning.TargetFramework(".NETFramework,Version=v4.7.2")]

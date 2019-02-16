@@ -107,16 +107,13 @@
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Test\tree.csx" />
-    <None Include="Templates\New Project\%40App\!App.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="Templates\Class.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Templates\New Project\%40Library\!Library.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Templates\App.cs">
+    <None Include="Templates\Script">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Test\tree.cs" />
@@ -271,7 +268,7 @@
     <Content Include="Resources\fileScript.png" />
     <None Include="Resources\project.png" />
     <Content Include="Resources\qm.ico" />
-    <None Include="Templates\include\usings.txt">
+    <None Include="Templates\include\using.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Resources\qm_running.ico" />

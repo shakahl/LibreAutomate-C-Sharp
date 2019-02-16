@@ -385,11 +385,11 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="doNotChangeSelection"></param>
-	public bool SetCurrentFile(FileNode f, bool doNotChangeSelection = false)
+	public bool SetCurrentFile(FileNode f, bool doNotChangeSelection = false, bool newFile = false)
 	{
 		if(IsAlien(f)) return false;
 		if(!doNotChangeSelection) f.SelectSingle();
-		if(_currentFile != f) _SetCurrentFile(f);
+		if(_currentFile != f) _SetCurrentFile(f, newFile);
 		return _currentFile == f;
 	}
 
@@ -400,7 +400,8 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	///	Returns false if fails to read file or if f is folder.
 	/// </summary>
 	/// <param name="f"></param>
-	bool _SetCurrentFile(FileNode f)
+	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
+	bool _SetCurrentFile(FileNode f, bool newFile = false)
 	{
 		Debug.Assert(!IsAlien(f));
 		if(f == _currentFile) return true;
@@ -412,7 +413,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		var fPrev = _currentFile;
 		_currentFile = f;
 
-		if(!Panels.Editor.Open(f)) {
+		if(!Panels.Editor.Open(f, newFile)) {
 			_currentFile = fPrev;
 			if(OpenFiles.Contains(f)) Panels.Open.UpdateCurrent(_currentFile);
 			return false;
@@ -537,9 +538,9 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		var f = FileNode.NewItem(this, target, pos, template, name);
 		if(f == null) return null;
 		if(f.IsFolder) {
-			if(f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main);
+			if(f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main, newFile: true);
 			else f.SelectSingle();
-		} else SetCurrentFile(f);
+		} else SetCurrentFile(f, newFile: true);
 		if(beginEdit && f.IsSelected) RenameSelected();
 		return f;
 	}

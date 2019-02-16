@@ -33,9 +33,9 @@ partial class EdForm
 {
 	internal void TestEditor()
 	{
-		TestMC();
-		//TestDragDrop();
-		return;
+		//TestMC();
+		////TestDragDrop();
+		//return;
 
 		//var th = new Thread(()=>
 		//{
@@ -51,6 +51,10 @@ partial class EdForm
 		var doc = Panels.Editor.ActiveDoc;
 		var t = doc.ST;
 		var s = doc.Text;
+
+		//t.Call(SCI_FOLDALL);
+		for(int i = 0; i < 3; i++) Print((uint)t.Call(SCI_GETFOLDLEVEL, i));
+		return;
 
 		//Output.Clear();
 		//Model.Save.TextNowIfNeed();
