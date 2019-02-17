@@ -93,7 +93,7 @@ namespace Au.Compiler
 			public EIfRunning ifRunning;
 			public EUac uac;
 			public bool prefer32bit;
-			public bool console;//TODO: test
+			public bool console;
 
 			/// <summary>Has config file this.file + ".config".</summary>
 			public bool hasConfig;
@@ -354,7 +354,6 @@ namespace Au.Compiler
 			}
 		}
 
-		//TODO
 		static void _Triggers(IWorkspaceFile fMain, CSharpCompilation compilation)
 		{
 			List<CompTriggerData> a = null;

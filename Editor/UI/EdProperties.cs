@@ -32,7 +32,7 @@ partial class EdCodeFileProperties : Form_, IMessageFilter
 {
 	FileNode _f, _fProjectFolder;
 	EdMetaCommentsParser _meta;
-	bool _isCS;
+	bool _isClass;
 	ERole _role;
 
 	public EdCodeFileProperties(FileNode f)
@@ -41,7 +41,7 @@ partial class EdCodeFileProperties : Form_, IMessageFilter
 
 		_f = f;
 		f.FindProject(out _fProjectFolder, out _);
-		_isCS = f.IsCS;
+		_isClass = f.IsClass;
 
 		this.Text = _f.Name + " Properties";
 
@@ -77,12 +77,12 @@ partial class EdCodeFileProperties : Form_, IMessageFilter
 		case "miniProgram": _role = ERole.miniProgram; break;
 		case "exeProgram": _role = ERole.exeProgram; break;
 		case "editorExtension": _role = ERole.editorExtension; break;
-		case "classLibrary" when _isCS: _role = ERole.classLibrary; break;
-		case "classFile" when _isCS: _role = ERole.classFile; break;
-		default: _role = _isCS ? ERole.classFile : ERole.miniProgram; break;
+		case "classLibrary" when _isClass: _role = ERole.classLibrary; break;
+		case "classFile" when _isClass: _role = ERole.classFile; break;
+		default: _role = _isClass ? ERole.classFile : ERole.miniProgram; break;
 		}
 
-		var roles = _isCS ? "miniProgram|exeProgram|editorExtension|classLibrary|classFile" : "miniProgram|exeProgram|editorExtension";
+		var roles = _isClass ? "miniProgram|exeProgram|editorExtension|classLibrary|classFile" : "miniProgram|exeProgram|editorExtension";
 		_AddCombo("role", roles, null,
 @"<b>role</b> - purpose of this C# code file. What type of assembly to create and how to execute.
  • <i>miniProgram</i> - execute in a separate host process started from editor.
@@ -91,7 +91,7 @@ partial class EdCodeFileProperties : Form_, IMessageFilter
  • <i>classLibrary</i> - create .dll file. It can be used as a reference assembly anywhere.
  • <i>classFile</i> - don't create/execute. Compile together with other C# code files in the project or using meta c. Inherits meta options of the main file of the compilation.
 
-Default role for scripts is miniProgram; cannot be the last two. Default for .cs files is classFile.
+Default role for scripts is miniProgram; cannot be the last two. Default for class files is classFile.
 ",
 			noCheckbox: true, index: (int)_role);
 
@@ -398,7 +398,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		_meta.role = null;
 		if(_role != ERole.classFile) {
-			if(_isCS || _role != ERole.miniProgram) _meta.role = _role.ToString();
+			if(_isClass || _role != ERole.miniProgram) _meta.role = _role.ToString();
 			switch(_role) {
 			case ERole.exeProgram:
 			case ERole.classLibrary:
@@ -455,12 +455,12 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	private void _bAddMyLibraryProject_Click(object sender, EventArgs e)
 		=> _AddFromWorkspace(
-			f => (f != _f && f.GetCsFileRole() == FileNode.ECsRole.Library) ? f : null,
+			f => (f != _f && f.GetClassFileRole() == FileNode.EClassFileRole.Library) ? f : null,
 			_meta.pr, "class library projects", sender);
 
 	private void _bAddClass_Click(object sender, EventArgs e)
 		=> _AddFromWorkspace(
-			f => (f != _f && f.IsCS && !f.FindProject(out _, out _) && f.GetCsFileRole() == FileNode.ECsRole.Class) ? f : null,
+			f => (f != _f && f.IsClass && !f.FindProject(out _, out _) && f.GetClassFileRole() == FileNode.EClassFileRole.Class) ? f : null,
 			_meta.c, "class files", sender);
 
 	private void _bAddResource_Click(object sender, EventArgs e)
@@ -670,9 +670,9 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	void _InfoInit()
 	{
-		const string c_script = "This is a C# script file. Script syntax help: menu File -> New -> Help -> C# script syntax.";
-		const string c_cs = "This is a C# class file. It can contain standard C# code: one or more classes, namespaces, etc.";
-		_info.ST.SetText((_isCS ? c_cs : c_script) + @"
+		const string c_script = "This is a C# script file. Script syntax help: menu File -> New -> Help -> Script syntax.";
+		const string c_class = "This is a C# class file. It can contain standard C# code: one or more classes, namespaces, etc.";
+		_info.ST.SetText((_isClass ? c_class : c_script) + @"
 
 This program saves most file properties in code as <i>meta comments<> - comments starting with <c green>/*/<> at the very start of code. You can change them here or in the code editor.
 
@@ -732,7 +732,7 @@ To remove, delete the line in the code editor. Optionally delete unused dll file
 @"<b>Class file<> - add a C# code file that contains some classes/functions used by this file.
 Adds meta <c green>c File.cs<>. The compiler will compile all code files and create single assembly.
 
-If this file is in a project, don't need to add .cs files that are in the project folder.
+If this file is in a project, don't need to add class files that are in the project folder.
 Can be added only files that are in this workspace. Import files if need, for example drag/drop.
 Can be path relative to this file (examples: Class5.cs, Folder\Class5.cs, ..\Folder\Class5.cs) or path in the workspace (examples: \Class5.cs, \Folder\Class5.cs).
 To remove, delete the line in the code editor.

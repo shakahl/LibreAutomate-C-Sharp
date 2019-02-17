@@ -19,7 +19,7 @@ using Au.Triggers;
 //}}
 using System.Numerics;
 
-//{{ app
+//{{ class, Main
 unsafe partial class App :AuApp { //}}
 [STAThread] static void Main(string[] args) { new App()._Main(args); }
 void _Main(string[] args) { //}}
@@ -35,8 +35,8 @@ like Print("hello");. This script shows where to add more code, for example usin
 This program saves script properties and references in meta comments, at the very start of code.
 You can change them in the Properties dialog. The /*​/ ifRunning restart; ...*​/ is an example.
 
-You can add 'using ...' and [assembly: ...] between the '//{{ using' and '//{{ app' code blocks
-in the folded code (click the [+] box to show it). The 'using System.Numerics;' is an example.
+You can add 'using ...' and [assembly: ...] below the '//{{ using' code block in the folded
+code (click the [+] box to show it). The 'using System.Numerics;' is an example.
 You can add '#define ...' and 'extern alias ...' above the '//{{ using' code block.
 
 As you can see, your main script code actually is in function _Main, which is in class App.
@@ -90,7 +90,7 @@ static extern int GetTickCount();
 //{{
 } //ends class App. Optional. Below you can add more classes.
 
-//When compiling scripts and .cs files this program adds:
+//When compiling, this program adds:
 //1. References: mscorlib, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
 //2. Attributes: [module: DefaultCharSet(CharSet.Unicode)], some version attributes.
 

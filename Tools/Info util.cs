@@ -55,7 +55,7 @@ namespace Au.Tools
 		{
 			string wild = c_infoWildex;
 			if(text.EndsWith_('$')) {
-				text = text.Remove(text.Length - 1);
+				text = text.RemoveEnd_(1);
 				wild = wild.Substring(10);
 			}
 			_SetInfoText(text + wild);

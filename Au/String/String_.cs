@@ -558,6 +558,12 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Removes <paramref name="count"/> characters from the end of this string.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static string RemoveEnd_(this string t, int count) => t.Remove(t.Length - count);
+
+		/// <summary>
 		/// If this string is longer than <paramref name="limit"/>, returns its substring 0 to <paramref name="limit"/>-1 with appended '…' character.
 		/// Else returns this string.
 		/// </summary>

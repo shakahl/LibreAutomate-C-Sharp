@@ -116,7 +116,7 @@ partial class FilesModel
 			_ccName = new NodeTextBox();
 			this.NodeControls.Add(_ccName);
 			_ccName.EditEnabled = true;
-			_ccName.ValueNeeded = node => (node.Tag as FileNode).Name;
+			_ccName.ValueNeeded = node => (node.Tag as FileNode).DisplayName;
 			_ccName.ValuePushed = (node, value) => { (node.Tag as FileNode).FileRename(value as string, false); };
 			_ccName.FontNeeded = node => node.Tag == _model.CurrentFile ? EdStock.FontBold : null;
 			_ccName.DrawText += _ccName_DrawText;

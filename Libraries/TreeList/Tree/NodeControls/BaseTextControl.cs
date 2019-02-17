@@ -162,17 +162,18 @@ namespace Aga.Controls.Tree.NodeControls
 				pen.Dispose();
 			}
 
-			//au: TextRenderer.DrawText bug workaround: use DrawString, or backColor.
-			if(context.IsMemoryBitmap) {
-				//using(var brush = new SolidBrush(textColor)) context.Graphics.DrawString(label, font, brush, bounds);
+			//using(var brush = new SolidBrush(textColor)) context.Graphics.DrawString(label, font, brush, bounds);
+			if(context.IsMemoryBitmap) { //au: TextRenderer.DrawText bug workaround: use backColor.
 				TextRenderer.DrawText(context.Graphics, label, font, bounds, textColor, node.Tree.BackColor, _formatFlags);
 			} else {
 				TextRenderer.DrawText(context.Graphics, label, font, bounds, textColor, _formatFlags);
 			}
-			//note: when drawing frequently, eg scrolling, TextRenderer.DrawText adds several magabytes of used memory.
+			//au: when drawing frequently, eg scrolling, TextRenderer.DrawText adds several magabytes of used memory.
 			//	It seems it is later released by GC and then does not grow again. Multiple controls don't add more memory than single.
 			//	Graphics.DrawString and GDI API don't have this problem.
 			//Also TextRenderer.DrawText is several times slower than Graphics.DrawString. Makes OnPaint ~3 times slower, eg 5 -> 15 ms.
+			//	In more recent test, makes only 50% slower, eg 6 -> 9 ms. TextRenderer.DrawText is ~50% of OnPaint time. Another 25% is TextRenderer.MeasureText, called 2 times.
+			//	GDI API DrawText speed is same as of TextRenderer.DrawText.
 		}
 
 		private void CreateBrushes(TreeNodeAdv node, DrawContext context, string text, out Brush backgroundBrush, out Color textColor, out Font font, ref string label)

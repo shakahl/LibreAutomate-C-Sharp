@@ -848,7 +848,7 @@ partial class PanelEdit : Control
 				var s = new string((char*)(p + 76));
 				if(!s.EndsWithI_(".url")) return;
 				url = d.GetData("UnicodeText", false) as string;
-				if(url != null) text = s.Remove(s.Length - 4);
+				if(url != null) text = s.RemoveEnd_(4);
 			}
 		}
 

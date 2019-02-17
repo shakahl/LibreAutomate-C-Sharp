@@ -347,7 +347,7 @@ namespace Au
 		{
 			string path = directoryPath;
 			if(0 == (flags & FEFlags.UseRawPath)) path = Path_.Normalize(path);
-			if(path.EndsWith_('\\')) path = path.Remove(path.Length - 1);
+			if(path.EndsWith_('\\')) path = path.RemoveEnd_(1);
 
 			_DisableDeviceNotReadyMessageBox();
 

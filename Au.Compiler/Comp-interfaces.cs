@@ -39,11 +39,13 @@ namespace Au.Compiler
 
 		bool IsScript { get; }
 
+		bool IsClass { get; }
+
 		IWorkspaceFiles IwfWorkspace { get; }
 
 		IWorkspaceFile IwfFindRelative(string relativePath, bool? folder);
 
-		IEnumerable<IWorkspaceFile> IwfEnumProjectCsFiles(IWorkspaceFile fSkip = null);
+		IEnumerable<IWorkspaceFile> IwfEnumProjectClassFiles(IWorkspaceFile fSkip = null);
 
 		bool IwfFindProject(out IWorkspaceFile folder, out IWorkspaceFile main);
 
@@ -74,7 +76,7 @@ namespace Au.Compiler
 		public CompTriggerData(string method, string attribute, KeyValuePair<string, object>[] args)
 		{
 			this.method = method;
-			triggerType = attribute.Remove(attribute.Length - 9); //remove suffix "Attribute"
+			triggerType = attribute.RemoveEnd_(9); //remove suffix "Attribute"
 			this.args = args;
 		}
 	}

@@ -291,7 +291,7 @@ namespace Au
 			if(opt.PasteEnter) {
 				string s = data as string;
 				if(enter = s != null && s.EndsWith_('\n') && !isConsole) {
-					s = s.Remove(s.Length - (s.EndsWith_("\r\n") ? 2 : 1));
+					s = s.RemoveEnd_(s.EndsWith_("\r\n") ? 2 : 1);
 					if(s.Length == 0) {
 						Keyb.Lib.SendCopyPaste.Enter(opt);
 						return;

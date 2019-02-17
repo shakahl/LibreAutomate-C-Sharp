@@ -36,7 +36,7 @@ static class Run
 	/// Else returns: process id if started now, 0 if failed, (int)AuTask.ERunResult.deferred if scheduled to run later, (int)AuTask.ERunResult.editorThread if runs in editor thread.
 	/// </summary>
 	/// <param name="run">If true, compiles if need and executes. If false, always compiles and does not execute.</param>
-	/// <param name="f">C# file (script or .cs). Does nothing if null or not C# file.</param>
+	/// <param name="f">C# file. Does nothing if null or not C# file.</param>
 	/// <param name="args">To pass to Main.</param>
 	/// <param name="noDefer">Don't schedule to run later.</param>
 	/// <param name="wrPipeName">Pipe name for AuTask.WriteResult.</param>
@@ -110,8 +110,8 @@ static class Run
 			f.FileMove(f2, Aga.Controls.Tree.NodePosition.After);
 			text = "Class1.Function1();\r\n";
 		} else {
-			s = f.Name; s = "test " + s.Remove(s.Length - 3);
-			if(!_NewItem(out f2, out bool isProject, "Script", s)) return;
+			s = "test " + Path_.GetFileName(f.Name, true);
+			if(!_NewItem(out f2, out bool isProject, "Script.cs", s)) return;
 			f.TestScript = f2;
 			text =
 $@"/* {(isProject ? "pr" : "c")} {f.ItemPath} */

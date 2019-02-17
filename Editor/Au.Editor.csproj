@@ -113,13 +113,13 @@
     <None Include="Templates\New Project\%40Library\!Library.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Templates\Script">
+    <None Include="Templates\Script.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Test\tree.cs" />
     <None Include="Unused\TriggersUI.cs" />
     <Compile Include="Run, triggers\Run.cs" />
-    <None Include="Templates\New Project\%40Script\!Script">
+    <None Include="Templates\New Project\%40Script\!Script.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="UI\CmdHandlers.cs" />
@@ -129,7 +129,7 @@
     <Compile Include="Files\_FormNewCollection.cs" />
     <Compile Include="Program\CommandLine.cs" />
     <Compile Include="Program\ProgramSettings.cs" />
-    <None Include="Default\files\Script1">
+    <None Include="Default\files\Script1.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Compile Include="Files\FileNode.cs" />
@@ -211,7 +211,6 @@
     <Content Include="Default\files.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Default\AuOptions.xml" />
     <Content Include="Default\Panels.xml">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -275,9 +274,9 @@
     <None Include="Templates\New File\TextFile.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Templates\Help\C# script syntax">
+    <Compile Include="Templates\Help\Script syntax.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Compile>
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
   <ItemGroup />

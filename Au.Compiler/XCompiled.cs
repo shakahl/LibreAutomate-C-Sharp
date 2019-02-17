@@ -122,7 +122,7 @@ namespace Au.Compiler
 							if(projFolder != null) {
 								if(!Convert_.MD5HashResult.FromString(value, offs, s.EndOffset - offs, out var md5)) return false;
 								Convert_.MD5Hash md = default;
-								foreach(var f1 in projFolder.IwfEnumProjectCsFiles(f)) {
+								foreach(var f1 in projFolder.IwfEnumProjectClassFiles(f)) {
 									if(_IsFileModified(f1)) return false;
 									md.Add(f1.Id);
 								}
@@ -147,7 +147,7 @@ namespace Au.Compiler
 							if(s[0] == 'l') {
 								if(f2.IwfFindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
 								if(f2 == f) return false; //will be compiler error "circular reference"
-								//Print(f2, projFolder2);
+														  //Print(f2, projFolder2);
 								if(!IsCompiled(f2, out _, projFolder2)) return false;
 								//Print("library is compiled");
 							} else {
@@ -165,12 +165,12 @@ namespace Au.Compiler
 				}
 				if(isMultiFileProject != (projFolder != null)) {
 					if(projFolder == null) return false;
-					foreach(var f1 in projFolder.IwfEnumProjectCsFiles(f)) return false; //project with single file?
+					foreach(var f1 in projFolder.IwfEnumProjectClassFiles(f)) return false; //project with single file?
 				}
 				//Debug_.Print("compiled");
 
 				r.file = asmFile;
-				r.name = f.Name; if(!isScript) r.name = r.name.Remove(r.name.Length - 3);
+				r.name = Path_.GetFileName(f.Name, true);
 				return true;
 
 				bool _IsFileModified(IWorkspaceFile f_) => _IsFileModified2(f_.FilePath);

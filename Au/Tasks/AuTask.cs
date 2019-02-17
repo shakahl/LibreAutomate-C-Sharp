@@ -63,7 +63,7 @@ namespace Au
 		/// Returns 0 if task start is deferred because a script is running (see meta option ifRunning).
 		/// Returns 0 if role editorExtension; then waits until the task ends.
 		/// </returns>
-		/// <param name="script">Script file name, or path like @"\Folder\Script5".</param>
+		/// <param name="script">Script name like "Script5", or path like @"\Folder\Script5.cs".</param>
 		/// <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
 		/// <exception cref="AuException">Failed to start script.</exception>

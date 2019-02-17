@@ -18,7 +18,7 @@ using static Au.NoClass;
 using Au.Triggers;
 //}}
 
-//{{ app
+//{{ class, Main
 unsafe partial class App :AuApp { //}}
 [STAThread] static void Main(string[] args) { new App()._Main(args); }
 void _Main(string[] args) { //}}
@@ -28,6 +28,6 @@ void _Main(string[] args) { //}}
 //This is a C# script.
 //To compile and run it, click the Run button on the toolbar.
 
-Print("This function writes text and variables to the output pane.");
+Print("Function Print writes text and variables to the output pane.");
 
 AuDialog.Show("Example", "Message box.");

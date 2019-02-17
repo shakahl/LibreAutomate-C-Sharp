@@ -186,7 +186,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void File_NewScript()
 	{
-		Model.NewItem("Script", beginEdit: true);
+		Model.NewItem("Script.cs", beginEdit: true);
 	}
 
 	public void File_NewClass()
@@ -518,7 +518,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		var t = Tasks.GetGreenTask(); if(t == null) return;
 		var m = new AuMenu();
 		m.Add("End task:", null).Enabled = false;
-		m[t.f.Name] = o => Tasks.EndTask(t);
+		m[t.f.DisplayName] = o => Tasks.EndTask(t);
 		m.Show(MainForm);
 	}
 

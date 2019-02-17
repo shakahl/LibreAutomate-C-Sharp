@@ -423,7 +423,7 @@ namespace Au.Util
 					}
 				}
 				if(s == null) return null;
-				s = s.Remove(s.Length - 10); //remove ".resources"
+				s = s.RemoveEnd_(10); //remove ".resources"
 				var t = asm.GetType(s);
 				if(t != null) {
 					var fl = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static; //need NonPublic because default access is internal

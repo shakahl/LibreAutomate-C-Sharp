@@ -52,7 +52,7 @@ class PanelOpen :Control, ITreeModel
 		_ccName = new NodeTextBox();
 		_c.NodeControls.Add(_ccName);
 		//_ccName.Trimming = StringTrimming.EllipsisCharacter;
-		_ccName.ValueNeeded = node => (node.Tag as FileNode).Name;
+		_ccName.ValueNeeded = node => (node.Tag as FileNode).DisplayName;
 
 		_c.NodeMouseClick += _c_NodeMouseClick;
 		_c.NodeMouseDoubleClick += _c_NodeMouseClick;

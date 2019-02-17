@@ -52,7 +52,7 @@ class PanelRunning :Control, ITreeModel
 		_ccName = new NodeTextBox();
 		_c.NodeControls.Add(_ccName);
 		//_ccName.Trimming = StringTrimming.EllipsisCharacter;
-		_ccName.ValueNeeded = node => (node.Tag as RunningTask).f.Name;
+		_ccName.ValueNeeded = node => (node.Tag as RunningTask).f.DisplayName;
 		_ccName.DrawText += _ccName_DrawText;
 
 		_c.NodeMouseClick += _c_NodeMouseClick;
@@ -107,7 +107,7 @@ class PanelRunning :Control, ITreeModel
 			Model.SetCurrentFile(f);
 			break;
 		case MouseButtons.Right:
-			var name = f.Name;
+			var name = f.DisplayName;
 			var m = new AuMenu();
 			m["End task '" + name + "'"] = o => Tasks.EndTask(t);
 			m["End all '" + name + "'"] = o => Tasks.EndTasksOf(f);

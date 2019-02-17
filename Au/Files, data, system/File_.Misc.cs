@@ -46,7 +46,7 @@ namespace Au
 			internal static string GetFileTypeOrProtocolRegistryKey(string fileType, bool isFileType, bool isURL)
 			{
 				if(!isFileType) fileType = GetExtensionOrProtocol(fileType, out isURL);
-				else if(isURL) fileType = fileType.Remove(fileType.Length - 1); //"proto:" -> "proto"
+				else if(isURL) fileType = fileType.RemoveEnd_(1); //"proto:" -> "proto"
 				if(Empty(fileType)) return null;
 
 				string R, userChoiceKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\" + fileType + @"\UserChoice";

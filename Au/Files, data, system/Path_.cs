@@ -649,9 +649,9 @@ namespace Au
 		/// "http://a.b.c" -> "a.b".
 		/// </code>
 		/// </remarks>
-		public static string GetFileName(string path, bool withoutExtension=false)
+		public static string GetFileName(string path, bool withoutExtension = false)
 		{
-			return _GetPathPart(path, withoutExtension? _PathPart.NameWithoutExt : _PathPart.NameWithExt);
+			return _GetPathPart(path, withoutExtension ? _PathPart.NameWithoutExt : _PathPart.NameWithExt);
 		}
 
 		/// <summary>
@@ -678,7 +678,7 @@ namespace Au
 		public static string GetExtension(string path, out string pathWithoutExtension)
 		{
 			var ext = GetExtension(path);
-			if(ext != null && ext.Length > 0) pathWithoutExtension = path.Remove(path.Length - ext.Length);
+			if(ext != null && ext.Length > 0) pathWithoutExtension = path.RemoveEnd_(ext.Length);
 			else pathWithoutExtension = path;
 			return ext;
 		}

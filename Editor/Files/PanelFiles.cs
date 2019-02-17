@@ -204,7 +204,7 @@ partial class PanelFiles : Control
 					if(level == 0 && name.EqualsI_("include")) continue;
 					if(isProject = (name[0] == '@')) name = name.Substring(1);
 				} else {
-					if(level == 0 && 0 != name.Equals_(true, "Script", "Class.cs")) continue;
+					if(level == 0 && 0 != name.Equals_(true, "Script.cs", "Class.cs")) continue;
 				}
 
 				bool isFolder = v.IsDirectory && !isProject;
@@ -217,8 +217,12 @@ partial class PanelFiles : Control
 					string si = null;
 					//if(isProject) si = "project";
 					if(isProject) si = "folder";
-					else if(Path_.FindExtension(name) < 0) si = "fileScript";
-					else if(name.EndsWithI_(".cs")) si = "fileClass";
+					else {
+						switch(FileNode.DetectFileType(v.FullPath)) {
+						case FileNode.EFileType.Script: si = "fileScript"; break;
+						case FileNode.EFileType.Class: si = "fileClass"; break;
+						}
+					}
 					Bitmap im = si != null ? EdResources.GetImageUseCache(si) : FileNode.IconCache.GetImage(v.FullPath, true);
 					if(im != null) item.Image = im;
 				}

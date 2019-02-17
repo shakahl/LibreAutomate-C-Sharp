@@ -28,12 +28,12 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 {
 	#region types
 
-	//File type. Not saved in XML. We get Folder from XML tag (d folder, f file), others from filename extension.
-	enum _Type : byte
+	//File type. Saved in XML as tag name: d folder, s script, c class, n other.
+	public enum EFileType : byte
 	{
 		Folder, //must be 0
 		Script,
-		CsFile,
+		Class,
 		NotCodeFile,
 	}
 
@@ -56,7 +56,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	class _Misc
 	{
 		public string iconOrLinkTarget;
-		public uint runOther;
+		public uint testScript;
 	}
 
 	#endregion
@@ -65,19 +65,16 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 
 	FilesModel _model;
 	string _name;
+	string _displayName;
 	uint _id;
-	_Type _type;
+	EFileType _type;
 	_State _state;
 	_Flags _flags;
 	object _misc; //null or icon path (string) or TMisc
 
-	void _CtorSetTypeEtc(bool isFolder, string linkTarget)
+	void _CtorMisc(string linkTarget)
 	{
-		if(!isFolder) {
-			if(_name.EndsWithI_(".cs")) _type = _Type.CsFile;
-			else if(_name.IndexOf('.') < 0) _type = _Type.Script;
-			else _type = _Type.NotCodeFile;
-
+		if(!IsFolder) {
 			if(!Empty(linkTarget)) {
 				_state |= _State.Link;
 				_misc = linkTarget;
@@ -85,16 +82,38 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		}
 	}
 
-	//this ctor is used when creating new item
-	public FileNode(FilesModel model, string name, bool isFolder, string linkTarget = null)
+	//currently not used
+	//this ctor is used when creating new item of known type
+	//public FileNode(FilesModel model, string name, EFileType type, string linkTarget = null)
+	//{
+	//	_model = model;
+	//	_type = type;
+	//	_name = name;
+	//	_id = _model.AddGetId(this);
+	//	_CtorMisc(linkTarget);
+	//}
+
+	//this ctor is used when creating new item, importing items from files etc.
+	//name is filename with extension.
+	//sourcePath is used when need to get file text to detect type.
+	//template used when creating new item, to detect item type.
+	public FileNode(FilesModel model, string name, string sourcePath, bool isFolder, string linkTarget = null, string template = null)
 	{
+		//detect file type
+		EFileType type;
+		if(isFolder) type = EFileType.Folder;
+		else if(template == "Script.cs") type = EFileType.Script;
+		else if(template == "Class.cs") type = EFileType.Class;
+		else type = DetectFileType(sourcePath);
+
 		_model = model;
+		_type = type;
 		_name = name;
 		_id = _model.AddGetId(this);
-		_CtorSetTypeEtc(isFolder, linkTarget);
+		_CtorMisc(linkTarget);
 	}
 
-	//this ctor is used when copying or importing.
+	//this ctor is used when copying or importing a workspace.
 	//Deep-copies fields from f, except _model, _name, _id (generates new) and run.
 	FileNode(FilesModel model, FileNode f, string name)
 	{
@@ -107,7 +126,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		_id = _model.AddGetId(this);
 	}
 
-	//this ctor is used when reading XML file
+	//this ctor is used when reading files.xml
 	FileNode(XmlReader x, FileNode parent, FilesModel model)
 	{
 		_model = model;
@@ -115,13 +134,14 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 			if(x.Name != "files") throw new ArgumentException("XML root element name must be 'files'");
 			_model.MaxId = (uint)x["max-i"].ToLong_();
 		} else {
-			bool isFolder = false;
 			switch(x.Name) {
-			case "f": break;
-			case "d": isFolder = true; break;
-			default: throw new ArgumentException("XML element name must be 'f' or 'd'");
+			case "d": _type = EFileType.Folder; break;
+			case "s": _type = EFileType.Script; break;
+			case "c": _type = EFileType.Class; break;
+			case "n": _type = EFileType.NotCodeFile; break;
+			default: throw new ArgumentException("XML element name must be 'd', 's', 'c' or 'n'");
 			}
-			uint id = 0, runOther = 0; string linkTarget = null, icon = null;
+			uint id = 0, testScript = 0; string linkTarget = null, icon = null;
 			while(x.MoveToNextAttribute()) {
 				var v = x.Value;
 				switch(x.Name) {
@@ -130,14 +150,14 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 				case "f": _flags = (_Flags)v.ToInt_(); break;
 				case "path": linkTarget = v; break;
 				case "icon": icon = v; break;
-				case "run": runOther = (uint)v.ToLong_(); break;
+				case "run": testScript = (uint)v.ToLong_(); break;
 				}
 			}
 			if(Empty(_name)) throw new ArgumentException("no 'n' attribute in XML");
 			_id = _model.AddGetId(this, id);
-			_CtorSetTypeEtc(isFolder, linkTarget);
+			_CtorMisc(linkTarget);
 			if(icon != null && linkTarget == null) { Debug.Assert(_misc == null); _misc = icon; }
-			if(runOther != 0) _GetSetMisc(true).runOther = runOther;
+			if(testScript != 0) _GetSetMisc(true).testScript = testScript;
 		}
 	}
 
@@ -151,13 +171,19 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 			x.WriteStartElement("files");
 			if(_model != null) x.WriteAttributeString("max-i", _model.MaxId.ToString()); //null when exporting
 		} else {
-			x.WriteStartElement(IsFolder ? "d" : "f");
+			string t = "n";
+			switch(_type) {
+			case EFileType.Folder: t = "d"; break;
+			case EFileType.Script: t = "s"; break;
+			case EFileType.Class: t = "c"; break;
+			}
+			x.WriteStartElement(t);
 			x.WriteAttributeString("n", _name);
 			if(!exporting) x.WriteAttributeString("i", _id.ToString());
 			if(_flags != 0) x.WriteAttributeString("f", ((int)_flags).ToString());
 			if(IsLink) x.WriteAttributeString("path", LinkTarget);
 			var ico = CustomIcon; if(ico != null) x.WriteAttributeString("icon", ico);
-			if(!exporting) { uint ro = _RunOtherId; if(ro != 0) x.WriteAttributeString("run", ro.ToString()); }
+			if(!exporting) { uint ts = _TestScriptId; if(ts != 0) x.WriteAttributeString("run", ts.ToString()); }
 		}
 	}
 
@@ -188,27 +214,39 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// <summary>
 	/// true if folder or root.
 	/// </summary>
-	public bool IsFolder => _type == _Type.Folder;
+	public bool IsFolder => _type == EFileType.Folder;
 
 	/// <summary>
-	/// true if script or .cs file.
+	/// true if script file.
 	/// </summary>
-	public bool IsCodeFile => _type == _Type.Script || _type == _Type.CsFile;
+	public bool IsScript => _type == EFileType.Script;
 
 	/// <summary>
-	/// true if script file (and not .cs).
+	/// true if class file.
 	/// </summary>
-	public bool IsScript => _type == _Type.Script;
+	public bool IsClass => _type == EFileType.Class;
 
 	/// <summary>
-	/// true if .cs file, aka "class file".
+	/// true if script or class file.
 	/// </summary>
-	public bool IsCS => _type == _Type.CsFile;
+	public bool IsCodeFile => _type == EFileType.Script || _type == EFileType.Class;
 
 	/// <summary>
 	/// File name with extension.
 	/// </summary>
 	public string Name => _name;
+
+	/// <summary>
+	/// File name with or without extension.
+	/// If is script and ends with ".cs", returns without extension.
+	/// </summary>
+	public string DisplayName {
+		get {
+			if(_displayName != null) return _displayName;
+			if(!IsScript || !_name.EndsWithI_(".cs")) return _name;
+			return _displayName = _name.RemoveEnd_(3);
+		}
+	}
 
 	/// <summary>
 	/// Unique id in this workspace. To find faster, with database, etc.
@@ -267,7 +305,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		}
 	}
 
-	uint _RunOtherId => (_misc is _Misc m) ? m.runOther : 0;
+	uint _TestScriptId => (_misc is _Misc m) ? m.testScript : 0;
 
 	/// <summary>
 	/// Gets or sets other item to run instead of this. None if null.
@@ -275,7 +313,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// </summary>
 	public FileNode TestScript {
 		get {
-			uint runId = _RunOtherId;
+			uint runId = _TestScriptId;
 			if(runId != 0) {
 				var f = _model.FindById(runId); if(f != null) return f;
 				TestScript = null;
@@ -285,8 +323,8 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		set {
 			uint runId = value?._id ?? 0;
 			var m = _GetSetMisc(runId != 0); if(m == null) return;
-			if(m.runOther == runId) return;
-			m.runOther = runId;
+			if(m.testScript == runId) return;
+			m.testScript = runId;
 			_model.Save.WorkspaceLater();
 		}
 	}
@@ -305,7 +343,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	public bool IsAlien => IsDeleted || _model != Program.Model;
 
 	/// <summary>
-	/// Returns item path in workspace and XML, like @"\Folder\Name.cs" or @"\Name.cs".
+	/// Returns item path in workspace, like @"\Folder\Name.cs" or @"\Name.cs".
 	/// Returns null if this item is deleted.
 	/// </summary>
 	public string ItemPath => _ItemPath();
@@ -327,7 +365,8 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	[ThreadStatic] static Stack<string> t_pathStack;
 
 	/// <summary>
-	/// Gets file path.
+	/// Gets full path of the file.
+	/// If this is a link, it is the link target.
 	/// </summary>
 	public string FilePath {
 		get {
@@ -361,9 +400,9 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 			k = "delete";
 		} else {
 			switch(_type) {
-			case _Type.Script: k = "fileScript"; break;
-			case _Type.CsFile: k = "fileClass"; break;
-			case _Type.Folder:
+			case EFileType.Script: k = "fileScript"; break;
+			case EFileType.Class: k = "fileClass"; break;
+			case EFileType.Folder:
 				//if(IsProjectFolder()) k = "project"; else //rejected. Name starts with '@' character, it's visible without a different icon.
 				k = expandedFolder ? "folderOpen" : "folder";
 				break;
@@ -455,7 +494,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// Finds file or folder by name or path relative to: this folder, parent folder (if this is file) or root (if relativePath starts with @"\").
 	/// Returns null if not found; also if name is null/"".
 	/// </summary>
-	/// <param name="relativePath">Examples: "name", @"subfolder\name", @".\subfolder\name", @"..\parent\name", @"\root path\name".</param>
+	/// <param name="relativePath">Examples: "name.cs", @"subfolder\name.cs", @".\subfolder\name.cs", @"..\parent\name.cs", @"\root path\name.cs".</param>
 	/// <param name="folder">true - folder, false - file, null - any.</param>
 	public FileNode FindRelative(string relativePath, bool? folder)
 	{
@@ -526,26 +565,26 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	}
 
 	/// <summary>
-	/// Gets .cs file role from metacomments.
-	/// Note: can be slow, because loads file text if .cs file.
+	/// Gets class file role from metacomments.
+	/// Note: can be slow, because loads file text if this is a class file.
 	/// </summary>
-	public ECsRole GetCsFileRole()
+	public EClassFileRole GetClassFileRole()
 	{
-		if(_type != _Type.CsFile) return ECsRole.None;
+		if(_type != EFileType.Class) return EClassFileRole.None;
 		var code = GetText();
-		if(!MetaComments.FindMetaComments(code, out int endOfMeta)) return ECsRole.Class;
+		if(!MetaComments.FindMetaComments(code, out int endOfMeta)) return EClassFileRole.Class;
 		foreach(var v in MetaComments.EnumOptions(code, endOfMeta)) {
 			if(!v.NameIs("role")) continue;
-			if(v.ValueIs("classLibrary")) return ECsRole.Library;
+			if(v.ValueIs("classLibrary")) return EClassFileRole.Library;
 			if(v.ValueIs("classFile")) break;
-			return ECsRole.App;
+			return EClassFileRole.App;
 		}
-		return ECsRole.Class;
+		return EClassFileRole.Class;
 	}
-	
-	public enum ECsRole
+
+	public enum EClassFileRole
 	{
-		/// <summary>Not .cs file.</summary>
+		/// <summary>Not a class file.</summary>
 		None,
 		/// <summary>Has meta role miniProgram/exeProgram/editorExtension.</summary>
 		App,
@@ -563,10 +602,10 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 
 	public IWorkspaceFile IwfFindRelative(string relativePath, bool? folder) => FindRelative(relativePath, folder);
 
-	public IEnumerable<IWorkspaceFile> IwfEnumProjectCsFiles(IWorkspaceFile fSkip = null)
+	public IEnumerable<IWorkspaceFile> IwfEnumProjectClassFiles(IWorkspaceFile fSkip = null)
 	{
 		foreach(var f in Descendants()) {
-			if(f._type == _Type.CsFile && f != fSkip) yield return f;
+			if(f._type == EFileType.Class && f != fSkip) yield return f;
 		}
 	}
 
@@ -691,10 +730,10 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// <param name="template">
 	/// Item type and template.
 	/// Can be filename or relative path of a file or folder from the Templates folder.
-	/// Examples: "Script", "Class.cs", "Text.txt", "Subfolder", "Subfolder\File.cs".
-	/// If "Folder", creates simple folder. If the file/folder does not exist, creates script or class (.cs) or other file.
+	/// Examples: "File.cs", "File.txt", "Subfolder", "Subfolder\File.cs".
+	/// Special names: "Folder", "Script.cs", "Class.cs". Case-sensitive.
+	/// Else detects type (folder, script, class, other) by file type (folder or not), extension (.cs or not) or text (if .cs).
 	/// If folder name starts with '@', creates multi-file project from template if exists. To sort the main code file first, its name can start with '!' character.
-	/// Files without extension are considered C# scripts.
 	/// </param>
 	/// <param name="name">If not null, creates with this name (made unique). Else gets name from template. In any case, makes unique name.</param>
 	public static FileNode NewItem(FilesModel model, FileNode target, NodePosition pos, string template, string name = null)
@@ -728,15 +767,15 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		name = CreateNameUniqueInFolder(newParent, name, isFolder);
 
 		//create file or folder
+		var path = newParent.FilePath + "\\" + name;
 		try {
-			var path = newParent.FilePath + "\\" + name;
 			if(isFolder) File_.CreateDirectory(path);
 			else File_.SaveText(path, text);
 		}
 		catch(Exception ex) { Print(ex.Message); return null; }
 
 		//create new FileNode and insert at the specified place
-		var f = new FileNode(model, name, isFolder);
+		var f = new FileNode(model, name, path, isFolder, template: template);
 		f._Common_MoveCopyNew(target, pos);
 
 		if(isFolder && Path_.GetFileName(template)[0] == '@') {
@@ -813,7 +852,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// </summary>
 	/// <param name="name">
 	/// Name, like "New name.cs" or "New name".
-	/// If not folder: if no extension, adds previous extension; else if new name would change type script/cs/other, corrects name to prevent it.
+	/// If not folder: if no extension, adds previous extension; else if new name would change type cs/other, corrects name to prevent it.
 	/// If invalid filename, replaces invalid characters etc.
 	/// </param>
 	/// <param name="notifyControl">true if called not from the control edit notification.</param>
@@ -824,11 +863,10 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 			if(name.IndexOf('.') < 0) {
 				var ext = Path_.GetExtension(_name);
 				if(ext.Length > 0) name += ext;
-			} else if(_name.IndexOf('.') < 0) {
-				name = name.Replace('.', ';');
 			} else if(_name.EndsWithI_(".cs") != name.EndsWithI_(".cs")) {
 				name += Path_.GetExtension(_name);
 			}
+			//TODO: test
 		}
 		if(name == _name) return true;
 
@@ -841,6 +879,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		}
 
 		_name = name;
+		_displayName = null;
 		_model.Save.WorkspaceLater();
 		if(notifyControl) UpdateControlRow();
 		if(this == _model.CurrentFile) Program.MainForm.SetTitle();
@@ -954,6 +993,26 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		//insert at the specified place and set to save
 		f._Common_MoveCopyNew(target, pos);
 		return f;
+	}
+
+	#endregion
+
+	#region util
+
+	/// <summary>
+	/// Detects file type from extension or text.
+	/// If .cs, uses text.
+	/// Must be not folder.
+	/// </summary>
+	public static EFileType DetectFileType(string path)
+	{
+		var type = EFileType.NotCodeFile;
+		if(path.EndsWithI_(".cs")) {
+			type = EFileType.Class;
+			try { if(File_.LoadText(path).Contains("//{{ class, Main")) type = EFileType.Script; }
+			catch(Exception ex) { Debug_.Print(ex); }
+		}
+		return type;
 	}
 
 	#endregion

@@ -53,7 +53,7 @@ class PanelRecent :Control, ITreeModel
 		_ccName = new NodeTextBox();
 		_c.NodeControls.Add(_ccName);
 		//_ccName.Trimming = StringTrimming.EllipsisCharacter;
-		_ccName.ValueNeeded = node => (node.Tag as RunningTasks.RecentTask).f.Name;
+		_ccName.ValueNeeded = node => (node.Tag as RunningTasks.RecentTask).f.DisplayName;
 
 		_ccStatus = new NodeTextBox();
 		_c.NodeControls.Add(_ccStatus);

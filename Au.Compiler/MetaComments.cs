@@ -48,7 +48,7 @@ namespace Au.Compiler
 	/// 
 	/// <h3>Other C# files to compile together</h3>
 	/// <code><![CDATA[
-	/// c file.cs //file in this C# file's folder. It must be .cs file, not C# script. Should not contain Main function.
+	/// c file.cs //a class file in this C# file's folder
 	/// c folder\file.cs //path relative to this C# file's folder
 	/// c .\folder\file.cs //the same as above
 	/// c ..\folder\file.cs //path relative to the parent folder
@@ -128,7 +128,7 @@ namespace Au.Compiler
 	/// 
 	/// <h3>Settings used to create assembly file</h3>
 	/// <code><![CDATA[
-	/// role miniProgram|exeProgram|editorExtension|classLibrary|classFile //purpose of this C# file. Also the type of the output assembly file (exe, dll, none). Default: miniProgram for scripts, classFile for .cs files. More info below.
+	/// role miniProgram|exeProgram|editorExtension|classLibrary|classFile //purpose of this C# file. Also the type of the output assembly file (exe, dll, none). Default: miniProgram for scripts, classFile for class files. More info below.
 	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %Folders.Workspace%\bin. Default for classLibrary: %Folders.ThisApp%\Libraries.
 	/// console false|true //let the program run with console
 	/// icon file.ico //icon of the .exe/.dll file. Can be filename or relative path, like with 'c'.
@@ -141,7 +141,7 @@ namespace Au.Compiler
 	/// About role:
 	/// If role is 'exeProgram' or 'classLibrary', creates .exe or .dll file, named like this C# file, in 'outputPath' directory.
 	/// If role is 'miniProgram' (default for scripts) or 'editorExtension', creates a temporary assembly file in subfolder ".compiled" of the workspace folder.
-	/// If role is 'classFile' (default for .cs files) does not create any output files from this C# file. Its purpose is to be compiled together with other C# code files.
+	/// If role is 'classFile' (default for class files) does not create any output files from this C# file. Its purpose is to be compiled together with other C# code files.
 	/// If role is 'editorExtension', the task runs in the main UI thread of the editor process. Rarely used. Can be used to create editor extensions. The user cannot see and end the task. Creates memory leaks when executing recompiled assemblies (eg after editing the script), because old assembly versions cannot be unloaded until process exits.
 	/// 
 	/// Full path can be used with 'r', 'com', 'outputPath' and 'xmlDoc'. It can start with an environment variable or special folder name, like <c>%Folders.ThisAppDocuments%\file.exe</c>.
@@ -364,7 +364,7 @@ namespace Au.Compiler
 			_ParseFile(f, true);
 
 			if(projFolder != null) {
-				foreach(var ff in projFolder.IwfEnumProjectCsFiles(f)) _ParseFile(ff, false);
+				foreach(var ff in projFolder.IwfEnumProjectClassFiles(f)) _ParseFile(ff, false);
 			}
 
 			if(_filesC != null) {
@@ -398,9 +398,7 @@ namespace Au.Compiler
 			bool isScript = f.IsScript;
 
 			if(_isMain = isMain) {
-				string name = f.Name;
-				if(!isScript) name = name.Remove(name.Length - 3);
-				Name = name;
+				Name = Path_.GetFileName(f.Name, true);
 				IsScript = isScript;
 
 				Optimize = DefaultOptimize;
@@ -452,8 +450,8 @@ namespace Au.Compiler
 				}
 				return;
 			case "c":
-				if(!value.EndsWithI_(".cs")) { _Error(iValue, "must be .cs file"); return; }
 				var ff = _GetFile(value, iValue); if(ff == null) return;
+				if(!ff.IsClass) { _Error(iValue, "must be a class file"); return; }
 				if(_filesC == null) _filesC = new List<IWorkspaceFile>();
 				else if(_filesC.Contains(ff)) return;
 				_filesC.Add(ff);
@@ -505,7 +503,7 @@ namespace Au.Compiler
 				_Specified(EMSpecified.role, iName);
 				if(_Enum(out ERole ro, value, iValue)) {
 					Role = ro;
-					if(IsScript && (ro == ERole.classFile || Role == ERole.classLibrary)) _Error(iValue, "role classFile and classLibrary can be only in .cs file");
+					if(IsScript && (ro == ERole.classFile || Role == ERole.classLibrary)) _Error(iValue, "role classFile and classLibrary can be only in class files");
 				}
 				break;
 			case "outputPath":
@@ -568,7 +566,7 @@ namespace Au.Compiler
 			//rejected:
 			//pdb true|false //if true, creates .pdb file. Note: if false, can be difficult to find unhandled exception place in code. Default: true.
 			//skip  //don't compile this file when compiling multiple files ('c'). Must be the first line.
-			//c  //also compile all other .cs files in the same folder and subfolders. This option can be only in the main file, not in files compiled because of 'c'. Script files are not included.
+			//c  //also compile all other class files in the same folder and subfolders. This option can be only in the main file, not in files compiled because of 'c'. Script files are not included.
 			//using Namespace; //\\r //.NET/GAC assembly reference, using assembly name = Namespace
 			//using Namespace; //\\r .dll //other assembly reference, using file name = Namespace.dll. The file must be in the main Au folder or its subfolder Libraries.
 		}
@@ -669,7 +667,7 @@ namespace Au.Compiler
 				if(OutputPath == null) OutputPath = Folders.ThisApp + "Libraries";
 				break;
 			case ERole.classFile:
-				if(Specified != 0) return _Error(0, "with role classFile (default role of .cs files) can be used only c, r, resource, com");
+				if(Specified != 0) return _Error(0, "with role classFile (default role of class files) can be used only c, r, resource, com");
 				break;
 			}
 

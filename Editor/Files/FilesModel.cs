@@ -269,7 +269,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// Finds all files (and not folders) that have the specified name.
 	/// Returns empty array if not found.
 	/// </summary>
-	/// <param name="name">File name. If starts with backslash, works like <see cref="Find"/>. Does not support <see cref="FileNode.IdStringWithWorkspace"/> string.</param>
+	/// <param name="name">File name, like "name.cs". If starts with backslash, works like <see cref="Find"/>. Does not support <see cref="FileNode.IdStringWithWorkspace"/> string.</param>
 	public FileNode[] FindAll(string name)
 	{
 		return Root.FindAllDescendantFiles(name);
@@ -525,6 +525,11 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		return r;
 	}
 
+	/// <summary>
+	/// Creates new item at the top of the tree or at the context menu position.
+	/// Opens file or selects folder. Optionally begins renaming.
+	/// Calls <see cref="FileNode.NewItem"/>.
+	/// </summary>
 	public FileNode NewItem(string template, string name = null, bool beginEdit = false)
 	{
 		var pos = NodePosition.Inside;
@@ -532,7 +537,11 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		return NewItem(target, pos, template, name, beginEdit);
 	}
 
-	/// <inheritdoc cref="FileNode.NewItem"/>
+	/// <summary>
+	/// Creates new item at the specified position.
+	/// Opens file or selects folder. Optionally begins renaming.
+	/// Calls <see cref="FileNode.NewItem"/>.
+	/// </summary>
 	public FileNode NewItem(FileNode target, NodePosition pos, string template, string name = null, bool beginEdit = false)
 	{
 		var f = FileNode.NewItem(this, target, pos, template, name);
@@ -668,7 +677,6 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			//	//FUTURE
 			//	break;
 			case 3:
-				if(f.IsScript) goto case 1; //CONSIDER: maybe use .csx extension, then can open in Visual Studio. Now even if we find VS path and open, we have two problems: opens new VS process; no colors/intellisense.
 				Shell.Run(f.FilePath);
 				break;
 			case 4:
@@ -829,7 +837,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		//info: don't need to schedule saving here. FileCopy and FileMove did it.
 	}
 
-	void _ImportFiles(bool copy, string[] a, FileNode target, NodePosition pos)
+	void _ImportFiles(bool copy, string[] a, FileNode target, NodePosition pos)//TODO: test
 	{
 		bool fromWorkspaceDir = false, dirsDropped = false;
 		for(int i = 0; i < a.Length; i++) {
@@ -870,32 +878,32 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			var newParentPath = newParent.FilePath;
 			var (nf1, nd1) = _CountFilesFolders();
 
-			foreach(var s in a) {
+			foreach(var path in a) {
 				bool isDir;
-				var itIs = File_.ExistsAs2(s, true);
+				var itIs = File_.ExistsAs2(path, true);
 				if(itIs == FileDir2.File) isDir = false;
 				else if(itIs == FileDir2.Directory && r != 1) isDir = true;
 				else continue; //skip symlinks or if does not exist
 
 				FileNode k;
-				var name = Path_.GetFileName(s);
-				if(r == 1) {
-					k = new FileNode(this, name, false, s); //CONSIDER: unexpand
+				var name = Path_.GetFileName(path);
+				if(r == 1) { //add as link
+					k = new FileNode(this, name, path, false, path); //CONSIDER: unexpand
 				} else {
 					//var newPath = newParentPath + "\\" + name;
 					if(fromWorkspaceDir) { //already exists?
-						var relPath = s.Substring(FilesDirectory.Length);
+						var relPath = path.Substring(FilesDirectory.Length);
 						var fExists = this.Find(relPath, null);
 						if(fExists != null) {
 							fExists.FileMove(target, pos);
 							continue;
 						}
 					}
-					k = new FileNode(this, name, isDir);
-					if(isDir) _AddDir(s, k);
+					k = new FileNode(this, name, path, isDir);
+					if(isDir) _AddDir(path, k);
 					try {
-						if(r == 2) File_.CopyTo(s, newParentPath, IfExists.Fail);
-						else File_.MoveTo(s, newParentPath, IfExists.Fail);
+						if(r == 2) File_.CopyTo(path, newParentPath, IfExists.Fail);
+						else File_.MoveTo(path, newParentPath, IfExists.Fail);
 					}
 					catch(Exception ex) { Print(ex.Message); continue; }
 				}
@@ -915,7 +923,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		{
 			foreach(var u in File_.EnumDirectory(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
 				bool isDir = u.IsDirectory;
-				var k = new FileNode(this, u.Name, isDir);
+				var k = new FileNode(this, u.Name, u.FullPath, isDir);
 				parent.AddChild(k);
 				if(isDir) _AddDir(u.FullPath, k);
 			}

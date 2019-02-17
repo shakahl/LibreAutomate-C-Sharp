@@ -806,7 +806,7 @@ namespace Au.Tools
 			if(info == null) {
 				info = c_infoForm;
 			} else if(info.EndsWith_('$')) {
-				_commonInfos.SetTextWithWildexInfo(info.Remove(info.Length - 1));
+				_commonInfos.SetTextWithWildexInfo(info.RemoveEnd_(1));
 				return;
 			}
 			_info.ST.SetText(info);

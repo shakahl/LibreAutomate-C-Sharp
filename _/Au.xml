@@ -13647,6 +13647,12 @@
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/> or <paramref name="count"/>.</exception>
         </member>
+        <member name="M:Au.String_.RemoveEnd_(System.String,System.Int32)">
+            <summary>
+            Removes <paramref name="count"/> characters from the end of this string.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
         <member name="M:Au.String_.Limit_(System.String,System.Int32)">
             <summary>
             If this string is longer than <paramref name="limit"/>, returns its substring 0 to <paramref name="limit"/>-1 with appended '…' character.
@@ -22468,7 +22474,7 @@
             Returns 0 if task start is deferred because a script is running (see meta option ifRunning).
             Returns 0 if role editorExtension; then waits until the task ends.
             </returns>
-            <param name="script">Script file name, or path like @"\Folder\Script5".</param>
+            <param name="script">Script name like "Script5", or path like @"\Folder\Script5.cs".</param>
             <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
             <exception cref="T:System.IO.FileNotFoundException">Script file not found.</exception>
             <exception cref="T:Au.Types.AuException">Failed to start script.</exception>
