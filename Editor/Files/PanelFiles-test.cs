@@ -113,7 +113,7 @@ partial class PanelFiles
 		};
 		m["change cell"] = o =>
 		{
-			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame", false);
+			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame");
 			//f.GUID = "one two";
 			//f.GUID = "one\ntwo";
 			Perf.First();
@@ -123,11 +123,11 @@ partial class PanelFiles
 			_c.Update();
 			Perf.NW();
 
-			Timer_.After(1000, () => f.FileRename(name, true));
+			Timer_.After(1000, () => f.FileRename(name));
 		};
 		m["udate row"] = o =>
 		{
-			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame", false);
+			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame");
 			//f.GUID = "one two";
 			Perf.First();
 			_c.UpdateNode(n);
@@ -135,7 +135,7 @@ partial class PanelFiles
 			_c.Update();
 			Perf.NW();
 
-			Timer_.After(1000, () => f.FileRename(name, true));
+			Timer_.After(1000, () => f.FileRename(name));
 		};
 		m["GC.Collect"] = o => GC.Collect();
 		m["disable control"] = o =>

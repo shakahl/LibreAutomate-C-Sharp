@@ -117,7 +117,7 @@ partial class FilesModel
 			this.NodeControls.Add(_ccName);
 			_ccName.EditEnabled = true;
 			_ccName.ValueNeeded = node => (node.Tag as FileNode).DisplayName;
-			_ccName.ValuePushed = (node, value) => { (node.Tag as FileNode).FileRename(value as string, false); };
+			_ccName.ValuePushed = (node, value) => { (node.Tag as FileNode).FileRename(value as string, true); };
 			_ccName.FontNeeded = node => node.Tag == _model.CurrentFile ? EdStock.FontBold : null;
 			_ccName.DrawText += _ccName_DrawText;
 
@@ -251,8 +251,7 @@ partial class FilesModel
 			if(!node.IsSelected && _model.OpenFiles.Contains(f)) { //draw yellow background for open files
 				var g = e.Graphics;
 				var r = rowRect; //why width 0?
-				var cr = g.VisibleClipBounds; //TODO: see TreeViewAdv.DrawRow, it creates Rectangle differently
-				r.X = (int)cr.X; r.Width = (int)cr.Width;
+				r.X = OffsetX; r.Width = ClientSize.Width;
 				if(_IsTextBlack) g.FillRectangle(Brushes.LightGoldenrodYellow, r);
 				//if(f == _model.CurrentFile) {
 				//	r.Width--; r.Height--;

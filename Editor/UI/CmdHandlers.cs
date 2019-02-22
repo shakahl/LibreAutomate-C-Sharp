@@ -101,6 +101,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Edit_Cut), Edit_Cut);
 		_dict.Add(nameof(Edit_Copy), Edit_Copy);
 		_dict.Add(nameof(Edit_Paste), Edit_Paste);
+		_dict.Add(nameof(Edit_CopyForForum), Edit_CopyForForum);
 		_dict.Add(nameof(Edit_Find), Edit_Find);
 		_dict.Add(nameof(Edit_Members), Edit_Members);
 		_dict.Add(nameof(Edit_ContextHelp), Edit_ContextHelp);
@@ -186,17 +187,17 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void File_NewScript()
 	{
-		Model.NewItem("Script.cs", beginEdit: true);
+		Model.NewItem("Script.cs", beginRenaming: true);
 	}
 
 	public void File_NewClass()
 	{
-		Model.NewItem("Class.cs", beginEdit: true);
+		Model.NewItem("Class.cs", beginRenaming: true);
 	}
 
 	public void File_NewFolder()
 	{
-		Model.NewItem("Folder", beginEdit: true);
+		Model.NewItem("Folder", beginRenaming: true);
 	}
 
 	public void File_Import()
@@ -346,27 +347,35 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Edit_Undo()
 	{
-		Panels.Editor.ActiveDoc.Call(Sci.SCI_UNDO);
+		Panels.Editor.ActiveDoc?.Call(Sci.SCI_UNDO);
 	}
 
 	public void Edit_Redo()
 	{
-		Panels.Editor.ActiveDoc.Call(Sci.SCI_REDO);
+		Panels.Editor.ActiveDoc?.Call(Sci.SCI_REDO);
 	}
 
 	public void Edit_Cut()
 	{
-		Panels.Editor.ActiveDoc.Call(Sci.SCI_CUT);
+		Panels.Editor.ActiveDoc?.Call(Sci.SCI_CUT);
 	}
 
 	public void Edit_Copy()
 	{
-		Panels.Editor.ActiveDoc.Call(Sci.SCI_COPY);
+		var doc = Panels.Editor.ActiveDoc; if(doc == null) return;
+		doc.CopyModified(onlyInfo: true);
+		doc.Call(Sci.SCI_COPY);
+	}
+
+	public void Edit_CopyForForum()
+	{
+		Panels.Editor.ActiveDoc?.CopyModified();
 	}
 
 	public void Edit_Paste()
 	{
-		Panels.Editor.ActiveDoc.Call(Sci.SCI_PASTE);
+		var doc = Panels.Editor.ActiveDoc; if(doc == null) return;
+		if(!doc.PasteModified()) doc.Call(Sci.SCI_PASTE);
 	}
 
 	public void Edit_Find()
@@ -468,7 +477,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		f.FormClosed += (unu, e) => {
 			if(e.CloseReason == CloseReason.UserClosing && f.DialogResult == DialogResult.OK) {
 				var s = f.ResultCode;
-				var d = Panels.Editor.ActiveDoc;
+				var d = Panels.Editor.ActiveDoc; if(d == null) return;
 				var t = d.ST;
 				if(t.IsReadonly) {
 					Print(s);

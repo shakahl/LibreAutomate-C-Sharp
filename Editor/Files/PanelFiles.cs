@@ -208,7 +208,7 @@ partial class PanelFiles : Control
 				}
 
 				bool isFolder = v.IsDirectory && !isProject;
-				var item = new ToolStripMenuItem(name, null, (unu, sed) => Model.NewItem(v.FullPath.Substring(templDir.Length + 1), beginEdit: true));
+				var item = new ToolStripMenuItem(name, null, (unu, sed) => Model.NewItem(v.FullPath.Substring(templDir.Length + 1), beginRenaming: true));
 				if(isFolder) {
 					var ddSub = new ToolStripDropDownMenu();
 					item.DropDown = ddSub;
@@ -219,8 +219,8 @@ partial class PanelFiles : Control
 					if(isProject) si = "folder";
 					else {
 						switch(FileNode.DetectFileType(v.FullPath)) {
-						case FileNode.EFileType.Script: si = "fileScript"; break;
-						case FileNode.EFileType.Class: si = "fileClass"; break;
+						case EFileType.Script: si = "fileScript"; break;
+						case EFileType.Class: si = "fileClass"; break;
 						}
 					}
 					Bitmap im = si != null ? EdResources.GetImageUseCache(si) : FileNode.IconCache.GetImage(v.FullPath, true);

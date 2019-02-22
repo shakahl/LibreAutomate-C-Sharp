@@ -95,6 +95,7 @@
 			<Edit_Cut i="cut" hkText="Ctrl+X"/>
 			<Edit_Copy i="copy" hkText="Ctrl+C"/>
 			<Edit_Paste i="paste" hkText="Ctrl+V"/>
+			<Edit_CopyForForum/>
 			<sep/>
 			<Edit_Find i="find"/>
 			<Edit_FindReferences/>

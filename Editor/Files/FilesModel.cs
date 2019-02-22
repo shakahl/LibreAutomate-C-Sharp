@@ -530,27 +530,34 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// Opens file or selects folder. Optionally begins renaming.
 	/// Calls <see cref="FileNode.NewItem"/>.
 	/// </summary>
-	public FileNode NewItem(string template, string name = null, bool beginEdit = false)
+	public FileNode NewItem(string template, string name = null, bool beginRenaming = false, EdNewFileText text = null)
 	{
 		var pos = NodePosition.Inside;
 		var target = _inContextMenu ? _GetInsertPos(out pos) : null;
-		return NewItem(target, pos, template, name, beginEdit);
+		return NewItem(target, pos, template, name, beginRenaming, text);
 	}
 
 	/// <summary>
 	/// Creates new item at the specified position.
-	/// Opens file or selects folder. Optionally begins renaming.
+	/// Opens file, or selects folder, or opens main file of project folder. Optionally begins renaming.
 	/// Calls <see cref="FileNode.NewItem"/>.
 	/// </summary>
-	public FileNode NewItem(FileNode target, NodePosition pos, string template, string name = null, bool beginEdit = false)
+	public FileNode NewItem(FileNode target, NodePosition pos, string template, string name = null, bool beginRenaming = false, EdNewFileText text = null)
 	{
 		var f = FileNode.NewItem(this, target, pos, template, name);
 		if(f == null) return null;
+
 		if(f.IsFolder) {
-			if(f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main, newFile: true);
-			else f.SelectSingle();
-		} else SetCurrentFile(f, newFile: true);
-		if(beginEdit && f.IsSelected) RenameSelected();
+			if(f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main, newFile: true); //open the main file of the new project folder
+			else f.SelectSingle(); //select the new folder
+		} else SetCurrentFile(f, newFile: true); //open the new file
+
+		if(text != null && f == CurrentFile) {
+			string s = text.meta + (text.replaceTemplate ? null : f.GetText()) + text.text;
+			Panels.Editor.ActiveDoc.ST.SetText(s);
+		}
+
+		if(beginRenaming && f.IsSelected) RenameSelected();
 		return f;
 	}
 
@@ -585,7 +592,8 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			try { File_.Delete(f.FilePath, tryRecycleBin); } //FUTURE: use other thread, because very slow. Or better move to folder 'deleted'.
 			catch(Exception ex) { Print(ex.Message); return false; }
 		} else {
-			Print($"<>File not deleted: <explore>{f.FilePath}<>");
+			string s1 = doNotDeleteFile ? "File not deleted:" : "The deleted item was a link to";
+			Print($"<>Info: {s1} <explore>{f.FilePath}<>");
 		}
 
 		foreach(var k in e) {
@@ -744,7 +752,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			if(files.Length == 1 && IsWorkspaceDirectory(files[0])) {
 				switch(AuDialog.ShowEx("Workspace", files[0],
 					"1 Open workspace|2 Import workspace|0 Cancel",
-					flags: DFlags.Wider, footerText: GetSecurityInfo(true))) {
+					DFlags.Wider, footerText: GetSecurityInfo("v|"))) {
 				case 1: Timer_.After(1, () => Panels.Files.LoadWorkspace(files[0])); break;
 				case 2: ImportWorkspace(files[0], target, pos); break;
 				}
@@ -837,7 +845,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		//info: don't need to schedule saving here. FileCopy and FileMove did it.
 	}
 
-	void _ImportFiles(bool copy, string[] a, FileNode target, NodePosition pos)//TODO: test
+	void _ImportFiles(bool copy, string[] a, FileNode target, NodePosition pos)
 	{
 		bool fromWorkspaceDir = false, dirsDropped = false;
 		for(int i = 0; i < a.Length; i++) {
@@ -866,7 +874,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			string ins1 = dirsDropped ? "\nFolders not supported." : null;
 			r = AuDialog.ShowEx("Import files", string.Join("\n", a),
 			$"1 Add as a link to the external file{ins1}|2 Copy to the workspace folder|3 Move to the workspace folder|0 Cancel",
-			flags: DFlags.CommandLinks | DFlags.Wider, owner: _control, footerText: GetSecurityInfo(true));
+			DFlags.CommandLinks | DFlags.Wider, owner: _control, footerText: GetSecurityInfo("v|"));
 			if(r == 0) return;
 		}
 
@@ -876,7 +884,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		_control.BeginUpdate();
 		try {
 			var newParentPath = newParent.FilePath;
-			var (nf1, nd1) = _CountFilesFolders();
+			var (nf1, nd1, nc1) = _CountFilesFolders();
 
 			foreach(var path in a) {
 				bool isDir;
@@ -911,9 +919,9 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 				if(select) k.IsSelected = true;
 			}
 
-			var (nf2, nd2) = _CountFilesFolders();
-			int nf = nf2 - nf1, nd = nd2 - nd1;
-			if(nf + nd > 0) Print($"Info: Imported {nf} files and {nd} folders.\r\n\t{GetSecurityInfo()}");
+			var (nf2, nd2, nc2) = _CountFilesFolders();
+			int nf = nf2 - nf1, nd = nd2 - nd1, nc = nc2 - nc1;
+			if(nf + nd > 0) Print($"Info: Imported {nf} files and {nd} folders.{(nc > 0 ? GetSecurityInfo("\r\n\t") : null)}");
 		}
 		catch(Exception ex) { Print(ex.Message); }
 		finally { _control.EndUpdate(); }
@@ -929,10 +937,11 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			}
 		}
 
-		(int nf, int nd) _CountFilesFolders()
+		(int nf, int nd, int nc) _CountFilesFolders()
 		{
-			int nf = 0, nd = 0; foreach(var v in Root.Descendants()) if(v.IsFolder) nd++; else nf++;
-			return (nf, nd);
+			int nf = 0, nd = 0, nc = 0;
+			foreach(var v in Root.Descendants()) if(v.IsFolder) nd++; else { nf++; if(v.IsCodeFile) nc++; }
+			return (nf, nd, nc);
 		}
 	}
 
@@ -1054,11 +1063,25 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// <summary>
 	/// Security info string.
 	/// </summary>
-	public static string GetSecurityInfo(bool withShieldIcon = false)
+	public static string GetSecurityInfo(string prefix = null)
 	{
-		var s = "Security info: Unknown files can contain malicious code - virus, spyware, etc. It is safe to import, open and edit files if you don't run and don't compile them. Triggers are inactive until run/compile.";
-		return withShieldIcon ? ("v|" + s) : s;
+		return prefix + "Security info: Unknown .cs files can contain malicious code - virus, spyware, etc. It is safe to import, open and edit files if you don't run and don't compile them. Triggers are inactive until run/compile.";
 	}
 
 	#endregion
+}
+
+class EdNewFileText
+{
+	public bool replaceTemplate;
+	public string text, meta;
+
+	public EdNewFileText() { }
+
+	public EdNewFileText(bool replaceTemplate, string text, string meta = null)
+	{
+		this.replaceTemplate = replaceTemplate;
+		this.text = text;
+		this.meta = meta;
+	}
 }

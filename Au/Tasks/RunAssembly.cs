@@ -83,7 +83,7 @@ namespace Au
 				var e = te.InnerException;
 				if(0 != (flags & RAFlags.DontHandleExceptions)) throw e;
 				//Print(e);
-				AuApp.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
+				AuScript.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
 			}
 
 			//see also: TaskScheduler.UnobservedTaskException event.
@@ -155,9 +155,9 @@ namespace Au.Types
 	/// 
 	/// More features may be added in the future.
 	/// </remarks>
-	public abstract class AuApp
+	public abstract class AuScript
 	{
-		static AuApp()
+		static AuScript()
 		{
 			AppDomain.CurrentDomain.UnhandledException += (ad, e) => {
 				if((ad as AppDomain).Id != AppDomain.CurrentDomain.Id) return; //avoid printing twice if subscribed in main and other appdomain
@@ -175,10 +175,10 @@ namespace Au.Types
 			};
 		}
 
-		static AuApp s_instance;
+		static AuScript s_instance;
 
 		///
-		protected AuApp()
+		protected AuScript()
 		{
 			s_instance = this;
 		}

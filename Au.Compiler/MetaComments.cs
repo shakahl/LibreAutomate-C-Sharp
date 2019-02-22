@@ -26,9 +26,9 @@ namespace Au.Compiler
 	/// </summary>
 	/// <remarks>
 	/// To compile C# code, often need various settings, more files, etc. In Visual Studio you can set it in project Properties and Solution Explorer. In Au you can set it in C# code as meta comments.
-	/// Meta comments is a block of comments that starts with <c>/*/</c> and ends with <c>*/</c>. Must be at the very start of C# code. Example:
+	/// Meta comments is a block of comments that starts and ends with <c>/*/</c>. Must be at the very start of C# code. Example:
 	/// <code><![CDATA[
-	/// /*/ option1 value1; option2 value2; option2 value3 */
+	/// /*/ option1 value1; option2 value2; option2 value3 /*/
 	/// ]]></code>
 	/// Options and values must match case, except filenames/paths. No "enclosing", no escaping.
 	/// Some options can be several times with different values, for example to specify several references.
@@ -342,7 +342,7 @@ namespace Au.Compiler
 		public EMSpecified Specified { get; private set; }
 
 		/// <summary>
-		/// If there is meta, gets character position after */. Else 0.
+		/// If there is meta, gets character position after /*/. Else 0.
 		/// </summary>
 		public int EndOfMeta { get; private set; }
 
@@ -682,27 +682,27 @@ namespace Au.Compiler
 		}
 
 		/// <summary>
-		/// Returns true if code starts with metacomments "/*/ ... */".
+		/// Returns true if code starts with metacomments "/*/ ... /*/".
 		/// </summary>
 		/// <param name="code">Code. Can be null.</param>
 		/// <param name="endOfMetacomments">Receives the very end of metacomments.</param>
 		public static bool FindMetaComments(string code, out int endOfMetacomments)
 		{
 			endOfMetacomments = 0;
-			if(code.Length_() < 5 || !code.StartsWith_("/*/")) return false;
-			int iTo = code.IndexOf_("*/", 3); if(iTo < 0) return false;
-			endOfMetacomments = iTo + 2;
+			if(code.Length_() < 6 || !code.StartsWith_("/*/")) return false;
+			int iTo = code.IndexOf_("/*/", 3); if(iTo < 0) return false;
+			endOfMetacomments = iTo + 3;
 			return true;
 		}
 
 		/// <summary>
 		/// Parses metacomments and returns offsets of all option names and values in code.
 		/// </summary>
-		/// <param name="code">Code that starts with metacomments "/*/ ... */".</param>
+		/// <param name="code">Code that starts with metacomments "/*/ ... /*/".</param>
 		/// <param name="endOfMetacomments">The very end of metacomments, returned by <see cref="FindMetaComments"/>.</param>
 		public static IEnumerable<Token> EnumOptions(string code, int endOfMetacomments)
 		{
-			for(int i = 3, iEnd = endOfMetacomments - 2; i < iEnd; i++) {
+			for(int i = 3, iEnd = endOfMetacomments - 3; i < iEnd; i++) {
 				Token t = default;
 				for(; i < iEnd; i++) if(code[i] > ' ') break; //find next option
 				if(i == iEnd) break;

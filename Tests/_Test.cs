@@ -83,9 +83,9 @@ using System.Numerics;
 
 //[assembly: Trigger.Hotkey("F4")]
 
-//class App :AuApp
+//class Script :AuScript
 //{
-//	static App()
+//	static Script()
 //	{
 //		Output.LibUseQM2 = true;
 //		Output.RedirectConsoleOutput = true;
@@ -96,8 +96,8 @@ using System.Numerics;
 //	}
 
 //	//[Trigger.Hotkey("Ctrl+-")]
-//	[STAThread] static void Main(string[] args) { new App()._Main(args); }
-//	//[STAThread] static void Main(string[] args) { var a = new App(); a._Main(args); a.RunTriggers(); }
+//	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
+//	//[STAThread] static void Main(string[] args) { var a = new Script(); a._Main(args); a.RunTriggers(); }
 
 //	//[Trigger.Hotkey("Ctrl+-")]
 //	void _Main(string[] args)
@@ -106,7 +106,7 @@ using System.Numerics;
 //			Print("main");
 //			RunTriggers();
 //			//Trigger.Run(this);
-//			//Trigger.Run(typeof(App));
+//			//Trigger.Run(typeof(Script));
 //			//TestTriggers();
 //		}
 //		catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
@@ -2283,20 +2283,6 @@ a1,-8";
 #if true
 			//Thread_.Start(() => { for(; ; ) { 1.s(); GC.Collect(); } });
 
-			//object o = () => true; //error
-			//object o = new Func<bool>(() => true); //OK
-			//TContext o = () => true; //error
-			//TContext o = new Func<bool>(() => true); //OK
-
-			var pe = Perf.StartNew();
-			int i = 0;
-			if(Au.Util.Assembly_.LibIsAuNgened)i++; //60 if ngened, else 1200
-			pe.Next();
-			if(Au.Util.Assembly_.LibIsAuNgened) i++;
-			pe.Next();
-			if(Au.Util.Assembly_.LibIsAuNgened) i++;
-			pe.NW();
-			Print(i);
 
 			//Triggers.Of().
 			//TestWndGroup();

@@ -423,7 +423,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		if(!_GetGrid()) { this.DialogResult = DialogResult.None; return; };
 
-		string append = null; if(endOf == 0) append = _f.IsScript ? " " : "\r\n\r\n";
+		string append = null; if(endOf == 0) append = _f.IsScript ? " " : "\r\n";
 		var s = _meta.Format(append);
 
 		if(s.Length == 0) {

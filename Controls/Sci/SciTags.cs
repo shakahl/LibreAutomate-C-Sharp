@@ -653,7 +653,7 @@ namespace Au.Controls
 					//don't hide unknown tags, unless start with '+'. Can be either misspelled (hiding would make harder to debug) or not intended for us (forgot <_>).
 					if(ch != '+') goto ge;
 					//if(!_userLinkTags.ContainsKey(linkTag = new string((sbyte*)tag, 0, tagLen))) goto ge; //no, it makes slower and creates garbage. Also would need to look in the static dictionary too. It's not so important to check now because we use '+' prefix.
-					//info: initially was used '_', not '+'. But it creates more problems. Eg C# stack trace can contain "... at App.<>c.<_Main>b__1_0() ...".
+					//info: initially was used '_', not '+'. But it creates more problems. Eg C# stack trace can contain "... at Script.<>c.<_Main>b__1_0() ...".
 					linkTag = "";
 					userTag = true;
 					break;

@@ -216,7 +216,7 @@ namespace Au
 		/// Parameters etc are of <see cref="ShowEx"/>.
 		/// </summary>
 		public AuDialog(
-			string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default,
+			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			) : this()
@@ -1391,8 +1391,8 @@ namespace Au
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="buttons">See <see cref="Show"/>. Examples: "OK|Cancel", "1 OK|2 Cancel|5 Save|4 Don't Save".</param>
-		/// <param name="icon"></param>
 		/// <param name="flags"></param>
+		/// <param name="icon"></param>
 		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
 		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
@@ -1429,12 +1429,12 @@ namespace Au
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static DResult ShowEx(
-			string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default,
+			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			)
 		{
-			var d = new AuDialog(text1, text2, buttons, icon, flags, owner,
+			var d = new AuDialog(text1, text2, buttons, flags, icon, owner,
 				expandedText, footerText, title, radioButtons, checkBox,
 				defaultButton, x, y, secondsTimeout, onLinkClick);
 			return d.ShowDialog();
@@ -1466,8 +1466,8 @@ namespace Au
 		/// You can use <see cref="DFlags.CommandLinks"/> in flags to change the style of custom buttons.
 		/// See also: <see cref="SetButtons"/>.
 		/// </param>
-		/// <param name="icon"></param>
 		/// <param name="flags"></param>
+		/// <param name="icon"></param>
 		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
 		/// <remarks>
@@ -1493,9 +1493,9 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int Show(string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
+		public static int Show(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null)
 		{
-			return ShowEx(text1, text2, buttons, icon, flags, owner, expandedText).Button;
+			return ShowEx(text1, text2, buttons, flags, icon, owner, expandedText).Button;
 		}
 
 		/// <summary>
@@ -1505,7 +1505,7 @@ namespace Au
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static int ShowInfo(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
 		{
-			return Show(text1, text2, buttons, DIcon.Info, flags, owner, expandedText);
+			return Show(text1, text2, buttons, flags, DIcon.Info, owner, expandedText);
 		}
 
 		/// <summary>
@@ -1515,7 +1515,7 @@ namespace Au
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static int ShowWarning(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
 		{
-			return Show(text1, text2, buttons, DIcon.Warning, flags, owner, expandedText);
+			return Show(text1, text2, buttons, flags, DIcon.Warning, owner, expandedText);
 		}
 
 		/// <summary>
@@ -1525,7 +1525,7 @@ namespace Au
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static int ShowError(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
 		{
-			return Show(text1, text2, buttons, DIcon.Error, flags, owner, expandedText);
+			return Show(text1, text2, buttons, flags, DIcon.Error, owner, expandedText);
 		}
 
 		/// <summary>
@@ -1534,9 +1534,9 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowOKCancel(string text1 = null, string text2 = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
+		public static bool ShowOKCancel(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null)
 		{
-			return 1 == Show(text1, text2, "OK|Cancel", icon, flags, owner, expandedText);
+			return 1 == Show(text1, text2, "OK|Cancel", flags, icon, owner, expandedText);
 		}
 
 		/// <summary>
@@ -1545,9 +1545,9 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowYesNo(string text1 = null, string text2 = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
+		public static bool ShowYesNo(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null)
 		{
-			return 1 == Show(text1, text2, "Yes|No", icon, flags, owner, expandedText);
+			return 1 == Show(text1, text2, "Yes|No", flags, icon, owner, expandedText);
 		}
 
 		#endregion Show
@@ -1614,7 +1614,7 @@ namespace Au
 		{
 			if(Empty(buttons)) buttons = "1 OK|2 Cancel";
 
-			var d = new AuDialog(text1, text2, buttons, 0, flags, owner,
+			var d = new AuDialog(text1, text2, buttons, flags, 0, owner,
 				expandedText, footerText, title, radioButtons, checkBox,
 				0, x, y, secondsTimeout, onLinkClick);
 
@@ -1740,7 +1740,7 @@ namespace Au
 			Action<DEventArgs> onLinkClick = null
 			)
 		{
-			var d = new AuDialog(text1, text2, null, 0, flags, owner,
+			var d = new AuDialog(text1, text2, null, flags, 0, owner,
 				expandedText, footerText, title, null, checkBox,
 				defaultButton, x, y, secondsTimeout, onLinkClick);
 
@@ -1810,7 +1810,7 @@ namespace Au
 		{
 			if(Empty(buttons)) buttons = "0 Cancel";
 
-			var d = new AuDialog(text1, text2, buttons, 0, flags, owner,
+			var d = new AuDialog(text1, text2, buttons, flags, 0, owner,
 				expandedText, footerText, title, radioButtons, checkBox,
 				0, x, y, secondsTimeout, onLinkClick);
 
@@ -1880,12 +1880,12 @@ namespace Au
 		/// </example>
 		/// <exception cref="AggregateException">Failed to show dialog.</exception>
 		public static AuDialog ShowNoWaitEx(
-			string text1 = null, string text2 = null, string buttons = null, DIcon icon = 0, DFlags flags = 0, AnyWnd owner = default,
+			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			)
 		{
-			var d = new AuDialog(text1, text2, buttons, icon, flags, owner,
+			var d = new AuDialog(text1, text2, buttons, flags, icon, owner,
 				expandedText, footerText, title, radioButtons, checkBox,
 				defaultButton, x, y, secondsTimeout, onLinkClick);
 			d.ShowDialogNoWait();
@@ -1904,11 +1904,11 @@ namespace Au
 		/// <exception cref="AggregateException">Failed to show dialog.</exception>
 		public static AuDialog ShowNoWait(
 			string text1 = null, string text2 = null,
-			string buttons = null, DIcon icon = 0, DFlags flags = 0,
+			string buttons = null, DFlags flags = 0, DIcon icon = 0,
 			AnyWnd owner = default
 			)
 		{
-			return ShowNoWaitEx(text1, text2, buttons, icon, flags, owner);
+			return ShowNoWaitEx(text1, text2, buttons, flags, icon, owner);
 		}
 
 #pragma warning restore 1573 //missing XML documentation for parameters

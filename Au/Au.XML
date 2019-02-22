@@ -2621,7 +2621,7 @@
             </summary>
             <param name="maxCount">The maximum number of substrings to get. If negative (default), gets all.</param>
         </member>
-        <member name="T:Au.Types.AuApp">
+        <member name="T:Au.Types.AuScript">
             <summary>
             This class is used in automation script files as base of their main class. Adds some features.
             </summary>
@@ -2633,10 +2633,10 @@
             More features may be added in the future.
             </remarks>
         </member>
-        <member name="M:Au.Types.AuApp.#ctor">
+        <member name="M:Au.Types.AuScript.#ctor">
             
         </member>
-        <member name="M:Au.Types.AuApp.OnUnhandledException(System.UnhandledExceptionEventArgs)">
+        <member name="M:Au.Types.AuScript.OnUnhandledException(System.UnhandledExceptionEventArgs)">
             <summary>
             Prints exception info.
             Override this function to intercept unhandled exceptions. Call the base function if want to print exception info as usually.
@@ -4319,7 +4319,7 @@
         </member>
         <member name="T:Au.Types.DIcon">
             <summary>
-            Standard icons for <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/> and similar functions.
+            Standard icons for <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.DIcon.App">
@@ -4335,14 +4335,14 @@
         </member>
         <member name="T:Au.Types.DFlags">
             <summary>
-            Flags for <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/> and similar functions.
+            Flags for <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.DFlags.CommandLinks">
             <summary>
             Display custom buttons as a column of command-links, not as a row of classic buttons.
             Command links can have multi-line text. The first line has bigger font.
-            More info about custom buttons: <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.
+            More info about custom buttons: <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.DFlags.EndThread">
@@ -4388,7 +4388,7 @@
         </member>
         <member name="T:Au.Types.DResult">
             <summary>
-            Result of <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and similar functions: button id, radio button id, check box state, edit field text.
+            Result of <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and similar functions: button id, radio button id, check box state, edit field text.
             </summary>
         </member>
         <member name="F:Au.Types.DResult.Timeout">
@@ -17251,7 +17251,7 @@
         </member>
         <member name="M:Au.Debug_.Dialog(System.Object,System.String,System.Int32,System.String)">
             <summary>
-            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/> to show some debug info.
+            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/> to show some debug info.
             Works only if DEBUG is defined. Read more in class help.
             The 3 optional arguments are not used explicitly.
             </summary>
@@ -17298,7 +17298,7 @@
             </summary>
             <remarks>
             You can use static functions (less code) or create class instances (more options).
-            More info: <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            More info: <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             
             Uses task dialog API <msdn>TaskDialogIndirect</msdn>.
             
@@ -17368,10 +17368,10 @@
         <member name="M:Au.AuDialog.#ctor">
             
         </member>
-        <member name="M:Au.AuDialog.#ctor(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
+        <member name="M:Au.AuDialog.#ctor(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
             Initializes a new <see cref="T:Au.AuDialog"/> instance and sets main properties.
-            Parameters etc are of <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Parameters etc are of <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
         </member>
         <member name="M:Au.AuDialog.SetTitleBarText(System.String)">
@@ -17418,7 +17418,7 @@
             Sets common and/or custom buttons and custom buttons style.
             </summary>
             <param name="buttons">
-            Common and/or custom buttons, like with <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.
+            Common and/or custom buttons, like with <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
             These ids should be negative if you use <paramref name="customButtons"/> too, because ids of <paramref name="customButtons"/> are 1, 2, ... .
             </param>
             <param name="asCommandLinks">Custom buttons style. If false - row of classic buttons. If true - column of command-link buttons that can have multiline text.</param>
@@ -17636,7 +17636,7 @@
             </summary>
             <remarks>
             Calls <see cref="M:Au.AuDialog.ThreadWaitForOpen"/>, therefore the dialog is already open when this function returns.
-            More info: <see cref="M:Au.AuDialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
+            More info: <see cref="M:Au.AuDialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
             </remarks>
             <exception cref="T:System.AggregateException">Failed to show dialog.</exception>
         </member>
@@ -17683,7 +17683,7 @@
             Example: <c>d.Send.Message(TDApi.TDM.CLICK_VERIFICATION, 1);</c> .
             
             Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
-            Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="M:Au.AuDialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and <see cref="M:Au.AuDialog.ShowProgressEx(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="M:Au.AuDialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and <see cref="M:Au.AuDialog.ShowProgressEx(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </remarks>
         </member>
         <member name="P:Au.AuDialog.EditControl">
@@ -17691,16 +17691,16 @@
             Gets edit control handle as Wnd.
             </summary>
         </member>
-        <member name="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
+        <member name="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
             Shows dialog.
             Returns selected button id and other results packed in a <see cref="T:Au.Types.DResult"/> variable.
             </summary>
             <param name="text1">Main instruction. Bigger font.</param>
             <param name="text2">Text below main instruction.</param>
-            <param name="buttons">See <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>. Examples: "OK|Cancel", "1 OK|2 Cancel|5 Save|4 Don't Save".</param>
-            <param name="icon"></param>
+            <param name="buttons">See <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>. Examples: "OK|Cancel", "1 OK|2 Cancel|5 Save|4 Don't Save".</param>
             <param name="flags"></param>
+            <param name="icon"></param>
             <param name="owner">Owner window or null. See <see cref="M:Au.AuDialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
             <param name="expandedText">Text that the user can show and hide.</param>
             <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
@@ -17737,7 +17737,7 @@
             </example>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)">
+        <member name="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)">
             <summary>
             Shows dialog.
             Returns selected button id.
@@ -17764,19 +17764,19 @@
             You can use <see cref="F:Au.Types.DFlags.CommandLinks"/> in flags to change the style of custom buttons.
             See also: <see cref="M:Au.AuDialog.SetButtons(System.String,System.Boolean,Au.Types.MultiString)"/>.
             </param>
-            <param name="icon"></param>
             <param name="flags"></param>
+            <param name="icon"></param>
             <param name="owner">Owner window or null. See <see cref="M:Au.AuDialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
             <param name="expandedText">Text that the user can show and hide.</param>
             <remarks>
-            Calls <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Calls <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             Tip: Use named arguments. Example: <c>AuDialog.Show("Text.", icon: DIcon.Info)</c> .
             </remarks>
             <seealso cref="M:Au.AuDialog.ShowInfo(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>
             <seealso cref="M:Au.AuDialog.ShowWarning(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>
             <seealso cref="M:Au.AuDialog.ShowError(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>
-            <seealso cref="M:Au.AuDialog.ShowOKCancel(System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>
-            <seealso cref="M:Au.AuDialog.ShowYesNo(System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>
+            <seealso cref="M:Au.AuDialog.ShowOKCancel(System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>
+            <seealso cref="M:Au.AuDialog.ShowYesNo(System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>
             <seealso cref="M:Au.Debug_.Dialog(System.Object,System.String,System.Int32,System.String)"/>
             <example>
             <code><![CDATA[
@@ -17795,37 +17795,37 @@
         <member name="M:Au.AuDialog.ShowInfo(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)">
             <summary>
             Shows dialog with DIcon.Info icon.
-            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.
+            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
         <member name="M:Au.AuDialog.ShowWarning(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)">
             <summary>
             Shows dialog with DIcon.Warning icon.
-            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.
+            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
         <member name="M:Au.AuDialog.ShowError(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)">
             <summary>
             Shows dialog with DIcon.Error icon.
-            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.
+            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.AuDialog.ShowOKCancel(System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)">
+        <member name="M:Au.AuDialog.ShowOKCancel(System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)">
             <summary>
             Shows dialog with OK and Cancel buttons.
             Returns true if selected OK.
-            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.
+            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.AuDialog.ShowYesNo(System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)">
+        <member name="M:Au.AuDialog.ShowYesNo(System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)">
             <summary>
             Shows dialog with Yes and No buttons.
             Returns true if selected Yes.
-            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.
+            Calls <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
@@ -17848,8 +17848,8 @@
             <param name="x">X position in <see cref="P:Au.AuDialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="y">Y position in <see cref="P:Au.AuDialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
-            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.</param>
-            <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.</param>
+            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.</param>
+            <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.</param>
             <param name="onButtonClick">
             A button-clicked event handler function, eg lambda.
             Examples:
@@ -17951,7 +17951,7 @@
             <param name="x">X position in <see cref="P:Au.AuDialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="y">Y position in <see cref="P:Au.AuDialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
-            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.</param>
+            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.</param>
             <remarks>
             This function allows you to use most of the dialog features, but not all. Alternatively you can create a AuDialog class instance, set properties and call ShowDialog. Example in <see cref="T:Au.AuDialog"/> class help.
             </remarks>
@@ -17991,7 +17991,7 @@
             Shows dialog with progress bar.
             Creates dialog in new thread and returns without waiting until it is closed.
             Returns <see cref="T:Au.AuDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Au.AuDialog.IsOpen"/>, <see cref="M:Au.AuDialog.ThreadWaitForClosed"/>, <see cref="P:Au.AuDialog.Result"/> (when closed), <see cref="P:Au.AuDialog.DialogWindow"/>, <see cref="P:Au.AuDialog.Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
-            Most parameters are the same as with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Most parameters are the same as with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
             <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
             <remarks>
@@ -18015,7 +18015,7 @@
             Shows dialog with progress bar.
             Creates dialog in other thread and returns without waiting until it is closed.
             Returns <see cref="T:Au.AuDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Au.AuDialog.IsOpen"/>, <see cref="M:Au.AuDialog.ThreadWaitForClosed"/>, <see cref="P:Au.AuDialog.Result"/> (when closed), <see cref="P:Au.AuDialog.DialogWindow"/>, <see cref="P:Au.AuDialog.Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
-            All parameters except marquee are the same as with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            All parameters except marquee are the same as with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
             <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
             <remarks>
@@ -18034,12 +18034,12 @@
             </example>
             <exception cref="T:Au.Types.AuException">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.AuDialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
+        <member name="M:Au.AuDialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
-            Shows dialog like <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> but does not wait.
+            Shows dialog like <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> but does not wait.
             Creates dialog in other thread and returns without waiting until it is closed.
             Returns <see cref="T:Au.AuDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Au.AuDialog.IsOpen"/>, <see cref="M:Au.AuDialog.ThreadWaitForClosed"/>, <see cref="P:Au.AuDialog.Result"/> (when closed), <see cref="P:Au.AuDialog.DialogWindow"/>, <see cref="P:Au.AuDialog.Send"/>; through the Send property you can modify controls and close the dialog (see example).
-            Parameters are the same as with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Parameters are the same as with <see cref="M:Au.AuDialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
             <remarks>
             This function allows you to use most of the dialog features, but not all. Alternatively you can create a AuDialog class instance, set properties and call <see cref="M:Au.AuDialog.ShowDialogNoWait"/>.
@@ -18057,15 +18057,15 @@
             </example>
             <exception cref="T:System.AggregateException">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.AuDialog.ShowNoWait(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd)">
+        <member name="M:Au.AuDialog.ShowNoWait(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd)">
             <summary>
-            Shows dialog like <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/> but does not wait.
+            Shows dialog like <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/> but does not wait.
             Creates dialog in other thread and returns without waiting until it is closed.
-            Returns <see cref="T:Au.AuDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Au.AuDialog.IsOpen"/>, <see cref="M:Au.AuDialog.ThreadWaitForClosed"/>, <see cref="P:Au.AuDialog.Result"/> (when closed), <see cref="P:Au.AuDialog.DialogWindow"/>, <see cref="P:Au.AuDialog.Send"/>. Through the <b>Send</b> property you can modify controls and close the dialog. Example in <see cref="M:Au.AuDialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> topic.
-            Parameters are the same as with <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>.
+            Returns <see cref="T:Au.AuDialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Au.AuDialog.IsOpen"/>, <see cref="M:Au.AuDialog.ThreadWaitForClosed"/>, <see cref="P:Au.AuDialog.Result"/> (when closed), <see cref="P:Au.AuDialog.DialogWindow"/>, <see cref="P:Au.AuDialog.Send"/>. Through the <b>Send</b> property you can modify controls and close the dialog. Example in <see cref="M:Au.AuDialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> topic.
+            Parameters are the same as with <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
             </summary>
             <remarks>
-            Calls <see cref="M:Au.AuDialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DIcon,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Calls <see cref="M:Au.AuDialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </remarks>
             <exception cref="T:System.AggregateException">Failed to show dialog.</exception>
         </member>

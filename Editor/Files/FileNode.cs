@@ -28,15 +28,6 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 {
 	#region types
 
-	//File type. Saved in XML as tag name: d folder, s script, c class, n other.
-	public enum EFileType : byte
-	{
-		Folder, //must be 0
-		Script,
-		Class,
-		NotCodeFile,
-	}
-
 	//Not saved in XML.
 	[Flags]
 	enum _State : byte
@@ -210,6 +201,11 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// Returns null if this workspace is unloaded.
 	/// </summary>
 	public TreeViewAdv TreeControl => _model.TreeControl;
+
+	/// <summary>
+	/// File type.
+	/// </summary>
+	public EFileType FileType => _type;
 
 	/// <summary>
 	/// true if folder or root.
@@ -805,6 +801,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		s = s.RegexReplace_(@"(?m)^//#include +(.+)$", m => {
 			var si = s_dirTemplatesBS + @"include\" + m[1];
 			if(File_.ExistsAsFile(si)) return File_.LoadText(si);
+			Print($"Errror in {templFile}. #include file does not exist: {si}");
 			return null;
 		});
 
@@ -852,21 +849,16 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// </summary>
 	/// <param name="name">
 	/// Name, like "New name.cs" or "New name".
-	/// If not folder: if no extension, adds previous extension; else if new name would change type cs/other, corrects name to prevent it.
+	/// If not folder, adds previous extension if no extension or changed code file extension.
 	/// If invalid filename, replaces invalid characters etc.
 	/// </param>
-	/// <param name="notifyControl">true if called not from the control edit notification.</param>
-	public bool FileRename(string name, bool notifyControl)
+	/// <param name="userEdited">true if called from the control edit notification.</param>
+	public bool FileRename(string name, bool userEdited = false)
 	{
 		name = Path_.CorrectFileName(name);
 		if(!IsFolder) {
-			if(name.IndexOf('.') < 0) {
-				var ext = Path_.GetExtension(_name);
-				if(ext.Length > 0) name += ext;
-			} else if(_name.EndsWithI_(".cs") != name.EndsWithI_(".cs")) {
-				name += Path_.GetExtension(_name);
-			}
-			//TODO: test
+			var ext = Path_.GetExtension(_name);
+			if(ext.Length > 0) if(name.IndexOf('.') < 0 || (IsCodeFile && !name.EndsWithI_(ext))) name += ext;
 		}
 		if(name == _name) return true;
 
@@ -875,13 +867,12 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 				File_.Rename(this.FilePath, name, IfExists.Fail);
 			}
 			catch(Exception ex) { Print(ex.Message); return false; }
-			//if(IsLink(out string sp)) _x.SetAttributeValue(s_xnPath, Path_.GetDirectoryPath(sp, true) + name); //if we would rename the target file
 		}
 
 		_name = name;
 		_displayName = null;
 		_model.Save.WorkspaceLater();
-		if(notifyControl) UpdateControlRow();
+		if(!userEdited) UpdateControlRow();
 		if(this == _model.CurrentFile) Program.MainForm.SetTitle();
 		return true;
 	}
@@ -1009,11 +1000,23 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		var type = EFileType.NotCodeFile;
 		if(path.EndsWithI_(".cs")) {
 			type = EFileType.Class;
-			try { if(File_.LoadText(path).Contains("//{{ class, Main")) type = EFileType.Script; }
+			try { if(File_.LoadText(path).Contains("//{{ main")) type = EFileType.Script; }
 			catch(Exception ex) { Debug_.Print(ex); }
 		}
 		return type;
 	}
 
 	#endregion
+}
+
+/// <summary>
+/// File type of a <see cref="FileNode"/>.
+/// Saved in XML as tag name: d folder, s script, c class, n other.
+/// </summary>
+enum EFileType : byte
+{
+	Folder, //must be 0
+	Script,
+	Class,
+	NotCodeFile,
 }

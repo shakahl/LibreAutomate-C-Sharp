@@ -1,0 +1,2 @@
+﻿//{{ main
+unsafe partial class Script :AuScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}

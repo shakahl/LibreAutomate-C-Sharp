@@ -674,8 +674,10 @@ namespace Au.Controls
 			public byte[] Load(string file)
 			{
 				_enc = _Encoding.Binary;
-				if(0 != Path_.GetExtension(file).Equals_(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani"))
+				if(0 != Path_.GetExtension(file).Equals_(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
+					if(!File_.ExistsAsFile(file)) throw new FileNotFoundException($"Could not find file '{file}'.");
 					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"\0");
+				}
 
 				using(var fr = File_.WaitIfLocked(() => File.OpenRead(file))) {
 					var fileSize = fr.Length;

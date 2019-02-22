@@ -28,7 +28,7 @@ partial class PanelEdit : Control
 	List<SciCode> _docs = new List<SciCode>(); //documents that are actually open currently. Note: FilesModel.OpenFiles contains not only these.
 	SciCode _activeDoc;
 
-	public AuScintilla ActiveDoc => _activeDoc;
+	public SciCode ActiveDoc => _activeDoc;
 
 	public bool IsOpen => _activeDoc != null;
 
@@ -157,6 +157,7 @@ partial class PanelEdit : Control
 		Strips.tbRun.Enabled = enable;
 		//menus
 		Strips.Menubar.Items["Menu_Edit"].Enabled = enable;
+		Strips.Menubar.Items["Menu_Code"].Enabled = enable;
 		Strips.Menubar.Items["Menu_Run"].Enabled = enable;
 		//toolbar buttons
 		Strips.tbFile.Items["File_Properties"].Enabled = enable;
@@ -277,7 +278,7 @@ partial class PanelEdit : Control
 
 
 
-	class SciCode : AuScintilla
+	public class SciCode : AuScintilla
 	{
 		public readonly FileNode FN;
 		SciText.FileLoaderSaver _fls;
@@ -286,7 +287,7 @@ partial class PanelEdit : Control
 		const int c_marginLineNumbers = 1;
 		const int c_marginMarkers = 2; //breakpoints etc
 
-		public SciCode(FileNode file, SciText.FileLoaderSaver fls)
+		internal SciCode(FileNode file, SciText.FileLoaderSaver fls)
 		{
 			//_edit = edit;
 			FN = file;
@@ -329,6 +330,8 @@ partial class PanelEdit : Control
 				Call(SCI_SETLINEENDTYPESALLOWED, 1);
 
 				_FoldingInit();
+
+				//Call(SCI_ASSIGNCMDKEY, 3 << 16 | 'C', SCI_COPY); //Ctrl+Shift+C = raw copy
 			}
 		}
 
@@ -413,14 +416,35 @@ partial class PanelEdit : Control
 			case Api.WM_SETFOCUS:
 				if(!_noModelEnsureCurrentSelected) Model?.EnsureCurrentSelected();
 				break;
+			case Api.WM_KEYDOWN:
+				char key = (char)(int)m.WParam;
+				var mod = Keyb.GetMod();
+				if(mod == KMod.Ctrl) {
+					switch(key) {
+					case 'C':
+						CopyModified(true);
+						break;
+					case 'V':
+						if(PasteModified()) return;
+						break;
+					}
+					//} else if(mod == (KMod.Ctrl | KMod.Shift)) {
+					//	switch(key) {
+					//	}
+				}
+				break;
+			case Api.WM_CHAR:
+				int c = (int)m.WParam;
+				if(c < 32 && !(c == 8 || c == 9 || c == 10 || c == 13)) return;
+				break;
 			}
 			base.WndProc(ref m);
 		}
 		bool _noModelEnsureCurrentSelected;
 
-		public bool IsUnsaved => 0 != Call(SCI_GETMODIFY);
+		internal bool IsUnsaved => 0 != Call(SCI_GETMODIFY);
 
-		public bool SaveText()
+		internal bool SaveText()
 		{
 			if(IsUnsaved) {
 				try { _fls.Save(ST, FN.FilePath); }
@@ -860,6 +884,141 @@ partial class PanelEdit : Control
 			}
 			return null;
 		}
+
+		#endregion
+
+		#region copy paste
+
+		public void CopyModified(bool onlyInfo = false)
+		{
+			int i1 = Call(SCI_GETSELECTIONSTART), i2 = Call(SCI_GETSELECTIONEND), textLen = ST.TextLengthBytes;
+			if(textLen == 0) return;
+			bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !FN.IsCodeFile;
+			if(onlyInfo) {
+				if(isFragment || s_infoCopy) return; s_infoCopy = true;
+				Print("Info: To copy C# code for pasting in the forum, use menu Edit -> Copy For Forum. Then simply paste there; don't use the Code button.");
+				return;
+			}
+
+			if(!isFragment) { i1 = 0; i2 = textLen; }
+			string s = ST.RangeText(i1, i2);
+			bool isScript = FN.IsScript;
+			var b = new StringBuilder("[code2]");
+			if(isFragment) {
+				b.Append(s);
+			} else {
+				var name = FN.Name; if(isScript && name.RegexIsMatch_(@"(?i)^Script\d*\.cs")) name = null;
+				var sType = isScript ? "script" : "class";
+				var rx = isScript ? _RxScript : _RxClass;
+				//Perf.First();
+				if(rx.Match(s, out var m)) {
+					//Perf.NW();
+					int i = m.EndIndex;
+					if(name == null && m.Index == 0) { //if standard script named like "ScriptN.cs", copy as fragment
+						while(i < s.Length && (s[i] == '\r' || s[i] == '\n')) i++;
+					} else {
+						//Start with prefix type+name. Then format code like it is displayed in editor when folded.
+						//	Usually the first code line here is in the first line too, after the prefix. It looks better, even with meta.
+						b.AppendFormat("//// {0} \"{1}\"{2}", sType, name, s[0] == '/' ? " " : "\r\n").Append(s, 0, m.Index);
+						if(isScript) {
+							b.Append("//{{");
+							if(m[1].Length > 0 || m[2].Length > 0) {
+								b.Append(s, m[1].Index, m[1].Length).Append("\r\n//{{ using")
+									.Append(s, m[2].Index, m[2].Length).Append("\r\n//{{ main");
+							}
+						} else {
+							b.Append("//{{ using");
+						}
+					}
+					b.Append(s, i, s.Length - i);
+				} else {
+					b.AppendFormat("///// {0} \"{1}\"\r\n{2}", sType, name, s); // 5 '/'
+				}
+			}
+			b.AppendLine("[/code2]");
+			//_Print(s, true);
+			s = b.ToString();
+			//_Print(s);
+			new Clipb.Data().AddText(s).SetClipboard();
+			//PasteModified();
+		}
+		static bool s_infoCopy;
+
+		static Regex_ _RxScript => s_rxScript ?? (s_rxScript = new Regex_($@"(?sm)//{{{{(.*?)\R\Q{_Usings}\E$(.*?)\R\Q{_ScriptMain}\E$"));
+		static Regex_ _RxClass => s_rxClass ?? (s_rxClass = new Regex_($@"(?sm)^\Q{_Usings}\E$"));
+		static Regex_ s_rxScript, s_rxClass;
+		static string s_usings, s_scriptMain;
+		static string _Usings => s_usings ?? (s_usings = File_.LoadText(Folders.ThisAppBS + @"Templates\include\using.txt"));
+		static string _ScriptMain => s_scriptMain ?? (s_scriptMain = File_.LoadText(Folders.ThisAppBS + @"Templates\include\main.txt"));
+
+		public bool PasteModified()
+		{
+			var s = Clipb.Data.GetText();
+			if(s == null) return false;
+			if(s.StartsWith_("[code2]") && s.EndsWith_("[/code2]\r\n")) s = s.Substring(7, s.Length - 17);
+			if(!(s.StartsWith_("////"))) return false;
+			//_Print(s);
+
+			if(!s.RegexMatch_(@"^/////? (script|class) ""(.*?)""( |\R)", out var m)) return false;
+			bool isClass = s[m[1].Index] == 'c';
+			int i = m.EndIndex;
+			if(s[4] == '/') { //raw
+				s = s.Substring(i);
+			} else {
+				var b = new StringBuilder();
+				if(isClass) {
+					if(!s.RegexMatch_(@"[ \n]//{{ using\R", out var m1)) return false;
+					int u = m1.Index + 1;
+					b.Append(s, i, u - i).Append(_Usings);
+					u += 10;
+					b.Append(s, u, s.Length - u);
+				} else {
+					if(!s.RegexMatch_(@"[ \n]//{{", out var m1)) return false;
+					int j = m1.EndIndex;
+					b.Append(s, i, j - i);
+					if(s.RegexMatch_(@"(?ms)(.*?)^//{{ using\R(.*?)^//{{ main$", out var k, more: new RXMore(j))) {
+						b.Append(s, j, k[1].Length).AppendLine(_Usings).Append(s, k[2].Index, k[2].Length);
+						i = k.EndIndex;
+					} else {
+						b.AppendLine().AppendLine(_Usings);
+						i = j;
+					}
+					b.Append(_ScriptMain).Append(s, i, s.Length - i);
+				}
+				s = b.ToString();
+			}
+			//_Print(s);
+			var name = m[2].Length > 0 ? m[2].Value : "Script";
+
+			string buttons = FN.FileType != (isClass ? EFileType.Class : EFileType.Script)
+				? "1 Create new file|Cancel"
+				: "1 Create new file|2 Rename this file and replace all text|3 Replace all text|4 Paste|Cancel";
+			switch(AuDialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
+			case 0: break; //Cancel
+			case 1: //Create new file
+				Model.NewItem(isClass ? "Class.cs" : "Script.cs", name, text: new EdNewFileText(true, s));
+				break;
+			case 2: //Rename and replace all text
+				if(FN.FileRename(name)) goto case 3;
+				break;
+			case 3: //Replace all text
+				ST.SetText(s);
+				break;
+			case 4: //Paste
+				ST.ReplaceSel(s);
+				break;
+			}
+
+			return true;
+		}
+
+#if DEBUG
+		void _Print(string s, bool first = false)
+		{
+			if(first) Output.Clear();
+			Print("<><code>" + s + "</code>\r\n<Z 0xc0e0c0><>");
+		}
+#endif
 
 		#endregion
 	}

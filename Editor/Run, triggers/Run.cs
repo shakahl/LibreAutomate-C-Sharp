@@ -101,33 +101,36 @@ static class Run
 		int action = s.ToInt_(); //1 add meta role miniProgram, 2 create Script project, 3 create new test script and set "run" attribute
 		var f = Model.Find(s.Substring(2), null); if(f == null) return;
 		FileNode f2 = null;
-		string text = null;
-		if(action == 1) {
+		if(action == 1) { //add meta role exeProgram
 			if(!Model.SetCurrentFile(f)) return;
 			Model.Properties();
-		} else if(action == 2) {
-			if(!_NewItem(out f2, out _, @"New Project\@Script")) return;
-			f.FileMove(f2, Aga.Controls.Tree.NodePosition.After);
-			text = "Class1.Function1();\r\n";
 		} else {
-			s = "test " + Path_.GetFileName(f.Name, true);
-			if(!_NewItem(out f2, out bool isProject, "Script.cs", s)) return;
-			f.TestScript = f2;
-			text =
-$@"/* {(isProject ? "pr" : "c")} {f.ItemPath} */
+			if(action == 2) { //create project
+				if(!_NewItem(out f2, @"New Project\@Script")) return;
+				f.FileMove(f2, Aga.Controls.Tree.NodePosition.After);
+			} else { //create test script
+				s = "test " + Path_.GetFileName(f.Name, true);
+				if(!_NewItem(out f2, "Script.cs", s)) return;
+				f.TestScript = f2;
+			}
 
-{(isProject ? "Library." : "")}Class1.Function1();
-";
-		}
-		if(text != null && f2 == Model.CurrentFile) Panels.Editor.ActiveDoc.ST.SetText(text);
+			//Creates new item above f or f's project folder.
+			bool _NewItem(out FileNode ni, string template, string name = null)
+			{
+				bool isProject = f.FindProject(out var target, out _);
+				if(!isProject) target = f;
 
-		//Creates new item above f or f's project folder.
-		bool _NewItem(out FileNode ni, out bool isProject, string template, string name = null)
-		{
-			isProject = f.FindProject(out var target, out _);
-			if(!isProject) target = f;
-			ni = Model.NewItem(target, Aga.Controls.Tree.NodePosition.Before, template, name);
-			return ni != null;
+				var text = new EdNewFileText();
+				if(action == 2) {
+					text.text = "Class1.Function1();\r\n";
+				} else {
+					text.meta = $"/*/ {(isProject ? "pr" : "c")} {f.ItemPath} /*/ ";
+					text.text = $"{(isProject ? "Library." : "")}Class1.Function1();\r\n";
+				}
+
+				ni = Model.NewItem(target, Aga.Controls.Tree.NodePosition.Before, template, name, text: text);
+				return ni != null;
+			}
 		}
 	}
 	static bool s_isRegisteredLinkRCF;

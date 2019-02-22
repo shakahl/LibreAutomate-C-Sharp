@@ -1,55 +1,38 @@
-﻿/*/ ifRunning restart; r System.Numerics; */ //{{
+﻿/*/ ifRunning restart; r System.Numerics; /*/ //{{
 //{{ using
-using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Drawing;
-using System.Linq;
-using Au;
-using Au.Types;
-using static Au.NoClass;
-using Au.Triggers;
-//}}
-using System.Numerics;
+using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq; using Au; using Au.Types; using static Au.NoClass; using Au.Triggers; //}}
 
-//{{ class, Main
-unsafe partial class App :AuApp { //}}
-[STAThread] static void Main(string[] args) { new App()._Main(args); }
-void _Main(string[] args) { //}}
-//}}
-//}}
+using System.Numerics; //example. Add usings and assembly/module attributes here.
+
+//{{ main
+unsafe partial class Script :AuScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
 
 /*
-In this program is used standard C# syntax. You don't see the class, Main(), usings, etc because
-it is folded (hidden) in the code editor. You can click the [+] box at the top-left to unhide it.
-Everything else is optional. A script can have just single visible code line below the first line,
-like Print("hello");. This script shows where to add more code, for example usings and functions.
+To create automation scripts in this program you use C# as the programming language.
+Scripts actually are regular C# programs. Click the small [+] box at the top-left,
+and you can see code familiar to C# programmers - several usings, class Script and
+function Main (from it starts script execution). To avoid using 'static' everywhere,
+function Main creates a class instance and calls function _Main, where is your main
+script code. Usually don't need to edit the folded (hidden) code. Let it be hidden,
+and write your script below it. Your script can optionally end with one or two },
+to end function _Main and class Script.
 
-This program saves script properties and references in meta comments, at the very start of code.
-You can change them in the Properties dialog. The /*​/ ifRunning restart; ...*​/ is an example.
+The //{{ and //}} are used to fold (hide) code lines. Like #region and #endregion.
 
-You can add 'using ...' and [assembly: ...] below the '//{{ using' code block in the folded
-code (click the [+] box to show it). The 'using System.Numerics;' is an example.
-You can add '#define ...' and 'extern alias ...' above the '//{{ using' code block.
+This program saves script properties and used references in /*​/ meta comments /*​/,
+at the very start of script file. You can change them in the Properties dialog.
 
-As you can see, your main script code actually is in function _Main, which is in class App.
-The closing } } below your script code are optional (this program adds them when compiling).
+You can add more functions to the script in several ways:
+1. Directly in your script (function _Main), as nested functions.
+2. Below function _Main, as class member functions. Insert } to end function _Main.
+3. In class files. Create a class file (menu File -> New ...) and use the Properties
+dialog of the script to add it. Or create a script project (menu File -> New ...)
+and add class files to the project folder.
 
-You can add more functions below or in main script code.
-If below, insert single } between them (it ends the _Main function). The functions actually are
-member function of class App. Fields (member variables) are shared by _Main and all functions.
-Else the function is a nested function. Its local variables are shared with nested functions.
+Below function _Main and } you can also add fields, nested classes, [DllImport], etc.
 
-Below main script code you also can add fields, nested classes, [DllImport] declarations and
-everything else that can be used at class level.
-
+You can add 'using' directives, assembly/module attributes and #define below or above
+the '//{{ using' code block. Click the [+] box to show it.
 */
 
 Print("Main script code is here.");
@@ -57,7 +40,7 @@ ExampleFunction("function"); //call function
 int localVariable = 2;
 ExampleNestedFunction("nested function"); //call nested function
 var v = new NestedClass(); v.Function2(); //call function of other class
-Print(GetTickCount()); //call dll function
+Print(GetTickCount()); //call the declared dll function
 
 //Nested function example. Can use local variables declared above.
 void ExampleNestedFunction(string parameter) {
@@ -65,13 +48,13 @@ void ExampleNestedFunction(string parameter) {
 }
 
 //{{
-} //ends the _Main function. The comment line above is recommended to balance folding.
+} //ends function _Main. The comment line above is recommended to balance folding.
 
-//Field examples. These fields are member variables of class App.
-int _field = 3; //visible in all functions of class App, but not directly visible in nested classes
+//Field examples. These fields are member variables of class Script.
+int _field = 3; //visible in all functions of class Script, but not directly visible in nested classes
 static int s_staticField = 10; //static and const fields are directly visible in nested classes too
 
-//Function example. It is a member of class App. Can use fields, but not local variables of _Main.
+//Function example. It is a member of class Script. Can use fields, but not local variables of _Main.
 void ExampleFunction(string parameter) {
 	Print(parameter, _field);
 }
@@ -83,12 +66,12 @@ class NestedClass {
 	}
 }
 
-//Other class-level declaration example.
+//Other declaration example.
 [DllImport("kernel32.dll")]
 static extern int GetTickCount();
 
 //{{
-} //ends class App. Optional. Below you can add more classes.
+} //ends class Script. Optional. Below you can add more classes.
 
 //When compiling, this program adds:
 //1. References: mscorlib, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.

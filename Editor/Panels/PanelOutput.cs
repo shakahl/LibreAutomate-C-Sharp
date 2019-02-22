@@ -60,7 +60,7 @@ class PanelOutput : Control
 						return $"<open \"{f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}\">{f.Name}{x[2].Value}<>: ";
 					});
 				} else if((i = s.IndexOf("\n   at ") + 1) > 0 && s.IndexOf(":line ", i) > 0) { //stack trace with source file info
-					int j = s.LastIndexOf("\r\n   at App.Main(String[] args) in ");
+					int j = s.LastIndexOf("\r\n   at Script.Main(String[] args) in ");
 					if(j >= 0) j = s.IndexOf_("\r\n", j + 30);
 					if(j < 0) { j = s.Length; if(s.EndsWith_("\r\n")) j -= 2; } //include the Main line, because _Main may be missing
 					int stackLen = j - i;
@@ -83,7 +83,7 @@ class PanelOutput : Control
 								Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
 								.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
 
-								bool isMain = k.StartsWith("   at App._Main(String[] args) in ");
+								bool isMain = k.StartsWith("   at Script._Main(String[] args) in ");
 								if(!isMain || !f.IsScript) b.Append(", <_>").Append(s, k.Offset + 6, g.Index - k.Offset - 10).Append("</_>");
 								b.AppendLine();
 

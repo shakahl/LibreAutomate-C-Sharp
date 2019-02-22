@@ -78,7 +78,7 @@ class EdMetaCommentsParser
 	}
 
 	/// <summary>
-	/// Formats metacomments string "/*/ ... */".
+	/// Formats metacomments string "/*/ ... /*/".
 	/// Returns "" if there are no options.
 	/// </summary>
 	public string Format(string append)
@@ -117,7 +117,7 @@ class EdMetaCommentsParser
 		_AppendList("c", _c, true);
 		_AppendList("resource", _resource, true);
 		if(b.Length == 4) return "";
-		b.Append("*/");
+		b.Append("/*/");
 		if(append != null) b.Append(append);
 		return b.ToString();
 

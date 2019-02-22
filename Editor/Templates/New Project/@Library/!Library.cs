@@ -1,4 +1,4 @@
-﻿/*/ role classLibrary; outputPath %Folders.ThisApp%\Libraries */
+﻿/*/ role classLibrary; outputPath %Folders.ThisApp%\Libraries /*/
 //#include using.txt
 
 [assembly: System.Reflection.AssemblyVersion("1.0.0.0")]

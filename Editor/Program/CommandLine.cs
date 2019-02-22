@@ -58,7 +58,7 @@ static class CommandLine
 				}
 			} else { //one or more files
 				if(a.Length == 1 && FilesModel.IsWorkspaceDirectory(s)) {
-					switch(cmd = AuDialog.ShowEx("Workspace", s, "1 Import|2 Open|0 Cancel", footerText: FilesModel.GetSecurityInfo(true))) {
+					switch(cmd = AuDialog.ShowEx("Workspace", s, "1 Import|2 Open|0 Cancel", footerText: FilesModel.GetSecurityInfo("v|"))) {
 					case 1: _importWorkspace = s; break;
 					case 2: WorkspaceDirectory = s; break;
 					}
