@@ -655,6 +655,7 @@ namespace Aga.Controls.Tree
 						value.IsSelected = true;
 						CurrentNode = value;
 						EnsureVisible(value);
+						SelectionStart = value; //au
 					}
 				}
 				finally {

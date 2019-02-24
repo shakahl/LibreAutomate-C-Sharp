@@ -60,10 +60,10 @@ namespace Au.Util
 	}
 
 	/// <summary>
-	/// Memory shared by all appdomains and by other related processes.
+	/// Memory shared by all processes using this library.
 	/// </summary>
 	[DebuggerStepThrough]
-	[StructLayout(LayoutKind.Explicit, Size = 0x10000)]
+	[StructLayout(LayoutKind.Sequential, Size = 0x10000)]
 	unsafe struct LibSharedMemory
 	{
 		#region variables used by our library classes
@@ -72,17 +72,16 @@ namespace Au.Util
 		//1. Some type sizes are different in 32 and 64 bit process, eg IntPtr.
 		//	Solution: Use long and cast to IntPtr etc.
 		//2. The memory may be used by processes that use different library versions.
-		//	Solution: In new library versions don't change struct offsets and old members. Maybe reserve some space for future members. If need more, add new struct. Use Assert(sizeof) in our static ctor.
+		//	Solution: In new library versions don't change struct sizes and old members.
+		//		Maybe reserve some space for future members. If need more, add new struct.
+		//		Use eg [StructLayout(LayoutKind.Sequential, Size = 16)].
 
 		//reserve 16 for some header, eg shared memory version.
-		[FieldOffset(16)]
-		internal OutputServer.LibSharedMemoryData outp; //now sizeof 2, reserve 16
-		[FieldOffset(32)]
-#if PERF_SM
-		internal Perf.Inst perf; //now sizeof 184, reserve 256-32
-		[FieldOffset(256)]
-#endif
-		byte _futureStructPlaceholder;
+		[StructLayout(LayoutKind.Sequential, Size = 16)] struct _Header { }
+		_Header _h;
+
+		internal OutputServer.LibSharedMemoryData outp;
+		internal Triggers.Triggers.LibSharedMemoryData triggers;
 
 		#endregion
 
@@ -98,11 +97,6 @@ namespace Au.Util
 
 		static LibSharedMemory()
 		{
-			Debug.Assert(sizeof(OutputServer.LibSharedMemoryData) <= 16);
-#if PERF_SM
-			Debug.Assert(sizeof(Perf.Inst) <= 256 - 32);
-#endif
-
 			_sm = (LibSharedMemory*)SharedMemory.CreateOrGet("Au_SM_0x10000", Size, out var created);
 #if DEBUG
 			if(created) { //must be zero-inited, it's documented

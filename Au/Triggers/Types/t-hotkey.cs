@@ -58,29 +58,24 @@ namespace Au.Triggers
 			/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="Keyb.GetMod"/> (and any such functions in any app) will not know that the key is physically pressed.
 			/// </summary>
 			DontReleaseMod = 16,
-
-			/// <summary>
-			/// The trigger is temporarily disabled.
-			/// </summary>
-			Disabled = 128,
 		}
 
-		class _TriggerEtc : TriggerBase
+		class _TriggerEtc : Trigger
 		{
-			public readonly TFlags flags;
+			internal readonly TFlags flags;
 			string _shortString;
 
-			public _TriggerEtc(Triggers triggers, Action<HotkeyTriggerArgs> action, string hotkey, TFlags flags) : base(triggers, action, true)
+			internal _TriggerEtc(Triggers triggers, Action<HotkeyTriggerArgs> action, string hotkey, TFlags flags) : base(triggers, action, true)
 			{
 				_shortString = hotkey;
 				this.flags = flags;
 			}
 
-			public override void Run(TriggerArgs args) => RunT(args as HotkeyTriggerArgs);
+			internal override void Run(TriggerArgs args) => RunT(args as HotkeyTriggerArgs);
 
-			public override string TypeString() => "Hotkey";
+			internal override string TypeString() => "Hotkey";
 
-			public override string ShortString() => _shortString;
+			internal override string ShortString() => _shortString;
 
 			//public override string ToString()
 			//{
@@ -94,7 +89,7 @@ namespace Au.Triggers
 		}
 
 		Triggers _triggers;
-		Dictionary<int, TriggerBase> _d = new Dictionary<int, TriggerBase>();
+		Dictionary<int, Trigger> _d = new Dictionary<int, Trigger>();
 
 		internal HotkeyTriggers(Triggers triggers)
 		{
@@ -140,15 +135,15 @@ namespace Au.Triggers
 			//Print(k.Key);
 			if(!k.IsInjectedByAu && !k.IsUp && 0 == k.Mod) {
 				Perf.Next();
-				KMod mod = Keyb.GetMod(); //usually ~10 mcs, but sometimes 200-500 mcs
+				KMod mod = Keyb.GetMod(); //usually ~10 mcs, but sometimes 200-500 mcs //TODO: store in thc, for Autotext hook to use
 				Perf.Next();
 				//KMod mod = 0;//TODO
 				if(_d.TryGetValue(_DictKey(k.Key, mod), out var v)) {
 					HotkeyTriggerArgs args = null;
 					for(; v != null; v = v.next) {
+						if(v.DisabledThisOrAll) continue;
 						var x = v as _TriggerEtc;
-						if(0!=(x.flags&TFlags.Disabled)) continue;
-						if(args == null) thc.args = args = new HotkeyTriggerArgs(thc.w, k.Key, mod); //may need for scope callbacks too
+						if(args == null) thc.args = args = new HotkeyTriggerArgs(v, thc.w, k.Key, mod); //may need for scope callbacks too
 						args.Flags = x.flags;
 						if(!x.MatchScope(thc)) continue;
 						thc.trigger = v;
@@ -167,7 +162,8 @@ namespace Au.Triggers
 		public KKey Key { get; }
 		public KMod Mod { get; }
 		public HotkeyTriggers.TFlags Flags { get; internal set; }
-		internal HotkeyTriggerArgs(Wnd w, KKey key, KMod mod)
+
+		internal HotkeyTriggerArgs(Trigger trigger, Wnd w, KKey key, KMod mod) :base(trigger)
 		{
 			Window = w; Key = key; Mod = mod;
 		}

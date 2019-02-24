@@ -34,25 +34,19 @@ namespace Au.Triggers
 	public class Triggers
 	{
 		ITriggers[] _t;
-		ITriggers this[ETriggerType e] => _t[(int)e];
+		ITriggers this[TriggerType e] => _t[(int)e];
 
 		Triggers() => _Init();
 
 		void _Init()
 		{
-			_t = new ITriggers[(int)ETriggerType.Count];
+			_t = new ITriggers[(int)TriggerType.Count];
 			_scopes = new TriggerScopes();
 			_options = new TriggerOptions();
 			_threads = null; //will create on demand
 		}
 
-		/// <summary>
-		/// Gets the <see cref="Triggers"/> object of this thread.
-		/// </summary>
-		/// <remarks>
-		/// Rarely used.
-		/// </remarks>
-		public static Triggers Instance => t_instance ?? (t_instance = new Triggers());
+		static Triggers _Instance => t_instance ?? (t_instance = new Triggers());
 		[ThreadStatic] static Triggers t_instance;
 
 		//public static TriggerScopes Of {
@@ -76,7 +70,7 @@ namespace Au.Triggers
 		//static bool _test;
 		//static string _s1;
 
-		public static TriggerScopes Of => Instance._scopes;
+		public static TriggerScopes Of => _Instance._scopes;
 		TriggerScopes _scopes;
 		internal TriggerScopes LibScopes => _scopes;
 
@@ -86,22 +80,22 @@ namespace Au.Triggers
 		/// <remarks>
 		/// More info and examples: <see cref="TriggerOptions"/>.
 		/// </remarks>
-		public static TriggerOptions Options => Instance._options;
+		public static TriggerOptions Options => _Instance._options;
 		TriggerOptions _options;
 		internal TriggerOptions LibOptions => _options;
 
 		TriggerActionThreads _threads;
 
-		ITriggers _Get(ETriggerType e)
+		ITriggers _Get(TriggerType e)
 		{
 			int i = (int)e;
 			var t = _t[i];
 			if(t == null) {
 				switch(e) {
-				case ETriggerType.Hotkey: t = new HotkeyTriggers(this); break;
-				case ETriggerType.Autotext: t = new AutotextTriggers(this); break;
-				case ETriggerType.Mouse: t = new MouseTriggers(this); break;
-				case ETriggerType.WindowActive: case ETriggerType.WindowVisible: t = new WindowTriggers(this, e); break;
+				case TriggerType.Hotkey: t = new HotkeyTriggers(this); break;
+				case TriggerType.Autotext: t = new AutotextTriggers(this); break;
+				case TriggerType.Mouse: t = new MouseTriggers(this); break;
+				case TriggerType.WindowActive: case TriggerType.WindowVisible: t = new WindowTriggers(this, e); break;
 				default: Debug.Assert(false); break;
 				}
 				_t[i] = t;
@@ -109,17 +103,23 @@ namespace Au.Triggers
 			return t;
 		}
 
-		public static HotkeyTriggers Hotkey => Instance._Get(ETriggerType.Hotkey) as HotkeyTriggers;
+		public static HotkeyTriggers Hotkey => _Instance._Get(TriggerType.Hotkey) as HotkeyTriggers;
 
-		public static AutotextTriggers Autotext => Instance._Get(ETriggerType.Autotext) as AutotextTriggers;
+		public static AutotextTriggers Autotext => _Instance._Get(TriggerType.Autotext) as AutotextTriggers;
 
-		public static MouseTriggers Mouse => Instance._Get(ETriggerType.Mouse) as MouseTriggers;
+		public static MouseTriggers Mouse => _Instance._Get(TriggerType.Mouse) as MouseTriggers;
 
-		public static WindowTriggers WindowActive => Instance._Get(ETriggerType.WindowActive) as WindowTriggers;
+		public static WindowTriggers WindowActive => _Instance._Get(TriggerType.WindowActive) as WindowTriggers;
 
-		public static WindowTriggers WindowVisible => Instance._Get(ETriggerType.WindowVisible) as WindowTriggers;
+		public static WindowTriggers WindowVisible => _Instance._Get(TriggerType.WindowVisible) as WindowTriggers;
 
-		public static void Run() => Instance._Run();
+		/// <summary>
+		/// The last added trigger.
+		/// </summary>
+		public static Trigger LastAdded => _Instance.lastAdded;
+		internal Trigger lastAdded;
+
+		public static void Run() => _Instance._Run();
 		void _Run()
 		{
 			//AppDomain.CurrentDomain.AssemblyLoad += (object sender, AssemblyLoadEventArgs args) => {
@@ -136,9 +136,9 @@ namespace Au.Triggers
 				var t = _t[i];
 				if(t == null || !t.HasTriggers) continue;
 				haveTriggers = true;
-				switch((ETriggerType)i) {
-				case ETriggerType.Hotkey: case ETriggerType.Autotext: llHooks |= 1; break;
-				case ETriggerType.Mouse: llHooks |= 2; break;
+				switch((TriggerType)i) {
+				case TriggerType.Hotkey: case TriggerType.Autotext: llHooks |= 1; break;
+				case TriggerType.Mouse: llHooks |= 2; break;
 				}
 			}
 			//Print(haveTriggers, (uint)llHooks);
@@ -184,7 +184,7 @@ namespace Au.Triggers
 						Util.Jit.Compile(typeof(HotkeyTriggers), "HookProc");
 						Util.Jit.Compile(typeof(AutotextTriggers), "HookProc");
 						Util.Jit.Compile(typeof(MouseTriggers), "HookProc");
-						Util.Jit.Compile(typeof(TriggerBase), "MatchScope");
+						Util.Jit.Compile(typeof(Trigger), "MatchScope");
 						Util.Jit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
 					}
 				});
@@ -231,7 +231,7 @@ namespace Au.Triggers
 			const int bLen = 100; byte* b = stackalloc byte[bLen]; //buffer for ReadFile
 			try {
 				_StartStop(true);
-				var thc = new TriggerHookContext();
+				var thc = new TriggerHookContext(this);
 				var ha = new IntPtr[2] { evHooks, _evStop };
 
 				//GC.Collect(); //if adding triggers and scopes creates much garbage, eg if is used StackTrace or StckFrame
@@ -256,19 +256,19 @@ namespace Au.Triggers
 					thc.InitContext();
 					if(size == sizeof(Api.KBDLLHOOKSTRUCT)) {
 						var k = new HookData.Keyboard(null, b);
-						if(this[ETriggerType.Hotkey] is HotkeyTriggers t1)
+						if(this[TriggerType.Hotkey] is HotkeyTriggers t1)
 							suppressInputEvent = t1.HookProc(k, thc);
-						if(!suppressInputEvent /*&& thc.trigger == null*/ && this[ETriggerType.Autotext] is AutotextTriggers t2)
+						if(!suppressInputEvent /*&& thc.trigger == null*/ && this[TriggerType.Autotext] is AutotextTriggers t2)
 							suppressInputEvent = t2.HookProc(k, thc);
 					} else {
 						var m = (Api.MSLLHOOKSTRUCT2*)b;
 						var k = new HookData.Mouse(null, m->message, b);
-						var t1 = this[ETriggerType.Mouse] as MouseTriggers;
+						var t1 = this[TriggerType.Mouse] as MouseTriggers;
 						suppressInputEvent = t1.HookProc(k, thc);
 					}
 					Perf.Next();
 					thc.PerfWarn();
-					Perf.NW();//TODO
+					//Perf.NW();//TODO
 					Api.WriteFile(pipe, &suppressInputEvent, 1, out _);
 					if(thc.trigger?.action != null) {
 						if(_threads == null) _threads = new TriggerActionThreads();
@@ -297,9 +297,8 @@ namespace Au.Triggers
 		/// Stops watching for trigger events and causes <see cref="Run"/> to return.
 		/// </summary>
 		/// <remarks>
-		/// Rarely used.
-		/// Does not abort unfinished threads of trigger actions.
-		/// <note type="note">Don't call from a trigger action like this: <c>Triggers.Instance.Stop();</c>. The <b>Instance</b> then is of wrong thread. Instead call this in the main thread: <c>var ti=Triggers.Instance;</c> and then call this in a trigger action: <c>ti.Stop();</c>.</note>
+		/// Does not abort threads of trigger actions that are still running.
+		/// Example: <see cref="Disabled"/>.
 		/// </remarks>
 		public void Stop()
 		{
@@ -308,7 +307,31 @@ namespace Au.Triggers
 		IntPtr _evStop;
 
 		/// <summary>
-		/// Clears all added triggers, scopes (<b>Triggers.Of</b>), options, etc.
+		/// Gets or sets whether triggers of this <see cref="Triggers"/> instance are disabled.
+		/// </summary>
+		/// <remarks>
+		/// Does not depend on <see cref="TriggersEverywhere.Disabled"/>.
+		/// Does not end/pause threads of trigger actions.
+		/// </remarks>
+		/// <seealso cref="TriggerScopes.EnabledAlways"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// Triggers.Hotkey["Ctrl+T"] = o => { Print("Ctrl+T"); };
+		/// Triggers.Of.EnabledAlways = true;
+		/// Triggers.Hotkey["Ctrl+D"] = o => { Print("Ctrl+D (disable/enable)"); o.Triggers.Disabled ^= true; }; //toggle
+		/// Triggers.Hotkey["Ctrl+Q"] = o => { Print("Ctrl+Q (stop)"); o.Triggers.Stop(); };
+		/// ]]></code>
+		/// </example>
+		public bool Disabled { get; set; }
+
+		[StructLayout(LayoutKind.Sequential, Size = 16)] //note: this struct is in shared memory. Size must be same in all library versions.
+		internal struct LibSharedMemoryData
+		{
+			public bool disabled;
+		}
+
+		/// <summary>
+		/// Removes all added triggers. Resets <b>Triggers.Of</b> and <b>Triggers.Options</b>.
 		/// </summary>
 		/// <remarks>
 		/// Rarely used.
@@ -317,17 +340,20 @@ namespace Au.Triggers
 		/// Called from another thread. For example from a trigger action.
 		/// Or called while in <see cref="Run"/>. Call <see cref="Stop"/> at first; then call this function after <b>Run</b> returns.
 		/// </exception>
-		public void Clear()
+		public static void Clear()
 		{
-			if(this != t_instance || _evStop != default) throw new InvalidOperationException();
-			_Init();
+			var ti = t_instance;
+			if(ti == null || ti._evStop != default) throw new InvalidOperationException();
+			ti._Init();
 		}
 
 		internal static string PipeName(int threadId) => @"\\.\pipe\Au.Triggers-" + threadId.ToString();
 	}
 
-	enum ETriggerType
+	public enum TriggerType
 	{
+		//note: don't change values in new versions. Used in shared memory, which may be used by an exe that uses library of different version.
+
 		Hotkey,
 		Autotext,
 		Mouse,
@@ -357,22 +383,16 @@ namespace Au.Triggers
 		void StartStop(bool start);
 	}
 
-	/// <summary>
-	/// Base of trigger action argument classes of all trigger types.
-	/// </summary>
-	public class TriggerArgs
-	{
-
-	}
-
 
 	class TriggerHookContext : WFCache
 	{
+		public readonly Triggers triggers;
 		Wnd _w;
 		bool _haveWnd, _mouseWnd; POINT _p;
 
-		public TriggerHookContext()
+		public TriggerHookContext(Triggers triggers)
 		{
+			this.triggers = triggers;
 			_perfList = new _ScopeTime[32];
 			_perfHookTimeout = Util.WinHook.LowLevelHooksTimeout;
 		}
@@ -391,7 +411,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// Trigger/action to run. Set by a hook proc of a trigger engine.
 		/// </summary>
-		public TriggerBase trigger;
+		public Trigger trigger;
 
 		/// <summary>
 		/// Used with <see cref="trigger"/>.
@@ -480,6 +500,22 @@ namespace Au.Triggers
 			}
 			b.Append("* W - Triggers.Of.Window or similar; F - Triggers.Of.Func or similar.</fold>");
 			ThreadPool.QueueUserWorkItem(s1 => Print(s1), b.ToString()); //4 ms first time. Async because Print JIT slow.
+		}
+	}
+
+	/// <summary>
+	/// Gets info common to triggers of all proceses that use this library in this user session.
+	/// </summary>
+	public static class TriggersEverywhere
+	{
+		/// <summary>
+		/// true if triggers are disabled in all proceses that use this library in this user session.
+		/// </summary>
+		/// <seealso cref="Triggers.Disabled"/>
+		/// <seealso cref="TriggerScopes.EnabledAlways"/>
+		public static unsafe bool Disabled {
+			get => Util.LibSharedMemory.Ptr->triggers.disabled;
+			internal set => Util.LibSharedMemory.Ptr->triggers.disabled = value;
 		}
 	}
 

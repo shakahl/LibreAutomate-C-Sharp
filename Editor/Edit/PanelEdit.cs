@@ -478,8 +478,10 @@ partial class PanelEdit : Control
 							}
 						} else if(newFile) {
 							//fold boilerplate code
-							//Call(SCI_FOLDALL); //does not fold nested
-							if(0 != (SC_FOLDLEVELHEADERFLAG & Call(SCI_GETFOLDLEVEL, 0))) Call(SCI_FOLDCHILDREN, 0);
+							if(this.Text.RegexMatch_(@"//\{\{(\R//\{\{)? using\R", 0, out RXGroup g)) {
+								int i = ST.LineIndexFromPosition(g.Index, true);
+								if(0 != (SC_FOLDLEVELHEADERFLAG & Call(SCI_GETFOLDLEVEL, i))) Call(SCI_FOLDCHILDREN, i);
+							}
 						}
 					}
 				}
@@ -967,13 +969,13 @@ partial class PanelEdit : Control
 			} else {
 				var b = new StringBuilder();
 				if(isClass) {
-					if(!s.RegexMatch_(@"[ \n]//{{ using\R", out var m1)) return false;
+					if(!s.RegexMatch_(@"[ \n]//{{ using\R", 0, out RXGroup m1)) return false;
 					int u = m1.Index + 1;
 					b.Append(s, i, u - i).Append(_Usings);
 					u += 10;
 					b.Append(s, u, s.Length - u);
 				} else {
-					if(!s.RegexMatch_(@"[ \n]//{{", out var m1)) return false;
+					if(!s.RegexMatch_(@"[ \n]//{{", 0, out RXGroup m1)) return false;
 					int j = m1.EndIndex;
 					b.Append(s, i, j - i);
 					if(s.RegexMatch_(@"(?ms)(.*?)^//{{ using\R(.*?)^//{{ main$", out var k, more: new RXMore(j))) {

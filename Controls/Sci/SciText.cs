@@ -188,6 +188,11 @@ namespace Au.Controls
 		}
 
 		/// <summary>
+		/// => utf16 ? CountBytesFromChars(pos) : pos;
+		/// </summary>
+		int _Pos(int pos, bool utf16) => utf16 ? CountBytesFromChars(pos) : pos;
+
+		/// <summary>
 		/// Converts UTF-16 position to UTF-8 position.
 		/// Note: currently actually UTF-32. Will need to replace SCI_POSITIONRELATIVE with SCI_POSITIONRELATIVECODEUNITS.
 		/// </summary>
@@ -419,13 +424,14 @@ namespace Au.Controls
 		public int CurrentPositionBytes { get => Call(SCI_GETCURRENTPOS); set => Call(SCI_SETEMPTYSELECTION, value); }
 
 		/// <summary>
-		/// Gets line index from character position (UTF-8 bytes).
+		/// Gets line index from character position (UTF-8 bytes by default).
 		/// </summary>
 		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
-		public int LineIndexFromPosition(int pos)
+		/// <param name="utf16"></param>
+		public int LineIndexFromPosition(int pos, bool utf16 = false)
 		{
 			if(pos <= 0) return 0;
-			return Call(SCI_LINEFROMPOSITION, pos);
+			return Call(SCI_LINEFROMPOSITION, _Pos(pos, utf16));
 		}
 
 		/// <summary>

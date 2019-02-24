@@ -27,27 +27,33 @@ namespace Au.Triggers
 {
 	public class WindowTriggers : ITriggers
 	{
-		class _TriggerEtc : TriggerBase
+		[Flags]
+		public enum TFlags : byte
 		{
-			public readonly Wnd.Finder finder;
 
-			public _TriggerEtc(Triggers triggers, Action<WindowTriggerArgs> action, Wnd.Finder finder) : base(triggers, action, false)
+		}
+
+		class _TriggerEtc : Trigger
+		{
+			internal readonly Wnd.Finder finder;
+
+			internal _TriggerEtc(Triggers triggers, Action<WindowTriggerArgs> action, Wnd.Finder finder) : base(triggers, action, false)
 			{
 				this.finder = finder;
 			}
 
-			public override void Run(TriggerArgs args) => RunT(args as WindowTriggerArgs);
+			internal override void Run(TriggerArgs args) => RunT(args as WindowTriggerArgs);
 
-			public override string TypeString() => "Window"; //TODO
+			internal override string TypeString() => "Window"; //TODO
 
-			public override string ShortString() => finder.ToString(); //TODO
+			internal override string ShortString() => finder.ToString(); //TODO
 		}
 
 		Triggers _triggers;
-		ETriggerType _ttype;
+		TriggerType _ttype;
 		List<_TriggerEtc> _a = new List<_TriggerEtc>();
 
-		internal WindowTriggers(Triggers triggers, ETriggerType ttype)
+		internal WindowTriggers(Triggers triggers, TriggerType ttype)
 		{
 			_triggers = triggers;
 			_ttype = ttype;
@@ -72,10 +78,11 @@ namespace Au.Triggers
 	public class WindowTriggerArgs : TriggerArgs
 	{
 		public Wnd Window { get; set; }
-		//public WindowTriggers.TFlags Flags { get; set; }
-		//public WindowTriggerArgs(Wnd w, WindowTriggers.TFlags flags)
-		//{
-		//	Window = w; Flags = flags;
-		//}
+		public WindowTriggers.TFlags Flags { get; set; }
+
+		internal WindowTriggerArgs(Trigger trigger, Wnd w, WindowTriggers.TFlags flags) : base(trigger)
+		{
+			Window = w; Flags = flags;
+		}
 	}
 }

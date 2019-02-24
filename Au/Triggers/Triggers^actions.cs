@@ -70,7 +70,7 @@ namespace Au.Triggers
 		/// There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => AuTask.RunWait("Other Script");</c>.
 		/// There is no "temporarily pause old running action to run new action" feature. As well as for scripts.
 		/// The thread has <see cref="ApartmentState.STA"/>.
-		/// The <b>RunActionInX</b> functions are mutually exclusive. Only the last called function is active. If none called, it is the same as called this function without arguments.
+		/// The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active. If none called, it is the same as called this function without arguments.
 		/// </remarks>
 		public void RunActionInThread(int thread = 0, int ifRunningWaitMS = 0)
 		{
@@ -85,7 +85,7 @@ namespace Au.Triggers
 		/// <remarks>
 		/// Use if need to run actions simultaneously with other actions or other instances of self, especially if the action is long-running (maybe 5 s and more).
 		/// The thread has <see cref="ApartmentState.STA"/>.
-		/// The <b>RunActionInX</b> functions are mutually exclusive. Only the last called function is active.
+		/// The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
 		/// </remarks>
 		/// <param name="singleInstance">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
 		public void RunActionInNewThread(bool singleInstance)
@@ -101,7 +101,7 @@ namespace Au.Triggers
 		/// <remarks>
 		/// Use if need to run actions simultaneously with other actions or other instances of self, and the action is short-running (maybe less than 5 s) and don't need <see cref="ApartmentState.STA"/>.
 		/// Thread pool threads have <see cref="ApartmentState.MTA"/>.
-		/// The <b>RunActionInX</b> functions are mutually exclusive. Only the last called function is active.
+		/// The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
 		/// </remarks>
 		/// <param name="singleInstance">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
 		public void RunActionInThreadPool(bool singleInstance)
@@ -156,18 +156,23 @@ namespace Au.Triggers
 	/// </summary>
 	public class TOAfterArgs
 	{
+		///
+		internal TOAfterArgs(Exception e) { Exception = e; }
+
 		/// <summary>
 		/// If action ended with an exception, contains the exception. Else null.
 		/// </summary>
 		public Exception Exception { get; private set; }
-
-		///
-		public TOAfterArgs(Exception e) { Exception = e; }
 	}
 
 	class TriggerActionThreads
 	{
-		public void Run(TriggerBase ta, TriggerArgs args)
+		//public TriggerActionThreads(Triggers triggers)
+		//{
+
+		//}
+
+		public void Run(Trigger ta, TriggerArgs args)
 		{
 			Action actionWrapper = () => {
 				var opt = ta.options;
@@ -206,7 +211,7 @@ namespace Au.Triggers
 			} else {
 				bool singleInstance = ta.options.ifRunning == 0;
 				if(singleInstance) {
-					if(_d == null) _d = new ConcurrentDictionary<TriggerBase, object>();
+					if(_d == null) _d = new ConcurrentDictionary<Trigger, object>();
 					if(_d.TryGetValue(ta, out var tt)) {
 						//return;
 						switch(tt) {
@@ -244,7 +249,7 @@ namespace Au.Triggers
 		}
 
 		List<_Thread> _a = new List<_Thread>();
-		ConcurrentDictionary<TriggerBase, object> _d;
+		ConcurrentDictionary<Trigger, object> _d;
 
 		class _Thread
 		{

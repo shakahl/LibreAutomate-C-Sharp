@@ -27,24 +27,24 @@ namespace Au.Triggers
 {
 	public class AutotextTriggers : ITriggers
 	{
-		class _TriggerEtc : TriggerBase
+		class _TriggerEtc : Trigger
 		{
 			string _shortString;
 
-			public _TriggerEtc(Triggers triggers, Action<AutotextTriggerArgs> action, string text) : base(triggers, action, true)
+			internal _TriggerEtc(Triggers triggers, Action<AutotextTriggerArgs> action, string text) : base(triggers, action, true)
 			{
 				_shortString = text;
 			}
 
-			public override void Run(TriggerArgs args) => RunT(args as AutotextTriggerArgs);
+			internal override void Run(TriggerArgs args) => RunT(args as AutotextTriggerArgs);
 
-			public override string TypeString() => "Autotext";
+			internal override string TypeString() => "Autotext";
 
-			public override string ShortString() => _shortString;
+			internal override string ShortString() => _shortString;
 		}
 
 		Triggers _triggers;
-		Dictionary<string, TriggerBase> _d = new Dictionary<string, TriggerBase>();
+		Dictionary<string, Trigger> _d = new Dictionary<string, Trigger>();
 
 		internal AutotextTriggers(Triggers triggers)
 		{
@@ -70,12 +70,18 @@ namespace Au.Triggers
 			//note: this is called after HotkeyTriggers.HookProc.
 			//	It may set thc.triggers and return false to not suppress the input event. Then we should reset autotext.
 
+			if(!k.IsInjectedByAu && !k.IsUp && 0 == k.Mod) {
+
+			}
 			return false;
 		}
 	}
 
 	public class AutotextTriggerArgs : TriggerArgs
 	{
+		internal AutotextTriggerArgs(Trigger trigger) : base(trigger)
+		{
+		}
 
 		public void Replace(string replacement)
 		{

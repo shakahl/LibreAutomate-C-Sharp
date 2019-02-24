@@ -166,7 +166,7 @@ namespace Au.Compiler
 		/// <param name="errorMessage">"Metadata file '....dll' could not be opened ..."</param>
 		public void RemoveBadReference(string errorMessage)
 		{
-			if(errorMessage.RegexMatch_(@"'(.+?)'", 1, out var path))
+			if(errorMessage.RegexMatch_(@"'(.+?)'", 1, out string path))
 				lock(s_refsWR) { _cache.RemoveAll(v => v.FilePath.EqualsI_(path)); }
 		}
 	}

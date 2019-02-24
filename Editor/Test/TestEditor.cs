@@ -53,8 +53,8 @@ partial class EdForm
 		var s = doc.Text;
 
 		//t.Call(SCI_FOLDALL);
-		for(int i = 0; i < 3; i++) Print((uint)t.Call(SCI_GETFOLDLEVEL, i));
-		return;
+		//for(int i = 0; i < 3; i++) Print((uint)t.Call(SCI_GETFOLDLEVEL, i));
+		//return;
 
 		//Output.Clear();
 		//Model.Save.TextNowIfNeed();
@@ -82,7 +82,7 @@ partial class EdForm
 		//doc.Call(Sci.SCI_SETSTYLING, 10, 22);
 
 
-		var a = s.SplitLines_();
+		//var a = s.SplitLines_();
 		//bool? folder = default; switch(a[1]) { case "1": folder = true; break; case "0": folder = false; break; }
 		////Print(Model.Find(a[0], folder));
 		////var fn = Model.Find("test scripts", true);
@@ -111,6 +111,7 @@ partial class EdForm
 		//TestTools();
 		//TestReplaceFile();
 
+		Au.Triggers.TriggersEverywhere.Disabled ^= true;
 	}
 	static bool s_test1;
 

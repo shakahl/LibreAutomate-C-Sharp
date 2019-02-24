@@ -503,10 +503,9 @@ namespace Au.Util
 		/// <summary>
 		/// Shared memory variables. Used with global server only.
 		/// </summary>
+		[StructLayout(LayoutKind.Sequential, Size = 16)] //note: this struct is in shared memory. Size must be same in all library versions.
 		internal struct LibSharedMemoryData
 		{
-			//BE CAREFUL: this struct is in shared memory. Max allowed size is 16.
-
 			public byte IsServer, IsTimer;
 #if NEED_CALLER
 				public byte NeedCaller;

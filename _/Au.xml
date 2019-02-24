@@ -6980,14 +6980,6 @@
             Triggers.
             </summary>
         </member>
-        <member name="P:Au.Triggers.Triggers.Instance">
-            <summary>
-            Gets the <see cref="T:Au.Triggers.Triggers"/> object of this thread.
-            </summary>
-            <remarks>
-            Rarely used.
-            </remarks>
-        </member>
         <member name="P:Au.Triggers.Triggers.Options">
             <summary>
             Allows to set some options for multiple triggers and their actions.
@@ -6996,19 +6988,41 @@
             More info and examples: <see cref="T:Au.Triggers.TriggerOptions"/>.
             </remarks>
         </member>
+        <member name="P:Au.Triggers.Triggers.LastAdded">
+            <summary>
+            The last added trigger.
+            </summary>
+        </member>
         <member name="M:Au.Triggers.Triggers.Stop">
             <summary>
             Stops watching for trigger events and causes <see cref="M:Au.Triggers.Triggers.Run"/> to return.
             </summary>
             <remarks>
-            Rarely used.
-            Does not abort unfinished threads of trigger actions.
-            <note type="note">Don't call from a trigger action like this: <c>Triggers.Instance.Stop();</c>. The <b>Instance</b> then is of wrong thread. Instead call this in the main thread: <c>var ti=Triggers.Instance;</c> and then call this in a trigger action: <c>ti.Stop();</c>.</note>
+            Does not abort threads of trigger actions that are still running.
+            Example: <see cref="P:Au.Triggers.Triggers.Disabled"/>.
             </remarks>
+        </member>
+        <member name="P:Au.Triggers.Triggers.Disabled">
+            <summary>
+            Gets or sets whether triggers of this <see cref="T:Au.Triggers.Triggers"/> instance are disabled.
+            </summary>
+            <remarks>
+            Does not depend on <see cref="P:Au.Triggers.TriggersEverywhere.Disabled"/>.
+            Does not end/pause threads of trigger actions.
+            </remarks>
+            <seealso cref="P:Au.Triggers.TriggerScopes.EnabledAlways"/>
+            <example>
+            <code><![CDATA[
+            Triggers.Hotkey["Ctrl+T"] = o => { Print("Ctrl+T"); };
+            Triggers.Of.EnabledAlways = true;
+            Triggers.Hotkey["Ctrl+D"] = o => { Print("Ctrl+D (disable/enable)"); o.Triggers.Disabled ^= true; }; //toggle
+            Triggers.Hotkey["Ctrl+Q"] = o => { Print("Ctrl+Q (stop)"); o.Triggers.Stop(); };
+            ]]></code>
+            </example>
         </member>
         <member name="M:Au.Triggers.Triggers.Clear">
             <summary>
-            Clears all added triggers, scopes (<b>Triggers.Of</b>), options, etc.
+            Removes all added triggers. Resets <b>Triggers.Of</b> and <b>Triggers.Options</b>.
             </summary>
             <remarks>
             Rarely used.
@@ -7029,11 +7043,6 @@
             </summary>
             <param name="start"></param>
         </member>
-        <member name="T:Au.Triggers.TriggerArgs">
-            <summary>
-            Base of trigger action argument classes of all trigger types.
-            </summary>
-        </member>
         <member name="F:Au.Triggers.TriggerHookContext.trigger">
             <summary>
             Trigger/action to run. Set by a hook proc of a trigger engine.
@@ -7053,6 +7062,18 @@
             <summary>
             Tells to get window (for scope) from the specified point. If not called, will use the active window. In any case, gets window on demand.
             </summary>
+        </member>
+        <member name="T:Au.Triggers.TriggersEverywhere">
+            <summary>
+            Gets info common to triggers of all proceses that use this library in this user session.
+            </summary>
+        </member>
+        <member name="P:Au.Triggers.TriggersEverywhere.Disabled">
+            <summary>
+            true if triggers are disabled in all proceses that use this library in this user session.
+            </summary>
+            <seealso cref="P:Au.Triggers.Triggers.Disabled"/>
+            <seealso cref="P:Au.Triggers.TriggerScopes.EnabledAlways"/>
         </member>
         <member name="T:Au.Triggers.HooksServer">
             <summary>
@@ -7179,6 +7200,50 @@
             Makes simpler to implement <see cref="M:Au.Triggers.TriggerBase.Run(Au.Triggers.TriggerArgs)"/>.
             </summary>
         </member>
+        <member name="P:Au.Triggers.TriggerBase.Triggers">
+            <summary>
+            The <see cref="P:Au.Triggers.TriggerBase.Triggers"/> instance to which this trigger belongs.
+            </summary>
+        </member>
+        <member name="P:Au.Triggers.TriggerBase.Disabled">
+            <summary>
+            Gets or sets whether this trigger is disabled.
+            Does not depend on <see cref="P:Au.Triggers.Triggers.Disabled"/>, <see cref="P:Au.Triggers.TriggersEverywhere.Disabled"/>, <see cref="P:Au.Triggers.TriggerBase.EnabledAlways"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Triggers.TriggerBase.DisabledThisOrAll">
+            <summary>
+            Returns true if <see cref="P:Au.Triggers.TriggerBase.Disabled"/>; also if <see cref="P:Au.Triggers.Triggers.Disabled"/> or <see cref="P:Au.Triggers.TriggersEverywhere.Disabled"/>, unless <see cref="P:Au.Triggers.TriggerBase.EnabledAlways"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Triggers.TriggerBase.EnabledAlways">
+            <summary>
+            Gets or sets whether this trigger ignores <see cref="P:Au.Triggers.Triggers.Disabled"/> and <see cref="P:Au.Triggers.TriggersEverywhere.Disabled"/>.
+            </summary>
+            <remarks>
+            When adding the trigger, this property is set to the value of <see cref="P:Au.Triggers.TriggerScopes.EnabledAlways"/> at that time.
+            </remarks>
+        </member>
+        <member name="T:Au.Triggers.TriggerArgs">
+            <summary>
+            Base of trigger action argument classes of all trigger types.
+            </summary>
+        </member>
+        <member name="P:Au.Triggers.TriggerArgs.Trigger">
+            <summary>
+            The <see cref="P:Au.Triggers.TriggerArgs.Trigger"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Triggers.TriggerArgs.Triggers">
+            <summary>
+            The <see cref="P:Au.Triggers.TriggerArgs.Triggers"/> instance to which this trigger belongs.
+            </summary>
+        </member>
+        <member name="P:Au.Triggers.TriggerScopes.EnabledAlways">
+            <summary>
+            Triggers added afterwards don't depend on <see cref="P:Au.Triggers.Triggers.Disabled"/> and <see cref="P:Au.Triggers.TriggersEverywhere.Disabled"/>.
+            </summary>
+        </member>
         <member name="M:Au.Triggers.TriggerScope.Match(Au.Triggers.TriggerHookContext)">
             <summary>
             Returns true if window/context matches.
@@ -7227,11 +7292,6 @@
             Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="M:Au.Keyb.GetMod(Au.Types.KMod)"/> (and any such functions in any app) will not know that the key is physically pressed.
             </summary>
         </member>
-        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.Disabled">
-            <summary>
-            The trigger is temporarily disabled.
-            </summary>
-        </member>
         <member name="F:Au.Triggers.MouseTriggers.TFlags.Shared">
             <summary>
             Allow other apps to receive the key too, as if it is not a hotkey.
@@ -7258,11 +7318,6 @@
             <summary>
             Don't release modifier keys.
             Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="M:Au.Keyb.GetMod(Au.Types.KMod)"/> (and any such functions in any app) will not know that the key is physically pressed.
-            </summary>
-        </member>
-        <member name="F:Au.Triggers.MouseTriggers.TFlags.Disabled">
-            <summary>
-            The trigger is temporarily disabled.
             </summary>
         </member>
         <member name="T:Au.Util.IconsAsync">
@@ -9070,7 +9125,7 @@
         </member>
         <member name="T:Au.Util.LibSharedMemory">
             <summary>
-            Memory shared by all appdomains and by other related processes.
+            Memory shared by all processes using this library.
             </summary>
         </member>
         <member name="F:Au.Util.LibSharedMemory.Size">
@@ -13213,6 +13268,17 @@
             Returns true if this string matches PCRE regular expression <paramref name="rx"/>.
             Gets whole match or some group, as string.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.MatchS(System.String,System.String@,System.Int32,Au.Types.RXMore)"/>.
+            Examples in <see cref="T:Au.Regex_"/> class help.
+            </summary>
+            <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <paramref name="group"/>.</exception>
+            <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
+        </member>
+        <member name="M:Au.String_.RegexMatch_(System.String,System.String,System.Int32,Au.Types.RXGroup@,Au.Types.RXFlags,Au.Types.RXMore)">
+            <summary>
+            Returns true if this string matches PCRE regular expression <paramref name="rx"/>.
+            Gets whole match or some group, as index and length.
+            Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.MatchG(System.String,Au.Types.RXGroup@,System.Int32,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
             </summary>
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>

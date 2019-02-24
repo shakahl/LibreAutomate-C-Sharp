@@ -58,35 +58,30 @@ namespace Au.Triggers
 			/// </summary>
 			DontReleaseMod = 16,
 
-			/// <summary>
-			/// The trigger is temporarily disabled.
-			/// </summary>
-			Disabled = 128,
-
 			//TODO: this enum is copied from HotkeyTriggers without changed. Review etc.
 		}
 
 		enum ESubtype : byte { Click, Wheel, Edge, Move }
 
-		class _TriggerEtc : TriggerBase
+		class _TriggerEtc : Trigger
 		{
-			public readonly TFlags flags;
+			internal readonly TFlags flags;
 			string _shortString;
 
-			public _TriggerEtc(Triggers triggers, Action<MouseTriggerArgs> action, TFlags flags) : base(triggers, action, true)
+			internal _TriggerEtc(Triggers triggers, Action<MouseTriggerArgs> action, TFlags flags) : base(triggers, action, true)
 			{
 				this.flags = flags;
 			}
 
-			public override void Run(TriggerArgs args) => RunT(args as MouseTriggerArgs);
+			internal override void Run(TriggerArgs args) => RunT(args as MouseTriggerArgs);
 
-			public override string TypeString() => "Mouse";
+			internal override string TypeString() => "Mouse";
 
-			public override string ShortString() => _shortString; //TODO
+			internal override string ShortString() => _shortString; //TODO
 		}
 
 		Triggers _triggers;
-		Dictionary<int, TriggerBase> _d = new Dictionary<int, TriggerBase>();
+		Dictionary<int, Trigger> _d = new Dictionary<int, Trigger>();
 
 		internal MouseTriggers(Triggers triggers)
 		{
@@ -176,9 +171,9 @@ namespace Au.Triggers
 					if(subtype == ESubtype.Click || subtype == ESubtype.Wheel) thc.UseWndFromPoint(k.pt);
 					MouseTriggerArgs args = null;
 					for(; v != null; v = v.next) {
+						if(v.DisabledThisOrAll) continue;
 						var x = v as _TriggerEtc;
-						if(0!=(x.flags&TFlags.Disabled)) continue;
-						if(args == null) thc.args = args = new MouseTriggerArgs(thc.w, mod); //may need for scope callbacks too
+						if(args == null) thc.args = args = new MouseTriggerArgs(v, thc.w, mod); //may need for scope callbacks too
 						args.Flags = x.flags;
 						if(!x.MatchScope(thc)) continue;
 						thc.trigger = v;
@@ -197,7 +192,8 @@ namespace Au.Triggers
 		public Wnd Window { get; }
 		public KMod Mod { get; }
 		public MouseTriggers.TFlags Flags { get; internal set; }
-		public MouseTriggerArgs(Wnd w, KMod mod)
+
+		internal MouseTriggerArgs(Trigger trigger, Wnd w, KMod mod) : base(trigger)
 		{
 			Window = w; Mod = mod;
 		}

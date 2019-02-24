@@ -628,6 +628,11 @@
             <param name="flags"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
+        <member name="M:Au.Controls.SciText._Pos(System.Int32,System.Boolean)">
+            <summary>
+            => utf16 ? CountBytesFromChars(pos) : pos;
+            </summary>
+        </member>
         <member name="M:Au.Controls.SciText.CountBytesFromChars(System.Int32)">
             <summary>
             Converts UTF-16 position to UTF-8 position.
@@ -714,11 +719,12 @@
             The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciText.LineIndexFromPosition(System.Int32)">
+        <member name="M:Au.Controls.SciText.LineIndexFromPosition(System.Int32,System.Boolean)">
             <summary>
-            Gets line index from character position (UTF-8 bytes).
+            Gets line index from character position (UTF-8 bytes by default).
             </summary>
             <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
+            <param name="utf16"></param>
         </member>
         <member name="M:Au.Controls.SciText.LineStart(System.Int32)">
             <summary>

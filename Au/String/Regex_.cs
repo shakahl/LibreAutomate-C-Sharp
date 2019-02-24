@@ -210,16 +210,13 @@ namespace Au
 		/// Print(x.FindAllS(s));
 		/// ]]></code>
 		/// </example>
-		public RXCalloutFunc Callout
-		{
-			set
-			{
+		public RXCalloutFunc Callout {
+			set {
 				lock(this) {
 					if(value == null) {
 						_pcreCallout = null;
 					} else {
-						_pcreCallout = (void* calloutBlock, void* param) =>
-						{
+						_pcreCallout = (void* calloutBlock, void* param) => {
 							var b = new RXCalloutData(calloutBlock);
 							value(b);
 							return b.Result;
@@ -1033,10 +1030,8 @@ namespace Au
 
 		//Calls pcre2_pattern_info(ALLOPTIONS), which returns flags passed to the ctor and possibly modified by (*OPTION) and possibly added UTF if contains non-ASCII characters.
 		//Actually RXFlags is long, where the high 32 bits is extended options. This func gets only the main options (the low 32 bits).
-		RXFlags _InfoAllOptions
-		{
-			get
-			{
+		RXFlags _InfoAllOptions {
+			get {
 				RXFlags R;
 				Cpp.pcre2_pattern_info(_CodeHR, Cpp.PCRE2_INFO_.ALLOPTIONS, &R);
 				return R;
@@ -1090,6 +1085,21 @@ namespace Au
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.MatchS(s, out result, group, more);
+		}
+
+		/// <summary>
+		/// Returns true if this string matches PCRE regular expression <paramref name="rx"/>.
+		/// Gets whole match or some group, as index and length.
+		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.MatchG(string, out RXGroup, int, RXMore)"/>.
+		/// Examples in <see cref="Regex_"/> class help.
+		/// </summary>
+		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="group"/>.</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
+		public static bool RegexMatch_(this string s, string rx, int group, out RXGroup result, RXFlags flags = 0, RXMore more = null)
+		{
+			var x = _cache.AddOrGet(rx, flags);
+			return x.MatchG(s, out result, group, more);
 		}
 
 		/// <summary>

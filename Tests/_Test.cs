@@ -2283,7 +2283,6 @@ a1,-8";
 #if true
 			//Thread_.Start(() => { for(; ; ) { 1.s(); GC.Collect(); } });
 
-
 			//Triggers.Of().
 			//TestWndGroup();
 			//TestMulticastDelegate();

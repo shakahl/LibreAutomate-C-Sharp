@@ -81,10 +81,10 @@
     <Compile Include="Triggers\Triggers^hooks.cs" />
     <Compile Include="Triggers\Triggers^actions.cs" />
     <Compile Include="Triggers\Trigger.cs" />
-    <Compile Include="Triggers\Types\Tr autotext.cs" />
-    <Compile Include="Triggers\Types\Tr hotkey.cs" />
-    <Compile Include="Triggers\Types\Tr mouse.cs" />
-    <Compile Include="Triggers\Types\Tr window.cs" />
+    <Compile Include="Triggers\Types\t-autotext.cs" />
+    <Compile Include="Triggers\Types\t-hotkey.cs" />
+    <Compile Include="Triggers\Types\t-mouse.cs" />
+    <Compile Include="Triggers\Types\t-window.cs" />
     <Compile Include="Util\IconsAsync.cs" />
     <Compile Include="Files, data, system\Thread_.cs" />
     <Compile Include="Input\BlockInput.cs" />
