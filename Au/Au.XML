@@ -889,58 +889,6 @@
         <member name="T:Au.Types.Native">
             <summary>
             Windows API types and constants used with public functions (parameters etc) of this library.
-            Also several helper functions.
-            </summary>
-        </member>
-        <member name="M:Au.Types.Native.ClearError">
-            <summary>
-            Calls API <msdn>SetLastError</msdn>(0), which clears the Windows API error code of this thread.
-            Need it before calling some functions if you want to use <see cref="M:Au.Types.Native.GetError"/> or <see cref="M:Au.Types.Native.GetErrorMessage"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.Native.SetError(System.Int32)">
-            <summary>
-            Calls API <msdn>SetLastError</msdn>, which sets the Windows API error code of this thread.
-            </summary>
-        </member>
-        <member name="M:Au.Types.Native.GetError">
-             <summary>
-             Gets the Windows API error code of this thread.
-             Calls <see cref="M:System.Runtime.InteropServices.Marshal.GetLastWin32Error"/>.
-             </summary>
-             <remarks>
-             Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable. But only if the API declaration's DllImport attribute has SetLastError = true.
-             Some functions of this library simply call these API functions and don't throw exception when API fail. For example, most Wnd propery-get functions.
-             When failed, they return false/0/null/empty. Then you can call <b>Native.GetError</b> to get the error code. Also you can use <see cref="M:Au.Types.Native.GetErrorMessage"/>.
-             
-             Most of these functions set the code only when failed, and don't clear old error code when succeeded. Therefore may need to call <see cref="M:Au.Types.Native.ClearError"/> before.
-            
-             Windows API error code definitions and documentation are not included in this library. You can look for them in API function documentation on the internet.
-             </remarks>
-             <example>
-             <code><![CDATA[
-             Wnd w = Wnd.Find("Notepag");
-             //if(w.Is0) return; //assume you don't use this
-             Native.ClearError();
-             bool enabled = w.IsEnabled; //returns true if enabled, false if disabled or failed
-             int e = Native.GetError();
-             if(e != 0) { Print(e, Native.GetErrorMessage(e)); return; } //1400, Invalid window handle
-             Print(enabled);
-             ]]></code>
-             </example>
-        </member>
-        <member name="M:Au.Types.Native.GetErrorMessage">
-            <summary>
-            Gets the text message of the Windows API error code of this thread.
-            Returns null if the code is 0.
-            The string always ends with ".".
-            </summary>
-        </member>
-        <member name="M:Au.Types.Native.GetErrorMessage(System.Int32)">
-            <summary>
-            Gets the text message of a Windows API error code.
-            Returns null if errorCode is 0.
-            The string always ends with ".".
             </summary>
         </member>
         <member name="T:Au.Types.Native.MSG">
@@ -1069,16 +1017,16 @@
         <member name="F:Au.Types.Native.GCL.CBCLSEXTRA">
             <exclude />
         </member>
-        <member name="T:Au.Types.Native.WS">
-            <summary><msdn>CreateWindowEx</msdn></summary>
-            <tocexclude />
-        </member>
-        <member name="T:Au.Types.Native.WS_EX">
-            <summary><msdn>CreateWindowEx</msdn></summary>
-            <tocexclude />
-        </member>
         <member name="T:Au.Types.Native.SMTO">
             <summary><msdn>SendMessageTimeout</msdn></summary>
+            <tocexclude />
+        </member>
+        <member name="T:Au.Types.WS">
+            <summary><msdn>CreateWindowEx</msdn></summary>
+            <tocexclude />
+        </member>
+        <member name="T:Au.Types.WS_EX">
+            <summary><msdn>CreateWindowEx</msdn></summary>
             <tocexclude />
         </member>
         <member name="T:Au.Types.KMod">
@@ -2643,6 +2591,15 @@
             </summary>
             <param name="e"></param>
         </member>
+        <member name="P:Au.Types.AuScript.Triggers">
+            <summary>
+            Gets or sets an <see cref="T:Au.Triggers.AuTriggers"/> instance, as a field of this class.
+            </summary>
+            <remarks>
+            This property can be used in automation scripts to avoid creating an <b>AuTriggers</b> variable explicitly. The returned value is a field of this class. The <b>AuTriggers</b> object is auto-created when callig this property first time or after setting it = null.
+            In automation scripts this property is available because this class is the base of the Script class. In other classes need to create an <b>AuTriggers</b> variable explicitly. In scripts you also can create explicitly if you like, for example to have more than one instance.
+            </remarks>
+        </member>
         <member name="T:Au.Types.HookData">
             <summary>
             Contains types of hook data for hook procedures installed by <see cref="T:Au.Util.WinHook"/> and <see cref="T:Au.Util.AccHook"/>.
@@ -2995,10 +2952,10 @@
         <member name="F:Au.Types.HookData.AccHookData.hook">
             <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
         </member>
-        <member name="F:Au.Types.HookData.AccHookData.aEvent">
+        <member name="F:Au.Types.HookData.AccHookData.wnd">
             <summary><msdn>WinEventProc</msdn></summary>
         </member>
-        <member name="F:Au.Types.HookData.AccHookData.wnd">
+        <member name="F:Au.Types.HookData.AccHookData.aEvent">
             <summary><msdn>WinEventProc</msdn></summary>
         </member>
         <member name="F:Au.Types.HookData.AccHookData.idObject">
@@ -3014,7 +2971,7 @@
             <summary><msdn>WinEventProc</msdn></summary>
         </member>
         <member name="M:Au.Types.HookData.AccHookData.GetAcc">
-            <inheritdoc cref="M:Au.Acc.FromEvent(Au.Wnd,System.Int32,System.Int32)"/>
+            <inheritdoc cref="M:Au.Acc.FromEvent(Au.Wnd,Au.Types.AccOBJID,System.Int32)"/>
         </member>
         <member name="T:Au.Types.NamespaceDoc">
             <summary>
@@ -3416,14 +3373,14 @@
         </member>
         <member name="M:Au.Types.AuException.#ctor(System.Int32)">
             <summary>
-            Sets Message = "Failed. " + Native.GetErrorMessage(winApiErrorCode).
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : Native.GetError().
+            Sets Message = "Failed. " + WinError.MessageFor(winApiErrorCode).
+            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : WinError.Code.
             </summary>
         </member>
         <member name="M:Au.Types.AuException.#ctor(System.Int32,System.String)">
             <summary>
-            Sets Message = message + " " + Native.GetErrorMessage(winApiErrorCode).
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : Native.GetError().
+            Sets Message = message + " " + WinError.MessageFor(winApiErrorCode).
+            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : WinError.Code.
             </summary>
         </member>
         <member name="M:Au.Types.AuException.#ctor(System.String,System.Exception)">
@@ -3434,8 +3391,8 @@
         </member>
         <member name="M:Au.Types.AuException.#ctor(System.Int32,System.String,System.Exception)">
             <summary>
-            Sets Message = message + " " + Native.GetErrorMessage(winApiErrorCode) + "\r\n\t" + innerException.Message.
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : Native.GetError().
+            Sets Message = message + " " + WinError.MessageFor(winApiErrorCode) + "\r\n\t" + innerException.Message.
+            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : WinError.Code.
             </summary>
         </member>
         <member name="P:Au.Types.AuException.NativeErrorCode">
@@ -3454,7 +3411,7 @@
             If it starts with "*", replaces the "*" with "Failed to ".
             If it ends with "*", replaces the "*" with commonPostfix if it is not empty.
             If then the message does not end with ".", appends ".".
-            If appendMessage is null, uses Native.GetErrorMessage(NativeErrorCode) if NativeErrorCode not 0.
+            If appendMessage is null, uses WinError.MessageFor(NativeErrorCode) if NativeErrorCode not 0.
             If then appendMessage is not empty, appends " " and appendMessage.
             Also appends InnerException.Message in new tab-indented line if InnerException is not null.
             </summary>
@@ -3505,13 +3462,13 @@
         </member>
         <member name="M:Au.Types.WndException.#ctor(Au.Wnd,System.Int32)">
             <summary>
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? Native.GetError() : ERROR_INVALID_WINDOW_HANDLE).
+            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? WinError.Code : ERROR_INVALID_WINDOW_HANDLE).
             Sets Message = "Failed.".
             </summary>
         </member>
         <member name="M:Au.Types.WndException.#ctor(Au.Wnd,System.Int32,System.String)">
             <summary>
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? Native.GetError() : ERROR_INVALID_WINDOW_HANDLE).
+            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? WinError.Code : ERROR_INVALID_WINDOW_HANDLE).
             </summary>
         </member>
         <member name="M:Au.Types.WndException.#ctor(Au.Wnd,System.String,System.Exception)">
@@ -3521,7 +3478,7 @@
         </member>
         <member name="M:Au.Types.WndException.#ctor(Au.Wnd,System.Int32,System.String,System.Exception)">
             <summary>
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? Native.GetError() : ERROR_INVALID_WINDOW_HANDLE).
+            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? WinError.Code : ERROR_INVALID_WINDOW_HANDLE).
             </summary>
         </member>
         <member name="P:Au.Types.WndException.Window">
@@ -4612,7 +4569,7 @@
             Calls API <msdn>GetProp</msdn> and returns its return value.
             </summary>
             <param name="name">Property name.</param>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="P:Au.Types.WProp.Item(System.UInt16)">
             <summary>
@@ -4632,7 +4589,7 @@
             <param name="name">Property name.</param>
             <param name="value">Property value.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             
             Later call <see cref="M:Au.Types.WProp.Remove(System.String)"/> to remove the property. If you use many unique property names and don't remove the properties, the property name strings can fill the global atom table which is of a fixed size (about 48000) and which is used by all processes for various purposes.
             </remarks>
@@ -4654,7 +4611,7 @@
             Calls API <msdn>RemoveProp</msdn> and returns its return value.
             </summary>
             <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Types.WProp.Remove(System.UInt16)">
             <summary>
@@ -4669,7 +4626,7 @@
             Uses API <msdn>EnumPropsEx</msdn>.
             </summary>
             <remarks>
-            Returns 0-length list if fails. Fails if invalid window or access denied (<see cref="T:Au.Uac">UAC</see>). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns 0-length list if fails. Fails if invalid window or access denied (<see cref="T:Au.Uac">UAC</see>). Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="M:Au.Types.WProp.ToString">
@@ -4771,9 +4728,10 @@
         <member name="P:Au.Types.WFCache.CacheName">
             <summary>
             Cache window name.
+            Default: false.
             </summary>
             <remarks>
-            Should be true if window name can be changed while this variable is used. Window class and program are always cached because cannot be changed.
+            Window name is not cached by default because can be changed. Window class and program are always cached because cannot be changed.
             </remarks>
         </member>
         <member name="M:Au.Types.WFCache.Clear(System.Boolean)">
@@ -4839,7 +4797,7 @@
         <member name="F:Au.Types.FAFlags.DontThrow">
             <summary>
             If failed, return false and don't throw exception.
-            Then, if you need error info, you can use <see cref="M:Au.Types.Native.GetError"/>. If the file/directory does not exist, it will return ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND or ERROR_NOT_READY.
+            Then, if you need error info, you can use <see cref="P:Au.WinError.Code"/>. If the file/directory does not exist, it will return ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND or ERROR_NOT_READY.
             If failed and the native error code is ERROR_ACCESS_DENIED or ERROR_SHARING_VIOLATION, the returned attributes will be (FileAttributes)(-1). The file probably exists but is protected so that this process cannot access and use it. Else attributes will be 0.
             </summary>
         </member>
@@ -5111,7 +5069,7 @@
             
             An Acc instance holds an AO COM pointer (<msdn>IAccessible</msdn>) and a simple element id (int). Most Acc functions wrap IAccessible interface functions or/and related API.
             
-            Acc functions that get properties don't throw exception when the wrapped IAccessible/etc function failed (returned an error code of HRESULT type). Then they return "" (string properties), 0, false, null or empty collection, dependin on return type. Applications implement AOs differently, often with bugs, and their IAccessible interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These Acc functions also set the last error code of this thread = the return value (HRESULT) of the IAccessible function, and callers can use <see cref="M:Au.Types.Native.GetError"/> to get it. If Native.GetError returns 1 (S_FALSE), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
+            Acc functions that get properties don't throw exception when the wrapped IAccessible/etc function failed (returned an error code of HRESULT type). Then they return "" (string properties), 0, false, null or empty collection, dependin on return type. Applications implement AOs differently, often with bugs, and their IAccessible interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These Acc functions also set the last error code of this thread = the return value (HRESULT) of the IAccessible function, and callers can use <see cref="P:Au.WinError.Code"/> to get it. If WinError.Code returns 1 (S_FALSE), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
             
             You can dispose Acc variables to release the COM object, but it is not necessary (GC will do it later).
             
@@ -5214,7 +5172,7 @@
             Uses API <msdn>WindowFromAccessibleObject</msdn>.
             </summary>
             <remarks>
-            Returns default(Wnd) if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns default(Wnd) if failed. Supports <see cref="P:Au.WinError.Code"/>.
             All objects must support this property, but some have bugs and can fail (return default(Wnd)) or return a wrong window.
             </remarks>
         </member>
@@ -5224,7 +5182,7 @@
             Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
             </summary>
             <remarks>
-            Returns default(Wnd) if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns default(Wnd) if failed. Supports <see cref="P:Au.WinError.Code"/>.
             All objects must support this property, but some have bugs and can return default(Wnd).
             </remarks>
         </member>
@@ -5234,7 +5192,7 @@
             </summary>
             <remarks>
             Calls <see cref="M:Au.Acc.GetRect(Au.Types.RECT@)"/>.
-            Returns empty rectangle if failed or this property is unavailable. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns empty rectangle if failed or this property is unavailable. Supports <see cref="P:Au.WinError.Code"/>.
             Most but not all objects support this property.
             </remarks>
         </member>
@@ -5245,7 +5203,7 @@
             </summary>
             <param name="r">Receives object rectangle in screen coordinates.</param>
             <remarks>
-            Returns false if failed or this property is unavailable. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if failed or this property is unavailable. Supports <see cref="P:Au.WinError.Code"/>.
             Most but not all objects support this property.
             </remarks>
         </member>
@@ -5257,7 +5215,7 @@
             <param name="r">Receives object rectangle in w client area coordinates.</param>
             <param name="w">Window or control.</param>
             <remarks>
-            Returns false if failed or this property is unavailable. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if failed or this property is unavailable. Supports <see cref="P:Au.WinError.Code"/>.
             Most but not all objects support this property.
             </remarks>
         </member>
@@ -5268,7 +5226,7 @@
             </summary>
             <remarks>
             Most objects have a standard role, as enum <see cref="T:Au.Types.AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
-            Returns 0 if role is string or if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns 0 if role is string or if failed. Supports <see cref="P:Au.WinError.Code"/>.
             All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
             </remarks>
         </member>
@@ -5280,7 +5238,7 @@
             <remarks>
             Most objects have a standard role, as enum <see cref="T:Au.Types.AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
             For standard roles this function returns enum <see cref="T:Au.Types.AccROLE"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
-            Returns "" if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns "" if failed. Supports <see cref="P:Au.WinError.Code"/>.
             All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
             </remarks>
         </member>
@@ -5290,7 +5248,7 @@
             Uses <msdn>IAccessible.get_accState</msdn>.
             </summary>
             <remarks>
-            Returns 0 if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns 0 if failed. Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -5345,7 +5303,7 @@
             </summary>
             <remarks>
             Object name usually is its read-only text (eg button text, link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the object.
-            Returns "" if name is unavailable or if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns "" if name is unavailable or if failed. Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="M:Au.Acc.LibNameOfWindow(Au.Wnd)">
@@ -5362,7 +5320,7 @@
             <exception cref="T:Au.Types.AuException">Failed to set value.</exception>
             <remarks>
             Object value usually is its editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the object reliably.
-            The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="P:Au.WinError.Code"/>.
             Most objects don't support 'set'.
             </remarks>
         </member>
@@ -5372,7 +5330,7 @@
             Uses <msdn>IAccessible.get_accDescription</msdn>.
             </summary>
             <remarks>
-            Returns "" if this property is unavailable or if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns "" if this property is unavailable or if failed. Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Acc.Help">
@@ -5381,7 +5339,7 @@
             Uses <msdn>IAccessible.get_accHelp</msdn>.
             </summary>
             <remarks>
-            Returns "" if this property is unavailable or if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns "" if this property is unavailable or if failed. Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Acc.UiaId">
@@ -5390,7 +5348,7 @@
             </summary>
             <remarks>
             Only objects found with flag <see cref="F:Au.Types.AFFlags.UIA"/> can have this property.
-            Returns "" if this property is unavailable or if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns "" if this property is unavailable or if failed. Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Acc.KeyboardShortcut">
@@ -5399,7 +5357,7 @@
             Uses <msdn>IAccessible.get_accKeyboardShortcut</msdn>.
             </summary>
             <remarks>
-            Returns "" if this property is unavailable or if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns "" if this property is unavailable or if failed. Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Acc.DefaultAction">
@@ -5408,7 +5366,7 @@
             Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
             </summary>
             <remarks>
-            Returns "" if this property is unavailable or if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns "" if this property is unavailable or if failed. Supports <see cref="P:Au.WinError.Code"/>.
             If this is a Java accessible object, returns all actions that can be used with <see cref="M:Au.Acc.DoJavaAction(System.String)"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="M:Au.Acc.DoAction"/>.
             </remarks>
         </member>
@@ -5506,7 +5464,7 @@
         <member name="P:Au.Acc.SelectedChildren">
             <summary>
             Gets selected direct child items.
-            Returns empty array if there are no selected items of if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns empty array if there are no selected items of if failed. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="P:Au.Acc.ChildCount">
@@ -5543,7 +5501,7 @@
             
             Normally this function is faster than calling multiple property functions, because it makes single remote procedure call. But not if this accessible object was found with flag <see cref="F:Au.Types.AFFlags.NotInProc"/> etc.
             
-            Returns false if fails, for example when the object's window is closed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if fails, for example when the object's window is closed. Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="M:Au.Acc.Navigate(System.String,System.Double)">
@@ -5583,7 +5541,7 @@
             </summary>
             <param name="outer">If true, gets outer HTML (with tag and attributes), else inner HTML.</param>
             <remarks>
-            Returns "" if this is not a HTML element or if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns "" if this is not a HTML element or if failed. Supports <see cref="P:Au.WinError.Code"/>.
             Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
             If this is the root of web page (role DOCUMENT or PANE), gets web page body HTML.
             </remarks>
@@ -5594,7 +5552,7 @@
             </summary>
             <param name="name">Attribute name, for example "href", "id", "class". Full, case-sensitive.</param>
             <remarks>
-            Returns "" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns "" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="P:Au.WinError.Code"/>.
             Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
             </remarks>
             <exception cref="T:System.ArgumentException">name is null/""/invalid.</exception>
@@ -5604,7 +5562,7 @@
             Gets all HTML attributes.
             </summary>
             <remarks>
-            Returns empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="P:Au.WinError.Code"/>.
             Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
             </remarks>
         </member>
@@ -6070,10 +6028,10 @@
             More info: <see cref="F:Au.Types.AFFlags.UIA"/>.
             </param>
         </member>
-        <member name="M:Au.Acc.FromEvent(Au.Wnd,System.Int32,System.Int32)">
+        <member name="M:Au.Acc.FromEvent(Au.Wnd,Au.Types.AccOBJID,System.Int32)">
             <summary>
             Gets the accessible object that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="T:Au.Util.AccHook"/>.
-            Returns null if failed. Suports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns null if failed. Suports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <param name="w"></param>
             <param name="idObject"></param>
@@ -6431,7 +6389,7 @@
         <member name="M:Au.Process_.ProcessIdFromHandle(System.IntPtr)">
             <summary>
             Gets process id from handle.
-            Returns 0 if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns 0 if failed. Supports <see cref="P:Au.WinError.Code"/>.
             Calls API <msdn>GetProcessId</msdn>.
             </summary>
             <param name="processHandle">Process handle.</param>
@@ -6439,7 +6397,7 @@
         <member name="M:Au.Process_.GetSessionId(System.Int32)">
             <summary>
             Gets user session id of process.
-            Returns -1 if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns -1 if failed. Supports <see cref="P:Au.WinError.Code"/>.
             Calls API <msdn>ProcessIdToSessionId</msdn>.
             </summary>
             <param name="processId">Process id.</param>
@@ -6980,7 +6938,7 @@
             Triggers.
             </summary>
         </member>
-        <member name="P:Au.Triggers.Triggers.Options">
+        <member name="P:Au.Triggers.AuTriggers.Options">
             <summary>
             Allows to set some options for multiple triggers and their actions.
             </summary>
@@ -6988,26 +6946,41 @@
             More info and examples: <see cref="T:Au.Triggers.TriggerOptions"/>.
             </remarks>
         </member>
-        <member name="P:Au.Triggers.Triggers.LastAdded">
+        <member name="P:Au.Triggers.AuTriggers.Last">
             <summary>
             The last added trigger.
             </summary>
+            <example>
+            <code><![CDATA[
+            Triggers.Last.Hotkey.EnabledAlways = true;
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Au.Triggers.Triggers.Stop">
+        <member name="M:Au.Triggers.AuTriggers.Stop">
             <summary>
-            Stops watching for trigger events and causes <see cref="M:Au.Triggers.Triggers.Run"/> to return.
+            Stops watching for trigger events and causes <see cref="M:Au.Triggers.AuTriggers.Run"/> to return.
             </summary>
             <remarks>
             Does not abort threads of trigger actions that are still running.
-            Example: <see cref="P:Au.Triggers.Triggers.Disabled"/>.
+            Example: <see cref="P:Au.Triggers.AuTriggers.Disabled"/>.
             </remarks>
         </member>
-        <member name="P:Au.Triggers.Triggers.Disabled">
+        <member name="P:Au.Triggers.AuTriggers.LibRunning">
             <summary>
-            Gets or sets whether triggers of this <see cref="T:Au.Triggers.Triggers"/> instance are disabled.
+            True if executing <see cref="M:Au.Triggers.AuTriggers.Run"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Triggers.AuTriggers.LibThrowIfRunning">
+            <summary>
+            Throws InvalidOperationException if executing <see cref="M:Au.Triggers.AuTriggers.Run"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Triggers.AuTriggers.Disabled">
+            <summary>
+            Gets or sets whether triggers of this <see cref="T:Au.Triggers.AuTriggers"/> instance are disabled.
             </summary>
             <remarks>
-            Does not depend on <see cref="P:Au.Triggers.TriggersEverywhere.Disabled"/>.
+            Does not depend on <see cref="P:Au.Triggers.AuTriggers.DisabledEverywhere"/>.
             Does not end/pause threads of trigger actions.
             </remarks>
             <seealso cref="P:Au.Triggers.TriggerScopes.EnabledAlways"/>
@@ -7020,17 +6993,12 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Triggers.Triggers.Clear">
+        <member name="P:Au.Triggers.AuTriggers.DisabledEverywhere">
             <summary>
-            Removes all added triggers. Resets <b>Triggers.Of</b> and <b>Triggers.Options</b>.
+            true if triggers are disabled in all proceses that use this library in this user session.
             </summary>
-            <remarks>
-            Rarely used.
-            </remarks>
-            <exception cref="T:System.InvalidOperationException">
-            Called from another thread. For example from a trigger action.
-            Or called while in <see cref="M:Au.Triggers.Triggers.Run"/>. Call <see cref="M:Au.Triggers.Triggers.Stop"/> at first; then call this function after <b>Run</b> returns.
-            </exception>
+            <seealso cref="P:Au.Triggers.AuTriggers.Disabled"/>
+            <seealso cref="P:Au.Triggers.TriggerScopes.EnabledAlways"/>
         </member>
         <member name="P:Au.Triggers.ITriggers.HasTriggers">
             <summary>
@@ -7063,18 +7031,6 @@
             Tells to get window (for scope) from the specified point. If not called, will use the active window. In any case, gets window on demand.
             </summary>
         </member>
-        <member name="T:Au.Triggers.TriggersEverywhere">
-            <summary>
-            Gets info common to triggers of all proceses that use this library in this user session.
-            </summary>
-        </member>
-        <member name="P:Au.Triggers.TriggersEverywhere.Disabled">
-            <summary>
-            true if triggers are disabled in all proceses that use this library in this user session.
-            </summary>
-            <seealso cref="P:Au.Triggers.Triggers.Disabled"/>
-            <seealso cref="P:Au.Triggers.TriggerScopes.EnabledAlways"/>
-        </member>
         <member name="T:Au.Triggers.HooksServer">
             <summary>
             Low-level keyboard and mouse hooks in editor process or task process.
@@ -7096,7 +7052,7 @@
             Allows to set some options for multiple triggers and their actions.
             </summary>
             <remarks>
-            You set options through a thread-static property <see cref="P:Au.Triggers.Triggers.Options"/>.
+            You set options through a thread-static property <see cref="P:Au.Triggers.AuTriggers.Options"/>.
             Changed options are applied to all triggers/actions added afterwards in this thread.
             </remarks>
             <example>
@@ -7123,7 +7079,7 @@
             There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => AuTask.RunWait("Other Script");</c>.
             There is no "temporarily pause old running action to run new action" feature. As well as for scripts.
             The thread has <see cref="F:System.Threading.ApartmentState.STA"/>.
-            The <b>RunActionInX</b> functions are mutually exclusive. Only the last called function is active. If none called, it is the same as called this function without arguments.
+            The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active. If none called, it is the same as called this function without arguments.
             </remarks>
         </member>
         <member name="M:Au.Triggers.TriggerOptions.RunActionInNewThread(System.Boolean)">
@@ -7133,7 +7089,7 @@
             <remarks>
             Use if need to run actions simultaneously with other actions or other instances of self, especially if the action is long-running (maybe 5 s and more).
             The thread has <see cref="F:System.Threading.ApartmentState.STA"/>.
-            The <b>RunActionInX</b> functions are mutually exclusive. Only the last called function is active.
+            The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
             </remarks>
             <param name="singleInstance">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
         </member>
@@ -7144,7 +7100,7 @@
             <remarks>
             Use if need to run actions simultaneously with other actions or other instances of self, and the action is short-running (maybe less than 5 s) and don't need <see cref="F:System.Threading.ApartmentState.STA"/>.
             Thread pool threads have <see cref="F:System.Threading.ApartmentState.MTA"/>.
-            The <b>RunActionInX</b> functions are mutually exclusive. Only the last called function is active.
+            The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
             </remarks>
             <param name="singleInstance">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
         </member>
@@ -7170,55 +7126,41 @@
             ]]></code>
             </example>
         </member>
-        <member name="T:Au.Triggers.TOBeforeArgs">
+        <member name="T:Au.Triggers.TriggerOptions.BAArgs">
             <summary>
-            Arguments for <see cref="P:Au.Triggers.TriggerOptions.BeforeAction"/>.
-            Currently does not contain any properties.
+            Arguments for <see cref="P:Au.Triggers.TriggerOptions.BeforeAction"/> and <see cref="P:Au.Triggers.TriggerOptions.AfterAction"/>.
             </summary>
         </member>
-        <member name="T:Au.Triggers.TOAfterArgs">
+        <member name="P:Au.Triggers.TriggerOptions.BAArgs.Exception">
             <summary>
-            Arguments for <see cref="P:Au.Triggers.TriggerOptions.AfterAction"/>.
+            If action ended with an exception, the exception. Else null.
             </summary>
         </member>
-        <member name="P:Au.Triggers.TOAfterArgs.Exception">
+        <member name="M:Au.Triggers.Trigger.Run(Au.Triggers.TriggerArgs)">
             <summary>
-            If action ended with an exception, contains the exception. Else null.
-            </summary>
-        </member>
-        <member name="M:Au.Triggers.TOAfterArgs.#ctor(System.Exception)">
-            
-        </member>
-        <member name="M:Au.Triggers.TriggerBase.Run(Au.Triggers.TriggerArgs)">
-            <summary>
-            Called through TriggerActionThreads.Run in action thread.
+            Called through <see cref="M:Au.Triggers.TriggerActionThreads.Run(Au.Triggers.Trigger,Au.Triggers.TriggerArgs)"/> in action thread.
             Possibly runs later.
             </summary>
         </member>
-        <member name="M:Au.Triggers.TriggerBase.RunT``1(``0)">
+        <member name="M:Au.Triggers.Trigger.RunT``1(``0)">
             <summary>
-            Makes simpler to implement <see cref="M:Au.Triggers.TriggerBase.Run(Au.Triggers.TriggerArgs)"/>.
+            Makes simpler to implement <see cref="M:Au.Triggers.Trigger.Run(Au.Triggers.TriggerArgs)"/>.
             </summary>
         </member>
-        <member name="P:Au.Triggers.TriggerBase.Triggers">
-            <summary>
-            The <see cref="P:Au.Triggers.TriggerBase.Triggers"/> instance to which this trigger belongs.
-            </summary>
-        </member>
-        <member name="P:Au.Triggers.TriggerBase.Disabled">
+        <member name="P:Au.Triggers.Trigger.Disabled">
             <summary>
             Gets or sets whether this trigger is disabled.
-            Does not depend on <see cref="P:Au.Triggers.Triggers.Disabled"/>, <see cref="P:Au.Triggers.TriggersEverywhere.Disabled"/>, <see cref="P:Au.Triggers.TriggerBase.EnabledAlways"/>.
+            Does not depend on <see cref="P:Au.Triggers.AuTriggers.Disabled"/>, <see cref="P:Au.Triggers.AuTriggers.DisabledEverywhere"/>, <see cref="P:Au.Triggers.Trigger.EnabledAlways"/>.
             </summary>
         </member>
-        <member name="P:Au.Triggers.TriggerBase.DisabledThisOrAll">
+        <member name="P:Au.Triggers.Trigger.DisabledThisOrAll">
             <summary>
-            Returns true if <see cref="P:Au.Triggers.TriggerBase.Disabled"/>; also if <see cref="P:Au.Triggers.Triggers.Disabled"/> or <see cref="P:Au.Triggers.TriggersEverywhere.Disabled"/>, unless <see cref="P:Au.Triggers.TriggerBase.EnabledAlways"/>.
+            Returns true if <see cref="P:Au.Triggers.Trigger.Disabled"/>; also if <see cref="P:Au.Triggers.AuTriggers.Disabled"/> or <see cref="P:Au.Triggers.AuTriggers.DisabledEverywhere"/>, unless <see cref="P:Au.Triggers.Trigger.EnabledAlways"/>.
             </summary>
         </member>
-        <member name="P:Au.Triggers.TriggerBase.EnabledAlways">
+        <member name="P:Au.Triggers.Trigger.EnabledAlways">
             <summary>
-            Gets or sets whether this trigger ignores <see cref="P:Au.Triggers.Triggers.Disabled"/> and <see cref="P:Au.Triggers.TriggersEverywhere.Disabled"/>.
+            Gets or sets whether this trigger ignores <see cref="P:Au.Triggers.AuTriggers.Disabled"/> and <see cref="P:Au.Triggers.AuTriggers.DisabledEverywhere"/>.
             </summary>
             <remarks>
             When adding the trigger, this property is set to the value of <see cref="P:Au.Triggers.TriggerScopes.EnabledAlways"/> at that time.
@@ -7229,19 +7171,9 @@
             Base of trigger action argument classes of all trigger types.
             </summary>
         </member>
-        <member name="P:Au.Triggers.TriggerArgs.Trigger">
-            <summary>
-            The <see cref="P:Au.Triggers.TriggerArgs.Trigger"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Triggers.TriggerArgs.Triggers">
-            <summary>
-            The <see cref="P:Au.Triggers.TriggerArgs.Triggers"/> instance to which this trigger belongs.
-            </summary>
-        </member>
         <member name="P:Au.Triggers.TriggerScopes.EnabledAlways">
             <summary>
-            Triggers added afterwards don't depend on <see cref="P:Au.Triggers.Triggers.Disabled"/> and <see cref="P:Au.Triggers.TriggersEverywhere.Disabled"/>.
+            Triggers added afterwards don't depend on <see cref="P:Au.Triggers.AuTriggers.Disabled"/> and <see cref="P:Au.Triggers.AuTriggers.DisabledEverywhere"/>.
             </summary>
         </member>
         <member name="M:Au.Triggers.TriggerScope.Match(Au.Triggers.TriggerHookContext)">
@@ -7250,75 +7182,65 @@
             </summary>
             <param name="thc">This func uses the window handle (gets on demand) and WFCache.</param>
         </member>
-        <member name="T:Au.Triggers.TFuncArgs">
-            <summary>
-            <see cref="T:Au.Triggers.TFunc"/> arguments.
-            </summary>
-        </member>
-        <member name="P:Au.Triggers.TFuncArgs.Hotkey">
-            
-        </member>
-        <member name="P:Au.Triggers.TFuncArgs.Autotext">
-            
-        </member>
-        <member name="P:Au.Triggers.TFuncArgs.Mouse">
-            
-        </member>
-        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.Shared">
+        <member name="F:Au.Triggers.TKFlags.Shared">
             <summary>
             Allow other apps to receive the key too, as if it is not a hotkey.
             Without this flag, other apps receive only modifier keys.
             </summary>
         </member>
-        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.Up">
+        <member name="F:Au.Triggers.TKFlags.Up">
             <summary>
             Run the action when all hotkey keys (key and modifiers) are released.
             Without this flag, the action runs when the non-modifier key pressed down.
             </summary>
         </member>
-        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.ModLeft">
+        <member name="F:Au.Triggers.TKFlags.ModLeft">
             <summary>
             Run the action only when using left-side modifier keys.
             </summary>
         </member>
-        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.ModRight">
+        <member name="F:Au.Triggers.TKFlags.ModRight">
             <summary>
             Run the action only when using right-side modifier keys.
             </summary>
         </member>
-        <member name="F:Au.Triggers.HotkeyTriggers.TFlags.DontReleaseMod">
+        <member name="F:Au.Triggers.TKFlags.DontReleaseMod">
             <summary>
             Don't release modifier keys.
             Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="M:Au.Keyb.GetMod(Au.Types.KMod)"/> (and any such functions in any app) will not know that the key is physically pressed.
             </summary>
         </member>
-        <member name="F:Au.Triggers.MouseTriggers.TFlags.Shared">
+        <member name="F:Au.Triggers.TMFlags.Shared">
             <summary>
             Allow other apps to receive the key too, as if it is not a hotkey.
             Without this flag, other apps receive only modifier keys.
             </summary>
         </member>
-        <member name="F:Au.Triggers.MouseTriggers.TFlags.Up">
+        <member name="F:Au.Triggers.TMFlags.Up">
             <summary>
             Run the action when all hotkey keys (key and modifiers) are released.
             Without this flag, the action runs when the non-modifier key pressed down.
             </summary>
         </member>
-        <member name="F:Au.Triggers.MouseTriggers.TFlags.ModLeft">
+        <member name="F:Au.Triggers.TMFlags.ModLeft">
             <summary>
             Run the action only when using left-side modifier keys.
             </summary>
         </member>
-        <member name="F:Au.Triggers.MouseTriggers.TFlags.ModRight">
+        <member name="F:Au.Triggers.TMFlags.ModRight">
             <summary>
             Run the action only when using right-side modifier keys.
             </summary>
         </member>
-        <member name="F:Au.Triggers.MouseTriggers.TFlags.DontReleaseMod">
+        <member name="F:Au.Triggers.TMFlags.DontReleaseMod">
             <summary>
             Don't release modifier keys.
             Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="M:Au.Keyb.GetMod(Au.Types.KMod)"/> (and any such functions in any app) will not know that the key is physically pressed.
             </summary>
+        </member>
+        <member name="T:Au.Triggers.WindowTriggers.WinEvent">
+            <tocexclude />
+            <remarks>Infrastructure.</remarks>
         </member>
         <member name="T:Au.Util.IconsAsync">
             <summary>
@@ -7461,7 +7383,7 @@
         <member name="M:Au.Util.RegisterHotkey.Register(System.Int32,Au.Types.KHotkey,Au.Types.AnyWnd)">
             <summary>
             Registers a hotkey using API <msdn>RegisterHotKey</msdn>.
-            Returns false if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if fails. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <param name="id">Hotkey id. Must be 0 to 0xBFFF. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
             <param name="hotkey">Hotkey. Can be: string like "Ctrl+Shift+Alt+Win+K", tuple (KMod, KKey), enum KKey, enum Keys, struct KHotkey.</param>
@@ -7733,14 +7655,6 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
-        </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
         </member>
         <member name="T:Au.Util.ILReader">
             <summary>
@@ -8076,11 +7990,11 @@
         </member>
         <member name="M:Au.Util.WinHook.Keyboard(System.Func{Au.Types.HookData.Keyboard,System.Boolean})">
             <summary>
-            Installs a low-level keyboard hook (WH_KEYBOARD_LL).
+            Sets a low-level keyboard hook (WH_KEYBOARD_LL).
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
-            Hook procedure.
+            The hook procedure (function that handles hook events).
             Must return as soon as possible, or the system hangs and removes the hook.
             If returns true or calls <see cref="M:Au.Types.HookData.ReplyMessage(System.Boolean)"/>, the event is cancelled (not visible to apps and other hooks). Event data cannot be modified.
             </param>
@@ -8105,11 +8019,11 @@
         </member>
         <member name="M:Au.Util.WinHook.Mouse(System.Func{Au.Types.HookData.Mouse,System.Boolean})">
             <summary>
-            Installs a low-level mouse hook (WH_MOUSE_LL).
+            Sets a low-level mouse hook (WH_MOUSE_LL).
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
-            Hook procedure.
+            The hook procedure (function that handles hook events).
             Must return as soon as possible, or the system hangs and removes the hook.
             If returns true or calls <see cref="M:Au.Types.HookData.ReplyMessage(System.Boolean)"/>, the event is cancelled (not visible to apps and other hooks). Event data cannot be modified.
             </param>
@@ -8134,11 +8048,11 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadCbt(System.Func{Au.Types.HookData.ThreadCbt,System.Boolean},System.Int32)">
             <summary>
-            Installs a WH_CBT hook for a thread of this process.
+            Sets a WH_CBT hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
-            Hook procedure.
+            Hook procedure (function that handles hook events).
             Must return as soon as possible.
             If returns true, the event is cancelled. For some events you can modify some fields of event data.
             </param>
@@ -8186,11 +8100,11 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadGetMessage(System.Action{Au.Types.HookData.ThreadGetMessage},System.Int32)">
             <summary>
-            Installs a WH_GETMESSAGE hook for a thread of this process.
+            Sets a WH_GETMESSAGE hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
-            Hook procedure.
+            The hook procedure (function that handles hook events).
             Must return as soon as possible.
             The event cannot be cancelled. As a workaround, you can set msg->message=0. Also can modify other fields.
             </param>
@@ -8208,11 +8122,11 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadKeyboard(System.Func{Au.Types.HookData.ThreadKeyboard,System.Boolean},System.Int32)">
             <summary>
-            Installs a WH_GETMESSAGE hook for a thread of this process.
+            Sets a WH_GETMESSAGE hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
-            Hook procedure.
+            The hook procedure (function that handles hook events).
             Must return as soon as possible.
             If returns true, the event is cancelled.
             </param>
@@ -8231,11 +8145,11 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadMouse(System.Func{Au.Types.HookData.ThreadMouse,System.Boolean},System.Int32)">
             <summary>
-            Installs a WH_MOUSE hook for a thread of this process.
+            Sets a WH_MOUSE hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
-            Hook procedure.
+            The hook procedure (function that handles hook events).
             Must return as soon as possible.
             If returns true, the event is cancelled.
             </param>
@@ -8254,11 +8168,11 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadCallWndProc(System.Action{Au.Types.HookData.ThreadCallWndProc},System.Int32)">
             <summary>
-            Installs a WH_CALLWNDPROC hook for a thread of this process.
+            Sets a WH_CALLWNDPROC hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
-            Hook procedure.
+            The hook procedure (function that handles hook events).
             Must return as soon as possible.
             The event cannot be cancelled or modified.
             </param>
@@ -8278,11 +8192,11 @@
         </member>
         <member name="M:Au.Util.WinHook.ThreadCallWndProcRet(System.Action{Au.Types.HookData.ThreadCallWndProcRet},System.Int32)">
             <summary>
-            Installs a WH_CALLWNDPROCRET hook for a thread of this process.
+            Sets a WH_CALLWNDPROCRET hook for a thread of this process.
             See <msdn>SetWindowsHookEx</msdn>.
             </summary>
             <param name="hookProc">
-            Hook procedure.
+            The hook procedure (function that handles hook events).
             Must return as soon as possible.
             The event cannot be cancelled or modified.
             </param>
@@ -8302,7 +8216,7 @@
         </member>
         <member name="M:Au.Util.WinHook.#ctor(System.Int32,System.Delegate,System.Int32,System.String)">
             <summary>
-            Installs hook of the specified type.
+            Sets a hook of the specified type.
             This ctor is private, because our dispatcher hook procedure does not know how to call hookProc.
             </summary>
             <param name="hookType">One of WH_ constants that are used with API <msdn>SetWindowsHookEx</msdn>.</param>
@@ -8353,7 +8267,6 @@
             </remarks>
             <example>
             <code><![CDATA[
-            //using Au.Util;
             bool stop = false;
             using(new Au.Util.AccHook(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
             {
@@ -8372,17 +8285,46 @@
         </member>
         <member name="M:Au.Util.AccHook.#ctor(Au.Types.AccEVENT,Au.Types.AccEVENT,System.Action{Au.Types.HookData.AccHookData},System.Int32,System.Int32,Au.Types.AccHookFlags)">
             <summary>
-            Installs hook.
+            Sets a hook for an event or a range of events.
             Calls API <msdn>SetWinEventHook</msdn>.
             </summary>
-            <param name="eventMin">Specifies the event constant for the lowest event value in the range of events that are handled by the hook function. This parameter can be set to AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>.</param>
-            <param name="eventMax">Specifies the event constant for the highest event value in the range of events that are handled by the hook function. This parameter can be set to AccEVENT.MAX to indicate the highest possible event value. If 0, uses <paramref name="eventMin"/>.</param>
-            <param name="hookProc">Delegate of the hook procedure.</param>
-            <param name="idProcess">Specifies the id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
-            <param name="idThread">Specifies the native id of the thread from which the hook function receives events. If 0 - all threads.</param>
+            <param name="eventMin">The lowest event constant value in the range of events. Can be AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>.</param>
+            <param name="eventMax">The highest event constant value in the range of events. Can be AccEVENT.MAX to indicate the highest possible event value. If 0, uses <paramref name="eventMin"/>.</param>
+            <param name="hookProc">The hook procedure (function that handles hook events).</param>
+            <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
+            <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
             <param name="flags"></param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <example><inheritdoc cref="T:Au.Util.AccHook"/></example>
+        </member>
+        <member name="M:Au.Util.AccHook.#ctor(Au.Types.AccEVENT[],System.Action{Au.Types.HookData.AccHookData},System.Int32,System.Int32,Au.Types.AccHookFlags)">
+            <summary>
+            Sets a hook for multiple events.
+            Calls API <msdn>SetWinEventHook</msdn>.
+            </summary>
+            <param name="events">Events. Reference: <msdn>SetWinEventHook</msdn>. Elements with value 0 are ignored.</param>
+            <param name="hookProc">The hook procedure (function that handles hook events).</param>
+            <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
+            <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
+            <param name="flags"></param>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <example><inheritdoc cref="T:Au.Util.AccHook"/></example>
+        </member>
+        <member name="M:Au.Util.AccHook.Hook(Au.Types.AccEVENT,Au.Types.AccEVENT,System.Int32,System.Int32,Au.Types.AccHookFlags)">
+            <summary>
+            Sets hooks again after <see cref="M:Au.Util.AccHook.Unhook"/>.
+            </summary>
+            <remarks>
+            Parameters are the same as of the constructor, but values can be different.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.AccHook.Hook(Au.Types.AccEVENT[],System.Int32,System.Int32,Au.Types.AccHookFlags)">
+            <summary>
+            Sets hooks again after <see cref="M:Au.Util.AccHook.Unhook"/>.
+            </summary>
+            <remarks>
+            Parameters are the same as of the constructor, but values can be different.
+            </remarks>
         </member>
         <member name="M:Au.Util.AccHook.Unhook">
             <summary>
@@ -8980,12 +8922,11 @@
             <code><![CDATA[
             internal static unsafe string GetCachedString(char* p, int len)
             {
-            	lock(_cacheWR) {
-            		if(!_cacheWR.TryGetTarget(out var cache)) _cacheWR.SetTarget(cache = new StringCache());
-            		return cache.Add(p, len);
-            	}
+            	if(_cacheWR == null) _cacheWR = new WeakReference<StringCache>(null);
+            	if(!_cacheWR.TryGetTarget(out var cache)) _cacheWR.SetTarget(cache = new StringCache());
+            	return cache.Add(p, len);
             }
-            static WeakReference<StringCache> _cacheWR = new WeakReference<StringCache>(null);
+            [ThreadStatic] static WeakReference<StringCache> _cacheWR = new WeakReference<StringCache>(null);
             
             //When char[] is used as text buffer.
             internal static unsafe string GetCachedString(char[] a, int len)
@@ -9023,7 +8964,7 @@
         </member>
         <member name="M:Au.Util.StringCache.LibAdd(System.Char[],System.Int32)">
             <summary>
-            Gets string cached in a weak-referenced internal static LibStringCache object.
+            Gets string cached in a weak-referenced internal thread-static LibStringCache object.
             Locks and calls <see cref="M:Au.Util.StringCache.Add(System.Char*,System.Int32)"/>.
             </summary>
             <param name="a">Text buffer.</param>
@@ -9041,7 +8982,7 @@
         </member>
         <member name="M:Au.Util.StringCache.LibAdd(System.String,System.Int32,System.Int32)">
             <summary>
-            Gets substring of string s as a string cached in a weak-referenced internal static LibStringCache object.
+            Gets substring of string s as a string cached in a weak-referenced internal thread-static LibStringCache object.
             Locks and calls <see cref="M:Au.Util.StringCache.Add(System.Char*,System.Int32)"/>.
             </summary>
             <param name="s">The string containing the substring. Can be null/"" if other parameters are 0.</param>
@@ -9580,7 +9521,7 @@
         <member name="M:Au.Util.ModuleHandle_.GetFilePath(System.IntPtr)">
             <summary>
             Gets full path of dll or exe file from its native handle.
-            Returns null if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns null if fails. Supports <see cref="P:Au.WinError.Code"/>.
             Calls API <msdn>GetModuleFileName</msdn>.
             </summary>
         </member>
@@ -9730,13 +9671,13 @@
             <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value TIMER_MODIFY_STATE|SYNCHRONIZE allows to set and wait.</param>
             <exception cref="T:Au.Types.AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
             <param name="inheritHandle"></param>
-            <param name="noException">If fails, return null, don't throw exception. Supports <see cref="M:Au.Types.Native.GetError"/>.</param>
+            <param name="noException">If fails, return null, don't throw exception. Supports <see cref="P:Au.WinError.Code"/>.</param>
             <exception cref="T:Au.Types.AuException">Failed. For example, the timer does not exist.</exception>
         </member>
         <member name="M:Au.Util.WaitableTimer.Set(System.Int64,System.Int32)">
             <summary>
             Calls API <msdn>SetWaitableTimer</msdn>.
-            Returns false if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if fails. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <param name="dueTime">
             The time after which the state of the timer is to be set to signaled. It is relative time (from now).
@@ -9748,7 +9689,7 @@
         <member name="M:Au.Util.WaitableTimer.SetAbsolute(System.DateTime,System.Int32)">
             <summary>
             Calls API <msdn>SetWaitableTimer</msdn>.
-            Returns false if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if fails. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <param name="dueTime">The UTC date/time at which the state of the timer is to be set to signaled.</param>
             <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
@@ -9792,7 +9733,7 @@
             <summary>
             Opens process handle.
             Calls API OpenProcess.
-            Returns default if fails. Supports Native.GetError().
+            Returns default if fails. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <param name="processId">Process id.</param>
             <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
@@ -9801,7 +9742,7 @@
             <summary>
             Opens window's process handle.
             This overload is more powerful: if API OpenProcess fails, it tries API GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
-            Returns default if fails. Supports Native.GetError().
+            Returns default if fails. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <param name="w"></param>
             <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
@@ -9828,7 +9769,7 @@
         <member name="M:Au.Util.Security_.SetPrivilege(System.String,System.Boolean)">
             <summary>
             Enables or disables a privilege for this process.
-            Returns false if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if fails. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <param name="privilegeName"></param>
             <param name="enable"></param>
@@ -11522,6 +11463,56 @@
             ]]></code>
             </example>
         </member>
+        <member name="M:Au.WinError.Clear">
+            <summary>
+            Calls API <msdn>SetLastError</msdn>(0), which clears the Windows API last error code of this thread.
+            Need it before calling some functions if you want to use <see cref="P:Au.WinError.Code"/> or <see cref="P:Au.WinError.Message"/>.
+            The same as <c>WinError.Code = 0;</c>.
+            </summary>
+        </member>
+        <member name="P:Au.WinError.Code">
+             <summary>
+             Gets or sets the Windows API last error code of this thread.
+             </summary>
+             <remarks>
+             Calls <see cref="M:System.Runtime.InteropServices.Marshal.GetLastWin32Error"/> or API <msdn>SetLastError</msdn>.
+             
+             Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable. But only if the API declaration's DllImport attribute has SetLastError = true.
+             Some functions of this library simply call these API functions and don't throw exception when API fail. For example, most Wnd propery-get functions.
+             When failed, they return false/0/null/empty. Then you can call <b>WinError.Code</b> to get the error code. Also you can use <see cref="P:Au.WinError.Message"/>.
+             
+             Most of these functions set the code only when failed, and don't clear old error code when succeeded. Therefore may need to call <see cref="M:Au.WinError.Clear"/> before.
+            
+             Windows API error code definitions and documentation are not included in this library. You can look for them in API function documentation on the internet.
+             </remarks>
+             <example>
+             <code><![CDATA[
+             Wnd w = Wnd.Find("Notepag");
+             WinError.Clear();
+             bool enabled = w.IsEnabled; //returns true if enabled, false if disabled or failed
+             if(!enabled && WinError.Code != 0) { Print(WinError.Message); return; } //1400, Invalid window handle
+             Print(enabled);
+             ]]></code>
+             </example>
+        </member>
+        <member name="P:Au.WinError.Message">
+            <summary>
+            Gets the text message of the Windows API last error code of this thread.
+            Returns null if the code is 0.
+            </summary>
+            <remarks>
+            The string always ends with ".".
+            </remarks>
+        </member>
+        <member name="M:Au.WinError.MessageFor(System.Int32)">
+            <summary>
+            Gets the text message of a Windows API error code.
+            Returns null if errorCode is 0.
+            </summary>
+            <remarks>
+            The string always ends with ".".
+            </remarks>
+        </member>
         <member name="T:Au.OsdWindow">
             <summary>
             Transparent window that can be used for on-screen display. Derived classes on it can draw non-transparent text, rectangle, image, anything.
@@ -12575,22 +12566,25 @@
             <param name="name">File path or mailslot name.</param>
             <param name="openExisting">Use OPEN_EXISTING. If false, uses CREATE_ALWAYS.</param>
         </member>
-        <member name="P:Au.Output.LibUseQM2">
+        <member name="T:Au.Output.QM2">
+            
+        </member>
+        <member name="P:Au.Output.QM2.UseQM2">
             <summary>
             Sets to use QM2 as the output server.
             </summary>
         </member>
-        <member name="M:Au.Output.LibClearQM2">
+        <member name="M:Au.Output.QM2.Clear">
             <summary>
             Clears QM2 output pane.
             </summary>
         </member>
-        <member name="M:Au.Output.LibWriteQM2(System.Object)">
+        <member name="M:Au.Output.QM2.Write(System.Object)">
             <summary>
             Writes line to QM2.
             </summary>
         </member>
-        <member name="M:Au.Output._WriteToQM2(System.String)">
+        <member name="M:Au.Output.QM2._WriteToQM2(System.String)">
             <param name="s">If null, clears output.</param>
         </member>
         <member name="T:Au.Properties.Resources">
@@ -13235,6 +13229,17 @@
             foreach(var v in a) Print(v.Index, v.Value);
             ]]></code>
             </example>
+        </member>
+        <member name="M:Au.Regex_.EscapeQE(System.String,System.Boolean)">
+            <summary>
+            Encloses string in \Q \E if it contains metacharacters \^$.[|()?*+{ or if <paramref name="always"/> == true.
+            </summary>
+            <param name="s"></param>
+            <param name="always">Enclose always, even if the string does not contain metacharacters. Should be true if the regular expression in which this string will be used has option "extended", because then whitespace is ignored and # is a special character too.</param>
+            <remarks>
+            Such enclosed substring in a regular expression is interpreted as a literal string.
+            This function also escapes \E, so that it does not end the literal string.
+            </remarks>
         </member>
         <member name="T:Au.String_">
             <summary>
@@ -14178,7 +14183,7 @@
         <member name="M:Au.File_.Misc.GetFileId(System.String,Au.File_.Misc.FileId@)">
             <summary>
             Gets <see cref="T:Au.File_.Misc.FileId"/> of a file or directory.
-            Returns false if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if fails. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <param name="path">Full path. Supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>).</param>
             <param name="fileId"></param>
@@ -14293,7 +14298,7 @@
             <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
+            Supports <see cref="P:Au.WinError.Code"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
             </remarks>
         </member>
@@ -14307,7 +14312,7 @@
             <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attributes Directory and ReparsePoint.
+            Supports <see cref="P:Au.WinError.Code"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attributes Directory and ReparsePoint.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
             </remarks>
         </member>
@@ -14319,7 +14324,7 @@
             <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/>.
+            Supports <see cref="P:Au.WinError.Code"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/>.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
             For symbolic links etc, returns true if the link exists. Does not care whether its target exists.
             Unlike <see cref="M:Au.File_.ExistsAsFile(System.String,System.Boolean)"/> and <see cref="M:Au.File_.ExistsAsDirectory(System.String,System.Boolean)"/>, this function returns true when the file exists but cannot get its attributes. Then <c>ExistsAsAny(path)</c> is not the same as <c>ExistsAsFile(path) || ExistsAsDirectory(path)</c>.
@@ -14334,7 +14339,7 @@
             <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
+            Supports <see cref="P:Au.WinError.Code"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
             For symbolic links etc, returns true if the link exists and its target is not a directory. Does not care whether its target exists.
             </remarks>
@@ -14348,7 +14353,7 @@
             <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). Can be null.</param>
             <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
+            Supports <see cref="P:Au.WinError.Code"/>. If you need exception when fails, instead call <see cref="M:Au.File_.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)"/> and check attribute Directory.
             Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
             For symbolic links etc, returns true if the link exists and its target is a directory. Does not care whether its target exists.
             </remarks>
@@ -14382,7 +14387,7 @@
             </param>
             <param name="errorHandler">
             Callback function. Called when fails to get children of a subdirectory, when using flag <see cref="F:Au.Types.FEFlags.AndSubdirectories"/>.
-            It receives the subdirectory path. It can call <see cref="M:Au.Types.Native.GetError"/> and throw an exception.
+            It receives the subdirectory path. It can call <see cref="P:Au.WinError.Code"/> and throw an exception.
             If it does not throw an exception, the enumeration continues as if the directory is empty.
             If errorHandler not used, then throws exception.
             Read more in Remarks.
@@ -17307,12 +17312,12 @@
         </member>
         <member name="M:Au.Debug_.LibPrintNativeError(System.String,System.Int32,System.String)">
             <summary>
-            In DEBUG config prints Native.GetErrorMessage().
+            In DEBUG config prints WinError.Message.
             </summary>
         </member>
         <member name="M:Au.Debug_.LibPrintNativeError(System.Int32,System.String,System.Int32,System.String)">
             <summary>
-            In DEBUG config prints Native.GetErrorMessage(code).
+            In DEBUG config prints WinError.MessageFor(code).
             </summary>
         </member>
         <member name="M:Au.Debug_.Dialog(System.Object,System.String,System.Int32,System.String)">
@@ -18383,7 +18388,7 @@
             
             What happens when a Wnd function fails:
             <list type="bullet">
-            <item>Functions that get window properties don't throw exceptions. They return false/0/null/empty. Most of them support <see cref="M:Au.Types.Native.GetError"/>, and it is mentioned in function documentation.</item>
+            <item>Functions that get window properties don't throw exceptions. They return false/0/null/empty. Most of them support <see cref="P:Au.WinError.Code"/>, and it is mentioned in function documentation.</item>
             <item>Many functions that change window properties throw exception. Exceptions are listed in function documentation. Almost all these functions throw only <see cref="T:Au.Types.WndException"/>.</item>
             <item>Other functions that change window properties return false. They are more often used in programming than in automation scripts.</item>
             <item>When a 'find' function does not find the window or control, it returns default(Wnd) (window handle 0). Then <see cref="P:Au.Wnd.Is0"/> will return true.</item>
@@ -18605,54 +18610,54 @@
             <summary>
             Calls API <msdn>SendMessage</msdn>.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.SendS(System.Int32,Au.Types.LPARAM,System.String)">
             <summary>
             Calls API <msdn>SendMessage</msdn> where lParam is string.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.SendS(System.Int32,Au.Types.LPARAM,System.Char[])">
             <summary>
             Calls API <msdn>SendMessage</msdn> where lParam is char[].
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.SendTimeout(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.Native.SMTO)">
             <summary>
             Calls API <msdn>SendMessageTimeout</msdn>.
-            Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns its return value (false if failed). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.SendTimeout(System.Int32,Au.Types.LPARAM@,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.Native.SMTO)">
             <summary>
             Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
-            Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns its return value (false if failed). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.SendTimeoutS(System.Int32,Au.Types.LPARAM@,System.Int32,Au.Types.LPARAM,System.String,Au.Types.Native.SMTO)">
             <summary>
             Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
-            Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns its return value (false if failed). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.SendTimeoutS(System.Int32,Au.Types.LPARAM@,System.Int32,Au.Types.LPARAM,System.Char[],Au.Types.Native.SMTO)">
             <summary>
             Calls API <msdn>SendMessageTimeout</msdn> where lParam is char[].
-            Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns its return value (false if failed). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.SendNotify(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Calls API <msdn>SendNotifyMessage</msdn>.
-            Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns its return value (false if failed). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.Post(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Calls API <msdn>PostMessage</msdn>.
-            Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns its return value (false if failed). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <seealso cref="M:Au.Wnd.Misc.PostThreadMessage(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/>
         </member>
@@ -18665,14 +18670,14 @@
             <summary>
             Posts a message to the message queue of this thread.
             Calls API <msdn>PostMessage</msdn> with default(Wnd). 
-            Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns its return value (false if failed). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.Misc.PostThreadMessage(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Posts a message to the message queue of the specified thread.
             Calls API <msdn>PostThreadMessage</msdn>. 
-            Returns its return value (false if failed). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns its return value (false if failed). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.Misc.WaitForAnActiveWindow">
@@ -18901,7 +18906,7 @@
             Native window handle.
             </summary>
         </member>
-        <member name="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)">
+        <member name="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)">
             <summary>
             Creates window.
             Calls API <msdn>CreateWindowEx</msdn>.
@@ -18925,7 +18930,7 @@
         <member name="M:Au.Wnd.Misc.MyWindow.CreateMessageWindow(System.String,System.String)">
             <summary>
             Creates <msdn>message-only window</msdn> with styles WS_POPUP, WS_EX_NOACTIVATE.
-            More info: <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/>.
+            More info: <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.Misc.MyWindow.Destroy">
@@ -18959,8 +18964,8 @@
             <exception cref="T:System.ComponentModel.Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
             <remarks>
             Calls API <msdn>RegisterClassEx</msdn>.
-            The class then can be used in all appdomains of this process. To create windows, use <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/>.
-            You provide a window procedure when creating a MyWindow variable. Windows created not with <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/> use API <msdn>DefWindowProc</msdn> as window procedure, and therefore are not useful.
+            The class then can be used in all appdomains of this process. To create windows, use <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/>.
+            You provide a window procedure when creating a MyWindow variable. Windows created not with <see cref="M:Au.Wnd.Misc.MyWindow.Create(System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM)"/> use API <msdn>DefWindowProc</msdn> as window procedure, and therefore are not useful.
             The window class remains registered until this process ends. Don't need to unregister.
             This function can be called multiple times for the same class, for example called once in each appdomain. Next time it just returns class atom.
             Thread-safe.
@@ -18993,10 +18998,10 @@
             Calls API <msdn>FindWindowEx</msdn>.
             Faster than <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>, which does not find message-only windows.
             Finds hidden windows too.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.Misc.WindowRectFromClientRect(Au.Types.RECT@,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Boolean)">
+        <member name="M:Au.Wnd.Misc.WindowRectFromClientRect(Au.Types.RECT@,Au.Types.WS,Au.Types.WS_EX,System.Boolean)">
             <summary>
             Calculates window rectangle from client area rectangle and style.
             Calls API <msdn>AdjustWindowRectEx</msdn>.
@@ -19009,7 +19014,7 @@
             Ignores styles WS_VSCROLL, WS_HSCROLL and wrapped menu bar.
             </remarks>
         </member>
-        <member name="M:Au.Wnd.Misc.BorderWidth(Au.Types.Native.WS,Au.Types.Native.WS_EX)">
+        <member name="M:Au.Wnd.Misc.BorderWidth(Au.Types.WS,Au.Types.WS_EX)">
             <summary>
             Calculates window border width from style.
             </summary>
@@ -19026,7 +19031,7 @@
             <param name="g">Variable that receives the info.</param>
             <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="P:Au.Wnd.ThreadId"/>.</param>
         </member>
-        <member name="M:Au.Wnd.Misc.CreateWindow(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
+        <member name="M:Au.Wnd.Misc.CreateWindow(System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
             <summary>
             Creates native/unmanaged window.
             Calls API <msdn>CreateWindowEx</msdn>.
@@ -19034,9 +19039,9 @@
             Usually don't need to specify hInstance.
             </summary>
         </member>
-        <member name="M:Au.Wnd.Misc.CreateWindowAndSetFont(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM,System.IntPtr)">
+        <member name="M:Au.Wnd.Misc.CreateWindowAndSetFont(System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM,System.IntPtr)">
             <summary>
-            Creates native/unmanaged window like <see cref="M:Au.Wnd.Misc.CreateWindow(System.String,System.String,Au.Types.Native.WS,Au.Types.Native.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> and sets font.
+            Creates native/unmanaged window like <see cref="M:Au.Wnd.Misc.CreateWindow(System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> and sets font.
             If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
             Later call <see cref="M:Au.Wnd.Misc.DestroyWindow(Au.Wnd)"/> or <see cref="M:Au.Wnd.Close(System.Boolean,System.Boolean)"/>.
             </summary>
@@ -19053,7 +19058,7 @@
             <summary>
             Destroys a native window of this thread.
             Calls API <msdn>DestroyWindow</msdn>.
-            Returns false if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if failed. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <seealso cref="M:Au.Wnd.Close(System.Boolean,System.Boolean)"/>
         </member>
@@ -19112,7 +19117,7 @@
             Calls API <msdn>GetClassLong</msdn> if current process is 32-bit, <msdn>GetClassLongPtr</msdn> if 64-bit.
             </summary>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             For index can be used constants from <see cref="T:Au.Types.Native.GCL"/>. All values are the same in 32-bit and 64-bit process.
             </remarks>
         </member>
@@ -19241,7 +19246,7 @@
             <summary>
             Returns true if the window is visible.
             Returns false if is invisible or is a child of invisible parent.
-            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <remarks>
             Calls API <msdn>IsWindowVisible</msdn>. Does not call <see cref="P:Au.Wnd.IsCloaked"/>.
@@ -19258,7 +19263,7 @@
             <summary>
             Returns true if the window is visible.
             Returns false if is invisible or is a child of invisible parent.
-            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <remarks>
             Returns false if API <msdn>IsWindowVisible</msdn> returns false.
@@ -19300,20 +19305,20 @@
             <b>ShowLL</b> is more low-level. Does not throw exception when fails, and does not add a delay; <b>Show</b> adds a small delay when the window is of other thread.
             
             Calls API <msdn>ShowWindow</msdn> with SW_SHOWNA or SW_HIDE.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Wnd.IsEnabled">
             <summary>
             Returns true if the window is enabled for mouse and keyboard input.
-            Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
             Calls API <msdn>IsWindowEnabled</msdn>. It does not check whether the parent window is disabled.
             </summary>
         </member>
         <member name="P:Au.Wnd.IsEnabledReally">
             <summary>
             Returns true if the window and its ancestors are enabled for mouse and keyboard input.
-            Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.Enable(System.Boolean)">
@@ -19345,14 +19350,14 @@
         <member name="P:Au.Wnd.IsMinimized">
             <summary>
             Returns true if minimized, false if not.
-            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
             Calls API <msdn>IsIconic</msdn>.
             </summary>
         </member>
         <member name="P:Au.Wnd.IsMaximized">
             <summary>
             Returns true if maximized, false if not.
-            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
             Calls API <msdn>IsZoomed</msdn>.
             </summary>
         </member>
@@ -19401,7 +19406,7 @@
             <summary>
             Initializes a WINDOWPLACEMENT struct and calls API <msdn>GetWindowPlacement</msdn>.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
             <exception cref="T:Au.Types.WndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
         </member>
         <member name="M:Au.Wnd.LibSetWindowPlacement(Au.Types.Api.WINDOWPLACEMENT@,System.String)">
@@ -19571,7 +19576,7 @@
         <member name="M:Au.Wnd.ThisThread.Focus(Au.Wnd)">
             <summary>
             Calls API <msdn>SetFocus</msdn>. It sets the keyboard input focus to the specified control or window, which must be of this thread.
-            Returns false if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns false if fails. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <remarks>
             Fails if the control/window belongs to another thread or is invalid or disabled.
@@ -19609,7 +19614,7 @@
             <remarks>
             The same as the <see cref="P:Au.Wnd.Rect"/> property.
             Calls API <msdn>GetWindowRect</msdn> and returns its return value.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="M:Au.Wnd.GetSize(Au.Types.SIZE@)">
@@ -19620,7 +19625,7 @@
             <remarks>
             The same as the <see cref="P:Au.Wnd.Size"/> property.
             Calls API <msdn>GetWindowRect</msdn> and returns its return value.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Wnd.Rect">
@@ -19637,7 +19642,7 @@
             </summary>
             <remarks>
             Calls <see cref="M:Au.Wnd.GetSize(Au.Types.SIZE@)"/>. Returns default(SIZE) if fails (eg window closed).
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Wnd.X">
@@ -19673,7 +19678,7 @@
             Get rectangle in screen coordinates; the same as <see cref="M:Au.Wnd.GetWindowAndClientRectInScreen(Au.Types.RECT@,Au.Types.RECT@)"/>.
             If false (default), calls API <msdn>GetClientRect</msdn>; the same as <see cref="P:Au.Wnd.ClientRect"/> or <see cref="M:Au.Wnd.GetClientSize(Au.Types.SIZE@)"/>.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="M:Au.Wnd.GetClientSize(Au.Types.SIZE@)">
@@ -19685,7 +19690,7 @@
             The same as the <see cref="P:Au.Wnd.ClientSize"/> property.
             The same as <see cref="M:Au.Wnd.GetClientRect(Au.Types.RECT@,System.Boolean)"/>, just the parameter type is different.
             Calls API <msdn>GetClientRect</msdn> and returns its return value.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Wnd.ClientRect">
@@ -19741,7 +19746,7 @@
             Calls API <msdn>GetWindowInfo</msdn>.
             </summary>
             <param name="wi">Receives window/client rectangles, styles etc.</param>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.GetWindowAndClientRectInScreen(Au.Types.RECT@,Au.Types.RECT@)">
             <summary>
@@ -19749,79 +19754,79 @@
             </summary>
             <param name="rWindow">Receives window rectangle.</param>
             <param name="rClient">Receives client area rectangle.</param>
-            <remarks>Calls API <msdn>GetWindowInfo</msdn>. Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Calls API <msdn>GetWindowInfo</msdn>. Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapClientToClientOf(Au.Wnd,Au.Types.RECT@)">
             <summary>
             Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapClientToClientOf(Au.Wnd,Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapClientToScreen(Au.Types.RECT@)">
             <summary>
             Converts coordinates relative to the client area of this window to coordinates relative to the screen.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapClientToScreen(Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the client area of this window to coordinates relative to the screen.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapScreenToClient(Au.Types.RECT@)">
             <summary>
             Converts coordinates relative to the screen to coordinates relative to the client area of this window.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapScreenToClient(Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the screen to coordinates relative to the client area of this window.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapClientToWindow(Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapClientToWindow(Au.Types.RECT@)">
             <summary>
             Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapWindowToClient(Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the top-left corner of this window to coordinates relative to the client area of this window.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapWindowToClient(Au.Types.RECT@)">
             <summary>
             Converts coordinates relative to the top-left corner of this window to coordinates relative to the client area of this window.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapWindowToScreen(Au.Types.POINT@)">
             <summary>
             Converts coordinates relative to the top-left corner of this window to screen coordinates.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.MapWindowToScreen(Au.Types.RECT@)">
             <summary>
             Converts coordinates relative to the top-left corner of this window to screen coordinates.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.GetRectInClientOf(Au.Wnd,Au.Types.RECT@)">
             <summary>
@@ -19829,7 +19834,7 @@
             </summary>
             <param name="w">The returned rectangle will be relative to the client area of window w. If w is default(Wnd), gets rectangle in screen.</param>
             <param name="r">Receives the rectangle.</param>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
             <seealso cref="P:Au.Wnd.RectInDirectParent"/>
         </member>
         <member name="P:Au.Wnd.RectInDirectParent">
@@ -19852,7 +19857,7 @@
             <summary>
             Gets rectangle of normal (restored) window even if currently it is minimized or maximized.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="P:Au.Wnd.MouseClientXY">
             <summary>
@@ -19887,7 +19892,7 @@
             Calls API <msdn>SetWindowPos</msdn>.
             </summary>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             For <paramref name="wndInsertAfter"/> you can use enum <b>Native.HWND</b> members: <b>TOP</b>, <b>BOTTOM</b>, <b>TOPMOST</b>, <b>NOTOPMOST</b>.
             </remarks>
         </member>
@@ -19898,7 +19903,7 @@
             <remarks>
             See also <see cref="M:Au.Wnd.Move(Au.Types.Coord,Au.Types.Coord,Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.Types.Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP flags.
             This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOZORDER|NOOWNERZORDER|NOACTIVATE|swpFlagsToAdd. It is better to use in programming, with windows of current thread.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             
             For top-level windows use screen coordinates. For controls - direct parent client coordinates.
             </remarks>
@@ -19911,7 +19916,7 @@
             <remarks>
             See also <see cref="M:Au.Wnd.Move(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.Types.Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
             This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOSIZE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             
             For top-level windows use screen coordinates. For controls - direct parent client coordinates.
             </remarks>
@@ -19924,7 +19929,7 @@
             <remarks>
             See also <see cref="M:Au.Wnd.Resize(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.Types.Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
             This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOMOVE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
             <seealso cref="M:Au.Wnd.SetWindowPos(Au.Types.Native.SWP,System.Int32,System.Int32,System.Int32,System.Int32,Au.Wnd)"/>
         </member>
@@ -20025,7 +20030,7 @@
             May not work with top-level windows when it would move an inactive window above the active window.
             If w is default(Wnd), calls <see cref="M:Au.Wnd.ZorderBottom"/>.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.ZorderBelow(Au.Wnd)">
             <summary>
@@ -20035,7 +20040,7 @@
             May not work with top-level windows when it would move an inactive window above the active window.
             If w is default(Wnd), calls <see cref="M:Au.Wnd.ZorderTop"/>.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.ZorderTop">
             <summary>
@@ -20044,14 +20049,14 @@
             Does not activate.
             In most cases does not work with top-level inactive windows, although returns true; instead use <see cref="M:Au.Wnd.ActivateLL"/>.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.ZorderBottom">
             <summary>
             Places this window or control at the bottom of the Z order.
             If the window was topmost, makes it and its owner window non-topmost.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.ZorderTopmost">
             <summary>
@@ -20060,7 +20065,7 @@
             If this window has an owner window, the owner does not become topmost.
             This cannot be a control.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.ZorderNoTopmost(System.Boolean)">
             <summary>
@@ -20069,7 +20074,7 @@
             This cannot be a control.
             </summary>
             <param name="afterActiveWindow">Also place this window after the active nontopmost window in the Z order, unless the active window is its owner.</param>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="P:Au.Wnd.IsTopmost">
             <summary>
@@ -20085,55 +20090,55 @@
             <summary>
             Gets window style.
             </summary>
-            <value>One or more <see cref="T:Au.Types.Native.WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</value>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-            <seealso cref="M:Au.Wnd.HasStyle(Au.Types.Native.WS,System.Boolean)"/>
-            <seealso cref="M:Au.Wnd.SetStyle(Au.Types.Native.WS,Au.Types.SetAddRemove,System.Boolean,System.Boolean)"/>
+            <value>One or more <see cref="T:Au.Types.WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</value>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
+            <seealso cref="M:Au.Wnd.HasStyle(Au.Types.WS,System.Boolean)"/>
+            <seealso cref="M:Au.Wnd.SetStyle(Au.Types.WS,Au.Types.SetAddRemove,System.Boolean,System.Boolean)"/>
         </member>
         <member name="P:Au.Wnd.ExStyle">
             <summary>
             Gets window extended style.
             </summary>
-            <value>One or more <see cref="T:Au.Types.Native.WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</value>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
-            <seealso cref="M:Au.Wnd.HasExStyle(Au.Types.Native.WS_EX,System.Boolean)"/>
-            <seealso cref="M:Au.Wnd.SetExStyle(Au.Types.Native.WS_EX,Au.Types.SetAddRemove,System.Boolean,System.Boolean)"/>
+            <value>One or more <see cref="T:Au.Types.WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</value>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
+            <seealso cref="M:Au.Wnd.HasExStyle(Au.Types.WS_EX,System.Boolean)"/>
+            <seealso cref="M:Au.Wnd.SetExStyle(Au.Types.WS_EX,Au.Types.SetAddRemove,System.Boolean,System.Boolean)"/>
         </member>
-        <member name="M:Au.Wnd.HasStyle(Au.Types.Native.WS,System.Boolean)">
+        <member name="M:Au.Wnd.HasStyle(Au.Types.WS,System.Boolean)">
             <summary>
             Returns true if the window has all specified style flags (see <see cref="P:Au.Wnd.Style"/>).
             </summary>
             <param name="style">One or more styles.</param>
             <param name="any">
             Return true if has any (not necessary all) of the specified styles.
-            Note: don't use <see cref="F:Au.Types.Native.WS.CAPTION"/>, because it consists of two other styles - BORDER and DLGFRAME.
+            Note: don't use <see cref="F:Au.Types.WS.CAPTION"/>, because it consists of two other styles - BORDER and DLGFRAME.
             </param>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.HasExStyle(Au.Types.Native.WS_EX,System.Boolean)">
+        <member name="M:Au.Wnd.HasExStyle(Au.Types.WS_EX,System.Boolean)">
             <summary>
             Returns true if the window has all specified extended style flags (see <see cref="P:Au.Wnd.ExStyle"/>).
             </summary>
             <param name="exStyle">One or more extended styles.</param>
             <param name="any">Return true if has any (not necessary all) of the specified styles.</param>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
-        <member name="M:Au.Wnd.SetStyle(Au.Types.Native.WS,Au.Types.SetAddRemove,System.Boolean,System.Boolean)">
+        <member name="M:Au.Wnd.SetStyle(Au.Types.WS,Au.Types.SetAddRemove,System.Boolean,System.Boolean)">
             <summary>
             Changes window style.
             </summary>
-            <param name="style">One or more <see cref="T:Au.Types.Native.WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</param>
+            <param name="style">One or more <see cref="T:Au.Types.WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</param>
             <param name="how"></param>
             <param name="updateNC">Update non-client area (frame, title bar).</param>
             <param name="updateClient">Update client area.</param>
             <exception cref="T:Au.Types.WndException"/>
             <seealso cref="P:Au.Wnd.Style"/>
         </member>
-        <member name="M:Au.Wnd.SetExStyle(Au.Types.Native.WS_EX,Au.Types.SetAddRemove,System.Boolean,System.Boolean)">
+        <member name="M:Au.Wnd.SetExStyle(Au.Types.WS_EX,Au.Types.SetAddRemove,System.Boolean,System.Boolean)">
             <summary>
             Changes window extended style.
             </summary>
-            <param name="style">One or more <see cref="T:Au.Types.Native.WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</param>
+            <param name="style">One or more <see cref="T:Au.Types.WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</param>
             <param name="how"></param>
             <param name="updateNC">Update non-client area (frame, title bar).</param>
             <param name="updateClient">Update client area.</param>
@@ -20142,21 +20147,21 @@
         </member>
         <member name="P:Au.Wnd.IsPopupWindow">
             <summary>
-            Returns true if has Native.WS.POPUP style.
+            Returns true if has WS.POPUP style.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="P:Au.Wnd.IsToolWindow">
             <summary>
-            Returns true if has Native.WS_EX.TOOLWINDOW style.
+            Returns true if has WS_EX.TOOLWINDOW style.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="P:Au.Wnd.IsResizable">
             <summary>
-            Returns true if has Native.WS.THICKFRAME style.
+            Returns true if has WS.THICKFRAME style.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.GetWindowLong(System.Int32)">
             <summary>
@@ -20164,7 +20169,7 @@
             </summary>
             <remarks>
             For index can be used constants from <see cref="T:Au.Types.Native.GWL"/>.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="M:Au.Wnd.SetWindowLong(System.Int32,Au.Types.LPARAM)">
@@ -20179,7 +20184,7 @@
         <member name="P:Au.Wnd.ControlId">
             <summary>
             Gets or sets id of this control.
-            The 'get' function supports <see cref="M:Au.Types.Native.GetError"/>.
+            The 'get' function supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <exception cref="T:Au.Types.WndException">Failed (only 'set' function).</exception>
         </member>
@@ -20201,14 +20206,14 @@
             <summary>
             Calls API <msdn>GetWindowThreadProcessId</msdn>.
             Returns thread id and also gets process id.
-            Returns 0 if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns 0 if fails. Supports <see cref="P:Au.WinError.Code"/>.
             <note>It is native thread id, not Thread.ManagedThreadId.</note>
             </summary>
         </member>
         <member name="P:Au.Wnd.ThreadId">
             <summary>
             Gets native thread id of this window. Calls API <msdn>GetWindowThreadProcessId</msdn>.
-            Returns 0 if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns 0 if fails. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <remarks>
             It is not the same as <see cref="P:System.Threading.Thread.ManagedThreadId"/>.
@@ -20217,34 +20222,34 @@
         <member name="P:Au.Wnd.ProcessId">
             <summary>
             Gets native process id of this window. Calls API <msdn>GetWindowThreadProcessId</msdn>.
-            Returns 0 if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns 0 if fails. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="P:Au.Wnd.IsOfThisThread">
             <summary>
             Returns true if this window belongs to the current thread, false if to another thread.
-            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
             Calls API <msdn>GetWindowThreadProcessId</msdn>.
             </summary>
         </member>
         <member name="P:Au.Wnd.IsOfThisProcess">
             <summary>
             Returns true if this window belongs to the current process, false if to another process.
-            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
             Calls API <msdn>GetWindowThreadProcessId</msdn>.
             </summary>
         </member>
         <member name="P:Au.Wnd.IsUnicode">
             <summary>
             Returns true if the window is a Unicode window, false if ANSI.
-            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
             Calls API <msdn>IsWindowUnicode</msdn>.
             </summary>
         </member>
         <member name="P:Au.Wnd.Is64Bit">
             <summary>
             Returns true if the window is of a 64-bit process, false if of a 32-bit process.
-            Also returns false if fails. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Also returns false if fails. Supports <see cref="P:Au.WinError.Code"/>.
             If <see cref="P:Au.Ver.Is64BitOS"/> is true, calls API <msdn>GetWindowThreadProcessId</msdn>, <msdn>OpenProcess</msdn> and <msdn>IsWow64Process</msdn>.
             <note>If you know that the window belongs to current process, instead use <see cref="P:System.Environment.Is64BitProcess"/> or <c>IntPtr.Size==8</c>. This function is much slower.</note>
             </summary>
@@ -20254,7 +20259,7 @@
             Returns true if thread of this window is considered hung (not responding).
             Calls API <msdn>IsHungAppWindow</msdn>.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="P:Au.Wnd.IsHungGhost">
             <summary>
@@ -20265,39 +20270,39 @@
             <summary>
             Returns true if this is a console window (class name "ConsoleWindowClass").
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="P:Au.Wnd.IsUacAccessDenied">
             <summary>
             Returns true if <see cref="T:Au.Uac">UAC</see> would not allow to automate the window.
             It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="P:Au.Wnd.ClassName">
             <summary>
             Gets window class name.
-            Returns null if fails, eg if the window is closed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns null if fails, eg if the window is closed. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="M:Au.Wnd.ClassNameIs(System.String)">
             <summary>
             Returns true if the class name of this window matches cn. Else returns false.
-            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Also returns false when fails (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <param name="cn">Class name. Case-insensitive <see cref="M:Au.String_.Like_(System.String,System.String,System.Boolean)">wildcard</see>. Cannot be null.</param>
         </member>
         <member name="M:Au.Wnd.ClassNameIs(System.String[])">
             <summary>
-            If the class name of this window matches one of strings in classNames, returns 1-based index of the string. Else returns 0.
-            Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="M:Au.Types.Native.GetError"/>.
+            If the class name of this window matches one of strings in <paramref name="classNames"/>, returns 1-based index of the string. Else returns 0.
+            Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <param name="classNames">Class names. Case-insensitive <see cref="M:Au.String_.Like_(System.String,System.String,System.Boolean)">wildcard</see>. The array and strings cannot be null.</param>
         </member>
         <member name="P:Au.Wnd.Name">
             <summary>
             Gets name.
-            Returns "" if no name. Returns null if fails, eg if the window is closed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns "" if no name. Returns null if fails, eg if the window is closed. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <remarks>
             <note>It is not the .NET Control.Name property. To get it you can use <see cref="P:Au.Wnd.NameWinForms"/>.</note>
@@ -20314,7 +20319,7 @@
         <member name="P:Au.Wnd.ControlText">
             <summary>
             Gets control text.
-            Returns "" if no text. Returns null if fails, eg if the window is closed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns "" if no text. Returns null if fails, eg if the window is closed. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <remarks>
             Unlike <see cref="P:Au.Wnd.Name"/>, this function prefers variable text, for example Edit control editable text, ComboBox control selected item text, status bar text.
@@ -20329,7 +20334,7 @@
             <summary>
             Gets window/control name or control text.
             Returns "" if it is empty.
-            Returns null if fails, eg if the window is closed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns null if fails, eg if the window is closed. Supports <see cref="P:Au.WinError.Code"/>.
             This is a low-level function. You can instead use <see cref="P:Au.Wnd.Name"/> and <see cref="P:Au.Wnd.ControlText"/>.
             </summary>
             <param name="getText">
@@ -20339,7 +20344,7 @@
             </param>
             <param name="removeUnderlineAmpersand">
             Remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
-            Removes only if this is a control (has style Native.WS.CHILD).
+            Removes only if this is a control (has style WS.CHILD).
             Calls <see cref="M:Au.Util.StringMisc.RemoveUnderlineAmpersand(System.String)"/>.
             </param>
             <seealso cref="M:Au.Wnd.SetText(System.String)"/>
@@ -20350,7 +20355,7 @@
             <summary>
             Gets text.
             Returns "" if it is empty.
-            Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="P:Au.WinError.Code"/>.
             Calls API InternalGetWindowText. If it fails, and getControlTextIfEmpty==true, and this is a control, calls _GetTextSlow, which uses WM_GETTEXT.
             </summary>
         </member>
@@ -20358,7 +20363,7 @@
             <summary>
             Gets text.
             Returns "" if it is empty.
-            Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="P:Au.WinError.Code"/>.
             Uses WM_GETTEXT.
             </summary>
         </member>
@@ -20402,6 +20407,13 @@
             Calls <see cref="P:Au.Wnd.ProcessId"/> and <see cref="M:Au.Process_.GetName(System.Int32,System.Boolean,System.Boolean)"/>.
             This function is much slower than getting window name or class name. Don't use code like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>. Instead use <c>var s=w.ProgramName; if(s=="A" || s=="B")</c>.
             </remarks>
+        </member>
+        <member name="M:Au.Wnd.ProgramNameIs(System.String[])">
+            <summary>
+            If the program name of this window matches one of strings in <paramref name="programNames"/>, returns 1-based index of the string. Else returns 0.
+            Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="P:Au.WinError.Code"/>.
+            </summary>
+            <param name="programNames">Program names, like "notepad.exe". Case-insensitive <see cref="M:Au.String_.Like_(System.String,System.String,System.Boolean)">wildcard</see>. The array and strings cannot be null.</param>
         </member>
         <member name="P:Au.Wnd.ProgramPath">
             <summary>
@@ -20687,7 +20699,7 @@
             </param>
             <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="T:Au.Wnd.GetWnd">
@@ -20733,7 +20745,7 @@
             <param name="threadId">
             Unmanaged thread id.
             See <see cref="P:Au.Thread_.NativeId"/>, <see cref="P:Au.Wnd.ThreadId"/>.
-            If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="P:Au.WinError.Code"/>.
             </param>
             <param name="onlyVisible">Need only visible windows.</param>
             <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
@@ -20807,7 +20819,7 @@
             <remarks>
             If this is a top-level window, gets next top-level window, else gets next control of the same direct parent.
             Calls API <msdn>GetWindow</msdn>(GW_HWNDNEXT).
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="M:Au.Wnd.GetWnd.Previous(System.Int32)">
@@ -20819,7 +20831,7 @@
             <remarks>
             If this is a top-level window, gets previous top-level window, else gets previous control of the same direct parent.
             Calls API <msdn>GetWindow</msdn>(GW_HWNDPREV).
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Wnd.GetWnd.FirstSibling">
@@ -20830,7 +20842,7 @@
             <remarks>
             If this is a top-level window, gets the first top-level window, else gets the first control of the same direct parent.
             Calls API <msdn>GetWindow</msdn>(this, GW_HWNDFIRST).
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Wnd.GetWnd.LastSibling">
@@ -20841,7 +20853,7 @@
             <remarks>
             If this is a top-level window, gets the last top-level window, else gets the last control of the same direct parent.
             Calls API <msdn>GetWindow</msdn>(this, GW_HWNDLAST).
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Wnd.GetWnd.FirstChild">
@@ -20851,7 +20863,7 @@
             </summary>
             <remarks>
             Calls API <msdn>GetWindow</msdn>(GW_CHILD).
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Wnd.GetWnd.LastChild">
@@ -20861,7 +20873,7 @@
             </summary>
             <remarks>
             Calls API <msdn>GetWindow</msdn>.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="M:Au.Wnd.GetWnd.Child(System.Int32)">
@@ -20872,7 +20884,7 @@
             <param name="index">0-based index of the child control in the Z order.</param>
             <remarks>
             Calls API <msdn>GetWindow</msdn>.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Wnd.GetWnd.Owner">
@@ -20883,7 +20895,7 @@
             <remarks>
             A window that has an owner window is always on top of it.
             Controls don't have an owner window.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             This function is the same as <see cref="P:Au.Wnd.Owner"/>, which also allows to change owner.
             </remarks>
         </member>
@@ -20894,7 +20906,7 @@
             Returns default(Wnd) if fails.
             </summary>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             This function is the same as <see cref="P:Au.Wnd.Window"/>.
             </remarks>
         </member>
@@ -20904,7 +20916,7 @@
             Returns default(Wnd) if this is a top-level window or if fails.
             </summary>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Wnd.GetWnd.DirectParentOrOwner">
@@ -20914,7 +20926,7 @@
             </summary>
             <remarks>
             Calls API <msdn>GetParent</msdn>.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="M:Au.Wnd.GetWnd.LastActiveOwnedOrThis(System.Boolean)">
@@ -20924,7 +20936,7 @@
             </summary>
             <param name="includeOwners">Can return an owner (or owner's owner and so on) of this window too.</param>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="M:Au.Wnd.GetWnd.RootOwnerOrThis(System.Boolean)">
@@ -20934,7 +20946,7 @@
             Returns default(Wnd) if fails.
             </summary>
             <param name="supportControls">If this is a child window, use its top-level parent window instead.</param>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="M:Au.Wnd.GetWnd.OwnersAndThis(System.Boolean)">
             <summary>
@@ -21258,7 +21270,7 @@
         <member name="M:Au.Wnd.SavePositionSizeState(System.Boolean)">
             <summary>
             Gets window position, size and state stored in a string that can be used with <see cref="M:Au.Wnd.RestorePositionSizeState(System.String,System.Boolean,System.Boolean)"/>.
-            Returns null if failed. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Returns null if failed. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
             <param name="canBeMinimized">If now the window is minimized, let RestorePositionSizeState make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
         </member>
@@ -21479,7 +21491,7 @@
             Faster than <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>, which uses API <msdn>EnumWindows</msdn>.
             Finds hidden windows too.
             To find message-only windows use <see cref="M:Au.Wnd.Misc.FindMessageWindow(System.String,System.String,Au.Wnd)"/> instead.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
             </remarks>
         </member>
@@ -21540,7 +21552,7 @@
             <remarks>
             A window that has an owner window is always on top of it.
             Don't call this for controls, they don't have an owner window.
-            The 'get' function returns default(Wnd) if this window isn't owned or is invalid. Supports <see cref="M:Au.Types.Native.GetError"/>.
+            The 'get' function returns default(Wnd) if this window isn't owned or is invalid. Supports <see cref="P:Au.WinError.Code"/>.
             The 'set' function can fail, eg if the owner's process has higher <see cref="T:Au.Uac">UAC</see> integrity level.
             </remarks>
         </member>
@@ -21549,16 +21561,16 @@
             Gets the top-level parent window of this control.
             If this is a top-level window, returns this. Returns default(Wnd) if this window is invalid.
             </summary>
-            <remarks>Supports <see cref="M:Au.Types.Native.GetError"/>.</remarks>
+            <remarks>Supports <see cref="P:Au.WinError.Code"/>.</remarks>
         </member>
         <member name="P:Au.Wnd.IsChild">
             <summary>
             Returns true if this is a child window (control), false if top-level window.
             </summary>
             <remarks>
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             Uses <see cref="P:Au.Wnd.GetWnd.DirectParent"/>.
-            Another way is <c>w.HasStyle(Native.WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
+            Another way is <c>w.HasStyle(WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
             </remarks>
         </member>
         <member name="M:Au.Wnd.IsChildOf(Au.Wnd)">
@@ -21567,7 +21579,7 @@
             </summary>
             <remarks>
             Calls API <msdn>IsChild</msdn>.
-            Supports <see cref="M:Au.Types.Native.GetError"/>.
+            Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
         </member>
         <member name="P:Au.Wnd.Active">
@@ -21890,7 +21902,7 @@
             Sets new periodic timer.
             Returns new <see cref="T:Au.Timer_"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
             </summary>
-            <param name="periodMilliseconds">Time interval (period) of calling the callback function, milliseconds. The minimal period is 10-20, even if this parameter is less than that.</param>
+            <param name="periodMilliseconds">Time interval (period) of calling the callback function, milliseconds. The minimal period is 10-20, even if specified smaller.</param>
             <param name="timerAction">Callback function.</param>
             <param name="tag">Something to pass to the callback function as <see cref="P:Au.Timer_.Tag"/>.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">Negative periodMilliseconds.</exception>
@@ -22041,7 +22053,7 @@
             Calls API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_ALLINPUT. Alertable.
             When a handle becomes signaled, returns its 0-based index. If abandoned mutex, returns 0-based index + Api.WAIT_ABANDONED_0 (0x80).
             If timeMS>0, waits max timeMS and on timeout returns Api.WAIT_TIMEOUT.
-            If failed, returns -1. Supports Native.GetError.
+            If failed, returns -1. Supports <see cref="P:Au.WinError.Code"/>.
             </summary>
         </member>
         <member name="M:Au.WaitFor.LibWait(System.Int64,Au.Types.WHFlags,System.Object,Au.Types.LibWaitVariable,System.IntPtr[])">

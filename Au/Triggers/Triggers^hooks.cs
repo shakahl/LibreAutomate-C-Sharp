@@ -167,7 +167,7 @@ namespace Au.Triggers
 
 		unsafe int _AddThread(int threadId, byte[] data)
 		{
-			var pipeName = Triggers.PipeName(threadId);
+			var pipeName = AuTriggers.LibPipeName(threadId);
 			var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ | Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, Api.FILE_FLAG_OVERLAPPED);
 			if(pipe.IsInvalid) { Debug_.LibPrintNativeError(); return 0; }
 
@@ -260,7 +260,7 @@ namespace Au.Triggers
 				g1: //we use this weird goto code instead of a nested _Wait function to make faster JIT
 				var o = new Api.OVERLAPPED { hEvent = _event };
 				if(!(read ? Api.ReadFile(x.pipe, &r, 1, out _, &o) : Api.WriteFile(x.pipe, data, size, out _, &o))) {
-					if(Native.GetError() != Api.ERROR_IO_PENDING) { Debug_.LibPrintNativeError(); return false; }
+					if(WinError.Code != Api.ERROR_IO_PENDING) { Debug_.LibPrintNativeError(); return false; }
 					for(; ; ) {
 						var r1 = Api.WaitForMultipleObjectsEx(2, ha, false, Timeout.Infinite, false);
 						if(r1 == 0) break;

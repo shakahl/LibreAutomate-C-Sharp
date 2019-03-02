@@ -165,7 +165,7 @@ namespace Au
 					for(bool useSB = false; ; useSB = results == null) {
 						var o = new Api.OVERLAPPED { hEvent = ev.SafeWaitHandle.DangerousGetHandle() };
 						if(!Api.ConnectNamedPipe(_hPipe, &o)) {
-							int e = Native.GetError(); if(e != Api.ERROR_IO_PENDING) break;
+							int e = WinError.Code; if(e != Api.ERROR_IO_PENDING) break;
 							int wr = WaitHandle.WaitAny(ha);
 							if(wr != 0) { Api.CancelIo(_hPipe); R = true; break; } //task ended
 							if(!Api.GetOverlappedResult(_hPipe, ref o, out _, false)) { Api.DisconnectNamedPipe(_hPipe); break; }
@@ -173,7 +173,7 @@ namespace Au
 
 						if(b == null) b = (char*)Util.NativeHeap.Alloc(bLen);
 						bool readOK;
-						while(((readOK = Api.ReadFile(_hPipe, b, bLen, out int n, null)) || (Native.GetError() == Api.ERROR_MORE_DATA)) && n > 0) {
+						while(((readOK = Api.ReadFile(_hPipe, b, bLen, out int n, null)) || (WinError.Code == Api.ERROR_MORE_DATA)) && n > 0) {
 							n /= 2;
 							if(!readOK) useSB = true;
 							//Print(useSB, n);

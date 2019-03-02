@@ -25,8 +25,8 @@ namespace Au.Triggers
 {
 	class TOptions
 	{
-		public Action<TOBeforeArgs> before;
-		public Action<TOAfterArgs> after;
+		public Action<TriggerOptions.BAArgs> before;
+		public Action<TriggerOptions.BAArgs> after;
 		public int thread;
 		public int ifRunning;
 
@@ -39,7 +39,7 @@ namespace Au.Triggers
 	/// Allows to set some options for multiple triggers and their actions.
 	/// </summary>
 	/// <remarks>
-	/// You set options through a thread-static property <see cref="Triggers.Options"/>.
+	/// You set options through a thread-static property <see cref="AuTriggers.Options"/>.
 	/// Changed options are applied to all triggers/actions added afterwards in this thread.
 	/// </remarks>
 	/// <example>
@@ -120,7 +120,7 @@ namespace Au.Triggers
 		/// Triggers.Options.BeforeAction = o => { Opt.Key.KeySpeed = 20; Opt.Key.TextSpeed = 5; };
 		/// ]]></code>
 		/// </example>
-		public Action<TOBeforeArgs> BeforeAction { set => _New().before = value; }
+		public Action<BAArgs> BeforeAction { set => _New().before = value; }
 
 		/// <summary>
 		/// null or an action to run after the actual action.
@@ -131,7 +131,7 @@ namespace Au.Triggers
 		/// Triggers.Options.AfterAction = o => { if(o.Exception!=null) Print(o.Exception.Message); else Print("completed successfully"); };
 		/// ]]></code>
 		/// </example>
-		public Action<TOAfterArgs> AfterAction { set => _New().after = value; }
+		public Action<BAArgs> AfterAction { set => _New().after = value; }
 
 		internal TOptions Current {
 			get {
@@ -140,29 +140,17 @@ namespace Au.Triggers
 			}
 		}
 		static TOptions s_empty;
-	}
-
-	/// <summary>
-	/// Arguments for <see cref="TriggerOptions.BeforeAction"/>.
-	/// Currently does not contain any properties.
-	/// </summary>
-	public class TOBeforeArgs
-	{
-
-	}
-
-	/// <summary>
-	/// Arguments for <see cref="TriggerOptions.AfterAction"/>.
-	/// </summary>
-	public class TOAfterArgs
-	{
-		///
-		internal TOAfterArgs(Exception e) { Exception = e; }
 
 		/// <summary>
-		/// If action ended with an exception, contains the exception. Else null.
+		/// Arguments for <see cref="BeforeAction"/> and <see cref="AfterAction"/>.
 		/// </summary>
-		public Exception Exception { get; private set; }
+		public struct BAArgs
+		{
+			/// <summary>
+			/// If action ended with an exception, the exception. Else null.
+			/// </summary>
+			public Exception Exception { get; internal set; }
+		}
 	}
 
 	class TriggerActionThreads
@@ -177,8 +165,9 @@ namespace Au.Triggers
 			Action actionWrapper = () => {
 				var opt = ta.options;
 				try {
+					TriggerOptions.BAArgs baArgs = default; //struct
 #if true
-					opt.before?.Invoke(new TOBeforeArgs());
+					opt.before?.Invoke(baArgs);
 #else
 					if(opt.before != null) {
 						bool called = false;
@@ -188,10 +177,9 @@ namespace Au.Triggers
 						opt.before(!called);
 					}
 #endif
-					Exception ex = null;
 					try { ta.Run(args); }
-					catch(Exception e1) when(!(e1 is ThreadAbortException)) { Print(ex = e1); }
-					opt.after?.Invoke(new TOAfterArgs(ex));
+					catch(Exception ex) when(!(ex is ThreadAbortException)) { baArgs.Exception = ex; Print(ex); }
+					opt.after?.Invoke(baArgs);
 				}
 				catch(Exception e2) {
 					if(e2 is ThreadAbortException) Thread.ResetAbort(); //FUTURE: don't reset if eg thrown to end task process softly
@@ -288,7 +276,7 @@ namespace Au.Triggers
 						finally {
 							Api.CloseHandle(_event);
 							_q = null; _running = false; //restart if aborted
-							//Print("thread ended");
+														 //Print("thread ended");
 						}
 					});
 				}

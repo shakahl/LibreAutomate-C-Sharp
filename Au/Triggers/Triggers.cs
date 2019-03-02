@@ -31,25 +31,20 @@ namespace Au.Triggers
 		//SHFB uses this for namespace documentation.
 	}
 
-	public class Triggers
+	public class AuTriggers
 	{
-		ITriggers[] _t;
+		readonly ITriggers[] _t;
 		ITriggers this[TriggerType e] => _t[(int)e];
 
-		Triggers() => _Init();
-
-		void _Init()
+		public AuTriggers()
 		{
 			_t = new ITriggers[(int)TriggerType.Count];
-			_scopes = new TriggerScopes();
-			_options = new TriggerOptions();
-			_threads = null; //will create on demand
+			scopes = new TriggerScopes();
+			options = new TriggerOptions();
+			winCache = new WFCache { CacheName = true }; //we'll call Clear(onlyName: true) at the start of each event
 		}
 
-		static Triggers _Instance => t_instance ?? (t_instance = new Triggers());
-		[ThreadStatic] static Triggers t_instance;
-
-		//public static TriggerScopes Of {
+		//public TriggerScopes Of {
 		//	get {
 		//		if(_test == false){
 		//			Debug_.LibMemorySetAnchor();
@@ -64,15 +59,14 @@ namespace Au.Triggers
 
 		//			 _test = true;
 
-		//		return Instance._scopes;
+		//		return scopes;
 		//	}
 		//}
 		//static bool _test;
 		//static string _s1;
 
-		public static TriggerScopes Of => _Instance._scopes;
-		TriggerScopes _scopes;
-		internal TriggerScopes LibScopes => _scopes;
+		public TriggerScopes Of => scopes;
+		internal readonly TriggerScopes scopes;
 
 		/// <summary>
 		/// Allows to set some options for multiple triggers and their actions.
@@ -80,9 +74,10 @@ namespace Au.Triggers
 		/// <remarks>
 		/// More info and examples: <see cref="TriggerOptions"/>.
 		/// </remarks>
-		public static TriggerOptions Options => _Instance._options;
-		TriggerOptions _options;
-		internal TriggerOptions LibOptions => _options;
+		public TriggerOptions Options => options;
+		internal readonly TriggerOptions options;
+
+		internal readonly WFCache winCache;
 
 		TriggerActionThreads _threads;
 
@@ -95,7 +90,7 @@ namespace Au.Triggers
 				case TriggerType.Hotkey: t = new HotkeyTriggers(this); break;
 				case TriggerType.Autotext: t = new AutotextTriggers(this); break;
 				case TriggerType.Mouse: t = new MouseTriggers(this); break;
-				case TriggerType.WindowActive: case TriggerType.WindowVisible: t = new WindowTriggers(this, e); break;
+				case TriggerType.Window: t = new WindowTriggers(this); break;
 				default: Debug.Assert(false); break;
 				}
 				_t[i] = t;
@@ -103,24 +98,35 @@ namespace Au.Triggers
 			return t;
 		}
 
-		public static HotkeyTriggers Hotkey => _Instance._Get(TriggerType.Hotkey) as HotkeyTriggers;
+		public HotkeyTriggers Hotkey => _Get(TriggerType.Hotkey) as HotkeyTriggers;
 
-		public static AutotextTriggers Autotext => _Instance._Get(TriggerType.Autotext) as AutotextTriggers;
+		public AutotextTriggers Autotext => _Get(TriggerType.Autotext) as AutotextTriggers;
 
-		public static MouseTriggers Mouse => _Instance._Get(TriggerType.Mouse) as MouseTriggers;
+		public MouseTriggers Mouse => _Get(TriggerType.Mouse) as MouseTriggers;
 
-		public static WindowTriggers WindowActive => _Instance._Get(TriggerType.WindowActive) as WindowTriggers;
-
-		public static WindowTriggers WindowVisible => _Instance._Get(TriggerType.WindowVisible) as WindowTriggers;
+		public WindowTriggers Window => _Get(TriggerType.Window) as WindowTriggers;
 
 		/// <summary>
 		/// The last added trigger.
 		/// </summary>
-		public static Trigger LastAdded => _Instance.lastAdded;
-		internal Trigger lastAdded;
+		/// <example>
+		/// <code><![CDATA[
+		/// Triggers.Last.Hotkey.EnabledAlways = true;
+		/// ]]></code>
+		/// </example>
+		public LastAdded Last { get; } = new LastAdded();
 
-		public static void Run() => _Instance._Run();
-		void _Run()
+		public class LastAdded
+		{
+			internal Trigger trigger;
+
+			public HotkeyTrigger Hotkey => trigger as HotkeyTrigger;
+			public AutotextTrigger Autotext => trigger as AutotextTrigger;
+			public MouseTrigger Mouse => trigger as MouseTrigger;
+			public WindowTrigger Window => trigger as WindowTrigger;
+		}
+
+		public void Run()
 		{
 			//AppDomain.CurrentDomain.AssemblyLoad += (object sender, AssemblyLoadEventArgs args) => {
 			//	var a = args.LoadedAssembly;
@@ -130,6 +136,8 @@ namespace Au.Triggers
 			//	//	Debugger.Launch();
 			//	//}
 			//};
+
+			LibThrowIfRunning();
 
 			bool haveTriggers = false; int llHooks = 0;
 			for(int i = 0; i < _t.Length; i++) {
@@ -172,21 +180,24 @@ namespace Au.Triggers
 			//Perf.Next();
 
 			//prevent big delay later on first LL hook event while hook proc waits
-			if(_scopes.HasScopes) {
+			if(scopes.HasScopes) {
 				ThreadPool.QueueUserWorkItem(_ => { //never mind: should do it once. Several Triggers.Run in task is rare. Fast next time.
-					Util.Assembly_.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
-					if(!Util.Assembly_.LibIsAuNgened) {
-						new Wnd.Finder("*a").IsMatch(Wnd.Active);
-						Wnd.FromXY(default, WXYFlags.NeedWindow);
-						Keyb.GetMod();
-						_ = Time.PerfMicroseconds;
-						Util.Jit.Compile(typeof(TriggerHookContext), "InitContext", "PerfEnd", "PerfWarn");
-						Util.Jit.Compile(typeof(HotkeyTriggers), "HookProc");
-						Util.Jit.Compile(typeof(AutotextTriggers), "HookProc");
-						Util.Jit.Compile(typeof(MouseTriggers), "HookProc");
-						Util.Jit.Compile(typeof(Trigger), "MatchScope");
-						Util.Jit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
+					try {
+						Util.Assembly_.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
+						if(!Util.Assembly_.LibIsAuNgened) {
+							new Wnd.Finder("*a").IsMatch(Wnd.Active);
+							Wnd.FromXY(default, WXYFlags.NeedWindow);
+							Keyb.GetMod();
+							_ = Time.PerfMicroseconds;
+							Util.Jit.Compile(typeof(TriggerHookContext), "InitContext", "PerfEnd", "PerfWarn");
+							Util.Jit.Compile(typeof(HotkeyTriggers), "HookProc");
+							Util.Jit.Compile(typeof(AutotextTriggers), "HookProc");
+							Util.Jit.Compile(typeof(MouseTriggers), "HookProc");
+							Util.Jit.Compile(typeof(Trigger), "MatchScope");
+							Util.Jit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
+						}
 					}
+					catch(Exception ex) { Debug_.Print(ex); }
 				});
 			}
 			//Perf.Next();
@@ -213,7 +224,7 @@ namespace Au.Triggers
 			}
 
 			int threadId = Api.GetCurrentThreadId();
-			var pipe = Api.CreateNamedPipe(PipeName(threadId),
+			var pipe = Api.CreateNamedPipe(LibPipeName(threadId),
 				Api.PIPE_ACCESS_DUPLEX | Api.FILE_FLAG_OVERLAPPED,
 				Api.PIPE_TYPE_MESSAGE | Api.PIPE_READMODE_MESSAGE | Api.PIPE_REJECT_REMOTE_CLIENTS,
 				1, 0, 0, 0, Api.SECURITY_ATTRIBUTES.ForPipes);
@@ -222,7 +233,7 @@ namespace Au.Triggers
 			var aCDS = new byte[8];
 			aCDS.WriteInt_(llHooks, 0);
 			aCDS.WriteInt_(Api.GetCurrentProcessId(), 4);
-			if(1 != Wnd.Misc.CopyDataStruct.SendBytes(wMsg, 1, aCDS, threadId)) { //install hooks and start sending events to this thread
+			if(1 != Wnd.Misc.CopyDataStruct.SendBytes(wMsg, 1, aCDS, threadId)) { //install hooks and start sending events to us
 				pipe.Dispose();
 				throw new AuException("*SendBytes");
 			}
@@ -240,14 +251,14 @@ namespace Au.Triggers
 				while(true) {
 					var o = new Api.OVERLAPPED { hEvent = evHooks };
 					if(!Api.ReadFile(pipe, b, bLen, out int size, &o)) {
-						int ec = Native.GetError();
+						int ec = WinError.Code;
 						if(ec == Api.ERROR_IO_PENDING) {
 							//note: while waiting here, can be called acc hook proc, timer etc (any posted and sent messages).
 							if(0 != WaitFor.LibWait(Timeout.Infinite, WHFlags.DoEvents, ha)) { //with WaitHandle.WaitAny cannot use MTA thread, timers, etc
 								Api.CancelIo(pipe);
 								break;
 							}
-							ec = Api.GetOverlappedResult(pipe, ref o, out size, false) ? 0 : Native.GetError();
+							ec = Api.GetOverlappedResult(pipe, ref o, out size, false) ? 0 : WinError.Code;
 						}
 						if(ec != 0) { Debug_.LibPrintNativeError(ec); break; }
 					}
@@ -270,17 +281,22 @@ namespace Au.Triggers
 					thc.PerfWarn();
 					//Perf.NW();//TODO
 					Api.WriteFile(pipe, &suppressInputEvent, 1, out _);
-					if(thc.trigger?.action != null) {
-						if(_threads == null) _threads = new TriggerActionThreads();
-						_threads.Run(thc.trigger, thc.args);
-					}
+					if(thc.trigger != null) LibRunAction(thc.trigger, thc.args);
 				}
 			}
 			finally {
 				pipe.Dispose();
 				Api.CloseHandle(evHooks);
 				_StartStop(false);
-				wMsg.Send(Api.WM_USER, 1, threadId); //stop sending hook events to this thread
+				wMsg.Send(Api.WM_USER, 1, threadId); //stop sending hook events to us
+			}
+		}
+
+		internal void LibRunAction(Trigger trigger, TriggerArgs args)
+		{
+			if(trigger.action != null) {
+				if(_threads == null) _threads = new TriggerActionThreads();
+				_threads.Run(trigger, args);
 			}
 		}
 
@@ -302,15 +318,25 @@ namespace Au.Triggers
 		/// </remarks>
 		public void Stop()
 		{
-			if(_evStop != default) Api.SetEvent(_evStop);
+			Api.SetEvent(_evStop);
 		}
 		IntPtr _evStop;
 
 		/// <summary>
-		/// Gets or sets whether triggers of this <see cref="Triggers"/> instance are disabled.
+		/// True if executing <see cref="Run"/>.
+		/// </summary>
+		internal bool LibRunning => _evStop != default;
+
+		/// <summary>
+		/// Throws InvalidOperationException if executing <see cref="Run"/>.
+		/// </summary>
+		internal void LibThrowIfRunning() { if(_evStop != default) throw new InvalidOperationException(); }
+
+		/// <summary>
+		/// Gets or sets whether triggers of this <see cref="AuTriggers"/> instance are disabled.
 		/// </summary>
 		/// <remarks>
-		/// Does not depend on <see cref="TriggersEverywhere.Disabled"/>.
+		/// Does not depend on <see cref="DisabledEverywhere"/>.
 		/// Does not end/pause threads of trigger actions.
 		/// </remarks>
 		/// <seealso cref="TriggerScopes.EnabledAlways"/>
@@ -324,41 +350,31 @@ namespace Au.Triggers
 		/// </example>
 		public bool Disabled { get; set; }
 
+		/// <summary>
+		/// true if triggers are disabled in all proceses that use this library in this user session.
+		/// </summary>
+		/// <seealso cref="Disabled"/>
+		/// <seealso cref="TriggerScopes.EnabledAlways"/>
+		public static unsafe bool DisabledEverywhere {
+			get => Util.LibSharedMemory.Ptr->triggers.disabled;
+			internal set => Util.LibSharedMemory.Ptr->triggers.disabled = value;
+		}
+
 		[StructLayout(LayoutKind.Sequential, Size = 16)] //note: this struct is in shared memory. Size must be same in all library versions.
 		internal struct LibSharedMemoryData
 		{
 			public bool disabled;
 		}
 
-		/// <summary>
-		/// Removes all added triggers. Resets <b>Triggers.Of</b> and <b>Triggers.Options</b>.
-		/// </summary>
-		/// <remarks>
-		/// Rarely used.
-		/// </remarks>
-		/// <exception cref="InvalidOperationException">
-		/// Called from another thread. For example from a trigger action.
-		/// Or called while in <see cref="Run"/>. Call <see cref="Stop"/> at first; then call this function after <b>Run</b> returns.
-		/// </exception>
-		public static void Clear()
-		{
-			var ti = t_instance;
-			if(ti == null || ti._evStop != default) throw new InvalidOperationException();
-			ti._Init();
-		}
-
-		internal static string PipeName(int threadId) => @"\\.\pipe\Au.Triggers-" + threadId.ToString();
+		internal static string LibPipeName(int threadId) => @"\\.\pipe\Au.Triggers-" + threadId.ToString();
 	}
 
-	public enum TriggerType
+	enum TriggerType
 	{
-		//note: don't change values in new versions. Used in shared memory, which may be used by an exe that uses library of different version.
-
 		Hotkey,
 		Autotext,
 		Mouse,
-		WindowActive,
-		WindowVisible,
+		Window,
 
 		Count,
 
@@ -384,20 +400,20 @@ namespace Au.Triggers
 	}
 
 
-	class TriggerHookContext : WFCache
+	class TriggerHookContext
 	{
-		public readonly Triggers triggers;
+		internal readonly AuTriggers triggers;
 		Wnd _w;
 		bool _haveWnd, _mouseWnd; POINT _p;
 
-		public TriggerHookContext(Triggers triggers)
+		public TriggerHookContext(AuTriggers triggers)
 		{
 			this.triggers = triggers;
 			_perfList = new _ScopeTime[32];
 			_perfHookTimeout = Util.WinHook.LowLevelHooksTimeout;
 		}
 
-		public Wnd w {
+		public Wnd Window {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if(!_haveWnd) {
@@ -431,7 +447,7 @@ namespace Au.Triggers
 			Perf.First();//TODO
 
 			_w = default; _haveWnd = _mouseWnd = false;
-			Clear(onlyName: true);
+			triggers.winCache.Clear(onlyName: true);
 			trigger = null; args = null;
 			_perfLen = 0;
 		}
@@ -459,19 +475,19 @@ namespace Au.Triggers
 			_perfTime = Time.PerfMicroseconds;
 		}
 
-		public void PerfEnd(TriggerScopeBase scope)
+		public void PerfEnd(bool isFunc, ref int perfTime)
 		{
 			long tLong = Time.PerfMicroseconds - _perfTime;
 			int time = (int)Math.Min(tLong, 1_000_000_000);
 
 			//calc average time of this scope. Assume the first time is 0.
-			if(scope.perfTime != 0) scope.perfTime = Math.Max(1, (int)(((long)scope.perfTime * 7 + time) / 8));
-			//Print($"time={time}, avg={scope.perfTime}");
+			if(perfTime != 0) perfTime = Math.Max(1, (int)(((long)perfTime * 7 + time) / 8));
+			//Print($"time={time}, avg={perfTime}");
 
-			if(scope is TriggerScopeFunc) time |= unchecked((int)0x80000000);
-			if(_perfLen == _perfList.Length) Array.Resize(ref _perfList, _perfList.Length * 2); //TODO: test
-			_perfList[_perfLen++] = new _ScopeTime { time = time, avgTime = scope.perfTime };
-			if(scope.perfTime == 0) scope.perfTime = 1;
+			if(isFunc) time |= unchecked((int)0x80000000);
+			if(_perfLen == _perfList.Length) Array.Resize(ref _perfList, _perfList.Length * 2);
+			_perfList[_perfLen++] = new _ScopeTime { time = time, avgTime = perfTime };
+			if(perfTime == 0) perfTime = 1;
 		}
 
 		public void PerfWarn()
@@ -500,22 +516,6 @@ namespace Au.Triggers
 			}
 			b.Append("* W - Triggers.Of.Window or similar; F - Triggers.Of.Func or similar.</fold>");
 			ThreadPool.QueueUserWorkItem(s1 => Print(s1), b.ToString()); //4 ms first time. Async because Print JIT slow.
-		}
-	}
-
-	/// <summary>
-	/// Gets info common to triggers of all proceses that use this library in this user session.
-	/// </summary>
-	public static class TriggersEverywhere
-	{
-		/// <summary>
-		/// true if triggers are disabled in all proceses that use this library in this user session.
-		/// </summary>
-		/// <seealso cref="Triggers.Disabled"/>
-		/// <seealso cref="TriggerScopes.EnabledAlways"/>
-		public static unsafe bool Disabled {
-			get => Util.LibSharedMemory.Ptr->triggers.disabled;
-			internal set => Util.LibSharedMemory.Ptr->triggers.disabled = value;
 		}
 	}
 

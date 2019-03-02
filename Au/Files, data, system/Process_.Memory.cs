@@ -48,7 +48,7 @@ namespace Au
 				if(Mem != default) {
 					var mem = Mem; Mem = default;
 					if(!_dontFree) {
-						if(!Api.VirtualFreeEx(_HprocHR, mem)) PrintWarning("Failed to free process memory. " + Native.GetErrorMessage());
+						if(!Api.VirtualFreeEx(_HprocHR, mem)) PrintWarning("Failed to free process memory. " + WinError.Message);
 					}
 				}
 				_hproc.Dispose();

@@ -30,7 +30,7 @@ namespace Au
 	/// 
 	/// An Acc instance holds an AO COM pointer (<msdn>IAccessible</msdn>) and a simple element id (int). Most Acc functions wrap IAccessible interface functions or/and related API.
 	/// 
-	/// Acc functions that get properties don't throw exception when the wrapped IAccessible/etc function failed (returned an error code of HRESULT type). Then they return "" (string properties), 0, false, null or empty collection, dependin on return type. Applications implement AOs differently, often with bugs, and their IAccessible interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These Acc functions also set the last error code of this thread = the return value (HRESULT) of the IAccessible function, and callers can use <see cref="Native.GetError"/> to get it. If Native.GetError returns 1 (S_FALSE), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
+	/// Acc functions that get properties don't throw exception when the wrapped IAccessible/etc function failed (returned an error code of HRESULT type). Then they return "" (string properties), 0, false, null or empty collection, dependin on return type. Applications implement AOs differently, often with bugs, and their IAccessible interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These Acc functions also set the last error code of this thread = the return value (HRESULT) of the IAccessible function, and callers can use <see cref="WinError.Code"/> to get it. If WinError.Code returns 1 (S_FALSE), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
 	/// 
 	/// You can dispose Acc variables to release the COM object, but it is not necessary (GC will do it later).
 	/// 
@@ -381,7 +381,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets the accessible object that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="Util.AccHook"/>.
-		/// Returns null if failed. Suports <see cref="Native.GetError"/>.
+		/// Returns null if failed. Suports <see cref="WinError.Code"/>.
 		/// </summary>
 		/// <param name="w"></param>
 		/// <param name="idObject"></param>
@@ -392,11 +392,11 @@ namespace Au
 		/// Often fails because the object already does not exist, because the callback function is called asynchronously, especially when the event is OBJECT_DESTROY, OBJECT_HIDE, SYSTEM_*END.
 		/// Returns null if failed. Always check the return value, to avoid NullReferenceException. An exception in the callback function kills this process.
 		/// </remarks>
-		public static Acc FromEvent(Wnd w, int idObject, int idChild)
+		public static Acc FromEvent(Wnd w, AccOBJID idObject, int idChild)
 		{
 			int hr = Api.AccessibleObjectFromEvent(w, idObject, idChild, out var iacc, out var v);
 			if(hr == 0 && iacc == default) hr = Api.E_FAIL;
-			if(hr != 0) { Native.SetError(hr); return null; }
+			if(hr != 0) { WinError.Code = hr; return null; }
 			int elem = v.vt == Api.VARENUM.VT_I4 ? v.ValueInt : 0;
 			return new Acc(iacc, elem);
 		}
@@ -472,7 +472,7 @@ namespace Au
 				}
 #endif
 			}
-			Native.SetError(hr);
+			WinError.Code = hr;
 			return hr;
 		}
 
@@ -500,7 +500,7 @@ namespace Au
 			t_debugNoRecurse = true;
 			try {
 				var s = ToString();
-				Print($"<><c 0xff>-{funcId}, 0x{hr:X} - {Native.GetErrorMessage(hr)}    {s}</c>");
+				Print($"<><c 0xff>-{funcId}, 0x{hr:X} - {WinError.MessageFor(hr)}    {s}</c>");
 			}
 			finally { t_debugNoRecurse = false; }
 		}

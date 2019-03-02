@@ -165,7 +165,7 @@ static unsafe class Program
 			//}
 			if(m.code == HookData.CbtEvent.ACTIVATE) {
 				var w = (Wnd)m.wParam;
-				if(!w.HasExStyle(Native.WS_EX.NOACTIVATE)) {
+				if(!w.HasExStyle(WS_EX.NOACTIVATE)) {
 					//Print(w);
 					//Print(w.ExStyle);
 					//Api.SetForegroundWindow(w); //does not work

@@ -355,7 +355,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Registers a hotkey using API <msdn>RegisterHotKey</msdn>.
-		/// Returns false if fails. Supports <see cref="Native.GetError"/>.
+		/// Returns false if fails. Supports <see cref="WinError.Code"/>.
 		/// </summary>
 		/// <param name="id">Hotkey id. Must be 0 to 0xBFFF. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
 		/// <param name="hotkey">Hotkey. Can be: string like "Ctrl+Shift+Alt+Win+K", tuple (KMod, KKey), enum KKey, enum Keys, struct KHotkey.</param>
@@ -394,7 +394,7 @@ namespace Au.Util
 		{
 			if(_id != 0) {
 				if(!Api.UnregisterHotKey(_w, _id)) {
-					var es = Native.GetErrorMessage();
+					var es = WinError.Message;
 					PrintWarning($"Failed to unregister hotkey, id={_id.ToString()}. {es}");
 					return;
 				}

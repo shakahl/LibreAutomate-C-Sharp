@@ -1037,6 +1037,36 @@ namespace Au
 				return R;
 			}
 		}
+
+		/// <summary>
+		/// Encloses string in \Q \E if it contains metacharacters \^$.[|()?*+{ or if <paramref name="always"/> == true.
+		/// </summary>
+		/// <param name="s"></param>
+		/// <param name="always">Enclose always, even if the string does not contain metacharacters. Should be true if the regular expression in which this string will be used has option "extended", because then whitespace is ignored and # is a special character too.</param>
+		/// <remarks>
+		/// Such enclosed substring in a regular expression is interpreted as a literal string.
+		/// This function also escapes \E, so that it does not end the literal string.
+		/// </remarks>
+		public static string EscapeQE(string s, bool always = false)
+		{
+			if(s == null) return s;
+			if(always) goto g1;
+			for(int i = 0; i < s.Length; i++) {
+				char c = s[i];
+				if((c >= '(' && c <= '+') || c == '\\' || c == '.' || c == '?' || c == '{' || c == '[' || c == '|' || c == '$' || c == '^') goto g1;
+				//this is slower
+				//if(c < 128) {
+				//	if(c < 64) {
+				//		if(0 != (0b1000000000000000010011110001000000000000000000000000000000000000UL & (1UL << c))) goto g1;
+				//	} else {
+				//		if(0 != (0b0001100000000000000000000000000001011000000000000000000000000000UL & (1UL << (c - 64)))) goto g1;
+				//	}
+				//}
+			}
+			return s;
+			g1:
+			return @"\Q" + s.Replace(@"\E", @"\E\\E\Q") + @"\E";
+		}
 	}
 
 	#region static

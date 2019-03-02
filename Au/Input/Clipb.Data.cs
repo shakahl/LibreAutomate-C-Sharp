@@ -219,9 +219,9 @@ namespace Au
 					var v = _a[i];
 					if(format != 0 && v.format != format) continue;
 					if(renderLater) {
-						Native.ClearError();
+						WinError.Clear();
 						Api.SetClipboardData(v.format, default);
-						int ec = Native.GetError(); if(ec != 0) throw new AuException(ec, "*set clipboard data");
+						int ec = WinError.Code; if(ec != 0) throw new AuException(ec, "*set clipboard data");
 					} else _SetClipboard(v.format, v.data);
 				}
 #if SUPPORT_RAW_HANDLE
@@ -260,7 +260,7 @@ namespace Au
 				Debug.Assert(h != default);
 				if(default != Api.SetClipboardData(format, h)) return;
 				ge:
-				int ec = Native.GetError();
+				int ec = WinError.Code;
 				if(data is Bitmap) Api.DeleteObject(h); else Api.GlobalFree(h);
 				throw new AuException(ec, "*set clipboard data");
 			}

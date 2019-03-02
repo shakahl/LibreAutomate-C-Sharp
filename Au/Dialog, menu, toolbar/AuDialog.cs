@@ -980,7 +980,7 @@ namespace Au
 				else if(_c.hwndParent.Is0) topmost = Options.TopmostIfNoOwnerWindow;
 				if(topmost) w.ZorderTopmost();
 
-				//w.SetStyleAdd(Native.WS.THICKFRAME); //does not work
+				//w.SetStyleAdd(WS.THICKFRAME); //does not work
 
 				if(_IsEdit) _EditControlCreate();
 
@@ -1299,23 +1299,23 @@ namespace Au
 
 			//Create an intermediate "#32770" to be direct parent of the Edit control.
 			//It is safer (the dialog will not receive Edit notifications) and helps to solve Tab/Esc problems.
-			var pStyle = Native.WS.CHILD | Native.WS.VISIBLE | Native.WS.CLIPCHILDREN | Native.WS.CLIPSIBLINGS; //don't need WS_TABSTOP
-			var pExStyle = Native.WS_EX.NOPARENTNOTIFY; //not Native.WS_EX.CONTROLPARENT
+			var pStyle = WS.CHILD | WS.VISIBLE | WS.CLIPCHILDREN | WS.CLIPSIBLINGS; //don't need WS_TABSTOP
+			var pExStyle = WS_EX.NOPARENTNOTIFY; //not WS_EX.CONTROLPARENT
 			_editParent = Wnd.Misc.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
 			_editControlParentProcHolder = _EditControlParentProc;
 			_editParent.SetWindowLong(Native.GWL.DWLP_DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder));
 
 			//Create Edit or ComboBox control.
 			string cn = "Edit";
-			var style = Native.WS.CHILD | Native.WS.VISIBLE; //don't need WS_TABSTOP
+			var style = WS.CHILD | WS.VISIBLE; //don't need WS_TABSTOP
 			switch(_editType) {
-			case DEdit.Text: style |= (Native.WS)Api.ES_AUTOHSCROLL; break;
-			case DEdit.Password: style |= (Native.WS)(Api.ES_PASSWORD | Api.ES_AUTOHSCROLL); break;
-			case DEdit.Number: style |= (Native.WS)(Api.ES_NUMBER | Api.ES_AUTOHSCROLL); break;
-			case DEdit.Multiline: style |= (Native.WS)(Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN) | Native.WS.VSCROLL; break;
-			case DEdit.Combo: style |= (Native.WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | Native.WS.VSCROLL; cn = "ComboBox"; break;
+			case DEdit.Text: style |= (WS)Api.ES_AUTOHSCROLL; break;
+			case DEdit.Password: style |= (WS)(Api.ES_PASSWORD | Api.ES_AUTOHSCROLL); break;
+			case DEdit.Number: style |= (WS)(Api.ES_NUMBER | Api.ES_AUTOHSCROLL); break;
+			case DEdit.Multiline: style |= (WS)(Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN) | WS.VSCROLL; break;
+			case DEdit.Combo: style |= (WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | WS.VSCROLL; cn = "ComboBox"; break;
 			}
-			_editWnd = Wnd.Misc.CreateWindowAndSetFont(cn, null, style, Native.WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent, customFontHandle: _editFont);
+			_editWnd = Wnd.Misc.CreateWindowAndSetFont(cn, null, style, WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent, customFontHandle: _editFont);
 
 			//Init the control.
 			if(_editType == DEdit.Combo) {

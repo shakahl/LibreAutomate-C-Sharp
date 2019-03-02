@@ -186,7 +186,7 @@ namespace Au.Controls
 			}
 			catch(Exception ex) {
 #if DEBUG
-				Output.LibWriteQM2(ex);
+				Output.QM2.Write(ex); //cannot Print or show dialog in ctor
 #else
 				_ = ex;
 #endif

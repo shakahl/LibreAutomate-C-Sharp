@@ -52,7 +52,7 @@ class UacDragDrop
 			_timer = new Timer_(() => _Timer());
 
 			//use hook to detect when drag-drop started
-			_hook = new Au.Util.AccHook(AccEVENT.SYSTEM_CAPTURESTART, AccEVENT.SYSTEM_CAPTURESTART, d => {
+			_hook = new Au.Util.AccHook(AccEVENT.SYSTEM_CAPTURESTART, 0, d => {
 				_EndedDragMode();
 				if(0 == d.wnd.ClassNameIs("CLIPBRDWNDCLASS", "DragWindow")) return;
 				_StartedDragMode();
@@ -282,8 +282,8 @@ class UacDragDrop
 		protected override CreateParams CreateParams {
 			get {
 				CreateParams k = base.CreateParams;
-				k.ExStyle = (int)(Native.WS_EX.LAYERED | Native.WS_EX.NOACTIVATE | Native.WS_EX.TOOLWINDOW | Native.WS_EX.TOPMOST);
-				k.Style = unchecked((int)(Native.WS.POPUP | Native.WS.DISABLED));
+				k.ExStyle = (int)(WS_EX.LAYERED | WS_EX.NOACTIVATE | WS_EX.TOOLWINDOW | WS_EX.TOPMOST);
+				k.Style = unchecked((int)(WS.POPUP | WS.DISABLED));
 				return k;
 			}
 		}

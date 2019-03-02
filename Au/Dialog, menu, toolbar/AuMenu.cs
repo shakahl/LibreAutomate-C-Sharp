@@ -523,7 +523,7 @@ namespace Au
 		/// </summary>
 		public static bool DefaultActivateMenuWindow { get; set; }
 
-		Native.WS_EX _ExStyle => ActivateMenuWindow ? Native.WS_EX.TOOLWINDOW | Native.WS_EX.TOPMOST : Native.WS_EX.TOOLWINDOW | Native.WS_EX.TOPMOST | Native.WS_EX.NOACTIVATE;
+		WS_EX _ExStyle => ActivateMenuWindow ? WS_EX.TOOLWINDOW | WS_EX.TOPMOST : WS_EX.TOOLWINDOW | WS_EX.TOPMOST | WS_EX.NOACTIVATE;
 
 		#endregion
 

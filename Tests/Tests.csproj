@@ -59,7 +59,7 @@
   <PropertyGroup />
   <PropertyGroup />
   <PropertyGroup>
-    <StartupObject>Test</StartupObject>
+    <StartupObject>Script</StartupObject>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -96,6 +96,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Unused currently\older.cs" />
+    <Compile Include="Util\OutputForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="_Script.cs" />
     <Compile Include="Unused currently\FlagEnumEditor.cs">
       <SubType>Component</SubType>
     </Compile>
@@ -112,7 +117,7 @@
     <None Include="Unused currently\SQLite.cs" />
     <Compile Include="_Test.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Unused currently\Test menu, TB.cs" />
+    <None Include="Unused currently\Test menu, TB.cs" />
     <None Include="packages.config" />
     <EmbeddedResource Include="Unused currently\FormMenu.resx">
       <DependentUpon>FormMenu.cs</DependentUpon>

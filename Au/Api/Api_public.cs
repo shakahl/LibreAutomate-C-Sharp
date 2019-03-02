@@ -8,78 +8,63 @@ using static Au.NoClass;
 #pragma warning disable 1591 //missing XML documentation
 #pragma warning disable 649, 169 //field never assigned/used
 
-namespace Au.Types
+namespace Au
 {
-	/// <summary>
-	/// Windows API types and constants used with public functions (parameters etc) of this library.
-	/// Also several helper functions.
-	/// </summary>
 	[DebuggerStepThrough]
-	[CLSCompliant(false)]
-	public static unsafe partial class Native
+	public static class WinError
 	{
 		/// <summary>
-		/// Calls API <msdn>SetLastError</msdn>(0), which clears the Windows API error code of this thread.
-		/// Need it before calling some functions if you want to use <see cref="GetError"/> or <see cref="GetErrorMessage()"/>.
+		/// Calls API <msdn>SetLastError</msdn>(0), which clears the Windows API last error code of this thread.
+		/// Need it before calling some functions if you want to use <see cref="Code"/> or <see cref="Message"/>.
+		/// The same as <c>WinError.Code = 0;</c>.
 		/// </summary>
-		public static void ClearError()
-		{
-			Api.SetLastError(0);
-		}
+		public static void Clear() => Api.SetLastError(0);
 
 		/// <summary>
-		/// Calls API <msdn>SetLastError</msdn>, which sets the Windows API error code of this thread.
-		/// </summary>
-		public static void SetError(int errorCode)
-		{
-			Api.SetLastError(errorCode);
-		}
-
-		/// <summary>
-		/// Gets the Windows API error code of this thread.
-		/// Calls <see cref="Marshal.GetLastWin32Error"/>.
+		/// Gets or sets the Windows API last error code of this thread.
 		/// </summary>
 		/// <remarks>
+		/// Calls <see cref="Marshal.GetLastWin32Error"/> or API <msdn>SetLastError</msdn>.
+		/// 
 		/// Many Windows API functions, when failed, set an error code. Code 0 means no error. It is stored in an internal thread-specific int variable. But only if the API declaration's DllImport attribute has SetLastError = true.
 		/// Some functions of this library simply call these API functions and don't throw exception when API fail. For example, most Wnd propery-get functions.
-		/// When failed, they return false/0/null/empty. Then you can call <b>Native.GetError</b> to get the error code. Also you can use <see cref="GetErrorMessage()"/>.
+		/// When failed, they return false/0/null/empty. Then you can call <b>WinError.Code</b> to get the error code. Also you can use <see cref="Message"/>.
 		/// 
-		/// Most of these functions set the code only when failed, and don't clear old error code when succeeded. Therefore may need to call <see cref="ClearError"/> before.
+		/// Most of these functions set the code only when failed, and don't clear old error code when succeeded. Therefore may need to call <see cref="Clear"/> before.
 		///
 		/// Windows API error code definitions and documentation are not included in this library. You can look for them in API function documentation on the internet.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// Wnd w = Wnd.Find("Notepag");
-		/// //if(w.Is0) return; //assume you don't use this
-		/// Native.ClearError();
+		/// WinError.Clear();
 		/// bool enabled = w.IsEnabled; //returns true if enabled, false if disabled or failed
-		/// int e = Native.GetError();
-		/// if(e != 0) { Print(e, Native.GetErrorMessage(e)); return; } //1400, Invalid window handle
+		/// if(!enabled && WinError.Code != 0) { Print(WinError.Message); return; } //1400, Invalid window handle
 		/// Print(enabled);
 		/// ]]></code>
 		/// </example>
-		public static int GetError()
-		{
-			return Marshal.GetLastWin32Error();
+		public static int Code {
+			get => Marshal.GetLastWin32Error();
+			set => Api.SetLastError(value);
 		}
 
 		/// <summary>
-		/// Gets the text message of the Windows API error code of this thread.
+		/// Gets the text message of the Windows API last error code of this thread.
 		/// Returns null if the code is 0.
-		/// The string always ends with ".".
 		/// </summary>
-		public static string GetErrorMessage()
-		{
-			return GetErrorMessage(GetError());
-		}
+		/// <remarks>
+		/// The string always ends with ".".
+		/// </remarks>
+		public static string Message => MessageFor(Code);
 
 		/// <summary>
 		/// Gets the text message of a Windows API error code.
 		/// Returns null if errorCode is 0.
-		/// The string always ends with ".".
 		/// </summary>
-		public static string GetErrorMessage(int errorCode)
+		/// <remarks>
+		/// The string always ends with ".".
+		/// </remarks>
+		public static unsafe string MessageFor(int errorCode)
 		{
 			if(errorCode == 0) return null;
 			if(errorCode == 1) return "The requested data or action is unavailable. (0x1)."; //or ERROR_INVALID_FUNCTION, but it's rare
@@ -98,7 +83,18 @@ namespace Au.Types
 			s = $"{s} (0x{errorCode:X}).";
 			return s;
 		}
+	}
+}
 
+namespace Au.Types
+{
+	/// <summary>
+	/// Windows API types and constants used with public functions (parameters etc) of this library.
+	/// </summary>
+	[DebuggerStepThrough]
+	[CLSCompliant(false)]
+	public static unsafe partial class Native
+	{
 		/// <summary><msdn>MSG</msdn></summary>
 		/// <tocexclude />
 		public struct MSG
@@ -189,7 +185,7 @@ namespace Au.Types
 
 		/// <summary><msdn>SIGDN</msdn></summary>
 		/// <tocexclude />
-		public enum SIGDN :uint
+		public enum SIGDN : uint
 		{
 			NORMALDISPLAY,
 			PARENTRELATIVEPARSING = 0x80018001,
@@ -210,7 +206,7 @@ namespace Au.Types
 		/// <summary><msdn>SetWindowPos</msdn></summary>
 		/// <tocexclude />
 		[Flags]
-		public enum SWP :uint
+		public enum SWP : uint
 		{
 			NOSIZE = 0x1,
 			NOMOVE = 0x2,
@@ -309,76 +305,78 @@ namespace Au.Types
 			//info: also there are GCLP_, but their values are the same.
 		}
 
-		/// <summary><msdn>CreateWindowEx</msdn></summary>
-		/// <tocexclude />
-		[Flags]
-		public enum WS :uint
-		{
-			POPUP = 0x80000000,
-			CHILD = 0x40000000,
-			MINIMIZE = 0x20000000,
-			VISIBLE = 0x10000000,
-			DISABLED = 0x08000000,
-			CLIPSIBLINGS = 0x04000000,
-			CLIPCHILDREN = 0x02000000,
-			MAXIMIZE = 0x01000000,
-			BORDER = 0x00800000,
-			DLGFRAME = 0x00400000,
-			VSCROLL = 0x00200000,
-			HSCROLL = 0x00100000,
-			SYSMENU = 0x00080000,
-			THICKFRAME = 0x00040000,
-			MINIMIZEBOX = 0x00020000,
-			GROUP = 0x00020000,
-			MAXIMIZEBOX = 0x00010000,
-			TABSTOP = 0x00010000,
-			CAPTION = BORDER | DLGFRAME,
-			//these can cause bugs and confusion because consist of several styles. Not useful in C#, because used only to create native windows.
-			//OVERLAPPEDWINDOW = CAPTION | SYSMENU | THICKFRAME | MINIMIZEBOX | MAXIMIZEBOX,
-			//POPUPWINDOW = POPUP | BORDER | SYSMENU,
-		}
-
-		/// <summary><msdn>CreateWindowEx</msdn></summary>
-		/// <tocexclude />
-		[Flags]
-		public enum WS_EX :uint
-		{
-			DLGMODALFRAME = 0x00000001,
-			NOPARENTNOTIFY = 0x00000004,
-			TOPMOST = 0x00000008,
-			ACCEPTFILES = 0x00000010,
-			TRANSPARENT = 0x00000020,
-			MDICHILD = 0x00000040,
-			TOOLWINDOW = 0x00000080,
-			WINDOWEDGE = 0x00000100,
-			CLIENTEDGE = 0x00000200,
-			CONTEXTHELP = 0x00000400,
-			//LEFT = 0x00000000,
-			RIGHT = 0x00001000,
-			//LTRREADING = 0x00000000,
-			RTLREADING = 0x00002000,
-			//RIGHTSCROLLBAR = 0x00000000,
-			LEFTSCROLLBAR = 0x00004000,
-			CONTROLPARENT = 0x00010000,
-			STATICEDGE = 0x00020000,
-			APPWINDOW = 0x00040000,
-			LAYERED = 0x00080000,
-			NOINHERITLAYOUT = 0x00100000,
-			NOREDIRECTIONBITMAP = 0x00200000,
-			LAYOUTRTL = 0x00400000,
-			COMPOSITED = 0x02000000,
-			NOACTIVATE = 0x08000000,
-		}
-
 		/// <summary><msdn>SendMessageTimeout</msdn></summary>
 		/// <tocexclude />
 		[Flags]
-		public enum SMTO :uint
+		public enum SMTO : uint
 		{
 			BLOCK = 0x0001,
 			ABORTIFHUNG = 0x0002,
 			NOTIMEOUTIFNOTHUNG = 0x0008,
 			ERRORONEXIT = 0x0020,
 		}
+	}
+
+	//These are too often used to be in Native class.
+
+	/// <summary><msdn>CreateWindowEx</msdn></summary>
+	/// <tocexclude />
+	[Flags]
+	public enum WS : uint
+	{
+		POPUP = 0x80000000,
+		CHILD = 0x40000000,
+		MINIMIZE = 0x20000000,
+		VISIBLE = 0x10000000,
+		DISABLED = 0x08000000,
+		CLIPSIBLINGS = 0x04000000,
+		CLIPCHILDREN = 0x02000000,
+		MAXIMIZE = 0x01000000,
+		BORDER = 0x00800000,
+		DLGFRAME = 0x00400000,
+		VSCROLL = 0x00200000,
+		HSCROLL = 0x00100000,
+		SYSMENU = 0x00080000,
+		THICKFRAME = 0x00040000,
+		MINIMIZEBOX = 0x00020000,
+		GROUP = 0x00020000,
+		MAXIMIZEBOX = 0x00010000,
+		TABSTOP = 0x00010000,
+		CAPTION = BORDER | DLGFRAME,
+		//these can cause bugs and confusion because consist of several styles. Not useful in C#, because used only to create native windows.
+		//OVERLAPPEDWINDOW = CAPTION | SYSMENU | THICKFRAME | MINIMIZEBOX | MAXIMIZEBOX,
+		//POPUPWINDOW = POPUP | BORDER | SYSMENU,
+	}
+
+	/// <summary><msdn>CreateWindowEx</msdn></summary>
+	/// <tocexclude />
+	[Flags]
+	public enum WS_EX : uint
+	{
+		DLGMODALFRAME = 0x00000001,
+		NOPARENTNOTIFY = 0x00000004,
+		TOPMOST = 0x00000008,
+		ACCEPTFILES = 0x00000010,
+		TRANSPARENT = 0x00000020,
+		MDICHILD = 0x00000040,
+		TOOLWINDOW = 0x00000080,
+		WINDOWEDGE = 0x00000100,
+		CLIENTEDGE = 0x00000200,
+		CONTEXTHELP = 0x00000400,
+		//LEFT = 0x00000000,
+		RIGHT = 0x00001000,
+		//LTRREADING = 0x00000000,
+		RTLREADING = 0x00002000,
+		//RIGHTSCROLLBAR = 0x00000000,
+		LEFTSCROLLBAR = 0x00004000,
+		CONTROLPARENT = 0x00010000,
+		STATICEDGE = 0x00020000,
+		APPWINDOW = 0x00040000,
+		LAYERED = 0x00080000,
+		NOINHERITLAYOUT = 0x00100000,
+		NOREDIRECTIONBITMAP = 0x00200000,
+		LAYOUTRTL = 0x00400000,
+		COMPOSITED = 0x02000000,
+		NOACTIVATE = 0x08000000,
 	}
 }

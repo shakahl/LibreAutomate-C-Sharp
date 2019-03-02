@@ -47,7 +47,7 @@ namespace Au.Util
 				if(!InterDomainVariables.GetVariable(name, out IntPtr t)) {
 					var hm = Api.CreateFileMapping((IntPtr)(~0), Api.SECURITY_ATTRIBUTES.ForLowIL, Api.PAGE_READWRITE, 0, size, name);
 					if(hm == default) goto ge;
-					created = Native.GetError() != Api.ERROR_ALREADY_EXISTS;
+					created = WinError.Code != Api.ERROR_ALREADY_EXISTS;
 					t = Api.MapViewOfFile(hm, 0x000F001F, 0, 0, 0);
 					if(t == default) { Api.CloseHandle(hm); goto ge; }
 					InterDomainVariables.SetVariable(name, t);
@@ -81,7 +81,7 @@ namespace Au.Util
 		_Header _h;
 
 		internal OutputServer.LibSharedMemoryData outp;
-		internal Triggers.Triggers.LibSharedMemoryData triggers;
+		internal Triggers.AuTriggers.LibSharedMemoryData triggers;
 
 		#endregion
 

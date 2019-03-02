@@ -111,7 +111,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Gets full path of dll or exe file from its native handle.
-		/// Returns null if fails. Supports <see cref="Native.GetError"/>.
+		/// Returns null if fails. Supports <see cref="WinError.Code"/>.
 		/// Calls API <msdn>GetModuleFileName</msdn>.
 		/// </summary>
 		public static string GetFilePath(IntPtr hModule)
@@ -584,16 +584,16 @@ namespace Au.Util
 		/// <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value TIMER_MODIFY_STATE|SYNCHRONIZE allows to set and wait.</param>
 		/// <exception cref="AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
 		/// <param name="inheritHandle"></param>
-		/// <param name="noException">If fails, return null, don't throw exception. Supports <see cref="Native.GetError"/>.</param>
+		/// <param name="noException">If fails, return null, don't throw exception. Supports <see cref="WinError.Code"/>.</param>
 		/// <exception cref="AuException">Failed. For example, the timer does not exist.</exception>
 		public static WaitableTimer Open(string timerName, uint access = Api.TIMER_MODIFY_STATE | Api.SYNCHRONIZE, bool inheritHandle = false, bool noException = false)
 		{
 			var h = Api.OpenWaitableTimer(access, inheritHandle, timerName);
 			if(h.IsInvalid) {
-				var e = Native.GetError();
+				var e = WinError.Code;
 				h.SetHandleAsInvalid();
 				if(noException) {
-					Native.SetError(e);
+					WinError.Code = e;
 					return null;
 				}
 				throw new AuException(e, "*open timer");
@@ -603,7 +603,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Calls API <msdn>SetWaitableTimer</msdn>.
-		/// Returns false if fails. Supports <see cref="Native.GetError"/>.
+		/// Returns false if fails. Supports <see cref="WinError.Code"/>.
 		/// </summary>
 		/// <param name="dueTime">
 		/// The time after which the state of the timer is to be set to signaled. It is relative time (from now).
@@ -619,7 +619,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Calls API <msdn>SetWaitableTimer</msdn>.
-		/// Returns false if fails. Supports <see cref="Native.GetError"/>.
+		/// Returns false if fails. Supports <see cref="WinError.Code"/>.
 		/// </summary>
 		/// <param name="dueTime">The UTC date/time at which the state of the timer is to be set to signaled.</param>
 		/// <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
@@ -682,13 +682,13 @@ namespace Au.Util
 		/// <summary>
 		/// Opens process handle.
 		/// Calls API OpenProcess.
-		/// Returns default if fails. Supports Native.GetError().
+		/// Returns default if fails. Supports <see cref="WinError.Code"/>.
 		/// </summary>
 		/// <param name="processId">Process id.</param>
 		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
 		public static LibKernelHandle OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
 		{
-			if(processId == 0) { Native.SetError(Api.ERROR_INVALID_PARAMETER); return default; }
+			if(processId == 0) { WinError.Code = Api.ERROR_INVALID_PARAMETER; return default; }
 			_OpenProcess(out var h, processId, desiredAccess);
 			return new LibKernelHandle(h);
 		}
@@ -696,7 +696,7 @@ namespace Au.Util
 		/// <summary>
 		/// Opens window's process handle.
 		/// This overload is more powerful: if API OpenProcess fails, it tries API GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
-		/// Returns default if fails. Supports Native.GetError().
+		/// Returns default if fails. Supports <see cref="WinError.Code"/>.
 		/// </summary>
 		/// <param name="w"></param>
 		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
@@ -713,7 +713,7 @@ namespace Au.Util
 			if(R != default) return true;
 			if(processWindow.Is0) return false;
 			if(0 != (desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE))) return false;
-			int e = Native.GetError();
+			int e = WinError.Code;
 			if(Uac.OfThisProcess.IsUIAccess) R = Api.GetProcessHandleFromHwnd(processWindow);
 			if(R != default) return true;
 			Api.SetLastError(e);
@@ -754,7 +754,7 @@ namespace Au.Util
 	{
 		/// <summary>
 		/// Enables or disables a privilege for this process.
-		/// Returns false if fails. Supports <see cref="Native.GetError"/>.
+		/// Returns false if fails. Supports <see cref="WinError.Code"/>.
 		/// </summary>
 		/// <param name="privilegeName"></param>
 		/// <param name="enable"></param>
@@ -765,7 +765,7 @@ namespace Au.Util
 			if(Api.LookupPrivilegeValue(null, privilegeName, out p.Privileges.Luid)) {
 				Api.OpenProcessToken(Api.GetCurrentProcess(), Api.TOKEN_ADJUST_PRIVILEGES, out IntPtr hToken);
 				Api.AdjustTokenPrivileges(hToken, false, p, 0, null, default);
-				ok = 0 == Native.GetError();
+				ok = 0 == WinError.Code;
 				Api.CloseHandle(hToken);
 			}
 			return ok;

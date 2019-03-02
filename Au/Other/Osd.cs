@@ -187,9 +187,9 @@ namespace Au
 				s_isWinClassRegistered |= regMask;
 			}
 
-			var es = Native.WS_EX.TOOLWINDOW | Native.WS_EX.TOPMOST | Native.WS_EX.LAYERED | Native.WS_EX.TRANSPARENT | Native.WS_EX.NOACTIVATE;
-			if(ClickToClose) es &= ~Native.WS_EX.TRANSPARENT;
-			_w.Create(cn, Name, Native.WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
+			var es = WS_EX.TOOLWINDOW | WS_EX.TOPMOST | WS_EX.LAYERED | WS_EX.TRANSPARENT | WS_EX.NOACTIVATE;
+			if(ClickToClose) es &= ~WS_EX.TRANSPARENT;
+			_w.Create(cn, Name, WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
 			_SetOpacity();
 			if(!_r.Is0) _w.Handle.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
 			return _w.Handle;

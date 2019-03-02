@@ -25,35 +25,36 @@ using static Au.NoClass;
 
 namespace Au.Triggers
 {
-	public class AutotextTriggers : ITriggers
+	public class AutotextTrigger : Trigger
 	{
-		class _TriggerEtc : Trigger
+		string _shortString;
+
+		internal AutotextTrigger(AuTriggers triggers, Action<AutotextTriggerArgs> action, string text) : base(triggers, action, true)
 		{
-			string _shortString;
-
-			internal _TriggerEtc(Triggers triggers, Action<AutotextTriggerArgs> action, string text) : base(triggers, action, true)
-			{
-				_shortString = text;
-			}
-
-			internal override void Run(TriggerArgs args) => RunT(args as AutotextTriggerArgs);
-
-			internal override string TypeString() => "Autotext";
-
-			internal override string ShortString() => _shortString;
+			_shortString = text;
 		}
 
-		Triggers _triggers;
+		internal override void Run(TriggerArgs args) => RunT(args as AutotextTriggerArgs);
+
+		public override string TypeString() => "Autotext";
+
+		public override string ShortString() => _shortString;
+	}
+
+	public class AutotextTriggers : ITriggers
+	{
+		AuTriggers _triggers;
 		Dictionary<string, Trigger> _d = new Dictionary<string, Trigger>();
 
-		internal AutotextTriggers(Triggers triggers)
+		internal AutotextTriggers(AuTriggers triggers)
 		{
 			_triggers = triggers;
 		}
 
 		public Action<AutotextTriggerArgs> this[string text] {
 			set {
-				var t = new _TriggerEtc(_triggers, value, text);
+				_triggers.LibThrowIfRunning();
+				var t = new AutotextTrigger(_triggers, value, text);
 				t.DictAdd(_d, text);
 			}
 		}
@@ -79,8 +80,13 @@ namespace Au.Triggers
 
 	public class AutotextTriggerArgs : TriggerArgs
 	{
-		internal AutotextTriggerArgs(Trigger trigger) : base(trigger)
+		public AutotextTrigger Trigger { get; }
+		public Wnd Window { get; }
+
+		internal AutotextTriggerArgs(AutotextTrigger trigger, Wnd w)
 		{
+			Trigger = trigger;
+			Window = w;
 		}
 
 		public void Replace(string replacement)

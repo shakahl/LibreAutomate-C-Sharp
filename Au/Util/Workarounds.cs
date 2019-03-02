@@ -59,7 +59,7 @@ namespace Au.Util
 			//This makes startup faster. Also, if in same thread, it can take much more time, don't know why, depending on where called.
 			ThreadStart d = () =>
 			{
-				Wnd w = Api.CreateWindowEx(Native.WS_EX.NOACTIVATE, "#32770", null, Native.WS.POPUP, 0, 0, 0, 0, Native.HWND_MESSAGE, 0, default, 0);
+				Wnd w = Api.CreateWindowEx(WS_EX.NOACTIVATE, "#32770", null, WS.POPUP, 0, 0, 0, 0, Native.HWND_MESSAGE, 0, default, 0);
 				//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster; empty class same speed.
 				//w.FocusControlOfThisThread();
 				Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.

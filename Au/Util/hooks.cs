@@ -37,11 +37,11 @@ namespace Au.Util
 		string _hookTypeString; //"Keyboard" etc
 
 		/// <summary>
-		/// Installs a low-level keyboard hook (WH_KEYBOARD_LL).
+		/// Sets a low-level keyboard hook (WH_KEYBOARD_LL).
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
-		/// Hook procedure.
+		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible, or the system hangs and removes the hook.
 		/// If returns true or calls <see cref="HookData.ReplyMessage"/>, the event is cancelled (not visible to apps and other hooks). Event data cannot be modified.
 		/// </param>
@@ -67,11 +67,11 @@ namespace Au.Util
 			=> new WinHook(Api.WH_KEYBOARD_LL, hookProc, -1);
 
 		/// <summary>
-		/// Installs a low-level mouse hook (WH_MOUSE_LL).
+		/// Sets a low-level mouse hook (WH_MOUSE_LL).
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
-		/// Hook procedure.
+		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible, or the system hangs and removes the hook.
 		/// If returns true or calls <see cref="HookData.ReplyMessage"/>, the event is cancelled (not visible to apps and other hooks). Event data cannot be modified.
 		/// </param>
@@ -100,11 +100,11 @@ namespace Au.Util
 			=> new WinHook(Api.WH_MOUSE_LL, hookProc, -1, "Mouse");
 
 		/// <summary>
-		/// Installs a WH_CBT hook for a thread of this process.
+		/// Sets a WH_CBT hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
-		/// Hook procedure.
+		/// Hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// If returns true, the event is cancelled. For some events you can modify some fields of event data.
 		/// </param>
@@ -153,11 +153,11 @@ namespace Au.Util
 			=> new WinHook(Api.WH_CBT, hookProc, threadId);
 
 		/// <summary>
-		/// Installs a WH_GETMESSAGE hook for a thread of this process.
+		/// Sets a WH_GETMESSAGE hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
-		/// Hook procedure.
+		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// The event cannot be cancelled. As a workaround, you can set msg->message=0. Also can modify other fields.
 		/// </param>
@@ -176,11 +176,11 @@ namespace Au.Util
 			=> new WinHook(Api.WH_GETMESSAGE, hookProc, threadId);
 
 		/// <summary>
-		/// Installs a WH_GETMESSAGE hook for a thread of this process.
+		/// Sets a WH_GETMESSAGE hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
-		/// Hook procedure.
+		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// If returns true, the event is cancelled.
 		/// </param>
@@ -200,11 +200,11 @@ namespace Au.Util
 			=> new WinHook(Api.WH_KEYBOARD, hookProc, threadId);
 
 		/// <summary>
-		/// Installs a WH_MOUSE hook for a thread of this process.
+		/// Sets a WH_MOUSE hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
-		/// Hook procedure.
+		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// If returns true, the event is cancelled.
 		/// </param>
@@ -224,11 +224,11 @@ namespace Au.Util
 			=> new WinHook(Api.WH_MOUSE, hookProc, threadId);
 
 		/// <summary>
-		/// Installs a WH_CALLWNDPROC hook for a thread of this process.
+		/// Sets a WH_CALLWNDPROC hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
-		/// Hook procedure.
+		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// The event cannot be cancelled or modified.
 		/// </param>
@@ -249,11 +249,11 @@ namespace Au.Util
 			=> new WinHook(Api.WH_CALLWNDPROC, hookProc, threadId);
 
 		/// <summary>
-		/// Installs a WH_CALLWNDPROCRET hook for a thread of this process.
+		/// Sets a WH_CALLWNDPROCRET hook for a thread of this process.
 		/// See <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
 		/// <param name="hookProc">
-		/// Hook procedure.
+		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// The event cannot be cancelled or modified.
 		/// </param>
@@ -274,7 +274,7 @@ namespace Au.Util
 			=> new WinHook(Api.WH_CALLWNDPROCRET, hookProc, threadId);
 
 		/// <summary>
-		/// Installs hook of the specified type.
+		/// Sets a hook of the specified type.
 		/// This ctor is private, because our dispatcher hook procedure does not know how to call hookProc.
 		/// </summary>
 		/// <param name="hookType">One of WH_ constants that are used with API <msdn>SetWindowsHookEx</msdn>.</param>
@@ -300,7 +300,7 @@ namespace Au.Util
 		{
 			if(_hh != default) {
 				bool ok = Api.UnhookWindowsHookEx(_hh);
-				if(!ok) PrintWarning($"Failed to unhook WinHook ({_hookTypeString}). {Native.GetErrorMessage()}");
+				if(!ok) PrintWarning($"Failed to unhook WinHook ({_hookTypeString}). {WinError.Message}");
 				_hh = default;
 				_proc2 = null;
 			}
@@ -996,7 +996,6 @@ namespace Au.Util
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// //using Au.Util;
 	/// bool stop = false;
 	/// using(new Au.Util.AccHook(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
 	/// {
@@ -1015,27 +1014,83 @@ namespace Au.Util
 	public class AccHook : IDisposable
 	{
 		IntPtr _hh; //HHOOK
+		IntPtr[] _ahh; //multiple HHOOK
 		Api.WINEVENTPROC _proc1; //our intermediate hook proc that calls _proc2
 		Action<HookData.AccHookData> _proc2; //caller's hook proc
 
 		/// <summary>
-		/// Installs hook.
+		/// Sets a hook for an event or a range of events.
 		/// Calls API <msdn>SetWinEventHook</msdn>.
 		/// </summary>
-		/// <param name="eventMin">Specifies the event constant for the lowest event value in the range of events that are handled by the hook function. This parameter can be set to AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>.</param>
-		/// <param name="eventMax">Specifies the event constant for the highest event value in the range of events that are handled by the hook function. This parameter can be set to AccEVENT.MAX to indicate the highest possible event value. If 0, uses <paramref name="eventMin"/>.</param>
-		/// <param name="hookProc">Delegate of the hook procedure.</param>
-		/// <param name="idProcess">Specifies the id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
-		/// <param name="idThread">Specifies the native id of the thread from which the hook function receives events. If 0 - all threads.</param>
+		/// <param name="eventMin">The lowest event constant value in the range of events. Can be AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>.</param>
+		/// <param name="eventMax">The highest event constant value in the range of events. Can be AccEVENT.MAX to indicate the highest possible event value. If 0, uses <paramref name="eventMin"/>.</param>
+		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
+		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
+		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example><inheritdoc cref="AccHook"/></example>
 		public AccHook(AccEVENT eventMin, AccEVENT eventMax, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
 		{
 			if(eventMax == 0) eventMax = eventMin;
-			_hh = Api.SetWinEventHook(eventMin, eventMax, default, _proc1 = _HookProc, idProcess, idThread, flags);
-			if(_hh == default) throw new AuException("*set hook");
+			_proc1 = _HookProc;
+			Hook(eventMin, eventMax, idProcess, idThread, flags);
 			_proc2 = hookProc;
+		}
+
+		/// <summary>
+		/// Sets a hook for multiple events.
+		/// Calls API <msdn>SetWinEventHook</msdn>.
+		/// </summary>
+		/// <param name="events">Events. Reference: <msdn>SetWinEventHook</msdn>. Elements with value 0 are ignored.</param>
+		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
+		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
+		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
+		/// <param name="flags"></param>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <example><inheritdoc cref="AccHook"/></example>
+		public AccHook(AccEVENT[] events, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
+		{
+			_proc1 = _HookProc;
+			Hook(events, idProcess, idThread, flags);
+			_proc2 = hookProc;
+		}
+
+		/// <summary>
+		/// Sets hooks again after <see cref="Unhook"/>.
+		/// </summary>
+		/// <remarks>
+		/// Parameters are the same as of the constructor, but values can be different.
+		/// </remarks>
+		public void Hook(AccEVENT eventMin, AccEVENT eventMax, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
+		{
+			_Throw1();
+			_hh = Api.SetWinEventHook(eventMin, eventMax, default, _proc1, idProcess, idThread, flags);
+			if(_hh == default) throw new AuException(0, "*set hook");
+		}
+
+		/// <summary>
+		/// Sets hooks again after <see cref="Unhook"/>.
+		/// </summary>
+		/// <remarks>
+		/// Parameters are the same as of the constructor, but values can be different.
+		/// </remarks>
+		public void Hook(AccEVENT[] events, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
+		{
+			_Throw1();
+			_ahh = new IntPtr[events.Length];
+			for(int i = 0; i < events.Length; i++) {
+				var e = events[i]; if(e == 0) continue;
+				var hh = Api.SetWinEventHook(e, e, default, _proc1, idProcess, idThread, flags);
+				if(hh == default) { var ec = WinError.Code; Unhook(); throw new AuException(ec, "*set hook for " + e.ToString()); }
+				_ahh[i] = hh;
+			}
+		}
+
+		void _Throw1()
+		{
+			if(_hh != default || _ahh != null) throw new InvalidOperationException();
+			if(_proc1 == null) throw new ObjectDisposedException(nameof(AccHook));
 		}
 
 		/// <summary>
@@ -1047,22 +1102,32 @@ namespace Au.Util
 		public void Unhook()
 		{
 			if(_hh != default) {
-				bool ok = Api.UnhookWinEvent(_hh);
-				if(!ok) PrintWarning("Failed to unhook AccHook.");
+				if(!Api.UnhookWinEvent(_hh)) PrintWarning("Failed to unhook AccHook.");
 				_hh = default;
+			} else if(_ahh != null) {
+				foreach(var hh in _ahh) {
+					if(hh == default) continue;
+					if(!Api.UnhookWinEvent(hh)) PrintWarning("Failed to unhook AccHook.");
+				}
+				_ahh = null;
 			}
 		}
 
 		/// <summary>
 		/// Calls <see cref="Unhook"/>.
 		/// </summary>
-		public void Dispose() { Unhook(); GC.SuppressFinalize(this); }
+		public void Dispose()
+		{
+			Unhook();
+			_proc1 = null;
+			GC.SuppressFinalize(this);
+		}
 
 		//MSDN: UnhookWinEvent fails if called from a thread different from the call that corresponds to SetWinEventHook.
 		///
 		~AccHook() { PrintWarning("Non-disposed AccHook variable."); } //unhooking makes no sense
 
-		void _HookProc(IntPtr hHook, AccEVENT aEvent, Wnd wnd, int idObject, int idChild, int idThread, int eventTime)
+		void _HookProc(IntPtr hHook, AccEVENT aEvent, Wnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
 		{
 			try {
 				_proc2(new HookData.AccHookData(this, aEvent, wnd, idObject, idChild, idThread, eventTime));
@@ -1086,11 +1151,11 @@ namespace Au.Types
 			public readonly AccHook hook;
 
 			/// <summary><msdn>WinEventProc</msdn></summary>
-			public readonly AccEVENT aEvent;
-			/// <summary><msdn>WinEventProc</msdn></summary>
 			public readonly Wnd wnd;
 			/// <summary><msdn>WinEventProc</msdn></summary>
-			public readonly int idObject;
+			public readonly AccEVENT aEvent;
+			/// <summary><msdn>WinEventProc</msdn></summary>
+			public readonly AccOBJID idObject;
 			/// <summary><msdn>WinEventProc</msdn></summary>
 			public readonly int idChild;
 			/// <summary><msdn>WinEventProc</msdn></summary>
@@ -1098,7 +1163,7 @@ namespace Au.Types
 			/// <summary><msdn>WinEventProc</msdn></summary>
 			public readonly int eventTime;
 
-			internal AccHookData(AccHook hook, AccEVENT aEvent, Wnd wnd, int idObject, int idChild, int idThread, int eventTime)
+			internal AccHookData(AccHook hook, AccEVENT aEvent, Wnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
 			{
 				this.hook = hook;
 				this.aEvent = aEvent;

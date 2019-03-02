@@ -431,7 +431,7 @@ namespace Au
 	/// </example>
 	public class Timer_
 	{
-		object _action; //Action<Timer_> or Action
+		Delegate _action; //Action<Timer_> or Action
 		LPARAM _id;
 		int _threadId;
 		bool _singlePeriod;
@@ -447,12 +447,12 @@ namespace Au
 		public object Tag { get; set; }
 
 		///
-		public Timer_(Action<Timer_> timerAction, object tag = null) : this((object)timerAction, tag) { }
+		public Timer_(Action<Timer_> timerAction, object tag = null) : this((Delegate)timerAction, tag) { }
 
 		///
-		public Timer_(Action timerAction, object tag = null) : this((object)timerAction, tag) { }
+		public Timer_(Action timerAction, object tag = null) : this((Delegate)timerAction, tag) { }
 
-		Timer_(object timerAction, object tag)
+		Timer_(Delegate timerAction, object tag)
 		{
 			_action = timerAction;
 			Tag = tag;
@@ -546,7 +546,7 @@ namespace Au
 
 		//~Timer_() { Print("dtor"); } //don't call Stop() here, we are in other thread
 
-		static Timer_ _Set(int time, bool singlePeriod, object timerAction, object tag = null)
+		static Timer_ _Set(int time, bool singlePeriod, Delegate timerAction, object tag = null)
 		{
 			var t = new Timer_(timerAction, tag);
 			t.Start(time, singlePeriod);
@@ -581,7 +581,7 @@ namespace Au
 		/// Sets new periodic timer.
 		/// Returns new <see cref="Timer_"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
 		/// </summary>
-		/// <param name="periodMilliseconds">Time interval (period) of calling the callback function, milliseconds. The minimal period is 10-20, even if this parameter is less than that.</param>
+		/// <param name="periodMilliseconds">Time interval (period) of calling the callback function, milliseconds. The minimal period is 10-20, even if specified smaller.</param>
 		/// <param name="timerAction">Callback function.</param>
 		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Negative periodMilliseconds.</exception>

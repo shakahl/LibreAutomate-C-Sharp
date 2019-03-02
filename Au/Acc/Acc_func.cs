@@ -29,7 +29,7 @@ namespace Au
 		/// Uses API <msdn>WindowFromAccessibleObject</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Returns default(Wnd) if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns default(Wnd) if failed. Supports <see cref="WinError.Code"/>.
 		/// All objects must support this property, but some have bugs and can fail (return default(Wnd)) or return a wrong window.
 		/// </remarks>
 		public Wnd WndContainer
@@ -55,7 +55,7 @@ namespace Au
 		/// Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Returns default(Wnd) if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns default(Wnd) if failed. Supports <see cref="WinError.Code"/>.
 		/// All objects must support this property, but some have bugs and can return default(Wnd).
 		/// </remarks>
 		public Wnd WndTopLevel => WndContainer.Window;
@@ -66,7 +66,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Calls <see cref="GetRect(out RECT)"/>.
-		/// Returns empty rectangle if failed or this property is unavailable. Supports <see cref="Native.GetError"/>.
+		/// Returns empty rectangle if failed or this property is unavailable. Supports <see cref="WinError.Code"/>.
 		/// Most but not all objects support this property.
 		/// </remarks>
 		public RECT Rect { get { GetRect(out var r); return r; } }
@@ -77,7 +77,7 @@ namespace Au
 		/// </summary>
 		/// <param name="r">Receives object rectangle in screen coordinates.</param>
 		/// <remarks>
-		/// Returns false if failed or this property is unavailable. Supports <see cref="Native.GetError"/>.
+		/// Returns false if failed or this property is unavailable. Supports <see cref="WinError.Code"/>.
 		/// Most but not all objects support this property.
 		/// </remarks>
 		public bool GetRect(out RECT r)
@@ -95,7 +95,7 @@ namespace Au
 		/// <param name="r">Receives object rectangle in w client area coordinates.</param>
 		/// <param name="w">Window or control.</param>
 		/// <remarks>
-		/// Returns false if failed or this property is unavailable. Supports <see cref="Native.GetError"/>.
+		/// Returns false if failed or this property is unavailable. Supports <see cref="WinError.Code"/>.
 		/// Most but not all objects support this property.
 		/// </remarks>
 		public bool GetRect(out RECT r, Wnd w)
@@ -109,7 +109,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Most objects have a standard role, as enum <see cref="AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
-		/// Returns 0 if role is string or if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns 0 if role is string or if failed. Supports <see cref="WinError.Code"/>.
 		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
 		/// </remarks>
 		public AccROLE RoleInt
@@ -130,7 +130,7 @@ namespace Au
 		/// <remarks>
 		/// Most objects have a standard role, as enum <see cref="AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
 		/// For standard roles this function returns enum <see cref="AccROLE"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
-		/// Returns "" if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns "" if failed. Supports <see cref="WinError.Code"/>.
 		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
 		/// </remarks>
 		public string Role
@@ -178,7 +178,7 @@ namespace Au
 		/// Uses <msdn>IAccessible.get_accState</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Returns 0 if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns 0 if failed. Supports <see cref="WinError.Code"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -272,7 +272,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Object name usually is its read-only text (eg button text, link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the object.
-		/// Returns "" if name is unavailable or if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns "" if name is unavailable or if failed. Supports <see cref="WinError.Code"/>.
 		/// </remarks>
 		public string Name
 		{
@@ -304,7 +304,7 @@ namespace Au
 		/// <exception cref="AuException">Failed to set value.</exception>
 		/// <remarks>
 		/// Object value usually is its editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the object reliably.
-		/// The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
+		/// The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="WinError.Code"/>.
 		/// Most objects don't support 'set'.
 		/// </remarks>
 		public string Value
@@ -323,7 +323,7 @@ namespace Au
 		/// Uses <msdn>IAccessible.get_accDescription</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError.Code"/>.
 		/// </remarks>
 		public string Description
 		{
@@ -335,7 +335,7 @@ namespace Au
 		/// Uses <msdn>IAccessible.get_accHelp</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError.Code"/>.
 		/// </remarks>
 		public string Help
 		{
@@ -347,7 +347,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Only objects found with flag <see cref="AFFlags.UIA"/> can have this property.
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError.Code"/>.
 		/// </remarks>
 		public string UiaId
 		{
@@ -359,7 +359,7 @@ namespace Au
 		/// Uses <msdn>IAccessible.get_accKeyboardShortcut</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError.Code"/>.
 		/// </remarks>
 		public string KeyboardShortcut
 		{
@@ -371,7 +371,7 @@ namespace Au
 		/// Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError.Code"/>.
 		/// If this is a Java accessible object, returns all actions that can be used with <see cref="DoJavaAction"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="DoAction"/>.
 		/// </remarks>
 		public string DefaultAction
@@ -727,14 +727,14 @@ namespace Au
 
 		/// <summary>
 		/// Gets selected direct child items.
-		/// Returns empty array if there are no selected items of if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns empty array if there are no selected items of if failed. Supports <see cref="WinError.Code"/>.
 		/// </summary>
 		public Acc[] SelectedChildren
 		{
 			get
 			{
 				LibThrowIfDisposed();
-				if(_elem != 0) { Native.ClearError(); return Array.Empty<Acc>(); }
+				if(_elem != 0) { WinError.Clear(); return Array.Empty<Acc>(); }
 				//return _iacc.get_accSelection();
 				if(0 != _Hresult(_FuncId.selection, Cpp.Cpp_AccGetSelection(this, out var b)) || b.Is0) return Array.Empty<Acc>();
 				GC.KeepAlive(this);
@@ -755,7 +755,7 @@ namespace Au
 			get
 			{
 				LibThrowIfDisposed();
-				if(_elem != 0) { Native.ClearError(); return 0; }
+				if(_elem != 0) { WinError.Clear(); return 0; }
 				_Hresult(_FuncId.child_count, Cpp.Cpp_AccGetInt(this, 'c', out int cc));
 				GC.KeepAlive(this);
 				return cc;
@@ -789,7 +789,7 @@ namespace Au
 		/// 
 		/// Normally this function is faster than calling multiple property functions, because it makes single remote procedure call. But not if this accessible object was found with flag <see cref="AFFlags.NotInProc"/> etc.
 		/// 
-		/// Returns false if fails, for example when the object's window is closed. Supports <see cref="Native.GetError"/>.
+		/// Returns false if fails, for example when the object's window is closed. Supports <see cref="WinError.Code"/>.
 		/// </remarks>
 		public bool GetProperties(string props, out AccProperties result)
 		{
@@ -802,7 +802,7 @@ namespace Au
 			GC.KeepAlive(this);
 			if(hr != 0) {
 				if(hr == (int)Cpp.EError.InvalidParameter) throw new ArgumentException("Unknown property character.");
-				Native.SetError(hr);
+				WinError.Code = hr;
 				return false;
 			}
 			using(b) {
@@ -897,7 +897,7 @@ namespace Au
 			}
 			GC.KeepAlive(this);
 			if(hr == (int)Cpp.EError.InvalidParameter) throw new ArgumentException("Invalid navig string.");
-			Native.SetError(hr);
+			WinError.Code = hr;
 			return hr == 0 ? new Acc(ca) : null;
 
 			//FUTURE: when fails, possibly this is disconnected etc. Retry Find with same Finder.
@@ -910,7 +910,7 @@ namespace Au
 		/// </summary>
 		/// <param name="outer">If true, gets outer HTML (with tag and attributes), else inner HTML.</param>
 		/// <remarks>
-		/// Returns "" if this is not a HTML element or if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns "" if this is not a HTML element or if failed. Supports <see cref="WinError.Code"/>.
 		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
 		/// If this is the root of web page (role DOCUMENT or PANE), gets web page body HTML.
 		/// </remarks>
@@ -927,7 +927,7 @@ namespace Au
 		/// </summary>
 		/// <param name="name">Attribute name, for example "href", "id", "class". Full, case-sensitive.</param>
 		/// <remarks>
-		/// Returns "" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="Native.GetError"/>.
+		/// Returns "" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="WinError.Code"/>.
 		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
 		/// </remarks>
 		/// <exception cref="ArgumentException">name is null/""/invalid.</exception>
@@ -944,7 +944,7 @@ namespace Au
 		/// Gets all HTML attributes.
 		/// </summary>
 		/// <remarks>
-		/// Returns empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="Native.GetError"/>.
+		/// Returns empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="WinError.Code"/>.
 		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
 		/// </remarks>
 		public Dictionary<string, string> HtmlAttributes()

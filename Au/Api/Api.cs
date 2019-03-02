@@ -871,7 +871,7 @@ namespace Au.Types
 		//internal static extern int AccessibleObjectFromPoint(POINT ptScreen, out IntPtr ppacc, out VARIANT pvarChild);
 
 		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int AccessibleObjectFromEvent(Wnd hwnd, int dwId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
+		internal static extern int AccessibleObjectFromEvent(Wnd hwnd, AccOBJID dwObjectId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
 
 		[DllImport("oleacc.dll")]
 		internal static extern IntPtr GetProcessHandleFromHwnd(Wnd hwnd);

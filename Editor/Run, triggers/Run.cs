@@ -194,7 +194,7 @@ class RunningTask
 			if(ok) {
 				if(0 != Api.WaitForSingleObject(h, 2000)) { Debug_.Print("process not terminated"); return false; }
 			} else {
-				var s = Native.GetErrorMessage();
+				var s = WinError.Message;
 				if(0 != Api.WaitForSingleObject(h, 0)) { Debug_.Print(s); return false; }
 			}
 			//note: TerminateProcess kills process not immediately. Need at least several ms.
@@ -514,7 +514,7 @@ class RunningTasks
 				//Perf.First();
 				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent.SafeWaitHandle.DangerousGetHandle() };
 				if(!Api.ConnectNamedPipe(pre.hPipe, &o)) {
-					int e = Native.GetError(); if(e != Api.ERROR_IO_PENDING) throw new AuException(e);
+					int e = WinError.Code; if(e != Api.ERROR_IO_PENDING) throw new AuException(e);
 					int wr = WaitHandle.WaitAny(new WaitHandle[2] { pre.overlappedEvent, hProcess });
 					if(wr != 0) { Api.CancelIo(pre.hPipe); throw new AuException("*start task. Preloaded task process ended"); }
 					disconnectPipe = true;

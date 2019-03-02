@@ -106,7 +106,7 @@ namespace Au
 		static unsafe bool _GetAttributesOnError(string path, FAFlags flags, out FileAttributes attr, Api.WIN32_FILE_ATTRIBUTE_DATA* p = null)
 		{
 			attr = 0;
-			var ec = Native.GetError();
+			var ec = WinError.Code;
 			switch(ec) {
 			case Api.ERROR_FILE_NOT_FOUND:
 			case Api.ERROR_PATH_NOT_FOUND:
@@ -129,7 +129,7 @@ namespace Au
 					}
 					return true;
 				}
-				Native.SetError(ec);
+				WinError.Code = ec;
 				attr = (FileAttributes)(-1);
 				break;
 			}
@@ -152,7 +152,7 @@ namespace Au
 			_DisableDeviceNotReadyMessageBox();
 			attr = Api.GetFileAttributes(path);
 			if(attr == (FileAttributes)(-1) && !_GetAttributesOnError(path, FAFlags.DontThrow, out attr)) return false;
-			if(!useRawPath && !Path_.IsFullPath(path)) { Native.SetError(Api.ERROR_FILE_NOT_FOUND); return false; }
+			if(!useRawPath && !Path_.IsFullPath(path)) { WinError.Code = Api.ERROR_FILE_NOT_FOUND; return false; }
 			return true;
 		}
 
@@ -164,7 +164,7 @@ namespace Au
 		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
+		/// Supports <see cref="WinError.Code"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// </remarks>
 		public static FileDir ExistsAs(string path, bool useRawPath = false)
@@ -183,7 +183,7 @@ namespace Au
 		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attributes Directory and ReparsePoint.
+		/// Supports <see cref="WinError.Code"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attributes Directory and ReparsePoint.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// </remarks>
 		public static unsafe FileDir2 ExistsAs2(string path, bool useRawPath = false)
@@ -203,7 +203,7 @@ namespace Au
 		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/>.
+		/// Supports <see cref="WinError.Code"/>. If you need exception when fails, instead call <see cref="GetAttributes"/>.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// For symbolic links etc, returns true if the link exists. Does not care whether its target exists.
 		/// Unlike <see cref="ExistsAsFile"/> and <see cref="ExistsAsDirectory"/>, this function returns true when the file exists but cannot get its attributes. Then <c>ExistsAsAny(path)</c> is not the same as <c>ExistsAsFile(path) || ExistsAsDirectory(path)</c>.
@@ -221,7 +221,7 @@ namespace Au
 		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
+		/// Supports <see cref="WinError.Code"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// For symbolic links etc, returns true if the link exists and its target is not a directory. Does not care whether its target exists.
 		/// </remarks>
@@ -229,7 +229,7 @@ namespace Au
 		{
 			var R = ExistsAs(path, useRawPath);
 			if(R == FileDir.File) return true;
-			if(R != FileDir.NotFound) Native.ClearError();
+			if(R != FileDir.NotFound) WinError.Clear();
 			return false;
 		}
 
@@ -241,7 +241,7 @@ namespace Au
 		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="Native.GetError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
+		/// Supports <see cref="WinError.Code"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// For symbolic links etc, returns true if the link exists and its target is a directory. Does not care whether its target exists.
 		/// </remarks>
@@ -249,7 +249,7 @@ namespace Au
 		{
 			var R = ExistsAs(path, useRawPath);
 			if(R == FileDir.Directory) return true;
-			if(R != FileDir.NotFound) Native.ClearError();
+			if(R != FileDir.NotFound) WinError.Clear();
 			return false;
 		}
 
@@ -321,7 +321,7 @@ namespace Au
 		/// </param>
 		/// <param name="errorHandler">
 		/// Callback function. Called when fails to get children of a subdirectory, when using flag <see cref="FEFlags.AndSubdirectories"/>.
-		/// It receives the subdirectory path. It can call <see cref="Native.GetError"/> and throw an exception.
+		/// It receives the subdirectory path. It can call <see cref="WinError.Code"/> and throw an exception.
 		/// If it does not throw an exception, the enumeration continues as if the directory is empty.
 		/// If errorHandler not used, then throws exception.
 		/// Read more in Remarks.
@@ -374,8 +374,8 @@ namespace Au
 #endif
 						if(hfind == (IntPtr)(-1)) {
 							hfind = default;
-							var ec = Native.GetError();
-							//Print(ec, Native.GetErrorMessage(ec), path);
+							var ec = WinError.Code;
+							//Print(ec, WinError.MessageFor(ec), path);
 							bool itsOK = false;
 							switch(ec) {
 							case Api.ERROR_FILE_NOT_FOUND:
@@ -394,14 +394,14 @@ namespace Au
 							case Api.ERROR_DIRECTORY: //it is file, not directory. Error text is "The directory name is invalid".
 							case Api.ERROR_BAD_NETPATH: //eg \\COMPUTER\MissingFolder
 								if(stack.Count == 0 && !ExistsAsDirectory(path, true))
-									throw new DirectoryNotFoundException($"Directory not found: '{path}'. {Native.GetErrorMessage(ec)}");
+									throw new DirectoryNotFoundException($"Directory not found: '{path}'. {WinError.MessageFor(ec)}");
 								//itsOK = (attr & Api.FILE_ATTRIBUTE_REPARSE_POINT) != 0;
 								itsOK = true; //or maybe the subdirectory was deleted after we retrieved it
 								break;
 							case Api.ERROR_INVALID_NAME: //eg contains invalid characters
 							case Api.ERROR_BAD_NET_NAME: //eg \\COMPUTER
 								if(stack.Count == 0)
-									throw new ArgumentException(Native.GetErrorMessage(ec));
+									throw new ArgumentException(WinError.MessageFor(ec));
 								itsOK = true;
 								break;
 							}
@@ -413,7 +413,7 @@ namespace Au
 						}
 					} else {
 						if(!Api.FindNextFile(hfind, out d)) {
-							Debug.Assert(Native.GetError() == Api.ERROR_NO_MORE_FILES);
+							Debug.Assert(WinError.Code == Api.ERROR_NO_MORE_FILES);
 							Api.FindClose(hfind);
 							hfind = default;
 						}
@@ -550,7 +550,7 @@ namespace Au
 				if(!copy) {
 					//note: don't use MOVEFILE_COPY_ALLOWED, because then moving directory to another drive fails with ERROR_ACCESS_DENIED and we don't know that the reason is different drive
 					if(ok = Api.MoveFileEx(path1, path2, 0)) return;
-					if(Native.GetError() == Api.ERROR_NOT_SAME_DEVICE) {
+					if(WinError.Code == Api.ERROR_NOT_SAME_DEVICE) {
 						copy = true;
 						deleteSource = true;
 					}
@@ -639,11 +639,11 @@ namespace Au
 						//To create or copy symbolic links, need SeCreateSymbolicLinkPrivilege privilege.
 						//Admins have it, else this process cannot get it.
 						//More info: MS technet -> "Create symbolic links".
-						//Debug_.Print($"failed to copy symbolic link '{s1}'. It's OK, skipped it. Error: {Native.GetErrorMessage()}");
+						//Debug_.Print($"failed to copy symbolic link '{s1}'. It's OK, skipped it. Error: {WinError.MessageFor()}");
 						continue;
 					}
 					if(0 != (copyFlags & FCFlags.IgnoreAccessDeniedErrors)) {
-						if(Native.GetError() == Api.ERROR_ACCESS_DENIED) continue;
+						if(WinError.Code == Api.ERROR_ACCESS_DENIED) continue;
 					}
 					goto ge;
 				}
@@ -916,13 +916,13 @@ namespace Au
 		{
 			//Print(dir, path);
 			if(dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
-			var ec = Native.GetError();
+			var ec = WinError.Code;
 			if(ec == Api.ERROR_ACCESS_DENIED) {
 				var a = Api.GetFileAttributes(path);
 				if(a != (FileAttributes)(-1) && 0 != (a & FileAttributes.ReadOnly)) {
 					Api.SetFileAttributes(path, a & ~FileAttributes.ReadOnly);
 					if(dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
-					ec = Native.GetError();
+					ec = WinError.Code;
 				}
 			}
 			if(ec == Api.ERROR_DIR_NOT_EMPTY && Api.PathIsDirectoryEmpty(path)) {
@@ -932,10 +932,10 @@ namespace Au
 					Thread.Sleep(15);
 					if(Api.RemoveDirectory(path)) return 0;
 				}
-				ec = Native.GetError();
+				ec = WinError.Code;
 			}
 			if(ec == Api.ERROR_FILE_NOT_FOUND || ec == Api.ERROR_PATH_NOT_FOUND) return 0;
-			Debug_.Print("_DeleteLL failed. " + Native.GetErrorMessage(ec) + "  " + path
+			Debug_.Print("_DeleteLL failed. " + WinError.MessageFor(ec) + "  " + path
 				+ (dir ? ("   Children: " + string.Join(" | ", EnumDirectory(path).Select(f => f.Name))) : null));
 			return ec;
 
@@ -1034,7 +1034,7 @@ namespace Au
 					? Api.CreateDirectory(s, default)
 					: Api.CreateDirectoryEx(templateDirectory, s, default);
 				if(!ok) {
-					int ec = Native.GetError();
+					int ec = WinError.Code;
 					if(ec == Api.ERROR_ALREADY_EXISTS) continue;
 					if(ec == Api.ERROR_ACCESS_DENIED && ++retry < 5) { Thread.Sleep(15); goto g1; } //sometimes access denied briefly, eg immediately after deleting the folder while its parent is open in Explorer. Now could not reproduce on Win10.
 					throw new AuException(0, $@"*create directory '{path}'");
@@ -1294,7 +1294,7 @@ namespace Au
 				if(!Api.MoveFileEx(temp, file, Api.MOVEFILE_REPLACE_EXISTING)) es = "MoveFileEx failed";
 			}
 			if(es != null) {
-				int ec = Native.GetError();
+				int ec = WinError.Code;
 				if(w.ExceptionFilter(ec)) { w.Sleep(); goto g2; }
 				throw new IOException(es, ec);
 			}
@@ -1352,7 +1352,7 @@ namespace Au.Types
 
 		///<summary>
 		///If failed, return false and don't throw exception.
-		///Then, if you need error info, you can use <see cref="Native.GetError"/>. If the file/directory does not exist, it will return ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND or ERROR_NOT_READY.
+		///Then, if you need error info, you can use <see cref="WinError.Code"/>. If the file/directory does not exist, it will return ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND or ERROR_NOT_READY.
 		///If failed and the native error code is ERROR_ACCESS_DENIED or ERROR_SHARING_VIOLATION, the returned attributes will be (FileAttributes)(-1). The file probably exists but is protected so that this process cannot access and use it. Else attributes will be 0.
 		///</summary>
 		DontThrow = 2,

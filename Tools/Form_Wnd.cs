@@ -186,7 +186,7 @@ namespace Au.Tools
 			{
 				cn = w.ClassName;
 				if(cn != null) return true;
-				_propError = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + Native.GetErrorMessage();
+				_propError = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + WinError.Message;
 				_grid.Clear();
 				_grid.Invalidate();
 				_winInfo.ST.ClearText();
@@ -589,7 +589,7 @@ namespace Au.Tools
 						var cn = c.ClassName;
 						if(cn == null) {
 							IsException = true;
-							return _displayText = "Failed: " + Native.GetErrorMessage();
+							return _displayText = "Failed: " + WinError.Message;
 						}
 
 						var name = c.Name;
@@ -706,7 +706,7 @@ namespace Au.Tools
 				}
 				b.AppendFormat("<+rect {0} 1><i>ClientRect<><>:    ", sh).AppendLine(w.ClientRect.ToString());
 				var style = w.Style;
-				s = (style & (Native.WS)0xffff0000).ToString();
+				s = (style & (WS)0xffff0000).ToString();
 				if(isCon) s = s.Replace("MINIMIZEBOX", "GROUP").Replace("MAXIMIZEBOX", "TABSTOP");
 				uint style2 = ((uint)style) & 0xffff; //unknown styles of that class
 				b.Append("<i>Style<>:  0x").Append(((uint)style).ToString("X8")).Append(" (").Append(s);

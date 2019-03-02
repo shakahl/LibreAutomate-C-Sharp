@@ -113,7 +113,7 @@ namespace Au
 
 			/// <summary>
 			/// Gets <see cref="FileId"/> of a file or directory.
-			/// Returns false if fails. Supports <see cref="Native.GetError"/>.
+			/// Returns false if fails. Supports <see cref="WinError.Code"/>.
 			/// </summary>
 			/// <param name="path">Full path. Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
 			/// <param name="fileId"></param>

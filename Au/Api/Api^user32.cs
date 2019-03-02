@@ -139,7 +139,7 @@ namespace Au.Types
 		internal static extern bool UnregisterClass(uint classAtom, IntPtr hInstance);
 
 		[DllImport("user32.dll", EntryPoint = "CreateWindowExW", SetLastError = true)]
-		internal static extern Wnd CreateWindowEx(Native.WS_EX dwExStyle, string lpClassName, string lpWindowName, Native.WS dwStyle, int x, int y, int nWidth, int nHeight, Wnd hWndParent, LPARAM hMenu, IntPtr hInstance, LPARAM lpParam);
+		internal static extern Wnd CreateWindowEx(WS_EX dwExStyle, string lpClassName, string lpWindowName, WS dwStyle, int x, int y, int nWidth, int nHeight, Wnd hWndParent, LPARAM hMenu, IntPtr hInstance, LPARAM lpParam);
 
 		[DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
 		internal static extern LPARAM DefWindowProc(Wnd hWnd, int msg, LPARAM wParam, LPARAM lParam);
@@ -780,7 +780,7 @@ namespace Au.Types
 		/// <summary>
 		/// Extra info value of key and mouse events sent by functions of this library.
 		/// </summary>
-		internal const int AuExtraInfo = 0x71427fa5; //TODO: public
+		internal const int AuExtraInfo = 0x71427fa5;
 
 		//[DllImport("user32.dll", SetLastError = true)]
 		//internal static extern int SendInput(int cInputs, in INPUTKEY pInputs, int cbSize);
@@ -823,7 +823,7 @@ namespace Au.Types
 		internal static extern Wnd SetParent(Wnd hWndChild, Wnd hWndNewParent);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool AdjustWindowRectEx(ref RECT lpRect, Native.WS dwStyle, bool bMenu, Native.WS_EX dwExStyle);
+		internal static extern bool AdjustWindowRectEx(ref RECT lpRect, WS dwStyle, bool bMenu, WS_EX dwExStyle);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ChangeWindowMessageFilter(int message, uint dwFlag);
@@ -1120,7 +1120,7 @@ namespace Au.Types
 
 		internal const int HC_NOREMOVE = 3;
 
-		internal delegate void WINEVENTPROC(IntPtr hWinEventHook, AccEVENT event_, Wnd hwnd, int idObject, int idChild, int idEventThread, int dwmsEventTime);
+		internal delegate void WINEVENTPROC(IntPtr hWinEventHook, AccEVENT event_, Wnd hwnd, AccOBJID idObject, int idChild, int idEventThread, int dwmsEventTime);
 
 		[DllImport("user32.dll")]
 		internal static extern IntPtr SetWinEventHook(AccEVENT eventMin, AccEVENT eventMax, IntPtr hmodWinEventProc, WINEVENTPROC pfnWinEventProc, int idProcess, int idThread, AccHookFlags dwFlags);

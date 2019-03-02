@@ -75,15 +75,12 @@ namespace Au
 				/// <remarks>
 				/// The window will be destroyed in these cases: 1. Called <see cref="Destroy"/>. 2. Closed by the user or some program/script. 3. When this thread ends. 4. This function called again (then destroys old window and creates new).
 				/// </remarks>
-				public bool Create(string className, string name = null, Native.WS style = 0, Native.WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default)
+				public bool Create(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default)
 				{
-					Destroy();
-
-					if(!_Create(className, name, style, exStyle, x, y, width, height, parent, controlId)) return false;
-
 					if(t_windows == null) t_windows = new List<MyWindow>();
+					Destroy();
+					if(!_Create(className, name, style, exStyle, x, y, width, height, parent, controlId)) return false;
 					t_windows.Add(this);
-
 					return true;
 				}
 
@@ -93,7 +90,7 @@ namespace Au
 				/// </summary>
 				public bool CreateMessageWindow(string className, string name = null)
 				{
-					return Create(className, name, Native.WS.POPUP, Native.WS_EX.NOACTIVATE, 0, 0, 0, 0, Native.HWND.MESSAGE);
+					return Create(className, name, WS.POPUP, WS_EX.NOACTIVATE, 0, 0, 0, 0, Native.HWND.MESSAGE);
 					//note: WS_EX_NOACTIVATE is important.
 				}
 
@@ -137,14 +134,20 @@ namespace Au
 						: Api.CallWindowProc(_nativeWndProc, w, message, wParam, lParam);
 				}
 
-				bool _Create(string className, string name, Native.WS style, Native.WS_EX exStyle, int x, int y, int width, int height, Wnd parent, LPARAM controlId)
+				bool _Create(string className, string name, WS style, WS_EX exStyle, int x, int y, int width, int height, Wnd parent, LPARAM controlId)
 				{
 					using(Util.WinHook.ThreadCbt(c => {
 						if(c.code == HookData.CbtEvent.CREATEWND) {
+							//note: unhook as soon as possible. Else possible exception etc.
+							//	If eg hook proc uses 'lock' and that 'lock' must wait,
+							//	our hook proc is called again and again while waiting, until 'lock' throws exception.
+							//	It is known that 'lock' in STA thread dispatches messages, but I don't know why hook proc
+							//	is called multiple times for same event.
+							c.hook.Unhook();
+
 							var ww = (Wnd)c.wParam;
 							Debug.Assert(ww.ClassNameIs(className));
 							_nativeWndProc = ww.SetWindowLong(Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_ourWndProc));
-							c.hook.Unhook();
 						} else Debug.Assert(false);
 						return false;
 					})) Handle = CreateWindow(className, name, style, exStyle, x, y, width, height, parent, controlId);

@@ -251,7 +251,7 @@ namespace Au
 		/// Calls API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_ALLINPUT. Alertable.
 		/// When a handle becomes signaled, returns its 0-based index. If abandoned mutex, returns 0-based index + Api.WAIT_ABANDONED_0 (0x80).
 		/// If timeMS>0, waits max timeMS and on timeout returns Api.WAIT_TIMEOUT.
-		/// If failed, returns -1. Supports Native.GetError.
+		/// If failed, returns -1. Supports <see cref="WinError.Code"/>.
 		/// </summary>
 		internal static int LibWait(long timeMS, WHFlags flags, params IntPtr[] handles)
 		{

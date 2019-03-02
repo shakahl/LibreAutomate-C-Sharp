@@ -111,7 +111,7 @@ partial class EdForm
 		//TestTools();
 		//TestReplaceFile();
 
-		Au.Triggers.TriggersEverywhere.Disabled ^= true;
+		Au.Triggers.AuTriggers.DisabledEverywhere ^= true;
 	}
 	static bool s_test1;
 

@@ -133,9 +133,9 @@ namespace Au
 		void _Init()
 		{
 			Perf.Next();
-			var exStyle = Native.WS_EX.TOOLWINDOW | Native.WS_EX.NOACTIVATE | Native.WS_EX.TOPMOST;
-			var style = Native.WS.POPUP;
-			//style |= Native.WS.CAPTION | Native.WS.SYSMENU;
+			var exStyle = WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST;
+			var style = WS.POPUP;
+			//style |= WS.CAPTION | WS.SYSMENU;
 
 			//RECT r = Screen.PrimaryScreen.WorkingArea; r.Inflate(-2, -2); r.top += 4;
 			RECT r = (0, 0, 200, 200);

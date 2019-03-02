@@ -529,7 +529,7 @@ namespace Au
 				Debug.Assert(!_isOpen);
 				var to = new WaitFor.Loop(noThrow ? -1 : -10, 1);
 				while(!Api.OpenClipboard(_w)) {
-					int ec = Native.GetError();
+					int ec = WinError.Code;
 					if(!to.Sleep()) {
 						Dispose();
 						if(noThrow) return false;
@@ -683,6 +683,7 @@ namespace Au
 		/// </summary>
 		/// <inheritdoc cref="Clipb.PasteText"/>
 		public static void Paste(string text) => Clipb.PasteText(text);
+		//TODO: fails to paste in VMware player. QM2 too.
 
 		/// <summary>
 		/// Calls <see cref="Clipb.CopyText"/>.

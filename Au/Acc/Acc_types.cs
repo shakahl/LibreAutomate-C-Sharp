@@ -352,6 +352,7 @@ namespace Au.Types
 		REMOVESELECTION = 0x10,
 	}
 
+	//CONSIDER: remove the SYSTEM_/OBJECT_ prefixes.
 	/// <summary>
 	/// Event constants for <see cref="Util.AccHook"/>. See API <msdn>SetWinEventHook</msdn>.
 	/// </summary>

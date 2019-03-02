@@ -60,10 +60,8 @@ namespace Au
 		/// <item>The startup info of this process tells to not show console window and to not redirect the standard output.</item>
 		/// </list>
 		/// </remarks>
-		public static bool IsWritingToConsole
-		{
-			get
-			{
+		public static bool IsWritingToConsole {
+			get {
 				if(!IsConsoleProcess || IgnoreConsole || LogFile != null) return false;
 				if(!_isVisibleConsole.HasValue) {
 					Api.GetStartupInfo(out var x);
@@ -90,8 +88,8 @@ namespace Au
 				_ClearToLogFile();
 			} else if(IsWritingToConsole) {
 				try { Console.Clear(); } catch { } //exception if redirected, it is documented
-			} else if(LibUseQM2) {
-				_WriteToQM2(null);
+			} else if(QM2.UseQM2) {
+				QM2.Clear();
 			} else {
 				_ClearToOutputServer();
 			}
@@ -141,7 +139,7 @@ namespace Au
 		/// <summary>
 		/// Our default writer class for the Writer property.
 		/// </summary>
-		class _OutputWriter :TextWriter
+		class _OutputWriter : TextWriter
 		{
 			public override void WriteLine(string value) { WriteDirectly(value); }
 			public override Encoding Encoding => Encoding.Unicode;
@@ -158,7 +156,7 @@ namespace Au
 
 			if(LogFile != null) _WriteToLogFile(value);
 			else if(IsWritingToConsole) Console.WriteLine(value);
-			else if(LibUseQM2) _WriteToQM2(value);
+			else if(QM2.UseQM2) QM2.Write(value);
 			else _WriteToOutputServer(value);
 		}
 
@@ -169,10 +167,8 @@ namespace Au
 		/// Console.Write will write line, like Console.WriteLine.
 		/// Console.Clear will not clear output; it will throw exception.
 		/// </remarks>
-		public static bool RedirectConsoleOutput
-		{
-			set
-			{
+		public static bool RedirectConsoleOutput {
+			set {
 				if(value) {
 					if(_prevConsoleOut != null || IsConsoleProcess) return;
 					_prevConsoleOut = Console.Out;
@@ -192,10 +188,8 @@ namespace Au
 		/// <remarks>
 		/// Tip: To write to the output window even in console process, set <c>Output.IgnoreConsole=true;</c> before calling this method first time.
 		/// </remarks>
-		public static bool RedirectDebugOutput
-		{
-			set
-			{
+		public static bool RedirectDebugOutput {
+			set {
 				if(value) {
 					if(_traceListener != null) return;
 					//Trace.Listeners.Add(IsWritingToConsole ? (new ConsoleTraceListener()) : (new TextWriterTraceListener(Writer)));
@@ -220,11 +214,9 @@ namespace Au
 		/// Also supports mailslots. For LogFile use mailslot name, as documented in <msdn>CreateMailslot</msdn>. Multiple appdomains and processes can use the same mailslot.
 		/// </remarks>
 		/// <exception cref="ArgumentException">The 'set' function throws this exception if the value is not full path and not null.</exception>
-		public static string LogFile
-		{
+		public static string LogFile {
 			get => _logFile;
-			set
-			{
+			set {
 				lock(_lockObj1) {
 					if(_hFile != null) {
 						_hFile.Close();
@@ -254,14 +246,14 @@ namespace Au
 					g1:
 					_hFile = _LogFile.Open();
 					if(_hFile == null) {
-						var e = Native.GetError();
+						var e = WinError.Code;
 						if(e == Api.ERROR_SHARING_VIOLATION) {
 							var u = Path_.MakeUnique(_logFile, false);
 							if(u != _logFile) { _logFile = u; goto g1; }
 						}
 						var logf = _logFile;
 						_logFile = null;
-						PrintWarning($"Failed to create or open log file '{logf}'. {Native.GetErrorMessage(e)}");
+						PrintWarning($"Failed to create or open log file '{logf}'. {WinError.MessageFor(e)}");
 						WriteDirectly(s);
 						return;
 					}
@@ -334,7 +326,7 @@ namespace Au
 					ok = Api.WriteFile(_h, b, n, out _);
 				}
 				if(!ok) {
-					string emsg = Native.GetErrorMessage();
+					string emsg = WinError.Message;
 					LogFile = null;
 					PrintWarning($"Failed to write to log file '{_name}'. {emsg}");
 					WriteDirectly(s);
@@ -368,9 +360,9 @@ namespace Au
 		{
 			var h = Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, default, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
 			if(h.IsInvalid) {
-				var e = Native.GetError();
+				var e = WinError.Code;
 				h.SetHandleAsInvalid();
-				Native.SetError(e);
+				WinError.Code = e;
 				return null;
 			}
 			return h;
@@ -378,30 +370,39 @@ namespace Au
 			//tested: CREATE_ALWAYS works with mailslot too. Does not erase messages. Undocumented what to use.
 		}
 
-		/// <summary>
-		/// Sets to use QM2 as the output server.
-		/// </summary>
-		internal static bool LibUseQM2 { get; set; }
-
-		/// <summary>
-		/// Clears QM2 output pane.
-		/// </summary>
-		internal static void LibClearQM2() => _WriteToQM2(null);
-
-		/// <summary>
-		/// Writes line to QM2.
-		/// </summary>
-		internal static void LibWriteQM2(object o) => _WriteToQM2(o?.ToString() ?? "");
-
-		/// <param name="s">If null, clears output.</param>
-		static void _WriteToQM2(string s)
+		///
+#if DEBUG
+		public
+#else
+		internal
+#endif
+		static class QM2
 		{
-			if(!_hwndQM2.IsAlive) {
-				_hwndQM2 = Api.FindWindow("QM_Editor", null);
-				if(_hwndQM2.Is0) return;
+			/// <summary>
+			/// Sets to use QM2 as the output server.
+			/// </summary>
+			public static bool UseQM2 { get; set; }
+
+			/// <summary>
+			/// Clears QM2 output pane.
+			/// </summary>
+			public static void Clear() => _WriteToQM2(null);
+
+			/// <summary>
+			/// Writes line to QM2.
+			/// </summary>
+			public static void Write(object o) => _WriteToQM2(o?.ToString() ?? "");
+
+			/// <param name="s">If null, clears output.</param>
+			static void _WriteToQM2(string s)
+			{
+				if(!_hwndQM2.IsAlive) {
+					_hwndQM2 = Api.FindWindow("QM_Editor", null);
+					if(_hwndQM2.Is0) return;
+				}
+				_hwndQM2.SendS(Api.WM_SETTEXT, -1, s);
 			}
-			_hwndQM2.SendS(Api.WM_SETTEXT, -1, s);
+			static Wnd _hwndQM2;
 		}
-		static Wnd _hwndQM2;
 	}
 }

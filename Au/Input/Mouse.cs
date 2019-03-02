@@ -632,7 +632,7 @@ namespace Au
 					var wfp = Wnd.FromXY(p, WXYFlags.NeedWindow);
 					if(wfp == wTL) return true;
 					//forgive if same thread and no caption. Eg a tooltip that disappears and relays the click to its owner window. But not if wTL is disabled.
-					if(wTL.IsEnabled && wfp.ThreadId == wTL.ThreadId && !wfp.HasStyle(Native.WS.CAPTION)) return true;
+					if(wTL.IsEnabled && wfp.ThreadId == wTL.ThreadId && !wfp.HasStyle(WS.CAPTION)) return true;
 					return false;
 				}
 			}

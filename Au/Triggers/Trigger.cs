@@ -28,22 +28,22 @@ namespace Au.Triggers
 	{
 		internal Trigger next; //linked list when eg same hotkey is used in multiple scopes
 		internal readonly Delegate action;
-		internal readonly Triggers triggers;
+		internal readonly AuTriggers triggers;
 		internal readonly TOptions options; //Triggers.Options
 		internal readonly TriggerScope scope; //Triggers.Of.WindowX, used by hotkey, autotext and mouse triggers
 		readonly TriggerScopeFunc[] _funcAfter, _funcBefore; //Triggers.Of.FuncX, used by all triggers
 
-		internal Trigger(Triggers triggers, Delegate action, bool usesWindowScope)
+		internal Trigger(AuTriggers triggers, Delegate action, bool usesWindowScope)
 		{
 			this.action = action;
 			this.triggers = triggers;
-			options = triggers.LibOptions.Current;
-			var x = triggers.LibScopes;
+			options = triggers.options.Current;
+			var x = triggers.scopes;
 			if(usesWindowScope) scope = x.Current;
 			_funcBefore = _Func(x.commonFuncBefore, x.funcBefore); x.funcBefore = null;
 			_funcAfter = _Func(x.funcAfter, x.commonFuncAfter); x.funcAfter = null;
 			EnabledAlways = x.EnabledAlways;
-			triggers.lastAdded = this;
+			triggers.Last.trigger = this;
 
 			TriggerScopeFunc[] _Func(TFunc f1, TFunc f2)
 			{
@@ -69,7 +69,7 @@ namespace Au.Triggers
 		}
 
 		/// <summary>
-		/// Called through TriggerActionThreads.Run in action thread.
+		/// Called through <see cref="TriggerActionThreads.Run"/> in action thread.
 		/// Possibly runs later.
 		/// </summary>
 		internal abstract void Run(TriggerArgs args);
@@ -77,30 +77,28 @@ namespace Au.Triggers
 		/// <summary>
 		/// Makes simpler to implement <see cref="Run"/>.
 		/// </summary>
-		internal void RunT<T>(T args) => (action as Action<T>)(args);
+		protected private void RunT<T>(T args) => (action as Action<T>)(args);
 
-		internal abstract string TypeString();
-		internal abstract string ShortString();
+		public abstract string TypeString();
+		public abstract string ShortString();
 
 		internal bool MatchScope(TriggerHookContext thc)
 		{
-			TFuncArgs args = null;
 			for(int i = 0; i < 3; i++) {
 				if(i == 1) {
 					if(scope != null) {
 						thc.PerfStart();
 						bool ok = scope.Match(thc);
-						thc.PerfEnd(scope);
+						thc.PerfEnd(false, ref scope.perfTime);
 						if(!ok) return false;
 					}
 				} else {
 					var af = i == 0 ? _funcBefore : _funcAfter;
 					if(af != null) {
-						if(args == null) args = new TFuncArgs(thc.args);
 						foreach(var v in af) {
 							thc.PerfStart();
-							bool ok = v.f(args);
-							thc.PerfEnd(v);
+							bool ok = v.f(thc.args);
+							thc.PerfEnd(true, ref v.perfTime);
 							if(!ok) return false;
 						}
 					}
@@ -112,24 +110,41 @@ namespace Au.Triggers
 			//	should compare it once, and don't call 'before' functions again if did not match. Rare.
 		}
 
-		/// <summary>
-		/// The <see cref="Au.Triggers.Triggers"/> instance to which this trigger belongs.
-		/// </summary>
-		public Triggers Triggers => triggers;
+		internal bool MatchScope2(TriggerArgs args) //not overload, because Util.Jit.Compile
+		{
+			for(int i = 0; i < 2; i++) {
+				var af = i == 0 ? _funcBefore : _funcAfter;
+				if(af != null) {
+					foreach(var v in af) {
+						bool ok = v.f(args);
+						if(!ok) return false;
+					}
+				}
+			}
+			return true;
+		}
+
+		internal bool HasFunc => _funcBefore != null || _funcAfter != null;
+
+		//probably not useful. Or also need a property for eg HotkeyTriggers in inherited classes.
+		///// <summary>
+		///// The <see cref="AuTriggers"/> instance to which this trigger belongs.
+		///// </summary>
+		//public AuTriggers Triggers => triggers;
 
 		/// <summary>
 		/// Gets or sets whether this trigger is disabled.
-		/// Does not depend on <see cref="Triggers.Disabled"/>, <see cref="TriggersEverywhere.Disabled"/>, <see cref="EnabledAlways"/>.
+		/// Does not depend on <see cref="AuTriggers.Disabled"/>, <see cref="AuTriggers.DisabledEverywhere"/>, <see cref="EnabledAlways"/>.
 		/// </summary>
 		public bool Disabled { get; set; }
 
 		/// <summary>
-		/// Returns true if <see cref="Disabled"/>; also if <see cref="Triggers.Disabled"/> or <see cref="TriggersEverywhere.Disabled"/>, unless <see cref="EnabledAlways"/>.
+		/// Returns true if <see cref="Disabled"/>; also if <see cref="AuTriggers.Disabled"/> or <see cref="AuTriggers.DisabledEverywhere"/>, unless <see cref="EnabledAlways"/>.
 		/// </summary>
-		public bool DisabledThisOrAll => Disabled || (!EnabledAlways && (triggers.Disabled | TriggersEverywhere.Disabled));
+		public bool DisabledThisOrAll => Disabled || (!EnabledAlways && (triggers.Disabled | AuTriggers.DisabledEverywhere));
 
 		/// <summary>
-		/// Gets or sets whether this trigger ignores <see cref="Triggers.Disabled"/> and <see cref="TriggersEverywhere.Disabled"/>.
+		/// Gets or sets whether this trigger ignores <see cref="AuTriggers.Disabled"/> and <see cref="AuTriggers.DisabledEverywhere"/>.
 		/// </summary>
 		/// <remarks>
 		/// When adding the trigger, this property is set to the value of <see cref="TriggerScopes.EnabledAlways"/> at that time.
@@ -142,22 +157,6 @@ namespace Au.Triggers
 	/// </summary>
 	public class TriggerArgs
 	{
-		Trigger _trigger;
-
-		internal TriggerArgs(Trigger trigger)
-		{
-			_trigger = trigger;
-		}
-
-		/// <summary>
-		/// The trigger.
-		/// </summary>
-		public Trigger Trigger => _trigger;
-
-		/// <summary>
-		/// The <see cref="Au.Triggers.Triggers"/> instance to which this trigger belongs.
-		/// </summary>
-		public Triggers Triggers => _trigger.triggers;
 	}
 
 	public class TriggerScopes
@@ -261,15 +260,16 @@ namespace Au.Triggers
 		}
 
 		/// <summary>
-		/// Triggers added afterwards don't depend on <see cref="Triggers.Disabled"/> and <see cref="TriggersEverywhere.Disabled"/>.
+		/// Triggers added afterwards don't depend on <see cref="AuTriggers.Disabled"/> and <see cref="AuTriggers.DisabledEverywhere"/>.
 		/// </summary>
 		public bool EnabledAlways { get; set; }
 	}
 
-	public class TriggerScope : TriggerScopeBase
+	public class TriggerScope
 	{
 		internal readonly object o; //Wnd.Finder, Wnd, object<Wnd.Finder|Wnd>[]
 		internal readonly bool not;
+		internal int perfTime;
 
 		internal TriggerScope(object o, bool not)
 		{
@@ -284,11 +284,11 @@ namespace Au.Triggers
 		internal bool Match(TriggerHookContext thc)
 		{
 			bool yes = false;
-			var w = thc.w;
+			var w = thc.Window;
 			if(!w.Is0) {
 				switch(o) {
 				case Wnd.Finder f:
-					yes = f.IsMatch(w, thc);
+					yes = f.IsMatch(w, thc.triggers.winCache);
 					break;
 				case Wnd hwnd:
 					yes = w == hwnd;
@@ -296,7 +296,7 @@ namespace Au.Triggers
 				case object[] a:
 					foreach(var v in a) {
 						switch(v) {
-						case Wnd.Finder f1: yes = f1.IsMatch(w, thc); break;
+						case Wnd.Finder f1: yes = f1.IsMatch(w, thc.triggers.winCache); break;
 						case Wnd w1: yes = (w == w1); break;
 						}
 						if(yes) break;
@@ -308,34 +308,11 @@ namespace Au.Triggers
 		}
 	}
 
-	public class TriggerScopeBase
+	class TriggerScopeFunc
 	{
+		internal TFunc f;
 		internal int perfTime;
 	}
 
-	class TriggerScopeFunc : TriggerScopeBase
-	{
-		internal TFunc f;
-	}
-
-	public delegate bool TFunc(TFuncArgs args);
-
-	/// <summary>
-	/// <see cref="TFunc"/> arguments.
-	/// </summary>
-	public class TFuncArgs
-	{
-		TriggerArgs _ta;
-
-		internal TFuncArgs(TriggerArgs ta) { _ta = ta; }
-
-		///
-		public HotkeyTriggerArgs Hotkey => _ta as HotkeyTriggerArgs;
-
-		///
-		public AutotextTriggerArgs Autotext => _ta as AutotextTriggerArgs;
-
-		///
-		public MouseTriggerArgs Mouse => _ta as MouseTriggerArgs;
-	}
+	public delegate bool TFunc(TriggerArgs args);
 }

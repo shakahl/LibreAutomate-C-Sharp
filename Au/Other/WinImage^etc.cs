@@ -361,8 +361,8 @@ namespace Au
 				get
 				{
 					var p = base.CreateParams;
-					p.Style = unchecked((int)(Native.WS.POPUP));
-					p.ExStyle = (int)(Native.WS_EX.TOOLWINDOW | Native.WS_EX.TOPMOST);
+					p.Style = unchecked((int)(WS.POPUP));
+					p.ExStyle = (int)(WS_EX.TOOLWINDOW | WS_EX.TOPMOST);
 					return p;
 				}
 			}

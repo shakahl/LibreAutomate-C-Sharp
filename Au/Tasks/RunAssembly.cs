@@ -197,5 +197,18 @@ namespace Au.Types
 			if(k != null) k.OnUnhandledException(e);
 			else Print(e.ExceptionObject);
 		}
+
+		/// <summary>
+		/// Gets or sets an <see cref="Au.Triggers.AuTriggers"/> instance, as a field of this class.
+		/// </summary>
+		/// <remarks>
+		/// This property can be used in automation scripts to avoid creating an <b>AuTriggers</b> variable explicitly. The returned value is a field of this class. The <b>AuTriggers</b> object is auto-created when callig this property first time or after setting it = null.
+		/// In automation scripts this property is available because this class is the base of the Script class. In other classes need to create an <b>AuTriggers</b> variable explicitly. In scripts you also can create explicitly if you like, for example to have more than one instance.
+		/// </remarks>
+		protected Au.Triggers.AuTriggers Triggers {
+			get => _triggers ?? (_triggers = new Au.Triggers.AuTriggers());
+			set => _triggers = value;
+		}
+		Au.Triggers.AuTriggers _triggers;
 	}
 }

@@ -26,84 +26,91 @@ using Microsoft.Win32.SafeHandles;
 
 namespace Au.Triggers
 {
-	public class HotkeyTriggers : ITriggers //in task process
+	[Flags]
+	public enum TKFlags : byte
 	{
-		[Flags]
-		public enum TFlags : byte
+		/// <summary>
+		/// Allow other apps to receive the key too, as if it is not a hotkey.
+		/// Without this flag, other apps receive only modifier keys.
+		/// </summary>
+		Shared = 1,
+
+		/// <summary>
+		/// Run the action when all hotkey keys (key and modifiers) are released.
+		/// Without this flag, the action runs when the non-modifier key pressed down.
+		/// </summary>
+		Up = 2,
+
+		/// <summary>
+		/// Run the action only when using left-side modifier keys.
+		/// </summary>
+		ModLeft = 4,
+
+		/// <summary>
+		/// Run the action only when using right-side modifier keys.
+		/// </summary>
+		ModRight = 8,
+
+		/// <summary>
+		/// Don't release modifier keys.
+		/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="Keyb.GetMod"/> (and any such functions in any app) will not know that the key is physically pressed.
+		/// </summary>
+		DontReleaseMod = 16,
+	}
+
+	public class HotkeyTrigger : Trigger
+	{
+		internal readonly TKFlags flags;
+		string _shortString;
+
+		internal HotkeyTrigger(AuTriggers triggers, Action<HotkeyTriggerArgs> action, string hotkey, TKFlags flags) : base(triggers, action, true)
 		{
-			/// <summary>
-			/// Allow other apps to receive the key too, as if it is not a hotkey.
-			/// Without this flag, other apps receive only modifier keys.
-			/// </summary>
-			Shared = 1,
-
-			/// <summary>
-			/// Run the action when all hotkey keys (key and modifiers) are released.
-			/// Without this flag, the action runs when the non-modifier key pressed down.
-			/// </summary>
-			Up = 2,
-
-			/// <summary>
-			/// Run the action only when using left-side modifier keys.
-			/// </summary>
-			ModLeft = 4,
-
-			/// <summary>
-			/// Run the action only when using right-side modifier keys.
-			/// </summary>
-			ModRight = 8,
-
-			/// <summary>
-			/// Don't release modifier keys.
-			/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="Keyb.GetMod"/> (and any such functions in any app) will not know that the key is physically pressed.
-			/// </summary>
-			DontReleaseMod = 16,
+			_shortString = hotkey;
+			this.flags = flags;
 		}
 
-		class _TriggerEtc : Trigger
-		{
-			internal readonly TFlags flags;
-			string _shortString;
+		internal override void Run(TriggerArgs args) => RunT(args as HotkeyTriggerArgs);
 
-			internal _TriggerEtc(Triggers triggers, Action<HotkeyTriggerArgs> action, string hotkey, TFlags flags) : base(triggers, action, true)
-			{
-				_shortString = hotkey;
-				this.flags = flags;
-			}
+		public override string TypeString() => "Hotkey";
 
-			internal override void Run(TriggerArgs args) => RunT(args as HotkeyTriggerArgs);
+		public override string ShortString() => _shortString;
 
-			internal override string TypeString() => "Hotkey";
+		//public override string ToString()
+		//{
+		//	return "Hotkey " + _shortString;
+		//	//using(new Util.LibStringBuilder(out var b)) {
+		//	//	b.Append("Hotkey ").Append(_hotkey);
 
-			internal override string ShortString() => _shortString;
+		//	//	return b.ToString();
+		//	//}
+		//}
 
-			//public override string ToString()
-			//{
-			//	return "Hotkey " + _shortString;
-			//	//using(new Util.LibStringBuilder(out var b)) {
-			//	//	b.Append("Hotkey ").Append(_hotkey);
+		public TKFlags Flags => flags;
+	}
 
-			//	//	return b.ToString();
-			//	//}
-			//}
-		}
-
-		Triggers _triggers;
+	public class HotkeyTriggers : ITriggers
+	{
+		AuTriggers _triggers;
 		Dictionary<int, Trigger> _d = new Dictionary<int, Trigger>();
 
-		internal HotkeyTriggers(Triggers triggers)
+		internal HotkeyTriggers(AuTriggers triggers)
 		{
 			_triggers = triggers;
 		}
 
 		static int _DictKey(KKey key, KMod mod) => ((int)mod << 8) | (int)key;
 
-		public Action<HotkeyTriggerArgs> this[string hotkey, TFlags flags = 0] {
+		public Action<HotkeyTriggerArgs> this[string hotkey, TKFlags flags = 0] {
 			set {
+				_triggers.LibThrowIfRunning();
+				//actually could safely add triggers while running.
+				//	Currently would need just lock(_d) in several places. Also some triggers of this type must be added before starting, else we would not have the hook etc.
+				//	But probably not so useful. Makes programming more difficult. If need, can Stop, add triggers, then Run again.
+
 				if(!Keyb.Misc.LibParseHotkeyTriggerString(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
-				if(key == KKey.Delete && mod == (KMod.Ctrl | KMod.Alt) && !flags.Has_(TFlags.Shared)) throw new ArgumentException("With Ctrl+Alt+Delete need flag Shared.");
+				if(key == KKey.Delete && mod == (KMod.Ctrl | KMod.Alt) && !flags.Has_(TKFlags.Shared)) throw new ArgumentException("With Ctrl+Alt+Delete need flag Shared.");
 				//Print($"key={key}, mod={mod}, modAny={modAny}");
-				var t = new _TriggerEtc(_triggers, value, hotkey, flags);
+				var t = new HotkeyTrigger(_triggers, value, hotkey, flags);
 				int b = LibModBitArray(mod, modAny);
 				for(int i = 0; i < 16; i++) if(0 != (b & (1 << i))) t.DictAdd(_d, _DictKey(key, (KMod)i));
 			}
@@ -142,13 +149,12 @@ namespace Au.Triggers
 					HotkeyTriggerArgs args = null;
 					for(; v != null; v = v.next) {
 						if(v.DisabledThisOrAll) continue;
-						var x = v as _TriggerEtc;
-						if(args == null) thc.args = args = new HotkeyTriggerArgs(v, thc.w, k.Key, mod); //may need for scope callbacks too
-						args.Flags = x.flags;
+						var x = v as HotkeyTrigger;
+						if(args == null) thc.args = args = new HotkeyTriggerArgs(x, thc.Window, k.Key, mod); //may need for scope callbacks too
 						if(!x.MatchScope(thc)) continue;
 						thc.trigger = v;
 						//Print(k.Key, mod);
-						return 0 == (x.flags & TFlags.Shared);
+						return 0 == (x.flags & TKFlags.Shared);
 					}
 				}
 			}
@@ -158,13 +164,14 @@ namespace Au.Triggers
 
 	public class HotkeyTriggerArgs : TriggerArgs
 	{
+		public HotkeyTrigger Trigger { get; }
 		public Wnd Window { get; }
 		public KKey Key { get; }
 		public KMod Mod { get; }
-		public HotkeyTriggers.TFlags Flags { get; internal set; }
 
-		internal HotkeyTriggerArgs(Trigger trigger, Wnd w, KKey key, KMod mod) :base(trigger)
+		internal HotkeyTriggerArgs(HotkeyTrigger trigger, Wnd w, KKey key, KMod mod)
 		{
+			Trigger = trigger;
 			Window = w; Key = key; Mod = mod;
 		}
 	}

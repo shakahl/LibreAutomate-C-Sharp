@@ -122,7 +122,7 @@ class PanelOutput : Control
 		dd.Show(new Rectangle(Mouse.XY, default));
 	}
 
-	//not override void OnHandleCreated, because then _c handle still not created, and we need to Call
+	//not override void OnHandleCreated, because then _c handle still not created, and we need to Call //TODO
 	private void _c_HandleCreated(object sender, EventArgs e)
 	{
 		var h = _c.Handle;
@@ -174,7 +174,7 @@ class PanelOutput : Control
 		if(on) {
 			w.Owner = default;
 			w.ZorderTopmost();
-			//w.SetExStyle(Native.WS_EX.APPWINDOW, SetAddRemove.Add);
+			//w.SetExStyle(WS_EX.APPWINDOW, SetAddRemove.Add);
 			//Wnd.GetWnd.Root.ActivateLL(); w.ActivateLL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();

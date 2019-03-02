@@ -133,7 +133,7 @@ namespace Au.Tools
 		/// <summary>
 		/// If s has *? characters, prepends "**t ".
 		/// But if s has single * character, converts to "**r regexp" that ignores it. Because single * often is used to indicate unsaved state.
-		/// If canMakeVerbatim and makes regex or s contains '\' and no newlines etc, prepends @" and appends ".
+		/// If canMakeVerbatim and makes regex or s contains '\' and no newlines/controlchars, prepends @" and appends ".
 		/// s can be null.
 		/// </summary>
 		internal static string EscapeWindowName(string s, bool canMakeVerbatim)
@@ -142,15 +142,11 @@ namespace Au.Tools
 			if(Wildex.HasWildcards(s)) {
 				int i = s.IndexOf('*');
 				if(i >= 0 && s.IndexOf('*', i + 1) < 0) {
-					var b = new StringBuilder();
-					if(i > 0) b.Append(@"**r \Q").Append(s, 0, i).Append(@"\E");
-					b.Append(@"\*?");
-					int len = s.Length - ++i;
-					if(len > 0) b.Append(@"\Q").Append(s, i, len).Append(@"\E");
-					s = b.ToString();
+					s = "**r " + Regex_.EscapeQE(s.Remove(i)) + @"\*?" + Regex_.EscapeQE(s.Substring(i + 1));
 				} else s = "**t " + s;
 			}
-			if(canMakeVerbatim && s.IndexOf('\\') >= 0 && !s.RegexIsMatch_(@"[\x00-\x1F""\x85\x{2028}\x{2029}]")) s = "@\"" + s + "\"";
+			if(canMakeVerbatim && s.IndexOf('\\') >= 0 && !s.RegexIsMatch_(@"[\x00-\x1F\x85\x{2028}\x{2029}]"))
+				s = "@\"" + s.Replace("\"", "\"\"") + "\"";
 			return s;
 		}
 

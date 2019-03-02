@@ -132,7 +132,7 @@ namespace Au.Tools
 			g.Clear();
 
 			if(!_acc.GetProperties("Rnuvdakh@srw", out p)) {
-				_propError = "Failed to get AO properties: \r\n" + Native.GetErrorMessage();
+				_propError = "Failed to get AO properties: \r\n" + WinError.Message;
 				g.Invalidate();
 				return false;
 			}
@@ -678,7 +678,7 @@ namespace Au.Tools
 						string props = isWINDOW ? "Rnsw" : "Rns";
 						if(!a.GetProperties(props, out var p)) {
 							IsException = true;
-							return _displayText = "Failed: " + Native.GetErrorMessage();
+							return _displayText = "Failed: " + WinError.Message;
 						}
 
 						if(isWINDOW) {

@@ -31,12 +31,11 @@ namespace Au.Util
 	/// <code><![CDATA[
 	/// internal static unsafe string GetCachedString(char* p, int len)
 	/// {
-	/// 	lock(_cacheWR) {
-	/// 		if(!_cacheWR.TryGetTarget(out var cache)) _cacheWR.SetTarget(cache = new StringCache());
-	/// 		return cache.Add(p, len);
-	/// 	}
+	/// 	if(_cacheWR == null) _cacheWR = new WeakReference<StringCache>(null);
+	/// 	if(!_cacheWR.TryGetTarget(out var cache)) _cacheWR.SetTarget(cache = new StringCache());
+	/// 	return cache.Add(p, len);
 	/// }
-	/// static WeakReference<StringCache> _cacheWR = new WeakReference<StringCache>(null);
+	/// [ThreadStatic] static WeakReference<StringCache> _cacheWR = new WeakReference<StringCache>(null);
 	/// 
 	/// //When char[] is used as text buffer.
 	/// internal static unsafe string GetCachedString(char[] a, int len)
@@ -59,8 +58,7 @@ namespace Au.Util
 		/// <summary>
 		/// Number of elements in this cache.
 		/// </summary>
-		public int Count
-		{
+		public int Count {
 			get { return _count; }
 		}
 
@@ -235,17 +233,17 @@ namespace Au.Util
 		internal static string LibAdd(char* p, int len, bool lenIsMaxLen = false)
 		{
 			if(lenIsMaxLen) len = LibCharPtr.Length(p, len);
-			lock(_cacheWR) {
-				if(!_cacheWR.TryGetTarget(out var cache)) _cacheWR.SetTarget(cache = new StringCache());
-				return cache.Add(p, len);
-			}
+			if(_cacheWR == null) _cacheWR = new WeakReference<StringCache>(null);
+			if(!_cacheWR.TryGetTarget(out var cache)) _cacheWR.SetTarget(cache = new StringCache());
+			return cache.Add(p, len);
 		}
-		static WeakReference<StringCache> _cacheWR = new WeakReference<StringCache>(null);
+		[ThreadStatic] static WeakReference<StringCache> _cacheWR;
+		//note: don't use static/lock. In STA thread it dispatches messages. See comments in MyWindow._Create. Same speed. Try SpinLock?
 
-		//internal static int LibDebugStringCount => _cacheWR.TryGetTarget(out var v) ? v.Count : 0;
+		//[ThreadStatic] internal static int LibDebugStringCount => t_cacheWR.TryGetTarget(out var v) ? v.Count : 0;
 
 		/// <summary>
-		/// Gets string cached in a weak-referenced internal static LibStringCache object.
+		/// Gets string cached in a weak-referenced internal thread-static LibStringCache object.
 		/// Locks and calls <see cref="Add"/>.
 		/// </summary>
 		/// <param name="a">Text buffer.</param>
@@ -277,7 +275,7 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Gets substring of string s as a string cached in a weak-referenced internal static LibStringCache object.
+		/// Gets substring of string s as a string cached in a weak-referenced internal thread-static LibStringCache object.
 		/// Locks and calls <see cref="Add"/>.
 		/// </summary>
 		/// <param name="s">The string containing the substring. Can be null/"" if other parameters are 0.</param>

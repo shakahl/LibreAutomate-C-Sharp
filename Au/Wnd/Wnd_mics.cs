@@ -39,7 +39,7 @@ namespace Au
 			/// <remarks>
 			/// Ignores styles WS_VSCROLL, WS_HSCROLL and wrapped menu bar.
 			/// </remarks>
-			public static bool WindowRectFromClientRect(ref RECT r, Native.WS style, Native.WS_EX exStyle, bool hasMenu = false)
+			public static bool WindowRectFromClientRect(ref RECT r, WS style, WS_EX exStyle, bool hasMenu = false)
 			{
 				return Api.AdjustWindowRectEx(ref r, style, hasMenu, exStyle);
 			}
@@ -47,7 +47,7 @@ namespace Au
 			/// <summary>
 			/// Calculates window border width from style.
 			/// </summary>
-			public static int BorderWidth(Native.WS style, Native.WS_EX exStyle)
+			public static int BorderWidth(WS style, WS_EX exStyle)
 			{
 				RECT r = default;
 				Api.AdjustWindowRectEx(ref r, style, false, exStyle);
@@ -88,7 +88,7 @@ namespace Au
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// Usually don't need to specify hInstance.
 			/// </summary>
-			public static Wnd CreateWindow(string className, string name = null, Native.WS style = 0, Native.WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
+			public static Wnd CreateWindow(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
 			{
 				return Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
 			}
@@ -98,7 +98,7 @@ namespace Au
 			/// If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </summary>
-			public static Wnd CreateWindowAndSetFont(string className, string name = null, Native.WS style = 0, Native.WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
+			public static Wnd CreateWindowAndSetFont(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
 			{
 				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
 				if(!w.Is0) SetFontHandle(w, (customFontHandle == default) ? Util.LibNativeFont.RegularCached : customFontHandle);
@@ -113,14 +113,14 @@ namespace Au
 			/// <param name="className">Window class name. Can be any existing class.</param>
 			public static Wnd CreateMessageWindow(string className)
 			{
-				return CreateWindow(className, null, Native.WS.POPUP, Native.WS_EX.NOACTIVATE, parent: Native.HWND.MESSAGE);
+				return CreateWindow(className, null, WS.POPUP, WS_EX.NOACTIVATE, parent: Native.HWND.MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
 			}
 
 			/// <summary>
 			/// Destroys a native window of this thread.
 			/// Calls API <msdn>DestroyWindow</msdn>.
-			/// Returns false if failed. Supports <see cref="Native.GetError"/>.
+			/// Returns false if failed. Supports <see cref="WinError.Code"/>.
 			/// </summary>
 			/// <seealso cref="Close"/>
 			public static bool DestroyWindow(Wnd w)
@@ -214,7 +214,7 @@ namespace Au
 			/// Calls API <msdn>GetClassLong</msdn> if current process is 32-bit, <msdn>GetClassLongPtr</msdn> if 64-bit.
 			/// </summary>
 			/// <remarks>
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// For index can be used constants from <see cref="Native.GCL"/>. All values are the same in 32-bit and 64-bit process.
 			/// </remarks>
 			public static LPARAM GetClassLong(Wnd w, int index)
@@ -231,10 +231,10 @@ namespace Au
 			///// <exception cref="WndException"/>
 			//public static LPARAM SetClassLong(Wnd w, int index, LPARAM newValue)
 			//{
-			//	Native.ClearError();
+			//	WinError.Clear();
 			//	LPARAM R;
 			//	if(IntPtr.Size == 8) R = Api.SetClassLong64(w, index, newValue); else R = Api.SetClassLong32(w, index, (int)newValue);
-			//	if(R == 0 && Native.GetError() != 0) w.ThrowUseNative();
+			//	if(R == 0 && WinError.Code != 0) w.ThrowUseNative();
 			//	return R;
 			//}
 

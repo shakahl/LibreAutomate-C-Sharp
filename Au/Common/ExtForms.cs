@@ -206,8 +206,8 @@ namespace Au.Types
 			get {
 				var p = base.CreateParams;
 				if(IsPopup) {
-					if(((Native.WS)p.Style).Has_(Native.WS.CHILD)) p.Style &= ~unchecked((int)Native.WS.POPUP); //probably in designer
-					else p.Style |= unchecked((int)Native.WS.POPUP);
+					if(((WS)p.Style).Has_(WS.CHILD)) p.Style &= ~unchecked((int)WS.POPUP); //probably in designer
+					else p.Style |= unchecked((int)WS.POPUP);
 				}
 				return p;
 			}

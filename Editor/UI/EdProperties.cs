@@ -596,7 +596,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			break;
 		}
 		if(hr != 0) {
-			AuDialog.ShowError("Failed to load type library", Native.GetErrorMessage(hr), owner: this);
+			AuDialog.ShowError("Failed to load type library", WinError.MessageFor(hr), owner: this);
 			return;
 		}
 

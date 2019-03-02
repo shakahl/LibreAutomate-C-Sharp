@@ -456,7 +456,7 @@ namespace Au
 		/// Faster than <see cref="Find"/>, which uses API <msdn>EnumWindows</msdn>.
 		/// Finds hidden windows too.
 		/// To find message-only windows use <see cref="Misc.FindMessageWindow"/> instead.
-		/// Supports <see cref="Native.GetError"/>.
+		/// Supports <see cref="WinError.Code"/>.
 		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
 		/// </remarks>
 		public static Wnd FindFast(string name, string cn, Wnd wAfter = default)
@@ -485,7 +485,7 @@ namespace Au
 			/// Calls API <msdn>FindWindowEx</msdn>.
 			/// Faster than <see cref="Find"/>, which does not find message-only windows.
 			/// Finds hidden windows too.
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
 			public static Wnd FindMessageWindow(string name, string cn, Wnd wAfter = default)
 			{
@@ -565,7 +565,7 @@ namespace Au
 			/// <param name="threadId">
 			/// Unmanaged thread id.
 			/// See <see cref="Thread_.NativeId"/>, <see cref="ThreadId"/>.
-			/// If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="Native.GetError"/>.
+			/// If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="WinError.Code"/>.
 			/// </param>
 			/// <param name="onlyVisible">Need only visible windows.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
@@ -903,16 +903,17 @@ namespace Au.Types
 
 		/// <summary>
 		/// Cache window name.
+		/// Default: false.
 		/// </summary>
 		/// <remarks>
-		/// Should be true if window name can be changed while this variable is used. Window class and program are always cached because cannot be changed.
+		/// Window name is not cached by default because can be changed. Window class and program are always cached because cannot be changed.
 		/// </remarks>
 		public bool CacheName { get; set; }
 
 		internal void Begin(Wnd w)
 		{
 			var t = Api.GetTickCount64();
-			if(w != _w || t - _time > 1100) {
+			if(w != _w || t - _time > 2500) {
 				Clear();
 				if(w.IsAlive) { _w = w; _time = t; }
 			}

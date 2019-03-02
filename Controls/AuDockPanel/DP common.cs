@@ -346,7 +346,7 @@ namespace Au.Controls
 						rect.EnsureInScreen();
 					} else if(this.ParentSplit != null) {
 						rect = this.RectangleInScreen;
-						Wnd.Misc.WindowRectFromClientRect(ref rect, Native.WS.POPUP | Native.WS.THICKFRAME, Native.WS_EX.TOOLWINDOW);
+						Wnd.Misc.WindowRectFromClientRect(ref rect, WS.POPUP | WS.THICKFRAME, WS_EX.TOOLWINDOW);
 					} else { //new panel, empty bounds
 						var mp = Mouse.XY;
 						rect = (mp.x - 15, mp.y - 15, 300, 150);

@@ -32,10 +32,10 @@ namespace Au
 		public void SetTransparency(bool allowTransparency, double? opacity = null, ColorInt? colorRGB = null)
 		{
 			var est = ExStyle;
-			bool layered = (est & Native.WS_EX.LAYERED) != 0;
+			bool layered = (est & WS_EX.LAYERED) != 0;
 
 			if(allowTransparency) {
-				if(!layered) SetExStyle(est | Native.WS_EX.LAYERED);
+				if(!layered) SetExStyle(est | WS_EX.LAYERED);
 
 				uint col = 0, op = 0, f = 0;
 				if(colorRGB != null) {
@@ -52,7 +52,7 @@ namespace Au
 				if(!Api.SetLayeredWindowAttributes(this, col, (byte)op, f)) ThrowUseNative();
 			} else if(layered) {
 				//if(!Api.SetLayeredWindowAttributes(this, 0, 0, 0)) ThrowUseNative();
-				SetExStyle(est & ~Native.WS_EX.LAYERED);
+				SetExStyle(est & ~WS_EX.LAYERED);
 			}
 		}
 
@@ -143,7 +143,7 @@ namespace Au
 			get
 			{
 				if(!Ver.MinWin8) return false;
-				if(!HasExStyle(Native.WS_EX.TOPMOST | Native.WS_EX.NOREDIRECTIONBITMAP) || (Style & Native.WS.CAPTION) != 0) return false;
+				if(!HasExStyle(WS_EX.TOPMOST | WS_EX.NOREDIRECTIONBITMAP) || (Style & WS.CAPTION) != 0) return false;
 				if(ClassNameIs("Windows.UI.Core.CoreWindow")) return true;
 				if(!Ver.MinWin10 && LibIsOfShellProcess) return true;
 				return false;
@@ -160,7 +160,7 @@ namespace Au
 			get
 			{
 				if(!Ver.MinWin10) return 0;
-				if(!HasExStyle(Native.WS_EX.NOREDIRECTIONBITMAP)) return 0;
+				if(!HasExStyle(WS_EX.NOREDIRECTIONBITMAP)) return 0;
 				return ClassNameIs("ApplicationFrameWindow", "Windows.UI.Core.CoreWindow");
 				//could use IsImmersiveProcess, but this is better
 			}
@@ -168,7 +168,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets window position, size and state stored in a string that can be used with <see cref="RestorePositionSizeState"/>.
-		/// Returns null if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns null if failed. Supports <see cref="WinError.Code"/>.
 		/// </summary>
 		/// <param name="canBeMinimized">If now the window is minimized, let RestorePositionSizeState make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
 		public unsafe string SavePositionSizeState(bool canBeMinimized = false)
@@ -195,16 +195,16 @@ namespace Au
 					var style = this.Style;
 					switch(p.showCmd) {
 					case Api.SW_SHOWMAXIMIZED:
-						if((style & Native.WS.MAXIMIZE) == 0) {
+						if((style & WS.MAXIMIZE) == 0) {
 							this.MoveLL(p.rcNormalPosition.left, p.rcNormalPosition.top, p.rcNormalPosition.Width, p.rcNormalPosition.Height); //without this would be always in primary monitor
-							this.SetStyle(style | Native.WS.MAXIMIZE);
+							this.SetStyle(style | WS.MAXIMIZE);
 						}
 						break;
 					case Api.SW_SHOWMINIMIZED:
-						if((style & Native.WS.MINIMIZE) == 0) this.SetStyle(style | Native.WS.MINIMIZE);
+						if((style & WS.MINIMIZE) == 0) this.SetStyle(style | WS.MINIMIZE);
 						break;
 					case Api.SW_SHOWNORMAL:
-						if((style & (Native.WS.MAXIMIZE | Native.WS.MINIMIZE)) != 0) this.SetStyle(style & ~(Native.WS.MAXIMIZE | Native.WS.MINIMIZE));
+						if((style & (WS.MAXIMIZE | WS.MINIMIZE)) != 0) this.SetStyle(style & ~(WS.MAXIMIZE | WS.MINIMIZE));
 						//never mind: if currently minimized, will not be restored. Usually currently is normal, because this func called after creating window, especially if invisible. But will restore if currently maximized.
 						break;
 					}

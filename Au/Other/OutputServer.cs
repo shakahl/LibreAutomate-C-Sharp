@@ -241,7 +241,7 @@ namespace Au.Util
 				if(_isGlobal) {
 					var m = Api.CreateMailslot(LibMailslotName, 0, 0, Api.SECURITY_ATTRIBUTES.ForLowIL);
 					if(m.IsInvalid) {
-						var e = Native.GetError();
+						var e = WinError.Code;
 						m.SetHandleAsInvalid();
 						if(e == Api.ERROR_ALREADY_EXISTS) return false; //called not first time, or exists in another process/appdomain
 						throw new AuException(e, "*create mailslot");
@@ -620,7 +620,7 @@ namespace Au
 			//If last error says that server's mailslot closed, closes client's mailsot/timer and tries to reopen. If reopened, returns true.
 			bool _ReopenMailslot()
 			{
-				if(Native.GetError() == Api.ERROR_HANDLE_EOF) { //server's mailslot closed
+				if(WinError.Code == Api.ERROR_HANDLE_EOF) { //server's mailslot closed
 					_Close();
 					if(_Connect()) return true;
 				} else {

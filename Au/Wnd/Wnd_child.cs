@@ -459,7 +459,7 @@ namespace Au
 		/// </param>
 		/// <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
 		/// <remarks>
-		/// Supports <see cref="Native.GetError"/>.
+		/// Supports <see cref="WinError.Code"/>.
 		/// </remarks>
 		public Wnd ChildFast(string name, string cn, Wnd wAfter = default)
 		{

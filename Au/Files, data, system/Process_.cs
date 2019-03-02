@@ -126,7 +126,7 @@ namespace Au
 					else s = b.LibToStringCached(na);
 					return true;
 				}
-				if(Native.GetError() != Api.ERROR_INSUFFICIENT_BUFFER) return false;
+				if(WinError.Code != Api.ERROR_INSUFFICIENT_BUFFER) return false;
 			}
 		}
 
@@ -358,7 +358,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets process id from handle.
-		/// Returns 0 if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns 0 if failed. Supports <see cref="WinError.Code"/>.
 		/// Calls API <msdn>GetProcessId</msdn>.
 		/// </summary>
 		/// <param name="processHandle">Process handle.</param>
@@ -377,7 +377,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets user session id of process.
-		/// Returns -1 if failed. Supports <see cref="Native.GetError"/>.
+		/// Returns -1 if failed. Supports <see cref="WinError.Code"/>.
 		/// Calls API <msdn>ProcessIdToSessionId</msdn>.
 		/// </summary>
 		/// <param name="processId">Process id.</param>

@@ -420,9 +420,9 @@ namespace Au.Controls
 			protected override CreateParams CreateParams {
 				get {
 					var p = base.CreateParams;
-					p.Style = unchecked((int)(Native.WS.POPUP));
-					var es = Native.WS_EX.TOOLWINDOW | Native.WS_EX.NOACTIVATE;
-					if(_p != null && _owner == null) es |= Native.WS_EX.TOPMOST;
+					p.Style = unchecked((int)(WS.POPUP));
+					var es = WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE;
+					if(_p != null && _owner == null) es |= WS_EX.TOPMOST;
 					p.ExStyle = (int)es;
 					p.ClassStyle |= (int)Api.CS_DROPSHADOW;
 					return p;

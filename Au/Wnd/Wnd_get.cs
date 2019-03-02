@@ -110,7 +110,7 @@ namespace Au
 			/// <remarks>
 			/// If this is a top-level window, gets next top-level window, else gets next control of the same direct parent.
 			/// Calls API <msdn>GetWindow</msdn>(GW_HWNDNEXT).
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
 			public Wnd Next(int skip = 0) => _GetWindow(Api.GW_HWNDNEXT, skip);
 
@@ -122,7 +122,7 @@ namespace Au
 			/// <remarks>
 			/// If this is a top-level window, gets previous top-level window, else gets previous control of the same direct parent.
 			/// Calls API <msdn>GetWindow</msdn>(GW_HWNDPREV).
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
 			public Wnd Previous(int skip = 0) => _GetWindow(Api.GW_HWNDPREV, skip);
 
@@ -133,7 +133,7 @@ namespace Au
 			/// <remarks>
 			/// If this is a top-level window, gets the first top-level window, else gets the first control of the same direct parent.
 			/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDFIRST).
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
 			public Wnd FirstSibling => Api.GetWindow(_w, Api.GW_HWNDFIRST);
 
@@ -144,7 +144,7 @@ namespace Au
 			/// <remarks>
 			/// If this is a top-level window, gets the last top-level window, else gets the last control of the same direct parent.
 			/// Calls API <msdn>GetWindow</msdn>(this, GW_HWNDLAST).
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
 			public Wnd LastSibling => Api.GetWindow(_w, Api.GW_HWNDLAST);
 
@@ -154,7 +154,7 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// Calls API <msdn>GetWindow</msdn>(GW_CHILD).
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
 			public Wnd FirstChild => Api.GetWindow(_w, Api.GW_CHILD);
 
@@ -164,7 +164,7 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// Calls API <msdn>GetWindow</msdn>.
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
 			public Wnd LastChild { get { var t = Api.GetWindow(_w, Api.GW_CHILD); return t.Is0 ? t : Api.GetWindow(t, Api.GW_HWNDLAST); } }
 
@@ -175,7 +175,7 @@ namespace Au
 			/// <param name="index">0-based index of the child control in the Z order.</param>
 			/// <remarks>
 			/// Calls API <msdn>GetWindow</msdn>.
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
 			public Wnd Child(int index)
 			{
@@ -192,7 +192,7 @@ namespace Au
 			/// <remarks>
 			/// A window that has an owner window is always on top of it.
 			/// Controls don't have an owner window.
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// This function is the same as <see cref="Wnd.Owner"/>, which also allows to change owner.
 			/// </remarks>
 			public Wnd Owner => Api.GetWindow(_w, Api.GW_OWNER);
@@ -203,7 +203,7 @@ namespace Au
 			/// Returns default(Wnd) if fails.
 			/// </summary>
 			/// <remarks>
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// This function is the same as <see cref="Wnd.Window"/>.
 			/// </remarks>
 			public Wnd Window => _w.Window;
@@ -213,7 +213,7 @@ namespace Au
 			/// Returns default(Wnd) if this is a top-level window or if fails.
 			/// </summary>
 			/// <remarks>
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
 			public Wnd DirectParent {
 				get {
@@ -233,7 +233,7 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// Calls API <msdn>GetParent</msdn>.
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
 			public Wnd DirectParentOrOwner => Api.GetParent(_w);
 
@@ -243,7 +243,7 @@ namespace Au
 			///// </summary>
 			///// <remarks>
 			///// Calls API <msdn>GetWindow</msdn>(GW_ENABLEDPOPUP).
-			///// Supports <see cref="Native.GetError"/>.
+			///// Supports <see cref="WinError.Code"/>.
 			///// </remarks>
 			//public Wnd EnabledOwnedOrThis => return Api.GetWindow(_w, Api.GW_ENABLEDPOPUP);
 
@@ -253,7 +253,7 @@ namespace Au
 			/// </summary>
 			/// <param name="includeOwners">Can return an owner (or owner's owner and so on) of this window too.</param>
 			/// <remarks>
-			/// Supports <see cref="Native.GetError"/>.
+			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
 			public Wnd LastActiveOwnedOrThis(bool includeOwners = false)
 			{
@@ -273,7 +273,7 @@ namespace Au
 			/// Returns default(Wnd) if fails.
 			/// </summary>
 			/// <param name="supportControls">If this is a child window, use its top-level parent window instead.</param>
-			/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+			/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
 			public Wnd RootOwnerOrThis(bool supportControls = false)
 			{
 				//return Api.GetAncestor(_w, Api.GA_ROOTOWNER); //slow, and can return Get.Root, eg for combolbox
@@ -392,8 +392,8 @@ namespace Au
 				if(!w.IsVisible) return false;
 
 				var exStyle = w.ExStyle;
-				if((exStyle & Native.WS_EX.APPWINDOW) == 0) {
-					if((exStyle & (Native.WS_EX.TOOLWINDOW | Native.WS_EX.NOACTIVATE)) != 0) return false;
+				if((exStyle & WS_EX.APPWINDOW) == 0) {
+					if((exStyle & (WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE)) != 0) return false;
 					if(!w.Owner.Is0) return false;
 				}
 
@@ -402,7 +402,7 @@ namespace Au
 				if(Ver.MinWin10) {
 					if(w.IsCloaked) {
 						if(!allDesktops) return false;
-						if((exStyle & Native.WS_EX.NOREDIRECTIONBITMAP) != 0) { //probably a store app
+						if((exStyle & WS_EX.NOREDIRECTIONBITMAP) != 0) { //probably a store app
 							switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 							case 1: return false; //Windows search, experience host, etc. Also app windows that normally would sit on ApplicationFrameWindow windows.
 							case 2: if(_WindowsStoreAppFrameChild(w).Is0) return false; break; //skip hosts
@@ -410,8 +410,8 @@ namespace Au
 						}
 					}
 				} else if(Ver.MinWin8) {
-					if((exStyle & Native.WS_EX.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(Native.WS.CAPTION)) {
-						if(!allDesktops && (exStyle & Native.WS_EX.TOPMOST) != 0) return false; //skip store apps
+					if((exStyle & WS_EX.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(WS.CAPTION)) {
+						if(!allDesktops && (exStyle & WS_EX.TOPMOST) != 0) return false; //skip store apps
 						if(Shell.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) return false; //skip captionless shell windows
 					}
 					//On Win8 impossible to get next window like Alt+Tab.
@@ -523,7 +523,7 @@ namespace Au
 		/// <remarks>
 		/// A window that has an owner window is always on top of it.
 		/// Don't call this for controls, they don't have an owner window.
-		/// The 'get' function returns default(Wnd) if this window isn't owned or is invalid. Supports <see cref="Native.GetError"/>.
+		/// The 'get' function returns default(Wnd) if this window isn't owned or is invalid. Supports <see cref="WinError.Code"/>.
 		/// The 'set' function can fail, eg if the owner's process has higher <see cref="Uac">UAC</see> integrity level.
 		/// </remarks>
 		public Wnd Owner {
@@ -535,7 +535,7 @@ namespace Au
 		/// Gets the top-level parent window of this control.
 		/// If this is a top-level window, returns this. Returns default(Wnd) if this window is invalid.
 		/// </summary>
-		/// <remarks>Supports <see cref="Native.GetError"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
 		public Wnd Window {
 			get {
 				var w = Api.GetAncestor(this, Api.GA_ROOT);
@@ -548,9 +548,9 @@ namespace Au
 		/// Returns true if this is a child window (control), false if top-level window.
 		/// </summary>
 		/// <remarks>
-		/// Supports <see cref="Native.GetError"/>.
+		/// Supports <see cref="WinError.Code"/>.
 		/// Uses <see cref="GetWnd.DirectParent"/>.
-		/// Another way is <c>w.HasStyle(Native.WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
+		/// Another way is <c>w.HasStyle(WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
 		/// </remarks>
 		public bool IsChild => !Get.DirectParent.Is0;
 
@@ -559,7 +559,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Calls API <msdn>IsChild</msdn>.
-		/// Supports <see cref="Native.GetError"/>.
+		/// Supports <see cref="WinError.Code"/>.
 		/// </remarks>
 		public bool IsChildOf(Wnd w) { return Api.IsChild(w, this); }
 

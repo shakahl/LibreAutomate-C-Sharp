@@ -148,7 +148,7 @@ namespace Au
 			if(_haveIntegrityLevel == 0) {
 				unsafe {
 					Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, null, 0, out var siz);
-					if(Native.GetError() != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
+					if(WinError.Code != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
 					else {
 						var b = stackalloc byte[(int)siz];
 						var tml = (TOKEN_MANDATORY_LABEL*)b;
