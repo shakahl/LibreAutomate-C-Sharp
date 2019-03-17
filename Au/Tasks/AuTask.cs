@@ -219,7 +219,7 @@ namespace Au
 		internal static Wnd WndMsg {
 			get {
 				if(!s_wndMsg.IsAlive) {
-					s_wndMsg = Wnd.Misc.FindMessageWindow(null, "Au.Editor.Msg");
+					s_wndMsg = Wnd.Misc.FindMessageOnlyWindow(null, "Au.Editor.Msg");
 				}
 				return s_wndMsg;
 			}

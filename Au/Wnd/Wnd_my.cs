@@ -88,7 +88,7 @@ namespace Au
 				/// Creates <msdn>message-only window</msdn> with styles WS_POPUP, WS_EX_NOACTIVATE.
 				/// More info: <see cref="Create"/>.
 				/// </summary>
-				public bool CreateMessageWindow(string className, string name = null)
+				public bool CreateMessageOnlyWindow(string className, string name = null)
 				{
 					return Create(className, name, WS.POPUP, WS_EX.NOACTIVATE, 0, 0, 0, 0, Native.HWND.MESSAGE);
 					//note: WS_EX_NOACTIVATE is important.

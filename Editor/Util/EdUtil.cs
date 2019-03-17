@@ -28,15 +28,16 @@ using static Au.NoClass;
 static class EdNetExtensions
 {
 	/// <summary>
-	/// Shows ToolStripDropDownMenu menu at current mouse position, like it would be a ContextMenuStrip menu.
+	/// Shows ToolStripDropDownMenu menu at the cursor or caret position, like it would be a ContextMenuStrip menu.
 	/// </summary>
 	/// <remarks>
 	/// This way is undocumented and possibly will stop working in future .NET versions. I did not find a better way.
 	/// </remarks>
-	public static void ShowAsContextMenu_(this ToolStripDropDownMenu t)
+	public static void ShowAsContextMenu_(this ToolStripDropDownMenu t, bool caret = false)
 	{
+		POINT p; if(caret && Api.GetCaretPos(out p)) Api.GetFocus().MapClientToScreen(ref p); else p = Mouse.XY;
 		var oi = t.OwnerItem; t.OwnerItem = null; //to set position
-		try { t.Show(Mouse.XY); }
+		try { t.Show(p); }
 		finally { t.OwnerItem = oi; }
 	}
 

@@ -324,7 +324,7 @@ namespace Au.Util
 			Debug_.PrintIf(_hh != default, $"Non-disposed WinHook ({_hookTypeString}) variable.");
 		}
 
-		LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam)
+		unsafe LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam)
 		{
 			try {
 				if(code >= 0) {
@@ -333,14 +333,17 @@ namespace Au.Util
 
 					switch(_proc2) {
 					case Func<HookData.Keyboard, bool> p:
+						if(IgnoreKeyMouseEventsInjectedByAu && ((Api.KBDLLHOOKSTRUCT*)lParam)->IsInjectedByAu) goto gr;
 						t1 = Time.PerfMilliseconds; hookType = Api.WH_KEYBOARD_LL;
 						R = p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
 						break;
 					case Func<HookData.Mouse, bool> p:
+						if(IgnoreKeyMouseEventsInjectedByAu && ((Api.MSLLHOOKSTRUCT*)lParam)->IsInjectedByAu) goto gr;
 						t1 = Time.PerfMilliseconds; hookType = Api.WH_MOUSE_LL;
 						R = p(new HookData.Mouse(this, wParam, lParam));
 						break;
 					case Func<LPARAM, LPARAM, bool> p: //raw
+						if(IgnoreKeyMouseEventsInjectedByAu && ((Api.MSLLHOOKSTRUCT*)lParam)->IsInjectedByAu) goto gr;
 						t1 = Time.PerfMilliseconds; hookType = Api.WH_MOUSE_LL;
 						R = p(wParam, lParam);
 						break;
@@ -392,9 +395,14 @@ namespace Au.Util
 			catch(Exception ex) { if(LibOnException(ex, this)) return 0; }
 			//info: on any exception .NET would terminate process, even on ThreadAbortException.
 			//	This prevents it when using eg AuDialog. But not when eg MessageBox.Show; I don't know how to prevent it.
-
+			gr:
 			return Api.CallNextHookEx(default, code, wParam, lParam);
 		}
+
+		/// <summary>
+		/// Don't call keyboard and mouse hook procedure for events sent by functions of this library.
+		/// </summary>
+		public bool IgnoreKeyMouseEventsInjectedByAu { get; set; }
 
 		/// <summary>
 		/// Gets the max time in milliseconds allowed by Windows for low-level keyboard and mouse hook procedures.
@@ -419,7 +427,7 @@ namespace Au.Util
 		static int s_lowLevelHooksTimeout;
 
 		/// <summary>
-		/// Call on any catched exception in a hook procedure.
+		/// Called on any catched exception in a hook procedure.
 		/// Returns true if it is ThreadAbortException.
 		/// </summary>
 		/// <param name="e"></param>
@@ -1127,10 +1135,10 @@ namespace Au.Util
 		///
 		~AccHook() { PrintWarning("Non-disposed AccHook variable."); } //unhooking makes no sense
 
-		void _HookProc(IntPtr hHook, AccEVENT aEvent, Wnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
+		void _HookProc(IntPtr hHook, AccEVENT ev, Wnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
 		{
 			try {
-				_proc2(new HookData.AccHookData(this, aEvent, wnd, idObject, idChild, idThread, eventTime));
+				_proc2(new HookData.AccHookData(this, ev, wnd, idObject, idChild, idThread, eventTime));
 			}
 			catch(Exception ex) { WinHook.LibOnException(ex, this); }
 		}
@@ -1153,7 +1161,7 @@ namespace Au.Types
 			/// <summary><msdn>WinEventProc</msdn></summary>
 			public readonly Wnd wnd;
 			/// <summary><msdn>WinEventProc</msdn></summary>
-			public readonly AccEVENT aEvent;
+			public readonly AccEVENT ev;
 			/// <summary><msdn>WinEventProc</msdn></summary>
 			public readonly AccOBJID idObject;
 			/// <summary><msdn>WinEventProc</msdn></summary>
@@ -1163,10 +1171,10 @@ namespace Au.Types
 			/// <summary><msdn>WinEventProc</msdn></summary>
 			public readonly int eventTime;
 
-			internal AccHookData(AccHook hook, AccEVENT aEvent, Wnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
+			internal AccHookData(AccHook hook, AccEVENT ev, Wnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
 			{
 				this.hook = hook;
-				this.aEvent = aEvent;
+				this.ev = ev;
 				this.wnd = wnd;
 				this.idObject = idObject;
 				this.idChild = idChild;

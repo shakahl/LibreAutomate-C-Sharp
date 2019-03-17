@@ -86,15 +86,15 @@ namespace Au.Tools
 			//note: don't reorder all the calls.
 
 			Wnd c = _acc.WndContainer, w = c.Window;
-			if(!w.IsVisibleEx) {
-				if(!captured) return;
-				//Edge workaround. Without it, w would be some cloaked window of other process, and there are many such cloaked windows, and Wnd.Find often finds wrong window.
+			if(w.Is0) return;
+			if(captured && w.IsCloaked) {
+				//Edge workaround. w is a cloaked windowsuicorecorewindow of other process. There are many such cloaked windows, and Wnd.Find often finds wrong window.
 				c = Wnd.FromMouse();
 				w = c.Window;
 				if(w.Is0) return;
 			}
 
-			//if control is in other thread, search in control by default, elso coild be slow because cannot use inproc. Except for known windows.
+			//if control is in other thread, search in control by default, elso slow because cannot use inproc. Except for known windows.
 			bool useCon = c != w && c.ThreadId != w.ThreadId && 0 == c.ClassNameIs(Api.string_IES, "Windows.UI.Core.CoreWindow");
 
 			_SetWndCon(w, c, useCon);

@@ -46,7 +46,7 @@ namespace Au.Util
 			//Print(Api.GetActiveWindow());
 			if(Wnd.Active.IsOfThisProcess) return;
 #if true
-			Wnd w = Wnd.Misc.CreateMessageWindow("#32770");
+			Wnd w = Wnd.Misc.CreateMessageOnlyWindow("#32770");
 			//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster and prevents setting foreground; empty class same speed.
 			Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.
 

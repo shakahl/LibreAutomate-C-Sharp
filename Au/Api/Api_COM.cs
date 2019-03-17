@@ -429,5 +429,15 @@ namespace Au.Types
 		//	[PreserveSig] int get__NewEnum([MarshalAs(UnmanagedType.IUnknown)] out Object ppEnum);
 		//}
 
+		[ComImport, Guid("a5cd92ff-29be-454c-8d04-d82879fb3f1b"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		internal interface IVirtualDesktopManager
+		{
+			[PreserveSig] int IsWindowOnCurrentVirtualDesktop(Wnd topLevelWindow, [MarshalAs(UnmanagedType.Bool)] out bool onCurrentDesktop);
+			[PreserveSig] int GetWindowDesktopId(Wnd topLevelWindow, out Guid desktopId);
+			[PreserveSig] int MoveWindowToDesktop(Wnd topLevelWindow, in Guid desktopId);
+		}
+
+		[ComImport, Guid("aa509086-5ca9-4c25-8f95-589d3c07b48a"), ClassInterface(ClassInterfaceType.None)]
+		internal class VirtualDesktopManager { }
 	}
 }

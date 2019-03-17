@@ -141,49 +141,49 @@ namespace Au.Triggers
 		internal bool HookProc(HookData.Mouse k, TriggerHookContext thc)
 		{
 			//Print(k.Event, k.pt);
-			if(!k.IsInjectedByAu) {
-				ESubtype subtype; byte data = 0;
-				if(k.IsButton) {
-					if(k.IsButtonUp) return false;
-					subtype = ESubtype.Click;
-					TMClick b;
-					switch(k.Event) {
-					case HookData.MouseEvent.LeftButton: b = TMClick.Left; break;
-					case HookData.MouseEvent.RightButton: b = TMClick.Right; break;
-					case HookData.MouseEvent.MiddleButton: b = TMClick.Middle; break;
-					case HookData.MouseEvent.X1Button: b = TMClick.X1; break;
-					default: b = TMClick.X2; break;
-					}
-					data = (byte)b;
-				} else if(k.IsWheel) {
-					subtype = ESubtype.Wheel;
-					TMWheel b;
-					switch(k.Event) {
-					case HookData.MouseEvent.WheelForward: b = TMWheel.Forward; break;
-					case HookData.MouseEvent.WheelBackward: b = TMWheel.Backward; break;
-					case HookData.MouseEvent.WheelLeft: b = TMWheel.Left; break;
-					default: b = TMWheel.Right; break;
-					}
-					data = (byte)b;
-				} else {
-					//_TODO
-					subtype = ESubtype.Move;
-					return false;
-				}
+			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
-				var mod = Keyb.GetMod();
-				if(_d.TryGetValue(_DictKey(subtype, mod, data), out var v)) {
-					if(subtype == ESubtype.Click || subtype == ESubtype.Wheel) thc.UseWndFromPoint(k.pt);
-					MouseTriggerArgs args = null;
-					for(; v != null; v = v.next) {
-						if(v.DisabledThisOrAll) continue;
-						var x = v as MouseTrigger;
-						if(args == null) thc.args = args = new MouseTriggerArgs(x, thc.Window, mod); //may need for scope callbacks too
-						if(!x.MatchScope(thc)) continue;
-						thc.trigger = v;
-						Print(k.Event, k.pt, mod);
-						return 0 == (x.flags & TMFlags.Shared);
-					}
+			ESubtype subtype; byte data = 0;
+			if(k.IsButton) {
+				if(k.IsButtonUp) return false;
+				subtype = ESubtype.Click;
+				TMClick b;
+				switch(k.Event) {
+				case HookData.MouseEvent.LeftButton: b = TMClick.Left; break;
+				case HookData.MouseEvent.RightButton: b = TMClick.Right; break;
+				case HookData.MouseEvent.MiddleButton: b = TMClick.Middle; break;
+				case HookData.MouseEvent.X1Button: b = TMClick.X1; break;
+				default: b = TMClick.X2; break;
+				}
+				data = (byte)b;
+			} else if(k.IsWheel) {
+				subtype = ESubtype.Wheel;
+				TMWheel b;
+				switch(k.Event) {
+				case HookData.MouseEvent.WheelForward: b = TMWheel.Forward; break;
+				case HookData.MouseEvent.WheelBackward: b = TMWheel.Backward; break;
+				case HookData.MouseEvent.WheelLeft: b = TMWheel.Left; break;
+				default: b = TMWheel.Right; break;
+				}
+				data = (byte)b;
+			} else {
+				//_TODO
+				subtype = ESubtype.Move;
+				return false;
+			}
+
+			var mod = Keyb.GetMod();
+			if(_d.TryGetValue(_DictKey(subtype, mod, data), out var v)) {
+				if(subtype == ESubtype.Click || subtype == ESubtype.Wheel) thc.UseWndFromPoint(k.pt);
+				MouseTriggerArgs args = null;
+				for(; v != null; v = v.next) {
+					if(v.DisabledThisOrAll) continue;
+					var x = v as MouseTrigger;
+					if(args == null) thc.args = args = new MouseTriggerArgs(x, thc.Window, mod); //may need for scope callbacks too
+					if(!x.MatchScopeWindowAndFunc(thc)) continue;
+					thc.trigger = v;
+					Print(k.Event, k.pt, mod);
+					return 0 == (x.flags & TMFlags.Shared);
 				}
 			}
 

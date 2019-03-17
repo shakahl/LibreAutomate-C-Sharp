@@ -27,7 +27,7 @@ namespace Au.Tools
 	/// <summary>
 	/// Scintilla-based control that shows colored C# code created by its parent form (a code tool dialog).
 	/// </summary>
-	public class CodeBox :AuScintilla
+	public class CodeBox : AuScintilla
 	{
 		public CodeBox()
 		{
@@ -148,7 +148,10 @@ namespace Au.Tools
 					b.Append("var w = Wnd.Find(");
 					b.AppendStringArg(TUtil.EscapeWindowName(wnd.Name, true), noComma: true);
 					b.AppendStringArg(TUtil.StripWndClassName(cls, true));
-					if(!wnd.IsVisibleEx) b.AppendOtherArg("WFFlags.HiddenToo", "flags");
+					string fl = null;
+					if(!wnd.IsVisible) fl = "WFFlags.HiddenToo";
+					if(wnd.IsCloaked) fl = fl == null ? "WFFlags.CloakedToo" : "WFFlags.HiddenToo|WFFlags.CloakedToo";
+					if(fl != null) b.AppendOtherArg(fl, "flags");
 					b.Append(").OrThrow();");
 				} else con = default;
 
@@ -183,7 +186,7 @@ namespace Au.Tools
 							b.Append("(");
 							b.AppendStringArg(name, noComma: true);
 							b.AppendStringArg(cls);
-							if(!con.IsVisibleEx) b.AppendOtherArg("WCFlags.HiddenToo", "flags");
+							if(!con.IsVisible) b.AppendOtherArg("WCFlags.HiddenToo", "flags");
 							b.Append(").OrThrow();");
 						}
 					} else con = default;

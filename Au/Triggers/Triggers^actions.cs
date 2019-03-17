@@ -111,6 +111,8 @@ namespace Au.Triggers
 			_new.ifRunning = singleInstance ? 0 : 1;
 		}
 
+		//CONSIDER: RunActionInTriggersThread. Now can use Func instead, but it is more code.
+
 		/// <summary>
 		/// null or an action to run before the actual action.
 		/// For example can set Opt options.
@@ -140,6 +142,12 @@ namespace Au.Triggers
 			}
 		}
 		static TOptions s_empty;
+
+		/// <summary>
+		/// If true, triggers added afterwards don't depend on <see cref="AuTriggers.Disabled"/> and <see cref="AuTriggers.DisabledEverywhere"/>.
+		/// This property sets the <see cref="Trigger.EnabledAlways"/> property of triggers added afterwards.
+		/// </summary>
+		public bool EnabledAlways { get; set; }
 
 		/// <summary>
 		/// Arguments for <see cref="BeforeAction"/> and <see cref="AfterAction"/>.

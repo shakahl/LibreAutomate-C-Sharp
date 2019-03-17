@@ -98,7 +98,7 @@ namespace Au
 			Util.LibArrayBuilder<Wnd> _AllChildren(Wnd wParent)
 			{
 				wParent.ThrowIfInvalid();
-				return Lib.EnumWindows2(Lib.EnumWindowsAPI.EnumChildWindows,
+				return Lib.EnumWindows2(Lib.EnumAPI.EnumChildWindows,
 						onlyVisible: 0 == (_flags & WCFlags.HiddenToo),
 						sortFirstVisible: true,
 						wParent: wParent,
@@ -404,11 +404,11 @@ namespace Au
 			{
 				ref var x = ref *(_KidEnumData*)p;
 				if(c.ControlId == x.id) {
-					if(x.flags.Has_(WCFlags.DirectChild) && c.Get.DirectParentOrOwner != x.wThis) return true;
-					if(c.IsVisible) { x.cVisible = c; return false; }
+					if(x.flags.Has_(WCFlags.DirectChild) && c.Get.DirectParentOrOwner != x.wThis) return 1;
+					if(c.IsVisible) { x.cVisible = c; return 0; }
 					if(x.flags.Has_(WCFlags.HiddenToo) && x.cHidden.Is0) x.cHidden = c;
 				}
-				return true;
+				return 1;
 			}, &d);
 			return d.cVisible.Is0 ? d.cHidden : d.cVisible;
 		}
@@ -488,7 +488,7 @@ namespace Au
 			public Wnd[] Children(bool directChild = false, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				_w.ThrowIfInvalid();
-				return Lib.EnumWindows(Lib.EnumWindowsAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild);
+				return Lib.EnumWindows(Lib.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild);
 			}
 
 			//rejected: unreliable.

@@ -111,7 +111,7 @@ namespace Au
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </summary>
 			/// <param name="className">Window class name. Can be any existing class.</param>
-			public static Wnd CreateMessageWindow(string className)
+			public static Wnd CreateMessageOnlyWindow(string className)
 			{
 				return CreateWindow(className, null, WS.POPUP, WS_EX.NOACTIVATE, parent: Native.HWND.MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
@@ -127,6 +127,20 @@ namespace Au
 			{
 				return Api.DestroyWindow(w);
 			}
+
+			/// <summary>
+			/// Returns true if the window is a <msdn>message-only window</msdn>.
+			/// </summary>
+			public static bool IsMessageOnlyWindow(Wnd w)
+			{
+				var v = w.GetWindowLong(Native.GWL.HWNDPARENT);
+				if(v != default) {
+					if(s_messageOnlyParent == 0) s_messageOnlyParent = FindMessageOnlyWindow(null, null).GetWindowLong(Native.GWL.HWNDPARENT);
+					return v == s_messageOnlyParent;
+				}
+				return false;
+			}
+			static LPARAM s_messageOnlyParent;
 
 			/// <summary>
 			/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
@@ -238,18 +252,19 @@ namespace Au
 			//	return R;
 			//}
 
-			/// <summary>
-			/// Gets atom of a window class.
-			/// To get class atom when you have a window w, use <c>Wnd.Misc.GetClassLong(w, Native.GCL.ATOM)</c>.
-			/// </summary>
-			/// <param name="className">Class name.</param>
-			/// <param name="moduleHandle">Native module handle of the exe or dll that registered the class. Don't use if it is a global class (CS_GLOBALCLASS style).</param>
-			public static ushort GetClassAtom(string className, IntPtr moduleHandle = default)
-			{
-				var x = new Api.WNDCLASSEX();
-				x.cbSize = Api.SizeOf(x);
-				return Api.GetClassInfoEx(moduleHandle, className, ref x);
-			}
+			//Rejected. Does not work with many windows. Unreliable. Rarely used.
+			///// <summary>
+			///// Gets atom of a window class.
+			///// To get class atom when you have a window w, use <c>Wnd.Misc.GetClassLong(w, Native.GCL.ATOM)</c>.
+			///// </summary>
+			///// <param name="className">Class name.</param>
+			///// <param name="moduleHandle">Native module handle of the exe or dll that registered the class. Don't use if it is a global class (CS_GLOBALCLASS style).</param>
+			//public static ushort GetClassAtom(string className, IntPtr moduleHandle = default)
+			//{
+			//	var x = new Api.WNDCLASSEX();
+			//	x.cbSize = Api.SizeOf(x);
+			//	return Api.GetClassInfoEx(moduleHandle, className, ref x);
+			//}
 
 			/// <summary>
 			/// Calls API <msdn>RegisterWindowMessage</msdn>.

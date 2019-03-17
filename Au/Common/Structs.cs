@@ -88,8 +88,15 @@ namespace Au.Types
 
 		public override bool Equals(object obj) => obj is LPARAM && (LPARAM)obj == this;
 
+		/// <summary>
+		/// Returns true if other == this.
+		/// Implements IEquatable. Prevents boxing when used as a key of a collection.
+		/// </summary>
 		public bool Equals(LPARAM other) => _v == other._v;
 
+		/// <summary>
+		/// Implements IComparable. It allows to sort a collection.
+		/// </summary>
 		public int CompareTo(LPARAM other) => _v == other._v ? 0 : (_v < other._v ? -1 : 1);
 
 		//ISerializable implementation.

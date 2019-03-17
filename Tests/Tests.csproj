@@ -237,8 +237,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
+    <PreBuildEvent>$(TargetDir)kill_Au.Tests.exe</PreBuildEvent>
   </PropertyGroup>
   <Import Project="..\packages\StrongNamer.0.0.8\build\StrongNamer.targets" Condition="Exists('..\packages\StrongNamer.0.0.8\build\StrongNamer.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

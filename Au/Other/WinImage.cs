@@ -136,11 +136,11 @@ namespace Au
 			{
 				RECT r;
 				switch(_area.Type) {
-				case WIArea.AType.Wnd:
+				case WIArea.AreaType.Wnd:
 					r = Rect;
 					_area.W.MapClientToScreen(ref r);
 					return r;
-				case WIArea.AType.Acc:
+				case WIArea.AreaType.Acc:
 					if(!_area.A.GetRect(out var rr)) return default;
 					r = Rect;
 					r.Offset(rr.left, rr.top);
@@ -173,7 +173,7 @@ namespace Au
 		//Called by extension methods.
 		internal void LibMouseAction(MButton button, Coord x, Coord y)
 		{
-			if(_area.Type == WIArea.AType.Bitmap) throw new InvalidOperationException();
+			if(_area.Type == WIArea.AreaType.Bitmap) throw new InvalidOperationException();
 
 			Debug.Assert(!Rect.IsEmpty);
 			if(Rect.IsEmpty) return;
@@ -185,12 +185,12 @@ namespace Au
 
 			var p = Coord.NormalizeInRect(x, y, Rect, centerIfEmpty: true);
 
-			if(_area.Type == WIArea.AType.Screen) {
+			if(_area.Type == WIArea.AreaType.Screen) {
 				if(button == 0) Mouse.Move(p);
 				else Mouse.ClickEx(button, p);
 			} else {
 				var w = _area.W;
-				if(_area.Type == WIArea.AType.Acc) {
+				if(_area.Type == WIArea.AreaType.Acc) {
 					if(!_area.A.GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
 					p.x += r.left; p.y += r.top;
 				}
@@ -235,7 +235,7 @@ namespace Au
 		/// Can be created with function Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
 		/// </item>
 		/// <item>int, ColorInt or Color - color. Int must be in 0xRRGGBB format. Alpha is not used.</item>
-		/// <item>Bitmap - image object in memory.</item>
+		/// <item><see cref="Bitmap"/> - image object in memory.</item>
 		/// <item>IEnumerable of string, int/ColorInt/Color, Bitmap or object - multiple images or colors. Action - find any. To create a different action can be used callback function (parameter <paramref name="also"/>).</item>
 		/// </list>
 		/// Icons are not supported directly, but you can use <see cref="Icon_.GetFileIconImage"/> or <see cref="Icon_.HandleToImage"/>.
@@ -438,7 +438,7 @@ namespace Au
 
 			public void Dispose()
 			{
-				if(_area.Type == WIArea.AType.Bitmap) {
+				if(_area.Type == WIArea.AreaType.Bitmap) {
 					if(_ad.bmpData != null) _area.B.UnlockBits(_ad.bmpData);
 				} else {
 					Util.NativeHeap.Free(_ad.pixels);
@@ -466,17 +466,17 @@ namespace Au
 				WIFlags badFlags = 0; string sBadFlags = null;
 
 				switch(_area.Type) {
-				case WIArea.AType.Screen:
+				case WIArea.AreaType.Screen:
 					badFlags = WIFlags.WindowDC;
 					break;
-				case WIArea.AType.Wnd:
+				case WIArea.AreaType.Wnd:
 					_area.W.ThrowIfInvalid();
 					break;
-				case WIArea.AType.Acc:
+				case WIArea.AreaType.Acc:
 					if(_area.A == null) throw new ArgumentNullException(nameof(area));
 					_area.W = _area.A.WndContainer;
-					goto case WIArea.AType.Wnd;
-				case WIArea.AType.Bitmap:
+					goto case WIArea.AreaType.Wnd;
+				case WIArea.AreaType.Bitmap:
 					badFlags = WIFlags.WindowDC;
 					if(action != _Action.Find) throw new ArgumentException(); //there is no sense to wait for some changes in Bitmap
 					if(_area.B == null) throw new ArgumentNullException(nameof(area));
@@ -550,13 +550,13 @@ namespace Au
 				RECT r;
 				_resultOffset = default;
 				switch(_area.Type) {
-				case WIArea.AType.Wnd:
+				case WIArea.AreaType.Wnd:
 					failedGetRect = !_area.W.GetClientRect(out r, !windowDC);
 					break;
-				case WIArea.AType.Acc:
+				case WIArea.AreaType.Acc:
 					failedGetRect = !(windowDC ? _area.A.GetRect(out r, _area.W) : _area.A.GetRect(out r));
 					break;
-				case WIArea.AType.Bitmap:
+				case WIArea.AreaType.Bitmap:
 					r = (0, 0, _area.B.Width, _area.B.Height, false);
 					break;
 				default: //Screen
@@ -582,7 +582,7 @@ namespace Au
 					r.Intersect(rr);
 				}
 
-				if(_area.Type == WIArea.AType.Acc) {
+				if(_area.Type == WIArea.AreaType.Acc) {
 					//adjust r and _resultOffset,
 					//	because object rectangle may be bigger than client area (eg WINDOW object)
 					//	or its part is not in client area (eg scrolled web page).
@@ -615,7 +615,7 @@ namespace Au
 				if(nGood == 0) return false;
 
 				//Get area pixels.
-				if(_area.Type == WIArea.AType.Bitmap) {
+				if(_area.Type == WIArea.AreaType.Bitmap) {
 					if(_ad.bmpData == null) {
 						var pf = (_area.B.PixelFormat == PixelFormat.Format32bppArgb) ? PixelFormat.Format32bppArgb : PixelFormat.Format32bppRgb; //if possible, use PixelFormat of _bmp, to avoid conversion/copying. Both these formats are ok, we don't use alpha.
 						_ad.bmpData = _area.B.LockBits(r, ImageLockMode.ReadOnly, pf);
@@ -1044,9 +1044,9 @@ namespace Au.Types
 	/// </remarks>
 	public class WIArea
 	{
-		internal enum AType :byte { Screen, Wnd, Acc, Bitmap }
+		internal enum AreaType :byte { Screen, Wnd, Acc, Bitmap }
 
-		internal AType Type;
+		internal AreaType Type;
 		internal bool HasRect;
 		internal Wnd W;
 		internal Acc A;
@@ -1054,14 +1054,14 @@ namespace Au.Types
 		internal RECT R;
 
 		WIArea() { }
-		public WIArea(Wnd w, RECT r) { W = w; Type = AType.Wnd; SetRect(r); }
-		public WIArea(Acc a, RECT r) { A = a; Type = AType.Acc; SetRect(r); }
+		public WIArea(Wnd w, RECT r) { W = w; Type = AreaType.Wnd; SetRect(r); }
+		public WIArea(Acc a, RECT r) { A = a; Type = AreaType.Acc; SetRect(r); }
 		public void SetRect(RECT r) { R = r; HasRect = true; }
 
-		public static implicit operator WIArea(Wnd w) => new WIArea() { W = w, Type = AType.Wnd };
-		public static implicit operator WIArea(Acc a) => new WIArea() { A = a, Type = AType.Acc };
-		public static implicit operator WIArea(Bitmap b) => new WIArea() { B = b, Type = AType.Bitmap };
-		public static implicit operator WIArea(RECT r) => new WIArea() { R = r, Type = AType.Screen };
+		public static implicit operator WIArea(Wnd w) => new WIArea() { W = w, Type = AreaType.Wnd };
+		public static implicit operator WIArea(Acc a) => new WIArea() { A = a, Type = AreaType.Acc };
+		public static implicit operator WIArea(Bitmap b) => new WIArea() { B = b, Type = AreaType.Bitmap };
+		public static implicit operator WIArea(RECT r) => new WIArea() { R = r, Type = AreaType.Screen };
 		public static implicit operator WIArea((Wnd w, RECT r) t) => new WIArea(t.w, t.r);
 		public static implicit operator WIArea((Acc a, RECT r) t) => new WIArea(t.a, t.r);
 	}

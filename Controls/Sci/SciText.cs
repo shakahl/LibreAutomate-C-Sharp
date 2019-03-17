@@ -421,14 +421,25 @@ namespace Au.Controls
 		/// Gets or sets current caret position (SCI_GETCURRENTPOS/SCI_SETEMPTYSELECTION) in UTF-8 bytes.
 		/// The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
 		/// </summary>
-		public int CurrentPositionBytes { get => Call(SCI_GETCURRENTPOS); set => Call(SCI_SETEMPTYSELECTION, value); }
+		public int CurrentPos { get => Call(SCI_GETCURRENTPOS); set => Call(SCI_SETEMPTYSELECTION, value); }
+
+		/// <summary>
+		/// SCI_GETSELECTIONSTART.
+		/// </summary>
+		public int SelectionStart => Call(SCI_GETSELECTIONSTART);
+
+		/// <summary>
+		/// SCI_GETSELECTIONEND.
+		/// Always greater or equal than SelectionStart.
+		/// </summary>
+		public int SelectionEnd => Call(SCI_GETSELECTIONEND);
 
 		/// <summary>
 		/// Gets line index from character position (UTF-8 bytes by default).
 		/// </summary>
 		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
 		/// <param name="utf16"></param>
-		public int LineIndexFromPosition(int pos, bool utf16 = false)
+		public int LineIndexFromPos(int pos, bool utf16 = false)
 		{
 			if(pos <= 0) return 0;
 			return Call(SCI_LINEFROMPOSITION, _Pos(pos, utf16));
@@ -462,9 +473,9 @@ namespace Au.Controls
 		/// Gets line start position from any position. Both are in UTF-8 bytes.
 		/// </summary>
 		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
-		public int LineStartFromPosition(int pos)
+		public int LineStartFromPos(int pos)
 		{
-			return LineStart(LineIndexFromPosition(pos));
+			return LineStart(LineIndexFromPos(pos));
 		}
 
 		/// <summary>
@@ -473,13 +484,26 @@ namespace Au.Controls
 		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
 		/// <param name="withRN">Include \r\n.</param>
 		/// <param name="lineStartIsLineEnd">If pos is at a line start (0 or after '\n' character), return pos.</param>
-		public int LineEndFromPosition(int pos, bool withRN = false, bool lineStartIsLineEnd = false)
+		public int LineEndFromPos(int pos, bool withRN = false, bool lineStartIsLineEnd = false)
 		{
 			if(pos < 0) pos = 0;
 			if(lineStartIsLineEnd) {
-				if(pos == 0 || Call(SCI_GETCHARAT, pos - 1) == (int)'\n') return pos;
+				if(pos == 0 || Call(SCI_GETCHARAT, pos - 1) == '\n') return pos;
 			}
-			return LineEnd(LineIndexFromPosition(pos), withRN);
+			return LineEnd(LineIndexFromPos(pos), withRN);
+		}
+
+		/// <summary>
+		/// Gets line index, start and end positions (UTF-8 bytes) from position.
+		/// </summary>
+		/// <param name="pos">A position in document text. If negative, uses 0. If greater than line count, uses text length.</param>
+		/// <param name="withRN">Include \r\n.</param>
+		public (int line, int start, int end) LineStartEndFromPos(int pos, bool withRN = false)
+		{
+			int li = Call(SCI_LINEFROMPOSITION, pos);
+			int startPos = Call(SCI_POSITIONFROMLINE, li);
+			int endPos = withRN ? startPos + Call(SCI_LINELENGTH, li) : Call(SCI_GETLINEENDPOSITION, li);
+			return (li, startPos, endPos);
 		}
 
 		/// <summary>
@@ -504,6 +528,13 @@ namespace Au.Controls
 		/// Gets the number of lines.
 		/// </summary>
 		public int LineCount => Call(SCI_GETLINECOUNT);
+
+		/// <summary>
+		/// Gets position (UTF-8 bytes) from point.
+		/// </summary>
+		/// <param name="p">Point in client area.</param>
+		/// <param name="minusOneIfFar">Return -1 if p is not in text characters.</param>
+		public int PosFromXY(POINT p, bool minusOneIfFar) => Call(minusOneIfFar ? SCI_POSITIONFROMPOINTCLOSE : SCI_POSITIONFROMPOINT, p.x, p.y);
 
 		/// <summary>
 		/// Gets annotation text of line.
@@ -557,8 +588,8 @@ namespace Au.Controls
 		public void RangeToFullLines(ref int from, ref int to, bool withRN = false)
 		{
 			Debug.Assert(from <= to);
-			from = LineStartFromPosition(from);
-			to = LineEndFromPosition(to, withRN, true);
+			from = LineStartFromPos(from);
+			to = LineEndFromPos(to, withRN, true);
 		}
 
 		/// <summary>
@@ -833,6 +864,48 @@ namespace Au.Controls
 
 				File_.Save(file, temp => { using(var fs = File.OpenWrite(temp)) { fs.Write(b, 0, len); } });
 			}
+		}
+
+		public int MarginFromPoint(POINT p, bool screenCoord)
+		{
+			if(screenCoord) p = SC.PointToClient(p);
+			if(SC.ClientRectangle.Contains(p)) {
+				for(int i = 0, w = 0; i < 5; i++) { w += Call(SCI_GETMARGINWIDTHN, i); if(w >= p.x) return i; }
+			}
+			return -1;
+		}
+
+		/// <summary>
+		/// Gets text and offsets of lines containing selection.
+		/// Returns true. If <i>ifFullLines</i> is true, may return false.
+		/// </summary>
+		/// <param name="x">Receives results. The positions are UTF-8.</param>
+		/// <param name="ifFullLines">Fail (return false) if selection length is 0 or selection start is not at a line start.</param>
+		/// <param name="oneMore">Get +1 line if selection ends at a line start, except if selection length is 0.</param>
+		public bool GetSelectionLines(out SelectionLines x, bool ifFullLines = false, bool oneMore = false)
+		{
+			x = default;
+			x.selStart = this.SelectionStart; x.selEnd = this.SelectionEnd;
+			if(ifFullLines && x.selEnd == x.selStart) return false;
+			var (_, start, end) = LineStartEndFromPos(x.selStart);
+			if(ifFullLines && start != x.selStart) return false;
+			x.linesStart = start;
+
+			if(x.selEnd > x.selStart) {
+				(_, start, end) = LineStartEndFromPos(x.selEnd);
+				if(!oneMore && start == x.selEnd) end = start; //selection end is at line start. We need the line only if oneMore.
+				if(ifFullLines && x.selEnd < end) return false;
+			}
+
+			x.linesEnd = end;
+			x.text = this.RangeText(x.linesStart, end);
+			return true;
+		}
+
+		public struct SelectionLines
+		{
+			public int selStart, selEnd, linesStart, linesEnd;
+			public string text;
 		}
 	}
 

@@ -140,7 +140,9 @@ namespace Au.Triggers
 		internal bool HookProc(HookData.Keyboard k, TriggerHookContext thc)
 		{
 			//Print(k.Key);
-			if(!k.IsInjectedByAu && !k.IsUp && 0 == k.Mod) {
+			Debug.Assert(!k.IsInjectedByAu); //server must ignore
+
+			if(!k.IsUp && 0 == k.Mod) {
 				Perf.Next();
 				KMod mod = Keyb.GetMod(); //usually ~10 mcs, but sometimes 200-500 mcs //TODO: store in thc, for Autotext hook to use
 				Perf.Next();
@@ -151,7 +153,7 @@ namespace Au.Triggers
 						if(v.DisabledThisOrAll) continue;
 						var x = v as HotkeyTrigger;
 						if(args == null) thc.args = args = new HotkeyTriggerArgs(x, thc.Window, k.Key, mod); //may need for scope callbacks too
-						if(!x.MatchScope(thc)) continue;
+						if(!x.MatchScopeWindowAndFunc(thc)) continue;
 						thc.trigger = v;
 						//Print(k.Key, mod);
 						return 0 == (x.flags & TKFlags.Shared);

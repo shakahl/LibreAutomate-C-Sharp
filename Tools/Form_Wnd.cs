@@ -166,8 +166,9 @@ namespace Au.Tools
 			string[] _ContainsCombo_DropDown()
 			{
 				try {
+					//acc
 					var a1 = Acc.FindAll(_wnd, name: "?*", prop: "notin=SCROLLBAR\0maxcc=100", flags: AFFlags.ClientArea); //all that have a name
-					var a2 = new List<string>(a1.Length);
+					var a2 = new List<string>();
 					string prevName = null;
 					for(int i = a1.Length - 1; i >= 0; i--) {
 						if(!a1[i].GetProperties("Rn", out var prop)) continue;
@@ -176,6 +177,13 @@ namespace Au.Tools
 						if(!a2.Contains(rn)) a2.Add(rn);
 					}
 					a2.Reverse();
+					//child
+					foreach(var c in _wnd.Get.Children(onlyVisible: true)) {
+						var cn = c.Name; if(Empty(cn)) continue;
+						cn = "'!" + TUtil.StripWndClassName(c.ClassName, true) + "' " + TUtil.EscapeWildex(cn);
+						if(!a2.Contains(cn)) a2.Add(cn);
+					}
+
 					return a2.ToArray();
 					//rejected: sort
 				}
@@ -325,7 +333,7 @@ namespace Au.Tools
 
 			g.ZAddHeaderRow("Window");
 			_AddFlag(nameof(WFFlags.HiddenToo), "Can be invisible", tt: "Flag WFFlags.HiddenToo.");
-			_AddFlag(nameof(WFFlags.SkipCloaked), "Cannot be cloaked", tt: "Don't find cloaked windows, eg those on other Windows 10 virtual desktops.\r\nFlag WFFlags.SkipCloaked.");
+			_AddFlag(nameof(WFFlags.CloakedToo), "Can be cloaked", tt: "Find cloaked windows. Flag WFFlags.CloakedToo.\r\nCloaked are windows on inactive Windows 10 virtual desktops, ghost windows of hidden Windows Store apps, various hidden system windows.");
 			_AddProp("alsoW", "also", "o => false", tt: "Lambda that returns true if Wnd o is the wanted window.", info: c_infoAlsoW);
 			_AddProp(null, "wait", "5", tt: c_infoWait);
 			g.ZAddHidden = noCon;
@@ -426,8 +434,7 @@ namespace Au.Tools
 		private void _bTest_Click(object sender, EventArgs ea)
 		{
 			var (code, wndVar) = _FormatCode(true); if(code == null) return;
-			TUtil.RunTestFindObject(code, wndVar, _wnd, _bTest, _lSpeed, o =>
-			{
+			TUtil.RunTestFindObject(code, wndVar, _wnd, _bTest, _lSpeed, o => {
 				var w = (Wnd)o;
 				var r = w.Rect;
 				if(w.IsMaximized && !w.IsChild) {
@@ -498,8 +505,7 @@ namespace Au.Tools
 			_ccName = new NodeTextBox();
 			_tree.NodeControls.Add(_ccName);
 
-			_ccName.ValueNeeded = node =>
-			{
+			_ccName.ValueNeeded = node => {
 				var k = node.Tag as _WndNode;
 				return k.DisplayText;
 			};
@@ -545,7 +551,7 @@ namespace Au.Tools
 			if(!_con.Is0) TUtil.ShowOsdRect(_con.Rect);
 		}
 
-		class _WndTree :ITreeModel
+		class _WndTree : ITreeModel
 		{
 			public _WndNode Root;
 
@@ -574,17 +580,15 @@ namespace Au.Tools
 			}
 		}
 
-		class _WndNode :XElement
+		class _WndNode : XElement
 		{
 			public _WndNode(string name) : base(name) { }
 
 			public Wnd c;
 			string _displayText;
 
-			public string DisplayText
-			{
-				get
-				{
+			public string DisplayText {
+				get {
 					if(_displayText == null) {
 						var cn = c.ClassName;
 						if(cn == null) {
@@ -746,13 +750,11 @@ namespace Au.Tools
 		{
 			if(_wiWCP == 0) {
 				_wiWCP = 1;
-				_winInfo.Tags.AddLinkTag("+switch", s =>
-				{
+				_winInfo.Tags.AddLinkTag("+switch", s => {
 					_wiWCP = s.ToInt_();
-                    _SetText(default);
+					_SetText(default);
 				});
-				_winInfo.Tags.AddLinkTag("+rect", s =>
-				{
+				_winInfo.Tags.AddLinkTag("+rect", s => {
 					var w = (Wnd)s.ToInt_(0, out int e);
 					int client = s.ToInt_(e);
 					var r = client == 1 ? w.ClientRectInScreen : w.Rect;
@@ -761,11 +763,11 @@ namespace Au.Tools
 			}
 			_SetText(f);
 
-            void _SetText(in _WinInfo wi)
-            {
-                var s1=wi.Format(_wnd, _con, _wiWCP);
-                _winInfo.ST.SetText(s1);
-            }
+			void _SetText(in _WinInfo wi)
+			{
+				var s1 = wi.Format(_wnd, _con, _wiWCP);
+				_winInfo.ST.SetText(s1);
+			}
 		}
 		int _wiWCP; //0 not inited, 1 window, 2 control, 3 program
 
@@ -777,8 +779,7 @@ namespace Au.Tools
 			_grid.ZShowEditInfo += infoDelegate;
 			_grid2.ZShowEditInfo += infoDelegate;
 
-			_tree.Paint += (object sender, PaintEventArgs e) =>
-			{
+			_tree.Paint += (object sender, PaintEventArgs e) => {
 				if(_tree.Model == null) {
 					e.Graphics.Clear(this.BackColor); //like grids
 					_OnPaintDrawBackText(sender, e, "Control tree.");

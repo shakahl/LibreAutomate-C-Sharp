@@ -227,22 +227,6 @@ namespace Au
 				}
 			}
 
-			//Better use Desktop.ToggleShowDesktop etc.
-			///// <summary>
-			///// Minimizes or restores main windows, to show or hide desktop.
-			///// </summary>
-			///// <param name="on">
-			///// If omitted or null, calls <see cref="Misc.Desktop.ToggleShowDesktop"/>, which shows or hides desktop.
-			///// If true, calls <see cref="Misc.Desktop.MinimizeWindows"/>, which minimizes main windows.
-			///// If false, calls <see cref="Misc.Desktop.UndoMinimizeEtc"/>, which restores windows recently minimized by this function.
-			///// </param>
-			//public static void ShowDesktop(bool? on = null)
-			//{
-			//	if(on == null) Misc.Desktop.ToggleShowDesktop();
-			//	else if(on.Value) Misc.Desktop.MinimizeWindows();
-			//	else Misc.Desktop.UndoMinimizeEtc();
-			//}
-
 			//FUTURE: use IVirtualDesktopManager to manage virtual desktops.
 			//Currently almost not useful, because its MoveWindowToDesktop does not work with windows of other processes.
 			//But in the future, if we'll have a dll to inject into another process, eg to find accessible objects faster, then also can add this to it.

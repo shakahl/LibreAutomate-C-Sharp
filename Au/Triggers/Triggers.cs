@@ -40,8 +40,8 @@ namespace Au.Triggers
 		{
 			_t = new ITriggers[(int)TriggerType.Count];
 			scopes = new TriggerScopes();
+			funcs = new TriggerFuncs();
 			options = new TriggerOptions();
-			winCache = new WFCache { CacheName = true }; //we'll call Clear(onlyName: true) at the start of each event
 		}
 
 		//public TriggerScopes Of {
@@ -68,6 +68,9 @@ namespace Au.Triggers
 		public TriggerScopes Of => scopes;
 		internal readonly TriggerScopes scopes;
 
+		public TriggerFuncs FuncOf => funcs;
+		internal readonly TriggerFuncs funcs;
+
 		/// <summary>
 		/// Allows to set some options for multiple triggers and their actions.
 		/// </summary>
@@ -76,8 +79,6 @@ namespace Au.Triggers
 		/// </remarks>
 		public TriggerOptions Options => options;
 		internal readonly TriggerOptions options;
-
-		internal readonly WFCache winCache;
 
 		TriggerActionThreads _threads;
 
@@ -140,6 +141,7 @@ namespace Au.Triggers
 			LibThrowIfRunning();
 
 			bool haveTriggers = false; int llHooks = 0;
+			_windowTriggers = null;
 			for(int i = 0; i < _t.Length; i++) {
 				var t = _t[i];
 				if(t == null || !t.HasTriggers) continue;
@@ -147,14 +149,19 @@ namespace Au.Triggers
 				switch((TriggerType)i) {
 				case TriggerType.Hotkey: case TriggerType.Autotext: llHooks |= 1; break;
 				case TriggerType.Mouse: llHooks |= 2; break;
+				case TriggerType.Window: _windowTriggers = t as WindowTriggers; break;
 				}
 			}
 			//Print(haveTriggers, (uint)llHooks);
 			if(!haveTriggers) return;
+			_winTimerPeriod = 0;
+			_winTimerLastTime = 0;
 
 			try {
 				if(llHooks != 0) {
 					_RunWithHooksServer(llHooks);
+					//TODO: key/mouse triggers must run in separate thread.
+					//	Because now possible hook timeout if something other (window triggers, a form, timer, etc) sometimes runs too long.
 				} else {
 					_RunSimple();
 				}
@@ -164,23 +171,69 @@ namespace Au.Triggers
 			}
 		}
 
-		void _RunSimple()
+		unsafe void _RunSimple()
 		{
 			try {
 				_StartStop(true);
-				WaitFor.LibWait(Timeout.Infinite, WHFlags.DoEvents, _evStop);
+				IntPtr h = _evStop;
+				_Wait(&h, 1);
 			}
 			finally {
 				_StartStop(false);
 			}
 		}
 
+		unsafe int _Wait(IntPtr* ha, int nh)
+		{
+			for(; ; ) {
+				int slice = -1;
+				if(_winTimerPeriod > 0) {
+					long t = Time.PerfMilliseconds;
+					if(_winTimerLastTime == 0) _winTimerLastTime = t;
+					int td = (int)(t - _winTimerLastTime);
+					int period = _Period();
+					if(td >= period - 5) {
+						_winTimerLastTime = t;
+						_windowTriggers?.LibTimer();
+						slice = _Period();
+					} else slice = period - td;
+
+					int _Period() => _winTimerPeriod / 15 * 15 + 15;
+					//int _Period() => Math.Max(_winTimerPeriod, 15);
+				}
+				var k = Api.MsgWaitForMultipleObjectsEx(nh, ha, slice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
+				if(k == nh) { //message, COM (RPC uses postmessage), hook, etc
+					while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
+						if(m.hwnd.Is0 && m.message == Api.WM_USER + 20) {
+							_windowTriggers.LibSimulateNew(m.wParam, m.lParam);
+							continue;
+						}
+						Api.TranslateMessage(m);
+						Api.DispatchMessage(m);
+					}
+				} else if(!(k == Api.WAIT_TIMEOUT || k == Api.WAIT_IO_COMPLETION)) return k; //signaled handle, abandoned mutex, WAIT_FAILED (-1)
+			}
+		}
+		long _winTimerLastTime;
+		WindowTriggers _windowTriggers;
+
+		internal int LibWinTimerPeriod {
+			get => _winTimerPeriod;
+			set {
+				long t = Time.PerfMilliseconds;
+				int td = (int)(t - _winTimerLastTime);
+				if(td > 10) _winTimerLastTime = t;
+				_winTimerPeriod = value;
+			}
+		}
+		int _winTimerPeriod;
+
 		unsafe void _RunWithHooksServer(int llHooks)
 		{
 			//Perf.Next();
 
 			//prevent big delay later on first LL hook event while hook proc waits
-			if(scopes.HasScopes) {
+			if(scopes.Used || funcs.Used) {
 				ThreadPool.QueueUserWorkItem(_ => { //never mind: should do it once. Several Triggers.Run in task is rare. Fast next time.
 					try {
 						Util.Assembly_.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
@@ -193,7 +246,7 @@ namespace Au.Triggers
 							Util.Jit.Compile(typeof(HotkeyTriggers), "HookProc");
 							Util.Jit.Compile(typeof(AutotextTriggers), "HookProc");
 							Util.Jit.Compile(typeof(MouseTriggers), "HookProc");
-							Util.Jit.Compile(typeof(Trigger), "MatchScope");
+							Util.Jit.Compile(typeof(Trigger), "MatchScopeWindowAndFunc");
 							Util.Jit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
 						}
 					}
@@ -206,7 +259,7 @@ namespace Au.Triggers
 			bool hooksInEditor = AuTask.Role != ATRole.ExeProgram;
 			if(hooksInEditor) {
 				//SHOULDDO: pass wMsg when starting task.
-				wMsg = Wnd.Misc.FindMessageWindow(null, "Au.Hooks.Server");
+				wMsg = Wnd.Misc.FindMessageOnlyWindow(null, "Au.Hooks.Server");
 				if(wMsg.Is0) {
 					Debug_.Print("Au.Hooks.Server");
 					hooksInEditor = false;
@@ -243,7 +296,7 @@ namespace Au.Triggers
 			try {
 				_StartStop(true);
 				var thc = new TriggerHookContext(this);
-				var ha = new IntPtr[2] { evHooks, _evStop };
+				var ha = stackalloc IntPtr[2] { evHooks, _evStop };
 
 				//GC.Collect(); //if adding triggers and scopes creates much garbage, eg if is used StackTrace or StckFrame
 				//Perf.NW('T');
@@ -254,7 +307,7 @@ namespace Au.Triggers
 						int ec = WinError.Code;
 						if(ec == Api.ERROR_IO_PENDING) {
 							//note: while waiting here, can be called acc hook proc, timer etc (any posted and sent messages).
-							if(0 != WaitFor.LibWait(Timeout.Infinite, WHFlags.DoEvents, ha)) { //with WaitHandle.WaitAny cannot use MTA thread, timers, etc
+							if(0 != _Wait(ha, 2)) {
 								Api.CancelIo(pipe);
 								break;
 							}
@@ -330,7 +383,12 @@ namespace Au.Triggers
 		/// <summary>
 		/// Throws InvalidOperationException if executing <see cref="Run"/>.
 		/// </summary>
-		internal void LibThrowIfRunning() { if(_evStop != default) throw new InvalidOperationException(); }
+		internal void LibThrowIfRunning() { if(LibRunning) throw new InvalidOperationException("Must be before or after Triggers.Run."); }
+
+		/// <summary>
+		/// Throws InvalidOperationException if not executing <see cref="Run"/>.
+		/// </summary>
+		internal void LibThrowIfNotRunning() { if(!LibRunning) throw new InvalidOperationException("Cannot be before or after Triggers.Run."); }
 
 		/// <summary>
 		/// Gets or sets whether triggers of this <see cref="AuTriggers"/> instance are disabled.
@@ -339,13 +397,14 @@ namespace Au.Triggers
 		/// Does not depend on <see cref="DisabledEverywhere"/>.
 		/// Does not end/pause threads of trigger actions.
 		/// </remarks>
-		/// <seealso cref="TriggerScopes.EnabledAlways"/>
+		/// <seealso cref="TriggerOptions.EnabledAlways"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// Triggers.Hotkey["Ctrl+T"] = o => { Print("Ctrl+T"); };
-		/// Triggers.Of.EnabledAlways = true;
-		/// Triggers.Hotkey["Ctrl+D"] = o => { Print("Ctrl+D (disable/enable)"); o.Triggers.Disabled ^= true; }; //toggle
-		/// Triggers.Hotkey["Ctrl+Q"] = o => { Print("Ctrl+Q (stop)"); o.Triggers.Stop(); };
+		/// Triggers.Options.EnabledAlways = true;
+		/// Triggers.Hotkey["Ctrl+D"] = o => { Print("Ctrl+D (disable/enable)"); Triggers.Disabled ^= true; }; //toggle
+		/// Triggers.Hotkey["Ctrl+Q"] = o => { Print("Ctrl+Q (stop)"); Triggers.Stop(); };
+		/// Triggers.Run();
 		/// ]]></code>
 		/// </example>
 		public bool Disabled { get; set; }
@@ -354,7 +413,7 @@ namespace Au.Triggers
 		/// true if triggers are disabled in all proceses that use this library in this user session.
 		/// </summary>
 		/// <seealso cref="Disabled"/>
-		/// <seealso cref="TriggerScopes.EnabledAlways"/>
+		/// <seealso cref="TriggerOptions.EnabledAlways"/>
 		public static unsafe bool DisabledEverywhere {
 			get => Util.LibSharedMemory.Ptr->triggers.disabled;
 			internal set => Util.LibSharedMemory.Ptr->triggers.disabled = value;
@@ -378,11 +437,9 @@ namespace Au.Triggers
 
 		Count,
 
-		//future. Move above ServerCount.
-
-		TimerAfter,
-		TimerEvery,
-		TimerAt,
+		//TimerAfter,
+		//TimerEvery,
+		//TimerAt,
 	}
 
 	interface ITriggers
@@ -400,17 +457,18 @@ namespace Au.Triggers
 	}
 
 
-	class TriggerHookContext
+	class TriggerHookContext : WFCache
 	{
-		internal readonly AuTriggers triggers;
+		//internal readonly AuTriggers triggers;
 		Wnd _w;
 		bool _haveWnd, _mouseWnd; POINT _p;
 
 		public TriggerHookContext(AuTriggers triggers)
 		{
-			this.triggers = triggers;
+			//this.triggers = triggers;
 			_perfList = new _ScopeTime[32];
 			_perfHookTimeout = Util.WinHook.LowLevelHooksTimeout;
+			base.CacheName = true; //we'll call Clear(onlyName: true) at the start of each event
 		}
 
 		public Wnd Window {
@@ -447,7 +505,7 @@ namespace Au.Triggers
 			Perf.First();//TODO
 
 			_w = default; _haveWnd = _mouseWnd = false;
-			triggers.winCache.Clear(onlyName: true);
+			base.Clear(onlyName: true);
 			trigger = null; args = null;
 			_perfLen = 0;
 		}
@@ -506,7 +564,7 @@ namespace Au.Triggers
 			//Print(ttTrue, ttCompare);
 			if(ttCompare <= 25 && (ttTrue < 200 || ttTrue < _perfHookTimeout - 100)) return;
 			var b = new StringBuilder();
-			b.AppendFormat("<>Warning: Too slow trigger scope detection (Triggers.Of). Time: {0} ms. Task name: {1}. <fold>", ttTrue, AuTask.Name);
+			b.AppendFormat("<>Warning: Too slow trigger scope detection (Triggers.Of or Triggers.FuncOf). Time: {0} ms. Task name: {1}. <fold>", ttTrue, AuTask.Name);
 			for(int i = 0; i < _perfLen; i++) {
 				var v = _perfList[i];
 				int t = v.time & 0x7fffffff;
@@ -514,7 +572,7 @@ namespace Au.Triggers
 				if(v.avgTime > 0) b.AppendFormat(", average {0}.{1:D3} ms", v.avgTime / 1000, v.avgTime % 1000);
 				b.AppendLine();
 			}
-			b.Append("* W - Triggers.Of.Window or similar; F - Triggers.Of.Func or similar.</fold>");
+			b.Append("* W - Triggers.Of (window); F - Triggers.FuncOf.</fold>");
 			ThreadPool.QueueUserWorkItem(s1 => Print(s1), b.ToString()); //4 ms first time. Async because Print JIT slow.
 		}
 	}

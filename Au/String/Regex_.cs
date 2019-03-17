@@ -487,12 +487,13 @@ namespace Au
 				//empty match?
 				if(_from <= p.x) {
 					if(_from < p.x) throw new ArgumentException(@"This function does not support (?=...\K).");
-					_from++;
-					//also skip the second part of surrogate pair
-					if(_from < _to && (_subject[_from] & 0xfc00) == 0xdc00) {
-						if(0 != (_regex._InfoAllOptions & RXFlags.UTF)) _from++;
-						//CONSIDER: pcre2_substitute() skips whole \r\n too. Should we too?
-						//	tested: .NET doesn't skip neither \r\n nor surrogate.
+					if(++_from < _to) {
+						var c = _subject[_from];
+						if(c == '\n') { //skip \n if inside \r\n
+							if(_subject[_from - 1] == '\r') _from++;
+						} else if((c & 0xfc00) == 0xdc00) { //skip the second part of surrogate pair
+							if(0 != (_regex._InfoAllOptions & RXFlags.UTF)) _from++;
+						}
 					}
 					if(_from > _to) _maxCount = 0;
 				}
@@ -688,6 +689,7 @@ namespace Au
 		int _Replace(string s, out string result, string repl, Func<RXMatch, string> replFunc, int maxCount, RXMore more)
 		{
 			StringBuilder b = null;
+			Util.LibStringBuilder bCache = default;
 			int prevEnd = 0;
 			int replType = 0; //0 empty, 1 simple, 2 with $, 3 callback
 
@@ -695,7 +697,7 @@ namespace Au
 			while(e.Next()) {
 				//init variables
 				if(b == null) {
-					b = new StringBuilder(s.Length + 100);
+					bCache = new Util.LibStringBuilder(out b, s.Length + 100);
 					if(replFunc != null) replType = 3; else if(!Empty(repl)) replType = repl.IndexOf('$') < 0 ? 1 : 2;
 				}
 				//append s part before this match
@@ -718,6 +720,7 @@ namespace Au
 				int nAfter = s.Length - prevEnd;
 				if(nAfter > 0) b.Append(s, prevEnd, nAfter);
 				result = b.ToString();
+				bCache.Dispose();
 			} else result = s;
 
 			return e.foundCount;

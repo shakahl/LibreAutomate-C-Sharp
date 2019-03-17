@@ -406,12 +406,12 @@ namespace Au.Tools
 				//	Bad: blocks current UI thread. But maybe not so bad.
 				//	Good: we get valid Acc result. Else it would be marshalled for a script thread.
 			}
-			catch(NotFoundException) {
-				AuDialog.ShowInfo("Window not found", owner: form, flags: DFlags.OwnerCenter);
-				//info: throws only when window not found. This is to show time anyway when acc not found.
-			}
 			catch(Exception e) {
-				AuDialog.ShowError(e.GetType().Name, e.Message, owner: form, flags: DFlags.OwnerCenter);
+				if(e is TargetInvocationException tie) e = tie.InnerException;
+				string s1, s2;
+				if(e is NotFoundException) { s1 = "Window not found"; s2 = null; } //info: throws only when window not found. This is to show time anyway when acc etc not found.
+				else { s1 = e.GetType().Name; s2 = e.Message; }
+				AuDialog.ShowError(s1, s2, owner: form, flags: DFlags.OwnerCenter);
 			}
 			finally {
 				bTest.Enabled = true;

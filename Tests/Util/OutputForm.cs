@@ -33,34 +33,47 @@ class OutputForm : Form_
 	{
 		this.Text = "Tests";
 		this.StartPosition = FormStartPosition.Manual;
-		var r = Screen.AllScreens[1].Bounds; r.Inflate(-20, 0); r.Offset(20, 0);
+		int x = 150;
+		var r = Screen.AllScreens[1].Bounds; r.Inflate(-x, 0); r.Offset(x, 0);
 		this.Bounds = r;
 
-		_c = new SciOutput();
+		_c = new SciOutput(this);
 		_c.Dock = DockStyle.Fill;
 		this.Controls.Add(_c);
 
 		_os.NoNewline = true;
 		_os.SetNotifications(_ProcessMessages, this);
+		_os.Start();
+		Output.IgnoreConsole = true;
 	}
 
 	void _ProcessMessages()
 	{
+		if(_paused) return;
 		_c.Tags.OutputServerProcessMessages(_os);
 	}
+	bool _paused;
 
 	public static void ShowForm()
 	{
-		_os.Start();
-		Output.IgnoreConsole = true;
 		Application.Run(new OutputForm());
-		_os.Stop();
 	}
+
+	protected override void OnFormClosed(FormClosedEventArgs e)
+	{
+		_os.Stop();
+		base.OnFormClosed(e);
+	}
+
+	protected override bool ShowWithoutActivation => true;
 
 	class SciOutput : AuScintilla
 	{
-		public SciOutput()
+		OutputForm _f;
+
+		public SciOutput(OutputForm f)
 		{
+			_f = f;
 			InitReadOnlyAlways = true;
 			InitTagsStyle = TagsStyle.AutoWithPrefix;
 			InitImagesStyle = ImagesStyle.ImageTag;
@@ -81,6 +94,9 @@ class OutputForm : Form_
 			switch(e.Button) {
 			case MouseButtons.Middle:
 				ST.ClearText();
+				break;
+			case MouseButtons.Right:
+				_f._paused ^= true;
 				break;
 			}
 			base.OnMouseDown(e);

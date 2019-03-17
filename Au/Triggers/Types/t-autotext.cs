@@ -71,7 +71,9 @@ namespace Au.Triggers
 			//note: this is called after HotkeyTriggers.HookProc.
 			//	It may set thc.triggers and return false to not suppress the input event. Then we should reset autotext.
 
-			if(!k.IsInjectedByAu && !k.IsUp && 0 == k.Mod) {
+			Debug.Assert(!k.IsInjectedByAu); //server must ignore
+
+			if(!k.IsUp && 0 == k.Mod) {
 
 			}
 			return false;

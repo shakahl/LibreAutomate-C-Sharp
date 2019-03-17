@@ -420,12 +420,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Edit_Comment()
 	{
-
+		Panels.Editor.ActiveDoc?.CommentLines(true);
 	}
 
 	public void Edit_Uncomment()
 	{
-
+		Panels.Editor.ActiveDoc?.CommentLines(false);
 	}
 
 	public void Edit_HideRegion()
@@ -483,7 +483,7 @@ class CmdHandlers : IGStripManagerCallbacks
 					Print(s);
 				} else {
 					d.Focus();
-					int i = t.LineStartFromPosition(t.CurrentPositionBytes);
+					int i = t.LineStartFromPos(t.CurrentPos);
 					s += "\r\n";
 					t.ReplaceSel(s, i);
 				}

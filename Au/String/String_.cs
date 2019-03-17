@@ -38,6 +38,8 @@ namespace Au
 			fixed (char* a = t, b = s) return _Equals(a, b, len, ignoreCase);
 		}
 
+		//TODO: use prefix Au for all extension methods and classes. Examples AuEquals, AuScreen. Or maybe AEquals, AScreen.
+
 		/// <summary>
 		/// Compares this and other string. Returns true if equal. Uses ordinal case-insensitive comparison.
 		/// </summary>

@@ -232,6 +232,8 @@ namespace Au.Controls
 			_c.Model = _c;
 
 			_w.ShowPopup(anchor, !down);
+
+			//TEST: API CalculatePopupWindowPosition.
 		}
 
 		bool IMessageFilter.PreFilterMessage(ref Message m)

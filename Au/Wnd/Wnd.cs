@@ -56,7 +56,7 @@ namespace Au
 	/// ]]></code>
 	/// </example>
 	[Serializable]
-	public unsafe partial struct Wnd : IEquatable<Wnd>
+	public unsafe partial struct Wnd : IEquatable<Wnd>, IComparable<Wnd>
 	{
 #if false
 		/// Why Wnd is struct, not class:
@@ -137,11 +137,6 @@ namespace Au
 		//public static Wnd operator +(Wnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (Wnd).");
 
 		/// <summary>
-		/// Returns true if w == this.
-		/// </summary>
-		public bool Equals(Wnd w) => w == this; //IEquatable<Wnd>.Equals, to avoid boxing with eg Dictionary<Wnd, T2>
-
-		/// <summary>
 		/// Returns true if w != null and w.Value == this.
 		/// </summary>
 		public bool Equals(Wnd? w)
@@ -157,6 +152,17 @@ namespace Au
 			//return obj is Wnd w && this == w; //compiler creates slow and big code if 'is ValueType variable'
 			return obj is Wnd && this == (Wnd)obj;
 		}
+
+		/// <summary>
+		/// Returns true if other == this.
+		/// Implements IEquatable. It prevents boxing when used as a key of a collection.
+		/// </summary>
+		public bool Equals(Wnd other) => other == this; //IEquatable<Wnd>.Equals, to avoid boxing with eg Dictionary<Wnd, T2>
+
+		/// <summary>
+		/// Implements IComparable. It allows to sort a collection.
+		/// </summary>
+		public int CompareTo(Wnd other) => _h == other._h ? 0 : (_h < other._h ? -1 : 1);
 
 		///
 		public override int GetHashCode() => (int)_h;
@@ -409,53 +415,53 @@ namespace Au
 		/// 
 		/// Even when this function returns true, the window may be actually invisible. It can be cloaked, on an inactive Windows 10 virtual desktop (cloaked), inactive Windows Store app (cloaked), transparent, zero-size, minimized, off-screen, covered by other windows or can have zero-size window region.
 		/// </remarks>
-		/// <seealso cref="IsVisibleEx"/>
 		/// <seealso cref="IsCloaked"/>
 		/// <seealso cref="IsVisibleAndNotCloaked"/>
 		/// <seealso cref="Show"/>
 		/// <seealso cref="Activate()"/>
 		public bool IsVisible => Api.IsWindowVisible(this);
 
-		/// <summary>
-		/// Returns true if the window is visible.
-		/// Returns false if is invisible or is a child of invisible parent.
-		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
-		/// </summary>
-		/// <remarks>
-		/// Returns false if API <msdn>IsWindowVisible</msdn> returns false.
-		/// Also returns false if <see cref="IsCloaked"/> returns true, but only for some popup windows that usually are useless and could cause problems if considered visible.
-		/// Else returns true.
-		/// 
-		/// Even when this function returns true, the window may be actually invisible. It can be cloaked (excepth the above case), on an inactive Windows 10 virtual desktop (cloaked), inactive Windows Store app (cloaked), transparent, zero-size, minimized, off-screen, covered by other windows or can have zero-size window region.
-		/// </remarks>
-		/// <seealso cref="IsVisible"/>
-		/// <seealso cref="IsCloaked"/>
-		/// <seealso cref="IsVisibleAndNotCloaked"/>
-		/// <seealso cref="Show"/>
-		/// <seealso cref="Activate()"/>
-		public bool IsVisibleEx {
-			get {
-				if(!Api.IsWindowVisible(this)) return false;
+		//rejected. Unreliable, eg then does not find Store apps in inactive desktops. Instead now Find skips all cloaked by default.
+		///// <summary>
+		///// Returns true if the window is visible.
+		///// Returns false if is invisible or is a child of invisible parent.
+		///// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		///// </summary>
+		///// <remarks>
+		///// Returns false if API <msdn>IsWindowVisible</msdn> returns false.
+		///// Also returns false if <see cref="IsCloaked"/> returns true, but only for some popup windows that usually are useless and could cause problems if considered visible.
+		///// Else returns true.
+		///// 
+		///// Even when this function returns true, the window may be actually invisible. It can be cloaked (excepth the above case), on an inactive Windows 10 virtual desktop (cloaked), inactive Windows Store app (cloaked), transparent, zero-size, minimized, off-screen, covered by other windows or can have zero-size window region.
+		///// </remarks>
+		///// <seealso cref="IsVisible"/>
+		///// <seealso cref="IsCloaked"/>
+		///// <seealso cref="IsVisibleAndNotCloaked"/>
+		///// <seealso cref="Show"/>
+		///// <seealso cref="Activate()"/>
+		//public bool IsVisibleEx {
+		//	get {
+		//		if(!Api.IsWindowVisible(this)) return false;
 
-				var style = Style;
-				if((style & (WS.POPUP | WS.CHILD)) == WS.POPUP) {
-					if((style & WS.CAPTION) != WS.CAPTION) return !IsCloaked;
+		//		var style = Style;
+		//		if((style & (WS.POPUP | WS.CHILD)) == WS.POPUP) {
+		//			if((style & WS.CAPTION) != WS.CAPTION) return !IsCloaked;
 
-					//is it a ghost ApplicationFrameWindow, like closed Calculator on Win10?
-					if(Ver.MinWin10 && HasExStyle(WS_EX.NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
-						var isGhost = default == Api.FindWindowEx(this, default, "Windows.UI.Core.CoreWindow", null);
-						//Print(isGhost, this);
-						return !isGhost;
-					}
-				}
-				return true;
-			}
-		}
+		//			//is it a ghost ApplicationFrameWindow, like closed Calculator on Win10?
+		//			if(Ver.MinWin10 && HasExStyle(WS_EX.NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
+		//				var isGhost = default == Api.FindWindowEx(this, default, "Windows.UI.Core.CoreWindow", null);
+		//				//Print(isGhost, this);
+		//				return !isGhost;
+		//			}
+		//		}
+		//		return true;
+		//	}
+		//}
+
 
 		/// <summary>
 		/// Returns true if <see cref="IsVisible"/> returns true and <see cref="IsCloaked"/> returns false.
 		/// </summary>
-		/// <seealso cref="IsVisibleEx"/>
 		public bool IsVisibleAndNotCloaked => IsVisible && !IsCloaked;
 
 		/// <summary>
@@ -557,12 +563,10 @@ namespace Au
 		/// Returns true if the window is cloaked.
 		/// Returns false if not cloaked or if failed.
 		/// On Windows 7 returns false because there is no "cloaked window" feature.
-		/// Windows 10 uses window cloaking mostly to hide windows on inactive desktops. Windows 8 - mostly to hide Metro app windows.
+		/// Windows 10 uses window cloaking mostly to hide windows on inactive desktops. Windows 8 - mostly to hide Windows Store app windows.
 		/// </summary>
 		/// <seealso cref="IsCloakedGetState"/>
-		public bool IsCloaked {
-			get => IsCloakedGetState != 0;
-		}
+		public bool IsCloaked  => IsCloakedGetState != 0;
 
 		#endregion
 
@@ -573,18 +577,14 @@ namespace Au
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
 		/// Calls API <msdn>IsIconic</msdn>.
 		/// </summary>
-		public bool IsMinimized {
-			get => Api.IsIconic(this);
-		}
+		public bool IsMinimized => Api.IsIconic(this);
 
 		/// <summary>
 		/// Returns true if maximized, false if not.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
 		/// Calls API <msdn>IsZoomed</msdn>.
 		/// </summary>
-		public bool IsMaximized {
-			get => Api.IsZoomed(this);
-		}
+		public bool IsMaximized => Api.IsZoomed(this);
 
 		/// <summary>
 		/// If not minimized, minimizes.
@@ -2498,6 +2498,12 @@ namespace Au
 		/// <seealso cref="NameAcc"/>
 		/// <seealso cref="NameWinForms"/>
 		public string Name => GetText(false, true);
+
+		/// <summary>
+		/// Gets window name using API InternalGetWindowText. The same as GetText(false, false).
+		/// This should be a top-level window, because does not process ampersands.
+		/// </summary>
+		internal string LibNameTL => _GetTextFast(false);
 
 		/// <summary>
 		/// Gets control text.

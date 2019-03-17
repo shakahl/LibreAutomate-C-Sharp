@@ -104,7 +104,7 @@ namespace Au
 			if(!c.Is0) return c;
 			if(retry) return default;
 
-			name = w.GetText(false, false); if(Empty(name)) return default;
+			name = w.LibNameTL; if(Empty(name)) return default;
 
 			for(; ; ) {
 				c = Api.FindWindowEx(default, c, "Windows.UI.Core.CoreWindow", name); //I could not find API for it
@@ -208,7 +208,7 @@ namespace Au
 			internal static Wnd CreateMessageWindowDefWndProc()
 			{
 				if(s_atomDWP == 0) s_atomDWP = Misc.MyWindow.RegisterClass(c_wndClassDWP);
-				return Misc.CreateMessageWindow(c_wndClassDWP);
+				return Misc.CreateMessageOnlyWindow(c_wndClassDWP);
 			}
 			static ushort s_atomDWP;
 			const string c_wndClassDWP = "Au.DWP";

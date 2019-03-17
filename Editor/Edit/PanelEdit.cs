@@ -341,32 +341,6 @@ partial class PanelEdit : Control
 		//	base.Dispose(disposing);
 		//}
 
-		//protected override void OnVisibleChanged(EventArgs e)
-		//{
-		//	if(!Visible) Output.LibWriteQM2("hide");
-		//	base.OnVisibleChanged(e);
-		//}
-
-		//protected override void OnMouseDown(MouseEventArgs e)
-		//{
-		//	switch(e.Button) {
-		//	case MouseButtons.Middle:
-		//		ST.ClearText();
-		//		break;
-		//	}
-		//	base.OnMouseDown(e);
-		//}
-
-		protected override void OnMouseUp(MouseEventArgs e)
-		{
-			switch(e.Button) {
-			case MouseButtons.Right:
-				Strips.ddEdit.ShowAsContextMenu_();
-				break;
-			}
-			base.OnMouseUp(e);
-		}
-
 		protected override void OnSciNotify(ref SCNotification n)
 		{
 			//switch(n.nmhdr.code) {
@@ -437,6 +411,30 @@ partial class PanelEdit : Control
 				int c = (int)m.WParam;
 				if(c < 32 && !(c == 8 || c == 9 || c == 10 || c == 13)) return;
 				break;
+			case Api.WM_RBUTTONDOWN:
+				//prevent changing selection when right-clicked margin if selection start is in that line
+				POINT p = (Math_.LoShort(m.LParam), Math_.HiShort(m.LParam));
+				if(ST.MarginFromPoint(p, false) >= 0) {
+					var k = ST.LineStartEndFromPos(ST.PosFromXY(p, false));
+					var cp = ST.SelectionStart;
+					if(cp >= k.start && cp <= k.end) return;
+				}
+				break;
+			case Api.WM_CONTEXTMENU:
+				bool kbd = (int)m.LParam == -1;
+				int margin = kbd ? -1 : ST.MarginFromPoint((Math_.LoShort(m.LParam), Math_.HiShort(m.LParam)), true);
+				switch(margin) {
+				case -1:
+					Strips.ddEdit.ShowAsContextMenu_(kbd);
+					break;
+				case c_marginLineNumbers:
+				case c_marginMarkers:
+					CommentLines(null);
+					break;
+					//case c_marginFold:
+					//	break;
+				}
+				return;
 			}
 			base.WndProc(ref m);
 		}
@@ -479,7 +477,7 @@ partial class PanelEdit : Control
 						} else if(newFile) {
 							//fold boilerplate code
 							if(this.Text.RegexMatch_(@"//\{\{(\R//\{\{)? using\R", 0, out RXGroup g)) {
-								int i = ST.LineIndexFromPosition(g.Index, true);
+								int i = ST.LineIndexFromPos(g.Index, true);
 								if(0 != (SC_FOLDLEVELHEADERFLAG & Call(SCI_GETFOLDLEVEL, i))) Call(SCI_FOLDCHILDREN, i);
 							}
 						}
@@ -597,10 +595,10 @@ partial class PanelEdit : Control
 			if(isExpanded) {
 				_FoldingFoldLine(line);
 				//move caret out of contracted region
-				int pos = ST.CurrentPositionBytes;
+				int pos = ST.CurrentPos;
 				if(pos > startPos) {
 					int i = ST.LineEnd(Call(SCI_GETLASTCHILD, line, -1));
-					if(pos <= i) ST.CurrentPositionBytes = startPos;
+					if(pos <= i) ST.CurrentPos = startPos;
 				}
 			} else {
 				Call(SCI_FOLDLINE, line, 1);
@@ -679,7 +677,7 @@ partial class PanelEdit : Control
 			var p = this.PointToClient(new Point(e.X, e.Y));
 			if(_drag != _DD_DataType.Text) { //if files etc, drop as lines, not anywhere
 				pos = Call(SCI_POSITIONFROMPOINT, p.X, p.Y);
-				pos = ST.LineStartFromPosition(pos);
+				pos = ST.LineStartFromPos(pos);
 				p.X = Call(SCI_POINTXFROMPOSITION, 0, pos);
 				p.Y = Call(SCI_POINTYFROMPOSITION, 0, pos);
 			} else pos = 0;
@@ -893,7 +891,7 @@ partial class PanelEdit : Control
 
 		public void CopyModified(bool onlyInfo = false)
 		{
-			int i1 = Call(SCI_GETSELECTIONSTART), i2 = Call(SCI_GETSELECTIONEND), textLen = ST.TextLengthBytes;
+			int i1 = ST.SelectionStart, i2 = ST.SelectionEnd, textLen = ST.TextLengthBytes;
 			if(textLen == 0) return;
 			bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !FN.IsCodeFile;
 			if(onlyInfo) {
@@ -1021,6 +1019,32 @@ partial class PanelEdit : Control
 			Print("<><code>" + s + "</code>\r\n<Z 0xc0e0c0><>");
 		}
 #endif
+
+		#endregion
+
+		#region line actions
+
+		/// <summary>
+		/// Comments (adds //) or uncomments (removes //) selected lines or current line.
+		/// </summary>
+		/// <param name="comment">Comment (true), uncomment (false) or toggle (null).</param>
+		internal void CommentLines(bool? comment)
+		{
+			if(ST.IsReadonly) return;
+			ST.GetSelectionLines(out var x);
+			var s = x.text;
+			if(s.Length == 0) return;
+			bool wasSelection = x.selEnd > x.selStart;
+			bool caretAtEnd = wasSelection && ST.CurrentPos == x.linesEnd;
+			bool com = comment ?? !s.RegexIsMatch_("^[ \t]*//(?!/[^/])");
+			s = com ? s.RegexReplace_(@"(?m)^", "//") : s.RegexReplace_(@"(?m)^([ \t]*)//", "$1");
+			ST.ReplaceRange(x.linesStart, x.linesEnd, s);
+			if(wasSelection) {
+				int i = x.linesStart, j = ST.CountBytesFromChars(x.linesStart, s.Length);
+				Call(SCI_SETSEL, caretAtEnd ? i : j, caretAtEnd ? j : i);
+			}
+		}
+
 
 		#endregion
 	}

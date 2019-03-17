@@ -162,6 +162,9 @@ namespace Au.Types
 		internal static extern void Cpp_Test();
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern int* EnumWindowsEx(out int len, bool onlyVisible, int api);
+
+		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern LPARAM Cpp_InputSync(int action, int tid, LPARAM hh);
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]

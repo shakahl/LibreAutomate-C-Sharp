@@ -1021,3 +1021,65 @@ EXPORT void Cpp_Test()
 //}
 
 #endif //#if _DEBUG
+
+//not tested
+//struct _EWData {
+//	int** aAll;
+//	int** aVisible;
+//	int nAll, nVisible, capAll, capVisible;
+//};
+//
+//void _EWAdd(int*& a, int& len, int& cap, int initCap, HWND w) {
+//	if(a == null) a = (int*)HeapAlloc(GetProcessHeap(), 0, (cap = initCap) * 4);
+//	else if(len == cap) a = (int*)HeapReAlloc(GetProcessHeap(), 0, a, (cap *= 2) * 4);
+//	a[len++] = (int)(LPARAM)w;
+//}
+//
+//BOOL _EWProc(HWND w, LPARAM param) {
+//	_EWData& d = *(_EWData*)param;
+//	if(d.aAll != null) _EWAdd(*d.aAll, d.nAll, d.capAll, 1000, w);
+//	if(d.aVisible != null && IsWindowVisible(w)) _EWAdd(*d.aVisible, d.nVisible, d.capVisible, 200, w);
+//	return 1;
+//}
+//
+//EXPORT void EnumWindowsEx(int api, int** aAll, int& nAll, int** aVisible, int& nVisible) {
+//	_EWData d;
+//	d.aAll = aAll;
+//	d.aVisible = aVisible;
+//	d.capAll = nAll;
+//	d.capVisible = nVisible;
+//	d.nAll = d.nVisible = 0;
+//
+//	EnumWindows(_EWProc, (LPARAM)&d);
+//
+//	if(aAll != null) nAll = d.nAll;
+//	if(aVisible != null) nVisible = d.nVisible;
+//}
+
+//struct _EWData {
+//	int* a;
+//	int cap, len;
+//	bool onlyVisible;
+//};
+//
+//BOOL _EWProc(HWND w, LPARAM param) {
+//	_EWData& d = *(_EWData*)param;
+//	if(d.onlyVisible && !IsWindowVisible(w)) return 1;
+//	if(d.len == d.cap) {
+//		HANDLE hh = GetProcessHeap();
+//		if(d.cap == 0) d.a = (int*)HeapAlloc(hh, 0, (d.cap = (d.onlyVisible ? 200 : 1000)) * 4);
+//		else d.a = (int*)HeapReAlloc(hh, 0, d.a, (d.cap *= 2) * 4);
+//	}
+//	d.a[d.len++] = (int)(LPARAM)w;
+//	return 1;
+//}
+//
+//EXPORT int* EnumWindowsEx(int& len, BOOL onlyVisible, int api) {
+//	_EWData d = {};
+//	d.onlyVisible = onlyVisible;
+//
+//	EnumWindows(_EWProc, (LPARAM)&d);
+//	len = d.len;
+//	return d.a;
+//}
+//Faster than C#. Eg 250 vs 310 mcs.

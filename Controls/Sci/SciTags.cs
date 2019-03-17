@@ -425,7 +425,7 @@ namespace Au.Controls
 			//limit
 			int len = _c.ST.TextLengthBytes;
 			if(len > 4 * 1024 * 1024) {
-				len = _c.ST.LineStartFromPosition(len / 2);
+				len = _c.ST.LineStartFromPos(len / 2);
 				if(len > 0) _c.ST.ReplaceRange(0, len, "...\r\n");
 			}
 

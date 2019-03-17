@@ -726,5 +726,13 @@ namespace Au.Types
 
 		[DllImport("kernel32.dll")]
 		internal static extern int GetTickCount();
+
+		//internal const uint THREAD_SET_CONTEXT = 0x10;
+
+		//internal delegate void PAPCFUNC(LPARAM Parameter);
+
+		//[DllImport("kernel32.dll", SetLastError = true)]
+		//internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, LPARAM dwData);
+
 	}
 }

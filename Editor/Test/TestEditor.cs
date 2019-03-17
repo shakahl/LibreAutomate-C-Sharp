@@ -111,6 +111,8 @@ partial class EdForm
 		//TestTools();
 		//TestReplaceFile();
 
+		//doc.CommentLines(!Keyb.IsShift);
+
 		Au.Triggers.AuTriggers.DisabledEverywhere ^= true;
 	}
 	static bool s_test1;

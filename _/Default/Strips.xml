@@ -108,8 +108,8 @@
 			<Edit_Lines>
 				<Edit_Indent/>
 				<Edit_Unindent/>
-				<Edit_Comment/>
-				<Edit_Uncomment/>
+				<Edit_Comment hkText="r-click sel. bar"/>
+				<Edit_Uncomment hkText="r-click sel. bar"/>
 				<Edit_HideRegion/>
 				<Edit_SelectAll/>
 				<Edit_Output/>

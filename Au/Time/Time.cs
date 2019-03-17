@@ -89,7 +89,7 @@ namespace Au
 		/// <remarks>
 		/// Uses API <msdn>QueryPerformanceCounter</msdn>.
 		/// This function is used to measure time differences with 1 ms precision, like <c>var t1=Time.PerfMilliseconds; ... var t2=Time.PerfMilliseconds; var diff=t2-t1;</c>.
-		/// The return value equals <see cref="PerfMicroseconds"/>/1000 but is slightly different than of <see cref="WinMilliseconds64"/> and other similar functions of this library, Windows API and .NET. Never compare times returned by different functions.
+		/// The return value equals <see cref="PerfMicroseconds"/>/1000 but is slightly different than of <see cref="WinMilliseconds"/> and other similar functions of this library, Windows API and .NET. Never compare times returned by different functions.
 		/// Independent of computer clock time changes.
 		/// </remarks>
 		public static long PerfMilliseconds { get { Api.QueryPerformanceCounter(out var t); return (long)(t * s_freqMS); } }
@@ -106,7 +106,7 @@ namespace Au
 		/// Uses the low-resolution system timer. Its period usually is 15.25 ms. When need to measure time differences with better precision, use <see cref="PerfMilliseconds"/> or <see cref="PerfMicroseconds"/>.
 		/// Independent of computer clock time changes.
 		/// </remarks>
-		public static long WinMilliseconds64 => Api.GetTickCount64();
+		public static long WinMilliseconds => Api.GetTickCount64();
 
 		/// <summary>
 		/// Gets the number of milliseconds elapsed since Windows startup.

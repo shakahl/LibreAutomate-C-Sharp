@@ -713,13 +713,24 @@
             Gets text length (SCI_GETTEXTLENGTH) in UTF-8 bytes.
             </summary>
         </member>
-        <member name="P:Au.Controls.SciText.CurrentPositionBytes">
+        <member name="P:Au.Controls.SciText.CurrentPos">
             <summary>
             Gets or sets current caret position (SCI_GETCURRENTPOS/SCI_SETEMPTYSELECTION) in UTF-8 bytes.
             The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciText.LineIndexFromPosition(System.Int32,System.Boolean)">
+        <member name="P:Au.Controls.SciText.SelectionStart">
+            <summary>
+            SCI_GETSELECTIONSTART.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.SciText.SelectionEnd">
+            <summary>
+            SCI_GETSELECTIONEND.
+            Always greater or equal than SelectionStart.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.LineIndexFromPos(System.Int32,System.Boolean)">
             <summary>
             Gets line index from character position (UTF-8 bytes by default).
             </summary>
@@ -739,19 +750,26 @@
             <param name="line">0-based line index. If negative, returns 0. If greater than line count, returns text length.</param>
             <param name="withRN">Include \r\n.</param>
         </member>
-        <member name="M:Au.Controls.SciText.LineStartFromPosition(System.Int32)">
+        <member name="M:Au.Controls.SciText.LineStartFromPos(System.Int32)">
             <summary>
             Gets line start position from any position. Both are in UTF-8 bytes.
             </summary>
             <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
         </member>
-        <member name="M:Au.Controls.SciText.LineEndFromPosition(System.Int32,System.Boolean,System.Boolean)">
+        <member name="M:Au.Controls.SciText.LineEndFromPos(System.Int32,System.Boolean,System.Boolean)">
             <summary>
             Gets line end position from any position. Both are in UTF-8 bytes.
             </summary>
             <param name="pos">A position in document text. If negative, returns 0. If greater than text length, uses the last line.</param>
             <param name="withRN">Include \r\n.</param>
             <param name="lineStartIsLineEnd">If pos is at a line start (0 or after '\n' character), return pos.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.LineStartEndFromPos(System.Int32,System.Boolean)">
+            <summary>
+            Gets line index, start and end positions (UTF-8 bytes) from position.
+            </summary>
+            <param name="pos">A position in document text. If negative, uses 0. If greater than line count, uses text length.</param>
+            <param name="withRN">Include \r\n.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineText(System.Int32)">
             <summary>
@@ -769,6 +787,13 @@
             <summary>
             Gets the number of lines.
             </summary>
+        </member>
+        <member name="M:Au.Controls.SciText.PosFromXY(Au.Types.POINT,System.Boolean)">
+            <summary>
+            Gets position (UTF-8 bytes) from point.
+            </summary>
+            <param name="p">Point in client area.</param>
+            <param name="minusOneIfFar">Return -1 if p is not in text characters.</param>
         </member>
         <member name="M:Au.Controls.SciText.AnnotationText(System.Int32)">
             <summary>
@@ -922,6 +947,15 @@
             <param name="file">To pass to File.OpenRead.</param>
             <exception cref="T:System.Exception">Exceptions of File.OpenRead, File.Read, Encoding.Convert.</exception>
             <exception cref="T:System.InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
+        </member>
+        <member name="M:Au.Controls.SciText.GetSelectionLines(Au.Controls.SciText.SelectionLines@,System.Boolean,System.Boolean)">
+            <summary>
+            Gets text and offsets of lines containing selection.
+            Returns true. If <i>ifFullLines</i> is true, may return false.
+            </summary>
+            <param name="x">Receives results. The positions are UTF-8.</param>
+            <param name="ifFullLines">Fail (return false) if selection length is 0 or selection start is not at a line start.</param>
+            <param name="oneMore">Get +1 line if selection ends at a line start, except if selection length is 0.</param>
         </member>
         <member name="T:Au.Controls.AuScintilla">
             <summary>

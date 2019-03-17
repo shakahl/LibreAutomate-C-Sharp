@@ -97,7 +97,7 @@ namespace Au.Triggers
 		{
 			string cn = _inTaskProcess ? "Au.Hooks.Exe" : "Au.Hooks.Server";
 			Wnd.Misc.MyWindow.RegisterClass(cn);
-			_msgWnd.CreateMessageWindow(cn);
+			_msgWnd.CreateMessageOnlyWindow(cn);
 			Api.SetEvent(_event);
 			if(_inTaskProcess) Util.AppDomain_.Exit += (unu, sed) => _msgWnd.Handle.SendTimeout(1000, Api.WM_CLOSE); //unhook etc
 
@@ -180,16 +180,15 @@ namespace Au.Triggers
 				if(pi >= 0) _pipes[pi] = tp; else _pipes.Add(tp);
 			}
 
-			//if(0 != (mask & 1) && _hookK == null) _hookK = Util.WinHook.Keyboard(k => { //very slow JIT on first hook event
-			//	return _Send(k.LibNativeStructPtr, sizeof(Api.KBDLLHOOKSTRUCT));
-			//});
-			if(0 != (mask & 1) && _hookK == null) _hookK = Util.WinHook.Keyboard(_KeyboardHookProc);
+			if(0 != (mask & 1) && _hookK == null) {
+				_hookK = Util.WinHook.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
+				_hookK.IgnoreKeyMouseEventsInjectedByAu = true;
+			}
 
-			//if(0 != (mask & 2) && _hookM == null) _hookM = Util.WinHook.LibMouseRaw((wParam, lParam) => {
-			//	var m = new Api.MSLLHOOKSTRUCT2(wParam, lParam);
-			//	return _Send(&m, sizeof(Api.MSLLHOOKSTRUCT2));
-			//});
-			if(0 != (mask & 2) && _hookM == null) _hookM = Util.WinHook.LibMouseRaw(_MouseHookProc);
+			if(0 != (mask & 2) && _hookM == null) {
+				_hookM = Util.WinHook.LibMouseRaw(_MouseHookProc);
+				_hookM.IgnoreKeyMouseEventsInjectedByAu = true;
+			}
 
 			return 1;
 		}

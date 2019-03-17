@@ -516,7 +516,7 @@ namespace Au
 			Wnd w = WndTopLevel; if(w.Is0) throw new AuException("*get window");
 			Acc doc = Acc.Wait(-1, w, "web:"); if(doc == null) throw new AuException("*find web page");
 
-			string wndName = w.Name, docName = doc.Name; Debug.Assert(!Empty(wndName) && !Empty(docName));
+			string wndName = w.LibNameTL, docName = doc.Name; Debug.Assert(!Empty(wndName) && !Empty(docName));
 			bool wndOK = false, docOK = false;
 			Acc.Finder f = null;
 
@@ -527,7 +527,7 @@ namespace Au
 			while(to.Sleep()) {
 				w.ThrowIfInvalid();
 				if(!wndOK) {
-					var s = w.Name;
+					var s = w.LibNameTL;
 					if(s == null) continue; //probably invalid, will throw in next loop
 					wndOK = s != wndName;
 				}

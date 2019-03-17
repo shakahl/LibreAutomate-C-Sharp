@@ -35,7 +35,7 @@ namespace Au
 		/// <param name="active">The window must be the active window (<see cref="Active"/>), and not minimized.</param>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
-		/// By default ignores invisible windows. Use flag <see cref="WFFlags.HiddenToo"/> if need.
+		/// By default ignores invisible and cloaked windows. Use flags if need.
 		/// If you have a window's Wnd variable, to wait until it is active/visible/etc use <see cref="WaitForCondition"/> instead.
 		/// </remarks>
 		/// <example>
@@ -84,7 +84,7 @@ namespace Au
 		/// <param name="windows">One or more variables containing window properties. Can be strings, see <see cref="Finder.op_Implicit(string)"/>.</param>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
-		/// By default ignores invisible windows. Use flag <see cref="WFFlags.HiddenToo"/> if need.
+		/// By default ignores invisible and cloaked windows. Use flags if need.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -126,7 +126,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
-		/// By default ignores invisible windows. Use flag <see cref="WFFlags.HiddenToo"/> if need.
+		/// By default ignores invisible and cloaked windows. Use flags if need.
 		/// If you have a window's Wnd variable, to wait until it is closed use <see cref="WaitForClosed"/> instead.
 		/// Examples: <see cref="Wait"/>.
 		/// </remarks>

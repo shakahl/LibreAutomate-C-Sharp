@@ -26,7 +26,7 @@ namespace Au.Util
 	/// Does not support reference types. Does not call T.Dispose.
 	/// </summary>
 	//[DebuggerStepThrough]
-	internal unsafe struct LibArrayBuilder<T> :IDisposable where T : unmanaged
+	internal unsafe struct LibArrayBuilder<T> : IDisposable where T : unmanaged
 	{
 		T* _p;
 		int _len, _cap;
@@ -64,11 +64,9 @@ namespace Au.Util
 		/// Gets or sets the total number of elements (not bytes) the internal memory can hold without resizing.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">(the 'set' function) value less than Count. Instead use ReAlloc or Free.</exception>
-		public int Capacity
-		{
+		public int Capacity {
 			get => _cap;
-			set
-			{
+			set {
 				if(value != _cap) {
 					if(value < _len) throw new ArgumentOutOfRangeException();
 					_p = (T*)NativeHeap.ReAlloc(_p, value * sizeof(T));
@@ -84,10 +82,11 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="count">Element count.</param>
 		/// <param name="zeroInit">Set all bytes = 0. If false, the memory is uninitialized, ie random byte values. Default true. Slower when true.</param>
-		public T* Alloc(int count, bool zeroInit = true)
+		/// <param name="noExtra">Set Capacity = count. If false, allocates more if count is less thah the minimal capacity for this type.</param>
+		public T* Alloc(int count, bool zeroInit = true, bool noExtra = false)
 		{
 			if(_cap != 0) Free();
-			int cap = Math.Max(count, s_minCap);
+			int cap = count; if(cap < s_minCap && !noExtra) cap = s_minCap;
 			_p = (T*)NativeHeap.Alloc(cap * sizeof(T), zeroInit);
 			_cap = cap; _len = count;
 			return _p;
@@ -100,13 +99,14 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="count">New element count.</param>
 		/// <param name="zeroInit">Set all added bytes = 0. If false, the added memory is uninitialized, ie random byte values. Default true. Slower when true.</param>
+		/// <param name="noExtra">Set Capacity = count. If false, allocates more if count is less thah the minimal capacity for this type.</param>
 		/// <remarks>
 		/// The new memory usually is at a new location. The preserved elements are copied there.
 		/// Sets Count=count. To allocate more memory without changing Count, change Capacity instead.
 		/// </remarks>
-		public T* ReAlloc(int count, bool zeroInit = true)
+		public T* ReAlloc(int count, bool zeroInit = true, bool noExtra = false)
 		{
-			int cap = Math.Max(count, s_minCap);
+			int cap = count; if(cap < s_minCap && !noExtra) cap = s_minCap;
 			_p = (T*)NativeHeap.ReAlloc(_p, cap * sizeof(T), zeroInit);
 			_cap = cap; _len = count;
 			return _p;
@@ -167,11 +167,9 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="i">Element index.</param>
 		/// <exception cref="IndexOutOfRangeException"></exception>
-		public ref T this[int i]
-		{
+		public ref T this[int i] {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
-			get
-			{
+			get {
 				if((uint)i >= (uint)_len) _ThrowBadIndex();
 				return ref _p[i];
 			}

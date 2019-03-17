@@ -211,24 +211,17 @@ class PanelOutput : Control
 			ST.StyleClearAll();
 		}
 
-		protected override void OnMouseDown(MouseEventArgs e)
+		protected override void WndProc(ref Message m)
 		{
-			switch(e.Button) {
-			case MouseButtons.Middle:
+			switch(m.Msg) {
+			case Api.WM_MBUTTONDOWN:
 				ST.ClearText();
-				break;
+				return;
+			case Api.WM_CONTEXTMENU:
+				Strips.ddOutput.ShowAsContextMenu_((int)m.LParam == -1);
+				return;
 			}
-			base.OnMouseDown(e);
-		}
-
-		protected override void OnMouseUp(MouseEventArgs e)
-		{
-			switch(e.Button) {
-			case MouseButtons.Right:
-				Strips.ddOutput.ShowAsContextMenu_();
-				break;
-			}
-			base.OnMouseUp(e);
+			base.WndProc(ref m);
 		}
 
 		void _OpenLink(string s)

@@ -546,10 +546,10 @@ namespace Au.Controls
 				}
 			}
 			if(s == null) {
-				firstLine = _t.LineIndexFromPosition(from);
+				firstLine = _t.LineIndexFromPos(from);
 				int from2 = _t.LineStart(firstLine);
 				if(!inserted && from2 == from) return; //deleted whole lines or characters at line start, which cannot create new image string in text
-				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _t.LineEndFromPosition(to);
+				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _t.LineEndFromPos(to);
 				len = to2 - from2;
 				//Print(inserted, from, to, from2, to2, len);
 				if(len < 10) return;

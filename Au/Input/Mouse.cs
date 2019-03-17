@@ -196,7 +196,7 @@ namespace Au
 			LibWaitForNoButtonsPressed();
 			w.ThrowIfInvalid();
 			var wTL = w.Window;
-			if(!wTL.IsVisibleEx) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not.
+			if(!wTL.IsVisible) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not. If cloaked because in an inactive virtual desktop etc, Click activates and it usually uncloaks.
 			if(wTL.IsMinimized) { wTL.ShowNotMinimized(true); _Sleep(500); } //never mind: if w is a control...
 			var p = Coord.NormalizeInWindow(x, y, w, nonClient, centerIfEmpty: true);
 			if(!w.MapClientToScreen(ref p)) w.ThrowUseNative();

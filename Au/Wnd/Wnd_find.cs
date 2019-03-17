@@ -46,9 +46,10 @@ namespace Au
 			/// See <see cref="Wnd.Find"/>.
 			/// </summary>
 			/// <exception cref="ArgumentException">
-			/// cn is "". To match any, use null.
-			/// program is "" or 0 or contains \ or /. To match any, use null.
+			/// <paramref name="cn"/> is "". To match any, use null.
+			/// <paramref name="program"/> is "" or 0 or contains \ or /. To match any, use null.
 			/// Invalid wildcard expression ("**options " or regular expression).
+			/// Invalid image string in <paramref name="contains"/>.
 			/// </exception>
 			public Finder(
 				string name = null, string cn = null, WF3 program = default,
@@ -64,24 +65,36 @@ namespace Au
 
 			void _ParseContains(object contains)
 			{
-				if(contains is string s) { //accessible object. Format: "'role' name" or "name".
+				if(contains is string s) { //accessible object or control or image. Acc format: "'role' name" or "name". Control: "'^class' text". Image: "image:...".
 					if(s.Length == 0) return;
 					string role = null, name = s;
-					if(s.RegexMatch_(@"^'(.+?)?' ((?s).+)?$", out var m)) { role = m[1].Value; name = m[2].Value; }
-					_contains = new Acc.Finder(role, name, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
+					switch(s[0]) {
+					case '\'':
+						if(s.RegexMatch_(@"^'(.+?)?' ((?s).+)?$", out var m)) { role = m[1].Value; name = m[2].Value; }
+						break;
+					case 'i' when s.StartsWith_("image:"):
+						_contains = WinImage.LoadImage(s);
+						return;
+					}
+					if(role != null && role[0] == '!') { //control
+						_contains = new ChildFinder(name, role.Length == 1 ? null : role.Substring(1));
+					} else { //acc
+						_contains = new Acc.Finder(role, name, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
+					}
 				} else if(contains is Acc.Finder || contains is ChildFinder || contains is System.Drawing.Image) _contains = contains;
 				else throw new ArgumentException("Unsupported object type.", nameof(contains));
 			}
 
 			/// <summary>
-			/// Implicit conversion from string that can contain window name, class name, program and/or an accessible object.
-			/// Examples: "name,cn,program", "name", ",cn", ",,program", "name,cn", "name,,program", ",cn,program", "name,,,accName", "name,,,'accRole' accName".
+			/// Implicit conversion from string that can contain window name, class name, program and/or an object.
+			/// Examples: "name,cn,program", "name", ",cn", ",,program", "name,cn", "name,,program", ",cn,program", "name,,,object".
 			/// </summary>
 			/// <param name="s">
-			/// One or more comma-separated window properties: name, class, program and/or an accessible object. Empty parts are considered null.
-			/// The same as parameters of <see cref="Wnd.Find"/> and the constructor. The first 3 comma-separated parts cannot contain commas.
-			/// Alternatively, parts can be separated by '\0' characters, like "name\0"+"cn\0"+"program\0"+"acc". Then parts can contain commas. Example: "*one, two, three*\0" (name with commas).
+			/// One or more comma-separated window properties: name, class, program and/or an object. Empty parts are considered null.
+			/// The same as parameters of <see cref="Wnd.Find"/>. The first 3 parts are <i>name</i>, <i>cn</i> and <i>program</i>. The last part is <i>contains</i> as string; can specify an accessible object, control or image.
+			/// The first 3 comma-separated parts cannot contain commas. Alternatively, parts can be separated by '\0' characters, like "name\0"+"cn\0"+"program\0"+"object". Then parts can contain commas. Example: "*one, two, three*\0" (name with commas).
 			/// </param>
+			/// <exception cref="Exception">Exceptions of the constructor.</exception>
 			public static implicit operator Finder(string s)
 			{
 				string name = null, cn = null, prog = null, contains = null;
@@ -116,9 +129,10 @@ namespace Au
 
 			Util.LibArrayBuilder<Wnd> _AllWindows()
 			{
-				//FUTURE: optimization: if cn not wildcard etc, at first find atom. If not found, don't search. If found, compare atom, not class name string.
+				//FUTURE: optimization: if cn not wildcard etc, at first find atom.
+				//	If not found, don't search. If found, compare atom, not class name string.
 
-				var f = _threadId != 0 ? Lib.EnumWindowsAPI.EnumThreadWindows : Lib.EnumWindowsAPI.EnumWindows;
+				var f = _threadId != 0 ? Lib.EnumAPI.EnumThreadWindows : Lib.EnumAPI.EnumWindows;
 				return Lib.EnumWindows2(f, 0 == (_flags & WFFlags.HiddenToo), true, wParent: _owner, threadId: _threadId);
 			}
 
@@ -175,7 +189,8 @@ namespace Au
 				Result = default;
 				if(a.Type == _WndList.ListType.None) return -1;
 				bool inList = a.Type != _WndList.ListType.ArrayBuilder;
-				bool mustBeVisible = inList && (_flags & WFFlags.HiddenToo) == 0;
+				bool ignoreVisibility = cache?.IgnoreVisibility ?? false;
+				bool mustBeVisible = inList && (_flags & WFFlags.HiddenToo) == 0 && !ignoreVisibility;
 				bool isOwner = inList && !_owner.Is0;
 				bool isTid = inList ? _threadId != 0 : false;
 				List<int> pids = null; bool programNamePlanB = false; //variables for faster getting/matching program name
@@ -183,14 +198,14 @@ namespace Au
 				for(int index = 0; a.Next(out Wnd w); index++) {
 					if(w.Is0) continue;
 
-					//speed of 1000 times getting:
-					//name 400, class 400 (non-cached), foreign pid/tid 400,
+					//With warm CPU, speed of 1000 times getting:
+					//name 400, class 400, foreign pid/tid 400,
 					//owner 55, rect 55, style 50, exstyle 50, cloaked 280,
 					//GetProp(string) 1700, GetProp(atom) 300, GlobalFindAtom 650,
 					//program >=2500
 
 					if(mustBeVisible) {
-						if(!w.IsVisibleEx) continue;
+						if(!w.IsVisible) continue;
 					}
 
 					if(isOwner) {
@@ -200,7 +215,7 @@ namespace Au
 					cache?.Begin(w);
 
 					if(_name != null) {
-						var s = cache != null && cache.CacheName ? (cache.Name ?? (cache.Name = w.GetText(false, false))) : w.GetText(false, false);
+						var s = cache != null && cache.CacheName ? (cache.Name ?? (cache.Name = w.LibNameTL)) : w.LibNameTL;
 						if(!_name.Match(s)) continue;
 						//note: name is before classname. It makes faster in slowest cases (HiddenToo), because most windows are nameless.
 					}
@@ -208,6 +223,10 @@ namespace Au
 					if(_className != null) {
 						var s = cache != null ? (cache.Class ?? (cache.Class = w.ClassName)) : w.ClassName;
 						if(!_className.Match(s)) continue;
+					}
+
+					if(0 == (_flags & WFFlags.CloakedToo) && !ignoreVisibility) {
+						if(w.IsCloaked) continue;
 					}
 
 					int pid = 0, tid = 0;
@@ -275,10 +294,6 @@ namespace Au
 								continue;
 							}
 						}
-					}
-
-					if(0 != (_flags & WFFlags.SkipCloaked)) {
-						if(w.IsCloaked) continue;
 					}
 
 					if(_also != null && !_also(w)) continue;
@@ -356,10 +371,15 @@ namespace Au
 		/// </param>
 		/// <param name="contains">
 		/// Text, image or other object in the client area of the window. Depends on type:
-		/// string - an accessible object that must be in the window. Format: "'role' name" or "name". See <see cref="Acc.Find"/>.
 		/// <see cref="Acc.Finder"/> - arguments for <see cref="Acc.Find"/>. Defines an accessible object that must be in the window.
-		/// <see cref="Wnd.ChildFinder"/> - arguments for <see cref="Wnd.Child"/>. Defines a child control that must be in the window.
-		/// <see cref="System.Drawing.Image"/> or <see cref="System.Drawing.Bitmap"/> - image that must be visible in the window. To find it, this function calls <see cref="WinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>. See also <see cref="WinImage.LoadImage"/>.
+		/// <see cref="ChildFinder"/> - arguments for <see cref="Child"/>. Defines a child control that must be in the window.
+		/// <see cref="System.Drawing.Bitmap"/> - image that must be visible in the window. This function calls <see cref="WinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>. See also <see cref="WinImage.LoadImage"/>.
+		/// string - an object that must be in the window. Depends on string format:
+		/// <list type="bullet">
+		/// <item>"'role' name" or "name" - accessible object. See <see cref="Acc.Find"/>.</item>
+		/// <item>"'!cn' name" or "'!' name" - child control. See <see cref="Child"/>.</item>
+		/// <item>"image:..." - image. See <see cref="WinImage.Find"/>, <see cref="WinImage.LoadImage"/>.</item>
+		/// </list>
 		///
 		/// This parameter is evaluated after <paramref name="also"/>.
 		/// </param>
@@ -367,13 +387,14 @@ namespace Au
 		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
 		/// 
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
-		/// On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has uiAccess; to find such windows you can use <see cref="FindFast"/>.
-		/// To find message-only windows use <see cref="Misc.FindMessageWindow"/> instead.
+		/// On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has uiAccess or High+uiAccess or has disableWindowFiltering in manifest; to find such windows you can use <see cref="FindFast"/>.
+		/// To find message-only windows use <see cref="Misc.FindMessageOnlyWindow"/> instead.
 		/// </remarks>
 		/// <exception cref="ArgumentException">
 		/// <paramref name="cn"/> is "". To match any, use null.
 		/// <paramref name="program"/> is "" or 0 or contains \ or /. To match any, use null.
 		/// Invalid wildcard expression ("**options " or regular expression).
+		/// Invalid image string in <paramref name="contains"/>.
 		/// </exception>
 		/// <example>
 		/// Try to find Notepad window. Return if not found.
@@ -455,7 +476,7 @@ namespace Au
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Find"/>, which uses API <msdn>EnumWindows</msdn>.
 		/// Finds hidden windows too.
-		/// To find message-only windows use <see cref="Misc.FindMessageWindow"/> instead.
+		/// To find message-only windows use <see cref="Misc.FindMessageOnlyWindow"/> instead.
 		/// Supports <see cref="WinError.Code"/>.
 		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
 		/// </remarks>
@@ -487,7 +508,7 @@ namespace Au
 			/// Finds hidden windows too.
 			/// Supports <see cref="WinError.Code"/>.
 			/// </remarks>
-			public static Wnd FindMessageWindow(string name, string cn, Wnd wAfter = default)
+			public static Wnd FindMessageOnlyWindow(string name, string cn, Wnd wAfter = default)
 			{
 				return Api.FindWindowEx(Native.HWND.MESSAGE, wAfter, cn, name);
 			}
@@ -542,21 +563,39 @@ namespace Au
 			/// Gets top-level windows.
 			/// Returns array containing window handles as Wnd.
 			/// </summary>
-			/// <param name="onlyVisible">Need only visible windows.</param>
-			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
+			/// <param name="onlyVisible">
+			/// Need only visible windows.
+			/// Note: this function does not check whether windows are cloaked, as it is rather slow. Use <see cref="IsCloaked"/> if need.
+			/// </param>
+			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order. Not used when <paramref name="onlyVisible"/> is true.</param>
 			/// <remarks>
 			/// Calls API <msdn>EnumWindows</msdn>.
 			/// <note>The list can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows"/>.</note>
 			/// By default array elements are sorted to match the Z order.
-			/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 only few such windows exist), unless this process has <see cref="Uac">UAC</see> integrity level uiAccess; to get such windows you can use <see cref="FindFast"/>.
+			/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has <see cref="Uac">UAC</see> integrity level uiAccess or High+uiAccess or has disableWindowFiltering in manifest; to get such windows you can use <see cref="FindFast"/>.
 			/// </remarks>
 			/// <seealso cref="FindAll"/>
 			public static Wnd[] AllWindows(bool onlyVisible = false, bool sortFirstVisible = false)
 			{
-				return Lib.EnumWindows(Lib.EnumWindowsAPI.EnumWindows, onlyVisible, sortFirstVisible);
+				return Lib.EnumWindows(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible);
 
 				//rejected: add a flag to skip tooltips, IME, etc.
 			}
+
+			/// <inheritdoc cref="AllWindows(bool, bool)"/>
+			/// <summary>
+			/// Gets top-level windows.
+			/// </summary>
+			/// <param name="a">Receives window handles as Wnd. If null, this function creates new List, else clears. Then adds new items.</param>
+			/// <param name="onlyVisible"><inheritdoc cref="AllWindows(bool, bool)"/></param>
+			/// <param name="sortFirstVisible"><inheritdoc cref="AllWindows(bool, bool)"/></param>
+			/// <remarks>
+			/// Use this overload to avoid much garbage when calling frequently with the same List variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
+			/// </remarks>
+			public static void AllWindows(ref List<Wnd> a, bool onlyVisible = false, bool sortFirstVisible = false)
+			{
+				Lib.EnumWindows2(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ?? (a = new List<Wnd>()));
+			}//TODO: the same for child and thread
 
 			/// <summary>
 			/// Gets top-level windows of a thread.
@@ -577,9 +616,7 @@ namespace Au
 			public static Wnd[] ThreadWindows(int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				if(threadId == 0) throw new ArgumentException("0 threadId.");
-				return Lib.EnumWindows(Lib.EnumWindowsAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId);
-
-				//speed: 2.5 times faster than EnumWindows. Tested with a foreign thread with 30 windows.
+				return Lib.EnumWindows(Lib.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId);
 			}
 		}
 
@@ -588,9 +625,9 @@ namespace Au
 		/// </summary>
 		internal static partial class Lib
 		{
-			internal enum EnumWindowsAPI { EnumWindows, EnumThreadWindows, EnumChildWindows, }
+			internal enum EnumAPI { EnumWindows, EnumThreadWindows, EnumChildWindows, }
 
-			internal static Wnd[] EnumWindows(EnumWindowsAPI api,
+			internal static Wnd[] EnumWindows(EnumAPI api,
 				bool onlyVisible, bool sortFirstVisible, Wnd wParent = default, bool directChild = false, int threadId = 0)
 			{
 				using(var a = EnumWindows2(api, onlyVisible, sortFirstVisible, wParent, directChild, threadId)) {
@@ -599,132 +636,113 @@ namespace Au
 			}
 
 			/// <summary>
-			/// For EnumWindows2.
+			/// This version creates much less garbage.
+			/// The caller must dispose the returned LibArrayBuilder, unless list is not null.
+			/// If list is not null, adds windows there (clears at first) and returns default(LibArrayBuilder).
 			/// </summary>
-			internal delegate bool EnumCallback(Wnd w, object param);
-
-			/// <summary>
-			/// This version creates much less garbage (the garbage would be the returned managed array).
-			/// The caller must dispose the returned LibArrayBuilder.
-			/// </summary>
-			internal static Util.LibArrayBuilder<Wnd> EnumWindows2(EnumWindowsAPI api,
-				bool onlyVisible, bool sortFirstVisible, Wnd wParent = default, bool directChild = false, int threadId = 0,
-				EnumCallback predicate = null, object param = default)
+			internal static Util.LibArrayBuilder<Wnd> EnumWindows2(EnumAPI api,
+				bool onlyVisible, bool sortFirstVisible = false, Wnd wParent = default, bool directChild = false, int threadId = 0,
+				Func<Wnd, object, bool> predicate = null, object predParam = default, List<Wnd> list = null)
 			{
-				using(var d = new _WndEnum(api, onlyVisible, directChild, wParent, predicate, param)) {
-					d.Enumerate(threadId);
-
-					//CONSIDER: sort not only visible first, but also non-popup, non-toolwindow. Eg now finds a QM toolbar instead of Firefox.
-					if(sortFirstVisible && !onlyVisible) {
-						if(t_sort == null) t_sort = new WeakReference<List<Wnd>>(null);
-						if(!t_sort.TryGetTarget(out var aVisible)) t_sort.SetTarget(aVisible = new List<Wnd>(250));
-						else aVisible.Clear();
-						int n = d.a.Count;
-						for(int i = 0; i < n; i++) {
-							var w = d.a[i]; if(!(api == EnumWindowsAPI.EnumChildWindows ? w.IsVisible : w.IsVisibleEx)) continue;
-							aVisible.Add(w);
-							d.a[i] = default;
-						}
-						for(int i = n - 1, j = i; i >= 0; i--) {
-							var w = d.a[i];
-							if(!w.Is0) d.a[j--] = w;
-						}
-						for(int i = 0; i < aVisible.Count; i++) d.a[i] = aVisible[i];
+				Util.LibArrayBuilder<Wnd> ab = default;
+				bool disposeArray = true;
+				var d = new _EnumData { api = api, onlyVisible = onlyVisible, directChild = directChild, wParent = wParent };
+				try {
+					switch(api) {
+					case EnumAPI.EnumWindows:
+						Api.EnumWindows(_wndEnumProc, &d);
+						break;
+					case EnumAPI.EnumThreadWindows:
+						Api.EnumThreadWindows(threadId, _wndEnumProc, &d);
+						break;
+					case EnumAPI.EnumChildWindows:
+						Api.EnumChildWindows(wParent, _wndEnumProc, &d);
+						break;
 					}
 
-					d.DontDisposeArray();
-					return d.a;
+					int n = d.len;
+					if(n > 0) {
+						if(predicate != null) {
+							n = 0;
+							for(int i = 0; i < d.len; i++) {
+								if(predicate((Wnd)d.a[i], predParam)) d.a[n++] = d.a[i];
+							}
+						}
+
+						if(list != null) {
+							list.Clear();
+							if(list.Capacity < n) list.Capacity = n + n / 2;
+							if(sortFirstVisible && !onlyVisible) {
+								for(int i = 0; i < n; i++) {
+									var w = (Wnd)d.a[i];
+									if(w.IsVisible) { list.Add(w); d.a[i] = 0; }
+								}
+								for(int i = 0; i < n; i++) {
+									int wi = d.a[i];
+									if(wi != 0) list.Add((Wnd)wi);
+								}
+							} else {
+								for(int i = 0; i < n; i++) list.Add((Wnd)d.a[i]);
+							}
+						} else {
+							ab.Alloc(n, zeroInit: false, noExtra: true);
+							if(sortFirstVisible && !onlyVisible) {
+								int j = 0;
+								for(int i = 0; i < n; i++) {
+									var w = (Wnd)d.a[i];
+									if(w.IsVisible) { ab[j++] = w; d.a[i] = 0; }
+								}
+								for(int i = 0; i < n; i++) {
+									int wi = d.a[i];
+									if(wi != 0) ab[j++] = (Wnd)wi;
+								}
+							} else {
+								for(int i = 0; i < n; i++) ab[i] = (Wnd)d.a[i];
+							}
+						}
+					}
+					disposeArray = false;
+					return ab;
+				}
+				finally {
+					Util.NativeHeap.Free(d.a);
+					if(disposeArray) ab.Dispose();
 				}
 			}
-			[ThreadStatic] static WeakReference<List<Wnd>> t_sort;
+			static Api.WNDENUMPROC _wndEnumProc = (w, p) => ((_EnumData*)p)->Proc(w);
 
-			//Used for API EnumWindows etc lParam instead of lambda, to avoid garbage.
-			struct _WndEnum : IDisposable
+			struct _EnumData
 			{
-				public Util.LibArrayBuilder<Wnd> a;
-				Wnd _wParent;
-				EnumWindowsAPI _api;
-				bool _onlyVisible, _directChild, _disposeArray;
-				EnumCallback _predicate;
-				object _param;
+				public int* a;
+				public int len;
+				int _cap;
+				public EnumAPI api;
+				public bool onlyVisible, directChild;
+				public Wnd wParent;
 
-				public _WndEnum(EnumWindowsAPI api, bool onlyVisible, bool directChild, Wnd wParent, EnumCallback predicate, object param)
+				public int Proc(Wnd w)
 				{
-					a = default;
-					_disposeArray = true;
-					_api = api;
-					_onlyVisible = onlyVisible;
-					_directChild = directChild;
-					_wParent = wParent;
-					_predicate = predicate;
-					_param = param;
-				}
-
-				public void Dispose()
-				{
-					if(_disposeArray) a.Dispose();
-				}
-
-				public void DontDisposeArray() => _disposeArray = false;
-
-				delegate int WndEnumProcT(Wnd w, ref _WndEnum d);
-
-				static int _WndEnumProc(Wnd w, ref _WndEnum d) => d._WndEnumProc(w);
-				static WndEnumProcT _wndEnumProc = _WndEnumProc;
-
-				int _WndEnumProc(Wnd w)
-				{
-					if(_api == EnumWindowsAPI.EnumChildWindows) {
-						if(_onlyVisible && !w.IsVisible) return 1;
-						if(_directChild && Api.GetParent(w) != _wParent) return 1;
+					if(onlyVisible && !w.IsVisible) return 1;
+					if(api == EnumAPI.EnumChildWindows) {
+						if(directChild && Api.GetParent(w) != wParent) return 1;
 					} else {
-						if(_onlyVisible && !w.IsVisibleEx) return 1;
-						if(!_wParent.Is0 && w.Owner != _wParent) return 1;
+						if(!wParent.Is0 && w.Owner != wParent) return 1;
 					}
-					if(_predicate != null && !_predicate(w, _param)) return 1;
-					a.Add(w);
+					if(a == null) a = (int*)Util.NativeHeap.Alloc((_cap = onlyVisible ? 200 : 1000) * 4);
+					else if(len == _cap) a = (int*)Util.NativeHeap.ReAlloc(a, (_cap *= 2) * 4);
+					a[len++] = (int)w;
 					return 1;
 				}
 
-				public bool Enumerate(int threadId)
-				{
-					bool ok = false;
-					switch(_api) {
-					case EnumWindowsAPI.EnumWindows:
-						ok = _Api.EnumWindows(_wndEnumProc, ref this);
-						break;
-					case EnumWindowsAPI.EnumThreadWindows:
-						ok = _Api.EnumThreadWindows(threadId, _wndEnumProc, ref this);
-						break;
-					case EnumWindowsAPI.EnumChildWindows:
-						ok = _Api.EnumChildWindows(_wParent, _wndEnumProc, ref this);
-						break;
-					}
-					return ok;
-
-					//note: need this in exe manifest. Else EnumWindows skips "immersive" windows if this process is not admin/uiAccess.
-					/*
-  <asmv3:application>
-    ...
-    <asmv3:windowsSettings xmlns="http://schemas.microsoft.com/SMI/2011/WindowsSettings">
-      <disableWindowFiltering>true</disableWindowFiltering>
-    </asmv3:windowsSettings>
-  </asmv3:application>
-					*/
-				}
-
-				[System.Security.SuppressUnmanagedCodeSecurity] //why not allowed on struct?
-				class _Api
-				{
-					[DllImport("user32.dll", SetLastError = true)]
-					internal static extern bool EnumWindows(WndEnumProcT lpEnumFunc, ref _WndEnum d);
-
-					[DllImport("user32.dll", SetLastError = true)]
-					internal static extern bool EnumThreadWindows(int dwThreadId, WndEnumProcT lpfn, ref _WndEnum d);
-
-					[DllImport("user32.dll", SetLastError = true)]
-					internal static extern bool EnumChildWindows(Wnd hWndParent, WndEnumProcT lpEnumFunc, ref _WndEnum d);
-				}
+				//note: need this in exe manifest. Else EnumWindows skips "immersive" windows if this process is not admin/uiAccess.
+				/*
+<asmv3:application>
+...
+<asmv3:windowsSettings xmlns="http://schemas.microsoft.com/SMI/2011/WindowsSettings">
+  <disableWindowFiltering>true</disableWindowFiltering>
+</asmv3:windowsSettings>
+</asmv3:application>
+				*/
 			}
 		}
 
@@ -804,22 +822,23 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// 'flags' parameter of <see cref="Wnd.Find"/>.
+	/// Flags of <see cref="Wnd.Find"/>.
 	/// </summary>
 	[Flags]
 	public enum WFFlags
 	{
 		/// <summary>
-		/// Can find hidden windows. See <see cref="Wnd.IsVisibleEx"/>.
-		/// Use this carefully. Always use cn, not just name, because there are many hidden tooltip windows etc that could match the name.
+		/// Can find invisible windows. See <see cref="Wnd.IsVisible"/>.
+		/// Use this carefully. Always use <i>cn</i> (class name), not just <i>name</i>, to avoid finding a wrong window with the same name.
 		/// </summary>
 		HiddenToo = 1,
 
 		/// <summary>
-		/// Skip cloaked windows. See <see cref="Wnd.IsCloaked"/>.
-		/// Cloaked are windows hidden not in the classic way, therefore Wnd.IsVisible does not detect it, but Wnd.IsCloaked detects. For example, windows on inactive Windows 10 virtual desktops; inactive Windows Store apps on Windows 8.
+		/// Can find cloaked windows. See <see cref="Wnd.IsCloaked"/>.
+		/// Cloaked are windows hidden not in the classic way, therefore <see cref="Wnd.IsVisible"/> does not detect it, but <see cref="Wnd.IsCloaked"/> detects. For example, windows on inactive Windows 10 virtual desktops, ghost windows of inactive Windows Store apps, various hidden system windows.
+		/// Use this carefully. Always use <i>cn</i> (class name), not just <i>name</i>, to avoid finding a wrong window with the same name.
 		/// </summary>
-		SkipCloaked = 2,
+		CloakedToo = 2,
 	}
 
 	/// <summary>
@@ -906,18 +925,30 @@ namespace Au.Types
 		/// Default: false.
 		/// </summary>
 		/// <remarks>
-		/// Window name is not cached by default because can be changed. Window class and program are always cached because cannot be changed.
+		/// Window name is not cached by default because can be changed. Window class name and program name are always cached because cannot be changed.
 		/// </remarks>
 		public bool CacheName { get; set; }
 
+		/// <summary>
+		/// Don't auto-clear cached properties on timeout.
+		/// </summary>
+		public bool NoTimeout { get; set; }
+
 		internal void Begin(Wnd w)
 		{
-			var t = Api.GetTickCount64();
-			if(w != _w || t - _time > 2500) {
-				Clear();
-				if(w.IsAlive) { _w = w; _time = t; }
+			if(NoTimeout) {
+				if(w != _w) {
+					Clear();
+					_w = w;
+				}
+			} else {
+				var t = Api.GetTickCount64();
+				if(w != _w || t - _time > 2500) {
+					Clear();
+					if(w.IsAlive) { _w = w; _time = t; }
+				}
+				//else if(CacheName && t - _time > 100) Name = null; //no, instead let call Clear if need
 			}
-			//else if(CacheName && t - _time > 100) Name = null; //no, instead let call Clear if need
 		}
 
 		/// <summary>
@@ -933,5 +964,10 @@ namespace Au.Types
 			if(onlyName) Name = null;
 			else { _w = default; _time = 0; Name = Class = Program = null; Tid = Pid = 0; }
 		}
+
+		/// <summary>
+		/// Match invisible and cloaked windows too, even if the flags are not set (see <see cref="WFFlags"/>).
+		/// </summary>
+		public bool IgnoreVisibility { get; set; }
 	}
 }

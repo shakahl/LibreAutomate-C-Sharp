@@ -98,7 +98,6 @@ static partial class Test
 
 
 
-			//Triggers.Of().
 			//TestWndGroup();
 			//TestMulticastDelegate();
 			//TestCastDelegate();
