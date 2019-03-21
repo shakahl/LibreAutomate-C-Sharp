@@ -44,7 +44,6 @@ namespace Au.Triggers
 			var tf = triggers.funcs;
 			_funcBefore = _Func(tf.commonBefore, tf.nextBefore); tf.nextBefore = null;
 			_funcAfter = _Func(tf.nextAfter, tf.commonAfter); tf.nextAfter = null;
-			triggers.Last.trigger = this;
 
 			TriggerFunc[] _Func(TFunc f1, TFunc f2)
 			{
@@ -82,6 +81,8 @@ namespace Au.Triggers
 
 		public abstract string TypeString();
 		public abstract string ShortString();
+
+		public override string ToString() => TypeString() + " " + ShortString();
 
 		internal bool MatchScopeWindowAndFunc(TriggerHookContext thc)
 		{
@@ -176,12 +177,27 @@ namespace Au.Triggers
 		/// When adding the trigger, this property is set to the value of <see cref="TriggerOptions.EnabledAlways"/> at that time.
 		/// </remarks>
 		public bool EnabledAlways { get; set; }
+
+		/// <summary>
+		/// Starts the action like when its trigger is activated.
+		/// </summary>
+		/// <param name="args"></param>
+		/// <exception cref="InvalidOperationException">Called in a wrong place or from a wrong thread. More info in Ramarks.</exception>
+		/// <remarks>
+		/// Must be called while <see cref="AuTriggers.Run">Triggers.Run</see>) is running, from the same thread that called it.
+		/// </remarks>
+		public void RunAction(TriggerArgs args)
+		{
+			triggers.LibThrowIfNotRunning();
+			if(Thread_.NativeId != triggers.LibThreadId) throw new InvalidOperationException("Wrong thread. Call from a FuncOf function.");
+			triggers.LibRunAction(this, args);
+		}
 	}
 
 	/// <summary>
 	/// Base of trigger action argument classes of all trigger types.
 	/// </summary>
-	public class TriggerArgs
+	public abstract class TriggerArgs
 	{
 	}
 

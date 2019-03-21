@@ -75,16 +75,6 @@ namespace Au.Triggers
 
 		public override string ShortString() => _shortString;
 
-		//public override string ToString()
-		//{
-		//	return "Hotkey " + _shortString;
-		//	//using(new Util.LibStringBuilder(out var b)) {
-		//	//	b.Append("Hotkey ").Append(_hotkey);
-
-		//	//	return b.ToString();
-		//	//}
-		//}
-
 		public TKFlags Flags => flags;
 	}
 
@@ -113,6 +103,7 @@ namespace Au.Triggers
 				var t = new HotkeyTrigger(_triggers, value, hotkey, flags);
 				int b = LibModBitArray(mod, modAny);
 				for(int i = 0; i < 16; i++) if(0 != (b & (1 << i))) t.DictAdd(_d, _DictKey(key, (KMod)i));
+				_lastAdded = t;
 			}
 		}
 
@@ -130,7 +121,13 @@ namespace Au.Triggers
 			return b;
 		}
 
-		bool ITriggers.HasTriggers => _d.Count > 0;
+		/// <summary>
+		/// The last added trigger.
+		/// </summary>
+		public HotkeyTrigger Last => _lastAdded;
+		HotkeyTrigger _lastAdded;
+
+		bool ITriggers.HasTriggers => _lastAdded != null;
 
 		void ITriggers.StartStop(bool start)
 		{
@@ -171,7 +168,8 @@ namespace Au.Triggers
 		public KKey Key { get; }
 		public KMod Mod { get; }
 
-		internal HotkeyTriggerArgs(HotkeyTrigger trigger, Wnd w, KKey key, KMod mod)
+		///
+		public HotkeyTriggerArgs(HotkeyTrigger trigger, Wnd w, KKey key, KMod mod)
 		{
 			Trigger = trigger;
 			Window = w; Key = key; Mod = mod;

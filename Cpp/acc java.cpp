@@ -534,7 +534,7 @@ bool _NoJab() { return s_inited < 0; }
 //speed: faster than AccessibleObjectFromWindow. Much faster than _JApi::isJavaWindow, and don't need to load dll etc.
 bool _IsJavaWindow(HWND w)
 {
-	if(GetWindowLong(w, GWL_STYLE)&WS_CHILD) return false;
+	if(wnd::Style(w)&WS_CHILD) return false;
 
 	auto wf = WinFlags::Get(w);
 	if(!!(wf&eWinFlags::AccJavaYes)) return true;

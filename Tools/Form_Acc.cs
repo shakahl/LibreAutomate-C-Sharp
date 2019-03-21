@@ -29,6 +29,7 @@ using Aga.Controls.Tree.NodeControls;
 
 //TODO: include winforms name. Eg in paint.net now does not find buttons and even toolbars; QM2 finds toolbar using wfName.
 //TODO: if checked state, activate window before test. Else different FOCUSED etc.
+//SHOULDDO: now unchecks "Capture" when opened the window tool. Should check again when closed.
 
 namespace Au.Tools
 {
@@ -628,6 +629,7 @@ namespace Au.Tools
 		{
 			if(node == null) return;
 			_acc = (node.Tag as _AccNode).a;
+			_SetWndCon(_wnd, _acc.WndContainer, _useCon);
 			if(!_FillGrid(out var p)) return;
 			_UpdateCodeBox();
 			TUtil.ShowOsdRect(p.Rect);

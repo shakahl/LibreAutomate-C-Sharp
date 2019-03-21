@@ -27,7 +27,8 @@ namespace Au.Triggers
 	{
 		public Action<TriggerOptions.BAArgs> before;
 		public Action<TriggerOptions.BAArgs> after;
-		public int thread;
+		public short thread;
+		public bool noWarning;
 		public int ifRunning;
 
 		public TOptions Clone() => this.MemberwiseClone() as TOptions;
@@ -62,9 +63,10 @@ namespace Au.Triggers
 		/// <summary>
 		/// Run actions in a dedicated thread that does not end when actions end.
 		/// </summary>
-		/// <param name="thread">Any non-negative number that you want to use to identify the thread. Default 0.</param>
+		/// <param name="thread">A number that you want to use to identify the thread. Can be 0-32767 (short.MaxValue). Default 0.</param>
 		/// <param name="ifRunningWaitMS">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queed actions). If &gt; 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
-		/// <exception cref="ArgumentOutOfRangeException"><paramref name="thread"/> &lt; 0 or <paramref name="ifRunningWaitMS"/> &lt; -1.</exception>
+		/// <param name="noWarning">No warning when cannot start an action because an action is running and ifRunningWaitMS==0.</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Multiple actions in same thread cannot run simultaneously. Actions in different threads can run simultaneously.
 		/// There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => AuTask.RunWait("Other Script");</c>.
@@ -72,12 +74,15 @@ namespace Au.Triggers
 		/// The thread has <see cref="ApartmentState.STA"/>.
 		/// The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active. If none called, it is the same as called this function without arguments.
 		/// </remarks>
-		public void RunActionInThread(int thread = 0, int ifRunningWaitMS = 0)
+		public void RunActionInThread(int thread = 0, int ifRunningWaitMS = 0, bool noWarning = false)
 		{
 			_New();
-			_new.thread = thread >= 0 ? thread : throw new ArgumentOutOfRangeException(null, "thread must be >= 0");
-			_new.ifRunning = ifRunningWaitMS >= -1 ? ifRunningWaitMS : throw new ArgumentOutOfRangeException(null, "ifRunningWaitMS must be >= -1");
+			if((uint)thread > short.MaxValue) throw new ArgumentOutOfRangeException();
+			_new.thread = (short)thread;
+			_new.ifRunning = ifRunningWaitMS >= -1 ? ifRunningWaitMS : throw new ArgumentOutOfRangeException();
+			_new.noWarning = noWarning;
 		}
+		//CONSIDER: make default ifRunningWaitMS = 1000 if it is another action.
 
 		/// <summary>
 		/// Run actions in new threads.
@@ -168,10 +173,10 @@ namespace Au.Triggers
 
 		//}
 
-		public void Run(Trigger ta, TriggerArgs args)
+		public void Run(Trigger trigger, TriggerArgs args)
 		{
 			Action actionWrapper = () => {
-				var opt = ta.options;
+				var opt = trigger.options;
 				try {
 					TriggerOptions.BAArgs baArgs = default; //struct
 #if true
@@ -185,7 +190,7 @@ namespace Au.Triggers
 						opt.before(!called);
 					}
 #endif
-					try { ta.Run(args); }
+					try { trigger.Run(args); }
 					catch(Exception ex) when(!(ex is ThreadAbortException)) { baArgs.Exception = ex; Print(ex); }
 					opt.after?.Invoke(baArgs);
 				}
@@ -194,21 +199,21 @@ namespace Au.Triggers
 					else Print(e2);
 				}
 				finally {
-					if(opt.thread < 0 && opt.ifRunning == 0) _d.TryRemove(ta, out _);
+					if(opt.thread < 0 && opt.ifRunning == 0) _d.TryRemove(trigger, out _);
 				}
 			};
 			//never mind: we should not create actionWrapper if cannot run. But such cases are rare. Fast and small, about 64 bytes.
 
-			int threadId = ta.options.thread;
+			int threadId = trigger.options.thread;
 			if(threadId >= 0) { //dedicated thread
 				_Thread h = null; foreach(var v in _a) if(v.id == threadId) { h = v; break; }
 				if(h == null) _a.Add(h = new _Thread(threadId));
-				h.RunAction(actionWrapper, ta.options.ifRunning);
+				h.RunAction(actionWrapper, trigger);
 			} else {
-				bool singleInstance = ta.options.ifRunning == 0;
+				bool singleInstance = trigger.options.ifRunning == 0;
 				if(singleInstance) {
 					if(_d == null) _d = new ConcurrentDictionary<Trigger, object>();
-					if(_d.TryGetValue(ta, out var tt)) {
+					if(_d.TryGetValue(trigger, out var tt)) {
 						//return;
 						switch(tt) {
 						case Thread thread:
@@ -226,12 +231,12 @@ namespace Au.Triggers
 				case -1: //new thread
 					var thread = new Thread(actionWrapper.Invoke) { IsBackground = true };
 					thread.SetApartmentState(ApartmentState.STA);
-					if(singleInstance) _d[ta] = thread;
+					if(singleInstance) _d[trigger] = thread;
 					thread.Start();
 					break;
 				case -2: //thread pool
 					var task = new Task(actionWrapper);
-					if(singleInstance) _d[ta] = task;
+					if(singleInstance) _d[trigger] = task;
 					task.Start();
 					break;
 				}
@@ -251,15 +256,16 @@ namespace Au.Triggers
 		{
 			struct _Action { public Action actionWrapper; public long time; }
 
-			Queue<_Action> _q;
 			IntPtr _event;
+			Queue<_Action> _q;
+			_Action _runningAction;
 			bool _running;
 			bool _disposed;
 			public readonly int id;
 
 			public _Thread(int id) { this.id = id; }
 
-			public void RunAction(Action actionWrapper, int ifRunningWaitMS)
+			public void RunAction(Action actionWrapper, Trigger trigger)
 			{
 				if(_disposed) return;
 				if(_q == null) {
@@ -290,8 +296,12 @@ namespace Au.Triggers
 				}
 
 				lock(_q) {
+					int ifRunningWaitMS = trigger.options.ifRunning;
 					if(_running) {
-						if(ifRunningWaitMS == 0) return;
+						if(ifRunningWaitMS == 0) {
+							if(!trigger.options.noWarning) Print("Warning: can't run the trigger action because an action is running in this thread. To run simultaneously or wait, use one of Triggers.Options.RunActionInX functions. To disable this warning: Triggers.Options.RunActionInThread(0, 0, noWarning: true);. Trigger: " + trigger);
+							return;
+						}
 					} else {
 						_running = true;
 						//if(ifRunningWaitMS > 0 && ifRunningWaitMS < 1000000000) ifRunningWaitMS += 1000;

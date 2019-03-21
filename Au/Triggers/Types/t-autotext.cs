@@ -56,10 +56,17 @@ namespace Au.Triggers
 				_triggers.LibThrowIfRunning();
 				var t = new AutotextTrigger(_triggers, value, text);
 				t.DictAdd(_d, text);
+				_lastAdded = t;
 			}
 		}
 
-		bool ITriggers.HasTriggers => _d.Count > 0;
+		/// <summary>
+		/// The last added trigger.
+		/// </summary>
+		public AutotextTrigger Last => _lastAdded;
+		AutotextTrigger _lastAdded;
+
+		bool ITriggers.HasTriggers => _lastAdded != null;
 
 		void ITriggers.StartStop(bool start)
 		{
@@ -85,7 +92,8 @@ namespace Au.Triggers
 		public AutotextTrigger Trigger { get; }
 		public Wnd Window { get; }
 
-		internal AutotextTriggerArgs(AutotextTrigger trigger, Wnd w)
+		///
+		public AutotextTriggerArgs(AutotextTrigger trigger, Wnd w)
 		{
 			Trigger = trigger;
 			Window = w;

@@ -170,11 +170,11 @@ namespace Au
 
 						if(inList) { //else the enum function did this
 							if(!_flags.Has_(WCFlags.HiddenToo)) {
-								if(!w.IsVisible) continue;
+								if(!w.LibIsVisibleIn(wParent)) continue;
 							}
 
 							if(_flags.Has_(WCFlags.DirectChild) && !wParent.Is0) {
-								if(w.Get.DirectParentOrOwner != wParent) continue;
+								if(w.LibParentGWL != wParent) continue;
 							}
 						}
 
@@ -400,12 +400,13 @@ namespace Au
 			if(flags.Has_(WCFlags.DirectChild | WCFlags.HiddenToo)) return Api.GetDlgItem(this, id); //fast
 
 			var d = new _KidEnumData() { wThis = this, id = id }; //info: to avoid garbage delegates, we use _KidEnumData instead of captured variables
+			var wParent = this;
 			Api.EnumChildWindows(this, (c, p) =>
 			{
 				ref var x = ref *(_KidEnumData*)p;
 				if(c.ControlId == x.id) {
-					if(x.flags.Has_(WCFlags.DirectChild) && c.Get.DirectParentOrOwner != x.wThis) return 1;
-					if(c.IsVisible) { x.cVisible = c; return 0; }
+					if(x.flags.Has_(WCFlags.DirectChild) && c.LibParentGWL != x.wThis) return 1;
+					if(c.LibIsVisibleIn(wParent)) { x.cVisible = c; return 0; }
 					if(x.flags.Has_(WCFlags.HiddenToo) && x.cHidden.Is0) x.cHidden = c;
 				}
 				return 1;
@@ -477,18 +478,35 @@ namespace Au
 			/// Gets child controls, including all descendants.
 			/// Returns array containing 0 or more control handles as Wnd.
 			/// </summary>
-			/// <param name="directChild">Need only direct children, not grandchildren.</param>
 			/// <param name="onlyVisible">Need only visible controls.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
+			/// <param name="directChild">Need only direct children, not all descendants.</param>
 			/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
 			/// Calls API <msdn>EnumChildWindows</msdn>.
 			/// </remarks>
 			/// <seealso cref="ChildAll"/>
-			public Wnd[] Children(bool directChild = false, bool onlyVisible = false, bool sortFirstVisible = false)
+			public Wnd[] Children(bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false)
 			{
 				_w.ThrowIfInvalid();
 				return Lib.EnumWindows(Lib.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild);
+			}
+
+			/// <summary>
+			/// Gets child controls, including all descendants.
+			/// </summary>
+			/// <param name="a">Receives window handles as Wnd. If null, this function creates new List, else clears before adding items.</param>
+			/// <param name="onlyVisible">Need only visible controls.</param>
+			/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
+			/// <param name="directChild">Need only direct children, not all descendants.</param>
+			/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <remarks>
+			/// Use this overload to avoid much garbage when calling frequently with the same List variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
+			/// </remarks>
+			public void Children(ref List<Wnd> a, bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false)
+			{
+				_w.ThrowIfInvalid();
+				Lib.EnumWindows2(Lib.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild, list: a ?? (a = new List<Wnd>()));
 			}
 
 			//rejected: unreliable.

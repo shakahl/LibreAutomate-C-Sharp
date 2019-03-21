@@ -133,14 +133,14 @@ namespace Au
 			/// </summary>
 			public static bool IsMessageOnlyWindow(Wnd w)
 			{
-				var v = w.GetWindowLong(Native.GWL.HWNDPARENT);
+				var v = w.LibParentGWL;
 				if(v != default) {
-					if(s_messageOnlyParent == 0) s_messageOnlyParent = FindMessageOnlyWindow(null, null).GetWindowLong(Native.GWL.HWNDPARENT);
+					if(s_messageOnlyParent.Is0) s_messageOnlyParent = FindMessageOnlyWindow(null, null).LibParentGWL;
 					return v == s_messageOnlyParent;
 				}
 				return false;
 			}
-			static LPARAM s_messageOnlyParent;
+			static Wnd s_messageOnlyParent;
 
 			/// <summary>
 			/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
@@ -218,6 +218,7 @@ namespace Au
 				if(R == 0) R = GetClassLong(w, size32 ? Native.GCL.HICON : Native.GCL.HICONSM);
 				if(R == 0) R = GetClassLong(w, size32 ? Native.GCL.HICONSM : Native.GCL.HICON);
 				//tested this code with DPI 125%. Small icon of most windows match DPI (20), some 16, some 24.
+				//TEST: undocumented API InternalGetWindowIcon.
 
 				//Copy, because will DestroyIcon, also it resizes if need.
 				if(R != 0) return Api.CopyImage(R, Api.IMAGE_ICON, size, size, 0);
@@ -225,29 +226,24 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Calls API <msdn>GetClassLong</msdn> if current process is 32-bit, <msdn>GetClassLongPtr</msdn> if 64-bit.
+			/// Calls API <msdn>GetClassLongPtr</msdn>.
 			/// </summary>
 			/// <remarks>
 			/// Supports <see cref="WinError.Code"/>.
 			/// For index can be used constants from <see cref="Native.GCL"/>. All values are the same in 32-bit and 64-bit process.
+			/// In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
 			/// </remarks>
-			public static LPARAM GetClassLong(Wnd w, int index)
-			{
-				LPARAM R;
-				if(IntPtr.Size == 8) R = Api.GetClassLong64(w, index); else R = Api.GetClassLong32(w, index);
-				return R;
-			}
+			public static LPARAM GetClassLong(Wnd w, int index) => Api.GetClassLongPtr(w, index);
 
 			//probably not useful. Dangerous.
 			///// <summary>
-			///// Calls API <msdn>SetClassLong</msdn> if this process is 32-bit, <msdn>SetClassLongPtr</msdn> if 64-bit.
+			///// Calls API <msdn>SetClassLongPtr</msdn> (SetClassLong in 32-bit process).
 			///// </summary>
 			///// <exception cref="WndException"/>
 			//public static LPARAM SetClassLong(Wnd w, int index, LPARAM newValue)
 			//{
 			//	WinError.Clear();
-			//	LPARAM R;
-			//	if(IntPtr.Size == 8) R = Api.SetClassLong64(w, index, newValue); else R = Api.SetClassLong32(w, index, (int)newValue);
+			//	LPARAM R = Api.SetClassLongPtr(w, index, newValue);
 			//	if(R == 0 && WinError.Code != 0) w.ThrowUseNative();
 			//	return R;
 			//}

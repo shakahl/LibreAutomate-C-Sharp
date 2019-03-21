@@ -82,6 +82,9 @@ namespace Au.Triggers
 
 		TriggerActionThreads _threads;
 
+		internal int LibThreadId => _threadId;
+		int _threadId;
+
 		ITriggers _Get(TriggerType e)
 		{
 			int i = (int)e;
@@ -106,26 +109,6 @@ namespace Au.Triggers
 		public MouseTriggers Mouse => _Get(TriggerType.Mouse) as MouseTriggers;
 
 		public WindowTriggers Window => _Get(TriggerType.Window) as WindowTriggers;
-
-		/// <summary>
-		/// The last added trigger.
-		/// </summary>
-		/// <example>
-		/// <code><![CDATA[
-		/// Triggers.Last.Hotkey.EnabledAlways = true;
-		/// ]]></code>
-		/// </example>
-		public LastAdded Last { get; } = new LastAdded();
-
-		public class LastAdded
-		{
-			internal Trigger trigger;
-
-			public HotkeyTrigger Hotkey => trigger as HotkeyTrigger;
-			public AutotextTrigger Autotext => trigger as AutotextTrigger;
-			public MouseTrigger Mouse => trigger as MouseTrigger;
-			public WindowTrigger Window => trigger as WindowTrigger;
-		}
 
 		public void Run()
 		{
@@ -158,16 +141,19 @@ namespace Au.Triggers
 			_winTimerLastTime = 0;
 
 			try {
+				_threadId = Thread_.NativeId;
 				if(llHooks != 0) {
 					_RunWithHooksServer(llHooks);
-					//TODO: key/mouse triggers must run in separate thread.
+					//CONSIDER: run key/mouse triggers in separate thread.
 					//	Because now possible hook timeout if something other (window triggers, a form, timer, etc) sometimes runs too long.
+					//	But it makes programming more difficult in various places. Need to lock etc.
 				} else {
 					_RunSimple();
 				}
 			}
 			finally {
 				_threads?.Dispose(); _threads = null;
+				_threadId = 0;
 			}
 		}
 
@@ -198,8 +184,8 @@ namespace Au.Triggers
 						slice = _Period();
 					} else slice = period - td;
 
-					int _Period() => _winTimerPeriod / 15 * 15 + 15;
-					//int _Period() => Math.Max(_winTimerPeriod, 15);
+					int _Period() => _winTimerPeriod / 15 * 15 + 10;
+					//int _Period() => Math.Max(_winTimerPeriod, 10);
 				}
 				var k = Api.MsgWaitForMultipleObjectsEx(nh, ha, slice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
 				if(k == nh) { //message, COM (RPC uses postmessage), hook, etc
@@ -340,8 +326,8 @@ namespace Au.Triggers
 			finally {
 				pipe.Dispose();
 				Api.CloseHandle(evHooks);
-				_StartStop(false);
 				wMsg.Send(Api.WM_USER, 1, threadId); //stop sending hook events to us
+				_StartStop(false);
 			}
 		}
 
@@ -355,7 +341,13 @@ namespace Au.Triggers
 
 		void _StartStop(bool start)
 		{
-			if(start) _evStop = Api.CreateEvent(false); else { Api.CloseHandle(_evStop); _evStop = default; }
+			if(start) {
+				_evStop = Api.CreateEvent(false);
+			} else {
+				Stopping?.Invoke(this, EventArgs.Empty);
+				Api.CloseHandle(_evStop);
+				_evStop = default;
+			}
 			foreach(var t in _t) {
 				if(t == null || !t.HasTriggers) continue;
 				t.StartStop(start);
@@ -367,13 +359,26 @@ namespace Au.Triggers
 		/// </summary>
 		/// <remarks>
 		/// Does not abort threads of trigger actions that are still running.
-		/// Example: <see cref="Disabled"/>.
 		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// Triggers.Hotkey["Ctrl+T"] = o => Print("Ctrl+T");
+		/// Triggers.Hotkey["Ctrl+Q"] = o => { Print("Ctrl+Q (stop)"); Triggers.Stop(); };
+		/// Triggers.Hotkey.Last.EnabledAlways = true;
+		/// Triggers.Run();
+		/// Print("stopped");
+		/// ]]></code>
+		/// </example>
 		public void Stop()
 		{
 			Api.SetEvent(_evStop);
 		}
 		IntPtr _evStop;
+
+		/// <summary>
+		/// Occurs before <see cref="Run">Triggers.Run</see> stops trigger engines and returns. Runs in its thread.
+		/// </summary>
+		public event EventHandler Stopping;
 
 		/// <summary>
 		/// True if executing <see cref="Run"/>.
@@ -397,13 +402,13 @@ namespace Au.Triggers
 		/// Does not depend on <see cref="DisabledEverywhere"/>.
 		/// Does not end/pause threads of trigger actions.
 		/// </remarks>
+		/// <seealso cref="Trigger.EnabledAlways"/>
 		/// <seealso cref="TriggerOptions.EnabledAlways"/>
 		/// <example>
 		/// <code><![CDATA[
-		/// Triggers.Hotkey["Ctrl+T"] = o => { Print("Ctrl+T"); };
-		/// Triggers.Options.EnabledAlways = true;
+		/// Triggers.Hotkey["Ctrl+T"] = o => Print("Ctrl+T");
 		/// Triggers.Hotkey["Ctrl+D"] = o => { Print("Ctrl+D (disable/enable)"); Triggers.Disabled ^= true; }; //toggle
-		/// Triggers.Hotkey["Ctrl+Q"] = o => { Print("Ctrl+Q (stop)"); Triggers.Stop(); };
+		/// Triggers.Hotkey.Last.EnabledAlways = true;
 		/// Triggers.Run();
 		/// ]]></code>
 		/// </example>

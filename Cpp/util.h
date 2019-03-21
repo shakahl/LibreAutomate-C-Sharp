@@ -298,11 +298,13 @@ public:
 
 namespace wnd
 {
+inline DWORD Style(HWND w) { return (DWORD)GetWindowLongPtrW(w, GWL_STYLE); }
 bool ClassName(HWND w, out Bstr& s);
 int ClassNameIs(HWND w, std::initializer_list<STR> a);
 bool ClassNameIs(HWND w, STR s);
 bool ClassNameIs(HWND w, const str::Wildex& s);
 bool Name(HWND w, out Bstr& s);
+bool IsVisibleInWindow(HWND c, HWND wTL);
 
 using WNDENUMPROCL = const std::function <bool(HWND c)>;
 

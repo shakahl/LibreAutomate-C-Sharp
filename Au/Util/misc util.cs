@@ -549,6 +549,9 @@ namespace Au.Util
 			}
 			return r;
 		}
+
+		//TEST: Win10 API GetDpiForWindow, GetSystemDpiForProcess, GetSystemMetricsForDpi.
+		//	Win8.1 LogicalToPhysicalPointForPerMonitorDPI, PhysicalToLogicalPointForPerMonitorDPI.
 	}
 
 	/// <summary>

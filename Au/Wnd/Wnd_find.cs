@@ -63,6 +63,10 @@ namespace Au
 				if(contains != null) _ParseContains(contains);
 			}
 
+			//TODO: use uniform and more readable format:
+			//	acc:ROLE, name
+			//	child:class, name
+			//	image:xxxxxxxxxxxxxxx
 			void _ParseContains(object contains)
 			{
 				if(contains is string s) { //accessible object or control or image. Acc format: "'role' name" or "name". Control: "'^class' text". Image: "image:...".
@@ -567,26 +571,28 @@ namespace Au
 			/// Need only visible windows.
 			/// Note: this function does not check whether windows are cloaked, as it is rather slow. Use <see cref="IsCloaked"/> if need.
 			/// </param>
-			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order. Not used when <paramref name="onlyVisible"/> is true.</param>
+			/// <param name="sortFirstVisible">
+			/// Place hidden windows at the end of the array. If false, the order of array elements matches the Z order.
+			/// Not used when <paramref name="onlyVisible"/> is true.</param>
 			/// <remarks>
 			/// Calls API <msdn>EnumWindows</msdn>.
-			/// <note>The list can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows"/>.</note>
-			/// By default array elements are sorted to match the Z order.
-			/// On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has <see cref="Uac">UAC</see> integrity level uiAccess or High+uiAccess or has disableWindowFiltering in manifest; to get such windows you can use <see cref="FindFast"/>.
+			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows"/>.</note>
+			/// Does not get message-only windows. Use <see cref="Misc.FindMessageOnlyWindow"/> if need.
+			/// On Windows 8 and later does not get Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has <see cref="Uac">UAC</see> integrity level uiAccess or High+uiAccess or its manifest contains disableWindowFiltering; to get such windows you can use <see cref="FindFast"/>.
+			/// Tip: To get top-level and child windows in single array: <c>var a = Wnd.GetWnd.Root.Get.Children();</c>.
 			/// </remarks>
+			/// <seealso cref="Children"/>
 			/// <seealso cref="FindAll"/>
 			public static Wnd[] AllWindows(bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				return Lib.EnumWindows(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible);
-
-				//rejected: add a flag to skip tooltips, IME, etc.
 			}
 
 			/// <inheritdoc cref="AllWindows(bool, bool)"/>
 			/// <summary>
 			/// Gets top-level windows.
 			/// </summary>
-			/// <param name="a">Receives window handles as Wnd. If null, this function creates new List, else clears. Then adds new items.</param>
+			/// <param name="a">Receives window handles as Wnd. If null, this function creates new List, else clears before adding items.</param>
 			/// <param name="onlyVisible"><inheritdoc cref="AllWindows(bool, bool)"/></param>
 			/// <param name="sortFirstVisible"><inheritdoc cref="AllWindows(bool, bool)"/></param>
 			/// <remarks>
@@ -595,7 +601,7 @@ namespace Au
 			public static void AllWindows(ref List<Wnd> a, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				Lib.EnumWindows2(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ?? (a = new List<Wnd>()));
-			}//TODO: the same for child and thread
+			}
 
 			/// <summary>
 			/// Gets top-level windows of a thread.
@@ -617,6 +623,17 @@ namespace Au
 			{
 				if(threadId == 0) throw new ArgumentException("0 threadId.");
 				return Lib.EnumWindows(Lib.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId);
+			}
+
+			/// <inheritdoc cref="ThreadWindows(int, bool, bool)"/>
+			/// <summary>
+			/// Gets top-level windows of a thread.
+			/// </summary>
+			/// <remarks><inheritdoc cref="AllWindows(ref List{Wnd}, bool, bool)"/></remarks>
+			public static void ThreadWindows(ref List<Wnd> a, int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
+			{
+				if(threadId == 0) throw new ArgumentException("0 threadId.");
+				Lib.EnumWindows2(Lib.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ?? (a = new List<Wnd>()));
 			}
 		}
 
@@ -644,6 +661,8 @@ namespace Au
 				bool onlyVisible, bool sortFirstVisible = false, Wnd wParent = default, bool directChild = false, int threadId = 0,
 				Func<Wnd, object, bool> predicate = null, object predParam = default, List<Wnd> list = null)
 			{
+				if(directChild && wParent == GetWnd.Root) { api = EnumAPI.EnumWindows; wParent = default; }
+
 				Util.LibArrayBuilder<Wnd> ab = default;
 				bool disposeArray = true;
 				var d = new _EnumData { api = api, onlyVisible = onlyVisible, directChild = directChild, wParent = wParent };
@@ -672,33 +691,27 @@ namespace Au
 						if(list != null) {
 							list.Clear();
 							if(list.Capacity < n) list.Capacity = n + n / 2;
-							if(sortFirstVisible && !onlyVisible) {
-								for(int i = 0; i < n; i++) {
-									var w = (Wnd)d.a[i];
-									if(w.IsVisible) { list.Add(w); d.a[i] = 0; }
-								}
-								for(int i = 0; i < n; i++) {
-									int wi = d.a[i];
-									if(wi != 0) list.Add((Wnd)wi);
-								}
-							} else {
-								for(int i = 0; i < n; i++) list.Add((Wnd)d.a[i]);
-							}
 						} else {
 							ab.Alloc(n, zeroInit: false, noExtra: true);
-							if(sortFirstVisible && !onlyVisible) {
-								int j = 0;
-								for(int i = 0; i < n; i++) {
-									var w = (Wnd)d.a[i];
-									if(w.IsVisible) { ab[j++] = w; d.a[i] = 0; }
-								}
-								for(int i = 0; i < n; i++) {
-									int wi = d.a[i];
-									if(wi != 0) ab[j++] = (Wnd)wi;
-								}
-							} else {
-								for(int i = 0; i < n; i++) ab[i] = (Wnd)d.a[i];
+						}
+						if(sortFirstVisible && !onlyVisible) {
+							int j = 0;
+							for(int i = 0; i < n; i++) {
+								var w = (Wnd)d.a[i];
+								if(!_EnumIsVisible(w, api, wParent)) continue;
+								if(list != null) list.Add(w); else ab[j++] = w;
+								d.a[i] = 0;
 							}
+							for(int i = 0; i < n; i++) {
+								int wi = d.a[i];
+								if(wi == 0) continue;
+								var w = (Wnd)wi;
+								if(list != null) list.Add(w); else ab[j++] = w;
+							}
+						} else if(list != null) {
+							for(int i = 0; i < n; i++) list.Add((Wnd)d.a[i]);
+						} else {
+							for(int i = 0; i < n; i++) ab[i] = (Wnd)d.a[i];
 						}
 					}
 					disposeArray = false;
@@ -722,9 +735,9 @@ namespace Au
 
 				public int Proc(Wnd w)
 				{
-					if(onlyVisible && !w.IsVisible) return 1;
+					if(onlyVisible && !_EnumIsVisible(w, api, wParent)) return 1;
 					if(api == EnumAPI.EnumChildWindows) {
-						if(directChild && Api.GetParent(w) != wParent) return 1;
+						if(directChild && w.LibParentGWL != wParent) return 1;
 					} else {
 						if(!wParent.Is0 && w.Owner != wParent) return 1;
 					}
@@ -744,6 +757,9 @@ namespace Au
 </asmv3:application>
 				*/
 			}
+
+			static bool _EnumIsVisible(Wnd w, EnumAPI api, Wnd wParent)
+				=> api == EnumAPI.EnumChildWindows ? w.LibIsVisibleIn(wParent) : w.IsVisible;
 		}
 
 		/// <summary>

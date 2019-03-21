@@ -264,7 +264,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// When Find or similar function finds an accessible object, it sets this property of the Acc variable.
-		/// When searching in a window or control, at level 0 are direct children of the WINDOW object of the window or control. When searching in Acc, at level 0 are direct children of the Acc. When searching in web page (role prefix "web:" etc), at level 0 is the web page object (role DOCUMENT or PANE).
+		/// When searching in a window, at level 0 are direct children of the WINDOW object. When searching in controls (specified class or id), at level 0 is the object of the control; however if used path, at level 0 are direct children. When searching in Acc, at level 0 are direct children of the Acc. When searching in web page (role prefix "web:" etc), at level 0 is the web page object (role DOCUMENT or PANE).
 		/// </remarks>
 		public int Level { get => _misc.level; set => _misc.SetLevel(value); }
 

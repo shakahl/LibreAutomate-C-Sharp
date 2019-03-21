@@ -209,35 +209,52 @@ namespace Au
 			public Wnd Window => _w.Window;
 
 			/// <summary>
-			/// Gets the direct parent window or control of this control.
+			/// Gets the direct parent window of this control. It can be the top-level window or another control.
 			/// Returns default(Wnd) if this is a top-level window or if fails.
 			/// </summary>
 			/// <remarks>
 			/// Supports <see cref="WinError.Code"/>.
+			/// This function does not use API <msdn>GetParent</msdn>, which is faster but unreliable.
 			/// </remarks>
 			public Wnd DirectParent {
 				get {
-					Wnd R = Api.GetParent(_w);
-					if(R.Is0 || R == Api.GetWindow(_w, Api.GW_OWNER) || R == Root) return default;
-					return R;
-					//tested: GetAncestor much slower. IsChild also slower.
-					//About 'R == _wDesktop': it is rare, eg combolbox.
-					//	If with createwindow owner is 0 or desktop, both getparent and getwindow return 0.
-					//	But if with setwindowlong owner is desktop, both return desktop.
+#if true
+					var p = _w.GetWindowLong(Native.GWL.HWNDPARENT);
+					if(p == default) {
+//#if DEBUG
+//						var p2 = Api.GetAncestor(_w, Api.GA_PARENT);
+//						Debug.Assert(p2.Is0 || p2 == Root);
+//#endif
+						return default;
+					}
+					WinError.Clear();
+					var o = Api.GetWindow(_w, Api.GW_OWNER);
+					if(o.Is0) {
+						var ec = WinError.Code;
+						if(ec == 0) return (Wnd)p;
+						Debug.Assert(ec == Api.ERROR_INVALID_WINDOW_HANDLE);
+					}
+					return default;
+#else //the msdn-recommended version, but 6 times slower. The same IsTopLevelWindow (undocumented API).
+					var p = Api.GetAncestor(_w, Api.GA_PARENT);
+					if(p.Is0 || p == Root) return default;
+					return p;
+#endif
 				}
 			}
 
-			/// <summary>
-			/// Gets the direct parent window or control of this control, or the owner window of this top-level window.
-			/// Returns default(Wnd) if this is an unowned top-level window or if fails.
-			/// </summary>
-			/// <remarks>
-			/// Calls API <msdn>GetParent</msdn>.
-			/// Supports <see cref="WinError.Code"/>.
-			/// </remarks>
-			public Wnd DirectParentOrOwner => Api.GetParent(_w);
+			//rejected. Not much faster than our DirectParent.
+			///// <summary>
+			///// Calls API <msdn>GetParent</msdn>.
+			///// </summary>
+			///// <remarks>
+			///// The API function is fast but unreliable. It can get parent or owner window, and fails in some cases. Read more in the API documentation. It is reliable only if you know that this window is a child window and has WS_CHILD style.
+			///// Supports <see cref="WinError.Code"/>.
+			///// </remarks>
+			//[Obsolete("Unreliable")]
+			//public Wnd GetParentApi => Api.GetParent(_w);
 
-			//rejected: not useful
+			//rejected. Not useful.
 			///// <summary>
 			///// Gets an enabled owned window in the chain of windows owned by this window, or this window itself if there are no such windows.
 			///// </summary>
@@ -549,19 +566,24 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Supports <see cref="WinError.Code"/>.
-		/// Uses <see cref="GetWnd.DirectParent"/>.
 		/// Another way is <c>w.HasStyle(WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
 		/// </remarks>
+		/// <seealso cref="GetWnd.DirectParent"/>
 		public bool IsChild => !Get.DirectParent.Is0;
 
 		/// <summary>
-		/// Returns true if this is a direct or indirect child (descendant) of window w.
+		/// Returns true if this is a child or descendant of window w.
 		/// </summary>
 		/// <remarks>
 		/// Calls API <msdn>IsChild</msdn>.
 		/// Supports <see cref="WinError.Code"/>.
 		/// </remarks>
 		public bool IsChildOf(Wnd w) { return Api.IsChild(w, this); }
+
+		/// <summary>
+		/// Returns <c>(Wnd)GetWindowLong(Native.GWL.HWNDPARENT)</c>.
+		/// </summary>
+		internal Wnd LibParentGWL => (Wnd)GetWindowLong(Native.GWL.HWNDPARENT);
 
 		/// <summary>
 		/// Gets the active (foreground) window.

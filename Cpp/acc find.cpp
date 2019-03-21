@@ -39,7 +39,7 @@ class AccFinder
 	bool _found; //true when the AO has been found
 	IAccessible** _findDOCUMENT; //used by _FindDocumentSimple, else null
 	BSTR* _errStr; //error string, when a parameter is invalid
-	HWND _w; //window in which currently searching
+	HWND _wTL; //window in which currently searching
 
 	bool _Error(STR es) {
 		if(_errStr) *_errStr = SysAllocString(es);
@@ -325,18 +325,20 @@ public:
 				}
 			}
 		} else if(!!(_flags2&eAF2::InControls)) {
-			wnd::EnumChildWindows(w, [this](HWND c)
+			wnd::EnumChildWindows(w, [this, w](HWND c)
 			{
-				if(!(_flags&eAF::HiddenToo) && !IsWindowVisible(c)) return true;
+				if(!(_flags&eAF::HiddenToo)) {
+					if(!wnd::IsVisibleInWindow(c, w)) return true; //not IsWindowVisible, because we want to find controls in invisible windows
+				}
 				if(_controlClass.Is()) {
 					if(!wnd::ClassNameIs(c, _controlClass)) return true;
 				} else {
 					if(GetDlgCtrlID(c) != _controlId) return true;
 				}
-				return (bool)_FindInWnd(c);
+				return (bool)_FindInWnd(c, true);
 			});
 		} else {
-			_w = w;
+			_wTL = (wnd::Style(w)&WS_CHILD) ? 0 : w;
 			_FindInWnd(w);
 		}
 
@@ -344,7 +346,7 @@ public:
 	}
 
 private:
-	HRESULT _FindInWnd(HWND w)
+	HRESULT _FindInWnd(HWND w, bool isControl = false)
 	{
 		AccDtorIfElem0 aw;
 		HRESULT hr;
@@ -360,7 +362,18 @@ private:
 			aw.misc.role = inCLIENT ? ROLE_SYSTEM_CLIENT : ROLE_SYSTEM_WINDOW; //not important: can be not CLIENT (eg DIALOG)
 		}
 		if(hr) return hr;
-		if(_FindInAcc(ref aw, 0)) return 0; //note: caller also must check _found; this is just for EnumChildWindows.
+
+		//isControl is true when is specified class or id. Now caller is enumerating controls. Need _Match for control's WINDOW, not only for descendants.
+		int level = 0;
+		if(isControl && _path == null) {
+			switch(_Match(ref aw, level++)) {
+			case _eMatchResult::Stop: return 0;
+			case _eMatchResult::SkipChildren: goto gnf;
+			}
+		}
+
+		if(_FindInAcc(ref aw, level)) return 0; //note: caller also must check _found; this is just for EnumChildWindows.
+	gnf:
 		return (HRESULT)eError::NotFound;
 	}
 
@@ -375,13 +388,13 @@ private:
 
 		AccChildren c(ref aParent, startIndex, exactIndex, !!(_flags&eAF::Reverse), _maxCC);
 		if(c.Count() == 0) {
-			if(_w) {
+			if(_wTL) {
 				//Java?
-				if(level == (!!(_flags&eAF::ClientArea) ? 0 : 1) && aParent.misc.role == ROLE_SYSTEM_CLIENT && !(GetWindowLongW(_w, GWL_STYLE)&WS_CHILD)) {
-					if(wnd::ClassNameIs(_w, L"SunAwt*")) {
-						AccDtorIfElem0 aw(AccJavaFromWindow(_w), 0, eAccMiscFlags::Java);
+				if(level == (!!(_flags&eAF::ClientArea) ? 0 : 1) && aParent.misc.role == ROLE_SYSTEM_CLIENT) {
+					if(wnd::ClassNameIs(_wTL, L"SunAwt*")) {
+						AccDtorIfElem0 aw(AccJavaFromWindow(_wTL), 0, eAccMiscFlags::Java);
 						if(aw.acc) {
-							_w = 0;
+							_wTL = 0;
 							return _FindInAcc(ref aw, 1);
 						}
 					}
@@ -437,12 +450,13 @@ private:
 			}
 		}
 
+		STR roleNeeded = _path != null ? _path[level].role : _role;
+
 		if(level < _minLevel) goto gr;
 
 		//If eAF::Mark, the caller is getting all AO using callback, and wants us to add eAccMiscFlags::Marked to AOs that match role, rect, name and state.
 		int mark = !!(_flags&eAF::Mark) ? 1 : 0; //if some of these props does not match, we'll set this = -1, to avoid comparing other props
 
-		STR roleNeeded = _path != null ? _path[level].role : _role;
 		if(roleNeeded != null) {
 			if(!roleString) roleString = ao::RoleToString(ref varRole);
 			if(wcscmp(roleNeeded, roleString)) {
@@ -467,8 +481,9 @@ private:
 		if(!hiddenToo) {
 			switch(state.IsInvisible()) {
 			case 2: //INVISISBLE and OFFSCREEN
-				if(!_IsRoleToSkipIfInvisible(role)) break; //info: _IsRoleToSkipIfInvisible prevents finding background DOCUMENT in Firefox
+				if(!_IsRoleToSkipIfInvisible(role)) break; //eg prevents finding a background DOCUMENT in Firefox
 			case 1: //only INVISIBLE
+				if(_IsRoleTopLevelClient(role, level)) break; //rare
 				skipChildren = true; goto gr;
 			}
 		}
@@ -509,7 +524,7 @@ private:
 			skipChildren = _IsRoleToSkipDescendants(role, roleNeeded, a.acc);
 
 			//skip children of invisible AO that often have many descendants (eg DOCUMENT, WINDOW)
-			if(!skipChildren && !hiddenToo && _IsRoleToSkipIfInvisible(role)) skipChildren = state.IsInvisible();
+			if(!skipChildren && !hiddenToo && _IsRoleToSkipIfInvisible(role) && !_IsRoleTopLevelClient(role, level)) skipChildren = state.IsInvisible();
 		}
 
 		return skipChildren ? _eMatchResult::SkipChildren : _eMatchResult::Continue;
@@ -568,6 +583,17 @@ private:
 			if(!(_flags&eAF::MenuToo))
 				if(!str::Switch(roleNeeded, { L"MENUITEM", L"MENUPOPUP" })) return true;
 			break;
+		}
+		return false;
+	}
+
+	//Returns true if the AO is most likely the client area of the top-level window.
+	bool _IsRoleTopLevelClient(int role, int level) {
+		if(_wTL &&  level == 0 && !(_flags&eAF::ClientArea)) {
+			switch(role) {
+			case ROLE_SYSTEM_MENUBAR: case ROLE_SYSTEM_TITLEBAR: case ROLE_SYSTEM_SCROLLBAR: case ROLE_SYSTEM_GRIP: break;
+			default: return true;
+			}
 		}
 		return false;
 	}
@@ -757,7 +783,7 @@ namespace outproc
 //Returns: 0 not Chrome, 1 Chrome was already enabled, 2 Chrome enabled now.
 int AccEnableChrome(HWND w, bool checkClassName)
 {
-	assert(!(GetWindowLongW(w, GWL_STYLE)&WS_CHILD));
+	assert(!(wnd::Style(w)&WS_CHILD));
 
 	if(checkClassName && !wnd::ClassNameIs(w, L"Chrome*")) return 0;
 

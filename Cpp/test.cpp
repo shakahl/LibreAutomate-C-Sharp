@@ -622,6 +622,9 @@ void _TestIAccessibleImpl();
 
 EXPORT void Cpp_Test()
 {
+
+
+
 	//_TestIAccessibleImpl();
 		//CHandle hRead, hWrite;
 		//if(!CreatePipe(&hRead.m_h, &hWrite.m_h, null, 0)) return;

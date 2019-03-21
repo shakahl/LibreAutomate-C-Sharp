@@ -5728,7 +5728,7 @@
         </member>
         <member name="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)">
              <summary>
-             Finds accessible object (AO) in window.
+             Finds an accessible object (AO) in window.
              Returns the found AO. Returns null if not found. See examples.
              </summary>
              <param name="w">Window or control that contains the AO.</param>
@@ -6007,7 +6007,7 @@
             </summary>
             <remarks>
             When Find or similar function finds an accessible object, it sets this property of the Acc variable.
-            When searching in a window or control, at level 0 are direct children of the WINDOW object of the window or control. When searching in Acc, at level 0 are direct children of the Acc. When searching in web page (role prefix "web:" etc), at level 0 is the web page object (role DOCUMENT or PANE).
+            When searching in a window, at level 0 are direct children of the WINDOW object. When searching in controls (specified class or id), at level 0 is the object of the control; however if used path, at level 0 are direct children. When searching in Acc, at level 0 are direct children of the Acc. When searching in web page (role prefix "web:" etc), at level 0 is the web page object (role DOCUMENT or PANE).
             </remarks>
         </member>
         <member name="P:Au.Acc._Disposed">
@@ -6978,24 +6978,27 @@
             More info and examples: <see cref="T:Au.Triggers.TriggerOptions"/>.
             </remarks>
         </member>
-        <member name="P:Au.Triggers.AuTriggers.Last">
-            <summary>
-            The last added trigger.
-            </summary>
-            <example>
-            <code><![CDATA[
-            Triggers.Last.Hotkey.EnabledAlways = true;
-            ]]></code>
-            </example>
-        </member>
         <member name="M:Au.Triggers.AuTriggers.Stop">
             <summary>
             Stops watching for trigger events and causes <see cref="M:Au.Triggers.AuTriggers.Run"/> to return.
             </summary>
             <remarks>
             Does not abort threads of trigger actions that are still running.
-            Example: <see cref="P:Au.Triggers.AuTriggers.Disabled"/>.
             </remarks>
+            <example>
+            <code><![CDATA[
+            Triggers.Hotkey["Ctrl+T"] = o => Print("Ctrl+T");
+            Triggers.Hotkey["Ctrl+Q"] = o => { Print("Ctrl+Q (stop)"); Triggers.Stop(); };
+            Triggers.Hotkey.Last.EnabledAlways = true;
+            Triggers.Run();
+            Print("stopped");
+            ]]></code>
+            </example>
+        </member>
+        <member name="E:Au.Triggers.AuTriggers.Stopping">
+            <summary>
+            Occurs before <see cref="M:Au.Triggers.AuTriggers.Run">Triggers.Run</see> stops trigger engines and returns. Runs in its thread.
+            </summary>
         </member>
         <member name="P:Au.Triggers.AuTriggers.LibRunning">
             <summary>
@@ -7020,13 +7023,13 @@
             Does not depend on <see cref="P:Au.Triggers.AuTriggers.DisabledEverywhere"/>.
             Does not end/pause threads of trigger actions.
             </remarks>
+            <seealso cref="P:Au.Triggers.Trigger.EnabledAlways"/>
             <seealso cref="P:Au.Triggers.TriggerOptions.EnabledAlways"/>
             <example>
             <code><![CDATA[
-            Triggers.Hotkey["Ctrl+T"] = o => { Print("Ctrl+T"); };
-            Triggers.Options.EnabledAlways = true;
+            Triggers.Hotkey["Ctrl+T"] = o => Print("Ctrl+T");
             Triggers.Hotkey["Ctrl+D"] = o => { Print("Ctrl+D (disable/enable)"); Triggers.Disabled ^= true; }; //toggle
-            Triggers.Hotkey["Ctrl+Q"] = o => { Print("Ctrl+Q (stop)"); Triggers.Stop(); };
+            Triggers.Hotkey.Last.EnabledAlways = true;
             Triggers.Run();
             ]]></code>
             </example>
@@ -7105,13 +7108,14 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Triggers.TriggerOptions.RunActionInThread(System.Int32,System.Int32)">
+        <member name="M:Au.Triggers.TriggerOptions.RunActionInThread(System.Int32,System.Int32,System.Boolean)">
             <summary>
             Run actions in a dedicated thread that does not end when actions end.
             </summary>
-            <param name="thread">Any non-negative number that you want to use to identify the thread. Default 0.</param>
+            <param name="thread">A number that you want to use to identify the thread. Can be 0-32767 (short.MaxValue). Default 0.</param>
             <param name="ifRunningWaitMS">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queed actions). If &gt; 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"><paramref name="thread"/> &lt; 0 or <paramref name="ifRunningWaitMS"/> &lt; -1.</exception>
+            <param name="noWarning">No warning when cannot start an action because an action is running and ifRunningWaitMS==0.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
             Multiple actions in same thread cannot run simultaneously. Actions in different threads can run simultaneously.
             There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => AuTask.RunWait("Other Script");</c>.
@@ -7210,6 +7214,16 @@
             When adding the trigger, this property is set to the value of <see cref="P:Au.Triggers.TriggerOptions.EnabledAlways"/> at that time.
             </remarks>
         </member>
+        <member name="M:Au.Triggers.Trigger.RunAction(Au.Triggers.TriggerArgs)">
+            <summary>
+            Starts the action like when its trigger is activated.
+            </summary>
+            <param name="args"></param>
+            <exception cref="T:System.InvalidOperationException">Called in a wrong place or from a wrong thread. More info in Ramarks.</exception>
+            <remarks>
+            Must be called while <see cref="M:Au.Triggers.AuTriggers.Run">Triggers.Run</see>) is running, from the same thread that called it.
+            </remarks>
+        </member>
         <member name="T:Au.Triggers.TriggerArgs">
             <summary>
             Base of trigger action argument classes of all trigger types.
@@ -7220,6 +7234,14 @@
             Returns true if window matches.
             </summary>
             <param name="thc">This func uses the window handle (gets on demand) and WFCache.</param>
+        </member>
+        <member name="P:Au.Triggers.AutotextTriggers.Last">
+            <summary>
+            The last added trigger.
+            </summary>
+        </member>
+        <member name="M:Au.Triggers.AutotextTriggerArgs.#ctor(Au.Triggers.AutotextTrigger,Au.Wnd)">
+            
         </member>
         <member name="F:Au.Triggers.TKFlags.Shared">
             <summary>
@@ -7249,6 +7271,14 @@
             Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="M:Au.Keyb.GetMod(Au.Types.KMod)"/> (and any such functions in any app) will not know that the key is physically pressed.
             </summary>
         </member>
+        <member name="P:Au.Triggers.HotkeyTriggers.Last">
+            <summary>
+            The last added trigger.
+            </summary>
+        </member>
+        <member name="M:Au.Triggers.HotkeyTriggerArgs.#ctor(Au.Triggers.HotkeyTrigger,Au.Wnd,Au.Types.KKey,Au.Types.KMod)">
+            
+        </member>
         <member name="F:Au.Triggers.TMFlags.Shared">
             <summary>
             Allow other apps to receive the key too, as if it is not a hotkey.
@@ -7276,6 +7306,14 @@
             Don't release modifier keys.
             Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the program sends Ctrl key-up event, making the key logically released, although it is still physically pressed. It prevents the modifier keys interfering with the action. However functions like <see cref="M:Au.Keyb.GetMod(Au.Types.KMod)"/> (and any such functions in any app) will not know that the key is physically pressed.
             </summary>
+        </member>
+        <member name="P:Au.Triggers.MouseTriggers.Last">
+            <summary>
+            The last added trigger.
+            </summary>
+        </member>
+        <member name="M:Au.Triggers.MouseTriggerArgs.#ctor(Au.Triggers.MouseTrigger,Au.Wnd,Au.Types.KMod)">
+            
         </member>
         <member name="T:Au.Triggers.TWFlags">
             <summary>
@@ -7356,18 +7394,6 @@
             The window has been restored from the minimized state.
             </summary>
         </member>
-        <member name="F:Au.Triggers.TWEvents.MoveSizeStart">
-            <summary>
-            The user started to move or resize the window.
-            This event does not occur when the window is moved/resized not by the user.
-            </summary>
-        </member>
-        <member name="F:Au.Triggers.TWEvents.MoveSizeEnd">
-            <summary>
-            The user finished (or canceled) to move or resize the window.
-            This event does not occur when the window is moved/resized not by the user.
-            </summary>
-        </member>
         <member name="T:Au.Triggers.WindowTrigger">
             <summary>
             Represents a window trigger.
@@ -7375,7 +7401,7 @@
             <example>
             <code><![CDATA[
             Triggers.Window.ActiveNew["Window name"] = o => Print(o.Window);
-            var v = Triggers.Last.Window; //v is the new WindowTrigger
+            var v = Triggers.Window.Last; //v is the new WindowTrigger. Rarely used.
             ]]></code>
             </example>
         </member>
@@ -7496,10 +7522,10 @@
             When a "later" event occurs, the trigger action is executed. The <see cref="P:Au.Triggers.WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
             The "later" trigers are not disabled when primary triggers are disabled.
             </param>
-            <returns>The return value is not used. See also: <see cref="P:Au.Triggers.AuTriggers.Last"/>.</returns>
             <remarks>
             The first 5 parameters are the same as with <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </remarks>
+            <seealso cref="P:Au.Triggers.WindowTriggers.Last"/>
         </member>
         <member name="P:Au.Triggers.WindowTriggers.Subtype.Item(Au.Wnd.Finder,Au.Triggers.TWFlags,Au.Triggers.TWEvents)">
             <inheritdoc cref="P:Au.Triggers.WindowTriggers.Subtype.Item(System.String,System.String,Au.Types.WF3,System.Func{Au.Wnd,System.Boolean},System.Object,Au.Triggers.TWFlags,Au.Triggers.TWEvents)"/>
@@ -7507,9 +7533,14 @@
             This overload uses a <see cref="T:Au.Wnd.Finder"/> to specify window properties.
             </remarks>
         </member>
+        <member name="P:Au.Triggers.WindowTriggers.Last">
+            <summary>
+            The last added trigger.
+            </summary>
+        </member>
         <member name="M:Au.Triggers.WindowTriggers.LibTimer">
             <summary>
-            Called from the message loop every 255 or less ms.
+            Called from the message loop every 250 or less ms.
             </summary>
         </member>
         <member name="F:Au.Triggers.WindowTriggers._enumWinProc">
@@ -7529,7 +7560,7 @@
             </summary>
             <param name="k"></param>
         </member>
-        <member name="M:Au.Triggers.WindowTriggers._Proc(Au.Triggers.TWEvents,Au.Wnd,Au.Triggers.WindowTriggers._ProcCaller,System.String,System.Boolean)">
+        <member name="M:Au.Triggers.WindowTriggers._Proc(Au.Triggers.TWEvents,Au.Wnd,Au.Triggers.WindowTriggers._ProcCaller,System.String)">
             <summary>
             Processes events for main triggers (active, visible) and most "later" triggers.
             Called from hook (_HookProc), timer (LibTimer), at startup (StartStop) and SimulateActiveNew/SimulateVisibleNew.
@@ -7587,14 +7618,13 @@
             <item>C - the window is cloaked (<see cref="P:Au.Wnd.IsCloaked"/>).</item>
             <item>O - the window is considered old, ie created before calling <b>Triggers.Run</b>.</item>
             <item>T - the even has been detected using a timer, which means slower response time. Else detected using a hook.</item>
-            <item>Q - the event was queued (now retrieved from the queue) because the hook procedure was called while processing previous events. It means the event may be rather old.</item>
             </list>
             </item>
-            <item>Window (handle, class, name, program, rectangle, style, exstyle).</item>
+            <item>Window (handle, class, name, program, rectangle).</item>
             </list>
             Colors are used for window event types used for primary triggers: blue if activated; green if became visible; yellow if name changed.
-            When a primary trigger is activated, prints the primary event type, like ActiveNew.
             For "later" events is logged time, event and window. Black, tab-indented. Prints only events that are specified in triggers.
+            When a trigger is activated, prints the event type in red.
             </remarks>
             <example>
             <code><![CDATA[
@@ -7602,7 +7632,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Triggers.WindowTriggers._LogEvent(Au.Triggers.TWEvents,Au.Wnd,Au.Triggers.WindowTriggers._ProcCaller,System.Boolean,System.Boolean)">
+        <member name="M:Au.Triggers.WindowTriggers._LogEvent(Au.Triggers.TWEvents,Au.Wnd,Au.Triggers.WindowTriggers._ProcCaller,System.Boolean)">
             <summary>
             Called by _Proc.
             </summary>
@@ -7641,6 +7671,9 @@
             Triggers.Run();
             ]]></code>
             </example>
+        </member>
+        <member name="M:Au.Triggers.WindowTriggerArgs.#ctor(Au.Triggers.WindowTrigger,Au.Wnd,Au.Triggers.TWEvents)">
+            
         </member>
         <member name="T:Au.Util.IconsAsync">
             <summary>
@@ -19540,11 +19573,12 @@
         </member>
         <member name="M:Au.Wnd.Misc.GetClassLong(Au.Wnd,System.Int32)">
             <summary>
-            Calls API <msdn>GetClassLong</msdn> if current process is 32-bit, <msdn>GetClassLongPtr</msdn> if 64-bit.
+            Calls API <msdn>GetClassLongPtr</msdn>.
             </summary>
             <remarks>
             Supports <see cref="P:Au.WinError.Code"/>.
             For index can be used constants from <see cref="T:Au.Types.Native.GCL"/>. All values are the same in 32-bit and 64-bit process.
+            In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
             </remarks>
         </member>
         <member name="M:Au.Wnd.Misc.RegisterMessage(System.String,System.Boolean)">
@@ -19680,6 +19714,13 @@
             <summary>
             Returns true if <see cref="P:Au.Wnd.IsVisible"/> returns true and <see cref="P:Au.Wnd.IsCloaked"/> returns false.
             </summary>
+        </member>
+        <member name="M:Au.Wnd.LibIsVisibleIn(Au.Wnd)">
+            <summary>
+            Returns true if this window is visible in the specified parent or ancestor window.
+            Like <see cref="P:Au.Wnd.IsVisible"/>, but does not check the visibility of the specified parent/ancestor window.
+            </summary>
+            <param name="wParent">Parent or ancestor window.</param>
         </member>
         <member name="M:Au.Wnd.Show(System.Boolean)">
             <summary>
@@ -20558,19 +20599,21 @@
         </member>
         <member name="M:Au.Wnd.GetWindowLong(System.Int32)">
             <summary>
-            Calls API <msdn>GetWindowLong</msdn> if this process is 32-bit, <msdn>GetWindowLongPtr</msdn> if 64-bit.
+            Calls API <msdn>GetWindowLongPtr</msdn>.
             </summary>
             <remarks>
             For index can be used constants from <see cref="T:Au.Types.Native.GWL"/>.
             Supports <see cref="P:Au.WinError.Code"/>.
+            In 32-bit process actually calls <b>GetWindowLong</b>, because <b>GetWindowLongPtr</b> is unavailable.
             </remarks>
         </member>
         <member name="M:Au.Wnd.SetWindowLong(System.Int32,Au.Types.LPARAM)">
             <summary>
-            Calls API <msdn>SetWindowLong</msdn> if this process is 32-bit, <msdn>SetWindowLongPtr</msdn> if 64-bit.
+            Calls API <msdn>SetWindowLongPtr</msdn>.
             </summary>
             <remarks>
             For index can be used constants from <see cref="T:Au.Types.Native.GWL"/>.
+            In 32-bit process actually calls <b>SetWindowLong</b>, because <b>SetWindowLongPtr</b> is unavailable.
             </remarks>
             <exception cref="T:Au.Types.WndException"/>
         </member>
@@ -21112,14 +21155,27 @@
             Gets child controls, including all descendants.
             Returns array containing 0 or more control handles as Wnd.
             </summary>
-            <param name="directChild">Need only direct children, not grandchildren.</param>
             <param name="onlyVisible">Need only visible controls.</param>
             <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
+            <param name="directChild">Need only direct children, not all descendants.</param>
             <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
             <remarks>
             Calls API <msdn>EnumChildWindows</msdn>.
             </remarks>
             <seealso cref="M:Au.Wnd.ChildAll(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean})"/>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.Children(System.Collections.Generic.List{Au.Wnd}@,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Gets child controls, including all descendants.
+            </summary>
+            <param name="a">Receives window handles as Wnd. If null, this function creates new List, else clears before adding items.</param>
+            <param name="onlyVisible">Need only visible controls.</param>
+            <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
+            <param name="directChild">Need only direct children, not all descendants.</param>
+            <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>
+            Use this overload to avoid much garbage when calling frequently with the same List variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
+            </remarks>
         </member>
         <member name="M:Au.Wnd.GetWnd.AllWindows(System.Boolean,System.Boolean)">
             <summary>
@@ -21130,13 +21186,17 @@
             Need only visible windows.
             Note: this function does not check whether windows are cloaked, as it is rather slow. Use <see cref="P:Au.Wnd.IsCloaked"/> if need.
             </param>
-            <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order. Not used when <paramref name="onlyVisible"/> is true.</param>
+            <param name="sortFirstVisible">
+            Place hidden windows at the end of the array. If false, the order of array elements matches the Z order.
+            Not used when <paramref name="onlyVisible"/> is true.</param>
             <remarks>
             Calls API <msdn>EnumWindows</msdn>.
-            <note>The list can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="M:Au.Wnd.GetWnd.MainWindows(System.Boolean)"/>.</note>
-            By default array elements are sorted to match the Z order.
-            On Windows 8 and later gets only desktop windows, not Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has <see cref="T:Au.Uac">UAC</see> integrity level uiAccess or High+uiAccess or has disableWindowFiltering in manifest; to get such windows you can use <see cref="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)"/>.
+            <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="M:Au.Wnd.GetWnd.MainWindows(System.Boolean)"/>.</note>
+            Does not get message-only windows. Use <see cref="M:Au.Wnd.Misc.FindMessageOnlyWindow(System.String,System.String,Au.Wnd)"/> if need.
+            On Windows 8 and later does not get Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has <see cref="T:Au.Uac">UAC</see> integrity level uiAccess or High+uiAccess or its manifest contains disableWindowFiltering; to get such windows you can use <see cref="M:Au.Wnd.FindFast(System.String,System.String,Au.Wnd)"/>.
+            Tip: To get top-level and child windows in single array: <c>var a = Wnd.GetWnd.Root.Get.Children();</c>.
             </remarks>
+            <seealso cref="M:Au.Wnd.GetWnd.Children(System.Boolean,System.Boolean,System.Boolean)"/>
             <seealso cref="M:Au.Wnd.FindAll(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>
         </member>
         <member name="M:Au.Wnd.GetWnd.AllWindows(System.Collections.Generic.List{Au.Wnd}@,System.Boolean,System.Boolean)">
@@ -21144,7 +21204,7 @@
             <summary>
             Gets top-level windows.
             </summary>
-            <param name="a">Receives window handles as Wnd. If null, this function creates new List, else clears. Then adds new items.</param>
+            <param name="a">Receives window handles as Wnd. If null, this function creates new List, else clears before adding items.</param>
             <param name="onlyVisible"><inheritdoc cref="M:Au.Wnd.GetWnd.AllWindows(System.Boolean,System.Boolean)"/></param>
             <param name="sortFirstVisible"><inheritdoc cref="M:Au.Wnd.GetWnd.AllWindows(System.Boolean,System.Boolean)"/></param>
             <remarks>
@@ -21168,6 +21228,13 @@
             Calls API <msdn>EnumThreadWindows</msdn>.
             </remarks>
             <seealso cref="M:Au.Thread_.HasMessageLoop(System.Boolean@)"/>
+        </member>
+        <member name="M:Au.Wnd.GetWnd.ThreadWindows(System.Collections.Generic.List{Au.Wnd}@,System.Int32,System.Boolean,System.Boolean)">
+            <inheritdoc cref="M:Au.Wnd.GetWnd.ThreadWindows(System.Int32,System.Boolean,System.Boolean)"/>
+            <summary>
+            Gets top-level windows of a thread.
+            </summary>
+            <remarks><inheritdoc cref="M:Au.Wnd.GetWnd.AllWindows(System.Collections.Generic.List{Au.Wnd}@,System.Boolean,System.Boolean)"/></remarks>
         </member>
         <member name="M:Au.Wnd.GetWnd.#ctor(Au.Wnd)">
             
@@ -21326,21 +21393,12 @@
         </member>
         <member name="P:Au.Wnd.GetWnd.DirectParent">
             <summary>
-            Gets the direct parent window or control of this control.
+            Gets the direct parent window of this control. It can be the top-level window or another control.
             Returns default(Wnd) if this is a top-level window or if fails.
             </summary>
             <remarks>
             Supports <see cref="P:Au.WinError.Code"/>.
-            </remarks>
-        </member>
-        <member name="P:Au.Wnd.GetWnd.DirectParentOrOwner">
-            <summary>
-            Gets the direct parent window or control of this control, or the owner window of this top-level window.
-            Returns default(Wnd) if this is an unowned top-level window or if fails.
-            </summary>
-            <remarks>
-            Calls API <msdn>GetParent</msdn>.
-            Supports <see cref="P:Au.WinError.Code"/>.
+            This function does not use API <msdn>GetParent</msdn>, which is faster but unreliable.
             </remarks>
         </member>
         <member name="M:Au.Wnd.GetWnd.LastActiveOwnedOrThis(System.Boolean)">
@@ -21991,18 +22049,23 @@
             </summary>
             <remarks>
             Supports <see cref="P:Au.WinError.Code"/>.
-            Uses <see cref="P:Au.Wnd.GetWnd.DirectParent"/>.
             Another way is <c>w.HasStyle(WS.CHILD)</c>. It is faster but less reliable, because some top-level windows have WS_CHILD style and some child windows don't.
             </remarks>
+            <seealso cref="P:Au.Wnd.GetWnd.DirectParent"/>
         </member>
         <member name="M:Au.Wnd.IsChildOf(Au.Wnd)">
             <summary>
-            Returns true if this is a direct or indirect child (descendant) of window w.
+            Returns true if this is a child or descendant of window w.
             </summary>
             <remarks>
             Calls API <msdn>IsChild</msdn>.
             Supports <see cref="P:Au.WinError.Code"/>.
             </remarks>
+        </member>
+        <member name="P:Au.Wnd.LibParentGWL">
+            <summary>
+            Returns <c>(Wnd)GetWindowLong(Native.GWL.HWNDPARENT)</c>.
+            </summary>
         </member>
         <member name="P:Au.Wnd.Active">
             <summary>

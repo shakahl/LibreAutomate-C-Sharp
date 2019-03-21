@@ -41,11 +41,6 @@ namespace Au.Triggers
 		/// As always, <b>Triggers.FuncOf</b> functions must not execute slow code; should take less than 10 ms.
 		/// </summary>
 		LaterCallFunc = 2,
-
-		//rejected. If need, better let the script do it.
-		//WaitVisible = ,
-		//WaitIdle = ,
-		//WaitFocusedControl = ,
 	}
 
 	/// <summary>
@@ -110,22 +105,25 @@ namespace Au.Triggers
 		/// </summary>
 		Unminimized = 0x200,
 
-		/// <summary>
-		/// The user started to move or resize the window.
-		/// This event does not occur when the window is moved/resized not by the user.
-		/// </summary>
-		MoveSizeStart = 0x400,
+		//rejected. Not useful when we don't have notifications for each location change.
+		///// <summary>
+		///// The user started to move or resize the window.
+		///// This event does not occur when maximizing/restoring and when the window is moved/resized not by the user.
+		///// </summary>
+		//MoveSizeStart = 0x400,
 
-		/// <summary>
-		/// The user finished (or canceled) to move or resize the window.
-		/// This event does not occur when the window is moved/resized not by the user.
-		/// </summary>
-		MoveSizeEnd = 0x800,
+		///// <summary>
+		///// The user finished (or canceled) to move or resize the window.
+		///// This event does not occur when maximizing/restoring and when the window is moved/resized not by the user.
+		///// </summary>
+		//MoveSizeEnd = 0x800,
 
-		//CONSIDER: Location. Use timer or thread-specific AccEVENT.OBJECT_LOCATIONCHANGE.
-		//CONSIDER: Focus (when eg a child control focused). Use timer or thread-specific AccEVENT.OBJECT_FOCUSED.
-		//CONSIDER: Timer.
-		//CONSIDER: StoppingTriggers. Or Finally.
+		//rejected: Location. Use timer or thread-specific AccEVENT.OBJECT_LOCATIONCHANGE.
+		//	Probably it should not be a trigger. If timer, too slow in many cases. If hook, too frequent trigger when drag-moving etc.
+		//	If a script wants to track window location, it can easily set AccHook(AccEVENT.OBJECT_LOCATIONCHANGE) instead.
+		//rejected: Focus (when eg a child control focused). Use timer or AccEVENT.OBJECT_FOCUSED.
+		//	Rarely used. A script can easily use AccHook(AccEVENT.OBJECT_FOCUSED).
+		//rejected: Timer.
 	}
 
 	enum _Once : byte { Always, Once, New } //Active, ActiveOnce, ActiveNew, and the same for VisibleX.
@@ -136,7 +134,7 @@ namespace Au.Triggers
 	/// <example>
 	/// <code><![CDATA[
 	/// Triggers.Window.ActiveNew["Window name"] = o => Print(o.Window);
-	/// var v = Triggers.Last.Window; //v is the new WindowTrigger
+	/// var v = Triggers.Window.Last; //v is the new WindowTrigger. Rarely used.
 	/// ]]></code>
 	/// </example>
 	public class WindowTrigger : Trigger
@@ -302,10 +300,10 @@ namespace Au.Triggers
 			/// When a "later" event occurs, the trigger action is executed. The <see cref="WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
 			/// The "later" trigers are not disabled when primary triggers are disabled.
 			/// </param>
-			/// <returns>The return value is not used. See also: <see cref="AuTriggers.Last"/>.</returns>
 			/// <remarks>
 			/// The first 5 parameters are the same as with <see cref="Wnd.Find"/>.
 			/// </remarks>
+			/// <seealso cref="Last"/>
 			public Action<WindowTriggerArgs> this[
 				string name = null, string cn = null, WF3 program = default, Func<Wnd, bool> also = null, object contains = null,
 				TWFlags flags = 0, TWEvents later = 0
@@ -342,16 +340,21 @@ namespace Au.Triggers
 				last.next = t;
 				last = t;
 			}
-			_hasTriggers = true;
 			_laterEvents |= later;
+			_lastAdded = t;
 		}
 
-		bool ITriggers.HasTriggers => _hasTriggers;
-		bool _hasTriggers;
+		/// <summary>
+		/// The last added trigger.
+		/// </summary>
+		public WindowTrigger Last => _lastAdded;
+		WindowTrigger _lastAdded;
+
+		bool ITriggers.HasTriggers => _lastAdded != null;
 
 		WindowTrigger _tActive, _tVisible; //null or last trigger in linked list
 		TWEvents _laterEvents, _allEvents;
-		bool _needVisibleArray; //0 != (_allEvents & (TWEvents.Visible | TWEvents.Invisible))
+		bool _usesVisibleArray; //0 != (_allEvents & (TWEvents.Visible | TWEvents.Invisible))
 
 		unsafe void ITriggers.StartStop(bool start)
 		{
@@ -375,9 +378,9 @@ namespace Au.Triggers
 
 				_allEvents = _laterEvents | TWEvents.Active | TWEvents.Name;
 				if(_tVisible != null) _allEvents |= TWEvents.Visible | TWEvents.Uncloaked;
-				_needVisibleArray = 0 != (_allEvents & (TWEvents.Visible | TWEvents.Invisible));
+				_usesVisibleArray = 0 != (_allEvents & (TWEvents.Visible | TWEvents.Invisible));
 
-				var ah = new AccEVENT[7];
+				var ah = new AccEVENT[5];
 				ah[0] = AccEVENT.SYSTEM_FOREGROUND;
 				if(_win8) {
 					if(0 != (_allEvents & TWEvents.Uncloaked)) ah[1] = AccEVENT.OBJECT_UNCLOAKED;
@@ -385,18 +388,17 @@ namespace Au.Triggers
 				}
 				if(0 != (_allEvents & TWEvents.Minimized)) ah[3] = AccEVENT.SYSTEM_MINIMIZESTART;
 				if(0 != (_allEvents & TWEvents.Unminimized)) ah[4] = AccEVENT.SYSTEM_MINIMIZEEND;
-				if(0 != (_allEvents & TWEvents.MoveSizeStart)) ah[5] = AccEVENT.SYSTEM_MOVESIZESTART;
-				if(0 != (_allEvents & TWEvents.MoveSizeEnd)) ah[6] = AccEVENT.SYSTEM_MOVESIZEEND;
+				//if(0 != (_allEvents & TWEvents.MoveSizeStart)) ah[5] = AccEVENT.SYSTEM_MOVESIZESTART;
+				//if(0 != (_allEvents & TWEvents.MoveSizeEnd)) ah[6] = AccEVENT.SYSTEM_MOVESIZEEND;
 				_hooks = new Util.AccHook(ah, _HookProc);
 				_hookEventQueue = new Queue<(AccEVENT, int)>();
 
 				_triggers.LibWinTimerPeriod = 250;
-				_threadId = Thread_.NativeId;
 
 				Api.IVirtualDesktopManager dm = null;
 				Api.EnumWindows((w, param) => {
 					if(w.IsVisible) {
-						if(_needVisibleArray) _aVisible.Add(w);
+						if(_usesVisibleArray) _aVisible.Add(w);
 						//skip empty winstore hosts that later probably will be used as new windows. Speed: ~100 mcs, first time ~10 ms.
 						if(_win10 && w.HasExStyle(WS_EX.NOREDIRECTIONBITMAP) && w.IsCloaked && w.ClassNameIs("ApplicationFrameWindow")) {
 							//is it a window in an inactive virtual desktop? In both cases it does not have a child Windows.UI.Core.CoreWindow.
@@ -422,14 +424,12 @@ namespace Au.Triggers
 				_hooks?.Dispose();
 				_hooks = null;
 				_hookEventQueue = null;
-				_threadId = 0;
 			}
 		}
 
 		Util.AccHook _hooks;
 		Queue<(AccEVENT, int)> _hookEventQueue;
 		WFCache _winPropCache;
-		int _threadId;
 
 		struct _TriggeredData
 		{
@@ -446,7 +446,7 @@ namespace Au.Triggers
 		int _timerCounter10;
 
 		/// <summary>
-		/// Called from the message loop every 255 or less ms.
+		/// Called from the message loop every 250 or less ms.
 		/// </summary>
 		internal unsafe void LibTimer()
 		{
@@ -458,7 +458,7 @@ namespace Au.Triggers
 
 			//bool verbose = !Keyb.IsNumLock;
 			//if(Keyb.IsNumLock) return;
-			Perf.First();
+			//Perf.First();
 			//var a = Wnd.GetWnd.AllWindows(true);
 
 			//Wnd.GetWnd.AllWindows(ref _listVisible, true);
@@ -485,14 +485,14 @@ namespace Au.Triggers
 			//if(Visible.HasTriggers) needEW = true;
 			//else if(Active.HasTriggers) { if(++_timerCounterActiveEW >= 20) { _timerCounterActiveEW = 0; needEW = true; } }
 
-			if(_needVisibleArray) {
+			if(_usesVisibleArray) {
 
 				//Print(Time.PerfMilliseconds % 10000);
 
 				var t1 = _aVisibleOld; _aVisibleOld = _aVisible; _aVisible = t1;
 				_aVisible.len = 0;
 				Api.EnumWindows(_enumWinProc);
-				Perf.Next();
+				//Perf.Next();
 				_VisibleAddedRemoved();
 
 				//Perf.NW();
@@ -631,7 +631,7 @@ namespace Au.Triggers
 			try {
 				//Time.SleepDoEvents(300); //test queue
 				//Perf.Cpu();
-				for(bool queed = false; ; queed = true) {
+				for(; ; ) {
 					TWEvents e = 0;
 					switch(accEvent) {
 					case AccEVENT.SYSTEM_FOREGROUND:
@@ -642,11 +642,11 @@ namespace Au.Triggers
 					case AccEVENT.OBJECT_CLOAKED: e = TWEvents.Cloaked; break;
 					case AccEVENT.SYSTEM_MINIMIZESTART: e = TWEvents.Minimized; break;
 					case AccEVENT.SYSTEM_MINIMIZEEND: e = TWEvents.Unminimized; break;
-					case AccEVENT.SYSTEM_MOVESIZESTART: e = TWEvents.MoveSizeStart; break;
-					case AccEVENT.SYSTEM_MOVESIZEEND: e = TWEvents.MoveSizeEnd; break;
+						//case AccEVENT.SYSTEM_MOVESIZESTART: e = TWEvents.MoveSizeStart; break;
+						//case AccEVENT.SYSTEM_MOVESIZEEND: e = TWEvents.MoveSizeEnd; break;
 					}
 
-					if(e != 0) _Proc(e, w, _ProcCaller.Hook, queed: queed);
+					if(e != 0) _Proc(e, w, _ProcCaller.Hook);
 
 					//Normal timer period is 255. It is optimized for quite small CPU usage and quite good response time.
 					//To improve response time, we temporarily set smaller period on SYSTEM_FOREGROUND. Need it when the window is not active too.
@@ -673,11 +673,13 @@ namespace Au.Triggers
 
 		enum _ProcCaller { Timer, Hook, Run, Startup }
 
+		Perf.Inst _perf;
+
 		/// <summary>
 		/// Processes events for main triggers (active, visible) and most "later" triggers.
 		/// Called from hook (_HookProc), timer (LibTimer), at startup (StartStop) and SimulateActiveNew/SimulateVisibleNew.
 		/// </summary>
-		void _Proc(TWEvents e, Wnd w, _ProcCaller caller = _ProcCaller.Timer, string name = null, bool queed = false)
+		void _Proc(TWEvents e, Wnd w, _ProcCaller caller = _ProcCaller.Timer, string name = null)
 		{
 			//e can be:
 			//Used for main triggers (Active, Visible) and other triggers:
@@ -689,22 +691,29 @@ namespace Au.Triggers
 			//	Cloaked - from OBJECT_CLOAKED hook.
 			//	Minimized from SYSTEM_MINIMIZESTART hook.
 			//	Unminimized from SYSTEM_MINIMIZEEND hook.
-			//	MoveSizeStart from SYSTEM_MOVESIZESTART hook.
-			//	MoveSizeEnd from SYSTEM_MOVESIZEEND hook.
-			Debug.Assert(e == TWEvents.Active || e == TWEvents.Name || e == TWEvents.Visible || e == TWEvents.Uncloaked || e == TWEvents.Cloaked || e == TWEvents.Minimized || e == TWEvents.Unminimized || e == TWEvents.MoveSizeStart || e == TWEvents.MoveSizeEnd);
+			//	rejected: MoveSizeStart, MoveSizeEnd.
+			Debug.Assert(e == TWEvents.Active || e == TWEvents.Name || e == TWEvents.Visible || e == TWEvents.Uncloaked || e == TWEvents.Cloaked || e == TWEvents.Minimized || e == TWEvents.Unminimized/* || e == TWEvents.MoveSizeStart || e == TWEvents.MoveSizeEnd*/);
 
 			bool callerHT = caller == _ProcCaller.Hook || caller == _ProcCaller.Timer;
+
+			//Ignore Active if invisible. Triggering while invisible creates more problems than is useful. The timer will call us later.
+			//	It makes the trigger slower in many cases. Usually the speed is important when closing unwanted messageboxes etc.
+			//	If closed while invisible, the user usually never sees the window. It seems like it would be better, but can create problems:
+			//	1. If the trigger uses 'contains', in some windows we cannot find the object because it is still invisible etc; example - TaskDialog windows.
+			//	2. If the trigger is not perfectly specified and its action closes wrong windows, the user does not know what is going on.
+			//	3. It temporarily deactivates the current window anyway, and often the user is unaware about it.
+			if(e == TWEvents.Active && callerHT && !w.IsVisibleAndNotCloaked) return;
+			//if(e == TWEvents.Active && callerHT) { if(!w.IsVisibleAndNotCloaked) { _perf.First(); return; } else if(caller== _ProcCaller.Timer) _perf.NW('A'); }
+
 			int iTriggered = _aTriggered.Find(w);
 
-			bool runActive = false,
-				isVisible = w.IsVisible,
-				detectedVisibleNow = e != TWEvents.Visible && _needVisibleArray && isVisible && callerHT && _aVisible.Find(w) < 0;
-
+			bool detectedVisibleNow = e != TWEvents.Visible && _usesVisibleArray && callerHT && w.IsVisible && _aVisible.Find(w) < 0;
 			if(detectedVisibleNow) {
 				_aVisible.Add(w);
 				_ProcLater(TWEvents.Visible, w, iTriggered);
 			}
 
+			bool runActive = false;
 			if(e == TWEvents.Active) {
 				name = w.LibNameTL;
 				if(callerHT) {
@@ -728,14 +737,14 @@ namespace Au.Triggers
 				}
 			}
 
-			bool runVisible = _tVisible != null && isVisible && !w.IsCloaked;
+			bool runVisible = _tVisible != null && w.IsVisibleAndNotCloaked;
 			if(!(runVisible | runActive)) return;
 
 			bool oldWindow = callerHT && _hsOld.Contains(w);
 
 			if(_log && callerHT && (_logSkip == null || !_logSkip(w))) {
-				if(detectedVisibleNow) _LogEvent(TWEvents.Visible, w, caller, queed, oldWindow);
-				_LogEvent(e, w, caller, queed, oldWindow);
+				if(detectedVisibleNow) _LogEvent(TWEvents.Visible, w, caller, oldWindow);
+				_LogEvent(e, w, caller, oldWindow);
 			}
 
 			object triggered = iTriggered >= 0 ? _aTriggeredData[iTriggered].triggered : null, triggeredOld = triggered;
@@ -788,7 +797,7 @@ namespace Au.Triggers
 
 					//if(!visible && !w.IsActive) break; //no
 
-					if(_log) Print("Window trigger " + (visible ? "Visible" : "Active") + (t.once == _Once.New ? "New" : (t.once == _Once.Once ? "Once" : "")));
+					if(_log) Print($"<><c red>{(visible ? "Visible" : "Active")}{(t.once == _Once.New ? "New" : (t.once == _Once.Once ? "Once" : ""))}<>");
 
 					_triggers.LibRunAction(t, args);
 				} while(v != last);
@@ -821,7 +830,7 @@ namespace Au.Triggers
 				_aTriggeredData[iTriggered].name = name;
 			}
 
-			if(_log) Print($"\t{Time.PerfMilliseconds % 10000,4}, {e,-12}  {w}");
+			if(_log) Print($"\t{Time.PerfMilliseconds % 10000,4}, {e,-11}, {w}");
 
 			WindowTriggerArgs args = null;
 			var triggered = _aTriggeredData[iTriggered].triggered;
@@ -835,6 +844,9 @@ namespace Au.Triggers
 				if(0 != (t.flags & TWFlags.LaterCallFunc)) {
 					if(!t.CallFunc(args)) continue;
 				}
+
+				if(_log) Print($"<><c red>\t{e}<>");
+
 				_triggers.LibRunAction(t, args);
 			}
 		}
@@ -870,7 +882,7 @@ namespace Au.Triggers
 		void _SimulateNew(TWEvents e, Wnd w)
 		{
 			_triggers.LibThrowIfNotRunning();
-			Api.PostThreadMessage(_threadId, Api.WM_USER + 20, (int)e, w.Handle); //calls LibSimulateNew in correct thread
+			Api.PostThreadMessage(_triggers.LibThreadId, Api.WM_USER + 20, (int)e, w.Handle); //calls LibSimulateNew in correct thread
 		}
 
 		//Called in correct thread.
@@ -900,14 +912,13 @@ namespace Au.Triggers
 		/// <item>C - the window is cloaked (<see cref="Wnd.IsCloaked"/>).</item>
 		/// <item>O - the window is considered old, ie created before calling <b>Triggers.Run</b>.</item>
 		/// <item>T - the even has been detected using a timer, which means slower response time. Else detected using a hook.</item>
-		/// <item>Q - the event was queued (now retrieved from the queue) because the hook procedure was called while processing previous events. It means the event may be rather old.</item>
 		/// </list>
 		/// </item>
-		/// <item>Window (handle, class, name, program, rectangle, style, exstyle).</item>
+		/// <item>Window (handle, class, name, program, rectangle).</item>
 		/// </list>
 		/// Colors are used for window event types used for primary triggers: blue if activated; green if became visible; yellow if name changed.
-		/// When a primary trigger is activated, prints the primary event type, like ActiveNew.
 		/// For "later" events is logged time, event and window. Black, tab-indented. Prints only events that are specified in triggers.
+		/// When a trigger is activated, prints the event type in red.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -923,7 +934,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// Called by _Proc.
 		/// </summary>
-		void _LogEvent(TWEvents e, Wnd w, _ProcCaller caller, bool queed, bool oldWindow)
+		void _LogEvent(TWEvents e, Wnd w, _ProcCaller caller, bool oldWindow)
 		{
 			string col = "0";
 			switch(e) {
@@ -931,13 +942,12 @@ namespace Au.Triggers
 			case TWEvents.Visible: case TWEvents.Uncloaked: col = "0x00c000"; break;
 			case TWEvents.Name: col = "0xC0C000"; break;
 			}
-			var T = caller == _ProcCaller.Timer ? "T" : " ";
 			var A = w.IsActive ? "A" : " ";
 			var H = w.IsVisible ? " " : "H";
 			var C = w.IsCloaked ? "C" : " ";
 			var O = oldWindow ? "O" : " ";
-			var Q = queed ? "Q" : " ";
-			Print($"<><c {col}>{Time.PerfMilliseconds % 10000,4}, {e,-12} {T}{A}{H}{C}{O}{Q}, {w}, {w.Style}, {w.ExStyle}</c>");
+			var T = caller == _ProcCaller.Timer ? "T" : " ";
+			Print($"<><c {col}>{Time.PerfMilliseconds % 10000,4}, {e,-11}, {A}{H}{C}{O}{T}, {w}</c>");
 		}
 
 		/// <summary>
@@ -994,7 +1004,8 @@ namespace Au.Triggers
 		/// </example>
 		public TWEvents Later { get; }
 
-		internal WindowTriggerArgs(WindowTrigger trigger, Wnd w, TWEvents later)
+		///
+		public WindowTriggerArgs(WindowTrigger trigger, Wnd w, TWEvents later)
 		{
 			Trigger = trigger;
 			Window = w;

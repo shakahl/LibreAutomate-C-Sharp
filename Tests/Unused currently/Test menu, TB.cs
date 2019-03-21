@@ -999,111 +999,111 @@ public partial class Test
 
 	//#endregion
 
-//	#region test toolbar strip in native window
+	//	#region test toolbar strip in native window
 
-//	static LPARAM _WndprocAuBar2(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
-//	{
-//		//Print(msg);
-//		switch(msg) {
-//		case Api.WM_DESTROY:
-//			_mlTb.Stop();
-//			break;
-//		}
+	//	static LPARAM _WndprocAuBar2(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	//	{
+	//		//Print(msg);
+	//		switch(msg) {
+	//		case Api.WM_DESTROY:
+	//			_mlTb.Stop();
+	//			break;
+	//		}
 
-//		LPARAM R = Api.DefWindowProc(w, msg, wParam, lParam);
+	//		LPARAM R = Api.DefWindowProc(w, msg, wParam, lParam);
 
-//		switch(msg) {
-//		case Api.WM_PAINT:
-//			//Print("painted");
-//			//if(_tbStrip2 != null) {
-//			//	ToolStrip2 t = _tbStrip2; _tbStrip2 = null;
-//			//	if(!t.Focused) t.Focus(); //solves problem when in native window: the first button-click does not work. This takes several milliseconds therefore is after painting.
-//			//}
-//			break;
-//		}
+	//		switch(msg) {
+	//		case Api.WM_PAINT:
+	//			//Print("painted");
+	//			//if(_tbStrip2 != null) {
+	//			//	ToolStrip2 t = _tbStrip2; _tbStrip2 = null;
+	//			//	if(!t.Focused) t.Focus(); //solves problem when in native window: the first button-click does not work. This takes several milliseconds therefore is after painting.
+	//			//}
+	//			break;
+	//		}
 
-//		return R;
-//	}
+	//		return R;
+	//	}
 
-//	static Wnd.Misc.MyWindowClass _tbWndClass2;
+	//	static Wnd.Misc.MyWindowClass _tbWndClass2;
 
-//	class ToolStrip2 :ToolStrip
-//	{
-//		IntPtr _hwndParent;
+	//	class ToolStrip2 :ToolStrip
+	//	{
+	//		IntPtr _hwndParent;
 
-//		public ToolStrip2(IntPtr hwndParent) { _hwndParent = hwndParent; }
+	//		public ToolStrip2(IntPtr hwndParent) { _hwndParent = hwndParent; }
 
-//		protected override CreateParams CreateParams
-//		{
-//			get
-//			{
-//				var p = base.CreateParams;
-//				p.Parent = _hwndParent;
-//				return p;
-//			}
-//		}
-//	}
+	//		protected override CreateParams CreateParams
+	//		{
+	//			get
+	//			{
+	//				var p = base.CreateParams;
+	//				p.Parent = _hwndParent;
+	//				return p;
+	//			}
+	//		}
+	//	}
 
-//	static void TestToolbarStripInNativeWindow()
-//	{
-//		Perf.First();
-//		if(_tbWndClass2 == null) {
-//			_tbWndClass2 = Wnd.Misc.MyWindowClass.Register("AuBar2", _WndprocAuBar2, IntPtr.Size, Api.CS_GLOBALCLASS);
-//			Perf.Next();
-//		}
+	//	static void TestToolbarStripInNativeWindow()
+	//	{
+	//		Perf.First();
+	//		if(_tbWndClass2 == null) {
+	//			_tbWndClass2 = Wnd.Misc.MyWindowClass.Register("AuBar2", _WndprocAuBar2, IntPtr.Size, Api.CS_GLOBALCLASS);
+	//			Perf.Next();
+	//		}
 
-//		//bool topMost = true;
-//		Wnd w = Api.CreateWindowEx(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST, _tbWndClass2.Name, null,
-//			WS.POPUP | WS.CAPTION | WS.SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
-//		Perf.Next();
+	//		//bool topMost = true;
+	//		Wnd w = Api.CreateWindowEx(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST, _tbWndClass2.Name, null,
+	//			WS.POPUP | WS.CAPTION | WS.SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
+	//		Perf.Next();
 
-//#if true
-//		//var t = new ToolStrip();
-//		var t = new ToolStrip2(w.Handle);
-//		t.SuspendLayout();
-//		t.SetBounds(0, 0, 1100, 40);
-//		Perf.Next();
+	//#if true
+	//		//var t = new ToolStrip();
+	//		var t = new ToolStrip2(w.Handle);
+	//		t.SuspendLayout();
+	//		t.SetBounds(0, 0, 1100, 40);
+	//		Perf.Next();
 
-//		var b = new ToolStripButton("Text");
-//		b.Click += B_Click1;
-//		t.Items.Add(b);
-//		Perf.Next();
+	//		var b = new ToolStripButton("Text");
+	//		b.Click += B_Click1;
+	//		t.Items.Add(b);
+	//		Perf.Next();
 
-//		for(int i = 0; i < 30; i++) {
-//			//t.Items.Add("Text");
-//			b = new ToolStripButton("Text");
-//			t.Items.Add(b);
-//		}
-//		Perf.Next();
+	//		for(int i = 0; i < 30; i++) {
+	//			//t.Items.Add("Text");
+	//			b = new ToolStripButton("Text");
+	//			t.Items.Add(b);
+	//		}
+	//		Perf.Next();
 
-//		//Wnd wt = (Wnd)t.Handle;
-//		//Print(wt);
-//		//Print(wt.Get.DirectParent);
-//		//if(Api.SetParent(wt, w).Is0) Print(new Win32Exception().Message);
-//		//Print(wt.Get.DirectParentOrOwner);
+	//		//Wnd wt = (Wnd)t.Handle;
+	//		//Print(wt);
+	//		//Print(wt.Get.DirectParent);
+	//		//if(Api.SetParent(wt, w).Is0) Print(new Win32Exception().Message);
+	//		//Print(wt.Get.GetParentApi);
 
-//		t.ResumeLayout();
-//		t.CreateControl();
-//		//Wnd wt = (Wnd)t.Handle;
+	//		t.ResumeLayout();
+	//		t.CreateControl();
+	//		//Wnd wt = (Wnd)t.Handle;
 
-//		Perf.Next();
-//#endif
-//		w.Show(true);
-//		//w.ActivateLL();
-//		//Perf.Next();
-//		//Wnd wt = (Wnd)t.Handle;
-//		//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
-//		//w.Post(Api.WM_ACTIVATE, 1); w.Post(Api.WM_ACTIVATE, 0);
-//		//t.Select();
-//		//Perf.Next();
-//		//t.Focus();
-//		Perf.Next();
-//		_mlTb.Loop();
-//		Api.DestroyWindow(w);
-//		//if(!t.IsDisposed) t.Dispose();
-//	}
+	//		Perf.Next();
+	//#endif
+	//		w.Show(true);
+	//		//w.ActivateLL();
+	//		//Perf.Next();
+	//		//Wnd wt = (Wnd)t.Handle;
+	//		//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
+	//		//w.Post(Api.WM_ACTIVATE, 1); w.Post(Api.WM_ACTIVATE, 0);
+	//		//t.Select();
+	//		//Perf.Next();
+	//		//t.Focus();
+	//		Perf.Next();
+	//		_mlTb.Loop();
+	//		Api.DestroyWindow(w);
+	//		//if(!t.IsDisposed) t.Dispose();
+	//	}
 
-//	#endregion
+	//	#endregion
 
 	//#region test old toolbar in native window
 
@@ -1231,93 +1231,93 @@ public partial class Test
 	#endregion
 
 
-//	static void TestAuBar()
-//	{
-//		//var il = _TestCreateImageList();
+	//	static void TestAuBar()
+	//	{
+	//		//var il = _TestCreateImageList();
 
-//		Perf.First();
-//		var m = new AuToolbar();
-//		//m.ImageList = il;
-//		Perf.Next();
+	//		Perf.First();
+	//		var m = new AuToolbar();
+	//		//m.ImageList = il;
+	//		Perf.Next();
 
-//		m.Ex.SetBounds(100, 100, 400, 100);
+	//		m.Ex.SetBounds(100, 100, 400, 100);
 
-//		m["Close"] = o => { Print(o); _mlTb.Stop(); };
-//		Perf.Next();
-//#if true
-//		for(int i = 0; i < 30; i++) {
-//			m.Add("Text", null);
-//		}
-//#else
-//		m.Separator();
-//		m["Icon", @"q:\app\Cut.ico"] = o => Print(o);
-//		m["Icon", @"q:\app\Copy.ico"] = o => Print(o);
-//		m["Icon", @"q:\app\Paste.ico"] = o => Print(o);
-//		m["Icon", @"q:\app\Run.ico"] = o => Print(o);
-//		m["Icon", @"q:\app\Tip.ico"] = o => Print(o);
-//		m.LastItem.ForeColor = Color.OrangeRed;
-//		//m["Icon resource", 1] = o => Print(o);
-//		m["Imagelist icon name", "k0"] = o => Print(o);
-//		m["Imagelist icon index", 1, tooltip:"tooltip"] = o => Print(o);
-//		m.Separator();
-//		m.Add(new ToolStripTextBox());
-//#endif
-//		Perf.Next();
+	//		m["Close"] = o => { Print(o); _mlTb.Stop(); };
+	//		Perf.Next();
+	//#if true
+	//		for(int i = 0; i < 30; i++) {
+	//			m.Add("Text", null);
+	//		}
+	//#else
+	//		m.Separator();
+	//		m["Icon", @"q:\app\Cut.ico"] = o => Print(o);
+	//		m["Icon", @"q:\app\Copy.ico"] = o => Print(o);
+	//		m["Icon", @"q:\app\Paste.ico"] = o => Print(o);
+	//		m["Icon", @"q:\app\Run.ico"] = o => Print(o);
+	//		m["Icon", @"q:\app\Tip.ico"] = o => Print(o);
+	//		m.LastItem.ForeColor = Color.OrangeRed;
+	//		//m["Icon resource", 1] = o => Print(o);
+	//		m["Imagelist icon name", "k0"] = o => Print(o);
+	//		m["Imagelist icon index", 1, tooltip:"tooltip"] = o => Print(o);
+	//		m.Separator();
+	//		m.Add(new ToolStripTextBox());
+	//#endif
+	//		Perf.Next();
 
-//		//Print(w);
-//		m.Visible = true;
-//		Perf.Next();
-//		_mlTb.Loop();
-//		m.Close();
-//	}
+	//		//Print(w);
+	//		m.Visible = true;
+	//		Perf.Next();
+	//		_mlTb.Loop();
+	//		m.Close();
+	//	}
 
-//	static void TestToolbar()
-//	{
-//		//Debug_.PrintFunc();
-//		for(int i = 0; i < 1; i++) { TestAuBar(); /*Thread.Sleep(500);*/ }
+	//	static void TestToolbar()
+	//	{
+	//		//Debug_.PrintFunc();
+	//		for(int i = 0; i < 1; i++) { TestAuBar(); /*Thread.Sleep(500);*/ }
 
-//		//for(int i=0; i<1; i++) TestOldToolbar();
-//		//for(int i=0; i<1; i++) TestOldToolbarInNativeWindow();
-//		//for(int i=0; i<1; i++) TestToolbarStrip();
-//		//for(int i=0; i<1; i++) TestToolbarStripInNativeWindow();
-//		//for(int i=0; i<4; i++) TestNativeWindow();
+	//		//for(int i=0; i<1; i++) TestOldToolbar();
+	//		//for(int i=0; i<1; i++) TestOldToolbarInNativeWindow();
+	//		//for(int i=0; i<1; i++) TestToolbarStrip();
+	//		//for(int i=0; i<1; i++) TestToolbarStripInNativeWindow();
+	//		//for(int i=0; i<4; i++) TestNativeWindow();
 
-//		//TestWpfToolbar();
-//		//TestWpfToolbar();
-//		//var t = new Thread(() => { TestWpfToolbar(); });
-//		//t.SetApartmentState(ApartmentState.STA); //WPF menu does not work without this
-//		//t.Start();
-//		//t.Join();
-//	}
+	//		//TestWpfToolbar();
+	//		//TestWpfToolbar();
+	//		//var t = new Thread(() => { TestWpfToolbar(); });
+	//		//t.SetApartmentState(ApartmentState.STA); //WPF menu does not work without this
+	//		//t.Start();
+	//		//t.Join();
+	//	}
 
 
-//	static void TestMenuTB()
-//	{
+	//	static void TestMenuTB()
+	//	{
 
-//		//MessageBox.Show("");
-//		//AuDialog.Show("");
+	//		//MessageBox.Show("");
+	//		//AuDialog.Show("");
 
-//		//Thread.Sleep(500);
-//		TestToolbar();
-//		//TestAuMenu();
-//		//TestAuMenuWithForm();
-//		//Thread.Sleep(500);
-//		//TestWpfContextMenu();
-//		//Thread.Sleep(500);
-//		//TestWpfContextMenu();
+	//		//Thread.Sleep(500);
+	//		TestToolbar();
+	//		//TestAuMenu();
+	//		//TestAuMenuWithForm();
+	//		//Thread.Sleep(500);
+	//		//TestWpfContextMenu();
+	//		//Thread.Sleep(500);
+	//		//TestWpfContextMenu();
 
-//		//var t = new Thread(() => { TestWpfContextMenu(); });
-//		//t.SetApartmentState(ApartmentState.STA); //WPF menu does not work without this
-//		//t.Start();
-//		//t.Join();
+	//		//var t = new Thread(() => { TestWpfContextMenu(); });
+	//		//t.SetApartmentState(ApartmentState.STA); //WPF menu does not work without this
+	//		//t.Start();
+	//		//t.Join();
 
-//		//MessageBox.Show(""); //after menu this is behind other windows. Form too.
-//		//AuDialog.Show(""); //active, OK
+	//		//MessageBox.Show(""); //after menu this is behind other windows. Form too.
+	//		//AuDialog.Show(""); //active, OK
 
-//		//Form f=new Form();
-//		//f.Load += (unu, sed)=>{ f.Activate(); }; //OK
-//		//f.ShowDialog();
-//	}
+	//		//Form f=new Form();
+	//		//f.Load += (unu, sed)=>{ f.Activate(); }; //OK
+	//		//f.ShowDialog();
+	//	}
 }
 
 

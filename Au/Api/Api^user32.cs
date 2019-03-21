@@ -22,29 +22,44 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "PostThreadMessageW")]
 		internal static extern bool PostThreadMessage(int idThread, int Msg, LPARAM wParam, LPARAM lParam);
 
-		[DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
-		internal static extern int GetWindowLong32(Wnd hWnd, int nIndex);
 
-		[DllImport("user32.dll", EntryPoint = "GetWindowLongPtrW", SetLastError = true)]
-		internal static extern LPARAM GetWindowLong64(Wnd hWnd, int nIndex);
+		[DllImport("user32.dll", SetLastError = true)]
+		static extern LPARAM GetWindowLongW(Wnd hWnd, int nIndex);
 
-		[DllImport("user32.dll", EntryPoint = "SetWindowLongW", SetLastError = true)]
-		internal static extern int SetWindowLong32(Wnd hWnd, int nIndex, int dwNewLong);
+		[DllImport("user32.dll", SetLastError = true)]
+		static extern LPARAM GetWindowLongPtrW(Wnd hWnd, int nIndex);
 
-		[DllImport("user32.dll", EntryPoint = "SetWindowLongPtrW", SetLastError = true)]
-		internal static extern LPARAM SetWindowLong64(Wnd hWnd, int nIndex, LPARAM dwNewLong);
+		//info: 32-bit user32.dll does not have GetWindowLongPtrW etc. In C++, in x86 config it is defined as GetWindowLongW etc.
+		internal static LPARAM GetWindowLongPtr(Wnd w, int nIndex)
+			=> IntPtr.Size == 8 ? GetWindowLongPtrW(w, nIndex) : GetWindowLongW(w, nIndex);
 
-		[DllImport("user32.dll", EntryPoint = "GetClassLongW", SetLastError = true)]
-		internal static extern int GetClassLong32(Wnd hWnd, int nIndex);
+		[DllImport("user32.dll", SetLastError = true)]
+		static extern LPARAM SetWindowLongW(Wnd hWnd, int nIndex, LPARAM dwNewLong);
 
-		[DllImport("user32.dll", EntryPoint = "GetClassLongPtrW", SetLastError = true)]
-		internal static extern LPARAM GetClassLong64(Wnd hWnd, int nIndex);
+		[DllImport("user32.dll", SetLastError = true)]
+		static extern LPARAM SetWindowLongPtrW(Wnd hWnd, int nIndex, LPARAM dwNewLong);
 
-		[DllImport("user32.dll", EntryPoint = "SetClassLongW", SetLastError = true)]
-		internal static extern int SetClassLong32(Wnd hWnd, int nIndex, int dwNewLong);
+		internal static LPARAM SetWindowLongPtr(Wnd w, int nIndex, LPARAM dwNewLong)
+			=> IntPtr.Size == 8 ? SetWindowLongPtrW(w, nIndex, dwNewLong) : SetWindowLongW(w, nIndex, dwNewLong);
 
-		[DllImport("user32.dll", EntryPoint = "SetClassLongPtrW", SetLastError = true)]
-		internal static extern LPARAM SetClassLong64(Wnd hWnd, int nIndex, LPARAM dwNewLong);
+		[DllImport("user32.dll", SetLastError = true)]
+		static extern LPARAM GetClassLongW(Wnd hWnd, int nIndex);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		static extern LPARAM GetClassLongPtrW(Wnd hWnd, int nIndex);
+
+		internal static LPARAM GetClassLongPtr(Wnd w, int nIndex)
+			=> IntPtr.Size == 8 ? GetClassLongPtrW(w, nIndex) : GetClassLongW(w, nIndex);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		static extern LPARAM SetClassLongW(Wnd hWnd, int nIndex, LPARAM dwNewLong);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		static extern LPARAM SetClassLongPtrW(Wnd hWnd, int nIndex, LPARAM dwNewLong);
+
+		internal static LPARAM SetClassLongPtr(Wnd w, int nIndex, LPARAM dwNewLong)
+			=> IntPtr.Size == 8 ? SetClassLongPtrW(w, nIndex, dwNewLong) : SetClassLongW(w, nIndex, dwNewLong);
+
 
 		[DllImport("user32.dll", EntryPoint = "GetClassNameW", SetLastError = true)]
 		internal static extern int GetClassName(Wnd hWnd, char* lpClassName, int nMaxCount);
@@ -252,8 +267,11 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern Wnd GetTopWindow(Wnd hWnd);
 
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern Wnd GetParent(Wnd hWnd);
+		//rejected. Obsolete, confusing.
+		//	Returns owner for top-level windows with WS_POPUP style.
+		//	Returns 0 for child windows without WS_CHILD style, eg message-only windows and QM2 toolbar owners.
+		//[DllImport("user32.dll", SetLastError = true)]
+		//internal static extern Wnd GetParent(Wnd hWnd);
 
 		[DllImport("user32.dll")]
 		internal static extern Wnd GetDesktopWindow();
@@ -396,6 +414,10 @@ namespace Au.Types
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool IsChild(Wnd hWndParent, Wnd hWnd);
+
+		//rejected. As slow as GetAncestor(GA_PARENT).
+		//[DllImport("user32.dll", SetLastError = true), Obsolete("Undocumented API")]
+		//internal static extern bool IsTopLevelWindow(Wnd hWnd);
 
 		#region GetSystemMetrics, SystemParametersInfo
 

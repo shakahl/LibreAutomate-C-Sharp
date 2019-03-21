@@ -284,6 +284,7 @@ namespace Au.Types
 		/// </example>
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static Wnd OrThrow(this Wnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (Wnd).");
+		//CONSIDER: OrExc
 
 		/// <summary>
 		/// If this is null, throws <see cref="NotFoundException"/>, else returns this.

@@ -15,7 +15,7 @@ void Print(STR s)
 	}
 	//SendMessageW(s_QM2, WM_SETTEXT, -1, (LPARAM)(s ? s : L""));
 	DWORD_PTR res;
-	SendMessageTimeoutW(s_QM2, WM_SETTEXT, -1, (LPARAM)(s ? s : L""), SMTO_BLOCK|SMTO_ABORTIFHUNG, 5000, &res);
+	SendMessageTimeoutW(s_QM2, WM_SETTEXT, -1, (LPARAM)(s ? s : L""), SMTO_BLOCK | SMTO_ABORTIFHUNG, 5000, &res);
 #else
 	_cputws(s);
 	_cputws(L"\r\n");
@@ -189,6 +189,43 @@ bool Name(HWND w, out Bstr& s)
 	return R;
 }
 
+//Like IsWindowVisible, but does not check wTL visibility.
+//Slower, but does not make EnumChildWindows significantly slower. Eg 550 -> 570-590 mcs.
+bool IsVisibleInWindow(HWND c, HWND wTL)
+{
+	if(IsWindowVisible(c)) return true; //these two make faster in most cases (when wTL is visible)
+	if(IsWindowVisible(wTL)) return false;
+	int i;
+	for(i = 0; i < 10000; i++) {
+		//PrintWnd(c);
+		if(!(wnd::Style(c) & WS_VISIBLE)) return false;
+		c = (HWND)(LPARAM)GetWindowLongPtrW(c, GWLP_HWNDPARENT);
+		if(c == wTL) return true;
+		if(c == 0) break;
+	}
+	assert(false);
+	return false;
+}
+
+BOOL EnumChildWindows(HWND w, WNDENUMPROCL& callback)
+{
+	return ::EnumChildWindows(w, [](HWND c, LPARAM p) { return (BOOL)(*(WNDENUMPROCL*)p)(c); }, (LPARAM)&callback);
+}
+
+//className - wildcard.
+HWND FindChildByClassName(HWND w, STR className, bool visible)
+{
+	HWND R = 0;
+	wnd::EnumChildWindows(w, [&R, className, visible, w](HWND c)
+	{
+		if(visible && !IsVisibleInWindow(c, w)) return 1;
+		if(!wnd::ClassNameIs(c, className)) return 1;
+		R = c;
+		return 0;
+	});
+	return R;
+}
+
 #if TRACE
 void PrintWnd(HWND w)
 {
@@ -202,29 +239,11 @@ void PrintWnd(HWND w)
 		RECT r = {}; GetWindowRect(w, &r);
 		STR inv = IsWindowVisible(w) ? L"" : L" invisible";
 		Printf(L"%i %s \"%s\" {L=%i T=%i W=%i H=%i}%s",
-			(int)(LPARAM)w, sc, sn, r.left, r.top, r.right-r.left, r.bottom-r.top, inv);
+			(int)(LPARAM)w, sc, sn, r.left, r.top, r.right - r.left, r.bottom - r.top, inv);
 	}
 }
 #endif
 
-BOOL EnumChildWindows(HWND w, WNDENUMPROCL& callback)
-{
-	return ::EnumChildWindows(w, [](HWND c, LPARAM p) { return (BOOL)(*(WNDENUMPROCL*)p)(c); }, (LPARAM)&callback);
-}
-
-//className - wildcard.
-HWND FindChildByClassName(HWND w, STR className, bool visible)
-{
-	HWND R = 0;
-	wnd::EnumChildWindows(w, [&R, className, visible](HWND c)
-	{
-		if(visible && !IsWindowVisible(c)) return 1;
-		if(!wnd::ClassNameIs(c, className)) return 1;
-		R = c;
-		return 0;
-	});
-	return R;
-}
 }
 
 //Gets pointer to other interface through iserviceprovider.
@@ -234,7 +253,7 @@ bool QueryService_(IUnknown* iFrom, OUT void** iTo, REFIID iid, const GUID* guid
 	*iTo = null;
 	if(!guidService) guidService = &iid;
 	Smart<IServiceProvider> sp;
-	return 0==iFrom->QueryInterface(&sp) && 0==sp->QueryService(*guidService, iid, iTo) && *iTo;
+	return 0 == iFrom->QueryInterface(&sp) && 0 == sp->QueryService(*guidService, iid, iTo) && *iTo;
 }
 
 //void DoEvents()

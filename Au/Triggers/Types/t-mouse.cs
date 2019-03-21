@@ -128,10 +128,17 @@ namespace Au.Triggers
 				var b = HotkeyTriggers.LibModBitArray(mod, modAny);
 				for(int i = 0; i < 16; i++) if(0 != (b & (1 << i))) t.DictAdd(_d, _DictKey(subtype, (KMod)i, data));
 			}
+			_lastAdded = t;
 			return t;
 		}
 
-		bool ITriggers.HasTriggers => _d.Count > 0;
+		/// <summary>
+		/// The last added trigger.
+		/// </summary>
+		public MouseTrigger Last => _lastAdded;
+		MouseTrigger _lastAdded;
+
+		bool ITriggers.HasTriggers => _lastAdded != null;
 
 		void ITriggers.StartStop(bool start)
 		{
@@ -197,7 +204,8 @@ namespace Au.Triggers
 		public Wnd Window { get; }
 		public KMod Mod { get; }
 
-		internal MouseTriggerArgs(MouseTrigger trigger, Wnd w, KMod mod)
+		///
+		public MouseTriggerArgs(MouseTrigger trigger, Wnd w, KMod mod)
 		{
 			Trigger = trigger;
 			Window = w; Mod = mod;

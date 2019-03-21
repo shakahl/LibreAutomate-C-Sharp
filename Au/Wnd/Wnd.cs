@@ -465,6 +465,27 @@ namespace Au
 		public bool IsVisibleAndNotCloaked => IsVisible && !IsCloaked;
 
 		/// <summary>
+		/// Returns true if this window is visible in the specified parent or ancestor window.
+		/// Like <see cref="IsVisible"/>, but does not check the visibility of the specified parent/ancestor window.
+		/// </summary>
+		/// <param name="wParent">Parent or ancestor window.</param>
+		internal bool LibIsVisibleIn(Wnd wParent)
+		{
+			if(IsVisible) return true; //these two make faster in most cases (when wTL is visible)
+			if(wParent.IsVisible) return false;
+			var c = this;
+			for(int i = 0; i < 10000; i++) {
+				//Print(c);
+				if(!c.HasStyle(WS.VISIBLE)) return false;
+				c = c.LibParentGWL;
+				if(c == wParent) return true;
+				if(c.Is0) break;
+			}
+			Debug.Assert(false);
+			return false;
+		}
+
+		/// <summary>
 		/// Shows (if hidden) or hides this window.
 		/// Does not activate/deactivate/zorder.
 		/// With windows of current thread usually it's better to use <see cref="ShowLL"/>.
@@ -1638,6 +1659,8 @@ namespace Au
 			return true;
 		}
 
+		//TEST: undocumented API GetWindowMinimizeRect. Gets rect of taskbar button or where it would be minimized above the Start button.
+
 		/// <summary>
 		/// Returns mouse pointer position relative to the client area of this window.
 		/// </summary>
@@ -2254,31 +2277,27 @@ namespace Au
 		#region window/class long, control id, prop
 
 		/// <summary>
-		/// Calls API <msdn>GetWindowLong</msdn> if this process is 32-bit, <msdn>GetWindowLongPtr</msdn> if 64-bit.
+		/// Calls API <msdn>GetWindowLongPtr</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// For index can be used constants from <see cref="Native.GWL"/>.
 		/// Supports <see cref="WinError.Code"/>.
+		/// In 32-bit process actually calls <b>GetWindowLong</b>, because <b>GetWindowLongPtr</b> is unavailable.
 		/// </remarks>
-		public LPARAM GetWindowLong(int index)
-		{
-			LPARAM R;
-			if(IntPtr.Size == 8) R = Api.GetWindowLong64(this, index); else R = Api.GetWindowLong32(this, index);
-			return R;
-		}
+		public LPARAM GetWindowLong(int index) => Api.GetWindowLongPtr(this, index);
 
 		/// <summary>
-		/// Calls API <msdn>SetWindowLong</msdn> if this process is 32-bit, <msdn>SetWindowLongPtr</msdn> if 64-bit.
+		/// Calls API <msdn>SetWindowLongPtr</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// For index can be used constants from <see cref="Native.GWL"/>.
+		/// In 32-bit process actually calls <b>SetWindowLong</b>, because <b>SetWindowLongPtr</b> is unavailable.
 		/// </remarks>
 		/// <exception cref="WndException"/>
 		public LPARAM SetWindowLong(int index, LPARAM newValue)
 		{
 			WinError.Clear();
-			LPARAM R;
-			if(IntPtr.Size == 8) R = Api.SetWindowLong64(this, index, newValue); else R = Api.SetWindowLong32(this, index, (int)newValue);
+			LPARAM R = Api.SetWindowLongPtr(this, index, newValue);
 			if(R == 0 && WinError.Code != 0) ThrowUseNative();
 			return R;
 		}
@@ -2391,9 +2410,10 @@ namespace Au
 		/// Returns true if the window is a ghost window that the system creates over a hung (not responding) window to allow the user to minimally interact with it.
 		/// </summary>
 		public bool IsHungGhost {
-			get => IsHung && ClassNameIs("Ghost.exe") && ProgramName.EqualsI_("DWM.exe");
+			get => IsHung && ClassNameIs("Ghost") && ProgramName.EqualsI_("DWM.exe");
 			//Class is "Ghost", exe is "DWM" (even if no Aero), text sometimes ends with "(Not Responding)".
 			//IsHungWindow returns true for ghost window, although it is not actually hung. It is the fastest.
+			//TODO: test undocumented API HungWindowFromGhostWindow
 		}
 
 		/// <summary>

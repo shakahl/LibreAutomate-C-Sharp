@@ -190,13 +190,13 @@ IStream* MarshalAgentIAccessible(HWND wAgent) {
 
 namespace outproc
 {
-//Reads wAgent AO marshal data from the window extra memory (GetWindowLong), calls CoUnmarshalInterface.
+//Reads wAgent AO marshal data from the window extra memory (GetWindowLongPtrW), calls CoUnmarshalInterface.
 bool UnmarshalAgentIAccessible(HWND wAgent, out IAccessible*& iacc) {
 	iacc = null;
 
-	DWORD streamSize = GetWindowLongW(wAgent, 0); if(streamSize == 0) return false;
+	DWORD streamSize = (DWORD)GetWindowLongPtrW(wAgent, 0); if(streamSize == 0) return false;
 	long b[c_agentWndExtra / 4];
-	for(DWORD i = 0; i < streamSize; i += 4) b[i / 4] = GetWindowLongW(wAgent, i + 4);
+	for(DWORD i = 0; i < streamSize; i += 4) b[i / 4] = (long)GetWindowLongPtrW(wAgent, i + 4);
 
 	HGLOBAL hg = GlobalAlloc(GMEM_MOVEABLE, streamSize); if(hg == 0) return false;
 	LPVOID mem = GlobalLock(hg); memcpy(mem, b, streamSize); GlobalUnlock(mem);
@@ -488,7 +488,9 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 
 	if(tid == GetCurrentThreadId()) return (HRESULT)eError::WindowOfThisThread;
 	if(wnd::ClassNameIs(GetAncestor(w, GA_ROOT), { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" }))
-		return (HRESULT)eError::UseNotInProc; //tested: uiAccess does not help
+		return (HRESULT)eError::UseNotInProc;
+	//tested: uiAccess does not help.
+	//TODO: test SetProcessRestrictionExemption, AcquireDeveloperLicense.
 
 	static CHandle s_mutex(CreateMutexW(SecurityAttributes::Common(), false, L"AuCpp_MutexGAW"));
 	DWORD wfso = WaitForSingleObject(s_mutex, INFINITE);

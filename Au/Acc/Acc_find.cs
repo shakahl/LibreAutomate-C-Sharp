@@ -303,7 +303,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds accessible object (AO) in window.
+		/// Finds an accessible object (AO) in window.
 		/// Returns the found AO. Returns null if not found. See examples.
 		/// </summary>
 		/// <param name="w">Window or control that contains the AO.</param>

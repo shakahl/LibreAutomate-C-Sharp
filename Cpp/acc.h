@@ -562,7 +562,7 @@ private:
 
 			DWORD bits = 1 << 3; //CLIENT
 
-			DWORD style = GetWindowLongW(w, GWL_STYLE);
+			DWORD style = wnd::Style(w);
 			if(style&WS_VSCROLL) bits |= 1 << 4;
 			if(style&WS_HSCROLL) bits |= 1 << 5;
 			if((style&(WS_VSCROLL | WS_HSCROLL)) == (WS_VSCROLL | WS_HSCROLL)) bits |= 1 << 6; //GRIP
@@ -572,7 +572,7 @@ private:
 				//note: assume system MENUBAR always visible if TITLEBAR visible; it depends on WS_SYSMENU + on don't know what.
 				if((style&WS_CAPTION) == WS_CAPTION) bits |= 3; //system MENUBAR, TITLEBAR
 			} else {
-				//With top-level windows don't use style/GetWindowLongW(w, GWL_ID)/GetMenu. Can be custom MENUBAR etc. Here the speed is not so important.
+				//With top-level windows don't use style/GetWindowLongPtrW(w, GWL_ID)/GetMenu. Can be custom MENUBAR etc. Here the speed is not so important.
 				for(int i = 0; i < 3; i++) {
 					Smart<IAccessible> iacc; long state;
 					if(0 != v[i].pdispVal->QueryInterface(&iacc)) continue;

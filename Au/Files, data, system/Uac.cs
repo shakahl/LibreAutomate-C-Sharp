@@ -300,6 +300,7 @@ namespace Au
 			try { r = (int)Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System", "EnableLUA", 1); }
 			catch { }
 			return r == 0;
+			//TODO: test undocumented API CheckElevationEnabled.
 		}
 	}
 }
