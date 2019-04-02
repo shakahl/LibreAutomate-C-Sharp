@@ -132,7 +132,7 @@ namespace Au.Tools
 			if(!wnd.Is0) {
 				if(wnd == _wnd) {
 					sCode = ST.RangeText(0, _ReadonlyStartUtf8);
-					if(sCode.RegexMatch_(@"^(?:var|Wnd) (\w+)((?s).+\r\n(?:var|Wnd) (\w+).+$)?", out var m)) {
+					if(sCode.RegexMatch_(@"^(?:var|Wnd) (\w+)((?s).+\R(?:var|Wnd) (\w+).+$)?", out var m)) {
 						bool isConCode = m[3].Exists;
 						if(con == _con && !con.Is0 == isConCode) return (sCode, m[isConCode ? 3 : 1].Value);
 						wndVar = m[1].Value;
@@ -146,7 +146,7 @@ namespace Au.Tools
 				if(sCode != null) b.Append(sCode);
 				else if((cls = wnd.ClassName) != null) {
 					b.Append("var w = Wnd.Find(");
-					b.AppendStringArg(TUtil.EscapeWindowName(wnd.Name, true), noComma: true);
+					b.AppendStringArg(TUtil.EscapeWindowName(wnd.LibNameTL, true), noComma: true);
 					b.AppendStringArg(TUtil.StripWndClassName(cls, true));
 					string fl = null;
 					if(!wnd.IsVisible) fl = "WFFlags.HiddenToo";
@@ -203,6 +203,15 @@ namespace Au.Tools
 			return (R, wndVar);
 		}
 		Wnd _wnd, _con;
+
+		//rejected. Better don't update changed window name than overwrite user-edited code.
+		///// <summary>
+		///// Forget window and control handles. Then <see cref="ZGetWndFindCode"/> will format new code even if the window is the same as previously.
+		///// </summary>
+		//public void ZResetWndCon()
+		//{
+		//	_wnd = _con = default;
+		//}
 
 		/// <summary>
 		/// Shows <see cref="Form_Wnd"/> and updates text.

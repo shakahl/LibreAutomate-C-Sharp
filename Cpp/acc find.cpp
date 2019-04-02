@@ -23,12 +23,13 @@ class AccFinder
 	str::Wildex _controlClass; //used when the prop parameter has "class=x". Then _flags2 has eAF2::InControls.
 	str::Wildex _name; //name. If the name parameter is null, _name.Is()==false.
 	NameValue* _prop; //other string properties and HTML attributes. Specified in the prop parameter, like L"value=XXX\0 @id=YYY".
+	STR _controlWF; //WinForms name. Used when the prop parameter has "id=x" where x is not a number. Then _flags2 has eAF2::InControls.
 	STR* _notin; //when searching, skip descendants of AO of these roles. Specified in the prop parameter.
 	Bstr _roleStrings, _propStrings; //a copy of the input role/prop string when eg need to parse (modify) the string
 	int _pathCount; //_path array element count
 	int _propCount; //_prop array element count
 	int _notinCount; //_notin array element count
-	int _controlId; //used when the prop parameter has "id=x". Then _flags2 has eAF2::InControls, and _controlClass is null.
+	int _controlId; //used when the prop parameter has "id=x" wherex x is a number. Then _flags2 has eAF2::InControls|IsId.
 	int _minLevel, _maxLevel; //min and max level to search in the object subtree. Specified in the prop parameter. Default 0 1000.
 	int _maxCC; //skip descendants of AOs that have more children. Specified in the prop parameter. Default 10000.
 	int _stateYes, _stateNo; //the AO must have all _stateYes flags and none of _stateNo flags. Specified in the prop parameter.
@@ -200,9 +201,10 @@ class AccFinder
 						if(i == 0) return _Error(L"Unknown name in prop. For HTML attributes use prefix @.");
 						const int nStrProp = 6;
 						if(i > nStrProp) {
-							int len = (int)(s - va); if(len == 0) goto ge;
+							i -= nStrProp;
+							int len = (int)(s - va); if(len == 0 && i != 8) goto ge; //winforms name can be empty
 							addToProp = false;
-							switch(i - nStrProp) {
+							switch(i) {
 							case 1:
 								if(!_ParseState(va, s)) return false;
 								break;
@@ -236,8 +238,10 @@ class AccFinder
 								_flags2 |= eAF2::InControls;
 								break;
 							case 8:
-								_controlId = strtoi(va, &s2);
-								if(s2 != s) goto ge;
+								if(len > 0) {
+									int cid = strtoi(va, &s2);
+									if(s2 == s) { _controlId = cid; _flags2 |= eAF2::IsId; } else _controlWF = va;
+								} else _controlWF = va;
 								_flags2 |= eAF2::InControls;
 								break;
 							}
@@ -327,14 +331,10 @@ public:
 		} else if(!!(_flags2&eAF2::InControls)) {
 			wnd::EnumChildWindows(w, [this, w](HWND c)
 			{
-				if(!(_flags&eAF::HiddenToo)) {
-					if(!wnd::IsVisibleInWindow(c, w)) return true; //not IsWindowVisible, because we want to find controls in invisible windows
-				}
-				if(_controlClass.Is()) {
-					if(!wnd::ClassNameIs(c, _controlClass)) return true;
-				} else {
-					if(GetDlgCtrlID(c) != _controlId) return true;
-				}
+				if(!(_flags&eAF::HiddenToo) && !wnd::IsVisibleInWindow(c, w)) return true; //not IsWindowVisible, because we want to find controls in invisible windows
+				if(!!(_flags2&eAF2::IsId) && GetDlgCtrlID(c) != _controlId) return true;
+				if(_controlClass.Is() && !wnd::ClassNameIs(c, _controlClass)) return true;
+				if(_controlWF != null && !wnd::WinFormsNameIs(c, _controlWF)) return true;
 				return (bool)_FindInWnd(c, true);
 			});
 		} else {

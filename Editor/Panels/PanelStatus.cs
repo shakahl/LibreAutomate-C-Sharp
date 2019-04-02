@@ -34,7 +34,8 @@ class PanelStatus :Control
 
 		_c = new AuScintilla();
 		_c.Dock = DockStyle.Fill;
-		_c.AccessibleName = "Status bar";
+		_c.AccessibleName = _c.Name = "Status_text";
+		this.AccessibleName = this.Name = "Status";
 		_c.AccessibleRole = AccessibleRole.StatusBar;
 
 		_c.InitReadOnlyAlways = true;

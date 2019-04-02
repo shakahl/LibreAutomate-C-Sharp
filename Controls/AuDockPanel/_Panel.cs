@@ -55,10 +55,11 @@ namespace Au.Controls
 					_InitToolstrip(ts);
 				} else if(x.HasAttribute_("doc")) {
 					this.HasDocument = true;
-					c.AccessibleRole = AccessibleRole.Document;
-				} else {
-					c.AccessibleRole = AccessibleRole.Pane;
+				//	c.AccessibleRole = AccessibleRole.Document; //no, its child is DOCUMENT
+				//} else {
+				//	c.AccessibleRole = AccessibleRole.Pane;
 				}
+				c.AccessibleRole = AccessibleRole.Pane;
 
 				this.InitDockStateFromXML(x);
 			}

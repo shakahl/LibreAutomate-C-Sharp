@@ -32,15 +32,75 @@ namespace Au
 		/// </remarks>
 		public class Finder
 		{
-			Wildex _name;
-			Wildex _className;
-			Wildex _program;
-			Func<Wnd, bool> _also;
-			WFFlags _flags;
-			int _processId;
-			int _threadId;
-			Wnd _owner;
-			object _contains;
+			readonly Wildex _name;
+			readonly Wildex _cn;
+			readonly Wildex _program;
+			readonly Func<Wnd, bool> _also;
+			readonly WFFlags _flags;
+			readonly int _processId;
+			readonly int _threadId;
+			readonly Wnd _owner;
+			readonly object _contains;
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+			/// <summary>
+			/// Parsed parameter values. All read-only.
+			/// </summary>
+			public TProps Props => new TProps(this);
+			/// <tocexclude />
+			public struct TProps
+			{
+				Finder _f;
+				internal TProps(Finder f) { _f = f; }
+
+				public Wildex name => _f._name;
+				public Wildex cn => _f._cn;
+				public Wildex program => _f._program;
+				public Func<Wnd, bool> also => _f._also;
+				public WFFlags flags => _f._flags;
+				public int processId => _f._processId;
+				public int threadId => _f._threadId;
+				public Wnd owner => _f._owner;
+				public object contains => _f._contains;
+
+				/// <summary>
+				/// After unsuccesful <see cref="IsMatch"/> indicates the parameter that does not match.
+				/// </summary>
+				public EProps DoesNotMatch => _f._stopProp;
+			}
+
+			EProps _stopProp;
+			/// <tocexclude />
+			public enum EProps { name = 1, cn, program, also, contains, visible, cloaked, }
+
+			public override string ToString()
+			{
+				using(new Util.LibStringBuilder(out var b)) {
+					_Append("name", _name);
+					_Append("cn", _cn);
+					if(_program != null) _Append("program", _program); else if(_processId != 0) _Append("processId", _processId); else if(_threadId != 0) _Append("threadId", _threadId);
+					if(_also != null) _Append("also", "");
+					_Append("contains", _contains);
+					//if(_contains!=null) {
+					//string s = null;
+					//switch(_contains) {
+					//case Acc.Finder _: s = "acc"; break;
+					//case ChildFinder _: s = "child"; break;
+					//default: s = "image"; break; //note: avoid loading System.Drawing.dll. It can be Bitmap, ColorInt, etc.
+					//}
+					//if(s != null) _Append("contains", s);
+					//}
+					return b.ToString();
+
+					void _Append(string k, object v)
+					{
+						if(v == null) return;
+						if(b.Length != 0) b.Append(", ");
+						b.Append(k).Append('=').Append(v);
+					}
+				}
+			}
+#pragma warning restore CS1591
 
 			/// <summary>
 			/// See <see cref="Wnd.Find"/>.
@@ -56,38 +116,42 @@ namespace Au
 				WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
 			{
 				_name = name;
-				if(cn != null) _className = cn.Length != 0 ? cn : throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
+				if(cn != null) _cn = cn.Length != 0 ? cn : throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
 				program.GetValue(out _program, out _processId, out _threadId, out _owner);
 				_flags = flags;
 				_also = also;
-				if(contains != null) _ParseContains(contains);
+				if(contains != null) _contains = _ParseContains(contains);
 			}
 
-			//TODO: use uniform and more readable format:
-			//	acc:ROLE, name
-			//	child:class, name
-			//	image:xxxxxxxxxxxxxxx
-			void _ParseContains(object contains)
+			object _ParseContains(object contains)
 			{
-				if(contains is string s) { //accessible object or control or image. Acc format: "'role' name" or "name". Control: "'^class' text". Image: "image:...".
-					if(s.Length == 0) return;
-					string role = null, name = s;
+				switch(contains) {
+				case string s: //accessible object or control or image. Acc format: "a'role' name" or "name". Control: "c'class' text". Image: "image:...".
+					if(s.Length == 0) return null;
+					string role = null, name = s; bool isControl = false;
 					switch(s[0]) {
-					case '\'':
-						if(s.RegexMatch_(@"^'(.+?)?' ((?s).+)?$", out var m)) { role = m[1].Value; name = m[2].Value; }
+					case 'a':
+					case 'c':
+						if(s.RegexMatch_(@"^. ?'(.+?)?' ?((?s).+)?$", out var m)) { role = m[1].Value; name = m[2].Value; isControl = s[0] == 'c'; }
 						break;
 					case 'i' when s.StartsWith_("image:"):
-						_contains = WinImage.LoadImage(s);
-						return;
+						return _LoadImage(s);
 					}
-					if(role != null && role[0] == '!') { //control
-						_contains = new ChildFinder(name, role.Length == 1 ? null : role.Substring(1));
-					} else { //acc
-						_contains = new Acc.Finder(role, name, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
-					}
-				} else if(contains is Acc.Finder || contains is ChildFinder || contains is System.Drawing.Image) _contains = contains;
-				else throw new ArgumentException("Unsupported object type.", nameof(contains));
+					if(isControl) return new ChildFinder(name, role);
+					return new Acc.Finder(role, name, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
+				default:
+					return contains;
+					//case Acc.Finder _:
+					//case ChildFinder _:
+					//case System.Drawing.Bitmap _: //note: avoid loading System.Drawing.dll. It can be Bitmap, ColorInt, etc. If invalid type, will throw later.
+					//	return contains;
+					//default: 
+					//	throw new ArgumentException("Unsupported object type.", nameof(contains));
+				}
 			}
+
+			[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading System.Drawing.dll when image not used
+			static object _LoadImage(string s) => WinImage.LoadImage(s);
 
 			/// <summary>
 			/// Implicit conversion from string that can contain window name, class name, program and/or an object.
@@ -128,7 +192,7 @@ namespace Au
 			public bool Find()
 			{
 				using(var k = new _WndList(_AllWindows()))
-					return _FindInList(k) >= 0;
+					return _FindOrMatch(k) >= 0;
 			}
 
 			Util.LibArrayBuilder<Wnd> _AllWindows()
@@ -149,7 +213,7 @@ namespace Au
 			public int FindInList(IEnumerable<Wnd> a)
 			{
 				using(var k = new _WndList(a))
-					return _FindInList(k);
+					return _FindOrMatch(k);
 			}
 
 			/// <summary>
@@ -175,7 +239,7 @@ namespace Au
 			{
 				using(k) {
 					using(var ab = new Util.LibArrayBuilder<Wnd>()) {
-						_FindInList(k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
+						_FindOrMatch(k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
 						return ab.ToArray();
 					}
 				}
@@ -188,9 +252,10 @@ namespace Au
 			/// <param name="a">List of Wnd. Does not dispose it.</param>
 			/// <param name="getAll">If not null, calls it for all matching and returns -1.</param>
 			/// <param name="cache"></param>
-			int _FindInList(_WndList a, Action<Wnd> getAll = null, WFCache cache = null)
+			int _FindOrMatch(_WndList a, Action<Wnd> getAll = null, WFCache cache = null)
 			{
 				Result = default;
+				_stopProp = 0;
 				if(a.Type == _WndList.ListType.None) return -1;
 				bool inList = a.Type != _WndList.ListType.ArrayBuilder;
 				bool ignoreVisibility = cache?.IgnoreVisibility ?? false;
@@ -209,28 +274,28 @@ namespace Au
 					//program >=2500
 
 					if(mustBeVisible) {
-						if(!w.IsVisible) continue;
+						if(!w.IsVisible) { _stopProp = EProps.visible; continue; }
 					}
 
 					if(isOwner) {
-						if(_owner != w.Owner) continue;
+						if(_owner != w.Owner) { _stopProp = EProps.program; continue; }
 					}
 
 					cache?.Begin(w);
 
 					if(_name != null) {
 						var s = cache != null && cache.CacheName ? (cache.Name ?? (cache.Name = w.LibNameTL)) : w.LibNameTL;
-						if(!_name.Match(s)) continue;
+						if(!_name.Match(s)) { _stopProp = EProps.name; continue; }
 						//note: name is before classname. It makes faster in slowest cases (HiddenToo), because most windows are nameless.
 					}
 
-					if(_className != null) {
+					if(_cn != null) {
 						var s = cache != null ? (cache.Class ?? (cache.Class = w.ClassName)) : w.ClassName;
-						if(!_className.Match(s)) continue;
+						if(!_cn.Match(s)) { _stopProp = EProps.cn; continue; }
 					}
 
 					if(0 == (_flags & WFFlags.CloakedToo) && !ignoreVisibility) {
-						if(w.IsCloaked) continue;
+						if(w.IsCloaked) { _stopProp = EProps.cloaked; continue; }
 					}
 
 					int pid = 0, tid = 0;
@@ -239,16 +304,16 @@ namespace Au
 							if(cache.Tid == 0) cache.Tid = w.GetThreadProcessId(out cache.Pid);
 							tid = cache.Tid; pid = cache.Pid;
 						} else tid = w.GetThreadProcessId(out pid);
-						if(tid == 0) continue;
+						if(tid == 0) { _stopProp = EProps.program; continue; }
 						//speed: with foreign processes the same speed as getting name or class name. Much faster if same process.
 					}
 
 					if(isTid) {
-						if(_threadId != tid) continue;
+						if(_threadId != tid) { _stopProp = EProps.program; continue; }
 					}
 
 					if(_processId != 0) {
-						if(_processId != pid) continue;
+						if(_processId != pid) { _stopProp = EProps.program; continue; }
 					}
 
 					if(_program != null) {
@@ -271,6 +336,7 @@ namespace Au
 						//	If it returns null (it means there are no matching processes), break (window not found).
 						//	From now, in each loop will need just to find pid in the returned list, and continue if not found.
 
+						_stopProp = EProps.program;
 						g1:
 						if(programNamePlanB) {
 							if(!pids.Contains(pid)) continue;
@@ -286,7 +352,7 @@ namespace Au
 
 								//switch to plan B
 								Process_.LibGetProcessesByName(ref pids, _program);
-								if(pids == null || pids.Count == 0) break;
+								if(Empty(pids)) break;
 								programNamePlanB = true;
 								goto g1;
 							}
@@ -298,19 +364,29 @@ namespace Au
 								continue;
 							}
 						}
+						_stopProp = 0;
 					}
 
-					if(_also != null && !_also(w)) continue;
+					if(_also != null) {
+						bool ok = false;
+						try { ok = _also(w); }
+						catch(WndException) { } //don't throw if w destroyed
+						if(!ok) { _stopProp = EProps.also; continue; }
+					}
 
 					if(_contains != null) {
 						bool found = false;
-						switch(_contains) {
-						case Acc.Finder f: found = f.Find(w); break;
-						case ChildFinder f: found = f.Find(w); break;
-						//case System.Drawing.Image f: found = null != WinImage.Find(w, f, WIFlags.WindowDC); break;
-						default: found = _FIL_Image(w, _contains); break; //avoid loading System.Drawing.dll
+						try {
+							switch(_contains) {
+							case Acc.Finder f: found = f.Find(w); break;
+							case ChildFinder f: found = f.Find(w); break;
+							default: found = null != WinImage.Find(w, _contains, WIFlags.WindowDC); break; //FUTURE: optimize. //note: avoid loading System.Drawing.dll. It can be Bitmap, ColorInt, etc.
+							}
 						}
-						if(!found) continue;
+						catch(Exception ex) when(!(ex is ThreadAbortException)) {
+							if(!(ex is WndException)) PrintWarning("Exception when tried to find the 'contains' object. " + ex.ToStringWithoutStack_());
+						}
+						if(!found) { _stopProp = EProps.contains; continue; }
 					}
 
 					if(getAll != null) {
@@ -325,13 +401,6 @@ namespace Au
 				return -1;
 			}
 
-			[MethodImpl(MethodImplOptions.NoInlining)]
-			static bool _FIL_Image(Wnd w, object contains)
-			{
-				var im = contains as System.Drawing.Image;
-				return null != WinImage.Find(w, im, WIFlags.WindowDC); //FUTURE: optimize
-			}
-
 			/// <summary>
 			/// Returns true if window w properties match the specified properties.
 			/// </summary>
@@ -339,7 +408,7 @@ namespace Au
 			/// <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in <paramref name="cache"/>; next time it gets these strings from <paramref name="cache"/>.</param>
 			public bool IsMatch(Wnd w, WFCache cache = null)
 			{
-				return 0 == _FindInList(new _WndList(w), cache: cache);
+				return 0 == _FindOrMatch(new _WndList(w), cache: cache);
 			}
 		}
 
@@ -377,11 +446,11 @@ namespace Au
 		/// Text, image or other object in the client area of the window. Depends on type:
 		/// <see cref="Acc.Finder"/> - arguments for <see cref="Acc.Find"/>. Defines an accessible object that must be in the window.
 		/// <see cref="ChildFinder"/> - arguments for <see cref="Child"/>. Defines a child control that must be in the window.
-		/// <see cref="System.Drawing.Bitmap"/> - image that must be visible in the window. This function calls <see cref="WinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>. See also <see cref="WinImage.LoadImage"/>.
+		/// <see cref="System.Drawing.Bitmap"/> or other, except string - image(s) or color(s) that must be visible in the window. This function calls <see cref="WinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>, and uses this value for the <i>image</i> parameter. See also <see cref="WinImage.LoadImage"/>.
 		/// string - an object that must be in the window. Depends on string format:
 		/// <list type="bullet">
-		/// <item>"'role' name" or "name" - accessible object. See <see cref="Acc.Find"/>.</item>
-		/// <item>"'!cn' name" or "'!' name" - child control. See <see cref="Child"/>.</item>
+		/// <item>"a 'role' name" or "name" or "a 'role'" - accessible object. See <see cref="Acc.Find"/>.</item>
+		/// <item>"c 'cn' name" or "c '' name" or "c 'cn'" - child control. See <see cref="Child"/>.</item>
 		/// <item>"image:..." - image. See <see cref="WinImage.Find"/>, <see cref="WinImage.LoadImage"/>.</item>
 		/// </list>
 		///
@@ -763,7 +832,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// An enumerable list of Wnd for <see cref="Finder._FindInList"/> and <see cref="ChildFinder._FindInList"/>.
+		/// An enumerable list of Wnd for <see cref="Finder._FindOrMatch"/> and <see cref="ChildFinder._FindInList"/>.
 		/// Holds Util.LibArrayBuilder or IEnumerator or single Wnd or none.
 		/// Must be disposed if it is Util.LibArrayBuilder or IEnumerator, else disposing is optional.
 		/// </summary>

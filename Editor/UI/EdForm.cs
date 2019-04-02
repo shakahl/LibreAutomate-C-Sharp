@@ -284,6 +284,7 @@ public static class Panels
 #endif
 
 		var m = PanelManager = new AuDockPanel();
+		m.Name = "Panels";
 		m.Create(Folders.ThisAppBS + @"Default\Panels.xml", Folders.ThisAppDocuments + @"!Settings\Panels.xml",
 			Editor, Files, Output, Find, Open, Running, Recent,
 #if TEST

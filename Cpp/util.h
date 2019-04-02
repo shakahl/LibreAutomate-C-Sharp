@@ -208,6 +208,16 @@ public:
 	}
 };
 
+//class ProcessMemory
+//{
+//	LPBYTE m_mem;
+//	HANDLE m_hproc;
+//public:
+//	ProcessMemory() { ZEROTHIS; }
+//	~ProcessMemory() { Free(); }
+//	LPBYTE Alloc(HWND hWnd, DWORD nBytes, DWORD flags = 0);
+//};
+
 //currently not used.
 ////can instead use CAtlFileMappingBase from atlfile.h, but this added before including ATL, and don't want to change now.
 //class SharedMemory
@@ -310,6 +320,7 @@ using WNDENUMPROCL = const std::function <bool(HWND c)>;
 
 BOOL EnumChildWindows(HWND w, WNDENUMPROCL& callback);
 HWND FindChildByClassName(HWND w, STR className, bool visible);
+bool WinFormsNameIs(HWND w, STR name);
 
 #if TRACE
 void PrintWnd(HWND w);

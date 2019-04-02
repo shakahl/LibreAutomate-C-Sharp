@@ -32,8 +32,9 @@ partial class PanelFiles : Control
 
 	public PanelFiles()
 	{
-		this.Name = "Files";
 		_c = new FilesModel.TreeViewFiles();
+		_c.AccessibleName = _c.Name = "Files_list";
+		this.AccessibleName = this.Name = "Files";
 		this.Controls.Add(_c);
 	}
 

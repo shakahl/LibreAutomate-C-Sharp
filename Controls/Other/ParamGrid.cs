@@ -25,6 +25,9 @@ using SG = SourceGrid;
 using Editors = SourceGrid.Cells.Editors;
 using DevAge.Drawing;
 
+//TODO: don't select text of clicked cell. Instead place caret there.
+//CRAZY: try to make ParamGrid from AuScintilla. Easier to edit text. The grid control is so difficult to use without a wrapper.
+
 namespace Au.Controls
 {
 	/// <summary>

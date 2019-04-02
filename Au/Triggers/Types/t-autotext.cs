@@ -25,28 +25,37 @@ using static Au.NoClass;
 
 namespace Au.Triggers
 {
-	public class AutotextTrigger : Trigger
+	/// <summary>
+	/// Represents an autotext trigger.
+	/// </summary>
+	public class AutotextTrigger : ActionTrigger
 	{
-		string _shortString;
+		string _paramsString;
 
-		internal AutotextTrigger(AuTriggers triggers, Action<AutotextTriggerArgs> action, string text) : base(triggers, action, true)
+		internal AutotextTrigger(ActionTriggers triggers, Action<AutotextTriggerArgs> action, string text) : base(triggers, action, true)
 		{
-			_shortString = text;
+			_paramsString = text;
 		}
 
 		internal override void Run(TriggerArgs args) => RunT(args as AutotextTriggerArgs);
 
-		public override string TypeString() => "Autotext";
+		/// <inheritdoc/>
+		public override string TypeString => "Autotext";
 
-		public override string ShortString() => _shortString;
+		/// <inheritdoc/>
+		public override string ParamsString => _paramsString;
 	}
 
+	/// <summary>
+	/// Autotext triggers.
+	/// </summary>
+	/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
 	public class AutotextTriggers : ITriggers
 	{
-		AuTriggers _triggers;
-		Dictionary<string, Trigger> _d = new Dictionary<string, Trigger>();
+		ActionTriggers _triggers;
+		Dictionary<string, ActionTrigger> _d = new Dictionary<string, ActionTrigger>();
 
-		internal AutotextTriggers(AuTriggers triggers)
+		internal AutotextTriggers(ActionTriggers triggers)
 		{
 			_triggers = triggers;
 		}
@@ -87,9 +96,12 @@ namespace Au.Triggers
 		}
 	}
 
+	/// <summary>
+	/// Arguments for actions of autotext triggers.
+	/// </summary>
 	public class AutotextTriggerArgs : TriggerArgs
 	{
-		public AutotextTrigger Trigger { get; }
+		public AutotextTrigger Trigger { get; internal set; }
 		public Wnd Window { get; }
 
 		///

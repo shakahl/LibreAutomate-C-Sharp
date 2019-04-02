@@ -152,7 +152,7 @@ namespace Au
 			var oc = new _OpenClipboard(createOwner: true, noOpenNow: !restore);
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
-				Keyb.Lib.ReleaseModAndCapsLock(opt, forClipb: true);
+				Keyb.Lib.ReleaseModAndDisableModMenu();
 
 				var save = new _SaveRestore();
 				if(restore) {
@@ -265,7 +265,7 @@ namespace Au
 			var bi = new BlockUserInput() { ResendBlockedKeys = true };
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
-				Keyb.Lib.ReleaseModAndCapsLock(opt, forClipb: true);
+				Keyb.Lib.ReleaseModAndDisableModMenu();
 				opt = opt.LibGetHookOptionsOrThis(wFocus);
 				LibPaste(data, opt, wFocus);
 			}

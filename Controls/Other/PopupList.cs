@@ -314,7 +314,7 @@ namespace Au.Controls
 				if(x.Disabled) return !isSpace;
 				if(x.CheckType != default) {
 					if(isSpace) {
-						if(Keyb.IsCtrl || Keyb.IsShift) return false;
+						if(Keyb.UI.IsCtrl || Keyb.UI.IsShift) return false;
 						_ToggleCheckbox(node, x);
 						return true;
 					}

@@ -36,7 +36,8 @@ class PanelRunning :Control, ITreeModel
 		_c = new _TreeViewAdv();
 		_c.BorderStyle = BorderStyle.None;
 		_c.Dock = DockStyle.Fill;
-		_c.AccessibleName = this.Name = "Running";
+		_c.AccessibleName = _c.Name = "Running_list";
+		this.AccessibleName = this.Name = "Running";
 
 		_c.ShowLines = false;
 		_c.ShowPlusMinus = false;

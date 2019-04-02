@@ -668,7 +668,7 @@ namespace Au
 			//Workaround for Windows controls bugs, part 1.
 			Wnd w = default, wTL = default; bool focusingControl = false;
 			if(how.Has_(AccSELFLAG.TAKEFOCUS) && 0 == _GetWnd(out w)) {
-				if(!w.IsEnabled) throw new AuException("*set focus. Disabled"); //accSelect would not fail
+				if(!w.IsEnabled(true)) throw new AuException("*set focus. Disabled"); //accSelect would not fail
 				wTL = w.Window;
 				wTL.Activate();
 				if(focusingControl = (w != wTL)) w.Focus();
@@ -793,7 +793,7 @@ namespace Au
 		/// </remarks>
 		public bool GetProperties(string props, out AccProperties result)
 		{
-			//SHOULDDO: use cached role.
+			//SHOULDDO: use cached role. Or not, because now can help to catch bugs where the cached role is incorrect.
 
 			result = default;
 			LibThrowIfDisposed();

@@ -34,7 +34,7 @@ partial class PanelEdit : Control
 
 	public PanelEdit()
 	{
-		this.Name = "Code";
+		this.AccessibleName = this.Name = "Code";
 		this.BackColor = SystemColors.AppWorkspace;
 	}
 
@@ -71,9 +71,10 @@ partial class PanelEdit : Control
 			_activeDoc.Visible = true;
 			_UpdateUI_Cmd();
 		} else {
+			var path = f.FilePath;
 			byte[] text = null;
 			SciText.FileLoaderSaver fls = default;
-			try { text = fls.Load(f.FilePath); }
+			try { text = fls.Load(path); }
 			catch(Exception ex) { Print("Failed to open file. " + ex.Message); }
 			if(text == null) return false;
 
@@ -83,6 +84,8 @@ partial class PanelEdit : Control
 			_activeDoc = doc;
 			this.Controls.Add(doc);
 			doc.Init(text, newFile);
+			doc.AccessibleName = f.Name;
+			doc.AccessibleDescription = path;
 		}
 		if(focus) _activeDoc.Focus();
 
@@ -294,7 +297,8 @@ partial class PanelEdit : Control
 			_fls = fls;
 
 			this.Dock = DockStyle.Fill;
-			this.AccessibleName = "Code";
+			this.Name = "Code_text";
+			this.AccessibleRole = AccessibleRole.Document;
 			this.AllowDrop = true;
 
 			InitImagesStyle = ImagesStyle.AnyString;
@@ -392,7 +396,7 @@ partial class PanelEdit : Control
 				break;
 			case Api.WM_KEYDOWN:
 				char key = (char)(int)m.WParam;
-				var mod = Keyb.GetMod();
+				var mod = Keyb.UI.GetMod();
 				if(mod == KMod.Ctrl) {
 					switch(key) {
 					case 'C':

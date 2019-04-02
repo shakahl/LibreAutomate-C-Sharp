@@ -60,7 +60,7 @@ namespace Au
 
 		//KEYEVENTF_ flags for API SendInput.
 		[Flags]
-		enum _KFlags :byte
+		enum _KFlags : byte
 		{
 			Extended = 1,
 			Up = 2,
@@ -69,7 +69,7 @@ namespace Au
 		};
 
 		//_KEvent type - key, text, sleep, etc.
-		enum _KType :byte
+		enum _KType : byte
 		{
 			KeyEvent, //send key down or up event, depending on _KFlags.Up. In _KEvent used vk and scan.
 			KeyPair, //send key down and up events. In _KEvent used vk and scan.
@@ -307,6 +307,31 @@ namespace Au
 		{
 			_ThrowIfSending();
 			return _AddKey(new _KEvent(false, vk, (_KFlags)(siFlags & 0xf), scan));
+		}
+
+		/// <summary>
+		/// Sends key events added by BlockUserInput -> LibAddRaw.
+		/// Simply calls Api.SendInput. No options, no sleep, etc.
+		/// Sets dwExtraInfo = 0.
+		/// </summary>
+		internal unsafe void LibSendBlocked()
+		{
+#if true
+			var a = new Api.INPUTK[_a.Count];
+			for(int i = 0; i < a.Length; i++) {
+				var k = _a[i];
+				a[i].Set(k.vk, k.scan, (uint)k.SIFlags);
+				a[i].dwExtraInfo = 0;
+			}
+			fixed (Api.INPUTK* p = a) Api.SendInput(p, a.Length);
+#else
+			try {
+				for(int i = 0; i < _a.Count; i++) {
+					_SendKey(_a[i], i);
+				}
+			}
+			catch(Exception ex) { Debug_.Print(ex.Message); }
+#endif
 		}
 
 		/// <summary>

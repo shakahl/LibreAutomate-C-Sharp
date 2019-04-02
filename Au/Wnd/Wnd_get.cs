@@ -214,7 +214,7 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// Supports <see cref="WinError.Code"/>.
-			/// This function does not use API <msdn>GetParent</msdn>, which is faster but unreliable.
+			/// Unlike API <msdn>GetParent</msdn>, this function never returns the owner window.
 			/// </remarks>
 			public Wnd DirectParent {
 				get {

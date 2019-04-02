@@ -16,21 +16,22 @@ int _IsSpecWnd(HWND w, bool onlyChrome)
 	return wnd::ClassNameIs(w, { L"Chrome*", L"SunAwt*", L"SALFRAME" });
 }
 
-bool _IsLink(IAccessible* par)
+void _FromPoint_GetLink(ref IAccessible*& a, ref long& elem, ref int& role)
 {
-	switch(ao::get_accRole(par)) { case ROLE_SYSTEM_LINK: case ROLE_SYSTEM_PUSHBUTTON: return true; }
-	return false;
-}
-
-void _FromPoint_GetLink(ref IAccessible*& a, ref long& elem)
-{
+	//note: the child AO of LINK/BUTTON can be anything except LINK/BUTTON, although usually TEXT, STATICTEXT, IMAGE.
+	switch(role) { case ROLE_SYSTEM_LINK: case ROLE_SYSTEM_PUSHBUTTON: return; }
 	IAccessible* parent = null;
 	if(elem != 0) parent = a; else if(0 != ao::get_accParent(a, out parent)) return;
-	if(_IsLink(parent)) {
+	int role2 = ao::get_accRole(parent);
+	switch(role2) {
+	case ROLE_SYSTEM_LINK: case ROLE_SYSTEM_PUSHBUTTON:
+		//bug in old Chrome and new Firefox in some cases: AO retrieved with get_accParent is invalid, eg cannot get its window.
+		HWND wp; if(elem == 0 && WindowFromAccessibleObject(parent, &wp)) { PRINTF(L"Cannot get parent LINK because WindowFromAccessibleObject would fail."); break; }
+
 		if(elem != 0) elem = 0; else util::Swap(ref a, ref parent);
+		role = role2;
 	}
 	if(parent != a) parent->Release();
-	//note: ignore role. Because it can be anything, not only TEXT, STATICTEXT, IMAGE.
 	//rejected: support 2 levels, eg youtube right-side list.
 	//	Can be even more levels, and multiple children of LINK, some of them may be useful for automation.
 	//	Often they have default action "jump" and value=URL.
@@ -56,7 +57,7 @@ HRESULT AccFromPoint(POINT p, int flags, int specWnd, out Cpp_Acc& aResult)
 		assert(v.vt == VT_I4 || v.vt == 0);
 		elem = v.vt == VT_I4 ? v.lVal : 0;
 
-		role = ao::get_accRole(iacc);
+		role = ao::get_accRole(iacc, elem);
 		//Perf.Next();
 
 		//UIA?
@@ -81,7 +82,8 @@ HRESULT AccFromPoint(POINT p, int flags, int specWnd, out Cpp_Acc& aResult)
 		}
 	}
 
-	if(flags & 2) _FromPoint_GetLink(ref iacc.p, ref elem);
+	if(!!(miscFlags&eAccMiscFlags::UIA)) role = ao::get_accRole(iacc);
+	if(flags & 2) _FromPoint_GetLink(ref iacc.p, ref elem, ref role);
 
 	aResult.acc = iacc.Detach(); aResult.elem = elem; aResult.misc.flags = miscFlags;
 	aResult.SetRole(role);

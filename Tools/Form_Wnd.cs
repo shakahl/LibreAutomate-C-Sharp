@@ -27,6 +27,7 @@ using Aga.Controls.Tree.NodeControls;
 
 //FUTURE: add UI to format code 'w = w.Get.Right();' etc.
 //FUTURE: init from code string. Cannot use Roslyn because of its slowness.
+//SHOULDDO: try to find and select control in current tree when captured from same window. Like in acc tool.
 
 namespace Au.Tools
 {
@@ -36,6 +37,7 @@ namespace Au.Tools
 		TUtil.CaptureWindowEtcWithHotkey _capt;
 		CommonInfos _commonInfos;
 		bool _uncheckControl;
+		string _wndName;
 
 		public Form_Wnd(Wnd wnd = default, bool uncheckControl = false)
 		{
@@ -116,16 +118,20 @@ namespace Au.Tools
 
 			_noeventGridValueChanged = true;
 
+			var wndName = _wnd.LibNameTL;
 			if(newWindow) {
 				g.ZAddHeaderRow("Window");
-				f.wName = _wnd.Name;
-				g.ZAdd(null, "name", TUtil.EscapeWindowName(f.wName, true), true, info: "Window name.$");
+				g.ZAdd(null, "name", TUtil.EscapeWindowName(wndName, true), true, info: "Window name.$");
 				g.ZAdd(null, "class", TUtil.StripWndClassName(f.wClass, true), true, info: "Window class name.$");
 				f.wProg = _wnd.ProgramName;
 				var ap = new List<string> { f.wProg, "WFEtc.Process(processId)", "WFEtc.Thread(threadId)" }; if(!_wnd.Owner.Is0) ap.Add("WFEtc.Owner(ownerWindow)");
-				g.ZAdd(null, "program", ap, Empty(f.wName), info: "Program.$", etype: ParamGrid.EditType.ComboText, comboIndex: 0);
+				g.ZAdd(null, "program", ap, Empty(wndName), info: "Program.$", etype: ParamGrid.EditType.ComboText, comboIndex: 0);
 				g.ZAdd(null, "contains", (Func<string[]>)_ContainsCombo_DropDown, false, info: "An accessible object in the window. Format: 'role' name.\r\nName$$", etype: ParamGrid.EditType.ComboText);
+			} else if(wndName != _wndName) {
+				if(TUtil.ShouldChangeGridWildex(g.ZGetCellText("name", 1), wndName))
+					g.ZSetCellText("name", 1, TUtil.EscapeWindowName(wndName, true));
 			}
+			f.wName = _wndName = wndName;
 
 			if(isCon) {
 				g.ZAddHeaderRow("Control", check: !_uncheckControl);
@@ -166,25 +172,27 @@ namespace Au.Tools
 			string[] _ContainsCombo_DropDown()
 			{
 				try {
-					//acc
-					var a1 = Acc.FindAll(_wnd, name: "?*", prop: "notin=SCROLLBAR\0maxcc=100", flags: AFFlags.ClientArea); //all that have a name
-					var a2 = new List<string>();
-					string prevName = null;
-					for(int i = a1.Length - 1; i >= 0; i--) {
-						if(!a1[i].GetProperties("Rn", out var prop)) continue;
-						if(prop.Name == prevName && prop.Role == "WINDOW") continue; prevName = prop.Name; //skip parent WINDOW
-						string rn = "'" + prop.Role + "' " + TUtil.EscapeWildex(prop.Name);
-						if(!a2.Contains(rn)) a2.Add(rn);
-					}
-					a2.Reverse();
+					var a1 = new List<string>();
 					//child
 					foreach(var c in _wnd.Get.Children(onlyVisible: true)) {
 						var cn = c.Name; if(Empty(cn)) continue;
-						cn = "'!" + TUtil.StripWndClassName(c.ClassName, true) + "' " + TUtil.EscapeWildex(cn);
-						if(!a2.Contains(cn)) a2.Add(cn);
+						cn = "c '" + TUtil.StripWndClassName(c.ClassName, true) + "' " + TUtil.EscapeWildex(cn);
+						if(!a1.Contains(cn)) a1.Add(cn);
 					}
+					//acc
+					var a2 = new List<string>();
+					var a3 = Acc.FindAll(_wnd, name: "?*", prop: "notin=SCROLLBAR\0maxcc=100", flags: AFFlags.ClientArea); //all that have a name
+					string prevName = null;
+					for(int i = a3.Length - 1; i >= 0; i--) {
+						if(!a3[i].GetProperties("Rn", out var prop)) continue;
+						if(prop.Name == prevName && prop.Role == "WINDOW") continue; prevName = prop.Name; //skip parent WINDOW
+						string rn = "a '" + prop.Role + "' " + TUtil.EscapeWildex(prop.Name);
+						if(!a2.Contains(rn)) a2.Add(rn);
+					}
+					a2.Reverse();
+					a1.AddRange(a2);
 
-					return a2.ToArray();
+					return a1.ToArray();
 					//rejected: sort
 				}
 				catch(Exception ex) { Debug_.Print(ex); return null; }
@@ -315,7 +323,9 @@ namespace Au.Tools
 
 			var R = b.ToString();
 
-			if(!forTest) _code.ZSetText(R);
+			if(!forTest) {
+				_code.ZSetText(R);
+			}
 
 			return (R, "w");
 		}

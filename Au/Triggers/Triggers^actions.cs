@@ -40,7 +40,7 @@ namespace Au.Triggers
 	/// Allows to set some options for multiple triggers and their actions.
 	/// </summary>
 	/// <remarks>
-	/// You set options through a thread-static property <see cref="AuTriggers.Options"/>.
+	/// You set options through a thread-static property <see cref="ActionTriggers.Options"/>.
 	/// Changed options are applied to all triggers/actions added afterwards in this thread.
 	/// </remarks>
 	/// <example>
@@ -119,8 +119,8 @@ namespace Au.Triggers
 		//CONSIDER: RunActionInTriggersThread. Now can use Func instead, but it is more code.
 
 		/// <summary>
-		/// null or an action to run before the actual action.
-		/// For example can set Opt options.
+		/// A function to run before the trigger action.
+		/// For example, it can set <see cref="Opt"/> options.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -130,8 +130,8 @@ namespace Au.Triggers
 		public Action<BAArgs> BeforeAction { set => _New().before = value; }
 
 		/// <summary>
-		/// null or an action to run after the actual action.
-		/// For example can log exception.
+		/// A function to run after the trigger action.
+		/// For example, it can log exceptions.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -149,8 +149,8 @@ namespace Au.Triggers
 		static TOptions s_empty;
 
 		/// <summary>
-		/// If true, triggers added afterwards don't depend on <see cref="AuTriggers.Disabled"/> and <see cref="AuTriggers.DisabledEverywhere"/>.
-		/// This property sets the <see cref="Trigger.EnabledAlways"/> property of triggers added afterwards.
+		/// If true, triggers added afterwards don't depend on <see cref="ActionTriggers.Disabled"/> and <see cref="ActionTriggers.DisabledEverywhere"/>.
+		/// This property sets the <see cref="ActionTrigger.EnabledAlways"/> property of triggers added afterwards.
 		/// </summary>
 		public bool EnabledAlways { get; set; }
 
@@ -159,6 +159,18 @@ namespace Au.Triggers
 		/// </summary>
 		public struct BAArgs
 		{
+			internal BAArgs(TriggerArgs args)
+			{
+				ActionArgs = args;
+				Exception = null;
+			}
+
+			/// <summary>
+			/// Trigger event info. The same variable as passed to the trigger action.
+			/// To access the info, cast to <b>HotkeyTriggerArgs</b> etc, depending on trigger type.
+			/// </summary>
+			public TriggerArgs ActionArgs { get; }
+
 			/// <summary>
 			/// If action ended with an exception, the exception. Else null.
 			/// </summary>
@@ -168,17 +180,21 @@ namespace Au.Triggers
 
 	class TriggerActionThreads
 	{
-		//public TriggerActionThreads(Triggers triggers)
-		//{
-
-		//}
-
-		public void Run(Trigger trigger, TriggerArgs args)
+		public void Run(ActionTrigger trigger, TriggerArgs args)
 		{
 			Action actionWrapper = () => {
 				var opt = trigger.options;
 				try {
-					TriggerOptions.BAArgs baArgs = default; //struct
+					switch(args) {
+					case HotkeyTriggerArgs ta:
+						if(0 == (ta.Trigger.flags & (TKFlags.NoModOff | TKFlags.KeyModUp | TKFlags.PassMessage))) Keyb.Lib.ReleaseModAndDisableModMenu();
+						break;
+					case MouseTriggerArgs ta:
+						if(0 == (ta.Trigger.flags & (TMFlags.ButtonModUp | TMFlags.PassMessage))) Keyb.Lib.DisableModMenu(); //info: not ReleaseModAndDisableModMenu. Releasing mod keys makes no sense because we cannot disable the auto-repeat. Disabling menu is unreliable too for the same reason (can show menu later), but it is best we can do if we don't want to block auto-repeated keys using a low-level keyboard hook.
+						break;
+					}
+
+					var baArgs = new TriggerOptions.BAArgs(args); //struct
 #if true
 					opt.before?.Invoke(baArgs);
 #else
@@ -212,7 +228,7 @@ namespace Au.Triggers
 			} else {
 				bool singleInstance = trigger.options.ifRunning == 0;
 				if(singleInstance) {
-					if(_d == null) _d = new ConcurrentDictionary<Trigger, object>();
+					if(_d == null) _d = new ConcurrentDictionary<ActionTrigger, object>();
 					if(_d.TryGetValue(trigger, out var tt)) {
 						//return;
 						switch(tt) {
@@ -250,7 +266,7 @@ namespace Au.Triggers
 		}
 
 		List<_Thread> _a = new List<_Thread>();
-		ConcurrentDictionary<Trigger, object> _d;
+		ConcurrentDictionary<ActionTrigger, object> _d;
 
 		class _Thread
 		{
@@ -258,14 +274,13 @@ namespace Au.Triggers
 
 			IntPtr _event;
 			Queue<_Action> _q;
-			_Action _runningAction;
 			bool _running;
 			bool _disposed;
 			public readonly int id;
 
 			public _Thread(int id) { this.id = id; }
 
-			public void RunAction(Action actionWrapper, Trigger trigger)
+			public void RunAction(Action actionWrapper, ActionTrigger trigger)
 			{
 				if(_disposed) return;
 				if(_q == null) {

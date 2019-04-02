@@ -25,11 +25,8 @@ using SG = SourceGrid;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
+//SHOULDDO: if checked state, activate window before test. Else different FOCUSED etc.
 //FUTURE: support Edge better. Eg can find without UIA. See the workaround.
-
-//TODO: include winforms name. Eg in paint.net now does not find buttons and even toolbars; QM2 finds toolbar using wfName.
-//TODO: if checked state, activate window before test. Else different FOCUSED etc.
-//SHOULDDO: now unchecks "Capture" when opened the window tool. Should check again when closed.
 
 namespace Au.Tools
 {
@@ -40,6 +37,7 @@ namespace Au.Tools
 		bool _useCon;
 		TUtil.CaptureWindowEtcWithHotkey _capt;
 		CommonInfos _commonInfos;
+		string _wndName;
 
 		public Form_Acc(Acc acc = null)
 		{
@@ -95,6 +93,11 @@ namespace Au.Tools
 				if(w.Is0) return;
 			}
 
+			string wndName = w.LibNameTL;
+			bool sameWnd = captured && w == _wnd && wndName == _wndName;
+			_wndName = wndName;
+			//rejected: update window name in code box if changed name of same window. In WinImage tool too. Currently only Wnd tool does it.
+
 			//if control is in other thread, search in control by default, elso slow because cannot use inproc. Except for known windows.
 			bool useCon = c != w && c.ThreadId != w.ThreadId && 0 == c.ClassNameIs(Api.string_IES, "Windows.UI.Core.CoreWindow");
 
@@ -102,7 +105,7 @@ namespace Au.Tools
 
 			if(_grid2.RowsCount == 0) _FillGrid2();
 
-			if(!_FillGridCodeThree(captured)) return;
+			if(!_FillGridThreeCode(captured, sameWnd)) return;
 
 			_bTest.Enabled = true; _bOK.Enabled = true; _bEtc.Enabled = true;
 		}
@@ -114,16 +117,21 @@ namespace Au.Tools
 			_useCon = useCon && !_con.Is0;
 		}
 
-		bool _FillGridCodeThree(bool captured = false)
+		bool _FillGridThreeCode(bool captured = false, bool sameWnd = false)
 		{
-			_ClearTree();
+			Perf.First();
+			bool sameTree = sameWnd && _TrySelectInSameTree();
+			Perf.Next();
+
+			if(!sameTree) _ClearTree();
 			if(!_FillGrid(out var p)) return false;
+			if(!sameTree) _FillTree(p);
 			_UpdateCodeBox();
-			_FillTree(p);
 
 			if(captured && p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_acc.MiscFlags.Has_(AccMiscFlags.Java) && Ver.Is64BitOS)
 				_SetFormInfo(c_infoJava);
 
+			Perf.NW();//TODO
 			return true;
 		}
 
@@ -148,12 +156,14 @@ namespace Au.Tools
 			_AddIfNotEmpty("role", role, true, false, info: c_infoRole);
 			//CONSIDER: path too. But maybe don't encourage, because then the code depends on window/page structure.
 			bool noName = !_AddIfNotEmpty("name", p.Name, true, true, info: "Name.$");
+			if(noName) _Add("name", "", info: "Name.$");
 			if(_AddIfNotEmpty("uiaid", p.UiaId, noName, true, info: "UIA AutomationId.$")) noName = false;
 
 			//control
 			if(!isWeb && !_con.Is0 && !_useCon) {
-				if(TUtil.GetUsefulControlId(_con, _wnd, out int id)) _Add("id", id.ToString(), true, info: c_infoId);
-				_Add("class", TUtil.StripWndClassName(_con.ClassName, true), id == 0, info: c_infoClass);
+				string sId = TUtil.GetUsefulControlId(_con, _wnd, out int id) ? id.ToString() : _con.NameWinForms;
+				if(sId != null) _Add("id", sId, sId.Length > 0, info: c_infoId);
+				_Add("class", TUtil.StripWndClassName(_con.ClassName, true), Empty(sId), info: c_infoClass);
 			}
 
 			_AddIfNotEmpty("value", p.Value, false, true, info: "Value.$");
@@ -286,7 +296,7 @@ namespace Au.Tools
 				}
 				if(va == null) {
 					if(g == _grid2) continue;
-					switch(na) { case "class": case "id": case "elem": case "state": case "rect": continue; }
+					switch(na) { case "class": case "elem": case "state": case "rect": continue; }
 				}
 				if(isProp) b.Append(@" + '\0' + ");
 				else {
@@ -378,17 +388,18 @@ namespace Au.Tools
 		private void _bEtc_Click(object sender, EventArgs e)
 		{
 			var m = new AuMenu();
-			m["Control"] = o => { _useCon = o.MenuItem.Checked && !_con.Is0; _FillGridCodeThree(); };
+			m["Control"] = o => { _useCon = o.MenuItem.Checked && !_con.Is0; _FillGridThreeCode(); };
 			m.LastMenuItem.Enabled = !_con.Is0;
 			m.LastMenuItem.CheckOnClick = true;
 			m.LastMenuItem.Checked = _useCon;
-			m["Edit window/control..."] = o =>
-			{
+			m["Edit window/control..."] = o => {
 				var wPrev = _WndSearchIn;
+				bool captCheck = _cCapture.Checked;
 				var r = _code.ZShowWndTool(_wnd, _con, !_useCon);
+				if(captCheck) _cCapture.Checked = true;
 				if(!r.ok) return;
 				_SetWndCon(r.wnd, r.con, r.useCon);
-				if(_WndSearchIn != wPrev) _FillGridCodeThree();
+				if(_WndSearchIn != wPrev) _FillGridThreeCode();
 			};
 			m.LastMenuItem.ToolTipText = "Search only in control (if captured), not in whole window.\r\nTo edit window or/and control name etc, click 'Edit window/control...' or edit it in the code field.";
 			m.LastMenuItem.Enabled = !_wnd.Is0;
@@ -474,8 +485,7 @@ namespace Au.Tools
 			//Print(prop.Replace('\0', ';'));
 			var role = p.Role; if(role.Length == 0) role = null;
 			try {
-				Acc.Find(w, role, "**tc " + p.Name, prop, flags, also: o =>
-				{
+				Acc.Find(w, role, "**tc " + p.Name, prop, flags, also: o => {
 					//var x = new _AccNode(o.Role);
 					var x = new _AccNode("a");
 					int lev = o.Level;
@@ -544,20 +554,52 @@ namespace Au.Tools
 			_tree.Model = new _AccTree(xRoot);
 			//Perf.Next();
 
-			if(xSelect != null) {
-				var n = _tree.FindNodeByTag(xSelect);
-				if(n != null) {
-					_tree.Visible = false;
-					_tree.EnsureVisible(n);
-					n.IsSelected = true;
-					_tree.Visible = true;
-
-					//tree control bug: if visible and need to scroll, does not scroll, and when scrolled paints items over items etc.
-					//	Workaround 1: temporarily hide.
-					//	Workaround 2: BeginUpdate, EnsureVisible, EndUpdate, EnsureVisible. Slightly slower.
-				}
-			}
+			if(xSelect != null) _SelectTreeNode(xSelect);
 			//Perf.NW();
+		}
+
+		void _SelectTreeNode(_AccNode an)
+		{
+			var n = _tree.FindNodeByTag(an);
+			_tree.Visible = false;
+			if(n != null) _tree.EnsureVisible(n);
+			_tree.SelectedNode = n;
+			_tree.Visible = true;
+
+			//tree control bug: if visible and need to scroll, does not scroll, and when scrolled paints items over items etc.
+			//	Workaround 1: temporarily hide and call EnsureVisible.
+			//	Workaround 2: BeginUpdate, EnsureVisible, EndUpdate, EnsureVisible. Slightly slower.
+		}
+
+		//Tries to find and select _acc in current tree when captured from same window.
+		//	Eg maybe the user captured because wants to use navigate; then wants to see both AO.
+		//	Usually faster than recreating tree, but in some cases can be slower. Slower when fails to find.
+		bool _TrySelectInSameTree()
+		{
+			//if(Keyb.IsScrollLock) return false;
+			int elem = _acc.SimpleElementId;
+			var ri = _acc.RoleInt;
+			if(!_acc.GetProperties(ri == 0 ? "Rrn" : "rn", out var p)) return false;
+			string rs = ri == 0 ? p.Role : null;
+			//Print(elem, ri, rs, p.Rect, _acc);
+			var xr = (_tree.Model as _AccTree).Root;
+			foreach(var xe in xr.Descendants()) {
+				var n = xe as _AccNode;
+				var a = n.a;
+				if(a.SimpleElementId != elem) continue;
+				if(a.RoleInt != ri) continue;
+				if(rs != null && a.Role != rs) continue;
+				if(a.Rect != p.Rect) continue;
+				if(a.Name != p.Name) continue;
+				_SelectTreeNode(n);
+				return true;
+			}
+			Debug_.Print("recreating tree of same window");
+			return false;
+
+			//Other ways to compare Acc:
+			//IAccIdentity. Unavailable in web pages.
+			//IUIAutomationElement. Very slow ElementFromIAccessible. In Firefox can be 30 ms.
 		}
 
 		void _ShowTreeInfo(string text)
@@ -586,8 +628,7 @@ namespace Au.Tools
 			_tree.NodeControls.Add(_ccName);
 			//_ccName.Trimming = StringTrimming.EllipsisCharacter;
 
-			_ccName.ValueNeeded = node =>
-			{
+			_ccName.ValueNeeded = node => {
 				var a = node.Tag as _AccNode;
 				//Print(a.a);
 				return a.DisplayText;
@@ -635,7 +676,7 @@ namespace Au.Tools
 			TUtil.ShowOsdRect(p.Rect);
 		}
 
-		class _AccTree :ITreeModel
+		class _AccTree : ITreeModel
 		{
 			public _AccNode Root;
 
@@ -664,17 +705,15 @@ namespace Au.Tools
 			}
 		}
 
-		class _AccNode :XElement
+		class _AccNode : XElement
 		{
 			public _AccNode(string name) : base(name) { }
 
 			public Acc a;
 			string _displayText;
 
-			public string DisplayText
-			{
-				get
-				{
+			public string DisplayText {
+				get {
 					if(_displayText == null) {
 						bool isWINDOW = a.RoleInt == AccROLE.WINDOW;
 						string props = isWINDOW ? "Rnsw" : "Rns";
@@ -714,13 +753,12 @@ namespace Au.Tools
 			_grid.ZShowEditInfo += infoDelegate;
 			_grid2.ZShowEditInfo += infoDelegate;
 
-			_tree.Paint += (object sender, PaintEventArgs e) =>
-			 {
-				 if(_tree.Model == null && !(_lTreeInfo?.Visible ?? false)) {
-					 e.Graphics.Clear(this.BackColor); //like grids
-					 _OnPaintDrawBackText(sender, e, "Object tree.");
-				 }
-			 };
+			_tree.Paint += (object sender, PaintEventArgs e) => {
+				if(_tree.Model == null && !(_lTreeInfo?.Visible ?? false)) {
+					e.Graphics.Clear(this.BackColor); //like grids
+					_OnPaintDrawBackText(sender, e, "Object tree.");
+				}
+			};
 
 			_grid.Paint += (sender, e) => { if(_acc == null || _propError != null) _OnPaintDrawBackText(sender, e, _propError ?? "AO properties."); };
 			_grid2.Paint += (sender, e) => { if(_acc == null) _OnPaintDrawBackText(sender, e, "Other parameters and search settings."); };

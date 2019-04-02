@@ -226,6 +226,36 @@ HWND FindChildByClassName(HWND w, STR className, bool visible)
 	return R;
 }
 
+bool WinFormsNameIs(HWND w, STR name)
+{
+	static UINT WM_GETCONTROLNAME = RegisterWindowMessageW(L"WM_GETCONTROLNAME");
+	const int c_bufChars = 1024;
+
+	DWORD pid; if(0 == GetWindowThreadProcessId(w, &pid)) return false;
+	wchar_t b[c_bufChars]; int len;
+	if(pid == GetCurrentProcessId()) {
+		len = (int)SendMessageW(w, WM_GETCONTROLNAME, c_bufChars, (LPARAM)b) - 1; if(len < 0) return false;
+	} else {
+		HANDLE hp = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ, false, pid); if(!hp) return false;
+		void* pm = VirtualAllocEx(hp, null, c_bufChars * 2, MEM_RESERVE | MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+		__try {
+			if(pm == null) return false;
+			DWORD_PTR n1; if(!SendMessageTimeoutW(w, WM_GETCONTROLNAME, c_bufChars, (LPARAM)pm, SMTO_ABORTIFHUNG, 10000, &n1) || --n1 < 0) return false;
+			len = (int)n1; n1 *= 2;
+			SIZE_T n2; if(n1 > 0 && !(ReadProcessMemory(hp, pm, b, n1, &n2) && n2 == n1)) return false;
+		}
+		__finally {
+			if(pm != null) VirtualFreeEx(hp, pm, 0, MEM_RELEASE);
+			CloseHandle(hp);
+		}
+	}
+	//b[len] = 0; Print(len); Print(b);
+	return str::Equals(name, str::Len(name), b, len);
+
+	//note: don't need to cache the process handle and memory. It is several times faster than sendmessage. Anyway, inproc is rarely used with acc.
+	//info: also there is WM_GETCONTROLTYPE, like "PaintDotNet.Controls.AppWorkspace, PaintDotNet, Version=4.21.6589.7045, Culture=neutral, PublicKeyToken=null"
+}
+
 #if TRACE
 void PrintWnd(HWND w)
 {

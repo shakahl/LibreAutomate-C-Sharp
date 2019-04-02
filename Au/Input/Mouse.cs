@@ -92,7 +92,7 @@ namespace Au
 		static void _MoveSlowTo(POINT p)
 		{
 			int speed = Opt.Mouse.MoveSpeed;
-			if(speed == 0 && IsPressed()) speed = 1; //make one intermediate movement, because some programs (older MSDEV) don't select text otherwise
+			if(speed == 0 && IsPressed()) speed = 1; //make one intermediate movement, else some programs don't select text
 			if(speed > 0) {
 				var p0 = XY;
 				int dxall = p.x - p0.x, dyall = p.y - p0.y;
@@ -614,7 +614,7 @@ namespace Au
 				if(!bad && !_CheckWindowFromPoint()) {
 					Debug_.Print("need to activate");
 					//info: activating brings to the Z top and also uncloaks
-					if(!wTL.IsEnabled) bad = true; //probably an owned modal dialog disabled the window
+					if(!wTL.IsEnabled(false)) bad = true; //probably an owned modal dialog disabled the window
 					else if(wTL.ThreadId == Wnd.GetWnd.Shell.ThreadId) bad = true; //desktop
 					else if(wTL.IsActive) wTL.ZorderTop(); //can be below another window in the same topmost/normal Z order, although it is rare
 					else bad = !wTL.LibActivate(Wnd.Lib.ActivateFlags.NoThrowIfInvalid | Wnd.Lib.ActivateFlags.IgnoreIfNoActivateStyleEtc | Wnd.Lib.ActivateFlags.NoGetWindow);
@@ -632,7 +632,7 @@ namespace Au
 					var wfp = Wnd.FromXY(p, WXYFlags.NeedWindow);
 					if(wfp == wTL) return true;
 					//forgive if same thread and no caption. Eg a tooltip that disappears and relays the click to its owner window. But not if wTL is disabled.
-					if(wTL.IsEnabled && wfp.ThreadId == wTL.ThreadId && !wfp.HasStyle(WS.CAPTION)) return true;
+					if(wTL.IsEnabled(false) && wfp.ThreadId == wTL.ThreadId && !wfp.HasStyle(WS.CAPTION)) return true;
 					return false;
 				}
 			}
@@ -962,9 +962,14 @@ namespace Au
 		//rejected: finally release script-pressed buttons, especially on exception. Instead let use code: using(Mouse.LeftDown(...)), it auto-releases pressed button.
 
 		/// <summary>
-		/// Returns true if some mouse buttons are pressed.
+		/// Returns true if some mouse buttons are down (pressed).
 		/// </summary>
-		/// <param name="buttons">Check only these buttons. Default - all.</param>
+		/// <param name="buttons">Return true if some of these buttons are down. Default: any (Left, Right, Middle, X1 or X2).</param>
+		/// <remarks>
+		/// Uses API <msdn>GetAsyncKeyState</msdn>.
+		/// When processing user input in UI code (forms, WPF), instead use class <see cref="Keyb.UI"/> or .NET functions. They use API <msdn>GetKeyState</msdn>.
+		/// When mouse left and right buttons are swapped, gets logical state, not physical.
+		/// </remarks>
 		/// <seealso cref="WaitForNoButtonsPressed"/>
 		public static bool IsPressed(MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
@@ -976,23 +981,38 @@ namespace Au
 			return false;
 		}
 
-		/// <summary>
-		/// Returns a value indicating which mouse buttons are in pressed state.
-		/// </summary>
-		/// <param name="buttons">Check only these buttons. Default - all.</param>
-		public static MButtons PressedButtons(MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
-		{
-			MButtons R = 0;
-			if(0 != (buttons & MButtons.Left) && Keyb.IsPressed(KKey.MouseLeft)) R |= MButtons.Left;
-			if(0 != (buttons & MButtons.Right) && Keyb.IsPressed(KKey.MouseRight)) R |= MButtons.Right;
-			if(0 != (buttons & MButtons.Middle) && Keyb.IsPressed(KKey.MouseMiddle)) R |= MButtons.Middle;
-			if(0 != (buttons & MButtons.X1) && Keyb.IsPressed(KKey.MouseX1)) return R |= MButtons.X1;
-			if(0 != (buttons & MButtons.X2) && Keyb.IsPressed(KKey.MouseX2)) return R |= MButtons.X2;
-			return R;
-		}
+		//rejected: not useful.
+		///// <summary>
+		///// Returns a value indicating which mouse buttons are down (pressed).
+		///// </summary>
+		///// <param name="buttons">Check only these buttons. Default: Left, Right, Middle, X1, X2.</param>
+		///// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		//public static MButtons Buttons(MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
+		//{
+		//	MButtons R = 0;
+		//	if(0 != (buttons & MButtons.Left) && Keyb.IsKey(KKey.MouseLeft)) R |= MButtons.Left;
+		//	if(0 != (buttons & MButtons.Right) && Keyb.IsKey(KKey.MouseRight)) R |= MButtons.Right;
+		//	if(0 != (buttons & MButtons.Middle) && Keyb.IsKey(KKey.MouseMiddle)) R |= MButtons.Middle;
+		//	if(0 != (buttons & MButtons.X1) && Keyb.IsKey(KKey.MouseX1)) return R |= MButtons.X1;
+		//	if(0 != (buttons & MButtons.X2) && Keyb.IsKey(KKey.MouseX2)) return R |= MButtons.X2;
+		//	return R;
+		//}
+
+		//rejected: rarely used. Can use IsPressed.
+		///// <summary>
+		///// Returns true if the left mouse button is down (pressed).
+		///// </summary>
+		///// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		//public static bool IsLeft => Keyb.IsPressed(KKey.MouseLeft);
+
+		///// <summary>
+		///// Returns true if the right mouse button is down (pressed).
+		///// </summary>
+		///// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		//public static bool IsRight => Keyb.IsPressed(KKey.MouseRight);
 
 		/// <summary>
-		/// Waits while some mouse buttons are in pressed state (see <see cref="IsPressed"/>).
+		/// Waits while some mouse buttons are down (pressed). See <see cref="IsPressed"/>.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
@@ -1005,7 +1025,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits while some buttons are in pressed state, except those pressed by a <see cref="Mouse"/> class function in this thread.
+		/// Waits while some buttons are down (pressed), except those pressed by a <see cref="Mouse"/> class function in this thread.
 		/// Does nothing option <b>Relaxed</b> is true.
 		/// </summary>
 		internal static void LibWaitForNoButtonsPressed()
@@ -1254,7 +1274,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Flags for mouse buttons.
-	/// Used with functions that check mouse button states (pressed or released).
+	/// Used with functions that check mouse button states (down or up).
 	/// </summary>
 	/// <remarks>
 	/// The values are the same as <see cref="System.Windows.Forms.MouseButtons"/>, therefore can be cast to/from.

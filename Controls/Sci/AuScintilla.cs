@@ -38,7 +38,7 @@ namespace Au.Controls
 	/// Responsible for creating and initializing the control. Also used to set/change control properties.
 	/// The ST property returns a SciText object that can be used to work with text, code styling etc.
 	/// </summary>
-	public class AuScintilla :Control
+	public class AuScintilla : Control
 	{
 		static SciFnDirect s_fnDirect;
 		SciFnDirect _fnDirect;
@@ -70,12 +70,12 @@ namespace Au.Controls
 					 ControlStyles.UseTextForAccessibility |
 					 ControlStyles.UserPaint,
 					 false);
+
+			this.AccessibleRole = AccessibleRole.Text;
 		}
 
-		protected override CreateParams CreateParams
-		{
-			get
-			{
+		protected override CreateParams CreateParams {
+			get {
 				if(s_fnDirect == null) {
 					var path = SciLexerDllPath;
 					if(!Api.GetDelegate(out s_fnDirect, path, "Scintilla_DirectFunction")) throw new AuException(0, $"*load '{path}'");
@@ -267,10 +267,8 @@ namespace Au.Controls
 		/// Scintilla dll path.
 		/// Default is <c>Folders.ThisApp + @"Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll"</c>. If you want to change it, call this before creating first control.
 		/// </summary>
-		public static string SciLexerDllPath
-		{
-			get
-			{
+		public static string SciLexerDllPath {
+			get {
 				if(s_dllPath == null) {
 					s_dllPath = Folders.ThisAppBS + @"Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
 					if(!File_.ExistsAsFile(s_dllPath, true)) { //in designer?
@@ -279,8 +277,7 @@ namespace Au.Controls
 				}
 				return s_dllPath;
 			}
-			set
-			{
+			set {
 				s_dllPath = Path_.Normalize(value);
 			}
 		}
@@ -365,11 +362,9 @@ namespace Au.Controls
 		/// Word-wrap.
 		/// </summary>
 		[DefaultValue(false)]
-		public virtual bool WrapLines
-		{
+		public virtual bool WrapLines {
 			get => _wrapLines;
-			set
-			{
+			set {
 				if(value != _wrapLines) {
 					_wrapLines = value;
 					if(IsHandleCreated) Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : SC_WRAP_NONE);
@@ -378,9 +373,24 @@ namespace Au.Controls
 		}
 		bool _wrapLines;
 
-        //[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden), EditorBrowsable(EditorBrowsableState.Never)]
-        //[Obsolete("Use ST.SetText or ST.SetTextNewDocument", true)] //because we don't know how to set text, with undo or as new document
-        //public new virtual string Text { get; set; }
-        public new virtual string Text => ST.GetText();
-    }
+		//[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden), EditorBrowsable(EditorBrowsableState.Never)]
+		//[Obsolete("Use ST.SetText or ST.SetTextNewDocument", true)] //because we don't know how to set text, with undo or as new document
+		//public new virtual string Text { get; set; }
+		public new virtual string Text => ST.GetText();
+
+		protected override AccessibleObject CreateAccessibilityInstance()
+		{
+			return _acc ?? (_acc = new _Acc(this));
+		}
+		_Acc _acc;
+
+		class _Acc : ControlAccessibleObject
+		{
+			AuScintilla _control;
+
+			public _Acc(AuScintilla ownerControl) : base(ownerControl) => _control = ownerControl;
+
+			public override AccessibleStates State => base.State | (_control.ST.IsReadonly ? AccessibleStates.ReadOnly : 0);
+		}
+	}
 }

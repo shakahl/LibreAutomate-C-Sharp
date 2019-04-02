@@ -91,16 +91,13 @@ class UacDragDrop
 			if(!_wTransparent.Is0) _wTransparent.Post(Api.WM_USER); //let it close self
 		}
 
-		static bool _IsMousePressed => Keyb.GetAsyncKeyState(KKey.MouseLeft) < 0 || Keyb.GetAsyncKeyState(KKey.MouseRight) < 0;
-		//static bool _IsMousePressed => Mouse.IsPressed(MButtons.Left | MButtons.Right); //somehow unreliable when in drag mode
-
 		//Every 30 ms while in drag mode.
 		void _Timer()
 		{
 			if(!_isDragMode) return;
 
 			//when mouse released, end drag mode with ~100 ms delay
-			if(!_IsMousePressed) {
+			if(!Mouse.IsPressed(MButtons.Left | MButtons.Right)) { //calls GetKeyStateAsync. GetKeyState somehow unreliable when in drag mode.
 				if(++_endCounter == 4) _EndedDragMode();
 				return;
 			}
@@ -179,7 +176,7 @@ class UacDragDrop
 					_InvokeDDHandler(_wTargetControl, DDEvent.Leave);
 					_wTargetControl = default;
 				}
-				if(!w.Is0 && w.IsOfThisProcess && w.IsEnabledReally) {
+				if(!w.Is0 && w.IsOfThisProcess && w.IsEnabled(true)) {
 					if(ev != 0 && _wTargetControl.Is0) {
 						if(ev == DDEvent.Over) ev = 0;
 						else _InvokeDDHandler(w, DDEvent.Enter, p);

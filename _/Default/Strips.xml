@@ -124,7 +124,7 @@
     <Menu_Code>
       <Code_Wnd/>
       <Code_Acc/>
-      <Code_WinImage/>
+      <Code_WinImage t="WinImage"/>
     </Menu_Code>
     <Menu_Run>
 			<Run_Run i="run"/>

@@ -26,167 +26,241 @@ namespace Au
 		#region get key state
 
 		/// <summary>
-		/// Returns true if Alt key is pressed.
+		/// Gets key states for using in UI code (forms, WPF).
 		/// </summary>
 		/// <remarks>
-		/// Uses <see cref="GetKeyState"/>.
+		/// Use functions of this class when processing user input events in user interface code (forms, WPF). In other code (automation scrits, etc) usually it's better to use functions of <see cref="Keyb"/> class. Functions of this class are similar to .NET's <b>Control.ModifierKeys</b>, <b>Keyboard.Modifiers</b> etc, but may be easier to use.
+		/// 
+		/// In Windows there are two API to get key state (down or up) - <msdn>GetKeyState</msdn> and <msdn>GetAsyncKeyState</msdn>. In most cases they return the same result, but not always.
+		/// 
+		/// API <b>GetAsyncKeyState</b> is used by class <see cref="Keyb"/> and not by this class (<b>Keyb.UI</b>). When the user (or some software) presses or releases a key, <b>GetAsyncKeyState</b> sees the change immediately. It is good in automation scripts, but not good in UI code because the state is not synchronized with the message queue.
+		/// 
+		/// This class (<b>Keyb.UI</b>) uses API <msdn>GetKeyState</msdn>. In the foreground thread (of the active window), it sees key state changes not immediately but after the thread reads key messages from its queue. It is good in UI threads. In background threads this API usually works like <b>GetAsyncKeyState</b>, but it depends on API <msdn>AttachThreadInput</msdn> and in some cases is less reliable, for example may be unaware of keys pressed before the thread started.
+		/// 
+		/// The key state returned by these API is not always the same as of the physical keyboard. There is no API to get physical state. The two most common cases when it is different:
+		/// 1. When the key is pressed or released by software, such as the <b>Key</b> function of this library.
+		/// 2. When the key is blocked by a low-level hook. For example, hotkey triggers of this library use hooks.
+		/// 
+		/// Also there is API <msdn>GetKeyboardState</msdn>. It gets states of all keys in single call. Works like <b>GetKeyState</b>.
 		/// </remarks>
-		public static bool IsAlt => IsPressed(KKey.Alt);
-
-		/// <summary>
-		/// Returns true if Ctrl key is pressed.
-		/// </summary>
-		/// <remarks>
-		/// Uses <see cref="GetKeyState"/>.
-		/// </remarks>
-		public static bool IsCtrl => IsPressed(KKey.Ctrl);
-
-		/// <summary>
-		/// Returns true if Shift key is pressed.
-		/// </summary>
-		/// <remarks>
-		/// Uses <see cref="GetKeyState"/>.
-		/// </remarks>
-		public static bool IsShift => IsPressed(KKey.Shift);
-
-		/// <summary>
-		/// Returns true if Win key is pressed.
-		/// </summary>
-		/// <remarks>
-		/// Uses <see cref="GetKeyState"/>.
-		/// </remarks>
-		public static bool IsWin => IsPressed(KKey.Win) || IsPressed(KKey.RWin);
-
-		/// <summary>
-		/// Returns true if some modifier keys are pressed: Ctrl, Shift, Alt, Win.
-		/// </summary>
-		/// <param name="modifierKeys">Check only these keys. Default - all.</param>
-		/// <seealso cref="WaitForNoModifierKeys"/>
-		/// <remarks>
-		/// Uses <see cref="GetKeyState"/>.
-		/// </remarks>
-		public static bool IsMod(KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
+		public static class UI
 		{
-			if(0 != (modifierKeys & KMod.Ctrl) && IsCtrl) return true;
-			if(0 != (modifierKeys & KMod.Shift) && IsShift) return true;
-			if(0 != (modifierKeys & KMod.Alt) && IsAlt) return true;
-			if(0 != (modifierKeys & KMod.Win) && IsWin) return true;
-			return false;
-			//speed: slightly faster than GetKeyboardState with stackalloc.
+			/// <summary>
+			/// Calls API <msdn>GetKeyState</msdn> and returns its return value.
+			/// </summary>
+			/// <remarks>
+			/// If returns &lt; 0, the key is down (pressed). If the low-order bit is 1, the key is toggled; it works only with CapsLock, NumLock, ScrollLock and several other keys, as well as mouse buttons.
+			/// Can be used for mouse buttons too, for example <c>Keyb.UI.GetKeyState(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
+			/// </remarks>
+			public static short GetKeyState(KKey key) => Api.GetKeyState((int)key);
+
+			/// <summary>
+			/// Returns true if the specified key or mouse button is down (pressed).
+			/// </summary>
+			/// <remarks>
+			/// Can be used for mouse buttons too, for example <c>Keyb.UI.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
+			/// </remarks>
+			public static bool IsPressed(KKey key) => GetKeyState(key) < 0;
+
+			/// <summary>
+			/// Returns true if the Alt key is down (pressed).
+			/// </summary>
+			public static bool IsAlt => IsPressed(KKey.Alt);
+
+			/// <summary>
+			/// Returns true if the Ctrl key is down (pressed).
+			/// </summary>
+			public static bool IsCtrl => IsPressed(KKey.Ctrl);
+
+			/// <summary>
+			/// Returns true if the Shift key is down (pressed).
+			/// </summary>
+			public static bool IsShift => IsPressed(KKey.Shift);
+
+			/// <summary>
+			/// Returns true if the Win key is down (pressed).
+			/// </summary>
+			public static bool IsWin => IsPressed(KKey.Win) || IsPressed(KKey.RWin);
+
+			/// <summary>
+			/// Returns true if some modifier keys are down (pressed).
+			/// </summary>
+			/// <param name="mod">Return true if some of these keys are down (pressed). Default: Ctrl, Shift or Alt.</param>
+			/// <remarks>
+			/// By default does not check the Win key, as it is not used in UI, but you can include it in <paramref name="mod"/> if need.
+			/// </remarks>
+			public static bool IsMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt)
+			{
+				if(0 != (mod & KMod.Ctrl) && IsCtrl) return true;
+				if(0 != (mod & KMod.Shift) && IsShift) return true;
+				if(0 != (mod & KMod.Alt) && IsAlt) return true;
+				if(0 != (mod & KMod.Win) && IsWin) return true;
+				return false;
+			}
+
+			/// <summary>
+			/// Gets flags indicating which modifier keys are down (pressed).
+			/// </summary>
+			/// <param name="mod">Check only these keys. Default: Ctrl, Shift, Alt.</param>
+			/// <remarks>
+			/// By default does not check the Win key, as it is not used in UI, but you can include it in <paramref name="mod"/> if need.
+			/// </remarks>
+			public static KMod GetMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt)
+			{
+				KMod R = 0;
+				if(0 != (mod & KMod.Ctrl) && IsCtrl) R |= KMod.Ctrl;
+				if(0 != (mod & KMod.Shift) && IsShift) R |= KMod.Shift;
+				if(0 != (mod & KMod.Alt) && IsAlt) R |= KMod.Alt;
+				if(0 != (mod & KMod.Win) && IsWin) R |= KMod.Win;
+				return R;
+			}
+
+			/// <summary>
+			/// Returns true if the Caps Lock key is toggled.
+			/// </summary>
+			/// <remarks>
+			/// The same as <see cref="Keyb.IsCapsLock"/>.
+			/// </remarks>
+			public static bool IsCapsLock => (GetKeyState(KKey.CapsLock) & 1) != 0;
+
+			/// <summary>
+			/// Returns true if the Num Lock key is toggled.
+			/// </summary>
+			/// <remarks>
+			/// The same as <see cref="Keyb.IsNumLock"/>.
+			/// </remarks>
+			public static bool IsNumLock => (GetKeyState(KKey.NumLock) & 1) != 0;
+
+			/// <summary>
+			/// Returns true if the Scroll Lock key is toggled.
+			/// </summary>
+			/// <remarks>
+			/// The same as <see cref="Keyb.IsScrollLock"/>.
+			/// </remarks>
+			public static bool IsScrollLock => (GetKeyState(KKey.ScrollLock) & 1) != 0;
 		}
 
 		/// <summary>
-		/// Gets flags indicating which modifier keys are pressed: Ctrl, Shift, Alt, Win.
+		/// Returns true if the specified key or mouse button is down (pressed).
+		/// Not for UI code (forms, WPF).
 		/// </summary>
-		/// <param name="modifierKeys">Check only these keys. Default - all.</param>
 		/// <remarks>
-		/// Uses <see cref="GetKeyState"/>.
+		/// Uses API <msdn>GetAsyncKeyState</msdn>.
+		/// When processing user input in UI code (forms, WPF), instead use class <see cref="Keyb.UI"/> or .NET functions. They use API <msdn>GetKeyState</msdn>.
+		/// Can be used for mouse buttons too, for example <c>Keyb.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
 		/// </remarks>
-		public static KMod GetMod(KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
+		public static bool IsPressed(KKey key)
+		{
+			if((key == KKey.MouseLeft || key == KKey.MouseRight) && 0 != Api.GetSystemMetrics(Api.SM_SWAPBUTTON)) key = (KKey)((int)key ^ 3); //makes this func 3 times slower, eg 2 -> 6 mcs when cold CPU. But much faster when called next time without a delay; for example Mouse.IsPressed(Left|Right) is not slower than Mouse.IsPressed(Left) in reality, although calls this func 2 times.
+			return Api.GetAsyncKeyState((int)key) < 0;
+		}
+
+		/// <summary>
+		/// Returns true if the Alt key is down (pressed).
+		/// Not for UI code (forms, WPF).
+		/// </summary>
+		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		public static bool IsAlt => IsPressed(KKey.Alt);
+
+		/// <summary>
+		/// Returns true if the Ctrl key is down (pressed).
+		/// </summary>
+		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		public static bool IsCtrl => IsPressed(KKey.Ctrl);
+
+		/// <summary>
+		/// Returns true if the Shift key is down (pressed).
+		/// Not for UI code (forms, WPF).
+		/// </summary>
+		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		public static bool IsShift => IsPressed(KKey.Shift);
+
+		/// <summary>
+		/// Returns true if the Win key is down (pressed).
+		/// Not for UI code (forms, WPF).
+		/// </summary>
+		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		public static bool IsWin => IsPressed(KKey.Win) || IsPressed(KKey.RWin);
+
+		/// <summary>
+		/// Returns true if some modifier keys are down (pressed): Ctrl, Shift, Alt, Win.
+		/// Not for UI code (forms, WPF).
+		/// </summary>
+		/// <param name="mod">Return true if some of these keys are pressed. Default - any (Ctrl, Shift, Alt or Win).</param>
+		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		/// <seealso cref="WaitForNoModifierKeys"/>
+		public static bool IsMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
+		{
+			if(0 != (mod & KMod.Ctrl) && IsCtrl) return true;
+			if(0 != (mod & KMod.Shift) && IsShift) return true;
+			if(0 != (mod & KMod.Alt) && IsAlt) return true;
+			if(0 != (mod & KMod.Win) && IsWin) return true;
+			return false;
+		}
+
+		/// <summary>
+		/// Gets flags indicating which modifier keys are down (pressed): Ctrl, Shift, Alt, Win.
+		/// Not for UI code (forms, WPF).
+		/// </summary>
+		/// <param name="mod">Check only these keys. Default - all four.</param>
+		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		public static KMod GetMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
 		{
 			KMod R = 0;
-			if(0 != (modifierKeys & KMod.Ctrl) && IsCtrl) R |= KMod.Ctrl;
-			if(0 != (modifierKeys & KMod.Shift) && IsShift) R |= KMod.Shift;
-			if(0 != (modifierKeys & KMod.Alt) && IsAlt) R |= KMod.Alt;
-			if(0 != (modifierKeys & KMod.Win) && IsWin) R |= KMod.Win;
+			if(0 != (mod & KMod.Ctrl) && IsCtrl) R |= KMod.Ctrl;
+			if(0 != (mod & KMod.Shift) && IsShift) R |= KMod.Shift;
+			if(0 != (mod & KMod.Alt) && IsAlt) R |= KMod.Alt;
+			if(0 != (mod & KMod.Win) && IsWin) R |= KMod.Win;
 			return R;
 		}
 
 		/// <summary>
 		/// Returns true if the Caps Lock key is toggled.
 		/// </summary>
-		/// <remarks>
-		/// Uses <see cref="GetKeyState"/>.
-		/// </remarks>
-		public static bool IsCapsLock => (Api.GetKeyState((int)KKey.CapsLock) & 1) != 0;
+		public static bool IsCapsLock => UI.IsCapsLock;
 
 		/// <summary>
 		/// Returns true if the Num Lock key is toggled.
 		/// </summary>
-		/// <remarks>
-		/// Uses <see cref="GetKeyState"/>.
-		/// </remarks>
-		public static bool IsNumLock => (Api.GetKeyState((int)KKey.NumLock) & 1) != 0;
+		public static bool IsNumLock => UI.IsNumLock;
 
 		/// <summary>
 		/// Returns true if the Scroll Lock key is toggled.
 		/// </summary>
-		/// <remarks>
-		/// Uses <see cref="GetKeyState"/>.
-		/// </remarks>
-		public static bool IsScrollLock => (Api.GetKeyState((int)KKey.ScrollLock) & 1) != 0;
-
-		/// <summary>
-		/// Calls API <msdn>GetKeyState</msdn> and returns its return value.
-		/// </summary>
-		/// <remarks>
-		/// If returns &lt; 0, the key is pressed. If the low-order bit is 1, the key is toggled; not all keys can be toggled.
-		/// This key state changes when the active app receives the key down or up notification.
-		/// This and other 'get key state' functions of this library except <see cref="GetAsyncKeyState"/> use API <msdn>GetKeyState</msdn>.
-		/// If a key is blocked by a hook, its state does not change. If it's a low-level hook, then it's impossible to detect whether the key is physically pressed.
-		/// </remarks>
-		public static short GetKeyState(KKey key) => Api.GetKeyState((int)key);
-
-		/// <summary>
-		/// Calls API <msdn>GetAsyncKeyState</msdn> and returns its return value.
-		/// </summary>
-		/// <remarks>
-		/// If returns &lt; 0, the key is pressed.
-		/// This key state changes when the OS receives the key down or up notification and before the active app receives the notification.
-		/// If a key is blocked by a low-level hook, its state does not change. Then it's impossible to detect whether the key is physically pressed.
-		/// </remarks>
-		public static short GetAsyncKeyState(KKey key) => Api.GetAsyncKeyState((int)key);
-
-		/// <summary>
-		/// Returns true if the specified key or mouse button is pressed.
-		/// </summary>
-		/// <remarks>
-		/// Calls API <msdn>GetKeyState</msdn>.
-		/// </remarks>
-		public static bool IsPressed(KKey key) => Api.GetKeyState((int)key) < 0;
-
-		//rejected: rarely used; does not work with most keys; can use GetKeyState, IsCapsLock, etc.
-		///// <summary>
-		///// Returns true if the specified key or mouse button is toggled.
-		///// </summary>
-		///// <remarks>
-		///// Calls API <msdn>GetKeyState</msdn>.
-		///// Can get the toggled state of the lock keys, modifier keys and mouse buttons. Cannot get of most other keys.
-		///// </remarks>
-		//public static bool IsKeyToggled(KKey key) => (Api.GetKeyState((int)key) & 1) != 0;
+		public static bool IsScrollLock => UI.IsScrollLock;
 
 		#endregion
 
 		#region wait
 
 		/// <summary>
-		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are in pressed state (see <see cref="IsMod"/>).
+		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are down (pressed). See <see cref="IsMod"/>.
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <param name="modifierKeys">Check only these keys. Default - all.</param>
+		/// <param name="mod">Check only these keys. Default: all.</param>
 		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
-		public static bool WaitForNoModifierKeys(double secondsTimeout = 0.0, KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
+		public static bool WaitForNoModifierKeys(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
 		{
-			return WaitForNoModifierKeysAndMouseButtons(secondsTimeout, modifierKeys, 0);
+			return WaitForNoModifierKeysAndMouseButtons(secondsTimeout, mod, 0);
 		}
 
 		/// <summary>
-		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are in pressed state.
+		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are down (pressed).
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <param name="modifierKeys">Check only these keys. Default - all.</param>
-		/// <param name="buttons">Check only these buttons. Default - all.</param>
+		/// <param name="mod">Check only these keys. Default: all.</param>
+		/// <param name="buttons">Check only these buttons. Default: all.</param>
 		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <seealso cref="IsMod"/>
 		/// <seealso cref="Mouse.IsPressed"/>
 		/// <seealso cref="Mouse.WaitForNoButtonsPressed"/>
-		public static bool WaitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod modifierKeys = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
+		public static bool WaitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
 			var to = new WaitFor.Loop(secondsTimeout, 2);
 			for(; ; ) {
-				if(!IsMod(modifierKeys) && !Mouse.IsPressed(buttons)) return true;
+				if(!IsMod(mod) && !Mouse.IsPressed(buttons)) return true;
 				if(!to.Sleep()) return false;
 			}
 		}
@@ -198,7 +272,7 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Waits while the specified keys or/and mouse buttons are in pressed state.
+		/// Waits while the specified keys or/and mouse buttons are down (pressed).
 		/// </summary>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
 		/// <param name="keys">One or more keys or/and mouse buttons. Waits until all are released. Can be string like with <see cref="Key"/>, without operators.</param>
@@ -206,7 +280,7 @@ namespace Au
 		public static bool WaitForReleased(double secondsTimeout, params KKey[] keys)
 		{
 			return WaitFor.Condition(secondsTimeout, () => {
-				foreach(var k in keys) if(GetKeyState(k) < 0) return false;
+				foreach(var k in keys) if(IsPressed(k)) return false;
 				return true;
 			}, 2);
 		}
@@ -314,7 +388,7 @@ namespace Au
 
 		static KKey _WaitForKey(double secondsTimeout, KKey key, bool up, bool block)
 		{
-			//SHOULDDO: if up and block: don't block if was pressed when starting to wait. Also in the Mouse func.
+			//SHOULDDO: if up and block: don't block if was down when starting to wait. Also in the Mouse func.
 
 			KKey R = 0;
 			using(Util.WinHook.Keyboard(x => {
@@ -457,13 +531,13 @@ namespace Au
 
 			/// <summary>
 			/// Used for parsing of hotkey triggers and mouse trigger modifiers.
-			/// Like <see cref="ParseHotkeyString"/>, but supports 'any mod' (like "Shift?+K" or "?+K") and onlyMod.
-			/// onlyMod - if false, returns false if s is not "key" or "mod+key". Else returns false if s is not "mod" (used for mouse trigger mod).
+			/// Like <see cref="ParseHotkeyString"/>, but supports 'any mod' (like "Shift?+K" or "?+K") and <i>noKey</i>.
+			/// <i>noKey</i> - s can contain only modifiers, not key. If false, s must be "key" or "mod+key", else returns false. Else s must be "mod" or null/"", else returns false.
 			/// </summary>
-			internal static bool LibParseHotkeyTriggerString(string s, out KMod mod, out KMod modAny, out KKey key, bool onlyMod)
+			internal static bool LibParseHotkeyTriggerString(string s, out KMod mod, out KMod modAny, out KKey key, bool noKey)
 			{
 				key = 0; mod = 0; modAny = 0;
-				if(s == null) return false;
+				if(Empty(s)) return noKey;
 				int i = 0; bool ignore = false;
 				foreach(var g in _SplitKeysString(s)) {
 					if(ignore) { ignore = false; continue; }
@@ -482,7 +556,7 @@ namespace Au
 						}
 					} else if(g.Length != 1 || s[g.Index] != '+') return false;
 				}
-				if(onlyMod) return (mod | modAny) != 0 && key == 0;
+				if(noKey) return (mod | modAny) != 0 && key == 0;
 				return key != 0;
 			}
 
@@ -662,7 +736,7 @@ namespace Au
 		/// <description>+()</description>
 		/// <description><c>"Alt+(E P)"</c></description>
 		/// <description>The same as <c>"Alt*down E P Alt*up"</c>.
-		/// Inside () cannot be used + or another +().
+		/// Inside () cannot be used + and +().
 		/// </description>
 		/// </item>
 		/// <item>
@@ -716,8 +790,7 @@ namespace Au
 		/// <item>
 		/// <description><see cref="OptKey.NoModOff" r=""/></description>
 		/// <description>false.
-		/// Releases modifier keys (Alt, Ctrl, Shift, Win) if pressed.
-		/// Does it only at the start; later they cannot interfere, unless <see cref="OptKey.NoBlockInput" r=""/> is true.</description>
+		/// Releases modifier keys (Alt, Ctrl, Shift, Win). Does it only at the start; later they cannot interfere, unless <see cref="OptKey.NoBlockInput" r=""/> is true.</description>
 		/// <description>true.
 		/// Does not touch modifier keys. It can be dangerous.</description>
 		/// </item>

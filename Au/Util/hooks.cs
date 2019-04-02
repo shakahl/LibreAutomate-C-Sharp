@@ -333,17 +333,34 @@ namespace Au.Util
 
 					switch(_proc2) {
 					case Func<HookData.Keyboard, bool> p:
-						if(IgnoreKeyMouseEventsInjectedByAu && ((Api.KBDLLHOOKSTRUCT*)lParam)->IsInjectedByAu) goto gr;
+						var kll = (Api.KBDLLHOOKSTRUCT*)lParam;
+						var vk = (KKey)kll->vkCode;
+						if(kll->IsInjected) {
+							if(IgnoreKeyMouseInjectedByAu && kll->IsInjectedByAu) goto gr;
+							if(vk == KKey.Packet && IgnoreKeyInjectedPacket) goto gr;
+							if(vk == KKey.MouseX2 && kll->dwExtraInfo == 1354291109) goto gr; //QM2 sync code
+						} else {
+							//When Keyb.Lib.ReleaseModAndCapsLock sends Shift to turn off CapsLock,
+							//	hooks receive a non-injected LShift down, CapsLock down/up and injected LShift up.
+							//	Our triggers would recover, but cannot auto-repeat. Better don't call the hookproc.
+							if((vk == KKey.CapsLock || vk == KKey.LShift) && IgnoreKeyMouseInjectedByAu && BlockUserInput.LibDontBlockLShiftCaps) goto gr;
+
+							//Test how our triggers recover when a modifier down or up event is lost. Or when triggers started while a modifier is down.
+							//if(Keyb.IsScrollLock) {
+							//	//if(vk == KKey.LCtrl && !kll->IsUp) { Print("lost Ctrl down"); goto gr; }
+							//	if(vk == KKey.LCtrl && kll->IsUp) { Print("lost Ctrl up"); goto gr; }
+							//}
+						}
 						t1 = Time.PerfMilliseconds; hookType = Api.WH_KEYBOARD_LL;
 						R = p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
 						break;
 					case Func<HookData.Mouse, bool> p:
-						if(IgnoreKeyMouseEventsInjectedByAu && ((Api.MSLLHOOKSTRUCT*)lParam)->IsInjectedByAu) goto gr;
+						if(IgnoreKeyMouseInjectedByAu && ((Api.MSLLHOOKSTRUCT*)lParam)->IsInjectedByAu) goto gr;
 						t1 = Time.PerfMilliseconds; hookType = Api.WH_MOUSE_LL;
 						R = p(new HookData.Mouse(this, wParam, lParam));
 						break;
-					case Func<LPARAM, LPARAM, bool> p: //raw
-						if(IgnoreKeyMouseEventsInjectedByAu && ((Api.MSLLHOOKSTRUCT*)lParam)->IsInjectedByAu) goto gr;
+					case Func<LPARAM, LPARAM, bool> p: //raw mouse
+						if(IgnoreKeyMouseInjectedByAu && ((Api.MSLLHOOKSTRUCT*)lParam)->IsInjectedByAu) goto gr;
 						t1 = Time.PerfMilliseconds; hookType = Api.WH_MOUSE_LL;
 						R = p(wParam, lParam);
 						break;
@@ -371,14 +388,14 @@ namespace Au.Util
 					//	Hook proc must return in HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout ms.
 					//		Default 300. On Win10 max 1000 (bigger registry value is ignored and used 1000).
 					//	On timeout Windows:
-					//		1. Does not wait more. Passes the event to the next hook etc, and we cannot return 1 to block the event.
+					//		1. Does not wait more. Passes the message to the next hook etc, and we cannot return 1 to block it.
 					//		2. Kills the hook after several such cases. Usually 6 keys or 11 mouse events.
 					//		3. Makes the hook useless: next times does not wait for it, and we cannot return 1 to block the event.
 					//	Somehow does not apply 2 and 3 to some apps, eg C# apps created by Visual Studio, although applies to those created not by VS. I did not find why.
 					if(hookType != 0 && (t1 = Time.PerfMilliseconds - t1) > 200 /*&& t1 < 5000*/ && !Debugger.IsAttached) {
 						if(t1 > LowLevelHooksTimeout - 50) {
-							var s1 = hookType == Api.WH_KEYBOARD_LL ? "keyboard" : "mouse";
-							var s2 = R ? $" On timeout the {s1} event is passed to the active window, other hooks, etc." : null;
+							var s1 = hookType == Api.WH_KEYBOARD_LL ? "key" : "mouse";
+							var s2 = R ? $" On timeout the {s1} message is passed to the active window, other hooks, etc." : null;
 							//PrintWarning($"Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}"); //too slow first time
 							//Print($"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //first Print JIT 30 ms
 							ThreadPool.QueueUserWorkItem(s3 => Print(s3), $"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //fast if with false. But async print can be confusing.
@@ -400,18 +417,27 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Don't call keyboard and mouse hook procedure for events sent by functions of this library.
+		/// Don't call low-level keyboard and mouse hook procedure for events sent by functions of this library.
 		/// </summary>
-		public bool IgnoreKeyMouseEventsInjectedByAu { get; set; }
+		public bool IgnoreKeyMouseInjectedByAu { get; set; }
+
+		/// <summary>
+		/// Don't call low-level keyboard hook procedure for injected (software-generated) keys VK_PACKET.
+		/// It is a special virtual-key code used by software to insert text.
+		/// </summary>
+		public bool IgnoreKeyInjectedPacket { get; set; }
 
 		/// <summary>
 		/// Gets the max time in milliseconds allowed by Windows for low-level keyboard and mouse hook procedures.
 		/// </summary>
 		/// <remarks>
-		/// Gets registry value HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout.
-		/// If the registry value is missing, returns 300; it is the default value used by Windows. If the registry value is more than 1000, returns 1000, because Windows 10 ignores bigger values.
-		/// If a hook procedure takes more time, Windows does not wait. Then the return value is ignored, and the event is passed to the active window, other hooks, etc. Also Windows may fully or partially disable the hook.
-		/// More info: <google>registry LowLevelHooksTimeout</google>.
+		/// Gets registry value HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout. If it is missing, returns 300; it is the default value used by Windows. If greater than 1000, returns 1000, because Windows 10 ignores bigger values.
+		/// 
+		/// If a hook procedure takes more time, Windows does not wait. Then the return value is ignored, and the event is passed to other apps, hooks, etc. After several such cases Windows may fully or partially disable the hook. This class detects such cases; then it restores the hook and displays a warning. If the warning is rare, you can ignore it. If frequent, it means your hook procedure is too slow and need to edit it.
+		/// 
+		/// Callback functions of keyboard and mouse triggers are called in a hook procedure, therefore must be as fast as possible. More info: <see cref="Triggers.TriggerFuncs"/>.
+		/// 
+		/// More info: <msdn>registry LowLevelHooksTimeout</msdn>.
 		/// </remarks>
 		public static int LowLevelHooksTimeout {
 			get {

@@ -18,12 +18,10 @@ using System.Runtime.ExceptionServices;
 using Au.Types;
 using static Au.NoClass;
 
-#pragma warning disable CS1591 // Missing XML comment //TODO
-
 namespace Au.Triggers
 {
 	/// <summary>
-	/// Triggers.
+	/// This namespace contains classes of triggers, for example hotkeys.
 	/// </summary>
 	[CompilerGenerated()]
 	class NamespaceDoc
@@ -31,12 +29,124 @@ namespace Au.Triggers
 		//SHFB uses this for namespace documentation.
 	}
 
-	public class AuTriggers
+	/// <summary>
+	/// The main class of action triggers.
+	/// </summary>
+	/// <remarks>
+	/// There are two categories of triggers:
+	/// 1. Script triggers launch automation scripts, usually as new processes (running programs).
+	/// 2. Action triggers launch functions (aka <i>trigger actions</i>) in running automation scripts. Most trigger types are action triggers.
+	/// 
+	/// This class manages action triggers. The <see cref="AuScript.Triggers" r=""/> property gets its instance. Through it you access all trigger types (hotkey, window, etc) and add triggers to them.
+	/// 
+	/// Code syntax to add an action trigger:
+	/// <code>Triggers.TriggerType[parameters] = action;</code>
+	/// Examples:
+	/// <code>
+	/// Triggers.Hotkey["Ctrl+K"] = o => Print(o.Trigger);
+	/// Triggers.Hotkey["Ctrl+Shift+K"] = o => {
+	///		Print("This is a trigger action. Usually it is a lambda function, like in these examples.");
+	///		Print($"It runs when you press {o.Trigger}.");
+	/// };
+	/// Triggers.Run();
+	/// </code>
+	/// 
+	/// Also you can set options (<see cref="TriggerOptions">Triggers.Options</see>), window scopes (<see cref="TriggerScopes">Triggers.Of</see>) and custom scopes (<see cref="TriggerFuncs">Triggers.FuncOf</see>) for multiple triggers added afterwards.
+	/// 
+	/// Finally call <see cref="Run">Triggers.Run()</see>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s).
+	/// </remarks>
+	/// <example>
+	/// This is a single script with many action triggers.
+	/// <code><![CDATA[
+	/// //if you want to set options for all or some triggers, do it before adding these triggers
+	/// Triggers.Options.RunActionInThread(0, 500);
+	/// 
+	/// //you can use variables if don't want to type "Triggers.Hotkey" etc for each trigger
+	/// var hk = Triggers.Hotkey;
+	/// var mouse = Triggers.Mouse;
+	/// var window = Triggers.Window;
+	/// var tt = Triggers.Autotext;
+	/// 
+	/// //hotkey triggers
+	/// 
+	/// hk["Ctrl+K"] = o => Print(o.Trigger);
+	/// hk["Ctrl+Shift+F11"] = o => {
+	/// 	Print(o.Trigger);
+	/// 	var w1 = Wnd.FindOrRun("* Notepad", run: () => Shell.Run(Folders.System + "notepad.exe"));
+	/// 	Text("text");
+	/// 	w1.Close();
+	/// };
+	/// 
+	/// //triggers that work only with some windows
+	/// 
+	/// Triggers.Of.Window("* WordPad", "WordPadClass"); //let the following triggers work only when a WordPad window is active
+	/// hk["Ctrl+F5"] = o => Print(o.Trigger, o.Window);
+	/// hk["Ctrl+F6"] = o => Print(o.Trigger, o.Window);
+	/// 
+	/// var notepad = Triggers.Of.Window("* Notepad"); //let the following triggers work only when a Notepad window is active
+	/// hk["Ctrl+F5"] = o => Print(o.Trigger, o.Window);
+	/// hk["Ctrl+F6"] = o => Print(o.Trigger, o.Window);
+	/// 
+	/// Triggers.Of.AllWindows(); //let the following triggers work with all windows
+	/// 
+	/// //mouse triggers
+	/// 
+	/// mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => Print(o.Trigger);
+	/// mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); AuDialog.ShowEx("Bang!", x: Coord.Max); };
+	/// mouse[TMMove.LeftRightInCenter50] = o => Wnd.SwitchActiveWindow();
+	/// 
+	/// Triggers.FuncOf.NextTrigger = o => Keyb.IsScrollLock; //example of a custom scope (aka context, condition)
+	/// mouse[TMWheel.Forward] = o => Print($"{o.Trigger} while ScrollLock is on");
+	/// 
+	/// Triggers.Of.Again(notepad); //let the following triggers work only when a Notepad window is active
+	/// mouse[TMMove.LeftRightInBottom25] = o => { Print(o.Trigger); o.Window.Close(); };
+	/// Triggers.Of.AllWindows();
+	/// 
+	/// //window triggers. Note: window triggers don't depend on Triggers.Of window.
+	/// 
+	/// window.ActiveNew["* Notepad", "Notepad"] = o => Print("opened Notepad window");
+	/// window.ActiveNew["Notepad", "#32770", contains: "Do you want to save *"] = o => {
+	/// 	Print("opened Notepad's 'Do you want to save' dialog");
+	/// 	Key("Alt+S");
+	/// };
+	/// 
+	/// //autotext triggers
+	/// 
+	/// tt["sep"] = o => o.Replace("september");
+	/// tt["nov"] = o => o.Replace("november");
+	/// 
+	/// //how to stop and disable/enable triggers
+	/// 
+	/// hk["Ctrl+Alt+Q"] = o => Triggers.Stop(); //let Triggers.Run() end its work and return
+	/// hk.Last.EnabledAlways = true;
+	/// 
+	/// hk["Ctrl+Alt+D"] = o => Triggers.Disabled ^= true; //disable/enable triggers here
+	/// hk.Last.EnabledAlways = true;
+	/// 
+	/// hk["Ctrl+Alt+Win+D"] = o => ActionTriggers.DisabledEverywhere ^= true; //disable/enable triggers in all processes
+	/// hk.Last.EnabledAlways = true;
+	/// 
+	/// hk["Ctrl+F7"] = o => Print("This trigger can be disabled/enabled with Ctrl+F8.");
+	/// var t1 = hk.Last;
+	/// hk["Ctrl+F8"] = o => t1.Disabled ^= true; //disable/enable a trigger
+	/// 
+	/// //finally call Triggers.Run(). Without it the triggers won't work.
+	/// Triggers.Run();
+	/// Print("the end");
+	/// ]]></code>
+	/// </example>
+	public class ActionTriggers
 	{
 		readonly ITriggers[] _t;
 		ITriggers this[TriggerType e] => _t[(int)e];
 
-		public AuTriggers()
+		/// <summary>
+		/// Initializes a new instance of this class.
+		/// </summary>
+		/// <remarks>
+		/// In automation scripts don't need to create new instances of this class. Instead use the <see cref="AuScript.Triggers" r=""/> property to get an instance.
+		/// </remarks>
+		public ActionTriggers()
 		{
 			_t = new ITriggers[(int)TriggerType.Count];
 			scopes = new TriggerScopes();
@@ -65,18 +175,24 @@ namespace Au.Triggers
 		//static bool _test;
 		//static string _s1;
 
+		/// <summary>
+		/// Allows to set window scopes (working windows) for triggers.
+		/// </summary>
+		/// <remarks>Examples: <see cref="TriggerScopes"/>, <see cref="ActionTriggers"/>.</remarks>
 		public TriggerScopes Of => scopes;
 		internal readonly TriggerScopes scopes;
 
+		/// <summary>
+		/// Allows to set custom scopes/contexts/conditions for triggers.
+		/// </summary>
+		/// <remarks>More info and examples: <see cref="TriggerFuncs"/>, <see cref="ActionTriggers"/>.</remarks>
 		public TriggerFuncs FuncOf => funcs;
 		internal readonly TriggerFuncs funcs;
 
 		/// <summary>
 		/// Allows to set some options for multiple triggers and their actions.
 		/// </summary>
-		/// <remarks>
-		/// More info and examples: <see cref="TriggerOptions"/>.
-		/// </remarks>
+		/// <remarks>More info and examples: <see cref="TriggerOptions"/>, <see cref="ActionTriggers"/>.</remarks>
 		public TriggerOptions Options => options;
 		internal readonly TriggerOptions options;
 
@@ -102,14 +218,40 @@ namespace Au.Triggers
 			return t;
 		}
 
+		/// <summary>
+		/// Hotkey triggers.
+		/// </summary>
+		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
 		public HotkeyTriggers Hotkey => _Get(TriggerType.Hotkey) as HotkeyTriggers;
 
+		/// <summary>
+		/// Autotext triggers.
+		/// </summary>
+		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
 		public AutotextTriggers Autotext => _Get(TriggerType.Autotext) as AutotextTriggers;
 
+		/// <summary>
+		/// Mouse triggers.
+		/// </summary>
+		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
 		public MouseTriggers Mouse => _Get(TriggerType.Mouse) as MouseTriggers;
 
+		/// <summary>
+		/// Window triggers.
+		/// </summary>
+		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
 		public WindowTriggers Window => _Get(TriggerType.Window) as WindowTriggers;
 
+		/// <summary>
+		/// Makes triggers alive.
+		/// </summary>
+		/// <remarks>
+		/// This function monitors hotkeys, activated windows and other events. When an event matches an added trigger, launches the thrigger's action, which runs in other thread.
+		/// Does not return immediately, unless there are no triggers added. Runs until this process or thread is terminated/aborted or <see cref="Stop"/> called.
+		/// Example: <see cref="ActionTriggers"/>.
+		/// </remarks>
+		/// <exception cref="InvalidOperationException">Already running.</exception>
+		/// <exception cref="AuException">Something failed.</exception>
 		public void Run()
 		{
 			//AppDomain.CurrentDomain.AssemblyLoad += (object sender, AssemblyLoadEventArgs args) => {
@@ -232,7 +374,7 @@ namespace Au.Triggers
 							Util.Jit.Compile(typeof(HotkeyTriggers), "HookProc");
 							Util.Jit.Compile(typeof(AutotextTriggers), "HookProc");
 							Util.Jit.Compile(typeof(MouseTriggers), "HookProc");
-							Util.Jit.Compile(typeof(Trigger), "MatchScopeWindowAndFunc");
+							Util.Jit.Compile(typeof(ActionTrigger), "MatchScopeWindowAndFunc");
 							Util.Jit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
 						}
 					}
@@ -319,6 +461,11 @@ namespace Au.Triggers
 					Perf.Next();
 					thc.PerfWarn();
 					//Perf.NW();//TODO
+
+					//var mem = GC.GetTotalMemory(false);
+					//if(mem != _debugMem && _debugMem != 0) Print(mem - _debugMem);
+					//_debugMem = mem;
+
 					Api.WriteFile(pipe, &suppressInputEvent, 1, out _);
 					if(thc.trigger != null) LibRunAction(thc.trigger, thc.args);
 				}
@@ -331,7 +478,9 @@ namespace Au.Triggers
 			}
 		}
 
-		internal void LibRunAction(Trigger trigger, TriggerArgs args)
+		//long _debugMem;
+
+		internal void LibRunAction(ActionTrigger trigger, TriggerArgs args)
 		{
 			if(trigger.action != null) {
 				if(_threads == null) _threads = new TriggerActionThreads();
@@ -396,13 +545,13 @@ namespace Au.Triggers
 		internal void LibThrowIfNotRunning() { if(!LibRunning) throw new InvalidOperationException("Cannot be before or after Triggers.Run."); }
 
 		/// <summary>
-		/// Gets or sets whether triggers of this <see cref="AuTriggers"/> instance are disabled.
+		/// Gets or sets whether triggers of this <see cref="ActionTriggers"/> instance are disabled.
 		/// </summary>
 		/// <remarks>
 		/// Does not depend on <see cref="DisabledEverywhere"/>.
 		/// Does not end/pause threads of trigger actions.
 		/// </remarks>
-		/// <seealso cref="Trigger.EnabledAlways"/>
+		/// <seealso cref="ActionTrigger.EnabledAlways"/>
 		/// <seealso cref="TriggerOptions.EnabledAlways"/>
 		/// <example>
 		/// <code><![CDATA[
@@ -415,13 +564,14 @@ namespace Au.Triggers
 		public bool Disabled { get; set; }
 
 		/// <summary>
-		/// true if triggers are disabled in all proceses that use this library in this user session.
+		/// true if triggers are disabled in all processes that use this library in this user session.
 		/// </summary>
+		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
 		/// <seealso cref="Disabled"/>
 		/// <seealso cref="TriggerOptions.EnabledAlways"/>
 		public static unsafe bool DisabledEverywhere {
 			get => Util.LibSharedMemory.Ptr->triggers.disabled;
-			internal set => Util.LibSharedMemory.Ptr->triggers.disabled = value;
+			set => Util.LibSharedMemory.Ptr->triggers.disabled = value;
 		}
 
 		[StructLayout(LayoutKind.Sequential, Size = 16)] //note: this struct is in shared memory. Size must be same in all library versions.
@@ -464,11 +614,11 @@ namespace Au.Triggers
 
 	class TriggerHookContext : WFCache
 	{
-		//internal readonly AuTriggers triggers;
+		//internal readonly ActionTriggers triggers;
 		Wnd _w;
 		bool _haveWnd, _mouseWnd; POINT _p;
 
-		public TriggerHookContext(AuTriggers triggers)
+		public TriggerHookContext(ActionTriggers triggers)
 		{
 			//this.triggers = triggers;
 			_perfList = new _ScopeTime[32];
@@ -490,7 +640,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// Trigger/action to run. Set by a hook proc of a trigger engine.
 		/// </summary>
-		public Trigger trigger;
+		public ActionTrigger trigger;
 
 		/// <summary>
 		/// Used with <see cref="trigger"/>.
@@ -583,18 +733,18 @@ namespace Au.Triggers
 	}
 
 
-	public static class TaskTrigger
-	{
-		[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-		public class HotkeyAttribute : Attribute
-		{
-			public string Hotkey { get; }
+	//public static class TaskTrigger
+	//{
+	//	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+	//	public class HotkeyAttribute : Attribute
+	//	{
+	//		public string Hotkey { get; }
 
-			public HotkeyAttribute(string hotkey)
-			{
-				Hotkey = hotkey;
-			}
-		}
+	//		public HotkeyAttribute(string hotkey)
+	//		{
+	//			Hotkey = hotkey;
+	//		}
+	//	}
 
-	}
+	//}
 }

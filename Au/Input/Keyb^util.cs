@@ -343,46 +343,76 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Releases modifier keys if pressed. Optionally turns off CapsLock if toggled.
-			/// Returns true if was CapsLock.
-			/// Uses options NoModOff and NoCapsOff. Does not call Hook.
+			/// Releases modifier keys if pressed and no option NoModOff. Turns off CapsLock if toggled and no option NoCapsOff.
+			/// When releasing modifiers, if pressed Alt or Win without Ctrl, presses-releases Ctrl to avoid menu mode.
+			/// Returns true if turned off CapsLock.
+			/// Does not sleep, blockinput, etc.
 			/// </summary>
-			/// <param name="opt"></param>
-			/// <param name="forClipb">Used for Clipb Ctrl+V/C/X. Ignore CapsLock and always release modifiers, regardless of opt.</param>
-			internal static bool ReleaseModAndCapsLock(OptKey opt, bool forClipb = false)
+			internal static bool ReleaseModAndCapsLock(OptKey opt)
 			{
 				//note: don't call Hook here, it does not make sense.
 
-				bool R = !forClipb && !opt.NoCapsOff && IsCapsLock;
-				if(R) SendKey(KKey.CapsLock);
+				bool R = !opt.NoCapsOff && IsCapsLock;
+				if(R) {
+					if(IsPressed(KKey.CapsLock)) SendKey(KKey.CapsLock, 2); //never mind: in this case later may not restore CapsLock because of auto-repeat
+					SendKey(KKey.CapsLock);
+					if(IsCapsLock) {
+						//Probably Shift is set to turn off CapsLock in CP dialog "Text Services and Input Languages".
+						//	Win10: Settings -> Time & Language -> Language -> Input method -> Hot keys.
+						BlockUserInput.LibDontBlockLShiftCaps = true;
+						SendKey(KKey.Shift);
+						BlockUserInput.LibDontBlockLShiftCaps = false;
+						R = !IsCapsLock;
+						Debug.Assert(R);
 
-				if(forClipb || !opt.NoModOff) {
-					bool isLAlt = IsKeyPressedSyncOrAsync(KKey.LAlt);
-					bool isRAlt = IsKeyPressedSyncOrAsync(KKey.RAlt);
-					bool isLWin = IsKeyPressedSyncOrAsync(KKey.Win);
-					bool isRWin = IsKeyPressedSyncOrAsync(KKey.RWin);
-					bool isLCtrl = IsKeyPressedSyncOrAsync(KKey.LCtrl);
-					bool isRCtrl = IsKeyPressedSyncOrAsync(KKey.RCtrl);
-					bool menu = (isLAlt || isRAlt || isLWin || isRWin) && !(isLCtrl || isRCtrl);
-					if(menu) SendKey(KKey.Ctrl); //if Alt or Win pressed, send Ctrl to avoid menu mode or Start menu. For Alt works Ctrl-up, but maybe not everywhere. For Win need Ctrl-down-up.
-					if(isLCtrl) SendCtrl(false);
-					if(isRCtrl) SendRCtrlUp();
-					if(IsKeyPressedSyncOrAsync(KKey.LShift)) SendShift(false);
-					if(IsKeyPressedSyncOrAsync(KKey.RShift)) SendRShiftUp();
-					if(isLAlt) SendAlt(false);
-					if(isRAlt) SendRAltUp();
-					if(isLWin) SendKey(KKey.Win, 2);
-					if(isRWin) SendKey(KKey.RWin, 2);
+						//note: need LibDontBlockLShiftCaps, because when we send Shift, the BlockInput hook receives these events:
+						//Left Shift down, not injected //!!
+						//Caps Lock down, not injected
+						//Caps Lock up, not injected
+						//Left Shift up, injected
 
-					//CONSIDER: don't release if pressed by script.
+						//speed: often ~15 ms. Without Shift max 5 ms.
+
+						//never mind: don't need to turn off CapsLock if there is only text, unless Options.TextOption == KTextOption.Keys.
+					}
 				}
-
+				if(!opt.NoModOff) ReleaseModAndDisableModMenu();
 				return R;
 			}
 
-			internal static bool IsKeyPressedSyncOrAsync(KKey k)
+			/// <summary>
+			/// Releases modifier keys if pressed.
+			/// If pressed Alt or Win without Ctrl, presses-releases Ctrl to avoid menu mode.
+			/// Does not use options, sleep, blockinput, etc.
+			/// </summary>
+			internal static void ReleaseModAndDisableModMenu()
 			{
-				return GetKeyState(k) < 0 || GetAsyncKeyState(k) < 0;
+				bool isLAlt = IsPressed(KKey.LAlt);
+				bool isRAlt = IsPressed(KKey.RAlt);
+				bool isLWin = IsPressed(KKey.Win);
+				bool isRWin = IsPressed(KKey.RWin);
+				bool isLCtrl = IsPressed(KKey.LCtrl);
+				bool isRCtrl = IsPressed(KKey.RCtrl);
+				bool menu = (isLAlt || isRAlt || isLWin || isRWin) && !(isLCtrl || isRCtrl);
+				if(menu) SendKey(KKey.Ctrl); //if Alt or Win pressed, send Ctrl to avoid menu mode or Start menu. For Alt works Ctrl-up, but maybe not everywhere. For Win need Ctrl-down-up.
+				if(isLCtrl) SendCtrl(false);
+				if(isRCtrl) SendRCtrlUp();
+				if(IsPressed(KKey.LShift)) SendShift(false);
+				if(IsPressed(KKey.RShift)) SendRShiftUp();
+				if(isLAlt) SendAlt(false);
+				if(isRAlt) SendRAltUp();
+				if(isLWin) SendKey(KKey.Win, 2);
+				if(isRWin) SendKey(KKey.RWin, 2);
+			}
+
+			/// <summary>
+			/// If pressed Alt or Win without Ctrl, presses-releases Ctrl to avoid menu mode.
+			/// </summary>
+			internal static void DisableModMenu()
+			{
+				if(IsPressed(KKey.Alt) || IsPressed(KKey.Win) || IsPressed(KKey.RWin)) {
+					if(!IsPressed(KKey.Ctrl)) SendKey(KKey.Ctrl);
+				}
 			}
 
 			/// <summary>
@@ -506,7 +536,7 @@ namespace Au
 		static class _KeyTypes
 		{
 			[Flags]
-			enum _KT :byte
+			enum _KT : byte
 			{
 				Mod = 1,
 				Extended = 2,

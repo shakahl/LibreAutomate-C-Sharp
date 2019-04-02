@@ -86,14 +86,14 @@ namespace Au
 			if(!what.HasAny_(BIEvents.All)) throw new ArgumentException();
 
 			_block = what;
-			_startTime = Time.PerfMilliseconds;
+			_startTime = Time.WinMilliseconds;
 
 			_syncEvent = Api.CreateEvent(false);
 			_stopEvent = Api.CreateEvent(false);
 			_threadHandle = Api.OpenThread(Api.SYNCHRONIZE, false, _threadId = Api.GetCurrentThreadId());
 
 			ThreadPool.QueueUserWorkItem(_this => (_this as BlockUserInput)._ThreadProc(), this);
-			//TODO: what if thread pool is very busy? Eg if scripts use it incorrectly. Maybe better have own internal pool.
+			//SHOULDDO: what if thread pool is very busy? Eg if scripts use it incorrectly. Maybe better have own internal pool.
 
 			Api.WaitForSingleObject(_syncEvent, Timeout.Infinite);
 			GC.KeepAlive(this);
@@ -141,12 +141,13 @@ namespace Au
 			var bk = _blockedKeys;
 			if(bk != null && !discardBlockedKeys) {
 				_blockedKeys = null;
-				if(Time.PerfMilliseconds - _startTime < c_maxResendTime) {
-					bk.Options.NoCapsOff = bk.Options.NoModOff = true;
-					try { bk.Send(); }
-					catch(Exception ex) { Debug_.Print(ex.Message); }
+				if(Time.WinMilliseconds - _startTime < c_maxResendTime) {
+					bk.LibSendBlocked();
 				}
 			}
+
+			//SHOULDDO: now new user-pressed keys can be inserted before and while resending the blocked keys.
+			//	Should resend while still recording new keys (before SetEvent), until there are no new keys. Why not to do it in the hook thread?
 		}
 
 		const int c_maxResendTime = 10000;
@@ -194,10 +195,10 @@ namespace Au
 			//	//Could detect Ctrl+Alt+Del here. But SetWinEventHook(SYSTEM_DESKTOPSWITCH) is better.
 			//}
 
-			if(ResendBlockedKeys && Time.PerfMilliseconds - _startTime < c_maxResendTime) {
+			if(ResendBlockedKeys && Time.WinMilliseconds - _startTime < c_maxResendTime) {
 				if(_blockedKeys == null) _blockedKeys = new Keyb(Opt.Static.Key);
+				//Print("blocked", x.vkCode, !x.IsUp);
 				_blockedKeys.LibAddRaw(x.vkCode, (ushort)x.scanCode, x.LibSendInputFlags);
-				//Print(x.vkCode);
 			}
 			return true;
 		}
@@ -223,6 +224,7 @@ namespace Au
 			if(vk != 0) {
 				var a = DontBlockKeys;
 				if(a != null) foreach(var k in a) if(vk == k) return true;
+				if(LibDontBlockLShiftCaps) { if(vk == KKey.LShift || vk == KKey.CapsLock) return true; }
 				w = Wnd.Active;
 			} else {
 				w = isMMove ? Wnd.Active : Wnd.FromMouse();
@@ -275,9 +277,14 @@ namespace Au
 		/// Default: { KKey.Pause, KKey.PrintScreen, KKey.F1 }.
 		/// </summary>
 		/// <remarks>
-		/// The array should contain keys without modifier key flags.
+		/// For modifier keys use the left/right key code: LCtrl, RCtrl, LShift, RShift, LAlt, RAlt, Win, RWin.
 		/// </remarks>
 		public static KKey[] DontBlockKeys { get; set; } = new KKey[] { KKey.Pause, KKey.PrintScreen, KKey.F1 };
+
+		/// <summary>
+		/// Don't block LShift and CapsLock. Used when turning off CapsLock when need Shift.
+		/// </summary>
+		internal static bool LibDontBlockLShiftCaps { get; set; } //never mind: thread-safety. Rarely used.
 
 		/// <summary>
 		/// Gets or sets whether the blocking is paused.

@@ -777,7 +777,7 @@ namespace Au
 			if(_c.hwndParent.Is0 && Options.AutoOwnerWindow) _c.hwndParent = Wnd.ThisThread.Active; //info: MessageBox.Show also does it, but it also disables all thread windows
 			if(_c.hwndParent.IsAlive) {
 				if(!_enableOwner && !_c.hwndParent.IsOfThisThread) _enableOwner = true;
-				if(_enableOwner && !_c.hwndParent.IsEnabled) _enableOwner = false;
+				if(_enableOwner && !_c.hwndParent.IsEnabled(false)) _enableOwner = false;
 			}
 
 			_SetPos(true); //get screen

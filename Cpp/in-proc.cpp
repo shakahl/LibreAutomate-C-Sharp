@@ -223,6 +223,7 @@ DWORD WINAPI UnloadDllThreadProc(LPVOID lpParameter) {
 	}
 	s_agentWindowClassAtom = 0;
 	Sleep(100);
+	if(!AccDisconnectWrappers()) { PRINTS(L"failed to unload dll because of unreleased acc wrappers"); return 0; }
 	FreeLibraryAndExitThread(s_moduleHandle, 0);
 	return 0;
 }
@@ -540,6 +541,7 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 //The installer then should wait min 200 ms, call FreeLibrary, and retry/wait if the dll is still locked.
 EXPORT void Cpp_Unload()
 {
+	int n = 0;
 	for(HWND wPrev = 0; ; ) {
 		HWND w = FindWindowEx(HWND_MESSAGE, 0, c_agentWindowClassName, null);
 		if(w == 0 || w == wPrev) break;
@@ -547,6 +549,7 @@ EXPORT void Cpp_Unload()
 		DWORD_PTR res;
 		SendMessageTimeout(w, WM_CLOSE, 0, 0, SMTO_ABORTIFHUNG, 5000, &res);
 	}
+	if(n > 0) Sleep(200 + n * 50);
 }
 
 #ifdef _DEBUG

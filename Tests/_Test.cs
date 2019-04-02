@@ -171,7 +171,7 @@ static partial class Test
 				//TestAccThrowOperator();
 			}
 			finally {
-				Cpp.Cpp_Unload();
+				Cpp.Unload();
 			}
 #endif
 		}

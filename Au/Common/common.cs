@@ -19,7 +19,7 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// This namespace contains main classes of this library.
+	/// This namespace contains main classes of this library, except triggers.
 	/// </summary>
 	[CompilerGenerated()]
 	class NamespaceDoc

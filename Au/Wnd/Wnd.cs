@@ -534,26 +534,20 @@ namespace Au
 		/// <summary>
 		/// Returns true if the window is enabled for mouse and keyboard input.
 		/// Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
-		/// Calls API <msdn>IsWindowEnabled</msdn>. It does not check whether the parent window is disabled.
 		/// </summary>
-		public bool IsEnabled => Api.IsWindowEnabled(this);
-
-		/// <summary>
-		/// Returns true if the window and its ancestors are enabled for mouse and keyboard input.
-		/// Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
-		/// </summary>
-		public bool IsEnabledReally {
-			get {
-				for(var w = this; ;) {
-					if(!Api.IsWindowEnabled(w)) return false;
-					w = w.Get.DirectParent; if(w.Is0) break;
-				}
-				return true;
+		/// <param name="ancestorsToo">Check whether all ancestors of this control are enabled too. If false, this function simply calls API <msdn>IsWindowEnabled</msdn>, which usualy returns true for controls in disabled windows.</param>
+		public bool IsEnabled(bool ancestorsToo)
+		{
+			if(!ancestorsToo) return Api.IsWindowEnabled(this);
+			for(var w = this; ;) {
+				if(!Api.IsWindowEnabled(w)) return false;
+				w = w.Get.DirectParent; if(w.Is0) break;
 			}
+			return true;
 		}
 
 		/// <summary>
-		/// Enables or disables the window.
+		/// Enables or disables.
 		/// Calls API <msdn>EnableWindow</msdn>.
 		/// </summary>
 		/// <param name="enable">Enable or disable.</param>
@@ -587,7 +581,7 @@ namespace Au
 		/// Windows 10 uses window cloaking mostly to hide windows on inactive desktops. Windows 8 - mostly to hide Windows Store app windows.
 		/// </summary>
 		/// <seealso cref="IsCloakedGetState"/>
-		public bool IsCloaked  => IsCloakedGetState != 0;
+		public bool IsCloaked => IsCloakedGetState != 0;
 
 		#endregion
 
@@ -1121,14 +1115,14 @@ namespace Au
 			int tid = ThreadId;
 			if(tid == Api.GetCurrentThreadId()) {
 				if(!ThisThread.Focus(this)) {
-					if(!IsEnabled) goto gDisabled;
+					if(!IsEnabled(true)) goto gDisabled;
 					goto gFailed;
 				}
 				return;
 			}
 
 			if(IsFocused) return;
-			if(!IsEnabled) goto gDisabled;
+			if(!IsEnabled(true)) goto gDisabled;
 
 			bool ok = false;
 			using(new Util.LibAttachThreadInput(tid, out bool atiOK)) {
@@ -2798,7 +2792,7 @@ namespace Au
 			if(ok) {
 				for(int i = 0; i < 100; i++) {
 					Thread.Sleep(15);
-					if(!IsEnabled) break; //destroyed or has an owned modal dialog box, eg "Save?"
+					if(!IsEnabled(false)) break; //destroyed or has an owned modal dialog box, eg "Save?"
 
 					//Wait less if hidden, eg has a tray icon.
 					//Also if a popup, eg a Yes/No message box (disabled X button).

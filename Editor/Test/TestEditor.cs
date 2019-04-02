@@ -113,7 +113,7 @@ partial class EdForm
 
 		//doc.CommentLines(!Keyb.IsShift);
 
-		Au.Triggers.AuTriggers.DisabledEverywhere ^= true;
+		Au.Triggers.ActionTriggers.DisabledEverywhere ^= true;
 	}
 	static bool s_test1;
 

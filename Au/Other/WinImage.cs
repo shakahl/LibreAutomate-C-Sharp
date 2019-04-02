@@ -25,6 +25,11 @@ using static Au.NoClass;
 
 //FUTURE: test OpenCV - an open source library for computer vision.
 
+//TODO: add flag to use PrintWindow, and use flag PW_RENDERFULLCONTENT.
+//	It's new in Win8.1 and undocumented. Then can capture windows like Chrome, Edge, winstore. Tested.
+//	Or always use PrintWindow on Win8.1+ if it works well and fast.
+//		But read QM2 help and comments; there are many cases when PrintWindow without this flag does not work.
+
 namespace Au
 {
 	/// <summary>

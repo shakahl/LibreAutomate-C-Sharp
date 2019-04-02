@@ -81,6 +81,7 @@
     <Compile Include="Triggers\Triggers^hooks.cs" />
     <Compile Include="Triggers\Triggers^actions.cs" />
     <Compile Include="Triggers\Trigger.cs" />
+    <Compile Include="Triggers\Triggers^util.cs" />
     <Compile Include="Triggers\Types\t-autotext.cs" />
     <Compile Include="Triggers\Types\t-hotkey.cs" />
     <Compile Include="Triggers\Types\t-mouse.cs" />

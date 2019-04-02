@@ -38,7 +38,6 @@ partial class FilesModel
 		{
 			this.BorderStyle = BorderStyle.None;
 			this.Dock = DockStyle.Fill;
-			this.AccessibleName = "Files";
 			//this.Font = MainForm.Font;
 
 			//this.AutoRowHeight = false; this.RowHeight = 25; //RowHeight ignored if AutoRowHeight true

@@ -30,7 +30,7 @@ namespace Au.Triggers
 	public enum TWFlags : byte
 	{
 		/// <summary>
-		/// Run at startup (of <see cref="AuTriggers.Run">Triggers.Run</see>), if the window then is active (for ActiveOnce etc triggers) or visible (for VisibleOnce etc triggers).
+		/// Run at startup (of <see cref="ActionTriggers.Run">Triggers.Run</see>), if the window then is active (for ActiveOnce etc triggers) or visible (for VisibleOnce etc triggers).
 		/// </summary>
 		RunAtStartup = 1,
 
@@ -38,7 +38,7 @@ namespace Au.Triggers
 		/// When using the <i>later</i> parameter, call the currently active <b>Triggers.FuncOf</b> functions on "later" events too.
 		/// If the function returns false, the action will not run.
 		/// The function runs synchronously in the same thread that called <b>Triggers.Run</b>. The action runs asynchronously in another thread, which is slower to start.
-		/// As always, <b>Triggers.FuncOf</b> functions must not execute slow code; should take less than 10 ms.
+		/// As always, <b>Triggers.FuncOf</b> functions must not contain slow code; should take less than 10 ms.
 		/// </summary>
 		LaterCallFunc = 2,
 	}
@@ -137,40 +137,40 @@ namespace Au.Triggers
 	/// var v = Triggers.Window.Last; //v is the new WindowTrigger. Rarely used.
 	/// ]]></code>
 	/// </example>
-	public class WindowTrigger : Trigger
+	public class WindowTrigger : ActionTrigger
 	{
 		internal readonly Wnd.Finder finder;
 		internal readonly TWEvents later;
 		internal readonly TWFlags flags;
+		internal readonly byte subtype; //0 ActveX, 1 VisibleX
 		internal readonly _Once once;
+		string _typeString, _paramsString;
 
-		internal WindowTrigger(AuTriggers triggers, Action<WindowTriggerArgs> action, Wnd.Finder finder, TWFlags flags, TWEvents later, _Once once) : base(triggers, action, false)
+		internal WindowTrigger(ActionTriggers triggers, Action<WindowTriggerArgs> action, Wnd.Finder finder, TWFlags flags, TWEvents later, WindowTriggers.Subtype x) : base(triggers, action, false)
 		{
 			this.finder = finder;
 			this.flags = flags;
 			this.later = later;
-			this.once = once;
+			this.subtype = x.subtype;
+			this.once = x.once;
 		}
 
 		internal override void Run(TriggerArgs args) => RunT(args as WindowTriggerArgs);
 
-		/// <summary>
-		/// Returns "Window".
-		/// </summary>
-		public override string TypeString() => "Window";
+		/// <inheritdoc/>
+		public override string TypeString => _typeString ?? (_typeString = "Window." + (subtype == 1 ? "Visible" : "Active") + (once == _Once.New ? "New" : (once == _Once.Once ? "Once" : "")));
 
-		/// <summary>
-		/// Returns a short trigger string.
-		/// </summary>
-		public override string ShortString() => finder.ToString(); //TODO
+		/// <inheritdoc/>
+		public override string ParamsString => _paramsString ?? (_paramsString = finder.ToString());
 	}
 
 	/// <summary>
 	/// Window triggers.
 	/// </summary>
+	/// <remarks>More examples: <see cref="ActionTriggers"/>.</remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// var wt = Triggers.Window; //wt is the WindowTriggers instance of Triggers
+	/// var wt = Triggers.Window; //wt is a WindowTriggers instance
 	/// wt.ActiveNew["Window name"] = o => Print(o.Window);
 	/// wt.Visible["Window2 name"] = o => Print(o.Window);
 	/// Triggers.Run();
@@ -178,10 +178,10 @@ namespace Au.Triggers
 	/// </example>
 	public class WindowTriggers : ITriggers
 	{
-		AuTriggers _triggers;
+		ActionTriggers _triggers;
 		bool _win10, _win8;
 
-		internal WindowTriggers(AuTriggers triggers)
+		internal WindowTriggers(ActionTriggers triggers)
 		{
 			_triggers = triggers;
 			_win10 = Ver.MinWin10;
@@ -197,7 +197,7 @@ namespace Au.Triggers
 		#region subtypes
 
 		/// <summary>
-		/// Triggers that execute the action when the specified window becomes active (each time).
+		/// Triggers that launch the action when the specified window becomes active (each time).
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -207,7 +207,7 @@ namespace Au.Triggers
 		public Subtype Active { get; }
 
 		/// <summary>
-		/// Triggers that execute the action when the specified window becomes active the first time in the trigger's life.
+		/// Triggers that launch the action when the specified window becomes active the first time in the trigger's life.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -217,10 +217,10 @@ namespace Au.Triggers
 		public Subtype ActiveOnce { get; }
 
 		/// <summary>
-		/// Triggers that execute the action when the specified window is created and then becomes active.
+		/// Triggers that launch the action when the specified window is created and then becomes active.
 		/// </summary>
 		/// <remarks>
-		/// The same as <see cref="ActiveOnce"/>, but windows created before calling <see cref="AuTriggers.Run">Triggers.Run</see>) are ignored.
+		/// The same as <see cref="ActiveOnce"/>, but windows created before calling <see cref="ActionTriggers.Run">Triggers.Run</see>) are ignored.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -230,7 +230,7 @@ namespace Au.Triggers
 		public Subtype ActiveNew { get; }
 
 		/// <summary>
-		/// Triggers that execute the action when the specified window becomes visible (each time).
+		/// Triggers that launch the action when the specified window becomes visible (each time).
 		/// </summary>
 		/// <remarks>
 		/// Cloaked windows are considered invisible. See <see cref="Wnd.IsCloaked"/>.
@@ -243,7 +243,7 @@ namespace Au.Triggers
 		public Subtype Visible { get; }
 
 		/// <summary>
-		/// Triggers that execute the action when the specified window becomes visible the first time in the trigger's life.
+		/// Triggers that launch the action when the specified window becomes visible the first time in the trigger's life.
 		/// </summary>
 		/// <remarks>
 		/// Cloaked windows are considered invisible. See <see cref="Wnd.IsCloaked"/>.
@@ -256,10 +256,10 @@ namespace Au.Triggers
 		public Subtype VisibleOnce { get; }
 
 		/// <summary>
-		/// Triggers that execute the action when the specified window is created and then becomes visible.
+		/// Triggers that launch the action when the specified window is created and then becomes visible.
 		/// </summary>
 		/// <remarks>
-		/// The same as <see cref="VisibleOnce"/>, but windows created before calling <see cref="AuTriggers.Run">Triggers.Run</see>) are ignored.
+		/// The same as <see cref="VisibleOnce"/>, but windows created before calling <see cref="ActionTriggers.Run">Triggers.Run</see>) are ignored.
 		/// Cloaked windows are considered invisible. See <see cref="Wnd.IsCloaked"/>.
 		/// </remarks>
 		/// <example>
@@ -274,10 +274,10 @@ namespace Au.Triggers
 		public class Subtype
 		{
 			internal readonly WindowTriggers winTriggers;
-			internal readonly int subtype;
+			internal readonly byte subtype; //0 ActveX, 1 VisibleX
 			internal readonly _Once once;
 
-			internal Subtype(WindowTriggers winTriggers, int subtype, _Once once)
+			internal Subtype(WindowTriggers winTriggers, byte subtype, _Once once)
 			{
 				this.winTriggers = winTriggers;
 				this.subtype = subtype;
@@ -300,6 +300,7 @@ namespace Au.Triggers
 			/// When a "later" event occurs, the trigger action is executed. The <see cref="WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
 			/// The "later" trigers are not disabled when primary triggers are disabled.
 			/// </param>
+			/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
 			/// <remarks>
 			/// The first 5 parameters are the same as with <see cref="Wnd.Find"/>.
 			/// </remarks>
@@ -330,7 +331,9 @@ namespace Au.Triggers
 		void _Add(Subtype x, Action<WindowTriggerArgs> action, Wnd.Finder f, TWFlags flags, TWEvents later)
 		{
 			_triggers.LibThrowIfRunning();
-			var t = new WindowTrigger(_triggers, action, f, flags, later, x.once);
+			switch(f.Props.contains) { case null: case Wnd.ChildFinder _: case Acc.Finder _: break; default: PrintWarning("Window triggers with 'contains image' are unreliable."); break; }
+
+			var t = new WindowTrigger(_triggers, action, f, flags, later, x);
 			ref var last = ref _tActive; if(x.subtype == 1) last = ref _tVisible;
 			if(last == null) {
 				last = t;
@@ -450,7 +453,7 @@ namespace Au.Triggers
 		/// </summary>
 		internal unsafe void LibTimer()
 		{
-			bool print = !Keyb.IsNumLock;
+			//bool print = !Keyb.IsNumLock;
 			//if(print) Print(Time.PerfMilliseconds % 10000);
 
 			int period = _triggers.LibWinTimerPeriod;
@@ -513,7 +516,7 @@ namespace Au.Triggers
 				}
 			}
 
-			if(++_timerCounter10 >= 10) { //execute this code every 2.5 s
+			if(++_timerCounter10 >= 10) { //every 2.5 s
 				_timerCounter10 = 0;
 				_hsOld.RemoveWhere(o => !Api.IsWindow(o));
 				_hsSeenActivating.RemoveWhere(o => !Api.IsWindow(o));
@@ -673,8 +676,6 @@ namespace Au.Triggers
 
 		enum _ProcCaller { Timer, Hook, Run, Startup }
 
-		Perf.Inst _perf;
-
 		/// <summary>
 		/// Processes events for main triggers (active, visible) and most "later" triggers.
 		/// Called from hook (_HookProc), timer (LibTimer), at startup (StartStop) and SimulateActiveNew/SimulateVisibleNew.
@@ -762,7 +763,7 @@ namespace Au.Triggers
 
 			void _Do(bool visible, bool secondaryEvent)
 			{
-				Trigger last = visible ? _tVisible : _tActive, v = last;
+				ActionTrigger last = visible ? _tVisible : _tActive, v = last;
 				if(last == null) return;
 
 				do {
@@ -781,12 +782,16 @@ namespace Au.Triggers
 
 					try {
 						if(!t.finder.IsMatch(w, _winPropCache)) continue;
+
+						//rejected: if 'contains' is image and it does not match, wait several seconds until it matches.
+						//	Now such triggers sometimes don't work because need more time to show the image.
+						//	Rare and too difficult. Cannot wait now. Would need to use timer or threadpool.
 					}
 					catch(Exception ex) when(!(ex is ThreadAbortException)) {
 						Print(ex);
 						continue;
 					}
-					if(args == null) args = new WindowTriggerArgs(t, w, 0);
+					if(args == null) args = new WindowTriggerArgs(t, w, 0); else args.Trigger = t;
 					if(!t.CallFunc(args)) continue; //info: handles exceptions
 
 					switch(triggered) {
@@ -797,7 +802,7 @@ namespace Au.Triggers
 
 					//if(!visible && !w.IsActive) break; //no
 
-					if(_log) Print($"<><c red>{(visible ? "Visible" : "Active")}{(t.once == _Once.New ? "New" : (t.once == _Once.Once ? "Once" : ""))}<>");
+					if(_log) Print($"<><c red>{t.TypeString}<>");
 
 					_triggers.LibRunAction(t, args);
 				} while(v != last);
@@ -840,7 +845,7 @@ namespace Au.Triggers
 				var t = a?[i] ?? (triggered as WindowTrigger);
 				if(0 == (t.later & e)) continue;
 				//if(t.DisabledThisOrAll) continue; //no
-				if(args == null) args = new WindowTriggerArgs(t, w, e);
+				if(args == null) args = new WindowTriggerArgs(t, w, e); else args.Trigger = t;
 				if(0 != (t.flags & TWFlags.LaterCallFunc)) {
 					if(!t.CallFunc(args)) continue;
 				}
@@ -856,7 +861,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Cannot be before or after <b>Triggers.Run</b>.</exception>
 		/// <remarks>
-		/// This function usually is used to run <b>ActiveNew</b> triggers for a window created before <see cref="AuTriggers.Run">Triggers.Run</see>. Here "run triggers" means "compare window properties etc with those specified in triggers and run actions of triggers that match". Normally such triggers don't run because the window is considered old. This function runs triggers as it was a new window. Triggers like ActiveNew and ActiveOnce will run once, as usually.
+		/// This function usually is used to run <b>ActiveNew</b> triggers for a window created before <see cref="ActionTriggers.Run">Triggers.Run</see>. Here "run triggers" means "compare window properties etc with those specified in triggers and run actions of triggers that match". Normally such triggers don't run because the window is considered old. This function runs triggers as it was a new window. Triggers like ActiveNew and ActiveOnce will run once, as usually.
 		/// This function must be called while the main triggers thread is in <b>Triggers.Run</b>, for example from another trigger action. It is asynchronous (does not wait).
 		/// If you call this function from another trigger action (hotkey etc), make sure the window trigger action runs in another thread or can be queed. Else both actions cannot run simultaneously. See example.
 		/// </remarks>
@@ -976,17 +981,14 @@ namespace Au.Triggers
 	}
 
 	/// <summary>
-	/// Arguments for trigger actions and <b>Triggers.FuncOf</b> functions of window triggers.
+	/// Arguments for actions of window triggers.
 	/// </summary>
-	/// <remarks>
-	/// In <b>FuncOf</b> functions received as <b>TriggerArgs</b> (base class). Use code like <c>o => { var k = o as WindowTriggerArgs; ... }</c>.
-	/// </remarks>
 	public class WindowTriggerArgs : TriggerArgs
 	{
 		/// <summary>
 		/// The trigger.
 		/// </summary>
-		public WindowTrigger Trigger { get; }
+		public WindowTrigger Trigger { get; internal set; }
 
 		/// <summary>
 		/// The window.

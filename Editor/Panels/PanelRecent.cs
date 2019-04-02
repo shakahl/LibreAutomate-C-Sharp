@@ -37,7 +37,8 @@ class PanelRecent :Control, ITreeModel
 		_c = new _TreeViewAdv();
 		_c.BorderStyle = BorderStyle.None;
 		_c.Dock = DockStyle.Fill;
-		_c.AccessibleName = this.Name = "Recent";
+		_c.AccessibleName = _c.Name = "Recent_list";
+		this.AccessibleName = this.Name = "Recent";
 
 		_c.ShowLines = false;
 		_c.ShowPlusMinus = false;

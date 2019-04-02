@@ -219,7 +219,7 @@ namespace Au.Controls
 			public _NoReadonly(SciText t)
 			{
 				_t = t;
-				_ro = _t.SC.InitReadOnlyAlways;
+				_ro = _t.SC.InitReadOnlyAlways || _t.IsReadonly;
 				if(_ro) _t.SC.Call(SCI_SETREADONLY, 0);
 			}
 

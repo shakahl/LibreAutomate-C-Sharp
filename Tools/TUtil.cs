@@ -133,7 +133,7 @@ namespace Au.Tools
 		/// <summary>
 		/// If s has *? characters, prepends "**t ".
 		/// But if s has single * character, converts to "**r regexp" that ignores it. Because single * often is used to indicate unsaved state.
-		/// If canMakeVerbatim and makes regex or s contains '\' and no newlines/controlchars, prepends @" and appends ".
+		/// If canMakeVerbatim and makes regex or s contains '\' and no newlines/controlchars, prepends @" and appends " and replaces all " with "".
 		/// s can be null.
 		/// </summary>
 		internal static string EscapeWindowName(string s, bool canMakeVerbatim)
@@ -145,9 +145,27 @@ namespace Au.Tools
 					s = "**r " + Regex_.EscapeQE(s.Remove(i)) + @"\*?" + Regex_.EscapeQE(s.Substring(i + 1));
 				} else s = "**t " + s;
 			}
-			if(canMakeVerbatim && s.IndexOf('\\') >= 0 && !s.RegexIsMatch_(@"[\x00-\x1F\x85\x{2028}\x{2029}]"))
+			if(canMakeVerbatim && s.IndexOf('\\') >= 0 && !s.RegexIsMatch_(@"[\x00-\x1F\x85\x{2028}\x{2029}]")) {
 				s = "@\"" + s.Replace("\"", "\"\"") + "\"";
+			}
 			return s;
+		}
+
+		/// <summary>
+		/// Returns true if newRawValue does not match wildex gridValue, unless contains is like $"..." or $@"...".
+		/// </summary>
+		/// <param name="gridValue">A wildex string, usually from a ParamGrid control cell. Can be raw or verbatim. Can be null.</param>
+		/// <param name="newRawValue">New raw string, not wildex. Can be null.</param>
+		internal static bool ShouldChangeGridWildex(string gridValue, string newRawValue)
+		{
+			if(gridValue == null) gridValue = "";
+			if(newRawValue == null) newRawValue = "";
+			if(IsVerbatim(gridValue, out _)) {
+				if(gridValue[0] == '$') return false;
+				gridValue = gridValue.Substring(2, gridValue.Length - 3).Replace("\"\"", "\"");
+			}
+			Wildex x = gridValue;
+			return !x.Match(newRawValue);
 		}
 
 		/// <summary>
@@ -409,7 +427,7 @@ namespace Au.Tools
 			catch(Exception e) {
 				if(e is TargetInvocationException tie) e = tie.InnerException;
 				string s1, s2;
-				if(e is NotFoundException) { s1 = "Window not found"; s2 = null; } //info: throws only when window not found. This is to show time anyway when acc etc not found.
+				if(e is NotFoundException) { s1 = "Window not found"; s2 = "Tip: If changed window name, you can replace part of name\r\nwith * or use regexp like @\"**r .+ - Notepad\"."; } //info: throws only when window not found. This is to show time anyway when acc etc not found.
 				else { s1 = e.GetType().Name; s2 = e.Message; }
 				AuDialog.ShowError(s1, s2, owner: form, flags: DFlags.OwnerCenter);
 			}

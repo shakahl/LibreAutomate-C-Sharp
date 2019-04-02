@@ -70,6 +70,10 @@ public:
 	}
 };
 
+static long s_accMarshalWrapperCount;
+//static CSimpleArray<IUnknown*> s_accMarshalWrappers;
+//static concurrency::critical_section s_cs1;
+
 //Workaround for Firefox bug in TEXT AOs in multi-process mode.
 class AccessibleMarshalWrapper : public IAccessible
 {
@@ -79,8 +83,42 @@ public:
 
 	AccessibleMarshalWrapper(IAccessible* a)
 	{
-		_a = a;
+		_a = a;//TODO: try to addref/release, maybe it will solve the WindowFromAccessibleObject problem for LINK in drag&dropped FF tab window
 		ignoreQI = true;
+
+		InterlockedIncrement(&s_accMarshalWrapperCount);
+		//concurrency::critical_section::scoped_lock sl(s_cs1);
+		//s_accMarshalWrappers.Add(this);
+	}
+
+	~AccessibleMarshalWrapper() {
+		InterlockedDecrement(&s_accMarshalWrapperCount);
+		//concurrency::critical_section::scoped_lock sl(s_cs1);
+		//s_accMarshalWrappers.Remove(this);
+	}
+
+	static bool Disconnect() {
+		//This process would crash later when releasing wrappers if this dll is unloaded then.
+#if true
+		//Don't allow to unload this dll if there are unreleased wrappers.
+		return s_accMarshalWrapperCount == 0;
+#else
+		//Disconnect unreleased acc wrappers. If fails don't allow to unload this dll.
+		//Does not work as expected. Just increments dll refcount, and then FreeLibraryAndExitThread does not unload it. Later is called Release().
+		concurrency::critical_section::scoped_lock sl(s_cs1);
+		int n = s_accMarshalWrappers.GetSize();
+		//PRINTI(n);
+		if(n == 0) return true;
+		bool failed = false;
+		for(int i = 0; i < n; i++) {
+			if(s_accMarshalWrappers[i] == null) continue;
+			int hr = CoDisconnectObject(s_accMarshalWrappers[i], 0);
+			if(hr != 0) { PRINTF(L"CoDisconnectObject, 0x%x", hr); failed = true; break; }
+			s_accMarshalWrappers[i] = null;
+		}
+		if(!failed) s_accMarshalWrappers.RemoveAll();
+		return !failed;
+#endif
 	}
 
 	virtual STDMETHODIMP QueryInterface(REFIID riid, void ** ppvObject) override
@@ -269,7 +307,7 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 			//Firefox bug when multi-process: fails to marshal all TEXT AOs.
 			//	Workaround: wrap a.acc into an AccessibleMarshalWrapper and marshal it instead.
 			//	Or could detect Firefox multi-process and use NotInProc implicitly. But slower almost 2 times. Also then cannot get HTML attributes etc later.
-
+#if true
 			HRESULT hr1 = hr;
 			auto wrap = new AccessibleMarshalWrapper(a.acc);
 			a.acc = wrap;
@@ -277,7 +315,8 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 			if(hr == 0) wrap->ignoreQI = false; else delete wrap;
 			//Print((UINT)hr);
 
-			PRINTF(L"failed to marshal AO: 0x%X 0x%X", hr1, hr);
+			if(hr) PRINTF(L"failed to marshal AO: 0x%X 0x%X", hr1, hr);
+#endif
 			//ao::PrintAcc(a.acc, a.elem);
 		} //else Print(L"OK");
 		if(hr) return false;
@@ -392,6 +431,9 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 	}
 	return RPC_E_SERVER_CANTMARSHAL_DATA;
 }
+
+bool AccDisconnectWrappers() { return AccessibleMarshalWrapper::Disconnect(); }
+
 } //namespace inproc
 
 namespace outproc

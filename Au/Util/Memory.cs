@@ -81,7 +81,7 @@ namespace Au.Util
 		_Header _h;
 
 		internal OutputServer.LibSharedMemoryData outp;
-		internal Triggers.AuTriggers.LibSharedMemoryData triggers;
+		internal Triggers.ActionTriggers.LibSharedMemoryData triggers;
 
 		#endregion
 

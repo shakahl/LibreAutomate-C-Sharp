@@ -24,6 +24,7 @@ enum class eAF2
 	IsRectH = 0x8000,
 	IsRect = 0xF000,
 	IsElem = 0x10000,
+	IsId = 0x20000, //"id=x", where x is a number
 };
 ENABLE_BITMASK_OPERATORS(eAF2);
 
@@ -161,6 +162,7 @@ public:
 namespace inproc
 {
 HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sResult, VARIANT vParams, long* pMagic);
+bool AccDisconnectWrappers();
 
 //Sets and restores get_accHelpTopic hook for all IAccessible interface tables.
 //Usually there are 1 or 2 interface tables in a process, but eg Firefox with multiple tabs can have ~10.
@@ -208,6 +210,7 @@ public:
 	}
 };
 extern HookIAccessible s_hookIAcc;
+
 }
 
 enum class eWinFlags

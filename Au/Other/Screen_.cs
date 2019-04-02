@@ -233,7 +233,7 @@ namespace Au.Types
 		/// </summary>
 		public static bool IsInAnyScreen(POINT p)
 		{
-			return Api.MonitorFromPoint(p, 0) != default; //0 - MONITOR_DEFAULTTONULL
+			return Api.MonitorFromPoint(p, Api.MONITOR_DEFAULTTONULL) != default;
 		}
 
 		/// <summary>

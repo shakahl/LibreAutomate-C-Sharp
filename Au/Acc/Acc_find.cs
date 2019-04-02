@@ -352,7 +352,7 @@ namespace Au
 		/// Cannot be used when searching in Acc.
 		/// </item>
 		/// <item>
-		/// "id" - search only in child controls that have this id (see <see cref="Wnd.ControlId"/>).
+		/// "id" - search only in child controls that have this id (see <see cref="Wnd.ControlId"/>). If the value is not a number - Windows Forms control name (see <see cref="Wnd.NameWinForms"/>); case-sensitive, not wildcard.
 		/// Cannot be used when searching in Acc.
 		/// </item>
 		/// <item>

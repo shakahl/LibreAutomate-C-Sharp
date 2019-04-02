@@ -167,7 +167,7 @@ namespace Au.Triggers
 
 		unsafe int _AddThread(int threadId, byte[] data)
 		{
-			var pipeName = AuTriggers.LibPipeName(threadId);
+			var pipeName = ActionTriggers.LibPipeName(threadId);
 			var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ | Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, Api.FILE_FLAG_OVERLAPPED);
 			if(pipe.IsInvalid) { Debug_.LibPrintNativeError(); return 0; }
 
@@ -182,12 +182,13 @@ namespace Au.Triggers
 
 			if(0 != (mask & 1) && _hookK == null) {
 				_hookK = Util.WinHook.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
-				_hookK.IgnoreKeyMouseEventsInjectedByAu = true;
+				_hookK.IgnoreKeyMouseInjectedByAu = true;
+				_hookK.IgnoreKeyInjectedPacket = true;
 			}
 
 			if(0 != (mask & 2) && _hookM == null) {
 				_hookM = Util.WinHook.LibMouseRaw(_MouseHookProc);
-				_hookM.IgnoreKeyMouseEventsInjectedByAu = true;
+				_hookM.IgnoreKeyMouseInjectedByAu = true;
 			}
 
 			return 1;

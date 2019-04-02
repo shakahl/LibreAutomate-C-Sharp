@@ -29,7 +29,8 @@ class PanelFind :Control
 		_c = new ListView();
 		_c.BorderStyle = BorderStyle.None;
 		_c.Dock = DockStyle.Fill;
-		_c.AccessibleName = this.Name = "Find";
+		_c.AccessibleName = _c.Name = "Find_list";
+		this.AccessibleName = this.Name = "Find";
 		this.Controls.Add(_c);
 
 	}

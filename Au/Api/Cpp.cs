@@ -143,7 +143,15 @@ namespace Au.Types
 
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern void Cpp_Unload();
+		static extern void Cpp_Unload();
+
+		internal static void Unload()
+		{
+			//run GC to release Firefox acc wrappers. Else may not unload from Firefox.
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+			Cpp_Unload();
+		}
 
 		// STRING
 

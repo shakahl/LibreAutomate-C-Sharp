@@ -35,7 +35,8 @@ class PanelOutput : Control
 	{
 		_c = new SciOutput();
 		_c.Dock = DockStyle.Fill;
-		_c.AccessibleName = this.Name = "Output";
+		_c.AccessibleName = _c.Name = "Output_text";
+		this.AccessibleName = this.Name = "Output";
 		this.Controls.Add(_c);
 
 		_history = new Queue<Au.Util.OutputServer.Message>();

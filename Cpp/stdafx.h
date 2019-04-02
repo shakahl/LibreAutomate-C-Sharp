@@ -23,6 +23,7 @@
 
 #include <atlbase.h>
 #include <atlcoll.h>
+//#include <concrt.h> //critical_section
 
 #include <windows.h>
 #include <Sddl.h>
