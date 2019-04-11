@@ -267,7 +267,7 @@ namespace Au
 
 			bool isPair; _KFlags f = 0;
 			if(!(isPair = (down == null)) && !down.GetValueOrDefault()) f |= _KFlags.Up;
-			if(_KeyTypes.IsExtended(key)) f |= _KFlags.Extended;
+			if(LibKeyTypes.IsExtended(key)) f |= _KFlags.Extended;
 
 			return _AddKey(new _KEvent(isPair, key, f));
 		}
@@ -312,26 +312,20 @@ namespace Au
 		/// <summary>
 		/// Sends key events added by BlockUserInput -> LibAddRaw.
 		/// Simply calls Api.SendInput. No options, no sleep, etc.
-		/// Sets dwExtraInfo = 0.
+		/// If new events added while sending, sends them too, until there are no new events added.
 		/// </summary>
 		internal unsafe void LibSendBlocked()
 		{
-#if true
+			g1:
 			var a = new Api.INPUTK[_a.Count];
 			for(int i = 0; i < a.Length; i++) {
 				var k = _a[i];
 				a[i].Set(k.vk, k.scan, (uint)k.SIFlags);
-				a[i].dwExtraInfo = 0;
 			}
+			_a.Clear();
 			fixed (Api.INPUTK* p = a) Api.SendInput(p, a.Length);
-#else
-			try {
-				for(int i = 0; i < _a.Count; i++) {
-					_SendKey(_a[i], i);
-				}
-			}
-			catch(Exception ex) { Debug_.Print(ex.Message); }
-#endif
+			//Time.DoEvents(); //sometimes catches one more event, but not necessary
+			if(_a.Count > 0) goto g1; //the hook proc is called while in SendInput. If we don't retry, new blocked keys are lost.
 		}
 
 		/// <summary>
@@ -493,6 +487,7 @@ namespace Au
 			var bi = new BlockUserInput() { ResendBlockedKeys = true };
 			try {
 				_sending = true;
+				//Print("{");
 				if(!Options.NoBlockInput) bi.Start(BIEvents.Keys);
 				restoreCapsLock = Lib.ReleaseModAndCapsLock(Options);
 				//Perf.Next();
@@ -525,6 +520,7 @@ namespace Au
 				_sending = false;
 				bi.Dispose();
 				//Perf.NW();
+				//Print("}");
 
 				//if canSendAgain, can be used like: AddX(); for(...) Send();
 				//else can be used like: AddX(); Send(); AddX(); Send();
@@ -580,7 +576,7 @@ namespace Au
 
 					sleep = Lib.LimitSleepTime(sleep);
 					if(kNext.IsKey) {
-						bool thisMod = _KeyTypes.IsMod(k.vk), nextMod = _KeyTypes.IsMod(kNext.vk);
+						bool thisMod = LibKeyTypes.IsMod(k.vk), nextMod = LibKeyTypes.IsMod(kNext.vk);
 						if(!k.IsUp) {
 							if(kNext.IsUp) sleep = opt.KeySpeed;
 							else if(thisMod == nextMod) sleep = 0;

@@ -112,8 +112,22 @@ namespace Au.Triggers
 	/// 
 	/// //autotext triggers
 	/// 
-	/// tt["sep"] = o => o.Replace("september");
-	/// tt["nov"] = o => o.Replace("november");
+	/// tt["los"] = o => o.Replace("Los Angeles");
+	/// tt["WIndows", TAFlags.MatchCase] = o => o.Replace("Windows");
+	/// tt.DefaultPostfixType = TAPostfix.None;
+	/// tt["<b>"] = o => o.Replace("<b>[[|]]</b>");
+	/// Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; };
+	/// tt["#file"] = o => {
+	/// 	o.Replace("");
+	/// 	var fd = new OpenFileDialog();
+	/// 	if(fd.ShowDialog() == DialogResult.OK) Text(fd.FileName);
+	/// };
+	/// Triggers.Options.BeforeAction = null;
+	/// tt.DefaultPostfixType = default;
+	/// 
+	/// var ts = Triggers.Autotext.Simple;
+	/// ts["#su"] = "Sunday"; //the same as tt["#su"] = o => o.Replace("Sunday");
+	/// ts["#mo"] = "Monday";
 	/// 
 	/// //how to stop and disable/enable triggers
 	/// 
@@ -132,7 +146,11 @@ namespace Au.Triggers
 	/// 
 	/// //finally call Triggers.Run(). Without it the triggers won't work.
 	/// Triggers.Run();
-	/// Print("the end");
+	/// //Triggers.Run returns when is called Triggers.Stop (see the "Ctrl+Alt+Q" trigger above).
+	/// Print("called Triggers.Stop");
+	/// //Recommended properties for scripts containg triggers: 'runMode'='blue' and 'ifRunning'='restart'. You can set it in the Properties dialog.
+	/// //The first property allows other scripts to start while this script is running.
+	/// //The second property makes easy to restart the script after editing: just click the Run button.
 	/// ]]></code>
 	/// </example>
 	public class ActionTriggers
@@ -265,15 +283,16 @@ namespace Au.Triggers
 
 			LibThrowIfRunning();
 
-			bool haveTriggers = false; int llHooks = 0;
+			bool haveTriggers = false; HooksServer.UsedEvents hookEvents = 0;
 			_windowTriggers = null;
 			for(int i = 0; i < _t.Length; i++) {
 				var t = _t[i];
 				if(t == null || !t.HasTriggers) continue;
 				haveTriggers = true;
 				switch((TriggerType)i) {
-				case TriggerType.Hotkey: case TriggerType.Autotext: llHooks |= 1; break;
-				case TriggerType.Mouse: llHooks |= 2; break;
+				case TriggerType.Hotkey: hookEvents |= HooksServer.UsedEvents.Keyboard; break;
+				case TriggerType.Autotext: hookEvents |= HooksServer.UsedEvents.Keyboard | HooksServer.UsedEvents.Mouse; break;
+				case TriggerType.Mouse: hookEvents |= (t as MouseTriggers).LibUsedHookEvents; break;
 				case TriggerType.Window: _windowTriggers = t as WindowTriggers; break;
 				}
 			}
@@ -284,8 +303,8 @@ namespace Au.Triggers
 
 			try {
 				_threadId = Thread_.NativeId;
-				if(llHooks != 0) {
-					_RunWithHooksServer(llHooks);
+				if(hookEvents != 0) {
+					_RunWithHooksServer(hookEvents);
 					//CONSIDER: run key/mouse triggers in separate thread.
 					//	Because now possible hook timeout if something other (window triggers, a form, timer, etc) sometimes runs too long.
 					//	But it makes programming more difficult in various places. Need to lock etc.
@@ -356,7 +375,7 @@ namespace Au.Triggers
 		}
 		int _winTimerPeriod;
 
-		unsafe void _RunWithHooksServer(int llHooks)
+		unsafe void _RunWithHooksServer(HooksServer.UsedEvents usedEvents)
 		{
 			//Perf.Next();
 
@@ -370,12 +389,12 @@ namespace Au.Triggers
 							Wnd.FromXY(default, WXYFlags.NeedWindow);
 							Keyb.GetMod();
 							_ = Time.PerfMicroseconds;
-							Util.Jit.Compile(typeof(TriggerHookContext), "InitContext", "PerfEnd", "PerfWarn");
-							Util.Jit.Compile(typeof(HotkeyTriggers), "HookProc");
-							Util.Jit.Compile(typeof(AutotextTriggers), "HookProc");
-							Util.Jit.Compile(typeof(MouseTriggers), "HookProc");
-							Util.Jit.Compile(typeof(ActionTrigger), "MatchScopeWindowAndFunc");
+							Util.Jit.Compile(typeof(HotkeyTriggers), nameof(HotkeyTriggers.HookProc));
+							//Util.Jit.Compile(typeof(AutotextTriggers), nameof(AutotextTriggers.HookProc)); //does not make sense
+							MouseTriggers.JitCompile();
+							Util.Jit.Compile(typeof(ActionTrigger), nameof(ActionTrigger.MatchScopeWindowAndFunc));
 							Util.Jit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
+							Util.Jit.Compile(typeof(TriggerHookContext), "InitContext", "PerfEnd", "PerfWarn");
 						}
 					}
 					catch(Exception ex) { Debug_.Print(ex); }
@@ -412,7 +431,7 @@ namespace Au.Triggers
 			if(pipe.IsInvalid) throw new AuException(0, "*CreateNamedPipe");
 
 			var aCDS = new byte[8];
-			aCDS.WriteInt_(llHooks, 0);
+			aCDS.WriteInt_((int)usedEvents, 0);
 			aCDS.WriteInt_(Api.GetCurrentProcessId(), 4);
 			if(1 != Wnd.Misc.CopyDataStruct.SendBytes(wMsg, 1, aCDS, threadId)) { //install hooks and start sending events to us
 				pipe.Dispose();
@@ -444,19 +463,31 @@ namespace Au.Triggers
 						if(ec != 0) { Debug_.LibPrintNativeError(ec); break; }
 					}
 
-					bool suppressInputEvent = false;
+					bool eat = false;
 					thc.InitContext();
 					if(size == sizeof(Api.KBDLLHOOKSTRUCT)) {
+						//Print("key");
 						var k = new HookData.Keyboard(null, b);
-						if(this[TriggerType.Hotkey] is HotkeyTriggers t1)
-							suppressInputEvent = t1.HookProc(k, thc);
-						if(!suppressInputEvent /*&& thc.trigger == null*/ && this[TriggerType.Autotext] is AutotextTriggers t2)
-							suppressInputEvent = t2.HookProc(k, thc);
-					} else {
+						thc.InitMod(k);
+						if(this[TriggerType.Hotkey] is HotkeyTriggers tk) { //if not null
+							eat = tk.HookProc(k, thc);
+						}
+						if(!eat /*&& thc.trigger == null*/ && this[TriggerType.Autotext] is AutotextTriggers ta) {
+							ta.HookProc(k, thc);
+						}
+					} else if(size == sizeof(Api.MSLLHOOKSTRUCT2)) {
 						var m = (Api.MSLLHOOKSTRUCT2*)b;
-						var k = new HookData.Mouse(null, m->message, b);
-						var t1 = this[TriggerType.Mouse] as MouseTriggers;
-						suppressInputEvent = t1.HookProc(k, thc);
+						//Print((uint)m->message);
+						if(this[TriggerType.Mouse] is MouseTriggers tm) {
+							var k = new HookData.Mouse(null, m->message, b);
+							eat = tm.HookProcClickWheel(k, thc);
+						}
+					} else {
+						//Print("edge/move");
+						if(this[TriggerType.Mouse] is MouseTriggers tm) {
+							var m = (MouseTriggers.LibEdgeMoveDetector.Result*)b;
+							tm.HookProcEdgeMove(*m, thc);
+						}
 					}
 					Perf.Next();
 					thc.PerfWarn();
@@ -466,7 +497,7 @@ namespace Au.Triggers
 					//if(mem != _debugMem && _debugMem != 0) Print(mem - _debugMem);
 					//_debugMem = mem;
 
-					Api.WriteFile(pipe, &suppressInputEvent, 1, out _);
+					Api.WriteFile(pipe, &eat, 1, out _);
 					if(thc.trigger != null) LibRunAction(thc.trigger, thc.args);
 				}
 			}
@@ -578,6 +609,7 @@ namespace Au.Triggers
 		internal struct LibSharedMemoryData
 		{
 			public bool disabled;
+			public bool resetAutotext;
 		}
 
 		internal static string LibPipeName(int threadId) => @"\\.\pipe\Au.Triggers-" + threadId.ToString();
@@ -730,8 +762,72 @@ namespace Au.Triggers
 			b.Append("* W - Triggers.Of (window); F - Triggers.FuncOf.</fold>");
 			ThreadPool.QueueUserWorkItem(s1 => Print(s1), b.ToString()); //4 ms first time. Async because Print JIT slow.
 		}
-	}
 
+		/// <summary>
+		/// Currently pressed modifier keys. Valid only in hotkey and autotext triggers.
+		/// </summary>
+		public KMod Mod => _mod;
+
+		/// <summary>
+		/// Currently pressed left-side modifier keys. Valid only in hotkey and autotext triggers.
+		/// </summary>
+		public KMod ModL => _modL;
+
+		/// <summary>
+		/// Currently pressed right-side modifier keys. Valid only in hotkey and autotext triggers.
+		/// </summary>
+		public KMod ModR => _modR;
+
+		/// <summary>
+		/// Not 0 if this key event is a modifier key. Valid only in hotkey and autotext triggers.
+		/// </summary>
+		public KMod ModThis => _modThis;
+
+		KMod _mod, _modL, _modR, _modThis;
+		long _lastKeyTime;
+
+		/// <summary>
+		/// Called before processing each keyboard hook event.
+		/// Updates Mod, ModL, ModR, IsThisKeyMod. They are used by hotkey and autotext triggers.
+		/// </summary>
+		public void InitMod(HookData.Keyboard k)
+		{
+			KMod modL = 0, modR = 0;
+			switch(k.vkCode) {
+			case KKey.LCtrl: modL = KMod.Ctrl; break;
+			case KKey.LShift: modL = KMod.Shift; break;
+			case KKey.LAlt: modL = KMod.Alt; break;
+			case KKey.Win: modL = KMod.Win; break;
+			case KKey.RCtrl: modR = KMod.Ctrl; break;
+			case KKey.RShift: modR = KMod.Shift; break;
+			case KKey.RAlt: modR = KMod.Alt; break;
+			case KKey.RWin: modR = KMod.Win; break;
+			}
+
+			if((_modThis = (modL | modR)) != 0) {
+				if(k.IsUp) {
+					_modL &= ~modL; _modR &= ~modR;
+				} else {
+					_modL |= modL; _modR |= modR;
+				}
+				_mod = _modL | _modR;
+			} else if(!k.IsUp) {
+				//We cannot trust _mod, because hooks are unreliable. We may not receive some events because of hook timeout, other hooks, OS quirks, etc. Also triggers may start while a modifier key is pressed.
+				//And we cannot use Keyb.IsPressed, because our triggers release modifiers. Also Key() etc. Then triggers could not be auto-repeated.
+				//We use both. If IsPressed(mod), add mod to _mod. Else remove from _mod after >5 s since the last seen key event. The max auto-repeat delay that you can set in CP is ~1 s.
+				TrigUtil.GetModLR(out modL, out modR);
+				//Debug_.PrintIf(modL != _modL || modR != _modR, $"KEY={k.vkCode}    modL={modL}  _modL={_modL}    modR={modR}  _modR={_modR}"); //normally should be only when auto-repeating a trigger
+				_modL |= modL; _modR |= modR;
+				long time = Time.WinMilliseconds;
+				if(time - _lastKeyTime > 5000) {
+					_modL &= modL; _modR &= modR;
+				}
+				_mod = _modL | _modR;
+				//Print(_mod, k.vkCode);
+				_lastKeyTime = time;
+			}
+		}
+	}
 
 	//public static class TaskTrigger
 	//{

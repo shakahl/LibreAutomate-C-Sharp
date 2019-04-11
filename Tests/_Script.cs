@@ -1,4 +1,4 @@
-/*/ runMode blue; ifRunning restart; /*/ //{{
+﻿/*/ runMode blue; ifRunning restart; /*/ //{{
 										 //{{ using
 using System;
 using System.Collections.Generic;
@@ -59,6 +59,110 @@ unsafe partial class Script : AuScript
 		Print(n, nv);
 	}
 
+	unsafe void TestCharUpperNonBmp()
+	{
+		//for(int i='A'; i<0x10000; i++) {
+		//	char c = (char)i;
+		//	if(char.IsUpper(c)) Print((uint)i, c);
+		//}
+
+		//var s = new string('\0', 2);
+		//fixed(char* p = s) {
+		//	for(int i = 'A'; i < 0x10000; i++) {
+		//		*(int*)p = i;
+		//		if(char.IsUpper(s, 0)) Print((uint)i, s);
+		//	}
+		//}
+
+		var e = Encoding.UTF32;
+		for(int i = 0x10000; i < 0x10_0000; i++) {
+			var c = (byte*)&i;
+			var u = e.GetString(c, 4);
+			//Print(u);
+			//if(char.IsUpper(u, 0)) Print((uint)i, u, u.ToLowerInvariant());
+			if(char.IsLower(u, 0)) Print((uint)i, u, u.ToUpperInvariant());
+		}
+		//Print("END");
+
+		Print("a".Equals("A", StringComparison.OrdinalIgnoreCase));
+		Print("𐐩".Equals("𐐁", StringComparison.OrdinalIgnoreCase));
+		Print("𐐩".IndexOf("𐐁", StringComparison.OrdinalIgnoreCase));
+		Print(char.IsUpper("𐐩", 0), char.IsLower("𐐩", 0), char.IsUpper("𐐁", 0), char.IsLower("𐐁", 0));
+		Print("abc".ToUpper_(true), "𐐨𐐩𐐪".ToUpper_(true));
+	}
+
+	//class TIA
+	//{
+	//	public static implicit operator TIA(string s) => new TIA();
+	//	public static implicit operator TIA(Action<string> a) => new TIA();
+	//}
+
+	//class TIO
+	//{
+	//	public TIA this[string s] {
+	//		set {
+	//			Print(s, value);
+	//		}
+	//		//get => null;
+	//	}
+
+	//	//void set_Item(string s, string va)
+	//	//{
+	//	//		Print(2);
+
+	//	//}
+	//}
+
+	//void TestIndexerOverload()
+	//{
+	//	var t = new TIO();
+	//	t["a"] = "text";
+	//	t["b"] = o => Print(o);
+	//}
+
+	void TestMouseRelative()
+	{
+		var w = Wnd.Find("* Notepad");
+		w.Activate();
+		Mouse.Move(w, 20, 20);
+
+		Opt.Mouse.MoveSpeed = 10;
+		for(int i = 0; i < 5; i++) {
+			1.s();
+			using(Mouse.LeftDown()) {
+				Mouse.MoveRelative(30, 30);
+				//var xy = Mouse.XY;
+				//Mouse.Move(xy.x + 30, xy.y + 30);
+			}
+		}
+
+		//Opt.Mouse.ClickSpeed = 1000;
+		//Mouse.Click();
+
+	}
+
+	void TestBlockInputReliability()
+	{
+		Wnd.Find("* Notepad").Activate();
+		//Wnd.Find("Quick *").Activate();
+
+		//Thread_.Start(() => {
+		//	using(Au.Util.WinHook.Keyboard(k => {
+		//		if(!k.IsInjectedByAu) Print("----", k);
+
+		//		return false;
+		//	})) Time.SleepDoEvents(5000);
+		//});
+
+		100.ms();
+		Key("Ctrl+A Delete Ctrl+Shift+J");
+		Output.Clear();
+		//10.ms();
+		for(int i = 0; i < 100; i++) {
+			Text("---- ");
+		}
+	}
+
 	void TestGetKeyState()
 	{
 		1.s();
@@ -112,6 +216,15 @@ unsafe partial class Script : AuScript
 		}
 		catch(Exception ex) { Print(ex); }
 		Print("END");
+	}
+
+	void Test2CharKeysAndVK()
+	{
+		Wnd.Find("* Notepad").Activate();
+		//Keyb.WaitForKey(0, "VK65", true);
+		//Key("VK65 Vk0x42");
+		//Print(Keyb.Misc.ParseKeysString("VK65 Vk0x42"));
+		if(Keyb.Misc.ParseHotkeyString("Ctrl+VK65", out var mod, out var key)) Print(mod, key);
 	}
 
 	void TestAcc()
@@ -256,6 +369,103 @@ unsafe partial class Script : AuScript
 		////Cpp.Cpp_Test();
 	}
 
+	void TriggersExamples()
+	{
+		//if you want to set options for all or some triggers, do it before adding these triggers
+		Triggers.Options.RunActionInThread(0, 500);
+
+		//you can use variables if don't want to type "Triggers.Hotkey" etc for each trigger
+		var hk = Triggers.Hotkey;
+		var mouse = Triggers.Mouse;
+		var window = Triggers.Window;
+		var tt = Triggers.Autotext;
+
+		//hotkey triggers
+
+		hk["Ctrl+K"] = o => Print(o.Trigger);
+		hk["Ctrl+Shift+F11"] = o => {
+			Print(o.Trigger);
+			var w1 = Wnd.FindOrRun("* Notepad", run: () => Shell.Run(Folders.System + "notepad.exe"));
+			Text("text");
+			w1.Close();
+		};
+
+		//triggers that work only with some windows
+
+		Triggers.Of.Window("* WordPad", "WordPadClass"); //let the following triggers work only when a WordPad window is active
+		hk["Ctrl+F5"] = o => Print(o.Trigger, o.Window);
+		hk["Ctrl+F6"] = o => Print(o.Trigger, o.Window);
+
+		var notepad = Triggers.Of.Window("* Notepad"); //let the following triggers work only when a Notepad window is active
+		hk["Ctrl+F5"] = o => Print(o.Trigger, o.Window);
+		hk["Ctrl+F6"] = o => Print(o.Trigger, o.Window);
+
+		Triggers.Of.AllWindows(); //let the following triggers work with all windows
+
+		//mouse triggers
+
+		mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => Print(o.Trigger);
+		mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); AuDialog.ShowEx("Bang!", x: Coord.Max); };
+		mouse[TMMove.LeftRightInCenter50] = o => Wnd.SwitchActiveWindow();
+
+		Triggers.FuncOf.NextTrigger = o => Keyb.IsScrollLock; //example of a custom scope (aka context, condition)
+		mouse[TMWheel.Forward] = o => Print($"{o.Trigger} while ScrollLock is on");
+
+		Triggers.Of.Again(notepad); //let the following triggers work only when a Notepad window is active
+		mouse[TMMove.LeftRightInBottom25] = o => { Print(o.Trigger); o.Window.Close(); };
+		Triggers.Of.AllWindows();
+
+		//window triggers. Note: window triggers don't depend on Triggers.Of window.
+
+		window.ActiveNew["* Notepad", "Notepad"] = o => Print("opened Notepad window");
+		window.ActiveNew["Notepad", "#32770", contains: "Do you want to save *"] = o => {
+			Print("opened Notepad's 'Do you want to save' dialog");
+			Key("Alt+S");
+		};
+
+		//autotext triggers
+
+		tt["los"] = o => o.Replace("Los Angeles");
+		tt["WIndows", TAFlags.MatchCase] = o => o.Replace("Windows");
+		tt.DefaultPostfixType = TAPostfix.None;
+		tt["<b>"] = o => o.Replace("<b>[[|]]</b>");
+		Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; };
+		tt["#file"] = o => {
+			o.Replace("");
+			var fd = new OpenFileDialog();
+			if(fd.ShowDialog() == DialogResult.OK) Text(fd.FileName);
+		};
+		Triggers.Options.BeforeAction = null;
+		tt.DefaultPostfixType = default;
+
+		var ts = Triggers.Autotext.Simple;
+		ts["#su"] = "Sunday"; //the same as tt["#su"] = o => o.Replace("Sunday");
+		ts["#mo"] = "Monday";
+
+		//how to stop and disable/enable triggers
+
+		hk["Ctrl+Alt+Q"] = o => Triggers.Stop(); //let Triggers.Run() end its work and return
+		hk.Last.EnabledAlways = true;
+
+		hk["Ctrl+Alt+D"] = o => Triggers.Disabled ^= true; //disable/enable triggers here
+		hk.Last.EnabledAlways = true;
+
+		hk["Ctrl+Alt+Win+D"] = o => ActionTriggers.DisabledEverywhere ^= true; //disable/enable triggers in all processes
+		hk.Last.EnabledAlways = true;
+
+		hk["Ctrl+F7"] = o => Print("This trigger can be disabled/enabled with Ctrl+F8.");
+		var t1 = hk.Last;
+		hk["Ctrl+F8"] = o => t1.Disabled ^= true; //disable/enable a trigger
+
+		//finally call Triggers.Run(). Without it the triggers won't work.
+		Triggers.Run();
+		//Triggers.Run returns when is called Triggers.Stop (see the "Ctrl+Alt+Q" trigger above).
+		Print("called Triggers.Stop");
+		//Recommended properties for scripts containg triggers: 'runMode'='blue' and 'ifRunning'='restart'. You can set it in the Properties dialog.
+		//The first property allows other scripts to start while this script is running.
+		//The second property makes easy to restart the script after editing: just click the Run button.
+	}
+
 	void TestWindowTriggers()
 	{
 		//Triggers.Window.ActiveOnce["Notepad", "#32770"] = null;
@@ -379,12 +589,12 @@ unsafe partial class Script : AuScript
 		var tm = Triggers.Mouse;
 
 		//tm.MoveSensitivity = 0;
-		tm[TMClick.Right, flags: TMFlags.PassMessage] = o => Print(o.Trigger);
+		//tm[TMClick.Right, flags: TMFlags.ShareEvent] = o => Print(o.Trigger);
 		tm[TMClick.X1, "Ctrl", TMFlags.ButtonModUp] = o => Print(o.Trigger);
 		//tm[TMClick.X1, null, TMFlags.Up] = o => Print(o.Trigger, o);
 		//tm[TMClick.Right, "Ctrl"] = o => { Opt.Key.NoModOff = true; Key("F22"); Print(o.Trigger); };
 		//tm[TMClick.Middle, "Win"] = o => { Print(o.Trigger); };
-		//tm[TMClick.Middle, "Win", TMFlags.PassMessage] = o => { Print(o.Trigger); };
+		//tm[TMClick.Middle, "Win", TMFlags.ShareEvent] = o => { Print(o.Trigger); };
 		tm[TMWheel.Forward, "Ctrl", TMFlags.ButtonModUp] = o => Print(o.Trigger);
 		tm[TMEdge.RightInTop25] = o => Print(o.Trigger);
 		//tm[TMEdge.Right] = o => Print(o.Trigger);
@@ -392,11 +602,53 @@ unsafe partial class Script : AuScript
 		tm[TMEdge.Left, "Ctrl", TMFlags.LeftMod] = o => Print(o.Trigger);
 		tm[TMEdge.BottomInRight25, "Ctrl", TMFlags.ButtonModUp] = o => Print(o.Trigger);
 		tm[TMEdge.Top, "?"] = o => Print(o.Trigger);
+		tm[TMEdge.Right, "Shift+Alt"] = o => Print(o.Trigger);
 		Triggers.Mouse[TMMove.DownUp] = o => Print(o.Trigger);
 		//Triggers.Mouse[TMMove.RightLeftInBottom25, "Alt"] = o => Print(o.Trigger);
 		//Triggers.Mouse[TMMove.RightLeftInBottom25, "Alt", screenIndex: -1] = o => Print(o.Trigger);
 		//Triggers.Mouse[TMMove.RightLeftInBottom25, "Alt", screenIndex: 1] = o => Print(o.Trigger);
-		Triggers.Mouse[TMMove.RightLeftInBottom25, "Alt", screenIndex: -2] = o => Print(o.Trigger);
+		Triggers.Mouse[TMMove.RightLeftInBottom25, "Alt", screen: TMScreen.Any] = o => Print(o.Trigger);
+
+		tm[TMEdge.BottomInLeft25] = o => Print(o.Trigger);
+		tm[TMEdge.LeftInTop25, screen: TMScreen.NonPrimary1] = o => Print(o.Trigger);
+		tm[TMEdge.LeftInBottom25] = o => Print(o.Trigger);
+
+		//Triggers.Hotkey["Alt+O"] = o => Print(o.Trigger);
+		//Triggers.Hotkey["Ctrl+Shift+O"] = o => Print(o.Trigger);
+
+		//tm[TMClick.Right] = o => Print(o.Trigger);
+		tm[TMClick.Right, null, TMFlags.ButtonModUp] = o => Print(o.Trigger);
+		tm[TMClick.Right, "Alt"] = o => Print(o.Trigger);
+		//tm[TMClick.Right, "Alt", TMFlags.ButtonModUp] = o => Print(o.Trigger);
+		//tm[TMClick.Right, "Alt", TMFlags.ShareEvent] = o => Print(o.Trigger);
+		//tm[TMClick.Right, "Alt", TMFlags.ButtonModUp | TMFlags.ShareEvent] = o => Print(o.Trigger);
+		Triggers.Options.BeforeAction = o => { Opt.Key.KeySpeed = 50; /*Opt.Key.NoBlockInput = true;*/ };
+		//tm[TMClick.Right, "Alt"] = o => Key("some Spa text Spa for Spa testing Spa Enter");
+		//tm[TMClick.Right, "Alt"] = o => Print("wait", Keyb.WaitForKey(0, true, true));
+		//tm[TMClick.Right, "Win"] = o => Print(o.Trigger);
+		//tm[TMClick.Right, "Shift"] = o => Print(o.Trigger);
+		tm[TMClick.Right, "Win", TMFlags.ButtonModUp] = o => Print(o.Trigger);
+		tm[TMClick.Right, "Win+Shift"] = o => Print(o.Trigger);
+		//tm[TMClick.Right, "Shift", TMFlags.ButtonModUp] = o => Print(o.Trigger);
+		//tm[TMClick.Right, "Shift", TMFlags.ButtonModUp | TMFlags.ShareEvent] = o => Print(o.Trigger);
+		//tm[TMClick.Left, "Shift"] = o => {
+		//	//2.s();
+		//	Opt.Mouse.MoveSpeed = 50;
+		//	using(Mouse.LeftDown()) {
+		//		//Mouse.MoveRelative(30, 30);
+		//		var xy = Mouse.XY;
+		//		Mouse.Move(xy.x+30, xy.y+30);
+		//	}
+		//	Print("done");
+		//};
+
+
+		//Triggers.Hotkey["Ctrl+K"] = o => Print(o.Trigger);
+		////Triggers.Autotext["mmpp"] = o => Print(o.Trigger);
+		//Triggers.Mouse[TMClick.Right] = o => Print(o.Trigger);
+		//Triggers.Mouse[TMWheel.Right] = o => Print(o.Trigger);
+		////Triggers.Mouse[TMEdge.Right] = o => Print(o.Trigger);
+		//Triggers.Mouse[TMMove.DownUp] = o => Print(o.Trigger);
 
 		//Print("----");
 		//Triggers.Hotkey["Ctrl+Q"] = o => Triggers.Stop();
@@ -430,13 +682,21 @@ unsafe partial class Script : AuScript
 		//tk["Alt+F", TKFlags.NoModOff] = o => { Print(o.Trigger, Keyb.IsAlt); };
 		//tk["Win+R", TKFlags.NoModOff] = o => { Print(o.Trigger, Keyb.IsWin); };
 		//tk["Shift+T", TKFlags.NoModOff] = o => { Opt.Key.NoModOff = true; Opt.Key.TextOption = KTextOption.Keys; Text("some Text"); };
-		//tk["Alt+F", TKFlags.PassMessage] = o => { Print(o.Trigger); };
-		//tk["Win+R", TKFlags.PassMessage] = o => { Print(o.Trigger); };
+		//tk["Alt+F", TKFlags.ShareEvent] = o => { Print(o.Trigger); };
+		//tk["Win+R", TKFlags.ShareEvent] = o => { Print(o.Trigger); };
 		tk["Win+R", TKFlags.RightMod] = o => { Print(o.Trigger); };
 		tk["F11", TKFlags.KeyModUp] = o => { Print(o.Trigger); };
-		tk["Ctrl+U", TKFlags.KeyModUp] = o => { Print(o.Trigger); };
-		//tk["Ctrl+U", TKFlags.KeyUp| TKFlags.NoModOff] = o => { Print(o.Trigger); };
+		//tk["F11", TKFlags.KeyModUp| TKFlags.ShareEvent] = o => { Print(o.Trigger); };
+
+		//tk["Alt+E"] = o => { Print(o.Trigger); };
+		//tk["Alt+E", TKFlags.NoModOff] = o => { Print(o.Trigger); };
+		//tk["Alt+E", TKFlags.ShareEvent] = o => { Print(o.Trigger); };
+		//tk["Alt+E", TKFlags.NoModOff|TKFlags.ShareEvent] = o => { Print(o.Trigger); };
+		//tk["Alt+E", TKFlags.KeyModUp] = o => { Print(o.Trigger); };
+		tk["Alt+E", TKFlags.KeyModUp | TKFlags.ShareEvent] = o => { Print(o.Trigger); };
+
 		tk["Ctrl+Shift+Alt+Win+U", TKFlags.KeyModUp] = o => { Print(o.Trigger); };
+		tk["Win+R", TKFlags.NoModOff] = o => { Print(o.Trigger); };
 
 		tk[KKey.Clear, null] = o => { Print(o.Trigger); };
 		tk[KKey.Clear, "Ctrl"] = o => { Print(o.Trigger); };
@@ -445,86 +705,88 @@ unsafe partial class Script : AuScript
 
 		tk[KKey.F12, "?"] = o => { Print(o.Trigger, o.Key, o.Mod); };
 
+		tk["Ctrl+VK66"] = o => { Print(o.Trigger); };
+
 		Triggers.Run();
 	}
 
-	void TriggersExamples()
+	void TestAutotextTriggers()
 	{
-		//if you want to set options for all or some triggers, do it before adding these triggers
-		Triggers.Options.RunActionInThread(0, 500);
-
-		//you can use variables if don't want to type "Triggers.Hotkey" etc for each trigger
-		var hk = Triggers.Hotkey;
-		var mouse = Triggers.Mouse;
-		var window = Triggers.Window;
 		var tt = Triggers.Autotext;
+		//tt.PostfixKey = KKey.RShift;
 
-		//hotkey triggers
+		Triggers.Options.RunActionInThread(0, 500);
+		//Triggers.Of.Window("* Notepad");
+		//Triggers.Options.BeforeAction = o => { Opt.Key.NoBlockInput=true; };
+		//tt["ABCDE"] = o => Print(o.Trigger);
+		//tt["A"] = o => Print(o.Trigger);
+		tt["kuu"] = o => { o.Replace("dramblys"); };
+		tt["#hor"] = o => { o.Replace("horisont"); };
+		tt["si#"] = o => { o.Replace("sit down"); };
+		tt[".dot"] = o => { o.Replace("density"); };
+		tt[".d"] = o => { o.Replace("dynamite"); };
+		tt["LL\r\nKK"] = o => { o.Replace("puff"); };
+		//tt["kuu", postfix: TAPostfix.None] = o => Print(o.Trigger);
+		//tt["kuu", postfix: TAPostfix.Delimiter] = o => Print(o.Trigger);
+		tt["ąčę"] = o => { o.Replace("acetilenas"); };
+		tt["na;", 0, TAPostfix.None] = o => { o.Replace("naujienos"); };
+		//tt["?"] = o => { o.Replace("acetilenas"); };
+		//tt["!", 0, TAPostfix.None] = o => { o.Replace("acetilenas"); };
+		//tt["<a ", TAFlags.DontErase, TAPostfix.None] = o => { o.Replace("href=\"\"></a>"); };
+		tt["<a "] = o => { o.Replace("<a href=\"\">[[|]]</a>"); };
+		//tt["<a ", TAFlags.DontErase] = o => { o.Replace("href=\"\">[[|]]</a>"); };
+		Triggers.Autotext["#exa"] = o => o.Replace("<example>[[|]]</example>");
+		tt["#kh"] = o => { o.Replace("one[[|]]\r\ntwo\r\nthree"); };
+		tt["#ki"] = o => { o.Replace("one[[|]]a-𐐨𐐩𐐪-b"); };
+		tt["hee"] = o => { o.Replace("𐐩ko"); };
+		//Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; };
+		//tt["hee"] = o => { o.Replace("one\r\ntwo\r\nthree"); };
+		//tt["tuu", TAFlags.DontErase] = o => { o.Replace("dramblys"); };
+		//tt["tuu", TAFlags.RemovePostfix] = o => { o.Replace("dramblys"); };
+		tt["tuu", TAFlags.DontErase | TAFlags.RemovePostfix, postfixChars: ",;"] = o => { o.Replace("dramblys"); };
+		//tt["kup", postfixChars: ",\r"] = o => { o.Replace("dramblys"); };
+		//tt.DefaultPostfixChars = ",\r#_";
+		//tt.DefaultPostfixChars = ",\r";
+		tt.WordCharsPlus = "_#";
+		tt["kup"] = o => { o.Replace("dramblys"); };
 
-		hk["Ctrl+K"] = o => Print(o.Trigger);
-		hk["Ctrl+Shift+F11"] = o => {
-			Print(o.Trigger);
-			var w1 = Wnd.FindOrRun("* Notepad", run: () => Shell.Run(Folders.System + "notepad.exe"));
-			Text("text");
-			w1.Close();
+		//Triggers.Hotkey["F11"] = o => { Print(o.Trigger); Mouse.Click(); };
+		//Triggers.Hotkey["F11"] = o => { Print(o.Trigger); Mouse.Click(); };
+		//Triggers.Hotkey["F11"] = o => { Text("text"); };
+		//Triggers.Hotkey["F11"] = o => { Key("text"); };
+		Triggers.Hotkey["F11"] = o => { Paste("text"); };
+		//Triggers.Hotkey["F11"] = o => { Opt.Key.TextSpeed = 500; Text("kaa kaa "); };
+		//Triggers.Hotkey["F11"] = o => {
+		//	2.s();
+		//	Wnd.Find("* Notepad").Activate();
+		//};
+		//Triggers.Hotkey["u", TKFlags.ShareEvent] = o => { Print(o.Trigger); };
+
+		//Triggers.FuncOf.NextTrigger = o => { var ta = o as AutotextTriggerArgs; ta.Replace("dramblys"); return false; };
+		//tt["kut"] = null;
+
+		tt["mee"] = o => {
+			//100.ms();
+			var m = new AuMenu();
+			m["one"] = u => Text("One");
+			m["two"] = u => Text("Two");
+			m.Show(true);
 		};
 
-		//triggers that work only with some windows
+		//tt["mii", TAFlags.Confirm] = o => { o.Replace("dramblys"); };
+		tt["mii", TAFlags.Confirm] = o => { o.Replace(@"1>------ Build started: Project: Au, Configuration: Debug Any CPU ------
+1>  Au -> Q:\app\Au\Au\bin\Debug\Au.dll
+2>------ Build started: Project: TreeList, Configuration: Debug Any CPU ------
+3>------ Build started: Project: Au.Compiler, Configuration: Debug Any CPU ------
+"); };
+		tt["con1", TAFlags.Confirm] = o => o.Replace("Flag Confirm");
+		tt["con2"] = o => { if(o.Confirm("Example")) o.Replace("Function Confirm"); };
 
-		Triggers.Of.Window("* WordPad", "WordPadClass"); //let the following triggers work only when a WordPad window is active
-		hk["Ctrl+F5"] = o => Print(o.Trigger, o.Window);
-		hk["Ctrl+F6"] = o => Print(o.Trigger, o.Window);
+		var ts = Triggers.Autotext.Simple;
+		ts["#su"] = "Sunday"; //the same as Triggers.Autotext["#su"] = o => o.Replace("Sunday");
+		ts["#mo"] = "Monday";
 
-		var notepad = Triggers.Of.Window("* Notepad"); //let the following triggers work only when a Notepad window is active
-		hk["Ctrl+F5"] = o => Print(o.Trigger, o.Window);
-		hk["Ctrl+F6"] = o => Print(o.Trigger, o.Window);
-
-		Triggers.Of.AllWindows(); //let the following triggers work with all windows
-
-		//mouse triggers
-
-		mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => Print(o.Trigger);
-		mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); AuDialog.ShowEx("Bang!", x: Coord.Max); };
-		mouse[TMMove.LeftRightInCenter50] = o => Wnd.SwitchActiveWindow();
-
-		Triggers.FuncOf.NextTrigger = o => Keyb.IsScrollLock; //example of a custom scope (aka context, condition)
-		mouse[TMWheel.Forward] = o => Print($"{o.Trigger} while ScrollLock is on");
-
-		Triggers.Of.Again(notepad); //let the following triggers work only when a Notepad window is active
-		mouse[TMMove.LeftRightInBottom25] = o => { Print(o.Trigger); o.Window.Close(); };
-		Triggers.Of.AllWindows();
-
-		//window triggers. Note: window triggers don't depend on Triggers.Of window.
-
-		window.ActiveNew["* Notepad", "Notepad"] = o => Print("opened Notepad window");
-		window.ActiveNew["Notepad", "#32770", contains: "Do you want to save *"] = o => {
-			Print("opened Notepad's 'Do you want to save' dialog");
-			Key("Alt+S");
-		};
-
-		//autotext triggers
-
-		tt["sep"] = o => o.Replace("september");
-		tt["nov"] = o => o.Replace("november");
-
-		//how to stop and disable/enable triggers
-
-		hk["Ctrl+Alt+Q"] = o => Triggers.Stop(); //let Triggers.Run() end its work and return
-		hk.Last.EnabledAlways = true;
-
-		hk["Ctrl+Alt+D"] = o => Triggers.Disabled ^= true; //disable/enable triggers here
-		hk.Last.EnabledAlways = true;
-
-		hk["Ctrl+Alt+Win+D"] = o => ActionTriggers.DisabledEverywhere ^= true; //disable/enable triggers in all processes
-		hk.Last.EnabledAlways = true;
-
-		hk["Ctrl+F7"] = o => Print("This trigger can be disabled/enabled with Ctrl+F8.");
-		var t1 = hk.Last;
-		hk["Ctrl+F8"] = o => t1.Disabled ^= true; //disable/enable a trigger
-
-		//finally call Triggers.Run(). Without it the triggers won't work.
 		Triggers.Run();
-		Print("the end");
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
@@ -534,21 +796,28 @@ unsafe partial class Script : AuScript
 		Output.QM2.UseQM2 = true;
 		Output.Clear();
 		//100.ms();
+
+		//TestIndexerOverload();
+		//TestCharUpperNonBmp();
+		//TestBlockInputReliability();
+		//TestGetKeyState();
+		//TestCapsLock();
+		//Test2CharKeysAndVK();
+		//TestTurnOffCapsLockWithShift();
+		//TestMouseRelative();
 #else
 		Thread_.Start(() => {
 			OutputForm.ShowForm();
 			//AuDialog.Show("triggers");
 			Triggers.Stop();
 		}, false);
-		100.ms();
-#endif
+		300.ms();
 
-
-		//TriggersExamples();
+		TestAutotextTriggers();
 		//TestHotkeyTriggers();
-		TestMouseTriggers();
-		//TestGetKeyState();
-		//TestCapsLock();
+		//TestMouseTriggers();
+		//TriggersExamples();
+#endif
 		return;
 
 		//try { TestAcc(); }

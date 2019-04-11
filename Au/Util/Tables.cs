@@ -97,6 +97,8 @@ namespace Au.Util
 			get { var v = _lcTable; if(v == null) _lcTable = v = Cpp.Cpp_LowercaseTable(); return v; } //why operator ?? cannot be used with pointers?
 		}
 		static char* _lcTable;
+		//never mind: this library does not support ucase/lcase chars 0x10000-0x100000 (surrogate pairs).
+		//	Tested with IsUpper/IsLower: about 600 such chars exist. ToUpper/ToLower can convert 40 of them. Equals/StartsWith/IndexOf/etc fail.
 
 		/// <summary>
 		/// Gets table for <see cref="Convert_.Base64Decode(char*, int, void*, int)"/> and co.

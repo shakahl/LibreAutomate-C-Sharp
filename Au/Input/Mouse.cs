@@ -77,7 +77,7 @@ namespace Au
 			if(!ok && !relaxed) {
 				var es = $"*mouse-move to this x y in screen. " + p.ToString();
 				Wnd.Active.LibUacCheckAndThrow(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
-																		//rejected: Wnd.GetWnd.Root.ActivateLL()
+																	 //rejected: Wnd.GetWnd.Root.ActivateLL()
 				throw new AuException(es);
 				//known reasons:
 				//	Active window of higher UAC IL.
@@ -214,7 +214,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Moves the mouse cursor where it was at the time of the last <see cref="Save"/> call in this thread. If it was not called - of the first 'mouse move' or 'mouse move and click' function call in this thread. Does nothing if these functions were not called.
+		/// Moves the mouse cursor where it was at the time of the last <see cref="Save"/> call in this thread. If it was not called - of the first 'mouse move' or 'mouse click' function call in this thread. Does nothing if these functions were not called.
 		/// </summary>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
@@ -230,14 +230,15 @@ namespace Au
 		{
 			public POINT first, last;
 			public _PrevMousePos() { first = last = XY; }
+			public _PrevMousePos(POINT p) { first = last = p; }
 		}
 		[ThreadStatic] static _PrevMousePos t_prevMousePos;
 
 		/// <summary>
-		/// Mouse cursor position of the most recent successful 'mouse move' or 'mouse move and click' function call in this thread.
+		/// Mouse cursor position of the most recent successful 'mouse move' or 'mouse click' function call in this thread.
 		/// If such functions are still not called in this thread, returns <see cref="XY"/>.
 		/// </summary>
-		public static POINT LastMoveXY { get { var v = t_prevMousePos; return (v != null) ? v.last : XY; } }
+		public static POINT LastXY => t_prevMousePos?.last ?? XY;
 
 		//rejected. MoveRelative usually is better. If need, can use code: Move(Mouse.X+dx, Mouse.Y+dy).
 		//public static void MoveFromCurrent(int dx, int dy)
@@ -248,11 +249,11 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Moves the cursor (mouse pointer) relative to <see cref="LastMoveXY"/>.
+		/// Moves the cursor (mouse pointer) relative to <see cref="LastXY"/>.
 		/// Returns the final cursor position in primary screen coordinates.
 		/// </summary>
-		/// <param name="dx">X offset from LastMoveXY.x.</param>
-		/// <param name="dy">Y offset from LastMoveXY.y.</param>
+		/// <param name="dx">X offset from <b>LastXY.x</b>.</param>
+		/// <param name="dy">Y offset from <b>LastXY.y</b>.</param>
 		/// <exception cref="ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="Uac">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
 		/// <remarks>
@@ -261,14 +262,14 @@ namespace Au
 		public static POINT MoveRelative(int dx, int dy)
 		{
 			LibWaitForNoButtonsPressed();
-			var p = LastMoveXY;
+			var p = LastXY;
 			p.x += dx; p.y += dy;
 			_Move(p, fast: false);
 			return p;
 		}
 
 		/// <summary>
-		/// Plays recorded mouse movements, relative to <see cref="LastMoveXY"/>.
+		/// Plays recorded mouse movements, relative to <see cref="LastXY"/>.
 		/// Returns the final cursor position in primary screen coordinates.
 		/// </summary>
 		/// <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="Util.Recording.MouseToString"/>.</param>
@@ -290,7 +291,7 @@ namespace Au
 			bool withSleepTimes = 0 != (flags & 1);
 			bool isSleep = withSleepTimes;
 
-			var p = LastMoveXY;
+			var p = LastXY;
 			int pdx = 0, pdy = 0;
 
 			for(int i = 1; i < a.Length;) {
@@ -336,7 +337,7 @@ namespace Au
 			/// </summary>
 			/// <param name="recorded">
 			/// List of x y distances from previous.
-			/// The first distance is from the mouse position before the first movement; at run time it will be distance from <see cref="Mouse.LastMoveXY"/>.
+			/// The first distance is from the mouse position before the first movement; at run time it will be distance from <see cref="Mouse.LastXY"/>.
 			/// To create uint value from distance dx dy use this code: <c>Math_.MakeUint(dx, dy)</c>.
 			/// </param>
 			/// <param name="withSleepTimes">
@@ -399,7 +400,7 @@ namespace Au
 		/// </summary>
 		static void _SendMove(POINT p)
 		{
-			if(t_prevMousePos == null) t_prevMousePos = new _PrevMousePos(); //sets .first=XY
+			if(t_prevMousePos == null) t_prevMousePos = new _PrevMousePos(); //sets .first=.last=XY
 			_SendRaw(Api.IMFlags.Move, p.x, p.y);
 		}
 
@@ -407,9 +408,9 @@ namespace Au
 		/// Sends single mouse button down or up event.
 		/// Does not use the action flags of button.
 		/// Applies SM_SWAPBUTTON.
-		/// If pMoved!=null, also moves to pMoved in the same API SendInput call.
+		/// Also moves to p in the same API SendInput call.
 		/// </summary>
-		static void _SendButton(MButton button, bool down, POINT? pMoved)
+		static void _SendButton(MButton button, bool down, POINT p)
 		{
 			//CONSIDER: release user-pressed modifier keys, like Keyb does.
 			//CONSIDER: block user input, like Keyb does.
@@ -433,9 +434,8 @@ namespace Au
 			//During the sleep the user can move the mouse. Correct it now if need.
 			//tested: if don't need to move, mouse messages are not sent. Hooks not tested. In some cases are sent one or more mouse messages but it depends on other things.
 			//Alternatively could temporarily block user input, but it is not good. Need a hook (UAC disables Api.BlockInput), etc. Better let scripts do it explicitly. If script contains several mouse/keys statements, it's better to block input once for all.
-			if(pMoved != null) f |= Api.IMFlags.Move;
+			f |= Api.IMFlags.Move;
 
-			var p = pMoved.GetValueOrDefault();
 			_SendRaw(f, p.x, p.y);
 
 			if(down) t_pressedButtons |= mb; else t_pressedButtons &= ~mb;
@@ -481,8 +481,11 @@ namespace Au
 
 		[ThreadStatic] static MButtons t_pressedButtons;
 
-		static void _Click(MButton button, POINT? pMoved = null, Wnd w = default)
+		static void _Click(MButton button, POINT p, Wnd w = default)
 		{
+			if(w.Is0) w = Api.WindowFromPoint(p);
+			bool windowOfThisThread = w.IsOfThisThread;
+			if(windowOfThisThread) PrintWarning("Click(window of own thread) may not work. Use another thread.");
 			//Sending a click to a window of own thread often does not work.
 			//Reason 1: often the window on down event enters a message loop that waits for up event. But then this func cannot send the up event because it is in the loop (if it does doevents).
 			//	Known workarounds:
@@ -492,10 +495,6 @@ namespace Au
 			//	Known workarounds:
 			//	1. (applied): show warning. Let the user modify the script: either don't click own windows or click from another thread.
 
-			if(w.Is0) w = Api.WindowFromPoint((pMoved != null) ? pMoved.GetValueOrDefault() : XY);
-			bool windowOfThisThread = w.IsOfThisThread;
-			if(windowOfThisThread) PrintWarning("Click(window of own thread) may not work. Use another thread.");
-
 			int sleep = Opt.Mouse.ClickSpeed;
 
 			switch(button & (MButton.Down | MButton.Up | MButton.DoubleClick)) {
@@ -504,21 +503,21 @@ namespace Au
 				//info: default double-click time is 500. Control Panel can set 200-900. API can set 1.
 				//info: to detect double-click, some apps use time between down and down (that is why /4), others between up and down.
 
-				_SendButton(button, true, pMoved);
+				_SendButton(button, true, p);
 				if(!windowOfThisThread) _Sleep(sleep);
-				_SendButton(button, false, pMoved);
+				_SendButton(button, false, p);
 				if(!windowOfThisThread) _Sleep(sleep);
 				goto case 0;
 			case 0: //click
-				_SendButton(button, true, pMoved);
+				_SendButton(button, true, p);
 				if(!windowOfThisThread) _Sleep(sleep);
-				_SendButton(button, false, pMoved);
+				_SendButton(button, false, p);
 				break;
 			case MButton.Down:
-				_SendButton(button, true, pMoved);
+				_SendButton(button, true, p);
 				break;
 			case MButton.Up:
-				_SendButton(button, false, pMoved);
+				_SendButton(button, false, p);
 				break;
 			default: throw new ArgumentException("Incompatible flags: Down, Up, DoubleClick", nameof(button));
 			}
@@ -535,21 +534,27 @@ namespace Au
 		/// </summary>
 		/// <returns><inheritdoc cref="LeftDown(bool)"/></returns>
 		/// <param name="button">Button and action. Default: left click.</param>
-		/// <param name="useLastMoveXY">
-		/// Use <see cref="LastMoveXY"/>. It is the mouse cursor position set by the most recent 'mouse move' or 'mouse move and click' function called in this thread. Use this option for reliability.
-		/// Example: <c>Mouse.Move(100, 100); Mouse.ClickEx(..., true);</c>. The click is always at 100 100, even if somebody changes cursor position between <c>Mouse.Move</c> sets it and <c>Mouse.ClickEx</c> uses it. In such case this option atomically moves the cursor to <b>LastMoveXY</b>. This movement is instant and does not use <see cref="Opt"/>.
+		/// <param name="useLastXY">
+		/// Use <see cref="LastXY"/>. It is the mouse cursor position set by the most recent 'mouse move' or 'mouse click' function called in this thread. Use this option for reliability.
+		/// Example: <c>Mouse.Move(100, 100); Mouse.ClickEx(..., true);</c>. The click is always at 100 100, even if somebody changes cursor position between <c>Mouse.Move</c> sets it and <c>Mouse.ClickEx</c> uses it. In such case this option atomically moves the cursor to <b>LastXY</b>. This movement is instant and does not use <see cref="Opt"/>.
 		/// If false (default), clicks at the current cursor position (does not move it).
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.ClickSpeed" r=""/>, <see cref="OptMouse.ClickSleepFinally" r=""/>.
 		/// </remarks>
-		public static MRelease ClickEx(MButton button = MButton.Left, bool useLastMoveXY = false)
+		public static MRelease ClickEx(MButton button = MButton.Left, bool useLastXY = false)
 		{
-			POINT? p = null; if(useLastMoveXY) p = LastMoveXY;
+			POINT p;
+			if(useLastXY) p = LastXY;
+			else {
+				p = XY;
+				if(t_prevMousePos == null) t_prevMousePos = new _PrevMousePos(p); //sets .first=.last=p
+				else t_prevMousePos.last = p;
+			}
 			_Click(button, p);
 			return button;
-			//CONSIDER: OptMouse.ClickAtLastMoveXY
+			//CONSIDER: Opt.Mouse.ClickAtLastXY
 		}
 
 		/// <summary>
@@ -567,7 +572,7 @@ namespace Au
 		/// </remarks>
 		public static MRelease ClickEx(MButton button, Coord x, Coord y)
 		{
-			var p = Move(x, y);
+			POINT p = Move(x, y);
 			_Click(button, p);
 			return button;
 		}
@@ -604,7 +609,7 @@ namespace Au
 		/// </remarks>
 		public static MRelease ClickEx(MButton button, Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
-			var p = Move(w, x, y, nonClient);
+			POINT p = Move(w, x, y, nonClient);
 
 			//Make sure will click w, not another window.
 			var action = button & (MButton.Down | MButton.Up | MButton.DoubleClick);
@@ -645,10 +650,10 @@ namespace Au
 		/// Left button click.
 		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
 		/// </summary>
-		/// <param name="useLastMoveXY">Use <see cref="LastMoveXY"/>, not current cursor position.</param>
-		public static void Click(bool useLastMoveXY = false)
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static void Click(bool useLastXY = false)
 		{
-			ClickEx(MButton.Left, useLastMoveXY);
+			ClickEx(MButton.Left, useLastXY);
 		}
 
 		/// <summary>
@@ -684,10 +689,10 @@ namespace Au
 		/// Right button click.
 		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
 		/// </summary>
-		/// <param name="useLastMoveXY">Use <see cref="LastMoveXY"/>, not current cursor position.</param>
-		public static void RightClick(bool useLastMoveXY = false)
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static void RightClick(bool useLastXY = false)
 		{
-			ClickEx(MButton.Right, useLastMoveXY);
+			ClickEx(MButton.Right, useLastXY);
 		}
 
 		/// <summary>
@@ -721,10 +726,10 @@ namespace Au
 		/// Left button double click.
 		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
 		/// </summary>
-		/// <param name="useLastMoveXY">Use <see cref="LastMoveXY"/>, not current cursor position.</param>
-		public static void DoubleClick(bool useLastMoveXY = false)
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static void DoubleClick(bool useLastXY = false)
 		{
-			ClickEx(MButton.Left | MButton.DoubleClick, useLastMoveXY);
+			ClickEx(MButton.Left | MButton.DoubleClick, useLastXY);
 		}
 
 		/// <summary>
@@ -759,10 +764,10 @@ namespace Au
 		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
 		/// </summary>
 		/// <returns>The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.</returns>
-		/// <param name="useLastMoveXY">Use <see cref="LastMoveXY"/>, not current cursor position.</param>
-		public static MRelease LeftDown(bool useLastMoveXY = false)
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static MRelease LeftDown(bool useLastXY = false)
 		{
-			return ClickEx(MButton.Left | MButton.Down, useLastMoveXY);
+			return ClickEx(MButton.Left | MButton.Down, useLastXY);
 		}
 
 		/// <summary>
@@ -804,10 +809,10 @@ namespace Au
 		/// Left button up (release pressed button).
 		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
 		/// </summary>
-		/// <param name="useLastMoveXY">Use <see cref="LastMoveXY"/>, not current cursor position.</param>
-		public static void LeftUp(bool useLastMoveXY = false)
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static void LeftUp(bool useLastXY = false)
 		{
-			ClickEx(MButton.Left | MButton.Up, useLastMoveXY);
+			ClickEx(MButton.Left | MButton.Up, useLastXY);
 		}
 
 		/// <summary>
@@ -841,10 +846,10 @@ namespace Au
 		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
 		/// </summary>
 		/// <returns><inheritdoc cref="LeftDown(bool)"/></returns>
-		/// <param name="useLastMoveXY">Use <see cref="LastMoveXY"/>, not current cursor position.</param>
-		public static MRelease RightDown(bool useLastMoveXY = false)
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static MRelease RightDown(bool useLastXY = false)
 		{
-			return ClickEx(MButton.Right | MButton.Down, useLastMoveXY);
+			return ClickEx(MButton.Right | MButton.Down, useLastXY);
 		}
 
 		/// <summary>
@@ -880,10 +885,10 @@ namespace Au
 		/// Right button up (release pressed button).
 		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
 		/// </summary>
-		/// <param name="useLastMoveXY">Use <see cref="LastMoveXY"/>, not current cursor position.</param>
-		public static void RightUp(bool useLastMoveXY = false)
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static void RightUp(bool useLastXY = false)
 		{
-			ClickEx(MButton.Right | MButton.Up, useLastMoveXY);
+			ClickEx(MButton.Right | MButton.Up, useLastXY);
 		}
 
 		/// <summary>
@@ -930,7 +935,7 @@ namespace Au
 		///// <summary>
 		///// Releases mouse buttons pressed by this thread.
 		///// </summary>
-		///// <param name="useLastMoveXY">If true (default), ensures that the cursor is at <see cref="LastMoveXY"/>, not at <see cref="XY"/> which may be different if eg the user or she's cat is moving the mouse.</param>
+		///// <param name="useLastXY">If true (default), ensures that the cursor is at <see cref="LastXY"/>, not at <see cref="XY"/> which may be different if eg the user or she's cat is moving the mouse.</param>
 		///// <example>
 		///// <code><![CDATA[
 		///// var w = Wnd.Find("* Notepad");
@@ -939,9 +944,9 @@ namespace Au
 		///// Mouse.Drop();
 		///// ]]></code>
 		///// </example>
-		//public static void Drop(bool useLastMoveXY=true)
+		//public static void Drop(bool useLastXY=true)
 		//{
-		//	if(useLastMoveXY) _ReleaseButtons(LastMoveXY);
+		//	if(useLastXY) _ReleaseButtons(LastXY);
 		//	else _ReleaseButtons();
 		//}
 
@@ -1053,6 +1058,7 @@ namespace Au
 		/// <remarks>
 		/// Unlike <see cref="WaitForNoButtonsPressed"/>, waits for down or up event, not for button state.
 		/// Uses low-level mouse hook.
+		/// Ignores mouse events injected by functions of this library.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1070,7 +1076,11 @@ namespace Au
 		/// Waits for button-down or button-up event of any mouse button, and gets the button code.
 		/// </summary>
 		/// <returns>Returns the button code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
-		/// <inheritdoc cref="WaitForClick(double, MButtons, bool, bool)"/>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="up">Wait for button-up event.</param>
+		/// <param name="block"><inheritdoc cref="WaitForClick(double, MButtons, bool, bool)"/></param>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <remarks><inheritdoc cref="WaitForClick(double, MButtons, bool, bool)"/></remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var button = Mouse.WaitForClick(0, up: true, block: true);
@@ -1087,8 +1097,7 @@ namespace Au
 			//info: this and related functions use similar code as Keyb._WaitForKey.
 
 			MButtons R = 0;
-			using(Util.WinHook.Mouse(x =>
-			{
+			using(Util.WinHook.Mouse(x => {
 				MButtons b = 0;
 				switch(x.Event) {
 				case HookData.MouseEvent.LeftButton: b = MButtons.Left; break;
@@ -1097,17 +1106,17 @@ namespace Au
 				case HookData.MouseEvent.X1Button: b = MButtons.X1; break;
 				case HookData.MouseEvent.X2Button: b = MButtons.X2; break;
 				}
-				if(b == 0) return false;
-				if(button != 0 && !button.Has_(b)) return false;
+				if(b == 0) return;
+				if(button != 0 && !button.Has_(b)) return;
 				if(x.IsButtonUp != up) {
 					if(up && block) { //button down when we are waiting for up. If block, now block down too.
 						if(button == 0) button = b;
-						return true;
+						x.BlockEvent();
 					}
-					return false;
+					return;
 				}
 				R = b;
-				return block;
+				if(block) x.BlockEvent();
 			})) WaitFor.MessagesAndCondition(secondsTimeout, () => R != 0);
 
 			return R;
@@ -1303,7 +1312,7 @@ namespace Au.Types
 	/// </summary>
 	/// <tocexclude />
 	[EditorBrowsable(EditorBrowsableState.Never)]
-	public struct MRelease :IDisposable
+	public struct MRelease : IDisposable
 	{
 		MButton _buttons;
 		///

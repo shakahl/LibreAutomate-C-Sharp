@@ -28,6 +28,7 @@ namespace Au
 		/// </summary>
 		static unsafe KKey _KeynameToKey(string s, int i, int len)
 		{
+			//Print(s, i, len);
 			if(len < 1) return 0;
 
 			char c = s[i];
@@ -88,8 +89,6 @@ namespace Au
 				return 0;
 			}
 
-			//FUTURE: virtual-key code, eg ^50
-
 			//F keys
 			if(c == 'F' && Char_.IsAsciiDigit(s[i + 1])) {
 				int n = s.ToInt_(i + 1, out int e, STIFlags.NoHex);
@@ -97,7 +96,7 @@ namespace Au
 			}
 
 			//named keys
-			//names start with an uppercase letter and must have at least 2 other anycase letters, except: Up, AltG (RAl), PageU (PgU), PageD (PgD).
+			//names start with an uppercase letter and must have at least 2 other anycase letters, except: Up, AltG (RAl), PageU (PgU), PageD (PgD), some alternative names (PU, PD, PB, PS, HM, SL, CL, NL, BS).
 			KKey k = 0;
 			char c1 = Char.ToLowerInvariant(s[i + 1]), //note: Util.LibTables.LowerCase would make startup slow
 				c2 = len > 2 ? Char.ToLowerInvariant(s[i + 2]) : ' ',
@@ -110,11 +109,11 @@ namespace Au
 				else if(_U('p', 'p')) k = KKey.Apps;
 				break;
 			case 'B':
-				if(_U('a', 'c')) k = KKey.Back;
+				if(_U('a', 'c') || _U('s', ' ')) k = KKey.Back;
 				break;
 			case 'C':
 				if(_U('t', 'r')) k = KKey.Ctrl;
-				else if(_U('a', 'p')) k = KKey.CapsLock;
+				else if(_U('a', 'p') || _U('l', ' ')) k = KKey.CapsLock;
 				break;
 			case 'D':
 				if(_U('e', 'l')) k = KKey.Delete;
@@ -126,7 +125,7 @@ namespace Au
 				else if(_U('s', 'c')) k = KKey.Escape;
 				break;
 			case 'H':
-				if(_U('o', 'm')) k = KKey.Home;
+				if(_U('o', 'm') || _U('m', ' ')) k = KKey.Home;
 				break;
 			case 'I':
 				if(_U('n', 's')) k = KKey.Insert;
@@ -139,15 +138,15 @@ namespace Au
 				if(_U('e', 'n')) k = KKey.Apps;
 				break;
 			case 'N':
-				if(_U('u', 'm')) k = KKey.NumLock;
+				if(_U('u', 'm') || _U('l', ' ')) k = KKey.NumLock;
 				//for NumEnter use Key((KKey.Enter, 0, true))
 				break;
 			case 'P':
 				if(_U('a', 'g') && c3 == 'e') k = c4 == 'u' ? KKey.PageUp : (c4 == 'd' ? KKey.PageDown : 0);
-				else if(_U('g', 'u')) k = KKey.PageUp;
-				else if(_U('g', 'd')) k = KKey.PageDown;
-				else if(_U('a', 'u')) k = KKey.Pause;
-				else if(_U('r', 'i') || _U('r', 't')) k = KKey.PrintScreen;
+				else if(_U('g', 'u') || _U('u', ' ')) k = KKey.PageUp;
+				else if(_U('g', 'd') || _U('d', ' ')) k = KKey.PageDown;
+				else if(_U('a', 'u') || _U('b', ' ')) k = KKey.Pause;
+				else if(_U('r', 'i') || _U('r', 't') || _U('s', ' ')) k = KKey.PrintScreen;
 				break;
 			case 'R':
 				if(_U('i', 'g')) k = KKey.Right;
@@ -159,7 +158,7 @@ namespace Au
 			case 'S':
 				if(_U('h', 'i')) k = KKey.Shift;
 				else if(_U('p', 'a')) k = KKey.Space;
-				else if(_U('c', 'r')) k = KKey.ScrollLock;
+				else if(_U('c', 'r') || _U('l', ' ')) k = KKey.ScrollLock;
 				//SysRq not used on Windows
 				break;
 			case 'T':
@@ -167,6 +166,13 @@ namespace Au
 				break;
 			case 'U':
 				if(c1 == 'p') k = KKey.Up;
+				break;
+			case 'V':
+				if(c1 == 'k') {
+					int v = s.ToInt_(i + 2, out int end, STIFlags.DontSkipSpaces);
+					if(end != i + len || (uint)v > 255) v = 0;
+					return (KKey)v;
+				}
 				break;
 			case 'W':
 				if(_U('i', 'n')) k = KKey.Win;
@@ -257,9 +263,8 @@ namespace Au
 			internal static int LimitSleepTime(int t) => t <= 10 ? t : (t / 4 + 8);
 
 			/// <summary>
-			/// If k is Shift, Ctrl, Alt or Win, returns it as modifier flag, eg KMod.Shift.
+			/// If k is Shift, Ctrl, Alt or Win or their left/right versions, returns it as modifier flag, eg KMod.Shift.
 			/// Else returns 0.
-			/// Also supports RShift etc.
 			/// </summary>
 			internal static KMod KeyToMod(KKey k)
 			{
@@ -310,7 +315,7 @@ namespace Au
 			internal static void SendKey(KKey k, int downUp = 0)
 			{
 				uint f = 0;
-				if(_KeyTypes.IsExtended(k)) f |= Api.KEYEVENTF_EXTENDEDKEY;
+				if(LibKeyTypes.IsExtended(k)) f |= Api.KEYEVENTF_EXTENDEDKEY;
 				ushort scan = VkToSc(k);
 
 				if(0 == (downUp & 2)) SendKeyEventRaw(k, scan, f);
@@ -359,9 +364,9 @@ namespace Au
 					if(IsCapsLock) {
 						//Probably Shift is set to turn off CapsLock in CP dialog "Text Services and Input Languages".
 						//	Win10: Settings -> Time & Language -> Language -> Input method -> Hot keys.
-						BlockUserInput.LibDontBlockLShiftCaps = true;
+						Util.WinHook.LibIgnoreLShiftCaps(2000);
 						SendKey(KKey.Shift);
-						BlockUserInput.LibDontBlockLShiftCaps = false;
+						Util.WinHook.LibIgnoreLShiftCaps(0);
 						R = !IsCapsLock;
 						Debug.Assert(R);
 
@@ -403,16 +408,6 @@ namespace Au
 				if(isRAlt) SendRAltUp();
 				if(isLWin) SendKey(KKey.Win, 2);
 				if(isRWin) SendKey(KKey.RWin, 2);
-			}
-
-			/// <summary>
-			/// If pressed Alt or Win without Ctrl, presses-releases Ctrl to avoid menu mode.
-			/// </summary>
-			internal static void DisableModMenu()
-			{
-				if(IsPressed(KKey.Alt) || IsPressed(KKey.Win) || IsPressed(KKey.RWin)) {
-					if(!IsPressed(KKey.Ctrl)) SendKey(KKey.Ctrl);
-				}
 			}
 
 			/// <summary>
@@ -533,7 +528,7 @@ namespace Au
 			if(_sending) throw new InvalidOperationException();
 		}
 
-		static class _KeyTypes
+		internal static class LibKeyTypes
 		{
 			[Flags]
 			enum _KT : byte
@@ -541,39 +536,62 @@ namespace Au
 				Mod = 1,
 				Extended = 2,
 				Mouse = 4,
-				Toggleable = 8, //API GetKeyState can get the 'toggled' bit
+				GksReliable = 8,
 			}
 
+			/// <summary>
+			/// Ctrl, LCtrl, etc.
+			/// </summary>
 			public static bool IsMod(KKey vk) => _b[(byte)vk].Has_(_KT.Mod);
+
 			public static bool IsExtended(KKey vk) => _b[(byte)vk].Has_(_KT.Extended);
+
 			public static bool IsMouse(KKey vk) => _b[(byte)vk].Has_(_KT.Mouse);
-			public static bool IsToggleable(KKey vk) => _b[(byte)vk].Has_(_KT.Toggleable);
+
+			/// <summary>
+			/// API GetKeyState always works.
+			/// For other keys returns 0 if pressed or toggled before starting current thread.
+			/// Modifiers (left/right too), xLock, mouse, some other.
+			/// </summary>
+			public static bool IsGetKeyStateReliable(KKey vk) => _b[(byte)vk].Has_(_KT.GksReliable);
+
+			/// <summary>
+			/// The same as <see cref="IsGetKeyStateReliable"/>.
+			/// </summary>
+			public static bool IsToggleable(KKey vk) => _b[(byte)vk].Has_(_KT.GksReliable);
 
 			static _KT[] _b;
 
-			static _KeyTypes()
+			static LibKeyTypes()
 			{
 				_b = new _KT[256];
 
-				_b[1] = _b[2] = _b[4] = _b[5] = _b[6] = _KT.Mouse | _KT.Toggleable;
-				_b[16] = _b[17] = _b[18] = _KT.Mod | _KT.Toggleable;
+				_b[1] = _b[2] = _b[4] = _b[5] = _b[6]
+					= _KT.Mouse | _KT.GksReliable;
+
+				_b[16] = _b[17] = _b[18] = _b[(int)KKey.LShift] = _b[(int)KKey.RShift] = _b[(int)KKey.LCtrl] = _b[(int)KKey.LAlt]
+					= _KT.Mod | _KT.GksReliable;
 
 				_b[(int)KKey.PageUp] = _b[(int)KKey.PageDown] = _b[(int)KKey.End] = _b[(int)KKey.Home]
 					= _b[(int)KKey.Left] = _b[(int)KKey.Up] = _b[(int)KKey.Right] = _b[(int)KKey.Down]
 					= _b[(int)KKey.PrintScreen] = _b[(int)KKey.Insert] = _b[(int)KKey.Delete]
-					= _b[(int)KKey.Sleep] = _b[(int)KKey.Apps] = _b[(int)KKey.Divide] = _b[(int)KKey.Cancel]
+					= _b[(int)KKey.Sleep] = _b[(int)KKey.Apps] = _b[(int)KKey.Divide] = _b[(int)KKey.Break]
 					= _KT.Extended;
-				//and more, but undocumented, and I cannot test.
-				//	There is no API to get extended keys. MapVirtualKeyEx can get only of 50% keys.
+				//and more, but undocumented, and cannot test. There is no API to get extended keys. MapVirtualKeyEx can get only of 50% keys.
 
-				_b[(int)KKey.CapsLock] = _b[(int)KKey.ScrollLock] = _b[(int)KKey.Back] = _b[(int)KKey.Tab] = _b[(int)KKey.Enter] = _b[(int)KKey.Escape]
-					= _b[(int)KKey.LShift] = _b[(int)KKey.RShift] = _b[(int)KKey.LCtrl] = _b[(int)KKey.LAlt] = _KT.Toggleable;
-				//also Home and maybe more
+				_b[(int)KKey.CapsLock] = _b[(int)KKey.ScrollLock]
+					= _b[(int)KKey.Back] = _b[(int)KKey.Tab] = _b[(int)KKey.Enter] = _b[(int)KKey.Escape]
+					= _KT.GksReliable; //also Home and maybe more
 
-				_b[(int)KKey.RCtrl] = _b[(int)KKey.RAlt] = _b[(int)KKey.NumLock] = _KT.Extended | _KT.Toggleable;
-				_b[(int)KKey.Win] = _b[(int)KKey.RWin] = _KT.Mod | _KT.Extended | _KT.Toggleable;
+				_b[(int)KKey.NumLock]
+					= _KT.Extended | _KT.GksReliable;
+
+				_b[(int)KKey.Win] = _b[(int)KKey.RWin] = _b[(int)KKey.RCtrl] = _b[(int)KKey.RAlt]
+					= _KT.Mod | _KT.Extended | _KT.GksReliable;
 
 				for(int i = (int)KKey.BrowserBack; i <= (int)KKey.LaunchApp2; i++) _b[i] = _KT.Extended; //media/browser/launchapp keys
+
+				//for(int i = 1; i < 256; i++) Print((KKey)i, _b[i]);
 			}
 		}
 	}

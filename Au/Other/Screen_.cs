@@ -87,6 +87,7 @@ namespace Au.Types
 		/// </summary>
 		public const int OfActiveWindow = -2;
 
+		//TODO: use enum for index, like now TMScreen (mouse triggers).
 		/// <summary>
 		/// Gets <see cref="Screen"/> object from screen index.
 		/// </summary>
@@ -96,7 +97,7 @@ namespace Au.Types
 		/// If invalid, prints warning and gets the primary screen.
 		/// </param>
 		/// <remarks>
-		/// Uses <see cref="Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Control Panel.
+		/// Uses <see cref="Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Windows Settings.
 		/// </remarks>
 		public static Screen ScreenFromIndex(int screenIndex)
 		{
@@ -147,7 +148,7 @@ namespace Au.Types
 		/// If the value is null or invalid or fails, gets the primary screen.
 		/// </summary>
 		/// <remarks>
-		/// Uses <see cref="Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Control Panel.
+		/// Uses <see cref="Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Windows Settings.
 		/// </remarks>
 		public Screen GetScreen()
 		{

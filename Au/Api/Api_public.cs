@@ -95,7 +95,7 @@ namespace Au.Types
 	[CLSCompliant(false)]
 	public static unsafe partial class Native
 	{
-		/// <summary><msdn>MSG</msdn></summary>
+		/// <summary>API <msdn>MSG</msdn></summary>
 		/// <tocexclude />
 		public struct MSG
 		{
@@ -112,12 +112,24 @@ namespace Au.Types
 			}
 		}
 
-		/// <summary><msdn>GUITHREADINFO</msdn></summary>
+		/// <summary>API <msdn>GUITHREADINFO</msdn></summary>
+		/// <tocexclude />
+		[Flags]
+		public enum GUI
+		{
+			CARETBLINKING = 0x1,
+			INMOVESIZE = 0x2,
+			INMENUMODE = 0x4,
+			SYSTEMMENUMODE = 0x8,
+			POPUPMENUMODE = 0x10,
+		}
+
+		/// <summary>API <msdn>GUITHREADINFO</msdn></summary>
 		/// <tocexclude />
 		public struct GUITHREADINFO
 		{
 			public int cbSize;
-			public uint flags;
+			public GUI flags;
 			public Wnd hwndActive;
 			public Wnd hwndFocus;
 			public Wnd hwndCapture;
@@ -127,7 +139,7 @@ namespace Au.Types
 			public RECT rcCaret;
 		}
 
-		/// <summary><msdn>CREATESTRUCT</msdn></summary>
+		/// <summary>API <msdn>CREATESTRUCT</msdn></summary>
 		/// <remarks>
 		/// lpszClass is unavailable, because often it is atom. Instead use <see cref="Wnd.ClassName"/>.
 		/// </remarks>
@@ -142,17 +154,17 @@ namespace Au.Types
 			public int cx;
 			public int y;
 			public int x;
-			public uint style;
+			public WS style;
 			LPARAM _lpszName;
 			LPARAM _lpszClass;
-			public uint dwExStyle;
+			public WS_EX dwExStyle;
 
 			public unsafe string lpszName => _lpszName == default ? null : new string((char*)_lpszName);
 
 			//tested and documented: hook can change only x y cx cy.
 		}
 
-		/// <summary><msdn>MOUSEHOOKSTRUCT</msdn></summary>
+		/// <summary>API <msdn>MOUSEHOOKSTRUCT</msdn></summary>
 		/// <tocexclude />
 		public struct MOUSEHOOKSTRUCT
 		{
@@ -162,7 +174,7 @@ namespace Au.Types
 			public LPARAM dwExtraInfo;
 		}
 
-		/// <summary><msdn>CWPSTRUCT</msdn></summary>
+		/// <summary>API <msdn>CWPSTRUCT</msdn></summary>
 		/// <tocexclude />
 		public struct CWPSTRUCT
 		{
@@ -172,7 +184,7 @@ namespace Au.Types
 			public Wnd hwnd;
 		}
 
-		/// <summary><msdn>CWPRETSTRUCT</msdn></summary>
+		/// <summary>API <msdn>CWPRETSTRUCT</msdn></summary>
 		/// <tocexclude />
 		public struct CWPRETSTRUCT
 		{
@@ -183,7 +195,7 @@ namespace Au.Types
 			public Wnd hwnd;
 		}
 
-		/// <summary><msdn>SIGDN</msdn></summary>
+		/// <summary>API <msdn>SIGDN</msdn></summary>
 		/// <tocexclude />
 		public enum SIGDN : uint
 		{
@@ -199,11 +211,11 @@ namespace Au.Types
 			PARENTRELATIVEFORUI = 0x80094001
 		}
 
-		/// <summary><msdn>WNDPROC</msdn></summary>
+		/// <summary>API <msdn>WNDPROC</msdn></summary>
 		/// <tocexclude />
 		public delegate LPARAM WNDPROC(Wnd w, int msg, LPARAM wParam, LPARAM lParam);
 
-		/// <summary><msdn>SetWindowPos</msdn></summary>
+		/// <summary>API <msdn>SetWindowPos</msdn></summary>
 		/// <tocexclude />
 		[Flags]
 		public enum SWP : uint
@@ -223,7 +235,10 @@ namespace Au.Types
 			ASYNCWINDOWPOS = 0x4000,
 		}
 
-		/// <summary><msdn>SetWindowPos</msdn></summary>
+		/// <summary>
+		/// Special window handle values.
+		/// See API <msdn>SetWindowPos</msdn>.
+		/// </summary>
 		/// <tocexclude />
 		public enum HWND
 		{
@@ -235,7 +250,10 @@ namespace Au.Types
 			BROADCAST = 0xffff,
 		}
 
-		/// <summary><msdn>GetWindowLong</msdn></summary>
+		/// <summary>
+		/// Window long constants.
+		/// See API <msdn>GetWindowLong</msdn>.
+		/// </summary>
 		/// <tocexclude />
 		public static class GWL
 		{
@@ -276,7 +294,10 @@ namespace Au.Types
 			public static int DWLP_USER => IntPtr.Size * 2;
 		}
 
-		/// <summary><msdn>WNDCLASSEX</msdn>, <msdn>GetClassLong</msdn></summary>
+		/// <summary>
+		/// Window class long constants.
+		/// See API <msdn>WNDCLASSEX</msdn>, API <msdn>GetClassLong</msdn>.
+		/// </summary>
 		/// <tocexclude />
 		public static class GCL
 		{
@@ -305,7 +326,7 @@ namespace Au.Types
 			//info: also there are GCLP_, but their values are the same.
 		}
 
-		/// <summary><msdn>SendMessageTimeout</msdn></summary>
+		/// <summary>API <msdn>SendMessageTimeout</msdn></summary>
 		/// <tocexclude />
 		[Flags]
 		public enum SMTO : uint
@@ -319,7 +340,10 @@ namespace Au.Types
 
 	//These are too often used to be in Native class.
 
-	/// <summary><msdn>CreateWindowEx</msdn></summary>
+	/// <summary>
+	/// Window styles.
+	/// See API <msdn>CreateWindowEx</msdn>.
+	/// </summary>
 	/// <tocexclude />
 	[Flags]
 	public enum WS : uint
@@ -348,7 +372,10 @@ namespace Au.Types
 		//POPUPWINDOW = POPUP | BORDER | SYSMENU,
 	}
 
-	/// <summary><msdn>CreateWindowEx</msdn></summary>
+	/// <summary>
+	/// Window extended styles.
+	/// See API <msdn>CreateWindowEx</msdn>.
+	/// </summary>
 	/// <tocexclude />
 	[Flags]
 	public enum WS_EX : uint

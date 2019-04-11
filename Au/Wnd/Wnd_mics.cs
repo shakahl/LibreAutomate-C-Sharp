@@ -60,7 +60,7 @@ namespace Au
 			public static int BorderWidth(Wnd w)
 			{
 				w.LibGetWindowInfo(out var x);
-				return (int)x.cxWindowBorders;
+				return x.cxWindowBorders;
 			}
 
 			/// <summary>
@@ -199,7 +199,7 @@ namespace Au
 			/// <param name="w"></param>
 			/// <param name="size32">Get 32x32 icon. If false, gets 16x16 icon.</param>
 			/// <remarks>
-			/// Icon size depends on DPI (text size, can be changed in Control Panel). By default small is 16, large 32.
+			/// Icon size depends on DPI (text size, can be changed in Windows Settings). By default small is 16, large 32.
 			/// This function can be used with windows of any process.
 			/// </remarks>
 			/// <seealso cref="Icon_"/>

@@ -26,7 +26,7 @@ namespace Au
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class AuMenu :BaseMT, IDisposable
+	public class AuMenu : BaseMT, IDisposable
 	{
 		//The main wrapped object. The class is derived from ContextMenuStrip.
 		ContextMenuStrip_ _cm;
@@ -111,8 +111,7 @@ namespace Au
 		/// m["notepad"] = o => Shell.TryRun(Folders.System + "notepad.exe"));
 		/// m.Show();
 		/// </code></example>
-		public Action<MTClickArgs> this[string text, object icon = null]
-		{
+		public Action<MTClickArgs> this[string text, object icon = null] {
 			set { Add(text, value, icon); }
 		}
 
@@ -317,7 +316,7 @@ namespace Au
 		/// Allows to use code: <c>using(m.Submenu("Name")) { add items; }</c> .
 		/// </summary>
 		/// <tocexclude />
-		public struct UsingSubmenu :IDisposable
+		public struct UsingSubmenu : IDisposable
 		{
 			AuMenu _m;
 
@@ -382,10 +381,8 @@ namespace Au
 		/// <summary>
 		/// Gets <see cref="ToolStripDropDownMenu"/> of the main menu or submenu where new items currently are added.
 		/// </summary>
-		public ToolStripDropDownMenu CurrentAddMenu
-		{
-			get
-			{
+		public ToolStripDropDownMenu CurrentAddMenu {
+			get {
 				_CheckDisposed(); //used by all Add(), Submenu()
 				return _submenuStack.Count > 0 ? _submenuStack.Peek() : _cm;
 			}
@@ -407,9 +404,10 @@ namespace Au
 		/// <summary>
 		/// Shows the menu at the mouse cursor position.
 		/// </summary>
-		public void Show()
+		/// <param name="byCaret">Show at the text cursor (caret) position, if available.</param>
+		public void Show(bool byCaret = false)
 		{
-			_Show(1);
+			_Show(byCaret ? 4 : 1);
 		}
 
 		/// <summary>
@@ -472,6 +470,10 @@ namespace Au
 			case 1: _cm.Show(Mouse.XY); break;
 			case 2: _cm.Show(new Point(x, y), direction); break;
 			case 3: _cm.Show(control, new Point(x, y), direction); break;
+			case 4:
+				Keyb.Misc.GetTextCursorRect(out RECT cr, out _, orMouse: true);
+				_cm.Show(new Point(cr.left - 32, cr.bottom + 2));
+				break;
 			}
 			_inOurShow = false;
 			//Perf.Next();
@@ -528,7 +530,7 @@ namespace Au
 		#endregion
 
 		//Extends ContextMenuStrip of the main menu to change its behavior as we need.
-		class ContextMenuStrip_ :ContextMenuStrip, _IAuToolStrip
+		class ContextMenuStrip_ : ContextMenuStrip, _IAuToolStrip
 		{
 			AuMenu _am;
 
@@ -537,10 +539,8 @@ namespace Au
 				_am = am;
 			}
 
-			protected override CreateParams CreateParams
-			{
-				get
-				{
+			protected override CreateParams CreateParams {
+				get {
 					//note: this func is called several times, first time before ctor
 					//Print("CreateParams", _cat, IsHandleCreated, p.ExStyle.ToString("X"));
 					var p = base.CreateParams;
@@ -638,7 +638,7 @@ namespace Au
 		}
 
 		//Extends ToolStripDropDownMenu of a submenu to change its behavior as we need.
-		internal class ToolStripDropDownMenu_ :ToolStripDropDownMenu, _IAuToolStrip
+		internal class ToolStripDropDownMenu_ : ToolStripDropDownMenu, _IAuToolStrip
 		{
 			AuMenu _am;
 			bool _openedOnce;
@@ -649,10 +649,8 @@ namespace Au
 				_am = am;
 			}
 
-			protected override CreateParams CreateParams
-			{
-				get
-				{
+			protected override CreateParams CreateParams {
+				get {
 					//note: this prop is called several times, first time before ctor
 					//Print("CreateParams");
 					var p = base.CreateParams;
@@ -1133,11 +1131,9 @@ namespace Au.Types
 		/// This property is applied to all items, and can be set only before adding items (else exception).
 		/// To set different icon size for a submenu: <c>using(m.Submenu("sub")) { m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);</c>
 		/// </remarks>
-		public int IconSize
-		{
+		public int IconSize {
 			get => MainToolStrip.ImageScalingSize.Width;
-			set
-			{
+			set {
 				if(MainToolStrip.Items.Count != 0) throw new InvalidOperationException();
 				MainToolStrip.ImageScalingSize = new Size(value, value);
 			}
@@ -1412,7 +1408,7 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="BaseMT.ItemThread"/>.
 	/// </summary>
-	public enum MTThread :byte
+	public enum MTThread : byte
 	{
 		/// <summary>
 		/// Execute item callback functions in current thread. This is default.
@@ -1441,7 +1437,7 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="BaseMT.ExceptionHandling"/>.
 	/// </summary>
-	public enum MTExcept :byte
+	public enum MTExcept : byte
 	{
 		/// <summary>
 		/// Don't handle exceptions. This is default.

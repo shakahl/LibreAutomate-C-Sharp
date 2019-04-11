@@ -33,7 +33,7 @@ class OutputForm : Form_
 	{
 		this.Text = "Tests";
 		this.StartPosition = FormStartPosition.Manual;
-		int x = 150;
+		int x = 300;
 		var r = Screen.AllScreens[1].Bounds; r.Inflate(-x, 0); r.Offset(x, 0);
 		this.Bounds = r;
 

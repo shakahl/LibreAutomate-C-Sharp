@@ -757,6 +757,7 @@ namespace Au.Compiler
 	public enum ERunMode { green, blue }
 
 	public enum EIfRunning { runIfBlue, dontRun, wait, restart, restartOrWait }
+	//CONSIDER: default restart. For green and blue.
 
 	/// <summary>
 	/// Flags for <see cref="MetaComments.Parse"/>

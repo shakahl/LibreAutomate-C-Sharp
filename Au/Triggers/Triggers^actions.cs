@@ -21,6 +21,10 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 
+//TODO: either:
+//	1. Transfer Opt to actions. Now can use Options.BeforeAction.
+//	2. Let trigger actions reset Opt options. Because we reuse thread.
+
 namespace Au.Triggers
 {
 	class TOptions
@@ -32,8 +36,6 @@ namespace Au.Triggers
 		public int ifRunning;
 
 		public TOptions Clone() => this.MemberwiseClone() as TOptions;
-
-		//CONSIDER: before calling 'before' or action, reset all Opt options. Or use main thread's options set before adding trigger.
 	}
 
 	/// <summary>
@@ -185,13 +187,15 @@ namespace Au.Triggers
 			Action actionWrapper = () => {
 				var opt = trigger.options;
 				try {
-					switch(args) {
-					case HotkeyTriggerArgs ta:
-						if(0 == (ta.Trigger.flags & (TKFlags.NoModOff | TKFlags.KeyModUp | TKFlags.PassMessage))) Keyb.Lib.ReleaseModAndDisableModMenu();
-						break;
-					case MouseTriggerArgs ta:
-						if(0 == (ta.Trigger.flags & (TMFlags.ButtonModUp | TMFlags.PassMessage))) Keyb.Lib.DisableModMenu(); //info: not ReleaseModAndDisableModMenu. Releasing mod keys makes no sense because we cannot disable the auto-repeat. Disabling menu is unreliable too for the same reason (can show menu later), but it is best we can do if we don't want to block auto-repeated keys using a low-level keyboard hook.
-						break;
+					if(args is HotkeyTriggerArgs ta) {
+						switch(ta.Trigger.flags & (TKFlags.NoModOff | TKFlags.KeyModUp | TKFlags.ShareEvent)) {
+						case 0:
+							Keyb.Lib.ReleaseModAndDisableModMenu();
+							break;
+						case TKFlags.NoModOff:
+							if(Keyb.IsMod(KMod.Alt | KMod.Win)) Keyb.Lib.SendKey(KKey.Ctrl); //disable Alt/Win menu
+							break;
+						}
 					}
 
 					var baArgs = new TriggerOptions.BAArgs(args); //struct

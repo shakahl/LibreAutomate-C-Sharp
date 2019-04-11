@@ -335,6 +335,21 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Converts the string or only the first character (or Unicode surrogate pair) to upper case.
+		/// Calls <see cref="string.ToUpperInvariant"/>.
+		/// </summary>
+		public static unsafe string ToUpper_(this string t, bool firstCharOnly)
+		{
+			if(!firstCharOnly) return t.ToUpperInvariant();
+			if(!char.IsLower(t, 0)) return t;
+			if(t.Length >= 2 && char.IsHighSurrogate(t[0]) && char.IsLowSurrogate(t[1]))
+				return t.Remove(2).ToUpperInvariant() + t.Substring(2);
+			var u = string.Copy(t);
+			fixed (char* p = u) *p = char.ToUpperInvariant(*p);
+			return u;
+		}
+
+		/// <summary>
 		/// Converts part of string to int.
 		/// Returns the int value, or 0 if fails to convert.
 		/// </summary>

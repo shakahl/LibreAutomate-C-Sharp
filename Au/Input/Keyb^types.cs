@@ -56,7 +56,7 @@ namespace Au.Types
 		MouseLeft = 0x01,
 		MouseRight = 0x02,
 		///<summary>Ctrl+Pause.</summary>
-		Cancel = 0x03,
+		Break = 0x03,
 		MouseMiddle = 0x04,
 		MouseX1 = 0x05,
 		MouseX2 = 0x06,

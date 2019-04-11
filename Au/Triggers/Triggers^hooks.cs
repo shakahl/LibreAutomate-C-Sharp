@@ -53,12 +53,12 @@ namespace Au.Triggers
 		{
 			public SafeFileHandle pipe;
 			public int threadId, processId;
-			public int hooks; //flags: 1 key, 2 mouse
+			public UsedEvents usedEvents;
 			public IntPtr threadHandle;
 
-			public _ThreadPipe(SafeFileHandle pipe, int threadId, int processId, int hooks)
+			public _ThreadPipe(SafeFileHandle pipe, int threadId, int processId, UsedEvents usedEvents)
 			{
-				this.pipe = pipe; this.threadId = threadId; this.processId = processId; this.hooks = hooks;
+				this.pipe = pipe; this.threadId = threadId; this.processId = processId; this.usedEvents = usedEvents;
 				threadHandle = new Util.LibKernelHandle(Api.OpenThread(Api.SYNCHRONIZE, false, threadId));
 			}
 
@@ -69,12 +69,23 @@ namespace Au.Triggers
 			}
 		}
 
+		[Flags]
+		public enum UsedEvents
+		{
+			Keyboard = 1, //Hotkey and Autotext triggers
+			Mouse = 2, //Mouse and Autotext triggers. Just sets the hook and resets autotext; to receive events, also add other MouseX flags.
+			MouseClick = 0x10, //Mouse click triggers
+			MouseWheel = 0x20, //Mouse wheel triggers
+			MouseEdgeMove = 0x40, //Mouse edge and move triggers
+		}
+
 		readonly Wnd.Misc.MyWindow _msgWnd;
 		readonly Thread _thread;
 		readonly List<_ThreadPipe> _pipes;
 		Util.WinHook _hookK, _hookM;
 		IntPtr _event;
 		bool _inTaskProcess;
+		MouseTriggers.LibEdgeMoveDetector _emDetector;
 
 		public static HooksServer Instance => s_instance;
 		static HooksServer s_instance;
@@ -127,6 +138,7 @@ namespace Au.Triggers
 				case Api.WM_DESTROY:
 					_hookK?.Dispose();
 					_hookM?.Dispose();
+					_emDetector = null;
 					foreach(var v in _pipes) v?.Dispose();
 					Api.CloseHandle(_event);
 					s_instance = null;
@@ -171,42 +183,52 @@ namespace Au.Triggers
 			var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ | Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, Api.FILE_FLAG_OVERLAPPED);
 			if(pipe.IsInvalid) { Debug_.LibPrintNativeError(); return 0; }
 
-			int mask = data.ReadInt_(0);
+			var usedEvents = (UsedEvents)data.ReadInt_(0);
 			int processId = data.ReadInt_(4);
 
-			var tp = new _ThreadPipe(pipe, threadId, processId, mask);
+			var tp = new _ThreadPipe(pipe, threadId, processId, usedEvents);
 			lock(_pipes) {
 				int pi = _pipes.IndexOf(null); //Print(_pipes.Count, pi);
 				if(pi >= 0) _pipes[pi] = tp; else _pipes.Add(tp);
 			}
 
-			if(0 != (mask & 1) && _hookK == null) {
+			if(0 != (usedEvents & UsedEvents.Keyboard) && _hookK == null) {
 				_hookK = Util.WinHook.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
-				_hookK.IgnoreKeyMouseInjectedByAu = true;
-				_hookK.IgnoreKeyInjectedPacket = true;
 			}
-
-			if(0 != (mask & 2) && _hookM == null) {
+			if(0 != (usedEvents & UsedEvents.Mouse) && _hookM == null) {
 				_hookM = Util.WinHook.LibMouseRaw(_MouseHookProc);
-				_hookM.IgnoreKeyMouseInjectedByAu = true;
+			}
+			if(0 != (usedEvents & UsedEvents.MouseEdgeMove) && _emDetector == null) {
+				_emDetector = new MouseTriggers.LibEdgeMoveDetector();
 			}
 
 			return 1;
 		}
 
-		unsafe bool _KeyboardHookProc(HookData.Keyboard k)
+		unsafe void _KeyboardHookProc(HookData.Keyboard k)
 		{
-			return _Send(k.LibNativeStructPtr, sizeof(Api.KBDLLHOOKSTRUCT));
+			if(_Send(UsedEvents.Keyboard, k.LibNativeStructPtr, sizeof(Api.KBDLLHOOKSTRUCT))) k.BlockEvent();
 			//var p = Perf.StartNew();
 			//var R = _Send(k.LibNativeStructPtr, sizeof(Api.KBDLLHOOKSTRUCT));
 			//p.NW();
-			//return R;
+			//if(R) k.BlockEvent();
 		}
 
 		unsafe bool _MouseHookProc(LPARAM wParam, LPARAM lParam)
 		{
+			int msg = (int)wParam;
+			if(msg == Api.WM_MOUSEMOVE) {
+				var mll = (Api.MSLLHOOKSTRUCT*)lParam;
+				if(_emDetector?.Detect(mll->pt) ?? false) {
+					MouseTriggers.LibEdgeMoveDetector.Result d = _emDetector.result;
+					_Send(UsedEvents.MouseEdgeMove, &d, sizeof(MouseTriggers.LibEdgeMoveDetector.Result));
+				}
+				return false;
+			}
+
 			var m = new Api.MSLLHOOKSTRUCT2(wParam, lParam);
-			return _Send(&m, sizeof(Api.MSLLHOOKSTRUCT2));
+			var eventType = m.IsWheel ? UsedEvents.MouseWheel : UsedEvents.MouseClick;
+			return _Send(eventType, &m, sizeof(Api.MSLLHOOKSTRUCT2));
 		}
 
 		int _RemoveThread(int threadId)
@@ -248,11 +270,11 @@ namespace Au.Triggers
 			//	We lock _pipes only here and in functions that modify it.
 		}
 
-		unsafe bool _Send(void* data, int size)
+		unsafe bool _Send(UsedEvents eventType, void* data, int size)
 		{
 			for(int i = 0; i < _pipes.Count; i++) {
 				var x = _pipes[i]; if(x == null) continue;
-				if(size == sizeof(Api.KBDLLHOOKSTRUCT)) { if(0 == (x.hooks & 1)) continue; } else { if(0 == (x.hooks & 2)) continue; }
+				if(0 == (x.usedEvents & eventType)) continue;
 
 				var ha = stackalloc IntPtr[2] { _event, x.threadHandle };
 				int r = 0;

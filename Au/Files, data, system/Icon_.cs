@@ -343,7 +343,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets the width and height of shell icons of standard sizes - small, large, extra large and jumbo.
-		/// Jumbo is always 256. Others depend on text size (DPI) that can be changed in Control Panel. If text size is 100%, they usually are 16, 32, 48.
+		/// Jumbo is always 256. Others depend on text size (DPI) that can be changed in Windows Settings. If text size is 100%, they usually are 16, 32, 48.
 		/// </summary>
 		public static int GetShellIconSize(IconSize size)
 		{
@@ -878,7 +878,7 @@ namespace Au.Types
 
 #if false
 		/// <summary>
-		/// Scale the specified size according to DPI (text size) specified in Control Panel.
+		/// Scale the specified size according to DPI (text size) specified in Windows Settings.
 		/// </summary>
 		DpiScale = 4, //rejected. In most cases can use standard-size icons from enum IconSize, they are DPI-scaled. Or pass size * Util.Dpi.BaseDPI.
 

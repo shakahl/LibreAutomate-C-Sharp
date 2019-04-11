@@ -20,41 +20,48 @@ using Au.Types;
 using Au.Util;
 using static Au.NoClass;
 
+#region winhook
+
 namespace Au.Util
 {
 	/// <summary>
-	/// Helps with windows hooks. See <msdn>SetWindowsHookEx</msdn>.
+	/// Helps with windows hooks. See API <msdn>SetWindowsHookEx</msdn>.
 	/// </summary>
 	/// <remarks>
 	/// The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="Opt.WaitFor"/>).
-	/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Uninstall</b> in the same thread) or with the 'using' pattern. Else this process may crash.
+	/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in the same thread) or with the 'using' pattern. Else this process may crash.
 	/// </remarks>
 	public class WinHook : IDisposable
 	{
 		IntPtr _hh; //HHOOK
-		Api.HOOKPROC _proc1; //our intermediate dispatcher hook proc that calls _proc2
+		readonly Api.HOOKPROC _proc1; //our intermediate dispatcher hook proc that calls _proc2
 		Delegate _proc2; //caller's hook proc
-		string _hookTypeString; //"Keyboard" etc
+		readonly string _hookTypeString; //"Keyboard" etc
+		readonly int _hookType; //Api.WH_
+		readonly bool _ignoreAuInjected;
 
 		/// <summary>
 		/// Sets a low-level keyboard hook (WH_KEYBOARD_LL).
-		/// See <msdn>SetWindowsHookEx</msdn>.
+		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
+		/// <returns>Returns a new <see cref="WinHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
-		/// Must return as soon as possible, or the system hangs and removes the hook.
-		/// If returns true or calls <see cref="HookData.ReplyMessage"/>, the event is cancelled (not visible to apps and other hooks). Event data cannot be modified.
+		/// Must return as soon as possible. More info: <see cref="LowLevelHooksTimeout"/>.
+		/// If calls <see cref="HookData.Keyboard.BlockEvent"/> or <see cref="HookData.ReplyMessage"/>(true), the event is not sent to apps and other hooks.
+		/// Event data cannot be modified.
+		/// <note type="note">When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
 		/// </param>
+		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
+		/// <param name="setNow">Set hook now. Default true.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
 		/// var stop = false;
-		/// using(WinHook.Keyboard(x =>
-		/// {
+		/// using(WinHook.Keyboard(x => {
 		/// 	Print(x);
-		/// 	if(x.vkCode == KKey.Escape) { stop = true; return true; } //return true to suppress the event
-		/// 	return false;
+		/// 	if(x.vkCode == KKey.Escape) { stop = true; x.BlockEvent(); }
 		/// })) {
 		/// 	MessageBox.Show("Low-level keyboard hook.", "Test");
 		/// 	//or
@@ -63,28 +70,31 @@ namespace Au.Util
 		/// }
 		/// ]]></code>
 		/// </example>
-		public static WinHook Keyboard(Func<HookData.Keyboard, bool> hookProc)
-			=> new WinHook(Api.WH_KEYBOARD_LL, hookProc, -1);
+		public static WinHook Keyboard(Action<HookData.Keyboard> hookProc, bool ignoreAuInjected = true, bool setNow = true)
+			=> new WinHook(Api.WH_KEYBOARD_LL, hookProc, setNow, 0, ignoreAuInjected);
 
 		/// <summary>
 		/// Sets a low-level mouse hook (WH_MOUSE_LL).
-		/// See <msdn>SetWindowsHookEx</msdn>.
+		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
+		/// <returns>Returns a new <see cref="WinHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
-		/// Must return as soon as possible, or the system hangs and removes the hook.
-		/// If returns true or calls <see cref="HookData.ReplyMessage"/>, the event is cancelled (not visible to apps and other hooks). Event data cannot be modified.
+		/// Must return as soon as possible. More info: <see cref="LowLevelHooksTimeout"/>.
+		/// If calls <see cref="HookData.Mouse.BlockEvent"/> or <see cref="HookData.ReplyMessage"/>(true), the event is not sent to apps and other hooks.
+		/// Event data cannot be modified.
+		/// <note type="note">When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
 		/// </param>
+		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
+		/// <param name="setNow">Set hook now. Default true.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
 		/// var stop = false;
-		/// using(WinHook.Mouse(x =>
-		/// {
+		/// using(WinHook.Mouse(x => {
 		/// 	Print(x);
-		/// 	if(x.Event == HookData.MouseEvent.RightButton) { stop = x.IsButtonUp; return true; } //return true to suppress the event
-		/// 	return false;
+		/// 	if(x.Event == HookData.MouseEvent.RightButton) { stop = x.IsButtonUp; x.BlockEvent(); }
 		/// })) {
 		/// 	MessageBox.Show("Low-level mouse hook.", "Test");
 		/// 	//or
@@ -93,28 +103,30 @@ namespace Au.Util
 		/// }
 		/// ]]></code>
 		/// </example>
-		public static WinHook Mouse(Func<HookData.Mouse, bool> hookProc)
-			=> new WinHook(Api.WH_MOUSE_LL, hookProc, -1);
+		public static WinHook Mouse(Action<HookData.Mouse> hookProc, bool ignoreAuInjected = true, bool setNow = true)
+			=> new WinHook(Api.WH_MOUSE_LL, hookProc, setNow, 0, ignoreAuInjected);
 
-		internal static WinHook LibMouseRaw(Func<LPARAM, LPARAM, bool> hookProc)
-			=> new WinHook(Api.WH_MOUSE_LL, hookProc, -1, "Mouse");
+		internal static WinHook LibMouseRaw(Func<LPARAM, LPARAM, bool> hookProc, bool ignoreAuInjected = true, bool setNow = true)
+			=> new WinHook(Api.WH_MOUSE_LL, hookProc, setNow, 0, ignoreAuInjected, "Mouse");
 
 		/// <summary>
 		/// Sets a WH_CBT hook for a thread of this process.
-		/// See <msdn>SetWindowsHookEx</msdn>.
+		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
+		/// <returns>Returns a new <see cref="WinHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// Hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// If returns true, the event is cancelled. For some events you can modify some fields of event data.
+		/// <note type="note">When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
+		/// <param name="setNow">Set hook now. Default true.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
-		/// using(WinHook.ThreadCbt(x =>
-		/// {
+		/// using(WinHook.ThreadCbt(x => {
 		/// 	Print(x.code);
 		/// 	switch(x.code) {
 		/// 	case HookData.CbtEvent.ACTIVATE:
@@ -149,162 +161,194 @@ namespace Au.Util
 		/// }
 		/// ]]></code>
 		/// </example>
-		public static WinHook ThreadCbt(Func<HookData.ThreadCbt, bool> hookProc, int threadId = 0)
-			=> new WinHook(Api.WH_CBT, hookProc, threadId);
+		public static WinHook ThreadCbt(Func<HookData.ThreadCbt, bool> hookProc, int threadId = 0, bool setNow = true)
+			=> new WinHook(Api.WH_CBT, hookProc, setNow, threadId);
 
 		/// <summary>
 		/// Sets a WH_GETMESSAGE hook for a thread of this process.
-		/// See <msdn>SetWindowsHookEx</msdn>.
+		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
+		/// <returns>Returns a new <see cref="WinHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// The event cannot be cancelled. As a workaround, you can set msg->message=0. Also can modify other fields.
+		/// <note type="note">When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
+		/// <param name="setNow">Set hook now. Default true.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
-		/// using(WinHook.ThreadGetMessage(x =>
-		/// {
+		/// using(WinHook.ThreadGetMessage(x => {
 		/// 	Print(x.msg->ToString(), x.PM_NOREMOVE);
 		/// })) MessageBox.Show("hook");
 		/// ]]></code>
 		/// </example>
-		public static WinHook ThreadGetMessage(Action<HookData.ThreadGetMessage> hookProc, int threadId = 0)
-			=> new WinHook(Api.WH_GETMESSAGE, hookProc, threadId);
+		public static WinHook ThreadGetMessage(Action<HookData.ThreadGetMessage> hookProc, int threadId = 0, bool setNow = true)
+			=> new WinHook(Api.WH_GETMESSAGE, hookProc, setNow, threadId);
 
 		/// <summary>
 		/// Sets a WH_GETMESSAGE hook for a thread of this process.
-		/// See <msdn>SetWindowsHookEx</msdn>.
+		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
+		/// <returns>Returns a new <see cref="WinHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// If returns true, the event is cancelled.
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
+		/// <param name="setNow">Set hook now. Default true.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
-		/// using(WinHook.ThreadKeyboard(x =>
-		/// {
+		/// using(WinHook.ThreadKeyboard(x => {
 		/// 	Print(x.key, 0 != (x.lParam & 0x80000000) ? "up" : "", x.lParam, x.PM_NOREMOVE);
 		/// 	return false;
 		/// })) MessageBox.Show("hook");
 		/// ]]></code>
 		/// </example>
-		public static WinHook ThreadKeyboard(Func<HookData.ThreadKeyboard, bool> hookProc, int threadId = 0)
-			=> new WinHook(Api.WH_KEYBOARD, hookProc, threadId);
+		public static WinHook ThreadKeyboard(Func<HookData.ThreadKeyboard, bool> hookProc, int threadId = 0, bool setNow = true)
+			=> new WinHook(Api.WH_KEYBOARD, hookProc, setNow, threadId);
 
 		/// <summary>
 		/// Sets a WH_MOUSE hook for a thread of this process.
-		/// See <msdn>SetWindowsHookEx</msdn>.
+		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
+		/// <returns>Returns a new <see cref="WinHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// If returns true, the event is cancelled.
+		/// <note type="note">When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
+		/// <param name="setNow">Set hook now. Default true.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
-		/// using(WinHook.ThreadMouse(x =>
-		/// {
+		/// using(WinHook.ThreadMouse(x => {
 		/// 	Print(x.message, x.m->pt, x.m->hwnd, x.PM_NOREMOVE);
 		/// 	return false;
 		/// })) MessageBox.Show("hook");
 		/// ]]></code>
 		/// </example>
-		public static WinHook ThreadMouse(Func<HookData.ThreadMouse, bool> hookProc, int threadId = 0)
-			=> new WinHook(Api.WH_MOUSE, hookProc, threadId);
+		public static WinHook ThreadMouse(Func<HookData.ThreadMouse, bool> hookProc, int threadId = 0, bool setNow = true)
+			=> new WinHook(Api.WH_MOUSE, hookProc, setNow, threadId);
 
 		/// <summary>
 		/// Sets a WH_CALLWNDPROC hook for a thread of this process.
-		/// See <msdn>SetWindowsHookEx</msdn>.
+		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
+		/// <returns>Returns a new <see cref="WinHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// The event cannot be cancelled or modified.
+		/// <note type="note">When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
+		/// <param name="setNow">Set hook now. Default true.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
-		/// using(WinHook.ThreadCallWndProc(x =>
-		/// {
+		/// using(WinHook.ThreadCallWndProc(x => {
 		/// 	ref var m = ref *x.msg;
 		/// 	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam);
 		/// 	Print(mm, x.sentByOtherThread);
 		/// })) MessageBox.Show("hook");
 		/// ]]></code>
 		/// </example>
-		public static WinHook ThreadCallWndProc(Action<HookData.ThreadCallWndProc> hookProc, int threadId = 0)
-			=> new WinHook(Api.WH_CALLWNDPROC, hookProc, threadId);
+		public static WinHook ThreadCallWndProc(Action<HookData.ThreadCallWndProc> hookProc, int threadId = 0, bool setNow = true)
+			=> new WinHook(Api.WH_CALLWNDPROC, hookProc, setNow, threadId);
 
 		/// <summary>
 		/// Sets a WH_CALLWNDPROCRET hook for a thread of this process.
-		/// See <msdn>SetWindowsHookEx</msdn>.
+		/// See API <msdn>SetWindowsHookEx</msdn>.
 		/// </summary>
+		/// <returns>Returns a new <see cref="WinHook"/> object that manages the hook.</returns>
 		/// <param name="hookProc">
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// The event cannot be cancelled or modified.
+		/// <note type="note">When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
+		/// <param name="setNow">Set hook now. Default true.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
-		/// using(WinHook.ThreadCallWndProcRet(x =>
-		/// {
+		/// using(WinHook.ThreadCallWndProcRet(x => {
 		/// 	ref var m = ref *x.msg;
 		/// 	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam); mm.Result = m.lResult;
 		/// 	Print(mm, x.sentByOtherThread);
 		/// })) MessageBox.Show("hook");
 		/// ]]></code>
 		/// </example>
-		public static WinHook ThreadCallWndProcRet(Action<HookData.ThreadCallWndProcRet> hookProc, int threadId = 0)
-			=> new WinHook(Api.WH_CALLWNDPROCRET, hookProc, threadId);
+		public static WinHook ThreadCallWndProcRet(Action<HookData.ThreadCallWndProcRet> hookProc, int threadId = 0, bool setNow = true)
+			=> new WinHook(Api.WH_CALLWNDPROCRET, hookProc, setNow, threadId);
 
-		/// <summary>
-		/// Sets a hook of the specified type.
-		/// This ctor is private, because our dispatcher hook procedure does not know how to call hookProc.
-		/// </summary>
-		/// <param name="hookType">One of WH_ constants that are used with API <msdn>SetWindowsHookEx</msdn>.</param>
-		/// <param name="hookProc">Delegate of the hook procedure of correct type.</param>
-		/// <param name="tid">Thread id or: 0 (default) this thread, -1 global hook.</param>
-		/// <param name="hookTypeString"></param>
-		/// <exception cref="AuException">Failed.</exception>
-		WinHook(int hookType, Delegate hookProc, int tid = 0, [CallerMemberName] string hookTypeString = null)
+		WinHook(int hookType, Delegate hookProc, bool setNow, int tid, bool ignoreAuInjected = false, [CallerMemberName] string hookTypeString = null)
 		{
-			if(tid == 0) tid = Api.GetCurrentThreadId(); else if(tid == -1) tid = 0;
-			_hh = Api.SetWindowsHookEx(hookType, _proc1 = _HookProc, default, tid);
-			if(_hh == default) throw new AuException(0, "*set hook");
+			_proc1 = _HookProc;
 			_proc2 = hookProc;
+			_hookType = hookType;
 			_hookTypeString = hookTypeString;
+			_ignoreAuInjected = ignoreAuInjected;
+			if(setNow) Hook(tid);
 
 			//info: don't need to JIT _HookProc for LL hooks of triggers, because we use CBT hook before it to create the message-only window.
 		}
 
 		/// <summary>
-		/// Uninstalls the hook if installed.
+		/// Sets the hook.
 		/// </summary>
+		/// <param name="threadId">If the hook type is a thread hook - thread id, or 0 for current thread. Else not used and must be 0.</param>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="InvalidOperationException">The hook is already set.</exception>
+		/// <exception cref="ArgumentException">threadId not 0 and the hook type is not a thread hook.</exception>
+		/// <remarks>
+		/// Usually don't need to call this function, because the <b>WinHook</b> static methods that return a new <b>WinHook</b> object by default call it.
+		/// </remarks>
+		public void Hook(int threadId = 0)
+		{
+			if(_proc2 == null) throw new ObjectDisposedException("WinHook");
+			if(_hh != default) throw new InvalidOperationException("The hook is already set.");
+			if(_hookType == Api.WH_KEYBOARD_LL || _hookType == Api.WH_MOUSE_LL) {
+				if(threadId != 0) throw new ArgumentException("threadId must be 0");
+			} else if(threadId == 0) {
+				threadId = Api.GetCurrentThreadId();
+			}
+			_hh = Api.SetWindowsHookEx(_hookType, _proc1, default, threadId);
+			if(_hh == default) throw new AuException(0, "*set hook");
+		}
+
+		/// <summary>
+		/// Removes the hook.
+		/// </summary>
+		/// <remarks>
+		/// Does nothing if already removed or wasn't set.
+		/// Later you can call <see cref="Hook"/> to set hook again.
+		/// </remarks>
 		public void Unhook()
 		{
 			if(_hh != default) {
 				bool ok = Api.UnhookWindowsHookEx(_hh);
 				if(!ok) PrintWarning($"Failed to unhook WinHook ({_hookTypeString}). {WinError.Message}");
 				_hh = default;
-				_proc2 = null;
 			}
 		}
+
+		/// <summary>
+		/// Returns true if the hook is set.
+		/// </summary>
+		public bool IsSet => _hh != default;
 
 		///// <summary>
 		///// Don't print warning "Non-disposed WinHook variable".
@@ -312,9 +356,14 @@ namespace Au.Util
 		//public bool NoWarningNondisposed { get; set; }
 
 		/// <summary>
-		/// Calls <see cref="Unhook"/>.
+		/// Calls <see cref="Unhook"/> and disposes this object.
 		/// </summary>
-		public void Dispose() { Unhook(); GC.SuppressFinalize(this); }
+		public void Dispose()
+		{
+			Unhook();
+			_proc2 = null;
+			GC.SuppressFinalize(this);
+		}
 
 		///
 		~WinHook()
@@ -329,21 +378,25 @@ namespace Au.Util
 			try {
 				if(code >= 0) {
 					bool R = false;
-					long t1 = 0; int hookType = 0;
+					long t1 = 0;
+					Action<HookData.Mouse> pm1; Func<LPARAM, LPARAM, bool> pm2;
 
 					switch(_proc2) {
-					case Func<HookData.Keyboard, bool> p:
+					case Action<HookData.Keyboard> p:
 						var kll = (Api.KBDLLHOOKSTRUCT*)lParam;
 						var vk = (KKey)kll->vkCode;
 						if(kll->IsInjected) {
-							if(IgnoreKeyMouseInjectedByAu && kll->IsInjectedByAu) goto gr;
-							if(vk == KKey.Packet && IgnoreKeyInjectedPacket) goto gr;
+							if(kll->IsInjectedByAu) {
+								if(kll->vkCode == 0) goto gr; //used to enable activating windows
+								if(!kll->IsUp) Triggers.AutotextTriggers.ResetEverywhere = true;
+								if(_ignoreAuInjected) goto gr;
+							}
 							if(vk == KKey.MouseX2 && kll->dwExtraInfo == 1354291109) goto gr; //QM2 sync code
 						} else {
 							//When Keyb.Lib.ReleaseModAndCapsLock sends Shift to turn off CapsLock,
 							//	hooks receive a non-injected LShift down, CapsLock down/up and injected LShift up.
 							//	Our triggers would recover, but cannot auto-repeat. Better don't call the hookproc.
-							if((vk == KKey.CapsLock || vk == KKey.LShift) && IgnoreKeyMouseInjectedByAu && BlockUserInput.LibDontBlockLShiftCaps) goto gr;
+							if((vk == KKey.CapsLock || vk == KKey.LShift) && _ignoreAuInjected && _IgnoreLShiftCaps) goto gr;
 
 							//Test how our triggers recover when a modifier down or up event is lost. Or when triggers started while a modifier is down.
 							//if(Keyb.IsScrollLock) {
@@ -351,19 +404,30 @@ namespace Au.Util
 							//	if(vk == KKey.LCtrl && kll->IsUp) { Print("lost Ctrl up"); goto gr; }
 							//}
 						}
-						t1 = Time.PerfMilliseconds; hookType = Api.WH_KEYBOARD_LL;
-						R = p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
+						if(Keyb.LibKeyTypes.IsMod(vk) && _IgnoreMod) goto gr;
+						t1 = Time.PerfMilliseconds;
+						p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
+						if(R = kll->BlockEvent) kll->BlockEvent = false;
 						break;
-					case Func<HookData.Mouse, bool> p:
-						if(IgnoreKeyMouseInjectedByAu && ((Api.MSLLHOOKSTRUCT*)lParam)->IsInjectedByAu) goto gr;
-						t1 = Time.PerfMilliseconds; hookType = Api.WH_MOUSE_LL;
-						R = p(new HookData.Mouse(this, wParam, lParam));
+					case Action<HookData.Mouse> p:
+						pm1 = p; pm2 = null;
+						gm1:
+						var mll = (Api.MSLLHOOKSTRUCT*)lParam;
+						switch((int)wParam) {
+						case Api.WM_LBUTTONDOWN: case Api.WM_RBUTTONDOWN: Triggers.AutotextTriggers.ResetEverywhere = true; break;
+						}
+						if(_ignoreAuInjected && mll->IsInjectedByAu) goto gr;
+						t1 = Time.PerfMilliseconds;
+						if(pm2 != null) {
+							R = pm2(wParam, lParam);
+						} else {
+							pm1(new HookData.Mouse(this, wParam, lParam));
+							if(R = mll->BlockEvent) mll->BlockEvent = false;
+						}
 						break;
 					case Func<LPARAM, LPARAM, bool> p: //raw mouse
-						if(IgnoreKeyMouseInjectedByAu && ((Api.MSLLHOOKSTRUCT*)lParam)->IsInjectedByAu) goto gr;
-						t1 = Time.PerfMilliseconds; hookType = Api.WH_MOUSE_LL;
-						R = p(wParam, lParam);
-						break;
+						pm2 = p; pm1 = null;
+						goto gm1;
 					case Func<HookData.ThreadCbt, bool> p:
 						R = p(new HookData.ThreadCbt(this, code, wParam, lParam));
 						break;
@@ -392,9 +456,9 @@ namespace Au.Util
 					//		2. Kills the hook after several such cases. Usually 6 keys or 11 mouse events.
 					//		3. Makes the hook useless: next times does not wait for it, and we cannot return 1 to block the event.
 					//	Somehow does not apply 2 and 3 to some apps, eg C# apps created by Visual Studio, although applies to those created not by VS. I did not find why.
-					if(hookType != 0 && (t1 = Time.PerfMilliseconds - t1) > 200 /*&& t1 < 5000*/ && !Debugger.IsAttached) {
+					if(t1 != 0 && (t1 = Time.PerfMilliseconds - t1) > 200 /*&& t1 < 5000*/ && !Debugger.IsAttached) {
 						if(t1 > LowLevelHooksTimeout - 50) {
-							var s1 = hookType == Api.WH_KEYBOARD_LL ? "key" : "mouse";
+							var s1 = _hookType == Api.WH_KEYBOARD_LL ? "key" : "mouse";
 							var s2 = R ? $" On timeout the {s1} message is passed to the active window, other hooks, etc." : null;
 							//PrintWarning($"Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}"); //too slow first time
 							//Print($"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //first Print JIT 30 ms
@@ -403,7 +467,7 @@ namespace Au.Util
 						//FUTURE: print warning if t1 is >25 frequently. Unhook and don't rehook if >LowLevelHooksTimeout-50 frequently.
 
 						Api.UnhookWindowsHookEx(_hh);
-						_hh = Api.SetWindowsHookEx(hookType, _proc1, default, 0);
+						_hh = Api.SetWindowsHookEx(_hookType, _proc1, default, 0);
 					}
 
 					if(R) return 1;
@@ -415,17 +479,6 @@ namespace Au.Util
 			gr:
 			return Api.CallNextHookEx(default, code, wParam, lParam);
 		}
-
-		/// <summary>
-		/// Don't call low-level keyboard and mouse hook procedure for events sent by functions of this library.
-		/// </summary>
-		public bool IgnoreKeyMouseInjectedByAu { get; set; }
-
-		/// <summary>
-		/// Don't call low-level keyboard hook procedure for injected (software-generated) keys VK_PACKET.
-		/// It is a special virtual-key code used by software to insert text.
-		/// </summary>
-		public bool IgnoreKeyInjectedPacket { get; set; }
 
 		/// <summary>
 		/// Gets the max time in milliseconds allowed by Windows for low-level keyboard and mouse hook procedures.
@@ -472,19 +525,56 @@ namespace Au.Util
 			PrintWarning("Unhandled exception in hook procedure. " + e.ToString());
 			return false;
 		}
+
+		[StructLayout(LayoutKind.Sequential, Size = 32)] //note: this struct is in shared memory. Size must be same in all library versions.
+		internal struct LibSharedMemoryData
+		{
+			public long dontBlockModUntil, dontBlocLShiftCapsUntil;
+			//16 bytes reserved
+		}
+
+		/// <summary>
+		/// Let other hooks (in all processes) ignore modifier keys for timeMS milliseconds. If 0 - restore.
+		/// Used by mouse triggers.
+		/// Returns the timeout time (Time.WinMilliseconds + timeMS) or 0.
+		/// </summary>
+		internal unsafe long LibIgnoreModInOtherHooks(long timeMS)
+		{
+			_ignoreModExceptThisHook = timeMS > 0;
+			var r = _ignoreModExceptThisHook ? Time.WinMilliseconds + timeMS : 0;
+			LibSharedMemory.Ptr->winHook.dontBlockModUntil = r;
+			return r;
+		}
+
+		unsafe bool _IgnoreMod => LibSharedMemory.Ptr->winHook.dontBlockModUntil > Time.WinMilliseconds && !_ignoreModExceptThisHook;
+		bool _ignoreModExceptThisHook;
+
+		/// <summary>
+		/// Let all hooks (in all processes) ignore LShift and CapsLock for timeMS milliseconds. If 0 - restore.
+		/// Returns the timeout time (Time.WinMilliseconds + timeMS) or 0.
+		/// Used when turning off CapsLock with Shift.
+		/// </summary>
+		internal static unsafe long LibIgnoreLShiftCaps(long timeMS)
+		{
+			var r = timeMS > 0 ? Time.WinMilliseconds + timeMS : 0;
+			LibSharedMemory.Ptr->winHook.dontBlocLShiftCapsUntil = r;
+			return r;
+		}
+
+		static unsafe bool _IgnoreLShiftCaps => LibSharedMemory.Ptr->winHook.dontBlocLShiftCapsUntil > Time.WinMilliseconds;
 	}
 }
 
 namespace Au.Types
 {
 	/// <summary>
-	/// Contains types of hook data for hook procedures installed by <see cref="WinHook"/> and <see cref="AccHook"/>.
+	/// Contains types of hook data for hook procedures set by <see cref="WinHook"/> and <see cref="AccHook"/>.
 	/// </summary>
 	public static partial class HookData
 	{
 		/// <summary>
-		/// Hook data for the hook procedure installed by <see cref="WinHook.Keyboard"/>.
-		/// More info: <msdn>LowLevelKeyboardProc</msdn>.
+		/// Event data for the hook procedure set by <see cref="WinHook.Keyboard"/>.
+		/// More info: API <msdn>LowLevelKeyboardProc</msdn>.
 		/// </summary>
 		public unsafe struct Keyboard
 		{
@@ -498,6 +588,11 @@ namespace Au.Types
 				this.hook = hook;
 				_x = (Api.KBDLLHOOKSTRUCT*)lParam;
 			}
+
+			/// <summary>
+			/// Call this function to steal this event from other hooks and apps.
+			/// </summary>
+			public void BlockEvent() => _x->BlockEvent = true;
 
 			/// <summary>
 			/// Is extended key.
@@ -528,17 +623,7 @@ namespace Au.Types
 			/// <summary>
 			/// If the key is a modifier key (Shift, Ctrl, Alt, Win), returns the modifier flag. Else returns 0.
 			/// </summary>
-			public KMod Mod {
-				get {
-					switch((KKey)_x->vkCode) {
-					case KKey.Shift: case KKey.LShift: case KKey.RShift: return KMod.Shift;
-					case KKey.Ctrl: case KKey.LCtrl: case KKey.RCtrl: return KMod.Ctrl;
-					case KKey.Alt: case KKey.LAlt: case KKey.RAlt: return KMod.Alt;
-					case KKey.Win: case KKey.RWin: return KMod.Win;
-					}
-					return 0;
-				}
-			}
+			public KMod Mod => Keyb.Lib.KeyToMod((KKey)_x->vkCode);
 
 			/// <summary>
 			/// If <b>vkCode</b> is a left or right modifier key code (LShift, LCtrl, LAlt, RShift, RCtrl, RAlt, RWin), returns the common modifier key code (Shift, Ctrl, Alt, Win). Else returns <b>vkCode</b>.
@@ -590,15 +675,15 @@ namespace Au.Types
 				return $"{vkCode.ToString()} {(IsUp ? "up" : "")}{(IsInjected ? " (injected)" : "")}";
 			}
 
-			/// <summary><msdn>KBDLLHOOKSTRUCT</msdn></summary>
+			/// <summary>API <msdn>KBDLLHOOKSTRUCT</msdn></summary>
 			public KKey vkCode => (KKey)_x->vkCode;
-			/// <summary><msdn>KBDLLHOOKSTRUCT</msdn></summary>
+			/// <summary>API <msdn>KBDLLHOOKSTRUCT</msdn></summary>
 			public uint scanCode => _x->scanCode;
-			/// <summary><msdn>KBDLLHOOKSTRUCT</msdn></summary>
+			/// <summary>API <msdn>KBDLLHOOKSTRUCT</msdn></summary>
 			public uint flags => _x->flags;
-			/// <summary><msdn>KBDLLHOOKSTRUCT</msdn></summary>
+			/// <summary>API <msdn>KBDLLHOOKSTRUCT</msdn></summary>
 			public int time => _x->time;
-			/// <summary><msdn>KBDLLHOOKSTRUCT</msdn></summary>
+			/// <summary>API <msdn>KBDLLHOOKSTRUCT</msdn></summary>
 			public LPARAM dwExtraInfo => _x->dwExtraInfo;
 
 			internal Api.KBDLLHOOKSTRUCT* LibNativeStructPtr => _x;
@@ -610,8 +695,8 @@ namespace Au.Types
 		public const int AuExtraInfo = Api.AuExtraInfo;
 
 		/// <summary>
-		/// Hook data for the hook procedure installed by <see cref="WinHook.Mouse"/>.
-		/// More info: <msdn>LowLevelMouseProc</msdn>.
+		/// Hook data for the hook procedure set by <see cref="WinHook.Mouse"/>.
+		/// More info: API <msdn>LowLevelMouseProc</msdn>.
 		/// </summary>
 		public unsafe struct Mouse
 		{
@@ -619,36 +704,43 @@ namespace Au.Types
 			public readonly WinHook hook;
 
 			readonly Api.MSLLHOOKSTRUCT* _x;
-			readonly uint _event;
+			readonly MouseEvent _event;
 
 			internal Mouse(WinHook hook, LPARAM wParam, LPARAM lParam)
 			{
-				this.hook = hook;
-				_x = (Api.MSLLHOOKSTRUCT*)lParam;
-				_event = (uint)wParam;
 				IsButtonDown = IsButtonUp = IsWheel = false;
-				short wheelOrXButton = (short)(mouseData >> 16);
-				switch(_event) {
+				this.hook = hook;
+				var p = (Api.MSLLHOOKSTRUCT*)lParam;
+				_x = p;
+				int e = (int)wParam;
+				switch(e) {
 				case Api.WM_LBUTTONDOWN: case Api.WM_RBUTTONDOWN: case Api.WM_MBUTTONDOWN: IsButtonDown = true; break;
-				case Api.WM_LBUTTONUP: case Api.WM_RBUTTONUP: case Api.WM_MBUTTONUP: _event--; IsButtonUp = true; break;
-				case Api.WM_XBUTTONUP: _event--; IsButtonUp = true; goto g1;
+				case Api.WM_LBUTTONUP: case Api.WM_RBUTTONUP: case Api.WM_MBUTTONUP: e--; IsButtonUp = true; break;
+				case Api.WM_XBUTTONUP: e--; IsButtonUp = true; goto g1;
 				case Api.WM_XBUTTONDOWN:
 					IsButtonDown = true;
 					g1:
-					switch(wheelOrXButton) { case 1: _event |= 0x1000; break; case 2: _event |= 0x2000; break; }
+					switch(p->mouseData >> 16) { case 1: e |= 0x1000; break; case 2: e |= 0x2000; break; }
 					break;
 				case Api.WM_MOUSEWHEEL:
 				case Api.WM_MOUSEHWHEEL:
 					IsWheel = true;
-					if(wheelOrXButton > 0) _event |= 0x1000; else if(wheelOrXButton < 0) _event |= 0x2000;
+					short wheel = (short)(p->mouseData >> 16);
+					if(wheel > 0) e |= 0x1000; else if(wheel < 0) e |= 0x2000;
 					break;
 				}
+				_event = (MouseEvent)e;
 			}
+
+			/// <summary>
+			/// Call this function to steal this event from other hooks and apps.
+			/// </summary>
+			public void BlockEvent() => _x->BlockEvent = true;
 
 			/// <summary>
 			/// What event it is (button, move, wheel).
 			/// </summary>
-			public MouseEvent Event => (MouseEvent)_event;
+			public MouseEvent Event => _event;
 
 			/// <summary>
 			/// Is button-down event.
@@ -664,6 +756,22 @@ namespace Au.Types
 			/// Is button event (down or up).
 			/// </summary>
 			public bool IsButton => IsButtonDown | IsButtonUp;
+
+			/// <summary>
+			/// Converts <see cref="Event"/> to <see cref="MButtons"/>.
+			/// </summary>
+			public MButtons Button {
+				get {
+					switch(_event) {
+					case MouseEvent.LeftButton: return MButtons.Left;
+					case MouseEvent.RightButton: return MButtons.Right;
+					case MouseEvent.MiddleButton: return MButtons.Middle;
+					case MouseEvent.X1Button: return MButtons.X1;
+					case MouseEvent.X2Button: return MButtons.X2;
+					}
+					return 0;
+				}
+			}
 
 			/// <summary>
 			/// Is wheel event.
@@ -688,15 +796,15 @@ namespace Au.Types
 				return $"{Event.ToString()} {ud} {pt.ToString()}{(IsInjected ? " (injected)" : "")}";
 			}
 
-			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>
+			/// <summary>API <msdn>MSLLHOOKSTRUCT</msdn></summary>
 			public POINT pt => _x->pt;
-			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>
+			/// <summary>API <msdn>MSLLHOOKSTRUCT</msdn></summary>
 			public uint mouseData => _x->mouseData;
-			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>
+			/// <summary>API <msdn>MSLLHOOKSTRUCT</msdn></summary>
 			public uint flags => _x->flags;
-			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>
+			/// <summary>API <msdn>MSLLHOOKSTRUCT</msdn></summary>
 			public int time => _x->time;
-			/// <summary><msdn>MSLLHOOKSTRUCT</msdn></summary>
+			/// <summary>API <msdn>MSLLHOOKSTRUCT</msdn></summary>
 			public LPARAM dwExtraInfo => _x->dwExtraInfo;
 
 			internal Api.MSLLHOOKSTRUCT* LibNativeStructPtr => _x;
@@ -722,21 +830,21 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Hook data for the hook procedure installed by <see cref="WinHook.ThreadCbt"/>.
-		/// More info: <msdn>CBTProc</msdn>.
+		/// Hook data for the hook procedure set by <see cref="WinHook.ThreadCbt"/>.
+		/// More info: API <msdn>CBTProc</msdn>.
 		/// </summary>
 		public struct ThreadCbt
 		{
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly WinHook hook;
 
-			/// <summary><msdn>CBTProc</msdn></summary>
+			/// <summary>API <msdn>CBTProc</msdn></summary>
 			public readonly CbtEvent code;
 
-			/// <summary><msdn>CBTProc</msdn></summary>
+			/// <summary>API <msdn>CBTProc</msdn></summary>
 			public readonly LPARAM wParam;
 
-			/// <summary><msdn>CBTProc</msdn></summary>
+			/// <summary>API <msdn>CBTProc</msdn></summary>
 			public readonly LPARAM lParam;
 
 			internal ThreadCbt(WinHook hook, int code, LPARAM wParam, LPARAM lParam)
@@ -765,7 +873,7 @@ namespace Au.Types
 			/// <summary>
 			/// Returns the window handle and gets more info about the created window.
 			/// </summary>
-			/// <param name="c"><msdn>CREATESTRUCT</msdn>. You can modify x y cx cy.</param>
+			/// <param name="c">API <msdn>CREATESTRUCT</msdn>. You can modify x y cx cy.</param>
 			/// <param name="wInsertAfter">Window whose position in the Z order precedes that of the window being created, or default(Wnd).</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CREATEWND.</exception>
 			public unsafe Wnd CreationInfo(out Native.CREATESTRUCT* c, out Wnd wInsertAfter)
@@ -780,7 +888,7 @@ namespace Au.Types
 			/// <summary>
 			/// Returns the mouse message and gets some more info about the mouse event.
 			/// </summary>
-			/// <param name="m"><msdn>MOUSEHOOKSTRUCT</msdn>.</param>
+			/// <param name="m">API <msdn>MOUSEHOOKSTRUCT</msdn>.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CLICKSKIPPED.</exception>
 			public unsafe uint MouseInfo(out Native.MOUSEHOOKSTRUCT* m)
 			{
@@ -792,7 +900,7 @@ namespace Au.Types
 			/// <summary>
 			/// Returns the key code and gets some more info about the keyboard event.
 			/// </summary>
-			/// <param name="lParam"><i>lParam</i> of the key message. Specifies the repeat count, scan code, etc. See <msdn>WM_KEYDOWN</msdn>.</param>
+			/// <param name="lParam"><i>lParam</i> of the key message. Specifies the repeat count, scan code, etc. See API <msdn>WM_KEYDOWN</msdn>.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.KEYSKIPPED.</exception>
 			public KKey KeyInfo(out uint lParam)
 			{
@@ -828,7 +936,7 @@ namespace Au.Types
 			/// <summary>
 			/// Returns the window handle and gets some more info about the minimize-maximize-restore event.
 			/// </summary>
-			/// <param name="showState">The new show state. See <msdn>ShowWindow</msdn>. Minimized 6, maximized 3, restored 9.</param>
+			/// <param name="showState">The new show state. See API <msdn>ShowWindow</msdn>. Minimized 6, maximized 3, restored 9.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MINMAX.</exception>
 			public Wnd MinMaxInfo(out int showState)
 			{
@@ -840,7 +948,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// CBT hook event types. Used with <see cref="ThreadCbt"/>.
-		/// More info: <msdn>CBTProc</msdn>.
+		/// More info: API <msdn>CBTProc</msdn>.
 		/// </summary>
 		public enum CbtEvent
 		{
@@ -859,8 +967,8 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Hook data for the hook procedure installed by <see cref="WinHook.ThreadGetMessage"/>.
-		/// More info: <msdn>GetMsgProc</msdn>.
+		/// Hook data for the hook procedure set by <see cref="WinHook.ThreadGetMessage"/>.
+		/// More info: API <msdn>GetMsgProc</msdn>.
 		/// </summary>
 		public unsafe struct ThreadGetMessage
 		{
@@ -886,8 +994,8 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Hook data for the hook procedure installed by <see cref="WinHook.ThreadKeyboard"/>.
-		/// More info: <msdn>KeyboardProc</msdn>.
+		/// Hook data for the hook procedure set by <see cref="WinHook.ThreadKeyboard"/>.
+		/// More info: API <msdn>KeyboardProc</msdn>.
 		/// </summary>
 		public struct ThreadKeyboard
 		{
@@ -905,7 +1013,7 @@ namespace Au.Types
 			public readonly KKey key;
 
 			/// <summary>
-			/// <i>lParam</i> of the key message. Specifies the key state, scan code, etc. See <msdn>KeyboardProc</msdn>.
+			/// <i>lParam</i> of the key message. Specifies the key state, scan code, etc. See API <msdn>KeyboardProc</msdn>.
 			/// </summary>
 			public readonly uint lParam;
 
@@ -919,8 +1027,8 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Hook data for the hook procedure installed by <see cref="WinHook.ThreadMouse"/>.
-		/// More info: <msdn>MouseProc</msdn>.
+		/// Hook data for the hook procedure set by <see cref="WinHook.ThreadMouse"/>.
+		/// More info: API <msdn>MouseProc</msdn>.
 		/// </summary>
 		public unsafe struct ThreadMouse
 		{
@@ -952,8 +1060,8 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Hook data for the hook procedure installed by <see cref="WinHook.ThreadCallWndProc"/>.
-		/// More info: <msdn>CallWndProc</msdn>.
+		/// Hook data for the hook procedure set by <see cref="WinHook.ThreadCallWndProc"/>.
+		/// More info: API <msdn>CallWndProc</msdn>.
 		/// </summary>
 		public unsafe struct ThreadCallWndProc
 		{
@@ -979,8 +1087,8 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Hook data for the hook procedure installed by <see cref="WinHook.ThreadCallWndProcRet"/>.
-		/// More info: <msdn>CallWndRetProc</msdn>.
+		/// Hook data for the hook procedure set by <see cref="WinHook.ThreadCallWndProcRet"/>.
+		/// More info: API <msdn>CallWndRetProc</msdn>.
 		/// </summary>
 		public unsafe struct ThreadCallWndProcRet
 		{
@@ -1006,7 +1114,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Calls API <msdn>ReplyMessage</msdn>, which allows to use <see cref="Acc"/> and COM in the hook procedure.
+		/// Calls API API <msdn>ReplyMessage</msdn>, which allows to use <see cref="Acc"/> and COM in the hook procedure.
 		/// </summary>
 		/// <param name="cancelEvent">
 		/// Don't notify the target window about the event, and don't call other hook procedures.
@@ -1019,14 +1127,18 @@ namespace Au.Types
 	}
 }
 
+#endregion
+
+#region acchook
+
 namespace Au.Util
 {
 	/// <summary>
-	/// Helps with accessible object event hooks. See <msdn>SetWinEventHook</msdn>.
+	/// Helps with accessible object event hooks. See API <msdn>SetWinEventHook</msdn>.
 	/// </summary>
 	/// <remarks>
 	/// The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="Opt.WaitFor"/>).
-	/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Uninstall</b>) or with the 'using' pattern.
+	/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unhook</b>) or with the 'using' pattern.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -1076,7 +1188,7 @@ namespace Au.Util
 		/// Sets a hook for multiple events.
 		/// Calls API <msdn>SetWinEventHook</msdn>.
 		/// </summary>
-		/// <param name="events">Events. Reference: <msdn>SetWinEventHook</msdn>. Elements with value 0 are ignored.</param>
+		/// <param name="events">Events. Reference: API <msdn>SetWinEventHook</msdn>. Elements with value 0 are ignored.</param>
 		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
 		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
 		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
@@ -1128,10 +1240,11 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Uninstalls the hook if installed.
+		/// Removes the hook.
 		/// </summary>
 		/// <remarks>
-		/// Must be called from the same thread that installed the hook.
+		/// Does nothing if already removed or wasn't set.
+		/// Must be called from the same thread that sets the hook.
 		/// </remarks>
 		public void Unhook()
 		{
@@ -1176,25 +1289,25 @@ namespace Au.Types
 	public static partial class HookData
 	{
 		/// <summary>
-		/// Hook data for the hook procedure installed by <see cref="AccHook"/>.
-		/// More info: <msdn>WinEventProc</msdn>.
+		/// Hook data for the hook procedure set by <see cref="AccHook"/>.
+		/// More info: API <msdn>WinEventProc</msdn>.
 		/// </summary>
 		public unsafe struct AccHookData
 		{
 			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
 			public readonly AccHook hook;
 
-			/// <summary><msdn>WinEventProc</msdn></summary>
+			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly Wnd wnd;
-			/// <summary><msdn>WinEventProc</msdn></summary>
+			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly AccEVENT ev;
-			/// <summary><msdn>WinEventProc</msdn></summary>
+			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly AccOBJID idObject;
-			/// <summary><msdn>WinEventProc</msdn></summary>
+			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly int idChild;
-			/// <summary><msdn>WinEventProc</msdn></summary>
+			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly int idThread;
-			/// <summary><msdn>WinEventProc</msdn></summary>
+			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly int eventTime;
 
 			internal AccHookData(AccHook hook, AccEVENT ev, Wnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
@@ -1216,3 +1329,5 @@ namespace Au.Types
 		}
 	}
 }
+
+#endregion

@@ -31,9 +31,10 @@ namespace Au.Triggers
 	{
 		/// <summary>
 		/// Allow other apps to receive the key down message too.
-		/// Without this flag, other apps receive only modifier keys and the key up message. Also, OS always receives Ctrl+Alt+Delete and some other hotkeys.
+		/// Without this flag, other apps usually receive only modifier keys. Also, OS always receives Ctrl+Alt+Delete and some other hotkeys.
+		/// To receive and block key messages is used a low-level hook. Other hooks may receive blocked messages or not, depending on when they were set. 
 		/// </summary>
-		PassMessage = 1,
+		ShareEvent = 1,
 
 		/// <summary>
 		/// Run the action when the key and modifier keys are released.
@@ -52,9 +53,9 @@ namespace Au.Triggers
 
 		/// <summary>
 		/// Don't release modifier keys.
-		/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfer with the action. However functions like <see cref="Keyb.GetMod"/> (and any such functions in any app) will not know that the key is physically pressed.
+		/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfer with the action. However functions like <see cref="Keyb.GetMod"/> and <see cref="Keyb.WaitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
 		/// <note type="note">Unreleased modifier keys will interfere with mouse functions like <see cref="Mouse.Click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>Opt.Key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>Opt.Key.NoModOff</b> is true and <b>Opt.Key.TextOption</b> is <b>KTextOption.Keys</b>.</note>.
-		/// Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>PassMessage</b>. Then don't need this flag.
+		/// Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
 		/// </summary>
 		NoModOff = 16,
 	}
@@ -137,7 +138,7 @@ namespace Au.Triggers
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
 		public Action<HotkeyTriggerArgs> this[KKey key, string modKeys, TKFlags flags = 0] {
 			set {
-				var ps = key.ToString(); if(Char_.IsAsciiDigit(ps[0])) ps = "vk" + ps;
+				var ps = key.ToString(); if(Char_.IsAsciiDigit(ps[0])) ps = "VK" + ps;
 				if(!Empty(modKeys)) ps = modKeys + "+" + ps;
 
 				if(!Keyb.Misc.LibParseHotkeyTriggerString(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
@@ -170,11 +171,8 @@ namespace Au.Triggers
 
 		void ITriggers.StartStop(bool start)
 		{
-			_mod = _modL = _modR = 0;
-			_lastKeyTime = 0;
-			_upTrigger = null;
-			_upArgs = null;
-			_upKey = 0;
+			_UpClear();
+			_eatUp = 0;
 		}
 
 		internal bool HookProc(HookData.Keyboard k, TriggerHookContext thc)
@@ -182,64 +180,39 @@ namespace Au.Triggers
 			//Print(k.vkCode, !k.IsUp);
 			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
-			long time = Time.WinMilliseconds;
-
+			KKey key = k.vkCode;
+			KMod mod = thc.Mod;
 			bool up = k.IsUp;
-			if(!up) _upTrigger = null;
+			if(!up) _UpClear();
 
-			KMod modL = 0, modR = 0;
-			switch(k.vkCode) {
-			case KKey.LCtrl: modL = KMod.Ctrl; break;
-			case KKey.LShift: modL = KMod.Shift; break;
-			case KKey.LAlt: modL = KMod.Alt; break;
-			case KKey.Win: modL = KMod.Win; break;
-			case KKey.RCtrl: modR = KMod.Ctrl; break;
-			case KKey.RShift: modR = KMod.Shift; break;
-			case KKey.RAlt: modR = KMod.Alt; break;
-			case KKey.RWin: modR = KMod.Win; break;
-			}
-
-			if((modL | modR) != 0) {
-				if(up) {
-					_modL &= ~modL; _modR &= ~modR;
-				} else {
-					_modL |= modL; _modR |= modR;
-				}
-				_mod = _modL | _modR;
-
-				if(_upTrigger != null && _mod == 0 && _upKey == 0) _UpTriggered(thc);
+			if(thc.ModThis != 0) {
+				if(_upTrigger != null && mod == 0 && _upKey == 0) _UpTriggered(thc);
 			} else if(up) {
-				if(_upTrigger != null && k.vkCode == _upKey) {
-					if(Keyb.IsMod()) _upKey = 0;
-					else _UpTriggered(thc);
+				if(key == _upKey) {
+					_upKey = 0;
+					if(_upTrigger != null && mod == 0) _UpTriggered(thc);
 				}
+				if(key == _eatUp) {
+					_eatUp = 0;
+					return true;
+					//To be safer, could return false if Keyb.IsPressed(_eatUp), but then can interfere with the trigger action.
+				}
+				//CONSIDER: _upTimeout.
 			} else {
-				//We cannot trust _mod, because hooks are unreliable. We may not receive some events because of hook timeout, other hooks, OS quirks, etc. Also triggers may start while a modifier key is pressed.
-				//And we cannot use Keyb.IsPressed, because our triggers release modifiers. Also Key() etc. Then triggers could not be auto-repeated.
-				//We use both. If IsPressed(mod), add mod to _mod. Else remove from _mod after >5 s since the last seen key event. The max auto-repeat delay that you can set in CP is ~1 s.
-				TrigUtil.GetModLR(out modL, out modR);
-				//Debug_.PrintIf(modL != _modL || modR != _modR, $"KEY={k.vkCode}    modL={modL}  _modL={_modL}    modR={modR}  _modR={_modR}"); //normally should be only when auto-repeating a trigger
-				_modL |= modL; _modR |= modR;
-				if(time - _lastKeyTime > 5000) {
-					_modL &= modL; _modR &= modR;
-				}
-				_mod = _modL | _modR;
-				//Print(_mod, k.vkCode);
-				_lastKeyTime = time;
+				if(key == _eatUp) _eatUp = 0;
 
-				KKey key = k.vkCode;
-				if(_d.TryGetValue(_DictKey(key, _mod), out var v)) {
+				if(_d.TryGetValue(_DictKey(key, mod), out var v)) {
 					HotkeyTriggerArgs args = null;
 					for(; v != null; v = v.next) {
 						if(v.DisabledThisOrAll) continue;
 						var x = v as HotkeyTrigger;
 
 						switch(x.flags & (TKFlags.LeftMod | TKFlags.RightMod)) {
-						case TKFlags.LeftMod: if(_modL != _mod) continue; break;
-						case TKFlags.RightMod: if(_modR != _mod) continue; break;
+						case TKFlags.LeftMod: if(thc.ModL != mod) continue; break;
+						case TKFlags.RightMod: if(thc.ModR != mod) continue; break;
 						}
 
-						if(args == null) thc.args = args = new HotkeyTriggerArgs(x, thc.Window, key, _mod); //may need for scope callbacks too
+						if(args == null) thc.args = args = new HotkeyTriggerArgs(x, thc.Window, key, mod); //may need for scope callbacks too
 						else args.Trigger = x;
 						if(!x.MatchScopeWindowAndFunc(thc)) continue;
 
@@ -247,28 +220,45 @@ namespace Au.Triggers
 							_upTrigger = x;
 							_upArgs = args;
 							_upKey = key;
+
+							if(0 == (x.flags & TKFlags.ShareEvent)) {
+								switch(mod) {
+								case KMod.Alt:
+								case KMod.Win:
+								case KMod.Alt | KMod.Win:
+									//Print("need Ctrl");
+									ThreadPool.QueueUserWorkItem(o => Keyb.Lib.SendKey(KKey.Ctrl)); //disable Alt/Win menu //TODO: SendCtrl
+									break;
+								}
+							}
 						} else {
 							thc.trigger = x;
 						}
 
-						//Print(key, _mod);
-						return 0 == (x.flags & TKFlags.PassMessage);
+						//Print(key, mod);
+						if(0 != (x.flags & TKFlags.ShareEvent)) return false;
+						_eatUp = key;
+						return true;
 					}
 				}
 			}
 			return false;
 		}
 
-		KMod _mod, _modL, _modR;
-		long _lastKeyTime;
 		HotkeyTrigger _upTrigger;
 		HotkeyTriggerArgs _upArgs;
 		KKey _upKey;
+		KKey _eatUp;
 
 		void _UpTriggered(TriggerHookContext thc)
 		{
 			thc.args = _upArgs;
 			thc.trigger = _upTrigger;
+			_UpClear();
+		}
+
+		void _UpClear()
+		{
 			_upTrigger = null;
 			_upArgs = null;
 			_upKey = 0;

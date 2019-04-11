@@ -30,10 +30,11 @@ namespace Au.Triggers
 	public enum TMFlags : byte
 	{
 		/// <summary>
-		/// Allow other apps to receive the mouse button and wheel messages too.
+		/// Allow other apps to receive the mouse button or wheel message too.
 		/// Used only with the click and wheel triggers.
+		/// To receive and block mouse messages is used a low-level hook. Other hooks may receive blocked messages or not, depending on when they were set. 
 		/// </summary>
-		PassMessage = 1,
+		ShareEvent = 1,
 
 		/// <summary>
 		/// Run the action when the mouse button and modifier keys are released.
@@ -50,7 +51,7 @@ namespace Au.Triggers
 		/// </summary>
 		RightMod = 8,
 
-		//rejected. Releasing mod keys makes no sense because we cannot disable the auto-repeat. For hotkeys OS (or hardware) disables it.
+		//rejected. We always mod-off and eat auto-repeated and up events with a temp hook. Because OS does not disable auto-repeating like for hotkeys.
 		///// <summary>
 		///// Don't release modifier keys.
 		///// More info: <see cref="TKFlags.NoModOff"/>.
@@ -64,13 +65,13 @@ namespace Au.Triggers
 	public class MouseTrigger : ActionTrigger
 	{
 		internal readonly TMFlags flags;
-		internal readonly int screenIndex;
+		internal readonly TMScreen screenIndex;
 		string _paramsString;
 
-		internal MouseTrigger(ActionTriggers triggers, Action<MouseTriggerArgs> action, TMFlags flags, int screenIndex, string paramsString) : base(triggers, action, true)
+		internal MouseTrigger(ActionTriggers triggers, Action<MouseTriggerArgs> action, TMFlags flags, TMScreen screen, string paramsString) : base(triggers, action, true)
 		{
 			this.flags = flags;
-			this.screenIndex = screenIndex;
+			this.screenIndex = screen;
 			_paramsString = paramsString;
 		}
 
@@ -100,10 +101,8 @@ namespace Au.Triggers
 		internal MouseTriggers(ActionTriggers triggers)
 		{
 			_triggers = triggers;
-			MoveSensitivity = 5;
 		}
 
-		//static int _DictKey(ESubtype subtype, KMod mod, byte data1, byte data2 = 0) => (data2 << 24) | (data1 << 16) | ((byte)mod << 8) | (byte)subtype;
 		static int _DictKey(ESubtype subtype, KMod mod, byte data) => (data << 16) | ((byte)mod << 8) | (byte)subtype;
 
 		/// <summary>
@@ -147,22 +146,17 @@ namespace Au.Triggers
 		/// <param name="edge"></param>
 		/// <param name="modKeys"><inheritdoc cref="this[TMClick, string, TMFlags]"/></param>
 		/// <param name="flags"></param>
-		/// <param name="screenIndex">
-		/// Let the trigger work only in this screen (display monitor).
-		/// 
-		/// 0 (default) - only in the primary screen.
-		/// &gt;0 - a non-primary screen index.
-		/// -1 - all screens.
-		/// -2 - screen of the active window at that time.
-		/// 
-		/// Uses <see cref="Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Control Panel.
+		/// <param name="screen">
+		/// Let the trigger work only in this screen (display monitor). Also you can specify <b>All</b>.
+		/// Default: <b>Primary</b>.
+		/// Uses <see cref="Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Windows Settings.
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
 		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
-		public Action<MouseTriggerArgs> this[TMEdge edge, string modKeys = null, TMFlags flags = 0, int screenIndex = 0] {
+		public Action<MouseTriggerArgs> this[TMEdge edge, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0] {
 			set {
-				var t = _Add(value, ESubtype.Edge, modKeys, flags, (byte)edge, screenIndex, edge.ToString());
+				var t = _Add(value, ESubtype.Edge, modKeys, flags, (byte)edge, screen, edge.ToString());
 			}
 		}
 
@@ -172,17 +166,17 @@ namespace Au.Triggers
 		/// <param name="move"></param>
 		/// <param name="modKeys"><inheritdoc cref="this[TMClick, string, TMFlags]"/></param>
 		/// <param name="flags"></param>
-		/// <param name="screenIndex"><inheritdoc cref="this[TMEdge, string, TMFlags, int]"/></param>
+		/// <param name="screen"><inheritdoc cref="this[TMEdge, string, TMFlags, TMScreen]"/></param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
 		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
-		public Action<MouseTriggerArgs> this[TMMove move, string modKeys = null, TMFlags flags = 0, int screenIndex = 0] {
+		public Action<MouseTriggerArgs> this[TMMove move, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0] {
 			set {
-				var t = _Add(value, ESubtype.Move, modKeys, flags, (byte)move, screenIndex, move.ToString());
+				var t = _Add(value, ESubtype.Move, modKeys, flags, (byte)move, screen, move.ToString());
 			}
 		}
 
-		MouseTrigger _Add(Action<MouseTriggerArgs> f, ESubtype subtype, string modKeys, TMFlags flags, byte data, int screenIndex, string sData)
+		MouseTrigger _Add(Action<MouseTriggerArgs> f, ESubtype subtype, string modKeys, TMFlags flags, byte data, TMScreen screen, string sData)
 		{
 			_triggers.LibThrowIfRunning();
 			bool noMod = Empty(modKeys);
@@ -190,19 +184,19 @@ namespace Au.Triggers
 			string ps;
 			using(new Util.LibStringBuilder(out var b)) {
 				b.Append(subtype.ToString()).Append(' ').Append(sData);
-				b.Append(" + ").Append(noMod ? "no modifiers" : (modKeys == "?" ? "any modifiers" : modKeys));
+				b.Append(" + ").Append(noMod ? "none" : (modKeys == "?" ? "any" : modKeys));
 				if(flags != 0) b.Append(" (").Append(flags.ToString()).Append(')');
 				if(subtype == ESubtype.Edge || subtype == ESubtype.Move) {
-					if(screenIndex == 0) b.Append(", primary screen");
-					else if(screenIndex > 0) b.Append(", non-primary screen ").Append(screenIndex);
-					else if(screenIndex == -1) b.Append(", any screen");
-					else if(screenIndex == -2) b.Append(", screen of the active window");
+					if(screen == 0) b.Append(", primary screen");
+					else if(screen > 0) b.Append(", non-primary screen ").Append((int)screen);
+					else if(screen == TMScreen.Any) b.Append(", any screen");
+					else if(screen == TMScreen.OfActiveWindow) b.Append(", screen of the active window");
 					else throw new ArgumentException();
 				}
 				ps = b.ToString(); //Print(ps);
 			}
 
-			var t = new MouseTrigger(_triggers, f, flags, screenIndex, ps);
+			var t = new MouseTrigger(_triggers, f, flags, screen, ps);
 			if(noMod) {
 				if(flags.HasAny_(subtype == ESubtype.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
 				t.DictAdd(_d, _DictKey(subtype, 0, data));
@@ -212,6 +206,12 @@ namespace Au.Triggers
 				for(int i = 0; i < 16; i++) if(0 != (b & (1 << i))) t.DictAdd(_d, _DictKey(subtype, (KMod)i, data));
 			}
 			_lastAdded = t;
+			LibUsedHookEvents |= HooksServer.UsedEvents.Mouse; //just sets the hook
+			switch(subtype) {
+			case ESubtype.Click: LibUsedHookEvents |= HooksServer.UsedEvents.MouseClick; break;
+			case ESubtype.Wheel: LibUsedHookEvents |= HooksServer.UsedEvents.MouseWheel; break;
+			default: LibUsedHookEvents |= HooksServer.UsedEvents.MouseEdgeMove; break;
+			}
 			return t;
 		}
 
@@ -223,41 +223,45 @@ namespace Au.Triggers
 
 		bool ITriggers.HasTriggers => _lastAdded != null;
 
+		internal HooksServer.UsedEvents LibUsedHookEvents { get; private set; }
+
 		void ITriggers.StartStop(bool start)
 		{
 			if(start) {
-				_mmState = new _MMState();
 			} else {
-				_mmState = null;
-				_CancelUp();
+				_ResetUpAndUnhookTempKeybHook();
+				_eatUp = 0;
 			}
 		}
 
-		internal bool HookProc(HookData.Mouse k, TriggerHookContext thc)
+		internal bool HookProcClickWheel(HookData.Mouse k, TriggerHookContext thc)
 		{
 			//Print(k.Event, k.pt);
 			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
 			ESubtype subtype;
-			byte data = 0, dataAnyPart = 0;
-			bool isMoveEdge = false;
-			POINT mmPoint = default;
+			byte data;
 
 			if(k.IsButton) {
 				if(k.IsButtonUp) {
-					if(_upTrigger != null && k.Event == _upEvent) {
+					if(k.Event == _upEvent) {
 						_upEvent = 0;
-						if(Keyb.IsMod()) {
-							_SetTimerToWaitForModUp();
-						} else {
+						if(_upMod == 0 && _upTrigger != null) {
 							thc.args = _upArgs;
 							thc.trigger = _upTrigger;
-							_upTrigger = null;
-							_upArgs = null;
+							_ResetUp();
 						}
 					}
+					if(k.Event == _eatUp) {
+						_eatUp = 0;
+						return true;
+						//To be safer, could return false if Mouse.IsPressed(k.Button), but then can interfere with the trigger action.
+					}
 					return false;
+					//CONSIDER: _upTimeout.
 				}
+				if(k.Event == _eatUp) _eatUp = 0;
+
 				subtype = ESubtype.Click;
 				TMClick b;
 				switch(k.Event) {
@@ -268,7 +272,7 @@ namespace Au.Triggers
 				default: b = TMClick.X2; break;
 				}
 				data = (byte)b;
-			} else if(k.IsWheel) {
+			} else { //wheel
 				subtype = ESubtype.Wheel;
 				TMWheel b;
 				switch(k.Event) {
@@ -278,25 +282,34 @@ namespace Au.Triggers
 				default: b = TMWheel.Right; break;
 				}
 				data = (byte)b;
-			} else {
-				var mm = new _MMDetector(this, k, out mmPoint);
-				if(!mm.Detect()) return false;
-				subtype = mm.subtype;
-				if(subtype == ESubtype.Move) {
-					data = (byte)mm.moveEvent; dataAnyPart = (byte)mm.moveEventAnyPart;
-				} else {
-					data = (byte)mm.edgeEvent; dataAnyPart = (byte)mm.edgeEventAnyPart;
-				}
-				isMoveEdge = true;
 			}
 
-			_CancelUp();
+			return _HookProc2(thc, false, subtype, k.Event, k.pt, data, 0);
+		}
 
-			var mod = TrigUtil.GetModLR(out var modL, out var modR);
+		internal void HookProcEdgeMove(in LibEdgeMoveDetector.Result d, TriggerHookContext thc)
+		{
+			ESubtype subtype;
+			byte data = 0, dataAnyPart = 0;
+
+			if(d.edgeEvent != 0) {
+				subtype = ESubtype.Edge;
+				data = (byte)d.edgeEvent; dataAnyPart = (byte)d.edgeEventAnyPart;
+			} else {
+				subtype = ESubtype.Move;
+				data = (byte)d.moveEvent; dataAnyPart = (byte)d.moveEventAnyPart;
+			}
+
+			_HookProc2(thc, true, subtype, HookData.MouseEvent.Move, d.pt, data, dataAnyPart);
+		}
+
+		bool _HookProc2(TriggerHookContext thc, bool isEdgeMove, ESubtype subtype, HookData.MouseEvent mEvent, POINT pt, byte data, byte dataAnyPart)
+		{
+			var mod = TrigUtil.GetModLR(out var modL, out var modR) | _eatMod;
 			MouseTriggerArgs args = null;
 			g1:
 			if(_d.TryGetValue(_DictKey(subtype, mod, data), out var v)) {
-				if(!isMoveEdge) thc.UseWndFromPoint(k.pt);
+				if(!isEdgeMove) thc.UseWndFromPoint(pt);
 				for(; v != null; v = v.next) {
 					if(v.DisabledThisOrAll) continue;
 					var x = v as MouseTrigger;
@@ -306,9 +319,9 @@ namespace Au.Triggers
 					case TMFlags.RightMod: if(modR != mod) continue; break;
 					}
 
-					if(isMoveEdge && x.screenIndex != -1) {
-						var screen = Screen_.ScreenFromIndex(x.screenIndex);
-						if(!screen.Bounds.Contains(mmPoint)) continue;
+					if(isEdgeMove && x.screenIndex != TMScreen.Any) {
+						var screen = Screen_.ScreenFromIndex((int)x.screenIndex);
+						if(!screen.Bounds.Contains(pt)) continue;
 					}
 
 					if(args == null) thc.args = args = new MouseTriggerArgs(x, thc.Window, mod); //may need for scope callbacks too
@@ -318,16 +331,23 @@ namespace Au.Triggers
 					if(0 != (x.flags & TMFlags.ButtonModUp) && (mod != 0 || subtype == ESubtype.Click)) {
 						_upTrigger = x;
 						_upArgs = args;
-						_upEvent = 0;
-						if(subtype == ESubtype.Click) _upEvent = k.Event;
-						else _SetTimerToWaitForModUp();
+						_upEvent = subtype == ESubtype.Click ? mEvent : 0;
+						_upMod = mod;
 					} else {
 						thc.trigger = x;
+						_ResetUp();
 					}
 
-					//Print(k.Event, k.pt, mod);
-					if(isMoveEdge) return false;
-					return 0 == (x.flags & TMFlags.PassMessage);
+					_eatMod = mod;
+					if(mod != 0) {
+						_SetTempKeybHook();
+						Keyb.Lib.ReleaseModAndDisableModMenu();
+					}
+
+					//Print(mEvent, pt, mod);
+					if(isEdgeMove || 0 != (x.flags & TMFlags.ShareEvent)) return false;
+					if(subtype == ESubtype.Click) _eatUp = mEvent;
+					return true;
 				}
 			}
 			if(dataAnyPart != 0) {
@@ -338,87 +358,152 @@ namespace Au.Triggers
 			return false;
 		}
 
+		//these are used to activate trigger when button and modifiers released
 		MouseTrigger _upTrigger;
 		MouseTriggerArgs _upArgs;
 		HookData.MouseEvent _upEvent;
-		Timer_ _upTimer;
-		bool _upIsTimer;
+		KMod _upMod;
+		//this is used to eat modifier keys, regardless when the trigger is activated
+		KMod _eatMod;
+		//these are used to eat modifier keys and to activate trigger when modifiers released
+		Util.WinHook _keyHook;
+		long _keyHookTimeout;
+		//this is used to eat button-up event, regardless when the trigger is activated
+		HookData.MouseEvent _eatUp;
 
-		void _SetTimerToWaitForModUp()
+		void _ResetUp()
 		{
-			if(_upTimer == null) _upTimer = new Timer_(timer => {
-				if(_upTrigger != null && Keyb.IsMod()) return;
-				timer.Stop();
-				_upIsTimer = false;
-				if(_upTrigger != null) {
-					var t = _upTrigger;
-					_upTrigger = null;
-					_triggers.LibRunAction(t, _upArgs);
-					_upArgs = null;
-					_upEvent = 0;
-				}
-			});
-			_upTimer.Start(15, false);
-			_upIsTimer = true;
+			_upTrigger = null;
+			_upArgs = null;
+			_upEvent = 0;
+			_upMod = 0;
 		}
 
-		void _CancelUp()
+		void _UnhookTempKeybHook()
 		{
-			if(_upTrigger != null) {
-				_upTrigger = null;
-				_upArgs = null;
-				_upEvent = 0;
+			if(_keyHook != null) {
+				//Print(". unhook");
+				_keyHook.Unhook();
+				_keyHookTimeout = _keyHook.LibIgnoreModInOtherHooks(0);
 			}
-			if(_upIsTimer) {
-				_upTimer.Stop();
-				_upIsTimer = false;
+		}
+
+		void _ResetUpAndUnhookTempKeybHook()
+		{
+			_ResetUp();
+			_eatMod = 0;
+			_UnhookTempKeybHook();
+		}
+
+		void _SetTempKeybHook()
+		{
+			//Print(". hook");
+			if(_keyHook == null) {
+				_keyHook = Util.WinHook.Keyboard(k => {
+					if(Time.WinMilliseconds >= _keyHookTimeout) {
+						_ResetUpAndUnhookTempKeybHook();
+						Debug_.Print("hook timeout");
+					} else {
+						var mod = k.Mod;
+						if(0 != (mod & _upMod) && k.IsUp) {
+							_upMod &= ~mod;
+							if(_upMod == 0 && _upEvent == 0 && _upTrigger != null) {
+								_triggers.LibRunAction(_upTrigger, _upArgs);
+								_ResetUp();
+							}
+						}
+						if(0 != (mod & _eatMod)) {
+							//Print(k);
+							k.BlockEvent();
+							if(k.IsUp) _eatMod &= ~mod;
+						}
+						if(0 == (_upMod | _eatMod)) _UnhookTempKeybHook();
+					}
+				}, setNow: false);
 			}
+			if(!_keyHook.IsSet) _keyHook.Hook();
+			_keyHookTimeout = _keyHook.LibIgnoreModInOtherHooks(5000);
+		}
+
+		internal static void JitCompile()
+		{
+			Util.Jit.Compile(typeof(MouseTriggers), nameof(HookProcClickWheel));
+			Util.Jit.Compile(typeof(MouseTriggers), nameof(HookProcEdgeMove));
+			Util.Jit.Compile(typeof(MouseTriggers), nameof(_HookProc2));
 		}
 
 		/// <summary>
 		/// Detects trigger events of types Edge and Move.
 		/// </summary>
-		struct _MMDetector
+		/// <remarks>
+		/// Used in the hook server, to avoid sending all mouse move events to clients, which would use 2 or more times more CPU, eg 0.9% instead of 0.45%. Tested: raw input uses slightly less CPU.
+		/// </remarks>
+		internal class LibEdgeMoveDetector
 		{
 			int _x, _y; //mouse position. Relative to the primary screen.
 			int _xmin, _ymin, _xmax, _ymax; //min and max possible mouse position in current screen. Relative to the primary screen.
-			_MMState _prev;
+			_State _prev;
 			int _sens;
-			public ESubtype subtype;
-			public TMEdge edgeEvent, edgeEventAnyPart;
-			public TMMove moveEvent, moveEventAnyPart;
+			public Result result;
 
-			public _MMDetector(MouseTriggers mTriggers, HookData.Mouse m, out POINT realPoint) : this()
+			internal struct Result
 			{
-				_prev = mTriggers._mmState;
-				_sens = mTriggers._mmSens;
+				public POINT pt;
+				public TMEdge edgeEvent, edgeEventAnyPart;
+				public TMMove moveEvent, moveEventAnyPart;
+			}
 
-				//get normal x y. In m can be outside screen when cursor moved fast and was stopped by a screen edge. Tested: never for click/wheel events.
-				//var r = Screen.GetBounds(m.pt); //creates much garbage. Calls API MonitorFromPoint and creates new Screen object.
-				var hmon = Api.MonitorFromPoint(m.pt, Api.MONITOR_DEFAULTTONEAREST);
+			/// <summary>
+			/// State data set by previous events.
+			/// </summary>
+			struct _State
+			{
+				public int xx, yy; //previous coords
+				public long time; //previous time
+
+				//these used for Move events
+				public int mx1, my1, mx2, my2;
+				public TMMove mDirection;
+				public long mTimeout;
+
+				//these used for Edge events
+				public long eTimeout;
+
+#if DEBUG
+				//public int debug;
+#endif
+			}
+
+			public LibEdgeMoveDetector()
+			{
+				_sens = Util.Dpi.BaseDPI / 4; //FUTURE: different for each screen
+			}
+
+			public bool Detect(POINT pt)
+			{
+				//get normal x y. In pt can be outside screen when cursor moved fast and was stopped by a screen edge. Tested: never for click/wheel events.
+				//var r = Screen.GetBounds(pt); //creates much garbage. Calls API MonitorFromPoint and creates new Screen object.
+				//Print(pt, Mouse.XY);
+				//var hmon = Api.MonitorFromPoint(pt, Api.MONITOR_DEFAULTTONEAREST); //problem with empty corners between 2 unaligned screens: when mouse tries to quickly diagonally cut such a corner, may activate a wrong trigger
+				var hmon = Api.MonitorFromPoint(Mouse.XY, Api.MONITOR_DEFAULTTONEAREST); //smaller problem: Mouse.XY gets previous coordinates
 				Api.MONITORINFO mi = default; mi.cbSize = Api.SizeOf<Api.MONITORINFO>();
 				Api.GetMonitorInfo(hmon, ref mi);
 				var r = mi.rcMonitor;
 				_xmin = r.left; _ymin = r.top; _xmax = r.right - 1; _ymax = r.bottom - 1;
-				_x = Math_.MinMax(m.pt.x, _xmin, _xmax);
-				_y = Math_.MinMax(m.pt.y, _ymin, _ymax);
-				//Print(m.pt, _x, _y);
-				realPoint = (_x, _y);
-			}
+				_x = Math_.MinMax(pt.x, _xmin, _xmax);
+				_y = Math_.MinMax(pt.y, _ymin, _ymax);
+				//Print(pt, _x, _y, r);
 
-			public bool Detect()
-			{
+				result = default;
+				result.pt = (_x, _y);
+
 				_Detect();
 				_prev.xx = _x; _prev.yy = _y;
 
-				if(edgeEvent != 0) subtype = ESubtype.Edge;
-				else if(moveEvent != 0) subtype = ESubtype.Move;
-				else return false;
-
 #if DEBUG
-				//Print(++_prev._debug, subtype, edgeEvent, moveEvent, (_x, _y));
+				//Print(++_prev.debug, edgeEvent, moveEvent, (_x, _y));
 #endif
-				return true;
+				return result.edgeEvent != 0 || result.moveEvent != 0;
 			}
 
 			void _Detect()
@@ -444,19 +529,19 @@ namespace Au.Triggers
 					if(y == _ymin) { //top
 						if(_prev.yy <= _ymin) return;
 						if(Screen_.IsInAnyScreen((x, y - 1))) return;
-						edgeEvent = (TMEdge)((int)(edgeEventAnyPart = TMEdge.Top) + _PartX(x));
+						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Top) + _PartX(x));
 					} else if(y == _ymax) { //bottom
 						if(_prev.yy >= _ymax) return;
 						if(Screen_.IsInAnyScreen((x, y + 1))) return;
-						edgeEvent = (TMEdge)((int)(edgeEventAnyPart = TMEdge.Bottom) + _PartX(x));
+						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Bottom) + _PartX(x));
 					} else if(x == _xmin) { //left
 						if(_prev.xx <= _xmin) return;
 						if(Screen_.IsInAnyScreen((x - 1, y))) return;
-						edgeEvent = (TMEdge)((int)(edgeEventAnyPart = TMEdge.Left) + _PartY(y));
+						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Left) + _PartY(y));
 					} else /*if(x == _xmax)*/ { //right
 						if(_prev.xx >= _xmax) return;
 						if(Screen_.IsInAnyScreen((x + 1, y))) return;
-						edgeEvent = (TMEdge)((int)(edgeEventAnyPart = TMEdge.Right) + _PartY(y));
+						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Right) + _PartY(y));
 					}
 					_prev.eTimeout = time + 100;
 				} else {
@@ -539,8 +624,8 @@ namespace Au.Triggers
 							break;
 						}
 						if(part != 0) {
-							moveEventAnyPart = e;
-							moveEvent = (TMMove)((int)e + part);
+							result.moveEventAnyPart = e;
+							result.moveEvent = (TMMove)((int)e + part);
 						}
 					}
 				}
@@ -561,44 +646,22 @@ namespace Au.Triggers
 				if(y >= _ymax - q) return 3;
 				return 1;
 			}
+
+			///// <summary>
+			///// Sensitivity of <see cref="TMMove"/> tiggers.
+			///// Default: 5. Can be 0 (less sensitive) to 10 (more sensitive).
+			///// </summary>
+			//public int MoveSensitivity {
+			//	get => _sensPublic;
+			//	set {
+			//		if((uint)value > 10) throw new ArgumentOutOfRangeException(null, "0-10");
+			//		_sensPublic = value;
+			//		_sens = (int)(Math.Pow(1.414, 14 - value) * 1.3);
+			//		Print(_sens); //29 when _sensPublic 5 (default)
+			//	}
+			//}
+			//int _sensPublic;
 		}
-
-		/// <summary>
-		/// State data set by previous _MMDetector instances.
-		/// </summary>
-		class _MMState
-		{
-			public int xx, yy; //previous coords
-			public long time; //previous time
-
-			//these used for Move events
-			public int mx1, my1, mx2, my2;
-			public TMMove mDirection;
-			public long mTimeout;
-
-			//these used for Edge events
-			public long eTimeout;
-
-#if DEBUG
-			//public int _debug;
-#endif
-		}
-		_MMState _mmState;
-
-		/// <summary>
-		/// Sensitivity of <see cref="TMMove"/> tiggers.
-		/// Default: 5. Can be 0 (less sensitive) to 10 (more sensitive).
-		/// </summary>
-		public int MoveSensitivity {
-			get => _mmSensPublic;
-			set {
-				if((uint)value > 10) throw new ArgumentOutOfRangeException(null, "0-10");
-				_mmSensPublic = value;
-				_mmSens = (int)(Math.Pow(1.414, 14 - value) * 1.3);
-				//Print(_sens); //29 when _sensPublic 5 (default)
-			}
-		}
-		int _mmSens, _mmSensPublic;
 	}
 
 	/// <summary>
@@ -669,6 +732,17 @@ namespace Au.Triggers
 		LeftRight, LeftRightInCenter50, LeftRightInTop25, LeftRightInBottom25,
 		UpDown, UpDownInCenter50, UpDownInLeft25, UpDownInRight25,
 		DownUp, DownUpInCenter50, DownUpInLeft25, DownUpInRight25,
+	}
+
+	/// <summary>
+	/// Screen index for mouse triggers.
+	/// </summary>
+	public enum TMScreen
+	{
+		Primary,
+		NonPrimary1, NonPrimary2, NonPrimary3, NonPrimary4, NonPrimary5,
+		Any = -1,
+		OfActiveWindow = -2,
 	}
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 }

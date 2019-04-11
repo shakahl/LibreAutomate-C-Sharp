@@ -481,14 +481,19 @@ namespace Au.Util
 
 	/// <summary>
 	/// Functions for high-DPI screen support.
-	/// High DPI means when in Control Panel is set screen text size other than 100%.
 	/// </summary>
+	/// <remarks>
+	/// High DPI is when in Windows Settings is set display text size other than 100%.
+	/// Currently this class and this library don't support multiple screens that have different DPI. The Windows OS supports it since version 8.1.
+	/// </remarks>
 	public static class Dpi
 	{
 		/// <summary>
 		/// Gets DPI of the primary screen.
-		/// On newer Windows versions, users can change DPI without logoff-logon. This function gets the setting that was after logon.
 		/// </summary>
+		/// <remarks>
+		/// On newer Windows versions, users can change DPI without logoff-logon. This function gets the setting that was after logon.
+		/// </remarks>
 		public static int BaseDPI {
 			get {
 				if(_baseDPI == 0) {

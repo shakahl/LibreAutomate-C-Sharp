@@ -331,16 +331,17 @@ namespace Au
 		/// <summary>
 		/// Waits for key-down or key-up event of the specified key.
 		/// </summary>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
 		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <param name="key">Wait for this key. Can be a single-key string like with <see cref="Key"/>.</param>
+		/// <param name="key">Wait for this key..</param>
 		/// <param name="up">Wait for key-up event.</param>
 		/// <param name="block">Make the event invisible for other apps. If <paramref name="up"/> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
 		/// <exception cref="ArgumentException"><paramref name="key"/> is 0.</exception>
 		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
 		/// <remarks>
 		/// Unlike <see cref="WaitForReleased"/>, waits for key event, not for key state.
 		/// Uses low-level keyboard hook. Can wait for any single key. See also <see cref="WaitForHotkey"/>.
+		/// Ignores key events injected by functions of this library.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -354,8 +355,17 @@ namespace Au
 			return 0 != _WaitForKey(secondsTimeout, key, up, block);
 		}
 
-		/// <inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/>
+		/// <summary>
+		/// Waits for key-down or key-up event of the specified key.
+		/// </summary>
+		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="key">Wait for this key. A single-key string like with <see cref="Key"/>.</param>
+		/// <param name="up">Wait for key-up event.</param>
+		/// <param name="block"><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></param>
 		/// <exception cref="ArgumentException">Invalid <paramref name="key"/> string.</exception>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <remarks><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// Keyb.WaitForKey(0, "Ctrl", up: false, block: true);
@@ -374,7 +384,11 @@ namespace Au
 		/// Returns the key code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.
 		/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
 		/// </returns>
-		/// <inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/>
+		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="up">Wait for key-up event.</param>
+		/// <param name="block"><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></param>
+		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <remarks><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var key = Keyb.WaitForKey(0, up: true, block: true);
@@ -392,16 +406,16 @@ namespace Au
 
 			KKey R = 0;
 			using(Util.WinHook.Keyboard(x => {
-				if(key != 0 && !x.IsKey(key)) return false;
+				if(key != 0 && !x.IsKey(key)) return;
 				if(x.IsUp != up) {
 					if(up && block) { //key down when we are waiting for up. If block, now block down too.
 						if(key == 0) key = x.vkCode;
-						return true;
+						x.BlockEvent();
 					}
-					return false;
+					return;
 				}
 				R = x.vkCode; //info: for mod keys returns left/right
-				return block;
+				if(block) x.BlockEvent();
 			})) WaitFor.MessagesAndCondition(secondsTimeout, () => R != 0);
 
 			return R;
@@ -682,7 +696,7 @@ namespace Au
 		/// </description>
 		/// <description>Start with an uppercase character. Only the first 3 characters are significant; others can be any ASCII letters. For example, can be <c>"Back"</c>, <c>"Bac"</c>, <c>"Backspace"</c> or <c>"BACK"</c>, but not <c>"back"</c> or <c>"Ba"</c> or <c>"Back5"</c>.
 		/// 
-		/// Alternative key names: AltGr (RAlt), App (Menu), PageDown, PageUp, PrintScreen (PrtSc).
+		/// Alternative key names: AltGr (RAlt), App (Menu), PageDown or PD (PgDn), PageUp or PU (PgUp), PrintScreen or PS (PrtSc), BS (Back), PB (Pause/Break), CL (CapsLock), NL (NumLock), SL (ScrollLock), HM (Home).
 		/// </description>
 		/// </item>
 		/// <item>
@@ -702,7 +716,14 @@ namespace Au
 		/// <description>Other keys</description>
 		/// <description>Names of enum <see cref="KKey"/> members.</description>
 		/// <description>Start with an uppercase character.
-		/// Example: <c>Key("BrowserBack", KKey.BrowserBack);</c>
+		/// Example: <c>Key("BrowserBack"); //KKey.BrowserBack</c>
+		/// </description>
+		/// </item>
+		/// <item>
+		/// <description>Other keys</description>
+		/// <description>Virtual-key codes.</description>
+		/// <description>Start with VK or Vk.
+		/// Example: <c>Key("VK65 VK0x42");</c>
 		/// </description>
 		/// </item>
 		/// <item>

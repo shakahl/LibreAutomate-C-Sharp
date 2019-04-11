@@ -82,6 +82,7 @@ namespace Au.Util
 
 		internal OutputServer.LibSharedMemoryData outp;
 		internal Triggers.ActionTriggers.LibSharedMemoryData triggers;
+		internal WinHook.LibSharedMemoryData winHook;
 
 		#endregion
 

@@ -752,7 +752,7 @@ namespace Au.Types
 		/// Few apps don't support it.
 		/// This option is default.
 		/// Supports most Unicode characters.
-		/// For newlines is used key Enter (implicitly).
+		/// For newlines sends key Enter, because VK_PACKET often does not work well.
 		/// </summary>
 		Characters,
 		//info:
@@ -764,7 +764,7 @@ namespace Au.Types
 		/// <summary>
 		/// Send text keys, with Shift or other modifiers where need, depending on the keyboard layout of the active window. The numpad keys are not used.
 		/// All apps support it.
-		/// Cannot send characters that cannot be typed using the keyboard. For example most Unicode characters. For these characters is used the <b>Characters</b> option (implicitly).
+		/// Cannot send characters that cannot be easily typed using the keyboard. For example most Unicode characters. For these characters uses the <b>Characters</b> option.
 		/// </summary>
 		Keys,
 
@@ -774,7 +774,7 @@ namespace Au.Types
 		/// This option is recommended for long text, because other ways then are too slow.
 		/// Other options are unreliable when text length is more than 4000 or 5000 and the target app is too slow to process sent characters. Then <see cref="OptKey.TextSpeed"/> can help.
 		/// Also, other options are unreliable when the target app modifies typed text, for example has such features as auto-complete or auto-indent. However some apps modify even pasted text, for example trim the last newline.
-		/// When pasting text, previous clipboard data is lost.
+		/// When pasting text, previous clipboard data is lost. Only text is restored.
 		/// </summary>
 		Paste,
 
