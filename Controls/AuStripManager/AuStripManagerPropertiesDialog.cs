@@ -287,7 +287,7 @@ namespace Au.Controls
 			this.radioIconAndText.AutoSize = true;
 			this.radioIconAndText.Location = new System.Drawing.Point(248, 24);
 			this.radioIconAndText.Name = "radioIconAndText";
-			this.radioIconAndText.Size = new System.Drawing.Size(93, 19);
+			this.radioIconAndText.Size = new System.Drawing.Size(94, 19);
 			this.radioIconAndText.TabIndex = 3;
 			this.radioIconAndText.Text = "Icon and text";
 			this.radioIconAndText.UseVisualStyleBackColor = true;
@@ -329,7 +329,7 @@ namespace Au.Controls
 			this.label1.AutoSize = true;
 			this.label1.Location = new System.Drawing.Point(8, 8);
 			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(71, 15);
+			this.label1.Size = new System.Drawing.Size(72, 15);
 			this.label1.TabIndex = 0;
 			this.label1.Text = "Custom text";
 			// 
@@ -365,14 +365,14 @@ namespace Au.Controls
 			this.textIcon.Size = new System.Drawing.Size(384, 23);
 			this.textIcon.TabIndex = 5;
 			this.toolTip1.SetToolTip(this.textIcon, "Icon file path like c:\\a\\b.ico or c:\\a\\b.dll,5\r\nYou can drag and drop a file here" +
-		".");
+        ".");
 			// 
 			// button1
 			// 
 			this.button1.DialogResult = System.Windows.Forms.DialogResult.OK;
-			this.button1.Location = new System.Drawing.Point(328, 280);
+			this.button1.Location = new System.Drawing.Point(336, 280);
 			this.button1.Name = "button1";
-			this.button1.Size = new System.Drawing.Size(80, 24);
+			this.button1.Size = new System.Drawing.Size(72, 24);
 			this.button1.TabIndex = 8;
 			this.button1.Text = "OK";
 			this.button1.UseVisualStyleBackColor = true;
@@ -457,9 +457,6 @@ namespace Au.Controls
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.CancelButton = this.button2;
 			this.ClientSize = new System.Drawing.Size(503, 313);
-			this.FormBorderStyle = FormBorderStyle.FixedDialog;
-			this.MaximizeBox = false;
-			this.MinimizeBox = false;
 			this.Controls.Add(this.groupHotkey);
 			this.Controls.Add(this.comboColor);
 			this.Controls.Add(this.button2);
@@ -470,6 +467,10 @@ namespace Au.Controls
 			this.Controls.Add(this.textText);
 			this.Controls.Add(this.label1);
 			this.Controls.Add(this.groupStyle);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
+			this.MaximizeBox = false;
+			this.MinimizeBox = false;
+			this.Name = "AuStripManagerPropertiesDialog";
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
 			this.groupStyle.ResumeLayout(false);

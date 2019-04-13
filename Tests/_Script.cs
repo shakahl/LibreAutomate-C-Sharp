@@ -438,7 +438,7 @@ unsafe partial class Script : AuScript
 		Triggers.Options.BeforeAction = null;
 		tt.DefaultPostfixType = default;
 
-		var ts = Triggers.Autotext.Simple;
+		var ts = Triggers.Autotext.SimpleReplace;
 		ts["#su"] = "Sunday"; //the same as tt["#su"] = o => o.Replace("Sunday");
 		ts["#mo"] = "Monday";
 
@@ -545,8 +545,8 @@ unsafe partial class Script : AuScript
 		//Triggers.Window.VisibleOnce["Notepad", "#32770", contains: "c 'Button' Save"] = o => Print("TRIGGER", o.Window);
 		//Triggers.Window.VisibleOnce["Notepad", "#32770", contains: "a 'STATICTEXT' * save *"] = o => Print("TRIGGER", o.Window);
 
-		//Triggers.Window.VisibleOnce["Notepad", "#32770"] = o => { Print("TRIGGER", o.Window); o.Window.Close(); };
-		//Triggers.Window.ActiveOnce["Notepad", "#32770"] = o => { Print("TRIGGER", o.Window); o.Window.Close(); };
+		Triggers.Window.VisibleOnce["Notepad", "#32770"] = o => { Print("TRIGGER", o.Window); o.Window.Close(); };
+		Triggers.Window.ActiveOnce["Notepad", "#32770"] = o => { Print("TRIGGER", o.Window); o.Window.Close(); };
 
 		//Triggers.Window.ActiveOnce["Notepad", "#32770", contains: "c 'Button' Save"] = o => {
 		//Triggers.Window.ActiveOnce["Save As", "#32770", "notepad.exe", contains: "c 'Button' Save"] = o => {
@@ -572,6 +572,13 @@ unsafe partial class Script : AuScript
 			//Perf.Write();
 			w.Close();
 		};
+
+		//int n = 0;
+		//foreach(var v in Triggers.Window) {
+		//	Print(v);
+		//	n++;
+		//}
+		//Print(n);
 
 		Triggers.Run();
 		//Print("stopped");
@@ -617,7 +624,7 @@ unsafe partial class Script : AuScript
 		//Triggers.Hotkey["Ctrl+Shift+O"] = o => Print(o.Trigger);
 
 		//tm[TMClick.Right] = o => Print(o.Trigger);
-		tm[TMClick.Right, null, TMFlags.ButtonModUp] = o => Print(o.Trigger);
+		//tm[TMClick.Right, null, TMFlags.ButtonModUp] = o => Print(o.Trigger);
 		tm[TMClick.Right, "Alt"] = o => Print(o.Trigger);
 		//tm[TMClick.Right, "Alt", TMFlags.ButtonModUp] = o => Print(o.Trigger);
 		//tm[TMClick.Right, "Alt", TMFlags.ShareEvent] = o => Print(o.Trigger);
@@ -650,6 +657,13 @@ unsafe partial class Script : AuScript
 		////Triggers.Mouse[TMEdge.Right] = o => Print(o.Trigger);
 		//Triggers.Mouse[TMMove.DownUp] = o => Print(o.Trigger);
 
+		//int n = 0;
+		//foreach(var v in tm) {
+		//	Print(v);
+		//	n++;
+		//}
+		//Print(n);
+
 		//Print("----");
 		//Triggers.Hotkey["Ctrl+Q"] = o => Triggers.Stop();
 		Triggers.Run();
@@ -663,6 +677,7 @@ unsafe partial class Script : AuScript
 		Triggers.Options.RunActionInThread(0, 500);
 		var tk = Triggers.Hotkey;
 
+#if true
 		//tk["Shift+K"] = o => { Print(Keyb.IsShift); Mouse.Click(); };
 		//tk["Shift+K", TKFlags.NoModOff] = o => { Print(Keyb.IsShift); Mouse.Click(); };
 		//tk["Shift+K", TKFlags.NoModOff] = o => { Print(Keyb.IsShift); Key("keys", "some Text"); };
@@ -706,6 +721,25 @@ unsafe partial class Script : AuScript
 		tk[KKey.F12, "?"] = o => { Print(o.Trigger, o.Key, o.Mod); };
 
 		tk["Ctrl+VK66"] = o => { Print(o.Trigger); };
+
+		tk["Shift+F11"] = o => { Print(o.Trigger); };
+		tk["?+F11"] = o => { Print(o.Trigger); };
+#else
+		tk["Ctrl+K"] = o => { Print(o.Trigger); };
+		tk["Ctrl+Alt+K"] = o => { Print(o.Trigger); };
+		tk[KKey.F12, "?"] = o => { Print(o.Trigger, o.Key, o.Mod); };
+		tk["Ctrl?+L"] = o => { Print(o.Trigger); };
+		tk["Ctrl?+Shift?+M"] = o => { Print(o.Trigger); };
+		tk["Ctrl?+Shift+N"] = o => { Print(o.Trigger); };
+
+#endif
+
+		//int n = 0;
+		//foreach(var v in tk) {
+		//	Print(v);
+		//	n++;
+		//}
+		//Print(n);
 
 		Triggers.Run();
 	}
@@ -773,18 +807,32 @@ unsafe partial class Script : AuScript
 			m.Show(true);
 		};
 
-		//tt["mii", TAFlags.Confirm] = o => { o.Replace("dramblys"); };
-		tt["mii", TAFlags.Confirm] = o => { o.Replace(@"1>------ Build started: Project: Au, Configuration: Debug Any CPU ------
-1>  Au -> Q:\app\Au\Au\bin\Debug\Au.dll
-2>------ Build started: Project: TreeList, Configuration: Debug Any CPU ------
-3>------ Build started: Project: Au.Compiler, Configuration: Debug Any CPU ------
-"); };
+		tt["mii", TAFlags.Confirm] = o => { o.Replace("dramblys"); };
+//		tt["mii", TAFlags.Confirm] = o => { o.Replace(@"1>------ Build started: Project: Au, Configuration: Debug Any CPU ------
+//1>  Au -> Q:\app\Au\Au\bin\Debug\Au.dll
+//2>------ Build started: Project: TreeList, Configuration: Debug Any CPU ------
+//3>------ Build started: Project: Au.Compiler, Configuration: Debug Any CPU ------
+//"); };
 		tt["con1", TAFlags.Confirm] = o => o.Replace("Flag Confirm");
 		tt["con2"] = o => { if(o.Confirm("Example")) o.Replace("Function Confirm"); };
 
-		var ts = Triggers.Autotext.Simple;
+		var ts = Triggers.Autotext.SimpleReplace;
 		ts["#su"] = "Sunday"; //the same as Triggers.Autotext["#su"] = o => o.Replace("Sunday");
 		ts["#mo"] = "Monday";
+		ts["#mokkkk"] = "Monday";
+		ts["#sukkkk"] = "Sunday";
+
+		Triggers.Of.Window("* Notepad");
+
+		Triggers.Mouse[TMEdge.RightInBottom25] = o => Print(o.Trigger);
+		Triggers.Window.ActiveNew["* Notepad"] = o => Print(o.Trigger);
+
+		//int n = 0;
+		//foreach(var v in tt) {
+		//	Print(v);
+		//	n++;
+		//}
+		//Print(n);
 
 		Triggers.Run();
 	}
@@ -807,15 +855,21 @@ unsafe partial class Script : AuScript
 		//TestMouseRelative();
 #else
 		Thread_.Start(() => {
+#if true
 			OutputForm.ShowForm();
-			//AuDialog.Show("triggers");
+#else
+			Output.QM2.UseQM2 = true;
+			Output.Clear();
+			AuDialog.Show("triggers");
+#endif
 			Triggers.Stop();
 		}, false);
 		300.ms();
 
-		TestAutotextTriggers();
-		//TestHotkeyTriggers();
+		//TestAutotextTriggers();
+		TestHotkeyTriggers();
 		//TestMouseTriggers();
+		//TestWindowTriggers();
 		//TriggersExamples();
 #endif
 		return;

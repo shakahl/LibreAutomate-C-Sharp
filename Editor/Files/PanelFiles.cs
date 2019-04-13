@@ -46,8 +46,9 @@ partial class PanelFiles : Control
 
 	/// <summary>
 	/// Loads existing or new workspace.
-	/// If fails, shows a task dialog with several choices - retry, load another, create new, cancel.
+	/// If fails, shows a task dialog with several choices - retry, load another, create new, cancel. If then fails, ends process.
 	/// Sets Model and Text properties of the main form. Updates recent files.
+	/// By default runs startup script.
 	/// </summary>
 	/// <param name="wsDir">
 	/// Workspace's directory. The directory should contain file "files.xml" and subdirectory "files".
@@ -55,7 +56,8 @@ partial class PanelFiles : Control
 	/// If the setting does not exist, uses Folders.ThisAppDocuments + @"Main".
 	/// If the file does not exist, copies from Folders.ThisApp + @"Default".
 	/// </param>
-	public FilesModel LoadWorkspace(string wsDir = null)
+	/// <param name="runStartupScript"></param>
+	public FilesModel LoadWorkspace(string wsDir = null, bool runStartupScript = true)
 	{
 		if(wsDir == null) wsDir = Settings.Get("workspace");
 		if(Empty(wsDir)) wsDir = Folders.ThisAppDocuments + @"Main";
@@ -112,6 +114,8 @@ partial class PanelFiles : Control
 		if(newFile) m.SetCurrentFile(m.Root.FirstChild, newFile: true);
 		else m.LoadState();
 		if(m.CurrentFile == null) MainForm.SetTitle();
+
+		if(runStartupScript) Model.RunStartupScript();
 
 		return _model;
 	}

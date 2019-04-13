@@ -691,8 +691,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Tools_Options()
 	{
-
+		EdOptions.ShowForm();
 	}
+
+	#endregion
+
+	#region menu_Output
 
 	public void Tools_Output_Clear()
 	{
@@ -741,6 +745,10 @@ class CmdHandlers : IGStripManagerCallbacks
 		var v = Panels.Output;
 		v.Topmost = !v.Topmost;
 	}
+
+	#endregion
+
+	#region menu_Statusbar
 
 	public void Tools_Statusbar_Floating()
 	{

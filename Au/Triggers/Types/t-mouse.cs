@@ -20,6 +20,7 @@ using System.Windows.Forms;
 using Au;
 using Au.Types;
 using static Au.NoClass;
+using System.Collections;
 
 namespace Au.Triggers
 {
@@ -64,12 +65,16 @@ namespace Au.Triggers
 	/// </summary>
 	public class MouseTrigger : ActionTrigger
 	{
+		internal readonly KMod modMasked, modMask;
 		internal readonly TMFlags flags;
 		internal readonly TMScreen screenIndex;
 		string _paramsString;
 
-		internal MouseTrigger(ActionTriggers triggers, Action<MouseTriggerArgs> action, TMFlags flags, TMScreen screen, string paramsString) : base(triggers, action, true)
+		internal MouseTrigger(ActionTriggers triggers, Action<MouseTriggerArgs> action, KMod mod, KMod modAny, TMFlags flags, TMScreen screen, string paramsString) : base(triggers, action, true)
 		{
+			const KMod csaw = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win;
+			modMask = ~modAny & csaw;
+			modMasked = mod & modMask;
 			this.flags = flags;
 			this.screenIndex = screen;
 			_paramsString = paramsString;
@@ -91,7 +96,7 @@ namespace Au.Triggers
 	/// Mouse triggers.
 	/// </summary>
 	/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
-	public class MouseTriggers : ITriggers
+	public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 	{
 		enum ESubtype : byte { Click, Wheel, Edge, Move }
 
@@ -102,8 +107,6 @@ namespace Au.Triggers
 		{
 			_triggers = triggers;
 		}
-
-		static int _DictKey(ESubtype subtype, KMod mod, byte data) => (data << 16) | ((byte)mod << 8) | (byte)subtype;
 
 		/// <summary>
 		/// Adds a mouse click trigger.
@@ -196,15 +199,14 @@ namespace Au.Triggers
 				ps = b.ToString(); //Print(ps);
 			}
 
-			var t = new MouseTrigger(_triggers, f, flags, screen, ps);
+			KMod mod = 0, modAny = 0;
 			if(noMod) {
 				if(flags.HasAny_(subtype == ESubtype.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
-				t.DictAdd(_d, _DictKey(subtype, 0, data));
 			} else {
-				if(!Keyb.Misc.LibParseHotkeyTriggerString(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
-				var b = TrigUtil.ModBitArray(mod, modAny);
-				for(int i = 0; i < 16; i++) if(0 != (b & (1 << i))) t.DictAdd(_d, _DictKey(subtype, (KMod)i, data));
+				if(!Keyb.Misc.LibParseHotkeyTriggerString(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 			}
+			var t = new MouseTrigger(_triggers, f, mod, modAny, flags, screen, ps);
+			t.DictAdd(_d, _DictKey(subtype, data));
 			_lastAdded = t;
 			LibUsedHookEvents |= HooksServer.UsedEvents.Mouse; //just sets the hook
 			switch(subtype) {
@@ -214,6 +216,8 @@ namespace Au.Triggers
 			}
 			return t;
 		}
+
+		static int _DictKey(ESubtype subtype, byte data) => (data << 8) | (byte)subtype;
 
 		/// <summary>
 		/// The last added trigger.
@@ -308,11 +312,11 @@ namespace Au.Triggers
 			var mod = TrigUtil.GetModLR(out var modL, out var modR) | _eatMod;
 			MouseTriggerArgs args = null;
 			g1:
-			if(_d.TryGetValue(_DictKey(subtype, mod, data), out var v)) {
+			if(_d.TryGetValue(_DictKey(subtype, data), out var v)) {
 				if(!isEdgeMove) thc.UseWndFromPoint(pt);
 				for(; v != null; v = v.next) {
-					if(v.DisabledThisOrAll) continue;
 					var x = v as MouseTrigger;
+					if((mod & x.modMask) != x.modMasked) continue;
 
 					switch(x.flags & (TMFlags.LeftMod | TMFlags.RightMod)) {
 					case TMFlags.LeftMod: if(modL != mod) continue; break;
@@ -324,8 +328,11 @@ namespace Au.Triggers
 						if(!screen.Bounds.Contains(pt)) continue;
 					}
 
+					if(v.DisabledThisOrAll) continue;
+
 					if(args == null) thc.args = args = new MouseTriggerArgs(x, thc.Window, mod); //may need for scope callbacks too
 					else args.Trigger = x;
+
 					if(!x.MatchScopeWindowAndFunc(thc)) continue;
 
 					if(0 != (x.flags & TMFlags.ButtonModUp) && (mod != 0 || subtype == ESubtype.Click)) {
@@ -427,9 +434,8 @@ namespace Au.Triggers
 
 		internal static void JitCompile()
 		{
-			Util.Jit.Compile(typeof(MouseTriggers), nameof(HookProcClickWheel));
-			Util.Jit.Compile(typeof(MouseTriggers), nameof(HookProcEdgeMove));
-			Util.Jit.Compile(typeof(MouseTriggers), nameof(_HookProc2));
+			Util.Jit.Compile(typeof(MouseTriggers), nameof(HookProcClickWheel), nameof(HookProcEdgeMove), nameof(_HookProc2));
+			Wnd.FromXY(default, WXYFlags.NeedWindow);
 		}
 
 		/// <summary>
@@ -661,6 +667,24 @@ namespace Au.Triggers
 			//	}
 			//}
 			//int _sensPublic;
+		}
+
+		/// <summary>
+		/// Used by foreach to enumerate added triggers.
+		/// </summary>
+		public IEnumerator<MouseTrigger> GetEnumerator()
+		{
+			foreach(var kv in _d) {
+				for(var v = kv.Value; v != null; v = v.next) {
+					var x = v as MouseTrigger;
+					yield return x;
+				}
+			}
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			throw new NotImplementedException();
 		}
 	}
 

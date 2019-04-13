@@ -14,7 +14,6 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Xml.Linq;
 using System.Reflection.Emit;

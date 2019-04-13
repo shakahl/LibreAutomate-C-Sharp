@@ -758,7 +758,8 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		if(name == null) {
 			name = Path_.GetFileName(template);
 			//let unique names start from 1
-			if(!isFolder && (i = name.LastIndexOf('.')) > 0) name = name.Insert(i, "1"); else name += "1";
+			if(!(!isFolder && name.EqualsI_("Startup.cs")))
+				if(!isFolder && (i = name.LastIndexOf('.')) > 0) name = name.Insert(i, "1"); else name += "1";
 		}
 		name = CreateNameUniqueInFolder(newParent, name, isFolder);
 
@@ -954,7 +955,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// <param name="newModel">Used when importing workspace.</param>
 	internal FileNode FileCopy(FileNode target, NodePosition pos, FilesModel newModel = null)
 	{
-		_model.Save.TextNowIfNeed(true);
+		_model.Save?.TextNowIfNeed(true);
 
 		//create unique name
 		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;

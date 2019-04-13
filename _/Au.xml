@@ -7129,6 +7129,10 @@
             Triggers.Options.BeforeAction = null;
             tt.DefaultPostfixType = default;
             
+            var ts = Triggers.Autotext.SimpleReplace;
+            ts["#su"] = "Sunday"; //the same as tt["#su"] = o => o.Replace("Sunday");
+            ts["#mo"] = "Monday";
+            
             //how to stop and disable/enable triggers
             
             hk["Ctrl+Alt+Q"] = o => Triggers.Stop(); //let Triggers.Run() end its work and return
@@ -7717,13 +7721,6 @@
             <param name="args">Trigger action arguments. Example: <see cref="T:Au.Triggers.TriggerFuncs"/>.</param>
             <returns>Return true to run the trigger action, or false to not run.</returns>
         </member>
-        <member name="M:Au.Triggers.TrigUtil.ModBitArray(Au.Types.KMod,Au.Types.KMod)">
-            <summary>
-            To specify 'any modifier(s)' in hotkey and mouse triggers, can be used ?, like "Shift?+K" (any Shift) or "Ctrl+Shift?+K" (Ctrl+any Shift) or "?+K" (any mods).
-            To implement it simply, we add all modifier combinations to the dictionary. For example, for "Shift?+K" we add "K" and "Shift+K".
-            This function returns a 16 bit array containing 1 bits for modifier combinations to add: 0, Shift, Ctrl, Ctrl+Shift, Alt, ....
-            </summary>
-        </member>
         <member name="M:Au.Triggers.TrigUtil.GetModLR(Au.Types.KMod@,Au.Types.KMod@)">
             <summary>
             Gets left and right modifiers. Uses Keyb.IsPressed.
@@ -7819,6 +7816,25 @@
             <exception cref="T:System.InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
             <remarks>Example: <see cref="T:Au.Triggers.ActionTriggers"/>.</remarks>
         </member>
+        <member name="T:Au.Triggers.AutotextTriggers.TSimpleReplace">
+            <tocexclude />
+            <remarks>Infrastructure.</remarks>
+        </member>
+        <member name="P:Au.Triggers.AutotextTriggers.TSimpleReplace.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String)">
+            <inheritdoc cref="P:Au.Triggers.AutotextTriggers.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String)"/>
+        </member>
+        <member name="P:Au.Triggers.AutotextTriggers.SimpleReplace">
+            <summary>
+            Allows to add triggers in a more concise way - assign a string, not a function. The string will replace the user-typed text.
+            </summary>
+            <example>
+            <code><![CDATA[
+            var ts = Triggers.Autotext.SimpleReplace;
+            ts["#su"] = "Sunday"; //the same as Triggers.Autotext["#su"] = o => o.Replace("Sunday");
+            ts["#mo"] = "Monday";
+            ]]></code>
+            </example>
+        </member>
         <member name="P:Au.Triggers.AutotextTriggers.DefaultFlags">
             <summary>
             Default value for the <i>flags</i> parameter used for triggers added afterwards.
@@ -7865,6 +7881,11 @@
         <member name="P:Au.Triggers.AutotextTriggers.Last">
             <summary>
             The last added trigger.
+            </summary>
+        </member>
+        <member name="M:Au.Triggers.AutotextTriggers.GetEnumerator">
+            <summary>
+            Used by foreach to enumerate added triggers.
             </summary>
         </member>
         <member name="T:Au.Triggers.AutotextTriggerArgs">
@@ -8025,6 +8046,11 @@
             The last added trigger.
             </summary>
         </member>
+        <member name="M:Au.Triggers.HotkeyTriggers.GetEnumerator">
+            <summary>
+            Used by foreach to enumerate added triggers.
+            </summary>
+        </member>
         <member name="T:Au.Triggers.HotkeyTriggerArgs">
             <summary>
             Arguments for actions of hotkey triggers.
@@ -8172,6 +8198,11 @@
         <member name="T:Au.Triggers.MouseTriggers.LibEdgeMoveDetector._State">
             <summary>
             State data set by previous events.
+            </summary>
+        </member>
+        <member name="M:Au.Triggers.MouseTriggers.GetEnumerator">
+            <summary>
+            Used by foreach to enumerate added triggers.
             </summary>
         </member>
         <member name="T:Au.Triggers.MouseTriggerArgs">
@@ -8555,6 +8586,11 @@
             <summary>
             For _aTriggered, _aVisible and _aVisibleOld we use resizable array, not List.
             We access elements by index in time-critical code. With List it is much slower.
+            </summary>
+        </member>
+        <member name="M:Au.Triggers.WindowTriggers.GetEnumerator">
+            <summary>
+            Used by foreach to enumerate added triggers.
             </summary>
         </member>
         <member name="T:Au.Triggers.WindowTriggerArgs">

@@ -229,7 +229,7 @@ class PanelOutput : Control
 		{
 			//Print(s);
 			var a = s.Split('|');
-			var fn = Model.Find(a[0], false);
+			var fn = Model.FindFile(a[0]);
 			if(fn == null || !Model.SetCurrentFile(fn)) return;
 			var doc = Panels.Editor.ActiveDoc;
 			doc.Focus();
@@ -246,7 +246,7 @@ class PanelOutput : Control
 		void _RunScript(string s)
 		{
 			var a = s.Split('|');
-			var f = Model.Find(a[0], false); if(f == null) return;
+			var f = Model.FindFile(a[0]); if(f == null) return;
 			Run.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt_(0));
 		}
 	}

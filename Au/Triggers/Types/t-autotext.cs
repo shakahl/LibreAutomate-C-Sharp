@@ -21,6 +21,7 @@ using System.Globalization;
 using Au;
 using Au.Types;
 using static Au.NoClass;
+using System.Collections;
 
 namespace Au.Triggers
 {
@@ -130,7 +131,7 @@ namespace Au.Triggers
 	/// Autotext triggers.
 	/// </summary>
 	/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
-	public class AutotextTriggers : ITriggers
+	public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger>
 	{
 		ActionTriggers _triggers;
 		Dictionary<int, ActionTrigger> _d = new Dictionary<int, ActionTrigger>();
@@ -138,7 +139,7 @@ namespace Au.Triggers
 		internal AutotextTriggers(ActionTriggers triggers)
 		{
 			_triggers = triggers;
-			_simple = new TSimple(this);
+			_simpleReplace = new TSimpleReplace(this);
 		}
 
 		/// <summary>
@@ -177,11 +178,11 @@ namespace Au.Triggers
 
 		/// <tocexclude />
 		/// <remarks>Infrastructure.</remarks>
-		public class TSimple
+		public class TSimpleReplace
 		{
 			AutotextTriggers _host;
 
-			internal TSimple(AutotextTriggers host)
+			internal TSimpleReplace(AutotextTriggers host)
 			{
 				_host = host;
 			}
@@ -199,13 +200,13 @@ namespace Au.Triggers
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// var ts = Triggers.Autotext.Simple;
+		/// var ts = Triggers.Autotext.SimpleReplace;
 		/// ts["#su"] = "Sunday"; //the same as Triggers.Autotext["#su"] = o => o.Replace("Sunday");
 		/// ts["#mo"] = "Monday";
 		/// ]]></code>
 		/// </example>
-		public TSimple Simple => _simple;
-		TSimple _simple;
+		public TSimpleReplace SimpleReplace => _simpleReplace;
+		TSimpleReplace _simpleReplace;
 
 		/// <summary>
 		/// Default value for the <i>flags</i> parameter used for triggers added afterwards.
@@ -472,6 +473,7 @@ namespace Au.Triggers
 						if(x.postfixChars != null && postfixType == _DetectedPostfix.Delim && x.postfixChars.IndexOf(c) < 0) continue;
 
 						if(v.DisabledThisOrAll) continue;
+
 						if(args == null) { //may need for scope callbacks too
 							bool hasPChar = postfixType == _DetectedPostfix.Delim;
 							int n = s.Length, to = nc; if(hasPChar) { n++; to++; }
@@ -479,6 +481,7 @@ namespace Au.Triggers
 							i = to - n; fixed (char* p = tt) for(int j = 0; i < to;) p[j++] = _text[i++].c;
 							thc.args = args = new AutotextTriggerArgs(x, thc.Window, tt, hasPChar);
 						} else args.Trigger = x;
+
 						if(!x.MatchScopeWindowAndFunc(thc)) continue;
 
 						Reset(); //CONSIDER: flag DontReset. If the action generates keyboard events or mouse clicks, our kooks will reset.
@@ -580,6 +583,29 @@ namespace Au.Triggers
 			var s = new string(' ', _len);
 			fixed (char* p = s) for(int i = 0; i < s.Length; i++) p[i] = _text[i].c;
 			Print(s);
+		}
+
+		internal static unsafe void JitCompile()
+		{
+			Util.Jit.Compile(typeof(AutotextTriggers), nameof(HookProc), nameof(_Trigger), nameof(_KeyToChar));
+		}
+
+		/// <summary>
+		/// Used by foreach to enumerate added triggers.
+		/// </summary>
+		public IEnumerator<AutotextTrigger> GetEnumerator()
+		{
+			foreach(var kv in _d) {
+				for(var v = kv.Value; v != null; v = v.next) {
+					var x = v as AutotextTrigger;
+					yield return x;
+				}
+			}
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			throw new NotImplementedException();
 		}
 	}
 
@@ -717,7 +743,7 @@ namespace Au.Triggers
 		public bool Confirm(string text) //can be static, but, because it is public, would be not so easy to use.
 		{
 			bool ok = false;
-			var m = new AuMenu { ModalAlways = true };
+			var m = new AuMenu { ModalAlways = true }; //FUTURE: need something better. Creates 60 KB of garbage etc.
 			m[text.Escape_(limit: 60)] = u => ok = true;
 			using(Util.WinHook.Keyboard(x => {
 				if(x.IsUp) return;
@@ -732,10 +758,8 @@ namespace Au.Triggers
 				m.Show(true);
 				return ok;
 			}
-
-			//TODO: test garbage. Maybe use/reuse _menu.
 		}
 
-		//TODO: Menu.
+		//FUTURE: Menu.
 	}
 }

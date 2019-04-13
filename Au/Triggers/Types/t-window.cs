@@ -20,6 +20,7 @@ using System.Runtime.ExceptionServices;
 using Au;
 using Au.Types;
 using static Au.NoClass;
+using System.Collections;
 
 namespace Au.Triggers
 {
@@ -176,7 +177,7 @@ namespace Au.Triggers
 	/// Triggers.Run();
 	/// ]]></code>
 	/// </example>
-	public class WindowTriggers : ITriggers
+	public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger>
 	{
 		ActionTriggers _triggers;
 		bool _win10, _win8;
@@ -791,7 +792,9 @@ namespace Au.Triggers
 						Print(ex);
 						continue;
 					}
+
 					if(args == null) args = new WindowTriggerArgs(t, w, 0); else args.Trigger = t;
+
 					if(!t.CallFunc(args)) continue; //info: handles exceptions
 
 					switch(triggered) {
@@ -977,6 +980,31 @@ namespace Au.Triggers
 				}
 				return -1;
 			}
+		}
+
+		/// <summary>
+		/// Used by foreach to enumerate added triggers.
+		/// </summary>
+		public IEnumerator<WindowTrigger> GetEnumerator()
+		{
+			ActionTrigger last, v;
+			last = v = _tActive;
+			do {
+				v = v.next;
+				var x = v as WindowTrigger;
+				yield return x;
+			} while(v != last);
+			last = v = _tVisible;
+			do {
+				v = v.next;
+				var x = v as WindowTrigger;
+				yield return x;
+			} while(v != last);
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			throw new NotImplementedException();
 		}
 	}
 

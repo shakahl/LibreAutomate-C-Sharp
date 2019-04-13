@@ -14,7 +14,6 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Linq;
 using System.Xml.Linq;
 
@@ -79,20 +78,21 @@ partial class EdForm : Form
 	void _OnLoad()
 	{
 		Tasks = new RunningTasks();
-		Panels.Files.LoadWorkspace(CommandLine.WorkspaceDirectory);
+		Panels.Files.LoadWorkspace(CommandLine.WorkspaceDirectory, runStartupScript: false);
 		Debug_.PrintIf(((Wnd)this).IsVisible, "BAD: form became visible while loading workspace");
+		Au.Triggers.HooksServer.Start(false);
+		CommandLine.OnMainFormLoaded();
 		IsLoaded = true;
+		Model.RunStartupScript();
 		//Perf.Next();
 
-		Timer_.After(1, () => {
+		Timer_.After(1, () => { //TODO
 			var s = CommandLine.TestArg;
 			if(s != null) {
 				Print(Time.PerfMicroseconds - Convert.ToInt64(s));
 			}
 			Perf.Next('P');
 			//Perf.Write();
-
-			CommandLine.OnAfterCreatedFormAndOpenedWorkspace();
 		});
 	}
 

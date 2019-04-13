@@ -219,6 +219,8 @@ namespace Au.Util
 		{
 			if(systemCore) _ = typeof(System.Linq.Enumerable).Assembly; //System.Core, System
 			if(formsDrawing) _ = typeof(System.Windows.Forms.Control).Assembly; //System.Windows.Forms, System.Drawing
+
+			//It seems, after some Windows or .NET update, assembly loading became much faster. Now loads Forms+Drawing in 20-30 ms when cold CPU.
 		}
 	}
 

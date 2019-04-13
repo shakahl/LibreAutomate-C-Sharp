@@ -125,7 +125,7 @@ namespace Au.Triggers
 	/// Triggers.Options.BeforeAction = null;
 	/// tt.DefaultPostfixType = default;
 	/// 
-	/// var ts = Triggers.Autotext.Simple;
+	/// var ts = Triggers.Autotext.SimpleReplace;
 	/// ts["#su"] = "Sunday"; //the same as tt["#su"] = o => o.Replace("Sunday");
 	/// ts["#mo"] = "Monday";
 	/// 
@@ -306,7 +306,7 @@ namespace Au.Triggers
 				if(hookEvents != 0) {
 					_RunWithHooksServer(hookEvents);
 					//CONSIDER: run key/mouse triggers in separate thread.
-					//	Because now possible hook timeout if something other (window triggers, a form, timer, etc) sometimes runs too long.
+					//	Because now possible hook timeout if something other (window triggers, a form event handler, timer, etc) sometimes runs too long.
 					//	But it makes programming more difficult in various places. Need to lock etc.
 				} else {
 					_RunSimple();
@@ -346,7 +346,6 @@ namespace Au.Triggers
 					} else slice = period - td;
 
 					int _Period() => _winTimerPeriod / 15 * 15 + 10;
-					//int _Period() => Math.Max(_winTimerPeriod, 10);
 				}
 				var k = Api.MsgWaitForMultipleObjectsEx(nh, ha, slice, Api.QS_ALLINPUT, Api.MWMO_ALERTABLE | Api.MWMO_INPUTAVAILABLE);
 				if(k == nh) { //message, COM (RPC uses postmessage), hook, etc
@@ -380,21 +379,21 @@ namespace Au.Triggers
 			//Perf.Next();
 
 			//prevent big delay later on first LL hook event while hook proc waits
-			if(scopes.Used || funcs.Used) {
-				ThreadPool.QueueUserWorkItem(_ => { //never mind: should do it once. Several Triggers.Run in task is rare. Fast next time.
+			bool ngened = Util.Assembly_.LibIsAuNgened;
+			bool scopeUsed = scopes.Used || funcs.Used;
+			if(!ngened || scopeUsed) { //never mind: should do it once. Several Triggers.Run in task is rare. Fast next time.
+				ThreadPool.QueueUserWorkItem(_ => {
 					try {
-						Util.Assembly_.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
-						if(!Util.Assembly_.LibIsAuNgened) {
-							new Wnd.Finder("*a").IsMatch(Wnd.Active);
-							Wnd.FromXY(default, WXYFlags.NeedWindow);
-							Keyb.GetMod();
+						if(scopeUsed) Util.Assembly_.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
+						if(!ngened) {
+							if(scopeUsed) new Wnd.Finder("*a").IsMatch(Wnd.Active);
 							_ = Time.PerfMicroseconds;
-							Util.Jit.Compile(typeof(HotkeyTriggers), nameof(HotkeyTriggers.HookProc));
-							//Util.Jit.Compile(typeof(AutotextTriggers), nameof(AutotextTriggers.HookProc)); //does not make sense
-							MouseTriggers.JitCompile();
-							Util.Jit.Compile(typeof(ActionTrigger), nameof(ActionTrigger.MatchScopeWindowAndFunc));
 							Util.Jit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
 							Util.Jit.Compile(typeof(TriggerHookContext), "InitContext", "PerfEnd", "PerfWarn");
+							Util.Jit.Compile(typeof(ActionTrigger), nameof(ActionTrigger.MatchScopeWindowAndFunc));
+							if(this[TriggerType.Hotkey] is HotkeyTriggers tk) Util.Jit.Compile(typeof(HotkeyTriggers), nameof(HotkeyTriggers.HookProc));
+							if(this[TriggerType.Autotext] is AutotextTriggers ta) AutotextTriggers.JitCompile();
+							if(this[TriggerType.Mouse] is MouseTriggers tm) MouseTriggers.JitCompile();
 						}
 					}
 					catch(Exception ex) { Debug_.Print(ex); }
@@ -405,7 +404,6 @@ namespace Au.Triggers
 			Wnd wMsg = default;
 			bool hooksInEditor = AuTask.Role != ATRole.ExeProgram;
 			if(hooksInEditor) {
-				//SHOULDDO: pass wMsg when starting task.
 				wMsg = Wnd.Misc.FindMessageOnlyWindow(null, "Au.Hooks.Server");
 				if(wMsg.Is0) {
 					Debug_.Print("Au.Hooks.Server");
@@ -463,6 +461,7 @@ namespace Au.Triggers
 						if(ec != 0) { Debug_.LibPrintNativeError(ec); break; }
 					}
 
+					//Perf.First();
 					bool eat = false;
 					thc.InitContext();
 					if(size == sizeof(Api.KBDLLHOOKSTRUCT)) {
@@ -489,9 +488,9 @@ namespace Au.Triggers
 							tm.HookProcEdgeMove(*m, thc);
 						}
 					}
-					Perf.Next();
+					//Perf.Next();
 					thc.PerfWarn();
-					//Perf.NW();//TODO
+					//Perf.NW();
 
 					//var mem = GC.GetTotalMemory(false);
 					//if(mem != _debugMem && _debugMem != 0) Print(mem - _debugMem);
@@ -643,7 +642,6 @@ namespace Au.Triggers
 		void StartStop(bool start);
 	}
 
-
 	class TriggerHookContext : WFCache
 	{
 		//internal readonly ActionTriggers triggers;
@@ -689,8 +687,6 @@ namespace Au.Triggers
 		/// </summary>
 		public void InitContext()
 		{
-			Perf.First();//TODO
-
 			_w = default; _haveWnd = _mouseWnd = false;
 			base.Clear(onlyName: true);
 			trigger = null; args = null;

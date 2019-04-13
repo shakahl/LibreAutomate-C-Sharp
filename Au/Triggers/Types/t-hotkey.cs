@@ -20,6 +20,7 @@ using System.Runtime.ExceptionServices;
 using Au;
 using Au.Types;
 using static Au.NoClass;
+using System.Collections;
 
 namespace Au.Triggers
 {
@@ -65,13 +66,17 @@ namespace Au.Triggers
 	/// </summary>
 	public class HotkeyTrigger : ActionTrigger
 	{
+		internal readonly KMod modMasked, modMask;
 		internal readonly TKFlags flags;
 		string _paramsString;
 
-		internal HotkeyTrigger(ActionTriggers triggers, Action<HotkeyTriggerArgs> action, TKFlags flags, string paramsString) : base(triggers, action, true)
+		internal HotkeyTrigger(ActionTriggers triggers, Action<HotkeyTriggerArgs> action, KMod mod, KMod modAny, TKFlags flags, string paramsString) : base(triggers, action, true)
 		{
-			_paramsString = flags == 0 ? paramsString : paramsString + " (" + flags.ToString() + ")"; //Print(_paramsString);
+			const KMod csaw = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win;
+			modMask = ~modAny & csaw;
+			modMasked = mod & modMask;
 			this.flags = flags;
+			_paramsString = flags == 0 ? paramsString : paramsString + " (" + flags.ToString() + ")"; //Print(_paramsString);
 		}
 
 		internal override void Run(TriggerArgs args) => RunT(args as HotkeyTriggerArgs);
@@ -90,7 +95,7 @@ namespace Au.Triggers
 	/// Hotkey triggers.
 	/// </summary>
 	/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
-	public class HotkeyTriggers : ITriggers
+	public class HotkeyTriggers : ITriggers, IEnumerable<HotkeyTrigger>
 	{
 		ActionTriggers _triggers;
 		Dictionary<int, ActionTrigger> _d = new Dictionary<int, ActionTrigger>();
@@ -99,8 +104,6 @@ namespace Au.Triggers
 		{
 			_triggers = triggers;
 		}
-
-		static int _DictKey(KKey key, KMod mod) => ((int)mod << 8) | (int)key;
 
 		/// <summary>
 		/// Adds a hotkey trigger.
@@ -155,9 +158,8 @@ namespace Au.Triggers
 			//	But probably not so useful. Makes programming more difficult. If need, can Stop, add triggers, then Run again.
 
 			//Print($"key={key}, mod={mod}, modAny={modAny}");
-			var t = new HotkeyTrigger(_triggers, action, flags, paramsString);
-			int b = TrigUtil.ModBitArray(mod, modAny);
-			for(int i = 0; i < 16; i++) if(0 != (b & (1 << i))) t.DictAdd(_d, _DictKey(key, (KMod)i));
+			var t = new HotkeyTrigger(_triggers, action, mod, modAny, flags, paramsString);
+			t.DictAdd(_d, (int)key);
 			_lastAdded = t;
 		}
 
@@ -201,19 +203,22 @@ namespace Au.Triggers
 			} else {
 				if(key == _eatUp) _eatUp = 0;
 
-				if(_d.TryGetValue(_DictKey(key, mod), out var v)) {
+				if(_d.TryGetValue((int)key, out var v)) {
 					HotkeyTriggerArgs args = null;
 					for(; v != null; v = v.next) {
-						if(v.DisabledThisOrAll) continue;
 						var x = v as HotkeyTrigger;
+						if((mod & x.modMask) != x.modMasked) continue;
 
 						switch(x.flags & (TKFlags.LeftMod | TKFlags.RightMod)) {
 						case TKFlags.LeftMod: if(thc.ModL != mod) continue; break;
 						case TKFlags.RightMod: if(thc.ModR != mod) continue; break;
 						}
 
+						if(v.DisabledThisOrAll) continue;
+
 						if(args == null) thc.args = args = new HotkeyTriggerArgs(x, thc.Window, key, mod); //may need for scope callbacks too
 						else args.Trigger = x;
+
 						if(!x.MatchScopeWindowAndFunc(thc)) continue;
 
 						if(0 != (x.flags & TKFlags.KeyModUp)) {
@@ -262,6 +267,24 @@ namespace Au.Triggers
 			_upTrigger = null;
 			_upArgs = null;
 			_upKey = 0;
+		}
+
+		/// <summary>
+		/// Used by foreach to enumerate added triggers.
+		/// </summary>
+		public IEnumerator<HotkeyTrigger> GetEnumerator()
+		{
+			foreach(var kv in _d) {
+				for(var v = kv.Value; v != null; v = v.next) {
+					var x = v as HotkeyTrigger;
+					yield return x;
+				}
+			}
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			throw new NotImplementedException();
 		}
 	}
 

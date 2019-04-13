@@ -91,11 +91,13 @@ class OutputForm : Form_
 
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
+			if(ModifierKeys != 0) return;
 			switch(e.Button) {
 			case MouseButtons.Middle:
 				ST.ClearText();
 				break;
 			case MouseButtons.Right:
+				if(!_f._paused) { Osd.ShowText("OutputForm info: right-click pauses output. Right click again to resume.", xy: PopupXY.Mouse); }
 				_f._paused ^= true;
 				break;
 			}

@@ -29,143 +29,143 @@ partial class PanelFiles
 {
 	public void Test()
 	{
-		//Print(_c.SelectedNode);
+//		//Print(_c.SelectedNode);
 
-		//var name = "MSVCRT";
-		//var name = "msvcrt";
-		//var name = "Declarations";
-		//var name = "Backup";
-		var name = "QM# fileS.cs";
+//		//var name = "MSVCRT";
+//		//var name = "msvcrt";
+//		//var name = "Declarations";
+//		//var name = "Backup";
+//		var name = "QM# fileS.cs";
 
-		//var n = _c.AllNodes.ElementAt(2);
-		var f = _model.Find(name, null);
-		//Print(f);
-		if(f == null) { Print("not found"); return; }
-		//var n = _c.FindNodeByTag(f);
-		var n = f?.TreeNodeAdv;
-		//Print(n?.Tag);
+//		//var n = _c.AllNodes.ElementAt(2);
+//		var f = _model.Find(name, null);
+//		//Print(f);
+//		if(f == null) { Print("not found"); return; }
+//		//var n = _c.FindNodeByTag(f);
+//		var n = f?.TreeNodeAdv;
+//		//Print(n?.Tag);
 
-		var m = new AuMenu();
-		m["SelectedNode"] = o => _c.SelectedNode = n;
-		m["IsSelected=true"] = o => n.IsSelected = true; //adds to selection
-		m["ClearSelection"] = o => _c.ClearSelection();
-		m["ClearSelection; IsSelected=true"] = o => { _c.ClearSelection(); n.IsSelected = true; };
-		//m["ClearSelection; IsSelected=true"] = o => { _c.ClearSelection(); _c.SelectedNode=n; };
-		m["EnsureVisible"] = o => _c.EnsureVisible(n);
-		m["ScrollTo"] = o => _c.ScrollTo(n);
-		m["Find"] = o =>
-		{
-			Print(_model.Find("QM3 function flags.cs", false));
-			Print(_model.Find(@"\Function ideAs\Acc.path.cs", false));
-			Print(_model.Find("mono compiler", false));
-			Print(_model.Find(@"\oLd\mono compiler", false));
-			Print("-----");
-			Print(_model.Find("QM3 function flags.cs", false));
-			Print(_model.Find(@"\Function ideAs\Acc.path.cs", false));
-			Print(_model.Find("mono compiler", false));
-			Print(_model.Find(@"\oLd\mono compiler", false));
-			Print("-----");
-			Print(_model.Find("QM3 function flags.cs", true));
-			Print(_model.Find(@"\Function ideAs\Acc.path.cs", true));
-			Print(_model.Find("mono compiler", true));
-			Print(_model.Find(@"\oLd\mono compiler", true));
-		};
-		m["FullUpdate"] = o => _c.FullUpdate();
-		m["HideEditor"] = o => _c.HideEditor();
-		//m["Delete"] = o => f.FileDelete();
-		//m["Clear"] = o => _model.Clear();
-		m["StructureChanged"] = o => _model.OnStructureChanged();
-		m["Add"] = o =>
-		{
-		};
-		m["GetNodeBounds"] = o =>
-		{
-			Print(_c.GetNodeBounds(n));
-			Print(_c.GetNodeBoundsInClient(n));
-		};
-		m["GetNodeControls"] = o =>
-		{
-			int dx = _c.OffsetX, dy = _c.OffsetY;
-			foreach(var v in _c.GetNodeControls(n)) {
-				var r = v.Bounds; r.X -= dx; r.Y -= dy;
-				Print(r);
-			}
-		};
-		m["GetNodeControlInfoAt"] = o =>
-		{
-			var k = _c.GetNodeControlInfoAt(new Point(60, 40));
-			Print(k.Node?.Tag, k.Bounds);
-		};
-#if TEST_MANY_COLUMNS
-				m["column IsVisible"] = o =>
-				{
-					_columnGUID.IsVisible = !_columnGUID.IsVisible;
-				};
-#endif
-		m["speed"] = o =>
-		{
-			Perf.First();
-			//n.IsSelected = true;
-			_c.Invalidate(false);
-			Perf.Next();
-			_c.Update();
-			Perf.NW();
-		};
-		m["change cell"] = o =>
-		{
-			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame");
-			//f.GUID = "one two";
-			//f.GUID = "one\ntwo";
-			Perf.First();
-			_c.Invalidate(false); //now fast, but Update slow
-								  //_model.OnNodeChanged(f); //now quite slow, and Update slow
-			Perf.Next();
-			_c.Update();
-			Perf.NW();
+//		var m = new AuMenu();
+//		m["SelectedNode"] = o => _c.SelectedNode = n;
+//		m["IsSelected=true"] = o => n.IsSelected = true; //adds to selection
+//		m["ClearSelection"] = o => _c.ClearSelection();
+//		m["ClearSelection; IsSelected=true"] = o => { _c.ClearSelection(); n.IsSelected = true; };
+//		//m["ClearSelection; IsSelected=true"] = o => { _c.ClearSelection(); _c.SelectedNode=n; };
+//		m["EnsureVisible"] = o => _c.EnsureVisible(n);
+//		m["ScrollTo"] = o => _c.ScrollTo(n);
+//		m["Find"] = o =>
+//		{
+//			Print(_model.Find("QM3 function flags.cs", false));
+//			Print(_model.Find(@"\Function ideAs\Acc.path.cs", false));
+//			Print(_model.Find("mono compiler", false));
+//			Print(_model.Find(@"\oLd\mono compiler", false));
+//			Print("-----");
+//			Print(_model.Find("QM3 function flags.cs", false));
+//			Print(_model.Find(@"\Function ideAs\Acc.path.cs", false));
+//			Print(_model.Find("mono compiler", false));
+//			Print(_model.Find(@"\oLd\mono compiler", false));
+//			Print("-----");
+//			Print(_model.Find("QM3 function flags.cs", true));
+//			Print(_model.Find(@"\Function ideAs\Acc.path.cs", true));
+//			Print(_model.Find("mono compiler", true));
+//			Print(_model.Find(@"\oLd\mono compiler", true));
+//		};
+//		m["FullUpdate"] = o => _c.FullUpdate();
+//		m["HideEditor"] = o => _c.HideEditor();
+//		//m["Delete"] = o => f.FileDelete();
+//		//m["Clear"] = o => _model.Clear();
+//		m["StructureChanged"] = o => _model.OnStructureChanged();
+//		m["Add"] = o =>
+//		{
+//		};
+//		m["GetNodeBounds"] = o =>
+//		{
+//			Print(_c.GetNodeBounds(n));
+//			Print(_c.GetNodeBoundsInClient(n));
+//		};
+//		m["GetNodeControls"] = o =>
+//		{
+//			int dx = _c.OffsetX, dy = _c.OffsetY;
+//			foreach(var v in _c.GetNodeControls(n)) {
+//				var r = v.Bounds; r.X -= dx; r.Y -= dy;
+//				Print(r);
+//			}
+//		};
+//		m["GetNodeControlInfoAt"] = o =>
+//		{
+//			var k = _c.GetNodeControlInfoAt(new Point(60, 40));
+//			Print(k.Node?.Tag, k.Bounds);
+//		};
+//#if TEST_MANY_COLUMNS
+//				m["column IsVisible"] = o =>
+//				{
+//					_columnGUID.IsVisible = !_columnGUID.IsVisible;
+//				};
+//#endif
+//		m["speed"] = o =>
+//		{
+//			Perf.First();
+//			//n.IsSelected = true;
+//			_c.Invalidate(false);
+//			Perf.Next();
+//			_c.Update();
+//			Perf.NW();
+//		};
+//		m["change cell"] = o =>
+//		{
+//			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame");
+//			//f.GUID = "one two";
+//			//f.GUID = "one\ntwo";
+//			Perf.First();
+//			_c.Invalidate(false); //now fast, but Update slow
+//								  //_model.OnNodeChanged(f); //now quite slow, and Update slow
+//			Perf.Next();
+//			_c.Update();
+//			Perf.NW();
 
-			Timer_.After(1000, () => f.FileRename(name));
-		};
-		m["udate row"] = o =>
-		{
-			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame");
-			//f.GUID = "one two";
-			Perf.First();
-			_c.UpdateNode(n);
-			Perf.Next();
-			_c.Update();
-			Perf.NW();
+//			Timer_.After(1000, () => f.FileRename(name));
+//		};
+//		m["udate row"] = o =>
+//		{
+//			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame");
+//			//f.GUID = "one two";
+//			Perf.First();
+//			_c.UpdateNode(n);
+//			Perf.Next();
+//			_c.Update();
+//			Perf.NW();
 
-			Timer_.After(1000, () => f.FileRename(name));
-		};
-		m["GC.Collect"] = o => GC.Collect();
-		m["disable control"] = o =>
-		{
-			_c.Enabled = false;
-			AuDialog.Show();
-			_c.Enabled = true;
-		};
-		m["ItemPath"] = o =>
-		{
-			f = _model.Find("obsolete", null);
-			Print(f?.ItemPath);
-			f = _model.Find("Zip_to_WEB", null);
-			Print(f?.ItemPath);
-			f = _model.Find("tips.txt", null);
-			Print(f?.ItemPath);
-		};
-		m["FilePath"] = o =>
-		{
-			f = _model.Find("obsolete", null);
-			Print(f?.FilePath);
-			f = _model.Find("Zip_to_WEB", null);
-			Print(f?.FilePath);
-			f = _model.Find("tips.txt", null);
-			Print(f?.FilePath);
-		};
-		m["delete icon cache"] = o => { FileNode.IconCache.ClearCache(); _c.Invalidate(); };
-		m.Separator();
+//			Timer_.After(1000, () => f.FileRename(name));
+//		};
+//		m["GC.Collect"] = o => GC.Collect();
+//		m["disable control"] = o =>
+//		{
+//			_c.Enabled = false;
+//			AuDialog.Show();
+//			_c.Enabled = true;
+//		};
+//		m["ItemPath"] = o =>
+//		{
+//			f = _model.Find("obsolete", null);
+//			Print(f?.ItemPath);
+//			f = _model.Find("Zip_to_WEB", null);
+//			Print(f?.ItemPath);
+//			f = _model.Find("tips.txt", null);
+//			Print(f?.ItemPath);
+//		};
+//		m["FilePath"] = o =>
+//		{
+//			f = _model.Find("obsolete", null);
+//			Print(f?.FilePath);
+//			f = _model.Find("Zip_to_WEB", null);
+//			Print(f?.FilePath);
+//			f = _model.Find("tips.txt", null);
+//			Print(f?.FilePath);
+//		};
+//		m["delete icon cache"] = o => { FileNode.IconCache.ClearCache(); _c.Invalidate(); };
+//		m.Separator();
 
-		m.Show();
+//		m.Show();
 	}
 }
 #endif

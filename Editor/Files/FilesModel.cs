@@ -176,7 +176,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// </summary>
 	/// <param name="name">
 	/// Can be:
-	/// Name like "name.cs".
+	/// Name, like "name.cs". If folder is false, can be just "name"; if does not find, tries to find with ".cs", and debugprints a note if finds.
 	/// Relative path like @"\name.cs" or @"\subfolder\name.cs".
 	/// &lt;id&gt; - enclosed <see cref="FileNode.IdString"/>, or <see cref="FileNode.IdStringWithWorkspace"/>.
 	/// 
@@ -185,8 +185,22 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// <param name="folder">true - folder, false - file, null - any.</param>
 	public FileNode Find(string name, bool? folder)
 	{
-		if(name != null && name.Length > 0 && name[0] == '<') return FindById(name.ToLong_(1));
-		return Root.FindDescendant(name, folder);
+		if(Empty(name)) return null;
+		if(name[0] == '<') return FindById(name.ToLong_(1));
+		var f = Root.FindDescendant(name, folder);
+		if(f == null && folder == false && !name.EndsWithI_(".cs")) {
+			f = Root.FindDescendant(name + ".cs", folder);
+			Debug_.PrintIf(f != null, "name without .cs");
+		}
+		return f;
+	}
+
+	/// <summary>
+	/// Calls <see cref="Find(string, bool?)"/>(name, false).
+	/// </summary>
+	public FileNode FindFile(string name)
+	{
+		return Find(name, false);
 	}
 
 	/// <summary>
@@ -269,8 +283,8 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// Finds all files (and not folders) that have the specified name.
 	/// Returns empty array if not found.
 	/// </summary>
-	/// <param name="name">File name, like "name.cs". If starts with backslash, works like <see cref="Find"/>. Does not support <see cref="FileNode.IdStringWithWorkspace"/> string.</param>
-	public FileNode[] FindAll(string name)
+	/// <param name="name">File name, like "name.cs". If starts with backslash, works like <see cref="Find"/>. Does not support <see cref="FileNode.IdStringWithWorkspace"/> string and filename without extension.</param>
+	public FileNode[] FindAllFiles(string name)
 	{
 		return Root.FindAllDescendantFiles(name);
 	}
@@ -750,9 +764,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			_MultiCopyMove(copy, a, target, pos);
 		} else {
 			if(files.Length == 1 && IsWorkspaceDirectory(files[0])) {
-				switch(AuDialog.ShowEx("Workspace", files[0],
-					"1 Open workspace|2 Import workspace|0 Cancel",
-					DFlags.Wider, footerText: GetSecurityInfo("v|"))) {
+				switch(AuDialog.ShowEx("Workspace", files[0], "1 Open|2 Import|0 Cancel", footerText: GetSecurityInfo("v|"))) {
 				case 1: Timer_.After(1, () => Panels.Files.LoadWorkspace(files[0])); break;
 				case 2: ImportWorkspace(files[0], target, pos); break;
 				}
@@ -874,7 +886,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			string ins1 = dirsDropped ? "\nFolders not supported." : null;
 			r = AuDialog.ShowEx("Import files", string.Join("\n", a),
 			$"1 Add as a link to the external file{ins1}|2 Copy to the workspace folder|3 Move to the workspace folder|0 Cancel",
-			DFlags.CommandLinks | DFlags.Wider, owner: _control, footerText: GetSecurityInfo("v|"));
+			DFlags.CommandLinks, owner: _control, footerText: GetSecurityInfo("v|"));
 			if(r == 0) return;
 		}
 
@@ -1041,6 +1053,17 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 
 	#endregion
 
+	#region other
+
+	public void RunStartupScript()
+	{
+		var f = FindFile("Startup.cs"); //TODO: run only if was already started manually
+		if(f != null) Run.CompileAndRun(true, f); //TODO: wait for triggers hooks server started
+
+	}
+
+	#endregion
+
 	#region util
 
 	/// <summary>
@@ -1065,7 +1088,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// </summary>
 	public static string GetSecurityInfo(string prefix = null)
 	{
-		return prefix + "Security info: Unknown .cs files can contain malicious code - virus, spyware, etc. It is safe to import, open and edit files if you don't run and don't compile them. Triggers are inactive until run/compile.";
+		return prefix + "Security info: Unknown C# script files can contain malicious code - virus, spyware, etc. It is safe to import, open and edit C# files if you don't run them. Triggers don't work until run.";
 	}
 
 	#endregion

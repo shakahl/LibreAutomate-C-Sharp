@@ -58,9 +58,9 @@ static class CommandLine
 				}
 			} else { //one or more files
 				if(a.Length == 1 && FilesModel.IsWorkspaceDirectory(s)) {
-					switch(cmd = AuDialog.ShowEx("Workspace", s, "1 Import|2 Open|0 Cancel", footerText: FilesModel.GetSecurityInfo("v|"))) {
-					case 1: _importWorkspace = s; break;
-					case 2: WorkspaceDirectory = s; break;
+					switch(cmd = AuDialog.ShowEx("Workspace", s, "1 Open|2 Import|0 Cancel", footerText: FilesModel.GetSecurityInfo("v|"))) {
+					case 1: WorkspaceDirectory = s; break;
+					case 2: _importWorkspace = s; break;
 					}
 				} else {
 					cmd = 3;
@@ -102,20 +102,22 @@ static class CommandLine
 	/// </summary>
 	public static string TestArg;
 
-	public static void OnAfterCreatedFormAndOpenedWorkspace()
+	public static void OnMainFormLoaded()
 	{
-		try {
-			if(_importWorkspace != null) Model.ImportWorkspace(_importWorkspace);
-			else if(_importFiles != null) Model.ImportFiles(_importFiles);
-		}
-		catch(Exception ex) { Print(ex.Message); }
-
 		Wnd.Misc.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER);
 		Wnd.Misc.MyWindow.RegisterClass("Au.Editor.Msg");
 		_msgWnd = new Wnd.Misc.MyWindow(_WndProc);
 		_msgWnd.CreateMessageOnlyWindow("Au.Editor.Msg");
 
-		Au.Triggers.HooksServer.Start(false);
+		if(_importWorkspace != null || _importFiles != null) {
+			Timer_.After(10, () => {
+				try {
+					if(_importWorkspace != null) Model.ImportWorkspace(_importWorkspace);
+					else Model.ImportFiles(_importFiles);
+				}
+				catch(Exception ex) { Print(ex.Message); }
+			});
+		}
 	}
 
 	/// <summary>
@@ -130,7 +132,7 @@ static class CommandLine
 
 	/// <summary>
 	/// The message-only window.
-	/// Don't call before the program is fully inited and OnAfterCreatedFormAndOpenedWorkspace called.
+	/// Don't call before the program is fully inited and OnMainFormLoaded called.
 	/// </summary>
 	public static Wnd MsgWnd => _msgWnd.Handle;
 
@@ -193,7 +195,7 @@ static class CommandLine
 				var d = Au.Util.LibSerializer.Deserialize(b);
 				script = d[0]; args = d[1]; pipeName = d[2];
 			}
-			var f = Model?.Find(script, false);
+			var f = Model?.FindFile(script);
 			if(f == null) {
 				if(action == 99) Print($"Command line: script '{script}' not found."); //else the caller script will throw exception
 				return (int)AuTask.ERunResult.notFound;

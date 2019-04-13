@@ -207,11 +207,9 @@ namespace Au.Triggers
 
 		unsafe void _KeyboardHookProc(HookData.Keyboard k)
 		{
-			if(_Send(UsedEvents.Keyboard, k.LibNativeStructPtr, sizeof(Api.KBDLLHOOKSTRUCT))) k.BlockEvent();
 			//var p = Perf.StartNew();
-			//var R = _Send(k.LibNativeStructPtr, sizeof(Api.KBDLLHOOKSTRUCT));
+			if(_Send(UsedEvents.Keyboard, k.LibNativeStructPtr, sizeof(Api.KBDLLHOOKSTRUCT))) k.BlockEvent();
 			//p.NW();
-			//if(R) k.BlockEvent();
 		}
 
 		unsafe bool _MouseHookProc(LPARAM wParam, LPARAM lParam)
