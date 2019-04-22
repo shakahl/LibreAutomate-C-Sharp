@@ -126,7 +126,7 @@ namespace Au.Tools
 		/// </summary>
 		internal static string EscapeWildex(string s)
 		{
-			if(Wildex.HasWildcards(s)) s = "**t " + s;
+			if(Wildex.HasWildcardChars(s)) s = "**t " + s;
 			return s;
 		}
 
@@ -139,7 +139,7 @@ namespace Au.Tools
 		internal static string EscapeWindowName(string s, bool canMakeVerbatim)
 		{
 			if(s == null) return s;
-			if(Wildex.HasWildcards(s)) {
+			if(Wildex.HasWildcardChars(s)) {
 				int i = s.IndexOf('*');
 				if(i >= 0 && s.IndexOf('*', i + 1) < 0) {
 					s = "**r " + Regex_.EscapeQE(s.Remove(i)) + @"\*?" + Regex_.EscapeQE(s.Substring(i + 1));

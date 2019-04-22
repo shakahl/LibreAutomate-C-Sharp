@@ -508,6 +508,7 @@ namespace Au.Compiler
 			//also copy C++ dlls
 			_CopyFileIfNeed(Folders.ThisAppBS + @"dll\64bit\AuCpp.dll", m.OutputPath + @"\dll\64bit\AuCpp.dll");
 			_CopyFileIfNeed(Folders.ThisAppBS + @"dll\32bit\AuCpp.dll", m.OutputPath + @"\dll\32bit\AuCpp.dll");
+			//SHOULDDO: copy sqlite3.dll, if used class SqliteDB. Or add a 'copyFile' meta.
 		}
 
 		static void _CopyFileIfNeed(string sFrom, string sTo)

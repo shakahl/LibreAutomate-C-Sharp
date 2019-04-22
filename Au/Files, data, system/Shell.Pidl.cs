@@ -26,7 +26,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Wraps an ITEMIDLIST*, also known as PIDL or LPITEMIDLIST. In C# it is IntPtr.
-		/// When calling shell API, virtual objects can be identified only by ITEMIDLIST*. Some API also support "parsing name", which may look like "::{CLSID-1}\::{CLSID-2}". File-system objects can be identified by path as well as by ITEMIDLIST*. URLs can be identified by URL as well as by ITEMIDLIST*.
+		/// When calling shell API, virtual objects can be identified only by ITEMIDLIST*. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by ITEMIDLIST*. URLs can be identified by URL as well as by ITEMIDLIST*.
 		/// 
 		/// The ITEMIDLIST structure is in unmanaged memory. You should always dispose Pidl variables.
 		/// 
@@ -73,7 +73,7 @@ namespace Au
 			/// <param name="pidlAbsolute">Absolute PIDL (parent folder).</param>
 			/// <param name="pidlRelative">Relative PIDL (child object).</param>
 			/// <remarks>
-			/// Does not free <paramref name="pidlAbsolute"/> and <paramref name="pidlRelative"/>.
+			/// Does not free *pidlAbsolute* and *pidlRelative*.
 			/// </remarks>
 			public Pidl(IntPtr pidlAbsolute, IntPtr pidlRelative) => _pidl = Api.ILCombine(pidlAbsolute, pidlRelative);
 

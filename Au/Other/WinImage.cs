@@ -48,7 +48,7 @@ namespace Au
 		/// </summary>
 		/// <param name="image"><inheritdoc cref="Find"/></param>
 		/// <exception cref="FileNotFoundException">The specified file does not exist.</exception>
-		/// <exception cref="Exception">Depending on <paramref name="image"/> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="Convert_.Decompress"/>.</exception>
+		/// <exception cref="Exception">Depending on *image* string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="Convert_.Decompress"/>.</exception>
 		/// <exception cref="ArgumentException">Bad image format (the image cannot be loaded as Bitmap).</exception>
 		/// <remarks>
 		/// <see cref="Find"/> uses this function when <i>image</i> argument type is string. More info there.
@@ -114,7 +114,7 @@ namespace Au
 		//rejected. Use OrThrow.
 		///// <summary>
 		///// If x is not null, returns x, else throws <see cref="NotFoundException"/>.
-		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(WinImage)" r=""/>.
+		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(WinImage)"/>.
 		///// </summary>
 		///// <exception cref="NotFoundException">x is null.</exception>
 		///// <example><inheritdoc cref="ExtensionMethods.OrThrow(WinImage)"/></example>
@@ -218,31 +218,24 @@ namespace Au
 		/// </returns>
 		/// <param name="area">
 		/// Where to search. Can be a window/control, accessible object, another image or a rectangle in screen.
-		/// <list type="bullet">
-		/// <item><see cref="Wnd"/> - window or control. The search area is its client area.</item>
-		/// <item><see cref="Acc"/> - accessible object.</item>
-		/// <item><see cref="Bitmap"/> - another image. These flags are invalid: <see cref="WIFlags.WindowDC"/>.</item>
-		/// <item><see cref="RECT"/> - a rectangle area in screen. These flags are invalid: <see cref="WIFlags.WindowDC"/>.</item>
-		/// <item><see cref="WIArea"/> - can contain Wnd, Acc or Bitmap. Also allows to specify a rectangle in it, which makes the search area smaller and the function faster. Example: <c>WinImage.Find((w, (left, top, width, height)), "image.png");</c>.</item>
-		/// </list>
+		/// - <see cref="Wnd"/> - window or control. The search area is its client area.
+		/// - <see cref="Acc"/> - accessible object.
+		/// - <see cref="Bitmap"/> - another image. These flags are invalid: <see cref="WIFlags.WindowDC"/>.
+		/// - <see cref="RECT"/> - a rectangle area in screen. These flags are invalid: <see cref="WIFlags.WindowDC"/>.
+		/// - <see cref="WIArea"/> - can contain Wnd, Acc or Bitmap. Also allows to specify a rectangle in it, which makes the search area smaller and the function faster. Example: <c>WinImage.Find((w, (left, top, width, height)), "image.png");</c>.
 		/// </param>
 		/// <param name="image">
 		/// Image or color to find. Can be of type:
-		/// <list type="bullet">
-		/// <item>
-		/// string - path of .png or .bmp file.
-		/// If not full path, uses <see cref="Folders.ThisAppImages"/>.
-		/// If the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file @"C:\X.png" not found.
-		/// </item>
-		/// <item>
-		/// string that starts with "image:" or "~:" - Base64-encoded .png or .bmp image embedded in script.
-		/// If "image:", it is .png file data, else it is compressed .bmp file data.
-		/// Can be created with function Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
-		/// </item>
-		/// <item>int, ColorInt or Color - color. Int must be in 0xRRGGBB format. Alpha is not used.</item>
-		/// <item><see cref="Bitmap"/> - image object in memory.</item>
-		/// <item>IEnumerable of string, int/ColorInt/Color, Bitmap or object - multiple images or colors. Action - find any. To create a different action can be used callback function (parameter <paramref name="also"/>).</item>
-		/// </list>
+		/// - string - path of .png or .bmp file.
+		/// <br/>If not full path, uses <see cref="Folders.ThisAppImages"/>.
+		/// <br/>If the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file <c>@"C:\X.png"</c> not found.
+		/// - string that starts with <c>"image:"</c> or <c>"~:"</c> - Base64-encoded .png or .bmp image embedded in script.
+		/// <br/>If <c>"image:"</c>, it is .png file data, else it is compressed .bmp file data.
+		/// <br/>Can be created with function Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
+		/// - int, ColorInt or Color - color. Int must be in 0xRRGGBB format. Alpha is not used.
+		/// - <see cref="Bitmap"/> - image object in memory.
+		/// - IEnumerable of string, int/ColorInt/Color, Bitmap or object - multiple images or colors. Action - find any. To create a different action can be used callback function (parameter *also*).
+		/// 
 		/// Icons are not supported directly, but you can use <see cref="Icon_.GetFileIconImage"/> or <see cref="Icon_.HandleToImage"/>.
 		/// Transparent and partially transparent pixels are not compared. For example, when you capture a non-rectangular area image, the image actually is rectangular, but pixels outside of its captured area are transparent and therefore not compared. Also you can draw transparent areas with an image editor that supports it, for example Paint.NET.
 		/// </param>
@@ -251,21 +244,19 @@ namespace Au
 		/// <param name="also">
 		/// Callback function. Called for each found image instance and receives its rectangle, match index and list index. Can return one of <see cref="WIAlso"/> values.
 		/// Callback functions can be used to get rectangles of multiple found images, create custom behaviors/actions, etc. Examples:
-		/// <list type="bullet">
-		/// <item>Skip some matching images if some condition if false: <c>also: o => condition ? WIAlso.OkReturn : WIAlso.FindOther</c></item>
-		/// <item>Skip n matching images: <c>also: o => o.Skip(n)</c></item>
-		/// <item>Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return false; }</c>. Don't use this code in 'wait' functions.</item>
-		/// <item>Get rectangles etc of all matching images and stop waiting: <c>also: o => { list.Add(o); o.Found = true; return false; }</c></item>
-		/// <item>Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); WinImage.Find(w, images, also: o => { found[o.ListIndex] = true; return WIAlso.OkFindMoreOfList; }); if(found[0]) Print(0); if(found[1]) Print(1);</c></item>
-		/// </list>
+		/// - Skip some matching images if some condition if false: <c>also: o => condition ? WIAlso.OkReturn : WIAlso.FindOther</c>
+		/// - Skip n matching images: <c>also: o => o.Skip(n)</c>
+		/// - Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return false; }</c>. Don't use this code in 'wait' functions.
+		/// - Get rectangles etc of all matching images and stop waiting: <c>also: o => { list.Add(o); o.Found = true; return false; }</c>
+		/// - Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); WinImage.Find(w, images, also: o => { found[o.ListIndex] = true; return WIAlso.OkFindMoreOfList; }); if(found[0]) Print(0); if(found[1]) Print(1);</c>
 		/// </param>
-		/// <exception cref="WndException">Invalid window handle (the <paramref name="area"/> argument).</exception>
+		/// <exception cref="WndException">Invalid window handle (the *area* argument).</exception>
 		/// <exception cref="ArgumentException">
-		/// An argument is of unsupported type or is/contains a null/invalid value.
-		/// Image or area is a bottom-up Bitmap object (see <see cref="BitmapData.Stride"/>). Such bitmaps are unusual in .NET (GDI+), but can be created by <b>Image.FromHbitmap</b> (instead use <see cref="BitmapFromHbitmap"/>).
+		/// - An argument is of unsupported type or is/contains a null/invalid value.
+		/// - Image or area is a bottom-up Bitmap object (see <see cref="BitmapData.Stride"/>). Such bitmaps are unusual in .NET (GDI+), but can be created by <b>Image.FromHbitmap</b> (instead use <see cref="BitmapFromHbitmap"/>).
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The specified file does not exist.</exception>
-		/// <exception cref="Exception">Depending on <paramref name="image"/> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="Convert_.Decompress"/>.</exception>
+		/// <exception cref="Exception">Depending on *image* string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="Convert_.Decompress"/>.</exception>
 		/// <exception cref="AuException">Something failed.</exception>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find image or color in window". It is form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll.
@@ -274,11 +265,11 @@ namespace Au
 		/// 1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>(w, rectangle)</c>).
 		/// 2. Flag <see cref="WIFlags.WindowDC"/>. Usually makes several times faster. With this flag the speed depends on window.
 		/// 3. Video driver. Can be much slower if incorrect, generic or virtual PC driver is used. Flag <see cref="WIFlags.WindowDC"/> should help.
-		/// 4. <paramref name="colorDiff"/>. Should be as small as possible.
+		/// 4. *colorDiff*. Should be as small as possible.
 		/// 
 		/// If flag <see cref="WIFlags.WindowDC"/> is not used, the search area must be visible on the screen. If it is covered by other windows, the function will search in these windows.
 		/// 
-		/// The function can only find images that exactly match the specified image. With <paramref name="colorDiff"/> it can find images with slightly different colors and brightness. It cannot find images with different shapes.
+		/// The function can only find images that exactly match the specified image. With *colorDiff* it can find images with slightly different colors and brightness. It cannot find images with different shapes.
 		/// 
 		/// This function is not the best way to find objects when the script is intended for long use or for use on multiple computers or must be very reliable. Because it may fail to find the image after are changed some settings - system theme, application theme, text size (DPI), font smoothing (if the image contains text), etc. Also are possible various unexpected temporary conditions that may distort or hide the image, for example adjacent window shadow, a tooltip or some temporary window. If possible, in such scripts instead use other functions, eg find control or accessible object.
 		/// </remarks>
@@ -306,11 +297,9 @@ namespace Au
 		/// <summary>
 		/// Finds image(s) or color(s) displayed in window or other area. Waits until found.
 		/// </summary>
-		/// <returns>Returns <see cref="WinImage"/> object containing the rectangle of the found image. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
-		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns null.
-		/// </param>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <returns>Returns <see cref="WinImage"/> object containing the rectangle of the found image. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		public static WinImage Wait(double secondsTimeout, WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<WinImage, WIAlso> also = null)
 		{
@@ -324,9 +313,9 @@ namespace Au
 		/// <summary>
 		/// Waits until image(s) or color(s) is not displayed in window or other area.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		public static bool WaitNot(double secondsTimeout, WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<WinImage, WIAlso> also = null)
 		{
@@ -337,9 +326,9 @@ namespace Au
 		/// <summary>
 		/// Waits until something visually changes in window or other area.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <remarks>
 		/// The same as <see cref="WaitNot"/>, but instead of <i>image</i> parameter this function captures the area image at the beginning.

@@ -12,6 +12,8 @@
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -25,7 +27,7 @@
     <UseVSHostingProcess>false</UseVSHostingProcess>
     <CodeAnalysisRuleSet>..\MinimumRecommendedRules - copy.ruleset</CodeAnalysisRuleSet>
     <NoWarn>3001,3002,3003,3009,419</NoWarn>
-    <DocumentationFile>Au.XML</DocumentationFile>
+    <DocumentationFile>bin\Debug\Au.xml</DocumentationFile>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -37,7 +39,7 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>3001,3002,3003,3009,419</NoWarn>
-    <DocumentationFile>Au.XML</DocumentationFile>
+    <DocumentationFile>bin\Release\Au.xml</DocumentationFile>
     <LangVersion>latest</LangVersion>
     <DebugSymbols>true</DebugSymbols>
   </PropertyGroup>
@@ -147,10 +149,12 @@
     <Compile Include="String\Csv.cs" />
     <Compile Include="Util\TreeBase.cs" />
     <Compile Include="Wnd\Wnd_wait.cs" />
+    <Compile Include="_doc\Aaa.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="packages.config" />
     <None Include="Properties\Au.snk" />
     <None Include="String\excluded\string classes.cs" />
     <None Include="String\excluded\String_ex.cs" />
@@ -186,10 +190,41 @@
     <Compile Include="Util\misc util.cs" />
     <Compile Include="Api\Api.cs" />
     <Compile Include="Util\workarounds.cs" />
+    <None Include="_doc\api\index.md" />
+    <None Include="_doc\api\toc.yml" />
+    <None Include="_doc\articles\index.md" />
+    <None Include="_doc\editor\intro.md" />
+    <None Include="_doc\articles\toc.yml" />
+    <None Include="_doc\editor\toc.yml" />
+    <None Include="_doc\articles\Wildcard expression.md" />
+    <None Include="_doc\docfx.json" />
+    <None Include="_doc\filter.yml" />
+    <None Include="_doc\include\Path_.GetDirectoryPath-examples.md" />
+    <None Include="_doc\include\Path_.GetFileName-examples.md" />
+    <None Include="_doc\include\param-secondsTimeout.md" />
+    <None Include="_doc\index.md" />
+    <None Include="_doc\template1\layout\_master.tmpl" />
+    <None Include="_doc\template1\partials\affix.tmpl.partial" />
+    <None Include="_doc\template1\partials\class.header.tmpl.partial" />
+    <None Include="_doc\template1\partials\footer.tmpl.partial" />
+    <None Include="_doc\template1\partials\logo.tmpl.partial" />
+    <None Include="_doc\articles\UAC.md" />
+    <None Include="_doc\template2\partials\collection.tmpl.partial" />
+    <None Include="_doc\toc.yml" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <None Include="Resources\red_cross_cursor.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="_doc\.gitignore" />
+    <Content Include="_doc\api\.gitignore" />
+    <Content Include="_doc\template1\mod.txt" />
+    <Content Include="_doc\template1\styles\main.css" />
+    <Content Include="_doc\template1\styles\main.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="_doc\apidoc\" />
+    <Folder Include="_doc\images\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

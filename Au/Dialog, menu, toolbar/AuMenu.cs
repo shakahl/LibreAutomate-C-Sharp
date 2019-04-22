@@ -123,11 +123,11 @@ namespace Au
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="onClick">Callback function. Called when clicked the menu item.</param>
 		/// <param name="icon">Can be:
-		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icon_.GetFileIcon"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="BaseMT.IconFlags" r=""/>.
+		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icon_.GetFileIcon"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="BaseMT.IconFlags"/>.
 		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// Icon, Image, Folders.FolderPath.
-		/// null (default) - no icon. If <see cref="BaseMT.ExtractIconPathFromCode" r=""/> == true, extracts icon path from <paramref name="onClick"/> code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
+		/// null (default) - no icon. If <see cref="BaseMT.ExtractIconPathFromCode"/> == true, extracts icon path from *onClick* code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
 		/// "" - no icon.
 		/// </param>
 		/// <example><code>
@@ -393,7 +393,7 @@ namespace Au
 		/// Returns null if it is not a <b>ToolStripMenuItem</b>, for example a button or separator.
 		/// </summary>
 		/// <remarks>
-		/// You can instead use <see cref="BaseMT.LastItem" r=""/>, which gets <see cref="ToolStripItem"/>, which is the base class of all supported item types.
+		/// You can instead use <see cref="BaseMT.LastItem"/>, which gets <see cref="ToolStripItem"/>, which is the base class of all supported item types.
 		/// </remarks>
 		public ToolStripMenuItem LastMenuItem => LastItem as ToolStripMenuItem;
 
@@ -1010,7 +1010,6 @@ namespace Au.Types
 	/// <summary>
 	/// Base class of <see cref="AuMenu"/> and <see cref="AuToolbar"/>.
 	/// </summary>
-	[EditorBrowsable(EditorBrowsableState.Never)]
 	public abstract class BaseMT
 	{
 		struct _ClickAction
@@ -1299,7 +1298,7 @@ namespace Au.Types
 		internal List<Image> _images;
 
 		/// <summary>
-		/// Gets icon path from code that contains string like @"c:\windows\system32\notepad.exe" or @"%Folders.System%\notepad.exe" or URL/shell.
+		/// Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%Folders.System%\notepad.exe"</c> or URL/shell.
 		/// Also supports code patterns like 'Folders.System + "notepad.exe"' or 'Folders.Virtual.RecycleBin'.
 		/// Returns null if no such string/pattern.
 		/// </summary>

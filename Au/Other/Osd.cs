@@ -235,7 +235,7 @@ namespace Au
 		/// Derived classes should override this function and draw anything. Don't need to call base.OnPaint of <see cref="OsdWindow"/>, it does nothing.
 		/// </summary>
 		/// <remarks>
-		/// If <see cref="Opacity"/> is 0 (default), <paramref name="g"/> is filled with <see cref="TransparentColor"/>. Pixels of this color will be transparent. The base class draws only non-transparent areas.
+		/// If <see cref="Opacity"/> is 0 (default), *g* is filled with <see cref="TransparentColor"/>. Pixels of this color will be transparent. The base class draws only non-transparent areas.
 		/// </remarks>
 		protected virtual void OnPaint(Graphics g, Rectangle r)
 		{
@@ -271,7 +271,7 @@ namespace Au
 		/// <summary>
 		/// Closes all OSD windows of this process.
 		/// </summary>
-		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.</param>
+		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [](xref:wildcard_expression).</param>
 		public static void CloseAll(string name = null)
 		{
 			foreach(var w in Wnd.FindAll(name, "**m Au.OSD||Au.OSD2", WF3.Process(Process_.CurrentProcessId))) w.Close(noWait: true);

@@ -483,7 +483,7 @@ namespace Au.Util
 #endif
 
 		/// <summary>
-		/// Gets mailslot name like @"\\.\mailslot\Au.Output\" + sessionId.
+		/// Gets mailslot name like <c>@"\\.\mailslot\Au.Output\" + sessionId</c>.
 		/// </summary>
 		internal static string LibMailslotName {
 			get {

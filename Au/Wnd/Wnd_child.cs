@@ -259,38 +259,29 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
 		/// </summary>
 		/// <param name="name">
 		/// Control name.
-		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+		/// String format: [](xref:wildcard_expression).
 		/// null means 'can be any'. "" means 'must not have name'.
 		/// 
 		/// By default the function gets control names with <see cref="Name"/>.
 		/// Can start with these prefix strings:
-		/// <list type="bullet">
-		/// <item>
-		/// "***text " - use <see cref="ControlText"/>.
-		/// Slower and can be less reliable (because can get editable text), especially if not used cn (class name). Does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
-		/// </item>
-		/// <item>
-		/// "***accName " - use <see cref="NameAcc"/>.
-		/// Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
-		/// </item>
-		/// <item>
-		/// "***wfName " - use .NET Windows Forms Control Name property.
-		/// To get it this function uses <see cref="Misc.WinFormsControlNames"/>. It is slower and can fail because of <see cref="Uac">UAC</see>.
-		/// </item>
-		/// <item>
-		/// "***id " (like "***id 15") - use control id.
-		/// To get it this function uses <see cref="ControlId"/>.
-		/// The id value cannot be wildcard expression.
-		/// See also <see cref="ChildById"/>.</item>
-		/// </list>
+		/// - <c>"***text "</c> - use <see cref="ControlText"/>.
+		/// <br/>Slower and can be less reliable (because can get editable text), especially if not used cn (class name). Does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
+		/// - <c>"***accName "</c> - use <see cref="NameAcc"/>.
+		/// <br/>Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
+		/// - <c>"***wfName "</c> - use .NET Windows Forms Control Name property.
+		/// <br/>To get it this function uses <see cref="Misc.WinFormsControlNames"/>. It is slower and can fail because of [](xref:uac).
+		/// - <c>"***id "</c> like <c>"***id 15"</c> - use control id.
+		/// <br/>To get it this function uses <see cref="ControlId"/>.
+		/// <br/>The id value cannot be wildcard expression.
+		/// <br/>See also <see cref="ChildById"/>.
 		/// </param>
 		/// <param name="cn">
 		/// Control class name.
-		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+		/// String format: [](xref:wildcard_expression).
 		/// null means 'can be any'. Cannot be "".
 		/// You can see control class name etc in editor's status bar and dialog "Find window or control".
 		/// </param>
@@ -306,9 +297,9 @@ namespace Au
 		/// </param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <exception cref="ArgumentException">
-		/// <paramref name="name"/> starts with "***", but the prefix is invalid.
-		/// <paramref name="cn"/> is "". To match any, use null.
-		/// Invalid wildcard expression ("**options " or regular expression).
+		/// - *name* starts with <c>"***"</c>, but the prefix is invalid.
+		/// - *cn* is "". To match any, use null.
+		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
@@ -324,7 +315,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if this window contains the specified control.
 		/// Calls <see cref="Child"/>.
-		/// <note type="note">
+		/// <note>
 		/// Using this function many times with same parameters is inefficient. Instead create new <see cref="ChildFinder"/> and call <see cref="ChildFinder.Find"/> or <see cref="HasChild(ChildFinder)"/>. See example.
 		/// </note>
 		/// </summary>
@@ -384,7 +375,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control by its id and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
 		/// </summary>
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
@@ -441,7 +432,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a direct child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
 		/// Can be used only when you know full name and/or class name.
@@ -460,7 +451,7 @@ namespace Au
 		/// </param>
 		/// <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
 		/// <remarks>
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// </remarks>
 		public Wnd ChildFast(string name, string cn, Wnd wAfter = default)
 		{
@@ -800,7 +791,7 @@ namespace Au
 		///// </summary>
 		///// <param name="itemName">
 		///// Menu item name.
-		///// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+		///// String format: [](xref:wildcard_expression).
 		///// </param>
 		///// <param name="systemMenu">The menu item is in the title bar's context menu, not in the menu bar.</param>
 		//public void Click(string itemName, bool systemMenu = false)
@@ -822,9 +813,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// 'flags' parameter of <see cref="Wnd.Child"/>.
-	/// <note>
-	/// </note>
+	/// Flags for <see cref="Wnd.Child"/>.
 	/// </summary>
 	[Flags]
 	public enum WCFlags

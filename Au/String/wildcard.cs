@@ -26,17 +26,25 @@ namespace Au
 		/// <summary>
 		/// Compares this string with a string that possibly contains wildcard characters.
 		/// Returns true if the strings match.
-		/// 
-		/// Wildcard characters:
-		/// * - zero or more of any characters.
-		/// ? - any character.
 		/// </summary>
 		/// <param name="t">This string. If null, returns false. If "", returns true if pattern is "" or "*".</param>
 		/// <param name="pattern">String that possibly contains wildcard characters. Cannot be null. If "", returns true if this string is "". If "*", always returns true except when this string is null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <remarks>
-		/// Like all String_ functions, performs ordinal comparison, ie does not depend on current culture.
-		/// Much faster than Regex.IsMatch and not much slower than Equals_, EndsWith_, IndexOf_ etc.
+		/// Wildcard characters:
+		/// 
+		/// Character | Will match | Examples
+		/// | - | - | - |
+		/// | * | Zero or more of any characters. | <c>"start*"</c>, <c>"*end"</c>, <c>"*middle*"</c>
+		/// | ? | Any single character. | <c>"date ????-??-??"</c>
+		/// 
+		/// There are no escape sequences for * and ? characters.
+		/// 
+		/// Like all <b>String_</b> functions, performs ordinal comparison, ie does not depend on current culture.
+		/// 
+		/// Much faster than regular expression. Not much slower than <b>Equals_</b>, <b>EndsWith_</b>, <b>IndexOf_</b>, etc.
+		/// 
+		/// See also: [](xref:wildcard_expression).
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -50,7 +58,6 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="Wildex"/>
-		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>
 #if false //somehow speed depends on dll version. With some versions same as C# code, with some slower. Also depends on string. With shortest strings 50% slower.
 		public static bool Like_(this string t, string pattern, bool ignoreCase = false)
 		{
@@ -157,11 +164,12 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// This class implements <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink> parsing and matching (comparing).
-	/// Typically used in 'find' functions. For example, <see cref="Wnd.Find"/> uses it to compare window name, class name and program.
-	/// The 'find' function creates a Wildex instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
+	/// This class implements [](xref:wildcard_expression) parsing and matching (comparing).
 	/// </summary>
-	/// <exception cref="ArgumentException">Invalid "**options " or regular expression.</exception>
+	/// Typically used in 'find' functions. For example, <see cref="Wnd.Find"/> uses it to compare window name, class name and program.
+	/// The 'find' function creates a <b>Wildex</b> instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
+	/// <remarks>
+	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
 	/// //This version does not support wildcard expressions.
@@ -193,12 +201,12 @@ namespace Au.Types
 		bool _not;
 
 		/// <param name="wildcardExpression">
-		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>.
+		/// [Wildcard expression](xref:wildcard_expression).
 		/// Cannot be null (throws exception).
 		/// "" will match "".
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
-		/// <exception cref="ArgumentException">Invalid "**options " or regular expression.</exception>
+		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
 		public Wildex(string wildcardExpression)
 		{
 			var w = wildcardExpression;
@@ -247,7 +255,7 @@ namespace Au.Types
 				}
 			}
 
-			if(_type == WildType.Wildcard && !HasWildcards(w)) _type = WildType.Text;
+			if(_type == WildType.Wildcard && !HasWildcardChars(w)) _type = WildType.Text;
 			_obj = w;
 		}
 		static readonly string[] _splitMulti = { "||" };
@@ -256,9 +264,8 @@ namespace Au.Types
 		/// Creates new Wildex from wildcard expression string.
 		/// If the string is null, returns null.
 		/// </summary>
-		/// <param name="wildcardExpression">
-		/// <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">Wildcard expression</conceptualLink>.
-		/// </param>
+		/// <param name="wildcardExpression">[Wildcard expression](xref:wildcard_expression). </param>
+		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
 		public static implicit operator Wildex(string wildcardExpression)
 		{
 			if(wildcardExpression == null) return null;
@@ -271,7 +278,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Compares a string with the <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink> used to create this <see cref="Wildex"/>.
+		/// Compares a string with the [](xref:wildcard_expression) used to create this <see cref="Wildex"/>.
 		/// Returns true if they match.
 		/// </summary>
 		/// <param name="s">String. If null, returns false. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
@@ -403,7 +410,7 @@ namespace Au.Types
 		/// Returns true if string contains wildcard characters: '*', '?'.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		public static bool HasWildcards(string s) //CONSIDER: IsWildcard
+		public static bool HasWildcardChars(string s) //CONSIDER: IsWildcard
 		{
 			if(s == null) return false;
 			for(int i = 0; i < s.Length; i++) {

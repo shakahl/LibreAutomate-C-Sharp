@@ -83,7 +83,7 @@ partial class EdForm : Form
 		Au.Triggers.HooksServer.Start(false);
 		CommandLine.OnMainFormLoaded();
 		IsLoaded = true;
-		Model.RunStartupScript();
+		Model.RunStartupScripts();
 		//Perf.Next();
 
 		Timer_.After(1, () => { //TODO

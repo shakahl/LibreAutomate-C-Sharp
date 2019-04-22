@@ -14,7 +14,7 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
-//using System.Xml.Linq;
+using System.Xml.Linq;
 using System.Collections;
 
 using Au;
@@ -40,6 +40,8 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public readonly List<FileNode> OpenFiles;
 	readonly string _dbFile;
 	public readonly SqliteDB DB;
+	public readonly string SettingsFile;
+	public readonly XElement SettingsXml;
 	//readonly TriggersUI _triggers;
 	readonly bool _importing;
 	readonly bool _initedFully;
@@ -69,7 +71,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		Root = FileNode.Load(WorkspaceFile, this); //recursively creates whole model tree; caller handles exceptions
 
 		if(!_importing) {
-			_dbFile = WorkspaceDirectory + @"\settings.db";
+			_dbFile = WorkspaceDirectory + @"\state.db";
 			try {
 				DB = new SqliteDB(_dbFile, sql:
 					//"PRAGMA journal_mode=WAL;" + //no, it does more bad than good
@@ -78,12 +80,23 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 					);
 			}
 			catch(Exception ex) {
-				Print($"Failed to open file '{_dbFile}'. Will not load/save workspace settings, including lists of open files, expanded folders, markers, folding.\r\n\t{ex.ToStringWithoutStack_()}");
+				Print($"Failed to open file '{_dbFile}'. Will not load/save workspace state: lists of open files, expanded folders, markers, folding, etc.\r\n\t{ex.ToStringWithoutStack_()}");
 			}
+
+			SettingsFile = WorkspaceDirectory + @"\settings.xml";
+			try {
+				if(!File_.ExistsAsFile(SettingsFile)) File_.SaveText(SettingsFile, "<settings/>");
+				SettingsXml = XElement_.Load(SettingsFile);
+			}
+			catch(Exception ex) {
+				Print($"Failed to open file '{SettingsFile}'. Will not load/save workspace settings: startup scripts, etc.\r\n\t{ex.ToStringWithoutStack_()}");
+			}
+
 			OpenFiles = new List<FileNode>();
 			_InitClickSelect();
 			_InitWatcher();
 			//_triggers = new TriggersUI(this);
+
 			Folders.Workspace = WorkspaceDirectory;
 		}
 		_initedFully = true;
@@ -1055,11 +1068,51 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 
 	#region other
 
-	public void RunStartupScript()
+	/// <summary>
+	/// Saves <see cref="SettingsXml"/> to <see cref="SettingsFile"/>.
+	/// If fails, prints error and returns false.
+	/// </summary>
+	public bool SaveWorkspaceSettings()
 	{
-		var f = FindFile("Startup.cs"); //TODO: run only if was already started manually
-		if(f != null) Run.CompileAndRun(true, f); //TODO: wait for triggers hooks server started
+		if(SettingsXml != null) {
+			try { SettingsXml.Save_(SettingsFile); return true; }
+			catch(Exception ex) { Print("Failed to save workspace settings. " + ex.ToStringWithoutStack_()); }
+		}
+		return false;
+	}
 
+	/// <summary>
+	/// Note: the .NET XML reader replaces \r\n with \n, even in CDATA. If the caller needs \r\n, eg for an Edit control, let it replace \n with \r\n.
+	/// </summary>
+	public string StartupScriptsCsv {
+		get => SettingsXml?.Element("users")?.Element_("user", "guid", UserGuid, true)?.Element("startupScripts")?.Value;
+		set {
+			if(SettingsXml == null) return;
+			var x = SettingsXml.ElementGetOrAdd_("users").ElementGetOrAdd_("user", "guid", UserGuid, true).ElementGetOrAdd_("startupScripts");
+			x.Value = value;
+			SaveWorkspaceSettings();
+		}
+	}
+
+	public void RunStartupScripts()
+	{
+		var csv = StartupScriptsCsv; if(csv == null) return;
+		var x = CsvTable.Parse(csv);
+		foreach(var row in x.Data) {
+			var f = FindFile(row[0]);
+			if(f == null) { Print("Startup script not found: " + row[0] + ". Please edit name in Options."); continue; }
+			int delay = 10;
+			if(x.ColumnCount > 1) {
+				var sd = row[1];
+				delay = sd.ToInt_(0, out int end);
+				if(end > 0 && !sd.EndsWithI_("ms")) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
+				if(delay < 10) delay = 10;
+			}
+			Timer_.After(delay, () => {
+				_ = Au.Triggers.HooksServer.Instance.MsgWnd; //waits until started
+				Run.CompileAndRun(true, f);
+			});
+		}
 	}
 
 	#endregion

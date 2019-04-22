@@ -99,7 +99,7 @@ namespace Au
 		/// <param name="cut">Use Ctrl+X.</param>
 		/// <param name="options">
 		/// Options. If null (default), uses <see cref="Opt.Key"/>.
-		/// Uses <see cref="OptKey.RestoreClipboard" r=""/>, <see cref="OptKey.NoBlockInput" r=""/>, <see cref="OptKey.KeySpeedClipboard" r=""/>. Does not use <see cref="OptKey.Hook" r=""/>.
+		/// Uses <see cref="OptKey.RestoreClipboard"/>, <see cref="OptKey.NoBlockInput"/>, <see cref="OptKey.KeySpeedClipboard"/>. Does not use <see cref="OptKey.Hook"/>.
 		/// </param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -208,7 +208,7 @@ namespace Au
 		/// <param name="text">Text.</param>
 		/// <param name="options">
 		/// Options. If null (default), uses <see cref="Opt.Key"/>.
-		/// Uses <see cref="OptKey.RestoreClipboard" r=""/>, <see cref="OptKey.PasteEnter" r=""/>, <see cref="OptKey.NoBlockInput" r=""/>, <see cref="OptKey.SleepFinally" r=""/>, <see cref="OptKey.Hook" r=""/>, <see cref="OptKey.KeySpeedClipboard" r=""/>.
+		/// Uses <see cref="OptKey.RestoreClipboard"/>, <see cref="OptKey.PasteEnter"/>, <see cref="OptKey.NoBlockInput"/>, <see cref="OptKey.SleepFinally"/>, <see cref="OptKey.Hook"/>, <see cref="OptKey.KeySpeedClipboard"/>.
 		/// </param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>

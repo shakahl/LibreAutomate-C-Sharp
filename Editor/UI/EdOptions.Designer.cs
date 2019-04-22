@@ -25,41 +25,46 @@
 	/// </summary>
 	private void InitializeComponent()
 	{
-			this.buttonOK1 = new Au.Controls.ButtonOK();
-			this.buttonCancel1 = new Au.Controls.ButtonCancel();
+			this.components = new System.ComponentModel.Container();
+			this._bOK = new Au.Controls.ButtonOK();
+			this._bCancel = new Au.Controls.ButtonCancel();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this._tabGeneral = new System.Windows.Forms.TabPage();
-			this._tabEditor = new System.Windows.Forms.TabPage();
+			this._startupScripts = new System.Windows.Forms.TextBox();
+			this.label1 = new System.Windows.Forms.Label();
+			this._versionCheck = new System.Windows.Forms.CheckBox();
+			this._runAtStartup = new System.Windows.Forms.CheckBox();
 			this._tabFiles = new System.Windows.Forms.TabPage();
+			this._tabEditor = new System.Windows.Forms.TabPage();
 			this._tabHotkeys = new System.Windows.Forms.TabPage();
 			this._tabSounds = new System.Windows.Forms.TabPage();
-			this._runAtStartup = new System.Windows.Forms.CheckBox();
-			this._versionCheck = new System.Windows.Forms.CheckBox();
-			this.label1 = new System.Windows.Forms.Label();
-			this._startupScripts = new System.Windows.Forms.TextBox();
+			this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
+			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 			this.tabControl1.SuspendLayout();
 			this._tabGeneral.SuspendLayout();
+			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
 			this.SuspendLayout();
 			// 
-			// buttonOK1
+			// _bOK
 			// 
-			this.buttonOK1.Location = new System.Drawing.Point(280, 304);
-			this.buttonOK1.Name = "buttonOK1";
-			this.buttonOK1.Size = new System.Drawing.Size(72, 24);
-			this.buttonOK1.TabIndex = 0;
+			this._bOK.Location = new System.Drawing.Point(280, 304);
+			this._bOK.Name = "_bOK";
+			this._bOK.Size = new System.Drawing.Size(72, 24);
+			this._bOK.TabIndex = 0;
+			this._bOK.Click += new System.EventHandler(this._bOK_Click);
 			// 
-			// buttonCancel1
+			// _bCancel
 			// 
-			this.buttonCancel1.Location = new System.Drawing.Point(360, 304);
-			this.buttonCancel1.Name = "buttonCancel1";
-			this.buttonCancel1.Size = new System.Drawing.Size(72, 24);
-			this.buttonCancel1.TabIndex = 1;
+			this._bCancel.Location = new System.Drawing.Point(360, 304);
+			this._bCancel.Name = "_bCancel";
+			this._bCancel.Size = new System.Drawing.Size(72, 24);
+			this._bCancel.TabIndex = 1;
 			// 
 			// tabControl1
 			// 
 			this.tabControl1.Controls.Add(this._tabGeneral);
-			this.tabControl1.Controls.Add(this._tabEditor);
 			this.tabControl1.Controls.Add(this._tabFiles);
+			this.tabControl1.Controls.Add(this._tabEditor);
 			this.tabControl1.Controls.Add(this._tabHotkeys);
 			this.tabControl1.Controls.Add(this._tabSounds);
 			this.tabControl1.Location = new System.Drawing.Point(0, 0);
@@ -82,15 +87,47 @@
 			this._tabGeneral.Text = "General";
 			this._tabGeneral.UseVisualStyleBackColor = true;
 			// 
-			// _tabEditor
+			// _startupScripts
 			// 
-			this._tabEditor.Location = new System.Drawing.Point(4, 24);
-			this._tabEditor.Name = "_tabEditor";
-			this._tabEditor.Padding = new System.Windows.Forms.Padding(3);
-			this._tabEditor.Size = new System.Drawing.Size(440, 268);
-			this._tabEditor.TabIndex = 1;
-			this._tabEditor.Text = "Editor";
-			this._tabEditor.UseVisualStyleBackColor = true;
+			this._startupScripts.AcceptsReturn = true;
+			this._startupScripts.Location = new System.Drawing.Point(200, 32);
+			this._startupScripts.Multiline = true;
+			this._startupScripts.Name = "_startupScripts";
+			this._startupScripts.Size = new System.Drawing.Size(232, 52);
+			this._startupScripts.TabIndex = 3;
+			this._toolTip.SetToolTip(this._startupScripts, "Script name or path, and delay ms or s.\r\nExample:\r\nscript4.cs, 500 ms\r\n\\folder\\sc" +
+        "ript5.cs, 2 s");
+			this._startupScripts.WordWrap = false;
+			this._startupScripts.Validating += new System.ComponentModel.CancelEventHandler(this._startupScripts_Validating);
+			// 
+			// label1
+			// 
+			this.label1.AutoSize = true;
+			this.label1.Location = new System.Drawing.Point(200, 12);
+			this.label1.Name = "label1";
+			this.label1.Size = new System.Drawing.Size(217, 15);
+			this.label1.TabIndex = 2;
+			this.label1.Text = "Run scripts when this workspace loaded";
+			// 
+			// _versionCheck
+			// 
+			this._versionCheck.AutoSize = true;
+			this._versionCheck.Location = new System.Drawing.Point(8, 40);
+			this._versionCheck.Name = "_versionCheck";
+			this._versionCheck.Size = new System.Drawing.Size(171, 19);
+			this._versionCheck.TabIndex = 1;
+			this._versionCheck.Text = "Check for program updates";
+			this._versionCheck.UseVisualStyleBackColor = true;
+			// 
+			// _runAtStartup
+			// 
+			this._runAtStartup.AutoSize = true;
+			this._runAtStartup.Location = new System.Drawing.Point(8, 12);
+			this._runAtStartup.Name = "_runAtStartup";
+			this._runAtStartup.Size = new System.Drawing.Size(162, 19);
+			this._runAtStartup.TabIndex = 0;
+			this._runAtStartup.Text = "Run when Windows starts";
+			this._runAtStartup.UseVisualStyleBackColor = true;
 			// 
 			// _tabFiles
 			// 
@@ -100,6 +137,16 @@
 			this._tabFiles.TabIndex = 2;
 			this._tabFiles.Text = "Files";
 			this._tabFiles.UseVisualStyleBackColor = true;
+			// 
+			// _tabEditor
+			// 
+			this._tabEditor.Location = new System.Drawing.Point(4, 24);
+			this._tabEditor.Name = "_tabEditor";
+			this._tabEditor.Padding = new System.Windows.Forms.Padding(3);
+			this._tabEditor.Size = new System.Drawing.Size(440, 268);
+			this._tabEditor.TabIndex = 1;
+			this._tabEditor.Text = "Editor";
+			this._tabEditor.UseVisualStyleBackColor = true;
 			// 
 			// _tabHotkeys
 			// 
@@ -119,53 +166,26 @@
 			this._tabSounds.Text = "Sounds";
 			this._tabSounds.UseVisualStyleBackColor = true;
 			// 
-			// _runAtStartup
+			// _errorProvider
 			// 
-			this._runAtStartup.AutoSize = true;
-			this._runAtStartup.Location = new System.Drawing.Point(8, 12);
-			this._runAtStartup.Name = "_runAtStartup";
-			this._runAtStartup.Size = new System.Drawing.Size(162, 19);
-			this._runAtStartup.TabIndex = 0;
-			this._runAtStartup.Text = "Run when Windows starts";
-			this._runAtStartup.UseVisualStyleBackColor = true;
+			this._errorProvider.ContainerControl = this;
 			// 
-			// _versionCheck
+			// _toolTip
 			// 
-			this._versionCheck.AutoSize = true;
-			this._versionCheck.Location = new System.Drawing.Point(8, 40);
-			this._versionCheck.Name = "_versionCheck";
-			this._versionCheck.Size = new System.Drawing.Size(171, 19);
-			this._versionCheck.TabIndex = 1;
-			this._versionCheck.Text = "Check for program updates";
-			this._versionCheck.UseVisualStyleBackColor = true;
-			// 
-			// label1
-			// 
-			this.label1.AutoSize = true;
-			this.label1.Location = new System.Drawing.Point(216, 14);
-			this.label1.Name = "label1";
-			this.label1.Size = new System.Drawing.Size(195, 15);
-			this.label1.TabIndex = 2;
-			this.label1.Text = "Run scripts when workspace loaded";
-			// 
-			// _startupScripts
-			// 
-			this._startupScripts.Location = new System.Drawing.Point(216, 32);
-			this._startupScripts.Multiline = true;
-			this._startupScripts.Name = "_startupScripts";
-			this._startupScripts.Size = new System.Drawing.Size(216, 52);
-			this._startupScripts.TabIndex = 3;
+			this._toolTip.AutoPopDelay = 5000;
+			this._toolTip.InitialDelay = 100;
+			this._toolTip.ReshowDelay = 100;
 			// 
 			// EdOptions
 			// 
-			this.AcceptButton = this.buttonOK1;
+			this.AcceptButton = this._bOK;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.CancelButton = this.buttonCancel1;
+			this.CancelButton = this._bCancel;
 			this.ClientSize = new System.Drawing.Size(446, 336);
 			this.Controls.Add(this.tabControl1);
-			this.Controls.Add(this.buttonCancel1);
-			this.Controls.Add(this.buttonOK1);
+			this.Controls.Add(this._bCancel);
+			this.Controls.Add(this._bOK);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.IsPopup = true;
 			this.MaximizeBox = false;
@@ -177,14 +197,15 @@
 			this.tabControl1.ResumeLayout(false);
 			this._tabGeneral.ResumeLayout(false);
 			this._tabGeneral.PerformLayout();
+			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).EndInit();
 			this.ResumeLayout(false);
 
 	}
 
 	#endregion
 
-	private Au.Controls.ButtonOK buttonOK1;
-	private Au.Controls.ButtonCancel buttonCancel1;
+	private Au.Controls.ButtonOK _bOK;
+	private Au.Controls.ButtonCancel _bCancel;
 	private System.Windows.Forms.TabControl tabControl1;
 	private System.Windows.Forms.TabPage _tabGeneral;
 	private System.Windows.Forms.TabPage _tabEditor;
@@ -195,4 +216,6 @@
 	private System.Windows.Forms.CheckBox _runAtStartup;
 	private System.Windows.Forms.TextBox _startupScripts;
 	private System.Windows.Forms.Label label1;
+	private System.Windows.Forms.ErrorProvider _errorProvider;
+	private System.Windows.Forms.ToolTip _toolTip;
 }

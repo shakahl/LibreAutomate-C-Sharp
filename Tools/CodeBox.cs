@@ -180,7 +180,7 @@ namespace Au.Tools
 									}
 								}
 							}
-							if(Wildex.HasWildcards(name)) name = "**t " + name;
+							if(Wildex.HasWildcardChars(name)) name = "**t " + name;
 							name = prefix + name;
 
 							b.Append("(");

@@ -115,7 +115,7 @@ partial class PanelFiles : Control
 		else m.LoadState();
 		if(m.CurrentFile == null) MainForm.SetTitle();
 
-		if(runStartupScript) Model.RunStartupScript();
+		if(runStartupScript) Model.RunStartupScripts();
 
 		return _model;
 	}

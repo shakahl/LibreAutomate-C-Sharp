@@ -15,9 +15,13 @@
       </HelpKeywords>
     </Topic>
   </Topic>
+  <Topic id="644ff910-aa52-4236-9082-9ec273b3e61d" visible="True" noFile="true" isExpanded="true" title="Editor program">
+    <Topic id="c2da3a94-af63-4986-975b-abd959da3509" visible="True" />
+    <Topic id="" visible="True" isSelected="true" title="Tii" />
+  </Topic>
   <Topic id="23b6ef8f-5e67-4221-accd-5ab84d4fab8b" visible="True" noFile="true" isExpanded="true" apiParentMode="InsertBefore" title="Other info">
     <Topic id="036bb846-3cba-4710-bd7d-daeff3f75392" visible="True" />
-    <Topic id="e2645f42-9c3a-4d8c-8bef-eabba00c92e9" visible="True" isSelected="true" />
+    <Topic id="e2645f42-9c3a-4d8c-8bef-eabba00c92e9" visible="True" />
     <Topic id="0248143b-a0dd-4fa1-84f9-76831db6714a" visible="True" />
   </Topic>
   <Topic id="505d663b-04af-4fdf-84b1-e618a6bd84a6" visible="True" />

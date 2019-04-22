@@ -58,7 +58,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Converts object to string like <see cref="Print(object)" r=""/> does.
+		/// Converts object to string like <see cref="Print(object)"/> does.
 		/// </summary>
 		internal static string LibPrintObjectToString(object value)
 		{
@@ -102,7 +102,7 @@ namespace Au
 		/// {0} - item index, starting from 0.
 		/// {1} - item index, starting from 1.
 		/// 
-		/// Default "{s}\r\n". It works like <see cref="Print{T}(IEnumerable{T})" r=""/>.
+		/// Default "{s}\r\n". It works like <see cref="Print{T}(IEnumerable{T})"/>.
 		/// </param>
 		/// <param name="trimEnd">
 		/// How many characters to remove from the end of the result string.
@@ -184,11 +184,11 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Warning text.</param>
 		/// <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0.</param>
-		/// <param name="prefix">Text before <paramref name="text"/>. Default "Warning: ".</param>
+		/// <param name="prefix">Text before *text*. Default "Warning: ".</param>
 		/// <remarks>
 		/// Calls <see cref="Output.Write"/>.
-		/// Does not show more that 1 warning/second, unless Opt.Debug.<see cref="OptDebug.Verbose" r=""/> == true.
-		/// To disable some warnings, use Opt.Debug.<see cref="OptDebug.DisableWarnings" r=""/>.
+		/// Does not show more that 1 warning/second, unless <b>Opt.Debug.</b><see cref="OptDebug.Verbose"/> == true.
+		/// To disable some warnings, use <b>Opt.Debug.</b><see cref="OptDebug.DisableWarnings"/>.
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static void PrintWarning(string text, int showStackFromThisFrame = 0, string prefix = "Warning: ")

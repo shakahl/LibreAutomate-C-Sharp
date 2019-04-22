@@ -57,27 +57,12 @@ namespace Au
 				}
 
 				/// <summary>
-				/// Used by <see cref="SetProgressState"/>.
-				/// </summary>
-				/// <tocexclude />
-				public enum ProgressState
-				{
-#pragma warning disable 1591 //XML doc
-					NoProgress = 0,
-					Indeterminate = 0x1,
-					Normal = 0x2,
-					Error = 0x4,
-					Paused = 0x8
-#pragma warning restore 1591 //XML doc
-				}
-
-				/// <summary>
 				/// Sets the state of the progress indicator displayed on the taskbar button.
 				/// Calls <msdn>ITaskbarList3.SetProgressState</msdn>.
 				/// </summary>
 				/// <param name="w">Button's window.</param>
 				/// <param name="state">Progress indicator state and color.</param>
-				public static void SetProgressState(Wnd w, ProgressState state)
+				public static void SetProgressState(Wnd w, TBProgressState state)
 				{
 					_TaskbarButton.taskbarInstance.SetProgressState(w, state);
 				}
@@ -133,7 +118,7 @@ namespace Au
 
 						// ITaskbarList3
 						[PreserveSig] int SetProgressValue(Wnd hwnd, long ullCompleted, long ullTotal);
-						[PreserveSig] int SetProgressState(Wnd hwnd, ProgressState state);
+						[PreserveSig] int SetProgressState(Wnd hwnd, TBProgressState state);
 						[PreserveSig] int RegisterTab(Wnd hwndTab, Wnd hwndMDI);
 						[PreserveSig] int UnregisterTab(Wnd hwndTab);
 						[PreserveSig] int SetTabOrder(Wnd hwndTab, Wnd hwndInsertBefore);
@@ -259,7 +244,7 @@ namespace Au
 				/// </summary>
 				/// <param name="w">Any top-level or child window of that process.</param>
 				/// <exception cref="WndException">w invalid.</exception>
-				/// <exception cref="AuException">Failed to allocate process memory (see <see cref="Process_.Memory"/>) needed to get control names, usually because of <see cref="Uac">UAC</see>.</exception>
+				/// <exception cref="AuException">Failed to allocate process memory (see <see cref="Process_.Memory"/>) needed to get control names, usually because of [](xref:uac).</exception>
 				public WinFormsControlNames(Wnd w)
 				{
 					_pm = new Process_.Memory(w, 4096); //throws
@@ -337,7 +322,7 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// This struct is <msdn>COPYDATASTRUCT</msdn>.
-			/// <note type="note">By default <see cref="Uac">UAC</see> blocks messages sent from processes of lower integrity level. Call <see cref="EnableReceivingWM_COPYDATA"/> if need.</note>
+			/// <note>By default [](xref:uac) blocks messages sent from processes of lower integrity level. Call <see cref="EnableReceivingWM_COPYDATA"/> if need.</note>
 			/// </remarks>
 			/// <seealso cref="Util.SharedMemory"/>
 			/// <seealso cref="System.IO.Pipes.NamedPipeServerStream"/>
@@ -427,7 +412,7 @@ namespace Au
 				}
 
 				/// <summary>
-				/// Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower <see cref="Uac">UAC</see> integrity level processes.
+				/// Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower [](xref:uac) integrity level processes.
 				/// </summary>
 				public static void EnableReceivingWM_COPYDATA()
 				{
@@ -437,5 +422,23 @@ namespace Au
 				#endregion
 			}
 		}
+	}
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// Used by <see cref="Wnd.Misc.TaskbarButton.SetProgressState"/>.
+	/// </summary>
+	[NoDoc]
+	public enum TBProgressState
+	{
+#pragma warning disable 1591 //XML doc
+		NoProgress = 0,
+		Indeterminate = 0x1,
+		Normal = 0x2,
+		Error = 0x4,
+		Paused = 0x8
+#pragma warning restore 1591 //XML doc
 	}
 }

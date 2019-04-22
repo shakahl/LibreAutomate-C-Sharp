@@ -54,7 +54,7 @@ namespace Au
 		/// </param>
 		/// <param name="args">
 		/// Command line arguments.
-		/// This function expands environment variables if starts with "%" or "\"%".
+		/// This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="more">Allows to specify more parameters.</param>
@@ -238,7 +238,7 @@ namespace Au
 		/// </param>
 		/// <param name="args">
 		/// Command line arguments.
-		/// This function expands environment variables if starts with "%" or "\"%".
+		/// This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
 		/// </param>
 		/// <param name="directory">Working directory. Default - <see cref="Directory.GetCurrentDirectory"/> of this process.</param>
 		/// <param name="textEncoding">Text encoding used to convert console's ANSI text to C# Unicode text.</param>
@@ -284,7 +284,7 @@ namespace Au
 
 		/// <summary>
 		/// Runs a console program (hidden), waits until its process ends, and prints its output text.
-		/// Calls <see cref="RunConsole(out string, string, string, string, Encoding)"/> and <see cref="Print(string)" r=""/>.
+		/// Calls <see cref="RunConsole(out string, string, string, string, Encoding)"/> and <see cref="Print(string)"/>.
 		/// </summary>
 		/// <param name="file"></param>
 		/// <param name="args"></param>
@@ -303,7 +303,7 @@ namespace Au
 		/// </summary>
 		/// <param name="path">
 		/// Full path of a file or directory or other shell object.
-		/// Supports @"%environmentVariable%\..." (see <see cref="Path_.ExpandEnvVar"/>) and "::..." (see <see cref="Pidl.ToHexString"/>).
+		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="Path_.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="Pidl.ToHexString"/>).
 		/// </param>
 		public static bool SelectFileInExplorer(string path)
 		{

@@ -34,7 +34,7 @@ namespace Au
 		/// Get full path.
 		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
 		/// </param>
-		/// <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if <paramref name="fullPath"/> is true.</param>
+		/// <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if *fullPath* is true.</param>
 		/// <remarks>
 		/// This function is much slower than getting window name or class name.
 		/// </remarks>
@@ -272,16 +272,16 @@ namespace Au
 		/// </summary>
 		/// <param name="processName">
 		/// Process executable file name, like "notepad.exe".
-		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+		/// String format: [](xref:wildcard_expression).
 		/// </param>
 		/// <param name="fullPath">
-		/// <paramref name="processName"/> is full path.
+		/// *processName* is full path.
 		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
 		/// </param>
 		/// <param name="ofThisSession">Get processes only of this user session.</param>
 		/// <exception cref="ArgumentException">
-		/// processName is "" or null.
-		/// Invalid wildcard expression ("**options " or regular expression).
+		/// - *processName* is "" or null.
+		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		public static int[] GetProcessIds(string processName, bool fullPath = false, bool ofThisSession = false)
 		{
@@ -358,7 +358,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets process id from handle.
-		/// Returns 0 if failed. Supports <see cref="WinError.Code"/>.
+		/// Returns 0 if failed. Supports <see cref="WinError"/>.
 		/// Calls API <msdn>GetProcessId</msdn>.
 		/// </summary>
 		/// <param name="processHandle">Process handle.</param>
@@ -377,7 +377,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets user session id of process.
-		/// Returns -1 if failed. Supports <see cref="WinError.Code"/>.
+		/// Returns -1 if failed. Supports <see cref="WinError"/>.
 		/// Calls API <msdn>ProcessIdToSessionId</msdn>.
 		/// </summary>
 		/// <param name="processId">Process id.</param>
@@ -419,7 +419,7 @@ namespace Au
 
 		/// <summary>
 		/// Creates correct arguments for CreateProcess:
-		/// lpCommandLine, as char[] like "\"exeFile\" args\0";
+		/// lpCommandLine, as char[] like <c>"\"exeFile\" args\0"</c>;
 		/// lpCurrentDirectory = directory of exeFile;
 		/// flags CREATE_UNICODE_ENVIRONMENT and optionally CREATE_SUSPENDED;
 		/// STARTUPINFO with flag STARTF_FORCEOFFFEEDBACK;

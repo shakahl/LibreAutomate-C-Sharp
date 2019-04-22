@@ -233,7 +233,7 @@ namespace Au
 
 			//rejected: Not very useful. Not very easy to understand the purpose. Adds some overhead.
 			///// <summary>
-			///// Executes <paramref name="code"/> (lambda) <paramref name="count"/> times, and then calls <see cref="Next"/>.
+			///// Executes *code* (lambda) *count* times, and then calls <see cref="Next"/>.
 			///// </summary>
 			//public void Execute(int count, Action code)
 			//{
@@ -242,7 +242,7 @@ namespace Au
 			//}
 
 			///// <summary>
-			///// <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
+			///// *countAll* times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
 			///// </summary>
 			//public void ExecuteMulti(int countAll, int countEach, params Action[] codes)
 			//{
@@ -399,12 +399,12 @@ namespace Au
 
 		//rejected: Not very useful. Not very easy to understand the purpose. Adds some overhead.
 		///// <summary>
-		///// Executes <paramref name="code"/> (lambda) <paramref name="count"/> times, and then calls <see cref="Next"/>.
+		///// Executes *code* (lambda) *count* times, and then calls <see cref="Next"/>.
 		///// </summary>
 		//public static void Execute(int count, Action code) => StaticInst.Execute(count, code);
 
 		///// <summary>
-		///// <paramref name="countAll"/> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
+		///// *countAll* times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
 		///// </summary>
 		//public static void ExecuteMulti(int countAll, int countEach, params Action[] codes) => StaticInst.ExecuteMulti(countAll, countEach, codes);
 	}

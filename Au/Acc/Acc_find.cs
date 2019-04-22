@@ -129,13 +129,13 @@ namespace Au
 			/// </summary>
 			/// <param name="w">Window or control that contains the AO.</param>
 			/// <exception cref="ArgumentException">
-			/// <i>role</i> is "" or invalid.
-			/// <i>name</i> is invalid wildcard expression ("**options " or regular expression).
-			/// <i>prop</i> has invalid format or contains unknown property names or invalid wildcard expressions.
-			/// Using flag <see cref="AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
+			/// - <i>role</i> is "" or invalid.
+			/// - <i>name</i> is invalid wildcard expression (<c>"**options "</c> or regular expression).
+			/// - <i>prop</i> has invalid format or contains unknown property names or invalid wildcard expressions.
+			/// - flag <see cref="AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
 			/// </exception>
 			/// <exception cref="WndException">Invalid window.</exception>
-			/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Uac">UAC</see> integrity level process.</exception>
+			/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 			public bool Find(Wnd w)
 			{
 				return _FindOrWait(w, 0, false);
@@ -148,13 +148,13 @@ namespace Au
 			/// <param name="a">Direct or indirect parent AO.</param>
 			/// <exception cref="ArgumentNullException">a is null.</exception>
 			/// <exception cref="ArgumentException">
-			/// <i>role</i> is "" or invalid or has a prefix ("web:" etc).
-			/// <i>name</i> is invalid wildcard expression ("**options " or regular expression).
-			/// <i>prop</i> has invalid format or contains unknown property names or invalid wildcard expressions.
-			/// Using flag <see cref="AFFlags.UIA"/>.
-			/// <see cref="SimpleElementId"/> is not 0.
+			/// - <i>role</i> is "" or invalid or has a prefix ("web:" etc).
+			/// - <i>name</i> is invalid wildcard expression (<c>"**options "</c> or regular expression).
+			/// - <i>prop</i> has invalid format or contains unknown property names or invalid wildcard expressions.
+			/// - flag <see cref="AFFlags.UIA"/>.
+			/// - <see cref="SimpleElementId"/> is not 0.
 			/// </exception>
-			/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Uac">UAC</see> integrity level process.</exception>
+			/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 			public bool Find(Acc a)
 			{
 				return _FindOrWait(a, 0, false);
@@ -164,10 +164,10 @@ namespace Au
 			/// Finds accessible object (AO) in window w.
 			/// The same as <see cref="Find(Wnd)"/>, but waits until the AO is found or the given time expires.
 			/// </summary>
-			/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+			/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 			/// <param name="w">Window or control that contains the AO.</param>
-			/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-			/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+			/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+			/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 			/// <exception cref="Exception">Exceptions of <see cref="Find(Wnd)"/>.</exception>
 			public bool Wait(double secondsTimeout, Wnd w)
 			{
@@ -178,10 +178,10 @@ namespace Au
 			/// Finds accessible object (AO) in another AO.
 			/// The same as <see cref="Find(Acc)"/>, but waits until the AO is found or the given time expires.
 			/// </summary>
-			/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+			/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 			/// <param name="a">Direct or indirect parent AO.</param>
-			/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-			/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+			/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+			/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 			/// <exception cref="Exception">Exceptions of <see cref="Find(Acc)"/>.</exception>
 			public bool Wait(double secondsTimeout, Acc a)
 			{
@@ -304,145 +304,118 @@ namespace Au
 
 		/// <summary>
 		/// Finds an accessible object (AO) in window.
-		/// Returns the found AO. Returns null if not found. See examples.
+		/// Returns the found AO. Returns null if not found.
 		/// </summary>
 		/// <param name="w">Window or control that contains the AO.</param>
 		/// <param name="role">
-		/// AO role, like "LINK". Or path, like "ROLE/ROLE/ROLE".
-		/// See <see cref="Role"/>. Can be used standard roles (see <see cref="AccROLE"/>) and custom roles (like "div" in Firefox).
-		/// This parameter is string. If you want to use <see cref="AccROLE"/>: <c>nameof(AccROLE.CHECKBOX)</c>.
-		/// Case-sensitive, not wildcard. Use null to match any role. Cannot be "".
+		/// AO role, like <c>"LINK"</c> or <c>nameof(AccROLE.LINK)</c>. Or path, like <c>"ROLE/ROLE/ROLE"</c>.
+		/// Can be used standard roles (see <see cref="AccROLE"/>) and custom roles (like <c>"div"</c> in Firefox). More info: <see cref="Role"/>.
 		/// 
-		/// Role or path can have a prefix:
-		/// <list type="bullet">
-		/// <item>
-		/// "web:" - search only in the visible web page, not in whole window.
-		/// Examples: "web:LINK", "web:/LIST/LISTITEM/LINK".
-		/// Supports Firefox, Chrome, Internet Explorer (IE) and apps that use their code. With other windows, searches in the first found visible AO that has DOCUMENT role.
-		/// <note type="note">Chrome web page accessible objects normally are disabled (don't exist). Use prefix "web:" or "chrome:" to enable.</note>
-		/// Tip: To search only NOT in web pages, use <paramref name="prop"/> "notin=DOCUMENT" (Chrome, Firefox) or "notin=PANE" (IE).
-		/// </item>
-		/// <item>"firefox:" - search only in the visible web page of Firefox or Firefox-based web browser. If w window class name starts with "Mozilla", can be used "web:" instead.</item>
-		/// <item>"chrome:" - search only in the visible web page of Chrome or Chrome-based web browser. If w window class name starts with "Chrome", can be used "web:" instead.</item>
-		/// </list>
-		/// Prefix cannot be used if: <paramref name="prop"/> contains "id" or "class"; with flag <see cref="AFFlags.UIA"/>; searching in Acc (<see cref="Find(string, string, string, AFFlags, Func{Acc, bool}, int, string)"/>).
-		///
-		/// Can be used path consisting of roles separated by "/". Examples:
-		/// <list type="bullet">
-		/// <item>"web:DOCUMENT/div/LIST/LISTITEM/LINK" - find LINK using its full path in web page.</item>
-		/// <item>"web:/div/LIST//LINK" - the empty parts mean 'any role'. For example don't need to specify DOCUMENT because in web pages the first part is always DOCUMENT (Firefox, Chrome) or PANE (IE).</item>
-		/// <item>"web:/div/LIST[4]/LISTITEM[-1]/LINK" - the 4 is 1-based index of div child from which to start searching (4-th, then 3-th, 5-th and so on). It can make faster. Negative means 'index from end', for example use -1 to search in reverse order. Flag <see cref="AFFlags.Reverse"/> is not applied to path parts with indexes. If index is invalid, will use the nearest valid index.</item>
-		/// <item>"web:/div/LIST[4!]/LISTITEM[-1!]/LINK" - like the above, but the LIST must be exactly 4-th child (don't search 3-th, 5-th etc) and the LISTITEM must be the last child. This can be useful when waiting (uses less CPU), however useless if AO indices in the window or web page change often.</item>
-		/// <item>"web://[4]/[-1!]/[2]" - index without role.</item>
-		/// <item>"CLIENT/WINDOW/TREE/TREEITEM[-1]" - path in window or control. The first path part is a direct child AO of the WINDOW AO of the window/control. The WINDOW AO itself is not included in the search; if you need it, instead use <see cref="FromWindow"/>.</item>
-		/// </list>
+		/// Case-sensitive. Not wildcard. Use null to match any role. Cannot be "".
+		/// 
+		/// Can have a prefix:
+		/// - <c>"web:"</c> - search only in the visible web page, not in whole window. Examples: <c>"web:LINK"</c>, <c>"web:/LIST/LISTITEM/LINK"</c>.\
+		///   Supports Firefox, Chrome, Internet Explorer (IE) and apps that use their code. With other windows, searches in the first found visible AO that has DOCUMENT role.\
+		///   Tip: To search only NOT in web pages, use *prop* <c>"notin=DOCUMENT"</c> (Chrome, Firefox) or <c>"notin=PANE"</c> (IE).
+		/// - <c>"firefox:"</c> - search only in the visible web page of Firefox or Firefox-based web browser. If w window class name starts with "Mozilla", can be used <c>"web:"</c> instead.
+		/// - <c>"chrome:"</c> - search only in the visible web page of Chrome or Chrome-based web browser. If w window class name starts with "Chrome", can be used <c>"web:"</c> instead.
+		/// 
+		/// <note>Chrome web page accessible objects normally are disabled (don't exist). Use prefix <c>"web:"</c> or <c>"chrome:"</c> to enable.</note>
+		/// 
+		/// Prefix cannot be used:
+		/// - if *prop* contains <c>"id"</c> or <c>"class"</c>;
+		/// - with flag <see cref="AFFlags.UIA"/>;
+		/// - with the non-static **Find** overload (searching in an AO).
+		/// 
+		/// Can be path consisting of roles separated by "/". Examples:
+		/// - <c>"web:DOCUMENT/div/LIST/LISTITEM/LINK"</c> - find LINK using its full path in web page.
+		/// - <c>"web:/div/LIST//LINK"</c> - the empty parts mean 'any role'. For example don't need to specify DOCUMENT because in web pages the first part is always DOCUMENT (Firefox, Chrome) or PANE (IE).
+		/// - <c>"web:/div/LIST[4]/LISTITEM[-1]/LINK"</c> - the 4 is 1-based index of div child from which to start searching (4-th, then 3-th, 5-th and so on). It can make faster. Negative means 'index from end', for example use -1 to search in reverse order. Flag <see cref="AFFlags.Reverse"/> is not applied to path parts with indexes. If index is invalid, will use the nearest valid index.
+		/// - <c>"web:/div/LIST[4!]/LISTITEM[-1!]/LINK"</c> - like the above, but the LIST must be exactly 4-th child (don't search 3-th, 5-th etc) and the LISTITEM must be the last child. This can be useful when waiting (uses less CPU), however useless if AO indices in the window or web page change often.
+		/// - <c>"web://[4]/[-1!]/[2]"</c> - index without role.
+		/// - <c>"CLIENT/WINDOW/TREE/TREEITEM[-1]"</c> - path in window or control. The first path part is a direct child AO of the WINDOW AO of the window/control. The WINDOW AO itself is not included in the search; if you need it, instead use <see cref="FromWindow"/>.
 		/// </param>
 		/// <param name="name">
 		/// AO name (<see cref="Name"/>).
-		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+		/// String format: [](xref:wildcard_expression).
 		/// null means 'any'. "" means 'empty or unavailable'.
 		/// </param>
 		/// <param name="prop">
 		/// Other AO properties and search settings.
-		/// Format: one or more "name=value", separated with "\0" or "\0 ", like "description=xxx\0 @href=yyy". Names must match case. Values of string properties are wildcard expressions.
+		/// Format: one or more <c>"name=value"</c>, separated with <c>"\0"</c> or <c>"\0 "</c>, like <c>"description=xxx\0 @href=yyy"</c>. Names must match case. Values of string properties are wildcard expressions.
 		/// 
-		/// <list type="bullet">
-		/// <item>
-		/// "class" - search only in child controls that have this class name (see <see cref="Wnd.ClassName"/>).
-		/// Cannot be used when searching in Acc.
-		/// </item>
-		/// <item>
-		/// "id" - search only in child controls that have this id (see <see cref="Wnd.ControlId"/>). If the value is not a number - Windows Forms control name (see <see cref="Wnd.NameWinForms"/>); case-sensitive, not wildcard.
-		/// Cannot be used when searching in Acc.
-		/// </item>
-		/// <item>
-		/// "value" - <see cref="Value"/>.
-		/// </item>
-		/// <item>
-		/// "description" - <see cref="Description"/>.
-		/// </item>
-		/// <item>
-		/// "state" - <see cref="State"/>. List of states that the AO must have and/or not have.
-		/// Example: "state=CHECKED, FOCUSABLE, !DISABLED".
-		/// Example: "state=0x100010, !0x1".
-		/// Will find AO that has all states without "!" prefix and does not have any of states with "!" prefix.
-		/// </item>
-		/// <item>
-		/// "rect" - <see cref="Rect"/>. Can be specified left, top, width and/or height, using <see cref="RECT.ToString"/> format.
-		/// Example: "rect={L=1155 T=1182 W=132 H=13}".
-		/// Example: "rect={W=132 T=1182}".
+		/// - <c>"class"</c> - search only in child controls that have this class name (see <see cref="Wnd.ClassName"/>).
+		/// Cannot be used when searching in an AO.
+		/// - <c>"id"</c> - search only in child controls that have this id (see <see cref="Wnd.ControlId"/>). If the value is not a number - Windows Forms control name (see <see cref="Wnd.NameWinForms"/>); case-sensitive, not wildcard.
+		/// Cannot be used when searching in an AO.
+		/// - <c>"value"</c> - <see cref="Value"/>.
+		/// - <c>"description"</c> - <see cref="Description"/>.
+		/// - <c>"state"</c> - <see cref="State"/>. List of states that the AO must have and/or not have.
+		/// Example: <c>"state=CHECKED, FOCUSABLE, !DISABLED"</c>.
+		/// Example: <c>"state=0x100010, !0x1"</c>.
+		/// Will find AO that has all states without <c>"!"</c> prefix and does not have any of states with <c>"!"</c> prefix.
+		/// - <c>"rect"</c> - <see cref="Rect"/>. Can be specified left, top, width and/or height, using <see cref="RECT.ToString"/> format.
+		/// Example: <c>"rect={L=1155 T=1182 W=132 H=13}"</c>.
+		/// Example: <c>"rect={W=132 T=1182}"</c>.
 		/// The L T coordinates are relative to the primary screen.
-		/// </item>
-		/// <item>
-		/// "level" - level (see <see cref="Level"/>) at which the AO can be found. Can be exact level, or minimal and maximal level separated by space.
+		/// - <c>"level"</c> - level (see <see cref="Level"/>) at which the AO can be found. Can be exact level, or minimal and maximal level separated by space.
 		/// The default value is 0 1000.
-		/// Alternatively you can use path in role, like "////LINK".
-		/// </item>
-		/// <item>
-		/// "elem" - <see cref="SimpleElementId"/>.
-		/// </item>
-		/// <item>
-		/// "action" - <see cref="DefaultAction"/>.
-		/// </item>
-		/// <item>
-		/// "key" - <see cref="KeyboardShortcut"/>.
-		/// </item>
-		/// <item>
-		/// "help" - <see cref="Help"/>.
-		/// </item>
-		/// <item>
-		/// "uiaid" - <see cref="UiaId"/>.
-		/// </item>
-		/// <item>
-		/// "maxcc" - when searching, skip children of AO that have more than this number of direct children. It can make faster.
+		/// Alternatively you can use path in role, like <c>"////LINK"</c>.
+		/// - <c>"elem"</c> - <see cref="SimpleElementId"/>.
+		/// - <c>"action"</c> - <see cref="DefaultAction"/>.
+		/// - <c>"key"</c> - <see cref="KeyboardShortcut"/>.
+		/// - <c>"help"</c> - <see cref="Help"/>.
+		/// - <c>"uiaid"</c> - <see cref="UiaId"/>.
+		/// - <c>"maxcc"</c> - when searching, skip children of AO that have more than this number of direct children. It can make faster.
 		/// The default value is 10000. It also prevents hanging or crashing when an AO in the object tree has large number of children. For example OpenOffice Calc TABLE has one billion children.
-		/// </item>
-		/// <item>
-		/// "notin" - when searching, skip children of AO that have these roles. It can make faster.
-		/// Example: "notin=TREE,LIST,TOOLBAR".
-		/// Roles in the list must be separated with "," or ", ". Case-sensitive, not wildcard.
+		/// - <c>"notin"</c> - when searching, skip children of AO that have these roles. It can make faster.
+		/// Example: <c>"notin=TREE,LIST,TOOLBAR"</c>.
+		/// Roles in the list must be separated with <c>","</c> or <c>", "</c>. Case-sensitive, not wildcard.
 		/// See also: <see cref="AFFlags.MenuToo"/>.
-		/// </item>
-		/// <item>
-		/// "@attr" - <see cref="HtmlAttribute"/>. Here "attr" is any attribute name.
-		/// Example: "@id=example".
-		/// </item>
-		/// </list>
+		/// - <c>"@attr"</c> - <see cref="HtmlAttribute"/>. Here "attr" is any attribute name.
+		/// 
+		/// Example: <c>"@id=example"</c>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
 		/// Callback function. Called for each matching AO. Let it return true if this is the wanted AO.
-		/// Example, the AO must contain point x y: <c>o => o.GetRect(out var r, o.WndTopLevel) &amp;&amp; r.Contains(266, 33)</c>
+		/// Example: the AO must contain point x y: <c>o => o.GetRect(out var r, o.WndTopLevel) &amp;&amp; r.Contains(266, 33)</c>
 		/// </param>
 		/// <param name="skip">
 		/// 0-based index of matching AO.
 		/// For example, if 1, the function skips the first matching AO and returns the second.
 		/// </param>
-		/// <param name="navig">If not null, call <see cref="Navigate"/> with this string and return its result.</param>
+		/// <param name="navig">If not null, the specified object is an intermediate object. After finding it, call <see cref="Navigate"/> with this string and return its result.</param>
 		/// <param name="controls">
 		/// Properties of child controls where to search.
-		/// This is an alternative for class/id in <paramref name="prop"/>. Allows to specify more control properties. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
+		/// This is an alternative for class/id in *prop*. Allows to specify more control properties. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
 		/// </param>
+		/// 
 		/// <exception cref="ArgumentException">
-		/// <paramref name="role"/> is "" or invalid.
-		/// <paramref name="name"/> is invalid wildcard expression ("**options " or regular expression).
-		/// <paramref name="prop"/> has invalid format or contains unknown property names or invalid wildcard expressions.
-		/// <paramref name="navig"/> string is invalid.
-		/// Using flag <see cref="AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
+		/// - *role* is "" or invalid.
+		/// - *name* is invalid wildcard expression (<c>"**options "</c> or regular expression).
+		/// - *prop* has invalid format or contains unknown property names or invalid wildcard expressions.
+		/// - *navig* string is invalid.
+		/// - *flags* has <see cref="AFFlags.UIA"/> when searching in web page (role prefix <c>"web:"</c> etc).
 		/// </exception>
-		/// <exception cref="WndException">Invalid window (if the function has parameter <paramref name="w"/>).</exception>
-		/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Uac">UAC</see> integrity level process.</exception>
+		/// <exception cref="WndException"> Invalid window (if the function has parameter *w*).</exception>
+		/// <exception cref="AuException"> Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+		/// 
 		/// <remarks>
 		/// To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.Form_Acc</b> in Au.Tools.dll.
 		/// 
 		/// Walks the tree of accessible objects, until finds a matching AO.
+		/// 
 		/// Uses <see cref="Finder"/>. You can use it directly. See example.
-		/// In wildcard expressions supports PCRE regular expressions (prefix "**r ") but not .NET regular expressions (prefix "**R "). They are similar.
+		/// 
+		/// In wildcard expressions supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**R "</c>). They are similar.
+		/// 
 		/// To find web page AOs usually it's better to use <see cref="Wait"/> instead, it's more reliable.
+		/// 
 		/// More info in <see cref="Acc"/> topic.
 		/// </remarks>
 		/// <example>
-		/// Find link "Example" in web page, and click. Throw NotFoundException if not found.
+		/// Find link "Example" in web page, and click. Throw <b>NotFoundException</b> if not found.
 		/// <code><![CDATA[
 		/// var w = Wnd.Find("* Chrome").OrThrow();
 		/// var a = Acc.Find(w, "web:LINK", "Example").OrThrow();
@@ -455,7 +428,7 @@ namespace Au
 		/// if(a == null) { Print("not found"); return; }
 		/// a.DoAction();
 		/// ]]></code>
-		/// Use a Finder.
+		/// Use <see cref="Finder"/>.
 		/// <code><![CDATA[
 		/// var w = Wnd.Find("* Chrome").OrThrow();
 		/// var f = new Acc.Finder("BUTTON", "Example");
@@ -473,19 +446,18 @@ namespace Au
 			return f.Result;
 		}
 
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Finds a descendant accessible object (AO) of this AO.
 		/// Returns the found AO. Returns null if not found.
 		/// </summary>
 		/// <exception cref="ArgumentException">
-		/// <paramref name="role"/> is "" or invalid or has a prefix ("web:" etc).
-		/// <paramref name="name"/> is invalid wildcard expression ("**options " or regular expression).
-		/// <paramref name="prop"/> has invalid format or contains unknown property names or invalid wildcard expressions or "class", "id".
-		/// <paramref name="navig"/> string is invalid.
-		/// Using flag <see cref="AFFlags.UIA"/>.
-		/// <see cref="SimpleElementId"/> is not 0.
+		/// - *role* is "" or invalid or has a prefix (<c>"web:"</c> etc).
+		/// - *name* is invalid wildcard expression (<c>"**options "</c> or regular expression).
+		/// - *prop* has invalid format or contains unknown property names or invalid wildcard expressions or <c>"class"</c>, <c>"id"</c>.
+		/// - *navig* string is invalid.
+		/// - *flags* has <see cref="AFFlags.UIA"/>.
+		/// - <see cref="SimpleElementId"/> is not 0.
 		/// </exception>
 		public Acc Find(string role = null, string name = null, string prop = null, AFFlags flags = 0,
 			Func<Acc, bool> also = null, int skip = 0, string navig = null)
@@ -497,15 +469,14 @@ namespace Au
 			return f.Result;
 		}
 
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Finds accessible object (AO) in window. Waits until the AO is found or the given time expires.
 		/// </summary>
-		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns null.
-		/// </param>
-		/// <returns>Returns the found AO. On timeout returns null if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		public static Acc Wait(double secondsTimeout, Wnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0,
 			Func<Acc, bool> also = null, int skip = 0, string navig = null)
 		{
@@ -518,9 +489,9 @@ namespace Au
 		/// <summary>
 		/// Finds a descendant accessible object (AO) of this AO. Waits until the AO is found or the given time expires.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="Wait"/></param>
-		/// <returns><inheritdoc cref="Wait"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="Wait"/></exception>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		public Acc Wait(double secondsTimeout, string role = null, string name = null, string prop = null, AFFlags flags = 0,
 			Func<Acc, bool> also = null, int skip = 0, string navig = null)
 		{

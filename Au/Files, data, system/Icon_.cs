@@ -52,11 +52,11 @@ namespace Au
 		/// <param name="file">
 		/// Can be:
 		/// Path of any file or folder.
-		/// URL, like "http://..." or "mailto:a@b.c" or "file:///path".
-		/// ITEMIDLIST like ":: HexEncodedITEMIDLIST". It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="Shell.Pidl.ToHexString"/>.
-		/// Shell object parsing name, like @"::{CLSID-1}\::{CLSID-2}" or @"shell:AppsFolder\WinStoreAppId".
-		/// File type like ".txt" or URL protocol like "http:".
-		/// If it is a file containing multiple icons (eg exe, dll), can be specified icon index like "path,index" or native icon resource id like "path,-id".
+		/// URL, like <c>"http://..."</c> or <c>"mailto:a@b.c"</c> or <c>"file:///path"</c>.
+		/// ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="Shell.Pidl.ToHexString"/>.
+		/// Shell object parsing name, like <c>@"::{CLSID-1}\::{CLSID-2}"</c> or <c>@"shell:AppsFolder\WinStoreAppId"</c>.
+		/// File type like <c>".txt"</c> or URL protocol like <c>"http:"</c>.
+		/// If it is a file containing multiple icons (eg exe, dll), can be specified icon index like <c>"path,index"</c> or native icon resource id like <c>"path,-id"</c>.
 		/// If not full path, the function will look in <see cref="Folders.ThisAppImages"/>. See also <see cref="GIFlags"/>.
 		/// Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).
 		/// </param>
@@ -549,9 +549,9 @@ namespace Au
 		/// Parses icon location string.
 		/// Returns true if it includes icon index or resource id.
 		/// </summary>
-		/// <param name="s">Icon location. Can be "path,index" or "path,-id" or just path. Receives path.</param>
+		/// <param name="s">Icon location. Can be <c>"path,index"</c> or <c>"path,-id"</c> or just path. Receives path.</param>
 		/// <param name="index">Receives the number or 0.</param>
-		/// <remarks>Also supports path enclosed in double quotes like "\"path\",index", and spaces between comma and index like "path, index".</remarks>
+		/// <remarks>Also supports path enclosed in double quotes like <c>"\"path\",index"</c>, and spaces between comma and index like <c>"path, index"</c>.</remarks>
 		public static bool ParseIconLocation(ref string s, out int index)
 		{
 			index = 0;
@@ -646,7 +646,7 @@ namespace Au
 			/// How it works: If this function finds cached image, it sets timer that after ~50 ms loads that icon/image from file again and compares with the cached image. If different, updates the cache. Does it once, not periodically.
 			/// Use only in UI threads. Does not work if this thread does not retrieve/dispatch posted messages.
 			/// </param>
-			/// <param name="auParam">Something to pass to the <paramref name="autoUpdate"/> callback function.</param>
+			/// <param name="auParam">Something to pass to the *autoUpdate* callback function.</param>
 			public Bitmap GetImage(string file, bool useExt, GIFlags giFlags = 0, Action<Bitmap, object> autoUpdate = null, object auParam = null)
 			{
 				if(useExt) {
@@ -676,8 +676,8 @@ namespace Au
 			/// <param name="name">Some unique name. It is used to identify this image in cache.</param>
 			/// <param name="callback">Called to get image. To convert icon handle to image, use <see cref="Icon_.HandleToImage"/>.</param>
 			/// <param name="autoUpdate"><inheritdoc cref="GetImage(string, bool, GIFlags, Action{Bitmap, object}, object)"/></param>
-			/// <param name="auParam">Something to pass to the <paramref name="autoUpdate"/> callback function.</param>
-			/// <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <paramref name="callback"/>.</param>
+			/// <param name="auParam">Something to pass to the *autoUpdate* callback function.</param>
+			/// <param name="auDispose">If true (default), auto-updating can dispose unused image returned by *callback*.</param>
 			public Bitmap GetImage(string name, Func<Bitmap> callback, Action<Bitmap, object> autoUpdate = null, object auParam = null, bool auDispose = true)
 			{
 				return _GetImage(name, 0, callback, autoUpdate, auParam, auDispose);

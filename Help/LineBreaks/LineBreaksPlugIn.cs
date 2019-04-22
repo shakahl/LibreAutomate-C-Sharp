@@ -115,7 +115,7 @@ namespace LineBreaks
 		/// <param name="configuration">The configuration data that the plug-in should use to initialize itself</param>
 		public void Initialize(BuildProcess buildProcess, XPathNavigator configuration)
 		{
-			Output.LibUseQM2 = true;
+			Output.QM2.UseQM2 = true;
 			Output.Clear();
 
 			builder = buildProcess;
@@ -303,7 +303,7 @@ namespace LineBreaks
 			}
 		}
 
-		//<msdn>API</MSDN> -> <see href=''https://www.google.com/search?q=site:msdn.microsoft.com+{API}''>{API}</see>
+		//<msdn>API</MSDN> -> <see href=''https://www.google.com/search?q=site:docs.microsoft.com+{API}''>{API}</see>
 		void ProcessMsdn(XmlNode members)
 		{
 			var doc = members.OwnerDocument;
@@ -311,7 +311,7 @@ namespace LineBreaks
 				//Print(n.InnerText);
 				var k = doc.CreateElement("see");
 				k.InnerText = n.InnerText;
-				k.SetAttribute("href", "https://www.google.com/search?q=site:msdn.microsoft.com+" + n.InnerText);
+				k.SetAttribute("href", "https://www.google.com/search?q=site:docs.microsoft.com+" + n.InnerText);
 				var p = n.ParentNode;
 				p.InsertAfter(k, n);
 				p.RemoveChild(n);

@@ -363,7 +363,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Sets field values.
-		/// If <paramref name="end"/> is -1 (default), will be used subject string length.
+		/// If *end* is -1 (default), will be used subject string length.
 		/// </summary>
 		public RXMore(int start = 0, int end = -1, RXMatchFlags matchFlags = 0)
 		{
@@ -487,7 +487,7 @@ namespace Au.Types
 		/// Gets the start index and length of the specified group in the subject string.
 		/// </summary>
 		/// <param name="group">Group number (1-based index).</param>
-		/// <exception cref="ArgumentOutOfRangeException"><paramref name="group"/> must be &gt; 0 and &lt; capture_top.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">*group* must be &gt; 0 and &lt; capture_top.</exception>
 		public (int index, int length) Group(int group)
 		{
 			if(group <= 0 || group >= _p->capture_top) throw new ArgumentOutOfRangeException(nameof(group), "Must be > 0 and < capture_top.");
@@ -500,7 +500,7 @@ namespace Au.Types
 		/// Gets the value (substring) of the specified group.
 		/// </summary>
 		/// <param name="group">Group number (1-based index).</param>
-		/// <exception cref="ArgumentOutOfRangeException"><paramref name="group"/> must be &gt; 0 and &lt; capture_top.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">*group* must be &gt; 0 and &lt; capture_top.</exception>
 		public string GroupValue(int group)
 		{
 			var (i, len) = Group(group);
@@ -529,14 +529,13 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	/// Many options also can be specified in regular expression (RE):
-	/// <list type="bullet">
-	/// <item>These can be anywhere in RE: (?i) CASELESS, (?m) MULTILINE, (?s) DOTALL, (?n) NO_AUTO_CAPTURE, (?x) EXTENDED, (?xx) EXTENDED_MORE, (?J) DUPNAMES, (?U) UNGREEDY. Can be multiple, like (?ms). Can be unset, like (?-i). RE "\Qtext\E" is like RE "text" with flag LITERAL.</item>
-	/// <item>Instead of ANCHORED can be used \A or \G at the start of RE. Or ^, except in multiline mode.</item>
-	/// <item>Instead of ENDANCHORED can be used \z at the end of RE. Or $, except in multiline mode.</item>
-	/// <item>Flag UTF is implicitly added if RE contains non-ASCII characters and there is no flag NEVER_UTF.</item>
-	/// <item>These must be at the very start and are named like flags: (*UTF), (*UCP), (*NOTEMPTY), (*NOTEMPTY_ATSTART), (*NO_AUTO_POSSESS), (*NO_DOTSTAR_ANCHOR), (*NO_START_OPT).</item>
-	/// <item>More info in <see href="https://www.pcre.org/current/doc/html/pcre2pattern.html">PCRE syntax reference</see>.</item>
-	/// </list>
+	/// - These can be anywhere in RE: (?i) CASELESS, (?m) MULTILINE, (?s) DOTALL, (?n) NO_AUTO_CAPTURE, (?x) EXTENDED, (?xx) EXTENDED_MORE, (?J) DUPNAMES, (?U) UNGREEDY. Can be multiple, like (?ms). Can be unset, like (?-i). RE "\Qtext\E" is like RE "text" with flag LITERAL.
+	/// - Instead of ANCHORED can be used \A or \G at the start of RE. Or ^, except in multiline mode.
+	/// - Instead of ENDANCHORED can be used \z at the end of RE. Or $, except in multiline mode.
+	/// - Flag UTF is implicitly added if RE contains non-ASCII characters and there is no flag NEVER_UTF.
+	/// - These must be at the very start and are named like flags: (*UTF), (*UCP), (*NOTEMPTY), (*NOTEMPTY_ATSTART), (*NO_AUTO_POSSESS), (*NO_DOTSTAR_ANCHOR), (*NO_START_OPT).
+	/// - More info in <see href="https://www.pcre.org/current/doc/html/pcre2pattern.html">PCRE syntax reference</see>.
+	/// 
 	/// Some of RXFlags flags also exist in <see cref="RXMatchFlags"/>. You can set them either when calling Regex_ constructor or when calling Regex_ functions that have parameter <i>more</i>. You can use different flags for each function call with the same Regex_ variable.
 	/// </remarks>
 	[Flags]

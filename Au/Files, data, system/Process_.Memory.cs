@@ -75,9 +75,9 @@ namespace Au
 			/// <param name="freeWhenDisposing">
 			/// Let the Dispose method (or finalizer) call API <msdn>VirtualFreeEx</msdn> to free mem. The memory must be allocated with API <msdn>VirtualAllocEx</msdn> (by any process) or <msdn>VirtualAlloc</msdn> (by that process).
 			/// If false, mem can be any memory in that process, and this variable will not free it. Alternatively you can use <see cref="ReadOther"/> and <see cref="WriteOther"/>.</param>
-			/// <exception cref="InvalidOperationException">This variable already has Mem, unless it was set by this function with <paramref name="freeWhenDisposing"/> = false.</exception>
+			/// <exception cref="InvalidOperationException">This variable already has Mem, unless it was set by this function with *freeWhenDisposing* = false.</exception>
 			/// <remarks>
-			/// This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with <paramref name="freeWhenDisposing"/> = true.
+			/// This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with *freeWhenDisposing* = true.
 			/// </remarks>
 			public void SetMem(IntPtr mem, bool freeWhenDisposing)
 			{
@@ -110,7 +110,7 @@ namespace Au
 			/// </summary>
 			/// <param name="w">A window in that process.</param>
 			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <remarks>This is the preferred constructor when the process has windows. It works with windows of <see cref="Uac">UAC</see> High integrity level when this process is Medium+uiAccess.</remarks>
+			/// <remarks>This is the preferred constructor when the process has windows. It works with windows of [](xref:uac) High integrity level when this process is Medium+uiAccess.</remarks>
 			/// <exception cref="WndException">w invalid.</exception>
 			/// <exception cref="AuException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
 			public Memory(Wnd w, int nBytes)
@@ -124,7 +124,7 @@ namespace Au
 			/// </summary>
 			/// <param name="processId">Process id.</param>
 			/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
-			/// <exception cref="AuException">Failed to open process handle (usually because of <see cref="Uac">UAC</see>) or allocate memory.</exception>
+			/// <exception cref="AuException">Failed to open process handle (usually because of [](xref:uac)) or allocate memory.</exception>
 			public Memory(int processId, int nBytes)
 			{
 				_Alloc(processId, default, nBytes);

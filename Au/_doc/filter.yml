@@ -1,0 +1,7 @@
+﻿apiRules:
+- exclude:
+      uidRegex: ^System\.Object
+      type: Type
+- exclude:
+    hasAttribute:
+      uid: Au.Types.NoDoc

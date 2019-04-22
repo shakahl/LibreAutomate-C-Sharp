@@ -55,7 +55,7 @@ namespace Au.Controls
 			c.Multiline = true; //let all rows have the same multiline editor, even if the value cannot be multiline
 
 			this.Controller.AddController(_controller = new _CellController(this));
-			this.Controller.AddController(SG.Cells.Controllers.Resizable.ResizeWidth); //we resize width and height automatically, but the user may want to resize width. This is like in VS.
+			//this.Controller.AddController(SG.Cells.Controllers.Resizable.ResizeWidth); //we resize width and height automatically, but the user may want to resize width. This is like in VS. Rejected because the control does not resize normally.
 			_controllerTooltip0 = new SG.Cells.Controllers.ToolTipText() /*{ IsBalloon = true }*/;
 			_controllerTooltip1 = new SG.Cells.Controllers.ToolTipText();
 

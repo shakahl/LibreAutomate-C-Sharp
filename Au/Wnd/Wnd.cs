@@ -32,15 +32,13 @@ namespace Au
 	/// More functions are in the nested classes - <see cref="Misc"/>, <see cref="Misc.Desktop"/> etc. They are used mostly in programming, rarely in automation scripts.
 	/// 
 	/// What happens when a Wnd function fails:
-	/// <list type="bullet">
-	/// <item>Functions that get window properties don't throw exceptions. They return false/0/null/empty. Most of them support <see cref="WinError.Code"/>, and it is mentioned in function documentation.</item>
-	/// <item>Many functions that change window properties throw exception. Exceptions are listed in function documentation. Almost all these functions throw only <see cref="WndException"/>.</item>
-	/// <item>Other functions that change window properties return false. They are more often used in programming than in automation scripts.</item>
-	/// <item>When a 'find' function does not find the window or control, it returns default(Wnd) (window handle 0). Then <see cref="Is0"/> will return true.</item>
-	/// <item>If a function does not follow these rules, it is mentioned in function documentation.</item>
-	/// </list>
+	/// - Functions that get window properties don't throw exceptions. They return false/0/null/empty. Most of them support <see cref="WinError"/>, and it is mentioned in function documentation.
+	/// - Many functions that change window properties throw exception. Exceptions are listed in function documentation. Almost all these functions throw only <see cref="WndException"/>.
+	/// - Other functions that change window properties return false. They are more often used in programming than in automation scripts.
+	/// - When a 'find' function does not find the window or control, it returns default(Wnd) (window handle 0). Then <see cref="Is0"/> will return true.
+	/// - If a function does not follow these rules, it is mentioned in function documentation.
 	/// 
-	/// Many functions fail if the window's process has a higher <see cref="Uac">UAC</see> integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
+	/// Many functions fail if the window's process has a higher [](xref:uac) integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
 	/// 
 	/// The Wnd type can be used with native Windows API functions without casting. Use Wnd for the parameter type in the declaration, like <c>[DllImport(...)] static extern bool NativeFunction(Wnd hWnd, ...)</c>.
 	/// 
@@ -61,20 +59,17 @@ namespace Au
 #if false
 		/// Why Wnd is struct, not class:
 		///		Advantages:
-		///		<list type="number">
-		///		<item>Lightweight. Contains just void*, which is 4 or 8 bytes.</item>
-		///		<item>Easier to create overloaded functions that have a window parameter. If it was a class, then a null argument could be ambiguous if eg could also be a string etc.</item>
-		///		<item>When a find-window function does not find the window, calling next function (without checking the return value) does not throw null-reference exception. Instead the function can throw a more specific exception or just return false etc.</item>
-		///		<item>The handle actually already is a reference (to a window object managed by the OS). We don't own the object; we usually don't need to destroy the window finally; it is more like a numeric window id.</item>
-		///		<item>Code where a window argument is default(Wnd) is more clear. If it would be null, then it is unclear how the function interprets it: as a 0 handle or as "don't use it". Now if we want a "don't use it" behavior, we'll use an overload.</item>
-		///		<item>In my experience, it makes programming/scripting easier that if it would be a class. Because windows are not found so often (in automation scripts). A find-window function could throw a 'not found' exception, but it is not good (it's easier to check the return value than to use try/catch or throwing/nonthrowing overloads).</item>
-		///		<item>Probably it is not a "bad practice" to have a struct with many member functions, because eg the .NET DateTime is struct.</item>
-		///		</list>
+		///		- Lightweight. Contains just void*, which is 4 or 8 bytes.
+		///		- Easier to create overloaded functions that have a window parameter. If it was a class, then a null argument could be ambiguous if eg could also be a string etc.
+		///		- When a find-window function does not find the window, calling next function (without checking the return value) does not throw null-reference exception. Instead the function can throw a more specific exception or just return false etc.
+		///		- The handle actually already is a reference (to a window object managed by the OS). We don't own the object; we usually don't need to destroy the window finally; it is more like a numeric window id.
+		///		- Code where a window argument is default(Wnd) is more clear. If it would be null, then it is unclear how the function interprets it: as a 0 handle or as "don't use it". Now if we want a "don't use it" behavior, we'll use an overload.
+		///		- In my experience, it makes programming/scripting easier that if it would be a class. Because windows are not found so often (in automation scripts). A find-window function could throw a 'not found' exception, but it is not good (it's easier to check the return value than to use try/catch or throwing/nonthrowing overloads).
+		///		- Probably it is not a "bad practice" to have a struct with many member functions, because eg the .NET DateTime is struct.
+		///		
 		///		Disadvantages:
-		///		<list type="number">
-		///		<item>Cannot be a base class of other classes. Workaround: Use it as a public field or property of the other class (or struct); in some cases it can be even better, because Wnd has very many methods, and the non-inherited methods of that class would be difficult to find; now they are separated, and can be used like x.NewClassMethod() and x.w.WndMethod(); anyway, in most cases we'll need the new window classes only for the functions that they add, not for Wnd functions, eg we would use a class ButtonWnd mostly only for button functions, not for general window functions.</item>
-		///		<item>In some cases C# does not allow to call a property-set function. Wnd has few such functions, maybe none.</item>
-		///		</list>
+		///		- Cannot be a base class of other classes. Workaround: Use it as a public field or property of the other class (or struct); in some cases it can be even better, because Wnd has very many methods, and the non-inherited methods of that class would be difficult to find; now they are separated, and can be used like x.NewClassMethod() and x.w.WndMethod(); anyway, in most cases we'll need the new window classes only for the functions that they add, not for Wnd functions, eg we would use a class ButtonWnd mostly only for button functions, not for general window functions.
+		///		- In some cases C# does not allow to call a property-set function. Wnd has few such functions, maybe none.
 		///		
 		//note: don't use :IWin32Window, because it loads System.Windows.Forms.dll always when Wnd used.
 #endif
@@ -130,7 +125,7 @@ namespace Au
 		//rejected. Use OrThrow.
 		///// <summary>
 		///// If x is not default(Wnd), returns x, else throws <see cref="NotFoundException"/>.
-		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>.
+		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
 		///// </summary>
 		///// <exception cref="NotFoundException">x is default(Wnd).</exception>
 		///// <example><inheritdoc cref="ExtensionMethods.OrThrow(Wnd)"/></example>
@@ -176,7 +171,7 @@ namespace Au
 		public IntPtr Handle => new IntPtr(_h);
 
 		/// <summary>
-		/// Formats string $"{handle}  {ClassName}  \"{Name}\"  {ProgramName}  {Rect}".
+		/// Formats string <c>$"{handle}  {ClassName}  \"{Name}\"  {ProgramName}  {Rect}"</c>.
 		/// </summary>
 		public override string ToString()
 		{
@@ -196,7 +191,7 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>SendMessage</msdn>.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public LPARAM Send(int message, LPARAM wParam = default, LPARAM lParam = default)
 		{
 			Debug.Assert(!Is0);
@@ -206,7 +201,7 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>SendMessage</msdn> where lParam is string.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public LPARAM SendS(int message, LPARAM wParam, string lParam)
 		{
 			Debug.Assert(!Is0);
@@ -218,7 +213,7 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>SendMessage</msdn> where lParam is char[].
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public LPARAM SendS(int message, LPARAM wParam, char[] lParam)
 		{
 			Debug.Assert(!Is0);
@@ -228,7 +223,7 @@ namespace Au
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn>.
-		/// Returns its return value (false if failed). Supports <see cref="WinError.Code"/>.
+		/// Returns its return value (false if failed). Supports <see cref="WinError"/>.
 		/// </summary>
 		public bool SendTimeout(int millisecondsTimeout, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
@@ -238,7 +233,7 @@ namespace Au
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
-		/// Returns its return value (false if failed). Supports <see cref="WinError.Code"/>.
+		/// Returns its return value (false if failed). Supports <see cref="WinError"/>.
 		/// </summary>
 		public bool SendTimeout(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
@@ -249,7 +244,7 @@ namespace Au
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
-		/// Returns its return value (false if failed). Supports <see cref="WinError.Code"/>.
+		/// Returns its return value (false if failed). Supports <see cref="WinError"/>.
 		/// </summary>
 		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, string lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
@@ -261,7 +256,7 @@ namespace Au
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is char[].
-		/// Returns its return value (false if failed). Supports <see cref="WinError.Code"/>.
+		/// Returns its return value (false if failed). Supports <see cref="WinError"/>.
 		/// </summary>
 		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, char[] lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
 		{
@@ -273,7 +268,7 @@ namespace Au
 
 		/// <summary>
 		/// Calls API <msdn>SendNotifyMessage</msdn>.
-		/// Returns its return value (false if failed). Supports <see cref="WinError.Code"/>.
+		/// Returns its return value (false if failed). Supports <see cref="WinError"/>.
 		/// </summary>
 		public bool SendNotify(int message, LPARAM wParam = default, LPARAM lParam = default)
 		{
@@ -283,7 +278,7 @@ namespace Au
 
 		/// <summary>
 		/// Calls API <msdn>PostMessage</msdn>.
-		/// Returns its return value (false if failed). Supports <see cref="WinError.Code"/>.
+		/// Returns its return value (false if failed). Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <seealso cref="Misc.PostThreadMessage(int, LPARAM, LPARAM)"/>
 		public bool Post(int message, LPARAM wParam = default, LPARAM lParam = default)
@@ -297,7 +292,7 @@ namespace Au
 			/// <summary>
 			/// Posts a message to the message queue of this thread.
 			/// Calls API <msdn>PostMessage</msdn> with default(Wnd). 
-			/// Returns its return value (false if failed). Supports <see cref="WinError.Code"/>.
+			/// Returns its return value (false if failed). Supports <see cref="WinError"/>.
 			/// </summary>
 			public static bool PostThreadMessage(int message, LPARAM wParam = default, LPARAM lParam = default)
 			{
@@ -307,7 +302,7 @@ namespace Au
 			/// <summary>
 			/// Posts a message to the message queue of the specified thread.
 			/// Calls API <msdn>PostThreadMessage</msdn>. 
-			/// Returns its return value (false if failed). Supports <see cref="WinError.Code"/>.
+			/// Returns its return value (false if failed). Supports <see cref="WinError"/>.
 			/// </summary>
 			public static bool PostThreadMessage(int threadId, int message, LPARAM wParam = default, LPARAM lParam = default)
 			{
@@ -378,7 +373,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if the <see cref="Wnd">window handle</see> is 0.
+		/// Returns true if the window handle is 0 (this variable == default(Wnd)).
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
@@ -390,7 +385,7 @@ namespace Au
 		public bool Is0 => _h == null;
 
 		/// <summary>
-		/// Returns true if the <see cref="Wnd">window handle</see> identifies an existing window.
+		/// Returns true if the window exists (the window handle is valid).
 		/// Returns false if the handle is 0 or invalid.
 		/// Invalid non-0 handle usually means that the window is closed/destroyed.
 		/// </summary>
@@ -408,7 +403,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if the window is visible.
 		/// Returns false if is invisible or is a child of invisible parent.
-		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <remarks>
 		/// Calls API <msdn>IsWindowVisible</msdn>. Does not call <see cref="IsCloaked"/>.
@@ -425,7 +420,7 @@ namespace Au
 		///// <summary>
 		///// Returns true if the window is visible.
 		///// Returns false if is invisible or is a child of invisible parent.
-		///// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		///// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		///// </summary>
 		///// <remarks>
 		///// Returns false if API <msdn>IsWindowVisible</msdn> returns false.
@@ -509,7 +504,7 @@ namespace Au
 		/// <b>ShowLL</b> is more low-level. Does not throw exception when fails, and does not add a delay; <b>Show</b> adds a small delay when the window is of other thread.
 		/// 
 		/// Calls API <msdn>ShowWindow</msdn> with SW_SHOWNA or SW_HIDE.
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// </remarks>
 		public bool ShowLL(bool show)
 		{
@@ -533,7 +528,7 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if the window is enabled for mouse and keyboard input.
-		/// Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		/// Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <param name="ancestorsToo">Check whether all ancestors of this control are enabled too. If false, this function simply calls API <msdn>IsWindowEnabled</msdn>, which usualy returns true for controls in disabled windows.</param>
 		public bool IsEnabled(bool ancestorsToo)
@@ -589,14 +584,14 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if minimized, false if not.
-		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// Calls API <msdn>IsIconic</msdn>.
 		/// </summary>
 		public bool IsMinimized => Api.IsIconic(this);
 
 		/// <summary>
 		/// Returns true if maximized, false if not.
-		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// Calls API <msdn>IsZoomed</msdn>.
 		/// </summary>
 		public bool IsMaximized => Api.IsZoomed(this);
@@ -728,7 +723,7 @@ namespace Au
 		/// <summary>
 		/// Initializes a WINDOWPLACEMENT struct and calls API <msdn>GetWindowPlacement</msdn>.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		/// <exception cref="WndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
 		internal bool LibGetWindowPlacement(out Api.WINDOWPLACEMENT wp, string errStr = null)
 		{
@@ -1012,11 +1007,9 @@ namespace Au
 		/// <remarks>
 		/// Activating a window usually also uncloaks it, for example switches to its virtual desktop on Windows 10.
 		/// Fails (throws exception) if cannot activate this window, except:
-		/// <list type="number">
-		/// <item>If this is a control, activates its top-level parent window.</item>
-		/// <item>If this is <see cref="GetWnd.Root"/>, just deactivates the currently active window.</item>
-		/// <item>When the target application instead activates another window of the same thread.</item>
-		/// </list>
+		/// - If this is a control, activates its top-level parent window.
+		/// - If this is <see cref="GetWnd.Root"/>, just deactivates the currently active window.
+		/// - When the target application instead activates another window of the same thread.
 		/// </remarks>
 		/// <exception cref="WndException"/>
 		/// <seealso cref="ActivateLL"/>
@@ -1101,7 +1094,7 @@ namespace Au
 		/// </remarks>
 		/// <exception cref="WndException">
 		/// Invalid handle; disabled; failed to set focus; failed to activate parent window.
-		/// Fails to set focus when the target process is admin or uiAccess and this process isn't (see <see cref="Uac">UAC</see>).
+		/// Fails to set focus when the target process is admin or uiAccess and this process isn't (see [](xref:uac)).
 		/// </exception>
 		/// <seealso cref="Focused"/>
 		/// <seealso cref="IsFocused"/>
@@ -1185,7 +1178,7 @@ namespace Au
 		{
 			/// <summary>
 			/// Calls API <msdn>SetFocus</msdn>. It sets the keyboard input focus to the specified control or window, which must be of this thread.
-			/// Returns false if fails. Supports <see cref="WinError.Code"/>.
+			/// Returns false if fails. Supports <see cref="WinError"/>.
 			/// </summary>
 			/// <remarks>
 			/// Fails if the control/window belongs to another thread or is invalid or disabled.
@@ -1235,7 +1228,7 @@ namespace Au
 		/// <remarks>
 		/// The same as the <see cref="Rect"/> property.
 		/// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// </remarks>
 		public bool GetRect(out RECT r, bool withoutExtendedFrame = false)
 		{
@@ -1259,7 +1252,7 @@ namespace Au
 		/// <remarks>
 		/// The same as the <see cref="Size"/> property.
 		/// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// </remarks>
 		public bool GetSize(out SIZE z)
 		{
@@ -1286,7 +1279,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Calls <see cref="GetSize"/>. Returns default(SIZE) if fails (eg window closed).
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// </remarks>
 		public SIZE Size {
 			get {
@@ -1335,7 +1328,7 @@ namespace Au
 		/// Get rectangle in screen coordinates; the same as <see cref="GetWindowAndClientRectInScreen"/>.
 		/// If false (default), calls API <msdn>GetClientRect</msdn>; the same as <see cref="ClientRect"/> or <see cref="GetClientSize"/>.</param>
 		/// <remarks>
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// </remarks>
 		public bool GetClientRect(out RECT r, bool inScreen = false)
 		{
@@ -1353,7 +1346,7 @@ namespace Au
 		/// The same as the <see cref="ClientSize"/> property.
 		/// The same as <see cref="GetClientRect"/>, just the parameter type is different.
 		/// Calls API <msdn>GetClientRect</msdn> and returns its return value.
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// </remarks>
 		public bool GetClientSize(out SIZE z)
 		{
@@ -1443,7 +1436,7 @@ namespace Au
 		/// Calls API <msdn>GetWindowInfo</msdn>.
 		/// </summary>
 		/// <param name="wi">Receives window/client rectangles, styles etc.</param>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		internal bool LibGetWindowInfo(out Api.WINDOWINFO wi)
 		{
 			//initially this was public, but probably don't need.
@@ -1457,7 +1450,7 @@ namespace Au
 		/// </summary>
 		/// <param name="rWindow">Receives window rectangle.</param>
 		/// <param name="rClient">Receives client area rectangle.</param>
-		/// <remarks>Calls API <msdn>GetWindowInfo</msdn>. Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Calls API <msdn>GetWindowInfo</msdn>. Supports <see cref="WinError"/>.</remarks>
 		public bool GetWindowAndClientRectInScreen(out RECT rWindow, out RECT rClient)
 		{
 			if(LibGetWindowInfo(out var u)) {
@@ -1489,7 +1482,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapClientToClientOf(Wnd w, ref RECT r)
 		{
 			fixed (void* t = &r) { return _MapWindowPoints(this, w, t, 2); }
@@ -1498,7 +1491,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapClientToClientOf(Wnd w, ref POINT p)
 		{
 			fixed (void* t = &p) { return _MapWindowPoints(this, w, t, 1); }
@@ -1507,7 +1500,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the screen.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapClientToScreen(ref RECT r)
 		{
 			return MapClientToClientOf(default, ref r);
@@ -1516,7 +1509,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the screen.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapClientToScreen(ref POINT p)
 		{
 			return Api.ClientToScreen(this, ref p);
@@ -1525,7 +1518,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the screen to coordinates relative to the client area of this window.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapScreenToClient(ref RECT r)
 		{
 			fixed (void* t = &r) { return _MapWindowPoints(default, this, t, 2); }
@@ -1534,7 +1527,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the screen to coordinates relative to the client area of this window.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapScreenToClient(ref POINT p)
 		{
 			return Api.ScreenToClient(this, ref p);
@@ -1550,7 +1543,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapClientToWindow(ref POINT p)
 		{
 			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
@@ -1561,7 +1554,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapClientToWindow(ref RECT r)
 		{
 			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
@@ -1572,7 +1565,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the top-left corner of this window to coordinates relative to the client area of this window.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapWindowToClient(ref POINT p)
 		{
 			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
@@ -1583,7 +1576,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the top-left corner of this window to coordinates relative to the client area of this window.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapWindowToClient(ref RECT r)
 		{
 			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
@@ -1594,7 +1587,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the top-left corner of this window to screen coordinates.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapWindowToScreen(ref POINT p)
 		{
 			if(!GetRect(out var rw)) return false;
@@ -1605,7 +1598,7 @@ namespace Au
 		/// <summary>
 		/// Converts coordinates relative to the top-left corner of this window to screen coordinates.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool MapWindowToScreen(ref RECT r)
 		{
 			if(!GetRect(out var rw)) return false;
@@ -1618,7 +1611,7 @@ namespace Au
 		/// </summary>
 		/// <param name="w">The returned rectangle will be relative to the client area of window w. If w is default(Wnd), gets rectangle in screen.</param>
 		/// <param name="r">Receives the rectangle.</param>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		/// <seealso cref="RectInDirectParent"/>
 		public bool GetRectInClientOf(Wnd w, out RECT r)
 		{
@@ -1645,7 +1638,7 @@ namespace Au
 		/// <summary>
 		/// Gets rectangle of normal (restored) window even if currently it is minimized or maximized.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool GetRectNotMinMax(out RECT r)
 		{
 			if(!LibGetWindowPlacement(out var p)) { r = default; return false; }
@@ -1715,8 +1708,8 @@ namespace Au
 		/// Calls API <msdn>SetWindowPos</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Supports <see cref="WinError.Code"/>.
-		/// For <paramref name="wndInsertAfter"/> you can use enum <b>Native.HWND</b> members: <b>TOP</b>, <b>BOTTOM</b>, <b>TOPMOST</b>, <b>NOTOPMOST</b>.
+		/// Supports <see cref="WinError"/>.
+		/// For *wndInsertAfter* you can use enum <b>Native.HWND</b> members: <b>TOP</b>, <b>BOTTOM</b>, <b>TOPMOST</b>, <b>NOTOPMOST</b>.
 		/// </remarks>
 		public bool SetWindowPos(Native.SWP swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, Wnd wndInsertAfter = default)
 		{
@@ -1729,7 +1722,7 @@ namespace Au
 		/// <remarks>
 		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool, Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP flags.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOZORDER|NOOWNERZORDER|NOACTIVATE|swpFlagsToAdd. It is better to use in programming, with windows of current thread.
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// 
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
@@ -1745,7 +1738,7 @@ namespace Au
 		/// <remarks>
 		/// See also <see cref="Move(Coord, Coord, bool, Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOSIZE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// 
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
@@ -1761,7 +1754,7 @@ namespace Au
 		/// <remarks>
 		/// See also <see cref="Resize(Coord, Coord, bool, Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOMOVE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
 		public bool ResizeLL(int width, int height)
@@ -2016,7 +2009,7 @@ namespace Au
 		/// May not work with top-level windows when it would move an inactive window above the active window.
 		/// If w is default(Wnd), calls <see cref="ZorderBottom"/>.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool ZorderAbove(Wnd w)
 		{
 			return _ZorderAfterBefore(w, true);
@@ -2029,7 +2022,7 @@ namespace Au
 		/// May not work with top-level windows when it would move an inactive window above the active window.
 		/// If w is default(Wnd), calls <see cref="ZorderTop"/>.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool ZorderBelow(Wnd w)
 		{
 			return _ZorderAfterBefore(w, false);
@@ -2049,7 +2042,7 @@ namespace Au
 		/// Does not activate.
 		/// In most cases does not work with top-level inactive windows, although returns true; instead use <see cref="ActivateLL"/>.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool ZorderTop()
 		{
 			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOP);
@@ -2074,7 +2067,7 @@ namespace Au
 		/// Places this window or control at the bottom of the Z order.
 		/// If the window was topmost, makes it and its owner window non-topmost.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool ZorderBottom()
 		{
 			ZorderNoTopmost(); //see comments below
@@ -2087,7 +2080,7 @@ namespace Au
 		/// If this window has an owner window, the owner does not become topmost.
 		/// This cannot be a control.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool ZorderTopmost()
 		{
 			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOPMOST);
@@ -2099,7 +2092,7 @@ namespace Au
 		/// This cannot be a control.
 		/// </summary>
 		/// <param name="afterActiveWindow">Also place this window after the active nontopmost window in the Z order, unless the active window is its owner.</param>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool ZorderNoTopmost(bool afterActiveWindow = false)
 		{
 			if(!IsTopmost) return true;
@@ -2159,7 +2152,7 @@ namespace Au
 		/// Gets window style.
 		/// </summary>
 		/// <value>One or more <see cref="WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</value>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		/// <seealso cref="HasStyle"/>
 		/// <seealso cref="SetStyle"/>
 		public WS Style {
@@ -2170,7 +2163,7 @@ namespace Au
 		/// Gets window extended style.
 		/// </summary>
 		/// <value>One or more <see cref="WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</value>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		/// <seealso cref="HasExStyle"/>
 		/// <seealso cref="SetExStyle"/>
 		public WS_EX ExStyle {
@@ -2185,7 +2178,7 @@ namespace Au
 		/// Return true if has any (not necessary all) of the specified styles.
 		/// Note: don't use <see cref="WS.CAPTION"/>, because it consists of two other styles - BORDER and DLGFRAME.
 		/// </param>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool HasStyle(WS style, bool any = false)
 		{
 			var k = Style & style;
@@ -2197,7 +2190,7 @@ namespace Au
 		/// </summary>
 		/// <param name="exStyle">One or more extended styles.</param>
 		/// <param name="any">Return true if has any (not necessary all) of the specified styles.</param>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool HasExStyle(WS_EX exStyle, bool any = false)
 		{
 			var k = ExStyle & exStyle;
@@ -2251,19 +2244,19 @@ namespace Au
 		/// <summary>
 		/// Returns true if has WS.POPUP style.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool IsPopupWindow => HasStyle(WS.POPUP);
 
 		/// <summary>
 		/// Returns true if has WS_EX.TOOLWINDOW style.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool IsToolWindow => HasExStyle(WS_EX.TOOLWINDOW);
 
 		/// <summary>
 		/// Returns true if has WS.THICKFRAME style.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool IsResizable => HasStyle(WS.THICKFRAME);
 
 		#endregion
@@ -2275,7 +2268,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// For index can be used constants from <see cref="Native.GWL"/>.
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// In 32-bit process actually calls <b>GetWindowLong</b>, because <b>GetWindowLongPtr</b> is unavailable.
 		/// </remarks>
 		public LPARAM GetWindowLong(int index) => Api.GetWindowLongPtr(this, index);
@@ -2298,7 +2291,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets id of this control.
-		/// The 'get' function supports <see cref="WinError.Code"/>.
+		/// The 'get' function supports <see cref="WinError"/>.
 		/// </summary>
 		/// <exception cref="WndException">Failed (only 'set' function).</exception>
 		public int ControlId {
@@ -2327,7 +2320,7 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
 		/// Returns thread id and also gets process id.
-		/// Returns 0 if fails. Supports <see cref="WinError.Code"/>.
+		/// Returns 0 if fails. Supports <see cref="WinError"/>.
 		/// <note>It is native thread id, not Thread.ManagedThreadId.</note>
 		/// </summary>
 		public int GetThreadProcessId(out int processId)
@@ -2338,7 +2331,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets native thread id of this window. Calls API <msdn>GetWindowThreadProcessId</msdn>.
-		/// Returns 0 if fails. Supports <see cref="WinError.Code"/>.
+		/// Returns 0 if fails. Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <remarks>
 		/// It is not the same as <see cref="Thread.ManagedThreadId"/>.
@@ -2347,34 +2340,34 @@ namespace Au
 
 		/// <summary>
 		/// Gets native process id of this window. Calls API <msdn>GetWindowThreadProcessId</msdn>.
-		/// Returns 0 if fails. Supports <see cref="WinError.Code"/>.
+		/// Returns 0 if fails. Supports <see cref="WinError"/>.
 		/// </summary>
 		public int ProcessId { get { GetThreadProcessId(out var pid); return pid; } }
 
 		/// <summary>
 		/// Returns true if this window belongs to the current thread, false if to another thread.
-		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
 		/// </summary>
 		public bool IsOfThisThread => Api.GetCurrentThreadId() == ThreadId;
 
 		/// <summary>
 		/// Returns true if this window belongs to the current process, false if to another process.
-		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
 		/// </summary>
 		public bool IsOfThisProcess => Api.GetCurrentProcessId() == ProcessId;
 
 		/// <summary>
 		/// Returns true if the window is a Unicode window, false if ANSI.
-		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// Calls API <msdn>IsWindowUnicode</msdn>.
 		/// </summary>
 		public bool IsUnicode => Api.IsWindowUnicode(this);
 
 		/// <summary>
 		/// Returns true if the window is of a 64-bit process, false if of a 32-bit process.
-		/// Also returns false if fails. Supports <see cref="WinError.Code"/>.
+		/// Also returns false if fails. Supports <see cref="WinError"/>.
 		/// If <see cref="Ver.Is64BitOS"/> is true, calls API <msdn>GetWindowThreadProcessId</msdn>, <msdn>OpenProcess</msdn> and <msdn>IsWow64Process</msdn>.
 		/// <note>If you know that the window belongs to current process, instead use <see cref="Environment.Is64BitProcess"/> or <c>IntPtr.Size==8</c>. This function is much slower.</note>
 		/// </summary>
@@ -2397,7 +2390,7 @@ namespace Au
 		/// Returns true if thread of this window is considered hung (not responding).
 		/// Calls API <msdn>IsHungAppWindow</msdn>.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool IsHung => Api.IsHungAppWindow(this);
 
 		/// <summary>
@@ -2413,7 +2406,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if this is a console window (class name "ConsoleWindowClass").
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool IsConsole => ClassNameIs("ConsoleWindowClass");
 
 		internal void LibUacCheckAndThrow(string prefix = null)
@@ -2425,10 +2418,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if <see cref="Uac">UAC</see> would not allow to automate the window.
+		/// Returns true if [](xref:uac) would not allow to automate the window.
 		/// It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.
 		/// </summary>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public bool IsUacAccessDenied {
 			get {
 				WinError.Clear();
@@ -2466,7 +2459,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets window class name.
-		/// Returns null if fails, eg if the window is closed. Supports <see cref="WinError.Code"/>.
+		/// Returns null if fails, eg if the window is closed. Supports <see cref="WinError"/>.
 		/// </summary>
 		public string ClassName {
 			get {
@@ -2480,16 +2473,16 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if the class name of this window matches cn. Else returns false.
-		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
-		/// <param name="cn">Class name. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>. Cannot be null.</param>
+		/// <param name="cn">Class name. Case-insensitive wildcard. See <see cref="String_.Like_(string, string, bool)"/>. Cannot be null.</param>
 		public bool ClassNameIs(string cn) => ClassName.Like_(cn, true);
 
 		/// <summary>
-		/// If the class name of this window matches one of strings in <paramref name="classNames"/>, returns 1-based index of the string. Else returns 0.
-		/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		/// If the class name of this window matches one of strings in *classNames*, returns 1-based index of the string. Else returns 0.
+		/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
-		/// <param name="classNames">Class names. Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>. The array and strings cannot be null.</param>
+		/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="String_.Like_(string, string, bool)"/>. The array and strings cannot be null.</param>
 		public int ClassNameIs(params string[] classNames)
 		{
 			string s = ClassName; if(s == null) return 0;
@@ -2498,7 +2491,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets name.
-		/// Returns "" if no name. Returns null if fails, eg if the window is closed. Supports <see cref="WinError.Code"/>.
+		/// Returns "" if no name. Returns null if fails, eg if the window is closed. Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <remarks>
 		/// <note>It is not the .NET Control.Name property. To get it you can use <see cref="NameWinForms"/>.</note>
@@ -2521,7 +2514,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets control text.
-		/// Returns "" if no text. Returns null if fails, eg if the window is closed. Supports <see cref="WinError.Code"/>.
+		/// Returns "" if no text. Returns null if fails, eg if the window is closed. Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <remarks>
 		/// Unlike <see cref="Name"/>, this function prefers variable text, for example Edit control editable text, ComboBox control selected item text, status bar text.
@@ -2536,7 +2529,7 @@ namespace Au
 		/// <summary>
 		/// Gets window/control name or control text.
 		/// Returns "" if it is empty.
-		/// Returns null if fails, eg if the window is closed. Supports <see cref="WinError.Code"/>.
+		/// Returns null if fails, eg if the window is closed. Supports <see cref="WinError"/>.
 		/// This is a low-level function. You can instead use <see cref="Name"/> and <see cref="ControlText"/>.
 		/// </summary>
 		/// <param name="getText">
@@ -2572,7 +2565,7 @@ namespace Au
 		/// <summary>
 		/// Gets text.
 		/// Returns "" if it is empty.
-		/// Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="WinError.Code"/>.
+		/// Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="WinError"/>.
 		/// Calls API InternalGetWindowText. If it fails, and getControlTextIfEmpty==true, and this is a control, calls _GetTextSlow, which uses WM_GETTEXT.
 		/// </summary>
 		string _GetTextFast(bool useSlowIfEmpty)
@@ -2594,7 +2587,7 @@ namespace Au
 		/// <summary>
 		/// Gets text.
 		/// Returns "" if it is empty.
-		/// Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="WinError.Code"/>.
+		/// Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="WinError"/>.
 		/// Uses WM_GETTEXT.
 		/// </summary>
 		string _GetTextSlow()
@@ -2662,10 +2655,8 @@ namespace Au
 		//}
 #if false //artifacts of xml doc from various places. Maybe it will come back some day. The code is commented out there.
 		//from Wnd.Child comments:
-		/// <item>
-		/// "***label " - use <see cref="NameLabel"/>.
-		/// Useful when the control itself does not have a name but an adjacent control is used as its name. Examples - Edit controls in dialogs.
-		/// </item>
+		/// - "***label " - use <see cref="NameLabel"/>.
+		/// <br/>Useful when the control itself does not have a name but an adjacent control is used as its name. Examples - Edit controls in dialogs.
 #endif
 
 		/// <summary>
@@ -2677,9 +2668,12 @@ namespace Au
 		/// <summary>
 		/// Gets Control.Name property of a .NET Windows Forms control.
 		/// Returns null if it is not a Windows Forms control or if fails.
-		/// <note>Use this with controls of other processes. Don't use with your controls, when you have a Control object.</note>
-		/// <note>This is slow when getting names of multiple controls in a window. Instead create a <see cref="Misc.WinFormsControlNames"/> instance and call its <see cref="Misc.WinFormsControlNames.GetControlName"/> method for each control.</note>
 		/// </summary>
+		/// <remarks>
+		/// <note>Use this with controls of other processes. Don't use with your controls, when you have a Control object.</note>
+		/// 
+		/// <note>Slow when getting names of multiple controls in a window. Instead create a <see cref="Misc.WinFormsControlNames"/> instance and call its <see cref="Misc.WinFormsControlNames.GetControlName"/> method for each control.</note>
+		/// </remarks>
 		/// <seealso cref="Misc.WinFormsControlNames.IsWinFormsControl"/>
 		public string NameWinForms => Misc.WinFormsControlNames.GetSingleControlName(this);
 
@@ -2695,10 +2689,10 @@ namespace Au
 		//TODO: maybe string properties should return "" when failed, because now often NullReferenceException if not programmed carefully.
 
 		/// <summary>
-		/// If the program name of this window matches one of strings in <paramref name="programNames"/>, returns 1-based index of the string. Else returns 0.
-		/// Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="WinError.Code"/>.
+		/// If the program name of this window matches one of strings in *programNames*, returns 1-based index of the string. Else returns 0.
+		/// Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
-		/// <param name="programNames">Program names, like "notepad.exe". Case-insensitive <see cref="String_.Like_(string, string, bool)">wildcard</see>. The array and strings cannot be null.</param>
+		/// <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="String_.Like_(string, string, bool)"/>. The array and strings cannot be null.</param>
 		public int ProgramNameIs(params string[] programNames)
 		{
 			string s = ProgramName; if(s == null) return 0;
@@ -2731,7 +2725,7 @@ namespace Au
 
 		/// <summary>
 		/// Closes the window.
-		/// Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if <paramref name="noWait"/>==true.
+		/// Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if *noWait*==true.
 		/// </summary>
 		/// <param name="noWait">
 		/// If true, does not wait until the window is closed.
@@ -2744,7 +2738,7 @@ namespace Au
 		/// </param>
 		/// <remarks>
 		/// The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or is a dialog without X button, or just need more time to close it.
-		/// If the window is of this thread, just calls <see cref="Send"/> or <see cref="Post"/> (if <paramref name="noWait"/>==true) and returns true.
+		/// If the window is of this thread, just calls <see cref="Send"/> or <see cref="Post"/> (if *noWait*==true) and returns true.
 		/// </remarks>
 		/// <seealso cref="WaitForClosed"/>
 		/// <example>
@@ -2861,7 +2855,7 @@ namespace Au.Types
 		/// Calls API <msdn>GetProp</msdn> and returns its return value.
 		/// </summary>
 		/// <param name="name">Property name.</param>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public LPARAM this[string name] => Api.GetProp(_w, name);
 
 		/// <summary>
@@ -2881,7 +2875,7 @@ namespace Au.Types
 		/// <param name="name">Property name.</param>
 		/// <param name="value">Property value.</param>
 		/// <remarks>
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// 
 		/// Later call <see cref="Remove(string)"/> to remove the property. If you use many unique property names and don't remove the properties, the property name strings can fill the global atom table which is of a fixed size (about 48000) and which is used by all processes for various purposes.
 		/// </remarks>
@@ -2909,7 +2903,7 @@ namespace Au.Types
 		/// Calls API <msdn>RemoveProp</msdn> and returns its return value.
 		/// </summary>
 		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
-		/// <remarks>Supports <see cref="WinError.Code"/>.</remarks>
+		/// <remarks>Supports <see cref="WinError"/>.</remarks>
 		public LPARAM Remove(string name)
 		{
 			return Api.RemoveProp(_w, name);
@@ -2930,7 +2924,7 @@ namespace Au.Types
 		/// Uses API <msdn>EnumPropsEx</msdn>.
 		/// </summary>
 		/// <remarks>
-		/// Returns 0-length list if fails. Fails if invalid window or access denied (<see cref="Uac">UAC</see>). Supports <see cref="WinError.Code"/>.
+		/// Returns 0-length list if fails. Fails if invalid window or access denied ([](xref:uac)). Supports <see cref="WinError"/>.
 		/// </remarks>
 		public Dictionary<string, LPARAM> GetList()
 		{

@@ -20,31 +20,6 @@ using static Au.NoClass;
 namespace Au.Types
 {
 	/// <summary>
-	/// This namespace contains:
-	/// <list type="bullet">
-	/// <item>Types of function parameters and return values.</item>
-	/// <item>Exception classes, some base classes, some other types.</item>
-	/// <item>Extension methods for various .NET classes.</item>
-	/// </list>
-	/// </summary>
-	[CompilerGenerated()]
-	class NamespaceDoc
-	{
-		//SHFB uses this for namespace documentation.
-	}
-
-	//currently not used
-	///// <summary>Infrastructure.</summary>
-	///// <tocexclude />
-	//[EditorBrowsable(EditorBrowsableState.Never)]
-	//public class JustNull { }
-
-	///// <summary>Infrastructure.</summary>
-	///// <tocexclude />
-	//[EditorBrowsable(EditorBrowsableState.Never)]
-	//public class JustNull2 { }
-
-	/// <summary>
 	/// Contains x or y coordinate. Used for parameters of functions like Mouse.Move, Wnd.Move.
 	/// Allows to easily specify coordinates of these types: normal, reverse (from right or bottom of a rectangle), fractional (fraction of width or height of a rectangle), null.
 	/// Also has functions to convert to normal coodinates.

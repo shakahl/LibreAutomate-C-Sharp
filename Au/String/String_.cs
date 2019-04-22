@@ -23,7 +23,10 @@ namespace Au
 	/// Adds extension methods to <see cref="string"/>.
 	/// </summary>
 	/// <remarks>
-	/// Some .NET String methods use StringComparison.CurrentCulture by default, while others don't. It is confusing, dangerous (easy to make bugs), slower and rarely useful. Microsoft recommends to specify StringComparison.Ordinal[IgnoreCase] explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx. This class adds their versions that use StringComparison.Ordinal[IgnoreCase]. Same name, with prefix "_". For example, StartsWith uses StringComparison.CurrentCulture, and StartsWith_ uses StringComparison.Ordinal[IgnoreCase].
+	/// Some .NET String methods use StringComparison.CurrentCulture by default, while others don't. It is confusing, dangerous (easy to make bugs), slower and rarely useful.
+	/// Microsoft recommends to specify StringComparison.Ordinal[IgnoreCase] explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx.
+	/// This class adds their versions that use StringComparison.Ordinal[IgnoreCase]. Same name, with suffix <c>_</c>.
+	/// For example, <b>EndsWith</b> uses <b>StringComparison.CurrentCulture</b>, and <b>EndsWith_</b> uses <b>StringComparison.Ordinal</b>.
 	/// </remarks>
 	public static unsafe partial class String_
 	{
@@ -86,8 +89,8 @@ namespace Au
 		/// <summary>
 		/// Compares part of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
+		/// <exception cref="ArgumentNullException">*s* is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid *startIndex*.</exception>
 		public static bool EqualsAt_(this string t, int startIndex, string s, bool ignoreCase = false)
 		{
 			if((uint)startIndex > t.Length) throw new ArgumentOutOfRangeException(); //and NullReferenceException
@@ -100,8 +103,8 @@ namespace Au
 		/// Calls <see cref="EqualsAt_(string, int, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">A string in <paramref name="strings"/> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
+		/// <exception cref="ArgumentNullException">A string in *strings* is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid *startIndex*.</exception>
 		public static int EqualsAt_(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.EqualsAt_(startIndex, strings[i], ignoreCase)) return i + 1;
@@ -117,7 +120,7 @@ namespace Au
 		/// <summary>
 		/// Compares the end of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+		/// <exception cref="ArgumentNullException">*s* is null.</exception>
 		public static bool EndsWith_(this string t, string s, bool ignoreCase = false)
 		{
 			int tLen = t.Length; //NullReferenceException
@@ -128,14 +131,14 @@ namespace Au
 		/// <summary>
 		/// Compares the end of this string with other string. Returns true if equal. Uses ordinal case-insensitive comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+		/// <exception cref="ArgumentNullException">*s* is null.</exception>
 		public static bool EndsWithI_(this string t, string s) => EndsWith_(t, s, true);
 
 		/// <summary>
 		/// Calls <see cref="EndsWith_(string, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">A string in <paramref name="strings"/> is null.</exception>
+		/// <exception cref="ArgumentNullException">A string in *strings* is null.</exception>
 		public static int EndsWith_(this string t, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.EndsWith_(strings[i], ignoreCase)) return i + 1;
@@ -155,7 +158,7 @@ namespace Au
 		/// <summary>
 		/// Compares the beginning of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+		/// <exception cref="ArgumentNullException">*s* is null.</exception>
 		public static bool StartsWith_(this string t, string s, bool ignoreCase = false)
 		{
 			int tLen = t.Length; //NullReferenceException
@@ -166,14 +169,14 @@ namespace Au
 		/// <summary>
 		/// Compares the beginning of this string with other string. Returns true if equal. Uses ordinal case-insensitive comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+		/// <exception cref="ArgumentNullException">*s* is null.</exception>
 		public static bool StartsWithI_(this string t, string s) => StartsWith_(t, s, true);
 
 		/// <summary>
 		/// Calls <see cref="StartsWith_(string, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">A string in <paramref name="strings"/> is null.</exception>
+		/// <exception cref="ArgumentNullException">A string in *strings* is null.</exception>
 		public static int StartsWith_(this string t, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.StartsWith_(strings[i], ignoreCase)) return i + 1;
@@ -192,7 +195,7 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="string.IndexOf(string, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
+		/// <exception cref="ArgumentNullException">*s* is null.</exception>
 		public static int IndexOf_(this string t, string s, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
@@ -201,8 +204,8 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="string.IndexOf(string, int, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/>.</exception>
+		/// <exception cref="ArgumentNullException">*s* is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid *startIndex*.</exception>
 		public static int IndexOf_(this string t, string s, int startIndex, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
@@ -211,8 +214,8 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="string.IndexOf(string, int, int, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException"><paramref name="s"/> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/> or <paramref name="count"/>.</exception>
+		/// <exception cref="ArgumentNullException">*s* is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid *startIndex* or *count*.</exception>
 		public static int IndexOf_(this string t, string s, int startIndex, int count, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
@@ -556,7 +559,7 @@ namespace Au
 		/// <summary>
 		/// Returns a new string in which a specified string replaces a specified count of characters at a specified position in this instance.
 		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <paramref name="startIndex"/> or <paramref name="count"/>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid *startIndex* or *count*.</exception>
 		public static string ReplaceAt_(this string t, int startIndex, int count, string s)
 		{
 			return t.Remove(startIndex, count).Insert(startIndex, s);
@@ -575,13 +578,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Removes <paramref name="count"/> characters from the end of this string.
+		/// Removes *count* characters from the end of this string.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public static string RemoveEnd_(this string t, int count) => t.Remove(t.Length - count);
 
 		/// <summary>
-		/// If this string is longer than <paramref name="limit"/>, returns its substring 0 to <paramref name="limit"/>-1 with appended '…' character.
+		/// If this string is longer than *limit*, returns its substring 0 to *limit*-1 with appended '…' character.
 		/// Else returns this string.
 		/// </summary>
 		public static string Limit_(this string t, int limit)
@@ -596,11 +599,11 @@ namespace Au
 
 		/// <summary>
 		/// Replaces some characters with C# escape sequences.
-		/// Replaces these characters: '\\', '\"', '\t', '\n', '\r' and all in range 0-31.
+		/// Replaces these characters: <c>'\\'</c>, <c>'\"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
 		/// If the string contains these characters, replaces and returns new string. Else returns this string.
 		/// </summary>
 		/// <param name="t">This string.</param>
-		/// <param name="limit">If the final string is longer than <paramref name="limit"/>, get its substring 0 to <paramref name="limit"/>-1 with appended '…' character. The enclosing "" are not counted.</param>
+		/// <param name="limit">If the final string is longer than *limit*, get its substring 0 to *limit*-1 with appended '…' character. The enclosing "" are not counted.</param>
 		/// <param name="quote">Enclose in "".</param>
 		public static string Escape_(this string t, int limit = 0, bool quote = false)
 		{
@@ -674,13 +677,13 @@ namespace Au
 
 		internal static class Lib
 		{
-			/// <summary>{ '\r', '\n' }</summary>
+			/// <summary><c>{ '\r', '\n' }</c></summary>
 			internal static readonly char[] lineSep = { '\r', '\n' };
 
-			/// <summary>{ '\\', '/' }</summary>
+			/// <summary><c>{ '\\', '/' }</c></summary>
 			internal static readonly char[] pathSep = { '\\', '/' };
 
-			///// <summary>{ '*', '?' }</summary>
+			///// <summary><c>{ '*', '?' }</c></summary>
 			//internal static readonly char[] wildcard = { '*', '?' };
 
 		}

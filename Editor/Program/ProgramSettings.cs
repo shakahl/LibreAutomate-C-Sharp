@@ -94,6 +94,7 @@ class ProgramSettings
 	/// <summary>
 	/// Gets a setting of type string.
 	/// If exists, returns true. Else sets value=defaultValue and returns false.
+	/// Note: The .NET XML reader replaces \r\n with \n, even in CDATA. If the caller needs \r\n, eg for an Edit control, let it replace \n with \r\n.
 	/// </summary>
 	public bool Get(string name, out string value, string defaultValue = null)
 	{
@@ -104,6 +105,7 @@ class ProgramSettings
 	/// <summary>
 	/// Gets a setting of type string.
 	/// If does not exist, returns defaultValue.
+	/// Note: The .NET XML reader replaces \r\n with \n, even in CDATA. If the caller needs \r\n, eg for an Edit control, let it replace \n with \r\n.
 	/// </summary>
 	public string Get(string name, string defaultValue = null)
 	{

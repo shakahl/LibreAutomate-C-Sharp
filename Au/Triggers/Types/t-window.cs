@@ -31,7 +31,7 @@ namespace Au.Triggers
 	public enum TWFlags : byte
 	{
 		/// <summary>
-		/// Run at startup (of <see cref="ActionTriggers.Run">Triggers.Run</see>), if the window then is active (for ActiveOnce etc triggers) or visible (for VisibleOnce etc triggers).
+		/// Run the action when <see cref="ActionTriggers.Run"/> called, if the window then is active (for <b>ActiveOnce</b> etc triggers) or visible (for <b>VisibleOnce</b> etc triggers).
 		/// </summary>
 		RunAtStartup = 1,
 
@@ -221,7 +221,7 @@ namespace Au.Triggers
 		/// Triggers that launch the action when the specified window is created and then becomes active.
 		/// </summary>
 		/// <remarks>
-		/// The same as <see cref="ActiveOnce"/>, but windows created before calling <see cref="ActionTriggers.Run">Triggers.Run</see>) are ignored.
+		/// The same as <see cref="ActiveOnce"/>, but windows created before calling <see cref="ActionTriggers.Run"/> are ignored.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -260,7 +260,7 @@ namespace Au.Triggers
 		/// Triggers that launch the action when the specified window is created and then becomes visible.
 		/// </summary>
 		/// <remarks>
-		/// The same as <see cref="VisibleOnce"/>, but windows created before calling <see cref="ActionTriggers.Run">Triggers.Run</see>) are ignored.
+		/// The same as <see cref="VisibleOnce"/>, but windows created before calling <see cref="ActionTriggers.Run"/> are ignored.
 		/// Cloaked windows are considered invisible. See <see cref="Wnd.IsCloaked"/>.
 		/// </remarks>
 		/// <example>
@@ -295,8 +295,8 @@ namespace Au.Triggers
 			/// <param name="contains"></param>
 			/// <param name="flags"></param>
 			/// <param name="later">
-			/// Can optionally specify one or more additional events to watch.
-			/// The watching starts from the moment the primary trigger is activated, and only for that window.
+			/// Can optionally specify one or more additional events.
+			/// This starts to work when the primary trigger is activated, and works only for that window.
 			/// For example, to be notified when the window is closed or renamed, specify <c>later: TWEvents.Destroyed | TWEvents.Name</c>.
 			/// When a "later" event occurs, the trigger action is executed. The <see cref="WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
 			/// The "later" trigers are not disabled when primary triggers are disabled.
@@ -864,7 +864,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Cannot be before or after <b>Triggers.Run</b>.</exception>
 		/// <remarks>
-		/// This function usually is used to run <b>ActiveNew</b> triggers for a window created before <see cref="ActionTriggers.Run">Triggers.Run</see>. Here "run triggers" means "compare window properties etc with those specified in triggers and run actions of triggers that match". Normally such triggers don't run because the window is considered old. This function runs triggers as it was a new window. Triggers like ActiveNew and ActiveOnce will run once, as usually.
+		/// This function usually is used to run <b>ActiveNew</b> triggers for a window created before calling <see cref="ActionTriggers.Run"/>. Here "run triggers" means "compare window properties etc with those specified in triggers and run actions of triggers that match". Normally such triggers don't run because the window is considered old. This function runs triggers as it was a new window. Triggers like ActiveNew and ActiveOnce will run once, as usually.
 		/// This function must be called while the main triggers thread is in <b>Triggers.Run</b>, for example from another trigger action. It is asynchronous (does not wait).
 		/// If you call this function from another trigger action (hotkey etc), make sure the window trigger action runs in another thread or can be queed. Else both actions cannot run simultaneously. See example.
 		/// </remarks>
@@ -910,20 +910,21 @@ namespace Au.Triggers
 		/// <param name="skip">An optional callback function that can be used to reduce noise, eg skip tooltip windows. Return true to skip that window.</param>
 		/// <remarks>
 		/// For primary trigger events is logged this info:
-		/// <list type="number">
-		/// <item>Time milliseconds. Shows only the remainder of dividing by 10 seconds, therefore it starts from 0 again when reached 9999 (9 seconds and 999 milliseconds).</item>
-		/// <item>Event (see <see cref="TWEvents"/>).</item>
-		/// <item>Letters for window state etc:
-		/// <list type="bullet">
-		/// <item>A - the window is active.</item>
-		/// <item>H - the window is invisible (!<see cref="Wnd.IsVisible"/>).</item>
-		/// <item>C - the window is cloaked (<see cref="Wnd.IsCloaked"/>).</item>
-		/// <item>O - the window is considered old, ie created before calling <b>Triggers.Run</b>.</item>
-		/// <item>T - the even has been detected using a timer, which means slower response time. Else detected using a hook.</item>
-		/// </list>
-		/// </item>
-		/// <item>Window (handle, class, name, program, rectangle).</item>
-		/// </list>
+		/// <ol>
+		/// <li>Time milliseconds. Shows only the remainder of dividing by 10 seconds, therefore it starts from 0 again when reached 9999 (9 seconds and 999 milliseconds).</li>
+		/// <li>Event (see <see cref="TWEvents"/>).</li>
+		/// <li>Letters for window state etc:
+		/// <ul>
+		/// <li>A - the window is active.</li>
+		/// <li>H - the window is invisible (!<see cref="Wnd.IsVisible"/>).</li>
+		/// <li>C - the window is cloaked (<see cref="Wnd.IsCloaked"/>).</li>
+		/// <li>O - the window is considered old, ie created before calling <b>Triggers.Run</b>.</li>
+		/// <li>T - the even has been detected using a timer, which means slower response time. Else detected using a hook.</li>
+		/// </ul>
+		/// </li>
+		/// <li>Window (handle, class, name, program, rectangle).</li>
+		/// </ol>
+		/// 
 		/// Colors are used for window event types used for primary triggers: blue if activated; green if became visible; yellow if name changed.
 		/// For "later" events is logged time, event and window. Black, tab-indented. Prints only events that are specified in triggers.
 		/// When a trigger is activated, prints the event type in red.

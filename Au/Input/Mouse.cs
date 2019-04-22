@@ -121,16 +121,38 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Moves the cursor (mouse pointer) to the position x y in screen.
+		/// Returns normalized cursor position.
+		/// </summary>
+		/// <param name="x">X coordinate.</param>
+		/// <param name="y">Y coordinate.</param>
+		/// <exception cref="ArgumentOutOfRangeException">
+		/// - The specified x y is not in the screen (any screen). No exception if option <b>Relaxed</b> is true (then moves to a screen edge).
+		/// - Invalid screen index.
+		/// </exception>
+		/// <exception cref="AuException"><inheritdoc cref="Move(POINT)"/></exception>
+		/// <remarks>
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
+		/// </remarks>
+		public static POINT Move(Coord x, Coord y)
+		{
+			LibWaitForNoButtonsPressed();
+			var p = Coord.Normalize(x, y);
+			_Move(p, fast: false);
+			return p;
+		}
+		//rejected: parameters bool workArea = false, Screen_ screen = default. Rarely used. Can use the POINT overload and Coord.Normalize.
+
+		/// <summary>
 		/// Moves the cursor (mouse pointer) to the specified position in screen.
 		/// </summary>
-		/// <param name="p">
-		/// Coordinates relative to the primary screen.
-		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.Move((x, y, true));</c>.
+		/// <param name="p">Coordinates.
+		/// <note type="tip">When need coordinates relative to a non-primary screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.Move((x, y, true));</c>.</note>
 		/// </param>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move the cursor to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="Uac">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception if option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
+		/// <exception cref="AuException">Failed to move the cursor to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception if option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
 		/// </remarks>
 		/// <example>
 		/// Save-restore mouse position.
@@ -151,36 +173,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Moves the cursor (mouse pointer) to the position x y in screen.
-		/// Returns normalized cursor position.
-		/// </summary>
-		/// <param name="x">X coordinate.</param>
-		/// <param name="y">Y coordinate.</param>
-		/// <exception cref="ArgumentOutOfRangeException">
-		/// 1. The specified x y is not in the screen (any screen). No exception if option <b>Relaxed</b> is true (then moves to a screen edge).
-		/// 2. Invalid screen index.
-		/// </exception>
-		/// <exception cref="AuException"><inheritdoc cref="Move(POINT)"/></exception>
-		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
-		/// </remarks>
-		public static POINT Move(Coord x, Coord y)
-		{
-			LibWaitForNoButtonsPressed();
-			var p = Coord.Normalize(x, y);
-			_Move(p, fast: false);
-			return p;
-		}
-		//rejected: parameters bool workArea = false, Screen_ screen = default. Rarely used. Can use the POINT overload and Coord.Normalize.
-
-		/// <summary>
 		/// Moves the cursor (mouse pointer) to the position x y relative to window w.
 		/// Returns cursor position in primary screen coordinates.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="WndException">
 		/// Invalid window.
 		/// The top-level window is hidden. No exception if just cloaked, for example in another desktop; then on click will activate, which usually uncloaks.
@@ -189,7 +188,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException"><inheritdoc cref="Move(POINT)"/></exception>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
 		/// </remarks>
 		public static POINT Move(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
@@ -217,7 +216,7 @@ namespace Au
 		/// Moves the mouse cursor where it was at the time of the last <see cref="Save"/> call in this thread. If it was not called - of the first 'mouse move' or 'mouse click' function call in this thread. Does nothing if these functions were not called.
 		/// </summary>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
 		/// </remarks>
 		public static void Restore()
 		{
@@ -255,9 +254,9 @@ namespace Au
 		/// <param name="dx">X offset from <b>LastXY.x</b>.</param>
 		/// <param name="dy">Y offset from <b>LastXY.y</b>.</param>
 		/// <exception cref="ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="Uac">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
+		/// <exception cref="AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
 		/// </remarks>
 		public static POINT MoveRelative(int dx, int dy)
 		{
@@ -276,9 +275,9 @@ namespace Au
 		/// <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
 		/// <exception cref="ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
 		/// <exception cref="ArgumentOutOfRangeException">The last x y is not in screen. No exception option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher <see cref="Uac">UAC</see> integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
+		/// <exception cref="AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.Relaxed" r=""/> (only for the last movement; always relaxed in intermediate movements).
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.Relaxed"/> (only for the last movement; always relaxed in intermediate movements).
 		/// </remarks>
 		public static POINT MoveRecorded(string recordedString, double speedFactor = 1.0)
 		{
@@ -341,7 +340,7 @@ namespace Au
 			/// To create uint value from distance dx dy use this code: <c>Math_.MakeUint(dx, dy)</c>.
 			/// </param>
 			/// <param name="withSleepTimes">
-			/// <paramref name="recorded"/> also contains sleep times (milliseconds) alternating with distances.
+			/// *recorded* also contains sleep times (milliseconds) alternating with distances.
 			/// It must start with a sleep time. Example: {time1, dist1, time2, dist2}. Another example: {time1, dist1, time2, dist2, time3}. This is invalid: {dist1, time1, dist2, time2}.
 			/// </param>
 			public static string MouseToString(IEnumerable<uint> recorded, bool withSleepTimes)
@@ -532,7 +531,7 @@ namespace Au
 		/// Clicks, double-clicks, presses or releases a mouse button.
 		/// By default does not move the mouse cursor.
 		/// </summary>
-		/// <returns><inheritdoc cref="LeftDown(bool)"/></returns>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="button">Button and action. Default: left click.</param>
 		/// <param name="useLastXY">
 		/// Use <see cref="LastXY"/>. It is the mouse cursor position set by the most recent 'mouse move' or 'mouse click' function called in this thread. Use this option for reliability.
@@ -541,7 +540,7 @@ namespace Au
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.ClickSpeed" r=""/>, <see cref="OptMouse.ClickSleepFinally" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.ClickSpeed"/>, <see cref="OptMouse.ClickSleepFinally"/>.
 		/// </remarks>
 		public static MRelease ClickEx(MButton button = MButton.Left, bool useLastXY = false)
 		{
@@ -560,7 +559,7 @@ namespace Au
 		/// <summary>
 		/// Clicks, double-clicks, presses or releases a mouse button at the specified position in screen.
 		/// </summary>
-		/// <returns><inheritdoc cref="LeftDown(bool)"/></returns>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="button">Button and action.</param>
 		/// <param name="x">X coordinate.</param>
 		/// <param name="y">Y coordinate.</param>
@@ -568,7 +567,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
 		/// <remarks>
 		/// To move the mouse cursor, calls <see cref="Move(Coord, Coord)"/>.
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="OptMouse.ClickSpeed" r=""/>, <see cref="OptMouse.ClickSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="OptMouse.ClickSpeed"/>, <see cref="OptMouse.ClickSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
 		/// </remarks>
 		public static MRelease ClickEx(MButton button, Coord x, Coord y)
 		{
@@ -577,12 +576,16 @@ namespace Au
 			return button;
 		}
 
-		/// <inheritdoc cref="ClickEx(MButton, Coord, Coord)"/>
+		/// <summary>
+		/// Clicks, double-clicks, presses or releases a mouse button at the specified position in screen.
+		/// </summary>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="button">Button and action.</param>
-		/// <param name="p">
-		/// Coordinates relative to the primary screen.
-		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.ClickEx(MButton.Right, (x, y, true));</c>.
+		/// <param name="p">Coordinates.
+		/// <note type="tip">When need coordinates relative to a non-primary screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.ClickEx(MButton.Right, (x, y, true));</c>.</note>
 		/// </param>
+		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
 		public static MRelease ClickEx(MButton button, POINT p)
 		{
 			Move(p);
@@ -593,18 +596,18 @@ namespace Au
 		/// <summary>
 		/// Clicks, double-clicks, presses or releases a mouse button at position x y relative to window w.
 		/// </summary>
-		/// <returns><inheritdoc cref="LeftDown(bool)"/></returns>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="button">Button and action.</param>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="WndException">x y is not in the window (read more in Remarks).</exception>
 		/// <remarks>
 		/// To move the mouse cursor, calls <see cref="Move(Wnd, Coord, Coord, bool)"/>. More info there.
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed" r=""/>, <see cref="OptMouse.MoveSleepFinally" r=""/> (between moving and clicking), <see cref="OptMouse.ClickSpeed" r=""/>, <see cref="OptMouse.ClickSleepFinally" r=""/>, <see cref="OptMouse.Relaxed" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="OptMouse.ClickSpeed"/>, <see cref="OptMouse.ClickSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
 		/// If after moving the cursor it is not in the window (or a window of its thread), activates the window (or its top-level parent window). Throws exception if then x y is still not in the window. Skips all this when just releasing button or if option <b>Relaxed</b> is true. Also, if it is a control, x y can be somewhere else in its top-level parent window.
 		/// </remarks>
 		public static MRelease ClickEx(MButton button, Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
@@ -675,9 +678,9 @@ namespace Au
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void Click(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
@@ -712,9 +715,9 @@ namespace Au
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void RightClick(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
@@ -749,9 +752,9 @@ namespace Au
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void DoubleClick(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
@@ -763,7 +766,7 @@ namespace Au
 		/// Left button down (press and don't release).
 		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
 		/// </summary>
-		/// <returns>The return value can be used to auto-release pressed button. See example with <see cref="LeftDown(Wnd, Coord, Coord, bool)"/>.</returns>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
 		public static MRelease LeftDown(bool useLastXY = false)
 		{
@@ -774,7 +777,7 @@ namespace Au
 		/// Left button down (press and don't release) at position x y.
 		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <returns><inheritdoc cref="LeftDown(bool)"/></returns>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
@@ -787,19 +790,13 @@ namespace Au
 		/// Left down (press and don't release) at position x y relative to window w.
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
-		/// <returns>The return value can be used to auto-release pressed button. See example.</returns>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
-		/// <example>
-		/// <code><![CDATA[
-		/// //drag and drop: start at x=8 y=8, move 20 pixels down, drop
-		/// using(Mouse.LeftDown(w, 8, 8)) Mouse.MoveRelative(0, 20); //the button is auto-released when the 'using' code block ends
-		/// ]]></code>
-		/// </example>
 		public static MRelease LeftDown(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			return ClickEx(MButton.Left | MButton.Down, w, x, y, nonClient);
@@ -832,9 +829,9 @@ namespace Au
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void LeftUp(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
@@ -845,7 +842,7 @@ namespace Au
 		/// Right button down (press and don't release).
 		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
 		/// </summary>
-		/// <returns><inheritdoc cref="LeftDown(bool)"/></returns>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
 		public static MRelease RightDown(bool useLastXY = false)
 		{
@@ -856,7 +853,7 @@ namespace Au
 		/// Right button down (press and don't release) at position x y.
 		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <returns><inheritdoc cref="LeftDown(bool)"/></returns>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
@@ -869,11 +866,11 @@ namespace Au
 		/// Right button down (press and don't release) at position x y relative to window w.
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
-		/// <returns><inheritdoc cref="LeftDown(bool)"/></returns>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease RightDown(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
@@ -908,9 +905,9 @@ namespace Au
 		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void RightUp(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
@@ -923,7 +920,7 @@ namespace Au
 		/// <param name="ticks">Number of wheel ticks forward (positive) or backward (negative).</param>
 		/// <param name="horizontal">Horizontal wheel.</param>
 		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.ClickSleepFinally" r=""/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.ClickSleepFinally"/>.
 		/// </remarks>
 		public static void Wheel(int ticks, bool horizontal = false)
 		{
@@ -1019,10 +1016,10 @@ namespace Au
 		/// <summary>
 		/// Waits while some mouse buttons are down (pressed). See <see cref="IsPressed"/>.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <seealso cref="Keyb.WaitForNoModifierKeysAndMouseButtons"/>
 		public static bool WaitForNoButtonsPressed(double secondsTimeout = 0.0, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
@@ -1048,13 +1045,13 @@ namespace Au
 		/// <summary>
 		/// Waits for button-down or button-up event of the specified mouse button or buttons.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
 		/// <param name="up">Wait for button-up event.</param>
-		/// <param name="block">Make the event invisible for other apps. If <paramref name="up"/> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="ArgumentException"><paramref name="button"/> is 0.</exception>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="ArgumentException">*button* is 0.</exception>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// Unlike <see cref="WaitForNoButtonsPressed"/>, waits for down or up event, not for button state.
 		/// Uses low-level mouse hook.
@@ -1075,11 +1072,11 @@ namespace Au
 		/// <summary>
 		/// Waits for button-down or button-up event of any mouse button, and gets the button code.
 		/// </summary>
-		/// <returns>Returns the button code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <returns>Returns the button code. On timeout returns 0 if *secondsTimeout* is negative; else exception.</returns>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="up">Wait for button-up event.</param>
 		/// <param name="block"><inheritdoc cref="WaitForClick(double, MButtons, bool, bool)"/></param>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks><inheritdoc cref="WaitForClick(double, MButtons, bool, bool)"/></remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1126,11 +1123,11 @@ namespace Au
 		/// <summary>
 		/// Waits for a standard mouse cursor (pointer) visible.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="cursor">Id of a standard cursor.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		public static bool WaitForCursor(double secondsTimeout, MCursor cursor, bool not = false)
 		{
 			IntPtr hcur = Api.LoadCursor(default, cursor);
@@ -1142,11 +1139,11 @@ namespace Au
 		/// <summary>
 		/// Waits for a nonstandard mouse cursor (pointer) visible.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="cursorHash">Cursor hash, as returned by <see cref="Util.Cursor_.HashCursor"/>.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		public static bool WaitForCursor(double secondsTimeout, long cursorHash, bool not = false)
 		{
 			if(cursorHash == 0) throw new ArgumentException();
@@ -1208,7 +1205,7 @@ namespace Au
 			//rejected:
 			///// <param name="waitMS">
 			///// Maximal time to wait, milliseconds. Also which API to use.
-			///// If 0 (default), calls API <msdn>PostMessage</msdn> (it does not wait) and waits Opt.Mouse.<see cref="OptMouse.ClickSpeed" r=""/> ms.
+			///// If 0 (default), calls API <msdn>PostMessage</msdn> (it does not wait) and waits Opt.Mouse.<see cref="OptMouse.ClickSpeed"/> ms.
 			///// If less than 0 (eg Timeout.Infinite), calls API <msdn>SendMessage</msdn> which usually waits until the window finishes to process the message.
 			///// Else calls API <msdn>SendMessageTimeout</msdn> which waits max waitMS milliseconds, then throws AuException.
 			///// The SendX functions are not natural and less likely to work.
@@ -1243,6 +1240,7 @@ namespace Au.Types
 	/// There are two groups of values:
 	/// 1. Button (Left, Right, Middle, X1, X2). Default or 0: Left.
 	/// 2. Action (Down, Up, DoubleClick). Default: click.
+	/// 
 	/// Multiple values from the same group cannot be combined. For example Left|Right is invalid.
 	/// Values from different groups can be combined. For example Right|Down.
 	/// </remarks>
@@ -1308,10 +1306,14 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// The Dispose function releases mouse buttons pressed by the function that returned this variable.
+	/// The <b>Dispose</b> function releases mouse buttons pressed by the function that returned this variable.
 	/// </summary>
-	/// <tocexclude />
-	[EditorBrowsable(EditorBrowsableState.Never)]
+	/// <example>
+	/// Drag and drop: start at x=8 y=8, move 20 pixels down, drop.
+	/// <code><![CDATA[
+	/// using(Mouse.LeftDown(w, 8, 8)) Mouse.MoveRelative(0, 20); //the button is auto-released when the 'using' code block ends
+	/// ]]></code>
+	/// </example>
 	public struct MRelease : IDisposable
 	{
 		MButton _buttons;

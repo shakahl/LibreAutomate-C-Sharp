@@ -27,7 +27,7 @@ namespace Au.Controls
 {
 	//Problem with controls derived from Button: designer sets Text=Name and ignores [DefaultValue] of the Text override.
 	//This class sets correct Text, but still need [DefaultValue] to make it non-bold. Cannot set Name.
-	class _ButtonDesigner :ControlDesigner
+	class _ButtonDesigner : ControlDesigner
 	{
 		public override void InitializeNewComponent(IDictionary defaultValues)
 		{
@@ -42,13 +42,13 @@ namespace Au.Controls
 	/// Button that automatically sets its Text = "OK", DialogResult = DialogResult.OK and form's AcceptButton.
 	/// </summary>
 	[Designer(typeof(_ButtonDesigner))]
-	public class ButtonOK :Button
+	public class ButtonOK : Button
 	{
 		public ButtonOK()
 		{
-			DialogResult = DialogResult.OK;
-			Text = "&OK";
-			//Name = "_bOK"; //does not work in any way
+			base.DialogResult = DialogResult.OK;
+			base.Text = "&OK";
+			//base.Name = "_bOK"; //does not work in any way
 		}
 
 		[DefaultValue(DialogResult.OK)]
@@ -76,13 +76,14 @@ namespace Au.Controls
 	/// Button that automatically sets its Text = "Cancel", DialogResult = DialogResult.Cancel and form's CancelButton.
 	/// </summary>
 	[Designer(typeof(_ButtonDesigner))]
-	public class ButtonCancel :Button
+	public class ButtonCancel : Button
 	{
 		public ButtonCancel()
 		{
-			DialogResult = DialogResult.Cancel;
-			Text = "Cancel";
-			//Name = "_bCancel";
+			base.DialogResult = DialogResult.Cancel;
+			base.Text = "Cancel";
+			//base.Name = "_bCancel";
+			base.CausesValidation = false;
 		}
 
 		[DefaultValue(DialogResult.Cancel)]
@@ -90,6 +91,9 @@ namespace Au.Controls
 
 		[DefaultValue("Cancel")]
 		public override string Text { get => base.Text; set => base.Text = value; }
+
+		[DefaultValue(false)]
+		public new bool CausesValidation { get => base.CausesValidation; set => base.CausesValidation = value; }
 
 		protected override void OnHandleCreated(EventArgs e)
 		{

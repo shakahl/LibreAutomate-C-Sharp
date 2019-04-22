@@ -28,9 +28,9 @@
 			this._bOK = new Au.Controls.ButtonOK();
 			this._bCancel = new Au.Controls.ButtonCancel();
 			this._info = new Au.Controls.AuInfoBox();
-			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this._grid = new Au.Controls.ParamGrid();
-			this.groupBox3 = new System.Windows.Forms.GroupBox();
+			this.label4 = new System.Windows.Forms.Label();
+			this._tFindInList = new System.Windows.Forms.TextBox();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.label5 = new System.Windows.Forms.Label();
 			this._bAddComBrowse = new System.Windows.Forms.Button();
@@ -43,23 +43,16 @@
 			this._bAddGacVersion = new System.Windows.Forms.Button();
 			this._bAddMyLibraryProject = new System.Windows.Forms.Button();
 			this._bAddComRegistry = new System.Windows.Forms.Button();
-			this.label4 = new System.Windows.Forms.Label();
 			this.groupBox2 = new System.Windows.Forms.GroupBox();
 			this._bAddClass = new System.Windows.Forms.Button();
 			this._bAddResource = new System.Windows.Forms.Button();
-			this._tFindInList = new System.Windows.Forms.TextBox();
-			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-			this.splitContainer1.Panel1.SuspendLayout();
-			this.splitContainer1.Panel2.SuspendLayout();
-			this.splitContainer1.SuspendLayout();
-			this.groupBox3.SuspendLayout();
 			this.groupBox1.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// _bOK
 			// 
-			this._bOK.Location = new System.Drawing.Point(144, 304);
+			this._bOK.Location = new System.Drawing.Point(472, 404);
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
 			this._bOK.TabIndex = 0;
@@ -67,7 +60,7 @@
 			// 
 			// _bCancel
 			// 
-			this._bCancel.Location = new System.Drawing.Point(224, 304);
+			this._bCancel.Location = new System.Drawing.Point(552, 404);
 			this._bCancel.Name = "_bCancel";
 			this._bCancel.Size = new System.Drawing.Size(72, 24);
 			this._bCancel.TabIndex = 1;
@@ -75,45 +68,27 @@
 			// _info
 			// 
 			this._info.AccessibleName = "_info";
+			this._info.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._info.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this._info.DisableModifiedNotifications = false;
 			this._info.Location = new System.Drawing.Point(8, 8);
 			this._info.Name = "_info";
-			this._info.Size = new System.Drawing.Size(600, 104);
+			this._info.Size = new System.Drawing.Size(624, 80);
 			this._info.TabIndex = 7;
-			// 
-			// splitContainer1
-			// 
-			this.splitContainer1.Location = new System.Drawing.Point(8, 120);
-			this.splitContainer1.Name = "splitContainer1";
-			// 
-			// splitContainer1.Panel1
-			// 
-			this.splitContainer1.Panel1.Controls.Add(this._grid);
-			// 
-			// splitContainer1.Panel2
-			// 
-			this.splitContainer1.Panel2.Controls.Add(this.groupBox3);
-			this.splitContainer1.Panel2.Controls.Add(this._bOK);
-			this.splitContainer1.Panel2.Controls.Add(this._bCancel);
-			this.splitContainer1.Size = new System.Drawing.Size(600, 328);
-			this.splitContainer1.SplitterDistance = 300;
-			this.splitContainer1.TabIndex = 8;
 			// 
 			// _grid
 			// 
 			this._grid.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this._grid.ClipboardMode = SourceGrid.ClipboardMode.Copy;
 			this._grid.ColumnsCount = 2;
-			this._grid.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._grid.EnableSort = false;
-			this._grid.Location = new System.Drawing.Point(0, 0);
+			this._grid.Location = new System.Drawing.Point(8, 100);
 			this._grid.MinimumHeight = 18;
 			this._grid.Name = "_grid";
 			this._grid.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
 			this._grid.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-			this._grid.Size = new System.Drawing.Size(300, 328);
+			this._grid.Size = new System.Drawing.Size(296, 328);
 			this._grid.SpecialKeys = ((SourceGrid.GridSpecialKeys)((((((SourceGrid.GridSpecialKeys.Arrows | SourceGrid.GridSpecialKeys.PageDownUp) 
             | SourceGrid.GridSpecialKeys.Enter) 
             | SourceGrid.GridSpecialKeys.Escape) 
@@ -124,18 +99,21 @@
 			this._grid.ToolTipText = "";
 			this._grid.ZAddHidden = false;
 			// 
-			// groupBox3
+			// label4
 			// 
-			this.groupBox3.Controls.Add(this.groupBox1);
-			this.groupBox3.Controls.Add(this.label4);
-			this.groupBox3.Controls.Add(this.groupBox2);
-			this.groupBox3.Controls.Add(this._tFindInList);
-			this.groupBox3.Location = new System.Drawing.Point(8, 0);
-			this.groupBox3.Name = "groupBox3";
-			this.groupBox3.Size = new System.Drawing.Size(224, 280);
-			this.groupBox3.TabIndex = 6;
-			this.groupBox3.TabStop = false;
-			this.groupBox3.Text = "Add meta r, com, pr, c, resource";
+			this.label4.AutoSize = true;
+			this.label4.Location = new System.Drawing.Point(544, 200);
+			this.label4.Name = "label4";
+			this.label4.Size = new System.Drawing.Size(66, 15);
+			this.label4.TabIndex = 5;
+			this.label4.Text = "Find in lists";
+			// 
+			// _tFindInList
+			// 
+			this._tFindInList.Location = new System.Drawing.Point(544, 220);
+			this._tFindInList.Name = "_tFindInList";
+			this._tFindInList.Size = new System.Drawing.Size(80, 23);
+			this._tFindInList.TabIndex = 4;
 			// 
 			// groupBox1
 			// 
@@ -150,7 +128,7 @@
 			this.groupBox1.Controls.Add(this._bAddGacVersion);
 			this.groupBox1.Controls.Add(this._bAddMyLibraryProject);
 			this.groupBox1.Controls.Add(this._bAddComRegistry);
-			this.groupBox1.Location = new System.Drawing.Point(8, 24);
+			this.groupBox1.Location = new System.Drawing.Point(320, 100);
 			this.groupBox1.Name = "groupBox1";
 			this.groupBox1.Size = new System.Drawing.Size(208, 152);
 			this.groupBox1.TabIndex = 2;
@@ -173,6 +151,7 @@
 			this._bAddComBrowse.Size = new System.Drawing.Size(72, 24);
 			this._bAddComBrowse.TabIndex = 8;
 			this._bAddComBrowse.Text = "Browse...";
+			this._bAddComBrowse.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddComBrowse.UseVisualStyleBackColor = true;
 			this._bAddComBrowse.Click += new System.EventHandler(this._bAddComBrowse_Click);
 			// 
@@ -269,22 +248,13 @@
 			this._bAddComRegistry.UseVisualStyleBackColor = true;
 			this._bAddComRegistry.Click += new System.EventHandler(this._bAddComRegistry_Click);
 			// 
-			// label4
-			// 
-			this.label4.AutoSize = true;
-			this.label4.Location = new System.Drawing.Point(16, 252);
-			this.label4.Name = "label4";
-			this.label4.Size = new System.Drawing.Size(66, 15);
-			this.label4.TabIndex = 5;
-			this.label4.Text = "Find in lists";
-			// 
 			// groupBox2
 			// 
 			this.groupBox2.Controls.Add(this._bAddClass);
 			this.groupBox2.Controls.Add(this._bAddResource);
-			this.groupBox2.Location = new System.Drawing.Point(8, 184);
+			this.groupBox2.Location = new System.Drawing.Point(536, 100);
 			this.groupBox2.Name = "groupBox2";
-			this.groupBox2.Size = new System.Drawing.Size(208, 56);
+			this.groupBox2.Size = new System.Drawing.Size(96, 84);
 			this.groupBox2.TabIndex = 3;
 			this.groupBox2.TabStop = false;
 			this.groupBox2.Text = "Add file";
@@ -293,7 +263,7 @@
 			// 
 			this._bAddClass.Location = new System.Drawing.Point(8, 24);
 			this._bAddClass.Name = "_bAddClass";
-			this._bAddClass.Size = new System.Drawing.Size(88, 24);
+			this._bAddClass.Size = new System.Drawing.Size(80, 24);
 			this._bAddClass.TabIndex = 1;
 			this._bAddClass.Text = "Class file...";
 			this._bAddClass.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
@@ -302,28 +272,27 @@
 			// 
 			// _bAddResource
 			// 
-			this._bAddResource.Location = new System.Drawing.Point(112, 24);
+			this._bAddResource.Location = new System.Drawing.Point(8, 52);
 			this._bAddResource.Name = "_bAddResource";
-			this._bAddResource.Size = new System.Drawing.Size(88, 24);
+			this._bAddResource.Size = new System.Drawing.Size(80, 24);
 			this._bAddResource.TabIndex = 1;
 			this._bAddResource.Text = "Resource...";
 			this._bAddResource.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddResource.UseVisualStyleBackColor = true;
 			this._bAddResource.Click += new System.EventHandler(this._bAddResource_Click);
 			// 
-			// _tFindInList
-			// 
-			this._tFindInList.Location = new System.Drawing.Point(96, 248);
-			this._tFindInList.Name = "_tFindInList";
-			this._tFindInList.Size = new System.Drawing.Size(112, 23);
-			this._tFindInList.TabIndex = 4;
-			// 
 			// EdCodeFileProperties
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(616, 455);
-			this.Controls.Add(this.splitContainer1);
+			this.ClientSize = new System.Drawing.Size(640, 436);
+			this.Controls.Add(this.label4);
+			this.Controls.Add(this._grid);
+			this.Controls.Add(this._tFindInList);
+			this.Controls.Add(this.groupBox2);
+			this.Controls.Add(this._bOK);
+			this.Controls.Add(this.groupBox1);
+			this.Controls.Add(this._bCancel);
 			this.Controls.Add(this._info);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
 			this.IsPopup = true;
@@ -333,16 +302,11 @@
 			this.ShowIcon = false;
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
-			this.splitContainer1.Panel1.ResumeLayout(false);
-			this.splitContainer1.Panel2.ResumeLayout(false);
-			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-			this.splitContainer1.ResumeLayout(false);
-			this.groupBox3.ResumeLayout(false);
-			this.groupBox3.PerformLayout();
 			this.groupBox1.ResumeLayout(false);
 			this.groupBox1.PerformLayout();
 			this.groupBox2.ResumeLayout(false);
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 	}
 
@@ -351,7 +315,6 @@
 	private Au.Controls.ButtonOK _bOK;
 	private Au.Controls.ButtonCancel _bCancel;
 	private Au.Controls.AuInfoBox _info;
-	private System.Windows.Forms.SplitContainer splitContainer1;
 	private Au.Controls.ParamGrid _grid;
 	private System.Windows.Forms.Button _bAddBrowseNet;
 	private System.Windows.Forms.Button _bAddMyLibraryProject;
@@ -370,5 +333,4 @@
 	private System.Windows.Forms.Label label3;
 	private System.Windows.Forms.Label label2;
 	private System.Windows.Forms.Label label1;
-	private System.Windows.Forms.GroupBox groupBox3;
 }

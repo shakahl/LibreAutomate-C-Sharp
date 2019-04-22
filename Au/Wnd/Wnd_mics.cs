@@ -120,7 +120,7 @@ namespace Au
 			/// <summary>
 			/// Destroys a native window of this thread.
 			/// Calls API <msdn>DestroyWindow</msdn>.
-			/// Returns false if failed. Supports <see cref="WinError.Code"/>.
+			/// Returns false if failed. Supports <see cref="WinError"/>.
 			/// </summary>
 			/// <seealso cref="Close"/>
 			public static bool DestroyWindow(Wnd w)
@@ -147,7 +147,7 @@ namespace Au
 			/// Returns null if fails or if called on Windows 7.
 			/// </summary>
 			/// <param name="w"></param>
-			/// <param name="prependShellAppsFolder">Prepend @"shell:AppsFolder\" (to run or get icon).</param>
+			/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
 			/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
 			/// <remarks>
 			/// Windows Store app window class name can be "Windows.UI.Core.CoreWindow" or "ApplicationFrameWindow".
@@ -229,7 +229,7 @@ namespace Au
 			/// Calls API <msdn>GetClassLongPtr</msdn>.
 			/// </summary>
 			/// <remarks>
-			/// Supports <see cref="WinError.Code"/>.
+			/// Supports <see cref="WinError"/>.
 			/// For index can be used constants from <see cref="Native.GCL"/>. All values are the same in 32-bit and 64-bit process.
 			/// In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
 			/// </remarks>
@@ -276,7 +276,7 @@ namespace Au
 
 			/// <summary>
 			/// Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
-			/// It allows processes of lower <see cref="Uac">UAC</see> integrity level to send these messages to this process.
+			/// It allows processes of lower [](xref:uac) integrity level to send these messages to this process.
 			/// </summary>
 			public static void UacEnableMessages(params int[] messages)
 			{

@@ -176,7 +176,7 @@ namespace Au
 				/// The window class remains registered until this process ends. Don't need to unregister.
 				/// This function can be called multiple times for the same class, for example called once in each appdomain. Next time it just returns class atom.
 				/// Thread-safe.
-				/// <note type="note">Don't use code like <c>static ushort _atom = Wnd.Misc.MyWindow.RegisterClass("MyClass");</c>, because in Release configuration compiler removes this code if _atom is not used. Instead you can call this function in a static constructor.</note>
+				/// <note>Don't use code like <c>static ushort _atom = Wnd.Misc.MyWindow.RegisterClass("MyClass");</c>, because in Release configuration compiler removes this code if _atom is not used. Instead you can call this function in a static constructor.</note>
 				/// </remarks>
 				public static unsafe ushort RegisterClass(string className, WndClassEx ex = null)
 				{
@@ -205,7 +205,7 @@ namespace Au
 				/// <summary>
 				/// Used with <see cref="RegisterClass"/>.
 				/// </summary>
-				/// <tocexclude />
+				[NoDoc]
 				public class WndClassEx
 				{
 #pragma warning disable 1591 //XML doc

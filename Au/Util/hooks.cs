@@ -50,7 +50,7 @@ namespace Au.Util
 		/// Must return as soon as possible. More info: <see cref="LowLevelHooksTimeout"/>.
 		/// If calls <see cref="HookData.Keyboard.BlockEvent"/> or <see cref="HookData.ReplyMessage"/>(true), the event is not sent to apps and other hooks.
 		/// Event data cannot be modified.
-		/// <note type="note">When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
+		/// <note>When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
 		/// </param>
 		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -83,7 +83,7 @@ namespace Au.Util
 		/// Must return as soon as possible. More info: <see cref="LowLevelHooksTimeout"/>.
 		/// If calls <see cref="HookData.Mouse.BlockEvent"/> or <see cref="HookData.ReplyMessage"/>(true), the event is not sent to apps and other hooks.
 		/// Event data cannot be modified.
-		/// <note type="note">When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
+		/// <note>When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
 		/// </param>
 		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -118,7 +118,7 @@ namespace Au.Util
 		/// Hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// If returns true, the event is cancelled. For some events you can modify some fields of event data.
-		/// <note type="note">When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
+		/// <note>When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -173,7 +173,7 @@ namespace Au.Util
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// The event cannot be cancelled. As a workaround, you can set msg->message=0. Also can modify other fields.
-		/// <note type="note">When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
+		/// <note>When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -223,7 +223,7 @@ namespace Au.Util
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// If returns true, the event is cancelled.
-		/// <note type="note">When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
+		/// <note>When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -249,7 +249,7 @@ namespace Au.Util
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// The event cannot be cancelled or modified.
-		/// <note type="note">When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
+		/// <note>When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -276,7 +276,7 @@ namespace Au.Util
 		/// The hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// The event cannot be cancelled or modified.
-		/// <note type="note">When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
+		/// <note>When the hook procedure returns, the pointer field of the parameter variable becomes invalid and unsafe to use.</note>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -642,7 +642,7 @@ namespace Au.Types
 			}
 
 			/// <summary>
-			/// Returns true if <paramref name="key"/> == <b>vkCode</b> or <paramref name="key"/> is Shift, Ctrl, Alt or Win and <b>vkCode</b> is LShift/RShift, LCtrl/RCtrl, LAlt/RAlt or RWin.
+			/// Returns true if *key* == <b>vkCode</b> or *key* is Shift, Ctrl, Alt or Win and <b>vkCode</b> is LShift/RShift, LCtrl/RCtrl, LAlt/RAlt or RWin.
 			/// </summary>
 			public bool IsKey(KKey key)
 			{
@@ -1169,7 +1169,7 @@ namespace Au.Util
 		/// Calls API <msdn>SetWinEventHook</msdn>.
 		/// </summary>
 		/// <param name="eventMin">The lowest event constant value in the range of events. Can be AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>.</param>
-		/// <param name="eventMax">The highest event constant value in the range of events. Can be AccEVENT.MAX to indicate the highest possible event value. If 0, uses <paramref name="eventMin"/>.</param>
+		/// <param name="eventMax">The highest event constant value in the range of events. Can be AccEVENT.MAX to indicate the highest possible event value. If 0, uses *eventMin*.</param>
 		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
 		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
 		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>

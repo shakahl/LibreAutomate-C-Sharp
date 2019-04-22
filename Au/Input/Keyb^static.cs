@@ -87,7 +87,7 @@ namespace Au
 			/// </summary>
 			/// <param name="mod">Return true if some of these keys are down (pressed). Default: Ctrl, Shift or Alt.</param>
 			/// <remarks>
-			/// By default does not check the Win key, as it is not used in UI, but you can include it in <paramref name="mod"/> if need.
+			/// By default does not check the Win key, as it is not used in UI, but you can include it in *mod* if need.
 			/// </remarks>
 			public static bool IsMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt)
 			{
@@ -103,7 +103,7 @@ namespace Au
 			/// </summary>
 			/// <param name="mod">Check only these keys. Default: Ctrl, Shift, Alt.</param>
 			/// <remarks>
-			/// By default does not check the Win key, as it is not used in UI, but you can include it in <paramref name="mod"/> if need.
+			/// By default does not check the Win key, as it is not used in UI, but you can include it in *mod* if need.
 			/// </remarks>
 			public static KMod GetMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt)
 			{
@@ -236,10 +236,10 @@ namespace Au
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are down (pressed). See <see cref="IsMod"/>.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="mod">Check only these keys. Default: all.</param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		public static bool WaitForNoModifierKeys(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
 		{
 			return WaitForNoModifierKeysAndMouseButtons(secondsTimeout, mod, 0);
@@ -248,11 +248,11 @@ namespace Au
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are down (pressed).
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="mod">Check only these keys. Default: all.</param>
 		/// <param name="buttons">Check only these buttons. Default: all.</param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <seealso cref="IsMod"/>
 		/// <seealso cref="Mouse.IsPressed"/>
 		/// <seealso cref="Mouse.WaitForNoButtonsPressed"/>
@@ -274,9 +274,9 @@ namespace Au
 		/// <summary>
 		/// Waits while the specified keys or/and mouse buttons are down (pressed).
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="keys">One or more keys or/and mouse buttons. Waits until all are released. Can be string like with <see cref="Key"/>, without operators.</param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		public static bool WaitForReleased(double secondsTimeout, params KKey[] keys)
 		{
 			return WaitFor.Condition(secondsTimeout, () => {
@@ -294,13 +294,13 @@ namespace Au
 		/// <summary>
 		/// Registers a temporary hotkey and waits for it.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="hotkey"><inheritdoc cref="Util.RegisterHotkey.Register"/></param>
 		/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 		/// <exception cref="AuException">Failed to register hotkey.</exception>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// Uses <see cref="Util.RegisterHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
 		/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
@@ -331,13 +331,13 @@ namespace Au
 		/// <summary>
 		/// Waits for key-down or key-up event of the specified key.
 		/// </summary>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="key">Wait for this key..</param>
 		/// <param name="up">Wait for key-up event.</param>
-		/// <param name="block">Make the event invisible for other apps. If <paramref name="up"/> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
-		/// <exception cref="ArgumentException"><paramref name="key"/> is 0.</exception>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
+		/// <exception cref="ArgumentException">*key* is 0.</exception>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// Unlike <see cref="WaitForReleased"/>, waits for key event, not for key state.
 		/// Uses low-level keyboard hook. Can wait for any single key. See also <see cref="WaitForHotkey"/>.
@@ -358,13 +358,13 @@ namespace Au
 		/// <summary>
 		/// Waits for key-down or key-up event of the specified key.
 		/// </summary>
-		/// <returns><inheritdoc cref="WaitFor.Condition"/></returns>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="key">Wait for this key. A single-key string like with <see cref="Key"/>.</param>
 		/// <param name="up">Wait for key-up event.</param>
 		/// <param name="block"><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></param>
-		/// <exception cref="ArgumentException">Invalid <paramref name="key"/> string.</exception>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <exception cref="ArgumentException">Invalid *key* string.</exception>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -381,13 +381,13 @@ namespace Au
 		/// Waits for key-down or key-up event of any key, and gets the key code.
 		/// </summary>
 		/// <returns>
-		/// Returns the key code. On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.
+		/// Returns the key code. On timeout returns 0 if *secondsTimeout* is negative; else exception.
 		/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
 		/// </returns>
-		/// <param name="secondsTimeout"><inheritdoc cref="WaitFor.Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="up">Wait for key-up event.</param>
 		/// <param name="block"><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></param>
-		/// <exception cref="TimeoutException"><inheritdoc cref="WaitFor.Condition"/></exception>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -486,7 +486,7 @@ namespace Au
 			/// Returns 0 if unknown key name.
 			/// </summary>
 			/// <param name="s">String containing key name, like with <see cref="Keyb.Key"/>.</param>
-			/// <param name="startIndex">Key name start index in <paramref name="s"/>.</param>
+			/// <param name="startIndex">Key name start index in *s*.</param>
 			/// <param name="length">Key name length.</param>
 			/// <exception cref="ArgumentOutOfRangeException">Invalid start index or length.</exception>
 			public static KKey ParseKeyName(string s, int startIndex, int length)
@@ -520,8 +520,8 @@ namespace Au
 			/// <remarks>
 			/// Key names are like with <see cref="Keyb.Key"/>.
 			/// Must be single non-modifier key, preceded by zero or more of modifier keys Ctrl, Shift, Alt, Win, all joined with +.
-			/// Valid hotkey examples: "A", "a", "7", "F12", ".", "End", "Ctrl+D", "Ctrl+Alt+Shift+Win+Left", " Ctrl + U ".
-			/// Invalid hotkey examples: null, "", "A+B", "Ctrl+A+K", "A+Ctrl", "Ctrl+Shift", "Ctrl+", "NoSuchKey", "tab".
+			/// Valid hotkey examples: <c>"A"</c>, <c>"a"</c>, <c>"7"</c>, <c>"F12"</c>, <c>"."</c>, <c>"End"</c>, <c>"Ctrl+D"</c>, <c>"Ctrl+Alt+Shift+Win+Left"</c>, <c>" Ctrl + U "</c>.
+			/// Invalid hotkey examples: null, "", <c>"A+B"</c>, <c>"Ctrl+A+K"</c>, <c>"A+Ctrl"</c>, <c>"Ctrl+Shift"</c>, <c>"Ctrl+"</c>, <c>"NoSuchKey"</c>, <c>"tab"</c>.
 			/// </remarks>
 			public static bool ParseHotkeyString(string s, out KMod mod, out KKey key)
 			{
@@ -576,7 +576,7 @@ namespace Au
 
 			/// <summary>
 			/// Converts hotkey string to <see cref="System.Windows.Forms.Keys"/>.
-			/// For example, if s is "Ctrl+Left", sets hotkey=Keys.Control|Keys.Left.
+			/// For example, if s is <c>"Ctrl+Left"</c>, sets hotkey=Keys.Control|Keys.Left.
 			/// Returns false if the string is invalid.
 			/// </summary>
 			/// <inheritdoc cref="ParseHotkeyString(string, out KMod, out KKey)"/>
@@ -609,65 +609,31 @@ namespace Au
 		/// </summary>
 		/// <param name="keysEtc">
 		/// Any number of arguments of these types:
-		/// <list type="bullet">
-		/// <item>
-		/// <term>string</term>
-		/// <description>one or more key names separated by spaces or operators. More info in Remarks.
-		/// Example: <c>Key("Enter A Ctrl+A");</c>
-		/// See <see cref="AddKeys"/>.
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <term>string after 'keys' string</term>
-		/// <description>literal text. When there are several strings in sequence, they are interpreted as keys, text, keys, text...
-		/// Example: <c>Key("keys", "text", "keys", "text", 500, "keys", "text", "keys", KKey.Back, "keys", "text");</c>
-		/// Function <see cref="Text"/> is the same as <b>Key</b>, but the first parameter is text.
-		/// To send text can be used keys or clipboard, depending on <see cref="Opt.Key"/> and text.
-		/// See <see cref="AddText"/>.
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <term><see cref="KKey"/></term>
-		/// <description>a single key.
-		/// Example: <c>Key("Shift+", KKey.Left, "*3");</c> is the same as <c>Key("Shift+Left*3");</c>.
-		/// See <see cref="AddKey(KKey, bool?)"/>.
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <term>int</term>
-		/// <description>milliseconds to sleep. Max 10000.
-		/// Example: <c>Key("Left", 500, "Right");</c>
-		/// See <see cref="AddSleep"/>.
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <term><see cref="Action"/></term>
-		/// <description>callback function.
-		/// Example: <c>Action click = () => Mouse.Click(); Key("Shift+", click);</c>
-		/// See <see cref="AddCallback"/>.
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <term>null or ""</term>
-		/// <description>nothing.
-		/// Example: <c>Key("keys", 500, "", "text");</c>
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <term>(int, bool)</term>
-		/// <description>a single key, specified using scan code and extended-key flag.
-		/// Example: <c>Key("", "key F1:", (0x3B, false));</c>
-		/// See <see cref="AddKey(KKey, int, bool, bool?)"/>.
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <term>(KKey, int, bool)</term>
-		/// <description>a single key, specified using <see cref="KKey"/> and/or scan code and extended-key flag.
-		/// Example: <c>Key("", "numpad Enter:", (KKey.Enter, 0, true));</c>
-		/// See <see cref="AddKey(KKey, int, bool, bool?)"/>.
-		/// </description>
-		/// </item>
-		/// </list>
+		/// - string - keys. One or more key names separated by spaces or operators. More info in Remarks.
+		/// <br/>Example: <c>Key("Enter A Ctrl+A");</c>
+		/// <br/>See <see cref="AddKeys"/>.
+		/// - string after a "keys" string - literal text. When there are several strings in sequence, they are interpreted as keys, text, keys, text...
+		/// <br/>Example: <c>Key("keys", "text", "keys", "text", 500, "keys", "text", "keys", KKey.Back, "keys", "text");</c>
+		/// <br/>Function <see cref="Text"/> is the same as this function, but the first parameter is text.
+		/// <br/>To send text can be used keys or clipboard, depending on <see cref="Opt.Key"/> and text.
+		/// <br/>See <see cref="AddText"/>.
+		/// - <see cref="KKey"/> - a single key.
+		/// <br/>Example: <c>Key("Shift+", KKey.Left, "*3");</c> is the same as <c>Key("Shift+Left*3");</c>.
+		/// <br/>See <see cref="AddKey(KKey, bool?)"/>.
+		/// - int - milliseconds to sleep. Max 10000.
+		/// <br/>Example: <c>Key("Left", 500, "Right");</c>
+		/// <br/>See <see cref="AddSleep"/>.
+		/// - <see cref="Action"/> - callback function.
+		/// <br/>Example: <c>Action click = () => Mouse.Click(); Key("Shift+", click);</c>
+		/// <br/>See <see cref="AddCallback"/>.
+		/// - null or "" - nothing.
+		/// <br/>Example: <c>Key("keys", 500, "", "text");</c>
+		/// - (int, bool) - a single key, specified using scan code and extended-key flag.
+		/// <br/>Example: <c>Key("", "key F1:", (0x3B, false));</c>
+		/// <br/>See <see cref="AddKey(KKey, int, bool, bool?)"/>.
+		/// - (KKey, int, bool) - a single key, specified using <see cref="KKey"/> and/or scan code and extended-key flag.
+		/// <br/>Example: <c>Key("", "numpad Enter:", (KKey.Enter, 0, true));</c>
+		/// <br/>See <see cref="AddKey(KKey, int, bool, bool?)"/>.
 		/// </param>
 		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		/// <remarks>
@@ -678,205 +644,210 @@ namespace Au
 		/// ]]></code>
 		/// 
 		/// Key names:
-		/// <list type="table">
-		/// <listheader>
-		/// <term>Group</term>
-		/// <term>Keys</term>
-		/// <term>Info</term>
-		/// </listheader>
-		/// <item>
-		/// <description>Named keys</description>
-		/// <description>
+		/// <table>
+		/// <tr>
+		/// <th>Group</th>
+		/// <th>Keys</th>
+		/// <th>Info</th>
+		/// </tr>
+		/// <tr>
+		/// <td>Named keys</td>
+		/// <td>
 		/// <b>Modifier:</b> Alt, Ctrl, Shift, Win
-		/// <b>Right side:</b> RAlt, RCtrl, RShift, RWin
-		/// <b>Lock:</b> CapsLock, NumLock, ScrollLock
-		/// <b>Function:</b> F1-F24
-		/// <b>Arrow:</b> Down, Left, Right, Up
-		/// <b>Other:</b> Back, Del, End, Enter, Esc, Home, Ins, Menu, PgDown, PgUp, PrtSc, Space, Tab
-		/// </description>
-		/// <description>Start with an uppercase character. Only the first 3 characters are significant; others can be any ASCII letters. For example, can be <c>"Back"</c>, <c>"Bac"</c>, <c>"Backspace"</c> or <c>"BACK"</c>, but not <c>"back"</c> or <c>"Ba"</c> or <c>"Back5"</c>.
-		/// 
-		/// Alternative key names: AltGr (RAlt), App (Menu), PageDown or PD (PgDn), PageUp or PU (PgUp), PrintScreen or PS (PrtSc), BS (Back), PB (Pause/Break), CL (CapsLock), NL (NumLock), SL (ScrollLock), HM (Home).
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <description>Text keys</description>
-		/// <description>
+		/// <br/><b>Right side:</b> RAlt, RCtrl, RShift, RWin
+		/// <br/><b>Lock:</b> CapsLock, NumLock, ScrollLock
+		/// <br/><b>Function:</b> F1-F24
+		/// <br/><b>Arrow:</b> Down, Left, Right, Up
+		/// <br/><b>Other:</b> Back, Del, End, Enter, Esc, Home, Ins, Menu, PgDown, PgUp, PrtSc, Space, Tab
+		/// </td>
+		/// <td>Start with an uppercase character. Only the first 3 characters are significant; others can be any ASCII letters. For example, can be <c>"Back"</c>, <c>"Bac"</c>, <c>"Backspace"</c> or <c>"BACK"</c>, but not <c>"back"</c> or <c>"Ba"</c> or <c>"Back5"</c>.
+		/// <br/>
+		/// <br/>Alias: AltGr (RAlt), App (Menu), PageDown or PD (PgDn), PageUp or PU (PgUp), PrintScreen or PS (PrtSc), BS (Back), PB (Pause/Break), CL (CapsLock), NL (NumLock), SL (ScrollLock), HM (Home).
+		/// </td>
+		/// </tr>
+		/// <tr>
+		/// <td>Text keys</td>
+		/// <td>
 		/// <b>Alphabetic:</b> A-Z (or a-z)
-		/// <b>Number:</b> 0-9
-		/// <b>Numeric keypad:</b> #/ #* #- #+ #. #0-#9
-		/// <b>Other:</b> =, ` - [ ] \ ; ' , . /
-		/// </description>
-		/// <description>Spaces between keys are optional, except for uppercase A-Z. For example, can be <c>"A B"</c>, <c>"a b"</c>, <c>"A b"</c> or <c>"ab"</c>, but not <c>"AB"</c> or <c>"Ab"</c>.
-		/// 
-		/// For ` - [ ] \ ; ' , . / also can be used ~ _ { } | : " &lt; &gt; ?.
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <description>Other keys</description>
-		/// <description>Names of enum <see cref="KKey"/> members.</description>
-		/// <description>Start with an uppercase character.
-		/// Example: <c>Key("BrowserBack"); //KKey.BrowserBack</c>
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <description>Other keys</description>
-		/// <description>Virtual-key codes.</description>
-		/// <description>Start with VK or Vk.
-		/// Example: <c>Key("VK65 VK0x42");</c>
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <description>Forbidden</description>
-		/// <description>Fn, Ctrl+Alt+Del, Win+L, some other</description>
-		/// <description>Programs cannot press these keys.</description>
-		/// </item>
-		/// <item>
-		/// <description>Special characters</description>
-		/// <description><b>Operator:</b> + * ( ) $
-		/// <b>Numpad key prefix:</b> #
-		/// <b>Reserved:</b> ! @ % ^ &amp;
-		/// </description>
-		/// <description>These characters cannot be used as keys. Use = 8 9 0 4 3 1 2 5 6 7.</description>
-		/// </item>
-		/// </list>
+		/// <br/><b>Number:</b> 0-9
+		/// <br/><b>Numeric keypad:</b> #/ #* #- #+ #. #0-#9
+		/// <br/><b>Other:</b> =, ` - [ ] \ ; ' , . /
+		/// </td>
+		/// <td>Spaces between keys are optional, except for uppercase A-Z. For example, can be <c>"A B"</c>, <c>"a b"</c>, <c>"A b"</c> or <c>"ab"</c>, but not <c>"AB"</c> or <c>"Ab"</c>.
+		/// <br/>
+		/// <br/>For ` - [ ] \ ; ' , . / can be used ~ _ { } | : " &lt; &gt; ?.
+		/// </td>
+		/// </tr>
+		/// <tr>
+		/// <td>Other keys</td>
+		/// <td>Names of enum <see cref="KKey"/> members.</td>
+		/// <td>Start with an uppercase character.
+		/// <br/>Example: <c>Key("BrowserBack"); //KKey.BrowserBack</c>
+		/// </td>
+		/// </tr>
+		/// <tr>
+		/// <td>Other keys</td>
+		/// <td>Virtual-key codes.</td>
+		/// <td>Start with VK or Vk.
+		/// <br/>Example: <c>Key("VK65 VK0x42");</c>
+		/// </td>
+		/// </tr>
+		/// <tr>
+		/// <td>Forbidden</td>
+		/// <td>Fn, Ctrl+Alt+Del, Win+L, some other</td>
+		/// <td>Programs cannot press these keys.</td>
+		/// </tr>
+		/// <tr>
+		/// <td>Special characters</td>
+		/// <td>
+		/// <b>Operator:</b> + * ( ) $
+		/// <br/><b>Numpad key prefix:</b> #
+		/// <br/><b>Reserved:</b> ! @ % ^ &amp;
+		/// </td>
+		/// <td>These characters cannot be used as keys. Use = 8 9 0 4 3 1 2 5 6 7.</td>
+		/// </tr>
+		/// </table>
 		/// 
 		/// Operators:
-		/// <list type="table">
-		/// <listheader>
-		/// <term>Operator</term>
-		/// <term>Examples</term>
-		/// <term>Description</term>
-		/// </listheader>
-		/// <item>
-		/// <description>+</description>
-		/// <description><c>"Ctrl+Shift+A"</c><br/><c>"Alt+E+P"</c></description>
-		/// <description>The same as <c>"Ctrl*down Shift*down A Shift*up Ctrl*up"</c> and <c>"Alt*down E*down P E*up Alt*up"</c>.</description>
-		/// </item>
-		/// <item>
-		/// <description>+()</description>
-		/// <description><c>"Alt+(E P)"</c></description>
-		/// <description>The same as <c>"Alt*down E P Alt*up"</c>.
-		/// Inside () cannot be used + and +().
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <description>*down</description>
-		/// <description><c>"Ctrl*down"</c></description>
-		/// <description>Press key and don't release.</description>
-		/// </item>
-		/// <item>
-		/// <description>*up</description>
-		/// <description><c>"Ctrl*up"</c></description>
-		/// <description>Release key.</description>
-		/// </item>
-		/// <item>
-		/// <description>*number</description>
-		/// <description><c>"Left*3"</c></description>
-		/// <description>Press key repeatedly, like <c>"Left Left Left"</c>.
-		/// See <see cref="AddRepeat"/>.
-		/// </description>
-		/// </item>
-		/// <item>
-		/// <description>$</description>
-		/// <description><c>"$text"</c></description>
-		/// <description>$ is the same as Shift+.</description>
-		/// </item>
-		/// </list>
+		/// <table>
+		/// <tr>
+		/// <th>Operator</th>
+		/// <th>Examples</th>
+		/// <th>Description</th>
+		/// </tr>
+		/// <tr>
+		/// <td>+</td>
+		/// <td><c>"Ctrl+Shift+A"</c><br/><c>"Alt+E+P"</c></td>
+		/// <td>The same as <c>"Ctrl*down Shift*down A Shift*up Ctrl*up"</c> and <c>"Alt*down E*down P E*up Alt*up"</c>.</td>
+		/// </tr>
+		/// <tr>
+		/// <td>+()</td>
+		/// <td><c>"Alt+(E P)"</c></td>
+		/// <td>The same as <c>"Alt*down E P Alt*up"</c>.
+		/// <br/>Inside () cannot be used + and +().
+		/// </td>
+		/// </tr>
+		/// <tr>
+		/// <td>*down</td>
+		/// <td><c>"Ctrl*down"</c></td>
+		/// <td>Press key and don't release.</td>
+		/// </tr>
+		/// <tr>
+		/// <td>*up</td>
+		/// <td><c>"Ctrl*up"</c></td>
+		/// <td>Release key.</td>
+		/// </tr>
+		/// <tr>
+		/// <td>*number</td>
+		/// <td><c>"Left*3"</c></td>
+		/// <td>Press key repeatedly, like <c>"Left Left Left"</c>.
+		/// <br/>See <see cref="AddRepeat"/>.
+		/// </td>
+		/// </tr>
+		/// <tr>
+		/// <td>$</td>
+		/// <td><c>"$text"</c></td>
+		/// <td>$ is the same as Shift+.</td>
+		/// </tr>
+		/// </table>
+		/// 
 		/// Operators and related keys can be in separate arguments. Examples: <c>Key("Shift+", KKey.A); Key(KKey.A, "*3");</c>.
 		/// 
 		/// Uses <see cref="Opt.Key"/>:
-		/// <list type="table">
-		/// <listheader>
-		/// <term>Option</term>
-		/// <term>Default</term>
-		/// <term>Changed</term>
-		/// </listheader>
-		/// <item>
-		/// <description><see cref="OptKey.NoBlockInput" r=""/></description>
-		/// <description>false.
+		/// <table>
+		/// <tr>
+		/// <th>Option</th>
+		/// <th>Default</th>
+		/// <th>Changed</th>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.NoBlockInput"/></td>
+		/// <td>false.
 		/// Blocks user-pressed keys. Sends them afterwards.
-		/// If the last argument is 'sleep', stops blocking before executing it; else stops blocking after executing all arguments.</description>
-		/// <description>true.
-		/// Does not block user-pressed keys. It can be dangerous.</description>
-		/// </item>
-		/// <item>
-		/// <description><see cref="OptKey.NoCapsOff" r=""/></description>
-		/// <description>false.
-		/// If the CapsLock key is toggled, untoggles it temporarily (presses it before and after).</description>
-		/// <description>true.
+		/// <br/>If the last argument is 'sleep', stops blocking before executing it; else stops blocking after executing all arguments.</td>
+		/// <td>true.
+		/// Does not block user-pressed keys.</td>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.NoCapsOff"/></td>
+		/// <td>false.
+		/// If the CapsLock key is toggled, untoggles it temporarily (presses it before and after).</td>
+		/// <td>true.
 		/// Does not touch the CapsLock key.
-		/// Alphabetic keys of 'keys' arguments can depend on CapsLock. Text of 'text' arguments doesn't depend on CapsLock, unless <see cref="OptKey.TextOption" r=""/> is <see cref="KTextOption.Keys"/>.</description>
-		/// </item>
-		/// <item>
-		/// <description><see cref="OptKey.NoModOff" r=""/></description>
-		/// <description>false.
-		/// Releases modifier keys (Alt, Ctrl, Shift, Win). Does it only at the start; later they cannot interfere, unless <see cref="OptKey.NoBlockInput" r=""/> is true.</description>
-		/// <description>true.
-		/// Does not touch modifier keys. It can be dangerous.</description>
-		/// </item>
-		/// <item>
-		/// <description><see cref="OptKey.TextSpeed" r=""/></description>
-		/// <description>0 ms.</description>
-		/// <description>0 - 1000.
-		/// Changes the speed for 'text' arguments (makes slower).</description>
-		/// </item>
-		/// <item>
-		/// <description><see cref="OptKey.KeySpeed" r=""/></description>
-		/// <description>1 ms.</description>
-		/// <description>0 - 1000.
-		/// Changes the speed for 'keys' arguments (makes slower if &gt;1).</description>
-		/// </item>
-		/// <item>
-		/// <description><see cref="OptKey.KeySpeedClipboard" r=""/></description>
-		/// <description>5 ms.</description>
-		/// <description>0 - 1000.
-		/// Changes the speed of Ctrl+V keys when text is pasted using the clipboard.</description>
-		/// </item>
-		/// <item>
-		/// <description><see cref="OptKey.SleepFinally" r=""/></description>
-		/// <description>10 ms.</description>
-		/// <description>0 - 10000.
-		/// Tip: to sleep finally, also can be used code like this: <c>Key("keys", 1000);</c>.</description>
-		/// </item>
-		/// <item>
-		/// <description><see cref="OptKey.TextOption" r=""/></description>
-		/// <description><see cref="KTextOption.Characters"/></description>
-		/// <description><b>Keys</b> (send keys and Shift) or <b>Paste</b> (use clipboard).</description>
-		/// </item>
-		/// <item>
-		/// <description><see cref="OptKey.PasteLength" r=""/></description>
-		/// <description>300.
-		/// This option is used for 'text' arguments. If text length &gt;= this value, uses the clipboard.</description>
-		/// <description>&gt;=0.</description>
-		/// </item>
-		/// <item>
-		/// <description><see cref="OptKey.PasteEnter" r=""/></description>
-		/// <description>false.</description>
-		/// <description>true.
-		/// This option is used for 'text' arguments when using the clipboard.</description>
-		/// </item>
-		/// <item>
-		/// <description><see cref="OptKey.RestoreClipboard" r=""/></description>
-		/// <description>true.
+		/// <br/>Alphabetic keys of "keys" arguments can depend on CapsLock. Text of "text" arguments doesn't depend on CapsLock, unless <see cref="OptKey.TextOption"/> is <see cref="KTextOption.Keys"/>.</td>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.NoModOff"/></td>
+		/// <td>false.
+		/// Releases modifier keys (Alt, Ctrl, Shift, Win).
+		/// <br/>Does it only at the start; later they cannot interfere, unless <see cref="OptKey.NoBlockInput"/> is true.</td>
+		/// <td>true.
+		/// Does not touch modifier keys.</td>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.TextSpeed"/></td>
+		/// <td>0 ms.</td>
+		/// <td>0 - 1000.
+		/// Changes the speed for "text" arguments (makes slower).</td>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.KeySpeed"/></td>
+		/// <td>1 ms.</td>
+		/// <td>0 - 1000.
+		/// Changes the speed for "keys" arguments (makes slower if &gt;1).</td>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.KeySpeedClipboard"/></td>
+		/// <td>5 ms.</td>
+		/// <td>0 - 1000.
+		/// Changes the speed of Ctrl+V keys when text is pasted using the clipboard.</td>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.SleepFinally"/></td>
+		/// <td>10 ms.</td>
+		/// <td>0 - 10000.
+		/// <br/>Tip: to sleep finally, also can be used code like this: <c>Key("keys", 1000);</c>.</td>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.TextOption"/></td>
+		/// <td><see cref="KTextOption.Characters"/></td>
+		/// <td><see cref="KTextOption.Keys"/> (send keys and Shift) or <see cref="KTextOption.Paste"/> (use clipboard).</td>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.PasteLength"/></td>
+		/// <td>300.
+		/// <br/>This option is used for "text" arguments. If text length &gt;= this value, uses the clipboard.</td>
+		/// <td>&gt;=0.</td>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.PasteEnter"/></td>
+		/// <td>false.
+		/// <br/>This option is used for "text" arguments when using the clipboard.
+		/// </td>
+		/// <td>true.</td>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.RestoreClipboard"/></td>
+		/// <td>true.
 		/// Restore clipboard data (by default only text).
-		/// This option is used for 'text' arguments when using the clipboard.</description>
-		/// <description>false.
-		/// Don't restore clipboard data.</description>
-		/// </item>
-		/// <item>
-		/// <description><see cref="OptKey.Hook" r=""/></description>
-		/// <description>null.</description>
-		/// <description>Callback function that can modify options depending on active window etc.</description>
-		/// </item>
-		/// </list>
+		/// <br/>This option is used for "text" arguments when using the clipboard.</td>
+		/// <td>false.
+		/// Don't restore clipboard data.</td>
+		/// </tr>
+		/// <tr>
+		/// <td><see cref="OptKey.Hook"/></td>
+		/// <td>null.</td>
+		/// <td>Callback function that can modify options depending on active window etc.</td>
+		/// </tr>
+		/// </table>
+		/// 
 		/// When you don't want to use or modify <see cref="Opt.Key"/>, use a <see cref="Keyb"/> variable instead of this function. Example: <c>new Keyb(null).Add("keys", "text").Send();</c>. More examples in <see cref="Keyb(OptKey)"/> topic.
 		/// 
-		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OptKey.SleepFinally" r=""/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
+		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
 		/// 
-		/// This function should not be used to automate windows of own thread. In most cases it works, but strange problems are possible, because while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. See the last example.
+		/// This function should not be used to automate windows of own thread. It may work or not. Call it from another thread. See the last example.
 		/// 
-		/// Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See <see cref="Uac">UAC</see>.
+		/// Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See [](xref:uac).
 		/// 
 		/// The mouse button codes/names (eg <see cref="KKey.MouseLeft"/>) cannot be used to click. For it can be used callback, like in the "Ctrl+click" example.
 		/// </remarks>
@@ -980,7 +951,7 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text to send.</param>
 		/// <param name="keysEtc">Optional more parameters. The same as with <see cref="Key"/>. Can be used for example to press non-text keys, wait, send more text.</param>
-		/// <exception cref="ArgumentException">An argument in <paramref name="keysEtc"/> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
+		/// <exception cref="ArgumentException">An argument in *keysEtc* is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		/// <remarks>
 		/// This function is identical to <see cref="Key"/>, except: the first parameter is literal text (not keys). This example shows the difference: <c>Key("keys", "text", "keys", "text"); Text("text", "keys", "text", "keys");</c>.
 		/// To send text can be used keys or clipboard, depending on <see cref="Opt.Key"/> and text.

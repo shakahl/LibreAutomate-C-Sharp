@@ -25,7 +25,7 @@ namespace Au
 	/// <remarks>
 	/// The Debug_.PrintX functions write to the same output as <see cref="Output.Write"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
 	/// Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="ConditionalAttribute"/>("DEBUG")].
-	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(Opt.Debug.Verbose) PrintWarning("text");</c>; see <see cref="PrintWarning"/>, Opt.Debug.<see cref="OptDebug.Verbose" r=""/>.
+	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(Opt.Debug.Verbose) PrintWarning("text");</c>; see <see cref="PrintWarning"/>, Opt.Debug.<see cref="OptDebug.Verbose"/>.
 	/// </remarks>
 	//[DebuggerStepThrough]
 	public static class Debug_
@@ -112,7 +112,7 @@ namespace Au
 
 		//rejected: use if(Opt.Debug.Verbose) AuDialog.ShowWarning(...). It adds stack trace.
 		///// <summary>
-		///// If Opt.Debug.<see cref="OptDebug.Verbose" r=""/> == true, calls <see cref="AuDialog.Show"/> with text and stack trace.
+		///// If Opt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="AuDialog.Show"/> with text and stack trace.
 		///// Read more in class help.
 		///// </summary>
 		//[MethodImpl(MethodImplOptions.NoInlining)]
@@ -125,7 +125,7 @@ namespace Au
 
 		//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use PrintWarning; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
 		///// <summary>
-		///// If Opt.Debug.<see cref="OptDebug.Verbose" r=""/> == true, calls <see cref="Output.Write(string)"/>.
+		///// If Opt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="Output.Write(string)"/>.
 		///// Read more in class help.
 		///// </summary>
 		//public static void PrintOpt(string text)
@@ -135,7 +135,7 @@ namespace Au
 
 		//rejected: Don't need multiple warning functions. Now PrintWarning does not show more than 1 warning/second if Opt.Debug.Verbose is false. Also users can add this in script themplate: #if !DEBUG Options.DisableWarnings(...);
 		///// <summary>
-		///// If Opt.Debug.<see cref="OptDebug.Verbose" r=""/> == true, calls <see cref="PrintWarning"/>.
+		///// If Opt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="PrintWarning"/>.
 		///// Read more in class help.
 		///// </summary>
 		//[MethodImpl(MethodImplOptions.NoInlining)]
@@ -151,7 +151,7 @@ namespace Au
 		/// <param name="goodFlags">Valid flags.</param>
 		/// <remarks>
 		/// Can be used in functions that have an enum flags parameter but not all passed flags are valid for that function or object state.
-		/// Does nothing if Opt.Debug.<see cref="OptDebug.Verbose" r=""/> == false.
+		/// Does nothing if Opt.Debug.<see cref="OptDebug.Verbose"/> == false.
 		/// When flags are valid, this function is fast.
 		/// </remarks>
 		internal static unsafe void LibCheckFlagsOpt<T>(T flags, T goodFlags) where T : unmanaged, Enum

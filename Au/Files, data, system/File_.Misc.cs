@@ -113,7 +113,7 @@ namespace Au
 
 			/// <summary>
 			/// Gets <see cref="FileId"/> of a file or directory.
-			/// Returns false if fails. Supports <see cref="WinError.Code"/>.
+			/// Returns false if fails. Supports <see cref="WinError"/>.
 			/// </summary>
 			/// <param name="path">Full path. Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
 			/// <param name="fileId"></param>
@@ -324,7 +324,7 @@ namespace Au
 				/// Returns true if Ver.Is32BitProcessOn64BitOS is true and path starts with Folders.System.
 				/// Most such paths are redirected, therefore you may want to disable redirection with this class.
 				/// </summary>
-				/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of @"\\?\".</param>
+				/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of <c>@"\\?\"</c>.</param>
 				public static bool IsSystem64PathIn32BitProcess(string path)
 				{
 					return 0 != _IsSystem64PathIn32BitProcess(path);
@@ -344,7 +344,7 @@ namespace Au
 				/// If Ver.Is32BitProcessOn64BitOS is true and path starts with Folders.System, replaces that path part with <see cref="Folders.SystemX64"/>.
 				/// It disables redirection to Folders.SystemX32 for that path.
 				/// </summary>
-				/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of @"\\?\".</param>
+				/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of <c>@"\\?\"</c>.</param>
 				/// <param name="ifExistsOnlyThere">Don't replace path if the file or directory exists in the redirected folder or does not exist in the non-redirected folder.</param>
 				public static string GetNonRedirectedSystemPath(string path, bool ifExistsOnlyThere = false)
 				{
@@ -387,11 +387,11 @@ namespace Au
 			///// Gets file's MIME content type, like "text/html" or "image/png".
 			///// Returns false if cannot detect it.
 			///// </summary>
-			///// <param name="file">File name or path or URL or just extension like ".txt". If <paramref name="canAnalyseData"/> is true, must be full path of a file, and the file must exist and can be opened to read; else the function uses just .extension, and the file may exist or not.</param>
+			///// <param name="file">File name or path or URL or just extension like ".txt". If *canAnalyseData* is true, must be full path of a file, and the file must exist and can be opened to read; else the function uses just .extension, and the file may exist or not.</param>
 			///// <param name="contentType">Result.</param>
 			///// <param name="canAnalyseData">If cannot detect from file extension, try to detect from file data.</param>
-			///// <exception cref="ArgumentException">Not full path. Only if <paramref name="canAnalyseData"/> is true.</exception>
-			///// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes"/>. Only if <paramref name="canAnalyseData"/> is true.</exception>
+			///// <exception cref="ArgumentException">Not full path. Only if *canAnalyseData* is true.</exception>
+			///// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes"/>. Only if *canAnalyseData* is true.</exception>
 			///// <remarks>
 			///// Uses API <msdn>FindMimeFromData</msdn>.
 			///// </remarks>

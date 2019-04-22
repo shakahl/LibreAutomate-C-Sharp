@@ -25,7 +25,7 @@ namespace Au
 	public static class Registry_
 	{
 		/// <summary>
-		/// Default registry key, used when the key argument is null or @"\" or starts with @"\".
+		/// Default registry key, used when the key argument is null or <c>@"\"</c> or starts with <c>@"\"</c>.
 		/// </summary>
 		public const string AuKey = @"Software\Au";
 
@@ -40,14 +40,14 @@ namespace Au
 
 		/// <summary>
 		/// Parses registry key string and returns hive as RegistryKey.
-		/// If key starts with "HKEY_", removes hive name from it and returns that hive. For example, if key is @"HKEY_LOCAL_MACHINE\Software\Test", sets key=@"Software\Test" and returns HKEY_LOCAL_MACHINE.
-		/// Else if key is null or @"\", sets key=Registry_.AuKey (@"Software\Au") and returns HKEY_CURRENT_USER.
-		/// Else if key starts with @"\", prepends Registry_.AuKey (@"Software\Au") and returns HKEY_CURRENT_USER.
+		/// If key starts with <c>"HKEY_"</c>, removes hive name from it and returns that hive. For example, if key is <c>@"HKEY_LOCAL_MACHINE\Software\Test"</c>, sets key=<c>@"Software\Test"</c> and returns HKEY_LOCAL_MACHINE.
+		/// Else if key is null or <c>@"\"</c>, sets key=<c>Registry_.AuKey (@"Software\Au")</c> and returns HKEY_CURRENT_USER.
+		/// Else if key starts with <c>@"\"</c>, prepends <c>Registry_.AuKey (@"Software\Au")</c> and returns HKEY_CURRENT_USER.
 		/// Else just returns HKEY_CURRENT_USER.
-		/// Valid hive names: "HKEY_CURRENT_USER", "HKEY_LOCAL_MACHINE", "HKEY_CLASSES_ROOT", "HKEY_USERS", "HKEY_PERFORMANCE_DATA" or "HKEY_CURRENT_CONFIG".
+		/// Valid hive names: <c>"HKEY_CURRENT_USER"</c>, <c>"HKEY_LOCAL_MACHINE"</c>, <c>"HKEY_CLASSES_ROOT"</c>, <c>"HKEY_USERS"</c>, <c>"HKEY_PERFORMANCE_DATA"</c> or <c>"HKEY_CURRENT_CONFIG"</c>.
 		/// </summary>
 		/// <param name="key">Registry key. Can start with a hive name.</param>
-		/// <exception cref="ArgumentException">'key' starts with "HKEY_" but it is an invalid hive name.</exception>
+		/// <exception cref="ArgumentException">*key* starts with <c>"HKEY_"</c> but it is an invalid hive name.</exception>
 		public static RegistryKey ParseKeyString(ref string key)
 		{
 			if(key == null) key = @"\";

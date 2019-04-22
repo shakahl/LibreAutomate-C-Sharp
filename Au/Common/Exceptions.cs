@@ -20,9 +20,11 @@ namespace Au.Types
 {
 	/// <summary>
 	/// The base exception used in this library.
-	/// Some constructors support Windows API error code. Then Message will contain its error description.
-	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If does not end with ".", appends ".".
 	/// </summary>
+	/// <remarks>
+	/// Some constructors support Windows API error code. Then <see cref="Message"/> will contain its error description.
+	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If does not end with ".", appends ".".
+	/// </remarks>
 	[Serializable]
 	public class AuException :Exception, ISerializable
 	{
@@ -282,7 +284,6 @@ namespace Au.Types
 		/// var w = Wnd.Find("Example").OrThrow();
 		/// ]]></code>
 		/// </example>
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static Wnd OrThrow(this Wnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (Wnd).");
 		//CONSIDER: OrExc
 
@@ -299,7 +300,6 @@ namespace Au.Types
 		/// var a2 = (Acc.Find(w, ...)?.Find(...)).OrThrow();
 		/// ]]></code>
 		/// </example>
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static Acc OrThrow(this Acc x) => x ?? throw new NotFoundException("Not found (Acc).");
 
 		/// <summary>
@@ -312,7 +312,6 @@ namespace Au.Types
 		/// var wi = WinImage.Find(w, ...).OrThrow();
 		/// ]]></code>
 		/// </example>
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		public static WinImage OrThrow(this WinImage x) => x ?? throw new NotFoundException("Not found (WinImage).");
 
 		/// <summary>

@@ -209,8 +209,6 @@ namespace Au
 			FlagRtlLayout = Options.RtlLayout;
 		}
 
-		//FUTURE: <inheritdoc>
-
 		/// <summary>
 		/// Initializes a new <see cref="AuDialog"/> instance and sets main properties.
 		/// Parameters etc are of <see cref="ShowEx"/>.
@@ -496,7 +494,7 @@ namespace Au
 		/// </summary>
 		/// <param name="buttons">
 		/// Common and/or custom buttons, like with <see cref="Show"/>.
-		/// These ids should be negative if you use <paramref name="customButtons"/> too, because ids of <paramref name="customButtons"/> are 1, 2, ... .
+		/// These ids should be negative if you use *customButtons* too, because ids of *customButtons* are 1, 2, ... .
 		/// </param>
 		/// <param name="asCommandLinks">Custom buttons style. If false - row of classic buttons. If true - column of command-link buttons that can have multiline text.</param>
 		/// <param name="customButtons">

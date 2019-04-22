@@ -55,7 +55,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// Don't release modifier keys.
 		/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfer with the action. However functions like <see cref="Keyb.GetMod"/> and <see cref="Keyb.WaitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
-		/// <note type="note">Unreleased modifier keys will interfere with mouse functions like <see cref="Mouse.Click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>Opt.Key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>Opt.Key.NoModOff</b> is true and <b>Opt.Key.TextOption</b> is <b>KTextOption.Keys</b>.</note>.
+		/// <note>Unreleased modifier keys will interfere with mouse functions like <see cref="Mouse.Click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>Opt.Key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>Opt.Key.NoModOff</b> is true and <b>Opt.Key.TextOption</b> is <b>KTextOption.Keys</b>.</note>.
 		/// Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
 		/// </summary>
 		NoModOff = 16,
@@ -109,7 +109,7 @@ namespace Au.Triggers
 		/// Adds a hotkey trigger.
 		/// </summary>
 		/// <param name="hotkey">
-		/// A hotkey, like with the <see cref="Key" r=""/> function.
+		/// A hotkey, like with the <see cref="Keyb.Key"/> function.
 		/// Can contain 0 to 4 modifier keys (Ctrl, Shift, Alt, Win) and 1 non-modifier key.
 		/// Examples: "F11", "Ctrl+K", "Ctrl+Shift+Alt+Win+A".
 		/// To ignore modifiers: "?+K". Then the trigger works with any combination of modifiers.
@@ -131,7 +131,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <param name="key"></param>
 		/// <param name="modKeys">
-		/// Modifier keys, like with the <see cref="Key" r=""/> function.
+		/// Modifier keys, like with the <see cref="Keyb.Key"/> function.
 		/// Examples: "Ctrl", "Ctrl+Shift+Alt+Win".
 		/// To ignore modifiers: "?". Then the trigger works with any combination of modifiers.
 		/// To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
@@ -201,7 +201,8 @@ namespace Au.Triggers
 				}
 				//CONSIDER: _upTimeout.
 			} else {
-				if(key == _eatUp) _eatUp = 0;
+				//if(key == _eatUp) _eatUp = 0;
+				_eatUp = 0;
 
 				if(_d.TryGetValue((int)key, out var v)) {
 					HotkeyTriggerArgs args = null;
@@ -221,27 +222,29 @@ namespace Au.Triggers
 
 						if(!x.MatchScopeWindowAndFunc(thc)) continue;
 
-						if(0 != (x.flags & TKFlags.KeyModUp)) {
-							_upTrigger = x;
-							_upArgs = args;
-							_upKey = key;
-
-							if(0 == (x.flags & TKFlags.ShareEvent)) {
-								switch(mod) {
-								case KMod.Alt:
-								case KMod.Win:
-								case KMod.Alt | KMod.Win:
-									//Print("need Ctrl");
-									ThreadPool.QueueUserWorkItem(o => Keyb.Lib.SendKey(KKey.Ctrl)); //disable Alt/Win menu //TODO: SendCtrl
-									break;
-								}
+						if(x.action != null) {
+							if(0 != (x.flags & TKFlags.KeyModUp)) {
+								_upTrigger = x;
+								_upArgs = args;
+								_upKey = key;
+							} else {
+								thc.trigger = x;
 							}
-						} else {
-							thc.trigger = x;
 						}
 
 						//Print(key, mod);
 						if(0 != (x.flags & TKFlags.ShareEvent)) return false;
+
+						if(thc.trigger == null) { //KeyModUp or action==null
+							if(mod == KMod.Alt || mod == KMod.Win || mod == (KMod.Alt | KMod.Win)) {
+								//Print("need Ctrl");
+								ThreadPool.QueueUserWorkItem(o => Keyb.Lib.SendKey(KKey.Ctrl)); //disable Alt/Win menu
+							}
+						} else if(mod != 0) {
+							if(0 == (x.flags & TKFlags.NoModOff)) thc.muteMod = TriggerActionThreads.c_modRelease;
+							else if(mod == KMod.Alt || mod == KMod.Win || mod == (KMod.Alt | KMod.Win)) thc.muteMod = TriggerActionThreads.c_modCtrl;
+						}
+
 						_eatUp = key;
 						return true;
 					}

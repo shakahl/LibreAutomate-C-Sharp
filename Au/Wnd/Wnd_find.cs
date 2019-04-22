@@ -47,7 +47,8 @@ namespace Au
 			/// Parsed parameter values. All read-only.
 			/// </summary>
 			public TProps Props => new TProps(this);
-			/// <tocexclude />
+			
+			[NoDoc]
 			public struct TProps
 			{
 				Finder _f;
@@ -70,7 +71,8 @@ namespace Au
 			}
 
 			EProps _stopProp;
-			/// <tocexclude />
+
+			[NoDoc]
 			public enum EProps { name = 1, cn, program, also, contains, visible, cloaked, }
 
 			public override string ToString()
@@ -106,10 +108,10 @@ namespace Au
 			/// See <see cref="Wnd.Find"/>.
 			/// </summary>
 			/// <exception cref="ArgumentException">
-			/// <paramref name="cn"/> is "". To match any, use null.
-			/// <paramref name="program"/> is "" or 0 or contains \ or /. To match any, use null.
-			/// Invalid wildcard expression ("**options " or regular expression).
-			/// Invalid image string in <paramref name="contains"/>.
+			/// - *cn* is "". To match any, use null.
+			/// - *program* is "" or 0 or contains \ or /. To match any, use null.
+			/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
+			/// - Invalid image string in *contains*.
 			/// </exception>
 			public Finder(
 				string name = null, string cn = null, WF3 program = default,
@@ -155,12 +157,12 @@ namespace Au
 
 			/// <summary>
 			/// Implicit conversion from string that can contain window name, class name, program and/or an object.
-			/// Examples: "name,cn,program", "name", ",cn", ",,program", "name,cn", "name,,program", ",cn,program", "name,,,object".
+			/// Examples: <c>"name,cn,program"</c>, <c>"name"</c>, <c>",cn"</c>, <c>",,program"</c>, <c>"name,cn"</c>, <c>"name,,program"</c>, <c>",cn,program"</c>, <c>"name,,,object"</c>.
 			/// </summary>
 			/// <param name="s">
 			/// One or more comma-separated window properties: name, class, program and/or an object. Empty parts are considered null.
 			/// The same as parameters of <see cref="Wnd.Find"/>. The first 3 parts are <i>name</i>, <i>cn</i> and <i>program</i>. The last part is <i>contains</i> as string; can specify an accessible object, control or image.
-			/// The first 3 comma-separated parts cannot contain commas. Alternatively, parts can be separated by '\0' characters, like "name\0"+"cn\0"+"program\0"+"object". Then parts can contain commas. Example: "*one, two, three*\0" (name with commas).
+			/// The first 3 comma-separated parts cannot contain commas. Alternatively, parts can be separated by '\0' characters, like <c>"name\0"+"cn\0"+"program\0"+"object"</c>. Then parts can contain commas. Example: <c>"*one, two, three*\0"</c> (name with commas).
 			/// </param>
 			/// <exception cref="Exception">Exceptions of the constructor.</exception>
 			public static implicit operator Finder(string s)
@@ -218,7 +220,7 @@ namespace Au
 
 			/// <summary>
 			/// Finds all matching windows, like <see cref="Wnd.FindAll"/>.
-			/// Returns array containing 0 or more window handles as Wnd.
+			/// Returns array containing 0 or more window handles as <b>Wnd</b>.
 			/// </summary>
 			public Wnd[] FindAll()
 			{
@@ -227,7 +229,7 @@ namespace Au
 
 			/// <summary>
 			/// Finds all matching windows in a list of windows.
-			/// Returns array containing 0 or more window handles as Wnd.
+			/// Returns array containing 0 or more window handles as <b>Wnd</b>.
 			/// </summary>
 			/// <param name="a">Array or list of windows, for example returned by <see cref="GetWnd.AllWindows"/>.</param>
 			public Wnd[] FindAllInList(IEnumerable<Wnd> a)
@@ -405,7 +407,7 @@ namespace Au
 			/// Returns true if window w properties match the specified properties.
 			/// </summary>
 			/// <param name="w">A top-level window. If 0 or invalid, returns false.</param>
-			/// <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in <paramref name="cache"/>; next time it gets these strings from <paramref name="cache"/>.</param>
+			/// <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in *cache*; next time it gets these strings from *cache*.</param>
 			public bool IsMatch(Wnd w, WFCache cache = null)
 			{
 				return 0 == _FindOrMatch(new _WndList(w), cache: cache);
@@ -413,23 +415,23 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a top-level window and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See examples.
+		/// Finds a top-level window and returns its handle as <b>Wnd</b>.
+		/// Returns <c>default(Wnd)</c> if not found.
 		/// </summary>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
-		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+		/// String format: [](xref:wildcard_expression).
 		/// null means 'can be any'. "" means 'must not have name'.
 		/// </param>
 		/// <param name="cn">
 		/// Window class name.
-		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+		/// String format: [](xref:wildcard_expression).
 		/// null means 'can be any'. Cannot be "".
 		/// You can see window name, class name and program in editor's status bar and dialog "Find window or control".
 		/// </param>
 		/// <param name="program">
-		/// Program file name, like "notepad.exe".
-		/// String format: <conceptualLink target="0248143b-a0dd-4fa1-84f9-76831db6714a">wildcard expression</conceptualLink>.
+		/// Program file name, like <c>"notepad.exe"</c>.
+		/// String format: [](xref:wildcard_expression).
 		/// null means 'can be any'. Cannot be "". Cannot be path.
 		/// Or <see cref="WF3.Process"/>(process id), <see cref="WF3.Thread"/>(thread id), <see cref="WF3.Owner"/>(owner window).
 		/// See <see cref="ProcessId"/>, <see cref="Process_.CurrentProcessId"/>, <see cref="ThreadId"/>, <see cref="Thread_.NativeId"/>, <see cref="Owner"/>.
@@ -440,34 +442,39 @@ namespace Au
 		/// It can evaluate more properties of the window and return true when they match.
 		/// Example: <c>also: t =&gt; !t.IsPopupWindow</c>.
 		///
-		/// Called after evaluating all other parameters except <paramref name="contains"/>.
+		/// Called after evaluating all other parameters except *contains*.
 		/// </param>
 		/// <param name="contains">
 		/// Text, image or other object in the client area of the window. Depends on type:
-		/// <see cref="Acc.Finder"/> - arguments for <see cref="Acc.Find"/>. Defines an accessible object that must be in the window.
-		/// <see cref="ChildFinder"/> - arguments for <see cref="Child"/>. Defines a child control that must be in the window.
-		/// <see cref="System.Drawing.Bitmap"/> or other, except string - image(s) or color(s) that must be visible in the window. This function calls <see cref="WinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>, and uses this value for the <i>image</i> parameter. See also <see cref="WinImage.LoadImage"/>.
-		/// string - an object that must be in the window. Depends on string format:
-		/// <list type="bullet">
-		/// <item>"a 'role' name" or "name" or "a 'role'" - accessible object. See <see cref="Acc.Find"/>.</item>
-		/// <item>"c 'cn' name" or "c '' name" or "c 'cn'" - child control. See <see cref="Child"/>.</item>
-		/// <item>"image:..." - image. See <see cref="WinImage.Find"/>, <see cref="WinImage.LoadImage"/>.</item>
-		/// </list>
+		/// <ul>
+		/// <li><see cref="Acc.Finder"/> - arguments for <see cref="Acc.Find"/>. Defines an accessible object that must be in the window.</li>
+		/// <li><see cref="ChildFinder"/> - arguments for <see cref="Child"/>. Defines a child control that must be in the window.</li>
+		/// <li><see cref="System.Drawing.Bitmap"/> or other, except string - image(s) or color(s) that must be visible in the window. This function calls <see cref="WinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>, and uses this value for the <i>image</i> parameter. See also <see cref="WinImage.LoadImage"/>.</li>
+		/// <li>string - an object that must be in the window. Depends on string format:
+		/// <ul>
+		/// <li><c>"a 'role' name"</c> or <c>"name"</c> or <c>"a 'role'"</c> - accessible object. See <see cref="Acc.Find"/>.</li>
+		/// <li><c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c> - child control. See <see cref="Child"/>.</li>
+		/// <li><c>"image:..."</c> - image. See <see cref="WinImage.Find"/>, <see cref="WinImage.LoadImage"/>.</li>
+		/// </ul>
+		/// </li>
+		/// </ul>
 		///
-		/// This parameter is evaluated after <paramref name="also"/>.
+		/// This parameter is evaluated after *also*.
 		/// </param>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
 		/// 
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
+		/// 
 		/// On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has uiAccess or High+uiAccess or has disableWindowFiltering in manifest; to find such windows you can use <see cref="FindFast"/>.
+		/// 
 		/// To find message-only windows use <see cref="Misc.FindMessageOnlyWindow"/> instead.
 		/// </remarks>
 		/// <exception cref="ArgumentException">
-		/// <paramref name="cn"/> is "". To match any, use null.
-		/// <paramref name="program"/> is "" or 0 or contains \ or /. To match any, use null.
-		/// Invalid wildcard expression ("**options " or regular expression).
-		/// Invalid image string in <paramref name="contains"/>.
+		/// - *cn* is "". To match any, use null.
+		/// - *program* is "" or 0 or contains \ or /. To match any, use null.
+		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
+		/// - Invalid image string in *contains*.
 		/// </exception>
 		/// <example>
 		/// Try to find Notepad window. Return if not found.
@@ -531,8 +538,8 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a top-level window and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)" r=""/>.
+		/// Finds a top-level window and returns its handle as <b>Wnd</b>.
+		/// Returns <c>default(Wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
 		/// </summary>
 		/// <param name="name">
 		/// Name.
@@ -550,7 +557,7 @@ namespace Au
 		/// Faster than <see cref="Find"/>, which uses API <msdn>EnumWindows</msdn>.
 		/// Finds hidden windows too.
 		/// To find message-only windows use <see cref="Misc.FindMessageOnlyWindow"/> instead.
-		/// Supports <see cref="WinError.Code"/>.
+		/// Supports <see cref="WinError"/>.
 		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
 		/// </remarks>
 		public static Wnd FindFast(string name, string cn, Wnd wAfter = default)
@@ -561,8 +568,8 @@ namespace Au
 		public static partial class Misc
 		{
 			/// <summary>
-			/// Finds a message-only window and returns its handle as Wnd.
-			/// Returns default(Wnd) if not found.
+			/// Finds a message-only window and returns its handle as <b>Wnd</b>.
+			/// Returns <c>default(Wnd)</c> if not found.
 			/// </summary>
 			/// <param name="name">
 			/// Name.
@@ -579,7 +586,7 @@ namespace Au
 			/// Calls API <msdn>FindWindowEx</msdn>.
 			/// Faster than <see cref="Find"/>, which does not find message-only windows.
 			/// Finds hidden windows too.
-			/// Supports <see cref="WinError.Code"/>.
+			/// Supports <see cref="WinError"/>.
 			/// </remarks>
 			public static Wnd FindMessageOnlyWindow(string name, string cn, Wnd wAfter = default)
 			{
@@ -590,12 +597,12 @@ namespace Au
 		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Finds a top-level window (<see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="Shell.Run"/>.
-		/// Returns window handle as Wnd. Returns default(Wnd) if not found (if <paramref name="runWaitS"/> is negative; else exception).
+		/// Returns window handle as <b>Wnd</b>. Returns <c>default(Wnd)</c> if not found (if *runWaitS* is negative; else exception).
 		/// </summary>
 		/// <param name="run">Callback function. See example.</param>
 		/// <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="Wait"/>.</param>
 		/// <param name="needActiveWindow">Finally the window must be active. Default: true.</param>
-		/// <exception cref="TimeoutException"><paramref name="runWaitS"/> time has expired. Not thrown if <paramref name="runWaitS"/> &lt;= 0.</exception>
+		/// <exception cref="TimeoutException">*runWaitS* time has expired. Not thrown if *runWaitS* &lt;= 0.</exception>
 		/// <remarks>
 		/// The algorithm is:
 		/// <code>
@@ -634,7 +641,7 @@ namespace Au
 		{
 			/// <summary>
 			/// Gets top-level windows.
-			/// Returns array containing window handles as Wnd.
+			/// Returns array containing window handles as <b>Wnd</b>.
 			/// </summary>
 			/// <param name="onlyVisible">
 			/// Need only visible windows.
@@ -642,12 +649,12 @@ namespace Au
 			/// </param>
 			/// <param name="sortFirstVisible">
 			/// Place hidden windows at the end of the array. If false, the order of array elements matches the Z order.
-			/// Not used when <paramref name="onlyVisible"/> is true.</param>
+			/// Not used when *onlyVisible* is true.</param>
 			/// <remarks>
 			/// Calls API <msdn>EnumWindows</msdn>.
 			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows"/>.</note>
 			/// Does not get message-only windows. Use <see cref="Misc.FindMessageOnlyWindow"/> if need.
-			/// On Windows 8 and later does not get Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has <see cref="Uac">UAC</see> integrity level uiAccess or High+uiAccess or its manifest contains disableWindowFiltering; to get such windows you can use <see cref="FindFast"/>.
+			/// On Windows 8 and later does not get Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has [](xref:uac) integrity level uiAccess or High+uiAccess or its manifest contains disableWindowFiltering; to get such windows you can use <see cref="FindFast"/>.
 			/// Tip: To get top-level and child windows in single array: <c>var a = Wnd.GetWnd.Root.Get.Children();</c>.
 			/// </remarks>
 			/// <seealso cref="Children"/>
@@ -661,7 +668,7 @@ namespace Au
 			/// <summary>
 			/// Gets top-level windows.
 			/// </summary>
-			/// <param name="a">Receives window handles as Wnd. If null, this function creates new List, else clears before adding items.</param>
+			/// <param name="a">Receives window handles as <b>Wnd</b>. If null, this function creates new List, else clears before adding items.</param>
 			/// <param name="onlyVisible"><inheritdoc cref="AllWindows(bool, bool)"/></param>
 			/// <param name="sortFirstVisible"><inheritdoc cref="AllWindows(bool, bool)"/></param>
 			/// <remarks>
@@ -674,12 +681,12 @@ namespace Au
 
 			/// <summary>
 			/// Gets top-level windows of a thread.
-			/// Returns array containing 0 or more window handles as Wnd.
+			/// Returns array containing 0 or more window handles as <b>Wnd</b>.
 			/// </summary>
 			/// <param name="threadId">
 			/// Unmanaged thread id.
 			/// See <see cref="Thread_.NativeId"/>, <see cref="ThreadId"/>.
-			/// If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="WinError.Code"/>.
+			/// If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="WinError"/>.
 			/// </param>
 			/// <param name="onlyVisible">Need only visible windows.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
@@ -961,7 +968,7 @@ namespace Au.Types
 				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
 				if(!s.StartsWith_("**")) { //can be regex
 					if(s.IndexOfAny(String_.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
-					if(Path_.FindExtension(s) < 0 && !Wildex.HasWildcards(s)) PrintWarning("Program name without .exe.");
+					if(Path_.FindExtension(s) < 0 && !Wildex.HasWildcardChars(s)) PrintWarning("Program name without .exe.");
 				}
 				program = s;
 				break;

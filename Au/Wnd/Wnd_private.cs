@@ -46,7 +46,7 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window.</param>
 		/// <param name="appId">Receives app ID.</param>
-		/// <param name="prependShellAppsFolder">Prepend @"shell:AppsFolder\" (to run or get icon).</param>
+		/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
 		/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
 		static int _GetWindowsStoreAppId(Wnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
 		{

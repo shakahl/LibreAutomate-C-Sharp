@@ -16,20 +16,16 @@ using System.Runtime.ExceptionServices;
 using Au.Types;
 using static Au.NoClass;
 
-namespace Au
-{
-	/// <summary>
-	/// This namespace contains main classes of this library, except triggers.
-	/// </summary>
-	[CompilerGenerated()]
-	class NamespaceDoc
-	{
-		//SHFB uses this for namespace documentation.
-	}
-}
-
 namespace Au.Types
 {
+	/// <summary>
+	/// In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.All)]
+	public class NoDoc : Attribute
+	{
+	}
+
 	/// <summary>
 	/// Specifies whether to set, add or remove flags.
 	/// </summary>

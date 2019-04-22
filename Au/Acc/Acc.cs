@@ -28,87 +28,130 @@ namespace Au
 	/// <remarks>
 	/// Accessible objects (AO) are various user interface (UI) objects in windows and controls. For example buttons, links, list items. This class can find them, get properties, click, etc. Especially useful with web pages, because there are no controls. And many other windows don't use controls but support AO. But not all UI objects are AO.
 	/// 
-	/// An Acc instance holds an AO COM pointer (<msdn>IAccessible</msdn>) and a simple element id (int). Most Acc functions wrap IAccessible interface functions or/and related API.
+	/// An <b>Acc</b> instance holds an AO COM pointer (<msdn>IAccessible</msdn>) and a simple element id (int). Most <b>Acc</b> functions wrap <b>IAccessible</b> interface functions or/and related API.
 	/// 
-	/// Acc functions that get properties don't throw exception when the wrapped IAccessible/etc function failed (returned an error code of HRESULT type). Then they return "" (string properties), 0, false, null or empty collection, dependin on return type. Applications implement AOs differently, often with bugs, and their IAccessible interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These Acc functions also set the last error code of this thread = the return value (HRESULT) of the IAccessible function, and callers can use <see cref="WinError.Code"/> to get it. If WinError.Code returns 1 (S_FALSE), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
+	/// <b>Acc</b> functions that get properties don't throw exception when the wrapped <b>IAccessible</b>/etc function failed (returned an error code of <b>HRESULT</b> type). Then they return "" (string properties), 0, false, null or empty collection, dependin on return type. Applications implement AOs differently, often with bugs, and their <b>IAccessible</b> interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These <b>Acc</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the <b>IAccessible</b> function, and callers can use <see cref="WinError"/> to get it. If <b>WinError.Code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
 	/// 
-	/// You can dispose Acc variables to release the COM object, but it is not necessary (GC will do it later).
+	/// You can dispose <b>Acc</b> variables to release the COM object, but it is not necessary (GC will do it later).
 	/// 
-	/// An Acc variable cannot be used in multiple threads. Only Dispose can be called in any thread.
+	/// An <b>Acc</b> variable cannot be used in multiple threads. Only <b>Dispose</b> can be called in any thread.
 	/// 
 	/// AOs are implemented and live in their applications. This class just communicates with them.
 	/// 
 	/// Many applications have various problems with their AOs: bugs, incorrect/nonstandard/partial implementation, or initially disabled. This class implements workarounds for known problems, where possible.
 	/// 
-	/// Known problematic applications:
-	/// <list type="bullet">
-	/// <item>
-	/// Chrome web browser. Also Opera and other apps that use Chrome code; window class name is like "Chrome_WidgetWin_1".
-	/// 
-	/// Web page AOs initially are disabled (missing). Workarounds:
-	/// Functions Find, Wait and FindAll enable it if used role prefix "web:" or "chrome:". Functions FromXY, FromMouse and Focused enable it if window class name starts with "Chrome". However Chrome does it lazily, therefore first time the functions often get wrong AO. Note: this auto-enabing may fail with future Chrome versions.
-	/// Other ways to enable Chrome AOs: 1. Start Chrome with command line --force-renderer-accessibility. 2. In the future the script editor will have an option to enable Chrome AOs when it starts.
-	/// 
-	/// Some new web browser versions add new features or bugs that break something. AOs are especially vulnerable, because they are considered second-class citizens.
-	/// </item>
-	/// <item>
-	/// Firefox web browser.
-	/// 
-	/// By default, the Find function is 50-100 times slower than it could be. Also for this reason the Wait function consumes much CPU. And HTML attributes may be unavailable. See <see cref="AFFlags.NotInProc"/>. Workaround: disable the Firefox multiprocess feature: open URL about:config, find browser.tabs.remote.autostart, set it = false, restart Firefox. If there is no such option, right-click and create it, as Boolean. If there are more than one similar options, set them all = false. Note: Firefox may reset it when upgrading or reinstalling, or even remove it in the future. If this does not work, google how to disable Firefox multiprocess.
-	/// 
-	/// When Firefox starts, its web page AOs are unavailable. It creates them only when somebody asks (eg function Find), but does it lazily, and Find at first fails. Workaround: use Wait, not Find.
-	/// 
-	/// Ocassionally Firefox briefly turns off its web page AOs. Workaround: use Wait, not Find. With other web browsers also it's better to use Wait.
-	/// 
-	/// Some new web browser versions add new features or bugs that break something. AOs are especially vulnerable, because they are considered second-class citizens.
-	/// </item>
-	/// <item>
-	/// Edge web browser, JavaFX and other applications that don't have true accessible objects but have UI Automation elements.
-	/// 
-	/// To find AOs in these applications, need flag <see cref="AFFlags.UIA"/>.
-	/// </item>
-	/// <item>
-	/// Java applications that use AWT/Swing (window class name starts with "SunAwt").
-	/// 
-	/// Not supported on 32-bit OS.
-	/// 
-	/// Must be enabled Java Access Bridge (JAB).
-	/// If JAB is disabled or does not work, the "Find accessible object" tool shows an "enable" link when you try to capture something in a Java window. The link calls Au.Tools.Form_Acc.Java.EnableDisableJabUI. Or you can enable JAB in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe. Then restart Java apps. Also may need to restart apps that tried to use Java AOs.
-	/// 
-	/// Your process must have the same 32/64 bitness as the installed Java. To remove this limitation, install Java 32-bit and 64-bit (they coexist).
-	/// </item>
-	/// <item>
-	/// OpenOffice.
-	/// 
-	/// Often crashes after using AOs, usually when closing. Noticed in OpenOffice 4.1.4; may be fixed in newer versions.
-	/// </item>
-	/// <item>
-	/// LibreOffice.
-	/// 
-	/// AOs are unavailable unless this process is 32-bit (when LibreOffice is 64-bit). Also need flag <see cref="AFFlags.NotInProc"/>.
-	/// </item>
-	/// <item>
-	/// In some windows, AO of some controls are not connected to AO of parent control. Then Find cannot find them if searches in whole window.
-	/// 
-	/// Workaround: search only in that control. For example, use prop "class" or id". If it's a web browser control, use role prefix "web:". Or find the control with <see cref="Wnd.Child"/> and search in it. Or use <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.
-	/// </item>
-	/// <item>
-	/// AOs of many standard Windows controls have bugs when they are retrieved without loading dll into the target process (see <see cref="AFFlags.NotInProc"/>).
-	/// Known bugs: 1. Toolbar buttons don't have Name in some cases. 2. <see cref="Focus"/> and <see cref="Select"/> often don't work properly.
-	/// 
-	/// Workaround: don't use <see cref="AFFlags.NotInProc"/>, or use <see cref="AFFlags.UIA"/>.
-	/// </item>
-	/// <item>
-	/// Function Find is much slower when cannot load dll into the target process. More info: <see cref="AFFlags.NotInProc"/>. Function Wait then consumes much more CPU.
-	/// </item>
-	/// <item>
-	/// If the process has different 32/64 bitness than this process, to load the dll is launched rundll32.exe, which makes slower by about 50 ms first time.
-	/// </item>
-	/// <item>
-	/// Currently this library does not support auto-scaled windows when using high DPI (text size 125%, 150% or more).
-	/// If the target process is auto-scaled and this process isn't (or vice versa, or they have a different scaling factor), most coordinate-related functions don't work properly. For example, they get wrong AO rectangles.
-	/// </item>
-	/// </list>
+	/// <a data-toggle="collapse" href="#collapse1" aria-expanded="false" aria-controls="collapse1">Known problematic applications</a>
+	/// <div class="collapse" id="collapse1">
+	/// <table>
+	/// <tr>
+	/// <th>Application</th>
+	/// <th>Problems</th>
+	/// </tr>
+	/// <tr>
+	///  <td>Chrome web browser. Also Opera and other apps that use Chrome code. Window class name is like "Chrome_WidgetWin_1".</td>
+	///  <td>
+	///   <ol>
+	///    <li>Web page AOs initially are disabled(missing). Workarounds:
+	///     <ul>
+	///      <li>Functions Find, Wait and FindAll enable it if used role prefix "web:" or "chrome:". Functions FromXY, FromMouse and Focused enable it if window class name starts with "Chrome". However Chrome does it lazily, therefore first time the functions often get wrong AO. Note: this auto-enabing may fail with future Chrome versions.</li>
+	///      <li>Start Chrome with command line --force-renderer-accessibility.</li>
+	///      <li>In the future the script editor will have an option to enable Chrome AOs when it starts.</li>
+	///     </ul>
+	///    </li>
+	///    <li>Some new web browser versions add new features or bugs that break something.</li>
+	///   </ol>
+	///  </td>
+	/// </tr>
+	/// <tr>
+	///  <td>Firefox web browser.</td>
+	///  <td>
+	///   <ol>
+	///    <li>By default, the Find function is about 50 times slower than it could be. Also for this reason the Wait function consumes much CPU. And HTML attributes may be unavailable. See <see cref="AFFlags.NotInProc"/>. Workaround: disable the Firefox multiprocess feature: open URL about:config, find browser.tabs.remote.autostart, set it = false, restart Firefox. If there is no such option, right-click and create it, as Boolean. If there are more than one similar options, set them all = false. Note: Firefox may reset it when upgrading or reinstalling, or even remove it in the future. If this does not work, google how to disable Firefox multiprocess.</li>
+	///    <li>When Firefox starts, its web page AOs are unavailable. It creates them only when somebody asks (eg function Find), but does it lazily, and Find at first fails. Workaround: use Wait, not Find.</li>
+	///    <li>Ocassionally Firefox briefly turns off its web page AOs. Workaround: use Wait, not Find. With other web browsers also it's better to use Wait.</li>
+	///    <li>Some new web browser versions add new features or bugs that break something.</li>
+	///   </ol>
+	///  </td>
+	/// </tr>
+	/// <tr>
+	/// <td>Edge web browser, JavaFX and other applications that don't have true accessible objects but have UI Automation elements.</td>
+	///  <td>
+	///   <ol>
+	///    <li>To find AOs in these applications, need flag <see cref="AFFlags.UIA"/>.</li>
+	///   </ol>
+	///  </td>
+	/// </tr>
+	/// <tr>
+	///  <td>Java applications that use AWT/Swing. Window class name starts with "SunAwt".</td>
+	///  <td>
+	///   <ol>
+	///    <li>Not supported on 32-bit OS.</li>
+	///    <li>Must be enabled Java Access Bridge (JAB).<br/>If JAB is disabled or does not work, the "Find accessible object" tool shows an "enable" link when you try to capture something in a Java window. The link calls Au.Tools.Form_Acc.Java.EnableDisableJabUI. Or you can enable JAB in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe. Then restart Java apps. Also may need to restart apps that tried to use Java AOs.</li>
+	///    <li>Your process must have the same 32/64 bitness as the installed Java. To remove this limitation, install Java 32-bit and 64-bit (they coexist).</li>
+	///   </ol>
+	///  </td>
+	/// </tr>
+	/// <tr>
+	///  <td>OpenOffice.</td>
+	///  <td>
+	///   <ol>
+	///    <li>Often crashes after using AOs, usually when closing. Noticed in OpenOffice 4.1.4; may be fixed in newer versions.</li>
+	///   </ol>
+	///  </td>
+	/// </tr>
+	/// <tr>
+	///  <td>LibreOffice.</td>
+	///  <td>
+	///   <ol>
+	///    <li>AOs are unavailable unless this process is 32-bit (when LibreOffice is 64-bit). Also need flag <see cref="AFFlags.NotInProc"/>.</li>
+	///   </ol>
+	///  </td>
+	/// </tr>
+	/// <tr>
+	///  <td>Some controls.</td>
+	///  <td>
+	///   <ol>
+	///    <li>AOs of some controls are not connected to the AO of the parent control. Then Find cannot find them if searches in whole window.<br/>Workaround: search only in that control. For example, use *prop* <c>"class"</c> or <c>"id"</c>. If it's a web browser control, use role prefix <c>"web:"</c>. Or find the control with <see cref="Wnd.Child"/> and search in it. Or use <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.</li>
+	///   </ol>
+	///  </td>
+	/// </tr>
+	/// <tr>
+	///  <td>Some controls with flag <see cref="AFFlags.NotInProc"/>.</td>
+	///  <td>
+	///   AOs of many standard Windows controls have bugs when they are retrieved without loading dll into the target process (see <see cref="AFFlags.NotInProc"/>). Known bugs:
+	///   <ol>
+	///    <li>Toolbar buttons don't have Name in some cases.</li>
+	///    <li><see cref="Focus"/> and <see cref="Select"/> often don't work properly.</li>
+	///   </ol>
+	///   Workarounds: Don't use <see cref="AFFlags.NotInProc"/>. Or use <see cref="AFFlags.UIA"/>.
+	///  </td>
+	/// </tr>
+	/// <tr>
+	///  <td>When cannot load dll into the target process. For example Windows Store apps.</td>
+	///  <td>
+	///   <ol>
+	///    <li>Function Find is much slower. Function Wait then consumes much more CPU. More info: <see cref="AFFlags.NotInProc"/>.</li>
+	///   </ol>
+	///  </td>
+	/// </tr>
+	/// <tr>
+	///  <td>Processes of a different 32/64 bitness than this process.</td>
+	///  <td>
+	///   <ol>
+	///    <li>To load the dll is used rundll32.exe, which makes slower by about 50 ms first time.</li>
+	///   </ol>
+	///  </td>
+	/// </tr>
+	/// <tr>
+	///  <td>DPI-scaled windows.</td>
+	///  <td>
+	///   <ol>
+	///    <li>Currently this library does not support auto-scaled windows when using high DPI (text size 125%, 150% or more). If the target process is auto-scaled and this process isn't (or vice versa, or they have a different scaling factor), most coordinate-related functions don't work properly. For example, they get wrong AO rectangles.</li>
+	///   </ol>
+	///  </td>
+	/// </tr>
+	/// </table>
+	/// </div>
 	/// </remarks>
 	/// <example>
 	/// Click link "Example" in Chrome.
@@ -237,10 +280,9 @@ namespace Au
 		//rejected. Use OrThrow.
 		///// <summary>
 		///// If x is not null, returns x, else throws <see cref="NotFoundException"/>.
-		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Acc)" r=""/>.
+		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Acc)"/>.
 		///// </summary>
 		///// <exception cref="NotFoundException">x is null.</exception>
-		///// <example><inheritdoc cref="ExtensionMethods.OrThrow(Acc)"/></example>
 		//public static Acc operator +(Acc x) => x ?? throw new NotFoundException("Not found (Acc).");
 
 		/// <summary>
@@ -264,7 +306,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// When Find or similar function finds an accessible object, it sets this property of the Acc variable. If FromXY etc, it is 0 (unknown).
-		/// When searching in a window, at level 0 are direct children of the WINDOW object. When searching in controls (specified class or id), at level 0 is the object of the control; however if used path, at level 0 are direct children. When searching in Acc, at level 0 are direct children of the Acc. When searching in web page (role prefix "web:" etc), at level 0 is the web page object (role DOCUMENT or PANE).
+		/// When searching in a window, at level 0 are direct children of the WINDOW object. When searching in controls (specified class or id), at level 0 is the object of the control; however if used path, at level 0 are direct children. When searching in Acc, at level 0 are direct children of the Acc. When searching in web page (role prefix <c>"web:"</c> etc), at level 0 is the web page object (role DOCUMENT or PANE).
 		/// </remarks>
 		public int Level { get => _misc.level; set => _misc.SetLevel(value); }
 
@@ -287,8 +329,8 @@ namespace Au
 		/// <param name="objid">Window part id. Default AccOBJID.WINDOW. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
 		/// <param name="flags">Flags.</param>
 		/// <exception cref="WndException">Invalid window.</exception>
-		/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Uac">UAC</see> integrity level process.</exception>
-		/// <exception cref="ArgumentException"><paramref name="objid"/> is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+		/// <exception cref="ArgumentException">*objid* is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
 		public static Acc FromWindow(Wnd w, AccOBJID objid = AccOBJID.WINDOW, AWFlags flags = 0)
 		{
 			bool spec = false;
@@ -328,7 +370,7 @@ namespace Au
 		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>var a = Acc.FromXY((x, y, true));</c>. Also when need <see cref="Coord.Reverse"/> etc.
 		/// </param>
 		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Uac">UAC</see> integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </remarks>
@@ -349,7 +391,7 @@ namespace Au
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </summary>
 		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed. For example, window of a higher <see cref="Uac">UAC</see> integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		public static Acc FromMouse(AXYFlags flags = 0)
 		{
 			return FromXY(Mouse.XY, flags);
@@ -381,7 +423,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets the accessible object that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="Util.AccHook"/>.
-		/// Returns null if failed. Suports <see cref="WinError.Code"/>.
+		/// Returns null if failed. Suports <see cref="WinError"/>.
 		/// </summary>
 		/// <param name="w"></param>
 		/// <param name="idObject"></param>
@@ -511,7 +553,7 @@ namespace Au
 		/// Formats string from main properties of this accessible object.
 		/// </summary>
 		/// <remarks>
-		/// The string starts with role. Other properties have format like x="value", where x is a property character like with <see cref="GetProperties"/>; character e is <see cref="SimpleElementId"/>. HTML attributes have format @name="value". In string values are used C# escape sequences, for example \r\n for new line.
+		/// The string starts with role. Other properties have format like <c>x="value"</c>, where x is a property character like with <see cref="GetProperties"/>; character e is <see cref="SimpleElementId"/>. HTML attributes have format <c>@name="value"</c>. In string values are used C# escape sequences, for example \r\n for new line.
 		/// Indentation depends on <see cref="Level"/>.
 		/// </remarks>
 		/// <seealso cref="PrintAll"/>
@@ -555,10 +597,10 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Uses <see cref="ToString"/>.
-		/// Catches exceptions. On exception prints $"!exception! exceptionType exceptionMessage".
+		/// Catches exceptions. On exception prints <c>$"!exception! exceptionType exceptionMessage"</c>.
 		/// Parameters are of <see cref="Find"/>.
 		/// By default skips invisible objects and objects in menus. Use flags to include them.
-		/// Chrome web page accessible objects normally are disabled (missing) when it starts. Use role prefix "web:" or "chrome:" to enable. See example.
+		/// Chrome web page accessible objects normally are disabled (missing) when it starts. Use role prefix <c>"web:"</c> or <c>"chrome:"</c> to enable. See example.
 		/// </remarks>
 		/// <example>
 		/// Displays visible accessible objects in Chrome web page.

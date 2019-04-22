@@ -89,7 +89,7 @@ namespace Au.Types
 		#region enum
 
 		/// <summary>
-		/// Returns true if this enum variable has all flag bits specified in <paramref name="flag"/>.
+		/// Returns true if this enum variable has all flag bits specified in *flag*.
 		/// The same as Enum.HasFlag, but much faster.
 		/// </summary>
 		/// <param name="t"></param>
@@ -117,7 +117,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Returns true if this enum variable has one or more flag bits specified in <paramref name="flags"/>.
+		/// Returns true if this enum variable has one or more flag bits specified in *flags*.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="flags">One or more flags.</param>

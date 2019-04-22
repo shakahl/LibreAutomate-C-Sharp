@@ -21,23 +21,12 @@ using static Au.NoClass;
 namespace Au.Triggers
 {
 	/// <summary>
-	/// This namespace contains classes of triggers, for example hotkeys.
-	/// </summary>
-	[CompilerGenerated()]
-	class NamespaceDoc
-	{
-		//SHFB uses this for namespace documentation.
-	}
-
-	/// <summary>
 	/// The main class of action triggers.
 	/// </summary>
 	/// <remarks>
-	/// There are two categories of triggers:
-	/// 1. Script triggers launch automation scripts, usually as new processes (running programs).
-	/// 2. Action triggers launch functions (aka <i>trigger actions</i>) in running automation scripts. Most trigger types are action triggers.
+	/// Action triggers launch functions (aka <i>trigger actions</i>) in running automation scripts. To launch scripts are used other ways: manually, at startup, command line, <see cref="AuTask.Run"/>, output link.
 	/// 
-	/// This class manages action triggers. The <see cref="AuScript.Triggers" r=""/> property gets its instance. Through it you access all trigger types (hotkey, window, etc) and add triggers to them.
+	/// This class manages action triggers. The <see cref="AuScript.Triggers"/> property gets its instance. Through it you access all trigger types (hotkey, window, etc) and add triggers to them.
 	/// 
 	/// Code syntax to add an action trigger:
 	/// <code>Triggers.TriggerType[parameters] = action;</code>
@@ -51,14 +40,14 @@ namespace Au.Triggers
 	/// Triggers.Run();
 	/// </code>
 	/// 
-	/// Also you can set options (<see cref="TriggerOptions">Triggers.Options</see>), window scopes (<see cref="TriggerScopes">Triggers.Of</see>) and custom scopes (<see cref="TriggerFuncs">Triggers.FuncOf</see>) for multiple triggers added afterwards.
+	/// Also you can set options (<see cref="TriggerOptions"/>), window scopes (<see cref="TriggerScopes"/>) and custom scopes (<see cref="TriggerFuncs"/>) for multiple triggers added afterwards.
 	/// 
-	/// Finally call <see cref="Run">Triggers.Run()</see>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s).
+	/// Finally call <see cref="Run"/>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s).
 	/// </remarks>
 	/// <example>
 	/// This is a single script with many action triggers.
 	/// <code><![CDATA[
-	/// //if you want to set options for all or some triggers, do it before adding these triggers
+	/// //if you want to set options for all or some triggers, do it before adding them
 	/// Triggers.Options.RunActionInThread(0, 500);
 	/// 
 	/// //you can use variables if don't want to type "Triggers.Hotkey" etc for each trigger
@@ -69,7 +58,7 @@ namespace Au.Triggers
 	/// 
 	/// //hotkey triggers
 	/// 
-	/// hk["Ctrl+K"] = o => Print(o.Trigger);
+	/// hk["Ctrl+K"] = o => Print(o.Trigger); //it means: execute code "o => Print(o.Trigger)" when I press Ctrl+K
 	/// hk["Ctrl+Shift+F11"] = o => {
 	/// 	Print(o.Trigger);
 	/// 	var w1 = Wnd.FindOrRun("* Notepad", run: () => Shell.Run(Folders.System + "notepad.exe"));
@@ -102,12 +91,12 @@ namespace Au.Triggers
 	/// mouse[TMMove.LeftRightInBottom25] = o => { Print(o.Trigger); o.Window.Close(); };
 	/// Triggers.Of.AllWindows();
 	/// 
-	/// //window triggers. Note: window triggers don't depend on Triggers.Of window.
+	/// //window triggers. Note: window triggers don't depend on Triggers.Of.
 	/// 
 	/// window.ActiveNew["* Notepad", "Notepad"] = o => Print("opened Notepad window");
 	/// window.ActiveNew["Notepad", "#32770", contains: "Do you want to save *"] = o => {
 	/// 	Print("opened Notepad's 'Do you want to save' dialog");
-	/// 	Key("Alt+S");
+	/// 	//Key("Alt+S"); //click the Save button
 	/// };
 	/// 
 	/// //autotext triggers
@@ -116,7 +105,7 @@ namespace Au.Triggers
 	/// tt["WIndows", TAFlags.MatchCase] = o => o.Replace("Windows");
 	/// tt.DefaultPostfixType = TAPostfix.None;
 	/// tt["<b>"] = o => o.Replace("<b>[[|]]</b>");
-	/// Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; };
+	/// Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; }; //the best way to set thread-local options
 	/// tt["#file"] = o => {
 	/// 	o.Replace("");
 	/// 	var fd = new OpenFileDialog();
@@ -148,6 +137,7 @@ namespace Au.Triggers
 	/// Triggers.Run();
 	/// //Triggers.Run returns when is called Triggers.Stop (see the "Ctrl+Alt+Q" trigger above).
 	/// Print("called Triggers.Stop");
+	/// 
 	/// //Recommended properties for scripts containg triggers: 'runMode'='blue' and 'ifRunning'='restart'. You can set it in the Properties dialog.
 	/// //The first property allows other scripts to start while this script is running.
 	/// //The second property makes easy to restart the script after editing: just click the Run button.
@@ -162,7 +152,7 @@ namespace Au.Triggers
 		/// Initializes a new instance of this class.
 		/// </summary>
 		/// <remarks>
-		/// In automation scripts don't need to create new instances of this class. Instead use the <see cref="AuScript.Triggers" r=""/> property to get an instance.
+		/// In automation scripts don't need to create new instances of this class. Instead use the <see cref="AuScript.Triggers"/> property to get an instance.
 		/// </remarks>
 		public ActionTriggers()
 		{
@@ -497,7 +487,7 @@ namespace Au.Triggers
 					//_debugMem = mem;
 
 					Api.WriteFile(pipe, &eat, 1, out _);
-					if(thc.trigger != null) LibRunAction(thc.trigger, thc.args);
+					if(thc.trigger != null) LibRunAction(thc.trigger, thc.args, thc.muteMod);
 				}
 			}
 			finally {
@@ -510,12 +500,12 @@ namespace Au.Triggers
 
 		//long _debugMem;
 
-		internal void LibRunAction(ActionTrigger trigger, TriggerArgs args)
+		internal void LibRunAction(ActionTrigger trigger, TriggerArgs args, int muteMod = 0)
 		{
 			if(trigger.action != null) {
 				if(_threads == null) _threads = new TriggerActionThreads();
-				_threads.Run(trigger, args);
-			}
+				_threads.Run(trigger, args, muteMod);
+			} else Debug.Assert(muteMod == 0);
 		}
 
 		void _StartStop(bool start)
@@ -534,7 +524,7 @@ namespace Au.Triggers
 		}
 
 		/// <summary>
-		/// Stops watching for trigger events and causes <see cref="Run"/> to return.
+		/// Stops trigger engines and causes <see cref="Run"/> to return.
 		/// </summary>
 		/// <remarks>
 		/// Does not abort threads of trigger actions that are still running.
@@ -555,7 +545,7 @@ namespace Au.Triggers
 		IntPtr _evStop;
 
 		/// <summary>
-		/// Occurs before <see cref="Run">Triggers.Run</see> stops trigger engines and returns. Runs in its thread.
+		/// Occurs before <see cref="Run"/> stops trigger engines and returns. Runs in its thread.
 		/// </summary>
 		public event EventHandler Stopping;
 
@@ -677,6 +667,12 @@ namespace Au.Triggers
 		/// </summary>
 		public TriggerArgs args;
 
+		/// <summary>
+		/// Used with <see cref="trigger"/>.
+		/// Can be 0 or one of TriggerActionThreads.c_ constants.
+		/// </summary>
+		public int muteMod;
+
 		///// <summary>
 		///// This event was processed (not ignored). Set by a hook proc of a trigger engine.
 		///// </summary>
@@ -689,7 +685,7 @@ namespace Au.Triggers
 		{
 			_w = default; _haveWnd = _mouseWnd = false;
 			base.Clear(onlyName: true);
-			trigger = null; args = null;
+			trigger = null; args = null; muteMod = 0;
 			_perfLen = 0;
 		}
 

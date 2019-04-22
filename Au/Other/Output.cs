@@ -26,14 +26,12 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// When <see cref="Write"/>, <b>Print</b>, etc is called, where the text goes:
-	/// <list type="bullet">
-	/// <item>If redirected, to wherever it is redirected. See <see cref="Writer"/>.</item>
-	/// <item>Else if using log file (<see cref="LogFile"/> not null), writes to the file.</item>
-	/// <item>Else if using console (<see cref="IsWritingToConsole"/> returns true), writes to console.</item>
-	/// <item>Else if using local <see cref="Util.OutputServer"/> (in this appdomain), writes to it.</item>
-	/// <item>Else if exists global <see cref="Util.OutputServer"/> (in any process/appdomain), writes to it.</item>
-	/// <item>Else nowhere.</item>
-	/// </list>
+	/// - If redirected, to wherever it is redirected. See <see cref="Writer"/>.
+	/// - Else if using log file (<see cref="LogFile"/> not null), writes to the file.
+	/// - Else if using console (<see cref="IsWritingToConsole"/> returns true), writes to console.
+	/// - Else if using local <see cref="Util.OutputServer"/> (in this appdomain), writes to it.
+	/// - Else if exists global <see cref="Util.OutputServer"/> (in any process/appdomain), writes to it.
+	/// - Else nowhere.
 	/// </remarks>
 	//[DebuggerStepThrough]
 	public static partial class Output
@@ -53,12 +51,10 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Does not write to console in these cases:
-		/// <list type="bullet">
-		/// <item><see cref="IsConsoleProcess"/> is false.</item>
-		/// <item><see cref="IgnoreConsole"/> is true.</item>
-		/// <item><see cref="LogFile"/> is not null.</item>
-		/// <item>The startup info of this process tells to not show console window and to not redirect the standard output.</item>
-		/// </list>
+		/// - <see cref="IsConsoleProcess"/> is false.
+		/// - <see cref="IgnoreConsole"/> is true.
+		/// - <see cref="LogFile"/> is not null.
+		/// - The startup info of this process tells to not show console window and to not redirect the standard output.
 		/// </remarks>
 		public static bool IsWritingToConsole {
 			get {

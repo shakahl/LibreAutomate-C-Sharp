@@ -669,25 +669,35 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	void _InfoInit()
 	{
-		const string c_script = "This is a C# script file. Script syntax help: menu File -> New -> Help -> Script syntax.";
-		const string c_class = "This is a C# class file. It can contain standard C# code: one or more classes, namespaces, etc.";
-		_info.ST.SetText((_isClass ? c_class : c_script) + @"
+		const string c_script = @"This file is a C# script. Script syntax help: menu File -> New -> Help -> Script syntax.
 
-This program saves most file properties in code as <i>meta comments<> - comments starting with <c green>/*/<> at the very start of code. You can change them here or in the code editor.
+There are several ways to run a script:
+1. Click the Run button or menu item.
+2. Add script name in Options -> General -> Run scripts when this workspace loaded.
+3. Call <help M_Au_AuTask_Run>AuTask.Run<> from another script. Example: <code>AuTask.Run(""Script8.cs"");</code>
+4. Command line. Example: ""PathOfProgramFolder\Au.CL.exe"" ""Script8.cs"". More info in Help.
+5. Click a link in the output pane. Example: <code>Print(""<>Click to run <script>Script8.cs<>."");</code>
+
+In script code you can add <help T_Au_Triggers_ActionTriggers>triggers<> (hotkey etc) to execute parts of script code when it is running. There are no such triggers to launch scripts.
+";
+		const string c_class = "This file is a C# class. It can contain standard C# code: one or more classes, namespaces, etc.";
+		_info.ST.SetText(
+@"Most file properties are saved in code as <i>meta comments<> - comments starting with <c green>/*/<> at the very start of code. You can change them here or in the code editor.
 
 Use Google when you don't know some words in help text or don't understand some options. Most such words and options are used in C#/.NET programming in Visual Studio etc.
-");
+
+" + (_isClass ? c_class : c_script));
 
 		_infoDict = new Dictionary<string, string>(32);
 		_Add(_bAddBrowseNet,
-@"<b>Browse .NET<> - browse the .NET framework folder. Add selected .dll files as references.
+@"<b>Browse: .NET<> - browse the .NET framework folder. Add selected .dll files as references.
 Adds meta <c green>r FileName<>. The compiler will search in the .NET framework folder and GAC.
 
 Don't need to add mscorlib, System, System.Core, System.Windows.Forms, System.Drawing.
 To remove, delete the line in the code editor.
 ");
 		_Add(_bAddBrowseOther,
-@"<b>Browse Other<> - browse any folder. Add selected .dll files as references.
+@"<b>Browse: Other<> - browse any folder. Add selected .dll files as references.
 Adds meta <c green>r FileName.dll<>. Full path if not in <link>%Folders.ThisApp%<> or <link>%Folders.ThisApp%\Libraries<>.
 
 Don't need to add Au.dll.
@@ -695,14 +705,14 @@ To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assem
 To remove, delete the line in the code editor.
 ");
 		_Add(_bAddGacNewest,
-@"<b>GAC Newest<> - assemblies in GAC. Use the newest version as reference.
+@"<b>GAC: Newest<> - assemblies in GAC. Use the newest version as reference.
 Adds meta <c green>r Assembly<>. The compiler will search in the .NET framework folder and GAC.
 
 Don't need to add mscorlib, System, System.Core, System.Windows.Forms, System.Drawing.
 To remove, delete the line in the code editor.
 ");
 		_Add(_bAddGacVersion,
-@"<b>GAC Version<> - assemblies in GAC. Use specific version as reference.
+@"<b>GAC: Version<> - assemblies in GAC. Use specific version as reference.
 Adds meta <c green>r Assembly, Version=...<>. The compiler will search only in GAC.
 
 To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly, Version=1.2.0.0<>
@@ -716,11 +726,11 @@ An interop assembly is a .NET assembly without real code. Not used at run time. 
 To remove, delete the line in the code editor. Optionally delete unused interop assemblies.
 ";
 		_Add(_bAddComRegistry,
-@"<b>COM Registry<> - convert a registered" + c_com);
+@"<b>COM: Registry<> - convert a registered" + c_com);
 		_Add(_bAddComBrowse,
-@"<b>COM Browse<> - convert a" + c_com);
+@"<b>COM: Browse<> - convert a" + c_com);
 		_Add(_bAddMyLibraryProject,
-@"<b>My Library project<> - add a reference to a class library created in this workspace.
+@"<b>My: Library project<> - add a reference to a class library created in this workspace.
 Adds meta <c green>pr File.cs<>. The compiler will compile it if need and use the created dll file as a reference.
 
 The recommended outputPath of the library project is <link>%Folders.ThisApp%\Libraries<>. Else may not find the dll at run time.
@@ -755,7 +765,7 @@ Examples of loading resources at run time:
 <code>var cursor = Au.Util.Cursor_.LoadCursorFromMemory(Au.Util.Resources_.GetAppResource(""file.cur"") as byte[]);</code>
 ");
 		_Add(_tFindInList,
-@"<b>Find in lists<> - in the drop-down lists of the above buttons show only items containing this text.
+@"<b>Find in lists<> - in the drop-down lists of buttons show only items containing this text.
 ");
 
 		void _Add(Control c, string s) => _infoDict.Add(c.Name, s);
@@ -822,8 +832,6 @@ Examples of loading resources at run time:
 		}
 		return false;
 	}
-
-
 
 	#endregion
 }

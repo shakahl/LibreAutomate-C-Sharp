@@ -23,7 +23,8 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>3001,3002,3003,3009,1591</NoWarn>
-    <DocumentationFile>Au.Controls.XML</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
@@ -35,7 +36,8 @@
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>3001,3002,3003,3009,1591</NoWarn>
-    <DocumentationFile>bin\Release\Au.Controls.xml</DocumentationFile>
+    <DocumentationFile>
+    </DocumentationFile>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup>

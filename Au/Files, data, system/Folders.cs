@@ -24,53 +24,52 @@ namespace Au
 	/// Gets known/special folder paths (Desktop, Temp, etc).
 	/// </summary>
 	/// <remarks>
-	/// For return values is used type <see cref="FolderPath"/>, not string. It is implicitly convertible to string. Its operator + appends a filename or relative path string, with @"\" separator if need. Example: <c>string s = Folders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt</c>
-	/// If a function cannot get folder path, the return value contains null string. Then the + operator would throw AuException.
+	/// For return values is used type <see cref="FolderPath"/>, not string. It is implicitly convertible to string. Its operator + appends a filename or relative path string, with \ separator if need. Example: <c>string s = Folders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt</c>
+	/// If a function cannot get folder path, the return value contains null string. Then the + operator would throw <see cref="AuException"/>.
 	///
-	/// Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like "_Win8" which means that the folder is unavailable on older Windows.
+	/// Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
 	/// Some known folders, although supported and registerd, may be still not created.
 	/// 
 	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="Shell.Pidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes Shell, Shell.Pidl, Icon_) but not with .NET or native functions.
 	///
 	/// Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
 	/// The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
-	/// Names of folders specific to this application have "This" prefix, like ThisApp.
+	/// Names of folders specific to this application have prefix <b>This</b>, like <b>ThisApp</b>.
 	/// 
 	/// Some paths depend on the bitness (32 or 64 bit) of the OS and this process.
-	/// The example paths below are for English versions of Windows on most computers.
-	/// <list type="definition">
-	/// <item>
-	/// <term>32-bit Windows</term>
-	/// <description>
+	/// <table>
+	/// <tr>
+	/// <td>32-bit Windows</td>
+	/// <td>
 	/// System, SystemX86, SystemX64: <c>@"C:\WINDOWS\system32"</c>
-	/// ProgramFiles, ProgramFilesX86, ProgramFilesX64: <c>@"C:\Program Files"</c>
-	/// ProgramFilesCommon, ProgramFilesCommonX86, ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <term>64-bit Windows, 64-bit process</term>
-	/// <description>
+	/// <br/>ProgramFiles, ProgramFilesX86, ProgramFilesX64: <c>@"C:\Program Files"</c>
+	/// <br/>ProgramFilesCommon, ProgramFilesCommonX86, ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
+	/// </td>
+	/// </tr>
+	/// <tr>
+	/// <td>64-bit Windows, 64-bit process</td>
+	/// <td>
 	/// System, SystemX64: <c>@"C:\WINDOWS\system32"</c>
-	/// SystemX86: <c>@"C:\WINDOWS\SysWOW64"</c>
-	/// ProgramFiles, ProgramFilesX64: <c>@"C:\Program Files"</c>
-	/// ProgramFilesX86: <c>@"C:\Program Files (x86)"</c>
-	/// ProgramFilesCommon, ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
-	/// ProgramFilesCommonX86: <c>@"C:\Program Files (x86)\Common Files"</c>
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <term>64-bit Windows, 32-bit process</term>
-	/// <description>
+	/// <br/>SystemX86: <c>@"C:\WINDOWS\SysWOW64"</c>
+	/// <br/>ProgramFiles, ProgramFilesX64: <c>@"C:\Program Files"</c>
+	/// <br/>ProgramFilesX86: <c>@"C:\Program Files (x86)"</c>
+	/// <br/>ProgramFilesCommon, ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
+	/// <br/>ProgramFilesCommonX86: <c>@"C:\Program Files (x86)\Common Files"</c>
+	/// </td>
+	/// </tr>
+	/// <tr>
+	/// <td>64-bit Windows, 32-bit process</td>
+	/// <td>
 	/// System: <c>@"C:\WINDOWS\system32"</c>. However the OS in most cases redirects this path to <c>@"C:\WINDOWS\SysWOW64"</c>.
-	/// SystemX86: <c>@"C:\WINDOWS\SysWOW64"</c>
-	/// SystemX64: <c>@"C:\WINDOWS\Sysnative"</c>. The OS redirects it to the true <c>@"C:\WINDOWS\system32"</c>. It is a special path that you don't see in Explorer.
-	/// ProgramFiles, ProgramFilesX86: <c>@"C:\Program Files (x86)"</c>
-	/// ProgramFilesX64: <c>@"C:\Program Files"</c>
-	/// ProgramFilesCommon, ProgramFilesCommonX86: <c>@"C:\Program Files (x86)\Common Files"</c>
-	/// ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
-	/// </description>
-	/// </item>
-	/// </list>
+	/// <br/>SystemX86: <c>@"C:\WINDOWS\SysWOW64"</c>
+	/// <br/>SystemX64: <c>@"C:\WINDOWS\Sysnative"</c>. The OS redirects it to the true <c>@"C:\WINDOWS\system32"</c>. It is a special path that you don't see in Explorer.
+	/// <br/>ProgramFiles, ProgramFilesX86: <c>@"C:\Program Files (x86)"</c>
+	/// <br/>ProgramFilesX64: <c>@"C:\Program Files"</c>
+	/// <br/>ProgramFilesCommon, ProgramFilesCommonX86: <c>@"C:\Program Files (x86)\Common Files"</c>
+	/// <br/>ProgramFilesCommonX64: <c>@"C:\Program Files\Common Files"</c>
+	/// </td>
+	/// </tr>
+	/// </table>
 	/// </remarks>
 	[DebuggerStepThrough]
 	[System.Security.SuppressUnmanagedCodeSecurity]
@@ -308,7 +307,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets path of folder "temporary files of this application".
-		/// Default is Folders.Temp + "Au".
+		/// Default is <c>Folders.Temp + "Au"</c>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
@@ -323,7 +322,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets path of folder "user document files of this application".
-		/// Default is Folders.Documents + "Au".
+		/// Default is <c>Folders.Documents + "Au"</c>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
@@ -338,7 +337,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets path of folder "private files of this application of this user account".
-		/// Default is Folders.RoamingAppData + "Au".
+		/// Default is <c>Folders.RoamingAppData + "Au"</c>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
@@ -353,7 +352,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets path of folder "local (non-roaming) private files of this application of this user account".
-		/// Default is Folders.LocalAppData + "Au".
+		/// Default is <c>Folders.LocalAppData + "Au"</c>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
@@ -368,7 +367,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets path of folder "common (all users) private files of this application".
-		/// Default is Folders.ProgramData + "Au".
+		/// Default is <c>Folders.ProgramData + "Au"</c>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
@@ -384,7 +383,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets path of folder "images (icons etc) of this application".
-		/// Default is ThisAppBS + "Images".
+		/// Default is <c>ThisAppBS + "Images"</c>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
@@ -419,7 +418,7 @@ namespace Au
 		/// Gets non-redirected path of the System32 folder.
 		/// </summary>
 		/// <remarks>
-		/// If this process is 32-bit and OS is 64-bit, when it uses the <see cref="System"/> folder path (@"C:\WINDOWS\system32"), the OS in most cases redirects it to @"C:\Windows\SysWOW64", which contains 32-bit versions of program files. Use SystemX64 when you want to avoid the redirection and access the true System32 folder which on 64-bit OS contains 64-bit program files.
+		/// If this process is 32-bit and OS is 64-bit, when it uses the <see cref="System"/> folder path (<c>@"C:\WINDOWS\system32"</c>), the OS in most cases redirects it to <c>@"C:\Windows\SysWOW64"</c>, which contains 32-bit versions of program files. Use SystemX64 when you want to avoid the redirection and access the true System32 folder which on 64-bit OS contains 64-bit program files.
 		/// More info in class help.
 		/// </remarks>
 		/// <seealso cref="File_.Misc.DisableRedirection"/>
@@ -437,13 +436,13 @@ namespace Au
 		//The normal retrieving method for these folders is broken. Fails even on 64-bit OS if process is 32-bit.
 
 		/// <summary>
-		/// Returns <see cref="RuntimeEnvironment.GetRuntimeDirectory"/> without '\\' at the end.
+		/// Returns <see cref="RuntimeEnvironment.GetRuntimeDirectory"/> without <c>'\\'</c> at the end.
 		/// </summary>
 		public static FolderPath NetFrameworkRuntime => __netFrameworkRuntime ?? (__netFrameworkRuntime = RuntimeEnvironment.GetRuntimeDirectory().TrimEnd('\\'));
 		static string __netFrameworkRuntime;
 
 		/// <summary>
-		/// Gets CD/DVD drive path, like @"D:\".
+		/// Gets CD/DVD drive path, like <c>@"D:\"</c>.
 		/// Returns null if unavailable.
 		/// </summary>
 		public static FolderPath CdDvdDrive {
@@ -465,7 +464,7 @@ namespace Au
 		public static FolderPath RemovableDrive3 => RemovableDrive(3);
 
 		/// <summary>
-		/// Gets removable/external/USB drive path, like @"F:\".
+		/// Gets removable/external/USB drive path, like <c>@"F:\"</c>.
 		/// Returns null if unavailable.
 		/// </summary>
 		/// <param name="driveIndex">0-based removable drive index.</param>
@@ -479,7 +478,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets removable/external/USB drive name (like @"F:\") by its volume label.
+		/// Gets removable/external/USB drive name (like <c>@"F:\"</c>) by its volume label.
 		/// Returns null if unavailable.
 		/// </summary>
 		/// <param name="volumeLabel">Volume label. You can see it in drive Properties dialog; it is not the drive name that is displayed in File Explorer.</param>
@@ -767,9 +766,9 @@ namespace Au
 		/// Returns null if unavailable.
 		/// </summary>
 		/// <param name="folderName">
-		/// A property name of this class. Examples: "Documents", "Temp", "ThisApp".
-		/// Or a property name of the nested class Virtual, like "Virtual.ControlPanel". Gets ":: HexEncodedITEMIDLIST".
-		/// Or known folder canonical name. See <see cref="GetKnownFolders"/>. If has prefix "Virtual.", gets ":: HexEncodedITEMIDLIST". Much slower, but allows to get paths of folders registered by applications.
+		/// A property name of this class. Examples: <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>.
+		/// Or a property name of the nested class Virtual, like <c>"Virtual.ControlPanel"</c>. Gets <c>":: HexEncodedITEMIDLIST"</c>.
+		/// Or known folder canonical name. See <see cref="GetKnownFolders"/>. If has prefix <c>"Virtual."</c>, gets <c>":: HexEncodedITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
 		/// </param>
 		public static FolderPath GetFolder(string folderName)
 		{

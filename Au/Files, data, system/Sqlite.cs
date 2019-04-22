@@ -93,7 +93,7 @@ namespace Au
 		/// <exception cref="SLException">Failed to open database or execute sql.</exception>
 		/// <remarks>
 		/// Calls sqlite3_open_v2.
-		/// <note type="note">If a variable of this class is used by multiple threads, use <c>lock(variable) {  }</c> where need.</note>
+		/// <note>If a variable of this class is used by multiple threads, use <c>lock(variable) {  }</c> where need.</note>
 		/// </remarks>
 		public SqliteDB(string file, SLFlags flags = SLFlags.ReadWriteCreate, string sql = null)
 		{

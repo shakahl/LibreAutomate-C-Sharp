@@ -513,6 +513,19 @@
             <param name="attributeValue">Attribute value. If null, can be any value.</param>
             <param name="ignoreCase">Case-insensitive attributeValue.</param>
         </member>
+        <member name="M:Au.Types.XElement_.ElementGetOrAdd_(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
+            <summary>
+            Gets the first found direct child element. If not found, adds new empty child element.
+            Returns the found or added element.
+            </summary>
+        </member>
+        <member name="M:Au.Types.XElement_.ElementGetOrAdd_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Xml.Linq.XName,System.String,System.Boolean)">
+            <inheritdoc cref="M:Au.Types.XElement_.Element_(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Xml.Linq.XName,System.String,System.Boolean)"/>
+            <summary>
+            Gets the first found direct child element that has the specified attribute. If not found, adds new child element with the attribute.
+            Returns the found or added element.
+            </summary>
+        </member>
         <member name="M:Au.Types.XElement_.PreviousElement_(System.Xml.Linq.XElement)">
             <summary>
             Gets previous sibling element.
@@ -7037,9 +7050,7 @@
             The main class of action triggers.
             </summary>
             <remarks>
-            There are two categories of triggers:
-            1. Script triggers launch automation scripts, usually as new processes (running programs).
-            2. Action triggers launch functions (aka <i>trigger actions</i>) in running automation scripts. Most trigger types are action triggers.
+            Action triggers launch functions (aka <i>trigger actions</i>) in running automation scripts. To launch scripts are used other ways: manually, at startup, command line, <see cref="M:Au.AuTask.Run(System.String,System.String[])"/>, output link.
             
             This class manages action triggers. The <see cref="P:Au.Types.AuScript.Triggers" r=""/> property gets its instance. Through it you access all trigger types (hotkey, window, etc) and add triggers to them.
             
@@ -7062,7 +7073,7 @@
             <example>
             This is a single script with many action triggers.
             <code><![CDATA[
-            //if you want to set options for all or some triggers, do it before adding these triggers
+            //if you want to set options for all or some triggers, do it before adding them
             Triggers.Options.RunActionInThread(0, 500);
             
             //you can use variables if don't want to type "Triggers.Hotkey" etc for each trigger
@@ -7073,7 +7084,7 @@
             
             //hotkey triggers
             
-            hk["Ctrl+K"] = o => Print(o.Trigger);
+            hk["Ctrl+K"] = o => Print(o.Trigger); //it means: execute code "o => Print(o.Trigger)" when I press Ctrl+K
             hk["Ctrl+Shift+F11"] = o => {
             	Print(o.Trigger);
             	var w1 = Wnd.FindOrRun("* Notepad", run: () => Shell.Run(Folders.System + "notepad.exe"));
@@ -7106,12 +7117,12 @@
             mouse[TMMove.LeftRightInBottom25] = o => { Print(o.Trigger); o.Window.Close(); };
             Triggers.Of.AllWindows();
             
-            //window triggers. Note: window triggers don't depend on Triggers.Of window.
+            //window triggers. Note: window triggers don't depend on Triggers.Of.
             
             window.ActiveNew["* Notepad", "Notepad"] = o => Print("opened Notepad window");
             window.ActiveNew["Notepad", "#32770", contains: "Do you want to save *"] = o => {
             	Print("opened Notepad's 'Do you want to save' dialog");
-            	Key("Alt+S");
+            	//Key("Alt+S"); //click the Save button
             };
             
             //autotext triggers
@@ -7120,7 +7131,7 @@
             tt["WIndows", TAFlags.MatchCase] = o => o.Replace("Windows");
             tt.DefaultPostfixType = TAPostfix.None;
             tt["<b>"] = o => o.Replace("<b>[[|]]</b>");
-            Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; };
+            Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; }; //the best way to set thread-local options
             tt["#file"] = o => {
             	o.Replace("");
             	var fd = new OpenFileDialog();
@@ -7152,6 +7163,7 @@
             Triggers.Run();
             //Triggers.Run returns when is called Triggers.Stop (see the "Ctrl+Alt+Q" trigger above).
             Print("called Triggers.Stop");
+            
             //Recommended properties for scripts containg triggers: 'runMode'='blue' and 'ifRunning'='restart'. You can set it in the Properties dialog.
             //The first property allows other scripts to start while this script is running.
             //The second property makes easy to restart the script after editing: just click the Run button.
@@ -7222,7 +7234,7 @@
         </member>
         <member name="M:Au.Triggers.ActionTriggers.Stop">
             <summary>
-            Stops watching for trigger events and causes <see cref="M:Au.Triggers.ActionTriggers.Run"/> to return.
+            Stops trigger engines and causes <see cref="M:Au.Triggers.ActionTriggers.Run"/> to return.
             </summary>
             <remarks>
             Does not abort threads of trigger actions that are still running.
@@ -7303,6 +7315,12 @@
         <member name="F:Au.Triggers.TriggerHookContext.args">
             <summary>
             Used with <see cref="F:Au.Triggers.TriggerHookContext.trigger"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Triggers.TriggerHookContext.muteMod">
+            <summary>
+            Used with <see cref="F:Au.Triggers.TriggerHookContext.trigger"/>.
+            Can be 0 or one of TriggerActionThreads.c_ constants.
             </summary>
         </member>
         <member name="M:Au.Triggers.TriggerHookContext.InitContext">
@@ -7459,6 +7477,12 @@
             If action ended with an exception, the exception. Else null.
             </summary>
         </member>
+        <member name="M:Au.Triggers.TriggerActionThreads._Thread.RunAction(System.Action,Au.Triggers.ActionTrigger)">
+            <summary>
+            Adds the action to the queue and notifies the thread to execute it.
+            If the thread is busy, returns false; if ifRunning!=0, the action possibly will run later.
+            </summary>
+        </member>
         <member name="T:Au.Triggers.ActionTrigger">
             <summary>
             Base of classes of all action trigger types.
@@ -7466,7 +7490,7 @@
         </member>
         <member name="M:Au.Triggers.ActionTrigger.Run(Au.Triggers.TriggerArgs)">
             <summary>
-            Called through <see cref="M:Au.Triggers.TriggerActionThreads.Run(Au.Triggers.ActionTrigger,Au.Triggers.TriggerArgs)"/> in action thread.
+            Called through <see cref="M:Au.Triggers.TriggerActionThreads.Run(Au.Triggers.ActionTrigger,Au.Triggers.TriggerArgs,System.Int32)"/> in action thread.
             Possibly runs later.
             </summary>
         </member>
@@ -8460,8 +8484,8 @@
             <param name="contains"></param>
             <param name="flags"></param>
             <param name="later">
-            Can optionally specify one or more additional events to watch.
-            The watching starts from the moment the primary trigger is activated, and only for that window.
+            Can optionally specify one or more additional events.
+            This starts to work when the primary trigger is activated, and works only for that window.
             For example, to be notified when the window is closed or renamed, specify <c>later: TWEvents.Destroyed | TWEvents.Name</c>.
             When a "later" event occurs, the trigger action is executed. The <see cref="P:Au.Triggers.WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
             The "later" trigers are not disabled when primary triggers are disabled.
@@ -9035,14 +9059,6 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
-        </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
         </member>
         <member name="T:Au.Util.ILReader">
             <summary>
@@ -17953,9 +17969,9 @@
             Returns cursor position in primary screen coordinates.
             </summary>
             <param name="w">Window or control.</param>
-            <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+            <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+            <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
             <exception cref="T:Au.Types.WndException">
             Invalid window.
             The top-level window is hidden. No exception if just cloaked, for example in another desktop; then on click will activate, which usually uncloaks.
@@ -18082,9 +18098,9 @@
             <returns><inheritdoc cref="M:Au.Mouse.LeftDown(System.Boolean)"/></returns>
             <param name="button">Button and action.</param>
             <param name="w">Window or control.</param>
-            <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+            <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+            <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
             <exception cref="T:System.ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.WndException">x y is not in the window (read more in Remarks).</exception>
@@ -18116,9 +18132,9 @@
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
             <param name="w">Window or control.</param>
-            <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+            <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+            <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
@@ -18144,9 +18160,9 @@
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
             <param name="w">Window or control.</param>
-            <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+            <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+            <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
@@ -18172,9 +18188,9 @@
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
             <param name="w">Window or control.</param>
-            <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+            <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+            <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
@@ -18203,9 +18219,9 @@
             </summary>
             <returns>The return value can be used to auto-release pressed button. See example.</returns>
             <param name="w">Window or control.</param>
-            <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+            <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+            <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <example>
@@ -18237,9 +18253,9 @@
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
             <param name="w">Window or control.</param>
-            <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+            <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+            <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
         <member name="M:Au.Mouse.RightDown(System.Boolean)">
@@ -18267,9 +18283,9 @@
             </summary>
             <returns><inheritdoc cref="M:Au.Mouse.LeftDown(System.Boolean)"/></returns>
             <param name="w">Window or control.</param>
-            <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+            <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+            <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
@@ -18295,9 +18311,9 @@
             Calls <see cref="M:Au.Mouse.ClickEx(Au.Types.MButton,Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
             </summary>
             <param name="w">Window or control.</param>
-            <param name="x">X coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="y">Y coordinate relative to (but not limited to) the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle. If false (default), they are relative to the client area.</param>
+            <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+            <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Mouse.Move(Au.Wnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
         <member name="M:Au.Mouse.Wheel(System.Int32,System.Boolean)">
@@ -24148,7 +24164,7 @@
             Returns 0 if task start is deferred because a script is running (see meta option ifRunning).
             Returns 0 if role editorExtension; then waits until the task ends.
             </returns>
-            <param name="script">Script name like "Script5", or path like @"\Folder\Script5.cs".</param>
+            <param name="script">Script name like "Script5.cs", or path like @"\Folder\Script5.cs".</param>
             <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
             <exception cref="T:System.IO.FileNotFoundException">Script file not found.</exception>
             <exception cref="T:Au.Types.AuException">Failed to start script.</exception>
@@ -24190,7 +24206,7 @@
             <remarks>
             The <b>RunWait</b>(Action) overload can read the string in real time.
             The <b>RunWait</b>(out string) overload gets all strings joined when the task ends.
-            The program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5" can read the string from the redirected standard output in real time, or the string is written to its console in real time. The string encoding is UTF8; if you use a bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
+            The program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs" can read the string from the redirected standard output in real time, or the string is written to its console in real time. The string encoding is UTF8; if you use a bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
             </remarks>
         </member>
         <member name="T:Au.Perf">

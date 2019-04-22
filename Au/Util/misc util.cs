@@ -24,16 +24,6 @@ using static Au.NoClass;
 namespace Au.Util
 {
 	/// <summary>
-	/// Miscellaneous classes and functions, used in this library as utility/helper.
-	/// Some classes are public, and can be used not only in this library.
-	/// </summary>
-	[CompilerGenerated()]
-	class NamespaceDoc
-	{
-		//SHFB uses this for namespace documentation.
-	}
-
-	/// <summary>
 	/// Gets native module handle, or path from handle.
 	/// </summary>
 	public static class ModuleHandle_
@@ -53,7 +43,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Gets native module handle of an assembly.
-		/// Returns default(IntPtr) if <paramref name="asm"/> is null or if the assembly is in-memory (loaded from byte[]) or dynamic.
+		/// Returns default(IntPtr) if *asm* is null or if the assembly is in-memory (loaded from byte[]) or dynamic.
 		/// </summary>
 		public static IntPtr OfAssembly(Assembly asm)
 		{
@@ -111,7 +101,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Gets full path of dll or exe file from its native handle.
-		/// Returns null if fails. Supports <see cref="WinError.Code"/>.
+		/// Returns null if fails. Supports <see cref="WinError"/>.
 		/// Calls API <msdn>GetModuleFileName</msdn>.
 		/// </summary>
 		public static string GetFilePath(IntPtr hModule)
@@ -233,7 +223,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// JIT-compiles method.
-		/// Uses <see cref="RuntimeHelpers.PrepareMethod"/>.
+		/// Uses <b>RuntimeHelpers.PrepareMethod</b>.
 		/// </summary>
 		/// <param name="type">Type containing the method.</param>
 		/// <param name="method">Method name.</param>
@@ -252,13 +242,13 @@ namespace Au.Util
 		//rejected. Don't JIT-compile overloads.
 		///// <summary>
 		///// JIT-compiles a method overload.
-		///// Uses <see cref="RuntimeHelpers.PrepareMethod"/>.
+		///// Uses <b>RuntimeHelpers.PrepareMethod</b>.
 		///// </summary>
 		///// <param name="type">Type containing the method.</param>
 		///// <param name="method">Method name.</param>
 		///// <param name="paramTypes">Types of parameters of this overload.</param>
 		///// <exception cref="ArgumentException">Method does not exist.</exception>
-		///// <exception cref="AmbiguousMatchException">Multiple overloads exist that match <paramref name="paramTypes"/>.</exception>
+		///// <exception cref="AmbiguousMatchException">Multiple overloads exist that match *paramTypes*.</exception>
 		//public static void Compile(Type type, string method, params Type[] paramTypes)
 		//{
 		//	var m = type.GetMethod(method, c_bindingFlags, null, paramTypes, null);
@@ -270,7 +260,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// JIT-compiles multiple methods of same type.
-		/// Uses <see cref="RuntimeHelpers.PrepareMethod"/>.
+		/// Uses <b>RuntimeHelpers.PrepareMethod</b>.
 		/// </summary>
 		/// <param name="type">Type containing the methods.</param>
 		/// <param name="methods">Method names.</param>
@@ -594,7 +584,7 @@ namespace Au.Util
 		/// <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value TIMER_MODIFY_STATE|SYNCHRONIZE allows to set and wait.</param>
 		/// <exception cref="AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
 		/// <param name="inheritHandle"></param>
-		/// <param name="noException">If fails, return null, don't throw exception. Supports <see cref="WinError.Code"/>.</param>
+		/// <param name="noException">If fails, return null, don't throw exception. Supports <see cref="WinError"/>.</param>
 		/// <exception cref="AuException">Failed. For example, the timer does not exist.</exception>
 		public static WaitableTimer Open(string timerName, uint access = Api.TIMER_MODIFY_STATE | Api.SYNCHRONIZE, bool inheritHandle = false, bool noException = false)
 		{
@@ -613,7 +603,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Calls API <msdn>SetWaitableTimer</msdn>.
-		/// Returns false if fails. Supports <see cref="WinError.Code"/>.
+		/// Returns false if fails. Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <param name="dueTime">
 		/// The time after which the state of the timer is to be set to signaled. It is relative time (from now).
@@ -629,7 +619,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Calls API <msdn>SetWaitableTimer</msdn>.
-		/// Returns false if fails. Supports <see cref="WinError.Code"/>.
+		/// Returns false if fails. Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <param name="dueTime">The UTC date/time at which the state of the timer is to be set to signaled.</param>
 		/// <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
@@ -692,7 +682,7 @@ namespace Au.Util
 		/// <summary>
 		/// Opens process handle.
 		/// Calls API OpenProcess.
-		/// Returns default if fails. Supports <see cref="WinError.Code"/>.
+		/// Returns default if fails. Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <param name="processId">Process id.</param>
 		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
@@ -706,7 +696,7 @@ namespace Au.Util
 		/// <summary>
 		/// Opens window's process handle.
 		/// This overload is more powerful: if API OpenProcess fails, it tries API GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
-		/// Returns default if fails. Supports <see cref="WinError.Code"/>.
+		/// Returns default if fails. Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <param name="w"></param>
 		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
@@ -764,7 +754,7 @@ namespace Au.Util
 	{
 		/// <summary>
 		/// Enables or disables a privilege for this process.
-		/// Returns false if fails. Supports <see cref="WinError.Code"/>.
+		/// Returns false if fails. Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <param name="privilegeName"></param>
 		/// <param name="enable"></param>
@@ -992,8 +982,8 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 		/// Runs a task. Does not wait.
 		/// Returns process id.
 		/// </summary>
-		/// <param name="taskFolder">Can be like @"\Folder" or "Folder" or @"\" or "" or null.</param>
-		/// <param name="taskName">Can be like "Name" or @"\Folder\Name" or @"Folder\Name".</param>
+		/// <param name="taskFolder">Can be like <c>@"\Folder"</c> or <c>"Folder"</c> or <c>@"\"</c> or <c>""</c> or null.</param>
+		/// <param name="taskName">Can be like <c>"Name"</c> or <c>@"\Folder\Name"</c> or <c>@"Folder\Name"</c>.</param>
 		/// <param name="joinArgs">Join args into single arg for $(Arg0).</param>
 		/// <param name="args">Replacement values for substrings $(Arg0), $(Arg1), ..., $(Arg32) in 'create task' args. See <msdn>IRegisteredTask.Run</msdn>.</param>
 		/// <exception cref="Exception">Failed. Probably the task does not exist.</exception>

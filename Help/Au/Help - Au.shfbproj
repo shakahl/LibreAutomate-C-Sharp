@@ -7,13 +7,13 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>560cc1f6-ef15-45e5-a81e-66724ea5930d</ProjectGuid>
-    <SHFBSchemaVersion>2015.6.5.0</SHFBSchemaVersion>
+    <SHFBSchemaVersion>2017.9.26.0</SHFBSchemaVersion>
     <!-- AssemblyName, Name, and RootNamespace are not used by SHFB but Visual Studio adds them anyway -->
     <AssemblyName>Documentation</AssemblyName>
     <RootNamespace>Documentation</RootNamespace>
     <Name>Help - Au</Name>
     <!-- SHFB properties -->
-    <FrameworkVersion>.NET Framework 4.6.2</FrameworkVersion>
+    <FrameworkVersion>.NET Framework 4.7.2</FrameworkVersion>
     <OutputPath>..\..\_\Help\</OutputPath>
     <HtmlHelpName>Au Help</HtmlHelpName>
     <Language>en-US</Language>
@@ -41,7 +41,7 @@
     <NamingMethod>MemberName</NamingMethod>
     <HelpTitle>Au Class Library</HelpTitle>
     <ContentPlacement>AboveNamespaces</ContentPlacement>
-    <VisibleItems>InheritedMembers, Protected, ProtectedInternalAsProtected</VisibleItems>
+    <VisibleItems>InheritedMembers, Protected, ProtectedInternalAsProtected, EditorBrowsableNever, NonBrowsable</VisibleItems>
     <MissingTags>AutoDocumentCtors, AutoDocumentDispose</MissingTags>
     <DocumentationSources>
       <DocumentationSource sourceFile="..\..\Au\bin\Release\Au.XML" />
@@ -223,6 +223,7 @@
     <Folder Include="media" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Command line parameters.aml" />
     <None Include="Conceptual1.aml" />
     <None Include="UAC.aml" />
     <None Include="VersionHistory\v1.0.0.0.aml" />
@@ -233,6 +234,9 @@
   </ItemGroup>
   <ItemGroup>
     <ContentLayout Include="ContentLayout.content" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="test2.html" />
   </ItemGroup>
   <!-- Import the SHFB build targets -->
   <Import Project="$(SHFBROOT)\SandcastleHelpFileBuilder.targets" />

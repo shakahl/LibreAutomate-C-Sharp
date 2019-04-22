@@ -24,11 +24,11 @@ namespace Au
 	/// File system functions.
 	/// </summary>
 	/// <remarks>
-	/// Works with files and directories. Disk drives like @"C:\" or "C:" are directories too.
+	/// Works with files and directories. Disk drives like <c>@"C:\"</c> or <c>"C:"</c> are directories too.
 	/// Extends .NET file system classes such as <see cref="File"/> and <see cref="Directory"/>.
 	/// Many functions of this class can be used instead of existing similar .NET functions that are slow, limited or unreliable.
-	/// Most functions support only full path. Most of them throw <b>ArgumentException</b> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe; it was relevant only in DOS era.
-	/// Most functions support extended-length paths (longer than 259). Such local paths should have @"\\?\" prefix, like @"\\?\C:\...". Such network path should be like @"\\?\UNC\server\share\...". See <see cref="Path_.PrefixLongPath"/>, <see cref="Path_.PrefixLongPathIfNeed"/>. Many functions support long paths even without prefix.
+	/// Most functions support only full path. Most of them throw <b>ArgumentException</b> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe.
+	/// Most functions support extended-length paths (longer than 259). Such local paths should have <c>@"\\?\"</c> prefix, like <c>@"\\?\C:\..."</c>. Such network path should be like <c>@"\\?\UNC\server\share\..."</c>. See <see cref="Path_.PrefixLongPath"/>, <see cref="Path_.PrefixLongPathIfNeed"/>. Many functions support long paths even without prefix.
 	/// </remarks>
 	public static partial class File_
 	{
@@ -54,7 +54,7 @@ namespace Au
 		/// Returns false if the file/directory does not exist.
 		/// Calls API <msdn>GetFileAttributesEx</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If flag UseRawPath not used, supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
 		/// <param name="properties">Receives properties.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
@@ -84,7 +84,7 @@ namespace Au
 		/// Returns false if the file/directory does not exist.
 		/// Calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If flag UseRawPath not used, supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If flag UseRawPath not used, supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
 		/// <param name="attributes">Receives attributes, or 0 if failed.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
@@ -161,10 +161,10 @@ namespace Au
 		/// Returns NotFound (0) if does not exist or if fails to get attributes.
 		/// Calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
+		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="WinError.Code"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
+		/// Supports <see cref="WinError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// </remarks>
 		public static FileDir ExistsAs(string path, bool useRawPath = false)
@@ -180,10 +180,10 @@ namespace Au
 		/// Calls API <msdn>GetFileAttributes</msdn>.
 		/// The same as <see cref="ExistsAs"/> but provides more complete result. In most cases you can use ExistsAs, it's simpler.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
+		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="WinError.Code"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attributes Directory and ReparsePoint.
+		/// Supports <see cref="WinError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attributes Directory and ReparsePoint.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// </remarks>
 		public static unsafe FileDir2 ExistsAs2(string path, bool useRawPath = false)
@@ -200,10 +200,10 @@ namespace Au
 		/// Returns true if file or directory exists.
 		/// Calls <see cref="ExistsAs2"/>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
+		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="WinError.Code"/>. If you need exception when fails, instead call <see cref="GetAttributes"/>.
+		/// Supports <see cref="WinError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/>.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// For symbolic links etc, returns true if the link exists. Does not care whether its target exists.
 		/// Unlike <see cref="ExistsAsFile"/> and <see cref="ExistsAsDirectory"/>, this function returns true when the file exists but cannot get its attributes. Then <c>ExistsAsAny(path)</c> is not the same as <c>ExistsAsFile(path) || ExistsAsDirectory(path)</c>.
@@ -218,10 +218,10 @@ namespace Au
 		/// Returns false if does not exist or if fails to get its attributes.
 		/// Calls <see cref="ExistsAs"/>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
+		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="WinError.Code"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
+		/// Supports <see cref="WinError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// For symbolic links etc, returns true if the link exists and its target is not a directory. Does not care whether its target exists.
 		/// </remarks>
@@ -238,10 +238,10 @@ namespace Au
 		/// Returns false if does not exist or if fails to get its attributes.
 		/// Calls <see cref="ExistsAs"/>, which calls API <msdn>GetFileAttributes</msdn>.
 		/// </summary>
-		/// <param name="path">Full path. Supports @"\.." etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
+		/// <param name="path">Full path. Supports <c>@"\.."</c> etc. If useRawPath is false (default), supports environment variables (see <see cref="Path_.ExpandEnvVar"/>). Can be null.</param>
 		/// <param name="useRawPath">Pass path to the API as it is, without any normalizing and full-path checking.</param>
 		/// <remarks>
-		/// Supports <see cref="WinError.Code"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
+		/// Supports <see cref="WinError"/>. If you need exception when fails, instead call <see cref="GetAttributes"/> and check attribute Directory.
 		/// Always use full path. If path is not full: if useRawPath is false (default) returns NotFound; if useRawPath is true, searches in "current directory".
 		/// For symbolic links etc, returns true if the link exists and its target is a directory. Does not care whether its target exists.
 		/// </remarks>
@@ -256,13 +256,15 @@ namespace Au
 		/// <summary>
 		/// Finds file or directory and returns full path.
 		/// Returns null if cannot be found.
+		/// </summary>
+		/// <remarks>
 		/// If the path argument is full path, calls <see cref="ExistsAsAny"/> and returns normalized path if exists, null if not.
 		/// Else searches in these places:
 		///	1. dirs, if used.
 		/// 2. <see cref="Folders.ThisApp"/>.
 		/// 3. Calls API <msdn>SearchPath</msdn>, which searches in process directory, Windows system directories, current directory, PATH environment variable. The search order depends on API <msdn>SetSearchPathMode</msdn> or registry settings.
 		/// 4. If path ends with ".exe", tries to get path from registry "App Paths" keys.
-		/// </summary>
+		/// </remarks>
 		/// <param name="path">Full or relative path or just filename with extension. Supports network paths too.</param>
 		/// <param name="dirs">0 or more directories where to search.</param>
 		public static unsafe string SearchPath(string path, params string[] dirs)
@@ -321,7 +323,7 @@ namespace Au
 		/// </param>
 		/// <param name="errorHandler">
 		/// Callback function. Called when fails to get children of a subdirectory, when using flag <see cref="FEFlags.AndSubdirectories"/>.
-		/// It receives the subdirectory path. It can call <see cref="WinError.Code"/> and throw an exception.
+		/// It receives the subdirectory path. It can call <see cref="WinError"/><b>.Code</b> and throw an exception.
 		/// If it does not throw an exception, the enumeration continues as if the directory is empty.
 		/// If errorHandler not used, then throws exception.
 		/// Read more in Remarks.
@@ -333,12 +335,13 @@ namespace Au
 		/// Uses API <msdn>FindFirstFile</msdn>.
 		/// 
 		/// The paths that this function gets are normalized, ie may not start with exact directoryPath string. Expanded environment variables (see <see cref="Path_.ExpandEnvVar"/>), "..", DOS path etc.
-		/// Paths longer than <see cref="Path_.MaxDirectoryPathLength"/> have @"\\?\" prefix (see <see cref="Path_.PrefixLongPathIfNeed"/>).
+		/// Paths longer than <see cref="Path_.MaxDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="Path_.PrefixLongPathIfNeed"/>).
 		/// For symbolic links and mounted folders, gets info of the link/folder and not of its target.
 		/// 
 		/// These errors are ignored:
 		/// 1. Access denied (usually because of security permissions), unless used flag FailIfAccessDenied.
 		/// 2. Missing target directory of a symbolic link or mounted folder.
+		/// 
 		/// When an error is ignored, the function works as if that [sub]directory is empty; does not throw exception and does not call errorHandler.
 		/// 
 		/// Enumeration of a subdirectory starts immediately after the subdirectory itself is retrieved.
@@ -718,7 +721,7 @@ namespace Au
 		/// <param name="path">Full path.</param>
 		/// <param name="newPath">
 		/// New full path.
-		/// <note type="note">It is not the new parent directory. Use <see cref="MoveTo"/> for it.</note>
+		/// <note>It is not the new parent directory. Use <see cref="MoveTo"/> for it.</note>
 		/// </param>
 		/// <param name="ifExists"></param>
 		/// <exception cref="ArgumentException">path or newPath is not full path (see <see cref="Path_.IsFullPath"/>).</exception>
@@ -767,7 +770,7 @@ namespace Au
 		/// <param name="path">Full path.</param>
 		/// <param name="newPath">
 		/// New full path.
-		/// <note type="note">It is not the new parent directory. Use <see cref="CopyTo"/> for it.</note>
+		/// <note>It is not the new parent directory. Use <see cref="CopyTo"/> for it.</note>
 		/// </param>
 		/// <param name="ifExists"></param>
 		/// <param name="copyFlags">Options used when copying directory.</param>
@@ -947,7 +950,7 @@ namespace Au
 		static bool _DeleteShell(string path, bool recycle, List<string> a = null)
 		{
 			if(a != null) path = string.Join("\0", a);
-			if(Wildex.HasWildcards(path)) throw new ArgumentException("*? not supported.");
+			if(Wildex.HasWildcardChars(path)) throw new ArgumentException("*? not supported.");
 			var x = new Api.SHFILEOPSTRUCT() { wFunc = Api.FO_DELETE };
 			uint f = Api.FOF_NO_UI; //info: FOF_NO_UI includes 4 flags - noerrorui, silent, noconfirm, noconfirmmkdir
 			if(recycle) f |= Api.FOF_ALLOWUNDO; else f |= Api.FOF_NO_CONNECTED_ELEMENTS;
@@ -1050,7 +1053,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Expands environment variables (see <see cref="Path_.ExpandEnvVar"/>). Throws ArgumentException if not full path. Normalizes. Removes or adds '\\' at the end.
+		/// Expands environment variables (see <see cref="Path_.ExpandEnvVar"/>). Throws ArgumentException if not full path. Normalizes. Removes or adds <c>'\\'</c> at the end.
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		static string _PreparePath(string path)
@@ -1060,9 +1063,9 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds filename, eg @"b.txt" in @"c:\a\b.txt".
+		/// Finds filename, eg <c>@"b.txt"</c> in <c>@"c:\a\b.txt"</c>.
 		/// </summary>
-		/// <exception cref="ArgumentException">'\\' not found or is at the end. If noException, instead returns -1.</exception>
+		/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If noException, instead returns -1.</exception>
 		static int _FindFilename(string path, bool noException = false)
 		{
 			int R = path.LastIndexOfAny(String_.Lib.pathSep);
@@ -1074,9 +1077,9 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Removes filename, eg @"c:\a\b.txt" -> @"c:\a".
+		/// Removes filename, eg <c>@"c:\a\b.txt"</c> -> <c>@"c:\a"</c>.
 		/// </summary>
-		/// <exception cref="ArgumentException">'\\' not found or is at the end. If noException, instead returns null.</exception>
+		/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If noException, instead returns null.</exception>
 		static string _RemoveFilename(string path, bool noException = false)
 		{
 			int i = _FindFilename(path, noException); if(i < 0) return null;
@@ -1084,9 +1087,9 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets filename, eg @"c:\a\b.txt" -> @"b.txt".
+		/// Gets filename, eg <c>@"c:\a\b.txt"</c> -> <c>@"b.txt"</c>.
 		/// </summary>
-		/// <exception cref="ArgumentException">'\\' not found or is at the end. If noException, instead returns null.</exception>
+		/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If noException, instead returns null.</exception>
 		static string _GetFilename(string path, bool noException = false)
 		{
 			int i = _FindFilename(path, noException); if(i < 0) return null;
@@ -1094,7 +1097,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if character c == '\\' || c == '/'.
+		/// Returns true if character <c>c == '\\' || c == '/'</c>.
 		/// </summary>
 		static bool _IsSepChar(char c) { return c == '\\' || c == '/'; }
 		#endregion
@@ -1104,10 +1107,10 @@ namespace Au
 		/// <summary>
 		/// This function can be used to safely open a file that may be temporarily locked (used by another process or thread). Waits while the file is locked.
 		/// </summary>
-		/// <returns>Returns the return value of the lambda <paramref name="f"/>.</returns>
+		/// <returns>Returns the return value of the lambda *f*.</returns>
 		/// <param name="f">Lambda that calls a function that creates, opens or opens/reads/closes a file.</param>
 		/// <param name="millisecondsTimeout">Wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
-		/// <exception cref="ArgumentOutOfRangeException"><paramref name="millisecondsTimeout"/> less than -1.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">*millisecondsTimeout* less than -1.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the called function.</exception>
 		/// <remarks>
 		/// This function calls the lambda and handles <b>IOException</b>. If the exception indicates that the file is locked, waits and retries in loop.
@@ -1227,6 +1230,7 @@ namespace Au
 		/// The file-write functions provided by .NET and Windows API are unreliable, because:
 		/// 1. Fails if the file is temporarily open by another process or thread without sharing.
 		/// 2. Can corrupt file data. If this thread, process, PC or disk dies while writing, may write only part of data or just make empty file. Usually it happens when PC is turned off incorrectly.
+		/// 
 		/// To protect from 1, this functions waits/retries if the file is temporarily open/locked, like <see cref="WaitIfLocked"/>.
 		/// To protect from 2, this function writes to a temporary file and renames/replaces the specified file using API <msdn>ReplaceFile</msdn>. Although not completely atomic, it ensures that file data is not corrupt; if cannot write all data, does not change existing file data.
 		/// </remarks>
@@ -1352,7 +1356,7 @@ namespace Au.Types
 
 		///<summary>
 		///If failed, return false and don't throw exception.
-		///Then, if you need error info, you can use <see cref="WinError.Code"/>. If the file/directory does not exist, it will return ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND or ERROR_NOT_READY.
+		///Then, if you need error info, you can use <see cref="WinError"/>. If the file/directory does not exist, it will return ERROR_FILE_NOT_FOUND or ERROR_PATH_NOT_FOUND or ERROR_NOT_READY.
 		///If failed and the native error code is ERROR_ACCESS_DENIED or ERROR_SHARING_VIOLATION, the returned attributes will be (FileAttributes)(-1). The file probably exists but is protected so that this process cannot access and use it. Else attributes will be 0.
 		///</summary>
 		DontThrow = 2,
@@ -1403,7 +1407,7 @@ namespace Au.Types
 		/// <summary>
 		/// Skip files and subdirectories that have Hidden and System attributes (both).
 		/// These files/directories usually are created and used only by the operating system. Drives usually have several such directories. Another example - thumbnail cache files.
-		/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: "$Recycle.Bin", "System Volume Information", "Recovery". If you want to include them too, use network path of the drive, for example @"\\localhost\D$\" for D drive.
+		/// Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>"$Recycle.Bin"</c>, <c>"System Volume Information"</c>, <c>"Recovery"</c>. If you want to include them too, use network path of the drive, for example <c>@"\\localhost\D$\"</c> for D drive.
 		/// </summary>
 		SkipHiddenSystem = 8,
 
@@ -1427,7 +1431,7 @@ namespace Au.Types
 		UseRawPath = 0x40,
 
 		/// <summary>
-		/// Let <see cref="FEFile.Name"/> be path relative to the specified directory path. Like @"\name.txt" or @"\subdirectory\name.txt" instead of "name.txt".
+		/// Let <see cref="FEFile.Name"/> be path relative to the specified directory path. Like <c>@"\name.txt"</c> or <c>@"\subdirectory\name.txt"</c> instead of "name.txt".
 		/// </summary>
 		NeedRelativePaths = 0x80,
 	}

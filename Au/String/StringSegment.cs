@@ -32,7 +32,7 @@ namespace Au
 		int _offset, _length;
 
 		/// <summary>
-		/// Sets the substring = whole <paramref name="buffer"/>.
+		/// Sets the substring = whole *buffer*.
 		/// </summary>
 		/// <param name="buffer">The string that contains this substring. Cannot be null.</param>
 		public StringSegment(string buffer)
@@ -43,10 +43,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sets the substring = part of <paramref name="buffer"/> that starts at index <paramref name="offset"/> and has length <paramref name="length"/>.
+		/// Sets the substring = part of *buffer* that starts at index *offset* and has length *length*.
 		/// </summary>
 		/// <param name="buffer">The string that contains this substring. Cannot be null.</param>
-		/// <param name="offset">The offset of the substring in <paramref name="buffer"/>.</param>
+		/// <param name="offset">The offset of the substring in *buffer*.</param>
 		/// <param name="length">The length of the substring.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StringSegment(string buffer, int offset, int length)
@@ -59,10 +59,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sets the substring = part of <paramref name="buffer"/> that starts at index <paramref name="offset"/>.
+		/// Sets the substring = part of *buffer* that starts at index *offset*.
 		/// </summary>
 		/// <param name="buffer">The string that contains this substring. Cannot be null.</param>
-		/// <param name="offset">The offset of the substring in <paramref name="buffer"/>.</param>
+		/// <param name="offset">The offset of the substring in *buffer*.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StringSegment(string buffer, int offset) : this(buffer, offset, buffer.Length - offset) { }
 
@@ -218,7 +218,7 @@ namespace Au
 		/// Gets the value of this substring as a new string.
 		/// </summary>
 		/// <remarks>
-		/// <note type="note">Always creates new string object (substring of <see cref="Buffer"/>). See also <see cref="ValueCached"/>.</note>
+		/// <note>Always creates new string object (substring of <see cref="Buffer"/>). See also <see cref="ValueCached"/>.</note>
 		/// </remarks>
 		public string Value => _buffer.Substring(_offset, _length);
 
@@ -255,7 +255,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if <paramref name="obj"/> is <b>StringSegment</b> and its value is equal to that of this variable.
+		/// Returns true if *obj* is <b>StringSegment</b> and its value is equal to that of this variable.
 		/// Compares only substrigs, not offsets.
 		/// </summary>
 		public override bool Equals(object obj) => obj is StringSegment && _Equals((StringSegment)obj, false);
@@ -652,28 +652,19 @@ namespace Au.Types
 		}
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never)]
+		[NoDoc]
 		public SegParser GetEnumerator() => this;
 
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		IEnumerator<StringSegment> IEnumerable<StringSegment>.GetEnumerator() => this;
 
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		IEnumerator IEnumerable.GetEnumerator() => this;
 
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never)]
+		[NoDoc]
 		public StringSegment Current => new StringSegment(_s, _start, _end - _start);
 
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never)]
 		object IEnumerator.Current => Current;
 
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never)]
+		[NoDoc]
 		public bool MoveNext()
 		{
 			gStart:
@@ -721,16 +712,14 @@ namespace Au.Types
 			return true;
 		}
 
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never)]
+		[NoDoc]
 		public void Dispose()
 		{
 			//rejected: normally this variable is not reused because GetEnumerator returns a copy.
 			//_end = _sStart - 1;
 		}
 
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never)]
+		[NoDoc]
 		public void Reset()
 		{
 			_end = _sStart - 1;

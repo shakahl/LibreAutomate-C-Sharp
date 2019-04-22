@@ -1,0 +1,1 @@
+The maximal time to wait, seconds. If 0, waits infinitely. If > 0, after that time interval throws **TimeoutException**. If < 0, after that time interval returns the default value of the return type (false, null, etc).

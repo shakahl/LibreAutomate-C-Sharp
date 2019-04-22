@@ -30,10 +30,8 @@ namespace Au
 	/// Some frequently used static functions of this library have some options (settings). For example <see cref="Keyb.Key"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead you can set options using static properties. This class contains several groups of options for functions of various classes. See examples.
 	/// 
 	/// There are two sets of identical or similar options - in class <b>Opt</b> and in class <see cref="Opt.Static"/>:
-	/// <list type="bullet">
-	/// <item><b>Opt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>Opt.Static</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).</item>
-	/// <item><b>Opt.Static</b> - static options. Contains initial property values for <b>Opt</b>. Normally you change them in your script template (in script initialization code) or at the very start of script. Don't change later, it's not thread-safe.</item>
-	/// </list>
+	/// - <b>Opt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>Opt.Static</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).
+	/// - <b>Opt.Static</b> - static options. Contains initial property values for <b>Opt</b>. Normally you change them in your script template (in script initialization code) or at the very start of script. Don't change later, it's not thread-safe.
 	/// </remarks>
 	/// <example><inheritdoc cref="Static.Mouse"/></example>
 	public static class Opt
@@ -191,8 +189,7 @@ namespace Au
 			public static RestoreKey Key => new RestoreKey(0);
 
 			/// <summary>Infrastructure.</summary>
-			/// <tocexclude />
-			[EditorBrowsable(EditorBrowsableState.Never)]
+			[NoDoc]
 			public struct RestoreMouse :IDisposable
 			{
 				OptMouse _o;
@@ -202,8 +199,7 @@ namespace Au
 			}
 
 			/// <summary>Infrastructure.</summary>
-			/// <tocexclude />
-			[EditorBrowsable(EditorBrowsableState.Never)]
+			[NoDoc]
 			public struct RestoreKey :IDisposable
 			{
 				OptKey _o;
@@ -314,8 +310,7 @@ namespace Au.Types
 		}
 
 		/// <summary>Infrastructure.</summary>
-		/// <tocexclude />
-		[EditorBrowsable(EditorBrowsableState.Never)]
+		[NoDoc]
 		public struct RestoreWarnings :IDisposable
 		{
 			OptDebug _o;
@@ -331,11 +326,11 @@ namespace Au.Types
 	/// <summary>
 	/// Options for functions of class <see cref="Mouse"/>.
 	/// </summary>
-	/// <seealso cref="Opt.Mouse"/>
-	/// <seealso cref="Opt.Static.Mouse"/>
 	/// <remarks>
 	/// Total <c>Click(x, y)</c> time is: mouse move + <see cref="MoveSleepFinally"/> + button down + <see cref="ClickSpeed"/> + button down + <see cref="ClickSpeed"/> + <see cref="ClickSleepFinally"/>.
 	/// </remarks>
+	/// <seealso cref="Opt.Mouse"/>
+	/// <seealso cref="Opt.Static.Mouse"/>
 	public class OptMouse
 	{
 		struct _Options //makes easier to copy and reset fields
@@ -439,20 +434,15 @@ namespace Au.Types
 		/// </summary>
 		/// <remarks>
 		/// This option is used by these functions:
-		/// <list type="bullet">
-		/// <item><see cref="Mouse.Move"/>, <see cref="Mouse.Click"/> and other functions that move the cursor (mouse pointer):
-		/// false - throw exception if cannot move the cursor to the specified x y. For example it the x y is not in screen.
-		/// true - try to move anyway. Don't throw exception, regardless of the final cursor position (which probably will be at a screen edge).
-		/// </item>
-		/// <item><see cref="Mouse.Move"/>, <see cref="Mouse.Click"/> and other functions that move the cursor (mouse pointer):
-		/// false - before moving the cursor, wait while a mouse button is pressed by the user or another thread. It prevents an unintended drag-drop.
-		/// true - do not wait.
-		/// </item>
-		/// <item><see cref="Mouse.Click"/> and other functions that click or press a mouse button using window coordinates:
-		/// false - don't allow to click in another window. If need, activate the specified window (or its top-level parent). If that does not help, throw exception. However if the window is a control, allow x y anywhere in its top-level parent window.
-		/// true - allow to click in another window. Don't activate the window and don't throw exception.
-		/// </item>
-		/// </list>
+		/// - <see cref="Mouse.Move"/>, <see cref="Mouse.Click"/> and other functions that move the cursor (mouse pointer):
+		/// <br/>false - throw exception if cannot move the cursor to the specified x y. For example it the x y is not in screen.
+		/// <br/>true - try to move anyway. Don't throw exception, regardless of the final cursor position (which probably will be at a screen edge).
+		/// - <see cref="Mouse.Move"/>, <see cref="Mouse.Click"/> and other functions that move the cursor (mouse pointer):
+		/// <br/>false - before moving the cursor, wait while a mouse button is pressed by the user or another thread. It prevents an unintended drag-drop.
+		/// <br/>true - do not wait.
+		/// - <see cref="Mouse.Click"/> and other functions that click or press a mouse button using window coordinates:
+		/// <br/>false - don't allow to click in another window. If need, activate the specified window (or its top-level parent). If that does not help, throw exception. However if the window is a control, allow x y anywhere in its top-level parent window.
+		/// <br/>true - allow to click in another window. Don't activate the window and don't throw exception.
 		/// </remarks>
 		public bool Relaxed { get => _o.Relaxed; set => _o.Relaxed = value; }
 	}
@@ -678,7 +668,7 @@ namespace Au.Types
 		/// </summary>
 		/// <remarks>
 		/// Shows this info in the output, for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="RestoreClipboardExceptFormats"/>).
-		/// <note type="note">Copy something to the clipboard each time before calling this function. Don't use <see cref="Clipb.CopyText"/> and don't call this function in loop. Else it shows small times.</note>
+		/// <note>Copy something to the clipboard each time before calling this function. Don't use <see cref="Clipb.CopyText"/> and don't call this function in loop. Else it shows small times.</note>
 		/// The time depends on app, etc. More info: <see cref="RestoreClipboardExceptFormats"/>.
 		/// </remarks>
 		public static void PrintClipboard() => Clipb.LibPrintClipboard();
@@ -798,6 +788,11 @@ namespace Au.Types
 		/// This property makes the response time shorter or longer. If &lt;10, makes it shorter (faster response), but increases CPU usage; if &gt;10, makes it longer (slower response).
 		/// </remarks>
 		/// <seealso cref="WaitFor.Loop.Period"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// Opt.WaitFor.Period = 100;
+		/// ]]></code>
+		/// </example>
 		public int Period { get => _period; set => _period = Math_.MinMax(value, 1, 1000); }
 		int _period;
 
@@ -809,6 +804,11 @@ namespace Au.Types
 		/// Use this property when need to process Windows messages, events, hooks, timers, etc while waiting. More info: <see cref="Time.SleepDoEvents"/>.
 		/// </remarks>
 		/// <seealso cref="WaitFor.MessagesAndCondition"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// Opt.WaitFor.DoEvents = true;
+		/// ]]></code>
+		/// </example>
 		public bool DoEvents { get; set; }
 
 		///

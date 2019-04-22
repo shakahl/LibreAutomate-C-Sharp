@@ -27,7 +27,7 @@ namespace Au
 	/// 
 	/// All 'wait for' functions have a <i>secondsTimeout</i> parameter. It is the maximal time to wait, seconds. If it is 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, then stops waiting and returns default value of that type (false, etc).
 	/// 
-	/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a Form/Control event handler, the form would stop responding. Use another thread, for example async/await/Task, like in the example. Or option <see cref="OptWaitFor.DoEvents">Opt.WaitFor.DoEvents</see>.
+	/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a Form/Control event handler, the form would stop responding. Use another thread, for example async/await/Task, like in the example. Or option <see cref="OptWaitFor.DoEvents"/>.
 	/// </remarks>
 	/// <seealso cref="Time"/>
 	/// <example>
@@ -84,7 +84,7 @@ namespace Au
 
 			/// <summary>
 			/// Current period (<see cref="Sleep"/> sleep time), milliseconds.
-			/// Initially it is <see cref="OptWaitFor.Period">Opt.WaitFor.Period</see>, optionally multiplied by constructor's <i>options.Period</i>/10. Default 10 ms. Then each <see cref="Sleep"/> increments it until <see cref="MaxPeriod"/>.
+			/// Initially it is <see cref="OptWaitFor.Period"/>, optionally multiplied by constructor's <i>options.Period</i>/10. Default 10 ms. Then each <see cref="Sleep"/> increments it until <see cref="MaxPeriod"/>.
 			/// </summary>
 			public float Period { get; set; }
 
@@ -174,13 +174,11 @@ namespace Au
 		/// <summary>
 		/// Waits for an user-defined condition.
 		/// </summary>
-		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns false.
-		/// </param>
-		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true. The calling period depends on <paramref name="options"/>.</param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true. The calling period depends on *options*.</param>
 		/// <param name="options">Options. If null, uses <see cref="Opt.WaitFor"/>, else combines with it.</param>
-		/// <returns>Returns true. On timeout returns false if <paramref name="secondsTimeout"/> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><paramref name="secondsTimeout"/> time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks>More info: <see cref="WaitFor"/>.</remarks>
 		/// <example><inheritdoc cref="WaitFor"/></example>
 		public static bool Condition(double secondsTimeout, Func<bool> condition, OptWaitFor options = null)
@@ -195,16 +193,14 @@ namespace Au
 		/// <summary>
 		/// Waits for a kernel object (event, mutex, etc).
 		/// </summary>
-		/// <param name="secondsTimeout">
-		/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, after that time interval returns 0.
-		/// </param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="flags"></param>
 		/// <param name="handles">One or more handles of kernel objects. Max 63.</param>
 		/// <returns>
 		/// Returns 1-based index of the first signaled handle. Negative if abandoned mutex.
-		/// On timeout returns 0 if <paramref name="secondsTimeout"/> is negative; else exception.
+		/// On timeout returns 0 if *secondsTimeout* is negative; else exception.
 		/// </returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="Condition"/></exception>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuException">Failed. For example a handle is invalid.</exception>
 		/// <remarks>
 		/// Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
@@ -251,7 +247,7 @@ namespace Au
 		/// Calls API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_ALLINPUT. Alertable.
 		/// When a handle becomes signaled, returns its 0-based index. If abandoned mutex, returns 0-based index + Api.WAIT_ABANDONED_0 (0x80).
 		/// If timeMS>0, waits max timeMS and on timeout returns Api.WAIT_TIMEOUT.
-		/// If failed, returns -1. Supports <see cref="WinError.Code"/>.
+		/// If failed, returns -1. Supports <see cref="WinError"/>.
 		/// </summary>
 		internal static int LibWait(long timeMS, WHFlags flags, params IntPtr[] handles)
 		{
@@ -330,10 +326,10 @@ namespace Au
 		/// <summary>
 		/// Waits for a posted message received by this thread.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="callback">Callback function that returns true to stop waiting. More info in Remarks.</param>
-		/// <returns><inheritdoc cref="Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="Condition"/></exception>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// While waiting, dispatches Windows messages etc, like <see cref="Time.SleepDoEvents"/>. Before dispatching a posted message, calls the callback function. Stops waiting when it returns true. Does not dispatch the message if the function sets the message field = 0.
 		/// Does not use <see cref="Opt.WaitFor"/>.
@@ -353,10 +349,10 @@ namespace Au
 		/// <summary>
 		/// Waits for a variable or other condition that is changed while processing messages or other events received by this thread.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="condition">Callback function that returns true to stop waiting. More info in Remarks.</param>
-		/// <returns><inheritdoc cref="Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="Condition"/></exception>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// While waiting, dispatches Windows messages etc, like <see cref="Time.SleepDoEvents"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, etc), calls the callback function. Stops waiting when it returns true.
 		/// Similar to <see cref="Condition"/>. Differences: 1. Always dispatches messages etc. 2. Does not call the callback function when there are no messages etc.
@@ -378,11 +374,11 @@ namespace Au
 		/// <summary>
 		/// Waits until a variable is set = true.
 		/// </summary>
-		/// <param name="secondsTimeout"><inheritdoc cref="Condition"/></param>
+		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="variable">Stop waiting when this variable is set to true.</param>
-		/// <param name="options"><inheritdoc cref="Condition"/></param>
-		/// <returns><inheritdoc cref="Condition"/></returns>
-		/// <exception cref="TimeoutException"><inheritdoc cref="Condition"/></exception>
+		/// <param name="options">Options. If null, uses <see cref="Opt.WaitFor"/>, else combines with it.</param>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// This function is useful when the variable can be changed by any thread. To wait for a variable changed while processing messages etc in this thread, it's better to use <see cref="MessagesAndCondition"/>.
 		/// </remarks>
