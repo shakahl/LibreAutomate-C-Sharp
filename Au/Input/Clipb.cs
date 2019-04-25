@@ -119,7 +119,7 @@ namespace Au
 		/// </summary>
 		/// <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example the <see cref="Data"/> class or the .NET <see cref="System.Windows.Forms.Clipboard"/> class. Don't call copy/paste functions.</param>
 		/// <param name="cut">Use Ctrl+X.</param>
-		/// <param name="options"><inheritdoc cref="CopyText"/></param>
+		/// <param name="options">See <see cref="CopyText"/>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the callback function.</exception>
 		/// <remarks>
@@ -230,11 +230,13 @@ namespace Au
 			if(Empty(text)) return;
 			_Paste(text, options);
 		}
+		//TODO: fails to paste in VMware player. QM2 too. Maybe add an option to not sync etc.
 
 		/// <summary>
 		/// Pastes data added to a <see cref="Data"/> variable into the focused app using the clipboard.
+		/// More info: <see cref="PasteText"/>.
 		/// </summary>
-		/// <inheritdoc cref="PasteText"/>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// Paste data of two formats: HTML and text.
 		/// <code><![CDATA[
@@ -681,14 +683,13 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="Clipb.PasteText"/>.
 		/// </summary>
-		/// <inheritdoc cref="Clipb.PasteText"/>
+		/// <exception cref="AuException">Failed.</exception>
 		public static void Paste(string text) => Clipb.PasteText(text);
-		//TODO: fails to paste in VMware player. QM2 too.
 
 		/// <summary>
 		/// Calls <see cref="Clipb.CopyText"/>.
 		/// </summary>
-		/// <inheritdoc cref="Clipb.CopyText"/>
+		/// <exception cref="AuException">Failed.</exception>
 		public static string CopyText() => Clipb.CopyText();
 	}
 }

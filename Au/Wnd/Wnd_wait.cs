@@ -23,7 +23,6 @@ namespace Au
 {
 	public partial struct Wnd
 	{
-		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Waits until window exists, is visible (optionally) and active (optionally).
 		/// Returns window handle. On timeout returns default(Wnd) if *secondsTimeout* is negative; else exception.
@@ -32,6 +31,7 @@ namespace Au
 		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="active">The window must be the active window (<see cref="Active"/>), and not minimized.</param>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// By default ignores invisible and cloaked windows. Use flags if need.
 		/// If you have a window's Wnd variable, to wait until it is active/visible/etc use <see cref="WaitForCondition"/> instead.
@@ -114,7 +114,6 @@ namespace Au
 		//	Or add Wait methods to Finder: var f=new Wnd.Finder(...); if(f.Wait(...)) { Print(f.Wnd, f.index); }
 		//		But then 'wait any' methods must be static.
 
-		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Waits until window does not exist.
 		/// Parameters etc are the same as <see cref="Find"/>.
@@ -139,11 +138,10 @@ namespace Au
 		}
 		//TODO: add: bool active. Also wait any. Maybe single function with params Finder[]. Also return array index.
 
-		/// <inheritdoc cref="WaitNot(double, string, string, WF3, WFFlags, Func{Wnd, bool}, object)"/>
 		/// <summary>
 		/// Waits until window does not exist.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout"></param>
 		/// <param name="wFound">On timeout receives the first found matching window that exists.</param>
 		/// <param name="f">Window properties etc. Can be string, see <see cref="Finder.op_Implicit(string)"/>.</param>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -162,7 +160,6 @@ namespace Au
 		}
 
 		//rejected. Cannot use implicit conversion string to Finder.
-		///// <inheritdoc cref="WaitNot(double, Finder, out Wnd)"/>
 		//public static bool WaitNot(double secondsTimeout, Finder f)
 		//	=> WaitNot(secondsTimeout, out _, f);
 

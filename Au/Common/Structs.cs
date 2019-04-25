@@ -182,7 +182,7 @@ namespace Au.Types
 	/// Rectangle coordinates left top right bottom.
 	/// </summary>
 	/// <remarks>
-	/// This type can be used with Windows API functions. The .NET <b>Rectangle</b>/<b>Rect</b>/<b>Int32Rect</b> can't, because their fields are different.
+	/// This type can be used with Windows API functions. The .NET <b>Rectangle</b> etc can't, because their fields are different.
 	/// Has implicit conversions from/to <b>Rectangle</b> and <b>RectangleF</b>.
 	/// </remarks>
 	[DebuggerStepThrough]
@@ -199,7 +199,7 @@ namespace Au.Types
 		/// <param name="top"></param>
 		/// <param name="rightOrWidth">right or width, depending on *useWidthHeight*.</param>
 		/// <param name="bottomOrHeight">bottom or height, depending on *useWidthHeight*.</param>
-		/// <param name="useWidthHeight">If true (default), rightOrWidth/bottomOrHeight are width/height. Else right/bottom.</param>
+		/// <param name="useWidthHeight">If true (default), *rightOrWidth*/*bottomOrHeight* are width/height. Else right/bottom.</param>
 		public RECT(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight = true)
 		{
 			this.left = left; this.top = top;

@@ -873,7 +873,10 @@ namespace Au.Types
 			/// <summary>
 			/// Returns the window handle and gets more info about the created window.
 			/// </summary>
-			/// <param name="c">API <msdn>CREATESTRUCT</msdn>. You can modify x y cx cy.</param>
+			/// <param name="c">
+			/// API <msdn>CREATESTRUCT</msdn>.
+			/// You can modify x y cx cy.
+			/// </param>
 			/// <param name="wInsertAfter">Window whose position in the Z order precedes that of the window being created, or default(Wnd).</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CREATEWND.</exception>
 			public unsafe Wnd CreationInfo(out Native.CREATESTRUCT* c, out Wnd wInsertAfter)
@@ -965,6 +968,7 @@ namespace Au.Types
 			SETFOCUS = 9,
 #pragma warning restore 1591
 		}
+		//TODO: move to Au.Types.
 
 		/// <summary>
 		/// Hook data for the hook procedure set by <see cref="WinHook.ThreadGetMessage"/>.
@@ -982,6 +986,7 @@ namespace Au.Types
 
 			/// <summary>
 			/// Message parameters.
+			/// API <msdn>MSG</msdn>.
 			/// </summary>
 			public readonly Native.MSG* msg;
 
@@ -1047,6 +1052,7 @@ namespace Au.Types
 
 			/// <summary>
 			/// More info about the mouse message.
+			/// API <msdn>MOUSEHOOKSTRUCT</msdn>.
 			/// </summary>
 			public readonly Native.MOUSEHOOKSTRUCT* m;
 
@@ -1075,6 +1081,7 @@ namespace Au.Types
 
 			/// <summary>
 			/// Message parameters.
+			/// API <msdn>CWPSTRUCT</msdn>.
 			/// </summary>
 			public readonly Native.CWPSTRUCT* msg;
 
@@ -1102,6 +1109,7 @@ namespace Au.Types
 
 			/// <summary>
 			/// Message parameters and the return value.
+			/// API <msdn>CWPRETSTRUCT</msdn>.
 			/// </summary>
 			public readonly Native.CWPRETSTRUCT* msg;
 
@@ -1175,7 +1183,7 @@ namespace Au.Util
 		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed.</exception>
-		/// <example><inheritdoc cref="AccHook"/></example>
+		/// <example>See <see cref="AccHook"/>.</example>
 		public AccHook(AccEVENT eventMin, AccEVENT eventMax, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
 		{
 			if(eventMax == 0) eventMax = eventMin;
@@ -1194,7 +1202,7 @@ namespace Au.Util
 		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed.</exception>
-		/// <example><inheritdoc cref="AccHook"/></example>
+		/// <example>See <see cref="AccHook"/>.</example>
 		public AccHook(AccEVENT[] events, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
 		{
 			_proc1 = _HookProc;
@@ -1321,7 +1329,9 @@ namespace Au.Types
 				this.eventTime = eventTime;
 			}
 
-			///<inheritdoc cref="Acc.FromEvent"/>
+			/// <summary>
+			/// Calls <see cref="Acc.FromEvent"/>.
+			/// </summary>
 			public Acc GetAcc()
 			{
 				return Acc.FromEvent(wnd, idObject, idChild);

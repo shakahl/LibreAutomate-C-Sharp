@@ -46,7 +46,7 @@ namespace Au
 		/// <summary>
 		/// Loads image from file, string or resource.
 		/// </summary>
-		/// <param name="image"><inheritdoc cref="Find"/></param>
+		/// <param name="image">See <see cref="Find"/>.</param>
 		/// <exception cref="FileNotFoundException">The specified file does not exist.</exception>
 		/// <exception cref="Exception">Depending on *image* string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="Convert_.Decompress"/>.</exception>
 		/// <exception cref="ArgumentException">Bad image format (the image cannot be loaded as Bitmap).</exception>
@@ -117,7 +117,6 @@ namespace Au
 		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(WinImage)"/>.
 		///// </summary>
 		///// <exception cref="NotFoundException">x is null.</exception>
-		///// <example><inheritdoc cref="ExtensionMethods.OrThrow(WinImage)"/></example>
 		//public static WinImage operator +(WinImage x) => x ?? throw new NotFoundException("Not found (WinImage).");
 
 		/// <summary>
@@ -293,14 +292,15 @@ namespace Au
 		internal enum _Action { Find, Wait, WaitNot, WaitChanged }
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Finds image(s) or color(s) displayed in window or other area. Waits until found.
+		/// More info: <see cref="Find"/>.
 		/// </summary>
 		/// <returns>Returns <see cref="WinImage"/> object containing the rectangle of the found image. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
 		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		public static WinImage Wait(double secondsTimeout, WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<WinImage, WIAlso> also = null)
 		{
 			var r = _Wait(_Action.Wait, secondsTimeout, area, image, flags, colorDiff, also);
@@ -309,29 +309,31 @@ namespace Au
 			//tested: does not create garbage while waiting.
 		}
 
-		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Waits until image(s) or color(s) is not displayed in window or other area.
+		/// More info: <see cref="Find"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		public static bool WaitNot(double secondsTimeout, WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<WinImage, WIAlso> also = null)
 		{
 			return _Wait(_Action.WaitNot, secondsTimeout, area, image, flags, colorDiff, also).ok;
 		}
 
-		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Waits until something visually changes in window or other area.
+		/// More info: <see cref="Find"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
-		/// The same as <see cref="WaitNot"/>, but instead of <i>image</i> parameter this function captures the area image at the beginning.
+		/// The same as <see cref="WaitNot"/>, but instead of *image* parameter this function captures the area image at the beginning.
 		/// </remarks>
 		public static bool WaitChanged(double secondsTimeout, WIArea area, WIFlags flags = 0, int colorDiff = 0)
 		{
@@ -1076,14 +1078,12 @@ namespace Au.Types
 	public enum WIFlags
 	{
 		/// <summary>
-		/// Get pixels from the device context (DC) of the window client area, not from screen DC.
-		/// Not used when area is Bitmap.
-		/// Notes:
-		/// Usually much faster.
+		/// Get pixels from the device context (DC) of the window client area, not from screen DC. Usually much faster.
 		/// Can get pixels from window parts that are covered by other windows or offscreen. But not from hidden and minimized windows.
 		/// Does not work on Windows 7 if Aero theme is turned off. Then this flag is ignored.
 		/// If the window is DPI-scaled, the image must be captured from its non-scaled version.
 		/// Cannot find images in some windows (including Windows Store apps), and in some window parts (glass). All pixels captured from these windows/parts are black.
+		/// Not used when area is Bitmap.
 		/// </summary>
 		WindowDC = 1,
 

@@ -54,7 +54,7 @@ namespace Au
 			/// <summary>
 			/// See <see cref="Wnd.Child"/>.
 			/// </summary>
-			/// <exception cref="ArgumentException"><inheritdoc cref="Child"/></exception>
+			/// <exception cref="ArgumentException">See <see cref="Child"/>.</exception>
 			public ChildFinder(string name = null, string cn = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
 			{
 				if(cn != null) {

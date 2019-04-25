@@ -131,7 +131,7 @@ namespace Au.Triggers
 	/// <summary>
 	/// Autotext triggers.
 	/// </summary>
-	/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+	/// <example>See <see cref="ActionTriggers"/>.</example>
 	public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger>
 	{
 		ActionTriggers _triggers;
@@ -140,7 +140,7 @@ namespace Au.Triggers
 		internal AutotextTriggers(ActionTriggers triggers)
 		{
 			_triggers = triggers;
-			_simpleReplace = new TSimpleReplace(this);
+			_simpleReplace = new TASimpleReplace(this);
 		}
 
 		/// <summary>
@@ -151,11 +151,11 @@ namespace Au.Triggers
 		/// <param name="postfixType">Postfix type (character, key, any or none). If omitted or null, uses <see cref="DefaultPostfixType"/>; default - a non-word character or the Ctrl key.</param>
 		/// <param name="postfixChars">Postfix characters used when postfix type is <b>Char</b> or <b>CharOrKey</b> (default). If omitted or null, uses <see cref="DefaultPostfixChars"/>; default - non-word characters.</param>
 		/// <exception cref="ArgumentException">
-		/// Text is empty or too long. Can be 1 - 100 characters.
-		/// Or postfix characters contains letters or digits.
+		/// - Text is empty or too long. Can be 1 - 100 characters.
+		/// - Postfix characters contains letters or digits.
 		/// </exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
-		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <example>See <see cref="ActionTriggers"/>.</example>
 		public Action<AutotextTriggerArgs> this[string text, TAFlags? flags = null, TAPostfix? postfixType = null, string postfixChars = null] {
 			set {
 				_triggers.LibThrowIfRunning();
@@ -177,25 +177,6 @@ namespace Au.Triggers
 			}
 		}
 
-		/// <tocexclude />
-		/// <remarks>Infrastructure.</remarks>
-		public class TSimpleReplace
-		{
-			AutotextTriggers _host;
-
-			internal TSimpleReplace(AutotextTriggers host)
-			{
-				_host = host;
-			}
-
-			/// <inheritdoc cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string]"/>
-			public string this[string text, TAFlags? flags = null, TAPostfix? postfixType = null, string postfixChars = null] {
-				set {
-					_host[text, flags, postfixType, postfixChars] = o => o.Replace(value);
-				}
-			}
-		}
-
 		/// <summary>
 		/// Allows to add triggers in a more concise way - assign a string, not a function. The string will replace the user-typed text.
 		/// </summary>
@@ -206,8 +187,8 @@ namespace Au.Triggers
 		/// ts["#mo"] = "Monday";
 		/// ]]></code>
 		/// </example>
-		public TSimpleReplace SimpleReplace => _simpleReplace;
-		TSimpleReplace _simpleReplace;
+		public TASimpleReplace SimpleReplace => _simpleReplace;
+		TASimpleReplace _simpleReplace;
 
 		/// <summary>
 		/// Default value for the <i>flags</i> parameter used for triggers added afterwards.
@@ -659,11 +640,10 @@ namespace Au.Triggers
 		/// If the replacement text contains substring "[[|]]", removes it and moves the text cursor (caret) there with the Left key. See example.
 		/// </remarks>
 		/// <example>
-		/// More examples: <see cref="ActionTriggers"/>.
-		/// 
 		/// <code><![CDATA[
 		/// Triggers.Autotext["#exa"] = o => o.Replace("<example>[[|]]</example>");
 		/// ]]></code>
+		/// More examples: <see cref="ActionTriggers"/>.
 		/// </example>
 		public void Replace(string text, params object[] keysEtc)
 		{
@@ -762,5 +742,27 @@ namespace Au.Triggers
 		}
 
 		//FUTURE: Menu.
+	}
+
+	/// <remarks>Infrastructure.</remarks>
+	public class TASimpleReplace
+	{
+		AutotextTriggers _host;
+
+		internal TASimpleReplace(AutotextTriggers host)
+		{
+			_host = host;
+		}
+
+		/// <summary>
+		/// Adds an autotext trigger. Its action calls <see cref="AutotextTriggerArgs.Replace"/>.
+		/// More info: <see cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string]"/>.
+		/// </summary>
+		/// <exception cref="Exception">Exceptions of <see cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string]"/>.</exception>
+		public string this[string text, TAFlags? flags = null, TAPostfix? postfixType = null, string postfixChars = null] {
+			set {
+				_host[text, flags, postfixType, postfixChars] = o => o.Replace(value);
+			}
+		}
 	}
 }

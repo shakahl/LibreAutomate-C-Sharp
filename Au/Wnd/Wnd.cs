@@ -90,6 +90,10 @@ namespace Au
 		public static explicit operator LPARAM(Wnd w) => w._h;
 		public static explicit operator Wnd(int hwnd) => new Wnd((void*)hwnd);
 		public static explicit operator int(Wnd w) => (int)w._h;
+		/// <summary>
+		/// Converts from a special handle value.
+		/// </summary>
+		/// <param name="hwnd">See API <msdn>SetWindowPos</msdn>.</param>
 		public static implicit operator Wnd(Native.HWND hwnd) => new Wnd((void*)(int)hwnd);
 
 		/// <summary>
@@ -128,7 +132,7 @@ namespace Au
 		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
 		///// </summary>
 		///// <exception cref="NotFoundException">x is default(Wnd).</exception>
-		///// <example><inheritdoc cref="ExtensionMethods.OrThrow(Wnd)"/></example>
+		///// <example><see cref="ExtensionMethods.OrThrow(Wnd)"/></example>
 		//public static Wnd operator +(Wnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (Wnd).");
 
 		/// <summary>
@@ -1093,8 +1097,11 @@ namespace Au
 		/// This can be control or top-level window. Top-level windows also can have focus.
 		/// </remarks>
 		/// <exception cref="WndException">
-		/// Invalid handle; disabled; failed to set focus; failed to activate parent window.
-		/// Fails to set focus when the target process is admin or uiAccess and this process isn't (see [](xref:uac)).
+		/// - Invalid handle.
+		/// - Disabled.
+		/// - Failed to set focus.
+		/// - Failed to activate parent window.
+		/// Fails to set focus when the target process is admin or uiAccess and this process isn't. See [](xref:uac).
 		/// </exception>
 		/// <seealso cref="Focused"/>
 		/// <seealso cref="IsFocused"/>
@@ -1707,9 +1714,14 @@ namespace Au
 		/// <summary>
 		/// Calls API <msdn>SetWindowPos</msdn>.
 		/// </summary>
+		/// <param name="swpFlags"></param>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <param name="cx"></param>
+		/// <param name="cy"></param>
+		/// <param name="wndInsertAfter">A window or <see cref="Native.HWND"/>.<b>TOP</b>, <b>BOTTOM</b>, <b>TOPMOST</b>, <b>NOTOPMOST</b>.</param>
 		/// <remarks>
 		/// Supports <see cref="WinError"/>.
-		/// For *wndInsertAfter* you can use enum <b>Native.HWND</b> members: <b>TOP</b>, <b>BOTTOM</b>, <b>TOPMOST</b>, <b>NOTOPMOST</b>.
 		/// </remarks>
 		public bool SetWindowPos(Native.SWP swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, Wnd wndInsertAfter = default)
 		{

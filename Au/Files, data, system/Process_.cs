@@ -291,11 +291,12 @@ namespace Au
 			return a?.ToArray() ?? Array.Empty<int>();
 		}
 
-		/// <inheritdoc cref="GetProcessIds"/>
 		/// <summary>
 		/// Gets process id of the first found process of the specified program.
 		/// Returns 0 if not found.
+		/// More info: <see cref="GetProcessIds"/>.
 		/// </summary>
+		/// <exception cref="ArgumentException"/>
 		public static int GetProcessId(string processName, bool fullPath = false, bool ofThisSession = false)
 		{
 			if(Empty(processName)) throw new ArgumentException();
@@ -677,7 +678,6 @@ namespace Au.Types
 	/// <summary>
 	/// Contains process id, name and session id.
 	/// </summary>
-	/// <tocexclude />
 	public struct ProcessInfo
 	{
 		/// <summary>User session id.</summary>

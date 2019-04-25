@@ -122,7 +122,7 @@ namespace Au.Types
 			public char* lpszClassName; //not string because CLR would call CoTaskMemFree
 			public IntPtr hIconSm;
 
-			public WNDCLASSEX(Wnd.Misc.MyWindow.WndClassEx ex = null) : this()
+			public WNDCLASSEX(MWWndClassEx ex = null) : this()
 			{
 				this.cbSize = SizeOf<WNDCLASSEX>();
 				if(ex == null) {

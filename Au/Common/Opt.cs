@@ -33,7 +33,6 @@ namespace Au
 	/// - <b>Opt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>Opt.Static</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).
 	/// - <b>Opt.Static</b> - static options. Contains initial property values for <b>Opt</b>. Normally you change them in your script template (in script initialization code) or at the very start of script. Don't change later, it's not thread-safe.
 	/// </remarks>
-	/// <example><inheritdoc cref="Static.Mouse"/></example>
 	public static class Opt
 	{
 		/// <summary>
@@ -115,7 +114,7 @@ namespace Au
 			/// </remarks>
 			/// <example>
 			/// <code><![CDATA[
-			/// static MyScriptClass() { Opt.Static.Key.KeySpeed = 10; } //static constructor
+			/// Opt.Static.Key.KeySpeed = 10;
 			/// ...
 			/// Key("Tab Ctrl+V"); //uses Opt.Key, which is implicitly copied from Opt.Static.Key
 			/// ]]></code>
@@ -133,7 +132,7 @@ namespace Au
 			/// </summary>
 			/// <example>
 			/// <code><![CDATA[
-			/// static MyScriptClass() { Opt.Static.Mouse.ClickSpeed = 10; } //static constructor, for example in script template
+			/// Opt.Static.Mouse.ClickSpeed = 10;
 			/// ...
 			/// Mouse.Click(); //uses Opt.Mouse, which is implicitly copied from Opt.Static.Mouse
 			/// ]]></code>
@@ -155,7 +154,6 @@ namespace Au
 		/// <summary>
 		/// Makes easy to restore current options of this thread. See example.
 		/// </summary>
-		/// <example><inheritdoc cref="Temp.Mouse"/></example>
 		public static class Temp
 		{
 			/// <summary>

@@ -263,7 +263,6 @@ namespace Au.Util
 		/// <summary>
 		/// For <see cref="AddRange(IEnumerable{Item})"/>. 
 		/// </summary>
-		/// <tocexclude />
 		public struct Item
 		{
 #pragma warning disable 1591 //XML doc
@@ -277,7 +276,6 @@ namespace Au.Util
 		/// <summary>
 		/// For <see cref="Callback"/>. 
 		/// </summary>
-		/// <tocexclude />
 		public class Result
 		{
 			/// <summary>file passed to <see cref="Add(string, object)"/>.</summary>
@@ -301,7 +299,6 @@ namespace Au.Util
 		/// <param name="result">Contains icon, as well as the input parameters.</param>
 		/// <param name="objCommon">objCommon passed to <see cref="GetAllAsync"/>.</param>
 		/// <param name="nLeft">How many icons is still to get. Eg 0 if this is the last icon.</param>
-		/// <tocexclude />
 		public delegate void Callback(Result result, object objCommon, int nLeft);
 	}
 }

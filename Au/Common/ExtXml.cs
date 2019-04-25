@@ -191,10 +191,10 @@ namespace Au.Types
 			return e;
 		}
 
-		/// <inheritdoc cref="Element_"/>
 		/// <summary>
 		/// Gets the first found direct child element that has the specified attribute. If not found, adds new child element with the attribute.
 		/// Returns the found or added element.
+		/// More info: <see cref="Element_"/>
 		/// </summary>
 		public static XElement ElementGetOrAdd_(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
 		{
@@ -241,7 +241,6 @@ namespace Au.Types
 			return File_.WaitIfLocked(() => XElement.Load(file, options));
 		}
 
-		/// <inheritdoc cref="File_.Save"/>
 		/// <summary>
 		/// Saves XML to a file in a safer way.
 		/// Uses <see cref="XElement.Save(string, SaveOptions)"/> and <see cref="File_.Save"/>.
@@ -275,7 +274,6 @@ namespace Au.Types
 			return File_.WaitIfLocked(() => XDocument.Load(file, options));
 		}
 
-		/// <inheritdoc cref="File_.Save"/>
 		/// <summary>
 		/// Saves XML to a file in a safer way.
 		/// Uses <see cref="XDocument.Save(string)"/> and <see cref="File_.Save"/>

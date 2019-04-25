@@ -401,7 +401,7 @@ unsafe partial class Script : AuScript
 
 	void TestWindowTriggers()
 	{
-		//Triggers.Window.ActiveOnce["Notepad", "#32770"] = null;
+		//Triggers.Window[TWEvent.ActiveOnce, "Notepad", "#32770"] = null;
 		//var t1 = Triggers.Window.Last;
 		//Print(t1.TypeString);
 		//Print(t1.ParamsString);
@@ -418,32 +418,32 @@ unsafe partial class Script : AuScript
 		//Triggers.Of.Window("* Notepad");
 		//k["Ctrl+N"] = o => Print("Ctrl+N in Notepad");
 
-		//u.ActiveOnce["Quick *", thenEvents: TWEvents.Name] = o => Print(o.Window);
-		var te = TWEvents.Name;
-		te |= TWEvents.Destroyed;
-		te |= TWEvents.Active | TWEvents.Inactive;
-		te |= TWEvents.Visible | TWEvents.Invisible;
-		te |= TWEvents.Cloaked | TWEvents.Uncloaked;
-		te |= TWEvents.Minimized | TWEvents.Unminimized;
-		//te |= TWEvents.MoveSizeStart | TWEvents.MoveSizeEnd;
+		//u[TWEvent.ActiveOnce, "Quick *", thenEvents: TWLater.Name] = o => Print(o.Window);
+		var te = TWLater.Name;
+		te |= TWLater.Destroyed;
+		te |= TWLater.Active | TWLater.Inactive;
+		te |= TWLater.Visible | TWLater.Invisible;
+		te |= TWLater.Cloaked | TWLater.Uncloaked;
+		te |= TWLater.Minimized | TWLater.Unminimized;
+		//te |= TWLater.MoveSizeStart | TWEvents.MoveSizeEnd;
 		//Triggers.FuncOf.NextTrigger = o => { var y = o as WindowTriggerArgs; Print("func", y.Later, y.Window); /*201.ms();*/ return true; };
-		//u.ActiveOnce["*- Notepad", later: te, flags: TWFlags.LaterCallFunc] = o => Print(o.Later, o.Window);
-		//u.ActiveNew["* WordPad"] = o => Print(o.Window);
-		//u.ActiveNew["* Notepad++"] = o => Print(o.Window);
-		//u.ActiveOnce["* Notepad++"] = o => Print(o.Window);
-		//u.Active["* Notepad++"] = o => Print("active always", o.Window);
-		//u.ActiveNew["Calculator", "ApplicationFrameWindow"] = o => Print(o.Window);
-		//u.Active["Calculator", "ApplicationFrameWindow"] = o => Print(o.Window);
-		//u.ActiveNew["Settings", "ApplicationFrameWindow"] = o => Print(o.Window);
-		//u.ActiveOnce["Settings", "ApplicationFrameWindow"] = o => Print(o.Window);
-		//u.ActiveOnce["*Studio ", flags: TWFlags.StartupToo] = o => Print(o.Window);
+		//u[TWEvent.ActiveOnce, "*- Notepad", later: te, flags: TWFlags.LaterCallFunc] = o => Print(o.Later, o.Window);
+		//u[TWEvent.ActiveNew, "* WordPad"] = o => Print(o.Window);
+		//u[TWEvent.ActiveNew, "* Notepad++"] = o => Print(o.Window);
+		//u[TWEvent.ActiveOnce, "* Notepad++"] = o => Print(o.Window);
+		//u[TWEvent.Active, "* Notepad++"] = o => Print("active always", o.Window);
+		//u[TWEvent.ActiveNew, "Calculator", "ApplicationFrameWindow"] = o => Print(o.Window);
+		//u[TWEvent.Active, "Calculator", "ApplicationFrameWindow"] = o => Print(o.Window);
+		//u[TWEvent.ActiveNew, "Settings", "ApplicationFrameWindow"] = o => Print(o.Window);
+		//u[TWEvent.ActiveOnce, "Settings", "ApplicationFrameWindow"] = o => Print(o.Window);
+		//u[TWEvent.ActiveOnce, "*Studio ", flags: TWFlags.StartupToo] = o => Print(o.Window);
 
-		//u.Visible["* Notepad"] = o => Print(o.Window);
-		//u.VisibleNew["* WordPad"] = o => Print(o.Window);
-		u.VisibleOnce["QM SpamFilter"] = o => Print("visible once", o.Window);
-		//u.VisibleOnce["*Studio ", flags: TWFlags.StartupToo] = o => Print(o.Window);
+		//u[TWEvent.Visible, "* Notepad"] = o => Print(o.Window);
+		//u[TWEvent.VisibleNew, "* WordPad"] = o => Print(o.Window);
+		u[TWEvent.VisibleOnce, "QM SpamFilter"] = o => Print("visible once", o.Window);
+		//u[TWEvent.VisibleOnce, "*Studio ", flags: TWFlags.StartupToo] = o => Print(o.Window);
 
-		//u.VisibleOnce["mmmmmmm"] = o => Print("mmmmmmm", Thread_.NativeId);
+		//u[TWEvent.VisibleOnce, "mmmmmmm"] = o => Print("mmmmmmm", Thread_.NativeId);
 		//var t1 = Triggers.Window.Last;
 		////k["Ctrl+K"] = o => { Print("Ctrl+K", Thread_.NativeId); t1.RunAction(null); 100.ms(); };
 		////Triggers.FuncOf.NextTrigger = o => { t1.RunAction(null); return false; };
@@ -471,30 +471,30 @@ unsafe partial class Script : AuScript
 		//Triggers.FuncOf.NextTrigger = o => { var v = o as WindowTriggerArgs; var ac = v.Window.Get.Children(); Print(ac); Print(ac.Length); return true; };
 		Func<Wnd, bool> also = o => { var ac = o.Get.Children(); foreach(var v in ac) Print(v, v.Style & (WS)0xffff0000); Print(ac.Length); return true; };
 		//Func<Wnd, bool> also = o => { /*100.ms();*/ Print(o.Get.Children().Length); return true; };
-		//Triggers.Window.ActiveOnce["Notepad", "#32770"]=o=>Print("TRIGGER", o.Window);
-		//Triggers.Window.ActiveOnce["Notepad", "#32770", contains: "c 'Button' Save"] = o => Print("TRIGGER", o.Window);
-		//Triggers.Window.ActiveOnce["Notepad", "#32770", contains: "c 'Button' Save", also: also] = o => Print("TRIGGER", o.Window);
-		//Triggers.Window.ActiveOnce["Notepad", "#32770", contains: "a 'STATICTEXT' * save *"] = o => Print("TRIGGER", o.Window);
-		//Triggers.Window.VisibleOnce["Notepad", "#32770", contains: "c 'Button' Save"] = o => Print("TRIGGER", o.Window);
-		//Triggers.Window.VisibleOnce["Notepad", "#32770", contains: "a 'STATICTEXT' * save *"] = o => Print("TRIGGER", o.Window);
+		//Triggers.Window[TWEvent.ActiveOnce, "Notepad", "#32770"]=o=>Print("TRIGGER", o.Window);
+		//Triggers.Window[TWEvent.ActiveOnce, "Notepad", "#32770", contains: "c 'Button' Save"] = o => Print("TRIGGER", o.Window);
+		//Triggers.Window[TWEvent.ActiveOnce, "Notepad", "#32770", contains: "c 'Button' Save", also: also] = o => Print("TRIGGER", o.Window);
+		//Triggers.Window[TWEvent.ActiveOnce, "Notepad", "#32770", contains: "a 'STATICTEXT' * save *"] = o => Print("TRIGGER", o.Window);
+		//Triggers.Window[TWEvent.VisibleOnce, "Notepad", "#32770", contains: "c 'Button' Save"] = o => Print("TRIGGER", o.Window);
+		//Triggers.Window[TWEvent.VisibleOnce, "Notepad", "#32770", contains: "a 'STATICTEXT' * save *"] = o => Print("TRIGGER", o.Window);
 
-		Triggers.Window.VisibleOnce["Notepad", "#32770"] = o => { Print("TRIGGER", o.Window); o.Window.Close(); };
-		Triggers.Window.ActiveOnce["Notepad", "#32770"] = o => { Print("TRIGGER", o.Window); o.Window.Close(); };
+		Triggers.Window[TWEvent.VisibleOnce, "Notepad", "#32770"] = o => { Print("TRIGGER", o.Window); o.Window.Close(); };
+		Triggers.Window[TWEvent.ActiveOnce, "Notepad", "#32770"] = o => { Print("TRIGGER", o.Window); o.Window.Close(); };
 
-		//Triggers.Window.ActiveOnce["Notepad", "#32770", contains: "c 'Button' Save"] = o => {
-		//Triggers.Window.ActiveOnce["Save As", "#32770", "notepad.exe", contains: "c 'Button' Save"] = o => {
-		//Triggers.Window.ActiveOnce["Save As", "#32770", "notepad.exe", contains: "a 'BUTTON' Save"] = o => {
-		//Triggers.Window.ActiveOnce["Notepad", "#32770"] = o => {
-		Triggers.Window.ActiveOnce["Notepad", "#32770", contains: "Do you want to save*"] = o => {
+		//Triggers.Window[TWEvent.ActiveOnce, "Notepad", "#32770", contains: "c 'Button' Save"] = o => {
+		//Triggers.Window[TWEvent.ActiveOnce, "Save As", "#32770", "notepad.exe", contains: "c 'Button' Save"] = o => {
+		//Triggers.Window[TWEvent.ActiveOnce, "Save As", "#32770", "notepad.exe", contains: "a 'BUTTON' Save"] = o => {
+		//Triggers.Window[TWEvent.ActiveOnce, "Notepad", "#32770"] = o => {
+		Triggers.Window[TWEvent.ActiveOnce, "Notepad", "#32770", contains: "Do you want to save*"] = o => {
 			//string image = @"image:iVBORw0KGgoAAAANSUhEUgAAAJEAAAATCAYAAACQoO/wAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAALLSURBVGhD7VbBbeswDO1O/9ZRMkDWyAq59pZ77znlkgW6QIACXaArqCJFKSRFSbSDGj+FHmAgdijy8fFJ9kuYmHgQ00QTD2OaaOJhFBPdTu/h5d9bdb2eviliYsKGNNHuI9zoPuEz7NFMl3CmJxNj2FpKeGKeBQMTAb7DcReNdPik+4kRponoXuB6iafRezh+0X0ExvNXX8dk54P9v67Zz5nMvL/SLQHXNGpbdfGZ6lPEfX2EV85BncIQC694wbXkow3H11ea9mOW6IrQfHm9Ti+tmWh9JB/pgQyfiYhMHiAWEuIOTis0oX4lplelP+dyE9V18+uZiyF53E4XIZQWO/Hk34qUk8V0tSRYMYt1VdwB5xM3QKcX70w4R3ON10Q8uTJUAT63nZrFEB/pQCjXc+VcYSItMtU8RnEKF6xRC1OghNOmAmjtVploja69/yyIXjwz0bntGSw4iSihEvWOeldw6PwwjNKAK+caE8mhQyzWZGJZ6/FZrHu/pImE8ADFX/dqoYpZqSv2Bxwb9Xq9aA71TPi6+6X7X/BNRMVXNpv+z87mvyNcOdeZCHNjX7CeauKmgHo6Z6rXG+7/ZqKMYqaixbgXcTgUTQhNPjUcJkpkinBYzGiKE2qgDAAI8sG7cqaB6wGieD0TIf+Y4xpzlf6yeei/jplRF/bs10z0gK4FPNbRCyD3g/95ZmKgbyJKpIeUXM/JpKH0hxkBje0uYW+cKJ6clQgo1KgumS+eQnz4kAuedQeZ+2c1PSayBljBiFmsa+S351wwJ5nI0QsC1uBMaqOafA715pAmwiL8au8AHV8Ja4JEaezScU5an2OiuLhmYN6UV/VCouoaggPwVMN2mYjzbPTailmkazFGvmSPo14S+jNJRrpfFp9iom2QCHeFmXg6bGsi3Dl6J0w8OzY00TyF/io2MVF5Nw++XSaeExt/E038PYTwA9lvzmPkr4YtAAAAAElFTkSuQmCC";
-			//Triggers.Window.ActiveOnce["Notepad", "#32770", contains: image] = o => {
-			//Triggers.Window.ActiveOnce["Notepad", "#32770", also: o => WinImage.Wait(-1, o, image, WIFlags.WindowDC) != null] = o => {
-			//Triggers.Window.ActiveOnce["Options", "#32770"] = o => {
-			//Triggers.Window.ActiveOnce["* WordPad"] = o => {
-			//Triggers.Window.ActiveOnce["* Word"] = o => {
-			//Triggers.Window.ActiveOnce["* Chrome"] = o => {
-			//Triggers.Window.ActiveOnce["Calculator"] = o => {
-			//Triggers.Window.ActiveOnce["*paint.net*"] = o => {
+			//Triggers.Window[TWEvent.ActiveOnce, "Notepad", "#32770", contains: image] = o => {
+			//Triggers.Window[TWEvent.ActiveOnce, "Notepad", "#32770", also: o => WinImage.Wait(-1, o, image, WIFlags.WindowDC) != null] = o => {
+			//Triggers.Window[TWEvent.ActiveOnce, "Options", "#32770"] = o => {
+			//Triggers.Window[TWEvent.ActiveOnce, "* WordPad"] = o => {
+			//Triggers.Window[TWEvent.ActiveOnce, "* Word"] = o => {
+			//Triggers.Window[TWEvent.ActiveOnce, "* Chrome"] = o => {
+			//Triggers.Window[TWEvent.ActiveOnce, "Calculator"] = o => {
+			//Triggers.Window[TWEvent.ActiveOnce, "*paint.net*"] = o => {
 			var w = o.Window;
 			//Print(w.Child("Save"));
 			//Perf.First();
@@ -517,7 +517,7 @@ unsafe partial class Script : AuScript
 		//Print("stopped");
 
 		//Triggers.Options.RunActionInNewThread(true);
-		//Triggers.Window.ActiveNew["* Notepad"] = o => o.Window.Resize(500, 200);
+		//Triggers.Window[TWEvent.ActiveNew, "* Notepad"] = o => o.Window.Resize(500, 200);
 		//Triggers.Hotkey["Ctrl+T"] = o => Triggers.Window.SimulateActiveNew();
 		//Triggers.Hotkey["Ctrl+Alt+T"] = o => Triggers.Stop();
 		//Triggers.Run();
@@ -758,7 +758,7 @@ unsafe partial class Script : AuScript
 		Triggers.Of.Window("* Notepad");
 
 		Triggers.Mouse[TMEdge.RightInBottom25] = o => Print(o.Trigger);
-		Triggers.Window.ActiveNew["* Notepad"] = o => Print(o.Trigger);
+		Triggers.Window[TWEvent.ActiveNew, "* Notepad"] = o => Print(o.Trigger);
 
 		//int n = 0;
 		//foreach(var v in tt) {

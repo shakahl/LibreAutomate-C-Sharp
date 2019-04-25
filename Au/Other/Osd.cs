@@ -181,7 +181,7 @@ namespace Au
 			string cn; byte regMask;
 			if(Shadow) { cn = "Au.OSD2"; regMask = 2; } else { cn = "Au.OSD"; regMask = 1; }
 			if((s_isWinClassRegistered & regMask) == 0) {
-				var ce = new Wnd.Misc.MyWindow.WndClassEx() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, hbrBackground = default(IntPtr) };
+				var ce = new MWWndClassEx() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, hbrBackground = default(IntPtr) };
 				if(Shadow) ce.style |= Api.CS_DROPSHADOW;
 				Wnd.Misc.MyWindow.RegisterClass(cn, ce);
 				s_isWinClassRegistered |= regMask;
@@ -556,7 +556,9 @@ namespace Au
 		/// </remarks>
 		public int SecondsTimeout { get; set; }
 
-		/// <inheritdoc cref="OsdShowMode"/>
+		/// <summary>
+		/// See <see cref="OsdShowMode"/>.
+		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
@@ -758,8 +760,8 @@ namespace Au
 		/// <param name="color"><see cref="TextColor"/>. Default: <see cref="DefaultTransparentTextColor"/>.</param>
 		/// <param name="name"><see cref="OsdWindow.Name"/></param>
 		/// <param name="showMode"><see cref="ShowMode"/></param>
-		/// <param name="doNotShow"><inheritdoc cref="ShowText"/></param>
-		/// <returns><inheritdoc cref="ShowText"/></returns>
+		/// <param name="doNotShow">See <see cref="ShowText"/>.</param>
+		/// <returns>Returns an <see cref="Osd"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
 		/// Also sets these properties: <see cref="Font"/>=<see cref="DefaultTransparentTextFont"/>, <see cref="OsdWindow.Opacity"/>=0.
 		/// </remarks>
@@ -791,8 +793,8 @@ namespace Au
 		/// <param name="xy"><see cref="XY"/></param>
 		/// <param name="name"><see cref="OsdWindow.Name"/></param>
 		/// <param name="showMode"><see cref="ShowMode"/></param>
-		/// <param name="doNotShow"><inheritdoc cref="ShowText"/></param>
-		/// <returns><inheritdoc cref="ShowText"/></returns>
+		/// <param name="doNotShow">See <see cref="ShowText"/>.</param>
+		/// <returns>Returns an <see cref="Osd"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
 		/// Also sets these properties: <see cref="IsOfImageSize"/>=true, <see cref="OsdWindow.Opacity"/>=0, <see cref="ClickToClose"/>=true.
 		/// </remarks>

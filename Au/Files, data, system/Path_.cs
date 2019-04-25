@@ -629,7 +629,37 @@ namespace Au
 		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
 		/// Also supports URL and shell parsing names like <c>@"::{CLSID-1}\0\::{CLSID-2}"</c>.
 		/// 
-		/// [!include[](../include/Path_.GetFileName-examples.md)
+		/// Examples:
+		/// 
+		/// | path | result
+		/// | - | -
+		/// | <c>@"C:\A\B\file.txt"</c> | <c>"file.txt"</c>
+		/// | <c>"file.txt"</c> | <c>"file.txt"</c>
+		/// | <c>"file"</c> | <c>"file"</c>
+		/// | <c>@"C:\A\B"</c> | <c>"B"</c>
+		/// | <c>@"C:\A\B\"</c> | <c>"B"</c>
+		/// | <c>@"C:\A\/B\/"</c> | <c>"B"</c>
+		/// | <c>@"C:\"</c> | <c>""</c>
+		/// | <c>@"C:"</c> | <c>""</c>
+		/// | <c>@"\\network\share"</c> | <c>"share"</c>
+		/// | <c>@"C:\aa\file.txt:alt.stream"</c> | <c>"file.txt:alt.stream"</c>
+		/// | <c>"http://a.b.c"</c> | <c>"a.b.c"</c>
+		/// | <c>"::{A}\::{B}"</c> | <c>"::{B}"</c>
+		/// | <c>""</c> | <c>""</c>
+		/// | <c>null</c> | <c>null</c>
+		/// 
+		/// Examples when *withoutExtension* true:
+		/// 
+		/// | path | result
+		/// | - | -
+		/// | <c>@"C:\A\B\file.txt"</c> | <c>"file"</c>
+		/// | <c>"file.txt"</c> | <c>"file"</c>
+		/// | <c>"file"</c> | <c>"file"</c>
+		/// | <c>@"C:\A\B"</c> | <c>"B"</c>
+		/// | <c>@"C:\A\B\"</c> | <c>"B"</c>
+		/// | <c>@"C:\A\B.B\"</c> | <c>"B.B"</c>
+		/// | <c>@"C:\aa\file.txt:alt.stream"</c> | <c>"file.txt:alt"</c>
+		/// | <c>"http://a.b.c"</c> | <c>"a.b"</c>
 		/// </remarks>
 		public static string GetFileName(string path, bool withoutExtension = false)
 		{
@@ -701,7 +731,29 @@ namespace Au
 		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
 		/// Also supports URL and shell parsing names like <c>@"::{CLSID-1}\0\::{CLSID-2}"</c>.
 		/// 
-		/// [!include[](../include/Path_.GetDirectoryPath-examples.md)
+		/// Examples:
+		/// 
+		/// | path | result
+		/// | - | -
+		/// | <c>@"C:\A\B\file.txt"</c> | <c>@"C:\A\B"</c>
+		/// | <c>"file.txt"</c> | <c>""</c>
+		/// | <c>@"C:\A\B\"</c> | <c>@"C:\A"</c>
+		/// | <c>@"C:\A\/B\/"</c> | <c>@"C:\A"</c>
+		/// | <c>@"C:\"</c> | <c>null</c>
+		/// | <c>@"\\network\share"</c> | <c>null</c>
+		/// | <c>"http:"</c> | <c>null</c>
+		/// | <c>@"C:\aa\file.txt:alt.stream"</c> | <c>"C:\aa"</c>
+		/// | <c>"http://a.b.c"</c> | <c>"http:"</c>
+		/// | <c>"::{A}\::{B}"</c> | <c>"::{A}"</c>
+		/// | <c>""</c> | <c>""</c>
+		/// | <c>null</c> | <c>null</c>
+		/// 
+		/// Examples when *withSeparator* true:
+		/// 
+		/// | path | result
+		/// | - | -
+		/// | <c>@"C:\A\B"</c> | <c>@"C:\A\"</c> (not <c>@"C:\A"</c>)
+		/// | <c>"http://x.y"</c> | <c>"http://"</c> (not <c>"http:"</c>)
 		/// </remarks>
 		public static string GetDirectoryPath(string path, bool withSeparator = false)
 		{

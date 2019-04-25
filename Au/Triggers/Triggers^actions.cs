@@ -29,8 +29,8 @@ namespace Au.Triggers
 {
 	class TOptions
 	{
-		public Action<TriggerOptions.BAArgs> before;
-		public Action<TriggerOptions.BAArgs> after;
+		public Action<TOBAArgs> before;
+		public Action<TOBAArgs> after;
 		public short thread;
 		public bool noWarning;
 		public int ifRunning; //for dedicated thread it is the timeout (>= -1); for new/pool threads it is 0 if single instance, 1 if multi.
@@ -129,7 +129,7 @@ namespace Au.Triggers
 		/// Triggers.Options.BeforeAction = o => { Opt.Key.KeySpeed = 20; Opt.Key.TextSpeed = 5; };
 		/// ]]></code>
 		/// </example>
-		public Action<BAArgs> BeforeAction { set => _New().before = value; }
+		public Action<TOBAArgs> BeforeAction { set => _New().before = value; }
 
 		/// <summary>
 		/// A function to run after the trigger action.
@@ -140,7 +140,7 @@ namespace Au.Triggers
 		/// Triggers.Options.AfterAction = o => { if(o.Exception!=null) Print(o.Exception.Message); else Print("completed successfully"); };
 		/// ]]></code>
 		/// </example>
-		public Action<BAArgs> AfterAction { set => _New().after = value; }
+		public Action<TOBAArgs> AfterAction { set => _New().after = value; }
 
 		internal TOptions Current {
 			get {
@@ -155,29 +155,29 @@ namespace Au.Triggers
 		/// This property sets the <see cref="ActionTrigger.EnabledAlways"/> property of triggers added afterwards.
 		/// </summary>
 		public bool EnabledAlways { get; set; }
+	}
+
+	/// <summary>
+	/// Arguments for <see cref="TriggerOptions.BeforeAction"/> and <see cref="TriggerOptions.AfterAction"/>.
+	/// </summary>
+	public struct TOBAArgs
+	{
+		internal TOBAArgs(TriggerArgs args)
+		{
+			ActionArgs = args;
+			Exception = null;
+		}
 
 		/// <summary>
-		/// Arguments for <see cref="BeforeAction"/> and <see cref="AfterAction"/>.
+		/// Trigger event info. The same variable as passed to the trigger action.
+		/// To access the info, cast to <b>HotkeyTriggerArgs</b> etc, depending on trigger type.
 		/// </summary>
-		public struct BAArgs
-		{
-			internal BAArgs(TriggerArgs args)
-			{
-				ActionArgs = args;
-				Exception = null;
-			}
+		public TriggerArgs ActionArgs { get; }
 
-			/// <summary>
-			/// Trigger event info. The same variable as passed to the trigger action.
-			/// To access the info, cast to <b>HotkeyTriggerArgs</b> etc, depending on trigger type.
-			/// </summary>
-			public TriggerArgs ActionArgs { get; }
-
-			/// <summary>
-			/// If action ended with an exception, the exception. Else null.
-			/// </summary>
-			public Exception Exception { get; internal set; }
-		}
+		/// <summary>
+		/// If action ended with an exception, the exception. Else null.
+		/// </summary>
+		public Exception Exception { get; internal set; }
 	}
 
 	class TriggerActionThreads
@@ -189,7 +189,7 @@ namespace Au.Triggers
 				try {
 					_MuteMod(ref muteMod);
 
-					var baArgs = new TriggerOptions.BAArgs(args); //struct
+					var baArgs = new TOBAArgs(args); //struct
 #if true
 					opt.before?.Invoke(baArgs);
 #else

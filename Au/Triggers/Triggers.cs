@@ -43,6 +43,10 @@ namespace Au.Triggers
 	/// Also you can set options (<see cref="TriggerOptions"/>), window scopes (<see cref="TriggerScopes"/>) and custom scopes (<see cref="TriggerFuncs"/>) for multiple triggers added afterwards.
 	/// 
 	/// Finally call <see cref="Run"/>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s).
+	/// 
+	/// Recommended properties for scripts containg triggers. You can set it in the Properties dialog.
+	/// - <c>runMode blue</c> allows other scripts to start while this script is running.
+	/// - <c>ifRunning restart</c> makes easy to restart the script after editing: just click the Run button.
 	/// </remarks>
 	/// <example>
 	/// This is a single script with many action triggers.
@@ -93,8 +97,8 @@ namespace Au.Triggers
 	/// 
 	/// //window triggers. Note: window triggers don't depend on Triggers.Of.
 	/// 
-	/// window.ActiveNew["* Notepad", "Notepad"] = o => Print("opened Notepad window");
-	/// window.ActiveNew["Notepad", "#32770", contains: "Do you want to save *"] = o => {
+	/// window[TWEvent.ActiveNew, "* Notepad", "Notepad"] = o => Print("opened Notepad window");
+	/// window[TWEvent.ActiveNew, "Notepad", "#32770", contains: "Do you want to save *"] = o => {
 	/// 	Print("opened Notepad's 'Do you want to save' dialog");
 	/// 	//Key("Alt+S"); //click the Save button
 	/// };
@@ -137,10 +141,6 @@ namespace Au.Triggers
 	/// Triggers.Run();
 	/// //Triggers.Run returns when is called Triggers.Stop (see the "Ctrl+Alt+Q" trigger above).
 	/// Print("called Triggers.Stop");
-	/// 
-	/// //Recommended properties for scripts containg triggers: 'runMode'='blue' and 'ifRunning'='restart'. You can set it in the Properties dialog.
-	/// //The first property allows other scripts to start while this script is running.
-	/// //The second property makes easy to restart the script after editing: just click the Run button.
 	/// ]]></code>
 	/// </example>
 	public class ActionTriggers
@@ -229,25 +229,25 @@ namespace Au.Triggers
 		/// <summary>
 		/// Hotkey triggers.
 		/// </summary>
-		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+		/// <example>See <see cref="ActionTriggers"/>.</example>
 		public HotkeyTriggers Hotkey => _Get(TriggerType.Hotkey) as HotkeyTriggers;
 
 		/// <summary>
 		/// Autotext triggers.
 		/// </summary>
-		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+		/// <example>See <see cref="ActionTriggers"/>.</example>
 		public AutotextTriggers Autotext => _Get(TriggerType.Autotext) as AutotextTriggers;
 
 		/// <summary>
 		/// Mouse triggers.
 		/// </summary>
-		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+		/// <example>See <see cref="ActionTriggers"/>.</example>
 		public MouseTriggers Mouse => _Get(TriggerType.Mouse) as MouseTriggers;
 
 		/// <summary>
 		/// Window triggers.
 		/// </summary>
-		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+		/// <example>See <see cref="ActionTriggers"/>.</example>
 		public WindowTriggers Window => _Get(TriggerType.Window) as WindowTriggers;
 
 		/// <summary>
@@ -256,8 +256,8 @@ namespace Au.Triggers
 		/// <remarks>
 		/// This function monitors hotkeys, activated windows and other events. When an event matches an added trigger, launches the thrigger's action, which runs in other thread.
 		/// Does not return immediately, unless there are no triggers added. Runs until this process or thread is terminated/aborted or <see cref="Stop"/> called.
-		/// Example: <see cref="ActionTriggers"/>.
 		/// </remarks>
+		/// <example>See <see cref="ActionTriggers"/>.</example>
 		/// <exception cref="InvalidOperationException">Already running.</exception>
 		/// <exception cref="AuException">Something failed.</exception>
 		public void Run()
@@ -586,7 +586,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// true if triggers are disabled in all processes that use this library in this user session.
 		/// </summary>
-		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+		/// <example>See <see cref="ActionTriggers"/>.</example>
 		/// <seealso cref="Disabled"/>
 		/// <seealso cref="TriggerOptions.EnabledAlways"/>
 		public static unsafe bool DisabledEverywhere {

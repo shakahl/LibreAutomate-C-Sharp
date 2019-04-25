@@ -126,7 +126,6 @@ namespace Au.Util
 	/// </example>
 	public unsafe class OutputServer
 	{
-		/// <tocexclude />
 		/// <summary>
 		/// See <see cref="Message.Type"/>.
 		/// </summary>
@@ -145,7 +144,6 @@ namespace Au.Util
 			Clear,
 		}
 
-		/// <tocexclude />
 		/// <summary>
 		/// Contains message text and/or related info.
 		/// More info: <see cref="OutputServer"/>, <see cref="GetMessage"/>.

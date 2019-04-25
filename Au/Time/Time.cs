@@ -168,7 +168,12 @@ namespace Au
 		/// <summary>
 		/// Waits *timeMilliseconds* milliseconds. The same as <see cref="Sleep"/>.
 		/// </summary>
-		/// <inheritdoc cref="Sleep"/>
+		/// <exception cref="ArgumentOutOfRangeException">*timeMilliseconds* is negative and not Timeout.Infinite (-1).</exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// 50.ms();
+		/// ]]></code>
+		/// </example>
 		public static void ms(this int timeMilliseconds)
 		{
 			Sleep(timeMilliseconds);
@@ -180,7 +185,6 @@ namespace Au
 		/// </summary>
 		/// <param name="timeSeconds">Time to wait, seconds.</param>
 		/// <exception cref="ArgumentOutOfRangeException">*timeSeconds* is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
-		/// <remarks><inheritdoc cref="Sleep"/></remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// Time.Sleep(5000);
@@ -200,7 +204,6 @@ namespace Au
 		/// </summary>
 		/// <param name="timeSeconds">Time to wait, seconds. The smallest value is 0.001 (1 ms).</param>
 		/// <exception cref="ArgumentOutOfRangeException">*timeSeconds* is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
-		/// <remarks><inheritdoc cref="Sleep"/></remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// Time.Sleep(2500);
@@ -571,7 +574,7 @@ namespace Au
 			return _Set(timeMilliseconds, true, timerAction, tag);
 		}
 
-		/// <inheritdoc cref="After(int, Action, object)"/>
+		///
 		public static Timer_ After(int timeMilliseconds, Action<Timer_> timerAction, object tag = null)
 		{
 			return _Set(timeMilliseconds, true, timerAction, tag);
@@ -595,7 +598,7 @@ namespace Au
 			return _Set(periodMilliseconds, false, timerAction, tag);
 		}
 
-		/// <inheritdoc cref="Every(int, Action, object)"/>
+		///
 		public static Timer_ Every(int periodMilliseconds, Action<Timer_> timerAction, object tag = null)
 		{
 			return _Set(periodMilliseconds, false, timerAction, tag);

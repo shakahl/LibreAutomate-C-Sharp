@@ -21,7 +21,6 @@ namespace Au.Types
 	/// <summary>
 	/// In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.
 	/// </summary>
-	[AttributeUsage(AttributeTargets.All)]
 	public class NoDoc : Attribute
 	{
 	}

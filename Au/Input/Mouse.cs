@@ -121,18 +121,51 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Moves the cursor (mouse pointer) to the position x y in screen.
-		/// Returns normalized cursor position.
+		/// Moves the cursor (mouse pointer) to the position x y relative to window w.
 		/// </summary>
-		/// <param name="x">X coordinate.</param>
-		/// <param name="y">Y coordinate.</param>
-		/// <exception cref="ArgumentOutOfRangeException">
-		/// - The specified x y is not in the screen (any screen). No exception if option <b>Relaxed</b> is true (then moves to a screen edge).
-		/// - Invalid screen index.
+		/// <returns>Cursor position in primary screen coordinates.</returns>
+		/// <param name="w">Window or control.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+		/// <exception cref="WndException">
+		/// - Invalid window.
+		/// - The top-level window is hidden. No exception if just cloaked, for example in another desktop; then on click will activate, which usually uncloaks.
+		/// - Other window-related failures.
 		/// </exception>
-		/// <exception cref="AuException"><inheritdoc cref="Move(POINT)"/></exception>
+		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
+		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
+		/// </remarks>
+		public static POINT Move(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
+		{
+			LibWaitForNoButtonsPressed();
+			w.ThrowIfInvalid();
+			var wTL = w.Window;
+			if(!wTL.IsVisible) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not. If cloaked because in an inactive virtual desktop etc, Click activates and it usually uncloaks.
+			if(wTL.IsMinimized) { wTL.ShowNotMinimized(true); _Sleep(500); } //never mind: if w is a control...
+			var p = Coord.NormalizeInWindow(x, y, w, nonClient, centerIfEmpty: true);
+			if(!w.MapClientToScreen(ref p)) w.ThrowUseNative();
+			_Move(p, fast: false);
+			return p;
+		}
+
+		/// <summary>
+		/// Moves the cursor (mouse pointer) to the specified position in screen.
+		/// </summary>
+		/// <returns>Normalized cursor position.</returns>
+		/// <param name="x">X coordinate.</param>
+		/// <param name="y">Y coordinate.</param>
+		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
+		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
+		/// <remarks>
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
+		/// 
+		/// May fail to move the cursor to the specified x y. Some reasons:
+		/// - Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc).
+		/// - The active window belongs to a process of higher [](xref:uac) integrity level.
+		/// - Some application called API ClipCursor. No exception if option <b>Relaxed</b> is true (then final cursor position is undefined).
 		/// </remarks>
 		public static POINT Move(Coord x, Coord y)
 		{
@@ -150,7 +183,7 @@ namespace Au
 		/// <note type="tip">When need coordinates relative to a non-primary screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.Move((x, y, true));</c>.</note>
 		/// </param>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move the cursor to the specified x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception if option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
+		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
 		/// </remarks>
@@ -170,37 +203,6 @@ namespace Au
 		{
 			LibWaitForNoButtonsPressed();
 			_Move(p, fast: false);
-		}
-
-		/// <summary>
-		/// Moves the cursor (mouse pointer) to the position x y relative to window w.
-		/// Returns cursor position in primary screen coordinates.
-		/// </summary>
-		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
-		/// <exception cref="WndException">
-		/// Invalid window.
-		/// The top-level window is hidden. No exception if just cloaked, for example in another desktop; then on click will activate, which usually uncloaks.
-		/// Other window-related failures.
-		/// </exception>
-		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException"><inheritdoc cref="Move(POINT)"/></exception>
-		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
-		/// </remarks>
-		public static POINT Move(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
-		{
-			LibWaitForNoButtonsPressed();
-			w.ThrowIfInvalid();
-			var wTL = w.Window;
-			if(!wTL.IsVisible) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not. If cloaked because in an inactive virtual desktop etc, Click activates and it usually uncloaks.
-			if(wTL.IsMinimized) { wTL.ShowNotMinimized(true); _Sleep(500); } //never mind: if w is a control...
-			var p = Coord.NormalizeInWindow(x, y, w, nonClient, centerIfEmpty: true);
-			if(!w.MapClientToScreen(ref p)) w.ThrowUseNative();
-			_Move(p, fast: false);
-			return p;
 		}
 
 		/// <summary>
@@ -528,72 +530,6 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Clicks, double-clicks, presses or releases a mouse button.
-		/// By default does not move the mouse cursor.
-		/// </summary>
-		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
-		/// <param name="button">Button and action. Default: left click.</param>
-		/// <param name="useLastXY">
-		/// Use <see cref="LastXY"/>. It is the mouse cursor position set by the most recent 'mouse move' or 'mouse click' function called in this thread. Use this option for reliability.
-		/// Example: <c>Mouse.Move(100, 100); Mouse.ClickEx(..., true);</c>. The click is always at 100 100, even if somebody changes cursor position between <c>Mouse.Move</c> sets it and <c>Mouse.ClickEx</c> uses it. In such case this option atomically moves the cursor to <b>LastXY</b>. This movement is instant and does not use <see cref="Opt"/>.
-		/// If false (default), clicks at the current cursor position (does not move it).
-		/// </param>
-		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
-		/// <remarks>
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.ClickSpeed"/>, <see cref="OptMouse.ClickSleepFinally"/>.
-		/// </remarks>
-		public static MRelease ClickEx(MButton button = MButton.Left, bool useLastXY = false)
-		{
-			POINT p;
-			if(useLastXY) p = LastXY;
-			else {
-				p = XY;
-				if(t_prevMousePos == null) t_prevMousePos = new _PrevMousePos(p); //sets .first=.last=p
-				else t_prevMousePos.last = p;
-			}
-			_Click(button, p);
-			return button;
-			//CONSIDER: Opt.Mouse.ClickAtLastXY
-		}
-
-		/// <summary>
-		/// Clicks, double-clicks, presses or releases a mouse button at the specified position in screen.
-		/// </summary>
-		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
-		/// <param name="button">Button and action.</param>
-		/// <param name="x">X coordinate.</param>
-		/// <param name="y">Y coordinate.</param>
-		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
-		/// <remarks>
-		/// To move the mouse cursor, calls <see cref="Move(Coord, Coord)"/>.
-		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="OptMouse.ClickSpeed"/>, <see cref="OptMouse.ClickSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
-		/// </remarks>
-		public static MRelease ClickEx(MButton button, Coord x, Coord y)
-		{
-			POINT p = Move(x, y);
-			_Click(button, p);
-			return button;
-		}
-
-		/// <summary>
-		/// Clicks, double-clicks, presses or releases a mouse button at the specified position in screen.
-		/// </summary>
-		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
-		/// <param name="button">Button and action.</param>
-		/// <param name="p">Coordinates.
-		/// <note type="tip">When need coordinates relative to a non-primary screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.ClickEx(MButton.Right, (x, y, true));</c>.</note>
-		/// </param>
-		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
-		public static MRelease ClickEx(MButton button, POINT p)
-		{
-			Move(p);
-			_Click(button, p);
-			return button;
-		}
-
-		/// <summary>
 		/// Clicks, double-clicks, presses or releases a mouse button at position x y relative to window w.
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
@@ -650,27 +586,69 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Left button click.
-		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
+		/// Clicks, double-clicks, presses or releases a mouse button at the specified position in screen.
 		/// </summary>
-		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
-		public static void Click(bool useLastXY = false)
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
+		/// <param name="button">Button and action.</param>
+		/// <param name="x">X coordinate.</param>
+		/// <param name="y">Y coordinate.</param>
+		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
+		/// <remarks>
+		/// To move the mouse cursor, calls <see cref="Move(Coord, Coord)"/>.
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="OptMouse.ClickSpeed"/>, <see cref="OptMouse.ClickSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
+		/// </remarks>
+		public static MRelease ClickEx(MButton button, Coord x, Coord y)
 		{
-			ClickEx(MButton.Left, useLastXY);
+			POINT p = Move(x, y);
+			_Click(button, p);
+			return button;
 		}
 
 		/// <summary>
-		/// Left button click at position x y.
-		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
+		/// Clicks, double-clicks, presses or releases a mouse button at the specified position in screen.
 		/// </summary>
-		/// <param name="x">X coordinate in the screen.</param>
-		/// <param name="y">Y coordinate in the screen.</param>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
+		/// <param name="button">Button and action.</param>
+		/// <param name="p">Coordinates.
+		/// <note type="tip">When need coordinates relative to a non-primary screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.ClickEx(MButton.Right, (x, y, true));</c>.</note>
+		/// </param>
+		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
-		public static void Click(Coord x, Coord y)
+		public static MRelease ClickEx(MButton button, POINT p)
 		{
-			//note: most Click functions don't have a workArea and screen parameter. It is rarely used. For reliability better use the overloads that use window coordinates.
+			Move(p);
+			_Click(button, p);
+			return button;
+		}
 
-			ClickEx(MButton.Left, x, y);
+		/// <summary>
+		/// Clicks, double-clicks, presses or releases a mouse button.
+		/// By default does not move the mouse cursor.
+		/// </summary>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
+		/// <param name="button">Button and action. Default: left click.</param>
+		/// <param name="useLastXY">
+		/// Use <see cref="LastXY"/>. It is the mouse cursor position set by the most recent 'mouse move' or 'mouse click' function called in this thread. Use this option for reliability.
+		/// Example: <c>Mouse.Move(100, 100); Mouse.ClickEx(..., true);</c>. The click is always at 100 100, even if somebody changes cursor position between <c>Mouse.Move</c> sets it and <c>Mouse.ClickEx</c> uses it. In such case this option atomically moves the cursor to <b>LastXY</b>. This movement is instant and does not use <see cref="Opt"/>.
+		/// If false (default), clicks at the current cursor position (does not move it).
+		/// </param>
+		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
+		/// <remarks>
+		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.ClickSpeed"/>, <see cref="OptMouse.ClickSleepFinally"/>.
+		/// </remarks>
+		public static MRelease ClickEx(MButton button = MButton.Left, bool useLastXY = false)
+		{
+			POINT p;
+			if(useLastXY) p = LastXY;
+			else {
+				p = XY;
+				if(t_prevMousePos == null) t_prevMousePos = new _PrevMousePos(p); //sets .first=.last=p
+				else t_prevMousePos.last = p;
+			}
+			_Click(button, p);
+			return button;
+			//CONSIDER: Opt.Mouse.ClickAtLastXY
 		}
 
 		/// <summary>
@@ -689,25 +667,27 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Right button click.
-		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
-		/// </summary>
-		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
-		public static void RightClick(bool useLastXY = false)
-		{
-			ClickEx(MButton.Right, useLastXY);
-		}
-
-		/// <summary>
-		/// Right button click at position x y.
+		/// Left button click at position x y.
 		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
-		public static void RightClick(Coord x, Coord y)
+		public static void Click(Coord x, Coord y)
 		{
-			ClickEx(MButton.Right, x, y);
+			//note: most Click functions don't have a workArea and screen parameter. It is rarely used. For reliability better use the overloads that use window coordinates.
+
+			ClickEx(MButton.Left, x, y);
+		}
+
+		/// <summary>
+		/// Left button click.
+		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
+		/// </summary>
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static void Click(bool useLastXY = false)
+		{
+			ClickEx(MButton.Left, useLastXY);
 		}
 
 		/// <summary>
@@ -726,25 +706,25 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Left button double click.
-		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
-		/// </summary>
-		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
-		public static void DoubleClick(bool useLastXY = false)
-		{
-			ClickEx(MButton.Left | MButton.DoubleClick, useLastXY);
-		}
-
-		/// <summary>
-		/// Left button double click at position x y.
+		/// Right button click at position x y.
 		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
-		public static void DoubleClick(Coord x, Coord y)
+		public static void RightClick(Coord x, Coord y)
 		{
-			ClickEx(MButton.Left | MButton.DoubleClick, x, y);
+			ClickEx(MButton.Right, x, y);
+		}
+
+		/// <summary>
+		/// Right button click.
+		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
+		/// </summary>
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static void RightClick(bool useLastXY = false)
+		{
+			ClickEx(MButton.Right, useLastXY);
 		}
 
 		/// <summary>
@@ -763,27 +743,25 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Left button down (press and don't release).
-		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
-		/// </summary>
-		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
-		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
-		public static MRelease LeftDown(bool useLastXY = false)
-		{
-			return ClickEx(MButton.Left | MButton.Down, useLastXY);
-		}
-
-		/// <summary>
-		/// Left button down (press and don't release) at position x y.
+		/// Left button double click at position x y.
 		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
-		public static MRelease LeftDown(Coord x, Coord y)
+		public static void DoubleClick(Coord x, Coord y)
 		{
-			return ClickEx(MButton.Left | MButton.Down, x, y);
+			ClickEx(MButton.Left | MButton.DoubleClick, x, y);
+		}
+
+		/// <summary>
+		/// Left button double click.
+		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
+		/// </summary>
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static void DoubleClick(bool useLastXY = false)
+		{
+			ClickEx(MButton.Left | MButton.DoubleClick, useLastXY);
 		}
 
 		/// <summary>
@@ -803,25 +781,27 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Left button up (release pressed button).
-		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
-		/// </summary>
-		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
-		public static void LeftUp(bool useLastXY = false)
-		{
-			ClickEx(MButton.Left | MButton.Up, useLastXY);
-		}
-
-		/// <summary>
-		/// Left button up (release pressed button) at position x y.
+		/// Left button down (press and don't release) at position x y.
 		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
-		public static void LeftUp(Coord x, Coord y)
+		public static MRelease LeftDown(Coord x, Coord y)
 		{
-			ClickEx(MButton.Left | MButton.Up, x, y);
+			return ClickEx(MButton.Left | MButton.Down, x, y);
+		}
+
+		/// <summary>
+		/// Left button down (press and don't release).
+		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
+		/// </summary>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static MRelease LeftDown(bool useLastXY = false)
+		{
+			return ClickEx(MButton.Left | MButton.Down, useLastXY);
 		}
 
 		/// <summary>
@@ -839,27 +819,25 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Right button down (press and don't release).
-		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
-		/// </summary>
-		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
-		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
-		public static MRelease RightDown(bool useLastXY = false)
-		{
-			return ClickEx(MButton.Right | MButton.Down, useLastXY);
-		}
-
-		/// <summary>
-		/// Right button down (press and don't release) at position x y.
+		/// Left button up (release pressed button) at position x y.
 		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
 		/// </summary>
-		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="x">X coordinate in the screen.</param>
 		/// <param name="y">Y coordinate in the screen.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
-		public static MRelease RightDown(Coord x, Coord y)
+		public static void LeftUp(Coord x, Coord y)
 		{
-			return ClickEx(MButton.Right | MButton.Down, x, y);
+			ClickEx(MButton.Left | MButton.Up, x, y);
+		}
+
+		/// <summary>
+		/// Left button up (release pressed button).
+		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
+		/// </summary>
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static void LeftUp(bool useLastXY = false)
+		{
+			ClickEx(MButton.Left | MButton.Up, useLastXY);
 		}
 
 		/// <summary>
@@ -879,13 +857,41 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Right button up (release pressed button).
+		/// Right button down (press and don't release) at position x y.
+		/// Calls <see cref="ClickEx(MButton, Coord, Coord)"/>. More info there.
+		/// </summary>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
+		/// <param name="x">X coordinate in the screen.</param>
+		/// <param name="y">Y coordinate in the screen.</param>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
+		public static MRelease RightDown(Coord x, Coord y)
+		{
+			return ClickEx(MButton.Right | MButton.Down, x, y);
+		}
+
+		/// <summary>
+		/// Right button down (press and don't release).
 		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
 		/// </summary>
+		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
-		public static void RightUp(bool useLastXY = false)
+		public static MRelease RightDown(bool useLastXY = false)
 		{
-			ClickEx(MButton.Right | MButton.Up, useLastXY);
+			return ClickEx(MButton.Right | MButton.Down, useLastXY);
+		}
+
+		/// <summary>
+		/// Right button up (release pressed button) at position x y relative to window w.
+		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
+		/// </summary>
+		/// <param name="w">Window or control.</param>
+		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
+		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
+		public static void RightUp(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
+		{
+			ClickEx(MButton.Right | MButton.Up, w, x, y, nonClient);
 		}
 
 		/// <summary>
@@ -901,17 +907,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Right button up (release pressed button) at position x y relative to window w.
-		/// Calls <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>. More info there.
+		/// Right button up (release pressed button).
+		/// Calls <see cref="ClickEx(MButton, bool)"/>. More info there.
 		/// </summary>
-		/// <param name="w">Window or control.</param>
-		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
-		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
-		public static void RightUp(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
+		/// <param name="useLastXY">Use <see cref="LastXY"/>, not current cursor position.</param>
+		public static void RightUp(bool useLastXY = false)
 		{
-			ClickEx(MButton.Right | MButton.Up, w, x, y, nonClient);
+			ClickEx(MButton.Right | MButton.Up, useLastXY);
 		}
 
 		/// <summary>
@@ -988,7 +990,7 @@ namespace Au
 		///// Returns a value indicating which mouse buttons are down (pressed).
 		///// </summary>
 		///// <param name="buttons">Check only these buttons. Default: Left, Right, Middle, X1, X2.</param>
-		///// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		///// <remarks>See <see cref="IsPressed"/>.</remarks>
 		//public static MButtons Buttons(MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		//{
 		//	MButtons R = 0;
@@ -1004,13 +1006,13 @@ namespace Au
 		///// <summary>
 		///// Returns true if the left mouse button is down (pressed).
 		///// </summary>
-		///// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		///// <remarks>See <see cref="IsPressed"/>.</remarks>
 		//public static bool IsLeft => Keyb.IsPressed(KKey.MouseLeft);
 
 		///// <summary>
 		///// Returns true if the right mouse button is down (pressed).
 		///// </summary>
-		///// <remarks><inheritdoc cref="IsPressed"/></remarks>
+		///// <remarks>See <see cref="IsPressed"/>.</remarks>
 		//public static bool IsRight => Keyb.IsPressed(KKey.MouseRight);
 
 		/// <summary>
@@ -1045,11 +1047,11 @@ namespace Au
 		/// <summary>
 		/// Waits for button-down or button-up event of the specified mouse button or buttons.
 		/// </summary>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
 		/// <param name="up">Wait for button-up event.</param>
 		/// <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="ArgumentException">*button* is 0.</exception>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks>
@@ -1073,11 +1075,10 @@ namespace Au
 		/// Waits for button-down or button-up event of any mouse button, and gets the button code.
 		/// </summary>
 		/// <returns>Returns the button code. On timeout returns 0 if *secondsTimeout* is negative; else exception.</returns>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
-		/// <param name="up">Wait for button-up event.</param>
-		/// <param name="block"><inheritdoc cref="WaitForClick(double, MButtons, bool, bool)"/></param>
+		/// <param name="secondsTimeout"></param>
+		/// <param name="up"></param>
+		/// <param name="block"></param>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
-		/// <remarks><inheritdoc cref="WaitForClick(double, MButtons, bool, bool)"/></remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var button = Mouse.WaitForClick(0, up: true, block: true);
@@ -1387,21 +1388,21 @@ namespace Au.Types
 	{
 		#region Wnd
 
-		/// <inheritdoc cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to the position x y relative to this window.
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
-		/// <seealso cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void MouseMove(this Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 			=> Mouse.Move(w.OrThrow(), x, y, nonClient);
 
-		/// <inheritdoc cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>
 		/// <summary>
 		/// Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
-		/// <seealso cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease MouseClick(this Wnd w, Coord x = default, Coord y = default, MButton button = MButton.Left, bool nonClient = false)
 			=> Mouse.ClickEx(button, w.OrThrow(), x, y, nonClient);
 
@@ -1409,34 +1410,30 @@ namespace Au.Types
 
 		#region Acc
 
-		/// <inheritdoc cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to this accessible object.
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
 		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
 		/// <exception cref="NotFoundException">Accessible object not found (this variable is null).</exception>
-		/// <exception cref="AuException">
-		/// Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).
-		/// <inheritdoc cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>
-		/// </exception>
+		/// <exception cref="AuException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void MouseMove(this Acc t, Coord x = default, Coord y = default)
 			=> _AccMouseAction(t.OrThrow(), false, x, y, default);
 
-		/// <inheritdoc cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>
 		/// <summary>
 		/// Clicks this accessible object.
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
 		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
 		/// <param name="button">Which button and how to use it.</param>
 		/// <exception cref="NotFoundException">Accessible object not found (this variable is null).</exception>
-		/// <exception cref="AuException">
-		/// Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).
-		/// <inheritdoc cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>
-		/// </exception>
+		/// <exception cref="AuException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease MouseClick(this Acc t, Coord x = default, Coord y = default, MButton button = MButton.Left)
 		{
 			_AccMouseAction(t.OrThrow(), true, x, y, button);
@@ -1464,21 +1461,22 @@ namespace Au.Types
 
 		#region WinImage
 
-		/// <inheritdoc cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>
 		/// <summary>
 		/// Moves the mouse to the found image.
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="x">X coordinate in the found image. Default - center.</param>
 		/// <param name="y">Y coordinate in the found image. Default - center.</param>
 		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
 		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void MouseMove(this WinImage t, Coord x = default, Coord y = default)
 			=> t.OrThrow().LibMouseAction(0, x, y);
 
-		/// <inheritdoc cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>
 		/// <summary>
 		/// Clicks the found image.
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="x">X coordinate in the found image. Default - center.</param>
@@ -1486,6 +1484,7 @@ namespace Au.Types
 		/// <param name="button">Which button and how to use it.</param>
 		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
 		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease MouseClick(this WinImage t, Coord x = default, Coord y = default, MButton button = MButton.Left)
 		{
 			t.OrThrow().LibMouseAction(button == 0 ? MButton.Left : button, x, y);

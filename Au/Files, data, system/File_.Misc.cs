@@ -83,34 +83,6 @@ namespace Au
 			}
 #endif
 
-#pragma warning disable 660, 661 //no Equals()
-			/// <summary>
-			/// Contains file properties that can be used to uniquely identify the file on a single computer.
-			/// </summary>
-			/// <remarks>
-			/// Can be used with files and directories.
-			/// To get it, use <see cref="GetFileId"/>.
-			/// There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
-			/// </remarks>
-			/// <tocexclude />
-			public struct FileId
-			{
-				/// <summary>The serial number of the volume (aka disk drive) that contains the file.</summary>
-				public int VolumeSerialNumber;
-				/// <summary>An identifier that is associated with the file. It is unique in that volume.</summary>
-				public long FileIndex;
-
-				///
-				public static bool operator ==(FileId a, FileId b)
-				{
-					return a.FileIndex == b.FileIndex && a.VolumeSerialNumber == b.VolumeSerialNumber;
-				}
-
-				///
-				public static bool operator !=(FileId a, FileId b) { return !(a == b); }
-			}
-#pragma warning restore 660, 661
-
 			/// <summary>
 			/// Gets <see cref="FileId"/> of a file or directory.
 			/// Returns false if fails. Supports <see cref="WinError"/>.
@@ -415,4 +387,34 @@ namespace Au
 			//}
 		}
 	}
+}
+
+namespace Au.Types
+{
+#pragma warning disable 660, 661 //no Equals()
+	/// <summary>
+	/// Contains file properties that can be used to uniquely identify the file on a single computer.
+	/// </summary>
+	/// <remarks>
+	/// Can be used with files and directories.
+	/// To get it, use <see cref="File_.Misc.GetFileId"/>.
+	/// There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
+	/// </remarks>
+	public struct FileId
+	{
+		/// <summary>The serial number of the volume (aka disk drive) that contains the file.</summary>
+		public int VolumeSerialNumber;
+		/// <summary>An identifier that is associated with the file. It is unique in that volume.</summary>
+		public long FileIndex;
+
+		///
+		public static bool operator ==(FileId a, FileId b)
+		{
+			return a.FileIndex == b.FileIndex && a.VolumeSerialNumber == b.VolumeSerialNumber;
+		}
+
+		///
+		public static bool operator !=(FileId a, FileId b) { return !(a == b); }
+	}
+#pragma warning restore 660, 661
 }

@@ -107,12 +107,7 @@ namespace Au
 			/// <summary>
 			/// See <see cref="Wnd.Find"/>.
 			/// </summary>
-			/// <exception cref="ArgumentException">
-			/// - *cn* is "". To match any, use null.
-			/// - *program* is "" or 0 or contains \ or /. To match any, use null.
-			/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
-			/// - Invalid image string in *contains*.
-			/// </exception>
+			/// <exception cref="ArgumentException">See <see cref="Wnd.Find"/>.</exception>
 			public Finder(
 				string name = null, string cn = null, WF3 program = default,
 				WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
@@ -416,23 +411,20 @@ namespace Au
 
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>Wnd</b>.
-		/// Returns <c>default(Wnd)</c> if not found.
 		/// </summary>
+		/// <returns>Returns <c>default(Wnd)</c> if not found.</returns>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
-		/// String format: [](xref:wildcard_expression).
-		/// null means 'can be any'. "" means 'must not have name'.
+		/// String format: [](xref:wildcard_expression). null means 'can be any'. "" means 'must not have name'.
 		/// </param>
 		/// <param name="cn">
 		/// Window class name.
-		/// String format: [](xref:wildcard_expression).
-		/// null means 'can be any'. Cannot be "".
+		/// String format: [](xref:wildcard_expression). null means 'can be any'. Cannot be "".
 		/// You can see window name, class name and program in editor's status bar and dialog "Find window or control".
 		/// </param>
 		/// <param name="program">
 		/// Program file name, like <c>"notepad.exe"</c>.
-		/// String format: [](xref:wildcard_expression).
-		/// null means 'can be any'. Cannot be "". Cannot be path.
+		/// String format: [](xref:wildcard_expression). null means 'can be any'. Cannot be "". Cannot be path.
 		/// Or <see cref="WF3.Process"/>(process id), <see cref="WF3.Thread"/>(thread id), <see cref="WF3.Owner"/>(owner window).
 		/// See <see cref="ProcessId"/>, <see cref="Process_.CurrentProcessId"/>, <see cref="ThreadId"/>, <see cref="Thread_.NativeId"/>, <see cref="Owner"/>.
 		/// </param>
@@ -441,7 +433,6 @@ namespace Au
 		/// Callback function. Called for each matching window.
 		/// It can evaluate more properties of the window and return true when they match.
 		/// Example: <c>also: t =&gt; !t.IsPopupWindow</c>.
-		///
 		/// Called after evaluating all other parameters except *contains*.
 		/// </param>
 		/// <param name="contains">
@@ -458,8 +449,6 @@ namespace Au
 		/// </ul>
 		/// </li>
 		/// </ul>
-		///
-		/// This parameter is evaluated after *also*.
 		/// </param>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
@@ -515,12 +504,12 @@ namespace Au
 		//[field: ThreadStatic]
 		//public static Finder LastFind { get; set; }
 
-		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Finds all matching windows.
 		/// Returns array containing 0 or more window handles as Wnd.
 		/// Parameters etc are the same as <see cref="Find"/>.
 		/// </summary>
+		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// The list is sorted to match the Z order, however hidden windows (when using <see cref="WFFlags.HiddenToo"/>) are always after visible windows.
 		/// </remarks>
@@ -594,15 +583,21 @@ namespace Au
 			}
 		}
 
-		/// <inheritdoc cref="Find"/>
 		/// <summary>
-		/// Finds a top-level window (<see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="Shell.Run"/>.
+		/// Finds a top-level window (calls <see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="Shell.Run"/>.
 		/// Returns window handle as <b>Wnd</b>. Returns <c>default(Wnd)</c> if not found (if *runWaitS* is negative; else exception).
 		/// </summary>
+		/// <param name="name">See <see cref="Find"/>.</param>
+		/// <param name="cn">See <see cref="Find"/>.</param>
+		/// <param name="program">See <see cref="Find"/>.</param>
+		/// <param name="flags">See <see cref="Find"/>.</param>
+		/// <param name="also">See <see cref="Find"/>.</param>
+		/// <param name="contains">See <see cref="Find"/>.</param>
 		/// <param name="run">Callback function. See example.</param>
 		/// <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="Wait"/>.</param>
 		/// <param name="needActiveWindow">Finally the window must be active. Default: true.</param>
 		/// <exception cref="TimeoutException">*runWaitS* time has expired. Not thrown if *runWaitS* &lt;= 0.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// The algorithm is:
 		/// <code>
@@ -619,10 +614,8 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public static Wnd FindOrRun(
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 			string name = null, string cn = null, WF3 program = default,
 			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null,
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 			Action run = null, double runWaitS = 60.0, bool needActiveWindow = true)
 		{
 			Wnd w = default;
@@ -664,13 +657,12 @@ namespace Au
 				return Lib.EnumWindows(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible);
 			}
 
-			/// <inheritdoc cref="AllWindows(bool, bool)"/>
 			/// <summary>
 			/// Gets top-level windows.
 			/// </summary>
 			/// <param name="a">Receives window handles as <b>Wnd</b>. If null, this function creates new List, else clears before adding items.</param>
-			/// <param name="onlyVisible"><inheritdoc cref="AllWindows(bool, bool)"/></param>
-			/// <param name="sortFirstVisible"><inheritdoc cref="AllWindows(bool, bool)"/></param>
+			/// <param name="onlyVisible"></param>
+			/// <param name="sortFirstVisible"></param>
 			/// <remarks>
 			/// Use this overload to avoid much garbage when calling frequently with the same List variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
 			/// </remarks>
@@ -701,11 +693,10 @@ namespace Au
 				return Lib.EnumWindows(Lib.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId);
 			}
 
-			/// <inheritdoc cref="ThreadWindows(int, bool, bool)"/>
 			/// <summary>
 			/// Gets top-level windows of a thread.
 			/// </summary>
-			/// <remarks><inheritdoc cref="AllWindows(ref List{Wnd}, bool, bool)"/></remarks>
+			/// <remarks>This overload can be used to avoid much garbage when caling frequently.</remarks>
 			public static void ThreadWindows(ref List<Wnd> a, int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				if(threadId == 0) throw new ArgumentException("0 threadId.");

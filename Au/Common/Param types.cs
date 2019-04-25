@@ -52,6 +52,7 @@ namespace Au.Types
 			/// </summary>
 			Fraction,
 		}
+		//TODO: move to Au.Types.
 
 		//Use single long field that packs int and CoordType.
 		//If 2 fields (int and CoordType), 64-bit compiler creates huge calling code.

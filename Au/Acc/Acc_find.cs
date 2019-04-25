@@ -398,8 +398,8 @@ namespace Au
 		/// - *navig* string is invalid.
 		/// - *flags* has <see cref="AFFlags.UIA"/> when searching in web page (role prefix <c>"web:"</c> etc).
 		/// </exception>
-		/// <exception cref="WndException"> Invalid window (if the function has parameter *w*).</exception>
-		/// <exception cref="AuException"> Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+		/// <exception cref="WndException">Invalid window.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// 
 		/// <remarks>
 		/// To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.Form_Acc</b> in Au.Tools.dll.
@@ -446,19 +446,15 @@ namespace Au
 			return f.Result;
 		}
 
-		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Finds a descendant accessible object (AO) of this AO.
 		/// Returns the found AO. Returns null if not found.
 		/// </summary>
-		/// <exception cref="ArgumentException">
-		/// - *role* is "" or invalid or has a prefix (<c>"web:"</c> etc).
-		/// - *name* is invalid wildcard expression (<c>"**options "</c> or regular expression).
-		/// - *prop* has invalid format or contains unknown property names or invalid wildcard expressions or <c>"class"</c>, <c>"id"</c>.
-		/// - *navig* string is invalid.
+		/// <exception cref="ArgumentException">Exceptions of other overload, plus:
 		/// - *flags* has <see cref="AFFlags.UIA"/>.
 		/// - <see cref="SimpleElementId"/> is not 0.
 		/// </exception>
+		/// <exception cref="AuException">Failed.</exception>
 		public Acc Find(string role = null, string name = null, string prop = null, AFFlags flags = 0,
 			Func<Acc, bool> also = null, int skip = 0, string navig = null)
 		{
@@ -470,13 +466,16 @@ namespace Au
 		}
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Finds accessible object (AO) in window. Waits until the AO is found or the given time expires.
+		/// More info: <see cref="Find"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <exception cref="ArgumentException"/>
+		/// <exception cref="WndException"/>
+		/// <exception cref="AuException"/>
 		public static Acc Wait(double secondsTimeout, Wnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0,
 			Func<Acc, bool> also = null, int skip = 0, string navig = null)
 		{
@@ -485,13 +484,15 @@ namespace Au
 			return f.Result;
 		}
 
-		/// <inheritdoc cref="Find(string, string, string, AFFlags, Func{Acc, bool}, int, string)"/>
 		/// <summary>
 		/// Finds a descendant accessible object (AO) of this AO. Waits until the AO is found or the given time expires.
+		/// More info: <see cref="Find"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"/>
+		/// <exception cref="ArgumentException"/>
+		/// <exception cref="AuException"/>
 		public Acc Wait(double secondsTimeout, string role = null, string name = null, string prop = null, AFFlags flags = 0,
 			Func<Acc, bool> also = null, int skip = 0, string navig = null)
 		{
@@ -503,11 +504,14 @@ namespace Au
 		}
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
-		/// <inheritdoc cref="Find"/>
 		/// <summary>
 		/// Finds all matching accessible objects in window.
-		/// Returns array of 0 or more elements.
+		/// More info: <see cref="Find"/>.
 		/// </summary>
+		/// <returns>Array of 0 or more elements.</returns>
+		/// <exception cref="ArgumentException"/>
+		/// <exception cref="WndException"/>
+		/// <exception cref="AuException"/>
 		/// <example>
 		/// Get all taskbar buttons (Windows 10).
 		/// <code><![CDATA[
@@ -526,11 +530,13 @@ namespace Au
 			return a.ToArray();
 		}
 
-		/// <inheritdoc cref="Find(string, string, string, AFFlags, Func{Acc, bool}, int, string)"/>
 		/// <summary>
 		/// Finds all matching descendant accessible objects (AO) of this AO.
-		/// Returns array of 0 or more elements.
+		/// More info: <see cref="Find"/>.
 		/// </summary>
+		/// <returns>Array of 0 or more elements.</returns>
+		/// <exception cref="ArgumentException"/>
+		/// <exception cref="AuException"/>
 		/// <example>
 		/// Get all taskbar buttons (Windows 10).
 		/// <code><![CDATA[

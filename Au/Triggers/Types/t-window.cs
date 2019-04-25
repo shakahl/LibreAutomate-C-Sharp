@@ -38,17 +38,58 @@ namespace Au.Triggers
 		/// <summary>
 		/// When using the <i>later</i> parameter, call the currently active <b>Triggers.FuncOf</b> functions on "later" events too.
 		/// If the function returns false, the action will not run.
-		/// The function runs synchronously in the same thread that called <b>Triggers.Run</b>. The action runs asynchronously in another thread, which is slower to start.
+		/// The function runs synchronously in the same thread that called <c>Triggers.Run</c>. The action runs asynchronously in another thread, which is slower to start.
 		/// As always, <b>Triggers.FuncOf</b> functions must not contain slow code; should take less than 10 ms.
 		/// </summary>
 		LaterCallFunc = 2,
 	}
 
 	/// <summary>
+	/// Events for window triggers.
+	/// </summary>
+	/// <remarks>
+	/// Cloaked windows are considered invisible. See <see cref="Wnd.IsCloaked"/>.
+	/// </remarks>
+	public enum TWEvent
+	{
+		/// <summary>
+		/// When the specified window becomes active (each time).
+		/// </summary>
+		Active,
+
+		/// <summary>
+		/// When the specified window becomes active the first time in the trigger's life.
+		/// </summary>
+		ActiveOnce,
+
+		/// <summary>
+		/// When the specified window is created and then becomes active.
+		/// The same as <see cref="ActiveOnce"/>, but windows created before calling <see cref="ActionTriggers.Run"/> are ignored.
+		/// </summary>
+		ActiveNew,
+
+		/// <summary>
+		/// When the specified window becomes visible (each time).
+		/// </summary>
+		Visible,
+
+		/// <summary>
+		/// When the specified window becomes visible the first time in the trigger's life.
+		/// </summary>
+		VisibleOnce,
+
+		/// <summary>
+		/// When the specified window is created and then becomes visible.
+		/// The same as <see cref="VisibleOnce"/>, but windows created before calling <see cref="ActionTriggers.Run"/> are ignored.
+		/// </summary>
+		VisibleNew,
+	}
+
+	/// <summary>
 	/// Window events for the <i>later</i> parameter of window triggers.
 	/// </summary>
 	[Flags]
-	public enum TWEvents : ushort
+	public enum TWLater : ushort
 	{
 		/// <summary>
 		/// Name changed.
@@ -127,55 +168,59 @@ namespace Au.Triggers
 		//rejected: Timer.
 	}
 
-	enum _Once : byte { Always, Once, New } //Active, ActiveOnce, ActiveNew, and the same for VisibleX.
-
 	/// <summary>
 	/// Represents a window trigger.
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[
-	/// Triggers.Window.ActiveNew["Window name"] = o => Print(o.Window);
+	/// Triggers.Window[TWEvent.ActiveNew, "Window name"] = o => Print(o.Window);
 	/// var v = Triggers.Window.Last; //v is the new WindowTrigger. Rarely used.
 	/// ]]></code>
 	/// </example>
 	public class WindowTrigger : ActionTrigger
 	{
 		internal readonly Wnd.Finder finder;
-		internal readonly TWEvents later;
+		internal readonly TWLater later;
 		internal readonly TWFlags flags;
-		internal readonly byte subtype; //0 ActveX, 1 VisibleX
-		internal readonly _Once once;
+		internal readonly TWEvent ev;
 		string _typeString, _paramsString;
 
-		internal WindowTrigger(ActionTriggers triggers, Action<WindowTriggerArgs> action, Wnd.Finder finder, TWFlags flags, TWEvents later, WindowTriggers.Subtype x) : base(triggers, action, false)
+		internal WindowTrigger(ActionTriggers triggers, Action<WindowTriggerArgs> action, TWEvent ev, Wnd.Finder finder, TWFlags flags, TWLater later) : base(triggers, action, false)
 		{
+			this.ev = ev;
 			this.finder = finder;
 			this.flags = flags;
 			this.later = later;
-			this.subtype = x.subtype;
-			this.once = x.once;
 		}
 
 		internal override void Run(TriggerArgs args) => RunT(args as WindowTriggerArgs);
 
 		/// <inheritdoc/>
-		public override string TypeString => _typeString ?? (_typeString = "Window." + (subtype == 1 ? "Visible" : "Active") + (once == _Once.New ? "New" : (once == _Once.Once ? "Once" : "")));
+		public override string TypeString => _typeString ?? (_typeString = "Window." + (IsVisible ? "Visible" : "Active") + (IsNew ? "New" : (IsOnce ? "Once" : "")));
 
 		/// <inheritdoc/>
 		public override string ParamsString => _paramsString ?? (_paramsString = finder.ToString());
+
+		internal bool IsVisible => ev >= TWEvent.Visible;
+
+		internal bool IsOnce => ev == TWEvent.ActiveOnce || ev == TWEvent.VisibleOnce;
+
+		internal bool IsNew => ev == TWEvent.ActiveNew || ev == TWEvent.VisibleNew;
+
+		internal bool IsAlways => ev == TWEvent.Active || ev == TWEvent.Visible;
 	}
 
 	/// <summary>
 	/// Window triggers.
 	/// </summary>
-	/// <remarks>More examples: <see cref="ActionTriggers"/>.</remarks>
 	/// <example>
 	/// <code><![CDATA[
 	/// var wt = Triggers.Window; //wt is a WindowTriggers instance
-	/// wt.ActiveNew["Window name"] = o => Print(o.Window);
-	/// wt.Visible["Window2 name"] = o => Print(o.Window);
+	/// wt[TWEvent.ActiveNew, "Window name"] = o => Print(o.Window);
+	/// wt[TWEvent.Visible, "Window2 name"] = o => Print(o.Window);
 	/// Triggers.Run();
 	/// ]]></code>
+	/// More examples: <see cref="ActionTriggers"/>.
 	/// </example>
 	public class WindowTriggers : ITriggers, IEnumerable<WindowTrigger>
 	{
@@ -187,165 +232,60 @@ namespace Au.Triggers
 			_triggers = triggers;
 			_win10 = Ver.MinWin10;
 			_win8 = Ver.MinWin8;
-			Active = new Subtype(this, 0, _Once.Always);
-			ActiveOnce = new Subtype(this, 0, _Once.Once);
-			ActiveNew = new Subtype(this, 0, _Once.New);
-			Visible = new Subtype(this, 1, _Once.Always);
-			VisibleOnce = new Subtype(this, 1, _Once.Once);
-			VisibleNew = new Subtype(this, 1, _Once.New);
 		}
 
-		#region subtypes
-
 		/// <summary>
-		/// Triggers that launch the action when the specified window becomes active (each time).
+		/// Adds a window trigger and its action.
 		/// </summary>
-		/// <example>
-		/// <code><![CDATA[
-		/// Triggers.Window.Active["Window name"] = o => Print(o.Window);
-		/// ]]></code>
-		/// </example>
-		public Subtype Active { get; }
-
-		/// <summary>
-		/// Triggers that launch the action when the specified window becomes active the first time in the trigger's life.
-		/// </summary>
-		/// <example>
-		/// <code><![CDATA[
-		/// Triggers.Window.ActiveOnce["Window name"] = o => Print(o.Window);
-		/// ]]></code>
-		/// </example>
-		public Subtype ActiveOnce { get; }
-
-		/// <summary>
-		/// Triggers that launch the action when the specified window is created and then becomes active.
-		/// </summary>
-		/// <remarks>
-		/// The same as <see cref="ActiveOnce"/>, but windows created before calling <see cref="ActionTriggers.Run"/> are ignored.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// Triggers.Window.ActiveNew["Window name"] = o => Print(o.Window);
-		/// ]]></code>
-		/// </example>
-		public Subtype ActiveNew { get; }
-
-		/// <summary>
-		/// Triggers that launch the action when the specified window becomes visible (each time).
-		/// </summary>
-		/// <remarks>
-		/// Cloaked windows are considered invisible. See <see cref="Wnd.IsCloaked"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// Triggers.Window.Visible["Window name"] = o => Print(o.Window);
-		/// ]]></code>
-		/// </example>
-		public Subtype Visible { get; }
-
-		/// <summary>
-		/// Triggers that launch the action when the specified window becomes visible the first time in the trigger's life.
-		/// </summary>
-		/// <remarks>
-		/// Cloaked windows are considered invisible. See <see cref="Wnd.IsCloaked"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// Triggers.Window.VisibleOnce["Window name"] = o => Print(o.Window);
-		/// ]]></code>
-		/// </example>
-		public Subtype VisibleOnce { get; }
-
-		/// <summary>
-		/// Triggers that launch the action when the specified window is created and then becomes visible.
-		/// </summary>
-		/// <remarks>
-		/// The same as <see cref="VisibleOnce"/>, but windows created before calling <see cref="ActionTriggers.Run"/> are ignored.
-		/// Cloaked windows are considered invisible. See <see cref="Wnd.IsCloaked"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// Triggers.Window.VisibleNew["Window name"] = o => Print(o.Window);
-		/// ]]></code>
-		/// </example>
-		public Subtype VisibleNew { get; }
-
-		/// <tocexclude />
-		/// <remarks>Infrastructure.</remarks>
-		public class Subtype
-		{
-			internal readonly WindowTriggers winTriggers;
-			internal readonly byte subtype; //0 ActveX, 1 VisibleX
-			internal readonly _Once once;
-
-			internal Subtype(WindowTriggers winTriggers, byte subtype, _Once once)
-			{
-				this.winTriggers = winTriggers;
-				this.subtype = subtype;
-				this.once = once;
-			}
-
-			/// <summary>
-			/// Adds (registers) a window trigger and its action.
-			/// </summary>
-			/// <param name="name"></param>
-			/// <param name="cn"></param>
-			/// <param name="program"></param>
-			/// <param name="also"></param>
-			/// <param name="contains"></param>
-			/// <param name="flags"></param>
-			/// <param name="later">
-			/// Can optionally specify one or more additional events.
-			/// This starts to work when the primary trigger is activated, and works only for that window.
-			/// For example, to be notified when the window is closed or renamed, specify <c>later: TWEvents.Destroyed | TWEvents.Name</c>.
-			/// When a "later" event occurs, the trigger action is executed. The <see cref="WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
-			/// The "later" trigers are not disabled when primary triggers are disabled.
-			/// </param>
-			/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
-			/// <remarks>
-			/// The first 5 parameters are the same as with <see cref="Wnd.Find"/>.
-			/// </remarks>
-			/// <seealso cref="Last"/>
-			public Action<WindowTriggerArgs> this[
+		/// <param name="winEvent">Trigger event.</param>
+		/// <param name="name">See <see cref="Wnd.Find"/>.</param>
+		/// <param name="cn">See <see cref="Wnd.Find"/>.</param>
+		/// <param name="program">See <see cref="Wnd.Find"/>.</param>
+		/// <param name="also">See <see cref="Wnd.Find"/>.</param>
+		/// <param name="contains">See <see cref="Wnd.Find"/>.</param>
+		/// <param name="flags">Trigger flags.</param>
+		/// <param name="later">
+		/// Can optionally specify one or more additional events.
+		/// This starts to work when the primary trigger is activated, and works only for that window.
+		/// For example, to be notified when the window is closed or renamed, specify <c>later: TWLater.Destroyed | TWLater.Name</c>.
+		/// When a "later" event occurs, the trigger action is executed. The <see cref="WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
+		/// The "later" trigers are not disabled when primary triggers are disabled.
+		/// </param>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <exception cref="ArgumentException">See <see cref="Wnd.Find"/>.</exception>
+		/// <seealso cref="Last"/>
+		public Action<WindowTriggerArgs> this[TWEvent winEvent,
 				string name = null, string cn = null, WF3 program = default, Func<Wnd, bool> also = null, object contains = null,
-				TWFlags flags = 0, TWEvents later = 0
+				TWFlags flags = 0, TWLater later = 0
 				] {
-				set {
-					var f = new Wnd.Finder(name, cn, program, 0, also, contains);
-					winTriggers._Add(this, value, f, flags, later);
-				}
-			}
-
-			/// <inheritdoc cref="this[string, string, WF3, Func{Wnd, bool}, object, TWFlags, TWEvents]"/>
-			/// <remarks>
-			/// This overload uses a <see cref="Wnd.Finder"/> to specify window properties.
-			/// </remarks>
-			public Action<WindowTriggerArgs> this[Wnd.Finder f, TWFlags flags = 0, TWEvents later = 0] {
-				set {
-					winTriggers._Add(this, value, f, flags, later);
-				}
+			set {
+				var f = new Wnd.Finder(name, cn, program, 0, also, contains);
+				this[winEvent, f, flags, later] = value;
 			}
 		}
 
-		#endregion
+		/// <summary>
+		/// Adds a window trigger and its action.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		public Action<WindowTriggerArgs> this[TWEvent winEvent, Wnd.Finder f, TWFlags flags = 0, TWLater later = 0] {
+			set {
+				_triggers.LibThrowIfRunning();
+				switch(f.Props.contains) { case null: case Wnd.ChildFinder _: case Acc.Finder _: break; default: PrintWarning("Window triggers with 'contains image' are unreliable."); break; }
 
-		void _Add(Subtype x, Action<WindowTriggerArgs> action, Wnd.Finder f, TWFlags flags, TWEvents later)
-		{
-			_triggers.LibThrowIfRunning();
-			switch(f.Props.contains) { case null: case Wnd.ChildFinder _: case Acc.Finder _: break; default: PrintWarning("Window triggers with 'contains image' are unreliable."); break; }
-
-			var t = new WindowTrigger(_triggers, action, f, flags, later, x);
-			ref var last = ref _tActive; if(x.subtype == 1) last = ref _tVisible;
-			if(last == null) {
-				last = t;
-				last.next = last;
-			} else {
-				t.next = last.next; //first
-				last.next = t;
-				last = t;
+				var t = new WindowTrigger(_triggers, value, winEvent, f, flags, later);
+				ref var last = ref _tActive; if(t.IsVisible) last = ref _tVisible;
+				if(last == null) {
+					last = t;
+					last.next = last;
+				} else {
+					t.next = last.next; //first
+					last.next = t;
+					last = t;
+				}
+				_laterEvents |= later;
+				_lastAdded = t;
 			}
-			_laterEvents |= later;
-			_lastAdded = t;
 		}
 
 		/// <summary>
@@ -357,8 +297,8 @@ namespace Au.Triggers
 		bool ITriggers.HasTriggers => _lastAdded != null;
 
 		WindowTrigger _tActive, _tVisible; //null or last trigger in linked list
-		TWEvents _laterEvents, _allEvents;
-		bool _usesVisibleArray; //0 != (_allEvents & (TWEvents.Visible | TWEvents.Invisible))
+		TWLater _laterEvents, _allEvents;
+		bool _usesVisibleArray; //0 != (_allEvents & (TWLater.Visible | TWLater.Invisible))
 
 		unsafe void ITriggers.StartStop(bool start)
 		{
@@ -380,20 +320,20 @@ namespace Au.Triggers
 					_winPropCache.Clear();
 				}
 
-				_allEvents = _laterEvents | TWEvents.Active | TWEvents.Name;
-				if(_tVisible != null) _allEvents |= TWEvents.Visible | TWEvents.Uncloaked;
-				_usesVisibleArray = 0 != (_allEvents & (TWEvents.Visible | TWEvents.Invisible));
+				_allEvents = _laterEvents | TWLater.Active | TWLater.Name;
+				if(_tVisible != null) _allEvents |= TWLater.Visible | TWLater.Uncloaked;
+				_usesVisibleArray = 0 != (_allEvents & (TWLater.Visible | TWLater.Invisible));
 
 				var ah = new AccEVENT[5];
 				ah[0] = AccEVENT.SYSTEM_FOREGROUND;
 				if(_win8) {
-					if(0 != (_allEvents & TWEvents.Uncloaked)) ah[1] = AccEVENT.OBJECT_UNCLOAKED;
-					if(0 != (_allEvents & TWEvents.Cloaked)) ah[2] = AccEVENT.OBJECT_CLOAKED;
+					if(0 != (_allEvents & TWLater.Uncloaked)) ah[1] = AccEVENT.OBJECT_UNCLOAKED;
+					if(0 != (_allEvents & TWLater.Cloaked)) ah[2] = AccEVENT.OBJECT_CLOAKED;
 				}
-				if(0 != (_allEvents & TWEvents.Minimized)) ah[3] = AccEVENT.SYSTEM_MINIMIZESTART;
-				if(0 != (_allEvents & TWEvents.Unminimized)) ah[4] = AccEVENT.SYSTEM_MINIMIZEEND;
-				//if(0 != (_allEvents & TWEvents.MoveSizeStart)) ah[5] = AccEVENT.SYSTEM_MOVESIZESTART;
-				//if(0 != (_allEvents & TWEvents.MoveSizeEnd)) ah[6] = AccEVENT.SYSTEM_MOVESIZEEND;
+				if(0 != (_allEvents & TWLater.Minimized)) ah[3] = AccEVENT.SYSTEM_MINIMIZESTART;
+				if(0 != (_allEvents & TWLater.Unminimized)) ah[4] = AccEVENT.SYSTEM_MINIMIZEEND;
+				//if(0 != (_allEvents & TWLater.MoveSizeStart)) ah[5] = AccEVENT.SYSTEM_MOVESIZESTART;
+				//if(0 != (_allEvents & TWLater.MoveSizeEnd)) ah[6] = AccEVENT.SYSTEM_MOVESIZEEND;
 				_hooks = new Util.AccHook(ah, _HookProc);
 				_hookEventQueue = new Queue<(AccEVENT, int)>();
 
@@ -421,9 +361,9 @@ namespace Au.Triggers
 				_wActive = default; _nameActive = null;
 
 				//run trigers that have flag TWFlags.RunAtStartup
-				for(int i = 0; i < _aVisible.len; i++) _Proc(TWEvents.Visible, _aVisible.a[i], _ProcCaller.Startup);
+				for(int i = 0; i < _aVisible.len; i++) _Proc(TWLater.Visible, _aVisible.a[i], _ProcCaller.Startup);
 				var wa = Wnd.Active;
-				if(!wa.Is0) _Proc(TWEvents.Active, wa, _ProcCaller.Startup);
+				if(!wa.Is0) _Proc(TWLater.Active, wa, _ProcCaller.Startup);
 			} else {
 				_hooks?.Dispose();
 				_hooks = null;
@@ -509,7 +449,7 @@ namespace Au.Triggers
 			var a = _aTriggered.a;
 			for(int i = 0; i < _aTriggered.len; i++) {
 				if(!Api.IsWindow(a[i])) {
-					_ProcLater(TWEvents.Destroyed, a[i], i);
+					_ProcLater(TWLater.Destroyed, a[i], i);
 					int last = --_aTriggered.len;
 					a[i] = a[last];
 					_aTriggeredData[i] = _aTriggeredData[last];
@@ -526,15 +466,15 @@ namespace Au.Triggers
 
 			var w = Wnd.Active;
 			if(w.Is0) {
-				if(!_wActive.Is0) _ProcLater(TWEvents.Inactive, _wActive);
+				if(!_wActive.Is0) _ProcLater(TWLater.Inactive, _wActive);
 				_wActive = default; _nameActive = null;
 			} else if(w != _wActive) {
-				_Proc(TWEvents.Active, w);
+				_Proc(TWLater.Active, w);
 			} else {
 				var name = w.LibNameTL;
 				if(name != null && name != _nameActive) {
 					_nameActive = name;
-					_Proc(TWEvents.Name, w, name: name);
+					_Proc(TWLater.Name, w, name: name);
 				}
 			}
 		}
@@ -567,11 +507,11 @@ namespace Au.Triggers
 			int n1 = diffTo1 - diffFrom, n2 = diffTo2 - diffFrom;
 			//Print($"from={diffFrom} to1={diffTo1} to2={diffTo2}    n1={n1} n2={n2}  n1*n2={n1*n2}");
 			if(n1 == 0) { //only added
-				if(0 != (_allEvents & TWEvents.Visible)) {
+				if(0 != (_allEvents & TWLater.Visible)) {
 					for(int i = diffFrom; i < diffTo2; i++) _Added(i);
 				}
 			} else if(n2 == 0) { //only removed
-				if(0 != (_allEvents & TWEvents.Invisible)) {
+				if(0 != (_allEvents & TWLater.Invisible)) {
 					for(int i = diffFrom; i < diffTo1; i++) _Removed(i);
 				}
 			} else { //reordered or/and added/removed
@@ -579,12 +519,12 @@ namespace Au.Triggers
 					 //Perf.Next();
 					 //SHOULDDO: optimize. Now slow when large array reordered. Eg divide the changed range into two.
 					 //n1 = n2 = 0;
-				if(0 != (_allEvents & TWEvents.Invisible)) {
+				if(0 != (_allEvents & TWLater.Invisible)) {
 					if(_hs2 == null) _hs2 = new HashSet<Wnd>(500); else _hs2.Clear();
 					for(int i = diffFrom; i < diffTo2; i++) _hs2.Add(aNew[i]);
 					for(int i = diffFrom; i < diffTo1; i++) if(!_hs2.Remove(aOld[i])) _Removed(i);
 				}
-				if(0 != (_allEvents & TWEvents.Visible)) {
+				if(0 != (_allEvents & TWLater.Visible)) {
 					if(_hs1 == null) _hs1 = new HashSet<Wnd>(500); else _hs1.Clear();
 					for(int i = diffFrom; i < diffTo1; i++) _hs1.Add(aOld[i]);
 					for(int i = diffFrom; i < diffTo2; i++) if(!_hs1.Remove(aNew[i])) _Added(i);
@@ -596,13 +536,13 @@ namespace Au.Triggers
 			void _Added(int i)
 			{
 				//n2++; //Print("added", aNew[i]);
-				_Proc(TWEvents.Visible, aNew[i]);
+				_Proc(TWLater.Visible, aNew[i]);
 			}
 
 			void _Removed(int i)
 			{
 				//n1++; //Print("removed", aOld[i]);
-				_ProcLater(TWEvents.Invisible, aOld[i]);
+				_ProcLater(TWLater.Invisible, aOld[i]);
 			}
 		}
 
@@ -636,18 +576,18 @@ namespace Au.Triggers
 				//Time.SleepDoEvents(300); //test queue
 				//Perf.Cpu();
 				for(; ; ) {
-					TWEvents e = 0;
+					TWLater e = 0;
 					switch(accEvent) {
 					case AccEVENT.SYSTEM_FOREGROUND:
 						//Debug_.PrintIf(!w.IsActive, $"{Time.PerfMilliseconds % 10000}, SYSTEM_FOREGROUND but not active: {w}"); //it is normal. The window either will be active soon (and timer will catch it), or will not be activated (eg prevented by Windows, hooks, etc), or another window became active.
-						if(w != _wActive && w.IsActive) e = TWEvents.Active;
+						if(w != _wActive && w.IsActive) e = TWLater.Active;
 						break;
-					case AccEVENT.OBJECT_UNCLOAKED: e = TWEvents.Uncloaked; break;
-					case AccEVENT.OBJECT_CLOAKED: e = TWEvents.Cloaked; break;
-					case AccEVENT.SYSTEM_MINIMIZESTART: e = TWEvents.Minimized; break;
-					case AccEVENT.SYSTEM_MINIMIZEEND: e = TWEvents.Unminimized; break;
-						//case AccEVENT.SYSTEM_MOVESIZESTART: e = TWEvents.MoveSizeStart; break;
-						//case AccEVENT.SYSTEM_MOVESIZEEND: e = TWEvents.MoveSizeEnd; break;
+					case AccEVENT.OBJECT_UNCLOAKED: e = TWLater.Uncloaked; break;
+					case AccEVENT.OBJECT_CLOAKED: e = TWLater.Cloaked; break;
+					case AccEVENT.SYSTEM_MINIMIZESTART: e = TWLater.Minimized; break;
+					case AccEVENT.SYSTEM_MINIMIZEEND: e = TWLater.Unminimized; break;
+						//case AccEVENT.SYSTEM_MOVESIZESTART: e = TWLater.MoveSizeStart; break;
+						//case AccEVENT.SYSTEM_MOVESIZEEND: e = TWLater.MoveSizeEnd; break;
 					}
 
 					if(e != 0) _Proc(e, w, _ProcCaller.Hook);
@@ -681,7 +621,7 @@ namespace Au.Triggers
 		/// Processes events for main triggers (active, visible) and most "later" triggers.
 		/// Called from hook (_HookProc), timer (LibTimer), at startup (StartStop) and SimulateActiveNew/SimulateVisibleNew.
 		/// </summary>
-		void _Proc(TWEvents e, Wnd w, _ProcCaller caller = _ProcCaller.Timer, string name = null)
+		void _Proc(TWLater e, Wnd w, _ProcCaller caller = _ProcCaller.Timer, string name = null)
 		{
 			//e can be:
 			//Used for main triggers (Active, Visible) and other triggers:
@@ -694,7 +634,7 @@ namespace Au.Triggers
 			//	Minimized from SYSTEM_MINIMIZESTART hook.
 			//	Unminimized from SYSTEM_MINIMIZEEND hook.
 			//	rejected: MoveSizeStart, MoveSizeEnd.
-			Debug.Assert(e == TWEvents.Active || e == TWEvents.Name || e == TWEvents.Visible || e == TWEvents.Uncloaked || e == TWEvents.Cloaked || e == TWEvents.Minimized || e == TWEvents.Unminimized/* || e == TWEvents.MoveSizeStart || e == TWEvents.MoveSizeEnd*/);
+			Debug.Assert(e == TWLater.Active || e == TWLater.Name || e == TWLater.Visible || e == TWLater.Uncloaked || e == TWLater.Cloaked || e == TWLater.Minimized || e == TWLater.Unminimized/* || e == TWLater.MoveSizeStart || e == TWLater.MoveSizeEnd*/);
 
 			bool callerHT = caller == _ProcCaller.Hook || caller == _ProcCaller.Timer;
 
@@ -704,23 +644,23 @@ namespace Au.Triggers
 			//	1. If the trigger uses 'contains', in some windows we cannot find the object because it is still invisible etc; example - TaskDialog windows.
 			//	2. If the trigger is not perfectly specified and its action closes wrong windows, the user does not know what is going on.
 			//	3. It temporarily deactivates the current window anyway, and often the user is unaware about it.
-			if(e == TWEvents.Active && callerHT && !w.IsVisibleAndNotCloaked) return;
-			//if(e == TWEvents.Active && callerHT) { if(!w.IsVisibleAndNotCloaked) { _perf.First(); return; } else if(caller== _ProcCaller.Timer) _perf.NW('A'); }
+			if(e == TWLater.Active && callerHT && !w.IsVisibleAndNotCloaked) return;
+			//if(e == TWLater.Active && callerHT) { if(!w.IsVisibleAndNotCloaked) { _perf.First(); return; } else if(caller== _ProcCaller.Timer) _perf.NW('A'); }
 
 			int iTriggered = _aTriggered.Find(w);
 
-			bool detectedVisibleNow = e != TWEvents.Visible && _usesVisibleArray && callerHT && w.IsVisible && _aVisible.Find(w) < 0;
+			bool detectedVisibleNow = e != TWLater.Visible && _usesVisibleArray && callerHT && w.IsVisible && _aVisible.Find(w) < 0;
 			if(detectedVisibleNow) {
 				_aVisible.Add(w);
-				_ProcLater(TWEvents.Visible, w, iTriggered);
+				_ProcLater(TWLater.Visible, w, iTriggered);
 			}
 
 			bool runActive = false;
-			if(e == TWEvents.Active) {
+			if(e == TWLater.Active) {
 				name = w.LibNameTL;
 				if(callerHT) {
-					_ProcLater(TWEvents.Name, w, iTriggered, name); //maybe name changed while inactive
-					if(!_wActive.Is0) _ProcLater(TWEvents.Inactive, _wActive);
+					_ProcLater(TWLater.Name, w, iTriggered, name); //maybe name changed while inactive
+					if(!_wActive.Is0) _ProcLater(TWLater.Inactive, _wActive);
 				}
 				_wActive = w; _nameActive = name;
 				if(callerHT) _ProcLater(e, w, iTriggered);
@@ -728,11 +668,11 @@ namespace Au.Triggers
 			} else {
 				if(callerHT) _ProcLater(e, w, iTriggered, name);
 				switch(e) {
-				case TWEvents.Name: //from timer, when active window name changed
+				case TWLater.Name: //from timer, when active window name changed
 					runActive = _tActive != null;
 					break;
-				case TWEvents.Visible:
-				case TWEvents.Uncloaked:
+				case TWLater.Visible:
+				case TWLater.Uncloaked:
 					name = w.LibNameTL;
 					break;
 				default: return;
@@ -745,7 +685,7 @@ namespace Au.Triggers
 			bool oldWindow = callerHT && _hsOld.Contains(w);
 
 			if(_log && callerHT && (_logSkip == null || !_logSkip(w))) {
-				if(detectedVisibleNow) _LogEvent(TWEvents.Visible, w, caller, oldWindow);
+				if(detectedVisibleNow) _LogEvent(TWLater.Visible, w, caller, oldWindow);
 				_LogEvent(e, w, caller, oldWindow);
 			}
 
@@ -760,7 +700,7 @@ namespace Au.Triggers
 			//Print(runVisible,runActive,w.IsActive, oldWindow);
 
 			if(runVisible) _Do(true, runActive && !detectedVisibleNow);
-			if(runActive && w.IsActive) _Do(false, e != TWEvents.Active);
+			if(runActive && w.IsActive) _Do(false, e != TWLater.Active);
 
 			void _Do(bool visible, bool secondaryEvent)
 			{
@@ -773,8 +713,8 @@ namespace Au.Triggers
 					var t = v as WindowTrigger;
 
 					if(caller == _ProcCaller.Startup && 0 == (t.flags & TWFlags.RunAtStartup)) continue;
-					if(oldWindow && (t.once == _Once.New || secondaryEvent)) continue;
-					if(triggered != null && (t.once != _Once.Always || secondaryEvent)) {
+					if(oldWindow && (t.IsNew || secondaryEvent)) continue;
+					if(triggered != null && (!t.IsAlways || secondaryEvent)) {
 						switch(triggered) {
 						case WindowTrigger wt1: if(wt1 == t) continue; break;
 						case List<WindowTrigger> awt1: if(awt1.Contains(t)) continue; break;
@@ -827,13 +767,13 @@ namespace Au.Triggers
 		/// Called to process "later" events from _Proc and timer.
 		/// iTriggered is w index in _aTriggered, or -1 if not found, or -2 (default) to let this func find.
 		/// </summary>
-		void _ProcLater(TWEvents e, Wnd w, int iTriggered = -2, string name = null)
+		void _ProcLater(TWLater e, Wnd w, int iTriggered = -2, string name = null)
 		{
 			if(0 == (_laterEvents & e)) return;
 			if(iTriggered < -1) iTriggered = _aTriggered.Find(w);
 			if(iTriggered < 0) return;
 
-			if(e == TWEvents.Name) { //called in 2 cases: 1. From timer, when name changed. 2. From _Proc on Active event (hook or timer).
+			if(e == TWLater.Name) { //called in 2 cases: 1. From timer, when name changed. 2. From _Proc on Active event (hook or timer).
 				if(name == null || _aTriggeredData[iTriggered].name == name) return;
 				_aTriggeredData[iTriggered].name = name;
 			}
@@ -862,32 +802,32 @@ namespace Au.Triggers
 		/// <summary>
 		/// Simulates event "activated new window" as if the the specified window is that window.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Cannot be before or after <b>Triggers.Run</b>.</exception>
+		/// <exception cref="InvalidOperationException">Cannot be before or after <c>Triggers.Run</c>.</exception>
 		/// <remarks>
-		/// This function usually is used to run <b>ActiveNew</b> triggers for a window created before calling <see cref="ActionTriggers.Run"/>. Here "run triggers" means "compare window properties etc with those specified in triggers and run actions of triggers that match". Normally such triggers don't run because the window is considered old. This function runs triggers as it was a new window. Triggers like ActiveNew and ActiveOnce will run once, as usually.
-		/// This function must be called while the main triggers thread is in <b>Triggers.Run</b>, for example from another trigger action. It is asynchronous (does not wait).
+		/// This function usually is used to run <b>ActiveNew</b> triggers for a window created before calling <see cref="ActionTriggers.Run"/>. Here "run triggers" means "compare window properties etc with those specified in triggers and run actions of triggers that match". Normally such triggers don't run because the window is considered old. This function runs triggers as it was a new window. Triggers like <b>ActiveNew</b> and <b>ActiveOnce</b> will run once, as usually.
+		/// This function must be called while the main triggers thread is in <c>Triggers.Run</c>, for example from another trigger action. It is asynchronous (does not wait).
 		/// If you call this function from another trigger action (hotkey etc), make sure the window trigger action runs in another thread or can be queed. Else both actions cannot run simultaneously. See example.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// Triggers.Options.RunActionInNewThread(true);
-		/// Triggers.Window.ActiveNew["* Notepad"] = o => o.Window.Resize(500, 200);
+		/// Triggers.Window[TWEvent.ActiveNew, "* Notepad"] = o => o.Window.Resize(500, 200);
 		/// Triggers.Hotkey["Ctrl+T"] = o => Triggers.Window.SimulateActiveNew(Wnd.Active);
 		/// Triggers.Hotkey["Ctrl+Alt+T"] = o => Triggers.Stop();
 		/// Triggers.Run();
 		/// ]]></code>
 		/// </example>
-		public void SimulateActiveNew(Wnd w) => _SimulateNew(TWEvents.Active, w);
+		public void SimulateActiveNew(Wnd w) => _SimulateNew(TWLater.Active, w);
 
 		/// <summary>
 		/// Simulates event "visible new window" as if the specified window is that window.
 		/// Similar to <see cref="SimulateActiveNew"/>.
 		/// </summary>
 		/// <param name="w"></param>
-		/// <exception cref="InvalidOperationException">Cannot be before or after <b>Triggers.Run</b>.</exception>
-		public void SimulateVisibleNew(Wnd w) => _SimulateNew(TWEvents.Visible, w);
+		/// <exception cref="InvalidOperationException">Cannot be before or after <c>Triggers.Run</c>.</exception>
+		public void SimulateVisibleNew(Wnd w) => _SimulateNew(TWLater.Visible, w);
 
-		void _SimulateNew(TWEvents e, Wnd w)
+		void _SimulateNew(TWLater e, Wnd w)
 		{
 			_triggers.LibThrowIfNotRunning();
 			Api.PostThreadMessage(_triggers.LibThreadId, Api.WM_USER + 20, (int)e, w.Handle); //calls LibSimulateNew in correct thread
@@ -897,7 +837,7 @@ namespace Au.Triggers
 		internal void LibSimulateNew(LPARAM wParam, LPARAM lParam)
 		{
 			var w = (Wnd)lParam;
-			if(w.IsAlive) _Proc((TWEvents)(int)wParam, w, _ProcCaller.Run);
+			if(w.IsAlive) _Proc((TWLater)(int)wParam, w, _ProcCaller.Run);
 		}
 
 		bool _log;
@@ -912,13 +852,13 @@ namespace Au.Triggers
 		/// For primary trigger events is logged this info:
 		/// <ol>
 		/// <li>Time milliseconds. Shows only the remainder of dividing by 10 seconds, therefore it starts from 0 again when reached 9999 (9 seconds and 999 milliseconds).</li>
-		/// <li>Event (see <see cref="TWEvents"/>).</li>
+		/// <li>Event (see <see cref="TWLater"/>).</li>
 		/// <li>Letters for window state etc:
 		/// <ul>
 		/// <li>A - the window is active.</li>
 		/// <li>H - the window is invisible (!<see cref="Wnd.IsVisible"/>).</li>
 		/// <li>C - the window is cloaked (<see cref="Wnd.IsCloaked"/>).</li>
-		/// <li>O - the window is considered old, ie created before calling <b>Triggers.Run</b>.</li>
+		/// <li>O - the window is considered old, ie created before calling <c>Triggers.Run</c>.</li>
 		/// <li>T - the even has been detected using a timer, which means slower response time. Else detected using a hook.</li>
 		/// </ul>
 		/// </li>
@@ -943,13 +883,13 @@ namespace Au.Triggers
 		/// <summary>
 		/// Called by _Proc.
 		/// </summary>
-		void _LogEvent(TWEvents e, Wnd w, _ProcCaller caller, bool oldWindow)
+		void _LogEvent(TWLater e, Wnd w, _ProcCaller caller, bool oldWindow)
 		{
 			string col = "0";
 			switch(e) {
-			case TWEvents.Active: col = "0x0000ff"; break;
-			case TWEvents.Visible: case TWEvents.Uncloaked: col = "0x00c000"; break;
-			case TWEvents.Name: col = "0xC0C000"; break;
+			case TWLater.Active: col = "0x0000ff"; break;
+			case TWLater.Visible: case TWLater.Uncloaked: col = "0x00c000"; break;
+			case TWLater.Name: col = "0xC0C000"; break;
 			}
 			var A = w.IsActive ? "A" : " ";
 			var H = w.IsVisible ? " " : "H";
@@ -1029,14 +969,14 @@ namespace Au.Triggers
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// Triggers.Window.ActiveOnce["*- Notepad", later: TWEvents.Active | TWEvents.Inactive] = o => Print(o.Later, o.Window);
+		/// Triggers.Window[TWEvent.ActiveOnce, "*- Notepad", later: TWLater.Active | TWLater.Inactive] = o => Print(o.Later, o.Window);
 		/// Triggers.Run();
 		/// ]]></code>
 		/// </example>
-		public TWEvents Later { get; }
+		public TWLater Later { get; }
 
 		///
-		public WindowTriggerArgs(WindowTrigger trigger, Wnd w, TWEvents later)
+		public WindowTriggerArgs(WindowTrigger trigger, Wnd w, TWLater later)
 		{
 			Trigger = trigger;
 			Window = w;

@@ -220,7 +220,7 @@ namespace Au.Types
 	/// Used with <see cref="Acc.RoleInt"/>
 	/// </summary>
 	/// <remarks>
-	/// Most names are as in API <msdn>IAccessible.get_accRole</msdn> documentation but without prefix "ROLE_SYSTEM_". These are renamed: PUSHBUTTON to BUTTON, CHECKBUTTON to CHECKBOX, GRAPHIC to IMAGE, OUTLINE to TREE, OUTLINEITEM to TREEITEM, OUTLINEBUTTON to TREEBUTTON,
+	/// Most names are as in API <msdn>IAccessible.get_accRole Object Roles</msdn> documentation but without prefix "ROLE_SYSTEM_". These are renamed: PUSHBUTTON to BUTTON, CHECKBUTTON to CHECKBOX, GRAPHIC to IMAGE, OUTLINE to TREE, OUTLINEITEM to TREEITEM, OUTLINEBUTTON to TREEBUTTON,
 	/// </remarks>
 	public enum AccROLE
 	{
@@ -295,7 +295,7 @@ namespace Au.Types
 	/// Used by <see cref="Acc.State"/>.
 	/// </summary>
 	/// <remarks>
-	/// Most names are as in API <msdn>IAccessible.get_accState</msdn> documentation but without prefix "STATE_SYSTEM_".
+	/// Most names are as in API <msdn>IAccessible.get_accState Object State Constants</msdn> documentation but without prefix "STATE_SYSTEM_".
 	/// </remarks>
 	[Flags]
 	public enum AccSTATE
@@ -354,10 +354,10 @@ namespace Au.Types
 
 	//CONSIDER: remove the SYSTEM_/OBJECT_ prefixes.
 	/// <summary>
-	/// Event constants for <see cref="Util.AccHook"/>. See API <msdn>SetWinEventHook</msdn>.
+	/// Event constants for <see cref="Util.AccHook"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API documentation but without prefix "EVENT_".
+	/// The names are as in API <msdn>SetWinEventHook Event Constants</msdn> documentation but without prefix "EVENT_".
 	/// </remarks>
 	public enum AccEVENT
 	{
@@ -491,10 +491,10 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="Util.AccHook"/>. See API <msdn>SetWinEventHook</msdn>.
+	/// Flags for <see cref="Util.AccHook"/>.
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API documentation but without prefix "WINEVENT_".
+	/// The names are as in API <msdn>SetWinEventHook</msdn> documentation but without prefix "WINEVENT_".
 	/// There are no flags for OUTOFCONTEXT and INCONTEXT. OUTOFCONTEXT is default (0). INCONTEXT cannot be used in managed code.
 	/// </remarks>
 	[Flags]

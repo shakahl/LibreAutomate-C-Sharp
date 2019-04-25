@@ -189,7 +189,11 @@ namespace Au.Util
 		/// <remarks>
 		/// Be careful with types derived from MarshalByRefObject. If the object does not exist, your callback function creates it in this appdomain. Maybe this appdomain is not where you want it to live. Instead use SetVariable and another overload of GetVariable.
 		/// </remarks>
-		/// <example><code>int test = InterDomainVariables.GetVariable("test", () => 10);</code></example>
+		/// <example>
+		/// <code><![CDATA[
+		/// int test = InterDomainVariables.GetVariable("test", () => 10);
+		/// ]]></code>
+		/// </example>
 		public static T GetVariable<T>(string name, Func<T> initValue)
 		{
 			lock("5WzrQPTnqUWvCTbo1GUTsA") {

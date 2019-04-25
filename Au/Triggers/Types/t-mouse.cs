@@ -95,7 +95,7 @@ namespace Au.Triggers
 	/// <summary>
 	/// Mouse triggers.
 	/// </summary>
-	/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+	/// <example> See <see cref="ActionTriggers"/>.</example>
 	public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 	{
 		enum ESubtype : byte { Click, Wheel, Edge, Move }
@@ -120,8 +120,8 @@ namespace Au.Triggers
 		/// </param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
-		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMClick button, string modKeys = null, TMFlags flags = 0] {
 			set {
 				var t = _Add(value, ESubtype.Click, modKeys, flags, (byte)button, 0, button.ToString());
@@ -132,11 +132,11 @@ namespace Au.Triggers
 		/// Adds a mouse wheel trigger.
 		/// </summary>
 		/// <param name="direction"></param>
-		/// <param name="modKeys"><inheritdoc cref="this[TMClick, string, TMFlags]"/></param>
+		/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags]"/>.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
-		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMWheel direction, string modKeys = null, TMFlags flags = 0] {
 			set {
 				var t = _Add(value, ESubtype.Wheel, modKeys, flags, (byte)direction, 0, direction.ToString());
@@ -147,7 +147,7 @@ namespace Au.Triggers
 		/// Adds a mouse screen edge trigger.
 		/// </summary>
 		/// <param name="edge"></param>
-		/// <param name="modKeys"><inheritdoc cref="this[TMClick, string, TMFlags]"/></param>
+		/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags]"/>.</param>
 		/// <param name="flags"></param>
 		/// <param name="screen">
 		/// Let the trigger work only in this screen (display monitor). Also you can specify <b>All</b>.
@@ -155,8 +155,8 @@ namespace Au.Triggers
 		/// Uses <see cref="Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Windows Settings.
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
-		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMEdge edge, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0] {
 			set {
 				var t = _Add(value, ESubtype.Edge, modKeys, flags, (byte)edge, screen, edge.ToString());
@@ -167,12 +167,12 @@ namespace Au.Triggers
 		/// Adds a mouse move trigger.
 		/// </summary>
 		/// <param name="move"></param>
-		/// <param name="modKeys"><inheritdoc cref="this[TMClick, string, TMFlags]"/></param>
+		/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags]"/>.</param>
 		/// <param name="flags"></param>
-		/// <param name="screen"><inheritdoc cref="this[TMEdge, string, TMFlags, TMScreen]"/></param>
+		/// <param name="screen">See <see cref="this[TMEdge, string, TMFlags, TMScreen]"/>.</param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
-		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMMove move, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0] {
 			set {
 				var t = _Add(value, ESubtype.Move, modKeys, flags, (byte)move, screen, move.ToString());

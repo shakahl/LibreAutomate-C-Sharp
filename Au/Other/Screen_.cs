@@ -40,7 +40,7 @@ namespace Au.Types
 		/// <summary>
 		/// Creates variable that holds screen index. Later will be called <see cref="ScreenFromIndex"/>.
 		/// </summary>
-		/// <param name="screenIndex"><inheritdoc cref="ScreenFromIndex"/></param>
+		/// <param name="screenIndex">See <see cref="ScreenFromIndex"/>.</param>
 		public static implicit operator Screen_(int screenIndex) => new Screen_(screenIndex);
 
 		/// <summary>

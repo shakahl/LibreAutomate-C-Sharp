@@ -44,6 +44,7 @@ namespace Au
 				/// It shoud call <see cref="DefWndProc"/> and return its return value. Except when don't need default processing.
 				/// More info: <msdn>Window Procedures</msdn>.
 				/// </summary>
+				/// <param name="wndProc">API <msdn>WNDPROC</msdn>.</param>
 				/// <seealso cref="PrintMsg(Wnd, int, LPARAM, LPARAM, int[])"/>
 				public MyWindow(Native.WNDPROC wndProc)
 				{
@@ -178,7 +179,7 @@ namespace Au
 				/// Thread-safe.
 				/// <note>Don't use code like <c>static ushort _atom = Wnd.Misc.MyWindow.RegisterClass("MyClass");</c>, because in Release configuration compiler removes this code if _atom is not used. Instead you can call this function in a static constructor.</note>
 				/// </remarks>
-				public static unsafe ushort RegisterClass(string className, WndClassEx ex = null)
+				public static unsafe ushort RegisterClass(string className, MWWndClassEx ex = null)
 				{
 					lock("jU0tLiIbtE6KWg5aCu7RDg") {
 						string interDomainVarName = "jU0tLiIbtE6KWg5aCu7RDg" + className.ToLower_();
@@ -201,25 +202,28 @@ namespace Au
 				}
 
 				//FUTURE: Superclass. Not very useful, because now we can do the same with subclassing, except changing the class name.
-
-				/// <summary>
-				/// Used with <see cref="RegisterClass"/>.
-				/// </summary>
-				[NoDoc]
-				public class WndClassEx
-				{
-#pragma warning disable 1591 //XML doc
-					public uint style;
-					public int cbClsExtra;
-					public int cbWndExtra;
-					public IntPtr hIcon;
-					public IntPtr? hCursor;
-					public IntPtr? hbrBackground;
-					public IntPtr hIconSm;
-#pragma warning restore 1591 //XML doc
-				}
 			}
 
 		}
+	}
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// Used with <see cref="Wnd.Misc.MyWindow.RegisterClass"/>.
+	/// </summary>
+	[NoDoc]
+	public class MWWndClassEx
+	{
+#pragma warning disable 1591 //XML doc
+		public uint style;
+		public int cbClsExtra;
+		public int cbWndExtra;
+		public IntPtr hIcon;
+		public IntPtr? hCursor;
+		public IntPtr? hbrBackground;
+		public IntPtr hIconSm;
+#pragma warning restore 1591 //XML doc
 	}
 }

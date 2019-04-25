@@ -351,9 +351,9 @@ namespace Au
 					}
 				}
 
-				/// <inheritdoc cref="SendString"/>
 				/// <summary>
 				/// Sends byte[] to a window of another process using API <msdn>SendMessage</msdn>(<msdn>WM_COPYDATA</msdn>).
+				/// More info: <see cref="SendString"/>.
 				/// </summary>
 				public static unsafe LPARAM SendBytes(Wnd w, int dataId, byte[] a, LPARAM wParam = default)
 				{

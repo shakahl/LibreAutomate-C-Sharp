@@ -644,7 +644,6 @@ namespace Au
 		/// <param name="resultBuffer">A memory buffer for the result bytes. Must be of at least bufferSize size, else this function will damage process memory.</param>
 		/// <param name="bufferSize">resultBuffer buffer size (bytes). Must be at least (int)(len * 3L / 4), else exception.</param>
 		/// <exception cref="ArgumentException">bufferSize too small.</exception>
-		/// <remarks><inheritdoc cref="Base64Decode(string)"/></remarks>
 		public static unsafe int Base64Decode(char* s, int len, void* resultBuffer, int bufferSize)
 		{
 			if(bufferSize < len * 3L / 4) throw new ArgumentException("bufferSize too small");

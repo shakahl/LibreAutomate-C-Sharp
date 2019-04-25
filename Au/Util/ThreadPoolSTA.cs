@@ -83,12 +83,14 @@ namespace Au.Util
 		/// Allows to submit a callback function (one or more times) to be called in thread pool threads, then optionally wait and cancel.
 		/// Can be used when need more options than <see cref="SubmitCallback"/> has.
 		/// </summary>
-		/// <example><code>
+		/// <example>
+		/// <code><![CDATA[
 		/// using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
 		/// 	work.Submit();
 		/// 	work.Wait();
 		/// }
-		/// </code></example>
+		/// ]]></code>
+		/// </example>
 		public class Work :IDisposable
 		{
 			GCHandle _gc; //to manage the lifetime of this object

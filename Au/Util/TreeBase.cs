@@ -254,7 +254,7 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="n"></param>
 		/// <param name="after">Insert n after this node. If false (default), inserts before this node.</param>
-		/// <exception cref="ArgumentException"><inheritdoc cref="AddChild"/></exception>
+		/// <exception cref="ArgumentException">See <see cref="AddChild"/>.</exception>
 		/// <exception cref="InvalidOperationException">This node does not have parent (<see cref="Parent"/> is null).</exception>
 		public void AddSibling(T n, bool after)
 		{

@@ -69,7 +69,7 @@ namespace Au
 			int _nMeasurements; //used with incremental to display n measurements and average times
 			long _time0;
 
-			/// <summary><inheritdoc cref="Perf.Incremental"/></summary>
+			/// <summary>See <see cref="Perf.Incremental"/>.</summary>
 			/// <example>
 			/// <code><![CDATA[
 			/// var perf = new Perf.Inst();
@@ -99,7 +99,7 @@ namespace Au
 				}
 			}
 
-			/// <inheritdoc cref="Perf.First()"/>
+			/// <summary><see cref="Perf.First()"/></summary>
 			public void First()
 			{
 #if !PREPAREMETHOD
@@ -121,7 +121,7 @@ namespace Au
 			//	First();
 			//}
 
-			/// <inheritdoc cref="Perf.Next"/>
+			/// <summary><see cref="Perf.Next"/></summary>
 			public void Next(char cMark = '\0')
 			{
 #if !PREPAREMETHOD

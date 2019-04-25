@@ -70,30 +70,36 @@ namespace Au
 		public static int Run(string script, params string[] args)
 			=> _Run(0, script, args, out _);
 
-		/// <inheritdoc cref="Run"/>
 		/// <summary>
 		/// Starts an automation task and waits until it ends.
+		/// More info: <see cref="Run"/>.
 		/// </summary>
-		/// <remarks>Exit code of the task process. See <see cref="Environment.ExitCode"/>.</remarks>
+		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
+		/// <exception cref="FileNotFoundException">Script file not found.</exception>
+		/// <exception cref="AuException">Failed to start script.</exception>
 		public static int RunWait(string script, params string[] args)
 			=> _Run(1, script, args, out _);
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-		/// <inheritdoc cref="Run"/>
 		/// <summary>
 		/// Starts an automation task, waits until it ends and gets its strings written by <see cref="WriteResult"/>.
+		/// More info: <see cref="Run"/>.
 		/// </summary>
 		/// <param name="results">Receives <see cref="WriteResult"/> output.</param>
-		/// <remarks>Exit code of the task process. See <see cref="Environment.ExitCode"/>.</remarks>
+		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
+		/// <exception cref="FileNotFoundException">Script file not found.</exception>
+		/// <exception cref="AuException">Failed to start script.</exception>
 		public static int RunWait(out string results, string script, params string[] args)
 			=> _Run(3, script, args, out results);
 
-		/// <inheritdoc cref="Run"/>
 		/// <summary>
 		/// Starts an automation task, waits until it ends and gets its strings written by <see cref="WriteResult"/>.
+		/// More info: <see cref="Run"/>.
 		/// </summary>
-		/// <param name="results">Receives <see cref="WriteResult"/> output. Called each time when the task calls <b>WriteResult</b>.</param>
-		/// <remarks>Exit code of the task process. See <see cref="Environment.ExitCode"/>.</remarks>
+		/// <param name="results">Receives <see cref="WriteResult"/> output whenever the task calls it.</param>
+		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
+		/// <exception cref="FileNotFoundException">Script file not found.</exception>
+		/// <exception cref="AuException">Failed to start script.</exception>
 		public static int RunWait(Action<string> results, string script, params string[] args)
 			=> _Run(3, script, args, out _, results);
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)

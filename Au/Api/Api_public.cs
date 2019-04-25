@@ -100,8 +100,6 @@ namespace Au.Types
 	[CLSCompliant(false)]
 	public static unsafe partial class Native
 	{
-		/// <summary>API <msdn>MSG</msdn></summary>
-		/// <tocexclude />
 		public struct MSG
 		{
 			public Wnd hwnd;
@@ -111,14 +109,10 @@ namespace Au.Types
 			public int time;
 			public POINT pt;
 
-			public override string ToString()
-			{
-				return System.Windows.Forms.Message.Create(hwnd.Handle, (int)message, wParam, lParam).ToString();
-			}
+			public override string ToString() => System.Windows.Forms.Message.Create(hwnd.Handle, (int)message, wParam, lParam).ToString();
 		}
 
-		/// <summary>API <msdn>GUITHREADINFO</msdn></summary>
-		/// <tocexclude />
+		/// <summary><see cref="GUITHREADINFO"/> flags.</summary>
 		[Flags]
 		public enum GUI
 		{
@@ -129,8 +123,6 @@ namespace Au.Types
 			POPUPMENUMODE = 0x10,
 		}
 
-		/// <summary>API <msdn>GUITHREADINFO</msdn></summary>
-		/// <tocexclude />
 		public struct GUITHREADINFO
 		{
 			public int cbSize;
@@ -144,11 +136,6 @@ namespace Au.Types
 			public RECT rcCaret;
 		}
 
-		/// <summary>API <msdn>CREATESTRUCT</msdn></summary>
-		/// <remarks>
-		/// lpszClass is unavailable, because often it is atom. Instead use <see cref="Wnd.ClassName"/>.
-		/// </remarks>
-		/// <tocexclude />
 		public struct CREATESTRUCT
 		{
 			public IntPtr lpCreateParams;
@@ -161,7 +148,8 @@ namespace Au.Types
 			public int x;
 			public WS style;
 			LPARAM _lpszName;
-			LPARAM _lpszClass;
+			/// <summary>Can be string or atom (ushort).</summary>
+			public LPARAM lpszClass;
 			public WS_EX dwExStyle;
 
 			public unsafe string lpszName => _lpszName == default ? null : new string((char*)_lpszName);
@@ -169,8 +157,6 @@ namespace Au.Types
 			//tested and documented: hook can change only x y cx cy.
 		}
 
-		/// <summary>API <msdn>MOUSEHOOKSTRUCT</msdn></summary>
-		/// <tocexclude />
 		public struct MOUSEHOOKSTRUCT
 		{
 			public POINT pt;
@@ -179,8 +165,6 @@ namespace Au.Types
 			public LPARAM dwExtraInfo;
 		}
 
-		/// <summary>API <msdn>CWPSTRUCT</msdn></summary>
-		/// <tocexclude />
 		public struct CWPSTRUCT
 		{
 			public LPARAM lParam;
@@ -189,8 +173,6 @@ namespace Au.Types
 			public Wnd hwnd;
 		}
 
-		/// <summary>API <msdn>CWPRETSTRUCT</msdn></summary>
-		/// <tocexclude />
 		public struct CWPRETSTRUCT
 		{
 			public LPARAM lResult;
@@ -200,8 +182,6 @@ namespace Au.Types
 			public Wnd hwnd;
 		}
 
-		/// <summary>API <msdn>SIGDN</msdn></summary>
-		/// <tocexclude />
 		public enum SIGDN : uint
 		{
 			NORMALDISPLAY,
@@ -217,11 +197,9 @@ namespace Au.Types
 		}
 
 		/// <summary>API <msdn>WNDPROC</msdn></summary>
-		/// <tocexclude />
 		public delegate LPARAM WNDPROC(Wnd w, int msg, LPARAM wParam, LPARAM lParam);
 
-		/// <summary>API <msdn>SetWindowPos</msdn></summary>
-		/// <tocexclude />
+		/// <summary>API <msdn>SetWindowPos</msdn> flags.</summary>
 		[Flags]
 		public enum SWP : uint
 		{
@@ -244,7 +222,6 @@ namespace Au.Types
 		/// Special window handle values.
 		/// See API <msdn>SetWindowPos</msdn>.
 		/// </summary>
-		/// <tocexclude />
 		public enum HWND
 		{
 			TOP = 0,
@@ -259,22 +236,14 @@ namespace Au.Types
 		/// Window long constants.
 		/// See API <msdn>GetWindowLong</msdn>.
 		/// </summary>
-		/// <tocexclude />
 		public static class GWL
 		{
-			/// <exclude />
 			public const int WNDPROC = -4;
-			/// <exclude />
 			public const int USERDATA = -21;
-			/// <exclude />
 			public const int STYLE = -16;
-			/// <exclude />
 			public const int ID = -12;
-			/// <exclude />
 			public const int HWNDPARENT = -8;
-			/// <exclude />
 			public const int HINSTANCE = -6;
-			/// <exclude />
 			public const int EXSTYLE = -20;
 			//info: also there are GWLP_, but their values are the same.
 
@@ -282,20 +251,13 @@ namespace Au.Types
 			//#define DWLP_DLGPROC    DWLP_MSGRESULT + sizeof(LRESULT)
 			//#define DWLP_USER       DWLP_DLGPROC + sizeof(DLGPROC)
 
-			/// <exclude />
 			public const int DWL_MSGRESULT = 0;
-			/// <exclude />
 			public const int DWL_DLGPROC_32 = 4;
-			/// <exclude />
 			public const int DWL_DLGPROC_64 = 8;
-			/// <exclude />
 			public const int DWL_USER_32 = 8;
-			/// <exclude />
 			public const int DWL_USER_64 = 16;
 
-			/// <exclude />
 			public static int DWLP_DLGPROC => IntPtr.Size;
-			/// <exclude />
 			public static int DWLP_USER => IntPtr.Size * 2;
 		}
 
@@ -303,36 +265,23 @@ namespace Au.Types
 		/// Window class long constants.
 		/// See API <msdn>WNDCLASSEX</msdn>, API <msdn>GetClassLong</msdn>.
 		/// </summary>
-		/// <tocexclude />
 		public static class GCL
 		{
-			/// <exclude />
 			public const int ATOM = -32;
-			/// <exclude />
 			public const int WNDPROC = -24;
-			/// <exclude />
 			public const int STYLE = -26;
-			/// <exclude />
 			public const int MENUNAME = -8;
-			/// <exclude />
 			public const int HMODULE = -16;
-			/// <exclude />
 			public const int HICONSM = -34;
-			/// <exclude />
 			public const int HICON = -14;
-			/// <exclude />
 			public const int HCURSOR = -12;
-			/// <exclude />
 			public const int HBRBACKGROUND = -10;
-			/// <exclude />
 			public const int CBWNDEXTRA = -18;
-			/// <exclude />
 			public const int CBCLSEXTRA = -20;
 			//info: also there are GCLP_, but their values are the same.
 		}
 
-		/// <summary>API <msdn>SendMessageTimeout</msdn></summary>
-		/// <tocexclude />
+		/// <summary>API <msdn>SendMessageTimeout</msdn> flags.</summary>
 		[Flags]
 		public enum SMTO : uint
 		{
@@ -349,7 +298,6 @@ namespace Au.Types
 	/// Window styles.
 	/// See API <msdn>CreateWindowEx</msdn>.
 	/// </summary>
-	/// <tocexclude />
 	[Flags]
 	public enum WS : uint
 	{
@@ -381,7 +329,6 @@ namespace Au.Types
 	/// Window extended styles.
 	/// See API <msdn>CreateWindowEx</msdn>.
 	/// </summary>
-	/// <tocexclude />
 	[Flags]
 	public enum WS_EX : uint
 	{

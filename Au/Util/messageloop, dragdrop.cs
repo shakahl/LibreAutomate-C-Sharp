@@ -211,7 +211,6 @@ namespace Au.Util
 			return R;
 		}
 
-		/// <tocexclude />
 		/// <summary>
 		/// <see cref="SimpleDragDrop(AnyWnd, MButtons, Action{MsgArgs})"/> callback function arguments.
 		/// </summary>
@@ -219,6 +218,7 @@ namespace Au.Util
 		{
 			/// <summary>
 			/// Current message retrieved by API <msdn>GetMessage</msdn>.
+			/// API <msdn>MSG</msdn>.
 			/// </summary>
 			public Native.MSG Msg;
 

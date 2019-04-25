@@ -157,12 +157,12 @@ namespace Au
 			/// If failed, returns null or throws exception.
 			/// </summary>
 			/// <param name="stringType">
-			/// String format.
+			/// String format. API <msdn>SIGDN</msdn>.
 			/// Often used:
-			/// Native.SIGDN.NORMALDISPLAY - returns object name without path. It is best to display in UI but cannot be parsed to create ITEMIDLIST again.
-			/// Native.SIGDN.FILESYSPATH - returns path if the ITEMIDLIST identifies a file system object (file or directory). Else returns null.
-			/// Native.SIGDN.URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
-			/// Native.SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create ITEMIDLIST again, therefore usually it's better to use <see cref="ToString"/> instead.
+			/// - Native.SIGDN.NORMALDISPLAY - returns object name without path. It is best to display in UI but cannot be parsed to create ITEMIDLIST again.
+			/// - Native.SIGDN.FILESYSPATH - returns path if the ITEMIDLIST identifies a file system object (file or directory). Else returns null.
+			/// - Native.SIGDN.URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
+			/// - Native.SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create ITEMIDLIST again, therefore usually it's better to use <see cref="ToString"/> instead.
 			/// </param>
 			/// <param name="throwIfFailed">If failed, throw AuException.</param>
 			/// <exception cref="AuException">Failed, and throwIfFailed is true.</exception>
@@ -171,15 +171,15 @@ namespace Au
 			/// </remarks>
 			public string ToShellString(Native.SIGDN stringType, bool throwIfFailed = false)
 			{
-				var R = ToShellString2(_pidl, stringType, throwIfFailed);
+				var R = ToShellString(_pidl, stringType, throwIfFailed);
 				GC.KeepAlive(this);
 				return R;
 			}
 
 			/// <summary>
-			/// The same as <see cref="ToShellString"/>, but uses an ITEMIDLIST* that is not stored in a Pidl variable.
+			/// This overload uses an ITEMIDLIST* that is not stored in a Pidl variable.
 			/// </summary>
-			public static string ToShellString2(IntPtr pidl, Native.SIGDN stringType, bool throwIfFailed = false)
+			public static string ToShellString(IntPtr pidl, Native.SIGDN stringType, bool throwIfFailed = false)
 			{
 				if(pidl == default) return null;
 				var hr = Api.SHGetNameFromIDList(pidl, stringType, out string R);
@@ -195,16 +195,16 @@ namespace Au
 			/// </summary>
 			public override string ToString()
 			{
-				var R = ToString2(_pidl);
+				var R = ToString(_pidl);
 				GC.KeepAlive(this);
 				return R;
 			}
 
 #if true
 			/// <summary>
-			/// The same as <see cref="ToString"/>, but uses an ITEMIDLIST* that is not stored in a Pidl variable.
+			/// This overload uses an ITEMIDLIST* that is not stored in a Pidl variable.
 			/// </summary>
-			public static string ToString2(IntPtr pidl)
+			public static string ToString(IntPtr pidl)
 			{
 				if(pidl == default) return null;
 				Api.IShellItem si = null;
@@ -219,23 +219,23 @@ namespace Au
 					}
 				}
 				finally { Api.ReleaseComObject(si); }
-				return ToHexString2(pidl);
+				return ToHexString(pidl);
 			}
 			//this version is 40% slower with non-virtual objects (why?), but with virtual objects same speed as SIGDN_DESKTOPABSOLUTEPARSING.
 			//The fastest (update: actually not) version would be to call LibToShellString(SIGDN_DESKTOPABSOLUTEPARSING), and then call LibToHexString if it returns not a path or URL. But it is unreliable, because can return string in any format, eg "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
 #elif false
 			//this version works, but with virtual objects 2 times slower than SIGDN_DESKTOPABSOLUTEPARSING (which already is very slow with virtual).
-			public static string ToString2(IntPtr pidl)
+			public static string ToString(IntPtr pidl)
 			{
 				if(pidl == default) return null;
-				var R = ToShellString2(pidl, Native.SIGDN.FILESYSPATH);
-				if(R == null) R = ToShellString2(pidl, Native.SIGDN.URL);
-				if(R == null) R = ToHexString2(pidl);
+				var R = ToShellString(pidl, Native.SIGDN.FILESYSPATH);
+				if(R == null) R = ToShellString(pidl, Native.SIGDN.URL);
+				if(R == null) R = ToHexString(pidl);
 				return R;
 			}
 #elif true
 			//this version works, but with virtual objects 30% slower. Also 30% slower for non-virtual objects (why?).
-			public static string ToString2(IntPtr pidl)
+			public static string ToString(IntPtr pidl)
 			{
 				if(pidl == default) return null;
 
@@ -248,7 +248,7 @@ namespace Au
 					}
 				}
 				finally { Api.ReleaseComObject(si); }
-				return ToHexString2(pidl);
+				return ToHexString(pidl);
 			}
 #else
 			//SHGetPathFromIDList also slow.
@@ -257,20 +257,22 @@ namespace Au
 
 			/// <summary>
 			/// Returns string ":: HexEncodedITEMIDLIST".
-			/// It can be used with some functions of this library, mostly of classes Shell, Shell.Pidl and Icon_. Cannot be used with native and .NET functions.
 			/// Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
 			/// </summary>
+			/// <remarks>
+			/// The string can be used with some functions of this library, mostly of classes Shell, Shell.Pidl and Icon_. Cannot be used with native and .NET functions.
+			/// </remarks>
 			public string ToHexString()
 			{
-				var R = ToHexString2(_pidl);
+				var R = ToHexString(_pidl);
 				GC.KeepAlive(this);
 				return R;
 			}
 
 			/// <summary>
-			/// The same as <see cref="ToHexString"/>, but uses an ITEMIDLIST* that is not stored in a Pidl variable.
+			/// This overload uses an ITEMIDLIST* that is not stored in a Pidl variable.
 			/// </summary>
-			public static string ToHexString2(IntPtr pidl)
+			public static string ToHexString(IntPtr pidl)
 			{
 				if(pidl == default) return null;
 				int n = Api.ILGetSize(pidl) - 2; //API gets size with the terminating '\0' (2 bytes)

@@ -94,7 +94,7 @@ namespace Au.Triggers
 	/// <summary>
 	/// Hotkey triggers.
 	/// </summary>
-	/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+	/// <example>See <see cref="ActionTriggers"/>.</example>
 	public class HotkeyTriggers : ITriggers, IEnumerable<HotkeyTrigger>
 	{
 		ActionTriggers _triggers;
@@ -117,8 +117,8 @@ namespace Au.Triggers
 		/// </param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Invalid hotkey string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
-		/// <remarks>Example: <see cref="ActionTriggers"/>.</remarks>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <example>See <see cref="ActionTriggers"/>.</example>
 		public Action<HotkeyTriggerArgs> this[string hotkey, TKFlags flags = 0] {
 			set {
 				if(!Keyb.Misc.LibParseHotkeyTriggerString(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
@@ -138,7 +138,7 @@ namespace Au.Triggers
 		/// </param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <b>Triggers.Run</b> was called, until it returns.</exception>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
 		public Action<HotkeyTriggerArgs> this[KKey key, string modKeys, TKFlags flags = 0] {
 			set {
 				var ps = key.ToString(); if(Char_.IsAsciiDigit(ps[0])) ps = "VK" + ps;

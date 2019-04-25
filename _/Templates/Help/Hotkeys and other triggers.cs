@@ -60,8 +60,8 @@ Triggers.Of.AllWindows();
 
 //window triggers. Note: window triggers don't depend on Triggers.Of.
 
-window.ActiveNew["* Notepad", "Notepad"] = o => Print("opened Notepad window");
-window.ActiveNew["Notepad", "#32770", contains: "Do you want to save *"] = o => {
+window[TWEvent.ActiveNew, "* Notepad", "Notepad"] = o => Print("opened Notepad window");
+window[TWEvent.ActiveNew, "Notepad", "#32770", contains: "Do you want to save *"] = o => {
 	Print("opened Notepad's 'Do you want to save' dialog");
 	//Key("Alt+S"); //press button Save
 };

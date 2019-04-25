@@ -104,7 +104,7 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X coordinate in the client area of this window. Can be <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y coordinate in the client area of this window. Can be <b>Coord.Reverse</b> etc.</param>
-		/// <param name="screenXY">x y are relative to the pimary screen, not to the client area.</param>
+		/// <param name="screenXY">The coordinates are relative to the pimary screen, not to the client area.</param>
 		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
 		public Wnd ChildFromXY(Coord x, Coord y, bool screenXY = false, bool directChild = false)
@@ -114,10 +114,10 @@ namespace Au
 			return _ChildFromXY(p, directChild, screenXY);
 		}
 
-		/// <inheritdoc cref="ChildFromXY(Coord, Coord, bool, bool)"/>
 		/// <param name="p">Coordinates in the client area of this window.</param>
-		/// <param name="screenXY">p is relative to the pimary screen, not to the client area.</param>
-		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
+		/// <param name="screenXY"></param>
+		/// <param name="directChild"></param>
+		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
 		public Wnd ChildFromXY(POINT p, bool screenXY = false, bool directChild = false)
 		{
 			ThrowIfInvalid();

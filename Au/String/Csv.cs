@@ -53,7 +53,11 @@ namespace Au
 		/// You can do anything with the <b>List</b>. For example, sort it, find rows containing certain field values, get/set field values directly, add/remove rows directly.
 		/// All row arrays have <b>Length</b> equal to <see cref="ColumnCount"/>, and it must remain so; you can change <b>Length</b>, but then need to call <c>ColumnCount=newLength</c>.
 		/// </remarks>
-		/// <example><code>x.Data.Sort((a,b) => string.CompareOrdinal(a[0], b[0]));</code></example>
+		/// <example>
+		/// <code><![CDATA[
+		/// x.Data.Sort((a,b) => string.CompareOrdinal(a[0], b[0]));
+		/// ]]></code>
+		/// </example>
 		public List<string[]> Data => _a;
 
 		/// <summary>

@@ -99,8 +99,12 @@ namespace Au
 
 		*/
 
-		/// <inheritdoc cref="Add(string, Action{MTClickArgs}, object)"/>
-		/// <example><code>
+		/// <summary>
+		/// Adds new item.
+		/// The same as <see cref="Add(string, Action{MTClickArgs}, object)"/>.
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
 		/// var m = new AuMenu();
 		/// m["One"] = o => Print(o);
 		/// m["Two", @"icon file path"] = o => { Print(o); AuDialog.Show(o.ToString()); };
@@ -110,27 +114,32 @@ namespace Au
 		/// m.ExtractIconPathFromCode = true;
 		/// m["notepad"] = o => Shell.TryRun(Folders.System + "notepad.exe"));
 		/// m.Show();
-		/// </code></example>
+		/// ]]></code>
+		/// </example>
 		public Action<MTClickArgs> this[string text, object icon = null] {
 			set { Add(text, value, icon); }
 		}
 
 		/// <summary>
 		/// Adds new item as <see cref="ToolStripMenuItem"/>.
-		/// Sets its text, icon and <b>Click</b> event handler. Other properties can be specified later. See example.
-		/// Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c> .
 		/// </summary>
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="onClick">Callback function. Called when clicked the menu item.</param>
 		/// <param name="icon">Can be:
-		/// string - path of .ico or any other file or folder or non-file object. See <see cref="Icon_.GetFileIcon"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="BaseMT.IconFlags"/>.
-		/// string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
-		/// int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
-		/// Icon, Image, Folders.FolderPath.
-		/// null (default) - no icon. If <see cref="BaseMT.ExtractIconPathFromCode"/> == true, extracts icon path from *onClick* code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
-		/// "" - no icon.
+		/// - string - path of .ico or any other file or folder or non-file object. See <see cref="Icon_.GetFileIcon"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="BaseMT.IconFlags"/>.
+		/// - string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
+		/// - int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
+		/// - Icon, Image, Folders.FolderPath.
+		/// - null (default) - no icon. If <see cref="BaseMT.ExtractIconPathFromCode"/> == true, extracts icon path from *onClick* code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
+		/// - "" - no icon.
 		/// </param>
-		/// <example><code>
+		/// <remarks>
+		/// Sets menu item text, icon and <b>Click</b> event handler. Other properties can be specified later. See example.
+		/// 
+		/// Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c>. See <see cref="this[string, object]"/>.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
 		/// var m = new AuMenu();
 		/// m.Add("One", o => Print(o), @"icon file path");
 		/// m.Add("Two", o => { Print(o.MenuItem.Checked); AuDialog.Show(o.ToString()); });
@@ -138,7 +147,8 @@ namespace Au
 		/// m.ExtractIconPathFromCode = true;
 		/// m.Add("notepad", o => Shell.TryRun(Folders.System + "notepad.exe"));
 		/// m.Show();
-		/// </code></example>
+		/// ]]></code>
+		/// </example>
 		public ToolStripMenuItem Add(string text, Action<MTClickArgs> onClick, object icon = null)
 		{
 			string sk = null;
@@ -169,7 +179,7 @@ namespace Au
 		/// Supports types derived from ToolStripItem.
 		/// </summary>
 		/// <param name="item">An already created item of any supported type.</param>
-		/// <param name="icon"><inheritdoc cref="Add(string, Action{MTClickArgs}, object)"/></param>
+		/// <param name="icon"></param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Not useful for most item types.</param>
 		public void Add(ToolStripItem item, object icon = null, Action<MTClickArgs> onClick = null)
 		{
@@ -212,13 +222,14 @@ namespace Au
 		/// 2. <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="EndSubmenu"/>.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="icon"><inheritdoc cref="Add(string, Action{MTClickArgs}, object)"/></param>
+		/// <param name="icon">See <see cref="Add(string, Action{MTClickArgs}, object)"/>.</param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
 		/// <remarks>
 		/// Submenus inherit these properties of the main menu, set before adding submenus (see example):
 		/// <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>ContextMenu</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
 		/// </remarks>
-		/// <example><code>
+		/// <example>
+		/// <code><![CDATA[
 		/// var m = new AuMenu();
 		/// m.CMS.BackColor = Color.PaleGoldenrod;
 		/// m["One"] = o => Print(o);
@@ -234,12 +245,13 @@ namespace Au
 		/// }
 		/// m["Eight"] = o => Print(o);
 		/// m.Show();
-		/// </code></example>
-		public UsingSubmenu Submenu(string text, object icon = null, Action<MTClickArgs> onClick = null)
+		/// ]]></code>
+		/// </example>
+		public MUsingSubmenu Submenu(string text, object icon = null, Action<MTClickArgs> onClick = null)
 		{
 			var item = _Submenu(out var dd, text, onClick, icon);
 			_submenuStack.Push(dd);
-			return new UsingSubmenu(this, item);
+			return new MUsingSubmenu(this, item);
 		}
 
 		ToolStripMenuItem _Submenu(out ToolStripDropDownMenu_ dd, string text, Action<MTClickArgs> onClick, object icon)
@@ -296,7 +308,8 @@ namespace Au
 		/// <summary>
 		/// Call this to end adding items to the current submenu if <see cref="Submenu"/> was called without 'using' and without a callback function that adds submenu items.
 		/// </summary>
-		/// <example><code>
+		/// <example>
+		/// <code><![CDATA[
 		/// var m = new AuMenu();
 		/// m["One"] = o => Print(o);
 		/// m["Two"] = o => Print(o);
@@ -306,31 +319,11 @@ namespace Au
 		/// 	m.EndSubmenu();
 		/// m["Five"] = o => Print(o);
 		/// m.Show();
-		/// </code></example>
+		/// ]]></code>
+		/// </example>
 		public void EndSubmenu()
 		{
 			var dd = _submenuStack.Pop();
-		}
-
-		/// <summary>
-		/// Allows to use code: <c>using(m.Submenu("Name")) { add items; }</c> .
-		/// </summary>
-		/// <tocexclude />
-		public struct UsingSubmenu : IDisposable
-		{
-			AuMenu _m;
-
-			/// <summary>
-			/// Gets ToolStripMenuItem of the submenu-item.
-			/// </summary>
-			public ToolStripMenuItem MenuItem { get; }
-
-			internal UsingSubmenu(AuMenu m, ToolStripMenuItem mi) { _m = m; MenuItem = mi; }
-
-			/// <summary>
-			/// Calls m.EndSubmenu().
-			/// </summary>
-			public void Dispose() { _m.EndSubmenu(); }
 		}
 
 		/// <summary>
@@ -339,9 +332,10 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="onOpening">Callback function that should add submenu items.</param>
-		/// <param name="icon"><inheritdoc cref="Add(string, Action{MTClickArgs}, object)"/></param>
+		/// <param name="icon">See <see cref="Add(string, Action{MTClickArgs}, object)"/>.</param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
-		/// <example><code>
+		/// <example>
+		/// <code><![CDATA[
 		/// var m = new AuMenu();
 		/// m["One"] = o => Print(o);
 		/// m["Two"] = o => Print(o);
@@ -360,7 +354,8 @@ namespace Au
 		/// });
 		/// m["Eight"] = o => Print(o);
 		/// m.Show();
-		/// </code></example>
+		/// ]]></code>
+		/// </example>
 		public ToolStripMenuItem Submenu(string text, Action<AuMenu> onOpening, object icon = null, Action<MTClickArgs> onClick = null)
 		{
 			var item = _Submenu(out var dd, text, onClick, icon);
@@ -1381,7 +1376,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Data passed to Click event handler functions of AuMenu and AuToolbar.
+	/// Data passed to Click event handler functions of <see cref="AuMenu"/> and <see cref="AuToolbar"/>.
 	/// </summary>
 	public class MTClickArgs
 	{
@@ -1449,5 +1444,26 @@ namespace Au.Types
 
 		/// <summary>Handle exceptions. On exception do nothing.</summary>
 		Silent,
+	}
+
+	/// <summary>
+	/// Allows to create <see cref="AuMenu"/> submenus easier.
+	/// Example: <c>using(m.Submenu("Name")) { add items; }</c> .
+	/// </summary>
+	public struct MUsingSubmenu : IDisposable
+	{
+		AuMenu _m;
+
+		/// <summary>
+		/// Gets <b>ToolStripMenuItem</b> of the submenu-item.
+		/// </summary>
+		public ToolStripMenuItem MenuItem { get; }
+
+		internal MUsingSubmenu(AuMenu m, ToolStripMenuItem mi) { _m = m; MenuItem = mi; }
+
+		/// <summary>
+		/// Calls <see cref="AuMenu.EndSubmenu"/>.
+		/// </summary>
+		public void Dispose() { _m.EndSubmenu(); }
 	}
 }

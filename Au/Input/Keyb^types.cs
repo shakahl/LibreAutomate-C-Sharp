@@ -367,7 +367,7 @@ namespace Au.Util
 		/// A single variable cannot register multiple hotkeys simultaneously. Use multiple variables, for example array.
 		/// </remarks>
 		/// <seealso cref="Keyb.WaitForHotkey"/>
-		/// <example><inheritdoc cref="RegisterHotkey"/></example>
+		/// <example>See <see cref="RegisterHotkey"/>.</example>
 		public bool Register(int id, KHotkey hotkey, AnyWnd window = default)
 		{
 			var (mod, key) = hotkey;

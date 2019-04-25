@@ -48,31 +48,41 @@ namespace Au
 			_Init();
 		}
 
-		/// <inheritdoc cref="Add(string, Action{MTClickArgs}, object)"/>
-		/// <example><code>
+		/// <summary>
+		/// Adds new button.
+		/// The same as <see cref="Add(string, Action{MTClickArgs}, object)"/>.
+		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
 		/// var t = new AuToolbar();
 		/// t["One"] = o => Print(o);
 		/// t["Two", @"icon file path"] = o => { Print(o); AuDialog.Show(o.ToString()); };
 		/// t.LastItem.ToolTipText = "tooltip";
-		/// </code></example>
+		/// ]]></code>
+		/// </example>
 		public Action<MTClickArgs> this[string text, object icon = null] {
 			set { Add(text, value, icon); }
 		}
 
 		/// <summary>
 		/// Adds new button as <see cref="ToolStripButton"/>.
-		/// Sets its text, icon and Click event handler. Other properties can be specified later. See example.
-		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c> .
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="onClick">Callback function. Called when the button clicked.</param>
-		/// <param name="icon"><inheritdoc cref="AuMenu.Add(string, Action{MTClickArgs}, object)"/></param>
-		/// <example><code>
+		/// <param name="icon">See <see cref="AuMenu.Add(string, Action{MTClickArgs}, object)"/>.</param>
+		/// <remarks>
+		/// Sets button text, icon and Click event handler. Other properties can be specified later. See example.
+		/// 
+		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c>. See <see cref="this[string, object]"/>.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
 		/// var m = new AuToolbar();
 		/// t.Add("One", o => Print(o), @"icon file path");
 		/// t.LastItem.ToolTipText = "tooltip";
 		/// t.Add("Two", o => { Print(o.MenuItem.Checked); });
-		/// </code></example>
+		/// ]]></code>
+		/// </example>
 		public ToolStripButton Add(string text, Action<MTClickArgs> onClick, object icon = null)
 		{
 			var item = new ToolStripButton(text);
@@ -86,7 +96,7 @@ namespace Au
 		/// Supports types derived from ToolStripItem.
 		/// </summary>
 		/// <param name="item">An already created item of any supported type.</param>
-		/// <param name="icon"><inheritdoc cref="AuMenu.Add(string, Action{MTClickArgs}, object)"/></param>
+		/// <param name="icon"></param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Not useful for most item types.</param>
 		public void Add(ToolStripItem item, object icon = null, Action<MTClickArgs> onClick = null)
 		{

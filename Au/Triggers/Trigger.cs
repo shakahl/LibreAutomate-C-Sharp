@@ -269,10 +269,15 @@ namespace Au.Triggers
 		public TriggerScope Window(string name = null, string cn = null, WF3 program = default, Func<Wnd, bool> also = null, object contains = null)
 			=> _Window(false, name, cn, program, also, contains);
 
-		/// <inheritdoc cref="Window(string, string, WF3, Func{Wnd, bool}, object)"/>
 		/// <summary>
 		/// Sets scope "not this window". Hotkey, autotext and mouse triggers added afterwards will not work when the specified window is active.
 		/// </summary>
+		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
+		/// <remarks>
+		/// Parameters are like with <see cref="Wnd.Find"/>.
+		/// Example in class help.
+		/// </remarks>
+		/// <exception cref="ArgumentException">Exceptions of <see cref="Wnd.Finder"/> constructor.</exception>
 		public TriggerScope NotWindow(string name = null, string cn = null, WF3 program = default, Func<Wnd, bool> also = null, object contains = null)
 			=> _Window(true, name, cn, program, also, contains);
 
@@ -324,10 +329,13 @@ namespace Au.Triggers
 		public TriggerScope Windows(params object[] any)
 			=> _Add(false, any);
 
-		/// <inheritdoc cref="Windows"/>
 		/// <summary>
 		/// Sets scope "not these windows". Hotkey, autotext and mouse triggers added afterwards will not work when one of the specified windows is active.
 		/// </summary>
+		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
+		/// <param name="any">See <see cref="Windows"/>.</param>
+		/// <exception cref="ArgumentException">Unsupported object type.</exception>
+		/// <exception cref="WndException">Invalid window handle (when object type is <b>Wnd</b>).</exception>
 		public TriggerScope NotWindows(params object[] any)
 			=> _Add(true, any);
 
@@ -363,9 +371,7 @@ namespace Au.Triggers
 	/// <summary>
 	/// A trigger scope returned by functions like <see cref="TriggerScopes.Window"/> and used with <see cref="TriggerScopes.Again"/>.
 	/// </summary>
-	/// <remarks>
-	/// Example: <see cref="TriggerScopes"/>.
-	/// </remarks>
+	/// <example>See <see cref="TriggerScopes"/>.</example>
 	public class TriggerScope
 	{
 		internal readonly object o; //Wnd.Finder, Wnd, object<Wnd.Finder|Wnd>[]

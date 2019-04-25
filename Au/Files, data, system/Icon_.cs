@@ -28,9 +28,42 @@ namespace Au
 	/// <seealso cref="Util.IconsAsync"/>
 	public static class Icon_
 	{
-		/// <inheritdoc cref="GetFileIcon"/>
-		/// <returns>Returns icon handle, or default(IntPtr) if failed.</returns>
-		/// <remarks>Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
+		/// <summary>
+		/// Gets file icon.
+		/// Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, flags etc.
+		/// </summary>
+		/// <returns>Returns null if failed.</returns>
+		/// <param name="file">
+		/// Can be:
+		/// - Path of any file or folder.
+		/// - URL, like <c>"http://..."</c> or <c>"mailto:a@b.c"</c> or <c>"file:///path"</c>.
+		/// - ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="Shell.Pidl.ToHexString"/>.
+		/// - Shell object parsing name, like <c>@"::{CLSID-1}\::{CLSID-2}"</c> or <c>@"shell:AppsFolder\WinStoreAppId"</c>.
+		/// - File type like <c>".txt"</c> or URL protocol like <c>"http:"</c>.
+		/// 
+		/// If it is a file containing multiple icons (eg exe, dll), can be specified icon index like <c>"path,index"</c> or native icon resource id like <c>"path,-id"</c>.
+		/// If not full path, the function will look in <see cref="Folders.ThisAppImages"/>. See also <see cref="GIFlags"/>.
+		/// Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).
+		/// </param>
+		/// <param name="size">Icon width and height. Also can be enum <see cref="IconSize"/>, cast to int.</param>
+		/// <param name="flags"></param>
+		public static Icon GetFileIcon(string file, int size, GIFlags flags = 0)
+			=> HandleToIcon(GetFileIconHandle(file, size, flags), true);
+
+		/// <summary>
+		/// Gets file icon.
+		/// More info: <see cref="GetFileIcon"/>.
+		/// </summary>
+		/// <returns>Returns null if failed.</returns>
+		public static Bitmap GetFileIconImage(string file, int size, GIFlags flags = 0)
+			=> HandleToImage(GetFileIconHandle(file, size, flags), true);
+
+		/// <summary>
+		/// Gets file icon.
+		/// More info: <see cref="GetFileIcon"/>.
+		/// </summary>
+		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
+		/// <seealso cref="Wnd.Misc.GetIconHandle"/>
 		public static IntPtr GetFileIconHandle(string file, int size, GIFlags flags = 0)
 		{
 			if(Empty(file)) return default;
@@ -45,45 +78,6 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets file icon.
-		/// Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, flags etc.
-		/// </summary>
-		/// <returns>Returns null if failed.</returns>
-		/// <param name="file">
-		/// Can be:
-		/// Path of any file or folder.
-		/// URL, like <c>"http://..."</c> or <c>"mailto:a@b.c"</c> or <c>"file:///path"</c>.
-		/// ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="Shell.Pidl.ToHexString"/>.
-		/// Shell object parsing name, like <c>@"::{CLSID-1}\::{CLSID-2}"</c> or <c>@"shell:AppsFolder\WinStoreAppId"</c>.
-		/// File type like <c>".txt"</c> or URL protocol like <c>"http:"</c>.
-		/// If it is a file containing multiple icons (eg exe, dll), can be specified icon index like <c>"path,index"</c> or native icon resource id like <c>"path,-id"</c>.
-		/// If not full path, the function will look in <see cref="Folders.ThisAppImages"/>. See also <see cref="GIFlags"/>.
-		/// Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).
-		/// </param>
-		/// <param name="size">Icon width and height. Also can be enum <see cref="IconSize"/>, cast to int.</param>
-		/// <param name="flags"></param>
-		/// <seealso cref="Wnd.Misc.GetIconHandle"/>
-		public static Icon GetFileIcon(string file, int size, GIFlags flags = 0)
-			=> HandleToIcon(GetFileIconHandle(file, size, flags), true);
-
-		/// <inheritdoc cref="GetFileIcon"/>
-		/// <remarks>
-		/// Calls <see cref="GetFileIconHandle"/> and converts to Bitmap.
-		/// </remarks>
-		public static Bitmap GetFileIconImage(string file, int size, GIFlags flags = 0)
-			=> HandleToImage(GetFileIconHandle(file, size, flags), true);
-
-		/// <inheritdoc cref="GetPidlIcon"/>
-		/// <returns>Returns icon handle, or default(IntPtr) if failed.</returns>
-		/// <remarks>Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
-		public static IntPtr GetPidlIconHandle(Shell.Pidl pidl, int size)
-		{
-			if(pidl?.IsNull ?? false) return default;
-			size = _NormalizeIconSizeParameter(size);
-			return _GetShellIcon(true, null, pidl, size);
-		}
-
-		/// <summary>
 		/// Gets icon of a file or other shell object specified as ITEMIDLIST.
 		/// </summary>
 		/// <returns>Returns null if failed.</returns>
@@ -92,10 +86,25 @@ namespace Au
 		public static Icon GetPidlIcon(Shell.Pidl pidl, int size)
 			=> HandleToIcon(GetPidlIconHandle(pidl, size), true);
 
-		/// <inheritdoc cref="GetPidlIcon"/>
-		/// <remarks>Calls <see cref="GetPidlIconHandle"/> and converts to Bitmap.</remarks>
+		/// <summary>
+		/// Gets icon of a file or other shell object specified as ITEMIDLIST.
+		/// More info: <see cref="GetPidlIcon"/>.
+		/// </summary>
+		/// <returns>Returns null if failed.</returns>
 		public static Bitmap GetPidlIconImage(Shell.Pidl pidl, int size)
 			=> HandleToImage(GetPidlIconHandle(pidl, size), true);
+
+		/// <summary>
+		/// Gets icon of a file or other shell object specified as ITEMIDLIST.
+		/// More info: <see cref="GetPidlIcon"/>.
+		/// </summary>
+		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
+		public static IntPtr GetPidlIconHandle(Shell.Pidl pidl, int size)
+		{
+			if(pidl?.IsNull ?? false) return default;
+			size = _NormalizeIconSizeParameter(size);
+			return _GetShellIcon(true, null, pidl, size);
+		}
 
 		static IntPtr _GetFileIcon(string file, int size, GIFlags flags)
 		{
@@ -381,9 +390,21 @@ namespace Au
 			return false;
 		}
 
-		/// <inheritdoc cref="LoadIcon"/>
-		/// <returns>Returns icon handle, or default(IntPtr) if failed.</returns>
-		/// <remarks>Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
+		/// <summary>
+		/// Extracts icon from file that contains it.
+		/// </summary>
+		/// <returns>Returns null if failed.</returns>
+		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
+		/// <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
+		/// <param name="size">Icon width and height. Also can be enum <see cref="IconSize"/>, cast to int.</param>
+		public static unsafe Icon LoadIcon(string file, int index = 0, int size = 16)
+			=> HandleToIcon(LoadIconHandle(file, index, size), true);
+
+		/// <summary>
+		/// Extracts icon from file that contains it.
+		/// More info: <see cref="LoadIcon"/>.
+		/// </summary>
+		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
 		public static unsafe IntPtr LoadIconHandle(string file, int index = 0, int size = 16)
 		{
 			if(Empty(file)) return default;
@@ -401,18 +422,19 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Extracts icon from file that contains it.
+		/// Gets a shell stock icon.
 		/// </summary>
 		/// <returns>Returns null if failed.</returns>
-		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
-		/// <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
+		/// <param name="icon">Shell stock icon id.</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="IconSize"/>, cast to int.</param>
-		public static unsafe Icon LoadIcon(string file, int index = 0, int size = 16)
-			=> HandleToIcon(LoadIconHandle(file, index, size), true);
+		public static Icon GetStockIcon(StockIcon icon, int size)
+			=> HandleToIcon(GetStockIconHandle(icon, size), true);
 
-		/// <inheritdoc cref="GetStockIcon"/>
-		/// <returns>Returns icon handle, or default(IntPtr) if failed.</returns>
-		/// <remarks>Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
+		/// <summary>
+		/// Gets a shell stock icon.
+		/// More info: <see cref="GetStockIcon"/>.
+		/// </summary>
+		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
 		public static unsafe IntPtr GetStockIconHandle(StockIcon icon, int size)
 		{
 			var x = new Api.SHSTOCKICONINFO(); x.cbSize = Api.SizeOf(x);
@@ -425,15 +447,17 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets a shell stock icon.
+		/// Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
 		/// </summary>
-		/// <returns>Returns null if failed.</returns>
-		/// <param name="icon">Shell stock icon id.</param>
+		/// <returns>Returns null if there are no icons.</returns>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="IconSize"/>, cast to int.</param>
-		public static Icon GetStockIcon(StockIcon icon, int size)
-			=> HandleToIcon(GetStockIconHandle(icon, size), true);
+		public static Icon GetAppIcon(int size)
+			=> HandleToIcon(GetAppIconHandle(size), false);
 
-		/// <inheritdoc cref="GetAppIcon"/>
+		/// <summary>
+		/// Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
+		/// More info: <see cref="GetAppIcon"/>.
+		/// </summary>
 		/// <returns>Returns native icon handle, or default(IntPtr) if there are no icons.</returns>
 		/// <remarks>The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.</remarks>
 		internal static IntPtr GetAppIconHandle(int size)
@@ -451,16 +475,19 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
+		/// Creates icon at run time.
 		/// </summary>
-		/// <returns>Returns null if there are no icons.</returns>
-		/// <param name="size">Icon width and height. Also can be enum <see cref="IconSize"/>, cast to int.</param>
-		public static Icon GetAppIcon(int size)
-			=> HandleToIcon(GetAppIconHandle(size), false);
+		/// <param name="width"></param>
+		/// <param name="height"></param>
+		/// <param name="drawCallback">Called to draw icon. If null, the icon will be completely transparent.</param>
+		public static Icon CreateIcon(int width, int height, Action<Graphics> drawCallback = null)
+			=> HandleToIcon(CreateIconHandle(width, height, drawCallback), true);
 
-		/// <inheritdoc cref="CreateIcon"/>
-		/// <returns>Returns native icon handle.</returns>
-		/// <remarks>Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy the icon.</remarks>
+		/// <summary>
+		/// Creates icon at run time.
+		/// More info: <see cref="CreateIcon"/>.
+		/// </summary>
+		/// <returns>Returns native icon handle. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
 		public static IntPtr CreateIconHandle(int width, int height, Action<Graphics> drawCallback = null)
 		{
 			if(drawCallback != null) {
@@ -480,15 +507,6 @@ namespace Au
 				//speed: ~20 mcs. About 10 times faster than above. Faster than CopyImage etc.
 			}
 		}
-
-		/// <summary>
-		/// Creates icon at run time.
-		/// </summary>
-		/// <param name="width"></param>
-		/// <param name="height"></param>
-		/// <param name="drawCallback">Called to draw icon. If null, the icon will be completely transparent.</param>
-		public static Icon CreateIcon(int width, int height, Action<Graphics> drawCallback = null)
-			=> HandleToIcon(CreateIconHandle(width, height, drawCallback), true);
 
 		/// <summary>
 		/// Destroys native icon.
@@ -630,10 +648,7 @@ namespace Au
 
 			/// <summary>
 			/// Gets file icon as <b>Bitmap</b>.
-			/// If it is in the memory cache, gets it from there.
-			/// Else if it is in the file cache, gets it from there and adds to the memory cache.
-			/// Else gets from file (uses <see cref="GetFileIconImage"/> and adds to the file cache and to the memory cache.
-			/// Returns null if <b>GetFileIconImage</b> failed, eg file does not exist.
+			/// Returns null if the icon is not cached and failed to get it, eg file does not exist.
 			/// </summary>
 			/// <param name="file">Any file or folder.</param>
 			/// <param name="useExt">
@@ -647,6 +662,11 @@ namespace Au
 			/// Use only in UI threads. Does not work if this thread does not retrieve/dispatch posted messages.
 			/// </param>
 			/// <param name="auParam">Something to pass to the *autoUpdate* callback function.</param>
+			/// <remarks>
+			/// If the icon is in the memory cache, gets it from there.
+			/// Else if it is in the file cache, gets it from there and adds to the memory cache.
+			/// Else gets from file (uses <see cref="GetFileIconImage"/> and adds to the file cache and to the memory cache.
+			/// </remarks>
 			public Bitmap GetImage(string file, bool useExt, GIFlags giFlags = 0, Action<Bitmap, object> autoUpdate = null, object auParam = null)
 			{
 				if(useExt) {
@@ -668,16 +688,18 @@ namespace Au
 
 			/// <summary>
 			/// Gets any icon or image using callback function.
-			/// If it is in the memory cache, gets it from there.
-			/// Else if it is in the file cache, gets it from there and adds to the memory cache.
-			/// Else calls callback function, which should return image, and adds to the file cache and to the memory cache.
-			/// Returns null if the callback function returns null.
+			/// Returns null if the icon is not cached and the callback function returns null.
 			/// </summary>
 			/// <param name="name">Some unique name. It is used to identify this image in cache.</param>
 			/// <param name="callback">Called to get image. To convert icon handle to image, use <see cref="Icon_.HandleToImage"/>.</param>
-			/// <param name="autoUpdate"><inheritdoc cref="GetImage(string, bool, GIFlags, Action{Bitmap, object}, object)"/></param>
-			/// <param name="auParam">Something to pass to the *autoUpdate* callback function.</param>
+			/// <param name="autoUpdate"></param>
+			/// <param name="auParam"></param>
 			/// <param name="auDispose">If true (default), auto-updating can dispose unused image returned by *callback*.</param>
+			/// <remarks>
+			/// If the icon is in the memory cache, gets it from there.
+			/// Else if it is in the file cache, gets it from there and adds to the memory cache.
+			/// Else calls callback function, which should return image, and adds to the file cache and to the memory cache.
+			/// </remarks>
 			public Bitmap GetImage(string name, Func<Bitmap> callback, Action<Bitmap, object> autoUpdate = null, object auParam = null, bool auDispose = true)
 			{
 				return _GetImage(name, 0, callback, autoUpdate, auParam, auDispose);
@@ -901,7 +923,6 @@ namespace Au.Types
 	/// Standard icon sizes.
 	/// </summary>
 	/// <seealso cref="Icon_.GetShellIconSize"/>
-	/// <tocexclude />
 	public enum IconSize //note: this is not in Au.Types, because then difficult to find, because often need to cast to int
 	{
 		/// <summary>
@@ -935,7 +956,7 @@ namespace Au.Types
 	}
 
 #pragma warning disable 1591 //missing XML documentation
-	/// <summary><msdn>SHSTOCKICONID</msdn></summary>
+	/// <summary>See <msdn>SHSTOCKICONID</msdn>.</summary>
 	/// <seealso cref="Icon_.GetStockIcon"/>
 	public enum StockIcon
 	{

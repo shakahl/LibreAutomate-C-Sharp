@@ -211,7 +211,8 @@ namespace Au
 			}
 		}
 
-		/// <inheritdoc cref="Get(out int, string, object[])"/>
+		/// <exception cref="SLException">Failed.</exception>
+		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get(out long value, string sql, params object[] bind)
 		{
 			using(var p = Statement(sql, bind)) {
@@ -221,7 +222,8 @@ namespace Au
 			}
 		}
 
-		///// <inheritdoc cref="Get(out int, string, object[])"/>
+		///// <exception cref="SLException">Failed.</exception>
+		///// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		//public bool Get(out DateTime value, bool convertToLocal, string sql, params object[] bind)
 		//{
 		//	using(var p = Prepare(sql, bind)) {
@@ -231,7 +233,8 @@ namespace Au
 		//	}
 		//}
 
-		/// <inheritdoc cref="Get(out int, string, object[])"/>
+		/// <exception cref="SLException">Failed.</exception>
+		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get(out bool value, string sql, params object[] bind)
 		{
 			using(var p = Statement(sql, bind)) {
@@ -241,7 +244,8 @@ namespace Au
 			}
 		}
 
-		/// <inheritdoc cref="Get(out int, string, object[])"/>
+		/// <exception cref="SLException">Failed.</exception>
+		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get(out double value, string sql, params object[] bind)
 		{
 			using(var p = Statement(sql, bind)) {
@@ -251,7 +255,8 @@ namespace Au
 			}
 		}
 
-		/// <inheritdoc cref="Get(out int, string, object[])"/>
+		/// <exception cref="SLException">Failed.</exception>
+		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get(out string value, string sql, params object[] bind)
 		{
 			using(var p = Statement(sql, bind)) {
@@ -261,7 +266,8 @@ namespace Au
 			}
 		}
 
-		/// <inheritdoc cref="Get(out int, string, object[])"/>
+		/// <exception cref="SLException">Failed.</exception>
+		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get<T>(out T[] value, string sql, params object[] bind) where T : unmanaged
 		{
 			using(var p = Statement(sql, bind)) {
@@ -271,7 +277,8 @@ namespace Au
 			}
 		}
 
-		/// <inheritdoc cref="Get(out int, string, object[])"/>
+		/// <exception cref="SLException">Failed.</exception>
+		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get<T>(out List<T> value, string sql, params object[] bind) where T : unmanaged
 		{
 			using(var p = Statement(sql, bind)) {
@@ -281,7 +288,9 @@ namespace Au
 			}
 		}
 
-		/// <inheritdoc cref="Get(out int, string, object[])"/>
+		/// <summary>See <see cref="Get(out int, string, object[])"/>.</summary>
+		/// <exception cref="SLException">Failed.</exception>
+		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool GetStruct<T>(out T value, string sql, params object[] bind) where T : unmanaged
 		{
 			using(var p = Statement(sql, bind)) {
@@ -291,8 +300,10 @@ namespace Au
 			}
 		}
 
-		/// <inheritdoc cref="Get(out int, string, object[])"/>
-		/// <summary>Executes single SQL statement and returns true if it returns at least one row of data.</summary>
+		/// <summary>
+		/// Executes single SQL statement and returns true if it returns at least one row of data.
+		/// More info: <see cref="Get(out int, string, object[])"/>.
+		/// </summary>
 		/// <remarks>This function is similar to the <b>GetX</b> functions, but it does not retrieve the data.</remarks>
 		public bool Any(string sql, params object[] bind)
 		{

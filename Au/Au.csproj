@@ -193,14 +193,14 @@
     <None Include="_doc\api\index.md" />
     <None Include="_doc\api\toc.yml" />
     <None Include="_doc\articles\index.md" />
+    <None Include="_doc\articles\Wait timeout.md" />
+    <None Include="_doc\articles\_test.md" />
     <None Include="_doc\editor\intro.md" />
     <None Include="_doc\articles\toc.yml" />
     <None Include="_doc\editor\toc.yml" />
     <None Include="_doc\articles\Wildcard expression.md" />
     <None Include="_doc\docfx.json" />
     <None Include="_doc\filter.yml" />
-    <None Include="_doc\include\Path_.GetDirectoryPath-examples.md" />
-    <None Include="_doc\include\Path_.GetFileName-examples.md" />
     <None Include="_doc\include\param-secondsTimeout.md" />
     <None Include="_doc\index.md" />
     <None Include="_doc\template1\layout\_master.tmpl" />
@@ -209,7 +209,9 @@
     <None Include="_doc\template1\partials\footer.tmpl.partial" />
     <None Include="_doc\template1\partials\logo.tmpl.partial" />
     <None Include="_doc\articles\UAC.md" />
+    <None Include="_doc\template1\partials\namespace.tmpl.partial" />
     <None Include="_doc\template2\partials\collection.tmpl.partial" />
+    <None Include="_doc\template2\partials\item.tmpl.partial" />
     <None Include="_doc\toc.yml" />
   </ItemGroup>
   <ItemGroup>

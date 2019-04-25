@@ -67,7 +67,7 @@ namespace Au
 			return false;
 		}
 
-		/// <inheritdoc cref="HasMessageLoop(out bool)"/>
+		///
 		public static bool HasMessageLoop() => HasMessageLoop(out _);
 
 		[MethodImpl(MethodImplOptions.NoInlining)]

@@ -66,7 +66,7 @@ namespace Au
 			/// <summary>
 			/// Calls API <msdn>GetGUIThreadInfo</msdn>, which can get some GUI info, eg mouse capturing, menu mode, move/size mode, focus, caret.
 			/// </summary>
-			/// <param name="g">Variable that receives the info.</param>
+			/// <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
 			/// <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="ThreadId"/>.</param>
 			public static bool GetGUIThreadInfo(out Native.GUITHREADINFO g, int idThread = 0)
 			{
@@ -194,7 +194,7 @@ namespace Au
 
 			/// <summary>
 			/// Gets icon that is displayed in window title bar and in its taskbar button.
-			/// Returns icon handle if successful, else default(IntPtr). Later call <see cref="Icon_.DestroyIconHandle"/> or <see cref="Icon_.HandleToImage"/>.
+			/// Returns icon handle if successful, else default(IntPtr). Later call <see cref="Icon_.DestroyIconHandle"/> or <see cref="Icon_.HandleToIcon"/> or <see cref="Icon_.HandleToImage"/>.
 			/// </summary>
 			/// <param name="w"></param>
 			/// <param name="size32">Get 32x32 icon. If false, gets 16x16 icon.</param>
@@ -315,7 +315,7 @@ namespace Au
 			/// <summary>
 			/// Writes a Windows message to the output.
 			/// </summary>
-			/// <param name="m"></param>
+			/// <param name="m">API <msdn>MSG</msdn>.</param>
 			/// <param name="ignore">Messages to not show.</param>
 			public static void PrintMsg(in Native.MSG m, params int[] ignore)
 			{

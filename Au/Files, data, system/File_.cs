@@ -702,8 +702,8 @@ namespace Au
 		/// <param name="newName">New name without path. Example: "name.txt".</param>
 		/// <param name="ifExists"></param>
 		/// <exception cref="ArgumentException">
-		/// path is not full path (see <see cref="Path_.IsFullPath"/>).
-		/// newName is invalid filename.
+		/// - *path* is not full path (see <see cref="Path_.IsFullPath"/>).
+		/// - *newName* is invalid filename.
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The file (path) does not exist or cannot be found.</exception>
 		/// <exception cref="AuException">Failed.</exception>
@@ -747,8 +747,8 @@ namespace Au
 		/// <param name="newDirectory">New parent directory.</param>
 		/// <param name="ifExists"></param>
 		/// <exception cref="ArgumentException">
-		/// path or newDirectory is not full path (see <see cref="Path_.IsFullPath"/>).
-		/// path is drive. To move drive content, use <see cref="Move"/>.
+		/// - *path* or *newDirectory* is not full path (see <see cref="Path_.IsFullPath"/>).
+		/// - *path* is drive. To move drive content, use <see cref="Move"/>.
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
 		/// <exception cref="AuException">Failed.</exception>
@@ -799,10 +799,10 @@ namespace Au
 		/// <param name="newDirectory">New parent directory.</param>
 		/// <param name="ifExists"></param>
 		/// <param name="copyFlags">Options used when copying directory.</param>
-		/// <param name="filter"><inheritdoc cref="Copy"/></param>
+		/// <param name="filter">See <see cref="Copy"/>.</param>
 		/// <exception cref="ArgumentException">
-		/// path or newDirectory is not full path (see <see cref="Path_.IsFullPath"/>).
-		/// path is drive. To copy drive content, use <see cref="Copy"/>.
+		/// - *path* or *newDirectory* is not full path (see <see cref="Path_.IsFullPath"/>).
+		/// - *path* is drive. To copy drive content, use <see cref="Copy"/>.
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
 		/// <exception cref="AuException">Failed.</exception>
@@ -1113,7 +1113,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">*millisecondsTimeout* less than -1.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the called function.</exception>
 		/// <remarks>
-		/// This function calls the lambda and handles <b>IOException</b>. If the exception indicates that the file is locked, waits and retries in loop.
+		/// Calls the lambda and handles <b>IOException</b>. If the exception indicates that the file is locked, waits and retries in loop.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1138,7 +1138,8 @@ namespace Au
 			catch(IOException e) when(w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
 		}
 
-		/// <inheritdoc cref="WaitIfLocked{T}(Func{T}, int)"/>
+		/// <exception cref="ArgumentOutOfRangeException">*millisecondsTimeout* less than -1.</exception>
+		/// <exception cref="Exception">Exceptions thrown by the called function.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// File.WriteAllText(file, "TEXT"); //unsafe. Exception if the file is locked.
@@ -1240,22 +1241,24 @@ namespace Au
 		}
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-		/// <inheritdoc cref="Save"/>
 		/// <summary>
 		/// Writes text to a file in a safe way, using <see cref="File.WriteAllText"/>.
+		/// More info: <see cref="Save"/>.
 		/// </summary>
 		/// <param name="text">Text to write.</param>
 		/// <param name="encoding">Text encoding in file. Default is UTF-8 without BOM.</param>
+		/// <exception cref="Exception">Exceptions of <see cref="Save"/>.</exception>
 		public static void SaveText(string file, string text, bool backup = false, int lockedWaitMS = 2000, Encoding encoding = null)
 		{
 			_Save(file, text ?? "", backup, lockedWaitMS, encoding);
 		}
 
-		/// <inheritdoc cref="Save"/>
 		/// <summary>
 		/// Writes data to a file in a safe way, using <see cref="File.WriteAllBytes"/>.
+		/// More info: <see cref="Save"/>.
 		/// </summary>
 		/// <param name="bytes">Data to write.</param>
+		/// <exception cref="Exception">Exceptions of <see cref="Save"/>.</exception>
 		public static void SaveBytes(string file, byte[] bytes, bool backup = false, int lockedWaitMS = 2000)
 		{
 			_Save(file, bytes ?? throw new ArgumentNullException(), backup, lockedWaitMS);

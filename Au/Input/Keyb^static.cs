@@ -156,38 +156,34 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if the Alt key is down (pressed).
+		/// Returns true if the Alt key is down (pressed). Calls <see cref="IsPressed"/>.
 		/// Not for UI code (forms, WPF).
 		/// </summary>
-		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
 		public static bool IsAlt => IsPressed(KKey.Alt);
 
 		/// <summary>
-		/// Returns true if the Ctrl key is down (pressed).
+		/// Returns true if the Ctrl key is down (pressed). Calls <see cref="IsPressed"/>.
+		/// Not for UI code (forms, WPF).
 		/// </summary>
-		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
 		public static bool IsCtrl => IsPressed(KKey.Ctrl);
 
 		/// <summary>
-		/// Returns true if the Shift key is down (pressed).
+		/// Returns true if the Shift key is down (pressed). Calls <see cref="IsPressed"/>.
 		/// Not for UI code (forms, WPF).
 		/// </summary>
-		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
 		public static bool IsShift => IsPressed(KKey.Shift);
 
 		/// <summary>
-		/// Returns true if the Win key is down (pressed).
+		/// Returns true if the Win key is down (pressed). Calls <see cref="IsPressed"/>.
 		/// Not for UI code (forms, WPF).
 		/// </summary>
-		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
 		public static bool IsWin => IsPressed(KKey.Win) || IsPressed(KKey.RWin);
 
 		/// <summary>
-		/// Returns true if some modifier keys are down (pressed): Ctrl, Shift, Alt, Win.
+		/// Returns true if some modifier keys are down (pressed): Ctrl, Shift, Alt, Win. Calls <see cref="IsPressed"/>.
 		/// Not for UI code (forms, WPF).
 		/// </summary>
 		/// <param name="mod">Return true if some of these keys are pressed. Default - any (Ctrl, Shift, Alt or Win).</param>
-		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
 		/// <seealso cref="WaitForNoModifierKeys"/>
 		public static bool IsMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
 		{
@@ -199,11 +195,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets flags indicating which modifier keys are down (pressed): Ctrl, Shift, Alt, Win.
+		/// Gets flags indicating which modifier keys are down (pressed): Ctrl, Shift, Alt, Win. Calls <see cref="IsPressed"/>.
 		/// Not for UI code (forms, WPF).
 		/// </summary>
 		/// <param name="mod">Check only these keys. Default - all four.</param>
-		/// <remarks><inheritdoc cref="IsPressed"/></remarks>
 		public static KMod GetMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
 		{
 			KMod R = 0;
@@ -277,6 +272,7 @@ namespace Au
 		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
 		/// <param name="keys">One or more keys or/and mouse buttons. Waits until all are released. Can be string like with <see cref="Key"/>, without operators.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		public static bool WaitForReleased(double secondsTimeout, params KKey[] keys)
 		{
 			return WaitFor.Condition(secondsTimeout, () => {
@@ -285,7 +281,8 @@ namespace Au
 			}, 2);
 		}
 
-		/// <inheritdoc cref="WaitForReleased(double, KKey[])"/>
+		/// <exception cref="ArgumentException">Error in keys string.</exception>
+		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		public static bool WaitForReleased(double secondsTimeout, string keys)
 		{
 			return WaitForReleased(secondsTimeout, Misc.ParseKeysString(keys));
@@ -294,8 +291,8 @@ namespace Au
 		/// <summary>
 		/// Registers a temporary hotkey and waits for it.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
-		/// <param name="hotkey"><inheritdoc cref="Util.RegisterHotkey.Register"/></param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="hotkey">See <see cref="Util.RegisterHotkey.Register"/>.</param>
 		/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="ArgumentException">Error in hotkey string.</exception>
@@ -333,7 +330,7 @@ namespace Au
 		/// </summary>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
-		/// <param name="key">Wait for this key..</param>
+		/// <param name="key">Wait for this key.</param>
 		/// <param name="up">Wait for key-up event.</param>
 		/// <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
 		/// <exception cref="ArgumentException">*key* is 0.</exception>
@@ -359,13 +356,12 @@ namespace Au
 		/// Waits for key-down or key-up event of the specified key.
 		/// </summary>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout"></param>
 		/// <param name="key">Wait for this key. A single-key string like with <see cref="Key"/>.</param>
-		/// <param name="up">Wait for key-up event.</param>
-		/// <param name="block"><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></param>
+		/// <param name="up"></param>
+		/// <param name="block"></param>
 		/// <exception cref="ArgumentException">Invalid *key* string.</exception>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
-		/// <remarks><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// Keyb.WaitForKey(0, "Ctrl", up: false, block: true);
@@ -384,11 +380,10 @@ namespace Au
 		/// Returns the key code. On timeout returns 0 if *secondsTimeout* is negative; else exception.
 		/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
 		/// </returns>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
-		/// <param name="up">Wait for key-up event.</param>
-		/// <param name="block"><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></param>
+		/// <param name="secondsTimeout"></param>
+		/// <param name="up"></param>
+		/// <param name="block"></param>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
-		/// <remarks><inheritdoc cref="WaitForKey(double, KKey, bool, bool)"/></remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var key = Keyb.WaitForKey(0, up: true, block: true);
@@ -544,6 +539,18 @@ namespace Au
 			}
 
 			/// <summary>
+			/// Converts hotkey string to <see cref="System.Windows.Forms.Keys"/>.
+			/// For example, if s is <c>"Ctrl+Left"</c>, sets hotkey=Keys.Control|Keys.Left.
+			/// Returns false if the string is invalid.
+			/// </summary>
+			public static bool ParseHotkeyString(string s, out System.Windows.Forms.Keys hotkey)
+			{
+				if(!ParseHotkeyString(s, out var mod, out var key)) { hotkey = 0; return false; }
+				hotkey = KModToKeys(mod) | (System.Windows.Forms.Keys)key;
+				return true;
+			}
+
+			/// <summary>
 			/// Used for parsing of hotkey triggers and mouse trigger modifiers.
 			/// Like <see cref="ParseHotkeyString"/>, but supports 'any mod' (like "Shift?+K" or "?+K") and <i>noKey</i>.
 			/// <i>noKey</i> - s can contain only modifiers, not key. If false, s must be "key" or "mod+key", else returns false. Else s must be "mod" or null/"", else returns false.
@@ -572,19 +579,6 @@ namespace Au
 				}
 				if(noKey) return (mod | modAny) != 0 && key == 0;
 				return key != 0;
-			}
-
-			/// <summary>
-			/// Converts hotkey string to <see cref="System.Windows.Forms.Keys"/>.
-			/// For example, if s is <c>"Ctrl+Left"</c>, sets hotkey=Keys.Control|Keys.Left.
-			/// Returns false if the string is invalid.
-			/// </summary>
-			/// <inheritdoc cref="ParseHotkeyString(string, out KMod, out KKey)"/>
-			public static bool ParseHotkeyString(string s, out System.Windows.Forms.Keys hotkey)
-			{
-				if(!ParseHotkeyString(s, out var mod, out var key)) { hotkey = 0; return false; }
-				hotkey = KModToKeys(mod) | (System.Windows.Forms.Keys)key;
-				return true;
 			}
 
 			/// <summary>
@@ -977,14 +971,14 @@ namespace Au
 		/// Sends virtual keystrokes to the active window. Also can send text, wait, etc.
 		/// Calls <see cref="Keyb.Key"/>.
 		/// </summary>
-		/// <inheritdoc cref="Keyb.Key"/>
+		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		public static void Key(params object[] keysEtc) => Keyb.Key(keysEtc);
 
 		/// <summary>
 		/// Sends text to the active window, using virtual keystrokes or the clipboard. Then also can send non-text keystrokes.
 		/// Calls <see cref="Keyb.Text"/>.
 		/// </summary>
-		/// <inheritdoc cref="Keyb.Text"/>
+		/// <exception cref="ArgumentException">An argument in *keysEtc* is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		public static void Text(string text, params object[] keysEtc) => Keyb.Text(text, keysEtc);
 	}
 }

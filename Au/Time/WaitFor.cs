@@ -180,7 +180,7 @@ namespace Au
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <remarks>More info: <see cref="WaitFor"/>.</remarks>
-		/// <example><inheritdoc cref="WaitFor"/></example>
+		/// <example>See <see cref="WaitFor"/>.</example>
 		public static bool Condition(double secondsTimeout, Func<bool> condition, OptWaitFor options = null)
 		{
 			var to = new Loop(secondsTimeout, options);
@@ -428,6 +428,7 @@ namespace Au.Types
 	/// <summary>
 	/// Delegate type for <see cref="WaitFor.PostedMessage(double, WaitMsgCallback)"/>.
 	/// </summary>
+	/// <param name="m">API <msdn>MSG</msdn>.</param>
 	public delegate bool WaitMsgCallback(ref Native.MSG m);
 
 	/// <summary>

@@ -922,10 +922,9 @@ namespace Au.Util
 		/// You can use <see cref="RunTask"/> to run the task.
 		/// </summary>
 		/// <param name="taskFolder">
-		/// <inheritdoc cref="RunTask"/>
 		/// This function creates the folder (and ancestors) if does not exist.
 		/// </param>
-		/// <param name="taskName"><inheritdoc cref="RunTask"/></param>
+		/// <param name="taskName">See <see cref="RunTask"/>.</param>
 		/// <param name="programFile">Full path of an exe file. This function does not normalize it.</param>
 		/// <param name="IL">Can be System, High or Medium. If System, runs in SYSTEM account. Else in creator's account.</param>
 		/// <param name="args">Command line arguments. Can contain literal substrings $(Arg0), $(Arg1), ..., $(Arg32) that will be replaced by <see cref="RunTask"/>.</param>
@@ -1000,8 +999,8 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 		/// <summary>
 		/// Returns true if the task exists.
 		/// </summary>
-		/// <param name="taskFolder"><inheritdoc cref="RunTask"/></param>
-		/// <param name="taskName"><inheritdoc cref="RunTask"/></param>
+		/// <param name="taskFolder">See <see cref="RunTask"/>.</param>
+		/// <param name="taskName">See <see cref="RunTask"/>.</param>
 		/// <exception cref="Exception">Failed.</exception>
 		public static bool TaskExists(string taskFolder, string taskName)
 		{

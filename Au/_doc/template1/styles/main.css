@@ -213,3 +213,15 @@ article h1 {
 p { white-space: pre-wrap }
 
 td p+p { margin-top: 10px; }
+
+div.codewrapper pre { background-color: #f9fbe7 }
+
+.inheritance h5, .inheritedMembers h5 {
+    border-bottom: 0;
+}
+
+code {
+    color: #804000;
+    background-color: #f5f5f5;
+    border-radius: 4px;
+}
