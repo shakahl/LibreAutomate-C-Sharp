@@ -114,8 +114,8 @@ class UacDragDrop
 				//Print("drag");
 				_isProcess2 = true;
 				_wWindow = w;
-				Process_.LibStartUserIL("Au.Editor.exe", "/d " + CommandLine.MsgWnd.Handle.ToString());
-				//Process_.LibStartUserIL("Au.Editor.exe", $"/d {CommandLine.MsgWnd.Handle.ToString()} {Time.PerfMilliseconds}"); //test process startup speed
+				new Au.Util.LibProcessStarter("Au.Editor.exe", "/d " + CommandLine.MsgWnd.Handle.ToString()).StartUserIL();
+				//new Au.Util.LibProcessStarter("Au.Editor.exe", $"/d {CommandLine.MsgWnd.Handle.ToString()} {Time.PerfMilliseconds}").StartUserIL(); //test process startup speed
 			} else if(w != _wTransparent) {
 				_wWindow = w;
 				_SetTransparentSizeZorder();

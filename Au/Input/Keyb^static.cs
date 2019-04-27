@@ -231,7 +231,7 @@ namespace Au
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) are down (pressed). See <see cref="IsMod"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="mod">Check only these keys. Default: all.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -243,7 +243,7 @@ namespace Au
 		/// <summary>
 		/// Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are down (pressed).
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="mod">Check only these keys. Default: all.</param>
 		/// <param name="buttons">Check only these buttons. Default: all.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
@@ -269,8 +269,8 @@ namespace Au
 		/// <summary>
 		/// Waits while the specified keys or/and mouse buttons are down (pressed).
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
-		/// <param name="keys">One or more keys or/and mouse buttons. Waits until all are released. Can be string like with <see cref="Key"/>, without operators.</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="keys">One or more keys or/and mouse buttons. Waits until all are released.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		public static bool WaitForReleased(double secondsTimeout, params KKey[] keys)
@@ -281,6 +281,12 @@ namespace Au
 			}, 2);
 		}
 
+		/// <summary>
+		/// Waits while the specified keys are down (pressed).
+		/// </summary>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="keys">One or more keys. Waits until all are released. String like with <see cref="Key"/>, without operators.</param>
+		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="ArgumentException">Error in keys string.</exception>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		public static bool WaitForReleased(double secondsTimeout, string keys)
@@ -329,7 +335,7 @@ namespace Au
 		/// Waits for key-down or key-up event of the specified key.
 		/// </summary>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="key">Wait for this key.</param>
 		/// <param name="up">Wait for key-up event.</param>
 		/// <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>

@@ -1903,8 +1903,8 @@ namespace Au
 					if(top.IsEmpty) top = Coord.Center;
 					var p = Coord.NormalizeInRect(left, top, rs);
 					x = p.x; y = p.y;
-					switch(left.Type) { case Coord.CoordType.Reverse: x -= wid; break; case Coord.CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
-					switch(top.Type) { case Coord.CoordType.Reverse: y -= hei; break; case Coord.CoordType.Fraction: y -= (int)(hei * top.FractionValue); break; }
+					switch(left.Type) { case CoordType.Reverse: x -= wid; break; case CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
+					switch(top.Type) { case CoordType.Reverse: y -= hei; break; case CoordType.Fraction: y -= (int)(hei * top.FractionValue); break; }
 				}
 
 				if(bEnsureInScreen) {

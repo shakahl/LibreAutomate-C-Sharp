@@ -91,6 +91,7 @@
         <member name="M:Au.Types.Api.SECURITY_ATTRIBUTES.#ctor(System.String)">
             <summary>
             Creates SECURITY_ATTRIBUTES from string security descriptor.
+            securityDescriptor can be null; then lpSecurityDescriptor will be null;
             </summary>
         </member>
         <member name="F:Au.Types.Api.SECURITY_ATTRIBUTES.ForLowIL">
@@ -942,6 +943,9 @@
         </member>
         <member name="T:Au.Types.Native.WNDPROC">
             <summary>API <msdn>WNDPROC</msdn></summary>
+        </member>
+        <member name="T:Au.Types.Native.SUBCLASSPROC">
+            <summary>API <msdn>SUBCLASSPROC</msdn></summary>
         </member>
         <member name="T:Au.Types.Native.SWP">
             <summary>API <msdn>SetWindowPos</msdn> flags.</summary>
@@ -2515,6 +2519,11 @@
             </summary>
             <param name="maxCount">The maximum number of substrings to get. If negative (default), gets all.</param>
         </member>
+        <member name="T:Au.Types.RAFlags">
+            <summary>
+            Flags for <see cref="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.Types.RAFlags)"/>.
+            </summary>
+        </member>
         <member name="T:Au.Types.AuScript">
             <summary>
             This class is used in automation script files as base of their main class. Adds some features.
@@ -2956,31 +2965,6 @@
             Also has functions to convert to normal coodinates.
             </summary>
         </member>
-        <member name="T:Au.Types.Coord.CoordType">
-            <summary>
-            Coord variable value type.
-            </summary>
-        </member>
-        <member name="F:Au.Types.Coord.CoordType.None">
-            <summary>
-            No value. The variable is default(Coord).
-            </summary>
-        </member>
-        <member name="F:Au.Types.Coord.CoordType.Normal">
-            <summary>
-            <see cref="P:Au.Types.Coord.Value"/> is pixel offset from left or top of a rectangle.
-            </summary>
-        </member>
-        <member name="F:Au.Types.Coord.CoordType.Reverse">
-            <summary>
-            <see cref="P:Au.Types.Coord.Value"/> is pixel offset from right or bottom of a rectangle, towards left or top.
-            </summary>
-        </member>
-        <member name="F:Au.Types.Coord.CoordType.Fraction">
-            <summary>
-            <see cref="P:Au.Types.Coord.FractionValue"/> is fraction of a rectangle, where 0.0 is left or top, and 1.0 is right or bottom (outside of the rectangle).
-            </summary>
-        </member>
         <member name="P:Au.Types.Coord.Type">
             <summary>
             Value type.
@@ -3071,6 +3055,31 @@
         </member>
         <member name="M:Au.Types.Coord.ToString">
             
+        </member>
+        <member name="T:Au.Types.CoordType">
+            <summary>
+            <see cref="T:Au.Types.Coord"/> variable value type.
+            </summary>
+        </member>
+        <member name="F:Au.Types.CoordType.None">
+            <summary>
+            No value. The variable is default(Coord).
+            </summary>
+        </member>
+        <member name="F:Au.Types.CoordType.Normal">
+            <summary>
+            <see cref="P:Au.Types.Coord.Value"/> is pixel offset from left or top of a rectangle.
+            </summary>
+        </member>
+        <member name="F:Au.Types.CoordType.Reverse">
+            <summary>
+            <see cref="P:Au.Types.Coord.Value"/> is pixel offset from right or bottom of a rectangle, towards left or top.
+            </summary>
+        </member>
+        <member name="F:Au.Types.CoordType.Fraction">
+            <summary>
+            <see cref="P:Au.Types.Coord.FractionValue"/> is fraction of a rectangle, where 0.0 is left or top, and 1.0 is right or bottom (outside of the rectangle).
+            </summary>
         </member>
         <member name="T:Au.Types.PopupXY">
             <summary>
@@ -3259,12 +3268,17 @@
             More parameters for <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.SRFlags,Au.Types.SRMore)"/>.
             </summary>
         </member>
-        <member name="F:Au.Types.SRMore.WorkingDirectory">
+        <member name="M:Au.Types.SRMore.op_Implicit(System.String)~Au.Types.SRMore">
             <summary>
-            Initial working directory for the new process.
-            Some programs look for their files in the working directory and fail to start if it is not the program's directory.
-            If null (default), the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found).
-            If this is "" or invalid or the function cannot find full path, the new process will inherit the curent working directory of this process.
+            Sets <see cref="F:Au.Types.SRMore.CurrentDirectory"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.SRMore.CurrentDirectory">
+            <summary>
+            Initial current directory for the new process.
+            If null (default), the new process will inherit the curent directory of this process.
+            If "", the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found). If not possible, same as null.
+            <note type="note">Some programs look for their files in current directory and fail to start if it is not the program's directory.</note>
             </summary>
         </member>
         <member name="F:Au.Types.SRMore.Verb">
@@ -4217,42 +4231,6 @@
             </summary>
             <param name="s">String. If null, returns false. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
         </member>
-        <member name="T:Au.Types.Wildex.WildType">
-            <summary>
-            The type of text (wildcard expression) used when creating the Wildex variable.
-            </summary>
-        </member>
-        <member name="F:Au.Types.Wildex.WildType.Text">
-            <summary>
-            Simple text (option t, or no *? characters and no t r R options).
-            <b>Match</b> calls <see cref="M:Au.String_.Equals_(System.String,System.String,System.Boolean)"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.Wildex.WildType.Wildcard">
-            <summary>
-            Wildcard (has *? characters and no t r R options).
-            <b>Match</b> calls <see cref="M:Au.String_.Like_(System.String,System.String,System.Boolean)"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.Wildex.WildType.RegexPcre">
-            <summary>
-            PCRE regular expression (option r).
-            <b>Match</b> calls <see cref="M:Au.Regex_.IsMatch(System.String,Au.Types.RXMore)"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.Wildex.WildType.RegexNet">
-            <summary>
-            .NET egular expression (option R).
-            <b>Match</b> calls <see cref="M:System.Text.RegularExpressions.Regex.IsMatch(System.String)"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.Wildex.WildType.Multi">
-            <summary>
-            Multiple parts (option m).
-            <b>Match</b> calls <b>Match</b> for each part (see <see cref="P:Au.Types.Wildex.MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
-            If you want to implement a different logic, call <b>Match</b> for each <see cref="P:Au.Types.Wildex.MultiArray"/> element (instead of calling <b>Match</b> for this variable).
-            </summary>
-        </member>
         <member name="P:Au.Types.Wildex.Text">
             <summary>
             Gets the wildcard or simple text.
@@ -4300,6 +4278,42 @@
             Returns true if string contains wildcard characters: '*', '?'.
             </summary>
             <param name="s">Can be null.</param>
+        </member>
+        <member name="T:Au.Types.WXType">
+            <summary>
+            The type of text (wildcard expression) of a <see cref="T:Au.Types.Wildex"/> variable.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WXType.Text">
+            <summary>
+            Simple text (option t, or no *? characters and no t r R options).
+            <b>Match</b> calls <see cref="M:Au.String_.Equals_(System.String,System.String,System.Boolean)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WXType.Wildcard">
+            <summary>
+            Wildcard (has *? characters and no t r R options).
+            <b>Match</b> calls <see cref="M:Au.String_.Like_(System.String,System.String,System.Boolean)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WXType.RegexPcre">
+            <summary>
+            PCRE regular expression (option r).
+            <b>Match</b> calls <see cref="M:Au.Regex_.IsMatch(System.String,Au.Types.RXMore)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WXType.RegexNet">
+            <summary>
+            .NET egular expression (option R).
+            <b>Match</b> calls <see cref="M:System.Text.RegularExpressions.Regex.IsMatch(System.String)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WXType.Multi">
+            <summary>
+            Multiple parts (option m).
+            <b>Match</b> calls <b>Match</b> for each part (see <see cref="P:Au.Types.Wildex.MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
+            If you want to implement a different logic, call <b>Match</b> for each <see cref="P:Au.Types.Wildex.MultiArray"/> element (instead of calling <b>Match</b> for this variable).
+            </summary>
         </member>
         <member name="T:Au.Types.DIcon">
             <summary>
@@ -4760,9 +4774,6 @@
             <summary>
             Match invisible and cloaked windows too, even if the flags are not set (see <see cref="T:Au.Types.WFFlags"/>).
             </summary>
-        </member>
-        <member name="T:Au.Types.SUBCLASSPROC">
-            <summary>API <msdn>SUBCLASSPROC</msdn></summary>
         </member>
         <member name="T:Au.Types.FileDir">
             <summary>
@@ -5482,9 +5493,7 @@
             <summary>
             Calls <see cref="M:Au.Acc.DoAction"/> or *action* and waits until window name changes and web page name changes.
             </summary>
-            <param name="secondsTimeout">
-            [!include[](../include/param-secondsTimeout.md)
-            
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).
             Default 60 seconds.
             </param>
             <param name="action">If used, calls it instead of <see cref="M:Au.Acc.DoAction"/>.</param>
@@ -5735,7 +5744,7 @@
             Finds accessible object (AO) in window w.
             The same as <see cref="M:Au.Acc.Finder.Find(Au.Wnd)"/>, but waits until the AO is found or the given time expires.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="w">Window or control that contains the AO.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -5746,7 +5755,7 @@
             Finds accessible object (AO) in another AO.
             The same as <see cref="M:Au.Acc.Finder.Find(Au.Acc)"/>, but waits until the AO is found or the given time expires.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="a">Direct or indirect parent AO.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -5905,7 +5914,7 @@
             Finds accessible object (AO) in window. Waits until the AO is found or the given time expires.
             More info: <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
             <exception cref="T:System.ArgumentException"/>
@@ -5917,7 +5926,7 @@
             Finds a descendant accessible object (AO) of this AO. Waits until the AO is found or the given time expires.
             More info: <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException"/>
             <exception cref="T:System.ArgumentException"/>
@@ -6460,90 +6469,6 @@
             <remarks>
             Calls <see cref="M:Au.Process_.GetVersionInfo(System.Int32)"/> and <see cref="P:System.Diagnostics.FileVersionInfo.FileDescription"/>.
             </remarks>
-        </member>
-        <member name="M:Au.Process_._ParamsForCreateProcess(System.String,System.String,System.String@,System.Boolean)">
-            <summary>
-            Creates correct arguments for CreateProcess:
-            lpCommandLine, as char[] like <c>"\"exeFile\" args\0"</c>;
-            lpCurrentDirectory = directory of exeFile;
-            flags CREATE_UNICODE_ENVIRONMENT and optionally CREATE_SUSPENDED;
-            STARTUPINFO with flag STARTF_FORCEOFFFEEDBACK;
-            optionally lpEnvironment.
-            </summary>
-            <param name="exeFile">Full path of program file, or filename/relative in <see cref="P:Au.Folders.ThisApp"/>. Uses <see cref="M:Au.Path_.Normalize(System.String,System.String,Au.Types.PNFlags)"/>.</param>
-            <param name="args">null or command line arguments.</param>
-            <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", are passed only these variables.</param>
-            <param name="suspended">Add flag CREATE_SUSPENDED.</param>
-        </member>
-        <member name="M:Au.Process_.LibStartLL(Au.Types.Api.PROCESS_INFORMATION@,System.String,System.String,System.Boolean,System.String,System.Boolean)">
-            <summary>
-            Starts process using API CreateProcess or CreateProcessAsUser, without the feedback hourglass cursor.
-            </summary>
-            <param name="pi">Receives CreateProcessX results. Will need to close handles in pi, eg pi.Dispose.</param>
-            <param name="exeFile">Full path of program file, or filename/relative in <see cref="P:Au.Folders.ThisApp"/>. Uses <see cref="M:Au.Path_.Normalize(System.String,System.String,Au.Types.PNFlags)"/>.</param>
-            <param name="args">null or command line arguments.</param>
-            <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", are passed only these variables.</param>
-            <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
-            <param name="suspended">Add flag CREATE_SUSPENDED.</param>
-        </member>
-        <member name="M:Au.Process_.LibStart(System.String,System.String,System.Boolean,System.String,Au.Process_.StartResult.Need)">
-            <summary>
-            Starts process using API CreateProcess or CreateProcessAsUser, without the feedback hourglass cursor.
-            </summary>
-            <param name="exeFile">Full path of program file, or filename/relative in <see cref="P:Au.Folders.ThisApp"/>. Uses <see cref="M:Au.Path_.Normalize(System.String,System.String,Au.Types.PNFlags)"/>.</param>
-            <param name="args">null or command line arguments.</param>
-            <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", are passed only these variables.</param>
-            <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
-            <param name="need">Which field to set in <b>StartResult</b>.</param>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
-        </member>
-        <member name="M:Au.Process_.LibStartUserIL(System.String,System.String,System.String,Au.Process_.StartResult.Need)">
-            <summary>
-            Starts UAC Medium integrity level (IL) process from this admin process.
-            </summary>
-            <param name="exeFile">Full path of program file, or filename/relative in <see cref="P:Au.Folders.ThisApp"/>. Uses <see cref="M:Au.Path_.Normalize(System.String,System.String,Au.Types.PNFlags)"/>.</param>
-            <param name="args">null or command line arguments.</param>
-            <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", are passed only these variables.</param>
-            <param name="need">Which field to set in <b>StartResult</b>.</param>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
-            <remarks>
-            Actually the process will have the same IL and user session as the shell process (normally explorer).
-            Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
-            Asserts and fails if this is not admin/system process. Caller should at first call <see cref="P:Au.Uac.IsAdmin"/> or <see cref="P:Au.Uac.IntegrityLevel"/>.
-            </remarks>
-        </member>
-        <member name="T:Au.Process_.StartResult">
-            <summary>
-            Results of LibStart and LibStartUserIL.
-            </summary>
-        </member>
-        <member name="T:Au.Process_.StartResult.Need">
-            <summary>
-            Which field to set.
-            </summary>
-        </member>
-        <member name="T:Au.Process_._NetProcessObject">
-            <summary>
-            Creates new .NET Process object with attached handle and/or id.
-            </summary>
-        </member>
-        <member name="P:Au.Process_._NetProcessObject.IsFast">
-            <summary>
-            Returns true if can create such object in a fast/reliable way. Else <see cref="M:Au.Process_._NetProcessObject.Create(System.IntPtr,System.Int32)"/> will use Process.GetProcessById.
-            It depends on .NET framework version, because uses private methods of Process class through reflection.
-            </summary>
-        </member>
-        <member name="M:Au.Process_._NetProcessObject.Create(System.IntPtr,System.Int32)">
-            <summary>
-            Creates new .NET Process object with attached handle and/or id.
-            Can be specified both handle and id, or one of them (then .NET will open process or get id from handle when need).
-            </summary>
-        </member>
-        <member name="M:Au.Process_._NetProcessObject.Create(Au.Types.Api.PROCESS_INFORMATION@,System.Boolean)">
-            <summary>
-            Creates new .NET Process object with attached handle and id.
-            Closes thread handle. If suspended, resumes thread.
-            </summary>
         </member>
         <member name="T:Au.SqliteDB">
             <summary>
@@ -9031,6 +8956,460 @@
             <param name="operandType">Defines the type of operand.</param>
             <returns>The size in bytes of the operand type.</returns>
         </member>
+        <member name="T:Au.Util.Assembly_">
+            <summary>
+            Assembly functions.
+            </summary>
+        </member>
+        <member name="P:Au.Util.Assembly_.EntryAssembly">
+            <summary>
+            Gets the entry assembly of this appdomain.
+            Normally instead can be used <see cref="M:System.Reflection.Assembly.GetEntryAssembly"/>, but it returns null if appdomain launched through <see cref="M:System.AppDomain.DoCallBack(System.CrossAppDomainDelegate)"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Util.Assembly_.LibIsAuNgened">
+            <summary>
+            Returns true if Au.dll is compiled to native code using ngen.exe.
+            It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
+            </summary>
+        </member>
+        <member name="M:Au.Util.Assembly_.IsNgened(System.Reflection.Assembly)">
+            <summary>
+            Returns true if assembly asm is compiled to native code using ngen.exe.
+            It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
+            </summary>
+        </member>
+        <member name="M:Au.Util.Assembly_.LibIsLoadedFormsWpf">
+            <summary>
+            Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
+            </summary>
+        </member>
+        <member name="T:Au.Util.Jit">
+            <summary>
+            JIT-compiles methods.
+            </summary>
+        </member>
+        <member name="M:Au.Util.Jit.Compile(System.Type,System.String)">
+            <summary>
+            JIT-compiles method.
+            Uses <b>RuntimeHelpers.PrepareMethod</b>.
+            </summary>
+            <param name="type">Type containing the method.</param>
+            <param name="method">Method name.</param>
+            <exception cref="T:System.ArgumentException">Method does not exist.</exception>
+            <exception cref="T:System.Reflection.AmbiguousMatchException">Multiple overloads exist.</exception>
+        </member>
+        <member name="M:Au.Util.Jit.Compile(System.Type,System.String[])">
+            <summary>
+            JIT-compiles multiple methods of same type.
+            Uses <b>RuntimeHelpers.PrepareMethod</b>.
+            </summary>
+            <param name="type">Type containing the methods.</param>
+            <param name="methods">Method names.</param>
+            <exception cref="T:System.ArgumentException">Method does not exist.</exception>
+        </member>
+        <member name="T:Au.Util.Resources_">
+            <summary>
+            Functions to work with managed resources.
+            </summary>
+        </member>
+        <member name="M:Au.Util.Resources_.GetAppResource(System.String)">
+            <summary>
+            Gets an Image or other object from managed resources of appdomain's entry assembly.
+            Returns null if not found.
+            </summary>
+            <param name="name">Resource name, like "example", not like "Project.Properties.Resources.example".</param>
+            <remarks>
+            Uses <see cref="M:System.Resources.ResourceManager.GetObject(System.String,System.Globalization.CultureInfo)"/>.
+            The Image is not cached. Will need to Dispose.
+            </remarks>
+        </member>
+        <member name="P:Au.Util.Resources_.AppResourcesName">
+            <summary>
+            Full name of embedded resources file, like "Project.Properties.Resources.resources".
+            Set this property once before calling <see cref="M:Au.Util.Resources_.GetAppResource(System.String)"/>.
+            If not set, it will look for resource where name ends with ".Resources.resources". If there is no such resources, uses the first.
+            To see embedded resource file names you can use this code: <c>Print(System.Reflection.Assembly.GetEntryAssembly().GetManifestResourceNames()</c>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.Resources_.LibGetAppResourceManager(System.Globalization.CultureInfo@)">
+            <summary>
+            Gets ResourceManager of appdomain's entry assembly.
+            Returns null if fails or if the assembly does not have resources.
+            Note: if the assembly contains multiple embedded .resource files, may need to set <see cref="P:Au.Util.Resources_.AppResourcesName"/> before.
+            </summary>
+        </member>
+        <member name="T:Au.Util.Dpi">
+            <summary>
+            Functions for high-DPI screen support.
+            </summary>
+            <remarks>
+            High DPI is when in Windows Settings is set display text size other than 100%.
+            Currently this class and this library don't support multiple screens that have different DPI. The Windows OS supports it since version 8.1.
+            </remarks>
+        </member>
+        <member name="P:Au.Util.Dpi.BaseDPI">
+            <summary>
+            Gets DPI of the primary screen.
+            </summary>
+            <remarks>
+            On newer Windows versions, users can change DPI without logoff-logon. This function gets the setting that was after logon.
+            </remarks>
+        </member>
+        <member name="P:Au.Util.Dpi.SmallIconSize">
+            <summary>
+            Gets small icon size that depends on DPI of the primary screen.
+            Width and Height are <see cref="P:Au.Util.Dpi.BaseDPI"/>/6, which is 16 if DPI is 96 (100%).
+            </summary>
+        </member>
+        <member name="M:Au.Util.Dpi.ScaleInt(System.Int32)">
+            <summary>
+            If <see cref="P:Au.Util.Dpi.BaseDPI"/> is more than 96, returns stretched i.
+            Else returns i.
+            </summary>
+            <param name="i"></param>
+        </member>
+        <member name="M:Au.Util.Dpi.ScaleSize(Au.Types.SIZE)">
+            <summary>
+            If <see cref="P:Au.Util.Dpi.BaseDPI"/> is more than 96, returns scaled (stretched) z.
+            Else returns z.
+            Note: for images use <see cref="M:Au.Util.Dpi.ImageSize(System.Drawing.Image)"/>.
+            </summary>
+            <param name="z"></param>
+        </member>
+        <member name="M:Au.Util.Dpi.ImageSize(System.Drawing.Image)">
+            <summary>
+            If <see cref="P:Au.Util.Dpi.BaseDPI"/> is more than 96 and image resolution is different, returns scaled (stretched) image.Size.
+            Else returns image.Size.
+            </summary>
+            <param name="image"></param>
+        </member>
+        <member name="T:Au.Util.WaitableTimer">
+            <summary>
+            Wraps a waitable timer handle. Allows to create, open, set and wait.
+            More info: API <msdn>CreateWaitableTimer</msdn>.
+            Note: will need to dispose.
+            </summary>
+        </member>
+        <member name="M:Au.Util.WaitableTimer.Create(System.Boolean,System.String)">
+            <summary>
+            Calls API <msdn>CreateWaitableTimer</msdn> and creates a WaitableTimer object that wraps the timer handle.
+            </summary>
+            <param name="manualReset"></param>
+            <param name="timerName">Timer name. If a timer with this name already exists, opens it if possible. If null, creates unnamed timer.</param>
+            <exception cref="T:Au.Types.AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
+        </member>
+        <member name="M:Au.Util.WaitableTimer.Open(System.String,System.UInt32,System.Boolean,System.Boolean)">
+            <summary>
+            Calls API <msdn>OpenWaitableTimer</msdn> and creates a WaitableTimer object that wraps the timer handle.
+            </summary>
+            <param name="timerName">Timer name. Fails if it does not exist; to open-or-create use <see cref="M:Au.Util.WaitableTimer.Create(System.Boolean,System.String)"/>.</param>
+            <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value TIMER_MODIFY_STATE|SYNCHRONIZE allows to set and wait.</param>
+            <exception cref="T:Au.Types.AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
+            <param name="inheritHandle"></param>
+            <param name="noException">If fails, return null, don't throw exception. Supports <see cref="T:Au.WinError"/>.</param>
+            <exception cref="T:Au.Types.AuException">Failed. For example, the timer does not exist.</exception>
+        </member>
+        <member name="M:Au.Util.WaitableTimer.Set(System.Int64,System.Int32)">
+            <summary>
+            Calls API <msdn>SetWaitableTimer</msdn>.
+            Returns false if fails. Supports <see cref="T:Au.WinError"/>.
+            </summary>
+            <param name="dueTime">
+            The time after which the state of the timer is to be set to signaled. It is relative time (from now).
+            If positive, in milliseconds. If negative, in 100 nanosecond intervals (microseconds*10), see <msdn>FILETIME</msdn>.
+            Also can be 0, to set minimal time.</param>
+            <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
+            <exception cref="T:System.OverflowException">dueTime*10000 is greater than long.MaxValue.</exception>
+        </member>
+        <member name="M:Au.Util.WaitableTimer.SetAbsolute(System.DateTime,System.Int32)">
+            <summary>
+            Calls API <msdn>SetWaitableTimer</msdn>.
+            Returns false if fails. Supports <see cref="T:Au.WinError"/>.
+            </summary>
+            <param name="dueTime">The UTC date/time at which the state of the timer is to be set to signaled.</param>
+            <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
+        </member>
+        <member name="T:Au.Util.LibKernelHandle">
+            <summary>
+            Manages a kernel handle.
+            Must be disposed.
+            Has static functions to open process handle.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibKernelHandle.#ctor(System.IntPtr)">
+            <summary>
+            Attaches a kernel handle to this new variable.
+            No exception when handle is invalid.
+            </summary>
+            <param name="handle"></param>
+        </member>
+        <member name="P:Au.Util.LibKernelHandle.Handle">
+            
+        </member>
+        <member name="P:Au.Util.LibKernelHandle.Is0">
+            <summary>_h == 0</summary>
+        </member>
+        <member name="P:Au.Util.LibKernelHandle.IsInvalid">
+            <summary>_h == 0 || _h == -1</summary>
+        </member>
+        <member name="M:Au.Util.LibKernelHandle.Dispose">
+            
+        </member>
+        <member name="M:Au.Util.LibKernelHandle.OpenProcess(System.Int32,System.UInt32)">
+            <summary>
+            Opens process handle.
+            Calls API OpenProcess.
+            Returns default if fails. Supports <see cref="T:Au.WinError"/>.
+            </summary>
+            <param name="processId">Process id.</param>
+            <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
+        </member>
+        <member name="M:Au.Util.LibKernelHandle.OpenProcess(Au.Wnd,System.UInt32)">
+            <summary>
+            Opens window's process handle.
+            This overload is more powerful: if API OpenProcess fails, it tries API GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
+            Returns default if fails. Supports <see cref="T:Au.WinError"/>.
+            </summary>
+            <param name="w"></param>
+            <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
+        </member>
+        <member name="T:Au.Util.LibKernelWaitHandle">
+            <summary>
+            Kernel handle that is derived from WaitHandle.
+            When don't need to wait, use <see cref="T:Au.Util.LibKernelHandle"/>, it's more lightweight and has more creation methods.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibKernelWaitHandle.FromProcessId(System.Int32,System.UInt32)">
+            <summary>
+            Opens process handle.
+            Returns null if failed.
+            </summary>
+            <param name="pid"></param>
+            <param name="desiredAccess"></param>
+        </member>
+        <member name="T:Au.Util.Security_">
+            <summary>
+            Security-related functions, such as enabling privileges.
+            </summary>
+        </member>
+        <member name="M:Au.Util.Security_.SetPrivilege(System.String,System.Boolean)">
+            <summary>
+            Enables or disables a privilege for this process.
+            Returns false if fails. Supports <see cref="T:Au.WinError"/>.
+            </summary>
+            <param name="privilegeName"></param>
+            <param name="enable"></param>
+        </member>
+        <member name="T:Au.Util.LibAttachThreadInput">
+            <summary>
+            Calls API <msdn>AttachThreadInput</msdn> to attach/detach thread input.
+            Constructor attaches thread input of this thread to that of the specified thread. <b>Dispose</b> detaches.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibAttachThreadInput.#ctor(System.Int32,System.Boolean@)">
+            <summary>
+            Attaches thread input of this thread to that of the specified thread.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibAttachThreadInput.Dispose">
+            <summary>
+            Detaches thread input.
+            </summary>
+        </member>
+        <member name="P:Au.Util.LibAttachThreadInput.IsAttached">
+            <summary>
+            Returns true if AttachThreadInput succeeded and this variable is not disposed.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand(System.String,System.String,Au.Types.UacIL,System.String,System.String)">
+            <summary>
+            Creates or updates a trigerless task that executes a program as system, admin or user.
+            This process must be admin.
+            You can use <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/> to run the task.
+            </summary>
+            <param name="taskFolder">
+            This function creates the folder (and ancestors) if does not exist.
+            </param>
+            <param name="taskName">See <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
+            <param name="programFile">Full path of an exe file. This function does not normalize it.</param>
+            <param name="IL">Can be System, High or Medium. If System, runs in SYSTEM account. Else in creator's account.</param>
+            <param name="args">Command line arguments. Can contain literal substrings $(Arg0), $(Arg1), ..., $(Arg32) that will be replaced by <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
+            <exception cref="T:System.UnauthorizedAccessException">Probably because this process is not admin.</exception>
+            <exception cref="T:System.Exception"></exception>
+        </member>
+        <member name="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])">
+            <summary>
+            Runs a task. Does not wait.
+            Returns process id.
+            </summary>
+            <param name="taskFolder">Can be like <c>@"\Folder"</c> or <c>"Folder"</c> or <c>@"\"</c> or <c>""</c> or null.</param>
+            <param name="taskName">Can be like <c>"Name"</c> or <c>@"\Folder\Name"</c> or <c>@"Folder\Name"</c>.</param>
+            <param name="joinArgs">Join args into single arg for $(Arg0).</param>
+            <param name="args">Replacement values for substrings $(Arg0), $(Arg1), ..., $(Arg32) in 'create task' args. See <msdn>IRegisteredTask.Run</msdn>.</param>
+            <exception cref="T:System.Exception">Failed. Probably the task does not exist.</exception>
+        </member>
+        <member name="M:Au.Util.LibTaskScheduler.TaskExists(System.String,System.String)">
+            <summary>
+            Returns true if the task exists.
+            </summary>
+            <param name="taskFolder">See <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
+            <param name="taskName">See <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
+            <exception cref="T:System.Exception">Failed.</exception>
+        </member>
+        <member name="M:Au.Util.LibProcessStarter.#ctor(System.String,System.String,System.String,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Prepares parameters for API <msdn>CreateProcess</msdn> and similar.
+            </summary>
+            <param name="exe">
+            Full path of program file. If not full path, uses <see cref="P:Au.Folders.ThisApp"/>. Uses <see cref="M:Au.Path_.Normalize(System.String,System.String,Au.Types.PNFlags)"/>.
+            If *rawExe* true, does not use <b>Normalize</b>/<b>ThisApp</b>.
+            </param>
+            <param name="args">null or command line arguments.</param>
+            <param name="curDir">
+            Initial current directory of the new process.
+            - If null, uses <c>Directory.GetCurrentDirectory()</c>.
+            - Else if *rawCurDir*==true, uses raw *curDir* value.
+            - Else if "", calls <c>Path_.GetDirectoryPath(exe)</c>.
+            - Else calls <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>.
+            </param>
+            <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
+            <param name="rawExe">Don't normalize *exe*.</param>
+            <param name="rawCurDir">Don't normalize *curDir*.</param>
+        </member>
+        <member name="M:Au.Util.LibProcessStarter.StartLL(Au.Types.Api.PROCESS_INFORMATION@,System.Boolean,System.Boolean)">
+            <summary>
+            Starts process using API CreateProcess or CreateProcessAsUser, without the feedback hourglass cursor.
+            </summary>
+            <param name="pi">Receives CreateProcessX results. Will need to close handles in pi, eg pi.Dispose.</param>
+            <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
+            <param name="inheritHandles">API parameter *bInheritHandles*.</param>
+        </member>
+        <member name="M:Au.Util.LibProcessStarter.Start(Au.Util.LibProcessStarter.Result.Need,System.Boolean)">
+            <summary>
+            Starts process using API CreateProcess or CreateProcessAsUser, without the feedback hourglass cursor.
+            </summary>
+            <param name="need">Which field to set in <b>Result</b>.</param>
+            <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+        </member>
+        <member name="M:Au.Util.LibProcessStarter.StartUserIL(Au.Util.LibProcessStarter.Result.Need)">
+            <summary>
+            Starts UAC Medium integrity level (IL) process from this admin process.
+            </summary>
+            <param name="need">Which field to set in <b>Result</b>.</param>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <remarks>
+            Actually the process will have the same IL and user session as the shell process (normally explorer).
+            Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
+            Asserts and fails if this is not admin/system process. Caller should at first call <see cref="P:Au.Uac.IsAdmin"/> or <see cref="P:Au.Uac.IntegrityLevel"/>.
+            </remarks>
+        </member>
+        <member name="T:Au.Util.LibProcessStarter.Result">
+            <summary>
+            Results of <see cref="T:Au.Util.LibProcessStarter"/> functions.
+            </summary>
+        </member>
+        <member name="T:Au.Util.LibProcessStarter.Result.Need">
+            <summary>
+            Which field to set.
+            </summary>
+        </member>
+        <member name="T:Au.Util.LibProcessStarter._NetProcessObject">
+            <summary>
+            Creates new .NET Process object with attached handle and/or id.
+            </summary>
+        </member>
+        <member name="P:Au.Util.LibProcessStarter._NetProcessObject.IsFast">
+            <summary>
+            Returns true if can create such object in a fast/reliable way. Else <see cref="M:Au.Util.LibProcessStarter._NetProcessObject.Create(System.IntPtr,System.Int32)"/> will use Process.GetProcessById.
+            It depends on .NET framework version, because uses private methods of Process class through reflection.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibProcessStarter._NetProcessObject.Create(System.IntPtr,System.Int32)">
+            <summary>
+            Creates new .NET Process object with attached handle and/or id.
+            Can be specified both handle and id, or one of them (then .NET will open process or get id from handle when need).
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibProcessStarter._NetProcessObject.Create(Au.Types.Api.PROCESS_INFORMATION@,System.Boolean)">
+            <summary>
+            Creates new .NET Process object with attached handle and id.
+            Closes thread handle. If suspended, resumes thread.
+            </summary>
+        </member>
+        <member name="T:Au.Util.LibSerializer">
+            <summary>
+            Binary-serializes and deserializes multiple values of types int, string, string[], byte[] and null.
+            Used mostly for sending parameters for IPC through pipe etc.
+            Similar to BinaryWriter, but faster and less garbage. Much faster than BinaryFormatter, CSV, etc.
+            Serializes all values into a byte[] in single call. If need to append, use BinaryWriter instead.
+            </summary>
+        </member>
+        <member name="T:Au.Util.LibSerializer.Value">
+            <summary>
+            Type of input and output values of <see cref="T:Au.Util.LibSerializer"/> functions.
+            Has implicit conversions from/to int and string.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibSerializer.Serialize(Au.Util.LibSerializer.Value[])">
+            <summary>
+            Serializes multiple values of types int, string, string[] and null.
+            The returned array can be passed to <see cref="M:Au.Util.LibSerializer.Deserialize(System.Byte[])"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibSerializer.SerializeWithSize(Au.Util.LibSerializer.Value[])">
+            <summary>
+            Serializes multiple values of types int, string, string[] and null.
+            Unlike <see cref="M:Au.Util.LibSerializer.Serialize(Au.Util.LibSerializer.Value[])"/>, in the first 4 bytes writes the size of data that follows.
+            Can be used with pipes or other streams where data size is initially unknown: read 4 bytes as <c>int dataSize</c>; <c>var b=new byte[dataSize]</c>, read it, pass b to <see cref="M:Au.Util.LibSerializer.Deserialize(System.Byte[])"/>. 
+            </summary>
+        </member>
+        <member name="M:Au.Util.LibSerializer.Deserialize(System.Byte[])">
+            <summary>
+            Deserializes values serialized by <see cref="M:Au.Util.LibSerializer.Serialize(Au.Util.LibSerializer.Value[])"/>.
+            Returns array of values passed to <b>Serialize</b>.
+            </summary>
+        </member>
+        <member name="T:Au.Util.ModuleHandle_">
+            <summary>
+            Gets native module handle, or path from handle.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ModuleHandle_.OfType(System.Type)">
+            <summary>
+            Gets native module handle of type's assembly.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ModuleHandle_.OfAssembly(System.Reflection.Assembly)">
+            <summary>
+            Gets native module handle of an assembly.
+            Returns default(IntPtr) if *asm* is null or if the assembly is in-memory (loaded from byte[]) or dynamic.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ModuleHandle_.OfAppDomainEntryAssembly">
+            <summary>
+            Gets native module handle of the entry assembly of this appdomain.
+            Returns default(IntPtr) if the assembly is in-memory (loaded from byte[]) or dynamic.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ModuleHandle_.OfAuDll">
+            <summary>
+            Gets native module handle of Au.dll.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ModuleHandle_.OfProcessExe">
+            <summary>
+            Gets native module handle of the program file of this process.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ModuleHandle_.GetFilePath(System.IntPtr)">
+            <summary>
+            Gets full path of dll or exe file from its native handle.
+            Returns null if fails. Supports <see cref="T:Au.WinError"/>.
+            Calls API <msdn>GetModuleFileName</msdn>.
+            </summary>
+        </member>
         <member name="T:Au.Util.StringMisc">
             <summary>
             Miscellaneous string functions. Parsing etc.
@@ -10650,39 +11029,6 @@
             <param name="obj">An object of any type.</param>
             <param name="size">Unmanaged memory size. It is passed to <b>GC.AddMemoryPressure</b> and <b>GC.RemoveMemoryPressure</b>.</param>
         </member>
-        <member name="T:Au.Util.LibSerializer">
-            <summary>
-            Binary-serializes and deserializes multiple values of types int, string, string[], byte[] and null.
-            Used mostly for sending parameters for IPC through pipe etc.
-            Similar to BinaryWriter, but faster and less garbage. Much faster than BinaryFormatter, CSV, etc.
-            Serializes all values into a byte[] in single call. If need to append, use BinaryWriter instead.
-            </summary>
-        </member>
-        <member name="T:Au.Util.LibSerializer.Value">
-            <summary>
-            Type of input and output values of <see cref="T:Au.Util.LibSerializer"/> functions.
-            Has implicit conversions from/to int and string.
-            </summary>
-        </member>
-        <member name="M:Au.Util.LibSerializer.Serialize(Au.Util.LibSerializer.Value[])">
-            <summary>
-            Serializes multiple values of types int, string, string[] and null.
-            The returned array can be passed to <see cref="M:Au.Util.LibSerializer.Deserialize(System.Byte[])"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Util.LibSerializer.SerializeWithSize(Au.Util.LibSerializer.Value[])">
-            <summary>
-            Serializes multiple values of types int, string, string[] and null.
-            Unlike <see cref="M:Au.Util.LibSerializer.Serialize(Au.Util.LibSerializer.Value[])"/>, in the first 4 bytes writes the size of data that follows.
-            Can be used with pipes or other streams where data size is initially unknown: read 4 bytes as <c>int dataSize</c>; <c>var b=new byte[dataSize]</c>, read it, pass b to <see cref="M:Au.Util.LibSerializer.Deserialize(System.Byte[])"/>. 
-            </summary>
-        </member>
-        <member name="M:Au.Util.LibSerializer.Deserialize(System.Byte[])">
-            <summary>
-            Deserializes values serialized by <see cref="M:Au.Util.LibSerializer.Serialize(Au.Util.LibSerializer.Value[])"/>.
-            Returns array of values passed to <b>Serialize</b>.
-            </summary>
-        </member>
         <member name="T:Au.Util.MessageLoop">
             <summary>
             A message loop, alternative to Application.Run which does not support nested loops.
@@ -10846,219 +11192,6 @@
             Call this to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
             </summary>
         </member>
-        <member name="T:Au.Util.ModuleHandle_">
-            <summary>
-            Gets native module handle, or path from handle.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ModuleHandle_.OfType(System.Type)">
-            <summary>
-            Gets native module handle of type's assembly.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ModuleHandle_.OfAssembly(System.Reflection.Assembly)">
-            <summary>
-            Gets native module handle of an assembly.
-            Returns default(IntPtr) if *asm* is null or if the assembly is in-memory (loaded from byte[]) or dynamic.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ModuleHandle_.OfAppDomainEntryAssembly">
-            <summary>
-            Gets native module handle of the entry assembly of this appdomain.
-            Returns default(IntPtr) if the assembly is in-memory (loaded from byte[]) or dynamic.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ModuleHandle_.OfAuDll">
-            <summary>
-            Gets native module handle of Au.dll.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ModuleHandle_.OfProcessExe">
-            <summary>
-            Gets native module handle of the program file of this process.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ModuleHandle_.GetFilePath(System.IntPtr)">
-            <summary>
-            Gets full path of dll or exe file from its native handle.
-            Returns null if fails. Supports <see cref="T:Au.WinError"/>.
-            Calls API <msdn>GetModuleFileName</msdn>.
-            </summary>
-        </member>
-        <member name="T:Au.Util.Assembly_">
-            <summary>
-            Assembly functions.
-            </summary>
-        </member>
-        <member name="P:Au.Util.Assembly_.EntryAssembly">
-            <summary>
-            Gets the entry assembly of this appdomain.
-            Normally instead can be used <see cref="M:System.Reflection.Assembly.GetEntryAssembly"/>, but it returns null if appdomain launched through <see cref="M:System.AppDomain.DoCallBack(System.CrossAppDomainDelegate)"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Util.Assembly_.LibIsAuNgened">
-            <summary>
-            Returns true if Au.dll is compiled to native code using ngen.exe.
-            It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
-            </summary>
-        </member>
-        <member name="M:Au.Util.Assembly_.IsNgened(System.Reflection.Assembly)">
-            <summary>
-            Returns true if assembly asm is compiled to native code using ngen.exe.
-            It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
-            </summary>
-        </member>
-        <member name="M:Au.Util.Assembly_.LibIsLoadedFormsWpf">
-            <summary>
-            Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
-            </summary>
-        </member>
-        <member name="T:Au.Util.Jit">
-            <summary>
-            JIT-compiles methods.
-            </summary>
-        </member>
-        <member name="M:Au.Util.Jit.Compile(System.Type,System.String)">
-            <summary>
-            JIT-compiles method.
-            Uses <b>RuntimeHelpers.PrepareMethod</b>.
-            </summary>
-            <param name="type">Type containing the method.</param>
-            <param name="method">Method name.</param>
-            <exception cref="T:System.ArgumentException">Method does not exist.</exception>
-            <exception cref="T:System.Reflection.AmbiguousMatchException">Multiple overloads exist.</exception>
-        </member>
-        <member name="M:Au.Util.Jit.Compile(System.Type,System.String[])">
-            <summary>
-            JIT-compiles multiple methods of same type.
-            Uses <b>RuntimeHelpers.PrepareMethod</b>.
-            </summary>
-            <param name="type">Type containing the methods.</param>
-            <param name="methods">Method names.</param>
-            <exception cref="T:System.ArgumentException">Method does not exist.</exception>
-        </member>
-        <member name="T:Au.Util.Resources_">
-            <summary>
-            Functions to work with managed resources.
-            </summary>
-        </member>
-        <member name="M:Au.Util.Resources_.GetAppResource(System.String)">
-            <summary>
-            Gets an Image or other object from managed resources of appdomain's entry assembly.
-            Returns null if not found.
-            </summary>
-            <param name="name">Resource name, like "example", not like "Project.Properties.Resources.example".</param>
-            <remarks>
-            Uses <see cref="M:System.Resources.ResourceManager.GetObject(System.String,System.Globalization.CultureInfo)"/>.
-            The Image is not cached. Will need to Dispose.
-            </remarks>
-        </member>
-        <member name="P:Au.Util.Resources_.AppResourcesName">
-            <summary>
-            Full name of embedded resources file, like "Project.Properties.Resources.resources".
-            Set this property once before calling <see cref="M:Au.Util.Resources_.GetAppResource(System.String)"/>.
-            If not set, it will look for resource where name ends with ".Resources.resources". If there is no such resources, uses the first.
-            To see embedded resource file names you can use this code: <c>Print(System.Reflection.Assembly.GetEntryAssembly().GetManifestResourceNames()</c>.
-            </summary>
-        </member>
-        <member name="M:Au.Util.Resources_.LibGetAppResourceManager(System.Globalization.CultureInfo@)">
-            <summary>
-            Gets ResourceManager of appdomain's entry assembly.
-            Returns null if fails or if the assembly does not have resources.
-            Note: if the assembly contains multiple embedded .resource files, may need to set <see cref="P:Au.Util.Resources_.AppResourcesName"/> before.
-            </summary>
-        </member>
-        <member name="T:Au.Util.Dpi">
-            <summary>
-            Functions for high-DPI screen support.
-            </summary>
-            <remarks>
-            High DPI is when in Windows Settings is set display text size other than 100%.
-            Currently this class and this library don't support multiple screens that have different DPI. The Windows OS supports it since version 8.1.
-            </remarks>
-        </member>
-        <member name="P:Au.Util.Dpi.BaseDPI">
-            <summary>
-            Gets DPI of the primary screen.
-            </summary>
-            <remarks>
-            On newer Windows versions, users can change DPI without logoff-logon. This function gets the setting that was after logon.
-            </remarks>
-        </member>
-        <member name="P:Au.Util.Dpi.SmallIconSize">
-            <summary>
-            Gets small icon size that depends on DPI of the primary screen.
-            Width and Height are <see cref="P:Au.Util.Dpi.BaseDPI"/>/6, which is 16 if DPI is 96 (100%).
-            </summary>
-        </member>
-        <member name="M:Au.Util.Dpi.ScaleInt(System.Int32)">
-            <summary>
-            If <see cref="P:Au.Util.Dpi.BaseDPI"/> is more than 96, returns stretched i.
-            Else returns i.
-            </summary>
-            <param name="i"></param>
-        </member>
-        <member name="M:Au.Util.Dpi.ScaleSize(Au.Types.SIZE)">
-            <summary>
-            If <see cref="P:Au.Util.Dpi.BaseDPI"/> is more than 96, returns scaled (stretched) z.
-            Else returns z.
-            Note: for images use <see cref="M:Au.Util.Dpi.ImageSize(System.Drawing.Image)"/>.
-            </summary>
-            <param name="z"></param>
-        </member>
-        <member name="M:Au.Util.Dpi.ImageSize(System.Drawing.Image)">
-            <summary>
-            If <see cref="P:Au.Util.Dpi.BaseDPI"/> is more than 96 and image resolution is different, returns scaled (stretched) image.Size.
-            Else returns image.Size.
-            </summary>
-            <param name="image"></param>
-        </member>
-        <member name="T:Au.Util.WaitableTimer">
-            <summary>
-            Wraps a waitable timer handle. Allows to create, open, set and wait.
-            More info: API <msdn>CreateWaitableTimer</msdn>.
-            Note: will need to dispose.
-            </summary>
-        </member>
-        <member name="M:Au.Util.WaitableTimer.Create(System.Boolean,System.String)">
-            <summary>
-            Calls API <msdn>CreateWaitableTimer</msdn> and creates a WaitableTimer object that wraps the timer handle.
-            </summary>
-            <param name="manualReset"></param>
-            <param name="timerName">Timer name. If a timer with this name already exists, opens it if possible. If null, creates unnamed timer.</param>
-            <exception cref="T:Au.Types.AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
-        </member>
-        <member name="M:Au.Util.WaitableTimer.Open(System.String,System.UInt32,System.Boolean,System.Boolean)">
-            <summary>
-            Calls API <msdn>OpenWaitableTimer</msdn> and creates a WaitableTimer object that wraps the timer handle.
-            </summary>
-            <param name="timerName">Timer name. Fails if it does not exist; to open-or-create use <see cref="M:Au.Util.WaitableTimer.Create(System.Boolean,System.String)"/>.</param>
-            <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value TIMER_MODIFY_STATE|SYNCHRONIZE allows to set and wait.</param>
-            <exception cref="T:Au.Types.AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
-            <param name="inheritHandle"></param>
-            <param name="noException">If fails, return null, don't throw exception. Supports <see cref="T:Au.WinError"/>.</param>
-            <exception cref="T:Au.Types.AuException">Failed. For example, the timer does not exist.</exception>
-        </member>
-        <member name="M:Au.Util.WaitableTimer.Set(System.Int64,System.Int32)">
-            <summary>
-            Calls API <msdn>SetWaitableTimer</msdn>.
-            Returns false if fails. Supports <see cref="T:Au.WinError"/>.
-            </summary>
-            <param name="dueTime">
-            The time after which the state of the timer is to be set to signaled. It is relative time (from now).
-            If positive, in milliseconds. If negative, in 100 nanosecond intervals (microseconds*10), see <msdn>FILETIME</msdn>.
-            Also can be 0, to set minimal time.</param>
-            <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
-            <exception cref="T:System.OverflowException">dueTime*10000 is greater than long.MaxValue.</exception>
-        </member>
-        <member name="M:Au.Util.WaitableTimer.SetAbsolute(System.DateTime,System.Int32)">
-            <summary>
-            Calls API <msdn>SetWaitableTimer</msdn>.
-            Returns false if fails. Supports <see cref="T:Au.WinError"/>.
-            </summary>
-            <param name="dueTime">The UTC date/time at which the state of the timer is to be set to signaled.</param>
-            <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>
-        </member>
         <member name="T:Au.Util.Help">
             <summary>
             Static functions to open a help topic etc.
@@ -11070,130 +11203,6 @@
             The file must be in <see cref="P:Au.Folders.ThisApp"/>.
             </summary>
             <param name="topic">Topic file name, like "M_Au_Acc_Find" or "0248143b-a0dd-4fa1-84f9-76831db6714a".</param>
-        </member>
-        <member name="T:Au.Util.LibKernelHandle">
-            <summary>
-            Manages a kernel handle.
-            Must be disposed.
-            Has static functions to open process handle.
-            </summary>
-        </member>
-        <member name="P:Au.Util.LibKernelHandle.Handle">
-            
-        </member>
-        <member name="P:Au.Util.LibKernelHandle.Is0">
-            
-        </member>
-        <member name="M:Au.Util.LibKernelHandle.#ctor(System.IntPtr)">
-            <summary>
-            Attaches a kernel handle to this new variable.
-            No exception when handle is invalid.
-            </summary>
-            <param name="handle"></param>
-        </member>
-        <member name="M:Au.Util.LibKernelHandle.Dispose">
-            
-        </member>
-        <member name="M:Au.Util.LibKernelHandle.OpenProcess(System.Int32,System.UInt32)">
-            <summary>
-            Opens process handle.
-            Calls API OpenProcess.
-            Returns default if fails. Supports <see cref="T:Au.WinError"/>.
-            </summary>
-            <param name="processId">Process id.</param>
-            <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
-        </member>
-        <member name="M:Au.Util.LibKernelHandle.OpenProcess(Au.Wnd,System.UInt32)">
-            <summary>
-            Opens window's process handle.
-            This overload is more powerful: if API OpenProcess fails, it tries API GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
-            Returns default if fails. Supports <see cref="T:Au.WinError"/>.
-            </summary>
-            <param name="w"></param>
-            <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
-        </member>
-        <member name="T:Au.Util.LibKernelWaitHandle">
-            <summary>
-            Kernel handle that is derived from WaitHandle.
-            When don't need to wait, use <see cref="T:Au.Util.LibKernelHandle"/>, it's more lightweight and has more creation methods.
-            </summary>
-        </member>
-        <member name="M:Au.Util.LibKernelWaitHandle.FromProcessId(System.Int32,System.UInt32)">
-            <summary>
-            Opens process handle.
-            Returns null if failed.
-            </summary>
-            <param name="pid"></param>
-            <param name="desiredAccess"></param>
-        </member>
-        <member name="T:Au.Util.Security_">
-            <summary>
-            Security-related functions, such as enabling privileges.
-            </summary>
-        </member>
-        <member name="M:Au.Util.Security_.SetPrivilege(System.String,System.Boolean)">
-            <summary>
-            Enables or disables a privilege for this process.
-            Returns false if fails. Supports <see cref="T:Au.WinError"/>.
-            </summary>
-            <param name="privilegeName"></param>
-            <param name="enable"></param>
-        </member>
-        <member name="T:Au.Util.LibAttachThreadInput">
-            <summary>
-            Calls API <msdn>AttachThreadInput</msdn> to attach/detach thread input.
-            Constructor attaches thread input of this thread to that of the specified thread. <b>Dispose</b> detaches.
-            </summary>
-        </member>
-        <member name="M:Au.Util.LibAttachThreadInput.#ctor(System.Int32,System.Boolean@)">
-            <summary>
-            Attaches thread input of this thread to that of the specified thread.
-            </summary>
-        </member>
-        <member name="M:Au.Util.LibAttachThreadInput.Dispose">
-            <summary>
-            Detaches thread input.
-            </summary>
-        </member>
-        <member name="P:Au.Util.LibAttachThreadInput.IsAttached">
-            <summary>
-            Returns true if AttachThreadInput succeeded and this variable is not disposed.
-            </summary>
-        </member>
-        <member name="M:Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand(System.String,System.String,Au.Types.UacIL,System.String,System.String)">
-            <summary>
-            Creates or updates a trigerless task that executes a program as system, admin or user.
-            This process must be admin.
-            You can use <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/> to run the task.
-            </summary>
-            <param name="taskFolder">
-            This function creates the folder (and ancestors) if does not exist.
-            </param>
-            <param name="taskName">See <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
-            <param name="programFile">Full path of an exe file. This function does not normalize it.</param>
-            <param name="IL">Can be System, High or Medium. If System, runs in SYSTEM account. Else in creator's account.</param>
-            <param name="args">Command line arguments. Can contain literal substrings $(Arg0), $(Arg1), ..., $(Arg32) that will be replaced by <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
-            <exception cref="T:System.UnauthorizedAccessException">Probably because this process is not admin.</exception>
-            <exception cref="T:System.Exception"></exception>
-        </member>
-        <member name="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])">
-            <summary>
-            Runs a task. Does not wait.
-            Returns process id.
-            </summary>
-            <param name="taskFolder">Can be like <c>@"\Folder"</c> or <c>"Folder"</c> or <c>@"\"</c> or <c>""</c> or null.</param>
-            <param name="taskName">Can be like <c>"Name"</c> or <c>@"\Folder\Name"</c> or <c>@"Folder\Name"</c>.</param>
-            <param name="joinArgs">Join args into single arg for $(Arg0).</param>
-            <param name="args">Replacement values for substrings $(Arg0), $(Arg1), ..., $(Arg32) in 'create task' args. See <msdn>IRegisteredTask.Run</msdn>.</param>
-            <exception cref="T:System.Exception">Failed. Probably the task does not exist.</exception>
-        </member>
-        <member name="M:Au.Util.LibTaskScheduler.TaskExists(System.String,System.String)">
-            <summary>
-            Returns true if the task exists.
-            </summary>
-            <param name="taskFolder">See <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
-            <param name="taskName">See <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
-            <exception cref="T:System.Exception">Failed.</exception>
         </member>
         <member name="M:Au.Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc">
             <summary>
@@ -12320,7 +12329,7 @@
             <summary>
             Waits while some modifier keys (Ctrl, Shift, Alt, Win) are down (pressed). See <see cref="M:Au.Keyb.IsMod(Au.Types.KMod)"/>.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="mod">Check only these keys. Default: all.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -12329,7 +12338,7 @@
             <summary>
             Waits while some modifier keys (Ctrl, Shift, Alt, Win) or mouse buttons are down (pressed).
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="mod">Check only these keys. Default: all.</param>
             <param name="buttons">Check only these buttons. Default: all.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
@@ -12342,12 +12351,18 @@
             <summary>
             Waits while the specified keys or/and mouse buttons are down (pressed).
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
-            <param name="keys">One or more keys or/and mouse buttons. Waits until all are released. Can be string like with <see cref="M:Au.Keyb.Key(System.Object[])"/>, without operators.</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+            <param name="keys">One or more keys or/and mouse buttons. Waits until all are released.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
         </member>
         <member name="M:Au.Keyb.WaitForReleased(System.Double,System.String)">
+            <summary>
+            Waits while the specified keys are down (pressed).
+            </summary>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+            <param name="keys">One or more keys. Waits until all are released. String like with <see cref="M:Au.Keyb.Key(System.Object[])"/>, without operators.</param>
+            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.ArgumentException">Error in keys string.</exception>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
         </member>
@@ -12355,7 +12370,7 @@
             <summary>
             Registers a temporary hotkey and waits for it.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="hotkey">See <see cref="M:Au.Util.RegisterHotkey.Register(System.Int32,Au.Types.KHotkey,Au.Types.AnyWnd)"/>.</param>
             <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
@@ -12383,7 +12398,7 @@
             Waits for key-down or key-up event of the specified key.
             </summary>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="key">Wait for this key.</param>
             <param name="up">Wait for key-up event.</param>
             <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
@@ -13536,7 +13551,7 @@
             More info: <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.
             </summary>
             <returns>Returns <see cref="T:Au.WinImage"/> object containing the rectangle of the found image. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.</exception>
@@ -13546,7 +13561,7 @@
             Waits until image(s) or color(s) is not displayed in window or other area.
             More info: <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
@@ -13557,7 +13572,7 @@
             Waits until something visually changes in window or other area.
             More info: <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
@@ -15550,7 +15565,7 @@
             Used by other Au projects to execute a script assembly.
             </summary>
         </member>
-        <member name="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.RAFlags)">
+        <member name="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.Types.RAFlags)">
             <summary>
             Executes assembly in this appdomain in this thread. Must be main appdomain.
             Handles exceptions.
@@ -15563,11 +15578,6 @@
         <member name="T:Au.RunAssembly._LoadedScriptAssembly">
             <summary>
             Remembers and finds script assemblies loaded in this appdomain, to avoid loading the same unchanged assembly multiple times.
-            </summary>
-        </member>
-        <member name="T:Au.RAFlags">
-            <summary>
-            Flags for <see cref="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.RAFlags)"/>.
             </summary>
         </member>
         <member name="T:Au.File_">
@@ -16454,7 +16464,10 @@
             This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
             </param>
             <param name="flags"></param>
-            <param name="more">Allows to specify more parameters.</param>
+            <param name="more">
+            Allows to specify more parameters: current directory, verb, window state, etc.
+            If string, it sets initial current directory for the new process. Use "" to get it from *file*. More info: <see cref="F:Au.Types.SRMore.CurrentDirectory"/>.
+            </param>
             <exception cref="T:System.ArgumentException">Used more.Verb and flag Admin.</exception>
             <exception cref="T:Au.Types.AuException">Failed. For example, the file does not exist.</exception>
             <remarks>
@@ -16488,45 +16501,28 @@
             <seealso cref="M:Au.Types.OptDebug.DisableWarnings(System.String[])"/>
             <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
         </member>
-        <member name="M:Au.Shell.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
+        <member name="M:Au.Shell.RunConsole(System.Action{System.String},System.String,System.String,System.String,System.Text.Encoding,System.Boolean)">
             <summary>
-            Runs a console program, waits until its process ends, and gets its output text.
-            Returns the process exit code. Usually a non-0 value means error.
+            
             </summary>
-            <param name="output">
-            Receives the output text.
-            Console programs have two output text streams - standard output and standard error. This function gets both, and the error text is always after the output text.
-            </param>
-            <param name="file">
+            <param name="output"></param>
+            <param name="exe">
             Path or name of an .exe or .bat file. Can be:
             Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>Folders.System + "x.exe"</c>, <c>@"%Folders.System%\x.exe"</c>.
-            Filename, like <c>"x.exe"</c>. The function calls <see cref="M:Au.File_.SearchPath(System.String,System.String[])"/>.
+            Filename, like <c>"x.exe"</c>. This function calls <see cref="M:Au.File_.SearchPath(System.String,System.String[])"/>.
             Path relative to <see cref="P:Au.Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
             Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>.
             </param>
-            <param name="args">
-            Command line arguments.
-            This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
+            <param name="args">null or command line arguments.</param>
+            <param name="curDir">
+            Initial current directory of the new process.
+            - If null, uses <c>Directory.GetCurrentDirectory()</c>.
+            - Else if "", calls <c>Path_.GetDirectoryPath(exe)</c>.
+            - Else calls <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>.
             </param>
-            <param name="directory">Working directory. Default - <see cref="M:System.IO.Directory.GetCurrentDirectory"/> of this process.</param>
-            <param name="textEncoding">Text encoding used to convert console's ANSI text to C# Unicode text.</param>
-            <exception cref="T:System.ComponentModel.Win32Exception">Failed, for example file not found.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Diagnostics.Process.Start"/>, <see cref="M:System.Diagnostics.Process.WaitForExit(System.Int32)"/>, <see cref="M:System.IO.StreamReader.ReadToEnd"/>.</exception>
-            <remarks>
-            Does not show the console window.
-            Uses <see cref="M:System.Diagnostics.Process.Start"/>. Does not use Windows shell API.
-            See also <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.SRFlags,Au.Types.SRMore)"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.Shell.RunConsole(System.String,System.String,System.String,System.Text.Encoding)">
-            <summary>
-            Runs a console program (hidden), waits until its process ends, and prints its output text.
-            Calls <see cref="M:Au.Shell.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)"/> and <see cref="M:Au.NoClass.Print(System.String)"/>.
-            </summary>
-            <param name="file"></param>
-            <param name="args"></param>
-            <param name="directory"></param>
-            <param name="textEncoding"></param>
+            <param name="encoding">Console's text encoding. If null, uses the default console text encoding (API <msdn>GetOEMCP</msdn>); it is not Unicode. Programs that display Unicode text use <see cref="P:System.Text.Encoding.UTF8"/>.</param>
+            <param name="rawText">Let the callback receive raw text; it can be one or more lines of text with line break characters. If false (default), the callback receives single line without line break characters.</param>
+            <returns>The process exit code.</returns>
         </member>
         <member name="M:Au.Shell.SelectFileInExplorer(System.String)">
             <summary>
@@ -18222,7 +18218,7 @@
             <summary>
             Waits while some mouse buttons are down (pressed). See <see cref="M:Au.Mouse.IsPressed(Au.Types.MButtons)"/>.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="buttons">Wait only for these buttons. Default - all.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -18239,7 +18235,7 @@
             Waits for button-down or button-up event of the specified mouse button or buttons.
             </summary>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
             <param name="up">Wait for button-up event.</param>
             <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
@@ -18277,7 +18273,7 @@
             <summary>
             Waits for a standard mouse cursor (pointer) visible.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="cursor">Id of a standard cursor.</param>
             <param name="not">Wait until this cursor disappears.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
@@ -18287,7 +18283,7 @@
             <summary>
             Waits for a nonstandard mouse cursor (pointer) visible.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="cursorHash">Cursor hash, as returned by <see cref="M:Au.Util.Cursor_.HashCursor(System.IntPtr)"/>.</param>
             <param name="not">Wait until this cursor disappears.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
@@ -19862,7 +19858,7 @@
             Returns window handle. On timeout returns default(Wnd) if *secondsTimeout* is negative; else exception.
             Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="active">The window must be the active window (<see cref="P:Au.Wnd.Active"/>), and not minimized.</param>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
@@ -19893,7 +19889,7 @@
             Waits until any of specified windows exists, is visible (optionally) and active (optionally).
             Returns window handle. On timeout returns default(Wnd) if *secondsTimeout* is negative; else exception.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="active">The window must be the active window (<see cref="P:Au.Wnd.Active"/>), and not minimized.</param>
             <param name="windows">One or more variables containing window properties. Can be strings, see <see cref="M:Au.Wnd.Finder.op_Implicit(System.String)~Au.Wnd.Finder"/>.</param>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -19912,7 +19908,7 @@
             Waits until window does not exist.
             Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
@@ -19935,7 +19931,7 @@
             <summary>
             Waits for an user-defined state/condition of this window. For example active, visible, enabled, closed, contains control.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
             <param name="doNotThrowIfClosed">
             Do not throw exception when the window handle is invalid or the window was closed while waiting.
@@ -19976,7 +19972,7 @@
             <summary>
             Waits until this window has the specified name.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="name">
             Window name. Usually it is the title bar text.
             String format: [](xref:wildcard_expression).
@@ -19990,7 +19986,7 @@
             <summary>
             Waits until this window is closed/destroyed or until its process ends.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="waitUntilProcessEnds">Wait until the process of this window ends.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -20606,13 +20602,13 @@
             <param name="m">API <msdn>MSG</msdn>.</param>
             <param name="ignore">Messages to not show.</param>
         </member>
-        <member name="M:Au.Wnd.Misc.SetWindowSubclass(Au.Wnd,Au.Types.SUBCLASSPROC,Au.Types.LPARAM,System.IntPtr)">
+        <member name="M:Au.Wnd.Misc.SetWindowSubclass(Au.Wnd,Au.Types.Native.SUBCLASSPROC,Au.Types.LPARAM,System.IntPtr)">
             <summary>API <msdn>SetWindowSubclass</msdn></summary>
         </member>
-        <member name="M:Au.Wnd.Misc.GetWindowSubclass(Au.Wnd,Au.Types.SUBCLASSPROC,Au.Types.LPARAM,System.IntPtr@)">
+        <member name="M:Au.Wnd.Misc.GetWindowSubclass(Au.Wnd,Au.Types.Native.SUBCLASSPROC,Au.Types.LPARAM,System.IntPtr@)">
             <summary>API <msdn>GetWindowSubclass</msdn></summary>
         </member>
-        <member name="M:Au.Wnd.Misc.RemoveWindowSubclass(Au.Wnd,Au.Types.SUBCLASSPROC,Au.Types.LPARAM)">
+        <member name="M:Au.Wnd.Misc.RemoveWindowSubclass(Au.Wnd,Au.Types.Native.SUBCLASSPROC,Au.Types.LPARAM)">
             <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
         </member>
         <member name="M:Au.Wnd.Misc.DefSubclassProc(Au.Wnd,System.UInt32,Au.Types.LPARAM,Au.Types.LPARAM)">
@@ -23080,13 +23076,6 @@
             DocFX tests.
             </summary>
             <remarks>
-            a <c>int i\=2 \*italic\* &quot;s&quot;; \/\/comm</c> b
-            a <c>\*italic\*</c> b
-            a <c>"string"</c> b
-            a <c>\@"\\\\\?\\"</c> b
-            a <c>\!"\#\$%'\(\)\*\+\,\-\.\/\:;\=\?\@\[\\\]\^\_\`\{\|\}\~</c> b
-            a <c><![CDATA[\!"\#\$%&'\(\)\*\+\,\-\.\/\:;<\=\>\?\@\[\\\]\^\_\`\{\|\}\~]]></c> b
-            a <c>bbb\\</c> b
             </remarks>
         </member>
         <member name="P:Au.AaaDocFX.TestProp">
@@ -23097,6 +23086,7 @@
         <member name="M:Au.AaaDocFX.TestMeth(System.String)">
             <summary>
             SUMMARY
+            a <c>@"\\?\"</c> b
             </summary>
             <param name="s">
             PARAM
@@ -23117,7 +23107,7 @@
             line2\
             line3</c> b
             
-            head <c>int i=2 *italic* "s"; //comm</c> tail
+            head <c>int i=2 *italic* "s"; //comm</c> tail,
             
             a <c>*italic*</c> b
             a <c>"string"</c> b
@@ -23139,9 +23129,23 @@
             a <c>@"\\?\"</c> b
             <code>
             var c = '\\'; //comment
-            var s=@"\\?\"; //comment
+            var s=@"\\?\"; //comment,,,,
             </code>
             </example>
+        </member>
+        <member name="M:Au.AaaDocFX.TestMeth2(System.String)">
+            <summary>SUMMARY =
+            a <c>@"\\?\"</c> b</summary>
+            <param name="s">PARAM = a <c>@"\\?\"</c> b</param>
+            <returns>RETURNS = a <c>@"\\?\"</c> b</returns>
+            <exception cref="T:System.Exception">EXCEPTION = a <c>@"\\?\"</c> b</exception>
+            <remarks>REMARKS = a <c>@"\\?\"</c> b</remarks>
+            <example>EXAMPLE = a <c>@"\\?\"</c> b</example>
+        </member>
+        <member name="M:Au.AaaDocFX.Deconstruct(Au.Types.KMod@,Au.Types.KKey@)">
+            <summary>
+            Allows to *split* a <b>KHotkey</b> variable like <c>var (mod, key) = hotkey;</c> *italic* text. a <c>@"\\?\"</c> b
+            </summary>
         </member>
         <member name="T:Au.Time">
             <summary>
@@ -23562,7 +23566,7 @@
             <summary>
             Waits for an user-defined condition.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true. The calling period depends on *options*.</param>
             <param name="options">Options. If null, uses <see cref="P:Au.Opt.WaitFor"/>, else combines with it.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
@@ -23574,7 +23578,7 @@
             <summary>
             Waits for a kernel object (event, mutex, etc).
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="flags"></param>
             <param name="handles">One or more handles of kernel objects. Max 63.</param>
             <returns>
@@ -23611,7 +23615,7 @@
             <summary>
             Waits for a posted message received by this thread.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="callback">Callback function that returns true to stop waiting. More info in Remarks.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -23631,7 +23635,7 @@
             <summary>
             Waits for a variable or other condition that is changed while processing messages or other events received by this thread.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="condition">Callback function that returns true to stop waiting. More info in Remarks.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -23653,7 +23657,7 @@
             <summary>
             Waits until a variable is set = true.
             </summary>
-            <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="variable">Stop waiting when this variable is set to true.</param>
             <param name="options">Options. If null, uses <see cref="P:Au.Opt.WaitFor"/>, else combines with it.</param>
             <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>

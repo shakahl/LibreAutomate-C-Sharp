@@ -196,7 +196,7 @@ namespace Au.Types
 		//note: could be struct, but somehow then slower. Slower instance creation, calling methods, in all cases.
 
 		object _obj; //string, Regex or Wildex[]. Tested: getting string etc with '_obj as string' is fast.
-		WildType _type;
+		WXType _type;
 		bool _ignoreCase;
 		bool _not;
 
@@ -211,17 +211,17 @@ namespace Au.Types
 		{
 			var w = wildcardExpression;
 			if(w == null) throw new ArgumentNullException();
-			_type = WildType.Wildcard;
+			_type = WXType.Wildcard;
 			_ignoreCase = true;
 			string[] split = null;
 
 			if(w.Length >= 3 && w[0] == '*' && w[1] == '*') {
 				for(int i = 2, j; i < w.Length; i++) {
 					switch(w[i]) {
-					case 't': _type = WildType.Text; break;
-					case 'r': _type = WildType.RegexPcre; break;
-					case 'R': _type = WildType.RegexNet; break;
-					case 'm': _type = WildType.Multi; break;
+					case 't': _type = WXType.Text; break;
+					case 'r': _type = WXType.RegexPcre; break;
+					case 'R': _type = WXType.RegexNet; break;
+					case 'm': _type = WXType.Multi; break;
 					case 'c': _ignoreCase = false; break;
 					case 'n': _not = true; break;
 					case ' ': w = w.Substring(i + 1); goto g1;
@@ -239,14 +239,14 @@ namespace Au.Types
 				throw new ArgumentException("Invalid \"**options \" in wildcard expression.");
 				g1:
 				switch(_type) {
-				case WildType.RegexNet:
+				case WXType.RegexNet:
 					var ro = _ignoreCase ? (RegexOptions.IgnoreCase | RegexOptions.CultureInvariant) : RegexOptions.CultureInvariant;
 					_obj = new Regex(w, ro);
 					return;
-				case WildType.RegexPcre:
+				case WXType.RegexPcre:
 					_obj = new Regex_(w);
 					return;
-				case WildType.Multi:
+				case WXType.Multi:
 					var a = w.Split(split ?? _splitMulti, StringSplitOptions.None);
 					var multi = new Wildex[a.Length];
 					for(int i = 0; i < a.Length; i++) multi[i] = new Wildex(a[i]);
@@ -255,7 +255,7 @@ namespace Au.Types
 				}
 			}
 
-			if(_type == WildType.Wildcard && !HasWildcardChars(w)) _type = WildType.Text;
+			if(_type == WXType.Wildcard && !HasWildcardChars(w)) _type = WXType.Text;
 			_obj = w;
 		}
 		static readonly string[] _splitMulti = { "||" };
@@ -288,20 +288,20 @@ namespace Au.Types
 
 			bool R = false;
 			switch(_type) {
-			case WildType.Wildcard:
+			case WXType.Wildcard:
 				R = s.Like_(_obj as string, _ignoreCase);
 				break;
-			case WildType.Text:
+			case WXType.Text:
 				var t = _obj as string;
 				R = s.Equals_(t, _ignoreCase);
 				break;
-			case WildType.RegexPcre:
+			case WXType.RegexPcre:
 				R = (_obj as Regex_).IsMatch(s);
 				break;
-			case WildType.RegexNet:
+			case WXType.RegexNet:
 				R = (_obj as Regex).IsMatch(s);
 				break;
-			case WildType.Multi:
+			case WXType.Multi:
 				var multi = _obj as Wildex[];
 				//[n] parts: all must match (with their option n applied)
 				int nNot = 0;
@@ -322,43 +322,6 @@ namespace Au.Types
 				break;
 			}
 			return R ^ _not;
-		}
-
-		/// <summary>
-		/// The type of text (wildcard expression) used when creating the Wildex variable.
-		/// </summary>
-		public enum WildType :byte
-		{
-			/// <summary>
-			/// Simple text (option t, or no *? characters and no t r R options).
-			/// <b>Match</b> calls <see cref="String_.Equals_(string, string, bool)"/>.
-			/// </summary>
-			Text,
-
-			/// <summary>
-			/// Wildcard (has *? characters and no t r R options).
-			/// <b>Match</b> calls <see cref="String_.Like_(string, string, bool)"/>.
-			/// </summary>
-			Wildcard,
-
-			/// <summary>
-			/// PCRE regular expression (option r).
-			/// <b>Match</b> calls <see cref="Regex_.IsMatch"/>.
-			/// </summary>
-			RegexPcre,
-
-			/// <summary>
-			/// .NET egular expression (option R).
-			/// <b>Match</b> calls <see cref="Regex.IsMatch(string)"/>.
-			/// </summary>
-			RegexNet,
-
-			/// <summary>
-			/// Multiple parts (option m).
-			/// <b>Match</b> calls <b>Match</b> for each part (see <see cref="MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
-			/// If you want to implement a different logic, call <b>Match</b> for each <see cref="MultiArray"/> element (instead of calling <b>Match</b> for this variable).
-			/// </summary>
-			Multi,
 		}
 
 		/// <summary>
@@ -388,7 +351,7 @@ namespace Au.Types
 		/// <summary>
 		/// Gets the type of text (wildcard, regex, etc).
 		/// </summary>
-		public WildType TextType => _type;
+		public WXType TextType => _type;
 
 		/// <summary>
 		/// Is case-insensitive?
@@ -423,4 +386,41 @@ namespace Au.Types
 
 	//rejected: struct WildexStruct - struct version of Wildex class. Moved to the Unused project.
 	//	Does not make faster, although in most cases creates less garbage.
+
+	/// <summary>
+	/// The type of text (wildcard expression) of a <see cref="Wildex"/> variable.
+	/// </summary>
+	public enum WXType : byte
+	{
+		/// <summary>
+		/// Simple text (option t, or no *? characters and no t r R options).
+		/// <b>Match</b> calls <see cref="String_.Equals_(string, string, bool)"/>.
+		/// </summary>
+		Text,
+
+		/// <summary>
+		/// Wildcard (has *? characters and no t r R options).
+		/// <b>Match</b> calls <see cref="String_.Like_(string, string, bool)"/>.
+		/// </summary>
+		Wildcard,
+
+		/// <summary>
+		/// PCRE regular expression (option r).
+		/// <b>Match</b> calls <see cref="Regex_.IsMatch"/>.
+		/// </summary>
+		RegexPcre,
+
+		/// <summary>
+		/// .NET egular expression (option R).
+		/// <b>Match</b> calls <see cref="Regex.IsMatch(string)"/>.
+		/// </summary>
+		RegexNet,
+
+		/// <summary>
+		/// Multiple parts (option m).
+		/// <b>Match</b> calls <b>Match</b> for each part (see <see cref="Wildex.MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
+		/// If you want to implement a different logic, call <b>Match</b> for each <see cref="Wildex.MultiArray"/> element (instead of calling <b>Match</b> for this variable).
+		/// </summary>
+		Multi,
+	}
 }

@@ -174,7 +174,7 @@ namespace Au
 		/// <summary>
 		/// Waits for an user-defined condition.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true. The calling period depends on *options*.</param>
 		/// <param name="options">Options. If null, uses <see cref="Opt.WaitFor"/>, else combines with it.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
@@ -193,7 +193,7 @@ namespace Au
 		/// <summary>
 		/// Waits for a kernel object (event, mutex, etc).
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="flags"></param>
 		/// <param name="handles">One or more handles of kernel objects. Max 63.</param>
 		/// <returns>
@@ -326,7 +326,7 @@ namespace Au
 		/// <summary>
 		/// Waits for a posted message received by this thread.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="callback">Callback function that returns true to stop waiting. More info in Remarks.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -349,7 +349,7 @@ namespace Au
 		/// <summary>
 		/// Waits for a variable or other condition that is changed while processing messages or other events received by this thread.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function that returns true to stop waiting. More info in Remarks.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -374,7 +374,7 @@ namespace Au
 		/// <summary>
 		/// Waits until a variable is set = true.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="variable">Stop waiting when this variable is set to true.</param>
 		/// <param name="options">Options. If null, uses <see cref="Opt.WaitFor"/>, else combines with it.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>

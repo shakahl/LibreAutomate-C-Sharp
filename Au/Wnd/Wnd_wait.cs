@@ -28,7 +28,7 @@ namespace Au
 		/// Returns window handle. On timeout returns default(Wnd) if *secondsTimeout* is negative; else exception.
 		/// Parameters etc are the same as <see cref="Find"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="active">The window must be the active window (<see cref="Active"/>), and not minimized.</param>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
@@ -77,7 +77,7 @@ namespace Au
 		/// Waits until any of specified windows exists, is visible (optionally) and active (optionally).
 		/// Returns window handle. On timeout returns default(Wnd) if *secondsTimeout* is negative; else exception.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="active">The window must be the active window (<see cref="Active"/>), and not minimized.</param>
 		/// <param name="windows">One or more variables containing window properties. Can be strings, see <see cref="Finder.op_Implicit(string)"/>.</param>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -118,7 +118,7 @@ namespace Au
 		/// Waits until window does not exist.
 		/// Parameters etc are the same as <see cref="Find"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
@@ -172,7 +172,7 @@ namespace Au
 		/// <summary>
 		/// Waits for an user-defined state/condition of this window. For example active, visible, enabled, closed, contains control.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
 		/// <param name="doNotThrowIfClosed">
 		/// Do not throw exception when the window handle is invalid or the window was closed while waiting.
@@ -226,7 +226,7 @@ namespace Au
 		/// <summary>
 		/// Waits until this window has the specified name.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
 		/// String format: [](xref:wildcard_expression).
@@ -244,7 +244,7 @@ namespace Au
 		/// <summary>
 		/// Waits until this window is closed/destroyed or until its process ends.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="waitUntilProcessEnds">Wait until the process of this window ends.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>

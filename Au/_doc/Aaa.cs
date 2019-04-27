@@ -29,13 +29,6 @@ namespace Au
 	/// DocFX tests.
 	/// </summary>
 	/// <remarks>
-	/// a <c>int i\=2 \*italic\* &quot;s&quot;; \/\/comm</c> b
-	/// a <c>\*italic\*</c> b
-	/// a <c>"string"</c> b
-	/// a <c>\@"\\\\\?\\"</c> b
-	/// a <c>\!"\#\$%'\(\)\*\+\,\-\.\/\:;\=\?\@\[\\\]\^\_\`\{\|\}\~</c> b
-	/// a <c><![CDATA[\!"\#\$%&'\(\)\*\+\,\-\.\/\:;<\=\>\?\@\[\\\]\^\_\`\{\|\}\~]]></c> b
-	/// a <c>bbb\\</c> b
 	/// </remarks>
 	public class AaaDocFX
 	{
@@ -46,6 +39,7 @@ namespace Au
 
 		/// <summary>
 		/// SUMMARY
+		/// a <c>@"\\?\"</c> b
 		/// </summary>
 		/// <param name="s">
 		/// PARAM
@@ -66,7 +60,7 @@ namespace Au
 		/// line2\
 		/// line3</c> b
 		/// 
-		/// head <c>int i=2 *italic* "s"; //comm</c> tail
+		/// head <c>int i=2 *italic* "s"; //comm</c> tail,
 		/// 
 		/// a <c>*italic*</c> b
 		/// a <c>"string"</c> b
@@ -88,14 +82,32 @@ namespace Au
 		/// a <c>@"\\?\"</c> b
 		/// <code>
 		/// var c = '\\'; //comment
-		/// var s=@"\\?\"; //comment
+		/// var s=@"\\?\"; //comment,,,,
 		/// </code>
 		/// </example>
 		public int TestMeth(string s)
 		{
-			if(!Keyb.WaitForHotkey(-3, "Ctrl+Shift+K")) return 0;
+			
 			return 0;
 		}
+
+		/// <summary>SUMMARY =
+		/// a <c>@"\\?\"</c> b</summary>
+		/// <param name="s">PARAM = a <c>@"\\?\"</c> b</param>
+		/// <returns>RETURNS = a <c>@"\\?\"</c> b</returns>
+		/// <exception cref="Exception">EXCEPTION = a <c>@"\\?\"</c> b</exception>
+		/// <remarks>REMARKS = a <c>@"\\?\"</c> b</remarks>
+		/// <example>EXAMPLE = a <c>@"\\?\"</c> b</example>
+		public int TestMeth2(string s)
+		{
+			
+			return 0;
+		}
+
+		/// <summary>
+		/// Allows to *split* a <b>KHotkey</b> variable like <c>var (mod, key) = hotkey;</c> *italic* text. a <c>@"\\?\"</c> b
+		/// </summary>
+		public void Deconstruct(out KMod mod, out KKey key) { mod = 0; key = 0; }
 	}
 }
 //#endif

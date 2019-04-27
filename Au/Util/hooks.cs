@@ -968,7 +968,6 @@ namespace Au.Types
 			SETFOCUS = 9,
 #pragma warning restore 1591
 		}
-		//TODO: move to Au.Types.
 
 		/// <summary>
 		/// Hook data for the hook procedure set by <see cref="WinHook.ThreadGetMessage"/>.

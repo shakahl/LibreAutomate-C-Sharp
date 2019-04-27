@@ -53,6 +53,9 @@ namespace Au.Types
 		//[DllImport("kernel32.dll")] //note: no SetLastError = true
 		//internal static extern bool CloseHandle(HandleRef hObject);
 
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool SetHandleInformation(IntPtr hObject, uint dwMask, uint dwFlags);
+
 		[DllImport("kernel32.dll")]
 		internal static extern IntPtr GetCurrentThread();
 
@@ -337,6 +340,12 @@ namespace Au.Types
 		internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, int creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default);
 
 		//note: not using parameter types SECURITY_ATTRIBUTES and OVERLAPPED* because it makes JIT-compiling much slower in some time-critical places.
+
+		//TODO: don't use SafeFileHandle. Use LibKernelHandle.
+
+		[DllImport("kernel32.dll", EntryPoint = "ReadFile", SetLastError = true)]
+		internal static extern bool ReadFileIP(IntPtr hFile, void* lpBuffer, int nBytesToRead, out int nBytesRead, void* lpOverlapped = null);
+		//TODO: now added IP suffix because using explicit JIT. Remove this declaration if will reject SafeFileHandle.
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool ReadFile(SafeFileHandle hFile, void* lpBuffer, int nBytesToRead, out int nBytesRead, void* lpOverlapped = null);
@@ -660,8 +669,9 @@ namespace Au.Types
 		internal const uint CREATE_UNICODE_ENVIRONMENT = 0x400;
 		internal const uint EXTENDED_STARTUPINFO_PRESENT = 0x80000;
 		//STARTUPINFO flags
+		internal const uint STARTF_USESHOWWINDOW = 0x1;
 		internal const uint STARTF_FORCEOFFFEEDBACK = 0x80;
-		//internal const uint STARTF_USESTDHANDLES = 0x100;
+		internal const uint STARTF_USESTDHANDLES = 0x100;
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateProcessW", SetLastError = true)]
 		internal static extern bool CreateProcess(string lpApplicationName, char[] lpCommandLine, SECURITY_ATTRIBUTES lpProcessAttributes, SECURITY_ATTRIBUTES lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, string lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
@@ -698,6 +708,9 @@ namespace Au.Types
 		internal static extern SafeFileHandle CreateNamedPipe(string lpName, uint dwOpenMode, uint dwPipeMode, uint nMaxInstances, uint nOutBufferSize, uint nInBufferSize, uint nDefaultTimeOut, SECURITY_ATTRIBUTES lpSecurityAttributes);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool CreatePipe(out IntPtr hReadPipe, out IntPtr hWritePipe, SECURITY_ATTRIBUTES lpPipeAttributes, uint nSize);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool ConnectNamedPipe(SafeFileHandle hNamedPipe, OVERLAPPED* lpOverlapped);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
@@ -719,6 +732,9 @@ namespace Au.Types
 		//internal static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out int ClientProcessId);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool PeekNamedPipe(IntPtr hPipe, void* lpBuffer, int nBufferSize, int* lpBytesRead, int* lpTotalBytesAvail, int* lpBytesLeftThisMessage);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool AllocConsole();
 
 		[DllImport("kernel32.dll")]
@@ -733,6 +749,9 @@ namespace Au.Types
 
 		//[DllImport("kernel32.dll", SetLastError = true)]
 		//internal static extern uint QueueUserAPC(PAPCFUNC pfnAPC, IntPtr hThread, LPARAM dwData);
+
+		[DllImport("kernel32.dll")]
+		internal static extern int GetOEMCP();
 
 	}
 }

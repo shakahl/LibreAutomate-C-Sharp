@@ -297,7 +297,7 @@ namespace Au
 		/// More info: <see cref="Find"/>.
 		/// </summary>
 		/// <returns>Returns <see cref="WinImage"/> object containing the rectangle of the found image. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
@@ -313,7 +313,7 @@ namespace Au
 		/// Waits until image(s) or color(s) is not displayed in window or other area.
 		/// More info: <see cref="Find"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
@@ -327,7 +327,7 @@ namespace Au
 		/// Waits until something visually changes in window or other area.
 		/// More info: <see cref="Find"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>

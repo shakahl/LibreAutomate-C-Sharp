@@ -496,9 +496,7 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="DoAction"/> or *action* and waits until window name changes and web page name changes.
 		/// </summary>
-		/// <param name="secondsTimeout">
-		/// [!include[](../include/param-secondsTimeout.md)
-		/// 
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).
 		/// Default 60 seconds.
 		/// </param>
 		/// <param name="action">If used, calls it instead of <see cref="DoAction"/>.</param>

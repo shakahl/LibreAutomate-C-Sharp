@@ -199,6 +199,9 @@ namespace Au.Types
 		/// <summary>API <msdn>WNDPROC</msdn></summary>
 		public delegate LPARAM WNDPROC(Wnd w, int msg, LPARAM wParam, LPARAM lParam);
 
+		/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
+		public delegate LPARAM SUBCLASSPROC(Wnd hWnd, uint msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
+
 		/// <summary>API <msdn>SetWindowPos</msdn> flags.</summary>
 		[Flags]
 		public enum SWP : uint

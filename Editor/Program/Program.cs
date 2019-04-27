@@ -45,6 +45,8 @@ static class Program
 		}
 		//speed with restarting is the same as when runs as non-admin. The fastest is when started as admin. Because faster when runs as admin.
 
+		Directory.SetCurrentDirectory(Folders.ThisApp); //because it is c:\windows\system32 when restarted as admin
+
 		_Main(args);
 	}
 

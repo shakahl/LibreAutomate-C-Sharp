@@ -131,7 +131,10 @@ namespace Au
 			}
 		}
 	}
+}
 
+namespace Au.Types
+{
 	/// <summary>
 	/// Flags for <see cref="RunAssembly.Run"/>.
 	/// </summary>
@@ -141,10 +144,7 @@ namespace Au
 		InEditorThread = 1,
 		DontHandleExceptions = 2,
 	}
-}
 
-namespace Au.Types
-{
 	/// <summary>
 	/// This class is used in automation script files as base of their main class. Adds some features.
 	/// </summary>

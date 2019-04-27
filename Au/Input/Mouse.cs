@@ -1018,7 +1018,7 @@ namespace Au
 		/// <summary>
 		/// Waits while some mouse buttons are down (pressed). See <see cref="IsPressed"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -1048,7 +1048,7 @@ namespace Au
 		/// Waits for button-down or button-up event of the specified mouse button or buttons.
 		/// </summary>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
 		/// <param name="up">Wait for button-up event.</param>
 		/// <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
@@ -1124,7 +1124,7 @@ namespace Au
 		/// <summary>
 		/// Waits for a standard mouse cursor (pointer) visible.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="cursor">Id of a standard cursor.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
@@ -1140,7 +1140,7 @@ namespace Au
 		/// <summary>
 		/// Waits for a nonstandard mouse cursor (pointer) visible.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="cursorHash">Cursor hash, as returned by <see cref="Util.Cursor_.HashCursor"/>.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
 		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>

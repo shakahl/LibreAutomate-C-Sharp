@@ -586,14 +586,14 @@ class RunningTasks
 		if(wrPipeName != null) wrPipeName = "AuTask.WriteResult.pipe=" + wrPipeName;
 		if(uac == _SpUac.admin) {
 			if(wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable AuTask.WriteResult"); //cannot pass environment variables. //rare //FUTURE
-			var k = Shell.Run(exeFile, args, SRFlags.Admin | SRFlags.NeedProcessHandle);
+			var k = Shell.Run(exeFile, args, SRFlags.Admin | SRFlags.NeedProcessHandle, "");
 			return (k.ProcessId, k.ProcessHandle);
 			//note: don't try to start task without UAC consent. It is not secure.
 			//	Normally Au editor runs as admin in admin user account, and don't need to go through this.
 		} else {
-			var psr = uac == _SpUac.userFromAdmin
-				? Process_.LibStartUserIL(exeFile, args, wrPipeName, Process_.StartResult.Need.WaitHandle)
-				: Process_.LibStart(exeFile, args, uac == _SpUac.uiAccess, wrPipeName, Process_.StartResult.Need.WaitHandle);
+			var ps = new Au.Util.LibProcessStarter(exeFile, args, "", envVar: wrPipeName, rawExe: true);
+			var need = Au.Util.LibProcessStarter.Result.Need.WaitHandle;
+			var psr = uac == _SpUac.userFromAdmin ? ps.StartUserIL(need) : ps.Start(need, inheritUiaccess: uac == _SpUac.uiAccess);
 			return (psr.pid, psr.waitHandle);
 		}
 	}

@@ -116,6 +116,19 @@
     <Compile Include="String\StringSegment.cs" />
     <Compile Include="Util\ILReader.cs" />
     <Compile Include="Tasks\RunAssembly.cs" />
+    <Compile Include="Util\small\Assembly_.cs" />
+    <Compile Include="Util\small\Jit.cs" />
+    <Compile Include="Util\small\Resources_.cs" />
+    <Compile Include="Util\small\Dpi.cs" />
+    <Compile Include="Util\small\WaitableTimer.cs" />
+    <Compile Include="Util\small\LibKernelHandle.cs" />
+    <Compile Include="Util\small\Security_.cs" />
+    <Compile Include="Util\small\LibAttachThreadInput.cs" />
+    <Compile Include="Util\small\LibTaskScheduler.cs" />
+    <Compile Include="Util\small\LibProcessStarter.cs" />
+    <Compile Include="Util\small\LibSerializer.cs" />
+    <Compile Include="Util\small\_.cs" />
+    <Compile Include="Util\small\ModuleHandle_.cs" />
     <Compile Include="Util\StringMisc.cs" />
     <Compile Include="Util\image, GDI, etc.cs" />
     <Compile Include="Util\hooks.cs" />
@@ -187,7 +200,7 @@
     <Compile Include="Time\Perf.cs" />
     <Compile Include="Api\Api_const.cs" />
     <EmbeddedResource Include="Properties\Au.manifest" />
-    <Compile Include="Util\misc util.cs" />
+    <Compile Include="Util\small\misc util.cs" />
     <Compile Include="Api\Api.cs" />
     <Compile Include="Util\workarounds.cs" />
     <None Include="_doc\api\index.md" />
@@ -201,7 +214,6 @@
     <None Include="_doc\articles\Wildcard expression.md" />
     <None Include="_doc\docfx.json" />
     <None Include="_doc\filter.yml" />
-    <None Include="_doc\include\param-secondsTimeout.md" />
     <None Include="_doc\index.md" />
     <None Include="_doc\template1\layout\_master.tmpl" />
     <None Include="_doc\template1\partials\affix.tmpl.partial" />

@@ -27,33 +27,6 @@ namespace Au.Types
 	[DebuggerStepThrough]
 	public struct Coord
 	{
-		/// <summary>
-		/// Coord variable value type.
-		/// </summary>
-		public enum CoordType
-		{
-			/// <summary>
-			/// No value. The variable is default(Coord).
-			/// </summary>
-			None,
-
-			/// <summary>
-			/// <see cref="Value"/> is pixel offset from left or top of a rectangle.
-			/// </summary>
-			Normal,
-
-			/// <summary>
-			/// <see cref="Value"/> is pixel offset from right or bottom of a rectangle, towards left or top.
-			/// </summary>
-			Reverse,
-
-			/// <summary>
-			/// <see cref="FractionValue"/> is fraction of a rectangle, where 0.0 is left or top, and 1.0 is right or bottom (outside of the rectangle).
-			/// </summary>
-			Fraction,
-		}
-		//TODO: move to Au.Types.
-
 		//Use single long field that packs int and CoordType.
 		//If 2 fields (int and CoordType), 64-bit compiler creates huge calling code.
 		//This version is good in 32-bit, very good in 64-bit. Even better than packing in single int (30 bits value and 2 bits type).
@@ -238,6 +211,32 @@ namespace Au.Types
 			default: return "default";
 			}
 		}
+	}
+
+	/// <summary>
+	/// <see cref="Coord"/> variable value type.
+	/// </summary>
+	public enum CoordType
+	{
+		/// <summary>
+		/// No value. The variable is default(Coord).
+		/// </summary>
+		None,
+
+		/// <summary>
+		/// <see cref="Coord.Value"/> is pixel offset from left or top of a rectangle.
+		/// </summary>
+		Normal,
+
+		/// <summary>
+		/// <see cref="Coord.Value"/> is pixel offset from right or bottom of a rectangle, towards left or top.
+		/// </summary>
+		Reverse,
+
+		/// <summary>
+		/// <see cref="Coord.FractionValue"/> is fraction of a rectangle, where 0.0 is left or top, and 1.0 is right or bottom (outside of the rectangle).
+		/// </summary>
+		Fraction,
 	}
 
 	/// <summary>

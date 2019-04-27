@@ -344,11 +344,12 @@ namespace Au.Types
 
 			/// <summary>
 			/// Creates SECURITY_ATTRIBUTES from string security descriptor.
+			/// securityDescriptor can be null; then lpSecurityDescriptor will be null;
 			/// </summary>
 			public SECURITY_ATTRIBUTES(string securityDescriptor)
 			{
 				nLength = IntPtr.Size * 3;
-				if(!ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptor, 1, out lpSecurityDescriptor)) throw new AuException(0, "SECURITY_ATTRIBUTES");
+				if(securityDescriptor != null && !ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptor, 1, out lpSecurityDescriptor)) throw new AuException(0, "SECURITY_ATTRIBUTES");
 			}
 
 			public void Dispose()

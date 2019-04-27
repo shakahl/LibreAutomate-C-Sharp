@@ -164,7 +164,7 @@ namespace Au
 			/// Finds accessible object (AO) in window w.
 			/// The same as <see cref="Find(Wnd)"/>, but waits until the AO is found or the given time expires.
 			/// </summary>
-			/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+			/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 			/// <param name="w">Window or control that contains the AO.</param>
 			/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 			/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -178,7 +178,7 @@ namespace Au
 			/// Finds accessible object (AO) in another AO.
 			/// The same as <see cref="Find(Acc)"/>, but waits until the AO is found or the given time expires.
 			/// </summary>
-			/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+			/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 			/// <param name="a">Direct or indirect parent AO.</param>
 			/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
 			/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
@@ -470,7 +470,7 @@ namespace Au
 		/// Finds accessible object (AO) in window. Waits until the AO is found or the given time expires.
 		/// More info: <see cref="Find"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException"/>
@@ -488,7 +488,7 @@ namespace Au
 		/// Finds a descendant accessible object (AO) of this AO. Waits until the AO is found or the given time expires.
 		/// More info: <see cref="Find"/>.
 		/// </summary>
-		/// <param name="secondsTimeout">[!include[](../include/param-secondsTimeout.md)</param>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"/>
 		/// <exception cref="ArgumentException"/>

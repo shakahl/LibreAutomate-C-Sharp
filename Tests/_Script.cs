@@ -770,14 +770,48 @@ unsafe partial class Script : AuScript
 		Triggers.Run();
 	}
 
+	void TestProcessStarter()
+	{
+		var exe = @"Q:\My QM\console4.exe";
+
+		//var ps = new Au.Util.LibProcessStarter(exe, "COMMAND", "", "moo=KKK");
+		//ps.Start();
+		//ps.StartUserIL();
+		//ps.Start(0, true);
+
+		//var r = ps.Start(Au.Util.LibProcessStarter.Result.Need.WaitHandle);
+		//r.waitHandle.WaitOne(-1);
+
+		//var r = ps.Start(Au.Util.LibProcessStarter.Result.Need.NetProcess);
+		////var r = ps.StartUserIL(Au.Util.LibProcessStarter.Result.Need.NetProcess);
+		//r.netProcess.WaitForExit();
+
+		//Print(Shell.RunConsole(s => Print(s.Length, s), exe));
+		//Print(Shell.RunConsole(exe));
+		//Print(Shell.RunConsole(out var s, exe)); Print(s);
+		//Print(Shell.RunConsole(s => Print(s.Length, s), exe, rawText: true));
+		//Print(Shell.RunConsole(exe, "cmd", "q:\\programs", encoding: Encoding.UTF8));
+
+		string v = "example";
+		int r1 = Shell.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
+
+		int r2 = Shell.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
+
+		int r3 = Shell.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
+		Print(text);
+
+		//Print("exit");
+	}
+
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
 	void _Main(string[] args)
 	{ //}}//}}//}}//}}
-#if false
+#if true
 		Output.QM2.UseQM2 = true;
 		Output.Clear();
 		100.ms();
 
+		TestProcessStarter();
 		//TestXmlNewlines();
 		//TestIndexerOverload();
 		//TestCharUpperNonBmp();
