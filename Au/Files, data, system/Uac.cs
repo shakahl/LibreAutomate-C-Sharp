@@ -27,23 +27,18 @@ namespace Au
 	{
 		#region IDisposable Support
 
-		void _Dispose()
-		{
-			if(_htoken != default) { Api.CloseHandle(_htoken); _htoken = default; }
-		}
-
 		///
-		~Uac() { _Dispose(); }
+		~Uac()  => _htoken.Dispose();
 
 		///
 		public void Dispose()
 		{
-			_Dispose();
+			_htoken.Dispose();
 			GC.SuppressFinalize(this);
 		}
 		#endregion
 
-		IntPtr _htoken;
+		LibHandle _htoken;
 		HandleRef _HtokenHR => new HandleRef(this, _htoken);
 
 		/// <summary>
@@ -171,11 +166,11 @@ namespace Au
 		}
 		UacIL _integrityLevel; byte _haveIntegrityLevel;
 
-		Uac(IntPtr hToken) { _htoken = hToken; }
+		Uac(LibHandle hToken) => _htoken = hToken;
 
 		static Uac _Create(IntPtr hProcess)
 		{
-			if(!Api.OpenProcessToken(hProcess, Api.TOKEN_QUERY | Api.TOKEN_QUERY_SOURCE, out var hToken)) return null;
+			if(!Api.OpenProcessToken(hProcess, Api.TOKEN_QUERY | Api.TOKEN_QUERY_SOURCE, out LibHandle hToken)) return null;
 			return new Uac(hToken);
 		}
 
@@ -188,7 +183,7 @@ namespace Au
 		public static Uac OfProcess(int processId)
 		{
 			if(processId == 0) return null;
-			using(var hp = Util.LibKernelHandle.OpenProcess(processId)) {
+			using(var hp = LibHandle.OpenProcess(processId)) {
 				if(hp.Is0) return null;
 				return _Create(hp);
 			}

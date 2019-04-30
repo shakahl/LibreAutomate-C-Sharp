@@ -319,7 +319,7 @@ namespace Au
 		/// <param name="filter">
 		/// Callback function. Called for each file and subdirectory.
 		/// If it returns false, the file/subdirectory is not included in results.
-		/// This can be useful when EnumDirectory is called indirectly, for example by the Copy method. If you call it directly, you can instead skip processing the file in your foreach loop.
+		/// Can be useful when EnumDirectory is called indirectly, for example by the Copy method. If you call it directly, you can instead skip processing the file in your foreach loop.
 		/// </param>
 		/// <param name="errorHandler">
 		/// Callback function. Called when fails to get children of a subdirectory, when using flag <see cref="FEFlags.AndSubdirectories"/>.
@@ -1234,6 +1234,8 @@ namespace Au
 		/// 
 		/// To protect from 1, this functions waits/retries if the file is temporarily open/locked, like <see cref="WaitIfLocked"/>.
 		/// To protect from 2, this function writes to a temporary file and renames/replaces the specified file using API <msdn>ReplaceFile</msdn>. Although not completely atomic, it ensures that file data is not corrupt; if cannot write all data, does not change existing file data.
+		/// 
+		/// This function is slower; it can be important when saving many files.
 		/// </remarks>
 		public static void Save(string file, Action<string> writer, bool backup = false, int lockedWaitMS = 2000)
 		{

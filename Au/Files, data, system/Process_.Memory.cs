@@ -29,7 +29,7 @@ namespace Au
 		/// </remarks>
 		public sealed unsafe class Memory :IDisposable
 		{
-			Util.LibKernelHandle _hproc;
+			LibHandle _hproc;
 			HandleRef _HprocHR => new HandleRef(this, _hproc);
 
 			///
@@ -91,7 +91,7 @@ namespace Au
 			{
 				string err = null;
 				const uint fl = Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE;
-				_hproc = w.Is0 ? Util.LibKernelHandle.OpenProcess(pid, fl) : Util.LibKernelHandle.OpenProcess(w, fl);
+				_hproc = w.Is0 ? LibHandle.OpenProcess(pid, fl) : LibHandle.OpenProcess(w, fl);
 				if(_hproc.Is0) { err = "Failed to open process handle."; goto ge; }
 
 				if(nBytes != 0) {

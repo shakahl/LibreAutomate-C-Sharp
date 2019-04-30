@@ -74,7 +74,7 @@ static unsafe class Program
 		}
 		//Perf.First();
 		using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
-			if(pipe.IsInvalid) { Debug_.LibPrintNativeError(); return; }
+			if(pipe.Is0) { Debug_.LibPrintNativeError(); return; }
 			//Perf.Next();
 			int size; if(!Api.ReadFile(pipe, &size, 4, out nr, default) || nr != 4) return;
 			//Perf.Next();

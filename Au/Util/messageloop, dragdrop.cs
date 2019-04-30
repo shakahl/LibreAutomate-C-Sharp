@@ -24,7 +24,7 @@ namespace Au.Util
 	/// </summary>
 	public class MessageLoop
 	{
-		IntPtr _loopEndEvent;
+		LibHandle _loopEndEvent;
 
 		/// <summary>
 		/// Runs a message loop.
@@ -38,7 +38,7 @@ namespace Au.Util
 					_DoEvents();
 
 					for(; ; ) {
-						var ev = _loopEndEvent;
+						IntPtr ev = _loopEndEvent;
 						int k = Api.MsgWaitForMultipleObjectsEx(1, &ev, 100, Api.QS_ALLINPUT, Api.MWMO_INPUTAVAILABLE);
 						if(k == Api.WAIT_TIMEOUT) continue; //we don't use INFINITE, because then does not respond to Thread.Abort
 
@@ -49,8 +49,7 @@ namespace Au.Util
 					}
 				}
 				finally {
-					Api.CloseHandle(_loopEndEvent);
-					_loopEndEvent = default;
+					_loopEndEvent.Dispose();
 				}
 			}
 
@@ -69,7 +68,7 @@ namespace Au.Util
 		/// </summary>
 		public void Stop()
 		{
-			if(_loopEndEvent != default) {
+			if(!_loopEndEvent.Is0) {
 				Api.SetEvent(_loopEndEvent);
 			}
 		}

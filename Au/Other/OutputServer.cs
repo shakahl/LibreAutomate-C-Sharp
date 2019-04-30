@@ -47,7 +47,6 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Linq;
 //using System.Xml.Linq;
-using Microsoft.Win32.SafeHandles;
 
 using Au.Types;
 using static Au.NoClass;
@@ -215,8 +214,8 @@ namespace Au.Util
 		//For local server, the thread and kernel timer would be not necessary. Instead could use just a user timer. But it has some limitations etc.
 
 		readonly ConcurrentQueue<Message> _messages = new ConcurrentQueue<Message>(); //all received and still not removed messages that were sent by clients when they call Output.Write etc
-		SafeFileHandle _mailslot; //used if global, else null
-		Util.WaitableTimer _timer; //used always
+		LibHandle _mailslot; //used if global
+		WaitableTimer _timer; //used always
 		Action _callback;
 		System.Windows.Forms.Control _callbackControl;
 		bool _isStarted;
@@ -238,9 +237,8 @@ namespace Au.Util
 			lock(this) {
 				if(_isGlobal) {
 					var m = Api.CreateMailslot(LibMailslotName, 0, 0, Api.SECURITY_ATTRIBUTES.ForLowIL);
-					if(m.IsInvalid) {
+					if(m.Is0) {
 						var e = WinError.Code;
-						m.SetHandleAsInvalid();
 						if(e == Api.ERROR_ALREADY_EXISTS) return false; //called not first time, or exists in another process/appdomain
 						throw new AuException(e, "*create mailslot");
 					}
@@ -269,7 +267,7 @@ namespace Au.Util
 				Thread_.Start(_Thread, sta: false);
 			}
 			catch {
-				if(_isGlobal) { _mailslot.Close(); _mailslot = null; }
+				if(_isGlobal) _mailslot.Dispose();
 				_timer?.Close(); _timer = null;
 				throw;
 			}
@@ -284,7 +282,7 @@ namespace Au.Util
 				if(!_isStarted) return;
 				_isStarted = false;
 				if(_isGlobal) {
-					_mailslot.Close(); _mailslot = null;
+					_mailslot.Dispose();
 					_SM->IsServer = 0;
 				} else {
 					Output.s_localServer = null;
@@ -564,7 +562,7 @@ namespace Au
 		{
 			//info: the mailslot/timer are implicitly disposed when appdomain ends.
 
-			SafeFileHandle _mailslot;
+			LibHandle _mailslot;
 			WaitableTimer _timer;
 			long _sizeWritten;
 
@@ -636,8 +634,8 @@ namespace Au
 
 			void _Close()
 			{
-				if(_mailslot != null) {
-					_mailslot.Close(); _mailslot = null;
+				if(!_mailslot.Is0) {
+					_mailslot.Dispose();
 					_timer.Close(); _timer = null;
 				}
 			}
@@ -649,13 +647,13 @@ namespace Au
 					return false;
 				}
 
-				if(_mailslot == null) {
+				if(_mailslot.Is0) {
 					_mailslot = LibCreateFile(OutputServer.LibMailslotName, true);
-					if(_mailslot == null) return false;
+					if(_mailslot.Is0) return false;
 
 					_timer = WaitableTimer.Open(OutputServer.LibTimerName, noException: true);
 					if(_timer == null) {
-						_mailslot.Close(); _mailslot = null;
+						_mailslot.Dispose();
 						return false;
 					}
 				}

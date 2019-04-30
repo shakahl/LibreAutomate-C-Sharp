@@ -412,11 +412,11 @@ namespace Au.Triggers
 			}
 
 			int threadId = Api.GetCurrentThreadId();
-			var pipe = Api.CreateNamedPipe(LibPipeName(threadId),
+			LibHandle pipe = Api.CreateNamedPipe(LibPipeName(threadId),
 				Api.PIPE_ACCESS_DUPLEX | Api.FILE_FLAG_OVERLAPPED,
 				Api.PIPE_TYPE_MESSAGE | Api.PIPE_READMODE_MESSAGE | Api.PIPE_REJECT_REMOTE_CLIENTS,
 				1, 0, 0, 0, Api.SECURITY_ATTRIBUTES.ForPipes);
-			if(pipe.IsInvalid) throw new AuException(0, "*CreateNamedPipe");
+			if(pipe.Is0) throw new AuException(0, "*CreateNamedPipe");
 
 			var aCDS = new byte[8];
 			aCDS.WriteInt_((int)usedEvents, 0);
@@ -426,7 +426,7 @@ namespace Au.Triggers
 				throw new AuException("*SendBytes");
 			}
 
-			var evHooks = Api.CreateEvent(true);
+			LibHandle evHooks = Api.CreateEvent(true);
 			const int bLen = 100; byte* b = stackalloc byte[bLen]; //buffer for ReadFile
 			try {
 				_StartStop(true);
@@ -454,7 +454,7 @@ namespace Au.Triggers
 					//Perf.First();
 					bool eat = false;
 					thc.InitContext();
-					if(size == sizeof(Api.KBDLLHOOKSTRUCT)) {
+					if(size == sizeof(Api.KBDLLHOOKSTRUCT2)) {
 						//Print("key");
 						var k = new HookData.Keyboard(null, b);
 						thc.InitMod(k);
@@ -492,7 +492,7 @@ namespace Au.Triggers
 			}
 			finally {
 				pipe.Dispose();
-				Api.CloseHandle(evHooks);
+				evHooks.Dispose();
 				wMsg.Send(Api.WM_USER, 1, threadId); //stop sending hook events to us
 				_StartStop(false);
 			}
@@ -514,8 +514,7 @@ namespace Au.Triggers
 				_evStop = Api.CreateEvent(false);
 			} else {
 				Stopping?.Invoke(this, EventArgs.Empty);
-				Api.CloseHandle(_evStop);
-				_evStop = default;
+				_evStop.Dispose();
 			}
 			foreach(var t in _t) {
 				if(t == null || !t.HasTriggers) continue;
@@ -542,7 +541,7 @@ namespace Au.Triggers
 		{
 			Api.SetEvent(_evStop);
 		}
-		IntPtr _evStop;
+		LibHandle _evStop;
 
 		/// <summary>
 		/// Occurs before <see cref="Run"/> stops trigger engines and returns. Runs in its thread.
@@ -552,7 +551,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// True if executing <see cref="Run"/>.
 		/// </summary>
-		internal bool LibRunning => _evStop != default;
+		internal bool LibRunning => !_evStop.Is0;
 
 		/// <summary>
 		/// Throws InvalidOperationException if executing <see cref="Run"/>.

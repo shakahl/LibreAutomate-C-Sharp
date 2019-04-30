@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using Microsoft.Win32.SafeHandles;
 
 namespace Au.Types
 {
@@ -31,9 +30,9 @@ namespace Au.Types
 		internal static extern bool QueryUnbiasedInterruptTime(out long UnbiasedTime);
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateEventW", SetLastError = true)]
-		internal static extern IntPtr CreateEvent2(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
+		internal static extern LibHandle CreateEvent2(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
 
-		internal static IntPtr CreateEvent(bool bManualReset)
+		internal static LibHandle CreateEvent(bool bManualReset)
 			=> CreateEvent2(default, bManualReset, false, null);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
@@ -78,10 +77,10 @@ namespace Au.Types
 		internal static extern uint ResumeThread(IntPtr hThread);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr CreateFileMapping(IntPtr hFile, SECURITY_ATTRIBUTES lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
+		internal static extern LibHandle CreateFileMapping(IntPtr hFile, SECURITY_ATTRIBUTES lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
 
 		//[DllImport("kernel32.dll", EntryPoint = "OpenFileMappingW", SetLastError = true)]
-		//internal static extern IntPtr OpenFileMapping(uint dwDesiredAccess, bool bInheritHandle, string lpName);
+		//internal static extern LibHandle OpenFileMapping(uint dwDesiredAccess, bool bInheritHandle, string lpName);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr MapViewOfFile(IntPtr hFileMappingObject, uint dwDesiredAccess, uint dwFileOffsetHigh, uint dwFileOffsetLow, LPARAM dwNumberOfBytesToMap);
@@ -129,7 +128,7 @@ namespace Au.Types
 		internal const uint TIMER_MODIFY_STATE = 0x2;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
+		internal static extern LibHandle OpenProcess(uint dwDesiredAccess, bool bInheritHandle, int dwProcessId);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetFullPathNameW", SetLastError = true)]
 		internal static extern int GetFullPathName(string lpFileName, int nBufferLength, [Out] char[] lpBuffer, char** lpFilePart);
@@ -337,36 +336,30 @@ namespace Au.Types
 		internal const uint FILE_FLAG_OPEN_REQUIRING_OPLOCK = 0x40000;
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
-		internal static extern SafeFileHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, int creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default);
+		internal static extern LibHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, int creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default);
 
 		//note: not using parameter types SECURITY_ATTRIBUTES and OVERLAPPED* because it makes JIT-compiling much slower in some time-critical places.
 
-		//TODO: don't use SafeFileHandle. Use LibKernelHandle.
-
-		[DllImport("kernel32.dll", EntryPoint = "ReadFile", SetLastError = true)]
-		internal static extern bool ReadFileIP(IntPtr hFile, void* lpBuffer, int nBytesToRead, out int nBytesRead, void* lpOverlapped = null);
-		//TODO: now added IP suffix because using explicit JIT. Remove this declaration if will reject SafeFileHandle.
-
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool ReadFile(SafeFileHandle hFile, void* lpBuffer, int nBytesToRead, out int nBytesRead, void* lpOverlapped = null);
+		internal static extern bool ReadFile(IntPtr hFile, void* lpBuffer, int nBytesToRead, out int nBytesRead, void* lpOverlapped = null);
 
-		internal static bool ReadFileArr(SafeFileHandle hFile, byte[] a, out int nBytesRead, void* lpOverlapped = null)
+		internal static bool ReadFileArr(IntPtr hFile, byte[] a, out int nBytesRead, void* lpOverlapped = null)
 		{
 			fixed (byte* p = a) return ReadFile(hFile, p, a.Length, out nBytesRead, lpOverlapped);
 		}
 
-		internal static bool ReadFileArr(SafeFileHandle hFile, out byte[] a, int size, out int nBytesRead, void* lpOverlapped = null)
+		internal static bool ReadFileArr(IntPtr hFile, out byte[] a, int size, out int nBytesRead, void* lpOverlapped = null)
 		{
 			a = new byte[size];
 			return ReadFileArr(hFile, a, out nBytesRead, lpOverlapped);
 		}
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool WriteFile(SafeFileHandle hFile, void* lpBuffer, int nBytesToWrite, out int nBytesWritten, void* lpOverlapped = null);
+		internal static extern bool WriteFile(IntPtr hFile, void* lpBuffer, int nBytesToWrite, out int nBytesWritten, void* lpOverlapped = null);
 		//note: lpNumberOfBytesWritten can be null only if lpOverlapped is not null.
 
 		//note: don't use overloads, because we Jit.Compile("WriteFile").
-		internal static bool WriteFileArr(SafeFileHandle hFile, byte[] a, out int nBytesWritten, void* lpOverlapped = null)
+		internal static bool WriteFileArr(IntPtr hFile, byte[] a, out int nBytesWritten, void* lpOverlapped = null)
 		{
 			fixed (byte* p = a) return WriteFile(hFile, p, a.Length, out nBytesWritten, lpOverlapped);
 		}
@@ -393,23 +386,23 @@ namespace Au.Types
 		}
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool GetFileInformationByHandle(SafeFileHandle hFile, out BY_HANDLE_FILE_INFORMATION lpFileInformation);
+		internal static extern bool GetFileInformationByHandle(IntPtr hFile, out BY_HANDLE_FILE_INFORMATION lpFileInformation);
 
 		internal const int FILE_BEGIN = 0;
 		internal const int FILE_CURRENT = 1;
 		internal const int FILE_END = 2;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool SetFilePointerEx(SafeFileHandle hFile, long liDistanceToMove, long* lpNewFilePointer, uint dwMoveMethod);
+		internal static extern bool SetFilePointerEx(IntPtr hFile, long liDistanceToMove, long* lpNewFilePointer, uint dwMoveMethod);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool SetEndOfFile(SafeFileHandle hFile);
+		internal static extern bool SetEndOfFile(IntPtr hFile);
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateMailslotW", SetLastError = true)]
-		internal static extern SafeFileHandle CreateMailslot(string lpName, uint nMaxMessageSize, int lReadTimeout, SECURITY_ATTRIBUTES lpSecurityAttributes);
+		internal static extern LibHandle CreateMailslot(string lpName, uint nMaxMessageSize, int lReadTimeout, SECURITY_ATTRIBUTES lpSecurityAttributes);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool GetMailslotInfo(SafeFileHandle hMailslot, uint* lpMaxMessageSize, out int lpNextSize, out int lpMessageCount, int* lpReadTimeout = null);
+		internal static extern bool GetMailslotInfo(IntPtr hMailslot, uint* lpMaxMessageSize, out int lpNextSize, out int lpMessageCount, int* lpReadTimeout = null);
 
 		internal struct SYSTEMTIME
 		{
@@ -580,7 +573,7 @@ namespace Au.Types
 		internal const uint THREAD_QUERY_LIMITED_INFORMATION = 0x800;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr OpenThread(uint dwDesiredAccess, bool bInheritHandle, int dwThreadId);
+		internal static extern LibHandle OpenThread(uint dwDesiredAccess, bool bInheritHandle, int dwThreadId);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool GetThreadTimes(IntPtr hThread, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
@@ -608,7 +601,7 @@ namespace Au.Types
 		internal static extern LPARAM GlobalSize(IntPtr hMem);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool GetFileSizeEx(SafeFileHandle hFile, out long lpFileSize);
+		internal static extern bool GetFileSizeEx(IntPtr hFile, out long lpFileSize);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern int WaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, bool bWaitAll, int dwMilliseconds, bool bAlertable);
@@ -652,20 +645,21 @@ namespace Au.Types
 
 		internal struct PROCESS_INFORMATION :IDisposable
 		{
-			public IntPtr hProcess;
-			public IntPtr hThread;
+			public LibHandle hProcess;
+			public LibHandle hThread;
 			public int dwProcessId;
 			public int dwThreadId;
 
 			public void Dispose()
 			{
-				CloseHandle(hThread);
-				CloseHandle(hProcess);
+				hThread.Dispose();
+				hProcess.Dispose();
 			}
 		}
 
 		//CreateProcess flags
 		internal const uint CREATE_SUSPENDED = 0x4;
+		internal const uint CREATE_NEW_CONSOLE = 0x10;
 		internal const uint CREATE_UNICODE_ENVIRONMENT = 0x400;
 		internal const uint EXTENDED_STARTUPINFO_PRESENT = 0x80000;
 		//STARTUPINFO flags
@@ -680,13 +674,13 @@ namespace Au.Types
 		internal static extern bool CreateProcessAsUser(IntPtr hToken, string lpApplicationName, char[] lpCommandLine, SECURITY_ATTRIBUTES lpProcessAttributes, SECURITY_ATTRIBUTES lpThreadAttributes, bool bInheritHandles, uint dwCreationFlags, string lpEnvironment, string lpCurrentDirectory, in STARTUPINFO lpStartupInfo, out PROCESS_INFORMATION lpProcessInformation);
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateWaitableTimerW", SetLastError = true)]
-		internal static extern SafeWaitHandle CreateWaitableTimer(SECURITY_ATTRIBUTES lpTimerAttributes, bool bManualReset, string lpTimerName);
+		internal static extern LibHandle CreateWaitableTimer(SECURITY_ATTRIBUTES lpTimerAttributes, bool bManualReset, string lpTimerName);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool SetWaitableTimer(SafeWaitHandle hTimer, ref long lpDueTime, int lPeriod = 0, IntPtr pfnCompletionRoutine = default, IntPtr lpArgToCompletionRoutine = default, bool fResume = false);
+		internal static extern bool SetWaitableTimer(IntPtr hTimer, ref long lpDueTime, int lPeriod = 0, IntPtr pfnCompletionRoutine = default, IntPtr lpArgToCompletionRoutine = default, bool fResume = false);
 
 		[DllImport("kernel32.dll", EntryPoint = "OpenWaitableTimerW", SetLastError = true)]
-		internal static extern SafeWaitHandle OpenWaitableTimer(uint dwDesiredAccess, bool bInheritHandle, string lpTimerName);
+		internal static extern LibHandle OpenWaitableTimer(uint dwDesiredAccess, bool bInheritHandle, string lpTimerName);
 
 		[DllImport("kernel32.dll")]
 		internal static extern bool QueryPerformanceCounter(out long lpPerformanceCount);
@@ -705,22 +699,22 @@ namespace Au.Types
 		internal const uint PIPE_REJECT_REMOTE_CLIENTS = 0x8;
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateNamedPipeW", SetLastError = true)]
-		internal static extern SafeFileHandle CreateNamedPipe(string lpName, uint dwOpenMode, uint dwPipeMode, uint nMaxInstances, uint nOutBufferSize, uint nInBufferSize, uint nDefaultTimeOut, SECURITY_ATTRIBUTES lpSecurityAttributes);
+		internal static extern LibHandle CreateNamedPipe(string lpName, uint dwOpenMode, uint dwPipeMode, uint nMaxInstances, uint nOutBufferSize, uint nInBufferSize, uint nDefaultTimeOut, SECURITY_ATTRIBUTES lpSecurityAttributes);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool CreatePipe(out IntPtr hReadPipe, out IntPtr hWritePipe, SECURITY_ATTRIBUTES lpPipeAttributes, uint nSize);
+		internal static extern bool CreatePipe(out LibHandle hReadPipe, out LibHandle hWritePipe, SECURITY_ATTRIBUTES lpPipeAttributes, uint nSize);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool ConnectNamedPipe(SafeFileHandle hNamedPipe, OVERLAPPED* lpOverlapped);
+		internal static extern bool ConnectNamedPipe(IntPtr hNamedPipe, OVERLAPPED* lpOverlapped);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool DisconnectNamedPipe(SafeFileHandle hNamedPipe);
+		internal static extern bool DisconnectNamedPipe(IntPtr hNamedPipe);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool GetOverlappedResult(SafeFileHandle hFile, ref OVERLAPPED lpOverlapped, out int lpNumberOfBytesTransferred, bool bWait);
+		internal static extern bool GetOverlappedResult(IntPtr hFile, ref OVERLAPPED lpOverlapped, out int lpNumberOfBytesTransferred, bool bWait);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool CancelIo(SafeFileHandle hFile);
+		internal static extern bool CancelIo(IntPtr hFile);
 
 		[DllImport("kernel32.dll", EntryPoint = "WaitNamedPipeW", SetLastError = true)]
 		internal static extern bool WaitNamedPipe(string lpNamedPipeName, int nTimeOut);
@@ -731,8 +725,8 @@ namespace Au.Types
 		//[DllImport("kernel32.dll", SetLastError = true)]
 		//internal static extern bool GetNamedPipeClientProcessId(IntPtr Pipe, out int ClientProcessId);
 
-		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool PeekNamedPipe(IntPtr hPipe, void* lpBuffer, int nBufferSize, int* lpBytesRead, int* lpTotalBytesAvail, int* lpBytesLeftThisMessage);
+		//[DllImport("kernel32.dll", SetLastError = true)]
+		//internal static extern bool PeekNamedPipe(IntPtr hPipe, void* lpBuffer, int nBufferSize, int* lpBytesRead, int* lpTotalBytesAvail, int* lpBytesLeftThisMessage);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool AllocConsole();

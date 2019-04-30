@@ -20,7 +20,6 @@ using System.Linq;
 using Au;
 using Au.Types;
 using static Au.NoClass;
-using Microsoft.Win32.SafeHandles;
 
 //Triggers of all non-exe task processes/threads use single low-level keyboard/mouse hook in editor process. Not own LL hooks, because:
 //	1. UAC. Editor normally is admin. Task processes can be any. Hooks of non-admin processes don't work when an admin window is active.
@@ -51,21 +50,21 @@ namespace Au.Triggers
 	{
 		class _ThreadPipe
 		{
-			public SafeFileHandle pipe;
+			public LibHandle pipe;
 			public int threadId, processId;
 			public UsedEvents usedEvents;
-			public IntPtr threadHandle;
+			public LibHandle threadHandle;
 
-			public _ThreadPipe(SafeFileHandle pipe, int threadId, int processId, UsedEvents usedEvents)
+			public _ThreadPipe(LibHandle pipe, int threadId, int processId, UsedEvents usedEvents)
 			{
 				this.pipe = pipe; this.threadId = threadId; this.processId = processId; this.usedEvents = usedEvents;
-				threadHandle = new Util.LibKernelHandle(Api.OpenThread(Api.SYNCHRONIZE, false, threadId));
+				threadHandle = Api.OpenThread(Api.SYNCHRONIZE, false, threadId);
 			}
 
 			public void Dispose()
 			{
 				pipe.Dispose();
-				Api.CloseHandle(threadHandle);
+				threadHandle.Dispose();
 			}
 		}
 
@@ -83,7 +82,7 @@ namespace Au.Triggers
 		readonly Thread _thread;
 		readonly List<_ThreadPipe> _pipes;
 		Util.WinHook _hookK, _hookM;
-		IntPtr _event;
+		LibHandle _event;
 		bool _inTaskProcess;
 		MouseTriggers.LibEdgeMoveDetector _emDetector;
 
@@ -140,7 +139,7 @@ namespace Au.Triggers
 					_hookM?.Dispose();
 					_emDetector = null;
 					foreach(var v in _pipes) v?.Dispose();
-					Api.CloseHandle(_event);
+					_event.Dispose();
 					s_instance = null;
 					Api.PostQuitMessage(0);
 					break;
@@ -180,8 +179,8 @@ namespace Au.Triggers
 		unsafe int _AddThread(int threadId, byte[] data)
 		{
 			var pipeName = ActionTriggers.LibPipeName(threadId);
-			var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ | Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, Api.FILE_FLAG_OVERLAPPED);
-			if(pipe.IsInvalid) { Debug_.LibPrintNativeError(); return 0; }
+			LibHandle pipe = Api.CreateFile(pipeName, Api.GENERIC_READ | Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, Api.FILE_FLAG_OVERLAPPED);
+			if(pipe.Is0) { Debug_.LibPrintNativeError(); return 0; }
 
 			var usedEvents = (UsedEvents)data.ReadInt_(0);
 			int processId = data.ReadInt_(4);
@@ -208,7 +207,8 @@ namespace Au.Triggers
 		unsafe void _KeyboardHookProc(HookData.Keyboard k)
 		{
 			//var p = Perf.StartNew();
-			if(_Send(UsedEvents.Keyboard, k.LibNativeStructPtr, sizeof(Api.KBDLLHOOKSTRUCT))) k.BlockEvent();
+			var d = new Api.KBDLLHOOKSTRUCT2(k.LibNativeStructPtr);
+			if(_Send(UsedEvents.Keyboard, &d, sizeof(Api.KBDLLHOOKSTRUCT2))) k.BlockEvent();
 			//p.NW();
 		}
 

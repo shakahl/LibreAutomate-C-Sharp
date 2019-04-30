@@ -58,7 +58,7 @@
       "_disableBreadcrumb": true,
       "_disableAffix": true,
       "_enableSearch": true,
-      "_disableContribution": true
+      "_disableContribution": true,
     },
     "dest": "_site",
     "globalMetadataFiles": [],

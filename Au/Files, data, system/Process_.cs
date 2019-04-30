@@ -50,7 +50,7 @@ namespace Au
 			//if(s_time != 0) Print(t - s_time);
 			//s_time = t;
 
-			using(var ph = Util.LibKernelHandle.OpenProcess(processId)) {
+			using(var ph = LibHandle.OpenProcess(processId)) {
 				if(!ph.Is0) {
 					//In non-admin process fails if the process is of another user session.
 					//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
@@ -233,7 +233,7 @@ namespace Au
 				}
 				string R = Util.StringCache.LibAdd(namePtr, nameLen);
 				if(!cannotOpen && Path_.LibIsPossiblyDos(R)) {
-					using(var ph = Util.LibKernelHandle.OpenProcess(processID)) {
+					using(var ph = LibHandle.OpenProcess(processID)) {
 						if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
 							R = _GetFileName(Path_.LibExpandDosPath(s));
 						}

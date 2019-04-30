@@ -14,7 +14,6 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Linq;
 //using System.Xml.Linq;
-using Microsoft.Win32.SafeHandles;
 
 using Au.Types;
 using static Au.NoClass;
@@ -275,7 +274,7 @@ namespace Au
 			//	Eg its finalizer does not write to file. If we try to Close it in our finalizer, it throws 'already disposed'.
 			//	Also we don't need such buffering. Better to write to the OS file buffer immediately, it's quite fast.
 
-			SafeFileHandle _h;
+			LibHandle _h;
 			string _name;
 
 			/// <summary>
@@ -289,7 +288,7 @@ namespace Au
 			{
 				var path = LogFile;
 				var h = LibCreateFile(path, false);
-				if(h == null) return null;
+				if(h.Is0) return null;
 				return new _LogFile() { _h = h, _name = path };
 			}
 
@@ -344,7 +343,7 @@ namespace Au
 			/// <summary>
 			/// Closes file handle.
 			/// </summary>
-			public void Close() { if(_h != null) { _h.Close(); _h = null; } }
+			public void Close() => _h.Dispose();
 		}
 
 		/// <summary>
@@ -352,16 +351,9 @@ namespace Au
 		/// </summary>
 		/// <param name="name">File path or mailslot name.</param>
 		/// <param name="openExisting">Use OPEN_EXISTING. If false, uses CREATE_ALWAYS.</param>
-		internal static SafeFileHandle LibCreateFile(string name, bool openExisting)
+		internal static LibHandle LibCreateFile(string name, bool openExisting)
 		{
-			var h = Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, default, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
-			if(h.IsInvalid) {
-				var e = WinError.Code;
-				h.SetHandleAsInvalid();
-				WinError.Code = e;
-				return null;
-			}
-			return h;
+			return Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, default, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
 
 			//tested: CREATE_ALWAYS works with mailslot too. Does not erase messages. Undocumented what to use.
 		}

@@ -45,8 +45,8 @@ namespace Au
 	/// </example>
 	public unsafe class BlockUserInput : IDisposable
 	{
-		IntPtr _syncEvent, _stopEvent;
-		IntPtr _threadHandle;
+		LibHandle _syncEvent, _stopEvent;
+		LibHandle _threadHandle;
 		Keyb _blockedKeys;
 		long _startTime;
 		BIEvents _block;
@@ -114,10 +114,10 @@ namespace Au
 
 		void _CloseHandles()
 		{
-			if(_syncEvent != default) {
-				Api.CloseHandle(_syncEvent); _syncEvent = default;
-				Api.CloseHandle(_stopEvent); _stopEvent = default;
-				Api.CloseHandle(_threadHandle); _threadHandle = default;
+			if(!_syncEvent.Is0) {
+				_syncEvent.Dispose();
+				_stopEvent.Dispose();
+				_threadHandle.Dispose();
 			}
 		}
 

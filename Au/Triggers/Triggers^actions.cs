@@ -246,7 +246,14 @@ namespace Au.Triggers
 						var thread = new Thread(actionWrapper.Invoke) { IsBackground = true };
 						thread.SetApartmentState(ApartmentState.STA);
 						if(singleInstance) _d[trigger] = thread;
-						thread.Start();
+						try { thread.Start(); }
+						catch(OutOfMemoryException) { //too many threads, probably 32-bit process
+							if(singleInstance) _d.TryRemove(trigger, out _);
+							_OutOfMemory();
+							//SHOULDDO: before starting thread, warn if there are too many action threads.
+							//	In 32-bit process normally fails at ~3000 threads.
+							//	Unlikely to fail in 64-bit process, but at ~15000 threads starts to hang temporarily, which causes hook timeout, slow mouse, other anomalies.
+						}
 					} else { //thread pool
 						var task = new Task(actionWrapper);
 						if(singleInstance) _d[trigger] = task;
@@ -265,6 +272,12 @@ namespace Au.Triggers
 			foreach(var v in _a) v.Dispose();
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		static void _OutOfMemory()
+		{
+			PrintWarning("There is not enough memory available to start the trigger action thread.", -1); //info: -1 because would need much memory for stack trace
+		}
+
 		List<_Thread> _a = new List<_Thread>();
 		ConcurrentDictionary<ActionTrigger, object> _d;
 
@@ -272,7 +285,7 @@ namespace Au.Triggers
 		{
 			struct _Action { public Action actionWrapper; public long time; }
 
-			IntPtr _event;
+			LibHandle _event;
 			Queue<_Action> _q;
 			bool _running;
 			bool _disposed;
@@ -290,28 +303,34 @@ namespace Au.Triggers
 				if(_q == null) {
 					_q = new Queue<_Action>();
 					_event = Api.CreateEvent(false);
-					Thread_.Start(() => {
-						try {
-							while(!_disposed && 0 == Api.WaitForSingleObject(_event, -1)) {
-								while(!_disposed) {
-									_Action x;
-									lock(_q) {
-										g1:
-										if(_q.Count == 0) { _running = false; break; }
-										x = _q.Dequeue();
-										if(x.time != 0 && Time.PerfMilliseconds > x.time) goto g1;
-										_running = true;
+					try {
+						Thread_.Start(() => {
+							try {
+								while(!_disposed && 0 == Api.WaitForSingleObject(_event, -1)) {
+									while(!_disposed) {
+										_Action x;
+										lock(_q) {
+											g1:
+											if(_q.Count == 0) { _running = false; break; }
+											x = _q.Dequeue();
+											if(x.time != 0 && Time.PerfMilliseconds > x.time) goto g1;
+											_running = true;
+										}
+										x.actionWrapper();
 									}
-									x.actionWrapper();
 								}
 							}
-						}
-						finally {
-							Api.CloseHandle(_event);
-							_q = null; _running = false; //restart if aborted
-														 //Print("thread ended");
-						}
-					});
+							finally {
+								_event.Dispose();
+								_q = null; _running = false; //restart if aborted
+															 //Print("thread ended");
+							}
+						});
+					}
+					catch(OutOfMemoryException) { //too many threads, probably 32-bit process
+						_event.Dispose();
+						_OutOfMemory();
+					}
 				}
 
 				bool R = true;

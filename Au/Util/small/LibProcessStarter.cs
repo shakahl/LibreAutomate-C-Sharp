@@ -81,10 +81,8 @@ namespace Au.Util
 		/// <param name="inheritHandles">API parameter *bInheritHandles*.</param>
 		public bool StartLL(out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool inheritHandles = false)
 		{
-			if(inheritUiaccess && Api.OpenProcessToken(Process_.CurrentProcessHandle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out var hToken)) {
-				bool ok = Api.CreateProcessAsUser(hToken, null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
-				Api.CloseHandle(hToken);
-				return ok;
+			if(inheritUiaccess && Api.OpenProcessToken(Process_.CurrentProcessHandle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out LibHandle hToken)) {
+				using(hToken) return Api.CreateProcessAsUser(hToken, null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
 			} else {
 				return Api.CreateProcess(null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
 			}
@@ -131,7 +129,7 @@ namespace Au.Util
 				int pid = Au.Util.LibTaskScheduler.RunTask("Au", "rundll32");
 				//Perf.Next();
 				//Print(pid);
-				var hUserProcess = Util.LibKernelHandle.OpenProcess(pid);
+				var hUserProcess = LibHandle.OpenProcess(pid);
 				//Print((IntPtr)hUserProcess);
 				if(hUserProcess.Is0) goto ge;
 #else
@@ -144,7 +142,7 @@ namespace Au.Util
 					w = Api.GetShellWindow();
 				}
 
-				var hUserProcess = Util.LibKernelHandle.OpenProcess(w);
+				var hUserProcess = LibHandle.OpenProcess(w);
 				if(hUserProcess.Is0) {
 					if(retry) goto ge;
 					retry = true; 500.ms(); goto g1;
@@ -157,13 +155,15 @@ namespace Au.Util
 #endif
 				//Perf.NW();
 
-				if(Api.OpenProcessToken(hUserProcess, Api.TOKEN_DUPLICATE, out var hShellToken)) {
-					const uint access = Api.TOKEN_QUERY | Api.TOKEN_ASSIGN_PRIMARY | Api.TOKEN_DUPLICATE | Api.TOKEN_ADJUST_DEFAULT | Api.TOKEN_ADJUST_SESSIONID;
-					if(Api.DuplicateTokenEx(hShellToken, access, null, Api.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation, Api.TOKEN_TYPE.TokenPrimary, out var userToken))
-						s_userToken = new SafeAccessTokenHandle(userToken);
-					Api.CloseHandle(hShellToken);
+				using(hUserProcess) {
+					if(Api.OpenProcessToken(hUserProcess, Api.TOKEN_DUPLICATE, out LibHandle hShellToken)) {
+						using(hShellToken) {
+							const uint access = Api.TOKEN_QUERY | Api.TOKEN_ASSIGN_PRIMARY | Api.TOKEN_DUPLICATE | Api.TOKEN_ADJUST_DEFAULT | Api.TOKEN_ADJUST_SESSIONID;
+							if(Api.DuplicateTokenEx(hShellToken, access, null, Api.SECURITY_IMPERSONATION_LEVEL.SecurityImpersonation, Api.TOKEN_TYPE.TokenPrimary, out var userToken))
+								s_userToken = new SafeAccessTokenHandle(userToken);
+						}
+					}
 				}
-				Api.CloseHandle(hUserProcess);
 				if(s_userToken == null) goto ge;
 			}
 
@@ -206,8 +206,8 @@ namespace Au.Util
 					netProcess = _NetProcessObject.Create(pi, suspended: suspended);
 					break;
 				case Need.WaitHandle:
-					Api.CloseHandle(pi.hThread);
-					waitHandle = new Util.LibKernelWaitHandle(pi.hProcess, true);
+					pi.hThread.Dispose();
+					waitHandle = new LibWaitHandle(pi.hProcess, true);
 					break;
 				default:
 					pi.Dispose();
@@ -273,7 +273,7 @@ namespace Au.Util
 				}
 				finally {
 					if(suspended) Api.ResumeThread(pi.hThread);
-					Api.CloseHandle(pi.hThread);
+					pi.hThread.Dispose();
 				}
 			}
 		}

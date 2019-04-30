@@ -741,11 +741,11 @@ unsafe partial class Script : AuScript
 		};
 
 		tt["mii", TAFlags.Confirm] = o => { o.Replace("dramblys"); };
-//		tt["mii", TAFlags.Confirm] = o => { o.Replace(@"1>------ Build started: Project: Au, Configuration: Debug Any CPU ------
-//1>  Au -> Q:\app\Au\Au\bin\Debug\Au.dll
-//2>------ Build started: Project: TreeList, Configuration: Debug Any CPU ------
-//3>------ Build started: Project: Au.Compiler, Configuration: Debug Any CPU ------
-//"); };
+		//		tt["mii", TAFlags.Confirm] = o => { o.Replace(@"1>------ Build started: Project: Au, Configuration: Debug Any CPU ------
+		//1>  Au -> Q:\app\Au\Au\bin\Debug\Au.dll
+		//2>------ Build started: Project: TreeList, Configuration: Debug Any CPU ------
+		//3>------ Build started: Project: Au.Compiler, Configuration: Debug Any CPU ------
+		//"); };
 		tt["con1", TAFlags.Confirm] = o => o.Replace("Flag Confirm");
 		tt["con2"] = o => { if(o.Confirm("Example")) o.Replace("Function Confirm"); };
 
@@ -792,15 +792,65 @@ unsafe partial class Script : AuScript
 		//Print(Shell.RunConsole(s => Print(s.Length, s), exe, rawText: true));
 		//Print(Shell.RunConsole(exe, "cmd", "q:\\programs", encoding: Encoding.UTF8));
 
-		string v = "example";
-		int r1 = Shell.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
+		//string v = "example";
+		//int r1 = Shell.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
 
-		int r2 = Shell.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
+		//int r2 = Shell.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
 
-		int r3 = Shell.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
-		Print(text);
+		//int r3 = Shell.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
+		//Print(text);
 
 		//Print("exit");
+	}
+
+	void TestRunConsole()
+	{
+		//var exe = @"Q:\My QM\console4.exe";
+		var exe = @"Q:\Test\ok\bin\console5.exe";
+
+#if true
+		int ec=Shell.RunConsole(s => {
+			Print(s);
+			//Print(s.Length, (int)s[s.Length - 1]);
+			Print(s.Length);
+		},
+		exe,
+		//flags: RCFlags.RawText,
+		encoding: Encoding.UTF8);
+		//Print(ec);
+#elif true
+		Shell.RunConsole(out var s, exe, encoding: Encoding.UTF8);
+		Print(s);
+#else
+		using(var p = new Process()) {
+			var ps = p.StartInfo;
+			ps.FileName = exe;
+			ps.UseShellExecute = false;
+			ps.CreateNoWindow = true;
+			ps.RedirectStandardOutput = true;
+			p.OutputDataReceived += (sen, e) => {
+				var s = e.Data;
+				Print(s);
+			};
+			p.Start();
+			p.BeginOutputReadLine();
+			p.WaitForExit();
+		}
+#endif
+	}
+
+	void TestManyTriggerActionThreads()
+	{
+		//Wnd.Find("* Notepad").Activate();
+
+		Triggers.Options.RunActionInNewThread(false);
+		var t = Triggers.Hotkey;
+		int n = 0;
+		t["F11"] = o => { Print(++n); 30.s(); n--; };
+
+		try { Triggers.Run(); }
+		catch(Exception ex) { Print(ex); }
+
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
@@ -811,7 +861,8 @@ unsafe partial class Script : AuScript
 		Output.Clear();
 		100.ms();
 
-		TestProcessStarter();
+		TestRunConsole();
+		//TestProcessStarter();
 		//TestXmlNewlines();
 		//TestIndexerOverload();
 		//TestCharUpperNonBmp();
@@ -834,8 +885,9 @@ unsafe partial class Script : AuScript
 		}, false);
 		300.ms();
 
+		TestManyTriggerActionThreads();
 		//TestAutotextTriggers();
-		TestHotkeyTriggers();
+		//TestHotkeyTriggers();
 		//TestMouseTriggers();
 		//TestWindowTriggers();
 		//TriggersExamples();

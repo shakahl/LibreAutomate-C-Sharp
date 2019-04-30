@@ -477,7 +477,7 @@ namespace Au.Tools
 			var stack = new Stack<_AccNode>(); stack.Push(xRoot);
 			int level = 0;
 
-			AFFlags flags = LibEnum.AFFlags_Mark | AFFlags.HiddenToo | AFFlags.MenuToo;
+			AFFlags flags = LibAFFlags.AFFlags_Mark | AFFlags.HiddenToo | AFFlags.MenuToo;
 			if(_IsChecked2(nameof(AFFlags.UIA))) flags |= AFFlags.UIA;
 			var us = (uint)p.State;
 			var prop = $"rect={p.Rect.ToString()}\0state=0x{(us.ToString("X"))},!0x{((~us).ToString("X"))}";
@@ -499,7 +499,7 @@ namespace Au.Tools
 						level = lev;
 					}
 					x.a = o;
-					if(o.MiscFlags.Has_(LibEnum.AccMiscFlags_Marked)) {
+					if(o.MiscFlags.Has_(LibAFFlags.AccMiscFlags_Marked)) {
 						//Print(o);
 						if(xSelect == null) xSelect = x;
 					}

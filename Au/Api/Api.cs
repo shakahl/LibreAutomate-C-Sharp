@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
-using Microsoft.Win32.SafeHandles;
 
 [module: DefaultCharSet(CharSet.Unicode)] //change default DllImport CharSet from ANSI to Unicode
 
@@ -230,7 +229,7 @@ namespace Au.Types
 		internal const uint TOKEN_ADJUST_DEFAULT = 128;
 
 		[DllImport("advapi32.dll", SetLastError = true)]
-		internal static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out IntPtr TokenHandle);
+		internal static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out LibHandle TokenHandle);
 
 		internal enum TOKEN_INFORMATION_CLASS
 		{
@@ -624,7 +623,7 @@ namespace Au.Types
 			public IntPtr hkeyClass;
 			public uint dwHotKey;
 			public IntPtr hMonitor;
-			public IntPtr hProcess;
+			public LibHandle hProcess;
 		}
 
 		[DllImport("shell32.dll", EntryPoint = "ShellExecuteExW", SetLastError = true)]
@@ -875,7 +874,7 @@ namespace Au.Types
 		internal static extern int AccessibleObjectFromEvent(Wnd hwnd, AccOBJID dwObjectId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
 
 		[DllImport("oleacc.dll")]
-		internal static extern IntPtr GetProcessHandleFromHwnd(Wnd hwnd);
+		internal static extern LibHandle GetProcessHandleFromHwnd(Wnd hwnd);
 
 		//[DllImport("oleacc.dll")]
 		////internal static extern LPARAM LresultFromObject(in Guid riid, LPARAM wParam, [MarshalAs(UnmanagedType.IUnknown)] Object punk);

@@ -79,7 +79,7 @@ namespace Au.Types
 	/// <summary>
 	/// A workaround to add internal members to public enums.
 	/// </summary>
-	internal static partial class LibEnum
+	internal static partial class LibAFFlags
 	{
 		/// <summary>
 		/// Used by tools like "Find accessible object", together with AccMiscFlags_Marked.

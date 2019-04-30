@@ -2,9 +2,9 @@
 
 ### Namespaces
 - Au - main classes of this library, except triggers.
-- Au.Types - types of function parameters and return values, exceptions, extension methods, etc.
+- Au.Types - types of function parameters, exceptions, extension methods, etc.
 - Au.Triggers - action triggers: hotkeys, autotext, mouse, window.
-- Au.Util - miscellaneous public utility/helper functions used by this library.
+- Au.Util - rarely used classes.
 
 ### .NET Assembly files
 - Au.dll - contains code of the above namespaces.

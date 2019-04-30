@@ -14,45 +14,41 @@ using System.Runtime.ExceptionServices;
 using System.Linq;
 using Microsoft.Win32.SafeHandles;
 
-using Au.Types;
 using static Au.NoClass;
 
-namespace Au.Util
+namespace Au.Types
 {
 	/// <summary>
 	/// Manages a kernel handle.
 	/// Must be disposed.
 	/// Has static functions to open process handle.
 	/// </summary>
-	internal struct LibKernelHandle : IDisposable
+	internal struct LibHandle : IDisposable
 	{
 		IntPtr _h;
 
 		/// <summary>
 		/// Attaches a kernel handle to this new variable.
 		/// No exception when handle is invalid.
+		/// If handle == -1, sets 0.
 		/// </summary>
 		/// <param name="handle"></param>
-		public LibKernelHandle(IntPtr handle) { _h = handle; }
+		public LibHandle(IntPtr handle) { _h = handle.ToInt64() == -1 ? default : handle; }
 
-		public static explicit operator LibKernelHandle(IntPtr p) => new LibKernelHandle(p);
+		//public static explicit operator LibHandle(IntPtr p) => new LibHandle(p);
 
-		public static implicit operator IntPtr(LibKernelHandle p) => p._h;
+		public static implicit operator IntPtr(LibHandle p) => p._h;
 
-		///
-		public IntPtr Handle => _h;
-
-		/// <summary>_h == 0</summary>
+		/// <summary>
+		/// _h == default.
+		/// Info: _h never is -1.
+		/// </summary>
 		public bool Is0 => _h == default;
-
-		/// <summary>_h == 0 || _h == -1</summary>
-		public bool IsInvalid => _h == default || _h.ToInt64() == -1;
 
 		///
 		public void Dispose()
 		{
-			if(!IsInvalid) Api.CloseHandle(_h);
-			_h = default;
+			if(!Is0) { Api.CloseHandle(_h); _h = default; }
 		}
 
 		/// <summary>
@@ -62,11 +58,10 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="processId">Process id.</param>
 		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
-		public static LibKernelHandle OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
+		public static LibHandle OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
 		{
 			if(processId == 0) { WinError.Code = Api.ERROR_INVALID_PARAMETER; return default; }
-			_OpenProcess(out var h, processId, desiredAccess);
-			return new LibKernelHandle(h);
+			return _OpenProcess(processId, desiredAccess);
 		}
 
 		/// <summary>
@@ -76,34 +71,31 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="w"></param>
 		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
-		public static LibKernelHandle OpenProcess(Wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
+		public static LibHandle OpenProcess(Wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
 		{
 			int pid = w.ProcessId; if(pid == 0) return default;
-			_OpenProcess(out var h, pid, desiredAccess, w);
-			return new LibKernelHandle(h);
+			return _OpenProcess(pid, desiredAccess, w);
 		}
 
-		static bool _OpenProcess(out IntPtr R, int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default)
+		static LibHandle _OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default)
 		{
-			R = Api.OpenProcess(desiredAccess, false, processId);
-			if(R != default) return true;
-			if(processWindow.Is0) return false;
-			if(0 != (desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE))) return false;
-			int e = WinError.Code;
-			if(Uac.OfThisProcess.IsUIAccess) R = Api.GetProcessHandleFromHwnd(processWindow);
-			if(R != default) return true;
-			Api.SetLastError(e);
-			return false;
+			LibHandle R = Api.OpenProcess(desiredAccess, false, processId);
+			if(R.Is0 && !processWindow.Is0 && 0 == (desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE))) {
+				int e = WinError.Code;
+				if(Uac.OfThisProcess.IsUIAccess) R = Api.GetProcessHandleFromHwnd(processWindow);
+				if(R.Is0) Api.SetLastError(e);
+			}
+			return R;
 		}
 	}
 
 	/// <summary>
 	/// Kernel handle that is derived from WaitHandle.
-	/// When don't need to wait, use <see cref="LibKernelHandle"/>, it's more lightweight and has more creation methods.
+	/// When don't need to wait, use <see cref="LibHandle"/>, it's more lightweight and has more creation methods.
 	/// </summary>
-	internal class LibKernelWaitHandle : WaitHandle
+	internal class LibWaitHandle : WaitHandle
 	{
-		public LibKernelWaitHandle(IntPtr nativeHandle, bool ownsHandle)
+		public LibWaitHandle(IntPtr nativeHandle, bool ownsHandle)
 		{
 			base.SafeWaitHandle = new SafeWaitHandle(nativeHandle, ownsHandle);
 		}
@@ -114,10 +106,10 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="pid"></param>
 		/// <param name="desiredAccess"></param>
-		public static LibKernelWaitHandle FromProcessId(int pid, uint desiredAccess)
+		public static LibWaitHandle FromProcessId(int pid, uint desiredAccess)
 		{
-			LibKernelWaitHandle wh = null;
-			try { wh = new LibKernelWaitHandle(LibKernelHandle.OpenProcess(pid, desiredAccess), true); }
+			LibWaitHandle wh = null;
+			try { wh = new LibWaitHandle(LibHandle.OpenProcess(pid, desiredAccess), true); }
 			catch(Exception ex) { Debug_.Print(ex); }
 			return wh;
 		}

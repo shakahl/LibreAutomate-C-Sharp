@@ -38,7 +38,7 @@ namespace Au
 
 		/// <summary>
 		/// Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
-		/// The returned <see cref="SRResult"/> variable contains some process info - process id etc.
+		/// The returned <see cref="RResult"/> variable contains some process info - process id etc.
 		/// </summary>
 		/// <param name="file">
 		/// What to run. Can be:
@@ -59,7 +59,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="more">
 		/// Allows to specify more parameters: current directory, verb, window state, etc.
-		/// If string, it sets initial current directory for the new process. Use "" to get it from *file*. More info: <see cref="SRMore.CurrentDirectory"/>.
+		/// If string, it sets initial current directory for the new process. Use "" to get it from *file*. More info: <see cref="RMore.CurrentDirectory"/>.
 		/// </param>
 		/// <exception cref="ArgumentException">Used more.Verb and flag Admin.</exception>
 		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
@@ -80,7 +80,7 @@ namespace Au
 		/// Wnd w = Wnd.FindOrRun("*- Notepad", run: () => Shell.Run("notepad.exe"));
 		/// ]]></code>
 		/// </example>
-		public static SRResult Run(string file, string args = null, SRFlags flags = 0, SRMore more = null)
+		public static RResult Run(string file, string args = null, RFlags flags = 0, RMore more = null)
 		{
 			Api.SHELLEXECUTEINFO x = default;
 			x.cbSize = Api.SizeOf(x);
@@ -100,13 +100,13 @@ namespace Au
 				}
 			}
 
-			if(flags.Has_(SRFlags.Admin)) {
+			if(flags.Has_(RFlags.Admin)) {
 				if(more?.Verb != null && !more.Verb.EqualsI_("runas")) throw new ArgumentException("Cannot use Verb with flag Admin");
 				x.lpVerb = "runas";
 			} else if(x.lpVerb != null) x.fMask |= Api.SEE_MASK_INVOKEIDLIST; //makes slower. But verbs are rarely used.
 
-			if(0 == (flags & SRFlags.ShowErrorUI)) x.fMask |= Api.SEE_MASK_FLAG_NO_UI;
-			if(0 == (flags & SRFlags.WaitForExit)) x.fMask |= Api.SEE_MASK_NO_CONSOLE;
+			if(0 == (flags & RFlags.ShowErrorUI)) x.fMask |= Api.SEE_MASK_FLAG_NO_UI;
+			if(0 == (flags & RFlags.WaitForExit)) x.fMask |= Api.SEE_MASK_NO_CONSOLE;
 
 			file = _NormalizeFile(false, file, out bool isFullPath, out bool isShellPath);
 			Pidl pidl = null;
@@ -134,12 +134,12 @@ namespace Au
 			}
 			if(!ok) throw new AuException(0, $"*run '{file}'");
 
-			var R = new SRResult();
-			bool waitForExit = 0 != (flags & SRFlags.WaitForExit);
-			bool needHandle = flags.Has_(SRFlags.NeedProcessHandle);
-			Util.LibKernelWaitHandle ph = null;
-			if(x.hProcess != default) {
-				if(waitForExit || needHandle) ph = new Util.LibKernelWaitHandle(x.hProcess, true);
+			var R = new RResult();
+			bool waitForExit = 0 != (flags & RFlags.WaitForExit);
+			bool needHandle = flags.Has_(RFlags.NeedProcessHandle);
+			LibWaitHandle ph = null;
+			if(!x.hProcess.Is0) {
+				if(waitForExit || needHandle) ph = new LibWaitHandle(x.hProcess, true);
 				if(!waitForExit) R.ProcessId = Process_.ProcessIdFromHandle(x.hProcess);
 			}
 
@@ -160,7 +160,7 @@ namespace Au
 			finally {
 				if(R.ProcessHandle == null) {
 					if(ph != null) ph.Dispose();
-					else if(x.hProcess != default) Api.CloseHandle(x.hProcess);
+					else x.hProcess.Dispose();
 				}
 			}
 
@@ -183,7 +183,7 @@ namespace Au
 		/// <seealso cref="OptDebug.DisableWarnings"/>
 		/// <seealso cref="Wnd.FindOrRun"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
-		public static SRResult TryRun(string s, string args = null, SRFlags flags = 0, SRMore more = null)
+		public static RResult TryRun(string s, string args = null, RFlags flags = 0, RMore more = null)
 		{
 			try {
 				return Run(s, args, flags, more);
@@ -225,23 +225,9 @@ namespace Au
 			return file;
 		}
 
-		///// <param name="output">
-		///// Receives the output text.
-		///// Console programs have two output text streams - standard output and standard error. This function gets both, and the error text is always after the output text.
-		///// </param>
-
-		///// <summary>
-		///// Runs a console program (hidden), waits until its process ends, and prints its output text.
-		///// Calls <see cref="RunConsole(out string, string, string, string, Encoding)"/> and <see cref="Print(string)"/>.
-		///// </summary>
-		///// <param name="exe"></param>
-		///// <param name="args"></param>
-		///// <param name="curDir"></param>
-		///// <param name="textEncoding"></param>
-
 		/// <summary>
 		/// Runs a console program, waits until its process ends, and gets its output text.
-		/// This overload prints text in real time.
+		/// This overload prints text lines in real time.
 		/// </summary>
 		/// <param name="exe">
 		/// Path or name of an .exe or .bat file. Can be:
@@ -282,28 +268,26 @@ namespace Au
 		/// </example>
 		public static unsafe int RunConsole(string exe, string args = null, string curDir = null, Encoding encoding = null)
 		{
-			return _RunConsole(s => Print(s), null, exe, args, curDir, encoding, false);
+			return _RunConsole(s => Print(s), null, exe, args, curDir, encoding);
 		}
 
 		/// <summary>
 		/// Runs a console program, waits until its process ends, and gets its output text.
-		/// This overload uses a callback function that receives text in real time.
+		/// This overload uses a callback function that receives text lines in real time.
 		/// </summary>
-		/// <param name="output">A callback function that receives the output text. By default it receives single line at a time, without line break characters.</param>
+		/// <param name="output">A callback function that receives the output text. It receives single full line at a time, without line break characters.</param>
 		/// <param name="exe"></param>
 		/// <param name="args"></param>
 		/// <param name="curDir"></param>
 		/// <param name="encoding"></param>
-		/// <param name="rawText">Let the *output* callback function receive raw text; it can be one or more lines of text with line break characters. If false (default), it is single line without line break characters.</param>
 		/// <exception cref="AuException">Failed, for example file not found.</exception>
-		public static unsafe int RunConsole(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null, bool rawText = false)
+		public static unsafe int RunConsole(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null)
 		{
-			return _RunConsole(output, null, exe, args, curDir, encoding, rawText);
+			return _RunConsole(output, null, exe, args, curDir, encoding);
 		}
 
 		/// <summary>
-		/// Runs a console program, waits until its process ends, and gets its output text.
-		/// This overload uses a variable for the output text.
+		/// Runs a console program, waits until its process ends, and gets its output text when it ends.
 		/// </summary>
 		/// <param name="output">A variable that receives the output text.</param>
 		/// <param name="exe"></param>
@@ -314,22 +298,21 @@ namespace Au
 		public static unsafe int RunConsole(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null)
 		{
 			var b = new StringBuilder();
-			var r = _RunConsole(null, b, exe, args, curDir, encoding, true);
+			var r = _RunConsole(null, b, exe, args, curDir, encoding);
 			output = b.ToString();
 			return r;
 		}
 
-#if true
-		static unsafe int _RunConsole(Action<string> outAction, StringBuilder outStr, string exe, string args, string curDir, Encoding encoding, bool rawText)
+		static unsafe int _RunConsole(Action<string> outAction, StringBuilder outStr, string exe, string args, string curDir, Encoding encoding)
 		{
 			exe = _NormalizeFile(true, exe, out _, out _);
 			//args = Path_.ExpandEnvVar(args); //rejected
 
 			var ps = new Util.LibProcessStarter(exe, args, curDir, rawExe: true);
 
-			IntPtr hProcess = default;
+			LibHandle hProcess = default;
 			var sa = new Api.SECURITY_ATTRIBUTES(null) { bInheritHandle = 1 };
-			if(!Api.CreatePipe(out var hOutRead, out var hOutWrite, sa, 0)) throw new AuException(0);
+			if(!Api.CreatePipe(out LibHandle hOutRead, out LibHandle hOutWrite, sa, 0)) throw new AuException(0);
 
 			byte* b = null; char* c = null;
 			try {
@@ -338,154 +321,89 @@ namespace Au
 				ps.si.dwFlags |= Api.STARTF_USESTDHANDLES | Api.STARTF_USESHOWWINDOW;
 				ps.si.hStdOutput = hOutWrite;
 				ps.si.hStdError = hOutWrite;
-				ps.flags |= 0x10; //CREATE_NEW_CONSOLE
+				ps.flags |= Api.CREATE_NEW_CONSOLE;
 
 				if(!ps.StartLL(out var pi, inheritHandles: true)) throw new AuException(0);
-				Api.CloseHandle(hOutWrite); hOutWrite = default; //important: must be here
-				Api.CloseHandle(pi.hThread);
+				hOutWrite.Dispose(); //important: must be here
+				pi.hThread.Dispose();
 				hProcess = pi.hProcess;
+
+				//variables for 'prevent getting partial lines'
+				bool needLines = outStr == null /*&& !flags.Has_(RCFlags.RawText)*/;
+				int offs = 0; bool skipN = false;
 
 				int bSize = 8000;
 				b = (byte*)Util.NativeHeap.Alloc(bSize);
-				c = (char*)Util.NativeHeap.Alloc(bSize * 2);
 
-				for(; ; ) {
-					bool ok = Api.ReadFileIP(hOutRead, b, bSize, out int nr);
-					if(ok) {
-						if(nr == bSize) {
-							int more = 0;
-							ok = Api.PeekNamedPipe(hOutRead, null, 0, null, &more, null);
-							if(ok && more > 0) {
-								int newSize = bSize + more;
-								b = (byte*)Util.NativeHeap.ReAlloc(b, newSize);
-								c = (char*)Util.NativeHeap.ReAlloc(c, newSize * 2);
-								ok = Api.ReadFileIP(hOutRead, b + bSize, more, out int nr2);
-								nr += nr2;
-								bSize = newSize;
-							}
-						}
+				for(bool ended = false; !ended;) {
+					if(bSize - offs < 1000) { //part of 'prevent getting partial lines' code
+						b = (byte*)Util.NativeHeap.ReAlloc(b, bSize *= 2);
+						Util.NativeHeap.Free(c); c = null;
 					}
-					if(!ok) {
-						if(WinError.Code == Api.ERROR_BROKEN_PIPE) break; //process ended
-						throw new AuException(0);
-					}
-					if(nr == 0) continue;
 
-					if(encoding == null) encoding = Encoding.GetEncoding(Api.GetOEMCP());
-					int nc = encoding.GetChars(b, nr, c, bSize);
-
-					if(outStr != null) {
-						outStr.Append(new string(c, 0, nc));
-					} else if(rawText) {
-						outAction(new string(c, 0, nc));
+					if(Api.ReadFile(hOutRead, b + offs, bSize - offs, out int nr)) {
+						if(nr == 0) continue;
+						nr += offs;
 					} else {
-						if(b[nc - 1] == '\n') nc--;
-						if(nc > 0 && b[nc - 1] == '\r') nc--;
-						var s = new string(c, 0, nc);
-						if(s.IndexOfAny(String_.Lib.lineSep) < 0) outAction(s);
-						else foreach(var k in new SegParser(s, Separators.Line)) outAction(k.Value);
+						if(WinError.Code != Api.ERROR_BROKEN_PIPE) throw new AuException(0);
+						//process ended
+						if(offs == 0) break;
+						nr = offs;
+						offs = 0;
+						ended = true;
 					}
-				}
 
-				if(!Api.GetExitCodeProcess(hProcess, out int ec)) ec = -1000;
-				return ec;
-			}
-			finally {
-				Api.CloseHandle(hProcess);
-				Api.CloseHandle(hOutRead);
-				if(hOutWrite != default) Api.CloseHandle(hOutWrite);
-				Util.NativeHeap.Free(b);
-				Util.NativeHeap.Free(c);
-			}
-		}
-#else //this version always calls PeekNamedPipe before ReadFile. Maybe it is safer, and also allows to abort thread. But slower response and uses more CPU. This code may be slightly outdated.
-		static unsafe int _RunConsole(Action<string> outAction, StringBuilder outStr, string exe, string args, string curDir, Encoding encoding, bool rawText)
-		{
-			exe = _NormalizeFile(true, exe, out _, out _);
-			//args = Path_.ExpandEnvVar(args); //rejected
-
-			var ps = new Util.LibProcessStarter(exe, args, curDir, rawExe: true);
-
-			IntPtr hProcess = default;
-			var sa = new Api.SECURITY_ATTRIBUTES(null) { bInheritHandle = 1 };
-			if(!Api.CreatePipe(out var hOutRead, out var hOutWrite, sa, 0)) throw new AuException(0);
-
-			byte* b = null; char* c = null;
-			try {
-				Api.SetHandleInformation(hOutRead, 1, 0); //remove HANDLE_FLAG_INHERIT
-
-				ps.si.dwFlags |= Api.STARTF_USESTDHANDLES | Api.STARTF_USESHOWWINDOW;
-				ps.si.hStdOutput = hOutWrite;
-				ps.si.hStdError = hOutWrite;
-				ps.flags |= 0x10; //CREATE_NEW_CONSOLE
-
-				if(!ps.StartLL(out var pi, inheritHandles: true)) throw new AuException(0);
-				Api.CloseHandle(hOutWrite); hOutWrite = default; //important: must be here
-				Api.CloseHandle(pi.hThread);
-				hProcess = pi.hProcess;
-
-				int bSize = 8000;
-				_Alloc(bSize);
-
-				for(; ; ) {
-					//1000.ms();
-					int nAvail = 0, nr = 0;
-					bool ok = Api.PeekNamedPipe(hOutRead, null, 0, null, &nAvail, null);
-					if(ok) {
-						if(nAvail == 0) {
-							//Print("zero");
-							Thread.Sleep(15);
+					//prevent getting partial lines. They can be created by the console program, or by the above code when buffer too small.
+					int moveFrom = 0;
+					if(needLines) {
+						if(skipN) { //if was split between \r and \n, remove \n now
+							skipN = false;
+							if(b[0] == '\n') Api.memmove(b, b + 1, --nr);
+							if(nr == 0) continue;
+						}
+						int i;
+						for(i = nr; i > 0; i--) { var k = b[i - 1]; if(k == '\n' || k == '\r') break; }
+						if(i == nr) { //ends with \n or \r
+							offs = 0;
+							if(b[--nr] == '\r') skipN = true;
+							else if(nr > 0 && b[nr - 1] == '\r') nr--;
+						} else if(i > 0) { //contains \n or \r
+							moveFrom = i;
+							offs = nr - i;
+							if(b[--i] == '\n' && i > 0 && b[i - 1] == '\r') i--;
+							nr = i;
+						} else if(!ended) {
+							offs = nr;
 							continue;
 						}
-						if(nAvail > bSize) {
-							_Free();
-							_Alloc(bSize = nAvail);
-						}
-						ok = Api.ReadFileIP(hOutRead, b, bSize, out nr);
 					}
-					if(!ok) {
-						if(WinError.Code == Api.ERROR_BROKEN_PIPE) break; //process ended
-						throw new AuException(0);
-					}
-					if(nr == 0) continue;
 
+					if(c == null) c = (char*)Util.NativeHeap.Alloc(bSize * 2);
 					if(encoding == null) encoding = Encoding.GetEncoding(Api.GetOEMCP());
 					int nc = encoding.GetChars(b, nr, c, bSize);
 
-					if(outStr != null) {
-						outStr.Append(new string(c, 0, nc));
-					} else if(rawText) {
-						outAction(new string(c, 0, nc));
-					} else {
-						if(b[nc - 1] == '\n') { nc--; if(nc > 0 && b[nc - 1] == '\r') nc--; }
-						var s = new string(c, 0, nc);
+					if(moveFrom > 0) Api.memmove(b, b + moveFrom, offs); //part of 'prevent getting partial lines' code
+
+					var s = new string(c, 0, nc);
+					if(needLines) {
 						if(s.IndexOfAny(String_.Lib.lineSep) < 0) outAction(s);
 						else foreach(var k in new SegParser(s, Separators.Line)) outAction(k.Value);
+					} else {
+						outStr.Append(s);
 					}
 				}
 
-				if(!Api.GetExitCodeProcess(hProcess, out int ec)) ec = -1000;
+				if(!Api.GetExitCodeProcess(hProcess, out int ec)) ec = int.MinValue;
 				return ec;
 			}
 			finally {
-				if(hOutWrite != default) Api.CloseHandle(hOutWrite);
-				Api.CloseHandle(hOutRead);
-				Api.CloseHandle(hProcess);
-				_Free();
-			}
-
-			void _Alloc(int n)
-			{
-				b = (byte*)Util.NativeHeap.Alloc(n);
-				c = (char*)Util.NativeHeap.Alloc(n * 2);
-			}
-			void _Free()
-			{
+				hProcess.Dispose();
+				hOutRead.Dispose();
+				hOutWrite.Dispose();
 				Util.NativeHeap.Free(b);
 				Util.NativeHeap.Free(c);
 			}
 		}
-#endif
 
 		/// <summary>
 		/// Opens parent folder in Explorer and selects the file.
@@ -508,10 +426,10 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// flags for <see cref="Shell.Run"/>.
+	/// Flags for <see cref="Shell.Run"/>.
 	/// </summary>
 	[Flags]
-	public enum SRFlags
+	public enum RFlags
 	{
 		/// <summary>
 		/// Show error message box if fails, for example if file not found.
@@ -521,12 +439,11 @@ namespace Au.Types
 
 		/// <summary>
 		/// If started new process, wait until it exits.
-		/// Uses <see cref="WaitHandle.WaitOne()"/>.
 		/// </summary>
 		WaitForExit = 2,
 
 		/// <summary>
-		/// Get process handle (<see cref="SRResult.ProcessHandle"/>), if possible.
+		/// Get process handle (<see cref="RResult.ProcessHandle"/>), if possible.
 		/// </summary>
 		NeedProcessHandle = 4,
 
@@ -540,12 +457,12 @@ namespace Au.Types
 	/// <summary>
 	/// More parameters for <see cref="Shell.Run"/>.
 	/// </summary>
-	public class SRMore
+	public class RMore
 	{
 		/// <summary>
 		/// Sets <see cref="CurrentDirectory"/>.
 		/// </summary>
-		public static implicit operator SRMore(string curDir) => new SRMore() { CurrentDirectory = curDir };
+		public static implicit operator RMore(string curDir) => new RMore() { CurrentDirectory = curDir };
 
 		/// <summary>
 		/// Initial current directory for the new process.
@@ -583,7 +500,7 @@ namespace Au.Types
 	/// <summary>
 	/// Results of <see cref="Shell.Run"/>.
 	/// </summary>
-	public class SRResult
+	public class RResult
 	{
 		/// <summary>
 		/// The exit code of the process.
@@ -621,4 +538,16 @@ namespace Au.Types
 			return ProcessId.ToString();
 		}
 	}
+
+	///// <summary>
+	///// Flags for <see cref="Shell.RunConsole"/>.
+	///// </summary>
+	//[Flags]
+	//public enum RCFlags
+	//{
+	//	/// <summary>
+	//	/// Let the *output* callback function receive raw text; it can be one or more lines of text with line break characters. If false (default), it is single line without line break characters.
+	//	/// </summary>
+	//	RawText = 1,
+	//}
 }

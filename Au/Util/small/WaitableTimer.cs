@@ -25,7 +25,7 @@ namespace Au.Util
 	/// </summary>
 	public class WaitableTimer : WaitHandle
 	{
-		WaitableTimer() { }
+		WaitableTimer(IntPtr h) => SafeWaitHandle = new Microsoft.Win32.SafeHandles.SafeWaitHandle(h, true);
 
 		/// <summary>
 		/// Calls API <msdn>CreateWaitableTimer</msdn> and creates a WaitableTimer object that wraps the timer handle.
@@ -36,12 +36,8 @@ namespace Au.Util
 		public static WaitableTimer Create(bool manualReset = false, string timerName = null)
 		{
 			var h = Api.CreateWaitableTimer(Api.SECURITY_ATTRIBUTES.ForLowIL, manualReset, timerName);
-			if(h.IsInvalid) {
-				var ex = new AuException(0, "*create timer");
-				h.SetHandleAsInvalid();
-				throw ex;
-			}
-			return new WaitableTimer() { SafeWaitHandle = h };
+			if(h.Is0) throw new AuException(0, "*create timer");
+			return new WaitableTimer(h);
 		}
 
 		/// <summary>
@@ -56,16 +52,15 @@ namespace Au.Util
 		public static WaitableTimer Open(string timerName, uint access = Api.TIMER_MODIFY_STATE | Api.SYNCHRONIZE, bool inheritHandle = false, bool noException = false)
 		{
 			var h = Api.OpenWaitableTimer(access, inheritHandle, timerName);
-			if(h.IsInvalid) {
+			if(h.Is0) {
 				var e = WinError.Code;
-				h.SetHandleAsInvalid();
 				if(noException) {
 					WinError.Code = e;
 					return null;
 				}
 				throw new AuException(e, "*open timer");
 			}
-			return new WaitableTimer() { SafeWaitHandle = h };
+			return new WaitableTimer(h);
 		}
 
 		/// <summary>
@@ -81,7 +76,7 @@ namespace Au.Util
 		public bool Set(long dueTime, int period = 0)
 		{
 			if(dueTime > 0) dueTime = -checked(dueTime * 10000);
-			return Api.SetWaitableTimer(this.SafeWaitHandle, ref dueTime, period, default, default, false);
+			return Api.SetWaitableTimer(this.SafeWaitHandle.DangerousGetHandle(), ref dueTime, period, default, default, false);
 		}
 
 		/// <summary>
@@ -93,7 +88,7 @@ namespace Au.Util
 		public bool SetAbsolute(DateTime dueTime, int period = 0)
 		{
 			var t = dueTime.ToFileTimeUtc();
-			return Api.SetWaitableTimer(this.SafeWaitHandle, ref t, period, default, default, false);
+			return Api.SetWaitableTimer(this.SafeWaitHandle.DangerousGetHandle(), ref t, period, default, default, false);
 		}
 	}
 }

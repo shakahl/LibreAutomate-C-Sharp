@@ -45,11 +45,11 @@ namespace Au.Util
 			lock("AF2liKVWtEej+lRYCx0scQ") {
 				string interDomainVarName = "AF2liKVWtEej+lRYCx0scQ" + name.ToLower_();
 				if(!InterDomainVariables.GetVariable(name, out IntPtr t)) {
-					var hm = Api.CreateFileMapping((IntPtr)(~0), Api.SECURITY_ATTRIBUTES.ForLowIL, Api.PAGE_READWRITE, 0, size, name);
-					if(hm == default) goto ge;
+					var hm = Api.CreateFileMapping((IntPtr)~0, Api.SECURITY_ATTRIBUTES.ForLowIL, Api.PAGE_READWRITE, 0, size, name);
+					if(hm.Is0) goto ge;
 					created = WinError.Code != Api.ERROR_ALREADY_EXISTS;
 					t = Api.MapViewOfFile(hm, 0x000F001F, 0, 0, 0);
-					if(t == default) { Api.CloseHandle(hm); goto ge; }
+					if(t == default) { hm.Dispose(); goto ge; }
 					InterDomainVariables.SetVariable(name, t);
 				}
 				return (void*)t;

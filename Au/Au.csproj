@@ -121,7 +121,7 @@
     <Compile Include="Util\small\Resources_.cs" />
     <Compile Include="Util\small\Dpi.cs" />
     <Compile Include="Util\small\WaitableTimer.cs" />
-    <Compile Include="Util\small\LibKernelHandle.cs" />
+    <Compile Include="Util\small\LibHandle.cs" />
     <Compile Include="Util\small\Security_.cs" />
     <Compile Include="Util\small\LibAttachThreadInput.cs" />
     <Compile Include="Util\small\LibTaskScheduler.cs" />
@@ -232,6 +232,7 @@
   <ItemGroup>
     <Content Include="_doc\.gitignore" />
     <Content Include="_doc\api\.gitignore" />
+    <Content Include="_doc\template1\favicon.ico" />
     <Content Include="_doc\template1\mod.txt" />
     <Content Include="_doc\template1\styles\main.css" />
     <Content Include="_doc\template1\styles\main.js" />

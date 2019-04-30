@@ -55,7 +55,7 @@ namespace Au
 			if(Ver.MinWin8) {
 				switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 				case 1:
-					using(var p = Util.LibKernelHandle.OpenProcess(w)) {
+					using(var p = LibHandle.OpenProcess(w)) {
 						if(!p.Is0) {
 							var b = Util.Buffers.LibChar(1000, out int na);
 							if(0 == Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);

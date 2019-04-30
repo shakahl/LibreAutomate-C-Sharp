@@ -512,11 +512,12 @@ class RunningTasks
 
 			if(pre != null) {
 				//Perf.First();
-				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent.SafeWaitHandle.DangerousGetHandle() };
+				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent };
 				if(!Api.ConnectNamedPipe(pre.hPipe, &o)) {
 					int e = WinError.Code; if(e != Api.ERROR_IO_PENDING) throw new AuException(e);
-					int wr = WaitHandle.WaitAny(new WaitHandle[2] { pre.overlappedEvent, hProcess });
-					if(wr != 0) { Api.CancelIo(pre.hPipe); throw new AuException("*start task. Preloaded task process ended"); }
+					var ha = stackalloc IntPtr[2] { pre.overlappedEvent, hProcess.SafeWaitHandle.DangerousGetHandle() };
+					int wr = Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
+					if(wr != 0) { Api.CancelIo(pre.hPipe); throw new AuException("*start task. Preloaded task process ended"); } //note: if fails when 32-bit process, rebuild solution with platform x86
 					disconnectPipe = true;
 					if(!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AuException(0);
 				}
@@ -548,8 +549,8 @@ class RunningTasks
 	class _Preloaded
 	{
 		public readonly string pipeName;
-		public readonly Microsoft.Win32.SafeHandles.SafeFileHandle hPipe;
-		public readonly ManualResetEvent overlappedEvent;
+		public readonly LibHandle hPipe;
+		public readonly LibHandle overlappedEvent;
 		public WaitHandle hProcess;
 		public int pid;
 
@@ -560,7 +561,13 @@ class RunningTasks
 				Api.PIPE_ACCESS_OUTBOUND | Api.FILE_FLAG_OVERLAPPED, //use async pipe because editor would hang if task process exited without connecting. Same speed.
 				Api.PIPE_TYPE_MESSAGE | Api.PIPE_REJECT_REMOTE_CLIENTS,
 				1, 0, 0, 0, null);
-			overlappedEvent = new ManualResetEvent(false);
+			overlappedEvent = Api.CreateEvent(false);
+		}
+
+		~_Preloaded()
+		{
+			hPipe.Dispose();
+			overlappedEvent.Dispose();
 		}
 	}
 	_Preloaded[] s_preloaded = new _Preloaded[6]; //user, admin, uiAccess, user32, admin32, uiAccess32
@@ -586,7 +593,7 @@ class RunningTasks
 		if(wrPipeName != null) wrPipeName = "AuTask.WriteResult.pipe=" + wrPipeName;
 		if(uac == _SpUac.admin) {
 			if(wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable AuTask.WriteResult"); //cannot pass environment variables. //rare //FUTURE
-			var k = Shell.Run(exeFile, args, SRFlags.Admin | SRFlags.NeedProcessHandle, "");
+			var k = Shell.Run(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
 			return (k.ProcessId, k.ProcessHandle);
 			//note: don't try to start task without UAC consent. It is not secure.
 			//	Normally Au editor runs as admin in admin user account, and don't need to go through this.

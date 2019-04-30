@@ -32,7 +32,7 @@ namespace Au
 		/// <remarks>
 		/// Supports known folder names. See <see cref="Folders"/>.
 		/// Example: <c>@"%Folders.Documents%\file.txt"</c>.
-		/// Example: <c>@"%Folders.Virtual.ControlPanel%"</c> //gets <c>":: HexEncodedITEMIDLIST"</c>.
+		/// Example: <c>@"%Folders.Virtual.ControlPanel%" //gets ":: HexEncodedITEMIDLIST"</c>.
 		/// Usually known folders are used like <c>string path = Folders.Documents + "file.txt"</c>. It's easier and faster. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
 		/// To get known folder path, this function calls <see cref="Folders.GetFolder"/>.
 		///

@@ -224,4 +224,6 @@ code {
     color: #804000;
     background-color: #f5f5f5;
     border-radius: 4px;
+	tab-size: 4;
+	-moz-tab-size: 4;
 }

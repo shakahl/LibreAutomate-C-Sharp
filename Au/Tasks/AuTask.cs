@@ -12,7 +12,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Linq;
-using Microsoft.Win32.SafeHandles;
 
 using Au.Types;
 using static Au.NoClass;
@@ -120,7 +119,7 @@ namespace Au
 				}
 
 				if(0 != (mode & 1)) {
-					using(var hProcess = Util.LibKernelWaitHandle.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION)) {
+					using(var hProcess = LibWaitHandle.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION)) {
 						if(hProcess == null) throw new AuException("*wait for task");
 
 						if(!needResult) hProcess.WaitOne(-1);
@@ -144,7 +143,7 @@ namespace Au
 
 		unsafe struct _TaskResults :IDisposable
 		{
-			SafeFileHandle _hPipe;
+			LibHandle _hPipe;
 			public string pipeName;
 			string _s;
 			StringBuilder _sb;
@@ -157,8 +156,7 @@ namespace Au
 					Api.PIPE_ACCESS_INBOUND | Api.FILE_FLAG_OVERLAPPED, //use async pipe because also need to wait for task process exit
 					Api.PIPE_TYPE_MESSAGE | Api.PIPE_READMODE_MESSAGE | Api.PIPE_REJECT_REMOTE_CLIENTS,
 					1, 0, 0, 0, Api.SECURITY_ATTRIBUTES.ForPipes);
-				if(_hPipe.IsInvalid) { _hPipe = null; return false; }
-				return true;
+				return !_hPipe.Is0;
 			}
 
 			public bool WaitAndRead(WaitHandle hProcess, Action<string> results)
@@ -213,10 +211,7 @@ namespace Au
 
 			public string ResultString => _s ?? _sb?.ToString();
 
-			public void Dispose()
-			{
-				_hPipe?.Dispose();
-			}
+			public void Dispose() => _hPipe.Dispose();
 		};
 
 		/// <summary>
@@ -249,7 +244,7 @@ namespace Au
 			if(!Empty(s)) {
 				if(!Api.WaitNamedPipe(pipeName, 3000)) goto ge;
 				using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, 0)) {
-					if(pipe.IsInvalid) goto ge;
+					if(pipe.Is0) goto ge;
 					fixed (char* p = s) if(!Api.WriteFile(pipe, p, s.Length * 2, out _)) goto ge;
 				}
 			}
