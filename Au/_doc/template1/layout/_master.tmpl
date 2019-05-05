@@ -9,6 +9,7 @@
 <html>
   {{>partials/head}}
   <body data-spy="scroll" data-target="#affix" data-offset="80">
+    <a name="top"></a>
     <div id="wrapper">
       <header>
         {{^_disableNavbar}}
@@ -23,7 +24,7 @@
         {{>partials/searchResults}}
       </div>
       {{/_enableSearch}}
-      <div role="main" class="container body-content hide-when-search">
+      <div role="main" class="container-fluid body-content hide-when-search">
       {{^_disableToc}}
         {{>partials/toc}}
         <div class="article row grid-right">

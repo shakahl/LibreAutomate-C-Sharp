@@ -65,7 +65,7 @@ namespace Au
 		/// 1. Gets pixels from window's device context (DC), not from screen DC, unless the Aero theme is turned off (on Windows 7). The window can be under other windows. The image can be different.
 		/// 2. If the window is partially or completely transparent, gets non-transparent image.
 		/// 3. Does not work with Windows Store app windows, Chrome and some other windows. Creates black image.
-		/// 4. If the window is DPI-scaled, captures its non-scaled view. And *rect* must contain non-scaled coordinates.
+		/// 4. If the window is DPI-scaled, captures its non-scaled view. And <i>rect</i> must contain non-scaled coordinates.
 		/// </remarks>
 		public static Bitmap Capture(Wnd w, RECT rect)
 		{
@@ -166,7 +166,7 @@ namespace Au
 		/// Creates image from a non-rectangular area of screen pixels.
 		/// </summary>
 		/// <param name="outline">The outline (shape) of the area in screen. If single element, captures single pixel.</param>
-		/// <exception cref="ArgumentException">*outline* is null or has 0 elements.</exception>
+		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
 		/// <remarks>
 		/// PixelFormat is always Format32bppRgb.
@@ -181,8 +181,8 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="outline">The outline (shape) of the area in w client area coordinates. If single element, captures single pixel.</param>
-		/// <exception cref="WndException">Invalid *w*.</exception>
-		/// <exception cref="ArgumentException">*outline* is null or has 0 elements.</exception>
+		/// <exception cref="WndException">Invalid <i>w</i>.</exception>
+		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
 		/// <remarks>More info: <see cref="Capture(Wnd, RECT)"/>.</remarks>
 		public static Bitmap Capture(Wnd w, List<POINT> outline)

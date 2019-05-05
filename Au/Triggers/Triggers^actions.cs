@@ -21,10 +21,6 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 
-//TODO: either:
-//	1. Transfer Opt to actions. Now can use Options.BeforeAction.
-//	2. Let trigger actions reset Opt options. Because we reuse thread.
-
 namespace Au.Triggers
 {
 	class TOptions
@@ -188,6 +184,8 @@ namespace Au.Triggers
 				var opt = trigger.options;
 				try {
 					_MuteMod(ref muteMod);
+
+					Opt.Reset();
 
 					var baArgs = new TOBAArgs(args); //struct
 #if true

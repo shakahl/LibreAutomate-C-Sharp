@@ -57,7 +57,6 @@
       "_enableNewTab": true,
       "_disableBreadcrumb": true,
       "_disableAffix": true,
-      "_enableSearch": true,
       "_disableContribution": true,
     },
     "dest": "_site",

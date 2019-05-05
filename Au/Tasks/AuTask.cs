@@ -228,10 +228,10 @@ namespace Au
 		static Wnd s_wndMsg;
 
 		/// <summary>
-		/// Writes a string result for the task that called <see cref="RunWait(out string, string, string[])"/> or <see cref="RunWait(Action{string}, string, string[])"/> to run this task, or for the program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5".
+		/// Writes a string result for the task that called <see cref="RunWait(out string, string, string[])"/> or <see cref="RunWait(Action{string}, string, string[])"/> to run this task, or for the program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs".
 		/// Returns false if this task was not started in such a way. Returns null if failed to write, except when s is null/"".
 		/// </summary>
-		/// <param name="s"></param>
+		/// <param name="s">A string. This function does not append newline characters.</param>
 		/// <remarks>
 		/// The <b>RunWait</b>(Action) overload can read the string in real time.
 		/// The <b>RunWait</b>(out string) overload gets all strings joined when the task ends.

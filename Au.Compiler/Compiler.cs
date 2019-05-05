@@ -498,7 +498,7 @@ namespace Au.Compiler
 				string netDir = Folders.Windows + @"Microsoft.NET\";
 				for(; i < refs.Count; i++) {
 					var s1 = refs[i].FilePath;
-					if(s1.StartsWithI_(netDir)) continue;
+					if(s1.StartsWith_(netDir, true)) continue;
 					var s2 = m.OutputPath + "\\" + Path_.GetFileName(s1);
 					//Print(s1, s2);
 					_CopyFileIfNeed(s1, s2);

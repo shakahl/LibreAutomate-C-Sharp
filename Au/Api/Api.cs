@@ -733,13 +733,13 @@ namespace Au.Types
 
 		#region shlwapi
 
-		[DllImport("shlwapi.dll", EntryPoint = "#176", PreserveSig = true)]
-		internal static extern int IUnknown_QueryService(IntPtr punk, in Guid guidService, in Guid riid, out IntPtr ppvOut);
+		//[DllImport("shlwapi.dll", EntryPoint = "#176", PreserveSig = true)]
+		//internal static extern int IUnknown_QueryService(IntPtr punk, in Guid guidService, in Guid riid, out IntPtr ppvOut);
 		//internal static extern int IUnknown_QueryService(IntPtr punk, in Guid guidService, in Guid riid, void* ppvOut);
 		//internal static extern int IUnknown_QueryService([MarshalAs(UnmanagedType.IUnknown)] object punk, in Guid guidService, in Guid riid, out IntPtr ppvOut);
 
-		[DllImport("shlwapi.dll", EntryPoint = "PathIsDirectoryEmptyW")]
-		internal static extern bool PathIsDirectoryEmpty(string pszPath);
+		//[DllImport("shlwapi.dll", EntryPoint = "PathIsDirectoryEmptyW")]
+		//internal static extern bool PathIsDirectoryEmpty(string pszPath);
 		//speed: slightly faster than with EnumDirectory.
 
 		[DllImport("shlwapi.dll")]

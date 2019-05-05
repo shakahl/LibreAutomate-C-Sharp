@@ -329,7 +329,7 @@ namespace Au
 
 			bool _hasXButton;
 
-			internal TDCBF_ SetButtons(string buttons, MultiString customButtons)
+			internal TDCBF_ SetButtons(string buttons, DStringList customButtons)
 			{
 				_customButtons = null;
 				_mapIdUserNative = null;
@@ -494,7 +494,7 @@ namespace Au
 		/// </summary>
 		/// <param name="buttons">
 		/// Common and/or custom buttons, like with <see cref="Show"/>.
-		/// These ids should be negative if you use *customButtons* too, because ids of *customButtons* are 1, 2, ... .
+		/// These ids should be negative if you use <i>customButtons</i> too, because ids of <i>customButtons</i> are 1, 2, ... .
 		/// </param>
 		/// <param name="asCommandLinks">Custom buttons style. If false - row of classic buttons. If true - column of command-link buttons that can have multiline text.</param>
 		/// <param name="customButtons">
@@ -503,7 +503,7 @@ namespace Au
 		/// Button ids will be 1, 2, ... .
 		/// <see cref="DefaultButton"/> will be 1. You can change it later.
 		/// </param>
-		public void SetButtons(string buttons, bool asCommandLinks = false, MultiString customButtons = default)
+		public void SetButtons(string buttons, bool asCommandLinks = false, DStringList customButtons = default)
 		{
 			_c.dwCommonButtons = _buttons.SetButtons(buttons, customButtons);
 			_SetFlag(TDF_.USE_COMMAND_LINKS, asCommandLinks);
@@ -960,7 +960,7 @@ namespace Au
 			switch(message) {
 			case Native.TDN.DIALOG_CONSTRUCTED:
 				_LockUnlock(false);
-				Send = new TDSend(this); //note: must be before setting _dlg, because another thread may call if(d.IsOpen) d.Send.Message(..).
+				Send = new DSend(this); //note: must be before setting _dlg, because another thread may call if(d.IsOpen) d.Send.Message(..).
 				_dlg = w;
 
 				Util.AppDomain_.Exit += _AppDomain__Exit; //closes dialog, to avoid the annoying "stopped working" UI
@@ -1163,9 +1163,9 @@ namespace Au
 		/// Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
 		/// Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="ShowNoWaitEx"/> and <see cref="ShowProgressEx"/>.
 		/// </remarks>
-		public TDSend Send { get; private set; }
+		public DSend Send { get; private set; }
 
-		//called by TDSend
+		//called by DSend
 		internal int LibSendMessage(Native.TDM message, LPARAM wParam = default, LPARAM lParam = default)
 		{
 			switch(message) {
@@ -1179,7 +1179,7 @@ namespace Au
 			return (int)_dlg.Send((int)message, wParam, lParam);
 		}
 
-		//called by TDSend
+		//called by DSend
 		internal void LibSetText(bool resizeDialog, Native.TDE partId, string text)
 		{
 			if(partId == Native.TDE.CONTENT && _editType == DEdit.Multiline) {
@@ -1732,7 +1732,7 @@ namespace Au
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
 		public static DResult ShowListEx(
-			MultiString list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default,
+			DStringList list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string checkBox = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0,
 			Action<DEventArgs> onLinkClick = null
@@ -1768,7 +1768,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowList(MultiString list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default)
+		public static int ShowList(DStringList list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default)
 		{
 			return ShowListEx(list, text1, text2, flags, owner);
 		}
@@ -2122,11 +2122,11 @@ namespace Au.Types
 	/// <remarks>
 	/// Example (in an event handler): <c>e.dialog.Close();</c>
 	/// </remarks>
-	public class TDSend
+	public class DSend
 	{
 		volatile AuDialog _tdo;
 
-		internal TDSend(AuDialog tdo) { _tdo = tdo; }
+		internal DSend(AuDialog tdo) { _tdo = tdo; }
 		internal void LibClear() { _tdo = null; }
 
 		/// <summary>

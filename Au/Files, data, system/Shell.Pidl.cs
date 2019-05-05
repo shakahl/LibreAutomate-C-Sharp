@@ -73,7 +73,7 @@ namespace Au
 			/// <param name="pidlAbsolute">Absolute PIDL (parent folder).</param>
 			/// <param name="pidlRelative">Relative PIDL (child object).</param>
 			/// <remarks>
-			/// Does not free *pidlAbsolute* and *pidlRelative*.
+			/// Does not free <i>pidlAbsolute</i> and <i>pidlRelative</i>.
 			/// </remarks>
 			public Pidl(IntPtr pidlAbsolute, IntPtr pidlRelative) => _pidl = Api.ILCombine(pidlAbsolute, pidlRelative);
 

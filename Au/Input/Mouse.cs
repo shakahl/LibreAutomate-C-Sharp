@@ -342,7 +342,7 @@ namespace Au
 			/// To create uint value from distance dx dy use this code: <c>Math_.MakeUint(dx, dy)</c>.
 			/// </param>
 			/// <param name="withSleepTimes">
-			/// *recorded* also contains sleep times (milliseconds) alternating with distances.
+			/// <i>recorded</i> also contains sleep times (milliseconds) alternating with distances.
 			/// It must start with a sleep time. Example: {time1, dist1, time2, dist2}. Another example: {time1, dist1, time2, dist2, time3}. This is invalid: {dist1, time1, dist2, time2}.
 			/// </param>
 			public static string MouseToString(IEnumerable<uint> recorded, bool withSleepTimes)
@@ -1020,8 +1020,8 @@ namespace Au
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <seealso cref="Keyb.WaitForNoModifierKeysAndMouseButtons"/>
 		public static bool WaitForNoButtonsPressed(double secondsTimeout = 0.0, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
@@ -1047,13 +1047,13 @@ namespace Au
 		/// <summary>
 		/// Waits for button-down or button-up event of the specified mouse button or buttons.
 		/// </summary>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
 		/// <param name="up">Wait for button-up event.</param>
-		/// <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
-		/// <exception cref="ArgumentException">*button* is 0.</exception>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <param name="block">Make the event invisible for other apps. If <i>up</i> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
+		/// <exception cref="ArgumentException"><i>button</i> is 0.</exception>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// Unlike <see cref="WaitForNoButtonsPressed"/>, waits for down or up event, not for button state.
 		/// Uses low-level mouse hook.
@@ -1074,11 +1074,11 @@ namespace Au
 		/// <summary>
 		/// Waits for button-down or button-up event of any mouse button, and gets the button code.
 		/// </summary>
-		/// <returns>Returns the button code. On timeout returns 0 if *secondsTimeout* is negative; else exception.</returns>
+		/// <returns>Returns the button code. On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <param name="secondsTimeout"></param>
 		/// <param name="up"></param>
 		/// <param name="block"></param>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// var button = Mouse.WaitForClick(0, up: true, block: true);
@@ -1127,8 +1127,8 @@ namespace Au
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="cursor">Id of a standard cursor.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitForCursor(double secondsTimeout, MCursor cursor, bool not = false)
 		{
 			IntPtr hcur = Api.LoadCursor(default, cursor);
@@ -1143,8 +1143,8 @@ namespace Au
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="cursorHash">Cursor hash, as returned by <see cref="Util.Cursor_.HashCursor"/>.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitForCursor(double secondsTimeout, long cursorHash, bool not = false)
 		{
 			if(cursorHash == 0) throw new ArgumentException();

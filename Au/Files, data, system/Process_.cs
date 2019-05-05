@@ -34,7 +34,7 @@ namespace Au
 		/// Get full path.
 		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
 		/// </param>
-		/// <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if *fullPath* is true.</param>
+		/// <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if <i>fullPath</i> is true.</param>
 		/// <remarks>
 		/// This function is much slower than getting window name or class name.
 		/// </remarks>
@@ -275,12 +275,12 @@ namespace Au
 		/// String format: [](xref:wildcard_expression).
 		/// </param>
 		/// <param name="fullPath">
-		/// *processName* is full path.
+		/// <i>processName</i> is full path.
 		/// Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
 		/// </param>
 		/// <param name="ofThisSession">Get processes only of this user session.</param>
 		/// <exception cref="ArgumentException">
-		/// - *processName* is "" or null.
+		/// - <i>processName</i> is "" or null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		public static int[] GetProcessIds(string processName, bool fullPath = false, bool ofThisSession = false)

@@ -101,7 +101,7 @@ namespace Au
 		/// </summary>
 		/// <param name="path">Any string. Can be null.</param>
 		/// <remarks>
-		/// Returns true if *path* matches one of these wildcard patterns:
+		/// Returns true if <i>path</i> matches one of these wildcard patterns:
 		/// - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here ? is A-Z, a-z.
 		/// - <c>@"?:"</c> - drive name, like <c>@"C:"</c>. Here ? is A-Z, a-z.
 		/// - <c>@"\\*"</c> - network path, like <c>@"\\server\share\..."</c>. Or has prefix <c>@"\\?\"</c>.
@@ -150,7 +150,7 @@ namespace Au
 		/// If starts with '%' character, calls <see cref="IsFullPath"/> with expanded environment variables (<see cref="ExpandEnvVar"/>). If it returns true, replaces the passed variable with the expanded path string.
 		/// </param>
 		/// <remarks>
-		/// Returns true if *path* matches one of these wildcard patterns:
+		/// Returns true if <i>path</i> matches one of these wildcard patterns:
 		/// - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here ? is A-Z, a-z.
 		/// - <c>@"?:"</c> - drive name, like <c>@"C:"</c>. Here ? is A-Z, a-z.
 		/// - <c>@"\\*"</c> - network path, like <c>@"\\server\share\..."</c>. Or has prefix <c>@"\\?\"</c>.
@@ -360,7 +360,7 @@ namespace Au
 		/// <param name="path">Any path.</param>
 		/// <param name="defaultParentDirectory">If path is not full path, combine it with defaultParentDirectory to make full path.</param>
 		/// <param name="flags"></param>
-		/// <exception cref="ArgumentException">path is not full path, and *defaultParentDirectory* is not used or does not make it full path.</exception>
+		/// <exception cref="ArgumentException">path is not full path, and <i>defaultParentDirectory</i> is not used or does not make it full path.</exception>
 		/// <remarks>
 		/// The sequence of actions:
 		/// 1. If path starts with '%' character, expands environment variables and special folder names. See <see cref="ExpandEnvVar"/>.
@@ -622,7 +622,7 @@ namespace Au
 		/// Returns null if path is null.
 		/// </summary>
 		/// <param name="path">Path or filename. Can be null.</param>
-		/// <param name="withoutExtension">Remove extension, unless *path* ends with <c>'\\'</c> or <c>'/'</c>.</param>
+		/// <param name="withoutExtension">Remove extension, unless <i>path</i> ends with <c>'\\'</c> or <c>'/'</c>.</param>
 		/// <remarks>
 		/// Similar to <see cref="Path.GetFileName"/> and <see cref="Path.GetFileNameWithoutExtension"/>. Some differences: does not throw exceptions; if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
 		/// 
@@ -648,7 +648,7 @@ namespace Au
 		/// | <c>""</c> | <c>""</c>
 		/// | <c>null</c> | <c>null</c>
 		/// 
-		/// Examples when *withoutExtension* true:
+		/// Examples when <i>withoutExtension</i> true:
 		/// 
 		/// | path | result
 		/// | - | -
@@ -748,7 +748,7 @@ namespace Au
 		/// | <c>""</c> | <c>""</c>
 		/// | <c>null</c> | <c>null</c>
 		/// 
-		/// Examples when *withSeparator* true:
+		/// Examples when <i>withSeparator</i> true:
 		/// 
 		/// | path | result
 		/// | - | -

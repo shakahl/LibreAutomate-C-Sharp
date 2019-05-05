@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Linq;
+//using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using Au;
@@ -21,6 +21,39 @@ using Au.Triggers; //}}
 				   //{{ main
 unsafe partial class Script : AuScript
 {
+	void TestOptReset()
+	{
+		//Opt.Static.Debug.Verbose = false;
+		//Opt.Debug.Verbose = true;
+		//Opt.Debug.DisableWarnings("one", "two");
+		//Print(Opt.Debug.Verbose);
+		//Print(Opt.Debug.IsWarningDisabled("two"));
+		////Opt.Reset();
+		//Opt.Debug.Reset();
+		//Print(Opt.Debug.Verbose);
+		//Print(Opt.Debug.IsWarningDisabled("two"));
+
+		//Opt.WaitFor.Period = 15;
+		//Print(Opt.WaitFor.Period);
+		////Opt.Reset();
+		//Opt.WaitFor.Reset();
+		//Print(Opt.WaitFor.Period);
+
+		Opt.Static.Mouse.MoveSpeed = 2;
+		Opt.Mouse.MoveSpeed = 15;
+		Print(Opt.Mouse.MoveSpeed);
+		//Opt.Reset();
+		Opt.Mouse.Reset();
+		Print(Opt.Mouse.MoveSpeed);
+
+		//Opt.Static.Key.TextSpeed = 2;
+		//Opt.Key.TextSpeed = 15;
+		//Print(Opt.Key.TextSpeed);
+		////Opt.Reset();
+		//Opt.Key.Reset();
+		//Print(Opt.Key.TextSpeed);
+	}
+
 	void Test1()
 	{
 		//var w = Wnd.Find("Options").OrThrow();
@@ -611,6 +644,19 @@ unsafe partial class Script : AuScript
 		var tk = Triggers.Hotkey;
 
 #if true
+
+		//Triggers.Options.BeforeAction = o => { Opt.Key.KeySpeed = 100; };
+		//Opt.Key.KeySpeed = 100;
+		//Opt.Static.Key.KeySpeed = 10;
+		//Triggers.Options.BeforeAction = o => { Opt.Key.Hook = h => { Print(h.w); if(h.w.Window.ClassNameIs("Notepad")) h.opt.KeySpeed = 100; }; };
+		//Opt.Key.Hook = h => { Print(h.w); if(h.w.Window.ClassNameIs("Notepad")) h.opt.KeySpeed = 100; };
+		//Opt.Static.Key.Hook = h => { Print(h.w); if(h.w.Window.ClassNameIs("Notepad")) h.opt.KeySpeed = 100; };
+		//tk["F11"] = o => { Key("abcdef"); };
+
+		tk["F11"] = o => { Opt.Key.KeySpeed = 200; Key("abcdef"); };
+		tk["F12"] = o => { Key("ghijk"); };
+
+#elif true
 		//tk["Shift+K"] = o => { Print(Keyb.IsShift); Mouse.Click(); };
 		//tk["Shift+K", TKFlags.NoModOff] = o => { Print(Keyb.IsShift); Mouse.Click(); };
 		//tk["Shift+K", TKFlags.NoModOff] = o => { Print(Keyb.IsShift); Key("keys", "some Text"); };
@@ -853,6 +899,31 @@ unsafe partial class Script : AuScript
 
 	}
 
+	void TestTodo()
+	{
+		//Action<MTClickArgs> f=o => Au.Util.Help_.AuWeb(o.ToString());
+
+		//var m = new AuMenu();
+		//m[""] = o => Au.Util.Help_.AuWeb("");
+		//m["api/"] = f;
+		//m["Au.Acc.Find"] = f;
+		//m["Wnd.Find"] = f;
+		//m["Au.Types.RECT"] = f;
+		//m["Types.Coord"] = f;
+		//m["articles/Wildcard expression"] = f;
+		//m.Show();
+
+		string s = "abcd";
+		//Print(s.StartsWith_("ab"));
+		//Print(s.StartsWith_("Ab"));
+		//Print(s.StartsWith_("Ab", true));
+		Print(s.Contains("bc", true));
+		//s.StartsWith_()
+		//s.ToLower_
+		//s.Contains("", true)
+		
+	}
+
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
 	void _Main(string[] args)
 	{ //}}//}}//}}//}}
@@ -861,7 +932,9 @@ unsafe partial class Script : AuScript
 		Output.Clear();
 		100.ms();
 
-		TestRunConsole();
+		TestTodo();
+		//TestOptReset();
+		//TestRunConsole();
 		//TestProcessStarter();
 		//TestXmlNewlines();
 		//TestIndexerOverload();
@@ -885,9 +958,9 @@ unsafe partial class Script : AuScript
 		}, false);
 		300.ms();
 
-		TestManyTriggerActionThreads();
+		//TestManyTriggerActionThreads();
 		//TestAutotextTriggers();
-		//TestHotkeyTriggers();
+		TestHotkeyTriggers();
 		//TestMouseTriggers();
 		//TestWindowTriggers();
 		//TriggersExamples();

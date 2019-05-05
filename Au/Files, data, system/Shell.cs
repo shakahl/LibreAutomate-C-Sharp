@@ -59,7 +59,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="more">
 		/// Allows to specify more parameters: current directory, verb, window state, etc.
-		/// If string, it sets initial current directory for the new process. Use "" to get it from *file*. More info: <see cref="RMore.CurrentDirectory"/>.
+		/// If string, it sets initial current directory for the new process. Use "" to get it from <i>file</i>. More info: <see cref="RMore.CurrentDirectory"/>.
 		/// </param>
 		/// <exception cref="ArgumentException">Used more.Verb and flag Admin.</exception>
 		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
@@ -101,7 +101,7 @@ namespace Au
 			}
 
 			if(flags.Has_(RFlags.Admin)) {
-				if(more?.Verb != null && !more.Verb.EqualsI_("runas")) throw new ArgumentException("Cannot use Verb with flag Admin");
+				if(more?.Verb != null && !more.Verb.Equals_("runas", true)) throw new ArgumentException("Cannot use Verb with flag Admin");
 				x.lpVerb = "runas";
 			} else if(x.lpVerb != null) x.fMask |= Api.SEE_MASK_INVOKEIDLIST; //makes slower. But verbs are rarely used.
 
@@ -546,7 +546,7 @@ namespace Au.Types
 	//public enum RCFlags
 	//{
 	//	/// <summary>
-	//	/// Let the *output* callback function receive raw text; it can be one or more lines of text with line break characters. If false (default), it is single line without line break characters.
+	//	/// Let the <i>output</i> callback function receive raw text; it can be one or more lines of text with line break characters. If false (default), it is single line without line break characters.
 	//	/// </summary>
 	//	RawText = 1,
 	//}

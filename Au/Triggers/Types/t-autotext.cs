@@ -631,7 +631,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <param name="text">The replacement text.</param>
 		/// <param name="keysEtc">Optionally more parameters that can generate keys etc. The same as with <see cref="Keyb.Text"/>.</param>
-		/// <exception cref="ArgumentException">An argument in *keysEtc* is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
+		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		/// <remarks>
 		/// Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="AutotextTriggers.DefaultFlags"/>. Uses these flags: <see cref="TAFlags.DontErase"/> <see cref="TAFlags.RemovePostfix"/> <see cref="TAFlags.ReplaceRaw"/> <see cref="TAFlags.Confirm"/>.
 		/// 

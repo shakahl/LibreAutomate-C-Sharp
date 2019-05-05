@@ -297,8 +297,8 @@ namespace Au
 		/// </param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <exception cref="ArgumentException">
-		/// - *name* starts with <c>"***"</c>, but the prefix is invalid.
-		/// - *cn* is "". To match any, use null.
+		/// - <i>name</i> starts with <c>"***"</c>, but the prefix is invalid.
+		/// - <i>cn</i> is "". To match any, use null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>

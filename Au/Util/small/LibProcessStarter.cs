@@ -33,19 +33,19 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="exe">
 		/// Full path of program file. If not full path, uses <see cref="Folders.ThisApp"/>. Uses <see cref="Path_.Normalize"/>.
-		/// If *rawExe* true, does not use <b>Normalize</b>/<b>ThisApp</b>.
+		/// If <i>rawExe</i> true, does not use <b>Normalize</b>/<b>ThisApp</b>.
 		/// </param>
 		/// <param name="args">null or command line arguments.</param>
 		/// <param name="curDir">
 		/// Initial current directory of the new process.
 		/// - If null, uses <c>Directory.GetCurrentDirectory()</c>.
-		/// - Else if *rawCurDir*==true, uses raw *curDir* value.
+		/// - Else if <i>rawCurDir</i>==true, uses raw <i>curDir</i> value.
 		/// - Else if "", calls <c>Path_.GetDirectoryPath(exe)</c>.
 		/// - Else calls <see cref="Path_.ExpandEnvVar"/>.
 		/// </param>
 		/// <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
-		/// <param name="rawExe">Don't normalize *exe*.</param>
-		/// <param name="rawCurDir">Don't normalize *curDir*.</param>
+		/// <param name="rawExe">Don't normalize <i>exe</i>.</param>
+		/// <param name="rawCurDir">Don't normalize <i>curDir</i>.</param>
 		public LibProcessStarter(string exe, string args = null, string curDir = null, string envVar = null, bool rawExe = false, bool rawCurDir = false) : this()
 		{
 			if(!rawExe) exe = Path_.Normalize(exe, Folders.ThisApp, PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath);
@@ -78,7 +78,7 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="pi">Receives CreateProcessX results. Will need to close handles in pi, eg pi.Dispose.</param>
 		/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
-		/// <param name="inheritHandles">API parameter *bInheritHandles*.</param>
+		/// <param name="inheritHandles">API parameter <i>bInheritHandles</i>.</param>
 		public bool StartLL(out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool inheritHandles = false)
 		{
 			if(inheritUiaccess && Api.OpenProcessToken(Process_.CurrentProcessHandle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out LibHandle hToken)) {

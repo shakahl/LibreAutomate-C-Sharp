@@ -66,7 +66,7 @@ namespace Au
 		/// <summary>
 		/// This constructor calls <see cref="Start"/>.
 		/// </summary>
-		/// <exception cref="ArgumentException">*what* is 0.</exception>
+		/// <exception cref="ArgumentException"><i>what</i> is 0.</exception>
 		public BlockUserInput(BIEvents what)
 		{
 			Start(what);
@@ -75,7 +75,7 @@ namespace Au
 		/// <summary>
 		/// Starts blocking.
 		/// </summary>
-		/// <exception cref="ArgumentException">*what* is 0.</exception>
+		/// <exception cref="ArgumentException"><i>what</i> is 0.</exception>
 		/// <exception cref="InvalidOperationException">Already started.</exception>
 		public void Start(BIEvents what)
 		{

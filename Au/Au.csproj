@@ -162,7 +162,7 @@
     <Compile Include="String\Csv.cs" />
     <Compile Include="Util\TreeBase.cs" />
     <Compile Include="Wnd\Wnd_wait.cs" />
-    <Compile Include="_doc\Aaa.cs" />
+    <None Include="_doc\Aaa.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -208,7 +208,8 @@
     <None Include="_doc\articles\index.md" />
     <None Include="_doc\articles\Wait timeout.md" />
     <None Include="_doc\articles\_test.md" />
-    <None Include="_doc\editor\intro.md" />
+    <None Include="_doc\editor\Command line.md" />
+    <None Include="_doc\editor\Au editor.md" />
     <None Include="_doc\articles\toc.yml" />
     <None Include="_doc\editor\toc.yml" />
     <None Include="_doc\articles\Wildcard expression.md" />
@@ -216,12 +217,12 @@
     <None Include="_doc\filter.yml" />
     <None Include="_doc\index.md" />
     <None Include="_doc\template1\layout\_master.tmpl" />
-    <None Include="_doc\template1\partials\affix.tmpl.partial" />
     <None Include="_doc\template1\partials\class.header.tmpl.partial" />
     <None Include="_doc\template1\partials\footer.tmpl.partial" />
     <None Include="_doc\template1\partials\logo.tmpl.partial" />
     <None Include="_doc\articles\UAC.md" />
     <None Include="_doc\template1\partials\namespace.tmpl.partial" />
+    <None Include="_doc\template1\partials\navbar.tmpl.partial" />
     <None Include="_doc\template2\partials\collection.tmpl.partial" />
     <None Include="_doc\template2\partials\item.tmpl.partial" />
     <None Include="_doc\toc.yml" />

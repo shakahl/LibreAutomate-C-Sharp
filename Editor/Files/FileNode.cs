@@ -239,7 +239,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	public string DisplayName {
 		get {
 			if(_displayName != null) return _displayName;
-			if(!IsScript || !_name.EndsWithI_(".cs")) return _name;
+			if(!IsScript || !_name.EndsWith_(".cs", true)) return _name;
 			return _displayName = _name.RemoveEnd_(3);
 		}
 	}
@@ -458,14 +458,14 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 			}
 		} else {
 			if(folder.HasValue) return _FindIn(e, name, folder.GetValueOrDefault());
-			foreach(var f in e) if(f._name.EqualsI_(name)) return f;
+			foreach(var f in e) if(f._name.Equals_(name, true)) return f;
 		}
 		return null;
 	}
 
 	static FileNode _FindIn(IEnumerable<FileNode> e, string name, bool folder)
 	{
-		foreach(var f in e) if(f.IsFolder == folder && f._name.EqualsI_(name)) return f;
+		foreach(var f in e) if(f.IsFolder == folder && f._name.Equals_(name, true)) return f;
 		return null;
 	}
 
@@ -523,7 +523,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 				var f1 = _FindRelative(name, false);
 				if(f1 != null) return new FileNode[] { f1 };
 			} else {
-				return Descendants().Where(k => !k.IsFolder && k._name.EqualsI_(name)).ToArray();
+				return Descendants().Where(k => !k.IsFolder && k._name.Equals_(name, true)).ToArray();
 			}
 		}
 		return Array.Empty<FileNode>();
@@ -858,7 +858,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		name = Path_.CorrectFileName(name);
 		if(!IsFolder) {
 			var ext = Path_.GetExtension(_name);
-			if(ext.Length > 0) if(name.IndexOf('.') < 0 || (IsCodeFile && !name.EndsWithI_(ext))) name += ext;
+			if(ext.Length > 0) if(name.IndexOf('.') < 0 || (IsCodeFile && !name.EndsWith_(ext, true))) name += ext;
 		}
 		if(name == _name) return true;
 
@@ -998,7 +998,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	public static EFileType DetectFileType(string path)
 	{
 		var type = EFileType.NotCodeFile;
-		if(path.EndsWithI_(".cs")) {
+		if(path.EndsWith_(".cs", true)) {
 			type = EFileType.Class;
 			try { if(File_.LoadText(path).Contains("//{{ main")) type = EFileType.Script; }
 			catch(Exception ex) { Debug_.Print(ex); }

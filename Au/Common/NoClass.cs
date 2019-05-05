@@ -184,7 +184,7 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Warning text.</param>
 		/// <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0.</param>
-		/// <param name="prefix">Text before *text*. Default "Warning: ".</param>
+		/// <param name="prefix">Text before <i>text</i>. Default "Warning: ".</param>
 		/// <remarks>
 		/// Calls <see cref="Output.Write"/>.
 		/// Does not show more that 1 warning/second, unless <b>Opt.Debug.</b><see cref="OptDebug.Verbose"/> == true.

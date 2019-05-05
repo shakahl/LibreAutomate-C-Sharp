@@ -747,5 +747,14 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern int GetOEMCP();
 
+
+
+
+
+		#region undocumented
+
+		internal delegate int CheckElevationEnabled(out int pResult);
+
+		#endregion
 	}
 }

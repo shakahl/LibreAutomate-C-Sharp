@@ -26,11 +26,11 @@ namespace Au
 	{
 		/// <summary>
 		/// Gets the container window or control of this accessible object.
-		/// Uses API <msdn>WindowFromAccessibleObject</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// Returns default(Wnd) if failed. Supports <see cref="WinError"/>.
-		/// All objects must support this property, but some have bugs and can fail (return default(Wnd)) or return a wrong window.
+		/// All objects must support this property, but some have bugs and can fail or return a wrong window.
+		/// Uses API <msdn>WindowFromAccessibleObject</msdn>.
 		/// </remarks>
 		public Wnd WndContainer
 		{
@@ -52,11 +52,11 @@ namespace Au
 
 		/// <summary>
 		/// Gets the top-level window that contains this accessible object.
-		/// Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// Returns default(Wnd) if failed. Supports <see cref="WinError"/>.
 		/// All objects must support this property, but some have bugs and can return default(Wnd).
+		/// Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
 		/// </remarks>
 		public Wnd WndTopLevel => WndContainer.Window;
 		//note: named not WndWindow, to avoid using accidentally instead of WndContainer.
@@ -73,12 +73,12 @@ namespace Au
 
 		/// <summary>
 		/// Gets location of this accessible object in screen.
-		/// Uses <msdn>IAccessible.accLocation</msdn>.
 		/// </summary>
 		/// <param name="r">Receives object rectangle in screen coordinates.</param>
 		/// <remarks>
 		/// Returns false if failed or this property is unavailable. Supports <see cref="WinError"/>.
 		/// Most but not all objects support this property.
+		/// Uses <msdn>IAccessible.accLocation</msdn>.
 		/// </remarks>
 		public bool GetRect(out RECT r)
 		{
@@ -90,13 +90,13 @@ namespace Au
 
 		/// <summary>
 		/// Gets location of this accessible object in the client area of window w.
-		/// Uses <msdn>IAccessible.accLocation</msdn> and <see cref="Wnd.MapScreenToClient(ref RECT)"/>.
 		/// </summary>
 		/// <param name="r">Receives object rectangle in w client area coordinates.</param>
 		/// <param name="w">Window or control.</param>
 		/// <remarks>
 		/// Returns false if failed or this property is unavailable. Supports <see cref="WinError"/>.
 		/// Most but not all objects support this property.
+		/// Uses <msdn>IAccessible.accLocation</msdn> and <see cref="Wnd.MapScreenToClient(ref RECT)"/>.
 		/// </remarks>
 		public bool GetRect(out RECT r, Wnd w)
 		{
@@ -105,12 +105,12 @@ namespace Au
 
 		/// <summary>
 		/// Gets standard non-string role, as enum AccROLE.
-		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// Most objects have a standard role, as enum <see cref="AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
 		/// Returns 0 if role is string or if failed. Supports <see cref="WinError"/>.
 		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
+		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
 		public AccROLE RoleInt
 		{
@@ -125,13 +125,13 @@ namespace Au
 
 		/// <summary>
 		/// Gets standard or custom role, as string.
-		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// Most objects have a standard role, as enum <see cref="AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
 		/// For standard roles this function returns enum <see cref="AccROLE"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
 		/// Returns "" if failed. Supports <see cref="WinError"/>.
 		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
+		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
 		public string Role
 		{
@@ -175,10 +175,10 @@ namespace Au
 
 		/// <summary>
 		/// Gets object state (flags).
-		/// Uses <msdn>IAccessible.get_accState</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// Returns 0 if failed. Supports <see cref="WinError"/>.
+		/// Uses <msdn>IAccessible.get_accState</msdn>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -268,11 +268,11 @@ namespace Au
 
 		/// <summary>
 		/// Gets name.
-		/// Uses <msdn>IAccessible.get_accName</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// Object name usually is its read-only text (eg button text, link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the object.
 		/// Returns "" if name is unavailable or if failed. Supports <see cref="WinError"/>.
+		/// Uses <msdn>IAccessible.get_accName</msdn>.
 		/// </remarks>
 		public string Name
 		{
@@ -299,13 +299,13 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets value.
-		/// Uses <msdn>IAccessible.get_accValue</msdn> or <msdn>IAccessible.put_accValue</msdn>.
 		/// </summary>
 		/// <exception cref="AuException">Failed to set value.</exception>
 		/// <remarks>
-		/// Object value usually is its editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the object reliably.
+		/// Usually it is editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the object reliably.
 		/// The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="WinError"/>.
 		/// Most objects don't support 'set'.
+		/// Uses <msdn>IAccessible.get_accValue</msdn> or <msdn>IAccessible.put_accValue</msdn>.
 		/// </remarks>
 		public string Value
 		{
@@ -320,10 +320,10 @@ namespace Au
 
 		/// <summary>
 		/// Gets description.
-		/// Uses <msdn>IAccessible.get_accDescription</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError"/>.
+		/// Uses <msdn>IAccessible.get_accDescription</msdn>.
 		/// </remarks>
 		public string Description
 		{
@@ -332,10 +332,10 @@ namespace Au
 
 		/// <summary>
 		/// Gets help text.
-		/// Uses <msdn>IAccessible.get_accHelp</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError"/>.
+		/// Uses <msdn>IAccessible.get_accHelp</msdn>.
 		/// </remarks>
 		public string Help
 		{
@@ -356,10 +356,10 @@ namespace Au
 
 		/// <summary>
 		/// Gets keyboard shortcut.
-		/// Uses <msdn>IAccessible.get_accKeyboardShortcut</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError"/>.
+		/// Uses <msdn>IAccessible.get_accKeyboardShortcut</msdn>.
 		/// </remarks>
 		public string KeyboardShortcut
 		{
@@ -368,11 +368,11 @@ namespace Au
 
 		/// <summary>
 		/// Gets default action.
-		/// Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
 		/// </summary>
 		/// <remarks>
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError"/>.
 		/// If this is a Java accessible object, returns all actions that can be used with <see cref="DoJavaAction"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="DoAction"/>.
+		/// Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
 		/// </remarks>
 		public string DefaultAction
 		{
@@ -381,12 +381,12 @@ namespace Au
 
 		/// <summary>
 		/// Performs the object's default action (see <see cref="DefaultAction"/>). Usually it is 'click', 'press' or similar.
-		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Fails if the object does not have a default action. Then you can use <see cref="ExtensionMethods.MouseClick(Acc, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
 		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="DoJavaAction"/> or one of the above functions (MouseClick etc).
+		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </remarks>
 		public void DoAction()
 		{
@@ -494,21 +494,21 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="DoAction"/> or *action* and waits until window name changes and web page name changes.
+		/// Calls <see cref="DoAction"/> or <i>action</i> and waits until window name changes and web page name changes.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).
 		/// Default 60 seconds.
 		/// </param>
 		/// <param name="action">If used, calls it instead of <see cref="DoAction"/>.</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuException">Failed. For example, when this object is invalid, or its top-level window does not contain a web page.</exception>
 		/// <exception cref="WndException">The window was closed while waiting.</exception>
-		/// <exception cref="Exception">Exceptions thrown by <see cref="DoAction"/> or by the *action* function.</exception>
+		/// <exception cref="Exception">Exceptions thrown by <see cref="DoAction"/> or by the <i>action</i> function.</exception>
 		/// <remarks>
 		/// This function is used to click a link in a web page and wait until current web page is gone. It prevents a following 'wait for object' function from finding a matching object in the old page, which would be bad.
 		/// This function does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for object' function which waits for a known object that must be in the new page.
-		/// This function cannot be used when the new page has the same title as current page. Then it waits until *secondsTimeout* time or forever. The same if the action does not open a web page.
+		/// This function cannot be used when the new page has the same title as current page. Then it waits until <i>secondsTimeout</i> time or forever. The same if the action does not open a web page.
 		/// </remarks>
 		public bool DoActionAndWaitForNewWebPage(double secondsTimeout = 60, Action<Acc> action = null)
 		{
@@ -747,8 +747,10 @@ namespace Au
 
 		/// <summary>
 		/// Gets the number of direct child objects.
-		/// Uses <msdn>IAccessible.get_accChildCount</msdn>.
 		/// </summary>
+		/// <remarks>
+		/// Uses <msdn>IAccessible.get_accChildCount</msdn>.
+		/// </remarks>
 		public int ChildCount
 		{
 			get
@@ -784,7 +786,7 @@ namespace Au
 		/// <param name="result">Receives results.</param>
 		/// <exception cref="ArgumentException">Unknown property character.</exception>
 		/// <remarks>
-		/// The returned variable contains values of properties specified in *props*. When a property is empty or failed to get, the member variable is "", empty dictionary or default value of that type; never null.
+		/// The returned variable contains values of properties specified in <i>props</i>. When a property is empty or failed to get, the member variable is "", empty dictionary or default value of that type; never null.
 		/// 
 		/// Normally this function is faster than calling multiple property functions, because it makes single remote procedure call. But not if this accessible object was found with flag <see cref="AFFlags.NotInProc"/> etc.
 		/// 
@@ -876,7 +878,7 @@ namespace Au
 		/// For <c>"child"</c> is used API <msdn>AccessibleChildren</msdn>.
 		/// </param>
 		/// <param name="secondsToWait">Wait for the wanted AO max this number of seconds. If negative, waits forever.</param>
-		/// <exception cref="ArgumentException">Invalid *navig* string.</exception>
+		/// <exception cref="ArgumentException">Invalid <i>navig</i> string.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// a = a.Navigate("parent next ch3", true);

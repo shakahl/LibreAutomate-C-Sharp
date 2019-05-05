@@ -306,7 +306,7 @@ namespace Au
 				{
 					if(!Ver.Is32BitProcessOn64BitOS) return 0;
 					string sysDir = Folders.System;
-					if(!path.StartsWithI_(sysDir)) return 0;
+					if(!path.StartsWith_(sysDir, true)) return 0;
 					int len = sysDir.Length;
 					if(path.Length > len && !Path_.LibIsSepChar(path[len])) return 0;
 					return len;
@@ -359,11 +359,11 @@ namespace Au
 			///// Gets file's MIME content type, like "text/html" or "image/png".
 			///// Returns false if cannot detect it.
 			///// </summary>
-			///// <param name="file">File name or path or URL or just extension like ".txt". If *canAnalyseData* is true, must be full path of a file, and the file must exist and can be opened to read; else the function uses just .extension, and the file may exist or not.</param>
+			///// <param name="file">File name or path or URL or just extension like ".txt". If <i>canAnalyseData</i> is true, must be full path of a file, and the file must exist and can be opened to read; else the function uses just .extension, and the file may exist or not.</param>
 			///// <param name="contentType">Result.</param>
 			///// <param name="canAnalyseData">If cannot detect from file extension, try to detect from file data.</param>
-			///// <exception cref="ArgumentException">Not full path. Only if *canAnalyseData* is true.</exception>
-			///// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes"/>. Only if *canAnalyseData* is true.</exception>
+			///// <exception cref="ArgumentException">Not full path. Only if <i>canAnalyseData</i> is true.</exception>
+			///// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes"/>. Only if <i>canAnalyseData</i> is true.</exception>
 			///// <remarks>
 			///// Uses API <msdn>FindMimeFromData</msdn>.
 			///// </remarks>

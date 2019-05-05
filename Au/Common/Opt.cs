@@ -19,8 +19,6 @@ using Au;
 using Au.Types;
 using static Au.NoClass;
 
-//TODO: Opt.Reset();
-
 namespace Au
 {
 	/// <summary>
@@ -85,7 +83,7 @@ namespace Au
 		/// PrintWarning("Example");
 		/// ]]></code>
 		/// </example>
-		public static OptDebug Debug => t_debug ?? (t_debug = new OptDebug());
+		public static OptDebug Debug => t_debug ?? (t_debug = new OptDebug(Opt.Static.Debug));
 		[ThreadStatic] static OptDebug t_debug;
 
 		/// <summary>
@@ -97,6 +95,17 @@ namespace Au
 		/// </remarks>
 		public static OptWaitFor WaitFor => t_waitFor ?? (t_waitFor = new OptWaitFor());
 		[ThreadStatic] static OptWaitFor t_waitFor;
+
+		/// <summary>
+		/// Resets all options. Copies from <see cref="Opt.Static"/>.
+		/// </summary>
+		public static void Reset()
+		{
+			t_key?.Reset();
+			t_mouse?.Reset();
+			t_waitFor?.Reset();
+			t_debug?.Reset();
+		}
 
 		/// <summary>
 		/// Default <see cref="Opt"/> properties of each thread.
@@ -188,7 +197,7 @@ namespace Au
 
 			/// <summary>Infrastructure.</summary>
 			[NoDoc]
-			public struct RestoreMouse :IDisposable
+			public struct RestoreMouse : IDisposable
 			{
 				OptMouse _o;
 				internal RestoreMouse(int unused) => t_mouse = new OptMouse(_o = t_mouse);
@@ -198,7 +207,7 @@ namespace Au
 
 			/// <summary>Infrastructure.</summary>
 			[NoDoc]
-			public struct RestoreKey :IDisposable
+			public struct RestoreKey : IDisposable
 			{
 				OptKey _o;
 				internal RestoreKey(int unused) => t_key = new OptKey(_o = t_key);
@@ -223,29 +232,38 @@ namespace Au.Types
 		_Options _o;
 		List<string> _disabledWarnings;
 
-		internal OptDebug()
+		/// <summary>
+		/// Initializes this instance with default values or values copied from another instance.
+		/// </summary>
+		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
+		internal OptDebug(OptDebug cloneOptions = null)
 		{
-			var o = Opt.Static.Debug;
-			if(this == o) {
-				_o = o._o;
-				if(o._disabledWarnings != null) _disabledWarnings = new List<string>(o._disabledWarnings);
-			} else {
+			if(cloneOptions != null) {
+				_Copy(cloneOptions);
 			}
 		}
+
+		void _Copy(OptDebug o)
+		{
+			_o = o._o;
+			_disabledWarnings = o._disabledWarnings == null ? null : new List<string>(o._disabledWarnings);
+		}
+
+		/// <summary>
+		/// Resets all options. Copies from <see cref="Opt.Static.Debug"/>.
+		/// </summary>
+		public void Reset() => _Copy(Opt.Static.Debug);
 
 		/// <summary>
 		/// If true, some library functions may display more warnings and other info.
 		/// If not explicitly set, the default value depends on the build configuration of the entry assymbly: true if Debug, false if Release.
 		/// </summary>
-		public bool Verbose
-		{
-			get
-			{
+		public bool Verbose {
+			get {
 				if(_o.Verbose == 0) Verbose = _IsAppDebugConfig();
 				return _o.Verbose == 2;
 			}
-			set
-			{
+			set {
 				_o.Verbose = (byte)(value ? 2 : 1);
 			}
 		}
@@ -309,7 +327,7 @@ namespace Au.Types
 
 		/// <summary>Infrastructure.</summary>
 		[NoDoc]
-		public struct RestoreWarnings :IDisposable
+		public struct RestoreWarnings : IDisposable
 		{
 			OptDebug _o;
 			int _restoreCount;
@@ -344,13 +362,13 @@ namespace Au.Types
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
 		internal OptMouse(OptMouse cloneOptions = null) //don't need public like OptKey
 		{
-			_LibReset(cloneOptions);
+			LibCopyOrDefault(cloneOptions);
 		}
 
 		/// <summary>
 		/// Copies options from o, or sets default if o==null. Like ctor does.
 		/// </summary>
-		void _LibReset(OptMouse o) //could be used as internal, but currently don't need
+		internal void LibCopyOrDefault(OptMouse o)
 		{
 			if(o != null) {
 				_o = o._o;
@@ -361,6 +379,11 @@ namespace Au.Types
 				_o.MoveSleepFinally = 10;
 			}
 		}
+
+		/// <summary>
+		/// Resets all options. Copies from <see cref="Opt.Static.Mouse"/>.
+		/// </summary>
+		public void Reset() => LibCopyOrDefault(Opt.Static.Mouse);
 
 		bool _IsStatic => this == Opt.Static.Mouse;
 
@@ -376,8 +399,7 @@ namespace Au.Types
 		/// Default: 20. Valid values: 0 - 1000 (1 s). Valid values for <see cref="Opt.Static.Mouse"/>: 0 - 100 (1 s).
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public int ClickSpeed
-		{
+		public int ClickSpeed {
 			get => _o.ClickSpeed;
 			set => _o.ClickSpeed = _SetValue(value, 1000, 100);
 		}
@@ -392,8 +414,7 @@ namespace Au.Types
 		/// It is not milliseconds or some other unit. It adds intermediate mouse movements and small delays when moving the mouse cursor to the specified point. The speed also depends on the distance.
 		/// Value 0 (default) does not add intermediate mouse movements. Adds at least 1 if some mouse buttons are pressed. Value 1 adds at least 1 intermediate mouse movement. Values 10-50 are good for visually slow movements.
 		/// </remarks>
-		public int MoveSpeed
-		{
+		public int MoveSpeed {
 			get => _o.MoveSpeed;
 			set => _o.MoveSpeed = _SetValue(value, 10000, 100);
 		}
@@ -406,8 +427,7 @@ namespace Au.Types
 		/// <remarks>
 		/// The 'click' functions also sleep <see cref="ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
 		/// </remarks>
-		public int ClickSleepFinally
-		{
+		public int ClickSleepFinally {
 			get => _o.ClickSleepFinally;
 			set => _o.ClickSleepFinally = _SetValue(value, 10000, 100);
 		}
@@ -420,8 +440,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Used by <see cref="Mouse.Move"/> (finally), <see cref="Mouse.Click"/> (between moving and clicking) and other functions that generate mouse movement events.
 		/// </remarks>
-		public int MoveSleepFinally
-		{
+		public int MoveSleepFinally {
 			get => _o.MoveSleepFinally;
 			set => _o.MoveSleepFinally = _SetValue(value, 1000, 100);
 		}
@@ -459,13 +478,13 @@ namespace Au.Types
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
 		public OptKey(OptKey cloneOptions = null)
 		{
-			LibReset(cloneOptions);
+			LibCopyOrDefault(cloneOptions);
 		}
 
 		/// <summary>
 		/// Copies options from o, or sets default if o==null. Like ctor does.
 		/// </summary>
-		internal void LibReset(OptKey o)
+		internal void LibCopyOrDefault(OptKey o)
 		{
 			if(o != null) {
 				_textSpeed = o._textSpeed;
@@ -497,6 +516,11 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// Resets all options. Copies from <see cref="Opt.Static.Key"/>.
+		/// </summary>
+		public void Reset() => LibCopyOrDefault(Opt.Static.Key);
+
+		/// <summary>
 		/// Returns this variable or OptKey cloned from this variable and possibly modified by Hook.
 		/// </summary>
 		/// <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
@@ -517,8 +541,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Not used for 'keys' parameters. See <see cref="KeySpeed"/>.
 		/// </remarks>
-		public int TextSpeed
-		{
+		public int TextSpeed {
 			get => _textSpeed;
 			set => _textSpeed = _SetValue(value, 1000, 10);
 		}
@@ -532,8 +555,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Not used for 'text' parameters. See <see cref="TextSpeed"/>.
 		/// </remarks>
-		public int KeySpeed
-		{
+		public int KeySpeed {
 			get => _keySpeed;
 			set => _keySpeed = _SetValue(value, 1000, 10);
 		}
@@ -547,8 +569,7 @@ namespace Au.Types
 		/// <remarks>
 		/// In most apps copy/paste works without this delay. Known apps that need it: Internet Explorer's address bar, BlueStacks.
 		/// </remarks>
-		public int KeySpeedClipboard
-		{
+		public int KeySpeedClipboard {
 			get => _clipboardKeySpeed;
 			set => _clipboardKeySpeed = _SetValue(value, 1000, 50);
 		}
@@ -562,8 +583,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Not used by <see cref="Clipb.CopyText"/>.
 		/// </remarks>
-		public int SleepFinally
-		{
+		public int SleepFinally {
 			get => _sleepFinally;
 			set => _sleepFinally = _SetValue(value, 10000, 100);
 		}
@@ -595,8 +615,7 @@ namespace Au.Types
 		/// Default: 300.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public int PasteLength
-		{
+		public int PasteLength {
 			get => _pasteLength;
 			set => _pasteLength = _SetValue(value, int.MaxValue, int.MaxValue);
 		}
@@ -813,6 +832,14 @@ namespace Au.Types
 		public OptWaitFor(int period = 10, bool doEvents = false)
 		{
 			Period = period; DoEvents = doEvents;
+		}
+
+		/// <summary>
+		/// Resets all options.
+		/// </summary>
+		public void Reset()
+		{
+			Period = 10; DoEvents = false;
 		}
 
 		/// <summary>

@@ -20,3 +20,6 @@
 - exclude:
       uidRegex: ^Au\.Types\.Native\.
       type: Type
+- exclude:
+      uidRegex: \.Finalize$
+      type: Method

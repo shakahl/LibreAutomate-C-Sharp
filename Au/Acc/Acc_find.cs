@@ -166,8 +166,8 @@ namespace Au
 			/// </summary>
 			/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 			/// <param name="w">Window or control that contains the AO.</param>
-			/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-			/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+			/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+			/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 			/// <exception cref="Exception">Exceptions of <see cref="Find(Wnd)"/>.</exception>
 			public bool Wait(double secondsTimeout, Wnd w)
 			{
@@ -180,8 +180,8 @@ namespace Au
 			/// </summary>
 			/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 			/// <param name="a">Direct or indirect parent AO.</param>
-			/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-			/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+			/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+			/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 			/// <exception cref="Exception">Exceptions of <see cref="Find(Acc)"/>.</exception>
 			public bool Wait(double secondsTimeout, Acc a)
 			{
@@ -316,16 +316,16 @@ namespace Au
 		/// Can have a prefix:
 		/// - <c>"web:"</c> - search only in the visible web page, not in whole window. Examples: <c>"web:LINK"</c>, <c>"web:/LIST/LISTITEM/LINK"</c>.\
 		///   Supports Firefox, Chrome, Internet Explorer (IE) and apps that use their code. With other windows, searches in the first found visible AO that has DOCUMENT role.\
-		///   Tip: To search only NOT in web pages, use *prop* <c>"notin=DOCUMENT"</c> (Chrome, Firefox) or <c>"notin=PANE"</c> (IE).
+		///   Tip: To search only NOT in web pages, use <i>prop</i> <c>"notin=DOCUMENT"</c> (Chrome, Firefox) or <c>"notin=PANE"</c> (IE).
 		/// - <c>"firefox:"</c> - search only in the visible web page of Firefox or Firefox-based web browser. If w window class name starts with "Mozilla", can be used <c>"web:"</c> instead.
 		/// - <c>"chrome:"</c> - search only in the visible web page of Chrome or Chrome-based web browser. If w window class name starts with "Chrome", can be used <c>"web:"</c> instead.
 		/// 
 		/// <note>Chrome web page accessible objects normally are disabled (don't exist). Use prefix <c>"web:"</c> or <c>"chrome:"</c> to enable.</note>
 		/// 
 		/// Prefix cannot be used:
-		/// - if *prop* contains <c>"id"</c> or <c>"class"</c>;
+		/// - if <i>prop</i> contains <c>"id"</c> or <c>"class"</c>;
 		/// - with flag <see cref="AFFlags.UIA"/>;
-		/// - with the non-static **Find** overload (searching in an AO).
+		/// - with the non-static <b>Find</b> overload (searching in an AO).
 		/// 
 		/// Can be path consisting of roles separated by "/". Examples:
 		/// - <c>"web:DOCUMENT/div/LIST/LISTITEM/LINK"</c> - find LINK using its full path in web page.
@@ -388,15 +388,15 @@ namespace Au
 		/// <param name="navig">If not null, the specified object is an intermediate object. After finding it, call <see cref="Navigate"/> with this string and return its result.</param>
 		/// <param name="controls">
 		/// Properties of child controls where to search.
-		/// This is an alternative for class/id in *prop*. Allows to specify more control properties. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
+		/// This is an alternative for class/id in <i>prop</i>. Allows to specify more control properties. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
 		/// </param>
 		/// 
 		/// <exception cref="ArgumentException">
-		/// - *role* is "" or invalid.
-		/// - *name* is invalid wildcard expression (<c>"**options "</c> or regular expression).
-		/// - *prop* has invalid format or contains unknown property names or invalid wildcard expressions.
-		/// - *navig* string is invalid.
-		/// - *flags* has <see cref="AFFlags.UIA"/> when searching in web page (role prefix <c>"web:"</c> etc).
+		/// - <i>role</i> is "" or invalid.
+		/// - <i>name</i> is invalid wildcard expression (<c>"**options "</c> or regular expression).
+		/// - <i>prop</i> has invalid format or contains unknown property names or invalid wildcard expressions.
+		/// - <i>navig</i> string is invalid.
+		/// - <i>flags</i> has <see cref="AFFlags.UIA"/> when searching in web page (role prefix <c>"web:"</c> etc).
 		/// </exception>
 		/// <exception cref="WndException">Invalid window.</exception>
 		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
@@ -451,7 +451,7 @@ namespace Au
 		/// Returns the found AO. Returns null if not found.
 		/// </summary>
 		/// <exception cref="ArgumentException">Exceptions of other overload, plus:
-		/// - *flags* has <see cref="AFFlags.UIA"/>.
+		/// - <i>flags</i> has <see cref="AFFlags.UIA"/>.
 		/// - <see cref="SimpleElementId"/> is not 0.
 		/// </exception>
 		/// <exception cref="AuException">Failed.</exception>
@@ -471,8 +471,8 @@ namespace Au
 		/// More info: <see cref="Find"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <returns>Returns the found AO. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException"/>
 		/// <exception cref="WndException"/>
 		/// <exception cref="AuException"/>
@@ -489,7 +489,7 @@ namespace Au
 		/// More info: <see cref="Find"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
+		/// <returns>Returns the found AO. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"/>
 		/// <exception cref="ArgumentException"/>
 		/// <exception cref="AuException"/>

@@ -5,7 +5,7 @@ title: wildcard expression
 
 # Wildcard expression
 
-*Wildcard expression* - a simple text format that supports wildcard characters, regular expression, multiple parts, etc. Like a regular expression, but much simpler. Can be used with 'find' functions, for example **Wnd.Find**.
+*Wildcard expression* - a simple text format that supports wildcard characters, regular expression, "match case", "text1 or text2" and "not text". Like a regular expression, but much simpler. Used with "find" functions, for example **Wnd.Find**.
 
 Wildcard characters:
 
@@ -32,8 +32,8 @@ Can start with `"**options "`:
 
 If the function argument is null or omitted, it usually means 'match any'. Wildcard expression `""` matches only `""`. Exception **ArgumentException** if invalid `"**options "` or regular expression.
 
-Examples
----
+#### Examples
+
 ```csharp
 //Find window. Its name ends with "- Notepad" and program is "notepad.exe".
 var w = Wnd.Find("*- Notepad", program: "notepad.exe");
@@ -42,7 +42,7 @@ var w = Wnd.Find("*- Notepad", program: "notepad.exe");
 var item = x.FindItem("example", "2017-*", "**rc regex");
 ```
 
-See also
----
-- [Wildex](xref:Au.Types.Wildex)
-- [Like_](xref:Au.String_.Like_(System.String,System.String,System.Boolean))
+### See also
+
+[Wildex](xref:Au.Types.Wildex)
+[Like_](xref:Au.String_.Like_(System.String,System.String,System.Boolean))

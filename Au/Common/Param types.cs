@@ -385,15 +385,14 @@ namespace Au.Types
 		public bool IsEmpty => _o == null;
 	}
 
-	//TODO: need a better name. If used only by AuDialog, maybe DStrings or DCustomButtons.
 	/// <summary>
 	/// Used for function parameters to specify multiple strings.
 	/// Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversion operators from these types.
 	/// </summary>
 	[DebuggerStepThrough]
-	public struct MultiString
+	public struct DStringList //with prefix D because this was created for AuDialog
 	{
-		MultiString(object o) => Value = o;
+		DStringList(object o) => Value = o;
 
 		/// <summary>
 		/// The raw value.
@@ -401,11 +400,11 @@ namespace Au.Types
 		public object Value;
 
 		/// <summary> Assignment of a value of type string. </summary>
-		public static implicit operator MultiString(string s) => new MultiString(s);
+		public static implicit operator DStringList(string s) => new DStringList(s);
 		/// <summary> Assignment of a value of type string[]. </summary>
-		public static implicit operator MultiString(string[] e) { return new MultiString(e); }
+		public static implicit operator DStringList(string[] e) { return new DStringList(e); }
 		/// <summary> Assignment of a value of type List&lt;string&gt;. </summary>
-		public static implicit operator MultiString(List<string> e) { return new MultiString(e); }
+		public static implicit operator DStringList(List<string> e) { return new DStringList(e); }
 
 		/// <summary>
 		/// Converts the value to string[].

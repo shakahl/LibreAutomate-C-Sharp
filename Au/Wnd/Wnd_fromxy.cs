@@ -199,8 +199,8 @@ namespace Au
 		/// <param name="distance">Distance from this control (from its edge) in the specified direction. Default 10.</param>
 		/// <param name="edgeOffset">
 		/// Distance in perpendicular direction, along the specified edge. Default 5.
-		/// If *direction* is <b>Left</b> or <b>Right</b>, 0 is the top edge, 1 is 1 pixel down, -1 is 1 pixel up, and so on.
-		/// If *direction* is <b>Above</b> or <b>Below</b>, 0 is the left edge, 1 is 1 pixel to the right, -1 is 1 pixel to the left, and so on.
+		/// If <i>direction</i> is <b>Left</b> or <b>Right</b>, 0 is the top edge, 1 is 1 pixel down, -1 is 1 pixel up, and so on.
+		/// If <i>direction</i> is <b>Above</b> or <b>Below</b>, 0 is the left edge, 1 is 1 pixel to the right, -1 is 1 pixel to the left, and so on.
 		/// </param>
 		/// <param name="topChild">If at that point is a visible child or descendant of the sibling, get that child/descendant. Default false.</param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>

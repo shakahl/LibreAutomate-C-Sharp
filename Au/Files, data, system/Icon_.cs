@@ -154,7 +154,7 @@ namespace Au
 						return GetStockIconHandle(siid, size);
 						//case FileDir.Directory: //folder name ends with .ico etc
 					}
-				} else if(file.EndsWithI_(".lnk")) {
+				} else if(file.EndsWith_(".lnk", true)) {
 					R = _GetLnkIcon(file, size);
 					if(R != default) return R;
 					//Print("_GetLnkIcon failed", file);
@@ -661,7 +661,7 @@ namespace Au
 			/// How it works: If this function finds cached image, it sets timer that after ~50 ms loads that icon/image from file again and compares with the cached image. If different, updates the cache. Does it once, not periodically.
 			/// Use only in UI threads. Does not work if this thread does not retrieve/dispatch posted messages.
 			/// </param>
-			/// <param name="auParam">Something to pass to the *autoUpdate* callback function.</param>
+			/// <param name="auParam">Something to pass to the <i>autoUpdate</i> callback function.</param>
 			/// <remarks>
 			/// If the icon is in the memory cache, gets it from there.
 			/// Else if it is in the file cache, gets it from there and adds to the memory cache.
@@ -676,7 +676,7 @@ namespace Au
 						else ext = ".no-ext";
 					} else {
 						//ext = ext.ToLower_();
-						if(ext.EqualsI_(".ico") || ext.EqualsI_(".exe") || ext.StartsWithI_(".exe,") || ext.StartsWithI_(".dll,")) ext = file;
+						if(ext.Equals_(".ico", true) || ext.Equals_(".exe", true) || ext.StartsWith_(".exe,", true) || ext.StartsWith_(".dll,", true)) ext = file;
 					}
 					file = ext;
 				} else if(Path_.IsFullPathExpandEnvVar(ref file)) {
@@ -694,7 +694,7 @@ namespace Au
 			/// <param name="callback">Called to get image. To convert icon handle to image, use <see cref="Icon_.HandleToImage"/>.</param>
 			/// <param name="autoUpdate"></param>
 			/// <param name="auParam"></param>
-			/// <param name="auDispose">If true (default), auto-updating can dispose unused image returned by *callback*.</param>
+			/// <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <i>callback</i>.</param>
 			/// <remarks>
 			/// If the icon is in the memory cache, gets it from there.
 			/// Else if it is in the file cache, gets it from there and adds to the memory cache.

@@ -445,8 +445,8 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		bool noDir = false, noExt = false;
 		var a = d.FileNames;
 		var dir = Path_.GetDirectoryPath(a[0]);
-		if(dir.EqualsI_(fNET) || dir.EqualsI_(fNET + @"\WPF")) noDir = noExt = true;
-		else if(dir.EqualsI_(fApp) || dir.EqualsI_(Folders.ThisAppBS + "Libraries") || dir.EqualsI_(Folders.ThisAppBS + "Compiler")) noDir = true; //App.config: <probing privatePath="Compiler;Libraries"/>
+		if(dir.Equals_(fNET, true) || dir.Equals_(fNET + @"\WPF", true)) noDir = noExt = true;
+		else if(dir.Equals_(fApp, true) || dir.Equals_(Folders.ThisAppBS + "Libraries", true) || dir.Equals_(Folders.ThisAppBS + "Compiler", true)) noDir = true; //App.config: <probing privatePath="Compiler;Libraries"/>
 		if(noDir) for(int i = 0; i < a.Length; i++) a[i] = Path_.GetFileName(a[i], noExt);
 
 		_meta.r.AddRange(a);

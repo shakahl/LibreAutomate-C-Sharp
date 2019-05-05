@@ -402,7 +402,7 @@ namespace Au
 			/// Returns true if window w properties match the specified properties.
 			/// </summary>
 			/// <param name="w">A top-level window. If 0 or invalid, returns false.</param>
-			/// <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in *cache*; next time it gets these strings from *cache*.</param>
+			/// <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in <i>cache</i>; next time it gets these strings from <i>cache</i>.</param>
 			public bool IsMatch(Wnd w, WFCache cache = null)
 			{
 				return 0 == _FindOrMatch(new _WndList(w), cache: cache);
@@ -433,7 +433,7 @@ namespace Au
 		/// Callback function. Called for each matching window.
 		/// It can evaluate more properties of the window and return true when they match.
 		/// Example: <c>also: t =&gt; !t.IsPopupWindow</c>.
-		/// Called after evaluating all other parameters except *contains*.
+		/// Called after evaluating all other parameters except <i>contains</i>.
 		/// </param>
 		/// <param name="contains">
 		/// Text, image or other object in the client area of the window. Depends on type:
@@ -460,10 +460,10 @@ namespace Au
 		/// To find message-only windows use <see cref="Misc.FindMessageOnlyWindow"/> instead.
 		/// </remarks>
 		/// <exception cref="ArgumentException">
-		/// - *cn* is "". To match any, use null.
-		/// - *program* is "" or 0 or contains \ or /. To match any, use null.
+		/// - <i>cn</i> is "". To match any, use null.
+		/// - <i>program</i> is "" or 0 or contains \ or /. To match any, use null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
-		/// - Invalid image string in *contains*.
+		/// - Invalid image string in <i>contains</i>.
 		/// </exception>
 		/// <example>
 		/// Try to find Notepad window. Return if not found.
@@ -585,7 +585,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a top-level window (calls <see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="Shell.Run"/>.
-		/// Returns window handle as <b>Wnd</b>. Returns <c>default(Wnd)</c> if not found (if *runWaitS* is negative; else exception).
+		/// Returns window handle as <b>Wnd</b>. Returns <c>default(Wnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
 		/// </summary>
 		/// <param name="name">See <see cref="Find"/>.</param>
 		/// <param name="cn">See <see cref="Find"/>.</param>
@@ -596,7 +596,7 @@ namespace Au
 		/// <param name="run">Callback function. See example.</param>
 		/// <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="Wait"/>.</param>
 		/// <param name="needActiveWindow">Finally the window must be active. Default: true.</param>
-		/// <exception cref="TimeoutException">*runWaitS* time has expired. Not thrown if *runWaitS* &lt;= 0.</exception>
+		/// <exception cref="TimeoutException"><i>runWaitS</i> time has expired. Not thrown if <i>runWaitS</i> &lt;= 0.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// The algorithm is:
@@ -642,7 +642,7 @@ namespace Au
 			/// </param>
 			/// <param name="sortFirstVisible">
 			/// Place hidden windows at the end of the array. If false, the order of array elements matches the Z order.
-			/// Not used when *onlyVisible* is true.</param>
+			/// Not used when <i>onlyVisible</i> is true.</param>
 			/// <remarks>
 			/// Calls API <msdn>EnumWindows</msdn>.
 			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows"/>.</note>

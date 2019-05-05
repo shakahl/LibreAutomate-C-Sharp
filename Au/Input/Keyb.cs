@@ -161,7 +161,7 @@ namespace Au
 		/// Returns self.
 		/// </summary>
 		/// <param name="keys">Key names and operators. Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc"</c>. More info: <see cref="Key"/>. Can be null or "".</param>
-		/// <exception cref="ArgumentException">Error in *keys* string, for example an unknown key name.</exception>
+		/// <exception cref="ArgumentException">Error in <i>keys</i> string, for example an unknown key name.</exception>
 		public Keyb AddKeys(string keys)
 		{
 			_ThrowIfSending();
@@ -259,7 +259,7 @@ namespace Au
 		/// </summary>
 		/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255.</param>
 		/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
-		/// <exception cref="ArgumentException">Invalid *key* (0).</exception>
+		/// <exception cref="ArgumentException">Invalid <i>key</i> (0).</exception>
 		public Keyb AddKey(KKey key, bool? down = null)
 		{
 			_ThrowIfSending();
@@ -387,7 +387,7 @@ namespace Au
 		/// Returns self.
 		/// </summary>
 		/// <param name="count">Repeat count.</param>
-		/// <exception cref="ArgumentOutOfRangeException">*count* &gt;10000 or &lt;0.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>count</i> &gt;10000 or &lt;0.</exception>
 		/// <exception cref="ArgumentException">The last added item is not key. Can repeat only single key; cannot repeat text etc.</exception>
 		public Keyb AddRepeat(int count)
 		{
@@ -403,7 +403,7 @@ namespace Au
 		/// Returns self.
 		/// </summary>
 		/// <param name="timeMS">Time to sleep, milliseconds.</param>
-		/// <exception cref="ArgumentOutOfRangeException">*timeMS* &gt;10000 (1 minute) or &lt;0.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> &gt;10000 (1 minute) or &lt;0.</exception>
 		public Keyb AddSleep(int timeMS)
 		{
 			_ThrowIfSending();
@@ -464,7 +464,7 @@ namespace Au
 		/// Sends keys, text and executes other events added with the <b>AddX</b> functions.
 		/// </summary>
 		/// <param name="canSendAgain">Don't clear the internal collection. If true, this function then can be called again (eg in loop) to send/execute the same keys etc. If false (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
-		/// <exception cref="ArgumentException">*canSendAgain* is true and keys end with + or (.</exception>
+		/// <exception cref="ArgumentException"><i>canSendAgain</i> is true and keys end with + or (.</exception>
 		public void Send(bool canSendAgain = false)
 		{
 			_ThrowIfSending();

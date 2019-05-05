@@ -197,9 +197,9 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="left"></param>
 		/// <param name="top"></param>
-		/// <param name="rightOrWidth">right or width, depending on *useWidthHeight*.</param>
-		/// <param name="bottomOrHeight">bottom or height, depending on *useWidthHeight*.</param>
-		/// <param name="useWidthHeight">If true (default), *rightOrWidth*/*bottomOrHeight* are width/height. Else right/bottom.</param>
+		/// <param name="rightOrWidth">right or width, depending on <i>useWidthHeight</i>.</param>
+		/// <param name="bottomOrHeight">bottom or height, depending on <i>useWidthHeight</i>.</param>
+		/// <param name="useWidthHeight">If true (default), <i>rightOrWidth</i>/<i>bottomOrHeight</i> are width/height. Else right/bottom.</param>
 		public RECT(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight = true)
 		{
 			this.left = left; this.top = top;
@@ -347,12 +347,12 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Moves this rectangle to the specified coordinates in another rectangle *r*.
+		/// Moves this rectangle to the specified coordinates in another rectangle <i>r</i>.
 		/// </summary>
-		/// <param name="x">X coordinate relative to *r*. Default - center. Can be Coord.Reverse etc.</param>
-		/// <param name="y">Y coordinate relative to *r*. Default - center. Can be Coord.Reverse etc.</param>
+		/// <param name="x">X coordinate relative to <i>r</i>. Default - center. Can be Coord.Reverse etc.</param>
+		/// <param name="y">Y coordinate relative to <i>r</i>. Default - center. Can be Coord.Reverse etc.</param>
 		/// <param name="r">Another rectangle.</param>
-		/// <param name="ensureInRect">If part of rectangle is not in *r*, move and/or resize it so that entire rectangle would be in *r*. Default true.</param>
+		/// <param name="ensureInRect">If part of rectangle is not in <i>r</i>, move and/or resize it so that entire rectangle would be in <i>r</i>. Default true.</param>
 		public void MoveInRect(RECT r, Coord x = default, Coord y = default, bool ensureInRect = true)
 		{
 			Wnd.Lib.MoveInScreen(false, x, y, false, default, ref this, default, false, ensureInRect, r);

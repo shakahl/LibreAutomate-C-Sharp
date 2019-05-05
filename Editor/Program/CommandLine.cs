@@ -46,13 +46,8 @@ static class CommandLine
 					case "/test":
 						if(++i < a.Length) TestArg = a[i];
 						break;
-					//case "/x":
-					//	activateWnd = false;
-					//	if(cmd != 0 || ++i == a.Length) { Console.WriteLine("/x used incorrectly"); return true; }
-					//	cmd = ;
-					//	break;
 					default:
-						Console.WriteLine("unknown: " + s);
+						AuDialog.ShowError("Unknown command line parameter", s);
 						return true;
 					}
 				}

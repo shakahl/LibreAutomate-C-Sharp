@@ -47,7 +47,7 @@ namespace Au
 		/// Valid hive names: <c>"HKEY_CURRENT_USER"</c>, <c>"HKEY_LOCAL_MACHINE"</c>, <c>"HKEY_CLASSES_ROOT"</c>, <c>"HKEY_USERS"</c>, <c>"HKEY_PERFORMANCE_DATA"</c> or <c>"HKEY_CURRENT_CONFIG"</c>.
 		/// </summary>
 		/// <param name="key">Registry key. Can start with a hive name.</param>
-		/// <exception cref="ArgumentException">*key* starts with <c>"HKEY_"</c> but it is an invalid hive name.</exception>
+		/// <exception cref="ArgumentException"><i>key</i> starts with <c>"HKEY_"</c> but it is an invalid hive name.</exception>
 		public static RegistryKey ParseKeyString(ref string key)
 		{
 			if(key == null) key = @"\";

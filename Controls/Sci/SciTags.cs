@@ -176,7 +176,7 @@ namespace Au.Controls
 	/// </description>
 	/// <description>
 	/// Shows an Au class library help topic (file "Au Help.chm").
-	/// Calls <see cref="Util.Help.AuHelp"/>.
+	/// Calls <see cref="Util.Help_.AuWeb"/>.
 	/// Attribute: right click in the help topic, click Properties, copy filename from the Address field.
 	/// </description>
 	/// </item>
@@ -871,7 +871,7 @@ namespace Au.Controls
 				Shell.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
 			case "help":
-				Util.Help.AuHelp(attr);
+				Util.Help_.AuWeb(attr);
 				break;
 			case "explore":
 				Shell.SelectFileInExplorer(attr);

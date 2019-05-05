@@ -363,7 +363,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Sets field values.
-		/// If *end* is -1 (default), will be used subject string length.
+		/// If <i>end</i> is -1 (default), will be used subject string length.
 		/// </summary>
 		public RXMore(int start = 0, int end = -1, RXMatchFlags matchFlags = 0)
 		{
@@ -487,7 +487,7 @@ namespace Au.Types
 		/// Gets the start index and length of the specified group in the subject string.
 		/// </summary>
 		/// <param name="group">Group number (1-based index).</param>
-		/// <exception cref="ArgumentOutOfRangeException">*group* must be &gt; 0 and &lt; capture_top.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>group</i> must be &gt; 0 and &lt; capture_top.</exception>
 		public (int index, int length) Group(int group)
 		{
 			if(group <= 0 || group >= _p->capture_top) throw new ArgumentOutOfRangeException(nameof(group), "Must be > 0 and < capture_top.");
@@ -500,7 +500,7 @@ namespace Au.Types
 		/// Gets the value (substring) of the specified group.
 		/// </summary>
 		/// <param name="group">Group number (1-based index).</param>
-		/// <exception cref="ArgumentOutOfRangeException">*group* must be &gt; 0 and &lt; capture_top.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>group</i> must be &gt; 0 and &lt; capture_top.</exception>
 		public string GroupValue(int group)
 		{
 			var (i, len) = Group(group);

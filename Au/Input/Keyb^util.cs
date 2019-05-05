@@ -517,7 +517,7 @@ namespace Au
 			if(call == null || wFocus.Is0) return Options;
 			if(wFocus != _sstate.wFocus) {
 				_sstate.wFocus = wFocus;
-				if(_sstate.options == null) _sstate.options = new OptKey(Options); else _sstate.options.LibReset(Options);
+				if(_sstate.options == null) _sstate.options = new OptKey(Options); else _sstate.options.LibCopyOrDefault(Options);
 				call(new KOHookData(_sstate.options, wFocus));
 			}
 			return _sstate.options;

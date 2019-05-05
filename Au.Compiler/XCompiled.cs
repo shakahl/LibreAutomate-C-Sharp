@@ -257,8 +257,8 @@ namespace Au.Compiler
 						var appDir = Folders.ThisAppBS;
 						for(; j < refs.Count; j++) {
 							var s1 = refs[j].FilePath;
-							if(s1.StartsWithI_(netDir)) continue;
-							if(s1.StartsWithI_(appDir)) s1 = s1.Substring(appDir.Length);
+							if(s1.StartsWith_(netDir, true)) continue;
+							if(s1.StartsWith_(appDir, true)) s1 = s1.Substring(appDir.Length);
 							b.Append("|*").Append(s1);
 						}
 					}

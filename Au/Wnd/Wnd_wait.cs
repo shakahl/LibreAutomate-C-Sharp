@@ -25,12 +25,12 @@ namespace Au
 	{
 		/// <summary>
 		/// Waits until window exists, is visible (optionally) and active (optionally).
-		/// Returns window handle. On timeout returns default(Wnd) if *secondsTimeout* is negative; else exception.
+		/// Returns window handle. On timeout returns default(Wnd) if <i>secondsTimeout</i> is negative; else exception.
 		/// Parameters etc are the same as <see cref="Find"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="active">The window must be the active window (<see cref="Active"/>), and not minimized.</param>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// By default ignores invisible and cloaked windows. Use flags if need.
@@ -75,12 +75,12 @@ namespace Au
 
 		/// <summary>
 		/// Waits until any of specified windows exists, is visible (optionally) and active (optionally).
-		/// Returns window handle. On timeout returns default(Wnd) if *secondsTimeout* is negative; else exception.
+		/// Returns window handle. On timeout returns default(Wnd) if <i>secondsTimeout</i> is negative; else exception.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="active">The window must be the active window (<see cref="Active"/>), and not minimized.</param>
 		/// <param name="windows">One or more variables containing window properties. Can be strings, see <see cref="Finder.op_Implicit(string)"/>.</param>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// By default ignores invisible and cloaked windows. Use flags if need.
 		/// </remarks>
@@ -119,8 +119,8 @@ namespace Au
 		/// Parameters etc are the same as <see cref="Find"/>.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// By default ignores invisible and cloaked windows. Use flags if need.
@@ -144,7 +144,7 @@ namespace Au
 		/// <param name="secondsTimeout"></param>
 		/// <param name="wFound">On timeout receives the first found matching window that exists.</param>
 		/// <param name="f">Window properties etc. Can be string, see <see cref="Finder.op_Implicit(string)"/>.</param>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitNot(double secondsTimeout, out Wnd wFound, Finder f)
 		{
 			wFound = default;
@@ -178,8 +178,8 @@ namespace Au
 		/// Do not throw exception when the window handle is invalid or the window was closed while waiting.
 		/// In such case the callback function must return false, like in the examples with <see cref="IsAlive"/>. Else exception is thrown (with a small delay) to prevent infinite waiting.
 		/// </param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <example>
 		/// <code><![CDATA[
@@ -231,8 +231,8 @@ namespace Au
 		/// Window name. Usually it is the title bar text.
 		/// String format: [](xref:wildcard_expression).
 		/// </param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
 		public bool WaitForName(double secondsTimeout, string name)
@@ -246,9 +246,9 @@ namespace Au
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="waitUntilProcessEnds">Wait until the process of this window ends.</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
-		/// <exception cref="AuException">Failed to open process handle when *waitUntilProcessEnds* is true.</exception>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		/// <exception cref="AuException">Failed to open process handle when <i>waitUntilProcessEnds</i> is true.</exception>
 		/// <remarks>
 		/// If the window is already closed, immediately returns true.
 		/// </remarks>

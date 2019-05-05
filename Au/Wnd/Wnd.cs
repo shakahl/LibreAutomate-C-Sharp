@@ -2409,7 +2409,7 @@ namespace Au
 		/// Returns true if the window is a ghost window that the system creates over a hung (not responding) window to allow the user to minimally interact with it.
 		/// </summary>
 		public bool IsHungGhost {
-			get => IsHung && ClassNameIs("Ghost") && ProgramName.EqualsI_("DWM.exe");
+			get => IsHung && ClassNameIs("Ghost") && ProgramName.Equals_("DWM.exe", true);
 			//Class is "Ghost", exe is "DWM" (even if no Aero), text sometimes ends with "(Not Responding)".
 			//IsHungWindow returns true for ghost window, although it is not actually hung. It is the fastest.
 			//TODO: test undocumented API HungWindowFromGhostWindow
@@ -2491,7 +2491,7 @@ namespace Au
 		public bool ClassNameIs(string cn) => ClassName.Like_(cn, true);
 
 		/// <summary>
-		/// If the class name of this window matches one of strings in *classNames*, returns 1-based index of the string. Else returns 0.
+		/// If the class name of this window matches one of strings in <i>classNames</i>, returns 1-based index of the string. Else returns 0.
 		/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="String_.Like_(string, string, bool)"/>. The array and strings cannot be null.</param>
@@ -2701,7 +2701,7 @@ namespace Au
 		//TODO: maybe string properties should return "" when failed, because now often NullReferenceException if not programmed carefully.
 
 		/// <summary>
-		/// If the program name of this window matches one of strings in *programNames*, returns 1-based index of the string. Else returns 0.
+		/// If the program name of this window matches one of strings in <i>programNames</i>, returns 1-based index of the string. Else returns 0.
 		/// Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
 		/// <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="String_.Like_(string, string, bool)"/>. The array and strings cannot be null.</param>
@@ -2737,7 +2737,7 @@ namespace Au
 
 		/// <summary>
 		/// Closes the window.
-		/// Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if *noWait*==true.
+		/// Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if <i>noWait</i>==true.
 		/// </summary>
 		/// <param name="noWait">
 		/// If true, does not wait until the window is closed.
@@ -2750,7 +2750,7 @@ namespace Au
 		/// </param>
 		/// <remarks>
 		/// The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or is a dialog without X button, or just need more time to close it.
-		/// If the window is of this thread, just calls <see cref="Send"/> or <see cref="Post"/> (if *noWait*==true) and returns true.
+		/// If the window is of this thread, just calls <see cref="Send"/> or <see cref="Post"/> (if <i>noWait</i>==true) and returns true.
 		/// </remarks>
 		/// <seealso cref="WaitForClosed"/>
 		/// <example>

@@ -38,7 +38,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Gets native module handle of an assembly.
-		/// Returns default(IntPtr) if *asm* is null or if the assembly is in-memory (loaded from byte[]) or dynamic.
+		/// Returns default(IntPtr) if <i>asm</i> is null or if the assembly is in-memory (loaded from byte[]) or dynamic.
 		/// </summary>
 		public static IntPtr OfAssembly(Assembly asm)
 		{

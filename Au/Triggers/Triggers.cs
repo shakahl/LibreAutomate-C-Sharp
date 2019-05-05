@@ -47,6 +47,8 @@ namespace Au.Triggers
 	/// Recommended properties for scripts containg triggers. You can set it in the Properties dialog.
 	/// - <c>runMode blue</c> allows other scripts to start while this script is running.
 	/// - <c>ifRunning restart</c> makes easy to restart the script after editing: just click the Run button.
+	/// 
+	/// <note type="note">Trigger actions don't inherit <b>Opt</b> options that are set before adding triggers. The example shows two ways how to set <b>Opt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>Opt</b> options set by previous action; the trigger engine calls <see cref="Opt.Reset"/> before executing an action.</note>
 	/// </remarks>
 	/// <example>
 	/// This is a single script with many action triggers.
@@ -109,18 +111,32 @@ namespace Au.Triggers
 	/// tt["WIndows", TAFlags.MatchCase] = o => o.Replace("Windows");
 	/// tt.DefaultPostfixType = TAPostfix.None;
 	/// tt["<b>"] = o => o.Replace("<b>[[|]]</b>");
-	/// Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; }; //the best way to set thread-local options
 	/// tt["#file"] = o => {
 	/// 	o.Replace("");
 	/// 	var fd = new OpenFileDialog();
 	/// 	if(fd.ShowDialog() == DialogResult.OK) Text(fd.FileName);
 	/// };
-	/// Triggers.Options.BeforeAction = null;
 	/// tt.DefaultPostfixType = default;
 	/// 
+	/// //shorter auto-replace code
+	/// 
 	/// var ts = Triggers.Autotext.SimpleReplace;
-	/// ts["#su"] = "Sunday"; //the same as tt["#su"] = o => o.Replace("Sunday");
-	/// ts["#mo"] = "Monday";
+	/// ts["#so"] = "Some text"; //the same as tt["#so"] = o => o.Replace("Some text");
+	/// ts["#mo"] = "More text";
+	/// 
+	/// //how to set Opt options for trigger actions
+	/// 
+	/// //Opt.Key.TextOption = KTextOption.Paste; //no, it won't work. It sets Opt for this thread, not for trigger actions.
+	/// Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; }; //the correct way. Sets Opt before executing an action.
+	/// ts["#p1"] = "text 1";
+	/// ts["#p2"] = "text 2";
+	/// Triggers.Options.BeforeAction = null;
+	/// 
+	/// //another way to set Opt options - use Opt.Static. It sets options for all actions in the script, not just for triggers added afterwards.
+	/// 
+	/// Opt.Static.Key.PasteLength = 50;
+	/// Opt.Static.Key.Hook = h => { var w1 = h.w.Window; Print(w1); if(w1.Name.Like_("* Word")) h.opt.PasteEnter = true; };
+	/// ts["#p3"] = "/* " + new string('*', 60) + " */\r\n";
 	/// 
 	/// //how to stop and disable/enable triggers
 	/// 
@@ -544,7 +560,7 @@ namespace Au.Triggers
 		LibHandle _evStop;
 
 		/// <summary>
-		/// Occurs before <see cref="Run"/> stops trigger engines and returns. Runs in its thread.
+		/// Occurs before <see cref="Run"/> stops trigger engines and returns.
 		/// </summary>
 		public event EventHandler Stopping;
 

@@ -721,7 +721,7 @@ partial class PanelEdit : Control
 				var paths = d.GetData("FileDrop", false) as string[];
 				if(paths != null) {
 					foreach(var path in paths) {
-						bool isLnk = path.EndsWithI_(".lnk");
+						bool isLnk = path.EndsWith_(".lnk", true);
 						if(isLnk) t.Append("//");
 						var name = Path_.GetFileName(path, true);
 						_AppendFile(path, name);
@@ -734,7 +734,7 @@ partial class PanelEdit : Control
 										name = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
 								} else {
 									args = g.Arguments;
-									if(!target.EndsWithI_(".exe") || name.IndexOf_("Shortcut") >= 0)
+									if(!target.EndsWith_(".exe", true) || name.IndexOf_("Shortcut") >= 0)
 										name = Path_.GetFileName(target, true);
 								}
 								_AppendFile(target, name, args);
@@ -874,7 +874,7 @@ partial class PanelEdit : Control
 			fixed (byte* p = b) { //FILEGROUPDESCRIPTORW
 				if(*(int*)p != 1) return; //count of FILEDESCRIPTORW
 				var s = new string((char*)(p + 76));
-				if(!s.EndsWithI_(".url")) return;
+				if(!s.EndsWith_(".url", true)) return;
 				url = d.GetData("UnicodeText", false) as string;
 				if(url != null) text = s.RemoveEnd_(4);
 			}

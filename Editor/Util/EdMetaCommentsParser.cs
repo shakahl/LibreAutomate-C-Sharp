@@ -124,7 +124,7 @@ class EdMetaCommentsParser
 		void _Append(string name, string value, bool relativePath = false)
 		{
 			if(value != null) {
-				if(relativePath && dir != null && value.StartsWithI_(dir)) value = value.Substring(dir.Length);
+				if(relativePath && dir != null && value.StartsWith_(dir, true)) value = value.Substring(dir.Length);
 				b.Append(name).Append(' ').Append(value).Append("; ");
 			}
 		}

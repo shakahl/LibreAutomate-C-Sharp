@@ -52,7 +52,7 @@ namespace Au.Util
 		///// <param name="method">Method name.</param>
 		///// <param name="paramTypes">Types of parameters of this overload.</param>
 		///// <exception cref="ArgumentException">Method does not exist.</exception>
-		///// <exception cref="AmbiguousMatchException">Multiple overloads exist that match *paramTypes*.</exception>
+		///// <exception cref="AmbiguousMatchException">Multiple overloads exist that match <i>paramTypes</i>.</exception>
 		//public static void Compile(Type type, string method, params Type[] paramTypes)
 		//{
 		//	var m = type.GetMethod(method, c_bindingFlags, null, paramTypes, null);

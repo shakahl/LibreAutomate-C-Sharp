@@ -135,15 +135,15 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits *timeMilliseconds* milliseconds.
+		/// Waits <i>timeMilliseconds</i> milliseconds.
 		/// </summary>
 		/// <param name="timeMilliseconds">Time to wait, milliseconds. Or <see cref="Timeout.Infinite"/>.</param>
 		/// <remarks>
 		/// Calls <see cref="Thread.Sleep(int)"/>.
-		/// Does not process Windows messages and other events, therefore should not be used in threads with windows, timers, hooks, events or COM, unless *timeMilliseconds* is small. Supports APC.
+		/// Does not process Windows messages and other events, therefore should not be used in threads with windows, timers, hooks, events or COM, unless <i>timeMilliseconds</i> is small. Supports APC.
 		/// If the computer goes to sleep or hibernate during that time, the real time is the specified time + the sleep/hibernate time.
 		/// </remarks>
-		/// <exception cref="ArgumentOutOfRangeException">*timeMilliseconds* is negative and not Timeout.Infinite (-1).</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>timeMilliseconds</i> is negative and not Timeout.Infinite (-1).</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// Time.Sleep(50);
@@ -166,9 +166,9 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits *timeMilliseconds* milliseconds. The same as <see cref="Sleep"/>.
+		/// Waits <i>timeMilliseconds</i> milliseconds. The same as <see cref="Sleep"/>.
 		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">*timeMilliseconds* is negative and not Timeout.Infinite (-1).</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>timeMilliseconds</i> is negative and not Timeout.Infinite (-1).</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// 50.ms();
@@ -180,11 +180,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits *timeSeconds* seconds.
+		/// Waits <i>timeSeconds</i> seconds.
 		/// The same as <see cref="Sleep"/> and <see cref="ms"/>, but the time is specified in seconds, not milliseconds.
 		/// </summary>
 		/// <param name="timeSeconds">Time to wait, seconds.</param>
-		/// <exception cref="ArgumentOutOfRangeException">*timeSeconds* is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>timeSeconds</i> is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// Time.Sleep(5000);
@@ -199,11 +199,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits *timeSeconds* seconds.
+		/// Waits <i>timeSeconds</i> seconds.
 		/// The same as <see cref="Sleep"/> and <see cref="ms"/>, but the time is specified in seconds, not milliseconds.
 		/// </summary>
 		/// <param name="timeSeconds">Time to wait, seconds. The smallest value is 0.001 (1 ms).</param>
-		/// <exception cref="ArgumentOutOfRangeException">*timeSeconds* is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>timeSeconds</i> is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// Time.Sleep(2500);
@@ -219,7 +219,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits *timeMS* milliseconds. While waiting, retrieves and dispatches Windows messages and other events.
+		/// Waits <i>timeMS</i> milliseconds. While waiting, retrieves and dispatches Windows messages and other events.
 		/// </summary>
 		/// <param name="timeMS">Time to wait, milliseconds. Or <see cref="Timeout.Infinite"/>.</param>
 		/// <remarks>
@@ -228,7 +228,7 @@ namespace Au
 		/// Be careful, this function is as dangerous as <see cref="System.Windows.Forms.Application.DoEvents"/>.
 		/// Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="DoEvents"/>.
 		/// </remarks>
-		/// <exception cref="ArgumentOutOfRangeException">*timeMS* is negative and not Timeout.Infinite.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> is negative and not Timeout.Infinite.</exception>
 		/// <seealso cref="WaitFor.MessagesAndCondition"/>
 		/// <seealso cref="WaitFor.PostedMessage"/>
 		/// <seealso cref="Util.MessageLoop"/>

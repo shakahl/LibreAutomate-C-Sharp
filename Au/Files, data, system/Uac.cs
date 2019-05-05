@@ -28,7 +28,7 @@ namespace Au
 		#region IDisposable Support
 
 		///
-		~Uac()  => _htoken.Dispose();
+		~Uac() => _htoken.Dispose();
 
 		///
 		public void Dispose()
@@ -292,10 +292,14 @@ namespace Au
 			//if(x.IsUIAccess) return false; //uiAccess in non-admin user session. Rare.
 
 			int r = 1;
-			try { r = (int)Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System", "EnableLUA", 1); }
-			catch { }
+			try {
+				if(!Api.GetDelegate(out Api.CheckElevationEnabled d, "kernel32.dll", "CheckElevationEnabled") || 0 != d(out r)) {
+					Debug_.Print("CheckElevationEnabled");
+					r = (int)Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System", "EnableLUA", 1);
+				}
+			}
+			catch(Exception e) { Debug_.Print(e); }
 			return r == 0;
-			//TODO: test undocumented API CheckElevationEnabled.
 		}
 	}
 }

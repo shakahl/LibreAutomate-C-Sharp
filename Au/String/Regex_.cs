@@ -134,7 +134,7 @@ namespace Au
 		/// </param>
 		/// <param name="flags">
 		/// Options.
-		/// Default 0. Flag UTF is implicitly added if *rx* contains non-ASCII characters and there is no flag NEVER_UTF.
+		/// Default 0. Flag UTF is implicitly added if <i>rx</i> contains non-ASCII characters and there is no flag NEVER_UTF.
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or failed to compile it for some other reason (unlikely).</exception>
@@ -250,14 +250,14 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if string *s* matches this regular expression.
+		/// Returns true if string <i>s</i> matches this regular expression.
 		/// </summary>
 		/// <param name="s">
 		/// Subject string.
 		/// If null, always returns false, even if the regular expression matches empty string.
 		/// </param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
 		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
@@ -282,7 +282,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if string *s* matches this regular expression.
+		/// Returns true if string <i>s</i> matches this regular expression.
 		/// Gets match info as <see cref="RXMatch"/>.
 		/// </summary>
 		/// <param name="s">
@@ -291,12 +291,12 @@ namespace Au
 		/// </param>
 		/// <param name="result">Receives match info. Read more in Remarks.</param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
-		/// If full match, returns true, and *result* contains the match and all groups that exist in the regular expressions.
-		/// If partial match, returns true, and *result* contains the match without groups. Partial match is possible if used a PARTIAL_ flag.
-		/// If no match, returns false, and *result* normally is null. But if a mark is available, *result* is an object with two valid properties - <see cref="RXMatch.Exists"/> (false) and <see cref="RXMatch.Mark"/>; other properties have undefined values or throw exception.
+		/// If full match, returns true, and <i>result</i> contains the match and all groups that exist in the regular expressions.
+		/// If partial match, returns true, and <i>result</i> contains the match without groups. Partial match is possible if used a PARTIAL_ flag.
+		/// If no match, returns false, and <i>result</i> normally is null. But if a mark is available, <i>result</i> is an object with two valid properties - <see cref="RXMatch.Exists"/> (false) and <see cref="RXMatch.Mark"/>; other properties have undefined values or throw exception.
 		/// 
 		/// This function is similar to <see cref="Regex.Match(string)"/>.
 		/// </remarks>
@@ -318,7 +318,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if string *s* matches this regular expression.
+		/// Returns true if string <i>s</i> matches this regular expression.
 		/// Gets whole match or some group, as <see cref="RXGroup"/> (index, length, value).
 		/// </summary>
 		/// <param name="s">
@@ -331,13 +331,13 @@ namespace Au
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is a simplified version of <see cref="Match"/>.
-		/// If full match, returns true, and *result* contains the match or the specifed group.
-		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore *group* should be 0.
-		/// If no match, returns false, and *result* is empty.
+		/// If full match, returns true, and <i>result</i> contains the match or the specifed group.
+		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
+		/// If no match, returns false, and <i>result</i> is empty.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -358,7 +358,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if string *s* matches this regular expression.
+		/// Returns true if string <i>s</i> matches this regular expression.
 		/// Gets whole match or some group, as string.
 		/// </summary>
 		/// <param name="s">
@@ -371,13 +371,13 @@ namespace Au
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is a simplified version of <see cref="Match"/> and <see cref="MatchG"/>.
-		/// If full match, returns true, and *result* contains the value of the match or of the specifed group.
-		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore *group* should be 0.
-		/// If no match, returns false, and *result* is null.
+		/// If full match, returns true, and <i>result</i> contains the value of the match or of the specifed group.
+		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
+		/// If no match, returns false, and <i>result</i> is null.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -512,8 +512,8 @@ namespace Au
 		/// </summary>
 		/// <param name="s">Subject string. Cannot be null.</param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
@@ -539,8 +539,8 @@ namespace Au
 		/// <param name="s">Subject string. Cannot be null.</param>
 		/// <param name="result">Receives all found matches.</param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
@@ -570,8 +570,8 @@ namespace Au
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
@@ -601,8 +601,8 @@ namespace Au
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
@@ -632,8 +632,8 @@ namespace Au
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
@@ -663,8 +663,8 @@ namespace Au
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
@@ -736,8 +736,8 @@ namespace Au
 		/// </param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
@@ -767,11 +767,11 @@ namespace Au
 		/// Can consist of any combination of literal text and substitutions like $1.
 		/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also replaces $* with the name of the last encountered mark.
 		/// </param>
-		/// <param name="result">The result string. Can be *s*.</param>
+		/// <param name="result">The result string. Can be <i>s</i>.</param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
@@ -801,8 +801,8 @@ namespace Au
 		/// </param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
@@ -831,11 +831,11 @@ namespace Au
 		/// Callback function's delegate, eg lambda. Called for each found match. Returns the replacement.
 		/// In the callback function you can use <see cref="RXMatch.ExpandReplacement"/>.
 		/// </param>
-		/// <param name="result">The result string. Can be *s*.</param>
+		/// <param name="result">The result string. Can be <i>s</i>.</param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
@@ -929,12 +929,12 @@ namespace Au
 		/// <param name="s">Subject string. Cannot be null.</param>
 		/// <param name="maxCount">The maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
-		/// Element 0 of the returned array is *s* substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is *s*.
+		/// Element 0 of the returned array is <i>s</i> substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is <i>s</i>.
 		/// 
 		/// This function is similar to <see cref="Regex.Split(string, int)"/>.
 		/// </remarks>
@@ -972,12 +972,12 @@ namespace Au
 		/// <param name="s">Subject string. Cannot be null.</param>
 		/// <param name="maxCount">The maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
 		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
 		/// <remarks>
-		/// Element 0 of the returned array is *s* substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is *s*.
+		/// Element 0 of the returned array is <i>s</i> substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is <i>s</i>.
 		/// 
 		/// This function is similar to <see cref="Regex.Split(string, int)"/>.
 		/// </remarks>
@@ -1040,7 +1040,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Encloses string in <c>\Q</c> <c>\E</c> if it contains metacharacters <c>\^$.[|()?*+{</c> or if *always* == true.
+		/// Encloses string in <c>\Q</c> <c>\E</c> if it contains metacharacters <c>\^$.[|()?*+{</c> or if <i>always</i> == true.
 		/// </summary>
 		/// <param name="s"></param>
 		/// <param name="always">Enclose always, even if the string does not contain metacharacters. Should be true if the regular expression in which this string will be used has option "extended", because then whitespace is ignored and # is a special character too.</param>
@@ -1075,7 +1075,7 @@ namespace Au
 	public static partial class String_
 	{
 		/// <summary>
-		/// Returns true if this string matches PCRE regular expression *rx*.
+		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.IsMatch(string, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
 		/// </summary>
@@ -1089,7 +1089,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if this string matches PCRE regular expression *rx*.
+		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
 		/// Gets match info as <see cref="RXMatch"/>.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.Match(string, out RXMatch, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
@@ -1104,13 +1104,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if this string matches PCRE regular expression *rx*.
+		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
 		/// Gets whole match or some group, as string.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.MatchS(string, out string, int, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *group*.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RegexMatch_(this string s, string rx, int group, out string result, RXFlags flags = 0, RXMore more = null)
 		{
@@ -1119,13 +1119,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if this string matches PCRE regular expression *rx*.
+		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
 		/// Gets whole match or some group, as index and length.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.MatchG(string, out RXGroup, int, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *group*.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RegexMatch_(this string s, string rx, int group, out RXGroup result, RXFlags flags = 0, RXMore more = null)
 		{
@@ -1134,7 +1134,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds all match instances of PCRE regular expression *rx*.
+		/// Finds all match instances of PCRE regular expression <i>rx</i>.
 		/// Returns a lazy IEnumerable&lt;<see cref="RXMatch"/>&gt; object that can be used with foreach.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.FindAll(string, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
@@ -1148,7 +1148,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds all match instances of PCRE regular expression *rx*. Gets array of <see cref="RXMatch"/>.
+		/// Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of <see cref="RXMatch"/>.
 		/// Returns true if found 1 or more matches.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.FindAll(string, out RXMatch[], RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
@@ -1162,13 +1162,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds all match instances of PCRE regular expression *rx*.
+		/// Finds all match instances of PCRE regular expression <i>rx</i>.
 		/// Returns a lazy IEnumerable&lt;<see cref="RXGroup"/>&gt; object that can be used with foreach.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.FindAllS(string, int, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *group*.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static IEnumerable<string> RegexFindAll_(this string s, string rx, int group, RXFlags flags = 0, RXMore more = null)
 		{
@@ -1177,13 +1177,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds all match instances of PCRE regular expression *rx*. Gets array of strings.
+		/// Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of strings.
 		/// Returns true if found 1 or more matches.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.FindAllS(string, out string[], int, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *group*.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RegexFindAll_(this string s, string rx, int group, out string[] result, RXFlags flags = 0, RXMore more = null)
 		{
@@ -1192,7 +1192,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds and replaces all match instances of PCRE regular expression *rx*.
+		/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
 		/// Returns the result string.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.Replace(string, string, int, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
@@ -1206,7 +1206,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds and replaces all match instances of PCRE regular expression *rx*.
+		/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
 		/// Returns the number of replacements made.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.Replace(string, string, out string, int, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
@@ -1220,7 +1220,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds and replaces all match instances of PCRE regular expression *rx*. Uses a callback function.
+		/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
 		/// Returns the result string.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.Replace(string, Func{RXMatch, string}, int, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
@@ -1234,7 +1234,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds and replaces all match instances of PCRE regular expression *rx*. Uses a callback function.
+		/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
 		/// Returns the number of replacements made.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.Replace(string, Func{RXMatch, string}, out string, int, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
@@ -1248,7 +1248,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns array of substrings delimited by PCRE regular expression *rx* matches.
+		/// Returns array of substrings delimited by PCRE regular expression <i>rx</i> matches.
 		/// Parameters etc are of <see cref="Regex_(string, RXFlags)"/> and <see cref="Regex_.Split(string, int, RXMore)"/>.
 		/// Examples in <see cref="Regex_"/> class help.
 		/// </summary>

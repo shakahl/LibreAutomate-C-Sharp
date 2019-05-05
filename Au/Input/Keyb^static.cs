@@ -87,7 +87,7 @@ namespace Au
 			/// </summary>
 			/// <param name="mod">Return true if some of these keys are down (pressed). Default: Ctrl, Shift or Alt.</param>
 			/// <remarks>
-			/// By default does not check the Win key, as it is not used in UI, but you can include it in *mod* if need.
+			/// By default does not check the Win key, as it is not used in UI, but you can include it in <i>mod</i> if need.
 			/// </remarks>
 			public static bool IsMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt)
 			{
@@ -103,7 +103,7 @@ namespace Au
 			/// </summary>
 			/// <param name="mod">Check only these keys. Default: Ctrl, Shift, Alt.</param>
 			/// <remarks>
-			/// By default does not check the Win key, as it is not used in UI, but you can include it in *mod* if need.
+			/// By default does not check the Win key, as it is not used in UI, but you can include it in <i>mod</i> if need.
 			/// </remarks>
 			public static KMod GetMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt)
 			{
@@ -233,8 +233,8 @@ namespace Au
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="mod">Check only these keys. Default: all.</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitForNoModifierKeys(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win)
 		{
 			return WaitForNoModifierKeysAndMouseButtons(secondsTimeout, mod, 0);
@@ -246,8 +246,8 @@ namespace Au
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="mod">Check only these keys. Default: all.</param>
 		/// <param name="buttons">Check only these buttons. Default: all.</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <seealso cref="IsMod"/>
 		/// <seealso cref="Mouse.IsPressed"/>
 		/// <seealso cref="Mouse.WaitForNoButtonsPressed"/>
@@ -271,8 +271,8 @@ namespace Au
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="keys">One or more keys or/and mouse buttons. Waits until all are released.</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitForReleased(double secondsTimeout, params KKey[] keys)
 		{
 			return WaitFor.Condition(secondsTimeout, () => {
@@ -286,9 +286,9 @@ namespace Au
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="keys">One or more keys. Waits until all are released. String like with <see cref="Key"/>, without operators.</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="ArgumentException">Error in keys string.</exception>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitForReleased(double secondsTimeout, string keys)
 		{
 			return WaitForReleased(secondsTimeout, Misc.ParseKeysString(keys));
@@ -300,10 +300,10 @@ namespace Au
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="hotkey">See <see cref="Util.RegisterHotkey.Register"/>.</param>
 		/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 		/// <exception cref="AuException">Failed to register hotkey.</exception>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// Uses <see cref="Util.RegisterHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
 		/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
@@ -334,13 +334,13 @@ namespace Au
 		/// <summary>
 		/// Waits for key-down or key-up event of the specified key.
 		/// </summary>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="key">Wait for this key.</param>
 		/// <param name="up">Wait for key-up event.</param>
-		/// <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
-		/// <exception cref="ArgumentException">*key* is 0.</exception>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <param name="block">Make the event invisible for other apps. If <i>up</i> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
+		/// <exception cref="ArgumentException"><i>key</i> is 0.</exception>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// Unlike <see cref="WaitForReleased"/>, waits for key event, not for key state.
 		/// Uses low-level keyboard hook. Can wait for any single key. See also <see cref="WaitForHotkey"/>.
@@ -361,13 +361,13 @@ namespace Au
 		/// <summary>
 		/// Waits for key-down or key-up event of the specified key.
 		/// </summary>
-		/// <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <param name="secondsTimeout"></param>
 		/// <param name="key">Wait for this key. A single-key string like with <see cref="Key"/>.</param>
 		/// <param name="up"></param>
 		/// <param name="block"></param>
-		/// <exception cref="ArgumentException">Invalid *key* string.</exception>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <exception cref="ArgumentException">Invalid <i>key</i> string.</exception>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// Keyb.WaitForKey(0, "Ctrl", up: false, block: true);
@@ -383,13 +383,13 @@ namespace Au
 		/// Waits for key-down or key-up event of any key, and gets the key code.
 		/// </summary>
 		/// <returns>
-		/// Returns the key code. On timeout returns 0 if *secondsTimeout* is negative; else exception.
+		/// Returns the key code. On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.
 		/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
 		/// </returns>
 		/// <param name="secondsTimeout"></param>
 		/// <param name="up"></param>
 		/// <param name="block"></param>
-		/// <exception cref="TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// var key = Keyb.WaitForKey(0, up: true, block: true);
@@ -487,7 +487,7 @@ namespace Au
 			/// Returns 0 if unknown key name.
 			/// </summary>
 			/// <param name="s">String containing key name, like with <see cref="Keyb.Key"/>.</param>
-			/// <param name="startIndex">Key name start index in *s*.</param>
+			/// <param name="startIndex">Key name start index in <i>s</i>.</param>
 			/// <param name="length">Key name length.</param>
 			/// <exception cref="ArgumentOutOfRangeException">Invalid start index or length.</exception>
 			public static KKey ParseKeyName(string s, int startIndex, int length)
@@ -849,7 +849,7 @@ namespace Au
 		/// 
 		/// Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See [](xref:uac).
 		/// 
-		/// The mouse button codes/names (eg <see cref="KKey.MouseLeft"/>) cannot be used to click. For it can be used callback, like in the "Ctrl+click" example.
+		/// Mouse button codes/names (eg <see cref="KKey.MouseLeft"/>) cannot be used to click. Instead use callback, like in the "Ctrl+click" example.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -951,7 +951,7 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text to send.</param>
 		/// <param name="keysEtc">Optional more parameters. The same as with <see cref="Key"/>. Can be used for example to press non-text keys, wait, send more text.</param>
-		/// <exception cref="ArgumentException">An argument in *keysEtc* is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
+		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		/// <remarks>
 		/// This function is identical to <see cref="Key"/>, except: the first parameter is literal text (not keys). This example shows the difference: <c>Key("keys", "text", "keys", "text"); Text("text", "keys", "text", "keys");</c>.
 		/// To send text can be used keys or clipboard, depending on <see cref="Opt.Key"/> and text.
@@ -984,7 +984,7 @@ namespace Au
 		/// Sends text to the active window, using virtual keystrokes or the clipboard. Then also can send non-text keystrokes.
 		/// Calls <see cref="Keyb.Text"/>.
 		/// </summary>
-		/// <exception cref="ArgumentException">An argument in *keysEtc* is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
+		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		public static void Text(string text, params object[] keysEtc) => Keyb.Text(text, keysEtc);
 	}
 }

@@ -40,7 +40,7 @@ namespace Au
 	/// 
 	/// Many applications have various problems with their AOs: bugs, incorrect/nonstandard/partial implementation, or initially disabled. This class implements workarounds for known problems, where possible.
 	/// 
-	/// <a data-toggle="collapse" href="#collapse1" aria-expanded="false" aria-controls="collapse1">Known problematic applications</a>
+	/// <a data-toggle="collapse" data-target="#collapse1" aria-expanded="false" aria-controls="collapse1">Known problematic applications</a>
 	/// <div class="collapse" id="collapse1">
 	/// <table>
 	/// <tr>
@@ -111,7 +111,7 @@ namespace Au
 	///  <td>Some controls.</td>
 	///  <td>
 	///   <ol>
-	///    <li>AOs of some controls are not connected to the AO of the parent control. Then Find cannot find them if searches in whole window.<br/>Workaround: search only in that control. For example, use *prop* <c>"class"</c> or <c>"id"</c>. If it's a web browser control, use role prefix <c>"web:"</c>. Or find the control with <see cref="Wnd.Child"/> and search in it. Or use <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.</li>
+	///    <li>AOs of some controls are not connected to the AO of the parent control. Then Find cannot find them if searches in whole window.<br/>Workaround: search only in that control. For example, use <i>prop</i> <c>"class"</c> or <c>"id"</c>. If it's a web browser control, use role prefix <c>"web:"</c>. Or find the control with <see cref="Wnd.Child"/> and search in it. Or use <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.</li>
 	///   </ol>
 	///  </td>
 	/// </tr>
@@ -323,14 +323,16 @@ namespace Au
 
 		/// <summary>
 		/// Gets accessible object of window or control or its standard part - client area, titlebar etc.
-		/// Uses API <msdn>AccessibleObjectFromWindow</msdn>.
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="objid">Window part id. Default AccOBJID.WINDOW. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
 		/// <param name="flags">Flags.</param>
 		/// <exception cref="WndException">Invalid window.</exception>
 		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
-		/// <exception cref="ArgumentException">*objid* is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
+		/// <exception cref="ArgumentException"><i>objid</i> is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
+		/// <remarks>
+		/// Uses API <msdn>AccessibleObjectFromWindow</msdn>.
+		/// </remarks>
 		public static Acc FromWindow(Wnd w, AccOBJID objid = AccOBJID.WINDOW, AWFlags flags = 0)
 		{
 			bool spec = false;
@@ -388,10 +390,12 @@ namespace Au
 
 		/// <summary>
 		/// Gets accessible object from mouse cursor (pointer) position.
-		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </summary>
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+		/// <remarks>
+		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
+		/// </remarks>
 		public static Acc FromMouse(AXYFlags flags = 0)
 		{
 			return FromXY(Mouse.XY, flags);

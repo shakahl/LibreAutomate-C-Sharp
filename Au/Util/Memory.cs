@@ -556,7 +556,7 @@ namespace Au.Util
 		static ConditionalWeakTable<object, _Remover> s_table = new ConditionalWeakTable<object, _Remover>();
 
 		/// <summary>
-		/// Calls <see cref="GC.AddMemoryPressure"/>. Later, when object *obj* is garbage-collected, will call <see cref="GC.RemoveMemoryPressure"/>.
+		/// Calls <see cref="GC.AddMemoryPressure"/>. Later, when object <i>obj</i> is garbage-collected, will call <see cref="GC.RemoveMemoryPressure"/>.
 		/// </summary>
 		/// <param name="obj">An object of any type.</param>
 		/// <param name="size">Unmanaged memory size. It is passed to <b>GC.AddMemoryPressure</b> and <b>GC.RemoveMemoryPressure</b>.</param>

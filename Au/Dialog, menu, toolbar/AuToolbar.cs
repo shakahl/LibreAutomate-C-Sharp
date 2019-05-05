@@ -24,7 +24,7 @@ namespace Au
 	/// <summary>
 	/// TODO
 	/// </summary>
-	public class AuToolbar : BaseMT
+	internal class AuToolbar : BaseMT //now internal because unfinished
 	{
 		static AuToolbar()
 		{

@@ -201,7 +201,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		if(Empty(name)) return null;
 		if(name[0] == '<') return FindById(name.ToLong_(1));
 		var f = Root.FindDescendant(name, folder);
-		if(f == null && folder == false && !name.EndsWithI_(".cs")) {
+		if(f == null && folder == false && !name.EndsWith_(".cs", true)) {
 			f = Root.FindDescendant(name + ".cs", folder);
 			Debug_.PrintIf(f != null, "name without .cs");
 		}
@@ -286,9 +286,9 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public FileNode FindByFilePath(string path)
 	{
 		var d = FilesDirectory;
-		if(path.Length > d.Length && path.StartsWithI_(d) && path[d.Length] == '\\') //is in workspace folder
+		if(path.Length > d.Length && path.StartsWith_(d, true) && path[d.Length] == '\\') //is in workspace folder
 			return Root.FindDescendant(path.Substring(d.Length), null);
-		foreach(var f in Root.Descendants()) if(f.IsLink && path.EqualsI_(f.LinkTarget)) return f;
+		foreach(var f in Root.Descendants()) if(f.IsLink && path.Equals_(f.LinkTarget, true)) return f;
 		return null;
 	}
 
@@ -882,7 +882,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			}
 			var fd = FilesDirectory;
 			if(!fromWorkspaceDir) {
-				if(s.StartsWithI_(fd) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromWorkspaceDir = true;
+				if(s.StartsWith_(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromWorkspaceDir = true;
 				else if(!dirsDropped) dirsDropped = File_.ExistsAsDirectory(s);
 			}
 		}
@@ -896,10 +896,8 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		} else if(fromWorkspaceDir) {
 			r = 3; //move
 		} else {
-			string ins1 = dirsDropped ? "\nFolders not supported." : null;
-			r = AuDialog.ShowEx("Import files", string.Join("\n", a),
-			$"1 Add as a link to the external file{ins1}|2 Copy to the workspace folder|3 Move to the workspace folder|0 Cancel",
-			DFlags.CommandLinks, owner: _control, footerText: GetSecurityInfo("v|"));
+			string buttons = (dirsDropped ? null : "1 Add as a link to the external file|") + "2 Copy to the workspace folder|3 Move to the workspace folder|0 Cancel";
+			r = AuDialog.ShowEx("Import files", string.Join("\n", a), buttons, DFlags.CommandLinks, owner: _control, footerText: GetSecurityInfo("v|"));
 			if(r == 0) return;
 		}
 
@@ -1105,7 +1103,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			if(x.ColumnCount > 1) {
 				var sd = row[1];
 				delay = sd.ToInt_(0, out int end);
-				if(end > 0 && !sd.EndsWithI_("ms")) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
+				if(end > 0 && !sd.EndsWith_("ms", true)) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
 				if(delay < 10) delay = 10;
 			}
 			Timer_.After(delay, () => {

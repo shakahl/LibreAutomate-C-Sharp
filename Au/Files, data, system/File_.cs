@@ -295,7 +295,7 @@ namespace Au
 				if(nr > na) na = nr; else if(nr > 0) return b.ToString(nr); else break;
 			}
 
-			if(path.EndsWithI_(".exe") && path.IndexOfAny(String_.Lib.pathSep) < 0) {
+			if(path.EndsWith_(".exe", true) && path.IndexOfAny(String_.Lib.pathSep) < 0) {
 				try {
 					string rk = @"Software\Microsoft\Windows\CurrentVersion\App Paths\" + path;
 					if(Registry_.GetString(out path, "", rk) || Registry_.GetString(out path, "", rk, Registry.LocalMachine)) {
@@ -440,9 +440,9 @@ namespace Au
 						if((flags & FEFlags.SkipHiddenSystem) != 0) continue;
 						//skip Recycle Bin etc. It is useless, prevents copying drives, etc.
 						if(isDir && path.EndsWith_(':')) {
-							if(name.EqualsI_("$Recycle.Bin")) continue;
-							if(name.EqualsI_("System Volume Information")) continue;
-							if(name.EqualsI_("Recovery")) continue;
+							if(name.Equals_("$Recycle.Bin", true)) continue;
+							if(name.Equals_("System Volume Information", true)) continue;
+							if(name.Equals_("Recovery", true)) continue;
 						}
 					}
 
@@ -702,8 +702,8 @@ namespace Au
 		/// <param name="newName">New name without path. Example: "name.txt".</param>
 		/// <param name="ifExists"></param>
 		/// <exception cref="ArgumentException">
-		/// - *path* is not full path (see <see cref="Path_.IsFullPath"/>).
-		/// - *newName* is invalid filename.
+		/// - <i>path</i> is not full path (see <see cref="Path_.IsFullPath"/>).
+		/// - <i>newName</i> is invalid filename.
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The file (path) does not exist or cannot be found.</exception>
 		/// <exception cref="AuException">Failed.</exception>
@@ -730,7 +730,7 @@ namespace Au
 		/// <remarks>
 		/// In most cases uses API <msdn>MoveFileEx</msdn>. It's fast, because don't need to copy files.
 		/// In these cases copies/deletes: destination is on another drive; need to merge directories.
-		/// When need to copy, does not copy the security properties; sets default security properties.
+		/// When need to copy, does not copy security properties; sets default.
 		/// 
 		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// If path and newPath share the same parent directory, just renames the file.
@@ -747,15 +747,15 @@ namespace Au
 		/// <param name="newDirectory">New parent directory.</param>
 		/// <param name="ifExists"></param>
 		/// <exception cref="ArgumentException">
-		/// - *path* or *newDirectory* is not full path (see <see cref="Path_.IsFullPath"/>).
-		/// - *path* is drive. To move drive content, use <see cref="Move"/>.
+		/// - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="Path_.IsFullPath"/>).
+		/// - <i>path</i> is drive. To move drive content, use <see cref="Move"/>.
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// In most cases uses API <msdn>MoveFileEx</msdn>. It's fast, because don't need to copy files.
 		/// In these cases copies/deletes: destination is on another drive; need to merge directories.
-		/// When need to copy, does not copy the security properties; sets default security properties.
+		/// When need to copy, does not copy security properties; sets default.
 		/// 
 		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// </remarks>
@@ -783,7 +783,7 @@ namespace Au
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Uses API <msdn>CopyFileEx</msdn>.
-		/// On Windows 7 does not copy the security properties; sets default security properties.
+		/// On Windows 7 does not copy security properties; sets default.
 		/// Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
 		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// </remarks>
@@ -801,14 +801,14 @@ namespace Au
 		/// <param name="copyFlags">Options used when copying directory.</param>
 		/// <param name="filter">See <see cref="Copy"/>.</param>
 		/// <exception cref="ArgumentException">
-		/// - *path* or *newDirectory* is not full path (see <see cref="Path_.IsFullPath"/>).
-		/// - *path* is drive. To copy drive content, use <see cref="Copy"/>.
+		/// - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="Path_.IsFullPath"/>).
+		/// - <i>path</i> is drive. To copy drive content, use <see cref="Copy"/>.
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Uses API <msdn>CopyFileEx</msdn>.
-		/// On Windows 7 does not copy the security properties; sets default security properties.
+		/// On Windows 7 does not copy security properties; sets default.
 		/// Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
 		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// </remarks>
@@ -909,8 +909,8 @@ namespace Au
 			//info:
 			//RemoveDirectory fails if not empty.
 			//Directory.Delete fails if a descendant is read-only, etc.
-			//Also both fail if a [now deleted] subfolder containing files was open in Explorer. Workaround: sleep(10) and retry.
-			//_DeleteShell does not have these problems. But it is very slow.
+			//Also both fail if a [now deleted] subfolder containing files was open in Explorer. Workaround: sleep/retry.
+			//_DeleteShell usually does not have these problems. But it is very slow.
 			//But all fail if it is current directory in any process. If in current process, _DeleteShell succeeds; it makes current directory = its parent.
 			return type;
 		}
@@ -928,10 +928,10 @@ namespace Au
 					ec = WinError.Code;
 				}
 			}
-			if(ec == Api.ERROR_DIR_NOT_EMPTY && Api.PathIsDirectoryEmpty(path)) {
-				//see comments above about Explorer
-				Debug_.Print("ERROR_DIR_NOT_EMPTY when empty");
-				for(int i = 0; i < 5; i++) {
+			if(ec == Api.ERROR_DIR_NOT_EMPTY /*&& Api.PathIsDirectoryEmpty(path)*/) {
+				//see comments above about Explorer. Also fails in other cases, eg when a file was opened in a web browser.
+				for(int i = 0; i < 50; i++) {
+					Debug_.PrintIf(i > 0, "ERROR_DIR_NOT_EMPTY when empty. Retry " + (i + 1));
 					Thread.Sleep(15);
 					if(Api.RemoveDirectory(path)) return 0;
 				}
@@ -1107,10 +1107,10 @@ namespace Au
 		/// <summary>
 		/// This function can be used to safely open a file that may be temporarily locked (used by another process or thread). Waits while the file is locked.
 		/// </summary>
-		/// <returns>Returns the return value of the lambda *f*.</returns>
+		/// <returns>Returns the return value of the lambda <i>f</i>.</returns>
 		/// <param name="f">Lambda that calls a function that creates, opens or opens/reads/closes a file.</param>
 		/// <param name="millisecondsTimeout">Wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
-		/// <exception cref="ArgumentOutOfRangeException">*millisecondsTimeout* less than -1.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>millisecondsTimeout</i> less than -1.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the called function.</exception>
 		/// <remarks>
 		/// Calls the lambda and handles <b>IOException</b>. If the exception indicates that the file is locked, waits and retries in loop.
@@ -1138,7 +1138,7 @@ namespace Au
 			catch(IOException e) when(w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
 		}
 
-		/// <exception cref="ArgumentOutOfRangeException">*millisecondsTimeout* less than -1.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>millisecondsTimeout</i> less than -1.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the called function.</exception>
 		/// <example>
 		/// <code><![CDATA[

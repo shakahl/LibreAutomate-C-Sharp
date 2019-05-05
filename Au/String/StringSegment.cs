@@ -32,7 +32,7 @@ namespace Au
 		int _offset, _length;
 
 		/// <summary>
-		/// Sets the substring = whole *buffer*.
+		/// Sets the substring = whole <i>buffer</i>.
 		/// </summary>
 		/// <param name="buffer">The string that contains this substring. Cannot be null.</param>
 		public StringSegment(string buffer)
@@ -43,10 +43,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sets the substring = part of *buffer* that starts at index *offset* and has length *length*.
+		/// Sets the substring = part of <i>buffer</i> that starts at index <i>offset</i> and has length <i>length</i>.
 		/// </summary>
 		/// <param name="buffer">The string that contains this substring. Cannot be null.</param>
-		/// <param name="offset">The offset of the substring in *buffer*.</param>
+		/// <param name="offset">The offset of the substring in <i>buffer</i>.</param>
 		/// <param name="length">The length of the substring.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StringSegment(string buffer, int offset, int length)
@@ -59,10 +59,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sets the substring = part of *buffer* that starts at index *offset*.
+		/// Sets the substring = part of <i>buffer</i> that starts at index <i>offset</i>.
 		/// </summary>
 		/// <param name="buffer">The string that contains this substring. Cannot be null.</param>
-		/// <param name="offset">The offset of the substring in *buffer*.</param>
+		/// <param name="offset">The offset of the substring in <i>buffer</i>.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public StringSegment(string buffer, int offset) : this(buffer, offset, buffer.Length - offset) { }
 
@@ -255,7 +255,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns true if *obj* is <b>StringSegment</b> and its value is equal to that of this variable.
+		/// Returns true if <i>obj</i> is <b>StringSegment</b> and its value is equal to that of this variable.
 		/// Compares only substrigs, not offsets.
 		/// </summary>
 		public override bool Equals(object obj) => obj is StringSegment && _Equals((StringSegment)obj, false);

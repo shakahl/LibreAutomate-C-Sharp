@@ -1271,6 +1271,17 @@
             Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
             </summary>
         </member>
+        <member name="M:Au.Types.OptDebug.#ctor(Au.Types.OptDebug)">
+            <summary>
+            Initializes this instance with default values or values copied from another instance.
+            </summary>
+            <param name="cloneOptions">If not null, copies its options into this variable.</param>
+        </member>
+        <member name="M:Au.Types.OptDebug.Reset">
+            <summary>
+            Resets all options. Copies from <see cref="P:Au.Opt.Static.Debug"/>.
+            </summary>
+        </member>
         <member name="P:Au.Types.OptDebug.Verbose">
             <summary>
             If true, some library functions may display more warnings and other info.
@@ -1330,9 +1341,14 @@
             </summary>
             <param name="cloneOptions">If not null, copies its options into this variable.</param>
         </member>
-        <member name="M:Au.Types.OptMouse._LibReset(Au.Types.OptMouse)">
+        <member name="M:Au.Types.OptMouse.LibCopyOrDefault(Au.Types.OptMouse)">
             <summary>
             Copies options from o, or sets default if o==null. Like ctor does.
+            </summary>
+        </member>
+        <member name="M:Au.Types.OptMouse.Reset">
+            <summary>
+            Resets all options. Copies from <see cref="P:Au.Opt.Static.Mouse"/>.
             </summary>
         </member>
         <member name="P:Au.Types.OptMouse.ClickSpeed">
@@ -1406,9 +1422,14 @@
             </summary>
             <param name="cloneOptions">If not null, copies its options into this variable.</param>
         </member>
-        <member name="M:Au.Types.OptKey.LibReset(Au.Types.OptKey)">
+        <member name="M:Au.Types.OptKey.LibCopyOrDefault(Au.Types.OptKey)">
             <summary>
             Copies options from o, or sets default if o==null. Like ctor does.
+            </summary>
+        </member>
+        <member name="M:Au.Types.OptKey.Reset">
+            <summary>
+            Resets all options. Copies from <see cref="P:Au.Opt.Static.Key"/>.
             </summary>
         </member>
         <member name="M:Au.Types.OptKey.LibGetHookOptionsOrThis(Au.Wnd)">
@@ -1653,6 +1674,11 @@
         </member>
         <member name="M:Au.Types.OptWaitFor.#ctor(System.Int32,System.Boolean)">
             
+        </member>
+        <member name="M:Au.Types.OptWaitFor.Reset">
+            <summary>
+            Resets all options.
+            </summary>
         </member>
         <member name="M:Au.Types.OptWaitFor.op_Implicit(System.Int32)~Au.Types.OptWaitFor">
             <summary>
@@ -1960,7 +1986,7 @@
         </member>
         <member name="M:Au.Types.ExtensionMethods.Has_``1(``0,``0)">
             <summary>
-            Returns true if this enum variable has all flag bits specified in *flag*.
+            Returns true if this enum variable has all flag bits specified in <i>flag</i>.
             The same as Enum.HasFlag, but much faster.
             </summary>
             <param name="t"></param>
@@ -1968,7 +1994,7 @@
         </member>
         <member name="M:Au.Types.ExtensionMethods.HasAny_``1(``0,``0)">
             <summary>
-            Returns true if this enum variable has one or more flag bits specified in *flags*.
+            Returns true if this enum variable has one or more flag bits specified in <i>flags</i>.
             </summary>
             <param name="t"></param>
             <param name="flags">One or more flags.</param>
@@ -2330,7 +2356,7 @@
         <member name="M:Au.Types.RXMore.#ctor(System.Int32,System.Int32,Au.Types.RXMatchFlags)">
             <summary>
             Sets field values.
-            If *end* is -1 (default), will be used subject string length.
+            If <i>end</i> is -1 (default), will be used subject string length.
             </summary>
         </member>
         <member name="T:Au.Types.RXCalloutFunc">
@@ -2418,14 +2444,14 @@
             Gets the start index and length of the specified group in the subject string.
             </summary>
             <param name="group">Group number (1-based index).</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">*group* must be &gt; 0 and &lt; capture_top.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>group</i> must be &gt; 0 and &lt; capture_top.</exception>
         </member>
         <member name="M:Au.Types.RXCalloutData.GroupValue(System.Int32)">
             <summary>
             Gets the value (substring) of the specified group.
             </summary>
             <param name="group">Group number (1-based index).</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">*group* must be &gt; 0 and &lt; capture_top.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>group</i> must be &gt; 0 and &lt; capture_top.</exception>
         </member>
         <member name="P:Au.Types.RXCalloutData.LastGroup">
             <summary>
@@ -2686,7 +2712,7 @@
         </member>
         <member name="M:Au.Types.HookData.Keyboard.IsKey(Au.Types.KKey)">
             <summary>
-            Returns true if *key* == <b>vkCode</b> or *key* is Shift, Ctrl, Alt or Win and <b>vkCode</b> is LShift/RShift, LCtrl/RCtrl, LAlt/RAlt or RWin.
+            Returns true if <i>key</i> == <b>vkCode</b> or <i>key</i> is Shift, Ctrl, Alt or Win and <b>vkCode</b> is LShift/RShift, LCtrl/RCtrl, LAlt/RAlt or RWin.
             </summary>
         </member>
         <member name="P:Au.Types.HookData.Keyboard.LibSendInputFlags">
@@ -3235,27 +3261,27 @@
             true if this is default(AnyWnd).
             </summary>
         </member>
-        <member name="T:Au.Types.MultiString">
+        <member name="T:Au.Types.DStringList">
             <summary>
             Used for function parameters to specify multiple strings.
             Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversion operators from these types.
             </summary>
         </member>
-        <member name="F:Au.Types.MultiString.Value">
+        <member name="F:Au.Types.DStringList.Value">
             <summary>
             The raw value.
             </summary>
         </member>
-        <member name="M:Au.Types.MultiString.op_Implicit(System.String)~Au.Types.MultiString">
+        <member name="M:Au.Types.DStringList.op_Implicit(System.String)~Au.Types.DStringList">
             <summary> Assignment of a value of type string. </summary>
         </member>
-        <member name="M:Au.Types.MultiString.op_Implicit(System.String[])~Au.Types.MultiString">
+        <member name="M:Au.Types.DStringList.op_Implicit(System.String[])~Au.Types.DStringList">
             <summary> Assignment of a value of type string[]. </summary>
         </member>
-        <member name="M:Au.Types.MultiString.op_Implicit(System.Collections.Generic.List{System.String})~Au.Types.MultiString">
+        <member name="M:Au.Types.DStringList.op_Implicit(System.Collections.Generic.List{System.String})~Au.Types.DStringList">
             <summary> Assignment of a value of type List&lt;string&gt;. </summary>
         </member>
-        <member name="M:Au.Types.MultiString.ToArray(System.Char)">
+        <member name="M:Au.Types.DStringList.ToArray(System.Char)">
             <summary>
             Converts the value to string[].
             </summary>
@@ -3521,7 +3547,7 @@
             <remarks>
             Some constructors support Windows API error code. Then Message also will contain its error description.
             If error code ERROR_INVALID_WINDOW_HANDLE, Message also depends on whether the window handle is 0.
-            If parameter 'winApiErrorCode' is 0 or not used: if the window handle is invalid, uses ERROR_INVALID_WINDOW_HANDLE.
+            If parameter <i>winApiErrorCode</i> is 0 or not used: if the window handle is invalid, uses ERROR_INVALID_WINDOW_HANDLE.
             If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If ends with "*", replaces the "*" with " window.". If does not end with ".", appends ".".
             </remarks>
         </member>
@@ -3653,9 +3679,9 @@
             </summary>
             <param name="left"></param>
             <param name="top"></param>
-            <param name="rightOrWidth">right or width, depending on *useWidthHeight*.</param>
-            <param name="bottomOrHeight">bottom or height, depending on *useWidthHeight*.</param>
-            <param name="useWidthHeight">If true (default), *rightOrWidth*/*bottomOrHeight* are width/height. Else right/bottom.</param>
+            <param name="rightOrWidth">right or width, depending on <i>useWidthHeight</i>.</param>
+            <param name="bottomOrHeight">bottom or height, depending on <i>useWidthHeight</i>.</param>
+            <param name="useWidthHeight">If true (default), <i>rightOrWidth</i>/<i>bottomOrHeight</i> are width/height. Else right/bottom.</param>
         </member>
         <member name="M:Au.Types.RECT.Set(System.Int32,System.Int32,System.Int32,System.Int32,System.Boolean)">
             <summary>
@@ -3774,12 +3800,12 @@
         </member>
         <member name="M:Au.Types.RECT.MoveInRect(Au.Types.RECT,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
             <summary>
-            Moves this rectangle to the specified coordinates in another rectangle *r*.
+            Moves this rectangle to the specified coordinates in another rectangle <i>r</i>.
             </summary>
-            <param name="x">X coordinate relative to *r*. Default - center. Can be Coord.Reverse etc.</param>
-            <param name="y">Y coordinate relative to *r*. Default - center. Can be Coord.Reverse etc.</param>
+            <param name="x">X coordinate relative to <i>r</i>. Default - center. Can be Coord.Reverse etc.</param>
+            <param name="y">Y coordinate relative to <i>r</i>. Default - center. Can be Coord.Reverse etc.</param>
             <param name="r">Another rectangle.</param>
-            <param name="ensureInRect">If part of rectangle is not in *r*, move and/or resize it so that entire rectangle would be in *r*. Default true.</param>
+            <param name="ensureInRect">If part of rectangle is not in <i>r</i>, move and/or resize it so that entire rectangle would be in <i>r</i>. Default true.</param>
         </member>
         <member name="M:Au.Types.RECT.EnsureInScreen(Au.Types.Screen_,System.Boolean)">
             <summary>
@@ -4531,7 +4557,7 @@
             Gets or sets edit field text.
             </summary>
         </member>
-        <member name="T:Au.Types.TDSend">
+        <member name="T:Au.Types.DSend">
             <summary>
             Can be used through <see cref="P:Au.AuDialog.Send"/>, to interact with dialog while it is open.
             </summary>
@@ -4539,7 +4565,7 @@
             Example (in an event handler): <c>e.dialog.Close();</c>
             </remarks>
         </member>
-        <member name="M:Au.Types.TDSend.Message(Au.Types.Native.TDM,Au.Types.LPARAM,Au.Types.LPARAM)">
+        <member name="M:Au.Types.DSend.Message(Au.Types.Native.TDM,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
             Sends a message to the dialog.
             </summary>
@@ -4551,7 +4577,7 @@
             NAVIGATE_PAGE currently not supported.
             </remarks>
         </member>
-        <member name="M:Au.Types.TDSend.ChangeText1(System.String,System.Boolean)">
+        <member name="M:Au.Types.DSend.ChangeText1(System.String,System.Boolean)">
             <summary>
             Changes the main big-font text.
             </summary>
@@ -4559,7 +4585,7 @@
             Call this method while the dialog is open, eg in an event handler.
             </remarks>
         </member>
-        <member name="M:Au.Types.TDSend.ChangeText2(System.String,System.Boolean)">
+        <member name="M:Au.Types.DSend.ChangeText2(System.String,System.Boolean)">
             <summary>
             Changes the main small-font text.
             </summary>
@@ -4567,7 +4593,7 @@
             Call this method while the dialog is open, eg in an event handler.
             </remarks>
         </member>
-        <member name="M:Au.Types.TDSend.ChangeFooterText(System.String,System.Boolean)">
+        <member name="M:Au.Types.DSend.ChangeFooterText(System.String,System.Boolean)">
             <summary>
             Changes the footer text.
             </summary>
@@ -4575,7 +4601,7 @@
             Call this method while the dialog is open, eg in an event handler.
             </remarks>
         </member>
-        <member name="M:Au.Types.TDSend.ChangeExpandedText(System.String,System.Boolean)">
+        <member name="M:Au.Types.DSend.ChangeExpandedText(System.String,System.Boolean)">
             <summary>
             Changes the expanded area text.
             </summary>
@@ -4583,7 +4609,7 @@
             Call this method while the dialog is open, eg in an event handler.
             </remarks>
         </member>
-        <member name="M:Au.Types.TDSend.Close(System.Int32)">
+        <member name="M:Au.Types.DSend.Close(System.Int32)">
             <summary>
             Clicks a button. Normally it closes the dialog.
             </summary>
@@ -4593,7 +4619,7 @@
             Sends message Native.TDM.CLICK_BUTTON.
             </remarks>
         </member>
-        <member name="M:Au.Types.TDSend.EnableButton(System.Int32,System.Boolean)">
+        <member name="M:Au.Types.DSend.EnableButton(System.Int32,System.Boolean)">
             <summary>
             Enables or disables a button.
             </summary>
@@ -4603,7 +4629,7 @@
             Sends message Native.TDM.ENABLE_BUTTON.
             </remarks>
         </member>
-        <member name="M:Au.Types.TDSend.Progress(System.Int32)">
+        <member name="M:Au.Types.DSend.Progress(System.Int32)">
             <summary>
             Sets progress bar value, 0 to 100.
             </summary>
@@ -5174,7 +5200,7 @@
             
             Many applications have various problems with their AOs: bugs, incorrect/nonstandard/partial implementation, or initially disabled. This class implements workarounds for known problems, where possible.
             
-            <a data-toggle="collapse" href="#collapse1" aria-expanded="false" aria-controls="collapse1">Known problematic applications</a>
+            <a data-toggle="collapse" data-target="#collapse1" aria-expanded="false" aria-controls="collapse1">Known problematic applications</a>
             <div class="collapse" id="collapse1">
             <table>
             <tr>
@@ -5245,7 +5271,7 @@
              <td>Some controls.</td>
              <td>
               <ol>
-               <li>AOs of some controls are not connected to the AO of the parent control. Then Find cannot find them if searches in whole window.<br/>Workaround: search only in that control. For example, use *prop* <c>"class"</c> or <c>"id"</c>. If it's a web browser control, use role prefix <c>"web:"</c>. Or find the control with <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/> and search in it. Or use <see cref="M:Au.Acc.Finder.Find(Au.Wnd,Au.Wnd.ChildFinder)"/>.</li>
+               <li>AOs of some controls are not connected to the AO of the parent control. Then Find cannot find them if searches in whole window.<br/>Workaround: search only in that control. For example, use <i>prop</i> <c>"class"</c> or <c>"id"</c>. If it's a web browser control, use role prefix <c>"web:"</c>. Or find the control with <see cref="M:Au.Wnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.Wnd,System.Boolean},System.Int32)"/> and search in it. Or use <see cref="M:Au.Acc.Finder.Find(Au.Wnd,Au.Wnd.ChildFinder)"/>.</li>
               </ol>
              </td>
             </tr>
@@ -5307,21 +5333,21 @@
         <member name="P:Au.Acc.WndContainer">
             <summary>
             Gets the container window or control of this accessible object.
-            Uses API <msdn>WindowFromAccessibleObject</msdn>.
             </summary>
             <remarks>
             Returns default(Wnd) if failed. Supports <see cref="T:Au.WinError"/>.
-            All objects must support this property, but some have bugs and can fail (return default(Wnd)) or return a wrong window.
+            All objects must support this property, but some have bugs and can fail or return a wrong window.
+            Uses API <msdn>WindowFromAccessibleObject</msdn>.
             </remarks>
         </member>
         <member name="P:Au.Acc.WndTopLevel">
             <summary>
             Gets the top-level window that contains this accessible object.
-            Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
             </summary>
             <remarks>
             Returns default(Wnd) if failed. Supports <see cref="T:Au.WinError"/>.
             All objects must support this property, but some have bugs and can return default(Wnd).
+            Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
             </remarks>
         </member>
         <member name="P:Au.Acc.Rect">
@@ -5337,56 +5363,56 @@
         <member name="M:Au.Acc.GetRect(Au.Types.RECT@)">
             <summary>
             Gets location of this accessible object in screen.
-            Uses <msdn>IAccessible.accLocation</msdn>.
             </summary>
             <param name="r">Receives object rectangle in screen coordinates.</param>
             <remarks>
             Returns false if failed or this property is unavailable. Supports <see cref="T:Au.WinError"/>.
             Most but not all objects support this property.
+            Uses <msdn>IAccessible.accLocation</msdn>.
             </remarks>
         </member>
         <member name="M:Au.Acc.GetRect(Au.Types.RECT@,Au.Wnd)">
             <summary>
             Gets location of this accessible object in the client area of window w.
-            Uses <msdn>IAccessible.accLocation</msdn> and <see cref="M:Au.Wnd.MapScreenToClient(Au.Types.RECT@)"/>.
             </summary>
             <param name="r">Receives object rectangle in w client area coordinates.</param>
             <param name="w">Window or control.</param>
             <remarks>
             Returns false if failed or this property is unavailable. Supports <see cref="T:Au.WinError"/>.
             Most but not all objects support this property.
+            Uses <msdn>IAccessible.accLocation</msdn> and <see cref="M:Au.Wnd.MapScreenToClient(Au.Types.RECT@)"/>.
             </remarks>
         </member>
         <member name="P:Au.Acc.RoleInt">
             <summary>
             Gets standard non-string role, as enum AccROLE.
-            Uses <msdn>IAccessible.get_accRole</msdn>.
             </summary>
             <remarks>
             Most objects have a standard role, as enum <see cref="T:Au.Types.AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
             Returns 0 if role is string or if failed. Supports <see cref="T:Au.WinError"/>.
             All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
+            Uses <msdn>IAccessible.get_accRole</msdn>.
             </remarks>
         </member>
         <member name="P:Au.Acc.Role">
             <summary>
             Gets standard or custom role, as string.
-            Uses <msdn>IAccessible.get_accRole</msdn>.
             </summary>
             <remarks>
             Most objects have a standard role, as enum <see cref="T:Au.Types.AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
             For standard roles this function returns enum <see cref="T:Au.Types.AccROLE"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
             Returns "" if failed. Supports <see cref="T:Au.WinError"/>.
             All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
+            Uses <msdn>IAccessible.get_accRole</msdn>.
             </remarks>
         </member>
         <member name="P:Au.Acc.State">
             <summary>
             Gets object state (flags).
-            Uses <msdn>IAccessible.get_accState</msdn>.
             </summary>
             <remarks>
             Returns 0 if failed. Supports <see cref="T:Au.WinError"/>.
+            Uses <msdn>IAccessible.get_accState</msdn>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -5437,11 +5463,11 @@
         <member name="P:Au.Acc.Name">
             <summary>
             Gets name.
-            Uses <msdn>IAccessible.get_accName</msdn>.
             </summary>
             <remarks>
             Object name usually is its read-only text (eg button text, link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the object.
             Returns "" if name is unavailable or if failed. Supports <see cref="T:Au.WinError"/>.
+            Uses <msdn>IAccessible.get_accName</msdn>.
             </remarks>
         </member>
         <member name="M:Au.Acc.LibNameOfWindow(Au.Wnd)">
@@ -5453,31 +5479,31 @@
         <member name="P:Au.Acc.Value">
             <summary>
             Gets or sets value.
-            Uses <msdn>IAccessible.get_accValue</msdn> or <msdn>IAccessible.put_accValue</msdn>.
             </summary>
             <exception cref="T:Au.Types.AuException">Failed to set value.</exception>
             <remarks>
-            Object value usually is its editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the object reliably.
+            Usually it is editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the object reliably.
             The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="T:Au.WinError"/>.
             Most objects don't support 'set'.
+            Uses <msdn>IAccessible.get_accValue</msdn> or <msdn>IAccessible.put_accValue</msdn>.
             </remarks>
         </member>
         <member name="P:Au.Acc.Description">
             <summary>
             Gets description.
-            Uses <msdn>IAccessible.get_accDescription</msdn>.
             </summary>
             <remarks>
             Returns "" if this property is unavailable or if failed. Supports <see cref="T:Au.WinError"/>.
+            Uses <msdn>IAccessible.get_accDescription</msdn>.
             </remarks>
         </member>
         <member name="P:Au.Acc.Help">
             <summary>
             Gets help text.
-            Uses <msdn>IAccessible.get_accHelp</msdn>.
             </summary>
             <remarks>
             Returns "" if this property is unavailable or if failed. Supports <see cref="T:Au.WinError"/>.
+            Uses <msdn>IAccessible.get_accHelp</msdn>.
             </remarks>
         </member>
         <member name="P:Au.Acc.UiaId">
@@ -5492,31 +5518,31 @@
         <member name="P:Au.Acc.KeyboardShortcut">
             <summary>
             Gets keyboard shortcut.
-            Uses <msdn>IAccessible.get_accKeyboardShortcut</msdn>.
             </summary>
             <remarks>
             Returns "" if this property is unavailable or if failed. Supports <see cref="T:Au.WinError"/>.
+            Uses <msdn>IAccessible.get_accKeyboardShortcut</msdn>.
             </remarks>
         </member>
         <member name="P:Au.Acc.DefaultAction">
             <summary>
             Gets default action.
-            Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
             </summary>
             <remarks>
             Returns "" if this property is unavailable or if failed. Supports <see cref="T:Au.WinError"/>.
             If this is a Java accessible object, returns all actions that can be used with <see cref="M:Au.Acc.DoJavaAction(System.String)"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="M:Au.Acc.DoAction"/>.
+            Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
             </remarks>
         </member>
         <member name="M:Au.Acc.DoAction">
             <summary>
             Performs the object's default action (see <see cref="P:Au.Acc.DefaultAction"/>). Usually it is 'click', 'press' or similar.
-            Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
             </summary>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
             Fails if the object does not have a default action. Then you can use <see cref="M:Au.Types.ExtensionMethods.MouseClick(Au.Acc,Au.Types.Coord,Au.Types.Coord,Au.Types.MButton)"/>, or try <see cref="M:Au.Acc.VirtualClick"/>, <see cref="M:Au.Acc.Select(Au.Types.AccSELFLAG)"/>, <see cref="M:Au.Acc.Focus(System.Boolean)"/> and keyboard functions.
             The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="M:Au.Acc.DoJavaAction(System.String)"/> or one of the above functions (MouseClick etc).
+            Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
             </remarks>
         </member>
         <member name="M:Au.Acc.VirtualClick">
@@ -5558,21 +5584,21 @@
         </member>
         <member name="M:Au.Acc.DoActionAndWaitForNewWebPage(System.Double,System.Action{Au.Acc})">
             <summary>
-            Calls <see cref="M:Au.Acc.DoAction"/> or *action* and waits until window name changes and web page name changes.
+            Calls <see cref="M:Au.Acc.DoAction"/> or <i>action</i> and waits until window name changes and web page name changes.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).
             Default 60 seconds.
             </param>
             <param name="action">If used, calls it instead of <see cref="M:Au.Acc.DoAction"/>.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:Au.Types.AuException">Failed. For example, when this object is invalid, or its top-level window does not contain a web page.</exception>
             <exception cref="T:Au.Types.WndException">The window was closed while waiting.</exception>
-            <exception cref="T:System.Exception">Exceptions thrown by <see cref="M:Au.Acc.DoAction"/> or by the *action* function.</exception>
+            <exception cref="T:System.Exception">Exceptions thrown by <see cref="M:Au.Acc.DoAction"/> or by the <i>action</i> function.</exception>
             <remarks>
             This function is used to click a link in a web page and wait until current web page is gone. It prevents a following 'wait for object' function from finding a matching object in the old page, which would be bad.
             This function does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for object' function which waits for a known object that must be in the new page.
-            This function cannot be used when the new page has the same title as current page. Then it waits until *secondsTimeout* time or forever. The same if the action does not open a web page.
+            This function cannot be used when the new page has the same title as current page. Then it waits until <i>secondsTimeout</i> time or forever. The same if the action does not open a web page.
             </remarks>
         </member>
         <member name="M:Au.Acc.Select(Au.Types.AccSELFLAG)">
@@ -5607,8 +5633,10 @@
         <member name="P:Au.Acc.ChildCount">
             <summary>
             Gets the number of direct child objects.
-            Uses <msdn>IAccessible.get_accChildCount</msdn>.
             </summary>
+            <remarks>
+            Uses <msdn>IAccessible.get_accChildCount</msdn>.
+            </remarks>
         </member>
         <member name="M:Au.Acc.GetProperties(System.String,Au.Types.AccProperties@)">
             <summary>
@@ -5634,7 +5662,7 @@
             <param name="result">Receives results.</param>
             <exception cref="T:System.ArgumentException">Unknown property character.</exception>
             <remarks>
-            The returned variable contains values of properties specified in *props*. When a property is empty or failed to get, the member variable is "", empty dictionary or default value of that type; never null.
+            The returned variable contains values of properties specified in <i>props</i>. When a property is empty or failed to get, the member variable is "", empty dictionary or default value of that type; never null.
             
             Normally this function is faster than calling multiple property functions, because it makes single remote procedure call. But not if this accessible object was found with flag <see cref="F:Au.Types.AFFlags.NotInProc"/> etc.
             
@@ -5664,7 +5692,7 @@
             For <c>"child"</c> is used API <msdn>AccessibleChildren</msdn>.
             </param>
             <param name="secondsToWait">Wait for the wanted AO max this number of seconds. If negative, waits forever.</param>
-            <exception cref="T:System.ArgumentException">Invalid *navig* string.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>navig</i> string.</exception>
             <example>
             <code><![CDATA[
             a = a.Navigate("parent next ch3", true);
@@ -5813,8 +5841,8 @@
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="w">Window or control that contains the AO.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Acc.Finder.Find(Au.Wnd)"/>.</exception>
         </member>
         <member name="M:Au.Acc.Finder.Wait(System.Double,Au.Acc)">
@@ -5824,8 +5852,8 @@
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="a">Direct or indirect parent AO.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Acc.Finder.Find(Au.Acc)"/>.</exception>
         </member>
         <member name="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)">
@@ -5843,16 +5871,16 @@
             Can have a prefix:
             - <c>"web:"</c> - search only in the visible web page, not in whole window. Examples: <c>"web:LINK"</c>, <c>"web:/LIST/LISTITEM/LINK"</c>.\
               Supports Firefox, Chrome, Internet Explorer (IE) and apps that use their code. With other windows, searches in the first found visible AO that has DOCUMENT role.\
-              Tip: To search only NOT in web pages, use *prop* <c>"notin=DOCUMENT"</c> (Chrome, Firefox) or <c>"notin=PANE"</c> (IE).
+              Tip: To search only NOT in web pages, use <i>prop</i> <c>"notin=DOCUMENT"</c> (Chrome, Firefox) or <c>"notin=PANE"</c> (IE).
             - <c>"firefox:"</c> - search only in the visible web page of Firefox or Firefox-based web browser. If w window class name starts with "Mozilla", can be used <c>"web:"</c> instead.
             - <c>"chrome:"</c> - search only in the visible web page of Chrome or Chrome-based web browser. If w window class name starts with "Chrome", can be used <c>"web:"</c> instead.
             
             <note>Chrome web page accessible objects normally are disabled (don't exist). Use prefix <c>"web:"</c> or <c>"chrome:"</c> to enable.</note>
             
             Prefix cannot be used:
-            - if *prop* contains <c>"id"</c> or <c>"class"</c>;
+            - if <i>prop</i> contains <c>"id"</c> or <c>"class"</c>;
             - with flag <see cref="F:Au.Types.AFFlags.UIA"/>;
-            - with the non-static **Find** overload (searching in an AO).
+            - with the non-static <b>Find</b> overload (searching in an AO).
             
             Can be path consisting of roles separated by "/". Examples:
             - <c>"web:DOCUMENT/div/LIST/LISTITEM/LINK"</c> - find LINK using its full path in web page.
@@ -5915,15 +5943,15 @@
             <param name="navig">If not null, the specified object is an intermediate object. After finding it, call <see cref="M:Au.Acc.Navigate(System.String,System.Double)"/> with this string and return its result.</param>
             <param name="controls">
             Properties of child controls where to search.
-            This is an alternative for class/id in *prop*. Allows to specify more control properties. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
+            This is an alternative for class/id in <i>prop</i>. Allows to specify more control properties. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
             </param>
             
             <exception cref="T:System.ArgumentException">
-            - *role* is "" or invalid.
-            - *name* is invalid wildcard expression (<c>"**options "</c> or regular expression).
-            - *prop* has invalid format or contains unknown property names or invalid wildcard expressions.
-            - *navig* string is invalid.
-            - *flags* has <see cref="F:Au.Types.AFFlags.UIA"/> when searching in web page (role prefix <c>"web:"</c> etc).
+            - <i>role</i> is "" or invalid.
+            - <i>name</i> is invalid wildcard expression (<c>"**options "</c> or regular expression).
+            - <i>prop</i> has invalid format or contains unknown property names or invalid wildcard expressions.
+            - <i>navig</i> string is invalid.
+            - <i>flags</i> has <see cref="F:Au.Types.AFFlags.UIA"/> when searching in web page (role prefix <c>"web:"</c> etc).
             </exception>
             <exception cref="T:Au.Types.WndException">Invalid window.</exception>
             <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
@@ -5971,7 +5999,7 @@
             Returns the found AO. Returns null if not found.
             </summary>
             <exception cref="T:System.ArgumentException">Exceptions of other overload, plus:
-            - *flags* has <see cref="F:Au.Types.AFFlags.UIA"/>.
+            - <i>flags</i> has <see cref="F:Au.Types.AFFlags.UIA"/>.
             - <see cref="P:Au.Acc.SimpleElementId"/> is not 0.
             </exception>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
@@ -5982,8 +6010,8 @@
             More info: <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-            <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns the found AO. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:System.ArgumentException"/>
             <exception cref="T:Au.Types.WndException"/>
             <exception cref="T:Au.Types.AuException"/>
@@ -5994,7 +6022,7 @@
             More info: <see cref="M:Au.Acc.Find(Au.Wnd,System.String,System.String,System.String,Au.Types.AFFlags,System.Func{Au.Acc,System.Boolean},System.Int32,System.String,Au.Wnd.ChildFinder)"/>.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-            <returns>Returns the found AO. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
+            <returns>Returns the found AO. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException"/>
             <exception cref="T:System.ArgumentException"/>
             <exception cref="T:Au.Types.AuException"/>
@@ -6097,14 +6125,16 @@
         <member name="M:Au.Acc.FromWindow(Au.Wnd,Au.Types.AccOBJID,Au.Types.AWFlags)">
             <summary>
             Gets accessible object of window or control or its standard part - client area, titlebar etc.
-            Uses API <msdn>AccessibleObjectFromWindow</msdn>.
             </summary>
             <param name="w">Window or control.</param>
             <param name="objid">Window part id. Default AccOBJID.WINDOW. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
             <param name="flags">Flags.</param>
             <exception cref="T:Au.Types.WndException">Invalid window.</exception>
             <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
-            <exception cref="T:System.ArgumentException">*objid* is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
+            <exception cref="T:System.ArgumentException"><i>objid</i> is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
+            <remarks>
+            Uses API <msdn>AccessibleObjectFromWindow</msdn>.
+            </remarks>
         </member>
         <member name="M:Au.Acc.FromXY(Au.Types.POINT,Au.Types.AXYFlags)">
             <summary>
@@ -6123,10 +6153,12 @@
         <member name="M:Au.Acc.FromMouse(Au.Types.AXYFlags)">
             <summary>
             Gets accessible object from mouse cursor (pointer) position.
-            Uses API <msdn>AccessibleObjectFromPoint</msdn>.
             </summary>
             <param name="flags"></param>
             <exception cref="T:Au.Types.AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+            <remarks>
+            Uses API <msdn>AccessibleObjectFromPoint</msdn>.
+            </remarks>
         </member>
         <member name="M:Au.Acc.Focused(System.Boolean)">
             <summary>
@@ -6316,9 +6348,9 @@
             <param name="freeWhenDisposing">
             Let the Dispose method (or finalizer) call API <msdn>VirtualFreeEx</msdn> to free mem. The memory must be allocated with API <msdn>VirtualAllocEx</msdn> (by any process) or <msdn>VirtualAlloc</msdn> (by that process).
             If false, mem can be any memory in that process, and this variable will not free it. Alternatively you can use <see cref="M:Au.Process_.Memory.ReadOther(System.IntPtr,System.Void*,System.Int32)"/> and <see cref="M:Au.Process_.Memory.WriteOther(System.IntPtr,System.Void*,System.Int32)"/>.</param>
-            <exception cref="T:System.InvalidOperationException">This variable already has Mem, unless it was set by this function with *freeWhenDisposing* = false.</exception>
+            <exception cref="T:System.InvalidOperationException">This variable already has Mem, unless it was set by this function with <i>freeWhenDisposing</i> = false.</exception>
             <remarks>
-            This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with *freeWhenDisposing* = true.
+            This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with <i>freeWhenDisposing</i> = true.
             </remarks>
         </member>
         <member name="M:Au.Process_.Memory.#ctor(Au.Wnd,System.Int32)">
@@ -6432,7 +6464,7 @@
             Get full path.
             Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
             </param>
-            <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if *fullPath* is true.</param>
+            <param name="noSlowAPI">When the fast API QueryFullProcessImageName fails, don't try to use another much slower API WTSEnumerateProcesses. Not used if <i>fullPath</i> is true.</param>
             <remarks>
             This function is much slower than getting window name or class name.
             </remarks>
@@ -6469,12 +6501,12 @@
             String format: [](xref:wildcard_expression).
             </param>
             <param name="fullPath">
-            *processName* is full path.
+            <i>processName</i> is full path.
             Note: Fails to get full path if the process belongs to another user session, unless current process is running as administrator; also fails to get full path of some system processes.
             </param>
             <param name="ofThisSession">Get processes only of this user session.</param>
             <exception cref="T:System.ArgumentException">
-            - *processName* is "" or null.
+            - <i>processName</i> is "" or null.
             - Invalid wildcard expression (<c>"**options "</c> or regular expression).
             </exception>
         </member>
@@ -6999,6 +7031,8 @@
             Recommended properties for scripts containg triggers. You can set it in the Properties dialog.
             - <c>runMode blue</c> allows other scripts to start while this script is running.
             - <c>ifRunning restart</c> makes easy to restart the script after editing: just click the Run button.
+            
+            <note type="note">Trigger actions don't inherit <b>Opt</b> options that are set before adding triggers. The example shows two ways how to set <b>Opt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>Opt</b> options set by previous action; the trigger engine calls <see cref="M:Au.Opt.Reset"/> before executing an action.</note>
             </remarks>
             <example>
             This is a single script with many action triggers.
@@ -7061,18 +7095,32 @@
             tt["WIndows", TAFlags.MatchCase] = o => o.Replace("Windows");
             tt.DefaultPostfixType = TAPostfix.None;
             tt["<b>"] = o => o.Replace("<b>[[|]]</b>");
-            Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; }; //the best way to set thread-local options
             tt["#file"] = o => {
             	o.Replace("");
             	var fd = new OpenFileDialog();
             	if(fd.ShowDialog() == DialogResult.OK) Text(fd.FileName);
             };
-            Triggers.Options.BeforeAction = null;
             tt.DefaultPostfixType = default;
             
+            //shorter auto-replace code
+            
             var ts = Triggers.Autotext.SimpleReplace;
-            ts["#su"] = "Sunday"; //the same as tt["#su"] = o => o.Replace("Sunday");
-            ts["#mo"] = "Monday";
+            ts["#so"] = "Some text"; //the same as tt["#so"] = o => o.Replace("Some text");
+            ts["#mo"] = "More text";
+            
+            //how to set Opt options for trigger actions
+            
+            //Opt.Key.TextOption = KTextOption.Paste; //no, it won't work. It sets Opt for this thread, not for trigger actions.
+            Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; }; //the correct way. Sets Opt before executing an action.
+            ts["#p1"] = "text 1";
+            ts["#p2"] = "text 2";
+            Triggers.Options.BeforeAction = null;
+            
+            //another way to set Opt options - use Opt.Static. It sets options for all actions in the script, not just for triggers added afterwards.
+            
+            Opt.Static.Key.PasteLength = 50;
+            Opt.Static.Key.Hook = h => { var w1 = h.w.Window; Print(w1); if(w1.Name.Like_("* Word")) h.opt.PasteEnter = true; };
+            ts["#p3"] = "/* " + new string('*', 60) + " */\r\n";
             
             //how to stop and disable/enable triggers
             
@@ -7177,7 +7225,7 @@
         </member>
         <member name="E:Au.Triggers.ActionTriggers.Stopping">
             <summary>
-            Occurs before <see cref="M:Au.Triggers.ActionTriggers.Run"/> stops trigger engines and returns. Runs in its thread.
+            Occurs before <see cref="M:Au.Triggers.ActionTriggers.Run"/> stops trigger engines and returns.
             </summary>
         </member>
         <member name="P:Au.Triggers.ActionTriggers.LibRunning">
@@ -7871,7 +7919,7 @@
             </summary>
             <param name="text">The replacement text.</param>
             <param name="keysEtc">Optionally more parameters that can generate keys etc. The same as with <see cref="M:Au.Keyb.Text(System.String,System.Object[])"/>.</param>
-            <exception cref="T:System.ArgumentException">An argument in *keysEtc* is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
+            <exception cref="T:System.ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
             <remarks>
             Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="P:Au.Triggers.AutotextTriggers.DefaultFlags"/>. Uses these flags: <see cref="F:Au.Triggers.TAFlags.DontErase"/> <see cref="F:Au.Triggers.TAFlags.RemovePostfix"/> <see cref="F:Au.Triggers.TAFlags.ReplaceRaw"/> <see cref="F:Au.Triggers.TAFlags.Confirm"/>.
             
@@ -9272,19 +9320,19 @@
             </summary>
             <param name="exe">
             Full path of program file. If not full path, uses <see cref="P:Au.Folders.ThisApp"/>. Uses <see cref="M:Au.Path_.Normalize(System.String,System.String,Au.Types.PNFlags)"/>.
-            If *rawExe* true, does not use <b>Normalize</b>/<b>ThisApp</b>.
+            If <i>rawExe</i> true, does not use <b>Normalize</b>/<b>ThisApp</b>.
             </param>
             <param name="args">null or command line arguments.</param>
             <param name="curDir">
             Initial current directory of the new process.
             - If null, uses <c>Directory.GetCurrentDirectory()</c>.
-            - Else if *rawCurDir*==true, uses raw *curDir* value.
+            - Else if <i>rawCurDir</i>==true, uses raw <i>curDir</i> value.
             - Else if "", calls <c>Path_.GetDirectoryPath(exe)</c>.
             - Else calls <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>.
             </param>
             <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
-            <param name="rawExe">Don't normalize *exe*.</param>
-            <param name="rawCurDir">Don't normalize *curDir*.</param>
+            <param name="rawExe">Don't normalize <i>exe</i>.</param>
+            <param name="rawCurDir">Don't normalize <i>curDir</i>.</param>
         </member>
         <member name="M:Au.Util.LibProcessStarter.StartLL(Au.Types.Api.PROCESS_INFORMATION@,System.Boolean,System.Boolean)">
             <summary>
@@ -9292,7 +9340,7 @@
             </summary>
             <param name="pi">Receives CreateProcessX results. Will need to close handles in pi, eg pi.Dispose.</param>
             <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
-            <param name="inheritHandles">API parameter *bInheritHandles*.</param>
+            <param name="inheritHandles">API parameter <i>bInheritHandles</i>.</param>
         </member>
         <member name="M:Au.Util.LibProcessStarter.Start(Au.Util.LibProcessStarter.Result.Need,System.Boolean)">
             <summary>
@@ -9393,7 +9441,7 @@
         <member name="M:Au.Util.ModuleHandle_.OfAssembly(System.Reflection.Assembly)">
             <summary>
             Gets native module handle of an assembly.
-            Returns default(IntPtr) if *asm* is null or if the assembly is in-memory (loaded from byte[]) or dynamic.
+            Returns default(IntPtr) if <i>asm</i> is null or if the assembly is in-memory (loaded from byte[]) or dynamic.
             </summary>
         </member>
         <member name="M:Au.Util.ModuleHandle_.OfAppDomainEntryAssembly">
@@ -10034,7 +10082,7 @@
             Calls API <msdn>SetWinEventHook</msdn>.
             </summary>
             <param name="eventMin">The lowest event constant value in the range of events. Can be AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>.</param>
-            <param name="eventMax">The highest event constant value in the range of events. Can be AccEVENT.MAX to indicate the highest possible event value. If 0, uses *eventMin*.</param>
+            <param name="eventMax">The highest event constant value in the range of events. Can be AccEVENT.MAX to indicate the highest possible event value. If 0, uses <i>eventMin</i>.</param>
             <param name="hookProc">The hook procedure (function that handles hook events).</param>
             <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
             <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
@@ -10192,7 +10240,7 @@
             To create uint value from distance dx dy use this code: <c>Math_.MakeUint(dx, dy)</c>.
             </param>
             <param name="withSleepTimes">
-            *recorded* also contains sleep times (milliseconds) alternating with distances.
+            <i>recorded</i> also contains sleep times (milliseconds) alternating with distances.
             It must start with a sleep time. Example: {time1, dist1, time2, dist2}. Another example: {time1, dist1, time2, dist2, time3}. This is invalid: {dist1, time1, dist2, time2}.
             </param>
         </member>
@@ -11033,7 +11081,7 @@
         </member>
         <member name="M:Au.Util.GC_.AddObjectMemoryPressure(System.Object,System.Int32)">
             <summary>
-            Calls <see cref="M:System.GC.AddMemoryPressure(System.Int64)"/>. Later, when object *obj* is garbage-collected, will call <see cref="M:System.GC.RemoveMemoryPressure(System.Int64)"/>.
+            Calls <see cref="M:System.GC.AddMemoryPressure(System.Int64)"/>. Later, when object <i>obj</i> is garbage-collected, will call <see cref="M:System.GC.RemoveMemoryPressure(System.Int64)"/>.
             </summary>
             <param name="obj">An object of any type.</param>
             <param name="size">Unmanaged memory size. It is passed to <b>GC.AddMemoryPressure</b> and <b>GC.RemoveMemoryPressure</b>.</param>
@@ -11201,17 +11249,17 @@
             Call this to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
             </summary>
         </member>
-        <member name="T:Au.Util.Help">
+        <member name="T:Au.Util.Help_">
             <summary>
             Static functions to open a help topic etc.
             </summary>
         </member>
-        <member name="M:Au.Util.Help.AuHelp(System.String)">
+        <member name="M:Au.Util.Help_.AuWeb(System.String)">
             <summary>
-            Opens file "Au Help.chm" and a help topic in it.
+            Opens a Au help topic onine.
             The file must be in <see cref="P:Au.Folders.ThisApp"/>.
             </summary>
-            <param name="topic">Topic file name, like "M_Au_Acc_Find" or "0248143b-a0dd-4fa1-84f9-76831db6714a".</param>
+            <param name="topic">Topic file name, like "Au.Acc.Find" or "Acc.Find" or "articles/Wildcard expression".</param>
         </member>
         <member name="M:Au.Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc">
             <summary>
@@ -11319,13 +11367,13 @@
             <summary>
             This constructor calls <see cref="M:Au.BlockUserInput.Start(Au.Types.BIEvents)"/>.
             </summary>
-            <exception cref="T:System.ArgumentException">*what* is 0.</exception>
+            <exception cref="T:System.ArgumentException"><i>what</i> is 0.</exception>
         </member>
         <member name="M:Au.BlockUserInput.Start(Au.Types.BIEvents)">
             <summary>
             Starts blocking.
             </summary>
-            <exception cref="T:System.ArgumentException">*what* is 0.</exception>
+            <exception cref="T:System.ArgumentException"><i>what</i> is 0.</exception>
             <exception cref="T:System.InvalidOperationException">Already started.</exception>
         </member>
         <member name="M:Au.BlockUserInput.Dispose">
@@ -11814,7 +11862,7 @@
             Sends text to the active window, using virtual keystrokes or the clipboard. Then also can send non-text keystrokes.
             Calls <see cref="M:Au.Keyb.Text(System.String,System.Object[])"/>.
             </summary>
-            <exception cref="T:System.ArgumentException">An argument in *keysEtc* is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
+            <exception cref="T:System.ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
         </member>
         <member name="M:Au.NoClass.Print(System.String)">
             <summary>
@@ -11891,7 +11939,7 @@
             </summary>
             <param name="text">Warning text.</param>
             <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0.</param>
-            <param name="prefix">Text before *text*. Default "Warning: ".</param>
+            <param name="prefix">Text before <i>text</i>. Default "Warning: ".</param>
             <remarks>
             Calls <see cref="M:Au.Output.Write(System.String)"/>.
             Does not show more that 1 warning/second, unless <b>Opt.Debug.</b><see cref="P:Au.Types.OptDebug.Verbose"/> == true.
@@ -11955,7 +12003,7 @@
             Returns self.
             </summary>
             <param name="keys">Key names and operators. Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc"</c>. More info: <see cref="M:Au.Keyb.Key(System.Object[])"/>. Can be null or "".</param>
-            <exception cref="T:System.ArgumentException">Error in *keys* string, for example an unknown key name.</exception>
+            <exception cref="T:System.ArgumentException">Error in <i>keys</i> string, for example an unknown key name.</exception>
         </member>
         <member name="M:Au.Keyb.AddKey(Au.Types.KKey,System.Nullable{System.Boolean})">
             <summary>
@@ -11964,7 +12012,7 @@
             </summary>
             <param name="key">Virtual-key code, as <see cref="T:Au.Types.KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255.</param>
             <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
-            <exception cref="T:System.ArgumentException">Invalid *key* (0).</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>key</i> (0).</exception>
         </member>
         <member name="M:Au.Keyb.AddKey(Au.Types.KKey,System.Int32,System.Boolean,System.Nullable{System.Boolean})">
             <summary>
@@ -12018,7 +12066,7 @@
             Returns self.
             </summary>
             <param name="count">Repeat count.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">*count* &gt;10000 or &lt;0.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>count</i> &gt;10000 or &lt;0.</exception>
             <exception cref="T:System.ArgumentException">The last added item is not key. Can repeat only single key; cannot repeat text etc.</exception>
         </member>
         <member name="M:Au.Keyb.AddSleep(System.Int32)">
@@ -12027,7 +12075,7 @@
             Returns self.
             </summary>
             <param name="timeMS">Time to sleep, milliseconds.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">*timeMS* &gt;10000 (1 minute) or &lt;0.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>timeMS</i> &gt;10000 (1 minute) or &lt;0.</exception>
         </member>
         <member name="M:Au.Keyb.Add(System.Object[])">
             <summary>
@@ -12042,7 +12090,7 @@
             Sends keys, text and executes other events added with the <b>AddX</b> functions.
             </summary>
             <param name="canSendAgain">Don't clear the internal collection. If true, this function then can be called again (eg in loop) to send/execute the same keys etc. If false (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
-            <exception cref="T:System.ArgumentException">*canSendAgain* is true and keys end with + or (.</exception>
+            <exception cref="T:System.ArgumentException"><i>canSendAgain</i> is true and keys end with + or (.</exception>
         </member>
         <member name="M:Au.Keyb._KeynameToKey(System.String,System.Int32,System.Int32)">
             <summary>
@@ -12233,7 +12281,7 @@
             </summary>
             <param name="mod">Return true if some of these keys are down (pressed). Default: Ctrl, Shift or Alt.</param>
             <remarks>
-            By default does not check the Win key, as it is not used in UI, but you can include it in *mod* if need.
+            By default does not check the Win key, as it is not used in UI, but you can include it in <i>mod</i> if need.
             </remarks>
         </member>
         <member name="M:Au.Keyb.UI.GetMod(Au.Types.KMod)">
@@ -12242,7 +12290,7 @@
             </summary>
             <param name="mod">Check only these keys. Default: Ctrl, Shift, Alt.</param>
             <remarks>
-            By default does not check the Win key, as it is not used in UI, but you can include it in *mod* if need.
+            By default does not check the Win key, as it is not used in UI, but you can include it in <i>mod</i> if need.
             </remarks>
         </member>
         <member name="P:Au.Keyb.UI.IsCapsLock">
@@ -12340,8 +12388,8 @@
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="mod">Check only these keys. Default: all.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
         <member name="M:Au.Keyb.WaitForNoModifierKeysAndMouseButtons(System.Double,Au.Types.KMod,Au.Types.MButtons)">
             <summary>
@@ -12350,8 +12398,8 @@
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="mod">Check only these keys. Default: all.</param>
             <param name="buttons">Check only these buttons. Default: all.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <seealso cref="M:Au.Keyb.IsMod(Au.Types.KMod)"/>
             <seealso cref="M:Au.Mouse.IsPressed(Au.Types.MButtons)"/>
             <seealso cref="M:Au.Mouse.WaitForNoButtonsPressed(System.Double,Au.Types.MButtons)"/>
@@ -12362,8 +12410,8 @@
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="keys">One or more keys or/and mouse buttons. Waits until all are released.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
         <member name="M:Au.Keyb.WaitForReleased(System.Double,System.String)">
             <summary>
@@ -12371,9 +12419,9 @@
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="keys">One or more keys. Waits until all are released. String like with <see cref="M:Au.Keyb.Key(System.Object[])"/>, without operators.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
             <exception cref="T:System.ArgumentException">Error in keys string.</exception>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
         <member name="M:Au.Keyb.WaitForHotkey(System.Double,Au.Types.KHotkey,System.Boolean)">
             <summary>
@@ -12382,10 +12430,10 @@
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="hotkey">See <see cref="M:Au.Util.RegisterHotkey.Register(System.Int32,Au.Types.KHotkey,Au.Types.AnyWnd)"/>.</param>
             <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
             <exception cref="T:System.ArgumentException">Error in hotkey string.</exception>
             <exception cref="T:Au.Types.AuException">Failed to register hotkey.</exception>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <remarks>
             Uses <see cref="T:Au.Util.RegisterHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
             Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
@@ -12406,13 +12454,13 @@
             <summary>
             Waits for key-down or key-up event of the specified key.
             </summary>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="key">Wait for this key.</param>
             <param name="up">Wait for key-up event.</param>
-            <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
-            <exception cref="T:System.ArgumentException">*key* is 0.</exception>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <param name="block">Make the event invisible for other apps. If <i>up</i> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
+            <exception cref="T:System.ArgumentException"><i>key</i> is 0.</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <remarks>
             Unlike <see cref="M:Au.Keyb.WaitForReleased(System.Double,Au.Types.KKey[])"/>, waits for key event, not for key state.
             Uses low-level keyboard hook. Can wait for any single key. See also <see cref="M:Au.Keyb.WaitForHotkey(System.Double,Au.Types.KHotkey,System.Boolean)"/>.
@@ -12429,13 +12477,13 @@
             <summary>
             Waits for key-down or key-up event of the specified key.
             </summary>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
             <param name="secondsTimeout"></param>
             <param name="key">Wait for this key. A single-key string like with <see cref="M:Au.Keyb.Key(System.Object[])"/>.</param>
             <param name="up"></param>
             <param name="block"></param>
-            <exception cref="T:System.ArgumentException">Invalid *key* string.</exception>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>key</i> string.</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <example>
             <code><![CDATA[
             Keyb.WaitForKey(0, "Ctrl", up: false, block: true);
@@ -12448,13 +12496,13 @@
             Waits for key-down or key-up event of any key, and gets the key code.
             </summary>
             <returns>
-            Returns the key code. On timeout returns 0 if *secondsTimeout* is negative; else exception.
+            Returns the key code. On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.
             For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
             </returns>
             <param name="secondsTimeout"></param>
             <param name="up"></param>
             <param name="block"></param>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <example>
             <code><![CDATA[
             var key = Keyb.WaitForKey(0, up: true, block: true);
@@ -12499,7 +12547,7 @@
             Returns 0 if unknown key name.
             </summary>
             <param name="s">String containing key name, like with <see cref="M:Au.Keyb.Key(System.Object[])"/>.</param>
-            <param name="startIndex">Key name start index in *s*.</param>
+            <param name="startIndex">Key name start index in <i>s</i>.</param>
             <param name="length">Key name length.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid start index or length.</exception>
         </member>
@@ -12791,7 +12839,7 @@
             </tr>
             </table>
             
-            When you don't want to use or modify <see cref="P:Au.Opt.Key"/>, use a <see cref="T:Au.Keyb"/> variable instead of this function. Example: <c>new Keyb(null).Add("keys", "text").Send();</c>. More examples in <see cref="M:Au.Keyb.#ctor(Au.Types.OptKey)"/> topic.
+            When you don't want to use or modify <see cref="P:Au.Opt.Key"/>, you can use a <see cref="T:Au.Keyb"/> variable instead of this function. Example: <c>new Keyb(null).Add("keys", "text").Send();</c>. More examples in <see cref="M:Au.Keyb.#ctor(Au.Types.OptKey)"/> topic.
             
             This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="P:Au.Types.OptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
             
@@ -12799,7 +12847,7 @@
             
             Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See [](xref:uac).
             
-            The mouse button codes/names (eg <see cref="F:Au.Types.KKey.MouseLeft"/>) cannot be used to click. For it can be used callback, like in the "Ctrl+click" example.
+            Mouse button codes/names (eg <see cref="F:Au.Types.KKey.MouseLeft"/>) cannot be used to click. Instead use callback, like in the "Ctrl+click" example.
             </remarks>
             <example>
             <code><![CDATA[
@@ -12898,7 +12946,7 @@
             </summary>
             <param name="text">Text to send.</param>
             <param name="keysEtc">Optional more parameters. The same as with <see cref="M:Au.Keyb.Key(System.Object[])"/>. Can be used for example to press non-text keys, wait, send more text.</param>
-            <exception cref="T:System.ArgumentException">An argument in *keysEtc* is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
+            <exception cref="T:System.ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
             <remarks>
             This function is identical to <see cref="M:Au.Keyb.Key(System.Object[])"/>, except: the first parameter is literal text (not keys). This example shows the difference: <c>Key("keys", "text", "keys", "text"); Text("text", "keys", "text", "keys");</c>.
             To send text can be used keys or clipboard, depending on <see cref="P:Au.Opt.Key"/> and text.
@@ -13064,7 +13112,7 @@
             Derived classes should override this function and draw anything. Don't need to call base.OnPaint of <see cref="T:Au.OsdWindow"/>, it does nothing.
             </summary>
             <remarks>
-            If <see cref="P:Au.OsdWindow.Opacity"/> is 0 (default), *g* is filled with <see cref="P:Au.OsdWindow.TransparentColor"/>. Pixels of this color will be transparent. The base class draws only non-transparent areas.
+            If <see cref="P:Au.OsdWindow.Opacity"/> is 0 (default), <i>g</i> is filled with <see cref="P:Au.OsdWindow.TransparentColor"/>. Pixels of this color will be transparent. The base class draws only non-transparent areas.
             </remarks>
         </member>
         <member name="P:Au.OsdWindow.Shadow">
@@ -13433,7 +13481,7 @@
             </summary>
             <param name="image">See <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.</param>
             <exception cref="T:System.IO.FileNotFoundException">The specified file does not exist.</exception>
-            <exception cref="T:System.Exception">Depending on *image* string format, exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, <see cref="M:Au.Convert_.Decompress(System.Byte[],System.Int32,System.Int32)"/>.</exception>
+            <exception cref="T:System.Exception">Depending on <i>image</i> string format, exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, <see cref="M:Au.Convert_.Decompress(System.Byte[],System.Int32,System.Int32)"/>.</exception>
             <exception cref="T:System.ArgumentException">Bad image format (the image cannot be loaded as Bitmap).</exception>
             <remarks>
             <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/> uses this function when <i>image</i> argument type is string. More info there.
@@ -13484,7 +13532,7 @@
             Finds image(s) or color(s) displayed in window or other area.
             </summary>
             <returns>
-            Returns <see cref="T:Au.WinImage"/> object containing the rectangle of the found image.
+            Returns a <see cref="T:Au.WinImage"/> object that contains the rectangle of the found image and can click it etc.
             Returns null if not found. See example.
             </returns>
             <param name="area">
@@ -13505,29 +13553,29 @@
             <br/>Can be created with function Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
             - int, ColorInt or Color - color. Int must be in 0xRRGGBB format. Alpha is not used.
             - <see cref="T:System.Drawing.Bitmap"/> - image object in memory.
-            - IEnumerable of string, int/ColorInt/Color, Bitmap or object - multiple images or colors. Action - find any. To create a different action can be used callback function (parameter *also*).
+            - IEnumerable of string, int/ColorInt/Color, Bitmap or object - multiple images or colors. Action - find any. To create a different action can be used callback function (parameter <i>also</i>).
             
             Icons are not supported directly, but you can use <see cref="M:Au.Icon_.GetFileIconImage(System.String,System.Int32,Au.Types.GIFlags)"/> or <see cref="M:Au.Icon_.HandleToImage(System.IntPtr,System.Boolean)"/>.
-            Transparent and partially transparent pixels are not compared. For example, when you capture a non-rectangular area image, the image actually is rectangular, but pixels outside of its captured area are transparent and therefore not compared. Also you can draw transparent areas with an image editor that supports it, for example Paint.NET.
             </param>
             <param name="flags"></param>
             <param name="colorDiff">Maximal allowed color difference. Use to to find images that have slightly different colors than the specified image. Can be 0 - 250, but should be as small as possible. Applied to each color component (red, green, blue) of each pixel.</param>
             <param name="also">
             Callback function. Called for each found image instance and receives its rectangle, match index and list index. Can return one of <see cref="T:Au.Types.WIAlso"/> values.
-            Callback functions can be used to get rectangles of multiple found images, create custom behaviors/actions, etc. Examples:
+            
+            Examples:
             - Skip some matching images if some condition if false: <c>also: o => condition ? WIAlso.OkReturn : WIAlso.FindOther</c>
             - Skip n matching images: <c>also: o => o.Skip(n)</c>
             - Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return false; }</c>. Don't use this code in 'wait' functions.
             - Get rectangles etc of all matching images and stop waiting: <c>also: o => { list.Add(o); o.Found = true; return false; }</c>
             - Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); WinImage.Find(w, images, also: o => { found[o.ListIndex] = true; return WIAlso.OkFindMoreOfList; }); if(found[0]) Print(0); if(found[1]) Print(1);</c>
             </param>
-            <exception cref="T:Au.Types.WndException">Invalid window handle (the *area* argument).</exception>
+            <exception cref="T:Au.Types.WndException">Invalid window handle (the <i>area</i> argument).</exception>
             <exception cref="T:System.ArgumentException">
             - An argument is of unsupported type or is/contains a null/invalid value.
             - Image or area is a bottom-up Bitmap object (see <see cref="P:System.Drawing.Imaging.BitmapData.Stride"/>). Such bitmaps are unusual in .NET (GDI+), but can be created by <b>Image.FromHbitmap</b> (instead use <see cref="M:Au.WinImage.BitmapFromHbitmap(System.IntPtr)"/>).
             </exception>
             <exception cref="T:System.IO.FileNotFoundException">The specified file does not exist.</exception>
-            <exception cref="T:System.Exception">Depending on *image* string format, exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, <see cref="M:Au.Convert_.Decompress(System.Byte[],System.Int32,System.Int32)"/>.</exception>
+            <exception cref="T:System.Exception">Depending on <i>image</i> string format, exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, <see cref="M:Au.Convert_.Decompress(System.Byte[],System.Int32,System.Int32)"/>.</exception>
             <exception cref="T:Au.Types.AuException">Something failed.</exception>
             <remarks>
             To create code for this function, use dialog "Find image or color in window". It is form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll.
@@ -13536,11 +13584,13 @@
             1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>(w, rectangle)</c>).
             2. Flag <see cref="F:Au.Types.WIFlags.WindowDC"/>. Usually makes several times faster. With this flag the speed depends on window.
             3. Video driver. Can be much slower if incorrect, generic or virtual PC driver is used. Flag <see cref="F:Au.Types.WIFlags.WindowDC"/> should help.
-            4. *colorDiff*. Should be as small as possible.
+            4. <i>colorDiff</i>. Should be as small as possible.
             
-            If flag <see cref="F:Au.Types.WIFlags.WindowDC"/> is not used, the search area must be visible on the screen. If it is covered by other windows, the function will search in these windows.
+            If flag <see cref="F:Au.Types.WIFlags.WindowDC"/> not used, the search area must be visible on the screen, because this function then gets pixels from the screen.
             
-            The function can only find images that exactly match the specified image. With *colorDiff* it can find images with slightly different colors and brightness. It cannot find images with different shapes.
+            Can find only images that exactly match the specified image. With <i>colorDiff</i> can find images with slightly different colors and brightness. Cannot find images with different shapes.
+            
+            Transparent and partially transparent pixels are ignored. For example, when you capture a non-rectangular area image, the image actually is rectangular, but pixels outside of its captured area are transparent and therefore not compared. Also you can draw transparent areas with an image editor that supports it, for example Paint.NET.
             
             This function is not the best way to find objects when the script is intended for long use or for use on multiple computers or must be very reliable. Because it may fail to find the image after are changed some settings - system theme, application theme, text size (DPI), font smoothing (if the image contains text), etc. Also are possible various unexpected temporary conditions that may distort or hide the image, for example adjacent window shadow, a tooltip or some temporary window. If possible, in such scripts instead use other functions, eg find control or accessible object.
             </remarks>
@@ -13559,9 +13609,9 @@
             Finds image(s) or color(s) displayed in window or other area. Waits until found.
             More info: <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.
             </summary>
-            <returns>Returns <see cref="T:Au.WinImage"/> object containing the rectangle of the found image. On timeout returns null if *secondsTimeout* is negative; else exception.</returns>
+            <returns>Returns <see cref="T:Au.WinImage"/> object containing the rectangle of the found image. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.</exception>
         </member>
@@ -13571,8 +13621,8 @@
             More info: <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.</exception>
         </member>
@@ -13582,12 +13632,12 @@
             More info: <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:Au.Types.WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.WinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>.</exception>
             <remarks>
-            The same as <see cref="M:Au.WinImage.WaitNot(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>, but instead of *image* parameter this function captures the area image at the beginning.
+            The same as <see cref="M:Au.WinImage.WaitNot(System.Double,Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.WinImage,Au.Types.WIAlso})"/>, but instead of <i>image</i> parameter this function captures the area image at the beginning.
             </remarks>
         </member>
         <member name="M:Au.WinImage.Capture(Au.Types.RECT)">
@@ -13624,7 +13674,7 @@
             1. Gets pixels from window's device context (DC), not from screen DC, unless the Aero theme is turned off (on Windows 7). The window can be under other windows. The image can be different.
             2. If the window is partially or completely transparent, gets non-transparent image.
             3. Does not work with Windows Store app windows, Chrome and some other windows. Creates black image.
-            4. If the window is DPI-scaled, captures its non-scaled view. And *rect* must contain non-scaled coordinates.
+            4. If the window is DPI-scaled, captures its non-scaled view. And <i>rect</i> must contain non-scaled coordinates.
             </remarks>
         </member>
         <member name="M:Au.WinImage.Capture(System.Collections.Generic.List{Au.Types.POINT})">
@@ -13632,7 +13682,7 @@
             Creates image from a non-rectangular area of screen pixels.
             </summary>
             <param name="outline">The outline (shape) of the area in screen. If single element, captures single pixel.</param>
-            <exception cref="T:System.ArgumentException">*outline* is null or has 0 elements.</exception>
+            <exception cref="T:System.ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
             <exception cref="T:Au.Types.AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
             <remarks>
             PixelFormat is always Format32bppRgb.
@@ -13644,8 +13694,8 @@
             </summary>
             <param name="w">Window or control.</param>
             <param name="outline">The outline (shape) of the area in w client area coordinates. If single element, captures single pixel.</param>
-            <exception cref="T:Au.Types.WndException">Invalid *w*.</exception>
-            <exception cref="T:System.ArgumentException">*outline* is null or has 0 elements.</exception>
+            <exception cref="T:Au.Types.WndException">Invalid <i>w</i>.</exception>
+            <exception cref="T:System.ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
             <exception cref="T:Au.Types.AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
             <remarks>More info: <see cref="M:Au.WinImage.Capture(Au.Wnd,Au.Types.RECT)"/>.</remarks>
         </member>
@@ -13744,6 +13794,11 @@
             Each thread has its own <b>Opt.WaitFor</b> instance. There is no <b>Opt.Static.WaitFor</b>.
             Most 'wait for' functions of this library use these options. Functions of .NET classes don't.
             </remarks>
+        </member>
+        <member name="M:Au.Opt.Reset">
+            <summary>
+            Resets all options. Copies from <see cref="T:Au.Opt.Static"/>.
+            </summary>
         </member>
         <member name="T:Au.Opt.Static">
             <summary>
@@ -14157,7 +14212,7 @@
             </param>
             <param name="flags">
             Options.
-            Default 0. Flag UTF is implicitly added if *rx* contains non-ASCII characters and there is no flag NEVER_UTF.
+            Default 0. Flag UTF is implicitly added if <i>rx</i> contains non-ASCII characters and there is no flag NEVER_UTF.
             </param>
             <exception cref="T:System.ArgumentNullException"></exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or failed to compile it for some other reason (unlikely).</exception>
@@ -14236,14 +14291,14 @@
         </member>
         <member name="M:Au.Regex_.IsMatch(System.String,Au.Types.RXMore)">
             <summary>
-            Returns true if string *s* matches this regular expression.
+            Returns true if string <i>s</i> matches this regular expression.
             </summary>
             <param name="s">
             Subject string.
             If null, always returns false, even if the regular expression matches empty string.
             </param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
             If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
@@ -14260,7 +14315,7 @@
         </member>
         <member name="M:Au.Regex_.Match(System.String,Au.Types.RXMatch@,Au.Types.RXMore)">
             <summary>
-            Returns true if string *s* matches this regular expression.
+            Returns true if string <i>s</i> matches this regular expression.
             Gets match info as <see cref="T:Au.Types.RXMatch"/>.
             </summary>
             <param name="s">
@@ -14269,12 +14324,12 @@
             </param>
             <param name="result">Receives match info. Read more in Remarks.</param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
-            If full match, returns true, and *result* contains the match and all groups that exist in the regular expressions.
-            If partial match, returns true, and *result* contains the match without groups. Partial match is possible if used a PARTIAL_ flag.
-            If no match, returns false, and *result* normally is null. But if a mark is available, *result* is an object with two valid properties - <see cref="P:Au.Types.RXMatch.Exists"/> (false) and <see cref="P:Au.Types.RXMatch.Mark"/>; other properties have undefined values or throw exception.
+            If full match, returns true, and <i>result</i> contains the match and all groups that exist in the regular expressions.
+            If partial match, returns true, and <i>result</i> contains the match without groups. Partial match is possible if used a PARTIAL_ flag.
+            If no match, returns false, and <i>result</i> normally is null. But if a mark is available, <i>result</i> is an object with two valid properties - <see cref="P:Au.Types.RXMatch.Exists"/> (false) and <see cref="P:Au.Types.RXMatch.Mark"/>; other properties have undefined values or throw exception.
             
             This function is similar to <see cref="M:System.Text.RegularExpressions.Regex.Match(System.String)"/>.
             </remarks>
@@ -14288,7 +14343,7 @@
         </member>
         <member name="M:Au.Regex_.MatchG(System.String,Au.Types.RXGroup@,System.Int32,Au.Types.RXMore)">
             <summary>
-            Returns true if string *s* matches this regular expression.
+            Returns true if string <i>s</i> matches this regular expression.
             Gets whole match or some group, as <see cref="T:Au.Types.RXGroup"/> (index, length, value).
             </summary>
             <param name="s">
@@ -14301,13 +14356,13 @@
             See also <see cref="M:Au.Regex_.GroupNumberFromName(System.String)"/>.
             </param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
             This function is a simplified version of <see cref="M:Au.Regex_.Match(System.String,Au.Types.RXMatch@,Au.Types.RXMore)"/>.
-            If full match, returns true, and *result* contains the match or the specifed group.
-            If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore *group* should be 0.
-            If no match, returns false, and *result* is empty.
+            If full match, returns true, and <i>result</i> contains the match or the specifed group.
+            If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
+            If no match, returns false, and <i>result</i> is empty.
             </remarks>
             <example>
             <code><![CDATA[
@@ -14319,7 +14374,7 @@
         </member>
         <member name="M:Au.Regex_.MatchS(System.String,System.String@,System.Int32,Au.Types.RXMore)">
             <summary>
-            Returns true if string *s* matches this regular expression.
+            Returns true if string <i>s</i> matches this regular expression.
             Gets whole match or some group, as string.
             </summary>
             <param name="s">
@@ -14332,13 +14387,13 @@
             See also <see cref="M:Au.Regex_.GroupNumberFromName(System.String)"/>.
             </param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
             This function is a simplified version of <see cref="M:Au.Regex_.Match(System.String,Au.Types.RXMatch@,Au.Types.RXMore)"/> and <see cref="M:Au.Regex_.MatchG(System.String,Au.Types.RXGroup@,System.Int32,Au.Types.RXMore)"/>.
-            If full match, returns true, and *result* contains the value of the match or of the specifed group.
-            If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore *group* should be 0.
-            If no match, returns false, and *result* is null.
+            If full match, returns true, and <i>result</i> contains the value of the match or of the specifed group.
+            If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
+            If no match, returns false, and <i>result</i> is null.
             </remarks>
             <example>
             <code><![CDATA[
@@ -14355,8 +14410,8 @@
             </summary>
             <param name="s">Subject string. Cannot be null.</param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
@@ -14378,8 +14433,8 @@
             <param name="s">Subject string. Cannot be null.</param>
             <param name="result">Receives all found matches.</param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
@@ -14405,8 +14460,8 @@
             See also <see cref="M:Au.Regex_.GroupNumberFromName(System.String)"/>.
             </param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
@@ -14432,8 +14487,8 @@
             See also <see cref="M:Au.Regex_.GroupNumberFromName(System.String)"/>.
             </param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
@@ -14459,8 +14514,8 @@
             See also <see cref="M:Au.Regex_.GroupNumberFromName(System.String)"/>.
             </param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
@@ -14486,8 +14541,8 @@
             See also <see cref="M:Au.Regex_.GroupNumberFromName(System.String)"/>.
             </param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *group* or from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
@@ -14515,8 +14570,8 @@
             </param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
@@ -14542,11 +14597,11 @@
             Can consist of any combination of literal text and substitutions like $1.
             Supports .NET regular expression substitution syntax. See <see cref="M:System.Text.RegularExpressions.Regex.Replace(System.String,System.String,System.Int32)"/>. Also replaces $* with the name of the last encountered mark.
             </param>
-            <param name="result">The result string. Can be *s*.</param>
+            <param name="result">The result string. Can be <i>s</i>.</param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
@@ -14573,8 +14628,8 @@
             </param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
@@ -14599,11 +14654,11 @@
             Callback function's delegate, eg lambda. Called for each found match. Returns the replacement.
             In the callback function you can use <see cref="M:Au.Types.RXMatch.ExpandReplacement(System.String)"/>.
             </param>
-            <param name="result">The result string. Can be *s*.</param>
+            <param name="result">The result string. Can be <i>s</i>.</param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
@@ -14625,12 +14680,12 @@
             <param name="s">Subject string. Cannot be null.</param>
             <param name="maxCount">The maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
-            Element 0 of the returned array is *s* substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is *s*.
+            Element 0 of the returned array is <i>s</i> substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is <i>s</i>.
             
             This function is similar to <see cref="M:System.Text.RegularExpressions.Regex.Split(System.String,System.Int32)"/>.
             </remarks>
@@ -14650,12 +14705,12 @@
             <param name="s">Subject string. Cannot be null.</param>
             <param name="maxCount">The maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
             <param name="more"></param>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in *more*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function pcre2_match failed. Unlikely.</exception>
             <remarks>
-            Element 0 of the returned array is *s* substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is *s*.
+            Element 0 of the returned array is <i>s</i> substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is <i>s</i>.
             
             This function is similar to <see cref="M:System.Text.RegularExpressions.Regex.Split(System.String,System.Int32)"/>.
             </remarks>
@@ -14670,7 +14725,7 @@
         </member>
         <member name="M:Au.Regex_.EscapeQE(System.String,System.Boolean)">
             <summary>
-            Encloses string in <c>\Q</c> <c>\E</c> if it contains metacharacters <c>\^$.[|()?*+{</c> or if *always* == true.
+            Encloses string in <c>\Q</c> <c>\E</c> if it contains metacharacters <c>\^$.[|()?*+{</c> or if <i>always</i> == true.
             </summary>
             <param name="s"></param>
             <param name="always">Enclose always, even if the string does not contain metacharacters. Should be true if the regular expression in which this string will be used has option "extended", because then whitespace is ignored and # is a special character too.</param>
@@ -14692,7 +14747,7 @@
         </member>
         <member name="M:Au.String_.RegexIsMatch_(System.String,System.String,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Returns true if this string matches PCRE regular expression *rx*.
+            Returns true if this string matches PCRE regular expression <i>rx</i>.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.IsMatch(System.String,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
             </summary>
@@ -14701,7 +14756,7 @@
         </member>
         <member name="M:Au.String_.RegexMatch_(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Returns true if this string matches PCRE regular expression *rx*.
+            Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets match info as <see cref="T:Au.Types.RXMatch"/>.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.Match(System.String,Au.Types.RXMatch@,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
@@ -14711,29 +14766,29 @@
         </member>
         <member name="M:Au.String_.RegexMatch_(System.String,System.String,System.Int32,System.String@,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Returns true if this string matches PCRE regular expression *rx*.
+            Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets whole match or some group, as string.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.MatchS(System.String,System.String@,System.Int32,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
             </summary>
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *group*.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
         <member name="M:Au.String_.RegexMatch_(System.String,System.String,System.Int32,Au.Types.RXGroup@,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Returns true if this string matches PCRE regular expression *rx*.
+            Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets whole match or some group, as index and length.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.MatchG(System.String,Au.Types.RXGroup@,System.Int32,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
             </summary>
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *group*.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
         <member name="M:Au.String_.RegexFindAll_(System.String,System.String,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Finds all match instances of PCRE regular expression *rx*.
+            Finds all match instances of PCRE regular expression <i>rx</i>.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXMatch"/>&gt; object that can be used with foreach.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.FindAll(System.String,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
@@ -14743,7 +14798,7 @@
         </member>
         <member name="M:Au.String_.RegexFindAll_(System.String,System.String,Au.Types.RXMatch[]@,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Finds all match instances of PCRE regular expression *rx*. Gets array of <see cref="T:Au.Types.RXMatch"/>.
+            Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of <see cref="T:Au.Types.RXMatch"/>.
             Returns true if found 1 or more matches.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.FindAll(System.String,Au.Types.RXMatch[]@,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
@@ -14753,29 +14808,29 @@
         </member>
         <member name="M:Au.String_.RegexFindAll_(System.String,System.String,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Finds all match instances of PCRE regular expression *rx*.
+            Finds all match instances of PCRE regular expression <i>rx</i>.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXGroup"/>&gt; object that can be used with foreach.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.FindAllS(System.String,System.Int32,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
             </summary>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *group*.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
         <member name="M:Au.String_.RegexFindAll_(System.String,System.String,System.Int32,System.String[]@,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Finds all match instances of PCRE regular expression *rx*. Gets array of strings.
+            Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of strings.
             Returns true if found 1 or more matches.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.FindAllS(System.String,System.String[]@,System.Int32,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
             </summary>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *group*.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
         <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.String,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Finds and replaces all match instances of PCRE regular expression *rx*.
+            Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
             Returns the result string.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.Replace(System.String,System.String,System.Int32,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
@@ -14785,7 +14840,7 @@
         </member>
         <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.String,System.String@,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Finds and replaces all match instances of PCRE regular expression *rx*.
+            Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
             Returns the number of replacements made.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.Replace(System.String,System.String,System.String@,System.Int32,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
@@ -14795,7 +14850,7 @@
         </member>
         <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Finds and replaces all match instances of PCRE regular expression *rx*. Uses a callback function.
+            Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
             Returns the result string.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
@@ -14805,7 +14860,7 @@
         </member>
         <member name="M:Au.String_.RegexReplace_(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Finds and replaces all match instances of PCRE regular expression *rx*. Uses a callback function.
+            Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
             Returns the number of replacements made.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
@@ -14815,7 +14870,7 @@
         </member>
         <member name="M:Au.String_.RegexSplit_(System.String,System.String,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
             <summary>
-            Returns array of substrings delimited by PCRE regular expression *rx* matches.
+            Returns array of substrings delimited by PCRE regular expression <i>rx</i> matches.
             Parameters etc are of <see cref="M:Au.Regex_.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.Regex_.Split(System.String,System.Int32,Au.Types.RXMore)"/>.
             Examples in <see cref="T:Au.Regex_"/> class help.
             </summary>
@@ -14907,11 +14962,6 @@
             Compares this and other string. Returns true if equal. Uses ordinal comparison.
             </summary>
         </member>
-        <member name="M:Au.String_.EqualsI_(System.String,System.String)">
-            <summary>
-            Compares this and other string. Returns true if equal. Uses ordinal case-insensitive comparison.
-            </summary>
-        </member>
         <member name="M:Au.String_.Equals_(System.String,System.Boolean,System.String[])">
             <summary>
             Calls <see cref="M:Au.String_.Equals_(System.String,System.String,System.Boolean)"/> for each string specified in the argument list until it returns true.
@@ -14922,35 +14972,29 @@
             <summary>
             Compares part of this string with other string. Returns true if equal. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *startIndex*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
         </member>
         <member name="M:Au.String_.EqualsAt_(System.String,System.Int32,System.Boolean,System.String[])">
             <summary>
             Calls <see cref="M:Au.String_.EqualsAt_(System.String,System.Int32,System.String,System.Boolean)"/> for each string specified in the argument list until it returns true.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
-            <exception cref="T:System.ArgumentNullException">A string in *strings* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *startIndex*.</exception>
+            <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
         </member>
         <member name="M:Au.String_.EndsWith_(System.String,System.String,System.Boolean)">
             <summary>
             Compares the end of this string with other string. Returns true if equal. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-        </member>
-        <member name="M:Au.String_.EndsWithI_(System.String,System.String)">
-            <summary>
-            Compares the end of this string with other string. Returns true if equal. Uses ordinal case-insensitive comparison.
-            </summary>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
         </member>
         <member name="M:Au.String_.EndsWith_(System.String,System.Boolean,System.String[])">
             <summary>
             Calls <see cref="M:Au.String_.EndsWith_(System.String,System.String,System.Boolean)"/> for each string specified in the argument list until it returns true.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
-            <exception cref="T:System.ArgumentNullException">A string in *strings* is null.</exception>
+            <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
         </member>
         <member name="M:Au.String_.EndsWith_(System.String,System.Char)">
             <summary>
@@ -14962,20 +15006,14 @@
             <summary>
             Compares the beginning of this string with other string. Returns true if equal. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-        </member>
-        <member name="M:Au.String_.StartsWithI_(System.String,System.String)">
-            <summary>
-            Compares the beginning of this string with other string. Returns true if equal. Uses ordinal case-insensitive comparison.
-            </summary>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
         </member>
         <member name="M:Au.String_.StartsWith_(System.String,System.Boolean,System.String[])">
             <summary>
             Calls <see cref="M:Au.String_.StartsWith_(System.String,System.String,System.Boolean)"/> for each string specified in the argument list until it returns true.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
-            <exception cref="T:System.ArgumentNullException">A string in *strings* is null.</exception>
+            <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
         </member>
         <member name="M:Au.String_.StartsWith_(System.String,System.Char)">
             <summary>
@@ -14987,21 +15025,27 @@
             <summary>
             Calls <see cref="M:System.String.IndexOf(System.String,System.StringComparison)"/>. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
         </member>
         <member name="M:Au.String_.IndexOf_(System.String,System.String,System.Int32,System.Boolean)">
             <summary>
             Calls <see cref="M:System.String.IndexOf(System.String,System.Int32,System.StringComparison)"/>. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *startIndex*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
         </member>
         <member name="M:Au.String_.IndexOf_(System.String,System.String,System.Int32,System.Int32,System.Boolean)">
             <summary>
             Calls <see cref="M:System.String.IndexOf(System.String,System.Int32,System.Int32,System.StringComparison)"/>. Uses ordinal comparison.
             </summary>
-            <exception cref="T:System.ArgumentNullException">*s* is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *startIndex* or *count*.</exception>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
+        </member>
+        <member name="M:Au.String_.Contains(System.String,System.String,System.Boolean)">
+            <summary>
+            Calls <see cref="M:System.String.IndexOf(System.String,System.StringComparison)"/>. Uses ordinal comparison.
+            </summary>
+            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
         </member>
         <member name="M:Au.String_.Length_(System.String)">
             <summary>
@@ -15170,17 +15214,17 @@
             <summary>
             Returns a new string in which a specified string replaces a specified count of characters at a specified position in this instance.
             </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid *startIndex* or *count*.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
         </member>
         <member name="M:Au.String_.RemoveEnd_(System.String,System.Int32)">
             <summary>
-            Removes *count* characters from the end of this string.
+            Removes <i>count</i> characters from the end of this string.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
         <member name="M:Au.String_.Limit_(System.String,System.Int32)">
             <summary>
-            If this string is longer than *limit*, returns its substring 0 to *limit*-1 with appended '…' character.
+            If this string is longer than <i>limit</i>, returns its substring 0 to <i>limit</i>-1 with appended '…' character.
             Else returns this string.
             </summary>
         </member>
@@ -15191,7 +15235,7 @@
             If the string contains these characters, replaces and returns new string. Else returns this string.
             </summary>
             <param name="t">This string.</param>
-            <param name="limit">If the final string is longer than *limit*, get its substring 0 to *limit*-1 with appended '…' character. The enclosing "" are not counted.</param>
+            <param name="limit">If the final string is longer than <i>limit</i>, get its substring 0 to <i>limit</i>-1 with appended '…' character. The enclosing "" are not counted.</param>
             <param name="quote">Enclose in "".</param>
         </member>
         <member name="M:Au.String_.IsAscii_(System.String)">
@@ -15226,24 +15270,24 @@
         </member>
         <member name="M:Au.StringSegment.#ctor(System.String)">
             <summary>
-            Sets the substring = whole *buffer*.
+            Sets the substring = whole <i>buffer</i>.
             </summary>
             <param name="buffer">The string that contains this substring. Cannot be null.</param>
         </member>
         <member name="M:Au.StringSegment.#ctor(System.String,System.Int32,System.Int32)">
             <summary>
-            Sets the substring = part of *buffer* that starts at index *offset* and has length *length*.
+            Sets the substring = part of <i>buffer</i> that starts at index <i>offset</i> and has length <i>length</i>.
             </summary>
             <param name="buffer">The string that contains this substring. Cannot be null.</param>
-            <param name="offset">The offset of the substring in *buffer*.</param>
+            <param name="offset">The offset of the substring in <i>buffer</i>.</param>
             <param name="length">The length of the substring.</param>
         </member>
         <member name="M:Au.StringSegment.#ctor(System.String,System.Int32)">
             <summary>
-            Sets the substring = part of *buffer* that starts at index *offset*.
+            Sets the substring = part of <i>buffer</i> that starts at index <i>offset</i>.
             </summary>
             <param name="buffer">The string that contains this substring. Cannot be null.</param>
-            <param name="offset">The offset of the substring in *buffer*.</param>
+            <param name="offset">The offset of the substring in <i>buffer</i>.</param>
         </member>
         <member name="P:Au.StringSegment.Buffer">
             <summary>
@@ -15401,7 +15445,7 @@
         </member>
         <member name="M:Au.StringSegment.Equals(System.Object)">
             <summary>
-            Returns true if *obj* is <b>StringSegment</b> and its value is equal to that of this variable.
+            Returns true if <i>obj</i> is <b>StringSegment</b> and its value is equal to that of this variable.
             Compares only substrigs, not offsets.
             </summary>
         </member>
@@ -15811,7 +15855,7 @@
             <param name="filter">
             Callback function. Called for each file and subdirectory.
             If it returns false, the file/subdirectory is not included in results.
-            This can be useful when EnumDirectory is called indirectly, for example by the Copy method. If you call it directly, you can instead skip processing the file in your foreach loop.
+            Can be useful when EnumDirectory is called indirectly, for example by the Copy method. If you call it directly, you can instead skip processing the file in your foreach loop.
             </param>
             <param name="errorHandler">
             Callback function. Called when fails to get children of a subdirectory, when using flag <see cref="F:Au.Types.FEFlags.AndSubdirectories"/>.
@@ -15852,8 +15896,8 @@
             <param name="newName">New name without path. Example: "name.txt".</param>
             <param name="ifExists"></param>
             <exception cref="T:System.ArgumentException">
-            - *path* is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).
-            - *newName* is invalid filename.
+            - <i>path</i> is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).
+            - <i>newName</i> is invalid filename.
             </exception>
             <exception cref="T:System.IO.FileNotFoundException">The file (path) does not exist or cannot be found.</exception>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
@@ -15877,7 +15921,7 @@
             <remarks>
             In most cases uses API <msdn>MoveFileEx</msdn>. It's fast, because don't need to copy files.
             In these cases copies/deletes: destination is on another drive; need to merge directories.
-            When need to copy, does not copy the security properties; sets default security properties.
+            When need to copy, does not copy security properties; sets default.
             
             Creates the destination directory if does not exist (see <see cref="M:Au.File_.CreateDirectory(System.String,System.String)"/>).
             If path and newPath share the same parent directory, just renames the file.
@@ -15891,15 +15935,15 @@
             <param name="newDirectory">New parent directory.</param>
             <param name="ifExists"></param>
             <exception cref="T:System.ArgumentException">
-            - *path* or *newDirectory* is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).
-            - *path* is drive. To move drive content, use <see cref="M:Au.File_.Move(System.String,System.String,Au.Types.IfExists)"/>.
+            - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).
+            - <i>path</i> is drive. To move drive content, use <see cref="M:Au.File_.Move(System.String,System.String,Au.Types.IfExists)"/>.
             </exception>
             <exception cref="T:System.IO.FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
             In most cases uses API <msdn>MoveFileEx</msdn>. It's fast, because don't need to copy files.
             In these cases copies/deletes: destination is on another drive; need to merge directories.
-            When need to copy, does not copy the security properties; sets default security properties.
+            When need to copy, does not copy security properties; sets default.
             
             Creates the destination directory if does not exist (see <see cref="M:Au.File_.CreateDirectory(System.String,System.String)"/>).
             </remarks>
@@ -15924,7 +15968,7 @@
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
             Uses API <msdn>CopyFileEx</msdn>.
-            On Windows 7 does not copy the security properties; sets default security properties.
+            On Windows 7 does not copy security properties; sets default.
             Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
             Creates the destination directory if does not exist (see <see cref="M:Au.File_.CreateDirectory(System.String,System.String)"/>).
             </remarks>
@@ -15939,14 +15983,14 @@
             <param name="copyFlags">Options used when copying directory.</param>
             <param name="filter">See <see cref="M:Au.File_.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>.</param>
             <exception cref="T:System.ArgumentException">
-            - *path* or *newDirectory* is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).
-            - *path* is drive. To copy drive content, use <see cref="M:Au.File_.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>.
+            - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="M:Au.Path_.IsFullPath(System.String)"/>).
+            - <i>path</i> is drive. To copy drive content, use <see cref="M:Au.File_.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>.
             </exception>
             <exception cref="T:System.IO.FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
             Uses API <msdn>CopyFileEx</msdn>.
-            On Windows 7 does not copy the security properties; sets default security properties.
+            On Windows 7 does not copy security properties; sets default.
             Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
             Creates the destination directory if does not exist (see <see cref="M:Au.File_.CreateDirectory(System.String,System.String)"/>).
             </remarks>
@@ -16053,10 +16097,10 @@
             <summary>
             This function can be used to safely open a file that may be temporarily locked (used by another process or thread). Waits while the file is locked.
             </summary>
-            <returns>Returns the return value of the lambda *f*.</returns>
+            <returns>Returns the return value of the lambda <i>f</i>.</returns>
             <param name="f">Lambda that calls a function that creates, opens or opens/reads/closes a file.</param>
             <param name="millisecondsTimeout">Wait max this number of milliseconds. Can be <see cref="F:System.Threading.Timeout.Infinite"/> (-1).</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">*millisecondsTimeout* less than -1.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>millisecondsTimeout</i> less than -1.</exception>
             <exception cref="T:System.Exception">Exceptions thrown by the called function.</exception>
             <remarks>
             Calls the lambda and handles <b>IOException</b>. If the exception indicates that the file is locked, waits and retries in loop.
@@ -16078,7 +16122,7 @@
             </example>
         </member>
         <member name="M:Au.File_.WaitIfLocked(System.Action,System.Int32)">
-            <exception cref="T:System.ArgumentOutOfRangeException">*millisecondsTimeout* less than -1.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>millisecondsTimeout</i> less than -1.</exception>
             <exception cref="T:System.Exception">Exceptions thrown by the called function.</exception>
             <example>
             <code><![CDATA[
@@ -16125,6 +16169,8 @@
             
             To protect from 1, this functions waits/retries if the file is temporarily open/locked, like <see cref="M:Au.File_.WaitIfLocked(System.Action,System.Int32)"/>.
             To protect from 2, this function writes to a temporary file and renames/replaces the specified file using API <msdn>ReplaceFile</msdn>. Although not completely atomic, it ensures that file data is not corrupt; if cannot write all data, does not change existing file data.
+            
+            This function is slower; it can be important when saving many files.
             </remarks>
         </member>
         <member name="M:Au.File_.SaveText(System.String,System.String,System.Boolean,System.Int32,System.Text.Encoding)">
@@ -16201,7 +16247,7 @@
             <param name="pidlAbsolute">Absolute PIDL (parent folder).</param>
             <param name="pidlRelative">Relative PIDL (child object).</param>
             <remarks>
-            Does not free *pidlAbsolute* and *pidlRelative*.
+            Does not free <i>pidlAbsolute</i> and <i>pidlRelative</i>.
             </remarks>
         </member>
         <member name="M:Au.Shell.Pidl.Dispose">
@@ -16475,7 +16521,7 @@
             <param name="flags"></param>
             <param name="more">
             Allows to specify more parameters: current directory, verb, window state, etc.
-            If string, it sets initial current directory for the new process. Use "" to get it from *file*. More info: <see cref="F:Au.Types.RMore.CurrentDirectory"/>.
+            If string, it sets initial current directory for the new process. Use "" to get it from <i>file</i>. More info: <see cref="F:Au.Types.RMore.CurrentDirectory"/>.
             </param>
             <exception cref="T:System.ArgumentException">Used more.Verb and flag Admin.</exception>
             <exception cref="T:Au.Types.AuException">Failed. For example, the file does not exist.</exception>
@@ -16513,7 +16559,7 @@
         <member name="M:Au.Shell.RunConsole(System.String,System.String,System.String,System.Text.Encoding)">
             <summary>
             Runs a console program, waits until its process ends, and gets its output text.
-            This overload prints text in real time.
+            This overload prints text lines in real time.
             </summary>
             <param name="exe">
             Path or name of an .exe or .bat file. Can be:
@@ -16556,9 +16602,9 @@
         <member name="M:Au.Shell.RunConsole(System.Action{System.String},System.String,System.String,System.String,System.Text.Encoding)">
             <summary>
             Runs a console program, waits until its process ends, and gets its output text.
-            This overload uses a callback function that receives text in real time.
+            This overload uses a callback function that receives text lines in real time.
             </summary>
-            <param name="output">A callback function that receives the output text. By default it receives single line at a time, without line break characters.</param>
+            <param name="output">A callback function that receives the output text. It receives single full line at a time, without line break characters.</param>
             <param name="exe"></param>
             <param name="args"></param>
             <param name="curDir"></param>
@@ -16567,8 +16613,7 @@
         </member>
         <member name="M:Au.Shell.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
             <summary>
-            Runs a console program, waits until its process ends, and gets its output text.
-            This overload uses a variable for the output text.
+            Runs a console program, waits until its process ends, and gets its output text when it ends.
             </summary>
             <param name="output">A variable that receives the output text.</param>
             <param name="exe"></param>
@@ -16632,7 +16677,7 @@
             </summary>
             <param name="path">Any string. Can be null.</param>
             <remarks>
-            Returns true if *path* matches one of these wildcard patterns:
+            Returns true if <i>path</i> matches one of these wildcard patterns:
             - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here ? is A-Z, a-z.
             - <c>@"?:"</c> - drive name, like <c>@"C:"</c>. Here ? is A-Z, a-z.
             - <c>@"\\*"</c> - network path, like <c>@"\\server\share\..."</c>. Or has prefix <c>@"\\?\"</c>.
@@ -16654,7 +16699,7 @@
             If starts with '%' character, calls <see cref="M:Au.Path_.IsFullPath(System.String)"/> with expanded environment variables (<see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>). If it returns true, replaces the passed variable with the expanded path string.
             </param>
             <remarks>
-            Returns true if *path* matches one of these wildcard patterns:
+            Returns true if <i>path</i> matches one of these wildcard patterns:
             - <c>@"?:\*"</c> - local path, like <c>@"C:\a\b.txt"</c>. Here ? is A-Z, a-z.
             - <c>@"?:"</c> - drive name, like <c>@"C:"</c>. Here ? is A-Z, a-z.
             - <c>@"\\*"</c> - network path, like <c>@"\\server\share\..."</c>. Or has prefix <c>@"\\?\"</c>.
@@ -16742,7 +16787,7 @@
             <param name="path">Any path.</param>
             <param name="defaultParentDirectory">If path is not full path, combine it with defaultParentDirectory to make full path.</param>
             <param name="flags"></param>
-            <exception cref="T:System.ArgumentException">path is not full path, and *defaultParentDirectory* is not used or does not make it full path.</exception>
+            <exception cref="T:System.ArgumentException">path is not full path, and <i>defaultParentDirectory</i> is not used or does not make it full path.</exception>
             <remarks>
             The sequence of actions:
             1. If path starts with '%' character, expands environment variables and special folder names. See <see cref="M:Au.Path_.ExpandEnvVar(System.String)"/>.
@@ -16875,7 +16920,7 @@
             Returns null if path is null.
             </summary>
             <param name="path">Path or filename. Can be null.</param>
-            <param name="withoutExtension">Remove extension, unless *path* ends with <c>'\\'</c> or <c>'/'</c>.</param>
+            <param name="withoutExtension">Remove extension, unless <i>path</i> ends with <c>'\\'</c> or <c>'/'</c>.</param>
             <remarks>
             Similar to <see cref="M:System.IO.Path.GetFileName(System.String)"/> and <see cref="M:System.IO.Path.GetFileNameWithoutExtension(System.String)"/>. Some differences: does not throw exceptions; if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
             
@@ -16901,7 +16946,7 @@
             | <c>""</c> | <c>""</c>
             | <c>null</c> | <c>null</c>
             
-            Examples when *withoutExtension* true:
+            Examples when <i>withoutExtension</i> true:
             
             | path | result
             | - | -
@@ -16978,7 +17023,7 @@
             | <c>""</c> | <c>""</c>
             | <c>null</c> | <c>null</c>
             
-            Examples when *withSeparator* true:
+            Examples when <i>withSeparator</i> true:
             
             | path | result
             | - | -
@@ -17606,7 +17651,7 @@
             - string - image name (key) in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageKey"/>).
             - int - image index in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
             - Icon, Image, Folders.FolderPath.
-            - null (default) - no icon. If <see cref="P:Au.Types.BaseMT.ExtractIconPathFromCode"/> == true, extracts icon path from *onClick* code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
+            - null (default) - no icon. If <see cref="P:Au.Types.BaseMT.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
             - "" - no icon.
             </param>
             <remarks>
@@ -18273,8 +18318,8 @@
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="buttons">Wait only for these buttons. Default - all.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <seealso cref="M:Au.Keyb.WaitForNoModifierKeysAndMouseButtons(System.Double,Au.Types.KMod,Au.Types.MButtons)"/>
         </member>
         <member name="M:Au.Mouse.LibWaitForNoButtonsPressed">
@@ -18287,13 +18332,13 @@
             <summary>
             Waits for button-down or button-up event of the specified mouse button or buttons.
             </summary>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="button">Mouse button. If several buttons specified, waits for any of them.</param>
             <param name="up">Wait for button-up event.</param>
-            <param name="block">Make the event invisible for other apps. If *up* is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
-            <exception cref="T:System.ArgumentException">*button* is 0.</exception>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <param name="block">Make the event invisible for other apps. If <i>up</i> is true, makes the down event invisible too, if it comes while waiting for the up event.</param>
+            <exception cref="T:System.ArgumentException"><i>button</i> is 0.</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <remarks>
             Unlike <see cref="M:Au.Mouse.WaitForNoButtonsPressed(System.Double,Au.Types.MButtons)"/>, waits for down or up event, not for button state.
             Uses low-level mouse hook.
@@ -18310,11 +18355,11 @@
             <summary>
             Waits for button-down or button-up event of any mouse button, and gets the button code.
             </summary>
-            <returns>Returns the button code. On timeout returns 0 if *secondsTimeout* is negative; else exception.</returns>
+            <returns>Returns the button code. On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.</returns>
             <param name="secondsTimeout"></param>
             <param name="up"></param>
             <param name="block"></param>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <example>
             <code><![CDATA[
             var button = Mouse.WaitForClick(0, up: true, block: true);
@@ -18329,8 +18374,8 @@
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="cursor">Id of a standard cursor.</param>
             <param name="not">Wait until this cursor disappears.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
         <member name="M:Au.Mouse.WaitForCursor(System.Double,System.Int64,System.Boolean)">
             <summary>
@@ -18339,8 +18384,8 @@
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="cursorHash">Cursor hash, as returned by <see cref="M:Au.Util.Cursor_.HashCursor(System.IntPtr)"/>.</param>
             <param name="not">Wait until this cursor disappears.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
         <member name="T:Au.Char_">
             <summary>
@@ -18976,13 +19021,13 @@
             Frees memory allocated by MarshalButtons and sets the c members to null/0.
             </summary>
         </member>
-        <member name="M:Au.AuDialog.SetButtons(System.String,System.Boolean,Au.Types.MultiString)">
+        <member name="M:Au.AuDialog.SetButtons(System.String,System.Boolean,Au.Types.DStringList)">
             <summary>
             Sets common and/or custom buttons and custom buttons style.
             </summary>
             <param name="buttons">
             Common and/or custom buttons, like with <see cref="M:Au.AuDialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
-            These ids should be negative if you use *customButtons* too, because ids of *customButtons* are 1, 2, ... .
+            These ids should be negative if you use <i>customButtons</i> too, because ids of <i>customButtons</i> are 1, 2, ... .
             </param>
             <param name="asCommandLinks">Custom buttons style. If false - row of classic buttons. If true - column of command-link buttons that can have multiline text.</param>
             <param name="customButtons">
@@ -19325,7 +19370,7 @@
             
             If omitted, null or "", the dialog will have OK button, id 1.
             You can use <see cref="F:Au.Types.DFlags.CommandLinks"/> in flags to change the style of custom buttons.
-            See also: <see cref="M:Au.AuDialog.SetButtons(System.String,System.Boolean,Au.Types.MultiString)"/>.
+            See also: <see cref="M:Au.AuDialog.SetButtons(System.String,System.Boolean,Au.Types.DStringList)"/>.
             </param>
             <param name="flags"></param>
             <param name="icon"></param>
@@ -19495,13 +19540,13 @@
             </example>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.AuDialog.ShowListEx(Au.Types.MultiString,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
+        <member name="M:Au.AuDialog.ShowListEx(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
             Shows dialog with a list of command-link buttons.
             Returns results packed in a <see cref="T:Au.Types.DResult"/> variable. Its Button property is id of the selected button, which is its 1-based index in the list; it is 0 if clicked the X (close window) button or pressed Esc.
             The return value can be assigned to an int variable or used in switch; then it is the id (1-based index or 0).
             </summary>
-            <param name="list">List items (buttons). Can be string like "One|Two|Three" or string[] or List&lt;string&gt;. See <see cref="M:Au.AuDialog.SetButtons(System.String,System.Boolean,Au.Types.MultiString)"/>.</param>
+            <param name="list">List items (buttons). Can be string like "One|Two|Three" or string[] or List&lt;string&gt;. See <see cref="M:Au.AuDialog.SetButtons(System.String,System.Boolean,Au.Types.DStringList)"/>.</param>
             <param name="text1">Main instruction. Bigger font.</param>
             <param name="text2">Text below main instruction.</param>
             <param name="flags"></param>
@@ -19527,18 +19572,18 @@
             </example>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.AuDialog.ShowList(Au.Types.MultiString,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd)">
+        <member name="M:Au.AuDialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd)">
             <summary>
             Shows dialog with a list of command-link buttons.
             Returns 1-based index of the selected button. Returns 0 if clicked the X (close window) button or pressed Esc.
             </summary>
-            <param name="list">List items (buttons). Can be string like "One|Two|Three" or string[] or List&lt;string&gt;. See <see cref="M:Au.AuDialog.SetButtons(System.String,System.Boolean,Au.Types.MultiString)"/>.</param>
+            <param name="list">List items (buttons). Can be string like "One|Two|Three" or string[] or List&lt;string&gt;. See <see cref="M:Au.AuDialog.SetButtons(System.String,System.Boolean,Au.Types.DStringList)"/>.</param>
             <param name="text1">Main instruction. Bigger font.</param>
             <param name="text2">Text below main instruction.</param>
             <param name="flags"></param>
             <param name="owner">Owner window or null. See <see cref="M:Au.AuDialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
             <remarks>
-            Calls <see cref="M:Au.AuDialog.ShowListEx(Au.Types.MultiString,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Calls <see cref="M:Au.AuDialog.ShowListEx(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -19908,12 +19953,12 @@
         <member name="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
             <summary>
             Waits until window exists, is visible (optionally) and active (optionally).
-            Returns window handle. On timeout returns default(Wnd) if *secondsTimeout* is negative; else exception.
+            Returns window handle. On timeout returns default(Wnd) if <i>secondsTimeout</i> is negative; else exception.
             Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="active">The window must be the active window (<see cref="P:Au.Wnd.Active"/>), and not minimized.</param>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
             <remarks>
             By default ignores invisible and cloaked windows. Use flags if need.
@@ -19940,12 +19985,12 @@
         <member name="M:Au.Wnd.WaitAny(System.Double,System.Boolean,Au.Wnd.Finder[])">
             <summary>
             Waits until any of specified windows exists, is visible (optionally) and active (optionally).
-            Returns window handle. On timeout returns default(Wnd) if *secondsTimeout* is negative; else exception.
+            Returns window handle. On timeout returns default(Wnd) if <i>secondsTimeout</i> is negative; else exception.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="active">The window must be the active window (<see cref="P:Au.Wnd.Active"/>), and not minimized.</param>
             <param name="windows">One or more variables containing window properties. Can be strings, see <see cref="M:Au.Wnd.Finder.op_Implicit(System.String)~Au.Wnd.Finder"/>.</param>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <remarks>
             By default ignores invisible and cloaked windows. Use flags if need.
             </remarks>
@@ -19962,8 +20007,8 @@
             Parameters etc are the same as <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
             <remarks>
             By default ignores invisible and cloaked windows. Use flags if need.
@@ -19978,7 +20023,7 @@
             <param name="secondsTimeout"></param>
             <param name="wFound">On timeout receives the first found matching window that exists.</param>
             <param name="f">Window properties etc. Can be string, see <see cref="M:Au.Wnd.Finder.op_Implicit(System.String)~Au.Wnd.Finder"/>.</param>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
         <member name="M:Au.Wnd.WaitForCondition(System.Double,System.Func{Au.Wnd,System.Boolean},System.Boolean)">
             <summary>
@@ -19990,8 +20035,8 @@
             Do not throw exception when the window handle is invalid or the window was closed while waiting.
             In such case the callback function must return false, like in the examples with <see cref="P:Au.Wnd.IsAlive"/>. Else exception is thrown (with a small delay) to prevent infinite waiting.
             </param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:Au.Types.WndException">The window handle is invalid or the window was closed while waiting.</exception>
             <example>
             <code><![CDATA[
@@ -20030,8 +20075,8 @@
             Window name. Usually it is the title bar text.
             String format: [](xref:wildcard_expression).
             </param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:Au.Types.WndException">The window handle is invalid or the window was closed while waiting.</exception>
             <exception cref="T:System.ArgumentException">Invalid wildcard expression.</exception>
         </member>
@@ -20041,9 +20086,9 @@
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="waitUntilProcessEnds">Wait until the process of this window ends.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
-            <exception cref="T:Au.Types.AuException">Failed to open process handle when *waitUntilProcessEnds* is true.</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+            <exception cref="T:Au.Types.AuException">Failed to open process handle when <i>waitUntilProcessEnds</i> is true.</exception>
             <remarks>
             If the window is already closed, immediately returns true.
             </remarks>
@@ -21767,7 +21812,7 @@
         </member>
         <member name="M:Au.Wnd.ClassNameIs(System.String[])">
             <summary>
-            If the class name of this window matches one of strings in *classNames*, returns 1-based index of the string. Else returns 0.
+            If the class name of this window matches one of strings in <i>classNames</i>, returns 1-based index of the string. Else returns 0.
             Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="T:Au.WinError"/>.
             </summary>
             <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="M:Au.String_.Like_(System.String,System.String,System.Boolean)"/>. The array and strings cannot be null.</param>
@@ -21892,7 +21937,7 @@
         </member>
         <member name="M:Au.Wnd.ProgramNameIs(System.String[])">
             <summary>
-            If the program name of this window matches one of strings in *programNames*, returns 1-based index of the string. Else returns 0.
+            If the program name of this window matches one of strings in <i>programNames</i>, returns 1-based index of the string. Else returns 0.
             Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="T:Au.WinError"/>.
             </summary>
             <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="M:Au.String_.Like_(System.String,System.String,System.Boolean)"/>. The array and strings cannot be null.</param>
@@ -21920,7 +21965,7 @@
         <member name="M:Au.Wnd.Close(System.Boolean,System.Boolean)">
             <summary>
             Closes the window.
-            Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if *noWait*==true.
+            Returns true if successfuly closed or if it was already closed (the handle is 0 or invalid) or if <i>noWait</i>==true.
             </summary>
             <param name="noWait">
             If true, does not wait until the window is closed.
@@ -21933,7 +21978,7 @@
             </param>
             <remarks>
             The window may refuse to be closed. For example, it may be hung, or hide itself instead, or display a "Save?" message box, or is a dialog without X button, or just need more time to close it.
-            If the window is of this thread, just calls <see cref="M:Au.Wnd.Send(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/> or <see cref="M:Au.Wnd.Post(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/> (if *noWait*==true) and returns true.
+            If the window is of this thread, just calls <see cref="M:Au.Wnd.Send(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/> or <see cref="M:Au.Wnd.Post(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/> (if <i>noWait</i>==true) and returns true.
             </remarks>
             <seealso cref="M:Au.Wnd.WaitForClosed(System.Double,System.Boolean)"/>
             <example>
@@ -22063,8 +22108,8 @@
             </param>
             <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
             <exception cref="T:System.ArgumentException">
-            - *name* starts with <c>"***"</c>, but the prefix is invalid.
-            - *cn* is "". To match any, use null.
+            - <i>name</i> starts with <c>"***"</c>, but the prefix is invalid.
+            - <i>cn</i> is "". To match any, use null.
             - Invalid wildcard expression (<c>"**options "</c> or regular expression).
             </exception>
             <remarks>
@@ -22219,7 +22264,7 @@
             </param>
             <param name="sortFirstVisible">
             Place hidden windows at the end of the array. If false, the order of array elements matches the Z order.
-            Not used when *onlyVisible* is true.</param>
+            Not used when <i>onlyVisible</i> is true.</param>
             <remarks>
             Calls API <msdn>EnumWindows</msdn>.
             <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="M:Au.Wnd.GetWnd.MainWindows(System.Boolean)"/>.</note>
@@ -22718,8 +22763,8 @@
             <param name="distance">Distance from this control (from its edge) in the specified direction. Default 10.</param>
             <param name="edgeOffset">
             Distance in perpendicular direction, along the specified edge. Default 5.
-            If *direction* is <b>Left</b> or <b>Right</b>, 0 is the top edge, 1 is 1 pixel down, -1 is 1 pixel up, and so on.
-            If *direction* is <b>Above</b> or <b>Below</b>, 0 is the left edge, 1 is 1 pixel to the right, -1 is 1 pixel to the left, and so on.
+            If <i>direction</i> is <b>Left</b> or <b>Right</b>, 0 is the top edge, 1 is 1 pixel down, -1 is 1 pixel up, and so on.
+            If <i>direction</i> is <b>Above</b> or <b>Below</b>, 0 is the left edge, 1 is 1 pixel to the right, -1 is 1 pixel to the left, and so on.
             </param>
             <param name="topChild">If at that point is a visible child or descendant of the sibling, get that child/descendant. Default false.</param>
             <exception cref="T:Au.Types.WndException">This variable is invalid (window not found, closed, etc).</exception>
@@ -22898,7 +22943,7 @@
             Returns true if window w properties match the specified properties.
             </summary>
             <param name="w">A top-level window. If 0 or invalid, returns false.</param>
-            <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in *cache*; next time it gets these strings from *cache*.</param>
+            <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in <i>cache</i>; next time it gets these strings from <i>cache</i>.</param>
         </member>
         <member name="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)">
             <summary>
@@ -22925,7 +22970,7 @@
             Callback function. Called for each matching window.
             It can evaluate more properties of the window and return true when they match.
             Example: <c>also: t =&gt; !t.IsPopupWindow</c>.
-            Called after evaluating all other parameters except *contains*.
+            Called after evaluating all other parameters except <i>contains</i>.
             </param>
             <param name="contains">
             Text, image or other object in the client area of the window. Depends on type:
@@ -22952,10 +22997,10 @@
             To find message-only windows use <see cref="M:Au.Wnd.Misc.FindMessageOnlyWindow(System.String,System.String,Au.Wnd)"/> instead.
             </remarks>
             <exception cref="T:System.ArgumentException">
-            - *cn* is "". To match any, use null.
-            - *program* is "" or 0 or contains \ or /. To match any, use null.
+            - <i>cn</i> is "". To match any, use null.
+            - <i>program</i> is "" or 0 or contains \ or /. To match any, use null.
             - Invalid wildcard expression (<c>"**options "</c> or regular expression).
-            - Invalid image string in *contains*.
+            - Invalid image string in <i>contains</i>.
             </exception>
             <example>
             Try to find Notepad window. Return if not found.
@@ -23011,7 +23056,7 @@
         <member name="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)">
             <summary>
             Finds a top-level window (calls <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
-            Returns window handle as <b>Wnd</b>. Returns <c>default(Wnd)</c> if not found (if *runWaitS* is negative; else exception).
+            Returns window handle as <b>Wnd</b>. Returns <c>default(Wnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
             </summary>
             <param name="name">See <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</param>
             <param name="cn">See <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</param>
@@ -23022,7 +23067,7 @@
             <param name="run">Callback function. See example.</param>
             <param name="runWaitS">How long to wait for the window after calling the callback function. Seconds. Default 60. See <see cref="M:Au.Wnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</param>
             <param name="needActiveWindow">Finally the window must be active. Default: true.</param>
-            <exception cref="T:System.TimeoutException">*runWaitS* time has expired. Not thrown if *runWaitS* &lt;= 0.</exception>
+            <exception cref="T:System.TimeoutException"><i>runWaitS</i> time has expired. Not thrown if <i>runWaitS</i> &lt;= 0.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</exception>
             <remarks>
             The algorithm is:
@@ -23124,82 +23169,6 @@
             If this is <see cref="P:Au.Wnd.GetWnd.Root"/>, returns true if there is no active window.
             </summary>
         </member>
-        <member name="T:Au.AaaDocFX">
-            <summary>
-            DocFX tests.
-            </summary>
-            <remarks>
-            </remarks>
-        </member>
-        <member name="P:Au.AaaDocFX.TestProp">
-            <summary>
-            Test property.
-            </summary>
-        </member>
-        <member name="M:Au.AaaDocFX.TestMeth(System.String)">
-            <summary>
-            SUMMARY
-            a <c>@"\\?\"</c> b
-            </summary>
-            <param name="s">
-            PARAM
-            a <c>@"\\?\"</c> b
-            </param>
-            <returns>
-            RETURNS
-            a <c>@"\\?\"</c> b
-            </returns>
-            <exception cref="T:System.Exception">
-            EXCEPTION
-            a <c>@"\\?\"</c> b
-            </exception>
-            <remarks>
-            REMARKS
-            
-            a <c>@"\\network\share"
-            line2\
-            line3</c> b
-            
-            head <c>int i=2 *italic* "s"; //comm</c> tail,
-            
-            a <c>*italic*</c> b
-            a <c>"string"</c> b
-            a <c>@"\\?\"</c> b
-            
-            a <c>"line1
-            line2	tab"</c> b
-            
-            a <c>!"#$%'()*+,-./:;=?@[\]^_`{|}~</c> b
-            a <c><![CDATA[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]]></c> b
-            
-            a <c>&lt;&gt;&amp;&apos;&quot;</c>
-            
-            a <c>bbb\</c> footer
-            
-            </remarks>
-            <example>
-            EXAMPLE
-            a <c>@"\\?\"</c> b
-            <code>
-            var c = '\\'; //comment
-            var s=@"\\?\"; //comment,,,
-            </code>
-            </example>
-        </member>
-        <member name="M:Au.AaaDocFX.TestMeth2(System.String)">
-            <summary>SUMMARY =
-            a <c>@"\\?\"</c> b</summary>
-            <param name="s">PARAM = a <c>@"\\?\"</c> b</param>
-            <returns>RETURNS = a <c>@"\\?\"</c> b</returns>
-            <exception cref="T:System.Exception">EXCEPTION = a <c>@"\\?\"</c> b</exception>
-            <remarks>REMARKS = a <c>@"\\?\"</c> b</remarks>
-            <example>EXAMPLE = a <c>@"\\?\"</c> b</example>
-        </member>
-        <member name="M:Au.AaaDocFX.Deconstruct(Au.Types.KMod@,Au.Types.KKey@)">
-            <summary>
-            Allows to *split* a <b>KHotkey</b> variable like <c>var (mod, key) = hotkey;</c> *italic* text. a <c>@"\\?\"</c> b
-            </summary>
-        </member>
         <member name="T:Au.Time">
             <summary>
             Time functions. Get time, sleep/wait, doevents.
@@ -23264,15 +23233,15 @@
         </member>
         <member name="M:Au.Time.Sleep(System.Int32)">
             <summary>
-            Waits *timeMilliseconds* milliseconds.
+            Waits <i>timeMilliseconds</i> milliseconds.
             </summary>
             <param name="timeMilliseconds">Time to wait, milliseconds. Or <see cref="F:System.Threading.Timeout.Infinite"/>.</param>
             <remarks>
             Calls <see cref="M:System.Threading.Thread.Sleep(System.Int32)"/>.
-            Does not process Windows messages and other events, therefore should not be used in threads with windows, timers, hooks, events or COM, unless *timeMilliseconds* is small. Supports APC.
+            Does not process Windows messages and other events, therefore should not be used in threads with windows, timers, hooks, events or COM, unless <i>timeMilliseconds</i> is small. Supports APC.
             If the computer goes to sleep or hibernate during that time, the real time is the specified time + the sleep/hibernate time.
             </remarks>
-            <exception cref="T:System.ArgumentOutOfRangeException">*timeMilliseconds* is negative and not Timeout.Infinite (-1).</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>timeMilliseconds</i> is negative and not Timeout.Infinite (-1).</exception>
             <example>
             <code><![CDATA[
             Time.Sleep(50);
@@ -23283,9 +23252,9 @@
         </member>
         <member name="M:Au.Time.ms(System.Int32)">
             <summary>
-            Waits *timeMilliseconds* milliseconds. The same as <see cref="M:Au.Time.Sleep(System.Int32)"/>.
+            Waits <i>timeMilliseconds</i> milliseconds. The same as <see cref="M:Au.Time.Sleep(System.Int32)"/>.
             </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException">*timeMilliseconds* is negative and not Timeout.Infinite (-1).</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>timeMilliseconds</i> is negative and not Timeout.Infinite (-1).</exception>
             <example>
             <code><![CDATA[
             50.ms();
@@ -23294,11 +23263,11 @@
         </member>
         <member name="M:Au.Time.s(System.Int32)">
             <summary>
-            Waits *timeSeconds* seconds.
+            Waits <i>timeSeconds</i> seconds.
             The same as <see cref="M:Au.Time.Sleep(System.Int32)"/> and <see cref="M:Au.Time.ms(System.Int32)"/>, but the time is specified in seconds, not milliseconds.
             </summary>
             <param name="timeSeconds">Time to wait, seconds.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">*timeSeconds* is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>timeSeconds</i> is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
             <example>
             <code><![CDATA[
             Time.Sleep(5000);
@@ -23309,11 +23278,11 @@
         </member>
         <member name="M:Au.Time.s(System.Double)">
             <summary>
-            Waits *timeSeconds* seconds.
+            Waits <i>timeSeconds</i> seconds.
             The same as <see cref="M:Au.Time.Sleep(System.Int32)"/> and <see cref="M:Au.Time.ms(System.Int32)"/>, but the time is specified in seconds, not milliseconds.
             </summary>
             <param name="timeSeconds">Time to wait, seconds. The smallest value is 0.001 (1 ms).</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">*timeSeconds* is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>timeSeconds</i> is less than 0 or greater than 2147483 (int.MaxValue/1000, 24.8 days).</exception>
             <example>
             <code><![CDATA[
             Time.Sleep(2500);
@@ -23324,7 +23293,7 @@
         </member>
         <member name="M:Au.Time.SleepDoEvents(System.Int32)">
             <summary>
-            Waits *timeMS* milliseconds. While waiting, retrieves and dispatches Windows messages and other events.
+            Waits <i>timeMS</i> milliseconds. While waiting, retrieves and dispatches Windows messages and other events.
             </summary>
             <param name="timeMS">Time to wait, milliseconds. Or <see cref="F:System.Threading.Timeout.Infinite"/>.</param>
             <remarks>
@@ -23333,7 +23302,7 @@
             Be careful, this function is as dangerous as <see cref="M:System.Windows.Forms.Application.DoEvents"/>.
             Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="M:Au.Time.DoEvents"/>.
             </remarks>
-            <exception cref="T:System.ArgumentOutOfRangeException">*timeMS* is negative and not Timeout.Infinite.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>timeMS</i> is negative and not Timeout.Infinite.</exception>
             <seealso cref="M:Au.WaitFor.MessagesAndCondition(System.Double,System.Func{System.Boolean})"/>
             <seealso cref="M:Au.WaitFor.PostedMessage(System.Double,Au.Types.WaitMsgCallback)"/>
             <seealso cref="T:Au.Util.MessageLoop"/>
@@ -23620,10 +23589,10 @@
             Waits for an user-defined condition.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-            <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true. The calling period depends on *options*.</param>
+            <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true. The calling period depends on <i>options</i>.</param>
             <param name="options">Options. If null, uses <see cref="P:Au.Opt.WaitFor"/>, else combines with it.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <remarks>More info: <see cref="T:Au.WaitFor"/>.</remarks>
             <example>See <see cref="T:Au.WaitFor"/>.</example>
         </member>
@@ -23636,9 +23605,9 @@
             <param name="handles">One or more handles of kernel objects. Max 63.</param>
             <returns>
             Returns 1-based index of the first signaled handle. Negative if abandoned mutex.
-            On timeout returns 0 if *secondsTimeout* is negative; else exception.
+            On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.
             </returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <exception cref="T:Au.Types.AuException">Failed. For example a handle is invalid.</exception>
             <remarks>
             Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
@@ -23670,8 +23639,8 @@
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="callback">Callback function that returns true to stop waiting. More info in Remarks.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <remarks>
             While waiting, dispatches Windows messages etc, like <see cref="M:Au.Time.SleepDoEvents(System.Int32)"/>. Before dispatching a posted message, calls the callback function. Stops waiting when it returns true. Does not dispatch the message if the function sets the message field = 0.
             Does not use <see cref="P:Au.Opt.WaitFor"/>.
@@ -23690,8 +23659,8 @@
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="condition">Callback function that returns true to stop waiting. More info in Remarks.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <remarks>
             While waiting, dispatches Windows messages etc, like <see cref="M:Au.Time.SleepDoEvents(System.Int32)"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, etc), calls the callback function. Stops waiting when it returns true.
             Similar to <see cref="M:Au.WaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/>. Differences: 1. Always dispatches messages etc. 2. Does not call the callback function when there are no messages etc.
@@ -23713,8 +23682,8 @@
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="variable">Stop waiting when this variable is set to true.</param>
             <param name="options">Options. If null, uses <see cref="P:Au.Opt.WaitFor"/>, else combines with it.</param>
-            <returns>Returns true. On timeout returns false if *secondsTimeout* is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException">*secondsTimeout* time has expired (if &gt; 0).</exception>
+            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <remarks>
             This function is useful when the variable can be changed by any thread. To wait for a variable changed while processing messages etc in this thread, it's better to use <see cref="M:Au.WaitFor.MessagesAndCondition(System.Double,System.Func{System.Boolean})"/>.
             </remarks>
@@ -23756,7 +23725,7 @@
             Valid hive names: <c>"HKEY_CURRENT_USER"</c>, <c>"HKEY_LOCAL_MACHINE"</c>, <c>"HKEY_CLASSES_ROOT"</c>, <c>"HKEY_USERS"</c>, <c>"HKEY_PERFORMANCE_DATA"</c> or <c>"HKEY_CURRENT_CONFIG"</c>.
             </summary>
             <param name="key">Registry key. Can start with a hive name.</param>
-            <exception cref="T:System.ArgumentException">*key* starts with <c>"HKEY_"</c> but it is an invalid hive name.</exception>
+            <exception cref="T:System.ArgumentException"><i>key</i> starts with <c>"HKEY_"</c> but it is an invalid hive name.</exception>
         </member>
         <member name="M:Au.Registry_.Open(System.String,Microsoft.Win32.RegistryKey)">
             <summary>
@@ -24124,7 +24093,7 @@
             How it works: If this function finds cached image, it sets timer that after ~50 ms loads that icon/image from file again and compares with the cached image. If different, updates the cache. Does it once, not periodically.
             Use only in UI threads. Does not work if this thread does not retrieve/dispatch posted messages.
             </param>
-            <param name="auParam">Something to pass to the *autoUpdate* callback function.</param>
+            <param name="auParam">Something to pass to the <i>autoUpdate</i> callback function.</param>
             <remarks>
             If the icon is in the memory cache, gets it from there.
             Else if it is in the file cache, gets it from there and adds to the memory cache.
@@ -24140,7 +24109,7 @@
             <param name="callback">Called to get image. To convert icon handle to image, use <see cref="M:Au.Icon_.HandleToImage(System.IntPtr,System.Boolean)"/>.</param>
             <param name="autoUpdate"></param>
             <param name="auParam"></param>
-            <param name="auDispose">If true (default), auto-updating can dispose unused image returned by *callback*.</param>
+            <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <i>callback</i>.</param>
             <remarks>
             If the icon is in the memory cache, gets it from there.
             Else if it is in the file cache, gets it from there and adds to the memory cache.
@@ -24214,10 +24183,10 @@
         </member>
         <member name="M:Au.AuTask.WriteResult(System.String)">
             <summary>
-            Writes a string result for the task that called <see cref="M:Au.AuTask.RunWait(System.String@,System.String,System.String[])"/> or <see cref="M:Au.AuTask.RunWait(System.Action{System.String},System.String,System.String[])"/> to run this task, or for the program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5".
+            Writes a string result for the task that called <see cref="M:Au.AuTask.RunWait(System.String@,System.String,System.String[])"/> or <see cref="M:Au.AuTask.RunWait(System.Action{System.String},System.String,System.String[])"/> to run this task, or for the program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs".
             Returns false if this task was not started in such a way. Returns null if failed to write, except when s is null/"".
             </summary>
-            <param name="s"></param>
+            <param name="s">A string. This function does not append newline characters.</param>
             <remarks>
             The <b>RunWait</b>(Action) overload can read the string in real time.
             The <b>RunWait</b>(out string) overload gets all strings joined when the task ends.

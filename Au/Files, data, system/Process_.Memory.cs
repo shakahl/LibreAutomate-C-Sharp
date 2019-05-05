@@ -75,9 +75,9 @@ namespace Au
 			/// <param name="freeWhenDisposing">
 			/// Let the Dispose method (or finalizer) call API <msdn>VirtualFreeEx</msdn> to free mem. The memory must be allocated with API <msdn>VirtualAllocEx</msdn> (by any process) or <msdn>VirtualAlloc</msdn> (by that process).
 			/// If false, mem can be any memory in that process, and this variable will not free it. Alternatively you can use <see cref="ReadOther"/> and <see cref="WriteOther"/>.</param>
-			/// <exception cref="InvalidOperationException">This variable already has Mem, unless it was set by this function with *freeWhenDisposing* = false.</exception>
+			/// <exception cref="InvalidOperationException">This variable already has Mem, unless it was set by this function with <i>freeWhenDisposing</i> = false.</exception>
 			/// <remarks>
-			/// This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with *freeWhenDisposing* = true.
+			/// This function can be used if this variable was created with <i>nBytes</i> = 0. Else exception. Also exception if this function previously called with <i>freeWhenDisposing</i> = true.
 			/// </remarks>
 			public void SetMem(IntPtr mem, bool freeWhenDisposing)
 			{

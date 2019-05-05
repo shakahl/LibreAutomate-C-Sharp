@@ -130,7 +130,7 @@ namespace Au
 		/// - string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// - int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// - Icon, Image, Folders.FolderPath.
-		/// - null (default) - no icon. If <see cref="BaseMT.ExtractIconPathFromCode"/> == true, extracts icon path from *onClick* code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
+		/// - null (default) - no icon. If <see cref="BaseMT.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
 		/// - "" - no icon.
 		/// </param>
 		/// <remarks>
@@ -1343,7 +1343,7 @@ namespace Au.Types
 						}
 					}
 				}
-				if(filename2 != null && filename2.EndsWithI_(".exe")) return File_.SearchPath(filename2);
+				if(filename2 != null && filename2.EndsWith_(".exe", true)) return File_.SearchPath(filename2);
 			}
 			catch(Exception ex) { Debug_.Print(ex); }
 			return null;

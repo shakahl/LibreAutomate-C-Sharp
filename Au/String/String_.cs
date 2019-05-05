@@ -41,13 +41,6 @@ namespace Au
 			fixed (char* a = t, b = s) return _Equals(a, b, len, ignoreCase);
 		}
 
-		//TODO: use prefix Au for all extension methods and classes. Examples AuEquals, AuScreen. Or maybe AEquals, AScreen.
-
-		/// <summary>
-		/// Compares this and other string. Returns true if equal. Uses ordinal case-insensitive comparison.
-		/// </summary>
-		public static bool EqualsI_(this string t, string s) => Equals_(t, s, true);
-
 		static bool _Equals(char* a, char* b, int len, bool ignoreCase)
 		{
 			//never mind: in 32-bit process this is not the fastest code (too few registers).
@@ -89,8 +82,8 @@ namespace Au
 		/// <summary>
 		/// Compares part of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *startIndex*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
 		public static bool EqualsAt_(this string t, int startIndex, string s, bool ignoreCase = false)
 		{
 			if((uint)startIndex > t.Length) throw new ArgumentOutOfRangeException(); //and NullReferenceException
@@ -103,8 +96,8 @@ namespace Au
 		/// Calls <see cref="EqualsAt_(string, int, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">A string in *strings* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *startIndex*.</exception>
+		/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
 		public static int EqualsAt_(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.EqualsAt_(startIndex, strings[i], ignoreCase)) return i + 1;
@@ -120,7 +113,7 @@ namespace Au
 		/// <summary>
 		/// Compares the end of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		public static bool EndsWith_(this string t, string s, bool ignoreCase = false)
 		{
 			int tLen = t.Length; //NullReferenceException
@@ -129,16 +122,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Compares the end of this string with other string. Returns true if equal. Uses ordinal case-insensitive comparison.
-		/// </summary>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		public static bool EndsWithI_(this string t, string s) => EndsWith_(t, s, true);
-
-		/// <summary>
 		/// Calls <see cref="EndsWith_(string, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">A string in *strings* is null.</exception>
+		/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
 		public static int EndsWith_(this string t, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.EndsWith_(strings[i], ignoreCase)) return i + 1;
@@ -158,7 +145,7 @@ namespace Au
 		/// <summary>
 		/// Compares the beginning of this string with other string. Returns true if equal. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		public static bool StartsWith_(this string t, string s, bool ignoreCase = false)
 		{
 			int tLen = t.Length; //NullReferenceException
@@ -167,16 +154,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Compares the beginning of this string with other string. Returns true if equal. Uses ordinal case-insensitive comparison.
-		/// </summary>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		public static bool StartsWithI_(this string t, string s) => StartsWith_(t, s, true);
-
-		/// <summary>
 		/// Calls <see cref="StartsWith_(string, string, bool)"/> for each string specified in the argument list until it returns true.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">A string in *strings* is null.</exception>
+		/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
 		public static int StartsWith_(this string t, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.StartsWith_(strings[i], ignoreCase)) return i + 1;
@@ -195,7 +176,7 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="string.IndexOf(string, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		public static int IndexOf_(this string t, string s, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
@@ -204,8 +185,8 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="string.IndexOf(string, int, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *startIndex*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
 		public static int IndexOf_(this string t, string s, int startIndex, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
@@ -214,8 +195,8 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="string.IndexOf(string, int, int, StringComparison)"/>. Uses ordinal comparison.
 		/// </summary>
-		/// <exception cref="ArgumentNullException">*s* is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *startIndex* or *count*.</exception>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
 		public static int IndexOf_(this string t, string s, int startIndex, int count, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
@@ -225,9 +206,28 @@ namespace Au
 		//rejected: IndexOfAny_, LastIndexOfAny_ and Trim_ that would use string instead of char[]. Not so often used. For speed/garbage it's better to use static char[].
 
 		/// <summary>
+		/// Returns true if this string contains string <i>s</i>. Uses ordinal comparison.
+		/// </summary>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		public static bool Contains_(this string t, string s, bool ignoreCase = false)
+		{
+			if(!ignoreCase) return t.Contains(s);
+			return t.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0;
+		}
+
+		/// <summary>
+		/// Returns true if this string contains character <i>c</i>.
+		/// </summary>
+		public static bool Contains_(this string t, char c)
+		{
+			return t.IndexOf(c) >= 0;
+		}
+
+		/// <summary>
 		/// Returns <see cref="string.Length"/>. If this string is null, returns 0.
 		/// </summary>
 		public static int Length_(this string t) => t?.Length ?? 0;
+		//CONSIDER: NoClass.Len(string|array|etc)
 
 		/// <summary>
 		/// Splits this string into substrings using the specified separators.
@@ -559,7 +559,7 @@ namespace Au
 		/// <summary>
 		/// Returns a new string in which a specified string replaces a specified count of characters at a specified position in this instance.
 		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid *startIndex* or *count*.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
 		public static string ReplaceAt_(this string t, int startIndex, int count, string s)
 		{
 			return t.Remove(startIndex, count).Insert(startIndex, s);
@@ -578,13 +578,15 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Removes *count* characters from the end of this string.
+		/// Removes <i>count</i> characters from the end of this string.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public static string RemoveEnd_(this string t, int count) => t.Remove(t.Length - count);
 
+		//TODO: RemoveEnd(string), RemoveEnd(char)
+
 		/// <summary>
-		/// If this string is longer than *limit*, returns its substring 0 to *limit*-1 with appended '…' character.
+		/// If this string is longer than <i>limit</i>, returns its substring 0 to <i>limit</i>-1 with appended '…' character.
 		/// Else returns this string.
 		/// </summary>
 		public static string Limit_(this string t, int limit)
@@ -594,7 +596,7 @@ namespace Au
 			if(k <= limit) return t;
 			return t.Remove(limit - 1) + "…";
 		}
-		//CONSIDER: if string looks like path, insert "…" in the middle.
+		//TODO: bool isPath=false: insert "…" in middle.
 		//	Don't need it in Escape_, because path cannot contain characters that need to be escaped.
 
 		/// <summary>
@@ -603,7 +605,7 @@ namespace Au
 		/// If the string contains these characters, replaces and returns new string. Else returns this string.
 		/// </summary>
 		/// <param name="t">This string.</param>
-		/// <param name="limit">If the final string is longer than *limit*, get its substring 0 to *limit*-1 with appended '…' character. The enclosing "" are not counted.</param>
+		/// <param name="limit">If the final string is longer than <i>limit</i>, get its substring 0 to <i>limit</i>-1 with appended '…' character. The enclosing "" are not counted.</param>
 		/// <param name="quote">Enclose in "".</param>
 		public static string Escape_(this string t, int limit = 0, bool quote = false)
 		{

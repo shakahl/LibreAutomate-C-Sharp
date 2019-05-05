@@ -235,7 +235,7 @@ namespace Au
 		/// Derived classes should override this function and draw anything. Don't need to call base.OnPaint of <see cref="OsdWindow"/>, it does nothing.
 		/// </summary>
 		/// <remarks>
-		/// If <see cref="Opacity"/> is 0 (default), *g* is filled with <see cref="TransparentColor"/>. Pixels of this color will be transparent. The base class draws only non-transparent areas.
+		/// If <see cref="Opacity"/> is 0 (default), <i>g</i> is filled with <see cref="TransparentColor"/>. Pixels of this color will be transparent. The base class draws only non-transparent areas.
 		/// </remarks>
 		protected virtual void OnPaint(Graphics g, Rectangle r)
 		{

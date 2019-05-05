@@ -21,19 +21,32 @@ namespace Au.Util
 	/// <summary>
 	/// Static functions to open a help topic etc.
 	/// </summary>
-	public static class Help
+	public static class Help_ //info: name not Help, because .NET has it
 	{
+#if true //online
+		/// <summary>
+		/// Opens a Au help topic onine.
+		/// The file must be in <see cref="Folders.ThisApp"/>.
+		/// </summary>
+		/// <param name="topic">Topic file name, like "Au.Acc.Find" or "Acc.Find" or "articles/Wildcard expression".</param>
+		public static void AuWeb(string topic)
+		{
+			var url = "http://3.quickmacros.com/help/";
+			if(!Empty(topic)) url = url + (topic.IndexOf('/') < 0 ? (topic.StartsWith_("Au.") ? "api/" : "api/Au.") : null) + topic + (topic.EndsWith_('/') ? null : ".html");
+			Shell.TryRun(url);
+		}
+#else //.chm
 		/// <summary>
 		/// Opens file "Au Help.chm" and a help topic in it.
 		/// The file must be in <see cref="Folders.ThisApp"/>.
 		/// </summary>
 		/// <param name="topic">Topic file name, like "M_Au_Acc_Find" or "0248143b-a0dd-4fa1-84f9-76831db6714a".</param>
-		public static void AuHelp(string topic) //TODO: open URL in DocFX-created website
+		public static void AuChm(string topic)
 		{
 			var s = Folders.ThisAppBS + "Help/Au Help.chm::/html/" + topic + ".htm";
 			Api.HtmlHelp(Api.GetDesktopWindow(), s, 0, 0); //HH_DISPLAY_TOPIC
 		}
-
+#endif
 	}
 
 

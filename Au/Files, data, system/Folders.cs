@@ -487,7 +487,7 @@ namespace Au
 			foreach(DriveInfo di in DriveInfo.GetDrives()) {
 				if(di.DriveType == DriveType.Removable) {
 					string v = null; try { v = di.VolumeLabel; } catch { continue; }
-					if(!v.EqualsI_(volumeLabel)) continue;
+					if(!v.Equals_(volumeLabel, true)) continue;
 					return di.Name;
 				}
 			}
