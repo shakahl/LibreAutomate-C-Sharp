@@ -292,8 +292,8 @@ namespace Au
 
 			if(opt.PasteEnter) {
 				string s = data as string;
-				if(enter = s != null && s.EndsWith_('\n') && !isConsole) {
-					s = s.RemoveEnd_(s.EndsWith_("\r\n") ? 2 : 1);
+				if(enter = s != null && s.Ends('\n') && !isConsole) {
+					s = s.RemoveSuffix(s.Ends("\r\n") ? 2 : 1);
 					if(s.Length == 0) {
 						Keyb.Lib.SendCopyPaste.Enter(opt);
 						return;
@@ -476,11 +476,11 @@ namespace Au
 					if(wOC == _wFocus) return true;
 					if(wOC.Is0) return true; //tested: none of tested apps calls OpenClipboard(0)
 					if(wOC.ProcessId == _wFocus.ProcessId) return true; //often classnamed "CLIPBRDWNDCLASS". Some clipboard managers are classnamed so too, eg Ditto.
-					if(wOC.ProgramName.Equals_("RuntimeBroker.exe", true)) return true; //Edge, Store apps
+					if(wOC.ProgramName.Eqi("RuntimeBroker.exe")) return true; //Edge, Store apps
 
 					//CONSIDER: option to return true for user-known windows. Also show warning or info that includes wOC info.
 
-					Debug_.Print(wOC.ToString());
+					Dbg.Print(wOC.ToString());
 					return false;
 
 					//BlueStacks problems:
@@ -595,7 +595,7 @@ namespace Au
 
 						if(!skip && exceptFormats != null && exceptFormats.Length != 0) {
 							name = LibGetFormatName(format);
-							foreach(string s in exceptFormats) if(s.Equals_(name, true)) { skip = true; break; }
+							foreach(string s in exceptFormats) if(s.Eqi(name)) { skip = true; break; }
 						}
 					}
 

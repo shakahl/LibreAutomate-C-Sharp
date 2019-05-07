@@ -402,11 +402,11 @@ namespace Au.Util
 				}
 			}
 			catch(Exception ex) {
-				Debug_.Dialog(ex.Message);
+				Dbg.Dialog(ex.Message);
 			}
 		}
 
-		//static string _ToMB(long n) => Math.Round(n / 1048576d, 3).ToString_();
+		//static string _ToMB(long n) => Math.Round(n / 1048576d, 3).ToStringInvariant();
 
 		/// <summary>
 		/// Adds s directly to _messages and sets timer.
@@ -429,7 +429,7 @@ namespace Au.Util
 			_messages.Enqueue(m);
 		}
 
-		//static int _GetMessageMemorySize(Message m) => 50 + m.Text.Length_() * 2;
+		//static int _GetMessageMemorySize(Message m) => 50 + m.Text.Lenn() * 2;
 		//int _memSize;
 
 		/// <summary>

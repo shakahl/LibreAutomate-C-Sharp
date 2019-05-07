@@ -341,7 +341,7 @@ namespace Au
 
 				if(!fixMSI) {
 					R = Path_.ExpandEnvVar(R);
-				} else if(R.IndexOf_(@"\Installer\{") > 0) {
+				} else if(R.Index(@"\Installer\{") > 0) {
 					//For MSI shortcuts GetPath gets like "C:\WINDOWS\Installer\{90110409-6000-11D3-8CFE-0150048383C9}\accicons.exe".
 					var product = stackalloc char[40];
 					var component = stackalloc char[40];
@@ -363,7 +363,7 @@ namespace Au
 				//GetWorkingDirectory and GetIconLocation get raw path, and envronment variables such as %ProgramFiles% are expanded to (x86) in 32-bit process.
 				if(Ver.Is32BitProcessOn64BitOS) {
 					if(_pf == null) { string s = Folders.ProgramFilesX86; _pf = s + "\\"; }
-					if(R.StartsWith_(_pf, true) && !File_.ExistsAsAny(R)) {
+					if(R.Starts(_pf, true) && !File_.ExistsAsAny(R)) {
 						var s2 = R.Remove(_pf.Length - 7, 6);
 						if(File_.ExistsAsAny(s2)) R = s2;
 						//info: "C:\\Program Files (x86)\\" in English, "C:\\Programme (x86)\\" in German etc.

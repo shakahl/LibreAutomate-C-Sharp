@@ -85,7 +85,7 @@ namespace Au.Controls
 				x.WriteStartElement("split");
 				if(!IsVerticalSplit) x.WriteAttributeString("hor", "");
 
-				if(_isFraction) x.WriteAttributeString("f", _fraction.ToString_());
+				if(_isFraction) x.WriteAttributeString("f", _fraction.ToStringInvariant());
 				else if(_isWidth1) x.WriteAttributeString("w1", _width.ToString());
 				else x.WriteAttributeString("w2", _width.ToString());
 
@@ -403,7 +403,7 @@ namespace Au.Controls
 					for(int i = 1, k = this.SplitterWidth; i <= 10; i++)
 						m.Add(i.ToString(), o =>
 						{
-							this.SplitterWidth = o.Item.Text.ToInt_();
+							this.SplitterWidth = o.Item.Text.ToInt();
 							_manager._UpdateLayout(true); //not this.UpdateLayout() because may need to apply minimal layouts
 						}).Checked = k == 0;
 				}

@@ -129,9 +129,9 @@ namespace Au
 					switch(s[0]) {
 					case 'a':
 					case 'c':
-						if(s.RegexMatch_(@"^. ?'(.+?)?' ?((?s).+)?$", out var m)) { role = m[1].Value; name = m[2].Value; isControl = s[0] == 'c'; }
+						if(s.RegexMatch(@"^. ?'(.+?)?' ?((?s).+)?$", out var m)) { role = m[1].Value; name = m[2].Value; isControl = s[0] == 'c'; }
 						break;
-					case 'i' when s.StartsWith_("image:"):
+					case 'i' when s.Starts("image:"):
 						return _LoadImage(s);
 					}
 					if(isControl) return new ChildFinder(name, role);
@@ -457,7 +457,7 @@ namespace Au
 		/// 
 		/// On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has uiAccess or High+uiAccess or has disableWindowFiltering in manifest; to find such windows you can use <see cref="FindFast"/>.
 		/// 
-		/// To find message-only windows use <see cref="Misc.FindMessageOnlyWindow"/> instead.
+		/// To find message-only windows use <see cref="More.FindMessageOnlyWindow"/> instead.
 		/// </remarks>
 		/// <exception cref="ArgumentException">
 		/// - <i>cn</i> is "". To match any, use null.
@@ -528,7 +528,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>Wnd</b>.
-		/// Returns <c>default(Wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
+		/// Returns <c>default(Wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="ExtAu.OrThrow(Wnd)"/>.
 		/// </summary>
 		/// <param name="name">
 		/// Name.
@@ -545,7 +545,7 @@ namespace Au
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Find"/>, which uses API <msdn>EnumWindows</msdn>.
 		/// Finds hidden windows too.
-		/// To find message-only windows use <see cref="Misc.FindMessageOnlyWindow"/> instead.
+		/// To find message-only windows use <see cref="More.FindMessageOnlyWindow"/> instead.
 		/// Supports <see cref="WinError"/>.
 		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
 		/// </remarks>
@@ -554,7 +554,7 @@ namespace Au
 			return Api.FindWindowEx(default, wAfter, cn, name);
 		}
 
-		public static partial class Misc
+		public static partial class More
 		{
 			/// <summary>
 			/// Finds a message-only window and returns its handle as <b>Wnd</b>.
@@ -646,7 +646,7 @@ namespace Au
 			/// <remarks>
 			/// Calls API <msdn>EnumWindows</msdn>.
 			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows"/>.</note>
-			/// Does not get message-only windows. Use <see cref="Misc.FindMessageOnlyWindow"/> if need.
+			/// Does not get message-only windows. Use <see cref="More.FindMessageOnlyWindow"/> if need.
 			/// On Windows 8 and later does not get Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has [](xref:uac) integrity level uiAccess or High+uiAccess or its manifest contains disableWindowFiltering; to get such windows you can use <see cref="FindFast"/>.
 			/// Tip: To get top-level and child windows in single array: <c>var a = Wnd.GetWnd.Root.Get.Children();</c>.
 			/// </remarks>
@@ -957,8 +957,8 @@ namespace Au.Types
 			case string s:
 				//LibThrowIfInvalid(s);
 				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
-				if(!s.StartsWith_("**")) { //can be regex
-					if(s.IndexOfAny(String_.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
+				if(!s.Starts("**")) { //can be regex
+					if(s.IndexOfAny(ExtString.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
 					if(Path_.FindExtension(s) < 0 && !Wildex.HasWildcardChars(s)) PrintWarning("Program name without .exe.");
 				}
 				program = s;
@@ -983,7 +983,7 @@ namespace Au.Types
 		//internal static void LibThrowIfInvalid(string s)
 		//{
 		//	if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
-		//	if(s.IndexOfAny(String_.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
+		//	if(s.IndexOfAny(ExtString.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
 		//	if(Path_.FindExtension(s) < 0) PrintWarning("Program name without .exe.");
 		//}
 

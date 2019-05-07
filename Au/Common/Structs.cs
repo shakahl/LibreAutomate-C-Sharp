@@ -55,7 +55,7 @@ namespace Au.Types
 		public static implicit operator LPARAM(long x) => new LPARAM((void*)x);
 		public static implicit operator LPARAM(ulong x) => new LPARAM((void*)x);
 		public static implicit operator LPARAM(bool x) => new LPARAM((void*)(x ? 1 : 0));
-		//also would be good to have LPARAM(Enum x), but I don't know how. Try like ExtensionMethods.Has_<T>. Maybe future C# will allow it.
+		//also would be good to have LPARAM(Enum x), but C# does not allow generic operators.
 
 		//int etc = LPARAM
 		public static implicit operator void* (LPARAM x) => x._v;
@@ -130,7 +130,7 @@ namespace Au.Types
 		/// <summary>Specifies position relative to the primary screen or its work area. Calls <see cref="Coord.Normalize"/>.</summary>
 		public static implicit operator POINT((Coord x, Coord y, bool workArea) t) => _Coord(t.x, t.y, t.workArea, default);
 		/// <summary>Specifies position relative to the specified screen or its work area. Calls <see cref="Coord.Normalize"/>.</summary>
-		public static implicit operator POINT((Coord x, Coord y, Screen_ screen, bool workArea) t) => _Coord(t.x, t.y, t.workArea, t.screen);
+		public static implicit operator POINT((Coord x, Coord y, ScreenDef screen, bool workArea) t) => _Coord(t.x, t.y, t.workArea, t.screen);
 		/// <summary>Specifies position in the specified rectangle which is relative to the primary screen. Calls <see cref="Coord.NormalizeInRect"/>.</summary>
 		public static implicit operator POINT((RECT r, Coord x, Coord y) t) => Coord.NormalizeInRect(t.x, t.y, t.r, centerIfEmpty: true);
 
@@ -145,7 +145,7 @@ namespace Au.Types
 		public override string ToString() => $"{{x={x} y={y}}}";
 #pragma warning restore 1591 //XML doc
 
-		static POINT _Coord(Coord x, Coord y, bool workArea, Screen_ screen) => Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
+		static POINT _Coord(Coord x, Coord y, bool workArea, ScreenDef screen) => Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
 	}
 
 	/// <summary>
@@ -335,13 +335,13 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. Can be Coord.Reverse etc.</param>
 		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. Can be Coord.Reverse etc.</param>
-		/// <param name="screen">Use this screen (see <see cref="Screen_"/>). If null (default), uses the primary screen.</param>
+		/// <param name="screen">Use this screen (see <see cref="ScreenDef"/>). If null (default), uses the primary screen.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
 		/// <remarks>
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="Wnd.MoveInScreen"/>.
 		/// </remarks>
-		public void MoveInScreen(Coord x, Coord y, Screen_ screen = default, bool workArea = true, bool ensureInScreen = true)
+		public void MoveInScreen(Coord x, Coord y, ScreenDef screen = default, bool workArea = true, bool ensureInScreen = true)
 		{
 			Wnd.Lib.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
 		}
@@ -362,12 +362,12 @@ namespace Au.Types
 		/// Adjusts this rectangle to ensure that whole rectangle is in screen.
 		/// Initial and final rectangle coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="screen">Use this screen (see <see cref="Screen_"/>). If null (default), uses screen of the rectangle (or nearest).</param>
+		/// <param name="screen">Use this screen (see <see cref="ScreenDef"/>). If null (default), uses screen of the rectangle (or nearest).</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <remarks>
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="Wnd.EnsureInScreen"/>.
 		/// </remarks>
-		public void EnsureInScreen(Screen_ screen = default, bool workArea = true)
+		public void EnsureInScreen(ScreenDef screen = default, bool workArea = true)
 		{
 			Wnd.Lib.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
 		}
@@ -443,11 +443,11 @@ namespace Au.Types
 			c.color = 0;
 			if(s == null || s.Length < 2) return false;
 			if(s[0] == '0' && s[1] == 'x') {
-				c.color = s.ToInt_(0, out int len);
+				c.color = s.ToInt(0, out int len);
 				if(len < 3) return false;
 				if(len <= 8) c.color |= unchecked((int)0xFF000000);
 			} else if(s[0] == '#') {
-				c.color = s.ToInt_(1, out int end, STIFlags.IsHexWithout0x);
+				c.color = s.ToInt(1, out int end, STIFlags.IsHexWithout0x);
 				if(end < 2) return false;
 				if(end <= 7) c.color |= unchecked((int)0xFF000000);
 			} else {
@@ -673,7 +673,7 @@ namespace Au.Types
 
 			//rejected:
 			//Some objects can return BSTR containing '\0's. Then probably the rest of string is garbage. I never noticed this but saw comments. Better allow '\0's, because in some cases it can be valid string. When invalid, it will not harm too much.
-			//int len2 = Util.LibCharPtr.Length(p, len); Debug_.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
+			//int len2 = Util.LibCharPtr.Length(p, len); Dbg.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
 
 			string r = noCache ? new string(p, 0, len) : Util.StringCache.LibAdd(p, len);
 			Dispose();

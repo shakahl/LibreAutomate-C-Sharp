@@ -105,7 +105,7 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 		/// <exception cref="Exception">Failed. Probably the task does not exist.</exception>
 		public static int RunTask(string taskFolder, string taskName, bool joinArgs, params string[] args)
 		{
-			object a; if(Empty(args)) a = null; else if(joinArgs) a = StringMisc.CommandLineFromArray(args); else a = args;
+			object a; if(Empty(args)) a = null; else if(joinArgs) a = ExtString.More.CommandLineFromArray(args); else a = args;
 			var ts = new Api.TaskScheduler() as Api.ITaskService;
 			ts.Connect();
 			var rt = ts.GetFolder(taskFolder).GetTask(taskName).Run(a);

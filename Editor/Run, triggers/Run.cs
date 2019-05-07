@@ -98,7 +98,7 @@ static class Run
 
 	static void _SciLink_RunClassFile(string s)
 	{
-		int action = s.ToInt_(); //1 add meta role miniProgram, 2 create Script project, 3 create new test script and set "run" attribute
+		int action = s.ToInt(); //1 add meta role miniProgram, 2 create Script project, 3 create new test script and set "run" attribute
 		var f = Model.Find(s.Substring(2), null); if(f == null) return;
 		FileNode f2 = null;
 		if(action == 1) { //add meta role exeProgram
@@ -192,10 +192,10 @@ class RunningTask
 			bool ok = Api.TerminateProcess(h, -1);
 			if(onProgramExit) return true;
 			if(ok) {
-				if(0 != Api.WaitForSingleObject(h, 2000)) { Debug_.Print("process not terminated"); return false; }
+				if(0 != Api.WaitForSingleObject(h, 2000)) { Dbg.Print("process not terminated"); return false; }
 			} else {
 				var s = WinError.Message;
-				if(0 != Api.WaitForSingleObject(h, 0)) { Debug_.Print(s); return false; }
+				if(0 != Api.WaitForSingleObject(h, 0)) { Dbg.Print(s); return false; }
 			}
 			//note: TerminateProcess kills process not immediately. Need at least several ms.
 		}
@@ -296,7 +296,7 @@ class RunningTasks
 
 		int taskId = (int)wParam;
 		int i = _Find(taskId);
-		if(i < 0) { Debug_.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
+		if(i < 0) { Dbg.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
 
 		var rt = _a[i];
 		_a.RemoveAt(i);
@@ -482,7 +482,7 @@ class RunningTasks
 		_Preloaded pre = null; byte[] taskParams = null;
 		if(r.notInCache) { //meta role exeProgram
 			exeFile = r.file;
-			argsString = args == null ? null : Au.Util.StringMisc.CommandLineFromArray(args);
+			argsString = args == null ? null : ExtString.More.CommandLineFromArray(args);
 		} else {
 			exeFile = Folders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");
 
@@ -530,7 +530,7 @@ class RunningTasks
 				//start preloaded process for next task. Let it wait for pipe connection.
 				if(uac != _SpUac.admin) { //we don't want second UAC consent
 					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
-					catch(Exception ex) { Debug_.Print(ex); }
+					catch(Exception ex) { Dbg.Print(ex); }
 				}
 			}
 		}

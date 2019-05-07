@@ -279,7 +279,7 @@ namespace Au.Types
 		/// <summary>
 		/// Disables one or more run-time warnings.
 		/// </summary>
-		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="String_.Like_(string, string, bool)"/>.</param>
+		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="ExtString.Like(string, string, bool)"/>.</param>
 		/// <remarks>
 		/// Adds the strings to an internal list. When <see cref="PrintWarning"/> is called, it looks in the list. If it finds the warning in the list, it does not show the warning.
 		/// It's easy to auto-restore warnings with 'using', like in the second example. Restoring is optional.
@@ -321,7 +321,7 @@ namespace Au.Types
 		{
 			string s = text ?? "";
 			var a = _disabledWarnings;
-			if(a != null) foreach(var k in a) if(s.Like_(k, true)) return true;
+			if(a != null) foreach(var k in a) if(s.Like(k, true)) return true;
 			return false;
 		}
 

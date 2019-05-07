@@ -63,7 +63,7 @@ namespace Au
 		/// More info: <see cref="GetFileIcon"/>.
 		/// </summary>
 		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-		/// <seealso cref="Wnd.Misc.GetIconHandle"/>
+		/// <seealso cref="Wnd.More.GetIconHandle"/>
 		public static IntPtr GetFileIconHandle(string file, int size, GIFlags flags = 0)
 		{
 			if(Empty(file)) return default;
@@ -141,7 +141,7 @@ namespace Au
 
 			if(isPath /*&& (extractFromFile || 0==(flags&IconFlags.Shell))*/) {
 				int ext = 0;
-				if(!extractFromFile && file.Length > 4) ext = file.EndsWith_(true, ".exe", ".scr", ".ico", ".cur", ".ani");
+				if(!extractFromFile && file.Length > 4) ext = file.Ends(true, ".exe", ".scr", ".ico", ".cur", ".ani");
 				if(extractFromFile || ext > 0) {
 					R = LoadIconHandle(file, index, size);
 					if(R != default || extractFromFile) return R;
@@ -154,7 +154,7 @@ namespace Au
 						return GetStockIconHandle(siid, size);
 						//case FileDir.Directory: //folder name ends with .ico etc
 					}
-				} else if(file.EndsWith_(".lnk", true)) {
+				} else if(file.Ends(".lnk", true)) {
 					R = _GetLnkIcon(file, size);
 					if(R != default) return R;
 					//Print("_GetLnkIcon failed", file);
@@ -173,7 +173,7 @@ namespace Au
 			//But now, after other optimizations applied, in real life makes faster just 10-20%.
 #if false
 			//if(0==(flags&IconFlags.Shell)){
-			string progId = isShellPath ? null : File_.Misc.GetFileTypeOrProtocolRegistryKey(file, isFileType, isURL);
+			string progId = isShellPath ? null : File_.More.GetFileTypeOrProtocolRegistryKey(file, isFileType, isURL);
 
 			RegistryKey rk = (progId == null) ? null : Registry_.Open(progId, Registry.ClassesRoot);
 			//Print(file, progId, isFileType, isURL, rk != null);
@@ -200,9 +200,9 @@ namespace Au
 					else ParseIconLocation(ref icon, out index);
 				} else if(Registry_.GetString(out icon, "", @"shell\open\command", rk) && icon.Length > 0) {
 					//Print(@"registry: shell\open\command", file, icon);
-					var a = icon.Split_((icon[0] == '\"') ? "\"" : " ", StringSplitOptions.RemoveEmptyEntries);
+					var a = icon.SegSplit((icon[0] == '\"') ? "\"" : " ", StringSplitOptions.RemoveEmptyEntries);
 					icon = (a.Length == 0) ? null : a[0];
-					if(icon.EndsWith_("rundll32.exe", true)) icon = null;
+					if(icon.Ends("rundll32.exe", true)) icon = null;
 				} else {
 					icon = null;
 					//Print("registry: no", file);
@@ -302,7 +302,7 @@ namespace Au
 					if(il != default) index = x.iIcon;
 					//Marshal.Release(il); //undocumented, but without it IImageList refcount grows. Probably it's ok, because it is static, never deleted until process exits.
 				}
-				catch { Debug_.Print("exception"); }
+				catch { Dbg.Print("exception"); }
 			}
 			if(index < 0) return default;
 
@@ -319,7 +319,7 @@ namespace Au
 					}
 				}
 			}
-			catch(Exception e) { Debug_.Print(e.Message); }
+			catch(Exception e) { Dbg.Print(e.Message); }
 			//finally { if(il != default) Marshal.Release(il); }
 			return R;
 		}
@@ -556,7 +556,7 @@ namespace Au
 			//var perf = Perf.StartNew();
 			Icon ic = Icon.FromHandle(hIcon);
 			Bitmap im = null;
-			try { im = ic.ToBitmap(); } catch(Exception e) { Debug_.Print(e.Message); }
+			try { im = ic.ToBitmap(); } catch(Exception e) { Dbg.Print(e.Message); }
 			ic.Dispose();
 			if(destroyIcon) Api.DestroyIcon(hIcon);
 			//perf.NW();
@@ -578,7 +578,7 @@ namespace Au
 			if(s.Length < 3) return false;
 			if(!Char_.IsAsciiDigit(s[s.Length - 1])) return false;
 			int i = s.LastIndexOf(','); if(i < 1) return false;
-			index = s.ToInt_(i + 1, out int e); if(e != s.Length) return false;
+			index = s.ToInt(i + 1, out int e); if(e != s.Length) return false;
 			s = s.Remove(i);
 			return true;
 
@@ -675,8 +675,8 @@ namespace Au
 						if(File_.ExistsAsDirectory(file)) ext = file;
 						else ext = ".no-ext";
 					} else {
-						//ext = ext.ToLower_();
-						if(ext.Equals_(".ico", true) || ext.Equals_(".exe", true) || ext.StartsWith_(".exe,", true) || ext.StartsWith_(".dll,", true)) ext = file;
+						//ext = ext.Lower();
+						if(ext.Eqi(".ico") || ext.Eqi(".exe") || ext.Starts(".exe,", true) || ext.Starts(".dll,", true)) ext = file;
 					}
 					file = ext;
 				} else if(Path_.IsFullPathExpandEnvVar(ref file)) {
@@ -719,10 +719,10 @@ namespace Au
 						//is in file cache?
 						try {
 							if(_x == null && File_.ExistsAsFile(_cacheFile)) {
-								_x = XElement_.Load(_cacheFile);
+								_x = ExtXml.LoadElement(_cacheFile);
 								if(_iconSize != _x.Attribute_("size", 0) || Util.Dpi.BaseDPI != _x.Attribute_("dpi", 0)) {
 									_x = null;
-									Debug_.Print("info: cleared icon cache");
+									Dbg.Print("info: cleared icon cache");
 								}
 
 								//FUTURE: Delete unused entries. Maybe try to auto-update changed icons.
@@ -738,7 +738,7 @@ namespace Au
 							}
 						}
 						catch(Exception ex) {
-							Debug_.Print(ex.Message);
+							Dbg.Print(ex.Message);
 						}
 
 						if(R != null) {

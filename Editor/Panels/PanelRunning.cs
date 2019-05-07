@@ -78,7 +78,7 @@ class PanelRunning :Control, ITreeModel
 
 	public IEnumerable GetChildren(object nodeTag)
 	{
-		//Debug_.PrintFunc();
+		//Dbg.PrintFunc();
 		Debug.Assert(nodeTag == null);
 		return Tasks.Items;
 		//FUTURE: also add folder with queed items.

@@ -110,7 +110,7 @@ namespace Au.Types
 		{
 			LibWaitHandle wh = null;
 			try { wh = new LibWaitHandle(LibHandle.OpenProcess(pid, desiredAccess), true); }
-			catch(Exception ex) { Debug_.Print(ex); }
+			catch(Exception ex) { Dbg.Print(ex); }
 			return wh;
 		}
 	}

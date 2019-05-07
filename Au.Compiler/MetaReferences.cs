@@ -85,7 +85,7 @@ namespace Au.Compiler
 		{
 			string alias = null;
 			int i = reference.IndexOf('=');
-			if(i >= 0 && !(i > 9 && reference.EqualsAt_(i - 9, ", Version"))) {
+			if(i >= 0 && !(i > 9 && reference.EqAt(i - 9, ", Version"))) {
 				alias = reference.Remove(i);
 				reference = reference.Substring(i + 1);
 			}
@@ -101,7 +101,7 @@ namespace Au.Compiler
 			//foreach(var v in _refs) Print(v.FilePath);
 			PortableExecutableReference mr;
 			lock(s_refsWR) {
-				mr = _cache.Find(v => v.FilePath.Equals_(path, true));
+				mr = _cache.Find(v => v.FilePath.Eqi(path));
 				if(mr == null) {
 					MetadataReferenceProperties prop = alias == null && !isCOM
 						? default
@@ -128,13 +128,13 @@ namespace Au.Compiler
 			if(isFull) return File_.ExistsAsFile(re) ? re : null;
 
 			string path, ext; int i;
-			if(0 != re.EndsWith_(true, s_asmExt)) {
+			if(0 != re.Ends(true, s_asmExt)) {
 				foreach(var v in s_dirs) {
 					path = Path_.Combine(v, re);
 					if(File_.ExistsAsFile(path)) return path;
 				}
 				ext = null;
-			} else if((i = re.IndexOf_(", Version=")) > 0) {
+			} else if((i = re.Index(", Version=")) > 0) {
 				return GAC.FindAssembly(re.Remove(i), re);
 			} else ext = ".dll";
 
@@ -142,7 +142,7 @@ namespace Au.Compiler
 			path = d + re + ext;
 			if(File_.ExistsAsFile(path)) return path;
 
-			bool isRelPath = re.IndexOfAny(String_.Lib.pathSep) >= 0;
+			bool isRelPath = re.IndexOfAny(ExtString.Lib.pathSep) >= 0;
 			if(!isRelPath) {
 				path = d + @"WPF\" + re + ext;
 				if(File_.ExistsAsFile(path)) return path;
@@ -166,8 +166,8 @@ namespace Au.Compiler
 		/// <param name="errorMessage">"Metadata file '....dll' could not be opened ..."</param>
 		public void RemoveBadReference(string errorMessage)
 		{
-			if(errorMessage.RegexMatch_(@"'(.+?)'", 1, out string path))
-				lock(s_refsWR) { _cache.RemoveAll(v => v.FilePath.Equals_(path, true)); }
+			if(errorMessage.RegexMatch(@"'(.+?)'", 1, out string path))
+				lock(s_refsWR) { _cache.RemoveAll(v => v.FilePath.Eqi(path)); }
 		}
 	}
 

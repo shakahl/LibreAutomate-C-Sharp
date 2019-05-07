@@ -195,7 +195,7 @@ namespace Au.Tools
 					return a1.ToArray();
 					//rejected: sort
 				}
-				catch(Exception ex) { Debug_.Print(ex); return null; }
+				catch(Exception ex) { Dbg.Print(ex); return null; }
 			}
 
 			bool _GetClassName(Wnd w, out string cn)
@@ -267,7 +267,7 @@ namespace Au.Tools
 			if(_grid.ZGetValue("program", out var sProg, true)) m |= 2;
 			if(m != 0) b.AppendStringArg(sClass);
 			if(0 != (m & 2)) {
-				if(!sProg.StartsWith_("WFEtc.")) b.AppendStringArg(sProg);
+				if(!sProg.Starts("WFEtc.")) b.AppendStringArg(sProg);
 				else if(!forTest) b.AppendOtherArg(sProg);
 				else m &= ~2;
 			}
@@ -313,7 +313,7 @@ namespace Au.Tools
 					if(0 != (m & 2)) b.Append(sClass);
 					if(0 != (m & 1)) {
 						if(0 != (m & 2)) b.Append(' ');
-						sName = sName.Limit_(100).RegexReplace_(@"^\*\*\*\w+ (.+)", "$1");
+						sName = sName.Limit(100).RegexReplace(@"^\*\*\*\w+ (.+)", "$1");
 						b.AppendStringArg(sName, noComma: true);
 					}
 				}
@@ -610,7 +610,7 @@ namespace Au.Tools
 						if(Empty(name)) _displayText = cn;
 						else {
 							using(new Util.LibStringBuilder(out var b)) {
-								name = name.Escape_(limit: 250);
+								name = name.Escape(limit: 250);
 								b.Append(cn).Append("  \"").Append(name).Append("\"");
 								_displayText = b.ToString();
 							}
@@ -710,7 +710,7 @@ namespace Au.Tools
 					//if(!Empty(cLabel)) b.Append("<i>NameLabel<>:    ").AppendLine(cLabel);
 					if(!Empty(cAcc)) b.Append("<i>NameAcc<>:    ").AppendLine(cAcc);
 					if(!Empty(cWF)) b.Append("<i>NameWinForms<>:    ").AppendLine(cWF);
-					if(!Empty(cText)) b.Append("<i>ControlText<>:    ").Append("<_>").Append(cText.Escape_(10000, true)).AppendLine("</_>");
+					if(!Empty(cText)) b.Append("<i>ControlText<>:    ").Append("<_>").Append(cText.Escape(10000, true)).AppendLine("</_>");
 					b.Append("<i>ControlId<>:    ").AppendLine(cId.ToString());
 					b.AppendFormat("<+rect {0}><i>RectInWindow<><>:    ", sh).AppendLine(w.RectInWindow.ToString());
 				} else {
@@ -741,7 +741,7 @@ namespace Au.Tools
 				}
 				b.Append("<i>Prop[\"...\"]<>:    "); bool isProp = false;
 				foreach(var p in w.Prop.GetList()) {
-					if(p.Key.StartsWith_('#')) continue;
+					if(p.Key.Starts('#')) continue;
 					if(!isProp) isProp = true; else b.Append(", ");
 					b.Append(p.Key).Append(" = ").Append(p.Value.ToString());
 				}
@@ -761,12 +761,12 @@ namespace Au.Tools
 			if(_wiWCP == 0) {
 				_wiWCP = 1;
 				_winInfo.Tags.AddLinkTag("+switch", s => {
-					_wiWCP = s.ToInt_();
+					_wiWCP = s.ToInt();
 					_SetText(default);
 				});
 				_winInfo.Tags.AddLinkTag("+rect", s => {
-					var w = (Wnd)s.ToInt_(0, out int e);
-					int client = s.ToInt_(e);
+					var w = (Wnd)s.ToInt(0, out int e);
+					int client = s.ToInt(e);
 					var r = client == 1 ? w.ClientRectInScreen : w.Rect;
 					TUtil.ShowOsdRect(r, limitToScreen: w.IsMaximized);
 				});
@@ -816,8 +816,8 @@ namespace Au.Tools
 		{
 			if(info == null) {
 				info = c_infoForm;
-			} else if(info.EndsWith_('$')) {
-				_commonInfos.SetTextWithWildexInfo(info.RemoveEnd_(1));
+			} else if(info.Ends('$')) {
+				_commonInfos.SetTextWithWildexInfo(info.RemoveSuffix(1));
 				return;
 			}
 			_info.ST.SetText(info);

@@ -22,7 +22,7 @@ namespace Au
 {
 	public partial struct Wnd
 	{
-		public static partial class Misc
+		public static partial class More
 		{
 			/// <summary>
 			/// Creates window and allows you to replace its window procedure.
@@ -182,7 +182,7 @@ namespace Au
 				public static unsafe ushort RegisterClass(string className, MWWndClassEx ex = null)
 				{
 					lock("jU0tLiIbtE6KWg5aCu7RDg") {
-						string interDomainVarName = "jU0tLiIbtE6KWg5aCu7RDg" + className.ToLower_();
+						string interDomainVarName = "jU0tLiIbtE6KWg5aCu7RDg" + className.Lower();
 						if(!Util.InterDomainVariables.GetVariable(interDomainVarName, out ushort atom)) {
 							var x = new Api.WNDCLASSEX(ex);
 
@@ -211,7 +211,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Used with <see cref="Wnd.Misc.MyWindow.RegisterClass"/>.
+	/// Used with <see cref="Wnd.More.MyWindow.RegisterClass"/>.
 	/// </summary>
 	[NoDoc]
 	public class MWWndClassEx

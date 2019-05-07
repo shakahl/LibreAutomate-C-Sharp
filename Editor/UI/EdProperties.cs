@@ -249,7 +249,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		void _AddCombo(string name, string values, string select, string info = null, bool noCheckbox = false, int index = -1)
 		{
-			var a = values.Split_("|");
+			var a = values.SegSplit("|");
 			bool isSpecified = select != null;
 			if(index < 0) {
 				index = 0;
@@ -445,8 +445,8 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		bool noDir = false, noExt = false;
 		var a = d.FileNames;
 		var dir = Path_.GetDirectoryPath(a[0]);
-		if(dir.Equals_(fNET, true) || dir.Equals_(fNET + @"\WPF", true)) noDir = noExt = true;
-		else if(dir.Equals_(fApp, true) || dir.Equals_(Folders.ThisAppBS + "Libraries", true) || dir.Equals_(Folders.ThisAppBS + "Compiler", true)) noDir = true; //App.config: <probing privatePath="Compiler;Libraries"/>
+		if(dir.Eqi(fNET) || dir.Eqi(fNET + @"\WPF")) noDir = noExt = true;
+		else if(dir.Eqi(fApp) || dir.Eqi(Folders.ThisAppBS + "Libraries") || dir.Eqi(Folders.ThisAppBS + "Compiler")) noDir = true; //App.config: <probing privatePath="Compiler;Libraries"/>
 		if(noDir) for(int i = 0; i < a.Length; i++) a[i] = Path_.GetFileName(a[i], noExt);
 
 		_meta.r.AddRange(a);
@@ -475,7 +475,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			var f2 = filter(f);
 			if(f2 == null) continue;
 			var path = f2.ItemPath;
-			if(sFind.Length > 0 && path.IndexOf_(sFind, true) < 0) continue;
+			if(sFind.Length > 0 && path.Index(sFind, true) < 0) continue;
 			if(!metaList.Contains(path, StringComparer.OrdinalIgnoreCase)) a.Add(path);
 		}
 		if(a.Count == 0) { AuDialog.Show(sFind.Length > 0 ? "Not found" : $"This workspace contains 0 {ifNone}", sFind, owner: this); return; }
@@ -487,7 +487,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 	private void _bAddGac_Click(object sender, EventArgs e)
 	{
 		var en = GAC.EnumAssemblies(sender == _bAddGacVersion).Distinct();
-		var sFind = _tFindInList.Text; if(sFind.Length > 0) en = en.Where(s => s.IndexOf_(sFind, true) >= 0);
+		var sFind = _tFindInList.Text; if(sFind.Length > 0) en = en.Where(s => s.Index(sFind, true) >= 0);
 		var a = en.ToArray();
 		if(a.Length == 0) { AuDialog.Show("Not found", sFind, owner: this); return; }
 		Array.Sort(a);
@@ -519,7 +519,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 						using(var verKey = guidKey.OpenSubKey(sVer)) {
 							if(verKey.GetValue("") is string description) {
 								if(rx.MatchG(description, out var g)) description = description.Remove(g.Index);
-								if(sFind.Length > 0 && description.IndexOf_(sFind, true) < 0) continue;
+								if(sFind.Length > 0 && description.Index(sFind, true) < 0) continue;
 								a.Add(new _RegTypelib { guid = sGuid, text = description + ", " + sVer, version = sVer });
 							} //else Print(sGuid); //some Microsoft typelibs. VS does not show these too.
 						}
@@ -574,7 +574,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			var aloc2 = new List<string>(); //locale names for display in the list dialog
 			using(var verKey = Registry.ClassesRoot.OpenSubKey($@"TypeLib\{r.guid}\{r.version}")) {
 				foreach(var s1 in verKey.GetSubKeyNames()) {
-					int lcid = s1.ToInt_(0, out int iEnd, STIFlags.IsHexWithout0x);
+					int lcid = s1.ToInt(0, out int iEnd, STIFlags.IsHexWithout0x);
 					if(iEnd != s1.Length) continue; //"FLAGS" etc; must be hex number without 0x
 					aloc.Add(s1);
 					var s2 = "Neutral";

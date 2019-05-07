@@ -24,7 +24,7 @@ namespace Au
 {
 	public partial struct Wnd
 	{
-		public static partial class Misc
+		public static partial class More
 		{
 			/// <summary>
 			/// Taskbar button flash, progress, add/delete.
@@ -428,7 +428,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Used by <see cref="Wnd.Misc.TaskbarButton.SetProgressState"/>.
+	/// Used by <see cref="Wnd.More.TaskbarButton.SetProgressState"/>.
 	/// </summary>
 	[NoDoc]
 	public enum TBProgressState

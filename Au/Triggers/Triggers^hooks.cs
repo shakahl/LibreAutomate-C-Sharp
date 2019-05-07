@@ -78,7 +78,7 @@ namespace Au.Triggers
 			MouseEdgeMove = 0x40, //Mouse edge and move triggers
 		}
 
-		readonly Wnd.Misc.MyWindow _msgWnd;
+		readonly Wnd.More.MyWindow _msgWnd;
 		readonly Thread _thread;
 		readonly List<_ThreadPipe> _pipes;
 		Util.WinHook _hookK, _hookM;
@@ -98,7 +98,7 @@ namespace Au.Triggers
 			_inTaskProcess = inTaskProcess;
 			_pipes = new List<_ThreadPipe>();
 
-			_msgWnd = new Wnd.Misc.MyWindow(_WndProc);
+			_msgWnd = new Wnd.More.MyWindow(_WndProc);
 			_event = Api.CreateEvent(true);
 			_thread = Thread_.Start(_Thread);
 		}
@@ -106,7 +106,7 @@ namespace Au.Triggers
 		void _Thread()
 		{
 			string cn = _inTaskProcess ? "Au.Hooks.Exe" : "Au.Hooks.Server";
-			Wnd.Misc.MyWindow.RegisterClass(cn);
+			Wnd.More.MyWindow.RegisterClass(cn);
 			_msgWnd.CreateMessageOnlyWindow(cn);
 			Api.SetEvent(_event);
 			if(_inTaskProcess) Util.AppDomain_.Exit += (unu, sed) => _msgWnd.Handle.SendTimeout(1000, Api.WM_CLOSE); //unhook etc
@@ -157,14 +157,14 @@ namespace Au.Triggers
 					return 0;
 				}
 			}
-			catch(Exception ex) { Debug_.Print(ex.Message); return default; }
+			catch(Exception ex) { Dbg.Print(ex.Message); return default; }
 
 			return _msgWnd.DefWndProc(w, message, wParam, lParam);
 		}
 
 		unsafe LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)
 		{
-			var c = new Wnd.Misc.CopyDataStruct(lParam);
+			var c = new Wnd.More.CopyDataStruct(lParam);
 			byte[] b = c.GetBytes();
 			switch(c.DataId) {
 			case 1:
@@ -180,7 +180,7 @@ namespace Au.Triggers
 		{
 			var pipeName = ActionTriggers.LibPipeName(threadId);
 			LibHandle pipe = Api.CreateFile(pipeName, Api.GENERIC_READ | Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, Api.FILE_FLAG_OVERLAPPED);
-			if(pipe.Is0) { Debug_.LibPrintNativeError(); return 0; }
+			if(pipe.Is0) { Dbg.LibPrintNativeError(); return 0; }
 
 			var usedEvents = (UsedEvents)data.ReadInt_(0);
 			int processId = data.ReadInt_(4);
@@ -280,13 +280,13 @@ namespace Au.Triggers
 				g1: //we use this weird goto code instead of a nested _Wait function to make faster JIT
 				var o = new Api.OVERLAPPED { hEvent = _event };
 				if(!(read ? Api.ReadFile(x.pipe, &r, 1, out _, &o) : Api.WriteFile(x.pipe, data, size, out _, &o))) {
-					if(WinError.Code != Api.ERROR_IO_PENDING) { Debug_.LibPrintNativeError(); return false; }
+					if(WinError.Code != Api.ERROR_IO_PENDING) { Dbg.LibPrintNativeError(); return false; }
 					for(; ; ) {
 						var r1 = Api.WaitForMultipleObjectsEx(2, ha, false, Timeout.Infinite, false);
 						if(r1 == 0) break;
 						Api.CancelIo(x.pipe);
 						if(r1 == 1) _RemovePipe(i); //probably TerminateThread
-						else Debug_.LibPrintNativeError(); //WAIT_FAILED
+						else Dbg.LibPrintNativeError(); //WAIT_FAILED
 						return false;
 						//note: not _ev.WaitOne. In STA thread it gets some messages, and then hook can reenter.
 					}

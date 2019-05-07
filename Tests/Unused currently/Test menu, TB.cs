@@ -322,7 +322,7 @@ public partial class Test
 		//	foreach(var f in Directory.EnumerateFiles(folder)) {
 		//		//Print(f);
 		//		var ext = Path.GetExtension(f).ToLower(); if(oneExt.Contains(ext)) continue; else oneExt.Add(ext);
-		//		if(0 != f.EndsWith_(true, ".aps", ".tss", ".bin", ".wal")) continue;
+		//		if(0 != f.Ends(true, ".aps", ".tss", ".bin", ".wal")) continue;
 		//		a.Add(f);
 		//		if(++n == 30) break;
 		//	}
@@ -641,7 +641,7 @@ public partial class Test
 	//	}
 	//	~TestDtor() { Print("~TestDtor"); }
 
-	//	void Met() { Debug_.PrintFunc(); }
+	//	void Met() { Dbg.PrintFunc(); }
 
 	//	class ContextMenuStrip_ :ContextMenuStrip
 	//	{
@@ -674,7 +674,7 @@ public partial class Test
 		}
 		~TestDtor() { Print("~TestDtor"); }
 
-		void Met() { Debug_.PrintFunc(); }
+		void Met() { Dbg.PrintFunc(); }
 
 		class ContextMenuStrip_ :ContextMenuStrip
 		{
@@ -710,7 +710,7 @@ public partial class Test
 
 				//_cat = null;
 
-				Debug_.PrintFunc();
+				Dbg.PrintFunc();
 
 				((Wnd)Handle).Post(Api.WM_CLOSE);
 
@@ -736,7 +736,7 @@ public partial class Test
 
 		~TestDtor2() { Print("~TestDtor2"); }
 
-		void Met() { Debug_.PrintFunc(); }
+		void Met() { Dbg.PrintFunc(); }
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
@@ -910,7 +910,7 @@ public partial class Test
 
 	//private static void T_ButtonClick(object sender, ToolBarButtonClickEventArgs e)
 	//{
-	//	Debug_.PrintFunc();
+	//	Dbg.PrintFunc();
 	//	_mlTb.Stop();
 	//}
 
@@ -993,7 +993,7 @@ public partial class Test
 
 	//private static void B_Click1(object sender, EventArgs e)
 	//{
-	//	Debug_.PrintFunc();
+	//	Dbg.PrintFunc();
 	//	_mlTb.Stop();
 	//}
 
@@ -1273,7 +1273,7 @@ public partial class Test
 
 	//	static void TestToolbar()
 	//	{
-	//		//Debug_.PrintFunc();
+	//		//Dbg.PrintFunc();
 	//		for(int i = 0; i < 1; i++) { TestAuBar(); /*Thread.Sleep(500);*/ }
 
 	//		//for(int i=0; i<1; i++) TestOldToolbar();

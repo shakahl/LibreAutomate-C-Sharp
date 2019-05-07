@@ -182,7 +182,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// if(a.State.Has_(AccSTATE.INVISIBLE)) Print("has state INVISIBLE");
+		/// if(a.State.Has(AccSTATE.INVISIBLE)) Print("has state INVISIBLE");
 		/// if(a.IsInvisible) Print("invisible");
 		/// ]]></code>
 		/// </example>
@@ -197,14 +197,14 @@ namespace Au
 		}
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state CHECKED. </summary>
-		public bool IsChecked => State.Has_(AccSTATE.CHECKED);
+		public bool IsChecked => State.Has(AccSTATE.CHECKED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state UNAVAILABLE. </summary>
 		/// <remarks>Does not check whether this object is in a disabled parent/ancestor object.</remarks>
-		public bool IsDisabled => State.Has_(AccSTATE.DISABLED);
+		public bool IsDisabled => State.Has(AccSTATE.DISABLED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state FOCUSED. </summary>
-		public bool IsFocused => State.Has_(AccSTATE.FOCUSED);
+		public bool IsFocused => State.Has(AccSTATE.FOCUSED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state INVISIBLE and does not have state OFFSCREEN. </summary>
 		/// <remarks>
@@ -215,8 +215,8 @@ namespace Au
 
 		internal bool LibIsInvisible(AccSTATE state)
 		{
-			if(!state.Has_(AccSTATE.INVISIBLE)) return false;
-			if(!state.Has_(AccSTATE.OFFSCREEN)) return true;
+			if(!state.Has(AccSTATE.INVISIBLE)) return false;
+			if(!state.Has(AccSTATE.OFFSCREEN)) return true;
 			switch(RoleInt) {
 			case AccROLE.WINDOW:
 			case AccROLE.DOCUMENT:
@@ -231,20 +231,20 @@ namespace Au
 		}
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state OFFSCREEN. </summary>
-		public bool IsOffscreen => State.Has_(AccSTATE.OFFSCREEN);
+		public bool IsOffscreen => State.Has(AccSTATE.OFFSCREEN);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state PROTECTED. </summary>
 		/// <remarks>This state is used for password fields.</remarks>
-		public bool IsPassword => State.Has_(AccSTATE.PROTECTED);
+		public bool IsPassword => State.Has(AccSTATE.PROTECTED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state PRESSED. </summary>
-		public bool IsPressed => State.Has_(AccSTATE.PRESSED);
+		public bool IsPressed => State.Has(AccSTATE.PRESSED);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state READONLY. </summary>
-		public bool IsReadonly => State.Has_(AccSTATE.READONLY);
+		public bool IsReadonly => State.Has(AccSTATE.READONLY);
 
 		/// <summary> Calls <see cref="State"/> and returns true if has state SELECTED. </summary>
-		public bool IsSelected => State.Has_(AccSTATE.SELECTED);
+		public bool IsSelected => State.Has(AccSTATE.SELECTED);
 
 		/// <summary>
 		/// Converts BSTR to string and disposes the BSTR.
@@ -384,7 +384,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
-		/// Fails if the object does not have a default action. Then you can use <see cref="ExtensionMethods.MouseClick(Acc, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
+		/// Fails if the object does not have a default action. Then you can use <see cref="ExtAu.MouseClick(Acc, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
 		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="DoJavaAction"/> or one of the above functions (MouseClick etc).
 		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </remarks>
@@ -436,7 +436,7 @@ namespace Au
 		{
 			var w = WndContainer;
 			if(!GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
-			if(r.IsEmpty || State.HasAny_(AccSTATE.INVISIBLE | AccSTATE.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
+			if(r.IsEmpty || State.HasAny(AccSTATE.INVISIBLE | AccSTATE.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
 			//FUTURE: Chrome bug: OFFSCREEN is not updated after scrolling.
 
 			var xy = Math_.MakeUint(r.CenterX, r.CenterY);
@@ -477,7 +477,7 @@ namespace Au
 				&& (state & (AccSTATE.FOCUSABLE | AccSTATE.SELECTABLE)) == AccSTATE.FOCUSABLE //must be only focusable. If SELECTABLE, probably don't need this workaround.
 				&& 0 == _GetWnd(out var w)
 				&& 0 == Cpp.Cpp_AccSelect(this, AccSELFLAG.TAKEFOCUS)
-				&& 0 == _GetState(out state) && state.Has_(AccSTATE.FOCUSED) //avoid sending keys to another control
+				&& 0 == _GetState(out state) && state.Has(AccSTATE.FOCUSED) //avoid sending keys to another control
 				) {
 				GC.KeepAlive(this);
 				w.Post(Api.WM_KEYDOWN, (byte)KKey.Space, 0);
@@ -585,7 +585,7 @@ namespace Au
 				if(ev == AccEVENT.OBJECT_CREATE && hwnd != w) return; //note: in Chrome hwnd is Chrome_RenderWidgetHostHWND
 				int di = ++debugIndex;
 				using(var a = Acc.FromEvent(hwnd, idObject, idChild)) {
-					if(a == null) { /*Debug_.Print("Acc.FromEvent null");*/ return; } //often IE, but these are not useful objects
+					if(a == null) { /*Dbg.Print("Acc.FromEvent null");*/ return; } //often IE, but these are not useful objects
 					if(eventNotify == null) { /*Print("null 2");*/ return; }
 					if(ev == AccEVENT.IA2_DOCUMENT_LOAD_COMPLETE) { //Chrome, Firefox
 
@@ -595,10 +595,10 @@ namespace Au
 							using(a2) {
 								if(eventNotify == null) { /*Print("null 3");*/ return; }
 								bool isFrame;
-								var hr = a2.GetRole(0, out var role, out var roleStr); if(hr != 0) Debug_.Print((uint)hr);
+								var hr = a2.GetRole(0, out var role, out var roleStr); if(hr != 0) Dbg.Print((uint)hr);
 								if(eventNotify == null) { /*Print("null 4");*/ return; }
 								if(hr != 0) isFrame = false;
-								else if(roleStr != null) isFrame = roleStr.EndsWith_("frame", true);
+								else if(roleStr != null) isFrame = roleStr.Ends("frame", true);
 								else isFrame = !(role == AccROLE.WINDOW || role == AccROLE.CLIENT);
 								//Print(role, roleStr);
 								if(isFrame) return;
@@ -622,7 +622,7 @@ namespace Au
 								aCLIENT.get_accName(0, out var URL2, 0); Debug.Assert(URL2.Length > 0);
 								if(URL1 != URL2) return;
 								if(eventNotify == null) { /*Print("null 6");*/ return; }
-							} else Debug_.Print("aCLIENT null");
+							} else Dbg.Print("aCLIENT null");
 						}
 					}
 
@@ -666,7 +666,7 @@ namespace Au
 
 			//Workaround for Windows controls bugs, part 1.
 			Wnd w = default, wTL = default; bool focusingControl = false;
-			if(how.Has_(AccSELFLAG.TAKEFOCUS) && 0 == _GetWnd(out w)) {
+			if(how.Has(AccSELFLAG.TAKEFOCUS) && 0 == _GetWnd(out w)) {
 				if(!w.IsEnabled(true)) throw new AuException("*set focus. Disabled"); //accSelect would not fail
 				wTL = w.Window;
 				wTL.Activate();
@@ -688,7 +688,7 @@ namespace Au
 
 			//Workaround for Windows controls bugs, part 2.
 			if(focusingControl && w.IsActive) {
-				//Debug_.Print("activated control");
+				//Dbg.Print("activated control");
 				wTL.Activate();
 			}
 
@@ -971,7 +971,7 @@ namespace Au
 			LibThrowIfDisposed();
 
 			int hr;
-			if(_misc.flags.Has_(AccMiscFlags.UIA)) hr = Cpp.Cpp_AccAction(this, 's');
+			if(_misc.flags.Has(AccMiscFlags.UIA)) hr = Cpp.Cpp_AccAction(this, 's');
 			else hr = Cpp.Cpp_AccWeb(this, "'s", out _);
 			GC.KeepAlive(this);
 

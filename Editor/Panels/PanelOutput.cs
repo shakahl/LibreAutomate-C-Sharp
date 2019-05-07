@@ -53,7 +53,7 @@ class PanelOutput : Control
 			//create links in compilation errors/warnings or run-time stack trace
 			var s = m.Text; int i;
 			if(s.Length >= 22) {
-				if(s.StartsWith_("<><Z #") && s.EqualsAt_(12, ">Compilation: ")) { //compilation
+				if(s.Starts("<><Z #") && s.EqAt(12, ">Compilation: ")) { //compilation
 					if(s_rx1 == null) s_rx1 = new Regex_(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
 					m.Text = s_rx1.Replace(s, x => {
 						var f = Model.FindByFilePath(x[1].Value);
@@ -62,18 +62,18 @@ class PanelOutput : Control
 					});
 				} else if((i = s.IndexOf("\n   at ") + 1) > 0 && s.IndexOf(":line ", i) > 0) { //stack trace with source file info
 					int j = s.LastIndexOf("\r\n   at Script.Main(String[] args) in ");
-					if(j >= 0) j = s.IndexOf_("\r\n", j + 30);
-					if(j < 0) { j = s.Length; if(s.EndsWith_("\r\n")) j -= 2; } //include the Main line, because _Main may be missing
+					if(j >= 0) j = s.Index("\r\n", j + 30);
+					if(j < 0) { j = s.Length; if(s.Ends("\r\n")) j -= 2; } //include the Main line, because _Main may be missing
 					int stackLen = j - i;
 					if(_sb == null) _sb = new StringBuilder(s.Length + 2000); else _sb.Clear();
 					var b = _sb;
 					//Output.LibWriteQM2("'" + s + "'");
-					if(!s.StartsWith_("<>")) b.Append("<>");
+					if(!s.Starts("<>")) b.Append("<>");
 					b.Append(s, 0, i);
 					var rx = s_rx2; if(rx == null) s_rx2 = rx = new Regex_(@" in (.+?):line (?=\d+$)");
 					var rxm = new RXMore();
 					bool replaced = false;
-					foreach(var k in s.Segments_(i, stackLen, "\r\n", SegFlags.NoEmpty)) {
+					foreach(var k in s.Segments(i, stackLen, "\r\n", SegFlags.NoEmpty)) {
 						//Output.LibWriteQM2("'"+k+"'");
 						rxm.start = k.Offset + 6; rxm.end = k.EndOffset;
 						if(k.StartsWith("   at ") && rx.MatchG(s, out var g, 1, rxm)) { //note: no "   at " if this is an inner exception marker
@@ -234,8 +234,8 @@ class PanelOutput : Control
 			var doc = Panels.Editor.ActiveDoc;
 			doc.Focus();
 			if(a.Length == 1) return;
-			int line = a[1].ToInt_(0) - 1; if(line < 0) return;
-			int column = a.Length == 2 ? -1 : a[2].ToInt_() - 1;
+			int line = a[1].ToInt(0) - 1; if(line < 0) return;
+			int column = a.Length == 2 ? -1 : a[2].ToInt() - 1;
 
 			var t = doc.ST;
 			int i = t.LineStart(line);

@@ -50,7 +50,7 @@ namespace Au
 			//return Environment.ExpandEnvironmentVariables(s); //5 times slower
 
 			//support known folders, like @"%Folders.Documents%\..."
-			if(i >= 12 && s.StartsWith_("%Folders.")) {
+			if(i >= 12 && s.Starts("%Folders.")) {
 				var k = Folders.GetFolder(s.Substring(9, i - 9));
 				if(k != null) return k + s.Substring(i + 1);
 				return s;
@@ -115,7 +115,7 @@ namespace Au
 		public static bool IsFullPath(string path)
 		{
 			var s = path;
-			int len = s.Length_();
+			int len = s.Lenn();
 
 			if(len >= 2) {
 				if(s[1] == ':' && Char_.IsAsciiAlpha(s[0])) {
@@ -128,11 +128,11 @@ namespace Au
 					return LibIsSepChar(s[1]);
 				case '%':
 #if true
-					if(!ExpandEnvVar(s).StartsWith_('%'))
+					if(!ExpandEnvVar(s).Starts('%'))
 						PrintWarning("Path starts with %environmentVariable%. Use Path_.IsFullPathExpandEnvVar instead.");
 #else
 					s = ExpandEnvVar(s); //quite fast. 70% slower than just LibEnvVarExists, but reliable.
-					return !s.StartsWith_('%') && IsFullPath(s);
+					return !s.Starts('%') && IsFullPath(s);
 #endif
 					break;
 				}
@@ -345,7 +345,7 @@ namespace Au
 				int i = s.Length - 1;
 				if(i > 0) {
 					if(LibIsSepChar(s[i]) && s[i - 1] != ':') {
-						var s2 = s.TrimEnd(String_.Lib.pathSep);
+						var s2 = s.TrimEnd(ExtString.Lib.pathSep);
 						if(s2.Length != 0) s = s2;
 					}
 					if(_EndsWithDriveWithoutSep(s)) s = s + "\\";
@@ -517,7 +517,7 @@ namespace Au
 		{
 			var s = path;
 			if(IsFullPath(s) && 0 == _GetPrefixLength(s)) {
-				if(s.Length >= 2 && LibIsSepChar(s[0]) && LibIsSepChar(s[1])) s = s.ReplaceAt_(0, 2, @"\\?\UNC\");
+				if(s.Length >= 2 && LibIsSepChar(s[0]) && LibIsSepChar(s[1])) s = s.ReplaceAt(0, 2, @"\\?\UNC\");
 				else s = @"\\?\" + s;
 			}
 			return s;
@@ -568,7 +568,7 @@ namespace Au
 			if(s == null) return 0;
 			int len = s.Length;
 			if(len >= 4 && s[2] == '?' && LibIsSepChar(s[0]) && LibIsSepChar(s[1]) && LibIsSepChar(s[3])) {
-				if(len >= 8 && LibIsSepChar(s[7]) && s.EqualsAt_(4, "UNC", true)) return 8;
+				if(len >= 8 && LibIsSepChar(s[7]) && s.EqAt(4, "UNC", true)) return 8;
 				return 4;
 			}
 			return 0;
@@ -597,8 +597,8 @@ namespace Au
 		public static string CorrectFileName(string name, string invalidCharReplacement = "-")
 		{
 			if(name == null || (name = name.Trim()).Length == 0) return "-";
-			name = name.RegexReplace_(_rxInvalidFN1, invalidCharReplacement).Trim();
-			if(name.RegexIsMatch_(_rxInvalidFN2)) name = "@" + name;
+			name = name.RegexReplace(_rxInvalidFN1, invalidCharReplacement).Trim();
+			if(name.RegexIsMatch(_rxInvalidFN2)) name = "@" + name;
 			return name;
 		}
 
@@ -613,7 +613,7 @@ namespace Au
 		public static bool IsInvalidFileName(string name)
 		{
 			if(name == null || (name = name.Trim()).Length == 0) return true;
-			return name.RegexIsMatch_(_rxInvalidFN1) || name.RegexIsMatch_(_rxInvalidFN2);
+			return name.RegexIsMatch(_rxInvalidFN1) || name.RegexIsMatch(_rxInvalidFN2);
 		}
 
 		/// <summary>
@@ -690,7 +690,7 @@ namespace Au
 		public static string GetExtension(string path, out string pathWithoutExtension)
 		{
 			var ext = GetExtension(path);
-			if(ext != null && ext.Length > 0) pathWithoutExtension = path.RemoveEnd_(ext.Length);
+			if(ext != null && ext.Length > 0) pathWithoutExtension = path.RemoveSuffix(ext.Length);
 			else pathWithoutExtension = path;
 			return ext;
 		}
@@ -840,7 +840,7 @@ namespace Au
 		/// <param name="s">Can be null.</param>
 		internal static bool LibIsProtocol(string s)
 		{
-			return s != null && s.EndsWith_(':') && GetUrlProtocolLength(s) == s.Length;
+			return s != null && s.Ends(':') && GetUrlProtocolLength(s) == s.Length;
 		}
 
 		/// <summary>

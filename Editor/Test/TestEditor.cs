@@ -82,7 +82,7 @@ partial class EdForm
 		//doc.Call(Sci.SCI_SETSTYLING, 10, 22);
 
 
-		//var a = s.SplitLines_();
+		//var a = s.SegSplitLines();
 		//bool? folder = default; switch(a[1]) { case "1": folder = true; break; case "0": folder = false; break; }
 		////Print(Model.Find(a[0], folder));
 		////var fn = Model.Find("test scripts", true);

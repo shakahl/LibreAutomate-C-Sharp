@@ -264,9 +264,9 @@ namespace Au
 		internal static unsafe int LibWait(long timeMS, WHFlags flags, object msgCallback, LibWaitVariable stopVar, params IntPtr[] handles)
 		{
 			int nHandles = handles?.Length ?? 0;
-			bool doEvents = flags.Has_(WHFlags.DoEvents);
+			bool doEvents = flags.Has(WHFlags.DoEvents);
 			Debug.Assert(doEvents || (msgCallback == null && stopVar == null));
-			bool all = flags.Has_(WHFlags.All) && nHandles > 1;
+			bool all = flags.Has(WHFlags.All) && nHandles > 1;
 
 			fixed (IntPtr* ha = handles) {
 				for(long timePrev = 0; ;) {

@@ -105,9 +105,9 @@ namespace SdkConverter
 		bool __DefineWA(string name, string value)
 		{
 			int suffixLen = 0;
-			if(value.Length == name.Length + 1 && value.EndsWith_("W")) suffixLen = 1;
-			else if(value.Length == name.Length + 2 && value.EndsWith_("_W")) suffixLen = 2; //some struct
-			if(!(suffixLen > 0 && value.StartsWith_(name))) {
+			if(value.Length == name.Length + 1 && value.Ends("W")) suffixLen = 1;
+			else if(value.Length == name.Length + 2 && value.Ends("_W")) suffixLen = 2; //some struct
+			if(!(suffixLen > 0 && value.Starts(name))) {
 				//Print($"<><c 0xff>{name}    {value}</c>");
 				return false;
 			}
@@ -164,7 +164,7 @@ namespace SdkConverter
 			foreach(var v in _defineConst) {
 				//if string constant name ends with "W", remove this if non-W version exists, and remove A version
 				string s = v.Value;
-				if(s.EndsWith_("\";") && v.Key.EndsWith_("W")) {
+				if(s.Ends("\";") && v.Key.Ends("W")) {
 					//Print($"{v.Key} = {s}");
 					string k = v.Key.Remove(v.Key.Length - 1); //name without "W"
 					
@@ -191,7 +191,7 @@ namespace SdkConverter
 			//'#define' function-style macros and other macros that cannot convert to C#
 			writer.Write("\r\n// CANNOT CONVERT\r\n\r\n");
 			foreach(var v in _defineOther) {
-				//if(v.Value.StartsWith_(" \"")) Print($"<><c 0xff>{v.Key} = {v.Value}</c>"); //11 in SDK (more removed by the above code)
+				//if(v.Value.Starts(" \"")) Print($"<><c 0xff>{v.Key} = {v.Value}</c>"); //11 in SDK (more removed by the above code)
 
 				writer.Write("internal const string {0} = null; //#define {0}{1};\r\n\r\n", v.Key, v.Value);
 			}

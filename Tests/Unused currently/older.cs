@@ -40,7 +40,7 @@ static partial class Test
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	Perf.First();
 		//	//Thread_.LibIsLoadedFormsWpf();
-		//	"fffff".StartsWith_("ff", true);
+		//	"fffff".Starts("ff", true);
 		//	//var s = Convert_.HexEncode(new byte[] { 1, 2 });
 		//	//Perf.First();
 		//	//var b = Convert_.HexDecode(s);
@@ -100,7 +100,7 @@ static partial class Test
 	{
 		var a = args.LoadedAssembly;
 		Print(a);
-		if(a.FullName.StartsWith_("System.Windows.Forms")) {
+		if(a.FullName.Starts("System.Windows.Forms")) {
 			//Print(1);
 		}
 	}
@@ -164,7 +164,7 @@ static partial class Test
 					//File_.WaitIfLocked(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
 				}
 			}
-			catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
+			catch(Exception e) { Dbg.Print(e.ToString()); Print((uint)e.HResult); }
 		});
 
 		Task.Run(() => {
@@ -187,7 +187,7 @@ static partial class Test
 					//}
 				}
 			}
-			catch(Exception e) { Debug_.Print(e.ToString()); Print((uint)e.HResult); }
+			catch(Exception e) { Dbg.Print(e.ToString()); Print((uint)e.HResult); }
 		}).Wait();
 
 		Print("OK");
@@ -200,8 +200,8 @@ static partial class Test
 		//		A2,4 100 -8 0x10";
 		//		var x = new CsvTable(csv);
 		//		//var d = x.Data.ToDictionary(row => row[0], row => row[1], StringComparer.OrdinalIgnoreCase);
-		//		//var d = x.Data.ToDictionary(row => row[0], row => Au.Util.StringMisc.StringToIntArray(row[1]), StringComparer.OrdinalIgnoreCase);
-		//		var d = x.ToDictionary(true, s => Au.Util.StringMisc.StringToIntArray(s));
+		//		//var d = x.Data.ToDictionary(row => row[0], row => ExtString.More.StringToIntArray(row[1]), StringComparer.OrdinalIgnoreCase);
+		//		var d = x.ToDictionary(true, s => ExtString.More.StringToIntArray(s));
 		//		//Print(d);
 		//		foreach(var v in d) Print(v.Key, string.Join(" ", v.Value));
 		//		x.FromDictionary(d, v => string.Join(" ", v));
@@ -215,8 +215,8 @@ a1,-8";
 		//Print(d);
 		//x = CsvTable.FromDictionary(d);
 		//Print(x);
-		//var d = x.ToDictionary(true, false, s => s.ToInt_()); //rejected
-		var d = x.ToDictionary(true, true, row => row[1].ToInt_());
+		//var d = x.ToDictionary(true, false, s => s.ToInt()); //rejected
+		var d = x.ToDictionary(true, true, row => row[1].ToInt());
 		Print(d);
 		//x = CsvTable.FromDictionary(d, v => v.ToString());
 		x = CsvTable.FromDictionary(d, 2, (v, r) => r[1] = v.ToString());
@@ -533,7 +533,7 @@ a1,-8";
 					var v = x.Value;
 					switch(x.Name) {
 					case "name": Name = v; break;
-					case "id": Id = v.ToInt_(); break;
+					case "id": Id = v.ToInt(); break;
 					}
 				}
 				if(Empty(Name)) throw new ArgumentException("no name attribute in XML");
@@ -657,13 +657,13 @@ a1,-8";
 				}
 #if true //two ways of reading attributes
 				Name = x["name"];
-				Id = x["id"].ToInt_();
+				Id = x["id"].ToInt();
 #else
 				while(x.MoveToNextAttribute()) {
 					var v = x.Value;
 					switch(x.Name) {
 					case "name": Name = v; break;
-					case "id": Id = v.ToInt_(); break;
+					case "id": Id = v.ToInt(); break;
 					}
 				}
 #endif
@@ -1435,7 +1435,7 @@ a1,-8";
 #else
 			if(!Guid.TryParse(r.guid, out var guid)) continue;
 			var ver = _RegTypelibParseVersion(r.version);
-			var lcid = (uint)r.locale.ToInt_(0, STIFlags.IsHexWithout0x);
+			var lcid = (uint)r.locale.ToInt(0, STIFlags.IsHexWithout0x);
 			int hr = LoadRegTypeLib(guid, ver.major, ver.minor, lcid, out var tl);
 #endif
 			if(hr != 0) { Print($"<><c 0xff>{r.text}, {r.version}, {r.locale}, {r.guid}, {WinError.MessageFor(hr)}</c>"); continue; }
@@ -1486,8 +1486,8 @@ a1,-8";
 
 	static (ushort major, ushort minor) _RegTypelibParseVersion(string version)
 	{
-		int verMinor = 0, verMajor = version.ToInt_(0, out int iEnd, STIFlags.IsHexWithout0x);
-		if(iEnd < version.Length && version[iEnd] == '.') verMinor = version.ToInt_(iEnd + 1, STIFlags.IsHexWithout0x);
+		int verMinor = 0, verMajor = version.ToInt(0, out int iEnd, STIFlags.IsHexWithout0x);
+		if(iEnd < version.Length && version[iEnd] == '.') verMinor = version.ToInt(iEnd + 1, STIFlags.IsHexWithout0x);
 		return ((ushort)verMajor, (ushort)verMinor);
 	}
 
@@ -2047,27 +2047,27 @@ a1,-8";
 		for(int i = 0; i < 10; i++) b[i] = "asasa";
 
 		for(int j = 0; j < 5; j++) {
-			//Debug_.LibMemorySetAnchor();
+			//Dbg.LibMemorySetAnchor();
 			Perf.First();
 			for(int i = 0; i < 1000; i++) {
 				foreach(var v in b) if(v == "fff") Print("mmm");
 			}
 			Perf.Next();
-			//Debug_.LibMemoryPrint();
+			//Dbg.LibMemoryPrint();
 
-			//Debug_.LibMemorySetAnchor();
+			//Dbg.LibMemorySetAnchor();
 			for(int i = 0; i < 1000; i++) {
 				for(int k = 0; k < a.Count; k++) if(a[k] == "fff") Print("mmm");
 			}
 			Perf.Next();
-			//Debug_.LibMemoryPrint();
+			//Dbg.LibMemoryPrint();
 
-			//Debug_.LibMemorySetAnchor();
+			//Dbg.LibMemorySetAnchor();
 			for(int i = 0; i < 1000; i++) {
 				foreach(var v in a) if(v == "fff") Print("mmm");
 			}
 			Perf.NW();
-			//Debug_.LibMemoryPrint();
+			//Dbg.LibMemoryPrint();
 			200.ms();
 		}
 	}

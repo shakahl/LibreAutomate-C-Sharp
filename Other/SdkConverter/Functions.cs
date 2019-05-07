@@ -61,14 +61,14 @@ namespace SdkConverter
 
 			//skip some
 			if(name.IndexOf('_') > 0) {
-				if(name.EndsWith_("_UserSize")
-					|| name.EndsWith_("_UserMarshal")
-					|| name.EndsWith_("_UserUnmarshal")
-					|| name.EndsWith_("_UserFree")
-					|| name.EndsWith_("_UserSize64")
-					|| name.EndsWith_("_UserMarshal64")
-					|| name.EndsWith_("_UserUnmarshal64")
-					|| name.EndsWith_("_UserFree64")
+				if(name.Ends("_UserSize")
+					|| name.Ends("_UserMarshal")
+					|| name.Ends("_UserUnmarshal")
+					|| name.Ends("_UserFree")
+					|| name.Ends("_UserSize64")
+					|| name.Ends("_UserMarshal64")
+					|| name.Ends("_UserUnmarshal64")
+					|| name.Ends("_UserFree64")
 					) {
 					_SkipStatement(false);
 					return;
@@ -91,7 +91,7 @@ namespace SdkConverter
 					nameInDll = dll.Substring(i + 1);
 					dll = dll.Substring(0, i);
 					//Print(nameInDll);
-				} else if(name.StartsWith_("K32")) {
+				} else if(name.Starts("K32")) {
 					//Print(name);
 					nameInDll = name;
 					name = name.Substring(3);
@@ -104,8 +104,8 @@ namespace SdkConverter
 			} else {
 				bool skip = false;
 				if(name.Contains("_")) skip = true; //mostly CRT library functions, X_Proxy/X_Stub, X_UserMarshal and similar
-				else if(name.StartsWith_("Dll")) skip = true; //DllInstall, DllRegisterServer etc
-				else if(name.StartsWith_("Ndr") || name.StartsWith_("Rpc")) skip = true; //undocumented
+				else if(name.Starts("Dll")) skip = true; //DllInstall, DllRegisterServer etc
+				else if(name.Starts("Ndr") || name.Starts("Rpc")) skip = true; //undocumented
 				else {
 					//Print(name);
 					skip = true; //all these in SDK others are undocumented, or documented as deprecated/removed

@@ -68,14 +68,14 @@ namespace Au.Compiler
 				if(_data == null && !_Open()) return false;
 
 				if(!_data.TryGetValue(f.Id, out string value)) return false;
-				//Debug_.Print(value);
+				//Dbg.Print(value);
 				int iPipe = 0;
 
 				bool isScript = f.IsScript;
 				r.role = MetaComments.DefaultRole(isScript);
 
 				string asmFile;
-				if(r.notInCache = (value != null && value.StartsWith_("|="))) {
+				if(r.notInCache = (value != null && value.Starts("|="))) {
 					iPipe = value.IndexOf('|', 2); if(iPipe < 0) iPipe = value.Length;
 					asmFile = value.Substring(2, iPipe - 2);
 				} else asmFile = CacheDirectory + "\\" + f.IdString;
@@ -89,21 +89,21 @@ namespace Au.Compiler
 				bool isMultiFileProject = false;
 				if(value != null && iPipe < value.Length) {
 					iPipe++;
-					foreach(var s in value.Segments_(iPipe, value.Length - iPipe, "|", SegFlags.NoEmpty)) {
+					foreach(var s in value.Segments(iPipe, value.Length - iPipe, "|", SegFlags.NoEmpty)) {
 						//Print(s);
 						int offs = s.Offset + 1;
 						switch(s[0]) {
 						case 't':
-							r.role = (ERole)value.ToInt_(offs);
+							r.role = (ERole)value.ToInt(offs);
 							break;
 						case 'a':
-							r.runMode = (ERunMode)value.ToInt_(offs);
+							r.runMode = (ERunMode)value.ToInt(offs);
 							break;
 						case 'n':
-							r.ifRunning = (EIfRunning)value.ToInt_(offs);
+							r.ifRunning = (EIfRunning)value.ToInt(offs);
 							break;
 						case 'u':
-							r.uac = (EUac)value.ToInt_(offs);
+							r.uac = (EUac)value.ToInt(offs);
 							break;
 						case 'b':
 							r.prefer32bit = true;
@@ -115,7 +115,7 @@ namespace Au.Compiler
 							r.mtaThread = true;
 							break;
 						case 'd':
-							r.pdbOffset = value.ToInt_(offs);
+							r.pdbOffset = value.ToInt(offs);
 							break;
 						case 'p':
 							isMultiFileProject = true;
@@ -142,7 +142,7 @@ namespace Au.Compiler
 						case 'y':
 						case 's':
 						case 'o':
-							var f2 = _coll.IwfFindById((uint)value.ToLong_(offs));
+							var f2 = _coll.IwfFindById((uint)value.ToInt64(offs));
 							if(f2 == null) return false;
 							if(s[0] == 'l') {
 								if(f2.IwfFindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
@@ -167,7 +167,7 @@ namespace Au.Compiler
 					if(projFolder == null) return false;
 					foreach(var f1 in projFolder.IwfEnumProjectClassFiles(f)) return false; //project with single file?
 				}
-				//Debug_.Print("compiled");
+				//Dbg.Print("compiled");
 
 				r.file = asmFile;
 				r.name = Path_.GetFileName(f.Name, true);
@@ -257,8 +257,8 @@ namespace Au.Compiler
 						var appDir = Folders.ThisAppBS;
 						for(; j < refs.Count; j++) {
 							var s1 = refs[j].FilePath;
-							if(s1.StartsWith_(netDir, true)) continue;
-							if(s1.StartsWith_(appDir, true)) s1 = s1.Substring(appDir.Length);
+							if(s1.Starts(netDir, true)) continue;
+							if(s1.Starts(appDir, true)) s1 = s1.Substring(appDir.Length);
 							b.Append("|*").Append(s1);
 						}
 					}
@@ -272,8 +272,8 @@ namespace Au.Compiler
 				}
 
 				uint id = f.Id;
-				if(_data.TryGetValue(id, out var oldValue) && value == oldValue) { /*Debug_.Print("same");*/ return; }
-				//Debug_.Print("different");
+				if(_data.TryGetValue(id, out var oldValue) && value == oldValue) { /*Dbg.Print("same");*/ return; }
+				//Dbg.Print("different");
 				_data[id] = value;
 				_Save();
 			}
@@ -288,7 +288,7 @@ namespace Au.Compiler
 					_Save();
 					if(deleteAsmFile) {
 						try { File_.Delete(CacheDirectory + "\\" + f.IdString); }
-						catch(Exception ex) { Debug_.Print(ex); }
+						catch(Exception ex) { Dbg.Print(ex); }
 					}
 				}
 			}
@@ -298,19 +298,19 @@ namespace Au.Compiler
 				if(_data != null) return true;
 				if(!File_.ExistsAsFile(_file)) return false;
 				string sData = File_.LoadText(_file);
-				foreach(var s in sData.Segments_("\n\r", SegFlags.NoEmpty)) {
+				foreach(var s in sData.Segments("\n\r", SegFlags.NoEmpty)) {
 					if(_data == null) {
 						//first line contains .NET framework version and Au.dll version, like 12345|1.2.3.4
-						var versions = s.Value.Split_("|"); if(versions.Length != 2) goto g1;
-						int frameworkVersion = versions[0].ToInt_(); string auVersion = versions[1];
+						var versions = s.Value.SegSplit("|"); if(versions.Length != 2) goto g1;
+						int frameworkVersion = versions[0].ToInt(); string auVersion = versions[1];
 						if(frameworkVersion != s_frameworkVersion || auVersion != s_auVersion) { //the s_ are inited by the static ctor
 																								 //Print(frameworkVersion, s_frameworkVersion, auVersion, s_auVersion);
 							goto g1;
 						}
-						_data = new Dictionary<uint, string>(sData.LineCount_());
+						_data = new Dictionary<uint, string>(sData.LineCount());
 						continue;
 					}
-					uint id = (uint)sData.ToLong_(s.Offset, out int idEnd);
+					uint id = (uint)sData.ToInt64(s.Offset, out int idEnd);
 					Debug.Assert(null != _coll.IwfFindById(id));
 					_data[id] = s.EndOffset > idEnd ? sData.Substring(idEnd, s.EndOffset - idEnd) : null;
 				}

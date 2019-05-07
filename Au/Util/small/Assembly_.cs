@@ -102,8 +102,8 @@ namespace Au.Util
 			void _FlagFromName(Assembly a)
 			{
 				string s = a.FullName; //fast, cached. GetName can be slow because not cached.
-				if(0 == (s_isLoadedFormsWpf & 1) && s.StartsWith_("System.Windows.Forms,")) s_isLoadedFormsWpf |= 1;
-				else if(0 == (s_isLoadedFormsWpf & 2) && s.StartsWith_("WindowsBase,")) s_isLoadedFormsWpf |= 2;
+				if(0 == (s_isLoadedFormsWpf & 1) && s.Starts("System.Windows.Forms,")) s_isLoadedFormsWpf |= 1;
+				else if(0 == (s_isLoadedFormsWpf & 2) && s.Starts("WindowsBase,")) s_isLoadedFormsWpf |= 2;
 			}
 		}
 		static volatile int s_isLoadedFormsWpf;

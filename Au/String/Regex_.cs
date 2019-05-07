@@ -62,7 +62,7 @@ namespace Au
 	///  Print("//Replace:");
 	/// Print(x.Replace(s, "'$2$1'"));
 	///  Print("//Replace with callback:");
-	/// Print(x.Replace(s, o => o.Value.ToUpper_()));
+	/// Print(x.Replace(s, o => o.Value.Upper()));
 	///  Print("//Replace with callback and ExpandReplacement:");
 	/// Print(x.Replace(s, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
 	///  
@@ -74,49 +74,49 @@ namespace Au
 	/// var s = "one two22, three333,four"; //subject string
 	/// var rx = @"\b(\w+?)(\d+)\b"; //regular expression
 	///  
-	///  Print("//RegexIsMatch_:");
-	/// Print(s.RegexIsMatch_(rx));
+	///  Print("//RegexIsMatch:");
+	/// Print(s.RegexIsMatch(rx));
 	///  
-	///  Print("//RegexMatch_:");
-	/// if(s.RegexMatch_(rx, out var m)) Print(m.Value, m[1].Value, m[2].Value);
+	///  Print("//RegexMatch:");
+	/// if(s.RegexMatch(rx, out var m)) Print(m.Value, m[1].Value, m[2].Value);
 	///  
-	///  Print("//RegexMatch_, get only string:");
-	/// if(s.RegexMatch_(rx, 0, out var s0)) Print(s0);
-	///  Print("//RegexMatch_, get only string of group 1:");
-	/// if(s.RegexMatch_(rx, 1, out var s1)) Print(s1);
+	///  Print("//RegexMatch, get only string:");
+	/// if(s.RegexMatch(rx, 0, out var s0)) Print(s0);
+	///  Print("//RegexMatch, get only string of group 1:");
+	/// if(s.RegexMatch(rx, 1, out var s1)) Print(s1);
 	///  
-	///  Print("//RegexFindAll_ with foreach:");
-	/// foreach(var v in s.RegexFindAll_(rx)) Print(v.Value, v[1].Value, v[2].Value);
+	///  Print("//RegexFindAll with foreach:");
+	/// foreach(var v in s.RegexFindAll(rx)) Print(v.Value, v[1].Value, v[2].Value);
 	///  
-	///  Print("//RegexFindAll_ with foreach, get only strings:");
-	/// foreach(var v in s.RegexFindAll_(rx, 0)) Print(v);
-	///  Print("//RegexFindAll_ with foreach, get only strings of group 2:");
-	/// foreach(var v in s.RegexFindAll_(rx, 2)) Print(v);
+	///  Print("//RegexFindAll with foreach, get only strings:");
+	/// foreach(var v in s.RegexFindAll(rx, 0)) Print(v);
+	///  Print("//RegexFindAll with foreach, get only strings of group 2:");
+	/// foreach(var v in s.RegexFindAll(rx, 2)) Print(v);
 	///  
-	///  Print("//RegexFindAll_, get array:");
-	/// if(s.RegexFindAll_(rx, out var am)) foreach(var k in am) Print(k.Value, k[1].Value, k[2].Value);
+	///  Print("//RegexFindAll, get array:");
+	/// if(s.RegexFindAll(rx, out var am)) foreach(var k in am) Print(k.Value, k[1].Value, k[2].Value);
 	///  
-	///  Print("//RegexFindAll_, get array of strings:");
-	/// if(s.RegexFindAll_(rx, 0, out var av)) Print(av);
-	///  Print("//RegexFindAll_, get array of group 2 strings:");
-	/// if(s.RegexFindAll_(rx, 2, out var ag)) Print(ag);
+	///  Print("//RegexFindAll, get array of strings:");
+	/// if(s.RegexFindAll(rx, 0, out var av)) Print(av);
+	///  Print("//RegexFindAll, get array of group 2 strings:");
+	/// if(s.RegexFindAll(rx, 2, out var ag)) Print(ag);
 	///  
-	///  Print("//RegexReplace_:");
-	/// Print(s.RegexReplace_(rx, "'$2$1'"));
+	///  Print("//RegexReplace:");
+	/// Print(s.RegexReplace(rx, "'$2$1'"));
 	///  
-	///  Print("//RegexReplace_ with callback:");
-	/// Print(s.RegexReplace_(rx, o => o.Value.ToUpper_()));
-	///  Print("//RegexReplace_ with callback and ExpandReplacement:");
-	/// Print(s.RegexReplace_(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
+	///  Print("//RegexReplace with callback:");
+	/// Print(s.RegexReplace(rx, o => o.Value.Upper()));
+	///  Print("//RegexReplace with callback and ExpandReplacement:");
+	/// Print(s.RegexReplace(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
 	///  
-	///  Print("//RegexReplace_, get replacement count:");
-	/// if(0 != s.RegexReplace_(rx, "'$2$1'", out var s2)) Print(s2);
+	///  Print("//RegexReplace, get replacement count:");
+	/// if(0 != s.RegexReplace(rx, "'$2$1'", out var s2)) Print(s2);
 	///  
-	///  Print("//RegexReplace_ with callback, get replacement count:");
-	/// if(0 != s.RegexReplace_(rx, o => o.Value.ToUpper_(), out var s3)) Print(s3);
+	///  Print("//RegexReplace with callback, get replacement count:");
+	/// if(0 != s.RegexReplace(rx, o => o.Value.Upper(), out var s3)) Print(s3);
 	///  
-	///  Print("//RegexSplit_:");
-	/// Print(s.RegexSplit_(@" *, *"));
+	///  Print("//RegexSplit:");
+	/// Print(s.RegexSplit(@" *, *"));
 	/// ]]></code></example>
 	public unsafe class Regex_
 	{
@@ -812,7 +812,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new Regex_(@"\b(\w+?)(\d+)\b");
-		/// s = x.Replace(s, o => o.Value.ToUpper_());
+		/// s = x.Replace(s, o => o.Value.Upper());
 		/// Print(s);
 		/// ]]></code>
 		/// </example>
@@ -845,7 +845,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new Regex_(@"\b(\w+?)(\d+)\b");
-		/// if(0 == x.Replace(s, o => o.Value.ToUpper_(), out s)) Print("not found");
+		/// if(0 == x.Replace(s, o => o.Value.Upper(), out s)) Print("not found");
 		/// else Print(s);
 		/// ]]></code>
 		/// </example>
@@ -877,7 +877,7 @@ namespace Au
 							if(t == eos) break;
 							ch = *s;
 							if(ch >= '0' && ch <= '9') { //${number}. info: group name cannot start with digit, then PCRE returns error.
-								group = repl.ToInt_((int)(s - s0), out int numEnd, STIFlags.NoHex);
+								group = repl.ToInt((int)(s - s0), out int numEnd, STIFlags.NoHex);
 								if(s0 + numEnd != t || group < 0) continue;
 							} else { //${name}
 								group = m.LibGroupNumberFromName(s, (int)(t - s), out _); //speed: 40-100 ns
@@ -885,7 +885,7 @@ namespace Au
 							}
 							s = t + 1;
 						} else if(ch >= '0' && ch <= '9') { //$number
-							group = repl.ToInt_((int)(s - s0), out int numEnd, STIFlags.NoHex);
+							group = repl.ToInt((int)(s - s0), out int numEnd, STIFlags.NoHex);
 							if(numEnd == 0 || group < 0) continue;
 							s = s0 + numEnd;
 						} else {
@@ -1072,7 +1072,7 @@ namespace Au
 
 	#region static
 
-	public static partial class String_
+	public static partial class ExtString
 	{
 		/// <summary>
 		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
@@ -1081,7 +1081,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexIsMatch_(this string s, string rx, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexIsMatch(this string s, string rx, RXFlags flags = 0, RXMore more = null)
 		{
 			if(s == null) return false;
 			var x = _cache.AddOrGet(rx, flags);
@@ -1096,7 +1096,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexMatch_(this string s, string rx, out RXMatch result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexMatch(this string s, string rx, out RXMatch result, RXFlags flags = 0, RXMore more = null)
 		{
 			if(s == null) { result = null; return false; }
 			var x = _cache.AddOrGet(rx, flags);
@@ -1112,7 +1112,7 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexMatch_(this string s, string rx, int group, out string result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexMatch(this string s, string rx, int group, out string result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.MatchS(s, out result, group, more);
@@ -1127,7 +1127,7 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexMatch_(this string s, string rx, int group, out RXGroup result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexMatch(this string s, string rx, int group, out RXGroup result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.MatchG(s, out result, group, more);
@@ -1141,7 +1141,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static IEnumerable<RXMatch> RegexFindAll_(this string s, string rx, RXFlags flags = 0, RXMore more = null)
+		public static IEnumerable<RXMatch> RegexFindAll(this string s, string rx, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.FindAll(s, more);
@@ -1155,7 +1155,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexFindAll_(this string s, string rx, out RXMatch[] result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexFindAll(this string s, string rx, out RXMatch[] result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.FindAll(s, out result, more);
@@ -1170,7 +1170,7 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static IEnumerable<string> RegexFindAll_(this string s, string rx, int group, RXFlags flags = 0, RXMore more = null)
+		public static IEnumerable<string> RegexFindAll(this string s, string rx, int group, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.FindAllS(s, group, more);
@@ -1185,7 +1185,7 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexFindAll_(this string s, string rx, int group, out string[] result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexFindAll(this string s, string rx, int group, out string[] result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.FindAllS(s, out result, group, more);
@@ -1199,7 +1199,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string RegexReplace_(this string s, string rx, string repl, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static string RegexReplace(this string s, string rx, string repl, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.Replace(s, repl, maxCount, more);
@@ -1213,7 +1213,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static int RegexReplace_(this string s, string rx, string repl, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static int RegexReplace(this string s, string rx, string repl, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.Replace(s, repl, out result, maxCount, more);
@@ -1227,7 +1227,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string RegexReplace_(this string s, string rx, Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static string RegexReplace(this string s, string rx, Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.Replace(s, replFunc, maxCount, more);
@@ -1241,7 +1241,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static int RegexReplace_(this string s, string rx, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static int RegexReplace(this string s, string rx, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.Replace(s, replFunc, out result, maxCount, more);
@@ -1254,7 +1254,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string[] RegexSplit_(this string s, string rx, int maxCount = 0, RXFlags flags = 0, RXMore more = null)
+		public static string[] RegexSplit(this string s, string rx, int maxCount = 0, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.Split(s, maxCount, more);

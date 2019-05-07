@@ -121,7 +121,7 @@ namespace Au.Triggers
 		/// <example>See <see cref="ActionTriggers"/>.</example>
 		public Action<HotkeyTriggerArgs> this[string hotkey, TKFlags flags = 0] {
 			set {
-				if(!Keyb.Misc.LibParseHotkeyTriggerString(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
+				if(!Keyb.More.LibParseHotkeyTriggerString(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
 				_Add(value, key, mod, modAny, flags, hotkey);
 			}
 		}
@@ -144,14 +144,14 @@ namespace Au.Triggers
 				var ps = key.ToString(); if(Char_.IsAsciiDigit(ps[0])) ps = "VK" + ps;
 				if(!Empty(modKeys)) ps = modKeys + "+" + ps;
 
-				if(!Keyb.Misc.LibParseHotkeyTriggerString(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
+				if(!Keyb.More.LibParseHotkeyTriggerString(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 				_Add(value, key, mod, modAny, flags, ps);
 			}
 		}
 
 		void _Add(Action<HotkeyTriggerArgs> action, KKey key, KMod mod, KMod modAny, TKFlags flags, string paramsString)
 		{
-			if(mod == 0 && flags.HasAny_((TKFlags.LeftMod | TKFlags.RightMod))) throw new ArgumentException("Invalid flags.");
+			if(mod == 0 && flags.HasAny((TKFlags.LeftMod | TKFlags.RightMod))) throw new ArgumentException("Invalid flags.");
 			_triggers.LibThrowIfRunning();
 			//actually could safely add triggers while running.
 			//	Currently would need just lock(_d) in several places. Also some triggers of this type must be added before starting, else we would not have the hook etc.

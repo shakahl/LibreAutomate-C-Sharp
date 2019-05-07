@@ -32,7 +32,7 @@ namespace Au.Util
 		public static void AuWeb(string topic)
 		{
 			var url = "http://3.quickmacros.com/help/";
-			if(!Empty(topic)) url = url + (topic.IndexOf('/') < 0 ? (topic.StartsWith_("Au.") ? "api/" : "api/Au.") : null) + topic + (topic.EndsWith_('/') ? null : ".html");
+			if(!Empty(topic)) url = url + (topic.IndexOf('/') < 0 ? (topic.Starts("Au.") ? "api/" : "api/Au.") : null) + topic + (topic.Ends('/') ? null : ".html");
 			Shell.TryRun(url);
 		}
 #else //.chm

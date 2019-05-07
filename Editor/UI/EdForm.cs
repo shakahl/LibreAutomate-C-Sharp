@@ -68,7 +68,7 @@ partial class EdForm : Form
 		//Perf.Next();
 
 		//#if DEBUG
-		//		Debug_.Print("Ending form ctor. Must be no parked controls created; use SetHookToMonitorCreatedWindowsOfThisThread.");
+		//		Dbg.Print("Ending form ctor. Must be no parked controls created; use SetHookToMonitorCreatedWindowsOfThisThread.");
 		//#endif
 	}
 
@@ -79,7 +79,7 @@ partial class EdForm : Form
 	{
 		Tasks = new RunningTasks();
 		Panels.Files.LoadWorkspace(CommandLine.WorkspaceDirectory, runStartupScript: false);
-		Debug_.PrintIf(((Wnd)this).IsVisible, "BAD: form became visible while loading workspace");
+		Dbg.PrintIf(((Wnd)this).IsVisible, "BAD: form became visible while loading workspace");
 		Au.Triggers.HooksServer.Start(false);
 		CommandLine.OnMainFormLoaded();
 		IsLoaded = true;
@@ -151,9 +151,9 @@ partial class EdForm : Form
 				//Normally at startup always inactive, because started as admin from task scheduler. SetForegroundWindow sometimes works, sometimes not.
 				//TODO: SetForegroundWindow fails when started with Au.CL.exe /e
 				//workaround: If clicked a window after our app started but before w activated, w is at Z bottom and in some cases without taskbar button.
-				Debug_.Print("window inactive");
-				Wnd.Misc.TaskbarButton.Add(w);
-				if(!w.ActivateLL()) Wnd.Misc.TaskbarButton.Flash(w, 5);
+				Dbg.Print("window inactive");
+				Wnd.More.TaskbarButton.Add(w);
+				if(!w.ActivateLL()) Wnd.More.TaskbarButton.Flash(w, 5);
 			}
 			//restore focused control correctly
 			if(isActive == 0) _wFocus = Wnd.ThisThread.Focused;

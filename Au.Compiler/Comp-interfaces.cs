@@ -76,7 +76,7 @@ namespace Au.Compiler
 		public CompTriggerData(string method, string attribute, KeyValuePair<string, object>[] args)
 		{
 			this.method = method;
-			triggerType = attribute.RemoveEnd_(9); //remove suffix "Attribute"
+			triggerType = attribute.RemoveSuffix(9); //remove suffix "Attribute"
 			this.args = args;
 		}
 	}

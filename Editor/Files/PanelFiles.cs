@@ -138,7 +138,7 @@ partial class PanelFiles : Control
 		var d = new OpenFileDialog() { Title = "Open workspace", Filter = "files.xml|files.xml" };
 		if(d.ShowDialog(this) != DialogResult.OK) return null;
 		var filesXml = d.FileName;
-		if(!Path_.GetFileName(filesXml).Equals_("files.xml", true)) {
+		if(!Path_.GetFileName(filesXml).Eqi("files.xml")) {
 			AuDialog.ShowError("Must be files.xml");
 			return null;
 		}
@@ -206,10 +206,10 @@ partial class PanelFiles : Control
 				bool isProject = false;
 				string name = v.Name;
 				if(v.IsDirectory) {
-					if(level == 0 && name.Equals_("include", true)) continue;
+					if(level == 0 && name.Eqi("include")) continue;
 					if(isProject = (name[0] == '@')) name = name.Substring(1);
 				} else {
-					if(level == 0 && 0 != name.Equals_(true, "Script.cs", "Class.cs")) continue;
+					if(level == 0 && 0 != name.Eq(true, "Script.cs", "Class.cs")) continue;
 				}
 
 				bool isFolder = v.IsDirectory && !isProject;

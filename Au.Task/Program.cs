@@ -49,7 +49,7 @@ static unsafe class Program
 		string asmFile; int pdbOffset, flags;
 
 		if(args.Length != 1) return;
-		string pipeName = args[0]; //if(!pipeName.StartsWith_(@"\\.\pipe\Au.Task-")) return;
+		string pipeName = args[0]; //if(!pipeName.Starts(@"\\.\pipe\Au.Task-")) return;
 
 		int nr = 0;
 #if false
@@ -74,7 +74,7 @@ static unsafe class Program
 		}
 		//Perf.First();
 		using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
-			if(pipe.Is0) { Debug_.LibPrintNativeError(); return; }
+			if(pipe.Is0) { Dbg.LibPrintNativeError(); return; }
 			//Perf.Next();
 			int size; if(!Api.ReadFile(pipe, &size, 4, out nr, default) || nr != 4) return;
 			//Perf.Next();

@@ -37,14 +37,14 @@ class ProgramSettings
 	{
 		_settFile = Folders.ThisAppDocuments + @"!Settings\Settings.xml";
 		try {
-			_x = XElement_.Load(_settFile);
+			_x = ExtXml.LoadElement(_settFile);
 		}
 		catch(Exception ex1) {
 			try {
 				if(File_.ExistsAsAny(_settFile))
 					AuDialog.ShowWarning("Failed to load settings", $"Will backup '{_settFile}' and use default settings.", expandedText: ex1.Message);
 				File_.Copy(Folders.ThisAppBS + @"Default\Settings.xml", _settFile, IfExists.RenameExisting);
-				_x = XElement_.Load(_settFile);
+				_x = ExtXml.LoadElement(_settFile);
 			}
 			catch(Exception ex2) {
 				AuDialog.ShowError("Failed to load settings", "Try again or reinstall the application.", expandedText: ex2.Message);
@@ -68,13 +68,13 @@ class ProgramSettings
 				_x.Save_(_settFile);
 			}
 			_isDirty = false;
-			//Debug_.Print("settings saved");
+			//Dbg.Print("settings saved");
 		}
 	}
 
 	private void _x_Changed(object sender, XObjectChangeEventArgs e)
 	{
-		//Debug_.PrintFunc(); //note: SetElementValue sends 2 events, because internally it removes/adds node's content. Setting the Value property is the same.
+		//Dbg.PrintFunc(); //note: SetElementValue sends 2 events, because internally it removes/adds node's content. Setting the Value property is the same.
 		Debug.Assert(Monitor.IsEntered(this));
 		_isDirty = true;
 	}
@@ -119,7 +119,7 @@ class ProgramSettings
 	/// </summary>
 	public bool Get(string name, out int value, int defaultValue = 0)
 	{
-		if(_Get(name, out var s)) { value = s.ToInt_(); return true; }
+		if(_Get(name, out var s)) { value = s.ToInt(); return true; }
 		value = defaultValue; return false;
 	}
 

@@ -2,8 +2,8 @@
 
 ### Namespaces
 - Au - main classes of this library, except triggers.
-- Au.Types - types of function parameters, exceptions, extension methods, etc.
-- Au.Triggers - action triggers: hotkeys, autotext, mouse, window.
+- Au.Types - types of function parameters, exceptions, etc.
+- Au.Triggers - triggers: hotkeys, autotext, mouse, window.
 - Au.Util - rarely used classes.
 
 ### .NET Assembly files

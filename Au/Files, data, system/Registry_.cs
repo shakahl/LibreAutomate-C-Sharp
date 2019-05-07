@@ -51,11 +51,11 @@ namespace Au
 		public static RegistryKey ParseKeyString(ref string key)
 		{
 			if(key == null) key = @"\";
-			if(key.StartsWith_('\\')) {
+			if(key.Starts('\\')) {
 				key = (key.Length == 1) ? AuKey : AuKey + key;
 				return Registry.CurrentUser;
 			}
-			if(!key.StartsWith_("HKEY_")) return Registry.CurrentUser;
+			if(!key.Starts("HKEY_")) return Registry.CurrentUser;
 
 			RegistryKey R = null;
 			int i = key.IndexOf('\\');

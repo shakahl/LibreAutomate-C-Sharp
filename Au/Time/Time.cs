@@ -497,7 +497,7 @@ namespace Au
 		{
 			//Print(t_timers.Count, idEvent);
 			if(!t_timers.TryGetValue(idEvent, out var t)) {
-				//Debug_.Print($"timer id {idEvent} not in t_timers");
+				//Dbg.Print($"timer id {idEvent} not in t_timers");
 				return;
 				//It is possible after killing timer.
 				//	Normally API KillTimer removes WM_TIMER message from queue (tested), but in some conditions our callback can still be called several times.

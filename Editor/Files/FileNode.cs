@@ -123,7 +123,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		_model = model;
 		if(parent == null) { //the root XML element
 			if(x.Name != "files") throw new ArgumentException("XML root element name must be 'files'");
-			_model.MaxId = (uint)x["max-i"].ToLong_();
+			_model.MaxId = (uint)x["max-i"].ToInt64();
 		} else {
 			switch(x.Name) {
 			case "d": _type = EFileType.Folder; break;
@@ -137,11 +137,11 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 				var v = x.Value;
 				switch(x.Name) {
 				case "n": _name = v; break;
-				case "i": id = (uint)v.ToLong_(); break;
-				case "f": _flags = (_Flags)v.ToInt_(); break;
+				case "i": id = (uint)v.ToInt64(); break;
+				case "f": _flags = (_Flags)v.ToInt(); break;
 				case "path": linkTarget = v; break;
 				case "icon": icon = v; break;
-				case "run": testScript = (uint)v.ToLong_(); break;
+				case "run": testScript = (uint)v.ToInt64(); break;
 				}
 			}
 			if(Empty(_name)) throw new ArgumentException("no 'n' attribute in XML");
@@ -239,8 +239,8 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	public string DisplayName {
 		get {
 			if(_displayName != null) return _displayName;
-			if(!IsScript || !_name.EndsWith_(".cs", true)) return _name;
-			return _displayName = _name.RemoveEnd_(3);
+			if(!IsScript || !_name.Ends(".cs", true)) return _name;
+			return _displayName = _name.RemoveSuffix(3);
 		}
 	}
 
@@ -419,7 +419,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		get => 0 != (_flags & _Flags.HasTriggers);
 		set {
 			if(value != HasTriggers) {
-				_flags.SetFlag_(_Flags.HasTriggers, value);
+				_flags.SetFlag(_Flags.HasTriggers, value);
 				_model.Save.WorkspaceLater();
 			}
 		}
@@ -458,22 +458,22 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 			}
 		} else {
 			if(folder.HasValue) return _FindIn(e, name, folder.GetValueOrDefault());
-			foreach(var f in e) if(f._name.Equals_(name, true)) return f;
+			foreach(var f in e) if(f._name.Eqi(name)) return f;
 		}
 		return null;
 	}
 
 	static FileNode _FindIn(IEnumerable<FileNode> e, string name, bool folder)
 	{
-		foreach(var f in e) if(f.IsFolder == folder && f._name.Equals_(name, true)) return f;
+		foreach(var f in e) if(f.IsFolder == folder && f._name.Eqi(name)) return f;
 		return null;
 	}
 
 	FileNode _FindRelative(string name, bool? folder)
 	{
-		if(name.StartsWith_(@"\\")) return null;
+		if(name.Starts(@"\\")) return null;
 		var f = this; int lastSegEnd = -1;
-		foreach(var seg in name.Segments_(@"\", SegFlags.NoEmpty)) {
+		foreach(var seg in name.Segments(@"\", SegFlags.NoEmpty)) {
 			var e = f.Children();
 			if((lastSegEnd = seg.EndOffset) == name.Length) {
 				f = _FindIn(e, seg.Value, folder, false);
@@ -501,8 +501,8 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		if(s[0] == '\\') p = Root;
 		else if(s[0] == '.') {
 			int i = 0;
-			for(; s.EqualsAt_(i, @"..\"); i += 3) { p = p.Parent; if(p == null) return null; }
-			if(i == 0 && s.StartsWith_(@".\")) i = 2;
+			for(; s.EqAt(i, @"..\"); i += 3) { p = p.Parent; if(p == null) return null; }
+			if(i == 0 && s.Starts(@".\")) i = 2;
 			if(i != 0) {
 				if(i == s.Length) return (p == Root || !(folder ?? true)) ? null : p;
 				s = s.Substring(i);
@@ -523,7 +523,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 				var f1 = _FindRelative(name, false);
 				if(f1 != null) return new FileNode[] { f1 };
 			} else {
-				return Descendants().Where(k => !k.IsFolder && k._name.Equals_(name, true)).ToArray();
+				return Descendants().Where(k => !k.IsFolder && k._name.Eqi(name)).ToArray();
 			}
 		}
 		return Array.Empty<FileNode>();
@@ -798,7 +798,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	{
 		string s = File_.LoadText(templFile);
 		//replace //"#include file" with text of file from "include" subfolder
-		s = s.RegexReplace_(@"(?m)^//#include +(.+)$", m => {
+		s = s.RegexReplace(@"(?m)^//#include +(.+)$", m => {
 			var si = s_dirTemplatesBS + @"include\" + m[1];
 			if(File_.ExistsAsFile(si)) return File_.LoadText(si);
 			Print($"Errror in {templFile}. #include file does not exist: {si}");
@@ -808,8 +808,8 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		//when adding classes to a library project, if the main file contains a namespace, add that namespace in the new file too.
 		if(template == "Class.cs" && newParent.FindProject(out var projFolder, out var projMain)) {
 			var rx = @"(?m)^namespace [\w\.]+";
-			if(!s.RegexIsMatch_(rx) && projMain.GetText().RegexMatch_(rx, 0, out string ns)) {
-				s = s.RegexReplace_(@"(?ms)^public class .+\}", ns + "\r\n{\r\n$0\r\n}", 1);
+			if(!s.RegexIsMatch(rx) && projMain.GetText().RegexMatch(rx, 0, out string ns)) {
+				s = s.RegexReplace(@"(?ms)^public class .+\}", ns + "\r\n{\r\n$0\r\n}", 1);
 			}
 		}
 
@@ -825,7 +825,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 			int i = fromName.LastIndexOf('.');
 			if(i >= 0) { ext = fromName.Substring(i); fromName = fromName.Remove(i); }
 		}
-		fromName = fromName.RegexReplace_(@"\d+$", "");
+		fromName = fromName.RegexReplace(@"\d+$", "");
 		for(int i = 2; ; i++) {
 			var s = fromName + i + ext;
 			if(!_Exists(s)) return s;
@@ -858,7 +858,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		name = Path_.CorrectFileName(name);
 		if(!IsFolder) {
 			var ext = Path_.GetExtension(_name);
-			if(ext.Length > 0) if(name.IndexOf('.') < 0 || (IsCodeFile && !name.EndsWith_(ext, true))) name += ext;
+			if(ext.Length > 0) if(name.IndexOf('.') < 0 || (IsCodeFile && !name.Ends(ext, true))) name += ext;
 		}
 		if(name == _name) return true;
 
@@ -998,10 +998,10 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	public static EFileType DetectFileType(string path)
 	{
 		var type = EFileType.NotCodeFile;
-		if(path.EndsWith_(".cs", true)) {
+		if(path.Ends(".cs", true)) {
 			type = EFileType.Class;
 			try { if(File_.LoadText(path).Contains("//{{ main")) type = EFileType.Script; }
-			catch(Exception ex) { Debug_.Print(ex); }
+			catch(Exception ex) { Dbg.Print(ex); }
 		}
 		return type;
 	}

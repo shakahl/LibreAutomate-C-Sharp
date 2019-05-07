@@ -67,7 +67,7 @@ unsafe class Program
 		var t1 = Time.PerfMilliseconds;
 
 		using(var fw = new FileSystemWatcher(apiDir, "*.yml")) {
-			fw.Changed += (sen, e) => { if(e.Name.StartsWith_("Au.", true)) ProcessYamlFile(e.FullPath, false); };
+			fw.Changed += (sen, e) => { if(e.Name.Starts("Au.", true)) ProcessYamlFile(e.FullPath, false); };
 			fw.EnableRaisingEvents = true;
 			fw.NotifyFilter = NotifyFilters.LastWrite;
 
@@ -75,8 +75,9 @@ unsafe class Program
 			try {
 				Shell.RunConsole(o => {
 					Print(o);
-					if(o.StartsWith_("Serving")) throw new OperationCanceledException();
+					if(o.Starts("Serving")) throw new OperationCanceledException();
 				}, docfx, $@"docfx.json --intermediateFolder ""{objDir}"" --serve");
+				// --force
 			}
 			catch(OperationCanceledException) {
 				serving = true;
@@ -97,12 +98,13 @@ unsafe class Program
 		1.s();
 		if(AuDialog.ShowYesNo("Upload?")) CompressAndUpload(docDir);
 
-		//Delete obj folder if > 1 GB. Each time it grows by 10 MB, and after a day or two can be > 1 GB. After deleting builds slower by ~50%.
-		if(File_.Misc.CalculateDirectorySize(objDir) / 1024 / 1024 > 1000) { Print("Deleting obj folder."); File_.Delete(objDir); }
+		//Delete obj folder if big. Each time it grows by 10 MB, and after a day or two can be > 1 GB. After deleting builds slower by ~50%.
+		if(File_.More.CalculateDirectorySize(objDir) / 1024 / 1024 > 500) { Print("Deleting obj folder."); File_.Delete(objDir); }
+		//info: if DocFX starts throwing stack overflow exception, delete the obj folder manually. It is likely to happen after many refactorings in the project.
 	}
 
 	/// <summary>
-	/// Workaround for DocFX bug: applies markdown to inline comments. It can damage whole text.
+	/// Workaround for DocFX bug: applies markdown in inline code. It can damage whole text.
 	/// Also something more.
 	/// </summary>
 	static void ProcessYamlFile(string path, bool test)
@@ -181,10 +183,10 @@ unsafe class Program
 		//	Markdown is not applied inside any <...>, including HTML comment. Also add <au>, else may not add <p> etc.
 		//	Will remove the enclosing later, when processing HTML.
 		//	Another way - escape markdown characters in <c>...</c> (prepend \). Problem: markdown is not applied in HTML blocks, eg HTML tables, except in certain parts.
-		if(0 != s.RegexReplace_(@"(?s)(?<!<pre>)<code>.+?</code>", @"<au><!--$0--></au>", out s)) R |= 1;
+		if(0 != s.RegexReplace(@"(?s)(?<!<pre>)<code>.+?</code>", @"<au><!--$0--></au>", out s)) R |= 1;
 
 		//Use C# colors in code blocks. Without it the javascript would guess, often incorrectly.
-		if(0 != s.RegexReplace_(@"<pre><code>", @"<pre><code class=""cs"">", out s)) R |= 2;
+		if(0 != s.RegexReplace(@"<pre><code>", @"<pre><code class=""cs"">", out s)) R |= 2;
 
 		if(R == 0) return false;
 		//if(0 != (R & 2)) Print(s);
@@ -196,18 +198,19 @@ unsafe class Program
 	{
 		string files = "*.html";
 		if(test) {
-			//files = @"api\Au.AaaDocFX*";
-			//files = @"api\Au.Regex_.Replace";
-			files = @"api\Au.Acc.Find";
+			//files = @"\api\Au.AaaDocFX*";
+			//files = @"\api\Au.Regex_.Replace";
+			files = @"\api\Au.Acc.Find";
+			files = @"\api\Au.AuDialog.Show";
 			files += ".html";
 		}
 		foreach(var f in File_.EnumDirectory(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
 			if(f.IsDirectory) continue;
-			var name = f.Name; if(!name.Like_(files) || name.EndsWith_(@"\toc.html")) continue;
+			var name = f.Name; if(!name.Like(files, true) || name.Ends(@"\toc.html")) continue;
 			var file = f.FullPath;
 			//if(test) Print($"<><c 0xff>{file}</c>");
 			var s = File.ReadAllText(file);
-			bool modified = ProcessHtmlFile(ref s, name.StartsWith_(@"\api"));
+			bool modified = ProcessHtmlFile(ref s, name.Starts(@"\api"));
 			if(modified) File.WriteAllText(!test ? file : file.Remove(file.Length - 1), s);
 		}
 
@@ -220,29 +223,29 @@ unsafe class Program
 
 		if(isApi) {
 			//Remove the <au><!--<code>*xml*</code>--></au> enclosing.
-			nr += s.RegexReplace_(@" < au><!--(<code>.+?</code>)--></au>", @"$1", out s);
+			nr += s.RegexReplace(@" < au><!--(<code>.+?</code>)--></au>", @"$1", out s);
 
 			//Link Method(parameters) -> Type.Method. And remove #jump. Works for properties too.
 			//Exclude those in auto-generated tables of class methods and properties.
-			nr += s.RegexReplace_(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|Util\.)?+([\w\.\-]+\.\w+)\.html)#\w+"">.+?</a>(?!\s*</td>\s*<td class=""markdown level1 summary"">)", @"$1"">$2</a>", out s);
+			nr += s.RegexReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|Util\.)?+([\w\.\-]+\.\w+)\.html)#\w+"">.+?</a>(?!\s*</td>\s*<td class=""markdown level1 summary"">)", @"$1"">$2</a>", out s);
 			//the same for enum
-			nr += s.RegexReplace_(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|Util\.)?+(\w+)\.html)#\w+"">(\w+</a>)", @"$1"">$2.$3", out s); //note: enums must not be nested in types
+			nr += s.RegexReplace(@"(<a class=""xref"" href=""Au\.(?:Types\.|Triggers\.|Util\.)?+(\w+)\.html)#\w+"">(\w+</a>)", @"$1"">$2.$3", out s); //note: enums must not be nested in types
 
 			//In class member pages, in title insert a link to the type.
-			nr += s.RegexReplace_(@"<h1\b[^>]* data-uid=""(Au\.(?:Types\.|Triggers\.|Util\.)?+([\w\.`]+))\.\w+\*?""[^>]*>\w+ (?=\w)",
+			nr += s.RegexReplace(@"<h1\b[^>]* data-uid=""(Au\.(?:Types\.|Triggers\.|Util\.)?+([\w\.`]+))\.\w+\*?""[^>]*>(?:Method|Property|Field|Event|Operator|Constructor) (?=\w)",
 				m => m.ExpandReplacement(@"$0<a href=""$1.html"">$2</a>.").Replace("`", "-"),
 				out s);
 
 			//Remove anchor from the first hidden overload <hr>, to prevent scrolling.
-			nr += s.RegexReplace_(@"(</h1>\s*<hr class=""overload"") id="".+?"" data-uid="".+?""", @"$1", out s);
+			nr += s.RegexReplace(@"(</h1>\s*<hr class=""overload"") id="".+?"" data-uid="".+?""", @"$1", out s);
 
 			//Add "(+ n overloads)" link in h1 and "(next/top)" links in h2 if need.
-			if(s.RegexFindAll_(@"<h2 class=""overload"" id=""(.+?)"".*?>Overload", out var a) && a.Length > 1) {
+			if(s.RegexFindAll(@"<h2 class=""overload"" id=""(.+?)"".*?>Overload", out var a) && a.Length > 1) {
 				var b = new StringBuilder();
 				int jPrev = 0;
 				for(int i = 0; i < a.Length; i++) {
 					bool first = i == 0, last = i == a.Length - 1;
-					int j = first ? s.IndexOf_("</h1>") : a[i].EndIndex;
+					int j = first ? s.Index("</h1>") : a[i].EndIndex;
 					b.Append(s, jPrev, j - jPrev);
 					jPrev = j;
 					b.Append("<span style='font-size:14px; font-weight: 400; margin-left:20px;'>(");
@@ -261,20 +264,31 @@ unsafe class Program
 		}
 
 		//<msdn>...</msdn> -> <a href="google search">
-		nr += s.RegexReplace_(@"<msdn>(.+?)</msdn>", @"<a href=""https://www.google.com/search?q=site:docs.microsoft.com+$1"">$1</a>", out s);
+		nr += s.RegexReplace(@"<msdn>(.+?)</msdn>", @"<a href=""https://www.google.com/search?q=site:docs.microsoft.com+$1"">$1</a>", out s);
 
-		//do the same now as renderTables would do at run time. Also remove class table-striped.
-		nr += s.RegexReplace_(@"(?s)<table(>.+?</table>)", @"<div class=""table-responsive""><table class=""table table-bordered table-condensed""$1</div>", out s);
+		//javascript renderTables() replacement, to avoid it at run time. Also remove class table-striped.
+		nr += s.RegexReplace(@"(?s)<table(>.+?</table>)", @"<div class=""table-responsive""><table class=""table table-bordered table-condensed""$1</div>", out s);
 
 		//the same for renderAlerts
-		nr += s.RegexReplace_(@"<div class=""(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\b",
+		nr += s.RegexReplace(@"<div class=""(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\b",
 			o => {
 				string k = "info"; switch(o[1].Value[0]) { case 'W': k = "warning"; break; case 'I': case 'C': k = "danger"; break; }
 				return o.Value + " alert alert-" + k;
 			},
 			out s);
 
-		//nr += s.RegexReplace_(@"", @"", out s);
+		//replace something in syntax code blocks
+		nr += s.RegexReplace(@"(?<=<div class=""codewrapper"">)\s*<pre><code.+?(?=</code></pre>)",
+			m => {
+				var k = m.Value;
+				k = k.RegexReplace(@"\(\w+\)0", @"0");
+				k = k.RegexReplace(@"default\([^)?]+\? *\)", @"null");
+				k = k.RegexReplace(@"default\(.+?\)", @"default");
+				return k;
+			}
+			, out s);
+
+		//nr += s.RegexReplace(@"", @"", out s);
 
 		return nr > 0;
 	}
@@ -285,7 +299,7 @@ unsafe class Program
 	//	var s = File.ReadAllText(file);
 
 	//	//
-	//	if(0==s.RegexReplace_(@"", @"", out s)) throw new Exception("regex failed");
+	//	if(0==s.RegexReplace(@"", @"", out s)) throw new Exception("regex failed");
 
 	//	Print(s);
 	//	//File.WriteAllText(file, s);

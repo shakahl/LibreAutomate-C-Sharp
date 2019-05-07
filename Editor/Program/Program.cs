@@ -151,7 +151,7 @@ static class Program
 			//Api.AllowSetForegroundWindow(pid); //fails and has no sense, because it's Au.CL.exe running as SYSTEM
 		}
 		catch(Exception ex) { //probably this program is not installed (no scheduled task)
-			Debug_.Dialog(ex);
+			Dbg.Dialog(ex);
 			return false;
 		}
 		return true;

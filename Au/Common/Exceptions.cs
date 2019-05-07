@@ -14,6 +14,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 using System.Runtime.Serialization;
 
+using Au.Types;
 using static Au.NoClass;
 
 namespace Au.Types
@@ -99,7 +100,7 @@ namespace Au.Types
 					int k = m.Length - 1;
 					if(m[k] == '*') m = m.Substring(0, k) + commonPostfix;
 				}
-				if(!m.EndsWith_('.')) m = m + ".";
+				if(!m.Ends('.')) m = m + ".";
 			}
 
 			if(appendMessage == null && NativeErrorCode != 0) appendMessage = WinError.MessageFor(NativeErrorCode);
@@ -272,8 +273,14 @@ namespace Au.Types
 
 		#endregion
 	}
+}
 
-	public static partial class ExtensionMethods
+namespace Au
+{
+	/// <summary>
+	/// Extension methods for types of this library.
+	/// </summary>
+	public static partial class ExtAu
 	{
 		/// <summary>
 		/// If this is default(Wnd), throws <see cref="NotFoundException"/>, else returns this.
@@ -285,7 +292,6 @@ namespace Au.Types
 		/// ]]></code>
 		/// </example>
 		public static Wnd OrThrow(this Wnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (Wnd).");
-		//CONSIDER: OrExc
 
 		/// <summary>
 		/// If this is null, throws <see cref="NotFoundException"/>, else returns this.
@@ -313,7 +319,10 @@ namespace Au.Types
 		/// ]]></code>
 		/// </example>
 		public static WinImage OrThrow(this WinImage x) => x ?? throw new NotFoundException("Not found (WinImage).");
+	}
 
+	static partial class ExtOther
+	{
 		/// <summary>
 		/// Returns string containing exception type name and message.
 		/// </summary>

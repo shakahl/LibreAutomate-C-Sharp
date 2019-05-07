@@ -588,7 +588,7 @@ namespace Au
 		/// <summary>
 		/// Gets the active (foreground) window.
 		/// Calls API <msdn>GetForegroundWindow</msdn>.
-		/// Returns default(Wnd) if there is no active window; more info: <see cref="Misc.WaitForAnActiveWindow"/>.
+		/// Returns default(Wnd) if there is no active window; more info: <see cref="More.WaitForAnActiveWindow"/>.
 		/// </summary>
 		public static Wnd Active => Api.GetForegroundWindow();
 

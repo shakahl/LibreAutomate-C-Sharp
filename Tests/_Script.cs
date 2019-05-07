@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using Au;
@@ -147,7 +147,7 @@ unsafe partial class Script : AuScript
 		Print("𐐩".Equals("𐐁", StringComparison.OrdinalIgnoreCase));
 		Print("𐐩".IndexOf("𐐁", StringComparison.OrdinalIgnoreCase));
 		Print(char.IsUpper("𐐩", 0), char.IsLower("𐐩", 0), char.IsUpper("𐐁", 0), char.IsLower("𐐁", 0));
-		Print("abc".ToUpper_(true), "𐐨𐐩𐐪".ToUpper_(true));
+		Print("abc".Upper(true), "𐐨𐐩𐐪".Upper(true));
 	}
 
 	//class TIA
@@ -283,7 +283,7 @@ unsafe partial class Script : AuScript
 		//Keyb.WaitForKey(0, "VK65", true);
 		//Key("VK65 Vk0x42");
 		//Print(Keyb.Misc.ParseKeysString("VK65 Vk0x42"));
-		if(Keyb.Misc.ParseHotkeyString("Ctrl+VK65", out var mod, out var key)) Print(mod, key);
+		if(Keyb.More.ParseHotkeyString("Ctrl+VK65", out var mod, out var key)) Print(mod, key);
 	}
 
 	void TestAcc()
@@ -301,7 +301,7 @@ unsafe partial class Script : AuScript
 		////s = @"var w = Wnd.Find(@""**r Document - WordPad\*?"", ""QM_Editor"").OrThrow();";
 		////s = @"var w = Wnd.Find(@""**r Document """"- WordPad\*?"", ""QM_Editor"").OrThrow();";
 
-		//if(s.RegexMatch_(@"^(?:var|Wnd) \w+ ?= ?Wnd\.(?:Find\(|Wait\(.+?, )(?s)(?:""((?:[^""\\]|\\.)*)""|(@(?:""[^""]*"")+))", out var k)) {
+		//if(s.RegexMatch(@"^(?:var|Wnd) \w+ ?= ?Wnd\.(?:Find\(|Wait\(.+?, )(?s)(?:""((?:[^""\\]|\\.)*)""|(@(?:""[^""]*"")+))", out var k)) {
 
 		//	Print(k[0]);
 		//	Print(k[1]);
@@ -855,7 +855,7 @@ unsafe partial class Script : AuScript
 		var exe = @"Q:\Test\ok\bin\console5.exe";
 
 #if true
-		int ec=Shell.RunConsole(s => {
+		int ec = Shell.RunConsole(s => {
 			Print(s);
 			//Print(s.Length, (int)s[s.Length - 1]);
 			Print(s.Length);
@@ -914,14 +914,16 @@ unsafe partial class Script : AuScript
 		//m.Show();
 
 		string s = "abcd";
-		//Print(s.StartsWith_("ab"));
-		//Print(s.StartsWith_("Ab"));
-		//Print(s.StartsWith_("Ab", true));
-		Print(s.Contains("bc", true));
-		//s.StartsWith_()
-		//s.ToLower_
-		//s.Contains("", true)
-		
+		//Print(s.Starts("ab"));
+		//Print(s.Starts("Ab"));
+		//Print(s.Starts("Ab", true));
+		//Print(s.Has("bc", true));
+		//s.Starts()
+		//s.Lower
+		//s.Has("", true)
+
+		//CONSIDER: move some extension classes to Au.Util.Ext.
+
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
@@ -1025,10 +1027,10 @@ unsafe partial class Script : AuScript
 			)) return false;
 		//if(w.HasExStyle(WS_EX.NOACTIVATE) && 0 != w.ProgramNameIs("devenv.exe")) return;
 		var es = w.ExStyle;
-		bool ret = es.Has_(WS_EX.TRANSPARENT | WS_EX.LAYERED) && es.HasAny_(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE); //tooltips etc
-		if(!ret) ret = es.Has_(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE) && es.Has_(WS_EX.LAYERED); //eg VS code tips
+		bool ret = es.Has(WS_EX.TRANSPARENT | WS_EX.LAYERED) && es.HasAny(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE); //tooltips etc
+		if(!ret) ret = es.Has(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE) && es.Has(WS_EX.LAYERED); //eg VS code tips
 		if(ret) { /*Print($"<><c 0x80e0e0>    {e}, {w}, {es}</c>");*/ return false; }
-		if(Debugger.IsAttached && w.LibNameTL.Like_("*Visual Studio")) return false;
+		if(Debugger.IsAttached && w.LibNameTL.Like("*Visual Studio")) return false;
 		return true;
 	}
 }

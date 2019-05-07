@@ -65,7 +65,7 @@ namespace Au.Tools
 			switch(n.nmhdr.code) {
 			case Sci.NOTIF.SCN_MODIFIED:
 				//Print(n.modificationType);
-				if(n.modificationType.HasAny_(Sci.MOD.SC_MOD_INSERTTEXT | Sci.MOD.SC_MOD_DELETETEXT)) ZTextChanged?.Invoke(this, null);
+				if(n.modificationType.HasAny(Sci.MOD.SC_MOD_INSERTTEXT | Sci.MOD.SC_MOD_DELETETEXT)) ZTextChanged?.Invoke(this, null);
 				break;
 			case Sci.NOTIF.SCN_UPDATEUI:
 				//make text after _ReadonlyStartUtf8 readonly
@@ -132,7 +132,7 @@ namespace Au.Tools
 			if(!wnd.Is0) {
 				if(wnd == _wnd) {
 					sCode = ST.RangeText(0, _ReadonlyStartUtf8);
-					if(sCode.RegexMatch_(@"^(?:var|Wnd) (\w+)((?s).+\R(?:var|Wnd) (\w+).+$)?", out var m)) {
+					if(sCode.RegexMatch(@"^(?:var|Wnd) (\w+)((?s).+\R(?:var|Wnd) (\w+).+$)?", out var m)) {
 						bool isConCode = m[3].Exists;
 						if(con == _con && !con.Is0 == isConCode) return (sCode, m[isConCode ? 3 : 1].Value);
 						wndVar = m[1].Value;

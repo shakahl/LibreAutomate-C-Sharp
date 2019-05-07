@@ -45,7 +45,7 @@ namespace Au
 			readonly Wildex _name;
 			readonly Wildex _className;
 			readonly Func<Wnd, bool> _also;
-			Misc.WinFormsControlNames _wfControls;
+			More.WinFormsControlNames _wfControls;
 			readonly int _skipCount;
 			readonly WCFlags _flags;
 			readonly _NameIs _nameIs;
@@ -62,9 +62,9 @@ namespace Au
 					_className = cn;
 				}
 				if(name != null) {
-					switch(Util.StringMisc.ParseParam3Stars(ref name, "id", "text", "accName", "wfName"/*, "label"*/)) {
+					switch(ExtString.More.ParseParam3Stars(ref name, "id", "text", "accName", "wfName"/*, "label"*/)) {
 					case -1: throw new ArgumentException("Invalid name prefix. Can be: \"***id \", \"***text \", \"***accName \", \"***wfName \"."); //, \"***label \"
-					case 1: _nameIs = _NameIs.id; _id = name.ToInt_(); break;
+					case 1: _nameIs = _NameIs.id; _id = name.ToInt(); break;
 					case 2: _nameIs = _NameIs.text; break;
 					case 3: _nameIs = _NameIs.accName; break;
 					case 4: _nameIs = _NameIs.wfName; break;
@@ -169,11 +169,11 @@ namespace Au
 						if(w.Is0) continue;
 
 						if(inList) { //else the enum function did this
-							if(!_flags.Has_(WCFlags.HiddenToo)) {
+							if(!_flags.Has(WCFlags.HiddenToo)) {
 								if(!w.LibIsVisibleIn(wParent)) continue;
 							}
 
-							if(_flags.Has_(WCFlags.DirectChild) && !wParent.Is0) {
+							if(_flags.Has(WCFlags.DirectChild) && !wParent.Is0) {
 								if(w.LibParentGWL != wParent) continue;
 							}
 						}
@@ -201,7 +201,7 @@ namespace Au
 							case _NameIs.wfName:
 								if(_wfControls == null) {
 									try {
-										_wfControls = new Misc.WinFormsControlNames(wParent.Is0 ? w : wParent);
+										_wfControls = new More.WinFormsControlNames(wParent.Is0 ? w : wParent);
 									}
 									catch(WndException) { //invalid parent window
 										return -1;
@@ -259,7 +259,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtAu.OrThrow(Wnd)"/>.
 		/// </summary>
 		/// <param name="name">
 		/// Control name.
@@ -273,7 +273,7 @@ namespace Au
 		/// - <c>"***accName "</c> - use <see cref="NameAcc"/>.
 		/// <br/>Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
 		/// - <c>"***wfName "</c> - use .NET Windows Forms Control Name property.
-		/// <br/>To get it this function uses <see cref="Misc.WinFormsControlNames"/>. It is slower and can fail because of [](xref:uac).
+		/// <br/>To get it this function uses <see cref="More.WinFormsControlNames"/>. It is slower and can fail because of [](xref:uac).
 		/// - <c>"***id "</c> like <c>"***id 15"</c> - use control id.
 		/// <br/>To get it this function uses <see cref="ControlId"/>.
 		/// <br/>The id value cannot be wildcard expression.
@@ -375,7 +375,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control by its id and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtAu.OrThrow(Wnd)"/>.
 		/// </summary>
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
@@ -388,7 +388,7 @@ namespace Au
 		public Wnd ChildById(int id, WCFlags flags = 0)
 		{
 			ThrowIfInvalid();
-			if(flags.Has_(WCFlags.DirectChild | WCFlags.HiddenToo)) return Api.GetDlgItem(this, id); //fast
+			if(flags.Has(WCFlags.DirectChild | WCFlags.HiddenToo)) return Api.GetDlgItem(this, id); //fast
 
 			var d = new _KidEnumData() { wThis = this, id = id }; //info: to avoid garbage delegates, we use _KidEnumData instead of captured variables
 			var wParent = this;
@@ -396,9 +396,9 @@ namespace Au
 			{
 				ref var x = ref *(_KidEnumData*)p;
 				if(c.ControlId == x.id) {
-					if(x.flags.Has_(WCFlags.DirectChild) && c.LibParentGWL != x.wThis) return 1;
+					if(x.flags.Has(WCFlags.DirectChild) && c.LibParentGWL != x.wThis) return 1;
 					if(c.LibIsVisibleIn(wParent)) { x.cVisible = c; return 0; }
-					if(x.flags.Has_(WCFlags.HiddenToo) && x.cHidden.Is0) x.cHidden = c;
+					if(x.flags.Has(WCFlags.HiddenToo) && x.cHidden.Is0) x.cHidden = c;
 				}
 				return 1;
 			}, &d);
@@ -432,7 +432,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a direct child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtAu.OrThrow(Wnd)"/>.
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
 		/// Can be used only when you know full name and/or class name.
@@ -674,7 +674,7 @@ namespace Au
 							return _GetAccCheckState(a);
 						}
 					}
-					catch(Exception ex) { Debug_.Print(ex); } //CONSIDER: if fails, show warning. In all Wnd property-get functions.
+					catch(Exception ex) { Dbg.Print(ex); } //CONSIDER: if fails, show warning. In all Wnd property-get functions.
 					return 0;
 				} else {
 					return (int)W.Send(BM_GETCHECK);
@@ -684,8 +684,8 @@ namespace Au
 			int _GetAccCheckState(Acc a)
 			{
 				var state = a.State;
-				if(state.Has_(AccSTATE.INDETERMINATE)) return 2;
-				if(state.Has_(AccSTATE.CHECKED)) return 1;
+				if(state.Has(AccSTATE.INDETERMINATE)) return 2;
+				if(state.Has(AccSTATE.CHECKED)) return 1;
 				return 0;
 			}
 
@@ -779,7 +779,7 @@ namespace Au
 			if((uint)(itemId - 1) >= 0xffff) throw new ArgumentOutOfRangeException();
 			ThrowIfInvalid();
 			var w = this;
-			if(ClassNameIs("#32768") && Misc.GetGUIThreadInfo(out var g, ThreadId) && !g.hwndMenuOwner.Is0) w = g.hwndMenuOwner;
+			if(ClassNameIs("#32768") && More.GetGUIThreadInfo(out var g, ThreadId) && !g.hwndMenuOwner.Is0) w = g.hwndMenuOwner;
 			w.Post(systemMenu ? Api.WM_SYSCOMMAND : Api.WM_COMMAND, itemId);
 			w.LibMinimalSleepIfOtherThread();
 		}

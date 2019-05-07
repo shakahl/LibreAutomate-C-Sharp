@@ -74,7 +74,7 @@ namespace Au
 			case System.Collections.IEnumerable e: s = string.Join("\r\n", System.Linq.Enumerable.Cast<object>(e)); break;
 			default: s = value.ToString(); break;
 			}
-			//if(s.IndexOf('\0') >= 0) s = s.Escape_(quote: true); //no
+			//if(s.IndexOf('\0') >= 0) s = s.Escape(quote: true); //no
 			return s;
 		}
 
@@ -117,7 +117,7 @@ namespace Au
 			if(value != null) {
 				using(new Util.LibStringBuilder(out var b)) {
 					string[] a = null;
-					if(format != "{s}\r\n") format.RegexFindAll_(@"(?s)(\{[s01]\})|.+?(?=(?1)|$)", 0, out a);
+					if(format != "{s}\r\n") format.RegexFindAll(@"(?s)(\{[s01]\})|.+?(?=(?1)|$)", 0, out a);
 					int i = 0;
 					foreach(T v in value) {
 						i++;

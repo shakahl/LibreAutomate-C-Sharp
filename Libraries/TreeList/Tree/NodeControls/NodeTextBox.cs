@@ -95,7 +95,7 @@ namespace Aga.Controls.Tree.NodeControls
 		void _UpdateRowHeight(TreeNodeAdv node, string sOld, string sNew)
 		{
 			if(this.TrimMultiLine || !this.MultilineEdit) return;
-			int n1 = sOld.LineCount_(true), n2 = sNew.LineCount_(true);
+			int n1 = sOld.LineCount(true), n2 = sNew.LineCount(true);
 			if(n1 == n2) return;
 			node.Height = null;
 			this.Parent.SmartFullUpdate();

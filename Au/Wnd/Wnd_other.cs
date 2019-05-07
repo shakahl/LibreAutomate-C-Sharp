@@ -137,7 +137,7 @@ namespace Au
 		/// On Windows 10 few windows have Metro style.
 		/// On Windows 7 there are no Metro style windows.
 		/// </summary>
-		/// <seealso cref="Misc.GetWindowsStoreAppId"/>
+		/// <seealso cref="More.GetWindowsStoreAppId"/>
 		public bool IsWindows8MetroStyle
 		{
 			get
@@ -154,7 +154,7 @@ namespace Au
 		/// <summary>
 		/// Returns non-zero if this window is a Windows 10 Store app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
 		/// </summary>
-		/// <seealso cref="Misc.GetWindowsStoreAppId"/>
+		/// <seealso cref="More.GetWindowsStoreAppId"/>
 		public int IsWindows10StoreApp
 		{
 			get

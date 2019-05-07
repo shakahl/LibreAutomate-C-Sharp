@@ -35,11 +35,11 @@ static class CommandLine
 		if(a.Length > 0) {
 			//Print(a);
 
-			for(int i = 0; i < a.Length; i++) if(a[i].StartsWith_('-')) a[i] = a[i].ReplaceAt_(0, 1, "/");
-			for(int i = 0; i < a.Length; i++) if(a[i].StartsWith_('/')) a[i] = a[i].ToLower_();
+			for(int i = 0; i < a.Length; i++) if(a[i].Starts('-')) a[i] = a[i].ReplaceAt(0, 1, "/");
+			for(int i = 0; i < a.Length; i++) if(a[i].Starts('/')) a[i] = a[i].Lower();
 
 			s = a[0];
-			if(s.StartsWith_('/')) {
+			if(s.Starts('/')) {
 				for(int i = 0; i < a.Length; i++) {
 					s = a[i];
 					switch(s) {
@@ -68,7 +68,7 @@ static class CommandLine
 		s_mutex = new Mutex(true, "Au.Mutex.1", out bool createdNew);
 		if(createdNew) return false;
 
-		var w = Wnd.Misc.FindMessageOnlyWindow(null, "Au.Editor.Msg");
+		var w = Wnd.More.FindMessageOnlyWindow(null, "Au.Editor.Msg");
 		if(!w.Is0) {
 			if(activateWnd) {
 				Wnd wMain = (Wnd)w.Send(Api.WM_USER);
@@ -84,7 +84,7 @@ static class CommandLine
 				break;
 			}
 			if(cmd != 0) {
-				Wnd.Misc.CopyDataStruct.SendString(w, cmd, s);
+				Wnd.More.CopyDataStruct.SendString(w, cmd, s);
 			}
 		}
 		return true;
@@ -99,9 +99,9 @@ static class CommandLine
 
 	public static void OnMainFormLoaded()
 	{
-		Wnd.Misc.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER);
-		Wnd.Misc.MyWindow.RegisterClass("Au.Editor.Msg");
-		_msgWnd = new Wnd.Misc.MyWindow(_WndProc);
+		Wnd.More.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER);
+		Wnd.More.MyWindow.RegisterClass("Au.Editor.Msg");
+		_msgWnd = new Wnd.More.MyWindow(_WndProc);
 		_msgWnd.CreateMessageOnlyWindow("Au.Editor.Msg");
 
 		if(_importWorkspace != null || _importFiles != null) {
@@ -123,7 +123,7 @@ static class CommandLine
 	static string _importWorkspace;
 	static string[] _importFiles;
 
-	static Wnd.Misc.MyWindow _msgWnd;
+	static Wnd.More.MyWindow _msgWnd;
 
 	/// <summary>
 	/// The message-only window.
@@ -160,7 +160,7 @@ static class CommandLine
 
 	static unsafe LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)
 	{
-		var c = new Wnd.Misc.CopyDataStruct(lParam);
+		var c = new Wnd.More.CopyDataStruct(lParam);
 		int action = c.DataId;
 		bool isString = action < 100;
 		string s = isString ? c.GetString() : null;
@@ -174,14 +174,14 @@ static class CommandLine
 			break;
 		case 3:
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show task dialog
-			Model.ImportFiles(s.Split_("\0"));
+			Model.ImportFiles(s.SegSplit("\0"));
 			break;
 		case 99: //run script from Au.CL.exe command line
 		case 100: //run script from script (AuTask.Run/RunWait)
 			int mode = (int)wParam; //1 - wait, 3 - wait and get AuTask.WriteResult output
 			string script; string[] args; string pipeName = null;
 			if(action == 99) {
-				var a = Au.Util.StringMisc.CommandLineToArray(s); if(a.Length == 0) return 0;
+				var a = ExtString.More.CommandLineToArray(s); if(a.Length == 0) return 0;
 				int nRemove = 0;
 				if(0 != (mode & 2)) pipeName = a[nRemove++];
 				script = a[nRemove++];

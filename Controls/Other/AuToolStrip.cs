@@ -167,7 +167,7 @@ namespace Au.Controls
 		//Then base.OnFontChanged creates parked control + drop-down etc.
 		protected override void OnFontChanged(EventArgs e)
 		{
-			//Debug_.PrintFunc();
+			//Dbg.PrintFunc();
 			if(!IsHandleCreated) return;
 			base.OnFontChanged(e);
 		}

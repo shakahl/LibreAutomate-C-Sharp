@@ -113,14 +113,14 @@ namespace Au.Controls
 		#region drag-drop
 		private void _TextIcon_DragEnter(object sender, DragEventArgs e)
 		{
-			//Debug_.PrintFunc();
+			//Dbg.PrintFunc();
 			if(e.Data.GetDataPresent(DataFormats.FileDrop, false)) e.Effect = DragDropEffects.Link;
 			else if(e.Data.GetDataPresent(DataFormats.UnicodeText, false)) e.Effect = DragDropEffects.Copy;
 		}
 
 		private void _TextIcon_DragDrop(object sender, DragEventArgs e)
 		{
-			//Debug_.PrintFunc();
+			//Dbg.PrintFunc();
 			string s = null;
 			if(e.Data.GetData(DataFormats.FileDrop, false) is string[] a && a.Length > 0) s = a[0];
 			else s = e.Data.GetData(DataFormats.UnicodeText, false) as string;
@@ -157,7 +157,7 @@ namespace Au.Controls
 		{
 			int iSel = -1;
 			var s = textHotkey.Text.Trim();
-			if(Keyb.Misc.ParseHotkeyString(s, out var hk)) {
+			if(Keyb.More.ParseHotkeyString(s, out var hk)) {
 				var x = FindUsedHotkey(hk, _x);
 				if(x != null) iSel = _hotkeys.IndexOf(x);
 			}
@@ -170,8 +170,8 @@ namespace Au.Controls
 			var s = textHotkey.Text.Trim();
 			if(Empty(s)) return;
 			bool ok = true;
-			if(!Keyb.Misc.ParseHotkeyString(s, out var mod, out var k) || mod.Has_(KMod.Win)) ok = false;
-			else if(!mod.HasAny_(KMod.Ctrl | KMod.Alt)) ok = (k >= KKey.F2 && k <= KKey.F24);
+			if(!Keyb.More.ParseHotkeyString(s, out var mod, out var k) || mod.Has(KMod.Win)) ok = false;
+			else if(!mod.HasAny(KMod.Ctrl | KMod.Alt)) ok = (k >= KKey.F2 && k <= KKey.F24);
 
 			if(!ok) {
 				e.Cancel = true;
@@ -185,7 +185,7 @@ namespace Au.Controls
 				foreach(var x in _hotkeys) {
 					if(x == xSkip) continue;
 					var s = x.Attribute_("hk");
-					if(Keyb.Misc.ParseHotkeyString(s, out var k) && k == hk) return x;
+					if(Keyb.More.ParseHotkeyString(s, out var k) && k == hk) return x;
 				}
 			}
 			return null;

@@ -495,7 +495,7 @@ namespace Au.Controls
 					x += u.width + 30;
 				}
 			}
-			catch(Exception ex) { Debug_.Print(ex.Message); }
+			catch(Exception ex) { Dbg.Print(ex.Message); }
 			finally { if(pen != default) Api.DeleteObject(Api.SelectObject(hdc, oldPen)); }
 			//Perf.NW();
 
@@ -556,7 +556,7 @@ namespace Au.Controls
 				if(from2 == from && to2 == to) {
 					s = n.textUTF8;
 				} else {
-					//Debug_.Print("need to get text");
+					//Dbg.Print("need to get text");
 					s = _GetTextRange(from2, to2); if(s == null) return;
 				}
 				textPos = from2;

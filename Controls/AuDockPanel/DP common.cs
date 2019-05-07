@@ -346,7 +346,7 @@ namespace Au.Controls
 						rect.EnsureInScreen();
 					} else if(this.ParentSplit != null) {
 						rect = this.RectangleInScreen;
-						Wnd.Misc.WindowRectFromClientRect(ref rect, WS.POPUP | WS.THICKFRAME, WS_EX.TOOLWINDOW);
+						Wnd.More.WindowRectFromClientRect(ref rect, WS.POPUP | WS.THICKFRAME, WS_EX.TOOLWINDOW);
 					} else { //new panel, empty bounds
 						var mp = Mouse.XY;
 						rect = (mp.x - 15, mp.y - 15, 300, 150);
@@ -545,10 +545,10 @@ namespace Au.Controls
 			{
 				Rectangle r = default;
 				if(s != null) {
-					r.X = s.ToInt_(0, out int i);
-					r.Y = s.ToInt_(i, out i);
-					r.Width = s.ToInt_(i, out i);
-					r.Height = s.ToInt_(i, out i);
+					r.X = s.ToInt(0, out int i);
+					r.Y = s.ToInt(i, out i);
+					r.Width = s.ToInt(i, out i);
+					r.Height = s.ToInt(i, out i);
 				}
 				return r;
 			}

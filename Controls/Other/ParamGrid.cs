@@ -191,7 +191,7 @@ namespace Au.Controls
 
 			public override void OnEditStarted(SG.CellContext c, EventArgs e)
 			{
-				//Debug_.PrintFunc();
+				//Dbg.PrintFunc();
 
 				if(c.Cell.Editor is Editors.ComboBox cb) { //read-only combo. The grid shows a ComboBox control.
 					cb.Control.DroppedDown = true;
@@ -556,7 +556,7 @@ namespace Au.Controls
 					default: { //combo
 						string[] a = null; Func<string[]> callback = null;
 						switch(value) {
-						case string s: a = s.Split_("|"); break;
+						case string s: a = s.SegSplit("|"); break;
 						case string[] sa: a = sa; break;
 						case List<string> sl: a = sl.ToArray(); break;
 						case Func<string[]> callb: callback = callb; break;
@@ -922,14 +922,14 @@ namespace Au.Controls
 			bool madeVisible = false;
 			g1:
 			int prevRow = -1;
-			foreach(var s in rows.Segments_(" -", SegFlags.NoEmpty)) {
+			foreach(var s in rows.Segments(" -", SegFlags.NoEmpty)) {
 				int row = ZFindRow(s); if(row < 0) throw new ArgumentException("invalid row " + s.ToString());
 				if(s.Offset > 0 && rows[s.Offset - 1] == '-') _ShowRange(row);
 				Rows.ShowRow(row, visible);
 				prevRow = row;
 				madeVisible |= visible;
 			}
-			if(rows.EndsWith_('-')) _ShowRange(RowsCount);
+			if(rows.Ends('-')) _ShowRange(RowsCount);
 
 			void _ShowRange(int toRow) { while(++prevRow < toRow) Rows.ShowRow(prevRow, visible); }
 

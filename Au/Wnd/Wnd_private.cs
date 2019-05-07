@@ -207,8 +207,8 @@ namespace Au
 
 			internal static Wnd CreateMessageWindowDefWndProc()
 			{
-				if(s_atomDWP == 0) s_atomDWP = Misc.MyWindow.RegisterClass(c_wndClassDWP);
-				return Misc.CreateMessageOnlyWindow(c_wndClassDWP);
+				if(s_atomDWP == 0) s_atomDWP = More.MyWindow.RegisterClass(c_wndClassDWP);
+				return More.CreateMessageOnlyWindow(c_wndClassDWP);
 			}
 			static ushort s_atomDWP;
 			const string c_wndClassDWP = "Au.DWP";

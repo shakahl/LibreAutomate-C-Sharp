@@ -187,7 +187,7 @@ partial class FilesModel
 			return true;
 		}
 		catch(SLException ex) {
-			Debug_.Print(ex);
+			Dbg.Print(ex);
 			return false;
 		}
 	}
@@ -209,7 +209,7 @@ partial class FilesModel
 			//expanded folders
 			if(DB.Get(out string s, "SELECT data FROM _misc WHERE key='expanded'") && !Empty(s)) {
 				_control.BeginUpdate();
-				foreach(var seg in s.Segments_(" ")) {
+				foreach(var seg in s.Segments(" ")) {
 					var fn = FindById(seg.Value);
 					fn?.TreeNodeAdv.Expand();
 				}
@@ -219,10 +219,10 @@ partial class FilesModel
 			//open files
 			if(DB.Get(out s, "SELECT data FROM _misc WHERE key='open'") && !Empty(s)) {
 				//format: indexOfActiveDocOrMinusOne id1 id2 ...
-				int i = -2, iActive = s.ToInt_();
+				int i = -2, iActive = s.ToInt();
 				FileNode fnActive = null;
 				//Perf.First();
-				foreach(var seg in s.Segments_(" ")) {
+				foreach(var seg in s.Segments(" ")) {
 					i++; if(i < 0) continue;
 					var fn = FindById(seg.Value); if(fn == null) continue;
 					OpenFiles.Add(fn);
@@ -233,7 +233,7 @@ partial class FilesModel
 				//Perf.NW();
 			}
 		}
-		catch(Exception ex) { Debug_.Print(ex); }
+		catch(Exception ex) { Dbg.Print(ex); }
 		finally { Save.LoadingState = false; }
 	}
 }

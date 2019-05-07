@@ -910,7 +910,7 @@ namespace Au.Types
 		//[DllImport("msvcrt.dll", EntryPoint = "_strtoui64", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern long strtoui64(byte* s, byte** endPtr = null, int radix = 0);
 
-		//This is used when working with char*. With C# strings use String_.ToInt32 etc.
+		//This is used when working with char*. With C# strings use ExtString.ToInt32 etc.
 		internal static int strtoi(char* s, char** endPtr = null, int radix = 0)
 		{
 			return (int)strtoi64(s, endPtr, radix);
@@ -922,7 +922,7 @@ namespace Au.Types
 			return (int)strtoi64(s, endPtr, radix);
 		}
 
-#if false //not used, because we have String_.ToInt32 etc, which has no overflow problems. But it supports only decimal and hex, not any radix.
+#if false //not used, because we have ExtString.ToInt32 etc, which has no overflow problems. But it supports only decimal and hex, not any radix.
 		/// <summary>
 		/// Converts part of string to int.
 		/// Returns the int value.

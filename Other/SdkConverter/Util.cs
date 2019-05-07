@@ -455,7 +455,7 @@ namespace SdkConverter
 		int _FindIdentifierInString(string s, string ident)
 		{
 			int len = ident.Length;
-			for(int i = 0; (i = s.IndexOf_(ident, i)) >= 0; i += len) {
+			for(int i = 0; (i = s.Index(ident, i)) >= 0; i += len) {
 				if(i > 0 && _IsCharIdent(s[i - 1])) continue;
 				if(i < s.Length - len && _IsCharIdent(s[i + len])) continue;
 				return i;

@@ -57,7 +57,7 @@ namespace Au
 		{
 			Bitmap R = null;
 			object o = null;
-			if(image.StartsWith_("image:") || image.StartsWith_("~:")) { //Base64-encoded image. Prefix: "image:" png, "~:" zipped bmp.
+			if(image.Starts("image:") || image.Starts("~:")) { //Base64-encoded image. Prefix: "image:" png, "~:" zipped bmp.
 				bool compressed = image[0] == '~';
 				int start = compressed ? 2 : 6, len = image.Length - start, n = (int)(len * 3L / 4);
 				var b = new byte[n];
@@ -110,14 +110,6 @@ namespace Au
 			ListIndex = 0;
 			MatchIndex = 0;
 		}
-
-		//rejected. Use OrThrow.
-		///// <summary>
-		///// If x is not null, returns x, else throws <see cref="NotFoundException"/>.
-		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(WinImage)"/>.
-		///// </summary>
-		///// <exception cref="NotFoundException">x is null.</exception>
-		//public static WinImage operator +(WinImage x) => x ?? throw new NotFoundException("Not found (WinImage).");
 
 		/// <summary>
 		/// Gets location of the found image, relative to the search area.
@@ -559,7 +551,7 @@ namespace Au
 					break;
 				default: //Screen
 					r = _area.R;
-					if(!Screen_.IsInAnyScreen(r)) r = default;
+					if(!ScreenDef.IsInAnyScreen(r)) r = default;
 					_area.HasRect = false;
 					_resultOffset.x = r.left; _resultOffset.y = r.top;
 					break;

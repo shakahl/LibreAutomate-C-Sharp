@@ -540,7 +540,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public int GetInt(int row, int column)
 		{
-			return this[row, column].ToInt_();
+			return this[row, column].ToInt();
 		}
 
 		/// <summary>
@@ -552,7 +552,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public void SetDouble(int row, int column, double value)
 		{
-			this[row, column] = value.ToString_();
+			this[row, column] = value.ToStringInvariant();
 		}
 
 		/// <summary>
@@ -563,7 +563,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public double GetDouble(int row, int column)
 		{
-			return this[row, column].ToDouble_();
+			return this[row, column].ToDouble();
 		}
 
 		//rejected: ToXml, ToHtml. Could be pasted in Excel, but need special format, difficult to make fully compatible. OpenOffice supports only HTML.

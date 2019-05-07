@@ -59,7 +59,7 @@ namespace Au.Util
 
 			flags = Api.CREATE_UNICODE_ENVIRONMENT;
 
-			if(envVar != null && !envVar.EndsWith_("\0\0")) {
+			if(envVar != null && !envVar.Ends("\0\0")) {
 				var es = Api.GetEnvironmentStrings();
 				int len1; for(var k = es; ; k++) if(k[0] == 0 && k[1] == 0) { len1 = (int)(k - es) + 2; break; }
 				int len2 = envVar.Length;

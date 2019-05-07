@@ -271,7 +271,7 @@ namespace Au.Controls
 					return _IconToBytes(s, t == ImageType.Cur, searchPath);
 				}
 			}
-			catch(Exception ex) { Debug_.Print(ex.Message + "    " + s); }
+			catch(Exception ex) { Dbg.Print(ex.Message + "    " + s); }
 			return null;
 		}
 
@@ -394,7 +394,7 @@ namespace Au.Controls
 			case ImageType.PngGifJpg:
 				path = File_.SearchPath(path, Folders.ThisAppImages); if(path == null) return null;
 				try { return "image:" + Convert.ToBase64String(File_.LoadBytes(path)); }
-				catch(Exception ex) { Debug_.Print(ex.Message); return null; }
+				catch(Exception ex) { Dbg.Print(ex.Message); return null; }
 			}
 			return BmpFileDataToString(BmpFileDataFromString(path, t, true));
 		}

@@ -72,14 +72,14 @@ namespace Au.Util
 				if(s_appResourcesName != null) {
 					s = a.FirstOrDefault(k => k == s_appResourcesName);
 				} else {
-					if(a.Length == 1 && a[0].EndsWith_(".resources")) s = a[0];
+					if(a.Length == 1 && a[0].Ends(".resources")) s = a[0];
 					else {
-						s = a.FirstOrDefault(k => k.EndsWith_(".Resources.resources")); //eg "Project.Properties.Resources.resources". Skip those like "Form1.resources".
-						if(s == null) s = a.FirstOrDefault(k => k.EndsWith_(".resources"));
+						s = a.FirstOrDefault(k => k.Ends(".Resources.resources")); //eg "Project.Properties.Resources.resources". Skip those like "Form1.resources".
+						if(s == null) s = a.FirstOrDefault(k => k.Ends(".resources"));
 					}
 				}
 				if(s == null) return null;
-				s = s.RemoveEnd_(10); //remove ".resources"
+				s = s.RemoveSuffix(10); //remove ".resources"
 				var t = asm.GetType(s);
 				if(t != null) {
 					var fl = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static; //need NonPublic because default access is internal
@@ -89,7 +89,7 @@ namespace Au.Util
 					}
 				}
 				if(_appResourceManager == null) {
-					//Debug_.Print("failed to get ResourceManager property"); //eg Au-compiled scripts don't have the type
+					//Dbg.Print("failed to get ResourceManager property"); //eg Au-compiled scripts don't have the type
 					_appResourceManager = new ResourceManager(s, asm);
 				}
 			}

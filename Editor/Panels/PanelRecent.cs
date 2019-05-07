@@ -77,7 +77,7 @@ class PanelRecent :Control, ITreeModel
 
 	public IEnumerable GetChildren(object nodeTag)
 	{
-		//Debug_.PrintFunc();
+		//Dbg.PrintFunc();
 		Debug.Assert(nodeTag == null);
 		return Tasks.Recent;
 	}

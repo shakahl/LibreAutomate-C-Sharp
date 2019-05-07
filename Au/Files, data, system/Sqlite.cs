@@ -97,10 +97,10 @@ namespace Au
 		/// </remarks>
 		public SqliteDB(string file, SLFlags flags = SLFlags.ReadWriteCreate, string sql = null)
 		{
-			bool isSpec = file != null && (file.Length == 0 || file == ":memory:" || file.StartsWith_("file:"));
+			bool isSpec = file != null && (file.Length == 0 || file == ":memory:" || file.Starts("file:"));
 			if(!isSpec) {
 				file = Path_.Normalize(file);
-				if(flags.Has_(SLFlags.SQLITE_OPEN_CREATE) && !File_.ExistsAsFile(file, true)) File_.CreateDirectoryFor(file);
+				if(flags.Has(SLFlags.SQLITE_OPEN_CREATE) && !File_.ExistsAsFile(file, true)) File_.CreateDirectoryFor(file);
 			}
 			var r = SLApi.sqlite3_open_v2(Convert_.Utf8FromString(file), ref _db, flags, null);
 			if(r != 0) {
@@ -356,7 +356,7 @@ namespace Au
 			get {
 				if(__isUtf16 == 0) {
 					var t = _RawGetText("PRAGMA encoding") ?? "";
-					__isUtf16 = (byte)(t.StartsWith_("UTF-16") ? 2 : 1);
+					__isUtf16 = (byte)(t.Starts("UTF-16") ? 2 : 1);
 				}
 				return __isUtf16 == 2;
 			}
@@ -791,7 +791,7 @@ namespace Au
 		{
 			int n = ColumnCount;
 			if(n > 0 && !Empty(name)) {
-				if(name.IsAscii_()) {
+				if(ExtString.More.IsAscii(name)) {
 					for(int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);
 						if(Util.LibCharPtr.AsciiEquals(b, name)) return i;
@@ -984,7 +984,7 @@ namespace Au.Types
 				_Append(s1); _Append(s2); if(s3 != s2) _Append(s3);
 				return b.ToString();
 
-				void _Append(string s) => b.AppendSentence(s, s?.StartsWith_("sqlite3_") ?? false); //avoid uppercase for function names
+				void _Append(string s) => b.AppendSentence(s, s?.Starts("sqlite3_") ?? false); //avoid uppercase for function names
 			}
 		}
 

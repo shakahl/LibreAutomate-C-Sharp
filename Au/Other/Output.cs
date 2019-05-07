@@ -309,7 +309,7 @@ namespace Au
 						int nn = Util.LibCharPtr.Length(b);
 						Convert_.Utf8FromString(s, b + nn, n);
 						n += nn;
-						if(s.StartsWith_("<>")) {
+						if(s.Starts("<>")) {
 							Api.memmove(b + 2, b, nn);
 							b[0] = (byte)'<'; b[1] = (byte)'>';
 						}

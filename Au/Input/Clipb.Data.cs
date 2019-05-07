@@ -302,12 +302,12 @@ namespace Au
 				var b = new StringBuilder(c_headerTemplate);
 				//find "<body>...</body>" and "<!--StartFragment-->...<!--EndFragment-->" in it
 				int isb = -1, ieb = -1, isf = -1, ief = -1; //start/end of inner body and fragment
-				if(html.RegexMatch_(@"<body\b.*?>", 0, out RXGroup body) && (ieb = html.IndexOf_("</body>", body.EndIndex)) >= 0) {
+				if(html.RegexMatch(@"<body\b.*?>", 0, out RXGroup body) && (ieb = html.Index("</body>", body.EndIndex)) >= 0) {
 					isb = body.EndIndex;
-					isf = html.IndexOf_(c_startFragment, isb, ieb - isb, true);
+					isf = html.Index(c_startFragment, isb, ieb - isb, true);
 					if(isf >= 0) {
 						isf += c_startFragment.Length;
-						ief = html.IndexOf_(c_endFragment, isf, ieb - isf, true);
+						ief = html.Index(c_endFragment, isf, ieb - isf, true);
 					}
 				}
 				//Print($"{isb} {ieb}  {isf} {ief}");
@@ -326,7 +326,7 @@ namespace Au
 						isb = isf; ieb = ief; //reuse these vars to calc UTF8 lengths
 					}
 					//correct isf/ief if html part lenghts are different in UTF8
-					if(!html.IsAscii_()) {
+					if(!ExtString.More.IsAscii(html)) {
 						fixed (char* p = html) {
 							int lenDiff1 = Encoding.UTF8.GetByteCount(p, isb) - isb;
 							int lenDiff2 = Encoding.UTF8.GetByteCount(p + isb, ieb - isb) - (ieb - isb);
@@ -519,15 +519,15 @@ EndFragment:0000000000
 				if(b == null) return null;
 				string s = Encoding.UTF8.GetString(b);
 
-				int ish = s.IndexOf_("StartHTML:", true);
-				int ieh = s.IndexOf_("EndHTML:", true);
-				int isf = s.IndexOf_("StartFragment:", true);
-				int ief = s.IndexOf_("EndFragment:", true);
+				int ish = s.Index("StartHTML:", true);
+				int ieh = s.Index("EndHTML:", true);
+				int isf = s.Index("StartFragment:", true);
+				int ief = s.Index("EndFragment:", true);
 				if(ish < 0 || ieh < 0 || isf < 0 || ief < 0) return null;
-				isf = s.ToInt_(isf + 14); if(isf < 0) return null;
-				ief = s.ToInt_(ief + 12); if(ief < isf) return null;
-				ish = s.ToInt_(ish + 10); if(ish < 0) ish = isf; else if(ish > isf) return null;
-				ieh = s.ToInt_(ieh + 8); if(ieh < 0) ieh = ief; else if(ieh < ief) return null;
+				isf = s.ToInt(isf + 14); if(isf < 0) return null;
+				ief = s.ToInt(ief + 12); if(ief < isf) return null;
+				ish = s.ToInt(ish + 10); if(ish < 0) ish = isf; else if(ish > isf) return null;
+				ieh = s.ToInt(ieh + 8); if(ieh < 0) ieh = ief; else if(ieh < ief) return null;
 
 				if(s.Length != b.Length) {
 					if(ieh > b.Length) return null;
@@ -538,8 +538,8 @@ EndFragment:0000000000
 				} else if(ieh > s.Length) return null;
 				//Print(ish, ieh, isf, ief);
 
-				int isu = s.IndexOf_("SourceURL:", true), ieu;
-				if(isu >= 0 && (ieu = s.IndexOfAny(String_.Lib.lineSep, isu += 10)) >= 0) sourceURL = s.Substring(isu, ieu - isu);
+				int isu = s.Index("SourceURL:", true), ieu;
+				if(isu >= 0 && (ieu = s.IndexOfAny(ExtString.Lib.lineSep, isu += 10)) >= 0) sourceURL = s.Substring(isu, ieu - isu);
 
 				fragmentStart = isf - ish; fragmentLength = ief - isf;
 				return s.Substring(ish, ieh - ish);

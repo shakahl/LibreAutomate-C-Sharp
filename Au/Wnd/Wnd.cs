@@ -29,7 +29,7 @@ namespace Au
 	/// 
 	/// There are two main types of windows - top-level windows and controls. Controls are child windows of top-level windows.
 	/// 
-	/// More functions are in the nested classes - <see cref="Misc"/>, <see cref="Misc.Desktop"/> etc. They are used mostly in programming, rarely in automation scripts.
+	/// More functions are in the nested classes - <see cref="More"/>, <see cref="More.Desktop"/> etc. They are used mostly in programming, rarely in automation scripts.
 	/// 
 	/// What happens when a Wnd function fails:
 	/// - Functions that get window properties don't throw exceptions. They return false/0/null/empty. Most of them support <see cref="WinError"/>, and it is mentioned in function documentation.
@@ -126,15 +126,6 @@ namespace Au
 		public static bool operator !=(Wnd? w1, Wnd w2) => true;
 #pragma warning restore 1591 //XML doc
 
-		//rejected. Use OrThrow.
-		///// <summary>
-		///// If x is not default(Wnd), returns x, else throws <see cref="NotFoundException"/>.
-		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Wnd)"/>.
-		///// </summary>
-		///// <exception cref="NotFoundException">x is default(Wnd).</exception>
-		///// <example><see cref="ExtensionMethods.OrThrow(Wnd)"/></example>
-		//public static Wnd operator +(Wnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (Wnd).");
-
 		/// <summary>
 		/// Returns true if w != null and w.Value == this.
 		/// </summary>
@@ -184,7 +175,7 @@ namespace Au
 			var sh = Handle.ToString();
 			if(cn == null) return sh + " <invalid handle>";
 			string s = Name;
-			if(s != null) s = s.Escape_(limit: 250);
+			if(s != null) s = s.Escape(limit: 250);
 			return $"{sh}  {cn}  \"{s}\"  {ProgramName}  {Rect.ToString()}";
 		}
 
@@ -284,14 +275,14 @@ namespace Au
 		/// Calls API <msdn>PostMessage</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="WinError"/>.
 		/// </summary>
-		/// <seealso cref="Misc.PostThreadMessage(int, LPARAM, LPARAM)"/>
+		/// <seealso cref="More.PostThreadMessage(int, LPARAM, LPARAM)"/>
 		public bool Post(int message, LPARAM wParam = default, LPARAM lParam = default)
 		{
 			Debug.Assert(!Is0);
 			return Api.PostMessage(this, message, wParam, lParam);
 		}
 
-		public static partial class Misc
+		public static partial class More
 		{
 			/// <summary>
 			/// Posts a message to the message queue of this thread.
@@ -717,7 +708,7 @@ namespace Au
 
 				if(!IsOfThisThread) {
 					if(wasMinimized) ActivateLL(); //fix Windows bug: if window of another thread, deactivates currently active window and does not activate this window
-					else if(state == Api.SW_MINIMIZE) Misc.WaitForAnActiveWindow();
+					else if(state == Api.SW_MINIMIZE) More.WaitForAnActiveWindow();
 				}
 			}
 
@@ -800,7 +791,7 @@ namespace Au
 			/// </summary>
 			static void _EnableActivate_SendKey(bool debugOut)
 			{
-				if(debugOut) Debug_.Print("EnableActivate: need key");
+				if(debugOut) Dbg.Print("EnableActivate: need key");
 
 				var x = new Api.INPUTK(0, 128, Api.KEYEVENTF_KEYUP);
 				Api.SendInput(&x);
@@ -813,9 +804,9 @@ namespace Au
 			/// </summary>
 			static void _EnableActivate_MinRes()
 			{
-				Debug_.Print("EnableActivate: need min/res");
+				Dbg.Print("EnableActivate: need min/res");
 
-				Wnd t = Misc.CreateWindow("#32770", null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WS_EX.TOOLWINDOW);
+				Wnd t = More.CreateWindow("#32770", null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WS_EX.TOOLWINDOW);
 				//info: When restoring, the window must be visible, or may not work.
 				try {
 					var wp = new Api.WINDOWPLACEMENT { showCmd = Api.SW_RESTORE };
@@ -864,7 +855,7 @@ namespace Au
 					//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
 					if(w == GetWnd.Root) return Active.Is0;
 					//CONSIDER: if GetForegroundWindow is not w, send WM_NULL. Info: https://blogs.msdn.microsoft.com/oldnewthing/20161118-00/?p=94745
-					return Misc.WaitForAnActiveWindow();
+					return More.WaitForAnActiveWindow();
 				}
 				//catch(WndException) { return false; }
 				catch { return false; }
@@ -904,8 +895,8 @@ namespace Au
 		/// <exception cref="WndException"/>
 		internal bool LibActivate(Lib.ActivateFlags flags)
 		{
-			if(!flags.Has_(Lib.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
-			if(flags.Has_(Lib.ActivateFlags.NoGetWindow)) Debug.Assert(!IsChild);
+			if(!flags.Has(Lib.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
+			if(flags.Has(Lib.ActivateFlags.NoGetWindow)) Debug.Assert(!IsChild);
 			else {
 				var w = Window;
 				if(w != this) {
@@ -1029,7 +1020,7 @@ namespace Au
 
 		/// <summary>
 		/// Low-level version of <see cref="Activate()"/>.
-		/// Just calls <see cref="Misc.EnableActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
+		/// Just calls <see cref="More.EnableActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
 		/// No exceptions, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
 		/// Returns false if fails.
 		/// </summary>
@@ -1038,7 +1029,7 @@ namespace Au
 			return Lib.ActivateLL(this);
 		}
 
-		public static partial class Misc
+		public static partial class More
 		{
 			/// <summary>
 			/// Waits while there is no active window.
@@ -1159,7 +1150,7 @@ namespace Au
 		/// <seealso cref="IsFocused"/>
 		public static Wnd Focused {
 			get {
-				Misc.GetGUIThreadInfo(out var g);
+				More.GetGUIThreadInfo(out var g);
 				return g.hwndFocus;
 			}
 		}
@@ -1732,7 +1723,7 @@ namespace Au
 		/// Moves and resizes.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool, Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP flags.
+		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool, ScreenDef)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP flags.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOZORDER|NOOWNERZORDER|NOACTIVATE|swpFlagsToAdd. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="WinError"/>.
 		/// 
@@ -1748,7 +1739,7 @@ namespace Au
 		/// Moves.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Move(Coord, Coord, bool, Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// See also <see cref="Move(Coord, Coord, bool, ScreenDef)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOSIZE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="WinError"/>.
 		/// 
@@ -1764,7 +1755,7 @@ namespace Au
 		/// Resizes.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Resize(Coord, Coord, bool, Screen_)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// See also <see cref="Resize(Coord, Coord, bool, ScreenDef)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOMOVE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="WinError"/>.
 		/// </remarks>
@@ -1789,7 +1780,7 @@ namespace Au
 		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int, int, int, Native.SWP)"/>.
 		/// </remarks>
 		/// <exception cref="WndException"/>
-		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, Screen_ screen = default)
+		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, ScreenDef screen = default)
 		{
 			ThrowIfInvalid();
 
@@ -1839,7 +1830,7 @@ namespace Au
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int)"/>.
 		/// </remarks>
-		public void Move(Coord x, Coord y, bool workArea = false, Screen_ screen = default)
+		public void Move(Coord x, Coord y, bool workArea = false, ScreenDef screen = default)
 		{
 			Move(x, y, default, default, workArea, screen);
 		}
@@ -1856,7 +1847,7 @@ namespace Au
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// With windows of current thread usually it's better to use <see cref="ResizeLL(int, int)"/>.
 		/// </remarks>
-		public void Resize(Coord width, Coord height, bool workArea = false, Screen_ screen = default)
+		public void Resize(Coord width, Coord height, bool workArea = false, ScreenDef screen = default)
 		{
 			Move(default, default, width, height, workArea, screen);
 		}
@@ -1872,7 +1863,7 @@ namespace Au
 			/// </summary>
 			internal static void MoveInScreen(bool bEnsureMethod,
 			Coord left, Coord top, bool useWindow, Wnd w, ref RECT r,
-			Screen_ screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default)
+			ScreenDef screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default)
 			{
 				RECT rs;
 				System.Windows.Forms.Screen scr;
@@ -1882,7 +1873,7 @@ namespace Au
 					scr = null;
 				} else {
 					if(!screen.IsNull) scr = screen.GetScreen();
-					else if(useWindow) scr = Screen_.ScreenFromWindow(w);
+					else if(useWindow) scr = ScreenDef.ScreenFromWindow(w);
 					else if(bEnsureMethod) scr = System.Windows.Forms.Screen.FromRectangle(r);
 					else scr = System.Windows.Forms.Screen.PrimaryScreen;
 
@@ -1918,7 +1909,7 @@ namespace Au
 
 				if(useWindow) { //move window
 					w.LibGetWindowPlacement(out var wp, "*move*");
-					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(Screen_.ScreenFromWindow(w));
+					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(ScreenDef.ScreenFromWindow(w));
 					if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;
 
 					Wnd hto = default; bool visible = w.IsVisible;
@@ -1957,7 +1948,7 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="screen">Move to this screen (see <see cref="Screen_"/>). If default, uses screen of this window.</param>
+		/// <param name="screen">Move to this screen (see <see cref="ScreenDef"/>). If default, uses screen of this window.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of window is not in screen, move and/or resize it so that entire window would be in screen. Default true.</param>
 		/// <exception cref="WndException"/>
@@ -1965,7 +1956,7 @@ namespace Au
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately, except when moving maximized to another screen.
 		/// </remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
-		public void MoveInScreen(Coord x, Coord y, Screen_ screen = default, bool workArea = true, bool ensureInScreen = true)
+		public void MoveInScreen(Coord x, Coord y, ScreenDef screen = default, bool workArea = true, bool ensureInScreen = true)
 		{
 			RECT r = default;
 			Lib.MoveInScreen(false, x, y, true, this, ref r, screen, workArea, ensureInScreen);
@@ -1974,14 +1965,14 @@ namespace Au
 		/// <summary>
 		/// Moves this window if need, to ensure that entire window is in screen.
 		/// </summary>
-		/// <param name="screen">Move to this screen (see <see cref="Screen_"/>). If default, uses screen of this window.</param>
+		/// <param name="screen">Move to this screen (see <see cref="ScreenDef"/>). If default, uses screen of this window.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
 		/// </remarks>
 		/// <seealso cref="RECT.EnsureInScreen"/>
-		public void EnsureInScreen(Screen_ screen = default, bool workArea = true)
+		public void EnsureInScreen(ScreenDef screen = default, bool workArea = true)
 		{
 			RECT r = default;
 			Lib.MoveInScreen(true, default, default, true, this, ref r, screen, workArea, true);
@@ -1990,11 +1981,11 @@ namespace Au
 		/// <summary>
 		/// Moves this window to the center of the screen.
 		/// </summary>
-		/// <param name="screen">Move to this screen (see <see cref="Screen_"/>). If default, uses screen of this window.</param>
+		/// <param name="screen">Move to this screen (see <see cref="ScreenDef"/>). If default, uses screen of this window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>Calls <c>ShowNotMinMax(true)</c> and <c>MoveInScreen(default, default, screen, true)</c>.</remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
-		public void MoveToScreenCenter(Screen_ screen = default)
+		public void MoveToScreenCenter(ScreenDef screen = default)
 		{
 			ShowNotMinMax(true);
 			MoveInScreen(default, default, screen, true);
@@ -2003,10 +1994,10 @@ namespace Au
 		/// <summary>
 		/// Gets <see cref="System.Windows.Forms.Screen"/> object of the screen that contains this window (the biggest part of it) or is nearest to it.
 		/// If this window handle is default(Wnd) or invalid, gets the primary screen.
-		/// Calls <see cref="Screen_.ScreenFromWindow"/>.
+		/// Calls <see cref="ScreenDef.ScreenFromWindow"/>.
 		/// </summary>
 		public System.Windows.Forms.Screen Screen {
-			get => Screen_.ScreenFromWindow(this);
+			get => ScreenDef.ScreenFromWindow(this);
 		}
 
 		#endregion
@@ -2409,10 +2400,10 @@ namespace Au
 		/// Returns true if the window is a ghost window that the system creates over a hung (not responding) window to allow the user to minimally interact with it.
 		/// </summary>
 		public bool IsHungGhost {
-			get => IsHung && ClassNameIs("Ghost") && ProgramName.Equals_("DWM.exe", true);
+			get => IsHung && ClassNameIs("Ghost") && ProgramName.Eqi("DWM.exe");
 			//Class is "Ghost", exe is "DWM" (even if no Aero), text sometimes ends with "(Not Responding)".
 			//IsHungWindow returns true for ghost window, although it is not actually hung. It is the fastest.
-			//TODO: test undocumented API HungWindowFromGhostWindow
+			//TEST: undocumented API HungWindowFromGhostWindow
 		}
 
 		/// <summary>
@@ -2424,7 +2415,7 @@ namespace Au
 		internal void LibUacCheckAndThrow(string prefix = null)
 		{
 			if(!Is0 && IsUacAccessDenied) {
-				if(prefix == null) prefix = "Failed. The"; else if(prefix.EndsWith_('.')) prefix += " The"; //this is to support prefix used by Mouse.Move: "The active"
+				if(prefix == null) prefix = "Failed. The"; else if(prefix.Ends('.')) prefix += " The"; //this is to support prefix used by Mouse.Move: "The active"
 				throw new AuException(Api.ERROR_ACCESS_DENIED, prefix + " window's process has a higher UAC integrity level (admin or uiAccess) than this process.");
 			}
 		}
@@ -2487,18 +2478,18 @@ namespace Au
 		/// Returns true if the class name of this window matches cn. Else returns false.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
-		/// <param name="cn">Class name. Case-insensitive wildcard. See <see cref="String_.Like_(string, string, bool)"/>. Cannot be null.</param>
-		public bool ClassNameIs(string cn) => ClassName.Like_(cn, true);
+		/// <param name="cn">Class name. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. Cannot be null.</param>
+		public bool ClassNameIs(string cn) => ClassName.Like(cn, true);
 
 		/// <summary>
 		/// If the class name of this window matches one of strings in <i>classNames</i>, returns 1-based index of the string. Else returns 0.
 		/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
-		/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="String_.Like_(string, string, bool)"/>. The array and strings cannot be null.</param>
+		/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
 		public int ClassNameIs(params string[] classNames)
 		{
 			string s = ClassName; if(s == null) return 0;
-			return s.Like_(true, classNames);
+			return s.Like(true, classNames);
 		}
 
 		/// <summary>
@@ -2552,7 +2543,7 @@ namespace Au
 		/// <param name="removeUnderlineAmpersand">
 		/// Remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// Removes only if this is a control (has style WS.CHILD).
-		/// Calls <see cref="Util.StringMisc.RemoveUnderlineAmpersand"/>.
+		/// Calls <see cref="ExtString.More.RemoveUnderlineAmpersand"/>.
 		/// </param>
 		/// <seealso cref="SetText"/>
 		/// <seealso cref="NameAcc"/>
@@ -2569,7 +2560,7 @@ namespace Au
 				&& !Empty(R)
 				//&& R.IndexOf('&') >= 0 //slower than HasStyle if the string is longer than 20
 				&& HasStyle(WS.CHILD)
-				) R = Util.StringMisc.RemoveUnderlineAmpersand(R);
+				) R = ExtString.More.RemoveUnderlineAmpersand(R);
 
 			return R;
 		}
@@ -2684,10 +2675,10 @@ namespace Au
 		/// <remarks>
 		/// <note>Use this with controls of other processes. Don't use with your controls, when you have a Control object.</note>
 		/// 
-		/// <note>Slow when getting names of multiple controls in a window. Instead create a <see cref="Misc.WinFormsControlNames"/> instance and call its <see cref="Misc.WinFormsControlNames.GetControlName"/> method for each control.</note>
+		/// <note>Slow when getting names of multiple controls in a window. Instead create a <see cref="More.WinFormsControlNames"/> instance and call its <see cref="More.WinFormsControlNames.GetControlName"/> method for each control.</note>
 		/// </remarks>
-		/// <seealso cref="Misc.WinFormsControlNames.IsWinFormsControl"/>
-		public string NameWinForms => Misc.WinFormsControlNames.GetSingleControlName(this);
+		/// <seealso cref="More.WinFormsControlNames.IsWinFormsControl"/>
+		public string NameWinForms => More.WinFormsControlNames.GetSingleControlName(this);
 
 		/// <summary>
 		/// Gets filename of process executable file, like "notepad.exe".
@@ -2704,11 +2695,11 @@ namespace Au
 		/// If the program name of this window matches one of strings in <i>programNames</i>, returns 1-based index of the string. Else returns 0.
 		/// Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
-		/// <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="String_.Like_(string, string, bool)"/>. The array and strings cannot be null.</param>
+		/// <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
 		public int ProgramNameIs(params string[] programNames)
 		{
 			string s = ProgramName; if(s == null) return 0;
-			return s.Like_(true, programNames);
+			return s.Like(true, programNames);
 		}
 
 		/// <summary>
@@ -2814,7 +2805,7 @@ namespace Au
 				}
 			}
 			LibMinimalSleepNoCheckThread();
-			Misc.WaitForAnActiveWindow();
+			More.WaitForAnActiveWindow();
 
 			return !IsAlive;
 		}

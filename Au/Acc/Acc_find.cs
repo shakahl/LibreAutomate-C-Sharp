@@ -118,7 +118,7 @@ namespace Au
 							return true;
 						}
 					}
-					catch(AuException ex) when(!c.IsAlive) { Debug_.Print(ex.Message); } //don't throw WndException/AuException if the window or a control is destroyed while searching, but throw AuException if eg access denied
+					catch(AuException ex) when(!c.IsAlive) { Dbg.Print(ex.Message); } //don't throw WndException/AuException if the window or a control is destroyed while searching, but throw AuException if eg access denied
 				}
 				return false;
 			}
@@ -199,7 +199,7 @@ namespace Au
 				if(a == null) throw new ArgumentNullException();
 				a.LibThrowIfDisposed();
 				if(a.SimpleElementId != 0) throw new ArgumentException("SimpleElementId is not 0.");
-				if(_flags.HasAny_(AFFlags.UIA | AFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea when searching in Acc.");
+				if(_flags.HasAny(AFFlags.UIA | AFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea when searching in Acc.");
 
 				Cpp.Cpp_Acc aParent = a;
 				var R = _Find(default, &aParent, secondsTimeout, isWaitFunc);
@@ -209,16 +209,16 @@ namespace Au
 
 			bool _Find(Wnd w, Cpp.Cpp_Acc* aParent, double secondsTimeout, bool isWaitFunc)
 			{
-				if(_flags.Has_(AFFlags.UIA | AFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea together.");
+				if(_flags.Has(AFFlags.UIA | AFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea together.");
 
 				_ClearResult();
 
 				AFFlags flags = _flags;
 				if(aParent != null) {
-					if(!aParent->misc.flags.Has_(AccMiscFlags.InProc)) flags |= AFFlags.NotInProc;
+					if(!aParent->misc.flags.Has(AccMiscFlags.InProc)) flags |= AFFlags.NotInProc;
 				}
 
-				bool inProc = !flags.Has_(AFFlags.NotInProc);
+				bool inProc = !flags.Has(AFFlags.NotInProc);
 
 				if(!isWaitFunc) {
 					Debug.Assert(secondsTimeout == 0.0);
@@ -287,7 +287,7 @@ namespace Au
 						break;
 					default:
 						Debug.Assert(!Cpp.IsCppError((int)hr));
-						if(hr == (Cpp.EError)Api.RPC_E_SERVER_CANTMARSHAL_DATA && !_flags.Has_(AFFlags.NotInProc))
+						if(hr == (Cpp.EError)Api.RPC_E_SERVER_CANTMARSHAL_DATA && !_flags.Has(AFFlags.NotInProc))
 							throw new AuException((int)hr, "For this object need flag NotInProc");
 						throw new AuException((int)hr);
 					}

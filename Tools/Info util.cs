@@ -45,8 +45,8 @@ namespace Au.Tools
 		public void SetTextWithWildexInfo(string text)
 		{
 			string wild = c_infoWildex;
-			if(text.EndsWith_('$')) {
-				text = text.RemoveEnd_(1);
+			if(text.Ends('$')) {
+				text = text.RemoveSuffix(1);
 				wild = wild.Substring(10);
 			}
 			_SetInfoText(text + wild);

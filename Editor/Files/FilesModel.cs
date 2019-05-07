@@ -86,7 +86,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			SettingsFile = WorkspaceDirectory + @"\settings.xml";
 			try {
 				if(!File_.ExistsAsFile(SettingsFile)) File_.SaveText(SettingsFile, "<settings/>");
-				SettingsXml = XElement_.Load(SettingsFile);
+				SettingsXml = ExtXml.LoadElement(SettingsFile);
 			}
 			catch(Exception ex) {
 				Print($"Failed to open file '{SettingsFile}'. Will not load/save workspace settings: startup scripts, etc.\r\n\t{ex.ToStringWithoutStack_()}");
@@ -199,11 +199,11 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public FileNode Find(string name, bool? folder)
 	{
 		if(Empty(name)) return null;
-		if(name[0] == '<') return FindById(name.ToLong_(1));
+		if(name[0] == '<') return FindById(name.ToInt64(1));
 		var f = Root.FindDescendant(name, folder);
-		if(f == null && folder == false && !name.EndsWith_(".cs", true)) {
+		if(f == null && folder == false && !name.Ends(".cs", true)) {
 			f = Root.FindDescendant(name + ".cs", folder);
-			Debug_.PrintIf(f != null, "name without .cs");
+			Dbg.PrintIf(f != null, "name without .cs");
 		}
 		return f;
 	}
@@ -233,7 +233,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 				for(uint u = 1; u < uint.MaxValue; u++) if(!_idMap.ContainsKey(u)) { MaxId = u - 1; break; } //fast
 				goto g1;
 			} else if(_idMap.ContainsKey(id)) { //damaged XML file, or maybe a bug?
-				Debug_.Print("id already exists:" + id);
+				Dbg.Print("id already exists:" + id);
 				MaxId = _idMap.Keys.Max();
 				id = 0;
 				goto g1;
@@ -266,10 +266,10 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		uint idf = (uint)id;
 		if(idf == 0) return null;
 		if(_idMap.TryGetValue(idf, out var f)) {
-			Debug_.PrintIf(f == null, "deleted: " + idf);
+			Dbg.PrintIf(f == null, "deleted: " + idf);
 			return f;
 		}
-		Debug_.Print("id not found: " + idf);
+		Dbg.Print("id not found: " + idf);
 		return null;
 	}
 
@@ -277,7 +277,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// Finds file or folder by its <see cref="FileNode.IdString"/>.
 	/// Note: it must not be as returned by <see cref="FileNode.IdStringWithWorkspace"/>.
 	/// </summary>
-	public FileNode FindById(string id) => FindById(id.ToLong_());
+	public FileNode FindById(string id) => FindById(id.ToInt64());
 
 	/// <summary>
 	/// Finds file or folder by its file path (<see cref="FileNode.FilePath"/>).
@@ -286,9 +286,9 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public FileNode FindByFilePath(string path)
 	{
 		var d = FilesDirectory;
-		if(path.Length > d.Length && path.StartsWith_(d, true) && path[d.Length] == '\\') //is in workspace folder
+		if(path.Length > d.Length && path.Starts(d, true) && path[d.Length] == '\\') //is in workspace folder
 			return Root.FindDescendant(path.Substring(d.Length), null);
-		foreach(var f in Root.Descendants()) if(f.IsLink && path.Equals_(f.LinkTarget, true)) return f;
+		foreach(var f in Root.Descendants()) if(f.IsLink && path.Eqi(f.LinkTarget)) return f;
 		return null;
 	}
 
@@ -625,7 +625,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 
 		foreach(var k in e) {
 			if(_myClipboard.Contains(k)) _myClipboard.Clear();
-			try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch(SLException ex) { Debug_.Print(ex); }
+			try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch(SLException ex) { Dbg.Print(ex); }
 			Au.Compiler.Compiler.OnFileDeleted(this, k);
 			_idMap[k.Id] = null;
 			k.IsDeleted = true;
@@ -875,14 +875,14 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		bool fromWorkspaceDir = false, dirsDropped = false;
 		for(int i = 0; i < a.Length; i++) {
 			var s = a[i] = Path_.Normalize(a[i]);
-			if(s.IndexOf_(@"\$RECYCLE.BIN\", true) > 0) {
+			if(s.Index(@"\$RECYCLE.BIN\", true) > 0) {
 				AuDialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
 					icon: DIcon.Info, owner: _control, onLinkClick: e => Shell.TryRun(e.LinkHref));
 				return;
 			}
 			var fd = FilesDirectory;
 			if(!fromWorkspaceDir) {
-				if(s.StartsWith_(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromWorkspaceDir = true;
+				if(s.Starts(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromWorkspaceDir = true;
 				else if(!dirsDropped) dirsDropped = File_.ExistsAsDirectory(s);
 			}
 		}
@@ -1030,6 +1030,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		_watcher.Deleted += _watcher_Deleted;
 		_watcher.Renamed += _watcher_Renamed;
 		//_watcher.EnableRaisingEvents = true; //FUTURE
+		//TEST: System.Runtime.Caching.MemoryCache
 	}
 
 	void _UninitWatcher()
@@ -1102,8 +1103,8 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			int delay = 10;
 			if(x.ColumnCount > 1) {
 				var sd = row[1];
-				delay = sd.ToInt_(0, out int end);
-				if(end > 0 && !sd.EndsWith_("ms", true)) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
+				delay = sd.ToInt(0, out int end);
+				if(end > 0 && !sd.Ends("ms", true)) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
 				if(delay < 10) delay = 10;
 			}
 			Timer_.After(delay, () => {
@@ -1129,7 +1130,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	{
 		string xmlFile = s + @"\files.xml";
 		if(File_.ExistsAsFile(xmlFile) && File_.ExistsAsDirectory(s + @"\files")) {
-			try { return XElement_.Load(xmlFile).Name == "files"; } catch { }
+			try { return ExtXml.LoadElement(xmlFile).Name == "files"; } catch { }
 		}
 		return false;
 	}

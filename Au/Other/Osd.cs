@@ -31,9 +31,9 @@ namespace Au
 		///
 		public OsdWindow()
 		{
-			_w = new Wnd.Misc.MyWindow(WndProc);
+			_w = new Wnd.More.MyWindow(WndProc);
 		}
-		Wnd.Misc.MyWindow _w; //TODO: _wClass. And Wnd _w.
+		Wnd.More.MyWindow _w; //TODO: _wClass. And Wnd _w.
 
 		/// <summary>Destroys the OSD window.</summary>
 		protected virtual void Dispose(bool disposing)
@@ -183,7 +183,7 @@ namespace Au
 			if((s_isWinClassRegistered & regMask) == 0) {
 				var ce = new MWWndClassEx() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, hbrBackground = default(IntPtr) };
 				if(Shadow) ce.style |= Api.CS_DROPSHADOW;
-				Wnd.Misc.MyWindow.RegisterClass(cn, ce);
+				Wnd.More.MyWindow.RegisterClass(cn, ce);
 				s_isWinClassRegistered |= regMask;
 			}
 
@@ -611,7 +611,7 @@ namespace Au
 			if(!_rectIsSet) base.Rect = Measure();
 
 			int t = SecondsTimeout;
-			if(t == 0) t = Math.Min(Text.Length_(), 1000) / 10 + 3; //calc time from text length
+			if(t == 0) t = Math.Min(Text.Lenn(), 1000) / 10 + 3; //calc time from text length
 			base.Show();
 			if(sync) {
 				if(t < 0) t = 0; else t = -t;
@@ -845,7 +845,7 @@ namespace Au
 		/// Each thread has its own instance of this property.
 		/// </summary>
 		[field: ThreadStatic]
-		public static Screen_ DefaultScreen { get; set; }
+		public static ScreenDef DefaultScreen { get; set; }
 	}
 }
 

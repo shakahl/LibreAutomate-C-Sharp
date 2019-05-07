@@ -73,8 +73,8 @@
     <Compile Include="Acc\Acc_types.cs" />
     <Compile Include="Acc\Acc_find.cs" />
     <Compile Include="Acc\Acc.cs" />
-    <Compile Include="Common\ExtForms.cs" />
-    <Compile Include="Common\ExtXml.cs" />
+    <Compile Include="Ext\ExtForms.cs" />
+    <Compile Include="Ext\ExtXml.cs" />
     <Compile Include="Files, data, system\Uac.cs" />
     <Compile Include="Files, data, system\Process_.Memory.cs" />
     <Compile Include="Files, data, system\Sqlite.cs" />
@@ -104,7 +104,7 @@
     <Compile Include="Common\Opt.cs" />
     <Compile Include="Properties\GlobalSuppressions.cs" />
     <Compile Include="Other\OutputServer.cs" />
-    <Compile Include="Other\Screen_.cs" />
+    <Compile Include="Other\ScreenDef.cs" />
     <Compile Include="Other\WinImage^etc.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -129,12 +129,12 @@
     <Compile Include="Util\small\LibSerializer.cs" />
     <Compile Include="Util\small\_.cs" />
     <Compile Include="Util\small\ModuleHandle_.cs" />
-    <Compile Include="Util\StringMisc.cs" />
+    <Compile Include="String\ExtString.More.cs" />
     <Compile Include="Util\image, GDI, etc.cs" />
     <Compile Include="Util\hooks.cs" />
     <Compile Include="Util\InterDomainVariables.cs" />
     <Compile Include="Common\Param types.cs" />
-    <Compile Include="Files, data, system\File_.Misc.cs" />
+    <Compile Include="Files, data, system\File_.More.cs" />
     <Compile Include="Files, data, system\Shell.Pidl.cs" />
     <Compile Include="Files, data, system\Shell.Shortcut.cs" />
     <Compile Include="Files, data, system\Path_.cs" />
@@ -149,11 +149,11 @@
     <Compile Include="Dialog, menu, toolbar\AuToolbar.cs" />
     <Compile Include="Dialog, menu, toolbar\AuMenu.cs" />
     <Compile Include="Input\Mouse.cs" />
-    <Compile Include="Common\ExtensionMethods.cs" />
+    <Compile Include="Ext\ExtOther.cs" />
     <Compile Include="Common\NoClass.cs" />
     <Compile Include="Other\Char_.cs" />
     <Compile Include="Other\Convert_.cs" />
-    <Compile Include="Other\Debug_.cs" />
+    <Compile Include="Other\Dbg.cs" />
     <Compile Include="Other\Output.cs" />
     <Compile Include="Files, data, system\Process_.cs" />
     <Compile Include="Util\CharPtr.cs" />
@@ -169,8 +169,6 @@
     </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Au.snk" />
-    <None Include="String\excluded\string classes.cs" />
-    <None Include="String\excluded\String_ex.cs" />
     <Compile Include="Time\Time.cs" />
     <Compile Include="Time\WaitFor.cs" />
     <Compile Include="Util\ArrayBuilder.cs" />
@@ -196,7 +194,7 @@
     <Compile Include="Files, data, system\Icon_.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tasks\AuTask.cs" />
-    <Compile Include="String\String_.cs" />
+    <Compile Include="String\ExtString.cs" />
     <Compile Include="Time\Perf.cs" />
     <Compile Include="Api\Api_const.cs" />
     <EmbeddedResource Include="Properties\Au.manifest" />

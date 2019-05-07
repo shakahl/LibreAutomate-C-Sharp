@@ -28,10 +28,10 @@ namespace Au
 	{
 		static AuToolbar()
 		{
-			Wnd.Misc.MyWindow.RegisterClass("AuToolbar");
+			Wnd.More.MyWindow.RegisterClass("AuToolbar");
 		}
 
-		Wnd.Misc.MyWindow _wClass;
+		Wnd.More.MyWindow _wClass;
 		Wnd _w;
 		ToolStrip_ _ts;
 
@@ -110,7 +110,7 @@ namespace Au
 
 		void _Item_GotFocus(object sender, EventArgs e)
 		{
-			//Debug_.PrintFunc();
+			//Dbg.PrintFunc();
 			//_w.ActivateLL();
 			Api.SetForegroundWindow(_w); //does not fail, probably after a mouse click this process is allowed to activate windows, even if the click did not activate because of the window style
 		}
@@ -150,7 +150,7 @@ namespace Au
 			//RECT r = Screen.PrimaryScreen.WorkingArea; r.Inflate(-2, -2); r.top += 4;
 			RECT r = (0, 0, 200, 200);
 
-			_wClass = new Wnd.Misc.MyWindow(WndProc);
+			_wClass = new Wnd.More.MyWindow(WndProc);
 			if(!_wClass.Create("AuToolbar", null, style, exStyle, r.top, r.left, r.Width, r.Height)) throw new Win32Exception();
 			Perf.Next();
 
@@ -258,7 +258,7 @@ namespace Au
 			////Solves ToolStrip problem in inactive window: no tooltips.
 			//protected override void OnMouseHover(EventArgs e)
 			//{
-			//	//Debug_.PrintFunc();
+			//	//Dbg.PrintFunc();
 			//	if(!_parent._w.IsActive && CanFocus && !Focused) {
 			//		//Print("focus");
 			//		Focus();
@@ -273,7 +273,7 @@ namespace Au
 			//This also creates another problem: at startup not hot button (until mouse-move) if mouse was there.
 			//protected override void OnMouseEnter(EventArgs e)
 			//{
-			//	//Debug_.PrintFunc();
+			//	//Dbg.PrintFunc();
 			//	if(!_parent._w.IsActive && CanFocus && !Focused) {
 			//		//Print("focus");
 			//		Print(_parent._showTime);
@@ -287,11 +287,11 @@ namespace Au
 			//This also creates another problem: at startup not hot button (until mouse-move) if mouse was there.
 			protected override void OnMouseEnter(EventArgs e)
 			{
-				//Debug_.PrintFunc();
+				//Dbg.PrintFunc();
 				if(!_parent._w.IsActive && CanFocus && !Focused) {
 					//Print("focus");
 					long td = Time.PerfMilliseconds - _parent._showTime - 500;
-					if(td < 0) { /*Debug_.Print("timer");*/ } //TODO: timer
+					if(td < 0) { /*Dbg.Print("timer");*/ } //TODO: timer
 					else Focus();
 					//TODO: timer
 				}

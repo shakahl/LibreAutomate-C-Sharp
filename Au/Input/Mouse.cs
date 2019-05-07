@@ -45,7 +45,7 @@ namespace Au
 		{
 			bool relaxed = Opt.Mouse.Relaxed, willFail = false;
 
-			if(!Screen_.IsInAnyScreen(p)) {
+			if(!ScreenDef.IsInAnyScreen(p)) {
 				if(!relaxed) throw new ArgumentOutOfRangeException(null, "Cannot mouse-move. This x y is not in screen. " + p.ToString());
 				willFail = true;
 			}
@@ -174,7 +174,7 @@ namespace Au
 			_Move(p, fast: false);
 			return p;
 		}
-		//rejected: parameters bool workArea = false, Screen_ screen = default. Rarely used. Can use the POINT overload and Coord.Normalize.
+		//rejected: parameters bool workArea = false, ScreenDef screen = default. Rarely used. Can use the POINT overload and Coord.Normalize.
 
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to the specified position in screen.
@@ -452,8 +452,8 @@ namespace Au
 		{
 			if(0 != (flags & Api.IMFlags.Move)) {
 				flags |= Api.IMFlags.Absolute;
-				x <<= 16; x += (x >= 0) ? 0x8000 : -0x8000; x /= Screen_.PrimaryWidth;
-				y <<= 16; y += (y >= 0) ? 0x8000 : -0x8000; y /= Screen_.PrimaryHeight;
+				x <<= 16; x += (x >= 0) ? 0x8000 : -0x8000; x /= ScreenDef.PrimaryWidth;
+				y <<= 16; y += (y >= 0) ? 0x8000 : -0x8000; y /= ScreenDef.PrimaryHeight;
 			}
 
 			int mouseData = 0;
@@ -556,7 +556,7 @@ namespace Au
 				var wTL = w.Window;
 				bool bad = !wTL.Rect.Contains(p);
 				if(!bad && !_CheckWindowFromPoint()) {
-					Debug_.Print("need to activate");
+					Dbg.Print("need to activate");
 					//info: activating brings to the Z top and also uncloaks
 					if(!wTL.IsEnabled(false)) bad = true; //probably an owned modal dialog disabled the window
 					else if(wTL.ThreadId == Wnd.GetWnd.Shell.ThreadId) bad = true; //desktop
@@ -1105,7 +1105,7 @@ namespace Au
 				case HookData.MouseEvent.X2Button: b = MButtons.X2; break;
 				}
 				if(b == 0) return;
-				if(button != 0 && !button.Has_(b)) return;
+				if(button != 0 && !button.Has(b)) return;
 				if(x.IsButtonUp != up) {
 					if(up && block) { //button down when we are waiting for up. If block, now block down too.
 						if(button == 0) button = b;
@@ -1230,6 +1230,117 @@ namespace Au
 		}
 	}
 #endif
+
+	public static partial class ExtAu
+	{
+		#region Wnd
+
+		/// <summary>
+		/// Moves the cursor (mouse pointer) to the position x y relative to this window.
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
+		/// </summary>
+		/// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.</exception>
+		public static void MouseMove(this Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
+			=> Mouse.Move(w.OrThrow(), x, y, nonClient);
+
+		/// <summary>
+		/// Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
+		/// </summary>
+		/// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
+		public static MRelease MouseClick(this Wnd w, Coord x = default, Coord y = default, MButton button = MButton.Left, bool nonClient = false)
+			=> Mouse.ClickEx(button, w.OrThrow(), x, y, nonClient);
+
+		#endregion
+
+		#region Acc
+
+		/// <summary>
+		/// Moves the cursor (mouse pointer) to this accessible object.
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
+		/// <exception cref="NotFoundException">Accessible object not found (this variable is null).</exception>
+		/// <exception cref="AuException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.</exception>
+		public static void MouseMove(this Acc t, Coord x = default, Coord y = default)
+			=> _AccMouseAction(t.OrThrow(), false, x, y, default);
+
+		/// <summary>
+		/// Clicks this accessible object.
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
+		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
+		/// <param name="button">Which button and how to use it.</param>
+		/// <exception cref="NotFoundException">Accessible object not found (this variable is null).</exception>
+		/// <exception cref="AuException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
+		public static MRelease MouseClick(this Acc t, Coord x = default, Coord y = default, MButton button = MButton.Left)
+		{
+			_AccMouseAction(t.OrThrow(), true, x, y, button);
+			return button;
+		}
+
+		static void _AccMouseAction(Acc t, bool click, Coord x, Coord y, MButton button)
+		{
+			var w = t.WndContainer; //info: not necessary, but with window the mouse functions are more reliable, eg will not click another window if it is over our window
+
+			//never mind: if w.Is0 and the action is 'click', get AO from point and fail if it is not t. But need to compare AO properties. Rare.
+
+			if(!(w.Is0 ? t.GetRect(out RECT r) : t.GetRect(out r, w))) throw new AuException(0, "*get rectangle");
+			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
+			if(w.Is0) {
+				if(button == 0) Mouse.Move(p);
+				else Mouse.ClickEx(button, p);
+			} else {
+				if(button == 0) Mouse.Move(w, p.x, p.y);
+				else Mouse.ClickEx(button, w, p.x, p.y);
+			}
+		}
+
+		#endregion
+
+		#region WinImage
+
+		/// <summary>
+		/// Moves the mouse to the found image.
+		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="x">X coordinate in the found image. Default - center.</param>
+		/// <param name="y">Y coordinate in the found image. Default - center.</param>
+		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
+		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.</exception>
+		public static void MouseMove(this WinImage t, Coord x = default, Coord y = default)
+			=> t.OrThrow().LibMouseAction(0, x, y);
+
+		/// <summary>
+		/// Clicks the found image.
+		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="x">X coordinate in the found image. Default - center.</param>
+		/// <param name="y">Y coordinate in the found image. Default - center.</param>
+		/// <param name="button">Which button and how to use it.</param>
+		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
+		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
+		public static MRelease MouseClick(this WinImage t, Coord x = default, Coord y = default, MButton button = MButton.Left)
+		{
+			t.OrThrow().LibMouseAction(button == 0 ? MButton.Left : button, x, y);
+			return button;
+		}
+
+		#endregion
+
+	}
 }
 
 namespace Au.Types
@@ -1382,116 +1493,5 @@ namespace Au.Types
 
 		/// <summary>Arrow and question mark.</summary>
 		Help = 32651,
-	}
-
-	public static partial class ExtensionMethods
-	{
-		#region Wnd
-
-		/// <summary>
-		/// Moves the cursor (mouse pointer) to the position x y relative to this window.
-		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.</exception>
-		public static void MouseMove(this Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
-			=> Mouse.Move(w.OrThrow(), x, y, nonClient);
-
-		/// <summary>
-		/// Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
-		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
-		public static MRelease MouseClick(this Wnd w, Coord x = default, Coord y = default, MButton button = MButton.Left, bool nonClient = false)
-			=> Mouse.ClickEx(button, w.OrThrow(), x, y, nonClient);
-
-		#endregion
-
-		#region Acc
-
-		/// <summary>
-		/// Moves the cursor (mouse pointer) to this accessible object.
-		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
-		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
-		/// <exception cref="NotFoundException">Accessible object not found (this variable is null).</exception>
-		/// <exception cref="AuException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.</exception>
-		public static void MouseMove(this Acc t, Coord x = default, Coord y = default)
-			=> _AccMouseAction(t.OrThrow(), false, x, y, default);
-
-		/// <summary>
-		/// Clicks this accessible object.
-		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
-		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
-		/// <param name="button">Which button and how to use it.</param>
-		/// <exception cref="NotFoundException">Accessible object not found (this variable is null).</exception>
-		/// <exception cref="AuException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
-		public static MRelease MouseClick(this Acc t, Coord x = default, Coord y = default, MButton button = MButton.Left)
-		{
-			_AccMouseAction(t.OrThrow(), true, x, y, button);
-			return button;
-		}
-
-		static void _AccMouseAction(Acc t, bool click, Coord x, Coord y, MButton button)
-		{
-			var w = t.WndContainer; //info: not necessary, but with window the mouse functions are more reliable, eg will not click another window if it is over our window
-
-			//never mind: if w.Is0 and the action is 'click', get AO from point and fail if it is not t. But need to compare AO properties. Rare.
-
-			if(!(w.Is0 ? t.GetRect(out RECT r) : t.GetRect(out r, w))) throw new AuException(0, "*get rectangle");
-			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
-			if(w.Is0) {
-				if(button == 0) Mouse.Move(p);
-				else Mouse.ClickEx(button, p);
-			} else {
-				if(button == 0) Mouse.Move(w, p.x, p.y);
-				else Mouse.ClickEx(button, w, p.x, p.y);
-			}
-		}
-
-		#endregion
-
-		#region WinImage
-
-		/// <summary>
-		/// Moves the mouse to the found image.
-		/// Calls <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the found image. Default - center.</param>
-		/// <param name="y">Y coordinate in the found image. Default - center.</param>
-		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
-		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.</exception>
-		public static void MouseMove(this WinImage t, Coord x = default, Coord y = default)
-			=> t.OrThrow().LibMouseAction(0, x, y);
-
-		/// <summary>
-		/// Clicks the found image.
-		/// Calls <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.
-		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="x">X coordinate in the found image. Default - center.</param>
-		/// <param name="y">Y coordinate in the found image. Default - center.</param>
-		/// <param name="button">Which button and how to use it.</param>
-		/// <exception cref="NotFoundException">Image not found (this variable is null).</exception>
-		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
-		public static MRelease MouseClick(this WinImage t, Coord x = default, Coord y = default, MButton button = MButton.Left)
-		{
-			t.OrThrow().LibMouseAction(button == 0 ? MButton.Left : button, x, y);
-			return button;
-		}
-
-		#endregion
-
 	}
 }

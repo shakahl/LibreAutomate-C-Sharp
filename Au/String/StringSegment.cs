@@ -20,7 +20,7 @@ namespace Au
 	/// <remarks>
 	/// The main properties are: <see cref="Buffer"/> - the string containing the substring; <see cref="Offset"/> - the start index of the substring in the string; <see cref="Length"/> substring length. There is no string object for the substring itself; however <see cref="Value"/> and some other functions allocate and return a new string object.
 	/// 
-	/// One of ways to create <b>StringSegment</b> instances is to split a string with <see cref="String_.Segments_(string, string, SegFlags)"/>.
+	/// One of ways to create <b>StringSegment</b> instances is to split a string with <see cref="ExtString.Segments(string, string, SegFlags)"/>.
 	/// 
 	/// Don't use the default constructor (parameterless). Then <b>Buffer</b> is null and the behavior of functions is undefined. Other constructors throw exception if the string is null.
 	/// 
@@ -280,11 +280,11 @@ namespace Au
 		{
 			int len = s.Length;
 			if(len != _length) return false;
-			return String_.LibEqualsAt_(_buffer, _offset, s._buffer, s._offset, len, ignoreCase);
+			return ExtString.LibSubEq(_buffer, _offset, s._buffer, s._offset, len, ignoreCase);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		bool _Equals(string s, bool ignoreCase) => _buffer.EqualsAt_(_offset, s, ignoreCase);
+		bool _Equals(string s, bool ignoreCase) => _buffer.EqAt(_offset, s, ignoreCase);
 
 		/// <summary>
 		/// Returns true if the specified string is equal to this substring.
@@ -327,7 +327,7 @@ namespace Au
 		public bool StartsWith(string text, bool ignoreCase = false)
 		{
 			if(_length < text.Length) return false; //NullReferenceException
-			return _buffer.EqualsAt_(_offset, text, ignoreCase);
+			return _buffer.EqAt(_offset, text, ignoreCase);
 		}
 
 		/// <summary>
@@ -339,7 +339,7 @@ namespace Au
 		{
 			var len = text.Length; //NullReferenceException
 			if(_length < len) return false;
-			return _buffer.EqualsAt_(_offset + _length - len, text, ignoreCase);
+			return _buffer.EqAt(_offset + _length - len, text, ignoreCase);
 		}
 
 		/// <summary>
@@ -512,14 +512,14 @@ namespace Au
 		/// </summary>
 		/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="Separators"/> constants.</param>
 		/// <param name="flags"></param>
-		/// <seealso cref="String_.Segments_(string, string, SegFlags)"/>
+		/// <seealso cref="ExtString.Segments(string, string, SegFlags)"/>
 		public SegParser Split(string separators, SegFlags flags = 0)
 		{
 			return new SegParser(this, separators, flags);
 		}
 	}
 
-	public static partial class String_
+	public static partial class ExtString
 	{
 		/// <summary>
 		/// This function can be used with foreach to split this string into substrings as <see cref="StringSegment"/> variables.
@@ -530,11 +530,11 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string s = "one * two three ";
-		/// foreach(var t in s.Segments_(" ")) Print(t);
-		/// foreach(var t in s.Segments_(Separators.Word, SegFlags.NoEmpty)) Print(t);
+		/// foreach(var t in s.Segments(" ")) Print(t);
+		/// foreach(var t in s.Segments(Separators.Word, SegFlags.NoEmpty)) Print(t);
 		/// ]]></code>
 		/// </example>
-		public static SegParser Segments_(this string t, string separators, SegFlags flags = 0)
+		public static SegParser Segments(this string t, string separators, SegFlags flags = 0)
 		{
 			return new SegParser(t, separators, flags);
 		}
@@ -547,7 +547,7 @@ namespace Au
 		/// <param name="length">The length of the part of this string.</param>
 		/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="Separators"/> constants.</param>
 		/// <param name="flags"></param>
-		public static SegParser Segments_(this string t, int startIndex, int length, string separators, SegFlags flags = 0)
+		public static SegParser Segments(this string t, int startIndex, int length, string separators, SegFlags flags = 0)
 		{
 			var seg = new StringSegment(t, startIndex, length);
 			return new SegParser(seg, separators, flags);
@@ -581,7 +581,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="String_.Segments_(string, string, SegFlags)"/> and some other functions.
+	/// Flags for <see cref="ExtString.Segments(string, string, SegFlags)"/> and some other functions.
 	/// </summary>
 	[Flags]
 	public enum SegFlags :byte
@@ -603,8 +603,8 @@ namespace Au.Types
 	/// Splits a string or <b>StringSegment</b> into substrings as <see cref="StringSegment"/> variables.
 	/// </summary>
 	/// <remarks>
-	/// Used with foreach. Also used internally by some functions of this library, for example <see cref="String_.Split_(string, string, SegFlags)"/> and <see cref="String_.SplitLines_"/>.
-	/// Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="String_.Segments_(string, string, SegFlags)"/> or <see cref="StringSegment.Split"/> with foreach.
+	/// Used with foreach. Also used internally by some functions of this library, for example <see cref="ExtString.SegSplit(string, string, SegFlags)"/> and <see cref="ExtString.SegSplitLines"/>.
+	/// Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="ExtString.Segments(string, string, SegFlags)"/> or <see cref="StringSegment.Split"/> with foreach.
 	/// </remarks>
 	public struct SegParser :IEnumerable<StringSegment>, IEnumerator<StringSegment>
 	{
@@ -729,7 +729,7 @@ namespace Au.Types
 		/// <summary>
 		/// Returns segment values as string[].
 		/// </summary>
-		/// <param name="maxCount">The maximum number of substrings to get. If negative (default), gets all.</param>
+		/// <param name="maxCount">The maximal number of substrings to get. If negative (default), gets all.</param>
 		public unsafe string[] ToStringArray(int maxCount = -1)
 		{
 			//All this big code is just to make this function as fast as String.Split or faster. Also less garbage.

@@ -91,7 +91,7 @@ namespace Au
 
 			//F keys
 			if(c == 'F' && Char_.IsAsciiDigit(s[i + 1])) {
-				int n = s.ToInt_(i + 1, out int e, STIFlags.NoHex);
+				int n = s.ToInt(i + 1, out int e, STIFlags.NoHex);
 				if(n > 0 && n <= 24 && e == i + len) return (KKey)(0x6F + n);
 			}
 
@@ -169,7 +169,7 @@ namespace Au
 				break;
 			case 'V':
 				if(c1 == 'k') {
-					int v = s.ToInt_(i + 2, out int end, STIFlags.DontSkipSpaces);
+					int v = s.ToInt(i + 2, out int end, STIFlags.DontSkipSpaces);
 					if(end != i + len || (uint)v > 255) v = 0;
 					return (KKey)v;
 				}
@@ -475,7 +475,7 @@ namespace Au
 			internal static Wnd GetWndFocusedOrActive()
 			{
 				for(int i = 0; i < 20; i++) {
-					Wnd.Misc.GetGUIThreadInfo(out var g);
+					Wnd.More.GetGUIThreadInfo(out var g);
 					//Print(i, g.hwndFocus, g.hwndActive);
 					if(!g.hwndFocus.Is0) return g.hwndFocus;
 					if(!g.hwndActive.Is0) return g.hwndActive;
@@ -542,23 +542,23 @@ namespace Au
 			/// <summary>
 			/// Ctrl, LCtrl, etc.
 			/// </summary>
-			public static bool IsMod(KKey vk) => _b[(byte)vk].Has_(_KT.Mod);
+			public static bool IsMod(KKey vk) => _b[(byte)vk].Has(_KT.Mod);
 
-			public static bool IsExtended(KKey vk) => _b[(byte)vk].Has_(_KT.Extended);
+			public static bool IsExtended(KKey vk) => _b[(byte)vk].Has(_KT.Extended);
 
-			public static bool IsMouse(KKey vk) => _b[(byte)vk].Has_(_KT.Mouse);
+			public static bool IsMouse(KKey vk) => _b[(byte)vk].Has(_KT.Mouse);
 
 			/// <summary>
 			/// API GetKeyState always works.
 			/// For other keys returns 0 if pressed or toggled before starting current thread.
 			/// Modifiers (left/right too), xLock, mouse, some other.
 			/// </summary>
-			public static bool IsGetKeyStateReliable(KKey vk) => _b[(byte)vk].Has_(_KT.GksReliable);
+			public static bool IsGetKeyStateReliable(KKey vk) => _b[(byte)vk].Has(_KT.GksReliable);
 
 			/// <summary>
 			/// The same as <see cref="IsGetKeyStateReliable"/>.
 			/// </summary>
-			public static bool IsToggleable(KKey vk) => _b[(byte)vk].Has_(_KT.GksReliable);
+			public static bool IsToggleable(KKey vk) => _b[(byte)vk].Has(_KT.GksReliable);
 
 			static _KT[] _b;
 

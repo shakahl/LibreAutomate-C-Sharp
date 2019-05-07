@@ -295,7 +295,7 @@ namespace Au
 				if(nr > na) na = nr; else if(nr > 0) return b.ToString(nr); else break;
 			}
 
-			if(path.EndsWith_(".exe", true) && path.IndexOfAny(String_.Lib.pathSep) < 0) {
+			if(path.Ends(".exe", true) && path.IndexOfAny(ExtString.Lib.pathSep) < 0) {
 				try {
 					string rk = @"Software\Microsoft\Windows\CurrentVersion\App Paths\" + path;
 					if(Registry_.GetString(out path, "", rk) || Registry_.GetString(out path, "", rk, Registry.LocalMachine)) {
@@ -303,7 +303,7 @@ namespace Au
 						if(ExistsAsAny(path, true)) return path;
 					}
 				}
-				catch(Exception ex) { Debug_.Print(path + "    " + ex.Message); }
+				catch(Exception ex) { Dbg.Print(path + "    " + ex.Message); }
 			}
 
 			return null;
@@ -350,7 +350,7 @@ namespace Au
 		{
 			string path = directoryPath;
 			if(0 == (flags & FEFlags.UseRawPath)) path = Path_.Normalize(path);
-			if(path.EndsWith_('\\')) path = path.RemoveEnd_(1);
+			if(path.Ends('\\')) path = path.RemoveSuffix(1);
 
 			_DisableDeviceNotReadyMessageBox();
 
@@ -360,7 +360,7 @@ namespace Au
 			bool isFirst = true;
 			FileAttributes attr = 0;
 			int basePathLength = path.Length;
-			var redir = new Misc.DisableRedirection();
+			var redir = new More.DisableRedirection();
 
 			try {
 				if(0 != (flags & FEFlags.DisableRedirection)) redir.Disable();
@@ -439,10 +439,10 @@ namespace Au
 					if((attr & hidSys) == hidSys) {
 						if((flags & FEFlags.SkipHiddenSystem) != 0) continue;
 						//skip Recycle Bin etc. It is useless, prevents copying drives, etc.
-						if(isDir && path.EndsWith_(':')) {
-							if(name.Equals_("$Recycle.Bin", true)) continue;
-							if(name.Equals_("System Volume Information", true)) continue;
-							if(name.Equals_("Recovery", true)) continue;
+						if(isDir && path.Ends(':')) {
+							if(name.Eqi("$Recycle.Bin")) continue;
+							if(name.Eqi("System Volume Information")) continue;
+							if(name.Eqi("Recovery")) continue;
 						}
 					}
 
@@ -525,9 +525,9 @@ namespace Au
 					case FileDir2.AccessDenied:
 						break;
 					default:
-						if(Misc.LibIsSameFile(path1, path2)) {
+						if(More.LibIsSameFile(path1, path2)) {
 							//eg renaming "file.txt" to "FILE.txt"
-							Debug_.Print("same file");
+							Dbg.Print("same file");
 							//deleted = true;
 							//copy will fail, move will succeed
 						} else if(ifExists == IfExists.MergeDirectory && (existsAs == FileDir2.Directory || existsAs == FileDir2.SymLinkDirectory)) {
@@ -584,7 +584,7 @@ namespace Au
 						_Delete(path1);
 					}
 					catch(Exception ex) {
-						if(!path1.EndsWith_(':')) //moving drive contents. Deleted contents but cannot delete drive.
+						if(!path1.Ends(':')) //moving drive contents. Deleted contents but cannot delete drive.
 							PrintWarning($"Failed to delete '{path1}' after copying it to another drive. {ex.Message}");
 						//throw new AuException("*move", ex); //don't. MoveFileEx also succeeds even if fails to delete source.
 					}
@@ -609,7 +609,7 @@ namespace Au
 			bool ok = false;
 			string s1 = null, s2 = null;
 			if(!merge) {
-				if(!path1.EndsWith_(@":\")) ok = Api.CreateDirectoryEx(path1, path2, default);
+				if(!path1.Ends(@":\")) ok = Api.CreateDirectoryEx(path1, path2, default);
 				if(!ok) ok = Api.CreateDirectory(path2, default);
 				if(!ok) goto ge;
 			}
@@ -642,7 +642,7 @@ namespace Au
 						//To create or copy symbolic links, need SeCreateSymbolicLinkPrivilege privilege.
 						//Admins have it, else this process cannot get it.
 						//More info: MS technet -> "Create symbolic links".
-						//Debug_.Print($"failed to copy symbolic link '{s1}'. It's OK, skipped it. Error: {WinError.MessageFor()}");
+						//Dbg.Print($"failed to copy symbolic link '{s1}'. It's OK, skipped it. Error: {WinError.MessageFor()}");
 						continue;
 					}
 					if(0 != (copyFlags & FCFlags.IgnoreAccessDeniedErrors)) {
@@ -861,7 +861,7 @@ namespace Au
 				}
 				if(a.Count == 0) return;
 				if(_DeleteShell(null, true, a)) return;
-				Debug_.Print("_DeleteShell failed");
+				Dbg.Print("_DeleteShell failed");
 			}
 			foreach(var v in paths) Delete(v);
 		}
@@ -877,7 +877,7 @@ namespace Au
 
 			if(tryRecycleBin) {
 				if(_DeleteShell(path, true)) return type;
-				Debug_.Print("_DeleteShell failed");
+				Dbg.Print("_DeleteShell failed");
 			}
 
 			int ec = 0;
@@ -897,7 +897,7 @@ namespace Au
 					LibShellNotify(Api.SHCNE_RMDIR, path);
 					return type;
 				}
-				Debug_.Print("Using _DeleteShell.");
+				Dbg.Print("Using _DeleteShell.");
 				//if(_DeleteShell(path, Recycle.No)) return type;
 				if(_DeleteShell(path, false)) return type;
 			} else {
@@ -931,14 +931,14 @@ namespace Au
 			if(ec == Api.ERROR_DIR_NOT_EMPTY /*&& Api.PathIsDirectoryEmpty(path)*/) {
 				//see comments above about Explorer. Also fails in other cases, eg when a file was opened in a web browser.
 				for(int i = 0; i < 50; i++) {
-					Debug_.PrintIf(i > 0, "ERROR_DIR_NOT_EMPTY when empty. Retry " + (i + 1));
+					Dbg.PrintIf(i > 0, "ERROR_DIR_NOT_EMPTY when empty. Retry " + (i + 1));
 					Thread.Sleep(15);
 					if(Api.RemoveDirectory(path)) return 0;
 				}
 				ec = WinError.Code;
 			}
 			if(ec == Api.ERROR_FILE_NOT_FOUND || ec == Api.ERROR_PATH_NOT_FOUND) return 0;
-			Debug_.Print("_DeleteLL failed. " + WinError.MessageFor(ec) + "  " + path
+			Dbg.Print("_DeleteLL failed. " + WinError.MessageFor(ec) + "  " + path
 				+ (dir ? ("   Children: " + string.Join(" | ", EnumDirectory(path).Select(f => f.Name))) : null));
 			return ec;
 
@@ -1068,7 +1068,7 @@ namespace Au
 		/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If noException, instead returns -1.</exception>
 		static int _FindFilename(string path, bool noException = false)
 		{
-			int R = path.LastIndexOfAny(String_.Lib.pathSep);
+			int R = path.LastIndexOfAny(ExtString.Lib.pathSep);
 			if(R < 0 || R == path.Length - 1) {
 				if(noException) return -1;
 				throw new ArgumentException($"No filename in path: '{path}'.");
@@ -1298,7 +1298,7 @@ namespace Au
 			if(ExistsAsFile(file, true)) {
 				if(!Api.ReplaceFile(file, temp, back, 6)) es = "ReplaceFile failed"; //random ERROR_UNABLE_TO_REMOVE_REPLACED; _LockedWaiter knows it
 				else if(backup) LibShellNotify(Api.SHCNE_RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
-				else if(!Api.DeleteFile(back)) Debug_.LibPrintNativeError(); //maybe should wait/retry if failed, but never noticed
+				else if(!Api.DeleteFile(back)) Dbg.LibPrintNativeError(); //maybe should wait/retry if failed, but never noticed
 			} else {
 				if(!Api.MoveFileEx(temp, file, Api.MOVEFILE_REPLACE_EXISTING)) es = "MoveFileEx failed";
 			}

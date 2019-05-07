@@ -57,13 +57,13 @@ namespace Au.Util
 	/// 			}
 	/// #if true //two ways of reading attributes
 	/// 			Name = x["name"];
-	/// 			Id = x["id"].ToInt_();
+	/// 			Id = x["id"].ToInt();
 	/// #else
 	/// 			while(x.MoveToNextAttribute()) {
 	/// 				var v = x.Value;
 	/// 				switch(x.Name) {
 	/// 				case "name": Name = v; break;
-	/// 				case "id": Id = v.ToInt_(); break;
+	/// 				case "id": Id = v.ToInt(); break;
 	/// 				}
 	/// 			}
 	/// #endif

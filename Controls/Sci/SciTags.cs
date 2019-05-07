@@ -391,14 +391,14 @@ namespace Au.Controls
 				case OutputServer.MessageType.Write:
 					if(s == null) {
 						s = m.Text;
-						hasTags = hasTagsPrev = s.StartsWith_("<>");
+						hasTags = hasTagsPrev = s.Starts("<>");
 					} else {
 						if(b == null) b = new StringBuilder();
 						if(b.Length == 0) b.Append(s);
 
 						s = m.Text;
 
-						bool hasTagsThis = m.Text.StartsWith_("<>");
+						bool hasTagsThis = m.Text.Starts("<>");
 						if(hasTagsThis && !hasTags) { hasTags = true; b.Insert(0, "<\x15\x0\x4"); }
 
 						if(!hasTags) {
@@ -841,7 +841,7 @@ namespace Au.Controls
 				return;
 			}
 			//get tag, attribute and text
-			if(!s.RegexMatch_(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
+			if(!s.RegexMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
 			string tag = m[1].Value, attr = m[2].Value ?? m[3].Value ?? m[4].Value;
 			//Print($"'{tag}'  '{attr}'  '{m[4].Value}'");
 
@@ -859,7 +859,7 @@ namespace Au.Controls
 				return;
 			}
 
-			var a = attr.Split_("|", 2);
+			var a = attr.SegSplit("|", 2);
 			bool one = a.Length == 1;
 			string s1 = a[0], s2 = one ? null : a[1];
 

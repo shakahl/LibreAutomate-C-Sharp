@@ -39,7 +39,7 @@ namespace Au.Tools
 			_AppendArgPrefix(t, param, noComma);
 			if(s == null) t.Append("null");
 			else if(IsVerbatim(s, out _)) t.Append(s);
-			else t.Append('\"').Append(s.Escape_()).Append('\"'); //FUTURE: make verbatim if contains \ and no newlines/tabs/etc
+			else t.Append('\"').Append(s.Escape()).Append('\"'); //FUTURE: make verbatim if contains \ and no newlines/tabs/etc
 			return t;
 		}
 
@@ -80,7 +80,7 @@ namespace Au.Tools
 			string[] flagNames = flagsEnum.GetEnumNames();
 			for(int r = 0, n = grid.RowsCount; r < n; r++) {
 				var key = grid.ZGetRowKey(r); if(Empty(key)) continue;
-				if(prefix != null) { if(key.StartsWith_(prefix)) key = key.Substring(prefix.Length); else continue; }
+				if(prefix != null) { if(key.Starts(prefix)) key = key.Substring(prefix.Length); else continue; }
 				if(!flagNames.Contains(key)) continue;
 				if(!grid.ZIsChecked(r)) continue;
 				var flag = flagsEnum.Name + "." + key;
@@ -99,7 +99,7 @@ namespace Au.Tools
 		/// </summary>
 		internal static StringBuilder AppendWaitTime(this StringBuilder t, string waitTime, bool orThrow)
 		{
-			if(Empty(waitTime)) waitTime = "0"; else if(!orThrow && waitTime != "0" && !waitTime.StartsWith_('-')) t.Append('-');
+			if(Empty(waitTime)) waitTime = "0"; else if(!orThrow && waitTime != "0" && !waitTime.Starts('-')) t.Append('-');
 			t.Append(waitTime);
 			return t;
 		}
@@ -145,7 +145,7 @@ namespace Au.Tools
 					s = "**r " + Regex_.EscapeQE(s.Remove(i)) + @"\*?" + Regex_.EscapeQE(s.Substring(i + 1));
 				} else s = "**t " + s;
 			}
-			if(canMakeVerbatim && s.IndexOf('\\') >= 0 && !s.RegexIsMatch_(@"[\x00-\x1F\x85\x{2028}\x{2029}]")) {
+			if(canMakeVerbatim && s.IndexOf('\\') >= 0 && !s.RegexIsMatch(@"[\x00-\x1F\x85\x{2028}\x{2029}]")) {
 				s = "@\"" + s.Replace("\"", "\"\"") + "\"";
 			}
 			return s;
@@ -176,8 +176,8 @@ namespace Au.Tools
 		internal static string StripWndClassName(string s, bool escapeWildex)
 		{
 			if(!Empty(s)) {
-				int n = s.RegexReplace_(@"^WindowsForms\d+(\..+?\.).+", "*$1*", out s);
-				if(n == 0) n = s.RegexReplace_(@"^(HwndWrapper\[.+?;).+", "$1*", out s);
+				int n = s.RegexReplace(@"^WindowsForms\d+(\..+?\.).+", "*$1*", out s);
+				if(n == 0) n = s.RegexReplace(@"^(HwndWrapper\[.+?;).+", "$1*", out s);
 				if(escapeWildex && n == 0) s = EscapeWildex(s);
 			}
 			return s;
@@ -398,7 +398,7 @@ namespace Au.Tools
 			b.AppendLine(@"static object[] __TestFunc__() {");
 			if(activateWindow) b.Append("((Wnd)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
 			b.AppendLine("var _p_ = Perf.StartNew();");
-			var lines = code.SplitLines_(true);
+			var lines = code.SegSplitLines(true);
 			int lastLine = lines.Length - 1;
 			for(int i = 0; i < lastLine; i++) b.AppendLine(lines[i]);
 			b.AppendLine("_p_.Next(); var _a_ =");
@@ -412,7 +412,7 @@ namespace Au.Tools
 			try {
 				bTest.Enabled = false;
 				if(!Au.Compiler.Scripting.Compile(code, out var c, wrap: true, load: true)) {
-					Debug_.Print("---- CODE ----\r\n" + code + "--------------");
+					Dbg.Print("---- CODE ----\r\n" + code + "--------------");
 					AuDialog.ShowError("Errors in code", c.errors, owner: form, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: code*/);
 				} else {
 					var rr=(object[])c.method.Invoke(null, null); //use array because fails to cast tuple, probably because in that assembly it is new type
@@ -442,8 +442,8 @@ namespace Au.Tools
 			double _SpeedMcsToMs(long tn) => Math.Round(tn / 1000d, tn < 1000 ? 2 : (tn < 10000 ? 1 : 0));
 			double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of Wnd.Find and Object.Find
 			string sTime;
-			if(lastLine == 1 && lines[0].Length == 6) sTime = t1.ToString_() + " ms"; //only Wnd.Find: "Wnd w;\r\nw = Wnd.Find(...);"
-			else sTime = t0.ToString_() + " + " + t1.ToString_() + " ms";
+			if(lastLine == 1 && lines[0].Length == 6) sTime = t1.ToStringInvariant() + " ms"; //only Wnd.Find: "Wnd w;\r\nw = Wnd.Find(...);"
+			else sTime = t0.ToStringInvariant() + " + " + t1.ToStringInvariant() + " ms";
 
 			if(r.obj is Wnd w1 && w1.Is0) r.obj = null;
 			if(r.obj != null) {

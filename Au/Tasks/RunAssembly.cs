@@ -55,7 +55,7 @@ namespace Au
 							if(File_.ExistsAsFile(s1)) bPdb = File.ReadAllBytes(s1);
 						}
 					}
-					catch(Exception ex) { bPdb = null; Debug_.Print(ex); } //not very important
+					catch(Exception ex) { bPdb = null; Dbg.Print(ex); } //not very important
 				}
 				asm = Assembly.Load(bAsm, bPdb);
 				if(findLoaded) lsa.Add(asmFile, asm);

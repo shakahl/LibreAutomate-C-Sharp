@@ -201,9 +201,9 @@ namespace Au.Triggers
 
 			KMod mod = 0, modAny = 0;
 			if(noMod) {
-				if(flags.HasAny_(subtype == ESubtype.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
+				if(flags.HasAny(subtype == ESubtype.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
 			} else {
-				if(!Keyb.Misc.LibParseHotkeyTriggerString(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
+				if(!Keyb.More.LibParseHotkeyTriggerString(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 			}
 			var t = new MouseTrigger(_triggers, f, mod, modAny, flags, screen, ps);
 			t.DictAdd(_d, _DictKey(subtype, data));
@@ -324,7 +324,7 @@ namespace Au.Triggers
 					}
 
 					if(isEdgeMove && x.screenIndex != TMScreen.Any) {
-						var screen = Screen_.ScreenFromIndex((int)x.screenIndex);
+						var screen = ScreenDef.ScreenFromIndex((int)x.screenIndex);
 						if(!screen.Bounds.Contains(pt)) continue;
 					}
 
@@ -412,7 +412,7 @@ namespace Au.Triggers
 				_keyHook = Util.WinHook.Keyboard(k => {
 					if(Time.WinMilliseconds >= _keyHookTimeout) {
 						_ResetUpAndUnhookTempKeybHook();
-						Debug_.Print("hook timeout");
+						Dbg.Print("hook timeout");
 					} else {
 						var mod = k.Mod;
 						if(0 != (mod & _upMod) && k.IsUp) {
@@ -537,19 +537,19 @@ namespace Au.Triggers
 					if(time < _prev.eTimeout) return; //prevent double trigger when OS sometimes gives strange coords if some hook blocks the event
 					if(y == _ymin) { //top
 						if(_prev.yy <= _ymin) return;
-						if(Screen_.IsInAnyScreen((x, y - 1))) return;
+						if(ScreenDef.IsInAnyScreen((x, y - 1))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Top) + _PartX(x));
 					} else if(y == _ymax) { //bottom
 						if(_prev.yy >= _ymax) return;
-						if(Screen_.IsInAnyScreen((x, y + 1))) return;
+						if(ScreenDef.IsInAnyScreen((x, y + 1))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Bottom) + _PartX(x));
 					} else if(x == _xmin) { //left
 						if(_prev.xx <= _xmin) return;
-						if(Screen_.IsInAnyScreen((x - 1, y))) return;
+						if(ScreenDef.IsInAnyScreen((x - 1, y))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Left) + _PartY(y));
 					} else /*if(x == _xmax)*/ { //right
 						if(_prev.xx >= _xmax) return;
-						if(Screen_.IsInAnyScreen((x + 1, y))) return;
+						if(ScreenDef.IsInAnyScreen((x + 1, y))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Right) + _PartY(y));
 					}
 					_prev.eTimeout = time + 100;

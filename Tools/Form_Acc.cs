@@ -128,7 +128,7 @@ namespace Au.Tools
 			if(!sameTree) _FillTree(p);
 			_UpdateCodeBox();
 
-			if(captured && p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_acc.MiscFlags.Has_(AccMiscFlags.Java) && Ver.Is64BitOS)
+			if(captured && p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_acc.MiscFlags.Has(AccMiscFlags.Java) && Ver.Is64BitOS)
 				_SetFormInfo(c_infoJava);
 
 			Perf.NW();//TODO
@@ -186,7 +186,7 @@ namespace Au.Tools
 			_Check2("also", false); _Check2("skip", false); _Check2("navig", false);
 			if(isWeb && !_waitAutoCheckedOnce) { _waitAutoCheckedOnce = true; _Check2("wait", true); }
 
-			_Check2(nameof(AFFlags.UIA), _acc.MiscFlags.Has_(AccMiscFlags.UIA));
+			_Check2(nameof(AFFlags.UIA), _acc.MiscFlags.Has(AccMiscFlags.UIA));
 
 			_noeventGridValueChanged = false;
 			g.ZAutoSize(); //tested: suspending layout does not make faster.
@@ -312,7 +312,7 @@ namespace Au.Tools
 						b.Append(va, prefixLen, va.Length - prefixLen);
 						continue;
 					} else {
-						va = va.Escape_();
+						va = va.Escape();
 						b.Append(va);
 					}
 				}
@@ -458,7 +458,7 @@ namespace Au.Tools
 			var r = TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as Acc).Rect);
 
 			if(r.obj is Acc a && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
-				if(!a.MiscFlags.Has_(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {
+				if(!a.MiscFlags.Has(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {
 					//need full path. Run("firefox.exe") fails if firefox is not properly installed.
 					string ffInfo = c_infoFirefox, ffPath = _wnd.ProgramPath;
 					if(ffPath != null) ffInfo = ffInfo.Replace("firefox.exe", ffPath);
@@ -499,7 +499,7 @@ namespace Au.Tools
 						level = lev;
 					}
 					x.a = o;
-					if(o.MiscFlags.Has_(LibAFFlags.AccMiscFlags_Marked)) {
+					if(o.MiscFlags.Has(LibAFFlags.AccMiscFlags_Marked)) {
 						//Print(o);
 						if(xSelect == null) xSelect = x;
 					}
@@ -530,7 +530,7 @@ namespace Au.Tools
 				//	Noticed this in Office 2003 Word Options dialog and in Dreamweaver.
 				//	Also, WndContainer then may get the top-level window. Eg in Word.
 				//	Workaround: enum child controls and look for _acc in one them. Then add "class" row if need.
-				Debug_.Print("broken IAccessible branch");
+				Dbg.Print("broken IAccessible branch");
 				foreach(var c in w.Get.Children(onlyVisible: true)) {
 					var m = _CreateModel(c, in p, true);
 					if(m.xSelect != null) {
@@ -594,7 +594,7 @@ namespace Au.Tools
 				_SelectTreeNode(n);
 				return true;
 			}
-			Debug_.Print("recreating tree of same window");
+			Dbg.Print("recreating tree of same window");
 			return false;
 
 			//Other ways to compare Acc:
@@ -729,7 +729,7 @@ namespace Au.Tools
 								_displayText = b.ToString();
 							}
 						} else if(p.Name.Length == 0) _displayText = p.Role;
-						else _displayText = p.Role + " \"" + p.Name.Escape_(limit: 250) + "\"";
+						else _displayText = p.Role + " \"" + p.Name.Escape(limit: 250) + "\"";
 
 						IsInvisible = a.LibIsInvisible(p.State);
 					}
@@ -781,8 +781,8 @@ namespace Au.Tools
 		{
 			if(info == null) {
 				info = c_infoForm;
-			} else if(info.EndsWith_('$')) {
-				_commonInfos.SetTextWithWildexInfo(info.RemoveEnd_(1));
+			} else if(info.Ends('$')) {
+				_commonInfos.SetTextWithWildexInfo(info.RemoveSuffix(1));
 				return;
 			}
 			_info.ST.SetText(info);

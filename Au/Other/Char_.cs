@@ -28,8 +28,6 @@ namespace Au
 	[DebuggerStepThrough]
 	public static class Char_
 	{
-		//rejected: make these extension methods (then also need to add suffix to the names).
-
 		/// <summary>
 		/// Returns true if character is '0' to '9'.
 		/// </summary>

@@ -99,11 +99,11 @@ namespace Au.Controls
 
 			_xmlFileDefault = xmlFile;
 			_xmlFileCustom = xmlFileCustom;
-			try { _xStrips = XElement_.Load(xmlFile); }
+			try { _xStrips = ExtXml.LoadElement(xmlFile); }
 			catch(Exception ex) { AuDialog.ShowError("Failed to load file", ex.ToString()); throw; }
 			XElement xCustom = null;
 			if(File_.ExistsAsFile(_xmlFileCustom)) {
-				try { xCustom = XElement_.Load(_xmlFileCustom); }
+				try { xCustom = ExtXml.LoadElement(_xmlFileCustom); }
 				catch(Exception e) { Print("Failed to load file", _xmlFileCustom, e.Message); }
 			}
 
@@ -257,7 +257,7 @@ namespace Au.Controls
 				var handler = _callbacks.GetClickHandler(tag);
 				if(handler != null) item.Click += handler;
 				else {
-					Debug_.Print("no handler of " + tag);
+					Dbg.Print("no handler of " + tag);
 					//return null;
 					//item.Enabled = false;
 					item.Visible = false;
@@ -346,9 +346,9 @@ namespace Au.Controls
 					mi.ShortcutKeyDisplayString = null;
 				}
 				if(x.Attribute_(out s, "hk")) {
-					bool ok = Keyb.Misc.ParseHotkeyString(s, out var hk);
+					bool ok = Keyb.More.ParseHotkeyString(s, out var hk);
 					if(ok) try { mi.ShortcutKeys = hk; } catch { ok = false; }
-					if(!ok) Debug_.Print("Invalid hotkey: " + s);
+					if(!ok) Dbg.Print("Invalid hotkey: " + s);
 				}
 				if(x.Attribute_(out string ss, "hkText")) mi.ShortcutKeyDisplayString = (s == null) ? ss : s + ", " + ss;
 			} else {
@@ -367,7 +367,7 @@ namespace Au.Controls
 			if(!x.Attribute_(out string s, "t")) {
 				string tag = x.Name.LocalName;
 				s = tag.Remove(0, tag.LastIndexOf('_') + 1); //eg "Edit_Copy" -> "Copy"
-				s = s.RegexReplace_("(?<=[^A-Z])(?=[A-Z])", " "); //"OneTwoThree" -> "One Two Three". //speed: don't need to optimize.
+				s = s.RegexReplace("(?<=[^A-Z])(?=[A-Z])", " "); //"OneTwoThree" -> "One Two Three". //speed: don't need to optimize.
 			}
 			return s;
 		}
@@ -385,7 +385,7 @@ namespace Au.Controls
 			var xtsCust = xCustom.Element(xtsDef.Name); if(xtsCust == null) return;
 
 			if(isMenu) {
-			} else if(name.StartsWith_("Custom")) {
+			} else if(name.Starts("Custom")) {
 				var xc = xCustom.Element(name); if(xc == null) return;
 				xc.Remove();
 				xtsDef.ReplaceWith(xc);
@@ -396,7 +396,7 @@ namespace Au.Controls
 				//reorder toolbar buttons
 				if(xtsCust.Attribute_(out string s, "order")) {
 					xtsDef.Elements("sep").Remove(); //remove all default <sep/>, because all separators now are in the 'order' attribute
-					var a = s.Split_(" ");
+					var a = s.SegSplit(" ");
 					for(int i = a.Length - 1; i >= 0; i--) {
 						if(a[i] == "sep") {
 							xtsDef.AddFirst(new XElement("sep"));
@@ -420,7 +420,7 @@ namespace Au.Controls
 		/// </summary>
 		void _DiffCustom()
 		{
-			var xStripsDefault = XElement_.Load(_xmlFileDefault);
+			var xStripsDefault = ExtXml.LoadElement(_xmlFileDefault);
 			var xStripsCustom = new XElement("strips");
 			string s;
 
@@ -617,7 +617,7 @@ namespace Au.Controls
 					s = f.textHotkey.Text; if(s == "") s = null;
 					x.SetAttributeValue("hk", s);
 					//remove the hotkey from another item, to avoid duplicates
-					if(Keyb.Misc.ParseHotkeyString(s, out var hk)) {
+					if(Keyb.More.ParseHotkeyString(s, out var hk)) {
 						var xx = f.FindUsedHotkey(hk, x);
 						if(xx != null) {
 							xx.SetAttributeValue("hk", null);

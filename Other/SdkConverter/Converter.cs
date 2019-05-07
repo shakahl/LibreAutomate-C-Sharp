@@ -462,10 +462,10 @@ internal static unsafe class API
 					return false;
 				}
 
-				if(name.EndsWith_("A") && char.IsLower(name[name.Length - 2])) {
+				if(name.Ends("A") && char.IsLower(name[name.Length - 2])) {
 					//Print(name);
 					return false;
-				} else if(name.EndsWith_("W") && char.IsLower(name[name.Length - 2])) {
+				} else if(name.Ends("W") && char.IsLower(name[name.Length - 2])) {
 					//Print(name);
 					name = name.Remove(name.Length - 1);
 				}

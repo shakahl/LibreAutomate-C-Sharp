@@ -561,7 +561,7 @@ namespace SdkConverter
 				return;
 			}
 
-			if(typeName.EndsWith_("[]")) typeName = typeName.Remove(typeName.Length - 2); //'TYPE a[n], b[m]'
+			if(typeName.Ends("[]")) typeName = typeName.Remove(typeName.Length - 2); //'TYPE a[n], b[m]'
 
 			string marshalAs = "ByValArray", comment = null, comment2 = null;
 			if(elemCount == 0) { //variable-length array of >= 0 elements
@@ -572,7 +572,7 @@ namespace SdkConverter
 				typeName = "string";
 				marshalAs = "ByValTStr";
 			} else {
-				if(elemCount < 8 && (memberName.IndexOf_("Reserved", true) >= 0 || memberName.IndexOf_("pad", true) >= 0 || memberName.StartsWith_("Spare", true))) {
+				if(elemCount < 8 && (memberName.Index("Reserved", true) >= 0 || memberName.Index("pad", true) >= 0 || memberName.Starts("Spare", true))) {
 					//Print(memberName);
 					var sb = new StringBuilder();
 					for(int i = 0; i < elemCount; i++) {

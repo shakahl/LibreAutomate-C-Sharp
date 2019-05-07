@@ -277,14 +277,6 @@ namespace Au
 			Dispose(false);
 		}
 
-		//rejected. Use OrThrow.
-		///// <summary>
-		///// If x is not null, returns x, else throws <see cref="NotFoundException"/>.
-		///// Alternatively you can use <see cref="ExtensionMethods.OrThrow(Acc)"/>.
-		///// </summary>
-		///// <exception cref="NotFoundException">x is null.</exception>
-		//public static Acc operator +(Acc x) => x ?? throw new NotFoundException("Not found (Acc).");
-
 		/// <summary>
 		/// Gets or changes simple element id, also known as child id.
 		/// </summary>
@@ -348,9 +340,9 @@ namespace Au
 				break;
 			}
 
-			var hr = Cpp.Cpp_AccFromWindow(flags.Has_(AWFlags.NotInProc) ? 1 : 0, w, objid, out var a, out _);
+			var hr = Cpp.Cpp_AccFromWindow(flags.Has(AWFlags.NotInProc) ? 1 : 0, w, objid, out var a, out _);
 			if(hr != 0) {
-				if(flags.Has_(AWFlags.NoThrow)) return null;
+				if(flags.Has(AWFlags.NoThrow)) return null;
 				if(spec && w.Is0) throw new AuException();
 				w.ThrowIfInvalid();
 				_WndThrow(hr, w, "*get accessible object from window.");
@@ -382,7 +374,7 @@ namespace Au
 				var hr = Cpp.Cpp_AccFromPoint(p, flags, out var a);
 				if(hr == 0) return new Acc(a);
 				if(i < 2) continue;
-				if(flags.Has_(AXYFlags.NoThrow)) return null;
+				if(flags.Has(AXYFlags.NoThrow)) return null;
 				_WndThrow(hr, Wnd.FromXY(p, WXYFlags.Raw), "*get accessible object from point.");
 			}
 		}
@@ -578,14 +570,14 @@ namespace Au
 				if(SimpleElementId != 0) b.Append(",  e=").Append(SimpleElementId);
 				foreach(var kv in k.HtmlAttributes) {
 					b.Append(",  @").Append(kv.Key).Append('=').Append('\"');
-					b.Append(kv.Value.Escape_(limit: 250)).Append('\"');
+					b.Append(kv.Value.Escape(limit: 250)).Append('\"');
 				}
 				_Add('w', k.WndContainer.ClassName ?? "");
 
 				void _Add(char name, string value, char q1 = '\"', char q2 = '\"')
 				{
 					if(value.Length == 0) return;
-					var t = value; if(q1 == '\"') t = t.Escape_(limit: 250);
+					var t = value; if(q1 == '\"') t = t.Escape(limit: 250);
 					b.Append(",  ").Append(name).Append('=');
 					if(q1 != '\0') b.Append(q1);
 					b.Append(t);

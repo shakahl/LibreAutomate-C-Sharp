@@ -175,11 +175,11 @@ namespace Au.Controls
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		void _NormalizeRange(ref int from, ref int to, SciFromTo flags)
 		{
-			bool isLen = flags.Has_(SciFromTo.ToIsLength);
+			bool isLen = flags.Has(SciFromTo.ToIsLength);
 			if(from < 0 || to < (isLen ? 0 : -1) || (!isLen && to < from)) throw new ArgumentOutOfRangeException();
-			if(flags.Has_(SciFromTo.FromIsChars)) from = CountBytesFromChars(from);
+			if(flags.Has(SciFromTo.FromIsChars)) from = CountBytesFromChars(from);
 			if(to < 0) to = TextLengthBytes;
-			else if(flags.Has_(SciFromTo.ToIsChars)) {
+			else if(flags.Has(SciFromTo.ToIsChars)) {
 				if(isLen) to = CountBytesFromChars(from, to);
 				else to = CountBytesFromChars(to);
 			} else {
@@ -301,7 +301,7 @@ namespace Au.Controls
 			case AuScintilla.TagsStyle.AutoAlways:
 				return s.IndexOf('<') >= 0;
 			case AuScintilla.TagsStyle.AutoWithPrefix:
-				return s.StartsWith_("<>");
+				return s.Starts("<>");
 			}
 			return false;
 		}
@@ -711,7 +711,7 @@ namespace Au.Controls
 			public byte[] Load(string file)
 			{
 				_enc = _Encoding.Binary;
-				if(0 != Path_.GetExtension(file).Equals_(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
+				if(0 != Path_.GetExtension(file).Eq(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
 					if(!File_.ExistsAsFile(file)) throw new FileNotFoundException($"Could not find file '{file}'.");
 					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"\0");
 				}

@@ -191,7 +191,7 @@ namespace Au
 						break;
 					default: //repeat
 						if(!e.IsKey) goto ge;
-						AddRepeat(keys.ToInt_(i + 1));
+						AddRepeat(keys.ToInt(i + 1));
 						break;
 					}
 					break;
@@ -545,7 +545,7 @@ namespace Au
 
 		unsafe void _SendKey(_KEvent k, int i)
 		{
-			bool needScanCode = k.scan == 0 && !k.SIFlags.HasAny_(_KFlags.Scancode | _KFlags.Unicode);
+			bool needScanCode = k.scan == 0 && !k.SIFlags.HasAny(_KFlags.Scancode | _KFlags.Unicode);
 			var opt = _GetOptionsAndWndFocused(out var wFocus, needScanCode);
 			if(needScanCode) {
 				var hkl = Api.GetKeyboardLayout(wFocus.ThreadId); //most layouts have the same standard scancodes, but eg dvorak different

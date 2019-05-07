@@ -76,7 +76,7 @@ namespace Au.Util
 				case VType.String: size += 4 + (a[i].Obj as string).Length * 2; break;
 				case VType.StringArray:
 					int z = 4;
-					foreach(var v in a[i].Obj as string[]) z += 4 + v.Length_() * 2;
+					foreach(var v in a[i].Obj as string[]) z += 4 + v.Lenn() * 2;
 					size += z;
 					break;
 				case VType.ByteArray: size += 4 + (a[i].Obj as byte[]).Length; break;

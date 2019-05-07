@@ -182,7 +182,7 @@ namespace Au.Types
 		/// <param name="screen">If used, x y are relative to this screen. Default - primary screen.</param>
 		/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
-		public static POINT Normalize(Coord x, Coord y, bool workArea = false, Screen_ screen = default, bool widthHeight = false, bool centerIfEmpty = false)
+		public static POINT Normalize(Coord x, Coord y, bool workArea = false, ScreenDef screen = default, bool widthHeight = false, bool centerIfEmpty = false)
 		{
 			if(centerIfEmpty) {
 				if(x.IsEmpty) x = Center;
@@ -192,7 +192,7 @@ namespace Au.Types
 			if(!x.IsEmpty || !y.IsEmpty) {
 				RECT r;
 				if(workArea || !screen.IsNull || _NeedRect(x, y)) {
-					r = Screen_.GetRect(screen, workArea);
+					r = ScreenDef.GetRect(screen, workArea);
 					if(widthHeight) r.Offset(-r.left, -r.top);
 				} else r = default;
 				p.x = x._Normalize(r.left, r.right);
@@ -207,7 +207,7 @@ namespace Au.Types
 			switch(Type) {
 			case CoordType.Normal: return Value.ToString() + ", Normal";
 			case CoordType.Reverse: return Value.ToString() + ", Reverse";
-			case CoordType.Fraction: return FractionValue.ToString_() + ", Fraction";
+			case CoordType.Fraction: return FractionValue.ToStringInvariant() + ", Fraction";
 			default: return "default";
 			}
 		}
@@ -246,14 +246,14 @@ namespace Au.Types
 	{
 #pragma warning disable 1591 //XML doc
 		public Coord x, y;
-		public Screen_ screen;
+		public ScreenDef screen;
 		public bool workArea;
 		//public bool rawXY;
 		public RECT? rect;
 
 		public PopupXY() { }
 
-		public PopupXY(Coord x, Coord y, bool workArea = true, Screen_ screen = default)
+		public PopupXY(Coord x, Coord y, bool workArea = true, ScreenDef screen = default)
 		{
 			this.x = x; this.y = y; this.workArea = workArea; this.screen = screen;
 		}
@@ -269,19 +269,19 @@ namespace Au.Types
 		/// <summary>Specifies position relative to the primary screen or its work area.</summary>
 		public static implicit operator PopupXY((Coord x, Coord y, bool workArea) p) => new PopupXY(p.x, p.y, p.workArea);
 		/// <summary>Specifies position relative to the work area of the specified screen.</summary>
-		public static implicit operator PopupXY((Coord x, Coord y, Screen_ screen) p) => new PopupXY(p.x, p.y, true, p.screen);
+		public static implicit operator PopupXY((Coord x, Coord y, ScreenDef screen) p) => new PopupXY(p.x, p.y, true, p.screen);
 		/// <summary>Specifies position relative to the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((Coord x, Coord y, bool workArea, Screen_ screen) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
+		public static implicit operator PopupXY((Coord x, Coord y, bool workArea, ScreenDef screen) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
 		/// <summary>Specifies position relative to the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((Coord x, Coord y, Screen_ screen, bool workArea) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
+		public static implicit operator PopupXY((Coord x, Coord y, ScreenDef screen, bool workArea) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
 		/// <summary>Specifies position relative to the primary screen.</summary>
 		public static implicit operator PopupXY(POINT p) => new PopupXY(p.x, p.y, false);
 		/// <summary>Specifies the center of the work area of the specified screen.</summary>
-		public static implicit operator PopupXY(Screen_ screen) => new PopupXY(default, default, true, screen);
+		public static implicit operator PopupXY(ScreenDef screen) => new PopupXY(default, default, true, screen);
 		/// <summary>Specifies the center of the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((Screen_ screen, bool workArea) t) => new PopupXY(default, default, t.workArea, t.screen);
+		public static implicit operator PopupXY((ScreenDef screen, bool workArea) t) => new PopupXY(default, default, t.workArea, t.screen);
 		/// <summary>Specifies the center of the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((bool workArea, Screen_ screen) t) => new PopupXY(default, default, t.workArea, t.screen);
+		public static implicit operator PopupXY((bool workArea, ScreenDef screen) t) => new PopupXY(default, default, t.workArea, t.screen);
 		/// <summary>Specifies position in the specified rectangle which is relative to the primary screen.</summary>
 		public static implicit operator PopupXY((RECT r, Coord x, Coord y) t) => new PopupXY(t.r, t.x, t.y);
 		/// <summary>Specifies the center of the specified rectangle which is relative to the primary screen.</summary>

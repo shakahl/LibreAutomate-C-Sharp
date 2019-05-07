@@ -253,7 +253,7 @@ class UacDragDrop
 		public static void MainDD(string[] args)
 		{
 			//Print("NonAdminProcess");
-			var msgWnd = (Wnd)args[1].ToInt_();
+			var msgWnd = (Wnd)args[1].ToInt();
 
 			var f = new NonAdminProcess(msgWnd);
 			f.ShowDialog();
@@ -305,7 +305,7 @@ class UacDragDrop
 			base.WndProc(ref m);
 
 			//test process startup speed. About 300 ms. Ngened slower.
-			//if(m.Msg == Api.WM_SHOWWINDOW && m.WParam != default) Print(Time.PerfMilliseconds - Environment.GetCommandLineArgs()[3].ToLong_());
+			//if(m.Msg == Api.WM_SHOWWINDOW && m.WParam != default) Print(Time.PerfMilliseconds - Environment.GetCommandLineArgs()[3].ToInt64());
 		}
 
 		bool _enteredOnce;
@@ -321,7 +321,7 @@ class UacDragDrop
 			_DDData r = default;
 			if(r.GetData(e.Data)) {
 				var b = Au.Util.LibSerializer.Serialize((int)e.AllowedEffect, e.KeyState, r.files, r.shell, r.text, r.linkName);
-				e.Effect = (DragDropEffects)(int)Wnd.Misc.CopyDataStruct.SendBytes(_msgWnd, 110, b);
+				e.Effect = (DragDropEffects)(int)Wnd.More.CopyDataStruct.SendBytes(_msgWnd, 110, b);
 			} else {
 				Hide();
 			}
@@ -368,7 +368,7 @@ class UacDragDrop
 				} else return false;
 				return true;
 			}
-			catch(Exception ex) { Debug_.Print(ex); return false; }
+			catch(Exception ex) { Dbg.Print(ex); return false; }
 
 			//note: MemoryStream.GetBuffer says "UnauthorizedAccessException: MemoryStream's internal buffer cannot be accessed"
 			//info: if from IE, GetData returns null for all formats.

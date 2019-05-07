@@ -159,11 +159,11 @@ namespace Au.Triggers
 		public Action<AutotextTriggerArgs> this[string text, TAFlags? flags = null, TAPostfix? postfixType = null, string postfixChars = null] {
 			set {
 				_triggers.LibThrowIfRunning();
-				int len = text.Length_(); if(len < 1 || len > 100) throw new ArgumentException("Text length must be 1 - 100.");
-				if(text.IndexOf('\n') >= 0) { text = text.RegexReplace_(@"\r?\n", "\r"); len = text.Length; }
+				int len = text.Lenn(); if(len < 1 || len > 100) throw new ArgumentException("Text length must be 1 - 100.");
+				if(text.IndexOf('\n') >= 0) { text = text.RegexReplace(@"\r?\n", "\r"); len = text.Length; }
 				TAFlags fl = flags ?? DefaultFlags;
 				bool matchCase = 0 != (fl & TAFlags.MatchCase);
-				if(!matchCase) text = text.ToLower_();
+				if(!matchCase) text = text.Lower();
 				var t = new AutotextTrigger(_triggers, value, text, fl, postfixType ?? DefaultPostfixType, _CheckPostfixChars(postfixChars) ?? DefaultPostfixChars);
 				//create dictionary key from 1-4 last characters lowercase
 				int k = 0;
@@ -340,7 +340,7 @@ namespace Au.Triggers
 
 		static Wnd _GetFocusedWindow()
 		{
-			if(!Wnd.Misc.GetGUIThreadInfo(out var gt)) return Wnd.Active;
+			if(!Wnd.More.GetGUIThreadInfo(out var gt)) return Wnd.Active;
 			if(0 != (gt.flags & (Native.GUI.INMENUMODE | Native.GUI.INMOVESIZE))) return default; //the character will not be typed when showing menu (or just Alt or F10 pressed) or moving/resizing window. Of course this will not work with nonstandard menus, eg in Word, as well as with other controls that don't accept text.
 			return gt.hwndFocus; //if no focus, the thread will not receive wm-keydown etc
 		}
@@ -669,7 +669,7 @@ namespace Au.Triggers
 						if(uc == UnicodeCategory.LowercaseLetter) { allUpper = false; break; }
 						if(uc == UnicodeCategory.UppercaseLetter) allUpper = true;
 					}
-					r = r.ToUpper_(!allUpper);
+					r = r.Upper(!allUpper);
 				}
 			}
 
@@ -725,7 +725,7 @@ namespace Au.Triggers
 		{
 			bool ok = false;
 			var m = new AuMenu { ModalAlways = true }; //FUTURE: need something better. Creates 60 KB of garbage etc.
-			m[text.Escape_(limit: 60)] = u => ok = true;
+			m[text.Escape(limit: 60)] = u => ok = true;
 			using(Util.WinHook.Keyboard(x => {
 				if(x.IsUp) return;
 				switch(x.vkCode) {

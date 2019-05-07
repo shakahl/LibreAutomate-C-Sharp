@@ -396,7 +396,7 @@ namespace Au.Compiler
 					object o;
 					switch(v.s) {
 					case null:
-						switch(Path_.GetExtension(name).ToLower_()) {
+						switch(Path_.GetExtension(name).Lower()) {
 						case ".png":
 						case ".bmp":
 						case ".jpg":
@@ -498,7 +498,7 @@ namespace Au.Compiler
 				string netDir = Folders.Windows + @"Microsoft.NET\";
 				for(; i < refs.Count; i++) {
 					var s1 = refs[i].FilePath;
-					if(s1.StartsWith_(netDir, true)) continue;
+					if(s1.Starts(netDir, true)) continue;
 					var s2 = m.OutputPath + "\\" + Path_.GetFileName(s1);
 					//Print(s1, s2);
 					_CopyFileIfNeed(s1, s2);
@@ -517,7 +517,7 @@ namespace Au.Compiler
 				&& File_.GetProperties(sFrom, out var p1, FAFlags.UseRawPath)
 				&& p2.LastWriteTimeUtc == p1.LastWriteTimeUtc
 				&& p2.Size == p1.Size) return;
-			//Debug_.Print("copy");
+			//Dbg.Print("copy");
 			File_.Copy(sFrom, sTo, IfExists.Delete);
 		}
 
@@ -528,7 +528,7 @@ namespace Au.Compiler
 			if(x.s == null) {
 				args = new string[] { outFile };
 			} else {
-				args = Util.StringMisc.CommandLineToArray(x.s);
+				args = ExtString.More.CommandLineToArray(x.s);
 
 				//replace variables like $(variable)
 				var f = m.CodeFiles[0].f;

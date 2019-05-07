@@ -81,7 +81,7 @@ namespace Au
 		{
 			if(_disposed) throw new ObjectDisposedException(nameof(BlockUserInput));
 			if(_block != 0) throw new InvalidOperationException();
-			if(!what.HasAny_(BIEvents.All)) throw new ArgumentException();
+			if(!what.HasAny(BIEvents.All)) throw new ArgumentException();
 
 			_block = what;
 			_startTime = Time.WinMilliseconds;
@@ -144,12 +144,12 @@ namespace Au
 			Util.WinHook hk = null, hm = null; Util.AccHook hwe = null;
 			try {
 				try {
-					if(_block.Has_(BIEvents.Keys))
+					if(_block.Has(BIEvents.Keys))
 						hk = Util.WinHook.Keyboard(_keyHookProc ?? (_keyHookProc = _KeyHookProc));
-					if(_block.HasAny_(BIEvents.MouseClicks | BIEvents.MouseMoving))
+					if(_block.HasAny(BIEvents.MouseClicks | BIEvents.MouseMoving))
 						hm = Util.WinHook.Mouse(_mouseHookProc ?? (_mouseHookProc = _MouseHookProc));
 				}
-				catch(AuException e1) { Debug_.Print(e1); _block = 0; return; } //failed to hook
+				catch(AuException e1) { Dbg.Print(e1); _block = 0; return; } //failed to hook
 
 				//This prevents occassional inserting a foreign key after the first our-script-pressed key.
 				//To reproduce, let our script send small series of chars in loop, and simultaneously a foreign script send other chars.
@@ -160,7 +160,7 @@ namespace Au
 
 				//the acc hook detects Ctrl+Alt+Del, Win+L, UAC consent, etc. SystemEvents.SessionSwitch only Win+L.
 				try { hwe = new Util.AccHook(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, _winEventProc ?? (_winEventProc = _WinEventProc)); }
-				catch(AuException e1) { Debug_.Print(e1); } //failed to hook
+				catch(AuException e1) { Dbg.Print(e1); } //failed to hook
 
 				WaitFor.LibWait(-1, WHFlags.DoEvents, _stopEvent, _threadHandle);
 

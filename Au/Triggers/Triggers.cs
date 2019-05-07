@@ -135,7 +135,7 @@ namespace Au.Triggers
 	/// //another way to set Opt options - use Opt.Static. It sets options for all actions in the script, not just for triggers added afterwards.
 	/// 
 	/// Opt.Static.Key.PasteLength = 50;
-	/// Opt.Static.Key.Hook = h => { var w1 = h.w.Window; Print(w1); if(w1.Name.Like_("* Word")) h.opt.PasteEnter = true; };
+	/// Opt.Static.Key.Hook = h => { var w1 = h.w.Window; Print(w1); if(w1.Name.Like("* Word")) h.opt.PasteEnter = true; };
 	/// ts["#p3"] = "/* " + new string('*', 60) + " */\r\n";
 	/// 
 	/// //how to stop and disable/enable triggers
@@ -181,8 +181,8 @@ namespace Au.Triggers
 		//public TriggerScopes Of {
 		//	get {
 		//		if(_test == false){
-		//			Debug_.LibMemorySetAnchor();
-		//			Timer_.After(500, () => Debug_.LibMemoryPrint());
+		//			Dbg.LibMemorySetAnchor();
+		//			Timer_.After(500, () => Dbg.LibMemoryPrint());
 		//		}
 
 		//		var k=new StackFrame(1, true);
@@ -281,7 +281,7 @@ namespace Au.Triggers
 			//AppDomain.CurrentDomain.AssemblyLoad += (object sender, AssemblyLoadEventArgs args) => {
 			//	var a = args.LoadedAssembly;
 			//	Print(a);
-			//	//if(a.FullName.StartsWith_("System.Drawing")) {
+			//	//if(a.FullName.Starts("System.Drawing")) {
 			//	//	//Print(new StackTrace());
 			//	//	Debugger.Launch();
 			//	//}
@@ -402,7 +402,7 @@ namespace Au.Triggers
 							if(this[TriggerType.Mouse] is MouseTriggers tm) MouseTriggers.JitCompile();
 						}
 					}
-					catch(Exception ex) { Debug_.Print(ex); }
+					catch(Exception ex) { Dbg.Print(ex); }
 				});
 			}
 			//Perf.Next();
@@ -410,9 +410,9 @@ namespace Au.Triggers
 			Wnd wMsg = default;
 			bool hooksInEditor = AuTask.Role != ATRole.ExeProgram;
 			if(hooksInEditor) {
-				wMsg = Wnd.Misc.FindMessageOnlyWindow(null, "Au.Hooks.Server");
+				wMsg = Wnd.More.FindMessageOnlyWindow(null, "Au.Hooks.Server");
 				if(wMsg.Is0) {
-					Debug_.Print("Au.Hooks.Server");
+					Dbg.Print("Au.Hooks.Server");
 					hooksInEditor = false;
 				} else {
 					//if this process is admin, and editor isn't, useEditor=false.
@@ -437,7 +437,7 @@ namespace Au.Triggers
 			var aCDS = new byte[8];
 			aCDS.WriteInt_((int)usedEvents, 0);
 			aCDS.WriteInt_(Api.GetCurrentProcessId(), 4);
-			if(1 != Wnd.Misc.CopyDataStruct.SendBytes(wMsg, 1, aCDS, threadId)) { //install hooks and start sending events to us
+			if(1 != Wnd.More.CopyDataStruct.SendBytes(wMsg, 1, aCDS, threadId)) { //install hooks and start sending events to us
 				pipe.Dispose();
 				throw new AuException("*SendBytes");
 			}
@@ -464,7 +464,7 @@ namespace Au.Triggers
 							}
 							ec = Api.GetOverlappedResult(pipe, ref o, out size, false) ? 0 : WinError.Code;
 						}
-						if(ec != 0) { Debug_.LibPrintNativeError(ec); break; }
+						if(ec != 0) { Dbg.LibPrintNativeError(ec); break; }
 					}
 
 					//Perf.First();
@@ -823,7 +823,7 @@ namespace Au.Triggers
 				//And we cannot use Keyb.IsPressed, because our triggers release modifiers. Also Key() etc. Then triggers could not be auto-repeated.
 				//We use both. If IsPressed(mod), add mod to _mod. Else remove from _mod after >5 s since the last seen key event. The max auto-repeat delay that you can set in CP is ~1 s.
 				TrigUtil.GetModLR(out modL, out modR);
-				//Debug_.PrintIf(modL != _modL || modR != _modR, $"KEY={k.vkCode}    modL={modL}  _modL={_modL}    modR={modR}  _modR={_modR}"); //normally should be only when auto-repeating a trigger
+				//Dbg.PrintIf(modL != _modL || modR != _modR, $"KEY={k.vkCode}    modL={modL}  _modL={_modL}    modR={modR}  _modR={_modR}"); //normally should be only when auto-repeating a trigger
 				_modL |= modL; _modR |= modR;
 				long time = Time.WinMilliseconds;
 				if(time - _lastKeyTime > 5000) {

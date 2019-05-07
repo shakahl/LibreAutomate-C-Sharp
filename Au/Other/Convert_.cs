@@ -809,30 +809,9 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Converts C# string to '\0'-terminated UTF8 string. Stores the UTF8 string in caller's buffer.
-		/// Returns UTF8 string length in bytes, not including the terminating '\0' character.
-		/// If fails (unlikely if passed correct arguments), returns 0 and sets buffer="".
-		/// </summary>
-		/// <param name="s">C# string (UTF16). Can be null.</param>
-		/// <param name="buffer">Caller-allocated memory of bufLen length.</param>
-		/// <param name="bufLen">buffer length in bytes. Should be at least <see cref="Utf8LengthFromString"/>+1, else converts only part of string. The maximal possible required buffer length for whole string can be s.Length*3+1.</param>
-		/// <remarks>
-		/// Calls API <msdn>WideCharToMultiByte</msdn>.
-		/// This is the most low-level and therefore fastest overload. Does not allocate any memory. With big strings much faster than .NET Encoding class functions.
-		/// Use buffer/bufLen carefully. If bufLen is greater that the memory buffer length, other memory will be overwritten/damaged.
-		/// </remarks>
-		public static int Utf8FromString(string s, byte* buffer, int bufLen)
-		{
-			if(buffer == null || bufLen <= 0) return 0; //use Utf8ToStringLength for it
-			int n = Empty(s) ? 0 : Api.WideCharToMultiByte(Api.CP_UTF8, 0, s, s.Length, buffer, bufLen, default, null);
-			buffer[Math.Min(n, bufLen - 1)] = 0;
-			return n;
-		}
-
-		/// <summary>
 		/// Converts C# string to '\0'-terminated UTF8 string.
 		/// </summary>
-		/// <param name="s">C# string (UTF16). If null, returns null.</param>
+		/// <param name="s">C# string. If null, returns null.</param>
 		/// <remarks>
 		/// How this is different from .NET Encoding class functions: 1. Uses <msdn>WideCharToMultiByte</msdn>. 2. Faster with big strings. 3. The returned string is '\0'-terminated. 4. No exceptions (unless the string is so large that fails to allocate so much memory).
 		/// </remarks>
@@ -854,9 +833,30 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Converts C# string to '\0'-terminated UTF8 string. Stores the UTF8 string in caller's buffer.
+		/// Returns UTF8 string length in bytes, not including the terminating '\0' character.
+		/// If fails (unlikely if passed correct arguments), returns 0 and sets buffer="".
+		/// </summary>
+		/// <param name="s">C# string. Can be null.</param>
+		/// <param name="buffer">Caller-allocated memory of bufLen length.</param>
+		/// <param name="bufLen">buffer length in bytes. Should be at least <see cref="Utf8LengthFromString"/>+1, else converts only part of string. The maximal possible required buffer length for whole string can be s.Length*3+1.</param>
+		/// <remarks>
+		/// Calls API <msdn>WideCharToMultiByte</msdn>.
+		/// This is the most low-level and therefore fastest overload. Does not allocate any memory. With big strings much faster than .NET Encoding class functions.
+		/// Use buffer/bufLen carefully. If bufLen is greater that the memory buffer length, other memory will be overwritten/damaged.
+		/// </remarks>
+		public static int Utf8FromString(string s, byte* buffer, int bufLen)
+		{
+			if(buffer == null || bufLen <= 0) return 0; //use Utf8ToStringLength for it
+			int n = Empty(s) ? 0 : Api.WideCharToMultiByte(Api.CP_UTF8, 0, s, s.Length, buffer, bufLen, default, null);
+			buffer[Math.Min(n, bufLen - 1)] = 0;
+			return n;
+		}
+
+		/// <summary>
 		/// Converts C# string to '\0'-terminated UTF8 string managed by a WeakReference variable.
 		/// </summary>
-		/// <param name="s">C# string (UTF16). If null, returns null, unless allocExtraBytes is not 0.</param>
+		/// <param name="s">C# string. If null, returns null, unless allocExtraBytes is not 0.</param>
 		/// <param name="buffer">A WeakReference variable (probably [ThreadStatic]) that manages the returned array. If null, this function will create it.</param>
 		/// <param name="utf8Length">If not null, receives UTF8 text length, not including '\0' and allocExtraBytes.</param>
 		/// <param name="allocExtraBytes">Allocate this number of extra bytes after the string.</param>
@@ -910,7 +910,7 @@ namespace Au
 		/// <param name="lengthBytes">Length of utf8 or part of it. If negative, the function finds utf8 length; then utf8 must be '\0'-terminated.</param>
 		/// <remarks>
 		/// Uses API <msdn>MultiByteToWideChar</msdn>.
-		/// There is no overload that takes byte[], because for it can be used .NET Encoding class functions. The speed is similar; this is slower with short strings but faster with long strings.
+		/// Can be used instead of the .NET <b>Encoding</b> class. The speed is similar; this is slower with short strings but faster with long strings.
 		/// </remarks>
 		public static string Utf8ToString(byte* utf8, int lengthBytes = -1)
 		{
@@ -927,6 +927,20 @@ namespace Au
 			}
 
 			//speed: with short strings slower than .NET Encoding. With long - not much faster.
+		}
+
+		/// <summary>
+		/// Converts UTF8 string to C# string (which is UTF16).
+		/// The terminating '\0' character is not included in the returned string.
+		/// </summary>
+		/// <param name="utf8">UTF8 string. If null, returns null.</param>
+		/// <remarks>
+		/// Uses API <msdn>MultiByteToWideChar</msdn>.
+		/// Can be used instead of the .NET <b>Encoding</b> class. The speed is similar; this is slower with short strings but faster with long strings.
+		/// </remarks>
+		public static string Utf8ToString(byte[] utf8)
+		{
+			fixed (byte* p = utf8) return Utf8ToString(p);
 		}
 
 #if false

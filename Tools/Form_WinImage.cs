@@ -387,7 +387,7 @@ namespace Au.Tools
 			var d = new SaveFileDialog { Filter = c_fileDialogFilter, DefaultExt = "png" };
 			if(d.ShowDialog(this) != DialogResult.OK) return false;
 			var f = d.FileName;
-			_image.Save(f, f.EndsWith_(".bmp", true) ? System.Drawing.Imaging.ImageFormat.Bmp : System.Drawing.Imaging.ImageFormat.Png);
+			_image.Save(f, f.Ends(".bmp", true) ? System.Drawing.Imaging.ImageFormat.Bmp : System.Drawing.Imaging.ImageFormat.Png);
 			_MultiRemove(true);
 			_imageFile = f;
 			_MultiAdd();

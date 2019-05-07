@@ -49,7 +49,7 @@ namespace Au
 		/// Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
 		/// Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="Folders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
 		/// Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="Pidl.ToShellString"/>, <see cref="Folders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
-		/// To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="Wnd.Misc.GetWindowsStoreAppId"/> or Google.
+		/// To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="Wnd.More.GetWindowsStoreAppId"/> or Google.
 		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="Path_.ExpandEnvVar"/>.
 		/// </param>
 		/// <param name="args">
@@ -100,8 +100,8 @@ namespace Au
 				}
 			}
 
-			if(flags.Has_(RFlags.Admin)) {
-				if(more?.Verb != null && !more.Verb.Equals_("runas", true)) throw new ArgumentException("Cannot use Verb with flag Admin");
+			if(flags.Has(RFlags.Admin)) {
+				if(more?.Verb != null && !more.Verb.Eqi("runas")) throw new ArgumentException("Cannot use Verb with flag Admin");
 				x.lpVerb = "runas";
 			} else if(x.lpVerb != null) x.fMask |= Api.SEE_MASK_INVOKEIDLIST; //makes slower. But verbs are rarely used.
 
@@ -123,7 +123,7 @@ namespace Au
 			}
 			if(!Empty(args)) x.lpParameters = Path_.ExpandEnvVar(args);
 
-			Wnd.Misc.EnableActivate();
+			Wnd.More.EnableActivate();
 
 			bool ok = false;
 			try {
@@ -136,7 +136,7 @@ namespace Au
 
 			var R = new RResult();
 			bool waitForExit = 0 != (flags & RFlags.WaitForExit);
-			bool needHandle = flags.Has_(RFlags.NeedProcessHandle);
+			bool needHandle = flags.Has(RFlags.NeedProcessHandle);
 			LibWaitHandle ph = null;
 			if(!x.hProcess.Is0) {
 				if(waitForExit || needHandle) ph = new LibWaitHandle(x.hProcess, true);
@@ -209,8 +209,8 @@ namespace Au
 					//Process.Run supports long path prefix, except when the exe is .NET.
 					if(!runConsole) file = Path_.UnprefixLongPath(file);
 
-					if(File_.Misc.DisableRedirection.IsSystem64PathIn32BitProcess(file) && !File_.ExistsAsAny(file)) {
-						file = File_.Misc.DisableRedirection.GetNonRedirectedSystemPath(file);
+					if(File_.More.DisableRedirection.IsSystem64PathIn32BitProcess(file) && !File_.ExistsAsAny(file)) {
+						file = File_.More.DisableRedirection.GetNonRedirectedSystemPath(file);
 					}
 				} else if(!Path_.IsUrl(file)) {
 					//ShellExecuteEx searches everywhere except in app folder.
@@ -329,7 +329,7 @@ namespace Au
 				hProcess = pi.hProcess;
 
 				//variables for 'prevent getting partial lines'
-				bool needLines = outStr == null /*&& !flags.Has_(RCFlags.RawText)*/;
+				bool needLines = outStr == null /*&& !flags.Has(RCFlags.RawText)*/;
 				int offs = 0; bool skipN = false;
 
 				int bSize = 8000;
@@ -386,7 +386,7 @@ namespace Au
 
 					var s = new string(c, 0, nc);
 					if(needLines) {
-						if(s.IndexOfAny(String_.Lib.lineSep) < 0) outAction(s);
+						if(s.IndexOfAny(ExtString.Lib.lineSep) < 0) outAction(s);
 						else foreach(var k in new SegParser(s, Separators.Line)) outAction(k.Value);
 					} else {
 						outStr.Append(s);

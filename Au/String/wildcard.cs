@@ -19,9 +19,9 @@ using static Au.NoClass;
 
 namespace Au
 {
-	public static unsafe partial class String_
+	public static unsafe partial class ExtString
 	{
-		#region Like_
+		#region Like
 
 		/// <summary>
 		/// Compares this string with a string that possibly contains wildcard characters.
@@ -40,33 +40,33 @@ namespace Au
 		/// 
 		/// There are no escape sequences for * and ? characters.
 		/// 
-		/// Like all <b>String_</b> functions, performs ordinal comparison, ie does not depend on current culture.
+		/// Uses ordinal comparison, ie does not depend on current culture.
 		/// 
-		/// Much faster than regular expression. Not much slower than <b>Equals_</b>, <b>EndsWith_</b>, <b>IndexOf_</b>, etc.
+		/// Much faster than regular expression.
 		/// 
 		/// See also: [](xref:wildcard_expression).
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// string s = @"C:\abc\mno.xyz";
-		/// if(s.Like_(@"C:\abc\mno.xyz")) Print("matches whole text (no wildcard characters)");
-		/// if(s.Like_(@"C:\abc\*")) Print("starts with");
-		/// if(s.Like_(@"*.xyz")) Print("ends with");
-		/// if(s.Like_(@"*mno*")) Print("contains");
-		/// if(s.Like_(@"C:\*.xyz")) Print("starts and ends with");
-		/// if(s.Like_(@"?:*")) Print("any character, : and possibly more text");
+		/// if(s.Like(@"C:\abc\mno.xyz")) Print("matches whole text (no wildcard characters)");
+		/// if(s.Like(@"C:\abc\*")) Print("starts with");
+		/// if(s.Like(@"*.xyz")) Print("ends with");
+		/// if(s.Like(@"*mno*")) Print("contains");
+		/// if(s.Like(@"C:\*.xyz")) Print("starts and ends with");
+		/// if(s.Like(@"?:*")) Print("any character, : and possibly more text");
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="Wildex"/>
 #if false //somehow speed depends on dll version. With some versions same as C# code, with some slower. Also depends on string. With shortest strings 50% slower.
-		public static bool Like_(this string t, string pattern, bool ignoreCase = false)
+		public static bool Like(this string t, string pattern, bool ignoreCase = false)
 		{
 			if(t == null) return false;
 			fixed (char* pt = t, pw = pattern)
 				return Cpp.Cpp_StringLike(pt, t.Length, pw, pattern.Length, ignoreCase);
 		}
 #else
-		public static bool Like_(this string t, string pattern, bool ignoreCase = false)
+		public static bool Like(this string t, string pattern, bool ignoreCase = false)
 		{
 			if(t == null) return false;
 			int patLen = pattern.Length;
@@ -137,7 +137,7 @@ namespace Au
 			//	Then cannot use "**options " for wildcard expressions.
 			//	Could use other escape sequences, eg [*], [?] and [[], but it makes slower and is more harmful than useful.
 
-			//The first two loops are fast, but Equals_ much faster when !ignoreCase. We cannot use such optimizations that it can.
+			//The first two loops are fast, but Eq much faster when !ignoreCase. We cannot use such optimizations that it can.
 			//The slowest case is "*substring*", because then the first two loops don't help.
 			//	Then similar speed as string.IndexOf(ordinal) and API <msdn>FindStringOrdinal</msdn>.
 			//	Possible optimization, but need to add much code, and makes not much faster, and makes other cases slower, difficult to avoid it.
@@ -145,19 +145,19 @@ namespace Au
 #endif
 
 		/// <summary>
-		/// Calls <see cref="Like_(string, string, bool)"/> for each wildcard pattern specified in the argument list until it returns true.
+		/// Calls <see cref="Like(string, string, bool)"/> for each wildcard pattern specified in the argument list until it returns true.
 		/// Returns 1-based index of matching pattern, or 0 if none.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <param name="patterns">One or more wildcard strings. The array and strings cannot be null.</param>
-		public static int Like_(this string t, bool ignoreCase = false, params string[] patterns)
+		public static int Like(this string t, bool ignoreCase = false, params string[] patterns)
 		{
-			for(int i = 0; i < patterns.Length; i++) if(t.Like_(patterns[i], ignoreCase)) return i + 1;
+			for(int i = 0; i < patterns.Length; i++) if(t.Like(patterns[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
-		#endregion Like_
+		#endregion Like
 	}
 }
 
@@ -175,7 +175,7 @@ namespace Au.Types
 	/// //This version does not support wildcard expressions.
 	/// Document Find1(string name, string date)
 	/// {
-	/// 	return Documents.Find(x => x.Name.Equals_(name) && x.Date.Equals_(date));
+	/// 	return Documents.Find(x => x.Name.Eqi(name) && x.Date.Eqi(date));
 	/// }
 	/// 
 	/// //This version supports wildcard expressions.
@@ -289,11 +289,11 @@ namespace Au.Types
 			bool R = false;
 			switch(_type) {
 			case WXType.Wildcard:
-				R = s.Like_(_obj as string, _ignoreCase);
+				R = s.Like(_obj as string, _ignoreCase);
 				break;
 			case WXType.Text:
 				var t = _obj as string;
-				R = s.Equals_(t, _ignoreCase);
+				R = s.Eq(t, _ignoreCase);
 				break;
 			case WXType.RegexPcre:
 				R = (_obj as Regex_).IsMatch(s);
@@ -394,13 +394,13 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// Simple text (option t, or no *? characters and no t r R options).
-		/// <b>Match</b> calls <see cref="String_.Equals_(string, string, bool)"/>.
+		/// <b>Match</b> calls <see cref="ExtString.Eq"/>.
 		/// </summary>
 		Text,
 
 		/// <summary>
 		/// Wildcard (has *? characters and no t r R options).
-		/// <b>Match</b> calls <see cref="String_.Like_(string, string, bool)"/>.
+		/// <b>Match</b> calls <see cref="ExtString.Like(string, string, bool)"/>.
 		/// </summary>
 		Wildcard,
 

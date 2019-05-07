@@ -421,7 +421,7 @@ namespace Au
 		/// If this process is 32-bit and OS is 64-bit, when it uses the <see cref="System"/> folder path (<c>@"C:\WINDOWS\system32"</c>), the OS in most cases redirects it to <c>@"C:\Windows\SysWOW64"</c>, which contains 32-bit versions of program files. Use SystemX64 when you want to avoid the redirection and access the true System32 folder which on 64-bit OS contains 64-bit program files.
 		/// More info in class help.
 		/// </remarks>
-		/// <seealso cref="File_.Misc.DisableRedirection"/>
+		/// <seealso cref="File_.More.DisableRedirection"/>
 		/// <seealso cref="Ver.Is32BitProcessOn64BitOS"/>
 		public static FolderPath SystemX64 => __SystemX64 ?? (__SystemX64 = Ver.Is32BitProcessOn64BitOS ? (FolderPath)(Windows + "Sysnative") : System);
 		static string __SystemX64;
@@ -487,7 +487,7 @@ namespace Au
 			foreach(DriveInfo di in DriveInfo.GetDrives()) {
 				if(di.DriveType == DriveType.Removable) {
 					string v = null; try { v = di.VolumeLabel; } catch { continue; }
-					if(!v.Equals_(volumeLabel, true)) continue;
+					if(!v.Eqi(volumeLabel)) continue;
 					return di.Name;
 				}
 			}
@@ -773,7 +773,7 @@ namespace Au
 		public static FolderPath GetFolder(string folderName)
 		{
 			if(Empty(folderName)) return null;
-			bool isVirtual = folderName.StartsWith_("Virtual.");
+			bool isVirtual = folderName.Starts("Virtual.");
 			if(isVirtual) folderName = folderName.Substring(8);
 
 			//properties of this class

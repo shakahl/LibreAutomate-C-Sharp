@@ -107,7 +107,7 @@ namespace Au.Controls
 
 				bool fileLoaded = false;
 				try {
-					var x = XElement_.Load(xmlFile);
+					var x = ExtXml.LoadElement(xmlFile);
 					fileLoaded = true;
 					if(!usesDefaultXML) xmlVersion = x.Attribute_("version");
 					x = x.Element("split");
@@ -146,7 +146,7 @@ namespace Au.Controls
 
 		void _GetPanelXmlFromDefaultFile(string defFile)
 		{
-			var xml = XElement_.Load(defFile);
+			var xml = ExtXml.LoadElement(defFile);
 
 			foreach(var c in _initControls.Values) {
 				if(_aPanel.Exists(v => v.Content == c)) continue;

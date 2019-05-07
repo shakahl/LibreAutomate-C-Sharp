@@ -370,7 +370,7 @@ namespace Au.Util
 		{
 			//unhooking in finalizer thread makes no sense. Must unhook in same thread, else fails.
 			//if(_hh != default && !NoWarningNondisposed) PrintWarning($"Non-disposed WinHook ({_hookTypeString}) variable."); //rejected. Eg when called Environment.Exit, finalizers are executed but finally code blocks not.
-			Debug_.PrintIf(_hh != default, $"Non-disposed WinHook ({_hookTypeString}) variable.");
+			Dbg.PrintIf(_hh != default, $"Non-disposed WinHook ({_hookTypeString}) variable.");
 		}
 
 		unsafe LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam)
@@ -516,7 +516,7 @@ namespace Au.Util
 			if(e is ThreadAbortException eta) {
 				Thread.ResetAbort();
 				hook.Dispose();
-				Debug_.Print("ThreadAbortException");
+				Dbg.Print("ThreadAbortException");
 				var t = Thread.CurrentThread;
 				Task.Run(() => { Thread.Sleep(50); t.Abort(eta.ExceptionState); });
 				return true;

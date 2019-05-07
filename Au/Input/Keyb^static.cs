@@ -291,7 +291,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitForReleased(double secondsTimeout, string keys)
 		{
-			return WaitForReleased(secondsTimeout, Misc.ParseKeysString(keys));
+			return WaitForReleased(secondsTimeout, More.ParseKeysString(keys));
 		}
 
 		/// <summary>
@@ -376,7 +376,7 @@ namespace Au
 		/// </example>
 		public static bool WaitForKey(double secondsTimeout, string key, bool up = false, bool block = false)
 		{
-			return 0 != _WaitForKey(secondsTimeout, Misc.LibParseKeyNameThrow(key), up, block);
+			return 0 != _WaitForKey(secondsTimeout, More.LibParseKeyNameThrow(key), up, block);
 		}
 
 		/// <summary>
@@ -425,9 +425,9 @@ namespace Au
 		#endregion
 
 		/// <summary>
-		/// Miscellaneous keyboard-related functions.
+		/// Miscellaneous rarely used keyboard-related functions.
 		/// </summary>
-		public static class Misc
+		public static class More
 		{
 			/// <summary>
 			/// Gets text cursor (caret) position and size.
@@ -442,7 +442,7 @@ namespace Au
 			/// </remarks>
 			public static bool GetTextCursorRect(out RECT r, out Wnd w, bool orMouse = false)
 			{
-				if(Wnd.Misc.GetGUIThreadInfo(out var g) && !g.hwndCaret.Is0) {
+				if(Wnd.More.GetGUIThreadInfo(out var g) && !g.hwndCaret.Is0) {
 					if(g.rcCaret.bottom <= g.rcCaret.top) g.rcCaret.bottom = g.rcCaret.top + 16;
 					r = g.rcCaret;
 					g.hwndCaret.MapClientToScreen(ref r);

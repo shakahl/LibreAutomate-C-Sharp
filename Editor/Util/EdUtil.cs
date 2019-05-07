@@ -23,7 +23,7 @@ using static Au.NoClass;
 
 /// <summary>
 /// Extension methods for .NET classes.
-/// See also <see cref="ExtensionMethods"/>.
+/// See also <see cref="ExtOther"/>.
 /// </summary>
 static class EdNetExtensions
 {

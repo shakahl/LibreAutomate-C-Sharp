@@ -53,7 +53,7 @@ namespace Au.Compiler
 		{
 			_StartAdd(isWarning: d.Severity != DiagnosticSeverity.Error);
 			var s = d.ToString();
-			int i = d.Location.IsInSource ? s.IndexOf_("): ") + 1 : 0;
+			int i = d.Location.IsInSource ? s.Index("): ") + 1 : 0;
 			if(i > 0) {
 				_b.AppendFormat("[{0}]{1}", s.Remove(i), s.Substring(i));
 			} else {
@@ -81,7 +81,7 @@ namespace Au.Compiler
 		public void AddError(IWorkspaceFile f, string code, int pos, string message, params object[] formatArgs)
 		{
 			_StartAdd();
-			int line = code.LineIndex_(pos, out var col);
+			ExtString.More.LineAndColumn(code, pos, out int line, out int col);
 			_Append(f, line, col, message, formatArgs);
 		}
 

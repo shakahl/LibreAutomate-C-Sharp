@@ -23,10 +23,10 @@ namespace Au
 	public partial struct Wnd
 	{
 		/// <summary>
-		/// Contains miscellaneous static window-related functions and classes. Rarely used, or useful only for programmers.
+		/// Miscellaneous window-related functions and classes. Rarely used, or useful only for programmers.
 		/// </summary>
 		[System.Security.SuppressUnmanagedCodeSecurity]
-		public static partial class Misc
+		public static partial class More
 		{
 			/// <summary>
 			/// Calculates window rectangle from client area rectangle and style.

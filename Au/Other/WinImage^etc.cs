@@ -262,7 +262,7 @@ namespace Au
 				RECT rs = SystemInformation.VirtualScreen;
 				//RECT rs = Screen.PrimaryScreen.Bounds; //for testing, to see Print output in other screen
 				Bitmap bs;
-				bool windowDC = flags.Has_(WICFlags.WindowDC);
+				bool windowDC = flags.Has(WICFlags.WindowDC);
 				if(windowDC) {
 					if(!_WaitForHotkey("Press F3 to select window from mouse pointer.")) return false;
 					var w = Wnd.FromMouse(WXYFlags.NeedWindow);
@@ -396,7 +396,7 @@ namespace Au
 					using(new Util.LibStringBuilder(out var s)) {
 						var ic = _flags & (WICFlags.Image | WICFlags.Color | WICFlags.Rectangle);
 						if(ic == 0) ic = WICFlags.Image | WICFlags.Color;
-						bool canColor = ic.Has_(WICFlags.Color);
+						bool canColor = ic.Has(WICFlags.Color);
 						if(canColor) {
 							var color = _img.GetPixel(pc.X, pc.Y).ToArgb() & 0xffffff;
 							s.Append("Color  0x").Append(color.ToString("X6")).Append('\n');

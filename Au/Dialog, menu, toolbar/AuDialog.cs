@@ -183,7 +183,7 @@ namespace Au
 			/// Show dialogs on this screen when screen is not explicitly specified (<see cref="Screen"/>) and there is no owner window.
 			/// If screen index is invalid, the 'show' method shows warning, no exception.
 			/// </summary>
-			public static Screen_ DefaultScreen { get; set; }
+			public static ScreenDef DefaultScreen { get; set; }
 			//SHOULDDO: check invalid index now
 
 			/// <summary>
@@ -362,7 +362,7 @@ namespace Au
 				TDCBF_ commonButtons = 0;
 				int id = 0, nextNativeId = 100;
 
-				foreach(var v in b.Split_("|")) {
+				foreach(var v in b.SegSplit("|")) {
 					string s = _ParseSingleString(v, ref id, onlyCustom);
 
 					int nativeId = 0;
@@ -400,7 +400,7 @@ namespace Au
 
 				_radioButtons = new List<_Button>();
 				int id = 0;
-				foreach(var v in buttons.Split_("|")) {
+				foreach(var v in buttons.SegSplit("|")) {
 					string s = _ParseSingleString(v, ref id, false);
 					_radioButtons.Add(new _Button(id, s));
 				}
@@ -408,8 +408,8 @@ namespace Au
 
 			static string _ParseSingleString(string s, ref int id, bool dontSplit)
 			{
-				if(!dontSplit && Util.StringMisc.ParseIntAndString_(s, out var i, out string r)) id = i; else { r = s; id++; }
-				r = r.Trim(String_.Lib.lineSep); //API does not like newline at start, etc
+				if(!dontSplit && ExtString.More.ParseIntAndString_(s, out var i, out string r)) id = i; else { r = s; id++; }
+				r = r.Trim(ExtString.Lib.lineSep); //API does not like newline at start, etc
 				if(r.Length == 0) r = " "; //else API exception
 				else r = r.Replace("\r\n", "\n"); //API adds 2 newlines for \r\n. Only for custom buttons, not for other controls/parts.
 				return r;
@@ -547,7 +547,7 @@ namespace Au
 		{
 			string text = null; bool check = false;
 			if(!Empty(checkBox)) {
-				string[] a = checkBox.Split_("|", 2);
+				string[] a = checkBox.SegSplit("|", 2);
 				text = a[0];
 				if(a.Length == 2) switch(a[1]) { case "true": case "check": case "checked": check = true; break; }
 			}
@@ -684,9 +684,9 @@ namespace Au
 		/// Sets the screen (display monitor) where to show the dialog in multi-screen environment.
 		/// If null or not set, will be used owner window's screen or <see cref="Options.DefaultScreen"/>.
 		/// If screen index is invalid, the 'show' method shows warning, no exception.
-		/// More info: <see cref="Screen_"/>, <see cref="Wnd.MoveInScreen"/>.
+		/// More info: <see cref="ScreenDef"/>, <see cref="Wnd.MoveInScreen"/>.
 		/// </summary>
-		public Screen_ Screen { set; private get; }
+		public ScreenDef Screen { set; private get; }
 
 		/// <summary>
 		/// Let the dialog close itself after closeAfterS seconds.
@@ -849,7 +849,7 @@ namespace Au
 				if(hr == 0) {
 					_result = new DResult(_buttons.MapIdNativeToUser(rNativeButton), rRadioButton, rIsChecked != 0, _editText?.ToString());
 
-					Wnd.Misc.WaitForAnActiveWindow();
+					Wnd.More.WaitForAnActiveWindow();
 				}
 			}
 			finally {
@@ -929,7 +929,7 @@ namespace Au
 		}
 
 		//Need to call this twice:
-		//	1. Before showing dialog, to get Screen_. Later cannot apply Screen_.OfActiveWindow, because the dialog is the active window.
+		//	1. Before showing dialog, to get ScreenDef. Later cannot apply ScreenDef.OfActiveWindow, because the dialog is the active window.
 		//	2. On TDN.CREATED, to move dialog if need.
 		void _SetPos(bool before)
 		{
@@ -949,7 +949,7 @@ namespace Au
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		void _SP_SetScreen() { _screen = _screen.GetScreen(); }
 
-		Screen_ _screen;
+		ScreenDef _screen;
 
 		int _CallbackProc(Wnd w, Native.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data)
 		{
@@ -1275,7 +1275,7 @@ namespace Au
 
 			if(_editType == DEdit.Multiline) {
 				int top = r.top;
-				if(!_c.pszContent.EndsWith_(c_multilineString)) {
+				if(!_c.pszContent.Ends(c_multilineString)) {
 					_c.pszContent += c_multilineString;
 					_dlg.SendS((int)Native.TDM.SET_ELEMENT_TEXT, (int)Native.TDE.CONTENT, _c.pszContent);
 					prog.GetRectInClientOf(parent, out r); //used to calculate Edit control height: after changing text, prog is moved down, and we know its previous location...
@@ -1299,7 +1299,7 @@ namespace Au
 			//It is safer (the dialog will not receive Edit notifications) and helps to solve Tab/Esc problems.
 			var pStyle = WS.CHILD | WS.VISIBLE | WS.CLIPCHILDREN | WS.CLIPSIBLINGS; //don't need WS_TABSTOP
 			var pExStyle = WS_EX.NOPARENTNOTIFY; //not WS_EX.CONTROLPARENT
-			_editParent = Wnd.Misc.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
+			_editParent = Wnd.More.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
 			_editControlParentProcHolder = _EditControlParentProc;
 			_editParent.SetWindowLong(Native.GWL.DWLP_DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder));
 
@@ -1313,7 +1313,7 @@ namespace Au
 			case DEdit.Multiline: style |= (WS)(Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN) | WS.VSCROLL; break;
 			case DEdit.Combo: style |= (WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | WS.VSCROLL; cn = "ComboBox"; break;
 			}
-			_editWnd = Wnd.Misc.CreateWindowAndSetFont(cn, null, style, WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent, customFontHandle: _editFont);
+			_editWnd = Wnd.More.CreateWindowAndSetFont(cn, null, style, WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent, customFontHandle: _editFont);
 
 			//Init the control.
 			if(_editType == DEdit.Combo) {
@@ -1477,7 +1477,7 @@ namespace Au
 		/// <seealso cref="ShowError"/>
 		/// <seealso cref="ShowOKCancel"/>
 		/// <seealso cref="ShowYesNo"/>
-		/// <seealso cref="Debug_.Dialog"/>
+		/// <seealso cref="Dbg.Dialog"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// if(AuDialog.Show("Show another example?", null, "1 OK|2 Cancel", DIcon.Info) != 1) return;
@@ -1693,7 +1693,7 @@ namespace Au
 		{
 			i = 0;
 			if(!ShowTextInput(out string s, text1, text2, editType, editText, flags, owner)) return false;
-			i = s.ToInt_();
+			i = s.ToInt();
 			return true;
 		}
 

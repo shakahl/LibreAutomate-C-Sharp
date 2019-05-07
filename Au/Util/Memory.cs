@@ -22,7 +22,7 @@ namespace Au.Util
 	/// Memory that can be used by multiple processes and app domains.
 	/// Faster and more raw/unsafe than System.IO.MemoryMappedFiles.MemoryMappedFile.
 	/// </summary>
-	/// <seealso cref="Wnd.Misc.CopyDataStruct"/>
+	/// <seealso cref="Wnd.More.CopyDataStruct"/>
 	//[DebuggerStepThrough]
 	public unsafe static class SharedMemory
 	{
@@ -43,7 +43,7 @@ namespace Au.Util
 		{
 			created = false;
 			lock("AF2liKVWtEej+lRYCx0scQ") {
-				string interDomainVarName = "AF2liKVWtEej+lRYCx0scQ" + name.ToLower_();
+				string interDomainVarName = "AF2liKVWtEej+lRYCx0scQ" + name.Lower();
 				if(!InterDomainVariables.GetVariable(name, out IntPtr t)) {
 					var hm = Api.CreateFileMapping((IntPtr)~0, Api.SECURITY_ATTRIBUTES.ForLowIL, Api.PAGE_READWRITE, 0, size, name);
 					if(hm.Is0) goto ge;
@@ -525,13 +525,13 @@ namespace Au.Util
 					if(capacity <= b.Capacity) {
 						if(alt) t_cachedInstance2 = null; else t_cachedInstance = null;
 						b.Clear();
-						//Debug_.Print("StringBuilder cached, alt=" + alt);
+						//Dbg.Print("StringBuilder cached, alt=" + alt);
 						sb = _sb = b;
 						return;
 					}
 				}
 			}
-			//Debug_.Print("StringBuilder new");
+			//Dbg.Print("StringBuilder new");
 			sb = _sb = new StringBuilder(capacity);
 		}
 
@@ -541,7 +541,7 @@ namespace Au.Util
 		public void Dispose()
 		{
 			if(_sb.Capacity <= MAX_BUILDER_SIZE) {
-				//Debug_.Print("StringBuilder released, alt=" + (t_cachedInstance != null));
+				//Dbg.Print("StringBuilder released, alt=" + (t_cachedInstance != null));
 				if(t_cachedInstance == null) t_cachedInstance = _sb; else t_cachedInstance2 = _sb;
 			}
 			_sb = null;

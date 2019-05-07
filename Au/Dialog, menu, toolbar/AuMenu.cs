@@ -192,7 +192,7 @@ namespace Au
 		//Called when a text box or combo box clicked. Before MouseDown, which does not work well with combo box.
 		void _Item_GotFocus(object sender, EventArgs e)
 		{
-			//Debug_.PrintFunc();
+			//Dbg.PrintFunc();
 			if(!(_isOwned || ActivateMenuWindow)) {
 				var t = sender as ToolStripItem;
 
@@ -466,7 +466,7 @@ namespace Au
 			case 2: _cm.Show(new Point(x, y), direction); break;
 			case 3: _cm.Show(control, new Point(x, y), direction); break;
 			case 4:
-				Keyb.Misc.GetTextCursorRect(out RECT cr, out _, orMouse: true);
+				Keyb.More.GetTextCursorRect(out RECT cr, out _, orMouse: true);
 				_cm.Show(new Point(cr.left - 32, cr.bottom + 2));
 				break;
 			}
@@ -604,7 +604,7 @@ namespace Au
 			{
 				//var perf = Perf.StartNew();
 
-				//Debug_.PrintFunc();
+				//Dbg.PrintFunc();
 				base.OnPaint(e);
 
 				//perf.Next(); Print("------------------ paint", perf.ToString());
@@ -727,7 +727,7 @@ namespace Au
 
 			protected override void OnPaint(PaintEventArgs e)
 			{
-				//Debug_.PrintFunc();
+				//Dbg.PrintFunc();
 				base.OnPaint(e);
 				_paintedOnce = true;
 			}
@@ -970,7 +970,7 @@ namespace Au
 		{
 			Debug.Assert(!IsDisposed); if(IsDisposed) return;
 
-			if(Wnd.Misc.GetGUIThreadInfo(out var g, Api.GetCurrentThreadId()) && !g.hwndMenuOwner.Is0) {
+			if(Wnd.More.GetGUIThreadInfo(out var g, Api.GetCurrentThreadId()) && !g.hwndMenuOwner.Is0) {
 				Api.EndMenu();
 				if(onEsc) return;
 			}
@@ -1159,7 +1159,7 @@ namespace Au.Types
 					case Folders.FolderPath fp: _SetItemFileIcon(isBar, item, fp); break;
 					}
 				}
-				catch(Exception e) { Debug_.Print(e.Message); } //ToBitmap() may throw
+				catch(Exception e) { Dbg.Print(e.Message); } //ToBitmap() may throw
 			}
 #endif
 			LastItem = item;
@@ -1343,9 +1343,9 @@ namespace Au.Types
 						}
 					}
 				}
-				if(filename2 != null && filename2.EndsWith_(".exe", true)) return File_.SearchPath(filename2);
+				if(filename2 != null && filename2.Ends(".exe", true)) return File_.SearchPath(filename2);
 			}
-			catch(Exception ex) { Debug_.Print(ex); }
+			catch(Exception ex) { Dbg.Print(ex); }
 			return null;
 		}
 

@@ -186,18 +186,18 @@ partial class PanelEdit : Control
 		if(0 == d.Call(SCI_CANUNDO)) disable |= EUpdateUI.Undo;
 		if(0 == d.Call(SCI_CANREDO)) disable |= EUpdateUI.Redo;
 		if(0 != d.Call(SCI_GETSELECTIONEMPTY)) disable |= EUpdateUI.Copy;
-		if(disable.Has_(EUpdateUI.Copy) || d.ST.IsReadonly) disable |= EUpdateUI.Cut;
+		if(disable.Has(EUpdateUI.Copy) || d.ST.IsReadonly) disable |= EUpdateUI.Cut;
 		//if(0 == d.Call(SCI_CANPASTE)) disable |= EUpdateUI.Paste; //rejected. Often slow. Also need to see on focused etc.
 
 		var dif = disable ^ _cmdDisabled; if(dif == 0) return;
 
 		//Print(dif);
 		_cmdDisabled = disable;
-		if(dif.Has_(EUpdateUI.Undo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Undo), !disable.Has_(EUpdateUI.Undo));
-		if(dif.Has_(EUpdateUI.Redo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Redo), !disable.Has_(EUpdateUI.Redo));
-		if(dif.Has_(EUpdateUI.Cut)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Cut), !disable.Has_(EUpdateUI.Cut));
-		if(dif.Has_(EUpdateUI.Copy)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Copy), !disable.Has_(EUpdateUI.Copy));
-		//if(dif.Has_(EUpdateUI.Paste)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Paste), !disable.Has_(EUpdateUI.Paste));
+		if(dif.Has(EUpdateUI.Undo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Undo), !disable.Has(EUpdateUI.Undo));
+		if(dif.Has(EUpdateUI.Redo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Redo), !disable.Has(EUpdateUI.Redo));
+		if(dif.Has(EUpdateUI.Cut)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Cut), !disable.Has(EUpdateUI.Cut));
+		if(dif.Has(EUpdateUI.Copy)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Copy), !disable.Has(EUpdateUI.Copy));
+		//if(dif.Has(EUpdateUI.Paste)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Paste), !disable.Has_(EUpdateUI.Paste));
 
 	}
 
@@ -269,7 +269,7 @@ partial class PanelEdit : Control
 
 		//foreach(var f in File_.EnumDirectory(Folders.ProgramFiles, FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
 		//	if(f.IsDirectory) continue;
-		//	if(0 == f.Name.EndsWith_(true, ".png", ".bmp", ".jpg", ".gif", ".ico")) continue;
+		//	if(0 == f.Name.Ends(true, ".png", ".bmp", ".jpg", ".gif", ".ico")) continue;
 		//	//Print(f.FullPath);
 		//	MainForm.Panels.Output.Write($"<image \"{f.FullPath}\">");
 		//	Time.DoEvents();
@@ -480,14 +480,14 @@ partial class PanelEdit : Control
 							}
 						} else if(newFile) {
 							//fold boilerplate code
-							if(this.Text.RegexMatch_(@"//\{\{(\R//\{\{)? using\R", 0, out RXGroup g)) {
+							if(this.Text.RegexMatch(@"//\{\{(\R//\{\{)? using\R", 0, out RXGroup g)) {
 								int i = ST.LineIndexFromPos(g.Index, true);
 								if(0 != (SC_FOLDLEVELHEADERFLAG & Call(SCI_GETFOLDLEVEL, i))) Call(SCI_FOLDCHILDREN, i);
 							}
 						}
 					}
 				}
-				catch(SLException ex) { Debug_.Print(ex); }
+				catch(SLException ex) { Dbg.Print(ex); }
 			};
 		}
 
@@ -524,7 +524,7 @@ partial class PanelEdit : Control
 					}
 					_savedMD5 = hash;
 				}
-				catch(SLException ex) { Debug_.Print(ex); }
+				catch(SLException ex) { Dbg.Print(ex); }
 			}
 		}
 
@@ -708,7 +708,7 @@ partial class PanelEdit : Control
 				if(FN.IsCodeFile) {
 					var text = ST.GetText();
 					if(Au.Compiler.MetaComments.FindMetaComments(text, out endOfMeta) && pos < endOfMeta) inMeta = true;
-					else if(pos > endOfMeta) text.RegexMatch_(@"\b(\w+)\s*=\s*new\s+Au(?:Menu|Toolbar)", 1, out menuVar, 0, new RXMore(endOfMeta, pos));
+					else if(pos > endOfMeta) text.RegexMatch(@"\b(\w+)\s*=\s*new\s+Au(?:Menu|Toolbar)", 1, out menuVar, 0, new RXMore(endOfMeta, pos));
 				}
 			}
 
@@ -721,7 +721,7 @@ partial class PanelEdit : Control
 				var paths = d.GetData("FileDrop", false) as string[];
 				if(paths != null) {
 					foreach(var path in paths) {
-						bool isLnk = path.EndsWith_(".lnk", true);
+						bool isLnk = path.Ends(".lnk", true);
 						if(isLnk) t.Append("//");
 						var name = Path_.GetFileName(path, true);
 						_AppendFile(path, name);
@@ -729,12 +729,12 @@ partial class PanelEdit : Control
 							try {
 								var g = Shell.Shortcut.Open(path);
 								string target = g.TargetAnyType, args = null;
-								if(target.StartsWith_("::")) {
+								if(target.Starts("::")) {
 									using(var pidl = Shell.Pidl.FromString(target))
 										name = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
 								} else {
 									args = g.Arguments;
-									if(!target.EndsWith_(".exe", true) || name.IndexOf_("Shortcut") >= 0)
+									if(!target.Ends(".exe", true) || name.Index("Shortcut") >= 0)
 										name = Path_.GetFileName(target, true);
 								}
 								_AppendFile(target, name, args);
@@ -818,16 +818,16 @@ partial class PanelEdit : Control
 
 					t.Append(opt).Append(path).Append(';');
 				} else {
-					name = name.Escape_();
+					name = name.Escape();
 					if(menuVar != null) t.Append(menuVar).Append("[\"").Append(name).Append("\"] =o=> ");
 					bool isFN = fn != null;
 					if(isFN && !fn.IsCodeFile) {
 						t.Append("//").Append(path);
 					} else {
 						t.Append(isFN ? "AuTask.Run(@\"" : "Shell.Run(@\"").Append(path);
-						if(!Empty(args)) t.Append("\", \"").Append(args.Escape_());
+						if(!Empty(args)) t.Append("\", \"").Append(args.Escape());
 						t.Append("\");");
-						if(menuVar == null && !isFN && (path.StartsWith_("::") || path.IndexOf_(name, true) < 0)) t.Append(" //").Append(name);
+						if(menuVar == null && !isFN && (path.Starts("::") || path.Index(name, true) < 0)) t.Append(" //").Append(name);
 						//FUTURE: add unexpanded path version
 					}
 				}
@@ -874,9 +874,9 @@ partial class PanelEdit : Control
 			fixed (byte* p = b) { //FILEGROUPDESCRIPTORW
 				if(*(int*)p != 1) return; //count of FILEDESCRIPTORW
 				var s = new string((char*)(p + 76));
-				if(!s.EndsWith_(".url", true)) return;
+				if(!s.Ends(".url", true)) return;
 				url = d.GetData("UnicodeText", false) as string;
-				if(url != null) text = s.RemoveEnd_(4);
+				if(url != null) text = s.RemoveSuffix(4);
 			}
 		}
 
@@ -911,7 +911,7 @@ partial class PanelEdit : Control
 			if(isFragment) {
 				b.Append(s);
 			} else {
-				var name = FN.Name; if(isScript && name.RegexIsMatch_(@"(?i)^Script\d*\.cs")) name = null;
+				var name = FN.Name; if(isScript && name.RegexIsMatch(@"(?i)^Script\d*\.cs")) name = null;
 				var sType = isScript ? "script" : "class";
 				var rx = isScript ? _RxScript : _RxClass;
 				//Perf.First();
@@ -959,11 +959,11 @@ partial class PanelEdit : Control
 		{
 			var s = Clipb.Data.GetText();
 			if(s == null) return false;
-			if(s.StartsWith_("[code2]") && s.EndsWith_("[/code2]\r\n")) s = s.Substring(7, s.Length - 17);
-			if(!(s.StartsWith_("////"))) return false;
+			if(s.Starts("[code2]") && s.Ends("[/code2]\r\n")) s = s.Substring(7, s.Length - 17);
+			if(!(s.Starts("////"))) return false;
 			//_Print(s);
 
-			if(!s.RegexMatch_(@"^/////? (script|class) ""(.*?)""( |\R)", out var m)) return false;
+			if(!s.RegexMatch(@"^/////? (script|class) ""(.*?)""( |\R)", out var m)) return false;
 			bool isClass = s[m[1].Index] == 'c';
 			int i = m.EndIndex;
 			if(s[4] == '/') { //raw
@@ -971,16 +971,16 @@ partial class PanelEdit : Control
 			} else {
 				var b = new StringBuilder();
 				if(isClass) {
-					if(!s.RegexMatch_(@"[ \n]//{{ using\R", 0, out RXGroup m1)) return false;
+					if(!s.RegexMatch(@"[ \n]//{{ using\R", 0, out RXGroup m1)) return false;
 					int u = m1.Index + 1;
 					b.Append(s, i, u - i).Append(_Usings);
 					u += 10;
 					b.Append(s, u, s.Length - u);
 				} else {
-					if(!s.RegexMatch_(@"[ \n]//{{", 0, out RXGroup m1)) return false;
+					if(!s.RegexMatch(@"[ \n]//{{", 0, out RXGroup m1)) return false;
 					int j = m1.EndIndex;
 					b.Append(s, i, j - i);
-					if(s.RegexMatch_(@"(?ms)(.*?)^//{{ using\R(.*?)^//{{ main$", out var k, more: new RXMore(j))) {
+					if(s.RegexMatch(@"(?ms)(.*?)^//{{ using\R(.*?)^//{{ main$", out var k, more: new RXMore(j))) {
 						b.Append(s, j, k[1].Length).AppendLine(_Usings).Append(s, k[2].Index, k[2].Length);
 						i = k.EndIndex;
 					} else {
@@ -1040,8 +1040,8 @@ partial class PanelEdit : Control
 			if(s.Length == 0) return;
 			bool wasSelection = x.selEnd > x.selStart;
 			bool caretAtEnd = wasSelection && ST.CurrentPos == x.linesEnd;
-			bool com = comment ?? !s.RegexIsMatch_("^[ \t]*//(?!/[^/])");
-			s = com ? s.RegexReplace_(@"(?m)^", "//") : s.RegexReplace_(@"(?m)^([ \t]*)//", "$1");
+			bool com = comment ?? !s.RegexIsMatch("^[ \t]*//(?!/[^/])");
+			s = com ? s.RegexReplace(@"(?m)^", "//") : s.RegexReplace(@"(?m)^([ \t]*)//", "$1");
 			ST.ReplaceRange(x.linesStart, x.linesEnd, s);
 			if(wasSelection) {
 				int i = x.linesStart, j = ST.CountBytesFromChars(x.linesStart, s.Length);

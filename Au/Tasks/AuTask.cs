@@ -35,7 +35,7 @@ namespace Au
 				if(s_name != null) return s_name;
 				//if(t_name != null) return t_name;
 				//var s = Thread.CurrentThread.Name;
-				//if(s != null && s.StartsWith_("[script] ")) return t_name = s.Substring(9);
+				//if(s != null && s.Starts("[script] ")) return t_name = s.Substring(9);
 				return s_name = AppDomain.CurrentDomain.FriendlyName;
 			}
 			internal set {
@@ -111,7 +111,7 @@ namespace Au
 				if(needResult && !tr.Init()) throw new AuException("*get task results");
 
 				var data = Util.LibSerializer.Serialize(script, args, tr.pipeName);
-				int pid = (int)Wnd.Misc.CopyDataStruct.SendBytes(w, 100, data, mode);
+				int pid = (int)Wnd.More.CopyDataStruct.SendBytes(w, 100, data, mode);
 				switch((ERunResult)pid) {
 				case ERunResult.failed: throw new AuException("*start task");
 				case ERunResult.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
@@ -220,7 +220,7 @@ namespace Au
 		internal static Wnd WndMsg {
 			get {
 				if(!s_wndMsg.IsAlive) {
-					s_wndMsg = Wnd.Misc.FindMessageOnlyWindow(null, "Au.Editor.Msg");
+					s_wndMsg = Wnd.More.FindMessageOnlyWindow(null, "Au.Editor.Msg");
 				}
 				return s_wndMsg;
 			}
@@ -250,7 +250,7 @@ namespace Au
 			}
 			return true;
 			ge:
-			Debug_.LibPrintNativeError();
+			Dbg.LibPrintNativeError();
 			return false;
 		}
 

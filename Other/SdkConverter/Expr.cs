@@ -52,7 +52,7 @@ namespace SdkConverter
 						return new _ExpressionResult(sValue, sType, false, value);
 					} else {
 						sValue = _TokToString(iFrom);
-						sType = sValue.EndsWith_("f", true) ? "float" : "double";
+						sType = sValue.Ends("f", true) ? "float" : "double";
 						return new _ExpressionResult(sValue, sType, false);
 					}
 

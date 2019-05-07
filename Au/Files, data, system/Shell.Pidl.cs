@@ -135,7 +135,7 @@ namespace Au
 			{
 				IntPtr R;
 				s = _Normalize(s);
-				if(s.StartsWith_(":: ")) { //hex-encoded ITEMIDLIST
+				if(s.Starts(":: ")) { //hex-encoded ITEMIDLIST
 					int n = (s.Length - 3) / 2;
 					R = Marshal.AllocCoTaskMem(n + 2);
 					byte* b = (byte*)R;

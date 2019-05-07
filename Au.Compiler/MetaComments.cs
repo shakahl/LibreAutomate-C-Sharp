@@ -377,7 +377,7 @@ namespace Au.Compiler
 			_FinalCheckOptions();
 
 			if(!Errors.IsEmpty) {
-				if(flags.Has_(EMPFlags.PrintErrors)) Errors.PrintAll();
+				if(flags.Has(EMPFlags.PrintErrors)) Errors.PrintAll();
 				return false;
 			}
 
@@ -479,17 +479,17 @@ namespace Au.Compiler
 				break;
 			case "define":
 				Specified |= EMSpecified.define;
-				Defines.AddRange(value.Split_(", ", SegFlags.NoEmpty));
+				Defines.AddRange(value.SegSplit(", ", SegFlags.NoEmpty));
 				break;
 			case "warningLevel":
 				_Specified(EMSpecified.warningLevel, iName);
-				int wl = value.ToInt_();
+				int wl = value.ToInt();
 				if(wl >= 0 && wl <= 4) WarningLevel = wl;
 				else _Error(iValue, "must be 0 - 4");
 				break;
 			case "noWarnings":
 				Specified |= EMSpecified.noWarnings;
-				NoWarnings.AddRange(value.Split_(", ", SegFlags.NoEmpty));
+				NoWarnings.AddRange(value.SegSplit(", ", SegFlags.NoEmpty));
 				break;
 			case "preBuild":
 				_Specified(EMSpecified.preBuild, iName);
@@ -579,7 +579,7 @@ namespace Au.Compiler
 
 		void _Specified(EMSpecified what, int errPos)
 		{
-			if(Specified.Has_(what)) _Error(errPos, "this meta option is already specified");
+			if(Specified.Has(what)) _Error(errPos, "this meta option is already specified");
 			Specified |= what;
 		}
 
@@ -614,7 +614,7 @@ namespace Au.Compiler
 		MetaFileAndString _GetFileAndString(string s, int errPos)
 		{
 			string s2 = null;
-			int i = s.IndexOf_(" /");
+			int i = s.Index(" /");
 			if(i > 0) {
 				s2 = s.Substring(i + 2);
 				s = s.Remove(i);
@@ -626,7 +626,7 @@ namespace Au.Compiler
 		{
 			s = s.TrimEnd('\\');
 			if(!Path_.IsFullPathExpandEnvVar(ref s)) {
-				if(s.StartsWith_('\\')) s = _fn.IwfWorkspace.IwfFilesDirectory + s;
+				if(s.Starts('\\')) s = _fn.IwfWorkspace.IwfFilesDirectory + s;
 				else s = Path_.GetDirectoryPath(_fn.FilePath, true) + s;
 			}
 			return Path_.LibNormalize(s, noExpandEV: true);
@@ -649,19 +649,19 @@ namespace Au.Compiler
 		{
 			switch(Role) {
 			case ERole.miniProgram:
-				if(Specified.HasAny_(EMSpecified.outputPath))
+				if(Specified.HasAny(EMSpecified.outputPath))
 					return _Error(0, "with role miniProgram (default role of script files) cannot use outputPath");
 				break;
 			case ERole.exeProgram:
 				if(OutputPath == null) OutputPath = Folders.Workspace + "bin";
 				break;
 			case ERole.editorExtension:
-				if(Specified.HasAny_(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
+				if(Specified.HasAny(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
 					| EMSpecified.config | EMSpecified.manifest | EMSpecified.console | EMSpecified.outputPath))
 					return _Error(0, "with role editorExtension cannot use runMode, ifRunning, uac, prefer32bit, config, manifest, console, outputPath");
 				break;
 			case ERole.classLibrary:
-				if(Specified.HasAny_(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
+				if(Specified.HasAny(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
 					| EMSpecified.config | EMSpecified.manifest | EMSpecified.console))
 					return _Error(0, "with role classLibrary cannot use runMode, ifRunning, uac, prefer32bit, config, manifest, console");
 				if(OutputPath == null) OutputPath = Folders.ThisApp + "Libraries";
@@ -689,8 +689,8 @@ namespace Au.Compiler
 		public static bool FindMetaComments(string code, out int endOfMetacomments)
 		{
 			endOfMetacomments = 0;
-			if(code.Length_() < 6 || !code.StartsWith_("/*/")) return false;
-			int iTo = code.IndexOf_("/*/", 3); if(iTo < 0) return false;
+			if(code.Lenn() < 6 || !code.Starts("/*/")) return false;
+			int iTo = code.Index("/*/", 3); if(iTo < 0) return false;
 			endOfMetacomments = iTo + 3;
 			return true;
 		}
@@ -729,8 +729,8 @@ namespace Au.Compiler
 
 			public string Name() => code.Substring(nameStart, nameLen);
 			public string Value() => code.Substring(valueStart, valueLen);
-			public bool NameIs(string s) => s.Length == nameLen && code.EqualsAt_(nameStart, s);
-			public bool ValueIs(string s) => s.Length == valueLen && code.EqualsAt_(valueStart, s);
+			public bool NameIs(string s) => s.Length == nameLen && code.EqAt(nameStart, s);
+			public bool ValueIs(string s) => s.Length == valueLen && code.EqAt(valueStart, s);
 		}
 	}
 
