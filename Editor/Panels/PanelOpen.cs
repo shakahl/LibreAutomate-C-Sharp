@@ -65,7 +65,7 @@ class PanelOpen :Control, ITreeModel
 
 	public void UpdateList()
 	{
-		//Dbg.PrintFunc();
+		//ADebug.PrintFunc();
 		bool cmdPrevDisable = (Model?.OpenFiles.Count ?? 0) < 2;
 		if(cmdPrevDisable != _cmdPrevDisabled) {
 			_cmdPrevDisabled = cmdPrevDisable;
@@ -77,7 +77,7 @@ class PanelOpen :Control, ITreeModel
 
 	public void UpdateCurrent(FileNode fn)
 	{
-		//Dbg.PrintFunc();
+		//ADebug.PrintFunc();
 		if(fn == null) _c.ClearSelection();
 		else _c.SelectedNode = _c.FindNodeByTag(fn);
 	}

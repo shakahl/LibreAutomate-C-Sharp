@@ -79,9 +79,9 @@ namespace Au.Compiler
 	/// Resource type depends on file extension and suffix:
 	/// Suffix /string or /strings - string. Extension .png, .bmp, .jpg, .jpeg, .gif, .tif or .tiff - Bitmap. Extension .ico - Icon. Other - byte[].
 	/// Examples of loading resources at run time:
-	/// In meta comments: <c>resource \images\file.png</c>. Code: <c>var bitmap = Au.Util.Resources_.GetAppResource("file.png") as Bitmap;</c>
-	/// In meta comments: <c>resource file.ico</c>. Code: <c>var icon = new Icon(Au.Util.Resources_.GetAppResource("file.ico") as Icon, 16, 16);</c>
-	/// In meta comments: <c>resource file.cur</c>. Code: <c>var cursor = Au.Util.Cursor_.LoadCursorFromMemory(Au.Util.Resources_.GetAppResource("file.cur") as byte[]);</c>
+	/// In meta comments: <c>resource \images\file.png</c>. Code: <c>var bitmap = Au.Util.AResources.GetAppResource("file.png") as Bitmap;</c>
+	/// In meta comments: <c>resource file.ico</c>. Code: <c>var icon = new Icon(Au.Util.AResources.GetAppResource("file.ico") as Icon, 16, 16);</c>
+	/// In meta comments: <c>resource file.cur</c>. Code: <c>var cursor = Au.Util.ACursor.LoadCursorFromMemory(Au.Util.AResources.GetAppResource("file.cur") as byte[]);</c>
 	/// 
 	/// <h3>Settings used when compiling</h3>
 	/// <code><![CDATA[
@@ -394,11 +394,11 @@ namespace Au.Compiler
 		/// <param name="isMain">If false, it is a file added through meta option 'c'.</param>
 		void _ParseFile(IWorkspaceFile f, bool isMain)
 		{
-			string code = File_.LoadText(f.FilePath);
+			string code = AFile.LoadText(f.FilePath);
 			bool isScript = f.IsScript;
 
 			if(_isMain = isMain) {
-				Name = Path_.GetFileName(f.Name, true);
+				Name = APath.GetFileName(f.Name, true);
 				IsScript = isScript;
 
 				Optimize = DefaultOptimize;
@@ -607,7 +607,7 @@ namespace Au.Compiler
 		{
 			var f = _fn.IwfFindRelative(s, false);
 			if(f == null) { _Error(errPos, $"file '{s}' does not exist in this workspace"); return null; }
-			if(!File_.ExistsAsFile(s = f.FilePath, true)) { _Error(errPos, "file does not exist: " + s); return null; }
+			if(!AFile.ExistsAsFile(s = f.FilePath, true)) { _Error(errPos, "file does not exist: " + s); return null; }
 			return f;
 		}
 
@@ -625,11 +625,11 @@ namespace Au.Compiler
 		string _GetOutPath(string s, int errPos)
 		{
 			s = s.TrimEnd('\\');
-			if(!Path_.IsFullPathExpandEnvVar(ref s)) {
+			if(!APath.IsFullPathExpandEnvVar(ref s)) {
 				if(s.Starts('\\')) s = _fn.IwfWorkspace.IwfFilesDirectory + s;
-				else s = Path_.GetDirectoryPath(_fn.FilePath, true) + s;
+				else s = APath.GetDirectoryPath(_fn.FilePath, true) + s;
 			}
-			return Path_.LibNormalize(s, noExpandEV: true);
+			return APath.LibNormalize(s, noExpandEV: true);
 		}
 
 		bool _PR(ref string value, int iValue)

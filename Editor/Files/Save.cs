@@ -159,7 +159,7 @@ partial class FilesModel
 			return true;
 		}
 		catch(Exception ex) { //XElement.Save exceptions are undocumented
-			AuDialog.ShowError("Failed to save", WorkspaceFile, expandedText: ex.Message);
+			ADialog.ShowError("Failed to save", WorkspaceFile, expandedText: ex.Message);
 			return false;
 		}
 	}
@@ -187,7 +187,7 @@ partial class FilesModel
 			return true;
 		}
 		catch(SLException ex) {
-			Dbg.Print(ex);
+			ADebug.Print(ex);
 			return false;
 		}
 	}
@@ -233,7 +233,7 @@ partial class FilesModel
 				//Perf.NW();
 			}
 		}
-		catch(Exception ex) { Dbg.Print(ex); }
+		catch(Exception ex) { ADebug.Print(ex); }
 		finally { Save.LoadingState = false; }
 	}
 }

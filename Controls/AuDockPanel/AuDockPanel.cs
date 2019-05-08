@@ -99,7 +99,7 @@ namespace Au.Controls
 			string xmlFile = xmlFileCustomized, xmlVersion = null, outInfo = null;
 			for(int i = 0; i < 2; i++) {
 				if(i == 0) {
-					if(!File_.ExistsAsFile(xmlFile)) continue;
+					if(!AFile.ExistsAsFile(xmlFile)) continue;
 				} else {
 					usesDefaultXML = true;
 					xmlFile = xmlFileDefault;
@@ -107,9 +107,9 @@ namespace Au.Controls
 
 				bool fileLoaded = false;
 				try {
-					var x = ExtXml.LoadElement(xmlFile);
+					var x = ExtXml.LoadElem(xmlFile);
 					fileLoaded = true;
-					if(!usesDefaultXML) xmlVersion = x.Attribute_("version");
+					if(!usesDefaultXML) xmlVersion = x.Attr("version");
 					x = x.Element("split");
 
 					//THIS DOES THE MAIN JOB
@@ -126,10 +126,10 @@ namespace Au.Controls
 					//tested: XML can be added to Application Settings, but var xml=Properties.Settings.Default.PanelsXML takes 61 MILLIseconds.
 				}
 				catch(Exception e) {
-					var sErr = $"Failed to load file '{xmlFile}'.\r\n\t{e.ToStringWithoutStack_()}";
+					var sErr = $"Failed to load file '{xmlFile}'.\r\n\t{e.ToStringWithoutStack()}";
 					if(usesDefaultXML) {
 						_xmlFile = null;
-						AuDialog.ShowError("Cannot load panel/toolbar layout.", $"{sErr}\r\n\r\nReinstall the application.");
+						ADialog.ShowError("Cannot load panel/toolbar layout.", $"{sErr}\r\n\r\nReinstall the application.");
 						Environment.Exit(1);
 					} else {
 						//probably in this version there are less panels, most likely when downgraded. Or the file is corrupt.
@@ -146,11 +146,11 @@ namespace Au.Controls
 
 		void _GetPanelXmlFromDefaultFile(string defFile)
 		{
-			var xml = ExtXml.LoadElement(defFile);
+			var xml = ExtXml.LoadElem(defFile);
 
 			foreach(var c in _initControls.Values) {
 				if(_aPanel.Exists(v => v.Content == c)) continue;
-				var x = xml.Descendant_("panel", "name", c.Name);
+				var x = xml.Desc("panel", "name", c.Name);
 				var gp = new _Panel(this, null, x) {
 					DockState = _DockState.Hidden,
 					SavedVisibleDockState = _DockState.Floating
@@ -164,16 +164,16 @@ namespace Au.Controls
 		{
 			try {
 				if(ResetLayoutAfterRestart) {
-					File_.Delete(_xmlFile);
+					AFile.Delete(_xmlFile);
 					return;
 				}
-				File_.CreateDirectoryFor(_xmlFile);
+				AFile.CreateDirectoryFor(_xmlFile);
 				var sett = new XmlWriterSettings() {
 					OmitXmlDeclaration = true,
 					Indent = true,
 					IndentChars = "\t"
 				};
-				File_.Save(_xmlFile, temp =>
+				AFile.Save(_xmlFile, temp =>
 				{
 					using(var x = XmlWriter.Create(temp, sett)) {
 						x.WriteStartDocument();
@@ -192,7 +192,7 @@ namespace Au.Controls
 #endif
 				//Print(ex);
 				//these don't work, maybe because now is closing app. Never mind, unlikely to fail, and not very important.
-				//AuDialog.ShowError("Failed to save panel/toolbar layout", _xmlFile, DFlags.Wider, expandedText: e.ToString());
+				//ADialog.ShowError("Failed to save panel/toolbar layout", _xmlFile, DFlags.Wider, expandedText: e.ToString());
 				//MessageBox.Show("aaaa");
 			}
 		}
@@ -284,7 +284,7 @@ namespace Au.Controls
 		{
 			bool R = false, hilite = false, isTooltip = false;
 			if((((uint)lParam) & 0xFFFF) == Api.HTCLIENT && !c.Capture) {
-				var p = c.MouseClientXY_();
+				var p = c.MouseClientXY();
 				switch(_HitTest(c, p.x, p.y, out var ht)) {
 				case _HitTestResult.Splitter:
 					//info: works better than Cursor=x in OnMouseMove.
@@ -311,10 +311,10 @@ namespace Au.Controls
 							int delay = _toolTipTabButton == null ? _toolTip.InitialDelay : _toolTip.ReshowDelay;
 							_HideTooltip();
 							_toolTipTabButton = ht.gp;
-							Timer_.After(delay, () =>
+							ATimer.After(delay, () =>
 							{
 								var gp = _toolTipTabButton; if(gp == null) return;
-								var p2 = gp.ParentControl.MouseClientXY_();
+								var p2 = gp.ParentControl.MouseClientXY();
 								_toolTip.Show(gp.ToolTipText, gp.ParentControl, p2.x, p2.y + 20, _toolTip.AutoPopDelay);
 							});
 						}
@@ -501,7 +501,7 @@ namespace Au.Controls
 			(m.Items.Add("Reset...", null, (unu, sed) =>
 			{
 				if(ResetLayoutAfterRestart) ResetLayoutAfterRestart = false;
-				else ResetLayoutAfterRestart = AuDialog.ShowOKCancel("Reset panel/toolbar layout", "After restarting this application.");
+				else ResetLayoutAfterRestart = ADialog.ShowOKCancel("Reset panel/toolbar layout", "After restarting this application.");
 			}) as ToolStripMenuItem).Checked = ResetLayoutAfterRestart;
 
 			m.ResumeLayout();
@@ -581,9 +581,9 @@ namespace Au.Controls
 
 		public class DPContextMenuEventArgs :DPEventArgs
 		{
-			public AuMenu menu { get; internal set; }
+			public AMenu menu { get; internal set; }
 
-			internal DPContextMenuEventArgs(object gPanel, AuMenu cm) : base(gPanel)
+			internal DPContextMenuEventArgs(object gPanel, AMenu cm) : base(gPanel)
 			{
 				menu = cm;
 			}

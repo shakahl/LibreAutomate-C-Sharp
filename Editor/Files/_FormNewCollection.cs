@@ -29,7 +29,7 @@ using static Program;
 partial class FilesModel
 {
 #endif
-	class _FormNewWorkspace :Form_
+	class _FormNewWorkspace :AFormBase
 	{
 		public _FormNewWorkspace()
 		{
@@ -46,7 +46,7 @@ partial class FilesModel
 			var d = new FolderBrowserDialog();
 			d.Description = "Location. In the selected folder will be created the main folder of the workspace.";
 			d.ShowNewFolderButton = true;
-			d.SelectedPath = File_.ExistsAsDirectory(textLocation.Text) ? textLocation.Text : (string)Folders.ThisAppDocuments;
+			d.SelectedPath = AFile.ExistsAsDirectory(textLocation.Text) ? textLocation.Text : (string)Folders.ThisAppDocuments;
 			if(d.ShowDialog(this) != DialogResult.OK) return;
 			textLocation.Text = d.SelectedPath;
 		}
@@ -55,9 +55,9 @@ partial class FilesModel
 		{
 			var ok = true;
 			var path = textPath.Text;
-			if(!Path_.IsFullPath(path)) ok = false;
-			else if(File_.ExistsAsAny(path)) {
-				AuDialog.ShowError("Already exists", path, owner: this);
+			if(!APath.IsFullPath(path)) ok = false;
+			else if(AFile.ExistsAsAny(path)) {
+				ADialog.ShowError("Already exists", path, owner: this);
 				ok = false;
 			}
 			this.DialogResult = ok ? DialogResult.OK : DialogResult.None;
@@ -69,9 +69,9 @@ partial class FilesModel
 			var name = textName.Text.Trim();
 			string path = null;
 			if(location.Length > 0 && name.Length > 0) {
-				name = Path_.CorrectFileName(name);
-				path = Path_.Combine(location, name);
-				try { path = Path_.Normalize(path); } catch { path = null; }
+				name = APath.CorrectFileName(name);
+				path = APath.Combine(location, name);
+				try { path = APath.Normalize(path); } catch { path = null; }
 			}
 			textPath.Text = path;
 			buttonOK.Enabled = path != null;

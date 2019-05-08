@@ -176,7 +176,7 @@ namespace Au
 			if(!LibGetWindowPlacement(out var p)) return null;
 			//Print(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 			if(!canBeMinimized && p.showCmd == Api.SW_SHOWMINIMIZED) p.showCmd = (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0 ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL;
-			return Convert_.HexEncode(&p, sizeof(Api.WINDOWPLACEMENT), true);
+			return AConvert.HexEncode(&p, sizeof(Api.WINDOWPLACEMENT), true);
 		}
 
 		/// <summary>
@@ -189,7 +189,7 @@ namespace Au
 		public unsafe void RestorePositionSizeState(string s, bool ensureInScreen = false, bool showActivate = false)
 		{
 			Api.WINDOWPLACEMENT p; int siz = sizeof(Api.WINDOWPLACEMENT);
-			if(siz == Convert_.HexDecode(s, &p, siz)) {
+			if(siz == AConvert.HexDecode(s, &p, siz)) {
 				//Print(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 				if(!showActivate && !this.IsVisible) {
 					var style = this.Style;

@@ -20,7 +20,7 @@ using static Au.NoClass;
 #if false //unfinished. Currently not used in lib.
 namespace Au//.Util
 {
-	public static unsafe class Thread_
+	public static unsafe class AThread
 	{
 		internal struct ProcessVariables
 		{
@@ -36,12 +36,12 @@ namespace Au//.Util
 				if(v->FlsIndex == 0) {
 					lock("DFXSMJh8qUiZj077K1qBkg") {
 						if(v->FlsIndex == 0) {
-							var d = Util.AppDomain_.GetDefaultDomain(out bool isThisDomainDefault);
+							var d = Util.AAppDomain.GetDefaultDomain(out bool isThisDomainDefault);
 							if(isThisDomainDefault) _SetCallback(); else d.DoCallBack(_SetCallback);
 						}
 					}
 				}
-				if(v->FlsIndex == -1) throw new AuException();
+				if(v->FlsIndex == -1) throw new AException();
 				FlsSetValue(v->FlsIndex, (IntPtr)_domainHandle);
 
 				//_Exit += value;
@@ -157,7 +157,7 @@ namespace Au//.Util
 
 		void _LaterDispose()
 		{
-			//_TODO: subscribe to Thread_.Exit.
+			//_TODO: subscribe to AThread.Exit.
 		}
 	}
 }

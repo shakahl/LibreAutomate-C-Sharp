@@ -24,9 +24,9 @@ namespace Au.Triggers
 	/// The main class of action triggers.
 	/// </summary>
 	/// <remarks>
-	/// Action triggers launch functions (aka <i>trigger actions</i>) in running automation scripts. To launch scripts are used other ways: manually, at startup, command line, <see cref="AuTask.Run"/>, output link.
+	/// Action triggers launch functions (aka <i>trigger actions</i>) in running automation scripts. To launch scripts are used other ways: manually, at startup, command line, <see cref="ATask.Run"/>, output link.
 	/// 
-	/// This class manages action triggers. The <see cref="AuScript.Triggers"/> property gets its instance. Through it you access all trigger types (hotkey, window, etc) and add triggers to them.
+	/// This class manages action triggers. The <see cref="AScript.Triggers"/> property gets its instance. Through it you access all trigger types (hotkey, window, etc) and add triggers to them.
 	/// 
 	/// Code syntax to add an action trigger:
 	/// <code>Triggers.TriggerType[parameters] = action;</code>
@@ -87,7 +87,7 @@ namespace Au.Triggers
 	/// //mouse triggers
 	/// 
 	/// mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => Print(o.Trigger);
-	/// mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); AuDialog.ShowEx("Bang!", x: Coord.Max); };
+	/// mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
 	/// mouse[TMMove.LeftRightInCenter50] = o => Wnd.SwitchActiveWindow();
 	/// 
 	/// Triggers.FuncOf.NextTrigger = o => Keyb.IsScrollLock; //example of a custom scope (aka context, condition)
@@ -168,7 +168,7 @@ namespace Au.Triggers
 		/// Initializes a new instance of this class.
 		/// </summary>
 		/// <remarks>
-		/// In automation scripts don't need to create new instances of this class. Instead use the <see cref="AuScript.Triggers"/> property to get an instance.
+		/// In automation scripts don't need to create new instances of this class. Instead use the <see cref="AScript.Triggers"/> property to get an instance.
 		/// </remarks>
 		public ActionTriggers()
 		{
@@ -181,8 +181,8 @@ namespace Au.Triggers
 		//public TriggerScopes Of {
 		//	get {
 		//		if(_test == false){
-		//			Dbg.LibMemorySetAnchor();
-		//			Timer_.After(500, () => Dbg.LibMemoryPrint());
+		//			ADebug.LibMemorySetAnchor();
+		//			ATimer.After(500, () => ADebug.LibMemoryPrint());
 		//		}
 
 		//		var k=new StackFrame(1, true);
@@ -275,7 +275,7 @@ namespace Au.Triggers
 		/// </remarks>
 		/// <example>See <see cref="ActionTriggers"/>.</example>
 		/// <exception cref="InvalidOperationException">Already running.</exception>
-		/// <exception cref="AuException">Something failed.</exception>
+		/// <exception cref="AException">Something failed.</exception>
 		public void Run()
 		{
 			//AppDomain.CurrentDomain.AssemblyLoad += (object sender, AssemblyLoadEventArgs args) => {
@@ -308,7 +308,7 @@ namespace Au.Triggers
 			_winTimerLastTime = 0;
 
 			try {
-				_threadId = Thread_.NativeId;
+				_threadId = AThread.NativeId;
 				if(hookEvents != 0) {
 					_RunWithHooksServer(hookEvents);
 					//CONSIDER: run key/mouse triggers in separate thread.
@@ -385,12 +385,12 @@ namespace Au.Triggers
 			//Perf.Next();
 
 			//prevent big delay later on first LL hook event while hook proc waits
-			bool ngened = Util.Assembly_.LibIsAuNgened;
+			bool ngened = Util.AAssembly.LibIsAuNgened;
 			bool scopeUsed = scopes.Used || funcs.Used;
 			if(!ngened || scopeUsed) { //never mind: should do it once. Several Triggers.Run in task is rare. Fast next time.
 				ThreadPool.QueueUserWorkItem(_ => {
 					try {
-						if(scopeUsed) Util.Assembly_.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
+						if(scopeUsed) Util.AAssembly.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
 						if(!ngened) {
 							if(scopeUsed) new Wnd.Finder("*a").IsMatch(Wnd.Active);
 							_ = Time.PerfMicroseconds;
@@ -402,17 +402,17 @@ namespace Au.Triggers
 							if(this[TriggerType.Mouse] is MouseTriggers tm) MouseTriggers.JitCompile();
 						}
 					}
-					catch(Exception ex) { Dbg.Print(ex); }
+					catch(Exception ex) { ADebug.Print(ex); }
 				});
 			}
 			//Perf.Next();
 
 			Wnd wMsg = default;
-			bool hooksInEditor = AuTask.Role != ATRole.ExeProgram;
+			bool hooksInEditor = ATask.Role != ATRole.ExeProgram;
 			if(hooksInEditor) {
 				wMsg = Wnd.More.FindMessageOnlyWindow(null, "Au.Hooks.Server");
 				if(wMsg.Is0) {
-					Dbg.Print("Au.Hooks.Server");
+					ADebug.Print("Au.Hooks.Server");
 					hooksInEditor = false;
 				} else {
 					//if this process is admin, and editor isn't, useEditor=false.
@@ -432,14 +432,14 @@ namespace Au.Triggers
 				Api.PIPE_ACCESS_DUPLEX | Api.FILE_FLAG_OVERLAPPED,
 				Api.PIPE_TYPE_MESSAGE | Api.PIPE_READMODE_MESSAGE | Api.PIPE_REJECT_REMOTE_CLIENTS,
 				1, 0, 0, 0, Api.SECURITY_ATTRIBUTES.ForPipes);
-			if(pipe.Is0) throw new AuException(0, "*CreateNamedPipe");
+			if(pipe.Is0) throw new AException(0, "*CreateNamedPipe");
 
 			var aCDS = new byte[8];
-			aCDS.WriteInt_((int)usedEvents, 0);
-			aCDS.WriteInt_(Api.GetCurrentProcessId(), 4);
+			aCDS.WriteInt((int)usedEvents, 0);
+			aCDS.WriteInt(Api.GetCurrentProcessId(), 4);
 			if(1 != Wnd.More.CopyDataStruct.SendBytes(wMsg, 1, aCDS, threadId)) { //install hooks and start sending events to us
 				pipe.Dispose();
-				throw new AuException("*SendBytes");
+				throw new AException("*SendBytes");
 			}
 
 			LibHandle evHooks = Api.CreateEvent(true);
@@ -464,7 +464,7 @@ namespace Au.Triggers
 							}
 							ec = Api.GetOverlappedResult(pipe, ref o, out size, false) ? 0 : WinError.Code;
 						}
-						if(ec != 0) { Dbg.LibPrintNativeError(ec); break; }
+						if(ec != 0) { ADebug.LibPrintNativeError(ec); break; }
 					}
 
 					//Perf.First();
@@ -758,7 +758,7 @@ namespace Au.Triggers
 			//Print(ttTrue, ttCompare);
 			if(ttCompare <= 25 && (ttTrue < 200 || ttTrue < _perfHookTimeout - 100)) return;
 			var b = new StringBuilder();
-			b.AppendFormat("<>Warning: Too slow trigger scope detection (Triggers.Of or Triggers.FuncOf). Time: {0} ms. Task name: {1}. <fold>", ttTrue, AuTask.Name);
+			b.AppendFormat("<>Warning: Too slow trigger scope detection (Triggers.Of or Triggers.FuncOf). Time: {0} ms. Task name: {1}. <fold>", ttTrue, ATask.Name);
 			for(int i = 0; i < _perfLen; i++) {
 				var v = _perfList[i];
 				int t = v.time & 0x7fffffff;
@@ -823,7 +823,7 @@ namespace Au.Triggers
 				//And we cannot use Keyb.IsPressed, because our triggers release modifiers. Also Key() etc. Then triggers could not be auto-repeated.
 				//We use both. If IsPressed(mod), add mod to _mod. Else remove from _mod after >5 s since the last seen key event. The max auto-repeat delay that you can set in CP is ~1 s.
 				TrigUtil.GetModLR(out modL, out modR);
-				//Dbg.PrintIf(modL != _modL || modR != _modR, $"KEY={k.vkCode}    modL={modL}  _modL={_modL}    modR={modR}  _modR={_modR}"); //normally should be only when auto-repeating a trigger
+				//ADebug.PrintIf(modL != _modL || modR != _modR, $"KEY={k.vkCode}    modL={modL}  _modL={_modL}    modR={modR}  _modR={_modR}"); //normally should be only when auto-repeating a trigger
 				_modL |= modL; _modR |= modR;
 				long time = Time.WinMilliseconds;
 				if(time - _lastKeyTime > 5000) {

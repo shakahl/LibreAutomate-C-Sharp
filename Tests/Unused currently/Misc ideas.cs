@@ -132,7 +132,7 @@ static partial class Test
 	key(...); //Keyb.Key(...);
 	tkey(...); //Keyb.Text(...); //or txt
 	paste(...); //Keyb.Paste(...);
-	msgbox(...); //AuDialog.Show(...);
+	msgbox(...); //ADialog.Show(...);
 	click(...); //Mouse.Click(...);
 	mmove(...); //Mouse.Move(...);
 	run(...); //Shell.Run(...);

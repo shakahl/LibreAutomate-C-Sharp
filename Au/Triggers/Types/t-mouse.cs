@@ -324,7 +324,7 @@ namespace Au.Triggers
 					}
 
 					if(isEdgeMove && x.screenIndex != TMScreen.Any) {
-						var screen = ScreenDef.ScreenFromIndex((int)x.screenIndex);
+						var screen = AScreen.ScreenFromIndex((int)x.screenIndex);
 						if(!screen.Bounds.Contains(pt)) continue;
 					}
 
@@ -412,7 +412,7 @@ namespace Au.Triggers
 				_keyHook = Util.WinHook.Keyboard(k => {
 					if(Time.WinMilliseconds >= _keyHookTimeout) {
 						_ResetUpAndUnhookTempKeybHook();
-						Dbg.Print("hook timeout");
+						ADebug.Print("hook timeout");
 					} else {
 						var mod = k.Mod;
 						if(0 != (mod & _upMod) && k.IsUp) {
@@ -499,8 +499,8 @@ namespace Au.Triggers
 				Api.GetMonitorInfo(hmon, ref mi);
 				var r = mi.rcMonitor;
 				_xmin = r.left; _ymin = r.top; _xmax = r.right - 1; _ymax = r.bottom - 1;
-				_x = Math_.MinMax(pt.x, _xmin, _xmax);
-				_y = Math_.MinMax(pt.y, _ymin, _ymax);
+				_x = AMath.MinMax(pt.x, _xmin, _xmax);
+				_y = AMath.MinMax(pt.y, _ymin, _ymax);
 				//Print(pt, _x, _y, r);
 
 				result = default;
@@ -537,19 +537,19 @@ namespace Au.Triggers
 					if(time < _prev.eTimeout) return; //prevent double trigger when OS sometimes gives strange coords if some hook blocks the event
 					if(y == _ymin) { //top
 						if(_prev.yy <= _ymin) return;
-						if(ScreenDef.IsInAnyScreen((x, y - 1))) return;
+						if(AScreen.IsInAnyScreen((x, y - 1))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Top) + _PartX(x));
 					} else if(y == _ymax) { //bottom
 						if(_prev.yy >= _ymax) return;
-						if(ScreenDef.IsInAnyScreen((x, y + 1))) return;
+						if(AScreen.IsInAnyScreen((x, y + 1))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Bottom) + _PartX(x));
 					} else if(x == _xmin) { //left
 						if(_prev.xx <= _xmin) return;
-						if(ScreenDef.IsInAnyScreen((x - 1, y))) return;
+						if(AScreen.IsInAnyScreen((x - 1, y))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Left) + _PartY(y));
 					} else /*if(x == _xmax)*/ { //right
 						if(_prev.xx >= _xmax) return;
-						if(ScreenDef.IsInAnyScreen((x + 1, y))) return;
+						if(AScreen.IsInAnyScreen((x + 1, y))) return;
 						result.edgeEvent = (TMEdge)((int)(result.edgeEventAnyPart = TMEdge.Right) + _PartY(y));
 					}
 					_prev.eTimeout = time + 100;

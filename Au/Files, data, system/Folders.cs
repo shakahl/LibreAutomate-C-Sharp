@@ -25,12 +25,12 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// For return values is used type <see cref="FolderPath"/>, not string. It is implicitly convertible to string. Its operator + appends a filename or relative path string, with \ separator if need. Example: <c>string s = Folders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt</c>
-	/// If a function cannot get folder path, the return value contains null string. Then the + operator would throw <see cref="AuException"/>.
+	/// If a function cannot get folder path, the return value contains null string. Then the + operator would throw <see cref="AException"/>.
 	///
 	/// Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
 	/// Some known folders, although supported and registerd, may be still not created.
 	/// 
-	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="Shell.Pidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes Shell, Shell.Pidl, Icon_) but not with .NET or native functions.
+	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="Shell.Pidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes Shell, Shell.Pidl, AIcon) but not with .NET or native functions.
 	///
 	/// Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
 	/// The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
@@ -287,7 +287,7 @@ namespace Au
 			lock(_lock) {
 				if(propVar == null) {
 					propVar = value;
-					if(create) File_.CreateDirectory(value);
+					if(create) AFile.CreateDirectory(value);
 				}
 			}
 			return propVar;
@@ -299,7 +299,7 @@ namespace Au
 			lock(_lock) {
 				if(propVar != null) throw new InvalidOperationException("Folders." + propName + " is already set.");
 				propVar = value;
-				if(create) File_.CreateDirectory(value);
+				if(create) AFile.CreateDirectory(value);
 			}
 		}
 
@@ -387,7 +387,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
-		/// Used by functions of these classes: Icon_, AuMenu, AuToolbar, WinImage, possibly some other.
+		/// Used by functions of these classes: AIcon, AMenu, AToolbar, WinImage, possibly some other.
 		/// This function does not auto-create the folder; usually it is created when installing the application.
 		/// </remarks>
 		public static FolderPath ThisAppImages {
@@ -410,7 +410,7 @@ namespace Au
 		/// Folder containing the program file of this process.
 		/// Unlike <see cref="ThisApp"/>, this path is the same in all app domains of this process.
 		/// </summary>
-		public static FolderPath ThisProcess => __thisProcess ?? (__thisProcess = Path_.GetDirectoryPath(Util.ModuleHandle_.GetFilePath(default)));
+		public static FolderPath ThisProcess => __thisProcess ?? (__thisProcess = APath.GetDirectoryPath(Util.AModuleHandle.GetFilePath(default)));
 		static string __thisProcess;
 		//public static FolderPath ThisProcess => Application.StartupPath; //no, loads Forms assembly
 
@@ -421,7 +421,7 @@ namespace Au
 		/// If this process is 32-bit and OS is 64-bit, when it uses the <see cref="System"/> folder path (<c>@"C:\WINDOWS\system32"</c>), the OS in most cases redirects it to <c>@"C:\Windows\SysWOW64"</c>, which contains 32-bit versions of program files. Use SystemX64 when you want to avoid the redirection and access the true System32 folder which on 64-bit OS contains 64-bit program files.
 		/// More info in class help.
 		/// </remarks>
-		/// <seealso cref="File_.More.DisableRedirection"/>
+		/// <seealso cref="AFile.More.DisableRedirection"/>
 		/// <seealso cref="Ver.Is32BitProcessOn64BitOS"/>
 		public static FolderPath SystemX64 => __SystemX64 ?? (__SystemX64 = Ver.Is32BitProcessOn64BitOS ? (FolderPath)(Windows + "Sysnative") : System);
 		static string __SystemX64;
@@ -500,7 +500,7 @@ namespace Au
 		/// </summary>
 		public static FolderPath EnvVar(string envVar)
 		{
-			return Path_.LibGetEnvVar(envVar);
+			return APath.LibGetEnvVar(envVar);
 		}
 
 		#endregion
@@ -798,7 +798,7 @@ namespace Au
 					Marshal.FreeCoTaskMem(pidl);
 				} else {
 					if(0 != kf.GetPath(0, out R)) return null;
-					R = Path_.ExpandEnvVar(R);
+					R = APath.ExpandEnvVar(R);
 				}
 				//tested: works in MTA apartment too. And all props.
 			}
@@ -831,14 +831,14 @@ namespace Au
 			public override string ToString() => _path;
 
 			/// <summary>
-			/// Calls <see cref="Path_.Combine"/>(fp, append).
+			/// Calls <see cref="APath.Combine"/>(fp, append).
 			/// Example: <c>string s = Folders.Desktop + "file.txt";</c>
 			/// </summary>
-			/// <exception cref="AuException">fp is empty. Most likely, used code <c>Folders.X + "append"</c> and Folders.X failed to get folder path.</exception>
+			/// <exception cref="AException">fp is empty. Most likely, used code <c>Folders.X + "append"</c> and Folders.X failed to get folder path.</exception>
 			public static string operator +(FolderPath fp, string append)
 			{
-				if(Empty(fp._path)) throw new AuException("No folder path.");
-				return Path_.Combine(fp._path, append);
+				if(Empty(fp._path)) throw new AException("No folder path.");
+				return APath.Combine(fp._path, append);
 			}
 		}
 

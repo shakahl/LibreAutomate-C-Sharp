@@ -11,7 +11,7 @@ namespace Au.Types
 			public uint uType;
 
 			[StructLayout(LayoutKind.Explicit)]
-			public struct TYPE_1
+			internal struct TYPE_1
 			{
 				[FieldOffset(0)]
 				public IntPtr pOleStr;

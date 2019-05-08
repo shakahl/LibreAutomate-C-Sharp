@@ -57,13 +57,13 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	{
 		_importing = c == null;
 		_control = c;
-		WorkspaceFile = Path_.Normalize(file);
-		WorkspaceDirectory = Path_.GetDirectoryPath(WorkspaceFile);
-		WorkspaceName = Path_.GetFileName(WorkspaceDirectory);
+		WorkspaceFile = APath.Normalize(file);
+		WorkspaceDirectory = APath.GetDirectoryPath(WorkspaceFile);
+		WorkspaceName = APath.GetFileName(WorkspaceDirectory);
 		FilesDirectory = WorkspaceDirectory + @"\files";
 		if(!_importing) {
 			WorkspaceSN = ++s_workspaceSN;
-			File_.CreateDirectory(FilesDirectory);
+			AFile.CreateDirectory(FilesDirectory);
 			Save = new AutoSave(this);
 		}
 		_idMap = new Dictionary<uint, FileNode>();
@@ -80,16 +80,16 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 					);
 			}
 			catch(Exception ex) {
-				Print($"Failed to open file '{_dbFile}'. Will not load/save workspace state: lists of open files, expanded folders, markers, folding, etc.\r\n\t{ex.ToStringWithoutStack_()}");
+				Print($"Failed to open file '{_dbFile}'. Will not load/save workspace state: lists of open files, expanded folders, markers, folding, etc.\r\n\t{ex.ToStringWithoutStack()}");
 			}
 
 			SettingsFile = WorkspaceDirectory + @"\settings.xml";
 			try {
-				if(!File_.ExistsAsFile(SettingsFile)) File_.SaveText(SettingsFile, "<settings/>");
-				SettingsXml = ExtXml.LoadElement(SettingsFile);
+				if(!AFile.ExistsAsFile(SettingsFile)) AFile.SaveText(SettingsFile, "<settings/>");
+				SettingsXml = ExtXml.LoadElem(SettingsFile);
 			}
 			catch(Exception ex) {
-				Print($"Failed to open file '{SettingsFile}'. Will not load/save workspace settings: startup scripts, etc.\r\n\t{ex.ToStringWithoutStack_()}");
+				Print($"Failed to open file '{SettingsFile}'. Will not load/save workspace settings: startup scripts, etc.\r\n\t{ex.ToStringWithoutStack()}");
 			}
 
 			OpenFiles = new List<FileNode>();
@@ -203,7 +203,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		var f = Root.FindDescendant(name, folder);
 		if(f == null && folder == false && !name.Ends(".cs", true)) {
 			f = Root.FindDescendant(name + ".cs", folder);
-			Dbg.PrintIf(f != null, "name without .cs");
+			ADebug.PrintIf(f != null, "name without .cs");
 		}
 		return f;
 	}
@@ -233,7 +233,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 				for(uint u = 1; u < uint.MaxValue; u++) if(!_idMap.ContainsKey(u)) { MaxId = u - 1; break; } //fast
 				goto g1;
 			} else if(_idMap.ContainsKey(id)) { //damaged XML file, or maybe a bug?
-				Dbg.Print("id already exists:" + id);
+				ADebug.Print("id already exists:" + id);
 				MaxId = _idMap.Keys.Max();
 				id = 0;
 				goto g1;
@@ -266,10 +266,10 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		uint idf = (uint)id;
 		if(idf == 0) return null;
 		if(_idMap.TryGetValue(idf, out var f)) {
-			Dbg.PrintIf(f == null, "deleted: " + idf);
+			ADebug.PrintIf(f == null, "deleted: " + idf);
 			return f;
 		}
-		Dbg.Print("id not found: " + idf);
+		ADebug.Print("id not found: " + idf);
 		return null;
 	}
 
@@ -545,7 +545,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			pos = NodePosition.Inside;
 		} else {
 			r = c.Tag as FileNode;
-			if(askIntoFolder && r.IsFolder && c.IsSelected && _control.SelectedNodes.Count == 1 && AuDialog.ShowYesNo("Into the folder?", owner: _control)) pos = NodePosition.Inside;
+			if(askIntoFolder && r.IsFolder && c.IsSelected && _control.SelectedNodes.Count == 1 && ADialog.ShowYesNo("Into the folder?", owner: _control)) pos = NodePosition.Inside;
 			else if(r.Next == null) pos = NodePosition.After; //usually we want to add after the last, not before
 			else pos = NodePosition.Before;
 		}
@@ -601,7 +601,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		//confirmation
 		var text = string.Join("\n", a.Select(f => f.Name));
 		var expandedText = "The file will be deleted, unless it is external.\r\nWill use Recycle Bin, if possible.";
-		var r = AuDialog.ShowEx("Deleting", text, "1 OK|0 Cancel", owner: _control, checkBox: "Don't delete file", expandedText: expandedText);
+		var r = ADialog.ShowEx("Deleting", text, "1 OK|0 Cancel", owner: _control, checkBox: "Don't delete file", expandedText: expandedText);
 		if(r.Button == 0) return;
 
 		foreach(var f in a) {
@@ -616,7 +616,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		CloseFiles(e);
 
 		if(!doNotDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
-			try { File_.Delete(f.FilePath, tryRecycleBin); } //FUTURE: use other thread, because very slow. Or better move to folder 'deleted'.
+			try { AFile.Delete(f.FilePath, tryRecycleBin); } //FUTURE: use other thread, because very slow. Or better move to folder 'deleted'.
 			catch(Exception ex) { Print(ex.Message); return false; }
 		} else {
 			string s1 = doNotDeleteFile ? "File not deleted:" : "The deleted item was a link to";
@@ -625,7 +625,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 
 		foreach(var k in e) {
 			if(_myClipboard.Contains(k)) _myClipboard.Clear();
-			try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch(SLException ex) { Dbg.Print(ex); }
+			try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch(SLException ex) { ADebug.Print(ex); }
 			Au.Compiler.Compiler.OnFileDeleted(this, k);
 			_idMap[k.Id] = null;
 			k.IsDeleted = true;
@@ -777,8 +777,8 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			_MultiCopyMove(copy, a, target, pos);
 		} else {
 			if(files.Length == 1 && IsWorkspaceDirectory(files[0])) {
-				switch(AuDialog.ShowEx("Workspace", files[0], "1 Open|2 Import|0 Cancel", footerText: GetSecurityInfo("v|"))) {
-				case 1: Timer_.After(1, () => Panels.Files.LoadWorkspace(files[0])); break;
+				switch(ADialog.ShowEx("Workspace", files[0], "1 Open|2 Import|0 Cancel", footerText: GetSecurityInfo("v|"))) {
+				case 1: ATimer.After(1, () => Panels.Files.LoadWorkspace(files[0])); break;
 				case 2: ImportWorkspace(files[0], target, pos); break;
 				}
 				return;
@@ -818,13 +818,13 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		else {
 			var d = new OpenFileDialog() { Title = "Import workspace", Filter = "files.xml|files.xml" };
 			if(d.ShowDialog(MainForm) != DialogResult.OK) return;
-			wsDir = Path_.GetDirectoryPath(xmlFile = d.FileName);
+			wsDir = APath.GetDirectoryPath(xmlFile = d.FileName);
 		}
 
 		try {
 			//create new folder for workspace's items
 			if(target == null) target = _GetInsertPos(out pos);
-			target = FileNode.NewItem(this, target, pos, "Folder", Path_.GetFileName(wsDir));
+			target = FileNode.NewItem(this, target, pos, "Folder", APath.GetFileName(wsDir));
 			if(target == null) return;
 
 			var m = new FilesModel(null, xmlFile);
@@ -874,22 +874,22 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	{
 		bool fromWorkspaceDir = false, dirsDropped = false;
 		for(int i = 0; i < a.Length; i++) {
-			var s = a[i] = Path_.Normalize(a[i]);
+			var s = a[i] = APath.Normalize(a[i]);
 			if(s.Index(@"\$RECYCLE.BIN\", true) > 0) {
-				AuDialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
+				ADialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
 					icon: DIcon.Info, owner: _control, onLinkClick: e => Shell.TryRun(e.LinkHref));
 				return;
 			}
 			var fd = FilesDirectory;
 			if(!fromWorkspaceDir) {
 				if(s.Starts(fd, true) && (s.Length == fd.Length || s[fd.Length] == '\\')) fromWorkspaceDir = true;
-				else if(!dirsDropped) dirsDropped = File_.ExistsAsDirectory(s);
+				else if(!dirsDropped) dirsDropped = AFile.ExistsAsDirectory(s);
 			}
 		}
 		int r;
 		if(copy) {
 			if(fromWorkspaceDir) {
-				AuDialog.ShowInfo("Files from workspace folder", "Ctrl not supported."); //not implemented
+				ADialog.ShowInfo("Files from workspace folder", "Ctrl not supported."); //not implemented
 				return;
 			}
 			r = 2; //copy
@@ -897,7 +897,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			r = 3; //move
 		} else {
 			string buttons = (dirsDropped ? null : "1 Add as a link to the external file|") + "2 Copy to the workspace folder|3 Move to the workspace folder|0 Cancel";
-			r = AuDialog.ShowEx("Import files", string.Join("\n", a), buttons, DFlags.CommandLinks, owner: _control, footerText: GetSecurityInfo("v|"));
+			r = ADialog.ShowEx("Import files", string.Join("\n", a), buttons, DFlags.CommandLinks, owner: _control, footerText: GetSecurityInfo("v|"));
 			if(r == 0) return;
 		}
 
@@ -911,13 +911,13 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 
 			foreach(var path in a) {
 				bool isDir;
-				var itIs = File_.ExistsAs2(path, true);
+				var itIs = AFile.ExistsAs2(path, true);
 				if(itIs == FileDir2.File) isDir = false;
 				else if(itIs == FileDir2.Directory && r != 1) isDir = true;
 				else continue; //skip symlinks or if does not exist
 
 				FileNode k;
-				var name = Path_.GetFileName(path);
+				var name = APath.GetFileName(path);
 				if(r == 1) { //add as link
 					k = new FileNode(this, name, path, false, path); //CONSIDER: unexpand
 				} else {
@@ -933,8 +933,8 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 					k = new FileNode(this, name, path, isDir);
 					if(isDir) _AddDir(path, k);
 					try {
-						if(r == 2) File_.CopyTo(path, newParentPath, IfExists.Fail);
-						else File_.MoveTo(path, newParentPath, IfExists.Fail);
+						if(r == 2) AFile.CopyTo(path, newParentPath, IfExists.Fail);
+						else AFile.MoveTo(path, newParentPath, IfExists.Fail);
 					}
 					catch(Exception ex) { Print(ex.Message); continue; }
 				}
@@ -952,7 +952,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 
 		void _AddDir(string path, FileNode parent)
 		{
-			foreach(var u in File_.EnumDirectory(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
+			foreach(var u in AFile.EnumDirectory(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
 				bool isDir = u.IsDirectory;
 				var k = new FileNode(this, u.Name, u.FullPath, isDir);
 				parent.AddChild(k);
@@ -992,16 +992,16 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	{
 		var a = SelectedItems; if(a.Length < 1) return false;
 
-		string name = a[0].Name; if(!a[0].IsFolder) name = Path_.GetFileName(name, true);
+		string name = a[0].Name; if(!a[0].IsFolder) name = APath.GetFileName(name, true);
 
 		if(a.Length == 1 && a[0].IsFolder && a[0].HasChildren) a = a[0].Children().ToArray();
 
 		var wsDir = GetDirectoryPathForNewWorkspace(name, location); if(wsDir == null) return false;
 		string filesDir = wsDir + @"\files";
 		try {
-			File_.CreateDirectory(filesDir);
+			AFile.CreateDirectory(filesDir);
 			foreach(var f in a) {
-				if(!f.IsLink) File_.CopyTo(f.FilePath, filesDir);
+				if(!f.IsLink) AFile.CopyTo(f.FilePath, filesDir);
 			}
 			FileNode.Export(a, wsDir + @"\files.xml");
 		}
@@ -1074,8 +1074,8 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public bool SaveWorkspaceSettings()
 	{
 		if(SettingsXml != null) {
-			try { SettingsXml.Save_(SettingsFile); return true; }
-			catch(Exception ex) { Print("Failed to save workspace settings. " + ex.ToStringWithoutStack_()); }
+			try { SettingsXml.SaveElem(SettingsFile); return true; }
+			catch(Exception ex) { Print("Failed to save workspace settings. " + ex.ToStringWithoutStack()); }
 		}
 		return false;
 	}
@@ -1084,10 +1084,10 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// Note: the .NET XML reader replaces \r\n with \n, even in CDATA. If the caller needs \r\n, eg for an Edit control, let it replace \n with \r\n.
 	/// </summary>
 	public string StartupScriptsCsv {
-		get => SettingsXml?.Element("users")?.Element_("user", "guid", UserGuid, true)?.Element("startupScripts")?.Value;
+		get => SettingsXml?.Element("users")?.Elem("user", "guid", UserGuid, true)?.Element("startupScripts")?.Value;
 		set {
 			if(SettingsXml == null) return;
-			var x = SettingsXml.ElementGetOrAdd_("users").ElementGetOrAdd_("user", "guid", UserGuid, true).ElementGetOrAdd_("startupScripts");
+			var x = SettingsXml.ElemOrAdd("users").ElemOrAdd("user", "guid", UserGuid, true).ElemOrAdd("startupScripts");
 			x.Value = value;
 			SaveWorkspaceSettings();
 		}
@@ -1096,7 +1096,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public void RunStartupScripts()
 	{
 		var csv = StartupScriptsCsv; if(csv == null) return;
-		var x = CsvTable.Parse(csv);
+		var x = Csv.Parse(csv);
 		foreach(var row in x.Data) {
 			var f = FindFile(row[0]);
 			if(f == null) { Print("Startup script not found: " + row[0] + ". Please edit name in Options."); continue; }
@@ -1107,7 +1107,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 				if(end > 0 && !sd.Ends("ms", true)) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
 				if(delay < 10) delay = 10;
 			}
-			Timer_.After(delay, () => {
+			ATimer.After(delay, () => {
 				_ = Au.Triggers.HooksServer.Instance.MsgWnd; //waits until started
 				Run.CompileAndRun(true, f);
 			});
@@ -1129,8 +1129,8 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public static bool IsWorkspaceDirectory(string s)
 	{
 		string xmlFile = s + @"\files.xml";
-		if(File_.ExistsAsFile(xmlFile) && File_.ExistsAsDirectory(s + @"\files")) {
-			try { return ExtXml.LoadElement(xmlFile).Name == "files"; } catch { }
+		if(AFile.ExistsAsFile(xmlFile) && AFile.ExistsAsDirectory(s + @"\files")) {
+			try { return ExtXml.LoadElem(xmlFile).Name == "files"; } catch { }
 		}
 		return false;
 	}

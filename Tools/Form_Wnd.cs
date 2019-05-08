@@ -63,7 +63,7 @@ namespace Au.Tools
 			base.OnLoad(e);
 
 			Wnd w = (Wnd)this;
-			if(Registry_.GetString(out var wndPos, "wndPos", c_registryKey))
+			if(ARegistry.GetString(out var wndPos, "wndPos", c_registryKey))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 
 			if(!_con.Is0) _SetWnd(false);
@@ -79,7 +79,7 @@ namespace Au.Tools
 			_capt?.Dispose();
 
 			Wnd w = (Wnd)this;
-			Registry_.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
+			ARegistry.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
 
 			base.OnFormClosing(e);
 		}
@@ -195,7 +195,7 @@ namespace Au.Tools
 					return a1.ToArray();
 					//rejected: sort
 				}
-				catch(Exception ex) { Dbg.Print(ex); return null; }
+				catch(Exception ex) { ADebug.Print(ex); return null; }
 			}
 
 			bool _GetClassName(Wnd w, out string cn)

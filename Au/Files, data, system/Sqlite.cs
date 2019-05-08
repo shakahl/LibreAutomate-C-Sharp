@@ -82,7 +82,7 @@ namespace Au
 		/// ":memory:" - create a private, temporary in-memory database.
 		/// "" - create a private, temporary on-disk database.
 		/// Starts with "file:" - see sqlite3_open_v2 documentation in SQLite website.
-		/// If not one of above special strings, must be full path, and can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>
+		/// If not one of above special strings, must be full path, and can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>
 		/// </param>
 		/// <param name="flags">sqlite3_open_v2 flags, documanted in SQLite website. Default: read-write, create file if does not exist (and parent directory).</param>
 		/// <param name="sql">
@@ -99,10 +99,10 @@ namespace Au
 		{
 			bool isSpec = file != null && (file.Length == 0 || file == ":memory:" || file.Starts("file:"));
 			if(!isSpec) {
-				file = Path_.Normalize(file);
-				if(flags.Has(SLFlags.SQLITE_OPEN_CREATE) && !File_.ExistsAsFile(file, true)) File_.CreateDirectoryFor(file);
+				file = APath.Normalize(file);
+				if(flags.Has(SLFlags.SQLITE_OPEN_CREATE) && !AFile.ExistsAsFile(file, true)) AFile.CreateDirectoryFor(file);
 			}
-			var r = SLApi.sqlite3_open_v2(Convert_.Utf8FromString(file), ref _db, flags, null);
+			var r = SLApi.sqlite3_open_v2(AConvert.Utf8FromString(file), ref _db, flags, null);
 			if(r != 0) {
 				Dispose();
 				throw new SLException(r, "sqlite3_open " + file);
@@ -140,7 +140,7 @@ namespace Au
 		/// <exception cref="SLException">Failed to execute sql.</exception>
 		public void Execute(string sql)
 		{
-			var b = Convert_.Utf8FromString(sql);
+			var b = AConvert.Utf8FromString(sql);
 			byte* es = null; //gets better error text than sqlite3_errstr; sqlite3_errmsg gets nothing after sqlite3_exec.
 			var r = SLApi.sqlite3_exec(_db, b, default, default, &es);
 			if(r != 0) throw new SLException(r, "sqlite3_exec", SLUtil.ToStringAndFree(es));
@@ -371,7 +371,7 @@ namespace Au
 				if(0 == SLApi.sqlite3_prepare16_v3(_db, p, -1, 0, ref x, null)) {
 					var e = SLApi.sqlite3_step(x);
 					Debug.Assert(e == SLError.Row || e == SLError.Done);
-					if(e == SLError.Row) r = Convert_.Utf8ToString(SLApi.sqlite3_column_text(x, 0));
+					if(e == SLError.Row) r = AConvert.Utf8ToString(SLApi.sqlite3_column_text(x, 0));
 					SLApi.sqlite3_finalize(x);
 				}
 			}
@@ -471,7 +471,7 @@ namespace Au
 		int _B(SLIndexOrName p)
 		{
 			if(p.name == null) return p.index;
-			int r = SLApi.sqlite3_bind_parameter_index(_st, Convert_.Utf8FromString(p.name));
+			int r = SLApi.sqlite3_bind_parameter_index(_st, AConvert.Utf8FromString(p.name));
 			if(r == 0) throw new SLException($"Parameter '{p.name}' does not exist in the SQL statement.");
 			return r;
 		}
@@ -714,7 +714,7 @@ namespace Au
 				if(t != null) return new string(t, 0, SLApi.sqlite3_column_bytes16(_st, icol));
 			} else {
 				byte* t = SLApi.sqlite3_column_text(_st, icol);
-				if(t != null) return Convert_.Utf8ToString(t, SLApi.sqlite3_column_bytes(_st, icol));
+				if(t != null) return AConvert.Utf8ToString(t, SLApi.sqlite3_column_bytes(_st, icol));
 			}
 			_WarnGet();
 			return null;
@@ -780,7 +780,7 @@ namespace Au
 		/// <summary>
 		/// sqlite3_column_name.
 		/// </summary>
-		public string ColumnName(int index) => Convert_.Utf8ToString(SLApi.sqlite3_column_name(_st, index));
+		public string ColumnName(int index) => AConvert.Utf8ToString(SLApi.sqlite3_column_name(_st, index));
 
 		/// <summary>
 		/// Finds column by name in results.
@@ -797,7 +797,7 @@ namespace Au
 						if(Util.LibCharPtr.AsciiEquals(b, name)) return i;
 					}
 				} else {
-					var bname = Convert_.Utf8FromString(name);
+					var bname = AConvert.Utf8FromString(name);
 					for(int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);
 						if(Util.LibCharPtr.Equals(b, bname)) return i;
@@ -962,7 +962,7 @@ namespace Au.Types
 	{
 		internal static string ToStringAndFree(byte* utf8)
 		{
-			var r = Convert_.Utf8ToString(utf8);
+			var r = AConvert.Utf8ToString(utf8);
 			SLApi.sqlite3_free(utf8);
 			return r;
 		}

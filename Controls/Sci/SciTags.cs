@@ -176,7 +176,7 @@ namespace Au.Controls
 	/// </description>
 	/// <description>
 	/// Shows an Au class library help topic (file "Au Help.chm").
-	/// Calls <see cref="Util.Help_.AuWeb"/>.
+	/// Calls <see cref="Util.AHelp.AuWeb"/>.
 	/// Attribute: right click in the help topic, click Properties, copy filename from the Address field.
 	/// </description>
 	/// </item>
@@ -278,7 +278,7 @@ namespace Au.Controls
 			//u1
 			public int Color { get => (int)(u1 & 0xffffff); set => u1 = (u1 & 0xff000000) | ((uint)value & 0xffffff) | 0x1000000; }
 			public bool HasColor => 0 != (u1 & 0x1000000);
-			public int Size { get => (int)(u1 >> 25); set => u1 = (u1 & 0x1ffffff) | ((uint)Math_.MinMax(value, 0, 127) << 25); }
+			public int Size { get => (int)(u1 >> 25); set => u1 = (u1 & 0x1ffffff) | ((uint)AMath.MinMax(value, 0, 127) << 25); }
 
 			//u2
 			public int BackColor { get => (int)(u2 & 0xffffff); set => u2 = (u2 & 0xff000000) | ((uint)value & 0xffffff) | 0x1000000; }
@@ -451,10 +451,10 @@ namespace Au.Controls
 				return;
 			}
 
-			int len = Convert_.Utf8LengthFromString(text);
+			int len = AConvert.Utf8LengthFromString(text);
 			byte* buffer = (byte*)NativeHeap.Alloc(len * 2 + 4), s = buffer;
 			try {
-				Convert_.Utf8FromString(text, s, len + 1);
+				AConvert.Utf8FromString(text, s, len + 1);
 				if(appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
 				if(skipLTGT && s[0] == '<' && s[1] == '>') { s += 2; len -= 2; }
 				s[len] = s[len + 1] = 0;
@@ -491,7 +491,7 @@ namespace Au.Controls
 
 				//end tag. Support <> and </tag>, but don't care what tag it is. The </tag> form can be used just to make the code more readable.
 				if(s[0] == '/') {
-					s++; while(Char_.IsAsciiAlpha(*s)) s++;
+					s++; while(AChar.IsAsciiAlpha(*s)) s++;
 					if(s[0] != '>') goto ge;
 				}
 				if(s[0] == '>') {
@@ -529,7 +529,7 @@ namespace Au.Controls
 
 				//read tag name
 				ch = *s; if(ch == '_' || ch == '+') s++;
-				while(Char_.IsAsciiAlpha(*s)) s++;
+				while(AChar.IsAsciiAlpha(*s)) s++;
 				int tagLen = (int)(s - tag);
 				if(tagLen == 0) goto ge;
 
@@ -576,7 +576,7 @@ namespace Au.Controls
 				case 1 << 16 | 'Z':
 					if(attr == null) goto ge;
 					int color;
-					if(Char_.IsAsciiDigit(*attr)) color = Api.strtoi(attr);
+					if(AChar.IsAsciiDigit(*attr)) color = Api.strtoi(attr);
 					else if(*attr == '#') color = Api.strtoi(attr + 1, radix: 16);
 					else {
 						var c = Color.FromName(new string((sbyte*)attr, 0, attrLen));
@@ -871,7 +871,7 @@ namespace Au.Controls
 				Shell.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
 			case "help":
-				Util.Help_.AuWeb(attr);
+				Util.AHelp.AuWeb(attr);
 				break;
 			case "explore":
 				Shell.SelectFileInExplorer(attr);
@@ -879,7 +879,7 @@ namespace Au.Controls
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
 				//others are unregistered tags. Only if start with '+' (others are displayed as text).
-				if(Opt.Debug.Verbose) AuDialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
+				if(Opt.Debug.Verbose) ADialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
 				break;
 			}
 		}
@@ -935,7 +935,7 @@ namespace Au.Controls
 		internal void LibOnLButtonDownWhenNotFocused(ref Message m, ref bool setFocus)
 		{
 			if(setFocus && _c.InitReadOnlyAlways && !Keyb.UI.IsAlt) {
-				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, Math_.LoShort(m.LParam), Math_.HiShort(m.LParam));
+				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
 				//Print(pos);
 				if(pos >= 0 && _t.StyleHotspot(_t.GetStyleAt(pos))) setFocus = false;
 			}

@@ -143,7 +143,7 @@ partial class EdForm
 		//var f = new DDForm();
 		//f.Show();
 
-		Thread_.Start(() => {
+		AThread.Start(() => {
 			var f = new DDForm();
 			var c = new TextBox(); f.Controls.Add(c);
 			f.ShowDialog();
@@ -202,9 +202,9 @@ partial class EdForm
 	//		for(int i = 0; i < 300; i++) {
 	//			try {
 	//				Settings.Set("test", i);
-	//				Settings.Xml.Save_(settFile);
+	//				Settings.Xml.SaveElem(settFile);
 	//			}catch(Exception e) {
-	//				Print(e.ToStringWithoutStack_(), (uint)e.HResult, i);
+	//				Print(e.ToStringWithoutStack(), (uint)e.HResult, i);
 	//				break;
 	//			}
 	//			1.ms();

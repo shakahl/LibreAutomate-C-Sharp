@@ -159,12 +159,12 @@ static class EdStock
 	/// Cached standard font used by most windows and controls.
 	/// On Windows 10 it is "Segoe UI" 9 by default.
 	/// </summary>
-	public static Font FontRegular = Au.Util.SystemFonts_.Regular;
+	public static Font FontRegular = Au.Util.ASystemFonts.Regular;
 
 	/// <summary>
 	/// Bold version of <see cref="Regular"/> font.
 	/// </summary>
-	public static Font FontBold = Au.Util.SystemFonts_.Bold;
+	public static Font FontBold = Au.Util.ASystemFonts.Bold;
 }
 
 /// <summary>

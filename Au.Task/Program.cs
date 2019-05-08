@@ -36,7 +36,7 @@ using static Au.NoClass;
 //Smaller problem: many threads.
 //Initially 4 treads, sometimes 7. After 20-30 s becomes 5 (+1 or -2). With [STAThread] would be +2.
 
-//PROBLEM: preloaded task's windows start inactive, behind one or more windows. Unless they activate self, like AuDialog.
+//PROBLEM: preloaded task's windows start inactive, behind one or more windows. Unless they activate self, like ADialog.
 //	It does not depend on the foreground lock setting/API. The setting/API just enable SetForegroundWindow, but most windows don't call it.
 //Workaround: use CBT hook. It receives HCBT_ACTIVATE even when the window does not become the foreground window.
 //	On HCBT_ACTIVATE, async-call SetForegroundWindow. Also, editor calls AllowSetForegroundWindow before starting task.
@@ -74,15 +74,15 @@ static unsafe class Program
 		}
 		//Perf.First();
 		using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
-			if(pipe.Is0) { Dbg.LibPrintNativeError(); return; }
+			if(pipe.Is0) { ADebug.LibPrintNativeError(); return; }
 			//Perf.Next();
 			int size; if(!Api.ReadFile(pipe, &size, 4, out nr, default) || nr != 4) return;
 			//Perf.Next();
 			if(!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
 			//Perf.Next();
 			var a = Au.Util.LibSerializer.Deserialize(b);
-			AuTask.Name = a[0]; asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4];
-			string wrp = a[5]; if(wrp != null) Environment.SetEnvironmentVariable("AuTask.WriteResult.pipe", wrp);
+			ATask.Name = a[0]; asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4];
+			string wrp = a[5]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
 		}
 #endif
 		//Perf.Next();
@@ -94,7 +94,7 @@ static unsafe class Program
 
 		if(0 != (flags & 1)) { //hasConfig
 			var config = asmFile + ".config";
-			if(File_.ExistsAsFile(config, true)) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
+			if(AFile.ExistsAsFile(config, true)) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
 		}
 
 		if(s_hook == null) _Hook();
@@ -111,10 +111,10 @@ static unsafe class Program
 		_SetComApartment(ApartmentState.STA);
 
 		//JIT slowest-to-JIT methods
-		if(!Au.Util.Assembly_.LibIsAuNgened) {
+		if(!Au.Util.AAssembly.LibIsAuNgened) {
 			Au.Util.Jit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
 			Au.Util.Jit.Compile(typeof(Au.Util.LibSerializer), "Deserialize");
-			File_.WaitIfLocked(() => (FileStream)null);
+			AFile.WaitIfLocked(() => (FileStream)null);
 		}
 
 		//load some .NET assemblies, it is very slow.
@@ -169,7 +169,7 @@ static unsafe class Program
 					//Print(w);
 					//Print(w.ExStyle);
 					//Api.SetForegroundWindow(w); //does not work
-					Timer_.After(1, () => {
+					ATimer.After(1, () => {
 						if(s_hook == null) return;
 						//Print(Wnd.Active);
 						//Print(Wnd.ThisThread.Active);

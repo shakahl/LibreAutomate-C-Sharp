@@ -206,7 +206,7 @@ namespace Au
 									catch(WndException) { //invalid parent window
 										return -1;
 									}
-									catch(AuException e) { //probably process of higher UAC integrity level
+									catch(AException e) { //probably process of higher UAC integrity level
 										PrintWarning($"Failed to get .NET control names. {e.Message}");
 										return -1;
 									}
@@ -550,7 +550,7 @@ namespace Au
 			/// </summary>
 			/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 			/// <exception cref="WndException">This window is invalid.</exception>
-			/// <exception cref="AuException">Failed.</exception>
+			/// <exception cref="AException">Failed.</exception>
 			/// <remarks>
 			/// Works not with all button controls. Sometimes does not work if the window is inactive.
 			/// Check boxes and radio buttons also are buttons. This function can click them.
@@ -589,7 +589,7 @@ namespace Au
 			/// <param name="on">Checks if true, unchecks if false.</param>
 			/// <param name="useAcc"></param>
 			/// <exception cref="WndException">This window is invalid.</exception>
-			/// <exception cref="AuException">Failed.</exception>
+			/// <exception cref="AException">Failed.</exception>
 			/// <remarks>
 			/// Works not with all button controls. Sometimes does not work if the window is inactive.
 			/// If this is a radio button, does not uncheck other radio buttons in its group.
@@ -606,7 +606,7 @@ namespace Au
 			/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
 			/// <exception cref="ArgumentOutOfRangeException">Invalid state.</exception>
 			/// <exception cref="WndException">This window is invalid.</exception>
-			/// <exception cref="AuException">Failed.</exception>
+			/// <exception cref="AException">Failed.</exception>
 			/// <remarks>
 			/// Does nothing if the check box already has the specified check state (if can get it).
 			/// Works not with all button controls. Sometimes does not work if the window is inactive.
@@ -674,7 +674,7 @@ namespace Au
 							return _GetAccCheckState(a);
 						}
 					}
-					catch(Exception ex) { Dbg.Print(ex); } //CONSIDER: if fails, show warning. In all Wnd property-get functions.
+					catch(Exception ex) { ADebug.Print(ex); } //CONSIDER: if fails, show warning. In all Wnd property-get functions.
 					return 0;
 				} else {
 					return (int)W.Send(BM_GETCHECK);

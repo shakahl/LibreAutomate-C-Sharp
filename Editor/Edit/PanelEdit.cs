@@ -267,7 +267,7 @@ partial class PanelEdit : Control
 		//Print("<><c 0x8000>one\0two</c>");
 
 
-		//foreach(var f in File_.EnumDirectory(Folders.ProgramFiles, FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
+		//foreach(var f in AFile.EnumDirectory(Folders.ProgramFiles, FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
 		//	if(f.IsDirectory) continue;
 		//	if(0 == f.Name.Ends(true, ".png", ".bmp", ".jpg", ".gif", ".ico")) continue;
 		//	//Print(f.FullPath);
@@ -417,7 +417,7 @@ partial class PanelEdit : Control
 				break;
 			case Api.WM_RBUTTONDOWN:
 				//prevent changing selection when right-clicked margin if selection start is in that line
-				POINT p = (Math_.LoShort(m.LParam), Math_.HiShort(m.LParam));
+				POINT p = (AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
 				if(ST.MarginFromPoint(p, false) >= 0) {
 					var k = ST.LineStartEndFromPos(ST.PosFromXY(p, false));
 					var cp = ST.SelectionStart;
@@ -426,7 +426,7 @@ partial class PanelEdit : Control
 				break;
 			case Api.WM_CONTEXTMENU:
 				bool kbd = (int)m.LParam == -1;
-				int margin = kbd ? -1 : ST.MarginFromPoint((Math_.LoShort(m.LParam), Math_.HiShort(m.LParam)), true);
+				int margin = kbd ? -1 : ST.MarginFromPoint((AMath.LoShort(m.LParam), AMath.HiShort(m.LParam)), true);
 				switch(margin) {
 				case -1:
 					Strips.ddEdit.ShowAsContextMenu_(kbd);
@@ -487,19 +487,19 @@ partial class PanelEdit : Control
 						}
 					}
 				}
-				catch(SLException ex) { Dbg.Print(ex); }
+				catch(SLException ex) { ADebug.Print(ex); }
 			};
 		}
 
 		#region editor data
 
-		Convert_.MD5HashResult _savedMD5;
+		AConvert.MD5HashResult _savedMD5;
 		Action _initDeferred;
 
-		static unsafe Convert_.MD5HashResult _Hash(List<int> a)
+		static unsafe AConvert.MD5HashResult _Hash(List<int> a)
 		{
 			if(a.Count == 0) return default;
-			Convert_.MD5Hash md5 = default;
+			AConvert.MD5Hash md5 = default;
 			foreach(var v in a) md5.Add(v);
 			return md5.Hash;
 		}
@@ -524,7 +524,7 @@ partial class PanelEdit : Control
 					}
 					_savedMD5 = hash;
 				}
-				catch(SLException ex) { Dbg.Print(ex); }
+				catch(SLException ex) { ADebug.Print(ex); }
 			}
 		}
 
@@ -723,7 +723,7 @@ partial class PanelEdit : Control
 					foreach(var path in paths) {
 						bool isLnk = path.Ends(".lnk", true);
 						if(isLnk) t.Append("//");
-						var name = Path_.GetFileName(path, true);
+						var name = APath.GetFileName(path, true);
 						_AppendFile(path, name);
 						if(isLnk) {
 							try {
@@ -735,11 +735,11 @@ partial class PanelEdit : Control
 								} else {
 									args = g.Arguments;
 									if(!target.Ends(".exe", true) || name.Index("Shortcut") >= 0)
-										name = Path_.GetFileName(target, true);
+										name = APath.GetFileName(target, true);
 								}
 								_AppendFile(target, name, args);
 							}
-							catch(AuException) { break; }
+							catch(AException) { break; }
 						}
 					}
 					s = t.ToString();
@@ -775,7 +775,7 @@ partial class PanelEdit : Control
 
 			if(!Empty(s)) {
 				var z = new Sci_DragDropData { x = xy.X, y = xy.Y };
-				var b = Convert_.Utf8FromString(s);
+				var b = AConvert.Utf8FromString(s);
 				fixed (byte* bp = b) {
 					z.text = bp;
 					z.len = b.Length - 1;
@@ -799,7 +799,7 @@ partial class PanelEdit : Control
 					string opt = null;
 					switch(_drag) {
 					case _DD_DataType.Files:
-						opt = File_.ExistsAsDirectory(path) ? "outputPath " : "r ";
+						opt = AFile.ExistsAsDirectory(path) ? "outputPath " : "r ";
 						break;
 					case _DD_DataType.Script:
 						if(fn.IsFolder) {
@@ -824,7 +824,7 @@ partial class PanelEdit : Control
 					if(isFN && !fn.IsCodeFile) {
 						t.Append("//").Append(path);
 					} else {
-						t.Append(isFN ? "AuTask.Run(@\"" : "Shell.Run(@\"").Append(path);
+						t.Append(isFN ? "ATask.Run(@\"" : "Shell.Run(@\"").Append(path);
 						if(!Empty(args)) t.Append("\", \"").Append(args.Escape());
 						t.Append("\");");
 						if(menuVar == null && !isFN && (path.Starts("::") || path.Index(name, true) < 0)) t.Append(" //").Append(name);
@@ -948,12 +948,12 @@ partial class PanelEdit : Control
 		}
 		static bool s_infoCopy;
 
-		static Regex_ _RxScript => s_rxScript ?? (s_rxScript = new Regex_($@"(?sm)//{{{{(.*?)\R\Q{_Usings}\E$(.*?)\R\Q{_ScriptMain}\E$"));
-		static Regex_ _RxClass => s_rxClass ?? (s_rxClass = new Regex_($@"(?sm)^\Q{_Usings}\E$"));
-		static Regex_ s_rxScript, s_rxClass;
+		static ARegex _RxScript => s_rxScript ?? (s_rxScript = new ARegex($@"(?sm)//{{{{(.*?)\R\Q{_Usings}\E$(.*?)\R\Q{_ScriptMain}\E$"));
+		static ARegex _RxClass => s_rxClass ?? (s_rxClass = new ARegex($@"(?sm)^\Q{_Usings}\E$"));
+		static ARegex s_rxScript, s_rxClass;
 		static string s_usings, s_scriptMain;
-		static string _Usings => s_usings ?? (s_usings = File_.LoadText(Folders.ThisAppBS + @"Templates\include\using.txt"));
-		static string _ScriptMain => s_scriptMain ?? (s_scriptMain = File_.LoadText(Folders.ThisAppBS + @"Templates\include\main.txt"));
+		static string _Usings => s_usings ?? (s_usings = AFile.LoadText(Folders.ThisAppBS + @"Templates\include\using.txt"));
+		static string _ScriptMain => s_scriptMain ?? (s_scriptMain = AFile.LoadText(Folders.ThisAppBS + @"Templates\include\main.txt"));
 
 		public bool PasteModified()
 		{
@@ -997,7 +997,7 @@ partial class PanelEdit : Control
 			string buttons = FN.FileType != (isClass ? EFileType.Class : EFileType.Script)
 				? "1 Create new file|Cancel"
 				: "1 Create new file|2 Rename this file and replace all text|3 Replace all text|4 Paste|Cancel";
-			switch(AuDialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
+			switch(ADialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
 			case 0: break; //Cancel
 			case 1: //Create new file
 				Model.NewItem(isClass ? "Class.cs" : "Script.cs", name, text: new EdNewFileText(true, s));

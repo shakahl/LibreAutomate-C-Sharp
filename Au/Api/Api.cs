@@ -348,7 +348,7 @@ namespace Au.Types
 			public SECURITY_ATTRIBUTES(string securityDescriptor)
 			{
 				nLength = IntPtr.Size * 3;
-				if(securityDescriptor != null && !ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptor, 1, out lpSecurityDescriptor)) throw new AuException(0, "SECURITY_ATTRIBUTES");
+				if(securityDescriptor != null && !ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptor, 1, out lpSecurityDescriptor)) throw new AException(0, "SECURITY_ATTRIBUTES");
 			}
 
 			public void Dispose()
@@ -469,7 +469,7 @@ namespace Au.Types
 			public string szInfo;
 
 			[StructLayout(LayoutKind.Explicit)]
-			public struct TYPE_1
+			internal struct TYPE_1
 			{
 				[FieldOffset(0)]
 				public int uTimeout;
@@ -1051,13 +1051,13 @@ namespace Au.Types
 		//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Init(out Convert_.MD5Hash context);
+		internal static extern void MD5Init(out AConvert.MD5Hash context);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Update(ref Convert_.MD5Hash context, void* data, int dataLen);
+		internal static extern void MD5Update(ref AConvert.MD5Hash context, void* data, int dataLen);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Final(ref Convert_.MD5Hash context);
+		internal static extern void MD5Final(ref AConvert.MD5Hash context);
 
 		internal struct SYSTEM_PROCESS_INFORMATION
 		{

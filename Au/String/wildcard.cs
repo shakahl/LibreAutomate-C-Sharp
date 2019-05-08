@@ -244,7 +244,7 @@ namespace Au.Types
 					_obj = new Regex(w, ro);
 					return;
 				case WXType.RegexPcre:
-					_obj = new Regex_(w);
+					_obj = new ARegex(w);
 					return;
 				case WXType.Multi:
 					var a = w.Split(split ?? _splitMulti, StringSplitOptions.None);
@@ -296,7 +296,7 @@ namespace Au.Types
 				R = s.Eq(t, _ignoreCase);
 				break;
 			case WXType.RegexPcre:
-				R = (_obj as Regex_).IsMatch(s);
+				R = (_obj as ARegex).IsMatch(s);
 				break;
 			case WXType.RegexNet:
 				R = (_obj as Regex).IsMatch(s);
@@ -406,7 +406,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// PCRE regular expression (option r).
-		/// <b>Match</b> calls <see cref="Regex_.IsMatch"/>.
+		/// <b>Match</b> calls <see cref="ARegex.IsMatch"/>.
 		/// </summary>
 		RegexPcre,
 

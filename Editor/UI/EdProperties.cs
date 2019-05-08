@@ -27,7 +27,7 @@ using Au.Compiler;
 using System.Runtime.InteropServices.ComTypes;
 using System.Globalization;
 
-partial class EdCodeFileProperties : Form_, IMessageFilter
+partial class EdCodeFileProperties : AFormBase, IMessageFilter
 {
 	FileNode _f, _fProjectFolder;
 	EdMetaCommentsParser _meta;
@@ -58,7 +58,7 @@ partial class EdCodeFileProperties : Form_, IMessageFilter
 		_meta = new EdMetaCommentsParser(_f);
 		_FillGrid();
 		Application.AddMessageFilter(this);
-		//_tSearch.SetCueBanner_("List must contain");
+		//_tSearch.SetCueBanner("List must contain");
 	}
 
 	protected override void OnFormClosed(FormClosedEventArgs e)
@@ -199,7 +199,7 @@ Everything else is like with preBuild.
 @"<b>outputPath</b> - directory for the output assembly file (.exe or .dll) and related files (used dlls, etc).
 Full path. Can start with %environmentVariable% or %Folders.SomeFolder%. Also can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%Folders.Workspace%\bin<>. Default if role classLibrary: <link>%Folders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
 ", noCheckbox: true, buttonAction: (sender, sed) => {
-	var m = new AuMenu();
+	var m = new AMenu();
 	m[_role == ERole.classLibrary ? @"%Folders.ThisApp%\Libraries" : @"%Folders.Workspace%\bin"] = o => _SetEditCellText(o.ToString());
 	m["Browse..."] = o => {
 		var f = new FolderBrowserDialog { SelectedPath = Folders.ThisAppDocuments, ShowNewFolderButton = true };
@@ -368,7 +368,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		FileNode fts = null;
 		if(g.ZGetValue("testScript", out var sts, true, true)) {
 			fts = _f.FindRelative(sts, false);
-			if(fts == null) { AuDialog.ShowInfo("testScript file not found", "Must be path relative to this file or path in worspace like \\file or \\folder\\file.", owner: this); return false; }
+			if(fts == null) { ADialog.ShowInfo("testScript file not found", "Must be path relative to this file or path in worspace like \\file or \\folder\\file.", owner: this); return false; }
 		}
 		_f.TestScript = fts;
 
@@ -405,7 +405,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				break;
 			}
 			if(_meta.config == "") _meta.config = "App.config";
-			var name = Path_.GetFileName(_f.Name, true);
+			var name = APath.GetFileName(_f.Name, true);
 			if(_meta.xmlDoc == "") _meta.xmlDoc = name + ".xml";
 			if(_meta.manifest == "") _meta.manifest = name + ".exe.manifest";
 		}
@@ -444,10 +444,10 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		//remove path and ext if need
 		bool noDir = false, noExt = false;
 		var a = d.FileNames;
-		var dir = Path_.GetDirectoryPath(a[0]);
+		var dir = APath.GetDirectoryPath(a[0]);
 		if(dir.Eqi(fNET) || dir.Eqi(fNET + @"\WPF")) noDir = noExt = true;
 		else if(dir.Eqi(fApp) || dir.Eqi(Folders.ThisAppBS + "Libraries") || dir.Eqi(Folders.ThisAppBS + "Compiler")) noDir = true; //App.config: <probing privatePath="Compiler;Libraries"/>
-		if(noDir) for(int i = 0; i < a.Length; i++) a[i] = Path_.GetFileName(a[i], noExt);
+		if(noDir) for(int i = 0; i < a.Length; i++) a[i] = APath.GetFileName(a[i], noExt);
 
 		_meta.r.AddRange(a);
 	}
@@ -478,7 +478,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			if(sFind.Length > 0 && path.Index(sFind, true) < 0) continue;
 			if(!metaList.Contains(path, StringComparer.OrdinalIgnoreCase)) a.Add(path);
 		}
-		if(a.Count == 0) { AuDialog.Show(sFind.Length > 0 ? "Not found" : $"This workspace contains 0 {ifNone}", sFind, owner: this); return; }
+		if(a.Count == 0) { ADialog.Show(sFind.Length > 0 ? "Not found" : $"This workspace contains 0 {ifNone}", sFind, owner: this); return; }
 		a.Sort();
 		var dd = new PopupList { Items = a.ToArray(), SelectedAction = o => metaList.Add(o.ResultItem as string) };
 		dd.Show(button as Control);
@@ -489,7 +489,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		var en = GAC.EnumAssemblies(sender == _bAddGacVersion).Distinct();
 		var sFind = _tFindInList.Text; if(sFind.Length > 0) en = en.Where(s => s.Index(sFind, true) >= 0);
 		var a = en.ToArray();
-		if(a.Length == 0) { AuDialog.Show("Not found", sFind, owner: this); return; }
+		if(a.Length == 0) { ADialog.Show("Not found", sFind, owner: this); return; }
 		Array.Sort(a);
 		var dd = new PopupList { Items = a, SelectedAction = o => _meta.r.Add(o.ResultItem as string) };
 		dd.Show(sender as Control);
@@ -508,7 +508,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 	{
 		//HKCU\TypeLib\typelibGuid\version\
 		var sFind = _tFindInList.Text;
-		var rx = new Regex_(@"(?i) (?:Type |Object )?Library[ \d\.]*$");
+		var rx = new ARegex(@"(?i) (?:Type |Object )?Library[ \d\.]*$");
 		var a = new List<_RegTypelib>(1000);
 		using(var tlKey = Registry.ClassesRoot.OpenSubKey("TypeLib")) { //guids
 			foreach(var sGuid in tlKey.GetSubKeyNames()) {
@@ -527,7 +527,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				}
 			}
 		}
-		if(a.Count == 0) { AuDialog.Show("Not found", sFind, owner: this); return; }
+		if(a.Count == 0) { ADialog.Show("Not found", sFind, owner: this); return; }
 		a.Sort((x, y) => string.Compare(x.text, y.text, true));
 
 		var dd = new PopupList { Items = a.ToArray(), SelectedAction = o => _ConvertTypeLibrary(o.ResultItem as _RegTypelib) };
@@ -587,7 +587,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			string locale;
 			if(aloc.Count == 1) locale = aloc[0];
 			else {
-				int i = AuDialog.ShowList(aloc2, "Locale", owner: this);
+				int i = ADialog.ShowList(aloc2, "Locale", owner: this);
 				if(i == 0) return;
 				locale = aloc[i - 1];
 			}
@@ -595,7 +595,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			break;
 		}
 		if(hr != 0) {
-			AuDialog.ShowError("Failed to load type library", WinError.MessageFor(hr), owner: this);
+			ADialog.ShowError("Failed to load type library", WinError.MessageFor(hr), owner: this);
 			return;
 		}
 
@@ -605,14 +605,14 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		try {
 			if(_convertedDir == null) {
 				_convertedDir = Folders.Workspace + @".interop\";
-				File_.CreateDirectory(_convertedDir);
+				AFile.CreateDirectory(_convertedDir);
 			}
 			var x = new _TypelibConverter();
 			x.Convert(tl);
 			_meta.com.AddRange(x.converted);
 			Print(@"<>Converted. Saved in <link>%Folders.Workspace%\.interop<>.");
 		}
-		catch(Exception ex) { AuDialog.ShowError("Failed to convert type library", ex.ToStringWithoutStack_(), owner: this); }
+		catch(Exception ex) { ADialog.ShowError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }
 		Marshal.ReleaseComObject(tl);
 		Cursor.Current = Cursors.Arrow;
 	}
@@ -630,13 +630,13 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			tl.GetLibAttr(out IntPtr ipta);
 			var ta = Marshal.PtrToStructure<System.Runtime.InteropServices.ComTypes.TYPELIBATTR>(ipta);
 			tl.ReleaseTLibAttr(ipta);
-			var hash = Convert_.HashFnv1(ta).ToString("x");
+			var hash = AConvert.HashFnv1(ta).ToString("x");
 
 			tl.GetDocumentation(-1, out var tlName, out var tlDescription, out var _, out var _);
 			var fileName = $"{tlName} {ta.wMajorVerNum}.{ta.wMinorVerNum} {hash}.dll";
 			var netPath = _convertedDir + fileName;
 
-			if(!s_converted.TryGetValue(fileName, out var asm) || !File_.ExistsAsFile(netPath)) {
+			if(!s_converted.TryGetValue(fileName, out var asm) || !AFile.ExistsAsFile(netPath)) {
 				Print($"{tlName} ({tlDescription}) to '{fileName}'.");
 
 				var converter = new TypeLibConverter();
@@ -674,7 +674,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 There are several ways to run a script:
 1. Click the Run button or menu item.
 2. Add script name in Options -> General -> Run scripts when this workspace loaded.
-3. Call <help M_Au_AuTask_Run>AuTask.Run<> from another script. Example: <code>AuTask.Run(""Script8.cs"");</code>
+3. Call <help M_Au_AuTask_Run>ATask.Run<> from another script. Example: <code>ATask.Run(""Script8.cs"");</code>
 4. Command line. Example: ""PathOfProgramFolder\Au.CL.exe"" ""Script8.cs"". More info in Help.
 5. Click a link in the output pane. Example: <code>Print(""<>Click to run <script>Script8.cs<>."");</code>
 
@@ -760,9 +760,9 @@ Can be path relative to this file (examples: File.png, Folder\File.png, ..\Folde
 To remove, delete the line in the code editor.
 
 Examples of loading resources at run time:
-<code>var bitmap = Au.Util.Resources_.GetAppResource(""file.png"") as Bitmap;</code>
-<code>var icon = new Icon(Au.Util.Resources_.GetAppResource(""file.ico"") as Icon, 16, 16);</code>
-<code>var cursor = Au.Util.Cursor_.LoadCursorFromMemory(Au.Util.Resources_.GetAppResource(""file.cur"") as byte[]);</code>
+<code>var bitmap = Au.Util.AResources.GetAppResource(""file.png"") as Bitmap;</code>
+<code>var icon = new Icon(Au.Util.AResources.GetAppResource(""file.ico"") as Icon, 16, 16);</code>
+<code>var cursor = Au.Util.ACursor.LoadCursorFromMemory(Au.Util.AResources.GetAppResource(""file.cur"") as byte[]);</code>
 ");
 		_Add(_tFindInList,
 @"<b>Find in lists<> - in the drop-down lists of buttons show only items containing this text.
@@ -771,7 +771,7 @@ Examples of loading resources at run time:
 		void _Add(Control c, string s) => _infoDict.Add(c.Name, s);
 
 		_infoRow = -1;
-		_infoTimer = new Timer_(() => _SetInfoText(_infoText));
+		_infoTimer = new ATimer(() => _SetInfoText(_infoText));
 		_grid.ZShowEditInfo += (cc, rowInfo) => { _SetInfoText(rowInfo); _gridEditMode = rowInfo != null; };
 
 		void _SetInfoText(string infoText)
@@ -794,7 +794,7 @@ Examples of loading resources at run time:
 		}
 
 		if(w == (Wnd)_grid) {
-			var pp = _grid.PositionAtPoint(new Point(Math_.LoShort(xy), Math_.HiShort(xy)));
+			var pp = _grid.PositionAtPoint(new Point(AMath.LoShort(xy), AMath.HiShort(xy)));
 			if(pp.Row != _infoRow) {
 				_infoText = null;
 				_infoRow = pp.Row;
@@ -819,7 +819,7 @@ Examples of loading resources at run time:
 	Wnd _infoWnd;
 	int _infoRow;
 	//Point _infoXY;
-	Timer_ _infoTimer;
+	ATimer _infoTimer;
 	string _infoText, _infoTextPrev;
 	bool _gridEditMode;
 

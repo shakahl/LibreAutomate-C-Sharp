@@ -26,14 +26,14 @@ namespace Au
 	public static partial class Shell
 	{
 		/// <summary>
-		/// The same as <see cref="Path_.Normalize"/>(CanBeUrlOrShell|DoNotPrefixLongPath), but ignores non-full path (returns s).
+		/// The same as <see cref="APath.Normalize"/>(CanBeUrlOrShell|DoNotPrefixLongPath), but ignores non-full path (returns s).
 		/// </summary>
 		/// <param name="s">File-system path or URL or "::...".</param>
 		static string _Normalize(string s)
 		{
-			s = Path_.ExpandEnvVar(s);
-			if(!Path_.IsFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
-			return Path_.LibNormalize(s, PNFlags.DontPrefixLongPath, true);
+			s = APath.ExpandEnvVar(s);
+			if(!APath.IsFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
+			return APath.LibNormalize(s, PNFlags.DontPrefixLongPath, true);
 		}
 
 		/// <summary>
@@ -43,14 +43,14 @@ namespace Au
 		/// <param name="file">
 		/// What to run. Can be:
 		/// Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>Folders.System + "notepad.exe"</c>, <c>@"%Folders.System%\notepad.exe"</c>.
-		/// Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="File_.SearchPath"/>.
+		/// Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="AFile.SearchPath"/>.
 		/// Path relative to <see cref="Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
 		/// Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
 		/// Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="Folders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
 		/// Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="Pidl.ToShellString"/>, <see cref="Folders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
 		/// To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="Wnd.More.GetWindowsStoreAppId"/> or Google.
-		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="Path_.ExpandEnvVar"/>.
+		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="APath.ExpandEnvVar"/>.
 		/// </param>
 		/// <param name="args">
 		/// Command line arguments.
@@ -62,7 +62,7 @@ namespace Au
 		/// If string, it sets initial current directory for the new process. Use "" to get it from <i>file</i>. More info: <see cref="RMore.CurrentDirectory"/>.
 		/// </param>
 		/// <exception cref="ArgumentException">Used more.Verb and flag Admin.</exception>
-		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
+		/// <exception cref="AException">Failed. For example, the file does not exist.</exception>
 		/// <remarks>
 		/// It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
 		/// Uses API <msdn>ShellExecuteEx</msdn>.
@@ -90,7 +90,7 @@ namespace Au
 			bool curDirFromFile = false;
 			if(more != null) {
 				x.lpVerb = more.Verb;
-				var cd = more.CurrentDirectory; if(cd != null) { if(cd.Length == 0) curDirFromFile = true; else cd = Path_.ExpandEnvVar(cd); }
+				var cd = more.CurrentDirectory; if(cd != null) { if(cd.Length == 0) curDirFromFile = true; else cd = APath.ExpandEnvVar(cd); }
 				x.lpDirectory = cd;
 				if(!more.OwnerWindow.IsEmpty) x.hwnd = more.OwnerWindow.Wnd.Window;
 				switch(more.WindowState) {
@@ -119,9 +119,9 @@ namespace Au
 			} else {
 				x.lpFile = file;
 
-				if(curDirFromFile && isFullPath) x.lpDirectory = Path_.GetDirectoryPath(file);
+				if(curDirFromFile && isFullPath) x.lpDirectory = APath.GetDirectoryPath(file);
 			}
-			if(!Empty(args)) x.lpParameters = Path_.ExpandEnvVar(args);
+			if(!Empty(args)) x.lpParameters = APath.ExpandEnvVar(args);
 
 			Wnd.More.EnableActivate();
 
@@ -132,7 +132,7 @@ namespace Au
 			finally {
 				pidl?.Dispose();
 			}
-			if(!ok) throw new AuException(0, $"*run '{file}'");
+			if(!ok) throw new AException(0, $"*run '{file}'");
 
 			var R = new RResult();
 			bool waitForExit = 0 != (flags & RFlags.WaitForExit);
@@ -140,7 +140,7 @@ namespace Au
 			LibWaitHandle ph = null;
 			if(!x.hProcess.Is0) {
 				if(waitForExit || needHandle) ph = new LibWaitHandle(x.hProcess, true);
-				if(!waitForExit) R.ProcessId = Process_.ProcessIdFromHandle(x.hProcess);
+				if(!waitForExit) R.ProcessId = AProcess.ProcessIdFromHandle(x.hProcess);
 			}
 
 			try {
@@ -177,7 +177,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
-		/// Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
+		/// Handles only exception of type AException. It is thrown when fails, usually when the file does not exist.
 		/// </remarks>
 		/// <seealso cref="PrintWarning"/>
 		/// <seealso cref="OptDebug.DisableWarnings"/>
@@ -188,7 +188,7 @@ namespace Au
 			try {
 				return Run(s, args, flags, more);
 			}
-			catch(AuException e) {
+			catch(AException e) {
 				PrintWarning(e.Message, 1);
 				return null;
 			}
@@ -198,24 +198,24 @@ namespace Au
 		static string _NormalizeFile(bool runConsole, string file, out bool isFullPath, out bool isShellPath)
 		{
 			isShellPath = isFullPath = false;
-			file = Path_.ExpandEnvVar(file);
+			file = APath.ExpandEnvVar(file);
 			if(Empty(file)) throw new ArgumentException();
-			if(runConsole || !(isShellPath = Path_.LibIsShellPath(file))) {
-				if(isFullPath = Path_.IsFullPath(file)) {
+			if(runConsole || !(isShellPath = APath.LibIsShellPath(file))) {
+				if(isFullPath = APath.IsFullPath(file)) {
 					var fl = runConsole ? PNFlags.DontExpandDosPath : PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath;
-					file = Path_.LibNormalize(file, fl, true);
+					file = APath.LibNormalize(file, fl, true);
 
 					//ShellExecuteEx supports long path prefix for exe but not for documents.
 					//Process.Run supports long path prefix, except when the exe is .NET.
-					if(!runConsole) file = Path_.UnprefixLongPath(file);
+					if(!runConsole) file = APath.UnprefixLongPath(file);
 
-					if(File_.More.DisableRedirection.IsSystem64PathIn32BitProcess(file) && !File_.ExistsAsAny(file)) {
-						file = File_.More.DisableRedirection.GetNonRedirectedSystemPath(file);
+					if(AFile.More.DisableRedirection.IsSystem64PathIn32BitProcess(file) && !AFile.ExistsAsAny(file)) {
+						file = AFile.More.DisableRedirection.GetNonRedirectedSystemPath(file);
 					}
-				} else if(!Path_.IsUrl(file)) {
+				} else if(!APath.IsUrl(file)) {
 					//ShellExecuteEx searches everywhere except in app folder.
 					//Process.Run prefers current directory.
-					var s2 = File_.SearchPath(file);
+					var s2 = AFile.SearchPath(file);
 					if(s2 != null) {
 						file = s2;
 						isFullPath = true;
@@ -232,23 +232,23 @@ namespace Au
 		/// <param name="exe">
 		/// Path or name of an .exe or .bat file. Can be:
 		/// Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>Folders.System + "x.exe"</c>, <c>@"%Folders.System%\x.exe"</c>.
-		/// Filename, like <c>"x.exe"</c>. This function calls <see cref="File_.SearchPath"/>.
+		/// Filename, like <c>"x.exe"</c>. This function calls <see cref="AFile.SearchPath"/>.
 		/// Path relative to <see cref="Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
-		/// Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="Path_.ExpandEnvVar"/>.
+		/// Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="APath.ExpandEnvVar"/>.
 		/// </param>
 		/// <param name="args">null or command line arguments.</param>
 		/// <param name="curDir">
 		/// Initial current directory of the new process.
 		/// - If null, uses <c>Directory.GetCurrentDirectory()</c>.
-		/// - Else if "", calls <c>Path_.GetDirectoryPath(exe)</c>.
-		/// - Else calls <see cref="Path_.ExpandEnvVar"/>.
+		/// - Else if "", calls <c>APath.GetDirectoryPath(exe)</c>.
+		/// - Else calls <see cref="APath.ExpandEnvVar"/>.
 		/// </param>
 		/// <param name="encoding">
 		/// Console's text encoding.
 		/// If null (default), uses the default console text encoding (API <msdn>GetOEMCP</msdn>); it is not Unicode. Programs that display Unicode text use <see cref="Encoding.UTF8"/>.
 		/// </param>
 		/// <returns>The process exit code. Usually a non-0 value means error.</returns>
-		/// <exception cref="AuException">Failed, for example file not found.</exception>
+		/// <exception cref="AException">Failed, for example file not found.</exception>
 		/// <remarks>
 		/// The console window is hidden. The text that would be displayed in it is redirected to this function.
 		/// 
@@ -280,7 +280,7 @@ namespace Au
 		/// <param name="args"></param>
 		/// <param name="curDir"></param>
 		/// <param name="encoding"></param>
-		/// <exception cref="AuException">Failed, for example file not found.</exception>
+		/// <exception cref="AException">Failed, for example file not found.</exception>
 		public static unsafe int RunConsole(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null)
 		{
 			return _RunConsole(output, null, exe, args, curDir, encoding);
@@ -294,7 +294,7 @@ namespace Au
 		/// <param name="args"></param>
 		/// <param name="curDir"></param>
 		/// <param name="encoding"></param>
-		/// <exception cref="AuException">Failed, for example file not found.</exception>
+		/// <exception cref="AException">Failed, for example file not found.</exception>
 		public static unsafe int RunConsole(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null)
 		{
 			var b = new StringBuilder();
@@ -306,13 +306,13 @@ namespace Au
 		static unsafe int _RunConsole(Action<string> outAction, StringBuilder outStr, string exe, string args, string curDir, Encoding encoding)
 		{
 			exe = _NormalizeFile(true, exe, out _, out _);
-			//args = Path_.ExpandEnvVar(args); //rejected
+			//args = APath.ExpandEnvVar(args); //rejected
 
 			var ps = new Util.LibProcessStarter(exe, args, curDir, rawExe: true);
 
 			LibHandle hProcess = default;
 			var sa = new Api.SECURITY_ATTRIBUTES(null) { bInheritHandle = 1 };
-			if(!Api.CreatePipe(out LibHandle hOutRead, out LibHandle hOutWrite, sa, 0)) throw new AuException(0);
+			if(!Api.CreatePipe(out LibHandle hOutRead, out LibHandle hOutWrite, sa, 0)) throw new AException(0);
 
 			byte* b = null; char* c = null;
 			try {
@@ -323,7 +323,7 @@ namespace Au
 				ps.si.hStdError = hOutWrite;
 				ps.flags |= Api.CREATE_NEW_CONSOLE;
 
-				if(!ps.StartLL(out var pi, inheritHandles: true)) throw new AuException(0);
+				if(!ps.StartLL(out var pi, inheritHandles: true)) throw new AException(0);
 				hOutWrite.Dispose(); //important: must be here
 				pi.hThread.Dispose();
 				hProcess = pi.hProcess;
@@ -345,7 +345,7 @@ namespace Au
 						if(nr == 0) continue;
 						nr += offs;
 					} else {
-						if(WinError.Code != Api.ERROR_BROKEN_PIPE) throw new AuException(0);
+						if(WinError.Code != Api.ERROR_BROKEN_PIPE) throw new AException(0);
 						//process ended
 						if(offs == 0) break;
 						nr = offs;
@@ -411,7 +411,7 @@ namespace Au
 		/// </summary>
 		/// <param name="path">
 		/// Full path of a file or directory or other shell object.
-		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="Path_.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="Pidl.ToHexString"/>).
+		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="APath.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="Pidl.ToHexString"/>).
 		/// </param>
 		public static bool SelectFileInExplorer(string path)
 		{

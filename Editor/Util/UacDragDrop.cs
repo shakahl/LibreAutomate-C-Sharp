@@ -26,7 +26,7 @@ class UacDragDrop
 	public class AdminProcess
 	{
 		Au.Util.AccHook _hook; //SYSTEM_CAPTURESTART
-		Timer_ _timer; //tracks mouse etc
+		ATimer _timer; //tracks mouse etc
 		bool _isDragMode; //is in drag-drop
 		bool _isProcess2; //is our non-admin process started
 		int _endCounter; //delays ending drag mode
@@ -49,7 +49,7 @@ class UacDragDrop
 
 		AdminProcess()
 		{
-			_timer = new Timer_(() => _Timer());
+			_timer = new ATimer(() => _Timer());
 
 			//use hook to detect when drag-drop started
 			_hook = new Au.Util.AccHook(AccEVENT.SYSTEM_CAPTURESTART, 0, d => {
@@ -368,7 +368,7 @@ class UacDragDrop
 				} else return false;
 				return true;
 			}
-			catch(Exception ex) { Dbg.Print(ex); return false; }
+			catch(Exception ex) { ADebug.Print(ex); return false; }
 
 			//note: MemoryStream.GetBuffer says "UnauthorizedAccessException: MemoryStream's internal buffer cannot be accessed"
 			//info: if from IE, GetData returns null for all formats.

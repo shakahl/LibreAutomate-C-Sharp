@@ -33,13 +33,13 @@ static class Run
 	/// <summary>
 	/// Compiles and/or executes C# file or its project.
 	/// If <paramref name="run"/> is false, returns 1 if compiled, 0 if failed to compile.
-	/// Else returns: process id if started now, 0 if failed, (int)AuTask.ERunResult.deferred if scheduled to run later, (int)AuTask.ERunResult.editorThread if runs in editor thread.
+	/// Else returns: process id if started now, 0 if failed, (int)ATask.ERunResult.deferred if scheduled to run later, (int)ATask.ERunResult.editorThread if runs in editor thread.
 	/// </summary>
 	/// <param name="run">If true, compiles if need and executes. If false, always compiles and does not execute.</param>
 	/// <param name="f">C# file. Does nothing if null or not C# file.</param>
 	/// <param name="args">To pass to Main.</param>
 	/// <param name="noDefer">Don't schedule to run later.</param>
-	/// <param name="wrPipeName">Pipe name for AuTask.WriteResult.</param>
+	/// <param name="wrPipeName">Pipe name for ATask.WriteResult.</param>
 	/// <remarks>
 	/// Saves editor text if need.
 	/// Calls <see cref="Compiler.Compile"/>.
@@ -82,7 +82,7 @@ static class Run
 
 		if(r.role == ERole.editorExtension) {
 			RunAssembly.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread);
-			return (int)AuTask.ERunResult.editorThread;
+			return (int)ATask.ERunResult.editorThread;
 		}
 
 		return Tasks.RunCompiled(f, r, args, noDefer, wrPipeName);
@@ -109,7 +109,7 @@ static class Run
 				if(!_NewItem(out f2, @"New Project\@Script")) return;
 				f.FileMove(f2, Aga.Controls.Tree.NodePosition.After);
 			} else { //create test script
-				s = "test " + Path_.GetFileName(f.Name, true);
+				s = "test " + APath.GetFileName(f.Name, true);
 				if(!_NewItem(out f2, "Script.cs", s)) return;
 				f.TestScript = f2;
 			}
@@ -192,10 +192,10 @@ class RunningTask
 			bool ok = Api.TerminateProcess(h, -1);
 			if(onProgramExit) return true;
 			if(ok) {
-				if(0 != Api.WaitForSingleObject(h, 2000)) { Dbg.Print("process not terminated"); return false; }
+				if(0 != Api.WaitForSingleObject(h, 2000)) { ADebug.Print("process not terminated"); return false; }
 			} else {
 				var s = WinError.Message;
-				if(0 != Api.WaitForSingleObject(h, 0)) { Dbg.Print(s); return false; }
+				if(0 != Api.WaitForSingleObject(h, 0)) { ADebug.Print(s); return false; }
 			}
 			//note: TerminateProcess kills process not immediately. Need at least several ms.
 		}
@@ -296,7 +296,7 @@ class RunningTasks
 
 		int taskId = (int)wParam;
 		int i = _Find(taskId);
-		if(i < 0) { Dbg.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
+		if(i < 0) { ADebug.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
 
 		var rt = _a[i];
 		_a.RemoveAt(i);
@@ -415,13 +415,13 @@ class RunningTasks
 
 	/// <summary>
 	/// Executes the compiled assembly in new process.
-	/// Returns: process id if started now, 0 if failed, (int)AuTask.ERunResult.deferred if scheduled to run later.
+	/// Returns: process id if started now, 0 if failed, (int)ATask.ERunResult.deferred if scheduled to run later.
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="r"></param>
 	/// <param name="args"></param>
 	/// <param name="noDefer">Don't schedule to run later. If cannot run now, just return 0.</param>
-	/// <param name="wrPipeName">Pipe name for AuTask.WriteResult.</param>
+	/// <param name="wrPipeName">Pipe name for ATask.WriteResult.</param>
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args, bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false)
 	{
@@ -436,7 +436,7 @@ class RunningTasks
 			case EIfRunning.wait:
 				if(noDefer) goto case EIfRunning.runIfBlue;
 				_q.Insert(0, new _WaitingTask(f, r, args));
-				return (int)AuTask.ERunResult.deferred;
+				return (int)ATask.ERunResult.deferred;
 			case EIfRunning.runIfBlue:
 				string s1 = (running.f == f) ? "it" : $"{running.f.SciLink}";
 				Print($"<>Cannot start {f.SciLink} because {s1} is running. Consider meta options <c green>runMode<>, <c green>ifRunning<>.");
@@ -514,15 +514,15 @@ class RunningTasks
 				//Perf.First();
 				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent };
 				if(!Api.ConnectNamedPipe(pre.hPipe, &o)) {
-					int e = WinError.Code; if(e != Api.ERROR_IO_PENDING) throw new AuException(e);
+					int e = WinError.Code; if(e != Api.ERROR_IO_PENDING) throw new AException(e);
 					var ha = stackalloc IntPtr[2] { pre.overlappedEvent, hProcess.SafeWaitHandle.DangerousGetHandle() };
 					int wr = Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
-					if(wr != 0) { Api.CancelIo(pre.hPipe); throw new AuException("*start task. Preloaded task process ended"); } //note: if fails when 32-bit process, rebuild solution with platform x86
+					if(wr != 0) { Api.CancelIo(pre.hPipe); throw new AException("*start task. Preloaded task process ended"); } //note: if fails when 32-bit process, rebuild solution with platform x86
 					disconnectPipe = true;
-					if(!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AuException(0);
+					if(!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AException(0);
 				}
 				//Perf.Next();
-				if(!Api.WriteFileArr(pre.hPipe, taskParams, out _)) throw new AuException(0);
+				if(!Api.WriteFileArr(pre.hPipe, taskParams, out _)) throw new AException(0);
 				//Perf.Next();
 				Api.DisconnectNamedPipe(pre.hPipe); disconnectPipe = false;
 				//Perf.NW('e');
@@ -530,7 +530,7 @@ class RunningTasks
 				//start preloaded process for next task. Let it wait for pipe connection.
 				if(uac != _SpUac.admin) { //we don't want second UAC consent
 					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
-					catch(Exception ex) { Dbg.Print(ex); }
+					catch(Exception ex) { ADebug.Print(ex); }
 				}
 			}
 		}
@@ -590,9 +590,9 @@ class RunningTasks
 	/// </summary>
 	static (int pid, WaitHandle hProcess) _StartProcess(_SpUac uac, string exeFile, string args, string wrPipeName)
 	{
-		if(wrPipeName != null) wrPipeName = "AuTask.WriteResult.pipe=" + wrPipeName;
+		if(wrPipeName != null) wrPipeName = "ATask.WriteResult.pipe=" + wrPipeName;
 		if(uac == _SpUac.admin) {
-			if(wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable AuTask.WriteResult"); //cannot pass environment variables. //rare //FUTURE
+			if(wrPipeName != null) throw new AException($"*start process '{exeFile}' as admin and enable ATask.WriteResult"); //cannot pass environment variables. //rare //FUTURE
 			var k = Shell.Run(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
 			return (k.ProcessId, k.ProcessHandle);
 			//note: don't try to start task without UAC consent. It is not secure.

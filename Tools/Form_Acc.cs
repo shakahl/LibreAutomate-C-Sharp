@@ -59,7 +59,7 @@ namespace Au.Tools
 			base.OnLoad(e);
 
 			Wnd w = (Wnd)this;
-			if(Registry_.GetString(out var wndPos, "wndPos", c_registryKey))
+			if(ARegistry.GetString(out var wndPos, "wndPos", c_registryKey))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 
 			if(_acc != null) _SetAcc(false);
@@ -75,7 +75,7 @@ namespace Au.Tools
 			_capt?.Dispose();
 
 			Wnd w = (Wnd)this;
-			Registry_.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
+			ARegistry.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
 
 			base.OnFormClosing(e);
 		}
@@ -387,7 +387,7 @@ namespace Au.Tools
 
 		private void _bEtc_Click(object sender, EventArgs e)
 		{
-			var m = new AuMenu();
+			var m = new AMenu();
 			m["Control"] = o => { _useCon = o.MenuItem.Checked && !_con.Is0; _FillGridThreeCode(); };
 			m.LastMenuItem.Enabled = !_con.Is0;
 			m.LastMenuItem.CheckOnClick = true;
@@ -530,7 +530,7 @@ namespace Au.Tools
 				//	Noticed this in Office 2003 Word Options dialog and in Dreamweaver.
 				//	Also, WndContainer then may get the top-level window. Eg in Word.
 				//	Workaround: enum child controls and look for _acc in one them. Then add "class" row if need.
-				Dbg.Print("broken IAccessible branch");
+				ADebug.Print("broken IAccessible branch");
 				foreach(var c in w.Get.Children(onlyVisible: true)) {
 					var m = _CreateModel(c, in p, true);
 					if(m.xSelect != null) {
@@ -594,7 +594,7 @@ namespace Au.Tools
 				_SelectTreeNode(n);
 				return true;
 			}
-			Dbg.Print("recreating tree of same window");
+			ADebug.Print("recreating tree of same window");
 			return false;
 
 			//Other ways to compare Acc:
@@ -836,7 +836,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 			public static void EnableDisableJabUI(AnyWnd owner)
 			{
 				var (ok, results) = EnableDisableJab(null);
-				if(results != null) AuDialog.Show("Results", results, icon: ok ? DIcon.Info : DIcon.Error, owner: owner, flags: DFlags.OwnerCenter);
+				if(results != null) ADialog.Show("Results", results, icon: ok ? DIcon.Info : DIcon.Error, owner: owner, flags: DFlags.OwnerCenter);
 			}
 
 			/// <summary>
@@ -847,7 +847,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 			public static (bool ok, string results) EnableDisableJab(bool? enable/*, bool allUsers*/)
 			{
 				if(enable == null) {
-					switch(AuDialog.ShowList("1 Enable|2 Disable|Cancel", "Java Access Bridge")) {
+					switch(ADialog.ShowList("1 Enable|2 Disable|Cancel", "Java Access Bridge")) {
 					case 1: enable = true; break;
 					case 2: enable = false; break;
 					default: return (false, null);
@@ -859,13 +859,13 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 
 				//if(!allUsers) {
 				string jabswitch = dir + @"\bin\jabswitch.exe", sout = null;
-				if(!File_.ExistsAsFile(jabswitch)) return (false, "Cannot find jabswitch.exe.");
+				if(!AFile.ExistsAsFile(jabswitch)) return (false, "Cannot find jabswitch.exe.");
 				try {
 					Shell.RunConsole(out sout, jabswitch, en ? "-enable" : "-disable");
 					sout = sout?.Trim();
 				}
 				catch(Exception ex) {
-					return (false, ex.ToStringWithoutStack_());
+					return (false, ex.ToStringWithoutStack());
 				}
 				//} else {
 				//never mind
@@ -874,8 +874,8 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 				sout += "\r\nRestart Java apps to apply the new settings.";
 
 				string dll64 = Folders.SystemX64 + "WindowsAccessBridge-64.dll", dll32 = Folders.SystemX86 + "WindowsAccessBridge-32.dll";
-				if(!File_.ExistsAsFile(dll64)) sout += "\r\n\r\nWarning: dll not found: " + dll64 + ".  64-bit apps will not be able to use AOs of Java apps. Install 64-bit Java too.";
-				if(!File_.ExistsAsFile(dll32)) sout += "\r\n\r\nNote: dll not found: " + dll32 + ".  32-bit apps will not be able to use AOs of Java apps. Install 32-bit Java too.";
+				if(!AFile.ExistsAsFile(dll64)) sout += "\r\n\r\nWarning: dll not found: " + dll64 + ".  64-bit apps will not be able to use AOs of Java apps. Install 64-bit Java too.";
+				if(!AFile.ExistsAsFile(dll32)) sout += "\r\n\r\nNote: dll not found: " + dll32 + ".  32-bit apps will not be able to use AOs of Java apps. Install 32-bit Java too.";
 
 				return (true, sout);
 
@@ -893,8 +893,8 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 			{
 				path = null;
 				string rk = @"HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\Java Runtime Environment";
-				if(!Registry_.GetString(out var ver, "CurrentVersion", rk)) return false;
-				if(!Registry_.GetString(out path, "JavaHome", rk + @"\" + ver)) return false;
+				if(!ARegistry.GetString(out var ver, "CurrentVersion", rk)) return false;
+				if(!ARegistry.GetString(out path, "JavaHome", rk + @"\" + ver)) return false;
 				return true;
 			}
 		}

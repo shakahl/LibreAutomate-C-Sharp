@@ -26,30 +26,30 @@ namespace Au
 	/// <remarks>
 	/// CSV is a text format used to store a single table of data in human-readable/editable way.
 	/// It is a list of lines (called rows or records) containing one or more values (called fields or cells) separated by a separator character.
-	/// There is no strictly defined CSV standard. <b>CsvTable</b> uses these rules:
+	/// There is no strictly defined CSV standard. <b>Csv</b> uses these rules:
 	///		Fields containg separator characters (default ','), quote characters (default '"') and multiple lines are enclosed in quote characters. Example: "ab, cd".
 	///		Each quote character in such fields is escaped (replaced) with two quote characters. Example: "ab ""cd"" ef".
 	///		If a field value starts or ends with ASCII space or tab characters, it is enclosed in quote characters. Example: " ab ". Or use parameter <i>trimSpaces</i> false when parsing.
 	///		Rows in CSV text can have different field count. All rows in in-memory CSV table have equal field count.
 	/// </remarks>
 	[DebuggerStepThrough]
-	public class CsvTable
+	public class Csv
 	{
 		List<string[]> _a;
 
 		/// <summary>
-		/// Initializes new <see cref="CsvTable"/> variable that can be used to add rows.
+		/// Initializes new <see cref="Csv"/> variable that can be used to add rows.
 		/// To create new variables from CSV text, file or dictionary, instead use static functions, for example <see cref="Parse"/>.
 		/// </summary>
-		public CsvTable() { _a = new List<string[]>(); }
+		public Csv() { _a = new List<string[]>(); }
 
-		CsvTable(List<string[]> a, int columnCount) { _a = a; _columnCount = columnCount; }
+		Csv(List<string[]> a, int columnCount) { _a = a; _columnCount = columnCount; }
 
 		/// <summary>
 		/// Gets the internal <b>List</b> containing rows as string arrays.
 		/// </summary>
 		/// <remarks>
-		/// It's not a copy; changing it will change the data of this <see cref="CsvTable"/> variable.
+		/// It's not a copy; changing it will change the data of this <see cref="Csv"/> variable.
 		/// You can do anything with the <b>List</b>. For example, sort it, find rows containing certain field values, get/set field values directly, add/remove rows directly.
 		/// All row arrays have <b>Length</b> equal to <see cref="ColumnCount"/>, and it must remain so; you can change <b>Length</b>, but then need to call <c>ColumnCount=newLength</c>.
 		/// </remarks>
@@ -73,7 +73,7 @@ namespace Au
 		public char Quote { get; set; } = '"';
 
 		/// <summary>
-		/// Parses CSV string and creates new <see cref="CsvTable"/> variable that contains all data in internal <b>List</b> of string arrays.
+		/// Parses CSV string and creates new <see cref="Csv"/> variable that contains all data in internal <b>List</b> of string arrays.
 		/// </summary>
 		/// <param name="csv">
 		/// CSV text.
@@ -82,10 +82,10 @@ namespace Au
 		/// <param name="separator">Field separator character used in CSV text. Default ','.</param>
 		/// <param name="quote">Character used in CSV text to enclose some fields. Default '"'.</param>
 		/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
-		/// <exception cref="AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
-		public static unsafe CsvTable Parse(string csv, char separator = ',', char quote = '"', bool trimSpaces = true)
+		/// <exception cref="AException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
+		public static unsafe Csv Parse(string csv, char separator = ',', char quote = '"', bool trimSpaces = true)
 		{
-			if(Empty(csv)) return new CsvTable();
+			if(Empty(csv)) return new Csv();
 
 			var a = new List<string[]>();
 			var tempRow = new List<string>(8);
@@ -112,14 +112,14 @@ namespace Au
 								else { hasClosingQuote = true; break; }
 							}
 						}
-						if(!hasClosingQuote) throw new AuException($"Invalid CSV format. Cells that start with {quote} must end with {quote}.");
+						if(!hasClosingQuote) throw new AException($"Invalid CSV format. Cells that start with {quote} must end with {quote}.");
 						e = s - 1; //before quote
 						if(trimSpaces) { //rtrim
 							while(s < se && (*s == ' ' || *s == '\t')) s++;
 						}
 						if(s < se && !(*s == separator || *s == '\n')) {
 							if(*s == '\r' && s < se + 1 && s[1] == '\n') s++;
-							else throw new AuException($"Invalid CSV format. For {quote} in enclosed cells use {quote}{quote}.");
+							else throw new AException($"Invalid CSV format. For {quote} in enclosed cells use {quote}{quote}.");
 						}
 					} else {
 						f = s; //field start
@@ -149,7 +149,7 @@ namespace Au
 					}
 				}
 
-				var R = new CsvTable(a, 0);
+				var R = new Csv(a, 0);
 				R.ColumnCount = nCol; //make all rows of equal length and set _columnCount
 				//Print(R.RowCount, R.ColumnCount);
 				return R;
@@ -281,7 +281,7 @@ namespace Au
 		/// <param name="row">0-based row index. With the 'set' function it can be negative or equal to <see cref="RowCount"/>; then adds new row.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// The 'get' function gets the row array. It's not a copy; changing its elements will change the data of this <see cref="CsvTable"/> variable.
+		/// The 'get' function gets the row array. It's not a copy; changing its elements will change the data of this <see cref="Csv"/> variable.
 		/// The 'set' function sets the row array. Does not copy the array, unless its <b>Length</b> is less than <see cref="ColumnCount"/>.
 		/// </remarks>
 		public string[] this[int row]
@@ -377,36 +377,36 @@ namespace Au
 		/// <summary>
 		/// Loads and parses a CSV file.
 		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>.</param>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
 		/// <param name="separator">Field separator character used in CSV text. Default ','.</param>
 		/// <param name="quote">Character used in CSV text to enclose some fields. Default '"'.</param>
 		/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText(string)"/>.</exception>
-		/// <exception cref="AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
+		/// <exception cref="AException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
 		/// <remarks>
-		/// Calls <see cref="File.ReadAllText(string)"/> and <see cref="Parse"/>. Also uses <see cref="File_.WaitIfLocked"/>.
+		/// Calls <see cref="File.ReadAllText(string)"/> and <see cref="Parse"/>. Also uses <see cref="AFile.WaitIfLocked"/>.
 		/// </remarks>
-		public static CsvTable Load(string file, char separator = ',', char quote = '"', bool trimSpaces = true)
+		public static Csv Load(string file, char separator = ',', char quote = '"', bool trimSpaces = true)
 		{
-			var csv = File_.LoadText(file);
+			var csv = AFile.LoadText(file);
 			return Parse(csv, separator, quote, trimSpaces);
 		}
 
 		/// <summary>
 		/// Composes CSV and saves to file.
 		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>. The file can exist or not; this function overwrites it.</param>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>. The file can exist or not; this function overwrites it.</param>
 		/// <param name="backup">Create backup file named file + "~backup".</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.WriteAllText(string, string)"/>.</exception>
 		/// <remarks>
-		/// Calls <see cref="ToString"/> and <see cref="File.WriteAllText(string, string)"/>. Also uses <see cref="File_.Save"/>.
+		/// Calls <see cref="ToString"/> and <see cref="File.WriteAllText(string, string)"/>. Also uses <see cref="AFile.Save"/>.
 		/// </remarks>
 		public void Save(string file, bool backup = false)
 		{
 			var csv = ToString();
-			File_.SaveText(file, csv, backup);
+			AFile.SaveText(file, csv, backup);
 		}
 
 		/// <summary>
@@ -414,12 +414,12 @@ namespace Au
 		/// </summary>
 		/// <param name="d"></param>
 		/// <exception cref="ArgumentNullException"></exception>
-		public static CsvTable FromDictionary(Dictionary<string, string> d)
+		public static Csv FromDictionary(Dictionary<string, string> d)
 		{
 			if(d == null) throw new ArgumentNullException();
 			var a = new List<string[]>(d.Count);
 			foreach(var v in d) a.Add(new string[] { v.Key, v.Value });
-			return new CsvTable(a, 2);
+			return new Csv(a, 2);
 		}
 
 		/// <summary>
@@ -428,7 +428,7 @@ namespace Au
 		/// <param name="d"></param>
 		/// <param name="valueToString">Callback function that converts value of type T to string.</param>
 		/// <exception cref="ArgumentNullException"></exception>
-		public static CsvTable FromDictionary<T>(Dictionary<string, T> d, Func<T, string> valueToString)
+		public static Csv FromDictionary<T>(Dictionary<string, T> d, Func<T, string> valueToString)
 		{
 			if(d == null || valueToString == null) throw new ArgumentNullException();
 			var a = new List<string[]>(d.Count);
@@ -436,7 +436,7 @@ namespace Au
 				var t = valueToString(v.Value);
 				a.Add(new string[] { v.Key, t });
 			}
-			return new CsvTable(a, 2);
+			return new Csv(a, 2);
 		}
 
 		/// <summary>
@@ -447,7 +447,7 @@ namespace Au
 		/// <param name="valueToCells">Callback function that converts value of type T to one or more strings and puts them in row array elements starting from index 1. At index 0 is key.</param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentOutOfRangeException">columnCount less than 2.</exception>
-		public static CsvTable FromDictionary<T>(Dictionary<string, T> d, int columnCount, Action<T, string[]> valueToCells)
+		public static Csv FromDictionary<T>(Dictionary<string, T> d, int columnCount, Action<T, string[]> valueToCells)
 		{
 			if(d == null || valueToCells == null) throw new ArgumentNullException();
 			if(columnCount < 2) throw new ArgumentOutOfRangeException();
@@ -458,7 +458,7 @@ namespace Au
 				valueToCells(v.Value, t);
 				a.Add(t);
 			}
-			return new CsvTable(a, columnCount);
+			return new Csv(a, columnCount);
 		}
 
 		/// <summary>

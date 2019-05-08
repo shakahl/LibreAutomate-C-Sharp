@@ -112,9 +112,9 @@ namespace Au
 			/// Returns null if failed.
 			/// Note: Pidl is disposable.
 			/// </summary>
-			/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or ":: HexEncodedITEMIDLIST" (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="Path_.ExpandEnvVar"/>).</param>
-			/// <param name="throwIfFailed">If failed, throw AuException.</param>
-			/// <exception cref="AuException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
+			/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or ":: HexEncodedITEMIDLIST" (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="APath.ExpandEnvVar"/>).</param>
+			/// <param name="throwIfFailed">If failed, throw AException.</param>
+			/// <exception cref="AException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
 			/// <remarks>
 			/// Calls <msdn>SHParseDisplayName</msdn>, except when string is ":: HexEncodedITEMIDLIST".
 			/// Never fails if s is ":: HexEncodedITEMIDLIST", even if it creates an invalid ITEMIDLIST.
@@ -139,12 +139,12 @@ namespace Au
 					int n = (s.Length - 3) / 2;
 					R = Marshal.AllocCoTaskMem(n + 2);
 					byte* b = (byte*)R;
-					n = Convert_.HexDecode(s, b, n, 3);
+					n = AConvert.HexDecode(s, b, n, 3);
 					b[n] = b[n + 1] = 0;
 				} else { //file-system path or URL or shell object parsing name
 					var hr = Api.SHParseDisplayName(s, default, out R, 0, null);
 					if(hr != 0) {
-						if(throwIfFailed) throw new AuException(hr);
+						if(throwIfFailed) throw new AException(hr);
 						return default;
 					}
 				}
@@ -164,8 +164,8 @@ namespace Au
 			/// - Native.SIGDN.URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
 			/// - Native.SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create ITEMIDLIST again, therefore usually it's better to use <see cref="ToString"/> instead.
 			/// </param>
-			/// <param name="throwIfFailed">If failed, throw AuException.</param>
-			/// <exception cref="AuException">Failed, and throwIfFailed is true.</exception>
+			/// <param name="throwIfFailed">If failed, throw AException.</param>
+			/// <exception cref="AException">Failed, and throwIfFailed is true.</exception>
 			/// <remarks>
 			/// Calls <msdn>SHGetNameFromIDList</msdn>.
 			/// </remarks>
@@ -184,7 +184,7 @@ namespace Au
 				if(pidl == default) return null;
 				var hr = Api.SHGetNameFromIDList(pidl, stringType, out string R);
 				if(hr == 0) return R;
-				if(throwIfFailed) throw new AuException(hr);
+				if(throwIfFailed) throw new AException(hr);
 				return null;
 			}
 
@@ -260,7 +260,7 @@ namespace Au
 			/// Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
 			/// </summary>
 			/// <remarks>
-			/// The string can be used with some functions of this library, mostly of classes Shell, Shell.Pidl and Icon_. Cannot be used with native and .NET functions.
+			/// The string can be used with some functions of this library, mostly of classes Shell, Shell.Pidl and AIcon. Cannot be used with native and .NET functions.
 			/// </remarks>
 			public string ToHexString()
 			{
@@ -278,7 +278,7 @@ namespace Au
 				int n = Api.ILGetSize(pidl) - 2; //API gets size with the terminating '\0' (2 bytes)
 				if(n < 0) return null;
 				if(n == 0) return ":: "; //shell root - Desktop
-				return ":: " + Convert_.HexEncode((void*)pidl, n, true);
+				return ":: " + AConvert.HexEncode((void*)pidl, n, true);
 			}
 		}
 	}

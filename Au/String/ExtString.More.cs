@@ -145,7 +145,7 @@ namespace Au
 			/// <param name="tail">Receives the string part that follows the number, or "". Receives null if no number. Can be this variable.</param>
 			/// <param name="startIndex">Offset in this string where to start parsing.</param>
 			/// <param name="flags"></param>
-			public static bool ParseIntAndString_(string s, out int num, out string tail, int startIndex = 0, STIFlags flags = 0)
+			public static bool ParseIntAndString(string s, out int num, out string tail, int startIndex = 0, STIFlags flags = 0)
 			{
 				num = s.ToInt(startIndex, out int end, flags);
 				if(end == 0) {

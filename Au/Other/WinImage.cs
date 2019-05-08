@@ -48,7 +48,7 @@ namespace Au
 		/// </summary>
 		/// <param name="image">See <see cref="Find"/>.</param>
 		/// <exception cref="FileNotFoundException">The specified file does not exist.</exception>
-		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="Convert_.Decompress"/>.</exception>
+		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="AConvert.Decompress"/>.</exception>
 		/// <exception cref="ArgumentException">Bad image format (the image cannot be loaded as Bitmap).</exception>
 		/// <remarks>
 		/// <see cref="Find"/> uses this function when <i>image</i> argument type is string. More info there.
@@ -62,17 +62,17 @@ namespace Au
 				int start = compressed ? 2 : 6, len = image.Length - start, n = (int)(len * 3L / 4);
 				var b = new byte[n];
 				fixed (byte* pb = b) {
-					fixed (char* ps = image) n = Convert_.Base64Decode(ps + start, len, pb, n);
+					fixed (char* ps = image) n = AConvert.Base64Decode(ps + start, len, pb, n);
 				}
 				using(var stream = compressed ? new MemoryStream() : new MemoryStream(b, 0, n, false)) {
-					if(compressed) Convert_.Decompress(stream, b, 0, n);
+					if(compressed) AConvert.Decompress(stream, b, 0, n);
 					R = new Bitmap(stream);
 				}
 				//size and speed of "image:" and "~:": "image:" usually is bigger by 10-20% and faster by ~25%
 			} else {
-				image = Path_.Normalize(image, Folders.ThisAppImages);
-				if(!File_.ExistsAsFile(image, true))
-					o = Util.Resources_.GetAppResource(Path_.GetFileName(image, true));
+				image = APath.Normalize(image, Folders.ThisAppImages);
+				if(!AFile.ExistsAsFile(image, true))
+					o = Util.AResources.GetAppResource(APath.GetFileName(image, true));
 				if(o == null) o = Image.FromFile(image);
 				R = o as Bitmap;
 				if(R == null) throw new ArgumentException("Bad image format."); //Image but not Bitmap
@@ -187,7 +187,7 @@ namespace Au
 			} else {
 				var w = _area.W;
 				if(_area.Type == WIArea.AreaType.Acc) {
-					if(!_area.A.GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
+					if(!_area.A.GetRect(out var r, w)) throw new AException(0, "*get rectangle");
 					p.x += r.left; p.y += r.top;
 				}
 				if(button == 0) Mouse.Move(w, p.x, p.y);
@@ -227,7 +227,7 @@ namespace Au
 		/// - <see cref="Bitmap"/> - image object in memory.
 		/// - IEnumerable of string, int/ColorInt/Color, Bitmap or object - multiple images or colors. Action - find any. To create a different action can be used callback function (parameter <i>also</i>).
 		/// 
-		/// Icons are not supported directly, but you can use <see cref="Icon_.GetFileIconImage"/> or <see cref="Icon_.HandleToImage"/>.
+		/// Icons are not supported directly, but you can use <see cref="AIcon.GetFileIconImage"/> or <see cref="AIcon.HandleToImage"/>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="colorDiff">Maximal allowed color difference. Use to to find images that have slightly different colors than the specified image. Can be 0 - 250, but should be as small as possible. Applied to each color component (red, green, blue) of each pixel.</param>
@@ -247,8 +247,8 @@ namespace Au
 		/// - Image or area is a bottom-up Bitmap object (see <see cref="BitmapData.Stride"/>). Such bitmaps are unusual in .NET (GDI+), but can be created by <b>Image.FromHbitmap</b> (instead use <see cref="BitmapFromHbitmap"/>).
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The specified file does not exist.</exception>
-		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="Convert_.Decompress"/>.</exception>
-		/// <exception cref="AuException">Something failed.</exception>
+		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="AConvert.Decompress"/>.</exception>
+		/// <exception cref="AException">Something failed.</exception>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find image or color in window". It is form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll.
 		/// 
@@ -551,14 +551,14 @@ namespace Au
 					break;
 				default: //Screen
 					r = _area.R;
-					if(!ScreenDef.IsInAnyScreen(r)) r = default;
+					if(!AScreen.IsInAnyScreen(r)) r = default;
 					_area.HasRect = false;
 					_resultOffset.x = r.left; _resultOffset.y = r.top;
 					break;
 				}
 				if(failedGetRect) {
 					_area.W.ThrowIfInvalid();
-					throw new AuException("*get rectangle");
+					throw new AException("*get rectangle");
 				}
 				//FUTURE: DPI
 
@@ -845,7 +845,7 @@ namespace Au
 
 			struct _OptimizationData
 			{
-				public struct POSCOLOR
+				internal struct POSCOLOR
 				{
 					public int pos; //the position in area (not in image) from which to start searching. Depends on where in the image is the color.
 					public uint color;
@@ -973,7 +973,7 @@ namespace Au
 					//copy from screen/window DC to memory bitmap
 					uint rop = windowDC ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
 					bool bbOK = Api.BitBlt(_ad.mb.Hdc, 0, 0, areaWidth, areaHeight, dc, r.left, r.top, rop);
-					if(!bbOK) throw new AuException("BitBlt"); //the API fails only if a HDC is invalid
+					if(!bbOK) throw new AException("BitBlt"); //the API fails only if a HDC is invalid
 				}
 				//_Debug("captured to MemBmp");
 				//get pixels
@@ -989,7 +989,7 @@ namespace Au
 					//biCompression = 0, //BI_RGB
 				};
 				if(Api.GetDIBits(_ad.mb.Hdc, _ad.mb.Hbitmap, 0, areaHeight, _ad.pixels, &h, 0) //DIB_RGB_COLORS
-					!= areaHeight) throw new AuException("GetDIBits");
+					!= areaHeight) throw new AException("GetDIBits");
 				//_Debug("_GetBitmapBits", 3);
 
 				//remove alpha (why it is here?). Currently don't need.

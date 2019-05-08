@@ -158,12 +158,12 @@ namespace Au.Controls
 
 		string _FromUtf8(byte* b, int n = -1)
 		{
-			return Convert_.Utf8ToString(b, n);
+			return AConvert.Utf8ToString(b, n);
 		}
 
 		byte[] _ToUtf8(string s, int* utf8Length = null)
 		{
-			return Convert_.LibUtf8FromString(s, ref t_byte, utf8Length);
+			return AConvert.LibUtf8FromString(s, ref t_byte, utf8Length);
 		}
 
 		/// <summary>
@@ -361,9 +361,9 @@ namespace Au.Controls
 				return;
 			}
 
-			int n = Convert_.Utf8LengthFromString(s);
+			int n = AConvert.Utf8LengthFromString(s);
 			fixed (byte* b = LibByte(n + 2)) {
-				Convert_.Utf8FromString(s, b, n + 1);
+				AConvert.Utf8FromString(s, b, n + 1);
 				if(andRN) { b[n++] = (byte)'\r'; b[n++] = (byte)'\n'; }
 
 				using(new _NoReadonly(this))
@@ -711,12 +711,12 @@ namespace Au.Controls
 			public byte[] Load(string file)
 			{
 				_enc = _Encoding.Binary;
-				if(0 != Path_.GetExtension(file).Eq(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
-					if(!File_.ExistsAsFile(file)) throw new FileNotFoundException($"Could not find file '{file}'.");
+				if(0 != APath.GetExtension(file).Eq(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
+					if(!AFile.ExistsAsFile(file)) throw new FileNotFoundException($"Could not find file '{file}'.");
 					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"\0");
 				}
 
-				using(var fr = File_.WaitIfLocked(() => File.OpenRead(file))) {
+				using(var fr = AFile.WaitIfLocked(() => File.OpenRead(file))) {
 					var fileSize = fr.Length;
 					if(fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.\0");
 					int trySize = (int)Math.Min(fileSize, 65_000);
@@ -826,7 +826,7 @@ namespace Au.Controls
 			}
 
 			/// <summary>
-			/// Saves control text with the same encoding/BOM as loaded. Uses <see cref="File_.Save"/>.
+			/// Saves control text with the same encoding/BOM as loaded. Uses <see cref="AFile.Save"/>.
 			/// </summary>
 			/// <param name="sci">Control's ST.</param>
 			/// <param name="file">To pass to File.OpenRead.</param>
@@ -862,7 +862,7 @@ namespace Au.Controls
 
 				//for(int i = 0; i < len; i++) Print(b[i]); return; //test
 
-				File_.Save(file, temp => { using(var fs = File.OpenWrite(temp)) { fs.Write(b, 0, len); } });
+				AFile.Save(file, temp => { using(var fs = File.OpenWrite(temp)) { fs.Write(b, 0, len); } });
 			}
 		}
 

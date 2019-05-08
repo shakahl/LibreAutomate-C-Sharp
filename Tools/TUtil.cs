@@ -142,7 +142,7 @@ namespace Au.Tools
 			if(Wildex.HasWildcardChars(s)) {
 				int i = s.IndexOf('*');
 				if(i >= 0 && s.IndexOf('*', i + 1) < 0) {
-					s = "**r " + Regex_.EscapeQE(s.Remove(i)) + @"\*?" + Regex_.EscapeQE(s.Substring(i + 1));
+					s = "**r " + ARegex.EscapeQE(s.Remove(i)) + @"\*?" + ARegex.EscapeQE(s.Substring(i + 1));
 				} else s = "**t " + s;
 			}
 			if(canMakeVerbatim && s.IndexOf('\\') >= 0 && !s.RegexIsMatch(@"[\x00-\x1F\x85\x{2028}\x{2029}]")) {
@@ -227,7 +227,7 @@ namespace Au.Tools
 			osr.Show();
 
 			int i = 0;
-			Timer_.Every(250, t =>
+			ATimer.Every(250, t =>
 			{
 				if(i++ < 5) {
 					osr.Color = (i & 1) != 0 ? 0xFFFFFF00 : 0xFF8A2BE2;
@@ -247,7 +247,7 @@ namespace Au.Tools
 		/// </summary>
 		internal class CaptureWindowEtcWithHotkey
 		{
-			Timer_ _timer;
+			ATimer _timer;
 			long _prevTime;
 			OsdRect _osr;
 			Form _form;
@@ -286,7 +286,7 @@ namespace Au.Tools
 					});
 
 					if(!Api.RegisterHotKey(wForm, 1, 0, KKey.F3)) {
-						AuDialog.ShowError("Failed to register hotkey F3", owner: _form);
+						ADialog.ShowError("Failed to register hotkey F3", owner: _form);
 						return;
 					}
 					Capturing = true;
@@ -294,7 +294,7 @@ namespace Au.Tools
 					//set timer that shows AO rect
 					if(_timer == null) {
 						_osr = TUtil.CreateOsdRect();
-						_timer = new Timer_(t =>
+						_timer = new ATimer(t =>
 						{
 							//Don't capture too frequently.
 							//	Eg if the callback is very slow. Or if multiple timer messages are received without time interval (possible in some conditions).
@@ -412,8 +412,8 @@ namespace Au.Tools
 			try {
 				bTest.Enabled = false;
 				if(!Au.Compiler.Scripting.Compile(code, out var c, wrap: true, load: true)) {
-					Dbg.Print("---- CODE ----\r\n" + code + "--------------");
-					AuDialog.ShowError("Errors in code", c.errors, owner: form, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: code*/);
+					ADebug.Print("---- CODE ----\r\n" + code + "--------------");
+					ADialog.ShowError("Errors in code", c.errors, owner: form, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: code*/);
 				} else {
 					var rr=(object[])c.method.Invoke(null, null); //use array because fails to cast tuple, probably because in that assembly it is new type
 					r = ((long[])rr[0], rr[1], (Wnd)rr[2]);
@@ -429,7 +429,7 @@ namespace Au.Tools
 				string s1, s2;
 				if(e is NotFoundException) { s1 = "Window not found"; s2 = "Tip: If changed window name, you can replace part of name\r\nwith * or use regexp like @\"**r .+ - Notepad\"."; } //info: throws only when window not found. This is to show time anyway when acc etc not found.
 				else { s1 = e.GetType().Name; s2 = e.Message; }
-				AuDialog.ShowError(s1, s2, owner: form, flags: DFlags.OwnerCenter);
+				ADialog.ShowError(s1, s2, owner: form, flags: DFlags.OwnerCenter);
 			}
 			finally {
 				bTest.Enabled = true;
@@ -461,16 +461,16 @@ namespace Au.Tools
 					}
 				}
 			} else {
-				//AuDialog.ShowEx("Not found", owner: this, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
+				//ADialog.ShowEx("Not found", owner: this, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
 				lSpeed.ForeColor = Color.Red;
 				lSpeed.Text = "Not found,";
-				Timer_.After(700, () => lSpeed.Text = sTime);
+				ATimer.After(700, () => lSpeed.Text = sTime);
 			}
 
 			((Wnd)form).ActivateLL();
 
 			if(r.wnd != wnd && !r.wnd.Is0) {
-				AuDialog.ShowWarning("The code finds another " + (r.wnd.IsChild ? "control" : "window"),
+				ADialog.ShowWarning("The code finds another " + (r.wnd.IsChild ? "control" : "window"),
 				$"Need:  {wnd.ToString()}\r\n\r\nFound:  {r.wnd.ToString()}",
 				owner: form, flags: DFlags.OwnerCenter | DFlags.Wider);
 				TUtil.ShowOsdRect(r.wnd.Rect, true);
@@ -494,14 +494,14 @@ namespace Au.Tools
 	//	{
 	//		RECT r = (500, 500, 30, 20);
 	//		TUtil.ShowOsdRect(r);
-	//		AuDialog.Show();
+	//		ADialog.Show();
 	//	}
 	//}
 
 	/// <summary>
 	/// All tool forms of this library should inherit from this class and override its virtual functions.
 	/// </summary>
-	public class ToolForm :Form_
+	public class ToolForm :AFormBase
 	{
 		public virtual string ResultCode { get; protected set; }
 

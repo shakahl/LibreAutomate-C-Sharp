@@ -2,7 +2,7 @@
 //{{ using
 using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq; using Au; using Au.Types; using static Au.NoClass; using Au.Triggers; //}}
 //{{ main
-unsafe partial class Script :AuScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
+unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
 
 //Triggers are used to execute parts of a running script. Not to launch scripts.
 //This script contains examples of all trigger types. The code is copied from the ActionTriggers class help topic.
@@ -48,7 +48,7 @@ Triggers.Of.AllWindows(); //let the following triggers work with all windows
 //mouse triggers
 
 mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => Print(o.Trigger);
-mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); AuDialog.ShowEx("Bang!", x: Coord.Max); };
+mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
 mouse[TMMove.LeftRightInCenter50] = o => Wnd.SwitchActiveWindow();
 
 Triggers.FuncOf.NextTrigger = o => Keyb.IsScrollLock; //example of a custom scope (aka context, condition)

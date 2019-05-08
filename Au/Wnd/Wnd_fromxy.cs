@@ -147,7 +147,7 @@ namespace Au
 
 				//is R transparent?
 				//Print("WM_NCHITTEST", R);
-				if(R.SendTimeout(100, out var ht, Api.WM_NCHITTEST, 0, Math_.MakeUint(p.x, p.y))) {
+				if(R.SendTimeout(100, out var ht, Api.WM_NCHITTEST, 0, AMath.MakeUint(p.x, p.y))) {
 					if((int)ht != Api.HTTRANSPARENT) break;
 				} else {
 					//break;

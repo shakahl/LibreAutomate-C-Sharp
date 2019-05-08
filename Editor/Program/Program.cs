@@ -39,7 +39,7 @@ static class Program
 
 		//restart as admin if started as non-admin on admin user account
 		if(args.Length > 0 && args[0] == "/n") {
-			args = args.RemoveAt_(0);
+			args = args.RemoveAt(0);
 		} else if(!Uac.IsAdmin && Uac.OfThisProcess.Elevation == UacElevation.Limited) {
 			if(_RestartAsAdmin(args)) return;
 		}
@@ -63,7 +63,7 @@ static class Program
 
 #if !DEBUG
 		var fProfile = Folders.ThisAppDataLocal + "ProfileOptimization";
-		File_.CreateDirectory(fProfile);
+		AFile.CreateDirectory(fProfile);
 		ProfileOptimization.SetProfileRoot(fProfile);
 		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 680 -> 560 ms. Makes compiler startup faster 4000 -> 2500 (ngen 670).
 		Perf.Next();
@@ -82,7 +82,7 @@ static class Program
 
 		if(!Settings.Get("user", out UserGuid)) Settings.Set("user", Guid.NewGuid().ToString());
 
-		Timer_.Every(1000, t => _TimerProc(t));
+		ATimer.Every(1000, t => _TimerProc(t));
 		//note: timer can make Process Hacker show constant CPU, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, 0 of 1000.
 		//Timer1s += () => Print("1 s");
 		//Timer1sOr025s += () => Print("0.25 s");
@@ -115,7 +115,7 @@ static class Program
 	internal static bool IsTimer025 => s_timerCounter > 0;
 	static uint s_timerCounter;
 
-	static void _TimerProc(Timer_ t)
+	static void _TimerProc(ATimer t)
 	{
 		bool needFast = (MainForm?.IsLoaded ?? false) && MainForm.Visible;
 		if(needFast != (s_timerCounter > 0)) t.Start(needFast ? 250 : 1000, false);
@@ -151,7 +151,7 @@ static class Program
 			//Api.AllowSetForegroundWindow(pid); //fails and has no sense, because it's Au.CL.exe running as SYSTEM
 		}
 		catch(Exception ex) { //probably this program is not installed (no scheduled task)
-			Dbg.Dialog(ex);
+			ADebug.Dialog(ex);
 			return false;
 		}
 		return true;
@@ -171,6 +171,6 @@ static class Program
 		//	if(k.Key == KKey.Up && !k.IsUp) 400.ms();
 
 		//	return false;
-		//})) AuDialog.Show("hook");
+		//})) ADialog.Show("hook");
 	}
 }

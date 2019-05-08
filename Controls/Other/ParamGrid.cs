@@ -191,7 +191,7 @@ namespace Au.Controls
 
 			public override void OnEditStarted(SG.CellContext c, EventArgs e)
 			{
-				//Dbg.PrintFunc();
+				//ADebug.PrintFunc();
 
 				if(c.Cell.Editor is Editors.ComboBox cb) { //read-only combo. The grid shows a ComboBox control.
 					cb.Control.DroppedDown = true;
@@ -224,7 +224,7 @@ namespace Au.Controls
 			//	var row = c.Position.Row; //if(row == _hoverRow) return;
 			//	_hoverRow = row;
 
-			//	if(_hoverTimer == null) _hoverTimer = new Timer_(t => {
+			//	if(_hoverTimer == null) _hoverTimer = new ATimer(t => {
 			//		if(_hoverRow < 0) return;
 			//		Print(_hoverRow);
 			//	});
@@ -240,7 +240,7 @@ namespace Au.Controls
 			//	base.OnMouseLeave(c, e);
 			//}
 
-			//Timer_ _hoverTimer;
+			//ATimer _hoverTimer;
 			//int _hoverRow = -1;
 		}
 

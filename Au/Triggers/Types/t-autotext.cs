@@ -724,7 +724,7 @@ namespace Au.Triggers
 		public bool Confirm(string text) //can be static, but, because it is public, would be not so easy to use.
 		{
 			bool ok = false;
-			var m = new AuMenu { ModalAlways = true }; //FUTURE: need something better. Creates 60 KB of garbage etc.
+			var m = new AMenu { ModalAlways = true }; //FUTURE: need something better. Creates 60 KB of garbage etc.
 			m[text.Escape(limit: 60)] = u => ok = true;
 			using(Util.WinHook.Keyboard(x => {
 				if(x.IsUp) return;

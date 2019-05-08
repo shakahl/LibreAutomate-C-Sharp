@@ -70,7 +70,7 @@ namespace Au
 		/// This extension method has been added because Rectangle.IsEmpty returns true only when all fields are 0, which is not very useful.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsEmpty_(this System.Drawing.Rectangle t)
+		public static bool IsEmptyRect(this System.Drawing.Rectangle t)
 		{
 			return t.Width <= 0 || t.Height <= 0;
 		}
@@ -192,7 +192,7 @@ namespace Au
 		/// <param name="index"></param>
 		/// <param name="count"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public static T[] RemoveAt_<T>(this T[] t, int index, int count = 1)
+		public static T[] RemoveAt<T>(this T[] t, int index, int count = 1)
 		{
 			if((uint)index > t.Length || count < 0 || index + count > t.Length) throw new ArgumentOutOfRangeException();
 			int n = t.Length - count;
@@ -210,7 +210,7 @@ namespace Au
 		/// <param name="index"></param>
 		/// <param name="value"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public static T[] Insert_<T>(this T[] t, int index, T value = default)
+		public static T[] InsertAt<T>(this T[] t, int index, T value = default)
 		{
 			if((uint)index > t.Length) throw new ArgumentOutOfRangeException();
 			var r = new T[t.Length + 1];
@@ -228,7 +228,7 @@ namespace Au
 		/// <param name="index"></param>
 		/// <param name="values"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public static T[] Insert_<T>(this T[] t, int index, params T[] values)
+		public static T[] InsertAt<T>(this T[] t, int index, params T[] values)
 		{
 			if((uint)index > t.Length) throw new ArgumentOutOfRangeException();
 			int n = values?.Length ?? 0; if(n == 0) return t;
@@ -240,13 +240,13 @@ namespace Au
 			return r;
 		}
 
-		internal static unsafe void WriteInt_(this byte[] t, int x, int index)
+		internal static unsafe void WriteInt(this byte[] t, int x, int index)
 		{
 			if(index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
 			fixed (byte* p = t) *(int*)(p + index) = x;
 		}
 
-		internal static unsafe int ReadInt_(this byte[] t, int index)
+		internal static unsafe int ReadInt(this byte[] t, int index)
 		{
 			if(index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
 			fixed (byte* p = t) return *(int*)(p + index);
@@ -263,7 +263,7 @@ namespace Au
 		/// <typeparam name="TValue"></typeparam>
 		/// <param name="t"></param>
 		/// <param name="predicate"></param>
-		public static void RemoveWhere_<TKey, TValue>(this Dictionary<TKey, TValue> t, Func<KeyValuePair<TKey, TValue>, bool> predicate)
+		public static void RemoveWhere<TKey, TValue>(this Dictionary<TKey, TValue> t, Func<KeyValuePair<TKey, TValue>, bool> predicate)
 		{
 			foreach(var k in t.Where(predicate).Select(kv => kv.Key).ToList()) { t.Remove(k); }
 		}

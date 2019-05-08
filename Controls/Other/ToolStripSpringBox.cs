@@ -110,7 +110,7 @@ namespace Au.Controls
 		public void SetCueBanner(string text, bool showWhenFocused = false)
 		{
 			var c = this.Control as TextBox;
-			c.SetCueBanner_(text, showWhenFocused);
+			c.SetCueBanner(text, showWhenFocused);
 		}
 	}
 
@@ -129,7 +129,7 @@ namespace Au.Controls
 		public void SetCueBanner(string text)
 		{
 			var c = this.Control as ComboBox;
-			c.SetCueBanner_(text);
+			c.SetCueBanner(text);
 		}
 	}
 }

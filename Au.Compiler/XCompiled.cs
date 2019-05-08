@@ -48,7 +48,7 @@ namespace Au.Compiler
 
 			static XCompiled()
 			{
-				bool ok = Registry_.GetInt(out s_frameworkVersion, "Release", @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full");
+				bool ok = ARegistry.GetInt(out s_frameworkVersion, "Release", @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full");
 				Debug.Assert(ok);
 				s_auVersion = typeof(Wnd).Assembly.GetName().Version.ToString();
 			}
@@ -68,7 +68,7 @@ namespace Au.Compiler
 				if(_data == null && !_Open()) return false;
 
 				if(!_data.TryGetValue(f.Id, out string value)) return false;
-				//Dbg.Print(value);
+				//ADebug.Print(value);
 				int iPipe = 0;
 
 				bool isScript = f.IsScript;
@@ -81,7 +81,7 @@ namespace Au.Compiler
 				} else asmFile = CacheDirectory + "\\" + f.IdString;
 				//Print(asmFile);
 
-				if(!File_.GetProperties(asmFile, out var asmProp, FAFlags.UseRawPath)) return false;
+				if(!AFile.GetProperties(asmFile, out var asmProp, FAFlags.UseRawPath)) return false;
 				DateTime asmDate = asmProp.LastWriteTimeUtc;
 
 				if(_IsFileModified(f)) return false;
@@ -120,8 +120,8 @@ namespace Au.Compiler
 						case 'p':
 							isMultiFileProject = true;
 							if(projFolder != null) {
-								if(!Convert_.MD5HashResult.FromString(value, offs, s.EndOffset - offs, out var md5)) return false;
-								Convert_.MD5Hash md = default;
+								if(!AConvert.MD5HashResult.FromString(value, offs, s.EndOffset - offs, out var md5)) return false;
+								AConvert.MD5Hash md = default;
 								foreach(var f1 in projFolder.IwfEnumProjectClassFiles(f)) {
 									if(_IsFileModified(f1)) return false;
 									md.Add(f1.Id);
@@ -131,7 +131,7 @@ namespace Au.Compiler
 							break;
 						case '*':
 							var dll = value.Substring(offs, s.EndOffset - offs);
-							if(!Path_.IsFullPath(dll)) dll = Folders.ThisApp + dll;
+							if(!APath.IsFullPath(dll)) dll = Folders.ThisApp + dll;
 							if(_IsFileModified2(dll)) return false;
 							break;
 						case 'l':
@@ -167,17 +167,17 @@ namespace Au.Compiler
 					if(projFolder == null) return false;
 					foreach(var f1 in projFolder.IwfEnumProjectClassFiles(f)) return false; //project with single file?
 				}
-				//Dbg.Print("compiled");
+				//ADebug.Print("compiled");
 
 				r.file = asmFile;
-				r.name = Path_.GetFileName(f.Name, true);
+				r.name = APath.GetFileName(f.Name, true);
 				return true;
 
 				bool _IsFileModified(IWorkspaceFile f_) => _IsFileModified2(f_.FilePath);
 
 				bool _IsFileModified2(string path_)
 				{
-					if(!File_.GetProperties(path_, out var prop_, FAFlags.UseRawPath)) return true;
+					if(!AFile.GetProperties(path_, out var prop_, FAFlags.UseRawPath)) return true;
 					//Print(prop_.LastWriteTimeUtc, asmDate);
 					if(prop_.LastWriteTimeUtc > asmDate) return true;
 					return false;
@@ -235,7 +235,7 @@ namespace Au.Compiler
 
 					int nAll = m.CodeFiles.Count, nNoC = nAll - m.CountC;
 					if(nNoC > 1) { //add MD5 hash of project files, except main
-						Convert_.MD5Hash md = default;
+						AConvert.MD5Hash md = default;
 						for(int i = 1; i < nNoC; i++) md.Add(m.CodeFiles[i].f.Id);
 						b.Append("|p").Append(md.Hash.ToString());
 					}
@@ -272,8 +272,8 @@ namespace Au.Compiler
 				}
 
 				uint id = f.Id;
-				if(_data.TryGetValue(id, out var oldValue) && value == oldValue) { /*Dbg.Print("same");*/ return; }
-				//Dbg.Print("different");
+				if(_data.TryGetValue(id, out var oldValue) && value == oldValue) { /*ADebug.Print("same");*/ return; }
+				//ADebug.Print("different");
 				_data[id] = value;
 				_Save();
 			}
@@ -287,8 +287,8 @@ namespace Au.Compiler
 				if(_data.Remove(f.Id)) {
 					_Save();
 					if(deleteAsmFile) {
-						try { File_.Delete(CacheDirectory + "\\" + f.IdString); }
-						catch(Exception ex) { Dbg.Print(ex); }
+						try { AFile.Delete(CacheDirectory + "\\" + f.IdString); }
+						catch(Exception ex) { ADebug.Print(ex); }
 					}
 				}
 			}
@@ -296,8 +296,8 @@ namespace Au.Compiler
 			bool _Open()
 			{
 				if(_data != null) return true;
-				if(!File_.ExistsAsFile(_file)) return false;
-				string sData = File_.LoadText(_file);
+				if(!AFile.ExistsAsFile(_file)) return false;
+				string sData = AFile.LoadText(_file);
 				foreach(var s in sData.Segments("\n\r", SegFlags.NoEmpty)) {
 					if(_data == null) {
 						//first line contains .NET framework version and Au.dll version, like 12345|1.2.3.4
@@ -323,8 +323,8 @@ namespace Au.Compiler
 
 			void _Save()
 			{
-				File_.CreateDirectory(CacheDirectory);
-				using(var b = File_.WaitIfLocked(() => File.CreateText(_file))) {
+				AFile.CreateDirectory(CacheDirectory);
+				using(var b = AFile.WaitIfLocked(() => File.CreateText(_file))) {
 					b.WriteLine(s_frameworkVersion + "|" + s_auVersion);
 					foreach(var v in _data) {
 						if(v.Value == null) b.WriteLine(v.Key); else { b.Write(v.Key); b.WriteLine(v.Value); }
@@ -336,8 +336,8 @@ namespace Au.Compiler
 			void _ClearCache()
 			{
 				_data = null;
-				try { File_.Delete(CacheDirectory); }
-				catch(AuException e) { PrintWarning(e.ToString(), -1); }
+				try { AFile.Delete(CacheDirectory); }
+				catch(AException e) { PrintWarning(e.ToString(), -1); }
 			}
 		}
 

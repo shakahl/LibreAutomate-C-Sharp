@@ -27,31 +27,31 @@ namespace Au.Types
 	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If does not end with ".", appends ".".
 	/// </remarks>
 	[Serializable]
-	public class AuException :Exception, ISerializable
+	public class AException :Exception, ISerializable
 	{
 		/// <summary>
 		/// Sets Message = "Failed.".
 		/// Sets NativeErrorCode = 0.
 		/// </summary>
-		public AuException() : base("Failed.") { }
+		public AException() : base("Failed.") { }
 
 		/// <summary>
 		/// Sets Message = message.
 		/// Sets NativeErrorCode = 0.
 		/// </summary>
-		public AuException(string message) : base(message ?? "Failed.") { }
+		public AException(string message) : base(message ?? "Failed.") { }
 
 		/// <summary>
 		/// Sets Message = "Failed. " + WinError.MessageFor(winApiErrorCode).
 		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : WinError.Code.
 		/// </summary>
-		public AuException(int winApiErrorCode) : this(winApiErrorCode, "Failed.") { }
+		public AException(int winApiErrorCode) : this(winApiErrorCode, "Failed.") { }
 
 		/// <summary>
 		/// Sets Message = message + " " + WinError.MessageFor(winApiErrorCode).
 		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : WinError.Code.
 		/// </summary>
-		public AuException(int winApiErrorCode, string message) : base(message ?? "Failed.")
+		public AException(int winApiErrorCode, string message) : base(message ?? "Failed.")
 		{
 			NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : WinError.Code;
 		}
@@ -60,13 +60,13 @@ namespace Au.Types
 		/// Sets Message = message + "\r\n\t" + innerException.Message.
 		/// Sets NativeErrorCode = 0.
 		/// </summary>
-		public AuException(string message, Exception innerException) : base(message ?? "Failed.", innerException) { }
+		public AException(string message, Exception innerException) : base(message ?? "Failed.", innerException) { }
 
 		/// <summary>
 		/// Sets Message = message + " " + WinError.MessageFor(winApiErrorCode) + "\r\n\t" + innerException.Message.
 		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : WinError.Code.
 		/// </summary>
-		public AuException(int winApiErrorCode, string message, Exception innerException) : base(message ?? "Failed.", innerException)
+		public AException(int winApiErrorCode, string message, Exception innerException) : base(message ?? "Failed.", innerException)
 		{
 			NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : WinError.Code;
 		}
@@ -113,25 +113,25 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// If errorCode is not 0, throws AuException that includes the code and its message.
+		/// If errorCode is not 0, throws AException that includes the code and its message.
 		/// More info: <see cref="FormatMessage"/>.
 		/// </summary>
 		/// <param name="errorCode">Windows API error code or HRESULT.</param>
 		/// <param name="message">Main message. The message of the error code will be appended to it.</param>
 		public static void ThrowIfHresultNot0(int errorCode, string message = null)
 		{
-			if(errorCode != 0) throw new AuException(errorCode, message);
+			if(errorCode != 0) throw new AException(errorCode, message);
 		}
 
 		/// <summary>
-		/// If errorCode is less than 0, throws AuException that includes the code and its message.
+		/// If errorCode is less than 0, throws AException that includes the code and its message.
 		/// More info: <see cref="FormatMessage"/>.
 		/// </summary>
 		/// <param name="errorCode">Windows API error code or HRESULT.</param>
 		/// <param name="message">Main message. The message of the error code will be appended to it.</param>
 		public static void ThrowIfHresultNegative(int errorCode, string message = null)
 		{
-			if(errorCode < 0) throw new AuException(errorCode, message);
+			if(errorCode < 0) throw new AException(errorCode, message);
 		}
 
 		#region ISerializable
@@ -144,7 +144,7 @@ namespace Au.Types
 		}
 
 		///
-		protected AuException(SerializationInfo info, StreamingContext context) : base(info, context)
+		protected AException(SerializationInfo info, StreamingContext context) : base(info, context)
 		{
 			NativeErrorCode = info.GetInt32("NativeErrorCode");
 		}
@@ -162,7 +162,7 @@ namespace Au.Types
 	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If ends with "*", replaces the "*" with " window.". If does not end with ".", appends ".".
 	/// </remarks>
 	[Serializable]
-	public class WndException :AuException, ISerializable
+	public class WndException :AException, ISerializable
 	{
 		const string _errStr_0Handle = "The window handle is 0. Usually it means 'window not found'.";
 		const string _errStr_InvalidHandle = "Invalid window handle. Usually it means 'the window was closed'.";
@@ -326,7 +326,7 @@ namespace Au
 		/// <summary>
 		/// Returns string containing exception type name and message.
 		/// </summary>
-		public static string ToStringWithoutStack_(this Exception t)
+		public static string ToStringWithoutStack(this Exception t)
 		{
 			return t.GetType().Name + ", " + t.Message;
 		}

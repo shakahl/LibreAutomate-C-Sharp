@@ -63,7 +63,7 @@ namespace Au.Compiler
 					ok = _Compile(forRun, f, out r, projFolder);
 				}
 				catch(Exception ex) {
-					Print($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack_()}");
+					Print($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack()}");
 				}
 				finally {
 					LibSetTimerGC();
@@ -138,7 +138,7 @@ namespace Au.Compiler
 					fileName = f.IdString;
 				}
 				outFile = outPath + "\\" + fileName;
-				File_.CreateDirectory(outPath);
+				AFile.CreateDirectory(outPath);
 			}
 
 			if(m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
@@ -185,7 +185,7 @@ namespace Au.Compiler
 			   allowUnsafe: true,
 			   platform: m.Prefer32Bit ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
 			   warningLevel: m.WarningLevel,
-			   specificDiagnosticOptions: m.NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(Char_.IsAsciiDigit(wa[0]) ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
+			   specificDiagnosticOptions: m.NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(AChar.IsAsciiDigit(wa[0]) ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
 			   cryptoKeyFile: m.SignFile?.FilePath, //also need strongNameProvider
 			   strongNameProvider: m.SignFile == null ? null : new DesktopStrongNameProvider()
 			   );
@@ -214,7 +214,7 @@ namespace Au.Compiler
 					//adds < 1 KB; almost the same compiling speed. Separate pdb file is 14 KB; 2 times slower compiling, slower loading.
 				}
 
-				if(m.XmlDocFile != null) xdStream = File_.WaitIfLocked(() => File.Create(xdFile = Path_.Normalize(m.XmlDocFile, outPath)));
+				if(m.XmlDocFile != null) xdStream = AFile.WaitIfLocked(() => File.Create(xdFile = APath.Normalize(m.XmlDocFile, outPath)));
 
 				resMan = _CreateManagedResources(m);
 				if(err.ErrorCount != 0) { err.PrintAll(); return false; }
@@ -245,9 +245,9 @@ namespace Au.Compiler
 			}
 			if(!emitResult.Success) {
 				if(needOutputFiles) {
-					File_.Delete(outFile);
-					if(pdbFile != null) File_.Delete(pdbFile);
-					if(xdFile != null) File_.Delete(xdFile);
+					AFile.Delete(outFile);
+					if(pdbFile != null) AFile.Delete(pdbFile);
+					if(xdFile != null) AFile.Delete(xdFile);
 				}
 				return false;
 			}
@@ -261,7 +261,7 @@ namespace Au.Compiler
 
 				//create assembly file
 				asmStream.Position = 0;
-				using(var fileStream = File_.WaitIfLocked(() => File.Create(outFile, (int)asmStream.Length))) {
+				using(var fileStream = AFile.WaitIfLocked(() => File.Create(outFile, (int)asmStream.Length))) {
 					asmStream.CopyTo(fileStream);
 
 					pdbStream.Position = 0;
@@ -269,7 +269,7 @@ namespace Au.Compiler
 						pdbStream.CopyTo(fileStream);
 						r.pdbOffset = (int)asmStream.Length;
 					} else {
-						using(var v = File_.WaitIfLocked(() => File.Create(pdbFile))) pdbStream.CopyTo(v);
+						using(var v = AFile.WaitIfLocked(() => File.Create(pdbFile))) pdbStream.CopyTo(v);
 					}
 				}
 				r.file = outFile;
@@ -285,8 +285,8 @@ namespace Au.Compiler
 				if(m.ConfigFile != null) {
 					r.hasConfig = true;
 					_CopyFileIfNeed(m.ConfigFile.FilePath, configFile);
-				} else if(File_.ExistsAsFile(configFile, true)) {
-					File_.Delete(configFile);
+				} else if(AFile.ExistsAsFile(configFile, true)) {
+					AFile.Delete(configFile);
 				}
 			}
 
@@ -396,7 +396,7 @@ namespace Au.Compiler
 					object o;
 					switch(v.s) {
 					case null:
-						switch(Path_.GetExtension(name).Lower()) {
+						switch(APath.GetExtension(name).Lower()) {
 						case ".png":
 						case ".bmp":
 						case ".jpg":
@@ -407,22 +407,22 @@ namespace Au.Compiler
 							o = (System.Drawing.Bitmap)System.Drawing.Image.FromFile(path);
 							break;
 						case ".ico":
-							//o = Icon_.GetFileIcon(path, size); //adds 4-bit icon, distorted
+							//o = AIcon.GetFileIcon(path, size); //adds 4-bit icon, distorted
 							o = new System.Drawing.Icon(path); //adds of all sizes. At run time: var icon=new Icon(GetResourceIcon(), 16, 16).
 							break;
 						//case ".cur":
-						//	o = Au.Util.Cursor_.LoadCursorFromFile(path); //error: Stock cursors cannot be serialized
+						//	o = Au.Util.ACursor.LoadCursorFromFile(path); //error: Stock cursors cannot be serialized
 						//	break;
 						default:
-							o = File_.LoadBytes(path);
+							o = AFile.LoadBytes(path);
 							break;
 						}
 						break;
 					case "string":
-						o = File_.LoadText(path);
+						o = AFile.LoadText(path);
 						break;
 					case "strings":
-						var csv = CsvTable.Load(path);
+						var csv = Csv.Load(path);
 						if(csv.ColumnCount != 2) throw new ArgumentException("CSV must contain 2 columns separated with ,");
 						foreach(var row in csv.Data) {
 							rw.AddResource(row[0], row[1]);
@@ -453,7 +453,7 @@ namespace Au.Compiler
 			if(manifest != null) manifestPath = manifest.FilePath;
 			else if(m.Role == ERole.exeProgram && m.ResFile == null) { //add default manifest if need
 				manifestPath = Folders.ThisAppBS + "default.exe.manifest"; //don't: uac
-				if(!File_.ExistsAsFile(manifestPath)) manifestPath = null;
+				if(!AFile.ExistsAsFile(manifestPath)) manifestPath = null;
 			}
 
 			if(m.IconFile == null && manifestPath == null && m.ResFile == null && m.OutputPath == null) return null;
@@ -476,7 +476,7 @@ namespace Au.Compiler
 
 		static void _ResourceException(Exception e, MetaComments m, IWorkspaceFile curFile)
 		{
-			var em = e.ToStringWithoutStack_();
+			var em = e.ToStringWithoutStack();
 			var err = m.Errors;
 			var f = m.CodeFiles[0].f;
 			if(curFile == null) err.AddError(f, "Failed to add resources. " + em);
@@ -499,7 +499,7 @@ namespace Au.Compiler
 				for(; i < refs.Count; i++) {
 					var s1 = refs[i].FilePath;
 					if(s1.Starts(netDir, true)) continue;
-					var s2 = m.OutputPath + "\\" + Path_.GetFileName(s1);
+					var s2 = m.OutputPath + "\\" + APath.GetFileName(s1);
 					//Print(s1, s2);
 					_CopyFileIfNeed(s1, s2);
 				}
@@ -513,12 +513,12 @@ namespace Au.Compiler
 
 		static void _CopyFileIfNeed(string sFrom, string sTo)
 		{
-			if(File_.GetProperties(sTo, out var p2, FAFlags.UseRawPath) //if exists
-				&& File_.GetProperties(sFrom, out var p1, FAFlags.UseRawPath)
+			if(AFile.GetProperties(sTo, out var p2, FAFlags.UseRawPath) //if exists
+				&& AFile.GetProperties(sFrom, out var p1, FAFlags.UseRawPath)
 				&& p2.LastWriteTimeUtc == p1.LastWriteTimeUtc
 				&& p2.Size == p1.Size) return;
-			//Dbg.Print("copy");
-			File_.Copy(sFrom, sTo, IfExists.Delete);
+			//ADebug.Print("copy");
+			AFile.Copy(sFrom, sTo, IfExists.Delete);
 		}
 
 		static bool _RunPrePostBuildScript(bool post, MetaComments m, string outFile)
@@ -532,7 +532,7 @@ namespace Au.Compiler
 
 				//replace variables like $(variable)
 				var f = m.CodeFiles[0].f;
-				if(s_rx1 == null) s_rx1 = new Regex_(@"\$\((\w+)\)");
+				if(s_rx1 == null) s_rx1 = new ARegex(@"\$\((\w+)\)");
 				string _ReplFunc(RXMatch k)
 				{
 					switch(k[1].Value) {
@@ -554,7 +554,7 @@ namespace Au.Compiler
 			RunAssembly.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread | RAFlags.DontHandleExceptions);
 			return true;
 		}
-		static Regex_ s_rx1;
+		static ARegex s_rx1;
 
 		/// <summary>
 		/// If Thread.CurrentThread.ManagedThreadId == 1, sets timer to call GC.Collect after 10 s.
@@ -570,13 +570,13 @@ namespace Au.Compiler
 			//	Then, if compiling frequently, compiling is fast, also don't need frequent explicit GC collect. For 10 s we have constant 40 MB, then 21 MB.
 
 			if(Thread.CurrentThread.ManagedThreadId != 1) return;
-			if(t_timerGC == null) t_timerGC = new Timer_(() => {
+			if(t_timerGC == null) t_timerGC = new ATimer(() => {
 				GC.Collect();
-				//GC.WaitForPendingFinalizers(); SetProcessWorkingSetSize(Process_.CurrentProcessHandle, -1, -1);
+				//GC.WaitForPendingFinalizers(); SetProcessWorkingSetSize(AProcess.CurrentProcessHandle, -1, -1);
 			});
 			t_timerGC.Start(10_000, true);
 		}
-		static Timer_ t_timerGC;
+		static ATimer t_timerGC;
 
 		#region default references and usings
 

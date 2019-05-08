@@ -101,7 +101,7 @@ namespace Au.Util
 		//	Tested with IsUpper/IsLower: about 600 such chars exist. ToUpper/ToLower can convert 40 of them. Equals/StartsWith/IndexOf/etc fail.
 
 		/// <summary>
-		/// Gets table for <see cref="Convert_.Base64Decode(char*, int, void*, int)"/> and co.
+		/// Gets table for <see cref="AConvert.Base64Decode(char*, int, void*, int)"/> and co.
 		/// Auto-creates when called first time in process. The memory is shared by appdomains.
 		/// </summary>
 		internal static byte* Base64
@@ -111,7 +111,7 @@ namespace Au.Util
 		static byte* _Base64Table;
 
 		/// <summary>
-		/// Gets table for <see cref="Convert_.HexDecode(string, void*, int, int)"/> and co.
+		/// Gets table for <see cref="AConvert.HexDecode(string, void*, int, int)"/> and co.
 		/// Auto-creates when called first time in process. The memory is shared by appdomains.
 		/// </summary>
 		internal static byte* Hex

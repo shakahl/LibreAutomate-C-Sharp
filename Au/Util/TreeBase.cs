@@ -396,7 +396,7 @@ namespace Au.Util
 		/// Loads XML file and creates tree of nodes from it.
 		/// Returns the root node.
 		/// </summary>
-		/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>.</param>
+		/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
 		/// <param name="nodeReader">Callback function that reads current XML element and creates/returns new node. See example.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="XmlReader.Create(string)"/>.</exception>
@@ -404,9 +404,9 @@ namespace Au.Util
 		/// <example><see cref="TreeBase{T}"/></example>
 		protected static T XmlLoad(string file, XmlNodeReader nodeReader)
 		{
-			file = Path_.LibNormalizeForNET(file);
+			file = APath.LibNormalizeForNET(file);
 			var xs = new XmlReaderSettings() { IgnoreComments = true, IgnoreProcessingInstructions = true, IgnoreWhitespace = true };
-			using(var r = File_.WaitIfLocked(() => XmlReader.Create(file, xs))) {
+			using(var r = AFile.WaitIfLocked(() => XmlReader.Create(file, xs))) {
 				return XmlLoad(r, nodeReader);
 			}
 		}
@@ -444,21 +444,21 @@ namespace Au.Util
 		/// <summary>
 		/// Saves tree of nodes (this and descendants) to an XML file.
 		/// </summary>
-		/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>.</param>
+		/// <param name="file">XML file. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
 		/// <param name="nodeWriter">Callback function that writes node's XML start element (see <see cref="XmlWriter.WriteStartElement(string)"/>) and attributes (see <see cref="XmlWriter.WriteAttributeString(string, string)"/>). Must not write children and end element. Also should not write value, unless your reader knows how to read it.</param>
 		/// <param name="sett">XML formatting settings. Optional.</param>
 		/// <param name="children">If not null, writes these nodes as if they were children of this node.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="XmlWriter.Create(string)"/> and other <b>XmlWriter</b> methods.</exception>
 		/// <remarks>
-		/// Uses <see cref="File_.Save"/>. It ensures that existing file data is not damaged on exception etc.
+		/// Uses <see cref="AFile.Save"/>. It ensures that existing file data is not damaged on exception etc.
 		/// </remarks>
 		/// <example><see cref="TreeBase{T}"/></example>
 		protected void XmlSave(string file, XmlNodeWriter nodeWriter, XmlWriterSettings sett = null, IEnumerable<T> children = null)
 		{
-			file = Path_.LibNormalizeForNET(file);
+			file = APath.LibNormalizeForNET(file);
 			if(sett == null) sett = new XmlWriterSettings() { OmitXmlDeclaration = true, Indent = true, IndentChars = "  " };
-			File_.Save(file, temp =>
+			AFile.Save(file, temp =>
 			{
 				using(var x = XmlWriter.Create(temp, sett)) {
 					XmlSave(x, nodeWriter, children);

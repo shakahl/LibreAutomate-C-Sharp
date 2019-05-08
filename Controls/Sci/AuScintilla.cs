@@ -78,7 +78,7 @@ namespace Au.Controls
 			get {
 				if(s_fnDirect == null) {
 					var path = SciLexerDllPath;
-					if(!Api.GetDelegate(out s_fnDirect, path, "Scintilla_DirectFunction")) throw new AuException(0, $"*load '{path}'");
+					if(!Api.GetDelegate(out s_fnDirect, path, "Scintilla_DirectFunction")) throw new AException(0, $"*load '{path}'");
 				}
 				_fnDirect = s_fnDirect;
 
@@ -271,14 +271,14 @@ namespace Au.Controls
 			get {
 				if(s_dllPath == null) {
 					s_dllPath = Folders.ThisAppBS + @"Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
-					if(!File_.ExistsAsFile(s_dllPath, true)) { //in designer?
+					if(!AFile.ExistsAsFile(s_dllPath, true)) { //in designer?
 						s_dllPath = @"Q:\app\Au\_\Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
 					}
 				}
 				return s_dllPath;
 			}
 			set {
-				s_dllPath = Path_.Normalize(value);
+				s_dllPath = APath.Normalize(value);
 			}
 		}
 		static string s_dllPath;

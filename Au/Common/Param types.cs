@@ -182,7 +182,7 @@ namespace Au.Types
 		/// <param name="screen">If used, x y are relative to this screen. Default - primary screen.</param>
 		/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
-		public static POINT Normalize(Coord x, Coord y, bool workArea = false, ScreenDef screen = default, bool widthHeight = false, bool centerIfEmpty = false)
+		public static POINT Normalize(Coord x, Coord y, bool workArea = false, AScreen screen = default, bool widthHeight = false, bool centerIfEmpty = false)
 		{
 			if(centerIfEmpty) {
 				if(x.IsEmpty) x = Center;
@@ -192,7 +192,7 @@ namespace Au.Types
 			if(!x.IsEmpty || !y.IsEmpty) {
 				RECT r;
 				if(workArea || !screen.IsNull || _NeedRect(x, y)) {
-					r = ScreenDef.GetRect(screen, workArea);
+					r = AScreen.GetRect(screen, workArea);
 					if(widthHeight) r.Offset(-r.left, -r.top);
 				} else r = default;
 				p.x = x._Normalize(r.left, r.right);
@@ -246,14 +246,14 @@ namespace Au.Types
 	{
 #pragma warning disable 1591 //XML doc
 		public Coord x, y;
-		public ScreenDef screen;
+		public AScreen screen;
 		public bool workArea;
 		//public bool rawXY;
 		public RECT? rect;
 
 		public PopupXY() { }
 
-		public PopupXY(Coord x, Coord y, bool workArea = true, ScreenDef screen = default)
+		public PopupXY(Coord x, Coord y, bool workArea = true, AScreen screen = default)
 		{
 			this.x = x; this.y = y; this.workArea = workArea; this.screen = screen;
 		}
@@ -269,19 +269,19 @@ namespace Au.Types
 		/// <summary>Specifies position relative to the primary screen or its work area.</summary>
 		public static implicit operator PopupXY((Coord x, Coord y, bool workArea) p) => new PopupXY(p.x, p.y, p.workArea);
 		/// <summary>Specifies position relative to the work area of the specified screen.</summary>
-		public static implicit operator PopupXY((Coord x, Coord y, ScreenDef screen) p) => new PopupXY(p.x, p.y, true, p.screen);
+		public static implicit operator PopupXY((Coord x, Coord y, AScreen screen) p) => new PopupXY(p.x, p.y, true, p.screen);
 		/// <summary>Specifies position relative to the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((Coord x, Coord y, bool workArea, ScreenDef screen) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
+		public static implicit operator PopupXY((Coord x, Coord y, bool workArea, AScreen screen) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
 		/// <summary>Specifies position relative to the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((Coord x, Coord y, ScreenDef screen, bool workArea) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
+		public static implicit operator PopupXY((Coord x, Coord y, AScreen screen, bool workArea) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
 		/// <summary>Specifies position relative to the primary screen.</summary>
 		public static implicit operator PopupXY(POINT p) => new PopupXY(p.x, p.y, false);
 		/// <summary>Specifies the center of the work area of the specified screen.</summary>
-		public static implicit operator PopupXY(ScreenDef screen) => new PopupXY(default, default, true, screen);
+		public static implicit operator PopupXY(AScreen screen) => new PopupXY(default, default, true, screen);
 		/// <summary>Specifies the center of the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((ScreenDef screen, bool workArea) t) => new PopupXY(default, default, t.workArea, t.screen);
+		public static implicit operator PopupXY((AScreen screen, bool workArea) t) => new PopupXY(default, default, t.workArea, t.screen);
 		/// <summary>Specifies the center of the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((bool workArea, ScreenDef screen) t) => new PopupXY(default, default, t.workArea, t.screen);
+		public static implicit operator PopupXY((bool workArea, AScreen screen) t) => new PopupXY(default, default, t.workArea, t.screen);
 		/// <summary>Specifies position in the specified rectangle which is relative to the primary screen.</summary>
 		public static implicit operator PopupXY((RECT r, Coord x, Coord y) t) => new PopupXY(t.r, t.x, t.y);
 		/// <summary>Specifies the center of the specified rectangle which is relative to the primary screen.</summary>
@@ -304,7 +304,7 @@ namespace Au.Types
 			{
 				int cy = Api.GetSystemMetrics(Api.SM_CYCURSOR);
 				var p = Au.Mouse.XY;
-				if(Util.Cursor_.GetCurrentCursor(out var hCursor) && Api.GetIconInfo(hCursor, out var u)) {
+				if(Util.ACursor.GetCurrentCursor(out var hCursor) && Api.GetIconInfo(hCursor, out var u)) {
 					if(u.hbmColor != default) Api.DeleteObject(u.hbmColor);
 					if(u.hbmMask != default) Api.DeleteObject(u.hbmMask);
 
@@ -390,7 +390,7 @@ namespace Au.Types
 	/// Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversion operators from these types.
 	/// </summary>
 	[DebuggerStepThrough]
-	public struct DStringList //with prefix D because this was created for AuDialog
+	public struct DStringList //with prefix D because this was created for ADialog
 	{
 		DStringList(object o) => Value = o;
 

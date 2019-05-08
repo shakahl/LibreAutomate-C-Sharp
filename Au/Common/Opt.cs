@@ -200,7 +200,7 @@ namespace Au
 			public struct RestoreMouse : IDisposable
 			{
 				OptMouse _o;
-				internal RestoreMouse(int unused) => t_mouse = new OptMouse(_o = t_mouse);
+				internal RestoreMouse(int _) => t_mouse = new OptMouse(_o = t_mouse);
 				/// <summary>Restores options.</summary>
 				public void Dispose() => t_mouse = _o;
 			}
@@ -210,7 +210,7 @@ namespace Au
 			public struct RestoreKey : IDisposable
 			{
 				OptKey _o;
-				internal RestoreKey(int unused) => t_key = new OptKey(_o = t_key);
+				internal RestoreKey(int _) => t_key = new OptKey(_o = t_key);
 				/// <summary>Restores options.</summary>
 				public void Dispose() => t_key = _o;
 			}
@@ -270,7 +270,7 @@ namespace Au.Types
 
 		static bool _IsAppDebugConfig()
 		{
-			var a = Util.Assembly_.EntryAssembly.GetCustomAttribute<DebuggableAttribute>();
+			var a = Util.AAssembly.EntryAssembly.GetCustomAttribute<DebuggableAttribute>();
 			if(a == null) return false;
 			//return a.IsJITOptimizerDisabled; //depends on 'Optimize code' checkbox in project Properties, regardless of config
 			return a.IsJITTrackingEnabled; //depends on config, but not 100% reliable, eg may be changed explicitly in source code (maybe the above too)
@@ -810,7 +810,7 @@ namespace Au.Types
 		/// Opt.WaitFor.Period = 100;
 		/// ]]></code>
 		/// </example>
-		public int Period { get => _period; set => _period = Math_.MinMax(value, 1, 1000); }
+		public int Period { get => _period; set => _period = AMath.MinMax(value, 1, 1000); }
 		int _period;
 
 		/// <summary>

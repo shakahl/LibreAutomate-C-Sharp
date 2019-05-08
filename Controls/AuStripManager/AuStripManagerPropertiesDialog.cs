@@ -31,7 +31,7 @@ namespace Au.Controls
 	public partial class AuStripManager
 	{
 #endif
-	class AuStripManagerPropertiesDialog : Form_
+	class AuStripManagerPropertiesDialog : AFormBase
 	{
 		AuStripManager _man;
 		XElement _x;
@@ -49,15 +49,15 @@ namespace Au.Controls
 			this.toolTip1.InitialDelay = 50; //TextBox tooltip bug workaround
 			this.Text = (isMenu ? "Menu item " : "Button ") + x.Name;
 
-			textText.Text = x.Attribute_("t2");
-			comboColor.Text = x.Attribute_("color");
-			textIcon.Text = x.Attribute_("i2");
+			textText.Text = x.Attr("t2");
+			comboColor.Text = x.Attr("color");
+			textIcon.Text = x.Attr("i2");
 			if(isMenu) {
 				groupStyle.Enabled = false;
-				textHotkey.Text = x.Attribute_("hk");
+				textHotkey.Text = x.Attr("hk");
 			} else {
 				groupHotkey.Enabled = false;
-				switch(x.Attribute_("style", 0)) {
+				switch(x.Attr("style", 0)) {
 				case 0: radioDefault.Checked = true; break;
 				case 1: radioOnlyText.Checked = true; break;
 				case 2: radioOnlyIcon.Checked = true; break;
@@ -113,14 +113,14 @@ namespace Au.Controls
 		#region drag-drop
 		private void _TextIcon_DragEnter(object sender, DragEventArgs e)
 		{
-			//Dbg.PrintFunc();
+			//ADebug.PrintFunc();
 			if(e.Data.GetDataPresent(DataFormats.FileDrop, false)) e.Effect = DragDropEffects.Link;
 			else if(e.Data.GetDataPresent(DataFormats.UnicodeText, false)) e.Effect = DragDropEffects.Copy;
 		}
 
 		private void _TextIcon_DragDrop(object sender, DragEventArgs e)
 		{
-			//Dbg.PrintFunc();
+			//ADebug.PrintFunc();
 			string s = null;
 			if(e.Data.GetData(DataFormats.FileDrop, false) is string[] a && a.Length > 0) s = a[0];
 			else s = e.Data.GetData(DataFormats.UnicodeText, false) as string;
@@ -133,11 +133,11 @@ namespace Au.Controls
 		void _InitHotkeys()
 		{
 			var xMenu = _man.MenuBar.Tag as XElement;
-			_hotkeys = xMenu.Descendants().Where(t => t.HasAttribute_("hk")).ToList();
-			_hotkeys.Sort((x1, x2) => string.CompareOrdinal(x1.Attribute_("hk"), x2.Attribute_("hk")));
+			_hotkeys = xMenu.Descendants().Where(t => t.HasAttr("hk")).ToList();
+			_hotkeys.Sort((x1, x2) => string.CompareOrdinal(x1.Attr("hk"), x2.Attr("hk")));
 
 			foreach(var x in _hotkeys) {
-				var s = x.Attribute_("hk");
+				var s = x.Attr("hk");
 				comboUsedHotkeys.Items.Add($"{s,-24} {x.Name}");
 			}
 			comboUsedHotkeys.SelectionChangeCommitted += _ComboUsedHotkeys_SelectionChangeCommitted;
@@ -184,7 +184,7 @@ namespace Au.Controls
 			if(_hotkeys != null) {
 				foreach(var x in _hotkeys) {
 					if(x == xSkip) continue;
-					var s = x.Attribute_("hk");
+					var s = x.Attr("hk");
 					if(Keyb.More.ParseHotkeyString(s, out var k) && k == hk) return x;
 				}
 			}

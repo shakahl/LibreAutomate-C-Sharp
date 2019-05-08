@@ -32,7 +32,7 @@ namespace Au.Util
 		/// Prepares parameters for API <msdn>CreateProcess</msdn> and similar.
 		/// </summary>
 		/// <param name="exe">
-		/// Full path of program file. If not full path, uses <see cref="Folders.ThisApp"/>. Uses <see cref="Path_.Normalize"/>.
+		/// Full path of program file. If not full path, uses <see cref="Folders.ThisApp"/>. Uses <see cref="APath.Normalize"/>.
 		/// If <i>rawExe</i> true, does not use <b>Normalize</b>/<b>ThisApp</b>.
 		/// </param>
 		/// <param name="args">null or command line arguments.</param>
@@ -40,19 +40,19 @@ namespace Au.Util
 		/// Initial current directory of the new process.
 		/// - If null, uses <c>Directory.GetCurrentDirectory()</c>.
 		/// - Else if <i>rawCurDir</i>==true, uses raw <i>curDir</i> value.
-		/// - Else if "", calls <c>Path_.GetDirectoryPath(exe)</c>.
-		/// - Else calls <see cref="Path_.ExpandEnvVar"/>.
+		/// - Else if "", calls <c>APath.GetDirectoryPath(exe)</c>.
+		/// - Else calls <see cref="APath.ExpandEnvVar"/>.
 		/// </param>
 		/// <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
 		/// <param name="rawExe">Don't normalize <i>exe</i>.</param>
 		/// <param name="rawCurDir">Don't normalize <i>curDir</i>.</param>
 		public LibProcessStarter(string exe, string args = null, string curDir = null, string envVar = null, bool rawExe = false, bool rawCurDir = false) : this()
 		{
-			if(!rawExe) exe = Path_.Normalize(exe, Folders.ThisApp, PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath);
+			if(!rawExe) exe = APath.Normalize(exe, Folders.ThisApp, PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath);
 			_exe = exe;
 			cl = (args == null ? ("\"" + exe + "\"" + "\0") : ("\"" + exe + "\" " + args + "\0")).ToCharArray();
 			if(curDir == null) this.curDir = Directory.GetCurrentDirectory(); //if null passed to CreateProcessWithTokenW, the new process does not inherit current directory of this process
-			else this.curDir = rawCurDir ? curDir : (curDir.Length == 0 ? Path_.GetDirectoryPath(exe) : Path_.ExpandEnvVar(curDir));
+			else this.curDir = rawCurDir ? curDir : (curDir.Length == 0 ? APath.GetDirectoryPath(exe) : APath.ExpandEnvVar(curDir));
 
 			si.cb = Api.SizeOf<Api.STARTUPINFO>();
 			si.dwFlags = Api.STARTF_FORCEOFFFEEDBACK;
@@ -81,7 +81,7 @@ namespace Au.Util
 		/// <param name="inheritHandles">API parameter <i>bInheritHandles</i>.</param>
 		public bool StartLL(out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool inheritHandles = false)
 		{
-			if(inheritUiaccess && Api.OpenProcessToken(Process_.CurrentProcessHandle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out LibHandle hToken)) {
+			if(inheritUiaccess && Api.OpenProcessToken(AProcess.CurrentProcessHandle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out LibHandle hToken)) {
 				using(hToken) return Api.CreateProcessAsUser(hToken, null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
 			} else {
 				return Api.CreateProcess(null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
@@ -93,14 +93,14 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="need">Which field to set in <b>Result</b>.</param>
 		/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		internal Result Start(Result.Need need = 0, bool inheritUiaccess = false)
 		{
 			bool suspended = need == Result.Need.NetProcess && !_NetProcessObject.IsFast, resetSuspendedFlag = false;
 			if(suspended && 0 == (flags & Api.CREATE_SUSPENDED)) { flags |= Api.CREATE_SUSPENDED; resetSuspendedFlag = true; }
 			bool ok = StartLL(out var pi, inheritUiaccess);
 			if(resetSuspendedFlag) flags &= ~Api.CREATE_SUSPENDED;
-			if(!ok) throw new AuException(0, $"*start process '{_exe}'");
+			if(!ok) throw new AException(0, $"*start process '{_exe}'");
 			return new Result(pi, need, suspended);
 		}
 
@@ -108,7 +108,7 @@ namespace Au.Util
 		/// Starts UAC Medium integrity level (IL) process from this admin process.
 		/// </summary>
 		/// <param name="need">Which field to set in <b>Result</b>.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <remarks>
 		/// Actually the process will have the same IL and user session as the shell process (normally explorer).
 		/// Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
@@ -118,7 +118,7 @@ namespace Au.Util
 		{
 			if(s_userToken == null) {
 				Debug.Assert(Uac.IsAdmin); //else cannot set privilege
-				if(!Util.Security_.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
+				if(!Util.ASecurity.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
 
 				//Perf.First();
 #if false //works, but slow, eg 60 ms, even if we don't create task everytime
@@ -137,7 +137,7 @@ namespace Au.Util
 				g1:
 				var w = Api.GetShellWindow();
 				if(w.Is0) { //if Explorer process killed or crashed, wait until it restarts
-					if(!WaitFor.Condition(2, () => !Api.GetShellWindow().Is0)) throw new AuException($"*start process '{_exe}' as user. There is no shell process.");
+					if(!WaitFor.Condition(2, () => !Api.GetShellWindow().Is0)) throw new AException($"*start process '{_exe}' as user. There is no shell process.");
 					500.ms();
 					w = Api.GetShellWindow();
 				}
@@ -174,7 +174,7 @@ namespace Au.Util
 			if(!ok) goto ge;
 			return new Result(pi, need, suspended);
 
-			ge: throw new AuException(0, $"*start process '{_exe}' as user");
+			ge: throw new AException(0, $"*start process '{_exe}' as user");
 		}
 		static SafeAccessTokenHandle s_userToken;
 
@@ -245,7 +245,7 @@ namespace Au.Util
 			public static Process Create(IntPtr handle, int id)
 			{
 				if(!IsFast) {
-					if(id == 0) id = Process_.ProcessIdFromHandle(handle);
+					if(id == 0) id = AProcess.ProcessIdFromHandle(handle);
 					return Process.GetProcessById(id); //3 ms, much garbage, gets all processes, can throw
 				}
 

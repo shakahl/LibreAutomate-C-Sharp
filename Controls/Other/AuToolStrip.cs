@@ -34,7 +34,7 @@ namespace Au.Controls
 		//these are used for tooltip
 		ToolTip _ttToolTip;
 		ToolStripItem _ttItem; //the last mouse move event hit test result
-		Timer_ _ttTimer;
+		ATimer _ttTimer;
 
 		public AuToolStrip()
 		{
@@ -62,19 +62,19 @@ namespace Au.Controls
 
 		bool _ShowTooltip()
 		{
-			ToolStripItem b1 = this.GetItemAt(this.MouseClientXY_()); if(b1 == null) return false;
+			ToolStripItem b1 = this.GetItemAt(this.MouseClientXY()); if(b1 == null) return false;
 			var s1 = b1.ToolTipText; if(Empty(s1)) return false; //null if separator
 			if(b1 == _ttItem) return true;
 			if(_ttToolTip == null) _ttToolTip = new ToolTip();
 			int delay = (_ttItem == null) ? _ttToolTip.InitialDelay : _ttToolTip.ReshowDelay;
 			_HideTooltip();
 			_ttItem = b1;
-			if(_ttTimer == null) _ttTimer = new Timer_(t =>
+			if(_ttTimer == null) _ttTimer = new ATimer(t =>
 			{
 				if(_ttItem == null) return;
 				_ttToolTip.Hide(_TopLevelParent);
 				var par = _TopLevelParent;
-				var p = par.MouseWindowXY_();
+				var p = par.MouseWindowXY();
 				_ttToolTip.Show(_ttItem.ToolTipText, par, p.x, p.y + 20, 5000);
 				//info: why here we use _TopLevelParent (not this ToolStrip Control):
 				//	Shortly: to enable tooltip in inactive form.
@@ -167,7 +167,7 @@ namespace Au.Controls
 		//Then base.OnFontChanged creates parked control + drop-down etc.
 		protected override void OnFontChanged(EventArgs e)
 		{
-			//Dbg.PrintFunc();
+			//ADebug.PrintFunc();
 			if(!IsHandleCreated) return;
 			base.OnFontChanged(e);
 		}

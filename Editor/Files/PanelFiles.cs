@@ -25,7 +25,7 @@ partial class ThisIsNotAFormFile { }
 
 partial class PanelFiles : Control
 {
-	//idea: when file clicked, open it and show AuMenu of its functions (if > 1).
+	//idea: when file clicked, open it and show AMenu of its functions (if > 1).
 
 	FilesModel.TreeViewFiles _c;
 	FilesModel _model;
@@ -71,9 +71,9 @@ partial class PanelFiles : Control
 
 			//CONSIDER: use different logic. Now silently creates empty files, it's not always good.
 			//	Add parameter createNew. If false, show error if file not found.
-			if(newFile = !File_.ExistsAsFile(xmlFile)) {
-				File_.CopyTo(Folders.ThisAppBS + @"Default\files", wsDir);
-				File_.Copy(Folders.ThisAppBS + @"Default\files.xml", xmlFile);
+			if(newFile = !AFile.ExistsAsFile(xmlFile)) {
+				AFile.CopyTo(Folders.ThisAppBS + @"Default\files", wsDir);
+				AFile.Copy(Folders.ThisAppBS + @"Default\files.xml", xmlFile);
 			}
 
 			_model?.UnloadingWorkspace(); //saves all, closes documents, sets current file = null
@@ -85,7 +85,7 @@ partial class PanelFiles : Control
 			m?.Dispose();
 			m = null;
 			//Print($"Failed to load '{wsDir}'. {ex.Message}");
-			switch(AuDialog.ShowError("Failed to load workspace", wsDir,
+			switch(ADialog.ShowError("Failed to load workspace", wsDir,
 				"1 Retry|2 Load another|3 Create new|0 Cancel",
 				owner: this, expandedText: ex.ToString())) {
 			case 1: goto g1;
@@ -105,7 +105,7 @@ partial class PanelFiles : Control
 			//add to recent
 			lock(Settings) {
 				var x1 = Settings.XmlOf("recent", true);
-				var x2 = x1.Element_(XN.f, XN.n, wsDir, true);
+				var x2 = x1.Elem(XN.f, XN.n, wsDir, true);
 				if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
 				if(x2 == null) x1.AddFirst(new XElement(XN.f, new XAttribute(XN.n, wsDir)));
 			}
@@ -138,11 +138,11 @@ partial class PanelFiles : Control
 		var d = new OpenFileDialog() { Title = "Open workspace", Filter = "files.xml|files.xml" };
 		if(d.ShowDialog(this) != DialogResult.OK) return null;
 		var filesXml = d.FileName;
-		if(!Path_.GetFileName(filesXml).Eqi("files.xml")) {
-			AuDialog.ShowError("Must be files.xml");
+		if(!APath.GetFileName(filesXml).Eqi("files.xml")) {
+			ADialog.ShowError("Must be files.xml");
 			return null;
 		}
-		return LoadWorkspace(Path_.GetDirectoryPath(filesXml));
+		return LoadWorkspace(APath.GetDirectoryPath(filesXml));
 	}
 
 	/// <summary>
@@ -170,8 +170,8 @@ partial class PanelFiles : Control
 			bool currentOK = false;
 			var aRem = new List<XElement>();
 			foreach(var x2 in x1.Elements(XN.f)) {
-				var path = x2.Attribute_(XN.n);
-				if(dd.Items.Count == 20 || !File_.ExistsAsDirectory(path)) {
+				var path = x2.Attr(XN.n);
+				if(dd.Items.Count == 20 || !AFile.ExistsAsDirectory(path)) {
 					aRem.Add(x2);
 					continue;
 				}
@@ -202,7 +202,7 @@ partial class PanelFiles : Control
 		{
 			ddParent.SuspendLayout();
 			int i = level == 0 ? 3 : 0;
-			foreach(var v in File_.EnumDirectory(dir, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
+			foreach(var v in AFile.EnumDirectory(dir, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
 				bool isProject = false;
 				string name = v.Name;
 				if(v.IsDirectory) {

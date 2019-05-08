@@ -21,7 +21,7 @@ namespace Au.Util
 	//CONSIDER: reject in the future, if not useful in scripts.
 	//	Now in this library used in 3 places; don't need MarshalByRef. Can be implemented in AuCpp.dll.
 	//	Now internal. Could be public, and initially was. See whether it will be useful in scripts.
-	//CONSIDER: Try to add InterProcessVariables too. Because scripts often run in separate processes.
+	//CONSIDER: Try to add InterProcessVariables too. Because scripts usually run in separate processes.
 
 	/// <summary>
 	/// Inter-domain variables. Allows to share values by all app domains of this process.
@@ -44,7 +44,7 @@ namespace Au.Util
 		/// <exception cref="System.Runtime.Serialization.SerializationException">The type is not supported because is neither serializable nor MarshalByRefObject-derived.</exception>
 		public static void SetVariable(string name, object value)
 		{
-			Util.AppDomain_.GetDefaultDomain().SetData("Au\x5" + name, value);
+			Util.AAppDomain.GetDefaultDomain().SetData("Au\x5" + name, value);
 		}
 
 		/// <summary>
@@ -54,7 +54,7 @@ namespace Au.Util
 		/// <param name="name">Name. Case-sensitive.</param>
 		public static object GetVariable(string name)
 		{
-			return Util.AppDomain_.GetDefaultDomain().GetData("Au\x5" + name);
+			return Util.AAppDomain.GetDefaultDomain().GetData("Au\x5" + name);
 		}
 #else
 		//Tried to make faster than AppDomain.GetData/SetData, but same speed, and first time much slower.
@@ -110,7 +110,7 @@ namespace Au.Util
 				if(_mbr == null) {
 					lock ("r1+6n6nPoEeix2QbYV0n+Q") {
 						if(_mbr == null) {
-							var dd = Util.AppDomain_.GetDefaultDomain(out bool isThisDomainDefault);
+							var dd = Util.AAppDomain.GetDefaultDomain(out bool isThisDomainDefault);
 							_mbr = dd.GetData("Au_InterDomain") as _MBR;
 							if(_mbr == null) {
 								if(isThisDomainDefault) _Init();
@@ -244,7 +244,7 @@ namespace Au.Util
 				if(o != null) { createdNew = false; return (T)o; }
 
 				T R;
-				var d = Util.AppDomain_.GetDefaultDomain(out bool isThisDomainDefault);
+				var d = Util.AAppDomain.GetDefaultDomain(out bool isThisDomainDefault);
 				if(isThisDomainDefault) {
 					R = new T();
 				} else {

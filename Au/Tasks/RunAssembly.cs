@@ -43,7 +43,7 @@ namespace Au
 			Assembly asm = findLoaded ? lsa.Find(asmFile) : null;
 			if(asm == null) {
 				byte[] bAsm, bPdb = null;
-				using(var stream = File_.WaitIfLocked(() => File.OpenRead(asmFile))) {
+				using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
 					bAsm = new byte[pdbOffset > 0 ? pdbOffset : stream.Length];
 					stream.Read(bAsm, 0, bAsm.Length);
 					try {
@@ -52,10 +52,10 @@ namespace Au
 							stream.Read(bPdb, 0, bPdb.Length);
 						} else {
 							var s1 = Path.ChangeExtension(asmFile, "pdb");
-							if(File_.ExistsAsFile(s1)) bPdb = File.ReadAllBytes(s1);
+							if(AFile.ExistsAsFile(s1)) bPdb = File.ReadAllBytes(s1);
 						}
 					}
-					catch(Exception ex) { bPdb = null; Dbg.Print(ex); } //not very important
+					catch(Exception ex) { bPdb = null; ADebug.Print(ex); } //not very important
 				}
 				asm = Assembly.Load(bAsm, bPdb);
 				if(findLoaded) lsa.Add(asmFile, asm);
@@ -63,7 +63,7 @@ namespace Au
 				//never mind: it's possible that we load newer compiled assembly version of script than intended.
 			}
 
-			AuTask.Role = 0 != (flags & RAFlags.InEditorThread) ? ATRole.EditorExtension : ATRole.MiniProgram; //default ExeProgram
+			ATask.Role = 0 != (flags & RAFlags.InEditorThread) ? ATRole.EditorExtension : ATRole.MiniProgram; //default ExeProgram
 
 			try {
 				var entryPoint = asm.EntryPoint ?? throw new InvalidOperationException("assembly without entry point (function Main)");
@@ -83,13 +83,13 @@ namespace Au
 				var e = te.InnerException;
 				if(0 != (flags & RAFlags.DontHandleExceptions)) throw e;
 				//Print(e);
-				AuScript.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
+				AScript.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
 			}
 
 			//see also: TaskScheduler.UnobservedTaskException event.
 			//	tested: the event works.
 			//	tested: somehow does not terminate process even with <ThrowUnobservedTaskExceptions enabled="true"/>.
-			//		Only when AuDialog.Show called, the GC.Collect makes it to disappear but the process does not exit.
+			//		Only when ADialog.Show called, the GC.Collect makes it to disappear but the process does not exit.
 			//	note: the terminating behavior also can be set in registry or env var. It overrides <ThrowUnobservedTaskExceptions enabled="false"/>.
 		}
 
@@ -111,7 +111,7 @@ namespace Au
 			public Assembly Find(string asmFile)
 			{
 				if(_d == null) _d = new Dictionary<string, _Asm>(StringComparer.OrdinalIgnoreCase);
-				if(!File_.GetProperties(asmFile, out var p, FAFlags.UseRawPath)) return null;
+				if(!AFile.GetProperties(asmFile, out var p, FAFlags.UseRawPath)) return null;
 				_fileTime = p.LastWriteTimeUtc;
 				if(_d.TryGetValue(asmFile, out var x)) {
 					if(x.time == _fileTime) return x.asm;
@@ -123,26 +123,13 @@ namespace Au
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			public void Add(string asmFile, Assembly asm)
 			{
-				if(_fileTime == default) return; //File_.GetProperties failed
+				if(_fileTime == default) return; //AFile.GetProperties failed
 				_d.Add(asmFile, new _Asm { time = _fileTime, asm = asm });
 
 				//foreach(var v in _d.Values) Print(v.asm.FullName);
 				//foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) Print(v.FullName);
 			}
 		}
-	}
-}
-
-namespace Au.Types
-{
-	/// <summary>
-	/// Flags for <see cref="RunAssembly.Run"/>.
-	/// </summary>
-	[Flags]
-	internal enum RAFlags
-	{
-		InEditorThread = 1,
-		DontHandleExceptions = 2,
 	}
 
 	/// <summary>
@@ -155,9 +142,9 @@ namespace Au.Types
 	/// 
 	/// More features may be added in the future.
 	/// </remarks>
-	public abstract class AuScript
+	public abstract class AScript
 	{
-		static AuScript()
+		static AScript()
 		{
 			AppDomain.CurrentDomain.UnhandledException += (ad, e) => {
 				if((ad as AppDomain).Id != AppDomain.CurrentDomain.Id) return; //avoid printing twice if subscribed in main and other appdomain
@@ -175,10 +162,10 @@ namespace Au.Types
 			};
 		}
 
-		static AuScript s_instance;
+		static AScript s_instance;
 
 		///
-		protected AuScript()
+		protected AScript()
 		{
 			s_instance = this;
 		}
@@ -216,5 +203,18 @@ namespace Au.Types
 			set => _triggers = value;
 		}
 		Au.Triggers.ActionTriggers _triggers;
+	}
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// Flags for <see cref="RunAssembly.Run"/>.
+	/// </summary>
+	[Flags]
+	internal enum RAFlags
+	{
+		InEditorThread = 1,
+		DontHandleExceptions = 2,
 	}
 }

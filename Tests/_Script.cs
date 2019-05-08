@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Linq;
+//using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using Au;
@@ -19,7 +19,7 @@ using Au.Types;
 using static Au.NoClass;
 using Au.Triggers; //}}
 				   //{{ main
-unsafe partial class Script : AuScript
+unsafe partial class Script : AScript
 {
 	void TestOptReset()
 	{
@@ -205,7 +205,7 @@ unsafe partial class Script : AuScript
 		Wnd.Find("* Notepad").Activate();
 		//Wnd.Find("Quick *").Activate();
 
-		//Thread_.Start(() => {
+		//AThread.Start(() => {
 		//	using(Au.Util.WinHook.Keyboard(k => {
 		//		if(!k.IsInjectedByAu) Print("----", k);
 
@@ -320,7 +320,7 @@ unsafe partial class Script : AuScript
 		//var fa = new Au.Tools.Form_WinImage();
 		fa.ShowDialog();
 
-		//AuDialog.Show("unload dll");
+		//ADialog.Show("unload dll");
 #else
 		//var w = Wnd.Find("FileZilla", "wxWindowNR").OrThrow();
 		////var a = Acc.Find(w, "LISTITEM").OrThrow();
@@ -476,9 +476,9 @@ unsafe partial class Script : AuScript
 		u[TWEvent.VisibleOnce, "QM SpamFilter"] = o => Print("visible once", o.Window);
 		//u[TWEvent.VisibleOnce, "*Studio ", flags: TWFlags.StartupToo] = o => Print(o.Window);
 
-		//u[TWEvent.VisibleOnce, "mmmmmmm"] = o => Print("mmmmmmm", Thread_.NativeId);
+		//u[TWEvent.VisibleOnce, "mmmmmmm"] = o => Print("mmmmmmm", AThread.NativeId);
 		//var t1 = Triggers.Window.Last;
-		////k["Ctrl+K"] = o => { Print("Ctrl+K", Thread_.NativeId); t1.RunAction(null); 100.ms(); };
+		////k["Ctrl+K"] = o => { Print("Ctrl+K", AThread.NativeId); t1.RunAction(null); 100.ms(); };
 		////Triggers.FuncOf.NextTrigger = o => { t1.RunAction(null); return false; };
 		//Triggers.FuncOf.NextTrigger = o => { (o as HotkeyTriggerArgs).Trigger.RunAction(null); return false; };
 		//k["Ctrl+K"] = o => Print("Ctrl+K");
@@ -780,7 +780,7 @@ unsafe partial class Script : AuScript
 
 		tt["mee"] = o => {
 			//100.ms();
-			var m = new AuMenu();
+			var m = new AMenu();
 			m["one"] = u => Text("One");
 			m["two"] = u => Text("Two");
 			m.Show(true);
@@ -901,10 +901,10 @@ unsafe partial class Script : AuScript
 
 	void TestTodo()
 	{
-		//Action<MTClickArgs> f=o => Au.Util.Help_.AuWeb(o.ToString());
+		//Action<MTClickArgs> f=o => Au.Util.AHelp.AuWeb(o.ToString());
 
-		//var m = new AuMenu();
-		//m[""] = o => Au.Util.Help_.AuWeb("");
+		//var m = new AMenu();
+		//m[""] = o => Au.Util.AHelp.AuWeb("");
 		//m["api/"] = f;
 		//m["Au.Acc.Find"] = f;
 		//m["Wnd.Find"] = f;
@@ -922,8 +922,7 @@ unsafe partial class Script : AuScript
 		//s.Lower
 		//s.Has("", true)
 
-		//CONSIDER: move some extension classes to Au.Util.Ext.
-
+		
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
@@ -948,13 +947,13 @@ unsafe partial class Script : AuScript
 		//TestTurnOffCapsLockWithShift();
 		//TestMouseRelative();
 #else
-		Thread_.Start(() => {
+		AThread.Start(() => {
 #if true
 			OutputForm.ShowForm();
 #else
 			Output.QM2.UseQM2 = true;
 			Output.Clear();
-			AuDialog.Show("triggers");
+			ADialog.Show("triggers");
 #endif
 			Triggers.Stop();
 		}, false);
@@ -976,7 +975,7 @@ unsafe partial class Script : AuScript
 		//	Cpp.Unload();
 		//}
 		////finally {  }
-		////AuDialog.Show("dll unloaded");
+		////ADialog.Show("dll unloaded");
 	}
 
 	//static void _Sleep(Wnd w)
@@ -998,7 +997,7 @@ unsafe partial class Script : AuScript
 	//{
 	//	int n = 16;
 	//	var a = new bool[n];
-	//	var ht = Thread_.Handle;
+	//	var ht = AThread.Handle;
 	//	Api.SetThreadPriority(ht, -2);
 	//	for(int i = 0; i < n; i++) {
 	//		//Print(1 << (i & 3));

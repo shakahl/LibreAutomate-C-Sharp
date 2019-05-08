@@ -54,7 +54,7 @@ namespace Au.Util
 		/// </param>
 		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
@@ -87,7 +87,7 @@ namespace Au.Util
 		/// </param>
 		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
@@ -122,7 +122,7 @@ namespace Au.Util
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
@@ -177,7 +177,7 @@ namespace Au.Util
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
@@ -201,7 +201,7 @@ namespace Au.Util
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
@@ -227,7 +227,7 @@ namespace Au.Util
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
@@ -253,7 +253,7 @@ namespace Au.Util
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
@@ -280,7 +280,7 @@ namespace Au.Util
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// //using Au.Util;
@@ -310,7 +310,7 @@ namespace Au.Util
 		/// Sets the hook.
 		/// </summary>
 		/// <param name="threadId">If the hook type is a thread hook - thread id, or 0 for current thread. Else not used and must be 0.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <exception cref="InvalidOperationException">The hook is already set.</exception>
 		/// <exception cref="ArgumentException">threadId not 0 and the hook type is not a thread hook.</exception>
 		/// <remarks>
@@ -326,7 +326,7 @@ namespace Au.Util
 				threadId = Api.GetCurrentThreadId();
 			}
 			_hh = Api.SetWindowsHookEx(_hookType, _proc1, default, threadId);
-			if(_hh == default) throw new AuException(0, "*set hook");
+			if(_hh == default) throw new AException(0, "*set hook");
 		}
 
 		/// <summary>
@@ -370,7 +370,7 @@ namespace Au.Util
 		{
 			//unhooking in finalizer thread makes no sense. Must unhook in same thread, else fails.
 			//if(_hh != default && !NoWarningNondisposed) PrintWarning($"Non-disposed WinHook ({_hookTypeString}) variable."); //rejected. Eg when called Environment.Exit, finalizers are executed but finally code blocks not.
-			Dbg.PrintIf(_hh != default, $"Non-disposed WinHook ({_hookTypeString}) variable.");
+			ADebug.PrintIf(_hh != default, $"Non-disposed WinHook ({_hookTypeString}) variable.");
 		}
 
 		unsafe LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam)
@@ -475,7 +475,7 @@ namespace Au.Util
 			}
 			catch(Exception ex) { if(LibOnException(ex, this)) return 0; }
 			//info: on any exception .NET would terminate process, even on ThreadAbortException.
-			//	This prevents it when using eg AuDialog. But not when eg MessageBox.Show; I don't know how to prevent it.
+			//	This prevents it when using eg ADialog. But not when eg MessageBox.Show; I don't know how to prevent it.
 			gr:
 			return Api.CallNextHookEx(default, code, wParam, lParam);
 		}
@@ -495,7 +495,7 @@ namespace Au.Util
 		public static int LowLevelHooksTimeout {
 			get {
 				if(s_lowLevelHooksTimeout == 0) {
-					if(!Registry_.GetInt(out int i, "LowLevelHooksTimeout", @"Control Panel\Desktop")) i = 300; //default 300, tested on Win10 and 7
+					if(!ARegistry.GetInt(out int i, "LowLevelHooksTimeout", @"Control Panel\Desktop")) i = 300; //default 300, tested on Win10 and 7
 					else if((uint)i > 1000) i = 1000; //Win10. On Win7 the limit is bigger. Not tested on Win8. On Win7/8 may be changed by a Windows update.
 					s_lowLevelHooksTimeout = i;
 				}
@@ -516,7 +516,7 @@ namespace Au.Util
 			if(e is ThreadAbortException eta) {
 				Thread.ResetAbort();
 				hook.Dispose();
-				Dbg.Print("ThreadAbortException");
+				ADebug.Print("ThreadAbortException");
 				var t = Thread.CurrentThread;
 				Task.Run(() => { Thread.Sleep(50); t.Abort(eta.ExceptionState); });
 				return true;
@@ -1181,7 +1181,7 @@ namespace Au.Util
 		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
 		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
 		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <example>See <see cref="AccHook"/>.</example>
 		public AccHook(AccEVENT eventMin, AccEVENT eventMax, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
 		{
@@ -1200,7 +1200,7 @@ namespace Au.Util
 		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
 		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
 		/// <param name="flags"></param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		/// <example>See <see cref="AccHook"/>.</example>
 		public AccHook(AccEVENT[] events, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
 		{
@@ -1219,7 +1219,7 @@ namespace Au.Util
 		{
 			_Throw1();
 			_hh = Api.SetWinEventHook(eventMin, eventMax, default, _proc1, idProcess, idThread, flags);
-			if(_hh == default) throw new AuException(0, "*set hook");
+			if(_hh == default) throw new AException(0, "*set hook");
 		}
 
 		/// <summary>
@@ -1235,7 +1235,7 @@ namespace Au.Util
 			for(int i = 0; i < events.Length; i++) {
 				var e = events[i]; if(e == 0) continue;
 				var hh = Api.SetWinEventHook(e, e, default, _proc1, idProcess, idThread, flags);
-				if(hh == default) { var ec = WinError.Code; Unhook(); throw new AuException(ec, "*set hook for " + e.ToString()); }
+				if(hh == default) { var ec = WinError.Code; Unhook(); throw new AException(ec, "*set hook for " + e.ToString()); }
 				_ahh[i] = hh;
 			}
 		}

@@ -241,7 +241,7 @@ namespace Au.Controls
 				var gt = this as _Tab;
 				bool isTab = gt != null;
 				var state = this.DockState;
-				var m = new AuMenu();
+				var m = new AMenu();
 				m.CMS.Text = "Menu";
 
 				//dock state
@@ -328,7 +328,7 @@ namespace Au.Controls
 				if(state == prevState) return;
 
 				if(this.ParentSplit == null && state == _DockState.Docked) { //new panel
-					AuDialog.ShowInfo("How to dock floating panels", "Alt+drag and drop.", owner: _manager);
+					ADialog.ShowInfo("How to dock floating panels", "Alt+drag and drop.", owner: _manager);
 					return;
 				}
 
@@ -341,7 +341,7 @@ namespace Au.Controls
 				//get RECT for floating now, because later this.ParentControl will change and even may be destroyed
 				RECT rect = new RECT();
 				if(state == _DockState.Floating) {
-					if(!onStartDrag && !SavedFloatingBounds.IsEmpty_()) {
+					if(!onStartDrag && !SavedFloatingBounds.IsEmptyRect()) {
 						rect = SavedFloatingBounds;
 						rect.EnsureInScreen();
 					} else if(this.ParentSplit != null) {
@@ -487,8 +487,8 @@ namespace Au.Controls
 
 			internal void InitDockStateFromXML(XElement x)
 			{
-				Enum.TryParse(x.Attribute_("state"), out this.DockState);
-				bool hide = x.HasAttribute_("hide"), floating = this.DockState == _DockState.Floating;
+				Enum.TryParse(x.Attr("state"), out this.DockState);
+				bool hide = x.HasAttr("hide"), floating = this.DockState == _DockState.Floating;
 				if(hide || floating) {
 					this.SavedVisibleDockState = this.DockState;
 					this.DockState = _DockState.Hidden;
@@ -506,13 +506,13 @@ namespace Au.Controls
 							{
 								_manager.Paint -= eh;
 								//SetDockState(_DockState.Floating);
-								Timer_.After(200, () => SetDockState(_DockState.Floating));
+								ATimer.After(200, () => SetDockState(_DockState.Floating));
 							};
 						_manager.Paint += eh;
 					}
 				}
-				this.SavedFloatingBounds = _RectFromString(x.Attribute_("rectFloating"));
-				if(!this.IsTabbedPanel || floating) Enum.TryParse(x.Attribute_("captionAt"), out this.CaptionAt);
+				this.SavedFloatingBounds = _RectFromString(x.Attr("rectFloating"));
+				if(!this.IsTabbedPanel || floating) Enum.TryParse(x.Attr("captionAt"), out this.CaptionAt);
 			}
 
 			internal void SaveDockStateToXml(XmlWriter x)

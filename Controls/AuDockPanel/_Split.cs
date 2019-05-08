@@ -46,12 +46,12 @@ namespace Au.Controls
 			{
 				manager._aSplit.Add(this);
 
-				if(!x.HasAttribute_("hor")) IsVerticalSplit = true;
-				int k = x.Attribute_("splitter", -1); if(k < 0 || k > 20) k = _splitterWidth;
+				if(!x.HasAttr("hor")) IsVerticalSplit = true;
+				int k = x.Attr("splitter", -1); if(k < 0 || k > 20) k = _splitterWidth;
 				this.SplitterWidth = k;
 
 				//SHOULDDO: use DPI-dependent units, not pixels. Especially if form size depends on DPI.
-				if(!(_isFraction = x.Attribute_(out _fraction, "f")) && !(_isWidth1 = x.Attribute_(out _width, "w1"))) _width = x.Attribute_("w2", 1);
+				if(!(_isFraction = x.Attr(out _fraction, "f")) && !(_isWidth1 = x.Attr(out _width, "w1"))) _width = x.Attr("w2", 1);
 
 				foreach(var xe in x.Elements()) {
 					_Node gn = null;
@@ -266,12 +266,12 @@ namespace Au.Controls
 				Debug.Assert(_dockedChildCount == 2);
 				_manager.Cursor = this.IsVerticalSplit ? Cursors.VSplit : Cursors.HSplit;
 				bool vert = this.IsVerticalSplit;
-				var p = _manager.MouseClientXY_();
+				var p = _manager.MouseClientXY();
 				var offset = vert ? (p.x - this.SplitterBounds.X) : (p.y - this.SplitterBounds.Y);
 				Au.Util.DragDrop.SimpleDragDrop(_manager, MButtons.Left, d =>
 				{
 					if(d.Msg.message != Api.WM_MOUSEMOVE) return;
-					p = _manager.MouseClientXY_();
+					p = _manager.MouseClientXY();
 					var b = this.Bounds;
 					int xy, loBound, hiBound, widHei;
 					if(vert) {
@@ -398,7 +398,7 @@ namespace Au.Controls
 
 			internal void ShowContextMenu(Point p)
 			{
-				var m = new AuMenu();
+				var m = new AMenu();
 				using(m.Submenu("Width")) {
 					for(int i = 1, k = this.SplitterWidth; i <= 10; i++)
 						m.Add(i.ToString(), o =>

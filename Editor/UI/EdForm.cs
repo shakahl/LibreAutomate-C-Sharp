@@ -68,7 +68,7 @@ partial class EdForm : Form
 		//Perf.Next();
 
 		//#if DEBUG
-		//		Dbg.Print("Ending form ctor. Must be no parked controls created; use SetHookToMonitorCreatedWindowsOfThisThread.");
+		//		ADebug.Print("Ending form ctor. Must be no parked controls created; use SetHookToMonitorCreatedWindowsOfThisThread.");
 		//#endif
 	}
 
@@ -79,14 +79,14 @@ partial class EdForm : Form
 	{
 		Tasks = new RunningTasks();
 		Panels.Files.LoadWorkspace(CommandLine.WorkspaceDirectory, runStartupScript: false);
-		Dbg.PrintIf(((Wnd)this).IsVisible, "BAD: form became visible while loading workspace");
+		ADebug.PrintIf(((Wnd)this).IsVisible, "BAD: form became visible while loading workspace");
 		Au.Triggers.HooksServer.Start(false);
 		CommandLine.OnMainFormLoaded();
 		IsLoaded = true;
 		Model.RunStartupScripts();
 		//Perf.Next();
 
-		Timer_.After(1, () => { //TODO
+		ATimer.After(1, () => { //TODO
 			var s = CommandLine.TestArg;
 			if(s != null) {
 				Print(Time.PerfMicroseconds - Convert.ToInt64(s));
@@ -146,12 +146,12 @@ partial class EdForm : Form
 			Tasks.TaskEnded2(m.WParam);
 			return;
 		case Api.WM_ACTIVATE:
-			int isActive = Math_.LoUshort(wParam); //0 inactive, 1 active, 2 click-active
+			int isActive = AMath.LoUshort(wParam); //0 inactive, 1 active, 2 click-active
 			if(isActive == 1 && !w.IsActive && !Api.SetForegroundWindow(w)) {
 				//Normally at startup always inactive, because started as admin from task scheduler. SetForegroundWindow sometimes works, sometimes not.
 				//TODO: SetForegroundWindow fails when started with Au.CL.exe /e
 				//workaround: If clicked a window after our app started but before w activated, w is at Z bottom and in some cases without taskbar button.
-				Dbg.Print("window inactive");
+				ADebug.Print("window inactive");
 				Wnd.More.TaskbarButton.Add(w);
 				if(!w.ActivateLL()) Wnd.More.TaskbarButton.Flash(w, 5);
 			}
@@ -187,7 +187,7 @@ partial class EdForm : Form
 		//Workaround for .NET inability to create hidden form normally.
 		//	note: while form invisible, .NET will not create handles of controls added after CreateControl_.
 		if(value && !IsHandleCreated) {
-			this.CreateControl_();
+			this.CreateControlNow();
 			_OnLoad();
 			if(!_StartsVisible) return;
 		}

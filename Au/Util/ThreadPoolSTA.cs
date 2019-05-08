@@ -207,7 +207,7 @@ namespace Au.Util
 					//info: Post() throws InvalidOperationException when appdomain is being unloaded. Usually then _isAppDomainDying is true.
 					//note: don't use Send(), it is very slow with icons, maybe paints each time because there are no other messages in the queue.
 				}
-				catch(Exception e) { Dbg.Print(e); }
+				catch(Exception e) { ADebug.Print(e); }
 				finally {
 					if(_work == default) _gc.Free(); //free now if this is a simple callback (ThreadPoolSTA.SubmitCallback()). Else Dispose() frees.
 				}
@@ -239,7 +239,7 @@ namespace Au.Util
 			_env.Pool = p->pool;
 			_env.CleanupGroup = CreateThreadpoolCleanupGroup();
 
-			AppDomain_.Exit += _CurrentDomain_DomainExit;
+			AAppDomain.Exit += _CurrentDomain_DomainExit;
 		}
 
 		static void _CurrentDomain_DomainExit(object sender, EventArgs e)

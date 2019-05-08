@@ -99,11 +99,11 @@ namespace Au.Controls
 
 			_xmlFileDefault = xmlFile;
 			_xmlFileCustom = xmlFileCustom;
-			try { _xStrips = ExtXml.LoadElement(xmlFile); }
-			catch(Exception ex) { AuDialog.ShowError("Failed to load file", ex.ToString()); throw; }
+			try { _xStrips = ExtXml.LoadElem(xmlFile); }
+			catch(Exception ex) { ADialog.ShowError("Failed to load file", ex.ToString()); throw; }
 			XElement xCustom = null;
-			if(File_.ExistsAsFile(_xmlFileCustom)) {
-				try { xCustom = ExtXml.LoadElement(_xmlFileCustom); }
+			if(AFile.ExistsAsFile(_xmlFileCustom)) {
+				try { xCustom = ExtXml.LoadElem(_xmlFileCustom); }
 				catch(Exception e) { Print("Failed to load file", _xmlFileCustom, e.Message); }
 			}
 
@@ -205,15 +205,15 @@ namespace Au.Controls
 			if(isMenu) {
 				mi = new ToolStripMenuItem();
 				item = mi;
-				if(x.HasElements || x.HasAttribute_("dd")) {
+				if(x.HasElements || x.HasAttr("dd")) {
 					_Submenu(x, mi, tag);
 				} else {
 					needHandler = true;
 				}
-			} else if(x.HasAttribute_("type")) {
+			} else if(x.HasAttr("type")) {
 				isControl = true;
-				string cue = x.Attribute_("cue");
-				s = x.Attribute_("type");
+				string cue = x.Attr("cue");
+				s = x.Attr("type");
 				switch(s) {
 				case "edit":
 					var ed = new ToolStripSpringTextBox();
@@ -230,7 +230,7 @@ namespace Au.Controls
 					return null;
 				}
 				if(cue != null) item.AccessibleName = cue;
-			} else if(x.HasElements || x.HasAttribute_("dd")) {
+			} else if(x.HasElements || x.HasAttr("dd")) {
 				ToolStripDropDownItem ddi;
 				var handler = _callbacks.GetClickHandler(tag);
 				if(handler != null) {
@@ -257,7 +257,7 @@ namespace Au.Controls
 				var handler = _callbacks.GetClickHandler(tag);
 				if(handler != null) item.Click += handler;
 				else {
-					Dbg.Print("no handler of " + tag);
+					ADebug.Print("no handler of " + tag);
 					//return null;
 					//item.Enabled = false;
 					item.Visible = false;
@@ -269,7 +269,7 @@ namespace Au.Controls
 
 		void _Submenu(XElement x, ToolStripDropDownItem ddItem, string tag)
 		{
-			var s = x.Attribute_("dd");
+			var s = x.Attr("dd");
 			if(!Empty(s)) {
 				ddItem.DropDown = Submenus[s];
 			} else {
@@ -290,7 +290,7 @@ namespace Au.Controls
 					//Fill menu items later. This saves ~50 ms of startup time if not using dd.SuspendLayout. With dd.SuspendLayout - just 5 ms.
 					//Can do it with Opening event or with timer. With timer easier. With event users cannot use MSAA etc to automate clicking menu items (with timer cannot use it only the first 1-2 seconds).
 #if true
-					Timer_.After(500, t =>
+					ATimer.After(500, t =>
 					{
 						dd.SuspendLayout();
 						_AddChildItems(x, dd, true);
@@ -315,28 +315,28 @@ namespace Au.Controls
 		{
 			string s, defaultText = null;
 
-			var tt = x.Attribute_("tt"); //tooltip
+			var tt = x.Attr("tt"); //tooltip
 			item.ToolTipText = tt ?? (isMenu ? null : (defaultText = _GetDefaultItemText(x)));
 
 			if(!isMenu) {
-				if(x.HasAttribute_("hide")) item.Overflow = ToolStripItemOverflow.Always;
+				if(x.HasAttr("hide")) item.Overflow = ToolStripItemOverflow.Always;
 				else if(!_inBuildAll) item.Overflow = ToolStripItemOverflow.AsNeeded;
 			}
 			if(isControl) return;
 
 			Image im = null;
-			if(x.Attribute_(out s, "i2")) { //custom image as icon file
-				im = Icon_.GetFileIconImage(s, (int)IconSize.SysSmall, GIFlags.SearchPath);
+			if(x.Attr(out s, "i2")) { //custom image as icon file
+				im = AIcon.GetFileIconImage(s, (int)IconSize.SysSmall, GIFlags.SearchPath);
 				if(im == null) Print($"Failed to get {(isMenu ? "menu item" : "toolbar button")} {x.Name} icon from file {s}\n\tTo fix this, right-click it and select Properties...");
 				//SHOULDDO: async or cache
 			}
-			if(im == null && x.Attribute_(out s, "i")) im = _callbacks.GetImage(s); //image from resources
+			if(im == null && x.Attr(out s, "i")) im = _callbacks.GetImage(s); //image from resources
 			item.Image = im;
 
-			if(x.Attribute_(out s, "color") && ColorInt.FromString(s, out var color)) item.ForeColor = (Color)color;
+			if(x.Attr(out s, "color") && ColorInt.FromString(s, out var color)) item.ForeColor = (Color)color;
 			else if(!_inBuildAll) item.ForeColor = Color.FromKnownColor(KnownColor.ControlText);
 
-			bool hasCustomText = x.Attribute_(out s, "t2"); //custom text
+			bool hasCustomText = x.Attr(out s, "t2"); //custom text
 			item.Text = s ?? defaultText ?? _GetDefaultItemText(x);
 
 			if(isMenu) {
@@ -345,14 +345,14 @@ namespace Au.Controls
 					mi.ShortcutKeys = 0;
 					mi.ShortcutKeyDisplayString = null;
 				}
-				if(x.Attribute_(out s, "hk")) {
+				if(x.Attr(out s, "hk")) {
 					bool ok = Keyb.More.ParseHotkeyString(s, out var hk);
 					if(ok) try { mi.ShortcutKeys = hk; } catch { ok = false; }
-					if(!ok) Dbg.Print("Invalid hotkey: " + s);
+					if(!ok) ADebug.Print("Invalid hotkey: " + s);
 				}
-				if(x.Attribute_(out string ss, "hkText")) mi.ShortcutKeyDisplayString = (s == null) ? ss : s + ", " + ss;
+				if(x.Attr(out string ss, "hkText")) mi.ShortcutKeyDisplayString = (s == null) ? ss : s + ", " + ss;
 			} else {
-				var style = item.Image == null ? ToolStripItemDisplayStyle.ImageAndText : (ToolStripItemDisplayStyle)x.Attribute_("style", 0);
+				var style = item.Image == null ? ToolStripItemDisplayStyle.ImageAndText : (ToolStripItemDisplayStyle)x.Attr("style", 0);
 				if(style == 0) style = hasCustomText ? ToolStripItemDisplayStyle.ImageAndText : ToolStripItemDisplayStyle.Image; //0 is ToolStripItemDisplayStyle.None
 				item.DisplayStyle = style;
 			}
@@ -364,7 +364,7 @@ namespace Au.Controls
 		/// </summary>
 		string _GetDefaultItemText(XElement x)
 		{
-			if(!x.Attribute_(out string s, "t")) {
+			if(!x.Attr(out string s, "t")) {
 				string tag = x.Name.LocalName;
 				s = tag.Remove(0, tag.LastIndexOf('_') + 1); //eg "Edit_Copy" -> "Copy"
 				s = s.RegexReplace("(?<=[^A-Z])(?=[A-Z])", " "); //"OneTwoThree" -> "One Two Three". //speed: don't need to optimize.
@@ -394,7 +394,7 @@ namespace Au.Controls
 				//MSDN: "if the new content has no parent, then the objects are simply attached to the XML tree. If the new content already is parented and is part of another XML tree, then the new content is cloned". Tested, it's true.
 			} else {
 				//reorder toolbar buttons
-				if(xtsCust.Attribute_(out string s, "order")) {
+				if(xtsCust.Attr(out string s, "order")) {
 					xtsDef.Elements("sep").Remove(); //remove all default <sep/>, because all separators now are in the 'order' attribute
 					var a = s.SegSplit(" ");
 					for(int i = a.Length - 1; i >= 0; i--) {
@@ -420,7 +420,7 @@ namespace Au.Controls
 		/// </summary>
 		void _DiffCustom()
 		{
-			var xStripsDefault = ExtXml.LoadElement(_xmlFileDefault);
+			var xStripsDefault = ExtXml.LoadElem(_xmlFileDefault);
 			var xStripsCustom = new XElement("strips");
 			string s;
 
@@ -438,10 +438,10 @@ namespace Au.Controls
 				XElement xtsDef = xStripsDefault.Element(xts.Name), xtsCust = null;
 				foreach(var x in xts.Descendants()) {
 					var name = x.Name; if(name == "sep") continue;
-					XElement xDef = xtsDef.Descendant_(name), xCust = null;
+					XElement xDef = xtsDef.Desc(name), xCust = null;
 					foreach(var att in x.Attributes()) {
 						var aname = att.Name;
-						if(att.Value == xDef.Attribute_(aname)) continue;
+						if(att.Value == xDef.Attr(aname)) continue;
 						if(xtsCust == null) xStripsCustom.Add(xtsCust = new XElement(xts.Name));
 						if(xCust == null) xtsCust.Add(xCust = new XElement(name));
 						xCust.SetAttributeValue(aname, att.Value);
@@ -471,8 +471,8 @@ namespace Au.Controls
 #if true
 			//save
 			try {
-				File_.CreateDirectoryFor(_xmlFileCustom);
-				xStripsCustom.Save_(_xmlFileCustom);
+				AFile.CreateDirectoryFor(_xmlFileCustom);
+				xStripsCustom.SaveElem(_xmlFileCustom);
 			}
 			catch(Exception e) {
 				Print("Failed to save XML file", _xmlFileCustom, e.Message);
@@ -498,7 +498,7 @@ namespace Au.Controls
 			bool isHidden = item.Overflow == ToolStripItemOverflow.Always;
 			var x = item.Tag as XElement;
 
-			var m = new AuMenu();
+			var m = new AMenu();
 			m["Properties..."] = o =>
 			{
 				using(var f = new AuStripManagerPropertiesDialog(this, item.Tag as XElement, isMenu)) {
@@ -522,14 +522,14 @@ namespace Au.Controls
 			}
 			if(!isMenu) {
 				m.Separator();
-				m["How to customize..."] = o => AuDialog.ShowInfo("Customizing toolbars and menus",
+				m["How to customize..."] = o => ADialog.ShowInfo("Customizing toolbars and menus",
 					"There are several standard toolbars and two custom toolbars (initially empty). Standard toolbar buttons cannot be added and removed, but can be hidden and reordered. Menu items cannot be added, removed, hidden and reordered." +
 					"\n\nYou can find most customization options in two context menus. Right-clicking a button or menu item shows its context menu. Right-clicking before the first button shows toolbar's context menu. You can Alt+drag toolbar buttons to reorder them on the same toolbar. You can Alt+drag toolbars to dock them somewhere else. Use splitters to resize. Right click a splitter to change its thickness."
 					);
-				string folder = Path_.GetDirectoryPath(_xmlFileCustom), link = $"<a href=\"{folder}\">{folder}</a>";
+				string folder = APath.GetDirectoryPath(_xmlFileCustom), link = $"<a href=\"{folder}\">{folder}</a>";
 				m["How to backup, restore, reset..."] = o =>
 				{
-					AuDialog.ShowEx("How to backup, restore or reset customizations",
+					ADialog.ShowEx("How to backup, restore or reset customizations",
 					"All customizations are saved in XML files in folder\n" +
 					link +
 					"\n\nTo backup:  copy the file." +
@@ -557,7 +557,7 @@ namespace Au.Controls
 			string s;
 			XElement x = item.Tag as XElement, xtbTo = tsTo?.Tag as XElement;
 
-			switch(Math_.LoUshort(action)) {
+			switch(AMath.LoUshort(action)) {
 			case 1: //copy from menu or standard toolbar to custom toolbar
 				var xNew = new XElement(x.Name, x.Attributes()); //copy without descendants but with attributes
 				if(item is ToolStripDropDownItem ddi && ddi.HasDropDown) {
@@ -653,7 +653,7 @@ namespace Au.Controls
 			if(!Au.Util.DragDrop.SimpleDragDrop(ts, MButtons.Left, k =>
 			{
 				if(k.Msg.message != Api.WM_MOUSEMOVE) return;
-				target = ts.GetItemAt(ts.MouseClientXY_());
+				target = ts.GetItemAt(ts.MouseClientXY());
 				//Print(target);
 				isOutside = (target == null && Wnd.FromMouse() != (Wnd)ts);
 				k.Cursor = isOutside ? Cursors.No : Cursors.Hand;

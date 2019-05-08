@@ -274,7 +274,7 @@ namespace Au
 		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [](xref:wildcard_expression).</param>
 		public static void CloseAll(string name = null)
 		{
-			foreach(var w in Wnd.FindAll(name, "**m Au.OSD||Au.OSD2", WF3.Process(Process_.CurrentProcessId))) w.Close(noWait: true);
+			foreach(var w in Wnd.FindAll(name, "**m Au.OSD||Au.OSD2", WF3.Process(AProcess.CurrentProcessId))) w.Close(noWait: true);
 		}
 	}
 
@@ -591,7 +591,7 @@ namespace Au
 			}
 			bool thisThread = false, wait = false;
 			switch(ShowMode) {
-			case OsdShowMode.Auto: thisThread = Thread_.HasMessageLoop(); break;
+			case OsdShowMode.Auto: thisThread = AThread.HasMessageLoop(); break;
 			case OsdShowMode.ThisThread: thisThread = true; break;
 			case OsdShowMode.Wait: thisThread = wait = true; break;
 			}
@@ -599,7 +599,7 @@ namespace Au
 				_Show(wait);
 			} else {
 				//Task.Run(() => ShowWait()); //works too, but cannot use StrongThread
-				Thread_.Start(() => _Show(true), ShowMode == OsdShowMode.WeakThread);
+				AThread.Start(() => _Show(true), ShowMode == OsdShowMode.WeakThread);
 				WaitFor.Condition(30, () => IsHandleCreated);
 
 				//CONSIDER: make smaller timeout when main thread ended if OsdShowMode.Auto
@@ -618,7 +618,7 @@ namespace Au
 				if(!WaitFor.MessagesAndCondition(t, () => !IsHandleCreated)) Close();
 			} else if(t > 0) {
 				t = Math.Min(t, int.MaxValue / 1000) * 1000; //s -> ms
-				Timer_.After(t, () => Close());
+				ATimer.After(t, () => Close());
 			}
 		}
 
@@ -627,7 +627,7 @@ namespace Au
 		/// </summary>
 		protected override void OnPaint(Graphics g, Rectangle r)
 		{
-			//Print(Thread_.NativeId);
+			//Print(AThread.NativeId);
 			if(Opacity != 0) {
 				g.Clear((Color)BackColor); //else OsdWindow cleared with TransparentColor
 
@@ -821,7 +821,7 @@ namespace Au
 		/// <summary>Default font for <see cref="ShowText"/> and <b>Osd</b>. Default: <b>SystemFonts.MessageBoxFont</b> of size 12.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
 		public static Font DefaultFont { get => s_defaultFont; set => s_defaultFont = value ?? throw new ArgumentNullException(); }
-		static Font s_defaultFont = new Font(Util.SystemFonts_.LibRegularCached.FontFamily, 12);
+		static Font s_defaultFont = new Font(Util.ASystemFonts.LibRegularCached.FontFamily, 12);
 
 		/// <summary>Default text color for <see cref="ShowText"/> and <b>Osd</b>. Default: 0xFF404040 (dark gray).</summary>
 		public static ColorInt DefaultTextColor { get; set; } = 0xFF404040;
@@ -845,7 +845,7 @@ namespace Au
 		/// Each thread has its own instance of this property.
 		/// </summary>
 		[field: ThreadStatic]
-		public static ScreenDef DefaultScreen { get; set; }
+		public static AScreen DefaultScreen { get; set; }
 	}
 }
 
@@ -859,7 +859,7 @@ namespace Au.Types
 	/// </remarks>
 	public enum OsdShowMode
 	{
-		/// <summary>Depends on <see cref="Thread_.HasMessageLoop"/>. If it is true, uses <b>ThisThread</b>, else <b>StrongThread</b>. Does not wait.</summary>
+		/// <summary>Depends on <see cref="AThread.HasMessageLoop"/>. If it is true, uses <b>ThisThread</b>, else <b>StrongThread</b>. Does not wait.</summary>
 		Auto,
 
 		/// <summary>

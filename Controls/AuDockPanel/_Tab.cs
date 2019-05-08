@@ -44,7 +44,7 @@ namespace Au.Controls
 			{
 				manager._aTab.Add(this);
 
-				int iAct = x.Attribute_("active", 0);
+				int iAct = x.Attr("active", 0);
 				var xPanels = x.Elements("panel");
 				this.Items = new List<_Panel>();
 

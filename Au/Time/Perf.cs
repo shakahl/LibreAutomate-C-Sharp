@@ -43,7 +43,7 @@ namespace Au
 			static Inst()
 			{
 				//Prevent JIT delay when calling Next etc if not ngened.
-				//if(!Util.Assembly_.LibIsAuNgened) { //unnecessary and makes slower
+				//if(!Util.AAssembly.LibIsAuNgened) { //unnecessary and makes slower
 #if PREPAREMETHOD
 				Util.Jit.Compile(typeof(Inst), "Next", "NW");
 #if DEBUG //else these methods are inlined

@@ -138,7 +138,7 @@ namespace Au.Triggers
 						var t1 = Time.PerfMilliseconds;
 						bool ok = v.f(args);
 						var td = Time.PerfMilliseconds - t1;
-						if(td > 200) PrintWarning($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {AuTask.Name}.", -1);
+						if(td > 200) PrintWarning($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {ATask.Name}.", -1);
 						if(!ok) return false;
 					}
 				}
@@ -200,7 +200,7 @@ namespace Au.Triggers
 		public void RunAction(TriggerArgs args)
 		{
 			triggers.LibThrowIfNotRunning();
-			if(Thread_.NativeId != triggers.LibThreadId) throw new InvalidOperationException("Wrong thread. Call from a FuncOf function.");
+			if(AThread.NativeId != triggers.LibThreadId) throw new InvalidOperationException("Wrong thread. Call from a FuncOf function.");
 			triggers.LibRunAction(this, args);
 		}
 	}

@@ -89,7 +89,7 @@ namespace ETest
 			int x = 0;
 
 			foreach(var s in iconFiles) {
-				var im = Icon_.GetFileIconImage(s, imageSize);
+				var im = AIcon.GetFileIconImage(s, imageSize);
 				g.DrawImage(im, x, 0);
 				x += imageSize;
 			}

@@ -201,7 +201,7 @@ namespace Au
 		/// On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.
 		/// </returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="AuException">Failed. For example a handle is invalid.</exception>
+		/// <exception cref="AException">Failed. For example a handle is invalid.</exception>
 		/// <remarks>
 		/// Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
 		/// Does not use <see cref="Opt.WaitFor"/>.
@@ -224,7 +224,7 @@ namespace Au
 			long timeMS = _TimeoutS2MS(secondsTimeout, out bool canThrow);
 
 			int r = LibWait(timeMS, flags, msgCallback, stopVar, handles);
-			if(r < 0) throw new AuException(0);
+			if(r < 0) throw new AException(0);
 			if(r == Api.WAIT_TIMEOUT) {
 				if(canThrow) throw new TimeoutException();
 				return 0;
@@ -336,7 +336,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// Timer_.After(2000, t => { Print("timer"); });
+		/// ATimer.After(2000, t => { Print("timer"); });
 		/// WaitFor.PostedMessage(5, (ref Native.MSG m) => { Print(m); return m.message == 0x113; }); //WM_TIMER
 		/// Print("finished");
 		/// ]]></code>
@@ -361,7 +361,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// bool stop = false;
-		/// Timer_.After(2000, t => { Print("timer"); stop = true; });
+		/// ATimer.After(2000, t => { Print("timer"); stop = true; });
 		/// WaitFor.MessagesAndCondition(5, () => stop);
 		/// Print(stop);
 		/// ]]></code>

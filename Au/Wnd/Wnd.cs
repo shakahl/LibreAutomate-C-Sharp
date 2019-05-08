@@ -791,7 +791,7 @@ namespace Au
 			/// </summary>
 			static void _EnableActivate_SendKey(bool debugOut)
 			{
-				if(debugOut) Dbg.Print("EnableActivate: need key");
+				if(debugOut) ADebug.Print("EnableActivate: need key");
 
 				var x = new Api.INPUTK(0, 128, Api.KEYEVENTF_KEYUP);
 				Api.SendInput(&x);
@@ -804,7 +804,7 @@ namespace Au
 			/// </summary>
 			static void _EnableActivate_MinRes()
 			{
-				Dbg.Print("EnableActivate: need min/res");
+				ADebug.Print("EnableActivate: need min/res");
 
 				Wnd t = More.CreateWindow("#32770", null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WS_EX.TOOLWINDOW);
 				//info: When restoring, the window must be visible, or may not work.
@@ -1723,7 +1723,7 @@ namespace Au
 		/// Moves and resizes.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool, ScreenDef)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP flags.
+		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool, AScreen)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP flags.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOZORDER|NOOWNERZORDER|NOACTIVATE|swpFlagsToAdd. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="WinError"/>.
 		/// 
@@ -1739,7 +1739,7 @@ namespace Au
 		/// Moves.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Move(Coord, Coord, bool, ScreenDef)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// See also <see cref="Move(Coord, Coord, bool, AScreen)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOSIZE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="WinError"/>.
 		/// 
@@ -1755,7 +1755,7 @@ namespace Au
 		/// Resizes.
 		/// </summary>
 		/// <remarks>
-		/// See also <see cref="Resize(Coord, Coord, bool, ScreenDef)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
+		/// See also <see cref="Resize(Coord, Coord, bool, AScreen)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
 		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOMOVE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="WinError"/>.
 		/// </remarks>
@@ -1780,7 +1780,7 @@ namespace Au
 		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int, int, int, Native.SWP)"/>.
 		/// </remarks>
 		/// <exception cref="WndException"/>
-		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, ScreenDef screen = default)
+		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, AScreen screen = default)
 		{
 			ThrowIfInvalid();
 
@@ -1830,7 +1830,7 @@ namespace Au
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int)"/>.
 		/// </remarks>
-		public void Move(Coord x, Coord y, bool workArea = false, ScreenDef screen = default)
+		public void Move(Coord x, Coord y, bool workArea = false, AScreen screen = default)
 		{
 			Move(x, y, default, default, workArea, screen);
 		}
@@ -1847,7 +1847,7 @@ namespace Au
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// With windows of current thread usually it's better to use <see cref="ResizeLL(int, int)"/>.
 		/// </remarks>
-		public void Resize(Coord width, Coord height, bool workArea = false, ScreenDef screen = default)
+		public void Resize(Coord width, Coord height, bool workArea = false, AScreen screen = default)
 		{
 			Move(default, default, width, height, workArea, screen);
 		}
@@ -1863,7 +1863,7 @@ namespace Au
 			/// </summary>
 			internal static void MoveInScreen(bool bEnsureMethod,
 			Coord left, Coord top, bool useWindow, Wnd w, ref RECT r,
-			ScreenDef screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default)
+			AScreen screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default)
 			{
 				RECT rs;
 				System.Windows.Forms.Screen scr;
@@ -1873,7 +1873,7 @@ namespace Au
 					scr = null;
 				} else {
 					if(!screen.IsNull) scr = screen.GetScreen();
-					else if(useWindow) scr = ScreenDef.ScreenFromWindow(w);
+					else if(useWindow) scr = AScreen.ScreenFromWindow(w);
 					else if(bEnsureMethod) scr = System.Windows.Forms.Screen.FromRectangle(r);
 					else scr = System.Windows.Forms.Screen.PrimaryScreen;
 
@@ -1909,7 +1909,7 @@ namespace Au
 
 				if(useWindow) { //move window
 					w.LibGetWindowPlacement(out var wp, "*move*");
-					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(ScreenDef.ScreenFromWindow(w));
+					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(AScreen.ScreenFromWindow(w));
 					if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;
 
 					Wnd hto = default; bool visible = w.IsVisible;
@@ -1948,7 +1948,7 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="screen">Move to this screen (see <see cref="ScreenDef"/>). If default, uses screen of this window.</param>
+		/// <param name="screen">Move to this screen (see <see cref="AScreen"/>). If default, uses screen of this window.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of window is not in screen, move and/or resize it so that entire window would be in screen. Default true.</param>
 		/// <exception cref="WndException"/>
@@ -1956,7 +1956,7 @@ namespace Au
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately, except when moving maximized to another screen.
 		/// </remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
-		public void MoveInScreen(Coord x, Coord y, ScreenDef screen = default, bool workArea = true, bool ensureInScreen = true)
+		public void MoveInScreen(Coord x, Coord y, AScreen screen = default, bool workArea = true, bool ensureInScreen = true)
 		{
 			RECT r = default;
 			Lib.MoveInScreen(false, x, y, true, this, ref r, screen, workArea, ensureInScreen);
@@ -1965,14 +1965,14 @@ namespace Au
 		/// <summary>
 		/// Moves this window if need, to ensure that entire window is in screen.
 		/// </summary>
-		/// <param name="screen">Move to this screen (see <see cref="ScreenDef"/>). If default, uses screen of this window.</param>
+		/// <param name="screen">Move to this screen (see <see cref="AScreen"/>). If default, uses screen of this window.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
 		/// </remarks>
 		/// <seealso cref="RECT.EnsureInScreen"/>
-		public void EnsureInScreen(ScreenDef screen = default, bool workArea = true)
+		public void EnsureInScreen(AScreen screen = default, bool workArea = true)
 		{
 			RECT r = default;
 			Lib.MoveInScreen(true, default, default, true, this, ref r, screen, workArea, true);
@@ -1981,11 +1981,11 @@ namespace Au
 		/// <summary>
 		/// Moves this window to the center of the screen.
 		/// </summary>
-		/// <param name="screen">Move to this screen (see <see cref="ScreenDef"/>). If default, uses screen of this window.</param>
+		/// <param name="screen">Move to this screen (see <see cref="AScreen"/>). If default, uses screen of this window.</param>
 		/// <exception cref="WndException"/>
 		/// <remarks>Calls <c>ShowNotMinMax(true)</c> and <c>MoveInScreen(default, default, screen, true)</c>.</remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
-		public void MoveToScreenCenter(ScreenDef screen = default)
+		public void MoveToScreenCenter(AScreen screen = default)
 		{
 			ShowNotMinMax(true);
 			MoveInScreen(default, default, screen, true);
@@ -1994,10 +1994,10 @@ namespace Au
 		/// <summary>
 		/// Gets <see cref="System.Windows.Forms.Screen"/> object of the screen that contains this window (the biggest part of it) or is nearest to it.
 		/// If this window handle is default(Wnd) or invalid, gets the primary screen.
-		/// Calls <see cref="ScreenDef.ScreenFromWindow"/>.
+		/// Calls <see cref="AScreen.ScreenFromWindow"/>.
 		/// </summary>
 		public System.Windows.Forms.Screen Screen {
-			get => ScreenDef.ScreenFromWindow(this);
+			get => AScreen.ScreenFromWindow(this);
 		}
 
 		#endregion
@@ -2416,7 +2416,7 @@ namespace Au
 		{
 			if(!Is0 && IsUacAccessDenied) {
 				if(prefix == null) prefix = "Failed. The"; else if(prefix.Ends('.')) prefix += " The"; //this is to support prefix used by Mouse.Move: "The active"
-				throw new AuException(Api.ERROR_ACCESS_DENIED, prefix + " window's process has a higher UAC integrity level (admin or uiAccess) than this process.");
+				throw new AException(Api.ERROR_ACCESS_DENIED, prefix + " window's process has a higher UAC integrity level (admin or uiAccess) than this process.");
 			}
 		}
 
@@ -2685,10 +2685,10 @@ namespace Au
 		/// Return null if fails.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetName"/>.
+		/// Calls <see cref="ProcessId"/> and <see cref="AProcess.GetName"/>.
 		/// This function is much slower than getting window name or class name. Don't use code like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>. Instead use <c>var s=w.ProgramName; if(s=="A" || s=="B")</c>.
 		/// </remarks>
-		public string ProgramName => Process_.LibGetNameCached(this, ProcessId);
+		public string ProgramName => AProcess.LibGetNameCached(this, ProcessId);
 		//TODO: maybe string properties should return "" when failed, because now often NullReferenceException if not programmed carefully.
 
 		/// <summary>
@@ -2707,20 +2707,20 @@ namespace Au
 		/// Return null if fails.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetName"/>.
+		/// Calls <see cref="ProcessId"/> and <see cref="AProcess.GetName"/>.
 		/// This function is much slower than getting window name or class name. Don't use code like <c>if(w.ProgramPath=="A" || w.ProgramPath=="B")</c>. Instead use <c>var s=w.ProgramPath; if(s=="A" || s=="B")</c>.
 		/// </remarks>
-		public string ProgramPath => Process_.LibGetNameCached(this, ProcessId, true);
+		public string ProgramPath => AProcess.LibGetNameCached(this, ProcessId, true);
 
 		/// <summary>
 		/// Gets description of process executable file.
 		/// Return null if fails.
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="ProcessId"/> and <see cref="Process_.GetDescription"/>.
+		/// Calls <see cref="ProcessId"/> and <see cref="AProcess.GetDescription"/>.
 		/// This function is slow. Much slower than <see cref="ProgramName"/>.
 		/// </remarks>
-		public string ProgramDescription => Process_.GetDescription(ProcessId);
+		public string ProgramDescription => AProcess.GetDescription(ProcessId);
 
 		#endregion
 
@@ -2783,7 +2783,7 @@ namespace Au
 				if(!useXButton) ok = Post(Api.WM_SYSCOMMAND, Api.SC_CLOSE); //UAC blocks WM_CLOSE but not WM_SYSCOMMAND
 			}
 
-			//if(!noWait.HasValue) noWait = Thread_.IsUI; //rejected
+			//if(!noWait.HasValue) noWait = AThread.IsUI; //rejected
 			if(noWait) return true;
 
 			if(ok) {

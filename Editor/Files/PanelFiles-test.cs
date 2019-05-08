@@ -45,7 +45,7 @@ partial class PanelFiles
 //		var n = f?.TreeNodeAdv;
 //		//Print(n?.Tag);
 
-//		var m = new AuMenu();
+//		var m = new AMenu();
 //		m["SelectedNode"] = o => _c.SelectedNode = n;
 //		m["IsSelected=true"] = o => n.IsSelected = true; //adds to selection
 //		m["ClearSelection"] = o => _c.ClearSelection();
@@ -123,7 +123,7 @@ partial class PanelFiles
 //			_c.Update();
 //			Perf.NW();
 
-//			Timer_.After(1000, () => f.FileRename(name));
+//			ATimer.After(1000, () => f.FileRename(name));
 //		};
 //		m["udate row"] = o =>
 //		{
@@ -135,13 +135,13 @@ partial class PanelFiles
 //			_c.Update();
 //			Perf.NW();
 
-//			Timer_.After(1000, () => f.FileRename(name));
+//			ATimer.After(1000, () => f.FileRename(name));
 //		};
 //		m["GC.Collect"] = o => GC.Collect();
 //		m["disable control"] = o =>
 //		{
 //			_c.Enabled = false;
-//			AuDialog.Show();
+//			ADialog.Show();
 //			_c.Enabled = true;
 //		};
 //		m["ItemPath"] = o =>

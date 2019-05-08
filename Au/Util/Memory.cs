@@ -34,7 +34,7 @@ namespace Au.Util
 		/// <param name="name">Shared memory name. Case-insensitive.</param>
 		/// <param name="size">Shared memory size. Ignored if the shared memory already exists.</param>
 		/// <param name="created">Receives true if created and not opened.</param>
-		/// <exception cref="AuException">The API failed.</exception>
+		/// <exception cref="AException">The API failed.</exception>
 		/// <remarks>
 		/// Once the memory is created, it is alive at least until this process ends. Other processes can keep the memory alive even after that.
 		/// There is no Close function to close the native shared memory object handle. The OS closes it when this process ends.
@@ -55,7 +55,7 @@ namespace Au.Util
 				return (void*)t;
 			}
 			ge:
-			throw new AuException(0, "*open shared memory");
+			throw new AException(0, "*open shared memory");
 		}
 	}
 
@@ -136,7 +136,7 @@ namespace Au.Util
 		internal LibWorkarounds.ProcessVariables workarounds;
 		internal ThreadPoolSTA.ProcessVariables threadPool;
 		internal ATRole taskRole;
-		//internal Thread_.ProcessVariables thread_;
+		//internal AThread.ProcessVariables thread_;
 		//internal Perf.Inst perf;
 
 		#endregion
@@ -525,13 +525,13 @@ namespace Au.Util
 					if(capacity <= b.Capacity) {
 						if(alt) t_cachedInstance2 = null; else t_cachedInstance = null;
 						b.Clear();
-						//Dbg.Print("StringBuilder cached, alt=" + alt);
+						//ADebug.Print("StringBuilder cached, alt=" + alt);
 						sb = _sb = b;
 						return;
 					}
 				}
 			}
-			//Dbg.Print("StringBuilder new");
+			//ADebug.Print("StringBuilder new");
 			sb = _sb = new StringBuilder(capacity);
 		}
 
@@ -541,7 +541,7 @@ namespace Au.Util
 		public void Dispose()
 		{
 			if(_sb.Capacity <= MAX_BUILDER_SIZE) {
-				//Dbg.Print("StringBuilder released, alt=" + (t_cachedInstance != null));
+				//ADebug.Print("StringBuilder released, alt=" + (t_cachedInstance != null));
 				if(t_cachedInstance == null) t_cachedInstance = _sb; else t_cachedInstance2 = _sb;
 			}
 			_sb = null;
@@ -551,7 +551,7 @@ namespace Au.Util
 	/// <summary>
 	/// <see cref="GC"/> extensions.
 	/// </summary>
-	public static class GC_
+	public static class AGC
 	{
 		static ConditionalWeakTable<object, _Remover> s_table = new ConditionalWeakTable<object, _Remover>();
 

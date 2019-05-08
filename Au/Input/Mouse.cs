@@ -45,7 +45,7 @@ namespace Au
 		{
 			bool relaxed = Opt.Mouse.Relaxed, willFail = false;
 
-			if(!ScreenDef.IsInAnyScreen(p)) {
+			if(!AScreen.IsInAnyScreen(p)) {
 				if(!relaxed) throw new ArgumentOutOfRangeException(null, "Cannot mouse-move. This x y is not in screen. " + p.ToString());
 				willFail = true;
 			}
@@ -78,7 +78,7 @@ namespace Au
 				var es = $"*mouse-move to this x y in screen. " + p.ToString();
 				Wnd.Active.LibUacCheckAndThrow(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
 																	 //rejected: Wnd.GetWnd.Root.ActivateLL()
-				throw new AuException(es);
+				throw new AException(es);
 				//known reasons:
 				//	Active window of higher UAC IL.
 				//	BlockInput, hook, some script etc that blocks mouse movement or restores mouse position.
@@ -134,7 +134,7 @@ namespace Au
 		/// - Other window-related failures.
 		/// </exception>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
+		/// <exception cref="AException">Failed to move the cursor to the specified x y.</exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
 		/// </remarks>
@@ -158,7 +158,7 @@ namespace Au
 		/// <param name="x">X coordinate.</param>
 		/// <param name="y">Y coordinate.</param>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
+		/// <exception cref="AException">Failed to move the cursor to the specified x y.</exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
 		/// 
@@ -174,7 +174,7 @@ namespace Au
 			_Move(p, fast: false);
 			return p;
 		}
-		//rejected: parameters bool workArea = false, ScreenDef screen = default. Rarely used. Can use the POINT overload and Coord.Normalize.
+		//rejected: parameters bool workArea = false, AScreen screen = default. Rarely used. Can use the POINT overload and Coord.Normalize.
 
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to the specified position in screen.
@@ -183,7 +183,7 @@ namespace Au
 		/// <note type="tip">When need coordinates relative to a non-primary screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>Mouse.Move((x, y, true));</c>.</note>
 		/// </param>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
+		/// <exception cref="AException">Failed to move the cursor to the specified x y.</exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
 		/// </remarks>
@@ -256,7 +256,7 @@ namespace Au
 		/// <param name="dx">X offset from <b>LastXY.x</b>.</param>
 		/// <param name="dy">Y offset from <b>LastXY.y</b>.</param>
 		/// <exception cref="ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
+		/// <exception cref="AException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
 		/// </remarks>
@@ -277,7 +277,7 @@ namespace Au
 		/// <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
 		/// <exception cref="ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
 		/// <exception cref="ArgumentOutOfRangeException">The last x y is not in screen. No exception option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
-		/// <exception cref="AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
+		/// <exception cref="AException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
 		/// <remarks>
 		/// Uses <see cref="Opt.Mouse"/>: <see cref="OptMouse.Relaxed"/> (only for the last movement; always relaxed in intermediate movements).
 		/// </remarks>
@@ -285,7 +285,7 @@ namespace Au
 		{
 			LibWaitForNoButtonsPressed();
 
-			var a = Convert_.Base64Decode(recordedString);
+			var a = AConvert.Base64Decode(recordedString);
 
 			byte flags = a[0];
 			const int knownFlags = 1; if((flags & knownFlags) != flags) throw new ArgumentException("Unknown string version");
@@ -339,7 +339,7 @@ namespace Au
 			/// <param name="recorded">
 			/// List of x y distances from previous.
 			/// The first distance is from the mouse position before the first movement; at run time it will be distance from <see cref="Mouse.LastXY"/>.
-			/// To create uint value from distance dx dy use this code: <c>Math_.MakeUint(dx, dy)</c>.
+			/// To create uint value from distance dx dy use this code: <c>AMath.MakeUint(dx, dy)</c>.
 			/// </param>
 			/// <param name="withSleepTimes">
 			/// <i>recorded</i> also contains sleep times (milliseconds) alternating with distances.
@@ -368,8 +368,8 @@ namespace Au
 						//never mind: ~90% is 7. Removing it would make almost 2 times smaller string. But need much more code. Or compress (see comment below).
 					} else {
 						//info: to make more compact, we write not distances (dx dy) but distance changes (x y).
-						int dx = Math_.LoShort(u), x = dx - pdx; pdx = dx;
-						int dy = Math_.HiShort(u), y = dy - pdy; pdy = dy;
+						int dx = AMath.LoShort(u), x = dx - pdx; pdx = dx;
+						int dy = AMath.HiShort(u), y = dy - pdy; pdy = dy;
 
 						if(x >= -4 && x < 4 && y >= -4 && y < 4) nbytes = 1; //3+3+2=8 bits, 90%
 						else if(x >= -64 && x < 64 && y >= -64 && y < 64) nbytes = 2; //7+7+2=16 bits, ~10%
@@ -386,7 +386,7 @@ namespace Au
 				}
 
 				//rejected: by default compresses to ~80% (20% smaller). When withSleepTimes, to ~50%, but never mind, rarely used.
-				//Print(a.Count, Convert_.Compress(a.ToArray()).Length);
+				//Print(a.Count, AConvert.Compress(a.ToArray()).Length);
 
 				return Convert.ToBase64String(a.ToArray());
 			}
@@ -452,8 +452,8 @@ namespace Au
 		{
 			if(0 != (flags & Api.IMFlags.Move)) {
 				flags |= Api.IMFlags.Absolute;
-				x <<= 16; x += (x >= 0) ? 0x8000 : -0x8000; x /= ScreenDef.PrimaryWidth;
-				y <<= 16; y += (y >= 0) ? 0x8000 : -0x8000; y /= ScreenDef.PrimaryHeight;
+				x <<= 16; x += (x >= 0) ? 0x8000 : -0x8000; x /= AScreen.PrimaryWidth;
+				y <<= 16; y += (y >= 0) ? 0x8000 : -0x8000; y /= AScreen.PrimaryHeight;
 			}
 
 			int mouseData = 0;
@@ -556,7 +556,7 @@ namespace Au
 				var wTL = w.Window;
 				bool bad = !wTL.Rect.Contains(p);
 				if(!bad && !_CheckWindowFromPoint()) {
-					Dbg.Print("need to activate");
+					ADebug.Print("need to activate");
 					//info: activating brings to the Z top and also uncloaks
 					if(!wTL.IsEnabled(false)) bad = true; //probably an owned modal dialog disabled the window
 					else if(wTL.ThreadId == Wnd.GetWnd.Shell.ThreadId) bad = true; //desktop
@@ -660,7 +660,7 @@ namespace Au
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
-		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
+		/// <exception cref="AException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void Click(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			ClickEx(MButton.Left, w, x, y, nonClient);
@@ -699,7 +699,7 @@ namespace Au
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
-		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
+		/// <exception cref="AException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void RightClick(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			ClickEx(MButton.Right, w, x, y, nonClient);
@@ -736,7 +736,7 @@ namespace Au
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
-		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
+		/// <exception cref="AException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void DoubleClick(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			ClickEx(MButton.Left | MButton.DoubleClick, w, x, y, nonClient);
@@ -774,7 +774,7 @@ namespace Au
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
-		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
+		/// <exception cref="AException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease LeftDown(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			return ClickEx(MButton.Left | MButton.Down, w, x, y, nonClient);
@@ -850,7 +850,7 @@ namespace Au
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Wnd, Coord, Coord, bool)"/>.</exception>
-		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
+		/// <exception cref="AException">x y is not in the window. More info: <see cref="ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease RightDown(Wnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
 			return ClickEx(MButton.Right | MButton.Down, w, x, y, nonClient);
@@ -1132,23 +1132,23 @@ namespace Au
 		public static bool WaitForCursor(double secondsTimeout, MCursor cursor, bool not = false)
 		{
 			IntPtr hcur = Api.LoadCursor(default, cursor);
-			if(hcur == default) throw new AuException(0, "*load cursor");
+			if(hcur == default) throw new AException(0, "*load cursor");
 
-			return WaitFor.Condition(secondsTimeout, () => (Util.Cursor_.GetCurrentCursor(out var h) && h == hcur) ^ not);
+			return WaitFor.Condition(secondsTimeout, () => (Util.ACursor.GetCurrentCursor(out var h) && h == hcur) ^ not);
 		}
 
 		/// <summary>
 		/// Waits for a nonstandard mouse cursor (pointer) visible.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="cursorHash">Cursor hash, as returned by <see cref="Util.Cursor_.HashCursor"/>.</param>
+		/// <param name="cursorHash">Cursor hash, as returned by <see cref="Util.ACursor.HashCursor"/>.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitForCursor(double secondsTimeout, long cursorHash, bool not = false)
 		{
 			if(cursorHash == 0) throw new ArgumentException();
-			return WaitFor.Condition(secondsTimeout, () => (Util.Cursor_.GetCurrentCursor(out var h) && Util.Cursor_.HashCursor(h) == cursorHash) ^ not);
+			return WaitFor.Condition(secondsTimeout, () => (Util.ACursor.GetCurrentCursor(out var h) && Util.ACursor.HashCursor(h) == cursorHash) ^ not);
 		}
 	}
 
@@ -1175,7 +1175,7 @@ namespace Au
 			/// <param name="y">Y coordinate relative to the client area, to send with the message.</param>
 			/// <param name="button"></param>
 			/// <param name="nonClient">x y are relative to the window rectangle. By default they are relative to the client area.</param>
-			/// <exception cref="AuException">Failed.</exception>
+			/// <exception cref="AException">Failed.</exception>
 			/// <remarks>
 			/// Does not move the mouse cursor, therefore does not work if the window gets cursor position not from the message.
 			/// Does not activate the window (unless the window activates itself).
@@ -1199,7 +1199,7 @@ namespace Au
 			{
 				if(isCtrl || Keyb.IsCtrl) wParam |= 8; //Api.MK_CONTROL
 				if(isShift || Keyb.IsShift) wParam |= 4; //Api.MK_SHIFT
-				if(!w.Post(message, wParam, lParam)) throw new AuException(0);
+				if(!w.Post(message, wParam, lParam)) throw new AException(0);
 				_SleepMax(-1, w.IsOfThisThread);
 			}
 
@@ -1208,11 +1208,11 @@ namespace Au
 			///// Maximal time to wait, milliseconds. Also which API to use.
 			///// If 0 (default), calls API <msdn>PostMessage</msdn> (it does not wait) and waits Opt.Mouse.<see cref="OptMouse.ClickSpeed"/> ms.
 			///// If less than 0 (eg Timeout.Infinite), calls API <msdn>SendMessage</msdn> which usually waits until the window finishes to process the message.
-			///// Else calls API <msdn>SendMessageTimeout</msdn> which waits max waitMS milliseconds, then throws AuException.
+			///// Else calls API <msdn>SendMessageTimeout</msdn> which waits max waitMS milliseconds, then throws AException.
 			///// The SendX functions are not natural and less likely to work.
 			///// If the window shows a dialog, the SendX functions usually wait until the dialog is closed.
 			///// </param>
-			///// <exception cref="AuException">Failed, or timeout.</exception>
+			///// <exception cref="AException">Failed, or timeout.</exception>
 			//static void _SendOrPost(int waitMS, Wnd w, uint message, LPARAM wParam, LPARAM lParam)
 			//{
 			//	bool ok;
@@ -1225,7 +1225,7 @@ namespace Au
 			//	} else {
 			//		ok = w.SendTimeout(waitMS, message, wParam, lParam);
 			//	}
-			//	if(!ok) throw new AuException(0);
+			//	if(!ok) throw new AException(0);
 			//}
 		}
 	}
@@ -1265,7 +1265,7 @@ namespace Au
 		/// <param name="x">X coordinate in the bounding rectangle of this object. Default - center.</param>
 		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
 		/// <exception cref="NotFoundException">Accessible object not found (this variable is null).</exception>
-		/// <exception cref="AuException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
+		/// <exception cref="AException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Mouse.Move(Wnd, Coord, Coord, bool)"/>.</exception>
 		public static void MouseMove(this Acc t, Coord x = default, Coord y = default)
 			=> _AccMouseAction(t.OrThrow(), false, x, y, default);
@@ -1279,7 +1279,7 @@ namespace Au
 		/// <param name="y">Y coordinate in the bounding rectangle of this object. Default - center.</param>
 		/// <param name="button">Which button and how to use it.</param>
 		/// <exception cref="NotFoundException">Accessible object not found (this variable is null).</exception>
-		/// <exception cref="AuException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
+		/// <exception cref="AException">Failed to get object rectangle (<see cref="Acc.GetRect(out RECT, Wnd)"/>) or container window (<see cref="Acc.WndContainer"/>).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Mouse.ClickEx(MButton, Wnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease MouseClick(this Acc t, Coord x = default, Coord y = default, MButton button = MButton.Left)
 		{
@@ -1293,7 +1293,7 @@ namespace Au
 
 			//never mind: if w.Is0 and the action is 'click', get AO from point and fail if it is not t. But need to compare AO properties. Rare.
 
-			if(!(w.Is0 ? t.GetRect(out RECT r) : t.GetRect(out r, w))) throw new AuException(0, "*get rectangle");
+			if(!(w.Is0 ? t.GetRect(out RECT r) : t.GetRect(out r, w))) throw new AException(0, "*get rectangle");
 			var p = Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
 			if(w.Is0) {
 				if(button == 0) Mouse.Move(p);

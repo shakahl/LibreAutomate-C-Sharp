@@ -54,7 +54,7 @@ class PanelOutput : Control
 			var s = m.Text; int i;
 			if(s.Length >= 22) {
 				if(s.Starts("<><Z #") && s.EqAt(12, ">Compilation: ")) { //compilation
-					if(s_rx1 == null) s_rx1 = new Regex_(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
+					if(s_rx1 == null) s_rx1 = new ARegex(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
 					m.Text = s_rx1.Replace(s, x => {
 						var f = Model.FindByFilePath(x[1].Value);
 						if(f == null) return x[0].Value;
@@ -70,7 +70,7 @@ class PanelOutput : Control
 					//Output.LibWriteQM2("'" + s + "'");
 					if(!s.Starts("<>")) b.Append("<>");
 					b.Append(s, 0, i);
-					var rx = s_rx2; if(rx == null) s_rx2 = rx = new Regex_(@" in (.+?):line (?=\d+$)");
+					var rx = s_rx2; if(rx == null) s_rx2 = rx = new ARegex(@" in (.+?):line (?=\d+$)");
 					var rxm = new RXMore();
 					bool replaced = false;
 					foreach(var k in s.Segments(i, stackLen, "\r\n", SegFlags.NoEmpty)) {
@@ -108,7 +108,7 @@ class PanelOutput : Control
 			}
 		});
 	}
-	static Regex_ s_rx1, s_rx2;
+	static ARegex s_rx1, s_rx2;
 
 	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 
@@ -185,7 +185,7 @@ class PanelOutput : Control
 
 	protected override void OnParentChanged(EventArgs e)
 	{
-		if(Parent is Form && Topmost) Timer_.After(1, () => _SetTopmost(true));
+		if(Parent is Form && Topmost) ATimer.After(1, () => _SetTopmost(true));
 
 		base.OnParentChanged(e);
 	}
@@ -247,7 +247,7 @@ class PanelOutput : Control
 		{
 			var a = s.Split('|');
 			var f = Model.FindFile(a[0]); if(f == null) return;
-			Run.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt_(0));
+			Run.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt(0));
 		}
 	}
 }

@@ -32,11 +32,11 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="manualReset"></param>
 		/// <param name="timerName">Timer name. If a timer with this name already exists, opens it if possible. If null, creates unnamed timer.</param>
-		/// <exception cref="AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
+		/// <exception cref="AException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
 		public static WaitableTimer Create(bool manualReset = false, string timerName = null)
 		{
 			var h = Api.CreateWaitableTimer(Api.SECURITY_ATTRIBUTES.ForLowIL, manualReset, timerName);
-			if(h.Is0) throw new AuException(0, "*create timer");
+			if(h.Is0) throw new AException(0, "*create timer");
 			return new WaitableTimer(h);
 		}
 
@@ -45,10 +45,10 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="timerName">Timer name. Fails if it does not exist; to open-or-create use <see cref="Create"/>.</param>
 		/// <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value TIMER_MODIFY_STATE|SYNCHRONIZE allows to set and wait.</param>
-		/// <exception cref="AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
+		/// <exception cref="AException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
 		/// <param name="inheritHandle"></param>
 		/// <param name="noException">If fails, return null, don't throw exception. Supports <see cref="WinError"/>.</param>
-		/// <exception cref="AuException">Failed. For example, the timer does not exist.</exception>
+		/// <exception cref="AException">Failed. For example, the timer does not exist.</exception>
 		public static WaitableTimer Open(string timerName, uint access = Api.TIMER_MODIFY_STATE | Api.SYNCHRONIZE, bool inheritHandle = false, bool noException = false)
 		{
 			var h = Api.OpenWaitableTimer(access, inheritHandle, timerName);
@@ -58,7 +58,7 @@ namespace Au.Util
 					WinError.Code = e;
 					return null;
 				}
-				throw new AuException(e, "*open timer");
+				throw new AException(e, "*open timer");
 			}
 			return new WaitableTimer(h);
 		}

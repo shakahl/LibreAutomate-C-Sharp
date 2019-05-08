@@ -294,11 +294,11 @@ namespace Au
 			int r = 1;
 			try {
 				if(!Api.GetDelegate(out Api.CheckElevationEnabled d, "kernel32.dll", "CheckElevationEnabled") || 0 != d(out r)) {
-					Dbg.Print("CheckElevationEnabled");
+					ADebug.Print("CheckElevationEnabled");
 					r = (int)Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System", "EnableLUA", 1);
 				}
 			}
-			catch(Exception e) { Dbg.Print(e); }
+			catch(Exception e) { ADebug.Print(e); }
 			return r == 0;
 		}
 	}

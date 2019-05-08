@@ -384,7 +384,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		if(!saved && this == _model.CurrentFile) {
 			return Panels.Editor.ActiveDoc.Text;
 		}
-		try { return File_.LoadText(FilePath); }
+		try { return AFile.LoadText(FilePath); }
 		catch(FileNotFoundException ex) { if(warningIfNotFound) PrintWarning(ex.Message, -1); }
 		return "";
 	}
@@ -409,7 +409,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		return EdResources.GetImageUseCache(k);
 	}
 
-	public static Icon_.ImageCache IconCache = new Icon_.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
+	public static AIcon.ImageCache IconCache = new AIcon.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
 
 	/// <summary>
 	/// Gets or sets 'has triggers' flag.
@@ -748,7 +748,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		bool isFolder = template == "Folder";
 		if(!isFolder) {
 			string templFile = s_dirTemplatesBS + template;
-			switch(File_.ExistsAs(templFile, true)) {
+			switch(AFile.ExistsAs(templFile, true)) {
 			case FileDir.Directory: isFolder = true; break;
 			case FileDir.File: text = _NI_GetTemplateText(templFile, template, newParent); break;
 			}
@@ -756,7 +756,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 
 		//create unique name
 		if(name == null) {
-			name = Path_.GetFileName(template);
+			name = APath.GetFileName(template);
 			//let unique names start from 1
 			if(!isFolder && (i = name.LastIndexOf('.')) > 0) name = name.Insert(i, "1"); else name += "1";
 		}
@@ -765,8 +765,8 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		//create file or folder
 		var path = newParent.FilePath + "\\" + name;
 		try {
-			if(isFolder) File_.CreateDirectory(path);
-			else File_.SaveText(path, text);
+			if(isFolder) AFile.CreateDirectory(path);
+			else AFile.SaveText(path, text);
 		}
 		catch(Exception ex) { Print(ex.Message); return null; }
 
@@ -774,7 +774,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		var f = new FileNode(model, name, path, isFolder, template: template);
 		f._Common_MoveCopyNew(target, pos);
 
-		if(isFolder && Path_.GetFileName(template)[0] == '@') {
+		if(isFolder && APath.GetFileName(template)[0] == '@') {
 			_NI_FillProjectFolder(model, f, s_dirTemplatesBS + template);
 		}
 		return f;
@@ -783,7 +783,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 
 	static void _NI_FillProjectFolder(FilesModel model, FileNode fnParent, string dirParent)
 	{
-		foreach(var v in File_.EnumDirectory(dirParent, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
+		foreach(var v in AFile.EnumDirectory(dirParent, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
 			bool isFolder = v.IsDirectory;
 			var name = v.Name;
 			if(isFolder && name[0] == '@') continue; //error, project in project
@@ -796,11 +796,11 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 
 	static string _NI_GetTemplateText(string templFile, string template, FileNode newParent)
 	{
-		string s = File_.LoadText(templFile);
+		string s = AFile.LoadText(templFile);
 		//replace //"#include file" with text of file from "include" subfolder
 		s = s.RegexReplace(@"(?m)^//#include +(.+)$", m => {
 			var si = s_dirTemplatesBS + @"include\" + m[1];
-			if(File_.ExistsAsFile(si)) return File_.LoadText(si);
+			if(AFile.ExistsAsFile(si)) return AFile.LoadText(si);
 			Print($"Errror in {templFile}. #include file does not exist: {si}");
 			return null;
 		});
@@ -834,7 +834,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		bool _Exists(string s)
 		{
 			if(null != _FindIn(folder.Children(), s, null, false)) return true;
-			if(File_.ExistsAsAny(folder.FilePath + "\\" + s)) return true; //orphaned file?
+			if(AFile.ExistsAsAny(folder.FilePath + "\\" + s)) return true; //orphaned file?
 			return false;
 		}
 	}
@@ -855,16 +855,16 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 	/// <param name="userEdited">true if called from the control edit notification.</param>
 	public bool FileRename(string name, bool userEdited = false)
 	{
-		name = Path_.CorrectFileName(name);
+		name = APath.CorrectFileName(name);
 		if(!IsFolder) {
-			var ext = Path_.GetExtension(_name);
+			var ext = APath.GetExtension(_name);
 			if(ext.Length > 0) if(name.IndexOf('.') < 0 || (IsCodeFile && !name.Ends(ext, true))) name += ext;
 		}
 		if(name == _name) return true;
 
 		if(!IsLink) {
 			try {
-				File_.Rename(this.FilePath, name, IfExists.Fail);
+				AFile.Rename(this.FilePath, name, IfExists.Fail);
 			}
 			catch(Exception ex) { Print(ex.Message); return false; }
 		}
@@ -917,7 +917,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 			var oldParent = Parent;
 			var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
 			if(newParent != oldParent) {
-				try { File_.Move(this.FilePath, newParent.FilePath + "\\" + _name, IfExists.Fail); }
+				try { AFile.Move(this.FilePath, newParent.FilePath + "\\" + _name, IfExists.Fail); }
 				catch(Exception ex) { Print(ex.Message); return false; }
 			}
 		}
@@ -962,7 +962,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 
 		//copy file or directory
 		if(!IsLink) {
-			try { File_.Copy(FilePath, newParent.FilePath + "\\" + name, IfExists.Fail); }
+			try { AFile.Copy(FilePath, newParent.FilePath + "\\" + name, IfExists.Fail); }
 			catch(Exception ex) { Print(ex.Message); return null; }
 		}
 
@@ -1000,8 +1000,8 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		var type = EFileType.NotCodeFile;
 		if(path.Ends(".cs", true)) {
 			type = EFileType.Class;
-			try { if(File_.LoadText(path).Contains("//{{ main")) type = EFileType.Script; }
-			catch(Exception ex) { Dbg.Print(ex); }
+			try { if(AFile.LoadText(path).Contains("//{{ main")) type = EFileType.Script; }
+			catch(Exception ex) { ADebug.Print(ex); }
 		}
 		return type;
 	}

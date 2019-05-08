@@ -27,7 +27,7 @@ public partial class Test
 	static ImageList _TestCreateImageList()
 	{
 		var il = new ImageList();
-		IntPtr hi = Icon_.GetFileIconHandle(@"q:\app\browse.ico", 16);
+		IntPtr hi = AIcon.GetFileIconHandle(@"q:\app\browse.ico", 16);
 		//il.Images.Add("k1", Icon.FromHandle(hi));
 		il.Images.Add("k0", Icon.FromHandle(hi).ToBitmap());
 		Api.DestroyIcon(hi);
@@ -41,11 +41,11 @@ public partial class Test
 		//1.s();
 		var il = _TestCreateImageList();
 
-		//AuMenu.DefaultActivateMenuWindow = true;
-		//AuMenu.DefaultMouseClosingDistance = 30;
+		//AMenu.DefaultActivateMenuWindow = true;
+		//AMenu.DefaultMouseClosingDistance = 30;
 
 		Perf.First();
-		var m = new AuMenu();
+		var m = new AMenu();
 
 		Perf.Next();
 		m.CMS.ImageList = il;
@@ -222,7 +222,7 @@ public partial class Test
 			var wo = (Wnd)tb.Owner.Handle;
 			//var wo = (Wnd)tb.Control.Handle;
 			//Print(wo);
-			AuDialog.Show("td", owner: wo);
+			ADialog.Show("td", owner: wo);
 			//MessageBox.Show(wo, "txt");
 		};
 		m.Add(tb);
@@ -274,7 +274,7 @@ public partial class Test
 		if(c != null) {
 			//m.ModalAlways = true;
 			m.Show(c, 100, 100);
-			//AuDialog.Show("");
+			//ADialog.Show("");
 			//m.Show(c, 200, 200);
 		} else {
 			//1.s();
@@ -330,7 +330,7 @@ public partial class Test
 
 		Perf.First();
 
-		var m = new AuMenu();
+		var m = new AMenu();
 		m.MouseClosingDistance = 100;
 		//m.ActivateMenuWindow = true;
 		//m.IconDirectory = @"q:\app";
@@ -351,7 +351,7 @@ public partial class Test
 
 			////Task.Run(() =>
 			////{
-			//	var hi = Icon_.GetIconHandle(f);
+			//	var hi = AIcon.GetIconHandle(f);
 			//	if(hi != default) Api.DestroyIcon(hi);
 			//	else Print("no icon: " + f);
 			////});
@@ -414,10 +414,10 @@ public partial class Test
 		//}
 #endif
 
-		//Timer_.After(1000, t => { m.CMS.Close(); });
-		//Timer_.After(1000, t => { m.CMS.Visible=false; });
-		//Timer_.After(1000, t => { m.Dispose(); });
-		//Timer_.After(1000, t => { m.CMS.Dispose(); });
+		//ATimer.After(1000, t => { m.CMS.Close(); });
+		//ATimer.After(1000, t => { m.CMS.Visible=false; });
+		//ATimer.After(1000, t => { m.Dispose(); });
+		//ATimer.After(1000, t => { m.CMS.Dispose(); });
 
 		//m.MultiShow = true;
 		Perf.Next();
@@ -431,7 +431,7 @@ public partial class Test
 		//m.Show(Mouse.X + 10, Mouse.Y);
 
 		//Print(1);
-		//AuDialog.Show("");
+		//ADialog.Show("");
 		//Print(2);
 
 		//using(m) { }
@@ -441,7 +441,7 @@ public partial class Test
 	{
 		Perf.First();
 
-		var m = new AuMenu();
+		var m = new AMenu();
 		m["One"] = o => Print(o);
 		m["Two"] = o => Print(o);
 		using(m.Submenu("Submenu")) {
@@ -456,7 +456,7 @@ public partial class Test
 		m["Eight"] = o => Print(o);
 		m.Show();
 
-		//var m = new AuMenu();
+		//var m = new AMenu();
 		//m["One"] = o => Print(o);
 		//m["Two"] = o => Print(o);
 		//m.Submenu("Submenu 1", m1 =>
@@ -475,7 +475,7 @@ public partial class Test
 		//m["Eight"] = o => Print(o);
 		//m.Show();
 
-		//var m = new AuMenu();
+		//var m = new AMenu();
 		//m.Add("One", o => Print(o), @"icon file path");
 		//m.Add("Two", o => { Print(o.MenuItem.Checked); });
 		//m.LastMenuItem.Checked = true;
@@ -495,7 +495,7 @@ public partial class Test
 		//m.Show();
 
 #if false
-		var b = new AuToolbar();
+		var b = new AToolbar();
 		b["One"] = o => Print(o);
 
 		using(b.DropDownButton("Drop")) {
@@ -515,7 +515,7 @@ public partial class Test
 
 		b["ToolStripDropDownButton"] = o =>
 		{
-			var m = new AuMenu();
+			var m = new AMenu();
 			m["One"] = o => Print(o);
 			m["Two"] = o => Print(o);
 			m.Show(o.Item);
@@ -523,7 +523,7 @@ public partial class Test
 
 		b["ToolStripDropDownButton"] = null;  //test ShowDropDown
 		{
-			var m = new AuMenu();
+			var m = new AMenu();
 			m["One"] = o => Print(o);
 			m["Two"] = o => Print(o);
 			m.Show(o.Item);
@@ -532,7 +532,7 @@ public partial class Test
 
 		b["ToolStripSplitButton"] = o =>
 		{
-			var m = new AuMenu();
+			var m = new AMenu();
 			m["One"] = o => Print(o);
 			m["Two"] = o => Print(o);
 			m.Show(b.LastItem);
@@ -544,7 +544,7 @@ public partial class Test
 
 		b["ToolStripSplitButton"] = o => Print(o);
 		{
-			var m = new AuMenu();
+			var m = new AMenu();
 			m["One"] = o => Print(o);
 			m["Two"] = o => Print(o);
 			(b.LastItem as ToolStripSplitButton).DropDown = m.CMS;
@@ -564,7 +564,7 @@ public partial class Test
 			//	//Print(e.Button); //no right-click event if a context menu assigned
 			//	//if(e.Button == MouseButtons.Right) Wnd.FindFast("QM_Editor").ActivateLL();
 			//	//TestAuMenu(sender as Form);
-			//	Timer_.After(100, o => TestAuMenu(sender as Form));
+			//	ATimer.After(100, o => TestAuMenu(sender as Form));
 			//};
 
 			TestAuMenu(this);
@@ -573,7 +573,7 @@ public partial class Test
 
 			//test as Control's context menu
 #if false
-			var m = new AuMenu();
+			var m = new AMenu();
 
 			//return;
 			m["One f"] = o => Print(o);
@@ -596,7 +596,7 @@ public partial class Test
 			{
 				if(ddb.HasDropDownItems) return;
 				Print("adding items");
-				var m = new AuMenu();
+				var m = new AMenu();
 				ddb.DropDown = m.CMS;
 				m["One"] = o => Print(o);
 				using(m.Submenu("Sub")) {
@@ -608,7 +608,7 @@ public partial class Test
 
 		protected override void WndProc(ref Message m)
 		{
-			//if(_outMsg) Au.Util.LibDebug_.PrintMsg(ref m);
+			//if(_outMsg) Wnd.More.PrintMsg(ref m);
 
 			base.WndProc(ref m);
 		}
@@ -637,18 +637,18 @@ public partial class Test
 	//	public TestDtor()
 	//	{
 	//		//_cm = new ContextMenuStrip();
-	//		_cm = new ContextMenuStrip_(this);
+	//		_cm = new _ContextMenuStrip(this);
 	//	}
 	//	~TestDtor() { Print("~TestDtor"); }
 
-	//	void Met() { Dbg.PrintFunc(); }
+	//	void Met() { ADebug.PrintFunc(); }
 
-	//	class ContextMenuStrip_ :ContextMenuStrip
+	//	class _ContextMenuStrip :ContextMenuStrip
 	//	{
 	//		WeakReference<TestDtor> _cat;
 	//		//TestDtor _cat;
 
-	//		internal ContextMenuStrip_(TestDtor cat)
+	//		internal _ContextMenuStrip(TestDtor cat)
 	//		{
 	//			_cat = new WeakReference<TestDtor>(cat);
 	//			TestDtor c;
@@ -660,34 +660,34 @@ public partial class Test
 	class TestDtor
 	{
 		IContainer _components;
-		ContextMenuStrip_ _cm;
+		_ContextMenuStrip _cm;
 
 		public ContextMenuStrip CMS { get { return _cm; } }
 
 		public TestDtor()
 		{
 			//_cm = new ContextMenuStrip();
-			//_cm = new ContextMenuStrip_(this);
+			//_cm = new _ContextMenuStrip(this);
 
 			_components = new Container();
-			_cm = new ContextMenuStrip_(this, _components);
+			_cm = new _ContextMenuStrip(this, _components);
 		}
 		~TestDtor() { Print("~TestDtor"); }
 
-		void Met() { Dbg.PrintFunc(); }
+		void Met() { ADebug.PrintFunc(); }
 
-		class ContextMenuStrip_ :ContextMenuStrip
+		class _ContextMenuStrip :ContextMenuStrip
 		{
 			TestDtor _cat;
 			//WeakReference<TestDtor> _catWeakRef;
 
-			internal ContextMenuStrip_(TestDtor cat)
+			internal _ContextMenuStrip(TestDtor cat)
 			{
 				_cat = cat;
 				//_catWeakRef = new WeakReference<TestDtor>(cat);
 			}
 
-			internal ContextMenuStrip_(TestDtor cat, IContainer container) : base(container)
+			internal _ContextMenuStrip(TestDtor cat, IContainer container) : base(container)
 			{
 				_cat = cat;
 				//_catWeakRef = new WeakReference<TestDtor>(cat);
@@ -710,7 +710,7 @@ public partial class Test
 
 				//_cat = null;
 
-				Dbg.PrintFunc();
+				ADebug.PrintFunc();
 
 				((Wnd)Handle).Post(Api.WM_CLOSE);
 
@@ -718,7 +718,7 @@ public partial class Test
 
 			protected override void WndProc(ref Message m)
 			{
-				//Au.Util.LibDebug_.PrintMsg(ref m);
+				//Wnd.More.PrintMsg(ref m);
 
 				base.WndProc(ref m);
 
@@ -736,13 +736,13 @@ public partial class Test
 
 		~TestDtor2() { Print("~TestDtor2"); }
 
-		void Met() { Dbg.PrintFunc(); }
+		void Met() { ADebug.PrintFunc(); }
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void TestAuMenuDtors()
 	{
-		var m = new AuMenu();
+		var m = new AMenu();
 		m["One"] = o => Print(o);
 		using(m.Submenu("sub")) {
 			m["Two"] = o => Print(o);
@@ -750,10 +750,10 @@ public partial class Test
 		m.MultiShow = true;
 		//m.MouseClosingDistance = 2000;
 		//var k = new ContextMenu(); k.MenuItems.Add("context"); m.CMS.ContextMenu = k;
-		//Timer_.After(2000, t => m.Close());
-		//Timer_.After(2000, t => m.Dispose());
-		//Timer_.After(2000, t => m.CMS.Close());
-		//Timer_.After(2000, t => m.CMS.Dispose());
+		//ATimer.After(2000, t => m.Close());
+		//ATimer.After(2000, t => m.Dispose());
+		//ATimer.After(2000, t => m.CMS.Close());
+		//ATimer.After(2000, t => m.CMS.Dispose());
 		m.Show();
 		//Print(1);
 		//GC.Collect();
@@ -817,7 +817,7 @@ public partial class Test
 
 	static void TestAuMenuCommonAddCallback()
 	{
-		var m = new AuMenu();
+		var m = new AMenu();
 
 		m.ItemAdded += x => { Print(x.Text); if(x.Text.Length > 3) x.BackColor = Color.Azure; };
 
@@ -858,7 +858,7 @@ public partial class Test
 
 		//for(int i = 0; i < 1; i++) {
 		//	GC.Collect();
-		//	AuDialog.Show("f");
+		//	ADialog.Show("f");
 		//}
 	}
 
@@ -910,7 +910,7 @@ public partial class Test
 
 	//private static void T_ButtonClick(object sender, ToolBarButtonClickEventArgs e)
 	//{
-	//	Dbg.PrintFunc();
+	//	ADebug.PrintFunc();
 	//	_mlTb.Stop();
 	//}
 
@@ -993,7 +993,7 @@ public partial class Test
 
 	//private static void B_Click1(object sender, EventArgs e)
 	//{
-	//	Dbg.PrintFunc();
+	//	ADebug.PrintFunc();
 	//	_mlTb.Stop();
 	//}
 
@@ -1236,7 +1236,7 @@ public partial class Test
 	//		//var il = _TestCreateImageList();
 
 	//		Perf.First();
-	//		var m = new AuToolbar();
+	//		var m = new AToolbar();
 	//		//m.ImageList = il;
 	//		Perf.Next();
 
@@ -1273,7 +1273,7 @@ public partial class Test
 
 	//	static void TestToolbar()
 	//	{
-	//		//Dbg.PrintFunc();
+	//		//ADebug.PrintFunc();
 	//		for(int i = 0; i < 1; i++) { TestAuBar(); /*Thread.Sleep(500);*/ }
 
 	//		//for(int i=0; i<1; i++) TestOldToolbar();
@@ -1295,7 +1295,7 @@ public partial class Test
 	//	{
 
 	//		//MessageBox.Show("");
-	//		//AuDialog.Show("");
+	//		//ADialog.Show("");
 
 	//		//Thread.Sleep(500);
 	//		TestToolbar();
@@ -1312,7 +1312,7 @@ public partial class Test
 	//		//t.Join();
 
 	//		//MessageBox.Show(""); //after menu this is behind other windows. Form too.
-	//		//AuDialog.Show(""); //active, OK
+	//		//ADialog.Show(""); //active, OK
 
 	//		//Form f=new Form();
 	//		//f.Load += (unu, sed)=>{ f.Activate(); }; //OK

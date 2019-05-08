@@ -192,7 +192,7 @@ namespace Au.Controls
 			}
 
 			//file path
-			if(length >= 8 && (c1 == '%' || (c2 == ':' && Char_.IsAsciiAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
+			if(length >= 8 && (c1 == '%' || (c2 == ':' && AChar.IsAsciiAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
 				byte* ext = s + length - 3;
 				if(ext[-1] == '.') {
 					if(LibCharPtr.AsciiStartsWithI(ext, "bmp")) return ImageType.Bmp;
@@ -202,11 +202,11 @@ namespace Au.Controls
 					if(LibCharPtr.AsciiStartsWithI(ext, "ico")) return ImageType.Ico;
 					if(LibCharPtr.AsciiStartsWithI(ext, "cur")) return ImageType.Cur;
 					if(LibCharPtr.AsciiStartsWithI(ext, "ani")) return ImageType.Cur;
-				} else if(Char_.IsAsciiDigit(ext[2])) { //can be like C:\x.dll,10
+				} else if(AChar.IsAsciiDigit(ext[2])) { //can be like C:\x.dll,10
 					byte* k = ext + 1, k2 = s + 8;
-					for(; k > k2; k--) if(!Char_.IsAsciiDigit(*k)) break;
+					for(; k > k2; k--) if(!AChar.IsAsciiDigit(*k)) break;
 					if(*k == '-') k--;
-					if(*k == ',' && k[-4] == '.' && Char_.IsAsciiAlpha(k[-1])) return ImageType.IconLib;
+					if(*k == ',' && k[-4] == '.' && AChar.IsAsciiAlpha(k[-1])) return ImageType.IconLib;
 				}
 			}
 
@@ -221,7 +221,7 @@ namespace Au.Controls
 		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
 		public static ImageType ImageTypeFromString(bool anyFile, string s)
 		{
-			var b = Convert_.Utf8FromString(s);
+			var b = AConvert.Utf8FromString(s);
 			fixed (byte* p = b) return ImageTypeFromString(true, p, b.Length - 1);
 		}
 
@@ -230,7 +230,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
 		/// <param name="t">Image type and string format.</param>
-		/// <param name="searchPath">Use <see cref="File_.SearchPath"/></param>
+		/// <param name="searchPath">Use <see cref="AFile.SearchPath"/></param>
 		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="Folders.ThisAppImages"/>.</remarks>
 		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false)
 		{
@@ -241,25 +241,25 @@ namespace Au.Controls
 				case ImageType.PngGifJpg:
 				case ImageType.Cur:
 					if(searchPath) {
-						s = File_.SearchPath(s, Folders.ThisAppImages);
+						s = AFile.SearchPath(s, Folders.ThisAppImages);
 						if(s == null) return null;
 					} else {
-						if(!Path_.IsFullPathExpandEnvVar(ref s)) return null;
-						s = Path_.Normalize(s, Folders.ThisAppImages);
-						if(!File_.ExistsAsFile(s)) return null;
+						if(!APath.IsFullPathExpandEnvVar(ref s)) return null;
+						s = APath.Normalize(s, Folders.ThisAppImages);
+						if(!AFile.ExistsAsFile(s)) return null;
 					}
 					break;
 				}
 
 				switch(t) {
 				case ImageType.Base64CompressedBmp:
-					return Convert_.Decompress(Convert_.Base64Decode(s));
+					return AConvert.Decompress(AConvert.Base64Decode(s));
 				case ImageType.Base64PngGifJpg:
-					using(var stream = new MemoryStream(Convert_.Base64Decode(s), false)) {
+					using(var stream = new MemoryStream(AConvert.Base64Decode(s), false)) {
 						return _ImageToBytes(Image.FromStream(stream));
 					}
 				case ImageType.Resource:
-					return _ImageToBytes(Resources_.GetAppResource(s) as Image);
+					return _ImageToBytes(AResources.GetAppResource(s) as Image);
 				case ImageType.Bmp:
 					return File.ReadAllBytes(s);
 				case ImageType.PngGifJpg:
@@ -271,7 +271,7 @@ namespace Au.Controls
 					return _IconToBytes(s, t == ImageType.Cur, searchPath);
 				}
 			}
-			catch(Exception ex) { Dbg.Print(ex.Message + "    " + s); }
+			catch(Exception ex) { ADebug.Print(ex.Message + "    " + s); }
 			return null;
 		}
 
@@ -313,7 +313,7 @@ namespace Au.Controls
 				siz = Api.GetSystemMetrics(Api.SM_CXCURSOR);
 				//note: if LR_DEFAULTSIZE, uses SM_CXCURSOR, normally 32. It may be not what Explorer displays eg in Cursors folder. But without it gets the first cursor, which often is large, eg 128.
 			} else {
-				hi = Icon_.GetFileIconHandle(s, 16, searchPath ? GIFlags.SearchPath : 0);
+				hi = AIcon.GetFileIconHandle(s, 16, searchPath ? GIFlags.SearchPath : 0);
 				siz = 16;
 			}
 			if(hi == default) return null;
@@ -366,13 +366,13 @@ namespace Au.Controls
 #endif
 
 		/// <summary>
-		/// Compresses .bmp file data (<see cref="Convert_.Compress"/>) and Base64-encodes.
+		/// Compresses .bmp file data (<see cref="AConvert.Compress"/>) and Base64-encodes.
 		/// Returns string with "~:" prefix.
 		/// </summary>
 		public static string BmpFileDataToString(byte[] bmpFileData)
 		{
 			if(bmpFileData == null) return null;
-			return "~:" + Convert.ToBase64String(Convert_.Compress(bmpFileData));
+			return "~:" + Convert.ToBase64String(AConvert.Compress(bmpFileData));
 		}
 
 		/// <summary>
@@ -392,9 +392,9 @@ namespace Au.Controls
 			case ImageType.Resource:
 				return path;
 			case ImageType.PngGifJpg:
-				path = File_.SearchPath(path, Folders.ThisAppImages); if(path == null) return null;
-				try { return "image:" + Convert.ToBase64String(File_.LoadBytes(path)); }
-				catch(Exception ex) { Dbg.Print(ex.Message); return null; }
+				path = AFile.SearchPath(path, Folders.ThisAppImages); if(path == null) return null;
+				try { return "image:" + Convert.ToBase64String(AFile.LoadBytes(path)); }
+				catch(Exception ex) { ADebug.Print(ex.Message); return null; }
 			}
 			return BmpFileDataToString(BmpFileDataFromString(path, t, true));
 		}

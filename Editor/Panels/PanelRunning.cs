@@ -78,7 +78,7 @@ class PanelRunning :Control, ITreeModel
 
 	public IEnumerable GetChildren(object nodeTag)
 	{
-		//Dbg.PrintFunc();
+		//ADebug.PrintFunc();
 		Debug.Assert(nodeTag == null);
 		return Tasks.Items;
 		//FUTURE: also add folder with queed items.
@@ -109,7 +109,7 @@ class PanelRunning :Control, ITreeModel
 			break;
 		case MouseButtons.Right:
 			var name = f.DisplayName;
-			var m = new AuMenu();
+			var m = new AMenu();
 			m["End task '" + name + "'"] = o => Tasks.EndTask(t);
 			m["End all '" + name + "'"] = o => Tasks.EndTasksOf(f);
 			m.Show(_c);

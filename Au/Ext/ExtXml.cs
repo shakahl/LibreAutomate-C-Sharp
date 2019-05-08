@@ -29,7 +29,7 @@ namespace Au
 		/// If the attribute does not exist, returns null.
 		/// If the attribute value is empty, returns "".
 		/// </summary>
-		public static string Attribute_(this XElement t, XName name)
+		public static string Attr(this XElement t, XName name)
 		{
 			return t.Attribute(name)?.Value;
 		}
@@ -39,7 +39,7 @@ namespace Au
 		/// If the attribute does not exist, returns defaultValue.
 		/// If the attribute value is empty, returns "".
 		/// </summary>
-		public static string Attribute_(this XElement t, XName name, string defaultValue)
+		public static string Attr(this XElement t, XName name, string defaultValue)
 		{
 			var x = t.Attribute(name);
 			return x != null ? x.Value : defaultValue;
@@ -49,7 +49,7 @@ namespace Au
 		/// Gets XML attribute value.
 		/// If the attribute does not exist, sets value=null and returns false.
 		/// </summary>
-		public static bool Attribute_(this XElement t, out string value, XName name)
+		public static bool Attr(this XElement t, out string value, XName name)
 		{
 			value = t.Attribute(name)?.Value;
 			return value != null;
@@ -60,7 +60,7 @@ namespace Au
 		/// If the attribute does not exist, returns defaultValue.
 		/// If the attribute value is empty or does not begin with a valid number, returns 0.
 		/// </summary>
-		public static int Attribute_(this XElement t, XName name, int defaultValue)
+		public static int Attr(this XElement t, XName name, int defaultValue)
 		{
 			var x = t.Attribute(name);
 			return x != null ? x.Value.ToInt() : defaultValue;
@@ -71,7 +71,7 @@ namespace Au
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
 		/// </summary>
-		public static bool Attribute_(this XElement t, out int value, XName name)
+		public static bool Attr(this XElement t, out int value, XName name)
 		{
 			var x = t.Attribute(name);
 			if(x == null) { value = 0; return false; }
@@ -84,7 +84,7 @@ namespace Au
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
 		/// </summary>
-		public static bool Attribute_(this XElement t, out long value, XName name)
+		public static bool Attr(this XElement t, out long value, XName name)
 		{
 			var x = t.Attribute(name);
 			if(x == null) { value = 0; return false; }
@@ -97,7 +97,7 @@ namespace Au
 		/// If the attribute does not exist, sets value=0F and returns false.
 		/// If the attribute value is empty or is not a valid number, sets value=0F and returns true.
 		/// </summary>
-		public static bool Attribute_(this XElement t, out float value, XName name)
+		public static bool Attr(this XElement t, out float value, XName name)
 		{
 			var x = t.Attribute(name);
 			if(x == null) { value = 0F; return false; }
@@ -108,7 +108,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if this element has the specified attribute.
 		/// </summary>
-		public static bool HasAttribute_(this XElement t, XName name)
+		public static bool HasAttr(this XElement t, XName name)
 		{
 			return t.Attribute(name) != null;
 		}
@@ -117,7 +117,7 @@ namespace Au
 		/// Gets the first found descendant element.
 		/// Returns null if not found.
 		/// </summary>
-		public static XElement Descendant_(this XElement t, XName name)
+		public static XElement Desc(this XElement t, XName name)
 		{
 			return t.Descendants(name).FirstOrDefault();
 		}
@@ -131,7 +131,7 @@ namespace Au
 		/// <param name="attributeName">Attribute name.</param>
 		/// <param name="attributeValue">Attribute value. If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
-		public static XElement Descendant_(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
+		public static XElement Desc(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
 		{
 			foreach(var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
 				var a = el.Attribute(attributeName); if(a == null) continue;
@@ -152,7 +152,7 @@ namespace Au
 		/// <param name="attributeName">Attribute name.</param>
 		/// <param name="attributeValue">Attribute value. If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
-		public static IEnumerable<XElement> Descendants_(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
+		public static IEnumerable<XElement> Descs(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
 		{
 			foreach(var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
 				var a = el.Attribute(attributeName); if(a == null) continue;
@@ -170,7 +170,7 @@ namespace Au
 		/// <param name="attributeName">Attribute name.</param>
 		/// <param name="attributeValue">Attribute value. If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
-		public static XElement Element_(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
+		public static XElement Elem(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
 		{
 			foreach(var el in (name != null) ? t.Elements(name) : t.Elements()) {
 				var a = el.Attribute(attributeName); if(a == null) continue;
@@ -184,7 +184,7 @@ namespace Au
 		/// Gets the first found direct child element. If not found, adds new empty child element.
 		/// Returns the found or added element.
 		/// </summary>
-		public static XElement ElementGetOrAdd_(this XElement t, XName name)
+		public static XElement ElemOrAdd(this XElement t, XName name)
 		{
 			var e = t.Element(name);
 			if(e == null) t.Add(e = new XElement(name));
@@ -194,11 +194,11 @@ namespace Au
 		/// <summary>
 		/// Gets the first found direct child element that has the specified attribute. If not found, adds new child element with the attribute.
 		/// Returns the found or added element.
-		/// More info: <see cref="Element_"/>
+		/// More info: <see cref="Elem"/>
 		/// </summary>
-		public static XElement ElementGetOrAdd_(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
+		public static XElement ElemOrAdd(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
 		{
-			var e = t.Element_(name, attributeName, attributeValue, ignoreCase);
+			var e = t.Elem(name, attributeName, attributeValue, ignoreCase);
 			if(e == null) t.Add(e = new XElement(name, new XAttribute(attributeName, attributeValue)));
 			return e;
 		}
@@ -207,7 +207,7 @@ namespace Au
 		/// Gets previous sibling element.
 		/// Returns null if no element.
 		/// </summary>
-		public static XElement PreviousElement_(this XElement t)
+		public static XElement PrevElem(this XElement t)
 		{
 			for(XNode n = t.PreviousNode; n != null; n = n.PreviousNode) {
 				if(n is XElement e) return e;
@@ -219,7 +219,7 @@ namespace Au
 		/// Gets next sibling element.
 		/// Returns null if no element.
 		/// </summary>
-		public static XElement NextElement_(this XElement t)
+		public static XElement NextElem(this XElement t)
 		{
 			for(XNode n = t.NextNode; n != null; n = n.NextNode) {
 				if(n is XElement e) return e;
@@ -229,26 +229,26 @@ namespace Au
 
 		/// <summary>
 		/// Loads XML file in a safer way.
-		/// Uses <see cref="XElement.Load"/> and <see cref="File_.WaitIfLocked"/>.
+		/// Uses <see cref="XElement.Load"/> and <see cref="AFile.WaitIfLocked"/>.
 		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>.</param>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
 		/// <param name="options"></param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="XElement.Load"/>.</exception>
-		public static XElement LoadElement(string file, LoadOptions options = default)
+		public static XElement LoadElem(string file, LoadOptions options = default)
 		{
-			file = Path_.LibNormalizeForNET(file);
-			return File_.WaitIfLocked(() => XElement.Load(file, options));
+			file = APath.LibNormalizeForNET(file);
+			return AFile.WaitIfLocked(() => XElement.Load(file, options));
 		}
 
 		/// <summary>
 		/// Saves XML to a file in a safer way.
-		/// Uses <see cref="XElement.Save(string, SaveOptions)"/> and <see cref="File_.Save"/>.
+		/// Uses <see cref="XElement.Save(string, SaveOptions)"/> and <see cref="AFile.Save"/>.
 		/// </summary>
-		/// <exception cref="Exception">Exceptions of <see cref="XElement.Save"/> and <see cref="File_.Save"/>.</exception>
-		public static void Save_(this XElement t, string file, bool backup = false, SaveOptions? options = default)
+		/// <exception cref="Exception">Exceptions of <see cref="XElement.Save"/> and <see cref="AFile.Save"/>.</exception>
+		public static void SaveElem(this XElement t, string file, bool backup = false, SaveOptions? options = default)
 		{
-			File_.Save(file, temp =>
+			AFile.Save(file, temp =>
 			{
 				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
 			}, backup);
@@ -256,26 +256,26 @@ namespace Au
 
 		/// <summary>
 		/// Loads XML file in a safer way.
-		/// Uses <see cref="XDocument.Load"/> and <see cref="File_.WaitIfLocked"/>.
+		/// Uses <see cref="XDocument.Load"/> and <see cref="AFile.WaitIfLocked"/>.
 		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="Path_.ExpandEnvVar"/>.</param>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
 		/// <param name="options"></param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Load"/>.</exception>
-		public static XDocument LoadDocument(string file, LoadOptions options = default)
+		public static XDocument LoadDoc(string file, LoadOptions options = default)
 		{
-			file = Path_.LibNormalizeForNET(file);
-			return File_.WaitIfLocked(() => XDocument.Load(file, options));
+			file = APath.LibNormalizeForNET(file);
+			return AFile.WaitIfLocked(() => XDocument.Load(file, options));
 		}
 
 		/// <summary>
 		/// Saves XML to a file in a safer way.
-		/// Uses <see cref="XDocument.Save(string)"/> and <see cref="File_.Save"/>
+		/// Uses <see cref="XDocument.Save(string)"/> and <see cref="AFile.Save"/>
 		/// </summary>
-		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Save"/> and <see cref="File_.Save"/>.</exception>
-		public static void Save_(this XDocument t, string file, bool backup = false, SaveOptions? options = default)
+		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Save"/> and <see cref="AFile.Save"/>.</exception>
+		public static void SaveDoc(this XDocument t, string file, bool backup = false, SaveOptions? options = default)
 		{
-			File_.Save(file, temp =>
+			AFile.Save(file, temp =>
 			{
 				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
 			}, backup);

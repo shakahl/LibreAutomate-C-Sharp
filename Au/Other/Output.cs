@@ -218,7 +218,7 @@ namespace Au
 						_hFile = null;
 					}
 					if(value != null) {
-						_logFile = Path_.Normalize(value);
+						_logFile = APath.Normalize(value);
 					} else _logFile = null;
 				}
 			}
@@ -243,7 +243,7 @@ namespace Au
 					if(_hFile == null) {
 						var e = WinError.Code;
 						if(e == Api.ERROR_SHARING_VIOLATION) {
-							var u = Path_.MakeUnique(_logFile, false);
+							var u = APath.MakeUnique(_logFile, false);
 							if(u != _logFile) { _logFile = u; goto g1; }
 						}
 						var logf = _logFile;
@@ -261,7 +261,7 @@ namespace Au
 		{
 			lock(_lockObj1) {
 				if(_hFile == null) {
-					try { File_.Delete(_logFile); } catch { }
+					try { AFile.Delete(_logFile); } catch { }
 				} else {
 					_hFile.Clear();
 				}
@@ -301,20 +301,20 @@ namespace Au
 			public bool WriteLine(string s)
 			{
 				bool ok;
-				int n = Convert_.Utf8LengthFromString(s) + 1;
+				int n = AConvert.Utf8LengthFromString(s) + 1;
 				fixed (byte* b = Util.Buffers.LibByte(n + 35)) {
 					if(LogFileTimestamp) {
 						Api.GetLocalTime(out var t);
 						Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
 						int nn = Util.LibCharPtr.Length(b);
-						Convert_.Utf8FromString(s, b + nn, n);
+						AConvert.Utf8FromString(s, b + nn, n);
 						n += nn;
 						if(s.Starts("<>")) {
 							Api.memmove(b + 2, b, nn);
 							b[0] = (byte)'<'; b[1] = (byte)'>';
 						}
 					} else {
-						Convert_.Utf8FromString(s, b, n);
+						AConvert.Utf8FromString(s, b, n);
 					}
 					b[n - 1] = 13; b[n++] = 10;
 

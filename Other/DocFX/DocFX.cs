@@ -61,7 +61,7 @@ unsafe class Program
 			foreach(var v in Wnd.FindAll(@"C:\WINDOWS\system32\cmd.exe", "ConsoleWindowClass")) { if(k++ > 0) v.Close(); }
 		}
 
-		File_.Delete(siteDir);
+		AFile.Delete(siteDir);
 		Directory.SetCurrentDirectory(docDir);
 
 		var t1 = Time.PerfMilliseconds;
@@ -82,7 +82,7 @@ unsafe class Program
 			catch(OperationCanceledException) {
 				serving = true;
 			}
-			//if(!serving) { AuDialog.Show("error?"); return; } //need if this process is not hosted
+			//if(!serving) { ADialog.Show("error?"); return; } //need if this process is not hosted
 			if(!serving) return;
 		}
 
@@ -96,10 +96,10 @@ unsafe class Program
 		//Key("F5");
 
 		1.s();
-		if(AuDialog.ShowYesNo("Upload?")) CompressAndUpload(docDir);
+		if(ADialog.ShowYesNo("Upload?")) CompressAndUpload(docDir);
 
 		//Delete obj folder if big. Each time it grows by 10 MB, and after a day or two can be > 1 GB. After deleting builds slower by ~50%.
-		if(File_.More.CalculateDirectorySize(objDir) / 1024 / 1024 > 500) { Print("Deleting obj folder."); File_.Delete(objDir); }
+		if(AFile.More.CalculateDirectorySize(objDir) / 1024 / 1024 > 500) { Print("Deleting obj folder."); AFile.Delete(objDir); }
 		//info: if DocFX starts throwing stack overflow exception, delete the obj folder manually. It is likely to happen after many refactorings in the project.
 	}
 
@@ -165,7 +165,7 @@ unsafe class Program
 			if(test) {
 				//Print(File.ReadAllText(tmp));
 			} else {
-				File_.Move(tmp, path, IfExists.Delete);
+				AFile.Move(tmp, path, IfExists.Delete);
 			}
 		}
 		catch(Exception e) { Print(e); }
@@ -199,12 +199,12 @@ unsafe class Program
 		string files = "*.html";
 		if(test) {
 			//files = @"\api\Au.AaaDocFX*";
-			//files = @"\api\Au.Regex_.Replace";
+			//files = @"\api\Au.ARegex.Replace";
 			files = @"\api\Au.Acc.Find";
-			files = @"\api\Au.AuDialog.Show";
+			files = @"\api\Au.ADialog.Show";
 			files += ".html";
 		}
-		foreach(var f in File_.EnumDirectory(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
+		foreach(var f in AFile.EnumDirectory(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
 			if(f.IsDirectory) continue;
 			var name = f.Name; if(!name.Like(files, true) || name.Ends(@"\toc.html")) continue;
 			var file = f.FullPath;
@@ -333,28 +333,28 @@ unsafe class Program
 	{
 		var sevenZip = @"C:\Program Files\7-Zip\7z.exe";
 
-		File_.Delete(docDir + @"\_site.tar");
-		File_.Delete(docDir + @"\_site.tar.bz2");
+		AFile.Delete(docDir + @"\_site.tar");
+		AFile.Delete(docDir + @"\_site.tar.bz2");
 
 		int r1 = Shell.RunConsole(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
 		if(r1 != 0) { Print(s); return; }
 		int r2 = Shell.RunConsole(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
 		if(r2 != 0) { Print(s); return; }
 
-		File_.Delete(docDir + @"\_site.tar");
+		AFile.Delete(docDir + @"\_site.tar");
 
 		Print("Compressed");
 	}
 
 	static void Upload(string docDir)
 	{
-		if(!Registry_.GetString(out var user, "kas", @"\Help")
-			|| !Registry_.GetString(out var pass, "kaip", @"\Help")
-			|| !Registry_.GetString(out var pass2, "kaip2", @"\Help")
+		if(!ARegistry.GetString(out var user, "kas", @"\Help")
+			|| !ARegistry.GetString(out var pass, "kaip", @"\Help")
+			|| !ARegistry.GetString(out var pass2, "kaip2", @"\Help")
 			) throw new FileNotFoundException("user or password not found in registry");
 
 		//upload
-		pass = Encoding.UTF8.GetString(Convert_.Base64Decode(pass));
+		pass = Encoding.UTF8.GetString(AConvert.Base64Decode(pass));
 		var name = @"\_site.tar.bz2";
 		using(var client = new WebClient()) {
 			client.Credentials = new NetworkCredential(user, pass);

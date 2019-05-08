@@ -30,7 +30,7 @@ namespace Au
 	/// 
 	/// This class also adds more methods.
 	/// The nested class <see cref="More"/> contains some less often used static methods.
-	/// You also can find string manipulation methods in other classes of this library, for example <see cref="Convert_"/>, <see cref="Keyb.More"/>.
+	/// You also can find string manipulation methods in other classes of this library, for example <see cref="AConvert"/>, <see cref="Keyb.More"/>.
 	/// </remarks>
 	public static unsafe partial class ExtString //TODO: ExtString
 	{
@@ -223,10 +223,12 @@ namespace Au
 		/// Returns true if this string contains string <i>s</i>. Uses ordinal comparison.
 		/// </summary>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <remarks>
+		/// Uses <see cref="string.IndexOf(string, int, StringComparison)"/>.
+		/// </remarks>
 		public static bool Has(this string t, string s, bool ignoreCase = false)
 		{
-			if(!ignoreCase) return t.Contains(s);
-			return t.IndexOf(s, StringComparison.OrdinalIgnoreCase) >= 0;
+			return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
 		}
 		//TODO: apply: replace Index and IndexOf.
 
@@ -646,16 +648,16 @@ namespace Au
 		//	return c;
 		//}
 
-		//rejected. Better call Convert_.Utf8FromString directly.
+		//rejected. Better call AConvert.Utf8FromString directly.
 		///// <summary>
 		///// Converts this string to '\0'-terminated UTF8 string as byte[].
 		///// </summary>
 		///// <remarks>
-		///// Calls <see cref="Convert_.Utf8FromString"/>.
+		///// Calls <see cref="AConvert.Utf8FromString"/>.
 		///// </remarks>
-		///// <seealso cref="Convert_.Utf8ToString"/>
+		///// <seealso cref="AConvert.Utf8ToString"/>
 		///// <seealso cref="Encoding.UTF8"/>
-		//public static byte[] AToUtf8And0(this string t) => Convert_.Utf8FromString(t);
+		//public static byte[] AToUtf8And0(this string t) => AConvert.Utf8FromString(t);
 
 		internal static class Lib
 		{

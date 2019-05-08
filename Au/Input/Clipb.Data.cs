@@ -190,7 +190,7 @@ namespace Au
 			/// <summary>
 			/// Copies the added data of all formats to the clipboard.
 			/// </summary>
-			/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry) or set clipboard data.</exception>
+			/// <exception cref="AException">Failed to open clipboard (after 10 s of wait/retry) or set clipboard data.</exception>
 			/// <exception cref="OutOfMemoryException">Failed to allocate memory for clipboard data.</exception>
 			/// <remarks>
 			/// Calls API <msdn>OpenClipboard</msdn>, <msdn>EmptyClipboard</msdn>, <msdn>SetClipboardData</msdn> and <msdn>CloseClipboard</msdn>.
@@ -209,7 +209,7 @@ namespace Au
 			/// <param name="renderLater">Call API <msdn>SetClipboardData</msdn>(format, default). When/if some app will try to get clipboard data, the first time your clipboard owner window will receive <msdn>WM_RENDERFORMAT</msdn> message and should call <c>SetOpenClipboard(false);</c>.</param>
 			/// <param name="format">Copy data only of this format. If 0 (default), of all formats.</param>
 			/// <exception cref="OutOfMemoryException">Failed to allocate memory for clipboard data.</exception>
-			/// <exception cref="AuException">Failed to set clipboard data.</exception>
+			/// <exception cref="AException">Failed to set clipboard data.</exception>
 			/// <remarks>
 			/// This function is similar to <see cref="SetClipboard"/>. It calls API <msdn>SetClipboardData</msdn> and does not call <b>OpenClipboard</b>, <b>EmptyClipboard</b>, <b>CloseClipboard</b>. The clipboard must be open and owned by a window of this thread.
 			/// </remarks>
@@ -221,7 +221,7 @@ namespace Au
 					if(renderLater) {
 						WinError.Clear();
 						Api.SetClipboardData(v.format, default);
-						int ec = WinError.Code; if(ec != 0) throw new AuException(ec, "*set clipboard data");
+						int ec = WinError.Code; if(ec != 0) throw new AException(ec, "*set clipboard data");
 					} else _SetClipboard(v.format, v.data);
 				}
 #if SUPPORT_RAW_HANDLE
@@ -262,7 +262,7 @@ namespace Au
 				ge:
 				int ec = WinError.Code;
 				if(data is Bitmap) Api.DeleteObject(h); else Api.GlobalFree(h);
-				throw new AuException(ec, "*set clipboard data");
+				throw new AException(ec, "*set clipboard data");
 			}
 
 			static unsafe IntPtr _CopyToHmem(void* p, int size)
@@ -440,7 +440,7 @@ EndFragment:0000000000
 			/// If 0, tries to get text (<see cref="ClipFormats.Text"/>) or file paths (<see cref="ClipFormats.Files"/>; returns multiline text).
 			/// Text encoding (UTF-16, ANSI, etc) depends on format; default UTF-16. See <see cref="ClipFormats.Register"/>.
 			/// </param>
-			/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+			/// <exception cref="AException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 			public static string GetText(int format = ClipFormats.Text)
 			{
 				using(new _OpenClipboard(false)) {
@@ -453,7 +453,7 @@ EndFragment:0000000000
 			/// Returns null if there is no data of the specified format.
 			/// </summary>
 			/// <exception cref="ArgumentException">Invalid format. Supported are all registered formats and standard formats &lt;CF_MAX except GDI handles.</exception>
-			/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+			/// <exception cref="AException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 			public static byte[] GetBinary(int format)
 			{
 				_CheckFormat(format);
@@ -482,7 +482,7 @@ EndFragment:0000000000
 			/// Gets image from the clipboard. Uses clipboard format <see cref="ClipFormats.Image"/> (CF_BITMAP).
 			/// Returns null if there is no data of this format.
 			/// </summary>
-			/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+			/// <exception cref="AException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 			/// <exception cref="Exception">Exceptions of <see cref="Image.FromHbitmap"/>.</exception>
 			public static Bitmap GetImage()
 			{
@@ -496,7 +496,7 @@ EndFragment:0000000000
 			/// Gets HTML text from the clipboard. Uses clipboard format <see cref="ClipFormats.Html"/> ("HTML Format").
 			/// Returns null if there is no data of this format or if failed to parse it.
 			/// </summary>
-			/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+			/// <exception cref="AException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 			public static string GetHtml() => GetHtml(out _, out _, out _);
 
 			/// <summary>
@@ -506,7 +506,7 @@ EndFragment:0000000000
 			/// <param name="fragmentStart">Fragment start index in the returned string.</param>
 			/// <param name="fragmentLength">Fragment length.</param>
 			/// <param name="sourceURL">Source URL, or null if unavailable.</param>
-			/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+			/// <exception cref="AException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 			public static string GetHtml(out int fragmentStart, out int fragmentLength, out string sourceURL)
 			{
 				return LibParseHtmlFormatData(GetBinary(ClipFormats.Html), out fragmentStart, out fragmentLength, out sourceURL);
@@ -554,7 +554,7 @@ EndFragment:0000000000
 			/// Gets rich text (RTF) from the clipboard. Uses clipboard format <see cref="ClipFormats.Rtf"/> ("Rich Text Format").
 			/// Returns null if there is no data of this format.
 			/// </summary>
-			/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+			/// <exception cref="AException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 			public static string GetRtf() => GetText(ClipFormats.Rtf);
 
 			//FUTURE: GetCsvTable
@@ -563,7 +563,7 @@ EndFragment:0000000000
 			/// Gets file paths from the clipboard. Uses clipboard format <see cref="ClipFormats.Files"/> (CF_HDROP).
 			/// Returns null if there is no data of this format.
 			/// </summary>
-			/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+			/// <exception cref="AException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 			public static string[] GetFiles()
 			{
 				using(new _OpenClipboard(false)) {

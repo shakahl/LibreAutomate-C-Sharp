@@ -23,7 +23,7 @@ using static Au.NoClass;
 using static Program;
 using Au.Controls;
 
-partial class EdOptions : Form_
+partial class EdOptions : AFormBase
 {
 	public EdOptions()
 	{
@@ -68,19 +68,19 @@ partial class EdOptions : Form_
 		string s = _startupScripts.Text; if(Empty(s)) return;
 		string err = null;
 		try {
-			var t = CsvTable.Parse(s);
+			var t = Csv.Parse(s);
 			if(t.ColumnCount > 2) { err = "Too many commas in a line. If script name contains comma, enclose in \"\"."; goto ge; }
 			foreach(var v in t.Data) {
 				var script = v[0];
 				if(Model.FindFile(script) == null) { err = "Script not found: " + script; break; }
 				var delay = v.Length == 1 ? null : v[1];
 				if(!Empty(delay)) {
-					if(_rxDelay == null) _rxDelay = new Regex_(@"(?i)^\d+ *m?s$");
+					if(_rxDelay == null) _rxDelay = new ARegex(@"(?i)^\d+ *m?s$");
 					if(!_rxDelay.IsMatch(delay)) { err = "Delay must be like 2 s or 500 ms"; break; }
 				}
 			}
 		}
-		catch(AuException ex) { err = ex.Message; }
+		catch(AException ex) { err = ex.Message; }
 		ge:
 		if(err != null) {
 			_errorProvider.SetIconAlignment(_startupScripts, ErrorIconAlignment.TopLeft);
@@ -88,7 +88,7 @@ partial class EdOptions : Form_
 			e.Cancel = true;
 		}
 	}
-	Regex_ _rxDelay;
+	ARegex _rxDelay;
 
 	protected override void OnFormClosing(FormClosingEventArgs e)
 	{

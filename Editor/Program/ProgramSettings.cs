@@ -37,17 +37,17 @@ class ProgramSettings
 	{
 		_settFile = Folders.ThisAppDocuments + @"!Settings\Settings.xml";
 		try {
-			_x = ExtXml.LoadElement(_settFile);
+			_x = ExtXml.LoadElem(_settFile);
 		}
 		catch(Exception ex1) {
 			try {
-				if(File_.ExistsAsAny(_settFile))
-					AuDialog.ShowWarning("Failed to load settings", $"Will backup '{_settFile}' and use default settings.", expandedText: ex1.Message);
-				File_.Copy(Folders.ThisAppBS + @"Default\Settings.xml", _settFile, IfExists.RenameExisting);
-				_x = ExtXml.LoadElement(_settFile);
+				if(AFile.ExistsAsAny(_settFile))
+					ADialog.ShowWarning("Failed to load settings", $"Will backup '{_settFile}' and use default settings.", expandedText: ex1.Message);
+				AFile.Copy(Folders.ThisAppBS + @"Default\Settings.xml", _settFile, IfExists.RenameExisting);
+				_x = ExtXml.LoadElem(_settFile);
 			}
 			catch(Exception ex2) {
-				AuDialog.ShowError("Failed to load settings", "Try again or reinstall the application.", expandedText: ex2.Message);
+				ADialog.ShowError("Failed to load settings", "Try again or reinstall the application.", expandedText: ex2.Message);
 				Environment.Exit(1);
 			}
 		}
@@ -65,16 +65,16 @@ class ProgramSettings
 	{
 		if(_isDirty) {
 			lock(this) {
-				_x.Save_(_settFile);
+				_x.SaveElem(_settFile);
 			}
 			_isDirty = false;
-			//Dbg.Print("settings saved");
+			//ADebug.Print("settings saved");
 		}
 	}
 
 	private void _x_Changed(object sender, XObjectChangeEventArgs e)
 	{
-		//Dbg.PrintFunc(); //note: SetElementValue sends 2 events, because internally it removes/adds node's content. Setting the Value property is the same.
+		//ADebug.PrintFunc(); //note: SetElementValue sends 2 events, because internally it removes/adds node's content. Setting the Value property is the same.
 		Debug.Assert(Monitor.IsEntered(this));
 		_isDirty = true;
 	}

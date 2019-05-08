@@ -15,6 +15,7 @@
 #include <ctype.h>
 #include <limits.h>
 
+#include <string> //au: added this because VS 2019 could not compile UniConversio.h because it uses std::string
 #include <vector>
 #include <map>
 

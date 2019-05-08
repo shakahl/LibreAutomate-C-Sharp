@@ -141,7 +141,7 @@ namespace Au.Triggers
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
 		public Action<HotkeyTriggerArgs> this[KKey key, string modKeys, TKFlags flags = 0] {
 			set {
-				var ps = key.ToString(); if(Char_.IsAsciiDigit(ps[0])) ps = "VK" + ps;
+				var ps = key.ToString(); if(AChar.IsAsciiDigit(ps[0])) ps = "VK" + ps;
 				if(!Empty(modKeys)) ps = modKeys + "+" + ps;
 
 				if(!Keyb.More.LibParseHotkeyTriggerString(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");

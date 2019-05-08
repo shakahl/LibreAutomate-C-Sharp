@@ -31,7 +31,7 @@ namespace Au.Util
 		/// </summary>
 		public unsafe void Loop()
 		{
-			bool isForms = 0 != (1 & Assembly_.LibIsLoadedFormsWpf());
+			bool isForms = 0 != (1 & AAssembly.LibIsLoadedFormsWpf());
 			using(isForms ? new LibEnsureWindowsFormsSynchronizationContext(true) : null) {
 				_loopEndEvent = Api.CreateEvent(true);
 				try {
@@ -55,7 +55,7 @@ namespace Au.Util
 
 			void _DoEvents()
 			{
-				if(isForms) _DoEventsForms(); //info: with Time.DoEvents something does not work, don't remember, maybe AuMenu.
+				if(isForms) _DoEventsForms(); //info: with Time.DoEvents something does not work, don't remember, maybe AMenu.
 				else Time.DoEvents();
 			}
 		}

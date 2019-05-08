@@ -423,7 +423,7 @@ namespace Au.Triggers
 			//	//if(n1 + n2 > 0) Print(n1, n2);
 			//}
 			//_aVisibleOld = a;
-			//Dbg.LibMemoryPrint();
+			//ADebug.LibMemoryPrint();
 
 			//bool needEW = false;
 			//if(Visible.HasTriggers) needEW = true;
@@ -568,7 +568,7 @@ namespace Au.Triggers
 			if(_inProc) {
 				_hookEventQueue.Enqueue((accEvent, (int)w));
 				//Print(_hookEventQueue.Count);
-				Dbg.PrintIf(_hookEventQueue.Count > 4, "_hookEventQueue.Count=" + _hookEventQueue.Count);
+				ADebug.PrintIf(_hookEventQueue.Count > 4, "_hookEventQueue.Count=" + _hookEventQueue.Count);
 				return;
 			}
 			_inProc = true;
@@ -579,7 +579,7 @@ namespace Au.Triggers
 					TWLater e = 0;
 					switch(accEvent) {
 					case AccEVENT.SYSTEM_FOREGROUND:
-						//Dbg.PrintIf(!w.IsActive, $"{Time.PerfMilliseconds % 10000}, SYSTEM_FOREGROUND but not active: {w}"); //it is normal. The window either will be active soon (and timer will catch it), or will not be activated (eg prevented by Windows, hooks, etc), or another window became active.
+						//ADebug.PrintIf(!w.IsActive, $"{Time.PerfMilliseconds % 10000}, SYSTEM_FOREGROUND but not active: {w}"); //it is normal. The window either will be active soon (and timer will catch it), or will not be activated (eg prevented by Windows, hooks, etc), or another window became active.
 						if(w != _wActive && w.IsActive) e = TWLater.Active;
 						break;
 					case AccEVENT.OBJECT_UNCLOAKED: e = TWLater.Uncloaked; break;

@@ -44,7 +44,7 @@ namespace Au.Triggers
 		//{
 		//	Print("ctor");
 		//	//System.Reflection.
-		//	Assembly assembly = Util.Assembly_.EntryAssembly;
+		//	Assembly assembly = Util.AAssembly.EntryAssembly;
 
 		//	//var a = assembly.GetCustomAttributes<Trigger.HotkeyAttribute>();
 		//	//Print(a);

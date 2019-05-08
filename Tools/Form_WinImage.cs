@@ -48,7 +48,7 @@ namespace Au.Tools
 			base.OnLoad(e);
 
 			Wnd w = (Wnd)this;
-			if(Registry_.GetString(out var wndPos, "wndPos", c_registryKey))
+			if(ARegistry.GetString(out var wndPos, "wndPos", c_registryKey))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 
 			_info.ST.SetText(c_infoForm);
@@ -58,7 +58,7 @@ namespace Au.Tools
 		protected override void OnFormClosing(FormClosingEventArgs e)
 		{
 			Wnd w = (Wnd)this;
-			Registry_.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
+			ARegistry.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
 
 			base.OnFormClosing(e);
 		}
@@ -107,7 +107,7 @@ namespace Au.Tools
 
 			_bTest.Enabled = true; _bOK.Enabled = true;
 
-			if(_MultiIsActive && AuDialog.ShowYesNo("Add to array?", owner: this)) _MultiAdd();
+			if(_MultiIsActive && ADialog.ShowYesNo("Add to array?", owner: this)) _MultiAdd();
 
 			_errorProvider.Clear();
 		}
@@ -156,7 +156,7 @@ namespace Au.Tools
 			void _MenuRect(object unu, EventArgs sed)
 			{
 				if(_wnd.Is0) return;
-				var m = new AuMenu();
+				var m = new AMenu();
 				m["Rectangle of the captured image"] = o => _SetRect(_rect);
 				m["Select rectangle..."] = o => { if(_CaptureImageOrRect(true, out var r)) _SetRect(r.rect); };
 				m.Show(this);
@@ -183,7 +183,7 @@ namespace Au.Tools
 					break;
 				case "WindowDC":
 					if(_image != null) {
-						_errorProvider.Icon = Icon_.GetStockIcon(StockIcon.INFO, 16);
+						_errorProvider.Icon = AIcon.GetStockIcon(StockIcon.INFO, 16);
 						_errorProvider.SetError(_bTest, "After changing 'Window can be in background' may need to capture again.\nClick Test. If not found, click Capture.");
 					}
 					break;
@@ -321,7 +321,7 @@ namespace Au.Tools
 				es = "Whole image must be in the client area of a single window.";
 			}
 			if(es != null) {
-				AuDialog.ShowError(null, es, owner: this);
+				ADialog.ShowError(null, es, owner: this);
 				return false;
 			}
 
@@ -347,7 +347,7 @@ namespace Au.Tools
 		{
 			bool isImage = _image != null && !_isColor;
 
-			var m = new AuMenu();
+			var m = new AMenu();
 			m["Use file..."] = o => _OpenFile(false);
 			m["Embed file..."] = o => _OpenFile(true);
 			m["Save as file..."] = o => _SaveFile(); m.LastItem.Enabled = isImage;

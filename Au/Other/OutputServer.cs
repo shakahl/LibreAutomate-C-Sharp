@@ -170,7 +170,7 @@ namespace Au.Util
 
 #if NEED_CALLER
 			/// <summary>
-			/// The <see cref="AuTask.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
+			/// The <see cref="ATask.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
 			/// Used with MessageType.Write.
 			/// If <see cref="NeedCallerMethod"/> is true, also includes the caller method. Format: "scriptname:type.method".
 			/// </summary>
@@ -185,7 +185,7 @@ namespace Au.Util
 			}
 #else
 			/// <summary>
-			/// The <see cref="AuTask.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
+			/// The <see cref="ATask.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
 			/// Used with MessageType.Write.
 			/// </summary>
 			public string Caller { get; }
@@ -231,7 +231,7 @@ namespace Au.Util
 		/// Starts server.
 		/// Returns false if server already exists (if global - in any process).
 		/// </summary>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AException">Failed.</exception>
 		public bool Start()
 		{
 			lock(this) {
@@ -240,7 +240,7 @@ namespace Au.Util
 					if(m.Is0) {
 						var e = WinError.Code;
 						if(e == Api.ERROR_ALREADY_EXISTS) return false; //called not first time, or exists in another process/appdomain
-						throw new AuException(e, "*create mailslot");
+						throw new AException(e, "*create mailslot");
 					}
 
 					_mailslot = m;
@@ -264,7 +264,7 @@ namespace Au.Util
 				if(_isGlobal) _timer = WaitableTimer.Create(false, LibTimerName);
 				else _timer = WaitableTimer.Create();
 
-				Thread_.Start(_Thread, sta: false);
+				AThread.Start(_Thread, sta: false);
 			}
 			catch {
 				if(_isGlobal) _mailslot.Dispose();
@@ -402,7 +402,7 @@ namespace Au.Util
 				}
 			}
 			catch(Exception ex) {
-				Dbg.Dialog(ex.Message);
+				ADebug.Dialog(ex.Message);
 			}
 		}
 
@@ -484,7 +484,7 @@ namespace Au.Util
 		internal static string LibMailslotName {
 			get {
 				if(_mailslotName == null) {
-					_mailslotName = @"\\.\mailslot\Au.Output\" + Process_.CurrentSessionId.ToString();
+					_mailslotName = @"\\.\mailslot\Au.Output\" + AProcess.CurrentSessionId.ToString();
 				}
 				return _mailslotName;
 			}
@@ -524,7 +524,7 @@ namespace Au
 
 			Api.GetSystemTimeAsFileTime(out var time);
 
-			string caller = AuTask.Name;
+			string caller = ATask.Name;
 #if NEED_CALLER
 			if(OutputServer.LibNeedCallerMethod) {
 				//info: this func always called from WriteDirectly, which is usually called through Writer, Write, Print, etc. But it is public and can be called directly.

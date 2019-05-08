@@ -525,7 +525,7 @@ class CmdHandlers : IGStripManagerCallbacks
 	{
 		if(Tasks.EndTasksOf(Model.CurrentFile)) return;
 		var t = Tasks.GetGreenTask(); if(t == null) return;
-		var m = new AuMenu();
+		var m = new AMenu();
 		m.Add("End task:", null).Enabled = false;
 		m[t.f.DisplayName] = o => Tasks.EndTask(t);
 		m.Show(MainForm);
@@ -776,12 +776,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Help_QuickStart()
 	{
-		Au.Util.Help_.AuWeb("");
+		Au.Util.AHelp.AuWeb("");
 	}
 
 	public void Help_Reference()
 	{
-		Au.Util.Help_.AuWeb("api/");
+		Au.Util.AHelp.AuWeb("api/");
 	}
 
 	public void Help_ContextHelp()

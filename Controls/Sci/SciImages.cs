@@ -289,7 +289,7 @@ namespace Au.Controls
 							b[--imageLen] = 0; //remove "\nPrevText"
 						} else {
 							if(imageLen == n) b[imageLen++] = (byte)'\n'; //no "\nPrevText"
-							Convert_.Utf8FromString(s, b + imageLen, lens * 3);
+							AConvert.Utf8FromString(s, b + imageLen, lens * 3);
 						}
 						_c.Call(SCI_ANNOTATIONSETTEXT, line, b);
 						return;
@@ -313,7 +313,7 @@ namespace Au.Controls
 					//info: now len<=n
 					if(imageLen < n) {
 						if(imageLen != 0) { b += imageLen; n -= imageLen; }
-						return Convert_.Utf8ToString(b, n);
+						return AConvert.Utf8ToString(b, n);
 					}
 				}
 			}
@@ -353,7 +353,7 @@ namespace Au.Controls
 			var d = t_data;
 
 			//is already loaded?
-			long hash = Convert_.HashFnv1_64(s + i, i2 - i);
+			long hash = AConvert.HashFnv1_64(s + i, i2 - i);
 			var im = d.FindImage(hash);
 			//Print(im != null, new string((sbyte*)s, i, i2 - i));
 			if(im != null) return im;
@@ -454,7 +454,7 @@ namespace Au.Controls
 						fixed (byte* bp = u.data) {
 							ImageUtil.BITMAPFILEHEADER* f = (ImageUtil.BITMAPFILEHEADER*)bp;
 							byte* pBits = bp + f->bfOffBits;
-							int bytesInLine = Math_.AlignUp(q.width * q.bitCount, 32) / 8;
+							int bytesInLine = AMath.AlignUp(q.width * q.bitCount, 32) / 8;
 							int sizF = u.data.Length - f->bfOffBits, siz = bytesInLine * q.height;
 							if(q.isCompressed) {
 								//this is slow with big images. It seems processes current line + all remaining lines. Such bitmaps are rare.
@@ -495,7 +495,7 @@ namespace Au.Controls
 					x += u.width + 30;
 				}
 			}
-			catch(Exception ex) { Dbg.Print(ex.Message); }
+			catch(Exception ex) { ADebug.Print(ex.Message); }
 			finally { if(pen != default) Api.DeleteObject(Api.SelectObject(hdc, oldPen)); }
 			//Perf.NW();
 
@@ -556,7 +556,7 @@ namespace Au.Controls
 				if(from2 == from && to2 == to) {
 					s = n.textUTF8;
 				} else {
-					//Dbg.Print("need to get text");
+					//ADebug.Print("need to get text");
 					s = _GetTextRange(from2, to2); if(s == null) return;
 				}
 				textPos = from2;
@@ -654,7 +654,7 @@ namespace Au.Controls
 
 		//void _SetTimer(_TimerTasks task)
 		//{
-		//	if(_timer10 == null) _timer10 = new Timer_(t =>
+		//	if(_timer10 == null) _timer10 = new ATimer(t =>
 		//	{
 		//		Perf.First();
 		//		if(0 != (_timerTasks & _TimerTasks.UpdateScrollBars)) _c.Call(SCI_UPDATESCROLLBARS);
@@ -664,7 +664,7 @@ namespace Au.Controls
 		//	if(_timerTasks == 0) _timer10.Start(10, true);
 		//	_timerTasks |= task;
 		//}
-		//Timer_ _timer10;
+		//ATimer _timer10;
 		//_TimerTasks _timerTasks;
 	}
 }

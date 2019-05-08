@@ -32,12 +32,12 @@ namespace Au
 		{
 			Api.RTL_OSVERSIONINFOW x = default; x.dwOSVersionInfoSize = Api.SizeOf(x);
 			if(0 == Api.RtlGetVersion(ref x)) {
-				_winver = Math_.MakeUshort(x.dwMinorVersion, x.dwMajorVersion);
+				_winver = AMath.MakeUshort(x.dwMinorVersion, x.dwMajorVersion);
 				//use this because Environment.OSVersion.Version (GetVersionEx) lies, even if we have correct manifest when is debugger present
 			} else {
 				Debug.Fail("RtlGetVersion");
 				var v = Environment.OSVersion.Version;
-				_winver = Math_.MakeUshort(v.Minor, v.Major);
+				_winver = AMath.MakeUshort(v.Minor, v.Major);
 			}
 
 			_minWin8 = _winver >= Win8;

@@ -19,7 +19,7 @@ This small and fast program is used to execute scripts. It relays the script nam
 The command line is the script name and optionally script's command line parameters (variable *args*), separated by space and optionally enclosed in "". The script must exist in current workspace.
 
 Use prefix * to wait until the script ends.
-Use prefix ** to wait until the script ends and capture its [AuTask.WriteResult](xref:Au.AuTask.WriteResult(System.String)) text. To capture **Console.Write** text, need to compile the script to .exe and run the .exe file instead.
+Use prefix ** to wait until the script ends and capture its [ATask.WriteResult](xref:Au.ATask.WriteResult(System.String)) text. To capture **Console.Write** text, need to compile the script to .exe and run the .exe file instead.
 
 The exit code of this program when it waits is the script's exit code. To set it the script can use **Environment.ExitCode**. When does not wait, the exit code normally is 0. When fails to run (script not found, contains errors, etc), the exit code is a negative value.
 

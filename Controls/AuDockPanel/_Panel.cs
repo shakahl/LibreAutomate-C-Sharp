@@ -41,7 +41,7 @@ namespace Au.Controls
 			/// </summary>
 			internal _Panel(AuDockPanel manager, _Split parentSplit, XElement x, _Tab parentTab = null) : base(manager, parentSplit)
 			{
-				var name = x.Attribute_("name");
+				var name = x.Attr("name");
 				var c = manager._initControls[name];
 
 				_manager._aPanel.Add(this);
@@ -53,7 +53,7 @@ namespace Au.Controls
 
 				if(c is ToolStrip ts) {
 					_InitToolstrip(ts);
-				} else if(x.HasAttribute_("doc")) {
+				} else if(x.HasAttr("doc")) {
 					this.HasDocument = true;
 				//	c.AccessibleRole = AccessibleRole.Document; //no, its child is DOCUMENT
 				//} else {

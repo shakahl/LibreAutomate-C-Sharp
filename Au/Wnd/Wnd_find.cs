@@ -318,18 +318,18 @@ namespace Au
 						//Usually it does not slow down much because need to do it only 1 or several times, only when window name, class etc match.
 						//The worst case is when only program is specified, and the very worst case is when also using flag HiddenToo.
 						//We are prepared for the worst case.
-						//Normally we call Process_.GetName. In most cases it is quite fast.
+						//Normally we call AProcess.GetName. In most cases it is quite fast.
 						//Anyway, we use this optimization:
 						//	Add pid of processes that don't match the specified name in the pids list (bad pids).
 						//	Next time, if pid is in the bad pids list, just continue, don't need to get program name again.
-						//However in the worst case we would encounter some processes that Process_.GetName cannot get name using the fast API.
+						//However in the worst case we would encounter some processes that AProcess.GetName cannot get name using the fast API.
 						//For each such process it would then use the much slower 'get all processes' API, which is almost as slow as Process.GetProcessById(pid).ProgramName.
 						//To solve this:
-						//We tell Process_.GetName to not use the slow API, but just return null when the fast API fails.
-						//When it happens (Process_.GetName returns null):
+						//We tell AProcess.GetName to not use the slow API, but just return null when the fast API fails.
+						//When it happens (AProcess.GetName returns null):
 						//	If need full path: continue, we cannot do anything more.
 						//	Switch to plan B and no longer use all the above. Plan B:
-						//	Get list of pids of all processes that match _program. For it we call Process_.LibGetProcessesByName, which uses the same slow API, but we call it just one time.
+						//	Get list of pids of all processes that match _program. For it we call AProcess.LibGetProcessesByName, which uses the same slow API, but we call it just one time.
 						//	If it returns null (it means there are no matching processes), break (window not found).
 						//	From now, in each loop will need just to find pid in the returned list, and continue if not found.
 
@@ -341,14 +341,14 @@ namespace Au
 							if(pids != null && pids.Contains(pid)) continue; //is known bad pid?
 
 							string pname = cache != null ? (cache.Program ?? (cache.Program = _Program())) : _Program();
-							string _Program() => Process_.GetName(pid, false, true);
-							//string _Program() => Process_.GetName(pid, 0!=(_flags&WFFlags.ProgramPath), true);
+							string _Program() => AProcess.GetName(pid, false, true);
+							//string _Program() => AProcess.GetName(pid, 0!=(_flags&WFFlags.ProgramPath), true);
 
 							if(pname == null) {
 								//if(0!=(_flags&WFFlags.ProgramPath)) continue;
 
 								//switch to plan B
-								Process_.LibGetProcessesByName(ref pids, _program);
+								AProcess.LibGetProcessesByName(ref pids, _program);
 								if(Empty(pids)) break;
 								programNamePlanB = true;
 								goto g1;
@@ -381,7 +381,7 @@ namespace Au
 							}
 						}
 						catch(Exception ex) when(!(ex is ThreadAbortException)) {
-							if(!(ex is WndException)) PrintWarning("Exception when tried to find the 'contains' object. " + ex.ToStringWithoutStack_());
+							if(!(ex is WndException)) PrintWarning("Exception when tried to find the 'contains' object. " + ex.ToStringWithoutStack());
 						}
 						if(!found) { _stopProp = EProps.contains; continue; }
 					}
@@ -426,7 +426,7 @@ namespace Au
 		/// Program file name, like <c>"notepad.exe"</c>.
 		/// String format: [](xref:wildcard_expression). null means 'can be any'. Cannot be "". Cannot be path.
 		/// Or <see cref="WF3.Process"/>(process id), <see cref="WF3.Thread"/>(thread id), <see cref="WF3.Owner"/>(owner window).
-		/// See <see cref="ProcessId"/>, <see cref="Process_.CurrentProcessId"/>, <see cref="ThreadId"/>, <see cref="Thread_.NativeId"/>, <see cref="Owner"/>.
+		/// See <see cref="ProcessId"/>, <see cref="AProcess.CurrentProcessId"/>, <see cref="ThreadId"/>, <see cref="AThread.NativeId"/>, <see cref="Owner"/>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
@@ -677,7 +677,7 @@ namespace Au
 			/// </summary>
 			/// <param name="threadId">
 			/// Unmanaged thread id.
-			/// See <see cref="Thread_.NativeId"/>, <see cref="ThreadId"/>.
+			/// See <see cref="AThread.NativeId"/>, <see cref="ThreadId"/>.
 			/// If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="WinError"/>.
 			/// </param>
 			/// <param name="onlyVisible">Need only visible windows.</param>
@@ -686,7 +686,7 @@ namespace Au
 			/// <remarks>
 			/// Calls API <msdn>EnumThreadWindows</msdn>.
 			/// </remarks>
-			/// <seealso cref="Thread_.HasMessageLoop"/>
+			/// <seealso cref="AThread.HasMessageLoop"/>
 			public static Wnd[] ThreadWindows(int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				if(threadId == 0) throw new ArgumentException("0 threadId.");
@@ -959,7 +959,7 @@ namespace Au.Types
 				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
 				if(!s.Starts("**")) { //can be regex
 					if(s.IndexOfAny(ExtString.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
-					if(Path_.FindExtension(s) < 0 && !Wildex.HasWildcardChars(s)) PrintWarning("Program name without .exe.");
+					if(APath.FindExtension(s) < 0 && !Wildex.HasWildcardChars(s)) PrintWarning("Program name without .exe.");
 				}
 				program = s;
 				break;
@@ -984,7 +984,7 @@ namespace Au.Types
 		//{
 		//	if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
 		//	if(s.IndexOfAny(ExtString.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
-		//	if(Path_.FindExtension(s) < 0) PrintWarning("Program name without .exe.");
+		//	if(APath.FindExtension(s) < 0) PrintWarning("Program name without .exe.");
 		//}
 
 		/// <summary>

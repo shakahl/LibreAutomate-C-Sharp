@@ -5,7 +5,7 @@ using System; using System.Collections.Generic; using System.Text; using System.
 using System.Numerics; //example. Add usings and assembly/module attributes here.
 
 //{{ main
-unsafe partial class Script :AuScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
+unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
 
 /*
 To create automation scripts in this program you use C# as the programming language.

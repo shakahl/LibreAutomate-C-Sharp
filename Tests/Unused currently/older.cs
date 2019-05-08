@@ -39,11 +39,11 @@ static partial class Test
 		//Perf.Cpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	Perf.First();
-		//	//Thread_.LibIsLoadedFormsWpf();
+		//	//AThread.LibIsLoadedFormsWpf();
 		//	"fffff".Starts("ff", true);
-		//	//var s = Convert_.HexEncode(new byte[] { 1, 2 });
+		//	//var s = AConvert.HexEncode(new byte[] { 1, 2 });
 		//	//Perf.First();
-		//	//var b = Convert_.HexDecode(s);
+		//	//var b = AConvert.HexDecode(s);
 		//	//Print(b);
 
 		//	Perf.NW();
@@ -54,28 +54,28 @@ static partial class Test
 
 		AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
 		//if(Keyb.IsCtrl) Print("ctrl");
-		//AuDialog.ShowEx(secondsTimeout: 1);
+		//ADialog.ShowEx(secondsTimeout: 1);
 
-		//Print(Thread_.LibIsLoadedFormsWpf());
+		//Print(AThread.LibIsLoadedFormsWpf());
 
 		//var t = typeof(Application);
-		//bool u = Thread_.IsUI;
+		//bool u = AThread.IsUI;
 		//Print(u);
 
 		//var f = new Form();
-		//f.Click += (unu, sed) => Print(Thread_.IsUI);
+		//f.Click += (unu, sed) => Print(AThread.IsUI);
 		////Application.Run(f);
 		//f.ShowDialog(); f.Dispose();
 
-		//Print(Thread_.LibIsLoadedFormsWpf());
+		//Print(AThread.LibIsLoadedFormsWpf());
 
 		//var m = new Au.Util.MessageLoop();
-		//Timer_.After(2000, () => m.Stop());
-		////Timer_.After(2000, () => Api.PostQuitMessage(0));
-		////Timer_.After(2000, () => Wnd.Misc.PostThreadMessage(Api.WM_QUIT));
+		//ATimer.After(2000, () => m.Stop());
+		////ATimer.After(2000, () => Api.PostQuitMessage(0));
+		////ATimer.After(2000, () => Wnd.Misc.PostThreadMessage(Api.WM_QUIT));
 		//m.Loop();
 
-		//var m = new AuMenu();
+		//var m = new AMenu();
 		//m["one"] = o => Print(o);
 		//m.Show();
 
@@ -109,16 +109,16 @@ static partial class Test
 	{
 		using(Au.Util.WinHook.ThreadGetMessage(x => {
 			Print(x.msg->ToString(), x.PM_NOREMOVE);
-			//throw new AuException("TEST");
+			//throw new AException("TEST");
 		})) {
-			Timer_.Every(1000, () => {
+			ATimer.Every(1000, () => {
 				Print(1);
-				//throw new AuException("TEST");
+				//throw new AException("TEST");
 				//Thread.CurrentThread.Abort();
 			});
 			MessageBox.Show("");
-			//AuDialog.Show();
-			//AuDialog.ShowEx(secondsTimeout: 10);
+			//ADialog.Show();
+			//ADialog.ShowEx(secondsTimeout: 10);
 			Print("thread OK");
 		}
 
@@ -126,7 +126,7 @@ static partial class Test
 		//{
 		//	//Thread.Sleep(100);
 		//	//Thread.CurrentThread.Abort();
-		//	throw new AuException("TEST");
+		//	throw new AException("TEST");
 		//	Print(w);
 		//	return true;
 		//}, 0);
@@ -156,15 +156,15 @@ static partial class Test
 				var t = Time.PerfMilliseconds;
 				while(Time.PerfMilliseconds - t < 1200) {
 					//using(var f = File.Create(file)) {
-					using(var f = File_.WaitIfLocked(() => File.Create(file))) {
+					using(var f = AFile.WaitIfLocked(() => File.Create(file))) {
 						f.WriteByte(1);
 						7.ms();
 					}
 					//File.WriteAllText(file, "TEXT"); //unsafe. Exception if the file is locked.
-					//File_.WaitIfLocked(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
+					//AFile.WaitIfLocked(() => File.WriteAllText(file, "TEXT")); //safe. Waits while the file is locked.
 				}
 			}
-			catch(Exception e) { Dbg.Print(e.ToString()); Print((uint)e.HResult); }
+			catch(Exception e) { ADebug.Print(e.ToString()); Print((uint)e.HResult); }
 		});
 
 		Task.Run(() => {
@@ -173,21 +173,21 @@ static partial class Test
 				var t = Time.PerfMilliseconds;
 				while(Time.PerfMilliseconds - t < 1200) {
 					//using(var f = File.OpenRead(file)) {
-					using(var f = File_.WaitIfLocked(() => File.OpenRead(file))) {
+					using(var f = AFile.WaitIfLocked(() => File.OpenRead(file))) {
 						f.ReadByte();
 						5.ms();
 					}
 					//var s1 = File.ReadAllText(file); //unsafe. Exception if the file is locked.
-					//var s2 = File_.WaitIfLocked(() => File.ReadAllText(file)); //safe. Waits while the file is locked.
-					//using(var f = File_.WaitIfLocked(() => File.OpenText(file))) { //safe. Waits while the file is locked.
+					//var s2 = AFile.WaitIfLocked(() => File.ReadAllText(file)); //safe. Waits while the file is locked.
+					//using(var f = AFile.WaitIfLocked(() => File.OpenText(file))) { //safe. Waits while the file is locked.
 					//	var s3 = f.ReadToEnd();
 					//}
-					//using(var f = File_.WaitIfLocked(() => File.Create(file))) { //safe. Waits while the file is locked.
+					//using(var f = AFile.WaitIfLocked(() => File.Create(file))) { //safe. Waits while the file is locked.
 					//	f.WriteByte(1);
 					//}
 				}
 			}
-			catch(Exception e) { Dbg.Print(e.ToString()); Print((uint)e.HResult); }
+			catch(Exception e) { ADebug.Print(e.ToString()); Print((uint)e.HResult); }
 		}).Wait();
 
 		Print("OK");
@@ -198,7 +198,7 @@ static partial class Test
 		//		var csv =
 		//@"A1, "" 3 5  12 100 ""
 		//		A2,4 100 -8 0x10";
-		//		var x = new CsvTable(csv);
+		//		var x = new Csv(csv);
 		//		//var d = x.Data.ToDictionary(row => row[0], row => row[1], StringComparer.OrdinalIgnoreCase);
 		//		//var d = x.Data.ToDictionary(row => row[0], row => ExtString.More.StringToIntArray(row[1]), StringComparer.OrdinalIgnoreCase);
 		//		var d = x.ToDictionary(true, s => ExtString.More.StringToIntArray(s));
@@ -210,29 +210,29 @@ static partial class Test
 		var csv =
 @"A1, 5
 a1,-8";
-		var x = CsvTable.Parse(csv);
+		var x = Csv.Parse(csv);
 		//var d = x.ToDictionary(true, true);
 		//Print(d);
-		//x = CsvTable.FromDictionary(d);
+		//x = Csv.FromDictionary(d);
 		//Print(x);
 		//var d = x.ToDictionary(true, false, s => s.ToInt()); //rejected
 		var d = x.ToDictionary(true, true, row => row[1].ToInt());
 		Print(d);
-		//x = CsvTable.FromDictionary(d, v => v.ToString());
-		x = CsvTable.FromDictionary(d, 2, (v, r) => r[1] = v.ToString());
-		//x = CsvTable.FromDictionary(d, 3, (v, r) => { r[1] = v.ToString(); r[2] = "TEST"; });
+		//x = Csv.FromDictionary(d, v => v.ToString());
+		x = Csv.FromDictionary(d, 2, (v, r) => r[1] = v.ToString());
+		//x = Csv.FromDictionary(d, 3, (v, r) => { r[1] = v.ToString(); r[2] = "TEST"; });
 		Print(x);
 
 		//var f = Folders.Temp + "test2.csv";
-		//var x = CsvTable.Parse(csv);
+		//var x = Csv.Parse(csv);
 		//x.Save(f);
-		//x = CsvTable.Load(f);
+		//x = Csv.Load(f);
 		//Print(x);
 
 		//var f = Folders.Temp + "test2.csv";
-		//var x = CsvTable.Parse(csv);
+		//var x = Csv.Parse(csv);
 		//x.Save(f);
-		//x = CsvTable.Load(f);
+		//x = Csv.Load(f);
 		//Print(x);
 
 	}
@@ -246,15 +246,15 @@ a1,-8";
 	//		var fileQ = @"Q:\test\sqlite.db";
 	//		int n = 1000;
 
-	//		File_.Delete(fileS);
-	//		File_.Delete(fileB);
-	//		File_.Delete(fileL);
-	//		File_.Delete(fileS2);
-	//		File_.Delete(fileQ);
+	//		AFile.Delete(fileS);
+	//		AFile.Delete(fileB);
+	//		AFile.Delete(fileL);
+	//		AFile.Delete(fileS2);
+	//		AFile.Delete(fileQ);
 
 	//		var a = new List<_GuidS>();
 	//		for(int i = 0; i < n; i++) {
-	//			var x = new _GuidS() { id = Convert_.GuidToHex(Guid.NewGuid()) };
+	//			var x = new _GuidS() { id = AConvert.GuidToHex(Guid.NewGuid()) };
 	//			a.Add(x);
 	//		}
 
@@ -263,7 +263,7 @@ a1,-8";
 	//		using(var db = new LiteDatabase(fileL)) {
 	//			var col = db.GetCollection<_GuidL>();
 	//			for(int i = 0; i < n; i++) {
-	//				var g =Convert_.GuidFromHex(a[i].id);
+	//				var g =AConvert.GuidFromHex(a[i].id);
 	//				var x = new _GuidL() { id = *(long*)&g };
 	//				col.Upsert(x);
 	//			}
@@ -273,7 +273,7 @@ a1,-8";
 	//		using(var db = new LiteDatabase(fileB)) {
 	//			var col = db.GetCollection<_GuidB>();
 	//			for(int i = 0; i < n; i++) {
-	//				var g = Convert_.GuidFromHex(a[i].id);
+	//				var g = AConvert.GuidFromHex(a[i].id);
 	//				var x = new _GuidB() { id = g };
 	//				col.Upsert(x);
 	//			}
@@ -312,7 +312,7 @@ a1,-8";
 	//		//		for(int i = 0; i < n; i++) {
 	//		//			var v = a[i];
 	//		//			//p.AddWithValue("guid", v.id);
-	//		//			p.AddWithValue("guid", Convert_.GuidFromHex(v.id));
+	//		//			p.AddWithValue("guid", AConvert.GuidFromHex(v.id));
 
 	//		//			p.AddWithValue("name", v.name);
 	//		//			p.AddWithValue("etc", v.etc);
@@ -382,14 +382,14 @@ a1,-8";
 
 	//		Perf.Next();
 	//		var file = @"Q:\test\sqlite.db";
-	//		bool isNew = !File_.ExistsAsFile(file);
+	//		bool isNew = !AFile.ExistsAsFile(file);
 	//	static void TestSqliteNet()
 	//	{
 	//		Perf.Next();
 	//#if false
 	//		string fileS = @"Q:\test\guid string.db";
 
-	//		var stream = File_.WaitIfLocked(() => new FileStream(fileS, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, System.IO.FileOptions.RandomAccess));
+	//		var stream = AFile.WaitIfLocked(() => new FileStream(fileS, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, System.IO.FileOptions.RandomAccess));
 	//		using(var db = new LiteDatabase(stream, disposeStream: true)) {
 	//			Perf.Next();
 	//			var col = db.GetCollection<_GuidS>();
@@ -399,8 +399,8 @@ a1,-8";
 	//		}
 	//#else
 	//		var file = @"Q:\test\sqlite.db";
-	//		File_.Delete(file);
-	//		bool isNew = !File_.ExistsAsFile(file);
+	//		AFile.Delete(file);
+	//		bool isNew = !AFile.ExistsAsFile(file);
 
 	//		using(var db = new SQLiteConnection(file)) {
 	//			Perf.Next();
@@ -440,7 +440,7 @@ a1,-8";
 	//			Perf.Next();
 
 	//			//return;
-	//			//AuDialog.Show();
+	//			//ADialog.Show();
 
 	//			for(int i = 0; i < 1; i++) {
 	//#if true
@@ -773,8 +773,8 @@ a1,-8";
 		//Sqlite.Test(); return;
 
 		var file = @"Q:\test\sqlite.db";
-		File_.Delete(file);
-		bool isNew = !File_.ExistsAsFile(file);
+		AFile.Delete(file);
+		bool isNew = !AFile.ExistsAsFile(file);
 
 		Perf.Cpu();
 		string dbsql = null;
@@ -1033,8 +1033,8 @@ a1,-8";
 		return;
 
 		var k = Encoding.Unicode.GetBytes(text);
-		k = k.Insert_<byte>(0, 0xff, 0xfe);
-		k = k.Insert_<byte>(k.Length, 65);
+		k = k.InsertAt<byte>(0, 0xff, 0xfe);
+		k = k.InsertAt<byte>(k.Length, 65);
 		File.WriteAllBytes(file, k);
 		Print(File.ReadAllText(file));// return;
 
@@ -1055,7 +1055,7 @@ a1,-8";
 		}
 
 		////var s = File.ReadAllText(file, Encoding.Default);
-		//if(File_.GetProperties(file, out var p)) Print(p.Size);
+		//if(AFile.GetProperties(file, out var p)) Print(p.Size);
 		//Print("bytes:");
 		//Print(File.ReadAllBytes(file));
 		//Print("---");
@@ -1077,12 +1077,12 @@ a1,-8";
 		//var t = new Thread(() => {
 
 		//});
-		//var t = Thread_.Start(() => { });
+		//var t = AThread.Start(() => { });
 		//Print(t.IsBackground, t.GetApartmentState());
 		//t.Start();
 
 		Osd.ShowText("test");
-		AuDialog.Show();
+		ADialog.Show();
 	}
 
 
@@ -1216,7 +1216,7 @@ a1,-8";
 	static void TestPopupList()
 	{
 		Application.SetCompatibleTextRenderingDefault(false);
-		var f = new Form { Text = "Nikn", Font = Au.Util.SystemFonts_.Regular, StartPosition = FormStartPosition.Manual, Location = new Point(300, 300) };
+		var f = new Form { Text = "Nikn", Font = Au.Util.ASystemFonts.Regular, StartPosition = FormStartPosition.Manual, Location = new Point(300, 300) };
 		var t = new TextBox { Width = 120, Left = 20 }; f.Controls.Add(t);
 		var b = new Button { Text = "button", Left = 200 }; f.Controls.Add(b);
 		var bOK = new ButtonOK { Left = 10, Top = 230 }; f.Controls.Add(bOK); f.AcceptButton = bOK;
@@ -1225,7 +1225,7 @@ a1,-8";
 #if true
 		//var a = new string[] { "One 123456789 123456789", "Folder", "Three", "Four", "W" };
 		//var a = new string[] { "One 123456789 123456789", "Folder", "Three", "Fo\r\nur", "Fo\r\nur", "Fo\r\nur", "Fo\r\nur" };
-		var icon = Icon_.GetFileIconImage(@"q:\app\ontop.ico", 16);
+		var icon = AIcon.GetFileIconImage(@"q:\app\ontop.ico", 16);
 		var a = new PLItem[] {
 			new PLItem("Done 123456789 123456789"){},
 			new PLItem("Two"){CheckType=PLCheckType.Box},
@@ -1268,14 +1268,14 @@ a1,-8";
 		//p.PopupWindow.FormClosed += (unu2, sed2) => Print("CLOSED", p.ResultItem, p.PopupWindow.Visible, p.PopupWindow.IsHandleCreated);
 		p.ClosedAction = k => {
 			Print("Closed", k.ResultItem, k.PopupWindow.IsHandleCreated);
-			//Timer_.After(1000, () => p.Show(t));
+			//ATimer.After(1000, () => p.Show(t));
 			//p.PopupWindow.Close();
 		};
 
 		f.Load += (unu, sed) => {
 			//var tt = new TextBox { Width = 150, Height = 25 };
-			//Timer_.After(50, () => {
-			//	var m = new AuMenu();
+			//ATimer.After(50, () => {
+			//	var m = new AMenu();
 			//	m["ddd"] = o => Print(o);
 			//	tt.MinimumSize = tt.Size;
 			//	var h = new ToolStripControlHost(tt);
@@ -1283,7 +1283,7 @@ a1,-8";
 			//	m.Show(f, 100, 100);
 			//});
 
-			Timer_.After(200, () => {
+			ATimer.After(200, () => {
 				//t.Visible = false;
 				p.Show(t);
 				//p.Show(new Rectangle(200, 500, 0, 0));
@@ -1292,27 +1292,27 @@ a1,-8";
 				//for(int i = 0; i < 10; i++) _ShowPL(f, a, i);
 			});
 
-			//Timer_.After(500, tim => {
+			//ATimer.After(500, tim => {
 			//	//p.Show(t);
 			//	p.Show(new Rectangle(200, 500, 0, 0));
 			//});
 		};
 		//f.TopMost = true;
 
-		//Timer_.After(2000, () => {
+		//ATimer.After(2000, () => {
 		t.Click += (unu, sed) => {
 			p.ComboBoxAnimation = true;
 			p.Show(t);
 
 			//var f2 = new Form { Text = "Two", Font = SystemFonts.MessageBoxFont };
 			//var t2 = new TextBox { Width = 120, Left = 20 }; f2.Controls.Add(t2);
-			//Timer_.After(500, () => p.Show(t2));
+			//ATimer.After(500, () => p.Show(t2));
 			//f2.ShowDialog(); f2.Dispose();
 		};
 
 #if true
 		Application.Run(f);
-		//AuDialog.Show();
+		//ADialog.Show();
 #else
 		var f2 = new Form();
 		f2.Click += (unu, sed) => f.ShowDialog();
@@ -1393,7 +1393,7 @@ a1,-8";
 		//var e = new Excel.Application();
 		////Print(e);
 		//e.Visible = true;
-		//AuDialog.Show();
+		//ADialog.Show();
 		//e.Quit();
 
 		//Print(typeof(ServicesManagerLib.enControlsAccepted).GetEnumNames());
@@ -1548,7 +1548,7 @@ a1,-8";
 			//Perf.Next();
 			//foreach(var v in a3.Where(kv => { var g = kv.Value.right; return g >= rFrom && g < rTo; }).ToList()) { a3.Remove(v.Key); }
 			//foreach(var v in a3.Where(kv => { var g = kv.Value.right; return g >= rFrom && g < rTo; }).Select(kv2=>kv2.Key).ToList()) { a3.Remove(v); }
-			a3.RemoveWhere_(kv => { var g = kv.Value.right; return g >= rFrom && g < rTo; });
+			a3.RemoveWhere(kv => { var g = kv.Value.right; return g >= rFrom && g < rTo; });
 			Perf.NW();
 			Print(a2.Count, a3.Count);
 			for(int i2 = rFrom; i2 < rTo; i2++) { var key = a0[i2]; a3.Add(key, new RECT(key, 0, i2, 0, false)); }
@@ -1560,7 +1560,7 @@ a1,-8";
 	private static void X_DoWork(object sender, DoWorkEventArgs e)
 	{
 		var t = Thread.CurrentThread;
-		Print(Thread_.NativeId, t.IsBackground, t.IsThreadPoolThread, t.GetApartmentState(), e.Argument);
+		Print(AThread.NativeId, t.IsBackground, t.IsThreadPoolThread, t.GetApartmentState(), e.Argument);
 	}
 
 	static void TestFormLoadVisible()
@@ -1573,7 +1573,7 @@ a1,-8";
 		var e = new TextBox { Left = 100 };
 		f.Controls.Add(e);
 
-		//Timer_.After(2000, () => Application.Exit());
+		//ATimer.After(2000, () => Application.Exit());
 		Application.Run(f);
 	}
 
@@ -1600,7 +1600,7 @@ a1,-8";
 		//		_first = true;
 		//		value = false;
 		//		//CreateHandle();
-		//		this.CreateControl_();
+		//		this.CreateControlNow();
 
 		//		//void _CreateControls(Control parent)
 		//		//{
@@ -1723,7 +1723,7 @@ a1,-8";
 		//var t1 = Time.PerfMilliseconds;
 		//var t2 = Time.WinMillisecondsWithoutSleep;
 		//var t3 = Time.WinMilliseconds64;
-		//AuDialog.Show();
+		//ADialog.Show();
 
 		Print(Time.WinMillisecondsWithoutSleep, Time.PerfMilliseconds, Api.GetTickCount64(), timeGetTime());
 		Print(Time.WinMillisecondsWithoutSleep, Time.PerfMilliseconds, Api.GetTickCount64(), timeGetTime());
@@ -1764,7 +1764,7 @@ a1,-8";
 		//	}
 
 		//	return false;
-		//})) AuDialog.Show("hook");
+		//})) ADialog.Show("hook");
 
 
 		using(var h = Au.Util.WinHook.Mouse(k => {
@@ -1775,7 +1775,7 @@ a1,-8";
 			}
 
 			return false;
-		})) AuDialog.Show("hook");
+		})) ADialog.Show("hook");
 	}
 
 	static void TestStackTrace()
@@ -1783,7 +1783,7 @@ a1,-8";
 		_ = typeof(System.Linq.Enumerable).Assembly;
 		//_ = typeof(Form).Assembly;
 		//Print(AppDomain.CurrentDomain.GetAssemblies());
-		//AuDialog.Show();
+		//ADialog.Show();
 		//10.s();
 		for(int i = 0; i < 5; i++) {
 			200.ms();
@@ -1808,7 +1808,7 @@ a1,-8";
 			//	Print(s);
 			//}
 		}
-		//AuDialog.Show();
+		//ADialog.Show();
 	}
 
 	struct TContext
@@ -1824,7 +1824,7 @@ a1,-8";
 	static void TestAbortThreadAndContinue()
 	{
 		var t = Thread.CurrentThread;
-		Thread_.Start(() => {
+		AThread.Start(() => {
 			for(int i = 0; i < 3; i++) {
 				1.s();
 				t.Abort();
@@ -1892,7 +1892,7 @@ a1,-8";
 
 	static void TestDelegateBeginInvoke()
 	{
-		Action a = () => Print(Thread_.NativeId, Thread.CurrentThread.IsThreadPoolThread);
+		Action a = () => Print(AThread.NativeId, Thread.CurrentThread.IsThreadPoolThread);
 
 		a();
 		var r = a.BeginInvoke(null, null);
@@ -1912,12 +1912,12 @@ a1,-8";
 				if(t.GetApartmentState() != ApartmentState.STA) {
 					if(t.TrySetApartmentState(ApartmentState.Unknown)) t.TrySetApartmentState(ApartmentState.STA);
 				}
-				Print(j, Thread_.NativeId, t.IsThreadPoolThread, t.GetApartmentState());
+				Print(j, AThread.NativeId, t.IsThreadPoolThread, t.GetApartmentState());
 			}, TaskCreationOptions.LongRunning);
 			10.ms();
 		}
 		//500.ms();
-		AuDialog.Show();
+		ADialog.Show();
 	}
 
 	//using System.Runtime.InteropServices;
@@ -1976,7 +1976,7 @@ a1,-8";
 			if(_q == null) {
 				_q = new Queue<_Action>();
 				_event = Api.CreateEvent(false);
-				Thread_.Start(() => {
+				AThread.Start(() => {
 					while(!_disposed && 0 == Api.WaitForSingleObject(_event, -1)) {
 						while(!_disposed) {
 							_Action x;
@@ -2026,7 +2026,7 @@ a1,-8";
 
 		Action eh = () => {
 			Perf.First();
-			//x.Run(() => AuDialog.Show(), 2000);
+			//x.Run(() => ADialog.Show(), 2000);
 			x.Run(() => { Perf.NW(); 1000.ms(); }, -1);
 		};
 		f.MouseDown += (unu, sed) => eh();
@@ -2036,7 +2036,7 @@ a1,-8";
 
 		x.Dispose();
 		1.s();
-		//AuDialog.Show("main end");
+		//ADialog.Show("main end");
 	}
 
 	static void TestListForeach()
@@ -2047,27 +2047,27 @@ a1,-8";
 		for(int i = 0; i < 10; i++) b[i] = "asasa";
 
 		for(int j = 0; j < 5; j++) {
-			//Dbg.LibMemorySetAnchor();
+			//ADebug.LibMemorySetAnchor();
 			Perf.First();
 			for(int i = 0; i < 1000; i++) {
 				foreach(var v in b) if(v == "fff") Print("mmm");
 			}
 			Perf.Next();
-			//Dbg.LibMemoryPrint();
+			//ADebug.LibMemoryPrint();
 
-			//Dbg.LibMemorySetAnchor();
+			//ADebug.LibMemorySetAnchor();
 			for(int i = 0; i < 1000; i++) {
 				for(int k = 0; k < a.Count; k++) if(a[k] == "fff") Print("mmm");
 			}
 			Perf.Next();
-			//Dbg.LibMemoryPrint();
+			//ADebug.LibMemoryPrint();
 
-			//Dbg.LibMemorySetAnchor();
+			//ADebug.LibMemorySetAnchor();
 			for(int i = 0; i < 1000; i++) {
 				foreach(var v in a) if(v == "fff") Print("mmm");
 			}
 			Perf.NW();
-			//Dbg.LibMemoryPrint();
+			//ADebug.LibMemoryPrint();
 			200.ms();
 		}
 	}

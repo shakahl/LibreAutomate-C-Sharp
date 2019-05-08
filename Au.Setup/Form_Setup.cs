@@ -65,6 +65,6 @@ public partial class Form_Setup :Form
 	//{
 	//	base.OnClick(e);
 
-	//	AuDialog.Show("Au");
+	//	ADialog.Show("Au");
 	//}
 }

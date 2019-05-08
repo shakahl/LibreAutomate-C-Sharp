@@ -281,7 +281,7 @@ namespace Au
 		/// The system uses the smallest period (best resolution) that currently is set by any application. You cannot make it bigger than current value.
 		/// <note>It is not recommended to keep small period (high resolution) for a long time. It can be bad for power saving.</note>
 		/// Don't need this for Time.SleepX and functions that use them (Mouse.Click etc). They call <see cref="TempSet1"/> when the sleep time is 1-99 ms.
-		/// This does not change the minimal period of <see cref="Timer_"/> and System.Windows.Forms.Timer.
+		/// This does not change the minimal period of <see cref="ATimer"/> and System.Windows.Forms.Timer.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -426,15 +426,15 @@ namespace Au
 	/// <example>
 	/// <code><![CDATA[
 	/// //this example sets 3 timers
-	/// Timer_.After(500, () => Print("after 500 ms"));
-	/// Timer_.Every(1000, () => Print("every 1000 ms"));
-	/// var t3 = new Timer_(() => Print("after 3000 ms")); t3.Start(3000, true); //the same as Timer_.After
+	/// ATimer.After(500, () => Print("after 500 ms"));
+	/// ATimer.Every(1000, () => Print("every 1000 ms"));
+	/// var t3 = new ATimer(() => Print("after 3000 ms")); t3.Start(3000, true); //the same as ATimer.After
 	/// MessageBox.Show("");
 	/// ]]></code>
 	/// </example>
-	public class Timer_
+	public class ATimer
 	{
-		Delegate _action; //Action<Timer_> or Action
+		Delegate _action; //Action<ATimer> or Action
 		LPARAM _id;
 		int _threadId;
 		bool _singlePeriod;
@@ -442,20 +442,20 @@ namespace Au
 		//To control object lifetime we use a thread-static Dictionary.
 		//Tried GCHandle, but could not find a way to delete object when thread ends.
 		//Calling KillTimer when thread ends is optional. Need just to re-enable garbage collection for this object.
-		[ThreadStatic] static Dictionary<LPARAM, Timer_> t_timers;
+		[ThreadStatic] static Dictionary<LPARAM, ATimer> t_timers;
 
 		/// <summary>
-		/// Some object or value attached to this Timer_ variable.
+		/// Some object or value attached to this ATimer variable.
 		/// </summary>
 		public object Tag { get; set; }
 
 		///
-		public Timer_(Action<Timer_> timerAction, object tag = null) : this((Delegate)timerAction, tag) { }
+		public ATimer(Action<ATimer> timerAction, object tag = null) : this((Delegate)timerAction, tag) { }
 
 		///
-		public Timer_(Action timerAction, object tag = null) : this((Delegate)timerAction, tag) { }
+		public ATimer(Action timerAction, object tag = null) : this((Delegate)timerAction, tag) { }
 
-		Timer_(Delegate timerAction, object tag)
+		ATimer(Delegate timerAction, object tag)
 		{
 			_action = timerAction;
 			Tag = tag;
@@ -486,7 +486,7 @@ namespace Au
 			_singlePeriod = singlePeriod;
 			if(isNew) {
 				_threadId = Thread.CurrentThread.ManagedThreadId;
-				if(t_timers == null) t_timers = new Dictionary<LPARAM, Timer_>();
+				if(t_timers == null) t_timers = new Dictionary<LPARAM, ATimer>();
 				t_timers.Add(_id, this);
 			}
 			//Print($"Start: {_id}  isNew={isNew}  singlePeriod={singlePeriod}  _threadId={_threadId}");
@@ -497,7 +497,7 @@ namespace Au
 		{
 			//Print(t_timers.Count, idEvent);
 			if(!t_timers.TryGetValue(idEvent, out var t)) {
-				//Dbg.Print($"timer id {idEvent} not in t_timers");
+				//ADebug.Print($"timer id {idEvent} not in t_timers");
 				return;
 				//It is possible after killing timer.
 				//	Normally API KillTimer removes WM_TIMER message from queue (tested), but in some conditions our callback can still be called several times.
@@ -508,7 +508,7 @@ namespace Au
 
 			try {
 				switch(t._action) {
-				case Action<Timer_> f: f(t); break;
+				case Action<ATimer> f: f(t); break;
 				case Action f: f(); break;
 				}
 			}
@@ -543,22 +543,22 @@ namespace Au
 		{
 			bool isSameThread = _threadId == Thread.CurrentThread.ManagedThreadId;
 			Debug.Assert(isSameThread);
-			if(!isSameThread) throw new InvalidOperationException(nameof(Timer_) + " used by multiple threads.");
+			if(!isSameThread) throw new InvalidOperationException(nameof(ATimer) + " used by multiple threads.");
 			//FUTURE: somehow allow other thread. It is often useful.
 		}
 
-		//~Timer_() { Print("dtor"); } //don't call Stop() here, we are in other thread
+		//~ATimer() { Print("dtor"); } //don't call Stop() here, we are in other thread
 
-		static Timer_ _Set(int time, bool singlePeriod, Delegate timerAction, object tag = null)
+		static ATimer _Set(int time, bool singlePeriod, Delegate timerAction, object tag = null)
 		{
-			var t = new Timer_(timerAction, tag);
+			var t = new ATimer(timerAction, tag);
 			t.Start(time, singlePeriod);
 			return t;
 		}
 
 		/// <summary>
 		/// Sets new one-time timer.
-		/// Returns new <see cref="Timer_"/> object. Usually you don't need it.
+		/// Returns new <see cref="ATimer"/> object. Usually you don't need it.
 		/// </summary>
 		/// <param name="timeMilliseconds">Time after which will be called the callback function, milliseconds. The minimal time is 10-20, even if this parameter is less than that.</param>
 		/// <param name="timerAction">Callback function.</param>
@@ -567,22 +567,22 @@ namespace Au
 		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
 		/// <remarks>
 		/// The callback function will be called in this thread.
-		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.
+		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or ADialog.Show(). The callback function is not called while this thread does not do it.
 		/// </remarks>
-		public static Timer_ After(int timeMilliseconds, Action timerAction, object tag = null)
+		public static ATimer After(int timeMilliseconds, Action timerAction, object tag = null)
 		{
 			return _Set(timeMilliseconds, true, timerAction, tag);
 		}
 
 		///
-		public static Timer_ After(int timeMilliseconds, Action<Timer_> timerAction, object tag = null)
+		public static ATimer After(int timeMilliseconds, Action<ATimer> timerAction, object tag = null)
 		{
 			return _Set(timeMilliseconds, true, timerAction, tag);
 		}
 
 		/// <summary>
 		/// Sets new periodic timer.
-		/// Returns new <see cref="Timer_"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
+		/// Returns new <see cref="ATimer"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
 		/// </summary>
 		/// <param name="periodMilliseconds">Time interval (period) of calling the callback function, milliseconds. The minimal period is 10-20, even if specified smaller.</param>
 		/// <param name="timerAction">Callback function.</param>
@@ -591,15 +591,15 @@ namespace Au
 		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
 		/// <remarks>
 		/// The callback function will be called in this thread.
-		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or AuDialog.Show(). The callback function is not called while this thread does not do it.
+		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or ADialog.Show(). The callback function is not called while this thread does not do it.
 		/// </remarks>
-		public static Timer_ Every(int periodMilliseconds, Action timerAction, object tag = null)
+		public static ATimer Every(int periodMilliseconds, Action timerAction, object tag = null)
 		{
 			return _Set(periodMilliseconds, false, timerAction, tag);
 		}
 
 		///
-		public static Timer_ Every(int periodMilliseconds, Action<Timer_> timerAction, object tag = null)
+		public static ATimer Every(int periodMilliseconds, Action<ATimer> timerAction, object tag = null)
 		{
 			return _Set(periodMilliseconds, false, timerAction, tag);
 		}

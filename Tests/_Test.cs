@@ -94,7 +94,7 @@ static partial class Test
 
 		try {
 #if true
-			//Thread_.Start(() => { for(; ; ) { 1.s(); GC.Collect(); } });
+			//AThread.Start(() => { for(; ; ) { 1.s(); GC.Collect(); } });
 
 
 
@@ -133,7 +133,7 @@ static partial class Test
 			//TestSqlite();
 			//TestSqliteExamples();
 			//TestGetBoxedPointer();
-			//AuDialog.Show();
+			//ADialog.Show();
 
 			//TestDB();
 			//TestAssocQS();

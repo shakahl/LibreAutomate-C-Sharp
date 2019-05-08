@@ -96,7 +96,7 @@ namespace Au.Compiler
 
 			var path = _ResolvePath(reference, isCOM);
 			if(path == null) return false;
-			path = Path_.LibNormalize(path);
+			path = APath.LibNormalize(path);
 
 			//foreach(var v in _refs) Print(v.FilePath);
 			PortableExecutableReference mr;
@@ -123,15 +123,15 @@ namespace Au.Compiler
 		static string _ResolvePath(string re, bool isCOM)
 		{
 			if(Empty(re)) return null;
-			bool isFull = Path_.IsFullPathExpandEnvVar(ref re);
+			bool isFull = APath.IsFullPathExpandEnvVar(ref re);
 			if(!isFull && isCOM) { isFull = true; re = Folders.Workspace + @".interop\" + re; }
-			if(isFull) return File_.ExistsAsFile(re) ? re : null;
+			if(isFull) return AFile.ExistsAsFile(re) ? re : null;
 
 			string path, ext; int i;
 			if(0 != re.Ends(true, s_asmExt)) {
 				foreach(var v in s_dirs) {
-					path = Path_.Combine(v, re);
-					if(File_.ExistsAsFile(path)) return path;
+					path = APath.Combine(v, re);
+					if(AFile.ExistsAsFile(path)) return path;
 				}
 				ext = null;
 			} else if((i = re.Index(", Version=")) > 0) {
@@ -140,12 +140,12 @@ namespace Au.Compiler
 
 			var d = RuntimeEnvironment.GetRuntimeDirectory();
 			path = d + re + ext;
-			if(File_.ExistsAsFile(path)) return path;
+			if(AFile.ExistsAsFile(path)) return path;
 
 			bool isRelPath = re.IndexOfAny(ExtString.Lib.pathSep) >= 0;
 			if(!isRelPath) {
 				path = d + @"WPF\" + re + ext;
-				if(File_.ExistsAsFile(path)) return path;
+				if(AFile.ExistsAsFile(path)) return path;
 			}
 
 			if(ext == null || isRelPath) path = null;

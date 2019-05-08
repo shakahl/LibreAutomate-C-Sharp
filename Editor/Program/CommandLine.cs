@@ -47,13 +47,13 @@ static class CommandLine
 						if(++i < a.Length) TestArg = a[i];
 						break;
 					default:
-						AuDialog.ShowError("Unknown command line parameter", s);
+						ADialog.ShowError("Unknown command line parameter", s);
 						return true;
 					}
 				}
 			} else { //one or more files
 				if(a.Length == 1 && FilesModel.IsWorkspaceDirectory(s)) {
-					switch(cmd = AuDialog.ShowEx("Workspace", s, "1 Open|2 Import|0 Cancel", footerText: FilesModel.GetSecurityInfo("v|"))) {
+					switch(cmd = ADialog.ShowEx("Workspace", s, "1 Open|2 Import|0 Cancel", footerText: FilesModel.GetSecurityInfo("v|"))) {
 					case 1: WorkspaceDirectory = s; break;
 					case 2: _importWorkspace = s; break;
 					}
@@ -105,7 +105,7 @@ static class CommandLine
 		_msgWnd.CreateMessageOnlyWindow("Au.Editor.Msg");
 
 		if(_importWorkspace != null || _importFiles != null) {
-			Timer_.After(10, () => {
+			ATimer.After(10, () => {
 				try {
 					if(_importWorkspace != null) Model.ImportWorkspace(_importWorkspace);
 					else Model.ImportFiles(_importFiles);
@@ -177,15 +177,15 @@ static class CommandLine
 			Model.ImportFiles(s.SegSplit("\0"));
 			break;
 		case 99: //run script from Au.CL.exe command line
-		case 100: //run script from script (AuTask.Run/RunWait)
-			int mode = (int)wParam; //1 - wait, 3 - wait and get AuTask.WriteResult output
+		case 100: //run script from script (ATask.Run/RunWait)
+			int mode = (int)wParam; //1 - wait, 3 - wait and get ATask.WriteResult output
 			string script; string[] args; string pipeName = null;
 			if(action == 99) {
 				var a = ExtString.More.CommandLineToArray(s); if(a.Length == 0) return 0;
 				int nRemove = 0;
 				if(0 != (mode & 2)) pipeName = a[nRemove++];
 				script = a[nRemove++];
-				args = a.Length == nRemove ? null : a.RemoveAt_(0, nRemove);
+				args = a.Length == nRemove ? null : a.RemoveAt(0, nRemove);
 			} else {
 				var d = Au.Util.LibSerializer.Deserialize(b);
 				script = d[0]; args = d[1]; pipeName = d[2];
@@ -193,7 +193,7 @@ static class CommandLine
 			var f = Model?.FindFile(script);
 			if(f == null) {
 				if(action == 99) Print($"Command line: script '{script}' not found."); //else the caller script will throw exception
-				return (int)AuTask.ERunResult.notFound;
+				return (int)ATask.ERunResult.notFound;
 			}
 			return Run.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
 		case 110: //received from our non-admin drop-target process on OnDragEnter
