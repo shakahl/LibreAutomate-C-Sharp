@@ -136,8 +136,33 @@ namespace Au
 		/// </summary>
 		class _OutputWriter : TextWriter
 		{
-			public override void WriteLine(string value) { WriteDirectly(value); }
+			StringBuilder _b;
+
 			public override Encoding Encoding => Encoding.Unicode;
+			public override void WriteLine(string value) { WriteDirectly(_PrependBuilder(value)); }
+			public override void Write(string value)
+			{
+				//QM2.Write($"'{value}'");
+				if(Empty(value)) return;
+				if(value.Ends('\n')) {
+					WriteLine(value.RemoveSuffix(value.Ends("\r\n") ? 2 : 1));
+				} else {
+					(_b ?? (_b = new StringBuilder())).Append(value);
+				}
+			}
+			string _PrependBuilder(string value)
+			{
+				if(_b != null && _b.Length > 0) {
+					value = _b.ToString() + value;
+					_b.Clear();
+				}
+				return value;
+			}
+			public override void Flush()
+			{
+				var s = _PrependBuilder(null);
+				if(!Empty(s)) WriteDirectly(s);
+			}
 		}
 
 		/// <summary>

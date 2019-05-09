@@ -310,7 +310,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sends key events added by BlockUserInput -> LibAddRaw.
+		/// Sends key events added by InputBlocker -> LibAddRaw.
 		/// Simply calls Api.SendInput. No options, no sleep, etc.
 		/// If new events added while sending, sends them too, until there are no new events added.
 		/// </summary>
@@ -484,7 +484,7 @@ namespace Au
 			//Perf.First();
 			int sleepFinally = 0;
 			bool restoreCapsLock = false;
-			var bi = new BlockUserInput() { ResendBlockedKeys = true };
+			var bi = new InputBlocker() { ResendBlockedKeys = true };
 			try {
 				_sending = true;
 				//Print("{");

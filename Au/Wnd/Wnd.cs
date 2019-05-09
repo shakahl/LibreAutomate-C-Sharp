@@ -2377,10 +2377,9 @@ namespace Au
 		public bool Is64Bit {
 			get {
 				if(Ver.Is64BitOS) {
-					using(var ph = LibHandle.OpenProcess(this)) {
-						if(ph.Is0 || !Api.IsWow64Process(ph, out var is32bit)) return false;
-						if(!is32bit) return true;
-					}
+					using var ph = LibHandle.OpenProcess(this);
+					if(ph.Is0 || !Api.IsWow64Process(ph, out var is32bit)) return false;
+					if(!is32bit) return true;
 				}
 				WinError.Clear();
 				return false;

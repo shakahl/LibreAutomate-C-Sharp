@@ -154,7 +154,7 @@ namespace Au.Controls
 	/// </description>
 	/// <description>
 	/// Opens a web page or runs a program or any file.
-	/// Calls function <see cref="Shell.TryRun"/>.
+	/// Calls function <see cref="Exec.TryRun"/>.
 	/// </description>
 	/// </item>
 	/// <item>
@@ -166,7 +166,7 @@ namespace Au.Controls
 	/// <description>
 	/// Google.
 	/// Uses this code:
-	/// <c>Shell.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);</c>
+	/// <c>Exec.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);</c>
 	/// Here s1 and s2 are attribute parts separated by |.
 	/// </description>
 	/// </item>
@@ -200,7 +200,7 @@ namespace Au.Controls
 	/// </description>
 	/// <description>
 	/// Selects file or folder in File Explorer.
-	/// Calls function <see cref="Shell.SelectFileInExplorer"/>.
+	/// Calls function <see cref="Exec.SelectFileInExplorer"/>.
 	/// </description>
 	/// </item>
 	/// <item>
@@ -865,16 +865,16 @@ namespace Au.Controls
 
 			switch(tag) {
 			case "link":
-				Shell.TryRun(s1, s2);
+				Exec.TryRun(s1, s2);
 				break;
 			case "google":
-				Shell.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
+				Exec.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
 			case "help":
 				Util.AHelp.AuWeb(attr);
 				break;
 			case "explore":
-				Shell.SelectFileInExplorer(attr);
+				Exec.SelectFileInExplorer(attr);
 				break;
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.

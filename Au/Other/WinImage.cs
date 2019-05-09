@@ -64,10 +64,9 @@ namespace Au
 				fixed (byte* pb = b) {
 					fixed (char* ps = image) n = AConvert.Base64Decode(ps + start, len, pb, n);
 				}
-				using(var stream = compressed ? new MemoryStream() : new MemoryStream(b, 0, n, false)) {
-					if(compressed) AConvert.Decompress(stream, b, 0, n);
-					R = new Bitmap(stream);
-				}
+				using var stream = compressed ? new MemoryStream() : new MemoryStream(b, 0, n, false);
+				if(compressed) AConvert.Decompress(stream, b, 0, n);
+				R = new Bitmap(stream);
 				//size and speed of "image:" and "~:": "image:" usually is bigger by 10-20% and faster by ~25%
 			} else {
 				image = APath.Normalize(image, Folders.ThisAppImages);
@@ -126,10 +125,8 @@ namespace Au
 		/// <remarks>
 		/// Slower than <see cref="Rect"/>.
 		/// </remarks>
-		public RECT RectInScreen
-		{
-			get
-			{
+		public RECT RectInScreen {
+			get {
 				RECT r;
 				switch(_area.Type) {
 				case WIArea.AreaType.Wnd:
@@ -277,10 +274,9 @@ namespace Au
 		/// </example>
 		public static WinImage Find(WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<WinImage, WIAlso> also = null)
 		{
-			using(var f = new _Finder(_Action.Find, area, image, flags, colorDiff, also)) {
-				if(!f.Find()) return null;
-				return f.Result;
-			}
+			using var f = new _Finder(_Action.Find, area, image, flags, colorDiff, also);
+			if(!f.Find()) return null;
+			return f.Result;
 		}
 
 		internal enum _Action { Find, Wait, WaitNot, WaitChanged }
@@ -337,13 +333,12 @@ namespace Au
 
 		static (bool ok, WinImage result) _Wait(_Action action, double secondsTimeout, WIArea area, object image, WIFlags flags, int colorDiff, Func<WinImage, WIAlso> also)
 		{
-			using(var f = new _Finder(action, area, image, flags, colorDiff, also)) {
-				bool ok = WaitFor.Condition(secondsTimeout, () => f.Find() ^ (action > _Action.Wait));
-				return (ok, f.Result);
-			}
+			using var f = new _Finder(action, area, image, flags, colorDiff, also);
+			bool ok = WaitFor.Condition(secondsTimeout, () => f.Find() ^ (action > _Action.Wait));
+			return (ok, f.Result);
 		}
 
-		internal unsafe class _Finder :IDisposable
+		internal unsafe class _Finder : IDisposable
 		{
 			class _Image
 			{
@@ -1003,7 +998,7 @@ namespace Au
 				//using(var areaBmp = new Bitmap(areaWidth, areaHeight, areaWidth * 4, PixelFormat.Format32bppRgb, (IntPtr)_areaPixels)) {
 				//	areaBmp.Save(testFile);
 				//}
-				//Shell.Run(testFile);
+				//Exec.Run(testFile);
 			}
 		}
 
@@ -1034,7 +1029,7 @@ namespace Au.Types
 	/// </remarks>
 	public class WIArea
 	{
-		internal enum AreaType :byte { Screen, Wnd, Acc, Bitmap }
+		internal enum AreaType : byte { Screen, Wnd, Acc, Bitmap }
 
 		internal AreaType Type;
 		internal bool HasRect;

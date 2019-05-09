@@ -727,10 +727,10 @@ partial class PanelEdit : Control
 						_AppendFile(path, name);
 						if(isLnk) {
 							try {
-								var g = Shell.Shortcut.Open(path);
+								var g = ShellShortcut.Open(path);
 								string target = g.TargetAnyType, args = null;
 								if(target.Starts("::")) {
-									using(var pidl = Shell.Pidl.FromString(target))
+									using(var pidl = Pidl.FromString(target))
 										name = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
 								} else {
 									args = g.Arguments;
@@ -824,7 +824,7 @@ partial class PanelEdit : Control
 					if(isFN && !fn.IsCodeFile) {
 						t.Append("//").Append(path);
 					} else {
-						t.Append(isFN ? "ATask.Run(@\"" : "Shell.Run(@\"").Append(path);
+						t.Append(isFN ? "ATask.Run(@\"" : "Exec.Run(@\"").Append(path);
 						if(!Empty(args)) t.Append("\", \"").Append(args.Escape());
 						t.Append("\");");
 						if(menuVar == null && !isFN && (path.Starts("::") || path.Index(name, true) < 0)) t.Append(" //").Append(name);
@@ -859,7 +859,7 @@ partial class PanelEdit : Control
 				shells = new string[n]; names = new string[n];
 				IntPtr pidlFolder = (IntPtr)(p + *pi++);
 				for(int i = 0; i < n; i++) {
-					using(var pidl = new Shell.Pidl(pidlFolder, (IntPtr)(p + pi[i]))) {
+					using(var pidl = new Pidl(pidlFolder, (IntPtr)(p + pi[i]))) {
 						shells[i] = pidl.ToString();
 						names[i] = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
 					}
@@ -911,7 +911,7 @@ partial class PanelEdit : Control
 			if(isFragment) {
 				b.Append(s);
 			} else {
-				var name = FN.Name; if(isScript && name.RegexIsMatch(@"(?i)^Script\d*\.cs")) name = null;
+				var name = FN.Name; if(isScript && name.Regex(@"(?i)^Script\d*\.cs")) name = null;
 				var sType = isScript ? "script" : "class";
 				var rx = isScript ? _RxScript : _RxClass;
 				//Perf.First();
@@ -1040,7 +1040,7 @@ partial class PanelEdit : Control
 			if(s.Length == 0) return;
 			bool wasSelection = x.selEnd > x.selStart;
 			bool caretAtEnd = wasSelection && ST.CurrentPos == x.linesEnd;
-			bool com = comment ?? !s.RegexIsMatch("^[ \t]*//(?!/[^/])");
+			bool com = comment ?? !s.Regex("^[ \t]*//(?!/[^/])");
 			s = com ? s.RegexReplace(@"(?m)^", "//") : s.RegexReplace(@"(?m)^([ \t]*)//", "$1");
 			ST.ReplaceRange(x.linesStart, x.linesEnd, s);
 			if(wasSelection) {

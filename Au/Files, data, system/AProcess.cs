@@ -50,29 +50,28 @@ namespace Au
 			//if(s_time != 0) Print(t - s_time);
 			//s_time = t;
 
-			using(var ph = LibHandle.OpenProcess(processId)) {
-				if(!ph.Is0) {
-					//In non-admin process fails if the process is of another user session.
-					//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
+			using var ph = LibHandle.OpenProcess(processId);
+			if(!ph.Is0) {
+				//In non-admin process fails if the process is of another user session.
+				//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
 
-					//getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\System32\notepad.exe" and I don't know API to convert to normal
-					if(_QueryFullProcessImageName(ph, !fullPath, out var s)) {
-						R = s;
-						if(APath.LibIsPossiblyDos(R)) {
-							if(fullPath || _QueryFullProcessImageName(ph, false, out s)) {
-								R = APath.LibExpandDosPath(s);
-								if(!fullPath) R = _GetFileName(R);
-							}
+				//getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\System32\notepad.exe" and I don't know API to convert to normal
+				if(_QueryFullProcessImageName(ph, !fullPath, out var s)) {
+					R = s;
+					if(APath.LibIsPossiblyDos(R)) {
+						if(fullPath || _QueryFullProcessImageName(ph, false, out s)) {
+							R = APath.LibExpandDosPath(s);
+							if(!fullPath) R = _GetFileName(R);
 						}
 					}
-				} else if(!noSlowAPI && !fullPath) { //the slow way. Can get only names, not paths.
-					using(new _AllProcesses(out var p, out int n)) {
-						for(int i = 0; i < n; i++)
-							if(p[i].processID == processId) {
-								R = p[i].GetName(cannotOpen: true);
-								break;
-							}
-					}
+				}
+			} else if(!noSlowAPI && !fullPath) { //the slow way. Can get only names, not paths.
+				using(new _AllProcesses(out var p, out int n)) {
+					for(int i = 0; i < n; i++)
+						if(p[i].processID == processId) {
+							R = p[i].GetName(cannotOpen: true);
+							break;
+						}
 				}
 			}
 
@@ -233,10 +232,9 @@ namespace Au
 				}
 				string R = Util.StringCache.LibAdd(namePtr, nameLen);
 				if(!cannotOpen && APath.LibIsPossiblyDos(R)) {
-					using(var ph = LibHandle.OpenProcess(processID)) {
-						if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
-							R = _GetFileName(APath.LibExpandDosPath(s));
-						}
+					using var ph = LibHandle.OpenProcess(processID);
+					if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
+						R = _GetFileName(APath.LibExpandDosPath(s));
 					}
 				}
 				return R;

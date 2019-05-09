@@ -36,7 +36,7 @@ namespace Au
 		/// Usually known folders are used like <c>string path = Folders.Documents + "file.txt"</c>. It's easier and faster. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
 		/// To get known folder path, this function calls <see cref="Folders.GetFolder"/>.
 		///
-		/// This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>Shell</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
+		/// This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>Exec</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
 		/// </remarks>
 		public static string ExpandEnvVar(string path)
 		{
@@ -598,7 +598,7 @@ namespace Au
 		{
 			if(name == null || (name = name.Trim()).Length == 0) return "-";
 			name = name.RegexReplace(_rxInvalidFN1, invalidCharReplacement).Trim();
-			if(name.RegexIsMatch(_rxInvalidFN2)) name = "@" + name;
+			if(name.Regex(_rxInvalidFN2)) name = "@" + name;
 			return name;
 		}
 
@@ -613,7 +613,7 @@ namespace Au
 		public static bool IsInvalidFileName(string name)
 		{
 			if(name == null || (name = name.Trim()).Length == 0) return true;
-			return name.RegexIsMatch(_rxInvalidFN1) || name.RegexIsMatch(_rxInvalidFN2);
+			return name.Regex(_rxInvalidFN1) || name.Regex(_rxInvalidFN2);
 		}
 
 		/// <summary>

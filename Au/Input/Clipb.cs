@@ -56,11 +56,9 @@ namespace Au
 		/// The 'get' function calls <see cref="Data.GetText"/>. Also can get file paths, as multiline text. Returns null if there is no text/files.
 		/// </remarks>
 		/// <seealso cref="Clipb.Data"/>
-		public static string Text
-		{
+		public static string Text {
 			get => Data.GetText(0);
-			set
-			{
+			set {
 				using(new _OpenClipboard(true)) {
 					_EmptyClipboard();
 					if(value != null) Data.LibSetText(value);
@@ -148,7 +146,7 @@ namespace Au
 			var opt = options ?? Opt.Key;
 			bool restore = opt.RestoreClipboard;
 			_ClipboardListener listener = null;
-			var bi = new BlockUserInput() { ResendBlockedKeys = true };
+			var bi = new InputBlocker() { ResendBlockedKeys = true };
 			var oc = new _OpenClipboard(createOwner: true, noOpenNow: !restore);
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
@@ -264,7 +262,7 @@ namespace Au
 		{
 			var wFocus = Keyb.Lib.GetWndFocusedOrActive();
 			var opt = options ?? Opt.Key;
-			var bi = new BlockUserInput() { ResendBlockedKeys = true };
+			var bi = new InputBlocker() { ResendBlockedKeys = true };
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
 				Keyb.Lib.ReleaseModAndDisableModMenu();
@@ -366,7 +364,7 @@ namespace Au
 		/// Waits until the target app gets (Paste) or sets (Copy) clipboard text.
 		/// For it subclasses our clipboard owner window and uses clipboard messages. Does not unsubclass.
 		/// </summary>
-		class _ClipboardListener :LibWaitVariable
+		class _ClipboardListener : LibWaitVariable
 		{
 			bool _paste; //true if used for paste, false if for copy
 			object _data; //string or Data. null if !_paste.
@@ -500,7 +498,7 @@ namespace Au
 		/// If the 'noOpenNow' parameter is true, does not open, only creates owner if need.
 		/// Dispose() closes clipboard and destroys the owner window.
 		/// </summary>
-		struct _OpenClipboard :IDisposable
+		struct _OpenClipboard : IDisposable
 		{
 			bool _isOpen;
 			Wnd _w;
@@ -662,19 +660,17 @@ namespace Au
 				if(len > 0) return Util.StringCache.LibAdd(b, len);
 			}
 			//standard
-			string s = null;
-			switch(format) { case Api.CF_TEXT: s = "CF_TEXT"; break; case Api.CF_BITMAP: s = "CF_BITMAP"; break; case Api.CF_METAFILEPICT: s = "CF_METAFILEPICT"; break; case Api.CF_SYLK: s = "CF_SYLK"; break; case Api.CF_DIF: s = "CF_DIF"; break; case Api.CF_TIFF: s = "CF_TIFF"; break; case Api.CF_OEMTEXT: s = "CF_OEMTEXT"; break; case Api.CF_DIB: s = "CF_DIB"; break; case Api.CF_PALETTE: s = "CF_PALETTE"; break; case Api.CF_RIFF: s = "CF_RIFF"; break; case Api.CF_WAVE: s = "CF_WAVE"; break; case Api.CF_UNICODETEXT: s = "CF_UNICODETEXT"; break; case Api.CF_ENHMETAFILE: s = "CF_ENHMETAFILE"; break; case Api.CF_HDROP: s = "CF_HDROP"; break; case Api.CF_LOCALE: s = "CF_LOCALE"; break; case Api.CF_DIBV5: s = "CF_DIBV5"; break; }
+			var s = format switch { Api.CF_TEXT => "CF_TEXT", Api.CF_BITMAP => "CF_BITMAP", Api.CF_METAFILEPICT => "CF_METAFILEPICT", Api.CF_SYLK => "CF_SYLK", Api.CF_DIF => "CF_DIF", Api.CF_TIFF => "CF_TIFF", Api.CF_OEMTEXT => "CF_OEMTEXT", Api.CF_DIB => "CF_DIB", Api.CF_PALETTE => "CF_PALETTE", Api.CF_RIFF => "CF_RIFF", Api.CF_WAVE => "CF_WAVE", Api.CF_UNICODETEXT => "CF_UNICODETEXT", Api.CF_ENHMETAFILE => "CF_ENHMETAFILE", Api.CF_HDROP => "CF_HDROP", Api.CF_LOCALE => "CF_LOCALE", Api.CF_DIBV5 => "CF_DIBV5", _ => null };
 			return s ?? format.ToString();
 		}
 
 		internal static void LibPrintClipboard()
 		{
 			Print("---- Clipboard ----");
-			using(var oc = new _OpenClipboard(true)) {
-				Api.GetClipboardData(0); //JIT
-				var save = new _SaveRestore();
-				save.Save(true);
-			}
+			using var oc = new _OpenClipboard(true);
+			Api.GetClipboardData(0); //JIT
+			var save = new _SaveRestore();
+			save.Save(true);
 		}
 	}
 

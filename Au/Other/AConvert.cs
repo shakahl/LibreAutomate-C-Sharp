@@ -277,7 +277,7 @@ namespace Au
 		/// If need, can be converted to byte[] with <see cref="ToArray"/> or to hex string with <see cref="ToString"/>.
 		/// </summary>
 		[Serializable]
-		public struct MD5HashResult :IEquatable<MD5HashResult>
+		public struct MD5HashResult : IEquatable<MD5HashResult>
 		{
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 			public long r1, r2;
@@ -342,9 +342,8 @@ namespace Au
 		/// <param name="algorithm">Algorithm name, eg "SHA256". See <see cref="CryptoConfig"/>.</param>
 		public static byte[] Hash(byte[] a, string algorithm)
 		{
-			using(var x = (HashAlgorithm)CryptoConfig.CreateFromName(algorithm)) {
-				return x.ComputeHash(a);
-			}
+			using var x = (HashAlgorithm)CryptoConfig.CreateFromName(algorithm);
+			return x.ComputeHash(a);
 		}
 
 		/// <summary>
@@ -739,12 +738,10 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of DeflateStream.</exception>
 		public static byte[] Compress(byte[] data)
 		{
-			using(MemoryStream memoryStream = new MemoryStream()) {
-				using(DeflateStream deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress)) {
-					deflateStream.Write(data, 0, data.Length);
-				}
-				return memoryStream.ToArray();
-			}
+			using var memoryStream = new MemoryStream();
+			using var deflateStream = new DeflateStream(memoryStream, CompressionMode.Compress);
+			deflateStream.Write(data, 0, data.Length);
+			return memoryStream.ToArray();
 		}
 
 		/// <summary>
@@ -757,10 +754,9 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of DeflateStream.</exception>
 		public static byte[] Decompress(byte[] compressedData, int index = 0, int count = -1)
 		{
-			using(var stream = new MemoryStream()) {
-				Decompress(stream, compressedData, index, count);
-				return stream.ToArray();
-			}
+			using var stream = new MemoryStream();
+			Decompress(stream, compressedData, index, count);
+			return stream.ToArray();
 		}
 
 		/// <summary>
@@ -775,20 +771,17 @@ namespace Au
 		/// <example>
 		/// This code is used by the other Decompress overload.
 		/// <code><![CDATA[
-		/// using(var stream = new MemoryStream()) {
-		/// 	Decompress(stream, compressedData, index, count);
-		/// 	return stream.ToArray();
-		/// }
+		/// using var stream = new MemoryStream();
+		/// Decompress(stream, compressedData, index, count);
+		/// return stream.ToArray();
 		/// ]]></code>
 		/// </example>
 		public static void Decompress(Stream streamForDecompressedData, byte[] compressedData, int index = 0, int count = -1)
 		{
 			if(count < 0) count = compressedData.Length - index;
-			using(MemoryStream compressStream = new MemoryStream(compressedData, index, count, false)) {
-				using(DeflateStream deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress)) {
-					deflateStream.CopyTo(streamForDecompressedData);
-				}
-			}
+			using var compressStream = new MemoryStream(compressedData, index, count, false);
+			using var deflateStream = new DeflateStream(compressStream, CompressionMode.Decompress);
+			deflateStream.CopyTo(streamForDecompressedData);
 
 			//note: cannot deflateStream.Read directly to array because its Length etc are not supported.
 			//note: also cannot use decompressedStream.GetBuffer because it can be bigger.

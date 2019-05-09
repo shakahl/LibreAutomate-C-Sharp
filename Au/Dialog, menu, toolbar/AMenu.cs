@@ -80,7 +80,7 @@ namespace Au
 		Specialized AddX methods.
 		
 		For example, instead of
-		m["Label"] = o => Shell.TryRun("notepad.exe");
+		m["Label"] = o => Exec.TryRun("notepad.exe");
 		can use
 		m.Run("notepad.exe", "label"); //label is optional
 		Then can auto-get icon without disassembling the callback.
@@ -94,7 +94,7 @@ namespace Au
 		Can even use extension methods for this. Example:
 		public static void Run(this AMenu m, string path, string label = null)
 		{
-			m[label ?? path, path] = o => Shell.TryRun(path);
+			m[label ?? path, path] = o => Exec.TryRun(path);
 		}
 
 		*/
@@ -112,7 +112,7 @@ namespace Au
 		/// m["Three"] = o => { Print(o.MenuItem.Checked); };
 		/// m.LastMenuItem.Checked = true;
 		/// m.ExtractIconPathFromCode = true;
-		/// m["notepad"] = o => Shell.TryRun(Folders.System + "notepad.exe"));
+		/// m["notepad"] = o => Exec.TryRun(Folders.System + "notepad.exe"));
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
@@ -130,7 +130,7 @@ namespace Au
 		/// - string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// - int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// - Icon, Image, Folders.FolderPath.
-		/// - null (default) - no icon. If <see cref="AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
+		/// - null (default) - no icon. If <see cref="AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>Exec.TryRun(@"c:\path\file.exe")</c> or <c>Exec.TryRun(Folders.System + "file.exe")</c>.
 		/// - "" - no icon.
 		/// </param>
 		/// <remarks>
@@ -145,7 +145,7 @@ namespace Au
 		/// m.Add("Two", o => { Print(o.MenuItem.Checked); ADialog.Show(o.ToString()); });
 		/// m.LastMenuItem.Checked = true;
 		/// m.ExtractIconPathFromCode = true;
-		/// m.Add("notepad", o => Shell.TryRun(Folders.System + "notepad.exe"));
+		/// m.Add("notepad", o => Exec.TryRun(Folders.System + "notepad.exe"));
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
@@ -1303,7 +1303,7 @@ namespace Au.Types
 			//	Opcodes: call(Folders.System), ldstr("notepad.exe"), Folders.FolderPath.op_Addition.
 			//also code pattern like 'Folders.System' or 'Folders.Virtual.RecycleBin'.
 			//	Opcodes: call(Folders.System), Folders.FolderPath.op_Implicit(FolderPath to string).
-			//also code pattern like 'Shell.TryRun("notepad.exe")'.
+			//also code pattern like 'Exec.TryRun("notepad.exe")'.
 			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
 			try {
 				var reader = new Util.ILReader(mi);
@@ -1316,7 +1316,7 @@ namespace Au.Types
 						//Print(s);
 						if(i == patternStart + 1) filename = s;
 						else {
-							if(APath.IsFullPathExpandEnvVar(ref s)) return s; //eg Shell.TryRun(@"%Folders.System%\notepad.exe");
+							if(APath.IsFullPathExpandEnvVar(ref s)) return s; //eg Exec.TryRun(@"%Folders.System%\notepad.exe");
 							if(APath.IsUrl(s) || APath.LibIsShellPath(s)) return s;
 							filename = null; patternStart = -1;
 							if(i == 1) filename2 = s;

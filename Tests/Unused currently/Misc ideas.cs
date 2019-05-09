@@ -135,7 +135,7 @@ static partial class Test
 	msgbox(...); //ADialog.Show(...);
 	click(...); //Mouse.Click(...);
 	mmove(...); //Mouse.Move(...);
-	run(...); //Shell.Run(...);
+	run(...); //Exec.Run(...);
 	act(...); //Wnd.Activate(...);
 	win(...); //Wnd.Find(...);
 	*/

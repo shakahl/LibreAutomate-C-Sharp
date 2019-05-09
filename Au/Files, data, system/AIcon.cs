@@ -37,7 +37,7 @@ namespace Au
 		/// Can be:
 		/// - Path of any file or folder.
 		/// - URL, like <c>"http://..."</c> or <c>"mailto:a@b.c"</c> or <c>"file:///path"</c>.
-		/// - ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="Shell.Pidl.ToHexString"/>.
+		/// - ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="Pidl.ToHexString"/>.
 		/// - Shell object parsing name, like <c>@"::{CLSID-1}\::{CLSID-2}"</c> or <c>@"shell:AppsFolder\WinStoreAppId"</c>.
 		/// - File type like <c>".txt"</c> or URL protocol like <c>"http:"</c>.
 		/// 
@@ -83,7 +83,7 @@ namespace Au
 		/// <returns>Returns null if failed.</returns>
 		/// <param name="pidl">ITEMIDLIST pointer (PIDL).</param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="IconSize"/>, cast to int.</param>
-		public static Icon GetPidlIcon(Shell.Pidl pidl, int size)
+		public static Icon GetPidlIcon(Pidl pidl, int size)
 			=> HandleToIcon(GetPidlIconHandle(pidl, size), true);
 
 		/// <summary>
@@ -91,7 +91,7 @@ namespace Au
 		/// More info: <see cref="GetPidlIcon"/>.
 		/// </summary>
 		/// <returns>Returns null if failed.</returns>
-		public static Bitmap GetPidlIconImage(Shell.Pidl pidl, int size)
+		public static Bitmap GetPidlIconImage(Pidl pidl, int size)
 			=> HandleToImage(GetPidlIconHandle(pidl, size), true);
 
 		/// <summary>
@@ -99,7 +99,7 @@ namespace Au
 		/// More info: <see cref="GetPidlIcon"/>.
 		/// </summary>
 		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-		public static IntPtr GetPidlIconHandle(Shell.Pidl pidl, int size)
+		public static IntPtr GetPidlIconHandle(Pidl pidl, int size)
 		{
 			if(pidl?.IsNull ?? false) return default;
 			size = _NormalizeIconSizeParameter(size);
@@ -233,7 +233,7 @@ namespace Au
 		}
 
 		//usePidl - if pidl not null/IsNull, use pidl, else convert file to PIDL. If false, pidl must be null.
-		static IntPtr _GetShellIcon(bool usePidl, string file, Shell.Pidl pidl, int size, bool freePidl = false)
+		static IntPtr _GetShellIcon(bool usePidl, string file, Pidl pidl, int size, bool freePidl = false)
 		{
 			//info:
 			//	We support everything that can have icon - path, URL, protocol (eg "http:"), file extension (eg ".txt"), shell item parsing name (eg "::{CLSID}"), "shell:AppsFolder\WinStoreAppId".
@@ -246,7 +246,7 @@ namespace Au
 			var pidl2 = pidl?.UnsafePtr ?? default;
 			if(usePidl) {
 				if(pidl2 == default) {
-					pidl2 = Shell.Pidl.LibFromString(file);
+					pidl2 = Pidl.LibFromString(file);
 					if(pidl2 == default) usePidl = false; else freePidl = true;
 				}
 			}
@@ -269,10 +269,9 @@ namespace Au
 					R = _GetShellIcon2(usePidl, pidl2, size);
 				} else {
 					//tested: switching thread does not make slower. The speed depends mostly on locking, because then thread pool threads must wait.
-					using(var work = Util.ThreadPoolSTA.CreateWork(null, o => { R = _GetShellIcon2(usePidl, pidl2, size); })) {
-						work.Submit();
-						work.Wait();
-					}
+					using var work = Util.ThreadPoolSTA.CreateWork(null, o => { R = _GetShellIcon2(usePidl, pidl2, size); });
+					work.Submit();
+					work.Wait();
 				}
 			}
 			finally { if(freePidl) Marshal.FreeCoTaskMem(pidl2); }
@@ -332,12 +331,11 @@ namespace Au
 		static IntPtr _GetLnkIcon(string file, int size)
 		{
 			try {
-				using(var x = Shell.Shortcut.Open(file)) {
-					var s = x.GetIconLocation(out int ii); if(s != null) return LoadIconHandle(s, ii, size);
-					s = x.TargetPathRawMSI; if(s != null) return GetFileIconHandle(s, size);
-					//Print("need IDList", file);
-					using(var pidl = x.TargetPidl) return GetPidlIconHandle(pidl, size);
-				}
+				using var x = ShellShortcut.Open(file);
+				var s = x.GetIconLocation(out int ii); if(s != null) return LoadIconHandle(s, ii, size);
+				s = x.TargetPathRawMSI; if(s != null) return GetFileIconHandle(s, size);
+				//Print("need IDList", file);
+				using(var pidl = x.TargetPidl) return GetPidlIconHandle(pidl, size);
 			}
 			catch { return default; }
 		}
@@ -491,13 +489,11 @@ namespace Au
 		public static IntPtr CreateIconHandle(int width, int height, Action<Graphics> drawCallback = null)
 		{
 			if(drawCallback != null) {
-				using(var b = new Bitmap(width, height)) {
-					using(var g = Graphics.FromImage(b)) {
-						g.Clear(Color.Transparent); //optional, new bitmaps are transparent, but it is undocumented, and eg .NET Bitmap.MakeTransparent does it
-						drawCallback(g);
-						return b.GetHicon();
-					}
-				}
+				using var b = new Bitmap(width, height);
+				using var g = Graphics.FromImage(b);
+				g.Clear(Color.Transparent); //optional, new bitmaps are transparent, but it is undocumented, and eg .NET Bitmap.MakeTransparent does it
+				drawCallback(g);
+				return b.GetHicon();
 			} else {
 				int nb = AMath.AlignUp(width, 32) / 8 * height;
 				var aAnd = new byte[nb]; for(int i = 0; i < nb; i++) aAnd[i] = 0xff;
@@ -590,7 +586,7 @@ namespace Au
 		/// </summary>
 		/// <threadsafety static="true" instance="true"/>
 		/// <seealso cref="Util.IconsAsync"/>
-		public sealed class ImageCache :IDisposable
+		public sealed class ImageCache : IDisposable
 		{
 			XElement _x;
 			Hashtable _table;
@@ -731,9 +727,8 @@ namespace Au
 							if(_x != null) {
 								var x = _x.Elem("i", "name", file, true);
 								if(x != null) {
-									using(var ms = new MemoryStream(AConvert.Base64Decode(x.Value), false)) {
-										R = new Bitmap(ms);
-									}
+									using var ms = new MemoryStream(AConvert.Base64Decode(x.Value), false);
+									R = new Bitmap(ms);
 								}
 							}
 						}
@@ -1056,40 +1051,4 @@ namespace Au.Types
 		MAX_ICONS = 181
 	}
 #pragma warning restore 1591
-
-
-	//public struct AIcon
-	//{
-	//	public object Value { get; }
-
-	//	AIcon(object o) { Value = o; }
-
-	//	public static implicit operator AIcon(Icon icon) => new AIcon(icon);
-	//	public static implicit operator AIcon(Image image) => new AIcon(image);
-	//	public static implicit operator AIcon(string file) => new AIcon(file);
-	//	public static implicit operator AIcon((string file, GIFlags flags) t) => new AIcon(t);
-	//	public static implicit operator AIcon((string file, int index) t) => new AIcon(t);
-	//	public static implicit operator AIcon(Shell.Pidl pidl) => new AIcon(pidl);
-	//	public static implicit operator AIcon(StockIcon icon) => new AIcon(icon);
-
-	//	public Icon GetIcon(int size)
-	//	{
-	//		if(GetIconOrImage(size) is Bitmap b) return AIcon.HandleToIcon(b.GetHicon());
-	//		return null;
-	//	}
-
-	//	public object GetIconOrImage(int size)
-	//	{
-	//		switch(Value) {
-	//		case Icon k: return k;
-	//		case Image k: return k;
-	//		case string k: return AIcon.GetFileIcon(k, size);
-	//		case ValueTuple<string, GIFlags> k: return AIcon.GetFileIcon(k.Item1, size, k.Item2);
-	//		case ValueTuple<string, int> k: return AIcon.LoadIcon(k.Item1, k.Item2, size);
-	//		case Shell.Pidl k: return AIcon.GetPidlIcon(k, size);
-	//		case StockIcon k: return AIcon.GetStockIcon(k, size);
-	//		}
-	//		return null;
-	//	}
-	//}
 }

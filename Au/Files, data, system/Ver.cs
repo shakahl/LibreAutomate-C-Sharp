@@ -96,6 +96,6 @@ namespace Au
 		/// <summary>
 		/// Returns true if this process is a 32-bit process running on 64-bit Windows. Also known as WOW64 process.
 		/// </summary>
-		public static bool Is32BitProcessOn64BitOS => _isWow64;
+		public static bool Is32BitProcessAnd64BitOS => _isWow64;
 	}
 }

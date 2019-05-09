@@ -82,9 +82,8 @@ namespace Au
 		/// <param name="nativeId"></param>
 		internal static void LibTerminate(int nativeId)
 		{
-			using(var th = Api.OpenThread(Api.THREAD_TERMINATE, false, nativeId)) {
-				if(!th.Is0) Api.TerminateThread(th, 0);
-			}
+			using var th = Api.OpenThread(Api.THREAD_TERMINATE, false, nativeId);
+			if(!th.Is0) Api.TerminateThread(th, 0);
 		}
 
 		/// <summary>

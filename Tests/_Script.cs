@@ -832,18 +832,18 @@ unsafe partial class Script : AScript
 		////var r = ps.StartUserIL(Au.Util.LibProcessStarter.Result.Need.NetProcess);
 		//r.netProcess.WaitForExit();
 
-		//Print(Shell.RunConsole(s => Print(s.Length, s), exe));
-		//Print(Shell.RunConsole(exe));
-		//Print(Shell.RunConsole(out var s, exe)); Print(s);
-		//Print(Shell.RunConsole(s => Print(s.Length, s), exe, rawText: true));
-		//Print(Shell.RunConsole(exe, "cmd", "q:\\programs", encoding: Encoding.UTF8));
+		//Print(Exec.RunConsole(s => Print(s.Length, s), exe));
+		//Print(Exec.RunConsole(exe));
+		//Print(Exec.RunConsole(out var s, exe)); Print(s);
+		//Print(Exec.RunConsole(s => Print(s.Length, s), exe, rawText: true));
+		//Print(Exec.RunConsole(exe, "cmd", "q:\\programs", encoding: Encoding.UTF8));
 
 		//string v = "example";
-		//int r1 = Shell.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
+		//int r1 = Exec.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
 
-		//int r2 = Shell.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
+		//int r2 = Exec.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
 
-		//int r3 = Shell.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
+		//int r3 = Exec.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
 		//Print(text);
 
 		//Print("exit");
@@ -855,7 +855,7 @@ unsafe partial class Script : AScript
 		var exe = @"Q:\Test\ok\bin\console5.exe";
 
 #if true
-		int ec = Shell.RunConsole(s => {
+		int ec = Exec.RunConsole(s => {
 			Print(s);
 			//Print(s.Length, (int)s[s.Length - 1]);
 			Print(s.Length);
@@ -865,7 +865,7 @@ unsafe partial class Script : AScript
 		encoding: Encoding.UTF8);
 		//Print(ec);
 #elif true
-		Shell.RunConsole(out var s, exe, encoding: Encoding.UTF8);
+		Exec.RunConsole(out var s, exe, encoding: Encoding.UTF8);
 		Print(s);
 #else
 		using(var p = new Process()) {
@@ -913,7 +913,7 @@ unsafe partial class Script : AScript
 		//m["articles/Wildcard expression"] = f;
 		//m.Show();
 
-		string s = "abcd";
+		string s = "abcdefghijklmnoprstuv";
 		//Print(s.Starts("ab"));
 		//Print(s.Starts("Ab"));
 		//Print(s.Starts("Ab", true));
@@ -922,7 +922,96 @@ unsafe partial class Script : AScript
 		//s.Lower
 		//s.Has("", true)
 
-		
+		//Debug.Listeners.Add(new DebugListener());
+		//Trace.Listeners.Add(new DebugListener());
+		//Trace.Listeners.Add(new ConsoleTraceListener());
+		//Output.RedirectDebugOutput = true;
+		//Debug.Indent();
+		//Debug.Print("Debug.Print");
+		//Debug.Write("Debug.Write\n");
+		////Debug.WriteLine("Debug.WriteLine");
+		//Trace.Write("Trace.Write\r\n");
+		//Trace.Write("Trace.Write2\r\n");
+		////Trace.WriteLine("Trace.WriteLine");
+		//Print("END");
+
+		//Debug.Write("one");
+		//Debug.Write("two");
+		////Debug.Flush();
+		//Debug.Print("|");
+
+		//Debug.WriteLine("List of errors:");
+		//Debug.Indent();
+		//Debug.WriteLine("Error 1: File not found");
+		//Debug.WriteLine("Error 2: Directory not found");
+		//Debug.Unindent();
+		//Debug.WriteLine("End of list of errors");
+
+		//for(int i = 1; i <= 17; i++) Print(Clipb.LibGetFormatName(i));
+
+		//Print(s.RemoveSuffix("CD", true));
+		//Print(s.RemoveSuffix('d'));
+
+		//int limit = 8;
+		//Print(s.Limit(limit));
+		//Print(s.Limit(limit, true));
+
+		//if(s.Regex(""))
+	}
+
+	//class DebugListener :TraceListener
+	//{
+	//	public override void Write(string message) => Output.Write(message);
+
+	//	public override void WriteLine(string message) => Output.Write(message);
+	//}
+
+	void TestCs8()
+	{
+		int i = 1, j = 2;
+		switch(i, j) {
+		case (1, 2):
+			Print("yess");
+			break;
+		}
+
+		int k = j switch { 1 => 10, 2 => 20, _ => 0 };
+		Print(k);
+
+		POINT p = (3, 4);
+		if(p is POINT { x: 3, y: 4 }) Print("POINT(3,4)");
+
+		//Range range = 1..5; //no
+		//var s = "one"; Print(s[^1]); //no
+
+		//using var _ = new TestUsing();
+		//using new TestUsing(); //no
+		//TestUsing v = null; using v; //no
+
+		Loc(i);
+		static void Loc(int u)
+		{
+			Print(u);
+		}
+
+
+		switch(ADialog.Show("test", "mmm", "1 OK|2 Cancel")) {
+
+		}
+
+		int dr = ADialog.Show("test", "mmm", "1 OK|2 Cancel") switch
+		{
+			1 => 10,
+			_ => 20
+		};
+	}
+
+	class TestUsing : IDisposable
+	{
+		public void Dispose()
+		{
+			Print("Dispose");
+		}
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
@@ -932,6 +1021,10 @@ unsafe partial class Script : AScript
 		Output.QM2.UseQM2 = true;
 		Output.Clear();
 		100.ms();
+
+		//TestCs8();
+		//ADialog.Show();
+
 
 		TestTodo();
 		//TestOptReset();

@@ -33,7 +33,7 @@ namespace Au.Util
 		{
 			var url = "http://3.quickmacros.com/help/";
 			if(!Empty(topic)) url = url + (topic.IndexOf('/') < 0 ? (topic.Starts("Au.") ? "api/" : "api/Au.") : null) + topic + (topic.Ends('/') ? null : ".html");
-			Shell.TryRun(url);
+			Exec.TryRun(url);
 		}
 #else //.chm
 		/// <summary>

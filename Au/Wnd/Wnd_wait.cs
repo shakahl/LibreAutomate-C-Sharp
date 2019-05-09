@@ -259,14 +259,13 @@ namespace Au
 			//SHOULDDO: if window of this thread or process...
 
 			if(!IsAlive) return true;
-			using(var ph = LibHandle.OpenProcess(this, Api.SYNCHRONIZE)) {
-				if(ph.Is0) {
-					var e = new AException(0, "*open process handle"); //info: with SYNCHRONIZE can open process of higher IL
-					if(!IsAlive) return true;
-					throw e;
-				}
-				return 0 != WaitFor.Handle(secondsTimeout, Opt.WaitFor.DoEvents ? WHFlags.DoEvents : 0, ph);
+			using var ph = LibHandle.OpenProcess(this, Api.SYNCHRONIZE);
+			if(ph.Is0) {
+				var e = new AException(0, "*open process handle"); //info: with SYNCHRONIZE can open process of higher IL
+				if(!IsAlive) return true;
+				throw e;
 			}
+			return 0 != WaitFor.Handle(secondsTimeout, Opt.WaitFor.DoEvents ? WHFlags.DoEvents : 0, ph);
 		}
 	}
 }

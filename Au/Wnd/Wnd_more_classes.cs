@@ -286,7 +286,7 @@ namespace Au
 				{
 					if(!IsWinFormsControl(c)) return null;
 					try {
-						using(var x = new WinFormsControlNames(c)) { return x.GetControlName(c); }
+						using(var x = new WinFormsControlNames(c)) return x.GetControlName(c);
 					}
 					catch { }
 					return null;

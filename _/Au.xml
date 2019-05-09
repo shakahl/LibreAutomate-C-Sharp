@@ -2683,13 +2683,13 @@
         </member>
         <member name="T:Au.Types.RFlags">
             <summary>
-            Flags for <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            Flags for <see cref="M:Au.Exec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.RFlags.ShowErrorUI">
             <summary>
             Show error message box if fails, for example if file not found.
-            Note: this does not disable exceptions. Still need exception handling. Or call <see cref="M:Au.Shell.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            Note: this does not disable exceptions. Still need exception handling. Or call <see cref="M:Au.Exec.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.RFlags.WaitForExit">
@@ -2710,7 +2710,7 @@
         </member>
         <member name="T:Au.Types.RMore">
             <summary>
-            More parameters for <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            More parameters for <see cref="M:Au.Exec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
             </summary>
         </member>
         <member name="M:Au.Types.RMore.op_Implicit(System.String)~Au.Types.RMore">
@@ -2746,7 +2746,7 @@
         </member>
         <member name="T:Au.Types.RResult">
             <summary>
-            Results of <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            Results of <see cref="M:Au.Exec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
             </summary>
         </member>
         <member name="P:Au.Types.RResult.ProcessExitCode">
@@ -2770,9 +2770,9 @@
             null if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
             </summary>
             <example>
-            This code does the same as <c>Shell.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
+            This code does the same as <c>Exec.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
             <code><![CDATA[
-            var r = Shell.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
+            var r = Exec.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
             using(var h = r.ProcessHandle) h?.WaitOne();
             ]]></code>
             </example>
@@ -5688,21 +5688,21 @@
         </member>
         <member name="M:Au.ExtXml.Attr(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Int32)">
             <summary>
-            Gets attribute value converted to int (<see cref="M:Au.ExtString.ToInt(System.String)"/>).
+            Gets attribute value converted to int (<see cref="M:Au.ExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/>).
             If the attribute does not exist, returns defaultValue.
             If the attribute value is empty or does not begin with a valid number, returns 0.
             </summary>
         </member>
         <member name="M:Au.ExtXml.Attr(System.Xml.Linq.XElement,System.Int32@,System.Xml.Linq.XName)">
             <summary>
-            Gets attribute value converted to int (<see cref="M:Au.ExtString.ToInt(System.String)"/>).
+            Gets attribute value converted to int (<see cref="M:Au.ExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/>).
             If the attribute does not exist, sets value=0 and returns false.
             If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
             </summary>
         </member>
         <member name="M:Au.ExtXml.Attr(System.Xml.Linq.XElement,System.Int64@,System.Xml.Linq.XName)">
             <summary>
-            Gets attribute value converted to long (<see cref="M:Au.ExtString.ToInt64(System.String)"/>).
+            Gets attribute value converted to long (<see cref="M:Au.ExtString.ToInt64(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/>).
             If the attribute does not exist, sets value=0 and returns false.
             If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
             </summary>
@@ -6167,41 +6167,41 @@
             <example>
             <code><![CDATA[
             //open database file
-            using(var db = new SqliteDB(@"Q:\test\sqlite.db")) {
-            	//create table
-            	db.Execute("CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY, name TEXT, x INT, guid BLOB, array BLOB)");
-            	
-            	//add 2 rows of data
-            	using(var trans = db.Transaction()) { //optional, but makes much faster when making multiple changes, and ensures that all or none of these changes are written to the database
-            		using(var p = db.Statement("INSERT OR REPLACE INTO test VALUES(?, ?, :x, ?, ?)")) {
-            			//assume we want to add values of these variables to the database table
-            			int id = 1; string name = "TEXT"; long x = -10; Guid guid = Guid.NewGuid(); int[] arr = new int[] { 1, 2, 3 };
-            			//add first row
-            			p.Bind(1, id);
-            			p.Bind(2, name).BindStruct(4, guid).Bind(5, arr);
-            			p.Bind(":x", x);
-            			p.Step();
-            			//add second row
-            			p.Reset().Bind(1, 2).Bind(":x", 123456789012345).Step(); //unbound columns are null
-            		}
-            		//update single row
-            		db.Execute("UPDATE test SET name=?2 WHERE id=?1", 2, "two");
-            		//write all this to database
-            		trans.Commit();
-            	}
+            using var db = new SqliteDB(@"Q:\test\sqlite.db");
+            //create table
+            db.Execute("CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY, name TEXT, x INT, guid BLOB, array BLOB)");
             
-            	//get data
-            	using(var p = db.Statement("SELECT * FROM test")) {
-            		while(p.Step()) { //for each row of results
-            			Print(p.GetInt(0), p.GetText(1), p.GetLong(2));
-            			Print(p.GetStruct<Guid>("guid"));
-            			Print(p.GetArray<int>("array"));
-            			Print("----");
-            		}
+            //add 2 rows of data
+            using(var trans = db.Transaction()) { //optional, but makes much faster when making multiple changes, and ensures that all or none of these changes are written to the database
+            	using(var p = db.Statement("INSERT OR REPLACE INTO test VALUES(?, ?, :x, ?, ?)")) {
+            		//assume we want to add values of these variables to the database table
+            		int id = 1; string name = "TEXT"; long x = -10; Guid guid = Guid.NewGuid(); int[] arr = new int[] { 1, 2, 3 };
+            		//add first row
+            		p.Bind(1, id);
+            		p.Bind(2, name).BindStruct(4, guid).Bind(5, arr);
+            		p.Bind(":x", x);
+            		p.Step();
+            		//add second row
+            		p.Reset().Bind(1, 2).Bind(":x", 123456789012345).Step(); //unbound columns are null
             	}
-            	//get single value
-            	if(db.Get(out string s1, "SELECT name FROM test WHERE id=?", 1)) Print(s1); else Print("not found");
-            	if(db.Get(out int i1, "PRAGMA page_size")) Print(i1);
+            	//update single row
+            	db.Execute("UPDATE test SET name=?2 WHERE id=?1", 2, "two");
+            	//write all this to database
+            	trans.Commit();
+            }
+            
+            //get data
+            using(var p = db.Statement("SELECT * FROM test")) {
+            	while(p.Step()) { //for each row of results
+            		Print(p.GetInt(0), p.GetText(1), p.GetLong(2));
+            		Print(p.GetStruct<Guid>("guid"));
+            		Print(p.GetArray<int>("array"));
+            		Print("----");
+            	}
+            }
+            //get single value
+            if(db.Get(out string s1, "SELECT name FROM test WHERE id=?", 1)) Print(s1); else Print("not found");
+            if(db.Get(out int i1, "PRAGMA page_size")) Print(i1);
             ]]></code>
             </example>
         </member>
@@ -6636,7 +6636,7 @@
             hk["Ctrl+K"] = o => Print(o.Trigger); //it means: execute code "o => Print(o.Trigger)" when I press Ctrl+K
             hk["Ctrl+Shift+F11"] = o => {
             	Print(o.Trigger);
-            	var w1 = Wnd.FindOrRun("* Notepad", run: () => Shell.Run(Folders.System + "notepad.exe"));
+            	var w1 = Wnd.FindOrRun("* Notepad", run: () => Exec.Run(Folders.System + "notepad.exe"));
             	Text("text");
             	w1.Close();
             };
@@ -8585,14 +8585,6 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
-        </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
         </member>
         <member name="T:Au.Util.ILReader">
             <summary>
@@ -13179,7 +13171,7 @@
             Wnd w = Wnd.Find("* Notepad");
             w.Activate();
             using(var b = WinImage.Capture(w.Rect)) { b.Save(file); }
-            Shell.Run(file);
+            Exec.Run(file);
             ]]></code>
             </example>
         </member>
@@ -14536,12 +14528,12 @@
             <remarks>
             Some .NET <see cref="T:System.String"/> methods use <see cref="F:System.StringComparison.CurrentCulture"/> by default, while others use ordinal or invariant comparison. It is confusing (difficult to remember), dangerous (easy to make bugs), slower and rarely useful.
             Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx.
-            This class adds their versions that use <i>StringComparison.Ordinal[IgnoreCase]</i>. Same or similar name, usually a shorter version.
+            This class adds their versions that use <b>StringComparison.Ordinal[IgnoreCase]</b>. Same or similar name, usually a shorter version.
             For example, <b>EndsWith</b> (of .NET) uses <b>StringComparison.CurrentCulture</b>, and <b>Ends</b> (of this class) uses <b>StringComparison.Ordinal</b>.
             
             This class also adds more methods.
             The nested class <see cref="T:Au.ExtString.More"/> contains some less often used static methods.
-            You also can find string manipulation methods in other classes of this library, for example <see cref="T:Au.AConvert"/>, <see cref="T:Au.Keyb.More"/>.
+            You also can find string functions in other classes of this library, including <see cref="T:Au.ARegex"/>, <see cref="T:Au.AConvert"/>, <see cref="T:Au.AChar"/>, <see cref="T:Au.APath"/>, <see cref="T:Au.StringSegment"/>, <see cref="T:Au.Csv"/>, <see cref="T:Au.Keyb.More"/>.
             </remarks>
         </member>
         <member name="M:Au.ExtString.RegexIsMatch(System.String,System.String,Au.Types.RXFlags,Au.Types.RXMore)">
@@ -14744,7 +14736,7 @@
         </member>
         <member name="M:Au.ExtString.More.CommandLineFromArray(System.String[])">
             <summary>
-            Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>, <see cref="M:System.Diagnostics.Process.Start"/>.
+            Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="M:Au.Exec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>, <see cref="M:System.Diagnostics.Process.Start"/>.
             Returns null if a is null or has 0 elements.
             </summary>
             <param name="a"></param>
@@ -14835,122 +14827,210 @@
         </member>
         <member name="M:Au.ExtString.Eq(System.String,System.String,System.Boolean)">
             <summary>
-            Compares this and other string. Returns true if equal. Uses ordinal comparison.
+            Compares this and other string. Returns true if equal.
             </summary>
+            <param name="t">This string.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
             <seealso cref="M:System.String.Compare(System.String,System.String)"/>
             <seealso cref="M:System.String.CompareOrdinal(System.String,System.String)"/>
         </member>
         <member name="M:Au.ExtString.Eq(System.String,System.Boolean,System.String[])">
             <summary>
-            Calls <see cref="M:Au.ExtString.Eq(System.String,System.String,System.Boolean)"/> for each string specified in the argument list until it returns true.
+            Compares this strings with multiple strings.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
+            <param name="t">This string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <param name="strings">Other strings.</param>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
         </member>
         <member name="M:Au.ExtString.Eqi(System.String,System.String)">
             <summary>
-            Compares this and other string ignoring case. Returns true if equal. Uses ordinal comparison.
+            Compares this and other string ignoring case (case-insensitive). Returns true if equal.
             </summary>
-            <remarks>Calls <see cref="M:Au.ExtString.Eq(System.String,System.String,System.Boolean)"/> with <i>ignoreCase</i> true.</remarks>
+            <param name="t">This string.</param>
+            <param name="s">Other string.</param>
+            <remarks>
+            Calls <see cref="M:Au.ExtString.Eq(System.String,System.String,System.Boolean)"/> with <i>ignoreCase</i> true.
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
         </member>
         <member name="M:Au.ExtString.EqAt(System.String,System.Int32,System.String,System.Boolean)">
             <summary>
-            Compares part of this string with other string. Returns true if equal. Uses ordinal comparison.
+            Compares part of this string with other string. Returns true if equal.
             </summary>
+            <param name="t">This string.</param>
+            <param name="startIndex">Offset in this string.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
             <seealso cref="M:System.String.Compare(System.String,System.String)"/>
             <seealso cref="M:System.String.CompareOrdinal(System.String,System.String)"/>
         </member>
         <member name="M:Au.ExtString.EqAt(System.String,System.Int32,System.Boolean,System.String[])">
             <summary>
-            Calls <see cref="M:Au.ExtString.EqAt(System.String,System.Int32,System.String,System.Boolean)"/> for each string specified in the argument list until it returns true.
+            Compares part of this string with multiple strings.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
+            <param name="t">This string.</param>
+            <param name="startIndex">Offset in this string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <param name="strings">Other strings.</param>
             <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
         </member>
         <member name="M:Au.ExtString.Ends(System.String,System.String,System.Boolean)">
             <summary>
-            Compares the end of this string with other string. Returns true if equal. Uses ordinal comparison.
+            Compares the end of this string with other string. Returns true if equal.
             </summary>
+            <param name="t">This string.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
         </member>
         <member name="M:Au.ExtString.Ends(System.String,System.Boolean,System.String[])">
             <summary>
-            Calls <see cref="M:Au.ExtString.Ends(System.String,System.String,System.Boolean)"/> for each string specified in the argument list until it returns true.
+            Compares the end of this string with multiple strings.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
+            <param name="t">This string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <param name="strings">Other strings.</param>
             <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
         </member>
         <member name="M:Au.ExtString.Ends(System.String,System.Char)">
             <summary>
             Returns true if this string ends with the specified character.
-            Fast, case-sensitive.
             </summary>
+            <param name="t">This string.</param>
+            <param name="c">The character.</param>
         </member>
         <member name="M:Au.ExtString.Starts(System.String,System.String,System.Boolean)">
             <summary>
-            Compares the beginning of this string with other string. Returns true if equal. Uses ordinal comparison.
+            Compares the beginning of this string with other string. Returns true if equal.
             </summary>
+            <param name="t">This string.</param>
+            <param name="s">Other string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
         </member>
         <member name="M:Au.ExtString.Starts(System.String,System.Boolean,System.String[])">
             <summary>
-            Calls <see cref="M:Au.ExtString.Starts(System.String,System.String,System.Boolean)"/> for each string specified in the argument list until it returns true.
+            Compares the beginning of this string with multiple strings.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
+            <param name="t">This string.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <param name="strings">Other strings.</param>
             <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
+            <remarks>
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
         </member>
         <member name="M:Au.ExtString.Starts(System.String,System.Char)">
             <summary>
             Returns true if this string starts with the specified character.
-            Fast, case-sensitive.
             </summary>
+            <param name="t">This string.</param>
+            <param name="c">The character.</param>
         </member>
         <member name="M:Au.ExtString.Index(System.String,System.String,System.Boolean)">
             <summary>
-            Calls <see cref="M:System.String.IndexOf(System.String,System.StringComparison)"/>. Uses ordinal comparison.
+            Finds substring in this string. Returns its zero-based index, or -1 if not found.
             </summary>
+            <param name="t">This string.</param>
+            <param name="s">Subtring to find.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
+            <remarks>
+            Calls <see cref="M:System.String.IndexOf(System.String,System.StringComparison)"/>.
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
         </member>
         <member name="M:Au.ExtString.Index(System.String,System.String,System.Int32,System.Boolean)">
             <summary>
-            Calls <see cref="M:System.String.IndexOf(System.String,System.Int32,System.StringComparison)"/>. Uses ordinal comparison.
+            Finds substring in part of this string. Returns its zero-based index, or -1 if not found.
             </summary>
+            <param name="t">This string.</param>
+            <param name="s">Subtring to find.</param>
+            <param name="startIndex">The search starting position.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.String.IndexOf(System.String,System.Int32,System.StringComparison)"/>.
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
         </member>
         <member name="M:Au.ExtString.Index(System.String,System.String,System.Int32,System.Int32,System.Boolean)">
             <summary>
-            Calls <see cref="M:System.String.IndexOf(System.String,System.Int32,System.Int32,System.StringComparison)"/>. Uses ordinal comparison.
+            Finds substring in part of this string. Returns its zero-based index, or -1 if not found.
             </summary>
+            <param name="t">This string.</param>
+            <param name="s">Subtring to find.</param>
+            <param name="startIndex">The search starting position.</param>
+            <param name="count">The number of characters to examine.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.String.IndexOf(System.String,System.Int32,System.Int32,System.StringComparison)"/>.
+            Uses ordinal comparison (does not depend on current culture/locale).
+            </remarks>
         </member>
         <member name="M:Au.ExtString.Has(System.String,System.String,System.Boolean)">
             <summary>
-            Returns true if this string contains string <i>s</i>. Uses ordinal comparison.
+            Returns true if this string contains the specified substring.
             </summary>
+            <param name="t">This string.</param>
+            <param name="s">Subtring to find.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
             <remarks>
-            Uses <see cref="M:System.String.IndexOf(System.String,System.Int32,System.StringComparison)"/>.
+            Calls <see cref="M:System.String.IndexOf(System.String,System.StringComparison)"/>.
+            Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
         </member>
         <member name="M:Au.ExtString.Has(System.String,System.Char)">
             <summary>
-            Returns true if this string contains character <i>c</i>.
+            Returns true if this string contains the specified character.
             </summary>
+            <param name="t">This string.</param>
+            <param name="c">Character to find.</param>
         </member>
         <member name="M:Au.ExtString.Lenn(System.String)">
             <summary>
             Returns <see cref="P:System.String.Length"/>. Returns 0 if this string is null.
             </summary>
+            <param name="t">This string.</param>
         </member>
         <member name="M:Au.ExtString.SegSplit(System.String,System.String,System.Int32,Au.Types.SegFlags)">
             <summary>
             Splits this string into substrings using the specified separators.
             </summary>
-            <param name="t"></param>
+            <param name="t">This string.</param>
             <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="T:Au.Types.Separators"/> constants.</param>
             <param name="maxCount">The maximal number of substrings to get. If negative, gets all.</param>
             <param name="flags"></param>
@@ -14963,7 +15043,7 @@
             <summary>
             Splits this string into substrings using the specified separators.
             </summary>
-            <param name="t"></param>
+            <param name="t">This string.</param>
             <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="T:Au.Types.Separators"/> constants.</param>
             <param name="flags"></param>
         </member>
@@ -14971,10 +15051,11 @@
             <summary>
             Splits this string into lines using separators "\r\n", "\n", "\r".
             </summary>
-            <param name="t"></param>
+            <param name="t">This string.</param>
             <param name="noEmptyLines">Don't get empty lines.</param>
             <remarks>
-            Calls <see cref="M:Au.ExtString.SegSplit(System.String,System.String,System.Int32,Au.Types.SegFlags)"/> with separators = Separators.Line, maxCount = -1 (all lines), flags = noEmptyLines ? SegFlags.NoEmpty : 0.
+            Uses this code: <c>return t.SegSplit(Separators.Line, noEmptyLines ? SegFlags.NoEmpty : 0);</c>.
+            See <see cref="M:Au.ExtString.SegSplit(System.String,System.String,System.Int32,Au.Types.SegFlags)"/>, <see cref="F:Au.Types.Separators.Line"/>, <see cref="F:Au.Types.SegFlags.NoEmpty"/>.
             </remarks>
             <seealso cref="M:Au.ExtString.Segments(System.String,System.String,Au.Types.SegFlags)"/>
         </member>
@@ -14983,31 +15064,43 @@
             Returns the number of lines.
             Counts line separators "\r\n", "\n", "\r".
             </summary>
-            <param name="t"></param>
+            <param name="t">This string.</param>
             <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
         </member>
         <member name="M:Au.ExtString.Lower(System.String)">
             <summary>
-            Calls <see cref="M:System.String.ToLowerInvariant"/>.
+            Converts this string to lower case. Returns the result string.
             </summary>
+            <param name="t">This string.</param>
+            <remarks>
+            Calls <see cref="M:System.String.ToLowerInvariant"/>.
+            </remarks>
         </member>
         <member name="M:Au.ExtString.Upper(System.String)">
             <summary>
-            Calls <see cref="M:System.String.ToUpperInvariant"/>.
+            Converts this string to upper case. Returns the result string.
             </summary>
+            <param name="t">This string.</param>
+            <remarks>
+            Calls <see cref="M:System.String.ToUpperInvariant"/>.
+            </remarks>
         </member>
         <member name="M:Au.ExtString.Upper(System.String,System.Boolean)">
             <summary>
-            Converts the string or only the first character (or Unicode surrogate pair) to upper case.
-            Calls <see cref="M:System.String.ToUpperInvariant"/>.
+            Converts this string or only the first character to upper case. Returns the result string.
             </summary>
+            <param name="t">This string.</param>
+            <param name="firstCharOnly">Convert only the first character.</param>
+            <remarks>
+            Calls <see cref="M:System.String.ToUpperInvariant"/>.
+            </remarks>
         </member>
         <member name="M:Au.ExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)">
             <summary>
-            Converts part of string to int.
+            Converts part of this string to int.
             Returns the int value, or 0 if fails to convert.
             </summary>
-            <param name="t"></param>
+            <param name="t">This string.</param>
             <param name="startIndex">Offset in this string where to start parsing.</param>
             <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
             <param name="flags"></param>
@@ -15032,20 +15125,22 @@
         </member>
         <member name="M:Au.ExtString.ToInt(System.String,System.Int32,Au.Types.STIFlags)">
             <summary>
-            This overload does not have parameter <i>numberEndIndex</i>.
+            Converts part of this string to int.
+            Returns the int value, or 0 if fails to convert.
             </summary>
         </member>
-        <member name="M:Au.ExtString.ToInt(System.String)">
+        <member name="M:Au.ExtString.ToInt(System.String,Au.Types.STIFlags)">
             <summary>
-            This overload does not have parameters.
+            Converts the start of this string to int.
+            Returns the int value, or 0 if fails to convert.
             </summary>
         </member>
         <member name="M:Au.ExtString.ToInt64(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)">
             <summary>
-            Converts part of string to long.
+            Converts part of this string to long.
             Returns the long value, or 0 if fails to convert.
             </summary>
-            <param name="t"></param>
+            <param name="t">This string.</param>
             <param name="startIndex">Offset in this string where to start parsing.</param>
             <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
             <param name="flags"></param>
@@ -15070,57 +15165,97 @@
         </member>
         <member name="M:Au.ExtString.ToInt64(System.String,System.Int32,Au.Types.STIFlags)">
             <summary>
-            This <see cref="M:Au.ExtString.ToInt64(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/> overload does not have parameter numberEndIndex.
+            Converts part of this string to long.
+            Returns the long value, or 0 if fails to convert.
             </summary>
         </member>
-        <member name="M:Au.ExtString.ToInt64(System.String)">
+        <member name="M:Au.ExtString.ToInt64(System.String,Au.Types.STIFlags)">
             <summary>
-            This <see cref="M:Au.ExtString.ToInt64(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/> overload does not have parameters.
+            Converts the start of this string to long.
+            Returns the long value, or 0 if fails to convert.
             </summary>
         </member>
         <member name="M:Au.ExtString.ToDouble(System.String,System.Boolean)">
             <summary>
-            Converts string to double.
-            Calls <see cref="M:System.Double.Parse(System.String,System.Globalization.NumberStyles,System.IFormatProvider)"/> with CultureInfo.InvariantCulture and NumberStyles.Float|NumberStyles.AllowThousands.
+            Converts this string to double.
             </summary>
-            <param name="t"></param>
-            <param name="canThrow">If true, exception if the string is not a valid number or is null. If false, then returns 0.</param>
+            <param name="t">This string.</param>
+            <param name="canThrow">If true, exception if the string is not a valid number or is null. If false (default), then returns 0.</param>
+            <remarks>
+            Calls <see cref="M:System.Double.Parse(System.String,System.Globalization.NumberStyles,System.IFormatProvider)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b> and <see cref="T:System.Globalization.NumberStyles"/> <b>Float</b> and <b>AllowThousands</b>.
+            </remarks>
         </member>
         <member name="M:Au.ExtString.ToFloat(System.String,System.Boolean)">
             <summary>
-            Converts string to float.
-            Calls <see cref="M:System.Single.Parse(System.String,System.Globalization.NumberStyles,System.IFormatProvider)"/> with CultureInfo.InvariantCulture and NumberStyles.Float|NumberStyles.AllowThousands.
+            Converts this string to float.
             </summary>
-            <param name="t"></param>
-            <param name="canThrow">If true, exception if the string is not a valid number or is null. If false, then returns 0.</param>
+            <param name="t">This string.</param>
+            <param name="canThrow">If true, exception if the string is not a valid number or is null. If false (default), then returns 0.</param>
+            <remarks>
+            Calls <see cref="M:System.Single.Parse(System.String,System.Globalization.NumberStyles,System.IFormatProvider)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b> and <see cref="T:System.Globalization.NumberStyles"/> <b>Float</b> and <b>AllowThousands</b>.
+            </remarks>
         </member>
         <member name="M:Au.ExtString.ReplaceAt(System.String,System.Int32,System.Int32,System.String)">
             <summary>
-            Returns a new string in which a specified string replaces a specified count of characters at a specified position in this instance.
+            Replaces part of this string with other string. Returns the result string.
             </summary>
+            <param name="t">This string.</param>
+            <param name="startIndex">Offset in this string.</param>
+            <param name="count">Count of characters to replace.</param>
+            <param name="s">The replacement string.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
+            <remarks>
+            More info: <see cref="M:System.String.Remove(System.Int32,System.Int32)"/>, <see cref="M:System.String.Insert(System.Int32,System.String)"/>.
+            </remarks>
         </member>
         <member name="M:Au.ExtString.RemoveSuffix(System.String,System.Int32)">
             <summary>
             Removes <i>count</i> characters from the end of this string.
+            Returns the result string.
             </summary>
+            <param name="t">This string.</param>
+            <param name="count">Count of characters to remove.</param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="M:Au.ExtString.Limit(System.String,System.Int32)">
+        <member name="M:Au.ExtString.RemoveSuffix(System.String,System.String,System.Boolean)">
+            <summary>
+            Removes <i>suffix</i> string from the end.
+            Returns the result string. Returns this string if does not end with <i>suffix</i>.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="suffix">Substring to remove.</param>
+            <param name="ignoreCase">Case-insensitive.</param>
+            <exception cref="T:System.ArgumentNullException"><i>suffix</i> is null.</exception>
+        </member>
+        <member name="M:Au.ExtString.RemoveSuffix(System.String,System.Char)">
+            <summary>
+            Removes <i>suffix</i> character from the end.
+            Returns the result string. Returns this string if does not end with <i>suffix</i>.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="suffix">Character to remove.</param>
+            <exception cref="T:System.ArgumentNullException"><i>suffix</i> is null.</exception>
+        </member>
+        <member name="M:Au.ExtString.Limit(System.String,System.Int32,System.Boolean)">
             <summary>
             If this string is longer than <i>limit</i>, returns its substring 0 to <i>limit</i>-1 with appended '…' character.
             Else returns this string.
             </summary>
+            <param name="t">This string.</param>
+            <param name="limit">Maximal length of the result string. If less than 1, is used 1.</param>
+            <param name="middle">Let "…" be in middle. For example it is useful when the string is a path, to avoid removing filename.</param>
         </member>
         <member name="M:Au.ExtString.Escape(System.String,System.Int32,System.Boolean)">
             <summary>
-            Replaces some characters with C# escape sequences.
-            Replaces these characters: <c>'\\'</c>, <c>'\"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
+            Replaces unsafe characters with C# escape sequences.
             If the string contains these characters, replaces and returns new string. Else returns this string.
             </summary>
             <param name="t">This string.</param>
             <param name="limit">If the final string is longer than <i>limit</i>, get its substring 0 to <i>limit</i>-1 with appended '…' character. The enclosing "" are not counted.</param>
             <param name="quote">Enclose in "".</param>
+            <remarks>
+            Replaces these characters: <c>'\\'</c>, <c>'\"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
+            </remarks>
         </member>
         <member name="F:Au.ExtString.Lib.lineSep">
             <summary><c>{ '\r', '\n' }</c></summary>
@@ -16101,26 +16236,20 @@
             <param name="bytes">Data to write.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AFile.Save(System.String,System.Action{System.String},System.Boolean,System.Int32)"/>.</exception>
         </member>
-        <member name="T:Au.Shell">
+        <member name="T:Au.Pidl">
             <summary>
-            Windows shell functions.
-            Windows shell manages files, folders (directories), shortcuts and virtual objects such as Control Panel.
-            </summary>
-        </member>
-        <member name="T:Au.Shell.Pidl">
-            <summary>
-            Manages an ITEMIDLIST structure that is used with shell API to identify files and other shell objects instead of a file-system path.
+            Manages an ITEMIDLIST structure that is used to identify files and other shell objects instead of a file-system path.
             </summary>
             <remarks>
             Wraps an ITEMIDLIST*, also known as PIDL or LPITEMIDLIST. In C# it is IntPtr.
-            When calling shell API, virtual objects can be identified only by ITEMIDLIST*. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by ITEMIDLIST*. URLs can be identified by URL as well as by ITEMIDLIST*.
+            When calling native shell API, virtual objects can be identified only by ITEMIDLIST*. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by ITEMIDLIST*. URLs can be identified by URL as well as by ITEMIDLIST*.
             
             The ITEMIDLIST structure is in unmanaged memory. You should always dispose Pidl variables.
             
             This class has only ITEMIDLIST functions that are used in this library. Look for other functions in the MSDN library. Many of them are named with IL prefix, like ILClone, ILGetSize, ILFindLastID.
             </remarks>
         </member>
-        <member name="P:Au.Shell.Pidl.UnsafePtr">
+        <member name="P:Au.Pidl.UnsafePtr">
             <summary>
             Gets the ITEMIDLIST* (PIDL).
             </summary>
@@ -16128,20 +16257,20 @@
             The ITEMIDLIST memory is managed by this variable and will be freed when disposing or GC-collecting it. Use <see cref="M:System.GC.KeepAlive(System.Object)"/> where need.
             </remarks>
         </member>
-        <member name="P:Au.Shell.Pidl.HandleRef">
+        <member name="P:Au.Pidl.HandleRef">
             <summary>
             Gets the ITEMIDLIST* (PIDL).
             </summary>
             <remarks>
-            Use to pass to API where the parameter type is HandlePtr. It is safer than <see cref="P:Au.Shell.Pidl.UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
+            Use to pass to API where the parameter type is HandlePtr. It is safer than <see cref="P:Au.Pidl.UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
             </remarks>
         </member>
-        <member name="P:Au.Shell.Pidl.IsNull">
+        <member name="P:Au.Pidl.IsNull">
             <summary>
             Returns true if the PIDL is default(IntPtr).
             </summary>
         </member>
-        <member name="M:Au.Shell.Pidl.#ctor(System.IntPtr)">
+        <member name="M:Au.Pidl.#ctor(System.IntPtr)">
             <summary>
             Assigns an ITEMIDLIST to this variable.
             </summary>
@@ -16151,7 +16280,7 @@
             This variable will finally free it with Marshal.FreeCoTaskMem.
             </param>
         </member>
-        <member name="M:Au.Shell.Pidl.#ctor(System.IntPtr,System.IntPtr)">
+        <member name="M:Au.Pidl.#ctor(System.IntPtr,System.IntPtr)">
             <summary>
             Combines two ITEMIDLIST (parent and child) and assigns the result to this variable.
             </summary>
@@ -16161,26 +16290,26 @@
             Does not free <i>pidlAbsolute</i> and <i>pidlRelative</i>.
             </remarks>
         </member>
-        <member name="M:Au.Shell.Pidl.Dispose">
+        <member name="M:Au.Pidl.Dispose">
             <summary>
             Frees the ITEMIDLIST with Marshal.FreeCoTaskMem and clears this variable.
             </summary>
         </member>
-        <member name="M:Au.Shell.Pidl.Finalize">
+        <member name="M:Au.Pidl.Finalize">
             
         </member>
-        <member name="M:Au.Shell.Pidl.Detach">
+        <member name="M:Au.Pidl.Detach">
             <summary>
             Gets the ITEMIDLIST and clears this variable so that it cannot be used and will not free the ITEMIDLIST memory. To free it use Marshal.FreeCoTaskMem.
             </summary>
         </member>
-        <member name="M:Au.Shell.Pidl.FromString(System.String,System.Boolean)">
+        <member name="M:Au.Pidl.FromString(System.String,System.Boolean)">
             <summary>
             Converts string to ITEMIDLIST and creates new Pidl variable that holds it.
             Returns null if failed.
             Note: Pidl is disposable.
             </summary>
-            <param name="s">A file-system path or URL or shell object parsing name (see <see cref="M:Au.Shell.Pidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>) or ":: HexEncodedITEMIDLIST" (see <see cref="M:Au.Shell.Pidl.ToHexString"/>). Supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
+            <param name="s">A file-system path or URL or shell object parsing name (see <see cref="M:Au.Pidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>) or ":: HexEncodedITEMIDLIST" (see <see cref="M:Au.Pidl.ToHexString"/>). Supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
             <param name="throwIfFailed">If failed, throw AException.</param>
             <exception cref="T:Au.Types.AException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
             <remarks>
@@ -16188,15 +16317,21 @@
             Never fails if s is ":: HexEncodedITEMIDLIST", even if it creates an invalid ITEMIDLIST.
             </remarks>
         </member>
-        <member name="M:Au.Shell.Pidl.LibFromString(System.String,System.Boolean)">
+        <member name="M:Au.Pidl.LibFromString(System.String,System.Boolean)">
             <summary>
-            The same as <see cref="M:Au.Shell.Pidl.FromString(System.String,System.Boolean)"/>, but returns unmanaged ITEMIDLIST* (PIDL).
+            The same as <see cref="M:Au.Pidl.FromString(System.String,System.Boolean)"/>, but returns unmanaged ITEMIDLIST* (PIDL).
             Later need to free it with Marshal.FreeCoTaskMem.
             </summary>
             <param name="s"></param>
             <param name="throwIfFailed"></param>
         </member>
-        <member name="M:Au.Shell.Pidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)">
+        <member name="M:Au.Pidl._Normalize(System.String)">
+            <summary>
+            The same as <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/>(CanBeUrlOrShell|DoNotPrefixLongPath), but ignores non-full path (returns s).
+            </summary>
+            <param name="s">File-system path or URL or "::...".</param>
+        </member>
+        <member name="M:Au.Pidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)">
             <summary>
             Converts the ITEMIDLIST to file path or URL or shell object parsing name or display name, depending on stringType argument.
             Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
@@ -16208,7 +16343,7 @@
             - Native.SIGDN.NORMALDISPLAY - returns object name without path. It is best to display in UI but cannot be parsed to create ITEMIDLIST again.
             - Native.SIGDN.FILESYSPATH - returns path if the ITEMIDLIST identifies a file system object (file or directory). Else returns null.
             - Native.SIGDN.URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
-            - Native.SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create ITEMIDLIST again, therefore usually it's better to use <see cref="M:Au.Shell.Pidl.ToString"/> instead.
+            - Native.SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create ITEMIDLIST again, therefore usually it's better to use <see cref="M:Au.Pidl.ToString"/> instead.
             </param>
             <param name="throwIfFailed">If failed, throw AException.</param>
             <exception cref="T:Au.Types.AException">Failed, and throwIfFailed is true.</exception>
@@ -16216,53 +16351,53 @@
             Calls <msdn>SHGetNameFromIDList</msdn>.
             </remarks>
         </member>
-        <member name="M:Au.Shell.Pidl.ToShellString(System.IntPtr,Au.Types.Native.SIGDN,System.Boolean)">
+        <member name="M:Au.Pidl.ToShellString(System.IntPtr,Au.Types.Native.SIGDN,System.Boolean)">
             <summary>
             This overload uses an ITEMIDLIST* that is not stored in a Pidl variable.
             </summary>
         </member>
-        <member name="M:Au.Shell.Pidl.ToString">
+        <member name="M:Au.Pidl.ToString">
             <summary>
             Converts the ITEMIDLIST to string.
-            If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns ":: HexEncodedITEMIDLIST" (see <see cref="M:Au.Shell.Pidl.ToHexString"/>).
+            If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns ":: HexEncodedITEMIDLIST" (see <see cref="M:Au.Pidl.ToHexString"/>).
             Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
             </summary>
         </member>
-        <member name="M:Au.Shell.Pidl.ToString(System.IntPtr)">
+        <member name="M:Au.Pidl.ToString(System.IntPtr)">
             <summary>
             This overload uses an ITEMIDLIST* that is not stored in a Pidl variable.
             </summary>
         </member>
-        <member name="M:Au.Shell.Pidl.ToHexString">
+        <member name="M:Au.Pidl.ToHexString">
             <summary>
             Returns string ":: HexEncodedITEMIDLIST".
             Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
             </summary>
             <remarks>
-            The string can be used with some functions of this library, mostly of classes Shell, Shell.Pidl and AIcon. Cannot be used with native and .NET functions.
+            The string can be used with some functions of this library, mostly of classes <b>Exec</b>, <b>Pidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
             </remarks>
         </member>
-        <member name="M:Au.Shell.Pidl.ToHexString(System.IntPtr)">
+        <member name="M:Au.Pidl.ToHexString(System.IntPtr)">
             <summary>
             This overload uses an ITEMIDLIST* that is not stored in a Pidl variable.
             </summary>
         </member>
-        <member name="T:Au.Shell.Shortcut">
+        <member name="T:Au.ShellShortcut">
             <summary>
             Creates shell shortcuts (.lnk files) and gets shortcut properties.
             </summary>
         </member>
-        <member name="M:Au.Shell.Shortcut.Dispose">
+        <member name="M:Au.ShellShortcut.Dispose">
             <summary>
             Releases internally used COM objects (IShellLink, IPersistFile).
             </summary>
         </member>
-        <member name="P:Au.Shell.Shortcut.IShellLink">
+        <member name="P:Au.ShellShortcut.IShellLink">
             <summary>
             Returns the internally used IShellLink COM interface.
             </summary>
         </member>
-        <member name="M:Au.Shell.Shortcut.Open(System.String)">
+        <member name="M:Au.ShellShortcut.Open(System.String)">
             <summary>
             Creates a new instance of the Shortcut class that can be used to get shortcut properties.
             Exception if shortcut file does not exist or cannot open it for read access.
@@ -16270,25 +16405,25 @@
             <param name="lnkPath">Shortcut file (.lnk) path.</param>
             <exception cref="T:Au.Types.AException">Failed to open .lnk file.</exception>
         </member>
-        <member name="M:Au.Shell.Shortcut.Create(System.String)">
+        <member name="M:Au.ShellShortcut.Create(System.String)">
             <summary>
             Creates a new instance of the Shortcut class that can be used to create or replace a shortcut file.
-            You can set properties and finally call <see cref="M:Au.Shell.Shortcut.Save"/>.
+            You can set properties and finally call <see cref="M:Au.ShellShortcut.Save"/>.
             If the shortcut file already exists, Save replaces it.
             </summary>
             <param name="lnkPath">Shortcut file (.lnk) path.</param>
         </member>
-        <member name="M:Au.Shell.Shortcut.OpenOrCreate(System.String)">
+        <member name="M:Au.ShellShortcut.OpenOrCreate(System.String)">
             <summary>
             Creates a new instance of the Shortcut class that can be used to create or modify a shortcut file.
             Exception if file exists but cannot open it for read-write access.
-            You can get and set properties and finally call <see cref="M:Au.Shell.Shortcut.Save"/>.
+            You can get and set properties and finally call <see cref="M:Au.ShellShortcut.Save"/>.
             If the shortcut file already exists, Save updates it.
             </summary>
             <param name="lnkPath">Shortcut file (.lnk) path.</param>
             <exception cref="T:Au.Types.AException">Failed to open existing .lnk file.</exception>
         </member>
-        <member name="M:Au.Shell.Shortcut.Save">
+        <member name="M:Au.ShellShortcut.Save">
             <summary>
             Saves the Shortcut variable properties to the shortcut file.
             </summary>
@@ -16297,7 +16432,7 @@
             Creates parent folder if need.
             </remarks>
         </member>
-        <member name="P:Au.Shell.Shortcut.TargetPath">
+        <member name="P:Au.ShellShortcut.TargetPath">
             <summary>
             Gets or sets shortcut target path.
             This property is null if target isn't a file system object, eg Control Panel or URL.
@@ -16305,12 +16440,12 @@
             <remarks>The 'get' function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where IShellLink.GetPath() lies.</remarks>
             <exception cref="T:Au.Types.AException">The 'set' function failed.</exception>
         </member>
-        <member name="P:Au.Shell.Shortcut.TargetPathRawMSI">
+        <member name="P:Au.ShellShortcut.TargetPathRawMSI">
             <summary>
             Gets shortcut target path and does not correct wrong MSI shortcut target.
             </summary>
         </member>
-        <member name="P:Au.Shell.Shortcut.TargetPidl">
+        <member name="P:Au.ShellShortcut.TargetPidl">
             <summary>
             Gets or sets a non-file-system target (eg Control Panel) through its ITEMIDLIST.
             </summary>
@@ -16320,7 +16455,7 @@
             </remarks>
             <exception cref="T:Au.Types.AException">The 'set' function failed.</exception>
         </member>
-        <member name="P:Au.Shell.Shortcut.TargetURL">
+        <member name="P:Au.ShellShortcut.TargetURL">
             <summary>
             Gets or sets a URL target.
             Note: it is a .lnk shortcut, not a .url shortcut.
@@ -16328,21 +16463,21 @@
             </summary>
             <exception cref="T:Au.Types.AException">The 'set' function failed.</exception>
         </member>
-        <member name="P:Au.Shell.Shortcut.TargetAnyType">
+        <member name="P:Au.ShellShortcut.TargetAnyType">
             <summary>
-            Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="T:Au.Shell.Pidl"/>).
-            The string can be used with <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="T:Au.Pidl"/>).
+            The string can be used with <see cref="M:Au.Exec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
             </summary>
             <exception cref="T:Au.Types.AException">The 'set' function failed.</exception>
         </member>
-        <member name="M:Au.Shell.Shortcut.GetIconLocation(System.Int32@)">
+        <member name="M:Au.ShellShortcut.GetIconLocation(System.Int32@)">
             <summary>
             Gets custom icon file path and icon index.
             Returns null if the shortcut does not have a custom icon (then you see its target icon).
             </summary>
             <param name="iconIndex">Receives 0 or icon index or negative icon resource id.</param>
         </member>
-        <member name="M:Au.Shell.Shortcut.SetIconLocation(System.String,System.Int32)">
+        <member name="M:Au.ShellShortcut.SetIconLocation(System.String,System.Int32)">
             <summary>
             Sets icon file path and icon index.
             </summary>
@@ -16350,32 +16485,32 @@
             <param name="iconIndex">0 or icon index or negative icon resource id.</param>
             <exception cref="T:Au.Types.AException"/>
         </member>
-        <member name="P:Au.Shell.Shortcut.WorkingDirectory">
+        <member name="P:Au.ShellShortcut.WorkingDirectory">
             <summary>
             Gets or sets the working directory path (Start in).
             </summary>
             <exception cref="T:Au.Types.AException">The 'set' function failed.</exception>
         </member>
-        <member name="P:Au.Shell.Shortcut.Arguments">
+        <member name="P:Au.ShellShortcut.Arguments">
             <summary>
             Gets or sets the command-line arguments.
             </summary>
             <exception cref="T:Au.Types.AException">The 'set' function failed.</exception>
         </member>
-        <member name="P:Au.Shell.Shortcut.Description">
+        <member name="P:Au.ShellShortcut.Description">
             <summary>
             Gets or sets the description text (Comment).
             </summary>
             <exception cref="T:Au.Types.AException">The 'set' function failed.</exception>
         </member>
-        <member name="P:Au.Shell.Shortcut.Hotkey">
+        <member name="P:Au.ShellShortcut.Hotkey">
             <summary>
             Gets or sets hotkey.
             Example: <c>x.Hotkey = Keys.Control | Keys.Alt | Keys.E;</c>
             </summary>
             <exception cref="T:Au.Types.AException">The 'set' function failed.</exception>
         </member>
-        <member name="P:Au.Shell.Shortcut.ShowState">
+        <member name="P:Au.ShellShortcut.ShowState">
             <summary>
             Gets or sets the window show state.
             The value can be 1 (normal, default), 2 (minimized) or 3 (maximized).
@@ -16383,15 +16518,15 @@
             </summary>
             <exception cref="T:Au.Types.AException">The 'set' function failed.</exception>
         </member>
-        <member name="M:Au.Shell.Shortcut.GetTarget(System.String)">
+        <member name="M:Au.ShellShortcut.GetTarget(System.String)">
             <summary>
             Gets shortcut target path or URL or virtual shell object ITEMIDLIST.
-            Uses <see cref="M:Au.Shell.Shortcut.Open(System.String)"/> and <see cref="P:Au.Shell.Shortcut.TargetAnyType"/>.
+            Uses <see cref="M:Au.ShellShortcut.Open(System.String)"/> and <see cref="P:Au.ShellShortcut.TargetAnyType"/>.
             </summary>
             <param name="lnkPath">Shortcut file (.lnk) path.</param>
             <exception cref="T:Au.Types.AException">Failed to open.</exception>
         </member>
-        <member name="M:Au.Shell.Shortcut.Delete(System.String)">
+        <member name="M:Au.ShellShortcut.Delete(System.String)">
             <summary>
             If shortcut file exists, unregisters its hotkey and deletes it.
             </summary>
@@ -16399,149 +16534,8 @@
             <exception cref="T:Au.Types.AException">Failed to unregister hotkey.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AFile.Delete(System.String,System.Boolean)"/>.</exception>
         </member>
-        <member name="M:Au.Shell.Shortcut._UnregisterHotkey(System.String)">
+        <member name="M:Au.ShellShortcut._UnregisterHotkey(System.String)">
             <exception cref="T:Au.Types.AException">Failed to open or save.</exception>
-        </member>
-        <member name="M:Au.Shell._Normalize(System.String)">
-            <summary>
-            The same as <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/>(CanBeUrlOrShell|DoNotPrefixLongPath), but ignores non-full path (returns s).
-            </summary>
-            <param name="s">File-system path or URL or "::...".</param>
-        </member>
-        <member name="M:Au.Shell.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)">
-            <summary>
-            Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
-            The returned <see cref="T:Au.Types.RResult"/> variable contains some process info - process id etc.
-            </summary>
-            <param name="file">
-            What to run. Can be:
-            Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>Folders.System + "notepad.exe"</c>, <c>@"%Folders.System%\notepad.exe"</c>.
-            Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
-            Path relative to <see cref="P:Au.Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
-            URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
-            Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-            Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="M:Au.Shell.Pidl.ToHexString"/>, <see cref="T:Au.Folders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
-            Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="M:Au.Shell.Pidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>, <see cref="T:Au.Folders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
-            To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="M:Au.Wnd.More.GetWindowsStoreAppId(Au.Wnd,System.Boolean,System.Boolean)"/> or Google.
-            Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
-            </param>
-            <param name="args">
-            Command line arguments.
-            This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
-            </param>
-            <param name="flags"></param>
-            <param name="more">
-            Allows to specify more parameters: current directory, verb, window state, etc.
-            If string, it sets initial current directory for the new process. Use "" to get it from <i>file</i>. More info: <see cref="F:Au.Types.RMore.CurrentDirectory"/>.
-            </param>
-            <exception cref="T:System.ArgumentException">Used more.Verb and flag Admin.</exception>
-            <exception cref="T:Au.Types.AException">Failed. For example, the file does not exist.</exception>
-            <remarks>
-            It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
-            Uses API <msdn>ShellExecuteEx</msdn>.
-            Similar to <see cref="M:System.Diagnostics.Process.Start(System.String,System.String)"/>.
-            </remarks>
-            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
-            <example>
-            Run notepad and wait for its window.
-            <code><![CDATA[
-            Shell.Run("notepad.exe");
-            Wnd w = Wnd.Wait(10, true, "*- Notepad", "Notepad");
-            ]]></code>
-            Run notepad or activate its window.
-            <code><![CDATA[
-            Wnd w = Wnd.FindOrRun("*- Notepad", run: () => Shell.Run("notepad.exe"));
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.Shell.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)">
-            <summary>
-            Calls <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/> and handles exceptions. All parameters are the same.
-            If <b>Run</b> throws exception, prints it as warning and returns null.
-            </summary>
-            <remarks>
-            This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
-            Handles only exception of type AException. It is thrown when fails, usually when the file does not exist.
-            </remarks>
-            <seealso cref="M:Au.NoClass.PrintWarning(System.String,System.Int32,System.String)"/>
-            <seealso cref="M:Au.Types.OptDebug.DisableWarnings(System.String[])"/>
-            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
-        </member>
-        <member name="M:Au.Shell.RunConsole(System.String,System.String,System.String,System.Text.Encoding)">
-            <summary>
-            Runs a console program, waits until its process ends, and gets its output text.
-            This overload prints text lines in real time.
-            </summary>
-            <param name="exe">
-            Path or name of an .exe or .bat file. Can be:
-            Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>Folders.System + "x.exe"</c>, <c>@"%Folders.System%\x.exe"</c>.
-            Filename, like <c>"x.exe"</c>. This function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
-            Path relative to <see cref="P:Au.Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
-            Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
-            </param>
-            <param name="args">null or command line arguments.</param>
-            <param name="curDir">
-            Initial current directory of the new process.
-            - If null, uses <c>Directory.GetCurrentDirectory()</c>.
-            - Else if "", calls <c>APath.GetDirectoryPath(exe)</c>.
-            - Else calls <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
-            </param>
-            <param name="encoding">
-            Console's text encoding.
-            If null (default), uses the default console text encoding (API <msdn>GetOEMCP</msdn>); it is not Unicode. Programs that display Unicode text use <see cref="P:System.Text.Encoding.UTF8"/>.
-            </param>
-            <returns>The process exit code. Usually a non-0 value means error.</returns>
-            <exception cref="T:Au.Types.AException">Failed, for example file not found.</exception>
-            <remarks>
-            The console window is hidden. The text that would be displayed in it is redirected to this function.
-            
-            Console programs have two output text streams - standard output and standard error. This function gets both.
-            Alternatively use <see cref="M:System.Diagnostics.Process.Start"/>. It gets the output and error streams separately, and some lines may be received in incorrect order in time.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            string v = "example";
-            int r1 = Shell.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
-            
-            int r2 = Shell.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
-            
-            int r3 = Shell.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
-            Print(text);
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.Shell.RunConsole(System.Action{System.String},System.String,System.String,System.String,System.Text.Encoding)">
-            <summary>
-            Runs a console program, waits until its process ends, and gets its output text.
-            This overload uses a callback function that receives text lines in real time.
-            </summary>
-            <param name="output">A callback function that receives the output text. It receives single full line at a time, without line break characters.</param>
-            <param name="exe"></param>
-            <param name="args"></param>
-            <param name="curDir"></param>
-            <param name="encoding"></param>
-            <exception cref="T:Au.Types.AException">Failed, for example file not found.</exception>
-        </member>
-        <member name="M:Au.Shell.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
-            <summary>
-            Runs a console program, waits until its process ends, and gets its output text when it ends.
-            </summary>
-            <param name="output">A variable that receives the output text.</param>
-            <param name="exe"></param>
-            <param name="args"></param>
-            <param name="curDir"></param>
-            <param name="encoding"></param>
-            <exception cref="T:Au.Types.AException">Failed, for example file not found.</exception>
-        </member>
-        <member name="M:Au.Shell.SelectFileInExplorer(System.String)">
-            <summary>
-            Opens parent folder in Explorer and selects the file.
-            Returns null if fails, for example if the file does not exist.
-            </summary>
-            <param name="path">
-            Full path of a file or directory or other shell object.
-            Supports <c>@"%environmentVariable%\..."</c> (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>) and <c>"::..."</c> (see <see cref="M:Au.Shell.Pidl.ToHexString"/>).
-            </param>
         </member>
         <member name="T:Au.APath">
             <summary>
@@ -16561,7 +16555,7 @@
              Usually known folders are used like <c>string path = Folders.Documents + "file.txt"</c>. It's easier and faster. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
              To get known folder path, this function calls <see cref="M:Au.Folders.GetFolder(System.String)"/>.
             
-             This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>Shell</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
+             This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>Exec</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
              </remarks>
         </member>
         <member name="M:Au.APath.LibGetEnvVar(System.String)">
@@ -16962,6 +16956,146 @@
             <param name="path">Suggested full path.</param>
             <param name="isDirectory">The path is for a directory. The number is always appended at the very end, not before .extension.</param>
         </member>
+        <member name="T:Au.Exec">
+            <summary>
+            This class contains static functions to execute or open programs, other files, folders, web pages, etc.
+            </summary>
+        </member>
+        <member name="M:Au.Exec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)">
+            <summary>
+            Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
+            The returned <see cref="T:Au.Types.RResult"/> variable contains some process info - process id etc.
+            </summary>
+            <param name="file">
+            What to run. Can be:
+            Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>Folders.System + "notepad.exe"</c>, <c>@"%Folders.System%\notepad.exe"</c>.
+            Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
+            Path relative to <see cref="P:Au.Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
+            URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
+            Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
+            Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="M:Au.Pidl.ToHexString"/>, <see cref="T:Au.Folders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
+            Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="M:Au.Pidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>, <see cref="T:Au.Folders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
+            To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="M:Au.Wnd.More.GetWindowsStoreAppId(Au.Wnd,System.Boolean,System.Boolean)"/> or Google.
+            Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            </param>
+            <param name="args">
+            Command line arguments.
+            This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
+            </param>
+            <param name="flags"></param>
+            <param name="more">
+            Allows to specify more parameters: current directory, verb, window state, etc.
+            If string, it sets initial current directory for the new process. Use "" to get it from <i>file</i>. More info: <see cref="F:Au.Types.RMore.CurrentDirectory"/>.
+            </param>
+            <exception cref="T:System.ArgumentException">Used more.Verb and flag Admin.</exception>
+            <exception cref="T:Au.Types.AException">Failed. For example, the file does not exist.</exception>
+            <remarks>
+            It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
+            Uses API <msdn>ShellExecuteEx</msdn>.
+            Similar to <see cref="M:System.Diagnostics.Process.Start(System.String,System.String)"/>.
+            </remarks>
+            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
+            <example>
+            Run notepad and wait for its window.
+            <code><![CDATA[
+            Exec.Run("notepad.exe");
+            Wnd w = Wnd.Wait(10, true, "*- Notepad", "Notepad");
+            ]]></code>
+            Run notepad or activate its window.
+            <code><![CDATA[
+            Wnd w = Wnd.FindOrRun("*- Notepad", run: () => Exec.Run("notepad.exe"));
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Exec.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)">
+            <summary>
+            Calls <see cref="M:Au.Exec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/> and handles exceptions. All parameters are the same.
+            If <b>Run</b> throws exception, prints it as warning and returns null.
+            </summary>
+            <remarks>
+            This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
+            Handles only exception of type AException. It is thrown when fails, usually when the file does not exist.
+            </remarks>
+            <seealso cref="M:Au.NoClass.PrintWarning(System.String,System.Int32,System.String)"/>
+            <seealso cref="M:Au.Types.OptDebug.DisableWarnings(System.String[])"/>
+            <seealso cref="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)"/>
+        </member>
+        <member name="M:Au.Exec.RunConsole(System.String,System.String,System.String,System.Text.Encoding)">
+            <summary>
+            Runs a console program, waits until its process ends, and gets its output text.
+            This overload prints text lines in real time.
+            </summary>
+            <param name="exe">
+            Path or name of an .exe or .bat file. Can be:
+            Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>Folders.System + "x.exe"</c>, <c>@"%Folders.System%\x.exe"</c>.
+            Filename, like <c>"x.exe"</c>. This function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
+            Path relative to <see cref="P:Au.Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
+            Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            </param>
+            <param name="args">null or command line arguments.</param>
+            <param name="curDir">
+            Initial current directory of the new process.
+            - If null, uses <c>Directory.GetCurrentDirectory()</c>.
+            - Else if "", calls <c>APath.GetDirectoryPath(exe)</c>.
+            - Else calls <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            </param>
+            <param name="encoding">
+            Console's text encoding.
+            If null (default), uses the default console text encoding (API <msdn>GetOEMCP</msdn>); it is not Unicode. Programs that display Unicode text use <see cref="P:System.Text.Encoding.UTF8"/>.
+            </param>
+            <returns>The process exit code. Usually a non-0 value means error.</returns>
+            <exception cref="T:Au.Types.AException">Failed, for example file not found.</exception>
+            <remarks>
+            The console window is hidden. The text that would be displayed in it is redirected to this function.
+            
+            Console programs have two output text streams - standard output and standard error. This function gets both.
+            Alternatively use <see cref="M:System.Diagnostics.Process.Start"/>. It gets the output and error streams separately, and some lines may be received in incorrect order in time.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            string v = "example";
+            int r1 = Exec.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
+            
+            int r2 = Exec.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
+            
+            int r3 = Exec.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
+            Print(text);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Exec.RunConsole(System.Action{System.String},System.String,System.String,System.String,System.Text.Encoding)">
+            <summary>
+            Runs a console program, waits until its process ends, and gets its output text.
+            This overload uses a callback function that receives text lines in real time.
+            </summary>
+            <param name="output">A callback function that receives the output text. It receives single full line at a time, without line break characters.</param>
+            <param name="exe"></param>
+            <param name="args"></param>
+            <param name="curDir"></param>
+            <param name="encoding"></param>
+            <exception cref="T:Au.Types.AException">Failed, for example file not found.</exception>
+        </member>
+        <member name="M:Au.Exec.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
+            <summary>
+            Runs a console program, waits until its process ends, and gets its output text when it ends.
+            </summary>
+            <param name="output">A variable that receives the output text.</param>
+            <param name="exe"></param>
+            <param name="args"></param>
+            <param name="curDir"></param>
+            <param name="encoding"></param>
+            <exception cref="T:Au.Types.AException">Failed, for example file not found.</exception>
+        </member>
+        <member name="M:Au.Exec.SelectFileInExplorer(System.String)">
+            <summary>
+            Opens parent folder in Explorer and selects the file.
+            Returns null if fails, for example if the file does not exist.
+            </summary>
+            <param name="path">
+            Full path of a file or directory or other shell object.
+            Supports <c>@"%environmentVariable%\..."</c> (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>) and <c>"::..."</c> (see <see cref="M:Au.Pidl.ToHexString"/>).
+            </param>
+        </member>
         <member name="T:Au.Ver">
             <summary>
             Provides various version info, for example the true Windows OS version.
@@ -17280,7 +17414,7 @@
              Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
              Some known folders, although supported and registerd, may be still not created.
              
-             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.Folders.VirtualPidl"/> return it as <see cref="T:Au.Shell.Pidl"/>. Functions of the nested class <see cref="T:Au.Folders.Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes Shell, Shell.Pidl, AIcon) but not with .NET or native functions.
+             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.Folders.VirtualPidl"/> return it as <see cref="T:Au.Pidl"/>. Functions of the nested class <see cref="T:Au.Folders.Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>Exec</b>, <b>Pidl</b>, <b>AIcon</b>) but not with .NET or native functions.
             
              Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
              The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
@@ -17347,7 +17481,7 @@
         </member>
         <member name="T:Au.Folders.VirtualPidl">
             <summary>
-            Gets ITEMIDLIST of known/special virtual folders (eg Control Panel), as <see cref="T:Au.Shell.Pidl"/>. 
+            Gets ITEMIDLIST of known/special virtual folders (eg Control Panel), as <see cref="T:Au.Pidl"/>. 
             </summary>
         </member>
         <member name="P:Au.Folders.Temp">
@@ -17655,7 +17789,7 @@
             m["Three"] = o => { Print(o.MenuItem.Checked); };
             m.LastMenuItem.Checked = true;
             m.ExtractIconPathFromCode = true;
-            m["notepad"] = o => Shell.TryRun(Folders.System + "notepad.exe"));
+            m["notepad"] = o => Exec.TryRun(Folders.System + "notepad.exe"));
             m.Show();
             ]]></code>
             </example>
@@ -17671,7 +17805,7 @@
             - string - image name (key) in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageKey"/>).
             - int - image index in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
             - Icon, Image, Folders.FolderPath.
-            - null (default) - no icon. If <see cref="P:Au.Types.AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>Shell.TryRun(@"c:\path\file.exe")</c> or <c>Shell.TryRun(Folders.System + "file.exe")</c>.
+            - null (default) - no icon. If <see cref="P:Au.Types.AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>Exec.TryRun(@"c:\path\file.exe")</c> or <c>Exec.TryRun(Folders.System + "file.exe")</c>.
             - "" - no icon.
             </param>
             <remarks>
@@ -17686,7 +17820,7 @@
             m.Add("Two", o => { Print(o.MenuItem.Checked); ADialog.Show(o.ToString()); });
             m.LastMenuItem.Checked = true;
             m.ExtractIconPathFromCode = true;
-            m.Add("notepad", o => Shell.TryRun(Folders.System + "notepad.exe"));
+            m.Add("notepad", o => Exec.TryRun(Folders.System + "notepad.exe"));
             m.Show();
             ]]></code>
             </example>
@@ -18748,10 +18882,9 @@
             <example>
             This code is used by the other Decompress overload.
             <code><![CDATA[
-            using(var stream = new MemoryStream()) {
-            	Decompress(stream, compressedData, index, count);
-            	return stream.ToArray();
-            }
+            using var stream = new MemoryStream();
+            Decompress(stream, compressedData, index, count);
+            return stream.ToArray();
             ]]></code>
             </example>
         </member>
@@ -23086,7 +23219,7 @@
         </member>
         <member name="M:Au.Wnd.FindOrRun(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)">
             <summary>
-            Finds a top-level window (calls <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.Shell.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            Finds a top-level window (calls <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.Exec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
             Returns window handle as <b>Wnd</b>. Returns <c>default(Wnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
             </summary>
             <param name="name">See <see cref="M:Au.Wnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.Wnd,System.Boolean},System.Object)"/>.</param>
@@ -23111,7 +23244,7 @@
             </remarks>
             <example>
             <code><![CDATA[
-            Wnd w = Wnd.FindOrRun("* Notepad", run: () => Shell.Run("notepad.exe"));
+            Wnd w = Wnd.FindOrRun("* Notepad", run: () => Exec.Run("notepad.exe"));
             Print(w);
             ]]></code>
             </example>
@@ -23933,7 +24066,7 @@
             Can be:
             - Path of any file or folder.
             - URL, like <c>"http://..."</c> or <c>"mailto:a@b.c"</c> or <c>"file:///path"</c>.
-            - ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="M:Au.Shell.Pidl.ToHexString"/>.
+            - ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="M:Au.Pidl.ToHexString"/>.
             - Shell object parsing name, like <c>@"::{CLSID-1}\::{CLSID-2}"</c> or <c>@"shell:AppsFolder\WinStoreAppId"</c>.
             - File type like <c>".txt"</c> or URL protocol like <c>"http:"</c>.
             
@@ -23959,7 +24092,7 @@
             <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="M:Au.AIcon.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy it.</returns>
             <seealso cref="M:Au.Wnd.More.GetIconHandle(Au.Wnd,System.Boolean)"/>
         </member>
-        <member name="M:Au.AIcon.GetPidlIcon(Au.Shell.Pidl,System.Int32)">
+        <member name="M:Au.AIcon.GetPidlIcon(Au.Pidl,System.Int32)">
             <summary>
             Gets icon of a file or other shell object specified as ITEMIDLIST.
             </summary>
@@ -23967,17 +24100,17 @@
             <param name="pidl">ITEMIDLIST pointer (PIDL).</param>
             <param name="size">Icon width and height. Also can be enum <see cref="T:Au.Types.IconSize"/>, cast to int.</param>
         </member>
-        <member name="M:Au.AIcon.GetPidlIconImage(Au.Shell.Pidl,System.Int32)">
+        <member name="M:Au.AIcon.GetPidlIconImage(Au.Pidl,System.Int32)">
             <summary>
             Gets icon of a file or other shell object specified as ITEMIDLIST.
-            More info: <see cref="M:Au.AIcon.GetPidlIcon(Au.Shell.Pidl,System.Int32)"/>.
+            More info: <see cref="M:Au.AIcon.GetPidlIcon(Au.Pidl,System.Int32)"/>.
             </summary>
             <returns>Returns null if failed.</returns>
         </member>
-        <member name="M:Au.AIcon.GetPidlIconHandle(Au.Shell.Pidl,System.Int32)">
+        <member name="M:Au.AIcon.GetPidlIconHandle(Au.Pidl,System.Int32)">
             <summary>
             Gets icon of a file or other shell object specified as ITEMIDLIST.
-            More info: <see cref="M:Au.AIcon.GetPidlIcon(Au.Shell.Pidl,System.Int32)"/>.
+            More info: <see cref="M:Au.AIcon.GetPidlIcon(Au.Pidl,System.Int32)"/>.
             </summary>
             <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="M:Au.AIcon.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy it.</returns>
         </member>

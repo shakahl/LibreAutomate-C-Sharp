@@ -107,30 +107,28 @@ namespace Au
 		{
 			var w = WndMsg; if(w.Is0) throw new AException("Au editor not found."); //CONSIDER: run editor program, if installed
 			bool needResult = 0 != (mode & 2); resultS = null;
-			using(var tr = new _TaskResults()) {
-				if(needResult && !tr.Init()) throw new AException("*get task results");
+			using var tr = new _TaskResults();
+			if(needResult && !tr.Init()) throw new AException("*get task results");
 
-				var data = Util.LibSerializer.Serialize(script, args, tr.pipeName);
-				int pid = (int)Wnd.More.CopyDataStruct.SendBytes(w, 100, data, mode);
-				switch((ERunResult)pid) {
-				case ERunResult.failed: throw new AException("*start task");
-				case ERunResult.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
-				case ERunResult.editorThread: case ERunResult.deferred: return 0;
-				}
-
-				if(0 != (mode & 1)) {
-					using(var hProcess = LibWaitHandle.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION)) {
-						if(hProcess == null) throw new AException("*wait for task");
-
-						if(!needResult) hProcess.WaitOne(-1);
-						else if(!tr.WaitAndRead(hProcess, resultA)) throw new AException("*get task result");
-						else if(resultA == null) resultS = tr.ResultString;
-
-						if(!Api.GetExitCodeProcess(hProcess.SafeWaitHandle.DangerousGetHandle(), out pid)) pid = int.MinValue;
-					}
-				}
-				return pid;
+			var data = Util.LibSerializer.Serialize(script, args, tr.pipeName);
+			int pid = (int)Wnd.More.CopyDataStruct.SendBytes(w, 100, data, mode);
+			switch((ERunResult)pid) {
+			case ERunResult.failed: throw new AException("*start task");
+			case ERunResult.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
+			case ERunResult.editorThread: case ERunResult.deferred: return 0;
 			}
+
+			if(0 != (mode & 1)) {
+				using var hProcess = LibWaitHandle.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);
+				if(hProcess == null) throw new AException("*wait for task");
+
+				if(!needResult) hProcess.WaitOne(-1);
+				else if(!tr.WaitAndRead(hProcess, resultA)) throw new AException("*get task result");
+				else if(resultA == null) resultS = tr.ResultString;
+
+				if(!Api.GetExitCodeProcess(hProcess.SafeWaitHandle.DangerousGetHandle(), out pid)) pid = int.MinValue;
+			}
+			return pid;
 		}
 
 		internal enum ERunResult //note: sync with ERunResult in Au.CL.cpp.
@@ -141,7 +139,7 @@ namespace Au
 			editorThread = -3,
 		}
 
-		unsafe struct _TaskResults :IDisposable
+		unsafe struct _TaskResults : IDisposable
 		{
 			LibHandle _hPipe;
 			public string pipeName;

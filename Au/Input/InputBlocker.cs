@@ -36,14 +36,14 @@ namespace Au
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// using(new BlockUserInput(BIEvents.All)) {
+	/// using(new InputBlocker(BIEvents.All)) {
 	/// 	Print("blocked");
 	/// 	5.s();
 	/// }
 	/// Print("not blocked");
 	/// ]]></code>
 	/// </example>
-	public unsafe class BlockUserInput : IDisposable
+	public unsafe class InputBlocker : IDisposable
 	{
 		LibHandle _syncEvent, _stopEvent;
 		LibHandle _threadHandle;
@@ -61,13 +61,13 @@ namespace Au
 		/// <summary>
 		/// This constructor does nothing (does not call <see cref="Start"/>).
 		/// </summary>
-		public BlockUserInput() { }
+		public InputBlocker() { }
 
 		/// <summary>
 		/// This constructor calls <see cref="Start"/>.
 		/// </summary>
 		/// <exception cref="ArgumentException"><i>what</i> is 0.</exception>
-		public BlockUserInput(BIEvents what)
+		public InputBlocker(BIEvents what)
 		{
 			Start(what);
 		}
@@ -79,7 +79,7 @@ namespace Au
 		/// <exception cref="InvalidOperationException">Already started.</exception>
 		public void Start(BIEvents what)
 		{
-			if(_disposed) throw new ObjectDisposedException(nameof(BlockUserInput));
+			if(_disposed) throw new ObjectDisposedException(nameof(InputBlocker));
 			if(_block != 0) throw new InvalidOperationException();
 			if(!what.HasAny(BIEvents.All)) throw new ArgumentException();
 
@@ -90,7 +90,7 @@ namespace Au
 			_stopEvent = Api.CreateEvent(false);
 			_threadHandle = Api.OpenThread(Api.SYNCHRONIZE, false, _threadId = Api.GetCurrentThreadId());
 
-			ThreadPool.QueueUserWorkItem(_this => (_this as BlockUserInput)._ThreadProc(), this);
+			ThreadPool.QueueUserWorkItem(_this => (_this as InputBlocker)._ThreadProc(), this);
 			//SHOULDDO: what if thread pool is very busy? Eg if scripts use it incorrectly. Maybe better have own internal pool.
 
 			Api.WaitForSingleObject(_syncEvent, Timeout.Infinite);
@@ -110,7 +110,7 @@ namespace Au
 		}
 
 		///
-		~BlockUserInput() => _CloseHandles();
+		~InputBlocker() => _CloseHandles();
 
 		void _CloseHandles()
 		{
@@ -247,7 +247,7 @@ namespace Au
 
 			_startTime = 0; //don't resend Ctrl+Alt+Del and other blocked keys
 			if(!ResumeAfterCtrlAltDelete)
-				ThreadPool.QueueUserWorkItem(_this => (_this as BlockUserInput).Stop(), this);
+				ThreadPool.QueueUserWorkItem(_this => (_this as InputBlocker).Stop(), this);
 		}
 
 		/// <summary>
@@ -306,7 +306,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Used with <see cref="BlockUserInput"/> class to specify what user input types to block (keys, mouse).
+	/// Used with <see cref="InputBlocker"/> class to specify what user input types to block (keys, mouse).
 	/// </summary>
 	[Flags]
 	public enum BIEvents

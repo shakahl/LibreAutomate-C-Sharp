@@ -109,10 +109,9 @@ namespace Au.Util
 		/// <param name="height">Height, pixels. Must be &gt; 0.</param>
 		public bool Create(int width, int height)
 		{
-			using(var dcs = new LibScreenDC(0)) {
-				Attach(Api.CreateCompatibleBitmap(dcs, width, height));
-				return _bm != default;
-			}
+			using var dcs = new LibScreenDC(0);
+			Attach(Api.CreateCompatibleBitmap(dcs, width, height));
+			return _bm != default;
 		}
 
 		/// <summary>

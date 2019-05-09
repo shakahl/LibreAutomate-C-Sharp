@@ -808,7 +808,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		//when adding classes to a library project, if the main file contains a namespace, add that namespace in the new file too.
 		if(template == "Class.cs" && newParent.FindProject(out var projFolder, out var projMain)) {
 			var rx = @"(?m)^namespace [\w\.]+";
-			if(!s.RegexIsMatch(rx) && projMain.GetText().RegexMatch(rx, 0, out string ns)) {
+			if(!s.Regex(rx) && projMain.GetText().RegexMatch(rx, 0, out string ns)) {
 				s = s.RegexReplace(@"(?ms)^public class .+\}", ns + "\r\n{\r\n$0\r\n}", 1);
 			}
 		}

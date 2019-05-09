@@ -25,14 +25,14 @@ namespace Au
 	/// <remarks>
 	/// Some .NET <see cref="String"/> methods use <see cref="StringComparison.CurrentCulture"/> by default, while others use ordinal or invariant comparison. It is confusing (difficult to remember), dangerous (easy to make bugs), slower and rarely useful.
 	/// Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx.
-	/// This class adds their versions that use <i>StringComparison.Ordinal[IgnoreCase]</i>. Same or similar name, usually a shorter version.
+	/// This class adds their versions that use <b>StringComparison.Ordinal[IgnoreCase]</b>. Same or similar name, usually a shorter version.
 	/// For example, <b>EndsWith</b> (of .NET) uses <b>StringComparison.CurrentCulture</b>, and <b>Ends</b> (of this class) uses <b>StringComparison.Ordinal</b>.
 	/// 
 	/// This class also adds more methods.
 	/// The nested class <see cref="More"/> contains some less often used static methods.
-	/// You also can find string manipulation methods in other classes of this library, for example <see cref="AConvert"/>, <see cref="Keyb.More"/>.
+	/// You also can find string functions in other classes of this library, including <see cref="ARegex"/>, <see cref="AConvert"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="StringSegment"/>, <see cref="Csv"/>, <see cref="Keyb.More"/>.
 	/// </remarks>
-	public static unsafe partial class ExtString //TODO: ExtString
+	public static unsafe partial class ExtString
 	{
 		static bool _Eq(char* a, char* b, int len, bool ignoreCase)
 		{
@@ -63,8 +63,14 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Compares this and other string. Returns true if equal. Uses ordinal comparison.
+		/// Compares this and other string. Returns true if equal.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="s">Other string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		/// <seealso cref="string.Compare"/>
 		/// <seealso cref="string.CompareOrdinal"/>
 		public static bool Eq(this string t, string s, bool ignoreCase = false)
@@ -76,9 +82,15 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="Eq(string, string, bool)"/> for each string specified in the argument list until it returns true.
+		/// Compares this strings with multiple strings.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <param name="strings">Other strings.</param>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static int Eq(this string t, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.Eq(strings[i], ignoreCase)) return i + 1;
@@ -86,16 +98,28 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Compares this and other string ignoring case. Returns true if equal. Uses ordinal comparison.
+		/// Compares this and other string ignoring case (case-insensitive). Returns true if equal.
 		/// </summary>
-		/// <remarks>Calls <see cref="Eq(string, string, bool)"/> with <i>ignoreCase</i> true.</remarks>
+		/// <param name="t">This string.</param>
+		/// <param name="s">Other string.</param>
+		/// <remarks>
+		/// Calls <see cref="Eq(string, string, bool)"/> with <i>ignoreCase</i> true.
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static bool Eqi(this string t, string s) => Eq(t, s, true);
 
 		/// <summary>
-		/// Compares part of this string with other string. Returns true if equal. Uses ordinal comparison.
+		/// Compares part of this string with other string. Returns true if equal.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="startIndex">Offset in this string.</param>
+		/// <param name="s">Other string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		/// <seealso cref="string.Compare"/>
 		/// <seealso cref="string.CompareOrdinal"/>
 		public static bool EqAt(this string t, int startIndex, string s, bool ignoreCase = false)
@@ -107,11 +131,18 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="EqAt(string, int, string, bool)"/> for each string specified in the argument list until it returns true.
+		/// Compares part of this string with multiple strings.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="startIndex">Offset in this string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <param name="strings">Other strings.</param>
 		/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static int EqAt(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.EqAt(startIndex, strings[i], ignoreCase)) return i + 1;
@@ -125,9 +156,15 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Compares the end of this string with other string. Returns true if equal. Uses ordinal comparison.
+		/// Compares the end of this string with other string. Returns true if equal.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="s">Other string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static bool Ends(this string t, string s, bool ignoreCase = false)
 		{
 			int tLen = t.Length; //NullReferenceException
@@ -136,10 +173,16 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="Ends(string, string, bool)"/> for each string specified in the argument list until it returns true.
+		/// Compares the end of this string with multiple strings.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <param name="strings">Other strings.</param>
 		/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static int Ends(this string t, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.Ends(strings[i], ignoreCase)) return i + 1;
@@ -148,8 +191,9 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if this string ends with the specified character.
-		/// Fast, case-sensitive.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="c">The character.</param>
 		public static bool Ends(this string t, char c)
 		{
 			int i = t.Length - 1;
@@ -157,9 +201,15 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Compares the beginning of this string with other string. Returns true if equal. Uses ordinal comparison.
+		/// Compares the beginning of this string with other string. Returns true if equal.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="s">Other string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static bool Starts(this string t, string s, bool ignoreCase = false)
 		{
 			int tLen = t.Length; //NullReferenceException
@@ -168,10 +218,16 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="Starts(string, string, bool)"/> for each string specified in the argument list until it returns true.
+		/// Compares the beginning of this string with multiple strings.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <param name="strings">Other strings.</param>
 		/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static int Starts(this string t, bool ignoreCase = false, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(t.Starts(strings[i], ignoreCase)) return i + 1;
@@ -180,37 +236,62 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if this string starts with the specified character.
-		/// Fast, case-sensitive.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="c">The character.</param>
 		public static bool Starts(this string t, char c)
 		{
 			return t.Length > 0 && t[0] == c;
 		}
 
 		/// <summary>
-		/// Calls <see cref="string.IndexOf(string, StringComparison)"/>. Uses ordinal comparison.
+		/// Finds substring in this string. Returns its zero-based index, or -1 if not found.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="s">Subtring to find.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <remarks>
+		/// Calls <see cref="string.IndexOf(string, StringComparison)"/>.
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static int Index(this string t, string s, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 
 		/// <summary>
-		/// Calls <see cref="string.IndexOf(string, int, StringComparison)"/>. Uses ordinal comparison.
+		/// Finds substring in part of this string. Returns its zero-based index, or -1 if not found.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="s">Subtring to find.</param>
+		/// <param name="startIndex">The search starting position.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
+		/// <remarks>
+		/// Calls <see cref="string.IndexOf(string, int, StringComparison)"/>.
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static int Index(this string t, string s, int startIndex, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 
 		/// <summary>
-		/// Calls <see cref="string.IndexOf(string, int, int, StringComparison)"/>. Uses ordinal comparison.
+		/// Finds substring in part of this string. Returns its zero-based index, or -1 if not found.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="s">Subtring to find.</param>
+		/// <param name="startIndex">The search starting position.</param>
+		/// <param name="count">The number of characters to examine.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
+		/// <remarks>
+		/// Calls <see cref="string.IndexOf(string, int, int, StringComparison)"/>.
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
 		public static int Index(this string t, string s, int startIndex, int count, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
@@ -220,21 +301,26 @@ namespace Au
 		//rejected: IndexOfAny, LastIndexOfAny and Trim that would use string instead of char[]. Not so often used. For speed/garbage it's better to use static char[].
 
 		/// <summary>
-		/// Returns true if this string contains string <i>s</i>. Uses ordinal comparison.
+		/// Returns true if this string contains the specified substring.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="s">Subtring to find.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <remarks>
-		/// Uses <see cref="string.IndexOf(string, int, StringComparison)"/>.
+		/// Calls <see cref="string.IndexOf(string, StringComparison)"/>.
+		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
 		public static bool Has(this string t, string s, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
 		}
-		//TODO: apply: replace Index and IndexOf.
 
 		/// <summary>
-		/// Returns true if this string contains character <i>c</i>.
+		/// Returns true if this string contains the specified character.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="c">Character to find.</param>
 		public static bool Has(this string t, char c)
 		{
 			return t.IndexOf(c) >= 0;
@@ -243,12 +329,13 @@ namespace Au
 		/// <summary>
 		/// Returns <see cref="string.Length"/>. Returns 0 if this string is null.
 		/// </summary>
+		/// <param name="t">This string.</param>
 		public static int Lenn(this string t) => t?.Length ?? 0;
 
 		/// <summary>
 		/// Splits this string into substrings using the specified separators.
 		/// </summary>
-		/// <param name="t"></param>
+		/// <param name="t">This string.</param>
 		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
 		/// <param name="maxCount">The maximal number of substrings to get. If negative, gets all.</param>
 		/// <param name="flags"></param>
@@ -265,7 +352,7 @@ namespace Au
 		/// <summary>
 		/// Splits this string into substrings using the specified separators.
 		/// </summary>
-		/// <param name="t"></param>
+		/// <param name="t">This string.</param>
 		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
 		/// <param name="flags"></param>
 		public static string[] SegSplit(this string t, string separators, SegFlags flags = 0)
@@ -277,10 +364,11 @@ namespace Au
 		/// <summary>
 		/// Splits this string into lines using separators "\r\n", "\n", "\r".
 		/// </summary>
-		/// <param name="t"></param>
+		/// <param name="t">This string.</param>
 		/// <param name="noEmptyLines">Don't get empty lines.</param>
 		/// <remarks>
-		/// Calls <see cref="SegSplit(string, string, int, SegFlags)"/> with separators = Separators.Line, maxCount = -1 (all lines), flags = noEmptyLines ? SegFlags.NoEmpty : 0.
+		/// Uses this code: <c>return t.SegSplit(Separators.Line, noEmptyLines ? SegFlags.NoEmpty : 0);</c>.
+		/// See <see cref="SegSplit(string, string, int, SegFlags)"/>, <see cref="Separators.Line"/>, <see cref="SegFlags.NoEmpty"/>.
 		/// </remarks>
 		/// <seealso cref="Segments(string, string, SegFlags)"/>
 		public static string[] SegSplitLines(this string t, bool noEmptyLines = false)
@@ -292,7 +380,7 @@ namespace Au
 		/// Returns the number of lines.
 		/// Counts line separators "\r\n", "\n", "\r".
 		/// </summary>
-		/// <param name="t"></param>
+		/// <param name="t">This string.</param>
 		/// <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
 		public static int LineCount(this string t, bool preferMore = false)
 		{
@@ -311,19 +399,31 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="string.ToLowerInvariant"/>.
+		/// Converts this string to lower case. Returns the result string.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <remarks>
+		/// Calls <see cref="string.ToLowerInvariant"/>.
+		/// </remarks>
 		public static string Lower(this string t) => t.ToLowerInvariant();
 
 		/// <summary>
-		/// Calls <see cref="string.ToUpperInvariant"/>.
+		/// Converts this string to upper case. Returns the result string.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <remarks>
+		/// Calls <see cref="string.ToUpperInvariant"/>.
+		/// </remarks>
 		public static string Upper(this string t) => t.ToUpperInvariant();
 
 		/// <summary>
-		/// Converts the string or only the first character (or Unicode surrogate pair) to upper case.
-		/// Calls <see cref="string.ToUpperInvariant"/>.
+		/// Converts this string or only the first character to upper case. Returns the result string.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="firstCharOnly">Convert only the first character.</param>
+		/// <remarks>
+		/// Calls <see cref="string.ToUpperInvariant"/>.
+		/// </remarks>
 		public static unsafe string Upper(this string t, bool firstCharOnly)
 		{
 			if(!firstCharOnly) return t.ToUpperInvariant();
@@ -335,11 +435,13 @@ namespace Au
 			return u;
 		}
 
+		#region ToNumber
+
 		/// <summary>
-		/// Converts part of string to int.
+		/// Converts part of this string to int.
 		/// Returns the int value, or 0 if fails to convert.
 		/// </summary>
-		/// <param name="t"></param>
+		/// <param name="t">This string.</param>
 		/// <param name="startIndex">Offset in this string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
 		/// <param name="flags"></param>
@@ -367,7 +469,8 @@ namespace Au
 		}
 
 		/// <summary>
-		/// This overload does not have parameter <i>numberEndIndex</i>.
+		/// Converts part of this string to int.
+		/// Returns the int value, or 0 if fails to convert.
 		/// </summary>
 		public static int ToInt(this string t, int startIndex, STIFlags flags = 0)
 		{
@@ -375,18 +478,19 @@ namespace Au
 		}
 
 		/// <summary>
-		/// This overload does not have parameters.
+		/// Converts the start of this string to int.
+		/// Returns the int value, or 0 if fails to convert.
 		/// </summary>
-		public static int ToInt(this string t)
+		public static int ToInt(this string t, STIFlags flags = 0)
 		{
-			return (int)_ToInt(t, 0, out _, false, 0);
+			return (int)_ToInt(t, 0, out _, false, flags);
 		}
 
 		/// <summary>
-		/// Converts part of string to long.
+		/// Converts part of this string to long.
 		/// Returns the long value, or 0 if fails to convert.
 		/// </summary>
-		/// <param name="t"></param>
+		/// <param name="t">This string.</param>
 		/// <param name="startIndex">Offset in this string where to start parsing.</param>
 		/// <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
 		/// <param name="flags"></param>
@@ -414,7 +518,8 @@ namespace Au
 		}
 
 		/// <summary>
-		/// This <see cref="ToInt64(string, int, out int, STIFlags)"/> overload does not have parameter numberEndIndex.
+		/// Converts part of this string to long.
+		/// Returns the long value, or 0 if fails to convert.
 		/// </summary>
 		public static long ToInt64(this string t, int startIndex, STIFlags flags = 0)
 		{
@@ -422,11 +527,12 @@ namespace Au
 		}
 
 		/// <summary>
-		/// This <see cref="ToInt64(string, int, out int, STIFlags)"/> overload does not have parameters.
+		/// Converts the start of this string to long.
+		/// Returns the long value, or 0 if fails to convert.
 		/// </summary>
-		public static long ToInt64(this string t)
+		public static long ToInt64(this string t, STIFlags flags = 0)
 		{
-			return _ToInt(t, 0, out _, true, 0);
+			return _ToInt(t, 0, out _, true, flags);
 		}
 
 		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong, STIFlags flags)
@@ -516,11 +622,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Converts string to double.
-		/// Calls <see cref="double.Parse(string, NumberStyles, IFormatProvider)"/> with CultureInfo.InvariantCulture and NumberStyles.Float|NumberStyles.AllowThousands.
+		/// Converts this string to double.
 		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="canThrow">If true, exception if the string is not a valid number or is null. If false, then returns 0.</param>
+		/// <param name="t">This string.</param>
+		/// <param name="canThrow">If true, exception if the string is not a valid number or is null. If false (default), then returns 0.</param>
+		/// <remarks>
+		/// Calls <see cref="double.Parse(string, NumberStyles, IFormatProvider)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b> and <see cref="NumberStyles"/> <b>Float</b> and <b>AllowThousands</b>.
+		/// </remarks>
 		public static double ToDouble(this string t, bool canThrow = false)
 		{
 			if(canThrow) return double.Parse(t, CultureInfo.InvariantCulture);
@@ -528,21 +636,32 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Converts string to float.
-		/// Calls <see cref="float.Parse(string, NumberStyles, IFormatProvider)"/> with CultureInfo.InvariantCulture and NumberStyles.Float|NumberStyles.AllowThousands.
+		/// Converts this string to float.
 		/// </summary>
-		/// <param name="t"></param>
-		/// <param name="canThrow">If true, exception if the string is not a valid number or is null. If false, then returns 0.</param>
+		/// <param name="t">This string.</param>
+		/// <param name="canThrow">If true, exception if the string is not a valid number or is null. If false (default), then returns 0.</param>
+		/// <remarks>
+		/// Calls <see cref="float.Parse(string, NumberStyles, IFormatProvider)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b> and <see cref="NumberStyles"/> <b>Float</b> and <b>AllowThousands</b>.
+		/// </remarks>
 		public static float ToFloat(this string t, bool canThrow = false)
 		{
 			if(canThrow) return float.Parse(t, CultureInfo.InvariantCulture);
 			return float.TryParse(t, NumberStyles.Float | NumberStyles.AllowThousands, CultureInfo.InvariantCulture, out float R) ? R : 0.0F;
 		}
 
+		#endregion
+
 		/// <summary>
-		/// Returns a new string in which a specified string replaces a specified count of characters at a specified position in this instance.
+		/// Replaces part of this string with other string. Returns the result string.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="startIndex">Offset in this string.</param>
+		/// <param name="count">Count of characters to replace.</param>
+		/// <param name="s">The replacement string.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
+		/// <remarks>
+		/// More info: <see cref="string.Remove(int, int)"/>, <see cref="string.Insert"/>.
+		/// </remarks>
 		public static string ReplaceAt(this string t, int startIndex, int count, string s)
 		{
 			return t.Remove(startIndex, count).Insert(startIndex, s);
@@ -562,32 +681,67 @@ namespace Au
 
 		/// <summary>
 		/// Removes <i>count</i> characters from the end of this string.
+		/// Returns the result string.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="count">Count of characters to remove.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public static string RemoveSuffix(this string t, int count) => t.Remove(t.Length - count);
+
+		/// <summary>
+		/// Removes <i>suffix</i> string from the end.
+		/// Returns the result string. Returns this string if does not end with <i>suffix</i>.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="suffix">Substring to remove.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <exception cref="ArgumentNullException"><i>suffix</i> is null.</exception>
+		public static string RemoveSuffix(this string t, string suffix, bool ignoreCase = false)
+		{
+			if(!t.Ends(suffix, ignoreCase)) return t;
+			return RemoveSuffix(t, suffix.Length);
+		}
+
+		/// <summary>
+		/// Removes <i>suffix</i> character from the end.
+		/// Returns the result string. Returns this string if does not end with <i>suffix</i>.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="suffix">Character to remove.</param>
+		/// <exception cref="ArgumentNullException"><i>suffix</i> is null.</exception>
+		public static string RemoveSuffix(this string t, char suffix)
+		{
+			if(!t.Ends(suffix)) return t;
+			return RemoveSuffix(t, 1);
+		}
 
 		/// <summary>
 		/// If this string is longer than <i>limit</i>, returns its substring 0 to <i>limit</i>-1 with appended '…' character.
 		/// Else returns this string.
 		/// </summary>
-		public static string Limit(this string t, int limit)
+		/// <param name="t">This string.</param>
+		/// <param name="limit">Maximal length of the result string. If less than 1, is used 1.</param>
+		/// <param name="middle">Let "…" be in middle. For example it is useful when the string is a path, to avoid removing filename.</param>
+		public static string Limit(this string t, int limit, bool middle = false)
 		{
 			int k = t.Length;
 			if(limit < 1) limit = 1;
 			if(k <= limit) return t;
-			return t.Remove(limit - 1) + "…";
+			limit--;
+			if(!middle) return t.Remove(limit) + "…";
+			return t.ReplaceAt(limit / 2, k - limit, "…");
 		}
-		//TODO: bool isPath=false: insert "…" in middle.
-		//	Don't need it in Escape, because path cannot contain characters that need to be escaped.
 
 		/// <summary>
-		/// Replaces some characters with C# escape sequences.
-		/// Replaces these characters: <c>'\\'</c>, <c>'\"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
+		/// Replaces unsafe characters with C# escape sequences.
 		/// If the string contains these characters, replaces and returns new string. Else returns this string.
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="limit">If the final string is longer than <i>limit</i>, get its substring 0 to <i>limit</i>-1 with appended '…' character. The enclosing "" are not counted.</param>
 		/// <param name="quote">Enclose in "".</param>
+		/// <remarks>
+		/// Replaces these characters: <c>'\\'</c>, <c>'\"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
+		/// </remarks>
 		public static string Escape(this string t, int limit = 0, bool quote = false)
 		{
 			int i, len = t.Length;

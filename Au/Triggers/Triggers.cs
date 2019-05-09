@@ -67,7 +67,7 @@ namespace Au.Triggers
 	/// hk["Ctrl+K"] = o => Print(o.Trigger); //it means: execute code "o => Print(o.Trigger)" when I press Ctrl+K
 	/// hk["Ctrl+Shift+F11"] = o => {
 	/// 	Print(o.Trigger);
-	/// 	var w1 = Wnd.FindOrRun("* Notepad", run: () => Shell.Run(Folders.System + "notepad.exe"));
+	/// 	var w1 = Wnd.FindOrRun("* Notepad", run: () => Exec.Run(Folders.System + "notepad.exe"));
 	/// 	Text("text");
 	/// 	w1.Close();
 	/// };

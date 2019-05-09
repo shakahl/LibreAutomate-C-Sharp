@@ -47,7 +47,7 @@ namespace Au
 			/// Parsed parameter values. All read-only.
 			/// </summary>
 			public TProps Props => new TProps(this);
-			
+
 			[NoDoc]
 			public struct TProps
 			{
@@ -188,8 +188,8 @@ namespace Au
 			/// </summary>
 			public bool Find()
 			{
-				using(var k = new _WndList(_AllWindows()))
-					return _FindOrMatch(k) >= 0;
+				using var k = new _WndList(_AllWindows());
+				return _FindOrMatch(k) >= 0;
 			}
 
 			Util.LibArrayBuilder<Wnd> _AllWindows()
@@ -209,8 +209,8 @@ namespace Au
 			/// <param name="a">Array or list of windows, for example returned by <see cref="GetWnd.AllWindows"/>.</param>
 			public int FindInList(IEnumerable<Wnd> a)
 			{
-				using(var k = new _WndList(a))
-					return _FindOrMatch(k);
+				using var k = new _WndList(a);
+				return _FindOrMatch(k);
 			}
 
 			/// <summary>
@@ -235,10 +235,9 @@ namespace Au
 			Wnd[] _FindAll(_WndList k)
 			{
 				using(k) {
-					using(var ab = new Util.LibArrayBuilder<Wnd>()) {
-						_FindOrMatch(k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
-						return ab.ToArray();
-					}
+					using var ab = new Util.LibArrayBuilder<Wnd>();
+					_FindOrMatch(k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
+					return ab.ToArray();
 				}
 			}
 
@@ -498,7 +497,7 @@ namespace Au
 		///// This example is similar to what <see cref="FindOrRun"/> does.
 		///// <code><![CDATA[
 		///// Wnd w = Wnd.Find("*- Notepad", "Notepad");
-		///// if(w.Is0) { Shell.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
+		///// if(w.Is0) { Exec.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
 		///// ]]></code>
 		///// </example>
 		//[field: ThreadStatic]
@@ -584,7 +583,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a top-level window (calls <see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="Shell.Run"/>.
+		/// Finds a top-level window (calls <see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="Exec.Run"/>.
 		/// Returns window handle as <b>Wnd</b>. Returns <c>default(Wnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
 		/// </summary>
 		/// <param name="name">See <see cref="Find"/>.</param>
@@ -609,7 +608,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// Wnd w = Wnd.FindOrRun("* Notepad", run: () => Shell.Run("notepad.exe"));
+		/// Wnd w = Wnd.FindOrRun("* Notepad", run: () => Exec.Run("notepad.exe"));
 		/// Print(w);
 		/// ]]></code>
 		/// </example>
@@ -714,9 +713,8 @@ namespace Au
 			internal static Wnd[] EnumWindows(EnumAPI api,
 				bool onlyVisible, bool sortFirstVisible, Wnd wParent = default, bool directChild = false, int threadId = 0)
 			{
-				using(var a = EnumWindows2(api, onlyVisible, sortFirstVisible, wParent, directChild, threadId)) {
-					return a.ToArray();
-				}
+				using var a = EnumWindows2(api, onlyVisible, sortFirstVisible, wParent, directChild, threadId);
+				return a.ToArray();
 			}
 
 			/// <summary>

@@ -74,8 +74,8 @@ namespace Au
 	/// var s = "one two22, three333,four"; //subject string
 	/// var rx = @"\b(\w+?)(\d+)\b"; //regular expression
 	///  
-	///  Print("//RegexIsMatch:");
-	/// Print(s.RegexIsMatch(rx));
+	///  Print("//Regex:");
+	/// Print(s.Regex(rx));
 	///  
 	///  Print("//RegexMatch:");
 	/// if(s.RegexMatch(rx, out var m)) Print(m.Value, m[1].Value, m[2].Value);
@@ -1081,7 +1081,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static bool RegexIsMatch(this string s, string rx, RXFlags flags = 0, RXMore more = null)
+		public static bool Regex(this string s, string rx, RXFlags flags = 0, RXMore more = null)
 		{
 			if(s == null) return false;
 			var x = _cache.AddOrGet(rx, flags);

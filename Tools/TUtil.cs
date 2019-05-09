@@ -145,7 +145,7 @@ namespace Au.Tools
 					s = "**r " + ARegex.EscapeQE(s.Remove(i)) + @"\*?" + ARegex.EscapeQE(s.Substring(i + 1));
 				} else s = "**t " + s;
 			}
-			if(canMakeVerbatim && s.IndexOf('\\') >= 0 && !s.RegexIsMatch(@"[\x00-\x1F\x85\x{2028}\x{2029}]")) {
+			if(canMakeVerbatim && s.IndexOf('\\') >= 0 && !s.Regex(@"[\x00-\x1F\x85\x{2028}\x{2029}]")) {
 				s = "@\"" + s.Replace("\"", "\"\"") + "\"";
 			}
 			return s;

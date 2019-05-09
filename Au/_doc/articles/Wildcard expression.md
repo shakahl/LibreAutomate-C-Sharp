@@ -45,4 +45,4 @@ var item = x.FindItem("example", "2017-*", "**rc regex");
 ### See also
 
 [Wildex](xref:Au.Types.Wildex)
-[ALike](xref:Au.String_.ALike(System.String,System.String,System.Boolean))
+[ALike](xref:Au.ExtString.Like(System.String,System.String,System.Boolean))

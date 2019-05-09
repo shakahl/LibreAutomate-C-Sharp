@@ -56,7 +56,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to int (<see cref="ExtString.ToInt(string)"/>).
+		/// Gets attribute value converted to int (<see cref="ExtString.ToInt"/>).
 		/// If the attribute does not exist, returns defaultValue.
 		/// If the attribute value is empty or does not begin with a valid number, returns 0.
 		/// </summary>
@@ -67,7 +67,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to int (<see cref="ExtString.ToInt(string)"/>).
+		/// Gets attribute value converted to int (<see cref="ExtString.ToInt"/>).
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
 		/// </summary>
@@ -80,7 +80,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to long (<see cref="ExtString.ToInt64(string)"/>).
+		/// Gets attribute value converted to long (<see cref="ExtString.ToInt64"/>).
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
 		/// </summary>

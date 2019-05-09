@@ -92,7 +92,7 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="Shell.Run"/>, <see cref="Process.Start"/>.
+			/// Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="Exec.Run"/>, <see cref="Process.Start"/>.
 			/// Returns null if a is null or has 0 elements.
 			/// </summary>
 			/// <param name="a"></param>

@@ -93,13 +93,12 @@ namespace Au
 			{
 				path = APath.LibNormalizeMinimally(path, false);
 				fileId = new FileId();
-				using(var h = Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS)) {
-					if(h.Is0) return false;
-					if(!Api.GetFileInformationByHandle(h, out var k)) return false;
-					fileId.VolumeSerialNumber = (int)k.dwVolumeSerialNumber;
-					fileId.FileIndex = (long)((ulong)k.nFileIndexHigh << 32 | k.nFileIndexLow);
-					return true;
-				}
+				using var h = Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS);
+				if(h.Is0) return false;
+				if(!Api.GetFileInformationByHandle(h, out var k)) return false;
+				fileId.VolumeSerialNumber = (int)k.dwVolumeSerialNumber;
+				fileId.FileIndex = (long)((ulong)k.nFileIndexHigh << 32 | k.nFileIndexLow);
+				return true;
 			}
 
 			/// <summary>
@@ -126,7 +125,7 @@ namespace Au
 
 			//static char[] s_sep3 = { '\\', '/', '~' };
 #if false
-		//this is ~300 times slower than AFile.Move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished. Move to Shell class.
+		//this is ~300 times slower than AFile.Move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished.
 		public static void RenameFileOrDirectory(string path, string newName)
 		{
 			Perf.First();
@@ -267,19 +266,19 @@ namespace Au
 			/// <summary>
 			/// Temporarily disables file system redirection, to allow this 32-bit process access the 64-bit System32 directory.
 			/// </summary>
-			public struct DisableRedirection :IDisposable
+			public struct DisableRedirection : IDisposable
 			{
 				bool _redirected;
 				IntPtr _redirValue;
 
 				/// <summary>
-				/// If Ver.Is32BitProcessOn64BitOS, calls API <msdn>Wow64DisableWow64FsRedirection</msdn>, which disables file system redirection.
+				/// If <see cref="Ver.Is32BitProcessAnd64BitOS"/>, calls API <msdn>Wow64DisableWow64FsRedirection</msdn>, which disables file system redirection.
 				/// The caller can call this without checking OS and process bitness. This function checks it and it is fast.
-				/// Always call <see cref="Revert"/> or Dispose, for example in finally{}, or use using (this struct implements IDisposable). Not calling it is more dangerous than a memory leak. It is not called by GC.
+				/// Always call <see cref="Revert"/> or <b>Dispose</b>, for example use <b>finally</b> or <b>using</b> statement. Not calling it is more dangerous than a memory leak. It is not called by GC.
 				/// </summary>
 				public void Disable()
 				{
-					if(Ver.Is32BitProcessOn64BitOS)
+					if(Ver.Is32BitProcessAnd64BitOS)
 						_redirected = Api.Wow64DisableWow64FsRedirection(out _redirValue);
 				}
 
@@ -293,7 +292,7 @@ namespace Au
 				}
 
 				/// <summary>
-				/// Returns true if Ver.Is32BitProcessOn64BitOS is true and path starts with Folders.System.
+				/// Returns true if <see cref="Ver.Is32BitProcessAnd64BitOS"/> is true and path starts with <see cref="Folders.System"/>.
 				/// Most such paths are redirected, therefore you may want to disable redirection with this class.
 				/// </summary>
 				/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of <c>@"\\?\"</c>.</param>
@@ -304,7 +303,7 @@ namespace Au
 
 				static int _IsSystem64PathIn32BitProcess(string path)
 				{
-					if(!Ver.Is32BitProcessOn64BitOS) return 0;
+					if(!Ver.Is32BitProcessAnd64BitOS) return 0;
 					string sysDir = Folders.System;
 					if(!path.Starts(sysDir, true)) return 0;
 					int len = sysDir.Length;
@@ -313,8 +312,8 @@ namespace Au
 				}
 
 				/// <summary>
-				/// If Ver.Is32BitProcessOn64BitOS is true and path starts with Folders.System, replaces that path part with <see cref="Folders.SystemX64"/>.
-				/// It disables redirection to Folders.SystemX32 for that path.
+				/// If <see cref="Ver.Is32BitProcessAnd64BitOS"/> is true and path starts with <see cref="Folders.System"/>, replaces that path part with <see cref="Folders.SystemX64"/>.
+				/// It disables redirection to <see cref="Folders.SystemX32"/> for that path.
 				/// </summary>
 				/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of <c>@"\\?\"</c>.</param>
 				/// <param name="ifExistsOnlyThere">Don't replace path if the file or directory exists in the redirected folder or does not exist in the non-redirected folder.</param>

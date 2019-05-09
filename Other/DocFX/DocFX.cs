@@ -73,7 +73,7 @@ unsafe class Program
 
 			bool serving = false;
 			try {
-				Shell.RunConsole(o => {
+				Exec.RunConsole(o => {
 					Print(o);
 					if(o.Starts("Serving")) throw new OperationCanceledException();
 				}, docfx, $@"docfx.json --intermediateFolder ""{objDir}"" --serve");
@@ -96,7 +96,7 @@ unsafe class Program
 		//Key("F5");
 
 		1.s();
-		if(ADialog.ShowYesNo("Upload?")) CompressAndUpload(docDir);
+		if(1 == ADialog.ShowEx("Upload?", null, "1 Yes|2 No", secondsTimeout: 5)) CompressAndUpload(docDir);
 
 		//Delete obj folder if big. Each time it grows by 10 MB, and after a day or two can be > 1 GB. After deleting builds slower by ~50%.
 		if(AFile.More.CalculateDirectorySize(objDir) / 1024 / 1024 > 500) { Print("Deleting obj folder."); AFile.Delete(objDir); }
@@ -223,7 +223,7 @@ unsafe class Program
 
 		if(isApi) {
 			//Remove the <au><!--<code>*xml*</code>--></au> enclosing.
-			nr += s.RegexReplace(@" < au><!--(<code>.+?</code>)--></au>", @"$1", out s);
+			nr += s.RegexReplace(@"<au><!--(<code>.+?</code>)--></au>", @"$1", out s);
 
 			//Link Method(parameters) -> Type.Method. And remove #jump. Works for properties too.
 			//Exclude those in auto-generated tables of class methods and properties.
@@ -336,9 +336,9 @@ unsafe class Program
 		AFile.Delete(docDir + @"\_site.tar");
 		AFile.Delete(docDir + @"\_site.tar.bz2");
 
-		int r1 = Shell.RunConsole(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
+		int r1 = Exec.RunConsole(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
 		if(r1 != 0) { Print(s); return; }
-		int r2 = Shell.RunConsole(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
+		int r2 = Exec.RunConsole(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
 		if(r2 != 0) { Print(s); return; }
 
 		AFile.Delete(docDir + @"\_site.tar");

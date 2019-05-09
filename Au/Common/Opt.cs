@@ -718,7 +718,7 @@ namespace Au.Types
 		/// Default: null.
 		/// </summary>
 		/// <remarks>
-		/// The callback function is called by <see cref="Key"/>, <see cref="Text"/>, <see cref="Keyb.Send"/>, <see cref="Paste"/> and similar functions. Not called by <see cref="Clipb.CopyText"/>.
+		/// The callback function is called by <see cref="Key"/>, <see cref="Text"/>, <see cref="Keyb.Send"/>, <see cref="Clipb.PasteText"/> and similar functions. Not called by <see cref="Clipb.CopyText"/>.
 		/// </remarks>
 		/// <seealso cref="KOHookData"/>
 		public Action<KOHookData> Hook { get; set; }

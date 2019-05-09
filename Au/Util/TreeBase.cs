@@ -134,10 +134,8 @@ namespace Au.Util
 		/// Returns the root ancestor node. Its <see cref="Parent"/> is null.
 		/// Returns this node if its <b>Parent</b> is null.
 		/// </summary>
-		public T RootAncestor
-		{
-			get
-			{
+		public T RootAncestor {
+			get {
 				var p = this as T;
 				while(p._parent != null) p = p._parent;
 				return p;
@@ -147,10 +145,8 @@ namespace Au.Util
 		/// <summary>
 		/// Gets the number of ancestors (parent, its parent and so on).
 		/// </summary>
-		public int Level
-		{
-			get
-			{
+		public int Level {
+			get {
 				int R = 0;
 				for(var p = _parent; p != null; p = p._parent) R++;
 				return R;
@@ -204,10 +200,8 @@ namespace Au.Util
 		/// <remarks>
 		/// Can be slow if there are many siblings. This class does not have a 'previous' field and therefore has to walk the linked list of siblings.
 		/// </remarks>
-		public T Previous
-		{
-			get
-			{
+		public T Previous {
+			get {
 				if(_parent == null) return null;
 				T n = _parent._lastChild._next;
 				Debug.Assert(n != null);
@@ -406,9 +400,8 @@ namespace Au.Util
 		{
 			file = APath.LibNormalizeForNET(file);
 			var xs = new XmlReaderSettings() { IgnoreComments = true, IgnoreProcessingInstructions = true, IgnoreWhitespace = true };
-			using(var r = AFile.WaitIfLocked(() => XmlReader.Create(file, xs))) {
-				return XmlLoad(r, nodeReader);
-			}
+			using var r = AFile.WaitIfLocked(() => XmlReader.Create(file, xs));
+			return XmlLoad(r, nodeReader);
 		}
 
 		/// <summary>
@@ -458,11 +451,9 @@ namespace Au.Util
 		{
 			file = APath.LibNormalizeForNET(file);
 			if(sett == null) sett = new XmlWriterSettings() { OmitXmlDeclaration = true, Indent = true, IndentChars = "  " };
-			AFile.Save(file, temp =>
-			{
-				using(var x = XmlWriter.Create(temp, sett)) {
-					XmlSave(x, nodeWriter, children);
-				}
+			AFile.Save(file, temp => {
+				using var x = XmlWriter.Create(temp, sett);
+				XmlSave(x, nodeWriter, children);
 			});
 		}
 

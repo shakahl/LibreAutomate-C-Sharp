@@ -27,8 +27,8 @@ namespace Au
 	/// Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="ConditionalAttribute"/>("DEBUG")].
 	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(Opt.Debug.Verbose) PrintWarning("text");</c>; see <see cref="PrintWarning"/>, Opt.Debug.<see cref="OptDebug.Verbose"/>.
 	/// </remarks>
-	//[DebuggerStepThrough]
-	public static class ADebug
+	[DebuggerStepThrough]
+	internal static class ADebug //FUTURE: make public, when will be more tested and if really need.
 	{
 		/// <summary>
 		/// Prefix for ADebug.Print, ADebug.PrintIf.
@@ -220,7 +220,7 @@ namespace Au
 		/// Works in Release too.
 		/// </summary>
 		/// <param name="fromAnchor">Get the difference from previous call to <b>LibMemorySetAnchor</b>.</param>
-		internal static void LibMemoryPrint(bool fromAnchor = true) => Output.Write(LibMemoryGet());
+		internal static void LibMemoryPrint(bool fromAnchor = true) => Output.Write(LibMemoryGet(fromAnchor));
 
 		/// <summary>
 		/// Memorizes current managed memory size, so that next call to another <b>LibMemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.

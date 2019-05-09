@@ -105,17 +105,15 @@ namespace Au.Util
 
 		public LibNativeFont(string name, int height, bool calculateHeightOnScreen = false)
 		{
-			using(var dcs = new LibScreenDC(0)) {
-				int h2 = -AMath.MulDiv(height, Api.GetDeviceCaps(dcs, 90), 72);
-				Handle = Api.CreateFont(h2, iCharSet: 1, pszFaceName: name); //LOGPIXELSY=90
-				if(calculateHeightOnScreen) {
-					using(var dcMem = new LibCompatibleDC(dcs)) {
-						var of = Api.SelectObject(dcMem, Handle);
-						Api.GetTextExtentPoint32(dcMem, "A", 1, out var z);
-						HeightOnScreen = z.height;
-						Api.SelectObject(dcMem, of);
-					}
-				}
+			using var dcs = new LibScreenDC(0);
+			int h2 = -AMath.MulDiv(height, Api.GetDeviceCaps(dcs, 90), 72);
+			Handle = Api.CreateFont(h2, iCharSet: 1, pszFaceName: name); //LOGPIXELSY=90
+			if(calculateHeightOnScreen) {
+				using var dcMem = new LibCompatibleDC(dcs);
+				var of = Api.SelectObject(dcMem, Handle);
+				Api.GetTextExtentPoint32(dcMem, "A", 1, out var z);
+				HeightOnScreen = z.height;
+				Api.SelectObject(dcMem, of);
 			}
 		}
 

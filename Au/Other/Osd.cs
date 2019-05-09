@@ -26,7 +26,7 @@ namespace Au
 	/// <summary>
 	/// Transparent window that can be used for on-screen display. Derived classes on it can draw non-transparent text, rectangle, image, anything.
 	/// </summary>
-	public abstract class OsdWindow :IDisposable
+	public abstract class OsdWindow : IDisposable
 	{
 		///
 		public OsdWindow()
@@ -86,11 +86,9 @@ namespace Au
 		/// <remarks>
 		/// This property can be changed after creating OSD window.
 		/// </remarks>
-		public double Opacity
-		{
+		public double Opacity {
 			get => _opacity;
-			set
-			{
+			set {
 				var v = Math.Min(Math.Max(value, 0.0), 1.0);
 				if(v == _opacity) return;
 				bool was0 = _opacity == 0;
@@ -124,11 +122,9 @@ namespace Au
 		/// <remarks>
 		/// This property can be changed after creating OSD window.
 		/// </remarks>
-		public RECT Rect
-		{
+		public RECT Rect {
 			get => _r;
-			set
-			{
+			set {
 				if(value == _r) return;
 				_r = value;
 				if(IsHandleCreated) _w.Handle.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
@@ -140,8 +136,7 @@ namespace Au
 		/// Gets or sets whether the OSD window is visible.
 		/// The 'set' function calls <see cref="Show"/> (it creates OSD window if need) or <see cref="Hide"/> (it does not destroy the OSD window).
 		/// </summary>
-		public bool Visible
-		{
+		public bool Visible {
 			get => _w.Handle.IsVisible;
 			set { if(value) Show(); else Hide(); } //note: if overridden, calls the override func
 		}
@@ -209,12 +204,11 @@ namespace Au
 				var dc = Api.BeginPaint(w, out var ps);
 				try {
 					var r = w.ClientRect;
-					using(var bg = BufferedGraphicsManager.Current.Allocate(dc, r)) {
-						var g = bg.Graphics;
-						if(_opacity == 0) g.Clear((Color)TransparentColor);
-						OnPaint(g, r);
-						bg.Render();
-					}
+					using var bg = BufferedGraphicsManager.Current.Allocate(dc, r);
+					var g = bg.Graphics;
+					if(_opacity == 0) g.Clear((Color)TransparentColor);
+					OnPaint(g, r);
+					bg.Render();
 				}
 				finally { Api.EndPaint(w, ps); }
 				return 0;
@@ -298,7 +292,7 @@ namespace Au
 	/// }
 	/// ]]></code>
 	/// </example>
-	public class OsdRect :OsdWindow
+	public class OsdRect : OsdWindow
 	{
 		///
 		public OsdRect()
@@ -318,8 +312,7 @@ namespace Au
 		/// x.Color = Color.Orange;
 		/// ]]></code>
 		/// </example>
-		public ColorInt Color
-		{
+		public ColorInt Color {
 			get => _color;
 			set { if(value != _color) { _color = value; Redraw(); } }
 		}
@@ -332,8 +325,7 @@ namespace Au
 		/// <remarks>
 		/// This property can be changed after creating OSD window.
 		/// </remarks>
-		public int Thickness
-		{
+		public int Thickness {
 			get => _thickness;
 			set { if(value != _thickness) { _thickness = value; Redraw(); } }
 		}
@@ -347,10 +339,9 @@ namespace Au
 			if(Opacity > 0) {
 				g.Clear((Color)_color);
 			} else {
-				using(var pen = new Pen((Color)_color, _thickness)) {
-					pen.Alignment = System.Drawing.Drawing2D.PenAlignment.Inset;
-					g.DrawRectangle(pen, r);
-				}
+				using var pen = new Pen((Color)_color, _thickness);
+				pen.Alignment = System.Drawing.Drawing2D.PenAlignment.Inset;
+				g.DrawRectangle(pen, r);
 			}
 		}
 	}
@@ -362,7 +353,7 @@ namespace Au
 	/// Creates a temporary partially transparent window, and draws text in it.
 	/// Most properties cannot be changed after creating OSD window.
 	/// </remarks>
-	public class Osd :OsdWindow
+	public class Osd : OsdWindow
 	{
 		/// <summary>
 		/// Coordinates.
@@ -379,11 +370,9 @@ namespace Au
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
-		public PopupXY XY
-		{
+		public PopupXY XY {
 			get => _xy;
-			set
-			{
+			set {
 				_xy = value;
 				if(value != null) _rectIsSet = false;
 				if(IsHandleCreated) base.Rect = Measure();
@@ -399,8 +388,7 @@ namespace Au
 		/// This property can be changed after creating OSD window.
 		/// </remarks>
 		/// <seealso cref="Measure"/>
-		public new RECT Rect
-		{
+		public new RECT Rect {
 			get => base.Rect;
 			set { _rectIsSet = true; base.Rect = value; }
 		}
@@ -424,8 +412,7 @@ namespace Au
 		/// <remarks>
 		/// This property can be changed after creating OSD window; then the window is not moved/resized, unless <see cref="ResizeWhenContentChanged"/> is true.
 		/// </remarks>
-		public string Text
-		{
+		public string Text {
 			get => _text;
 			set { if(value != _text) { _text = value; _ResizeOrInvalidate(); } }
 		}
@@ -447,8 +434,7 @@ namespace Au
 		/// <remarks>
 		/// This property can be changed after creating OSD window.
 		/// </remarks>
-		public ColorInt TextColor
-		{
+		public ColorInt TextColor {
 			get => _textColor;
 			set { if(value != _textColor) { _textColor = value; Invalidate(); } }
 		}
@@ -462,8 +448,7 @@ namespace Au
 		/// This property can be changed after creating OSD window.
 		/// Not used for completely transparent OSD.
 		/// </remarks>
-		public ColorInt BackColor
-		{
+		public ColorInt BackColor {
 			get => _backColor;
 			set { if(value != _backColor) { _backColor = value; Invalidate(); } }
 		}
@@ -477,8 +462,7 @@ namespace Au
 		/// This property can be changed after creating OSD window.
 		/// No border if <see cref="OsdWindow.Opacity"/>==0 or <b>BorderColor</b>==<see cref="BackColor"/>.
 		/// </remarks>
-		public ColorInt BorderColor
-		{
+		public ColorInt BorderColor {
 			get => _borderColor;
 			set { if(value != _borderColor) { _borderColor = value; Invalidate(); } }
 		}
@@ -632,10 +616,9 @@ namespace Au
 				g.Clear((Color)BackColor); //else OsdWindow cleared with TransparentColor
 
 				if(BorderColor != BackColor) { //border
-					using(var pen = new Pen((Color)BorderColor)) {
-						Rectangle rr = r; rr.Width--; rr.Height--;
-						g.DrawRectangle(pen, rr);
-					}
+					using var pen = new Pen((Color)BorderColor);
+					Rectangle rr = r; rr.Width--; rr.Height--;
+					g.DrawRectangle(pen, rr);
 					r.Inflate(-1, -1);
 				}
 			}

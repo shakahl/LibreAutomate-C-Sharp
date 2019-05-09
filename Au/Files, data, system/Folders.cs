@@ -30,7 +30,7 @@ namespace Au
 	/// Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
 	/// Some known folders, although supported and registerd, may be still not created.
 	/// 
-	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="Shell.Pidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes Shell, Shell.Pidl, AIcon) but not with .NET or native functions.
+	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="Pidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>Exec</b>, <b>Pidl</b>, <b>AIcon</b>) but not with .NET or native functions.
 	///
 	/// Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
 	/// The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
@@ -220,34 +220,34 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets ITEMIDLIST of known/special virtual folders (eg Control Panel), as <see cref="Shell.Pidl"/>. 
+		/// Gets ITEMIDLIST of known/special virtual folders (eg Control Panel), as <see cref="Pidl"/>. 
 		/// </summary>
 		[DebuggerStepThrough]
 		public static class VirtualPidl
 		{
-			public static Shell.Pidl AddNewPrograms => _GetVI(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04);
-			public static Shell.Pidl Apps_Win8 => _GetVI(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58);
-			public static Shell.Pidl AppUpdates => _GetVI(0xa305ce99, 0xf527492b, 0x8b1a7e76, 0xfa98d6e4);
-			public static Shell.Pidl ChangeRemovePrograms => _GetVI(0xdf7266ac, 0x92744867, 0x8d553bd6, 0x61de872d);
-			public static Shell.Pidl Computer => _GetVI(0x0AC0837C, 0xBBF8452A, 0x850D79D0, 0x8E667CA7);
-			public static Shell.Pidl Conflict => _GetVI(0x4bfefb45, 0x347d4006, 0xa5beac0c, 0xb0567192);
-			public static Shell.Pidl Connections => _GetVI(0x6F0CD92B, 0x2E9745D1, 0x88FFB0D1, 0x86B8DEDD);
-			public static Shell.Pidl ControlPanel => _GetVI(0x82A74AEB, 0xAEB4465C, 0xA014D097, 0xEE346D63);
-			public static Shell.Pidl Games => _GetVI(0xCAC52C1A, 0xB53D4edc, 0x92D76B2E, 0x8AC19434);
-			public static Shell.Pidl HomeGroup => _GetVI(0x52528A6B, 0xB9E34ADD, 0xB60D588C, 0x2DBA842D);
-			public static Shell.Pidl HomeGroupCurrentUser_Win8 => _GetVI(0x9B74B6A3, 0x0DFD4f11, 0x9E785F78, 0x00F2E772);
-			public static Shell.Pidl Internet => _GetVI(0x4D9F7874, 0x4E0C4904, 0x967B40B0, 0xD20C3E4B);
-			public static Shell.Pidl Network => _GetVI(0xD20BEEC4, 0x5CA84905, 0xAE3BBF25, 0x1EA09B53);
-			public static Shell.Pidl Printers => _GetVI(0x76FC4E2D, 0xD6AD4519, 0xA66337BD, 0x56068185);
-			public static Shell.Pidl RecycleBin => _GetVI(0xB7534046, 0x3ECB4C18, 0xBE4E64CD, 0x4CB7D6AC);
-			public static Shell.Pidl SEARCH_CSC => _GetVI(0xee32e446, 0x31ca4aba, 0x814fa5eb, 0xd2fd6d5e);
-			public static Shell.Pidl SearchHome => _GetVI(0x190337d1, 0xb8ca4121, 0xa6396d47, 0x2d16972a);
-			public static Shell.Pidl SEARCH_MAPI => _GetVI(0x98ec0e18, 0x20984d44, 0x86446697, 0x9315a281);
-			public static Shell.Pidl SyncManager => _GetVI(0x43668BF8, 0xC14E49B2, 0x97C97477, 0x84D784B7);
-			public static Shell.Pidl SyncResults => _GetVI(0x289a9a43, 0xbe444057, 0xa41b587a, 0x76d7e7f9);
-			public static Shell.Pidl SyncSetup => _GetVI(0x0F214138, 0xB1D34a90, 0xBBA927CB, 0xC0C5389A);
-			public static Shell.Pidl UsersFiles => _GetVI(0xf3ce0f7c, 0x49014acc, 0x8648d5d4, 0x4b04ef8f);
-			public static Shell.Pidl UsersLibraries => _GetVI(0xA302545D, 0xDEFF464b, 0xABE861C8, 0x648D939B);
+			public static Pidl AddNewPrograms => _GetVI(0xde61d971, 0x5ebc4f02, 0xa3a96c82, 0x895e5c04);
+			public static Pidl Apps_Win8 => _GetVI(0x1e87508d, 0x89c242f0, 0x8a7e645a, 0x0f50ca58);
+			public static Pidl AppUpdates => _GetVI(0xa305ce99, 0xf527492b, 0x8b1a7e76, 0xfa98d6e4);
+			public static Pidl ChangeRemovePrograms => _GetVI(0xdf7266ac, 0x92744867, 0x8d553bd6, 0x61de872d);
+			public static Pidl Computer => _GetVI(0x0AC0837C, 0xBBF8452A, 0x850D79D0, 0x8E667CA7);
+			public static Pidl Conflict => _GetVI(0x4bfefb45, 0x347d4006, 0xa5beac0c, 0xb0567192);
+			public static Pidl Connections => _GetVI(0x6F0CD92B, 0x2E9745D1, 0x88FFB0D1, 0x86B8DEDD);
+			public static Pidl ControlPanel => _GetVI(0x82A74AEB, 0xAEB4465C, 0xA014D097, 0xEE346D63);
+			public static Pidl Games => _GetVI(0xCAC52C1A, 0xB53D4edc, 0x92D76B2E, 0x8AC19434);
+			public static Pidl HomeGroup => _GetVI(0x52528A6B, 0xB9E34ADD, 0xB60D588C, 0x2DBA842D);
+			public static Pidl HomeGroupCurrentUser_Win8 => _GetVI(0x9B74B6A3, 0x0DFD4f11, 0x9E785F78, 0x00F2E772);
+			public static Pidl Internet => _GetVI(0x4D9F7874, 0x4E0C4904, 0x967B40B0, 0xD20C3E4B);
+			public static Pidl Network => _GetVI(0xD20BEEC4, 0x5CA84905, 0xAE3BBF25, 0x1EA09B53);
+			public static Pidl Printers => _GetVI(0x76FC4E2D, 0xD6AD4519, 0xA66337BD, 0x56068185);
+			public static Pidl RecycleBin => _GetVI(0xB7534046, 0x3ECB4C18, 0xBE4E64CD, 0x4CB7D6AC);
+			public static Pidl SEARCH_CSC => _GetVI(0xee32e446, 0x31ca4aba, 0x814fa5eb, 0xd2fd6d5e);
+			public static Pidl SearchHome => _GetVI(0x190337d1, 0xb8ca4121, 0xa6396d47, 0x2d16972a);
+			public static Pidl SEARCH_MAPI => _GetVI(0x98ec0e18, 0x20984d44, 0x86446697, 0x9315a281);
+			public static Pidl SyncManager => _GetVI(0x43668BF8, 0xC14E49B2, 0x97C97477, 0x84D784B7);
+			public static Pidl SyncResults => _GetVI(0x289a9a43, 0xbe444057, 0xa41b587a, 0x76d7e7f9);
+			public static Pidl SyncSetup => _GetVI(0x0F214138, 0xB1D34a90, 0xBBA927CB, 0xC0C5389A);
+			public static Pidl UsersFiles => _GetVI(0xf3ce0f7c, 0x49014acc, 0x8648d5d4, 0x4b04ef8f);
+			public static Pidl UsersLibraries => _GetVI(0xA302545D, 0xDEFF464b, 0xABE861C8, 0x648D939B);
 		}
 
 		#endregion
@@ -422,16 +422,16 @@ namespace Au
 		/// More info in class help.
 		/// </remarks>
 		/// <seealso cref="AFile.More.DisableRedirection"/>
-		/// <seealso cref="Ver.Is32BitProcessOn64BitOS"/>
-		public static FolderPath SystemX64 => __SystemX64 ?? (__SystemX64 = Ver.Is32BitProcessOn64BitOS ? (FolderPath)(Windows + "Sysnative") : System);
+		/// <seealso cref="Ver.Is32BitProcessAnd64BitOS"/>
+		public static FolderPath SystemX64 => __SystemX64 ?? (__SystemX64 = Ver.Is32BitProcessAnd64BitOS ? (FolderPath)(Windows + "Sysnative") : System);
 		static string __SystemX64;
 
 		/// <summary>More info in class help.</summary>
-		public static FolderPath ProgramFilesX64 => __ProgramFilesX64 ?? (__ProgramFilesX64 = Ver.Is32BitProcessOn64BitOS ? EnvVar("ProgramW6432") : ProgramFiles);
+		public static FolderPath ProgramFilesX64 => __ProgramFilesX64 ?? (__ProgramFilesX64 = Ver.Is32BitProcessAnd64BitOS ? EnvVar("ProgramW6432") : ProgramFiles);
 		static string __ProgramFilesX64;
 
 		/// <summary>More info in class help.</summary>
-		public static FolderPath ProgramFilesCommonX64 => __ProgramFilesCommonX64 ?? (__ProgramFilesCommonX64 = Ver.Is32BitProcessOn64BitOS ? EnvVar("CommonProgramW6432") : ProgramFilesCommon);
+		public static FolderPath ProgramFilesCommonX64 => __ProgramFilesCommonX64 ?? (__ProgramFilesCommonX64 = Ver.Is32BitProcessAnd64BitOS ? EnvVar("CommonProgramW6432") : ProgramFilesCommon);
 		static string __ProgramFilesCommonX64;
 		//The normal retrieving method for these folders is broken. Fails even on 64-bit OS if process is 32-bit.
 
@@ -519,21 +519,19 @@ namespace Au
 		}
 
 		//Gets virtual known folder ITEMIDLIST from KNOWNFOLDERID specified with 4 uints.
-		static Shell.Pidl _GetVI(uint a, uint b, uint c, uint d)
+		static Pidl _GetVI(uint a, uint b, uint c, uint d)
 		{
 			var guid = new KNOWNFOLDERID(a, b, c, d);
 			if(0 != SHGetKnownFolderIDList(guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, default, out IntPtr pidl)) return null;
-			return new Shell.Pidl(pidl);
+			return new Pidl(pidl);
 		}
 
 		//Gets virtual known folder ITEMIDLIST from KNOWNFOLDERID specified with 4 uints.
 		//Returns string ":: HexEncodedITEMIDLIST".
 		static FolderPath _GetV(uint a, uint b, uint c, uint d)
 		{
-			using(var pidl = _GetVI(a, b, c, d)) {
-				if(pidl == null) return null;
-				return pidl.ToHexString();
-			}
+			using var pidl = _GetVI(a, b, c, d);
+			return pidl?.ToHexString();
 		}
 
 		#endregion
@@ -794,7 +792,7 @@ namespace Au
 				if(man.GetFolderByName(folderName, out kf) != 0) return null;
 				if(isVirtual) {
 					if(0 != kf.GetIDList(0, out IntPtr pidl)) return null;
-					R = Shell.Pidl.ToHexString(pidl);
+					R = Pidl.ToHexString(pidl);
 					Marshal.FreeCoTaskMem(pidl);
 				} else {
 					if(0 != kf.GetPath(0, out R)) return null;

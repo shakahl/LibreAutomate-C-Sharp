@@ -20,22 +20,10 @@ using static Au.NoClass;
 namespace Au
 {
 	/// <summary>
-	/// Windows shell functions.
-	/// Windows shell manages files, folders (directories), shortcuts and virtual objects such as Control Panel.
+	/// This class contains static functions to execute or open programs, other files, folders, web pages, etc.
 	/// </summary>
-	public static partial class Shell
+	public static partial class Exec
 	{
-		/// <summary>
-		/// The same as <see cref="APath.Normalize"/>(CanBeUrlOrShell|DoNotPrefixLongPath), but ignores non-full path (returns s).
-		/// </summary>
-		/// <param name="s">File-system path or URL or "::...".</param>
-		static string _Normalize(string s)
-		{
-			s = APath.ExpandEnvVar(s);
-			if(!APath.IsFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
-			return APath.LibNormalize(s, PNFlags.DontPrefixLongPath, true);
-		}
-
 		/// <summary>
 		/// Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
 		/// The returned <see cref="RResult"/> variable contains some process info - process id etc.
@@ -72,12 +60,12 @@ namespace Au
 		/// <example>
 		/// Run notepad and wait for its window.
 		/// <code><![CDATA[
-		/// Shell.Run("notepad.exe");
+		/// Exec.Run("notepad.exe");
 		/// Wnd w = Wnd.Wait(10, true, "*- Notepad", "Notepad");
 		/// ]]></code>
 		/// Run notepad or activate its window.
 		/// <code><![CDATA[
-		/// Wnd w = Wnd.FindOrRun("*- Notepad", run: () => Shell.Run("notepad.exe"));
+		/// Wnd w = Wnd.FindOrRun("*- Notepad", run: () => Exec.Run("notepad.exe"));
 		/// ]]></code>
 		/// </example>
 		public static RResult Run(string file, string args = null, RFlags flags = 0, RMore more = null)
@@ -258,11 +246,11 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string v = "example";
-		/// int r1 = Shell.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
+		/// int r1 = Exec.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
 		/// 
-		/// int r2 = Shell.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
+		/// int r2 = Exec.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
 		/// 
-		/// int r3 = Shell.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
+		/// int r3 = Exec.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
 		/// Print(text);
 		/// ]]></code>
 		/// </example>
@@ -415,10 +403,9 @@ namespace Au
 		/// </param>
 		public static bool SelectFileInExplorer(string path)
 		{
-			using(var pidl = Pidl.FromString(path)) {
-				if(pidl == null) return false;
-				return 0 == Api.SHOpenFolderAndSelectItems(pidl.HandleRef, 0, null, 0);
-			}
+			using var pidl = Pidl.FromString(path);
+			if(pidl == null) return false;
+			return 0 == Api.SHOpenFolderAndSelectItems(pidl.HandleRef, 0, null, 0);
 		}
 	}
 }
@@ -426,14 +413,14 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="Shell.Run"/>.
+	/// Flags for <see cref="Exec.Run"/>.
 	/// </summary>
 	[Flags]
 	public enum RFlags
 	{
 		/// <summary>
 		/// Show error message box if fails, for example if file not found.
-		/// Note: this does not disable exceptions. Still need exception handling. Or call <see cref="Shell.TryRun"/>.
+		/// Note: this does not disable exceptions. Still need exception handling. Or call <see cref="Exec.TryRun"/>.
 		/// </summary>
 		ShowErrorUI = 1,
 
@@ -455,7 +442,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// More parameters for <see cref="Shell.Run"/>.
+	/// More parameters for <see cref="Exec.Run"/>.
 	/// </summary>
 	public class RMore
 	{
@@ -498,7 +485,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Results of <see cref="Shell.Run"/>.
+	/// Results of <see cref="Exec.Run"/>.
 	/// </summary>
 	public class RResult
 	{
@@ -522,9 +509,9 @@ namespace Au.Types
 		/// null if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
 		/// </summary>
 		/// <example>
-		/// This code does the same as <c>Shell.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
+		/// This code does the same as <c>Exec.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
 		/// <code><![CDATA[
-		/// var r = Shell.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
+		/// var r = Exec.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
 		/// using(var h = r.ProcessHandle) h?.WaitOne();
 		/// ]]></code>
 		/// </example>
@@ -540,7 +527,7 @@ namespace Au.Types
 	}
 
 	///// <summary>
-	///// Flags for <see cref="Shell.RunConsole"/>.
+	///// Flags for <see cref="Exec.RunConsole"/>.
 	///// </summary>
 	//[Flags]
 	//public enum RCFlags

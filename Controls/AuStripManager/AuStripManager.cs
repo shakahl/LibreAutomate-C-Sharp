@@ -535,7 +535,7 @@ namespace Au.Controls
 					"\n\nTo backup:  copy the file." +
 					"\nTo restore:  exit this application and replace the file with the backup file." +
 					"\nTo reset:  exit this application and delete the file."
-					, icon: DIcon.Info, onLinkClick: h => { Shell.Run(h.LinkHref); });
+					, icon: DIcon.Info, onLinkClick: h => { Exec.Run(h.LinkHref); });
 				};
 			}
 

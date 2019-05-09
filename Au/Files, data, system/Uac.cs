@@ -183,10 +183,9 @@ namespace Au
 		public static Uac OfProcess(int processId)
 		{
 			if(processId == 0) return null;
-			using(var hp = LibHandle.OpenProcess(processId)) {
-				if(hp.Is0) return null;
-				return _Create(hp);
-			}
+			using var hp = LibHandle.OpenProcess(processId);
+			if(hp.Is0) return null;
+			return _Create(hp);
 		}
 
 		/// <summary>

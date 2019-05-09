@@ -68,7 +68,7 @@ namespace Au
 					case 2: _nameIs = _NameIs.text; break;
 					case 3: _nameIs = _NameIs.accName; break;
 					case 4: _nameIs = _NameIs.wfName; break;
-					//case 5: _nameIs = _NameIs.label; break;
+						//case 5: _nameIs = _NameIs.label; break;
 					}
 					if(_nameIs != _NameIs.id) _name = name;
 				}
@@ -91,8 +91,8 @@ namespace Au
 			/// <exception cref="WndException">Invalid wParent.</exception>
 			public bool Find(Wnd wParent)
 			{
-				using(var k = new _WndList(_AllChildren(wParent)))
-					return _FindInList(wParent, k) >= 0;
+				using var k = new _WndList(_AllChildren(wParent));
+				return _FindInList(wParent, k) >= 0;
 			}
 
 			Util.LibArrayBuilder<Wnd> _AllChildren(Wnd wParent)
@@ -114,8 +114,8 @@ namespace Au
 			/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
 			public int FindInList(IEnumerable<Wnd> a, Wnd wParent = default)
 			{
-				using(var k = new _WndList(a))
-					return _FindInList(wParent, k);
+				using var k = new _WndList(a);
+				return _FindInList(wParent, k);
 			}
 
 			/// <summary>
@@ -143,10 +143,9 @@ namespace Au
 			Wnd[] _FindAll(_WndList k, Wnd wParent)
 			{
 				using(k) {
-					using(var ab = new Util.LibArrayBuilder<Wnd>()) {
-						_FindInList(wParent, k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
-						return ab.ToArray();
-					}
+					using var ab = new Util.LibArrayBuilder<Wnd>();
+					_FindInList(wParent, k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
+					return ab.ToArray();
 				}
 			}
 
@@ -392,8 +391,7 @@ namespace Au
 
 			var d = new _KidEnumData() { wThis = this, id = id }; //info: to avoid garbage delegates, we use _KidEnumData instead of captured variables
 			var wParent = this;
-			Api.EnumChildWindows(this, (c, p) =>
-			{
+			Api.EnumChildWindows(this, (c, p) => {
 				ref var x = ref *(_KidEnumData*)p;
 				if(c.ControlId == x.id) {
 					if(x.flags.Has(WCFlags.DirectChild) && c.LibParentGWL != x.wThis) return 1;
@@ -564,8 +562,8 @@ namespace Au
 			{
 				W.ThrowIfInvalid();
 				if(useAcc) {
-					using(var a = Acc.FromWindow(W, AccOBJID.CLIENT)) //throws if failed
-						a.DoAction();
+					using var a = Acc.FromWindow(W, AccOBJID.CLIENT); //throws if failed
+					a.DoAction();
 				} else {
 					_PostBmClick(); //async if other thread, because may show a dialog.
 				}
@@ -618,29 +616,28 @@ namespace Au
 				W.ThrowIfInvalid();
 				int id;
 				if(useAcc || !_IsCheckbox() || (uint)((id = W.ControlId) - 1) >= 0xffff) {
-					using(var a = Acc.FromWindow(W, AccOBJID.CLIENT)) { //throws if failed
-						int k = _GetAccCheckState(a);
-						if(k == state) return;
+					using var a = Acc.FromWindow(W, AccOBJID.CLIENT); //throws if failed
+					int k = _GetAccCheckState(a);
+					if(k == state) return;
+					if(useAcc) a.DoAction(); else _PostBmClick();
+					bool clickAgain = false;
+					switch(state) {
+					case 0:
+						if(k == 1) {
+							W.LibMinimalSleepIfOtherThread();
+							if(GetCheckState(true) == 2) clickAgain = true;
+							else return;
+						}
+						break;
+					case 1:
+						if(k == 2) clickAgain = true;
+						break;
+					case 2:
+						if(k == 0) clickAgain = true;
+						break;
+					}
+					if(clickAgain) {
 						if(useAcc) a.DoAction(); else _PostBmClick();
-						bool clickAgain = false;
-						switch(state) {
-						case 0:
-							if(k == 1) {
-								W.LibMinimalSleepIfOtherThread();
-								if(GetCheckState(true) == 2) clickAgain = true;
-								else return;
-							}
-							break;
-						case 1:
-							if(k == 2) clickAgain = true;
-							break;
-						case 2:
-							if(k == 0) clickAgain = true;
-							break;
-						}
-						if(clickAgain) {
-							if(useAcc) a.DoAction(); else _PostBmClick();
-						}
 					}
 				} else {
 					if(state == W.Send(BM_GETCHECK)) return;
@@ -669,10 +666,9 @@ namespace Au
 				if(useAcc || !_IsCheckbox()) {
 					//info: Windows Forms controls are user-drawn and don't have one of the styles, therefore BM_GETCHECK does not work.
 					try { //avoid exception in property-get functions
-						using(var a = Acc.FromWindow(W, AccOBJID.CLIENT, flags: AWFlags.NoThrow)) {
-							if(a == null) return 0;
-							return _GetAccCheckState(a);
-						}
+						using var a = Acc.FromWindow(W, AccOBJID.CLIENT, flags: AWFlags.NoThrow);
+						if(a == null) return 0;
+						return _GetAccCheckState(a);
 					}
 					catch(Exception ex) { ADebug.Print(ex); } //CONSIDER: if fails, show warning. In all Wnd property-get functions.
 					return 0;

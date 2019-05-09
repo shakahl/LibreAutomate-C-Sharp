@@ -44,7 +44,7 @@ namespace Au
 		/// Wnd w = Wnd.Find("* Notepad");
 		/// w.Activate();
 		/// using(var b = WinImage.Capture(w.Rect)) { b.Save(file); }
-		/// Shell.Run(file);
+		/// Exec.Run(file);
 		/// ]]></code>
 		/// </example>
 		public static Bitmap Capture(RECT rect)
@@ -83,32 +83,31 @@ namespace Au
 
 			//FUTURE: if w is DWM-scaled...
 
-			using(var mb = new Util.MemoryBitmap(r.Width, r.Height)) {
-				using(var dc = new Util.LibWindowDC(w)) {
-					if(dc.Is0 && !w.Is0) w.ThrowNoNative("Failed");
-					uint rop = !w.Is0 ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
-					bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, rop);
-					Debug.Assert(ok); //the API fails only if a HDC is invalid
-				}
-				var R = new Bitmap(r.Width, r.Height, PixelFormat.Format32bppRgb);
-				try {
-					var bh = new Api.BITMAPINFOHEADER() {
-						biSize = sizeof(Api.BITMAPINFOHEADER),
-						biWidth = r.Width, biHeight = -r.Height, //use -height for top-down
-						biPlanes = 1, biBitCount = 32,
-						//biCompression = 0, //BI_RGB
-					};
-					var d = R.LockBits(new Rectangle(0, 0, r.Width, r.Height), ImageLockMode.ReadWrite, R.PixelFormat); //tested: fast, no copy
-					try {
-						var apiResult = Api.GetDIBits(mb.Hdc, mb.Hbitmap, 0, r.Height, (void*)d.Scan0, &bh, 0); //DIB_RGB_COLORS
-						if(apiResult != r.Height) throw new AException("GetDIBits");
-						_SetAlpha(d, r, path);
-					}
-					finally { R.UnlockBits(d); } //tested: fast, no copy
-					return R;
-				}
-				catch { R.Dispose(); throw; }
+			using var mb = new Util.MemoryBitmap(r.Width, r.Height);
+			using(var dc = new Util.LibWindowDC(w)) {
+				if(dc.Is0 && !w.Is0) w.ThrowNoNative("Failed");
+				uint rop = !w.Is0 ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
+				bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, rop);
+				Debug.Assert(ok); //the API fails only if a HDC is invalid
 			}
+			var R = new Bitmap(r.Width, r.Height, PixelFormat.Format32bppRgb);
+			try {
+				var bh = new Api.BITMAPINFOHEADER() {
+					biSize = sizeof(Api.BITMAPINFOHEADER),
+					biWidth = r.Width, biHeight = -r.Height, //use -height for top-down
+					biPlanes = 1, biBitCount = 32,
+					//biCompression = 0, //BI_RGB
+				};
+				var d = R.LockBits(new Rectangle(0, 0, r.Width, r.Height), ImageLockMode.ReadWrite, R.PixelFormat); //tested: fast, no copy
+				try {
+					var apiResult = Api.GetDIBits(mb.Hdc, mb.Hbitmap, 0, r.Height, (void*)d.Scan0, &bh, 0); //DIB_RGB_COLORS
+					if(apiResult != r.Height) throw new AException("GetDIBits");
+					_SetAlpha(d, r, path);
+				}
+				finally { R.UnlockBits(d); } //tested: fast, no copy
+				return R;
+			}
+			catch { R.Dispose(); throw; }
 		}
 
 		static unsafe void _SetAlpha(BitmapData d, RECT r, GraphicsPath path = null)
@@ -152,14 +151,13 @@ namespace Au
 			if(n == 0) throw new ArgumentException();
 			if(n == 1) return _Capture((outline[0].x, outline[0].y, 1, 1));
 
-			using(var path = _CreatePath(outline)) {
-				RECT r = path.GetBounds();
-				if(r.IsEmpty) {
-					path.Widen(Pens.Black); //will be transparent, but no exception. Difficult to make non-transparent line.
-					r = path.GetBounds();
-				}
-				return _Capture(r, w, path);
+			using var path = _CreatePath(outline);
+			RECT r = path.GetBounds();
+			if(r.IsEmpty) {
+				path.Widen(Pens.Black); //will be transparent, but no exception. Difficult to make non-transparent line.
+				r = path.GetBounds();
 			}
+			return _Capture(r, w, path);
 		}
 
 		/// <summary>
@@ -255,7 +253,7 @@ namespace Au
 					wTool = toolWindow.Wnd;
 					aw = wTool.Get.OwnersAndThis(true);
 					foreach(var w in aw) w.ShowLL(false);
-					using(new BlockUserInput(BIEvents.MouseClicks)) Time.SleepDoEvents(300); //time for animations
+					using(new InputBlocker(BIEvents.MouseClicks)) Time.SleepDoEvents(300); //time for animations
 				}
 
 				g1:
@@ -267,13 +265,11 @@ namespace Au
 					if(!_WaitForHotkey("Press F3 to select window from mouse pointer.")) return false;
 					var w = Wnd.FromMouse(WXYFlags.NeedWindow);
 					w.GetClientRect(out var rc, inScreen: true);
-					using(var bw = Capture(w, w.ClientRect)) {
-						bs = new Bitmap(rs.Width, rs.Height);
-						using(var g = Graphics.FromImage(bs)) {
-							g.Clear(Color.Black);
-							g.DrawImage(bw, rc.left, rc.top);
-						}
-					}
+					using var bw = Capture(w, w.ClientRect);
+					bs = new Bitmap(rs.Width, rs.Height);
+					using var g = Graphics.FromImage(bs);
+					g.Clear(Color.Black);
+					g.DrawImage(bw, rc.left, rc.top);
 				} else {
 					bs = Capture(rs);
 				}
@@ -329,7 +325,7 @@ namespace Au
 			return true;
 		}
 
-		class _Form :Form
+		class _Form : Form
 		{
 			Bitmap _img;
 			Graphics _gMagn;
@@ -356,10 +352,8 @@ namespace Au
 				Cursor = _cursor = Util.ACursor.LoadCursorFromMemory(Properties.Resources.red_cross_cursor, 32);
 			}
 
-			protected override CreateParams CreateParams
-			{
-				get
-				{
+			protected override CreateParams CreateParams {
+				get {
 					var p = base.CreateParams;
 					p.Style = unchecked((int)(WS.POPUP));
 					p.ExStyle = (int)(WS_EX.TOOLWINDOW | WS_EX.TOPMOST);
@@ -388,77 +382,76 @@ namespace Au
 			protected override void OnMouseMove(MouseEventArgs e)
 			{
 				if(!_paintedOnce) return;
-				using(var gr = this.CreateGraphics()) {
-					var pc = e.Location; //cursor position
+				using var gr = this.CreateGraphics();
+				var pc = e.Location; //cursor position
 
-					//format text to draw below magnifier
-					string text;
-					using(new Util.LibStringBuilder(out var s)) {
-						var ic = _flags & (WICFlags.Image | WICFlags.Color | WICFlags.Rectangle);
-						if(ic == 0) ic = WICFlags.Image | WICFlags.Color;
-						bool canColor = ic.Has(WICFlags.Color);
-						if(canColor) {
-							var color = _img.GetPixel(pc.X, pc.Y).ToArgb() & 0xffffff;
-							s.Append("Color  0x").Append(color.ToString("X6")).Append('\n');
-						}
-						if(ic == WICFlags.Color) {
-							s.Append("Click to capture color.\n");
-						} else if(ic == WICFlags.Rectangle) {
-							s.Append("Mouse-drag to capture rectangle.\n");
-						} else {
-							s.Append("How to capture\n");
-							s.Append("  rectangle:  mouse-drag\n  any shape:  Shift+drag\n");
-							if(canColor) s.Append("  color:  Ctrl+click\n");
-						}
-						s.Append("More:  right-click"); //"  cancel:  key Esc\n  retry:  key F3 ... F3"
-						text = s.ToString();
+				//format text to draw below magnifier
+				string text;
+				using(new Util.LibStringBuilder(out var s)) {
+					var ic = _flags & (WICFlags.Image | WICFlags.Color | WICFlags.Rectangle);
+					if(ic == 0) ic = WICFlags.Image | WICFlags.Color;
+					bool canColor = ic.Has(WICFlags.Color);
+					if(canColor) {
+						var color = _img.GetPixel(pc.X, pc.Y).ToArgb() & 0xffffff;
+						s.Append("Color  0x").Append(color.ToString("X6")).Append('\n');
 					}
-
-					const int magnWH = 200; //width and height of the magnified image without borders etc
-
-					var m = _gMagn;
-					if(m == null) {
-						_textSize = TextRenderer.MeasureText(gr, text, Font);
-						_bMagn = new Bitmap(Math.Max(magnWH, _textSize.Width) + 2, magnWH + 4 + _textSize.Height);
-						_gMagn = m = Graphics.FromImage(_bMagn);
-						m.InterpolationMode = InterpolationMode.NearestNeighbor; //no interpolation
-						m.PixelOffsetMode = PixelOffsetMode.Half; //no half-pixel offset
+					if(ic == WICFlags.Color) {
+						s.Append("Click to capture color.\n");
+					} else if(ic == WICFlags.Rectangle) {
+						s.Append("Mouse-drag to capture rectangle.\n");
+					} else {
+						s.Append("How to capture\n");
+						s.Append("  rectangle:  mouse-drag\n  any shape:  Shift+drag\n");
+						if(canColor) s.Append("  color:  Ctrl+click\n");
 					}
-
-					//draw frames and color background. Also erase magnifier, need when near screen edges.
-					m.Clear(Color.Black);
-
-					//copy from captured screen image to magnifier image. Magnify 5 times.
-					int k = magnWH / 10;
-					var rFrom = new Rectangle(pc.X - k, pc.Y - k, k * 2, k * 2);
-					var rTo = new Rectangle(1, 1, magnWH, magnWH);
-					m.DrawImage(_img, rTo, rFrom, GraphicsUnit.Pixel);
-					//draw red crosshair
-					var redPen = Pens.Red;
-					k = magnWH / 2 + 4;
-					m.SetClip(_clip ?? (_clip = new Region(new Rectangle(k - 4, k - 4, 7, 7))), CombineMode.Exclude);
-					m.DrawLine(redPen, k, 1, k, magnWH + 1);
-					m.DrawLine(redPen, 1, k, magnWH + 1, k);
-					m.ResetClip();
-					//draw text below magnifier
-					var rc = new Rectangle(1, magnWH + 2, _textSize.Width, _textSize.Height);
-					TextRenderer.DrawText(m, text, Font, rc, Color.YellowGreen, Color.Transparent, TextFormatFlags.Left);
-
-					//set maginifier position far from cursor
-					var pm = new Point(-Left + 4, -Top + 4);
-					const int xMove = 600;
-					if(_magnMoved) pm.Offset(xMove, 0);
-					var rm = new Rectangle(pm.X, pm.Y, _bMagn.Width, _bMagn.Height); rm.Inflate(100, 100);
-					if(rm.Contains(pc)) {
-						rm = new Rectangle(pm.X, pm.Y, _bMagn.Width, _bMagn.Height);
-						gr.DrawImage(_img, rm, rm, GraphicsUnit.Pixel);
-						_magnMoved ^= true;
-						pm.Offset(_magnMoved ? xMove : -xMove, 0);
-					}
-
-					//m -> gr
-					gr.DrawImageUnscaled(_bMagn, pm);
+					s.Append("More:  right-click"); //"  cancel:  key Esc\n  retry:  key F3 ... F3"
+					text = s.ToString();
 				}
+
+				const int magnWH = 200; //width and height of the magnified image without borders etc
+
+				var m = _gMagn;
+				if(m == null) {
+					_textSize = TextRenderer.MeasureText(gr, text, Font);
+					_bMagn = new Bitmap(Math.Max(magnWH, _textSize.Width) + 2, magnWH + 4 + _textSize.Height);
+					_gMagn = m = Graphics.FromImage(_bMagn);
+					m.InterpolationMode = InterpolationMode.NearestNeighbor; //no interpolation
+					m.PixelOffsetMode = PixelOffsetMode.Half; //no half-pixel offset
+				}
+
+				//draw frames and color background. Also erase magnifier, need when near screen edges.
+				m.Clear(Color.Black);
+
+				//copy from captured screen image to magnifier image. Magnify 5 times.
+				int k = magnWH / 10;
+				var rFrom = new Rectangle(pc.X - k, pc.Y - k, k * 2, k * 2);
+				var rTo = new Rectangle(1, 1, magnWH, magnWH);
+				m.DrawImage(_img, rTo, rFrom, GraphicsUnit.Pixel);
+				//draw red crosshair
+				var redPen = Pens.Red;
+				k = magnWH / 2 + 4;
+				m.SetClip(_clip ?? (_clip = new Region(new Rectangle(k - 4, k - 4, 7, 7))), CombineMode.Exclude);
+				m.DrawLine(redPen, k, 1, k, magnWH + 1);
+				m.DrawLine(redPen, 1, k, magnWH + 1, k);
+				m.ResetClip();
+				//draw text below magnifier
+				var rc = new Rectangle(1, magnWH + 2, _textSize.Width, _textSize.Height);
+				TextRenderer.DrawText(m, text, Font, rc, Color.YellowGreen, Color.Transparent, TextFormatFlags.Left);
+
+				//set maginifier position far from cursor
+				var pm = new Point(-Left + 4, -Top + 4);
+				const int xMove = 600;
+				if(_magnMoved) pm.Offset(xMove, 0);
+				var rm = new Rectangle(pm.X, pm.Y, _bMagn.Width, _bMagn.Height); rm.Inflate(100, 100);
+				if(rm.Contains(pc)) {
+					rm = new Rectangle(pm.X, pm.Y, _bMagn.Width, _bMagn.Height);
+					gr.DrawImage(_img, rm, rm, GraphicsUnit.Pixel);
+					_magnMoved ^= true;
+					pm.Offset(_magnMoved ? xMove : -xMove, 0);
+				}
+
+				//m -> gr
+				gr.DrawImageUnscaled(_bMagn, pm);
 			}
 
 			protected override void OnMouseDown(MouseEventArgs e)
@@ -492,26 +485,24 @@ namespace Au
 					bool notFirstMove = false;
 					_capturing = true;
 					try {
-						if(!Util.DragDrop.SimpleDragDrop(this, MButtons.Left, m =>
-						{
+						if(!Util.DragDrop.SimpleDragDrop(this, MButtons.Left, m => {
 							if(m.Msg.message != Api.WM_MOUSEMOVE) return;
 							POINT p = m.Msg.pt;
 							p.x -= Left; p.y -= Top; //screen to client
-							using(var g = this.CreateGraphics()) {
-								if(isAnyShape) {
-									a.Add(p);
-									g.DrawLine(pen, p0, p);
-									p0 = p;
-								} else {
-									if(notFirstMove) { //erase prev rect
-										r.right++; r.bottom++;
-										g.DrawImage(_img, r, r, GraphicsUnit.Pixel);
-										//FUTURE: prevent flickering. Also don't draw under magnifier.
-									} else notFirstMove = true;
-									r = (p0.x, p0.y, p.x, p.y, false);
-									r.Normalize(true);
-									g.DrawRectangle(pen, r);
-								}
+							using var g = this.CreateGraphics();
+							if(isAnyShape) {
+								a.Add(p);
+								g.DrawLine(pen, p0, p);
+								p0 = p;
+							} else {
+								if(notFirstMove) { //erase prev rect
+									r.right++; r.bottom++;
+									g.DrawImage(_img, r, r, GraphicsUnit.Pixel);
+									//FUTURE: prevent flickering. Also don't draw under magnifier.
+								} else notFirstMove = true;
+								r = (p0.x, p0.y, p.x, p.y, false);
+								r.Normalize(true);
+								g.DrawRectangle(pen, r);
 							}
 						})) { //Esc key etc
 							this.Invalidate();

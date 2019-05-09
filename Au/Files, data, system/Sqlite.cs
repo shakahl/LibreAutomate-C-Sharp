@@ -32,44 +32,44 @@ namespace Au
 	/// <example>
 	/// <code><![CDATA[
 	/// //open database file
-	/// using(var db = new SqliteDB(@"Q:\test\sqlite.db")) {
-	/// 	//create table
-	/// 	db.Execute("CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY, name TEXT, x INT, guid BLOB, array BLOB)");
-	/// 	
-	/// 	//add 2 rows of data
-	/// 	using(var trans = db.Transaction()) { //optional, but makes much faster when making multiple changes, and ensures that all or none of these changes are written to the database
-	/// 		using(var p = db.Statement("INSERT OR REPLACE INTO test VALUES(?, ?, :x, ?, ?)")) {
-	/// 			//assume we want to add values of these variables to the database table
-	/// 			int id = 1; string name = "TEXT"; long x = -10; Guid guid = Guid.NewGuid(); int[] arr = new int[] { 1, 2, 3 };
-	/// 			//add first row
-	/// 			p.Bind(1, id);
-	/// 			p.Bind(2, name).BindStruct(4, guid).Bind(5, arr);
-	/// 			p.Bind(":x", x);
-	/// 			p.Step();
-	/// 			//add second row
-	/// 			p.Reset().Bind(1, 2).Bind(":x", 123456789012345).Step(); //unbound columns are null
-	/// 		}
-	/// 		//update single row
-	/// 		db.Execute("UPDATE test SET name=?2 WHERE id=?1", 2, "two");
-	/// 		//write all this to database
-	/// 		trans.Commit();
-	/// 	}
+	/// using var db = new SqliteDB(@"Q:\test\sqlite.db");
+	/// //create table
+	/// db.Execute("CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY, name TEXT, x INT, guid BLOB, array BLOB)");
 	/// 
-	/// 	//get data
-	/// 	using(var p = db.Statement("SELECT * FROM test")) {
-	/// 		while(p.Step()) { //for each row of results
-	/// 			Print(p.GetInt(0), p.GetText(1), p.GetLong(2));
-	/// 			Print(p.GetStruct<Guid>("guid"));
-	/// 			Print(p.GetArray<int>("array"));
-	/// 			Print("----");
-	/// 		}
+	/// //add 2 rows of data
+	/// using(var trans = db.Transaction()) { //optional, but makes much faster when making multiple changes, and ensures that all or none of these changes are written to the database
+	/// 	using(var p = db.Statement("INSERT OR REPLACE INTO test VALUES(?, ?, :x, ?, ?)")) {
+	/// 		//assume we want to add values of these variables to the database table
+	/// 		int id = 1; string name = "TEXT"; long x = -10; Guid guid = Guid.NewGuid(); int[] arr = new int[] { 1, 2, 3 };
+	/// 		//add first row
+	/// 		p.Bind(1, id);
+	/// 		p.Bind(2, name).BindStruct(4, guid).Bind(5, arr);
+	/// 		p.Bind(":x", x);
+	/// 		p.Step();
+	/// 		//add second row
+	/// 		p.Reset().Bind(1, 2).Bind(":x", 123456789012345).Step(); //unbound columns are null
 	/// 	}
-	/// 	//get single value
-	/// 	if(db.Get(out string s1, "SELECT name FROM test WHERE id=?", 1)) Print(s1); else Print("not found");
-	/// 	if(db.Get(out int i1, "PRAGMA page_size")) Print(i1);
+	/// 	//update single row
+	/// 	db.Execute("UPDATE test SET name=?2 WHERE id=?1", 2, "two");
+	/// 	//write all this to database
+	/// 	trans.Commit();
+	/// }
+	/// 
+	/// //get data
+	/// using(var p = db.Statement("SELECT * FROM test")) {
+	/// 	while(p.Step()) { //for each row of results
+	/// 		Print(p.GetInt(0), p.GetText(1), p.GetLong(2));
+	/// 		Print(p.GetStruct<Guid>("guid"));
+	/// 		Print(p.GetArray<int>("array"));
+	/// 		Print("----");
+	/// 	}
+	/// }
+	/// //get single value
+	/// if(db.Get(out string s1, "SELECT name FROM test WHERE id=?", 1)) Print(s1); else Print("not found");
+	/// if(db.Get(out int i1, "PRAGMA page_size")) Print(i1);
 	/// ]]></code>
 	/// </example>
-	public unsafe class SqliteDB :IDisposable
+	public unsafe class SqliteDB : IDisposable
 	{
 		IntPtr _db;
 
@@ -158,9 +158,8 @@ namespace Au
 		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public void Execute(string sql, params object[] bind)
 		{
-			using(var p = Statement(sql, bind)) {
-				p.Step();
-			}
+			using var p = Statement(sql, bind);
+			p.Step();
 		}
 
 		/// <summary>
@@ -204,88 +203,80 @@ namespace Au
 		/// </remarks>
 		public bool Get(out int value, string sql, params object[] bind)
 		{
-			using(var p = Statement(sql, bind)) {
-				bool R = p.Step();
-				value = R ? p.GetInt(0) : default;
-				return R;
-			}
+			using var p = Statement(sql, bind);
+			bool R = p.Step();
+			value = R ? p.GetInt(0) : default;
+			return R;
 		}
 
 		/// <exception cref="SLException">Failed.</exception>
 		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get(out long value, string sql, params object[] bind)
 		{
-			using(var p = Statement(sql, bind)) {
-				bool R = p.Step();
-				value = R ? p.GetLong(0) : default;
-				return R;
-			}
+			using var p = Statement(sql, bind);
+			bool R = p.Step();
+			value = R ? p.GetLong(0) : default;
+			return R;
 		}
 
 		///// <exception cref="SLException">Failed.</exception>
 		///// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		//public bool Get(out DateTime value, bool convertToLocal, string sql, params object[] bind)
 		//{
-		//	using(var p = Prepare(sql, bind)) {
-		//		bool R = p.Step();
-		//		value = R ? p.GetDateTime(0, convertToLocal) : default;
-		//		return R;
-		//	}
+		//	using var p = Prepare(sql, bind);
+		//	bool R = p.Step();
+		//	value = R ? p.GetDateTime(0, convertToLocal) : default;
+		//	return R;
 		//}
 
 		/// <exception cref="SLException">Failed.</exception>
 		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get(out bool value, string sql, params object[] bind)
 		{
-			using(var p = Statement(sql, bind)) {
-				bool R = p.Step();
-				value = R ? p.GetBool(0) : default;
-				return R;
-			}
+			using var p = Statement(sql, bind);
+			bool R = p.Step();
+			value = R ? p.GetBool(0) : default;
+			return R;
 		}
 
 		/// <exception cref="SLException">Failed.</exception>
 		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get(out double value, string sql, params object[] bind)
 		{
-			using(var p = Statement(sql, bind)) {
-				bool R = p.Step();
-				value = R ? p.GetDouble(0) : default;
-				return R;
-			}
+			using var p = Statement(sql, bind);
+			bool R = p.Step();
+			value = R ? p.GetDouble(0) : default;
+			return R;
 		}
 
 		/// <exception cref="SLException">Failed.</exception>
 		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get(out string value, string sql, params object[] bind)
 		{
-			using(var p = Statement(sql, bind)) {
-				bool R = p.Step();
-				value = R ? p.GetText(0) : default;
-				return R;
-			}
+			using var p = Statement(sql, bind);
+			bool R = p.Step();
+			value = R ? p.GetText(0) : default;
+			return R;
 		}
 
 		/// <exception cref="SLException">Failed.</exception>
 		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get<T>(out T[] value, string sql, params object[] bind) where T : unmanaged
 		{
-			using(var p = Statement(sql, bind)) {
-				bool R = p.Step();
-				value = R ? p.GetArray<T>(0) : default;
-				return R;
-			}
+			using var p = Statement(sql, bind);
+			bool R = p.Step();
+			value = R ? p.GetArray<T>(0) : default;
+			return R;
 		}
 
 		/// <exception cref="SLException">Failed.</exception>
 		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool Get<T>(out List<T> value, string sql, params object[] bind) where T : unmanaged
 		{
-			using(var p = Statement(sql, bind)) {
-				bool R = p.Step();
-				value = R ? p.GetList<T>(0) : default;
-				return R;
-			}
+			using var p = Statement(sql, bind);
+			bool R = p.Step();
+			value = R ? p.GetList<T>(0) : default;
+			return R;
 		}
 
 		/// <summary>See <see cref="Get(out int, string, object[])"/>.</summary>
@@ -293,11 +284,10 @@ namespace Au
 		/// <exception cref="NotSupportedException">sql contains more than single SQL statement.</exception>
 		public bool GetStruct<T>(out T value, string sql, params object[] bind) where T : unmanaged
 		{
-			using(var p = Statement(sql, bind)) {
-				bool R = p.Step();
-				value = R ? p.GetStruct<T>(0) : default;
-				return R;
-			}
+			using var p = Statement(sql, bind);
+			bool R = p.Step();
+			value = R ? p.GetStruct<T>(0) : default;
+			return R;
 		}
 
 		/// <summary>
@@ -307,9 +297,8 @@ namespace Au
 		/// <remarks>This function is similar to the <b>GetX</b> functions, but it does not retrieve the data.</remarks>
 		public bool Any(string sql, params object[] bind)
 		{
-			using(var p = Statement(sql, bind)) {
-				return p.Step();
-			}
+			using var p = Statement(sql, bind);
+			return p.Step();
 		}
 
 		#endregion
@@ -390,7 +379,7 @@ namespace Au
 	/// More info and example: <see cref="SqliteDB"/>.
 	/// <note type="important">A variable of this class can be used by multiple threads, but not simultaneously. Use <c>lock(database) {  }</c> where need.</note>
 	/// </remarks>
-	public unsafe class SqliteStatement :IDisposable
+	public unsafe class SqliteStatement : IDisposable
 	{
 		SqliteDB _db;
 		IntPtr _st;
@@ -847,7 +836,7 @@ namespace Au.Types
 	/// A SQLite transaction or savepoint. The main purpose is to automatically rollback if not explicitly committed.
 	/// Usage: <c>using(var trans = new SLTransaction(db)) { ... trans.Commit(); }</c>
 	/// </summary>
-	public struct SLTransaction :IDisposable
+	public struct SLTransaction : IDisposable
 	{
 		SqliteDB _db;
 
@@ -932,7 +921,7 @@ namespace Au.Types
 	/// <summary>
 	/// Exception thrown by <see cref="SqliteDB"/>, <see cref="SqliteStatement"/> and related types.
 	/// </summary>
-	public class SLException :Exception
+	public class SLException : Exception
 	{
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		public SLException(string message) : base(message) { }
