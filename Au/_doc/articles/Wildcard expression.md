@@ -5,7 +5,7 @@ title: wildcard expression
 
 # Wildcard expression
 
-*Wildcard expression* - a simple text format that supports wildcard characters, regular expression, "match case", "text1 or text2" and "not text". Like a regular expression, but much simpler. Used with "find" functions, for example **Wnd.Find**.
+*Wildcard expression* - a simple text format that supports wildcard characters, regular expression, "match case", "text1 or text2" and "not text". Like a regular expression, but much simpler. Used with "find" functions, for example [Wnd.Find]().
 
 Wildcard characters:
 
@@ -23,8 +23,8 @@ Can start with `"**options "`:
 | Option | Description | Examples |
 | :- | :- | :- |
 | t | *? in text are not wildcard characters. | `"**t text"` |
-| r | Text is PCRE regular expression ([ARegex](xref:Au.ARegex)).<br/>Syntax: [full](https://www.pcre.org/current/doc/html/pcre2pattern.html), [short](https://www.pcre.org/current/doc/html/pcre2syntax.html). | `"**r regex"` |
-| R | Text is .NET regular expression (**Regex**).<br/>Cannot be used with [Acc](xref:Au.Acc) class functions. | `"**R regex"` |
+| r | Text is PCRE regular expression ([ARegex]()).<br/>Syntax: [full](https://www.pcre.org/current/doc/html/pcre2pattern.html), [short](https://www.pcre.org/current/doc/html/pcre2syntax.html). | `"**r regex"` |
+| R | Text is .NET regular expression (**Regex**).<br/>Cannot be used with [Acc]() class functions. | `"**R regex"` |
 | c | Must match case. | `"**tc text"`, `"**rc regex"` |
 | m | Multi-part, separated by \|\|. | `"**m findAAA||orBBB||**r orCCC"` |
 | m(sep) | Multi-part, separated by sep. | `"**m(^^^) findAAA^^^orBBB"` |
@@ -44,5 +44,5 @@ var item = x.FindItem("example", "2017-*", "**rc regex");
 
 ### See also
 
-[Wildex](xref:Au.Types.Wildex)
-[ALike](xref:Au.ExtString.Like(System.String,System.String,System.Boolean))
+[Wildex]()
+[ExtString.Like]()

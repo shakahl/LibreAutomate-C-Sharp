@@ -256,11 +256,11 @@ partial class PanelEdit : Control
 		//	break;
 		//}
 
-		var o = Panels.Output;
+		//var o = Panels.Output;
 		//o.Write(@"Three green strips: <image ""C:\Users\G\Documents\Untitled.bmp"">");
 		//Print(_c.Text);
 		Output.Clear();
-		Print(_activeDoc?.Text);
+		//Print(_activeDoc?.Text);
 		//_c.Text = "";
 
 		//Print("one\0two");
@@ -274,7 +274,6 @@ partial class PanelEdit : Control
 		//	MainForm.Panels.Output.Write($"<image \"{f.FullPath}\">");
 		//	Time.DoEvents();
 		//}
-
 	}
 
 	//static bool _debugOnce;
@@ -727,14 +726,14 @@ partial class PanelEdit : Control
 						_AppendFile(path, name);
 						if(isLnk) {
 							try {
-								var g = ShellShortcut.Open(path);
+								var g = ShortcutFile.Open(path);
 								string target = g.TargetAnyType, args = null;
 								if(target.Starts("::")) {
 									using(var pidl = Pidl.FromString(target))
 										name = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
 								} else {
 									args = g.Arguments;
-									if(!target.Ends(".exe", true) || name.Index("Shortcut") >= 0)
+									if(!target.Ends(".exe", true) || name.Find("Shortcut") >= 0)
 										name = APath.GetFileName(target, true);
 								}
 								_AppendFile(target, name, args);
@@ -827,7 +826,7 @@ partial class PanelEdit : Control
 						t.Append(isFN ? "ATask.Run(@\"" : "Exec.Run(@\"").Append(path);
 						if(!Empty(args)) t.Append("\", \"").Append(args.Escape());
 						t.Append("\");");
-						if(menuVar == null && !isFN && (path.Starts("::") || path.Index(name, true) < 0)) t.Append(" //").Append(name);
+						if(menuVar == null && !isFN && (path.Starts("::") || path.Find(name, true) < 0)) t.Append(" //").Append(name);
 						//FUTURE: add unexpanded path version
 					}
 				}
@@ -911,22 +910,22 @@ partial class PanelEdit : Control
 			if(isFragment) {
 				b.Append(s);
 			} else {
-				var name = FN.Name; if(isScript && name.Regex(@"(?i)^Script\d*\.cs")) name = null;
+				var name = FN.Name; if(name.Regex(@"(?i)^(Script|Class)\d*\.cs")) name = null;
 				var sType = isScript ? "script" : "class";
 				var rx = isScript ? _RxScript : _RxClass;
 				//Perf.First();
 				if(rx.Match(s, out var m)) {
 					//Perf.NW();
+					bool hasM2 = m[2].Length > 0;
 					int i = m.EndIndex;
-					if(name == null && m.Index == 0) { //if standard script named like "ScriptN.cs", copy as fragment
+					if(isScript && name == null && m.Index == 0 && m[1].Length == 0 && !hasM2) { //if standard script named like "ScriptN.cs", copy as fragment
 						while(i < s.Length && (s[i] == '\r' || s[i] == '\n')) i++;
 					} else {
-						//Start with prefix type+name. Then format code like it is displayed in editor when folded.
-						//	Usually the first code line here is in the first line too, after the prefix. It looks better, even with meta.
-						b.AppendFormat("//// {0} \"{1}\"{2}", sType, name, s[0] == '/' ? " " : "\r\n").Append(s, 0, m.Index);
+						//Start with prefix '//-- type "name"'. Then format code like it is displayed in editor when folded.
+						b.AppendFormat("//-- {0} \"{1}\"{2}", sType, name, s[0] == '/' ? " " : "\r\n").Append(s, 0, m.Index);
 						if(isScript) {
 							b.Append("//{{");
-							if(m[1].Length > 0 || m[2].Length > 0) {
+							if(m[1].Length > 0 || hasM2) {
 								b.Append(s, m[1].Index, m[1].Length).Append("\r\n//{{ using")
 									.Append(s, m[2].Index, m[2].Length).Append("\r\n//{{ main");
 							}
@@ -935,8 +934,8 @@ partial class PanelEdit : Control
 						}
 					}
 					b.Append(s, i, s.Length - i);
-				} else {
-					b.AppendFormat("///// {0} \"{1}\"\r\n{2}", sType, name, s); // 5 '/'
+				} else { //raw
+					b.AppendFormat("//~~ {0} \"{1}\"\r\n{2}", sType, name, s);
 				}
 			}
 			b.AppendLine("[/code2]");
@@ -944,36 +943,35 @@ partial class PanelEdit : Control
 			s = b.ToString();
 			//_Print(s);
 			new Clipb.Data().AddText(s).SetClipboard();
-			//PasteModified();
+			//PasteModified(); //testing
 		}
 		static bool s_infoCopy;
 
-		static ARegex _RxScript => s_rxScript ?? (s_rxScript = new ARegex($@"(?sm)//{{{{(.*?)\R\Q{_Usings}\E$(.*?)\R\Q{_ScriptMain}\E$"));
-		static ARegex _RxClass => s_rxClass ?? (s_rxClass = new ARegex($@"(?sm)^\Q{_Usings}\E$"));
+		static ARegex _RxScript => s_rxScript ?? (s_rxScript = new ARegex($@"(?sm)//{{{{(.*?)\R\Q{c_usings}\E$(?:\R|(.*?))\R\Q{c_scriptMain}\E$"));
+		static ARegex _RxClass => s_rxClass ?? (s_rxClass = new ARegex($@"(?m)^\Q{c_usings}\E$"));
 		static ARegex s_rxScript, s_rxClass;
-		static string s_usings, s_scriptMain;
-		static string _Usings => s_usings ?? (s_usings = AFile.LoadText(Folders.ThisAppBS + @"Templates\include\using.txt"));
-		static string _ScriptMain => s_scriptMain ?? (s_scriptMain = AFile.LoadText(Folders.ThisAppBS + @"Templates\include\main.txt"));
+		const string c_usings = @"//{{ using
+using Au; using static Au.NoClass; using Au.Types; using System; using System.Collections.Generic; //}}";
+		const string c_scriptMain = @"//{{ main
+unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}";
 
 		public bool PasteModified()
 		{
 			var s = Clipb.Data.GetText();
 			if(s == null) return false;
 			if(s.Starts("[code2]") && s.Ends("[/code2]\r\n")) s = s.Substring(7, s.Length - 17);
-			if(!(s.Starts("////"))) return false;
-			//_Print(s);
 
-			if(!s.RegexMatch(@"^/////? (script|class) ""(.*?)""( |\R)", out var m)) return false;
-			bool isClass = s[m[1].Index] == 'c';
+			if(!s.RegexMatch(@"^//(?:--|~~) (script|class) ""(.*?)""( |\R)", out var m)) return false;
+			bool isClass = s[5] == 'c';
 			int i = m.EndIndex;
-			if(s[4] == '/') { //raw
+			if(s[3] == '~') { //raw
 				s = s.Substring(i);
 			} else {
 				var b = new StringBuilder();
 				if(isClass) {
 					if(!s.RegexMatch(@"[ \n]//{{ using\R", 0, out RXGroup m1)) return false;
 					int u = m1.Index + 1;
-					b.Append(s, i, u - i).Append(_Usings);
+					b.Append(s, i, u - i).Append(c_usings);
 					u += 10;
 					b.Append(s, u, s.Length - u);
 				} else {
@@ -981,37 +979,34 @@ partial class PanelEdit : Control
 					int j = m1.EndIndex;
 					b.Append(s, i, j - i);
 					if(s.RegexMatch(@"(?ms)(.*?)^//{{ using\R(.*?)^//{{ main$", out var k, more: new RXMore(j))) {
-						b.Append(s, j, k[1].Length).AppendLine(_Usings).Append(s, k[2].Index, k[2].Length);
+						b.Append(s, j, k[1].Length).AppendLine(c_usings).Append(s, k[2].Index, k[2].Length);
 						i = k.EndIndex;
 					} else {
-						b.AppendLine().AppendLine(_Usings);
+						b.AppendLine().AppendLine(c_usings).AppendLine();
 						i = j;
 					}
-					b.Append(_ScriptMain).Append(s, i, s.Length - i);
+					b.Append(c_scriptMain).Append(s, i, s.Length - i);
 				}
 				s = b.ToString();
 			}
-			//_Print(s);
-			var name = m[2].Length > 0 ? m[2].Value : "Script";
+			//_Print(s); return false;
+			var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");
 
 			string buttons = FN.FileType != (isClass ? EFileType.Class : EFileType.Script)
 				? "1 Create new file|Cancel"
-				: "1 Create new file|2 Rename this file and replace all text|3 Replace all text|4 Paste|Cancel";
+				: "1 Create new file|2 Replace all text|3 Paste|Cancel";
 			switch(ADialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
 			case 0: break; //Cancel
 			case 1: //Create new file
 				Model.NewItem(isClass ? "Class.cs" : "Script.cs", name, text: new EdNewFileText(true, s));
 				break;
-			case 2: //Rename and replace all text
-				if(FN.FileRename(name)) goto case 3;
-				break;
-			case 3: //Replace all text
+			case 2: //Replace all text
 				ST.SetText(s);
 				break;
-			case 4: //Paste
+			case 3: //Paste
 				ST.ReplaceSel(s);
 				break;
-			}
+			} //rejected: option to rename this file
 
 			return true;
 		}
@@ -1020,7 +1015,9 @@ partial class PanelEdit : Control
 		void _Print(string s, bool first = false)
 		{
 			if(first) Output.Clear();
-			Print("<><code>" + s + "</code>\r\n<Z 0xc0e0c0><>");
+			//Print("<><code>" + s + "</code>\r\n<Z 0xc0e0c0><>");
+			Print("<><code>" + s + "</code>");
+			Print("<><Z 0xc0e0c0><>");
 		}
 #endif
 

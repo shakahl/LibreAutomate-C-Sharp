@@ -331,7 +331,7 @@ namespace Au
 		static IntPtr _GetLnkIcon(string file, int size)
 		{
 			try {
-				using var x = ShellShortcut.Open(file);
+				using var x = ShortcutFile.Open(file);
 				var s = x.GetIconLocation(out int ii); if(s != null) return LoadIconHandle(s, ii, size);
 				s = x.TargetPathRawMSI; if(s != null) return GetFileIconHandle(s, size);
 				//Print("need IDList", file);

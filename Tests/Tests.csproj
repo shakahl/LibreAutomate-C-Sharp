@@ -176,6 +176,7 @@
   <ItemGroup>
     <None Include="Images\test.png" />
     <None Include="Resources\macro.ico" />
+    <Content Include="Microsoft.Scripting.dll" />
     <Content Include="Resources\qm.ico" />
     <None Include="Resources\VSDatasetInternalInfoFile.png" />
     <None Include="Resources\VSShell.png" />

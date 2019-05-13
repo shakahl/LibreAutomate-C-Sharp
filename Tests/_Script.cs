@@ -17,8 +17,8 @@ using System.Xml.Linq;
 using Au;
 using Au.Types;
 using static Au.NoClass;
-using Au.Triggers; //}}
-				   //{{ main
+using Au.Triggers;
+
 unsafe partial class Script : AScript
 {
 	void TestOptReset()
@@ -899,12 +899,149 @@ unsafe partial class Script : AScript
 
 	}
 
+	//class DebugListener :TraceListener
+	//{
+	//	public override void Write(string message) => Output.Write(message);
+
+	//	public override void WriteLine(string message) => Output.Write(message);
+	//}
+
+	void TestCs8()
+	{
+		int i = 1, j = 2;
+		switch(i, j) {
+		case (1, 2):
+			Print("yess");
+			break;
+		}
+
+		int k = j switch { 1 => 10, 2 => 20, _ => 0 };
+		Print(k);
+
+		POINT p = (3, 4);
+		if(p is POINT { x: 3, y: 4 }) Print("POINT(3,4)");
+
+		//Range range = 1..5; //no
+		//var s = "one"; Print(s[^1]); //no
+
+		//using var _ = new TestUsing();
+		//using new TestUsing(); //no
+		//TestUsing v = null; using v; //no
+
+		Loc(i);
+		static void Loc(int u)
+		{
+			Print(u);
+		}
+
+
+		switch(ADialog.Show("test", "mmm", "1 OK|2 Cancel")) {
+
+		}
+
+		int dr = ADialog.Show("test", "mmm", "1 OK|2 Cancel") switch
+		{
+			1 => 10,
+			_ => 20
+		};
+	}
+
+	class TestCs8Using : IDisposable
+	{
+		public void Dispose()
+		{
+			Print("Dispose");
+		}
+	}
+
+	//	void TestIronPython()
+	//	{
+	//		var py = IronPython.Hosting.Python.CreateEngine();
+	//		//var r = py.Execute(@"print 5");
+
+	//		py.SetSearchPaths(new string[] { @"Q:\Downloads\IronPython.2.7.9\Lib" });
+
+	//		var code = @"
+	//def Script():
+	//	print(""test"")
+	//	print("""") # empty line
+	//	print(""one\ntwo"") # multiline
+	//	print(2) # number
+
+
+	//# ---------------------------------------------------------------------------------
+	//# Put your Python script in the Script() function. Don't need to change other code.
+
+	//import sys
+	//import ctypes
+	//import os
+	//import win32gui
+
+	//class PrintRedirector(object):
+	//	def __init__(self):
+	//		self.hwndQM=win32gui.FindWindow(""QM_Editor"", None)
+
+	//	def write(self, message):
+	//		if(message=='\n'): return
+	//		ctypes.windll.user32.SendMessageW(self.hwndQM, 12, -1, message)
+
+	//sys.stdout = PrintRedirector()
+	//try: Script()
+	//finally: sys.stdout = sys.__stdout__";
+
+	//		var r = py.Execute(code);
+	//		Print(r);
+
+	//		//ADialog.Show("");
+	//	}
+
+	//void TestDiffMatchpatch()
+	//{
+	//	var s1 = "using System; using Au; using Au.Types;";
+	//	var s2 = "using System; using MyLib; using Au;";
+
+	//	//var dmp = new DiffMatchPatch.DiffMatchPatch(1f, 0.5);
+	//	var dmp = new diff_match_patch();
+	//	List<Diff> diff = dmp.diff_main(s1, s2);
+
+	//	//dmp.DiffCleanupSemantic(diff);
+	//	//dmp.DiffCleanupEfficiency(diff);
+	//	//dmp.DiffCleanupMerge(diff);
+	//	//dmp.DiffCleanupSemanticLossless(diff);
+
+	//	foreach(var v in diff) {
+	//		Print(v.operation, v.text);
+	//	}
+
+	//	//Print(dmp.DiffText1(diff));
+	//	//Print(dmp.DiffText2(diff));
+	//	//Print(dmp.DiffPrettyHtml(diff));
+	//	var delta = dmp.diff_toDelta(diff);
+	//	Print(delta);
+	//	var d2 = dmp.diff_fromDelta(s1, delta);
+	//	Print(d2);
+	//	Print(dmp.diff_text2(d2));
+
+	//	//Print("prefix, suffix");
+	//	//Print(dmp.DiffCommonPrefix(s1, s2));
+	//	//Print(dmp.DiffCommonSuffix(s1, s2));
+
+	//	//Print(dmp.DiffXIndex(diff, 30));
+
+
+
+	//	//var la = new List<string>(diff.Count);
+	//	//for(int i = 0; i < diff.Count*100; i++) la.Add(null);
+	//	//dmp.DiffCharsToLines(diff, la);
+	//	//Print(la);
+	//}
+
 	void TestTodo()
 	{
-		//Action<MTClickArgs> f=o => Au.Util.AHelp.AuWeb(o.ToString());
+		//Action<MTClickArgs> f=o => Au.Util.AHelp.AuHelp(o.ToString());
 
 		//var m = new AMenu();
-		//m[""] = o => Au.Util.AHelp.AuWeb("");
+		//m[""] = o => Au.Util.AHelp.AuHelp("");
 		//m["api/"] = f;
 		//m["Au.Acc.Find"] = f;
 		//m["Wnd.Find"] = f;
@@ -957,61 +1094,100 @@ unsafe partial class Script : AScript
 		//Print(s.Limit(limit, true));
 
 		//if(s.Regex(""))
-	}
 
-	//class DebugListener :TraceListener
-	//{
-	//	public override void Write(string message) => Output.Write(message);
+		//Exec.Select(@"q:\app\au\au\_doc");
 
-	//	public override void WriteLine(string message) => Output.Write(message);
-	//}
+		//s = "  abcdefghijklmnoprstuv";
+		////s = "                                                                                                                                                                        abcdefghijklmnoprstuv";
 
-	void TestCs8()
-	{
-		int i = 1, j = 2;
-		switch(i, j) {
-		case (1, 2):
-			Print("yess");
-			break;
-		}
+		//var c = new char[] { 't', 'u' };
+		//int i = 0, j = 0, k = 0, m = 0, n = 0, last=0;
+		//i = s.IndexOfAny(new char[] { 't', 'u' });
+		//Print(i);
+		//k = s.FindChars("tu");
+		//Print(k);
+		//m = s.FindChars("tu", 1, s.Length - 2);
+		//Print(m);
+		//Print(s.FindChars(" \r\n", not: true));
+		////return;
 
-		int k = j switch { 1 => 10, 2 => 20, _ => 0 };
-		Print(k);
+		//Perf.Cpu();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int n2 = 1000;
+		//	Perf.First();
+		//	//for(int i2 = 0; i2 < n2; i2++) { i = s.IndexOfAny(new char[] { 't', 'u' }); }
+		//	//Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { j = s.IndexOfAny(c); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { k = s.FindChars("tu"); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { m = s.FindChars("tu", 1, s.Length - 2); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { n = s.FindChars(" \r\n", not: true); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { last = s.FindLastChars(" \n", not: false); }
+		//	Perf.NW();
+		//	Thread.Sleep(200);
+		//}
+		//Print(i, j, k, m, n, last);
 
-		POINT p = (3, 4);
-		if(p is POINT { x: 3, y: 4 }) Print("POINT(3,4)");
+		//s = "//one\\\\";
+		//Print(s.Trim('/', '\\'));
+		//Print(s.TrimChars("/\\"));
 
-		//Range range = 1..5; //no
-		//var s = "one"; Print(s[^1]); //no
+		//string s1 = null, s2 = null, s3 = null;
+		//Perf.Cpu();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int n2 = 1000;
+		//	Perf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { s1=s.Trim('/', '\\'); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { s2=s.Trim(ExtString.Lib.pathSep); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { s3=s.TrimChars("/\\"); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	Perf.NW();
+		//	Thread.Sleep(200);
+		//}
+		//Print(s1, s2, s3);
 
-		//using var _ = new TestUsing();
-		//using new TestUsing(); //no
-		//TestUsing v = null; using v; //no
+		//s = "\u1234";
+		//Print(s.Length);
 
-		Loc(i);
-		static void Loc(int u)
-		{
-			Print(u);
-		}
+		//s = "a \\ \" \t \r \n \0 \u0001 b";
+		//var e = s.Escape();
+		//var e = Clipb.Data.GetText();
+		//Print(e);
+		//if(e.Unescape(out var u)) {
+		//	var a = u.ToCharArray();
+		//	foreach(var c in a) Print((uint)c);
+		//} else Print("FAILED");
 
+		//Print(",𝄎bcd𐊁 bcd,".FindWord("bcd𐊁"));
+		//Print(",bcd, bcd,".FindWord("bcd,"));
+		//Print("a_moo, _moo_, _moo,".FindWord("_moo", otherWordChars: "_"));
 
-		switch(ADialog.Show("test", "mmm", "1 OK|2 Cancel")) {
+		//s = "    dshjdhsj    dskdlskdl         fsfhsfsyyf           uyuyuyu needle dshdjshdjhs";
+		//var f = "needle";
+		//var rx = @"\bneedle\b";
+		//int i = 0, j = 0, k = 0, n=0;
 
-		}
-
-		int dr = ADialog.Show("test", "mmm", "1 OK|2 Cancel") switch
-		{
-			1 => 10,
-			_ => 20
-		};
-	}
-
-	class TestUsing : IDisposable
-	{
-		public void Dispose()
-		{
-			Print("Dispose");
-		}
+		//Perf.Cpu();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int n2 = 1000;
+		//	Perf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { i = s.Find(f); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { j = s.FindWord(f); }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { k = s.RegexMatch(rx, 0, out RXGroup g) ? g.Index : -1; }
+		//	Perf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { var m = Regex.Match(s, rx, RegexOptions.CultureInvariant); n = m.Success ? m.Index : -1; }
+		//	Perf.NW();
+		//	Thread.Sleep(200);
+		//}
+		//Print(i, j, k, n);
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
@@ -1022,11 +1198,11 @@ unsafe partial class Script : AScript
 		Output.Clear();
 		100.ms();
 
-		//TestCs8();
-		//ADialog.Show();
-
 
 		TestTodo();
+		//TestDiffMatchpatch();
+		//TestIronPython();
+		//TestCs8(); //ADialog.Show();
 		//TestOptReset();
 		//TestRunConsole();
 		//TestProcessStarter();

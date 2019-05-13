@@ -265,39 +265,37 @@ namespace Au
 		/// Compares only substrigs, not offsets.
 		/// </summary>
 		/// <param name="other">A variable to compare with this variable.</param>
-		public bool Equals(StringSegment other) => _Equals(other, false);
-		//note: cannot make single func with ignoreCase parameter, because need to implement IEquatable.
+		public bool Equals(StringSegment other) => _Equals(other, false); //IEquatable<StringSegment>
 
 		/// <summary>
 		/// Returns true if values of this and other variable are equal, case insensitive.
 		/// Compares only substrigs, not offsets.
 		/// </summary>
 		/// <param name="other">A variable to compare with this variable.</param>
-		public bool EqualsI(StringSegment other) => _Equals(other, true);
+		public bool Eqi(StringSegment other) => _Equals(other, true);
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		bool _Equals(StringSegment s, bool ignoreCase)
 		{
 			int len = s.Length;
 			if(len != _length) return false;
-			return ExtString.LibSubEq(_buffer, _offset, s._buffer, s._offset, len, ignoreCase);
+			return ExtString.LibEq(_buffer, _offset, s._buffer, s._offset, len, ignoreCase);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		bool _Equals(string s, bool ignoreCase) => _buffer.EqAt(_offset, s, ignoreCase);
+		bool _Equals(string s, bool ignoreCase) => _buffer.Eq(_offset, s, ignoreCase);
 
 		/// <summary>
 		/// Returns true if the specified string is equal to this substring.
 		/// </summary>
 		/// <param name="text">The string. Cannot be null.</param>
-		public bool Equals(string text) => _Equals(text, false);
-		//note: cannot make single func with ignoreCase parameter, because need to implement IEquatable.
+		public bool Equals(string text) => _Equals(text, false); //IEquatable<string>
 
 		/// <summary>
 		/// Returns true if the specified string is equal to this substring, case-insensitive.
 		/// </summary>
 		/// <param name="text">The string. Cannot be null.</param>
-		public bool EqualsI(string text) => _Equals(text, true);
+		public bool Eqi(string text) => _Equals(text, true);
 
 		/// <summary>
 		/// Compares two substrings and returns true if their values are equal.
@@ -324,10 +322,10 @@ namespace Au
 		/// </summary>
 		/// <param name="text">The string. Cannot be null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
-		public bool StartsWith(string text, bool ignoreCase = false)
+		public bool Starts(string text, bool ignoreCase = false)
 		{
 			if(_length < text.Length) return false; //NullReferenceException
-			return _buffer.EqAt(_offset, text, ignoreCase);
+			return _buffer.Eq(_offset, text, ignoreCase);
 		}
 
 		/// <summary>
@@ -335,11 +333,11 @@ namespace Au
 		/// </summary>
 		/// <param name="text">The string. Cannot be null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
-		public bool EndsWith(string text, bool ignoreCase = false)
+		public bool Ends(string text, bool ignoreCase = false)
 		{
 			var len = text.Length; //NullReferenceException
 			if(_length < len) return false;
-			return _buffer.EqAt(_offset + _length - len, text, ignoreCase);
+			return _buffer.Eq(_offset + _length - len, text, ignoreCase);
 		}
 
 		/// <summary>
@@ -388,9 +386,9 @@ namespace Au
 			return new StringSegment(_buffer, offset + _offset, length);
 		}
 
+#if false //rarely used. Use string functions for it.
 		/// <summary>
-		/// Finds a character and returns its index in this substring.
-		/// Returns -1 if not found.
+		/// Finds a character. Returns its index in this substring, or -1 if not found.
 		/// </summary>
 		/// <param name="c">The character.</param>
 		/// <param name="startIndex">The search starting position.</param>
@@ -405,8 +403,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a character and returns its index in this substring.
-		/// Returns -1 if not found.
+		/// Finds a character. Returns its index in this substring, or -1 if not found.
 		/// </summary>
 		/// <param name="c">The character.</param>
 		/// <param name="startIndex">The search starting position.</param>
@@ -416,8 +413,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a character and returns its index in this substring.
-		/// Returns -1 if not found.
+		/// Finds a character. Returns its index in this substring, or -1 if not found.eturns -1 if not found.
 		/// </summary>
 		/// <param name="c">The character.</param>
 		public int IndexOf(char c)
@@ -428,47 +424,8 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a character and returns its index in this substring.
-		/// Returns -1 if not found.
-		/// </summary>
-		/// <param name="anyOf">One or more characters to seek.</param>
-		/// <param name="startIndex">The search starting position.</param>
-		/// <param name="count">The number of character positions to examine.</param>
-		public int IndexOfAny(char[] anyOf, int startIndex, int count)
-		{
-			if(startIndex < 0 || startIndex + count > _length) throw new ArgumentOutOfRangeException(); //the rest will be validated in the called function
-
-			int index = _buffer.IndexOfAny(anyOf, _offset + startIndex, count);
-			if(index >= 0) index -= _offset;
-			return index;
-		}
-
-		/// <summary>
-		/// Finds a character and returns its index in this substring.
-		/// Returns -1 if not found.
-		/// </summary>
-		/// <param name="anyOf">One or more characters to seek.</param>
-		/// <param name="startIndex">The search starting position.</param>
-		public int IndexOfAny(char[] anyOf, int startIndex)
-		{
-			return IndexOfAny(anyOf, startIndex, _length - startIndex);
-		}
-
-		/// <summary>
-		/// Finds a character and returns its index in this substring.
-		/// Returns -1 if not found.
-		/// </summary>
-		/// <param name="anyOf">One or more characters to seek.</param>
-		public int IndexOfAny(char[] anyOf)
-		{
-			int index = _buffer.IndexOfAny(anyOf, _offset, _length);
-			if(index >= 0) index -= _offset;
-			return index;
-		}
-
-		/// <summary>
-		/// Finds a character and returns its index in this substring. Searches right-to-left.
-		/// Returns -1 if not found.
+		/// Finds a character. Returns its index in this substring, or -1 if not found.
+		/// Searches right-to-left.
 		/// </summary>
 		/// <param name="c">The character.</param>
 		public int LastIndexOf(char c)
@@ -477,6 +434,46 @@ namespace Au
 			if(index >= 0) index -= _offset;
 			return index;
 		}
+
+		/// <summary>
+		/// Finds the first occurence in this substring of any character in (or not in) a character set. Returns its index in this substring, or -1 if not found.
+		/// </summary>
+		/// <param name="chars">Characters to find.</param>
+		/// <param name="startIndex">The search starting position.</param>
+		/// <param name="count">The number of character positions to examine.</param>
+		/// <param name="not">Find character not specified in <i>chars</i>.</param>
+		public int FindChars(string chars, int startIndex, int count, bool not = false)
+		{
+			if(startIndex < 0 || startIndex + count > _length) throw new ArgumentOutOfRangeException(); //the rest will be validated in the called function
+
+			int index = _buffer.FindChars(chars, _offset + startIndex, count, not);
+			if(index >= 0) index -= _offset;
+			return index;
+		}
+
+		/// <summary>
+		/// Finds the first occurence in this substring of any character in (or not in) a character set. Returns its index in this substring, or -1 if not found.
+		/// </summary>
+		/// <param name="chars">Characters to find.</param>
+		/// <param name="startIndex">The search starting position.</param>
+		/// <param name="not">Find character not specified in <i>chars</i>.</param>
+		public int FindChars(string chars, int startIndex, bool not = false)
+		{
+			return FindChars(chars, startIndex, _length - startIndex, not);
+		}
+
+		/// <summary>
+		/// Finds the first occurence in this substring of any character in (or not in) a character set. Returns its index in this substring, or -1 if not found.
+		/// </summary>
+		/// <param name="chars">Characters to find.</param>
+		/// <param name="not">Find character not specified in <i>chars</i>.</param>
+		public int FindChars(string chars, bool not = false)
+		{
+			int index = _buffer.FindChars(chars, _offset, _length, not);
+			if(index >= 0) index -= _offset;
+			return index;
+		}
+#endif
 
 		/// <summary>
 		/// Removes all leading and trailing whitespaces (see <see cref="char.IsWhiteSpace"/>).
@@ -510,7 +507,7 @@ namespace Au
 		/// <summary>
 		/// Returns a <see cref="SegParser"/> that will split this substring into substrings as <b>StringSegment</b> variables when used with foreach.
 		/// </summary>
-		/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="SegSep"/> constants.</param>
 		/// <param name="flags"></param>
 		/// <seealso cref="ExtString.Segments(string, string, SegFlags)"/>
 		public SegParser Split(string separators, SegFlags flags = 0)
@@ -525,13 +522,13 @@ namespace Au
 		/// This function can be used with foreach to split this string into substrings as <see cref="StringSegment"/> variables.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="SegSep"/> constants.</param>
 		/// <param name="flags"></param>
 		/// <example>
 		/// <code><![CDATA[
 		/// string s = "one * two three ";
 		/// foreach(var t in s.Segments(" ")) Print(t);
-		/// foreach(var t in s.Segments(Separators.Word, SegFlags.NoEmpty)) Print(t);
+		/// foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) Print(t);
 		/// ]]></code>
 		/// </example>
 		public static SegParser Segments(this string t, string separators, SegFlags flags = 0)
@@ -545,7 +542,7 @@ namespace Au
 		/// <param name="t"></param>
 		/// <param name="startIndex">The start of the part of this string.</param>
 		/// <param name="length">The length of the part of this string.</param>
-		/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="separators">Characters that delimit the substrings. Or one of <see cref="SegSep"/> constants.</param>
 		/// <param name="flags"></param>
 		public static SegParser Segments(this string t, int startIndex, int length, string separators, SegFlags flags = 0)
 		{
@@ -560,7 +557,7 @@ namespace Au.Types
 	/// <summary>
 	/// Contains several string constants that can be used with some 'split string' functions of this library to specify separators.
 	/// </summary>
-	public static class Separators
+	public static class SegSep
 	{
 		/// <summary>
 		/// Specifies that separators are spaces, tabs, newlines and other characters for which <see cref="char.IsWhiteSpace(char)"/> returns true.
@@ -603,7 +600,7 @@ namespace Au.Types
 	/// Splits a string or <b>StringSegment</b> into substrings as <see cref="StringSegment"/> variables.
 	/// </summary>
 	/// <remarks>
-	/// Used with foreach. Also used internally by some functions of this library, for example <see cref="ExtString.SegSplit(string, string, SegFlags)"/> and <see cref="ExtString.SegSplitLines"/>.
+	/// Used with foreach. Also used internally by some functions of this library, for example <see cref="ExtString.SegSplit(string, string, SegFlags)"/> and <see cref="ExtString.SegLines"/>.
 	/// Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="ExtString.Segments(string, string, SegFlags)"/> or <see cref="StringSegment.Split"/> with foreach.
 	/// </remarks>
 	public struct SegParser :IEnumerable<StringSegment>, IEnumerator<StringSegment>
@@ -619,7 +616,7 @@ namespace Au.Types
 		/// Initializes this instance to split a string.
 		/// </summary>
 		/// <param name="s">The string.</param>
-		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="SegSep"/> constants.</param>
 		/// <param name="flags"></param>
 		public SegParser(string s, string separators, SegFlags flags = 0)
 		{
@@ -637,7 +634,7 @@ namespace Au.Types
 		/// Initializes this instance to split a <see cref="StringSegment"/>.
 		/// </summary>
 		/// <param name="seg">The StringSegment.</param>
-		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="SegSep"/> constants.</param>
 		/// <param name="flags"></param>
 		public SegParser(in StringSegment seg, string separators, SegFlags flags = 0)
 		{
@@ -679,13 +676,13 @@ namespace Au.Types
 				}
 				break;
 			case 22:
-				if(ReferenceEquals(sep, Separators.Whitespace)) {
+				if(ReferenceEquals(sep, SegSep.Whitespace)) {
 					for(; i < to; i++)
 						if(char.IsWhiteSpace(s[i])) goto g1;
-				} else if(ReferenceEquals(sep, Separators.Word)) {
+				} else if(ReferenceEquals(sep, SegSep.Word)) {
 					for(; i < to; i++)
 						if(!char.IsLetterOrDigit(s[i])) goto g1;
-				} else if(ReferenceEquals(sep, Separators.Line)) {
+				} else if(ReferenceEquals(sep, SegSep.Line)) {
 					_sepLength = 1;
 					for(; i < to; i++) {
 						var c = s[i];

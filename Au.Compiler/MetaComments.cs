@@ -614,7 +614,7 @@ namespace Au.Compiler
 		MetaFileAndString _GetFileAndString(string s, int errPos)
 		{
 			string s2 = null;
-			int i = s.Index(" /");
+			int i = s.Find(" /");
 			if(i > 0) {
 				s2 = s.Substring(i + 2);
 				s = s.Remove(i);
@@ -690,7 +690,7 @@ namespace Au.Compiler
 		{
 			endOfMetacomments = 0;
 			if(code.Lenn() < 6 || !code.Starts("/*/")) return false;
-			int iTo = code.Index("/*/", 3); if(iTo < 0) return false;
+			int iTo = code.Find("/*/", 3); if(iTo < 0) return false;
 			endOfMetacomments = iTo + 3;
 			return true;
 		}
@@ -729,8 +729,8 @@ namespace Au.Compiler
 
 			public string Name() => code.Substring(nameStart, nameLen);
 			public string Value() => code.Substring(valueStart, valueLen);
-			public bool NameIs(string s) => s.Length == nameLen && code.EqAt(nameStart, s);
-			public bool ValueIs(string s) => s.Length == valueLen && code.EqAt(valueStart, s);
+			public bool NameIs(string s) => s.Length == nameLen && code.Eq(nameStart, s);
+			public bool ValueIs(string s) => s.Length == valueLen && code.Eq(valueStart, s);
 		}
 	}
 

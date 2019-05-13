@@ -98,17 +98,6 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Compares this and other string ignoring case (case-insensitive). Returns true if equal.
-		/// </summary>
-		/// <param name="t">This string.</param>
-		/// <param name="s">Other string.</param>
-		/// <remarks>
-		/// Calls <see cref="Eq(string, string, bool)"/> with <i>ignoreCase</i> true.
-		/// Uses ordinal comparison (does not depend on current culture/locale).
-		/// </remarks>
-		public static bool Eqi(this string t, string s) => Eq(t, s, true);
-
-		/// <summary>
 		/// Compares part of this string with other string. Returns true if equal.
 		/// </summary>
 		/// <param name="t">This string.</param>
@@ -122,7 +111,7 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="string.Compare"/>
 		/// <seealso cref="string.CompareOrdinal"/>
-		public static bool EqAt(this string t, int startIndex, string s, bool ignoreCase = false)
+		public static bool Eq(this string t, int startIndex, string s, bool ignoreCase = false)
 		{
 			if((uint)startIndex > t.Length) throw new ArgumentOutOfRangeException(); //and NullReferenceException
 			int n = s?.Length ?? throw new ArgumentNullException();
@@ -143,17 +132,31 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int EqAt(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
+		public static int Eq(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
 		{
-			for(int i = 0; i < strings.Length; i++) if(t.EqAt(startIndex, strings[i], ignoreCase)) return i + 1;
+			for(int i = 0; i < strings.Length; i++) if(t.Eq(startIndex, strings[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
 		//For StringSegment.
-		internal static bool LibSubEq(string s1, int i1, string s2, int i2, int len, bool ignoreCase)
+		internal static bool LibEq(string s1, int i1, string s2, int i2, int len, bool ignoreCase)
 		{
 			fixed (char* a = s1, b = s2) return _Eq(a + i1, b + i2, len, ignoreCase);
 		}
+
+		/// <summary>
+		/// Compares this and other string ignoring case (case-insensitive). Returns true if equal.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="s">Other string.</param>
+		/// <remarks>
+		/// Calls <see cref="Eq(string, string, bool)"/> with <i>ignoreCase</i> true.
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
+		public static bool Eqi(this string t, string s) => Eq(t, s, true);
+
+		//rejected. Rarely used. Or also need Startsi, Endsi, Findi...
+		//public static bool Eqi(this string t, int startIndex, string s) => Eq(t, startIndex, s, true);
 
 		/// <summary>
 		/// Compares the end of this string with other string. Returns true if equal.
@@ -255,7 +258,7 @@ namespace Au
 		/// Calls <see cref="string.IndexOf(string, StringComparison)"/>.
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Index(this string t, string s, bool ignoreCase = false)
+		public static int Find(this string t, string s, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
@@ -273,7 +276,7 @@ namespace Au
 		/// Calls <see cref="string.IndexOf(string, int, StringComparison)"/>.
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Index(this string t, string s, int startIndex, bool ignoreCase = false)
+		public static int Find(this string t, string s, int startIndex, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
@@ -292,13 +295,10 @@ namespace Au
 		/// Calls <see cref="string.IndexOf(string, int, int, StringComparison)"/>.
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Index(this string t, string s, int startIndex, int count, bool ignoreCase = false)
+		public static int Find(this string t, string s, int startIndex, int count, bool ignoreCase = false)
 		{
 			return t.IndexOf(s, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
-
-		//rejected: LastIndex. Rarely used.
-		//rejected: IndexOfAny, LastIndexOfAny and Trim that would use string instead of char[]. Not so often used. For speed/garbage it's better to use static char[].
 
 		/// <summary>
 		/// Returns true if this string contains the specified substring.
@@ -327,6 +327,151 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Finds the first occurence in this string of any character in (or not in) a character set. Returns its zero-based index, or -1 if not found.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="chars">Characters to find.</param>
+		/// <param name="not">Find character not specified in <i>chars</i>.</param>
+		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+		public static int FindChars(this string t, string chars, bool not = false) => FindChars(t, chars, 0, t.Length, not);
+
+		/// <summary>
+		/// Finds the first occurence in part of this string of any character in (or not in) a character set. Returns its zero-based index, or -1 if not found.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="chars">Characters to find.</param>
+		/// <param name="startIndex">The search starting position.</param>
+		/// <param name="not">Find character not specified in <i>chars</i>.</param>
+		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
+		public static int FindChars(this string t, string chars, int startIndex, bool not = false) => FindChars(t, chars, startIndex, t.Length - startIndex, not);
+
+		/// <summary>
+		/// Finds the first occurence in part of this string of any character in (or not in) a character set. Returns its zero-based index, or -1 if not found.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="chars">Characters to find.</param>
+		/// <param name="startIndex">The search starting position.</param>
+		/// <param name="count">The number of characters to examine.</param>
+		/// <param name="not">Find character not specified in <i>chars</i>.</param>
+		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
+		public static int FindChars(this string t, string chars, int startIndex, int count, bool not = false)
+		{
+			if((uint)startIndex > t.Length || (uint)count > t.Length - startIndex) throw new ArgumentOutOfRangeException(); //and NullReferenceException
+			if(chars == null) throw new ArgumentNullException();
+			if(not) {
+				for(int i = startIndex, n = startIndex + count; i < n; i++) {
+					char c = t[i];
+					for(int j = 0; j < chars.Length; j++) if(chars[j] == c) goto g1;
+					return i;
+					g1:;
+				}
+			} else {
+				for(int i = startIndex, n = startIndex + count; i < n; i++) {
+					char c = t[i];
+					for(int j = 0; j < chars.Length; j++) if(chars[j] == c) return i;
+				}
+			}
+			return -1;
+		}
+
+		/// <summary>
+		/// Finds the last occurence in this string of any character in (or not in) a character set. Returns its zero-based index, or -1 if not found.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="chars">Characters to find.</param>
+		/// <param name="not">Find character not specified in <i>chars</i>.</param>
+		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+		public static int FindLastChars(this string t, string chars, bool not = false)
+		{
+			int len = t.Length; //NullReferenceException
+			if(chars == null) throw new ArgumentNullException();
+			if(not) {
+				for(int i = len - 1; i >= 0; i--) {
+					char c = t[i];
+					for(int j = 0; j < chars.Length; j++) if(chars[j] == c) goto g1;
+					return i;
+					g1:;
+				}
+			} else {
+				for(int i = len - 1; i >= 0; i--) {
+					char c = t[i];
+					for(int j = 0; j < chars.Length; j++) if(chars[j] == c) return i;
+				}
+			}
+			return -1;
+		}
+
+		/// <summary>
+		/// Removes specified characters for the start and/or end of this string. Returns the result string.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="chars">Characters to remove.</param>
+		/// <param name="start">Remove from start. Default true.</param>
+		/// <param name="end">Remove from end. Default true.</param>
+		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
+		public static string TrimChars(this string t, string chars, bool start = true, bool end = true)
+		{
+			int from = 0, to = t.Length;
+			if(end) to = FindLastChars(t, chars, not: true) + 1;
+			if(start) from = FindChars(t, chars, 0, to, not: true);
+			if(from == 0 && to == t.Length) return t;
+			return t.Substring(from, to - from);
+		}
+
+		/// <summary>
+		/// Finds whole word. Returns its zero-based index, or -1 if not found.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="s">Subtring to find.</param>
+		/// <param name="startIndex">The search starting position.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <param name="otherWordChars">Additional word characters, for which <see cref="Char.IsLetterOrDigit"/> returns false. For example "_".</param>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
+		/// <remarks>
+		/// If <i>s</i> starts with a word character finds substring that is not preceded by a word character.
+		/// If <i>s</i> ends with a word character, finds substring that is not followed by a word character.
+		/// Word characters are those for which <see cref="Char.IsLetterOrDigit"/> returns true plus those specified in <i>otherWordChars</i>.
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
+		public static int FindWord(this string t, string s, int startIndex = 0, bool ignoreCase = false, string otherWordChars = null)
+		{
+			if((uint)startIndex > t.Length) throw new ArgumentOutOfRangeException();
+			if(s == null) throw new ArgumentNullException();
+			int lens = s.Length; if(lens == 0) return 0; //like IndexOf and Find
+
+			bool wordStart = _IsWordChar(s, 0, false, otherWordChars),
+				wordEnd = _IsWordChar(s, lens - 1, true, otherWordChars);
+
+			for(int i = startIndex, iMax = t.Length - lens; i <= iMax; i++) {
+				i = t.Find(s, i, t.Length - i, ignoreCase);
+				if(i < 0) break;
+				if(wordStart && i > 0 && _IsWordChar(t, i - 1, true, otherWordChars)) continue;
+				if(wordEnd && i < iMax && _IsWordChar(t, i + lens, false, otherWordChars)) continue;
+				return i;
+			}
+			return -1;
+
+			static bool _IsWordChar(string s, int i, bool expandLeft, string otherWordChars)
+			{
+				char c = s[i];
+				if(c >= '\uD800' && c <= '\uDFFF') { //Unicode surrogates
+					if(expandLeft) {
+						if(Char.IsLowSurrogate(s[i])) return i > 0 && Char.IsHighSurrogate(s[i - 1]) && Char.IsLetterOrDigit(s, i - 1);
+					} else {
+						if(Char.IsHighSurrogate(s[i])) return i < s.Length - 1 && Char.IsLowSurrogate(s[i + 1]) && Char.IsLetterOrDigit(s, i);
+					}
+				} else {
+					if(Char.IsLetterOrDigit(c)) return true;
+					if(otherWordChars?.Has(c) ?? false) return true;
+				}
+				return false;
+			}
+		}
+
+		/// <summary>
 		/// Returns <see cref="string.Length"/>. Returns 0 if this string is null.
 		/// </summary>
 		/// <param name="t">This string.</param>
@@ -336,11 +481,11 @@ namespace Au
 		/// Splits this string into substrings using the specified separators.
 		/// </summary>
 		/// <param name="t">This string.</param>
-		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="SegSep"/> constants.</param>
 		/// <param name="maxCount">The maximal number of substrings to get. If negative, gets all.</param>
 		/// <param name="flags"></param>
 		/// <seealso cref="Segments(string, string, SegFlags)"/>
-		/// <seealso cref="SegSplitLines"/>
+		/// <seealso cref="SegLines"/>
 		/// <seealso cref="string.Split"/>
 		/// <seealso cref="string.Join"/>
 		public static string[] SegSplit(this string t, string separators, int maxCount, SegFlags flags = 0)
@@ -353,7 +498,7 @@ namespace Au
 		/// Splits this string into substrings using the specified separators.
 		/// </summary>
 		/// <param name="t">This string.</param>
-		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="Separators"/> constants.</param>
+		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="SegSep"/> constants.</param>
 		/// <param name="flags"></param>
 		public static string[] SegSplit(this string t, string separators, SegFlags flags = 0)
 		{
@@ -367,13 +512,13 @@ namespace Au
 		/// <param name="t">This string.</param>
 		/// <param name="noEmptyLines">Don't get empty lines.</param>
 		/// <remarks>
-		/// Uses this code: <c>return t.SegSplit(Separators.Line, noEmptyLines ? SegFlags.NoEmpty : 0);</c>.
-		/// See <see cref="SegSplit(string, string, int, SegFlags)"/>, <see cref="Separators.Line"/>, <see cref="SegFlags.NoEmpty"/>.
+		/// Uses this code: <c>return t.SegSplit(SegSep.Line, noEmptyLines ? SegFlags.NoEmpty : 0);</c>.
+		/// See <see cref="SegSplit(string, string, int, SegFlags)"/>, <see cref="SegSep.Line"/>, <see cref="SegFlags.NoEmpty"/>.
 		/// </remarks>
 		/// <seealso cref="Segments(string, string, SegFlags)"/>
-		public static string[] SegSplitLines(this string t, bool noEmptyLines = false)
+		public static string[] SegLines(this string t, bool noEmptyLines = false)
 		{
-			return SegSplit(t, Separators.Line, noEmptyLines ? SegFlags.NoEmpty : 0);
+			return SegSplit(t, SegSep.Line, noEmptyLines ? SegFlags.NoEmpty : 0);
 		}
 
 		/// <summary>
@@ -769,6 +914,7 @@ namespace Au
 						case '\t': b.Append("\\t"); break;
 						case '\n': b.Append("\\n"); break;
 						case '\r': b.Append("\\r"); break;
+						case '\0': b.Append("\\0"); break;
 						default: b.Append("\\u").Append(((ushort)c).ToString("x4")); break;
 						}
 					} else if(c == '\\') b.Append("\\\\");
@@ -783,7 +929,68 @@ namespace Au
 				return b.ToString();
 			}
 		}
-		//FUTURE: Unescape()
+
+		/// <summary>
+		/// Replaces C# escape sequences to characters in this string.
+		/// Returns true if successful. Returns false if the string contains an invalid or unsupported escape sequence.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="result">Receives the result string. It is this string if there are no escape sequences or if fails.</param>
+		/// <remarks>
+		/// Supports all escape sequences of <see cref="Escape"/>: \\ \" \t \n \r \0 \uXXXX.
+		/// Does not support \a \b \f \v \' \xXXXX \UXXXXXXXX.
+		/// </remarks>
+		public static bool Unescape(this string t, out string result)
+		{
+			result = t;
+			int i = t.IndexOf('\\');
+			if(i < 0) return true;
+
+			using(new Util.LibStringBuilder(out var b, t.Length)) {
+				b.Append(t, 0, i);
+
+				for(; i < t.Length; i++) {
+					char c = t[i];
+					if(c == '\\') {
+						if(++i == t.Length) return false;
+						switch(c = t[i]) {
+						case '\\': case '\"': break;
+						case 't': c = '\t'; break;
+						case 'n': c = '\n'; break;
+						case 'r': c = '\r'; break;
+						case '0': c = '\0'; break;
+						//case 'a': c = '\a'; break;
+						//case 'b': c = '\b'; break;
+						//case 'f': c = '\f'; break;
+						//case 'v': c = '\v'; break;
+						//case '\'': break;
+						//also we don't support U and x
+						case 'u':
+							if(!_Uni(t, ++i, 4, out int u)) return false;
+							c = (char)u;
+							i += 3;
+							break;
+						default: return false;
+						}
+					}
+					b.Append(c);
+				}
+
+				result = b.ToString();
+				return true;
+			}
+
+			static bool _Uni(string t, int i, int maxLen, out int R)
+			{
+				R = 0;
+				int to = i + maxLen; if(to > t.Length) return false;
+				for(; i < to; i++) {
+					int k = _CharHexToDec(t[i]); if(k < 0) return false;
+					R = (R << 4) + k;
+				}
+				return true;
+			}
+		}
 
 		//rejected
 		///// <summary>
@@ -812,19 +1019,6 @@ namespace Au
 		///// <seealso cref="AConvert.Utf8ToString"/>
 		///// <seealso cref="Encoding.UTF8"/>
 		//public static byte[] AToUtf8And0(this string t) => AConvert.Utf8FromString(t);
-
-		internal static class Lib
-		{
-			/// <summary><c>{ '\r', '\n' }</c></summary>
-			internal static readonly char[] lineSep = { '\r', '\n' };
-
-			/// <summary><c>{ '\\', '/' }</c></summary>
-			internal static readonly char[] pathSep = { '\\', '/' };
-
-			///// <summary><c>{ '*', '?' }</c></summary>
-			//internal static readonly char[] wildcard = { '*', '?' };
-
-		}
 	}
 }
 

@@ -1,8 +1,8 @@
 ﻿/*/ ifRunning restart; r System.Numerics; /*/ //{{
 //{{ using
-using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq; using Au; using Au.Types; using static Au.NoClass; using Au.Triggers; //}}
-
-using System.Numerics; //example. Add usings and assembly/module attributes here.
+using Au; using static Au.NoClass; using Au.Types; using System; using System.Collections.Generic; //}}
+using System.Numerics; //example
+using System.Runtime.InteropServices; //example
 
 //{{ main
 unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
@@ -31,8 +31,8 @@ and add class files to the project folder.
 
 Below function _Main and } you can also add fields, nested classes, [DllImport], etc.
 
-You can add 'using' directives, assembly/module attributes and #define below or above
-the '//{{ using' code block. Click the [+] box to show it.
+You can add 'using' directives below the '//{{ using' code block. Click the [+] box
+to show it. Add assembly/module attributes below usings. Add #define above usings.
 */
 
 Print("Main script code is here.");

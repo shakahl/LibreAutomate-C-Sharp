@@ -91,8 +91,15 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Writes string + "\r\n" to the output window or console (if <see cref="IsWritingToConsole"/>) or log file (if <see cref="LogFile"/> not null).
+		/// Writes text + <c>"\r\n"</c> to the output window or console (if <see cref="IsWritingToConsole"/>) or log file (if <see cref="LogFile"/> not null).
 		/// </summary>
+		/// <param name="value">
+		/// Text.
+		/// If "" or null, writes empty line.
+		/// </param>
+		/// <remarks>
+		/// Can display links, colors, images, etc. More info: [](xref:print_tags).
+		/// </remarks>
 		/// <seealso cref="Print(string)"/>
 		/// <seealso cref="Print(object)"/>
 		/// <seealso cref="Print{T}(IEnumerable{T})"/>

@@ -776,12 +776,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Help_QuickStart()
 	{
-		Au.Util.AHelp.AuWeb("");
+		Au.Util.AHelp.AuHelp("");
 	}
 
 	public void Help_Reference()
 	{
-		Au.Util.AHelp.AuWeb("api/");
+		Au.Util.AHelp.AuHelp("api/");
 	}
 
 	public void Help_ContextHelp()

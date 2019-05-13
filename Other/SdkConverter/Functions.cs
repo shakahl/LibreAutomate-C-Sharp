@@ -95,8 +95,8 @@ namespace SdkConverter
 					//Print(name);
 					nameInDll = name;
 					name = name.Substring(3);
-					if(name.EndsWith("W")) name = name.Remove(name.Length - 1);
-					else if(name.EndsWith("A")) {
+					if(name.Ends("W")) name = name.Remove(name.Length - 1);
+					else if(name.Ends("A")) {
 						_SkipStatement(false);
 						return;
 					}

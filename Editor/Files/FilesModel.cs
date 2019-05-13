@@ -715,7 +715,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 				Exec.Run(f.FilePath);
 				break;
 			case 4:
-				Exec.SelectFileInExplorer(f.FilePath);
+				Exec.Select(f.FilePath);
 				break;
 			}
 		}
@@ -875,7 +875,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		bool fromWorkspaceDir = false, dirsDropped = false;
 		for(int i = 0; i < a.Length; i++) {
 			var s = a[i] = APath.Normalize(a[i]);
-			if(s.Index(@"\$RECYCLE.BIN\", true) > 0) {
+			if(s.Find(@"\$RECYCLE.BIN\", true) > 0) {
 				ADialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
 					icon: DIcon.Info, owner: _control, onLinkClick: e => Exec.TryRun(e.LinkHref));
 				return;
@@ -1010,7 +1010,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			return false;
 		}
 
-		Exec.SelectFileInExplorer(wsDir);
+		Exec.Select(wsDir);
 		return true;
 	}
 

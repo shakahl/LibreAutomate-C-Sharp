@@ -313,7 +313,7 @@ namespace Au
 
 				/// <summary>
 				/// If <see cref="Ver.Is32BitProcessAnd64BitOS"/> is true and path starts with <see cref="Folders.System"/>, replaces that path part with <see cref="Folders.SystemX64"/>.
-				/// It disables redirection to <see cref="Folders.SystemX32"/> for that path.
+				/// It disables redirection to <see cref="Folders.SystemX86"/> for that path.
 				/// </summary>
 				/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of <c>@"\\?\"</c>.</param>
 				/// <param name="ifExistsOnlyThere">Don't replace path if the file or directory exists in the redirected folder or does not exist in the non-redirected folder.</param>

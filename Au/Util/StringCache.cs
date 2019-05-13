@@ -103,7 +103,7 @@ namespace Au.Util
 			int hashCode = AConvert.HashFast(p, len) & 0x7fffffff;
 			int bucket = hashCode % _buckets.Length;
 			for(int i = _buckets[hashCode % _buckets.Length] - 1; i >= 0; i = _slots[i].next) {
-				if(_slots[i].hashCode == hashCode && LibCharPtr.Equals(p, len, _slots[i].value)) {
+				if(_slots[i].hashCode == hashCode && LibCharPtr.Eq(p, len, _slots[i].value)) {
 					return _slots[i].value;
 				}
 			}

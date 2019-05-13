@@ -956,7 +956,7 @@ namespace Au.Types
 				//LibThrowIfInvalid(s);
 				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
 				if(!s.Starts("**")) { //can be regex
-					if(s.IndexOfAny(ExtString.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
+					if(s.FindChars(@"\/") >= 0) throw new ArgumentException("Program name contains \\ or /.");
 					if(APath.FindExtension(s) < 0 && !Wildex.HasWildcardChars(s)) PrintWarning("Program name without .exe.");
 				}
 				program = s;

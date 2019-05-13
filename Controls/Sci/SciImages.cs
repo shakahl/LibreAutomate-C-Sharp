@@ -338,7 +338,7 @@ namespace Au.Controls
 			//if not editor, skip if not <image "..."
 			if(!isMulti) {
 				if(_isEditor) imageStringStartPos = i - 1;
-				else if(i >= 8 && Au.Util.LibCharPtr.AsciiStartsWith(s + i - 8, "<image ")) imageStringStartPos = i - 8;
+				else if(i >= 8 && Au.Util.LibCharPtr.AsciiStarts(s + i - 8, "<image ")) imageStringStartPos = i - 8;
 				else goto g1;
 			}
 

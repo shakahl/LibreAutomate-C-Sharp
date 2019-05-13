@@ -22,6 +22,7 @@ using static Au.NoClass;
 using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
+//using DiffMatchPatch;
 
 #if TEST
 
@@ -31,7 +32,7 @@ partial class ThisIsNotAFormFile { }
 
 partial class EdForm
 {
-	internal void TestEditor()
+	internal unsafe void TestEditor()
 	{
 		//TestMC();
 		////TestDragDrop();
@@ -48,9 +49,23 @@ partial class EdForm
 		//return;
 
 
-		var doc = Panels.Editor.ActiveDoc;
+		//var doc = Panels.Editor.ActiveDoc;
+		var doc = Panels.Output.Controls[0] as AuScintilla;
 		var t = doc.ST;
 		var s = doc.Text;
+
+		//Output.QM2.Write(s);
+
+		int len=t.TextLengthBytes;
+		var b = stackalloc byte[len * 2 + 2];
+
+		Sci.Sci_TextRange tr = default;
+		tr.chrg.cpMax = len;
+		tr.lpstrText = b;
+		t.Call(Sci.SCI_GETSTYLEDTEXT, 0, &tr);
+		for(int i = 0; i < len*2; i++) {
+			Print(b[i]);
+		}
 
 		//t.Call(SCI_FOLDALL);
 		//for(int i = 0; i < 3; i++) Print((uint)t.Call(SCI_GETFOLDLEVEL, i));
@@ -82,7 +97,7 @@ partial class EdForm
 		//doc.Call(Sci.SCI_SETSTYLING, 10, 22);
 
 
-		//var a = s.SegSplitLines();
+		//var a = s.SegLines();
 		//bool? folder = default; switch(a[1]) { case "1": folder = true; break; case "0": folder = false; break; }
 		////Print(Model.Find(a[0], folder));
 		////var fn = Model.Find("test scripts", true);
@@ -113,7 +128,33 @@ partial class EdForm
 
 		//doc.CommentLines(!Keyb.IsShift);
 
-		Au.Triggers.ActionTriggers.DisabledEverywhere ^= true;
+		//Au.Triggers.ActionTriggers.DisabledEverywhere ^= true;
+
+		//		var s1 = @"//{{
+		////{{ using
+		//using Au; using static Au.NoClass; using Au.Types; using System; using System.Collections.Generic; //}}
+		////{{ main
+		//unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
+		//";
+		//		var s2 = @"/*/ role exeProgram; outputPath %Folders.Workspace%\bin; console true; /*/ //{{
+		////{{ using
+		//using Au; using static Au.NoClass; using Au.Types; using System; using System.Collections.Generic; //}}
+		//using My.NS1; //ąčę îôû
+		//using My.NS2;
+		////{{ main
+		//unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
+		//";
+
+		//		var dmp = new diff_match_patch();
+		//		List<Diff> diff = dmp.diff_main(s1, s2, true);
+		//		dmp.diff_cleanupSemantic(diff);
+		//		var delta = dmp.diff_toDelta(diff);
+		//		Print(delta);
+		//		Print("----");
+		//		var d2 = dmp.diff_fromDelta(s1, delta);
+		//		//Print(d2);
+		//		Print(dmp.diff_text2(d2));
+
 	}
 	static bool s_test1;
 

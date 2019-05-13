@@ -53,6 +53,8 @@ namespace Au.Triggers
 	/// <example>
 	/// This is a single script with many action triggers.
 	/// <code><![CDATA[
+	/// using Au.Triggers; //add this below other 'using' directives
+	/// 
 	/// //if you want to set options for all or some triggers, do it before adding them
 	/// Triggers.Options.RunActionInThread(0, 500);
 	/// 

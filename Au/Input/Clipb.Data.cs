@@ -302,12 +302,12 @@ namespace Au
 				var b = new StringBuilder(c_headerTemplate);
 				//find "<body>...</body>" and "<!--StartFragment-->...<!--EndFragment-->" in it
 				int isb = -1, ieb = -1, isf = -1, ief = -1; //start/end of inner body and fragment
-				if(html.RegexMatch(@"<body\b.*?>", 0, out RXGroup body) && (ieb = html.Index("</body>", body.EndIndex)) >= 0) {
+				if(html.RegexMatch(@"<body\b.*?>", 0, out RXGroup body) && (ieb = html.Find("</body>", body.EndIndex)) >= 0) {
 					isb = body.EndIndex;
-					isf = html.Index(c_startFragment, isb, ieb - isb, true);
+					isf = html.Find(c_startFragment, isb, ieb - isb, true);
 					if(isf >= 0) {
 						isf += c_startFragment.Length;
-						ief = html.Index(c_endFragment, isf, ieb - isf, true);
+						ief = html.Find(c_endFragment, isf, ieb - isf, true);
 					}
 				}
 				//Print($"{isb} {ieb}  {isf} {ief}");
@@ -519,10 +519,10 @@ EndFragment:0000000000
 				if(b == null) return null;
 				string s = Encoding.UTF8.GetString(b);
 
-				int ish = s.Index("StartHTML:", true);
-				int ieh = s.Index("EndHTML:", true);
-				int isf = s.Index("StartFragment:", true);
-				int ief = s.Index("EndFragment:", true);
+				int ish = s.Find("StartHTML:", true);
+				int ieh = s.Find("EndHTML:", true);
+				int isf = s.Find("StartFragment:", true);
+				int ief = s.Find("EndFragment:", true);
 				if(ish < 0 || ieh < 0 || isf < 0 || ief < 0) return null;
 				isf = s.ToInt(isf + 14); if(isf < 0) return null;
 				ief = s.ToInt(ief + 12); if(ief < isf) return null;
@@ -538,8 +538,8 @@ EndFragment:0000000000
 				} else if(ieh > s.Length) return null;
 				//Print(ish, ieh, isf, ief);
 
-				int isu = s.Index("SourceURL:", true), ieu;
-				if(isu >= 0 && (ieu = s.IndexOfAny(ExtString.Lib.lineSep, isu += 10)) >= 0) sourceURL = s.Substring(isu, ieu - isu);
+				int isu = s.Find("SourceURL:", true), ieu;
+				if(isu >= 0 && (ieu = s.FindChars("\r\n", isu += 10)) >= 0) sourceURL = s.Substring(isu, ieu - isu);
 
 				fragmentStart = isf - ish; fragmentLength = ief - isf;
 				return s.Substring(ish, ieh - ish);

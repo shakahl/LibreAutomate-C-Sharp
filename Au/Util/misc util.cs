@@ -29,7 +29,7 @@ namespace Au.Util
 		/// The file must be in <see cref="Folders.ThisApp"/>.
 		/// </summary>
 		/// <param name="topic">Topic file name, like "Au.Acc.Find" or "Acc.Find" or "articles/Wildcard expression".</param>
-		public static void AuWeb(string topic)
+		public static void AuHelp(string topic)
 		{
 			var url = "http://3.quickmacros.com/help/";
 			if(!Empty(topic)) url = url + (topic.IndexOf('/') < 0 ? (topic.Starts("Au.") ? "api/" : "api/Au.") : null) + topic + (topic.Ends('/') ? null : ".html");

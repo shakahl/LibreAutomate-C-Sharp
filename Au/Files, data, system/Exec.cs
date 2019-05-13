@@ -70,6 +70,8 @@ namespace Au
 		/// </example>
 		public static RResult Run(string file, string args = null, RFlags flags = 0, RMore more = null)
 		{
+			//SHOULDDO: from UAC IL admin run as user by default. Add property UacInherit.
+
 			Api.SHELLEXECUTEINFO x = default;
 			x.cbSize = Api.SizeOf(x);
 			x.fMask = Api.SEE_MASK_NOZONECHECKS | Api.SEE_MASK_NOASYNC | Api.SEE_MASK_NOCLOSEPROCESS | Api.SEE_MASK_CONNECTNETDRV | Api.SEE_MASK_UNICODE;
@@ -374,8 +376,8 @@ namespace Au
 
 					var s = new string(c, 0, nc);
 					if(needLines) {
-						if(s.IndexOfAny(ExtString.Lib.lineSep) < 0) outAction(s);
-						else foreach(var k in new SegParser(s, Separators.Line)) outAction(k.Value);
+						if(s.FindChars("\r\n") < 0) outAction(s);
+						else foreach(var k in new SegParser(s, SegSep.Line)) outAction(k.Value);
 					} else {
 						outStr.Append(s);
 					}
@@ -394,14 +396,14 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Opens parent folder in Explorer and selects the file.
+		/// Opens parent folder in Explorer and selects the specified file.
 		/// Returns null if fails, for example if the file does not exist.
 		/// </summary>
 		/// <param name="path">
 		/// Full path of a file or directory or other shell object.
 		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="APath.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="Pidl.ToHexString"/>).
 		/// </param>
-		public static bool SelectFileInExplorer(string path)
+		public static bool Select(string path)
 		{
 			using var pidl = Pidl.FromString(path);
 			if(pidl == null) return false;

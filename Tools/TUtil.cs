@@ -398,7 +398,7 @@ namespace Au.Tools
 			b.AppendLine(@"static object[] __TestFunc__() {");
 			if(activateWindow) b.Append("((Wnd)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
 			b.AppendLine("var _p_ = Perf.StartNew();");
-			var lines = code.SegSplitLines(true);
+			var lines = code.SegLines(true);
 			int lastLine = lines.Length - 1;
 			for(int i = 0; i < lastLine; i++) b.AppendLine(lines[i]);
 			b.AppendLine("_p_.Next(); var _a_ =");

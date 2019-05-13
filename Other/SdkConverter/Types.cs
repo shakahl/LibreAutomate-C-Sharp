@@ -999,7 +999,7 @@ namespace SdkConverter
 				}
 			} else {
 				//Print($"<><c 0xff>{name}</c>"); //0
-				//Print(R.Index($"internal struct {name}A "));
+				//Print(R.Find($"internal struct {name}A "));
 			}
 		}
 	}

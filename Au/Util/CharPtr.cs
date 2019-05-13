@@ -79,7 +79,7 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="p">'\0'-terminated UTF-16 string. Can be null.</param>
 		/// <param name="s">Cannot be null.</param>
-		public static bool StartsWith(char* p, string s)
+		public static bool Starts(char* p, string s)
 		{
 			if(p == null) return false;
 			for(int i = 0, n = s.Length; i < n; i++, p++) {
@@ -96,7 +96,7 @@ namespace Au.Util
 		/// <param name="len">p length.</param>
 		/// <param name="s">Cannot be null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
-		public static bool EndsWith(char* p, int len, string s, bool ignoreCase)
+		public static bool Ends(char* p, int len, string s, bool ignoreCase)
 		{
 			if(p == null || len < s.Length) return false;
 			p += len - s.Length;
@@ -118,7 +118,7 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="p">'\0'-terminated ANSI string. Can be null.</param>
 		/// <param name="s">Must contain only ASCII characters. Cannot be null.</param>
-		public static bool AsciiStartsWith(byte* p, string s)
+		public static bool AsciiStarts(byte* p, string s)
 		{
 			if(p == null) return false;
 			int i, n = s.Length;
@@ -133,7 +133,7 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="p">'\0'-terminated ANSI string. Can be null.</param>
 		/// <param name="s">Must contain only ASCII characters. Cannot be null.</param>
-		public static bool AsciiStartsWithI(byte* p, string s)
+		public static bool AsciiStartsi(byte* p, string s)
 		{
 			if(p == null) return false;
 			var t = LibTables.LowerCase;
@@ -150,14 +150,14 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="p">'\0'-terminated ANSI string. Can be null.</param>
 		/// <param name="s">Must contain only ASCII characters. Cannot be null.</param>
-		public static bool AsciiEquals(byte* p, string s) => AsciiStartsWith(p, s) && p[s.Length] == 0;
+		public static bool AsciiEq(byte* p, string s) => AsciiStarts(p, s) && p[s.Length] == 0;
 
 		/// <summary>
 		/// Returns true if unmanaged ANSI string p and string s are equal. Case-insensitive.
 		/// </summary>
 		/// <param name="p">'\0'-terminated ANSI string. Can be null.</param>
 		/// <param name="s">Must contain only ASCII characters. Cannot be null.</param>
-		public static bool AsciiEqualsI(byte* p, string s) => AsciiStartsWithI(p, s) && p[s.Length] == 0;
+		public static bool AsciiEqi(byte* p, string s) => AsciiStartsi(p, s) && p[s.Length] == 0;
 
 		/// <summary>
 		/// Finds character in unmanaged ANSI string which can be binary.
@@ -223,7 +223,7 @@ namespace Au.Util
 		/// <param name="p">Native string.</param>
 		/// <param name="len">p length. Returns false if it is != s.Length.</param>
 		/// <param name="s">Managed string.</param>
-		public static bool Equals(char* p, int len, string s)
+		public static bool Eq(char* p, int len, string s)
 		{
 			if(p == null) return s == null; if(s == null) return false;
 			if(len != s.Length) return false;
@@ -237,7 +237,7 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="p">Native string.</param>
 		/// <param name="s">Managed string.</param>
-		public static bool Equals(byte* p, byte[] s)
+		public static bool Eq(byte* p, byte[] s)
 		{
 			if(p == null) return s == null; if(s == null) return false;
 			int i;

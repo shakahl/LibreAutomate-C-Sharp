@@ -187,21 +187,21 @@ namespace Au.Controls
 			//special strings
 			switch(c1) {
 			case '~': return (c2 == ':') ? ImageType.Base64CompressedBmp : ImageType.None;
-			case 'i': if(LibCharPtr.AsciiStartsWith(s, "image:")) return ImageType.Base64PngGifJpg; break;
-			case 'r': if(LibCharPtr.AsciiStartsWith(s, "resource:")) return ImageType.Resource; break;
+			case 'i': if(LibCharPtr.AsciiStarts(s, "image:")) return ImageType.Base64PngGifJpg; break;
+			case 'r': if(LibCharPtr.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
 			}
 
 			//file path
 			if(length >= 8 && (c1 == '%' || (c2 == ':' && AChar.IsAsciiAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
 				byte* ext = s + length - 3;
 				if(ext[-1] == '.') {
-					if(LibCharPtr.AsciiStartsWithI(ext, "bmp")) return ImageType.Bmp;
-					if(LibCharPtr.AsciiStartsWithI(ext, "png")) return ImageType.PngGifJpg;
-					if(LibCharPtr.AsciiStartsWithI(ext, "gif")) return ImageType.PngGifJpg;
-					if(LibCharPtr.AsciiStartsWithI(ext, "jpg")) return ImageType.PngGifJpg;
-					if(LibCharPtr.AsciiStartsWithI(ext, "ico")) return ImageType.Ico;
-					if(LibCharPtr.AsciiStartsWithI(ext, "cur")) return ImageType.Cur;
-					if(LibCharPtr.AsciiStartsWithI(ext, "ani")) return ImageType.Cur;
+					if(LibCharPtr.AsciiStartsi(ext, "bmp")) return ImageType.Bmp;
+					if(LibCharPtr.AsciiStartsi(ext, "png")) return ImageType.PngGifJpg;
+					if(LibCharPtr.AsciiStartsi(ext, "gif")) return ImageType.PngGifJpg;
+					if(LibCharPtr.AsciiStartsi(ext, "jpg")) return ImageType.PngGifJpg;
+					if(LibCharPtr.AsciiStartsi(ext, "ico")) return ImageType.Ico;
+					if(LibCharPtr.AsciiStartsi(ext, "cur")) return ImageType.Cur;
+					if(LibCharPtr.AsciiStartsi(ext, "ani")) return ImageType.Cur;
 				} else if(AChar.IsAsciiDigit(ext[2])) { //can be like C:\x.dll,10
 					byte* k = ext + 1, k2 = s + 8;
 					for(; k > k2; k--) if(!AChar.IsAsciiDigit(*k)) break;

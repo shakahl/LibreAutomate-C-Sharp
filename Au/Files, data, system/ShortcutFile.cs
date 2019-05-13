@@ -22,7 +22,7 @@ namespace Au
 	/// <summary>
 	/// Creates shell shortcuts (.lnk files) and gets shortcut properties.
 	/// </summary>
-	public unsafe class ShellShortcut : IDisposable
+	public unsafe class ShortcutFile : IDisposable
 	{
 		Api.IShellLink _isl;
 		Api.IPersistFile _ipf;
@@ -47,7 +47,7 @@ namespace Au
 		internal Api.IShellLink IShellLink => _isl;
 		//This could be public, but then need to make IShellLink public. It is defined in a non-standard way. Never mind, it is not important.
 
-		ShellShortcut(string lnkPath, uint mode)
+		ShortcutFile(string lnkPath, uint mode)
 		{
 			_isl = new Api.ShellLink() as Api.IShellLink;
 			_ipf = _isl as Api.IPersistFile;
@@ -64,9 +64,9 @@ namespace Au
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
 		/// <exception cref="AException">Failed to open .lnk file.</exception>
-		public static ShellShortcut Open(string lnkPath)
+		public static ShortcutFile Open(string lnkPath)
 		{
-			return new ShellShortcut(lnkPath, Api.STGM_READ);
+			return new ShortcutFile(lnkPath, Api.STGM_READ);
 		}
 
 		/// <summary>
@@ -75,9 +75,9 @@ namespace Au
 		/// If the shortcut file already exists, Save replaces it.
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
-		public static ShellShortcut Create(string lnkPath)
+		public static ShortcutFile Create(string lnkPath)
 		{
-			return new ShellShortcut(lnkPath, Api.STGM_WRITE);
+			return new ShortcutFile(lnkPath, Api.STGM_WRITE);
 		}
 
 		/// <summary>
@@ -88,9 +88,9 @@ namespace Au
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
 		/// <exception cref="AException">Failed to open existing .lnk file.</exception>
-		public static ShellShortcut OpenOrCreate(string lnkPath)
+		public static ShortcutFile OpenOrCreate(string lnkPath)
 		{
-			return new ShellShortcut(lnkPath, Api.STGM_READWRITE);
+			return new ShortcutFile(lnkPath, Api.STGM_READWRITE);
 		}
 
 		/// <summary>
@@ -320,7 +320,7 @@ namespace Au
 
 			if(!fixMSI) {
 				R = APath.ExpandEnvVar(R);
-			} else if(R.Index(@"\Installer\{") > 0) {
+			} else if(R.Find(@"\Installer\{") > 0) {
 				//For MSI shortcuts GetPath gets like "C:\WINDOWS\Installer\{90110409-6000-11D3-8CFE-0150048383C9}\accicons.exe".
 				var product = stackalloc char[40];
 				var component = stackalloc char[40];

@@ -1,3 +1,5 @@
+- name: Print tags
+  href: Print tags.md
 - name: UAC
   href: UAC.md
 - name: Wildcard expression

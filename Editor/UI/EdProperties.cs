@@ -422,7 +422,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		if(!_GetGrid()) { this.DialogResult = DialogResult.None; return; };
 
-		string append = null; if(endOf == 0) append = _f.IsScript ? " " : "\r\n";
+		string append = null; if(endOf == 0) append = (_f.IsScript && code.Starts("//{{\r")) ? " " : "\r\n";
 		var s = _meta.Format(append);
 
 		if(s.Length == 0) {
@@ -475,7 +475,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			var f2 = filter(f);
 			if(f2 == null) continue;
 			var path = f2.ItemPath;
-			if(sFind.Length > 0 && path.Index(sFind, true) < 0) continue;
+			if(sFind.Length > 0 && path.Find(sFind, true) < 0) continue;
 			if(!metaList.Contains(path, StringComparer.OrdinalIgnoreCase)) a.Add(path);
 		}
 		if(a.Count == 0) { ADialog.Show(sFind.Length > 0 ? "Not found" : $"This workspace contains 0 {ifNone}", sFind, owner: this); return; }
@@ -487,7 +487,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 	private void _bAddGac_Click(object sender, EventArgs e)
 	{
 		var en = GAC.EnumAssemblies(sender == _bAddGacVersion).Distinct();
-		var sFind = _tFindInList.Text; if(sFind.Length > 0) en = en.Where(s => s.Index(sFind, true) >= 0);
+		var sFind = _tFindInList.Text; if(sFind.Length > 0) en = en.Where(s => s.Find(sFind, true) >= 0);
 		var a = en.ToArray();
 		if(a.Length == 0) { ADialog.Show("Not found", sFind, owner: this); return; }
 		Array.Sort(a);
@@ -519,7 +519,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 						using(var verKey = guidKey.OpenSubKey(sVer)) {
 							if(verKey.GetValue("") is string description) {
 								if(rx.MatchG(description, out var g)) description = description.Remove(g.Index);
-								if(sFind.Length > 0 && description.Index(sFind, true) < 0) continue;
+								if(sFind.Length > 0 && description.Find(sFind, true) < 0) continue;
 								a.Add(new _RegTypelib { guid = sGuid, text = description + ", " + sVer, version = sVer });
 							} //else Print(sGuid); //some Microsoft typelibs. VS does not show these too.
 						}
@@ -550,7 +550,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				using(var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits)) {
 					path = hk?.GetValue("") as string;
 					if(path == null) continue;
-					path = path.Trim('\"');
+					path = path.TrimChars("\"");
 				}
 				hr = LoadTypeLibEx(path, 2, out tl);
 				if(hr == 0 && tl == null) hr = 1;

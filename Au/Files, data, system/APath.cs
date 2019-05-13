@@ -345,10 +345,10 @@ namespace Au
 				int i = s.Length - 1;
 				if(i > 0) {
 					if(LibIsSepChar(s[i]) && s[i - 1] != ':') {
-						var s2 = s.TrimEnd(ExtString.Lib.pathSep);
+						var s2 = s.TrimChars(@"\/");
 						if(s2.Length != 0) s = s2;
 					}
-					if(_EndsWithDriveWithoutSep(s)) s = s + "\\";
+					if(_EndsWithDriveWithoutSep(s)) s += "\\";
 				}
 			}
 			return s;
@@ -568,7 +568,7 @@ namespace Au
 			if(s == null) return 0;
 			int len = s.Length;
 			if(len >= 4 && s[2] == '?' && LibIsSepChar(s[0]) && LibIsSepChar(s[1]) && LibIsSepChar(s[3])) {
-				if(len >= 8 && LibIsSepChar(s[7]) && s.EqAt(4, "UNC", true)) return 8;
+				if(len >= 8 && LibIsSepChar(s[7]) && s.Eq(4, "UNC", true)) return 8;
 				return 4;
 			}
 			return 0;

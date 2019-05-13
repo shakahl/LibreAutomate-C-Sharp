@@ -32,6 +32,8 @@
 #include "SparseState.h"
 #include "SubStyles.h"
 
+#include "Platform.h" //au: added for Platform::DebugPrintf
+
 #ifdef SCI_NAMESPACE
 using namespace Scintilla;
 #endif
@@ -693,6 +695,7 @@ void SCI_METHOD LexerCPP::Lex(Sci_PositionU startPos, Sci_Position length, int i
 	}
 
 	StyleContext sc(startPos, length, initStyle, styler);
+	//Platform::DebugPrintf("0x%X 0x%X\n", initStyle, sc.state);
 	LinePPState preproc = vlls.ForLine(lineCurrent);
 
 	bool definitionsChanged = false;

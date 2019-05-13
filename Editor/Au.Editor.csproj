@@ -109,6 +109,7 @@
     <Compile Include="UI\EdProperties.Designer.cs">
       <DependentUpon>EdProperties.cs</DependentUpon>
     </Compile>
+    <None Include="Unused\DiffMatchPatch.cs" />
     <Compile Include="Util\EdMetaCommentsParser.cs" />
     <Compile Include="Util\UacDragDrop.cs" />
     <EmbeddedResource Include="UI\EdOptions.resx">

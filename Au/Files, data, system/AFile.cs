@@ -295,11 +295,11 @@ namespace Au
 				if(nr > na) na = nr; else if(nr > 0) return b.ToString(nr); else break;
 			}
 
-			if(path.Ends(".exe", true) && path.IndexOfAny(ExtString.Lib.pathSep) < 0) {
+			if(path.Ends(".exe", true) && path.FindChars(@"\/") < 0) {
 				try {
 					string rk = @"Software\Microsoft\Windows\CurrentVersion\App Paths\" + path;
 					if(ARegistry.GetString(out path, "", rk) || ARegistry.GetString(out path, "", rk, Registry.LocalMachine)) {
-						path = APath.Normalize(path.Trim('\"'));
+						path = APath.Normalize(path.TrimChars("\""));
 						if(ExistsAsAny(path, true)) return path;
 					}
 				}
@@ -348,6 +348,8 @@ namespace Au
 		/// </remarks>
 		public static IEnumerable<FEFile> EnumDirectory(string directoryPath, FEFlags flags = 0, Func<FEFile, bool> filter = null, Action<string> errorHandler = null)
 		{
+			//TODO: use 2 parameters instead of filter: filterFile, filterDir. Or maybe remove. Because now confusing.
+
 			string path = directoryPath;
 			if(0 == (flags & FEFlags.UseRawPath)) path = APath.Normalize(path);
 			path = path.RemoveSuffix('\\');
@@ -1068,7 +1070,7 @@ namespace Au
 		/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If noException, instead returns -1.</exception>
 		static int _FindFilename(string path, bool noException = false)
 		{
-			int R = path.LastIndexOfAny(ExtString.Lib.pathSep);
+			int R = path.FindLastChars(@"\/");
 			if(R < 0 || R == path.Length - 1) {
 				if(noException) return -1;
 				throw new ArgumentException($"No filename in path: '{path}'.");

@@ -53,7 +53,7 @@ class PanelOutput : Control
 			//create links in compilation errors/warnings or run-time stack trace
 			var s = m.Text; int i;
 			if(s.Length >= 22) {
-				if(s.Starts("<><Z #") && s.EqAt(12, ">Compilation: ")) { //compilation
+				if(s.Starts("<><Z #") && s.Eq(12, ">Compilation: ")) { //compilation
 					if(s_rx1 == null) s_rx1 = new ARegex(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
 					m.Text = s_rx1.Replace(s, x => {
 						var f = Model.FindByFilePath(x[1].Value);
@@ -62,7 +62,7 @@ class PanelOutput : Control
 					});
 				} else if((i = s.IndexOf("\n   at ") + 1) > 0 && s.IndexOf(":line ", i) > 0) { //stack trace with source file info
 					int j = s.LastIndexOf("\r\n   at Script.Main(String[] args) in ");
-					if(j >= 0) j = s.Index("\r\n", j + 30);
+					if(j >= 0) j = s.Find("\r\n", j + 30);
 					if(j < 0) { j = s.Length; if(s.Ends("\r\n")) j -= 2; } //include the Main line, because _Main may be missing
 					int stackLen = j - i;
 					if(_sb == null) _sb = new StringBuilder(s.Length + 2000); else _sb.Clear();
@@ -76,7 +76,7 @@ class PanelOutput : Control
 					foreach(var k in s.Segments(i, stackLen, "\r\n", SegFlags.NoEmpty)) {
 						//Output.LibWriteQM2("'"+k+"'");
 						rxm.start = k.Offset + 6; rxm.end = k.EndOffset;
-						if(k.StartsWith("   at ") && rx.MatchG(s, out var g, 1, rxm)) { //note: no "   at " if this is an inner exception marker
+						if(k.Starts("   at ") && rx.MatchG(s, out var g, 1, rxm)) { //note: no "   at " if this is an inner exception marker
 							var f = Model.FindByFilePath(g.Value);
 							if(f != null) {
 								int i1 = g.EndIndex + 6, len1 = k.EndOffset - i1;
@@ -84,7 +84,7 @@ class PanelOutput : Control
 								Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
 								.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
 
-								bool isMain = k.StartsWith("   at Script._Main(String[] args) in ");
+								bool isMain = k.Starts("   at Script._Main(String[] args) in ");
 								if(!isMain || !f.IsScript) b.Append(", <_>").Append(s, k.Offset + 6, g.Index - k.Offset - 10).Append("</_>");
 								b.AppendLine();
 

@@ -783,13 +783,13 @@ namespace Au
 				if(ExtString.More.IsAscii(name)) {
 					for(int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);
-						if(Util.LibCharPtr.AsciiEquals(b, name)) return i;
+						if(Util.LibCharPtr.AsciiEq(b, name)) return i;
 					}
 				} else {
 					var bname = AConvert.Utf8FromString(name);
 					for(int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);
-						if(Util.LibCharPtr.Equals(b, bname)) return i;
+						if(Util.LibCharPtr.Eq(b, bname)) return i;
 					}
 				}
 			}

@@ -85,7 +85,7 @@ namespace Au.Compiler
 		{
 			string alias = null;
 			int i = reference.IndexOf('=');
-			if(i >= 0 && !(i > 9 && reference.EqAt(i - 9, ", Version"))) {
+			if(i >= 0 && !(i > 9 && reference.Eq(i - 9, ", Version"))) {
 				alias = reference.Remove(i);
 				reference = reference.Substring(i + 1);
 			}
@@ -134,7 +134,7 @@ namespace Au.Compiler
 					if(AFile.ExistsAsFile(path)) return path;
 				}
 				ext = null;
-			} else if((i = re.Index(", Version=")) > 0) {
+			} else if((i = re.Find(", Version=")) > 0) {
 				return GAC.FindAssembly(re.Remove(i), re);
 			} else ext = ".dll";
 
@@ -142,7 +142,7 @@ namespace Au.Compiler
 			path = d + re + ext;
 			if(AFile.ExistsAsFile(path)) return path;
 
-			bool isRelPath = re.IndexOfAny(ExtString.Lib.pathSep) >= 0;
+			bool isRelPath = re.FindChars(@"\/") >= 0;
 			if(!isRelPath) {
 				path = d + @"WPF\" + re + ext;
 				if(AFile.ExistsAsFile(path)) return path;

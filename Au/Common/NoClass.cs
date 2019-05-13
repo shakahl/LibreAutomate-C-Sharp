@@ -30,10 +30,14 @@ namespace Au
 	public static partial class NoClass
 	{
 		/// <summary>
-		/// Calls <see cref="Output.Write"/>. It writes string + "\r\n" to the output.
+		/// Calls <see cref="Output.Write"/>. It displays text + <c>"\r\n"</c> in the output pane or console.
 		/// </summary>
-		/// <remarks>
+		/// <param name="value">
+		/// Text.
 		/// If "" or null, writes empty line. To write "null" if null, use code <c>Print((object)s);</c>.
+		/// </param>
+		/// <remarks>
+		/// Can display links, colors, images, etc. More info: [](xref:print_tags).
 		/// </remarks>
 		public static void Print(string value)
 		{
@@ -50,7 +54,7 @@ namespace Au
 		/// If the type is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
 		/// If null, prints "null".
 		/// 
-		/// This overload is used for value types (int, RECT) etc and other types except strings, arrays and generic collections (they have own overloads; to use this function need to cast to object).
+		/// This overload is used for all types except: strings, arrays, generic collections. They have own overloads; to use this function need to cast to object.
 		/// </remarks>
 		public static void Print(object value)
 		{

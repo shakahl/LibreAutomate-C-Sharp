@@ -60,9 +60,9 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -142,7 +142,7 @@
     <Compile Include="Common\param types.cs" />
     <Compile Include="Files, data, system\AFile.More.cs" />
     <Compile Include="Files, data, system\Pidl.cs" />
-    <Compile Include="Files, data, system\ShellShortcut.cs" />
+    <Compile Include="Files, data, system\ShortcutFile.cs" />
     <Compile Include="Files, data, system\APath.cs" />
     <Compile Include="Files, data, system\Exec.cs" />
     <Compile Include="Files, data, system\Ver.cs" />
@@ -211,6 +211,7 @@
     <None Include="_doc\api\toc.yml" />
     <None Include="_doc\articles\index.md" />
     <None Include="_doc\articles\Wait timeout.md" />
+    <None Include="_doc\articles\Print tags.md" />
     <None Include="_doc\articles\_test.md" />
     <None Include="_doc\editor\Command line.md" />
     <None Include="_doc\editor\Au editor.md" />

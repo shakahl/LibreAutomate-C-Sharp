@@ -600,9 +600,8 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// Usings for <see cref="Scripting.Compile"/>.
-		/// The same as in using.txt.
 		/// </summary>
-		public const string DefaultUsings = @"using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq; using Au; using Au.Types; using static Au.NoClass; using Au.Triggers;";
+		public const string DefaultUsings = @"using Au; using static Au.NoClass; using Au.Types; using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq;";
 
 		#endregion
 	}

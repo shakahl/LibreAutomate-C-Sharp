@@ -53,7 +53,7 @@ namespace Au
 				if(s == null || !s.Starts("***")) return 0;
 				for(int i = 0; i < names.Length; i++) {
 					var ni = names[i];
-					if(s.Length - 3 <= ni.Length || !s.EqAt(3, ni)) continue;
+					if(s.Length - 3 <= ni.Length || !s.Eq(3, ni)) continue;
 					int j = 3 + ni.Length;
 					char c = s[j]; if(c != ' ') break;
 					s = s.Substring(j + 1);
@@ -110,7 +110,7 @@ namespace Au
 						b.Append('\"');
 						var s = v;
 						if(esc == 2) {
-							if(s.Index(@"\""") < 0) s = s.Replace(@"""", @"\""");
+							if(s.Find(@"\""") < 0) s = s.Replace(@"""", @"\""");
 							else s = s.RegexReplace(@"(\\*)""", @"$1$1\""");
 						}
 						if(s.Ends('\\')) s = s.RegexReplace(@"(\\+)$", "$1$1");

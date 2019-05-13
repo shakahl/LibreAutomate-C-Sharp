@@ -572,7 +572,7 @@ namespace SdkConverter
 				typeName = "string";
 				marshalAs = "ByValTStr";
 			} else {
-				if(elemCount < 8 && (memberName.Index("Reserved", true) >= 0 || memberName.Index("pad", true) >= 0 || memberName.Starts("Spare", true))) {
+				if(elemCount < 8 && (memberName.Find("Reserved", true) >= 0 || memberName.Find("pad", true) >= 0 || memberName.Starts("Spare", true))) {
 					//Print(memberName);
 					var sb = new StringBuilder();
 					for(int i = 0; i < elemCount; i++) {

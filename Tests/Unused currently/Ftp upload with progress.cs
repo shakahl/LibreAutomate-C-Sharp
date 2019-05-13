@@ -77,7 +77,7 @@ static partial class Test
 
 		protected override void OnLoad(EventArgs e)
 		{
-			if(ftpURL.EndsWith("/")) ftpURL += Path.GetFileName(localFile);
+			if(ftpURL.Ends('/')) ftpURL += Path.GetFileName(localFile);
 			label1.Text = localFile + "\n" + ftpURL;
 			base.OnLoad(e);
 
@@ -143,7 +143,7 @@ static partial class Test
 
 	static void TestFtpUploadSimple(string localFile, string ftpURL, string user, string password)
 	{
-		if(ftpURL.EndsWith("/")) ftpURL += Path.GetFileName(localFile);
+		if(ftpURL.Ends('/')) ftpURL += Path.GetFileName(localFile);
 		var request = (FtpWebRequest)WebRequest.Create(new Uri(ftpURL));
 		request.Method = WebRequestMethods.Ftp.UploadFile;
 		request.Credentials = new NetworkCredential(user, password);

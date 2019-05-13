@@ -501,7 +501,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		if(s[0] == '\\') p = Root;
 		else if(s[0] == '.') {
 			int i = 0;
-			for(; s.EqAt(i, @"..\"); i += 3) { p = p.Parent; if(p == null) return null; }
+			for(; s.Eq(i, @"..\"); i += 3) { p = p.Parent; if(p == null) return null; }
 			if(i == 0 && s.Starts(@".\")) i = 2;
 			if(i != 0) {
 				if(i == s.Length) return (p == Root || !(folder ?? true)) ? null : p;

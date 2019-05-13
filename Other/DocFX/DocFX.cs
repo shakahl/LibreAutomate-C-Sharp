@@ -96,7 +96,7 @@ unsafe class Program
 		//Key("F5");
 
 		1.s();
-		if(1 == ADialog.ShowEx("Upload?", null, "1 Yes|2 No", secondsTimeout: 5)) CompressAndUpload(docDir);
+		//if(1 == ADialog.ShowEx("Upload?", null, "1 Yes|2 No", secondsTimeout: 5)) CompressAndUpload(docDir);
 
 		//Delete obj folder if big. Each time it grows by 10 MB, and after a day or two can be > 1 GB. After deleting builds slower by ~50%.
 		if(AFile.More.CalculateDirectorySize(objDir) / 1024 / 1024 > 500) { Print("Deleting obj folder."); AFile.Delete(objDir); }
@@ -202,6 +202,7 @@ unsafe class Program
 			//files = @"\api\Au.ARegex.Replace";
 			files = @"\api\Au.Acc.Find";
 			files = @"\api\Au.ADialog.Show";
+			files = @"\articles\Wildcard expression";
 			files += ".html";
 		}
 		foreach(var f in AFile.EnumDirectory(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
@@ -210,14 +211,14 @@ unsafe class Program
 			var file = f.FullPath;
 			//if(test) Print($"<><c 0xff>{file}</c>");
 			var s = File.ReadAllText(file);
-			bool modified = ProcessHtmlFile(ref s, name.Starts(@"\api"));
+			bool modified = ProcessHtmlFile(ref s, name.Starts(@"\api"), siteDir);
 			if(modified) File.WriteAllText(!test ? file : file.Remove(file.Length - 1), s);
 		}
 
 		ProcessJs(siteDir);
 	}
 
-	static bool ProcessHtmlFile(ref string s, bool isApi)
+	static bool ProcessHtmlFile(ref string s, bool isApi, string siteDir)
 	{
 		int nr = 0;
 
@@ -245,7 +246,7 @@ unsafe class Program
 				int jPrev = 0;
 				for(int i = 0; i < a.Length; i++) {
 					bool first = i == 0, last = i == a.Length - 1;
-					int j = first ? s.Index("</h1>") : a[i].EndIndex;
+					int j = first ? s.Find("</h1>") : a[i].EndIndex;
 					b.Append(s, jPrev, j - jPrev);
 					jPrev = j;
 					b.Append("<span style='font-size:14px; font-weight: 400; margin-left:20px;'>(");
@@ -261,6 +262,22 @@ unsafe class Program
 				nr++;
 			}
 
+		} else {
+			//in .md we use this for links to api: [Class]() or [Class.Func]().
+			//	DocFX converts it to <a href="">Class</a> etc without warning.
+			//	Now convert it to a working link.
+			nr += s.RegexReplace(@"<a href="""">(.+?)</a>", m => {
+				var k = m[1].Value;
+				string href = null;
+				foreach(var ns in s_ns) {
+					if(AFile.ExistsAsFile(siteDir + "/api/" + ns + k + ".html")) {
+						href = "../api/" + ns + k + ".html";
+						break;
+					}
+				}
+				if(href == null) { Print($"cannot resolve link: [{k}]()"); return m.Value; }
+				return m.ExpandReplacement($@"<a href=""{href}"">$1</a>");
+			}, out s);
 		}
 
 		//<msdn>...</msdn> -> <a href="google search">
@@ -292,6 +309,7 @@ unsafe class Program
 
 		return nr > 0;
 	}
+	static string[] s_ns = { "Au.", "Au.Triggers.", "Au.Types.", "Au.Util.", "Au.NoClass.", };
 
 	//static void ProcessToc(string siteDir)
 	//{
@@ -370,7 +388,9 @@ unsafe class Program
 		Print("<>Extracted to <link>http://3.quickmacros.com/help/</link>");
 	}
 
-	/* Q:\Programs\eclipse\workspace\test\extract_help.php:
+}
+
+#if Extract // Q:\Programs\eclipse\workspace\test\extract_help.php:
 
 <?php
 
@@ -408,5 +428,28 @@ function rrmdir($src) {
 
 ?>
 
-	*/
-}
+#endif
+
+#if Disqus //add this to the bottom of help pages
+
+<hr style="margin-top: 50px"/>
+<div id="disqus_thread"></div>
+<script>
+/**
+*  RECOMMENDED CONFIGURATION VARIABLES: EDIT AND UNCOMMENT THE SECTION BELOW TO INSERT DYNAMIC VALUES FROM YOUR PLATFORM OR CMS.
+*  LEARN WHY DEFINING THESE VARIABLES IS IMPORTANT: https://disqus.com/admin/universalcode/#configuration-variables*/
+/*
+var disqus_config = function () {
+this.page.url = PAGE_URL;  // Replace PAGE_URL with your page's canonical URL variable
+this.page.identifier = PAGE_IDENTIFIER; // Replace PAGE_IDENTIFIER with your page's unique identifier variable
+};
+*/
+(function() { // DON'T EDIT BELOW THIS LINE
+var d = document, s = d.createElement('script');
+s.src = 'https://qm3.disqus.com/embed.js';
+s.setAttribute('data-timestamp', +new Date());
+(d.head || d.body).appendChild(s);
+})();
+</script>
+
+#endif

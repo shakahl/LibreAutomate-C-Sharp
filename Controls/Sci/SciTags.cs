@@ -47,7 +47,7 @@ REMOVED TAGS:
 DIFFERENT SYNTAX:
 	Most tags can be closed with <> or </> or </anything>.
 		Except these: <_>text</_>, <code>code</code>, <fold>text</fold>.
-		No closing tag: <image>.
+		No closing tag: <image "file">.
 	Attributes can be enclosed with "" or '' or non-enclosed (except for <image>).
 		Does not support escape sequences. An attribute ends with "> (if starts with ") or '> (if starts with ') or > (if non-enclosed).
 		In QM2 need "" for most; some can be non-enclosed. QM2 supports escape sequences.
@@ -56,16 +56,16 @@ DIFFERENT SYNTAX:
 OTHER CHANGES:
 	Supports user-defined link tags. Need to provide delegates of functions that implement them. Use SciTags.AddCommonLinkTag or SciTags.AddLinkTag.
 	These link tags are not implemented by this class, but you can provide delegates of functions that implement them:
-		<open>, <script> (QM2 <macro>).
-	<help> by default calls Au.Util.Help.AuHelp, which opens a topic in "Au Help.chm". Use like <help topicFileNameWithoutHtm>Link text</help>. You can override it with SciTags.AddCommonLinkTag or SciTags.AddLinkTag.
+		<open>, <script>.
+	<help> by default calls Au.Util.AHelp.AuHelp, which opens a topic in web browser. You can override it with SciTags.AddCommonLinkTag or SciTags.AddLinkTag.
 	<code> attributes are not used. Currently supports only C# code; for it uses the C++ lexer.
 
 CHANGES IN <image>:
 	Don't need the closing tag (</image>).
 	Supports managed image resources of the entry assembly. Syntax: <image "resource:ResourceName". Does not support resources from forms or other assemblies.
-	Supports images embedded directly in text, like "~:BmpFileData_EncodedBase64_CompressedDeflateStream".
 	Currently supports only 16x16 icons. Does not support icon resources.
-	
+	Supports images embedded directly in text.
+	More info in help topic "Print tags". File "Print tags.md".
 */
 
 namespace Au.Controls
@@ -73,193 +73,19 @@ namespace Au.Controls
 	using static Sci;
 
 	/// <summary>
-	/// Adds links and text formatting to a <see cref="AuScintilla"/> control.
-	/// Links and formatting is specified in text, using tags like in HTML. Reference is in Remarks.
-	/// Tags are supported by the <b>Print</b> function when it writes to the Au script editor.
+	/// Adds links and text formatting to an <see cref="AuScintilla"/> control.
 	/// </summary>
 	/// <remarks>
-	/// Links and text formatting is specified in control text using tags similar to HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
+	/// Links and formatting is specified in text, using tags like in HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
+	/// Reference: [](print_tags).
+	/// Tags are supported by the <b>Print</b> function when it writes to the Au script editor.
 	/// 
-	/// For most tags use this format: <c><![CDATA[<tag>text<>]]></c> or <c><![CDATA[<tag attribute>text<>]]></c>. Attribute can be enclosed in ' or " (must be enclosed if contains &gt;).
-	/// For these tags use different format: <c><![CDATA[<_>literal text</_>]]></c>, <c><![CDATA[<code>code</code>]]></c>, <c><![CDATA[<fold>text</fold>]]></c>, <c><![CDATA[<image "attribute">]]></c>.
-	/// Tags can be nested, like <c><![CDATA[<b><c green>text<><>]]></c> or <c><![CDATA[<b>text <c green>text<> text<>]]></c>.
-	/// 
-	/// Simple formatting tags:
-	/// <list type="table">
-	/// <listheader>
-	/// <term>Examples</term>
-	/// <term>Comments</term>
-	/// </listheader>
-	/// <item>
-	/// <description><c><![CDATA[<b>text<>]]></c></description>
-	/// <description>Bold text.</description>
-	/// </item>
-	/// <item>
-	/// <description><c><![CDATA[<i>text<>]]></c></description>
-	/// <description>Italic text.</description>
-	/// </item>
-	/// <item>
-	/// <description><c><![CDATA[<bi>text<>]]></c></description>
-	/// <description>Bold italic.</description>
-	/// </item>
-	/// <item>
-	/// <description><c><![CDATA[<u>text<>]]></c></description>
-	/// <description>Underline.</description>
-	/// </item>
-	/// <item>
-	/// <description>
-	/// <para><c><![CDATA[<c 0xE0A000>text<>]]></c></para>
-	/// <para><c><![CDATA[<c #E0A000>text<>]]></c></para>
-	/// <para><c><![CDATA[<c green>text<>]]></c></para>
-	/// </description>
-	/// <description>
-	/// Text color.
-	/// Color can be 0xRRGGBB, #RRGGBB or .NET color name.
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <description><c><![CDATA[<z yellow>text<>]]></c></description>
-	/// <description>Text background color.</description>
-	/// </item>
-	/// <item>
-	/// <description><c><![CDATA[<Z wheat>text<>]]></c></description>
-	/// <description>Line background color, when followed by new line.</description>
-	/// </item>
-	/// <item>
-	/// <description><c><![CDATA[<size 10>text<>]]></c></description>
-	/// <description>
-	/// Font height.
-	/// Note: it can increase height of all lines.
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <description><c><![CDATA[<mono>text<>]]></c></description>
-	/// <description>Monospace font.</description>
-	/// </item>
-	/// </list>
-	/// 
-	/// Links:
-	/// <list type="table">
-	/// <listheader>
-	/// <term>Examples</term>
-	/// <term>Comments</term>
-	/// </listheader>
-	/// <item>
-	/// <description>
-	/// <para><c><![CDATA[<link http://www.example.com>link text<>]]></c></para>
-	/// <para><c><![CDATA[<link C:\files\example.exe>link text<>]]></c></para>
-	/// <para><c><![CDATA[<link>http://www.example.com<>]]></c></para>
-	/// <para><c><![CDATA[<link>C:\files\example.exe<>]]></c></para>
-	/// <para><c><![CDATA[<link C:\example.exe|args>link text<>]]></c></para>
-	/// </description>
-	/// <description>
-	/// Opens a web page or runs a program or any file.
-	/// Calls function <see cref="Exec.TryRun"/>.
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <description>
-	/// <para><c><![CDATA[<google find this>link text<>]]></c></para>
-	/// <para><c><![CDATA[<google>find this<>]]></c></para>
-	/// <para><c><![CDATA[<google find this|append>link text<>]]></c></para>
-	/// </description>
-	/// <description>
-	/// Google.
-	/// Uses this code:
-	/// <c>Exec.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);</c>
-	/// Here s1 and s2 are attribute parts separated by |.
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <description>
-	/// <c><![CDATA[<help M_Au_Wnd_Find>link text<>]]></c>
-	/// </description>
-	/// <description>
-	/// Shows an Au class library help topic (file "Au Help.chm").
-	/// Calls <see cref="Util.AHelp.AuWeb"/>.
-	/// Attribute: right click in the help topic, click Properties, copy filename from the Address field.
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <description>
-	/// <para><c><![CDATA[<open document>link text<>]]></c></para>
-	/// <para><c><![CDATA[<open>document<>]]></c></para>
-	/// <para><c><![CDATA[<open document|5>link text<>]]></c></para>
-	/// <para><c><![CDATA[<open document|5|15>link text<>]]></c></para>
-	/// </description>
-	/// <description>
-	/// Should open a document or script or some other item in the program.
-	/// This control does not implement this tag. If used, it must be implemented by the program.
+	/// This control does not implement some predefined tags: open, script.
+	/// If used, must be implemented by the program.
+	/// Also you can register custom link tags that call your callback functions.
 	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
-	/// The 5 is 1-based line index; 15 is 1-based character index in line.
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <description>
-	/// <para><c><![CDATA[<explore>C:\files\example<>]]></c></para>
-	/// </description>
-	/// <description>
-	/// Selects file or folder in File Explorer.
-	/// Calls function <see cref="Exec.SelectFileInExplorer"/>.
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <description>
-	/// <para><c><![CDATA[<script script>link text<>]]></c></para>
-	/// <para><c><![CDATA[<script>script<>]]></c></para>
-	/// <para><c><![CDATA[<script script|args0|args1>link text<>]]></c></para>
-	/// </description>
-	/// <description>
-	/// Should run/execute a script.
-	/// This control does not implement this tag. If used, it must be implemented by the program.
-	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
-	/// </description>
-	/// </item>
-	/// </list>
-	/// Also you can register custom link tags that call your callback functions. See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
 	/// 
-	/// Other tags:
-	/// <list type="table">
-	/// <listheader>
-	/// <term>Examples</term>
-	/// <term>Comments</term>
-	/// </listheader>
-	/// <item>
-	/// <description><c><![CDATA[<_>text</_>]]></c></description>
-	/// <description>Literal text. Tags in it are ignored.</description>
-	/// </item>
-	/// <item>
-	/// <description><c><![CDATA[<code>var s="example";</code>]]></c></description>
-	/// <description>Colored C# code. Tags in it are ignored.</description>
-	/// </item>
-	/// <item>
-	/// <description><c><![CDATA[<fold>text</fold>]]></c></description>
-	/// <description>
-	/// Folded (hidden) lines. Adds a link to unfold (show).
-	/// </description>
-	/// </item>
-	/// <item>
-	/// <description>
-	/// <para><c><![CDATA[<image "c:\images\example.png">]]></c></para>
-	/// <para><c><![CDATA[<image "c:\files\example.txt">]]></c></para>
-	/// <para><c><![CDATA[<image "image:PngBase64">]]></c></para>
-	/// <para><c><![CDATA[<image "~:BmpCompressedBase64">]]></c></para>
-	/// <para><c><![CDATA[<image "resource:ResourceName">]]></c></para>
-	/// </description>
-	/// <description>
-	/// Image.
-	/// Images are displayed below this line.
-	/// Supports images of formats: png, bmp, jpg, gif, ico (only 16x16).
-	/// For other file types and folders displays small file icon.
-	/// Supports managed image resources of the entry assembly. Not icons.
-	/// Image file data is encoded as Base64 string. For it can be used dialog
-	/// "Find image or color in window" (form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll)
-	/// or function Au.Controls.ImageUtil.ImageToString (in Au.Controls.dll).
-	/// </description>
-	/// </item>
-	/// </list>
-	/// 
-	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au script editor it is the output (use <b>Print</b>, like in the example below). In this library - the <see cref="AuInfoBox"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.InitTagsStyle"/> and optionally <see cref="AuScintilla.InitImagesStyle"/>.
+	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au editor it is the output (use <b>Print</b>, like in the example below). In this library - the <see cref="AuInfoBox"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.InitTagsStyle"/> and optionally <see cref="AuScintilla.InitImagesStyle"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -507,7 +333,7 @@ namespace Au.Controls
 						currentStyle = (byte)i;
 					} else {
 						i &= 0x7fffffff;
-						if(s - tag == 6 && LibCharPtr.AsciiStartsWith(tag + 1, "fold")) {
+						if(s - tag == 6 && LibCharPtr.AsciiStarts(tag + 1, "fold")) {
 							(folds ?? (folds = new List<POINT>())).Add((i, (int)(t - s0)));
 							//if(s < sEnd && *s != '\r' && *s != '\n') _WriteString("\r\n", STYLE_DEFAULT); //no, can be an end of tag there
 						}
@@ -588,11 +414,11 @@ namespace Au.Controls
 					break;
 				case 4 << 16 | 's':
 					if(attr == null) goto ge;
-					if(LibCharPtr.AsciiStartsWith(tag + 1, "ize")) style.Size = Api.strtoi(attr);
+					if(LibCharPtr.AsciiStarts(tag + 1, "ize")) style.Size = Api.strtoi(attr);
 					else goto ge;
 					break;
 				case 4 << 16 | 'm':
-					if(LibCharPtr.AsciiStartsWith(tag + 1, "ono")) style.Mono = true;
+					if(LibCharPtr.AsciiStarts(tag + 1, "ono")) style.Mono = true;
 					else goto ge;
 					break;
 				//case 6 << 16 | 'h': //rejected. Not useful; does not hide newlines.
@@ -601,7 +427,7 @@ namespace Au.Controls
 				//	break;
 				case 5 << 16 | 'i':
 					if(attr == null) goto ge;
-					if(LibCharPtr.AsciiStartsWith(tag + 1, "mage")) hideTag = noEndTag = true;
+					if(LibCharPtr.AsciiStarts(tag + 1, "mage")) hideTag = noEndTag = true;
 					else goto ge;
 					break;
 				case 1 << 16 | '_': //<_>text where tags are ignored</_>
@@ -612,7 +438,7 @@ namespace Au.Controls
 					//hasTags = true;
 					continue;
 				case 4 << 16 | 'c': //<code>code</code>
-					if(!LibCharPtr.AsciiStartsWith(tag + 1, "ode")) goto ge;
+					if(!LibCharPtr.AsciiStarts(tag + 1, "ode")) goto ge;
 					i2 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), "</code>"); if(i2 < 0) goto ge;
 					if(codes == null) codes = new List<POINT>();
 					int iStartCode = (int)(t - s0);
@@ -622,7 +448,7 @@ namespace Au.Controls
 					hasTags = true;
 					continue;
 				case 4 << 16 | 'f': //<fold>text</fold>
-					if(!LibCharPtr.AsciiStartsWith(tag + 1, "old")) goto ge;
+					if(!LibCharPtr.AsciiStarts(tag + 1, "old")) goto ge;
 					stackInt = (int)(t - s0);
 					//add 'expand/collapse' link in this line. Max 6 characters, because overwriting "<fold>".
 					_WriteString(" ", STYLE_HIDDEN); //it is how we later detect links
@@ -660,7 +486,7 @@ namespace Au.Controls
 				}
 
 				if(linkTag != null) {
-					if(!userTag && !LibCharPtr.AsciiStartsWith(tag, linkTag)) goto ge;
+					if(!userTag && !LibCharPtr.AsciiStarts(tag, linkTag)) goto ge;
 					//if(attr == null) goto ge; //no, use text as attribute
 					style.Hotspot = true;
 					style.Color = 0x80FF;
@@ -732,6 +558,16 @@ namespace Au.Controls
 				//Perf.Next();
 				_SetLexer(LexLanguage.SCLEX_CPP);
 				//Perf.Next();
+
+				//Problem: SCI_COLOURISE does not work when appending if previous text contains styles.
+				//See code in:
+				//	LexerCPP::Lex: StyleContext sc(startPos, length, initStyle, styler);
+				//	LexInterface::Colourise: styleStart = pdoc->StyleAt(start - 1);
+				//Workaround: temporarily set previous char style = 0. Fast.
+				//SHOULDDO: try to set lexer once. It's quite slow. Previously I did not know this workaround.
+				int prevStyle = prevLen > 0 ? _c.Call(SCI_GETSTYLEAT, prevLen - 1) : 0;
+				if(prevStyle != 0) _StyleChar(prevLen - 1, 0);
+
 				for(int i = 0; i < codes.Count; i++) {
 					_c.Call(SCI_COLOURISE, codes[i].x + prevLen, codes[i].y + prevLen);
 				}
@@ -739,13 +575,17 @@ namespace Au.Controls
 				_SetLexer(LexLanguage.SCLEX_NULL);
 				//Perf.Next();
 
+				if(prevStyle != 0) _StyleChar(prevLen - 1, prevStyle); //part 2 of the workaround
+
 				for(int i = 0; i < codes.Count; i++) {
 					_StyleRange(codes[i].x);
 					endStyled = codes[i].y;
 				}
 			}
 			_StyleRange(len);
-			//Perf.NW();
+			//Perf.Next();
+			////Perf.Write();
+			//Output.QM2.Write(Perf.ToString());
 
 
 			void _StyleRange(int to)
@@ -756,8 +596,15 @@ namespace Au.Controls
 				}
 			}
 
+			void _StyleChar(int pos, int style)
+			{
+				_c.Call(SCI_STARTSTYLING, pos);
+				_c.Call(SCI_SETSTYLING, 1, style);
+			}
+
 			void _Write(byte ch, byte style)
 			{
+				//Output.QM2.Write($"{ch} {style}");
 				*t++ = ch; *r++ = style;
 			}
 
@@ -871,10 +718,10 @@ namespace Au.Controls
 				Exec.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
 			case "help":
-				Util.AHelp.AuWeb(attr);
+				Util.AHelp.AuHelp(attr);
 				break;
 			case "explore":
-				Exec.SelectFileInExplorer(attr);
+				Exec.Select(attr);
 				break;
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
