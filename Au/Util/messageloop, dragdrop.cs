@@ -156,7 +156,7 @@ namespace Au.Util
 	/// <summary>
 	/// Drag-drop functions.
 	/// </summary>
-	public static class DragDrop
+	public static class ADragDrop
 	{
 		/// <summary>
 		/// Simple non-OLE drag operation.

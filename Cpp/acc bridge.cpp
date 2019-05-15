@@ -83,7 +83,7 @@ public:
 
 	AccessibleMarshalWrapper(IAccessible* a)
 	{
-		_a = a;//TODO: try to addref/release, maybe it will solve the WindowFromAccessibleObject problem for LINK in drag&dropped FF tab window
+		_a = a;//SHOULDDO: try to addref/release, maybe it will solve the WindowFromAccessibleObject problem for LINK in drag&dropped FF tab window
 		ignoreQI = true;
 
 		InterlockedIncrement(&s_accMarshalWrapperCount);

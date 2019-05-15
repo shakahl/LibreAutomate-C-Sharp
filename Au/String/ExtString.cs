@@ -16,6 +16,7 @@ using System.Globalization;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 namespace Au
 {
@@ -30,7 +31,7 @@ namespace Au
 	/// 
 	/// This class also adds more methods.
 	/// The nested class <see cref="More"/> contains some less often used static methods.
-	/// You also can find string functions in other classes of this library, including <see cref="ARegex"/>, <see cref="AConvert"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="StringSegment"/>, <see cref="Csv"/>, <see cref="Keyb.More"/>.
+	/// You also can find string functions in other classes of this library, including <see cref="ARegex"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="StringSegment"/>, <see cref="Csv"/>, <see cref="Keyb.More"/>, <see cref="AConvert"/>, <see cref="Hash"/>.
 	/// </remarks>
 	public static unsafe partial class ExtString
 	{
@@ -47,7 +48,7 @@ namespace Au
 			}
 
 			if(ignoreCase) {
-				var table = Util.LibTables.LowerCase;
+				var table = LibTables.LowerCase;
 
 				for(int i = 0; i < len; i++) {
 					int c1 = a[i], c2 = b[i];
@@ -815,7 +816,7 @@ namespace Au
 			//return t.Substring(0, startIndex) + s + t.Substring(startIndex + count);
 
 			//maybe less garbage (didn't measure), but slightly slower
-			//using(new Util.LibStringBuilder(out var b)) {
+			//using(new LibStringBuilder(out var b)) {
 			//	if(startIndex != 0) b.Append(t, 0, startIndex);
 			//	b.Append(s);
 			//	int i = startIndex + count, n = t.Length - i;
@@ -905,7 +906,7 @@ namespace Au
 			if(quote) t = "\"" + t + "\"";
 			return t;
 			g1:
-			using(new Util.LibStringBuilder(out var b, len + len / 16 + 100)) {
+			using(new LibStringBuilder(out var b, len + len / 16 + 100)) {
 				if(quote) b.Append('\"');
 				for(i = 0; i < len; i++) {
 					var c = t[i];
@@ -946,7 +947,7 @@ namespace Au
 			int i = t.IndexOf('\\');
 			if(i < 0) return true;
 
-			using(new Util.LibStringBuilder(out var b, t.Length)) {
+			using(new LibStringBuilder(out var b, t.Length)) {
 				b.Append(t, 0, i);
 
 				for(; i < t.Length; i++) {

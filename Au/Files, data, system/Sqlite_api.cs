@@ -642,7 +642,7 @@ namespace Au.Types
 		[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern byte* sqlite3_errmsg(IntPtr db);
 
-		internal static string Errmsg(IntPtr db) => AConvert.Utf8ToString(sqlite3_errmsg(db));
+		internal static string Errmsg(IntPtr db) => Util.AConvert.Utf8ToString(sqlite3_errmsg(db));
 
 		[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SLError sqlite3_prepare16_v3(IntPtr db, char* sql, int nBytes, int prepFlags, ref IntPtr stmt, char** ptrRemain);
@@ -943,7 +943,7 @@ namespace Au.Types
 		[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern byte* sqlite3_errstr(SLError rc);
 
-		internal static string Errstr(SLError r) => AConvert.Utf8ToString(sqlite3_errstr(r));
+		internal static string Errstr(SLError r) => Util.AConvert.Utf8ToString(sqlite3_errstr(r));
 
 		//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern void sqlite3_log(SLError iErrCode, byte[] zFormat);

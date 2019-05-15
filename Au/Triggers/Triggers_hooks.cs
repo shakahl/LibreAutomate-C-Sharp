@@ -81,7 +81,7 @@ namespace Au.Triggers
 		readonly Wnd.More.MyWindow _msgWnd;
 		readonly Thread _thread;
 		readonly List<_ThreadPipe> _pipes;
-		Util.WinHook _hookK, _hookM;
+		WinHook _hookK, _hookM;
 		LibHandle _event;
 		bool _inTaskProcess;
 		MouseTriggers.LibEdgeMoveDetector _emDetector;
@@ -192,10 +192,10 @@ namespace Au.Triggers
 			}
 
 			if(0 != (usedEvents & UsedEvents.Keyboard) && _hookK == null) {
-				_hookK = Util.WinHook.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
+				_hookK = WinHook.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
 			}
 			if(0 != (usedEvents & UsedEvents.Mouse) && _hookM == null) {
-				_hookM = Util.WinHook.LibMouseRaw(_MouseHookProc);
+				_hookM = WinHook.LibMouseRaw(_MouseHookProc);
 			}
 			if(0 != (usedEvents & UsedEvents.MouseEdgeMove) && _emDetector == null) {
 				_emDetector = new MouseTriggers.LibEdgeMoveDetector();

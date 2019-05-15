@@ -17,6 +17,7 @@ using System.Runtime.ExceptionServices;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 namespace Au
 {
@@ -119,7 +120,7 @@ namespace Au
 		{
 			s = null;
 			for(int na = 300; ; na *= 2) {
-				var b = Util.Buffers.LibChar(ref na);
+				var b = Buffers.LibChar(ref na);
 				if(Api.QueryFullProcessImageName(hProcess, getFilename, b, ref na)) {
 					if(getFilename) s = _GetFileName(b, na);
 					else s = b.LibToStringCached(na);
@@ -161,14 +162,14 @@ namespace Au
 				Api.SYSTEM_PROCESS_INFORMATION* b = null;
 				try {
 					for(int na = 300_000; ;) {
-						b = (Api.SYSTEM_PROCESS_INFORMATION*)Util.NativeHeap.Alloc(na);
+						b = (Api.SYSTEM_PROCESS_INFORMATION*)AMemory.Alloc(na);
 
 						int status = Api.NtQuerySystemInformation(5, b, na, out na);
 						//Print(na); //eg 224000
 
 						if(status == 0) break;
 						if(status != Api.STATUS_INFO_LENGTH_MISMATCH) throw new AException(status);
-						var t = b; b = null; Util.NativeHeap.Free(t);
+						var t = b; b = null; AMemory.Free(t);
 					}
 
 					Api.SYSTEM_PROCESS_INFORMATION* p;
@@ -178,7 +179,7 @@ namespace Au
 						nbNames += p->NameLength; //bytes, not chars
 					}
 					count = nProcesses;
-					_p = (LibProcessInfo*)Util.NativeHeap.Alloc(nProcesses * sizeof(LibProcessInfo) + nbNames);
+					_p = (LibProcessInfo*)AMemory.Alloc(nProcesses * sizeof(LibProcessInfo) + nbNames);
 					LibProcessInfo* r = _p;
 					char* names = (char*)(_p + nProcesses);
 					for(p = b; p->NextEntryOffset != 0; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
@@ -195,12 +196,12 @@ namespace Au
 					}
 					pi = _p;
 				}
-				finally { Util.NativeHeap.Free(b); }
+				finally { AMemory.Free(b); }
 			}
 
 			public void Dispose()
 			{
-				Util.NativeHeap.Free(_p);
+				AMemory.Free(_p);
 			}
 		}
 #endif
@@ -230,7 +231,7 @@ namespace Au
 					if(processID == 0) return "Idle";
 					return null;
 				}
-				string R = Util.StringCache.LibAdd(namePtr, nameLen);
+				string R = StringCache.LibAdd(namePtr, nameLen);
 				if(!cannotOpen && APath.LibIsPossiblyDos(R)) {
 					using var ph = LibHandle.OpenProcess(processID);
 					if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
@@ -330,7 +331,7 @@ namespace Au
 			if(s == null) return null;
 			char* ss = s + len;
 			for(; ss > s; ss--) if(ss[-1] == '\\' || ss[-1] == '/') break;
-			return Util.StringCache.LibAdd(ss, len - (int)(ss - s));
+			return StringCache.LibAdd(ss, len - (int)(ss - s));
 		}
 
 		static string _GetFileName(string s)

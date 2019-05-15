@@ -19,6 +19,7 @@ using System.Drawing;
 using Au;
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 namespace Au.Controls
 {
@@ -37,10 +38,10 @@ namespace Au.Controls
 
 		[ThreadStatic] static WeakReference<byte[]> t_byte;
 
-		internal static byte[] LibByte(int n) { return Au.Util.Buffers.Get(n, ref t_byte); }
+		internal static byte[] LibByte(int n) { return Buffers.Get(n, ref t_byte); }
 		//these currently not used
-		//internal static Au.Util.Buffers.ByteBuffer LibByte(ref int n) { var r = Au.Util.Buffers.Get(n, ref t_byte); n = r.Length - 1; return r; }
-		//internal static Au.Util.Buffers.ByteBuffer LibByte(int n, out int nHave) { var r = Au.Util.Buffers.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
+		//internal static Buffers.ByteBuffer LibByte(ref int n) { var r = Buffers.Get(n, ref t_byte); n = r.Length - 1; return r; }
+		//internal static Buffers.ByteBuffer LibByte(int n, out int nHave) { var r = Buffers.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
 
 
 		internal SciText(AuScintilla sc)
@@ -100,7 +101,7 @@ namespace Au.Controls
 		{
 			int len;
 			fixed (byte* s = _ToUtf8(wParam0lParam, &len)) {
-				int i = Au.Util.LibCharPtr.Length(s);
+				int i = LibCharPtr.Length(s);
 				Debug.Assert(i < len);
 				return SC.Call(sciMessage, s, s + i + 1);
 			}
@@ -127,7 +128,7 @@ namespace Au.Controls
 				b[bufferSize] = 0;
 				Call(sciMessage, wParam, b);
 				Debug.Assert(b[bufferSize] == 0);
-				int len = Au.Util.LibCharPtr.Length(b, bufferSize);
+				int len = LibCharPtr.Length(b, bufferSize);
 				return _FromUtf8(b, len);
 			}
 		}
@@ -762,7 +763,7 @@ namespace Au.Controls
 				}
 				if(s[0] == 0xFE && s[1] == 0xFF) return _Encoding.Utf16BE;
 				if(len >= 4 && *(uint*)s == 0xFFFE0000) return _Encoding.Utf32BE;
-				int zeroAt = Au.Util.LibCharPtr.Length(s, len);
+				int zeroAt = LibCharPtr.Length(s, len);
 				if(zeroAt == len - 1) len--; //WordPad saves .rtf files with '\0' at the end
 				if(zeroAt == len) { //no '\0'
 					byte* p = s, pe = s + len; for(; p < pe; p++) if(*p >= 128) break; //is ASCII?
@@ -770,7 +771,7 @@ namespace Au.Controls
 					return _Encoding.Utf8NoBOM;
 				}
 				var u = (char*)s; len /= 2;
-				if(Au.Util.LibCharPtr.Length(u, len) == len) //no '\0'
+				if(LibCharPtr.Length(u, len) == len) //no '\0'
 					if(0 != Api.WideCharToMultiByte(Api.CP_UTF8, Api.WC_ERR_INVALID_CHARS, u, len, null, 0, default, null)) return _Encoding.Utf16NoBOM;
 				return _Encoding.Binary;
 			}

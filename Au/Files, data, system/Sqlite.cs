@@ -17,6 +17,7 @@ using System.Runtime.ExceptionServices;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 namespace Au
 {
@@ -783,13 +784,13 @@ namespace Au
 				if(ExtString.More.IsAscii(name)) {
 					for(int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);
-						if(Util.LibCharPtr.AsciiEq(b, name)) return i;
+						if(LibCharPtr.AsciiEq(b, name)) return i;
 					}
 				} else {
 					var bname = AConvert.Utf8FromString(name);
 					for(int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);
-						if(Util.LibCharPtr.Eq(b, bname)) return i;
+						if(LibCharPtr.Eq(b, bname)) return i;
 					}
 				}
 			}
@@ -969,7 +970,7 @@ namespace Au.Types
 
 		internal static string Concat(string s1, string s2, string s3)
 		{
-			using(new Util.LibStringBuilder(out var b)) {
+			using(new LibStringBuilder(out var b)) {
 				_Append(s1); _Append(s2); if(s3 != s2) _Append(s3);
 				return b.ToString();
 

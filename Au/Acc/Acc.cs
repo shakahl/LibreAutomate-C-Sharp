@@ -418,7 +418,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the accessible object that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="Util.AccHook"/>.
+		/// Gets the accessible object that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="WinAccHook"/>.
 		/// Returns null if failed. Suports <see cref="WinError"/>.
 		/// </summary>
 		/// <param name="w"></param>
@@ -452,8 +452,8 @@ namespace Au
 		public static Acc FromComObject(IntPtr x)
 		{
 			if(x == default) return null;
-			if(Util.Marshal_.QueryInterface(x, out IntPtr iacc, Api.IID_IAccessible)
-				|| Util.Marshal_.QueryService(x, out iacc, Api.IID_IAccessible)
+			if(Util.AMarshal.QueryInterface(x, out IntPtr iacc, Api.IID_IAccessible)
+				|| Util.AMarshal.QueryService(x, out iacc, Api.IID_IAccessible)
 				) return new Acc(iacc);
 			return null;
 		}

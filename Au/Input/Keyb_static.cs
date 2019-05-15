@@ -406,7 +406,7 @@ namespace Au
 			//SHOULDDO: if up and block: don't block if was down when starting to wait. Also in the Mouse func.
 
 			KKey R = 0;
-			using(Util.WinHook.Keyboard(x => {
+			using(WinHook.Keyboard(x => {
 				if(key != 0 && !x.IsKey(key)) return;
 				if(x.IsUp != up) {
 					if(up && block) { //key down when we are waiting for up. If block, now block down too.

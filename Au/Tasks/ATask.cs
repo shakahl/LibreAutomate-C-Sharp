@@ -173,7 +173,7 @@ namespace Au
 							if(!Api.GetOverlappedResult(_hPipe, ref o, out _, false)) { Api.DisconnectNamedPipe(_hPipe); break; }
 						}
 
-						if(b == null) b = (char*)Util.NativeHeap.Alloc(bLen);
+						if(b == null) b = (char*)Util.AMemory.Alloc(bLen);
 						bool readOK;
 						while(((readOK = Api.ReadFile(_hPipe, b, bLen, out int n, null)) || (WinError.Code == Api.ERROR_MORE_DATA)) && n > 0) {
 							n /= 2;
@@ -202,7 +202,7 @@ namespace Au
 				}
 				finally {
 					ev.Dispose();
-					Util.NativeHeap.Free(b);
+					Util.AMemory.Free(b);
 				}
 				return R;
 			}

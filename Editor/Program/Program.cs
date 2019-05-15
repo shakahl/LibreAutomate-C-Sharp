@@ -166,7 +166,7 @@ static class Program
 		//RunUac.Test();
 
 		//Output.LibUseQM2 = true; Output.Clear();
-		//using(var h = Au.Util.WinHook.Keyboard(k => {
+		//using(var h = WinHook.Keyboard(k => {
 		//	Print($"{k.Key}, {!k.IsUp}");
 		//	if(k.Key == KKey.Up && !k.IsUp) 400.ms();
 

@@ -16,9 +16,9 @@ using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
-using Au;
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 //FUTURE: support mutiline images like @"image:line1 line2" and like "image:line1" + "line2";
 
@@ -188,7 +188,7 @@ namespace Au.Controls
 				int nAnnotLines = Math.Min((maxHeight + (lineHeight - 1)) / lineHeight, 255);
 				//Print(lineHeight, maxHeight, nAnnotLines);
 
-				fixed (byte* b0 = Au.Util.Buffers.Get(annotLen + nAnnotLines + 20, ref t_data.BufferForAnnot)) {
+				fixed (byte* b0 = Buffers.Get(annotLen + nAnnotLines + 20, ref t_data.BufferForAnnot)) {
 					var b = b0;
 					*b++ = 3; Api._ltoa(totalWidth << 8 | nAnnotLines, b, 16); while(*(++b) != 0) { }
 					while(nAnnotLines-- > 1) *b++ = (byte)'\n';
@@ -279,7 +279,7 @@ namespace Au.Controls
 			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
 			if(n > 0) {
 				int lens = (s == null) ? 0 : s.Length;
-				fixed (byte* b = Au.Util.Buffers.Get(n + 1 + lens * 3, ref t_data.BufferForAnnot)) {
+				fixed (byte* b = Buffers.Get(n + 1 + lens * 3, ref t_data.BufferForAnnot)) {
 					_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
 					int imageLen = _ParseAnnotText(b, n, out var _);
 					if(imageLen > 0) {
@@ -306,7 +306,7 @@ namespace Au.Controls
 		{
 			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
 			if(n > 0) {
-				fixed (byte* b0 = Au.Util.Buffers.Get(n, ref t_data.BufferForAnnot)) {
+				fixed (byte* b0 = Buffers.Get(n, ref t_data.BufferForAnnot)) {
 					var b = b0;
 					_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
 					int imageLen = _ParseAnnotText(b, n, out var _);
@@ -338,12 +338,12 @@ namespace Au.Controls
 			//if not editor, skip if not <image "..."
 			if(!isMulti) {
 				if(_isEditor) imageStringStartPos = i - 1;
-				else if(i >= 8 && Au.Util.LibCharPtr.AsciiStarts(s + i - 8, "<image ")) imageStringStartPos = i - 8;
+				else if(i >= 8 && LibCharPtr.AsciiStarts(s + i - 8, "<image ")) imageStringStartPos = i - 8;
 				else goto g1;
 			}
 
 			//support "image1|image2|..."
-			int i3 = Au.Util.LibCharPtr.AsciiFindChar(s + i, i2 - i, (byte)'|') + i;
+			int i3 = LibCharPtr.AsciiFindChar(s + i, i2 - i, (byte)'|') + i;
 			if(i3 >= i) { i2 = i3; iFrom = i3 + 1; isMulti = true; } else isMulti = false;
 
 			//is it an image string?
@@ -353,7 +353,7 @@ namespace Au.Controls
 			var d = t_data;
 
 			//is already loaded?
-			long hash = AConvert.HashFnv1_64(s + i, i2 - i);
+			long hash = Hash.Fnv1Long(s + i, i2 - i);
 			var im = d.FindImage(hash);
 			//Print(im != null, new string((sbyte*)s, i, i2 - i));
 			if(im != null) return im;
@@ -562,7 +562,7 @@ namespace Au.Controls
 				textPos = from2;
 			}
 
-			int r = _isEditor ? Au.Util.LibCharPtr.AsciiFindChar(s, len, (byte)'\"') : Au.Util.LibCharPtr.AsciiFindString(s, len, "<image \"");
+			int r = _isEditor ? LibCharPtr.AsciiFindChar(s, len, (byte)'\"') : LibCharPtr.AsciiFindString(s, len, "<image \"");
 			if(r < 0) return;
 			//tested: all this is faster than SCI_FINDTEXT. Much faster when need to search in big text.
 
@@ -579,7 +579,7 @@ namespace Au.Controls
 		{
 			Debug.Assert(to >= from);
 			int len = to - from;
-			fixed (byte* s = Au.Util.Buffers.Get(len, ref t_data.BufferForText)) {
+			fixed (byte* s = Buffers.Get(len, ref t_data.BufferForText)) {
 				if(len > 0) {
 					var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = s };
 					var r = _c.Call(SCI_GETTEXTRANGE, 0, &tr);
@@ -616,7 +616,7 @@ namespace Au.Controls
 								tempHidden = true;
 								_c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_HIDDEN); //makes many times faster
 							}
-							fixed (byte* a0 = Au.Util.Buffers.Get(len, ref buf)) {
+							fixed (byte* a0 = Buffers.Get(len, ref buf)) {
 								var a = a0;
 								_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a); a[len] = 0;
 								var imageLen = _ParseAnnotText(a, len, out var _);

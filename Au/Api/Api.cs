@@ -1051,13 +1051,13 @@ namespace Au.Types
 		//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Init(out AConvert.MD5Hash context);
+		internal static extern void MD5Init(out Util.Hash.MD5 context);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Update(ref AConvert.MD5Hash context, void* data, int dataLen);
+		internal static extern void MD5Update(ref Util.Hash.MD5 context, void* data, int dataLen);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Final(ref AConvert.MD5Hash context);
+		internal static extern void MD5Final(ref Util.Hash.MD5 context);
 
 		internal struct SYSTEM_PROCESS_INFORMATION
 		{

@@ -376,7 +376,7 @@ namespace Au.Triggers
 		//this is used to eat modifier keys, regardless when the trigger is activated
 		KMod _eatMod;
 		//these are used to eat modifier keys and to activate trigger when modifiers released
-		Util.WinHook _keyHook;
+		WinHook _keyHook;
 		long _keyHookTimeout;
 		//this is used to eat button-up event, regardless when the trigger is activated
 		HookData.MouseEvent _eatUp;
@@ -409,7 +409,7 @@ namespace Au.Triggers
 		{
 			//Print(". hook");
 			if(_keyHook == null) {
-				_keyHook = Util.WinHook.Keyboard(k => {
+				_keyHook = WinHook.Keyboard(k => {
 					if(Time.WinMilliseconds >= _keyHookTimeout) {
 						_ResetUpAndUnhookTempKeybHook();
 						ADebug.Print("hook timeout");

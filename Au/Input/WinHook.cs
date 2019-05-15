@@ -12,24 +12,30 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Linq;
-//using System.Xml.Linq;
 
-using Au;
 using Au.Types;
 using Au.Util;
 using static Au.NoClass;
 
-#region winhook
-
-namespace Au.Util
+namespace Au
 {
 	/// <summary>
 	/// Helps with windows hooks. See API <msdn>SetWindowsHookEx</msdn>.
 	/// </summary>
 	/// <remarks>
-	/// The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="Opt.WaitFor"/>).
-	/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in the same thread) or with the 'using' pattern. Else this process may crash.
+	/// Hooks are used to receive notifications about various system events, for example keyboard or mouse input.
+	/// 
+	/// Threads that use hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="Opt.WaitFor"/>).
+	/// 
+	/// <note type="important">The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in the same thread) or with the 'using' pattern. Else this process may crash.</note>
+	/// 
+	/// <note type="warning">Avoid many hooks. Each low-level keyboard or mouse hook makes the computer slower, even if the hook procedure is fast. On each input event (key down, key up, mouse move, click, wheel) Windows sends a message to your thread.</note>
+	/// 
+	/// To handle hooked events is used a callback functions, aka hook procedure. Hook procedures of some hook types can block some events. Blocked events are not sent to apps and older hooks.
+	/// 
+	/// Accessible object functions may fail in hook procedures of low-level keyboard and mouse hooks. Workarounds exist.
+	/// 
+	/// Exists an alternative way to monitor keyboard or mouse events - raw input API. Good: less overhead; can detect from which device the input event came. Bad: cannot block events; incompatible with low-level keyboard hooks. This library does not have functions to make the API easier to use.
 	/// </remarks>
 	public class WinHook : IDisposable
 	{
@@ -57,7 +63,6 @@ namespace Au.Util
 		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// //using Au.Util;
 		/// var stop = false;
 		/// using(WinHook.Keyboard(x => {
 		/// 	Print(x);
@@ -90,7 +95,6 @@ namespace Au.Util
 		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// //using Au.Util;
 		/// var stop = false;
 		/// using(WinHook.Mouse(x => {
 		/// 	Print(x);
@@ -125,7 +129,6 @@ namespace Au.Util
 		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// //using Au.Util;
 		/// using(WinHook.ThreadCbt(x => {
 		/// 	Print(x.code);
 		/// 	switch(x.code) {
@@ -180,7 +183,6 @@ namespace Au.Util
 		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// //using Au.Util;
 		/// using(WinHook.ThreadGetMessage(x => {
 		/// 	Print(x.msg->ToString(), x.PM_NOREMOVE);
 		/// })) MessageBox.Show("hook");
@@ -204,7 +206,6 @@ namespace Au.Util
 		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// //using Au.Util;
 		/// using(WinHook.ThreadKeyboard(x => {
 		/// 	Print(x.key, 0 != (x.lParam & 0x80000000) ? "up" : "", x.lParam, x.PM_NOREMOVE);
 		/// 	return false;
@@ -230,7 +231,6 @@ namespace Au.Util
 		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// //using Au.Util;
 		/// using(WinHook.ThreadMouse(x => {
 		/// 	Print(x.message, x.m->pt, x.m->hwnd, x.PM_NOREMOVE);
 		/// 	return false;
@@ -256,7 +256,6 @@ namespace Au.Util
 		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// //using Au.Util;
 		/// using(WinHook.ThreadCallWndProc(x => {
 		/// 	ref var m = ref *x.msg;
 		/// 	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam);
@@ -283,7 +282,6 @@ namespace Au.Util
 		/// <exception cref="AException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// //using Au.Util;
 		/// using(WinHook.ThreadCallWndProcRet(x => {
 		/// 	ref var m = ref *x.msg;
 		/// 	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam); mm.Result = m.lResult;
@@ -568,7 +566,7 @@ namespace Au.Util
 namespace Au.Types
 {
 	/// <summary>
-	/// Contains types of hook data for hook procedures set by <see cref="WinHook"/> and <see cref="AccHook"/>.
+	/// Contains types of hook data for hook procedures set by <see cref="WinHook"/> and <see cref="WinAccHook"/>.
 	/// </summary>
 	public static partial class HookData
 	{
@@ -1133,210 +1131,3 @@ namespace Au.Types
 		public static void ReplyMessage(bool cancelEvent) => Api.ReplyMessage(cancelEvent);
 	}
 }
-
-#endregion
-
-#region acchook
-
-namespace Au.Util
-{
-	/// <summary>
-	/// Helps with accessible object event hooks. See API <msdn>SetWinEventHook</msdn>.
-	/// </summary>
-	/// <remarks>
-	/// The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="Opt.WaitFor"/>).
-	/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unhook</b>) or with the 'using' pattern.
-	/// </remarks>
-	/// <example>
-	/// <code><![CDATA[
-	/// bool stop = false;
-	/// using(new Au.Util.AccHook(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
-	/// {
-	/// 	Print(x.wnd);
-	/// 	var a = x.GetAcc();
-	/// 	Print(a);
-	/// 	if(x.wnd.ClassNameIs("Shell_TrayWnd")) stop = true;
-	/// })) {
-	/// 	MessageBox.Show("hook");
-	/// 	//or
-	/// 	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
-	/// 	//Print("the end");
-	/// }
-	/// ]]></code>
-	/// </example>
-	public class AccHook : IDisposable
-	{
-		IntPtr _hh; //HHOOK
-		IntPtr[] _ahh; //multiple HHOOK
-		Api.WINEVENTPROC _proc1; //our intermediate hook proc that calls _proc2
-		Action<HookData.AccHookData> _proc2; //caller's hook proc
-
-		/// <summary>
-		/// Sets a hook for an event or a range of events.
-		/// Calls API <msdn>SetWinEventHook</msdn>.
-		/// </summary>
-		/// <param name="eventMin">The lowest event constant value in the range of events. Can be AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>.</param>
-		/// <param name="eventMax">The highest event constant value in the range of events. Can be AccEVENT.MAX to indicate the highest possible event value. If 0, uses <i>eventMin</i>.</param>
-		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
-		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
-		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
-		/// <param name="flags"></param>
-		/// <exception cref="AException">Failed.</exception>
-		/// <example>See <see cref="AccHook"/>.</example>
-		public AccHook(AccEVENT eventMin, AccEVENT eventMax, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
-		{
-			if(eventMax == 0) eventMax = eventMin;
-			_proc1 = _HookProc;
-			Hook(eventMin, eventMax, idProcess, idThread, flags);
-			_proc2 = hookProc;
-		}
-
-		/// <summary>
-		/// Sets a hook for multiple events.
-		/// Calls API <msdn>SetWinEventHook</msdn>.
-		/// </summary>
-		/// <param name="events">Events. Reference: API <msdn>SetWinEventHook</msdn>. Elements with value 0 are ignored.</param>
-		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
-		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
-		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
-		/// <param name="flags"></param>
-		/// <exception cref="AException">Failed.</exception>
-		/// <example>See <see cref="AccHook"/>.</example>
-		public AccHook(AccEVENT[] events, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
-		{
-			_proc1 = _HookProc;
-			Hook(events, idProcess, idThread, flags);
-			_proc2 = hookProc;
-		}
-
-		/// <summary>
-		/// Sets hooks again after <see cref="Unhook"/>.
-		/// </summary>
-		/// <remarks>
-		/// Parameters are the same as of the constructor, but values can be different.
-		/// </remarks>
-		public void Hook(AccEVENT eventMin, AccEVENT eventMax, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
-		{
-			_Throw1();
-			_hh = Api.SetWinEventHook(eventMin, eventMax, default, _proc1, idProcess, idThread, flags);
-			if(_hh == default) throw new AException(0, "*set hook");
-		}
-
-		/// <summary>
-		/// Sets hooks again after <see cref="Unhook"/>.
-		/// </summary>
-		/// <remarks>
-		/// Parameters are the same as of the constructor, but values can be different.
-		/// </remarks>
-		public void Hook(AccEVENT[] events, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
-		{
-			_Throw1();
-			_ahh = new IntPtr[events.Length];
-			for(int i = 0; i < events.Length; i++) {
-				var e = events[i]; if(e == 0) continue;
-				var hh = Api.SetWinEventHook(e, e, default, _proc1, idProcess, idThread, flags);
-				if(hh == default) { var ec = WinError.Code; Unhook(); throw new AException(ec, "*set hook for " + e.ToString()); }
-				_ahh[i] = hh;
-			}
-		}
-
-		void _Throw1()
-		{
-			if(_hh != default || _ahh != null) throw new InvalidOperationException();
-			if(_proc1 == null) throw new ObjectDisposedException(nameof(AccHook));
-		}
-
-		/// <summary>
-		/// Removes the hook.
-		/// </summary>
-		/// <remarks>
-		/// Does nothing if already removed or wasn't set.
-		/// Must be called from the same thread that sets the hook.
-		/// </remarks>
-		public void Unhook()
-		{
-			if(_hh != default) {
-				if(!Api.UnhookWinEvent(_hh)) PrintWarning("Failed to unhook AccHook.");
-				_hh = default;
-			} else if(_ahh != null) {
-				foreach(var hh in _ahh) {
-					if(hh == default) continue;
-					if(!Api.UnhookWinEvent(hh)) PrintWarning("Failed to unhook AccHook.");
-				}
-				_ahh = null;
-			}
-		}
-
-		/// <summary>
-		/// Calls <see cref="Unhook"/>.
-		/// </summary>
-		public void Dispose()
-		{
-			Unhook();
-			_proc1 = null;
-			GC.SuppressFinalize(this);
-		}
-
-		//MSDN: UnhookWinEvent fails if called from a thread different from the call that corresponds to SetWinEventHook.
-		///
-		~AccHook() { PrintWarning("Non-disposed AccHook variable."); } //unhooking makes no sense
-
-		void _HookProc(IntPtr hHook, AccEVENT ev, Wnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
-		{
-			try {
-				_proc2(new HookData.AccHookData(this, ev, wnd, idObject, idChild, idThread, eventTime));
-			}
-			catch(Exception ex) { WinHook.LibOnException(ex, this); }
-		}
-	}
-}
-
-namespace Au.Types
-{
-	public static partial class HookData
-	{
-		/// <summary>
-		/// Hook data for the hook procedure set by <see cref="AccHook"/>.
-		/// More info: API <msdn>WinEventProc</msdn>.
-		/// </summary>
-		public unsafe struct AccHookData
-		{
-			/// <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
-			public readonly AccHook hook;
-
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
-			public readonly Wnd wnd;
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
-			public readonly AccEVENT ev;
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
-			public readonly AccOBJID idObject;
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
-			public readonly int idChild;
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
-			public readonly int idThread;
-			/// <summary>API <msdn>WinEventProc</msdn></summary>
-			public readonly int eventTime;
-
-			internal AccHookData(AccHook hook, AccEVENT ev, Wnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
-			{
-				this.hook = hook;
-				this.ev = ev;
-				this.wnd = wnd;
-				this.idObject = idObject;
-				this.idChild = idChild;
-				this.idThread = idThread;
-				this.eventTime = eventTime;
-			}
-
-			/// <summary>
-			/// Calls <see cref="Acc.FromEvent"/>.
-			/// </summary>
-			public Acc GetAcc()
-			{
-				return Acc.FromEvent(wnd, idObject, idChild);
-			}
-		}
-	}
-}
-
-#endregion

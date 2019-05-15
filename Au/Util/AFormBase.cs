@@ -19,7 +19,7 @@ using System.Drawing;
 using Au.Types;
 using static Au.NoClass;
 
-namespace Au
+namespace Au.Types
 {
 	/// <summary>
 	/// Can be used as base class for forms when you want to use correct dialog font and correct auto-scaling when high DPI.

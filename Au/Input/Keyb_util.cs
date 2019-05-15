@@ -364,9 +364,9 @@ namespace Au
 					if(IsCapsLock) {
 						//Probably Shift is set to turn off CapsLock in CP dialog "Text Services and Input Languages".
 						//	Win10: Settings -> Time & Language -> Language -> Input method -> Hot keys.
-						Util.WinHook.LibIgnoreLShiftCaps(2000);
+						WinHook.LibIgnoreLShiftCaps(2000);
 						SendKey(KKey.Shift);
-						Util.WinHook.LibIgnoreLShiftCaps(0);
+						WinHook.LibIgnoreLShiftCaps(0);
 						R = !IsCapsLock;
 						Debug.Assert(R);
 

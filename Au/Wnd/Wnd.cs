@@ -16,6 +16,7 @@ using System.Runtime.ExceptionServices;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 #pragma warning disable 282 //intellisense bug: it thinks that Wnd has multiple fields.
 
@@ -1116,7 +1117,7 @@ namespace Au
 			if(!IsEnabled(true)) goto gDisabled;
 
 			bool ok = false;
-			using(new Util.LibAttachThreadInput(tid, out bool atiOK)) {
+			using(new LibAttachThreadInput(tid, out bool atiOK)) {
 				if(atiOK) { //FUTURE: if fails, try Acc.Focus or UIA. AttachThreadInput is unreliable.
 					for(int i = 0; i < 5; i++) {
 						if(i > 0) Thread.Sleep(30);
@@ -2466,10 +2467,10 @@ namespace Au
 		public string ClassName {
 			get {
 				const int stackSize = 260;
-				var b = stackalloc char[stackSize]; //tested: same speed with Util.Buffers
+				var b = stackalloc char[stackSize]; //tested: same speed with Buffers
 				int n = Api.GetClassName(this, b, stackSize);
 				if(n == 0) return null;
-				return Util.StringCache.LibAdd(b, n);
+				return StringCache.LibAdd(b, n);
 			}
 		}
 
@@ -2574,11 +2575,11 @@ namespace Au
 		{
 			if(Is0) return null;
 			for(int na = 300; ; na *= 2) {
-				var b = Util.Buffers.LibChar(ref na);
+				var b = Buffers.LibChar(ref na);
 				WinError.Clear();
 				int nr = Api.InternalGetWindowText(this, b, na);
 				if(nr < na - 1) {
-					if(nr > 0) return Util.StringCache.LibAdd(b, nr);
+					if(nr > 0) return StringCache.LibAdd(b, nr);
 					if(WinError.Code != 0) return null;
 					if(useSlowIfEmpty && HasStyle(WS.CHILD)) return _GetTextSlow();
 					return "";
@@ -2597,13 +2598,13 @@ namespace Au
 			if(!SendTimeout(5000, out LPARAM ln, Api.WM_GETTEXTLENGTH)) return null;
 			int n = (int)ln; if(n < 1) return "";
 
-			var b = Util.Buffers.LibChar(n);
+			var b = Buffers.LibChar(n);
 			fixed (char* p = b.A) {
 				if(!SendTimeout(30000, out ln, Api.WM_GETTEXT, n + 1, p)) return null;
 				if(ln < 1) return "";
 				b.A[n] = '\0';
-				n = Util.LibCharPtr.Length(p, n); //info: some controls return incorrect ln, eg including '\0'
-				return Util.StringCache.LibAdd(b, n);
+				n = LibCharPtr.Length(p, n); //info: some controls return incorrect ln, eg including '\0'
+				return StringCache.LibAdd(b, n);
 			}
 
 			//note: cannot do this optimization:
@@ -2674,10 +2675,10 @@ namespace Au
 		/// <remarks>
 		/// <note>Use this with controls of other processes. Don't use with your controls, when you have a Control object.</note>
 		/// 
-		/// <note>Slow when getting names of multiple controls in a window. Instead create a <see cref="More.WinFormsControlNames"/> instance and call its <see cref="More.WinFormsControlNames.GetControlName"/> method for each control.</note>
+		/// <note>Slow when getting names of multiple controls in a window. Instead create a <see cref="WinFormsControlNames"/> instance and call its <see cref="WinFormsControlNames.GetControlName"/> method for each control.</note>
 		/// </remarks>
-		/// <seealso cref="More.WinFormsControlNames.IsWinFormsControl"/>
-		public string NameWinForms => More.WinFormsControlNames.GetSingleControlName(this);
+		/// <seealso cref="WinFormsControlNames.IsWinFormsControl"/>
+		public string NameWinForms => WinFormsControlNames.GetSingleControlName(this);
 
 		/// <summary>
 		/// Gets filename of process executable file, like "notepad.exe".

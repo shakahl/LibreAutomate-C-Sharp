@@ -18,6 +18,7 @@ using System.Reflection.Emit;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 //TODO: AMenu etc should have before/after delegate properties too. And dedicated threads. Like TriggerOptions.
 
@@ -453,7 +454,7 @@ namespace Au
 
 			if(!_showedOnce) {
 				//_showedOnce = true; //OnOpening() sets it
-				if(!ActivateMenuWindow) Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc();
+				if(!ActivateMenuWindow) LibWorkarounds.WaitCursorWhenShowingMenuEtc();
 			}
 			//Perf.Next();
 
@@ -483,7 +484,7 @@ namespace Au
 		bool _inOurShow; //to detect when ContextMenuStrip.Show called not through AMenu.Show
 		bool _isOwned; //control==0
 		bool _isModal; //depends on ModalAlways or Application.MessageLoop
-		Util.MessageLoop _msgLoop = new Util.MessageLoop();
+		MessageLoop _msgLoop = new MessageLoop();
 
 		/// <summary>
 		/// If false, disposes the menu when it is closed.
@@ -687,7 +688,7 @@ namespace Au
 			}
 
 			//AMTBase creates this. We call GetAllAsync.
-			internal List<Util.IconsAsync.Item> AsyncIcons { get; set; }
+			internal List<IconsAsync.Item> AsyncIcons { get; set; }
 
 			protected override void OnOpened(EventArgs e)
 			{
@@ -1186,7 +1187,7 @@ namespace Au.Types
 				//var perf = Perf.StartNew();
 				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
 
-				if(_AsyncIcons == null) _AsyncIcons = new Util.IconsAsync(); //used by submenus too
+				if(_AsyncIcons == null) _AsyncIcons = new IconsAsync(); //used by submenus too
 				var submenu = !isBar ? (owner as AMenu.ToolStripDropDownMenu_) : null;
 				bool isFirstImage = false;
 
@@ -1195,10 +1196,10 @@ namespace Au.Types
 					_AsyncIcons.Add(s, item);
 				} else {
 					if(submenu.AsyncIcons == null) {
-						submenu.AsyncIcons = new List<Util.IconsAsync.Item>();
+						submenu.AsyncIcons = new List<IconsAsync.Item>();
 						isFirstImage = true;
 					}
-					submenu.AsyncIcons.Add(new Util.IconsAsync.Item(s, item));
+					submenu.AsyncIcons.Add(new IconsAsync.Item(s, item));
 				}
 
 				//Reserve space for image.
@@ -1214,10 +1215,10 @@ namespace Au.Types
 		Image _imagePlaceholder;
 
 		//This is shared by toolbars and main menus. Submenus have their own.
-		Util.IconsAsync _AsyncIcons { get; set; }
+		IconsAsync _AsyncIcons { get; set; }
 
 		//list - used by submenus.
-		internal void _GetIconsAsync(ToolStrip ts, List<Util.IconsAsync.Item> list = null)
+		internal void _GetIconsAsync(ToolStrip ts, List<IconsAsync.Item> list = null)
 		{
 			if(_AsyncIcons == null) return;
 			if(list != null) _AsyncIcons.AddRange(list);
@@ -1225,7 +1226,7 @@ namespace Au.Types
 			_AsyncIcons.GetAllAsync(_AsyncCallback, ts.ImageScalingSize.Width, IconFlags, ts);
 		}
 
-		void _AsyncCallback(Util.IconsAsync.Result r, object objCommon, int nLeft)
+		void _AsyncCallback(IconsAsync.Result r, object objCommon, int nLeft)
 		{
 			var ts = objCommon as ToolStrip;
 			var item = r.obj as ToolStripItem;
@@ -1306,7 +1307,7 @@ namespace Au.Types
 			//also code pattern like 'Exec.TryRun("notepad.exe")'.
 			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
 			try {
-				var reader = new Util.ILReader(mi);
+				var reader = new ILReader(mi);
 				foreach(var instruction in reader.Instructions) {
 					if(++i > 100) break;
 					var op = instruction.Op;

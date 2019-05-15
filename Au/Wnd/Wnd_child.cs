@@ -15,6 +15,7 @@ using System.Runtime.ExceptionServices;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 #pragma warning disable 282 //intellisense bug: it thinks that Wnd has multiple fields.
 
@@ -45,7 +46,7 @@ namespace Au
 			readonly Wildex _name;
 			readonly Wildex _className;
 			readonly Func<Wnd, bool> _also;
-			More.WinFormsControlNames _wfControls;
+			WinFormsControlNames _wfControls;
 			readonly int _skipCount;
 			readonly WCFlags _flags;
 			readonly _NameIs _nameIs;
@@ -200,7 +201,7 @@ namespace Au
 							case _NameIs.wfName:
 								if(_wfControls == null) {
 									try {
-										_wfControls = new More.WinFormsControlNames(wParent.Is0 ? w : wParent);
+										_wfControls = new WinFormsControlNames(wParent.Is0 ? w : wParent);
 									}
 									catch(WndException) { //invalid parent window
 										return -1;
@@ -272,7 +273,7 @@ namespace Au
 		/// - <c>"***accName "</c> - use <see cref="NameAcc"/>.
 		/// <br/>Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
 		/// - <c>"***wfName "</c> - use .NET Windows Forms Control Name property.
-		/// <br/>To get it this function uses <see cref="More.WinFormsControlNames"/>. It is slower and can fail because of [](xref:uac).
+		/// <br/>To get it this function uses <see cref="WinFormsControlNames"/>. It is slower and can fail because of [](xref:uac).
 		/// - <c>"***id "</c> like <c>"***id 15"</c> - use control id.
 		/// <br/>To get it this function uses <see cref="ControlId"/>.
 		/// <br/>The id value cannot be wildcard expression.

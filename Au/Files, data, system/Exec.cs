@@ -16,6 +16,7 @@ using System.Runtime.ExceptionServices;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 namespace Au
 {
@@ -199,8 +200,8 @@ namespace Au
 					//Process.Run supports long path prefix, except when the exe is .NET.
 					if(!runConsole) file = APath.UnprefixLongPath(file);
 
-					if(AFile.More.DisableRedirection.IsSystem64PathIn32BitProcess(file) && !AFile.ExistsAsAny(file)) {
-						file = AFile.More.DisableRedirection.GetNonRedirectedSystemPath(file);
+					if(DisableFsRedirection.IsSystem64PathIn32BitProcess(file) && !AFile.ExistsAsAny(file)) {
+						file = DisableFsRedirection.GetNonRedirectedSystemPath(file);
 					}
 				} else if(!APath.IsUrl(file)) {
 					//ShellExecuteEx searches everywhere except in app folder.
@@ -298,7 +299,7 @@ namespace Au
 			exe = _NormalizeFile(true, exe, out _, out _);
 			//args = APath.ExpandEnvVar(args); //rejected
 
-			var ps = new Util.LibProcessStarter(exe, args, curDir, rawExe: true);
+			var ps = new LibProcessStarter(exe, args, curDir, rawExe: true);
 
 			LibHandle hProcess = default;
 			var sa = new Api.SECURITY_ATTRIBUTES(null) { bInheritHandle = 1 };
@@ -323,12 +324,12 @@ namespace Au
 				int offs = 0; bool skipN = false;
 
 				int bSize = 8000;
-				b = (byte*)Util.NativeHeap.Alloc(bSize);
+				b = (byte*)AMemory.Alloc(bSize);
 
 				for(bool ended = false; !ended;) {
 					if(bSize - offs < 1000) { //part of 'prevent getting partial lines' code
-						b = (byte*)Util.NativeHeap.ReAlloc(b, bSize *= 2);
-						Util.NativeHeap.Free(c); c = null;
+						b = (byte*)AMemory.ReAlloc(b, bSize *= 2);
+						AMemory.Free(c); c = null;
 					}
 
 					if(Api.ReadFile(hOutRead, b + offs, bSize - offs, out int nr)) {
@@ -368,7 +369,7 @@ namespace Au
 						}
 					}
 
-					if(c == null) c = (char*)Util.NativeHeap.Alloc(bSize * 2);
+					if(c == null) c = (char*)AMemory.Alloc(bSize * 2);
 					if(encoding == null) encoding = Encoding.GetEncoding(Api.GetOEMCP());
 					int nc = encoding.GetChars(b, nr, c, bSize);
 
@@ -390,8 +391,8 @@ namespace Au
 				hProcess.Dispose();
 				hOutRead.Dispose();
 				hOutWrite.Dispose();
-				Util.NativeHeap.Free(b);
-				Util.NativeHeap.Free(c);
+				AMemory.Free(b);
+				AMemory.Free(c);
 			}
 		}
 
@@ -457,7 +458,7 @@ namespace Au.Types
 		/// Initial current directory for the new process.
 		/// If null (default), the new process will inherit the curent directory of this process.
 		/// If "", the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found). If not possible, same as null.
-		/// <note type="note">Some programs look for their files in current directory and fail to start if it is not the program's directory.</note>
+		/// <note>Some programs look for their files in current directory and fail to start if it is not the program's directory.</note>
 		/// </summary>
 		public string CurrentDirectory;
 

@@ -48,7 +48,7 @@ namespace Au.Triggers
 	/// - <c>runMode blue</c> allows other scripts to start while this script is running.
 	/// - <c>ifRunning restart</c> makes easy to restart the script after editing: just click the Run button.
 	/// 
-	/// <note type="note">Trigger actions don't inherit <b>Opt</b> options that are set before adding triggers. The example shows two ways how to set <b>Opt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>Opt</b> options set by previous action; the trigger engine calls <see cref="Opt.Reset"/> before executing an action.</note>
+	/// <note>Trigger actions don't inherit <b>Opt</b> options that are set before adding triggers. The example shows two ways how to set <b>Opt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>Opt</b> options set by previous action; the trigger engine calls <see cref="Opt.Reset"/> before executing an action.</note>
 	/// </remarks>
 	/// <example>
 	/// This is a single script with many action triggers.
@@ -659,7 +659,7 @@ namespace Au.Triggers
 		{
 			//this.triggers = triggers;
 			_perfList = new _ScopeTime[32];
-			_perfHookTimeout = Util.WinHook.LowLevelHooksTimeout;
+			_perfHookTimeout = WinHook.LowLevelHooksTimeout;
 			base.CacheName = true; //we'll call Clear(onlyName: true) at the start of each event
 		}
 

@@ -206,7 +206,7 @@ unsafe partial class Script : AScript
 		//Wnd.Find("Quick *").Activate();
 
 		//AThread.Start(() => {
-		//	using(Au.Util.WinHook.Keyboard(k => {
+		//	using(WinHook.Keyboard(k => {
 		//		if(!k.IsInjectedByAu) Print("----", k);
 
 		//		return false;
@@ -315,18 +315,29 @@ unsafe partial class Script : AScript
 		//var w = Wnd.Find("FileZilla", "wxWindowNR").OrThrow();
 		//var a = Acc.Find(w, "STATICTEXT", "Local site:", "id=-31741").OrThrow();
 
-		var fa = new Au.Tools.Form_Acc();
-		//var fa = new Au.Tools.Form_Wnd();
-		//var fa = new Au.Tools.Form_WinImage();
-		fa.ShowDialog();
+		//var fa = new Au.Tools.Form_Acc();
+		////var fa = new Au.Tools.Form_Wnd();
+		////var fa = new Au.Tools.Form_WinImage();
+		//fa.ShowDialog();
 
 		//ADialog.Show("unload dll");
+
+		//var w = Wnd.Find("", "Shell_TrayWnd").OrThrow();
+		//var a = Acc.Find(w, "BUTTON", "Au - Microsoft Visual Studio - 1 running window", "class=MSTaskListWClass").OrThrow();
+		//var w = Wnd.Find("Calculator", "ApplicationFrameWindow").OrThrow();
+		//var a = Acc.Find(w, "BUTTON", "Seven", "class=Windows.UI.Core.CoreWindow").OrThrow();
+		var w = Wnd.Find("Calculator", "ApplicationFrameWindow").OrThrow();
+		var c = w.Child("Calculator", "Windows.UI.Core.CoreWindow").OrThrow();
+		var a = Acc.Find(c, "BUTTON", "Seven").OrThrow();
+		Print(a);
+		Print(a.MiscFlags);
+
 #else
 		//var w = Wnd.Find("FileZilla", "wxWindowNR").OrThrow();
 		////var a = Acc.Find(w, "LISTITEM").OrThrow();
 		////Print(a.RoleInt, a);
 
-		////using(new Au.Util.AccHook(AccEVENT.OBJECT_FOCUS, 0, k => { var a = k.GetAcc(); Print(a.RoleInt, a); }, idThread: w.ThreadId)) {
+		////using(new WinAccHook(AccEVENT.OBJECT_FOCUS, 0, k => { var a = k.GetAcc(); Print(a.RoleInt, a); }, idThread: w.ThreadId)) {
 
 		Triggers.Hotkey["F3"] = o => {
 			var a = Acc.FromMouse(AXYFlags.PreferLink | AXYFlags.NoThrow);
@@ -1188,6 +1199,8 @@ unsafe partial class Script : AScript
 		//	Thread.Sleep(200);
 		//}
 		//Print(i, j, k, n);
+
+
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
@@ -1197,7 +1210,6 @@ unsafe partial class Script : AScript
 		Output.QM2.UseQM2 = true;
 		Output.Clear();
 		100.ms();
-
 
 		TestTodo();
 		//TestDiffMatchpatch();
@@ -1235,7 +1247,6 @@ unsafe partial class Script : AScript
 		//TestWindowTriggers();
 		//TriggersExamples();
 #endif
-		return;
 
 		//try { TestAcc(); }
 		//finally {

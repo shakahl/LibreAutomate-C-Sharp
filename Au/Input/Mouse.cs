@@ -15,6 +15,7 @@ using System.Runtime.ExceptionServices;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 namespace Au
 {
@@ -273,7 +274,7 @@ namespace Au
 		/// Plays recorded mouse movements, relative to <see cref="LastXY"/>.
 		/// Returns the final cursor position in primary screen coordinates.
 		/// </summary>
-		/// <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="Util.Recording.MouseToString"/>.</param>
+		/// <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="Recording.MouseToString"/>.</param>
 		/// <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
 		/// <exception cref="ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
 		/// <exception cref="ArgumentOutOfRangeException">The last x y is not in screen. No exception option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
@@ -1095,7 +1096,7 @@ namespace Au
 			//info: this and related functions use similar code as Keyb._WaitForKey.
 
 			MButtons R = 0;
-			using(Util.WinHook.Mouse(x => {
+			using(WinHook.Mouse(x => {
 				MButtons b = 0;
 				switch(x.Event) {
 				case HookData.MouseEvent.LeftButton: b = MButtons.Left; break;
@@ -1134,21 +1135,21 @@ namespace Au
 			IntPtr hcur = Api.LoadCursor(default, cursor);
 			if(hcur == default) throw new AException(0, "*load cursor");
 
-			return WaitFor.Condition(secondsTimeout, () => (Util.ACursor.GetCurrentCursor(out var h) && h == hcur) ^ not);
+			return WaitFor.Condition(secondsTimeout, () => (ACursor.GetCurrentCursor(out var h) && h == hcur) ^ not);
 		}
 
 		/// <summary>
 		/// Waits for a nonstandard mouse cursor (pointer) visible.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="cursorHash">Cursor hash, as returned by <see cref="Util.ACursor.HashCursor"/>.</param>
+		/// <param name="cursorHash">Cursor hash, as returned by <see cref="ACursor.HashCursor"/>.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitForCursor(double secondsTimeout, long cursorHash, bool not = false)
 		{
 			if(cursorHash == 0) throw new ArgumentException();
-			return WaitFor.Condition(secondsTimeout, () => (Util.ACursor.GetCurrentCursor(out var h) && Util.ACursor.HashCursor(h) == cursorHash) ^ not);
+			return WaitFor.Condition(secondsTimeout, () => (ACursor.GetCurrentCursor(out var h) && ACursor.HashCursor(h) == cursorHash) ^ not);
 		}
 	}
 

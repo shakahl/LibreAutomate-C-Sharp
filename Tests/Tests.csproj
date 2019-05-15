@@ -98,6 +98,7 @@
   <ItemGroup>
     <None Include="file1.md" />
     <None Include="Unused currently\older.cs" />
+    <Compile Include="Unused currently\test namespaces.cs" />
     <Compile Include="Util\OutputForm.cs">
       <SubType>Form</SubType>
     </Compile>

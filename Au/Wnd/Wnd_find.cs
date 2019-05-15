@@ -783,7 +783,7 @@ namespace Au
 					return ab;
 				}
 				finally {
-					Util.NativeHeap.Free(d.a);
+					Util.AMemory.Free(d.a);
 					if(disposeArray) ab.Dispose();
 				}
 			}
@@ -806,8 +806,8 @@ namespace Au
 					} else {
 						if(!wParent.Is0 && w.Owner != wParent) return 1;
 					}
-					if(a == null) a = (int*)Util.NativeHeap.Alloc((_cap = onlyVisible ? 200 : 1000) * 4);
-					else if(len == _cap) a = (int*)Util.NativeHeap.ReAlloc(a, (_cap *= 2) * 4);
+					if(a == null) a = (int*)Util.AMemory.Alloc((_cap = onlyVisible ? 200 : 1000) * 4);
+					else if(len == _cap) a = (int*)Util.AMemory.ReAlloc(a, (_cap *= 2) * 4);
 					a[len++] = (int)w;
 					return 1;
 				}

@@ -162,9 +162,9 @@ namespace Au.Triggers
 
 		//rejected: Location. Use timer or thread-specific AccEVENT.OBJECT_LOCATIONCHANGE.
 		//	Probably it should not be a trigger. If timer, too slow in many cases. If hook, too frequent trigger when drag-moving etc.
-		//	If a script wants to track window location, it can easily set AccHook(AccEVENT.OBJECT_LOCATIONCHANGE) instead.
+		//	If a script wants to track window location, it can easily set WinAccHook(AccEVENT.OBJECT_LOCATIONCHANGE) instead.
 		//rejected: Focus (when eg a child control focused). Use timer or AccEVENT.OBJECT_FOCUSED.
-		//	Rarely used. A script can easily use AccHook(AccEVENT.OBJECT_FOCUSED).
+		//	Rarely used. A script can easily use WinAccHook(AccEVENT.OBJECT_FOCUSED).
 		//rejected: Timer.
 	}
 
@@ -334,7 +334,7 @@ namespace Au.Triggers
 				if(0 != (_allEvents & TWLater.Unminimized)) ah[4] = AccEVENT.SYSTEM_MINIMIZEEND;
 				//if(0 != (_allEvents & TWLater.MoveSizeStart)) ah[5] = AccEVENT.SYSTEM_MOVESIZESTART;
 				//if(0 != (_allEvents & TWLater.MoveSizeEnd)) ah[6] = AccEVENT.SYSTEM_MOVESIZEEND;
-				_hooks = new Util.AccHook(ah, _HookProc);
+				_hooks = new WinAccHook(ah, _HookProc);
 				_hookEventQueue = new Queue<(AccEVENT, int)>();
 
 				_triggers.LibWinTimerPeriod = 250;
@@ -371,7 +371,7 @@ namespace Au.Triggers
 			}
 		}
 
-		Util.AccHook _hooks;
+		WinAccHook _hooks;
 		Queue<(AccEVENT, int)> _hookEventQueue;
 		WFCache _winPropCache;
 
@@ -547,7 +547,7 @@ namespace Au.Triggers
 		}
 
 		/// <summary>
-		/// AccHook hook procedure.
+		/// WinAccHook hook procedure.
 		/// </summary>
 		/// <param name="k"></param>
 		void _HookProc(HookData.AccHookData k)

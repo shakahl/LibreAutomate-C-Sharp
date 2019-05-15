@@ -22,6 +22,7 @@ using static Au.NoClass;
 using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
+using Au.Util;
 
 partial class PanelEdit : Control
 {
@@ -308,7 +309,7 @@ partial class PanelEdit : Control
 		{
 			base.OnHandleCreated(e);
 
-			int dpi = Au.Util.Dpi.BaseDPI;
+			int dpi = Dpi.BaseDPI;
 
 			Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
 			ST.MarginWidth(c_marginLineNumbers, 40 * dpi / 96);
@@ -492,13 +493,13 @@ partial class PanelEdit : Control
 
 		#region editor data
 
-		AConvert.MD5HashResult _savedMD5;
+		Hash.MD5Result _savedMD5;
 		Action _initDeferred;
 
-		static unsafe AConvert.MD5HashResult _Hash(List<int> a)
+		static unsafe Hash.MD5Result _Hash(List<int> a)
 		{
 			if(a.Count == 0) return default;
-			AConvert.MD5Hash md5 = default;
+			Hash.MD5 md5 = default;
 			foreach(var v in a) md5.Add(v);
 			return md5.Hash;
 		}

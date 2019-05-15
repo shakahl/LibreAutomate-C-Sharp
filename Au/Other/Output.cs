@@ -17,6 +17,7 @@ using System.Runtime.ExceptionServices;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 namespace Au
 {
@@ -28,8 +29,8 @@ namespace Au
 	/// - If redirected, to wherever it is redirected. See <see cref="Writer"/>.
 	/// - Else if using log file (<see cref="LogFile"/> not null), writes to the file.
 	/// - Else if using console (<see cref="IsWritingToConsole"/> returns true), writes to console.
-	/// - Else if using local <see cref="Util.OutputServer"/> (in this appdomain), writes to it.
-	/// - Else if exists global <see cref="Util.OutputServer"/> (in any process/appdomain), writes to it.
+	/// - Else if using local <see cref="OutputServer"/> (in this appdomain), writes to it.
+	/// - Else if exists global <see cref="OutputServer"/> (in any process/appdomain), writes to it.
 	/// - Else nowhere.
 	/// </remarks>
 	//[DebuggerStepThrough]
@@ -334,11 +335,11 @@ namespace Au
 			{
 				bool ok;
 				int n = AConvert.Utf8LengthFromString(s) + 1;
-				fixed (byte* b = Util.Buffers.LibByte(n + 35)) {
+				fixed (byte* b = Buffers.LibByte(n + 35)) {
 					if(LogFileTimestamp) {
 						Api.GetLocalTime(out var t);
 						Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
-						int nn = Util.LibCharPtr.Length(b);
+						int nn = LibCharPtr.Length(b);
 						AConvert.Utf8FromString(s, b + nn, n);
 						n += nn;
 						if(s.Starts("<>")) {

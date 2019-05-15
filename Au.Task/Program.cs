@@ -151,7 +151,7 @@ static unsafe class Program
 
 	static void _Hook()
 	{
-		s_hook = Au.Util.WinHook.ThreadCbt(m => {
+		s_hook = WinHook.ThreadCbt(m => {
 			//Print(m.code, m.wParam, m.lParam);
 			//switch(m.code) {
 			//case HookData.CbtEvent.ACTIVATE:
@@ -188,6 +188,6 @@ static unsafe class Program
 			return false;
 		});
 	}
-	static Au.Util.WinHook s_hook;
+	static WinHook s_hook;
 
 }

@@ -421,7 +421,7 @@ namespace Au
 		/// If this process is 32-bit and OS is 64-bit, when it uses the <see cref="System"/> folder path (<c>@"C:\WINDOWS\system32"</c>), the OS in most cases redirects it to <c>@"C:\Windows\SysWOW64"</c>, which contains 32-bit versions of program files. Use SystemX64 when you want to avoid the redirection and access the true System32 folder which on 64-bit OS contains 64-bit program files.
 		/// More info in class help.
 		/// </remarks>
-		/// <seealso cref="AFile.More.DisableRedirection"/>
+		/// <seealso cref="Util.DisableFsRedirection"/>
 		/// <seealso cref="Ver.Is32BitProcessAnd64BitOS"/>
 		public static FolderPath SystemX64 => __SystemX64 ?? (__SystemX64 = Ver.Is32BitProcessAnd64BitOS ? (FolderPath)(Windows + "Sysnative") : System);
 		static string __SystemX64;

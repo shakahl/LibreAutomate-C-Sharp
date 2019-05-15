@@ -100,7 +100,7 @@ namespace Au.Util
 				_freeList = -1;
 			}
 
-			int hashCode = AConvert.HashFast(p, len) & 0x7fffffff;
+			int hashCode = Hash.Fast(p, len) & 0x7fffffff;
 			int bucket = hashCode % _buckets.Length;
 			for(int i = _buckets[hashCode % _buckets.Length] - 1; i >= 0; i = _slots[i].next) {
 				if(_slots[i].hashCode == hashCode && LibCharPtr.Eq(p, len, _slots[i].value)) {

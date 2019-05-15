@@ -488,10 +488,25 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 	HWND wFailed; if(t_failedCache.Get(tid, out wFailed)) return (HRESULT)eError::Inject;
 
 	if(tid == GetCurrentThreadId()) return (HRESULT)eError::WindowOfThisThread;
+
+	//problem: cannot inject dll into Store processes.
+	//	tested: uiAccess does not help.
+	//	tested: SetProcessRestrictionExemption always returns true, but dll injection fails. We cannot know whether a license exists.
+	//		MSDN says "This function only succeeds if a developer license is present on the system.". Probably the API does not work as documented.
+	//		tested: AcquireDeveloperLicense. It opens the Settings app -> security. No options to acquire a license.
+	//		see also: https://superuser.com/questions/496104/windows-8-developer-license
+	//	note: the child Windows.UI.Core.CoreWindow runs in other process than its host ApplicationFrameWindow. We need to inject into the control's process. Injection into the host's process succeeds but is useless.
+#if true
 	if(wnd::ClassNameIs(GetAncestor(w, GA_ROOT), { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" }))
 		return (HRESULT)eError::UseNotInProc;
-	//tested: uiAccess does not help.
-	//TODO: test SetProcessRestrictionExemption, AcquireDeveloperLicense.
+#else
+	int icn = wnd::ClassNameIs(w, { L"ApplicationFrameWindow", L"Windows.UI.Core.CoreWindow", L"ConsoleWindowClass", L"SunAwt*" });
+	if(icn) {
+		if(icn == 2 && SetProcessRestrictionExemption(true)) {
+			Print("SetProcessRestrictionExemption OK");
+		} else return (HRESULT)eError::UseNotInProc;
+	}
+#endif
 
 	static CHandle s_mutex(CreateMutexW(SecurityAttributes::Common(), false, L"AuCpp_MutexGAW"));
 	DWORD wfso = WaitForSingleObject(s_mutex, INFINITE);

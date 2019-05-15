@@ -268,7 +268,7 @@ namespace Au.Controls
 				bool vert = this.IsVerticalSplit;
 				var p = _manager.MouseClientXY();
 				var offset = vert ? (p.x - this.SplitterBounds.X) : (p.y - this.SplitterBounds.Y);
-				Au.Util.DragDrop.SimpleDragDrop(_manager, MButtons.Left, d =>
+				Au.Util.ADragDrop.SimpleDragDrop(_manager, MButtons.Left, d =>
 				{
 					if(d.Msg.message != Api.WM_MOUSEMOVE) return;
 					p = _manager.MouseClientXY();

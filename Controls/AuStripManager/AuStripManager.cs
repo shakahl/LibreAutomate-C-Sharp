@@ -650,7 +650,7 @@ namespace Au.Controls
 			var ts = item.Owner;
 			bool isCustom = ts == _tsCustom1 || ts == _tsCustom2;
 			//Print(item, ts, isCustom);
-			if(!Au.Util.DragDrop.SimpleDragDrop(ts, MButtons.Left, k =>
+			if(!Au.Util.ADragDrop.SimpleDragDrop(ts, MButtons.Left, k =>
 			{
 				if(k.Msg.message != Api.WM_MOUSEMOVE) return;
 				target = ts.GetItemAt(ts.MouseClientXY());

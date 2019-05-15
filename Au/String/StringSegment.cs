@@ -237,7 +237,7 @@ namespace Au
 		public override string ToString() => Value;
 
 		///
-		public override int GetHashCode() => AConvert.HashFast(_buffer, _offset, _length);
+		public override int GetHashCode() => Util.Hash.Fast(_buffer, _offset, _length);
 
 		/// <summary>
 		/// Gets the character at a specified position in this substring.

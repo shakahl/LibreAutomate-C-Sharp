@@ -22,6 +22,7 @@ using System.Linq;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 //FUTURE: test OpenCV - an open source library for computer vision.
 
@@ -71,7 +72,7 @@ namespace Au
 			} else {
 				image = APath.Normalize(image, Folders.ThisAppImages);
 				if(!AFile.ExistsAsFile(image, true))
-					o = Util.AResources.GetAppResource(APath.GetFileName(image, true));
+					o = AResources.GetAppResource(APath.GetFileName(image, true));
 				if(o == null) o = Image.FromFile(image);
 				R = o as Bitmap;
 				if(R == null) throw new ArgumentException("Bad image format."); //Image but not Bitmap
@@ -373,7 +374,7 @@ namespace Au
 
 				public _Image(ColorInt color)
 				{
-					var p = (int*)Util.NativeHeap.Alloc(4);
+					var p = (int*)AMemory.Alloc(4);
 					*p = (int)color | unchecked((int)0xff000000);
 					data = new BitmapData() { Width = 1, Height = 1, Scan0 = (IntPtr)p };
 				}
@@ -387,7 +388,7 @@ namespace Au
 				public void Dispose()
 				{
 					if(data != null) {
-						if(_b == null) Util.NativeHeap.Free((void*)data.Scan0); //when color or _action==WaitChanged
+						if(_b == null) AMemory.Free((void*)data.Scan0); //when color or _action==WaitChanged
 						else _b.UnlockBits(data);
 						data = null;
 					}
@@ -400,7 +401,7 @@ namespace Au
 
 			struct _AreaData
 			{
-				public Util.MemoryBitmap mb; //reuse while waiting, it makes slightly faster
+				public MemoryBitmap mb; //reuse while waiting, it makes slightly faster
 				public int width, height, memSize; //_areaMB width and height, use for the same purpose
 				public uint* pixels; //the same purpose. Allocating/freeing large memory is somehow slow.
 				public BitmapData bmpData; //of _bmp. Could be local, because we don't wait, but better do this way.
@@ -426,7 +427,7 @@ namespace Au
 				if(_area.Type == WIArea.AreaType.Bitmap) {
 					if(_ad.bmpData != null) _area.B.UnlockBits(_ad.bmpData);
 				} else {
-					Util.NativeHeap.Free(_ad.pixels);
+					AMemory.Free(_ad.pixels);
 					_ad.mb?.Dispose();
 				}
 				_DisposeInputImages();
@@ -956,13 +957,13 @@ namespace Au
 				//create memory bitmap. When waiting, we reuse _areaMB, it makes slightly faster.
 				if(_ad.mb == null || areaWidth != _ad.width || areaHeight != _ad.height) {
 					if(_ad.mb != null) { _ad.mb.Dispose(); _ad.mb = null; }
-					_ad.mb = new Util.MemoryBitmap(_ad.width = areaWidth, _ad.height = areaHeight);
+					_ad.mb = new MemoryBitmap(_ad.width = areaWidth, _ad.height = areaHeight);
 					//_Debug("created MemBmp");
 				}
 				//get DC of screen or window
 				bool windowDC = 0 != (_flags & WIFlags.WindowDC);
 				Wnd w = windowDC ? _area.W : default;
-				using(var dc = new Util.LibWindowDC(w)) { //quite fast, when compared with other parts
+				using(var dc = new LibWindowDC(w)) { //quite fast, when compared with other parts
 					if(dc.Is0 && windowDC) w.ThrowNoNative("Failed");
 					//_Debug("get DC");
 					//copy from screen/window DC to memory bitmap
@@ -974,7 +975,7 @@ namespace Au
 				//get pixels
 				int memSize = areaWidth * areaHeight * 4; //7.5 MB for a max window in 1920*1080 monitor
 				if(memSize > _ad.memSize) { //while waiting, we reuse the memory, it makes slightly faster.
-					_ad.pixels = (uint*)Util.NativeHeap.ReAlloc(_ad.pixels, memSize);
+					_ad.pixels = (uint*)AMemory.ReAlloc(_ad.pixels, memSize);
 					_ad.memSize = memSize;
 				}
 				var h = new Api.BITMAPINFOHEADER() {

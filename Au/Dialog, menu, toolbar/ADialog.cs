@@ -16,6 +16,7 @@ using System.Drawing;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 #pragma warning disable 649 //unused fields in API structs
 
@@ -69,7 +70,7 @@ namespace Au
 		{
 			//Activate manifest that tells to use comctl32.dll version 6. The API is unavailable in version 5.
 			//Need this if the host app does not have such manifest, eg if uses the default manifest added by Visual Studio.
-			using(Util.LibActCtx.Activate()) {
+			using(LibActCtx.Activate()) {
 				//Also, don't use DllImport, because it uses v5 comctl32.dll if it is already loaded.
 				Api.GetDelegate(out _tTaskDialogIndirect R, "comctl32.dll", "TaskDialogIndirect");
 				return R;
@@ -462,8 +463,8 @@ namespace Au
 			/// </summary>
 			internal unsafe void MarshalFreeButtons(ref TASKDIALOGCONFIG c)
 			{
-				Util.NativeHeap.Free(c.pButtons);
-				Util.NativeHeap.Free(c.pRadioButtons);
+				AMemory.Free(c.pButtons);
+				AMemory.Free(c.pRadioButtons);
 				c.pButtons = null; c.pRadioButtons = null;
 				c.cButtons = 0; c.cRadioButtons = 0;
 			}
@@ -476,7 +477,7 @@ namespace Au
 				if(n == 0) return null;
 				int nba = n * sizeof(TASKDIALOG_BUTTON), nb = nba;
 				foreach(var v in a) nb += (v.s.Length + 1) * 2;
-				var r = (TASKDIALOG_BUTTON*)Util.NativeHeap.Alloc(nb);
+				var r = (TASKDIALOG_BUTTON*)AMemory.Alloc(nb);
 				char* s = (char*)((byte*)r + nba);
 				for(int i = 0; i < n; i++) {
 					var v = a[i];
@@ -800,8 +801,8 @@ namespace Au
 			}
 
 			if(_c.hMainIcon == default && Options.UseAppIcon) SetIcon(DIcon.App);
-			//if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = Util.AModuleHandle.OfAppIcon();
-			if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = Util.AModuleHandle.OfProcessExe();
+			//if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = AModuleHandle.OfAppIcon();
+			if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = AModuleHandle.OfProcessExe();
 			//info: DIcon.App is IDI_APPLICATION (32512).
 			//Although MSDN does not mention that IDI_APPLICATION can be used when hInstance is NULL, it works. Even works for many other undocumented system resource ids, eg 100.
 			//Non-NULL hInstance is ignored for the icons specified as TD_x. It is documented and logical.
@@ -811,7 +812,7 @@ namespace Au
 
 			int rNativeButton = 0, rRadioButton = 0, rIsChecked = 0, hr = 0;
 			bool hasCustomButtons = false;
-			Util.WinHook hook = null;
+			WinHook hook = null;
 
 			try {
 				_threadIdInShow = Thread.CurrentThread.ManagedThreadId;
@@ -821,7 +822,7 @@ namespace Au
 				else hasCustomButtons = true;
 
 				if(_timeoutActive) { //Need mouse/key messages to stop countdown on click or key.
-					hook = Util.WinHook.ThreadGetMessage(_HookProc);
+					hook = WinHook.ThreadGetMessage(_HookProc);
 				}
 
 				Wnd.Lib.EnableActivate(true);
@@ -963,7 +964,7 @@ namespace Au
 				Send = new DSend(this); //note: must be before setting _dlg, because another thread may call if(d.IsOpen) d.Send.Message(..).
 				_dlg = w;
 
-				Util.AAppDomain.Exit += _AppDomain__Exit; //closes dialog, to avoid the annoying "stopped working" UI
+				AAppDomain.Exit += _AppDomain__Exit; //closes dialog, to avoid the annoying "stopped working" UI
 				break;
 			case Native.TDN.DESTROYED:
 				//Print(w.IsAlive); //valid
@@ -1138,7 +1139,7 @@ namespace Au
 			if(_dlg.Is0) return;
 			_dlg = default;
 			Send.LibClear();
-			Util.AAppDomain.Exit -= _AppDomain__Exit;
+			AAppDomain.Exit -= _AppDomain__Exit;
 		}
 		bool _isClosed;
 
@@ -1218,7 +1219,7 @@ namespace Au
 
 		string _TimeoutFooterText(int timeLeft)
 		{
-			using(new Util.LibStringBuilder(out var b)) {
+			using(new LibStringBuilder(out var b)) {
 				b.Append("This dialog will disappear if not clicked in ").Append(timeLeft).Append(" s.");
 				if(!Empty(_timeoutActionText)) b.AppendFormat("\nTimeout action: {0}.", _timeoutActionText);
 				if(FlagRtlLayout) b.Replace(".", "");
@@ -1243,7 +1244,7 @@ namespace Au
 
 			//create or get cached font and calculate control height
 			//note: don't use system messagebox font. ADialog API does not depend on it.
-			_editFont = Util.LibNativeFont.Verdana9Cached;
+			_editFont = LibNativeFont.Verdana9Cached;
 		}
 
 		void _EditControlUpdate(bool onlyZorder = false)
@@ -1352,7 +1353,7 @@ namespace Au
 		/// </summary>
 		public Wnd EditControl => _editWnd;
 		Wnd _editWnd, _editParent;
-		Util.LibNativeFont _editFont;
+		LibNativeFont _editFont;
 
 		//Dlgproc of our intermediate #32770 control, the parent of out Edit control.
 		int _EditControlParentProc(Wnd hWnd, int msg, LPARAM wParam, LPARAM lParam)

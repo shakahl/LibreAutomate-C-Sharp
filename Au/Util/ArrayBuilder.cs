@@ -21,7 +21,7 @@ namespace Au.Util
 {
 	/// <summary>
 	/// Like List or StringBuilder, used as a temporary variable-size array to create final fixed-size array.
-	/// To avoid much garbage (and many reallocations when growing), uses native memory heap. See <see cref="NativeHeap"/>.
+	/// To avoid much garbage (and many reallocations when growing), uses native memory heap. See <see cref="AMemory"/>.
 	/// Must be explicitly disposed to free the native memory. Does not have a finalizer because is struct (to avoid garbage).
 	/// Does not support reference types. Does not call T.Dispose.
 	/// </summary>
@@ -69,7 +69,7 @@ namespace Au.Util
 			set {
 				if(value != _cap) {
 					if(value < _len) throw new ArgumentOutOfRangeException();
-					_p = (T*)NativeHeap.ReAlloc(_p, value * sizeof(T));
+					_p = (T*)AMemory.ReAlloc(_p, value * sizeof(T));
 					_cap = value;
 				}
 			}
@@ -87,7 +87,7 @@ namespace Au.Util
 		{
 			if(_cap != 0) Free();
 			int cap = count; if(cap < s_minCap && !noExtra) cap = s_minCap;
-			_p = (T*)NativeHeap.Alloc(cap * sizeof(T), zeroInit);
+			_p = (T*)AMemory.Alloc(cap * sizeof(T), zeroInit);
 			_cap = cap; _len = count;
 			return _p;
 		}
@@ -107,7 +107,7 @@ namespace Au.Util
 		public T* ReAlloc(int count, bool zeroInit = true, bool noExtra = false)
 		{
 			int cap = count; if(cap < s_minCap && !noExtra) cap = s_minCap;
-			_p = (T*)NativeHeap.ReAlloc(_p, cap * sizeof(T), zeroInit);
+			_p = (T*)AMemory.ReAlloc(_p, cap * sizeof(T), zeroInit);
 			_cap = cap; _len = count;
 			return _p;
 		}
@@ -120,7 +120,7 @@ namespace Au.Util
 			if(_cap == 0) return;
 			_len = _cap = 0;
 			var p = _p; _p = null;
-			NativeHeap.Free(p);
+			AMemory.Free(p);
 		}
 
 		/// <summary>

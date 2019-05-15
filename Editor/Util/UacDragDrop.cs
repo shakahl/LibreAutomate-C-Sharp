@@ -25,7 +25,7 @@ class UacDragDrop
 {
 	public class AdminProcess
 	{
-		Au.Util.AccHook _hook; //SYSTEM_CAPTURESTART
+		WinAccHook _hook; //SYSTEM_CAPTURESTART
 		ATimer _timer; //tracks mouse etc
 		bool _isDragMode; //is in drag-drop
 		bool _isProcess2; //is our non-admin process started
@@ -52,7 +52,7 @@ class UacDragDrop
 			_timer = new ATimer(() => _Timer());
 
 			//use hook to detect when drag-drop started
-			_hook = new Au.Util.AccHook(AccEVENT.SYSTEM_CAPTURESTART, 0, d => {
+			_hook = new WinAccHook(AccEVENT.SYSTEM_CAPTURESTART, 0, d => {
 				_EndedDragMode();
 				if(0 == d.wnd.ClassNameIs("CLIPBRDWNDCLASS", "DragWindow")) return;
 				_StartedDragMode();

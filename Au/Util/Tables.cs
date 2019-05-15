@@ -38,7 +38,7 @@ namespace Au.Util
 			//internal char* CaseTable()
 			//{
 			//	if(_caseTable == null) {
-			//		var t = (char*)Api.VirtualAlloc(default, 0x20000); //faster than NativeHeap.Alloc when need big memory, especially when need to zero it
+			//		var t = (char*)Api.VirtualAlloc(default, 0x20000); //faster than AMemory.Alloc when need big memory, especially when need to zero it
 			//		if(t == null) throw new OutOfMemoryException();
 			//		for(int i = 0; i < 0x10000; i++) t[i] = (char)i;
 			//		Api.CharLowerBuff(t, 0x10000);

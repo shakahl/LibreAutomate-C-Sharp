@@ -362,7 +362,7 @@ namespace Au
 			bool isFirst = true;
 			FileAttributes attr = 0;
 			int basePathLength = path.Length;
-			var redir = new More.DisableRedirection();
+			var redir = new Util.DisableFsRedirection();
 
 			try {
 				if(0 != (flags & FEFlags.DisableRedirection)) redir.Disable();

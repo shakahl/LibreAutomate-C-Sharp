@@ -22,6 +22,7 @@ using System.Drawing.Drawing2D;
 using Au;
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 namespace Au
 {
@@ -83,8 +84,8 @@ namespace Au
 
 			//FUTURE: if w is DWM-scaled...
 
-			using var mb = new Util.MemoryBitmap(r.Width, r.Height);
-			using(var dc = new Util.LibWindowDC(w)) {
+			using var mb = new MemoryBitmap(r.Width, r.Height);
+			using(var dc = new LibWindowDC(w)) {
 				if(dc.Is0 && !w.Is0) w.ThrowNoNative("Failed");
 				uint rop = !w.Is0 ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
 				bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, rop);
@@ -207,7 +208,7 @@ namespace Au
 		public static unsafe Bitmap BitmapFromHbitmap(IntPtr hbitmap)
 		{
 			var bh = new Api.BITMAPINFOHEADER() { biSize = sizeof(Api.BITMAPINFOHEADER) };
-			using(var dcs = new Util.LibScreenDC(0)) {
+			using(var dcs = new LibScreenDC(0)) {
 				if(0 == Api.GetDIBits(dcs, hbitmap, 0, 0, null, &bh, 0)) goto ge;
 				int wid = bh.biWidth, hei = bh.biHeight;
 				if(hei > 0) bh.biHeight = -bh.biHeight; else hei = -hei;
@@ -349,7 +350,7 @@ namespace Au
 				TopLevel = true; //optional
 				StartPosition = FormStartPosition.Manual;
 				Text = "Au.WinImage.CaptureUI";
-				Cursor = _cursor = Util.ACursor.LoadCursorFromMemory(Properties.Resources.red_cross_cursor, 32);
+				Cursor = _cursor = ACursor.LoadCursorFromMemory(Properties.Resources.red_cross_cursor, 32);
 			}
 
 			protected override CreateParams CreateParams {
@@ -387,7 +388,7 @@ namespace Au
 
 				//format text to draw below magnifier
 				string text;
-				using(new Util.LibStringBuilder(out var s)) {
+				using(new LibStringBuilder(out var s)) {
 					var ic = _flags & (WICFlags.Image | WICFlags.Color | WICFlags.Rectangle);
 					if(ic == 0) ic = WICFlags.Image | WICFlags.Color;
 					bool canColor = ic.Has(WICFlags.Color);
@@ -485,7 +486,7 @@ namespace Au
 					bool notFirstMove = false;
 					_capturing = true;
 					try {
-						if(!Util.DragDrop.SimpleDragDrop(this, MButtons.Left, m => {
+						if(!ADragDrop.SimpleDragDrop(this, MButtons.Left, m => {
 							if(m.Msg.message != Api.WM_MOUSEMOVE) return;
 							POINT p = m.Msg.pt;
 							p.x -= Left; p.y -= Top; //screen to client

@@ -295,12 +295,12 @@ partial class EdForm
 
 	void SetHookToMonitorCreatedWindowsOfThisThread()
 	{
-		_hook = Au.Util.WinHook.ThreadCbt(x => {
+		_hook = WinHook.ThreadCbt(x => {
 			if(x.code == HookData.CbtEvent.CREATEWND) Print((Wnd)x.wParam);
 			return false;
 		});
 		Application.ApplicationExit += (unu, sed) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with WinHook) 
 	}
-	static Au.Util.WinHook _hook;
+	static WinHook _hook;
 }
 #endif

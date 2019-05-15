@@ -118,15 +118,15 @@ namespace Au.Util
 		{
 			if(s_userToken == null) {
 				Debug.Assert(Uac.IsAdmin); //else cannot set privilege
-				if(!Util.ASecurity.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
+				if(!ASecurity.SetPrivilege("SeIncreaseQuotaPrivilege", true)) goto ge;
 
 				//Perf.First();
 #if false //works, but slow, eg 60 ms, even if we don't create task everytime
 				var s = $"\"{Folders.ThisAppBS}Dll\\{(Ver.Is64BitProcess ? "64" : "32")}bit\\AuCpp.dll\",Cpp_RunDll";
-				Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, Folders.System + "rundll32.exe", s);
-				//Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, Folders.System + "notepad.exe"); //slow too
+				LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, Folders.System + "rundll32.exe", s);
+				//LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, Folders.System + "notepad.exe"); //slow too
 				//Perf.Next();
-				int pid = Au.Util.LibTaskScheduler.RunTask("Au", "rundll32");
+				int pid = LibTaskScheduler.RunTask("Au", "rundll32");
 				//Perf.Next();
 				//Print(pid);
 				var hUserProcess = LibHandle.OpenProcess(pid);

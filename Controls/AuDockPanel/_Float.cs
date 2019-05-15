@@ -370,7 +370,7 @@ namespace Au.Controls
 				Wnd w = (Wnd)this;
 				RECT r = w.Rect;
 				Point offs = new Point(p.X - r.left, p.Y - r.top);
-				bool ok = Au.Util.DragDrop.SimpleDragDrop(w, MButtons.Left, d =>
+				bool ok = Au.Util.ADragDrop.SimpleDragDrop(w, MButtons.Left, d =>
 				  {
 					  if(d.Msg.message != Api.WM_MOUSEMOVE) return;
 

@@ -107,7 +107,7 @@ static partial class Test
 
 	static unsafe void _TestExceptionInInteropCallback()
 	{
-		using(Au.Util.WinHook.ThreadGetMessage(x => {
+		using(WinHook.ThreadGetMessage(x => {
 			Print(x.msg->ToString(), x.PM_NOREMOVE);
 			//throw new AException("TEST");
 		})) {
@@ -1756,7 +1756,7 @@ a1,-8";
 	{
 		//Output.LibUseQM2 = true; Output.Clear();
 
-		//using(var h = Au.Util.WinHook.Keyboard(k => {
+		//using(var h = WinHook.Keyboard(k => {
 		//	Print($"{k.Key}, {!k.IsUp}");
 		//	if(k.Key == KKey.Up && !k.IsUp) {
 		//		1100.ms();
@@ -1767,7 +1767,7 @@ a1,-8";
 		//})) ADialog.Show("hook");
 
 
-		using(var h = Au.Util.WinHook.Mouse(k => {
+		using(var h = WinHook.Mouse(k => {
 			if(k.IsWheel) {
 				Print(">");
 				800.ms();

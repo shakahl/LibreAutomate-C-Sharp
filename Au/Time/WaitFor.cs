@@ -399,7 +399,7 @@ namespace Au
 			}
 		}
 
-		//FUTURE: add misc wait functions implemented using WinHook and AccHook.
+		//FUTURE: add misc wait functions implemented using WinHook and WinAccHook.
 		//public static class Hook
 		//{
 		//}

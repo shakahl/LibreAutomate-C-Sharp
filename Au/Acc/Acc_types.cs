@@ -354,7 +354,7 @@ namespace Au.Types
 
 	//CONSIDER: remove the SYSTEM_/OBJECT_ prefixes.
 	/// <summary>
-	/// Event constants for <see cref="Util.AccHook"/>.
+	/// Event constants for <see cref="WinAccHook"/>.
 	/// </summary>
 	/// <remarks>
 	/// The names are as in API <msdn>SetWinEventHook Event Constants</msdn> documentation but without prefix "EVENT_".
@@ -491,7 +491,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="Util.AccHook"/>.
+	/// Flags for <see cref="WinAccHook"/>.
 	/// </summary>
 	/// <remarks>
 	/// The names are as in API <msdn>SetWinEventHook</msdn> documentation but without prefix "WINEVENT_".

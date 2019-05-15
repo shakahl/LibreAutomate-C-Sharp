@@ -630,7 +630,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			tl.GetLibAttr(out IntPtr ipta);
 			var ta = Marshal.PtrToStructure<System.Runtime.InteropServices.ComTypes.TYPELIBATTR>(ipta);
 			tl.ReleaseTLibAttr(ipta);
-			var hash = AConvert.HashFnv1(ta).ToString("x");
+			var hash = Au.Util.Hash.Fnv1(ta).ToString("x");
 
 			tl.GetDocumentation(-1, out var tlName, out var tlDescription, out var _, out var _);
 			var fileName = $"{tlName} {ta.wMajorVerNum}.{ta.wMinorVerNum} {hash}.dll";

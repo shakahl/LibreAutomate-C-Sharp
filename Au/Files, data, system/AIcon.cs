@@ -19,13 +19,14 @@ using System.Drawing.Imaging;
 
 using Au.Types;
 using static Au.NoClass;
+using Au.Util;
 
 namespace Au
 {
 	/// <summary>
 	/// Gets icons for files etc.
 	/// </summary>
-	/// <seealso cref="Util.IconsAsync"/>
+	/// <seealso cref="IconsAsync"/>
 	public static class AIcon
 	{
 		/// <summary>
@@ -269,7 +270,7 @@ namespace Au
 					R = _GetShellIcon2(usePidl, pidl2, size);
 				} else {
 					//tested: switching thread does not make slower. The speed depends mostly on locking, because then thread pool threads must wait.
-					using var work = Util.ThreadPoolSTA.CreateWork(null, o => { R = _GetShellIcon2(usePidl, pidl2, size); });
+					using var work = ThreadPoolSTA.CreateWork(null, o => { R = _GetShellIcon2(usePidl, pidl2, size); });
 					work.Submit();
 					work.Wait();
 				}
@@ -310,7 +311,7 @@ namespace Au
 
 			try {
 				if(ilIndex == Api.SHIL_SMALL || ilIndex == Api.SHIL_LARGE || _GetShellImageList(ilIndex, out il)) {
-					//Print(il, Util.LibDebug_.GetComObjRefCount(il));
+					//Print(il, ADebug.GetComObjRefCount(il));
 					R = Api.ImageList_GetIcon(il, index, 0);
 					if(size != realSize && R != default) {
 						//Print(size, realSize, index, file);
@@ -460,8 +461,8 @@ namespace Au
 		/// <remarks>The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.</remarks>
 		internal static IntPtr GetAppIconHandle(int size)
 		{
-			//var h = Util.AModuleHandle.OfAppIcon();
-			var h = Util.AModuleHandle.OfProcessExe();
+			//var h = AModuleHandle.OfAppIcon();
+			var h = AModuleHandle.OfProcessExe();
 			if(h == default) return default;
 			size = _NormalizeIconSizeParameter(size);
 			return Api.LoadImage(h, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
@@ -533,7 +534,7 @@ namespace Au
 				//Icons are USER objects. Most icons also create 3 GDI objects, some 2. So a process can have max 3333 icons.
 				//If GC starts working when pressure is 100 KB, then the number of icons is ~50 and GDI handles ~150.
 				//We don't care about icon memory size.
-				Util.AGC.AddObjectMemoryPressure(R, 2000);
+				AGC.AddObjectMemoryPressure(R, 2000);
 			}
 			return R;
 		}
@@ -585,7 +586,7 @@ namespace Au
 		/// Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
 		/// </summary>
 		/// <threadsafety static="true" instance="true"/>
-		/// <seealso cref="Util.IconsAsync"/>
+		/// <seealso cref="IconsAsync"/>
 		public sealed class ImageCache : IDisposable
 		{
 			XElement _x;
@@ -716,7 +717,7 @@ namespace Au
 						try {
 							if(_x == null && AFile.ExistsAsFile(_cacheFile)) {
 								_x = ExtXml.LoadElem(_cacheFile);
-								if(_iconSize != _x.Attr("size", 0) || Util.Dpi.BaseDPI != _x.Attr("dpi", 0)) {
+								if(_iconSize != _x.Attr("size", 0) || Dpi.BaseDPI != _x.Attr("dpi", 0)) {
 									_x = null;
 									ADebug.Print("info: cleared icon cache");
 								}
@@ -781,7 +782,7 @@ namespace Au
 						if(_x == null) {
 							_x = new XElement("images");
 							_x.SetAttributeValue("size", _iconSize);
-							_x.SetAttributeValue("dpi", Util.Dpi.BaseDPI);
+							_x.SetAttributeValue("dpi", Dpi.BaseDPI);
 						}
 						_x.Add(d);
 					}
@@ -897,7 +898,7 @@ namespace Au.Types
 		/// <summary>
 		/// Scale the specified size according to DPI (text size) specified in Windows Settings.
 		/// </summary>
-		DpiScale = 4, //rejected. In most cases can use standard-size icons from enum IconSize, they are DPI-scaled. Or pass size * Util.Dpi.BaseDPI.
+		DpiScale = 4, //rejected. In most cases can use standard-size icons from enum IconSize, they are DPI-scaled. Or pass size * Au.Util.Dpi.BaseDPI.
 
 		/// Use shell API for all file types, including exe and ico.
 		Shell=8, //rejected because SHGetFileInfo does not get exe icon with shield overlay

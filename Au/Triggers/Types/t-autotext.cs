@@ -726,7 +726,7 @@ namespace Au.Triggers
 			bool ok = false;
 			var m = new AMenu { ModalAlways = true }; //FUTURE: need something better. Creates 60 KB of garbage etc.
 			m[text.Escape(limit: 60)] = u => ok = true;
-			using(Util.WinHook.Keyboard(x => {
+			using(WinHook.Keyboard(x => {
 				if(x.IsUp) return;
 				switch(x.vkCode) {
 				case KKey.Escape: break;

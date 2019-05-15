@@ -278,7 +278,7 @@ namespace Au.Controls
 			}
 
 			int len = AConvert.Utf8LengthFromString(text);
-			byte* buffer = (byte*)NativeHeap.Alloc(len * 2 + 4), s = buffer;
+			byte* buffer = (byte*)AMemory.Alloc(len * 2 + 4), s = buffer;
 			try {
 				AConvert.Utf8FromString(text, s, len + 1);
 				if(appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
@@ -287,7 +287,7 @@ namespace Au.Controls
 				_AddText(s, len, appendLine);
 			}
 			finally {
-				NativeHeap.Free(buffer);
+				AMemory.Free(buffer);
 			}
 		}
 
@@ -718,7 +718,7 @@ namespace Au.Controls
 				Exec.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
 			case "help":
-				Util.AHelp.AuHelp(attr);
+				AHelp.AuHelp(attr);
 				break;
 			case "explore":
 				Exec.Select(attr);
