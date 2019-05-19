@@ -18,7 +18,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Controls;
 using SG = SourceGrid;
 
@@ -369,7 +369,7 @@ namespace Au.Tools
 		void _OpenFile(bool embed)
 		{
 			if(_wnd.Is0) {
-				Osd.ShowText("At first please select a window with button 'Capture' or 'Edit...'.", xy: this, icon: SystemIcons.Error);
+				AOsd.ShowText("At first please select a window with button 'Capture' or 'Edit...'.", xy: this, icon: SystemIcons.Error);
 				return;
 			}
 

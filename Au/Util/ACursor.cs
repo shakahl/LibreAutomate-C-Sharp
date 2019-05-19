@@ -19,7 +19,7 @@ using Forms = System.Windows.Forms;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -100,7 +100,7 @@ namespace Au.Util
 			var hb = Api.CopyImage(ii.hbmMask, Api.IMAGE_BITMAP, 0, 0, Api.LR_COPYDELETEORG | Api.LR_CREATEDIBSECTION);
 			if(hb == default) { Api.DeleteObject(ii.hbmMask); return 0; }
 			if(0 != Api.GetObject(hb, sizeof(Api.BITMAP), &b) && b.bmBits != default)
-				R = Hash.Fnv1Long((byte*)b.bmBits, b.bmHeight * b.bmWidthBytes);
+				R = AHash.Fnv1Long((byte*)b.bmBits, b.bmHeight * b.bmWidthBytes);
 			Api.DeleteObject(hb);
 			return R;
 		}

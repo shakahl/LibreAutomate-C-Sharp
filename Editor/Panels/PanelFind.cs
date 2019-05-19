@@ -18,7 +18,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 class PanelFind :Control
 {

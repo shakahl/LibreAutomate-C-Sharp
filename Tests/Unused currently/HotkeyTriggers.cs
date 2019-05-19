@@ -16,7 +16,7 @@ using System.Runtime.ExceptionServices;
 using System.Linq;
 
 using Au;
-using static Au.NoClass;
+using static Au.AStatic;
 
 #if false
 namespace Au.Triggers

@@ -14,7 +14,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -34,10 +34,10 @@ namespace Au
 		internal void LibMinimalSleepNoCheckThread()
 		{
 			Debug.Assert(!IsOfThisThread);
-			//Perf.First();
+			//APerf.First();
 			Thread.Sleep(15);
 			SendTimeout(1000, 0);
-			//Perf.NW();
+			//APerf.NW();
 		}
 
 		/// <summary>
@@ -52,18 +52,18 @@ namespace Au
 		{
 			appId = null;
 
-			if(Ver.MinWin8) {
+			if(AVersion.MinWin8) {
 				switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 				case 1:
 					using(var p = LibHandle.OpenProcess(w)) {
 						if(!p.Is0) {
-							var b = Util.Buffers.LibChar(1000, out int na);
+							var b = Util.AMemoryArray.LibChar(1000, out int na);
 							if(0 == Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);
 						}
 					}
 					break;
 				case 2:
-					if(Ver.MinWin10) {
+					if(AVersion.MinWin10) {
 						if(0 == Api.SHGetPropertyStoreForWindow(w, Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
 							if(0 == ps.GetValue(Api.PKEY_AppUserModel_ID, out var v)) {
 								if(v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
@@ -99,7 +99,7 @@ namespace Au
 			bool retry = false;
 			string name = null;
 			g1:
-			if(!Ver.MinWin10 || !w.ClassNameIs("ApplicationFrameWindow")) return default;
+			if(!AVersion.MinWin10 || !w.ClassNameIs("ApplicationFrameWindow")) return default;
 			Wnd c = Api.FindWindowEx(w, default, "Windows.UI.Core.CoreWindow", null);
 			if(!c.Is0) return c;
 			if(retry) return default;
@@ -122,7 +122,7 @@ namespace Au
 		///// </summary>
 		//static Wnd _WindowsStoreAppHost(Wnd w)
 		//{
-		//	if(!Ver.MinWin10 || !w.ClassNameIs("Windows.UI.Core.CoreWindow")) return default;
+		//	if(!AVersion.MinWin10 || !w.ClassNameIs("Windows.UI.Core.CoreWindow")) return default;
 		//	Wnd wo = w.Get.DirectParent; if(!wo.Is0 && wo.ClassNameIs("ApplicationFrameWindow")) return wo;
 		//	string s = w.GetText(false, false); if(Empty(s)) return default;
 		//	return Api.FindWindow("ApplicationFrameWindow", s);
@@ -180,7 +180,7 @@ namespace Au
 
 			//	void _GetCommon(Wnd w)
 			//	{
-			//		var t = Time.PerfMilliseconds;
+			//		var t = ATime.PerfMilliseconds;
 			//		if(w != _w || t - _time > 100) { _w = w; _class = _programName= _programPath = null; _tid = _pid = 0; }
 			//		_time = t;
 			//	}

@@ -1,6 +1,6 @@
 /*/ runMode blue; ifRunning restart; /*/ //{{
 //{{ using
-using Au; using static Au.NoClass; using Au.Types; using System; using System.Collections.Generic; //}}
+using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}
 using Au.Triggers; //need this for triggers
 using System.Windows.Forms; //need this for some examples in this script
 

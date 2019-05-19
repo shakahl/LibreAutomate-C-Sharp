@@ -20,7 +20,7 @@ using System.Reflection.Emit;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 using Au.Controls;
 using Au.Compiler;
@@ -546,7 +546,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			tl = null; string path = null; int hr = 1;
 			var k0 = $@"TypeLib\{guid}\{version}\{locale}\win";
 			for(int i = 0; i < 2; i++) {
-				var bits = Ver.Is64BitProcess == (i == 0) ? "64" : "32";
+				var bits = AVersion.Is64BitProcess == (i == 0) ? "64" : "32";
 				using(var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits)) {
 					path = hk?.GetValue("") as string;
 					if(path == null) continue;
@@ -630,7 +630,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			tl.GetLibAttr(out IntPtr ipta);
 			var ta = Marshal.PtrToStructure<System.Runtime.InteropServices.ComTypes.TYPELIBATTR>(ipta);
 			tl.ReleaseTLibAttr(ipta);
-			var hash = Au.Util.Hash.Fnv1(ta).ToString("x");
+			var hash = Au.Util.AHash.Fnv1(ta).ToString("x");
 
 			tl.GetDocumentation(-1, out var tlName, out var tlDescription, out var _, out var _);
 			var fileName = $"{tlName} {ta.wMajorVerNum}.{ta.wMinorVerNum} {hash}.dll";

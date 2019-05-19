@@ -20,7 +20,7 @@ using System.Runtime;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 static class Program
 {
@@ -40,7 +40,7 @@ static class Program
 		//restart as admin if started as non-admin on admin user account
 		if(args.Length > 0 && args[0] == "/n") {
 			args = args.RemoveAt(0);
-		} else if(!Uac.IsAdmin && Uac.OfThisProcess.Elevation == UacElevation.Limited) {
+		} else if(!AUac.IsAdmin && AUac.OfThisProcess.Elevation == UacElevation.Limited) {
 			if(_RestartAsAdmin(args)) return;
 		}
 		//speed with restarting is the same as when runs as non-admin. The fastest is when started as admin. Because faster when runs as admin.
@@ -52,7 +52,7 @@ static class Program
 
 	static void _Main(string[] args)
 	{
-		Perf.First();
+		APerf.First();
 
 		//Test(); return;
 		//Process.GetCurrentProcess().ProcessorAffinity = (IntPtr)1; //test how works with 1 CPU
@@ -66,7 +66,7 @@ static class Program
 		AFile.CreateDirectory(fProfile);
 		ProfileOptimization.SetProfileRoot(fProfile);
 		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 680 -> 560 ms. Makes compiler startup faster 4000 -> 2500 (ngen 670).
-		Perf.Next();
+		APerf.Next();
 #endif
 
 		OutputServer.NoNewline = true;
@@ -92,7 +92,7 @@ static class Program
 		OutputServer.Stop();
 	}
 
-	internal static Au.Util.OutputServer OutputServer = new Au.Util.OutputServer(true);
+	internal static AOutputServer OutputServer = new AOutputServer(true);
 	internal static ProgramSettings Settings;
 	internal static EdForm MainForm;
 	internal static FilesModel Model;
@@ -165,8 +165,8 @@ static class Program
 
 		//RunUac.Test();
 
-		//Output.LibUseQM2 = true; Output.Clear();
-		//using(var h = WinHook.Keyboard(k => {
+		//AOutput.LibUseQM2 = true; AOutput.Clear();
+		//using(var h = AHookWin.Keyboard(k => {
 		//	Print($"{k.Key}, {!k.IsUp}");
 		//	if(k.Key == KKey.Up && !k.IsUp) 400.ms();
 

@@ -21,7 +21,7 @@ using System.Drawing.Drawing2D;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -84,7 +84,7 @@ namespace Au
 
 			//FUTURE: if w is DWM-scaled...
 
-			using var mb = new MemoryBitmap(r.Width, r.Height);
+			using var mb = new AMemoryBitmap(r.Width, r.Height);
 			using(var dc = new LibWindowDC(w)) {
 				if(dc.Is0 && !w.Is0) w.ThrowNoNative("Failed");
 				uint rop = !w.Is0 ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
@@ -114,10 +114,10 @@ namespace Au
 		static unsafe void _SetAlpha(BitmapData d, RECT r, GraphicsPath path = null)
 		{
 			//remove alpha. Will compress better.
-			//Perf.First();
+			//APerf.First();
 			byte* p = (byte*)d.Scan0, pe = p + r.Width * r.Height * 4;
 			for(p += 3; p < pe; p += 4) *p = 0xff;
-			//Perf.NW(); //1100 for max window
+			//APerf.NW(); //1100 for max window
 
 			//if path used, set alpha=0 for outer points
 			if(path != null) {
@@ -254,7 +254,7 @@ namespace Au
 					wTool = toolWindow.Wnd;
 					aw = wTool.Get.OwnersAndThis(true);
 					foreach(var w in aw) w.ShowLL(false);
-					using(new InputBlocker(BIEvents.MouseClicks)) Time.SleepDoEvents(300); //time for animations
+					using(new AInputBlocker(BIEvents.MouseClicks)) ATime.SleepDoEvents(300); //time for animations
 				}
 
 				g1:
@@ -317,7 +317,7 @@ namespace Au
 
 		static bool _WaitForHotkey(string info)
 		{
-			using(Osd.ShowText(info, Timeout.Infinite, icon: SystemIcons.Information)) {
+			using(AOsd.ShowText(info, Timeout.Infinite, icon: SystemIcons.Information)) {
 				//try { Keyb.WaitForHotkey(0, KKey.F3); }
 				//catch(AException) { ADialog.ShowError("Failed to register hotkey F3"); return false; }
 

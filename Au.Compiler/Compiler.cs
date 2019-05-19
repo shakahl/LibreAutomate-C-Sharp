@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -111,12 +111,12 @@ namespace Au.Compiler
 		static bool _Compile(bool forRun, IWorkspaceFile f, out CompResults r, IWorkspaceFile projFolder)
 		{
 			r = new CompResults();
-			//Perf.Next();
+			//APerf.Next();
 
 			var m = new MetaComments();
 			if(!m.Parse(f, projFolder, EMPFlags.PrintErrors)) return false;
 			var err = m.Errors;
-			//Perf.Next('m');
+			//APerf.Next('m');
 
 			bool needOutputFiles = m.Role != ERole.classFile;
 
@@ -155,7 +155,7 @@ namespace Au.Compiler
 
 				var tree = CSharpSyntaxTree.ParseText(code, po, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
 				//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), Visual Studio debugger, etc.
-				//	Our OutputServer.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
+				//	Our AOutputServer.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
 
 				if(addedBraces) { //if the script has the closing } or }}, remove the added } or }}
 					int nErr = 0;
@@ -172,7 +172,7 @@ namespace Au.Compiler
 
 				trees.Add(tree);
 			}
-			//Perf.Next('t');
+			//APerf.Next('t');
 
 			OutputKind oKind;
 			if(m.Role == ERole.classLibrary || m.Role == ERole.classFile) oKind = OutputKind.DynamicallyLinkedLibrary;
@@ -191,7 +191,7 @@ namespace Au.Compiler
 			   );
 
 			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, options);
-			//Perf.Next('c');
+			//APerf.Next('c');
 
 			string pdbFile = null, xdFile = null;
 			MemoryStream pdbStream = null;
@@ -232,7 +232,7 @@ namespace Au.Compiler
 				xdStream?.Dispose();
 				resNat?.Dispose(); //info: compiler disposes resMan
 			}
-			//Perf.Next('e');
+			//APerf.Next('e');
 
 			var diag = emitResult.Diagnostics;
 			if(!diag.IsEmpty) {
@@ -276,7 +276,7 @@ namespace Au.Compiler
 
 				//copy non-.NET references to the output directory
 				if(m.Role == ERole.exeProgram) {
-					//Perf.Next();
+					//APerf.Next();
 					_CopyReferenceFiles(m);
 				}
 
@@ -292,12 +292,12 @@ namespace Au.Compiler
 
 			if(m.PostBuild.f != null && !_RunPrePostBuildScript(true, m, outFile)) return false;
 
-			//Perf.First();
+			//APerf.First();
 			if(needOutputFiles) {
 				if(m.Role != ERole.classLibrary) _Triggers(f, compilation);
 				cache.AddCompiled(f, outFile, m, r.pdbOffset, r.mtaThread);
 			}
-			//Perf.NW();
+			//APerf.NW();
 
 			r.name = m.Name;
 			r.role = m.Role;
@@ -308,7 +308,7 @@ namespace Au.Compiler
 			r.console = m.Console;
 			r.notInCache = m.OutputPath != null;
 
-			//Perf.NW();
+			//APerf.NW();
 			return true;
 		}
 
@@ -422,7 +422,7 @@ namespace Au.Compiler
 						o = AFile.LoadText(path);
 						break;
 					case "strings":
-						var csv = Csv.Load(path);
+						var csv = ACsv.Load(path);
 						if(csv.ColumnCount != 2) throw new ArgumentException("CSV must contain 2 columns separated with ,");
 						foreach(var row in csv.Data) {
 							rw.AddResource(row[0], row[1]);
@@ -508,7 +508,7 @@ namespace Au.Compiler
 			//also copy C++ dlls
 			_CopyFileIfNeed(Folders.ThisAppBS + @"dll\64bit\AuCpp.dll", m.OutputPath + @"\dll\64bit\AuCpp.dll");
 			_CopyFileIfNeed(Folders.ThisAppBS + @"dll\32bit\AuCpp.dll", m.OutputPath + @"\dll\32bit\AuCpp.dll");
-			//SHOULDDO: copy sqlite3.dll, if used class SqliteDB. Or add a 'copyFile' meta.
+			//SHOULDDO: copy sqlite3.dll, if used class ASqlite. Or add a 'copyFile' meta.
 		}
 
 		static void _CopyFileIfNeed(string sFrom, string sTo)
@@ -528,7 +528,7 @@ namespace Au.Compiler
 			if(x.s == null) {
 				args = new string[] { outFile };
 			} else {
-				args = ExtString.More.CommandLineToArray(x.s);
+				args = AExtString.More.CommandLineToArray(x.s);
 
 				//replace variables like $(variable)
 				var f = m.CodeFiles[0].f;
@@ -601,7 +601,7 @@ namespace Au.Compiler
 		/// <summary>
 		/// Usings for <see cref="Scripting.Compile"/>.
 		/// </summary>
-		public const string DefaultUsings = @"using Au; using static Au.NoClass; using Au.Types; using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq;";
+		public const string DefaultUsings = @"using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq;";
 
 		#endregion
 	}

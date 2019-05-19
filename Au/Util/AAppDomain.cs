@@ -14,7 +14,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -40,7 +40,7 @@ namespace Au.Util
 						_defaultAppDomain = d;
 					} else { //current domain created not by Au
 						ICorRuntimeHost host = new CorRuntimeHost() as ICorRuntimeHost;
-						//Perf.Next(); //speed:  289  3251  (3542) ngened, else 4ms. Why GetDefaultDomain so slow?
+						//APerf.Next(); //speed:  289  3251  (3542) ngened, else 4ms. Why GetDefaultDomain so slow?
 						object o = null; host.GetDefaultDomain(out o);
 						_defaultAppDomain = o as AppDomain;
 

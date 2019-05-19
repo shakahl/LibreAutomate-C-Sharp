@@ -19,7 +19,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 using SG = SourceGrid;
 using Editors = SourceGrid.Cells.Editors;
@@ -809,7 +809,7 @@ namespace Au.Controls
 		/// Finds row by row key and returns row index.
 		/// Returns -1 if not found.
 		/// </summary>
-		public int ZFindRow(in StringSegment rowKey)
+		public int ZFindRow(in AStringSegment rowKey)
 		{
 			for(int r = 0, n = this.RowsCount; r < n; r++) {
 				if(this.Rows[r].Tag as string == rowKey) return r;

@@ -23,7 +23,7 @@ using System.Runtime;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 public partial class Form_Setup :Form
 {

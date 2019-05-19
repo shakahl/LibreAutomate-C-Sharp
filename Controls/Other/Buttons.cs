@@ -20,7 +20,7 @@ using System.Windows.Forms.Design;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using System.Collections;
 
 namespace Au.Controls

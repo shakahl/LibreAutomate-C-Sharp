@@ -19,7 +19,7 @@ using System.Runtime.ExceptionServices;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Triggers
 {
@@ -44,12 +44,12 @@ namespace Au.Triggers
 	/// <example>
 	/// <code><![CDATA[
 	/// Triggers.Options.RunActionInThreadPool(singleInstance: false);
-	/// Triggers.Options.BeforeAction = o => { Opt.Key.KeySpeed = 10; };
-	/// Triggers.Hotkey["Ctrl+K"] = o => Print(Opt.Key.KeySpeed); //10
-	/// Triggers.Hotkey["Ctrl+Shift+K"] = o => Print(Opt.Key.KeySpeed); //10
-	/// Triggers.Options.BeforeAction = o => { Opt.Key.KeySpeed = 20; };
-	/// Triggers.Hotkey["Ctrl+L"] = o => Print(Opt.Key.KeySpeed); //20
-	/// Triggers.Hotkey["Ctrl+Shift+L"] = o => Print(Opt.Key.KeySpeed); //20
+	/// Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 10; };
+	/// Triggers.Hotkey["Ctrl+K"] = o => Print(AOpt.Key.KeySpeed); //10
+	/// Triggers.Hotkey["Ctrl+Shift+K"] = o => Print(AOpt.Key.KeySpeed); //10
+	/// Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 20; };
+	/// Triggers.Hotkey["Ctrl+L"] = o => Print(AOpt.Key.KeySpeed); //20
+	/// Triggers.Hotkey["Ctrl+Shift+L"] = o => Print(AOpt.Key.KeySpeed); //20
 	/// ]]></code>
 	/// </example>
 	public class TriggerOptions
@@ -118,11 +118,11 @@ namespace Au.Triggers
 
 		/// <summary>
 		/// A function to run before the trigger action.
-		/// For example, it can set <see cref="Opt"/> options.
+		/// For example, it can set <see cref="AOpt"/> options.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// Triggers.Options.BeforeAction = o => { Opt.Key.KeySpeed = 20; Opt.Key.TextSpeed = 5; };
+		/// Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 20; AOpt.Key.TextSpeed = 5; };
 		/// ]]></code>
 		/// </example>
 		public Action<TOBAArgs> BeforeAction { set => _New().before = value; }
@@ -185,7 +185,7 @@ namespace Au.Triggers
 				try {
 					_MuteMod(ref muteMod);
 
-					Opt.Reset();
+					AOpt.Reset();
 
 					var baArgs = new TOBAArgs(args); //struct
 #if true
@@ -311,7 +311,7 @@ namespace Au.Triggers
 											g1:
 											if(_q.Count == 0) { _running = false; break; }
 											x = _q.Dequeue();
-											if(x.time != 0 && Time.PerfMilliseconds > x.time) goto g1;
+											if(x.time != 0 && ATime.PerfMilliseconds > x.time) goto g1;
 											_running = true;
 										}
 										x.actionWrapper();
@@ -344,7 +344,7 @@ namespace Au.Triggers
 						_running = true;
 						//if(ifRunningWaitMS > 0 && ifRunningWaitMS < 1000000000) ifRunningWaitMS += 1000;
 					}
-					_q.Enqueue(new _Action { actionWrapper = actionWrapper, time = ifRunningWaitMS <= 0 ? 0 : Time.PerfMilliseconds + ifRunningWaitMS });
+					_q.Enqueue(new _Action { actionWrapper = actionWrapper, time = ifRunningWaitMS <= 0 ? 0 : ATime.PerfMilliseconds + ifRunningWaitMS });
 				}
 				Api.SetEvent(_event);
 				return R;

@@ -19,7 +19,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 //using Au.Controls;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
@@ -207,7 +207,7 @@ namespace Au.Controls
 					if(e.CheckType != default) z.Width += NodeCheckBox.ImageSize + _c._ccCheck.LeftMargin;
 					var im = e.Icon;
 					if(im != null) {
-						var iz = Util.Dpi.ImageSize(im);
+						var iz = Util.ADpi.ImageSize(im);
 						z.Width += iz.width + _c._ccIcon.LeftMargin;
 						if(z.Height < iz.height) z.Height = iz.height;
 					}
@@ -372,7 +372,7 @@ namespace Au.Controls
 			public _Window(PopupList p)
 			{
 				_p = p;
-				_font = Util.ASystemFonts.Regular;
+				_font = Util.AFonts.Regular;
 
 				this.SuspendLayout();
 				this.AutoScaleMode = AutoScaleMode.None;

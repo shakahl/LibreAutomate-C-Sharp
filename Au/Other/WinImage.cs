@@ -21,7 +21,7 @@ using System.Linq;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 //FUTURE: test OpenCV - an open source library for computer vision.
@@ -401,7 +401,7 @@ namespace Au
 
 			struct _AreaData
 			{
-				public MemoryBitmap mb; //reuse while waiting, it makes slightly faster
+				public AMemoryBitmap mb; //reuse while waiting, it makes slightly faster
 				public int width, height, memSize; //_areaMB width and height, use for the same purpose
 				public uint* pixels; //the same purpose. Allocating/freeing large memory is somehow slow.
 				public BitmapData bmpData; //of _bmp. Could be local, because we don't wait, but better do this way.
@@ -526,7 +526,7 @@ namespace Au
 
 			public bool Find()
 			{
-				//Perf.Next();
+				//APerf.Next();
 				Result._Clear();
 
 				bool windowDC = 0 != (_flags & WIFlags.WindowDC);
@@ -612,7 +612,7 @@ namespace Au
 				} else {
 					_GetAreaPixels(r);
 				}
-				//Perf.Next();
+				//APerf.Next();
 
 				//Find image(s) in area.
 				WinImage alsoResult = null;
@@ -622,7 +622,7 @@ namespace Au
 					if(_FindImage(_images[i], out var alsoAction, ref alsoResult)) return true;
 					if(alsoAction == WIAlso.NotFound || alsoAction == WIAlso.FindOtherOfThis || alsoAction == WIAlso.OkFindMoreOfThis) break;
 				}
-				//Perf.Next();
+				//APerf.Next();
 				if(alsoResult != null) {
 					Result = alsoResult;
 					return true;
@@ -728,7 +728,7 @@ namespace Au
 				}
 
 				//now compare all pixels of the image
-				//Perf.First();
+				//APerf.First();
 				uint* ip = imagePixels, ipLineTo = ip + imageWidth;
 				for(; ; ) { //lines
 					if(f.color < 0x1000000) {
@@ -749,7 +749,7 @@ namespace Au
 					ap += areaWidthMinusImage;
 					ipLineTo += imageWidth;
 				}
-				//Perf.NW();
+				//APerf.NW();
 				//Print(nTimesFound);
 
 				#endregion
@@ -957,7 +957,7 @@ namespace Au
 				//create memory bitmap. When waiting, we reuse _areaMB, it makes slightly faster.
 				if(_ad.mb == null || areaWidth != _ad.width || areaHeight != _ad.height) {
 					if(_ad.mb != null) { _ad.mb.Dispose(); _ad.mb = null; }
-					_ad.mb = new MemoryBitmap(_ad.width = areaWidth, _ad.height = areaHeight);
+					_ad.mb = new AMemoryBitmap(_ad.width = areaWidth, _ad.height = areaHeight);
 					//_Debug("created MemBmp");
 				}
 				//get DC of screen or window
@@ -989,10 +989,10 @@ namespace Au
 				//_Debug("_GetBitmapBits", 3);
 
 				//remove alpha (why it is here?). Currently don't need.
-				////Perf.First();
+				////APerf.First();
 				//byte* p = (byte*)_areaPixels, pe = p + memSize;
 				//for(p += 3; p < pe; p += 4) *p = 0xff;
-				////Perf.NW(); //1100 for max window
+				////APerf.NW(); //1100 for max window
 
 				//see what we have
 				//var testFile = Folders.Temp + "WinImage.png";
@@ -1008,9 +1008,9 @@ namespace Au
 		//{
 		//	//MessageBox.Show(s);
 		//	switch(perfAction) {
-		//	case 1: Perf.First(); break;
-		//	case 2: Perf.Next(); break;
-		//	case 3: Perf.NW(); break;
+		//	case 1: APerf.First(); break;
+		//	case 2: APerf.Next(); break;
+		//	case 3: APerf.NW(); break;
 		//	}
 		//}
 	}

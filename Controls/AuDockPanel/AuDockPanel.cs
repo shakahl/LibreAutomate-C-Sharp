@@ -19,7 +19,7 @@ using System.Xml;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -107,7 +107,7 @@ namespace Au.Controls
 
 				bool fileLoaded = false;
 				try {
-					var x = ExtXml.LoadElem(xmlFile);
+					var x = AExtXml.LoadElem(xmlFile);
 					fileLoaded = true;
 					if(!usesDefaultXML) xmlVersion = x.Attr("version");
 					x = x.Element("split");
@@ -146,7 +146,7 @@ namespace Au.Controls
 
 		void _GetPanelXmlFromDefaultFile(string defFile)
 		{
-			var xml = ExtXml.LoadElem(defFile);
+			var xml = AExtXml.LoadElem(defFile);
 
 			foreach(var c in _initControls.Values) {
 				if(_aPanel.Exists(v => v.Content == c)) continue;
@@ -186,7 +186,7 @@ namespace Au.Controls
 			}
 			catch(Exception ex) {
 #if DEBUG
-				Output.QM2.Write(ex); //cannot Print or show dialog in ctor
+				AOutput.QM2.Write(ex); //cannot Print or show dialog in ctor
 #else
 				_ = ex;
 #endif
@@ -201,7 +201,7 @@ namespace Au.Controls
 			get {
 				if(__captionHeight == 0) {
 					var fh = this.Font.Height; //not FontHeight, it caches the value and it is not auto updated on font change
-					__captionHeight = Math.Max(fh, Au.Util.Dpi.ScaleInt(16)) + 2; //16 for icon, 2 for padding
+					__captionHeight = Math.Max(fh, Au.Util.ADpi.ScaleInt(16)) + 2; //16 for icon, 2 for padding
 				}
 				return __captionHeight;
 			}

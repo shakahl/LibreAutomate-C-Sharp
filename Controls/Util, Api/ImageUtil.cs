@@ -19,7 +19,7 @@ using System.Drawing.Imaging;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 #pragma warning disable 649
@@ -318,7 +318,7 @@ namespace Au.Controls
 			}
 			if(hi == default) return null;
 			try {
-				using(var m = new MemoryBitmap(siz, siz)) {
+				using(var m = new AMemoryBitmap(siz, siz)) {
 					RECT r = (0, 0, siz, siz, false);
 					Api.FillRect(m.Hdc, r, Api.GetStockObject(0)); //WHITE_BRUSH
 					if(!Api.DrawIconEx(m.Hdc, 0, 0, hi, siz, siz)) return null;

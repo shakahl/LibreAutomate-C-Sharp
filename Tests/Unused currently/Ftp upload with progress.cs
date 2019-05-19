@@ -7,7 +7,7 @@ using System.Windows.Forms;
 using System.Runtime.InteropServices;
 
 using Au;
-using static Au.NoClass;
+using static Au.AStatic;
 
 static partial class Test
 {

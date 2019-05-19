@@ -19,7 +19,7 @@ using System.Runtime.ExceptionServices;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 
 static partial class Test
@@ -94,7 +94,7 @@ static partial class Test
 		public void Run()
 		{
 
-			//Time.SleepDoEvents(Timeout.Infinite);
+			//ATime.SleepDoEvents(Timeout.Infinite);
 		}
 	}
 
@@ -128,7 +128,7 @@ static partial class Test
 
 
 	/*
-	print(...); //Output.Write(...);
+	print(...); //AOutput.Write(...);
 	key(...); //Keyb.Key(...);
 	tkey(...); //Keyb.Text(...); //or txt
 	paste(...); //Keyb.Paste(...);

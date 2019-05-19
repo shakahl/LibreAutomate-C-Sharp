@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -23,9 +23,9 @@ namespace Au
 	/// Functions useful to debug code.
 	/// </summary>
 	/// <remarks>
-	/// The ADebug.PrintX functions write to the same output as <see cref="Output.Write"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
+	/// The ADebug.PrintX functions write to the same output as <see cref="AOutput.Write"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
 	/// Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="ConditionalAttribute"/>("DEBUG")].
-	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(Opt.Debug.Verbose) PrintWarning("text");</c>; see <see cref="PrintWarning"/>, Opt.Debug.<see cref="OptDebug.Verbose"/>.
+	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(AOpt.Debug.Verbose) PrintWarning("text");</c>; see <see cref="PrintWarning"/>, AOpt.Debug.<see cref="OptDebug.Verbose"/>.
 	/// </remarks>
 	[DebuggerStepThrough]
 	internal static class ADebug //FUTURE: make public, when will be more tested and if really need.
@@ -52,11 +52,11 @@ namespace Au
 		static void _Print(object text, string cp, int cln, string cmn)
 		{
 			string s = LibPrintObjectToString(text);
-			Output.Write($"{TextPrefix}{cmn} ({APath.GetFileName(cp)}:{cln}):  {s}{TextSuffix}");
+			AOutput.Write($"{TextPrefix}{cmn} ({APath.GetFileName(cp)}:{cln}):  {s}{TextSuffix}");
 		}
 
 		/// <summary>
-		/// Calls <see cref="Output.Write"/> to show some debug info. Also shows current function name/file/line.
+		/// Calls <see cref="AOutput.Write"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional arguments are not used explicitly.
 		/// </summary>
@@ -65,7 +65,7 @@ namespace Au
 			=> _Print(text, cp, cln, cmn);
 
 		/// <summary>
-		/// If condition is true, calls <see cref="Output.Write"/> to show some debug info. Also shows current function name/file/line.
+		/// If condition is true, calls <see cref="AOutput.Write"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional arguments are not used explicitly.
 		/// </summary>
@@ -76,13 +76,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls <see cref="Output.Write"/> with current function name.
+		/// Calls <see cref="AOutput.Write"/> with current function name.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The optional argument is not used explicitly.
 		/// </summary>
 		[Conditional("DEBUG")]
 		public static void PrintFunc([CallerMemberName] string name = null)
-			=> Output.Write(name);
+			=> AOutput.Write(name);
 
 		/// <summary>
 		/// In DEBUG config prints WinError.Message.
@@ -110,38 +110,38 @@ namespace Au
 			ADialog.ShowEx("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{cmn} ({APath.GetFileName(cp)}:{cln})");
 		}
 
-		//rejected: use if(Opt.Debug.Verbose) ADialog.ShowWarning(...). It adds stack trace.
+		//rejected: use if(AOpt.Debug.Verbose) ADialog.ShowWarning(...). It adds stack trace.
 		///// <summary>
-		///// If Opt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="ADialog.Show"/> with text and stack trace.
+		///// If AOpt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="ADialog.Show"/> with text and stack trace.
 		///// Read more in class help.
 		///// </summary>
 		//[MethodImpl(MethodImplOptions.NoInlining)]
 		//public static void DialogOpt(string text)
 		//{
-		//	if(!Opt.Debug.Verbose) return;
+		//	if(!AOpt.Debug.Verbose) return;
 		//	var x = new StackTrace(1, true);
 		//	ADialog.ShowEx("Debug", text, flags: DFlags.ExpandDown | DFlags.Wider, expandedText: x.ToString());
 		//}
 
 		//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use PrintWarning; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
 		///// <summary>
-		///// If Opt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="Output.Write(string)"/>.
+		///// If AOpt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="AOutput.Write(string)"/>.
 		///// Read more in class help.
 		///// </summary>
 		//public static void PrintOpt(string text)
 		//{
-		//	if(Opt.Debug.Verbose) Output.Write("Debug: " + text);
+		//	if(AOpt.Debug.Verbose) AOutput.Write("Debug: " + text);
 		//}
 
-		//rejected: Don't need multiple warning functions. Now PrintWarning does not show more than 1 warning/second if Opt.Debug.Verbose is false. Also users can add this in script themplate: #if !DEBUG Options.DisableWarnings(...);
+		//rejected: Don't need multiple warning functions. Now PrintWarning does not show more than 1 warning/second if AOpt.Debug.Verbose is false. Also users can add this in script themplate: #if !DEBUG Options.DisableWarnings(...);
 		///// <summary>
-		///// If Opt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="PrintWarning"/>.
+		///// If AOpt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="PrintWarning"/>.
 		///// Read more in class help.
 		///// </summary>
 		//[MethodImpl(MethodImplOptions.NoInlining)]
 		//public static void WarningOpt(string text)
 		//{
-		//	if(Opt.Debug.Verbose) PrintWarning(text, 1);
+		//	if(AOpt.Debug.Verbose) PrintWarning(text, 1);
 		//}
 
 		/// <summary>
@@ -151,7 +151,7 @@ namespace Au
 		/// <param name="goodFlags">Valid flags.</param>
 		/// <remarks>
 		/// Can be used in functions that have an enum flags parameter but not all passed flags are valid for that function or object state.
-		/// Does nothing if Opt.Debug.<see cref="OptDebug.Verbose"/> == false.
+		/// Does nothing if AOpt.Debug.<see cref="OptDebug.Verbose"/> == false.
 		/// When flags are valid, this function is fast.
 		/// </remarks>
 		internal static unsafe void LibCheckFlagsOpt<T>(T flags, T goodFlags) where T : unmanaged, Enum
@@ -167,7 +167,7 @@ namespace Au
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		static void _CheckFlagsOpt(Type t, int goodFlags)
 		{
-			if(!Opt.Debug.Verbose) return;
+			if(!AOpt.Debug.Verbose) return;
 			if(!t.IsEnum) throw new ArgumentException("Bad type.");
 			var s = new StringBuilder("Invalid flags. Only these flags can be used: "); bool added = false;
 			for(int i = 1; i != 0; i <<= 1) {
@@ -220,7 +220,7 @@ namespace Au
 		/// Works in Release too.
 		/// </summary>
 		/// <param name="fromAnchor">Get the difference from previous call to <b>LibMemorySetAnchor</b>.</param>
-		internal static void LibMemoryPrint(bool fromAnchor = true) => Output.Write(LibMemoryGet(fromAnchor));
+		internal static void LibMemoryPrint(bool fromAnchor = true) => AOutput.Write(LibMemoryGet(fromAnchor));
 
 		/// <summary>
 		/// Memorizes current managed memory size, so that next call to another <b>LibMemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.

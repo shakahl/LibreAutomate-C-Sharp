@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 #pragma warning disable CS0282 //VS bug: shows warning "There is no defined ordering between fields in multiple declarations of partial struct 'Acc'. To specify an ordering, all instance fields must be in the same declaration."
 

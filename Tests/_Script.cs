@@ -16,7 +16,7 @@ using System.Xml;
 using System.Xml.Linq;
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Triggers;
 
 unsafe partial class Script : AScript
@@ -39,12 +39,12 @@ unsafe partial class Script : AScript
 		//Opt.WaitFor.Reset();
 		//Print(Opt.WaitFor.Period);
 
-		Opt.Static.Mouse.MoveSpeed = 2;
-		Opt.Mouse.MoveSpeed = 15;
-		Print(Opt.Mouse.MoveSpeed);
+		AOpt.Static.Mouse.MoveSpeed = 2;
+		AOpt.Mouse.MoveSpeed = 15;
+		Print(AOpt.Mouse.MoveSpeed);
 		//Opt.Reset();
-		Opt.Mouse.Reset();
-		Print(Opt.Mouse.MoveSpeed);
+		AOpt.Mouse.Reset();
+		Print(AOpt.Mouse.MoveSpeed);
 
 		//Opt.Static.Key.TextSpeed = 2;
 		//Opt.Key.TextSpeed = 15;
@@ -185,7 +185,7 @@ unsafe partial class Script : AScript
 		w.Activate();
 		Mouse.Move(w, 20, 20);
 
-		Opt.Mouse.MoveSpeed = 10;
+		AOpt.Mouse.MoveSpeed = 10;
 		for(int i = 0; i < 5; i++) {
 			1.s();
 			using(Mouse.LeftDown()) {
@@ -206,16 +206,16 @@ unsafe partial class Script : AScript
 		//Wnd.Find("Quick *").Activate();
 
 		//AThread.Start(() => {
-		//	using(WinHook.Keyboard(k => {
+		//	using(AHookWin.Keyboard(k => {
 		//		if(!k.IsInjectedByAu) Print("----", k);
 
 		//		return false;
-		//	})) Time.SleepDoEvents(5000);
+		//	})) ATime.SleepDoEvents(5000);
 		//});
 
 		100.ms();
 		Key("Ctrl+A Delete Ctrl+Shift+J");
-		Output.Clear();
+		AOutput.Clear();
 		//10.ms();
 		for(int i = 0; i < 100; i++) {
 			Text("---- ");
@@ -227,36 +227,36 @@ unsafe partial class Script : AScript
 		1.s();
 		Print(Mouse.IsPressed(MButtons.Left), Mouse.IsPressed(MButtons.Right));
 
-		Perf.Cpu();
+		APerf.Cpu();
 		for(int i1 = 0; i1 < 8; i1++) {
 			int n2 = 1;
-			Perf.First();
+			APerf.First();
 			for(int i2 = 0; i2 < n2; i2++) { Mouse.IsPressed(MButtons.Left); }
-			//Perf.Next();
+			//APerf.Next();
 			//for(int i2 = 0; i2 < n2; i2++) { Mouse.IsPressed(MButtons.Left| MButtons.Right); }
-			//Perf.Next();
+			//APerf.Next();
 			//for(int i2 = 0; i2 < n2; i2++) { Mouse.IsPressed(); }
-			//Perf.Next();
+			//APerf.Next();
 			//for(int i2 = 0; i2 < n2; i2++) { }
-			Perf.NW();
+			APerf.NW();
 			Thread.Sleep(200);
 		}
 
 		//for(int i = 0; i < 100; i++) {
 		//	50.ms();
-		//	Perf.First();
+		//	APerf.First();
 		//	//_ = Api.GetKeyState((int)KKey.Shift);
 		//	_ = Api.GetAsyncKeyState((int)KKey.Shift);
 		//	//_ = Api.GetKeyState((int)KKey.MouseLeft);
 		//	//_ = Api.GetAsyncKeyState((int)KKey.MouseLeft);
-		//	Perf.NW();
+		//	APerf.NW();
 		//}
 	}
 
 	void TestCapsLock()
 	{
 		Wnd.Find("* Notepad").Activate(); 100.ms();
-		Opt.Key.TextOption = KTextOption.Keys;
+		AOpt.Key.TextOption = KTextOption.Keys;
 		//Opt.Key.NoCapsOff = true;
 		//Key("CapsLock*down");
 		//Key("CapsLock*up");
@@ -337,7 +337,7 @@ unsafe partial class Script : AScript
 		////var a = Acc.Find(w, "LISTITEM").OrThrow();
 		////Print(a.RoleInt, a);
 
-		////using(new WinAccHook(AccEVENT.OBJECT_FOCUS, 0, k => { var a = k.GetAcc(); Print(a.RoleInt, a); }, idThread: w.ThreadId)) {
+		////using(new AHookAcc(AccEVENT.OBJECT_FOCUS, 0, k => { var a = k.GetAcc(); Print(a.RoleInt, a); }, idThread: w.ThreadId)) {
 
 		Triggers.Hotkey["F3"] = o => {
 			var a = Acc.FromMouse(AXYFlags.PreferLink | AXYFlags.NoThrow);
@@ -408,11 +408,11 @@ unsafe partial class Script : AScript
 
 		//		return;
 
-		//Perf.Cpu();
+		//APerf.Cpu();
 		//for(int i1 = 0; i1 < 7; i1++) {
-		//	Perf.First();
+		//	APerf.First();
 		//	Test2();
-		//	Perf.NW();
+		//	APerf.NW();
 		//	Thread.Sleep(200);
 		//}
 
@@ -541,12 +541,12 @@ unsafe partial class Script : AScript
 			//Triggers.Window[TWEvent.ActiveOnce, "*paint.net*"] = o => {
 			var w = o.Window;
 			//Print(w.Child("Save"));
-			//Perf.First();
+			//APerf.First();
 			//w.Send(0);
 			////_Sleep(w);
-			//Perf.Next();
+			//APerf.Next();
 			////Print(w.Child("Save"));
-			//Perf.Write();
+			//APerf.Write();
 			w.Close();
 		};
 
@@ -606,7 +606,7 @@ unsafe partial class Script : AScript
 		//tm[TMClick.Right, "Alt", TMFlags.ButtonModUp] = o => Print(o.Trigger);
 		//tm[TMClick.Right, "Alt", TMFlags.ShareEvent] = o => Print(o.Trigger);
 		//tm[TMClick.Right, "Alt", TMFlags.ButtonModUp | TMFlags.ShareEvent] = o => Print(o.Trigger);
-		Triggers.Options.BeforeAction = o => { Opt.Key.KeySpeed = 50; /*Opt.Key.NoBlockInput = true;*/ };
+		Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 50; /*Opt.Key.NoBlockInput = true;*/ };
 		//tm[TMClick.Right, "Alt"] = o => Key("some Spa text Spa for Spa testing Spa Enter");
 		//tm[TMClick.Right, "Alt"] = o => Print("wait", Keyb.WaitForKey(0, true, true));
 		//tm[TMClick.Right, "Win"] = o => Print(o.Trigger);
@@ -664,7 +664,7 @@ unsafe partial class Script : AScript
 		//Opt.Static.Key.Hook = h => { Print(h.w); if(h.w.Window.ClassNameIs("Notepad")) h.opt.KeySpeed = 100; };
 		//tk["F11"] = o => { Key("abcdef"); };
 
-		tk["F11"] = o => { Opt.Key.KeySpeed = 200; Key("abcdef"); };
+		tk["F11"] = o => { AOpt.Key.KeySpeed = 200; Key("abcdef"); };
 		tk["F12"] = o => { Key("ghijk"); };
 
 #elif true
@@ -912,9 +912,9 @@ unsafe partial class Script : AScript
 
 	//class DebugListener :TraceListener
 	//{
-	//	public override void Write(string message) => Output.Write(message);
+	//	public override void Write(string message) => AOutput.Write(message);
 
-	//	public override void WriteLine(string message) => Output.Write(message);
+	//	public override void WriteLine(string message) => AOutput.Write(message);
 	//}
 
 	void TestCs8()
@@ -1073,7 +1073,7 @@ unsafe partial class Script : AScript
 		//Debug.Listeners.Add(new DebugListener());
 		//Trace.Listeners.Add(new DebugListener());
 		//Trace.Listeners.Add(new ConsoleTraceListener());
-		//Output.RedirectDebugOutput = true;
+		//AOutput.RedirectDebugOutput = true;
 		//Debug.Indent();
 		//Debug.Print("Debug.Print");
 		//Debug.Write("Debug.Write\n");
@@ -1106,7 +1106,7 @@ unsafe partial class Script : AScript
 
 		//if(s.Regex(""))
 
-		//Exec.Select(@"q:\app\au\au\_doc");
+		//Exec.SelectInExplorer(@"q:\app\au\au\_doc");
 
 		//s = "  abcdefghijklmnoprstuv";
 		////s = "                                                                                                                                                                        abcdefghijklmnoprstuv";
@@ -1122,22 +1122,22 @@ unsafe partial class Script : AScript
 		//Print(s.FindChars(" \r\n", not: true));
 		////return;
 
-		//Perf.Cpu();
+		//APerf.Cpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int n2 = 1000;
-		//	Perf.First();
+		//	APerf.First();
 		//	//for(int i2 = 0; i2 < n2; i2++) { i = s.IndexOfAny(new char[] { 't', 'u' }); }
-		//	//Perf.Next();
+		//	//APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { j = s.IndexOfAny(c); }
-		//	Perf.Next();
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { k = s.FindChars("tu"); }
-		//	Perf.Next();
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { m = s.FindChars("tu", 1, s.Length - 2); }
-		//	Perf.Next();
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { n = s.FindChars(" \r\n", not: true); }
-		//	Perf.Next();
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { last = s.FindLastChars(" \n", not: false); }
-		//	Perf.NW();
+		//	APerf.NW();
 		//	Thread.Sleep(200);
 		//}
 		//Print(i, j, k, m, n, last);
@@ -1147,18 +1147,18 @@ unsafe partial class Script : AScript
 		//Print(s.TrimChars("/\\"));
 
 		//string s1 = null, s2 = null, s3 = null;
-		//Perf.Cpu();
+		//APerf.Cpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int n2 = 1000;
-		//	Perf.First();
+		//	APerf.First();
 		//	for(int i2 = 0; i2 < n2; i2++) { s1=s.Trim('/', '\\'); }
-		//	Perf.Next();
-		//	for(int i2 = 0; i2 < n2; i2++) { s2=s.Trim(ExtString.Lib.pathSep); }
-		//	Perf.Next();
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { s2=s.Trim(AExtString.Lib.pathSep); }
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { s3=s.TrimChars("/\\"); }
-		//	Perf.Next();
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { }
-		//	Perf.NW();
+		//	APerf.NW();
 		//	Thread.Sleep(200);
 		//}
 		//Print(s1, s2, s3);
@@ -1184,31 +1184,39 @@ unsafe partial class Script : AScript
 		//var rx = @"\bneedle\b";
 		//int i = 0, j = 0, k = 0, n=0;
 
-		//Perf.Cpu();
+		//APerf.Cpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int n2 = 1000;
-		//	Perf.First();
+		//	APerf.First();
 		//	for(int i2 = 0; i2 < n2; i2++) { i = s.Find(f); }
-		//	Perf.Next();
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { j = s.FindWord(f); }
-		//	Perf.Next();
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { k = s.RegexMatch(rx, 0, out RXGroup g) ? g.Index : -1; }
-		//	Perf.Next();
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { var m = Regex.Match(s, rx, RegexOptions.CultureInvariant); n = m.Success ? m.Index : -1; }
-		//	Perf.NW();
+		//	APerf.NW();
 		//	Thread.Sleep(200);
 		//}
 		//Print(i, j, k, n);
 
+		//foreach(var f in AFile.EnumDirectory(@"C:\Users\G\AppData\Roaming", FEFlags.AndSubdirectories, filter: k => k.IsDirectory || k.Name.Ends(".png", true))) {
+		//	if(f.IsDirectory) continue;
+		//	Print(f.FullPath);
+		//}
 
+		foreach(var f in AFile.EnumDirectory(@"C:\Users", FEFlags.AndSubdirectories, filter: k => !k.Name.Eqi("G"), errorHandler: p => Print("failed", p))) {
+			//if(f.IsDirectory) continue;
+			Print(f.FullPath);
+		}
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
 	void _Main(string[] args)
 	{ //}}//}}//}}//}}
 #if true
-		Output.QM2.UseQM2 = true;
-		Output.Clear();
+		AOutput.QM2.UseQM2 = true;
+		AOutput.Clear();
 		100.ms();
 
 		TestTodo();
@@ -1232,8 +1240,8 @@ unsafe partial class Script : AScript
 #if true
 			OutputForm.ShowForm();
 #else
-			Output.QM2.UseQM2 = true;
-			Output.Clear();
+			AOutput.QM2.UseQM2 = true;
+			AOutput.Clear();
 			ADialog.Show("triggers");
 #endif
 			Triggers.Stop();
@@ -1282,7 +1290,7 @@ unsafe partial class Script : AScript
 	//	for(int i = 0; i < n; i++) {
 	//		//Print(1 << (i & 3));
 	//		SetThreadAffinityMask(ht, 1 << (i & 3));
-	//		for(var t0 = Time.PerfMicroseconds; Time.PerfMicroseconds - t0 < 100;) { }
+	//		for(var t0 = ATime.PerfMicroseconds; ATime.PerfMicroseconds - t0 < 100;) { }
 	//		a[i]=SwitchToThread();
 	//		//a[i] = Thread.Yield();
 	//		//Thread.Sleep(0);

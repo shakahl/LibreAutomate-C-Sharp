@@ -4,7 +4,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Aga.Controls.Tree
 {

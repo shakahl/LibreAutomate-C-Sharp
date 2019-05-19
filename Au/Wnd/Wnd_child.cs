@@ -14,7 +14,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 #pragma warning disable 282 //intellisense bug: it thinks that Wnd has multiple fields.
@@ -43,10 +43,10 @@ namespace Au
 		{
 			enum _NameIs { name, id, text, accName, wfName }
 
-			readonly Wildex _name;
-			readonly Wildex _className;
+			readonly AWildex _name;
+			readonly AWildex _className;
 			readonly Func<Wnd, bool> _also;
-			WinFormsControlNames _wfControls;
+			AWinFormsControlNames _wfControls;
 			readonly int _skipCount;
 			readonly WCFlags _flags;
 			readonly _NameIs _nameIs;
@@ -63,7 +63,7 @@ namespace Au
 					_className = cn;
 				}
 				if(name != null) {
-					switch(ExtString.More.ParseParam3Stars(ref name, "id", "text", "accName", "wfName"/*, "label"*/)) {
+					switch(AExtString.More.ParseParam3Stars(ref name, "id", "text", "accName", "wfName"/*, "label"*/)) {
 					case -1: throw new ArgumentException("Invalid name prefix. Can be: \"***id \", \"***text \", \"***accName \", \"***wfName \"."); //, \"***label \"
 					case 1: _nameIs = _NameIs.id; _id = name.ToInt(); break;
 					case 2: _nameIs = _NameIs.text; break;
@@ -201,7 +201,7 @@ namespace Au
 							case _NameIs.wfName:
 								if(_wfControls == null) {
 									try {
-										_wfControls = new WinFormsControlNames(wParent.Is0 ? w : wParent);
+										_wfControls = new AWinFormsControlNames(wParent.Is0 ? w : wParent);
 									}
 									catch(WndException) { //invalid parent window
 										return -1;
@@ -259,7 +259,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtAu.OrThrow(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(Wnd)"/>.
 		/// </summary>
 		/// <param name="name">
 		/// Control name.
@@ -273,7 +273,7 @@ namespace Au
 		/// - <c>"***accName "</c> - use <see cref="NameAcc"/>.
 		/// <br/>Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
 		/// - <c>"***wfName "</c> - use .NET Windows Forms Control Name property.
-		/// <br/>To get it this function uses <see cref="WinFormsControlNames"/>. It is slower and can fail because of [](xref:uac).
+		/// <br/>To get it this function uses <see cref="AWinFormsControlNames"/>. It is slower and can fail because of [](xref:uac).
 		/// - <c>"***id "</c> like <c>"***id 15"</c> - use control id.
 		/// <br/>To get it this function uses <see cref="ControlId"/>.
 		/// <br/>The id value cannot be wildcard expression.
@@ -375,7 +375,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control by its id and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtAu.OrThrow(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(Wnd)"/>.
 		/// </summary>
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
@@ -431,7 +431,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a direct child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="ExtAu.OrThrow(Wnd)"/>.
+		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(Wnd)"/>.
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
 		/// Can be used only when you know full name and/or class name.
@@ -507,7 +507,7 @@ namespace Au
 			///// </summary>
 			//public static Wnd[] DirectChildrenFastUnsafe(string cn = null)
 			//{
-			//	Wildex wild = cn;
+			//	AWildex wild = cn;
 			//	var a = new List<Wnd>();
 			//	for(Wnd c = FirstChild; !c.Is0; c = c.Next) {
 			//		if(wild != null && !c._ClassNameIs(wild)) continue;

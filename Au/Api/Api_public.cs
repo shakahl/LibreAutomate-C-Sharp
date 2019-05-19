@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 #pragma warning disable 649, 169 //field never assigned/used
 

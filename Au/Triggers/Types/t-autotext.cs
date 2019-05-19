@@ -20,7 +20,7 @@ using System.Globalization;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using System.Collections;
 
 namespace Au.Triggers
@@ -281,7 +281,7 @@ namespace Au.Triggers
 			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
 			//Print(k);
-			//Perf.First();
+			//APerf.First();
 
 			if(ResetEverywhere) { //set by mouse hooks on click left|right and by keyboard hooks on Au-injected key events. In shared memory.
 				ResetEverywhere = false;
@@ -363,7 +363,7 @@ namespace Au.Triggers
 
 		unsafe void _Trigger(char c, bool isPK, Wnd wFocus, TriggerHookContext thc)
 		{
-			//Perf.Next();
+			//APerf.Next();
 			if(wFocus != _wFocus) {
 				Reset();
 				_wFocus = wFocus;
@@ -418,7 +418,7 @@ namespace Au.Triggers
 			}
 
 			if(nc == 0) return;
-			//Perf.Next();
+			//APerf.Next();
 			g1:
 			for(int k = 0, ii = nc - 1, jj = 0; ii >= 0 && jj <= 24; ii--, jj += 8) { //create dictionary key from 1-4 last characters lowercase
 				k |= (byte)_text[ii].cLow << jj;
@@ -481,7 +481,7 @@ namespace Au.Triggers
 				nc++;
 				goto g1;
 			}
-			//Perf.NW(); //about 90% of time takes _KeyToChar (ToUnicodeEx and GetKeyboardLayout).
+			//APerf.NW(); //about 90% of time takes _KeyToChar (ToUnicodeEx and GetKeyboardLayout).
 		}
 
 		unsafe int _KeyToChar(char* c, KKey vk, uint sc, Wnd wFocus, KMod mod)
@@ -569,7 +569,7 @@ namespace Au.Triggers
 
 		internal static unsafe void JitCompile()
 		{
-			Util.Jit.Compile(typeof(AutotextTriggers), nameof(HookProc), nameof(_Trigger), nameof(_KeyToChar));
+			Util.AJit.Compile(typeof(AutotextTriggers), nameof(HookProc), nameof(_Trigger), nameof(_KeyToChar));
 		}
 
 		/// <summary>
@@ -673,7 +673,7 @@ namespace Au.Triggers
 				}
 			}
 
-			var k = new Keyb(Opt.Key);
+			var k = new Keyb(AOpt.Key);
 			int erase = 0 == (flags & TAFlags.DontErase) ? t.Length : pc;
 			if(erase > 0) {
 				k.AddKey(KKey.Back);
@@ -726,7 +726,7 @@ namespace Au.Triggers
 			bool ok = false;
 			var m = new AMenu { ModalAlways = true }; //FUTURE: need something better. Creates 60 KB of garbage etc.
 			m[text.Escape(limit: 60)] = u => ok = true;
-			using(WinHook.Keyboard(x => {
+			using(AHookWin.Keyboard(x => {
 				if(x.IsUp) return;
 				switch(x.vkCode) {
 				case KKey.Escape: break;

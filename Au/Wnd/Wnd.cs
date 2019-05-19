@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 #pragma warning disable 282 //intellisense bug: it thinks that Wnd has multiple fields.
@@ -439,7 +439,7 @@ namespace Au
 		//			if((style & WS.CAPTION) != WS.CAPTION) return !IsCloaked;
 
 		//			//is it a ghost ApplicationFrameWindow, like closed Calculator on Win10?
-		//			if(Ver.MinWin10 && HasExStyle(WS_EX.NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
+		//			if(AVersion.MinWin10 && HasExStyle(WS_EX.NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
 		//				var isGhost = default == Api.FindWindowEx(this, default, "Windows.UI.Core.CoreWindow", null);
 		//				//Print(isGhost, this);
 		//				return !isGhost;
@@ -559,7 +559,7 @@ namespace Au
 		/// <seealso cref="IsCloaked"/>
 		public int IsCloakedGetState {
 			get {
-				if(!Ver.MinWin8) return 0;
+				if(!AVersion.MinWin8) return 0;
 				int cloaked = 0;
 				int hr = Api.DwmGetWindowAttribute(this, Api.DWMWA.CLOAKED, &cloaked, 4);
 				return cloaked;
@@ -1042,7 +1042,7 @@ namespace Au
 			public static bool WaitForAnActiveWindow()
 			{
 				for(int i = 0; i < 32; i++) {
-					Time.DoEvents();
+					ATime.DoEvents();
 					if(!Active.Is0) return true;
 					Thread.Sleep(15); //SHOULDDO: SleepDoEvents, or WaitForCallback
 				}
@@ -2372,12 +2372,12 @@ namespace Au
 		/// <summary>
 		/// Returns true if the window is of a 64-bit process, false if of a 32-bit process.
 		/// Also returns false if fails. Supports <see cref="WinError"/>.
-		/// If <see cref="Ver.Is64BitOS"/> is true, calls API <msdn>GetWindowThreadProcessId</msdn>, <msdn>OpenProcess</msdn> and <msdn>IsWow64Process</msdn>.
+		/// If <see cref="AVersion.Is64BitOS"/> is true, calls API <msdn>GetWindowThreadProcessId</msdn>, <msdn>OpenProcess</msdn> and <msdn>IsWow64Process</msdn>.
 		/// <note>If you know that the window belongs to current process, instead use <see cref="Environment.Is64BitProcess"/> or <c>IntPtr.Size==8</c>. This function is much slower.</note>
 		/// </summary>
 		public bool Is64Bit {
 			get {
-				if(Ver.Is64BitOS) {
+				if(AVersion.Is64BitOS) {
 					using var ph = LibHandle.OpenProcess(this);
 					if(ph.Is0 || !Api.IsWow64Process(ph, out var is32bit)) return false;
 					if(!is32bit) return true;
@@ -2433,27 +2433,27 @@ namespace Au
 			}
 		}
 
-		//These are not useful. Use IsAccessDenied or class Uac.
+		//These are not useful. Use IsAccessDenied or class AUac.
 		///// <summary>
 		///// Gets UAC integrity level of window's process.
 		///// Returns UacIL.Unknown if fails.
 		///// This function considers UIAccess equal to High.
-		///// See also: class Uac.
+		///// See also: class AUac.
 		///// </summary>
 		//public UacIL UacIntegrityLevel
 		//{
-		//	get { var p = Uac.OfProcess(ProcessId); return p == null ? UacIL.Unknown : p.IntegrityLevel; }
+		//	get { var p = AUac.OfProcess(ProcessId); return p == null ? UacIL.Unknown : p.IntegrityLevel; }
 		//}
 
 		///// <summary>
 		///// Returns true if window's process has higher UAC integrity level (IL) than current process.
 		///// Returns true if fails to open process handle, which usually means that the process has higher integrity level.
 		///// This function considers UIAccess equal to High.
-		///// See also: class Uac.
+		///// See also: class AUac.
 		///// </summary>
 		//public bool UacIntegrityLevelIsHigher
 		//{
-		//	get => UacIntegrityLevel > Uac.OfThisProcess.IntegrityLevel;
+		//	get => UacIntegrityLevel > AUac.OfThisProcess.IntegrityLevel;
 		//}
 
 		#endregion
@@ -2467,10 +2467,10 @@ namespace Au
 		public string ClassName {
 			get {
 				const int stackSize = 260;
-				var b = stackalloc char[stackSize]; //tested: same speed with Buffers
+				var b = stackalloc char[stackSize]; //tested: same speed with AMemoryArray
 				int n = Api.GetClassName(this, b, stackSize);
 				if(n == 0) return null;
-				return StringCache.LibAdd(b, n);
+				return AStringCache.LibAdd(b, n);
 			}
 		}
 
@@ -2478,14 +2478,14 @@ namespace Au
 		/// Returns true if the class name of this window matches cn. Else returns false.
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
-		/// <param name="cn">Class name. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. Cannot be null.</param>
+		/// <param name="cn">Class name. Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. Cannot be null.</param>
 		public bool ClassNameIs(string cn) => ClassName.Like(cn, true);
 
 		/// <summary>
 		/// If the class name of this window matches one of strings in <i>classNames</i>, returns 1-based index of the string. Else returns 0.
 		/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
-		/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
+		/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
 		public int ClassNameIs(params string[] classNames)
 		{
 			string s = ClassName; if(s == null) return 0;
@@ -2543,7 +2543,7 @@ namespace Au
 		/// <param name="removeUnderlineAmpersand">
 		/// Remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// Removes only if this is a control (has style WS.CHILD).
-		/// Calls <see cref="ExtString.More.RemoveUnderlineAmpersand"/>.
+		/// Calls <see cref="AExtString.More.RemoveUnderlineAmpersand"/>.
 		/// </param>
 		/// <seealso cref="SetText"/>
 		/// <seealso cref="NameAcc"/>
@@ -2560,7 +2560,7 @@ namespace Au
 				&& !Empty(R)
 				//&& R.IndexOf('&') >= 0 //slower than HasStyle if the string is longer than 20
 				&& HasStyle(WS.CHILD)
-				) R = ExtString.More.RemoveUnderlineAmpersand(R);
+				) R = AExtString.More.RemoveUnderlineAmpersand(R);
 
 			return R;
 		}
@@ -2575,11 +2575,11 @@ namespace Au
 		{
 			if(Is0) return null;
 			for(int na = 300; ; na *= 2) {
-				var b = Buffers.LibChar(ref na);
+				var b = AMemoryArray.LibChar(ref na);
 				WinError.Clear();
 				int nr = Api.InternalGetWindowText(this, b, na);
 				if(nr < na - 1) {
-					if(nr > 0) return StringCache.LibAdd(b, nr);
+					if(nr > 0) return AStringCache.LibAdd(b, nr);
 					if(WinError.Code != 0) return null;
 					if(useSlowIfEmpty && HasStyle(WS.CHILD)) return _GetTextSlow();
 					return "";
@@ -2598,13 +2598,13 @@ namespace Au
 			if(!SendTimeout(5000, out LPARAM ln, Api.WM_GETTEXTLENGTH)) return null;
 			int n = (int)ln; if(n < 1) return "";
 
-			var b = Buffers.LibChar(n);
+			var b = AMemoryArray.LibChar(n);
 			fixed (char* p = b.A) {
 				if(!SendTimeout(30000, out ln, Api.WM_GETTEXT, n + 1, p)) return null;
 				if(ln < 1) return "";
 				b.A[n] = '\0';
 				n = LibCharPtr.Length(p, n); //info: some controls return incorrect ln, eg including '\0'
-				return StringCache.LibAdd(b, n);
+				return AStringCache.LibAdd(b, n);
 			}
 
 			//note: cannot do this optimization:
@@ -2675,10 +2675,10 @@ namespace Au
 		/// <remarks>
 		/// <note>Use this with controls of other processes. Don't use with your controls, when you have a Control object.</note>
 		/// 
-		/// <note>Slow when getting names of multiple controls in a window. Instead create a <see cref="WinFormsControlNames"/> instance and call its <see cref="WinFormsControlNames.GetControlName"/> method for each control.</note>
+		/// <note>Slow when getting names of multiple controls in a window. Instead create a <see cref="AWinFormsControlNames"/> instance and call its <see cref="AWinFormsControlNames.GetControlName"/> method for each control.</note>
 		/// </remarks>
-		/// <seealso cref="WinFormsControlNames.IsWinFormsControl"/>
-		public string NameWinForms => WinFormsControlNames.GetSingleControlName(this);
+		/// <seealso cref="AWinFormsControlNames.IsWinFormsControl"/>
+		public string NameWinForms => AWinFormsControlNames.GetSingleControlName(this);
 
 		/// <summary>
 		/// Gets filename of process executable file, like "notepad.exe".
@@ -2695,7 +2695,7 @@ namespace Au
 		/// If the program name of this window matches one of strings in <i>programNames</i>, returns 1-based index of the string. Else returns 0.
 		/// Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="WinError"/>.
 		/// </summary>
-		/// <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="ExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
+		/// <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
 		public int ProgramNameIs(params string[] programNames)
 		{
 			string s = ProgramName; if(s == null) return 0;
@@ -2813,9 +2813,9 @@ namespace Au
 		//bool _IsBusy(int milliseconds)
 		//{
 		//	//Need to measure time. Cannot use just 2 ms timeout and ST return value because of the system timer default period 15.6 ms etc.
-		//	var t = Time.PerfMicroseconds;
+		//	var t = ATime.PerfMicroseconds;
 		//	SendTimeout(5 + milliseconds, 0, flags: 0);
-		//	var d = Time.PerfMicroseconds - t;
+		//	var d = ATime.PerfMicroseconds - t;
 		//	//Print(d);
 		//	return (d >= milliseconds * 1000L);
 		//}

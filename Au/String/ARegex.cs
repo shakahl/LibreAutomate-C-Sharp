@@ -16,7 +16,7 @@ using System.Linq;
 using System.Text.RegularExpressions; //for XML doc links
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -1072,7 +1072,7 @@ namespace Au
 
 	#region static
 
-	public static partial class ExtString
+	public static partial class AExtString
 	{
 		/// <summary>
 		/// Returns true if this string matches PCRE regular expression <i>rx</i>.

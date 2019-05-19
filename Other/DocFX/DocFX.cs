@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 using YamlDotNet.RepresentationModel;
 using System.Net;
@@ -35,10 +35,10 @@ unsafe class Program
 
 	static void _Main()
 	{
-		bool isConsole = Output.IsConsoleProcess;
+		bool isConsole = AOutput.IsConsoleProcess;
 		if(!isConsole) {
-			Output.QM2.UseQM2 = true;
-			Output.Clear();
+			AOutput.QM2.UseQM2 = true;
+			AOutput.Clear();
 		}
 
 		var docfx = @"Q:\Programs\DocFx\docfx.exe";
@@ -64,7 +64,7 @@ unsafe class Program
 		AFile.Delete(siteDir);
 		Directory.SetCurrentDirectory(docDir);
 
-		var t1 = Time.PerfMilliseconds;
+		var t1 = ATime.PerfMilliseconds;
 
 		using(var fw = new FileSystemWatcher(apiDir, "*.yml")) {
 			fw.Changed += (sen, e) => { if(e.Name.Starts("Au.", true)) ProcessYamlFile(e.FullPath, false); };
@@ -86,11 +86,11 @@ unsafe class Program
 			if(!serving) return;
 		}
 
-		var t2 = Time.PerfMilliseconds;
+		var t2 = ATime.PerfMilliseconds;
 
 		ProcessHtmlFiles(siteDir, false);
 
-		var t3 = Time.PerfMilliseconds; Print("speed (s):", (t2 - t1) / 1000, (t3 - t2) / 1000);
+		var t3 = ATime.PerfMilliseconds; Print("speed (s):", (t2 - t1) / 1000, (t3 - t2) / 1000);
 
 		//Wnd.Find("* Chrome").Activate();
 		//Key("F5");
@@ -309,7 +309,7 @@ unsafe class Program
 
 		return nr > 0;
 	}
-	static string[] s_ns = { "Au.", "Au.Triggers.", "Au.Types.", "Au.Util.", "Au.NoClass.", };
+	static string[] s_ns = { "Au.", "Au.Triggers.", "Au.Types.", "Au.Util.", "Au.AStatic.", };
 
 	//static void ProcessToc(string siteDir)
 	//{

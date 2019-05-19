@@ -14,7 +14,7 @@ using System.Runtime.ExceptionServices;
 using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -32,9 +32,9 @@ namespace Au
 		/// </remarks>
 		public class Finder
 		{
-			readonly Wildex _name;
-			readonly Wildex _cn;
-			readonly Wildex _program;
+			readonly AWildex _name;
+			readonly AWildex _cn;
+			readonly AWildex _program;
 			readonly Func<Wnd, bool> _also;
 			readonly WFFlags _flags;
 			readonly int _processId;
@@ -54,9 +54,9 @@ namespace Au
 				Finder _f;
 				internal TProps(Finder f) { _f = f; }
 
-				public Wildex name => _f._name;
-				public Wildex cn => _f._cn;
-				public Wildex program => _f._program;
+				public AWildex name => _f._name;
+				public AWildex cn => _f._cn;
+				public AWildex program => _f._program;
 				public Func<Wnd, bool> also => _f._also;
 				public WFFlags flags => _f._flags;
 				public int processId => _f._processId;
@@ -527,7 +527,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>Wnd</b>.
-		/// Returns <c>default(Wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="ExtAu.OrThrow(Wnd)"/>.
+		/// Returns <c>default(Wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(Wnd)"/>.
 		/// </summary>
 		/// <param name="name">
 		/// Name.
@@ -948,7 +948,7 @@ namespace Au.Types
 		/// Other variables will be null/0.
 		/// </summary>
 		/// <exception cref="ArgumentException">The value is "" or 0 or contains \ or /.</exception>
-		public void GetValue(out Wildex program, out int pid, out int tid, out Wnd owner)
+		public void GetValue(out AWildex program, out int pid, out int tid, out Wnd owner)
 		{
 			program = null; pid = 0; tid = 0; owner = default;
 			switch(_o) {
@@ -957,7 +957,7 @@ namespace Au.Types
 				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
 				if(!s.Starts("**")) { //can be regex
 					if(s.FindChars(@"\/") >= 0) throw new ArgumentException("Program name contains \\ or /.");
-					if(APath.FindExtension(s) < 0 && !Wildex.HasWildcardChars(s)) PrintWarning("Program name without .exe.");
+					if(APath.FindExtension(s) < 0 && !AWildex.HasWildcardChars(s)) PrintWarning("Program name without .exe.");
 				}
 				program = s;
 				break;
@@ -981,7 +981,7 @@ namespace Au.Types
 		//internal static void LibThrowIfInvalid(string s)
 		//{
 		//	if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
-		//	if(s.IndexOfAny(ExtString.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
+		//	if(s.IndexOfAny(AExtString.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
 		//	if(APath.FindExtension(s) < 0) PrintWarning("Program name without .exe.");
 		//}
 

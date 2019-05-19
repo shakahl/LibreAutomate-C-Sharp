@@ -18,7 +18,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
@@ -54,7 +54,7 @@ partial class EdForm
 		var t = doc.ST;
 		var s = doc.Text;
 
-		//Output.QM2.Write(s);
+		//AOutput.QM2.Write(s);
 
 		int len=t.TextLengthBytes;
 		var b = stackalloc byte[len * 2 + 2];
@@ -71,7 +71,7 @@ partial class EdForm
 		//for(int i = 0; i < 3; i++) Print((uint)t.Call(SCI_GETFOLDLEVEL, i));
 		//return;
 
-		//Output.Clear();
+		//AOutput.Clear();
 		//Model.Save.TextNowIfNeed();
 		//Compiler.ConvertCodeScriptToApp(Model.CurrentFile);
 
@@ -132,13 +132,13 @@ partial class EdForm
 
 		//		var s1 = @"//{{
 		////{{ using
-		//using Au; using static Au.NoClass; using Au.Types; using System; using System.Collections.Generic; //}}
+		//using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}
 		////{{ main
 		//unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
 		//";
 		//		var s2 = @"/*/ role exeProgram; outputPath %Folders.Workspace%\bin; console true; /*/ //{{
 		////{{ using
-		//using Au; using static Au.NoClass; using Au.Types; using System; using System.Collections.Generic; //}}
+		//using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}
 		//using My.NS1; //ąčę îôû
 		//using My.NS2;
 		////{{ main
@@ -163,12 +163,12 @@ partial class EdForm
 		//var code = Model.CurrentFile.GetText();
 
 		var t=Panels.Editor.ActiveDoc.ST;
-		//Perf.First();
+		//APerf.First();
 		//t.ReplaceRange(2, 4, "NEW TEXT");
 		//t.ReplaceRange(2, 4, "NEW TEXT", true, true);
 		//t.DeleteRange(2, 3);
 		//t.InsertText(2, "TEXT");
-		//Perf.NW();
+		//APerf.NW();
 
 		//var s=t.GetText();
 		//Print(s.Length, s, t.Call(SCI_POSITIONRELATIVE, 0, 1), t.Call(SCI_COUNTCHARACTERS, 0, 4));
@@ -295,12 +295,12 @@ partial class EdForm
 
 	void SetHookToMonitorCreatedWindowsOfThisThread()
 	{
-		_hook = WinHook.ThreadCbt(x => {
+		_hook = AHookWin.ThreadCbt(x => {
 			if(x.code == HookData.CbtEvent.CREATEWND) Print((Wnd)x.wParam);
 			return false;
 		});
-		Application.ApplicationExit += (unu, sed) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with WinHook) 
+		Application.ApplicationExit += (unu, sed) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with AHookWin) 
 	}
-	static WinHook _hook;
+	static AHookWin _hook;
 }
 #endif

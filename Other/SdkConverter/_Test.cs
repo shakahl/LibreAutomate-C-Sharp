@@ -19,7 +19,7 @@ using System.ComponentModel; //Win32Exception
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 #pragma warning disable 169
 
@@ -197,7 +197,7 @@ namespace SdkConverter
 			//var a3 = new Action(() => { TestUnmanaged3(out v, out g); });
 			//var a4 = new Action(() => { TestUnmanaged4(ref v, ref g); });
 
-			//Perf.ExecuteMulti(5, 10000, a1, a2, a3, a4);
+			//APerf.ExecuteMulti(5, 10000, a1, a2, a3, a4);
 
 			//var sb = new StringBuilder("test");
 			//CharUpper(sb);
@@ -263,7 +263,7 @@ namespace SdkConverter
 			//	}
 			//});
 
-			//Perf.ExecuteMulti(5, 50, a1, a2);
+			//APerf.ExecuteMulti(5, 50, a1, a2);
 
 			//OutList(n1, n2);
 		}

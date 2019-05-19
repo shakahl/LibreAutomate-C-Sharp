@@ -14,7 +14,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 //CONSIDER: add an option to inject and execute the task in any process/thread.
 //	[assembly: Inject("firefox.exe", windowName="* - Firefox")]

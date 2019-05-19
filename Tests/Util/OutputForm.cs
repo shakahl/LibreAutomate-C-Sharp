@@ -19,7 +19,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Controls;
 using static Au.Controls.Sci;
 
@@ -27,7 +27,7 @@ class OutputForm : AFormBase
 {
 	AuScintilla _c;
 
-	static Au.Util.OutputServer _os = new Au.Util.OutputServer(isGlobal: false);
+	static AOutputServer _os = new AOutputServer(isGlobal: false);
 
 	public OutputForm()
 	{
@@ -44,7 +44,7 @@ class OutputForm : AFormBase
 		_os.NoNewline = true;
 		_os.SetNotifications(_ProcessMessages, this);
 		_os.Start();
-		Output.IgnoreConsole = true;
+		AOutput.IgnoreConsole = true;
 	}
 
 	void _ProcessMessages()
@@ -97,7 +97,7 @@ class OutputForm : AFormBase
 				ST.ClearText();
 				break;
 			case MouseButtons.Right:
-				if(!_f._paused) { Osd.ShowText("OutputForm info: right-click pauses output. Right click again to resume.", xy: PopupXY.Mouse); }
+				if(!_f._paused) { AOsd.ShowText("OutputForm info: right-click pauses output. Right click again to resume.", xy: PopupXY.Mouse); }
 				_f._paused ^= true;
 				break;
 			}

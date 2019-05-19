@@ -12,7 +12,7 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Windows.Forms;
+using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
@@ -20,7 +20,7 @@ using System.Runtime.ExceptionServices;
 using l = Au;
 //using lt = Au.Types;
 //using lu = Au.Util;
-//using static Au.NoClass;
+//using static Au.AStatic;
 //using Au.Ext;
 
 //using m = Au.Mouse;
@@ -35,6 +35,7 @@ class test_namespaces
 		//l.File.ExistsAsFile("");
 		////m.Click();
 		//lu.
-		//Au.Util.Buffers.CharBuffer
+		//Au.Util.AMemoryArray.CharBuffer
+
 	}
 }

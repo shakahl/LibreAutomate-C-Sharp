@@ -16,7 +16,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Triggers
 {
@@ -48,7 +48,7 @@ namespace Au.Triggers
 	/// - <c>runMode blue</c> allows other scripts to start while this script is running.
 	/// - <c>ifRunning restart</c> makes easy to restart the script after editing: just click the Run button.
 	/// 
-	/// <note>Trigger actions don't inherit <b>Opt</b> options that are set before adding triggers. The example shows two ways how to set <b>Opt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>Opt</b> options set by previous action; the trigger engine calls <see cref="Opt.Reset"/> before executing an action.</note>
+	/// <note>Trigger actions don't inherit <b>AOpt</b> options that are set before adding triggers. The example shows two ways how to set <b>AOpt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>AOpt</b> options set by previous action; the trigger engine calls <see cref="AOpt.Reset"/> before executing an action.</note>
 	/// </remarks>
 	/// <example>
 	/// This is a single script with many action triggers.
@@ -126,18 +126,18 @@ namespace Au.Triggers
 	/// ts["#so"] = "Some text"; //the same as tt["#so"] = o => o.Replace("Some text");
 	/// ts["#mo"] = "More text";
 	/// 
-	/// //how to set Opt options for trigger actions
+	/// //how to set AOpt options for trigger actions
 	/// 
-	/// //Opt.Key.TextOption = KTextOption.Paste; //no, it won't work. It sets Opt for this thread, not for trigger actions.
-	/// Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; }; //the correct way. Sets Opt before executing an action.
+	/// //AOpt.Key.TextOption = KTextOption.Paste; //no, it won't work. It sets AOpt for this thread, not for trigger actions.
+	/// Triggers.Options.BeforeAction = o => { AOpt.Key.TextOption = KTextOption.Paste; }; //the correct way. Sets AOpt before executing an action.
 	/// ts["#p1"] = "text 1";
 	/// ts["#p2"] = "text 2";
 	/// Triggers.Options.BeforeAction = null;
 	/// 
-	/// //another way to set Opt options - use Opt.Static. It sets options for all actions in the script, not just for triggers added afterwards.
+	/// //another way to set AOpt options - use AOpt.Static. It sets options for all actions in the script, not just for triggers added afterwards.
 	/// 
-	/// Opt.Static.Key.PasteLength = 50;
-	/// Opt.Static.Key.Hook = h => { var w1 = h.w.Window; Print(w1); if(w1.Name.Like("* Word")) h.opt.PasteEnter = true; };
+	/// AOpt.Static.Key.PasteLength = 50;
+	/// AOpt.Static.Key.Hook = h => { var w1 = h.w.Window; Print(w1); if(w1.Name.Like("* Word")) h.opt.PasteEnter = true; };
 	/// ts["#p3"] = "/* " + new string('*', 60) + " */\r\n";
 	/// 
 	/// //how to stop and disable/enable triggers
@@ -343,7 +343,7 @@ namespace Au.Triggers
 			for(; ; ) {
 				int slice = -1;
 				if(_winTimerPeriod > 0) {
-					long t = Time.PerfMilliseconds;
+					long t = ATime.PerfMilliseconds;
 					if(_winTimerLastTime == 0) _winTimerLastTime = t;
 					int td = (int)(t - _winTimerLastTime);
 					int period = _Period();
@@ -374,7 +374,7 @@ namespace Au.Triggers
 		internal int LibWinTimerPeriod {
 			get => _winTimerPeriod;
 			set {
-				long t = Time.PerfMilliseconds;
+				long t = ATime.PerfMilliseconds;
 				int td = (int)(t - _winTimerLastTime);
 				if(td > 10) _winTimerLastTime = t;
 				_winTimerPeriod = value;
@@ -384,7 +384,7 @@ namespace Au.Triggers
 
 		unsafe void _RunWithHooksServer(HooksServer.UsedEvents usedEvents)
 		{
-			//Perf.Next();
+			//APerf.Next();
 
 			//prevent big delay later on first LL hook event while hook proc waits
 			bool ngened = Util.AAssembly.LibIsAuNgened;
@@ -395,11 +395,11 @@ namespace Au.Triggers
 						if(scopeUsed) Util.AAssembly.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
 						if(!ngened) {
 							if(scopeUsed) new Wnd.Finder("*a").IsMatch(Wnd.Active);
-							_ = Time.PerfMicroseconds;
-							Util.Jit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
-							Util.Jit.Compile(typeof(TriggerHookContext), "InitContext", "PerfEnd", "PerfWarn");
-							Util.Jit.Compile(typeof(ActionTrigger), nameof(ActionTrigger.MatchScopeWindowAndFunc));
-							if(this[TriggerType.Hotkey] is HotkeyTriggers tk) Util.Jit.Compile(typeof(HotkeyTriggers), nameof(HotkeyTriggers.HookProc));
+							_ = ATime.PerfMicroseconds;
+							Util.AJit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
+							Util.AJit.Compile(typeof(TriggerHookContext), "InitContext", "PerfEnd", "PerfWarn");
+							Util.AJit.Compile(typeof(ActionTrigger), nameof(ActionTrigger.MatchScopeWindowAndFunc));
+							if(this[TriggerType.Hotkey] is HotkeyTriggers tk) Util.AJit.Compile(typeof(HotkeyTriggers), nameof(HotkeyTriggers.HookProc));
 							if(this[TriggerType.Autotext] is AutotextTriggers ta) AutotextTriggers.JitCompile();
 							if(this[TriggerType.Mouse] is MouseTriggers tm) MouseTriggers.JitCompile();
 						}
@@ -407,7 +407,7 @@ namespace Au.Triggers
 					catch(Exception ex) { ADebug.Print(ex); }
 				});
 			}
-			//Perf.Next();
+			//APerf.Next();
 
 			Wnd wMsg = default;
 			bool hooksInEditor = ATask.Role != ATRole.ExeProgram;
@@ -418,8 +418,8 @@ namespace Au.Triggers
 					hooksInEditor = false;
 				} else {
 					//if this process is admin, and editor isn't, useEditor=false.
-					var u = Uac.OfProcess(wMsg.ProcessId);
-					if(u != null && u.IntegrityLevel < UacIL.UIAccess && Uac.OfThisProcess.IntegrityLevel >= UacIL.UIAccess) hooksInEditor = false;
+					var u = AUac.OfProcess(wMsg.ProcessId);
+					if(u != null && u.IntegrityLevel < UacIL.UIAccess && AUac.OfThisProcess.IntegrityLevel >= UacIL.UIAccess) hooksInEditor = false;
 				}
 			}
 			if(!hooksInEditor) {
@@ -452,7 +452,7 @@ namespace Au.Triggers
 				var ha = stackalloc IntPtr[2] { evHooks, _evStop };
 
 				//GC.Collect(); //if adding triggers and scopes creates much garbage, eg if is used StackTrace or StckFrame
-				//Perf.NW('T');
+				//APerf.NW('T');
 
 				while(true) {
 					var o = new Api.OVERLAPPED { hEvent = evHooks };
@@ -469,7 +469,7 @@ namespace Au.Triggers
 						if(ec != 0) { ADebug.LibPrintNativeError(ec); break; }
 					}
 
-					//Perf.First();
+					//APerf.First();
 					bool eat = false;
 					thc.InitContext();
 					if(size == sizeof(Api.KBDLLHOOKSTRUCT2)) {
@@ -496,9 +496,9 @@ namespace Au.Triggers
 							tm.HookProcEdgeMove(*m, thc);
 						}
 					}
-					//Perf.Next();
+					//APerf.Next();
 					thc.PerfWarn();
-					//Perf.NW();
+					//APerf.NW();
 
 					//var mem = GC.GetTotalMemory(false);
 					//if(mem != _debugMem && _debugMem != 0) Print(mem - _debugMem);
@@ -659,7 +659,7 @@ namespace Au.Triggers
 		{
 			//this.triggers = triggers;
 			_perfList = new _ScopeTime[32];
-			_perfHookTimeout = WinHook.LowLevelHooksTimeout;
+			_perfHookTimeout = AHookWin.LowLevelHooksTimeout;
 			base.CacheName = true; //we'll call Clear(onlyName: true) at the start of each event
 		}
 
@@ -726,12 +726,12 @@ namespace Au.Triggers
 
 		public void PerfStart()
 		{
-			_perfTime = Time.PerfMicroseconds;
+			_perfTime = ATime.PerfMicroseconds;
 		}
 
 		public void PerfEnd(bool isFunc, ref int perfTime)
 		{
-			long tLong = Time.PerfMicroseconds - _perfTime;
+			long tLong = ATime.PerfMicroseconds - _perfTime;
 			int time = (int)Math.Min(tLong, 1_000_000_000);
 
 			//calc average time of this scope. Assume the first time is 0.
@@ -827,7 +827,7 @@ namespace Au.Triggers
 				TrigUtil.GetModLR(out modL, out modR);
 				//ADebug.PrintIf(modL != _modL || modR != _modR, $"KEY={k.vkCode}    modL={modL}  _modL={_modL}    modR={modR}  _modR={_modR}"); //normally should be only when auto-repeating a trigger
 				_modL |= modL; _modR |= modR;
-				long time = Time.WinMilliseconds;
+				long time = ATime.WinMilliseconds;
 				if(time - _lastKeyTime > 5000) {
 					_modL &= modL; _modR &= modR;
 				}

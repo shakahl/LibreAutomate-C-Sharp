@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 #pragma warning disable CS0282 //VS bug: shows warning "There is no defined ordering between fields in multiple declarations of partial struct 'Acc'. To specify an ordering, all instance fields must be in the same declaration."
 
@@ -247,10 +247,10 @@ namespace Au
 		{
 			if(_iacc != default) {
 				var t = _iacc; _iacc = default;
-				//Perf.First();
+				//APerf.First();
 				//int rc =
 				Marshal.Release(t);
-				//Perf.NW();
+				//APerf.NW();
 				//Print($"rel: {Marshal.Release(t)}");
 				//Print(t, _elem, rc);
 
@@ -418,7 +418,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the accessible object that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="WinAccHook"/>.
+		/// Gets the accessible object that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="AHookAcc"/>.
 		/// Returns null if failed. Suports <see cref="WinError"/>.
 		/// </summary>
 		/// <param name="w"></param>
@@ -601,7 +601,7 @@ namespace Au
 		/// <example>
 		/// Displays visible accessible objects in Chrome web page.
 		/// <code><![CDATA[
-		/// Output.Clear();
+		/// AOutput.Clear();
 		/// var w = Wnd.Find("* Chrome").OrThrow();
 		/// Print("---- all ----");
 		/// Acc.PrintAll(w, "web:");

@@ -15,7 +15,7 @@ using System.Windows.Forms;
 //using System.Linq;
 //using System.Xml.Linq;
 
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Types
 {

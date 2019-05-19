@@ -16,7 +16,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -416,7 +416,7 @@ namespace Au
 
 				if(skipMinimized && w.IsMinimized) return false;
 
-				if(Ver.MinWin10) {
+				if(AVersion.MinWin10) {
 					if(w.IsCloaked) {
 						if(!allDesktops) return false;
 						if((exStyle & WS_EX.NOREDIRECTIONBITMAP) != 0) { //probably a store app
@@ -426,7 +426,7 @@ namespace Au
 							}
 						}
 					}
-				} else if(Ver.MinWin8) {
+				} else if(AVersion.MinWin8) {
 					if((exStyle & WS_EX.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(WS.CAPTION)) {
 						if(!allDesktops && (exStyle & WS_EX.TOPMOST) != 0) return false; //skip store apps
 						if(Shell.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) return false; //skip captionless shell windows

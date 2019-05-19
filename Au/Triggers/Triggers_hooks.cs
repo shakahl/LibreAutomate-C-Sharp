@@ -19,7 +19,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 //Triggers of all non-exe task processes/threads use single low-level keyboard/mouse hook in editor process. Not own LL hooks, because:
 //	1. UAC. Editor normally is admin. Task processes can be any. Hooks of non-admin processes don't work when an admin window is active.
@@ -81,7 +81,7 @@ namespace Au.Triggers
 		readonly Wnd.More.MyWindow _msgWnd;
 		readonly Thread _thread;
 		readonly List<_ThreadPipe> _pipes;
-		WinHook _hookK, _hookM;
+		AHookWin _hookK, _hookM;
 		LibHandle _event;
 		bool _inTaskProcess;
 		MouseTriggers.LibEdgeMoveDetector _emDetector;
@@ -112,9 +112,9 @@ namespace Au.Triggers
 			if(_inTaskProcess) Util.AAppDomain.Exit += (unu, sed) => _msgWnd.Handle.SendTimeout(1000, Api.WM_CLOSE); //unhook etc
 
 			if(!Util.AAssembly.LibIsAuNgened) {
-				Util.Jit.Compile(typeof(HooksServer), "_Send", "_KeyboardHookProc", "_MouseHookProc");
-				Util.Jit.Compile(typeof(Api), "WriteFile", "ReadFile", "WaitForMultipleObjectsEx");
-				_ = Time.PerfMilliseconds;
+				Util.AJit.Compile(typeof(HooksServer), "_Send", "_KeyboardHookProc", "_MouseHookProc");
+				Util.AJit.Compile(typeof(Api), "WriteFile", "ReadFile", "WaitForMultipleObjectsEx");
+				_ = ATime.PerfMilliseconds;
 			}
 
 			while(Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
@@ -192,10 +192,10 @@ namespace Au.Triggers
 			}
 
 			if(0 != (usedEvents & UsedEvents.Keyboard) && _hookK == null) {
-				_hookK = WinHook.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
+				_hookK = AHookWin.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
 			}
 			if(0 != (usedEvents & UsedEvents.Mouse) && _hookM == null) {
-				_hookM = WinHook.LibMouseRaw(_MouseHookProc);
+				_hookM = AHookWin.LibMouseRaw(_MouseHookProc);
 			}
 			if(0 != (usedEvents & UsedEvents.MouseEdgeMove) && _emDetector == null) {
 				_emDetector = new MouseTriggers.LibEdgeMoveDetector();
@@ -206,7 +206,7 @@ namespace Au.Triggers
 
 		unsafe void _KeyboardHookProc(HookData.Keyboard k)
 		{
-			//var p = Perf.StartNew();
+			//var p = APerf.StartNew();
 			var d = new Api.KBDLLHOOKSTRUCT2(k.LibNativeStructPtr);
 			if(_Send(UsedEvents.Keyboard, &d, sizeof(Api.KBDLLHOOKSTRUCT2))) k.BlockEvent();
 			//p.NW();

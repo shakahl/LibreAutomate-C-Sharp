@@ -27,7 +27,7 @@ using System.Security.AccessControl;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 //using Au.Util;
 using Au.Controls;
 using Au.Triggers;
@@ -59,7 +59,7 @@ static partial class Test
 	//	Not if app is ngened (but lib can be non-ngened).
 	//		But why only if STAThread? And why only if it's a struct (and not class) of a User.dll (and not eg of this assembly)?
 	//		Tested with a simplest dll, not only with Au.dll.
-	//	Also can depend on other things, eg handling some exception types, using Output.Clear etc. Only if [STAThread].
+	//	Also can depend on other things, eg handling some exception types, using AOutput.Clear etc. Only if [STAThread].
 	//	With or without [STAThread], 1 call to Task.Run makes 12 (from 6 or 9), >=2 Task.Run makes 14.
 	//The above numbers (6 and 9) are on Win10. On Win7 (virtual PC) the numbers are 4 and 7. Older .NET framework version.
 
@@ -82,12 +82,12 @@ static partial class Test
 	[HandleProcessCorruptedStateExceptions]
 	static unsafe void TestMain()
 	{
-		//Output.IgnoreConsole = true;
-		//Output.LogFile=@"Q:\Test\Au"+IntPtr.Size*8+".log";
-		Output.QM2.UseQM2 = true;
-		Output.RedirectConsoleOutput = true;
-		if(!Output.IsWritingToConsole) {
-			Output.Clear();
+		//AOutput.IgnoreConsole = true;
+		//AOutput.LogFile=@"Q:\Test\Au"+IntPtr.Size*8+".log";
+		AOutput.QM2.UseQM2 = true;
+		AOutput.RedirectConsoleOutput = true;
+		if(!AOutput.IsWritingToConsole) {
+			AOutput.Clear();
 			//100.ms();
 		}
 		//AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
@@ -128,8 +128,8 @@ static partial class Test
 			//TestEditAndContinue();
 			//TestDetectFileTextEncoding();
 			//TestCollectionEmpty();
-			//Perf.Cpu();
-			//Perf.First();
+			//APerf.Cpu();
+			//APerf.First();
 			//TestSqlite();
 			//TestSqliteExamples();
 			//TestGetBoxedPointer();

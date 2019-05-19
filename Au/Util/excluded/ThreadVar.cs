@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 #if false //unfinished. Currently not used in lib.
 namespace Au//.Util

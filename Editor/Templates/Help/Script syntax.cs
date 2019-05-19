@@ -1,6 +1,6 @@
 ﻿/*/ ifRunning restart; r System.Numerics; /*/ //{{
 //{{ using
-using Au; using static Au.NoClass; using Au.Types; using System; using System.Collections.Generic; //}}
+using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}
 using System.Numerics; //example
 using System.Runtime.InteropServices; //example
 

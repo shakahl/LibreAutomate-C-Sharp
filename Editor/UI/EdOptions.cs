@@ -19,7 +19,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 using Au.Controls;
 
@@ -68,7 +68,7 @@ partial class EdOptions : AFormBase
 		string s = _startupScripts.Text; if(Empty(s)) return;
 		string err = null;
 		try {
-			var t = Csv.Parse(s);
+			var t = ACsv.Parse(s);
 			if(t.ColumnCount > 2) { err = "Too many commas in a line. If script name contains comma, enclose in \"\"."; goto ge; }
 			foreach(var v in t.Data) {
 				var script = v[0];

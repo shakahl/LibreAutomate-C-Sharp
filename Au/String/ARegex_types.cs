@@ -18,13 +18,13 @@ using System.Text.RegularExpressions; //for XML doc links
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Types
 {
 	/// <summary>
 	/// Regular expression match info.
-	/// Used with <see cref="ARegex"/> class functions and String extension methods like <see cref="ExtString.RegexMatch"/>.
+	/// Used with <see cref="ARegex"/> class functions and String extension methods like <see cref="AExtString.RegexMatch"/>.
 	/// </summary>
 	/// <remarks>
 	/// Contains info about a regular expression match found in the subject string: index, length, substring, etc.
@@ -475,13 +475,13 @@ namespace Au.Types
 		/// The callout string, eg "xyz" for "(?C'xyz')".
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
-		public string callout_string => _p->callout_string == null ? null : Util.StringCache.LibAdd(_p->callout_string, (int)_p->callout_string_length);
+		public string callout_string => _p->callout_string == null ? null : Util.AStringCache.LibAdd(_p->callout_string, (int)_p->callout_string_length);
 
 		/// <summary>
 		/// The most recently passed (*MARK), (*PRUNE), or (*THEN) item in the match, or null if no such items have been passed.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
-		public string mark => _p->mark == null ? null : Util.StringCache.LibAdd(_p->mark);
+		public string mark => _p->mark == null ? null : Util.AStringCache.LibAdd(_p->mark);
 
 		/// <summary>
 		/// Gets the start index and length of the specified group in the subject string.

@@ -18,7 +18,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -265,14 +265,14 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Scintilla dll path.
-		/// Default is <c>Folders.ThisApp + @"Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll"</c>. If you want to change it, call this before creating first control.
+		/// Default is <c>Folders.ThisApp + @"Dll\" + (AVersion.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll"</c>. If you want to change it, call this before creating first control.
 		/// </summary>
 		public static string SciLexerDllPath {
 			get {
 				if(s_dllPath == null) {
-					s_dllPath = Folders.ThisAppBS + @"Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
+					s_dllPath = Folders.ThisAppBS + @"Dll\" + (AVersion.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
 					if(!AFile.ExistsAsFile(s_dllPath, true)) { //in designer?
-						s_dllPath = @"Q:\app\Au\_\Dll\" + (Ver.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
+						s_dllPath = @"Q:\app\Au\_\Dll\" + (AVersion.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
 					}
 				}
 				return s_dllPath;

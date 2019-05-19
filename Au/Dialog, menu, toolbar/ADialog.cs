@@ -15,7 +15,7 @@ using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 #pragma warning disable 649 //unused fields in API structs
@@ -409,7 +409,7 @@ namespace Au
 
 			static string _ParseSingleString(string s, ref int id, bool dontSplit)
 			{
-				if(!dontSplit && ExtString.More.ParseIntAndString(s, out var i, out string r)) id = i; else { r = s; id++; }
+				if(!dontSplit && AExtString.More.ParseIntAndString(s, out var i, out string r)) id = i; else { r = s; id++; }
 				r = r.TrimChars("\r\n"); //API does not like newline at start, etc
 				if(r.Length == 0) r = " "; //else API exception
 				else r = r.Replace("\r\n", "\n"); //API adds 2 newlines for \r\n. Only for custom buttons, not for other controls/parts.
@@ -812,7 +812,7 @@ namespace Au
 
 			int rNativeButton = 0, rRadioButton = 0, rIsChecked = 0, hr = 0;
 			bool hasCustomButtons = false;
-			WinHook hook = null;
+			AHookWin hook = null;
 
 			try {
 				_threadIdInShow = Thread.CurrentThread.ManagedThreadId;
@@ -822,7 +822,7 @@ namespace Au
 				else hasCustomButtons = true;
 
 				if(_timeoutActive) { //Need mouse/key messages to stop countdown on click or key.
-					hook = WinHook.ThreadGetMessage(_HookProc);
+					hook = AHookWin.ThreadGetMessage(_HookProc);
 				}
 
 				Wnd.Lib.EnableActivate(true);
@@ -1105,7 +1105,7 @@ namespace Au
 			while(!IsOpen) {
 				if(_isClosed) return false;
 				Thread.Sleep(15); //need ~3 loops if 15
-				Time.DoEvents(); //without it this func hangs if a form is the dialog owner
+				ATime.DoEvents(); //without it this func hangs if a form is the dialog owner
 			}
 			return true;
 		}

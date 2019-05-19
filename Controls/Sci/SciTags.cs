@@ -19,7 +19,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 /*
@@ -186,9 +186,9 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Displays <see cref="OutputServer"/> messages that are currently in its queue.
+		/// Displays <see cref="AOutputServer"/> messages that are currently in its queue.
 		/// </summary>
-		/// <param name="os">The OutputServer instance.</param>
+		/// <param name="os">The AOutputServer instance.</param>
 		/// <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.</param>
 		/// <remarks>
 		/// Removes messages from the queue.
@@ -196,8 +196,8 @@ namespace Au.Controls
 		/// Messages with tags must have prefix "&lt;&gt;".
 		/// Limits text length to about 4 MB (removes oldest text when exceeded).
 		/// </remarks>
-		/// <seealso cref="OutputServer.SetNotifications"/>
-		public void OutputServerProcessMessages(OutputServer os, Action<OutputServer.Message> onMessage = null)
+		/// <seealso cref="AOutputServer.SetNotifications"/>
+		public void OutputServerProcessMessages(AOutputServer os, Action<OutServMessage> onMessage = null)
 		{
 			//info: Cannot call _c.Write for each message, it's too slow. Need to join all messages.
 			//	If multiple messages, use StringBuilder.
@@ -209,12 +209,12 @@ namespace Au.Controls
 			while(os.GetMessage(out var m)) {
 				onMessage?.Invoke(m);
 				switch(m.Type) {
-				case OutputServer.MessageType.Clear:
+				case OutServMessageType.Clear:
 					_c.ST.ClearText();
 					s = null;
 					b?.Clear();
 					break;
-				case OutputServer.MessageType.Write:
+				case OutServMessageType.Write:
 					if(s == null) {
 						s = m.Text;
 						hasTags = hasTagsPrev = s.Starts("<>");
@@ -260,7 +260,7 @@ namespace Au.Controls
 
 			//test slow client
 			//Thread.Sleep(500);
-			//Output.LibWriteQM2(s.Length / 1048576d);
+			//AOutput.LibWriteQM2(s.Length / 1048576d);
 		}
 
 		/// <summary>
@@ -271,7 +271,7 @@ namespace Au.Controls
 		/// <param name="skipLTGT">If text starts with "&lt;&gt;", skip it.</param>
 		public void AddText(string text, bool appendLine, bool skipLTGT)
 		{
-			//Perf.First();
+			//APerf.First();
 			if(Empty(text) || (skipLTGT && text == "<>")) {
 				if(appendLine) _t.AppendText("", true, true, true); else _t.ClearText();
 				return;
@@ -293,7 +293,7 @@ namespace Au.Controls
 
 		void _AddText(byte* s, int len, bool append)
 		{
-			//Perf.Next();
+			//APerf.Next();
 			byte* s0 = s, sEnd = s + len; //source text
 			byte* t = s0; //destination text, ie without some tags
 			byte* r0 = s0 + (len + 2), r = r0; //destination style bytes
@@ -527,7 +527,7 @@ namespace Au.Controls
 
 			if(_styles.Count > prevStylesCount) _SetUserStyles(prevStylesCount);
 
-			//Perf.Next();
+			//APerf.Next();
 			_t.LibAddText(append, s0, len);
 			if(!hasTags) return;
 
@@ -555,9 +555,9 @@ namespace Au.Controls
 				//	Scrolling is very slow. //CONSIDER: try to scroll async (SCI_GOTOPOS); but no, will not need it when output will be buffered.
 				//	//FUTURE: see maybe it's possible to get styling from lexers without attaching them to Scintilla control. Creating a hidden control for it is not good, eg because setting text is much slower.
 
-				//Perf.Next();
+				//APerf.Next();
 				_SetLexer(LexLanguage.SCLEX_CPP);
-				//Perf.Next();
+				//APerf.Next();
 
 				//Problem: SCI_COLOURISE does not work when appending if previous text contains styles.
 				//See code in:
@@ -571,9 +571,9 @@ namespace Au.Controls
 				for(int i = 0; i < codes.Count; i++) {
 					_c.Call(SCI_COLOURISE, codes[i].x + prevLen, codes[i].y + prevLen);
 				}
-				//Perf.Next();
+				//APerf.Next();
 				_SetLexer(LexLanguage.SCLEX_NULL);
-				//Perf.Next();
+				//APerf.Next();
 
 				if(prevStyle != 0) _StyleChar(prevLen - 1, prevStyle); //part 2 of the workaround
 
@@ -583,9 +583,9 @@ namespace Au.Controls
 				}
 			}
 			_StyleRange(len);
-			//Perf.Next();
-			////Perf.Write();
-			//Output.QM2.Write(Perf.ToString());
+			//APerf.Next();
+			////APerf.Write();
+			//AOutput.QM2.Write(APerf.ToString());
 
 
 			void _StyleRange(int to)
@@ -604,7 +604,7 @@ namespace Au.Controls
 
 			void _Write(byte ch, byte style)
 			{
-				//Output.QM2.Write($"{ch} {style}");
+				//AOutput.QM2.Write($"{ch} {style}");
 				*t++ = ch; *r++ = style;
 			}
 
@@ -721,12 +721,12 @@ namespace Au.Controls
 				AHelp.AuHelp(attr);
 				break;
 			case "explore":
-				Exec.Select(attr);
+				Exec.SelectInExplorer(attr);
 				break;
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
 				//others are unregistered tags. Only if start with '+' (others are displayed as text).
-				if(Opt.Debug.Verbose) ADialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
+				if(AOpt.Debug.Verbose) ADialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
 				break;
 			}
 		}

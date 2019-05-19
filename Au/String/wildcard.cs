@@ -15,11 +15,11 @@ using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
-	public static unsafe partial class ExtString
+	public static unsafe partial class AExtString
 	{
 		#region Like
 
@@ -57,7 +57,7 @@ namespace Au
 		/// if(s.Like(@"?:*")) Print("any character, : and possibly more text");
 		/// ]]></code>
 		/// </example>
-		/// <seealso cref="Wildex"/>
+		/// <seealso cref="AWildex"/>
 #if false //somehow speed depends on dll version. With some versions same as C# code, with some slower. Also depends on string. With shortest strings 50% slower.
 		public static bool Like(this string t, string pattern, bool ignoreCase = false)
 		{
@@ -159,16 +159,13 @@ namespace Au
 
 		#endregion Like
 	}
-}
 
-namespace Au.Types
-{
 	/// <summary>
 	/// This class implements [](xref:wildcard_expression) parsing and matching (comparing).
 	/// </summary>
-	/// Typically used in 'find' functions. For example, <see cref="Wnd.Find"/> uses it to compare window name, class name and program.
-	/// The 'find' function creates a <b>Wildex</b> instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
 	/// <remarks>
+	/// Typically used in 'find' functions. For example, <see cref="Wnd.Find"/> uses it to compare window name, class name and program.
+	/// The 'find' function creates an <b>AWildex</b> instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -182,7 +179,7 @@ namespace Au.Types
 	/// //null-string arguments are not compared.
 	/// Document Find2(string name, string date)
 	/// {
-	/// 	Wildex n = name, d = date; //null if the string is null
+	/// 	AWildex n = name, d = date; //null if the string is null
 	/// 	return Documents.Find(x => (n == null || n.Match(x.Name)) && (d == null || d.Match(x.Date)));
 	/// }
 	/// 
@@ -191,11 +188,11 @@ namespace Au.Types
 	/// var item = x.Find2("example", "2017-*");
 	/// ]]></code>
 	/// </example>
-	public class Wildex
+	public class AWildex
 	{
 		//note: could be struct, but somehow then slower. Slower instance creation, calling methods, in all cases.
 
-		object _obj; //string, Regex or Wildex[]. Tested: getting string etc with '_obj as string' is fast.
+		object _obj; //string, ARegex, Regex or AWildex[]. Tested: getting string etc with '_obj as string' is fast.
 		WXType _type;
 		bool _ignoreCase;
 		bool _not;
@@ -207,7 +204,7 @@ namespace Au.Types
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public Wildex(string wildcardExpression)
+		public AWildex(string wildcardExpression)
 		{
 			var w = wildcardExpression;
 			if(w == null) throw new ArgumentNullException();
@@ -248,8 +245,8 @@ namespace Au.Types
 					return;
 				case WXType.Multi:
 					var a = w.Split(split ?? _splitMulti, StringSplitOptions.None);
-					var multi = new Wildex[a.Length];
-					for(int i = 0; i < a.Length; i++) multi[i] = new Wildex(a[i]);
+					var multi = new AWildex[a.Length];
+					for(int i = 0; i < a.Length; i++) multi[i] = new AWildex(a[i]);
 					_obj = multi;
 					return;
 				}
@@ -261,12 +258,12 @@ namespace Au.Types
 		static readonly string[] _splitMulti = { "||" };
 
 		/// <summary>
-		/// Creates new Wildex from wildcard expression string.
+		/// Creates new <b>AWildex</b> from wildcard expression string.
 		/// If the string is null, returns null.
 		/// </summary>
 		/// <param name="wildcardExpression">[Wildcard expression](xref:wildcard_expression). </param>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public static implicit operator Wildex(string wildcardExpression)
+		public static implicit operator AWildex(string wildcardExpression)
 		{
 			if(wildcardExpression == null) return null;
 
@@ -274,11 +271,11 @@ namespace Au.Types
 			///// If the string is "", calls <see cref="PrintWarning"/>. To match "", use "**empty" instead.
 			//	if(wildcardExpression.Length == 0) PrintWarning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
 
-			return new Wildex(wildcardExpression);
+			return new AWildex(wildcardExpression);
 		}
 
 		/// <summary>
-		/// Compares a string with the [](xref:wildcard_expression) used to create this <see cref="Wildex"/>.
+		/// Compares a string with the [](xref:wildcard_expression) used to create this <see cref="AWildex"/>.
 		/// Returns true if they match.
 		/// </summary>
 		/// <param name="s">String. If null, returns false. If "", returns true if it was "" or "*" or a regular expression that matches "".</param>
@@ -302,7 +299,7 @@ namespace Au.Types
 				R = (_obj as Regex).IsMatch(s);
 				break;
 			case WXType.Multi:
-				var multi = _obj as Wildex[];
+				var multi = _obj as AWildex[];
 				//[n] parts: all must match (with their option n applied)
 				int nNot = 0;
 				for(int i = 0; i < multi.Length; i++) {
@@ -343,10 +340,10 @@ namespace Au.Types
 		public Regex RegexNet => _obj as Regex;
 
 		/// <summary>
-		/// Array of Wildex variables, one for each part in multi-part text.
+		/// Array of <b>AWildex</b> variables, one for each part in multi-part text.
 		/// null if TextType is not Multi (no option m).
 		/// </summary>
-		public Wildex[] MultiArray => _obj as Wildex[];
+		public AWildex[] MultiArray => _obj as AWildex[];
 
 		/// <summary>
 		/// Gets the type of text (wildcard, regex, etc).
@@ -383,24 +380,27 @@ namespace Au.Types
 			return false; yes: return true;
 		}
 	}
+}
 
-	//rejected: struct WildexStruct - struct version of Wildex class. Moved to the Unused project.
+namespace Au.Types
+{
+	//rejected: struct WildexStruct - struct version of AWildex class. Moved to the Unused project.
 	//	Does not make faster, although in most cases creates less garbage.
 
 	/// <summary>
-	/// The type of text (wildcard expression) of a <see cref="Wildex"/> variable.
+	/// The type of text (wildcard expression) of a <see cref="AWildex"/> variable.
 	/// </summary>
 	public enum WXType : byte
 	{
 		/// <summary>
 		/// Simple text (option t, or no *? characters and no t r R options).
-		/// <b>Match</b> calls <see cref="ExtString.Eq"/>.
+		/// <b>Match</b> calls <see cref="AExtString.Eq"/>.
 		/// </summary>
 		Text,
 
 		/// <summary>
 		/// Wildcard (has *? characters and no t r R options).
-		/// <b>Match</b> calls <see cref="ExtString.Like(string, string, bool)"/>.
+		/// <b>Match</b> calls <see cref="AExtString.Like(string, string, bool)"/>.
 		/// </summary>
 		Wildcard,
 
@@ -418,8 +418,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Multiple parts (option m).
-		/// <b>Match</b> calls <b>Match</b> for each part (see <see cref="Wildex.MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
-		/// If you want to implement a different logic, call <b>Match</b> for each <see cref="Wildex.MultiArray"/> element (instead of calling <b>Match</b> for this variable).
+		/// <b>Match</b> calls <b>Match</b> for each part (see <see cref="AWildex.MultiArray"/>) and returns true if all negative (option n) parts return true (or there are no such parts) and some positive (no option n) part returns true (or there are no such parts).
+		/// If you want to implement a different logic, call <b>Match</b> for each <see cref="AWildex.MultiArray"/> element (instead of calling <b>Match</b> for this variable).
 		/// </summary>
 		Multi,
 	}

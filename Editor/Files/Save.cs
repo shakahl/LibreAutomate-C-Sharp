@@ -18,7 +18,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 
 partial class FilesModel
@@ -221,16 +221,16 @@ partial class FilesModel
 				//format: indexOfActiveDocOrMinusOne id1 id2 ...
 				int i = -2, iActive = s.ToInt();
 				FileNode fnActive = null;
-				//Perf.First();
+				//APerf.First();
 				foreach(var seg in s.Segments(" ")) {
 					i++; if(i < 0) continue;
 					var fn = FindById(seg.Value); if(fn == null) continue;
 					OpenFiles.Add(fn);
 					if(i == iActive) fnActive = fn;
 				}
-				//Perf.Next();
+				//APerf.Next();
 				if(fnActive == null || !_SetCurrentFile(fnActive)) Panels.Open.UpdateList();
-				//Perf.NW();
+				//APerf.NW();
 			}
 		}
 		catch(Exception ex) { ADebug.Print(ex); }

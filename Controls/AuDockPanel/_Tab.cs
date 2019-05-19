@@ -20,7 +20,7 @@ using System.Xml;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -171,7 +171,7 @@ namespace Au.Controls
 
 						if(_onlyIcons && gp.Image != null) {
 							//var z = gp.Image.Size;
-							var z = Au.Util.Dpi.SmallIconSize;
+							var z = Au.Util.ADpi.SmallIconSize;
 							if(z.width > r.Width) z.width = r.Width;
 							if(z.height > r.Height) z.height = r.Height;
 							var x = (r.Left + r.Right - z.width) / 2;

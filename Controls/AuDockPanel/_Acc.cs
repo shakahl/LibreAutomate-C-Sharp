@@ -17,7 +17,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Controls
 {

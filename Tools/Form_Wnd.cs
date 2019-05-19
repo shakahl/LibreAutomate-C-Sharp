@@ -19,7 +19,7 @@ using System.Collections;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Controls;
 using SG = SourceGrid;
 using Aga.Controls.Tree;
@@ -675,7 +675,7 @@ namespace Au.Tools
 					b.Append("<i>ProcessId<>:    ").AppendLine(pid.ToString());
 					b.Append("<i>ThreadId<>:    ").AppendLine(tid.ToString());
 					b.Append("<i>Is64Bit<>:    ").AppendLine(w.Is64Bit.ToString());
-					using(var uac = Uac.OfProcess(pid)) {
+					using(var uac = AUac.OfProcess(pid)) {
 						b.Append("<i><help T_Au_Process__UacInfo>UAC<> IL, elevation<>:    ")
 							.Append(uac.IntegrityLevel.ToString())
 							.Append(", ").AppendLine(uac.Elevation.ToString());

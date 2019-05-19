@@ -15,9 +15,8 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 //using System.Xml.Linq;
 
-using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -96,7 +95,7 @@ namespace Au
 		/// </summary>
 		/// <param name="cut">Use Ctrl+X.</param>
 		/// <param name="options">
-		/// Options. If null (default), uses <see cref="Opt.Key"/>.
+		/// Options. If null (default), uses <see cref="AOpt.Key"/>.
 		/// Uses <see cref="OptKey.RestoreClipboard"/>, <see cref="OptKey.NoBlockInput"/>, <see cref="OptKey.KeySpeedClipboard"/>. Does not use <see cref="OptKey.Hook"/>.
 		/// </param>
 		/// <exception cref="AException">Failed.</exception>
@@ -143,10 +142,10 @@ namespace Au
 		static string _Copy(bool cut, OptKey options, Action callback)
 		{
 			string R = null;
-			var opt = options ?? Opt.Key;
+			var opt = options ?? AOpt.Key;
 			bool restore = opt.RestoreClipboard;
 			_ClipboardListener listener = null;
-			var bi = new InputBlocker() { ResendBlockedKeys = true };
+			var bi = new AInputBlocker() { ResendBlockedKeys = true };
 			var oc = new _OpenClipboard(createOwner: true, noOpenNow: !restore);
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
@@ -205,7 +204,7 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="options">
-		/// Options. If null (default), uses <see cref="Opt.Key"/>.
+		/// Options. If null (default), uses <see cref="AOpt.Key"/>.
 		/// Uses <see cref="OptKey.RestoreClipboard"/>, <see cref="OptKey.PasteEnter"/>, <see cref="OptKey.NoBlockInput"/>, <see cref="OptKey.SleepFinally"/>, <see cref="OptKey.Hook"/>, <see cref="OptKey.KeySpeedClipboard"/>.
 		/// </param>
 		/// <exception cref="AException">Failed.</exception>
@@ -261,8 +260,8 @@ namespace Au
 		static void _Paste(object data, OptKey options = null)
 		{
 			var wFocus = Keyb.Lib.GetWndFocusedOrActive();
-			var opt = options ?? Opt.Key;
-			var bi = new InputBlocker() { ResendBlockedKeys = true };
+			var opt = options ?? AOpt.Key;
+			var bi = new AInputBlocker() { ResendBlockedKeys = true };
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
 				Keyb.Lib.ReleaseModAndDisableModMenu();
@@ -565,7 +564,7 @@ namespace Au
 
 			public void Save(bool debug = false)
 			{
-				var p1 = new Perf.Inst(); //will need if debug==true. Don't delete the Perf statements, they are used by a public function.
+				var p1 = new APerf.Inst(); //will need if debug==true. Don't delete the APerf statements, they are used by a public function.
 				bool allFormats = OptKey.RestoreClipboardAllFormats || debug;
 				string[] exceptFormats = OptKey.RestoreClipboardExceptFormats;
 
@@ -657,7 +656,7 @@ namespace Au
 			if(format >= 0xC000) {
 				var b = stackalloc char[300];
 				int len = Api.GetClipboardFormatName(format, b, 300);
-				if(len > 0) return Util.StringCache.LibAdd(b, len);
+				if(len > 0) return Util.AStringCache.LibAdd(b, len);
 			}
 			//standard
 			var s = format switch { Api.CF_TEXT => "CF_TEXT", Api.CF_BITMAP => "CF_BITMAP", Api.CF_METAFILEPICT => "CF_METAFILEPICT", Api.CF_SYLK => "CF_SYLK", Api.CF_DIF => "CF_DIF", Api.CF_TIFF => "CF_TIFF", Api.CF_OEMTEXT => "CF_OEMTEXT", Api.CF_DIB => "CF_DIB", Api.CF_PALETTE => "CF_PALETTE", Api.CF_RIFF => "CF_RIFF", Api.CF_WAVE => "CF_WAVE", Api.CF_UNICODETEXT => "CF_UNICODETEXT", Api.CF_ENHMETAFILE => "CF_ENHMETAFILE", Api.CF_HDROP => "CF_HDROP", Api.CF_LOCALE => "CF_LOCALE", Api.CF_DIBV5 => "CF_DIBV5", _ => null };
@@ -674,7 +673,7 @@ namespace Au
 		}
 	}
 
-	public static partial class NoClass
+	public static partial class AStatic
 	{
 		/// <summary>
 		/// Calls <see cref="Clipb.PasteText"/>.

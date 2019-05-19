@@ -18,7 +18,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 namespace Au.Controls
@@ -38,10 +38,10 @@ namespace Au.Controls
 
 		[ThreadStatic] static WeakReference<byte[]> t_byte;
 
-		internal static byte[] LibByte(int n) { return Buffers.Get(n, ref t_byte); }
+		internal static byte[] LibByte(int n) { return AMemoryArray.Get(n, ref t_byte); }
 		//these currently not used
-		//internal static Buffers.ByteBuffer LibByte(ref int n) { var r = Buffers.Get(n, ref t_byte); n = r.Length - 1; return r; }
-		//internal static Buffers.ByteBuffer LibByte(int n, out int nHave) { var r = Buffers.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
+		//internal static AMemoryArray.ByteBuffer LibByte(ref int n) { var r = AMemoryArray.Get(n, ref t_byte); n = r.Length - 1; return r; }
+		//internal static AMemoryArray.ByteBuffer LibByte(int n, out int nHave) { var r = AMemoryArray.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
 
 
 		internal SciText(AuScintilla sc)

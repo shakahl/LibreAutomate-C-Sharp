@@ -14,14 +14,14 @@ using System.Runtime.ExceptionServices;
 using System.Security.Cryptography;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Util
 {
 	/// <summary>
 	/// Data hash functions.
 	/// </summary>
-	public unsafe class Hash
+	public unsafe class AHash
 	{
 		#region FNV1
 
@@ -202,7 +202,7 @@ namespace Au.Util
 		/// Call <b>Add</b> one or more times. Finally use <see cref="Hash"/> to get result.
 		/// </summary>
 		/// <remarks>
-		/// Faster than the static <b>Hash</b> functions.
+		/// Faster than the .NET MD5 hash functions.
 		/// </remarks>
 		[StructLayout(LayoutKind.Explicit)]
 		public struct MD5 //MD5_CTX + _state

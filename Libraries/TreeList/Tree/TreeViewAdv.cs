@@ -12,7 +12,7 @@ using Aga.Controls.Tree.NodeControls;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Aga.Controls.Tree
 {
@@ -443,7 +443,7 @@ namespace Aga.Controls.Tree
 		{
 			base.OnFontChanged(e);
 			_measureContext.Font = Font;
-			//Au.Output.Write(Font);
+			//Au.AOutput.Write(Font);
 			_columnHeaderHeight = 0;
 			FullUpdate();
 		}

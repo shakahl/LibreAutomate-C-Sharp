@@ -9,7 +9,7 @@ using System.Windows.Forms.Design;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Utils
 {
@@ -161,7 +161,7 @@ namespace Utils
 			}
 
 			//auto-height
-			this.Font = Au.Util.ASystemFonts.Regular;
+			this.Font = Au.Util.AFonts.Regular;
 			var r = this.GetItemRectangle(0);
 			int h = this.Items.Count * r.Height, hMax = AScreen.PrimaryWorkArea.Height / 2 - r.Height - 10;
 			this.ClientSize = new Size(r.Width, Math.Min(h, hMax));

@@ -19,7 +19,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 using Au.Controls;
 
@@ -34,7 +34,7 @@ partial class EdForm : Form
 
 	public EdForm()
 	{
-		//Output.LibUseQM2 = true; Output.Clear();
+		//AOutput.LibUseQM2 = true; AOutput.Clear();
 
 		//#if DEBUG
 		//		SetHookToMonitorCreatedWindowsOfThisThread();
@@ -49,10 +49,10 @@ partial class EdForm : Form
 		this.Location = new Point(100, 100);
 		this.ClientSize = new Size(900, 600);
 
-		//Perf.Next();
+		//APerf.Next();
 		Strips.Init();
 		MainMenuStrip = Strips.Menubar;
-		//Perf.Next();
+		//APerf.Next();
 		Panels.Init();
 
 		this.Controls.Add(Panels.PanelManager);
@@ -65,7 +65,7 @@ partial class EdForm : Form
 
 		//Print(IsHandleCreated); foreach(Control v in Controls) if(v.IsHandleCreated) Print(v);
 
-		//Perf.Next();
+		//APerf.Next();
 
 		//#if DEBUG
 		//		ADebug.Print("Ending form ctor. Must be no parked controls created; use SetHookToMonitorCreatedWindowsOfThisThread.");
@@ -84,15 +84,15 @@ partial class EdForm : Form
 		CommandLine.OnMainFormLoaded();
 		IsLoaded = true;
 		Model.RunStartupScripts();
-		//Perf.Next();
+		//APerf.Next();
 
 		ATimer.After(1, () => { //TODO
 			var s = CommandLine.TestArg;
 			if(s != null) {
-				Print(Time.PerfMicroseconds - Convert.ToInt64(s));
+				Print(ATime.PerfMicroseconds - Convert.ToInt64(s));
 			}
-			Perf.Next('P');
-			//Perf.Write();
+			APerf.Next('P');
+			//APerf.Write();
 		});
 	}
 

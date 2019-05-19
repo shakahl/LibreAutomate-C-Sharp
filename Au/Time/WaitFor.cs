@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -29,7 +29,7 @@ namespace Au
 	/// 
 	/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a Form/Control event handler, the form would stop responding. Use another thread, for example async/await/Task, like in the example. Or option <see cref="OptWaitFor.DoEvents"/>.
 	/// </remarks>
-	/// <seealso cref="Time"/>
+	/// <seealso cref="ATime"/>
 	/// <example>
 	/// <code><![CDATA[
 	/// WaitFor.Condition(0, () => Keyb.IsScrollLock);
@@ -102,10 +102,10 @@ namespace Au
 			/// <param name="secondsTimeout">
 			/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval <see cref="Sleep"/> throws <see cref="TimeoutException"/>. If &lt;0, then <see cref="Sleep"/> returns false.
 			/// </param>
-			/// <param name="options">Options. If null, uses <see cref="Opt.WaitFor"/>, else combines with it.</param>
+			/// <param name="options">Options. If null, uses <see cref="AOpt.WaitFor"/>, else combines with it.</param>
 			public Loop(double secondsTimeout, OptWaitFor options = null)
 			{
-				var to = Opt.WaitFor;
+				var to = AOpt.WaitFor;
 				Period = to.Period;
 				_doEvents = to.DoEvents;
 				if(options != null) {
@@ -123,7 +123,7 @@ namespace Au
 					_hasTimeout = true;
 					if(secondsTimeout > 0) _throw = true; else { _throw = false; secondsTimeout = -secondsTimeout; }
 					_timeRemaining = checked((long)(secondsTimeout * 1000d));
-					_timePrev = Time.WinMillisecondsWithoutSleep;
+					_timePrev = ATime.WinMillisecondsWithoutSleep;
 				}
 				_precisionIsSet = false;
 			}
@@ -139,12 +139,12 @@ namespace Au
 
 				if(Period < 9.9f && !_precisionIsSet) { //default Period is 10
 					_precisionIsSet = true;
-					Time.LibSleepPrecision.TempSet1();
+					ATime.LibSleepPrecision.TempSet1();
 				}
 
 				int t = (int)Period;
 				if(_doEvents) {
-					Time.LibSleepDoEvents(t, noSetPrecision: true);
+					ATime.LibSleepDoEvents(t, noSetPrecision: true);
 				} else {
 					Thread.Sleep(t);
 				}
@@ -162,7 +162,7 @@ namespace Au
 			public bool IsTimeout()
 			{
 				if(!_hasTimeout) return false;
-				var t = Time.WinMillisecondsWithoutSleep;
+				var t = ATime.WinMillisecondsWithoutSleep;
 				_timeRemaining -= t - _timePrev;
 				_timePrev = t;
 				if(_timeRemaining > 0) return false;
@@ -176,7 +176,7 @@ namespace Au
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true. The calling period depends on <i>options</i>.</param>
-		/// <param name="options">Options. If null, uses <see cref="Opt.WaitFor"/>, else combines with it.</param>
+		/// <param name="options">Options. If null, uses <see cref="AOpt.WaitFor"/>, else combines with it.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>More info: <see cref="WaitFor"/>.</remarks>
@@ -204,7 +204,7 @@ namespace Au
 		/// <exception cref="AException">Failed. For example a handle is invalid.</exception>
 		/// <remarks>
 		/// Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
-		/// Does not use <see cref="Opt.WaitFor"/>.
+		/// Does not use <see cref="AOpt.WaitFor"/>.
 		/// </remarks>
 		public static int Handle(double secondsTimeout, WHFlags flags, params IntPtr[] handles)
 		{
@@ -274,7 +274,7 @@ namespace Au
 
 					int timeSlice = (all && doEvents) ? 15 : 300; //support Thread.Abort: call API in loop with small timeout. //TODO: test
 					if(timeMS > 0) {
-						long timeNow = Time.WinMillisecondsWithoutSleep;
+						long timeNow = ATime.WinMillisecondsWithoutSleep;
 						if(timePrev > 0) timeMS -= timeNow - timePrev;
 						if(timeMS <= 0) return Api.WAIT_TIMEOUT;
 						if(timeSlice > timeMS) timeSlice = (int)timeMS;
@@ -331,8 +331,8 @@ namespace Au
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
-		/// While waiting, dispatches Windows messages etc, like <see cref="Time.SleepDoEvents"/>. Before dispatching a posted message, calls the callback function. Stops waiting when it returns true. Does not dispatch the message if the function sets the message field = 0.
-		/// Does not use <see cref="Opt.WaitFor"/>.
+		/// While waiting, dispatches Windows messages etc, like <see cref="ATime.SleepDoEvents"/>. Before dispatching a posted message, calls the callback function. Stops waiting when it returns true. Does not dispatch the message if the function sets the message field = 0.
+		/// Does not use <see cref="AOpt.WaitFor"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -354,9 +354,9 @@ namespace Au
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
-		/// While waiting, dispatches Windows messages etc, like <see cref="Time.SleepDoEvents"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, etc), calls the callback function. Stops waiting when it returns true.
+		/// While waiting, dispatches Windows messages etc, like <see cref="ATime.SleepDoEvents"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, etc), calls the callback function. Stops waiting when it returns true.
 		/// Similar to <see cref="Condition"/>. Differences: 1. Always dispatches messages etc. 2. Does not call the callback function when there are no messages etc.
-		/// Does not use <see cref="Opt.WaitFor"/>.
+		/// Does not use <see cref="AOpt.WaitFor"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -376,7 +376,7 @@ namespace Au
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="variable">Stop waiting when this variable is set to true.</param>
-		/// <param name="options">Options. If null, uses <see cref="Opt.WaitFor"/>, else combines with it.</param>
+		/// <param name="options">Options. If null, uses <see cref="AOpt.WaitFor"/>, else combines with it.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
@@ -399,7 +399,7 @@ namespace Au
 			}
 		}
 
-		//FUTURE: add misc wait functions implemented using WinHook and WinAccHook.
+		//FUTURE: add misc wait functions implemented using AHookWin and AHookAcc.
 		//public static class Hook
 		//{
 		//}
@@ -420,7 +420,7 @@ namespace Au.Types
 		All = 1,
 
 		/// <summary>
-		/// While waiting, dispatch Windows messages, events, hooks etc. Like <see cref="Time.SleepDoEvents"/>.
+		/// While waiting, dispatch Windows messages, events, hooks etc. Like <see cref="ATime.SleepDoEvents"/>.
 		/// </summary>
 		DoEvents = 2,
 	}

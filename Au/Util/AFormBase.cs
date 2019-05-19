@@ -17,7 +17,7 @@ using System.Windows.Forms;
 using System.Drawing;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -39,7 +39,7 @@ namespace Au.Types
 		///
 		public AFormBase()
 		{
-			_font = Util.ASystemFonts.Regular;
+			_font = Util.AFonts.Regular;
 			this.Font = _font; //must be before 'AutoScaleMode = ...'
 			this.AutoScaleMode = AutoScaleMode.Font;
 		}

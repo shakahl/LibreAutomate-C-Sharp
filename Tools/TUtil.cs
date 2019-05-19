@@ -19,7 +19,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Tools
 {
@@ -126,7 +126,7 @@ namespace Au.Tools
 		/// </summary>
 		internal static string EscapeWildex(string s)
 		{
-			if(Wildex.HasWildcardChars(s)) s = "**t " + s;
+			if(AWildex.HasWildcardChars(s)) s = "**t " + s;
 			return s;
 		}
 
@@ -139,7 +139,7 @@ namespace Au.Tools
 		internal static string EscapeWindowName(string s, bool canMakeVerbatim)
 		{
 			if(s == null) return s;
-			if(Wildex.HasWildcardChars(s)) {
+			if(AWildex.HasWildcardChars(s)) {
 				int i = s.IndexOf('*');
 				if(i >= 0 && s.IndexOf('*', i + 1) < 0) {
 					s = "**r " + ARegex.EscapeQE(s.Remove(i)) + @"\*?" + ARegex.EscapeQE(s.Substring(i + 1));
@@ -164,7 +164,7 @@ namespace Au.Tools
 				if(gridValue[0] == '$') return false;
 				gridValue = gridValue.Substring(2, gridValue.Length - 3).Replace("\"\"", "\"");
 			}
-			Wildex x = gridValue;
+			AWildex x = gridValue;
 			return !x.Match(newRawValue);
 		}
 
@@ -208,9 +208,9 @@ namespace Au.Tools
 #region OnScreenRect
 
 		/// <summary>
-		/// Creates standard <see cref="OsdRect"/>.
+		/// Creates standard <see cref="AOsdRect"/>.
 		/// </summary>
-		internal static OsdRect CreateOsdRect(int thickness = 4) => new OsdRect() { Color = 0xFF8A2BE2, Thickness = thickness }; //Color.BlueViolet
+		internal static AOsdRect CreateOsdRect(int thickness = 4) => new AOsdRect() { Color = 0xFF8A2BE2, Thickness = thickness }; //Color.BlueViolet
 
 		/// <summary>
 		/// Briefly shows standard blinking on-screen rectangle.
@@ -249,7 +249,7 @@ namespace Au.Tools
 		{
 			ATimer _timer;
 			long _prevTime;
-			OsdRect _osr;
+			AOsdRect _osr;
 			Form _form;
 			CheckBox _captureCheckbox;
 			Func<RECT?> _cbGetRect;
@@ -298,7 +298,7 @@ namespace Au.Tools
 						{
 							//Don't capture too frequently.
 							//	Eg if the callback is very slow. Or if multiple timer messages are received without time interval (possible in some conditions).
-							long t1 = Time.PerfMilliseconds, t2 = t1 - _prevTime; _prevTime = t1; if(t2 < 100) return;
+							long t1 = ATime.PerfMilliseconds, t2 = t1 - _prevTime; _prevTime = t1; if(t2 < 100) return;
 
 							//show rect of UI object from mouse
 							Wnd w = Wnd.FromMouse(WXYFlags.NeedWindow);
@@ -391,13 +391,13 @@ namespace Au.Tools
 			lSpeed.Text = "";
 
 			//Print(code);
-			//Perf.First();
+			//APerf.First();
 
 			//FUTURE: #line
 			var b = new StringBuilder();
 			b.AppendLine(@"static object[] __TestFunc__() {");
 			if(activateWindow) b.Append("((Wnd)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
-			b.AppendLine("var _p_ = Perf.StartNew();");
+			b.AppendLine("var _p_ = APerf.StartNew();");
 			var lines = code.SegLines(true);
 			int lastLine = lines.Length - 1;
 			for(int i = 0; i < lastLine; i++) b.AppendLine(lines[i]);
@@ -436,7 +436,7 @@ namespace Au.Tools
 			}
 			if(!ok) return default;
 
-			//Perf.NW();
+			//APerf.NW();
 			//Print(r);
 
 			double _SpeedMcsToMs(long tn) => Math.Round(tn / 1000d, tn < 1000 ? 2 : (tn < 10000 ? 1 : 0));
@@ -456,7 +456,7 @@ namespace Au.Tools
 				foreach(var ow in ((Wnd)form).Get.OwnersAndThis(true)) {
 					if(re.IntersectsWith(ow.Rect)) {
 						r.wnd.Window.ActivateLL();
-						Time.SleepDoEvents(1500);
+						ATime.SleepDoEvents(1500);
 						break;
 					}
 				}
@@ -490,7 +490,7 @@ namespace Au.Tools
 
 	//public static class Test
 	//{
-	//	public static void OsdRect()
+	//	public static void AOsdRect()
 	//	{
 	//		RECT r = (500, 500, 30, 20);
 	//		TUtil.ShowOsdRect(r);

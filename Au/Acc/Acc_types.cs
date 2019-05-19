@@ -14,7 +14,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 //using System.Xml.Linq;
 
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -354,7 +354,7 @@ namespace Au.Types
 
 	//CONSIDER: remove the SYSTEM_/OBJECT_ prefixes.
 	/// <summary>
-	/// Event constants for <see cref="WinAccHook"/>.
+	/// Event constants for <see cref="AHookAcc"/>.
 	/// </summary>
 	/// <remarks>
 	/// The names are as in API <msdn>SetWinEventHook Event Constants</msdn> documentation but without prefix "EVENT_".
@@ -491,7 +491,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="WinAccHook"/>.
+	/// Flags for <see cref="AHookAcc"/>.
 	/// </summary>
 	/// <remarks>
 	/// The names are as in API <msdn>SetWinEventHook</msdn> documentation but without prefix "WINEVENT_".

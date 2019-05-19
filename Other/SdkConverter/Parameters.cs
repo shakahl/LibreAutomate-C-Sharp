@@ -16,7 +16,7 @@ using System.ComponentModel; //Win32Exception
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace SdkConverter
 {
@@ -356,7 +356,7 @@ namespace SdkConverter
 									ptr = 1;
 									isRawPtr = true;
 									//Could be StringBuilder, but the Au library does not use it, it is slow.
-									//Or [Out] char[]. The Au library uses it with Util.Buffers.LibChar.
+									//Or [Out] char[]. The Au library uses it with Util.AMemoryArray.LibChar.
 								}
 								break;
 							}

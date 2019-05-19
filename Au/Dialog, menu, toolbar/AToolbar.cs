@@ -15,7 +15,7 @@ using System.Windows.Forms;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 #pragma warning disable 1591 //XML doc //TODO
 
@@ -142,7 +142,7 @@ namespace Au
 
 		void _Init()
 		{
-			Perf.Next();
+			APerf.Next();
 			var exStyle = WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST;
 			var style = WS.POPUP;
 			//style |= WS.CAPTION | WS.SYSMENU;
@@ -152,7 +152,7 @@ namespace Au
 
 			_wClass = new Wnd.More.MyWindow(WndProc);
 			if(!_wClass.Create("AToolbar", null, style, exStyle, r.top, r.left, r.Width, r.Height)) throw new Win32Exception();
-			Perf.Next();
+			APerf.Next();
 
 			_ts = new ToolStrip_(this);
 			_ts.SuspendLayout();
@@ -169,10 +169,10 @@ namespace Au
 				if(!_ts.Created) {
 					_ts.ResumeLayout();
 					_ts.CreateControl();
-					Perf.Next();
+					APerf.Next();
 				}
 				_w.ShowLL(value);
-				_showTime = Time.PerfMilliseconds;
+				_showTime = ATime.PerfMilliseconds;
 			}
 		}
 
@@ -203,7 +203,7 @@ namespace Au
 			case Api.WM_PAINT:
 				//Print("painted");
 				//if(!_focusedOnce) {
-				//	Perf.NW();
+				//	APerf.NW();
 				//	_focusedOnce = true;
 				//	if(!_ts.Focused) _ts.Focus(); //solves problem when in native window: the first button-click does not work. This takes several milliseconds therefore is after painting. But here it is much slower and can create problems, eg flickering, more slow startup of next toolbar.
 				//}
@@ -290,7 +290,7 @@ namespace Au
 				//ADebug.PrintFunc();
 				if(!_parent._w.IsActive && CanFocus && !Focused) {
 					//Print("focus");
-					long td = Time.PerfMilliseconds - _parent._showTime - 500;
+					long td = ATime.PerfMilliseconds - _parent._showTime - 500;
 					if(td < 0) { /*ADebug.Print("timer");*/ } //TODO: timer
 					else Focus();
 					//TODO: timer
@@ -300,7 +300,7 @@ namespace Au
 
 			protected override void OnPaint(PaintEventArgs e)
 			{
-				//var perf = Perf.StartNew();
+				//var perf = APerf.StartNew();
 
 				//ThreadPriority tp = 0;
 				//if(!_paintedOnce) { //this could make the first paint faster if CPU is without hyperthreading

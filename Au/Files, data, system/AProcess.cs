@@ -16,7 +16,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -24,7 +24,7 @@ namespace Au
 	/// <summary>
 	/// Process functions. Extends <see cref="Process"/>.
 	/// </summary>
-	public static unsafe partial class AProcess
+	public static unsafe class AProcess
 	{
 		/// <summary>
 		/// Gets process executable file name (like "notepad.exe") or full path.
@@ -47,7 +47,7 @@ namespace Au
 			if(processId == 0) return null;
 			string R = null;
 
-			//var t = Time.PerfMicroseconds;
+			//var t = ATime.PerfMicroseconds;
 			//if(s_time != 0) Print(t - s_time);
 			//s_time = t;
 
@@ -120,7 +120,7 @@ namespace Au
 		{
 			s = null;
 			for(int na = 300; ; na *= 2) {
-				var b = Buffers.LibChar(ref na);
+				var b = AMemoryArray.LibChar(ref na);
 				if(Api.QueryFullProcessImageName(hProcess, getFilename, b, ref na)) {
 					if(getFilename) s = _GetFileName(b, na);
 					else s = b.LibToStringCached(na);
@@ -231,7 +231,7 @@ namespace Au
 					if(processID == 0) return "Idle";
 					return null;
 				}
-				string R = StringCache.LibAdd(namePtr, nameLen);
+				string R = AStringCache.LibAdd(namePtr, nameLen);
 				if(!cannotOpen && APath.LibIsPossiblyDos(R)) {
 					using var ph = LibHandle.OpenProcess(processID);
 					if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
@@ -303,7 +303,7 @@ namespace Au
 			return LibGetProcessesByName(ref a, processName, fullPath, ofThisSession, true);
 		}
 
-		internal static int LibGetProcessesByName(ref List<int> a, Wildex processName, bool fullPath = false, bool ofThisSession = false, bool first = false)
+		internal static int LibGetProcessesByName(ref List<int> a, AWildex processName, bool fullPath = false, bool ofThisSession = false, bool first = false)
 		{
 			a?.Clear();
 
@@ -331,7 +331,7 @@ namespace Au
 			if(s == null) return null;
 			char* ss = s + len;
 			for(; ss > s; ss--) if(ss[-1] == '\\' || ss[-1] == '/') break;
-			return StringCache.LibAdd(ss, len - (int)(ss - s));
+			return AStringCache.LibAdd(ss, len - (int)(ss - s));
 		}
 
 		static string _GetFileName(string s)

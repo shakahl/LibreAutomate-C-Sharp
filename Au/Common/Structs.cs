@@ -15,7 +15,7 @@ using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -626,7 +626,7 @@ namespace Au.Types
 		//public static implicit operator string(BSTR b)
 		//{
 		//	var p = b._p; if(p == null) return null;
-		//	return Util.StringCache.LibAdd(p, SysStringLen(p));
+		//	return Util.AStringCache.LibAdd(p, SysStringLen(p));
 		//}
 
 		public static explicit operator BSTR(string s) => new BSTR((char*)Marshal.StringToBSTR(s));
@@ -675,7 +675,7 @@ namespace Au.Types
 			//Some objects can return BSTR containing '\0's. Then probably the rest of string is garbage. I never noticed this but saw comments. Better allow '\0's, because in some cases it can be valid string. When invalid, it will not harm too much.
 			//int len2 = Util.LibCharPtr.Length(p, len); ADebug.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
 
-			string r = noCache ? new string(p, 0, len) : Util.StringCache.LibAdd(p, len);
+			string r = noCache ? new string(p, 0, len) : Util.AStringCache.LibAdd(p, len);
 			Dispose();
 			return r;
 		}

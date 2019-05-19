@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace SdkConverter
 {
@@ -880,7 +880,7 @@ namespace SdkConverter
 			sb.Append(_sbInterface.ToString()); _sbInterface.Clear();
 			string R = sb.ToString(); sb.Clear();
 
-			//Perf.First();
+			//APerf.First();
 			foreach(var v in _ns[0].sym) {
 				var sym = v.Value;
 
@@ -925,14 +925,14 @@ namespace SdkConverter
 					//Print($"<><c 0x8000>{s} = {t.csTypename}    {t}</c>"); //OK, just not used between typedef and struct definition
 				}
 			}
-			//Perf.NW();
+			//APerf.NW();
 
 			//remove W from struct/interface/delegate names
-			//Perf.First();
+			//APerf.First();
 			foreach(var v in _defineW) {
 				__RemoveAW(ref R, v.Key, v.Value);
 			}
-			//Perf.Next();
+			//APerf.Next();
 			foreach(var v in _ns[0].sym) { //some A/W are not #define but typedef, eg 'typedef MIXERCAPSW MIXERCAPS;'
 				var td = v.Value as _Typedef; if(td == null) continue;
 				if(td.forwardDecl || td.ptr != 0) continue;
@@ -948,7 +948,7 @@ namespace SdkConverter
 				if(suffixLen == 2) what |= 0x10000;
 				__RemoveAW(ref R, name, what);
 			}
-			//Perf.NW(); //800 1000 ms
+			//APerf.NW(); //800 1000 ms
 
 			//remove other known A and old versions
 			R.RegexReplace(@"(?ms)^internal struct PROPSHEETPAGE(?!W_V4\b).+?^\}\r\n", "", out R);

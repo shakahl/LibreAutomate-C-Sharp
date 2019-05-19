@@ -19,7 +19,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 //rejected. Not used frequently.
 //class XN

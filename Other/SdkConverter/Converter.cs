@@ -13,7 +13,7 @@ using System.Runtime.CompilerServices;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace SdkConverter
 {
@@ -22,8 +22,8 @@ namespace SdkConverter
 		[STAThread]
 		static void Main(string[] args)
 		{
-			Output.LibUseQM2 = true;
-			Output.Clear();
+			AOutput.LibUseQM2 = true;
+			AOutput.Clear();
 			var x = new Converter();
 
 #if TEST_SMALL

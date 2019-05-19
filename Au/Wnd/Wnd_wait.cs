@@ -17,7 +17,7 @@ using System.Runtime.ExceptionServices;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -237,7 +237,7 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
 		public bool WaitForName(double secondsTimeout, string name)
 		{
-			Wildex x = name; //ArgumentNullException
+			AWildex x = name; //ArgumentNullException
 			return WaitForCondition(secondsTimeout, t => x.Match(t.Name));
 		}
 
@@ -265,7 +265,7 @@ namespace Au
 				if(!IsAlive) return true;
 				throw e;
 			}
-			return 0 != WaitFor.Handle(secondsTimeout, Opt.WaitFor.DoEvents ? WHFlags.DoEvents : 0, ph);
+			return 0 != WaitFor.Handle(secondsTimeout, AOpt.WaitFor.DoEvents ? WHFlags.DoEvents : 0, ph);
 		}
 	}
 }

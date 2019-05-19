@@ -14,7 +14,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -143,10 +143,10 @@ namespace Au
 		{
 			get
 			{
-				if(!Ver.MinWin8) return false;
+				if(!AVersion.MinWin8) return false;
 				if(!HasExStyle(WS_EX.TOPMOST | WS_EX.NOREDIRECTIONBITMAP) || (Style & WS.CAPTION) != 0) return false;
 				if(ClassNameIs("Windows.UI.Core.CoreWindow")) return true;
-				if(!Ver.MinWin10 && LibIsOfShellProcess) return true;
+				if(!AVersion.MinWin10 && LibIsOfShellProcess) return true;
 				return false;
 				//could use IsImmersiveProcess, but this is better
 			}
@@ -160,7 +160,7 @@ namespace Au
 		{
 			get
 			{
-				if(!Ver.MinWin10) return 0;
+				if(!AVersion.MinWin10) return 0;
 				if(!HasExStyle(WS_EX.NOREDIRECTIONBITMAP)) return 0;
 				return ClassNameIs("ApplicationFrameWindow", "Windows.UI.Core.CoreWindow");
 				//could use IsImmersiveProcess, but this is better

@@ -20,7 +20,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -326,7 +326,7 @@ namespace Au
 						isb = isf; ieb = ief; //reuse these vars to calc UTF8 lengths
 					}
 					//correct isf/ief if html part lenghts are different in UTF8
-					if(!ExtString.More.IsAscii(html)) {
+					if(!AExtString.More.IsAscii(html)) {
 						fixed (char* p = html) {
 							int lenDiff1 = Encoding.UTF8.GetByteCount(p, isb) - isb;
 							int lenDiff2 = Encoding.UTF8.GetByteCount(p + isb, ieb - isb) - (ieb - isb);

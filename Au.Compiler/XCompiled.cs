@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Compiler
 {
@@ -120,8 +120,8 @@ namespace Au.Compiler
 						case 'p':
 							isMultiFileProject = true;
 							if(projFolder != null) {
-								if(!Util.Hash.MD5Result.FromString(value, offs, s.EndOffset - offs, out var md5)) return false;
-								Util.Hash.MD5 md = default;
+								if(!Util.AHash.MD5Result.FromString(value, offs, s.EndOffset - offs, out var md5)) return false;
+								Util.AHash.MD5 md = default;
 								foreach(var f1 in projFolder.IwfEnumProjectClassFiles(f)) {
 									if(_IsFileModified(f1)) return false;
 									md.Add(f1.Id);
@@ -235,7 +235,7 @@ namespace Au.Compiler
 
 					int nAll = m.CodeFiles.Count, nNoC = nAll - m.CountC;
 					if(nNoC > 1) { //add MD5 hash of project files, except main
-						Util.Hash.MD5 md = default;
+						Util.AHash.MD5 md = default;
 						for(int i = 1; i < nNoC; i++) md.Add(m.CodeFiles[i].f.Id);
 						b.Append("|p").Append(md.Hash.ToString());
 					}

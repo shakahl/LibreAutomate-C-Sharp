@@ -17,7 +17,7 @@ using System.Runtime.ExceptionServices;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -298,14 +298,14 @@ namespace Au
 		/// Registers a temporary hotkey and waits for it.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="hotkey">See <see cref="Util.RegisterHotkey.Register"/>.</param>
+		/// <param name="hotkey">See <see cref="ARegisteredHotkey.Register"/>.</param>
 		/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 		/// <exception cref="AException">Failed to register hotkey.</exception>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
-		/// Uses <see cref="Util.RegisterHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
+		/// Uses <see cref="ARegisteredHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
 		/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
 		/// </remarks>
 		/// <example>
@@ -322,7 +322,7 @@ namespace Au
 		public static bool WaitForHotkey(double secondsTimeout, KHotkey hotkey, bool waitModReleased = false)
 		{
 			if(s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("WaitForHotkey");
-			using(Util.RegisterHotkey rhk = default) {
+			using(ARegisteredHotkey rhk = default) {
 				if(!rhk.Register(s_atomWFH, hotkey)) throw new AException(0, "*register hotkey");
 				if(!WaitFor.PostedMessage(secondsTimeout, (ref Native.MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
 			}
@@ -406,7 +406,7 @@ namespace Au
 			//SHOULDDO: if up and block: don't block if was down when starting to wait. Also in the Mouse func.
 
 			KKey R = 0;
-			using(WinHook.Keyboard(x => {
+			using(AHookWin.Keyboard(x => {
 				if(key != 0 && !x.IsKey(key)) return;
 				if(x.IsUp != up) {
 					if(up && block) { //key down when we are waiting for up. If block, now block down too.
@@ -615,7 +615,7 @@ namespace Au
 		/// - string after a "keys" string - literal text. When there are several strings in sequence, they are interpreted as keys, text, keys, text...
 		/// <br/>Example: <c>Key("keys", "text", "keys", "text", 500, "keys", "text", "keys", KKey.Back, "keys", "text");</c>
 		/// <br/>Function <see cref="Text"/> is the same as this function, but the first parameter is text.
-		/// <br/>To send text can be used keys or clipboard, depending on <see cref="Opt.Key"/> and text.
+		/// <br/>To send text can be used keys or clipboard, depending on <see cref="AOpt.Key"/> and text.
 		/// <br/>See <see cref="AddText"/>.
 		/// - <see cref="KKey"/> - a single key.
 		/// <br/>Example: <c>Key("Shift+", KKey.Left, "*3");</c> is the same as <c>Key("Shift+Left*3");</c>.
@@ -753,7 +753,7 @@ namespace Au
 		/// 
 		/// Operators and related keys can be in separate arguments. Examples: <c>Key("Shift+", KKey.A); Key(KKey.A, "*3");</c>.
 		/// 
-		/// Uses <see cref="Opt.Key"/>:
+		/// Uses <see cref="AOpt.Key"/>:
 		/// <table>
 		/// <tr>
 		/// <th>Option</th>
@@ -841,7 +841,7 @@ namespace Au
 		/// </tr>
 		/// </table>
 		/// 
-		/// When you don't want to use or modify <see cref="Opt.Key"/>, you can use a <see cref="Keyb"/> variable instead of this function. Example: <c>new Keyb(null).Add("keys", "text").Send();</c>. More examples in <see cref="Keyb(OptKey)"/> topic.
+		/// When you don't want to use or modify <see cref="AOpt.Key"/>, you can use a <see cref="Keyb"/> variable instead of this function. Example: <c>new Keyb(null).Add("keys", "text").Send();</c>. More examples in <see cref="Keyb(OptKey)"/> topic.
 		/// 
 		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
 		/// 
@@ -903,7 +903,7 @@ namespace Au
 		/// Key("Shift+(", KKey.A, 500, KKey.B, ")");
 		/// 
 		/// //Send keys and text slowly.
-		/// Opt.Key.KeySpeed = Opt.Key.TextSpeed = 50;
+		/// AOpt.Key.KeySpeed = AOpt.Key.TextSpeed = 50;
 		/// Key("keys$:Space 123456789 Space 123456789 ,Space", "text: 123456789 123456789\n");
 		/// 
 		/// //Ctrl+click
@@ -943,7 +943,7 @@ namespace Au
 		/// </example>
 		public static void Key(params object[] keysEtc)
 		{
-			new Keyb(Opt.Key).Add(keysEtc).Send();
+			new Keyb(AOpt.Key).Add(keysEtc).Send();
 		}
 
 		/// <summary>
@@ -954,7 +954,7 @@ namespace Au
 		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		/// <remarks>
 		/// This function is identical to <see cref="Key"/>, except: the first parameter is literal text (not keys). This example shows the difference: <c>Key("keys", "text", "keys", "text"); Text("text", "keys", "text", "keys");</c>.
-		/// To send text can be used keys or clipboard, depending on <see cref="Opt.Key"/> and text.
+		/// To send text can be used keys or clipboard, depending on <see cref="AOpt.Key"/> and text.
 		/// More info in <see cref="Key"/> topic.
 		/// </remarks>
 		/// <seealso cref="Clipb.PasteText"/>
@@ -967,11 +967,11 @@ namespace Au
 		/// </example>
 		public static void Text(string text, params object[] keysEtc)
 		{
-			new Keyb(Opt.Key).AddText(text).Add(keysEtc).Send();
+			new Keyb(AOpt.Key).AddText(text).Add(keysEtc).Send();
 		}
 	}
 
-	public static partial class NoClass
+	public static partial class AStatic
 	{
 		/// <summary>
 		/// Sends virtual keystrokes to the active window. Also can send text, wait, etc.

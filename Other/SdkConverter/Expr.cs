@@ -16,7 +16,7 @@ using System.ComponentModel; //Win32Exception
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace SdkConverter
 {

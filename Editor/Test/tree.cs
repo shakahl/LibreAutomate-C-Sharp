@@ -1,6 +1,6 @@
 using System;
 using System.Text;
-using static Au.NoClass;
+using static Au.AStatic;
 
 public class tree
 {

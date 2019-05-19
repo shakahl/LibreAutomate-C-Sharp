@@ -18,7 +18,7 @@ using System.Xml;
 using System.Xml.Linq;
 
 using Au;
-using static Au.NoClass;
+using static Au.AStatic;
 
 public partial class FormMenu :Form
 {

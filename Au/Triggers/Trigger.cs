@@ -18,7 +18,7 @@ using System.Runtime.ExceptionServices;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Triggers
 {
@@ -135,9 +135,9 @@ namespace Au.Triggers
 			if(_funcAfter != null) {
 				try {
 					foreach(var v in _funcAfter) {
-						var t1 = Time.PerfMilliseconds;
+						var t1 = ATime.PerfMilliseconds;
 						bool ok = v.f(args);
-						var td = Time.PerfMilliseconds - t1;
+						var td = ATime.PerfMilliseconds - t1;
 						if(td > 200) PrintWarning($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {ATask.Name}.", -1);
 						if(!ok) return false;
 					}
@@ -430,7 +430,7 @@ namespace Au.Triggers
 	/// 
 	/// A trigger can have up to 4 CF delegates and a window scope (<c>Triggers.Of...</c>). They are called in this order: CF assigned through <see cref="FollowingTriggersBeforeWindow"/>, <see cref="NextTriggerBeforeWindow"/>, window scope, <see cref="NextTrigger"/>, <see cref="FollowingTriggers"/>. The <b>NextX</b> properties assign the CF to the next single trigger. The <b>FollowingX</b> properties assign the CF to all following triggers until you assign another CF or null. If several are assigned, the trigger action runs only if all CF return true and the window scope matches. The <b>XBeforeWindow</b> properties are used only with hotkey, autotext and mouse triggers.
 	/// 
-	/// All CF must be as fast as possible. Slow CF can make triggers slower (or even all keyboard/mouse input); also may cause warnings and trigger failures. A big problem is the low-level hooks timeout that Windows applies to trigger hooks; see <see cref="WinHook.LowLevelHooksTimeout"/>. A related problem - slow JIT and loading of assemblies, which can make the CF too slow the first time; in some rare cases may even need to preload assemblies or pre-JIT functions to avoid the timeout warning.
+	/// All CF must be as fast as possible. Slow CF can make triggers slower (or even all keyboard/mouse input); also may cause warnings and trigger failures. A big problem is the low-level hooks timeout that Windows applies to trigger hooks; see <see cref="AHookWin.LowLevelHooksTimeout"/>. A related problem - slow JIT and loading of assemblies, which can make the CF too slow the first time; in some rare cases may even need to preload assemblies or pre-JIT functions to avoid the timeout warning.
 	///
 	/// In CF never use functions that generate keyboard or mouse events or activate windows.
 	/// </remarks>

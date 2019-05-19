@@ -358,7 +358,7 @@ namespace Au.Types
 		internal static extern bool WriteFile(IntPtr hFile, void* lpBuffer, int nBytesToWrite, out int nBytesWritten, void* lpOverlapped = null);
 		//note: lpNumberOfBytesWritten can be null only if lpOverlapped is not null.
 
-		//note: don't use overloads, because we Jit.Compile("WriteFile").
+		//note: don't use overloads, because we AJit.Compile("WriteFile").
 		internal static bool WriteFileArr(IntPtr hFile, byte[] a, out int nBytesWritten, void* lpOverlapped = null)
 		{
 			fixed (byte* p = a) return WriteFile(hFile, p, a.Length, out nBytesWritten, lpOverlapped);

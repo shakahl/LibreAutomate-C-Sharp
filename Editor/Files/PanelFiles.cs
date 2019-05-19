@@ -18,7 +18,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 
 partial class ThisIsNotAFormFile { }

@@ -62,7 +62,7 @@ namespace Aga.Controls.Tree
 					Size z = TextRenderer.MeasureText("A", Font);
 					//Size z = TextRenderer.MeasureText(_measureContext.Graphics, "A", Font); //unexpected: much slower
 					_columnHeaderHeight = z.Height * 6 / 5 + 2;
-					//Au.Output.WriteList(z.Height, _columnHeaderHeight);
+					//Au.AOutput.WriteList(z.Height, _columnHeaderHeight);
 				}
 				return _columnHeaderHeight;
 			}

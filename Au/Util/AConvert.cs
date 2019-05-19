@@ -16,15 +16,15 @@ using System.Runtime.ExceptionServices;
 using System.IO.Compression;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Util
 {
 	/// <summary>
 	/// Data conversion functions - compress, hex-encode, Base64, UTF8.
 	/// </summary>
-	/// <seealso cref="Util.Hash"/>
-	/// <seealso cref="Util.Hash.MD5"/>
+	/// <seealso cref="Util.AHash"/>
+	/// <seealso cref="Util.AHash.MD5"/>
 	public unsafe class AConvert
 	{
 		#region hex encode
@@ -100,7 +100,7 @@ namespace Au.Util
 		{
 			if(s == null) return null;
 			int n = s.Length / 2;
-			var b = Util.Buffers.LibChar(n);
+			var b = Util.AMemoryArray.LibChar(n);
 			fixed (char* p = b.A) {
 				n = HexDecode(s, p, n, 0);
 				var r = new byte[n];
@@ -351,7 +351,7 @@ namespace Au.Util
 			if(s == null) return null;
 			fixed (char* p = s) {
 				int len = s.Length, n = (int)(len * 3L / 4);
-				fixed (byte* b = Util.Buffers.LibByte(n)) {
+				fixed (byte* b = Util.AMemoryArray.LibByte(n)) {
 					n = Base64Decode(p, len, b, n);
 					var r = new byte[n];
 					Marshal.Copy((IntPtr)b, r, 0, n);
@@ -509,12 +509,12 @@ namespace Au.Util
 			}
 			byte[] b; int len = s.Length;
 			if(len == 0) {
-				b = Util.Buffers.Get(allocExtraBytes, ref buffer);
+				b = Util.AMemoryArray.Get(allocExtraBytes, ref buffer);
 				b[0] = 0;
 			} else {
 				int n = Utf8LengthFromString(s);
 				if(utf8Length != null) *utf8Length = n;
-				b = Util.Buffers.Get(n + allocExtraBytes, ref buffer);
+				b = Util.AMemoryArray.Get(n + allocExtraBytes, ref buffer);
 				fixed (byte* p = b) {
 					var r = Utf8FromString(s, p, n + 1);
 					Debug.Assert(r == n);

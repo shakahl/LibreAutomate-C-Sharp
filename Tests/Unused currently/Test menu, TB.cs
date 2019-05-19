@@ -18,7 +18,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 #pragma warning disable 162, 168, 219, 649 //unreachable code, unused var/field
 
@@ -44,10 +44,10 @@ public partial class Test
 		//AMenu.DefaultActivateMenuWindow = true;
 		//AMenu.DefaultMouseClosingDistance = 30;
 
-		Perf.First();
+		APerf.First();
 		var m = new AMenu();
 
-		Perf.Next();
+		APerf.Next();
 		m.CMS.ImageList = il;
 #if false
 		m.CMS.BackColor = Color.PaleGoldenrod;
@@ -74,7 +74,7 @@ public partial class Test
 		var cm = new ContextMenu();
 		cm.MenuItems.Add("test").Click += (o, d) => { Print("cm"); };
 		m.CMS.ContextMenu = cm;
-		Perf.Next();
+		APerf.Next();
 
 		m["One"] = o => Print("-one-");
 		m["Two"] = o => { Print(o); };
@@ -255,7 +255,7 @@ public partial class Test
 			m["Lazy 4"] = o => Print(o);
 		});
 
-		Perf.Next();
+		APerf.Next();
 
 		//GC.Collect(); GC.Collect();
 
@@ -279,12 +279,12 @@ public partial class Test
 		} else {
 			//1.s();
 			//Print(1);
-			//Perf.Next();
+			//APerf.Next();
 			//m.Show(500, 300);
 			//m.Show();
 			m.Show(Mouse.X + 10, Mouse.Y + 10);
 			//Print(2);
-			//Thread.Sleep(200); Perf.First(); m.Show(); Print(3);
+			//Thread.Sleep(200); APerf.First(); m.Show(); Print(3);
 		}
 	}
 
@@ -328,7 +328,7 @@ public partial class Test
 		//	}
 		//}
 
-		Perf.First();
+		APerf.First();
 
 		var m = new AMenu();
 		m.MouseClosingDistance = 100;
@@ -359,7 +359,7 @@ public partial class Test
 
 		//using(m.Submenu("sub")) {
 #if true
-		Perf.First();
+		APerf.First();
 		//for(int i = 0; i < 30; i++) {
 		//	m["auto-update", @"Q:\My QM\icon.exe"] = o => Print(o);
 		//}
@@ -420,8 +420,8 @@ public partial class Test
 		//ATimer.After(1000, t => { m.CMS.Dispose(); });
 
 		//m.MultiShow = true;
-		Perf.Next();
-		m.CMS.Paint += (unu, sed) => Perf.NW();
+		APerf.Next();
+		m.CMS.Paint += (unu, sed) => APerf.NW();
 		m.Show();
 		//Thread.Sleep(500);
 		//m.Separator();
@@ -439,7 +439,7 @@ public partial class Test
 
 	static void TestAuMenuSimplest(Control c = null)
 	{
-		Perf.First();
+		APerf.First();
 
 		var m = new AMenu();
 		m["One"] = o => Print(o);
@@ -619,7 +619,7 @@ public partial class Test
 
 	static void TestAuMenuWithForm()
 	{
-		Perf.First();
+		APerf.First();
 		new Form1().ShowDialog();
 
 		//with this loop does not show f
@@ -868,7 +868,7 @@ public partial class Test
 
 	//static void TestOldToolbar()
 	//{
-	//	Perf.First();
+	//	APerf.First();
 	//	var f = new AuBar1();
 	//	//f.Icon = null;
 	//	f.Height = 50; f.Width = 1200;
@@ -879,28 +879,28 @@ public partial class Test
 	//	//t.Size = new Size(250, 25);
 	//	t.Divider = false;
 	//	t.ButtonClick += T_ButtonClick;
-	//	Perf.Next();
+	//	APerf.Next();
 
 	//	var b = new ToolBarButton("Text");
 	//	t.Buttons.Add(b);
-	//	Perf.Next();
+	//	APerf.Next();
 
 	//	for(int i = 0; i < 30; i++) {
 	//		//t.Buttons.Add("Text");
 	//		b = new ToolBarButton("Text");
 	//		t.Buttons.Add(b);
 	//	}
-	//	Perf.Next();
+	//	APerf.Next();
 
 	//	f.Controls.Add(t);
 	//	//t.ResumeLayout();
-	//	Perf.Next();
+	//	APerf.Next();
 	//	//f.Show();
 	//	//f.Visible = true;
 	//	Wnd w = (Wnd)f;
 	//	w.Show(true);
 	//	//w.ActivateLL();
-	//	Perf.Next();
+	//	APerf.Next();
 
 	//	//Application.Run();
 	//	_mlTb.Loop();
@@ -955,35 +955,35 @@ public partial class Test
 	//		_tbWndClass = Wnd.Misc.MyWindowClass.Register("AuBar1", _WndprocAuBar, 0, Api.CS_GLOBALCLASS);
 	//	}
 
-	//	Perf.First();
+	//	APerf.First();
 	//	var f = new AuBar1();
 	//	//f.SuspendLayout();
 	//	//f.Icon = null;
 	//	f.Height = 50; f.Width = 1200; //faster here than in CreateParams
 
-	//	Perf.Next();
+	//	APerf.Next();
 	//	var t = new ToolStrip();
 	//	t.SuspendLayout();
-	//	Perf.Next();
+	//	APerf.Next();
 
 	//	var b = new ToolStripButton("Text");
 	//	b.Click += B_Click1;
 	//	t.Items.Add(b);
-	//	Perf.Next();
+	//	APerf.Next();
 
 	//	for(int i = 0; i < 30; i++) {
 	//		//t.Items.Add("Text");
 	//		b = new ToolStripButton("Text");
 	//		t.Items.Add(b);
 	//	}
-	//	Perf.Next();
+	//	APerf.Next();
 
 	//	f.Controls.Add(t);
 	//	t.ResumeLayout();
-	//	Perf.Next();
+	//	APerf.Next();
 	//	//Wnd w = (Wnd)f; w.Show(true); //slightly faster, but then need 2 clicks to make a button to respond
 	//	f.Show(); //does not activate if WS_EX_NOACTIVATE
-	//	Perf.Next();
+	//	APerf.Next();
 
 	//	//Application.Run();
 	//	_mlTb.Loop();
@@ -1046,35 +1046,35 @@ public partial class Test
 
 	//	static void TestToolbarStripInNativeWindow()
 	//	{
-	//		Perf.First();
+	//		APerf.First();
 	//		if(_tbWndClass2 == null) {
 	//			_tbWndClass2 = Wnd.Misc.MyWindowClass.Register("AuBar2", _WndprocAuBar2, IntPtr.Size, Api.CS_GLOBALCLASS);
-	//			Perf.Next();
+	//			APerf.Next();
 	//		}
 
 	//		//bool topMost = true;
 	//		Wnd w = Api.CreateWindowEx(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST, _tbWndClass2.Name, null,
 	//			WS.POPUP | WS.CAPTION | WS.SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
-	//		Perf.Next();
+	//		APerf.Next();
 
 	//#if true
 	//		//var t = new ToolStrip();
 	//		var t = new ToolStrip2(w.Handle);
 	//		t.SuspendLayout();
 	//		t.SetBounds(0, 0, 1100, 40);
-	//		Perf.Next();
+	//		APerf.Next();
 
 	//		var b = new ToolStripButton("Text");
 	//		b.Click += B_Click1;
 	//		t.Items.Add(b);
-	//		Perf.Next();
+	//		APerf.Next();
 
 	//		for(int i = 0; i < 30; i++) {
 	//			//t.Items.Add("Text");
 	//			b = new ToolStripButton("Text");
 	//			t.Items.Add(b);
 	//		}
-	//		Perf.Next();
+	//		APerf.Next();
 
 	//		//Wnd wt = (Wnd)t.Handle;
 	//		//Print(wt);
@@ -1086,18 +1086,18 @@ public partial class Test
 	//		t.CreateControl();
 	//		//Wnd wt = (Wnd)t.Handle;
 
-	//		Perf.Next();
+	//		APerf.Next();
 	//#endif
 	//		w.Show(true);
 	//		//w.ActivateLL();
-	//		//Perf.Next();
+	//		//APerf.Next();
 	//		//Wnd wt = (Wnd)t.Handle;
 	//		//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
 	//		//w.Post(Api.WM_ACTIVATE, 1); w.Post(Api.WM_ACTIVATE, 0);
 	//		//t.Select();
-	//		//Perf.Next();
+	//		//APerf.Next();
 	//		//t.Focus();
-	//		Perf.Next();
+	//		APerf.Next();
 	//		_mlTb.Loop();
 	//		Api.DestroyWindow(w);
 	//		//if(!t.IsDisposed) t.Dispose();
@@ -1144,11 +1144,11 @@ public partial class Test
 	//		_tbWndClass3 = Wnd.Misc.MyWindowClass.Register("AuBar3", _WndprocAuBar2, 0, Api.CS_GLOBALCLASS);
 	//	}
 
-	//	Perf.First();
+	//	APerf.First();
 	//	//bool topMost = true;
 	//	Wnd w = Api.CreateWindowEx(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST, _tbWndClass3.Name, null,
 	//		WS.POPUP | WS.CAPTION | WS.SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
-	//	Perf.Next();
+	//	APerf.Next();
 
 
 	//	var t = new ToolBar2(w.Handle);
@@ -1156,27 +1156,27 @@ public partial class Test
 	//	t.Size = new Size(1100, 40);
 	//	t.Divider = false;
 	//	t.ButtonClick += T_ButtonClick;
-	//	Perf.Next();
+	//	APerf.Next();
 
 	//	var b = new ToolBarButton("Text");
 	//	t.Buttons.Add(b);
-	//	Perf.Next();
+	//	APerf.Next();
 
 	//	for(int i = 0; i < 30; i++) {
 	//		//t.Buttons.Add("Text");
 	//		b = new ToolBarButton("Text");
 	//		t.Buttons.Add(b);
 	//	}
-	//	Perf.Next();
+	//	APerf.Next();
 
 	//	//t.ResumeLayout();
 	//	t.CreateControl();
 	//	//Wnd wt = (Wnd)t.Handle;
 
-	//	Perf.Next();
+	//	APerf.Next();
 	//	w.Show(true);
 	//	//w.ActivateLL();
-	//	Perf.Next();
+	//	APerf.Next();
 	//	_mlTb.Loop();
 	//	Api.DestroyWindow(w);
 	//}
@@ -1203,26 +1203,26 @@ public partial class Test
 
 	//static void TestNativeWindow()
 	//{
-	//	Perf.First();
+	//	APerf.First();
 	//	if(_WndClassNW == null) {
 	//		_WndClassNW = Wnd.Misc.MyWindowClass.Register("NativeWi", _WndprocNW, IntPtr.Size, Api.CS_GLOBALCLASS);
-	//		Perf.Next();
+	//		APerf.Next();
 	//	}
 
 	//	//bool topMost = true;
 	//	Wnd w = Api.CreateWindowEx(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST, _WndClassNW.Name, null,
 	//		WS.POPUP | WS.CAPTION | WS.SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
-	//	Perf.Next();
+	//	APerf.Next();
 	//	w.Show(true);
 	//	//w.ActivateLL();
-	//	//Perf.Next();
+	//	//APerf.Next();
 	//	//Wnd wt = (Wnd)t.Handle;
 	//	//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
 	//	//w.Post(Api.WM_ACTIVATE, 1); w.Post(Api.WM_ACTIVATE, 0);
 	//	//t.Select();
-	//	//Perf.Next();
+	//	//APerf.Next();
 	//	//t.Focus();
-	//	Perf.Next();
+	//	APerf.Next();
 	//	_mlTb.Loop();
 	//	Api.DestroyWindow(w);
 	//	//if(!t.IsDisposed) t.Dispose();
@@ -1235,15 +1235,15 @@ public partial class Test
 	//	{
 	//		//var il = _TestCreateImageList();
 
-	//		Perf.First();
+	//		APerf.First();
 	//		var m = new AToolbar();
 	//		//m.ImageList = il;
-	//		Perf.Next();
+	//		APerf.Next();
 
 	//		m.Ex.SetBounds(100, 100, 400, 100);
 
 	//		m["Close"] = o => { Print(o); _mlTb.Stop(); };
-	//		Perf.Next();
+	//		APerf.Next();
 	//#if true
 	//		for(int i = 0; i < 30; i++) {
 	//			m.Add("Text", null);
@@ -1262,11 +1262,11 @@ public partial class Test
 	//		m.Separator();
 	//		m.Add(new ToolStripTextBox());
 	//#endif
-	//		Perf.Next();
+	//		APerf.Next();
 
 	//		//Print(w);
 	//		m.Visible = true;
-	//		Perf.Next();
+	//		APerf.Next();
 	//		_mlTb.Loop();
 	//		m.Close();
 	//	}

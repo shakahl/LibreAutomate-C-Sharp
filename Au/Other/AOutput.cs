@@ -1,0 +1,429 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Concurrent;
+using System.Text;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
+using System.ComponentModel;
+using System.Reflection;
+using Microsoft.Win32;
+using System.Runtime.ExceptionServices;
+//using System.Linq;
+//using System.Xml.Linq;
+
+using Au.Types;
+using static Au.AStatic;
+using Au.Util;
+
+namespace Au
+{
+	/// <summary>
+	/// Writes text to the output window, console or log file.
+	/// </summary>
+	/// <remarks>
+	/// When <see cref="Write"/>, <b>Print</b>, etc is called, where the text goes:
+	/// - If redirected, to wherever it is redirected. See <see cref="Writer"/>.
+	/// - Else if using log file (<see cref="LogFile"/> not null), writes to the file.
+	/// - Else if using console (<see cref="IsWritingToConsole"/> returns true), writes to console.
+	/// - Else if using local <see cref="AOutputServer"/> (in this appdomain), writes to it.
+	/// - Else if exists global <see cref="AOutputServer"/> (in any process/appdomain), writes to it.
+	/// - Else nowhere.
+	/// </remarks>
+	//[DebuggerStepThrough]
+	public static partial class AOutput
+	{
+		//note:
+		//This library does not redirect Console.WriteLine, unless user calls AOutput.RedirectConsoleOutput.
+		//One of reasons - there is no way to auto-run a class library initialization code that would redirect.
+
+		/// <summary>
+		/// Returns true if this is a console process.
+		/// </summary>
+		public static bool IsConsoleProcess => _isConsole;
+		static readonly bool _isConsole = Console.OpenStandardInput(1) != Stream.Null;
+
+		/// <summary>
+		/// Returns true if is writing to console, false if to the output window or log file. Assuming that <see cref="Writer"/> is not changed.
+		/// </summary>
+		/// <remarks>
+		/// Does not write to console in these cases:
+		/// - <see cref="IsConsoleProcess"/> is false.
+		/// - <see cref="IgnoreConsole"/> is true.
+		/// - <see cref="LogFile"/> is not null.
+		/// - The startup info of this process tells to not show console window and to not redirect the standard output.
+		/// </remarks>
+		public static bool IsWritingToConsole {
+			get {
+				if(!IsConsoleProcess || IgnoreConsole || LogFile != null) return false;
+				if(!_isVisibleConsole.HasValue) {
+					Api.GetStartupInfo(out var x);
+					_isVisibleConsole = x.hStdOutput != default || 0 == (x.dwFlags & 1) || 0 != x.wShowWindow; //redirected stdout, or visible console window
+				}
+				return _isVisibleConsole.GetValueOrDefault();
+			}
+		}
+		static bool? _isVisibleConsole;
+
+		/// <summary>
+		/// If true, Write and related functions in console process don't not use the console window. Then everything is like in non-console process.
+		/// </summary>
+		/// <seealso cref="RedirectConsoleOutput"/>
+		/// <seealso cref="RedirectDebugOutput"/>
+		public static bool IgnoreConsole { get; set; }
+
+		/// <summary>
+		/// Clears the output window or console text (if <see cref="IsWritingToConsole"/>) or log file (if <see cref="LogFile"/> not null).
+		/// </summary>
+		public static void Clear()
+		{
+			if(LogFile != null) {
+				_ClearToLogFile();
+			} else if(IsWritingToConsole) {
+				try { Console.Clear(); } catch { } //exception if redirected, it is documented
+			} else if(QM2.UseQM2) {
+				QM2.Clear();
+			} else {
+				_ClearToOutputServer();
+			}
+		}
+
+		/// <summary>
+		/// Writes text + <c>"\r\n"</c> to the output window or console (if <see cref="IsWritingToConsole"/>) or log file (if <see cref="LogFile"/> not null).
+		/// </summary>
+		/// <param name="value">
+		/// Text.
+		/// If "" or null, writes empty line.
+		/// </param>
+		/// <remarks>
+		/// Can display links, colors, images, etc. More info: [](xref:print_tags).
+		/// </remarks>
+		/// <seealso cref="Print(string)"/>
+		/// <seealso cref="Print(object)"/>
+		/// <seealso cref="Print{T}(IEnumerable{T})"/>
+		/// <seealso cref="Print(object, object, object[])"/>
+		/// <seealso cref="PrintListEx{T}(IEnumerable{T}, string, int)"/>
+		public static void Write(string value)
+		{
+			Writer.WriteLine(value);
+		}
+
+		/// <summary>
+		/// Gets or sets object that actually writes text when is called <see cref="Write"/>, <see cref="Print"/> and similar functions.
+		/// </summary>
+		/// <remarks>
+		/// If you want to redirect, modify or just monitor output text, use code like in the example. It is known as "output redirection".
+		/// Redirection is applied to whole appdomain, and does not affect other appdomains.
+		/// Redirection affects <see cref="Write"/>, <see cref="Print"/> and similar functions, also <see cref="RedirectConsoleOutput"/> and <see cref="RedirectDebugOutput"/>. It does not affect <see cref="WriteDirectly"/> and <see cref="Clear"/>.
+		/// Don't call <see cref="Write"/>, <see cref="Print"/> etc in method <b>WriteLine</b> of your writer class. It would call itself and create stack overflow. But you can call <see cref="WriteDirectly"/>.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// [STAThread]
+		/// static void Main()
+		/// {
+		/// 	AOutput.Writer = new TestOutputWriter();
+		/// 
+		/// 	Print("test");
+		/// }
+		/// 
+		/// class TestOutputWriter :TextWriter
+		/// {
+		/// 	public override void WriteLine(string value) { AOutput.WriteDirectly("redir: " + value); }
+		/// 	public override Encoding Encoding => Encoding.Unicode;
+		/// }
+		/// ]]></code>
+		/// </example>
+		public static TextWriter Writer { get; set; } = new _OutputWriter();
+
+		/// <summary>
+		/// Our default writer class for the Writer property.
+		/// </summary>
+		class _OutputWriter : TextWriter
+		{
+			StringBuilder _b;
+
+			public override Encoding Encoding => Encoding.Unicode;
+			public override void WriteLine(string value) { WriteDirectly(_PrependBuilder(value)); }
+			public override void Write(string value)
+			{
+				//QM2.Write($"'{value}'");
+				if(Empty(value)) return;
+				if(value.Ends('\n')) {
+					WriteLine(value.RemoveSuffix(value.Ends("\r\n") ? 2 : 1));
+				} else {
+					(_b ?? (_b = new StringBuilder())).Append(value);
+				}
+			}
+			string _PrependBuilder(string value)
+			{
+				if(_b != null && _b.Length > 0) {
+					value = _b.ToString() + value;
+					_b.Clear();
+				}
+				return value;
+			}
+			public override void Flush()
+			{
+				var s = _PrependBuilder(null);
+				if(!Empty(s)) WriteDirectly(s);
+			}
+		}
+
+		/// <summary>
+		/// Writes string value + "\r\n" to the output window or console (if <see cref="IsWritingToConsole"/>) or log file (if <see cref="LogFile"/> not null).
+		/// Unlike <see cref="Write"/>, <see cref="Print"/> etc, the string is not passed to <see cref="Writer"/>.
+		/// </summary>
+		[MethodImpl(MethodImplOptions.NoInlining)] //for stack trace, used in _WriteToOutputServer
+		public static void WriteDirectly(string value)
+		{
+			if(value == null) value = "";
+
+			if(LogFile != null) _WriteToLogFile(value);
+			else if(IsWritingToConsole) Console.WriteLine(value);
+			else if(QM2.UseQM2) QM2.Write(value);
+			else _WriteToOutputServer(value);
+		}
+
+		/// <summary>
+		/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="Write"/> etc.
+		/// </summary>
+		/// <remarks>
+		/// <b>Console.Write</b> will write line, like <b>Console.WriteLine</b>.
+		/// <b>Console.Clear</b> will not clear output; it will throw exception.
+		/// </remarks>
+		public static bool RedirectConsoleOutput {
+			set {
+				if(value) {
+					if(_prevConsoleOut != null || IsConsoleProcess) return;
+					_prevConsoleOut = Console.Out;
+					Console.SetOut(Writer);
+					//speed: 870
+				} else if(_prevConsoleOut != null) {
+					Console.SetOut(_prevConsoleOut);
+					_prevConsoleOut = null;
+				}
+			}
+		}
+		static TextWriter _prevConsoleOut;
+
+		/// <summary>
+		/// Let <b>Debug.WriteX</b> and <b>Trace.WriteX</b> methods write to the same destination as <see cref="Write"/> etc.
+		/// </summary>
+		/// <remarks>
+		/// Tip: To write to the output window even in console process, set <c>AOutput.IgnoreConsole=true;</c> before calling this method first time.
+		/// </remarks>
+		public static bool RedirectDebugOutput {
+			set {
+				if(value) {
+					if(_traceListener != null) return;
+					//Trace.Listeners.Add(IsWritingToConsole ? (new ConsoleTraceListener()) : (new TextWriterTraceListener(Writer)));
+					Trace.Listeners.Add(_traceListener = new TextWriterTraceListener(Writer));
+					//speed: 6100
+				} else if(_traceListener != null) {
+					Trace.Listeners.Remove(_traceListener);
+				}
+			}
+		}
+		static TextWriterTraceListener _traceListener;
+
+		/// <summary>
+		/// Sets log file path.
+		/// When set (not null), text passed to <see cref="Write"/>, <see cref="Print"/> and similar functions will be written to the file. Assuming that <see cref="Writer"/> is not changed.
+		/// If value is null - restores default behavior.
+		/// </summary>
+		/// <remarks>
+		/// The first <see cref="Write"/> etc call (in this appdomain) creates or opens the file and deletes old content if the file already exists.
+		/// Multiple appdomains cannot use the same file. If the file is open for writing, <see cref="Write"/> makes unique filename and changes <b>LogFile</b> value.
+		/// 
+		/// Also supports mailslots. For <b>LogFile</b> use mailslot name, as documented in <msdn>CreateMailslot</msdn>. Multiple appdomains and processes can use the same mailslot.
+		/// </remarks>
+		/// <exception cref="ArgumentException">The 'set' function throws this exception if the value is not full path and not null.</exception>
+		public static string LogFile {
+			get => _logFile;
+			set {
+				lock(_lockObj1) {
+					if(_hFile != null) {
+						_hFile.Close();
+						_hFile = null;
+					}
+					if(value != null) {
+						_logFile = APath.Normalize(value);
+					} else _logFile = null;
+				}
+			}
+
+		}
+		static string _logFile;
+		static _LogFile _hFile;
+		static readonly object _lockObj1 = new object();
+
+		/// <summary>
+		/// Let Write etc also add current time when using log file (see <see cref="LogFile"/>).
+		/// The time is local, not UTC.
+		/// </summary>
+		public static bool LogFileTimestamp { get; set; }
+
+		static void _WriteToLogFile(string s)
+		{
+			lock(_lockObj1) {
+				if(_hFile == null) {
+					g1:
+					_hFile = _LogFile.Open();
+					if(_hFile == null) {
+						var e = WinError.Code;
+						if(e == Api.ERROR_SHARING_VIOLATION) {
+							var u = APath.MakeUnique(_logFile, false);
+							if(u != _logFile) { _logFile = u; goto g1; }
+						}
+						var logf = _logFile;
+						_logFile = null;
+						PrintWarning($"Failed to create or open log file '{logf}'. {WinError.MessageFor(e)}");
+						WriteDirectly(s);
+						return;
+					}
+				}
+				_hFile.WriteLine(s);
+			}
+		}
+
+		static void _ClearToLogFile()
+		{
+			lock(_lockObj1) {
+				if(_hFile == null) {
+					try { AFile.Delete(_logFile); } catch { }
+				} else {
+					_hFile.Clear();
+				}
+			}
+		}
+
+		unsafe class _LogFile
+		{
+			//info: We don't use StreamWriter. It creates more problems than would make easier.
+			//	Eg its finalizer does not write to file. If we try to Close it in our finalizer, it throws 'already disposed'.
+			//	Also we don't need such buffering. Better to write to the OS file buffer immediately, it's quite fast.
+
+			LibHandle _h;
+			string _name;
+
+			/// <summary>
+			/// Opens LogFile file handle for writing.
+			/// Uses CREATE_ALWAYS, GENERIC_WRITE, FILE_SHARE_READ.
+			/// </summary>
+			/// <remarks>
+			/// Multiple appdomains cannot use the same file. Each appdomain overwrites it when opens first time.
+			/// </remarks>
+			public static _LogFile Open()
+			{
+				var path = LogFile;
+				var h = LibCreateFile(path, false);
+				if(h.Is0) return null;
+				return new _LogFile() { _h = h, _name = path };
+			}
+
+			/// <summary>
+			/// Writes s + "\r\n" and optionally timestamp.
+			/// </summary>
+			/// <remarks>
+			/// If fails to write to file: Sets LogFile=null, which closes file handle. Writes a warning and s to the output window or console.
+			/// </remarks>
+			public bool WriteLine(string s)
+			{
+				bool ok;
+				int n = AConvert.Utf8LengthFromString(s) + 1;
+				fixed (byte* b = AMemoryArray.LibByte(n + 35)) {
+					if(LogFileTimestamp) {
+						Api.GetLocalTime(out var t);
+						Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
+						int nn = LibCharPtr.Length(b);
+						AConvert.Utf8FromString(s, b + nn, n);
+						n += nn;
+						if(s.Starts("<>")) {
+							Api.memmove(b + 2, b, nn);
+							b[0] = (byte)'<'; b[1] = (byte)'>';
+						}
+					} else {
+						AConvert.Utf8FromString(s, b, n);
+					}
+					b[n - 1] = 13; b[n++] = 10;
+
+					ok = Api.WriteFile(_h, b, n, out _);
+				}
+				if(!ok) {
+					string emsg = WinError.Message;
+					LogFile = null;
+					PrintWarning($"Failed to write to log file '{_name}'. {emsg}");
+					WriteDirectly(s);
+					//Debug.Assert(false);
+				}
+				return ok;
+			}
+
+			/// <summary>
+			/// Sets file size = 0.
+			/// </summary>
+			public bool Clear()
+			{
+				bool ok = Api.SetFilePointerEx(_h, 0, null, Api.FILE_BEGIN) && Api.SetEndOfFile(_h);
+				Debug.Assert(ok);
+				return ok;
+			}
+
+			/// <summary>
+			/// Closes file handle.
+			/// </summary>
+			public void Close() => _h.Dispose();
+		}
+
+		/// <summary>
+		/// Calls Api.CreateFile to open file or mailslot.
+		/// </summary>
+		/// <param name="name">File path or mailslot name.</param>
+		/// <param name="openExisting">Use OPEN_EXISTING. If false, uses CREATE_ALWAYS.</param>
+		internal static LibHandle LibCreateFile(string name, bool openExisting)
+		{
+			return Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, default, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
+
+			//tested: CREATE_ALWAYS works with mailslot too. Does not erase messages. Undocumented what to use.
+		}
+
+		///
+#if DEBUG
+		public
+#else
+		internal
+#endif
+		static class QM2
+		{
+			/// <summary>
+			/// Sets to use QM2 as the output server.
+			/// </summary>
+			public static bool UseQM2 { get; set; }
+
+			/// <summary>
+			/// Clears QM2 output pane.
+			/// </summary>
+			public static void Clear() => _WriteToQM2(null);
+
+			/// <summary>
+			/// Writes line to QM2.
+			/// </summary>
+			public static void Write(object o) => _WriteToQM2(o?.ToString() ?? "");
+
+			/// <param name="s">If null, clears output.</param>
+			static void _WriteToQM2(string s)
+			{
+				if(!_hwndQM2.IsAlive) {
+					_hwndQM2 = Api.FindWindow("QM_Editor", null);
+					if(_hwndQM2.Is0) return;
+				}
+				_hwndQM2.SendS(Api.WM_SETTEXT, -1, s);
+			}
+			static Wnd _hwndQM2;
+		}
+	}
+}

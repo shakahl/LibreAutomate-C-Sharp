@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -57,7 +57,7 @@ namespace Au
 			}
 
 			for(int na = s.Length + 100; ;) {
-				var b = Util.Buffers.LibChar(ref na);
+				var b = Util.AMemoryArray.LibChar(ref na);
 				int nr = Api.ExpandEnvironmentStrings(s, b, na);
 				if(nr > na) na = nr;
 				else if(nr > 0) {
@@ -80,7 +80,7 @@ namespace Au
 		internal static string LibGetEnvVar(string name)
 		{
 			for(int na = 300; ;) {
-				var b = Util.Buffers.LibChar(ref na);
+				var b = Util.AMemoryArray.LibChar(ref na);
 				int nr = Api.GetEnvironmentVariable(name, b, na);
 				if(nr > na) na = nr; else return (nr == 0) ? "" : b.ToString(nr);
 			}
@@ -406,7 +406,7 @@ namespace Au
 				//	Because it does many things (see Normalize doc), not all documented.
 				//	We still ~2 times faster than Path.GetFullPath.
 				for(int na = 300; ;) {
-					var b = Util.Buffers.LibChar(ref na);
+					var b = Util.AMemoryArray.LibChar(ref na);
 					int nr = Api.GetFullPathName(s, na, b, null);
 					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
 				}
@@ -458,7 +458,7 @@ namespace Au
 		{
 			if(!Empty(s)) {
 				for(int na = 300; ;) {
-					var b = Util.Buffers.LibChar(ref na);
+					var b = Util.AMemoryArray.LibChar(ref na);
 					int nr = Api.GetLongPathName(s, b, na);
 					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
 				}

@@ -18,7 +18,7 @@ using System.Runtime.ExceptionServices;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -131,7 +131,10 @@ namespace Au
 			}
 		}
 	}
+}
 
+namespace Au.Types
+{
 	/// <summary>
 	/// This class is used in automation script files as base of their main class. Adds some features.
 	/// </summary>
@@ -204,10 +207,7 @@ namespace Au
 		}
 		Au.Triggers.ActionTriggers _triggers;
 	}
-}
 
-namespace Au.Types
-{
 	/// <summary>
 	/// Flags for <see cref="RunAssembly.Run"/>.
 	/// </summary>

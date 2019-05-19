@@ -19,7 +19,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Compiler;
 
 class EdMetaCommentsParser

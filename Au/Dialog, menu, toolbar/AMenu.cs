@@ -17,7 +17,7 @@ using System.Drawing;
 using System.Reflection.Emit;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 //TODO: AMenu etc should have before/after delegate properties too. And dedicated threads. Like TriggerOptions.
@@ -130,7 +130,7 @@ namespace Au
 		/// - string - path of .ico or any other file or folder or non-file object. See <see cref="AIcon.GetFileIcon"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="AMTBase.IconFlags"/>.
 		/// - string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// - int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
-		/// - Icon, Image, Folders.FolderPath.
+		/// - Icon, Image, AFolderPath.
 		/// - null (default) - no icon. If <see cref="AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>Exec.TryRun(@"c:\path\file.exe")</c> or <c>Exec.TryRun(Folders.System + "file.exe")</c>.
 		/// - "" - no icon.
 		/// </param>
@@ -267,7 +267,7 @@ namespace Au
 			//	But then cannot be ToolStripDropDownMenu_.
 			//	It is important only if using in menu bar.
 
-			//var t = new Perf.Inst(); t.First();
+			//var t = new APerf.Inst(); t.First();
 			dd.SuspendLayout();
 			if(_cm._changedBackColor) dd.BackColor = _cm.BackColor; //because by default gives 0xf0f0f0, although actually white, and then submenus would be gray
 			dd.BackgroundImage = _cm.BackgroundImage;
@@ -456,7 +456,7 @@ namespace Au
 				//_showedOnce = true; //OnOpening() sets it
 				if(!ActivateMenuWindow) LibWorkarounds.WaitCursorWhenShowingMenuEtc();
 			}
-			//Perf.Next();
+			//APerf.Next();
 
 			_isOwned = control != null;
 			_isModal = ModalAlways ? true : !AThread.HasMessageLoop();
@@ -472,7 +472,7 @@ namespace Au
 				break;
 			}
 			_inOurShow = false;
-			//Perf.Next();
+			//APerf.Next();
 
 			if(_isModal) {
 				_msgLoop.Loop();
@@ -484,7 +484,7 @@ namespace Au
 		bool _inOurShow; //to detect when ContextMenuStrip.Show called not through AMenu.Show
 		bool _isOwned; //control==0
 		bool _isModal; //depends on ModalAlways or Application.MessageLoop
-		MessageLoop _msgLoop = new MessageLoop();
+		AMessageLoop _msgLoop = new AMessageLoop();
 
 		/// <summary>
 		/// If false, disposes the menu when it is closed.
@@ -550,7 +550,7 @@ namespace Au
 				//Wnd.Misc.PrintMsg(ref m, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_ERASEBKGND, Api.WM_CTLCOLOREDIT);
 
 				if(_am._WndProc_Before(true, this, ref m)) return;
-				//var t = Perf.StartNew();
+				//var t = APerf.StartNew();
 				base.WndProc(ref m);
 				//t.Next(); if(t.TimeTotal >= 100) { Print(t.ToString(), m); }
 				_am._WndProc_After(true, this, ref m);
@@ -603,7 +603,7 @@ namespace Au
 
 			protected override void OnPaint(PaintEventArgs e)
 			{
-				//var perf = Perf.StartNew();
+				//var perf = APerf.StartNew();
 
 				//ADebug.PrintFunc();
 				base.OnPaint(e);
@@ -1143,9 +1143,9 @@ namespace Au.Types
 				_clickActions[item] = new _ClickAction() { action = onClick, threadOpt = this.ItemThread, exceptOpt = this.ExceptionHandling };
 				item.Click += _onClick;
 
-				//Perf.First();
+				//APerf.First();
 				if(icon == null && ExtractIconPathFromCode) icon = _IconPathFromCode(onClick.Method);
-				//Perf.NW(); //ngened about 10 ms first time, then fast. Else 30-40 ms first time.
+				//APerf.NW(); //ngened about 10 ms first time, then fast. Else 30-40 ms first time.
 				//Print(icon);
 			}
 
@@ -1157,7 +1157,7 @@ namespace Au.Types
 					case int index: if(index >= 0) item.ImageIndex = index; break;
 					case Image img: item.Image = img; break;
 					case Icon ico: item.Image = ico.ToBitmap(); break;
-					case Folders.FolderPath fp: _SetItemFileIcon(isBar, item, fp); break;
+					case AFolderPath fp: _SetItemFileIcon(isBar, item, fp); break;
 					}
 				}
 				catch(Exception e) { ADebug.Print(e.Message); } //ToBitmap() may throw
@@ -1184,7 +1184,7 @@ namespace Au.Types
 			if(il != null && il.Images.ContainsKey(s)) {
 				item.ImageKey = s;
 			} else {
-				//var perf = Perf.StartNew();
+				//var perf = APerf.StartNew();
 				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
 
 				if(_AsyncIcons == null) _AsyncIcons = new IconsAsync(); //used by submenus too
@@ -1250,9 +1250,9 @@ namespace Au.Types
 			//			if(im == null) item.ForeColor = Color.Red;
 			//#endif
 			if(nLeft == 0) {
-				//Perf.Next();
+				//APerf.Next();
 				ts.Update();
-				//Perf.NW();
+				//APerf.NW();
 			}
 		}
 
@@ -1301,9 +1301,9 @@ namespace Au.Types
 		static string _IconPathFromCode(MethodInfo mi)
 		{
 			//support code pattern like 'Folders.System + "notepad.exe"'.
-			//	Opcodes: call(Folders.System), ldstr("notepad.exe"), Folders.FolderPath.op_Addition.
+			//	Opcodes: call(Folders.System), ldstr("notepad.exe"), AFolderPath.op_Addition.
 			//also code pattern like 'Folders.System' or 'Folders.Virtual.RecycleBin'.
-			//	Opcodes: call(Folders.System), Folders.FolderPath.op_Implicit(FolderPath to string).
+			//	Opcodes: call(Folders.System), AFolderPath.op_Implicit(AFolderPath to string).
 			//also code pattern like 'Exec.TryRun("notepad.exe")'.
 			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
 			try {
@@ -1326,20 +1326,20 @@ namespace Au.Types
 						//Print(f, f.DeclaringType, f.Name, f.MemberType, f.ReturnType, f.GetParameters().Length);
 						var dt = f.DeclaringType;
 						if(dt == typeof(Folders) || dt == typeof(Folders.Virtual)) {
-							if(f.ReturnType == typeof(Folders.FolderPath) && f.GetParameters().Length == 0) {
+							if(f.ReturnType == typeof(AFolderPath) && f.GetParameters().Length == 0) {
 								//Print(1);
 								f1 = f;
 								patternStart = i;
 							}
-						} else if(dt == typeof(Folders.FolderPath)) {
+						} else if(dt == typeof(AFolderPath)) {
 							if(i == patternStart + 2 && f.Name == "op_Addition") {
 								//Print(2);
-								var fp = (Folders.FolderPath)f1.Invoke(null, null);
+								var fp = (AFolderPath)f1.Invoke(null, null);
 								if((string)fp == null) return null;
 								return fp + filename;
 							} else if(i == patternStart + 1 && f.Name == "op_Implicit" && f.ReturnType == typeof(string)) {
 								//Print(3);
-								return (Folders.FolderPath)f1.Invoke(null, null);
+								return (AFolderPath)f1.Invoke(null, null);
 							}
 						}
 					}

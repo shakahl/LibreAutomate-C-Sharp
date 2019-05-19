@@ -16,7 +16,7 @@ using System.Runtime.ExceptionServices;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 #pragma warning disable CS0282 //VS bug: shows warning "There is no defined ordering between fields in multiple declarations of partial struct 'Acc'. To specify an ordering, all instance fields must be in the same declaration."
 
@@ -384,7 +384,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="AException">Failed.</exception>
 		/// <remarks>
-		/// Fails if the object does not have a default action. Then you can use <see cref="ExtAu.MouseClick(Acc, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
+		/// Fails if the object does not have a default action. Then you can use <see cref="AExtAu.MouseClick(Acc, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
 		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="DoJavaAction"/> or one of the above functions (MouseClick etc).
 		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </remarks>
@@ -844,7 +844,7 @@ namespace Au
 			for(int i = 0; i < len; i++) {
 				var c = p[i];
 				if(c == '\0' && iv > ik) {
-					string sk = Util.StringCache.LibAdd(p + ik, iv - ik - 1);
+					string sk = Util.AStringCache.LibAdd(p + ik, iv - ik - 1);
 					string sv = new string(p, iv, i - iv);
 					d[sk] = sv;
 					ik = i + 1;

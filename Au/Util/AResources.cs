@@ -16,7 +16,7 @@ using System.Resources;
 using System.Globalization;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Util
 {

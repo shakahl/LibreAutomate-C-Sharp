@@ -18,7 +18,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -99,15 +99,15 @@ namespace Au.Controls
 
 			_xmlFileDefault = xmlFile;
 			_xmlFileCustom = xmlFileCustom;
-			try { _xStrips = ExtXml.LoadElem(xmlFile); }
+			try { _xStrips = AExtXml.LoadElem(xmlFile); }
 			catch(Exception ex) { ADialog.ShowError("Failed to load file", ex.ToString()); throw; }
 			XElement xCustom = null;
 			if(AFile.ExistsAsFile(_xmlFileCustom)) {
-				try { xCustom = ExtXml.LoadElem(_xmlFileCustom); }
+				try { xCustom = AExtXml.LoadElem(_xmlFileCustom); }
 				catch(Exception e) { Print("Failed to load file", _xmlFileCustom, e.Message); }
 			}
 
-			Size imageScalingSize = Au.Util.Dpi.SmallIconSize; //if high DPI, auto scale images
+			Size imageScalingSize = Au.Util.ADpi.SmallIconSize; //if high DPI, auto scale images
 
 			//create top-level toolstrips (menu bar and toolbars), and call _AddChildItems to add items and create drop-down menus and submenus
 			_inBuildAll = true;
@@ -420,7 +420,7 @@ namespace Au.Controls
 		/// </summary>
 		void _DiffCustom()
 		{
-			var xStripsDefault = ExtXml.LoadElem(_xmlFileDefault);
+			var xStripsDefault = AExtXml.LoadElem(_xmlFileDefault);
 			var xStripsCustom = new XElement("strips");
 			string s;
 
@@ -466,7 +466,7 @@ namespace Au.Controls
 			if(xCust1.HasElements) { xCust1.Remove(); xStripsCustom.Add(xCust1); }
 			if(xCust2.HasElements) { xCust2.Remove(); xStripsCustom.Add(xCust2); }
 
-			//Output.Clear();
+			//AOutput.Clear();
 			//Print(xStripsCustom);
 #if true
 			//save

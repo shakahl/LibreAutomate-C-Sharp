@@ -23,7 +23,7 @@ using System.IO.Pipes;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 using Au.Compiler;
 using Au.Controls;
@@ -48,7 +48,7 @@ static class Run
 	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null)
 	{
 #if TEST_STARTUP_SPEED
-		args = new string[] { Time.PerfMicroseconds.ToString() }; //and in script use this code: Print(Time.Microseconds-Convert.ToInt64(args[0]));
+		args = new string[] { ATime.PerfMicroseconds.ToString() }; //and in script use this code: Print(ATime.Microseconds-Convert.ToInt64(args[0]));
 #endif
 
 		Model.Save.TextNowIfNeed(onlyText: true);
@@ -446,10 +446,10 @@ class RunningTasks
 		}
 
 		_SpUac uac = _SpUac.normal; int preIndex = 0;
-		if(!Uac.IsUacDisabled) {
+		if(!AUac.IsUacDisabled) {
 			//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
 			//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
-			var IL = Uac.OfThisProcess.IntegrityLevel;
+			var IL = AUac.OfThisProcess.IntegrityLevel;
 			if(r.uac == EUac.inherit) {
 				switch(IL) {
 				case UacIL.High: preIndex = 1; break;
@@ -482,7 +482,7 @@ class RunningTasks
 		_Preloaded pre = null; byte[] taskParams = null;
 		if(r.notInCache) { //meta role exeProgram
 			exeFile = r.file;
-			argsString = args == null ? null : ExtString.More.CommandLineFromArray(args);
+			argsString = args == null ? null : AExtString.More.CommandLineFromArray(args);
 		} else {
 			exeFile = Folders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");
 
@@ -492,14 +492,14 @@ class RunningTasks
 			taskParams = Au.Util.LibSerializer.SerializeWithSize(r.name, r.file, r.pdbOffset, iFlags, args, wrPipeName);
 			wrPipeName = null;
 
-			if(r.prefer32bit && Ver.Is64BitOS) preIndex += 3;
+			if(r.prefer32bit && AVersion.Is64BitOS) preIndex += 3;
 			pre = s_preloaded[preIndex] ?? (s_preloaded[preIndex] = new _Preloaded(preIndex));
 			argsString = pre.pipeName;
 		}
 
 		int pid; WaitHandle hProcess = null; bool disconnectPipe = false;
 		try {
-			//Perf.First();
+			//APerf.First();
 			var pp = pre?.hProcess;
 			if(pp != null && 0 != Api.WaitForSingleObject(pp.SafeWaitHandle.DangerousGetHandle(), 0)) { //preloaded process exists
 				hProcess = pp; pid = pre.pid;
@@ -511,7 +511,7 @@ class RunningTasks
 			Api.AllowSetForegroundWindow(pid);
 
 			if(pre != null) {
-				//Perf.First();
+				//APerf.First();
 				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent };
 				if(!Api.ConnectNamedPipe(pre.hPipe, &o)) {
 					int e = WinError.Code; if(e != Api.ERROR_IO_PENDING) throw new AException(e);
@@ -521,11 +521,11 @@ class RunningTasks
 					disconnectPipe = true;
 					if(!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AException(0);
 				}
-				//Perf.Next();
+				//APerf.Next();
 				if(!Api.WriteFileArr(pre.hPipe, taskParams, out _)) throw new AException(0);
-				//Perf.Next();
+				//APerf.Next();
 				Api.DisconnectNamedPipe(pre.hPipe); disconnectPipe = false;
-				//Perf.NW('e');
+				//APerf.NW('e');
 
 				//start preloaded process for next task. Let it wait for pipe connection.
 				if(uac != _SpUac.admin) { //we don't want second UAC consent

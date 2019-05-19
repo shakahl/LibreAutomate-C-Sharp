@@ -20,7 +20,7 @@ using System.Xml;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Controls;
 using Au.Triggers;
 using System.Security.AccessControl;
@@ -36,17 +36,17 @@ static partial class Test
 		_ = typeof(System.Linq.Enumerable).Assembly; //System.Core, +18 ms
 		Print("NEW");
 
-		//Perf.Cpu();
+		//APerf.Cpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
-		//	Perf.First();
+		//	APerf.First();
 		//	//AThread.LibIsLoadedFormsWpf();
 		//	"fffff".Starts("ff", true);
 		//	//var s = AConvert.HexEncode(new byte[] { 1, 2 });
-		//	//Perf.First();
+		//	//APerf.First();
 		//	//var b = AConvert.HexDecode(s);
 		//	//Print(b);
 
-		//	Perf.NW();
+		//	APerf.NW();
 		//}
 
 
@@ -79,18 +79,18 @@ static partial class Test
 		//m["one"] = o => Print(o);
 		//m.Show();
 
-		//Osd.ShowText("TEST", showMode: OsdShowMode.Wait);
-		//var m = new Osd();
+		//AOsd.ShowText("TEST", showMode: OsdShowMode.Wait);
+		//var m = new AOsd();
 
-		//Perf.First();
+		//APerf.First();
 		//var k = new Keyb(null);
-		//Perf.Next();
+		//APerf.Next();
 		//for(int i = 0; i < 5; i++) {
 		//	k.AddKeys("Left");
 		//	//k.AddKeys("VolumeUp");
-		//	Perf.Next();
+		//	APerf.Next();
 		//}
-		//Perf.NW();
+		//APerf.NW();
 
 		Print("FINALLY");
 		foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) Print(v);
@@ -107,7 +107,7 @@ static partial class Test
 
 	static unsafe void _TestExceptionInInteropCallback()
 	{
-		using(WinHook.ThreadGetMessage(x => {
+		using(AHookWin.ThreadGetMessage(x => {
 			Print(x.msg->ToString(), x.PM_NOREMOVE);
 			//throw new AException("TEST");
 		})) {
@@ -153,8 +153,8 @@ static partial class Test
 
 		Task.Run(() => {
 			try {
-				var t = Time.PerfMilliseconds;
-				while(Time.PerfMilliseconds - t < 1200) {
+				var t = ATime.PerfMilliseconds;
+				while(ATime.PerfMilliseconds - t < 1200) {
 					//using(var f = File.Create(file)) {
 					using(var f = AFile.WaitIfLocked(() => File.Create(file))) {
 						f.WriteByte(1);
@@ -170,8 +170,8 @@ static partial class Test
 		Task.Run(() => {
 			10.ms();
 			try {
-				var t = Time.PerfMilliseconds;
-				while(Time.PerfMilliseconds - t < 1200) {
+				var t = ATime.PerfMilliseconds;
+				while(ATime.PerfMilliseconds - t < 1200) {
 					//using(var f = File.OpenRead(file)) {
 					using(var f = AFile.WaitIfLocked(() => File.OpenRead(file))) {
 						f.ReadByte();
@@ -198,10 +198,10 @@ static partial class Test
 		//		var csv =
 		//@"A1, "" 3 5  12 100 ""
 		//		A2,4 100 -8 0x10";
-		//		var x = new Csv(csv);
+		//		var x = new ACsv(csv);
 		//		//var d = x.Data.ToDictionary(row => row[0], row => row[1], StringComparer.OrdinalIgnoreCase);
-		//		//var d = x.Data.ToDictionary(row => row[0], row => ExtString.More.StringToIntArray(row[1]), StringComparer.OrdinalIgnoreCase);
-		//		var d = x.ToDictionary(true, s => ExtString.More.StringToIntArray(s));
+		//		//var d = x.Data.ToDictionary(row => row[0], row => AExtString.More.StringToIntArray(row[1]), StringComparer.OrdinalIgnoreCase);
+		//		var d = x.ToDictionary(true, s => AExtString.More.StringToIntArray(s));
 		//		//Print(d);
 		//		foreach(var v in d) Print(v.Key, string.Join(" ", v.Value));
 		//		x.FromDictionary(d, v => string.Join(" ", v));
@@ -210,29 +210,29 @@ static partial class Test
 		var csv =
 @"A1, 5
 a1,-8";
-		var x = Csv.Parse(csv);
+		var x = ACsv.Parse(csv);
 		//var d = x.ToDictionary(true, true);
 		//Print(d);
-		//x = Csv.FromDictionary(d);
+		//x = ACsv.FromDictionary(d);
 		//Print(x);
 		//var d = x.ToDictionary(true, false, s => s.ToInt()); //rejected
 		var d = x.ToDictionary(true, true, row => row[1].ToInt());
 		Print(d);
-		//x = Csv.FromDictionary(d, v => v.ToString());
-		x = Csv.FromDictionary(d, 2, (v, r) => r[1] = v.ToString());
-		//x = Csv.FromDictionary(d, 3, (v, r) => { r[1] = v.ToString(); r[2] = "TEST"; });
+		//x = ACsv.FromDictionary(d, v => v.ToString());
+		x = ACsv.FromDictionary(d, 2, (v, r) => r[1] = v.ToString());
+		//x = ACsv.FromDictionary(d, 3, (v, r) => { r[1] = v.ToString(); r[2] = "TEST"; });
 		Print(x);
 
 		//var f = Folders.Temp + "test2.csv";
-		//var x = Csv.Parse(csv);
+		//var x = ACsv.Parse(csv);
 		//x.Save(f);
-		//x = Csv.Load(f);
+		//x = ACsv.Load(f);
 		//Print(x);
 
 		//var f = Folders.Temp + "test2.csv";
-		//var x = Csv.Parse(csv);
+		//var x = ACsv.Parse(csv);
 		//x.Save(f);
-		//x = Csv.Load(f);
+		//x = ACsv.Load(f);
 		//Print(x);
 
 	}
@@ -258,7 +258,7 @@ a1,-8";
 	//			a.Add(x);
 	//		}
 
-	//		Perf.First();
+	//		APerf.First();
 	//#if false
 	//		using(var db = new LiteDatabase(fileL)) {
 	//			var col = db.GetCollection<_GuidL>();
@@ -268,7 +268,7 @@ a1,-8";
 	//				col.Upsert(x);
 	//			}
 	//		}
-	//		Perf.Next();
+	//		APerf.Next();
 
 	//		using(var db = new LiteDatabase(fileB)) {
 	//			var col = db.GetCollection<_GuidB>();
@@ -278,7 +278,7 @@ a1,-8";
 	//				col.Upsert(x);
 	//			}
 	//		}
-	//		Perf.Next();
+	//		APerf.Next();
 
 	//		using(var db = new LiteDatabase(fileS)) {
 	//			var col = db.GetCollection<_GuidS>();
@@ -287,14 +287,14 @@ a1,-8";
 	//				col.Upsert(x);
 	//			}
 	//		}
-	//		Perf.Next();
+	//		APerf.Next();
 
 	//		using(var db = new LiteDatabase(fileS2)) {
-	//			//Perf.Next();
+	//			//APerf.Next();
 	//			var col = db.GetCollection<_GuidS>();
 	//			col.Upsert(a);
 	//		}
-	//		Perf.Next();
+	//		APerf.Next();
 	//#endif
 	//		//System.Data.SQLite. Very slow to load.
 	//		//using(var db = new SQLiteConnection($"Data Source={fileQ};Version=3;")) {
@@ -304,7 +304,7 @@ a1,-8";
 	//		//		string sql = "create table test (guid BLOB PRIMARY KEY, name TEXT, etc TEXT, flags INT, a1, a2, i2 INT, s2 TEXT, s3 TEXT)";
 	//		//		var command = new SQLiteCommand(sql, db, trans);
 	//		//		command.ExecuteNonQuery();
-	//		//		Perf.Next();
+	//		//		APerf.Next();
 
 	//		//		sql = "insert into test values (?,?,?,?,?,?,?,?,?)";
 	//		//		command = new SQLiteCommand(sql, db, trans);
@@ -331,7 +331,7 @@ a1,-8";
 	//		//	}
 	//		//}
 
-	//		Perf.NW();
+	//		APerf.NW();
 	//	}
 
 	//class _GuidBase
@@ -380,22 +380,22 @@ a1,-8";
 	//	{
 	//		var sb = new StringBuilder();
 
-	//		Perf.Next();
+	//		APerf.Next();
 	//		var file = @"Q:\test\sqlite.db";
 	//		bool isNew = !AFile.ExistsAsFile(file);
 	//	static void TestSqliteNet()
 	//	{
-	//		Perf.Next();
+	//		APerf.Next();
 	//#if false
 	//		string fileS = @"Q:\test\guid string.db";
 
 	//		var stream = AFile.WaitIfLocked(() => new FileStream(fileS, System.IO.FileMode.OpenOrCreate, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, System.IO.FileOptions.RandomAccess));
 	//		using(var db = new LiteDatabase(stream, disposeStream: true)) {
-	//			Perf.Next();
+	//			APerf.Next();
 	//			var col = db.GetCollection<_GuidS>();
-	//			Perf.Next();
+	//			APerf.Next();
 	//			int n = col.Count();
-	//			Perf.Next();
+	//			APerf.Next();
 	//		}
 	//#else
 	//		var file = @"Q:\test\sqlite.db";
@@ -403,7 +403,7 @@ a1,-8";
 	//		bool isNew = !AFile.ExistsAsFile(file);
 
 	//		using(var db = new SQLiteConnection(file)) {
-	//			Perf.Next();
+	//			APerf.Next();
 
 	//			for(int j = 0; j < 1; j++) {
 	//				if(isNew) {
@@ -422,7 +422,7 @@ a1,-8";
 	//				//x.folding = new List<int> { 3, 5 };
 	//				x.folding = new int[] { 3, 5 };
 	//				//x.Symbol = new string('A', 500);
-	//				var p = Perf.StartNew();
+	//				var p = APerf.StartNew();
 	//				db.BeginTransaction();
 	//				for(int i = 0; i < 1; i++) {
 	//#if false
@@ -437,7 +437,7 @@ a1,-8";
 	//				db.Commit();
 	//				p.NW();
 	//			}
-	//			Perf.Next();
+	//			APerf.Next();
 
 	//			//return;
 	//			//ADialog.Show();
@@ -456,14 +456,14 @@ a1,-8";
 	//							sb.AppendLine("Stock: " + stock.Symbol);
 	//#endif
 	//			}
-	//			Perf.Next();
+	//			APerf.Next();
 	//		}
 	//#endif
-	//		Perf.NW();
-	//	}	//		Perf.Next();
+	//		APerf.NW();
+	//	}	//		APerf.Next();
 
 	//		using(var db = new SQLiteConnection(file)) {
-	//			Perf.Next();
+	//			APerf.Next();
 
 	//			if(isNew) {
 	//				db.CreateTable<Stock>();
@@ -471,7 +471,7 @@ a1,-8";
 	//				var s = db.Insert(new Stock() {
 	//					Symbol = "one"
 	//				});
-	//				Perf.Next();
+	//				APerf.Next();
 	//			}
 
 	//			for(int i = 0; i < 5; i++) {
@@ -485,10 +485,10 @@ a1,-8";
 	//				foreach(var stock in db.Query<Stock>("select * from Stock"))
 	//					sb.AppendLine("Stock: " + stock.Symbol);
 	//#endif
-	//				Perf.Next();
+	//				APerf.Next();
 	//			}
 	//		}
-	//		Perf.NW();
+	//		APerf.NW();
 
 	//		Print(sb);
 	//	}
@@ -507,9 +507,9 @@ a1,-8";
 
 	#endregion
 
-	#region test TreeBase
+	#region test ATreeBase
 
-	class TFile : Au.Util.TreeBase<TFile>
+	class TFile : Au.Util.ATreeBase<TFile>
 	{
 		public string Name { get; set; }
 		public int Id { get; private set; }
@@ -564,7 +564,7 @@ a1,-8";
 	{
 		//string file = @"Q:\Test\ok\files2.xml";
 
-		//Perf.First();
+		//APerf.First();
 		//var t = TFile.Load(file);
 
 		TFile t = new TFile(null, 0, true); //root
@@ -617,12 +617,12 @@ a1,-8";
 		//#region MyTree
 		//var x = MyTree.Load(@"Q:\test\example.xml");
 
-		//Perf.Cpu();
+		//APerf.Cpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int n2 = 1000;
-		//	Perf.First();
+		//	APerf.First();
 		//	for(int i2 = 0; i2 < n2; i2++) { foreach(var n in x.Children()) { if(n == null) Print("null"); } }
-		//	Perf.NW();
+		//	APerf.NW();
 		//	Thread.Sleep(10);
 		//}
 		//#endregion
@@ -630,12 +630,12 @@ a1,-8";
 
 	#endregion
 
-	#region TreeBase examples
+	#region ATreeBase examples
 
 	/*/ r System.Xml */
 	//using System.Xml;
 
-	class MyTree : Au.Util.TreeBase<MyTree>
+	class MyTree : Au.Util.ATreeBase<MyTree>
 	{
 		public string Name { get; set; }
 		public int Id { get; private set; }
@@ -726,18 +726,18 @@ a1,-8";
 			d.Add(i, "");
 		}
 
-		Perf.Cpu();
+		APerf.Cpu();
 		for(int i1 = 0; i1 < 5; i1++) {
 			int r1 = 0, r2 = 0;
-			Perf.First();
+			APerf.First();
 			//var k = d.Keys;
 			for(int i = 1; i < int.MaxValue; i++) {
 				if(!d.ContainsKey(i)) { r1 = i; break; }
 			}
-			Perf.Next();
+			APerf.Next();
 			//r2= Enumerable.Range(0, int.MaxValue).Except(d.Keys).FirstOrDefault(); //slow
 			r2 = d.Keys.Max() + 1;
-			Perf.NW();
+			APerf.NW();
 			Print(r1, r2);
 			Thread.Sleep(10);
 		}
@@ -776,10 +776,10 @@ a1,-8";
 		AFile.Delete(file);
 		bool isNew = !AFile.ExistsAsFile(file);
 
-		Perf.Cpu();
+		APerf.Cpu();
 		string dbsql = null;
 		//dbsql = "PRAGMA encoding='UTF-16'";
-		using(var db = new SqliteDB(file, sql: dbsql)) {
+		using(var db = new ASqlite(file, sql: dbsql)) {
 			db.Execute("CREATE TABLE test(id INTEGER PRIMARY KEY, name TEXT, re REAL, ąčę BLOB, i64 INTEGER)");
 
 			db.Execute("BEGIN");
@@ -825,14 +825,14 @@ a1,-8";
 				//p.BindAll(123456789012, null, 1.2f, Guid.NewGuid(), _ELong.Test);
 				//p.Step();
 
-				//Perf.First();
+				//APerf.First();
 				//for(int i = 0; i < 1000; i++) {
 				//	p.Reset();
 				//	p.Bind(1, i).Bind(2, new string('i', i));
 				//	p.Step();
-				//	if(i == 0) Perf.Next();
+				//	if(i == 0) APerf.Next();
 				//}
-				//Perf.NW();
+				//APerf.NW();
 			}
 			db.Execute("COMMIT");
 
@@ -848,7 +848,7 @@ a1,-8";
 			////using(var p = new Sqlite.Statement(db, "SELECT i64 FROM test WHERE id=1")) {
 			////using(var p = new Sqlite.Statement(db, "SELECT re FROM test WHERE id=1")) {
 			////using(var p = new Sqlite.Statement(db, "SELECT ąčę FROM test WHERE id=1")) {
-			//	Perf.First(); bool was = false;
+			//	APerf.First(); bool was = false;
 			//	if(p.Step()) {
 			//		var v = p.GetText("name");
 			//		Print((object)v);
@@ -866,17 +866,17 @@ a1,-8";
 
 			//		//Print(p.ColumnCount, p.ColumnName(0), p.ColumnIndex("ąčę"));
 			//	}
-			//	Perf.NW();
+			//	APerf.NW();
 			//}
 
 			//using(var p = new Sqlite.Statement(db, "SELECT name FROM test")) {
-			//	Perf.First(); bool was = false;
+			//	APerf.First(); bool was = false;
 			//	while(p.Step()) {
 			//		var s = p.GetText(0);
-			//		if(!was) { was = true; Perf.Next(); }
+			//		if(!was) { was = true; APerf.Next(); }
 			//		//Print(s);
 			//	}
-			//	Perf.NW();
+			//	APerf.NW();
 			//}
 		}
 		Print("OK");
@@ -887,7 +887,7 @@ a1,-8";
 	static void TestSqliteExamples()
 	{
 		//open database file
-		using(var db = new SqliteDB(@"Q:\test\sqlite.db")) {
+		using(var db = new ASqlite(@"Q:\test\sqlite.db")) {
 			//create table
 			db.Execute("CREATE TABLE IF NOT EXISTS test(id INTEGER PRIMARY KEY, name TEXT, x INT, guid BLOB, array BLOB)");
 
@@ -1081,7 +1081,7 @@ a1,-8";
 		//Print(t.IsBackground, t.GetApartmentState());
 		//t.Start();
 
-		Osd.ShowText("test");
+		AOsd.ShowText("test");
 		ADialog.Show();
 	}
 
@@ -1103,11 +1103,11 @@ a1,-8";
 		//Au.Util.LibTaskScheduler.RunTask(null, @"Quick Macros\test UAC"); //works
 #endif
 
-		//Perf.Cpu();
+		//APerf.Cpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
-		//	Perf.First();
+		//	APerf.First();
 		//	Au.Util.LibTaskScheduler.RunTask(@"\Quick Macros", "test UAC");
-		//	Perf.NW();
+		//	APerf.NW();
 		//	Thread.Sleep(1000);
 		//}
 
@@ -1216,7 +1216,7 @@ a1,-8";
 	static void TestPopupList()
 	{
 		Application.SetCompatibleTextRenderingDefault(false);
-		var f = new Form { Text = "Nikn", Font = Au.Util.ASystemFonts.Regular, StartPosition = FormStartPosition.Manual, Location = new Point(300, 300) };
+		var f = new Form { Text = "Nikn", Font = Au.Util.AFonts.Regular, StartPosition = FormStartPosition.Manual, Location = new Point(300, 300) };
 		var t = new TextBox { Width = 120, Left = 20 }; f.Controls.Add(t);
 		var b = new Button { Text = "button", Left = 200 }; f.Controls.Add(b);
 		var bOK = new ButtonOK { Left = 10, Top = 230 }; f.Controls.Add(bOK); f.AcceptButton = bOK;
@@ -1402,7 +1402,7 @@ a1,-8";
 		//int hr = QueryPathOfRegTypeLib(new Guid("{000204EF-0000-0000-C000-000000000046}"), 6, 0, 9, out var s);
 		//if(hr == 0) Print(s); else Print(WinError.MessageFor(hr));
 
-		Perf.First();
+		APerf.First();
 		var a = new List<_RegTypelib>(1000);
 		using(var tlKey = Registry.ClassesRoot.OpenSubKey("TypeLib")) { //guids
 			foreach(var sGuid in tlKey.GetSubKeyNames()) {
@@ -1424,7 +1424,7 @@ a1,-8";
 				}
 			}
 		}
-		Perf.NW(); //87000, with locale 118000
+		APerf.NW(); //87000, with locale 118000
 		a.Sort((x, y) => string.Compare(x.text, y.text, true));
 
 		//Print(a.Count); return;
@@ -1470,7 +1470,7 @@ a1,-8";
 			tl = null; string path = null; int hr = 1;
 			var k0 = $@"TypeLib\{guid}\{version}\{locale}\win";
 			for(int i = 0; i < 2; i++) {
-				var bits = Ver.Is64BitProcess == (i == 0) ? "64" : "32";
+				var bits = AVersion.Is64BitProcess == (i == 0) ? "64" : "32";
 				using(var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits)) {
 					path = hk?.GetValue("") as string;
 					if(path == null) continue;
@@ -1509,47 +1509,47 @@ a1,-8";
 		var a3 = new Dictionary<int, RECT>();
 
 		Print("ADD");
-		Perf.Cpu();
+		APerf.Cpu();
 		for(int i1 = 0; i1 < 5; i1++) {
 			a1.Clear(); a2.Clear(); a3.Clear();
-			Perf.First();
+			APerf.First();
 			for(int i2 = 0; i2 < n2; i2++) { var key = a0[i2]; a1.Add(new RECT(key, key, i2, 0, false)); }
-			Perf.Next();
+			APerf.Next();
 			for(int i2 = 0; i2 < n2; i2++) { var key = a0[i2]; a2.Add(key, new RECT(key, 0, i2, 0, false)); }
-			Perf.Next();
+			APerf.Next();
 			for(int i2 = 0; i2 < n2; i2++) { var key = a0[i2]; a3.Add(key, new RECT(key, 0, i2, 0, false)); }
-			Perf.NW();
+			APerf.NW();
 			Thread.Sleep(200);
 		}
 
 		//Print("FIND");
-		//Perf.Cpu();
+		//APerf.Cpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int v1 = 0, v2 = 0, v3 = 0;
 
-		//	Perf.First();
+		//	APerf.First();
 		//	for(int i2 = 0; i2 < n2; i2++) { for(int i = 0; i < a1.Count; i++) if(a1[i].left == kFind) { v1 = a1[i].top; break; } }
-		//	Perf.Next();
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { if(a2.TryGetValue(kFind, out var r)) v2 = r.left; }
-		//	Perf.Next();
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { if(a3.TryGetValue(kFind, out var r)) v3 = r.left; }
-		//	Perf.NW();
+		//	APerf.NW();
 		//	Print(v1, v2, v3);
 		//	Thread.Sleep(200);
 		//}
 
 		Print("REMOVE");
-		Perf.Cpu();
+		APerf.Cpu();
 		for(int i1 = 0; i1 < 5; i1++) {
 			int rFrom = n2 / 4, rTo = n2 - rFrom;
 
-			Perf.First();
+			APerf.First();
 			//for(int i2 = 0; i2 < n2; i2++) { for(int i = a2.Count - 1; i >= 0; i--) { var g = a2[i].right; if(g >= rFrom && g < rTo) a2.RemoveAt(i); } }
-			//Perf.Next();
+			//APerf.Next();
 			//foreach(var v in a3.Where(kv => { var g = kv.Value.right; return g >= rFrom && g < rTo; }).ToList()) { a3.Remove(v.Key); }
 			//foreach(var v in a3.Where(kv => { var g = kv.Value.right; return g >= rFrom && g < rTo; }).Select(kv2=>kv2.Key).ToList()) { a3.Remove(v); }
 			a3.RemoveWhere(kv => { var g = kv.Value.right; return g >= rFrom && g < rTo; });
-			Perf.NW();
+			APerf.NW();
 			Print(a2.Count, a3.Count);
 			for(int i2 = rFrom; i2 < rTo; i2++) { var key = a0[i2]; a3.Add(key, new RECT(key, 0, i2, 0, false)); }
 			Print(a3.Count);
@@ -1587,7 +1587,7 @@ a1,-8";
 
 		protected override void OnVisibleChanged(EventArgs e)
 		{
-			//Output.LibWriteQM2($"_canShow={_canShow}, _visibleOnce={_visibleOnce}, Visible={Visible}");
+			//AOutput.LibWriteQM2($"_canShow={_canShow}, _visibleOnce={_visibleOnce}, Visible={Visible}");
 			Print("OnVisibleChanged");
 		}
 
@@ -1631,13 +1631,13 @@ a1,-8";
 
 		//for(int j = 0; j < 5; j++) {
 		//	int n = 0;
-		//	Perf.First();
+		//	APerf.First();
 		//	var cache = new WFCache(true);
 		//	for(int i = 0; i < a.Length; i++) {
 		//		//if(a[i].IsMatch(w)) n++;
 		//		if(a[i].IsMatch(w, cache)) n++;
 		//	}
-		//	Perf.NW();
+		//	APerf.NW();
 		//	Print(n);
 		//	200.ms();
 		//}
@@ -1646,18 +1646,18 @@ a1,-8";
 		//JIT: 5.8, LibGetNameCached 6.5, WFCache 6.0
 
 
-		//Perf.Cpu();
+		//APerf.Cpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int n2 = 10;
-		//	Perf.First();
+		//	APerf.First();
 		//	for(int i2 = 0; i2 < n2; i2++) { var s = w.ProgramName; } //75/370, JIT 4.4;  cached: 80/135 , JIT 5.3
-		//	Perf.Next();
+		//	APerf.Next();
 		//	for(int i2 = 0; i2 < n2; i2++) { var s = w.ProgramPath; } //250/2000;  cached: 250/310
-		//	//Perf.Next();
+		//	//APerf.Next();
 		//	//for(int i2 = 0; i2 < n2; i2++) { var s = w.ProgramDescription; }
-		//	//Perf.Next();
-		//	//for(int i2 = 0; i2 < n2; i2++) { var t = Time.PerfMilliseconds; }
-		//	Perf.NW();
+		//	//APerf.Next();
+		//	//for(int i2 = 0; i2 < n2; i2++) { var t = ATime.PerfMilliseconds; }
+		//	APerf.NW();
 		//	Thread.Sleep(200);
 		//}
 	}
@@ -1667,7 +1667,7 @@ a1,-8";
 	[DllImport("winmm.dll")]
 	internal static extern int timeGetTime();
 
-	internal static double s_freqMCS, s_freqMS; //s_freqMCS used by Perf too
+	internal static double s_freqMCS, s_freqMS; //s_freqMCS used by APerf too
 	static long s_lastCorrectionTime;
 
 	//public static long Milliseconds {
@@ -1720,43 +1720,43 @@ a1,-8";
 
 	static void TestMillisecondsSpeed()
 	{
-		//var t1 = Time.PerfMilliseconds;
-		//var t2 = Time.WinMillisecondsWithoutSleep;
-		//var t3 = Time.WinMilliseconds64;
+		//var t1 = ATime.PerfMilliseconds;
+		//var t2 = ATime.WinMillisecondsWithoutSleep;
+		//var t3 = ATime.WinMilliseconds64;
 		//ADialog.Show();
 
-		Print(Time.WinMillisecondsWithoutSleep, Time.PerfMilliseconds, Api.GetTickCount64(), timeGetTime());
-		Print(Time.WinMillisecondsWithoutSleep, Time.PerfMilliseconds, Api.GetTickCount64(), timeGetTime());
-		Print(Time.PerfMilliseconds - Api.GetTickCount64());
+		Print(ATime.WinMillisecondsWithoutSleep, ATime.PerfMilliseconds, Api.GetTickCount64(), timeGetTime());
+		Print(ATime.WinMillisecondsWithoutSleep, ATime.PerfMilliseconds, Api.GetTickCount64(), timeGetTime());
+		Print(ATime.PerfMilliseconds - Api.GetTickCount64());
 		Print(Milliseconds, Milliseconds - Api.GetTickCount64());
 
-		Perf.Cpu();
+		APerf.Cpu();
 		for(int i1 = 0; i1 < 10; i1++) {
 			int n2 = 1000;
-			Perf.First();
+			APerf.First();
 			//for(int i2 = 0; i2 < n2; i2++) { var t1 = Stopwatch.GetTimestamp(); }
-			//Perf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { var t1 = Time.PerfMilliseconds; }
-			Perf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { var t2 = Time.WinMillisecondsWithoutSleep; }
-			Perf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { var t3 = Time.WinMilliseconds64; }
-			Perf.Next();
+			//APerf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { var t1 = ATime.PerfMilliseconds; }
+			APerf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { var t2 = ATime.WinMillisecondsWithoutSleep; }
+			APerf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { var t3 = ATime.WinMilliseconds64; }
+			APerf.Next();
 			for(int i2 = 0; i2 < n2; i2++) { var t3 = Api.GetTickCount64(); }
-			//Perf.Next();
+			//APerf.Next();
 			//for(int i2 = 0; i2 < n2; i2++) { var t1 = Milliseconds; }
-			Perf.Next();
+			APerf.Next();
 			for(int i2 = 0; i2 < n2; i2++) { var t1 = Environment.TickCount; }
-			Perf.NW();
+			APerf.NW();
 			Thread.Sleep(200);
 		}
 	}
 
 	static void TestHooks()
 	{
-		//Output.LibUseQM2 = true; Output.Clear();
+		//AOutput.LibUseQM2 = true; AOutput.Clear();
 
-		//using(var h = WinHook.Keyboard(k => {
+		//using(var h = AHookWin.Keyboard(k => {
 		//	Print($"{k.Key}, {!k.IsUp}");
 		//	if(k.Key == KKey.Up && !k.IsUp) {
 		//		1100.ms();
@@ -1767,7 +1767,7 @@ a1,-8";
 		//})) ADialog.Show("hook");
 
 
-		using(var h = WinHook.Mouse(k => {
+		using(var h = AHookWin.Mouse(k => {
 			if(k.IsWheel) {
 				Print(">");
 				800.ms();
@@ -1788,23 +1788,23 @@ a1,-8";
 		for(int i = 0; i < 5; i++) {
 			200.ms();
 			string s;
-			Perf.First();
+			APerf.First();
 			var x = new StackTrace(0, true);
-			Perf.Next();
+			APerf.Next();
 			s = x.ToString();
-			Perf.NW();
-			//Output.LibWriteQM2("'" + s + "'");
+			APerf.NW();
+			//AOutput.LibWriteQM2("'" + s + "'");
 			Print(s);
 
-			//Perf.First();
+			//APerf.First();
 			//try {
 			//	throw new Exception("test");
 			//}
 			//catch(Exception e) {
-			//	Perf.Next();
+			//	APerf.Next();
 			//	s = e.ToString();
-			//	Perf.NW();
-			//	//Output.LibWriteQM2("'" + s + "'");
+			//	APerf.NW();
+			//	//AOutput.LibWriteQM2("'" + s + "'");
 			//	Print(s);
 			//}
 		}
@@ -1855,18 +1855,18 @@ a1,-8";
 		_Tdi1(a1);
 		_Tdi2(a2);
 
-		Perf.Cpu();
+		APerf.Cpu();
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
-			Perf.First();
+			APerf.First();
 			for(int i2 = 0; i2 < n2; i2++) { _Tdi1(a1); }
-			Perf.Next();
+			APerf.Next();
 			for(int i2 = 0; i2 < n2; i2++) { _Tdi2(a2); }
-			Perf.Next();
+			APerf.Next();
 			for(int i2 = 0; i2 < n2; i2++) { }
-			Perf.Next();
+			APerf.Next();
 			for(int i2 = 0; i2 < n2; i2++) { }
-			Perf.NW();
+			APerf.NW();
 			Thread.Sleep(200);
 		}
 	}
@@ -1950,12 +1950,12 @@ a1,-8";
 			Print(s);
 		};
 
-		Perf.Cpu();
+		APerf.Cpu();
 		for(int i1 = 0; i1 < 5; i1++) {
-			Perf.First();
-			//Task.Run(() => Perf.NW()); //100
-			//ThreadPool.QueueUserWorkItem(o => Perf.NW()); //90
-			Au.Util.ThreadPoolSTA.SubmitCallback(null, o => Perf.NW()); //90
+			APerf.First();
+			//Task.Run(() => APerf.NW()); //100
+			//ThreadPool.QueueUserWorkItem(o => APerf.NW()); //90
+			Au.Util.ThreadPoolSTA.SubmitCallback(null, o => APerf.NW()); //90
 			Thread.Sleep(200);
 		}
 		//Print(AppDomain.CurrentDomain.GetAssemblies());
@@ -1984,7 +1984,7 @@ a1,-8";
 								g1:
 								if(_q.Count == 0) { _running = null; break; }
 								x = _q.Dequeue();
-								if(x.time != 0 && Time.PerfMilliseconds > x.time) goto g1;
+								if(x.time != 0 && ATime.PerfMilliseconds > x.time) goto g1;
 								_running = x.action;
 							}
 							x.action();
@@ -2003,7 +2003,7 @@ a1,-8";
 					_running = ac;
 					//if(ifRunningWaitMS > 0 && ifRunningWaitMS < 1000000000) ifRunningWaitMS += 1000;
 				}
-				_q.Enqueue(new _Action { action = ac, time = ifRunningWaitMS <= 0 ? 0 : Time.PerfMilliseconds + ifRunningWaitMS });
+				_q.Enqueue(new _Action { action = ac, time = ifRunningWaitMS <= 0 ? 0 : ATime.PerfMilliseconds + ifRunningWaitMS });
 			}
 			Api.SetEvent(_event);
 		}
@@ -2025,9 +2025,9 @@ a1,-8";
 		var f = new Form();
 
 		Action eh = () => {
-			Perf.First();
+			APerf.First();
 			//x.Run(() => ADialog.Show(), 2000);
-			x.Run(() => { Perf.NW(); 1000.ms(); }, -1);
+			x.Run(() => { APerf.NW(); 1000.ms(); }, -1);
 		};
 		f.MouseDown += (unu, sed) => eh();
 		f.KeyDown += (unu, sed) => eh();
@@ -2048,25 +2048,25 @@ a1,-8";
 
 		for(int j = 0; j < 5; j++) {
 			//ADebug.LibMemorySetAnchor();
-			Perf.First();
+			APerf.First();
 			for(int i = 0; i < 1000; i++) {
 				foreach(var v in b) if(v == "fff") Print("mmm");
 			}
-			Perf.Next();
+			APerf.Next();
 			//ADebug.LibMemoryPrint();
 
 			//ADebug.LibMemorySetAnchor();
 			for(int i = 0; i < 1000; i++) {
 				for(int k = 0; k < a.Count; k++) if(a[k] == "fff") Print("mmm");
 			}
-			Perf.Next();
+			APerf.Next();
 			//ADebug.LibMemoryPrint();
 
 			//ADebug.LibMemorySetAnchor();
 			for(int i = 0; i < 1000; i++) {
 				foreach(var v in a) if(v == "fff") Print("mmm");
 			}
-			Perf.NW();
+			APerf.NW();
 			//ADebug.LibMemoryPrint();
 			200.ms();
 		}

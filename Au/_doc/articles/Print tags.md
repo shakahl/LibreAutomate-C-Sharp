@@ -41,9 +41,9 @@ Print("<>Code example:\r\n<code>Mouse.Click(10, 20); //comments</code>");
 | Examples | Comments
 | - | -
 | `<link http://www.example.com>text<>`<br/>`<link C:\files\example.exe>text<>`<br/>`<link>http://www.example.com<>`<br/>`<link>C:\files\example.exe<>`<br/>`<link C:\example.exe|args>text<>` | Opens a web page or runs a program, file, folder.<br/>Calls function [Exec.TryRun]().
-| `<explore>C:\files\example<>` | Selects a file or folder in File Explorer.<br/>Calls function [Exec.Select]().
+| `<explore>C:\files\example<>` | Selects a file or folder in File Explorer.<br/>Calls function [Exec.SelectInExplorer]().
 | `<google s1>text<>`<br/>`<google>s1<>`<br/>`<google s1|s2>text<>` | Google. Opens this URL:<br/>`$"http://www.google.com/search?q={s1}{s2}"`<br/>Don't need to URL-encode.
-| `<help>Wnd.Find<>`<br/>`<help Au.Types.Wildex>text<>`<br/>`<help articles/Print tags>text<>` | Opens a help page of this library.
+| `<help>Class.Function<>`<br/>`<help Au.Namespace.Class>text<>`<br/>`<help articles/Print tags>text<>` | Opens a help page of this library.
 | `<open>Script5<>`<br/>`<open \Folder\Script5.cs>text<>`<br/>`<open Script5.cs|10>text<>`<br/>`<open Script5.cs|10|15>text<>` | Opens a script or other file in the code editor.<br/>The file must be in the workspace.<br/>The 10 is 1-based line index.<br/>The 15 is 1-based character index in line.
 | `<script>Script5<>`<br/>`<script \Folder\Script5.cs>text<>`<br/>`<script Script5.cs|args0|args1>text<>` | Runs a script.
 

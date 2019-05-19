@@ -14,7 +14,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -22,13 +22,13 @@ namespace Au
 	/// Keyboard functions: send virtual keystrokes and text to the active window, get key states.
 	/// </summary>
 	/// <remarks>
-	/// The main function is <see cref="Key"/>. Most documentation is there. See also <see cref="Text"/>. These functions use <see cref="Opt.Key"/>. Alternatively can be used <b>Keyb</b> variables, see <see cref="Keyb(OptKey)"/>.
+	/// The main function is <see cref="Key"/>. Most documentation is there. See also <see cref="Text"/>. These functions use <see cref="AOpt.Key"/>. Alternatively can be used <b>Keyb</b> variables, see <see cref="Keyb(OptKey)"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
 	/// Keyb.Key("Ctrl+Shift+Left"); //press Ctrl+Shift+Left
 	/// 
-	/// Opt.Key.KeySpeed = 300; //set options for static functions
+	/// AOpt.Key.KeySpeed = 300; //set options for static functions
 	/// Keyb.Key("Ctrl+A Del Tab*3", "text", "Enter", 500); //press Ctrl+A, press Del, press Tab 3 times, send text, press Enter, wait 100 ms
 	/// 
 	/// Keyb.Text("text\r\n"); //send text that ends with newline
@@ -43,7 +43,7 @@ namespace Au
 		/// <param name="cloneOptions">Options to be copied to <see cref="Options"/> of this variable. If null, uses default options.</param>
 		/// <example>
 		/// <code><![CDATA[
-		/// var k = new Keyb(Opt.Static.Key);
+		/// var k = new Keyb(AOpt.Static.Key);
 		/// k.Options.KeySpeed = 50;
 		/// k.AddKeys("Tab // Space").AddRepeat(3).AddText("text").AddKey(KKey.Enter).AddSleep(500);
 		/// k.Send(); //sends and clears the variable
@@ -310,7 +310,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sends key events added by InputBlocker -> LibAddRaw.
+		/// Sends key events added by AInputBlocker -> LibAddRaw.
 		/// Simply calls Api.SendInput. No options, no sleep, etc.
 		/// If new events added while sending, sends them too, until there are no new events added.
 		/// </summary>
@@ -324,7 +324,7 @@ namespace Au
 			}
 			_a.Clear();
 			fixed (Api.INPUTK* p = a) Api.SendInput(p, a.Length);
-			//Time.DoEvents(); //sometimes catches one more event, but not necessary
+			//ATime.DoEvents(); //sometimes catches one more event, but not necessary
 			if(_a.Count > 0) goto g1; //the hook proc is called while in SendInput. If we don't retry, new blocked keys are lost.
 		}
 
@@ -334,7 +334,7 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text. Can be null.</param>
 		/// <remarks>
-		/// To send text can be used keys or clipboard, depending on <see cref="Opt.Key"/> and text.
+		/// To send text can be used keys or clipboard, depending on <see cref="AOpt.Key"/> and text.
 		/// </remarks>
 		public Keyb AddText(string text)
 		{
@@ -481,16 +481,16 @@ namespace Au
 			//Print("-- _a --");
 			//Print(_a);
 
-			//Perf.First();
+			//APerf.First();
 			int sleepFinally = 0;
 			bool restoreCapsLock = false;
-			var bi = new InputBlocker() { ResendBlockedKeys = true };
+			var bi = new AInputBlocker() { ResendBlockedKeys = true };
 			try {
 				_sending = true;
 				//Print("{");
 				if(!Options.NoBlockInput) bi.Start(BIEvents.Keys);
 				restoreCapsLock = Lib.ReleaseModAndCapsLock(Options);
-				//Perf.Next();
+				//APerf.Next();
 				for(int i = 0; i < _a.Count; i++) {
 					var k = _a[i];
 					switch(k.Type) {
@@ -512,14 +512,14 @@ namespace Au
 						break;
 					}
 				}
-				//Perf.Next();
+				//APerf.Next();
 				sleepFinally += _GetOptionsAndWndFocused(out _, false).SleepFinally;
 			}
 			finally {
 				if(restoreCapsLock) Lib.SendKey(KKey.CapsLock);
 				_sending = false;
 				bi.Dispose();
-				//Perf.NW();
+				//APerf.NW();
 				//Print("}");
 
 				//if canSendAgain, can be used like: AddX(); for(...) Send();
@@ -593,9 +593,9 @@ namespace Au
 			//else { var ud = k.IsUp ? '-' : '+'; if(sleep > 0) Print($"{s}{ud} {sleep}"); else Print($"{s}{ud}"); }
 
 			for(int r = 0; r < count; r++) {
-				//Perf.First();
+				//APerf.First();
 				Api.SendInput(&ki);
-				//Perf.Next();
+				//APerf.Next();
 				if(sleep > 0) {
 					Lib.Sleep(sleep);
 				}
@@ -605,7 +605,7 @@ namespace Au
 					ki.dwFlags &= ~Api.KEYEVENTF_KEYUP;
 
 				}
-				//Perf.NW();
+				//APerf.NW();
 				//speed: min 400 mcs for each event. Often > 1000. Does not depend on whether all events sent by single SendInput call.
 			}
 		}

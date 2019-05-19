@@ -18,7 +18,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 
 static class CommandLine
@@ -181,7 +181,7 @@ static class CommandLine
 			int mode = (int)wParam; //1 - wait, 3 - wait and get ATask.WriteResult output
 			string script; string[] args; string pipeName = null;
 			if(action == 99) {
-				var a = ExtString.More.CommandLineToArray(s); if(a.Length == 0) return 0;
+				var a = AExtString.More.CommandLineToArray(s); if(a.Length == 0) return 0;
 				int nRemove = 0;
 				if(0 != (mode & 2)) pipeName = a[nRemove++];
 				script = a[nRemove++];

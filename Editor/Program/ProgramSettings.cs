@@ -18,7 +18,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 /// <summary>
 /// Manages program settings in XML format.
@@ -37,14 +37,14 @@ class ProgramSettings
 	{
 		_settFile = Folders.ThisAppDocuments + @"!Settings\Settings.xml";
 		try {
-			_x = ExtXml.LoadElem(_settFile);
+			_x = AExtXml.LoadElem(_settFile);
 		}
 		catch(Exception ex1) {
 			try {
 				if(AFile.ExistsAsAny(_settFile))
 					ADialog.ShowWarning("Failed to load settings", $"Will backup '{_settFile}' and use default settings.", expandedText: ex1.Message);
 				AFile.Copy(Folders.ThisAppBS + @"Default\Settings.xml", _settFile, IfExists.RenameExisting);
-				_x = ExtXml.LoadElem(_settFile);
+				_x = AExtXml.LoadElem(_settFile);
 			}
 			catch(Exception ex2) {
 				ADialog.ShowError("Failed to load settings", "Try again or reinstall the application.", expandedText: ex2.Message);

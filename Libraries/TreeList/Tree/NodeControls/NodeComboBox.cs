@@ -9,7 +9,7 @@ using System.Drawing.Design;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Aga.Controls.Tree.NodeControls
 {
@@ -36,8 +36,8 @@ namespace Aga.Controls.Tree.NodeControls
 
 		protected override Size CalculateEditorSize(EditorContext context)
 		{
-			var width = Parent.UseColumns ? context.Bounds.Width : Au.Util.Dpi.ScaleInt(EditorWidth);
-			var height = (context.Editor is CheckedListBox c) ? (Au.Util.Dpi.ScaleInt(c.PreferredHeight) + c.Items.Count * 2) : context.Bounds.Height;
+			var width = Parent.UseColumns ? context.Bounds.Width : Au.Util.ADpi.ScaleInt(EditorWidth);
+			var height = (context.Editor is CheckedListBox c) ? (Au.Util.ADpi.ScaleInt(c.PreferredHeight) + c.Items.Count * 2) : context.Bounds.Height;
 			return new Size(width, height);
 		}
 

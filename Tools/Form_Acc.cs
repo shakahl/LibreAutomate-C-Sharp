@@ -19,7 +19,7 @@ using System.Collections;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Controls;
 using SG = SourceGrid;
 using Aga.Controls.Tree;
@@ -119,19 +119,19 @@ namespace Au.Tools
 
 		bool _FillGridThreeCode(bool captured = false, bool sameWnd = false)
 		{
-			Perf.First();
+			APerf.First();
 			bool sameTree = sameWnd && _TrySelectInSameTree();
-			Perf.Next();
+			APerf.Next();
 
 			if(!sameTree) _ClearTree();
 			if(!_FillGrid(out var p)) return false;
 			if(!sameTree) _FillTree(p);
 			_UpdateCodeBox();
 
-			if(captured && p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_acc.MiscFlags.Has(AccMiscFlags.Java) && Ver.Is64BitOS)
+			if(captured && p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_acc.MiscFlags.Has(AccMiscFlags.Java) && AVersion.Is64BitOS)
 				_SetFormInfo(c_infoJava);
 
-			Perf.NW();//TODO
+			APerf.NW();//TODO
 			return true;
 		}
 
@@ -519,7 +519,7 @@ namespace Au.Tools
 		//p - _acc properties. This func uses them to find and select the AO in the tree.
 		void _FillTree(in AccProperties p)
 		{
-			//Perf.First();
+			//APerf.First();
 			var w = _WndSearchIn;
 			if(_isWebIE && !_useCon && !_con.Is0) w = _con; //if IE, don't display whole tree. Could be very slow, because cannot use in-proc for web pages (and there may be many tabs with large pages), because its control is in other thread.
 			var (xRoot, xSelect) = _CreateModel(w, in p, false);
@@ -550,12 +550,12 @@ namespace Au.Tools
 			//Print("------");
 			//Print(xr);
 
-			//Perf.Next();
+			//APerf.Next();
 			_tree.Model = new _AccTree(xRoot);
-			//Perf.Next();
+			//APerf.Next();
 
 			if(xSelect != null) _SelectTreeNode(xSelect);
-			//Perf.NW();
+			//APerf.NW();
 		}
 
 		void _SelectTreeNode(_AccNode an)
@@ -855,7 +855,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 				}
 				bool en = enable.GetValueOrDefault();
 
-				if(!GetJavaPath(out var dir)) return (false, "Cannot find Java" + (Ver.Is64BitProcess ? "64" : "") + "-bit. Make sure it is installed.");
+				if(!GetJavaPath(out var dir)) return (false, "Cannot find Java" + (AVersion.Is64BitProcess ? "64" : "") + "-bit. Make sure it is installed.");
 
 				//if(!allUsers) {
 				string jabswitch = dir + @"\bin\jabswitch.exe", sout = null;

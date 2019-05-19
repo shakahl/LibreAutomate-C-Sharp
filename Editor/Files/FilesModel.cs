@@ -19,7 +19,7 @@ using System.Collections;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
@@ -39,7 +39,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	readonly Dictionary<uint, FileNode> _idMap;
 	public readonly List<FileNode> OpenFiles;
 	readonly string _dbFile;
-	public readonly SqliteDB DB;
+	public readonly ASqlite DB;
 	public readonly string SettingsFile;
 	public readonly XElement SettingsXml;
 	//readonly TriggersUI _triggers;
@@ -73,7 +73,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		if(!_importing) {
 			_dbFile = WorkspaceDirectory + @"\state.db";
 			try {
-				DB = new SqliteDB(_dbFile, sql:
+				DB = new ASqlite(_dbFile, sql:
 					//"PRAGMA journal_mode=WAL;" + //no, it does more bad than good
 					"CREATE TABLE IF NOT EXISTS _misc (key TEXT PRIMARY KEY, data TEXT);" +
 					"CREATE TABLE IF NOT EXISTS _editor (id INTEGER PRIMARY KEY, lines BLOB);"
@@ -86,7 +86,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			SettingsFile = WorkspaceDirectory + @"\settings.xml";
 			try {
 				if(!AFile.ExistsAsFile(SettingsFile)) AFile.SaveText(SettingsFile, "<settings/>");
-				SettingsXml = ExtXml.LoadElem(SettingsFile);
+				SettingsXml = AExtXml.LoadElem(SettingsFile);
 			}
 			catch(Exception ex) {
 				Print($"Failed to open file '{SettingsFile}'. Will not load/save workspace settings: startup scripts, etc.\r\n\t{ex.ToStringWithoutStack()}");
@@ -499,7 +499,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		}
 		finally { _inContextMenu = false; }
 	}
-	Au.Util.MessageLoop _msgLoop = new Au.Util.MessageLoop();
+	Au.Util.AMessageLoop _msgLoop = new Au.Util.AMessageLoop();
 	bool _inContextMenu;
 
 	//Called when editor control focused, etc.
@@ -715,7 +715,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 				Exec.Run(f.FilePath);
 				break;
 			case 4:
-				Exec.Select(f.FilePath);
+				Exec.SelectInExplorer(f.FilePath);
 				break;
 			}
 		}
@@ -1010,7 +1010,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			return false;
 		}
 
-		Exec.Select(wsDir);
+		Exec.SelectInExplorer(wsDir);
 		return true;
 	}
 
@@ -1096,7 +1096,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public void RunStartupScripts()
 	{
 		var csv = StartupScriptsCsv; if(csv == null) return;
-		var x = Csv.Parse(csv);
+		var x = ACsv.Parse(csv);
 		foreach(var row in x.Data) {
 			var f = FindFile(row[0]);
 			if(f == null) { Print("Startup script not found: " + row[0] + ". Please edit name in Options."); continue; }
@@ -1130,7 +1130,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	{
 		string xmlFile = s + @"\files.xml";
 		if(AFile.ExistsAsFile(xmlFile) && AFile.ExistsAsDirectory(s + @"\files")) {
-			try { return ExtXml.LoadElem(xmlFile).Name == "files"; } catch { }
+			try { return AExtXml.LoadElem(xmlFile).Name == "files"; } catch { }
 		}
 		return false;
 	}

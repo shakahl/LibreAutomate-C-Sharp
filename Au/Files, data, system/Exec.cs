@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -36,8 +36,8 @@ namespace Au
 		/// Path relative to <see cref="Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
 		/// Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-		/// Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="Pidl.ToHexString"/>, <see cref="Folders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
-		/// Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="Pidl.ToShellString"/>, <see cref="Folders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
+		/// Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="APidl.ToHexString"/>, <see cref="Folders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
+		/// Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="APidl.ToShellString"/>, <see cref="Folders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
 		/// To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="Wnd.More.GetWindowsStoreAppId"/> or Google.
 		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="APath.ExpandEnvVar"/>.
 		/// </param>
@@ -100,9 +100,9 @@ namespace Au
 			if(0 == (flags & RFlags.WaitForExit)) x.fMask |= Api.SEE_MASK_NO_CONSOLE;
 
 			file = _NormalizeFile(false, file, out bool isFullPath, out bool isShellPath);
-			Pidl pidl = null;
+			APidl pidl = null;
 			if(isShellPath) { //":: HexEncodedITEMIDLIST" or "::{CLSID}..." (we convert it too because the API does not support many)
-				pidl = Pidl.FromString(file); //does not throw
+				pidl = APidl.FromString(file); //does not throw
 				if(pidl != null) {
 					x.lpIDList = pidl.UnsafePtr;
 					x.fMask |= Api.SEE_MASK_INVOKEIDLIST;
@@ -200,8 +200,8 @@ namespace Au
 					//Process.Run supports long path prefix, except when the exe is .NET.
 					if(!runConsole) file = APath.UnprefixLongPath(file);
 
-					if(DisableFsRedirection.IsSystem64PathIn32BitProcess(file) && !AFile.ExistsAsAny(file)) {
-						file = DisableFsRedirection.GetNonRedirectedSystemPath(file);
+					if(ADisableFsRedirection.IsSystem64PathIn32BitProcess(file) && !AFile.ExistsAsAny(file)) {
+						file = ADisableFsRedirection.GetNonRedirectedSystemPath(file);
 					}
 				} else if(!APath.IsUrl(file)) {
 					//ShellExecuteEx searches everywhere except in app folder.
@@ -402,11 +402,11 @@ namespace Au
 		/// </summary>
 		/// <param name="path">
 		/// Full path of a file or directory or other shell object.
-		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="APath.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="Pidl.ToHexString"/>).
+		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="APath.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="APidl.ToHexString"/>).
 		/// </param>
-		public static bool Select(string path)
+		public static bool SelectInExplorer(string path)
 		{
-			using var pidl = Pidl.FromString(path);
+			using var pidl = APidl.FromString(path);
 			if(pidl == null) return false;
 			return 0 == Api.SHOpenFolderAndSelectItems(pidl.HandleRef, 0, null, 0);
 		}

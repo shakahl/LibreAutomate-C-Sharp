@@ -19,7 +19,7 @@ using System.Runtime.ExceptionServices;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using System.Collections;
 
 namespace Au.Triggers
@@ -162,9 +162,9 @@ namespace Au.Triggers
 
 		//rejected: Location. Use timer or thread-specific AccEVENT.OBJECT_LOCATIONCHANGE.
 		//	Probably it should not be a trigger. If timer, too slow in many cases. If hook, too frequent trigger when drag-moving etc.
-		//	If a script wants to track window location, it can easily set WinAccHook(AccEVENT.OBJECT_LOCATIONCHANGE) instead.
+		//	If a script wants to track window location, it can easily set AHookAcc(AccEVENT.OBJECT_LOCATIONCHANGE) instead.
 		//rejected: Focus (when eg a child control focused). Use timer or AccEVENT.OBJECT_FOCUSED.
-		//	Rarely used. A script can easily use WinAccHook(AccEVENT.OBJECT_FOCUSED).
+		//	Rarely used. A script can easily use AHookAcc(AccEVENT.OBJECT_FOCUSED).
 		//rejected: Timer.
 	}
 
@@ -230,8 +230,8 @@ namespace Au.Triggers
 		internal WindowTriggers(ActionTriggers triggers)
 		{
 			_triggers = triggers;
-			_win10 = Ver.MinWin10;
-			_win8 = Ver.MinWin8;
+			_win10 = AVersion.MinWin10;
+			_win8 = AVersion.MinWin8;
 		}
 
 		/// <summary>
@@ -334,7 +334,7 @@ namespace Au.Triggers
 				if(0 != (_allEvents & TWLater.Unminimized)) ah[4] = AccEVENT.SYSTEM_MINIMIZEEND;
 				//if(0 != (_allEvents & TWLater.MoveSizeStart)) ah[5] = AccEVENT.SYSTEM_MOVESIZESTART;
 				//if(0 != (_allEvents & TWLater.MoveSizeEnd)) ah[6] = AccEVENT.SYSTEM_MOVESIZEEND;
-				_hooks = new WinAccHook(ah, _HookProc);
+				_hooks = new AHookAcc(ah, _HookProc);
 				_hookEventQueue = new Queue<(AccEVENT, int)>();
 
 				_triggers.LibWinTimerPeriod = 250;
@@ -371,7 +371,7 @@ namespace Au.Triggers
 			}
 		}
 
-		WinAccHook _hooks;
+		AHookAcc _hooks;
 		Queue<(AccEVENT, int)> _hookEventQueue;
 		WFCache _winPropCache;
 
@@ -395,14 +395,14 @@ namespace Au.Triggers
 		internal unsafe void LibTimer()
 		{
 			//bool print = !Keyb.IsNumLock;
-			//if(print) Print(Time.PerfMilliseconds % 10000);
+			//if(print) Print(ATime.PerfMilliseconds % 10000);
 
 			int period = _triggers.LibWinTimerPeriod;
 			if(period < 250) _triggers.LibWinTimerPeriod = Math.Min(period += period / 10 + 1, 250);
 
 			//bool verbose = !Keyb.IsNumLock;
 			//if(Keyb.IsNumLock) return;
-			//Perf.First();
+			//APerf.First();
 			//var a = Wnd.GetWnd.AllWindows(true);
 
 			//Wnd.GetWnd.AllWindows(ref _listVisible, true);
@@ -431,15 +431,15 @@ namespace Au.Triggers
 
 			if(_usesVisibleArray) {
 
-				//Print(Time.PerfMilliseconds % 10000);
+				//Print(ATime.PerfMilliseconds % 10000);
 
 				var t1 = _aVisibleOld; _aVisibleOld = _aVisible; _aVisible = t1;
 				_aVisible.len = 0;
 				Api.EnumWindows(_enumWinProc);
-				//Perf.Next();
+				//APerf.Next();
 				_VisibleAddedRemoved();
 
-				//Perf.NW();
+				//APerf.NW();
 				//speed with  3 main windows: 200, +IsVisible 270, +IsCloaked 450, +Name-IsCloaked 444
 				//speed with 20 main windows (79 visible, 541 total): 320, +IsVisible 430 (CPU 0.05). With 480 CPU 0.06, sometimes 0.05.
 				//Print(n);
@@ -495,7 +495,7 @@ namespace Au.Triggers
 		/// </summary>
 		void _VisibleAddedRemoved()
 		{
-			//Perf.First();
+			//APerf.First();
 			Wnd[] aNew = _aVisible.a, aOld = _aVisibleOld.a;
 			int nNew = _aVisible.len, nOld = _aVisibleOld.len;
 			int to = Math.Min(nOld, nNew), diffFrom;
@@ -516,7 +516,7 @@ namespace Au.Triggers
 				}
 			} else { //reordered or/and added/removed
 					 //Print($"n1={n1} n2={n2}  n1*n2={n1 * n2}");
-					 //Perf.Next();
+					 //APerf.Next();
 					 //SHOULDDO: optimize. Now slow when large array reordered. Eg divide the changed range into two.
 					 //n1 = n2 = 0;
 				if(0 != (_allEvents & TWLater.Invisible)) {
@@ -529,7 +529,7 @@ namespace Au.Triggers
 					for(int i = diffFrom; i < diffTo1; i++) _hs1.Add(aOld[i]);
 					for(int i = diffFrom; i < diffTo2; i++) if(!_hs1.Remove(aNew[i])) _Added(i);
 				}
-				//Perf.NW();
+				//APerf.NW();
 			}
 			//if(n1 + n2 > 0) Print($"<><z yellow>added {n2}, removed {n1}<>");
 
@@ -547,7 +547,7 @@ namespace Au.Triggers
 		}
 
 		/// <summary>
-		/// WinAccHook hook procedure.
+		/// AHookAcc hook procedure.
 		/// </summary>
 		/// <param name="k"></param>
 		void _HookProc(HookData.AccHookData k)
@@ -573,13 +573,13 @@ namespace Au.Triggers
 			}
 			_inProc = true;
 			try {
-				//Time.SleepDoEvents(300); //test queue
-				//Perf.Cpu();
+				//ATime.SleepDoEvents(300); //test queue
+				//APerf.Cpu();
 				for(; ; ) {
 					TWLater e = 0;
 					switch(accEvent) {
 					case AccEVENT.SYSTEM_FOREGROUND:
-						//ADebug.PrintIf(!w.IsActive, $"{Time.PerfMilliseconds % 10000}, SYSTEM_FOREGROUND but not active: {w}"); //it is normal. The window either will be active soon (and timer will catch it), or will not be activated (eg prevented by Windows, hooks, etc), or another window became active.
+						//ADebug.PrintIf(!w.IsActive, $"{ATime.PerfMilliseconds % 10000}, SYSTEM_FOREGROUND but not active: {w}"); //it is normal. The window either will be active soon (and timer will catch it), or will not be activated (eg prevented by Windows, hooks, etc), or another window became active.
 						if(w != _wActive && w.IsActive) e = TWLater.Active;
 						break;
 					case AccEVENT.OBJECT_UNCLOAKED: e = TWLater.Uncloaked; break;
@@ -694,7 +694,7 @@ namespace Au.Triggers
 			_winPropCache.Begin(w); //info: don't need to call Clear now. Timer calls it every 2.5 s.
 			_winPropCache.Name = name;
 
-			//Perf.First();
+			//APerf.First();
 			WindowTriggerArgs args = null;
 
 			//Print(runVisible,runActive,w.IsActive, oldWindow);
@@ -749,7 +749,7 @@ namespace Au.Triggers
 
 					_triggers.LibRunAction(t, args);
 				} while(v != last);
-				//Perf.NW(); //speed ms/triggers when cold CPU: ~1/1000, 10/10000, 50/100000, 130/1000000
+				//APerf.NW(); //speed ms/triggers when cold CPU: ~1/1000, 10/10000, 50/100000, 130/1000000
 			}
 
 			if(triggered != triggeredOld) {
@@ -778,7 +778,7 @@ namespace Au.Triggers
 				_aTriggeredData[iTriggered].name = name;
 			}
 
-			if(_log) Print($"\t{Time.PerfMilliseconds % 10000,4}, {e,-11}, {w}");
+			if(_log) Print($"\t{ATime.PerfMilliseconds % 10000,4}, {e,-11}, {w}");
 
 			WindowTriggerArgs args = null;
 			var triggered = _aTriggeredData[iTriggered].triggered;
@@ -896,7 +896,7 @@ namespace Au.Triggers
 			var C = w.IsCloaked ? "C" : " ";
 			var O = oldWindow ? "O" : " ";
 			var T = caller == _ProcCaller.Timer ? "T" : " ";
-			Print($"<><c {col}>{Time.PerfMilliseconds % 10000,4}, {e,-11}, {A}{H}{C}{O}{T}, {w}</c>");
+			Print($"<><c {col}>{ATime.PerfMilliseconds % 10000,4}, {e,-11}, {A}{H}{C}{O}{T}, {w}</c>");
 		}
 
 		/// <summary>

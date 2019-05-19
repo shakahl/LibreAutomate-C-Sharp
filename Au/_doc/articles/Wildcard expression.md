@@ -44,5 +44,5 @@ var item = x.FindItem("example", "2017-*", "**rc regex");
 
 ### See also
 
-[Wildex]()
-[ExtString.Like]()
+[AWildex]()
+[AExtString.Like]()

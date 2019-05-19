@@ -16,7 +16,7 @@ using System.Runtime.ExceptionServices;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -137,7 +137,7 @@ namespace Au
 
 				bool _Create(string className, string name, WS style, WS_EX exStyle, int x, int y, int width, int height, Wnd parent, LPARAM controlId)
 				{
-					using(WinHook.ThreadCbt(c => {
+					using(AHookWin.ThreadCbt(c => {
 						if(c.code == HookData.CbtEvent.CREATEWND) {
 							//note: unhook as soon as possible. Else possible exception etc.
 							//	If eg hook proc uses 'lock' and that 'lock' must wait,

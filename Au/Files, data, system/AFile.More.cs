@@ -15,7 +15,7 @@ using System.Linq;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -128,27 +128,27 @@ namespace Au
 		//this is ~300 times slower than AFile.Move. SHFileOperation too. Use only for files or other shell items in virtual folders. Unfinished.
 		public static void RenameFileOrDirectory(string path, string newName)
 		{
-			Perf.First();
+			APerf.First();
 			if(APath.IsInvalidFileName(newName)) throw new ArgumentException("Invalid filename.", nameof(newName));
 			path = _PreparePath(path, nameof(path));
 
-			Perf.Next();
+			APerf.Next();
 			var si = _ShellItem(path, "*rename");
-			Perf.Next();
+			APerf.Next();
 			var fo = new Api.FileOperation() as Api.IFileOperation;
-			Perf.Next();
+			APerf.Next();
 			try {
 				fo.SetOperationFlags(4); //FOF_SILENT. Without it shows a hidden dialog that becomes the active window.
 				AException.ThrowIfFailed(fo.RenameItem(si, newName, null), "*rename");
-				Perf.Next();
+				APerf.Next();
 				AException.ThrowIfFailed(fo.PerformOperations(), "*rename");
-				Perf.Next();
+				APerf.Next();
 			}
 			finally {
 				Api.ReleaseComObject(fo);
 				Api.ReleaseComObject(si);
 			}
-			Perf.NW();
+			APerf.NW();
 		}
 
 		static Api.IShellItem _ShellItem(string path, string errMsg)

@@ -18,7 +18,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
@@ -26,7 +26,7 @@ using static Au.Controls.Sci;
 class PanelOutput : Control
 {
 	SciOutput _c;
-	Queue<Au.Util.OutputServer.Message> _history;
+	Queue<OutServMessage> _history;
 	StringBuilder _sb;
 
 	//public SciControl Output => _c;
@@ -39,7 +39,7 @@ class PanelOutput : Control
 		this.AccessibleName = this.Name = "Output";
 		this.Controls.Add(_c);
 
-		_history = new Queue<Au.Util.OutputServer.Message>();
+		_history = new Queue<OutServMessage>();
 		OutputServer.SetNotifications(_GetServerMessages, this);
 
 		_c.HandleCreated += _c_HandleCreated;
@@ -48,7 +48,7 @@ class PanelOutput : Control
 	void _GetServerMessages()
 	{
 		_c.Tags.OutputServerProcessMessages(OutputServer, m => {
-			if(m.Type != Au.Util.OutputServer.MessageType.Write) return;
+			if(m.Type != OutServMessageType.Write) return;
 
 			//create links in compilation errors/warnings or run-time stack trace
 			var s = m.Text; int i;
@@ -67,14 +67,14 @@ class PanelOutput : Control
 					int stackLen = j - i;
 					if(_sb == null) _sb = new StringBuilder(s.Length + 2000); else _sb.Clear();
 					var b = _sb;
-					//Output.LibWriteQM2("'" + s + "'");
+					//AOutput.LibWriteQM2("'" + s + "'");
 					if(!s.Starts("<>")) b.Append("<>");
 					b.Append(s, 0, i);
 					var rx = s_rx2; if(rx == null) s_rx2 = rx = new ARegex(@" in (.+?):line (?=\d+$)");
 					var rxm = new RXMore();
 					bool replaced = false;
 					foreach(var k in s.Segments(i, stackLen, "\r\n", SegFlags.NoEmpty)) {
-						//Output.LibWriteQM2("'"+k+"'");
+						//AOutput.LibWriteQM2("'"+k+"'");
 						rxm.start = k.Offset + 6; rxm.end = k.EndOffset;
 						if(k.Starts("   at ") && rx.MatchG(s, out var g, 1, rxm)) { //note: no "   at " if this is an inner exception marker
 							var f = Model.FindByFilePath(g.Value);
@@ -102,7 +102,7 @@ class PanelOutput : Control
 			}
 
 			if(s.Length <= 10_000) { //* 50 = 1 MB
-				if(!ReferenceEquals(s, m.Text)) m = new Au.Util.OutputServer.Message(Au.Util.OutputServer.MessageType.Write, s, m.TimeUtc, m.Caller);
+				if(!ReferenceEquals(s, m.Text)) m = new OutServMessage(OutServMessageType.Write, s, m.TimeUtc, m.Caller);
 				_history.Enqueue(m);
 				if(_history.Count > 50) _history.Dequeue();
 			}
@@ -119,7 +119,7 @@ class PanelOutput : Control
 	public void History()
 	{
 		var dd = new PopupList { Items = _history.ToArray() };
-		dd.SelectedAction = o => Print((o.ResultItem as Au.Util.OutputServer.Message).Text);
+		dd.SelectedAction = o => Print((o.ResultItem as OutServMessage).Text);
 		dd.Show(new Rectangle(Mouse.XY, default));
 	}
 

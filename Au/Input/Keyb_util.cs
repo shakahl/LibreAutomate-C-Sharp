@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -248,11 +248,11 @@ namespace Au
 		internal static class Lib
 		{
 			/// <summary>
-			/// Calls Time.SleepDoEvents.
+			/// Calls ATime.SleepDoEvents.
 			/// </summary>
 			internal static void Sleep(int ms)
 			{
-				if(ms > 0) Time.SleepDoEvents(ms);
+				if(ms > 0) ATime.SleepDoEvents(ms);
 
 				//see comments in Mouse._Sleep.
 			}
@@ -364,9 +364,9 @@ namespace Au
 					if(IsCapsLock) {
 						//Probably Shift is set to turn off CapsLock in CP dialog "Text Services and Input Languages".
 						//	Win10: Settings -> Time & Language -> Language -> Input method -> Hot keys.
-						WinHook.LibIgnoreLShiftCaps(2000);
+						AHookWin.LibIgnoreLShiftCaps(2000);
 						SendKey(KKey.Shift);
-						WinHook.LibIgnoreLShiftCaps(0);
+						AHookWin.LibIgnoreLShiftCaps(0);
 						R = !IsCapsLock;
 						Debug.Assert(R);
 
@@ -479,7 +479,7 @@ namespace Au
 					//Print(i, g.hwndFocus, g.hwndActive);
 					if(!g.hwndFocus.Is0) return g.hwndFocus;
 					if(!g.hwndActive.Is0) return g.hwndActive;
-					Time.Sleep(1);
+					ATime.Sleep(1);
 				}
 				return default;
 

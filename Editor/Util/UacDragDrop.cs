@@ -19,13 +19,13 @@ using System.Windows.Forms;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 class UacDragDrop
 {
 	public class AdminProcess
 	{
-		WinAccHook _hook; //SYSTEM_CAPTURESTART
+		AHookAcc _hook; //SYSTEM_CAPTURESTART
 		ATimer _timer; //tracks mouse etc
 		bool _isDragMode; //is in drag-drop
 		bool _isProcess2; //is our non-admin process started
@@ -39,7 +39,7 @@ class UacDragDrop
 		{
 			if(on == (s_inst != null)) return;
 			if(on) {
-				if(Uac.OfThisProcess.Elevation != UacElevation.Full) return;
+				if(AUac.OfThisProcess.Elevation != UacElevation.Full) return;
 				s_inst = new AdminProcess();
 			} else {
 				s_inst._Dispose();
@@ -52,7 +52,7 @@ class UacDragDrop
 			_timer = new ATimer(() => _Timer());
 
 			//use hook to detect when drag-drop started
-			_hook = new WinAccHook(AccEVENT.SYSTEM_CAPTURESTART, 0, d => {
+			_hook = new AHookAcc(AccEVENT.SYSTEM_CAPTURESTART, 0, d => {
 				_EndedDragMode();
 				if(0 == d.wnd.ClassNameIs("CLIPBRDWNDCLASS", "DragWindow")) return;
 				_StartedDragMode();
@@ -61,7 +61,7 @@ class UacDragDrop
 			//note: we don't use SYSTEM_CAPTUREEND. It's too early and sometimes missing.
 			//tested: no EVENT_SYSTEM_DRAGDROPSTART events.
 			//info: classname "DragWindow" is of Windows Store, eg Edge.
-			//rejected: int pid = d.wnd.ProcessId; using(var u = Uac.OfProcess(pid)) { if(u == null || u.Elevation == UacElevation.Full) return; }
+			//rejected: int pid = d.wnd.ProcessId; using(var u = AUac.OfProcess(pid)) { if(u == null || u.Elevation == UacElevation.Full) return; }
 		}
 
 		void _Dispose()
@@ -115,7 +115,7 @@ class UacDragDrop
 				_isProcess2 = true;
 				_wWindow = w;
 				new Au.Util.LibProcessStarter("Au.Editor.exe", "/d " + CommandLine.MsgWnd.Handle.ToString()).StartUserIL();
-				//new Au.Util.LibProcessStarter("Au.Editor.exe", $"/d {CommandLine.MsgWnd.Handle.ToString()} {Time.PerfMilliseconds}").StartUserIL(); //test process startup speed
+				//new Au.Util.LibProcessStarter("Au.Editor.exe", $"/d {CommandLine.MsgWnd.Handle.ToString()} {ATime.PerfMilliseconds}").StartUserIL(); //test process startup speed
 			} else if(w != _wTransparent) {
 				_wWindow = w;
 				_SetTransparentSizeZorder();
@@ -305,7 +305,7 @@ class UacDragDrop
 			base.WndProc(ref m);
 
 			//test process startup speed. About 300 ms. Ngened slower.
-			//if(m.Msg == Api.WM_SHOWWINDOW && m.WParam != default) Print(Time.PerfMilliseconds - Environment.GetCommandLineArgs()[3].ToInt64());
+			//if(m.Msg == Api.WM_SHOWWINDOW && m.WParam != default) Print(ATime.PerfMilliseconds - Environment.GetCommandLineArgs()[3].ToInt64());
 		}
 
 		bool _enteredOnce;

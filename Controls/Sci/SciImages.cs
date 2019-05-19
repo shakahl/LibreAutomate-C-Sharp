@@ -17,7 +17,7 @@ using System.Drawing;
 //using System.Xml.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Util;
 
 //FUTURE: support mutiline images like @"image:line1 line2" and like "image:line1" + "line2";
@@ -188,7 +188,7 @@ namespace Au.Controls
 				int nAnnotLines = Math.Min((maxHeight + (lineHeight - 1)) / lineHeight, 255);
 				//Print(lineHeight, maxHeight, nAnnotLines);
 
-				fixed (byte* b0 = Buffers.Get(annotLen + nAnnotLines + 20, ref t_data.BufferForAnnot)) {
+				fixed (byte* b0 = AMemoryArray.Get(annotLen + nAnnotLines + 20, ref t_data.BufferForAnnot)) {
 					var b = b0;
 					*b++ = 3; Api._ltoa(totalWidth << 8 | nAnnotLines, b, 16); while(*(++b) != 0) { }
 					while(nAnnotLines-- > 1) *b++ = (byte)'\n';
@@ -228,20 +228,20 @@ namespace Au.Controls
 					} //else case 1
 
 					//Print($"NEW: '{new string((sbyte*)b0)}'");
-					//Perf.First();
+					//APerf.First();
 					if(!annotAdded) {
 						annotAdded = true;
 						if(allText) _c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_HIDDEN);
 					}
 					_c.Call(SCI_ANNOTATIONSETTEXT, iLine, b0);
-					//Perf.NW();
+					//APerf.NW();
 				}
 			}
 
 			if(annotAdded && allText) {
-				//Perf.First();
+				//APerf.First();
 				_c.Call(SCI_ANNOTATIONSETVISIBLE, (int)_visible);
-				//Perf.NW();
+				//APerf.NW();
 			}
 
 			//never mind: scintilla prints without annotations, therefore without images too.
@@ -279,7 +279,7 @@ namespace Au.Controls
 			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
 			if(n > 0) {
 				int lens = (s == null) ? 0 : s.Length;
-				fixed (byte* b = Buffers.Get(n + 1 + lens * 3, ref t_data.BufferForAnnot)) {
+				fixed (byte* b = AMemoryArray.Get(n + 1 + lens * 3, ref t_data.BufferForAnnot)) {
 					_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
 					int imageLen = _ParseAnnotText(b, n, out var _);
 					if(imageLen > 0) {
@@ -306,7 +306,7 @@ namespace Au.Controls
 		{
 			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
 			if(n > 0) {
-				fixed (byte* b0 = Buffers.Get(n, ref t_data.BufferForAnnot)) {
+				fixed (byte* b0 = AMemoryArray.Get(n, ref t_data.BufferForAnnot)) {
 					var b = b0;
 					_c.Call(SCI_ANNOTATIONGETTEXT, line, b); b[n] = 0;
 					int imageLen = _ParseAnnotText(b, n, out var _);
@@ -353,7 +353,7 @@ namespace Au.Controls
 			var d = t_data;
 
 			//is already loaded?
-			long hash = Hash.Fnv1Long(s + i, i2 - i);
+			long hash = AHash.Fnv1Long(s + i, i2 - i);
 			var im = d.FindImage(hash);
 			//Print(im != null, new string((sbyte*)s, i, i2 - i));
 			if(im != null) return im;
@@ -497,7 +497,7 @@ namespace Au.Controls
 			}
 			catch(Exception ex) { ADebug.Print(ex.Message); }
 			finally { if(pen != default) Api.DeleteObject(Api.SelectObject(hdc, oldPen)); }
-			//Perf.NW();
+			//APerf.NW();
 
 			//If there are no image strings (text edited), delete the annotation or just its part containing image info and '\n's.
 			if(!hasImages && c.annotLine == 0) {
@@ -579,7 +579,7 @@ namespace Au.Controls
 		{
 			Debug.Assert(to >= from);
 			int len = to - from;
-			fixed (byte* s = Buffers.Get(len, ref t_data.BufferForText)) {
+			fixed (byte* s = AMemoryArray.Get(len, ref t_data.BufferForText)) {
 				if(len > 0) {
 					var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = s };
 					var r = _c.Call(SCI_GETTEXTRANGE, 0, &tr);
@@ -611,12 +611,12 @@ namespace Au.Controls
 						for(int iLine = 0, nLines = _c.Call(SCI_GETLINECOUNT); iLine < nLines; iLine++) {
 							len = _c.Call(SCI_ANNOTATIONGETTEXT, iLine); //fast
 							if(len < 4) continue;
-							//Perf.First();
+							//APerf.First();
 							if(!tempHidden) {
 								tempHidden = true;
 								_c.Call(SCI_ANNOTATIONSETVISIBLE, (int)AnnotationsVisible.ANNOTATION_HIDDEN); //makes many times faster
 							}
-							fixed (byte* a0 = Buffers.Get(len, ref buf)) {
+							fixed (byte* a0 = AMemoryArray.Get(len, ref buf)) {
 								var a = a0;
 								_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a); a[len] = 0;
 								var imageLen = _ParseAnnotText(a, len, out var _);
@@ -625,11 +625,11 @@ namespace Au.Controls
 									_c.Call(SCI_ANNOTATIONSETTEXT, iLine, a);
 								}
 							}
-							//Perf.NW(); //surprisingly fast
+							//APerf.NW(); //surprisingly fast
 						}
-						//Perf.First();
+						//APerf.First();
 						if(tempHidden) _c.Call(SCI_ANNOTATIONSETVISIBLE, (int)_visible);
-						//Perf.NW(); //fast
+						//APerf.NW(); //fast
 					}
 				} else if(_visible == AnnotationsVisible.ANNOTATION_HIDDEN) {
 					_c.Call(SCI_SETANNOTATIONDRAWCALLBACK, 0, _callbackPtr);
@@ -656,9 +656,9 @@ namespace Au.Controls
 		//{
 		//	if(_timer10 == null) _timer10 = new ATimer(t =>
 		//	{
-		//		Perf.First();
+		//		APerf.First();
 		//		if(0 != (_timerTasks & _TimerTasks.UpdateScrollBars)) _c.Call(SCI_UPDATESCROLLBARS);
-		//		Perf.NW();
+		//		APerf.NW();
 		//		_timerTasks = 0;
 		//	});
 		//	if(_timerTasks == 0) _timer10.Start(10, true);

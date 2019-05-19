@@ -683,7 +683,7 @@ namespace Au.Types
 					get
 					{
 						if(_fAnyOperationsAborted_common != 0) return true;
-						var v = Ver.Is64BitProcess ? _fAnyOperationsAborted_64 : _fAnyOperationsAborted_32;
+						var v = AVersion.Is64BitProcess ? _fAnyOperationsAborted_64 : _fAnyOperationsAborted_32;
 						return v != 0;
 					}
 				}
@@ -782,9 +782,9 @@ namespace Au.Types
 		///// <param name="dotExt"></param>
 		//internal static string AssocQueryString(string dotExt/*, ASSOCSTR what = ASSOCSTR.ASSOCSTR_EXECUTABLE*/)
 		//{
-		//	var b = Util.Buffers.LibChar(300, out var n);
+		//	var b = Util.AMemoryArray.LibChar(300, out var n);
 		//	int hr = AssocQueryString(0x20, 2, dotExt, null, b, ref n); //ASSOCF_NOTRUNCATE
-		//	if(hr == E_POINTER) hr = AssocQueryString(0x20, 2, dotExt, null, b = Util.Buffers.LibChar(n), ref n);
+		//	if(hr == E_POINTER) hr = AssocQueryString(0x20, 2, dotExt, null, b = Util.AMemoryArray.LibChar(n), ref n);
 		//	return hr == 0 ? b.ToString(n) : null;
 		//}
 
@@ -910,7 +910,7 @@ namespace Au.Types
 		//[DllImport("msvcrt.dll", EntryPoint = "_strtoui64", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern long strtoui64(byte* s, byte** endPtr = null, int radix = 0);
 
-		//This is used when working with char*. With C# strings use ExtString.ToInt32 etc.
+		//This is used when working with char*. With C# strings use AExtString.ToInt32 etc.
 		internal static int strtoi(char* s, char** endPtr = null, int radix = 0)
 		{
 			return (int)strtoi64(s, endPtr, radix);
@@ -922,7 +922,7 @@ namespace Au.Types
 			return (int)strtoi64(s, endPtr, radix);
 		}
 
-#if false //not used, because we have ExtString.ToInt32 etc, which has no overflow problems. But it supports only decimal and hex, not any radix.
+#if false //not used, because we have AExtString.ToInt32 etc, which has no overflow problems. But it supports only decimal and hex, not any radix.
 		/// <summary>
 		/// Converts part of string to int.
 		/// Returns the int value.
@@ -1051,13 +1051,13 @@ namespace Au.Types
 		//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Init(out Util.Hash.MD5 context);
+		internal static extern void MD5Init(out Util.AHash.MD5 context);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Update(ref Util.Hash.MD5 context, void* data, int dataLen);
+		internal static extern void MD5Update(ref Util.AHash.MD5 context, void* data, int dataLen);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Final(ref Util.Hash.MD5 context);
+		internal static extern void MD5Final(ref Util.AHash.MD5 context);
 
 		internal struct SYSTEM_PROCESS_INFORMATION
 		{

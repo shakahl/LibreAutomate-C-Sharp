@@ -13,7 +13,7 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 
 using Au;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -25,7 +25,7 @@ namespace Au.Types
 		{
 			if(default != Api.GetModuleHandle("AuCpp.dll")) return; //probably loaded in other appdomain
 
-			string s = Ver.Is64BitProcess ? @"Dll\64bit\AuCpp.dll" : @"Dll\32bit\AuCpp.dll";
+			string s = AVersion.Is64BitProcess ? @"Dll\64bit\AuCpp.dll" : @"Dll\32bit\AuCpp.dll";
 			if(default != Api.LoadLibrary(Folders.ThisAppBS + s)) return; //normal
 			var p = Environment.GetEnvironmentVariable("Au.Path"); if(p != null && default != Api.LoadLibrary(APath.Combine(p, s))) return; //%Au.Path%
 			if(default != Api.LoadLibrary(Folders.ThisAppTemp + s)) return; //extracted from resources

@@ -14,7 +14,7 @@ using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -102,7 +102,7 @@ namespace Au.Util
 		public static string GetFilePath(IntPtr hModule)
 		{
 			for(int na = 300; ; na *= 2) {
-				var b = Buffers.LibChar(ref na);
+				var b = AMemoryArray.LibChar(ref na);
 				int n = Api.GetModuleFileName(default, b, na);
 				if(n < na) return n == 0 ? null : b.ToString(n);
 			}

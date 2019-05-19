@@ -19,7 +19,7 @@ using System.Windows.Forms;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Au.Controls;
 
 namespace Au.Tools
@@ -180,7 +180,7 @@ namespace Au.Tools
 									}
 								}
 							}
-							if(Wildex.HasWildcardChars(name)) name = "**t " + name;
+							if(AWildex.HasWildcardChars(name)) name = "**t " + name;
 							name = prefix + name;
 
 							b.Append("(");

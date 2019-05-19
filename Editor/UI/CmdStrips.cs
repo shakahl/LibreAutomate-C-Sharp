@@ -18,7 +18,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 using Au.Controls;
 
@@ -34,7 +34,7 @@ static class Strips
 
 	public static void Init()
 	{
-		//var p = Perf.StartNew();
+		//var p = APerf.StartNew();
 
 		//map command handler names/delegates etc
 		_cmd = new CmdHandlers();
@@ -73,7 +73,7 @@ static class Strips
 
 #if DEBUG
 		//all commands have menu items?
-		//var p = Perf.StartNew();
+		//var p = APerf.StartNew();
 		foreach(var k in _cmd.Dict.Keys) {
 			//Print(k);
 			if(_strips.Xml.Desc(k) == null) PrintWarning("no menu item for command " + k);

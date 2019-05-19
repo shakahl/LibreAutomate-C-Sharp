@@ -17,7 +17,7 @@ using System.Windows.Forms;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -132,8 +132,10 @@ namespace Au
 
 		/// <summary>
 		/// Gets <see cref="Screen"/> object of the screen that contains the specified window (the biggest part of it) or is nearest to it.
-		/// If w handle is 0 or invalid, gets the primary screen (<see cref="Screen.FromHandle"/> would return an invalid object if the window handle is invalid).
 		/// </summary>
+		/// <remarks>
+		/// If the window handle is 0 or invalid, gets the primary screen. <see cref="Screen.FromHandle"/> would return an invalid object.
+		/// </remarks>
 		public static Screen ScreenFromWindow(Wnd w)
 		{
 			if(!w.Is0) {
@@ -254,7 +256,7 @@ namespace Au
 		}
 	}
 
-	public static partial class ExtOther
+	public static partial class AExtensions
 	{
 		/// <summary>
 		/// Gets screen index that can be used with <see cref="AScreen"/> and functions that use it.

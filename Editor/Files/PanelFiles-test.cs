@@ -18,7 +18,7 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
@@ -104,24 +104,24 @@ partial class PanelFiles
 //#endif
 //		m["speed"] = o =>
 //		{
-//			Perf.First();
+//			APerf.First();
 //			//n.IsSelected = true;
 //			_c.Invalidate(false);
-//			Perf.Next();
+//			APerf.Next();
 //			_c.Update();
-//			Perf.NW();
+//			APerf.NW();
 //		};
 //		m["change cell"] = o =>
 //		{
 //			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame");
 //			//f.GUID = "one two";
 //			//f.GUID = "one\ntwo";
-//			Perf.First();
+//			APerf.First();
 //			_c.Invalidate(false); //now fast, but Update slow
 //								  //_model.OnNodeChanged(f); //now quite slow, and Update slow
-//			Perf.Next();
+//			APerf.Next();
 //			_c.Update();
-//			Perf.NW();
+//			APerf.NW();
 
 //			ATimer.After(1000, () => f.FileRename(name));
 //		};
@@ -129,11 +129,11 @@ partial class PanelFiles
 //		{
 //			f.FileRename("new looooooooooooooooooooooooooooooong naaaaaaaame");
 //			//f.GUID = "one two";
-//			Perf.First();
+//			APerf.First();
 //			_c.UpdateNode(n);
-//			Perf.Next();
+//			APerf.Next();
 //			_c.Update();
-//			Perf.NW();
+//			APerf.NW();
 
 //			ATimer.After(1000, () => f.FileRename(name));
 //		};

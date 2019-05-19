@@ -19,7 +19,7 @@ using System.Windows.Forms;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using System.Collections;
 
 namespace Au.Triggers
@@ -376,7 +376,7 @@ namespace Au.Triggers
 		//this is used to eat modifier keys, regardless when the trigger is activated
 		KMod _eatMod;
 		//these are used to eat modifier keys and to activate trigger when modifiers released
-		WinHook _keyHook;
+		AHookWin _keyHook;
 		long _keyHookTimeout;
 		//this is used to eat button-up event, regardless when the trigger is activated
 		HookData.MouseEvent _eatUp;
@@ -409,8 +409,8 @@ namespace Au.Triggers
 		{
 			//Print(". hook");
 			if(_keyHook == null) {
-				_keyHook = WinHook.Keyboard(k => {
-					if(Time.WinMilliseconds >= _keyHookTimeout) {
+				_keyHook = AHookWin.Keyboard(k => {
+					if(ATime.WinMilliseconds >= _keyHookTimeout) {
 						_ResetUpAndUnhookTempKeybHook();
 						ADebug.Print("hook timeout");
 					} else {
@@ -437,7 +437,7 @@ namespace Au.Triggers
 
 		internal static void JitCompile()
 		{
-			Util.Jit.Compile(typeof(MouseTriggers), nameof(HookProcClickWheel), nameof(HookProcEdgeMove), nameof(_HookProc2));
+			Util.AJit.Compile(typeof(MouseTriggers), nameof(HookProcClickWheel), nameof(HookProcEdgeMove), nameof(_HookProc2));
 			Wnd.FromXY(default, WXYFlags.NeedWindow);
 		}
 
@@ -485,7 +485,7 @@ namespace Au.Triggers
 
 			public LibEdgeMoveDetector()
 			{
-				_sens = Util.Dpi.BaseDPI / 4; //FUTURE: different for each screen
+				_sens = Util.ADpi.BaseDPI / 4; //FUTURE: different for each screen
 			}
 
 			public bool Detect(POINT pt)
@@ -525,7 +525,7 @@ namespace Au.Triggers
 				int x = _x, y = _y;
 				if(x == _prev.xx && y == _prev.yy) { /*Print("same x y");*/ return; }
 
-				long time = Time.PerfMilliseconds;
+				long time = ATime.PerfMilliseconds;
 				int dt = (int)(time - _prev.time);
 				_prev.time = time;
 				if(dt <= 0) return; //never noticed

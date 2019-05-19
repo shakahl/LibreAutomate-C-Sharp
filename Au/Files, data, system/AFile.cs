@@ -16,7 +16,7 @@ using System.Runtime.ExceptionServices;
 using System.Linq;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au
 {
@@ -290,7 +290,7 @@ namespace Au
 			if(ExistsAsAny(s)) return APath.LibNormalize(s, noExpandEV: true);
 
 			for(int na = 300; ;) {
-				var b = Util.Buffers.LibChar(ref na);
+				var b = Util.AMemoryArray.LibChar(ref na);
 				int nr = Api.SearchPath(null, path, null, na, b, null);
 				if(nr > na) na = nr; else if(nr > 0) return b.ToString(nr); else break;
 			}
@@ -312,44 +312,42 @@ namespace Au
 		/// <summary>
 		/// Gets names and other info of files and subdirectories in the specified directory.
 		/// Returns an enumerable collection of <see cref="FEFile"/> objects containing the info.
-		/// By default gets only direct children. Use flag <see cref="FEFlags.AndSubdirectories"/> to get all descendants.
 		/// </summary>
 		/// <param name="directoryPath">Full path of the directory.</param>
 		/// <param name="flags"></param>
 		/// <param name="filter">
-		/// Callback function. Called for each file and subdirectory.
-		/// If it returns false, the file/subdirectory is not included in results.
-		/// Can be useful when EnumDirectory is called indirectly, for example by the Copy method. If you call it directly, you can instead skip processing the file in your foreach loop.
+		/// Callback function. Called for each file and subdirectory. If returns false, the file/subdirectory is not included in results.
+		/// Can be useful when <b>EnumDirectory</b> is called indirectly, for example by the <see cref="Copy"/> method. If you call it directly, you can instead skip the file in your foreach loop.
+		/// Example: <c>filter: k => k.IsDirectory || k.Name.Ends(".png", true)</c>. See <see cref="FEFile.IsDirectory"/>.
 		/// </param>
 		/// <param name="errorHandler">
 		/// Callback function. Called when fails to get children of a subdirectory, when using flag <see cref="FEFlags.AndSubdirectories"/>.
-		/// It receives the subdirectory path. It can call <see cref="WinError"/><b>.Code</b> and throw an exception.
-		/// If it does not throw an exception, the enumeration continues as if the directory is empty.
-		/// If errorHandler not used, then throws exception.
-		/// Read more in Remarks.
+		/// Receives the subdirectory path. Can call <see cref="WinError"/><b>.Code</b> and throw an exception. If does not throw, the enumeration continues as if the directory is empty.
+		/// If <i>errorHandler</i> not used, then <b>EnumDirectory</b> throws exception. See also: flag <see cref="FEFlags.IgnoreAccessDeniedErrors"/>.
 		/// </param>
-		/// <exception cref="ArgumentException">directoryPath is invalid path or not full path.</exception>
-		/// <exception cref="DirectoryNotFoundException">directoryPath directory does not exist.</exception>
-		/// <exception cref="AException">Failed to get children of directoryPath or of a subdirectory. Read more in Remarks.</exception>
+		/// <exception cref="ArgumentException"><i>directoryPath</i> is invalid path or not full path.</exception>
+		/// <exception cref="DirectoryNotFoundException"><i>directoryPath</i> directory does not exist.</exception>
+		/// <exception cref="AException">Failed to get children of <i>directoryPath</i> or of a subdirectory.</exception>
 		/// <remarks>
 		/// Uses API <msdn>FindFirstFile</msdn>.
 		/// 
-		/// The paths that this function gets are normalized, ie may not start with exact directoryPath string. Expanded environment variables (see <see cref="APath.ExpandEnvVar"/>), "..", DOS path etc.
+		/// By default gets only direct children. Use flag <see cref="FEFlags.AndSubdirectories"/> to get all descendants.
+		/// 
+		/// The paths that this function gets are normalized, ie may not start with exact <i>directoryPath</i> string. Expanded environment variables (see <see cref="APath.ExpandEnvVar"/>), "..", DOS path etc.
 		/// Paths longer than <see cref="APath.MaxDirectoryPathLength"/> have <c>@"\\?\"</c> prefix (see <see cref="APath.PrefixLongPathIfNeed"/>).
+		/// 
 		/// For symbolic links and mounted folders, gets info of the link/folder and not of its target.
 		/// 
 		/// These errors are ignored:
-		/// 1. Access denied (usually because of security permissions), unless used flag FailIfAccessDenied.
-		/// 2. Missing target directory of a symbolic link or mounted folder.
+		/// 1. Missing target directory of a symbolic link or mounted folder.
+		/// 2. If used flag <see cref="FEFlags.IgnoreAccessDeniedErrors"/> - access denied.
 		/// 
-		/// When an error is ignored, the function works as if that [sub]directory is empty; does not throw exception and does not call errorHandler.
+		/// When an error is ignored, the function works as if that [sub]directory is empty; does not throw exception and does not call <i>errorHandler</i>.
 		/// 
 		/// Enumeration of a subdirectory starts immediately after the subdirectory itself is retrieved.
 		/// </remarks>
 		public static IEnumerable<FEFile> EnumDirectory(string directoryPath, FEFlags flags = 0, Func<FEFile, bool> filter = null, Action<string> errorHandler = null)
 		{
-			//TODO: use 2 parameters instead of filter: filterFile, filterDir. Or maybe remove. Because now confusing.
-
 			string path = directoryPath;
 			if(0 == (flags & FEFlags.UseRawPath)) path = APath.Normalize(path);
 			path = path.RemoveSuffix('\\');
@@ -362,7 +360,7 @@ namespace Au
 			bool isFirst = true;
 			FileAttributes attr = 0;
 			int basePathLength = path.Length;
-			var redir = new Util.DisableFsRedirection();
+			var redir = new Util.ADisableFsRedirection();
 
 			try {
 				if(0 != (flags & FEFlags.DisableRedirection)) redir.Disable();
@@ -777,8 +775,9 @@ namespace Au
 		/// <param name="ifExists"></param>
 		/// <param name="copyFlags">Options used when copying directory.</param>
 		/// <param name="filter">
-		/// This callback function can be used when copying directory. Called for each descendant file and subdirectory.
-		/// If it returns false, the file/subdirectory is not copied.
+		/// Callback function. Can be used when copying directory. Called for each descendant file and subdirectory.
+		/// If returns false, the file/subdirectory is not copied.
+		/// Example: <c>filter: k => k.IsDirectory || k.Name.Ends(".png", true)</c>. See <see cref="FEFile.IsDirectory"/>.
 		/// </param>
 		/// <exception cref="ArgumentException">path or newPath is not full path (see <see cref="APath.IsFullPath"/>).</exception>
 		/// <exception cref="FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
@@ -952,7 +951,7 @@ namespace Au
 		static bool _DeleteShell(string path, bool recycle, List<string> a = null)
 		{
 			if(a != null) path = string.Join("\0", a);
-			if(Wildex.HasWildcardChars(path)) throw new ArgumentException("*? not supported.");
+			if(AWildex.HasWildcardChars(path)) throw new ArgumentException("*? not supported.");
 			var x = new Api.SHFILEOPSTRUCT() { wFunc = Api.FO_DELETE };
 			uint f = Api.FOF_NO_UI; //info: FOF_NO_UI includes 4 flags - noerrorui, silent, noconfirm, noconfirmmkdir
 			if(recycle) f |= Api.FOF_ALLOWUNDO; else f |= Api.FOF_NO_CONNECTED_ELEMENTS;
@@ -1167,7 +1166,7 @@ namespace Au
 			{
 				if(millisecondsTimeout < -1) throw new ArgumentOutOfRangeException();
 				_timeout = millisecondsTimeout;
-				_t0 = Time.PerfMilliseconds;
+				_t0 = ATime.PerfMilliseconds;
 			}
 
 			public bool ExceptionFilter(IOException e) => ExceptionFilter(e.HResult & 0xffff);
@@ -1181,7 +1180,7 @@ namespace Au
 				case Api.ERROR_LOCK_VIOLATION:
 				case Api.ERROR_USER_MAPPED_FILE:
 				case Api.ERROR_UNABLE_TO_REMOVE_REPLACED: //ReplaceFile or File.Replace
-					return _timeout < 0 || Time.PerfMilliseconds - _t0 < _timeout;
+					return _timeout < 0 || ATime.PerfMilliseconds - _t0 < _timeout;
 				default: return false;
 				}
 			}

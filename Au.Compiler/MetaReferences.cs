@@ -16,7 +16,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
@@ -252,7 +252,7 @@ namespace Au.Compiler
 
 		static unsafe string _GetAssemblyPath(string assemblyName)
 		{
-			var p = Perf.StartNew();
+			var p = APerf.StartNew();
 			ASSEMBLY_INFO x = default;
 			x.cbAssemblyInfo = Api.SizeOf<ASSEMBLY_INFO>();
 			x.cchBuf = 1024;

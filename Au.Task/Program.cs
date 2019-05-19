@@ -16,7 +16,7 @@ using System.IO.Pipes;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 //[System.Security.SuppressUnmanagedCodeSecurity]
@@ -65,27 +65,27 @@ static unsafe class Program
 		for(int i = 0; i < 3; i++) {
 			if(Api.WaitNamedPipe(pipeName, i == 2 ? -1 : 100)) break;
 			if(Marshal.GetLastWin32Error() != Api.ERROR_SEM_TIMEOUT) return;
-			//Perf.First();
+			//APerf.First();
 			switch(i) {
 			case 0: _Prepare1(); break; //~70 ms with cold CPU, 35 with hot
 			case 1: _Prepare2(); break; //~65 ms with cold CPU, 30 with hot
 			}
-			//Perf.NW();
+			//APerf.NW();
 		}
-		//Perf.First();
+		//APerf.First();
 		using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
 			if(pipe.Is0) { ADebug.LibPrintNativeError(); return; }
-			//Perf.Next();
+			//APerf.Next();
 			int size; if(!Api.ReadFile(pipe, &size, 4, out nr, default) || nr != 4) return;
-			//Perf.Next();
+			//APerf.Next();
 			if(!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
-			//Perf.Next();
+			//APerf.Next();
 			var a = Au.Util.LibSerializer.Deserialize(b);
 			ATask.Name = a[0]; asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4];
 			string wrp = a[5]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
 		}
 #endif
-		//Perf.Next();
+		//APerf.Next();
 
 		bool mtaThread = 0 != (flags & 2); //app without [STAThread]
 		if(mtaThread == s_isSTA) _SetComApartment(mtaThread ? ApartmentState.MTA : ApartmentState.STA);
@@ -99,7 +99,7 @@ static unsafe class Program
 
 		if(s_hook == null) _Hook();
 
-		//Perf.Next();
+		//APerf.Next();
 		try { RunAssembly.Run(asmFile, args, pdbOffset); }
 		catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
 		finally { s_hook?.Dispose(); }
@@ -112,8 +112,8 @@ static unsafe class Program
 
 		//JIT slowest-to-JIT methods
 		if(!Au.Util.AAssembly.LibIsAuNgened) {
-			Au.Util.Jit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
-			Au.Util.Jit.Compile(typeof(Au.Util.LibSerializer), "Deserialize");
+			Au.Util.AJit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
+			Au.Util.AJit.Compile(typeof(Au.Util.LibSerializer), "Deserialize");
 			AFile.WaitIfLocked(() => (FileStream)null);
 		}
 
@@ -151,7 +151,7 @@ static unsafe class Program
 
 	static void _Hook()
 	{
-		s_hook = WinHook.ThreadCbt(m => {
+		s_hook = AHookWin.ThreadCbt(m => {
 			//Print(m.code, m.wParam, m.lParam);
 			//switch(m.code) {
 			//case HookData.CbtEvent.ACTIVATE:
@@ -188,6 +188,6 @@ static unsafe class Program
 			return false;
 		});
 	}
-	static WinHook s_hook;
+	static AHookWin s_hook;
 
 }

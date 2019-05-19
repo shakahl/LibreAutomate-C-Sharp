@@ -18,7 +18,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
@@ -260,7 +260,7 @@ partial class PanelEdit : Control
 		//var o = Panels.Output;
 		//o.Write(@"Three green strips: <image ""C:\Users\G\Documents\Untitled.bmp"">");
 		//Print(_c.Text);
-		Output.Clear();
+		AOutput.Clear();
 		//Print(_activeDoc?.Text);
 		//_c.Text = "";
 
@@ -272,8 +272,8 @@ partial class PanelEdit : Control
 		//	if(f.IsDirectory) continue;
 		//	if(0 == f.Name.Ends(true, ".png", ".bmp", ".jpg", ".gif", ".ico")) continue;
 		//	//Print(f.FullPath);
-		//	MainForm.Panels.Output.Write($"<image \"{f.FullPath}\">");
-		//	Time.DoEvents();
+		//	MainForm.Panels.AOutput.Write($"<image \"{f.FullPath}\">");
+		//	ATime.DoEvents();
 		//}
 	}
 
@@ -309,7 +309,7 @@ partial class PanelEdit : Control
 		{
 			base.OnHandleCreated(e);
 
-			int dpi = Dpi.BaseDPI;
+			int dpi = ADpi.BaseDPI;
 
 			Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
 			ST.MarginWidth(c_marginLineNumbers, 40 * dpi / 96);
@@ -341,7 +341,7 @@ partial class PanelEdit : Control
 
 		//protected override void Dispose(bool disposing)
 		//{
-		//	Output.LibWriteQM2($"Dispose disposing={disposing} IsHandleCreated={IsHandleCreated} Visible={Visible}");
+		//	AOutput.LibWriteQM2($"Dispose disposing={disposing} IsHandleCreated={IsHandleCreated} Visible={Visible}");
 		//	base.Dispose(disposing);
 		//}
 
@@ -493,13 +493,13 @@ partial class PanelEdit : Control
 
 		#region editor data
 
-		Hash.MD5Result _savedMD5;
+		AHash.MD5Result _savedMD5;
 		Action _initDeferred;
 
-		static unsafe Hash.MD5Result _Hash(List<int> a)
+		static unsafe AHash.MD5Result _Hash(List<int> a)
 		{
 			if(a.Count == 0) return default;
-			Hash.MD5 md5 = default;
+			AHash.MD5 md5 = default;
 			foreach(var v in a) md5.Add(v);
 			return md5.Hash;
 		}
@@ -727,10 +727,10 @@ partial class PanelEdit : Control
 						_AppendFile(path, name);
 						if(isLnk) {
 							try {
-								var g = ShortcutFile.Open(path);
+								var g = AShortcutFile.Open(path);
 								string target = g.TargetAnyType, args = null;
 								if(target.Starts("::")) {
-									using(var pidl = Pidl.FromString(target))
+									using(var pidl = APidl.FromString(target))
 										name = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
 								} else {
 									args = g.Arguments;
@@ -859,7 +859,7 @@ partial class PanelEdit : Control
 				shells = new string[n]; names = new string[n];
 				IntPtr pidlFolder = (IntPtr)(p + *pi++);
 				for(int i = 0; i < n; i++) {
-					using(var pidl = new Pidl(pidlFolder, (IntPtr)(p + pi[i]))) {
+					using(var pidl = new APidl(pidlFolder, (IntPtr)(p + pi[i]))) {
 						shells[i] = pidl.ToString();
 						names[i] = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
 					}
@@ -914,9 +914,9 @@ partial class PanelEdit : Control
 				var name = FN.Name; if(name.Regex(@"(?i)^(Script|Class)\d*\.cs")) name = null;
 				var sType = isScript ? "script" : "class";
 				var rx = isScript ? _RxScript : _RxClass;
-				//Perf.First();
+				//APerf.First();
 				if(rx.Match(s, out var m)) {
-					//Perf.NW();
+					//APerf.NW();
 					bool hasM2 = m[2].Length > 0;
 					int i = m.EndIndex;
 					if(isScript && name == null && m.Index == 0 && m[1].Length == 0 && !hasM2) { //if standard script named like "ScriptN.cs", copy as fragment
@@ -952,7 +952,7 @@ partial class PanelEdit : Control
 		static ARegex _RxClass => s_rxClass ?? (s_rxClass = new ARegex($@"(?m)^\Q{c_usings}\E$"));
 		static ARegex s_rxScript, s_rxClass;
 		const string c_usings = @"//{{ using
-using Au; using static Au.NoClass; using Au.Types; using System; using System.Collections.Generic; //}}";
+using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}";
 		const string c_scriptMain = @"//{{ main
 unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}";
 
@@ -1015,7 +1015,7 @@ unsafe partial class Script :AScript { [STAThread] static void Main(string[] arg
 #if DEBUG
 		void _Print(string s, bool first = false)
 		{
-			if(first) Output.Clear();
+			if(first) AOutput.Clear();
 			//Print("<><code>" + s + "</code>\r\n<Z 0xc0e0c0><>");
 			Print("<><code>" + s + "</code>");
 			Print("<><Z 0xc0e0c0><>");

@@ -19,12 +19,12 @@ using System.Xml;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 using Au.Compiler;
 
-partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
+partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 {
 	#region types
 
@@ -409,7 +409,7 @@ partial class FileNode : Au.Util.TreeBase<FileNode>, IWorkspaceFile
 		return EdResources.GetImageUseCache(k);
 	}
 
-	public static AIcon.ImageCache IconCache = new AIcon.ImageCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
+	public static AIconCache IconCache = new AIconCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
 
 	/// <summary>
 	/// Gets or sets 'has triggers' flag.

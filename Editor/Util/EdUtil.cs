@@ -19,11 +19,11 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 /// <summary>
 /// Extension methods for .NET classes.
-/// See also <see cref="ExtOther"/>.
+/// See also <see cref="AExtensions"/>.
 /// </summary>
 static class EdNetExtensions
 {
@@ -118,7 +118,7 @@ static class EdResources
 		lock(_cache) {
 			object R = _cache[name];
 			if(R != null) return R;
-			//var p = Perf.StartNew();
+			//var p = APerf.StartNew();
 			R = Project.Properties.Resources.ResourceManager.GetObject(name, Project.Properties.Resources.Culture);
 			//p.NW();
 			Debug.Assert(R != null);
@@ -159,12 +159,12 @@ static class EdStock
 	/// Cached standard font used by most windows and controls.
 	/// On Windows 10 it is "Segoe UI" 9 by default.
 	/// </summary>
-	public static Font FontRegular = Au.Util.ASystemFonts.Regular;
+	public static Font FontRegular = Au.Util.AFonts.Regular;
 
 	/// <summary>
 	/// Bold version of <see cref="Regular"/> font.
 	/// </summary>
-	public static Font FontBold = Au.Util.ASystemFonts.Bold;
+	public static Font FontBold = Au.Util.AFonts.Bold;
 }
 
 /// <summary>

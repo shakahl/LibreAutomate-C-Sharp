@@ -15,7 +15,7 @@ using System.Runtime.ExceptionServices;
 using System.Runtime.Serialization;
 
 using Au.Types;
-using static Au.NoClass;
+using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -280,7 +280,7 @@ namespace Au
 	/// <summary>
 	/// Extension methods for types of this library.
 	/// </summary>
-	public static partial class ExtAu
+	public static partial class AExtAu
 	{
 		/// <summary>
 		/// If this is default(Wnd), throws <see cref="NotFoundException"/>, else returns this.
@@ -321,7 +321,7 @@ namespace Au
 		public static WinImage OrThrow(this WinImage x) => x ?? throw new NotFoundException("Not found (WinImage).");
 	}
 
-	static partial class ExtOther
+	static partial class AExtensions
 	{
 		/// <summary>
 		/// Returns string containing exception type name and message.
