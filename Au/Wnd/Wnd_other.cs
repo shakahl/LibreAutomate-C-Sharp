@@ -19,7 +19,7 @@ using Au.Util;
 
 namespace Au
 {
-	public partial struct Wnd
+	public partial struct AWnd
 	{
 		/// <summary>
 		/// Sets transparency.
@@ -113,12 +113,12 @@ namespace Au
 		struct __ISSHELLWINDOW
 		{
 			int _tidW, _tidD, _pidW, _pidD;
-			IntPtr _w, _wDesk; //not Wnd because then TypeLoadException
+			IntPtr _w, _wDesk; //not AWnd because then TypeLoadException
 
-			public int IsShellWindow(Wnd w)
+			public int IsShellWindow(AWnd w)
 			{
 				if(w.Is0) return 0;
-				Wnd wDesk = GetWnd.Shell; //fast
+				AWnd wDesk = GetWnd.Shell; //fast
 				if(w == wDesk) return 1; //Progman. Other window (WorkerW) may be active when desktop active.
 
 				//cache because GetWindowThreadProcessId quite slow
@@ -169,7 +169,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets window position, size and state stored in a string that can be used with <see cref="RestorePositionSizeState"/>.
-		/// Returns null if failed. Supports <see cref="WinError"/>.
+		/// Returns null if failed. Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="canBeMinimized">If now the window is minimized, let RestorePositionSizeState make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
 		public unsafe string SavePositionSizeState(bool canBeMinimized = false)

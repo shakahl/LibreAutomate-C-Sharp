@@ -96,7 +96,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Gets full path of dll or exe file from its native handle.
-		/// Returns null if fails. Supports <see cref="WinError"/>.
+		/// Returns null if fails. Supports <see cref="ALastError"/>.
 		/// Calls API <msdn>GetModuleFileName</msdn>.
 		/// </summary>
 		public static string GetFilePath(IntPtr hModule)

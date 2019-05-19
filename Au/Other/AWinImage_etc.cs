@@ -26,7 +26,7 @@ using Au.Util;
 
 namespace Au
 {
-	public partial class WinImage
+	public partial class AWinImage
 	{
 		#region capture, etc
 
@@ -41,11 +41,11 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// var file = Folders.Temp + "notepad.png";
-		/// Wnd w = Wnd.Find("* Notepad");
+		/// var file = AFolders.Temp + "notepad.png";
+		/// AWnd w = AWnd.Find("* Notepad");
 		/// w.Activate();
-		/// using(var b = WinImage.Capture(w.Rect)) { b.Save(file); }
-		/// Exec.Run(file);
+		/// using(var b = AWinImage.Capture(w.Rect)) { b.Save(file); }
+		/// AExec.Run(file);
 		/// ]]></code>
 		/// </example>
 		public static Bitmap Capture(RECT rect)
@@ -68,13 +68,13 @@ namespace Au
 		/// 3. Does not work with Windows Store app windows, Chrome and some other windows. Creates black image.
 		/// 4. If the window is DPI-scaled, captures its non-scaled view. And <i>rect</i> must contain non-scaled coordinates.
 		/// </remarks>
-		public static Bitmap Capture(Wnd w, RECT rect)
+		public static Bitmap Capture(AWnd w, RECT rect)
 		{
 			w.ThrowIfInvalid();
 			return _Capture(rect, w);
 		}
 
-		static unsafe Bitmap _Capture(RECT r, Wnd w = default, GraphicsPath path = null)
+		static unsafe Bitmap _Capture(RECT r, AWnd w = default, GraphicsPath path = null)
 		{
 			//Transfer from screen/window DC to memory DC (does not work without this) and get pixels.
 
@@ -146,7 +146,7 @@ namespace Au
 			return new GraphicsPath(p, t);
 		}
 
-		static Bitmap _Capture(List<POINT> outline, Wnd w = default)
+		static Bitmap _Capture(List<POINT> outline, AWnd w = default)
 		{
 			int n = outline?.Count ?? 0;
 			if(n == 0) throw new ArgumentException();
@@ -183,8 +183,8 @@ namespace Au
 		/// <exception cref="WndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
 		/// <exception cref="AException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
-		/// <remarks>More info: <see cref="Capture(Wnd, RECT)"/>.</remarks>
-		public static Bitmap Capture(Wnd w, List<POINT> outline)
+		/// <remarks>More info: <see cref="Capture(AWnd, RECT)"/>.</remarks>
+		public static Bitmap Capture(AWnd w, List<POINT> outline)
 		{
 			w.ThrowIfInvalid();
 			return _Capture(outline, w);
@@ -248,7 +248,7 @@ namespace Au
 			default: throw new ArgumentException();
 			}
 
-			Wnd[] aw = null; Wnd wTool = default;
+			AWnd[] aw = null; AWnd wTool = default;
 			try {
 				if(!toolWindow.IsEmpty) {
 					wTool = toolWindow.Wnd;
@@ -264,7 +264,7 @@ namespace Au
 				bool windowDC = flags.Has(WICFlags.WindowDC);
 				if(windowDC) {
 					if(!_WaitForHotkey("Press F3 to select window from mouse pointer.")) return false;
-					var w = Wnd.FromMouse(WXYFlags.NeedWindow);
+					var w = AWnd.FromMouse(WXYFlags.NeedWindow);
 					w.GetClientRect(out var rc, inScreen: true);
 					using var bw = Capture(w, w.ClientRect);
 					bs = new Bitmap(rs.Width, rs.Height);
@@ -301,27 +301,27 @@ namespace Au
 			return true;
 		}
 
-		static Wnd _WindowFromRect(WICResult r)
+		static AWnd _WindowFromRect(WICResult r)
 		{
 			Thread.Sleep(25); //after the form is closed, sometimes need several ms until OS sets correct Z order. Until that may get different w1 and w2.
-			Wnd w1 = Wnd.FromXY((r.rect.left, r.rect.top));
-			Wnd w2 = (r.image == null) ? w1 : Wnd.FromXY((r.rect.right - 1, r.rect.bottom - 1));
+			AWnd w1 = AWnd.FromXY((r.rect.left, r.rect.top));
+			AWnd w2 = (r.image == null) ? w1 : AWnd.FromXY((r.rect.right - 1, r.rect.bottom - 1));
 			if(w2 != w1 || !_IsInClientArea(w1)) {
-				Wnd w3 = w1.Window, w4 = w2.Window;
+				AWnd w3 = w1.Window, w4 = w2.Window;
 				w1 = (w4 == w3 && _IsInClientArea(w3)) ? w3 : default;
 			}
 			return w1;
 
-			bool _IsInClientArea(Wnd w) => w.GetClientRect(out var rc, true) && rc.Contains(r.rect);
+			bool _IsInClientArea(AWnd w) => w.GetClientRect(out var rc, true) && rc.Contains(r.rect);
 		}
 
 		static bool _WaitForHotkey(string info)
 		{
 			using(AOsd.ShowText(info, Timeout.Infinite, icon: SystemIcons.Information)) {
-				//try { Keyb.WaitForHotkey(0, KKey.F3); }
+				//try { AKeyboard.WaitForHotkey(0, KKey.F3); }
 				//catch(AException) { ADialog.ShowError("Failed to register hotkey F3"); return false; }
 
-				Keyb.WaitForKey(0, KKey.F3, up: true, block: true);
+				AKeyboard.WaitForKey(0, KKey.F3, up: true, block: true);
 			}
 			return true;
 		}
@@ -349,7 +349,7 @@ namespace Au
 				ShowInTaskbar = false; //optional
 				TopLevel = true; //optional
 				StartPosition = FormStartPosition.Manual;
-				Text = "Au.WinImage.CaptureUI";
+				Text = "Au.AWinImage.CaptureUI";
 				Cursor = _cursor = ACursor.LoadCursorFromMemory(Properties.Resources.red_cross_cursor, 32);
 			}
 
@@ -574,7 +574,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="WinImage.CaptureUI"/>.
+	/// Flags for <see cref="AWinImage.CaptureUI"/>.
 	/// </summary>
 	/// <remarks>
 	/// Only one of flags <b>Image</b>, <b>Color</b> and <b>Rectangle</b> can be used. If none, can capture image or color.
@@ -599,7 +599,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Results of <see cref="WinImage.CaptureUI"/>.
+	/// Results of <see cref="AWinImage.CaptureUI"/>.
 	/// </summary>
 	public class WICResult
 	{
@@ -623,6 +623,6 @@ namespace Au.Types
 		/// Window or control containing the captured image or rectangle, if whole image is in its client area.
 		/// In some cases may be incorrect, for example if windows moved/opened/closed/etc while capturing.
 		/// </summary>
-		public Wnd wnd;
+		public AWnd wnd;
 	}
 }

@@ -22,7 +22,7 @@ namespace Au
 	/// Time functions. Get time, sleep/wait, doevents.
 	/// </summary>
 	/// <seealso cref="APerf"/>
-	/// <seealso cref="WaitFor"/>
+	/// <seealso cref="AWaitFor"/>
 	[DebuggerStepThrough]
 	public static class ATime
 	{
@@ -229,8 +229,8 @@ namespace Au
 		/// Calls API <msdn>MsgWaitForMultipleObjectsEx</msdn> and <see cref="DoEvents"/>.
 		/// </remarks>
 		/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> is negative and not Timeout.Infinite.</exception>
-		/// <seealso cref="WaitFor.MessagesAndCondition"/>
-		/// <seealso cref="WaitFor.PostedMessage"/>
+		/// <seealso cref="AWaitFor.MessagesAndCondition"/>
+		/// <seealso cref="AWaitFor.PostedMessage"/>
 		/// <seealso cref="Util.AMessageLoop"/>
 		public static void SleepDoEvents(int timeMS)
 		{
@@ -249,7 +249,7 @@ namespace Au
 
 			if(!noSetPrecision) LibSleepPrecision.LibTempSet1(timeMS);
 
-			WaitFor.LibWait(timeMS, WHFlags.DoEvents, null, null);
+			AWaitFor.LibWait(timeMS, WHFlags.DoEvents, null, null);
 		}
 
 		/// <summary>
@@ -262,7 +262,7 @@ namespace Au
 		public static void DoEvents()
 		{
 			while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
-				//Wnd.Misc.PrintMsg(m);
+				//AWnd.More.PrintMsg(m);
 				//if(m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); return; }
 				if(m.message == Api.WM_QUIT) Thread.CurrentThread.Abort();
 				Api.TranslateMessage(m);
@@ -280,7 +280,7 @@ namespace Au
 		/// The resolution is applied to all threads and processes. Other applications can change it too. For example, often web browsers temporarily set resolution 1 ms when opening a web page.
 		/// The system uses the smallest period (best resolution) that currently is set by any application. You cannot make it bigger than current value.
 		/// <note>It is not recommended to keep small period (high resolution) for a long time. It can be bad for power saving.</note>
-		/// Don't need this for ATime.SleepX and functions that use them (Mouse.Click etc). They call <see cref="TempSet1"/> when the sleep time is 1-99 ms.
+		/// Don't need this for ATime.SleepX and functions that use them (AMouse.Click etc). They call <see cref="TempSet1"/> when the sleep time is 1-99 ms.
 		/// This does not change the minimal period of <see cref="ATimer"/> and System.Windows.Forms.Timer.
 		/// </remarks>
 		/// <example>
@@ -493,7 +493,7 @@ namespace Au
 		}
 
 		static Api.TIMERPROC _timerProc = _TimerProc;
-		static void _TimerProc(Wnd w, int msg, LPARAM idEvent, uint time)
+		static void _TimerProc(AWnd w, int msg, LPARAM idEvent, uint time)
 		{
 			//Print(t_timers.Count, idEvent);
 			if(!t_timers.TryGetValue(idEvent, out var t)) {

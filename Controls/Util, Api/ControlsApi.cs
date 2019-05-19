@@ -16,9 +16,9 @@ namespace Au.Controls
 
 
 		//[DllImport("user32.dll")]
-		//public static extern IntPtr GetWindowDC(Wnd hWnd);
+		//public static extern IntPtr GetWindowDC(AWnd hWnd);
 		//[DllImport("user32.dll")]
-		//public static extern int ReleaseDC(Wnd hWnd, IntPtr hDC);
+		//public static extern int ReleaseDC(AWnd hWnd, IntPtr hDC);
 
 		//[DllImport("gdi32.dll")]
 		//public static extern IntPtr CreateSolidBrush(uint color);

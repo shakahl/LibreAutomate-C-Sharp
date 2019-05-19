@@ -94,13 +94,13 @@ namespace Au.Types
 		internal static extern bool SetRectRgn(IntPtr hrgn, int left, int top, int right, int bottom);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern IntPtr GetDC(Wnd hWnd);
+		internal static extern IntPtr GetDC(AWnd hWnd);
 
 		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern IntPtr GetWindowDC(Wnd hWnd);
+		//internal static extern IntPtr GetWindowDC(AWnd hWnd);
 
 		[DllImport("user32.dll")] //note: no SetLastError = true
-		internal static extern int ReleaseDC(Wnd hWnd, IntPtr hDC);
+		internal static extern int ReleaseDC(AWnd hWnd, IntPtr hDC);
 
 		[DllImport("gdi32.dll")]
 		internal static extern IntPtr CreateCompatibleDC(IntPtr hdc);
@@ -446,7 +446,7 @@ namespace Au.Types
 		//internal static extern int SHBindToParent(IntPtr pidl, in Guid riid, out IShellFolder ppv, out IntPtr ppidlLast);
 
 		[DllImport("shell32.dll", PreserveSig = true)]
-		internal static extern int SHGetPropertyStoreForWindow(Wnd hwnd, in Guid riid, out IPropertyStore ppv);
+		internal static extern int SHGetPropertyStoreForWindow(AWnd hwnd, in Guid riid, out IPropertyStore ppv);
 
 		internal static PROPERTYKEY PKEY_AppUserModel_ID = new PROPERTYKEY() { fmtid = new Guid(0x9F4C2855, 0x9F79, 0x4B39, 0xA8, 0xD0, 0xE1, 0xD4, 0x2D, 0xE1, 0xD5, 0xF3), pid = 5 };
 
@@ -456,7 +456,7 @@ namespace Au.Types
 		internal struct NOTIFYICONDATA
 		{
 			public int cbSize;
-			public Wnd hWnd;
+			public AWnd hWnd;
 			public int uID;
 			public uint uFlags;
 			public int uCallbackMessage;
@@ -611,7 +611,7 @@ namespace Au.Types
 		{
 			public int cbSize;
 			public uint fMask;
-			public Wnd hwnd;
+			public AWnd hwnd;
 			public string lpVerb;
 			public string lpFile;
 			public string lpParameters;
@@ -663,7 +663,7 @@ namespace Au.Types
 
 		internal struct SHFILEOPSTRUCT
 		{
-			public Wnd hwnd;
+			public AWnd hwnd;
 			public uint wFunc;
 			public string pFrom;
 			public string pTo;
@@ -697,7 +697,7 @@ namespace Au.Types
 
 		//internal struct SHFILEOPSTRUCT
 		//{
-		//	public Wnd hwnd;
+		//	public AWnd hwnd;
 		//	public uint wFunc;
 		//	public string pFrom;
 		//	public string pTo;
@@ -710,7 +710,7 @@ namespace Au.Types
 		//[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		//internal struct SHFILEOPSTRUCT__32
 		//{
-		//	public Wnd hwnd;
+		//	public AWnd hwnd;
 		//	public uint wFunc;
 		//	public string pFrom;
 		//	public string pTo;
@@ -850,7 +850,7 @@ namespace Au.Types
 		//internal static extern int OleInitialize(IntPtr pvReserved);
 
 		[DllImport("ole32.dll", PreserveSig = true)]
-		internal static extern int RevokeDragDrop(Wnd hwnd);
+		internal static extern int RevokeDragDrop(AWnd hwnd);
 
 
 		#endregion
@@ -862,26 +862,26 @@ namespace Au.Types
 		//internal static Guid IID_IAccessible2 = new Guid(0xE89F726E, 0xC4F4, 0x4c19, 0xBB, 0x19, 0xB6, 0x47, 0xD7, 0xFA, 0x84, 0x78);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
-		//internal static extern int AccessibleObjectFromWindow(Wnd hwnd, AccOBJID dwId, in Guid riid, out IntPtr ppvObject);
+		//internal static extern int AccessibleObjectFromWindow(AWnd hwnd, AccOBJID dwId, in Guid riid, out IntPtr ppvObject);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
-		//internal static extern int WindowFromAccessibleObject(IntPtr iacc, out Wnd phwnd);
+		//internal static extern int WindowFromAccessibleObject(IntPtr iacc, out AWnd phwnd);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
 		//internal static extern int AccessibleObjectFromPoint(POINT ptScreen, out IntPtr ppacc, out VARIANT pvarChild);
 
 		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int AccessibleObjectFromEvent(Wnd hwnd, AccOBJID dwObjectId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
+		internal static extern int AccessibleObjectFromEvent(AWnd hwnd, AccOBJID dwObjectId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
 
 		[DllImport("oleacc.dll")]
-		internal static extern LibHandle GetProcessHandleFromHwnd(Wnd hwnd);
+		internal static extern LibHandle GetProcessHandleFromHwnd(AWnd hwnd);
 
 		//[DllImport("oleacc.dll")]
 		////internal static extern LPARAM LresultFromObject(in Guid riid, LPARAM wParam, [MarshalAs(UnmanagedType.IUnknown)] Object punk);
 		//internal static extern LPARAM LresultFromObject(in Guid riid, LPARAM wParam, IntPtr punk);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
-		//internal static extern int AccessibleObjectFromWindow(Wnd hwnd, int dwId, in Guid riid, out IAccessible ppvObject);
+		//internal static extern int AccessibleObjectFromWindow(AWnd hwnd, int dwId, in Guid riid, out IAccessible ppvObject);
 
 
 		#endregion
@@ -1024,7 +1024,7 @@ namespace Au.Types
 		}
 
 		[DllImport("dwmapi.dll")]
-		internal static extern int DwmGetWindowAttribute(Wnd hwnd, DWMWA dwAttribute, void* pvAttribute, int cbAttribute);
+		internal static extern int DwmGetWindowAttribute(AWnd hwnd, DWMWA dwAttribute, void* pvAttribute, int cbAttribute);
 
 
 
@@ -1096,7 +1096,7 @@ namespace Au.Types
 		#region other
 
 		//[DllImport("uxtheme.dll", PreserveSig = true)]
-		//internal static extern int SetWindowTheme(Wnd hwnd, string pszSubAppName, string pszSubIdList);
+		//internal static extern int SetWindowTheme(AWnd hwnd, string pszSubAppName, string pszSubIdList);
 
 
 		[DllImport("msi.dll", EntryPoint = "#217")]
@@ -1114,7 +1114,7 @@ namespace Au.Types
 
 
 		[DllImport("hhctrl.ocx", EntryPoint = "HtmlHelpW")]
-		internal static extern Wnd HtmlHelp(Wnd hwndCaller, string pszFile, int uCommand, LPARAM dwData);
+		internal static extern AWnd HtmlHelp(AWnd hwndCaller, string pszFile, int uCommand, LPARAM dwData);
 
 
 		//[DllImport("urlmon.dll", PreserveSig = true)]

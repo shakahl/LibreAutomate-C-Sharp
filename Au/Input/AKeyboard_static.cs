@@ -21,7 +21,7 @@ using static Au.AStatic;
 
 namespace Au
 {
-	public partial class Keyb
+	public partial class AKeyboard
 	{
 		#region get key state
 
@@ -29,13 +29,13 @@ namespace Au
 		/// Gets key states for using in UI code (forms, WPF).
 		/// </summary>
 		/// <remarks>
-		/// Use functions of this class when processing user input events in user interface code (forms, WPF). In other code (automation scrits, etc) usually it's better to use functions of <see cref="Keyb"/> class. Functions of this class are similar to .NET's <b>Control.ModifierKeys</b>, <b>Keyboard.Modifiers</b> etc, but may be easier to use.
+		/// Use functions of this class when processing user input events in user interface code (forms, WPF). In other code (automation scrits, etc) usually it's better to use functions of <see cref="AKeyboard"/> class. Functions of this class are similar to .NET's <b>Control.ModifierKeys</b>, <b>Keyboard.Modifiers</b> etc, but may be easier to use.
 		/// 
 		/// In Windows there are two API to get key state (down or up) - <msdn>GetKeyState</msdn> and <msdn>GetAsyncKeyState</msdn>. In most cases they return the same result, but not always.
 		/// 
-		/// API <b>GetAsyncKeyState</b> is used by class <see cref="Keyb"/> and not by this class (<b>Keyb.UI</b>). When the user (or some software) presses or releases a key, <b>GetAsyncKeyState</b> sees the change immediately. It is good in automation scripts, but not good in UI code because the state is not synchronized with the message queue.
+		/// API <b>GetAsyncKeyState</b> is used by class <see cref="AKeyboard"/> and not by this class (<b>AKeyboard.UI</b>). When the user (or some software) presses or releases a key, <b>GetAsyncKeyState</b> sees the change immediately. It is good in automation scripts, but not good in UI code because the state is not synchronized with the message queue.
 		/// 
-		/// This class (<b>Keyb.UI</b>) uses API <msdn>GetKeyState</msdn>. In the foreground thread (of the active window), it sees key state changes not immediately but after the thread reads key messages from its queue. It is good in UI threads. In background threads this API usually works like <b>GetAsyncKeyState</b>, but it depends on API <msdn>AttachThreadInput</msdn> and in some cases is less reliable, for example may be unaware of keys pressed before the thread started.
+		/// This class (<b>AKeyboard.UI</b>) uses API <msdn>GetKeyState</msdn>. In the foreground thread (of the active window), it sees key state changes not immediately but after the thread reads key messages from its queue. It is good in UI threads. In background threads this API usually works like <b>GetAsyncKeyState</b>, but it depends on API <msdn>AttachThreadInput</msdn> and in some cases is less reliable, for example may be unaware of keys pressed before the thread started.
 		/// 
 		/// The key state returned by these API is not always the same as of the physical keyboard. There is no API to get physical state. The two most common cases when it is different:
 		/// 1. When the key is pressed or released by software, such as the <b>Key</b> function of this library.
@@ -50,7 +50,7 @@ namespace Au
 			/// </summary>
 			/// <remarks>
 			/// If returns &lt; 0, the key is down (pressed). If the low-order bit is 1, the key is toggled; it works only with CapsLock, NumLock, ScrollLock and several other keys, as well as mouse buttons.
-			/// Can be used for mouse buttons too, for example <c>Keyb.UI.GetKeyState(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
+			/// Can be used for mouse buttons too, for example <c>AKeyboard.UI.GetKeyState(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
 			/// </remarks>
 			public static short GetKeyState(KKey key) => Api.GetKeyState((int)key);
 
@@ -58,7 +58,7 @@ namespace Au
 			/// Returns true if the specified key or mouse button is down (pressed).
 			/// </summary>
 			/// <remarks>
-			/// Can be used for mouse buttons too, for example <c>Keyb.UI.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
+			/// Can be used for mouse buttons too, for example <c>AKeyboard.UI.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
 			/// </remarks>
 			public static bool IsPressed(KKey key) => GetKeyState(key) < 0;
 
@@ -119,7 +119,7 @@ namespace Au
 			/// Returns true if the Caps Lock key is toggled.
 			/// </summary>
 			/// <remarks>
-			/// The same as <see cref="Keyb.IsCapsLock"/>.
+			/// The same as <see cref="AKeyboard.IsCapsLock"/>.
 			/// </remarks>
 			public static bool IsCapsLock => (GetKeyState(KKey.CapsLock) & 1) != 0;
 
@@ -127,7 +127,7 @@ namespace Au
 			/// Returns true if the Num Lock key is toggled.
 			/// </summary>
 			/// <remarks>
-			/// The same as <see cref="Keyb.IsNumLock"/>.
+			/// The same as <see cref="AKeyboard.IsNumLock"/>.
 			/// </remarks>
 			public static bool IsNumLock => (GetKeyState(KKey.NumLock) & 1) != 0;
 
@@ -135,7 +135,7 @@ namespace Au
 			/// Returns true if the Scroll Lock key is toggled.
 			/// </summary>
 			/// <remarks>
-			/// The same as <see cref="Keyb.IsScrollLock"/>.
+			/// The same as <see cref="AKeyboard.IsScrollLock"/>.
 			/// </remarks>
 			public static bool IsScrollLock => (GetKeyState(KKey.ScrollLock) & 1) != 0;
 		}
@@ -146,12 +146,12 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Uses API <msdn>GetAsyncKeyState</msdn>.
-		/// When processing user input in UI code (forms, WPF), instead use class <see cref="Keyb.UI"/> or .NET functions. They use API <msdn>GetKeyState</msdn>.
-		/// Can be used for mouse buttons too, for example <c>Keyb.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
+		/// When processing user input in UI code (forms, WPF), instead use class <see cref="AKeyboard.UI"/> or .NET functions. They use API <msdn>GetKeyState</msdn>.
+		/// Can be used for mouse buttons too, for example <c>AKeyboard.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
 		/// </remarks>
 		public static bool IsPressed(KKey key)
 		{
-			if((key == KKey.MouseLeft || key == KKey.MouseRight) && 0 != Api.GetSystemMetrics(Api.SM_SWAPBUTTON)) key = (KKey)((int)key ^ 3); //makes this func 3 times slower, eg 2 -> 6 mcs when cold CPU. But much faster when called next time without a delay; for example Mouse.IsPressed(Left|Right) is not slower than Mouse.IsPressed(Left) in reality, although calls this func 2 times.
+			if((key == KKey.MouseLeft || key == KKey.MouseRight) && 0 != Api.GetSystemMetrics(Api.SM_SWAPBUTTON)) key = (KKey)((int)key ^ 3); //makes this func 3 times slower, eg 2 -> 6 mcs when cold CPU. But much faster when called next time without a delay; for example AMouse.IsPressed(Left|Right) is not slower than AMouse.IsPressed(Left) in reality, although calls this func 2 times.
 			return Api.GetAsyncKeyState((int)key) < 0;
 		}
 
@@ -249,13 +249,13 @@ namespace Au
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <seealso cref="IsMod"/>
-		/// <seealso cref="Mouse.IsPressed"/>
-		/// <seealso cref="Mouse.WaitForNoButtonsPressed"/>
+		/// <seealso cref="AMouse.IsPressed"/>
+		/// <seealso cref="AMouse.WaitForNoButtonsPressed"/>
 		public static bool WaitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
-			var to = new WaitFor.Loop(secondsTimeout, 2);
+			var to = new AWaitFor.Loop(secondsTimeout, 2);
 			for(; ; ) {
-				if(!IsMod(mod) && !Mouse.IsPressed(buttons)) return true;
+				if(!IsMod(mod) && !AMouse.IsPressed(buttons)) return true;
 				if(!to.Sleep()) return false;
 			}
 		}
@@ -275,7 +275,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitForReleased(double secondsTimeout, params KKey[] keys)
 		{
-			return WaitFor.Condition(secondsTimeout, () => {
+			return AWaitFor.Condition(secondsTimeout, () => {
 				foreach(var k in keys) if(IsPressed(k)) return false;
 				return true;
 			}, 2);
@@ -310,13 +310,13 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// Keyb.WaitForHotkey(0, "F11");
-		/// Keyb.WaitForHotkey(0, KKey.F11);
-		/// Keyb.WaitForHotkey(0, "Shift+A", true);
-		/// Keyb.WaitForHotkey(0, (KMod.Ctrl | KMod.Shift, KKey.P)); //Ctrl+Shift+P
-		/// Keyb.WaitForHotkey(0, Keys.Control | Keys.Alt | Keys.H); //Ctrl+Alt+H
-		/// Keyb.WaitForHotkey(5, "Ctrl+Win+K"); //exception after 5 s
-		/// if(!Keyb.WaitForHotkey(-5, "Left")) Print("timeout"); //returns false after 5 s
+		/// AKeyboard.WaitForHotkey(0, "F11");
+		/// AKeyboard.WaitForHotkey(0, KKey.F11);
+		/// AKeyboard.WaitForHotkey(0, "Shift+A", true);
+		/// AKeyboard.WaitForHotkey(0, (KMod.Ctrl | KMod.Shift, KKey.P)); //Ctrl+Shift+P
+		/// AKeyboard.WaitForHotkey(0, Keys.Control | Keys.Alt | Keys.H); //Ctrl+Alt+H
+		/// AKeyboard.WaitForHotkey(5, "Ctrl+Win+K"); //exception after 5 s
+		/// if(!AKeyboard.WaitForHotkey(-5, "Left")) Print("timeout"); //returns false after 5 s
 		/// ]]></code>
 		/// </example>
 		public static bool WaitForHotkey(double secondsTimeout, KHotkey hotkey, bool waitModReleased = false)
@@ -324,7 +324,7 @@ namespace Au
 			if(s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("WaitForHotkey");
 			using(ARegisteredHotkey rhk = default) {
 				if(!rhk.Register(s_atomWFH, hotkey)) throw new AException(0, "*register hotkey");
-				if(!WaitFor.PostedMessage(secondsTimeout, (ref Native.MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
+				if(!AWaitFor.PostedMessage(secondsTimeout, (ref Native.MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
 			}
 			if(waitModReleased) return WaitForNoModifierKeys(secondsTimeout, hotkey.Mod);
 			return true;
@@ -348,7 +348,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// Keyb.WaitForKey(0, KKey.Ctrl, up: false, block: true);
+		/// AKeyboard.WaitForKey(0, KKey.Ctrl, up: false, block: true);
 		/// Print("Ctrl");
 		/// ]]></code>
 		/// </example>
@@ -370,7 +370,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// Keyb.WaitForKey(0, "Ctrl", up: false, block: true);
+		/// AKeyboard.WaitForKey(0, "Ctrl", up: false, block: true);
 		/// Print("Ctrl");
 		/// ]]></code>
 		/// </example>
@@ -392,7 +392,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// var key = Keyb.WaitForKey(0, up: true, block: true);
+		/// var key = AKeyboard.WaitForKey(0, up: true, block: true);
 		/// Print(key);
 		/// ]]></code>
 		/// </example>
@@ -417,7 +417,7 @@ namespace Au
 				}
 				R = x.vkCode; //info: for mod keys returns left/right
 				if(block) x.BlockEvent();
-			})) WaitFor.MessagesAndCondition(secondsTimeout, () => R != 0);
+			})) AWaitFor.MessagesAndCondition(secondsTimeout, () => R != 0);
 
 			return R;
 		}
@@ -440,9 +440,9 @@ namespace Au
 			/// Can get only standard text cursor. Many apps use non-standard cursor; then fails.
 			/// Also fails if the text cursor currently is not displayed.
 			/// </remarks>
-			public static bool GetTextCursorRect(out RECT r, out Wnd w, bool orMouse = false)
+			public static bool GetTextCursorRect(out RECT r, out AWnd w, bool orMouse = false)
 			{
-				if(Wnd.More.GetGUIThreadInfo(out var g) && !g.hwndCaret.Is0) {
+				if(AWnd.More.GetGUIThreadInfo(out var g) && !g.hwndCaret.Is0) {
 					if(g.rcCaret.bottom <= g.rcCaret.top) g.rcCaret.bottom = g.rcCaret.top + 16;
 					r = g.rcCaret;
 					g.hwndCaret.MapClientToScreen(ref r);
@@ -464,7 +464,7 @@ namespace Au
 			/// Converts key name to <see cref="KKey"/>.
 			/// Returns 0 if unknown key name.
 			/// </summary>
-			/// <param name="keyName">Key name, like with <see cref="Keyb.Key"/>.</param>
+			/// <param name="keyName">Key name, like with <see cref="AKeyboard.Key"/>.</param>
 			public static KKey ParseKeyName(string keyName)
 			{
 				keyName = keyName ?? "";
@@ -486,7 +486,7 @@ namespace Au
 			/// Converts key name to <see cref="KKey"/>.
 			/// Returns 0 if unknown key name.
 			/// </summary>
-			/// <param name="s">String containing key name, like with <see cref="Keyb.Key"/>.</param>
+			/// <param name="s">String containing key name, like with <see cref="AKeyboard.Key"/>.</param>
 			/// <param name="startIndex">Key name start index in <i>s</i>.</param>
 			/// <param name="length">Key name length.</param>
 			/// <exception cref="ArgumentOutOfRangeException">Invalid start index or length.</exception>
@@ -500,7 +500,7 @@ namespace Au
 			/// <summary>
 			/// Converts keys string to <see cref="KKey"/> array.
 			/// </summary>
-			/// <param name="keys">String containing one or more key names, like with <see cref="Keyb.Key"/>. Operators are not supported.</param>
+			/// <param name="keys">String containing one or more key names, like with <see cref="AKeyboard.Key"/>. Operators are not supported.</param>
 			/// <exception cref="ArgumentException">Error in keys string.</exception>
 			public static KKey[] ParseKeysString(string keys)
 			{
@@ -519,7 +519,7 @@ namespace Au
 			/// Returns false if the string is invalid.
 			/// </summary>
 			/// <remarks>
-			/// Key names are like with <see cref="Keyb.Key"/>.
+			/// Key names are like with <see cref="AKeyboard.Key"/>.
 			/// Must be single non-modifier key, preceded by zero or more of modifier keys Ctrl, Shift, Alt, Win, all joined with +.
 			/// Valid hotkey examples: <c>"A"</c>, <c>"a"</c>, <c>"7"</c>, <c>"F12"</c>, <c>"."</c>, <c>"End"</c>, <c>"Ctrl+D"</c>, <c>"Ctrl+Alt+Shift+Win+Left"</c>, <c>" Ctrl + U "</c>.
 			/// Invalid hotkey examples: null, "", <c>"A+B"</c>, <c>"Ctrl+A+K"</c>, <c>"A+Ctrl"</c>, <c>"Ctrl+Shift"</c>, <c>"Ctrl+"</c>, <c>"NoSuchKey"</c>, <c>"tab"</c>.
@@ -624,7 +624,7 @@ namespace Au
 		/// <br/>Example: <c>Key("Left", 500, "Right");</c>
 		/// <br/>See <see cref="AddSleep"/>.
 		/// - <see cref="Action"/> - callback function.
-		/// <br/>Example: <c>Action click = () => Mouse.Click(); Key("Shift+", click);</c>
+		/// <br/>Example: <c>Action click = () => AMouse.Click(); Key("Shift+", click);</c>
 		/// <br/>See <see cref="AddCallback"/>.
 		/// - null or "" - nothing.
 		/// <br/>Example: <c>Key("keys", 500, "", "text");</c>
@@ -841,7 +841,7 @@ namespace Au
 		/// </tr>
 		/// </table>
 		/// 
-		/// When you don't want to use or modify <see cref="AOpt.Key"/>, you can use a <see cref="Keyb"/> variable instead of this function. Example: <c>new Keyb(null).Add("keys", "text").Send();</c>. More examples in <see cref="Keyb(OptKey)"/> topic.
+		/// When you don't want to use or modify <see cref="AOpt.Key"/>, you can use a <see cref="AKeyboard"/> variable instead of this function. Example: <c>new AKeyboard(null).Add("keys", "text").Send();</c>. More examples in <see cref="AKeyboard(OptKey)"/> topic.
 		/// 
 		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
 		/// 
@@ -854,9 +854,9 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// //Press key Enter.
-		/// Keyb.Key("Enter");
+		/// AKeyboard.Key("Enter");
 		/// 
-		/// //The same as above. The "Keyb." prefix is optional.
+		/// //The same as above. The "AKeyboard." prefix is optional.
 		/// Key("Enter");
 		/// 
 		/// //Press keys Ctrl+A.
@@ -907,16 +907,16 @@ namespace Au
 		/// Key("keys$:Space 123456789 Space 123456789 ,Space", "text: 123456789 123456789\n");
 		/// 
 		/// //Ctrl+click
-		/// Action click = () => Mouse.Click();
+		/// Action click = () => AMouse.Click();
 		/// Key("Ctrl+", click);
 		/// 
 		/// //Ctrl+drag
-		/// Action drag = () => { using(Mouse.LeftDown()) Mouse.MoveRelative(0, 50); };
+		/// Action drag = () => { using(AMouse.LeftDown()) AMouse.MoveRelative(0, 50); };
 		/// Key("Ctrl+", drag);
 		/// 
 		/// //Ctrl+drag, poor man's version
 		/// Key("Ctrl*down");
-		/// using(Mouse.LeftDown()) Mouse.MoveRelative(0, 50);
+		/// using(AMouse.LeftDown()) AMouse.MoveRelative(0, 50);
 		/// Key("Ctrl*up");
 		/// ]]></code>
 		/// Show form and send keys/text to it when button clicked.
@@ -943,7 +943,7 @@ namespace Au
 		/// </example>
 		public static void Key(params object[] keysEtc)
 		{
-			new Keyb(AOpt.Key).Add(keysEtc).Send();
+			new AKeyboard(AOpt.Key).Add(keysEtc).Send();
 		}
 
 		/// <summary>
@@ -957,17 +957,17 @@ namespace Au
 		/// To send text can be used keys or clipboard, depending on <see cref="AOpt.Key"/> and text.
 		/// More info in <see cref="Key"/> topic.
 		/// </remarks>
-		/// <seealso cref="Clipb.PasteText"/>
+		/// <seealso cref="AClipboard.PasteText"/>
 		/// <example>
 		/// <code><![CDATA[
-		/// Keyb.Text("Text where key names like Enter are interpreted as text.\r\n");
-		/// Keyb.Text("Send this text, press key", "Enter", "and wait", 500, "milliseconds. Enter");
-		/// Text("Can be used without the \"Keyb.\" prefix.\n");
+		/// AKeyboard.Text("Text where key names like Enter are interpreted as text.\r\n");
+		/// AKeyboard.Text("Send this text, press key", "Enter", "and wait", 500, "milliseconds. Enter");
+		/// Text("Can be used without the \"AKeyboard.\" prefix.\n");
 		/// ]]></code>
 		/// </example>
 		public static void Text(string text, params object[] keysEtc)
 		{
-			new Keyb(AOpt.Key).AddText(text).Add(keysEtc).Send();
+			new AKeyboard(AOpt.Key).AddText(text).Add(keysEtc).Send();
 		}
 	}
 
@@ -975,17 +975,17 @@ namespace Au
 	{
 		/// <summary>
 		/// Sends virtual keystrokes to the active window. Also can send text, wait, etc.
-		/// Calls <see cref="Keyb.Key"/>.
+		/// Calls <see cref="AKeyboard.Key"/>.
 		/// </summary>
 		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
-		public static void Key(params object[] keysEtc) => Keyb.Key(keysEtc);
+		public static void Key(params object[] keysEtc) => AKeyboard.Key(keysEtc);
 
 		/// <summary>
 		/// Sends text to the active window, using virtual keystrokes or the clipboard. Then also can send non-text keystrokes.
-		/// Calls <see cref="Keyb.Text"/>.
+		/// Calls <see cref="AKeyboard.Text"/>.
 		/// </summary>
 		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
-		public static void Text(string text, params object[] keysEtc) => Keyb.Text(text, keysEtc);
+		public static void Text(string text, params object[] keysEtc) => AKeyboard.Text(text, keysEtc);
 	}
 }
 

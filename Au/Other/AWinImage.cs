@@ -38,9 +38,9 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// An image is any visible rectangular part of a window. A color is any visible pixel (the same as image of size 1x1).
-	/// A <b>WinImage</b> variable holds results of <see cref="Find"/> and similar functions (rectangle etc).
+	/// A <b>AWinImage</b> variable holds results of <see cref="Find"/> and similar functions (rectangle etc).
 	/// </remarks>
-	public partial class WinImage
+	public partial class AWinImage
 	{
 		#region load, save
 
@@ -70,7 +70,7 @@ namespace Au
 				R = new Bitmap(stream);
 				//size and speed of "image:" and "~:": "image:" usually is bigger by 10-20% and faster by ~25%
 			} else {
-				image = APath.Normalize(image, Folders.ThisAppImages);
+				image = APath.Normalize(image, AFolders.ThisAppImages);
 				if(!AFile.ExistsAsFile(image, true))
 					o = AResources.GetAppResource(APath.GetFileName(image, true));
 				if(o == null) o = Image.FromFile(image);
@@ -91,12 +91,12 @@ namespace Au
 		///// </summary>
 		//public WIArea Area => _area;
 
-		WinImage(WIArea area)
+		AWinImage(WIArea area)
 		{
 			_area = area;
 		}
 
-		WinImage(WinImage copy)
+		AWinImage(AWinImage copy)
 		{
 			_area = copy._area;
 			Rect = copy.Rect;
@@ -115,7 +115,7 @@ namespace Au
 		/// Gets location of the found image, relative to the search area.
 		/// </summary>
 		/// <remarks>
-		/// Relative to the window/control client area (if area type is Wnd), accessible object (if Acc), image (if Bitmap) or screen (if RECT).
+		/// Relative to the window/control client area (if area type is AWnd), accessible object (if AAcc), image (if Bitmap) or screen (if RECT).
 		/// More info: <see cref="Find"/>.
 		/// </remarks>
 		public RECT Rect { get; private set; }
@@ -180,16 +180,16 @@ namespace Au
 			var p = Coord.NormalizeInRect(x, y, Rect, centerIfEmpty: true);
 
 			if(_area.Type == WIArea.AreaType.Screen) {
-				if(button == 0) Mouse.Move(p);
-				else Mouse.ClickEx(button, p);
+				if(button == 0) AMouse.Move(p);
+				else AMouse.ClickEx(button, p);
 			} else {
 				var w = _area.W;
 				if(_area.Type == WIArea.AreaType.Acc) {
 					if(!_area.A.GetRect(out var r, w)) throw new AException(0, "*get rectangle");
 					p.x += r.left; p.y += r.top;
 				}
-				if(button == 0) Mouse.Move(w, p.x, p.y);
-				else Mouse.ClickEx(button, w, p.x, p.y);
+				if(button == 0) AMouse.Move(w, p.x, p.y);
+				else AMouse.ClickEx(button, w, p.x, p.y);
 			}
 		}
 
@@ -202,21 +202,21 @@ namespace Au
 		/// Finds image(s) or color(s) displayed in window or other area.
 		/// </summary>
 		/// <returns>
-		/// Returns a <see cref="WinImage"/> object that contains the rectangle of the found image and can click it etc.
+		/// Returns a <see cref="AWinImage"/> object that contains the rectangle of the found image and can click it etc.
 		/// Returns null if not found. See example.
 		/// </returns>
 		/// <param name="area">
 		/// Where to search. Can be a window/control, accessible object, another image or a rectangle in screen.
-		/// - <see cref="Wnd"/> - window or control. The search area is its client area.
-		/// - <see cref="Acc"/> - accessible object.
+		/// - <see cref="AWnd"/> - window or control. The search area is its client area.
+		/// - <see cref="AAcc"/> - accessible object.
 		/// - <see cref="Bitmap"/> - another image. These flags are invalid: <see cref="WIFlags.WindowDC"/>.
 		/// - <see cref="RECT"/> - a rectangle area in screen. These flags are invalid: <see cref="WIFlags.WindowDC"/>.
-		/// - <see cref="WIArea"/> - can contain Wnd, Acc or Bitmap. Also allows to specify a rectangle in it, which makes the search area smaller and the function faster. Example: <c>WinImage.Find((w, (left, top, width, height)), "image.png");</c>.
+		/// - <see cref="WIArea"/> - can contain AWnd, AAcc or Bitmap. Also allows to specify a rectangle in it, which makes the search area smaller and the function faster. Example: <c>AWinImage.Find((w, (left, top, width, height)), "image.png");</c>.
 		/// </param>
 		/// <param name="image">
 		/// Image or color to find. Can be of type:
 		/// - string - path of .png or .bmp file.
-		/// <br/>If not full path, uses <see cref="Folders.ThisAppImages"/>.
+		/// <br/>If not full path, uses <see cref="AFolders.ThisAppImages"/>.
 		/// <br/>If the file does not exist, looks in resources of apdomain's entry assembly. For example, looks for Project.Properties.Resources.X if file <c>@"C:\X.png"</c> not found.
 		/// - string that starts with <c>"image:"</c> or <c>"~:"</c> - Base64-encoded .png or .bmp image embedded in script.
 		/// <br/>If <c>"image:"</c>, it is .png file data, else it is compressed .bmp file data.
@@ -237,7 +237,7 @@ namespace Au
 		/// - Skip n matching images: <c>also: o => o.Skip(n)</c>
 		/// - Get rectangles etc of all matching images: <c>also: o => { list.Add(o); return false; }</c>. Don't use this code in 'wait' functions.
 		/// - Get rectangles etc of all matching images and stop waiting: <c>also: o => { list.Add(o); o.Found = true; return false; }</c>
-		/// - Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); WinImage.Find(w, images, also: o => { found[o.ListIndex] = true; return WIAlso.OkFindMoreOfList; }); if(found[0]) Print(0); if(found[1]) Print(1);</c>
+		/// - Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); AWinImage.Find(w, images, also: o => { found[o.ListIndex] = true; return WIAlso.OkFindMoreOfList; }); if(found[0]) Print(0); if(found[1]) Print(1);</c>
 		/// </param>
 		/// <exception cref="WndException">Invalid window handle (the <i>area</i> argument).</exception>
 		/// <exception cref="ArgumentException">
@@ -267,13 +267,13 @@ namespace Au
 		/// <example>
 		/// Code created with dialog "Find image or color in window".
 		/// <code><![CDATA[
-		/// var w = Wnd.Find("Window Name").OrThrow();
+		/// var w = AWnd.Find("Window Name").OrThrow();
 		/// string image = "image:iVBORw0KGgoAAAANSUhEUgAAABYAAAANCAYAAACtpZ5jAAAAAXNSR0IArs4c...";
-		/// var wi = WinImage.Find(w, image).OrThrow();
+		/// var wi = AWinImage.Find(w, image).OrThrow();
 		/// wi.Click();
 		/// ]]></code>
 		/// </example>
-		public static WinImage Find(WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<WinImage, WIAlso> also = null)
+		public static AWinImage Find(WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<AWinImage, WIAlso> also = null)
 		{
 			using var f = new _Finder(_Action.Find, area, image, flags, colorDiff, also);
 			if(!f.Find()) return null;
@@ -287,12 +287,12 @@ namespace Au
 		/// Finds image(s) or color(s) displayed in window or other area. Waits until found.
 		/// More info: <see cref="Find"/>.
 		/// </summary>
-		/// <returns>Returns <see cref="WinImage"/> object containing the rectangle of the found image. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
+		/// <returns>Returns <see cref="AWinImage"/> object containing the rectangle of the found image. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
-		public static WinImage Wait(double secondsTimeout, WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<WinImage, WIAlso> also = null)
+		public static AWinImage Wait(double secondsTimeout, WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<AWinImage, WIAlso> also = null)
 		{
 			var r = _Wait(_Action.Wait, secondsTimeout, area, image, flags, colorDiff, also);
 			return r.ok ? r.result : null;
@@ -309,7 +309,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
-		public static bool WaitNot(double secondsTimeout, WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<WinImage, WIAlso> also = null)
+		public static bool WaitNot(double secondsTimeout, WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<AWinImage, WIAlso> also = null)
 		{
 			return _Wait(_Action.WaitNot, secondsTimeout, area, image, flags, colorDiff, also).ok;
 		}
@@ -332,10 +332,10 @@ namespace Au
 		}
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
-		static (bool ok, WinImage result) _Wait(_Action action, double secondsTimeout, WIArea area, object image, WIFlags flags, int colorDiff, Func<WinImage, WIAlso> also)
+		static (bool ok, AWinImage result) _Wait(_Action action, double secondsTimeout, WIArea area, object image, WIFlags flags, int colorDiff, Func<AWinImage, WIAlso> also)
 		{
 			using var f = new _Finder(action, area, image, flags, colorDiff, also);
-			bool ok = WaitFor.Condition(secondsTimeout, () => f.Find() ^ (action > _Action.Wait));
+			bool ok = AWaitFor.Condition(secondsTimeout, () => f.Find() ^ (action > _Action.Wait));
 			return (ok, f.Result);
 		}
 
@@ -413,10 +413,10 @@ namespace Au
 			List<_Image> _images; //support multiple images
 			WIFlags _flags;
 			uint _colorDiff;
-			Func<WinImage, WIAlso> _also;
+			Func<AWinImage, WIAlso> _also;
 
 			//output
-			internal WinImage Result { get; private set; }
+			internal AWinImage Result { get; private set; }
 			POINT _resultOffset; //to map the found rectangle from the captured area coordinates to the specified area coordinates
 
 			//area data
@@ -438,7 +438,7 @@ namespace Au
 				if(_images != null) foreach(var v in _images) v.Dispose();
 			}
 
-			internal _Finder(_Action action, WIArea area, object image, WIFlags flags, int colorDiff, Func<WinImage, WIAlso> also)
+			internal _Finder(_Action action, WIArea area, object image, WIFlags flags, int colorDiff, Func<AWinImage, WIAlso> also)
 			{
 				bool waitChanged = action == _Action.WaitChanged;
 				if((!waitChanged && image == null) || area == null) throw new ArgumentNullException();
@@ -479,7 +479,7 @@ namespace Au
 					if(_images.Count == 0) throw new ArgumentException("Empty.", nameof(image));
 				}
 
-				Result = new WinImage(_area);
+				Result = new AWinImage(_area);
 			}
 
 			void _AddImage(object image)
@@ -615,7 +615,7 @@ namespace Au
 				//APerf.Next();
 
 				//Find image(s) in area.
-				WinImage alsoResult = null;
+				AWinImage alsoResult = null;
 				for(int i = 0, n = _images.Count; i < n; i++) {
 					Result.ListIndex = i;
 					Result.MatchIndex = 0;
@@ -631,7 +631,7 @@ namespace Au
 				return false;
 			}
 
-			bool _FindImage(_Image image, out WIAlso alsoAction, ref WinImage alsoResult)
+			bool _FindImage(_Image image, out WIAlso alsoAction, ref AWinImage alsoResult)
 			{
 				alsoAction = WIAlso.FindOtherOfList;
 
@@ -761,7 +761,7 @@ namespace Au
 					Result.Rect = r;
 
 					if(_also != null) {
-						var wi = new WinImage(Result); //create new WinImage object because the callback may add it to a list etc
+						var wi = new AWinImage(Result); //create new AWinImage object because the callback may add it to a list etc
 						switch(alsoAction = _also(wi)) {
 						case WIAlso.OkReturn:
 							alsoResult = null;
@@ -962,7 +962,7 @@ namespace Au
 				}
 				//get DC of screen or window
 				bool windowDC = 0 != (_flags & WIFlags.WindowDC);
-				Wnd w = windowDC ? _area.W : default;
+				AWnd w = windowDC ? _area.W : default;
 				using(var dc = new LibWindowDC(w)) { //quite fast, when compared with other parts
 					if(dc.Is0 && windowDC) w.ThrowNoNative("Failed");
 					//_Debug("get DC");
@@ -995,11 +995,11 @@ namespace Au
 				////APerf.NW(); //1100 for max window
 
 				//see what we have
-				//var testFile = Folders.Temp + "WinImage.png";
+				//var testFile = AFolders.Temp + "AWinImage.png";
 				//using(var areaBmp = new Bitmap(areaWidth, areaHeight, areaWidth * 4, PixelFormat.Format32bppRgb, (IntPtr)_areaPixels)) {
 				//	areaBmp.Save(testFile);
 				//}
-				//Exec.Run(testFile);
+				//AExec.Run(testFile);
 			}
 		}
 
@@ -1020,13 +1020,13 @@ namespace Au.Types
 {
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 	/// <summary>
-	/// Defines the search area for <see cref="WinImage.Find"/> and similar functions.
+	/// Defines the search area for <see cref="AWinImage.Find"/> and similar functions.
 	/// </summary>
 	/// <remarks>
 	/// It can be a window/control, accessible object, another image or a rectangle in screen.
 	/// Also allows to specify a rectangle in it, which makes the search area smaller and the function faster.
-	/// Has implicit conversions from Wnd, Acc, Bitmap, RECT (rectangle in screen), tuple (Wnd, RECT), tuple (Acc, RECT).
-	/// Example: <c>WinImage.Find((w, (left, top, width, height)), "image.png");</c>.
+	/// Has implicit conversions from AWnd, AAcc, Bitmap, RECT (rectangle in screen), tuple (AWnd, RECT), tuple (Acc, RECT).
+	/// Example: <c>AWinImage.Find((w, (left, top, width, height)), "image.png");</c>.
 	/// </remarks>
 	public class WIArea
 	{
@@ -1034,35 +1034,35 @@ namespace Au.Types
 
 		internal AreaType Type;
 		internal bool HasRect;
-		internal Wnd W;
-		internal Acc A;
+		internal AWnd W;
+		internal AAcc A;
 		internal Bitmap B;
 		internal RECT R;
 
 		WIArea() { }
-		public WIArea(Wnd w, RECT r) { W = w; Type = AreaType.Wnd; SetRect(r); }
-		public WIArea(Acc a, RECT r) { A = a; Type = AreaType.Acc; SetRect(r); }
+		public WIArea(AWnd w, RECT r) { W = w; Type = AreaType.Wnd; SetRect(r); }
+		public WIArea(AAcc a, RECT r) { A = a; Type = AreaType.Acc; SetRect(r); }
 		public void SetRect(RECT r) { R = r; HasRect = true; }
 
-		public static implicit operator WIArea(Wnd w) => new WIArea() { W = w, Type = AreaType.Wnd };
-		public static implicit operator WIArea(Acc a) => new WIArea() { A = a, Type = AreaType.Acc };
+		public static implicit operator WIArea(AWnd w) => new WIArea() { W = w, Type = AreaType.Wnd };
+		public static implicit operator WIArea(AAcc a) => new WIArea() { A = a, Type = AreaType.Acc };
 		public static implicit operator WIArea(Bitmap b) => new WIArea() { B = b, Type = AreaType.Bitmap };
 		public static implicit operator WIArea(RECT r) => new WIArea() { R = r, Type = AreaType.Screen };
-		public static implicit operator WIArea((Wnd w, RECT r) t) => new WIArea(t.w, t.r);
-		public static implicit operator WIArea((Acc a, RECT r) t) => new WIArea(t.a, t.r);
+		public static implicit operator WIArea((AWnd w, RECT r) t) => new WIArea(t.w, t.r);
+		public static implicit operator WIArea((AAcc a, RECT r) t) => new WIArea(t.a, t.r);
 	}
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
 	//rejected: now using object. Maybe in the future.
 	///// <summary>
-	///// Image or color for <see cref="WinImage.Find"/> and similar functions.
+	///// Image or color for <see cref="AWinImage.Find"/> and similar functions.
 	///// </summary>
 	//public struct WIImage
 	//{
 	//}
 
 	/// <summary>
-	/// Flags for <see cref="WinImage.Find"/> and similar functions.
+	/// Flags for <see cref="AWinImage.Find"/> and similar functions.
 	/// </summary>
 	[Flags]
 	public enum WIFlags
@@ -1085,7 +1085,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="WinImage.Find"/> and <see cref="WinImage.Wait"/>. Its callback function (parameter <i>also</i>) can return one of these values.
+	/// Used with <see cref="AWinImage.Find"/> and <see cref="AWinImage.Wait"/>. Its callback function (parameter <i>also</i>) can return one of these values.
 	/// </summary>
 	public enum WIAlso
 	{

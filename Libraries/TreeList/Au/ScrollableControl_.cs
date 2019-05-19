@@ -44,10 +44,10 @@ namespace Au.Controls
 		}
 
 		[DllImport("user32.dll")]
-		internal static extern int SetScrollInfo(Wnd hwnd, bool vert, in SCROLLINFO lpsi, bool redraw);
+		internal static extern int SetScrollInfo(AWnd hwnd, bool vert, in SCROLLINFO lpsi, bool redraw);
 
 		[DllImport("user32.dll")]
-		internal static extern bool GetScrollInfo(Wnd hwnd, bool vert, ref SCROLLINFO lpsi);
+		internal static extern bool GetScrollInfo(AWnd hwnd, bool vert, ref SCROLLINFO lpsi);
 
 		public class ScrollInfo
 		{
@@ -86,7 +86,7 @@ namespace Au.Controls
 			if(IsHandleCreated) {
 				k = new SCROLLINFO(); k.cbSize = Api.SizeOf(k);
 				k.fMask = SIF_TRACKPOS | SIF_POS | SIF_PAGE | SIF_RANGE;
-				GetScrollInfo((Wnd)this, vertical, ref k);
+				GetScrollInfo((AWnd)this, vertical, ref k);
 			} else if(vertical) k = _v;
 			else k = _h;
 		}
@@ -103,7 +103,7 @@ namespace Au.Controls
 		{
 			var k = new SCROLLINFO(); k.cbSize = Api.SizeOf(k);
 			k.fMask = SIF_POS;
-			GetScrollInfo((Wnd)this, vertical, ref k);
+			GetScrollInfo((AWnd)this, vertical, ref k);
 			return k.nPos;
 		}
 
@@ -142,11 +142,11 @@ namespace Au.Controls
 		void _SetScrollInfo()
 		{
 			if(_h.fMask != 0) {
-				SetScrollInfo((Wnd)this, false, _h, true);
+				SetScrollInfo((AWnd)this, false, _h, true);
 				_h.fMask = 0;
 			}
 			if(_v.fMask != 0) {
-				SetScrollInfo((Wnd)this, true, _v, true);
+				SetScrollInfo((AWnd)this, true, _v, true);
 				_v.fMask = 0;
 			}
 		}
@@ -173,7 +173,7 @@ namespace Au.Controls
 			if(code == ScrollEventType.EndScroll) return;
 			var k = new SCROLLINFO(); k.cbSize = Api.SizeOf(k);
 			k.fMask = SIF_TRACKPOS | SIF_POS | SIF_PAGE | SIF_RANGE;
-			GetScrollInfo((Wnd)this, vert, ref k);
+			GetScrollInfo((AWnd)this, vert, ref k);
 			//Print(k.nPos, k.nTrackPos, k.nPage, k.nMax);
 			int i = k.nPos;
 			switch(code) {
@@ -190,7 +190,7 @@ namespace Au.Controls
 			if(i < k.nMin) i = k.nMin;
 			k.nPos = i;
 			k.fMask = SIF_POS;
-			SetScrollInfo((Wnd)this, vert, k, true);
+			SetScrollInfo((AWnd)this, vert, k, true);
 
 			//if(vert) _v = k; else _h = k;
 

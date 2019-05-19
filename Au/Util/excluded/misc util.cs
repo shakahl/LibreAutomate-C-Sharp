@@ -118,7 +118,7 @@ namespace Au.Util
 	//	/// Gets T type size.
 	//	/// </summary>
 	//	public readonly static int Size;
-	//	static TypeSize() { Size = Misc.LibGetTypeSize(typeof(T)); }
+	//	static TypeSize() { Size = More.LibGetTypeSize(typeof(T)); }
 
 	//	//speed: quite fast, especially when ngened. When using this generic class, LibGetTypeSize is called once for each type.
 	//}

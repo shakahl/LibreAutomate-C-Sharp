@@ -5,7 +5,7 @@ title: wildcard expression
 
 # Wildcard expression
 
-*Wildcard expression* - a simple text format that supports wildcard characters, regular expression, "match case", "text1 or text2" and "not text". Like a regular expression, but much simpler. Used with "find" functions, for example [Wnd.Find]().
+*Wildcard expression* - a simple text format that supports wildcard characters, regular expression, "match case", "text1 or text2" and "not text". Like a regular expression, but much simpler. Used with "find" functions, for example [AWnd.Find]().
 
 Wildcard characters:
 
@@ -24,7 +24,7 @@ Can start with `"**options "`:
 | :- | :- | :- |
 | t | *? in text are not wildcard characters. | `"**t text"` |
 | r | Text is PCRE regular expression ([ARegex]()).<br/>Syntax: [full](https://www.pcre.org/current/doc/html/pcre2pattern.html), [short](https://www.pcre.org/current/doc/html/pcre2syntax.html). | `"**r regex"` |
-| R | Text is .NET regular expression (**Regex**).<br/>Cannot be used with [Acc]() class functions. | `"**R regex"` |
+| R | Text is .NET regular expression (**Regex**).<br/>Cannot be used with [AAcc]() class functions. | `"**R regex"` |
 | c | Must match case. | `"**tc text"`, `"**rc regex"` |
 | m | Multi-part, separated by \|\|. | `"**m findAAA||orBBB||**r orCCC"` |
 | m(sep) | Multi-part, separated by sep. | `"**m(^^^) findAAA^^^orBBB"` |
@@ -36,7 +36,7 @@ If the function argument is null or omitted, it usually means 'match any'. Wildc
 
 ```csharp
 //Find window. Its name ends with "- Notepad" and program is "notepad.exe".
-var w = Wnd.Find("*- Notepad", program: "notepad.exe");
+var w = AWnd.Find("*- Notepad", program: "notepad.exe");
 
 //Find item in x. Its property 1 is "example" (case-insensitive), property 2 starts with "2017-" and property 3 matches a case-sensitive regular expression.
 var item = x.FindItem("example", "2017-*", "**rc regex");

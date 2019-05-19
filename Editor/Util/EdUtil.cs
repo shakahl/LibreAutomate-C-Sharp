@@ -35,7 +35,7 @@ static class EdNetExtensions
 	/// </remarks>
 	public static void ShowAsContextMenu_(this ToolStripDropDownMenu t, bool caret = false)
 	{
-		POINT p; if(caret && Api.GetCaretPos(out p)) Api.GetFocus().MapClientToScreen(ref p); else p = Mouse.XY;
+		POINT p; if(caret && Api.GetCaretPos(out p)) Api.GetFocus().MapClientToScreen(ref p); else p = AMouse.XY;
 		var oi = t.OwnerItem; t.OwnerItem = null; //to set position
 		try { t.Show(p); }
 		finally { t.OwnerItem = oi; }

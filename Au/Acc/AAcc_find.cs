@@ -17,23 +17,21 @@ using System.Runtime.ExceptionServices;
 using Au.Types;
 using static Au.AStatic;
 
-#pragma warning disable CS0282 //VS bug: shows warning "There is no defined ordering between fields in multiple declarations of partial struct 'Acc'. To specify an ordering, all instance fields must be in the same declaration."
-
 namespace Au
 {
-	public unsafe partial class Acc
+	public unsafe partial class AAcc
 	{
 		/// <summary>
 		/// Contains accessible object (AO) properties and is used to find the AO.
 		/// </summary>
 		/// <remarks>
-		/// Can be used instead of <see cref="Acc.Find"/>.
+		/// Can be used instead of <see cref="AAcc.Find"/>.
 		/// </remarks>
 		/// <example>
 		/// Find window that contains certain AO, and get the AO too.
 		/// <code><![CDATA[
-		/// var f = new Acc.Finder("BUTTON", "Apply"); //AO properties
-		/// Wnd w = Wnd.Find(cn: "#32770", also: t => f.Find(t));
+		/// var f = new AAcc.Finder("BUTTON", "Apply"); //AO properties
+		/// AWnd w = AWnd.Find(cn: "#32770", also: t => f.Find(t));
 		/// Print(w);
 		/// Print(f.Result);
 		/// ]]></code>
@@ -50,7 +48,7 @@ namespace Au
 			/// The found accessible object.
 			/// null if not found. null if used <see cref="ResultGetProperty"/>.
 			/// </summary>
-			public Acc Result { get; private set; }
+			public AAcc Result { get; private set; }
 
 			/// <summary>
 			/// The requested propery of the found accessible object, depending on <see cref="ResultGetProperty"/>.
@@ -84,10 +82,10 @@ namespace Au
 			void _ClearResult() { Result = null; ResultProperty = null; NavigFailed = false; }
 
 			/// <summary>
-			/// Stores the specified accessible object properties in this object. Reference: <see cref="Acc.Find"/>.
+			/// Stores the specified accessible object properties in this object. Reference: <see cref="AAcc.Find"/>.
 			/// Does not search now. For it call <b>Find</b> or <b>Wait</b>.
 			/// </summary>
-			public Finder(string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<Acc, bool> also = null, int skip = 0, string navig = null)
+			public Finder(string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<AAcc, bool> also = null, int skip = 0, string navig = null)
 			{
 				_role = role;
 				_name = name;
@@ -95,7 +93,7 @@ namespace Au
 				_flags = flags;
 				_skip = skip;
 				_navig = navig;
-				if(also != null) _also = (Cpp.Cpp_Acc ca) => also(new Acc(ca)) ? 1 : 0;
+				if(also != null) _also = (Cpp.Cpp_Acc ca) => also(new AAcc(ca)) ? 1 : 0;
 			}
 
 			/// <summary>
@@ -104,11 +102,11 @@ namespace Au
 			/// </summary>
 			/// <param name="w">Window that contains the control.</param>
 			/// <param name="controls">Control properties. This functions searches in all matching controls.</param>
-			/// <exception cref="Exception">Exceptions of <see cref="Find(Wnd)"/>.</exception>
+			/// <exception cref="Exception">Exceptions of <see cref="Find(AWnd)"/>.</exception>
 			/// <remarks>
 			/// Alternatively you can specify control class name or id in role. How this function is different: 1. Allows to specify more control properties. 2. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
 			/// </remarks>
-			public bool Find(Wnd w, Wnd.ChildFinder controls)
+			public bool Find(AWnd w, AWnd.ChildFinder controls)
 			{
 				w.ThrowIfInvalid();
 				foreach(var c in controls.FindAll(w)) {
@@ -124,7 +122,7 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Finds accessible object (AO) in window w, like <see cref="Acc.Find"/>.
+			/// Finds accessible object (AO) in window w, like <see cref="AAcc.Find"/>.
 			/// Returns true if found. The <see cref="Result"/> property will be the found AO.
 			/// </summary>
 			/// <param name="w">Window or control that contains the AO.</param>
@@ -136,13 +134,13 @@ namespace Au
 			/// </exception>
 			/// <exception cref="WndException">Invalid window.</exception>
 			/// <exception cref="AException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
-			public bool Find(Wnd w)
+			public bool Find(AWnd w)
 			{
 				return _FindOrWait(w, 0, false);
 			}
 
 			/// <summary>
-			/// Finds accessible object (AO) in another AO, like <see cref="Acc.Find(string, string, string, AFFlags, Func{Acc, bool}, int, string)"/>.
+			/// Finds accessible object (AO) in another AO, like <see cref="AAcc.Find(string, string, string, AFFlags, Func{AAcc, bool}, int, string)"/>.
 			/// Returns true if found. The <see cref="Result"/> property will be the found AO.
 			/// </summary>
 			/// <param name="a">Direct or indirect parent AO.</param>
@@ -155,51 +153,51 @@ namespace Au
 			/// - <see cref="SimpleElementId"/> is not 0.
 			/// </exception>
 			/// <exception cref="AException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
-			public bool Find(Acc a)
+			public bool Find(AAcc a)
 			{
 				return _FindOrWait(a, 0, false);
 			}
 
 			/// <summary>
 			/// Finds accessible object (AO) in window w.
-			/// The same as <see cref="Find(Wnd)"/>, but waits until the AO is found or the given time expires.
+			/// The same as <see cref="Find(AWnd)"/>, but waits until the AO is found or the given time expires.
 			/// </summary>
 			/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 			/// <param name="w">Window or control that contains the AO.</param>
 			/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 			/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-			/// <exception cref="Exception">Exceptions of <see cref="Find(Wnd)"/>.</exception>
-			public bool Wait(double secondsTimeout, Wnd w)
+			/// <exception cref="Exception">Exceptions of <see cref="Find(AWnd)"/>.</exception>
+			public bool Wait(double secondsTimeout, AWnd w)
 			{
 				return _FindOrWait(w, secondsTimeout, true);
 			}
 
 			/// <summary>
 			/// Finds accessible object (AO) in another AO.
-			/// The same as <see cref="Find(Acc)"/>, but waits until the AO is found or the given time expires.
+			/// The same as <see cref="Find(AAcc)"/>, but waits until the AO is found or the given time expires.
 			/// </summary>
 			/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 			/// <param name="a">Direct or indirect parent AO.</param>
 			/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 			/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-			/// <exception cref="Exception">Exceptions of <see cref="Find(Acc)"/>.</exception>
-			public bool Wait(double secondsTimeout, Acc a)
+			/// <exception cref="Exception">Exceptions of <see cref="Find(AAcc)"/>.</exception>
+			public bool Wait(double secondsTimeout, AAcc a)
 			{
 				return _FindOrWait(a, secondsTimeout, true);
 			}
 
-			bool _FindOrWait(Wnd w, double secondsTimeout, bool isWaitFunc)
+			bool _FindOrWait(AWnd w, double secondsTimeout, bool isWaitFunc)
 			{
 				w.ThrowIfInvalid();
 				return _Find(w, default, secondsTimeout, isWaitFunc);
 			}
 
-			bool _FindOrWait(Acc a, double secondsTimeout, bool isWaitFunc)
+			bool _FindOrWait(AAcc a, double secondsTimeout, bool isWaitFunc)
 			{
 				if(a == null) throw new ArgumentNullException();
 				a.LibThrowIfDisposed();
 				if(a.SimpleElementId != 0) throw new ArgumentException("SimpleElementId is not 0.");
-				if(_flags.HasAny(AFFlags.UIA | AFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea when searching in Acc.");
+				if(_flags.HasAny(AFFlags.UIA | AFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea when searching in AAcc.");
 
 				Cpp.Cpp_Acc aParent = a;
 				var R = _Find(default, &aParent, secondsTimeout, isWaitFunc);
@@ -207,7 +205,7 @@ namespace Au
 				return R;
 			}
 
-			bool _Find(Wnd w, Cpp.Cpp_Acc* aParent, double secondsTimeout, bool isWaitFunc)
+			bool _Find(AWnd w, Cpp.Cpp_Acc* aParent, double secondsTimeout, bool isWaitFunc)
 			{
 				if(_flags.Has(AFFlags.UIA | AFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea together.");
 
@@ -227,14 +225,14 @@ namespace Au
 
 				var ap = new Cpp.Cpp_AccParams(_role, _name, _prop, flags, _skip, _resultProp);
 
-				var to = new WaitFor.Loop(secondsTimeout, inProc ? 10 : 40);
+				var to = new AWaitFor.Loop(secondsTimeout, inProc ? 10 : 40);
 				for(bool doneUAC = false, doneThread = false; ;) {
 					var hr = Cpp.Cpp_AccFind(w, aParent, in ap, _also, out var ca, out var sResult);
 
 					if(hr == 0) {
 						switch(_resultProp) {
 						case '\0':
-							var res = new Acc(ca);
+							var res = new AAcc(ca);
 							if(_navig != null) {
 								res = res.Navigate(_navig);
 								if(NavigFailed = (res == null)) {
@@ -254,7 +252,7 @@ namespace Au
 									switch(_resultProp) {
 									case 'r': ResultProperty = *(RECT*)p; break;
 									case 's': ResultProperty = *(AccSTATE*)p; break;
-									case 'w': ResultProperty = (Wnd)(*(int*)p); break;
+									case 'w': ResultProperty = (AWnd)(*(int*)p); break;
 									case '@': ResultProperty = _AttributesToDictionary(p, sResult.Length); break;
 									}
 								}
@@ -344,9 +342,9 @@ namespace Au
 		/// Other AO properties and search settings.
 		/// Format: one or more <c>"name=value"</c>, separated with <c>"\0"</c> or <c>"\0 "</c>, like <c>"description=xxx\0 @href=yyy"</c>. Names must match case. Values of string properties are wildcard expressions.
 		/// 
-		/// - <c>"class"</c> - search only in child controls that have this class name (see <see cref="Wnd.ClassName"/>).
+		/// - <c>"class"</c> - search only in child controls that have this class name (see <see cref="AWnd.ClassName"/>).
 		/// Cannot be used when searching in an AO.
-		/// - <c>"id"</c> - search only in child controls that have this id (see <see cref="Wnd.ControlId"/>). If the value is not a number - Windows Forms control name (see <see cref="Wnd.NameWinForms"/>); case-sensitive, not wildcard.
+		/// - <c>"id"</c> - search only in child controls that have this id (see <see cref="AWnd.ControlId"/>). If the value is not a number - Windows Forms control name (see <see cref="AWnd.NameWinForms"/>); case-sensitive, not wildcard.
 		/// Cannot be used when searching in an AO.
 		/// - <c>"value"</c> - <see cref="Value"/>.
 		/// - <c>"description"</c> - <see cref="Description"/>.
@@ -412,33 +410,33 @@ namespace Au
 		/// 
 		/// To find web page AOs usually it's better to use <see cref="Wait"/> instead, it's more reliable.
 		/// 
-		/// More info in <see cref="Acc"/> topic.
+		/// More info in <see cref="AAcc"/> topic.
 		/// </remarks>
 		/// <example>
 		/// Find link "Example" in web page, and click. Throw <b>NotFoundException</b> if not found.
 		/// <code><![CDATA[
-		/// var w = Wnd.Find("* Chrome").OrThrow();
-		/// var a = Acc.Find(w, "web:LINK", "Example").OrThrow();
+		/// var w = AWnd.Find("* Chrome").OrThrow();
+		/// var a = AAcc.Find(w, "web:LINK", "Example").OrThrow();
 		/// a.DoAction();
 		/// ]]></code>
 		/// Try to find link "Example" in web page. Return if not found.
 		/// <code><![CDATA[
-		/// var w = Wnd.Find("* Chrome").OrThrow();
-		/// var a = Acc.Find(w, "web:LINK", "Example");
+		/// var w = AWnd.Find("* Chrome").OrThrow();
+		/// var a = AAcc.Find(w, "web:LINK", "Example");
 		/// if(a == null) { Print("not found"); return; }
 		/// a.DoAction();
 		/// ]]></code>
 		/// Use <see cref="Finder"/>.
 		/// <code><![CDATA[
-		/// var w = Wnd.Find("* Chrome").OrThrow();
-		/// var f = new Acc.Finder("BUTTON", "Example");
+		/// var w = AWnd.Find("* Chrome").OrThrow();
+		/// var f = new AAcc.Finder("BUTTON", "Example");
 		/// if(!f.Find(w)) { Print("not found"); return; }
-		/// Acc a = f.Result;
+		/// AAcc a = f.Result;
 		/// a.DoAction();
 		/// ]]></code>
 		/// </example>
-		public static Acc Find(Wnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0,
-			Func<Acc, bool> also = null, int skip = 0, string navig = null, Wnd.ChildFinder controls = null)
+		public static AAcc Find(AWnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0,
+			Func<AAcc, bool> also = null, int skip = 0, string navig = null, AWnd.ChildFinder controls = null)
 		{
 			var f = new Finder(role, name, prop, flags, also, skip, navig);
 			bool found = controls != null ? f.Find(w, controls) : f.Find(w);
@@ -455,10 +453,10 @@ namespace Au
 		/// - <see cref="SimpleElementId"/> is not 0.
 		/// </exception>
 		/// <exception cref="AException">Failed.</exception>
-		public Acc Find(string role = null, string name = null, string prop = null, AFFlags flags = 0,
-			Func<Acc, bool> also = null, int skip = 0, string navig = null)
+		public AAcc Find(string role = null, string name = null, string prop = null, AFFlags flags = 0,
+			Func<AAcc, bool> also = null, int skip = 0, string navig = null)
 		{
-			//info: f.Find will throw if this Acc is invalid etc.
+			//info: f.Find will throw if this AAcc is invalid etc.
 
 			var f = new Finder(role, name, prop, flags, also, skip, navig);
 			if(!f.Find(this)) return null;
@@ -476,8 +474,8 @@ namespace Au
 		/// <exception cref="ArgumentException"/>
 		/// <exception cref="WndException"/>
 		/// <exception cref="AException"/>
-		public static Acc Wait(double secondsTimeout, Wnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0,
-			Func<Acc, bool> also = null, int skip = 0, string navig = null)
+		public static AAcc Wait(double secondsTimeout, AWnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0,
+			Func<AAcc, bool> also = null, int skip = 0, string navig = null)
 		{
 			var f = new Finder(role, name, prop, flags, also, skip, navig);
 			if(!f.Wait(secondsTimeout, w)) return null;
@@ -493,10 +491,10 @@ namespace Au
 		/// <exception cref="TimeoutException"/>
 		/// <exception cref="ArgumentException"/>
 		/// <exception cref="AException"/>
-		public Acc Wait(double secondsTimeout, string role = null, string name = null, string prop = null, AFFlags flags = 0,
-			Func<Acc, bool> also = null, int skip = 0, string navig = null)
+		public AAcc Wait(double secondsTimeout, string role = null, string name = null, string prop = null, AFFlags flags = 0,
+			Func<AAcc, bool> also = null, int skip = 0, string navig = null)
 		{
-			//info: f.Find will throw if this Acc is invalid etc.
+			//info: f.Find will throw if this AAcc is invalid etc.
 
 			var f = new Finder(role, name, prop, flags, also, skip, navig);
 			if(!f.Wait(secondsTimeout, this)) return null;
@@ -515,13 +513,13 @@ namespace Au
 		/// <example>
 		/// Get all taskbar buttons (Windows 10).
 		/// <code><![CDATA[
-		/// var w = Wnd.Find(null, "Shell_TrayWnd").OrThrow();
-		/// foreach(var a in Acc.FindAll(w, "BUTTON", prop: "level=7")) Print(a);
+		/// var w = AWnd.Find(null, "Shell_TrayWnd").OrThrow();
+		/// foreach(var a in AAcc.FindAll(w, "BUTTON", prop: "level=7")) Print(a);
 		/// ]]></code>
 		/// </example>
-		public static Acc[] FindAll(Wnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<Acc, bool> also = null)
+		public static AAcc[] FindAll(AWnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<AAcc, bool> also = null)
 		{
-			var a = new List<Acc>();
+			var a = new List<AAcc>();
 			Find(w, role, name, prop, flags, o =>
 			{
 				if(also == null || also(o)) a.Add(o);
@@ -540,14 +538,14 @@ namespace Au
 		/// <example>
 		/// Get all taskbar buttons (Windows 10).
 		/// <code><![CDATA[
-		/// var w = Wnd.Find(null, "Shell_TrayWnd").OrThrow();
-		/// var atb = Acc.Find(w, "TOOLBAR", "Running applications").OrThrow();
+		/// var w = AWnd.Find(null, "Shell_TrayWnd").OrThrow();
+		/// var atb = AAcc.Find(w, "TOOLBAR", "Running applications").OrThrow();
 		/// foreach(var a in atb.FindAll("BUTTON", prop: "level=0")) Print(a);
 		/// ]]></code>
 		/// </example>
-		public Acc[] FindAll(string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<Acc, bool> also = null)
+		public AAcc[] FindAll(string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<AAcc, bool> also = null)
 		{
-			var a = new List<Acc>();
+			var a = new List<AAcc>();
 			Find(role, name, prop, flags, o =>
 			{
 				if(also == null || also(o)) a.Add(o);

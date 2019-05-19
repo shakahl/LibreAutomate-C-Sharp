@@ -32,14 +32,14 @@ namespace Au.Util
 		/// Loads cursor from file.
 		/// Returns null if fails.
 		/// </summary>
-		/// <param name="file">.cur or .ani file. If not full path, uses <see cref="Folders.ThisAppImages"/>.</param>
+		/// <param name="file">.cur or .ani file. If not full path, uses <see cref="AFolders.ThisAppImages"/>.</param>
 		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI (the "text size" system setting).</param>
 		/// <remarks>
 		/// This function exists because <see cref="Forms.Cursor"/> constructors don't support colors, ani cursors and custom size.
 		/// </remarks>
 		public static Forms.Cursor LoadCursorFromFile(string file, int size = 0)
 		{
-			file = APath.Normalize(file, Folders.ThisAppImages);
+			file = APath.Normalize(file, AFolders.ThisAppImages);
 			if(file == null) return null;
 			uint fl = Api.LR_LOADFROMFILE; if(size == 0) fl |= Api.LR_DEFAULTSIZE;
 			var hCur = Api.LoadImage(default, file, Api.IMAGE_CURSOR, size, size, fl);
@@ -76,7 +76,7 @@ namespace Au.Util
 		/// </remarks>
 		public static Forms.Cursor LoadCursorFromMemory(byte[] cursorData, int size = 0)
 		{
-			var s = Folders.Temp + Guid.NewGuid().ToString();
+			var s = AFolders.Temp + Guid.NewGuid().ToString();
 			File.WriteAllBytes(s, cursorData);
 			var c = LoadCursorFromFile(s, size);
 			AFile.Delete(s);

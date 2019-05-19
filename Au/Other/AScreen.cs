@@ -22,10 +22,10 @@ using static Au.AStatic;
 namespace Au
 {
 	/// <summary>
-	/// Used to specify a screen (aka display, monitor) using index, window, control, <see cref="Acc"/>, point, rectangle, <see cref="Screen"/>, <see cref="OfActiveWindow"/> or <see cref="OfMouse"/>.
+	/// Used to specify a screen (aka display, monitor) using index, window, control, <see cref="AAcc"/>, point, rectangle, <see cref="Screen"/>, <see cref="OfActiveWindow"/> or <see cref="OfMouse"/>.
 	/// </summary>
 	/// <remarks>
-	/// Used mostly for function parameters. The caller can specify screen index (int), window (Wnd etc), <see cref="Screen"/> object, etc. There are implicit conversion operators from these types. The <b>AScreen</b> variable holds the specified value. When the function needs screen properties, it calls <see cref="GetScreen"/> to get <see cref="Screen"/> object corresponding that value at that time.
+	/// Used mostly for function parameters. The caller can specify screen index (int), window (AWnd etc), <see cref="Screen"/> object, etc. There are implicit conversion operators from these types. The <b>AScreen</b> variable holds the specified value. When the function needs screen properties, it calls <see cref="GetScreen"/> to get <see cref="Screen"/> object corresponding that value at that time.
 	/// </remarks>
 	public struct AScreen
 	{
@@ -46,7 +46,7 @@ namespace Au
 		/// <summary>
 		/// Creates variable that holds window handle. Later will be called <see cref="ScreenFromWindow"/>. If invalid, will be used the primary screen.
 		/// </summary>
-		public static implicit operator AScreen(Wnd w) => new AScreen(w);
+		public static implicit operator AScreen(AWnd w) => new AScreen(w);
 
 		/// <summary>
 		/// Creates variable that holds <see cref="Control"/>. Later will be called <see cref="Screen.FromControl"/>.
@@ -69,9 +69,9 @@ namespace Au
 		public static implicit operator AScreen(RECT r) => new AScreen(r);
 
 		/// <summary>
-		/// Creates variable that holds <see cref="Acc"/>. Later will be called <see cref="Screen.FromRectangle"/>.
+		/// Creates variable that holds <see cref="AAcc"/>. Later will be called <see cref="Screen.FromRectangle"/>.
 		/// </summary>
-		public static implicit operator AScreen(Acc a) => new AScreen(a);
+		public static implicit operator AScreen(AAcc a) => new AScreen(a);
 
 		/// <summary>
 		/// Screen index of the primary screen. Value 0.
@@ -119,8 +119,8 @@ namespace Au
 				//	but in my recent tests with NetMeeting (noticed this long ago on an old OS version) and UltraVnc (wiki etc say) they didn't.
 				//	Therefore I cannot test and add filtering. No problems if they are the last in the list. Never mind.
 				//	Wiki about mirror drivers: https://en.wikipedia.org/wiki/Mirror_driver
-			} else if(screenIndex == OfMouse) return Screen.FromPoint(Mouse.XY);
-			else if(screenIndex == OfActiveWindow) return ScreenFromWindow(Wnd.Active);
+			} else if(screenIndex == OfMouse) return Screen.FromPoint(AMouse.XY);
+			else if(screenIndex == OfActiveWindow) return ScreenFromWindow(AWnd.Active);
 
 			if(screenIndex != 0) PrintWarning("Invalid screen index.");
 			return Screen.PrimaryScreen;
@@ -136,7 +136,7 @@ namespace Au
 		/// <remarks>
 		/// If the window handle is 0 or invalid, gets the primary screen. <see cref="Screen.FromHandle"/> would return an invalid object.
 		/// </remarks>
-		public static Screen ScreenFromWindow(Wnd w)
+		public static Screen ScreenFromWindow(AWnd w)
 		{
 			if(!w.Is0) {
 				Screen R = Screen.FromHandle((IntPtr)w);
@@ -159,11 +159,11 @@ namespace Au
 			case null: break;
 			case Screen scr: R = scr; break;
 			case int index: return ScreenFromIndex(index);
-			case Wnd w: return ScreenFromWindow(w);
+			case AWnd w: return ScreenFromWindow(w);
 			case Control c: R = Screen.FromControl(c); break;
 			case POINT p: return Screen.FromPoint(p);
 			case RECT r2: return Screen.FromRectangle(r2);
-			case Acc acc: return Screen.FromRectangle(acc.Rect);
+			case AAcc acc: return Screen.FromRectangle(acc.Rect);
 			///// <item><see cref="UIA.IElement"/> - gets screen of this UI Automation element (see <see cref="Screen.FromRectangle"/>).</item>
 			//case UIA.IElement e: return Screen.FromRectangle(e.BoundingRectangle);
 			default: return ScreenFromWindow(_Wpf());
@@ -173,7 +173,7 @@ namespace Au
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading WPF dlls when don't need
-		Wnd _Wpf() => (Wnd)(System.Windows.Window)_o;
+		AWnd _Wpf() => (AWnd)(System.Windows.Window)_o;
 
 		/// <summary>
 		/// Gets the value as object.
@@ -250,7 +250,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if rectangle of window w intersects with some screen.
 		/// </summary>
-		public static bool IsInAnyScreen(Wnd w)
+		public static bool IsInAnyScreen(AWnd w)
 		{
 			return Api.MonitorFromWindow(w, 0) != default;
 		}

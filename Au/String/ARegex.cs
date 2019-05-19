@@ -28,7 +28,7 @@ namespace Au
 	/// PCRE regular expression syntax: <see href="https://www.pcre.org/current/doc/html/pcre2pattern.html">full</see>, <see href="https://www.pcre.org/current/doc/html/pcre2syntax.html">short</see>.
 	/// Some websites with tutorials and info: <see href="http://www.rexegg.com/">rexegg</see>, <see href="https://www.regular-expressions.info/">regular-expressions.info</see>.
 	/// 
-	/// This class is an alternative to the .NET <see cref="Regex"/> class. The regular expression syntax is similar. PCRE has some features unavailable in .NET, and vice versa. In most cases PCRE is about 2 times faster. You can use any of these classes. Functions of <see cref="Acc"/> class support only PCRE.
+	/// This class is an alternative to the .NET <see cref="Regex"/> class. The regular expression syntax is similar. PCRE has some features unavailable in .NET, and vice versa. In most cases PCRE is about 2 times faster. You can use any of these classes. Functions of <see cref="AAcc"/> class support only PCRE.
 	/// 
 	/// Terms used in this documentation and in names of functions and types:
 	/// - <i>regular expression</i> - regular expression string. Also known as <i>pattern</i>.

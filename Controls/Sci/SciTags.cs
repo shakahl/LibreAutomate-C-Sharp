@@ -664,7 +664,7 @@ namespace Au.Controls
 		/// </summary>
 		internal void LibOnLinkClick(int pos, bool ctrl)
 		{
-			if(Keyb.UI.IsAlt) return;
+			if(AKeyboard.UI.IsAlt) return;
 
 			int iTag, iText, k;
 			//to find beginning of link text (after <tag>), search for STYLE_HIDDEN before
@@ -712,16 +712,16 @@ namespace Au.Controls
 
 			switch(tag) {
 			case "link":
-				Exec.TryRun(s1, s2);
+				AExec.TryRun(s1, s2);
 				break;
 			case "google":
-				Exec.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
+				AExec.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
 			case "help":
 				AHelp.AuHelp(attr);
 				break;
 			case "explore":
-				Exec.SelectInExplorer(attr);
+				AExec.SelectInExplorer(attr);
 				break;
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
@@ -781,7 +781,7 @@ namespace Au.Controls
 
 		internal void LibOnLButtonDownWhenNotFocused(ref Message m, ref bool setFocus)
 		{
-			if(setFocus && _c.InitReadOnlyAlways && !Keyb.UI.IsAlt) {
+			if(setFocus && _c.InitReadOnlyAlways && !AKeyboard.UI.IsAlt) {
 				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
 				//Print(pos);
 				if(pos >= 0 && _t.StyleHotspot(_t.GetStyleAt(pos))) setFocus = false;

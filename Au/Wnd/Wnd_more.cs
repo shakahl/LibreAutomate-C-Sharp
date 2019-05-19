@@ -16,11 +16,9 @@ using System.Runtime.ExceptionServices;
 using Au.Types;
 using static Au.AStatic;
 
-#pragma warning disable 282 //intellisense bug: it thinks that Wnd has multiple fields.
-
 namespace Au
 {
-	public partial struct Wnd
+	public partial struct AWnd
 	{
 		/// <summary>
 		/// Miscellaneous window-related functions and classes. Rarely used, or useful only for programmers.
@@ -57,7 +55,7 @@ namespace Au
 			/// <summary>
 			/// Gets window border width.
 			/// </summary>
-			public static int BorderWidth(Wnd w)
+			public static int BorderWidth(AWnd w)
 			{
 				w.LibGetWindowInfo(out var x);
 				return x.cxWindowBorders;
@@ -76,7 +74,7 @@ namespace Au
 
 			//public void ShowAnimate(bool show)
 			//{
-			//	//Don't add Wnd function, because:
+			//	//Don't add AWnd function, because:
 			//		//Rarely used.
 			//		//Api.AnimateWindow() works only with windows of current thread.
 			//		//Only programmers would need it, and they can call the API directly.
@@ -88,7 +86,7 @@ namespace Au
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// Usually don't need to specify hInstance.
 			/// </summary>
-			public static Wnd CreateWindow(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
+			public static AWnd CreateWindow(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
 			{
 				return Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
 			}
@@ -98,7 +96,7 @@ namespace Au
 			/// If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </summary>
-			public static Wnd CreateWindowAndSetFont(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
+			public static AWnd CreateWindowAndSetFont(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
 			{
 				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
 				if(!w.Is0) SetFontHandle(w, (customFontHandle == default) ? Util.LibNativeFont.RegularCached : customFontHandle);
@@ -111,7 +109,7 @@ namespace Au
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </summary>
 			/// <param name="className">Window class name. Can be any existing class.</param>
-			public static Wnd CreateMessageOnlyWindow(string className)
+			public static AWnd CreateMessageOnlyWindow(string className)
 			{
 				return CreateWindow(className, null, WS.POPUP, WS_EX.NOACTIVATE, parent: Native.HWND.MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
@@ -120,10 +118,10 @@ namespace Au
 			/// <summary>
 			/// Destroys a native window of this thread.
 			/// Calls API <msdn>DestroyWindow</msdn>.
-			/// Returns false if failed. Supports <see cref="WinError"/>.
+			/// Returns false if failed. Supports <see cref="ALastError"/>.
 			/// </summary>
 			/// <seealso cref="Close"/>
-			public static bool DestroyWindow(Wnd w)
+			public static bool DestroyWindow(AWnd w)
 			{
 				return Api.DestroyWindow(w);
 			}
@@ -131,7 +129,7 @@ namespace Au
 			/// <summary>
 			/// Returns true if the window is a <msdn>message-only window</msdn>.
 			/// </summary>
-			public static bool IsMessageOnlyWindow(Wnd w)
+			public static bool IsMessageOnlyWindow(AWnd w)
 			{
 				var v = w.LibParentGWL;
 				if(v != default) {
@@ -140,7 +138,7 @@ namespace Au
 				}
 				return false;
 			}
-			static Wnd s_messageOnlyParent;
+			static AWnd s_messageOnlyParent;
 
 			/// <summary>
 			/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
@@ -152,7 +150,7 @@ namespace Au
 			/// <remarks>
 			/// Windows Store app window class name can be "Windows.UI.Core.CoreWindow" or "ApplicationFrameWindow".
 			/// </remarks>
-			public static string GetWindowsStoreAppId(Wnd w, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
+			public static string GetWindowsStoreAppId(AWnd w, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
 			{
 				if(0 != _GetWindowsStoreAppId(w, out var R, prependShellAppsFolder, getExePathIfNotWinStoreApp)) return R;
 				return null;
@@ -164,7 +162,7 @@ namespace Au
 			/// Does not copy the font; don't dispose it while the window is alive.
 			/// Use this function only with windows of current process.
 			/// </summary>
-			public static void SetFontHandle(Wnd w, IntPtr fontHandle)
+			public static void SetFontHandle(AWnd w, IntPtr fontHandle)
 			{
 				w.Send(Api.WM_SETFONT, fontHandle, 1);
 			}
@@ -175,7 +173,7 @@ namespace Au
 			/// Does not copy the font; don't need to dispose.
 			/// Use this function only with windows of current process.
 			/// </summary>
-			public static IntPtr GetFontHandle(Wnd w)
+			public static IntPtr GetFontHandle(AWnd w)
 			{
 				return w.Send(Api.WM_GETFONT);
 			}
@@ -187,7 +185,7 @@ namespace Au
 			/// Use this function only with windows of current process.
 			/// </summary>
 			/// <seealso cref="AIcon"/>
-			public static void SetIconHandle(Wnd w, IntPtr iconHandle, bool size32 = false)
+			public static void SetIconHandle(AWnd w, IntPtr iconHandle, bool size32 = false)
 			{
 				w.Send(Api.WM_SETICON, size32, iconHandle);
 			}
@@ -203,7 +201,7 @@ namespace Au
 			/// This function can be used with windows of any process.
 			/// </remarks>
 			/// <seealso cref="AIcon"/>
-			public static IntPtr GetIconHandle(Wnd w, bool size32 = false)
+			public static IntPtr GetIconHandle(AWnd w, bool size32 = false)
 			{
 				int size = Api.GetSystemMetrics(size32 ? Api.SM_CXICON : Api.SM_CXSMICON);
 
@@ -229,29 +227,29 @@ namespace Au
 			/// Calls API <msdn>GetClassLongPtr</msdn>.
 			/// </summary>
 			/// <remarks>
-			/// Supports <see cref="WinError"/>.
+			/// Supports <see cref="ALastError"/>.
 			/// For index can be used constants from <see cref="Native.GCL"/>. All values are the same in 32-bit and 64-bit process.
 			/// In 32-bit process actually calls <b>GetClassLong</b>, because <b>GetClassLongPtr</b> is unavailable.
 			/// </remarks>
-			public static LPARAM GetClassLong(Wnd w, int index) => Api.GetClassLongPtr(w, index);
+			public static LPARAM GetClassLong(AWnd w, int index) => Api.GetClassLongPtr(w, index);
 
 			//probably not useful. Dangerous.
 			///// <summary>
 			///// Calls API <msdn>SetClassLongPtr</msdn> (SetClassLong in 32-bit process).
 			///// </summary>
 			///// <exception cref="WndException"/>
-			//public static LPARAM SetClassLong(Wnd w, int index, LPARAM newValue)
+			//public static LPARAM SetClassLong(AWnd w, int index, LPARAM newValue)
 			//{
-			//	WinError.Clear();
+			//	ALastError.Clear();
 			//	LPARAM R = Api.SetClassLongPtr(w, index, newValue);
-			//	if(R == 0 && WinError.Code != 0) w.ThrowUseNative();
+			//	if(R == 0 && ALastError.Code != 0) w.ThrowUseNative();
 			//	return R;
 			//}
 
 			//Rejected. Does not work with many windows. Unreliable. Rarely used.
 			///// <summary>
 			///// Gets atom of a window class.
-			///// To get class atom when you have a window w, use <c>Wnd.Misc.GetClassLong(w, Native.GCL.ATOM)</c>.
+			///// To get class atom when you have a window w, use <c>AWnd.More.GetClassLong(w, Native.GCL.ATOM)</c>.
 			///// </summary>
 			///// <param name="className">Class name.</param>
 			///// <param name="moduleHandle">Native module handle of the exe or dll that registered the class. Don't use if it is a global class (CS_GLOBALCLASS style).</param>
@@ -292,7 +290,7 @@ namespace Au
 			{
 				if(ignore != null) foreach(uint t in ignore) { if(t == m.Msg) return; }
 
-				Wnd w = (Wnd)m.HWnd;
+				AWnd w = (AWnd)m.HWnd;
 				uint counter = (uint)w.Prop["PrintMsg"]; w.Prop.Set("PrintMsg", ++counter);
 				Print(counter.ToString(), m.ToString());
 			}
@@ -305,7 +303,7 @@ namespace Au
 			/// <param name="wParam"></param>
 			/// <param name="lParam"></param>
 			/// <param name="ignore">Messages to not show.</param>
-			public static void PrintMsg(Wnd w, int msg, LPARAM wParam, LPARAM lParam, params int[] ignore)
+			public static void PrintMsg(AWnd w, int msg, LPARAM wParam, LPARAM lParam, params int[] ignore)
 			{
 				if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
 				var m = System.Windows.Forms.Message.Create(w.Handle, (int)msg, wParam, lParam);
@@ -324,19 +322,19 @@ namespace Au
 
 			/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#410")]
-			public static extern bool SetWindowSubclass(Wnd hWnd, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData);
+			public static extern bool SetWindowSubclass(AWnd hWnd, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData);
 
 			/// <summary>API <msdn>GetWindowSubclass</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
-			public static extern bool GetWindowSubclass(Wnd hWnd, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
+			public static extern bool GetWindowSubclass(AWnd hWnd, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
 
 			/// <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#412")]
-			public static extern bool RemoveWindowSubclass(Wnd hWnd, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
+			public static extern bool RemoveWindowSubclass(AWnd hWnd, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
 
 			/// <summary>API <msdn>DefSubclassProc</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#413")]
-			public static extern LPARAM DefSubclassProc(Wnd hWnd, uint uMsg, LPARAM wParam, LPARAM lParam);
+			public static extern LPARAM DefSubclassProc(AWnd hWnd, uint uMsg, LPARAM wParam, LPARAM lParam);
 		}
 	}
 }

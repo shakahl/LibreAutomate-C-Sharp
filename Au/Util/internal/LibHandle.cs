@@ -54,34 +54,34 @@ namespace Au.Types
 		/// <summary>
 		/// Opens process handle.
 		/// Calls API OpenProcess.
-		/// Returns default if fails. Supports <see cref="WinError"/>.
+		/// Returns default if fails. Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="processId">Process id.</param>
 		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
 		public static LibHandle OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
 		{
-			if(processId == 0) { WinError.Code = Api.ERROR_INVALID_PARAMETER; return default; }
+			if(processId == 0) { ALastError.Code = Api.ERROR_INVALID_PARAMETER; return default; }
 			return _OpenProcess(processId, desiredAccess);
 		}
 
 		/// <summary>
 		/// Opens window's process handle.
 		/// This overload is more powerful: if API OpenProcess fails, it tries API GetProcessHandleFromHwnd, which can open higher integrity level processes, but only if current process is uiAccess and desiredAccess includes only PROCESS_DUP_HANDLE, PROCESS_VM_OPERATION, PROCESS_VM_READ, PROCESS_VM_WRITE, SYNCHRONIZE.
-		/// Returns default if fails. Supports <see cref="WinError"/>.
+		/// Returns default if fails. Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="w"></param>
 		/// <param name="desiredAccess">Desired access (Api.PROCESS_), as documented in MSDN -> OpenProcess.</param>
-		public static LibHandle OpenProcess(Wnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
+		public static LibHandle OpenProcess(AWnd w, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION)
 		{
 			int pid = w.ProcessId; if(pid == 0) return default;
 			return _OpenProcess(pid, desiredAccess, w);
 		}
 
-		static LibHandle _OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, Wnd processWindow = default)
+		static LibHandle _OpenProcess(int processId, uint desiredAccess = Api.PROCESS_QUERY_LIMITED_INFORMATION, AWnd processWindow = default)
 		{
 			LibHandle R = Api.OpenProcess(desiredAccess, false, processId);
 			if(R.Is0 && !processWindow.Is0 && 0 == (desiredAccess & ~(Api.PROCESS_DUP_HANDLE | Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE | Api.SYNCHRONIZE))) {
-				int e = WinError.Code;
+				int e = ALastError.Code;
 				if(AUac.OfThisProcess.IsUIAccess) R = Api.GetProcessHandleFromHwnd(processWindow);
 				if(R.Is0) Api.SetLastError(e);
 			}

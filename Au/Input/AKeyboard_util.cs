@@ -19,7 +19,7 @@ using static Au.AStatic;
 
 namespace Au
 {
-	public partial class Keyb
+	public partial class AKeyboard
 	{
 		/// <summary>
 		/// Converts part of string to <see cref="KKey"/>.
@@ -254,7 +254,7 @@ namespace Au
 			{
 				if(ms > 0) ATime.SleepDoEvents(ms);
 
-				//see comments in Mouse._Sleep.
+				//see comments in AMouse._Sleep.
 			}
 
 			/// <summary>
@@ -426,7 +426,7 @@ namespace Au
 				/// Presses Ctrl+key. Does not release.
 				/// If enter is true, Release will press Enter.
 				/// </summary>
-				public void Press(KKey key, OptKey opt, Wnd wFocus, bool enter = false)
+				public void Press(KKey key, OptKey opt, AWnd wFocus, bool enter = false)
 				{
 					_scan = VkToSc(_vk = key, Api.GetKeyboardLayout(wFocus.ThreadId));
 					_enter = enter;
@@ -472,10 +472,10 @@ namespace Au
 				}
 			}
 
-			internal static Wnd GetWndFocusedOrActive()
+			internal static AWnd GetWndFocusedOrActive()
 			{
 				for(int i = 0; i < 20; i++) {
-					Wnd.More.GetGUIThreadInfo(out var g);
+					AWnd.More.GetGUIThreadInfo(out var g);
 					//Print(i, g.hwndFocus, g.hwndActive);
 					if(!g.hwndFocus.Is0) return g.hwndFocus;
 					if(!g.hwndActive.Is0) return g.hwndActive;
@@ -497,8 +497,8 @@ namespace Au
 		/// Returns OptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
 		/// </summary>
 		/// <param name="wFocus">receives the focused or active window. Also the function uses it to avoid frequent calling of Hook.</param>
-		/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(Wnd) if Hook is null.</param>
-		OptKey _GetOptionsAndWndFocused(out Wnd wFocus, bool getWndAlways)
+		/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(AWnd) if Hook is null.</param>
+		OptKey _GetOptionsAndWndFocused(out AWnd wFocus, bool getWndAlways)
 		{
 			if(Options.Hook == null && !getWndAlways) {
 				wFocus = default;
@@ -511,7 +511,7 @@ namespace Au
 		/// Returns OptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
 		/// </summary>
 		/// <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of Hook. If you don't have it, use _GetOptionsAndWndFocused instead.</param>
-		OptKey _GetOptions(Wnd wFocus)
+		OptKey _GetOptions(AWnd wFocus)
 		{
 			var call = Options.Hook;
 			if(call == null || wFocus.Is0) return Options;

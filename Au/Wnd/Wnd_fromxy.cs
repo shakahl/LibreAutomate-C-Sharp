@@ -18,20 +18,20 @@ using static Au.AStatic;
 
 namespace Au
 {
-	public partial struct Wnd
+	public partial struct AWnd
 	{
 		#region top-level or child
 
 		//FUTURE: test when this process is not DPI-aware:
 		//	Coordinate-related API on Win7 high DPI.
-		//	Acc location on Win10 with different DPI of monitors.
+		//	AO location on Win10 with different DPI of monitors.
 
 		/// <summary>
 		/// Gets visible top-level window or control from point.
 		/// </summary>
 		/// <param name="p">
 		/// Coordinates relative to the primary screen.
-		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>var a = Wnd.FromXY((x, y, true));</c>. Also when need <see cref="Coord.Reverse"/> etc.
+		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>var a = AWnd.FromXY((x, y, true));</c>. Also when need <see cref="Coord.Reverse"/> etc.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <remarks>
@@ -39,12 +39,12 @@ namespace Au
 		/// This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <msdn>RealChildWindowFromPoint</msdn>. Also does not skip disabled controls. All this is not true with flag Raw.
 		/// This function is not very fast, probably 0.3 - 1 ms.
 		/// </remarks>
-		public static Wnd FromXY(POINT p, WXYFlags flags = 0)
+		public static AWnd FromXY(POINT p, WXYFlags flags = 0)
 		{
 			bool needW = 0 != (flags & WXYFlags.NeedWindow);
 			bool needC = 0 != (flags & WXYFlags.NeedControl);
 			if(needW && needC) throw new ArgumentException("", "flags");
-			Wnd w;
+			AWnd w;
 
 			if(needW) {
 				w = Api.RealChildWindowFromPoint(Api.GetDesktopWindow(), p); //much faster than WindowFromPoint
@@ -75,7 +75,7 @@ namespace Au
 				return w;
 			}
 
-			Wnd t = w.Get.DirectParent; //need parent because need to call realchildwindowfrompoint on it, else for group box would go through the slow way of detecting transparen control
+			AWnd t = w.Get.DirectParent; //need parent because need to call realchildwindowfrompoint on it, else for group box would go through the slow way of detecting transparen control
 			if(!t.Is0) w = t;
 
 			t = w._ChildFromXY(p, false, true);
@@ -89,9 +89,9 @@ namespace Au
 		/// Gets visible top-level window or control from mouse cursor position.
 		/// More info: <see cref="FromXY"/>.
 		/// </summary>
-		public static Wnd FromMouse(WXYFlags flags = 0)
+		public static AWnd FromMouse(WXYFlags flags = 0)
 		{
-			return FromXY(Mouse.XY, flags);
+			return FromXY(AMouse.XY, flags);
 		}
 
 		#endregion
@@ -100,14 +100,14 @@ namespace Au
 
 		/// <summary>
 		/// Gets child control from point.
-		/// Returns default(Wnd) if the point is not in a child control or not in the client area of this window.
+		/// Returns default(AWnd) if the point is not in a child control or not in the client area of this window.
 		/// </summary>
 		/// <param name="x">X coordinate in the client area of this window. Can be <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y coordinate in the client area of this window. Can be <b>Coord.Reverse</b> etc.</param>
 		/// <param name="screenXY">The coordinates are relative to the pimary screen, not to the client area.</param>
 		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
-		public Wnd ChildFromXY(Coord x, Coord y, bool screenXY = false, bool directChild = false)
+		public AWnd ChildFromXY(Coord x, Coord y, bool screenXY = false, bool directChild = false)
 		{
 			ThrowIfInvalid();
 			POINT p = screenXY ? Coord.Normalize(x, y) : Coord.NormalizeInWindow(x, y, this);
@@ -118,16 +118,16 @@ namespace Au
 		/// <param name="screenXY"></param>
 		/// <param name="directChild"></param>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
-		public Wnd ChildFromXY(POINT p, bool screenXY = false, bool directChild = false)
+		public AWnd ChildFromXY(POINT p, bool screenXY = false, bool directChild = false)
 		{
 			ThrowIfInvalid();
 			return _ChildFromXY(p, directChild, screenXY);
 		}
 
-		//Returns child or default(Wnd).
-		Wnd _ChildFromXY(POINT p, bool directChild, bool screenXY)
+		//Returns child or default(AWnd).
+		AWnd _ChildFromXY(POINT p, bool directChild, bool screenXY)
 		{
-			Wnd R = _TopChildWindowFromPointSimple(this, p, directChild, screenXY);
+			AWnd R = _TopChildWindowFromPointSimple(this, p, directChild, screenXY);
 			if(R.Is0) return R;
 
 			//Test whether it is a transparent control, like tab, covering other controls.
@@ -138,7 +138,7 @@ namespace Au
 			if(!screenXY) Api.ClientToScreen(this, ref p);
 			g1:
 			RECT r = R.Rect;
-			for(Wnd t = R; ;) {
+			for(AWnd t = R; ;) {
 				t = Api.GetWindow(t, Api.GW_HWNDNEXT); if(t.Is0) break;
 				RECT rr = t.Rect;
 				if(!rr.Contains(p)) continue;
@@ -151,7 +151,7 @@ namespace Au
 					if((int)ht != Api.HTTRANSPARENT) break;
 				} else {
 					//break;
-					if(WinError.Code != Api.ERROR_ACCESS_DENIED) break; //higher UAC level?
+					if(ALastError.Code != Api.ERROR_ACCESS_DENIED) break; //higher UAC level?
 					if(rr.left <= r.left || rr.top <= r.top || rr.right >= r.right || rr.bottom >= r.bottom) break; //R must fully cover t, like a tab or group control
 				}
 
@@ -168,24 +168,24 @@ namespace Au
 			return R;
 		}
 
-		//Returns child or default(Wnd).
-		static Wnd _TopChildWindowFromPointSimple(Wnd w, POINT p, bool directChild, bool screenXY)
+		//Returns child or default(AWnd).
+		static AWnd _TopChildWindowFromPointSimple(AWnd w, POINT p, bool directChild, bool screenXY)
 		{
 			if(screenXY && !Api.ScreenToClient(w, ref p)) return default;
 
-			for(Wnd R = default; ;) {
-				Wnd t = _RealChildWindowFromPoint_RtlAware(w, p);
+			for(AWnd R = default; ;) {
+				AWnd t = _RealChildWindowFromPoint_RtlAware(w, p);
 				if(directChild) return t;
 				if(t.Is0 || !w.MapClientToClientOf(t, ref p)) return R;
 				R = w = t;
 			}
 		}
 
-		//Returns direct child or default(Wnd).
-		static Wnd _RealChildWindowFromPoint_RtlAware(Wnd w, POINT p)
+		//Returns direct child or default(AWnd).
+		static AWnd _RealChildWindowFromPoint_RtlAware(AWnd w, POINT p)
 		{
 			if(w.HasExStyle(WS_EX.LAYOUTRTL) && Api.GetClientRect(w, out var rc)) { p.x = rc.right - p.x; }
-			Wnd R = Api.RealChildWindowFromPoint(w, p);
+			AWnd R = Api.RealChildWindowFromPoint(w, p);
 			return R == w ? default : R;
 		}
 
@@ -193,7 +193,7 @@ namespace Au
 
 		/// <summary>
 		/// Get sibling control in space: left, right, above or below.
-		/// Returns default(Wnd) if there is no sibling.
+		/// Returns default(AWnd) if there is no sibling.
 		/// </summary>
 		/// <param name="direction"></param>
 		/// <param name="distance">Distance from this control (from its edge) in the specified direction. Default 10.</param>
@@ -207,10 +207,10 @@ namespace Au
 		/// <remarks>
 		/// This function is used mostly with controls, but supports top-level windows too.
 		/// </remarks>
-		Wnd _SiblingXY(_SibXY direction, int distance = 10, int edgeOffset = 5, bool topChild = false)
+		AWnd _SiblingXY(_SibXY direction, int distance = 10, int edgeOffset = 5, bool topChild = false)
 		{
-			Wnd w = Get.DirectParent;
-			if(!(w.Is0 ? GetRect(out RECT r) : GetRectInClientOf(w, out r))) ThrowUseNative(); //note: most other Wnd 'get' functions don't throw, but here it's better to throw.
+			AWnd w = Get.DirectParent;
+			if(!(w.Is0 ? GetRect(out RECT r) : GetRectInClientOf(w, out r))) ThrowUseNative(); //note: most other AWnd 'get' functions don't throw, but here it's better to throw.
 			POINT p = default;
 			switch(direction) {
 			case _SibXY.Left: p = (r.left - distance, r.top + edgeOffset); break;
@@ -218,8 +218,8 @@ namespace Au
 			case _SibXY.Above: p = (r.left + edgeOffset, r.top - distance); break;
 			case _SibXY.Below: p = (r.left + edgeOffset, r.bottom + distance); break;
 			}
-			//Print(p); if(w.Is0) Mouse.Move(p); else Mouse.Move(w, p.x, p.y);
-			Wnd R = w.Is0
+			//Print(p); if(w.Is0) AMouse.Move(p); else AMouse.Move(w, p.x, p.y);
+			AWnd R = w.Is0
 				? FromXY(p, topChild ? 0 : WXYFlags.NeedWindow)
 				: w._ChildFromXY(p, !topChild, false);
 			return R == this ? default : R; //cannot return self, but can return child if topChild, it's ok
@@ -232,7 +232,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="Wnd.FromXY"/> and <see cref="Wnd.FromMouse"/>.
+	/// Flags for <see cref="AWnd.FromXY"/> and <see cref="AWnd.FromMouse"/>.
 	/// </summary>
 	[Flags]
 	public enum WXYFlags
@@ -245,7 +245,7 @@ namespace Au.Types
 		NeedWindow = 1,
 
 		/// <summary>
-		/// Need a control (child window). Returns default(Wnd) if there is no control at that point.
+		/// Need a control (child window). Returns default(AWnd) if there is no control at that point.
 		/// Don't use together with NeedWindow.
 		/// If none of flags NeedWindow and NeedControl are specified, the function gets exactly what is at that point (control or top-level window).
 		/// </summary>

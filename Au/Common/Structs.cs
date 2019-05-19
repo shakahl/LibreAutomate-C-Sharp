@@ -29,7 +29,7 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	///	There is no struct WPARAM. Use LPARAM instead, because it is the same in all cases except when casting to long or ulong (ambigous signed/unsigned).
-	///	There is no cast operators for enum. When need, cast through int or uint. For Wnd cast through IntPtr.
+	///	There is no cast operators for enum. When need, cast through int or uint. For AWnd cast through IntPtr.
 	/// </remarks>
 	[DebuggerStepThrough]
 	//[Serializable]
@@ -339,11 +339,11 @@ namespace Au.Types
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
 		/// <remarks>
-		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="Wnd.MoveInScreen"/>.
+		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="AWnd.MoveInScreen"/>.
 		/// </remarks>
 		public void MoveInScreen(Coord x, Coord y, AScreen screen = default, bool workArea = true, bool ensureInScreen = true)
 		{
-			Wnd.Lib.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
+			AWnd.Lib.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
 		}
 
 		/// <summary>
@@ -355,7 +355,7 @@ namespace Au.Types
 		/// <param name="ensureInRect">If part of rectangle is not in <i>r</i>, move and/or resize it so that entire rectangle would be in <i>r</i>. Default true.</param>
 		public void MoveInRect(RECT r, Coord x = default, Coord y = default, bool ensureInRect = true)
 		{
-			Wnd.Lib.MoveInScreen(false, x, y, false, default, ref this, default, false, ensureInRect, r);
+			AWnd.Lib.MoveInScreen(false, x, y, false, default, ref this, default, false, ensureInRect, r);
 		}
 
 		/// <summary>
@@ -365,11 +365,11 @@ namespace Au.Types
 		/// <param name="screen">Use this screen (see <see cref="AScreen"/>). If null (default), uses screen of the rectangle (or nearest).</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <remarks>
-		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="Wnd.EnsureInScreen"/>.
+		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="AWnd.EnsureInScreen"/>.
 		/// </remarks>
 		public void EnsureInScreen(AScreen screen = default, bool workArea = true)
 		{
-			Wnd.Lib.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
+			AWnd.Lib.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
 		}
 
 		public override string ToString()

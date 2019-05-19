@@ -274,14 +274,14 @@ namespace Au
 					g1:
 					_hFile = _LogFile.Open();
 					if(_hFile == null) {
-						var e = WinError.Code;
+						var e = ALastError.Code;
 						if(e == Api.ERROR_SHARING_VIOLATION) {
 							var u = APath.MakeUnique(_logFile, false);
 							if(u != _logFile) { _logFile = u; goto g1; }
 						}
 						var logf = _logFile;
 						_logFile = null;
-						PrintWarning($"Failed to create or open log file '{logf}'. {WinError.MessageFor(e)}");
+						PrintWarning($"Failed to create or open log file '{logf}'. {ALastError.MessageFor(e)}");
 						WriteDirectly(s);
 						return;
 					}
@@ -354,7 +354,7 @@ namespace Au
 					ok = Api.WriteFile(_h, b, n, out _);
 				}
 				if(!ok) {
-					string emsg = WinError.Message;
+					string emsg = ALastError.Message;
 					LogFile = null;
 					PrintWarning($"Failed to write to log file '{_name}'. {emsg}");
 					WriteDirectly(s);
@@ -423,7 +423,7 @@ namespace Au
 				}
 				_hwndQM2.SendS(Api.WM_SETTEXT, -1, s);
 			}
-			static Wnd _hwndQM2;
+			static AWnd _hwndQM2;
 		}
 	}
 }

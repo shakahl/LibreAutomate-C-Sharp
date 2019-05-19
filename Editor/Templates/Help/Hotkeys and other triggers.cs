@@ -31,7 +31,7 @@ var tt = Triggers.Autotext;
 hk["Ctrl+K"] = o => Print(o.Trigger); //it means: execute code "o => Print(o.Trigger)" when I press Ctrl+K
 hk["Ctrl+Shift+F11"] = o => {
 	Print(o.Trigger);
-	var w1 = Wnd.FindOrRun("* Notepad", run: () => Exec.Run(Folders.System + "notepad.exe"));
+	var w1 = AWnd.FindOrRun("* Notepad", run: () => AExec.Run(AFolders.System + "notepad.exe"));
 	Text("text");
 	w1.Close();
 };
@@ -52,9 +52,9 @@ Triggers.Of.AllWindows(); //let the following triggers work with all windows
 
 mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => Print(o.Trigger);
 mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
-mouse[TMMove.LeftRightInCenter50] = o => Wnd.SwitchActiveWindow();
+mouse[TMMove.LeftRightInCenter50] = o => AWnd.SwitchActiveWindow();
 
-Triggers.FuncOf.NextTrigger = o => Keyb.IsScrollLock; //example of a custom scope (aka context, condition)
+Triggers.FuncOf.NextTrigger = o => AKeyboard.IsScrollLock; //example of a custom scope (aka context, condition)
 mouse[TMWheel.Forward] = o => Print($"{o.Trigger} while ScrollLock is on");
 
 Triggers.Of.Again(notepad); //let the following triggers work only when a Notepad window is active

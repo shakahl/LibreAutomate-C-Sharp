@@ -367,20 +367,20 @@ namespace Au.Controls
 				bool canDock = false;
 				DockTarget target = null;
 
-				Wnd w = (Wnd)this;
+				AWnd w = (AWnd)this;
 				RECT r = w.Rect;
 				Point offs = new Point(p.X - r.left, p.Y - r.top);
 				bool ok = Au.Util.ADragDrop.SimpleDragDrop(w, MButtons.Left, d =>
 				  {
 					  if(d.Msg.message != Api.WM_MOUSEMOVE) return;
 
-					  p = Mouse.XY;
+					  p = AMouse.XY;
 					  w.MoveLL(p.X - offs.X, p.Y - offs.Y);
 
 					  if(!canDock && ModifierKeys.HasFlag(Keys.Alt)) {
 						  canDock = true;
 						  //this.AllowTransparency = true; this.Opacity = 0.5; //exception
-						  ((Wnd)this).SetTransparency(true, 0.5);
+						  ((AWnd)this).SetTransparency(true, 0.5);
 						  _dockIndic = new _DockIndicator(_manager, this);
 						  _dockIndic.Show(this);
 					  }
@@ -388,7 +388,7 @@ namespace Au.Controls
 				  });
 
 				if(canDock) {
-					((Wnd)this).SetTransparency(false);
+					((AWnd)this).SetTransparency(false);
 					_dockIndic.Close();
 					if(ok) {
 						target = _dockIndic.OnFloatDropped();

@@ -39,14 +39,14 @@ namespace Au.Util
 	/// <summary>
 	/// Helps to get and release window DC with the 'using(...){...}' pattern.
 	/// Uses API GetDC and ReleaseDC.
-	/// If w is default(Wnd), gets screen DC.
+	/// If w is default(AWnd), gets screen DC.
 	/// </summary>
 	internal struct LibWindowDC : IDisposable, IDeviceContext
 	{
 		IntPtr _dc;
-		Wnd _w;
+		AWnd _w;
 
-		public LibWindowDC(Wnd w) => _dc = Api.GetDC(_w = w);
+		public LibWindowDC(AWnd w) => _dc = Api.GetDC(_w = w);
 		public static implicit operator IntPtr(LibWindowDC dc) => dc._dc;
 		public bool Is0 => _dc == default;
 

@@ -26,14 +26,14 @@ namespace Au.Types
 			if(default != Api.GetModuleHandle("AuCpp.dll")) return; //probably loaded in other appdomain
 
 			string s = AVersion.Is64BitProcess ? @"Dll\64bit\AuCpp.dll" : @"Dll\32bit\AuCpp.dll";
-			if(default != Api.LoadLibrary(Folders.ThisAppBS + s)) return; //normal
+			if(default != Api.LoadLibrary(AFolders.ThisAppBS + s)) return; //normal
 			var p = Environment.GetEnvironmentVariable("Au.Path"); if(p != null && default != Api.LoadLibrary(APath.Combine(p, s))) return; //%Au.Path%
-			if(default != Api.LoadLibrary(Folders.ThisAppTemp + s)) return; //extracted from resources
+			if(default != Api.LoadLibrary(AFolders.ThisAppTemp + s)) return; //extracted from resources
 			if(default != Api.LoadLibrary("AuCpp.dll")) return; //exe directory, system 32 or 64 bit directory, %PATH%, current directory
 
 			throw new AException(0, "*load AuCpp.dll");
 
-			//note: the dll is unavailable if running in a nonstandard environment, eg VS C# Interactive (then Folders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\ManagedLanguages\VBCSharp\InteractiveComponents").
+			//note: the dll is unavailable if running in a nonstandard environment, eg VS C# Interactive (then AFolders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\ManagedLanguages\VBCSharp\InteractiveComponents").
 			//	Workaround: set %Au.Path% = the main Au directory and restart Windows.
 		}
 
@@ -48,11 +48,11 @@ namespace Au.Types
 		{
 			public IntPtr acc;
 			public int elem;
-			public Acc._Misc misc;
+			public AAcc._Misc misc;
 
 			public Cpp_Acc(IntPtr iacc, int elem_) { acc = iacc; elem = elem_; misc = default; }
-			public Cpp_Acc(Acc a) { acc = a._iacc; elem = a._elem; misc = a._misc; }
-			public static implicit operator Cpp_Acc(Acc a) => new Cpp_Acc(a);
+			public Cpp_Acc(AAcc a) { acc = a._iacc; elem = a._elem; misc = a._misc; }
+			public static implicit operator Cpp_Acc(AAcc a) => new Cpp_Acc(a);
 		}
 
 		internal delegate int AccCallbackT(Cpp_Acc a);
@@ -63,7 +63,7 @@ namespace Au.Types
 			int _roleLength, _nameLength, _propLength;
 			public AFFlags flags;
 			public int skip;
-			char resultProp; //Acc.Finder.RProp
+			char resultProp; //AAcc.Finder.RProp
 
 			public Cpp_AccParams(string role, string name, string prop, AFFlags flags, int skip, char resultProp) : this()
 			{
@@ -77,7 +77,7 @@ namespace Au.Types
 		}
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern EError Cpp_AccFind(Wnd w, Cpp_Acc* aParent, in Cpp_AccParams ap, AccCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
+		internal static extern EError Cpp_AccFind(AWnd w, Cpp_Acc* aParent, in Cpp_AccParams ap, AccCallbackT also, out Cpp_Acc aResult, [MarshalAs(UnmanagedType.BStr)] out string sResult);
 
 		internal enum EError
 		{
@@ -96,7 +96,7 @@ namespace Au.Types
 		/// flags: 1 not inproc, 2 get only name.
 		/// </summary>
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccFromWindow(int flags, Wnd w, AccOBJID objId, out Cpp_Acc aResult, out BSTR sResult);
+		internal static extern int Cpp_AccFromWindow(int flags, AWnd w, AccOBJID objId, out Cpp_Acc aResult, out BSTR sResult);
 
 		//flags: 1 get UIA, 2 prefer LINK.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
@@ -104,12 +104,12 @@ namespace Au.Types
 
 		//flags: 1 get UIA.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_AccGetFocused(Wnd w, int flags, out Cpp_Acc aResult);
+		internal static extern int Cpp_AccGetFocused(AWnd w, int flags, out Cpp_Acc aResult);
 
-		//These are called from Acc class functions like Cpp.Cpp_Func(this, ...); GC.KeepAlive(this);.
-		//We can use 'this' because Cpp_Acc has an implicit conversion from Acc operator.
-		//Need GC.KeepAlive(this) everywhere. Else GC can collect the Acc (and release _iacc) while in the Cpp func.
-		//Alternatively could make the Cpp parameter 'const Cpp_Acc&', and pass Acc directly. But I don't like it.
+		//These are called from AAcc class functions like Cpp.Cpp_Func(this, ...); GC.KeepAlive(this);.
+		//We can use 'this' because Cpp_Acc has an implicit conversion from AAcc operator.
+		//Need GC.KeepAlive(this) everywhere. Else GC can collect the AAcc (and release _iacc) while in the Cpp func.
+		//Alternatively could make the Cpp parameter 'const Cpp_Acc&', and pass AAcc directly. But I don't like it.
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccNavigate(Cpp_Acc aFrom, string navig, out Cpp_Acc aResult);

@@ -129,14 +129,14 @@ static partial class Test
 
 	/*
 	print(...); //AOutput.Write(...);
-	key(...); //Keyb.Key(...);
-	tkey(...); //Keyb.Text(...); //or txt
-	paste(...); //Keyb.Paste(...);
+	key(...); //AKeyboard.Key(...);
+	tkey(...); //AKeyboard.Text(...); //or txt
+	paste(...); //AKeyboard.Paste(...);
 	msgbox(...); //ADialog.Show(...);
-	click(...); //Mouse.Click(...);
-	mmove(...); //Mouse.Move(...);
-	run(...); //Exec.Run(...);
-	act(...); //Wnd.Activate(...);
-	win(...); //Wnd.Find(...);
+	click(...); //AMouse.Click(...);
+	mmove(...); //AMouse.Move(...);
+	run(...); //AExec.Run(...);
+	act(...); //AWnd.Activate(...);
+	win(...); //AWnd.Find(...);
 	*/
 }

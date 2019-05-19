@@ -238,7 +238,7 @@ namespace Au.Triggers
 		public KKey PostfixKey {
 			get => _postfixKey;
 			set {
-				var mod = Keyb.Lib.KeyToMod(value);
+				var mod = AKeyboard.Lib.KeyToMod(value);
 				switch(mod) {
 				case KMod.Ctrl: case KMod.Shift: break;
 				default: throw new ArgumentException("Must be Ctrl, Shift, LCtrl, RCtrl, LShift or RShift.");
@@ -314,7 +314,7 @@ namespace Au.Triggers
 			var vk = k.vkCode;
 			if(vk >= KKey.PageUp && vk <= KKey.Down) goto gReset; //PageUp, PageDown, End, Home, Left, Up, Right, Down
 
-			Wnd wFocus = _GetFocusedWindow();
+			AWnd wFocus = _GetFocusedWindow();
 			if(wFocus.Is0) goto gReset;
 
 			var c = stackalloc char[8]; int n;
@@ -338,16 +338,16 @@ namespace Au.Triggers
 			Reset();
 		}
 
-		static Wnd _GetFocusedWindow()
+		static AWnd _GetFocusedWindow()
 		{
-			if(!Wnd.More.GetGUIThreadInfo(out var gt)) return Wnd.Active;
+			if(!AWnd.More.GetGUIThreadInfo(out var gt)) return AWnd.Active;
 			if(0 != (gt.flags & (Native.GUI.INMENUMODE | Native.GUI.INMOVESIZE))) return default; //the character will not be typed when showing menu (or just Alt or F10 pressed) or moving/resizing window. Of course this will not work with nonstandard menus, eg in Word, as well as with other controls that don't accept text.
 			return gt.hwndFocus; //if no focus, the thread will not receive wm-keydown etc
 		}
 
 		int _len; //count of valid user-typed characters in _text
 		bool _singlePK; //used to detect postfix key (Ctrl or Shift)
-		Wnd _wFocus; //the focused window/control. Used to reset if focus changed.
+		AWnd _wFocus; //the focused window/control. Used to reset if focus changed.
 
 		internal void Reset()
 		{
@@ -361,7 +361,7 @@ namespace Au.Triggers
 			set => Util.LibSharedMemory.Ptr->triggers.resetAutotext = value;
 		}
 
-		unsafe void _Trigger(char c, bool isPK, Wnd wFocus, TriggerHookContext thc)
+		unsafe void _Trigger(char c, bool isPK, AWnd wFocus, TriggerHookContext thc)
 		{
 			//APerf.Next();
 			if(wFocus != _wFocus) {
@@ -484,7 +484,7 @@ namespace Au.Triggers
 			//APerf.NW(); //about 90% of time takes _KeyToChar (ToUnicodeEx and GetKeyboardLayout).
 		}
 
-		unsafe int _KeyToChar(char* c, KKey vk, uint sc, Wnd wFocus, KMod mod)
+		unsafe int _KeyToChar(char* c, KKey vk, uint sc, AWnd wFocus, KMod mod)
 		{
 			var hkl = Api.GetKeyboardLayout(wFocus.ThreadId);
 			var ks = stackalloc byte[256];
@@ -508,7 +508,7 @@ namespace Au.Triggers
 				ks[(int)KKey.Ctrl] = (byte)((0 != (m & KMod.Ctrl)) ? 0x80 : 0);
 				ks[(int)KKey.Alt] = (byte)((0 != (m & KMod.Alt)) ? 0x80 : 0);
 				ks[(int)KKey.Win] = (byte)((0 != (m & KMod.Win)) ? 0x80 : 0);
-				ks[(int)KKey.CapsLock] = (byte)(Keyb.IsCapsLock ? 1 : 0); //don't need this for num lock
+				ks[(int)KKey.CapsLock] = (byte)(AKeyboard.IsCapsLock ? 1 : 0); //don't need this for num lock
 			}
 
 			return n;
@@ -603,7 +603,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// The active window.
 		/// </summary>
-		public Wnd Window { get; }
+		public AWnd Window { get; }
 
 		/// <summary>
 		/// The user-typed text. If <see cref="HasPostfixChar"/>==true, the last character is the postfix delimiter character.
@@ -616,7 +616,7 @@ namespace Au.Triggers
 		public bool HasPostfixChar { get; }
 
 		///
-		public AutotextTriggerArgs(AutotextTrigger trigger, Wnd w, string text, bool hasPChar)
+		public AutotextTriggerArgs(AutotextTrigger trigger, AWnd w, string text, bool hasPChar)
 		{
 			Trigger = trigger;
 			Window = w;
@@ -630,7 +630,7 @@ namespace Au.Triggers
 		/// Replaces the user-typed text with the specified text.
 		/// </summary>
 		/// <param name="text">The replacement text.</param>
-		/// <param name="keysEtc">Optionally more parameters that can generate keys etc. The same as with <see cref="Keyb.Text"/>.</param>
+		/// <param name="keysEtc">Optionally more parameters that can generate keys etc. The same as with <see cref="AKeyboard.Text"/>.</param>
 		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		/// <remarks>
 		/// Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="AutotextTriggers.DefaultFlags"/>. Uses these flags: <see cref="TAFlags.DontErase"/> <see cref="TAFlags.RemovePostfix"/> <see cref="TAFlags.ReplaceRaw"/> <see cref="TAFlags.Confirm"/>.
@@ -673,7 +673,7 @@ namespace Au.Triggers
 				}
 			}
 
-			var k = new Keyb(AOpt.Key);
+			var k = new AKeyboard(AOpt.Key);
 			int erase = 0 == (flags & TAFlags.DontErase) ? t.Length : pc;
 			if(erase > 0) {
 				k.AddKey(KKey.Back);

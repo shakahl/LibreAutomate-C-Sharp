@@ -23,7 +23,7 @@ namespace Au
 	/// Contains functions to wait for a user-defined condition or variable.
 	/// </summary>
 	/// <remarks>
-	/// Specialized 'wait for' functions are in other classes, for example <see cref="Wnd.Wait"/>.
+	/// Specialized 'wait for' functions are in other classes, for example <see cref="AWnd.Wait"/>.
 	/// 
 	/// All 'wait for' functions have a <i>secondsTimeout</i> parameter. It is the maximal time to wait, seconds. If it is 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, then stops waiting and returns default value of that type (false, etc).
 	/// 
@@ -32,7 +32,7 @@ namespace Au
 	/// <seealso cref="ATime"/>
 	/// <example>
 	/// <code><![CDATA[
-	/// WaitFor.Condition(0, () => Keyb.IsScrollLock);
+	/// AWaitFor.Condition(0, () => AKeyboard.IsScrollLock);
 	/// Print("ScrollLock now is toggled");
 	/// ]]></code>
 	/// Using in a Form/Control event handler.
@@ -41,13 +41,13 @@ namespace Au
 	/// f.Click += async (unu, sed) =>
 	///   {
 	/// 	  Print("waiting...");
-	/// 	  var result = await Task.Run(() => WaitFor.Condition(-10, () => Keyb.IsScrollLock));
+	/// 	  var result = await Task.Run(() => AWaitFor.Condition(-10, () => AKeyboard.IsScrollLock));
 	/// 	  if(w.Is0) Print("timeout"); else Print(result);
 	///   };
 	/// f.ShowDialog();
 	/// ]]></code>
 	/// </example>
-	public static partial class WaitFor
+	public static partial class AWaitFor
 	{
 		/// <summary>
 		/// Can be used to easily implement 'wait for' functions with a timeout.
@@ -61,18 +61,18 @@ namespace Au
 		/// <code><![CDATA[
 		/// public static bool WaitForMouseLeftButtonDown(double secondsTimeout)
 		/// {
-		/// 	var x = new WaitFor.Loop(secondsTimeout);
+		/// 	var x = new AWaitFor.Loop(secondsTimeout);
 		/// 	for(; ; ) {
-		/// 		if(Mouse.IsPressed(MButtons.Left)) return true;
+		/// 		if(AMouse.IsPressed(MButtons.Left)) return true;
 		/// 		if(!x.Sleep()) return false;
 		/// 	}
 		/// }
 		/// ]]></code>
-		/// The same with WaitFor.Condition.
+		/// The same with AWaitFor.Condition.
 		/// <code><![CDATA[
 		/// static bool WaitForMouseLeftButtonDown2(double secondsTimeout)
 		/// {
-		/// 	return WaitFor.Condition(secondsTimeout, () => Mouse.IsPressed(MButtons.Left));
+		/// 	return AWaitFor.Condition(secondsTimeout, () => AMouse.IsPressed(MButtons.Left));
 		/// }
 		/// ]]></code>
 		/// </example>
@@ -179,8 +179,8 @@ namespace Au
 		/// <param name="options">Options. If null, uses <see cref="AOpt.WaitFor"/>, else combines with it.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <remarks>More info: <see cref="WaitFor"/>.</remarks>
-		/// <example>See <see cref="WaitFor"/>.</example>
+		/// <remarks>More info: <see cref="AWaitFor"/>.</remarks>
+		/// <example>See <see cref="AWaitFor"/>.</example>
 		public static bool Condition(double secondsTimeout, Func<bool> condition, OptWaitFor options = null)
 		{
 			var to = new Loop(secondsTimeout, options);
@@ -247,7 +247,7 @@ namespace Au
 		/// Calls API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn> with QS_ALLINPUT. Alertable.
 		/// When a handle becomes signaled, returns its 0-based index. If abandoned mutex, returns 0-based index + Api.WAIT_ABANDONED_0 (0x80).
 		/// If timeMS>0, waits max timeMS and on timeout returns Api.WAIT_TIMEOUT.
-		/// If failed, returns -1. Supports <see cref="WinError"/>.
+		/// If failed, returns -1. Supports <see cref="ALastError"/>.
 		/// </summary>
 		internal static int LibWait(long timeMS, WHFlags flags, params IntPtr[] handles)
 		{
@@ -302,7 +302,7 @@ namespace Au
 		{
 			bool R = false;
 			while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
-				//Wnd.Misc.PrintMsg(m);
+				//AWnd.More.PrintMsg(m);
 				if(msgCallback is WaitMsgCallback callback1) {
 					if(callback1(ref m)) { msgCallback = null; R = true; }
 					if(m.message == 0) continue;
@@ -337,7 +337,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// ATimer.After(2000, t => { Print("timer"); });
-		/// WaitFor.PostedMessage(5, (ref Native.MSG m) => { Print(m); return m.message == 0x113; }); //WM_TIMER
+		/// AWaitFor.PostedMessage(5, (ref Native.MSG m) => { Print(m); return m.message == 0x113; }); //WM_TIMER
 		/// Print("finished");
 		/// ]]></code>
 		/// </example>
@@ -362,7 +362,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// bool stop = false;
 		/// ATimer.After(2000, t => { Print("timer"); stop = true; });
-		/// WaitFor.MessagesAndCondition(5, () => stop);
+		/// AWaitFor.MessagesAndCondition(5, () => stop);
 		/// Print(stop);
 		/// ]]></code>
 		/// </example>
@@ -386,7 +386,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// bool stop = false;
 		/// Task.Run(() => { 2.s(); Print("task"); stop = true; });
-		/// WaitFor.Variable(5, stop);
+		/// AWaitFor.Variable(5, stop);
 		/// Print(stop);
 		/// ]]></code>
 		/// </example>
@@ -409,7 +409,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="WaitFor.Handle"/>
+	/// Flags for <see cref="AWaitFor.Handle"/>
 	/// </summary>
 	[Flags]
 	public enum WHFlags
@@ -426,7 +426,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Delegate type for <see cref="WaitFor.PostedMessage(double, WaitMsgCallback)"/>.
+	/// Delegate type for <see cref="AWaitFor.PostedMessage(double, WaitMsgCallback)"/>.
 	/// </summary>
 	/// <param name="m">API <msdn>MSG</msdn>.</param>
 	public delegate bool WaitMsgCallback(ref Native.MSG m);
@@ -448,4 +448,4 @@ namespace Au.Types
 //	these are in System: WaitIdle, WaitForThreads,
 
 //CONSIDER: WaitForFocusChanged
-//	Eg when showing Open/SaveAs dialog, the file Edit control receives focus after 200 ms. Sending text to it works anyway, but the script fails if then it clicks OK not with keys (eg with Acc).
+//	Eg when showing Open/SaveAs dialog, the file Edit control receives focus after 200 ms. Sending text to it works anyway, but the script fails if then it clicks OK not with keys (eg with AAcc).

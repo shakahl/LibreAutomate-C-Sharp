@@ -358,7 +358,7 @@ namespace Au.Controls
 					//prevent showing drop-down again when the user clicks the drop-down button to close it
 					p.PopupWindow.VisibleChanged += (se1, sed) => {
 						if((se1 as Control).Visible) g._comboNoDD = true;
-						else ((Wnd)g).Post(Api.WM_USER + 10); //WndProc will set _comboNoDD = false
+						else ((AWnd)g).Post(Api.WM_USER + 10); //WndProc will set _comboNoDD = false
 					};
 				}
 				p.Items = items;

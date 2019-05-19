@@ -20,7 +20,7 @@ using static Au.AStatic;
 
 namespace Au
 {
-	public partial struct Wnd
+	public partial struct AWnd
 	{
 		public static partial class More
 		{
@@ -45,7 +45,7 @@ namespace Au
 				/// More info: <msdn>Window Procedures</msdn>.
 				/// </summary>
 				/// <param name="wndProc">API <msdn>WNDPROC</msdn>.</param>
-				/// <seealso cref="PrintMsg(Wnd, int, LPARAM, LPARAM, int[])"/>
+				/// <seealso cref="PrintMsg(AWnd, int, LPARAM, LPARAM, int[])"/>
 				public MyWindow(Native.WNDPROC wndProc)
 				{
 					_userWndProc = wndProc;
@@ -55,7 +55,7 @@ namespace Au
 				/// <summary>
 				/// Native window handle.
 				/// </summary>
-				public Wnd Handle { get; private set; }
+				public AWnd Handle { get; private set; }
 
 				/// <summary>
 				/// Creates window.
@@ -76,7 +76,7 @@ namespace Au
 				/// <remarks>
 				/// The window will be destroyed in these cases: 1. Called <see cref="Destroy"/>. 2. Closed by the user or some program/script. 3. When this thread ends. 4. This function called again (then destroys old window and creates new).
 				/// </remarks>
-				public bool Create(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, Wnd parent = default, LPARAM controlId = default)
+				public bool Create(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default)
 				{
 					if(t_windows == null) t_windows = new List<MyWindow>();
 					Destroy();
@@ -112,7 +112,7 @@ namespace Au
 					Debug.Assert(Handle == default && !t_windows.Contains(this));
 				}
 
-				LPARAM _WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
+				LPARAM _WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam)
 				{
 					var R = _userWndProc(w, message, wParam, lParam);
 
@@ -128,14 +128,14 @@ namespace Au
 				/// Calls the native window procedure of the window class.
 				/// More info: <msdn>Window Procedures</msdn>.
 				/// </summary>
-				public LPARAM DefWndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
+				public LPARAM DefWndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam)
 				{
 					return _nativeWndProc == _defWindowProc
 						? Api.DefWindowProc(w, message, wParam, lParam) //not necessary but presumably faster
 						: Api.CallWindowProc(_nativeWndProc, w, message, wParam, lParam);
 				}
 
-				bool _Create(string className, string name, WS style, WS_EX exStyle, int x, int y, int width, int height, Wnd parent, LPARAM controlId)
+				bool _Create(string className, string name, WS style, WS_EX exStyle, int x, int y, int width, int height, AWnd parent, LPARAM controlId)
 				{
 					using(AHookWin.ThreadCbt(c => {
 						if(c.code == HookData.CbtEvent.CREATEWND) {
@@ -146,7 +146,7 @@ namespace Au
 							//	is called multiple times for same event.
 							c.hook.Unhook();
 
-							var ww = (Wnd)c.wParam;
+							var ww = (AWnd)c.wParam;
 							Debug.Assert(ww.ClassNameIs(className));
 							_nativeWndProc = ww.SetWindowLong(Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_ourWndProc));
 						} else Debug.Assert(false);
@@ -177,7 +177,7 @@ namespace Au
 				/// The window class remains registered until this process ends. Don't need to unregister.
 				/// This function can be called multiple times for the same class, for example called once in each appdomain. Next time it just returns class atom.
 				/// Thread-safe.
-				/// <note>Don't use code like <c>static ushort _atom = Wnd.Misc.MyWindow.RegisterClass("MyClass");</c>, because in Release configuration compiler removes this code if _atom is not used. Instead you can call this function in a static constructor.</note>
+				/// <note>Don't use code like <c>static ushort _atom = AWnd.More.MyWindow.RegisterClass("MyClass");</c>, because in Release configuration compiler removes this code if _atom is not used. Instead you can call this function in a static constructor.</note>
 				/// </remarks>
 				public static unsafe ushort RegisterClass(string className, MWWndClassEx ex = null)
 				{
@@ -211,7 +211,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Used with <see cref="Wnd.More.MyWindow.RegisterClass"/>.
+	/// Used with <see cref="AWnd.More.MyWindow.RegisterClass"/>.
 	/// </summary>
 	[NoDoc]
 	public class MWWndClassEx

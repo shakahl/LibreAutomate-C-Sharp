@@ -45,7 +45,7 @@ static class Program
 		}
 		//speed with restarting is the same as when runs as non-admin. The fastest is when started as admin. Because faster when runs as admin.
 
-		Directory.SetCurrentDirectory(Folders.ThisApp); //because it is c:\windows\system32 when restarted as admin
+		Directory.SetCurrentDirectory(AFolders.ThisApp); //because it is c:\windows\system32 when restarted as admin
 
 		_Main(args);
 	}
@@ -62,7 +62,7 @@ static class Program
 		if(CommandLine.OnProgramStarted(args)) return;
 
 #if !DEBUG
-		var fProfile = Folders.ThisAppDataLocal + "ProfileOptimization";
+		var fProfile = AFolders.ThisAppDataLocal + "ProfileOptimization";
 		AFile.CreateDirectory(fProfile);
 		ProfileOptimization.SetProfileRoot(fProfile);
 		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 680 -> 560 ms. Makes compiler startup faster 4000 -> 2500 (ngen 670).
@@ -123,7 +123,7 @@ static class Program
 			Timer1sOr025s?.Invoke();
 			s_timerCounter++;
 			if(MousePosChangedWhenProgramVisible != null) {
-				var p = Mouse.XY;
+				var p = AMouse.XY;
 				if(p != s_mousePos) {
 					s_mousePos = p;
 					MousePosChangedWhenProgramVisible(p);

@@ -39,7 +39,7 @@ namespace Au
 		/// - File type like <c>".txt"</c> or URL protocol like <c>"http:"</c>.
 		/// 
 		/// If it is a file containing multiple icons (eg exe, dll), can be specified icon index like <c>"path,index"</c> or native icon resource id like <c>"path,-id"</c>.
-		/// If not full path, the function will look in <see cref="Folders.ThisAppImages"/>. See also <see cref="GIFlags"/>.
+		/// If not full path, the function will look in <see cref="AFolders.ThisAppImages"/>. See also <see cref="GIFlags"/>.
 		/// Supports environment variables (see <see cref="APath.ExpandEnvVar"/>).
 		/// </param>
 		/// <param name="size">Icon width and height. Also can be enum <see cref="IconSize"/>, cast to int.</param>
@@ -60,7 +60,7 @@ namespace Au
 		/// More info: <see cref="GetFileIcon"/>.
 		/// </summary>
 		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-		/// <seealso cref="Wnd.More.GetIconHandle"/>
+		/// <seealso cref="AWnd.More.GetIconHandle"/>
 		public static IntPtr GetFileIconHandle(string file, int size, GIFlags flags = 0)
 		{
 			if(Empty(file)) return default;
@@ -122,7 +122,7 @@ namespace Au
 					extractFromFile = ParseIconLocation(ref file, out index);
 
 					if(!searchPath) {
-						if(!APath.IsFullPath(file)) file = Folders.ThisAppImages + file;
+						if(!APath.IsFullPath(file)) file = AFolders.ThisAppImages + file;
 						file = APath.LibNormalize(file, PNFlags.DontPrefixLongPath, noExpandEV: true);
 					}
 				}
@@ -130,7 +130,7 @@ namespace Au
 
 			if(isPath) {
 				if(searchPath) {
-					file = AFile.SearchPath(file, Folders.ThisAppImages);
+					file = AFile.SearchPath(file, AFolders.ThisAppImages);
 					if(file == null) return default; //ignore getDefaultIfFails
 				}
 				file = APath.UnprefixLongPath(file);
@@ -218,7 +218,7 @@ namespace Au
 
 				if(icon != null) {
 					icon = APath.ExpandEnvVar(icon);
-					if(!APath.IsFullPath(icon)) icon = Folders.System + icon;
+					if(!APath.IsFullPath(icon)) icon = AFolders.System + icon;
 					R = GetFileIconHandleRaw(icon, index, size);
 					if(R != default) return R;
 				}
@@ -595,7 +595,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// If file is not full path, call <see cref="AFile.SearchPath"/>.
-		/// Without this flag searches only in <see cref="Folders.ThisAppImages"/>; with this flag also searches there first.
+		/// Without this flag searches only in <see cref="AFolders.ThisAppImages"/>; with this flag also searches there first.
 		/// </summary>
 		SearchPath = 2,
 

@@ -81,7 +81,7 @@ namespace Au
 		Specialized AddX methods.
 		
 		For example, instead of
-		m["Label"] = o => Exec.TryRun("notepad.exe");
+		m["Label"] = o => AExec.TryRun("notepad.exe");
 		can use
 		m.Run("notepad.exe", "label"); //label is optional
 		Then can auto-get icon without disassembling the callback.
@@ -95,7 +95,7 @@ namespace Au
 		Can even use extension methods for this. Example:
 		public static void Run(this AMenu m, string path, string label = null)
 		{
-			m[label ?? path, path] = o => Exec.TryRun(path);
+			m[label ?? path, path] = o => AExec.TryRun(path);
 		}
 
 		*/
@@ -113,7 +113,7 @@ namespace Au
 		/// m["Three"] = o => { Print(o.MenuItem.Checked); };
 		/// m.LastMenuItem.Checked = true;
 		/// m.ExtractIconPathFromCode = true;
-		/// m["notepad"] = o => Exec.TryRun(Folders.System + "notepad.exe"));
+		/// m["notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe"));
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
@@ -127,11 +127,11 @@ namespace Au
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="onClick">Callback function. Called when clicked the menu item.</param>
 		/// <param name="icon">Can be:
-		/// - string - path of .ico or any other file or folder or non-file object. See <see cref="AIcon.GetFileIcon"/>. If not full path, searches in <see cref="Folders.ThisAppImages"/>; see also <see cref="AMTBase.IconFlags"/>.
+		/// - string - path of .ico or any other file or folder or non-file object. See <see cref="AIcon.GetFileIcon"/>. If not full path, searches in <see cref="AFolders.ThisAppImages"/>; see also <see cref="AMTBase.IconFlags"/>.
 		/// - string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// - int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// - Icon, Image, AFolderPath.
-		/// - null (default) - no icon. If <see cref="AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>Exec.TryRun(@"c:\path\file.exe")</c> or <c>Exec.TryRun(Folders.System + "file.exe")</c>.
+		/// - null (default) - no icon. If <see cref="AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AExec.TryRun(@"c:\path\file.exe")</c> or <c>AExec.TryRun(AFolders.System + "file.exe")</c>.
 		/// - "" - no icon.
 		/// </param>
 		/// <remarks>
@@ -146,7 +146,7 @@ namespace Au
 		/// m.Add("Two", o => { Print(o.MenuItem.Checked); ADialog.Show(o.ToString()); });
 		/// m.LastMenuItem.Checked = true;
 		/// m.ExtractIconPathFromCode = true;
-		/// m.Add("notepad", o => Exec.TryRun(Folders.System + "notepad.exe"));
+		/// m.Add("notepad", o => AExec.TryRun(AFolders.System + "notepad.exe"));
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
@@ -198,7 +198,7 @@ namespace Au
 				var t = sender as ToolStripItem;
 
 				//Activate the clicked menu or submenu window to allow eg to enter text in text box.
-				var w = (Wnd)t.Owner.Handle;
+				var w = (AWnd)t.Owner.Handle;
 				Api.SetForegroundWindow(w); //does not fail, probably after a mouse click this process is allowed to activate windows, even if the click did not activate because of the window style
 
 				//see also: both OnClosing
@@ -463,11 +463,11 @@ namespace Au
 
 			_inOurShow = true;
 			switch(overload) {
-			case 1: _cm.Show(Mouse.XY); break;
+			case 1: _cm.Show(AMouse.XY); break;
 			case 2: _cm.Show(new Point(x, y), direction); break;
 			case 3: _cm.Show(control, new Point(x, y), direction); break;
 			case 4:
-				Keyb.More.GetTextCursorRect(out RECT cr, out _, orMouse: true);
+				AKeyboard.More.GetTextCursorRect(out RECT cr, out _, orMouse: true);
 				_cm.Show(new Point(cr.left - 32, cr.bottom + 2));
 				break;
 			}
@@ -547,7 +547,7 @@ namespace Au
 
 			protected override void WndProc(ref Message m)
 			{
-				//Wnd.Misc.PrintMsg(ref m, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_ERASEBKGND, Api.WM_CTLCOLOREDIT);
+				//AWnd.More.PrintMsg(ref m, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_ERASEBKGND, Api.WM_CTLCOLOREDIT);
 
 				if(_am._WndProc_Before(true, this, ref m)) return;
 				//var t = APerf.StartNew();
@@ -794,7 +794,7 @@ namespace Au
 					//This would solve the 'wait' cursor problem like WaitCursorWhenShowingMenuEtc.
 					//Also need to eat WM_IME_SETCONTEXT, which creates a second hidden IME window and makes slower.
 					//Faster by 1-2 ms.
-					//Api.SetActiveWindow((Wnd)Handle);
+					//Api.SetActiveWindow((AWnd)Handle);
 
 					break;
 				}
@@ -835,15 +835,15 @@ namespace Au
 		void _OnClosingAny(bool isSubmenu, ToolStripDropDownMenu dd, ToolStripDropDownClosingEventArgs e)
 		{
 			if(!_isOwned && !e.Cancel) {
-				//Print(e.CloseReason, dd.Focused, dd.ContainsFocus, Wnd.Active, Wnd.Active.Get.RootOwnerOrThis());
+				//Print(e.CloseReason, dd.Focused, dd.ContainsFocus, AWnd.Active, AWnd.Active.Get.RootOwnerOrThis());
 				switch(e.CloseReason) {
 				case ToolStripDropDownCloseReason.AppClicked: //eg clicked a context menu item of a child textbox. Note: the AppClicked documentation lies; actually we receive this when clicked a window of this thread (or maybe this process, not tested).
-					if(Wnd.Active.Handle == dd.Handle) e.Cancel = true;
+					if(AWnd.Active.Handle == dd.Handle) e.Cancel = true;
 					break;
 				case ToolStripDropDownCloseReason.AppFocusChange: //eg showed a dialog owned by this menu window
-					var wa = Wnd.Active;
+					var wa = AWnd.Active;
 					if(wa.Handle == dd.Handle) { //eg when closing this activated submenu because mouse moved to the parent menu
-						if(isSubmenu) Api.SetForegroundWindow((Wnd)dd.OwnerItem.Owner.Handle); //prevent closing the parent menu
+						if(isSubmenu) Api.SetForegroundWindow((AWnd)dd.OwnerItem.Owner.Handle); //prevent closing the parent menu
 					} else if(wa.Get.RootOwnerOrThis().Handle == dd.Handle) e.Cancel = true;
 					break;
 				}
@@ -857,7 +857,7 @@ namespace Au
 				_visibleSubmenus.Add(dd);
 			} else {
 				_InitUninitClosing(true);
-				if(ActivateMenuWindow) ((Wnd)dd.Handle).ActivateLL();
+				if(ActivateMenuWindow) ((AWnd)dd.Handle).ActivateLL();
 			}
 		}
 
@@ -869,7 +869,7 @@ namespace Au
 				_InitUninitClosing(false);
 
 				//Close menu windows. Else they are just hidden and prevent garbage collection until appdomain ends.
-				foreach(var k in _windows) ((Wnd)k.Handle).Post(Api.WM_CLOSE, _wmCloseWparam);
+				foreach(var k in _windows) ((AWnd)k.Handle).Post(Api.WM_CLOSE, _wmCloseWparam);
 
 				if(!MultiShow && !_isModal) ATimer.After(10, () => { Dispose(); }); //cannot dispose now, exception
 
@@ -923,10 +923,10 @@ namespace Au
 			_mouseWasIn = false;
 			if(init) {
 				_timer = ATimer.Every(100, _OnTimer);
-				if(!(_isOwned || ActivateMenuWindow)) _hotkeyRegistered = Api.RegisterHotKey((Wnd)_cm.Handle, _hotkeyEsc, 0, KKey.Escape);
+				if(!(_isOwned || ActivateMenuWindow)) _hotkeyRegistered = Api.RegisterHotKey((AWnd)_cm.Handle, _hotkeyEsc, 0, KKey.Escape);
 			} else {
 				if(_timer != null) { _timer.Stop(); _timer = null; }
-				if(_hotkeyRegistered) _hotkeyRegistered = !Api.UnregisterHotKey((Wnd)_cm.Handle, _hotkeyEsc);
+				if(_hotkeyRegistered) _hotkeyRegistered = !Api.UnregisterHotKey((AWnd)_cm.Handle, _hotkeyEsc);
 			}
 		}
 
@@ -941,7 +941,7 @@ namespace Au
 		void _CloseIfMouseIsFar()
 		{
 			int dist = MouseClosingDistance;
-			POINT p = Mouse.XY;
+			POINT p = AMouse.XY;
 			for(int i = -1; i < _visibleSubmenus.Count; i++) {
 				var k = i >= 0 ? _visibleSubmenus[i] : _cm as ToolStripDropDown;
 				RECT r = k.Bounds;
@@ -971,7 +971,7 @@ namespace Au
 		{
 			Debug.Assert(!IsDisposed); if(IsDisposed) return;
 
-			if(Wnd.More.GetGUIThreadInfo(out var g, Api.GetCurrentThreadId()) && !g.hwndMenuOwner.Is0) {
+			if(AWnd.More.GetGUIThreadInfo(out var g, Api.GetCurrentThreadId()) && !g.hwndMenuOwner.Is0) {
 				Api.EndMenu();
 				if(onEsc) return;
 			}
@@ -1258,18 +1258,18 @@ namespace Au.Types
 
 		void _SetItemIcon(ToolStrip ts, ToolStripItem item, Image im)
 		{
-			Wnd w = default;
+			AWnd w = default;
 			var its = ts as _IAuToolStrip;
 			if(its.PaintedOnce) {
 				if(_region1 == default) _region1 = Api.CreateRectRgn(0, 0, 0, 0);
 				if(_region2 == default) _region2 = Api.CreateRectRgn(0, 0, 0, 0);
 
-				w = (Wnd)ts.Handle;
+				w = (AWnd)ts.Handle;
 				Api.GetUpdateRgn(w, _region1, false);
 			}
 
 			//RECT u;
-			//Api.GetUpdateRect((Wnd)ts.Handle, out u, false); Print(its.PaintedOnce, u);
+			//Api.GetUpdateRect((AWnd)ts.Handle, out u, false); Print(its.PaintedOnce, u);
 
 			ts.SuspendLayout(); //without this much slower, especially when with overflow arrows (when many items)
 			item.Image = im;
@@ -1287,24 +1287,24 @@ namespace Au.Types
 				Api.InvalidateRgn(w, _region1, false);
 			}
 
-			//Api.GetUpdateRect((Wnd)ts.Handle, out u, false); Print("after", u);
+			//Api.GetUpdateRect((AWnd)ts.Handle, out u, false); Print("after", u);
 		}
 
 		IntPtr _region1, _region2;
 		internal List<Image> _images;
 
 		/// <summary>
-		/// Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%Folders.System%\notepad.exe"</c> or URL/shell.
-		/// Also supports code patterns like 'Folders.System + "notepad.exe"' or 'Folders.Virtual.RecycleBin'.
+		/// Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%AFolders.System%\notepad.exe"</c> or URL/shell.
+		/// Also supports code patterns like 'AFolders.System + "notepad.exe"' or 'AFolders.Virtual.RecycleBin'.
 		/// Returns null if no such string/pattern.
 		/// </summary>
 		static string _IconPathFromCode(MethodInfo mi)
 		{
-			//support code pattern like 'Folders.System + "notepad.exe"'.
-			//	Opcodes: call(Folders.System), ldstr("notepad.exe"), AFolderPath.op_Addition.
-			//also code pattern like 'Folders.System' or 'Folders.Virtual.RecycleBin'.
-			//	Opcodes: call(Folders.System), AFolderPath.op_Implicit(AFolderPath to string).
-			//also code pattern like 'Exec.TryRun("notepad.exe")'.
+			//support code pattern like 'AFolders.System + "notepad.exe"'.
+			//	Opcodes: call(AFolders.System), ldstr("notepad.exe"), AFolderPath.op_Addition.
+			//also code pattern like 'AFolders.System' or 'AFolders.Virtual.RecycleBin'.
+			//	Opcodes: call(AFolders.System), AFolderPath.op_Implicit(AFolderPath to string).
+			//also code pattern like 'AExec.TryRun("notepad.exe")'.
 			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
 			try {
 				var reader = new ILReader(mi);
@@ -1317,7 +1317,7 @@ namespace Au.Types
 						//Print(s);
 						if(i == patternStart + 1) filename = s;
 						else {
-							if(APath.IsFullPathExpandEnvVar(ref s)) return s; //eg Exec.TryRun(@"%Folders.System%\notepad.exe");
+							if(APath.IsFullPathExpandEnvVar(ref s)) return s; //eg AExec.TryRun(@"%AFolders.System%\notepad.exe");
 							if(APath.IsUrl(s) || APath.LibIsShellPath(s)) return s;
 							filename = null; patternStart = -1;
 							if(i == 1) filename2 = s;
@@ -1325,7 +1325,7 @@ namespace Au.Types
 					} else if(op == OpCodes.Call && instruction.Data is MethodInfo f && f.IsStatic) {
 						//Print(f, f.DeclaringType, f.Name, f.MemberType, f.ReturnType, f.GetParameters().Length);
 						var dt = f.DeclaringType;
-						if(dt == typeof(Folders) || dt == typeof(Folders.Virtual)) {
+						if(dt == typeof(AFolders) || dt == typeof(AFolders.Virtual)) {
 							if(f.ReturnType == typeof(AFolderPath) && f.GetParameters().Length == 0) {
 								//Print(1);
 								f1 = f;

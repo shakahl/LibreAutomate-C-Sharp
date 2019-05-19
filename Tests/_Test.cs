@@ -144,21 +144,21 @@ static partial class Test
 #else
 			try {
 
-				//var w8 = Wnd.Find("*Firefox*", "MozillaWindowClass").OrThrow();
+				//var w8 = AWnd.Find("*Firefox*", "MozillaWindowClass").OrThrow();
 				////Print(w8);
-				//var a = Acc.FindAll(w8, "web:TEXT", "??*");
-				////var a = Acc.FindAll(w8, "web:");
-				////var a = Acc.FindAll(w8, "web:TEXT", "??*", flags: AFFlags.NotInProc);
-				////var a = Acc.Wait(3, w8, "web:TEXT", "Search the Web", flags: AFFlags.NotInProc);
-				////var a = Acc.Wait(3, w8, "TEXT", "Search the Web", flags: AFFlags.UIA);
+				//var a = AAcc.FindAll(w8, "web:TEXT", "??*");
+				////var a = AAcc.FindAll(w8, "web:");
+				////var a = AAcc.FindAll(w8, "web:TEXT", "??*", flags: AFFlags.NotInProc);
+				////var a = AAcc.Wait(3, w8, "web:TEXT", "Search the Web", flags: AFFlags.NotInProc);
+				////var a = AAcc.Wait(3, w8, "TEXT", "Search the Web", flags: AFFlags.UIA);
 				//Print(a);
 				//Print("---");
 				//Print(a[0].MiscFlags);
 				//return;
 
-				//var w = Wnd.Find("Java Control Panel", "SunAwtFrame").OrThrow();
-				////var a = Acc.Find(w, "push button", "Settings...").OrThrow();
-				//var a = Acc.Find(w, "push button", "Settings...", flags: AFFlags.ClientArea).OrThrow();
+				//var w = AWnd.Find("Java Control Panel", "SunAwtFrame").OrThrow();
+				////var a = AAcc.Find(w, "push button", "Settings...").OrThrow();
+				//var a = AAcc.Find(w, "push button", "Settings...", flags: AFFlags.ClientArea).OrThrow();
 				//Print(a);
 
 				TestAccForm();

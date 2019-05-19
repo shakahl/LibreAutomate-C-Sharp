@@ -53,7 +53,7 @@ static partial class Test
 		//return;
 
 		AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
-		//if(Keyb.IsCtrl) Print("ctrl");
+		//if(AKeyboard.IsCtrl) Print("ctrl");
 		//ADialog.ShowEx(secondsTimeout: 1);
 
 		//Print(AThread.LibIsLoadedFormsWpf());
@@ -72,7 +72,7 @@ static partial class Test
 		//var m = new Au.Util.MessageLoop();
 		//ATimer.After(2000, () => m.Stop());
 		////ATimer.After(2000, () => Api.PostQuitMessage(0));
-		////ATimer.After(2000, () => Wnd.Misc.PostThreadMessage(Api.WM_QUIT));
+		////ATimer.After(2000, () => AWnd.More.PostThreadMessage(Api.WM_QUIT));
 		//m.Loop();
 
 		//var m = new AMenu();
@@ -83,7 +83,7 @@ static partial class Test
 		//var m = new AOsd();
 
 		//APerf.First();
-		//var k = new Keyb(null);
+		//var k = new AKeyboard(null);
 		//APerf.Next();
 		//for(int i = 0; i < 5; i++) {
 		//	k.AddKeys("Left");
@@ -223,13 +223,13 @@ a1,-8";
 		//x = ACsv.FromDictionary(d, 3, (v, r) => { r[1] = v.ToString(); r[2] = "TEST"; });
 		Print(x);
 
-		//var f = Folders.Temp + "test2.csv";
+		//var f = AFolders.Temp + "test2.csv";
 		//var x = ACsv.Parse(csv);
 		//x.Save(f);
 		//x = ACsv.Load(f);
 		//Print(x);
 
-		//var f = Folders.Temp + "test2.csv";
+		//var f = AFolders.Temp + "test2.csv";
 		//var x = ACsv.Parse(csv);
 		//x.Save(f);
 		//x = ACsv.Load(f);
@@ -1089,7 +1089,7 @@ a1,-8";
 	static void TestUacTS()
 	{
 #if false
-		//Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin(@"Au", "test UAC 2", Folders.System + "cmd.exe");
+		//Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin(@"Au", "test UAC 2", AFolders.System + "cmd.exe");
 		Au.Util.LibTaskScheduler.CreateTaskToRunProgramAsAdmin(@"Au", "test UAC", @"Q:\My QM\test_ts_UAC.exe", "test: $(Arg0)");
 #else
 		//Print(Au.Util.LibTaskScheduler.TaskExists(@"\Au", "test UAC"));
@@ -1111,7 +1111,7 @@ a1,-8";
 		//	Thread.Sleep(1000);
 		//}
 
-		var s = Folders.System + "notepad.exe";
+		var s = AFolders.System + "notepad.exe";
 		//Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "High", UacIL.High, s);
 		Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "Medium", UacIL.Medium, s);
 	}
@@ -1161,14 +1161,14 @@ a1,-8";
 	{
 		//bool secure = false;
 
-		var path = Folders.Documents + @"Au\Secure";
+		var path = AFolders.Documents + @"Au\Secure";
 		if(Directory.Exists(path)) Directory.Delete(path);
 		Directory.CreateDirectory(path);
 
 		_SetDirectorySecurity(path, true);
 		return;
 
-		//var x = new DirectorySecurity(Folders.Documents + @"Au", AccessControlSections.All);
+		//var x = new DirectorySecurity(AFolders.Documents + @"Au", AccessControlSections.All);
 		//x.RemoveAccessRule(new FileSystemAccessRule("G", FileSystemRights.Modify, AccessControlType.Allow));
 		//Directory.CreateDirectory(s, x);
 
@@ -1199,7 +1199,7 @@ a1,-8";
 
 	static void TestFolderSecurity()
 	{
-		string path = Folders.ProgramFiles;
+		string path = AFolders.ProgramFiles;
 		var ds = Directory.GetAccessControl(path);
 
 		var rules = ds.GetAccessRules(true, true, typeof(NTAccount));
@@ -1369,14 +1369,14 @@ a1,-8";
 
 	static void TestOptimizeTreeViewAdv()
 	{
-		var w = Wnd.FindFast(null, "QM_Editor").OrThrow();
+		var w = AWnd.FindFast(null, "QM_Editor").OrThrow();
 		var f = new Au.Tools.Form_Wnd(w);
 		Application.Run(f);
 	}
 
 	//static void TestReferenceCOM()
 	//{
-	//	var w = Wnd.Find("Quick *").OrThrow();
+	//	var w = AWnd.Find("Quick *").OrThrow();
 	//	w = w.ChildById(2212).OrThrow();
 	//	Accessibility.IAccessible a = null;
 	//	if(0 != AccessibleObjectFromWindow(w, OBJID_CLIENT, IID_IAccessible, out a)) throw new Exception("failed");
@@ -1384,7 +1384,7 @@ a1,-8";
 	//	Print(s);
 	//}
 	//[DllImport("oleacc.dll", PreserveSig = true)]
-	//internal static extern int AccessibleObjectFromWindow(Wnd hwnd, uint dwId, in Guid riid, out Accessibility.IAccessible ppvObject);
+	//internal static extern int AccessibleObjectFromWindow(AWnd hwnd, uint dwId, in Guid riid, out Accessibility.IAccessible ppvObject);
 	//internal static Guid IID_IAccessible = new Guid(0x618736E0, 0x3C3D, 0x11CF, 0x81, 0x0C, 0x00, 0xAA, 0x00, 0x38, 0x9B, 0x71);
 	//internal const uint OBJID_CLIENT = 0xFFFFFFFC;
 
@@ -1400,7 +1400,7 @@ a1,-8";
 
 		//int hr = QueryPathOfRegTypeLib(new Guid("{00000200-0000-0010-8000-00AA006D2EA4}"), 2, 0, 0, out var s);
 		//int hr = QueryPathOfRegTypeLib(new Guid("{000204EF-0000-0000-C000-000000000046}"), 6, 0, 9, out var s);
-		//if(hr == 0) Print(s); else Print(WinError.MessageFor(hr));
+		//if(hr == 0) Print(s); else Print(ALastError.MessageFor(hr));
 
 		APerf.First();
 		var a = new List<_RegTypelib>(1000);
@@ -1438,7 +1438,7 @@ a1,-8";
 			var lcid = (uint)r.locale.ToInt(0, STIFlags.IsHexWithout0x);
 			int hr = LoadRegTypeLib(guid, ver.major, ver.minor, lcid, out var tl);
 #endif
-			if(hr != 0) { Print($"<><c 0xff>{r.text}, {r.version}, {r.locale}, {r.guid}, {WinError.MessageFor(hr)}</c>"); continue; }
+			if(hr != 0) { Print($"<><c 0xff>{r.text}, {r.version}, {r.locale}, {r.guid}, {ALastError.MessageFor(hr)}</c>"); continue; }
 			Marshal.ReleaseComObject(tl);
 		}
 	}
@@ -1581,7 +1581,7 @@ a1,-8";
 	{
 		protected override void OnLoad(EventArgs e)
 		{
-			Print("OnLoad", ((Wnd)this).IsVisible);
+			Print("OnLoad", ((AWnd)this).IsVisible);
 			base.OnLoad(e);
 		}
 
@@ -1622,12 +1622,12 @@ a1,-8";
 
 	static void TestWndFinderCache()
 	{
-		var a = new Wnd.Finder[10];
+		var a = new AWnd.Finder[10];
 		for(int i = 0; i < a.Length; i++) {
-			a[i] = new Wnd.Finder("Quick *", "QM_Editor", "qm.exe");
-			//a[i] = new Wnd.Finder("Quick *", "QM_Editor");
+			a[i] = new AWnd.Finder("Quick *", "QM_Editor", "qm.exe");
+			//a[i] = new AWnd.Finder("Quick *", "QM_Editor");
 		}
-		Wnd w = Wnd.Find("Quick *").OrThrow();
+		AWnd w = AWnd.Find("Quick *").OrThrow();
 
 		//for(int j = 0; j < 5; j++) {
 		//	int n = 0;
@@ -1816,8 +1816,8 @@ a1,-8";
 		object _o;
 		TContext(object o) => _o = o;
 
-		public static implicit operator TContext(Wnd.Finder f) => new TContext(f);
-		public static implicit operator TContext(Wnd f) => new TContext(f);
+		public static implicit operator TContext(AWnd.Finder f) => new TContext(f);
+		public static implicit operator TContext(AWnd f) => new TContext(f);
 		public static implicit operator TContext(Func<bool> f) => new TContext(f);
 	}
 
@@ -2108,16 +2108,16 @@ a1,-8";
 
 	static void TestWndGroup()
 	{
-		//Wnd.Find("Quick*-").Activate();
+		//AWnd.Find("Quick*-").Activate();
 
-		//var f = new Wnd.Finder("Quick*");
+		//var f = new AWnd.Finder("Quick*");
 		//f.
 
-		//Print(Wnd.WaitAny(0, false, new Wnd.Finder("Quick*")));
-		Print(Wnd.WaitAny(10, true, "Quick*,,,'LISTITEM' one, two, three", "*Notepad"));
-		//Print(Wnd.WaitAny(10, true, "*one, two, three*\0", "*Notepad"));
-		//Print(Wnd.WaitNot(10, "*Notepad"));
-		//Print(Wnd.WaitNot(10, out _, ",,Notepad.exe"));
+		//Print(AWnd.WaitAny(0, false, new AWnd.Finder("Quick*")));
+		Print(AWnd.WaitAny(10, true, "Quick*,,,'LISTITEM' one, two, three", "*Notepad"));
+		//Print(AWnd.WaitAny(10, true, "*one, two, three*\0", "*Notepad"));
+		//Print(AWnd.WaitNot(10, "*Notepad"));
+		//Print(AWnd.WaitNot(10, out _, ",,Notepad.exe"));
 	}
 
 	static void TestOutTuple(int k, out (bool, int) t)

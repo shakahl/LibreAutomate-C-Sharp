@@ -28,11 +28,11 @@ namespace Au
 	{
 		static AToolbar()
 		{
-			Wnd.More.MyWindow.RegisterClass("AToolbar");
+			AWnd.More.MyWindow.RegisterClass("AToolbar");
 		}
 
-		Wnd.More.MyWindow _wClass;
-		Wnd _w;
+		AWnd.More.MyWindow _wClass;
+		AWnd _w;
 		ToolStrip_ _ts;
 
 		/// <summary>
@@ -150,7 +150,7 @@ namespace Au
 			//RECT r = Screen.PrimaryScreen.WorkingArea; r.Inflate(-2, -2); r.top += 4;
 			RECT r = (0, 0, 200, 200);
 
-			_wClass = new Wnd.More.MyWindow(WndProc);
+			_wClass = new AWnd.More.MyWindow(WndProc);
 			if(!_wClass.Create("AToolbar", null, style, exStyle, r.top, r.left, r.Width, r.Height)) throw new Win32Exception();
 			APerf.Next();
 
@@ -186,10 +186,10 @@ namespace Au
 		/// <summary>
 		/// Gets the main toolbar window.
 		/// </summary>
-		public Wnd MainWnd => _w;
+		public AWnd MainWnd => _w;
 
 
-		protected virtual LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
+		protected virtual LPARAM WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam)
 		{
 			switch(message) {
 			case Api.WM_NCCREATE:
@@ -227,8 +227,8 @@ namespace Au
 						p.Parent = _parent.MainWnd.Handle;
 
 						//TODO: window name should be not exactly as script name.
-						//	Because need to prevent finding it instead of eg its owner window when Wnd.Find is used with partial name and without class name.
-						//	Even if ucase like QM 2, because Wnd.Find is case-insensitive.
+						//	Because need to prevent finding it instead of eg its owner window when AWnd.Find is used with partial name and without class name.
+						//	Even if ucase like QM 2, because AWnd.Find is case-insensitive.
 						//	Maybe "s.c.r.i.p.t".
 					}
 					return p;

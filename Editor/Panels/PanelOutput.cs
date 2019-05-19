@@ -120,7 +120,7 @@ class PanelOutput : Control
 	{
 		var dd = new PopupList { Items = _history.ToArray() };
 		dd.SelectedAction = o => Print((o.ResultItem as OutServMessage).Text);
-		dd.Show(new Rectangle(Mouse.XY, default));
+		dd.Show(new Rectangle(AMouse.XY, default));
 	}
 
 	//not override void OnHandleCreated, because then _c handle still not created, and we need to Call //TODO
@@ -171,15 +171,15 @@ class PanelOutput : Control
 
 	void _SetTopmost(bool on)
 	{
-		var w = ((Wnd)this).Window;
+		var w = ((AWnd)this).Window;
 		if(on) {
 			w.Owner = default;
 			w.ZorderTopmost();
 			//w.SetExStyle(WS_EX.APPWINDOW, SetAddRemove.Add);
-			//Wnd.GetWnd.Root.ActivateLL(); w.ActivateLL(); //let taskbar add button
+			//AWnd.GetWnd.Root.ActivateLL(); w.ActivateLL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();
-			w.Owner = (Wnd)MainForm;
+			w.Owner = (AWnd)MainForm;
 		}
 	}
 

@@ -70,7 +70,7 @@ namespace Au
 		/// })) {
 		/// 	MessageBox.Show("Low-level keyboard hook.", "Test");
 		/// 	//or
-		/// 	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for Esc key
+		/// 	//AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for Esc key
 		/// 	//Print("the end");
 		/// }
 		/// ]]></code>
@@ -102,7 +102,7 @@ namespace Au
 		/// })) {
 		/// 	MessageBox.Show("Low-level mouse hook.", "Test");
 		/// 	//or
-		/// 	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for right-click
+		/// 	//AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for right-click
 		/// 	//Print("the end");
 		/// }
 		/// ]]></code>
@@ -145,7 +145,7 @@ namespace Au
 		/// 		Print(x.KeyInfo(out _));
 		/// 		break;
 		/// 	case HookData.CbtEvent.SETFOCUS:
-		/// 		Print(x.FocusInfo(out Wnd wPrev), wPrev);
+		/// 		Print(x.FocusInfo(out AWnd wPrev), wPrev);
 		/// 		break;
 		/// 	case HookData.CbtEvent.MOVESIZE:
 		/// 		Print(x.MoveSizeInfo(out var r), r->ToString());
@@ -154,7 +154,7 @@ namespace Au
 		/// 		Print(x.MinMaxInfo(out var state), state);
 		/// 		break;
 		/// 	case HookData.CbtEvent.DESTROYWND:
-		/// 		Print((Wnd)x.wParam);
+		/// 		Print((AWnd)x.wParam);
 		/// 		break;
 		/// 	}
 		/// 	return false;
@@ -338,7 +338,7 @@ namespace Au
 		{
 			if(_hh != default) {
 				bool ok = Api.UnhookWindowsHookEx(_hh);
-				if(!ok) PrintWarning($"Failed to unhook AHookWin ({_hookTypeString}). {WinError.Message}");
+				if(!ok) PrintWarning($"Failed to unhook AHookWin ({_hookTypeString}). {ALastError.Message}");
 				_hh = default;
 			}
 		}
@@ -391,18 +391,18 @@ namespace Au
 							}
 							if(vk == KKey.MouseX2 && kll->dwExtraInfo == 1354291109) goto gr; //QM2 sync code
 						} else {
-							//When Keyb.Lib.ReleaseModAndCapsLock sends Shift to turn off CapsLock,
+							//When AKeyboard.Lib.ReleaseModAndCapsLock sends Shift to turn off CapsLock,
 							//	hooks receive a non-injected LShift down, CapsLock down/up and injected LShift up.
 							//	Our triggers would recover, but cannot auto-repeat. Better don't call the hookproc.
 							if((vk == KKey.CapsLock || vk == KKey.LShift) && _ignoreAuInjected && _IgnoreLShiftCaps) goto gr;
 
 							//Test how our triggers recover when a modifier down or up event is lost. Or when triggers started while a modifier is down.
-							//if(Keyb.IsScrollLock) {
+							//if(AKeyboard.IsScrollLock) {
 							//	//if(vk == KKey.LCtrl && !kll->IsUp) { Print("lost Ctrl down"); goto gr; }
 							//	if(vk == KKey.LCtrl && kll->IsUp) { Print("lost Ctrl up"); goto gr; }
 							//}
 						}
-						if(Keyb.LibKeyTypes.IsMod(vk) && _IgnoreMod) goto gr;
+						if(AKeyboard.LibKeyTypes.IsMod(vk) && _IgnoreMod) goto gr;
 						t1 = ATime.PerfMilliseconds;
 						p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
 						if(R = kll->BlockEvent) kll->BlockEvent = false;
@@ -621,7 +621,7 @@ namespace Au.Types
 			/// <summary>
 			/// If the key is a modifier key (Shift, Ctrl, Alt, Win), returns the modifier flag. Else returns 0.
 			/// </summary>
-			public KMod Mod => Keyb.Lib.KeyToMod((KKey)_x->vkCode);
+			public KMod Mod => AKeyboard.Lib.KeyToMod((KKey)_x->vkCode);
 
 			/// <summary>
 			/// If <b>vkCode</b> is a left or right modifier key code (LShift, LCtrl, LAlt, RShift, RCtrl, RAlt, RWin), returns the common modifier key code (Shift, Ctrl, Alt, Win). Else returns <b>vkCode</b>.
@@ -857,15 +857,15 @@ namespace Au.Types
 			/// Returns the window handle of the window being activated and gets some more info.
 			/// </summary>
 			/// <param name="fMouse">true if the reason is the mouse.</param>
-			/// <param name="wPrevActive">The previously active window, or default(Wnd).</param>
+			/// <param name="wPrevActive">The previously active window, or default(AWnd).</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.ACTIVATE.</exception>
-			public unsafe Wnd ActivationInfo(out bool fMouse, out Wnd wPrevActive)
+			public unsafe AWnd ActivationInfo(out bool fMouse, out AWnd wPrevActive)
 			{
 				if(code != CbtEvent.ACTIVATE) throw new InvalidOperationException();
 				var t = (Api.CBTACTIVATESTRUCT*)lParam;
 				fMouse = t->fMouse;
 				wPrevActive = t->hWndActive;
-				return (Wnd)wParam;
+				return (AWnd)wParam;
 			}
 
 			/// <summary>
@@ -875,15 +875,15 @@ namespace Au.Types
 			/// API <msdn>CREATESTRUCT</msdn>.
 			/// You can modify x y cx cy.
 			/// </param>
-			/// <param name="wInsertAfter">Window whose position in the Z order precedes that of the window being created, or default(Wnd).</param>
+			/// <param name="wInsertAfter">Window whose position in the Z order precedes that of the window being created, or default(AWnd).</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CREATEWND.</exception>
-			public unsafe Wnd CreationInfo(out Native.CREATESTRUCT* c, out Wnd wInsertAfter)
+			public unsafe AWnd CreationInfo(out Native.CREATESTRUCT* c, out AWnd wInsertAfter)
 			{
 				if(code != CbtEvent.CREATEWND) throw new InvalidOperationException();
 				var t = (Api.CBT_CREATEWND*)lParam;
 				c = t->lpcs;
 				wInsertAfter = t->hwndInsertAfter;
-				return (Wnd)wParam;
+				return (AWnd)wParam;
 			}
 
 			/// <summary>
@@ -913,13 +913,13 @@ namespace Au.Types
 			/// <summary>
 			/// Returns the window handle and gets some more info about the focus event.
 			/// </summary>
-			/// <param name="wLostFocus">The previously focused window, or default(Wnd).</param>
+			/// <param name="wLostFocus">The previously focused window, or default(AWnd).</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.SETFOCUS.</exception>
-			public Wnd FocusInfo(out Wnd wLostFocus)
+			public AWnd FocusInfo(out AWnd wLostFocus)
 			{
 				if(code != CbtEvent.SETFOCUS) throw new InvalidOperationException();
-				wLostFocus = (Wnd)lParam;
-				return (Wnd)wParam;
+				wLostFocus = (AWnd)lParam;
+				return (AWnd)wParam;
 			}
 
 			/// <summary>
@@ -927,11 +927,11 @@ namespace Au.Types
 			/// </summary>
 			/// <param name="r">The new rectangle of the window.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MOVESIZE.</exception>
-			public unsafe Wnd MoveSizeInfo(out RECT* r)
+			public unsafe AWnd MoveSizeInfo(out RECT* r)
 			{
 				if(code != CbtEvent.MOVESIZE) throw new InvalidOperationException();
 				r = (RECT*)lParam;
-				return (Wnd)wParam;
+				return (AWnd)wParam;
 			}
 
 			/// <summary>
@@ -939,11 +939,11 @@ namespace Au.Types
 			/// </summary>
 			/// <param name="showState">The new show state. See API <msdn>ShowWindow</msdn>. Minimized 6, maximized 3, restored 9.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MINMAX.</exception>
-			public Wnd MinMaxInfo(out int showState)
+			public AWnd MinMaxInfo(out int showState)
 			{
 				if(code != CbtEvent.MINMAX) throw new InvalidOperationException();
 				showState = (int)lParam & 0xffff;
-				return (Wnd)wParam;
+				return (AWnd)wParam;
 			}
 		}
 
@@ -1119,7 +1119,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Calls API API <msdn>ReplyMessage</msdn>, which allows to use <see cref="Acc"/> and COM in the hook procedure.
+		/// Calls API API <msdn>ReplyMessage</msdn>, which allows to use <see cref="AAcc"/> and COM in the hook procedure.
 		/// </summary>
 		/// <param name="cancelEvent">
 		/// Don't notify the target window about the event, and don't call other hook procedures.

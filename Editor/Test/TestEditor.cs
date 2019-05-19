@@ -126,7 +126,7 @@ partial class EdForm
 		//TestTools();
 		//TestReplaceFile();
 
-		//doc.CommentLines(!Keyb.IsShift);
+		//doc.CommentLines(!AKeyboard.IsShift);
 
 		//Au.Triggers.ActionTriggers.DisabledEverywhere ^= true;
 
@@ -136,7 +136,7 @@ partial class EdForm
 		////{{ main
 		//unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
 		//";
-		//		var s2 = @"/*/ role exeProgram; outputPath %Folders.Workspace%\bin; console true; /*/ //{{
+		//		var s2 = @"/*/ role exeProgram; outputPath %AFolders.Workspace%\bin; console true; /*/ //{{
 		////{{ using
 		//using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}
 		//using My.NS1; //ąčę îôû
@@ -225,10 +225,10 @@ partial class EdForm
 
 	void TestTools()
 	{
-		var f = new Au.Tools.Form_Wnd(Wnd.Find("Quick*"));
+		var f = new Au.Tools.Form_Wnd(AWnd.Find("Quick*"));
 		//var f = new Au.Tools.Form_Acc();
 		//var f = new Au.Tools.Form_WinImage();
-		//Wnd.GetWnd.Root.Activate();100.ms();
+		//AWnd.GetWnd.Root.Activate();100.ms();
 		f.Show(this);
 		//f.ShowDialog();
 		//f.Dispose();
@@ -238,7 +238,7 @@ partial class EdForm
 
 	//void TestReplaceFile()
 	//{
-	//	var settFile = Folders.ThisAppDocuments + @"!Settings\Settings2.xml";
+	//	var settFile = AFolders.ThisAppDocuments + @"!Settings\Settings2.xml";
 	//	lock(Settings) {
 	//		for(int i = 0; i < 300; i++) {
 	//			try {
@@ -272,7 +272,7 @@ partial class EdForm
 	//{
 	//	var code = Panels.Editor.ActiveDoc.Text;
 
-	//	var sRef = new string[] { typeof(object).Assembly.Location, Folders.ThisApp + "Au.dll" };
+	//	var sRef = new string[] { typeof(object).Assembly.Location, AFolders.ThisApp + "Au.dll" };
 	//	//var sRef = new string[] { typeof(object).Assembly.Location };
 
 	//	var references = new List<PortableExecutableReference>();
@@ -296,7 +296,7 @@ partial class EdForm
 	void SetHookToMonitorCreatedWindowsOfThisThread()
 	{
 		_hook = AHookWin.ThreadCbt(x => {
-			if(x.code == HookData.CbtEvent.CREATEWND) Print((Wnd)x.wParam);
+			if(x.code == HookData.CbtEvent.CREATEWND) Print((AWnd)x.wParam);
 			return false;
 		});
 		Application.ApplicationExit += (unu, sed) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with AHookWin) 

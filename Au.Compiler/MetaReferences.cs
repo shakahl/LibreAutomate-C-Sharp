@@ -75,8 +75,8 @@ namespace Au.Compiler
 		/// <param name="reference">Assembly name (like "System.Something") or filename (like "My.dll") or path.</param>
 		/// <exception cref="Exception">Some unexpected exception, eg failed to load the found file.</exception>
 		/// <remarks>
-		/// If used filename without full path, searches in <see cref="Folders.ThisApp"/>, subfolder "Libraries", <see cref="Folders.NetFrameworkRuntime"/> and GAC.
-		/// If used assembly name without ".dll", ".exe" or ", Version=", searches only in <see cref="Folders.NetFrameworkRuntime"/> and GAC.
+		/// If used filename without full path, searches in <see cref="AFolders.ThisApp"/>, subfolder "Libraries", <see cref="AFolders.NetFrameworkRuntime"/> and GAC.
+		/// If used assembly name without ".dll", ".exe" or ", Version=", searches only in <see cref="AFolders.NetFrameworkRuntime"/> and GAC.
 		/// If contains", Version=", searches only in GAC.
 		/// Can be "Alias=X.dll" - assembly reference that can be used with C# keyword 'extern alias'.
 		/// Loads the file but does not parse. If bad format, error later when compiling.
@@ -124,7 +124,7 @@ namespace Au.Compiler
 		{
 			if(Empty(re)) return null;
 			bool isFull = APath.IsFullPathExpandEnvVar(ref re);
-			if(!isFull && isCOM) { isFull = true; re = Folders.Workspace + @".interop\" + re; }
+			if(!isFull && isCOM) { isFull = true; re = AFolders.Workspace + @".interop\" + re; }
 			if(isFull) return AFile.ExistsAsFile(re) ? re : null;
 
 			string path, ext; int i;
@@ -158,7 +158,7 @@ namespace Au.Compiler
 			//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
 		}
 		static readonly string[] s_asmExt = { ".dll", ".exe" };
-		static readonly string[] s_dirs = { Folders.ThisApp, Folders.ThisApp + "Libraries" };
+		static readonly string[] s_dirs = { AFolders.ThisApp, AFolders.ThisApp + "Libraries" };
 
 		/// <summary>
 		/// Extracts path from compiler error message CS0009 and removes the reference from cache.

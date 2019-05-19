@@ -18,7 +18,7 @@ using static Au.AStatic;
 
 namespace Au
 {
-	public unsafe partial struct Wnd
+	public unsafe partial struct AWnd
 	{
 		/// <summary>
 		/// if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
@@ -48,7 +48,7 @@ namespace Au
 		/// <param name="appId">Receives app ID.</param>
 		/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
 		/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
-		static int _GetWindowsStoreAppId(Wnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
+		static int _GetWindowsStoreAppId(AWnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
 		{
 			appId = null;
 
@@ -94,13 +94,13 @@ namespace Au
 		/// If w is minimized, cloaked (eg on other desktop) or the app is starting, the "Windows.UI.Core.CoreWindow" is not its child. Then searches for a top-level window named like w. It is unreliable, but MS does not provide API for this.
 		/// Info: "Windows.UI.Core.CoreWindow" windows hosted by "ApplicationFrameWindow" belong to separate processes. All "ApplicationFrameWindow" windows belong to a single process.
 		/// </summary>
-		static Wnd _WindowsStoreAppFrameChild(Wnd w)
+		static AWnd _WindowsStoreAppFrameChild(AWnd w)
 		{
 			bool retry = false;
 			string name = null;
 			g1:
 			if(!AVersion.MinWin10 || !w.ClassNameIs("ApplicationFrameWindow")) return default;
-			Wnd c = Api.FindWindowEx(w, default, "Windows.UI.Core.CoreWindow", null);
+			AWnd c = Api.FindWindowEx(w, default, "Windows.UI.Core.CoreWindow", null);
 			if(!c.Is0) return c;
 			if(retry) return default;
 
@@ -120,10 +120,10 @@ namespace Au
 		///// <summary>
 		///// The reverse of _WindowsStoreAppFrameChild.
 		///// </summary>
-		//static Wnd _WindowsStoreAppHost(Wnd w)
+		//static AWnd _WindowsStoreAppHost(AWnd w)
 		//{
 		//	if(!AVersion.MinWin10 || !w.ClassNameIs("Windows.UI.Core.CoreWindow")) return default;
-		//	Wnd wo = w.Get.DirectParent; if(!wo.Is0 && wo.ClassNameIs("ApplicationFrameWindow")) return wo;
+		//	AWnd wo = w.Get.DirectParent; if(!wo.Is0 && wo.ClassNameIs("ApplicationFrameWindow")) return wo;
 		//	string s = w.GetText(false, false); if(Empty(s)) return default;
 		//	return Api.FindWindow("ApplicationFrameWindow", s);
 		//}
@@ -146,7 +146,7 @@ namespace Au
 				static readonly ushort s_atom = Api.GlobalAddAtom("Au.WFlags"); //atom is much faster than string
 																				//note: cannot delete atom, eg in static dtor. Deletes even if currently used by a window prop, making the prop useless.
 
-				internal static bool Set(Wnd w, WFlags flags, SetAddRemove setAddRem = SetAddRemove.Set)
+				internal static bool Set(AWnd w, WFlags flags, SetAddRemove setAddRem = SetAddRemove.Set)
 				{
 					if(setAddRem != SetAddRemove.Set) {
 						var f = Get(w);
@@ -160,12 +160,12 @@ namespace Au
 					return w.Prop.Set(s_atom, (int)flags);
 				}
 
-				internal static WFlags Get(Wnd w)
+				internal static WFlags Get(AWnd w)
 				{
 					return (WFlags)(int)w.Prop[s_atom];
 				}
 
-				internal static WFlags Remove(Wnd w)
+				internal static WFlags Remove(AWnd w)
 				{
 					return (WFlags)(int)w.Prop.Remove(s_atom);
 				}
@@ -173,25 +173,25 @@ namespace Au
 
 			//internal class LastWndProps
 			//{
-			//	Wnd _w;
+			//	AWnd _w;
 			//	long _time;
 			//	string _class, _programName, _programPath;
 			//	int _tid, _pid;
 
-			//	void _GetCommon(Wnd w)
+			//	void _GetCommon(AWnd w)
 			//	{
 			//		var t = ATime.PerfMilliseconds;
 			//		if(w != _w || t - _time > 100) { _w = w; _class = _programName= _programPath = null; _tid = _pid = 0; }
 			//		_time = t;
 			//	}
 
-			//	//internal string GetName(Wnd w) { _GetCommon(w); return _name; }
+			//	//internal string GetName(AWnd w) { _GetCommon(w); return _name; }
 
-			//	internal string GetClass(Wnd w) { _GetCommon(w); return _class; }
+			//	internal string GetClass(AWnd w) { _GetCommon(w); return _class; }
 
-			//	internal string GetProgram(Wnd w, bool fullPath) { _GetCommon(w); return fullPath ? _programPath : _programName; }
+			//	internal string GetProgram(AWnd w, bool fullPath) { _GetCommon(w); return fullPath ? _programPath : _programName; }
 
-			//	internal int GetTidPid(Wnd w, out int pid) { _GetCommon(w); pid = _pid; return _tid; }
+			//	internal int GetTidPid(AWnd w, out int pid) { _GetCommon(w); pid = _pid; return _tid; }
 
 			//	//internal void SetName(string s) => _name = s;
 
@@ -205,7 +205,7 @@ namespace Au
 			//	internal static LastWndProps OfThread => _ofThread ?? (_ofThread = new LastWndProps());
 			//}
 
-			internal static Wnd CreateMessageWindowDefWndProc()
+			internal static AWnd CreateMessageWindowDefWndProc()
 			{
 				if(s_atomDWP == 0) s_atomDWP = More.MyWindow.RegisterClass(c_wndClassDWP);
 				return More.CreateMessageOnlyWindow(c_wndClassDWP);
@@ -217,7 +217,7 @@ namespace Au
 			/// Returns true if w contains a non-zero special handle value (<see cref="Native.HWND"/>).
 			/// Note: <b>Native.HWND.TOP</b> is 0.
 			/// </summary>
-			public static bool IsSpecHwnd(Wnd w)
+			public static bool IsSpecHwnd(AWnd w)
 			{
 				int i = (int)w;
 				return (i <= 1 && i >= -3) || i == 0xffff;

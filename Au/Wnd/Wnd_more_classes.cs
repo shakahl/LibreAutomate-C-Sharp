@@ -1,4 +1,4 @@
-﻿//Wnd.Misc nested classes.
+﻿//AWnd.More nested classes.
 
 using System;
 using System.Collections.Generic;
@@ -18,11 +18,9 @@ using System.Runtime.ExceptionServices;
 using Au.Types;
 using static Au.AStatic;
 
-#pragma warning disable 282 //intellisense bug: it thinks that Wnd has multiple fields.
-
 namespace Au
 {
-	public partial struct Wnd
+	public partial struct AWnd
 	{
 		public static partial class More
 		{
@@ -36,7 +34,7 @@ namespace Au
 				/// </summary>
 				/// <param name="w">Window.</param>
 				/// <param name="count">The number of times to flash. If 0, stops flashing.</param>
-				public static void Flash(Wnd w, int count)
+				public static void Flash(AWnd w, int count)
 				{
 					//const uint FLASHW_STOP = 0;
 					//const uint FLASHW_CAPTION = 0x00000001;
@@ -62,7 +60,7 @@ namespace Au
 				/// </summary>
 				/// <param name="w">Button's window.</param>
 				/// <param name="state">Progress indicator state and color.</param>
-				public static void SetProgressState(Wnd w, TBProgressState state)
+				public static void SetProgressState(AWnd w, TBProgressState state)
 				{
 					_TaskbarButton.taskbarInstance.SetProgressState(w, state);
 				}
@@ -74,7 +72,7 @@ namespace Au
 				/// <param name="w">Button's window.</param>
 				/// <param name="progressValue">Progress indicator value, 0 to progressTotal.</param>
 				/// <param name="progressTotal">Max progress indicator value.</param>
-				public static void SetProgressValue(Wnd w, int progressValue, int progressTotal = 100)
+				public static void SetProgressValue(AWnd w, int progressValue, int progressTotal = 100)
 				{
 					_TaskbarButton.taskbarInstance.SetProgressValue(w, progressValue, progressTotal);
 				}
@@ -84,7 +82,7 @@ namespace Au
 				/// Calls <msdn>ITaskbarList.AddTab</msdn>.
 				/// </summary>
 				/// <param name="w">Button's window.</param>
-				public static void Add(Wnd w)
+				public static void Add(AWnd w)
 				{
 					_TaskbarButton.taskbarInstance.AddTab(w);
 					//info: succeeds without HrInit(), tested on Win10 and 7.
@@ -96,7 +94,7 @@ namespace Au
 				/// Calls <msdn>ITaskbarList.DeleteTab</msdn>.
 				/// </summary>
 				/// <param name="w">Button's window.</param>
-				public static void Delete(Wnd w)
+				public static void Delete(AWnd w)
 				{
 					_TaskbarButton.taskbarInstance.DeleteTab(w);
 				}
@@ -108,27 +106,27 @@ namespace Au
 					{
 						// ITaskbarList
 						[PreserveSig] int HrInit();
-						[PreserveSig] int AddTab(Wnd hwnd);
-						[PreserveSig] int DeleteTab(Wnd hwnd);
-						[PreserveSig] int ActivateTab(Wnd hwnd);
-						[PreserveSig] int SetActiveAlt(Wnd hwnd);
+						[PreserveSig] int AddTab(AWnd hwnd);
+						[PreserveSig] int DeleteTab(AWnd hwnd);
+						[PreserveSig] int ActivateTab(AWnd hwnd);
+						[PreserveSig] int SetActiveAlt(AWnd hwnd);
 
 						// ITaskbarList2
-						[PreserveSig] int MarkFullscreenWindow(Wnd hwnd, bool fFullscreen);
+						[PreserveSig] int MarkFullscreenWindow(AWnd hwnd, bool fFullscreen);
 
 						// ITaskbarList3
-						[PreserveSig] int SetProgressValue(Wnd hwnd, long ullCompleted, long ullTotal);
-						[PreserveSig] int SetProgressState(Wnd hwnd, TBProgressState state);
-						[PreserveSig] int RegisterTab(Wnd hwndTab, Wnd hwndMDI);
-						[PreserveSig] int UnregisterTab(Wnd hwndTab);
-						[PreserveSig] int SetTabOrder(Wnd hwndTab, Wnd hwndInsertBefore);
-						[PreserveSig] int SetTabActive(Wnd hwndTab, Wnd hwndMDI, uint dwReserved);
-						[PreserveSig] int ThumbBarAddButtons(Wnd hwnd, uint cButtons, IntPtr pButton); //LPTHUMBBUTTON
-						[PreserveSig] int ThumbBarUpdateButtons(Wnd hwnd, uint cButtons, IntPtr pButton); //LPTHUMBBUTTON
-						[PreserveSig] int ThumbBarSetImageList(Wnd hwnd, IntPtr himl);
-						[PreserveSig] int SetOverlayIcon(Wnd hwnd, IntPtr hIcon, string pszDescription);
-						[PreserveSig] int SetThumbnailTooltip(Wnd hwnd, string pszTip);
-						[PreserveSig] int SetThumbnailClip(Wnd hwnd, ref RECT prcClip);
+						[PreserveSig] int SetProgressValue(AWnd hwnd, long ullCompleted, long ullTotal);
+						[PreserveSig] int SetProgressState(AWnd hwnd, TBProgressState state);
+						[PreserveSig] int RegisterTab(AWnd hwndTab, AWnd hwndMDI);
+						[PreserveSig] int UnregisterTab(AWnd hwndTab);
+						[PreserveSig] int SetTabOrder(AWnd hwndTab, AWnd hwndInsertBefore);
+						[PreserveSig] int SetTabActive(AWnd hwndTab, AWnd hwndMDI, uint dwReserved);
+						[PreserveSig] int ThumbBarAddButtons(AWnd hwnd, uint cButtons, IntPtr pButton); //LPTHUMBBUTTON
+						[PreserveSig] int ThumbBarUpdateButtons(AWnd hwnd, uint cButtons, IntPtr pButton); //LPTHUMBBUTTON
+						[PreserveSig] int ThumbBarSetImageList(AWnd hwnd, IntPtr himl);
+						[PreserveSig] int SetOverlayIcon(AWnd hwnd, IntPtr hIcon, string pszDescription);
+						[PreserveSig] int SetThumbnailTooltip(AWnd hwnd, string pszTip);
+						[PreserveSig] int SetThumbnailClip(AWnd hwnd, ref RECT prcClip);
 					}
 
 					[ComImport]
@@ -244,7 +242,7 @@ namespace Au
 				/// <param name="dataId">Data id. It is <msdn>COPYDATASTRUCT.dwData</msdn>.</param>
 				/// <param name="s">Data. Can contain '\0' characters.</param>
 				/// <param name="wParam">wParam of WM_COPYDATA. Optional.</param>
-				public static LPARAM SendString(Wnd w, int dataId, string s, LPARAM wParam = default)
+				public static LPARAM SendString(AWnd w, int dataId, string s, LPARAM wParam = default)
 				{
 					fixed (char* p = s) {
 						var c = new CopyDataStruct { _dwData = dataId, _cbData = s.Length * 2, _lpData = p };
@@ -256,7 +254,7 @@ namespace Au
 				/// Sends byte[] to a window of another process using API <msdn>SendMessage</msdn>(<msdn>WM_COPYDATA</msdn>).
 				/// More info: <see cref="SendString"/>.
 				/// </summary>
-				public static unsafe LPARAM SendBytes(Wnd w, int dataId, byte[] a, LPARAM wParam = default)
+				public static unsafe LPARAM SendBytes(AWnd w, int dataId, byte[] a, LPARAM wParam = default)
 				{
 					fixed (byte* p = a) {
 						var c = new CopyDataStruct { _dwData = dataId, _cbData = a.Length, _lpData = p };
@@ -329,7 +327,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Used by <see cref="Wnd.More.TaskbarButton.SetProgressState"/>.
+	/// Used by <see cref="AWnd.More.TaskbarButton.SetProgressState"/>.
 	/// </summary>
 	[NoDoc]
 	public enum TBProgressState

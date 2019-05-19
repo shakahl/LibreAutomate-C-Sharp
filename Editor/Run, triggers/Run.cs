@@ -194,7 +194,7 @@ class RunningTask
 			if(ok) {
 				if(0 != Api.WaitForSingleObject(h, 2000)) { ADebug.Print("process not terminated"); return false; }
 			} else {
-				var s = WinError.Message;
+				var s = ALastError.Message;
 				if(0 != Api.WaitForSingleObject(h, 0)) { ADebug.Print(s); return false; }
 			}
 			//note: TerminateProcess kills process not immediately. Need at least several ms.
@@ -225,7 +225,7 @@ class RunningTasks
 	readonly List<_WaitingTask> _q; //not Queue because may need to remove item at any index
 	bool _updateUI;
 	volatile bool _disposed;
-	Wnd _wMain;
+	AWnd _wMain;
 
 	public IEnumerable<RunningTask> Items => _a;
 
@@ -234,7 +234,7 @@ class RunningTasks
 		_a = new List<RunningTask>();
 		_q = new List<_WaitingTask>();
 		_recent = new List<RecentTask>();
-		_wMain = (Wnd)MainForm;
+		_wMain = (AWnd)MainForm;
 		Timer1sOr025s += _TimerUpdateUI;
 	}
 
@@ -484,7 +484,7 @@ class RunningTasks
 			exeFile = r.file;
 			argsString = args == null ? null : AExtString.More.CommandLineFromArray(args);
 		} else {
-			exeFile = Folders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");
+			exeFile = AFolders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");
 
 			int iFlags = r.hasConfig ? 1 : 0;
 			if(r.mtaThread) iFlags |= 2;
@@ -514,7 +514,7 @@ class RunningTasks
 				//APerf.First();
 				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent };
 				if(!Api.ConnectNamedPipe(pre.hPipe, &o)) {
-					int e = WinError.Code; if(e != Api.ERROR_IO_PENDING) throw new AException(e);
+					int e = ALastError.Code; if(e != Api.ERROR_IO_PENDING) throw new AException(e);
 					var ha = stackalloc IntPtr[2] { pre.overlappedEvent, hProcess.SafeWaitHandle.DangerousGetHandle() };
 					int wr = Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
 					if(wr != 0) { Api.CancelIo(pre.hPipe); throw new AException("*start task. Preloaded task process ended"); } //note: if fails when 32-bit process, rebuild solution with platform x86
@@ -593,7 +593,7 @@ class RunningTasks
 		if(wrPipeName != null) wrPipeName = "ATask.WriteResult.pipe=" + wrPipeName;
 		if(uac == _SpUac.admin) {
 			if(wrPipeName != null) throw new AException($"*start process '{exeFile}' as admin and enable ATask.WriteResult"); //cannot pass environment variables. //rare //FUTURE
-			var k = Exec.Run(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
+			var k = AExec.Run(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
 			return (k.ProcessId, k.ProcessHandle);
 			//note: don't try to start task without UAC consent. It is not secure.
 			//	Normally Au editor runs as admin in admin user account, and don't need to go through this.

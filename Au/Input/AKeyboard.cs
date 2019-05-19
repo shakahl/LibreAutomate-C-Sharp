@@ -22,28 +22,28 @@ namespace Au
 	/// Keyboard functions: send virtual keystrokes and text to the active window, get key states.
 	/// </summary>
 	/// <remarks>
-	/// The main function is <see cref="Key"/>. Most documentation is there. See also <see cref="Text"/>. These functions use <see cref="AOpt.Key"/>. Alternatively can be used <b>Keyb</b> variables, see <see cref="Keyb(OptKey)"/>.
+	/// The main function is <see cref="Key"/>. Most documentation is there. See also <see cref="Text"/>. These functions use <see cref="AOpt.Key"/>. Alternatively can be used <b>AKeyboard</b> variables, see <see cref="AKeyboard(OptKey)"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// Keyb.Key("Ctrl+Shift+Left"); //press Ctrl+Shift+Left
+	/// AKeyboard.Key("Ctrl+Shift+Left"); //press Ctrl+Shift+Left
 	/// 
 	/// AOpt.Key.KeySpeed = 300; //set options for static functions
-	/// Keyb.Key("Ctrl+A Del Tab*3", "text", "Enter", 500); //press Ctrl+A, press Del, press Tab 3 times, send text, press Enter, wait 100 ms
+	/// AKeyboard.Key("Ctrl+A Del Tab*3", "text", "Enter", 500); //press Ctrl+A, press Del, press Tab 3 times, send text, press Enter, wait 100 ms
 	/// 
-	/// Keyb.Text("text\r\n"); //send text that ends with newline
-	/// Keyb.Text("text", "Enter", 300); //send text, press Enter, wait 300 ms
+	/// AKeyboard.Text("text\r\n"); //send text that ends with newline
+	/// AKeyboard.Text("text", "Enter", 300); //send text, press Enter, wait 300 ms
 	/// 
-	/// Text("Key and Text can be used without the \"Keyb.\" prefix.");
+	/// Text("Key and Text can be used without the \"AKeyboard.\" prefix.");
 	/// Key("Enter");
 	/// ]]></code>
 	/// </example>
-	public partial class Keyb
+	public partial class AKeyboard
 	{
 		/// <param name="cloneOptions">Options to be copied to <see cref="Options"/> of this variable. If null, uses default options.</param>
 		/// <example>
 		/// <code><![CDATA[
-		/// var k = new Keyb(AOpt.Static.Key);
+		/// var k = new AKeyboard(AOpt.Static.Key);
 		/// k.Options.KeySpeed = 50;
 		/// k.AddKeys("Tab // Space").AddRepeat(3).AddText("text").AddKey(KKey.Enter).AddSleep(500);
 		/// k.Send(); //sends and clears the variable
@@ -51,7 +51,7 @@ namespace Au
 		/// for(int i = 0; i < 5; i++) k.Send(true); //does not clear the variable
 		/// ]]></code>
 		/// </example>
-		public Keyb(OptKey cloneOptions) { Options = new OptKey(cloneOptions); }
+		public AKeyboard(OptKey cloneOptions) { Options = new OptKey(cloneOptions); }
 
 		/// <summary>
 		/// Options used by this variable.
@@ -141,7 +141,7 @@ namespace Au
 		//This struct is used to separate sending-only fields from other fields.
 		struct _KSendingState
 		{
-			public Wnd wFocus;
+			public AWnd wFocus;
 			public OptKey options;
 
 			public void Clear()
@@ -162,7 +162,7 @@ namespace Au
 		/// </summary>
 		/// <param name="keys">Key names and operators. Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc"</c>. More info: <see cref="Key"/>. Can be null or "".</param>
 		/// <exception cref="ArgumentException">Error in <i>keys</i> string, for example an unknown key name.</exception>
-		public Keyb AddKeys(string keys)
+		public AKeyboard AddKeys(string keys)
 		{
 			_ThrowIfSending();
 			if(Empty(keys)) return this;
@@ -245,7 +245,7 @@ namespace Au
 		}
 
 		//Adds key or other event. Calls _ModUp(). Not used fo sleep and repeat.
-		Keyb _AddKey(_KEvent e)
+		AKeyboard _AddKey(_KEvent e)
 		{
 			_AddModUp();
 			_pstate.plus = false;
@@ -260,7 +260,7 @@ namespace Au
 		/// <param name="key">Virtual-key code, as <see cref="KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255.</param>
 		/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
 		/// <exception cref="ArgumentException">Invalid <i>key</i> (0).</exception>
-		public Keyb AddKey(KKey key, bool? down = null)
+		public AKeyboard AddKey(KKey key, bool? down = null)
 		{
 			_ThrowIfSending();
 			if(key == 0) throw new ArgumentException("Invalid value.", nameof(key));
@@ -281,7 +281,7 @@ namespace Au
 		/// <param name="extendedKey">true if the key is an extended key.</param>
 		/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
 		/// <exception cref="ArgumentException">Invalid scan code.</exception>
-		public Keyb AddKey(KKey key, int scanCode, bool extendedKey, bool? down = null)
+		public AKeyboard AddKey(KKey key, int scanCode, bool extendedKey, bool? down = null)
 		{
 			_ThrowIfSending();
 			if((uint)scanCode > 0xffff) throw new ArgumentException("Invalid value.", nameof(scanCode));
@@ -303,7 +303,7 @@ namespace Au
 		/// <param name="vk"></param>
 		/// <param name="scan"></param>
 		/// <param name="siFlags">SendInput flags.</param>
-		internal Keyb LibAddRaw(KKey vk, ushort scan, byte siFlags)
+		internal AKeyboard LibAddRaw(KKey vk, ushort scan, byte siFlags)
 		{
 			_ThrowIfSending();
 			return _AddKey(new _KEvent(false, vk, (_KFlags)(siFlags & 0xf), scan));
@@ -336,7 +336,7 @@ namespace Au
 		/// <remarks>
 		/// To send text can be used keys or clipboard, depending on <see cref="AOpt.Key"/> and text.
 		/// </remarks>
-		public Keyb AddText(string text)
+		public AKeyboard AddText(string text)
 		{
 			_ThrowIfSending();
 			if(!Empty(text)) _AddKey(new _KEvent(_KType.Text, _SetData(text)));
@@ -375,7 +375,7 @@ namespace Au
 		/// <remarks>
 		/// The callback function will be called by <see cref="Send"/> and can do anything except sending keys and copy/paste.
 		/// </remarks>
-		public Keyb AddCallback(Action callback)
+		public AKeyboard AddCallback(Action callback)
 		{
 			_ThrowIfSending();
 			if(callback == null) throw new ArgumentNullException();
@@ -389,7 +389,7 @@ namespace Au
 		/// <param name="count">Repeat count.</param>
 		/// <exception cref="ArgumentOutOfRangeException"><i>count</i> &gt;10000 or &lt;0.</exception>
 		/// <exception cref="ArgumentException">The last added item is not key. Can repeat only single key; cannot repeat text etc.</exception>
-		public Keyb AddRepeat(int count)
+		public AKeyboard AddRepeat(int count)
 		{
 			_ThrowIfSending();
 			if((uint)count > 10000) throw new ArgumentOutOfRangeException(nameof(count), "Max repeat count is 10000.");
@@ -404,7 +404,7 @@ namespace Au
 		/// </summary>
 		/// <param name="timeMS">Time to sleep, milliseconds.</param>
 		/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> &gt;10000 (1 minute) or &lt;0.</exception>
-		public Keyb AddSleep(int timeMS)
+		public AKeyboard AddSleep(int timeMS)
 		{
 			_ThrowIfSending();
 			if((uint)timeMS > 10000) throw new ArgumentOutOfRangeException(nameof(timeMS), "Max sleep time is 10000.");
@@ -418,7 +418,7 @@ namespace Au
 		/// </summary>
 		/// <param name="keysEtc">Arguments. The same as with <see cref="Key"/>.</param>
 		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example unknown key name.</exception>
-		public Keyb Add(params object[] keysEtc)
+		public AKeyboard Add(params object[] keysEtc)
 		{
 			_ThrowIfSending();
 			if(keysEtc != null) {
@@ -540,7 +540,7 @@ namespace Au
 			//Sync problems:
 			//	Tried many ways, nothing is good enough. The test code now is in the "Unused" project.
 			//	The best would be non-LL keyboard hook that sets event when receives our sent special key-up. Especially when combined with 'get thread CPU usage' while waiting for the event. However these hooks don't work eg in Store apps.
-			//Better add a Sync function (Keyb.Sync) or/and special key name, let users do it explicitly where need.
+			//Better add a Sync function (AKeyboard.Sync) or/and special key name, let users do it explicitly where need.
 		}
 
 		unsafe void _SendKey(_KEvent k, int i)
@@ -629,7 +629,7 @@ namespace Au
 			}
 
 			if(textOption == KTextOption.Paste) {
-				Clipb.LibPaste(s, opt, wFocus);
+				AClipboard.LibPaste(s, opt, wFocus);
 				return;
 			}
 

@@ -46,7 +46,7 @@ namespace Au
 			/// <param name="s">Parameter. If starts with "***" and is valid, receives the 'value' part; else unchanged. Can be null.</param>
 			/// <param name="names">List of supported 'name'.</param>
 			/// <remarks>
-			/// Used to parse parameters like <i>name</i> of <see cref="Wnd.Child"/>.
+			/// Used to parse parameters like <i>name</i> of <see cref="AWnd.Child"/>.
 			/// </remarks>
 			internal static int ParseParam3Stars(ref string s, params string[] names)
 			{
@@ -92,7 +92,7 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="Exec.Run"/>, <see cref="Process.Start"/>.
+			/// Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="AExec.Run"/>, <see cref="Process.Start"/>.
 			/// Returns null if a is null or has 0 elements.
 			/// </summary>
 			/// <param name="a"></param>

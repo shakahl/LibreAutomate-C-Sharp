@@ -417,7 +417,7 @@ namespace SdkConverter
 						}
 					} else if(!ts.isClass) {
 						switch(name) {
-						case "Wnd": case "LPARAM": isBlittable = true; break;
+						case "AWnd": case "LPARAM": isBlittable = true; break;
 						case "GUID": name = "Guid"; break;
 						case "DECIMAL": name = "decimal"; break;
 						case "VARIANT":

@@ -50,7 +50,7 @@ namespace Au.Compiler
 			{
 				bool ok = ARegistry.GetInt(out s_frameworkVersion, "Release", @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full");
 				Debug.Assert(ok);
-				s_auVersion = typeof(Wnd).Assembly.GetName().Version.ToString();
+				s_auVersion = typeof(AWnd).Assembly.GetName().Version.ToString();
 			}
 			static int s_frameworkVersion;
 			static string s_auVersion;
@@ -131,7 +131,7 @@ namespace Au.Compiler
 							break;
 						case '*':
 							var dll = value.Substring(offs, s.EndOffset - offs);
-							if(!APath.IsFullPath(dll)) dll = Folders.ThisApp + dll;
+							if(!APath.IsFullPath(dll)) dll = AFolders.ThisApp + dll;
 							if(_IsFileModified2(dll)) return false;
 							break;
 						case 'l':
@@ -252,9 +252,9 @@ namespace Au.Compiler
 					var refs = m.References.Refs;
 					int j = DefaultReferences.Count;
 					if(refs.Count > j) {
-						//string netDir = Folders.Windows + @"Microsoft.NET\";
-						string netDir = Folders.NetFrameworkRuntime; //no GAC
-						var appDir = Folders.ThisAppBS;
+						//string netDir = AFolders.Windows + @"Microsoft.NET\";
+						string netDir = AFolders.NetFrameworkRuntime; //no GAC
+						var appDir = AFolders.ThisAppBS;
 						for(; j < refs.Count; j++) {
 							var s1 = refs[j].FilePath;
 							if(s1.Starts(netDir, true)) continue;

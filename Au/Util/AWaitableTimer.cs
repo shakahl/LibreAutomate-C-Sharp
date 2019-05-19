@@ -47,15 +47,15 @@ namespace Au.Util
 		/// <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value TIMER_MODIFY_STATE|SYNCHRONIZE allows to set and wait.</param>
 		/// <exception cref="AException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
 		/// <param name="inheritHandle"></param>
-		/// <param name="noException">If fails, return null, don't throw exception. Supports <see cref="WinError"/>.</param>
+		/// <param name="noException">If fails, return null, don't throw exception. Supports <see cref="ALastError"/>.</param>
 		/// <exception cref="AException">Failed. For example, the timer does not exist.</exception>
 		public static AWaitableTimer Open(string timerName, uint access = Api.TIMER_MODIFY_STATE | Api.SYNCHRONIZE, bool inheritHandle = false, bool noException = false)
 		{
 			var h = Api.OpenWaitableTimer(access, inheritHandle, timerName);
 			if(h.Is0) {
-				var e = WinError.Code;
+				var e = ALastError.Code;
 				if(noException) {
-					WinError.Code = e;
+					ALastError.Code = e;
 					return null;
 				}
 				throw new AException(e, "*open timer");
@@ -65,7 +65,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Calls API <msdn>SetWaitableTimer</msdn>.
-		/// Returns false if fails. Supports <see cref="WinError"/>.
+		/// Returns false if fails. Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="dueTime">
 		/// The time after which the state of the timer is to be set to signaled. It is relative time (from now).
@@ -81,7 +81,7 @@ namespace Au.Util
 
 		/// <summary>
 		/// Calls API <msdn>SetWaitableTimer</msdn>.
-		/// Returns false if fails. Supports <see cref="WinError"/>.
+		/// Returns false if fails. Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="dueTime">The UTC date/time at which the state of the timer is to be set to signaled.</param>
 		/// <param name="period">The period of the timer, in milliseconds. If 0, the timer is signaled once. If greater than 0, the timer is periodic.</param>

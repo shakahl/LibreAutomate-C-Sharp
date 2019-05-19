@@ -47,7 +47,7 @@ namespace Au
 	{
 		LibHandle _syncEvent, _stopEvent;
 		LibHandle _threadHandle;
-		Keyb _blockedKeys;
+		AKeyboard _blockedKeys;
 		long _startTime;
 		BIEvents _block;
 		int _threadId;
@@ -162,7 +162,7 @@ namespace Au
 				try { hwe = new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, _winEventProc ?? (_winEventProc = _WinEventProc)); }
 				catch(AException e1) { ADebug.Print(e1); } //failed to hook
 
-				WaitFor.LibWait(-1, WHFlags.DoEvents, _stopEvent, _threadHandle);
+				AWaitFor.LibWait(-1, WHFlags.DoEvents, _stopEvent, _threadHandle);
 
 				if(_blockedKeys != null && !_discardBlockedKeys) {
 					if(ATime.WinMilliseconds - _startTime < c_maxResendTime) {
@@ -199,7 +199,7 @@ namespace Au
 			//}
 
 			if(ResendBlockedKeys && ATime.WinMilliseconds - _startTime < c_maxResendTime) {
-				if(_blockedKeys == null) _blockedKeys = new Keyb(AOpt.Static.Key);
+				if(_blockedKeys == null) _blockedKeys = new AKeyboard(AOpt.Static.Key);
 				//Print("blocked", x.vkCode, !x.IsUp);
 				_blockedKeys.LibAddRaw(x.vkCode, (ushort)x.scanCode, x.LibSendInputFlags);
 			}
@@ -224,13 +224,13 @@ namespace Au
 				//if(DontBlockInjected || (extraInfo != default && extraInfo == DontBlockInjectedExtraInfo)) return true;
 				if(DontBlockInjected) return true;
 			}
-			Wnd w;
+			AWnd w;
 			if(vk != 0) {
 				//var a = DontBlockKeys;
 				//if(a != null) foreach(var k in a) if(vk == k) return true;
-				w = Wnd.Active;
+				w = AWnd.Active;
 			} else {
-				w = isMMove ? Wnd.Active : Wnd.FromMouse();
+				w = isMMove ? AWnd.Active : AWnd.FromMouse();
 				//note: don't use hook's pt, because of a bug in some OS versions.
 				//note: for wheel it's better to use FromMouse.
 			}

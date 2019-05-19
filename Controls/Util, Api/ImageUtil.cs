@@ -231,7 +231,7 @@ namespace Au.Controls
 		/// <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
 		/// <param name="t">Image type and string format.</param>
 		/// <param name="searchPath">Use <see cref="AFile.SearchPath"/></param>
-		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="Folders.ThisAppImages"/>.</remarks>
+		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="AFolders.ThisAppImages"/>.</remarks>
 		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false)
 		{
 			//Print(t, s);
@@ -241,11 +241,11 @@ namespace Au.Controls
 				case ImageType.PngGifJpg:
 				case ImageType.Cur:
 					if(searchPath) {
-						s = AFile.SearchPath(s, Folders.ThisAppImages);
+						s = AFile.SearchPath(s, AFolders.ThisAppImages);
 						if(s == null) return null;
 					} else {
 						if(!APath.IsFullPathExpandEnvVar(ref s)) return null;
-						s = APath.Normalize(s, Folders.ThisAppImages);
+						s = APath.Normalize(s, AFolders.ThisAppImages);
 						if(!AFile.ExistsAsFile(s)) return null;
 					}
 					break;
@@ -376,12 +376,12 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="WinImage.Find"/>.
+		/// Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="AWinImage.Find"/>.
 		/// Returns string with prefix "image:" (Base-64 encoded .png/gif/jpg file data) or "~:" (Base-64 encoded compressed .bmp file data).
 		/// Supports all <see cref="ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
 		/// Returns null if path is not a valid image string or the file does not exist or failed to load.
 		/// </summary>
-		/// <remarks>Supports environment variables etc. If not full path, searches in Folders.ThisAppImages and standard directories.</remarks>
+		/// <remarks>Supports environment variables etc. If not full path, searches in AFolders.ThisAppImages and standard directories.</remarks>
 		public static string ImageToString(string path)
 		{
 			var t = ImageTypeFromString(true, path);
@@ -392,7 +392,7 @@ namespace Au.Controls
 			case ImageType.Resource:
 				return path;
 			case ImageType.PngGifJpg:
-				path = AFile.SearchPath(path, Folders.ThisAppImages); if(path == null) return null;
+				path = AFile.SearchPath(path, AFolders.ThisAppImages); if(path == null) return null;
 				try { return "image:" + Convert.ToBase64String(AFile.LoadBytes(path)); }
 				catch(Exception ex) { ADebug.Print(ex.Message); return null; }
 			}

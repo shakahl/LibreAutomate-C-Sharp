@@ -31,9 +31,9 @@ namespace Au
 		///
 		public AOsdWindow()
 		{
-			_w = new Wnd.More.MyWindow(WndProc);
+			_w = new AWnd.More.MyWindow(WndProc);
 		}
-		Wnd.More.MyWindow _w; //TODO: _wClass. And Wnd _w.
+		AWnd.More.MyWindow _w; //TODO: _wClass. And AWnd _w.
 
 		/// <summary>Destroys the OSD window.</summary>
 		protected virtual void Dispose(bool disposing)
@@ -48,8 +48,8 @@ namespace Au
 		/// <summary>Destroys the OSD window.</summary>
 		public void Close() => Dispose(true);
 
-		/// <summary>OSD window handle or default(Wnd).</summary>
-		public Wnd Handle => _w.Handle;
+		/// <summary>OSD window handle or default(AWnd).</summary>
+		public AWnd Handle => _w.Handle;
 
 		/// <summary>
 		/// Returns true if the OSD window is created.
@@ -170,7 +170,7 @@ namespace Au
 			_w.Handle.ShowLL(false);
 		}
 
-		Wnd _CreateWindow()
+		AWnd _CreateWindow()
 		{
 			//register window class if need. Need another class if shadow.
 			string cn; byte regMask;
@@ -178,7 +178,7 @@ namespace Au
 			if((s_isWinClassRegistered & regMask) == 0) {
 				var ce = new MWWndClassEx() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, hbrBackground = default(IntPtr) };
 				if(Shadow) ce.style |= Api.CS_DROPSHADOW;
-				Wnd.More.MyWindow.RegisterClass(cn, ce);
+				AWnd.More.MyWindow.RegisterClass(cn, ce);
 				s_isWinClassRegistered |= regMask;
 			}
 
@@ -195,7 +195,7 @@ namespace Au
 		/// Called when the OSD window receives a message.
 		/// If your derived class overrides this function, it must call base.WndProc and return its return value, except when don't need default processing.
 		/// </summary>
-		protected virtual LPARAM WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
+		protected virtual LPARAM WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam)
 		{
 			switch(message) {
 			case Api.WM_ERASEBKGND:
@@ -268,7 +268,7 @@ namespace Au
 		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [](xref:wildcard_expression).</param>
 		public static void CloseAll(string name = null)
 		{
-			foreach(var w in Wnd.FindAll(name, "**m Au.OSD||Au.OSD2", WF3.Process(AProcess.CurrentProcessId))) w.Close(noWait: true);
+			foreach(var w in AWnd.FindAll(name, "**m Au.OSD||Au.OSD2", WF3.Process(AProcess.CurrentProcessId))) w.Close(noWait: true);
 		}
 	}
 
@@ -584,7 +584,7 @@ namespace Au
 			} else {
 				//Task.Run(() => ShowWait()); //works too, but cannot use StrongThread
 				AThread.Start(() => _Show(true), ShowMode == OsdShowMode.WeakThread);
-				WaitFor.Condition(30, () => IsHandleCreated);
+				AWaitFor.Condition(30, () => IsHandleCreated);
 
 				//CONSIDER: make smaller timeout when main thread ended if OsdShowMode.Auto
 			}
@@ -599,7 +599,7 @@ namespace Au
 			base.Show();
 			if(sync) {
 				if(t < 0) t = 0; else t = -t;
-				if(!WaitFor.MessagesAndCondition(t, () => !IsHandleCreated)) Close();
+				if(!AWaitFor.MessagesAndCondition(t, () => !IsHandleCreated)) Close();
 			} else if(t > 0) {
 				t = Math.Min(t, int.MaxValue / 1000) * 1000; //s -> ms
 				ATimer.After(t, () => Close());

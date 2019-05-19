@@ -26,24 +26,24 @@ namespace Au.Util
 #if true //online
 		/// <summary>
 		/// Opens a Au help topic onine.
-		/// The file must be in <see cref="Folders.ThisApp"/>.
+		/// The file must be in <see cref="AFolders.ThisApp"/>.
 		/// </summary>
-		/// <param name="topic">Topic file name, like "Au.Acc.Find" or "Acc.Find" or "articles/Wildcard expression".</param>
+		/// <param name="topic">Topic file name, like "Au.AAcc.Find" or "AAcc.Find" or "articles/Wildcard expression".</param>
 		public static void AuHelp(string topic)
 		{
 			var url = "http://3.quickmacros.com/help/";
 			if(!Empty(topic)) url = url + (topic.IndexOf('/') < 0 ? (topic.Starts("Au.") ? "api/" : "api/Au.") : null) + topic + (topic.Ends('/') ? null : ".html");
-			Exec.TryRun(url);
+			AExec.TryRun(url);
 		}
 #else //.chm
 		/// <summary>
 		/// Opens file "Au Help.chm" and a help topic in it.
-		/// The file must be in <see cref="Folders.ThisApp"/>.
+		/// The file must be in <see cref="AFolders.ThisApp"/>.
 		/// </summary>
 		/// <param name="topic">Topic file name, like "M_Au_Acc_Find" or "0248143b-a0dd-4fa1-84f9-76831db6714a".</param>
 		public static void AuChm(string topic)
 		{
-			var s = Folders.ThisAppBS + "Help/Au Help.chm::/html/" + topic + ".htm";
+			var s = AFolders.ThisAppBS + "Help/Au Help.chm::/html/" + topic + ".htm";
 			Api.HtmlHelp(Api.GetDesktopWindow(), s, 0, 0); //HH_DISPLAY_TOPIC
 		}
 #endif

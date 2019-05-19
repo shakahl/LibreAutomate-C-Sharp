@@ -103,7 +103,7 @@ namespace Au
 		}
 		bool _isUIAccess; byte _haveIsUIAccess;
 
-		//not very useful. Returns false for ApplicationFrameWindow. Can use Wnd.IsWindows10StoreApp.
+		//not very useful. Returns false for ApplicationFrameWindow. Can use AWnd.IsWindows10StoreApp.
 		///// <summary>
 		///// Returns true if the process is a Windows Store app.
 		///// </summary>
@@ -143,7 +143,7 @@ namespace Au
 			if(_haveIntegrityLevel == 0) {
 				unsafe {
 					Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, null, 0, out var siz);
-					if(WinError.Code != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
+					if(ALastError.Code != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
 					else {
 						var b = stackalloc byte[(int)siz];
 						var tml = (TOKEN_MANDATORY_LABEL*)b;
@@ -178,7 +178,7 @@ namespace Au
 		/// Opens process access token and creates/returns new <see cref="AUac"/> variable that holds it. Then you can use its properties.
 		/// Returns null if failed. For example fails for services and some other processes if current process is not administrator.
 		/// </summary>
-		/// <param name="processId">Process id. If you have a window, use <see cref="Wnd.ProcessId"/>.</param>
+		/// <param name="processId">Process id. If you have a window, use <see cref="AWnd.ProcessId"/>.</param>
 		/// <remarks>
 		/// To get <b>AUac</b> of this process, use <see cref="OfThisProcess"/>.
 		/// </remarks>

@@ -46,7 +46,7 @@ partial class FilesModel
 			var d = new FolderBrowserDialog();
 			d.Description = "Location. In the selected folder will be created the main folder of the workspace.";
 			d.ShowNewFolderButton = true;
-			d.SelectedPath = AFile.ExistsAsDirectory(textLocation.Text) ? textLocation.Text : (string)Folders.ThisAppDocuments;
+			d.SelectedPath = AFile.ExistsAsDirectory(textLocation.Text) ? textLocation.Text : (string)AFolders.ThisAppDocuments;
 			if(d.ShowDialog(this) != DialogResult.OK) return;
 			textLocation.Text = d.SelectedPath;
 		}

@@ -39,9 +39,9 @@ namespace Au
 		/// <remarks>
 		/// This function is much slower than getting window name or class name.
 		/// </remarks>
-		/// <seealso cref="Wnd.ProgramName"/>
-		/// <seealso cref="Wnd.ProgramPath"/>
-		/// <seealso cref="Wnd.ProcessId"/>
+		/// <seealso cref="AWnd.ProgramName"/>
+		/// <seealso cref="AWnd.ProgramPath"/>
+		/// <seealso cref="AWnd.ProcessId"/>
 		public static string GetName(int processId, bool fullPath = false, bool noSlowAPI = false)
 		{
 			if(processId == 0) return null;
@@ -86,7 +86,7 @@ namespace Au
 		/// <summary>
 		/// Same as GetName, but faster when called several times for same window, like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>.
 		/// </summary>
-		internal static string LibGetNameCached(Wnd w, int processId, bool fullPath = false)
+		internal static string LibGetNameCached(AWnd w, int processId, bool fullPath = false)
 		{
 			if(processId == 0) return null;
 			var cache = _LastWndProps.OfThread;
@@ -101,11 +101,11 @@ namespace Au
 
 		class _LastWndProps
 		{
-			Wnd _w;
+			AWnd _w;
 			long _time;
 			internal string ProgramName, ProgramPath;
 
-			internal void Begin(Wnd w)
+			internal void Begin(AWnd w)
 			{
 				var t = Api.GetTickCount64();
 				if(w != _w || t - _time > 300) { _w = w; ProgramName = ProgramPath = null; }
@@ -126,7 +126,7 @@ namespace Au
 					else s = b.LibToStringCached(na);
 					return true;
 				}
-				if(WinError.Code != Api.ERROR_INSUFFICIENT_BUFFER) return false;
+				if(ALastError.Code != Api.ERROR_INSUFFICIENT_BUFFER) return false;
 			}
 		}
 
@@ -358,7 +358,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets process id from handle.
-		/// Returns 0 if failed. Supports <see cref="WinError"/>.
+		/// Returns 0 if failed. Supports <see cref="ALastError"/>.
 		/// Calls API <msdn>GetProcessId</msdn>.
 		/// </summary>
 		/// <param name="processHandle">Process handle.</param>
@@ -377,7 +377,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets user session id of process.
-		/// Returns -1 if failed. Supports <see cref="WinError"/>.
+		/// Returns -1 if failed. Supports <see cref="ALastError"/>.
 		/// Calls API <msdn>ProcessIdToSessionId</msdn>.
 		/// </summary>
 		/// <param name="processId">Process id.</param>

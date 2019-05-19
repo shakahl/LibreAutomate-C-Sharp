@@ -17,8 +17,6 @@ using System.Runtime.ExceptionServices;
 using Au.Types;
 using static Au.AStatic;
 
-#pragma warning disable CS0282 //VS bug: shows warning "There is no defined ordering between fields in multiple declarations of partial struct 'Acc'. To specify an ordering, all instance fields must be in the same declaration."
-
 namespace Au
 {
 	/// <summary>
@@ -28,13 +26,13 @@ namespace Au
 	/// <remarks>
 	/// Accessible objects (AO) are various user interface (UI) objects in windows and controls. For example buttons, links, list items. This class can find them, get properties, click, etc. Especially useful with web pages, because there are no controls. And many other windows don't use controls but support AO. But not all UI objects are AO.
 	/// 
-	/// An <b>Acc</b> instance holds an AO COM pointer (<msdn>IAccessible</msdn>) and a simple element id (int). Most <b>Acc</b> functions wrap <b>IAccessible</b> interface functions or/and related API.
+	/// An <b>AAcc</b> instance holds an AO COM pointer (<msdn>IAccessible</msdn>) and a simple element id (int). Most <b>AAcc</b> functions wrap <b>IAccessible</b> interface functions or/and related API.
 	/// 
-	/// <b>Acc</b> functions that get properties don't throw exception when the wrapped <b>IAccessible</b>/etc function failed (returned an error code of <b>HRESULT</b> type). Then they return "" (string properties), 0, false, null or empty collection, dependin on return type. Applications implement AOs differently, often with bugs, and their <b>IAccessible</b> interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These <b>Acc</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the <b>IAccessible</b> function, and callers can use <see cref="WinError"/> to get it. If <b>WinError.Code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
+	/// <b>AAcc</b> functions that get properties don't throw exception when the wrapped <b>IAccessible</b>/etc function failed (returned an error code of <b>HRESULT</b> type). Then they return "" (string properties), 0, false, null or empty collection, dependin on return type. Applications implement AOs differently, often with bugs, and their <b>IAccessible</b> interface functions return a variety of error codes. It's impossible to reliably detect whether the error code means a serious error or the property is merely unavailable. These <b>AAcc</b> functions also set the last error code of this thread = the return value (<b>HRESULT</b>) of the <b>IAccessible</b> function, and callers can use <see cref="ALastError"/> to get it. If <b>ALastError.Code</b> returns 1 (<b>S_FALSE</b>), in most cases it's not an error, just the property is unavailable. On error it will probably be a negative error code.
 	/// 
-	/// You can dispose <b>Acc</b> variables to release the COM object, but it is not necessary (GC will do it later).
+	/// You can dispose <b>AAcc</b> variables to release the COM object, but it is not necessary (GC will do it later).
 	/// 
-	/// An <b>Acc</b> variable cannot be used in multiple threads. Only <b>Dispose</b> can be called in any thread.
+	/// An <b>AAcc</b> variable cannot be used in multiple threads. Only <b>Dispose</b> can be called in any thread.
 	/// 
 	/// AOs are implemented and live in their applications. This class just communicates with them.
 	/// 
@@ -111,7 +109,7 @@ namespace Au
 	///  <td>Some controls.</td>
 	///  <td>
 	///   <ol>
-	///    <li>AOs of some controls are not connected to the AO of the parent control. Then Find cannot find them if searches in whole window.<br/>Workaround: search only in that control. For example, use <i>prop</i> <c>"class"</c> or <c>"id"</c>. If it's a web browser control, use role prefix <c>"web:"</c>. Or find the control with <see cref="Wnd.Child"/> and search in it. Or use <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.</li>
+	///    <li>AOs of some controls are not connected to the AO of the parent control. Then Find cannot find them if searches in whole window.<br/>Workaround: search only in that control. For example, use <i>prop</i> <c>"class"</c> or <c>"id"</c>. If it's a web browser control, use role prefix <c>"web:"</c>. Or find the control with <see cref="AWnd.Child"/> and search in it. Or use <see cref="AAcc.Finder.Find(AWnd, AWnd.ChildFinder)"/>.</li>
 	///   </ol>
 	///  </td>
 	/// </tr>
@@ -156,24 +154,24 @@ namespace Au
 	/// <example>
 	/// Click link "Example" in Chrome.
 	/// <code><![CDATA[
-	/// var w = Wnd.Find("* Chrome").OrThrow();
-	/// var a = Acc.Find(w, "web:LINK", "Example").OrThrow();
+	/// var w = AWnd.Find("* Chrome").OrThrow();
+	/// var a = AAcc.Find(w, "web:LINK", "Example").OrThrow();
 	/// a.DoAction();
 	/// ]]></code>
 	/// Click a link, wait for new web page, click a link in it.
 	/// <code><![CDATA[
-	/// var w = Wnd.Find("* Chrome").OrThrow();
-	/// var a = Acc.Wait(1, w, "web:LINK", "Link 1");
+	/// var w = AWnd.Find("* Chrome").OrThrow();
+	/// var a = AAcc.Wait(1, w, "web:LINK", "Link 1");
 	/// a.DoActionAndWaitForNewWebPage();
-	/// a = Acc.Wait(10, w, "web:LINK", "Link 2");
+	/// a = AAcc.Wait(10, w, "web:LINK", "Link 2");
 	/// a.DoActionAndWaitForNewWebPage();
 	/// ]]></code>
 	/// </example>
 	[StructLayout(LayoutKind.Sequential)]
-	public unsafe partial class Acc :IDisposable
+	public unsafe partial class AAcc :IDisposable
 	{
-		//FUTURE: Acc.Misc.EnableAccInChromeWebPagesWhenItStarts
-		//FUTURE: Acc.Misc.EnableAccInJavaWindows (see JavaEnableJAB in QM2)
+		//FUTURE: AAcc.More.EnableAccInChromeWebPagesWhenItStarts
+		//FUTURE: AAcc.More.EnableAccInJavaWindows (see JavaEnableJAB in QM2)
 		//FUTURE: add functions to marshal AO to another thread.
 
 		internal struct _Misc
@@ -189,25 +187,25 @@ namespace Au
 		internal IntPtr _iacc;
 		internal int _elem;
 		internal _Misc _misc;
-		//Real Acc object memory size with header: 32 bytes on 64-bit.
+		//Real AAcc object memory size with header: 32 bytes on 64-bit.
 		//We don't use RCW<IAccessible>, which would add another 32 bytes.
 
 		/// <summary>
-		/// Creates Acc from IAccessible and child id.
+		/// Creates AAcc from IAccessible and child id.
 		/// By default does not AddRef.
 		/// iacc must not be Is0.
 		/// </summary>
-		internal Acc(IntPtr iacc, int elem = 0, bool addRef = false)
+		internal AAcc(IntPtr iacc, int elem = 0, bool addRef = false)
 		{
 			_Set(iacc, elem, default, addRef);
 		}
 
 		/// <summary>
-		/// Creates Acc from Cpp_Acc.
+		/// Creates AAcc from Cpp_Acc.
 		/// By default does not AddRef.
 		/// x.acc must not be Is0.
 		/// </summary>
-		internal Acc(Cpp.Cpp_Acc x, bool addRef = false)
+		internal AAcc(Cpp.Cpp_Acc x, bool addRef = false)
 		{
 			_Set(x.acc, x.elem, x.misc, addRef);
 		}
@@ -272,7 +270,7 @@ namespace Au
 		}
 
 		///
-		~Acc()
+		~AAcc()
 		{
 			Dispose(false);
 		}
@@ -297,8 +295,8 @@ namespace Au
 		/// Gets or sets indentation level for <see cref="ToString"/>.
 		/// </summary>
 		/// <remarks>
-		/// When Find or similar function finds an accessible object, it sets this property of the Acc variable. If FromXY etc, it is 0 (unknown).
-		/// When searching in a window, at level 0 are direct children of the WINDOW object. When searching in controls (specified class or id), at level 0 is the object of the control; however if used path, at level 0 are direct children. When searching in Acc, at level 0 are direct children of the Acc. When searching in web page (role prefix <c>"web:"</c> etc), at level 0 is the web page object (role DOCUMENT or PANE).
+		/// When Find or similar function finds an accessible object, it sets this property of the AAcc variable. If FromXY etc, it is 0 (unknown).
+		/// When searching in a window, at level 0 are direct children of the WINDOW object. When searching in controls (specified class or id), at level 0 is the object of the control; however if used path, at level 0 are direct children. When searching in AAcc, at level 0 are direct children of the AAcc. When searching in web page (role prefix <c>"web:"</c> etc), at level 0 is the web page object (role DOCUMENT or PANE).
 		/// </remarks>
 		public int Level { get => _misc.level; set => _misc.SetLevel(value); }
 
@@ -310,7 +308,7 @@ namespace Au
 
 		internal void LibThrowIfDisposed()
 		{
-			if(_Disposed) throw new ObjectDisposedException(nameof(Acc));
+			if(_Disposed) throw new ObjectDisposedException(nameof(AAcc));
 		}
 
 		/// <summary>
@@ -325,7 +323,7 @@ namespace Au
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromWindow</msdn>.
 		/// </remarks>
-		public static Acc FromWindow(Wnd w, AccOBJID objid = AccOBJID.WINDOW, AWFlags flags = 0)
+		public static AAcc FromWindow(AWnd w, AccOBJID objid = AccOBJID.WINDOW, AWFlags flags = 0)
 		{
 			bool spec = false;
 			switch(objid) {
@@ -347,10 +345,10 @@ namespace Au
 				w.ThrowIfInvalid();
 				_WndThrow(hr, w, "*get accessible object from window.");
 			}
-			return new Acc(a);
+			return new AAcc(a);
 		}
 
-		static void _WndThrow(int hr, Wnd w, string es)
+		static void _WndThrow(int hr, AWnd w, string es)
 		{
 			w.LibUacCheckAndThrow(es);
 			throw new AException(hr, es);
@@ -361,21 +359,21 @@ namespace Au
 		/// </summary>
 		/// <param name="p">
 		/// Coordinates relative to the primary screen.
-		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>var a = Acc.FromXY((x, y, true));</c>. Also when need <see cref="Coord.Reverse"/> etc.
+		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>var a = AAcc.FromXY((x, y, true));</c>. Also when need <see cref="Coord.Reverse"/> etc.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <exception cref="AException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </remarks>
-		public static Acc FromXY(POINT p, AXYFlags flags = 0)
+		public static AAcc FromXY(POINT p, AXYFlags flags = 0)
 		{
 			for(int i = 0; ; i++) {
 				var hr = Cpp.Cpp_AccFromPoint(p, flags, out var a);
-				if(hr == 0) return new Acc(a);
+				if(hr == 0) return new AAcc(a);
 				if(i < 2) continue;
 				if(flags.Has(AXYFlags.NoThrow)) return null;
-				_WndThrow(hr, Wnd.FromXY(p, WXYFlags.Raw), "*get accessible object from point.");
+				_WndThrow(hr, AWnd.FromXY(p, WXYFlags.Raw), "*get accessible object from point.");
 			}
 		}
 		//rejected: FromXY(Coord, Coord, ...). Coord makes no sense; could be int int, but it's easy to create POINT from it.
@@ -388,9 +386,9 @@ namespace Au
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </remarks>
-		public static Acc FromMouse(AXYFlags flags = 0)
+		public static AAcc FromMouse(AXYFlags flags = 0)
 		{
-			return FromXY(Mouse.XY, flags);
+			return FromXY(AMouse.XY, flags);
 		}
 
 		/// <summary>
@@ -402,24 +400,24 @@ namespace Au
 		/// Need this with windows that don't support accessible objects but support UI Automation elements. Can be used with most other windows too.
 		/// More info: <see cref="AFFlags.UIA"/>.
 		/// </param>
-		public static Acc Focused(bool useUIAutomation = false)
+		public static AAcc Focused(bool useUIAutomation = false)
 		{
-			var w = Wnd.Focused;
+			var w = AWnd.Focused;
 			g1:
 			if(w.Is0) return null;
 			int hr = Cpp.Cpp_AccGetFocused(w, useUIAutomation ? 1 : 0, out var a);
 			if(hr != 0) {
-				var w2 = Wnd.Focused;
+				var w2 = AWnd.Focused;
 				if(w2 != w) { w = w2; goto g1; }
 				return null;
 			}
-			return new Acc(a);
+			return new AAcc(a);
 			//FUTURE: wait, like FromXY.
 		}
 
 		/// <summary>
 		/// Gets the accessible object that generated the event that is currently being processed by the callback function used with API <msdn>SetWinEventHook</msdn> or <see cref="AHookAcc"/>.
-		/// Returns null if failed. Suports <see cref="WinError"/>.
+		/// Returns null if failed. Suports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="w"></param>
 		/// <param name="idObject"></param>
@@ -430,13 +428,13 @@ namespace Au
 		/// Often fails because the object already does not exist, because the callback function is called asynchronously, especially when the event is OBJECT_DESTROY, OBJECT_HIDE, SYSTEM_*END.
 		/// Returns null if failed. Always check the return value, to avoid NullReferenceException. An exception in the callback function kills this process.
 		/// </remarks>
-		public static Acc FromEvent(Wnd w, AccOBJID idObject, int idChild)
+		public static AAcc FromEvent(AWnd w, AccOBJID idObject, int idChild)
 		{
 			int hr = Api.AccessibleObjectFromEvent(w, idObject, idChild, out var iacc, out var v);
 			if(hr == 0 && iacc == default) hr = Api.E_FAIL;
-			if(hr != 0) { WinError.Code = hr; return null; }
+			if(hr != 0) { ALastError.Code = hr; return null; }
 			int elem = v.vt == Api.VARENUM.VT_I4 ? v.ValueInt : 0;
-			return new Acc(iacc, elem);
+			return new AAcc(iacc, elem);
 		}
 
 #if false //rejected: not useful. Maybe in the future.
@@ -449,12 +447,12 @@ namespace Au
 		/// The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
 		/// For IHTMLElement and ISimpleDOMNode returns null if the HTML element is not an accessible object. Then you can try to get accessible object of its parent HTML element, parent's parent and so on, until succeeds.
 		/// </remarks>
-		public static Acc FromComObject(IntPtr x)
+		public static AAcc FromComObject(IntPtr x)
 		{
 			if(x == default) return null;
 			if(Util.AMarshal.QueryInterface(x, out IntPtr iacc, Api.IID_IAccessible)
 				|| Util.AMarshal.QueryService(x, out iacc, Api.IID_IAccessible)
-				) return new Acc(iacc);
+				) return new AAcc(iacc);
 			return null;
 		}
 
@@ -467,7 +465,7 @@ namespace Au
 		/// The COM object type can be IAccessible, IAccessible2, IHTMLElement, ISimpleDOMNode or any other COM interface type that can give <msdn>IAccessible</msdn> interface pointer through API <msdn>IUnknown.QueryInterface</msdn> or <msdn>IServiceProvider.QueryService</msdn>.
 		/// For IHTMLElement and ISimpleDOMNode returns null if the HTML element is not an accessible object. Then you can try to get accessible object of its parent HTML element, parent's parent and so on, until succeeds.
 		/// </remarks>
-		public static Acc FromComObject(object x)
+		public static AAcc FromComObject(object x)
 		{
 			if(x == null) return null;
 
@@ -510,7 +508,7 @@ namespace Au
 				}
 #endif
 			}
-			WinError.Code = hr;
+			ALastError.Code = hr;
 			return hr;
 		}
 
@@ -538,7 +536,7 @@ namespace Au
 			t_debugNoRecurse = true;
 			try {
 				var s = ToString();
-				Print($"<><c 0xff>-{funcId}, 0x{hr:X} - {WinError.MessageFor(hr)}    {s}</c>");
+				Print($"<><c 0xff>-{funcId}, 0x{hr:X} - {ALastError.MessageFor(hr)}    {s}</c>");
 			}
 			finally { t_debugNoRecurse = false; }
 		}
@@ -602,14 +600,14 @@ namespace Au
 		/// Displays visible accessible objects in Chrome web page.
 		/// <code><![CDATA[
 		/// AOutput.Clear();
-		/// var w = Wnd.Find("* Chrome").OrThrow();
+		/// var w = AWnd.Find("* Chrome").OrThrow();
 		/// Print("---- all ----");
-		/// Acc.PrintAll(w, "web:");
+		/// AAcc.PrintAll(w, "web:");
 		/// Print("---- links ----");
-		/// Acc.PrintAll(w, "web:LINK");
+		/// AAcc.PrintAll(w, "web:LINK");
 		/// ]]></code>
 		/// </example>
-		public static void PrintAll(Wnd w, string role = null, AFFlags flags = 0, string prop = null)
+		public static void PrintAll(AWnd w, string role = null, AFFlags flags = 0, string prop = null)
 		{
 			try {
 				Find(w, role, null, prop, flags, also: o => { Print(o); return false; });

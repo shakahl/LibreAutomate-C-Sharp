@@ -72,7 +72,7 @@ namespace Au
 		/// </summary>
 		public static POINT MouseClientXY(this Control t)
 		{
-			return ((Wnd)t).MouseClientXY;
+			return ((AWnd)t).MouseClientXY;
 		}
 
 		/// <summary>
@@ -80,7 +80,7 @@ namespace Au
 		/// </summary>
 		public static POINT MouseWindowXY(this Control t)
 		{
-			POINT p = Mouse.XY;
+			POINT p = AMouse.XY;
 			POINT k = t.Location;
 			return (p.x - k.x, p.y - k.y);
 		}
@@ -108,7 +108,7 @@ namespace Au
 		static void _SetCueBanner(Control c, int message, bool showWhenFocused, string text)
 		{
 			if(c.IsHandleCreated) {
-				((Wnd)c).SendS(message, showWhenFocused, text);
+				((AWnd)c).SendS(message, showWhenFocused, text);
 			} else if(!Empty(text)) {
 				c.HandleCreated += (unu, sed) => _SetCueBanner(c, message, showWhenFocused, text);
 			}

@@ -596,7 +596,7 @@ namespace Au.Types
 		static SLApi()
 		{
 			if(default == Api.GetModuleHandle(SQLITE_DLL)
-				&& default == Api.LoadLibrary(Folders.ThisAppBS + (IntPtr.Size == 8 ? @"Dll\64bit\" : @"Dll\32bit\") + SQLITE_DLL))
+				&& default == Api.LoadLibrary(AFolders.ThisAppBS + (IntPtr.Size == 8 ? @"Dll\64bit\" : @"Dll\32bit\") + SQLITE_DLL))
 				throw new DllNotFoundException(SQLITE_DLL);
 		}
 

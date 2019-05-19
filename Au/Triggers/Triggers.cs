@@ -69,7 +69,7 @@ namespace Au.Triggers
 	/// hk["Ctrl+K"] = o => Print(o.Trigger); //it means: execute code "o => Print(o.Trigger)" when I press Ctrl+K
 	/// hk["Ctrl+Shift+F11"] = o => {
 	/// 	Print(o.Trigger);
-	/// 	var w1 = Wnd.FindOrRun("* Notepad", run: () => Exec.Run(Folders.System + "notepad.exe"));
+	/// 	var w1 = AWnd.FindOrRun("* Notepad", run: () => AExec.Run(AFolders.System + "notepad.exe"));
 	/// 	Text("text");
 	/// 	w1.Close();
 	/// };
@@ -90,9 +90,9 @@ namespace Au.Triggers
 	/// 
 	/// mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => Print(o.Trigger);
 	/// mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
-	/// mouse[TMMove.LeftRightInCenter50] = o => Wnd.SwitchActiveWindow();
+	/// mouse[TMMove.LeftRightInCenter50] = o => AWnd.SwitchActiveWindow();
 	/// 
-	/// Triggers.FuncOf.NextTrigger = o => Keyb.IsScrollLock; //example of a custom scope (aka context, condition)
+	/// Triggers.FuncOf.NextTrigger = o => AKeyboard.IsScrollLock; //example of a custom scope (aka context, condition)
 	/// mouse[TMWheel.Forward] = o => Print($"{o.Trigger} while ScrollLock is on");
 	/// 
 	/// Triggers.Of.Again(notepad); //let the following triggers work only when a Notepad window is active
@@ -394,7 +394,7 @@ namespace Au.Triggers
 					try {
 						if(scopeUsed) Util.AAssembly.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
 						if(!ngened) {
-							if(scopeUsed) new Wnd.Finder("*a").IsMatch(Wnd.Active);
+							if(scopeUsed) new AWnd.Finder("*a").IsMatch(AWnd.Active);
 							_ = ATime.PerfMicroseconds;
 							Util.AJit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
 							Util.AJit.Compile(typeof(TriggerHookContext), "InitContext", "PerfEnd", "PerfWarn");
@@ -409,10 +409,10 @@ namespace Au.Triggers
 			}
 			//APerf.Next();
 
-			Wnd wMsg = default;
+			AWnd wMsg = default;
 			bool hooksInEditor = ATask.Role != ATRole.ExeProgram;
 			if(hooksInEditor) {
-				wMsg = Wnd.More.FindMessageOnlyWindow(null, "Au.Hooks.Server");
+				wMsg = AWnd.More.FindMessageOnlyWindow(null, "Au.Hooks.Server");
 				if(wMsg.Is0) {
 					ADebug.Print("Au.Hooks.Server");
 					hooksInEditor = false;
@@ -439,7 +439,7 @@ namespace Au.Triggers
 			var aCDS = new byte[8];
 			aCDS.WriteInt((int)usedEvents, 0);
 			aCDS.WriteInt(Api.GetCurrentProcessId(), 4);
-			if(1 != Wnd.More.CopyDataStruct.SendBytes(wMsg, 1, aCDS, threadId)) { //install hooks and start sending events to us
+			if(1 != AWnd.More.CopyDataStruct.SendBytes(wMsg, 1, aCDS, threadId)) { //install hooks and start sending events to us
 				pipe.Dispose();
 				throw new AException("*SendBytes");
 			}
@@ -457,14 +457,14 @@ namespace Au.Triggers
 				while(true) {
 					var o = new Api.OVERLAPPED { hEvent = evHooks };
 					if(!Api.ReadFile(pipe, b, bLen, out int size, &o)) {
-						int ec = WinError.Code;
+						int ec = ALastError.Code;
 						if(ec == Api.ERROR_IO_PENDING) {
 							//note: while waiting here, can be called acc hook proc, timer etc (any posted and sent messages).
 							if(0 != _Wait(ha, 2)) {
 								Api.CancelIo(pipe);
 								break;
 							}
-							ec = Api.GetOverlappedResult(pipe, ref o, out size, false) ? 0 : WinError.Code;
+							ec = Api.GetOverlappedResult(pipe, ref o, out size, false) ? 0 : ALastError.Code;
 						}
 						if(ec != 0) { ADebug.LibPrintNativeError(ec); break; }
 					}
@@ -652,7 +652,7 @@ namespace Au.Triggers
 	class TriggerHookContext : WFCache
 	{
 		//internal readonly ActionTriggers triggers;
-		Wnd _w;
+		AWnd _w;
 		bool _haveWnd, _mouseWnd; POINT _p;
 
 		public TriggerHookContext(ActionTriggers triggers)
@@ -663,12 +663,12 @@ namespace Au.Triggers
 			base.CacheName = true; //we'll call Clear(onlyName: true) at the start of each event
 		}
 
-		public Wnd Window {
+		public AWnd Window {
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			get {
 				if(!_haveWnd) {
 					_haveWnd = true;
-					_w = _mouseWnd ? Wnd.FromXY(_p, WXYFlags.NeedWindow) : Wnd.Active;
+					_w = _mouseWnd ? AWnd.FromXY(_p, WXYFlags.NeedWindow) : AWnd.Active;
 				}
 				return _w;
 			}
@@ -822,7 +822,7 @@ namespace Au.Triggers
 				_mod = _modL | _modR;
 			} else if(!k.IsUp) {
 				//We cannot trust _mod, because hooks are unreliable. We may not receive some events because of hook timeout, other hooks, OS quirks, etc. Also triggers may start while a modifier key is pressed.
-				//And we cannot use Keyb.IsPressed, because our triggers release modifiers. Also Key() etc. Then triggers could not be auto-repeated.
+				//And we cannot use AKeyboard.IsPressed, because our triggers release modifiers. Also Key() etc. Then triggers could not be auto-repeated.
 				//We use both. If IsPressed(mod), add mod to _mod. Else remove from _mod after >5 s since the last seen key event. The max auto-repeat delay that you can set in CP is ~1 s.
 				TrigUtil.GetModLR(out modL, out modR);
 				//ADebug.PrintIf(modL != _modL || modR != _modR, $"KEY={k.vkCode}    modL={modL}  _modL={_modL}    modR={modR}  _modR={_modR}"); //normally should be only when auto-repeating a trigger

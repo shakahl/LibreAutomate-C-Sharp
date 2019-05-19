@@ -28,12 +28,12 @@ namespace Au.Util
 	/// {
 	/// 	public static void Test()
 	/// 	{
-	/// 		Wnd w = Wnd.FindFast(null, "Notepad");
+	/// 		AWnd w = AWnd.FindFast(null, "Notepad");
 	/// 		string s = GetWndText(w);
 	/// 		Print(s);
 	/// 	}
 	/// 
-	/// 	public static string GetWndText(Wnd w)
+	/// 	public static string GetWndText(AWnd w)
 	/// 	{
 	/// 		for(int na = 300; ; na *= 2) {
 	/// 			var b = _GetCharBuffer(ref na);
@@ -50,7 +50,7 @@ namespace Au.Util
 	/// 
 	/// 	//we'll use this API in this example
 	/// 	[DllImport("user32.dll", EntryPoint = "GetWindowTextW")]
-	/// 	static extern int GetWindowText(Wnd hWnd, [Out] char[] lpString, int nMaxCount);
+	/// 	static extern int GetWindowText(AWnd hWnd, [Out] char[] lpString, int nMaxCount);
 	/// }
 	/// ]]></code>
 	/// </example>

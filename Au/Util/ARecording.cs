@@ -24,11 +24,11 @@ namespace Au.Util
 	public static partial class ARecording
 	{
 		/// <summary>
-		/// Converts multiple recorded mouse movements to string for <see cref="Mouse.MoveRecorded(string, double)"/>.
+		/// Converts multiple recorded mouse movements to string for <see cref="AMouse.MoveRecorded(string, double)"/>.
 		/// </summary>
 		/// <param name="recorded">
 		/// List of x y distances from previous.
-		/// The first distance is from the mouse position before the first movement; at run time it will be distance from <see cref="Mouse.LastXY"/>.
+		/// The first distance is from the mouse position before the first movement; at run time it will be distance from <see cref="AMouse.LastXY"/>.
 		/// To create uint value from distance dx dy use this code: <c>AMath.MakeUint(dx, dy)</c>.
 		/// </param>
 		/// <param name="withSleepTimes">

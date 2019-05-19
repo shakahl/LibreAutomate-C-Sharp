@@ -31,7 +31,7 @@ namespace Au
 	/// 
 	/// This class also adds more methods.
 	/// The nested class <see cref="More"/> contains some less often used static methods.
-	/// You also can find string functions in other classes of this library, including <see cref="ARegex"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="AStringSegment"/>, <see cref="ACsv"/>, <see cref="Keyb.More"/>, <see cref="AConvert"/>, <see cref="AHash"/>.
+	/// You also can find string functions in other classes of this library, including <see cref="ARegex"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="AStringSegment"/>, <see cref="ACsv"/>, <see cref="AKeyboard.More"/>, <see cref="AConvert"/>, <see cref="AHash"/>.
 	/// </remarks>
 	public static unsafe partial class AExtString
 	{

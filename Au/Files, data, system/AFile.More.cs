@@ -85,7 +85,7 @@ namespace Au
 
 			/// <summary>
 			/// Gets <see cref="FileId"/> of a file or directory.
-			/// Returns false if fails. Supports <see cref="WinError"/>.
+			/// Returns false if fails. Supports <see cref="ALastError"/>.
 			/// </summary>
 			/// <param name="path">Full path. Supports environment variables (see <see cref="APath.ExpandEnvVar"/>).</param>
 			/// <param name="fileId"></param>
@@ -153,7 +153,7 @@ namespace Au
 
 		static Api.IShellItem _ShellItem(string path, string errMsg)
 		{
-			var pidl = Misc.PidlFromString(path, true);
+			var pidl = More.PidlFromString(path, true);
 			try {
 				var guid = typeof(Api.IShellItem).GUID;
 				AException.ThrowIfFailed(Api.SHCreateItemFromIDList(pidl, guid, out var R), errMsg);
@@ -179,7 +179,7 @@ namespace Au
 				[PreserveSig] int SetProgressMessage([MarshalAs(UnmanagedType.LPWStr)] string pszMessage);
 				[PreserveSig] int SetProgressDialog(IOperationsProgressDialog popd);
 				[PreserveSig] int SetProperties(IntPtr pproparray); //IPropertyChangeArray
-				[PreserveSig] int SetOwnerWindow(Wnd hwndOwner);
+				[PreserveSig] int SetOwnerWindow(AWnd hwndOwner);
 				[PreserveSig] int ApplyPropertiesToItem(IShellItem psiItem);
 				[PreserveSig] int ApplyPropertiesToItems([MarshalAs(UnmanagedType.IUnknown)] Object punkItems);
 				[PreserveSig] int RenameItem(IShellItem psiItem, [MarshalAs(UnmanagedType.LPWStr)] string pszNewName, IFileOperationProgressSink pfopsItem);
@@ -219,7 +219,7 @@ namespace Au
 			[ComImport, Guid("0C9FB851-E5C9-43EB-A370-F0677B13874C"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 			internal interface IOperationsProgressDialog
 			{
-				[PreserveSig] int StartProgressDialog(Wnd hwndOwner, uint flags);
+				[PreserveSig] int StartProgressDialog(AWnd hwndOwner, uint flags);
 				[PreserveSig] int StopProgressDialog();
 				[PreserveSig] int SetOperation(SPACTION action);
 				[PreserveSig] int SetMode(uint mode);

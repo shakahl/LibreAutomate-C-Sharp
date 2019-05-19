@@ -44,28 +44,28 @@ namespace Au.Util
 			//Print("workaround", AppDomain.CurrentDomain.Id);
 
 			//Print(Api.GetActiveWindow());
-			if(Wnd.Active.IsOfThisProcess) return;
+			if(AWnd.Active.IsOfThisProcess) return;
 #if true
-			Wnd w = Wnd.More.CreateMessageOnlyWindow("#32770");
+			AWnd w = AWnd.More.CreateMessageOnlyWindow("#32770");
 			//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster and prevents setting foreground; empty class same speed.
 			Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.
 
 			//Api.SetForegroundWindow(w);
-			//Print(Wnd.Active);
-			Wnd.More.DestroyWindow(w);
-			//Print(Wnd.Active);
+			//Print(AWnd.Active);
+			AWnd.More.DestroyWindow(w);
+			//Print(AWnd.Active);
 			//APerf.NW(); //1 ms when ngened, else 2 ms
 #else
 			//This makes startup faster. Also, if in same thread, it can take much more time, don't know why, depending on where called.
 			ThreadStart d = () =>
 			{
-				Wnd w = Api.CreateWindowEx(WS_EX.NOACTIVATE, "#32770", null, WS.POPUP, 0, 0, 0, 0, Native.HWND_MESSAGE, 0, default, 0);
+				AWnd w = Api.CreateWindowEx(WS_EX.NOACTIVATE, "#32770", null, WS.POPUP, 0, 0, 0, 0, Native.HWND_MESSAGE, 0, default, 0);
 				//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster; empty class same speed.
 				//w.FocusControlOfThisThread();
 				Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.
-				//Print(Wnd.Active);
+				//Print(AWnd.Active);
 				//APerf.NW();
-				Wnd.Misc.DestroyWindow(w);
+				AWnd.More.DestroyWindow(w);
 			};
 			if(Environment.ProcessorCount > 1) {
 				var t = new Thread(d);

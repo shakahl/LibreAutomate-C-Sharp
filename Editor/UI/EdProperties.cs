@@ -123,7 +123,7 @@ This option is ignored when the task runs as .exe program started not from edito
 This option is ignored when the task runs as .exe program started not from editor.
 ");
 		_AddCombo("uac", "inherit|user|admin", _meta.uac,
-@"<b>uac</b> - <help T_Au_Uac>UAC<> integrity level (IL) of the task process.
+@"<b>uac</b> - <help articles/UAC>UAC<> integrity level (IL) of the task process.
  • <i>inherit</i> (default) - the same as of the editor process. Normally High IL if installed on admin account, else Medium IL.
  • <i>user</i> - Medium IL, like most applications. The task cannot automate high IL process windows, write some files, change some settings, etc.
  • <i>admin</i> - High IL, aka ""administrator"", ""elevated"". The task has many rights, but cannot automate some apps through COM, etc.
@@ -197,12 +197,12 @@ Everything else is like with preBuild.
 		g.ZAddHeaderRow("Assembly");
 		_AddEdit("outputPath", _meta.outputPath,
 @"<b>outputPath</b> - directory for the output assembly file (.exe or .dll) and related files (used dlls, etc).
-Full path. Can start with %environmentVariable% or %Folders.SomeFolder%. Also can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%Folders.Workspace%\bin<>. Default if role classLibrary: <link>%Folders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
+Full path. Can start with %environmentVariable% or %AFolders.SomeFolder%. Also can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%AFolders.Workspace%\bin<>. Default if role classLibrary: <link>%AFolders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
 ", noCheckbox: true, buttonAction: (sender, sed) => {
 	var m = new AMenu();
-	m[_role == ERole.classLibrary ? @"%Folders.ThisApp%\Libraries" : @"%Folders.Workspace%\bin"] = o => _SetEditCellText(o.ToString());
+	m[_role == ERole.classLibrary ? @"%AFolders.ThisApp%\Libraries" : @"%AFolders.Workspace%\bin"] = o => _SetEditCellText(o.ToString());
 	m["Browse..."] = o => {
-		var f = new FolderBrowserDialog { SelectedPath = Folders.ThisAppDocuments, ShowNewFolderButton = true };
+		var f = new FolderBrowserDialog { SelectedPath = AFolders.ThisAppDocuments, ShowNewFolderButton = true };
 		if(f.ShowDialog(this) == DialogResult.OK) _SetEditCellText(f.SelectedPath);
 		f.Dispose();
 	};
@@ -401,7 +401,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			switch(_role) {
 			case ERole.exeProgram:
 			case ERole.classLibrary:
-				if(Empty(_meta.outputPath)) _meta.outputPath = _role == ERole.exeProgram ? @"%Folders.Workspace%\bin" : @"%Folders.ThisApp%\Libraries";
+				if(Empty(_meta.outputPath)) _meta.outputPath = _role == ERole.exeProgram ? @"%AFolders.Workspace%\bin" : @"%AFolders.ThisApp%\Libraries";
 				break;
 			}
 			if(_meta.config == "") _meta.config = "App.config";
@@ -437,7 +437,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	private void _bAddBrowse_Click(object sender, EventArgs e)
 	{
-		string fNET = Folders.NetFrameworkRuntime, fApp = Folders.ThisApp;
+		string fNET = AFolders.NetFrameworkRuntime, fApp = AFolders.ThisApp;
 		var d = new OpenFileDialog { InitialDirectory = sender == _bAddBrowseNet ? fNET : fApp, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
 		if(d.ShowDialog(this) != DialogResult.OK) return;
 
@@ -446,7 +446,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		var a = d.FileNames;
 		var dir = APath.GetDirectoryPath(a[0]);
 		if(dir.Eqi(fNET) || dir.Eqi(fNET + @"\WPF")) noDir = noExt = true;
-		else if(dir.Eqi(fApp) || dir.Eqi(Folders.ThisAppBS + "Libraries") || dir.Eqi(Folders.ThisAppBS + "Compiler")) noDir = true; //App.config: <probing privatePath="Compiler;Libraries"/>
+		else if(dir.Eqi(fApp) || dir.Eqi(AFolders.ThisAppBS + "Libraries") || dir.Eqi(AFolders.ThisAppBS + "Compiler")) noDir = true; //App.config: <probing privatePath="Compiler;Libraries"/>
 		if(noDir) for(int i = 0; i < a.Length; i++) a[i] = APath.GetFileName(a[i], noExt);
 
 		_meta.r.AddRange(a);
@@ -595,7 +595,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			break;
 		}
 		if(hr != 0) {
-			ADialog.ShowError("Failed to load type library", WinError.MessageFor(hr), owner: this);
+			ADialog.ShowError("Failed to load type library", ALastError.MessageFor(hr), owner: this);
 			return;
 		}
 
@@ -604,13 +604,13 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		Print($"Converting COM type library to .NET assembly.");
 		try {
 			if(_convertedDir == null) {
-				_convertedDir = Folders.Workspace + @".interop\";
+				_convertedDir = AFolders.Workspace + @".interop\";
 				AFile.CreateDirectory(_convertedDir);
 			}
 			var x = new _TypelibConverter();
 			x.Convert(tl);
 			_meta.com.AddRange(x.converted);
-			Print(@"<>Converted. Saved in <link>%Folders.Workspace%\.interop<>.");
+			Print(@"<>Converted. Saved in <link>%AFolders.Workspace%\.interop<>.");
 		}
 		catch(Exception ex) { ADialog.ShowError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }
 		Marshal.ReleaseComObject(tl);
@@ -674,11 +674,11 @@ The file must be in this workspace. Can be path relative to this file (examples:
 There are several ways to run a script:
 1. Click the Run button or menu item.
 2. Add script name in Options -> General -> Run scripts when this workspace loaded.
-3. Call <help M_Au_AuTask_Run>ATask.Run<> from another script. Example: <code>ATask.Run(""Script8.cs"");</code>
+3. Call <help>ATask.Run<> from another script. Example: <code>ATask.Run(""Script8.cs"");</code>
 4. Command line. Example: ""PathOfProgramFolder\Au.CL.exe"" ""Script8.cs"". More info in Help.
 5. Click a link in the output pane. Example: <code>Print(""<>Click to run <script>Script8.cs<>."");</code>
 
-In script code you can add <help T_Au_Triggers_ActionTriggers>triggers<> (hotkey etc) to execute parts of script code when it is running. There are no such triggers to launch scripts.
+In script code you can add <help Au.Triggers.ActionTriggers>triggers<> (hotkey etc) to execute parts of script code when it is running. There are no such triggers to launch scripts.
 ";
 		const string c_class = "This file is a C# class. It can contain standard C# code: one or more classes, namespaces, etc.";
 		_info.ST.SetText(
@@ -698,7 +698,7 @@ To remove, delete the line in the code editor.
 ");
 		_Add(_bAddBrowseOther,
 @"<b>Browse: Other<> - browse any folder. Add selected .dll files as references.
-Adds meta <c green>r FileName.dll<>. Full path if not in <link>%Folders.ThisApp%<> or <link>%Folders.ThisApp%\Libraries<>.
+Adds meta <c green>r FileName.dll<>. Full path if not in <link>%AFolders.ThisApp%<> or <link>%AFolders.ThisApp%\Libraries<>.
 
 Don't need to add Au.dll.
 To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly.dll<>
@@ -719,7 +719,7 @@ To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assem
 To remove, delete the line in the code editor.
 ");
 		const string c_com = @" COM component's type library to an <i>interop assembly<>.
-Adds meta <c green>com FileName.dll<>. Saves the assembly file in <link>%Folders.Workspace%\.interop<>.
+Adds meta <c green>com FileName.dll<>. Saves the assembly file in <link>%AFolders.Workspace%\.interop<>.
 
 An interop assembly is a .NET assembly without real code. Not used at run time. At run time is used the COM component (registered native dll or exe file). Set prefer32bit true if 64-bit dll unavailable.
 
@@ -733,7 +733,7 @@ To remove, delete the line in the code editor. Optionally delete unused interop 
 @"<b>My: Library project<> - add a reference to a class library created in this workspace.
 Adds meta <c green>pr File.cs<>. The compiler will compile it if need and use the created dll file as a reference.
 
-The recommended outputPath of the library project is <link>%Folders.ThisApp%\Libraries<>. Else may not find the dll at run time.
+The recommended outputPath of the library project is <link>%AFolders.ThisApp%\Libraries<>. Else may not find the dll at run time.
 
 To remove, delete the line in the code editor. Optionally delete unused dll files.
 ");
@@ -782,10 +782,10 @@ Examples of loading resources at run time:
 		}
 	}
 
-	void _InfoOnMouseMove(Wnd w, LPARAM xy)
+	void _InfoOnMouseMove(AWnd w, LPARAM xy)
 	{
 		if(_gridEditMode) return;
-		Wnd wForm = (Wnd)this;
+		AWnd wForm = (AWnd)this;
 		if(w == wForm || w.Get.Window != wForm) {
 			_infoWnd = default;
 			_infoRow = -1;
@@ -793,7 +793,7 @@ Examples of loading resources at run time:
 			return;
 		}
 
-		if(w == (Wnd)_grid) {
+		if(w == (AWnd)_grid) {
 			var pp = _grid.PositionAtPoint(new Point(AMath.LoShort(xy), AMath.HiShort(xy)));
 			if(pp.Row != _infoRow) {
 				_infoText = null;
@@ -816,7 +816,7 @@ Examples of loading resources at run time:
 			_infoTimer.Start(700, true);
 		}
 	}
-	Wnd _infoWnd;
+	AWnd _infoWnd;
 	int _infoRow;
 	//Point _infoXY;
 	ATimer _infoTimer;
@@ -827,7 +827,7 @@ Examples of loading resources at run time:
 	{
 		switch(m.Msg) {
 		case Api.WM_MOUSEMOVE:
-			_InfoOnMouseMove((Wnd)m.HWnd, m.LParam);
+			_InfoOnMouseMove((AWnd)m.HWnd, m.LParam);
 			break;
 		}
 		return false;

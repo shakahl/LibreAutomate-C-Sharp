@@ -97,7 +97,7 @@ class UacDragDrop
 			if(!_isDragMode) return;
 
 			//when mouse released, end drag mode with ~100 ms delay
-			if(!Mouse.IsPressed(MButtons.Left | MButtons.Right)) { //calls GetKeyStateAsync. GetKeyState somehow unreliable when in drag mode.
+			if(!AMouse.IsPressed(MButtons.Left | MButtons.Right)) { //calls GetKeyStateAsync. GetKeyState somehow unreliable when in drag mode.
 				if(++_endCounter == 4) _EndedDragMode();
 				return;
 			}
@@ -108,7 +108,7 @@ class UacDragDrop
 				return;
 			}
 
-			var w = Wnd.FromMouse(WXYFlags.NeedWindow);
+			var w = AWnd.FromMouse(WXYFlags.NeedWindow);
 			if(!_isProcess2) {
 				if(!w.IsOfThisProcess) return;
 				//Print("drag");
@@ -122,8 +122,8 @@ class UacDragDrop
 			}
 		}
 
-		Wnd _wTransparent; //our transparent non-admin window
-		Wnd _wWindow; //current our top-level admin window covered by _wTransparent
+		AWnd _wTransparent; //our transparent non-admin window
+		AWnd _wWindow; //current our top-level admin window covered by _wTransparent
 
 		//Called in admin process. Non-admin process may not be able to zorder its window above admin windows.
 		void _SetTransparentSizeZorder()
@@ -138,7 +138,7 @@ class UacDragDrop
 		}
 
 		//SendMessage from _wTransparent on WM_CREATE.
-		public static void OnTransparentWindowCreated(Wnd wTransparent)
+		public static void OnTransparentWindowCreated(AWnd wTransparent)
 		{
 			var x = s_inst;
 			if(x?._isDragMode ?? false) {
@@ -169,7 +169,7 @@ class UacDragDrop
 
 			DragDropEffects ef = 0;
 			if(ev != DDEvent.Leave) {
-				var p = Mouse.XY;
+				var p = AMouse.XY;
 				var w = _wWindow.ChildFromXY(p, screenXY: true);
 				if(w.Is0) w = _wWindow;
 				if(w != _wTargetControl && !_wTargetControl.Is0) {
@@ -197,10 +197,10 @@ class UacDragDrop
 		DragDropEffects _allowedEffects;
 		int _keyState; //set on enter, then updated on over/drop
 
-		Wnd _wTargetControl; //control or form from mouse
+		AWnd _wTargetControl; //control or form from mouse
 
 		//If the control alows drop, calls its OnDragEnter/Over/Drop/Leave through reflection.
-		DragDropEffects _InvokeDDHandler(Wnd w, DDEvent ev, POINT p = default)
+		DragDropEffects _InvokeDDHandler(AWnd w, DDEvent ev, POINT p = default)
 		{
 			//Print(ev, w);
 			var c = Control.FromHandle(w.Handle); //is it thread-safe? It seems yes.
@@ -253,7 +253,7 @@ class UacDragDrop
 		public static void MainDD(string[] args)
 		{
 			//Print("NonAdminProcess");
-			var msgWnd = (Wnd)args[1].ToInt();
+			var msgWnd = (AWnd)args[1].ToInt();
 
 			var f = new NonAdminProcess(msgWnd);
 			f.ShowDialog();
@@ -261,9 +261,9 @@ class UacDragDrop
 			//Print("exit");
 		}
 
-		Wnd _msgWnd; //message-only IPC window in admin process
+		AWnd _msgWnd; //message-only IPC window in admin process
 
-		NonAdminProcess(Wnd msgWnd)
+		NonAdminProcess(AWnd msgWnd)
 		{
 			_msgWnd = msgWnd;
 			Text = "Au.DropTarget";
@@ -292,7 +292,7 @@ class UacDragDrop
 			switch(m.Msg) {
 			case Api.WM_CREATE:
 				_msgWnd.Send(Api.WM_USER, 10, m.HWnd);
-				Api.SetTimer((Wnd)m.HWnd, 1, 1000, null);
+				Api.SetTimer((AWnd)m.HWnd, 1, 1000, null);
 				break;
 			case Api.WM_TIMER:
 				if(!_msgWnd.IsAlive) Hide();
@@ -321,7 +321,7 @@ class UacDragDrop
 			_DDData r = default;
 			if(r.GetData(e.Data)) {
 				var b = Au.Util.LibSerializer.Serialize((int)e.AllowedEffect, e.KeyState, r.files, r.shell, r.text, r.linkName);
-				e.Effect = (DragDropEffects)(int)Wnd.More.CopyDataStruct.SendBytes(_msgWnd, 110, b);
+				e.Effect = (DragDropEffects)(int)AWnd.More.CopyDataStruct.SendBytes(_msgWnd, 110, b);
 			} else {
 				Hide();
 			}

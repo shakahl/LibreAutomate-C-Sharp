@@ -19,7 +19,7 @@ using static Au.AStatic;
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="Acc.Find"/> and similar functions.
+	/// Flags for <see cref="AAcc.Find"/> and similar functions.
 	/// </summary>
 	[Flags]
 	public enum AFFlags
@@ -47,7 +47,7 @@ namespace Au.Types
 		/// Search only in the client area of the window or control.
 		/// Skips the title bar, standard menubars and scrollbars. Searches only in the client area root object (but will not find the object itself).
 		/// When control class or id is specified in the <i>prop</i> argument, this flag is applied to these controls. Not applied to other controls.
-		/// Don't use this flag when searching in Acc or web page (role prefix "web:" etc) or with flag UIA.
+		/// Don't use this flag when searching in AAcc or web page (role prefix "web:" etc) or with flag UIA.
 		/// </summary>
 		ClientArea = 8,
 
@@ -55,9 +55,9 @@ namespace Au.Types
 		/// Search without loading dll into the target process.
 		/// Disadvantages: 1. Much slower. 2. Some properties are not supported, for example HTML attributes (while searching and later). 3. And more.
 		/// Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher [](xref:uac) integrity level, Firefox web page if its multiprocess feature is not disabled.
-		/// Some windows have child controls that belong to a different process or thread than the window. Example - Internet Explorer. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control(s) and search in it/them. For it can be used one of: 1. With Internet Explorer use role prefix "web:". 2. Find the control with <see cref="Wnd.Child"/> and search in it. 3. Use <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.
-		/// Don't need this flag when searching in Acc (then it is inherited from the Acc variable).
-		/// See also: <see cref="Acc.MiscFlags"/>.
+		/// Some windows have child controls that belong to a different process or thread than the window. Example - Internet Explorer. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control(s) and search in it/them. For it can be used one of: 1. With Internet Explorer use role prefix "web:". 2. Find the control with <see cref="AWnd.Child"/> and search in it. 3. Use <see cref="AAcc.Finder.Find(AWnd, AWnd.ChildFinder)"/>.
+		/// Don't need this flag when searching in AAcc (then it is inherited from the Acc variable).
+		/// See also: <see cref="AAcc.MiscFlags"/>.
 		/// </summary>
 		NotInProc = 0x100,
 
@@ -65,10 +65,10 @@ namespace Au.Types
 		/// Use UI Automation API.
 		/// Need this flag to find objects in windows that don't support accessible objects but support UI Automation elements.
 		/// Examples of such windows: Microsoft Edge web browser (web page), JavaFX applications.
-		/// Objects found with this flag never have HtmlX properties, but can have <see cref="Acc.UiaId"/>.
+		/// Objects found with this flag never have HtmlX properties, but can have <see cref="AAcc.UiaId"/>.
 		/// This flag can be used with most other windows too.
-		/// Don't use this flag when searching in Acc (then it is inherited from the Acc variable) or web page (role prefix "web:" etc).
-		/// See also: <see cref="Acc.MiscFlags"/>.
+		/// Don't use this flag when searching in AAcc (then it is inherited from the Acc variable) or web page (role prefix "web:" etc).
+		/// See also: <see cref="AAcc.MiscFlags"/>.
 		/// </summary>
 		UIA = 0x200,
 
@@ -93,7 +93,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="Acc.FromWindow"/>.
+	/// Flags for <see cref="AAcc.FromWindow"/>.
 	/// </summary>
 	[Flags]
 	public enum AWFlags
@@ -109,7 +109,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="Acc.FromXY"/>.
+	/// Flags for <see cref="AAcc.FromXY"/>.
 	/// </summary>
 	[Flags]
 	public enum AXYFlags
@@ -142,7 +142,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags returned by <see cref="Acc.MiscFlags"/>.
+	/// Flags returned by <see cref="AAcc.MiscFlags"/>.
 	/// </summary>
 	[Flags]
 	public enum AccMiscFlags :byte
@@ -161,7 +161,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// This accessible object was retrieved using Java Access Bridge API.
-		/// More info: <see cref="Acc"/>.
+		/// More info: <see cref="AAcc"/>.
 		/// </summary>
 		Java = 4,
 
@@ -173,7 +173,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Accessible object ids of window parts and some special objects.
-	/// Used with <see cref="Acc.FromWindow"/>
+	/// Used with <see cref="AAcc.FromWindow"/>
 	/// </summary>
 	/// <remarks>
 	/// The names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix "OBJID_". Except Java and UIA.
@@ -193,11 +193,11 @@ namespace Au.Types
 		ALERT = -10,
 		SOUND = -11,
 		/// <summary>
-		/// Can be used with API <msdn>WM_GETOBJECT</msdn>, not with <see cref="Acc.FromWindow"/>.
+		/// Can be used with API <msdn>WM_GETOBJECT</msdn>, not with <see cref="AAcc.FromWindow"/>.
 		/// </summary>
 		QUERYCLASSNAMEIDX = -12,
 		/// <summary>
-		/// Can be used with API <msdn>AccessibleObjectFromWindow</msdn>, not with <see cref="Acc.FromWindow"/>.
+		/// Can be used with API <msdn>AccessibleObjectFromWindow</msdn>, not with <see cref="AAcc.FromWindow"/>.
 		/// </summary>
 		NATIVEOM = -16,
 
@@ -217,7 +217,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Standard roles of accessible objects.
-	/// Used with <see cref="Acc.RoleInt"/>
+	/// Used with <see cref="AAcc.RoleInt"/>
 	/// </summary>
 	/// <remarks>
 	/// Most names are as in API <msdn>IAccessible.get_accRole Object Roles</msdn> documentation but without prefix "ROLE_SYSTEM_". These are renamed: PUSHBUTTON to BUTTON, CHECKBUTTON to CHECKBOX, GRAPHIC to IMAGE, OUTLINE to TREE, OUTLINEITEM to TREEITEM, OUTLINEBUTTON to TREEBUTTON,
@@ -292,7 +292,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Accessible object state flags.
-	/// Used by <see cref="Acc.State"/>.
+	/// Used by <see cref="AAcc.State"/>.
 	/// </summary>
 	/// <remarks>
 	/// Most names are as in API <msdn>IAccessible.get_accState Object State Constants</msdn> documentation but without prefix "STATE_SYSTEM_".
@@ -337,7 +337,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Accessible object selection flags.
-	/// Used by <see cref="Acc.Select"/>.
+	/// Used by <see cref="AAcc.Select"/>.
 	/// </summary>
 	/// <remarks>
 	/// The names are as in API <msdn>IAccessible.accSelect</msdn> documentation but without prefix "SELFLAG_".
@@ -511,14 +511,14 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="Acc.GetProperties"/>.
+	/// Used with <see cref="AAcc.GetProperties"/>.
 	/// </summary>
 	public struct AccProperties
 	{
 		public string Role, Name, Value, Description, Help, DefaultAction, KeyboardShortcut, UiaId, OuterHtml, InnerHtml;
 		public AccSTATE State;
 		public RECT Rect;
-		public Wnd WndContainer;
+		public AWnd WndContainer;
 		public Dictionary<string, string> HtmlAttributes;
 	}
 

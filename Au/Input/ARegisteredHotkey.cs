@@ -61,7 +61,7 @@ namespace Au
 	/// </example>
 	public struct ARegisteredHotkey : IDisposable
 	{
-		Wnd _w;
+		AWnd _w;
 		int _id;
 
 		///// <summary>The hotkey.</summary>
@@ -69,7 +69,7 @@ namespace Au
 
 		/// <summary>
 		/// Registers a hotkey using API <msdn>RegisterHotKey</msdn>.
-		/// Returns false if fails. Supports <see cref="WinError"/>.
+		/// Returns false if fails. Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="id">Hotkey id. Must be 0 to 0xBFFF. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
 		/// <param name="hotkey">Hotkey. Can be: string like "Ctrl+Shift+Alt+Win+K", tuple (KMod, KKey), enum KKey, enum Keys, struct KHotkey.</param>
@@ -80,7 +80,7 @@ namespace Au
 		/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
 		/// A single variable cannot register multiple hotkeys simultaneously. Use multiple variables, for example array.
 		/// </remarks>
-		/// <seealso cref="Keyb.WaitForHotkey"/>
+		/// <seealso cref="AKeyboard.WaitForHotkey"/>
 		/// <example>See <see cref="ARegisteredHotkey"/>.</example>
 		public bool Register(int id, KHotkey hotkey, AnyWnd window = default)
 		{
@@ -108,7 +108,7 @@ namespace Au
 		{
 			if(_id != 0) {
 				if(!Api.UnregisterHotKey(_w, _id)) {
-					var es = WinError.Message;
+					var es = ALastError.Message;
 					PrintWarning($"Failed to unregister hotkey, id={_id.ToString()}. {es}");
 					return;
 				}

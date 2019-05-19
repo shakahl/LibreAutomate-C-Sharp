@@ -97,7 +97,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			_InitWatcher();
 			//_triggers = new TriggersUI(this);
 
-			Folders.Workspace = WorkspaceDirectory;
+			AFolders.Workspace = WorkspaceDirectory;
 		}
 		_initedFully = true;
 	}
@@ -712,10 +712,10 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			//	//FUTURE
 			//	break;
 			case 3:
-				Exec.Run(f.FilePath);
+				AExec.Run(f.FilePath);
 				break;
 			case 4:
-				Exec.SelectInExplorer(f.FilePath);
+				AExec.SelectInExplorer(f.FilePath);
 				break;
 			}
 		}
@@ -877,7 +877,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			var s = a[i] = APath.Normalize(a[i]);
 			if(s.Find(@"\$RECYCLE.BIN\", true) > 0) {
 				ADialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
-					icon: DIcon.Info, owner: _control, onLinkClick: e => Exec.TryRun(e.LinkHref));
+					icon: DIcon.Info, owner: _control, onLinkClick: e => AExec.TryRun(e.LinkHref));
 				return;
 			}
 			var fd = FilesDirectory;
@@ -983,7 +983,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	{
 		var f = new _FormNewWorkspace();
 		f.textName.Text = name;
-		f.textLocation.Text = location ?? Folders.ThisAppDocuments;
+		f.textLocation.Text = location ?? AFolders.ThisAppDocuments;
 		if(f.ShowDialog() != DialogResult.OK) return null;
 		return f.textPath.Text;
 	}
@@ -1010,7 +1010,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			return false;
 		}
 
-		Exec.SelectInExplorer(wsDir);
+		AExec.SelectInExplorer(wsDir);
 		return true;
 	}
 

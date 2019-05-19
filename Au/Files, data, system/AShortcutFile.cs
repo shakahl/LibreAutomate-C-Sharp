@@ -158,7 +158,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="APidl"/>).
-		/// The string can be used with <see cref="Exec.Run"/>.
+		/// The string can be used with <see cref="AExec.Run"/>.
 		/// </summary>
 		/// <exception cref="AException">The 'set' function failed.</exception>
 		public string TargetAnyType {
@@ -341,7 +341,7 @@ namespace Au
 			//These don't help: SLGP_RAWPATH, GetIDList, disabled redirection.
 			//GetWorkingDirectory and GetIconLocation get raw path, and envronment variables such as %ProgramFiles% are expanded to (x86) in 32-bit process.
 			if(AVersion.Is32BitProcessAnd64BitOS) {
-				if(_pf == null) { string s = Folders.ProgramFilesX86; _pf = s + "\\"; }
+				if(_pf == null) { string s = AFolders.ProgramFilesX86; _pf = s + "\\"; }
 				if(R.Starts(_pf, true) && !AFile.ExistsAsAny(R)) {
 					var s2 = R.Remove(_pf.Length - 7, 6);
 					if(AFile.ExistsAsAny(s2)) R = s2;

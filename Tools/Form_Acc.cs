@@ -32,14 +32,14 @@ namespace Au.Tools
 {
 	public partial class Form_Acc : ToolForm
 	{
-		Acc _acc;
-		Wnd _wnd, _con;
+		AAcc _acc;
+		AWnd _wnd, _con;
 		bool _useCon;
 		TUtil.CaptureWindowEtcWithHotkey _capt;
 		CommonInfos _commonInfos;
 		string _wndName;
 
-		public Form_Acc(Acc acc = null)
+		public Form_Acc(AAcc acc = null)
 		{
 			InitializeComponent();
 
@@ -52,13 +52,13 @@ namespace Au.Tools
 			_acc = acc; //will be processed in OnLoad
 		}
 
-		const string c_registryKey = @"\Tools\Acc";
+		const string c_registryKey = @"\Tools\AAcc";
 
 		protected override void OnLoad(EventArgs e)
 		{
 			base.OnLoad(e);
 
-			Wnd w = (Wnd)this;
+			AWnd w = (AWnd)this;
 			if(ARegistry.GetString(out var wndPos, "wndPos", c_registryKey))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 
@@ -74,7 +74,7 @@ namespace Au.Tools
 			_cCapture.Checked = false;
 			_capt?.Dispose();
 
-			Wnd w = (Wnd)this;
+			AWnd w = (AWnd)this;
 			ARegistry.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
 
 			base.OnFormClosing(e);
@@ -84,11 +84,11 @@ namespace Au.Tools
 		{
 			//note: don't reorder all the calls.
 
-			Wnd c = _acc.WndContainer, w = c.Window;
+			AWnd c = _acc.WndContainer, w = c.Window;
 			if(w.Is0) return;
 			if(captured && w.IsCloaked) {
-				//Edge workaround. w is a cloaked windowsuicorecorewindow of other process. There are many such cloaked windows, and Wnd.Find often finds wrong window.
-				c = Wnd.FromMouse();
+				//Edge workaround. w is a cloaked windowsuicorecorewindow of other process. There are many such cloaked windows, and AWnd.Find often finds wrong window.
+				c = AWnd.FromMouse();
 				w = c.Window;
 				if(w.Is0) return;
 			}
@@ -96,7 +96,7 @@ namespace Au.Tools
 			string wndName = w.LibNameTL;
 			bool sameWnd = captured && w == _wnd && wndName == _wndName;
 			_wndName = wndName;
-			//rejected: update window name in code box if changed name of same window. In WinImage tool too. Currently only Wnd tool does it.
+			//rejected: update window name in code box if changed name of same window. In AWinImage tool too. Currently only AWnd tool does it.
 
 			//if control is in other thread, search in control by default, elso slow because cannot use inproc. Except for known windows.
 			bool useCon = c != w && c.ThreadId != w.ThreadId && 0 == c.ClassNameIs(Api.string_IES, "Windows.UI.Core.CoreWindow");
@@ -110,7 +110,7 @@ namespace Au.Tools
 			_bTest.Enabled = true; _bOK.Enabled = true; _bEtc.Enabled = true;
 		}
 
-		void _SetWndCon(Wnd wnd, Wnd con, bool useCon = false)
+		void _SetWndCon(AWnd wnd, AWnd con, bool useCon = false)
 		{
 			_wnd = wnd;
 			_con = con == wnd ? default : con;
@@ -119,9 +119,9 @@ namespace Au.Tools
 
 		bool _FillGridThreeCode(bool captured = false, bool sameWnd = false)
 		{
-			APerf.First();
+			//APerf.First();
 			bool sameTree = sameWnd && _TrySelectInSameTree();
-			APerf.Next();
+			//APerf.Next();
 
 			if(!sameTree) _ClearTree();
 			if(!_FillGrid(out var p)) return false;
@@ -131,7 +131,7 @@ namespace Au.Tools
 			if(captured && p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_acc.MiscFlags.Has(AccMiscFlags.Java) && AVersion.Is64BitOS)
 				_SetFormInfo(c_infoJava);
 
-			APerf.NW();//TODO
+			//APerf.NW();
 			return true;
 		}
 
@@ -141,7 +141,7 @@ namespace Au.Tools
 			g.Clear();
 
 			if(!_acc.GetProperties("Rnuvdakh@srw", out p)) {
-				_propError = "Failed to get AO properties: \r\n" + WinError.Message;
+				_propError = "Failed to get AO properties: \r\n" + ALastError.Message;
 				g.Invalidate();
 				return false;
 			}
@@ -210,9 +210,9 @@ namespace Au.Tools
 		{
 			var g = _grid2;
 
-			g.ZAdd(null, "also", "o => false", tt: "Lambda that returns true if Acc o is the wanted AO.", info: c_infoAlso);
+			g.ZAdd(null, "also", "o => false", tt: "Lambda that returns true if AAcc o is the wanted AO.", info: c_infoAlso);
 			g.ZAdd(null, "skip", "1", tt: "0-based index of matching AO.\nFor example, if 1, gets the second matching AO.");
-			g.ZAdd(null, "navig", null, tt: "When found, call Acc.Navigate to get another AO.", info: c_infoNavig);
+			g.ZAdd(null, "navig", null, tt: "When found, call AAcc.Navigate to get another AO.", info: c_infoNavig);
 			g.ZAdd(null, "wait", "5", tt: c_infoWait);
 			g.ZAddCheck("orThrow", "Exception if not found", true, tt: "Checked - throw exception.\nUnchecked - return null.");
 			g.ZAddHeaderRow("Search settings");
@@ -269,9 +269,9 @@ namespace Au.Tools
 			string waitTime = null;
 			bool isWait = !forTest && _grid2.ZGetValue("wait", out waitTime, false);
 			if(isWait) {
-				b.Append("Acc.Wait(").AppendWaitTime(waitTime, orThrow);
+				b.Append("AAcc.Wait(").AppendWaitTime(waitTime, orThrow);
 			} else {
-				b.Append("Acc.Find(");
+				b.Append("AAcc.Find(");
 			}
 
 			b.AppendOtherArg(wndVar, noComma: !isWait);
@@ -349,21 +349,21 @@ namespace Au.Tools
 			if(!_AccFromMouse(out var acc)) return;
 			_acc = acc;
 			_SetAcc(true);
-			var w = (Wnd)this;
+			var w = (AWnd)this;
 			if(w.IsMinimized) {
 				w.ShowNotMinMax();
 				w.ActivateLL();
 			}
 		}
 
-		bool _AccFromMouse(out Acc a)
+		bool _AccFromMouse(out AAcc a)
 		{
 			var flags = AXYFlags.PreferLink | AXYFlags.NoThrow;
 			if(_grid2.RowsCount > 0) {
 				if(_uiaUserChecked && _IsChecked2(nameof(AFFlags.UIA))) flags |= AXYFlags.UIA;
 				if(_IsChecked2(nameof(AFFlags.NotInProc))) flags |= AXYFlags.NotInProc;
 			}
-			a = Acc.FromMouse(flags);
+			a = AAcc.FromMouse(flags);
 			return a != null;
 		}
 		bool _uiaUserChecked; //to prevent capturing with AXYFlags.UIA when the checkbox was checked automatically (not by the user)
@@ -371,7 +371,7 @@ namespace Au.Tools
 
 		protected override void WndProc(ref Message m)
 		{
-			//Wnd w = (Wnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
+			//AWnd w = (AWnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
 
 			if(_capt != null && _capt.WndProc(ref m, out bool capture)) {
 				if(capture) _Capture();
@@ -414,20 +414,20 @@ namespace Au.Tools
 		bool _IsChecked2(string rowKey) => _grid2.ZIsChecked(rowKey);
 		void _Check2(string rowKey, bool check) => _grid2.ZCheck(rowKey, check);
 
-		Wnd _WndSearchIn => _useCon ? _con : _wnd;
+		AWnd _WndSearchIn => _useCon ? _con : _wnd;
 
 		void _UpdateCodeBox() => _FormatCode();
 
 		//Returns true if a is in visible web page in one of 3 browsers.
 		//browser - receives nonzero if container's class is like in one of browsers: 1 IES, 2 FF, 3 Chrome. Even if returns false.
-		static bool _IsVisibleWebPage(Acc a, out _BrowserEnum browser, Wnd wContainer = default)
+		static bool _IsVisibleWebPage(AAcc a, out _BrowserEnum browser, AWnd wContainer = default)
 		{
 			browser = 0;
 			if(wContainer.Is0) wContainer = a.WndContainer;
 			browser = (_BrowserEnum)wContainer.ClassNameIs(Api.string_IES, "Mozilla*", "Chrome*");
 			if(browser == 0) return false;
 			if(browser == _BrowserEnum.IE) return true;
-			Acc ad = null;
+			AAcc ad = null;
 			do {
 				if(a.RoleInt == AccROLE.DOCUMENT) ad = a;
 				a = a.Navigate("pa");
@@ -455,9 +455,9 @@ namespace Au.Tools
 		private void _bTest_Click(object sender, EventArgs ea)
 		{
 			var (code, wndVar) = _FormatCode(true); if(code == null) return;
-			var r = TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as Acc).Rect);
+			var r = TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as AAcc).Rect);
 
-			if(r.obj is Acc a && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
+			if(r.obj is AAcc a && r.speed >= 20_000 && !_IsChecked2(nameof(AFFlags.NotInProc)) && !_IsChecked2(nameof(AFFlags.UIA))) {
 				if(!a.MiscFlags.Has(AccMiscFlags.InProc) && _wnd.ClassNameIs("Mozilla*")) {
 					//need full path. Run("firefox.exe") fails if firefox is not properly installed.
 					string ffInfo = c_infoFirefox, ffPath = _wnd.ProgramPath;
@@ -471,7 +471,7 @@ namespace Au.Tools
 
 		#region tree
 
-		(_AccNode xRoot, _AccNode xSelect) _CreateModel(Wnd w, in AccProperties p, bool skipWINDOW)
+		(_AccNode xRoot, _AccNode xSelect) _CreateModel(AWnd w, in AccProperties p, bool skipWINDOW)
 		{
 			_AccNode xRoot = new _AccNode("root"), xSelect = null;
 			var stack = new Stack<_AccNode>(); stack.Push(xRoot);
@@ -485,7 +485,7 @@ namespace Au.Tools
 			//Print(prop.Replace('\0', ';'));
 			var role = p.Role; if(role.Length == 0) role = null;
 			try {
-				Acc.Find(w, role, "**tc " + p.Name, prop, flags, also: o => {
+				AAcc.Find(w, role, "**tc " + p.Name, prop, flags, also: o => {
 					//var x = new _AccNode(o.Role);
 					var x = new _AccNode("a");
 					int lev = o.Level;
@@ -534,7 +534,7 @@ namespace Au.Tools
 				foreach(var c in w.Get.Children(onlyVisible: true)) {
 					var m = _CreateModel(c, in p, true);
 					if(m.xSelect != null) {
-						//m.xRoot.a = Acc.FromWindow(c, flags: AWFlags.NoThrow);
+						//m.xRoot.a = AAcc.FromWindow(c, flags: AWFlags.NoThrow);
 						//if(m.xRoot.a != null) model.xRoot.Add(m.xRoot);
 						//else model.xRoot = m.xRoot;
 						xRoot = m.xRoot;
@@ -576,7 +576,7 @@ namespace Au.Tools
 		//	Usually faster than recreating tree, but in some cases can be slower. Slower when fails to find.
 		bool _TrySelectInSameTree()
 		{
-			//if(Keyb.IsScrollLock) return false;
+			//if(AKeyboard.IsScrollLock) return false;
 			int elem = _acc.SimpleElementId;
 			var ri = _acc.RoleInt;
 			if(!_acc.GetProperties(ri == 0 ? "Rrn" : "rn", out var p)) return false;
@@ -597,7 +597,7 @@ namespace Au.Tools
 			ADebug.Print("recreating tree of same window");
 			return false;
 
-			//Other ways to compare Acc:
+			//Other ways to compare AAcc:
 			//IAccIdentity. Unavailable in web pages.
 			//IUIAutomationElement. Very slow ElementFromIAccessible. In Firefox can be 30 ms.
 		}
@@ -709,7 +709,7 @@ namespace Au.Tools
 		{
 			public _AccNode(string name) : base(name) { }
 
-			public Acc a;
+			public AAcc a;
 			string _displayText;
 
 			public string DisplayText {
@@ -719,7 +719,7 @@ namespace Au.Tools
 						string props = isWINDOW ? "Rnsw" : "Rns";
 						if(!a.GetProperties(props, out var p)) {
 							IsException = true;
-							return _displayText = "Failed: " + WinError.Message;
+							return _displayText = "Failed: " + ALastError.Message;
 						}
 
 						if(isWINDOW) {
@@ -789,16 +789,16 @@ namespace Au.Tools
 		}
 
 		const string c_infoForm =
-@"Creates code to find <help M_Au_Acc_Find>accessible object<> (AO) in <help M_Au_Wnd_Find>window<>. Your script can click it, etc.
+@"Creates code to find <help AAcc.Find>accessible object<> (AO) in <help AWnd.Find>window<>. Your script can click it, etc.
 1. Move the mouse to an AO (button, link, etc). Press key <b>F3<>.
 2. Click the Test button. It finds and shows the AO and the search time.
 3. If need, check/uncheck/edit some fields or select another AO; click Test.
-4. Click OK, it inserts C# code in the editor. Or copy/paste.
-5. In the editor, add code to use the AO. <help T_Au_Acc>Examples<>. If need, rename variables, delete duplicate Wnd.Find lines, replace part of window name with *, etc.
+4. Click OK, it inserts C# code in editor. Or copy/paste.
+5. In editor add code to use the AO. <help AAcc>Examples<>. If need, rename variables, delete duplicate AWnd.Find lines, replace part of window name with *, etc.
 
 How to find AOs that don't have a name or other property with unique constant value? Capture another AO near it, and use <b>navig<> to get it. Or try <b>skip<>.";
 		const string c_infoRole = @"Role. Prefix <b>web:<> means 'in web page'. Can be path, like ROLE1/ROLE2/ROLE3. Path is relative to the window, control (if used <b>class<> or <b>id<>) or web page (role prefix <b>web:<>).
-Read more in <help M_Au_Acc_Find>Acc.Find<> help.";
+Read more in <help>AAcc.Find<> help.";
 		const string c_infoState = @"State. List of states that the AO must have and/or not have.
 Example: CHECKED, !DISABLED
 Note: AO state can change. Use only states you need. Remove others from the list.";
@@ -814,13 +814,13 @@ Note: It usually changes when elements before the AO are added or removed. Use i
 
 Can be multiline. For newline use Ctrl+Enter.";
 		const string c_infoNavig = @"<b>navig<> is a path to another AO from the found AO in the object tree. One or more of these words: <u><i>parent<> <i>child<> <i>first<> <i>last<> <i>next<> <i>previous<><>. Or 2 letters, like <i>ne<>.
-Example: pa ne2 ch3. The 2 means 2 times (ne ne). The 3 means 3-rd child (-3 would be 3-rd from end). More info: <help M_Au_Acc_Navigate>Acc.Navigate<>.";
+Example: pa ne2 ch3. The 2 means 2 times (ne ne). The 3 means 3-rd child (-3 would be 3-rd from end). More info: <help>AAcc.Navigate<>.";
 		const string c_infoWait = @"Wait timeout, seconds.
 If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns null or throws exception, depending on the 'Exception...' checkbox.";
 		const string c_infoLevel = @"<b>level<> - 0-based level of the AO in the object tree. Or min and max levels. Default 0 1000. Relative to the window, control (if used <b>class<> or <b>id<>) or web page (role prefix <b>web:<> etc).";
-		const string c_infoFirefox = @"To make much faster in Firefox, disable its multiprocess feature: open URL <link firefox.exe|about:config>about:config<>, set <b>browser.tabs.remote.autostart<> = <b>false<>, restart Firefox. More info in <help T_Au_Acc>Acc<> help.
+		const string c_infoFirefox = @"To make much faster in Firefox, disable its multiprocess feature: open URL <link firefox.exe|about:config>about:config<>, set <b>browser.tabs.remote.autostart<> = <b>false<>, restart Firefox. More info in <help>AAcc<> help.
 <+resetInfo>X<>";
-		const string c_infoJava = @"If there are no AOs in this window, need to <+jab>enable<> Java Access Bridge etc. More info in <help T_Au_Acc>Acc<> help.
+		const string c_infoJava = @"If there are no AOs in this window, need to <+jab>enable<> Java Access Bridge etc. More info in <help>AAcc<> help.
 <+resetInfo>X<>";
 
 		#endregion
@@ -861,7 +861,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 				string jabswitch = dir + @"\bin\jabswitch.exe", sout = null;
 				if(!AFile.ExistsAsFile(jabswitch)) return (false, "Cannot find jabswitch.exe.");
 				try {
-					Exec.RunConsole(out sout, jabswitch, en ? "-enable" : "-disable");
+					AExec.RunConsole(out sout, jabswitch, en ? "-enable" : "-disable");
 					sout = sout?.Trim();
 				}
 				catch(Exception ex) {
@@ -873,7 +873,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 
 				sout += "\r\nRestart Java apps to apply the new settings.";
 
-				string dll64 = Folders.SystemX64 + "WindowsAccessBridge-64.dll", dll32 = Folders.SystemX86 + "WindowsAccessBridge-32.dll";
+				string dll64 = AFolders.SystemX64 + "WindowsAccessBridge-64.dll", dll32 = AFolders.SystemX86 + "WindowsAccessBridge-32.dll";
 				if(!AFile.ExistsAsFile(dll64)) sout += "\r\n\r\nWarning: dll not found: " + dll64 + ".  64-bit apps will not be able to use AOs of Java apps. Install 64-bit Java too.";
 				if(!AFile.ExistsAsFile(dll32)) sout += "\r\n\r\nNote: dll not found: " + dll32 + ".  32-bit apps will not be able to use AOs of Java apps. Install 32-bit Java too.";
 

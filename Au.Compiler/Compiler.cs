@@ -452,7 +452,7 @@ namespace Au.Compiler
 			string manifestPath = null;
 			if(manifest != null) manifestPath = manifest.FilePath;
 			else if(m.Role == ERole.exeProgram && m.ResFile == null) { //add default manifest if need
-				manifestPath = Folders.ThisAppBS + "default.exe.manifest"; //don't: uac
+				manifestPath = AFolders.ThisAppBS + "default.exe.manifest"; //don't: uac
 				if(!AFile.ExistsAsFile(manifestPath)) manifestPath = null;
 			}
 
@@ -489,13 +489,13 @@ namespace Au.Compiler
 			//	Would need to create appdomain, load the assembly and get its references through reflection.
 			//	And don't need it. We'll copy Au.dll and all non-default references that are not in the .NET folder.
 
-			_CopyFileIfNeed(typeof(Wnd).Assembly.Location, m.OutputPath + @"\Au.dll");
+			_CopyFileIfNeed(typeof(AWnd).Assembly.Location, m.OutputPath + @"\Au.dll");
 
 			var refs = m.References.Refs;
 			int i = DefaultReferences.Count;
 			if(refs.Count > i) {
-				//string netDir = Folders.NetFrameworkRuntime; //no GAC
-				string netDir = Folders.Windows + @"Microsoft.NET\";
+				//string netDir = AFolders.NetFrameworkRuntime; //no GAC
+				string netDir = AFolders.Windows + @"Microsoft.NET\";
 				for(; i < refs.Count; i++) {
 					var s1 = refs[i].FilePath;
 					if(s1.Starts(netDir, true)) continue;
@@ -506,8 +506,8 @@ namespace Au.Compiler
 			}
 
 			//also copy C++ dlls
-			_CopyFileIfNeed(Folders.ThisAppBS + @"dll\64bit\AuCpp.dll", m.OutputPath + @"\dll\64bit\AuCpp.dll");
-			_CopyFileIfNeed(Folders.ThisAppBS + @"dll\32bit\AuCpp.dll", m.OutputPath + @"\dll\32bit\AuCpp.dll");
+			_CopyFileIfNeed(AFolders.ThisAppBS + @"dll\64bit\AuCpp.dll", m.OutputPath + @"\dll\64bit\AuCpp.dll");
+			_CopyFileIfNeed(AFolders.ThisAppBS + @"dll\32bit\AuCpp.dll", m.OutputPath + @"\dll\32bit\AuCpp.dll");
 			//SHOULDDO: copy sqlite3.dll, if used class ASqlite. Or add a 'copyFile' meta.
 		}
 
@@ -591,7 +591,7 @@ namespace Au.Compiler
 			{"System.Core", typeof(HashSet<>).Assembly.Location},
 			{"System.Windows.Forms", typeof(System.Windows.Forms.Form).Assembly.Location},
 			{"System.Drawing", typeof(System.Drawing.Point).Assembly.Location},
-			{"Au.dll", typeof(Wnd).Assembly.Location},
+			{"Au.dll", typeof(AWnd).Assembly.Location},
 
 			//speed: many references makes compiling much slower. We use temporary caching. Permanent caching would add many MB of process memory.
 		};

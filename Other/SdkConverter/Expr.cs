@@ -353,7 +353,7 @@ namespace SdkConverter
 			//LongToHandle
 			//HRESULT_FROM_WIN32
 
-			//never mind: sizeof pointers, IntPtr, LPARAM and Wnd.
+			//never mind: sizeof pointers, IntPtr, LPARAM and AWnd.
 		}
 
 		void __ExprDebugOutValue(_EVAL v)

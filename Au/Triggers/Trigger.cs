@@ -262,11 +262,11 @@ namespace Au.Triggers
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <remarks>
-		/// Parameters are like with <see cref="Wnd.Find"/>.
+		/// Parameters are like with <see cref="AWnd.Find"/>.
 		/// Example in class help.
 		/// </remarks>
-		/// <exception cref="ArgumentException">Exceptions of <see cref="Wnd.Finder"/> constructor.</exception>
-		public TriggerScope Window(string name = null, string cn = null, WF3 program = default, Func<Wnd, bool> also = null, object contains = null)
+		/// <exception cref="ArgumentException">Exceptions of <see cref="AWnd.Finder"/> constructor.</exception>
+		public TriggerScope Window(string name = null, string cn = null, WF3 program = default, Func<AWnd, bool> also = null, object contains = null)
 			=> _Window(false, name, cn, program, also, contains);
 
 		/// <summary>
@@ -274,28 +274,28 @@ namespace Au.Triggers
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <remarks>
-		/// Parameters are like with <see cref="Wnd.Find"/>.
+		/// Parameters are like with <see cref="AWnd.Find"/>.
 		/// Example in class help.
 		/// </remarks>
-		/// <exception cref="ArgumentException">Exceptions of <see cref="Wnd.Finder"/> constructor.</exception>
-		public TriggerScope NotWindow(string name = null, string cn = null, WF3 program = default, Func<Wnd, bool> also = null, object contains = null)
+		/// <exception cref="ArgumentException">Exceptions of <see cref="AWnd.Finder"/> constructor.</exception>
+		public TriggerScope NotWindow(string name = null, string cn = null, WF3 program = default, Func<AWnd, bool> also = null, object contains = null)
 			=> _Window(true, name, cn, program, also, contains);
 
-		TriggerScope _Window(bool not, string name, string cn, WF3 program, Func<Wnd, bool> also, object contains)
-			=> _Add(not, new Wnd.Finder(name, cn, program, 0, also, contains));
+		TriggerScope _Window(bool not, string name, string cn, WF3 program, Func<AWnd, bool> also, object contains)
+			=> _Add(not, new AWnd.Finder(name, cn, program, 0, also, contains));
 
 		/// <summary>
 		/// Sets scope "only this window". Hotkey, autotext and mouse triggers added afterwards will work only when the specified window is active.
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-		public TriggerScope Window(Wnd.Finder f)
+		public TriggerScope Window(AWnd.Finder f)
 			=> _Add(false, f);
 
 		/// <summary>
 		/// Sets scope "not this window". Hotkey, autotext and mouse triggers added afterwards will not work when the specified window is active.
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-		public TriggerScope NotWindow(Wnd.Finder f)
+		public TriggerScope NotWindow(AWnd.Finder f)
 			=> _Add(true, f);
 
 		/// <summary>
@@ -303,7 +303,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <exception cref="WndException">Invalid window handle.</exception>
-		public TriggerScope Window(Wnd w)
+		public TriggerScope Window(AWnd w)
 			=> _Add(false, w);
 
 		/// <summary>
@@ -311,7 +311,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <exception cref="WndException">Invalid window handle.</exception>
-		public TriggerScope NotWindow(Wnd w)
+		public TriggerScope NotWindow(AWnd w)
 			=> _Add(true, w);
 
 		/// <summary>
@@ -320,12 +320,12 @@ namespace Au.Triggers
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <param name="any">
 		/// Specifies one or more windows.
-		/// Supported object types: <see cref="Wnd.Finder"/>, <see cref="Wnd"/>, string.
-		/// If string, its format must be like with <see cref="Wnd.Finder.op_Implicit(string)"/>. Examples: "Name", "Name,Class", ",,Program.exe".
+		/// Supported object types: <see cref="AWnd.Finder"/>, <see cref="AWnd"/>, string.
+		/// If string, its format must be like with <see cref="AWnd.Finder.op_Implicit(string)"/>. Examples: "Name", "Name,Class", ",,Program.exe".
 		/// The easiest way to specify "all windows of program X.exe": <c>Triggers.Of.Windows(",,X.exe")</c>.
 		/// </param>
 		/// <exception cref="ArgumentException">Unsupported object type.</exception>
-		/// <exception cref="WndException">Invalid window handle (when object type is <b>Wnd</b>).</exception>
+		/// <exception cref="WndException">Invalid window handle (when object type is <b>AWnd</b>).</exception>
 		public TriggerScope Windows(params object[] any)
 			=> _Add(false, any);
 
@@ -335,7 +335,7 @@ namespace Au.Triggers
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <param name="any">See <see cref="Windows"/>.</param>
 		/// <exception cref="ArgumentException">Unsupported object type.</exception>
-		/// <exception cref="WndException">Invalid window handle (when object type is <b>Wnd</b>).</exception>
+		/// <exception cref="WndException">Invalid window handle (when object type is <b>AWnd</b>).</exception>
 		public TriggerScope NotWindows(params object[] any)
 			=> _Add(true, any);
 
@@ -343,15 +343,15 @@ namespace Au.Triggers
 		{
 			switch(o) {
 			case null: throw new ArgumentNullException();
-			case Wnd w: w.ThrowIf0(); break;
+			case AWnd w: w.ThrowIf0(); break;
 			case object[] a:
 				if(a.Length > 1) a = (o = a.Clone()) as object[]; //don't overwrite elements of array passed as argument. In most cases it contains strings.
 				for(int j = 0; j < a.Length; j++) {
 					switch(a[j]) {
-					case Wnd.Finder _: break;
-					case Wnd w: w.ThrowIf0(); break;
+					case AWnd.Finder _: break;
+					case AWnd w: w.ThrowIf0(); break;
 					case string s:
-						var f = (Wnd.Finder)s;
+						var f = (AWnd.Finder)s;
 						if(a.Length > 1) a[j] = f; else o = f;
 						break;
 					case null: throw new ArgumentNullException();
@@ -374,7 +374,7 @@ namespace Au.Triggers
 	/// <example>See <see cref="TriggerScopes"/>.</example>
 	public class TriggerScope
 	{
-		internal readonly object o; //Wnd.Finder, Wnd, object<Wnd.Finder|Wnd>[]
+		internal readonly object o; //AWnd.Finder, AWnd, object<AWnd.Finder|AWnd>[]
 		internal readonly bool not;
 		internal int perfTime;
 
@@ -394,17 +394,17 @@ namespace Au.Triggers
 			var w = thc.Window;
 			if(!w.Is0) {
 				switch(o) {
-				case Wnd.Finder f:
+				case AWnd.Finder f:
 					yes = f.IsMatch(w, thc);
 					break;
-				case Wnd hwnd:
+				case AWnd hwnd:
 					yes = w == hwnd;
 					break;
 				case object[] a:
 					foreach(var v in a) {
 						switch(v) {
-						case Wnd.Finder f1: yes = f1.IsMatch(w, thc); break;
-						case Wnd w1: yes = (w == w1); break;
+						case AWnd.Finder f1: yes = f1.IsMatch(w, thc); break;
+						case AWnd w1: yes = (w == w1); break;
 						}
 						if(yes) break;
 					}
@@ -437,9 +437,9 @@ namespace Au.Triggers
 	/// <example>
 	/// <code><![CDATA[
 	/// //examples of assigning a CF to a single trigger
-	/// Triggers.FuncOf.NextTrigger = o => Keyb.IsCapsLock; //o => Keyb.IsCapsLock is the callback function (lambda)
+	/// Triggers.FuncOf.NextTrigger = o => AKeyboard.IsCapsLock; //o => AKeyboard.IsCapsLock is the callback function (lambda)
 	/// Triggers.Hotkey["Ctrl+K"] = o => Print("action: Ctrl+K while CapsLock is on");
-	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; Print($"func: mod={v.Mod}"); return Mouse.IsPressed(MButtons.Left); };
+	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; Print($"func: mod={v.Mod}"); return AMouse.IsPressed(MButtons.Left); };
 	/// Triggers.Hotkey["Ctrl+Shift?+B"] = o => Print("action: mouse left button + Ctrl+B or Ctrl+Shift+B");
 	/// 
 	/// //examples of assigning a CF to multiple triggers

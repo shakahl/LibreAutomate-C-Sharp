@@ -28,17 +28,17 @@ namespace Au.Types
 		[ComImport, Guid("000214E6-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		internal interface IShellFolder
 		{
-			[PreserveSig] int ParseDisplayName(Wnd hwnd, IntPtr pbc, [MarshalAs(UnmanagedType.LPWStr)] string pszDisplayName, uint* pchEaten, out IntPtr ppidl, uint* pdwAttributes);
-			[PreserveSig] int EnumObjects(Wnd hwnd, uint grfFlags, out IEnumIDList ppenumIDList);
+			[PreserveSig] int ParseDisplayName(AWnd hwnd, IntPtr pbc, [MarshalAs(UnmanagedType.LPWStr)] string pszDisplayName, uint* pchEaten, out IntPtr ppidl, uint* pdwAttributes);
+			[PreserveSig] int EnumObjects(AWnd hwnd, uint grfFlags, out IEnumIDList ppenumIDList);
 			[PreserveSig] int BindToObject(IntPtr pidl, IntPtr pbc, in Guid riid, out IntPtr ppv);
 			[PreserveSig] int BindToStorage(IntPtr pidl, IntPtr pbc, in Guid riid, out IntPtr ppv);
 			[PreserveSig] int CompareIDs(LPARAM lParam, IntPtr pidl1, IntPtr pidl2);
-			[PreserveSig] int CreateViewObject(Wnd hwndOwner, in Guid riid, out IntPtr ppv);
+			[PreserveSig] int CreateViewObject(AWnd hwndOwner, in Guid riid, out IntPtr ppv);
 			[PreserveSig] int GetAttributesOf(uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, ref uint rgfInOut);
-			[PreserveSig] //int GetUIObjectOf(Wnd hwndOwner, uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, in Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
-			int GetUIObjectOf(Wnd hwndOwner, uint cidl, IntPtr* apidl, in Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.Interface)] out object ppv);
+			[PreserveSig] //int GetUIObjectOf(AWnd hwndOwner, uint cidl, [MarshalAs(UnmanagedType.LPArray)] IntPtr[] apidl, in Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.IUnknown)] out object ppv);
+			int GetUIObjectOf(AWnd hwndOwner, uint cidl, IntPtr* apidl, in Guid riid, IntPtr rgfReserved, [MarshalAs(UnmanagedType.Interface)] out object ppv);
 			[PreserveSig] int GetDisplayNameOf(IntPtr pidl, uint uFlags, out STRRET pName);
-			[PreserveSig] int SetNameOf(Wnd hwnd, IntPtr pidl, [MarshalAs(UnmanagedType.LPWStr)] string pszName, uint uFlags, out IntPtr ppidlOut);
+			[PreserveSig] int SetNameOf(AWnd hwnd, IntPtr pidl, [MarshalAs(UnmanagedType.LPWStr)] string pszName, uint uFlags, out IntPtr ppidlOut);
 		}
 
 		internal static Guid IID_IShellItem = new Guid(0x43826D1E, 0xE718, 0x42EE, 0xBC, 0x55, 0xA1, 0xE2, 0x61, 0xC3, 0x7B, 0xFE);
@@ -104,7 +104,7 @@ namespace Au.Types
 			[PreserveSig] int GetIconLocation([MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszIconPath, int cch, out int piIcon);
 			[PreserveSig] int SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
 			[PreserveSig] int SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, uint dwReserved = 0);
-			[PreserveSig] int Resolve(Wnd hwnd, uint fFlags);
+			[PreserveSig] int Resolve(AWnd hwnd, uint fFlags);
 			[PreserveSig] int SetPath([MarshalAs(UnmanagedType.LPWStr)] string pszFile);
 
 			//info: default string marshaling in COM interfaces is BSTR, but in this interface strings are LPWSTR. Cannot use plain string and char[].
@@ -199,8 +199,8 @@ namespace Au.Types
 		//	[PreserveSig] int GetBkColor(out uint pclr);
 		//	[PreserveSig] int BeginDrag(int iTrack, int dxHotspot, int dyHotspot);
 		//	[PreserveSig] int EndDrag();
-		//	[PreserveSig] int DragEnter(Wnd hwndLock, int x, int y);
-		//	[PreserveSig] int DragLeave(Wnd hwndLock);
+		//	[PreserveSig] int DragEnter(AWnd hwndLock, int x, int y);
+		//	[PreserveSig] int DragLeave(AWnd hwndLock);
 		//	[PreserveSig] int DragMove(int x, int y);
 		//	[PreserveSig] int SetDragCursorImage([MarshalAs(UnmanagedType.IUnknown)] Object punk, int iDrag, int dxHotspot, int dyHotspot);
 		//	[PreserveSig] int DragShowNolock([MarshalAs(UnmanagedType.Bool)] bool fShow);
@@ -432,9 +432,9 @@ namespace Au.Types
 		[ComImport, Guid("a5cd92ff-29be-454c-8d04-d82879fb3f1b"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		internal interface IVirtualDesktopManager
 		{
-			[PreserveSig] int IsWindowOnCurrentVirtualDesktop(Wnd topLevelWindow, [MarshalAs(UnmanagedType.Bool)] out bool onCurrentDesktop);
-			[PreserveSig] int GetWindowDesktopId(Wnd topLevelWindow, out Guid desktopId);
-			[PreserveSig] int MoveWindowToDesktop(Wnd topLevelWindow, in Guid desktopId);
+			[PreserveSig] int IsWindowOnCurrentVirtualDesktop(AWnd topLevelWindow, [MarshalAs(UnmanagedType.Bool)] out bool onCurrentDesktop);
+			[PreserveSig] int GetWindowDesktopId(AWnd topLevelWindow, out Guid desktopId);
+			[PreserveSig] int MoveWindowToDesktop(AWnd topLevelWindow, in Guid desktopId);
 		}
 
 		[ComImport, Guid("aa509086-5ca9-4c25-8f95-589d3c07b48a"), ClassInterface(ClassInterfaceType.None)]

@@ -318,7 +318,7 @@ namespace Au.Controls
 							gp.ParentTab.SetDockState(_DockState.LastVisible);
 							if(this.IsDocked) gp.ParentTab.SetActiveItem(gp);
 						}
-						if(this.ParentControl is _Float gf) ((Wnd)gf).EnsureInScreen();
+						if(this.ParentControl is _Float gf) ((AWnd)gf).EnsureInScreen();
 						return;
 					}
 					state = this.SavedVisibleDockState;
@@ -346,9 +346,9 @@ namespace Au.Controls
 						rect.EnsureInScreen();
 					} else if(this.ParentSplit != null) {
 						rect = this.RectangleInScreen;
-						Wnd.More.WindowRectFromClientRect(ref rect, WS.POPUP | WS.THICKFRAME, WS_EX.TOOLWINDOW);
+						AWnd.More.WindowRectFromClientRect(ref rect, WS.POPUP | WS.THICKFRAME, WS_EX.TOOLWINDOW);
 					} else { //new panel, empty bounds
-						var mp = Mouse.XY;
+						var mp = AMouse.XY;
 						rect = (mp.x - 15, mp.y - 15, 300, 150);
 						rect.EnsureInScreen();
 					}
@@ -477,8 +477,8 @@ namespace Au.Controls
 
 			internal void OnMouseLeftDown()
 			{
-				POINT p = Mouse.XY;
-				if(Api.DragDetect((Wnd)this.ParentControl, p)) {
+				POINT p = AMouse.XY;
+				if(Api.DragDetect((AWnd)this.ParentControl, p)) {
 					if(!this.IsFloating) this.SetDockState(_DockState.Floating, true);
 					var d = (this.ParentControl as _Float)?.Drag(p);
 					if(d != null) DockBy(d.gc, d.side);
@@ -563,7 +563,7 @@ namespace Au.Controls
 				this.UpdateLayout();
 				this.Invalidate();
 				//make sure that floating panel caption is in screen, else cannot move it until restarting this app
-				if(this.ParentControl is _Float gf) ((Wnd)gf).EnsureInScreen();
+				if(this.ParentControl is _Float gf) ((AWnd)gf).EnsureInScreen();
 			}
 		}
 	}

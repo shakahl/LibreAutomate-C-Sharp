@@ -85,18 +85,18 @@ namespace Au
 			=> AOutput.Write(name);
 
 		/// <summary>
-		/// In DEBUG config prints WinError.Message.
+		/// In DEBUG config prints ALastError.Message.
 		/// </summary>
 		[Conditional("DEBUG")]
 		internal static void LibPrintNativeError([CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
-			=> _Print(WinError.Message, cp, cln, cmn);
+			=> _Print(ALastError.Message, cp, cln, cmn);
 
 		/// <summary>
-		/// In DEBUG config prints WinError.MessageFor(code).
+		/// In DEBUG config prints ALastError.MessageFor(code).
 		/// </summary>
 		[Conditional("DEBUG")]
 		internal static void LibPrintNativeError(int code, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
-			=> _Print(WinError.MessageFor(code), cp, cln, cmn);
+			=> _Print(ALastError.MessageFor(code), cp, cln, cmn);
 
 		/// <summary>
 		/// Calls <see cref="ADialog.Show"/> to show some debug info.

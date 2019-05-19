@@ -164,7 +164,7 @@ namespace Au
 	/// This class implements [](xref:wildcard_expression) parsing and matching (comparing).
 	/// </summary>
 	/// <remarks>
-	/// Typically used in 'find' functions. For example, <see cref="Wnd.Find"/> uses it to compare window name, class name and program.
+	/// Typically used in 'find' functions. For example, <see cref="AWnd.Find"/> uses it to compare window name, class name and program.
 	/// The 'find' function creates an <b>AWildex</b> instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
 	/// </remarks>
 	/// <example>
@@ -267,7 +267,7 @@ namespace Au
 		{
 			if(wildcardExpression == null) return null;
 
-			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of Wnd.Find and Wnd.Child, where 'match any' is rare; but 'match any' is very often used for 'cn' and 'program' parameters, where "" causes exception, so they will quickly learn.
+			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of AWnd.Find and AWnd.Child, where 'match any' is rare; but 'match any' is very often used for 'cn' and 'program' parameters, where "" causes exception, so they will quickly learn.
 			///// If the string is "", calls <see cref="PrintWarning"/>. To match "", use "**empty" instead.
 			//	if(wildcardExpression.Length == 0) PrintWarning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
 

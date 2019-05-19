@@ -268,7 +268,7 @@ partial class PanelEdit : Control
 		//Print("<><c 0x8000>one\0two</c>");
 
 
-		//foreach(var f in AFile.EnumDirectory(Folders.ProgramFiles, FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
+		//foreach(var f in AFile.EnumDirectory(AFolders.ProgramFiles, FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
 		//	if(f.IsDirectory) continue;
 		//	if(0 == f.Name.Ends(true, ".png", ".bmp", ".jpg", ".gif", ".ico")) continue;
 		//	//Print(f.FullPath);
@@ -388,7 +388,7 @@ partial class PanelEdit : Control
 
 		protected override void WndProc(ref Message m)
 		{
-			//var w = (Wnd)m.HWnd;
+			//var w = (AWnd)m.HWnd;
 			//Print(m);
 			switch(m.Msg) {
 			case Api.WM_SETFOCUS:
@@ -396,7 +396,7 @@ partial class PanelEdit : Control
 				break;
 			case Api.WM_KEYDOWN:
 				char key = (char)(int)m.WParam;
-				var mod = Keyb.UI.GetMod();
+				var mod = AKeyboard.UI.GetMod();
 				if(mod == KMod.Ctrl) {
 					switch(key) {
 					case 'C':
@@ -782,7 +782,7 @@ partial class PanelEdit : Control
 					if(_drag != _DD_DataType.Text || 0 == (e.Effect & DragDropEffects.Move)) z.copy = 1;
 					Call(SCI_DRAGDROP, 2, &z);
 				}
-				if(!Focused && ((Wnd)(FindForm())).IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
+				if(!Focused && ((AWnd)(FindForm())).IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
 					_noModelEnsureCurrentSelected = true; //don't scroll treeview to currentfile
 					Focus();
 					_noModelEnsureCurrentSelected = false;
@@ -824,7 +824,7 @@ partial class PanelEdit : Control
 					if(isFN && !fn.IsCodeFile) {
 						t.Append("//").Append(path);
 					} else {
-						t.Append(isFN ? "ATask.Run(@\"" : "Exec.Run(@\"").Append(path);
+						t.Append(isFN ? "ATask.Run(@\"" : "AExec.Run(@\"").Append(path);
 						if(!Empty(args)) t.Append("\", \"").Append(args.Escape());
 						t.Append("\");");
 						if(menuVar == null && !isFN && (path.Starts("::") || path.Find(name, true) < 0)) t.Append(" //").Append(name);
@@ -943,7 +943,7 @@ partial class PanelEdit : Control
 			//_Print(s, true);
 			s = b.ToString();
 			//_Print(s);
-			new Clipb.Data().AddText(s).SetClipboard();
+			new AClipboardData().AddText(s).SetClipboard();
 			//PasteModified(); //testing
 		}
 		static bool s_infoCopy;
@@ -958,7 +958,7 @@ unsafe partial class Script :AScript { [STAThread] static void Main(string[] arg
 
 		public bool PasteModified()
 		{
-			var s = Clipb.Data.GetText();
+			var s = AClipboardData.GetText();
 			if(s == null) return false;
 			if(s.Starts("[code2]") && s.Ends("[/code2]\r\n")) s = s.Substring(7, s.Length - 17);
 

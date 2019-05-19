@@ -39,7 +39,7 @@ namespace Au.Util
 			if(r > 500) r = 500; else if(r < 8) r = 8;
 			s_minCap = r;
 
-			//info: 500 is optimal for getting all top-level windows (and invisible) as LibArrayBuilder<Wnd>.
+			//info: 500 is optimal for getting all top-level windows (and invisible) as LibArrayBuilder<AWnd>.
 			//	Normally there are 200-400 windows on my PC, rarely > 500.
 		}
 

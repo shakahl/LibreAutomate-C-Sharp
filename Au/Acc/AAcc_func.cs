@@ -18,21 +18,19 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 
-#pragma warning disable CS0282 //VS bug: shows warning "There is no defined ordering between fields in multiple declarations of partial struct 'Acc'. To specify an ordering, all instance fields must be in the same declaration."
-
 namespace Au
 {
-	public unsafe partial class Acc
+	public unsafe partial class AAcc
 	{
 		/// <summary>
 		/// Gets the container window or control of this accessible object.
 		/// </summary>
 		/// <remarks>
-		/// Returns default(Wnd) if failed. Supports <see cref="WinError"/>.
+		/// Returns default(AWnd) if failed. Supports <see cref="ALastError"/>.
 		/// All objects must support this property, but some have bugs and can fail or return a wrong window.
 		/// Uses API <msdn>WindowFromAccessibleObject</msdn>.
 		/// </remarks>
-		public Wnd WndContainer
+		public AWnd WndContainer
 		{
 			get
 			{
@@ -42,11 +40,11 @@ namespace Au
 			}
 		}
 
-		int _GetWnd(out Wnd w)
+		int _GetWnd(out AWnd w)
 		{
 			int hr = Cpp.Cpp_AccGetInt(this, 'w', out var i);
 			GC.KeepAlive(this);
-			w = (Wnd)i;
+			w = (AWnd)i;
 			return hr;
 		}
 
@@ -54,11 +52,11 @@ namespace Au
 		/// Gets the top-level window that contains this accessible object.
 		/// </summary>
 		/// <remarks>
-		/// Returns default(Wnd) if failed. Supports <see cref="WinError"/>.
-		/// All objects must support this property, but some have bugs and can return default(Wnd).
+		/// Returns default(AWnd) if failed. Supports <see cref="ALastError"/>.
+		/// All objects must support this property, but some have bugs and can return default(AWnd).
 		/// Uses API <msdn>WindowFromAccessibleObject</msdn> and API <msdn>GetAncestor</msdn>.
 		/// </remarks>
-		public Wnd WndTopLevel => WndContainer.Window;
+		public AWnd WndTopLevel => WndContainer.Window;
 		//note: named not WndWindow, to avoid using accidentally instead of WndContainer.
 
 		/// <summary>
@@ -66,7 +64,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Calls <see cref="GetRect(out RECT)"/>.
-		/// Returns empty rectangle if failed or this property is unavailable. Supports <see cref="WinError"/>.
+		/// Returns empty rectangle if failed or this property is unavailable. Supports <see cref="ALastError"/>.
 		/// Most but not all objects support this property.
 		/// </remarks>
 		public RECT Rect { get { GetRect(out var r); return r; } }
@@ -76,7 +74,7 @@ namespace Au
 		/// </summary>
 		/// <param name="r">Receives object rectangle in screen coordinates.</param>
 		/// <remarks>
-		/// Returns false if failed or this property is unavailable. Supports <see cref="WinError"/>.
+		/// Returns false if failed or this property is unavailable. Supports <see cref="ALastError"/>.
 		/// Most but not all objects support this property.
 		/// Uses <msdn>IAccessible.accLocation</msdn>.
 		/// </remarks>
@@ -94,11 +92,11 @@ namespace Au
 		/// <param name="r">Receives object rectangle in w client area coordinates.</param>
 		/// <param name="w">Window or control.</param>
 		/// <remarks>
-		/// Returns false if failed or this property is unavailable. Supports <see cref="WinError"/>.
+		/// Returns false if failed or this property is unavailable. Supports <see cref="ALastError"/>.
 		/// Most but not all objects support this property.
-		/// Uses <msdn>IAccessible.accLocation</msdn> and <see cref="Wnd.MapScreenToClient(ref RECT)"/>.
+		/// Uses <msdn>IAccessible.accLocation</msdn> and <see cref="AWnd.MapScreenToClient(ref RECT)"/>.
 		/// </remarks>
-		public bool GetRect(out RECT r, Wnd w)
+		public bool GetRect(out RECT r, AWnd w)
 		{
 			return GetRect(out r) && w.MapScreenToClient(ref r);
 		}
@@ -108,7 +106,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Most objects have a standard role, as enum <see cref="AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
-		/// Returns 0 if role is string or if failed. Supports <see cref="WinError"/>.
+		/// Returns 0 if role is string or if failed. Supports <see cref="ALastError"/>.
 		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
 		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
@@ -129,7 +127,7 @@ namespace Au
 		/// <remarks>
 		/// Most objects have a standard role, as enum <see cref="AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
 		/// For standard roles this function returns enum <see cref="AccROLE"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
-		/// Returns "" if failed. Supports <see cref="WinError"/>.
+		/// Returns "" if failed. Supports <see cref="ALastError"/>.
 		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
 		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
@@ -177,7 +175,7 @@ namespace Au
 		/// Gets object state (flags).
 		/// </summary>
 		/// <remarks>
-		/// Returns 0 if failed. Supports <see cref="WinError"/>.
+		/// Returns 0 if failed. Supports <see cref="ALastError"/>.
 		/// Uses <msdn>IAccessible.get_accState</msdn>.
 		/// </remarks>
 		/// <example>
@@ -271,7 +269,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Object name usually is its read-only text (eg button text, link text), or its adjacent read-only text (eg text label by this edit box). It usually does not change, therefore can be used to find or identify the object.
-		/// Returns "" if name is unavailable or if failed. Supports <see cref="WinError"/>.
+		/// Returns "" if name is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// Uses <msdn>IAccessible.get_accName</msdn>.
 		/// </remarks>
 		public string Name
@@ -288,7 +286,7 @@ namespace Au
 		/// Gets <see cref="Name"/> of window/control w.
 		/// Returns null if w invalid. Returns "" if failed to get name.
 		/// </summary>
-		internal static string LibNameOfWindow(Wnd w)
+		internal static string LibNameOfWindow(AWnd w)
 		{
 			if(!w.IsAlive) return null;
 			var hr = Cpp.Cpp_AccFromWindow(1 | 2, w, 0, out _, out var b);
@@ -303,7 +301,7 @@ namespace Au
 		/// <exception cref="AException">Failed to set value.</exception>
 		/// <remarks>
 		/// Usually it is editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the object reliably.
-		/// The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="WinError"/>.
+		/// The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// Most objects don't support 'set'.
 		/// Uses <msdn>IAccessible.get_accValue</msdn> or <msdn>IAccessible.put_accValue</msdn>.
 		/// </remarks>
@@ -322,7 +320,7 @@ namespace Au
 		/// Gets description.
 		/// </summary>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError"/>.
+		/// Returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// Uses <msdn>IAccessible.get_accDescription</msdn>.
 		/// </remarks>
 		public string Description
@@ -334,7 +332,7 @@ namespace Au
 		/// Gets help text.
 		/// </summary>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError"/>.
+		/// Returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// Uses <msdn>IAccessible.get_accHelp</msdn>.
 		/// </remarks>
 		public string Help
@@ -347,7 +345,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Only objects found with flag <see cref="AFFlags.UIA"/> can have this property.
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError"/>.
+		/// Returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// </remarks>
 		public string UiaId
 		{
@@ -358,7 +356,7 @@ namespace Au
 		/// Gets keyboard shortcut.
 		/// </summary>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError"/>.
+		/// Returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// Uses <msdn>IAccessible.get_accKeyboardShortcut</msdn>.
 		/// </remarks>
 		public string KeyboardShortcut
@@ -370,7 +368,7 @@ namespace Au
 		/// Gets default action.
 		/// </summary>
 		/// <remarks>
-		/// Returns "" if this property is unavailable or if failed. Supports <see cref="WinError"/>.
+		/// Returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// If this is a Java accessible object, returns all actions that can be used with <see cref="DoJavaAction"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="DoAction"/>.
 		/// Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
 		/// </remarks>
@@ -384,7 +382,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="AException">Failed.</exception>
 		/// <remarks>
-		/// Fails if the object does not have a default action. Then you can use <see cref="AExtAu.MouseClick(Acc, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
+		/// Fails if the object does not have a default action. Then you can use <see cref="AExtAu.MouseClick(AAcc, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
 		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="DoJavaAction"/> or one of the above functions (MouseClick etc).
 		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </remarks>
@@ -440,7 +438,7 @@ namespace Au
 			//FUTURE: Chrome bug: OFFSCREEN is not updated after scrolling.
 
 			var xy = AMath.MakeUint(r.CenterX, r.CenterY);
-			uint b = 0; if(Keyb.IsCtrl) b |= Api.MK_CONTROL; if(Keyb.IsShift) b |= Api.MK_SHIFT;
+			uint b = 0; if(AKeyboard.IsCtrl) b |= Api.MK_CONTROL; if(AKeyboard.IsShift) b |= Api.MK_SHIFT;
 			uint b1 = b | (right ? Api.MK_RBUTTON : Api.MK_LBUTTON);
 			w.Post(right ? Api.WM_RBUTTONDOWN : Api.WM_LBUTTONDOWN, b1, xy);
 			w.Post(Api.WM_MOUSEMOVE, b1, xy);
@@ -458,7 +456,7 @@ namespace Au
 		/// If null (default), performs default action (like <see cref="DoAction"/>) or posts Space key message. More info in Remarks.</param>
 		/// <exception cref="AException">Failed.</exception>
 		/// <remarks>
-		/// Read more about Java accessible objects in <see cref="Acc"/> topic.
+		/// Read more about Java accessible objects in <see cref="AAcc"/> topic.
 		/// 
 		/// Problem: if the action opens a dialog, DoAction/DoJavaAction do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is null and the object is focusable, this function tries a workaround: it makes the object (button etc) focused and posts Space key message, which should press the button; then this function does not wait.
 		/// </remarks>
@@ -510,19 +508,19 @@ namespace Au
 		/// This function does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for object' function which waits for a known object that must be in the new page.
 		/// This function cannot be used when the new page has the same title as current page. Then it waits until <i>secondsTimeout</i> time or forever. The same if the action does not open a web page.
 		/// </remarks>
-		public bool DoActionAndWaitForNewWebPage(double secondsTimeout = 60, Action<Acc> action = null)
+		public bool DoActionAndWaitForNewWebPage(double secondsTimeout = 60, Action<AAcc> action = null)
 		{
-			Wnd w = WndTopLevel; if(w.Is0) throw new AException("*get window");
-			Acc doc = Acc.Wait(-1, w, "web:"); if(doc == null) throw new AException("*find web page");
+			AWnd w = WndTopLevel; if(w.Is0) throw new AException("*get window");
+			AAcc doc = AAcc.Wait(-1, w, "web:"); if(doc == null) throw new AException("*find web page");
 
 			string wndName = w.LibNameTL, docName = doc.Name; Debug.Assert(!Empty(wndName) && !Empty(docName));
 			bool wndOK = false, docOK = false;
-			Acc.Finder f = null;
+			AAcc.Finder f = null;
 
 			if(action == null) DoAction(); else action(this);
 
 			//wait until window name and document name both are changed. They can change in any order, especially in Chrome.
-			var to = new WaitFor.Loop(secondsTimeout, 25);
+			var to = new AWaitFor.Loop(secondsTimeout, 25);
 			while(to.Sleep()) {
 				w.ThrowIfInvalid();
 				if(!wndOK) {
@@ -531,7 +529,7 @@ namespace Au
 					wndOK = s != wndName;
 				}
 				if(wndOK && !docOK) {
-					if(f == null) f = new Acc.Finder("web:") { ResultGetProperty = 'n' };
+					if(f == null) f = new AAcc.Finder("web:") { ResultGetProperty = 'n' };
 					if(!f.Find(w)) continue; //eg in Firefox for some time there is no DOCUMENT
 					var s = f.ResultProperty as string; if(s == null) continue;
 					docOK = s != docName;
@@ -550,7 +548,7 @@ namespace Au
 		//However web browsers not always fire the event. For some pages never, or only when not cached.
 		//Also, some pages are like never finish loading (the browser waiting animation does not stop spinning). Or finish when the wanted AO is there for long time, so why to wait. Or finish, then continue loading again...
 		//Also, this function inevitably will stop working with some new web browser version with new bugs. Too unreliable.
-		public bool DoActionAndWaitForWebPageLoaded(double secondsTimeout = 60, Action<Acc> action = null, Wnd w = default)
+		public bool DoActionAndWaitForWebPageLoaded(double secondsTimeout = 60, Action<AAcc> action = null, AWnd w = default)
 		{
 			LibThrowIfDisposed();
 
@@ -570,7 +568,7 @@ namespace Au
 			int browser = w.ClassNameIs(Api.string_IES, "Mozilla*", "Chrome*");
 			switch(browser) {
 			case 0:
-				Wnd ies = w.Child(null, Api.string_IES); if(ies.Is0) break;
+				AWnd ies = w.Child(null, Api.string_IES); if(ies.Is0) break;
 				w = ies; goto case 1;
 			case 1: hookEvent = AccEVENT.OBJECT_CREATE; break;
 			}
@@ -579,13 +577,13 @@ namespace Au
 			AutoResetEvent eventNotify = null;
 			int debugIndex = 0;
 
-			Api.WINEVENTPROC hook = (IntPtr hWinEventHook, AccEVENT ev, Wnd hwnd, int idObject, int idChild, int idEventThread, int time) =>
+			Api.WINEVENTPROC hook = (IntPtr hWinEventHook, AccEVENT ev, AWnd hwnd, int idObject, int idChild, int idEventThread, int time) =>
 			{
 				if(eventNotify == null) { /*Print("null 1");*/ return; }
 				if(ev == AccEVENT.OBJECT_CREATE && hwnd != w) return; //note: in Chrome hwnd is Chrome_RenderWidgetHostHWND
 				int di = ++debugIndex;
-				using(var a = Acc.FromEvent(hwnd, idObject, idChild)) {
-					if(a == null) { /*ADebug.Print("Acc.FromEvent null");*/ return; } //often IE, but these are not useful objects
+				using(var a = AAcc.FromEvent(hwnd, idObject, idChild)) {
+					if(a == null) { /*ADebug.Print("AAcc.FromEvent null");*/ return; } //often IE, but these are not useful objects
 					if(eventNotify == null) { /*Print("null 2");*/ return; }
 					if(ev == AccEVENT.IA2_DOCUMENT_LOAD_COMPLETE) { //Chrome, Firefox
 
@@ -654,7 +652,7 @@ namespace Au
 		/// </summary>
 		/// <param name="how">Specifies whether to select, focus, add to selection etc. Can be two flags, for example <c>AccSELFLAG.TAKEFOCUS | AccSELFLAG.TAKESELECTION</c>.</param>
 		/// <exception cref="AException">Failed.</exception>
-		/// <exception cref="WndException">Failed to activate the window (<see cref="Wnd.Activate"/>) or focus the control (<see cref="Wnd.Focus"/>).</exception>
+		/// <exception cref="WndException">Failed to activate the window (<see cref="AWnd.Activate"/>) or focus the control (<see cref="AWnd.Focus"/>).</exception>
 		/// <remarks>
 		/// Uses <msdn>IAccessible.accSelect</msdn>.
 		/// Not all objects support it. Most objects support not all flags. It depends on <see cref="AccSTATE"/> FOCUSABLE, SELECTABLE, MULTISELECTABLE, EXTSELECTABLE, DISABLED.
@@ -665,7 +663,7 @@ namespace Au
 			LibThrowIfDisposed();
 
 			//Workaround for Windows controls bugs, part 1.
-			Wnd w = default, wTL = default; bool focusingControl = false;
+			AWnd w = default, wTL = default; bool focusingControl = false;
 			if(how.Has(AccSELFLAG.TAKEFOCUS) && 0 == _GetWnd(out w)) {
 				if(!w.IsEnabled(true)) throw new AException("*set focus. Disabled"); //accSelect would not fail
 				wTL = w.Window;
@@ -705,7 +703,7 @@ namespace Au
 			//	With WPF initially almost does not work. After using a navigation key (Tab etc) starts to work well.
 			//tested: UIA.IElement.SetFocus:
 			//	In most cases works well with standard controls, all web browsers, WinForms.
-			//	With WPF same as Acc.
+			//	With WPF same as AAcc.
 			//	Bug: If standard control is disabled, deactivates parent window and draws focus rectangle on the control.
 		}
 
@@ -726,20 +724,20 @@ namespace Au
 
 		/// <summary>
 		/// Gets selected direct child items.
-		/// Returns empty array if there are no selected items of if failed. Supports <see cref="WinError"/>.
+		/// Returns empty array if there are no selected items of if failed. Supports <see cref="ALastError"/>.
 		/// </summary>
-		public Acc[] SelectedChildren
+		public AAcc[] SelectedChildren
 		{
 			get
 			{
 				LibThrowIfDisposed();
-				if(_elem != 0) { WinError.Clear(); return Array.Empty<Acc>(); }
+				if(_elem != 0) { ALastError.Clear(); return Array.Empty<AAcc>(); }
 				//return _iacc.get_accSelection();
-				if(0 != _Hresult(_FuncId.selection, Cpp.Cpp_AccGetSelection(this, out var b)) || b.Is0) return Array.Empty<Acc>();
+				if(0 != _Hresult(_FuncId.selection, Cpp.Cpp_AccGetSelection(this, out var b)) || b.Is0) return Array.Empty<AAcc>();
 				GC.KeepAlive(this);
 				var p = (Cpp.Cpp_Acc*)b.Ptr; int n = b.Length / sizeof(Cpp.Cpp_Acc);
-				var r = new Acc[n];
-				for(int i = 0; i < n; i++) r[i] = new Acc(p[i]);
+				var r = new AAcc[n];
+				for(int i = 0; i < n; i++) r[i] = new AAcc(p[i]);
 				b.Dispose();
 				return r;
 			}
@@ -756,7 +754,7 @@ namespace Au
 			get
 			{
 				LibThrowIfDisposed();
-				if(_elem != 0) { WinError.Clear(); return 0; }
+				if(_elem != 0) { ALastError.Clear(); return 0; }
 				_Hresult(_FuncId.child_count, Cpp.Cpp_AccGetInt(this, 'c', out int cc));
 				GC.KeepAlive(this);
 				return cc;
@@ -790,7 +788,7 @@ namespace Au
 		/// 
 		/// Normally this function is faster than calling multiple property functions, because it makes single remote procedure call. But not if this accessible object was found with flag <see cref="AFFlags.NotInProc"/> etc.
 		/// 
-		/// Returns false if fails, for example when the object's window is closed. Supports <see cref="WinError"/>.
+		/// Returns false if fails, for example when the object's window is closed. Supports <see cref="ALastError"/>.
 		/// </remarks>
 		public bool GetProperties(string props, out AccProperties result)
 		{
@@ -803,7 +801,7 @@ namespace Au
 			GC.KeepAlive(this);
 			if(hr != 0) {
 				if(hr == (int)Cpp.EError.InvalidParameter) throw new ArgumentException("Unknown property character.");
-				WinError.Code = hr;
+				ALastError.Code = hr;
 				return false;
 			}
 			using(b) {
@@ -814,7 +812,7 @@ namespace Au
 					switch(props[i]) {
 					case 'r': result.Rect = len > 0 ? *(RECT*)p : default; break;
 					case 's': result.State = len > 0 ? *(AccSTATE*)p : default; break;
-					case 'w': result.WndContainer = len > 0 ? (Wnd)(*(int*)p) : default; break;
+					case 'w': result.WndContainer = len > 0 ? (AWnd)(*(int*)p) : default; break;
 					case '@': result.HtmlAttributes = _AttributesToDictionary(p, len); break;
 					default:
 						var s = (len == 0) ? "" : new string(p, 0, len);
@@ -884,33 +882,33 @@ namespace Au
 		/// a = a.Navigate("parent next ch3", true);
 		/// ]]></code>
 		/// </example>
-		public Acc Navigate(string navig, double secondsToWait = 0)
+		public AAcc Navigate(string navig, double secondsToWait = 0)
 		{
 			LibThrowIfDisposed();
 			int hr; var ca = new Cpp.Cpp_Acc();
 			if(secondsToWait == 0) {
 				hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 			} else {
-				var to = new WaitFor.Loop(secondsToWait > 0 ? -secondsToWait : 0.0);
+				var to = new AWaitFor.Loop(secondsToWait > 0 ? -secondsToWait : 0.0);
 				do hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 				while(hr != 0 && hr != (int)Cpp.EError.InvalidParameter && to.Sleep());
 			}
 			GC.KeepAlive(this);
 			if(hr == (int)Cpp.EError.InvalidParameter) throw new ArgumentException("Invalid navig string.");
-			WinError.Code = hr;
-			return hr == 0 ? new Acc(ca) : null;
+			ALastError.Code = hr;
+			return hr == 0 ? new AAcc(ca) : null;
 
 			//FUTURE: when fails, possibly this is disconnected etc. Retry Find with same Finder.
 		}
 
-		//rejected: public Acc Parent() (call get_accParent directly). Can use Navigate(), it's almost as fast. Useful mostly in programming, not in scripts.
+		//rejected: public AAcc Parent() (call get_accParent directly). Can use Navigate(), it's almost as fast. Useful mostly in programming, not in scripts.
 
 		/// <summary>
 		/// Gets HTML.
 		/// </summary>
 		/// <param name="outer">If true, gets outer HTML (with tag and attributes), else inner HTML.</param>
 		/// <remarks>
-		/// Returns "" if this is not a HTML element or if failed. Supports <see cref="WinError"/>.
+		/// Returns "" if this is not a HTML element or if failed. Supports <see cref="ALastError"/>.
 		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
 		/// If this is the root of web page (role DOCUMENT or PANE), gets web page body HTML.
 		/// </remarks>
@@ -927,7 +925,7 @@ namespace Au
 		/// </summary>
 		/// <param name="name">Attribute name, for example <c>"href"</c>, <c>"id"</c>, <c>"class"</c>. Full, case-sensitive.</param>
 		/// <remarks>
-		/// Returns "" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="WinError"/>.
+		/// Returns "" if this is not a HTML element or does not have the specified attribute or failed. Supports <see cref="ALastError"/>.
 		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
 		/// </remarks>
 		/// <exception cref="ArgumentException">name is null/""/invalid.</exception>
@@ -944,7 +942,7 @@ namespace Au
 		/// Gets all HTML attributes.
 		/// </summary>
 		/// <remarks>
-		/// Returns empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="WinError"/>.
+		/// Returns empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="ALastError"/>.
 		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
 		/// </remarks>
 		public Dictionary<string, string> HtmlAttributes()

@@ -129,7 +129,7 @@ namespace Au.Controls
 		public void Show(Control anchor)
 		{
 			if(!(anchor?.IsHandleCreated ?? false)) throw new ArgumentException();
-			_Show(anchor, ((Wnd)anchor).Rect);
+			_Show(anchor, ((AWnd)anchor).Rect);
 		}
 
 		/// <summary>
@@ -238,7 +238,7 @@ namespace Au.Controls
 
 		bool IMessageFilter.PreFilterMessage(ref Message m)
 		{
-			//Wnd.Misc.PrintMsg(m, 0x118, Api.WM_TIMER, Api.WM_PAINT, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x60, 0xc341, 0x2a2);
+			//AWnd.More.PrintMsg(m, 0x118, Api.WM_TIMER, Api.WM_PAINT, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x60, 0xc341, 0x2a2);
 
 			switch(m.Msg) {
 			case Api.WM_KEYDOWN:
@@ -273,7 +273,7 @@ namespace Au.Controls
 			case Api.WM_NCRBUTTONDOWN:
 			case Api.WM_MBUTTONDOWN:
 			case Api.WM_NCMBUTTONDOWN:
-				if(((Wnd)m.HWnd).Window != (Wnd)_w) _Close(); //TODO: support owned windows of _w
+				if(((AWnd)m.HWnd).Window != (AWnd)_w) _Close(); //TODO: support owned windows of _w
 				break;
 			}
 			return false;
@@ -314,7 +314,7 @@ namespace Au.Controls
 				if(x.Disabled) return !isSpace;
 				if(x.CheckType != default) {
 					if(isSpace) {
-						if(Keyb.UI.IsCtrl || Keyb.UI.IsShift) return false;
+						if(AKeyboard.UI.IsCtrl || AKeyboard.UI.IsShift) return false;
 						_ToggleCheckbox(node, x);
 						return true;
 					}
@@ -411,10 +411,10 @@ namespace Au.Controls
 
 				if(_owner != null) {
 					Show(_owner);
-					if(changedOwner) ((Wnd)this).ZorderAbove((Wnd)_owner);
+					if(changedOwner) ((AWnd)this).ZorderAbove((AWnd)_owner);
 				} else {
 					Show(); //note: not the same as Show(null)
-					if(changedOwner) ((Wnd)this).ZorderTopmost();
+					if(changedOwner) ((AWnd)this).ZorderTopmost();
 				}
 				_showedOnce = true;
 			}
@@ -440,7 +440,7 @@ namespace Au.Controls
 
 			protected override void WndProc(ref Message m)
 			{
-				//Wnd.Misc.PrintMsg(m);
+				//AWnd.More.PrintMsg(m);
 
 				switch(m.Msg) {
 				case Api.WM_DESTROY:
@@ -477,7 +477,7 @@ namespace Au.Controls
 					//show with standard combobox animation
 					if(_p.ComboBoxAnimation && SystemInformation.IsComboBoxAnimationEnabled) {
 						Api.SetCursor(Cursors.Arrow.Handle);
-						Api.AnimateWindow((Wnd)this, 0, Api.AnimationFlags.Slide | (_up ? Api.AnimationFlags.VerticalNegative : Api.AnimationFlags.VerticalPositive));
+						Api.AnimateWindow((AWnd)this, 0, Api.AnimationFlags.Slide | (_up ? Api.AnimationFlags.VerticalNegative : Api.AnimationFlags.VerticalPositive));
 					}
 				}
 			}

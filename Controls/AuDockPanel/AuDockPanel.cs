@@ -91,7 +91,7 @@ namespace Au.Controls
 		void _LoadXmlAndCreateLayout(string xmlFileDefault, string xmlFileCustomized)
 		{
 			//We have 1 or 2 XML files containing panel/toolbar layout.
-			//xmlFileDefault contains default XML. It eg can be in Folders.ThisApp.
+			//xmlFileDefault contains default XML. It eg can be in AFolders.ThisApp.
 			//xmlFileCustomized contains previously saved XML (user-modified layout).
 			//At first try to load xmlFileCustomized. If it does not exist or is invalid, load xmlFileDefault; or get missing data from xmlFileDefault, if possible.
 			//Also loads xmlFileDefault when xmlFileCustomized XML does not match panels of new app version and cannot resolve it (eg some panels removed).
@@ -550,8 +550,8 @@ namespace Au.Controls
 		/// <param name="enable">Enable or disable.</param>
 		public void EnableDisableAllFloatingWindows(bool enable)
 		{
-			foreach(var v in _aPanel) if(v.IsFloating) ((Wnd)v.ParentControl).Enable(enable);
-			foreach(var v in _aTab) if(v.IsFloating) ((Wnd)v.ParentControl).Enable(enable);
+			foreach(var v in _aPanel) if(v.IsFloating) ((AWnd)v.ParentControl).Enable(enable);
+			foreach(var v in _aTab) if(v.IsFloating) ((AWnd)v.ParentControl).Enable(enable);
 		}
 
 		/// <summary>

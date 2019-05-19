@@ -22,7 +22,7 @@ namespace Au.Util
 	/// Memory that can be used by multiple processes and app domains.
 	/// Faster and more raw/unsafe than System.IO.MemoryMappedFiles.MemoryMappedFile.
 	/// </summary>
-	/// <seealso cref="Wnd.More.CopyDataStruct"/>
+	/// <seealso cref="AWnd.More.CopyDataStruct"/>
 	//[DebuggerStepThrough]
 	public unsafe static class ASharedMemory
 	{
@@ -47,7 +47,7 @@ namespace Au.Util
 				if(!InterDomainVariables.GetVariable(name, out IntPtr t)) {
 					var hm = Api.CreateFileMapping((IntPtr)~0, Api.SECURITY_ATTRIBUTES.ForLowIL, Api.PAGE_READWRITE, 0, size, name);
 					if(hm.Is0) goto ge;
-					created = WinError.Code != Api.ERROR_ALREADY_EXISTS;
+					created = ALastError.Code != Api.ERROR_ALREADY_EXISTS;
 					t = Api.MapViewOfFile(hm, 0x000F001F, 0, 0, 0);
 					if(t == default) { hm.Dispose(); goto ge; }
 					InterDomainVariables.SetVariable(name, t);

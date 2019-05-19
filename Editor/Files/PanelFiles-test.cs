@@ -56,17 +56,17 @@ partial class PanelFiles
 //		m["Find"] = o =>
 //		{
 //			Print(_model.Find("QM3 function flags.cs", false));
-//			Print(_model.Find(@"\Function ideAs\Acc.path.cs", false));
+//			Print(_model.Find(@"\Function ideAs\AAcc.path.cs", false));
 //			Print(_model.Find("mono compiler", false));
 //			Print(_model.Find(@"\oLd\mono compiler", false));
 //			Print("-----");
 //			Print(_model.Find("QM3 function flags.cs", false));
-//			Print(_model.Find(@"\Function ideAs\Acc.path.cs", false));
+//			Print(_model.Find(@"\Function ideAs\AAcc.path.cs", false));
 //			Print(_model.Find("mono compiler", false));
 //			Print(_model.Find(@"\oLd\mono compiler", false));
 //			Print("-----");
 //			Print(_model.Find("QM3 function flags.cs", true));
-//			Print(_model.Find(@"\Function ideAs\Acc.path.cs", true));
+//			Print(_model.Find(@"\Function ideAs\AAcc.path.cs", true));
 //			Print(_model.Find("mono compiler", true));
 //			Print(_model.Find(@"\oLd\mono compiler", true));
 //		};

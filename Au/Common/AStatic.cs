@@ -175,7 +175,7 @@ namespace Au
 
 				//rejected: escape strings (eg if contains characters "\r\n,\0"):
 				//	it can damage formatting tags etc;
-				//	the string may be already escaped, eg Wnd.ToString or Acc.ToString;
+				//	the string may be already escaped, eg AWnd.ToString or AAcc.ToString;
 				//	we don't know whether the caller wants it;
 				//	let the caller escape it if wants, it's easy.
 			}

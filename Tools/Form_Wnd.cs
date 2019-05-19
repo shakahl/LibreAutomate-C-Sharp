@@ -33,13 +33,13 @@ namespace Au.Tools
 {
 	public partial class Form_Wnd : ToolForm
 	{
-		Wnd _wnd, _con;
+		AWnd _wnd, _con;
 		TUtil.CaptureWindowEtcWithHotkey _capt;
 		CommonInfos _commonInfos;
 		bool _uncheckControl;
 		string _wndName;
 
-		public Form_Wnd(Wnd wnd = default, bool uncheckControl = false)
+		public Form_Wnd(AWnd wnd = default, bool uncheckControl = false)
 		{
 			InitializeComponent();
 			splitContainer3.SplitterWidth = 8;
@@ -56,13 +56,13 @@ namespace Au.Tools
 			//_grid.ZDebug = true;
 		}
 
-		const string c_registryKey = @"\Tools\Wnd";
+		const string c_registryKey = @"\Tools\AWnd";
 
 		protected override void OnLoad(EventArgs e)
 		{
 			base.OnLoad(e);
 
-			Wnd w = (Wnd)this;
+			AWnd w = (AWnd)this;
 			if(ARegistry.GetString(out var wndPos, "wndPos", c_registryKey))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 
@@ -78,7 +78,7 @@ namespace Au.Tools
 			_cCapture.Checked = false;
 			_capt?.Dispose();
 
-			Wnd w = (Wnd)this;
+			AWnd w = (AWnd)this;
 			ARegistry.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
 
 			base.OnFormClosing(e);
@@ -181,7 +181,7 @@ namespace Au.Tools
 					}
 					//acc
 					var a2 = new List<string>();
-					var a3 = Acc.FindAll(_wnd, name: "?*", prop: "notin=SCROLLBAR\0maxcc=100", flags: AFFlags.ClientArea); //all that have a name
+					var a3 = AAcc.FindAll(_wnd, name: "?*", prop: "notin=SCROLLBAR\0maxcc=100", flags: AFFlags.ClientArea); //all that have a name
 					string prevName = null;
 					for(int i = a3.Length - 1; i >= 0; i--) {
 						if(!a3[i].GetProperties("Rn", out var prop)) continue;
@@ -198,11 +198,11 @@ namespace Au.Tools
 				catch(Exception ex) { ADebug.Print(ex); return null; }
 			}
 
-			bool _GetClassName(Wnd w, out string cn)
+			bool _GetClassName(AWnd w, out string cn)
 			{
 				cn = w.ClassName;
 				if(cn != null) return true;
-				_propError = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + WinError.Message;
+				_propError = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + ALastError.Message;
 				_grid.Clear();
 				_grid.Invalidate();
 				_winInfo.ST.ClearText();
@@ -250,7 +250,7 @@ namespace Au.Tools
 			bool isCon = !_con.Is0 && _IsChecked("Control");
 			bool orThrow = !forTest && _IsChecked2("orThrow");
 
-			b.Append(forTest ? "Wnd w;\r\n" : "var ").Append("w = Wnd.");
+			b.Append(forTest ? "AWnd w;\r\n" : "var ").Append("w = AWnd.");
 
 			string waitTime = null;
 			bool isWait = !forTest && _grid2.ZGetValue("wait", out waitTime, false);
@@ -344,15 +344,15 @@ namespace Au.Tools
 			g.ZAddHeaderRow("Window");
 			_AddFlag(nameof(WFFlags.HiddenToo), "Can be invisible", tt: "Flag WFFlags.HiddenToo.");
 			_AddFlag(nameof(WFFlags.CloakedToo), "Can be cloaked", tt: "Find cloaked windows. Flag WFFlags.CloakedToo.\r\nCloaked are windows on inactive Windows 10 virtual desktops, ghost windows of hidden Windows Store apps, various hidden system windows.");
-			_AddProp("alsoW", "also", "o => false", tt: "Lambda that returns true if Wnd o is the wanted window.", info: c_infoAlsoW);
+			_AddProp("alsoW", "also", "o => false", tt: "Lambda that returns true if AWnd o is the wanted window.", info: c_infoAlsoW);
 			_AddProp(null, "wait", "5", tt: c_infoWait);
 			g.ZAddHidden = noCon;
 			g.ZAddHeaderRow("Control");
 			_AddFlag("C." + nameof(WCFlags.HiddenToo), "Can be invisible", tt: "Flag WCFlags.HiddenToo.");
 			//_AddFlag("C." + nameof(WCFlags.DirectChild), "Direct child of the window", tt: "Don't find indirect descendant controls (children of children and so on).\r\nFlag WCFlags.DirectChild."); //rejected: almost not useful here
-			_AddProp("alsoC", "also", "o => false", tt: "Lambda that returns true if Wnd o is the wanted control.", info: c_infoAlsoC);
+			_AddProp("alsoC", "also", "o => false", tt: "Lambda that returns true if AWnd o is the wanted control.", info: c_infoAlsoC);
 			_AddProp(null, "skip", "1", tt: "0-based index of matching control.\nFor example, if 1, gets the second matching control.");
-			_AddFlag("orThrow", "Exception if not found", true, tt: "Checked - throw exception.\nUnchecked - return default(Wnd).");
+			_AddFlag("orThrow", "Exception if not found", true, tt: "Checked - throw exception.\nUnchecked - return default(AWnd).");
 			g.ZAddHidden = false;
 
 			g.ZAutoSize();
@@ -372,17 +372,17 @@ namespace Au.Tools
 
 		private void _cCapture_CheckedChanged(object sender, EventArgs e)
 		{
-			if(_capt == null) _capt = new TUtil.CaptureWindowEtcWithHotkey(this, _cCapture, () => Wnd.FromMouse().Rect);
+			if(_capt == null) _capt = new TUtil.CaptureWindowEtcWithHotkey(this, _cCapture, () => AWnd.FromMouse().Rect);
 			_capt.StartStop(_cCapture.Checked);
 		}
 
 		void _Capture()
 		{
-			var c = Wnd.FromMouse(); if(c.Is0) return;
+			var c = AWnd.FromMouse(); if(c.Is0) return;
 			_con = c;
 			_uncheckControl = false;
 			_SetWnd(true);
-			var w = (Wnd)this;
+			var w = (AWnd)this;
 			if(w.IsMinimized) {
 				w.ShowNotMinMax();
 				w.ActivateLL();
@@ -391,7 +391,7 @@ namespace Au.Tools
 
 		protected override void WndProc(ref Message m)
 		{
-			//Wnd w = (Wnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
+			//AWnd w = (AWnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
 
 			if(_capt != null && _capt.WndProc(ref m, out bool capture)) {
 				if(capture) _Capture();
@@ -416,12 +416,12 @@ namespace Au.Tools
 		/// <summary>
 		/// When OK clicked, the top-level window (even when <see cref="ResultUseControl"/> is true).
 		/// </summary>
-		public Wnd ResultWindow => _wnd;
+		public AWnd ResultWindow => _wnd;
 
 		/// <summary>
-		/// When OK clicked, the control (even when <see cref="ResultUseControl"/> is false) or default(Wnd).
+		/// When OK clicked, the control (even when <see cref="ResultUseControl"/> is false) or default(AWnd).
 		/// </summary>
-		public Wnd ResultControl => _con;
+		public AWnd ResultControl => _con;
 
 		/// <summary>
 		/// When OK clicked, true if a control was selected and the 'Control' checkbox checked.
@@ -445,7 +445,7 @@ namespace Au.Tools
 		{
 			var (code, wndVar) = _FormatCode(true); if(code == null) return;
 			TUtil.RunTestFindObject(code, wndVar, _wnd, _bTest, _lSpeed, o => {
-				var w = (Wnd)o;
+				var w = (AWnd)o;
 				var r = w.Rect;
 				if(w.IsMaximized && !w.IsChild) {
 					var k = Screen.FromHandle(w.Handle).Bounds; k.Inflate(-2, -2);
@@ -471,9 +471,9 @@ namespace Au.Tools
 			if(_con.Is0) xSelect = xWindow;
 			_AddChildren(_wnd, xWindow);
 
-			void _AddChildren(Wnd wParent, _WndNode nParent)
+			void _AddChildren(AWnd wParent, _WndNode nParent)
 			{
-				for(Wnd t = wParent.Get.FirstChild; !t.Is0; t = t.Get.Next()) {
+				for(AWnd t = wParent.Get.FirstChild; !t.Is0; t = t.Get.Next()) {
 					var x = new _WndNode("w") { c = t };
 					nParent.Add(x);
 					if(t == _con && xSelect == null) xSelect = x;
@@ -594,7 +594,7 @@ namespace Au.Tools
 		{
 			public _WndNode(string name) : base(name) { }
 
-			public Wnd c;
+			public AWnd c;
 			string _displayText;
 
 			public string DisplayText {
@@ -603,7 +603,7 @@ namespace Au.Tools
 						var cn = c.ClassName;
 						if(cn == null) {
 							IsException = true;
-							return _displayText = "Failed: " + WinError.Message;
+							return _displayText = "Failed: " + ALastError.Message;
 						}
 
 						var name = c.Name;
@@ -635,7 +635,7 @@ namespace Au.Tools
 			public string wClass, wName, wProg, cClass, cName, cText, /*cLabel,*/ cAcc, cWF;
 			public int cId;
 
-			public string Format(Wnd w, Wnd c, int wcp)
+			public string Format(AWnd w, AWnd c, int wcp)
 			{
 				var b = new StringBuilder();
 
@@ -676,7 +676,7 @@ namespace Au.Tools
 					b.Append("<i>ThreadId<>:    ").AppendLine(tid.ToString());
 					b.Append("<i>Is64Bit<>:    ").AppendLine(w.Is64Bit.ToString());
 					using(var uac = AUac.OfProcess(pid)) {
-						b.Append("<i><help T_Au_Process__UacInfo>UAC<> IL, elevation<>:    ")
+						b.Append("<i><help articles/UAC>UAC<> IL, elevation<>:    ")
 							.Append(uac.IntegrityLevel.ToString())
 							.Append(", ").AppendLine(uac.Elevation.ToString());
 					}
@@ -700,7 +700,7 @@ namespace Au.Tools
 				return b.ToString();
 			}
 
-			void _Common(bool isCon, StringBuilder b, Wnd w, string name, string className)
+			void _Common(bool isCon, StringBuilder b, AWnd w, string name, string className)
 			{
 				string s, sh = w.Handle.ToString();
 				b.Append("<i>Handle<>:    ").AppendLine(sh);
@@ -728,7 +728,7 @@ namespace Au.Tools
 				b.AppendLine(")");
 				var estyle = w.ExStyle;
 				b.Append("<i>ExStyle<>:  0x").Append(((uint)estyle).ToString("X8")).Append(" (").Append(estyle.ToString()).AppendLine(")");
-				//b.Append("<i>Class style<>:  0x").AppendLine(((uint)Wnd.Misc.GetClassLong(w, Native.GCL.STYLE)).ToString("X8"));
+				//b.Append("<i>Class style<>:  0x").AppendLine(((uint)AWnd.More.GetClassLong(w, Native.GCL.STYLE)).ToString("X8"));
 				if(!isCon) {
 					b.Append("<i>Is...<>:    ");
 					_AppendIs(w.IsPopupWindow, "IsPopupWindow");
@@ -765,7 +765,7 @@ namespace Au.Tools
 					_SetText(default);
 				});
 				_winInfo.Tags.AddLinkTag("+rect", s => {
-					var w = (Wnd)s.ToInt(0, out int e);
+					var w = (AWnd)s.ToInt(0, out int e);
 					int client = s.ToInt(e);
 					var r = client == 1 ? w.ClientRectInScreen : w.Rect;
 					TUtil.ShowOsdRect(r, limitToScreen: w.IsMaximized);
@@ -824,14 +824,14 @@ namespace Au.Tools
 		}
 
 		const string c_infoForm =
-@"Creates code to <help M_Au_Wnd_Find>find window<> or <help M_Au_Wnd_Child>control<>.
+@"Creates code to <help AWnd.Find>find window<> or <help AWnd.Child>control<>.
 1. Move the mouse to a window or control. Press key <b>F3<>.
 2. Click the Test button. It finds and shows the window/control and the search time.
 3. If need, check/uncheck/edit some fields or select another window/control; click Test.
-4. Click OK, it inserts C# code in the editor. Or copy/paste.
-5. In the editor, add code to use the window/control. If need, rename variables, delete duplicate Wnd.Find lines, replace part of window name with *, etc.";
+4. Click OK, it inserts C# code in editor. Or copy/paste.
+5. In editor add code to use the window/control. If need, rename variables, delete duplicate AWnd.Find lines, replace part of window name with *, etc.";
 		const string c_infoWait = @"Wait timeout, seconds.
-If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns default(Wnd) or throws exception, depending on the 'Exception...' checkbox.";
+If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns default(AWnd) or throws exception, depending on the 'Exception...' checkbox.";
 		const string c_infoAlsoW = @"<b>also<> examples:
 <code>o => { Print(o); return false; }</code>
 <code>o => !o.IsPopupWindow</code>

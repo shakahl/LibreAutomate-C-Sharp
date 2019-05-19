@@ -27,7 +27,7 @@ namespace Au.Util
 	public sealed class AWinFormsControlNames : IDisposable
 	{
 		AProcessMemory _pm;
-		Wnd _w;
+		AWnd _w;
 
 		///
 		public void Dispose()
@@ -44,7 +44,7 @@ namespace Au.Util
 		/// <param name="w">Any top-level or child window of that process.</param>
 		/// <exception cref="WndException">w invalid.</exception>
 		/// <exception cref="AException">Failed to allocate process memory (see <see cref="AProcessMemory"/>) needed to get control names, usually because of [](xref:uac).</exception>
-		public AWinFormsControlNames(Wnd w)
+		public AWinFormsControlNames(AWnd w)
 		{
 			_pm = new AProcessMemory(w, 4096); //throws
 			_w = w;
@@ -55,7 +55,7 @@ namespace Au.Util
 		/// Returns null if fails or the name is empty.
 		/// </summary>
 		/// <param name="c">The control. Can be a top-level window too. Must be of the same process as the window specified in the constructor.</param>
-		public string GetControlName(Wnd c)
+		public string GetControlName(AWnd c)
 		{
 			if(_pm == null) return null;
 			if(!IsWinFormsControl(c)) return null;
@@ -70,7 +70,7 @@ namespace Au.Util
 		/// Usually it means that we can get Windows Forms control name of w and its child controls.
 		/// </summary>
 		/// <param name="w">The window. Can be top-level or control.</param>
-		public static bool IsWinFormsControl(Wnd w)
+		public static bool IsWinFormsControl(AWnd w)
 		{
 			return w.ClassNameIs("WindowsForms*");
 		}
@@ -81,7 +81,7 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="c">The control. Can be top-level window too.</param>
 		/// <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create a AWinFormsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
-		public static string GetSingleControlName(Wnd c)
+		public static string GetSingleControlName(AWnd c)
 		{
 			if(!IsWinFormsControl(c)) return null;
 			try {
@@ -98,7 +98,7 @@ namespace Au.Util
 		///// </summary>
 		///// <param name="c">The control. Can be top-level window too.</param>
 		///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating AWinFormsControlNames instance each time and calling its GetControlNameOrText method, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>
-		//public static string GetSingleControlName(Wnd c)
+		//public static string GetSingleControlName(AWnd c)
 		//{
 		//	if(!IsWinFormsControl(c)) return null;
 		//	uint pid = c.ProcessId; if(pid == 0) return null;

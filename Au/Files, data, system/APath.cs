@@ -26,17 +26,17 @@ namespace Au
 	{
 		/// <summary>
 		/// If path starts with <c>"%"</c> or <c>"\"%"</c>, expands environment variables enclosed in %, else just returns path.
-		/// Also supports known folder names, like <c>"%Folders.Documents%"</c>. More info in Remarks.
+		/// Also supports known folder names, like <c>"%AFolders.Documents%"</c>. More info in Remarks.
 		/// </summary>
 		/// <param name="path">Any string. Can be null.</param>
 		/// <remarks>
-		/// Supports known folder names. See <see cref="Folders"/>.
-		/// Example: <c>@"%Folders.Documents%\file.txt"</c>.
-		/// Example: <c>@"%Folders.Virtual.ControlPanel%" //gets ":: HexEncodedITEMIDLIST"</c>.
-		/// Usually known folders are used like <c>string path = Folders.Documents + "file.txt"</c>. It's easier and faster. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
-		/// To get known folder path, this function calls <see cref="Folders.GetFolder"/>.
+		/// Supports known folder names. See <see cref="AFolders"/>.
+		/// Example: <c>@"%AFolders.Documents%\file.txt"</c>.
+		/// Example: <c>@"%AFolders.Virtual.ControlPanel%" //gets ":: HexEncodedITEMIDLIST"</c>.
+		/// Usually known folders are used like <c>string path = AFolders.Documents + "file.txt"</c>. It's easier and faster. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
+		/// To get known folder path, this function calls <see cref="AFolders.GetFolder"/>.
 		///
-		/// This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>Exec</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
+		/// This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>AExec</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
 		/// </remarks>
 		public static string ExpandEnvVar(string path)
 		{
@@ -49,9 +49,9 @@ namespace Au
 			int i = s.IndexOf('%', 1); if(i < 2) return s;
 			//return Environment.ExpandEnvironmentVariables(s); //5 times slower
 
-			//support known folders, like @"%Folders.Documents%\..."
-			if(i >= 12 && s.Starts("%Folders.")) {
-				var k = Folders.GetFolder(s.Substring(9, i - 9));
+			//support known folders, like @"%AFolders.Documents%\..."
+			if(i >= 12 && s.Starts("%AFolders.")) {
+				var k = AFolders.GetFolder(s.Substring(9, i - 9));
 				if(k != null) return k + s.Substring(i + 1);
 				return s;
 			}
@@ -71,7 +71,7 @@ namespace Au
 		/// <summary>
 		/// Gets environment variable's value.
 		/// Returns "" if variable not found.
-		/// Does not support Folders.X.
+		/// Does not support AFolders.X.
 		/// </summary>
 		/// <param name="name">Case-insensitive name. Without %.</param>
 		/// <remarks>

@@ -24,7 +24,7 @@ namespace Au.Util
 	/// </summary>
 	/// <remarks>
 	/// Can be used in possibly very frequently called functions to avoid much string garbage and frequent garbage collections.
-	/// For example, <b>Wnd.ClassName</b> and <b>Wnd.Name</b> use this. They are called by <b>Wnd.Wait</b> for each window (can be hundreds of them) repeatedly. It could create megabytes of garbage (window classname and name strings) in a few seconds. Every loop creates almost the same set of strings, therefore it makes sense to cache them.
+	/// For example, <b>AWnd.ClassName</b> and <b>AWnd.Name</b> use this. They are called by <b>AWnd.Wait</b> for each window (can be hundreds of them) repeatedly. It could create megabytes of garbage (window classname and name strings) in a few seconds. Every loop creates almost the same set of strings, therefore it makes sense to cache them.
 	/// To allow GC free the cached strings, use a WeakReferenc&lt;AStringCache&gt; object. See example.
 	/// </remarks>
 	/// <example>

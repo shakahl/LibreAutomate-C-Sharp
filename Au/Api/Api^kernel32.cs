@@ -90,7 +90,6 @@ namespace Au.Types
 
 		[DllImport("kernel32.dll", EntryPoint = "GetModuleHandleW", SetLastError = true)]
 		internal static extern IntPtr GetModuleHandle(string name);
-		//see also Util.Misc.GetModuleHandleOf(Type|Assembly).
 
 		[DllImport("kernel32.dll", EntryPoint = "LoadLibraryW", SetLastError = true)]
 		internal static extern IntPtr LoadLibrary(string lpLibFileName);

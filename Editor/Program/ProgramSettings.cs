@@ -31,11 +31,11 @@ class ProgramSettings
 	bool _isDirty;
 
 	/// <summary>
-	/// Loads settings from Folders.ThisAppDocuments + @"!Settings\Settings.xml".
+	/// Loads settings from AFolders.ThisAppDocuments + @"!Settings\Settings.xml".
 	/// </summary>
 	public ProgramSettings()
 	{
-		_settFile = Folders.ThisAppDocuments + @"!Settings\Settings.xml";
+		_settFile = AFolders.ThisAppDocuments + @"!Settings\Settings.xml";
 		try {
 			_x = AExtXml.LoadElem(_settFile);
 		}
@@ -43,7 +43,7 @@ class ProgramSettings
 			try {
 				if(AFile.ExistsAsAny(_settFile))
 					ADialog.ShowWarning("Failed to load settings", $"Will backup '{_settFile}' and use default settings.", expandedText: ex1.Message);
-				AFile.Copy(Folders.ThisAppBS + @"Default\Settings.xml", _settFile, IfExists.RenameExisting);
+				AFile.Copy(AFolders.ThisAppBS + @"Default\Settings.xml", _settFile, IfExists.RenameExisting);
 				_x = AExtXml.LoadElem(_settFile);
 			}
 			catch(Exception ex2) {

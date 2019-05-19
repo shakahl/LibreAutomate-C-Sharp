@@ -190,7 +190,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Gets control id. Returns true if it can be used to identify the control in window wWindow.
 		/// </summary>
-		internal static bool GetUsefulControlId(Wnd wControl, Wnd wWindow, out int id)
+		internal static bool GetUsefulControlId(AWnd wControl, AWnd wWindow, out int id)
 		{
 			id = wControl.ControlId;
 			if(id == 0 || id == -1 || id > 0xffff || id < -0xffff) return false;
@@ -275,11 +275,11 @@ namespace Au.Tools
 			public void StartStop(bool start)
 			{
 				if(start == Capturing) return;
-				var wForm = (Wnd)_form;
+				var wForm = (AWnd)_form;
 				if(start) {
 					//let other forms stop capturing
 					wForm.Prop.Set(c_propName, 1);
-					Wnd.Find(null, "WindowsForms*", also: o =>
+					AWnd.Find(null, "WindowsForms*", also: o =>
 					{
 						if(o != wForm && o.Prop[c_propName] == 1) o.Send(c_stopMessage);
 						return false;
@@ -301,7 +301,7 @@ namespace Au.Tools
 							long t1 = ATime.PerfMilliseconds, t2 = t1 - _prevTime; _prevTime = t1; if(t2 < 100) return;
 
 							//show rect of UI object from mouse
-							Wnd w = Wnd.FromMouse(WXYFlags.NeedWindow);
+							AWnd w = AWnd.FromMouse(WXYFlags.NeedWindow);
 							RECT? r = default;
 							if(!(w.Is0 || w == wForm || w.Owner == wForm)) {
 								r = _cbGetRect();
@@ -367,24 +367,24 @@ namespace Au.Tools
 		/// Returns the found object and the speed.
 		/// </summary>
 		/// <param name="code">
-		/// Must start with one or more lines that find window or control and set Wnd variable named wndVar. Can be any code.
-		/// The last line must be a 'find object' function call. Example: <c>Acc.Find(...);</c>. Without 'var obj = ', without OrThrow, without Wait.
+		/// Must start with one or more lines that find window or control and set AWnd variable named wndVar. Can be any code.
+		/// The last line must be a 'find object' function call. Example: <c>AAcc.Find(...);</c>. Without 'var obj = ', without OrThrow, without Wait.
 		/// </param>
-		/// <param name="wndVar">Name of Wnd variable of the window or control in which to search.</param>
+		/// <param name="wndVar">Name of AWnd variable of the window or control in which to search.</param>
 		/// <param name="wnd">Window or control in which to search.</param>
 		/// <param name="bTest">The 'Test' button. This function disables it while executing code.</param>
 		/// <param name="lSpeed">Label control that displays speed.</param>
 		/// <param name="getRect">Callback function that returns object's rectangle in screen. Called when object has been found.</param>
 		/// <remarks>
-		/// The test code is executed in this thread. Else would get invalid Acc etc. If need, caller can use Task.Run.
+		/// The test code is executed in this thread. Else would get invalid AO etc. If need, caller can use Task.Run.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// var r = await TUtil.RunTestFindObject(code, _wndVar, _wnd, _bTest, _lSpeed, o => (o as Acc).Rect);
+		/// var r = await TUtil.RunTestFindObject(code, _wndVar, _wnd, _bTest, _lSpeed, o => (o as AAcc).Rect);
 		/// ]]></code>
 		/// </example>
 		internal static TestFindObjectResults RunTestFindObject(
-			string code, string wndVar, Wnd wnd, Button bTest, Label lSpeed, Func<object, RECT> getRect, bool activateWindow = false)
+			string code, string wndVar, AWnd wnd, Button bTest, Label lSpeed, Func<object, RECT> getRect, bool activateWindow = false)
 		{
 			if(Empty(code)) return default;
 			Form form = lSpeed.FindForm();
@@ -396,7 +396,7 @@ namespace Au.Tools
 			//FUTURE: #line
 			var b = new StringBuilder();
 			b.AppendLine(@"static object[] __TestFunc__() {");
-			if(activateWindow) b.Append("((Wnd)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
+			if(activateWindow) b.Append("((AWnd)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
 			b.AppendLine("var _p_ = APerf.StartNew();");
 			var lines = code.SegLines(true);
 			int lastLine = lines.Length - 1;
@@ -407,7 +407,7 @@ namespace Au.Tools
 			b.AppendLine("\r\n}");
 			code = b.ToString(); //Print(code);
 
-			(long[] speed, object obj, Wnd wnd) r = default;
+			(long[] speed, object obj, AWnd wnd) r = default;
 			bool ok = false;
 			try {
 				bTest.Enabled = false;
@@ -416,13 +416,13 @@ namespace Au.Tools
 					ADialog.ShowError("Errors in code", c.errors, owner: form, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: code*/);
 				} else {
 					var rr=(object[])c.method.Invoke(null, null); //use array because fails to cast tuple, probably because in that assembly it is new type
-					r = ((long[])rr[0], rr[1], (Wnd)rr[2]);
+					r = ((long[])rr[0], rr[1], (AWnd)rr[2]);
 					ok = true;
 				}
 
 				//note: the script runs in this thread.
 				//	Bad: blocks current UI thread. But maybe not so bad.
-				//	Good: we get valid Acc result. Else it would be marshalled for a script thread.
+				//	Good: we get valid AAcc result. Else it would be marshalled for a script thread.
 			}
 			catch(Exception e) {
 				if(e is TargetInvocationException tie) e = tie.InnerException;
@@ -440,12 +440,12 @@ namespace Au.Tools
 			//Print(r);
 
 			double _SpeedMcsToMs(long tn) => Math.Round(tn / 1000d, tn < 1000 ? 2 : (tn < 10000 ? 1 : 0));
-			double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of Wnd.Find and Object.Find
+			double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of AWnd.Find and Object.Find
 			string sTime;
-			if(lastLine == 1 && lines[0].Length == 6) sTime = t1.ToStringInvariant() + " ms"; //only Wnd.Find: "Wnd w;\r\nw = Wnd.Find(...);"
+			if(lastLine == 1 && lines[0].Length == 6) sTime = t1.ToStringInvariant() + " ms"; //only AWnd.Find: "AWnd w;\r\nw = AWnd.Find(...);"
 			else sTime = t0.ToStringInvariant() + " + " + t1.ToStringInvariant() + " ms";
 
-			if(r.obj is Wnd w1 && w1.Is0) r.obj = null;
+			if(r.obj is AWnd w1 && w1.Is0) r.obj = null;
 			if(r.obj != null) {
 				lSpeed.ForeColor = Form.DefaultForeColor;
 				lSpeed.Text = sTime;
@@ -453,7 +453,7 @@ namespace Au.Tools
 				TUtil.ShowOsdRect(re);
 
 				//if form or its visible owners cover the found object, temporarily activate object's window
-				foreach(var ow in ((Wnd)form).Get.OwnersAndThis(true)) {
+				foreach(var ow in ((AWnd)form).Get.OwnersAndThis(true)) {
 					if(re.IntersectsWith(ow.Rect)) {
 						r.wnd.Window.ActivateLL();
 						ATime.SleepDoEvents(1500);
@@ -467,7 +467,7 @@ namespace Au.Tools
 				ATimer.After(700, () => lSpeed.Text = sTime);
 			}
 
-			((Wnd)form).ActivateLL();
+			((AWnd)form).ActivateLL();
 
 			if(r.wnd != wnd && !r.wnd.Is0) {
 				ADialog.ShowWarning("The code finds another " + (r.wnd.IsChild ? "control" : "window"),

@@ -32,7 +32,7 @@ namespace Au.Util
 		/// Prepares parameters for API <msdn>CreateProcess</msdn> and similar.
 		/// </summary>
 		/// <param name="exe">
-		/// Full path of program file. If not full path, uses <see cref="Folders.ThisApp"/>. Uses <see cref="APath.Normalize"/>.
+		/// Full path of program file. If not full path, uses <see cref="AFolders.ThisApp"/>. Uses <see cref="APath.Normalize"/>.
 		/// If <i>rawExe</i> true, does not use <b>Normalize</b>/<b>ThisApp</b>.
 		/// </param>
 		/// <param name="args">null or command line arguments.</param>
@@ -48,7 +48,7 @@ namespace Au.Util
 		/// <param name="rawCurDir">Don't normalize <i>curDir</i>.</param>
 		public LibProcessStarter(string exe, string args = null, string curDir = null, string envVar = null, bool rawExe = false, bool rawCurDir = false) : this()
 		{
-			if(!rawExe) exe = APath.Normalize(exe, Folders.ThisApp, PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath);
+			if(!rawExe) exe = APath.Normalize(exe, AFolders.ThisApp, PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath);
 			_exe = exe;
 			cl = (args == null ? ("\"" + exe + "\"" + "\0") : ("\"" + exe + "\" " + args + "\0")).ToCharArray();
 			if(curDir == null) this.curDir = Directory.GetCurrentDirectory(); //if null passed to CreateProcessWithTokenW, the new process does not inherit current directory of this process
@@ -122,9 +122,9 @@ namespace Au.Util
 
 				//APerf.First();
 #if false //works, but slow, eg 60 ms, even if we don't create task everytime
-				var s = $"\"{Folders.ThisAppBS}Dll\\{(AVersion.Is64BitProcess ? "64" : "32")}bit\\AuCpp.dll\",Cpp_RunDll";
-				LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, Folders.System + "rundll32.exe", s);
-				//LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, Folders.System + "notepad.exe"); //slow too
+				var s = $"\"{AFolders.ThisAppBS}Dll\\{(AVersion.Is64BitProcess ? "64" : "32")}bit\\AuCpp.dll\",Cpp_RunDll";
+				LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, AFolders.System + "rundll32.exe", s);
+				//LibTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, AFolders.System + "notepad.exe"); //slow too
 				//APerf.Next();
 				int pid = LibTaskScheduler.RunTask("Au", "rundll32");
 				//APerf.Next();
@@ -137,7 +137,7 @@ namespace Au.Util
 				g1:
 				var w = Api.GetShellWindow();
 				if(w.Is0) { //if Explorer process killed or crashed, wait until it restarts
-					if(!WaitFor.Condition(2, () => !Api.GetShellWindow().Is0)) throw new AException($"*start process '{_exe}' as user. There is no shell process.");
+					if(!AWaitFor.Condition(2, () => !Api.GetShellWindow().Is0)) throw new AException($"*start process '{_exe}' as user. There is no shell process.");
 					500.ms();
 					w = Api.GetShellWindow();
 				}

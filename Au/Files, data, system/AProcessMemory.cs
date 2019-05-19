@@ -46,7 +46,7 @@ namespace Au
 			if(Mem != default) {
 				var mem = Mem; Mem = default;
 				if(!_dontFree) {
-					if(!Api.VirtualFreeEx(_HprocHR, mem)) PrintWarning("Failed to free process memory. " + WinError.Message);
+					if(!Api.VirtualFreeEx(_HprocHR, mem)) PrintWarning("Failed to free process memory. " + ALastError.Message);
 				}
 			}
 			_hproc.Dispose();
@@ -85,7 +85,7 @@ namespace Au
 		}
 		bool _dontFree;
 
-		void _Alloc(int pid, Wnd w, int nBytes)
+		void _Alloc(int pid, AWnd w, int nBytes)
 		{
 			string err = null;
 			const uint fl = Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE;
@@ -111,7 +111,7 @@ namespace Au
 		/// <remarks>This is the preferred constructor when the process has windows. It works with windows of [](xref:uac) High integrity level when this process is Medium+uiAccess.</remarks>
 		/// <exception cref="WndException">w invalid.</exception>
 		/// <exception cref="AException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
-		public AProcessMemory(Wnd w, int nBytes)
+		public AProcessMemory(AWnd w, int nBytes)
 		{
 			w.ThrowIfInvalid();
 			_Alloc(0, w, nBytes);

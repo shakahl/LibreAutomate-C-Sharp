@@ -346,7 +346,7 @@ namespace Au.Controls
 					mi.ShortcutKeyDisplayString = null;
 				}
 				if(x.Attr(out s, "hk")) {
-					bool ok = Keyb.More.ParseHotkeyString(s, out var hk);
+					bool ok = AKeyboard.More.ParseHotkeyString(s, out var hk);
 					if(ok) try { mi.ShortcutKeys = hk; } catch { ok = false; }
 					if(!ok) ADebug.Print("Invalid hotkey: " + s);
 				}
@@ -535,7 +535,7 @@ namespace Au.Controls
 					"\n\nTo backup:  copy the file." +
 					"\nTo restore:  exit this application and replace the file with the backup file." +
 					"\nTo reset:  exit this application and delete the file."
-					, icon: DIcon.Info, onLinkClick: h => { Exec.Run(h.LinkHref); });
+					, icon: DIcon.Info, onLinkClick: h => { AExec.Run(h.LinkHref); });
 				};
 			}
 
@@ -617,7 +617,7 @@ namespace Au.Controls
 					s = f.textHotkey.Text; if(s == "") s = null;
 					x.SetAttributeValue("hk", s);
 					//remove the hotkey from another item, to avoid duplicates
-					if(Keyb.More.ParseHotkeyString(s, out var hk)) {
+					if(AKeyboard.More.ParseHotkeyString(s, out var hk)) {
 						var xx = f.FindUsedHotkey(hk, x);
 						if(xx != null) {
 							xx.SetAttributeValue("hk", null);
@@ -655,7 +655,7 @@ namespace Au.Controls
 				if(k.Msg.message != Api.WM_MOUSEMOVE) return;
 				target = ts.GetItemAt(ts.MouseClientXY());
 				//Print(target);
-				isOutside = (target == null && Wnd.FromMouse() != (Wnd)ts);
+				isOutside = (target == null && AWnd.FromMouse() != (AWnd)ts);
 				k.Cursor = isOutside ? Cursors.No : Cursors.Hand;
 			}) || isOutside) return;
 			_Strips_Customize(2, item, ts, target);

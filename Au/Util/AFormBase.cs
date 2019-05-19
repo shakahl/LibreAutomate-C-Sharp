@@ -85,10 +85,10 @@ namespace Au.Types
 			if(IsPopup && !Modal) {
 				var fo = Owner;
 				if(fo != null) {
-					var w = ((Wnd)this);
+					var w = ((AWnd)this);
 					if(w.IsActive) {
 						Owner = null;
-						w.Owner = (Wnd)fo;
+						w.Owner = (AWnd)fo;
 					}
 				}
 			}

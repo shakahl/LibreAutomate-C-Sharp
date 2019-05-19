@@ -17,24 +17,22 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Util;
 
-#pragma warning disable 282 //intellisense bug: it thinks that Wnd has multiple fields.
-
 namespace Au
 {
-	public unsafe partial struct Wnd
+	public unsafe partial struct AWnd
 	{
 		/// <summary>
 		/// Contains control (child window) properties and is used to find the control.
 		/// </summary>
 		/// <remarks>
-		/// Can be used instead of <see cref="Wnd.Child"/> or <see cref="Wnd.ChildAll"/>.
+		/// Can be used instead of <see cref="AWnd.Child"/> or <see cref="AWnd.ChildAll"/>.
 		/// Also can be used to find window that contains certain control, like in the example.
 		/// </remarks>
 		/// <example>
 		/// Find window that contains certain control, and get the control too.
 		/// <code><![CDATA[
-		/// var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
-		/// Wnd w = Wnd.Find(cn: "#32770", also: t => f.Find(t));
+		/// var f = new AWnd.ChildFinder("Password*", "Static"); //control properties
+		/// AWnd w = AWnd.Find(cn: "#32770", also: t => f.Find(t));
 		/// Print(w);
 		/// Print(f.Result);
 		/// ]]></code>
@@ -45,7 +43,7 @@ namespace Au
 
 			readonly AWildex _name;
 			readonly AWildex _className;
-			readonly Func<Wnd, bool> _also;
+			readonly Func<AWnd, bool> _also;
 			AWinFormsControlNames _wfControls;
 			readonly int _skipCount;
 			readonly WCFlags _flags;
@@ -53,10 +51,10 @@ namespace Au
 			readonly int _id;
 
 			/// <summary>
-			/// See <see cref="Wnd.Child"/>.
+			/// See <see cref="AWnd.Child"/>.
 			/// </summary>
 			/// <exception cref="ArgumentException">See <see cref="Child"/>.</exception>
-			public ChildFinder(string name = null, string cn = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
+			public ChildFinder(string name = null, string cn = null, WCFlags flags = 0, Func<AWnd, bool> also = null, int skip = 0)
 			{
 				if(cn != null) {
 					if(cn.Length == 0) throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
@@ -81,22 +79,22 @@ namespace Au
 			/// <summary>
 			/// The found control.
 			/// </summary>
-			public Wnd Result { get; internal set; }
+			public AWnd Result { get; internal set; }
 
 			/// <summary>
-			/// Finds the specified child control, like <see cref="Wnd.Child"/>.
+			/// Finds the specified child control, like <see cref="AWnd.Child"/>.
 			/// Returns true if found.
 			/// The <see cref="Result"/> property will be the control.
 			/// </summary>
 			/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
 			/// <exception cref="WndException">Invalid wParent.</exception>
-			public bool Find(Wnd wParent)
+			public bool Find(AWnd wParent)
 			{
 				using var k = new _WndList(_AllChildren(wParent));
 				return _FindInList(wParent, k) >= 0;
 			}
 
-			Util.LibArrayBuilder<Wnd> _AllChildren(Wnd wParent)
+			Util.LibArrayBuilder<AWnd> _AllChildren(AWnd wParent)
 			{
 				wParent.ThrowIfInvalid();
 				return Lib.EnumWindows2(Lib.EnumAPI.EnumChildWindows,
@@ -113,7 +111,7 @@ namespace Au
 			/// </summary>
 			/// <param name="a">List of controls, for example returned by <see cref="GetWnd.Children"/>.</param>
 			/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
-			public int FindInList(IEnumerable<Wnd> a, Wnd wParent = default)
+			public int FindInList(IEnumerable<AWnd> a, AWnd wParent = default)
 			{
 				using var k = new _WndList(a);
 				return _FindInList(wParent, k);
@@ -121,30 +119,30 @@ namespace Au
 
 			/// <summary>
 			/// Finds all matching child controls, like <see cref="ChildAll"/>.
-			/// Returns array containing 0 or more control handles as Wnd.
+			/// Returns array containing 0 or more control handles as AWnd.
 			/// </summary>
 			/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
 			/// <exception cref="WndException">Invalid wParent.</exception>
-			public Wnd[] FindAll(Wnd wParent)
+			public AWnd[] FindAll(AWnd wParent)
 			{
 				return _FindAll(new _WndList(_AllChildren(wParent)), wParent);
 			}
 
 			/// <summary>
 			/// Finds all matching controls in a list of controls.
-			/// Returns array containing 0 or more control handles as Wnd.
+			/// Returns array containing 0 or more control handles as AWnd.
 			/// </summary>
 			/// <param name="a">List of controls, for example returned by <see cref="GetWnd.Children"/>.</param>
 			/// <param name="wParent">Direct or indirect parent window. Used only for flag DirectChild.</param>
-			public Wnd[] FindAllInList(IEnumerable<Wnd> a, Wnd wParent = default)
+			public AWnd[] FindAllInList(IEnumerable<AWnd> a, AWnd wParent = default)
 			{
 				return _FindAll(new _WndList(a), wParent);
 			}
 
-			Wnd[] _FindAll(_WndList k, Wnd wParent)
+			AWnd[] _FindAll(_WndList k, AWnd wParent)
 			{
 				using(k) {
-					using var ab = new Util.LibArrayBuilder<Wnd>();
+					using var ab = new Util.LibArrayBuilder<AWnd>();
 					_FindInList(wParent, k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
 					return ab.ToArray();
 				}
@@ -154,10 +152,10 @@ namespace Au
 			/// Returns index of matching element or -1.
 			/// Returns -1 if using getAll.
 			/// </summary>
-			/// <param name="wParent">Parent window. Can be default(Wnd) if inList is true and no DirectChild flag and not using winforms name.</param>
-			/// <param name="a">List of Wnd. Does not dispose it.</param>
+			/// <param name="wParent">Parent window. Can be default(AWnd) if inList is true and no DirectChild flag and not using winforms name.</param>
+			/// <param name="a">List of AWnd. Does not dispose it.</param>
 			/// <param name="getAll">If not null, calls it for all matching and returns -1.</param>
-			int _FindInList(Wnd wParent, _WndList a, Action<Wnd> getAll = null)
+			int _FindInList(AWnd wParent, _WndList a, Action<AWnd> getAll = null)
 			{
 				Result = default;
 				if(a.Type == _WndList.ListType.None) return -1;
@@ -165,7 +163,7 @@ namespace Au
 				int skipCount = _skipCount;
 
 				try { //will need to dispose something
-					for(int index = 0; a.Next(out Wnd w); index++) {
+					for(int index = 0; a.Next(out AWnd w); index++) {
 						if(w.Is0) continue;
 
 						if(inList) { //else the enum function did this
@@ -247,7 +245,7 @@ namespace Au
 			/// </summary>
 			/// <param name="c">A control. Can be 0/invalid, then returns false.</param>
 			/// <param name="wParent">Direct or indirect parent window. If used, returns false if it isn't parent (also depends on flag DirectChild).</param>
-			public bool IsMatch(Wnd c, Wnd wParent = default)
+			public bool IsMatch(AWnd c, AWnd wParent = default)
 			{
 				if(!wParent.Is0 && !c.IsChildOf(wParent)) {
 					Result = default;
@@ -258,8 +256,8 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(Wnd)"/>.
+		/// Finds a child control and returns its handle as AWnd.
+		/// Returns default(AWnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(AWnd)"/>.
 		/// </summary>
 		/// <param name="name">
 		/// Control name.
@@ -304,7 +302,7 @@ namespace Au
 		/// <remarks>
 		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
 		/// </remarks>
-		public Wnd Child(string name = null, string cn = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
+		public AWnd Child(string name = null, string cn = null, WCFlags flags = 0, Func<AWnd, bool> also = null, int skip = 0)
 		{
 			//ThrowIfInvalid(); //will be called later
 			var f = new ChildFinder(name, cn, flags, also, skip);
@@ -324,13 +322,13 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// //find window that contains certain control, and get the control too
-		/// var f = new Wnd.ChildFinder("Password*", "Static"); //control properties
-		/// Wnd w = Wnd.Find(cn: "#32770", also: t => t.HasChild(f));
+		/// var f = new AWnd.ChildFinder("Password*", "Static"); //control properties
+		/// AWnd w = AWnd.Find(cn: "#32770", also: t => t.HasChild(f));
 		/// Print(w);
 		/// Print(f.Result);
 		/// ]]></code>
 		/// </example>
-		public bool HasChild(string name = null, string cn = null, WCFlags flags = 0, Func<Wnd, bool> also = null, int skip = 0)
+		public bool HasChild(string name = null, string cn = null, WCFlags flags = 0, Func<AWnd, bool> also = null, int skip = 0)
 		{
 			return default != Child(name, cn, flags, also, skip);
 		}
@@ -343,8 +341,8 @@ namespace Au
 		/// <example>
 		/// Find window that contains certain control, and get the control too.
 		/// <code><![CDATA[
-		/// var cf = new Wnd.ChildFinder("Password*", "Static"); //control properties
-		/// Wnd w = Wnd.Find(cn: "#32770", also: t => t.HasChild(cf));
+		/// var cf = new AWnd.ChildFinder("Password*", "Static"); //control properties
+		/// AWnd w = AWnd.Find(cn: "#32770", also: t => t.HasChild(cf));
 		/// Print(w);
 		/// Print(f.Result);
 		/// ]]></code>
@@ -356,26 +354,26 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if this window contains the specified accessible object.
-		/// Calls <see cref="Acc.Finder.Find(Wnd, Wnd.ChildFinder)"/>.
+		/// Calls <see cref="AAcc.Finder.Find(AWnd, AWnd.ChildFinder)"/>.
 		/// </summary>
 		/// <exception cref="WndException"/>
 		/// <example>
 		/// Find window that contains certain accessible object (AO), and get the AO too.
 		/// <code><![CDATA[
-		/// var af = new Acc.Finder("BUTTON", "OK"); //AO properties
-		/// Wnd w = Wnd.Find(cn: "#32770", also: t => t.HasAcc(af));
+		/// var af = new AAcc.Finder("BUTTON", "OK"); //AO properties
+		/// AWnd w = AWnd.Find(cn: "#32770", also: t => t.HasAcc(af));
 		/// Print(w);
 		/// Print(f.Result);
 		/// ]]></code>
 		/// </example>
-		public bool HasAcc(Acc.Finder f)
+		public bool HasAcc(AAcc.Finder f)
 		{
 			return f.Find(this);
 		}
 
 		/// <summary>
-		/// Finds a child control by its id and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(Wnd)"/>.
+		/// Finds a child control by its id and returns its handle as AWnd.
+		/// Returns default(AWnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(AWnd)"/>.
 		/// </summary>
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
@@ -385,7 +383,7 @@ namespace Au
 		/// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
 		/// </remarks>
 		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
-		public Wnd ChildById(int id, WCFlags flags = 0)
+		public AWnd ChildById(int id, WCFlags flags = 0)
 		{
 			ThrowIfInvalid();
 			if(flags.Has(WCFlags.DirectChild | WCFlags.HiddenToo)) return Api.GetDlgItem(this, id); //fast
@@ -406,14 +404,14 @@ namespace Au
 
 		struct _KidEnumData
 		{
-			public Wnd wThis, cVisible, cHidden;
+			public AWnd wThis, cVisible, cHidden;
 			public int id;
 			public WCFlags flags;
 		}
 
 		/// <summary>
 		/// Finds all matching child controls.
-		/// Returns List containing 0 or more control handles as Wnd.
+		/// Returns List containing 0 or more control handles as AWnd.
 		/// Everything except the return type is the same as with <see cref="Child"/>.
 		/// </summary>
 		/// <exception cref="WndException"/>
@@ -422,7 +420,7 @@ namespace Au
 		/// In the returned list, hidden controls (when using WCFlags.HiddenToo) are always after visible controls.
 		/// </remarks>
 		/// <seealso cref="GetWnd.Children"/>
-		public Wnd[] ChildAll(string name = null, string cn = null, WCFlags flags = 0, Func<Wnd, bool> also = null)
+		public AWnd[] ChildAll(string name = null, string cn = null, WCFlags flags = 0, Func<AWnd, bool> also = null)
 		{
 			//ThrowIfInvalid(); //will be called later
 			var f = new ChildFinder(name, cn, flags, also);
@@ -430,8 +428,8 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a direct child control and returns its handle as Wnd.
-		/// Returns default(Wnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(Wnd)"/>.
+		/// Finds a direct child control and returns its handle as AWnd.
+		/// Returns default(AWnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(AWnd)"/>.
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
 		/// Can be used only when you know full name and/or class name.
@@ -450,9 +448,9 @@ namespace Au
 		/// </param>
 		/// <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
 		/// <remarks>
-		/// Supports <see cref="WinError"/>.
+		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public Wnd ChildFast(string name, string cn, Wnd wAfter = default)
+		public AWnd ChildFast(string name, string cn, AWnd wAfter = default)
 		{
 			//ThrowIfInvalid(); //no, it can be Message
 			if(Is0) {
@@ -466,7 +464,7 @@ namespace Au
 		{
 			/// <summary>
 			/// Gets child controls, including all descendants.
-			/// Returns array containing 0 or more control handles as Wnd.
+			/// Returns array containing 0 or more control handles as AWnd.
 			/// </summary>
 			/// <param name="onlyVisible">Need only visible controls.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
@@ -476,7 +474,7 @@ namespace Au
 			/// Calls API <msdn>EnumChildWindows</msdn>.
 			/// </remarks>
 			/// <seealso cref="ChildAll"/>
-			public Wnd[] Children(bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false)
+			public AWnd[] Children(bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false)
 			{
 				_w.ThrowIfInvalid();
 				return Lib.EnumWindows(Lib.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild);
@@ -485,7 +483,7 @@ namespace Au
 			/// <summary>
 			/// Gets child controls, including all descendants.
 			/// </summary>
-			/// <param name="a">Receives window handles as Wnd. If null, this function creates new List, else clears before adding items.</param>
+			/// <param name="a">Receives window handles as AWnd. If null, this function creates new List, else clears before adding items.</param>
 			/// <param name="onlyVisible">Need only visible controls.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
 			/// <param name="directChild">Need only direct children, not all descendants.</param>
@@ -493,10 +491,10 @@ namespace Au
 			/// <remarks>
 			/// Use this overload to avoid much garbage when calling frequently with the same List variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
 			/// </remarks>
-			public void Children(ref List<Wnd> a, bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false)
+			public void Children(ref List<AWnd> a, bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false)
 			{
 				_w.ThrowIfInvalid();
-				Lib.EnumWindows2(Lib.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild, list: a ?? (a = new List<Wnd>()));
+				Lib.EnumWindows2(Lib.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild, list: a ?? (a = new List<AWnd>()));
 			}
 
 			//rejected: unreliable.
@@ -505,11 +503,11 @@ namespace Au
 			///// Faster than API EnumChildWindows.
 			///// Should be used only with windows of current thread. Else it is unreliable because, if some controls are zordered or destroyed while enumerating, some controls can be skipped or retrieved more than once.
 			///// </summary>
-			//public static Wnd[] DirectChildrenFastUnsafe(string cn = null)
+			//public static AWnd[] DirectChildrenFastUnsafe(string cn = null)
 			//{
 			//	AWildex wild = cn;
-			//	var a = new List<Wnd>();
-			//	for(Wnd c = FirstChild; !c.Is0; c = c.Next) {
+			//	var a = new List<AWnd>();
+			//	for(AWnd c = FirstChild; !c.Is0; c = c.Next) {
 			//		if(wild != null && !c._ClassNameIs(wild)) continue;
 			//		a.Add(c);
 			//	}
@@ -518,25 +516,25 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Like <see cref="Wnd"/>, but has only button, check box and radio button functions - Click, Check etc.
+		/// Like <see cref="AWnd"/>, but has only button, check box and radio button functions - Click, Check etc.
 		/// </summary>
 		public struct WButton
 		{
 			/// <summary>
-			/// Button handle as Wnd.
+			/// Button handle as AWnd.
 			/// </summary>
-			public Wnd W { get; }
+			public AWnd W { get; }
 
-			WButton(Wnd w) { W = w; }
+			WButton(AWnd w) { W = w; }
 
 			/// <summary>
-			/// Implicit cast Wnd=WButton.
+			/// Implicit cast AWnd=WButton.
 			/// </summary>
-			public static implicit operator Wnd(WButton b) => b.W;
+			public static implicit operator AWnd(WButton b) => b.W;
 			/// <summary>
-			/// Explicit cast WButton=(WButton)Wnd.
+			/// Explicit cast WButton=(WButton)AWnd.
 			/// </summary>
-			public static explicit operator WButton(Wnd w) => new WButton(w);
+			public static explicit operator WButton(AWnd w) => new WButton(w);
 
 			///
 			public override string ToString()
@@ -547,7 +545,7 @@ namespace Au
 			/// <summary>
 			/// Sends a "click" message to this button control. Does not use the mouse.
 			/// </summary>
-			/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+			/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 			/// <exception cref="WndException">This window is invalid.</exception>
 			/// <exception cref="AException">Failed.</exception>
 			/// <remarks>
@@ -556,14 +554,14 @@ namespace Au
 			/// </remarks>
 			/// <example>
 			/// <code><![CDATA[
-			/// Wnd.Find("Options").Child("Cancel").AsButton.Click();
+			/// AWnd.Find("Options").Child("Cancel").AsButton.Click();
 			/// ]]></code>
 			/// </example>
 			public void Click(bool useAcc = false)
 			{
 				W.ThrowIfInvalid();
 				if(useAcc) {
-					using var a = Acc.FromWindow(W, AccOBJID.CLIENT); //throws if failed
+					using var a = AAcc.FromWindow(W, AccOBJID.CLIENT); //throws if failed
 					a.DoAction();
 				} else {
 					_PostBmClick(); //async if other thread, because may show a dialog.
@@ -602,7 +600,7 @@ namespace Au
 			/// Sets checkbox state. Does not use the mouse.
 			/// </summary>
 			/// <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
-			/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
+			/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
 			/// <exception cref="ArgumentOutOfRangeException">Invalid state.</exception>
 			/// <exception cref="WndException">This window is invalid.</exception>
 			/// <exception cref="AException">Failed.</exception>
@@ -617,7 +615,7 @@ namespace Au
 				W.ThrowIfInvalid();
 				int id;
 				if(useAcc || !_IsCheckbox() || (uint)((id = W.ControlId) - 1) >= 0xffff) {
-					using var a = Acc.FromWindow(W, AccOBJID.CLIENT); //throws if failed
+					using var a = AAcc.FromWindow(W, AccOBJID.CLIENT); //throws if failed
 					int k = _GetAccCheckState(a);
 					if(k == state) return;
 					if(useAcc) a.DoAction(); else _PostBmClick();
@@ -661,24 +659,24 @@ namespace Au
 			/// Gets check state of this check box or radio button.
 			/// Returns 0 if unchecked, 1 if checked, 2 if indeterminate. Also returns 0 if this is not a button or if failed to get state.
 			/// </summary>
-			/// <param name="useAcc">Use <see cref="Acc.State"/>. If false (default) and this button has a standard checkbox style, uses API <msdn>BM_GETCHECK</msdn>.</param>
+			/// <param name="useAcc">Use <see cref="AAcc.State"/>. If false (default) and this button has a standard checkbox style, uses API <msdn>BM_GETCHECK</msdn>.</param>
 			public int GetCheckState(bool useAcc = false)
 			{
 				if(useAcc || !_IsCheckbox()) {
 					//info: Windows Forms controls are user-drawn and don't have one of the styles, therefore BM_GETCHECK does not work.
 					try { //avoid exception in property-get functions
-						using var a = Acc.FromWindow(W, AccOBJID.CLIENT, flags: AWFlags.NoThrow);
+						using var a = AAcc.FromWindow(W, AccOBJID.CLIENT, flags: AWFlags.NoThrow);
 						if(a == null) return 0;
 						return _GetAccCheckState(a);
 					}
-					catch(Exception ex) { ADebug.Print(ex); } //CONSIDER: if fails, show warning. In all Wnd property-get functions.
+					catch(Exception ex) { ADebug.Print(ex); } //CONSIDER: if fails, show warning. In all AWnd property-get functions.
 					return 0;
 				} else {
 					return (int)W.Send(BM_GETCHECK);
 				}
 			}
 
-			int _GetAccCheckState(Acc a)
+			int _GetAccCheckState(AAcc a)
 			{
 				var state = a.State;
 				if(state.Has(AccSTATE.INDETERMINATE)) return 2;
@@ -723,12 +721,12 @@ namespace Au
 		/// Calls <see cref="WButton.Click(bool)"/>.
 		/// </summary>
 		/// <param name="buttonId">Control id of the button. This function calls <see cref="ChildById"/> to find the button.</param>
-		/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+		/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException">Button not found.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="ChildById"/> and <see cref="WButton.Click(bool)"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// Wnd.Find("Options").ButtonClick(2);
+		/// AWnd.Find("Options").ButtonClick(2);
 		/// ]]></code>
 		/// </example>
 		public void ButtonClick(int buttonId, bool useAcc = false)
@@ -744,12 +742,12 @@ namespace Au
 		/// </summary>
 		/// <param name="buttonName">Button name. This function calls <see cref="Child"/> to find the button.</param>
 		/// <param name="cn">Button class name to pass to <see cref="Child"/>.</param>
-		/// <param name="useAcc">Use <see cref="Acc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+		/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException">Button not found.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Child"/> and <see cref="WButton.Click(bool)"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// Wnd.Find("Options").ButtonClick("Cancel");
+		/// AWnd.Find("Options").ButtonClick("Cancel");
 		/// ]]></code>
 		/// </example>
 		public void ButtonClick(string buttonName, string cn = null, bool useAcc = false)
@@ -781,7 +779,7 @@ namespace Au
 			w.LibMinimalSleepIfOtherThread();
 		}
 
-		//rejected: use Acc functions instead.
+		//rejected: use AAcc functions instead.
 		///// <summary>
 		///// Finds a menu item by name and posts a "menu item clicked" notification as if that menu item was clicked. Does not use the mouse.
 		///// Works with all standard menus and some non-standard menus.
@@ -796,7 +794,7 @@ namespace Au
 		//	
 		//}
 
-		//rejected: need just 1 function. To get state, use Acc.
+		//rejected: need just 1 function. To get state, use AAcc.
 		///// <summary>
 		///// Click standard (classic) menu items, get state.
 		///// </summary>
@@ -810,7 +808,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="Wnd.Child"/>.
+	/// Flags for <see cref="AWnd.Child"/>.
 	/// </summary>
 	[Flags]
 	public enum WCFlags

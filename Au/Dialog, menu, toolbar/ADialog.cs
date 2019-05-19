@@ -115,13 +115,13 @@ namespace Au
 			public char* text;
 		}
 
-		delegate int TaskDialogCallbackProc(Wnd hwnd, Native.TDN notification, LPARAM wParam, LPARAM lParam, IntPtr data);
+		delegate int TaskDialogCallbackProc(AWnd hwnd, Native.TDN notification, LPARAM wParam, LPARAM lParam, IntPtr data);
 
 		[StructLayout(LayoutKind.Sequential, Pack = 1)]
 		unsafe struct TASKDIALOGCONFIG
 		{
 			public int cbSize;
-			public Wnd hwndParent;
+			public AWnd hwndParent;
 			public IntPtr hInstance;
 			public TDF_ dwFlags;
 			public TDCBF_ dwCommonButtons;
@@ -655,7 +655,7 @@ namespace Au
 		/// The owner window will be disabled, and this dialog will be on top of it.
 		/// This window will be in owner's screen, if screen was not explicitly specified with the <see cref="Screen"/> property. <see cref="ADialog.Options.DefaultScreen"/> is ignored.
 		/// </summary>
-		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be Control (eg Form) or Wnd (window handle). Can be null.</param>
+		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be Control (eg Form) or AWnd (window handle). Can be null.</param>
 		/// <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="SetXY"/> and <see cref="Screen"/> are ignored.</param>
 		/// <param name="doNotDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
 		/// <seealso cref="Options.AutoOwnerWindow"/>
@@ -685,7 +685,7 @@ namespace Au
 		/// Sets the screen (display monitor) where to show the dialog in multi-screen environment.
 		/// If null or not set, will be used owner window's screen or <see cref="Options.DefaultScreen"/>.
 		/// If screen index is invalid, the 'show' method shows warning, no exception.
-		/// More info: <see cref="AScreen"/>, <see cref="Wnd.MoveInScreen"/>.
+		/// More info: <see cref="AScreen"/>, <see cref="AWnd.MoveInScreen"/>.
 		/// </summary>
 		public AScreen Screen { set; private get; }
 
@@ -752,7 +752,7 @@ namespace Au
 
 		#endregion set properties
 
-		Wnd _dlg;
+		AWnd _dlg;
 		int _threadIdInShow;
 		bool _locked;
 
@@ -773,7 +773,7 @@ namespace Au
 			SetTitleBarText(_c.pszWindowTitle); //if not set, sets default
 			_EditControlInitBeforeShowDialog(); //don't reorder, must be before flags
 
-			if(_c.hwndParent.Is0 && Options.AutoOwnerWindow) _c.hwndParent = Wnd.ThisThread.Active; //info: MessageBox.Show also does it, but it also disables all thread windows
+			if(_c.hwndParent.Is0 && Options.AutoOwnerWindow) _c.hwndParent = AWnd.ThisThread.Active; //info: MessageBox.Show also does it, but it also disables all thread windows
 			if(_c.hwndParent.IsAlive) {
 				if(!_enableOwner && !_c.hwndParent.IsOfThisThread) _enableOwner = true;
 				if(_enableOwner && !_c.hwndParent.IsEnabled(false)) _enableOwner = false;
@@ -825,7 +825,7 @@ namespace Au
 					hook = AHookWin.ThreadGetMessage(_HookProc);
 				}
 
-				Wnd.Lib.EnableActivate(true);
+				AWnd.Lib.EnableActivate(true);
 
 				for(int i = 0; i < 10; i++) { //see the API bug-workaround comment below
 					_LockUnlock(true); //see the API bug-workaround comment below
@@ -850,7 +850,7 @@ namespace Au
 				if(hr == 0) {
 					_result = new DResult(_buttons.MapIdNativeToUser(rNativeButton), rRadioButton, rIsChecked != 0, _editText?.ToString());
 
-					Wnd.More.WaitForAnActiveWindow();
+					AWnd.More.WaitForAnActiveWindow();
 				}
 			}
 			finally {
@@ -952,7 +952,7 @@ namespace Au
 
 		AScreen _screen;
 
-		int _CallbackProc(Wnd w, Native.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data)
+		int _CallbackProc(AWnd w, Native.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data)
 		{
 			Action<DEventArgs> e = null;
 			int R = 0;
@@ -1148,10 +1148,10 @@ namespace Au
 		#region send messages
 
 		/// <summary>
-		/// Gets dialog window handle as Wnd.
-		/// Returns default(Wnd) if the dialog is not open.
+		/// Gets dialog window handle as AWnd.
+		/// Returns default(AWnd) if the dialog is not open.
 		/// </summary>
-		public Wnd DialogWindow => _dlg;
+		public AWnd DialogWindow => _dlg;
 
 		/// <summary>
 		/// Allows to modify dialog controls while it is open, and close the dialog.
@@ -1266,12 +1266,12 @@ namespace Au
 		//used to reserve space for multiline Edit control by appending this to text2
 		const string c_multilineString = "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n ";
 
-		Wnd _EditControlGetPlace(out RECT r)
+		AWnd _EditControlGetPlace(out RECT r)
 		{
-			Wnd parent = _dlg; //don't use the DirectUIHWND control for it, it can create problems
+			AWnd parent = _dlg; //don't use the DirectUIHWND control for it, it can create problems
 
 			//We'll hide the progress bar control and create our Edit control in its place.
-			Wnd prog = parent.Child(cn: "msctls_progress32", flags: WCFlags.HiddenToo);
+			AWnd prog = parent.Child(cn: "msctls_progress32", flags: WCFlags.HiddenToo);
 			prog.GetRectInClientOf(parent, out r);
 
 			if(_editType == DEdit.Multiline) {
@@ -1294,13 +1294,13 @@ namespace Au
 
 		void _EditControlCreate()
 		{
-			Wnd parent = _EditControlGetPlace(out RECT r);
+			AWnd parent = _EditControlGetPlace(out RECT r);
 
 			//Create an intermediate "#32770" to be direct parent of the Edit control.
 			//It is safer (the dialog will not receive Edit notifications) and helps to solve Tab/Esc problems.
 			var pStyle = WS.CHILD | WS.VISIBLE | WS.CLIPCHILDREN | WS.CLIPSIBLINGS; //don't need WS_TABSTOP
 			var pExStyle = WS_EX.NOPARENTNOTIFY; //not WS_EX.CONTROLPARENT
-			_editParent = Wnd.More.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
+			_editParent = AWnd.More.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
 			_editControlParentProcHolder = _EditControlParentProc;
 			_editParent.SetWindowLong(Native.GWL.DWLP_DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder));
 
@@ -1314,7 +1314,7 @@ namespace Au
 			case DEdit.Multiline: style |= (WS)(Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN) | WS.VSCROLL; break;
 			case DEdit.Combo: style |= (WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | WS.VSCROLL; cn = "ComboBox"; break;
 			}
-			_editWnd = Wnd.More.CreateWindowAndSetFont(cn, null, style, WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent, customFontHandle: _editFont);
+			_editWnd = AWnd.More.CreateWindowAndSetFont(cn, null, style, WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent, customFontHandle: _editFont);
 
 			//Init the control.
 			if(_editType == DEdit.Combo) {
@@ -1332,7 +1332,7 @@ namespace Au
 				_editWnd.Send(Api.EM_SETSEL, 0, -1);
 			}
 			_editParent.ZorderTop();
-			Wnd.ThisThread.Focus(_editWnd);
+			AWnd.ThisThread.Focus(_editWnd);
 		}
 
 		void _EditControlOnMessage(Native.TDN message)
@@ -1349,22 +1349,22 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets edit control handle as Wnd.
+		/// Gets edit control handle as AWnd.
 		/// </summary>
-		public Wnd EditControl => _editWnd;
-		Wnd _editWnd, _editParent;
+		public AWnd EditControl => _editWnd;
+		AWnd _editWnd, _editParent;
 		LibNativeFont _editFont;
 
 		//Dlgproc of our intermediate #32770 control, the parent of out Edit control.
-		int _EditControlParentProc(Wnd hWnd, int msg, LPARAM wParam, LPARAM lParam)
+		int _EditControlParentProc(AWnd hWnd, int msg, LPARAM wParam, LPARAM lParam)
 		{
 			//Print(msg, wParam, lParam);
 			switch(msg) {
 			case Api.WM_SETFOCUS: //enables Tab when in single-line Edit control
-				Wnd.ThisThread.Focus(_dlg.ChildFast(null, "DirectUIHWND"));
+				AWnd.ThisThread.Focus(_dlg.ChildFast(null, "DirectUIHWND"));
 				return 1;
 			case Api.WM_NEXTDLGCTL: //enables Tab when in multi-line Edit control
-				Wnd.ThisThread.Focus(_dlg.ChildFast(null, "DirectUIHWND"));
+				AWnd.ThisThread.Focus(_dlg.ChildFast(null, "DirectUIHWND"));
 				return 1;
 			case Api.WM_CLOSE: //enables Esc when in edit control
 				_dlg.Send(msg);
@@ -1377,7 +1377,7 @@ namespace Au
 			//tested: WM_GETDLGCODE, no results.
 		}
 		DLGPROC _editControlParentProcHolder;
-		delegate int DLGPROC(Wnd w, int msg, LPARAM wParam, LPARAM lParam);
+		delegate int DLGPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
 
 		#endregion Edit control
 
@@ -2071,7 +2071,7 @@ namespace Au.Types
 	/// </remarks>
 	public class DEventArgs :EventArgs
 	{
-		internal DEventArgs(ADialog obj_, Wnd hwnd_, Native.TDN message_, LPARAM wParam_, LPARAM lParam_)
+		internal DEventArgs(ADialog obj_, AWnd hwnd_, Native.TDN message_, LPARAM wParam_, LPARAM lParam_)
 		{
 			dialog = obj_; hwnd = hwnd_; message = message_; wParam = wParam_;
 			LinkHref = (message_ == Native.TDN.HYPERLINK_CLICKED) ? Marshal.PtrToStringUni(lParam_) : null;
@@ -2079,7 +2079,7 @@ namespace Au.Types
 
 #pragma warning disable 1591 //missing XML documentation
 		public ADialog dialog;
-		public Wnd hwnd;
+		public AWnd hwnd;
 		/// <summary>Reference: <msdn>task dialog notifications</msdn>.</summary>
 		public Native.TDN message;
 		public LPARAM wParam;
@@ -2207,7 +2207,7 @@ namespace Au.Types
 		}
 
 		[DllImport("user32.dll", EntryPoint = "SendMessageW")]
-		static extern LPARAM _ApiSendMessageTASKDIALOGCONFIG(Wnd hWnd, uint msg, LPARAM wParam, in TASKDIALOGCONFIG c);
+		static extern LPARAM _ApiSendMessageTASKDIALOGCONFIG(AWnd hWnd, uint msg, LPARAM wParam, in TASKDIALOGCONFIG c);
 #endif
 		/// <summary>
 		/// Clicks a button. Normally it closes the dialog.

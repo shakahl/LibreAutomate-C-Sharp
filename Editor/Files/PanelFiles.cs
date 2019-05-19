@@ -53,14 +53,14 @@ partial class PanelFiles : Control
 	/// <param name="wsDir">
 	/// Workspace's directory. The directory should contain file "files.xml" and subdirectory "files".
 	/// If null, loads the last used workspace (its path is in settings).
-	/// If the setting does not exist, uses Folders.ThisAppDocuments + @"Main".
-	/// If the file does not exist, copies from Folders.ThisApp + @"Default".
+	/// If the setting does not exist, uses AFolders.ThisAppDocuments + @"Main".
+	/// If the file does not exist, copies from AFolders.ThisApp + @"Default".
 	/// </param>
 	/// <param name="runStartupScript"></param>
 	public FilesModel LoadWorkspace(string wsDir = null, bool runStartupScript = true)
 	{
 		if(wsDir == null) wsDir = Settings.Get("workspace");
-		if(Empty(wsDir)) wsDir = Folders.ThisAppDocuments + @"Main";
+		if(Empty(wsDir)) wsDir = AFolders.ThisAppDocuments + @"Main";
 		var xmlFile = wsDir + @"\files.xml";
 		var oldModel = _model;
 		FilesModel m = null;
@@ -72,8 +72,8 @@ partial class PanelFiles : Control
 			//CONSIDER: use different logic. Now silently creates empty files, it's not always good.
 			//	Add parameter createNew. If false, show error if file not found.
 			if(newFile = !AFile.ExistsAsFile(xmlFile)) {
-				AFile.CopyTo(Folders.ThisAppBS + @"Default\files", wsDir);
-				AFile.Copy(Folders.ThisAppBS + @"Default\files.xml", xmlFile);
+				AFile.CopyTo(AFolders.ThisAppBS + @"Default\files", wsDir);
+				AFile.Copy(AFolders.ThisAppBS + @"Default\files.xml", xmlFile);
 			}
 
 			_model?.UnloadingWorkspace(); //saves all, closes documents, sets current file = null
@@ -195,7 +195,7 @@ partial class PanelFiles : Control
 	{
 		if(_newMenuDone) return; _newMenuDone = true;
 
-		var templDir = Folders.ThisAppBS + @"Templates";
+		var templDir = AFolders.ThisAppBS + @"Templates";
 		_CreateMenu(templDir, ddm, 0);
 
 		void _CreateMenu(string dir, ToolStripDropDownMenu ddParent, int level)

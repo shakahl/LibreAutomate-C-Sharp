@@ -68,10 +68,10 @@ static class CommandLine
 		s_mutex = new Mutex(true, "Au.Mutex.1", out bool createdNew);
 		if(createdNew) return false;
 
-		var w = Wnd.More.FindMessageOnlyWindow(null, "Au.Editor.Msg");
+		var w = AWnd.More.FindMessageOnlyWindow(null, "Au.Editor.Msg");
 		if(!w.Is0) {
 			if(activateWnd) {
-				Wnd wMain = (Wnd)w.Send(Api.WM_USER);
+				AWnd wMain = (AWnd)w.Send(Api.WM_USER);
 				if(!wMain.Is0) {
 					try { wMain.Activate(); }
 					catch { }
@@ -84,7 +84,7 @@ static class CommandLine
 				break;
 			}
 			if(cmd != 0) {
-				Wnd.More.CopyDataStruct.SendString(w, cmd, s);
+				AWnd.More.CopyDataStruct.SendString(w, cmd, s);
 			}
 		}
 		return true;
@@ -99,9 +99,9 @@ static class CommandLine
 
 	public static void OnMainFormLoaded()
 	{
-		Wnd.More.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER);
-		Wnd.More.MyWindow.RegisterClass("Au.Editor.Msg");
-		_msgWnd = new Wnd.More.MyWindow(_WndProc);
+		AWnd.More.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER);
+		AWnd.More.MyWindow.RegisterClass("Au.Editor.Msg");
+		_msgWnd = new AWnd.More.MyWindow(_WndProc);
 		_msgWnd.CreateMessageOnlyWindow("Au.Editor.Msg");
 
 		if(_importWorkspace != null || _importFiles != null) {
@@ -123,15 +123,15 @@ static class CommandLine
 	static string _importWorkspace;
 	static string[] _importFiles;
 
-	static Wnd.More.MyWindow _msgWnd;
+	static AWnd.More.MyWindow _msgWnd;
 
 	/// <summary>
 	/// The message-only window.
 	/// Don't call before the program is fully inited and OnMainFormLoaded called.
 	/// </summary>
-	public static Wnd MsgWnd => _msgWnd.Handle;
+	public static AWnd MsgWnd => _msgWnd.Handle;
 
-	static LPARAM _WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
+	static LPARAM _WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam)
 	{
 		switch(message) {
 		case Api.WM_COPYDATA:
@@ -149,7 +149,7 @@ static class CommandLine
 			case 3: //received from our non-admin drop-target process on OnDragOver/Drop/Leave
 				return (int)UacDragDrop.AdminProcess.OnDragEvent(i, (int)lParam);
 			case 10:
-				UacDragDrop.AdminProcess.OnTransparentWindowCreated((Wnd)lParam);
+				UacDragDrop.AdminProcess.OnTransparentWindowCreated((AWnd)lParam);
 				break;
 			}
 			return 0;
@@ -160,7 +160,7 @@ static class CommandLine
 
 	static unsafe LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)
 	{
-		var c = new Wnd.More.CopyDataStruct(lParam);
+		var c = new AWnd.More.CopyDataStruct(lParam);
 		int action = c.DataId;
 		bool isString = action < 100;
 		string s = isString ? c.GetString() : null;

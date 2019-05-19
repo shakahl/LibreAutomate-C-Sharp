@@ -25,7 +25,7 @@ namespace Au.Util
 	{
 		/// <summary>
 		/// Enables or disables a privilege for this process.
-		/// Returns false if fails. Supports <see cref="WinError"/>.
+		/// Returns false if fails. Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="privilegeName"></param>
 		/// <param name="enable"></param>
@@ -36,7 +36,7 @@ namespace Au.Util
 			if(Api.LookupPrivilegeValue(null, privilegeName, out p.Privileges.Luid)) {
 				Api.OpenProcessToken(Api.GetCurrentProcess(), Api.TOKEN_ADJUST_PRIVILEGES, out LibHandle hToken);
 				Api.AdjustTokenPrivileges(hToken, false, p, 0, null, default);
-				ok = 0 == WinError.Code;
+				ok = 0 == ALastError.Code;
 				hToken.Dispose();
 			}
 			return ok;

@@ -23,7 +23,7 @@ using static Au.AStatic;
 
 //Triggers of all non-exe task processes/threads use single low-level keyboard/mouse hook in editor process. Not own LL hooks, because:
 //	1. UAC. Editor normally is admin. Task processes can be any. Hooks of non-admin processes don't work when an admin window is active.
-//	2. In LL hook procedure some COM functions fail, eg Acc.Find in some windows. Scripts often use acc in scope context functions etc.
+//	2. In LL hook procedure some COM functions fail, eg AAcc.Find in some windows. Scripts often use acc in scope context functions etc.
 //		Error "An outgoing call cannot be made since the application is dispatching an input-synchronous call". Like when using SendMessage for IPC.
 //		That is why, even if hook is in task process, it must be in separate thread that communicates with action's thread through pipe.
 //	3. Scripts may use raw input or directX, and Windows has this bug: then low-level keyboard hook does not work in that process.
@@ -78,7 +78,7 @@ namespace Au.Triggers
 			MouseEdgeMove = 0x40, //Mouse edge and move triggers
 		}
 
-		readonly Wnd.More.MyWindow _msgWnd;
+		readonly AWnd.More.MyWindow _msgWnd;
 		readonly Thread _thread;
 		readonly List<_ThreadPipe> _pipes;
 		AHookWin _hookK, _hookM;
@@ -98,7 +98,7 @@ namespace Au.Triggers
 			_inTaskProcess = inTaskProcess;
 			_pipes = new List<_ThreadPipe>();
 
-			_msgWnd = new Wnd.More.MyWindow(_WndProc);
+			_msgWnd = new AWnd.More.MyWindow(_WndProc);
 			_event = Api.CreateEvent(true);
 			_thread = AThread.Start(_Thread);
 		}
@@ -106,7 +106,7 @@ namespace Au.Triggers
 		void _Thread()
 		{
 			string cn = _inTaskProcess ? "Au.Hooks.Exe" : "Au.Hooks.Server";
-			Wnd.More.MyWindow.RegisterClass(cn);
+			AWnd.More.MyWindow.RegisterClass(cn);
 			_msgWnd.CreateMessageOnlyWindow(cn);
 			Api.SetEvent(_event);
 			if(_inTaskProcess) Util.AAppDomain.Exit += (unu, sed) => _msgWnd.Handle.SendTimeout(1000, Api.WM_CLOSE); //unhook etc
@@ -122,7 +122,7 @@ namespace Au.Triggers
 
 		public Thread Thread => _thread;
 
-		public Wnd MsgWnd {
+		public AWnd MsgWnd {
 			get {
 				var w = _msgWnd.Handle;
 				if(w.Is0) { Api.WaitForSingleObject(_event, -1); w = _msgWnd.Handle; }
@@ -130,7 +130,7 @@ namespace Au.Triggers
 			}
 		}
 
-		LPARAM _WndProc(Wnd w, int message, LPARAM wParam, LPARAM lParam)
+		LPARAM _WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam)
 		{
 			try {
 				switch(message) {
@@ -164,7 +164,7 @@ namespace Au.Triggers
 
 		unsafe LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)
 		{
-			var c = new Wnd.More.CopyDataStruct(lParam);
+			var c = new AWnd.More.CopyDataStruct(lParam);
 			byte[] b = c.GetBytes();
 			switch(c.DataId) {
 			case 1:
@@ -280,7 +280,7 @@ namespace Au.Triggers
 				g1: //we use this weird goto code instead of a nested _Wait function to make faster JIT
 				var o = new Api.OVERLAPPED { hEvent = _event };
 				if(!(read ? Api.ReadFile(x.pipe, &r, 1, out _, &o) : Api.WriteFile(x.pipe, data, size, out _, &o))) {
-					if(WinError.Code != Api.ERROR_IO_PENDING) { ADebug.LibPrintNativeError(); return false; }
+					if(ALastError.Code != Api.ERROR_IO_PENDING) { ADebug.LibPrintNativeError(); return false; }
 					for(; ; ) {
 						var r1 = Api.WaitForMultipleObjectsEx(2, ha, false, Timeout.Infinite, false);
 						if(r1 == 0) break;

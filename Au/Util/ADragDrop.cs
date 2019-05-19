@@ -33,7 +33,7 @@ namespace Au.Util
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
 		public static bool SimpleDragDrop(AnyWnd window, MButtons mouseButton = MButtons.Left, Action<MsgArgs> onMouseKeyMessage = null)
 		{
-			Wnd w = window.Wnd;
+			AWnd w = window.Wnd;
 			Api.SetCapture(w);
 
 			bool R = false;

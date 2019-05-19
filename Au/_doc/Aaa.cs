@@ -118,11 +118,11 @@ namespace Au
 		/// Test property.
 		/// </summary>
 		/// <remarks>
-		/// type <see cref="Acc"/>
+		/// type <see cref="AAcc"/>
 		/// 
-		/// method <see cref="Acc.Find"/>
+		/// method <see cref="AAcc.Find"/>
 		/// 
-		/// property <see cref="Acc.Name"/>
+		/// property <see cref="AAcc.Name"/>
 		/// 
 		/// enum <see cref="AFFlags.NotInProc"/>
 		/// 

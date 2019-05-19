@@ -41,7 +41,7 @@ static class Strips
 		//p.Next();
 
 		_strips = new AuStripManager(MainForm, _cmd);
-		_strips.BuildAll(Folders.ThisAppBS + @"Default\Strips.xml", Folders.ThisAppDocuments + @"!Settings\Strips.xml", new AuDockPanel.DockedToolStripRenderer());
+		_strips.BuildAll(AFolders.ThisAppBS + @"Default\Strips.xml", AFolders.ThisAppDocuments + @"!Settings\Strips.xml", new AuDockPanel.DockedToolStripRenderer());
 		//p.Next();
 
 		//get top-level toolstrips (menu bar and toolbars)

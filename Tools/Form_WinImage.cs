@@ -26,7 +26,7 @@ namespace Au.Tools
 {
 	public partial class Form_WinImage : ToolForm
 	{
-		Wnd _wnd, _con;
+		AWnd _wnd, _con;
 		bool _useCon;
 		Bitmap _image;
 		RECT _rect;
@@ -41,13 +41,13 @@ namespace Au.Tools
 			_grid.ZValueChanged += _grid_ZValueChanged;
 		}
 
-		const string c_registryKey = @"\Tools\WinImage";
+		const string c_registryKey = @"\Tools\AWinImage";
 
 		protected override void OnLoad(EventArgs e)
 		{
 			base.OnLoad(e);
 
-			Wnd w = (Wnd)this;
+			AWnd w = (AWnd)this;
 			if(ARegistry.GetString(out var wndPos, "wndPos", c_registryKey))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 
@@ -57,7 +57,7 @@ namespace Au.Tools
 
 		protected override void OnFormClosing(FormClosingEventArgs e)
 		{
-			Wnd w = (Wnd)this;
+			AWnd w = (AWnd)this;
 			ARegistry.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
 
 			base.OnFormClosing(e);
@@ -112,7 +112,7 @@ namespace Au.Tools
 			_errorProvider.Clear();
 		}
 
-		void _SetWndCon(Wnd wnd, Wnd con, bool useCon, bool updateCodeIfNeed)
+		void _SetWndCon(AWnd wnd, AWnd con, bool useCon, bool updateCodeIfNeed)
 		{
 			var wPrev = _WndSearchIn;
 			_wnd = wnd;
@@ -220,9 +220,9 @@ namespace Au.Tools
 				else if(_grid.ZGetValue("WaitNot", out waitTime, false)) waitFunc = 2;
 			}
 			if(waitFunc != 0) {
-				b.Append(waitFunc == 1 ? "WinImage.Wait(" : "WinImage.WaitNot(").AppendWaitTime(waitTime, orThrow).Append(", ");
+				b.Append(waitFunc == 1 ? "AWinImage.Wait(" : "AWinImage.WaitNot(").AppendWaitTime(waitTime, orThrow).Append(", ");
 			} else {
-				b.Append("WinImage.Find(");
+				b.Append("AWinImage.Find(");
 			}
 
 			var (wndCode, wndVar) = _code.ZGetWndFindCode(_wnd, _useCon ? _con : default);
@@ -272,7 +272,7 @@ namespace Au.Tools
 				}
 
 				if(findAll) {
-					bb.AppendLine("var all = new List<WinImage>();");
+					bb.AppendLine("var all = new List<AWinImage>();");
 					b.Append("\r\nforeach(var im in all) { ");
 					if(mouse != null) b.Append(mouse).Append(" 100.ms(); ");
 					b.Append("}");
@@ -300,7 +300,7 @@ namespace Au.Tools
 		bool _IsChecked(string rowKey) => _grid.ZIsChecked(rowKey);
 		void _Check(string rowKey, bool check) => _grid.ZCheck(rowKey, check);
 
-		Wnd _WndSearchIn => _useCon ? _con : _wnd;
+		AWnd _WndSearchIn => _useCon ? _con : _wnd;
 
 		void _UpdateCodeBox() => _FormatCode();
 
@@ -310,7 +310,7 @@ namespace Au.Tools
 			WICFlags fl = 0;
 			if(rect) fl = WICFlags.Rectangle;
 			else if(_IsChecked("WindowDC")) fl |= WICFlags.WindowDC; //FUTURE: how rect is if DPI-scaled window?
-			if(!WinImage.CaptureUI(out r, fl, this)) return false;
+			if(!AWinImage.CaptureUI(out r, fl, this)) return false;
 
 			string es = null;
 			if(rect) {
@@ -448,7 +448,7 @@ namespace Au.Tools
 		{
 			_errorProvider.Clear();
 			var (code, wndVar) = _FormatCode(true); if(code == null) return;
-			TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as WinImage).RectInScreen, activateWindow: true);
+			TUtil.RunTestFindObject(code, wndVar, _WndSearchIn, _bTest, _lSpeed, o => (o as AWinImage).RectInScreen, activateWindow: true);
 		}
 
 		#endregion
@@ -456,12 +456,12 @@ namespace Au.Tools
 		#region info
 
 		const string c_infoForm =
-@"Creates code to <help M_Au_WinImage_Find>find image or color<> in <help M_Au_Wnd_Find>window<>. Your script can click it, etc.
+@"Creates code to <help AWinImage.Find>find image or color<> in <help AWnd.Find>window<>. Your script can click it, etc.
 1. Click the Capture button. Mouse-draw rectangle around the image.
 2. Click the Test button. It finds and shows the image and the search time.
 3. If need, check/uncheck/edit some fields; click Test.
-4. Click OK, it inserts C# code in the editor. Or copy/paste.
-5. If need, edit the code in the editor: rename variables, delete duplicate Wnd.Find lines, replace part of window name with *, etc.";
+4. Click OK, it inserts C# code in editor. Or copy/paste.
+5. If need, edit the code in editor: rename variables, delete duplicate AWnd.Find lines, replace part of window name with *, etc.";
 		const string c_infoWait = @"Wait timeout, seconds.
 If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns null or throws exception, depending on the 'Exception...' checkbox.";
 

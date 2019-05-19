@@ -51,7 +51,7 @@ public partial class Form_Setup :Form
 	void _TestInit()
 	{
 		//_destDir = @"Q:\app\au\_\";
-		_dir = Folders.ThisAppBS;
+		_dir = AFolders.ThisAppBS;
 	}
 
 	private void button1_Click(object sender, EventArgs e)

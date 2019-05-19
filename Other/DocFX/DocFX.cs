@@ -58,7 +58,7 @@ unsafe class Program
 		foreach(var v in Process.GetProcessesByName("docfx")) v.Kill();
 		if(isConsole) {
 			int k = 0;
-			foreach(var v in Wnd.FindAll(@"C:\WINDOWS\system32\cmd.exe", "ConsoleWindowClass")) { if(k++ > 0) v.Close(); }
+			foreach(var v in AWnd.FindAll(@"C:\WINDOWS\system32\cmd.exe", "ConsoleWindowClass")) { if(k++ > 0) v.Close(); }
 		}
 
 		AFile.Delete(siteDir);
@@ -73,7 +73,7 @@ unsafe class Program
 
 			bool serving = false;
 			try {
-				Exec.RunConsole(o => {
+				AExec.RunConsole(o => {
 					Print(o);
 					if(o.Starts("Serving")) throw new OperationCanceledException();
 				}, docfx, $@"docfx.json --intermediateFolder ""{objDir}"" --serve");
@@ -92,7 +92,7 @@ unsafe class Program
 
 		var t3 = ATime.PerfMilliseconds; Print("speed (s):", (t2 - t1) / 1000, (t3 - t2) / 1000);
 
-		//Wnd.Find("* Chrome").Activate();
+		//AWnd.Find("* Chrome").Activate();
 		//Key("F5");
 
 		1.s();
@@ -200,7 +200,7 @@ unsafe class Program
 		if(test) {
 			//files = @"\api\Au.AaaDocFX*";
 			//files = @"\api\Au.ARegex.Replace";
-			files = @"\api\Au.Acc.Find";
+			files = @"\api\Au.AAcc.Find";
 			files = @"\api\Au.ADialog.Show";
 			files = @"\articles\Wildcard expression";
 			files += ".html";
@@ -354,9 +354,9 @@ unsafe class Program
 		AFile.Delete(docDir + @"\_site.tar");
 		AFile.Delete(docDir + @"\_site.tar.bz2");
 
-		int r1 = Exec.RunConsole(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
+		int r1 = AExec.RunConsole(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
 		if(r1 != 0) { Print(s); return; }
-		int r2 = Exec.RunConsole(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
+		int r2 = AExec.RunConsole(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
 		if(r2 != 0) { Print(s); return; }
 
 		AFile.Delete(docDir + @"\_site.tar");

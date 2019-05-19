@@ -113,7 +113,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <param name="button"></param>
 		/// <param name="modKeys">
-		/// Modifier keys, like with the <see cref="Keyb.Key"/> function.
+		/// Modifier keys, like with the <see cref="AKeyboard.Key"/> function.
 		/// Examples: "Ctrl", "Ctrl+Shift+Alt+Win".
 		/// To ignore modifiers: "?". Then the trigger works with any combination of modifiers.
 		/// To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
@@ -203,7 +203,7 @@ namespace Au.Triggers
 			if(noMod) {
 				if(flags.HasAny(subtype == ESubtype.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
 			} else {
-				if(!Keyb.More.LibParseHotkeyTriggerString(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
+				if(!AKeyboard.More.LibParseHotkeyTriggerString(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 			}
 			var t = new MouseTrigger(_triggers, f, mod, modAny, flags, screen, ps);
 			t.DictAdd(_d, _DictKey(subtype, data));
@@ -259,7 +259,7 @@ namespace Au.Triggers
 					if(k.Event == _eatUp) {
 						_eatUp = 0;
 						return true;
-						//To be safer, could return false if Mouse.IsPressed(k.Button), but then can interfere with the trigger action.
+						//To be safer, could return false if AMouse.IsPressed(k.Button), but then can interfere with the trigger action.
 					}
 					return false;
 					//CONSIDER: _upTimeout.
@@ -351,7 +351,7 @@ namespace Au.Triggers
 					if(mod != 0) {
 						_SetTempKeybHook();
 						if(thc.trigger != null) thc.muteMod = TriggerActionThreads.c_modRelease;
-						else ThreadPool.QueueUserWorkItem(_ => Keyb.Lib.ReleaseModAndDisableModMenu());
+						else ThreadPool.QueueUserWorkItem(_ => AKeyboard.Lib.ReleaseModAndDisableModMenu());
 					}
 
 					//Print(mEvent, pt, mod);
@@ -438,7 +438,7 @@ namespace Au.Triggers
 		internal static void JitCompile()
 		{
 			Util.AJit.Compile(typeof(MouseTriggers), nameof(HookProcClickWheel), nameof(HookProcEdgeMove), nameof(_HookProc2));
-			Wnd.FromXY(default, WXYFlags.NeedWindow);
+			AWnd.FromXY(default, WXYFlags.NeedWindow);
 		}
 
 		/// <summary>
@@ -492,9 +492,9 @@ namespace Au.Triggers
 			{
 				//get normal x y. In pt can be outside screen when cursor moved fast and was stopped by a screen edge. Tested: never for click/wheel events.
 				//var r = Screen.GetBounds(pt); //creates much garbage. Calls API MonitorFromPoint and creates new Screen object.
-				//Print(pt, Mouse.XY);
+				//Print(pt, AMouse.XY);
 				//var hmon = Api.MonitorFromPoint(pt, Api.MONITOR_DEFAULTTONEAREST); //problem with empty corners between 2 unaligned screens: when mouse tries to quickly diagonally cut such a corner, may activate a wrong trigger
-				var hmon = Api.MonitorFromPoint(Mouse.XY, Api.MONITOR_DEFAULTTONEAREST); //smaller problem: Mouse.XY gets previous coordinates
+				var hmon = Api.MonitorFromPoint(AMouse.XY, Api.MONITOR_DEFAULTTONEAREST); //smaller problem: AMouse.XY gets previous coordinates
 				Api.MONITORINFO mi = default; mi.cbSize = Api.SizeOf<Api.MONITORINFO>();
 				Api.GetMonitorInfo(hmon, ref mi);
 				var r = mi.rcMonitor;
@@ -517,7 +517,7 @@ namespace Au.Triggers
 
 			void _Detect()
 			{
-				if(Mouse.IsPressed(MButtons.Left | MButtons.Right | MButtons.Middle)) {
+				if(AMouse.IsPressed(MButtons.Left | MButtons.Right | MButtons.Middle)) {
 					_prev.mDirection = 0;
 					return;
 				}
@@ -530,7 +530,7 @@ namespace Au.Triggers
 				_prev.time = time;
 				if(dt <= 0) return; //never noticed
 
-				//Print((x, y), Mouse.XY, time%10000);
+				//Print((x, y), AMouse.XY, time%10000);
 
 				if(y == _ymin || y == _ymax || x == _xmin || x == _xmax) {
 					_prev.mDirection = 0;
@@ -702,7 +702,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// The active window (Edge and Move triggers) or the mouse window (Click and Wheel triggers).
 		/// </summary>
-		public Wnd Window { get; }
+		public AWnd Window { get; }
 
 		/// <summary>
 		/// The pressed modifier keys.
@@ -713,7 +713,7 @@ namespace Au.Triggers
 		public KMod Mod { get; }
 
 		///
-		public MouseTriggerArgs(MouseTrigger trigger, Wnd w, KMod mod)
+		public MouseTriggerArgs(MouseTrigger trigger, AWnd w, KMod mod)
 		{
 			Trigger = trigger;
 			Window = w; Mod = mod;

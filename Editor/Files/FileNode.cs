@@ -409,7 +409,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		return EdResources.GetImageUseCache(k);
 	}
 
-	public static AIconCache IconCache = new AIconCache(Folders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
+	public static AIconCache IconCache = new AIconCache(AFolders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
 
 	/// <summary>
 	/// Gets or sets 'has triggers' flag.
@@ -779,7 +779,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		}
 		return f;
 	}
-	static string s_dirTemplatesBS = Folders.ThisAppBS + @"Templates\";
+	static string s_dirTemplatesBS = AFolders.ThisAppBS + @"Templates\";
 
 	static void _NI_FillProjectFolder(FilesModel model, FileNode fnParent, string dirParent)
 	{

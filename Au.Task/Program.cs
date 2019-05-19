@@ -156,24 +156,24 @@ static unsafe class Program
 			//switch(m.code) {
 			//case HookData.CbtEvent.ACTIVATE:
 			//case HookData.CbtEvent.SETFOCUS:
-			//	Print((Wnd)m.wParam);
-			//	Print(Wnd.Active);
-			//	Print(Wnd.ThisThread.Active);
-			//	Print(Wnd.Focused);
-			//	Print(Wnd.ThisThread.Focused);
+			//	Print((AWnd)m.wParam);
+			//	Print(AWnd.Active);
+			//	Print(AWnd.ThisThread.Active);
+			//	Print(AWnd.Focused);
+			//	Print(AWnd.ThisThread.Focused);
 			//	break;
 			//}
 			if(m.code == HookData.CbtEvent.ACTIVATE) {
-				var w = (Wnd)m.wParam;
+				var w = (AWnd)m.wParam;
 				if(!w.HasExStyle(WS_EX.NOACTIVATE)) {
 					//Print(w);
 					//Print(w.ExStyle);
 					//Api.SetForegroundWindow(w); //does not work
 					ATimer.After(1, () => {
 						if(s_hook == null) return;
-						//Print(Wnd.Active);
-						//Print(Wnd.ThisThread.Active);
-						bool isActive = w == Wnd.Active, activate = !isActive && w == Wnd.ThisThread.Active;
+						//Print(AWnd.Active);
+						//Print(AWnd.ThisThread.Active);
+						bool isActive = w == AWnd.Active, activate = !isActive && w == AWnd.ThisThread.Active;
 						if(isActive || activate) { s_hook.Dispose(); s_hook = null; }
 						if(activate) {
 							Api.SetForegroundWindow(w);

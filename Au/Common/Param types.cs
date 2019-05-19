@@ -20,7 +20,7 @@ using static Au.AStatic;
 namespace Au.Types
 {
 	/// <summary>
-	/// Contains x or y coordinate. Used for parameters of functions like Mouse.Move, Wnd.Move.
+	/// Contains x or y coordinate. Used for parameters of functions like AMouse.Move, AWnd.Move.
 	/// Allows to easily specify coordinates of these types: normal, reverse (from right or bottom of a rectangle), fractional (fraction of width or height of a rectangle), null.
 	/// Also has functions to convert to normal coodinates.
 	/// </summary>
@@ -151,7 +151,7 @@ namespace Au.Types
 		/// <param name="w">The window.</param>
 		/// <param name="nonClient">x y are relative to the entire w rectangle, not to its client area.</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
-		public static POINT NormalizeInWindow(Coord x, Coord y, Wnd w, bool nonClient = false, bool centerIfEmpty = false)
+		public static POINT NormalizeInWindow(Coord x, Coord y, AWnd w, bool nonClient = false, bool centerIfEmpty = false)
 		{
 			//info: don't need widthHeight parameter because client area left/top are 0. With non-client don't need in this library and probably not useful. But if need, caller can explicitly offset the rect before calling this func.
 
@@ -287,11 +287,11 @@ namespace Au.Types
 		/// <summary>Specifies the center of the specified rectangle which is relative to the primary screen.</summary>
 		public static implicit operator PopupXY(RECT r) => new PopupXY { rect = r };
 		/// <summary>Specifies position in the specified window.</summary>
-		public static implicit operator PopupXY((Wnd w, Coord x, Coord y) t) => new PopupXY(t.w.Rect, t.x, t.y);
+		public static implicit operator PopupXY((AWnd w, Coord x, Coord y) t) => new PopupXY(t.w.Rect, t.x, t.y);
 		/// <summary>Specifies the center of the specified window.</summary>
-		public static implicit operator PopupXY(Wnd w) => new PopupXY { rect = w.Rect };
+		public static implicit operator PopupXY(AWnd w) => new PopupXY { rect = w.Rect };
 		/// <summary>Specifies the center of the specified control or form.</summary>
-		public static implicit operator PopupXY(Control c) => new PopupXY { rect = ((Wnd)c).Rect };
+		public static implicit operator PopupXY(Control c) => new PopupXY { rect = ((AWnd)c).Rect };
 
 		//public bool IsRawXY => screen.IsNull && workArea == false && x.Type == Coord.CoordType.Normal && y.Type == Coord.CoordType.Normal;
 
@@ -303,7 +303,7 @@ namespace Au.Types
 			get
 			{
 				int cy = Api.GetSystemMetrics(Api.SM_CYCURSOR);
-				var p = Au.Mouse.XY;
+				var p = Au.AMouse.XY;
 				if(Util.ACursor.GetCurrentCursor(out var hCursor) && Api.GetIconInfo(hCursor, out var u)) {
 					if(u.hbmColor != default) Api.DeleteObject(u.hbmColor);
 					if(u.hbmMask != default) Api.DeleteObject(u.hbmMask);
@@ -343,7 +343,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Window handle.
-	/// Used for function parameters where the function needs a window handle as <see cref="Au.Wnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or any control class), System.Windows.Window (WPF window), IntPtr (window handle).
+	/// Used for function parameters where the function needs a window handle as <see cref="Au.AWnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or any control class), System.Windows.Window (WPF window), IntPtr (window handle).
 	/// </summary>
 	[DebuggerStepThrough]
 	public struct AnyWnd
@@ -351,33 +351,33 @@ namespace Au.Types
 		object _o;
 		AnyWnd(object o) { _o = o; }
 
-		/// <summary> Assignment of a value of type Wnd. </summary>
-		public static implicit operator AnyWnd(Wnd w) => new AnyWnd(w);
-		/// <summary> Assignment of a value of type Wnd. </summary>
-		public static implicit operator AnyWnd(IntPtr hwnd) => new AnyWnd((Wnd)hwnd);
+		/// <summary> Assignment of a value of type AWnd. </summary>
+		public static implicit operator AnyWnd(AWnd w) => new AnyWnd(w);
+		/// <summary> Assignment of a value of type AWnd. </summary>
+		public static implicit operator AnyWnd(IntPtr hwnd) => new AnyWnd((AWnd)hwnd);
 		/// <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
 		public static implicit operator AnyWnd(Control c) => new AnyWnd(c);
 		/// <summary> Assignment of a value of type System.Windows.Window (WPF window). </summary>
 		public static implicit operator AnyWnd(System.Windows.Window w) => new AnyWnd(w);
 
 		/// <summary>
-		/// Gets the window or control handle as Wnd.
-		/// Returns default(Wnd) if not assigned.
+		/// Gets the window or control handle as AWnd.
+		/// Returns default(AWnd) if not assigned.
 		/// </summary>
-		public Wnd Wnd
+		public AWnd Wnd
 		{
 			[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading Forms dll when don't need
 			get
 			{
 				if(_o == null) return default;
-				if(_o is Wnd) return (Wnd)_o;
-				if(_o is Control c) return (Wnd)c;
+				if(_o is AWnd) return (AWnd)_o;
+				if(_o is Control c) return (AWnd)c;
 				return _Wpf();
 			}
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading WPF dlls when don't need
-		Wnd _Wpf() => (Wnd)(System.Windows.Window)_o;
+		AWnd _Wpf() => (AWnd)(System.Windows.Window)_o;
 
 		/// <summary>
 		/// true if this is default(AnyWnd).

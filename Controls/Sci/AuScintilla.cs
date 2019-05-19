@@ -99,7 +99,7 @@ namespace Au.Controls
 
 		protected unsafe override void OnHandleCreated(EventArgs e)
 		{
-			_ptrDirect = ((Wnd)Handle).Send(SCI_GETDIRECTPOINTER);
+			_ptrDirect = ((AWnd)Handle).Send(SCI_GETDIRECTPOINTER);
 			Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
 
 			bool hasImages = InitImagesStyle != ImagesStyle.NoImages;
@@ -130,7 +130,7 @@ namespace Au.Controls
 
 			if(AccessibleName == null) AccessibleName = Name;
 
-			if(this.AllowDrop) Api.RevokeDragDrop((Wnd)this);
+			if(this.AllowDrop) Api.RevokeDragDrop((AWnd)this);
 
 			base.OnHandleCreated(e);
 		}
@@ -150,7 +150,7 @@ namespace Au.Controls
 
 		protected override void WndProc(ref Message m)
 		{
-			//if(this.Parent?.Name == "Output") Wnd.Misc.PrintMsg(ref m, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
+			//if(this.Parent?.Name == "Output") AWnd.More.PrintMsg(ref m, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
 
 			//LPARAM wParam = m.WParam, lParam = m.LParam;
 
@@ -167,10 +167,10 @@ namespace Au.Controls
 			//	break;
 
 			case Api.WM_LBUTTONDOWN:
-				if(Api.GetFocus() != (Wnd)Handle) {
+				if(Api.GetFocus() != (AWnd)Handle) {
 					bool setFocus = true;
 					Tags?.LibOnLButtonDownWhenNotFocused(ref m, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
-					if(setFocus) Api.SetFocus((Wnd)Handle);
+					if(setFocus) Api.SetFocus((AWnd)Handle);
 				}
 
 				_DefWndProc(ref m);
@@ -265,12 +265,12 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Scintilla dll path.
-		/// Default is <c>Folders.ThisApp + @"Dll\" + (AVersion.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll"</c>. If you want to change it, call this before creating first control.
+		/// Default is <c>AFolders.ThisApp + @"Dll\" + (AVersion.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll"</c>. If you want to change it, call this before creating first control.
 		/// </summary>
 		public static string SciLexerDllPath {
 			get {
 				if(s_dllPath == null) {
-					s_dllPath = Folders.ThisAppBS + @"Dll\" + (AVersion.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
+					s_dllPath = AFolders.ThisAppBS + @"Dll\" + (AVersion.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
 					if(!AFile.ExistsAsFile(s_dllPath, true)) { //in designer?
 						s_dllPath = @"Q:\app\Au\_\Dll\" + (AVersion.Is64BitProcess ? "64" : "32") + @"bit\SciLexer.dll";
 					}

@@ -47,7 +47,7 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Returns true if <see cref="AVersion.Is32BitProcessAnd64BitOS"/> is true and path starts with <see cref="Folders.System"/>.
+		/// Returns true if <see cref="AVersion.Is32BitProcessAnd64BitOS"/> is true and path starts with <see cref="AFolders.System"/>.
 		/// Most such paths are redirected, therefore you may want to disable redirection with this class.
 		/// </summary>
 		/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of <c>@"\\?\"</c>.</param>
@@ -59,7 +59,7 @@ namespace Au.Util
 		static int _IsSystem64PathIn32BitProcess(string path)
 		{
 			if(!AVersion.Is32BitProcessAnd64BitOS) return 0;
-			string sysDir = Folders.System;
+			string sysDir = AFolders.System;
 			if(!path.Starts(sysDir, true)) return 0;
 			int len = sysDir.Length;
 			if(path.Length > len && !APath.LibIsSepChar(path[len])) return 0;
@@ -67,8 +67,8 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// If <see cref="AVersion.Is32BitProcessAnd64BitOS"/> is true and path starts with <see cref="Folders.System"/>, replaces that path part with <see cref="Folders.SystemX64"/>.
-		/// It disables redirection to <see cref="Folders.SystemX86"/> for that path.
+		/// If <see cref="AVersion.Is32BitProcessAnd64BitOS"/> is true and path starts with <see cref="AFolders.System"/>, replaces that path part with <see cref="AFolders.SystemX64"/>.
+		/// It disables redirection to <see cref="AFolders.SystemX86"/> for that path.
 		/// </summary>
 		/// <param name="path">Normalized path. This function does not normalize. Also it is unaware of <c>@"\\?\"</c>.</param>
 		/// <param name="ifExistsOnlyThere">Don't replace path if the file or directory exists in the redirected folder or does not exist in the non-redirected folder.</param>
@@ -77,7 +77,7 @@ namespace Au.Util
 			int i = _IsSystem64PathIn32BitProcess(path);
 			if(i == 0) return path;
 			if(ifExistsOnlyThere && AFile.ExistsAsAny(path)) return path;
-			var s = path.ReplaceAt(0, i, Folders.SystemX64);
+			var s = path.ReplaceAt(0, i, AFolders.SystemX64);
 			if(ifExistsOnlyThere && !AFile.ExistsAsAny(s)) return path;
 			return s;
 		}

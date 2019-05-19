@@ -25,7 +25,7 @@ namespace Au
 	/// Options used by some functions of this library.
 	/// </summary>
 	/// <remarks>
-	/// Some frequently used static functions of this library have some options (settings). For example <see cref="Keyb.Key"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead you can set options using static properties. This class contains several groups of options for functions of various classes. See examples.
+	/// Some frequently used static functions of this library have some options (settings). For example <see cref="AKeyboard.Key"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead you can set options using static properties. This class contains several groups of options for functions of various classes. See examples.
 	/// 
 	/// There are two sets of identical or similar options - in class <b>AOpt</b> and in class <see cref="AOpt.Static"/>:
 	/// - <b>AOpt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>AOpt.Static</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).
@@ -34,20 +34,20 @@ namespace Au
 	public static class AOpt
 	{
 		/// <summary>
-		/// Options for keyboard and clipboard functions (classes <see cref="Keyb"/>, <see cref="Clipb"/> and functions that use them).
+		/// Options for keyboard and clipboard functions (classes <see cref="AKeyboard"/>, <see cref="AClipboard"/> and functions that use them).
 		/// </summary>
 		/// <remarks>
 		/// Each thread has its own <b>AOpt.Key</b> instance. It inherits options from <see cref="AOpt.Static.Key"/>.
-		/// Also can be used when creating <see cref="Keyb"/> instances. See the second example.
+		/// Also can be used when creating <see cref="AKeyboard"/> instances. See the second example.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// AOpt.Key.KeySpeed = 20;
 		/// Key("Tab Ctrl+V");
 		/// ]]></code>
-		/// Use a Keyb instance.
+		/// Use a AKeyboard instance.
 		/// <code><![CDATA[
-		/// var k = new Keyb(AOpt.Key); //create new Keyb instance and copy options from AOpt.Key to it
+		/// var k = new AKeyboard(AOpt.Key); //create new AKeyboard instance and copy options from AOpt.Key to it
 		/// k.Options.KeySpeed = 100; //changes option of k but not of AOpt.Key
 		/// k.Add("Tab Ctrl+V").Send(); //uses options of k
 		/// ]]></code>
@@ -56,7 +56,7 @@ namespace Au
 		[ThreadStatic] internal static OptKey t_key;
 
 		/// <summary>
-		/// Options for mouse functions (class <see cref="Mouse"/> and functions that use it).
+		/// Options for mouse functions (class <see cref="AMouse"/> and functions that use it).
 		/// </summary>
 		/// <remarks>
 		/// Each thread has its own <b>AOpt.Mouse</b> instance. It inherits options from <see cref="AOpt.Static.Mouse"/>.
@@ -64,7 +64,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// AOpt.Mouse.ClickSpeed = 100;
-		/// Mouse.Click();
+		/// AMouse.Click();
 		/// ]]></code>
 		/// </example>
 		public static OptMouse Mouse => t_mouse ?? (t_mouse = new OptMouse(AOpt.Static.Mouse));
@@ -119,7 +119,7 @@ namespace Au
 			/// Default option values for <see cref="AOpt.Key"/> of each thread.
 			/// </summary>
 			/// <remarks>
-			/// Also can be used when creating <see cref="Keyb"/> instances. See the second example.
+			/// Also can be used when creating <see cref="AKeyboard"/> instances. See the second example.
 			/// </remarks>
 			/// <example>
 			/// <code><![CDATA[
@@ -127,9 +127,9 @@ namespace Au
 			/// ...
 			/// Key("Tab Ctrl+V"); //uses AOpt.Key, which is implicitly copied from AOpt.Static.Key
 			/// ]]></code>
-			/// Use a Keyb instance.
+			/// Use a AKeyboard instance.
 			/// <code><![CDATA[
-			/// var k = new Keyb(AOpt.Static.Key); //create new Keyb instance and copy options from AOpt.Static.Key to it
+			/// var k = new AKeyboard(AOpt.Static.Key); //create new AKeyboard instance and copy options from AOpt.Static.Key to it
 			/// k.Options.KeySpeed = 100; //changes option of k but not of AOpt.Static.Key
 			/// k.Add("Tab Ctrl+V").Send(); //uses options of k
 			/// ]]></code>
@@ -143,7 +143,7 @@ namespace Au
 			/// <code><![CDATA[
 			/// AOpt.Static.Mouse.ClickSpeed = 10;
 			/// ...
-			/// Mouse.Click(); //uses AOpt.Mouse, which is implicitly copied from AOpt.Static.Mouse
+			/// AMouse.Click(); //uses AOpt.Mouse, which is implicitly copied from AOpt.Static.Mouse
 			/// ]]></code>
 			/// </example>
 			public static OptMouse Mouse { get; } = new OptMouse();
@@ -320,7 +320,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Options for functions of class <see cref="Mouse"/>.
+	/// Options for functions of class <see cref="AMouse"/>.
 	/// </summary>
 	/// <remarks>
 	/// Total <c>Click(x, y)</c> time is: mouse move + <see cref="MoveSleepFinally"/> + button down + <see cref="ClickSpeed"/> + button down + <see cref="ClickSpeed"/> + <see cref="ClickSleepFinally"/>.
@@ -390,7 +390,7 @@ namespace Au.Types
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Used by <see cref="Mouse.Move"/>, <see cref="Mouse.Click"/> and other functions that generate mouse movement events, except <see cref="Mouse.MoveRecorded"/>.
+		/// Used by <see cref="AMouse.Move"/>, <see cref="AMouse.Click"/> and other functions that generate mouse movement events, except <see cref="AMouse.MoveRecorded"/>.
 		/// It is not milliseconds or some other unit. It adds intermediate mouse movements and small delays when moving the mouse cursor to the specified point. The speed also depends on the distance.
 		/// Value 0 (default) does not add intermediate mouse movements. Adds at least 1 if some mouse buttons are pressed. Value 1 adds at least 1 intermediate mouse movement. Values 10-50 are good for visually slow movements.
 		/// </remarks>
@@ -418,7 +418,7 @@ namespace Au.Types
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Used by <see cref="Mouse.Move"/> (finally), <see cref="Mouse.Click"/> (between moving and clicking) and other functions that generate mouse movement events.
+		/// Used by <see cref="AMouse.Move"/> (finally), <see cref="AMouse.Click"/> (between moving and clicking) and other functions that generate mouse movement events.
 		/// </remarks>
 		public int MoveSleepFinally {
 			get => _o.MoveSleepFinally;
@@ -431,13 +431,13 @@ namespace Au.Types
 		/// </summary>
 		/// <remarks>
 		/// This option is used by these functions:
-		/// - <see cref="Mouse.Move"/>, <see cref="Mouse.Click"/> and other functions that move the cursor (mouse pointer):
+		/// - <see cref="AMouse.Move"/>, <see cref="AMouse.Click"/> and other functions that move the cursor (mouse pointer):
 		/// <br/>false - throw exception if cannot move the cursor to the specified x y. For example it the x y is not in screen.
 		/// <br/>true - try to move anyway. Don't throw exception, regardless of the final cursor position (which probably will be at a screen edge).
-		/// - <see cref="Mouse.Move"/>, <see cref="Mouse.Click"/> and other functions that move the cursor (mouse pointer):
+		/// - <see cref="AMouse.Move"/>, <see cref="AMouse.Click"/> and other functions that move the cursor (mouse pointer):
 		/// <br/>false - before moving the cursor, wait while a mouse button is pressed by the user or another thread. It prevents an unintended drag-drop.
 		/// <br/>true - do not wait.
-		/// - <see cref="Mouse.Click"/> and other functions that click or press a mouse button using window coordinates:
+		/// - <see cref="AMouse.Click"/> and other functions that click or press a mouse button using window coordinates:
 		/// <br/>false - don't allow to click in another window. If need, activate the specified window (or its top-level parent). If that does not help, throw exception. However if the window is a control, allow x y anywhere in its top-level parent window.
 		/// <br/>true - allow to click in another window. Don't activate the window and don't throw exception.
 		/// </remarks>
@@ -445,8 +445,8 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Options for functions of class <see cref="Keyb"/>.
-	/// Some options also are used with <see cref="Clipb"/> functions that send keys (Ctrl+V etc).
+	/// Options for functions of class <see cref="AKeyboard"/>.
+	/// Some options also are used with <see cref="AClipboard"/> functions that send keys (Ctrl+V etc).
 	/// </summary>
 	/// <seealso cref="AOpt.Key"/>
 	/// <seealso cref="AOpt.Static.Key"/>
@@ -504,7 +504,7 @@ namespace Au.Types
 		/// Returns this variable or OptKey cloned from this variable and possibly modified by Hook.
 		/// </summary>
 		/// <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
-		internal OptKey LibGetHookOptionsOrThis(Wnd wFocus)
+		internal OptKey LibGetHookOptionsOrThis(AWnd wFocus)
 		{
 			var call = this.Hook;
 			if(call == null || wFocus.Is0) return this;
@@ -514,7 +514,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// How long to wait (milliseconds) between pressing and releasing each character key of 'text' parameters of <see cref="Keyb.Text"/>, <see cref="Keyb.Key"/> and similar functions.
+		/// How long to wait (milliseconds) between pressing and releasing each character key of 'text' parameters of <see cref="AKeyboard.Text"/>, <see cref="AKeyboard.Key"/> and similar functions.
 		/// Default: 0. Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -528,7 +528,7 @@ namespace Au.Types
 		int _textSpeed;
 
 		/// <summary>
-		/// How long to wait (milliseconds) between pressing and releasing each key of 'keys' parameters of <see cref="Keyb.Key"/> and similar functions.
+		/// How long to wait (milliseconds) between pressing and releasing each key of 'keys' parameters of <see cref="AKeyboard.Key"/> and similar functions.
 		/// Default: 1. Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -561,7 +561,7 @@ namespace Au.Types
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Not used by <see cref="Clipb.CopyText"/>.
+		/// Not used by <see cref="AClipboard.CopyText"/>.
 		/// </remarks>
 		public int SleepFinally {
 			get => _sleepFinally;
@@ -665,10 +665,10 @@ namespace Au.Types
 		/// </summary>
 		/// <remarks>
 		/// Shows this info in the output, for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="RestoreClipboardExceptFormats"/>).
-		/// <note>Copy something to the clipboard each time before calling this function. Don't use <see cref="Clipb.CopyText"/> and don't call this function in loop. Else it shows small times.</note>
+		/// <note>Copy something to the clipboard each time before calling this function. Don't use <see cref="AClipboard.CopyText"/> and don't call this function in loop. Else it shows small times.</note>
 		/// The time depends on app, etc. More info: <see cref="RestoreClipboardExceptFormats"/>.
 		/// </remarks>
-		public static void PrintClipboard() => Clipb.LibPrintClipboard();
+		public static void PrintClipboard() => AClipboard.LibPrintClipboard();
 
 		#endregion
 
@@ -698,7 +698,7 @@ namespace Au.Types
 		/// Default: null.
 		/// </summary>
 		/// <remarks>
-		/// The callback function is called by <see cref="Key"/>, <see cref="Text"/>, <see cref="Keyb.Send"/>, <see cref="Clipb.PasteText"/> and similar functions. Not called by <see cref="Clipb.CopyText"/>.
+		/// The callback function is called by <see cref="Key"/>, <see cref="Text"/>, <see cref="AKeyboard.Send"/>, <see cref="AClipboard.PasteText"/> and similar functions. Not called by <see cref="AClipboard.CopyText"/>.
 		/// </remarks>
 		/// <seealso cref="KOHookData"/>
 		public Action<KOHookData> Hook { get; set; }
@@ -709,7 +709,7 @@ namespace Au.Types
 	/// </summary>
 	public struct KOHookData
 	{
-		internal KOHookData(OptKey opt, Wnd w) { this.opt = opt; this.w = w; }
+		internal KOHookData(OptKey opt, AWnd w) { this.opt = opt; this.w = w; }
 
 		/// <summary>
 		/// Options used by the 'send keys or text' function. The callback function can modify them, except Hook, NoModOff, NoCapsOff, NoBlockInput.
@@ -719,7 +719,7 @@ namespace Au.Types
 		/// <summary>
 		/// The focused control. If there is no focused control - the active window. Use <c>w.Window</c> to get top-level window; if <c>w.Window == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
 		/// </summary>
-		public readonly Wnd w;
+		public readonly AWnd w;
 	}
 
 	/// <summary>
@@ -772,8 +772,8 @@ namespace Au.Types
 	/// Options for 'wait for' functions.
 	/// </summary>
 	/// <seealso cref="AOpt.WaitFor"/>
-	/// <seealso cref="WaitFor.Condition"/>
-	/// <seealso cref="WaitFor.Loop"/>
+	/// <seealso cref="AWaitFor.Condition"/>
+	/// <seealso cref="AWaitFor.Loop"/>
 	public class OptWaitFor
 	{
 		/// <summary>
@@ -781,10 +781,10 @@ namespace Au.Types
 		/// Default: 10. Valid values: 1-1000.
 		/// </summary>
 		/// <remarks>
-		/// Most 'wait for' functions of this library use <see cref="WaitFor.Loop"/>, which repeatedly checks the wait condition and sleeps (waits) several ms. This property sets the initial sleep time, which then is incremented by <b>Period</b>/10 ms (default 1 ms) in each loop until reaches <b>Period</b>*50 (default 500 ms).
+		/// Most 'wait for' functions of this library use <see cref="AWaitFor.Loop"/>, which repeatedly checks the wait condition and sleeps (waits) several ms. This property sets the initial sleep time, which then is incremented by <b>Period</b>/10 ms (default 1 ms) in each loop until reaches <b>Period</b>*50 (default 500 ms).
 		/// This property makes the response time shorter or longer. If &lt;10, makes it shorter (faster response), but increases CPU usage; if &gt;10, makes it longer (slower response).
 		/// </remarks>
-		/// <seealso cref="WaitFor.Loop.Period"/>
+		/// <seealso cref="AWaitFor.Loop.Period"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// AOpt.WaitFor.Period = 100;
@@ -800,7 +800,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Use this property when need to process Windows messages, events, hooks, timers, etc while waiting. More info: <see cref="ATime.SleepDoEvents"/>.
 		/// </remarks>
-		/// <seealso cref="WaitFor.MessagesAndCondition"/>
+		/// <seealso cref="AWaitFor.MessagesAndCondition"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// AOpt.WaitFor.DoEvents = true;

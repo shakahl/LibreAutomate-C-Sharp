@@ -27,7 +27,7 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// This class wraps a SQLite API object sqlite3* and related sqlite3_x functions. They are documented perfectly in the SQLite website.
-	/// Uses this unmanaged dll: Folders.ThisApp + @"Dll\64bit\sqlite3.dll". In 32-bit process - "32bit" instead of "64bit".
+	/// Uses this unmanaged dll: AFolders.ThisApp + @"Dll\64bit\sqlite3.dll". In 32-bit process - "32bit" instead of "64bit".
 	/// </remarks>
 	/// <seealso cref="ASqliteStatement"/>
 	/// <example>

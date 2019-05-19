@@ -111,7 +111,7 @@ namespace Au
 			if(needResult && !tr.Init()) throw new AException("*get task results");
 
 			var data = Util.LibSerializer.Serialize(script, args, tr.pipeName);
-			int pid = (int)Wnd.More.CopyDataStruct.SendBytes(w, 100, data, mode);
+			int pid = (int)AWnd.More.CopyDataStruct.SendBytes(w, 100, data, mode);
 			switch((ERunResult)pid) {
 			case ERunResult.failed: throw new AException("*start task");
 			case ERunResult.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
@@ -167,7 +167,7 @@ namespace Au
 					for(bool useSB = false; ; useSB = results == null) {
 						var o = new Api.OVERLAPPED { hEvent = ev.SafeWaitHandle.DangerousGetHandle() };
 						if(!Api.ConnectNamedPipe(_hPipe, &o)) {
-							int e = WinError.Code; if(e != Api.ERROR_IO_PENDING) break;
+							int e = ALastError.Code; if(e != Api.ERROR_IO_PENDING) break;
 							int wr = WaitHandle.WaitAny(ha);
 							if(wr != 0) { Api.CancelIo(_hPipe); R = true; break; } //task ended
 							if(!Api.GetOverlappedResult(_hPipe, ref o, out _, false)) { Api.DisconnectNamedPipe(_hPipe); break; }
@@ -175,7 +175,7 @@ namespace Au
 
 						if(b == null) b = (char*)Util.AMemory.Alloc(bLen);
 						bool readOK;
-						while(((readOK = Api.ReadFile(_hPipe, b, bLen, out int n, null)) || (WinError.Code == Api.ERROR_MORE_DATA)) && n > 0) {
+						while(((readOK = Api.ReadFile(_hPipe, b, bLen, out int n, null)) || (ALastError.Code == Api.ERROR_MORE_DATA)) && n > 0) {
 							n /= 2;
 							if(!readOK) useSB = true;
 							//Print(useSB, n);
@@ -215,15 +215,15 @@ namespace Au
 		/// <summary>
 		/// Finds editor's message-only window used with WM_COPYDATA etc.
 		/// </summary>
-		internal static Wnd WndMsg {
+		internal static AWnd WndMsg {
 			get {
 				if(!s_wndMsg.IsAlive) {
-					s_wndMsg = Wnd.More.FindMessageOnlyWindow(null, "Au.Editor.Msg");
+					s_wndMsg = AWnd.More.FindMessageOnlyWindow(null, "Au.Editor.Msg");
 				}
 				return s_wndMsg;
 			}
 		}
-		static Wnd s_wndMsg;
+		static AWnd s_wndMsg;
 
 		/// <summary>
 		/// Writes a string result for the task that called <see cref="RunWait(out string, string, string[])"/> or <see cref="RunWait(Action{string}, string, string[])"/> to run this task, or for the program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs".

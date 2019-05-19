@@ -35,7 +35,7 @@ namespace Au
 		/// <remarks>
 		/// It is not the same as <see cref="Thread.ManagedThreadId"/>.
 		/// </remarks>
-		/// <seealso cref="Wnd.ThreadId"/>
+		/// <seealso cref="AWnd.ThreadId"/>
 		public static int NativeId => Api.GetCurrentThreadId();
 		//speed: fast, but several times slower than Thread.CurrentThread.ManagedThreadId. Caching in a ThreadStatic variable makes even slower.
 
@@ -55,7 +55,7 @@ namespace Au
 		/// <remarks>
 		/// Unlike calling <b>Application.MessageLoop</b> etc directly, this function does not cause to load Forms and WPF dlls.
 		/// </remarks>
-		/// <seealso cref="Wnd.GetWnd.ThreadWindows"/>
+		/// <seealso cref="AWnd.GetWnd.ThreadWindows"/>
 		public static bool HasMessageLoop(out bool isWPF)
 		{
 			//info: we don't call .NET functions directly to avoid loading assemblies.

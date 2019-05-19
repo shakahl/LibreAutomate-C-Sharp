@@ -23,7 +23,7 @@ namespace Au
 	/// <summary>
 	/// This class contains static functions to execute or open programs, other files, folders, web pages, etc.
 	/// </summary>
-	public static partial class Exec
+	public static partial class AExec
 	{
 		/// <summary>
 		/// Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
@@ -31,14 +31,14 @@ namespace Au
 		/// </summary>
 		/// <param name="file">
 		/// What to run. Can be:
-		/// Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>Folders.System + "notepad.exe"</c>, <c>@"%Folders.System%\notepad.exe"</c>.
+		/// Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>AFolders.System + "notepad.exe"</c>, <c>@"%AFolders.System%\notepad.exe"</c>.
 		/// Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="AFile.SearchPath"/>.
-		/// Path relative to <see cref="Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
+		/// Path relative to <see cref="AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
 		/// Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-		/// Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="APidl.ToHexString"/>, <see cref="Folders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
-		/// Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="APidl.ToShellString"/>, <see cref="Folders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
-		/// To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="Wnd.More.GetWindowsStoreAppId"/> or Google.
+		/// Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="APidl.ToHexString"/>, <see cref="AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
+		/// Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="APidl.ToShellString"/>, <see cref="AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
+		/// To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="AWnd.More.GetWindowsStoreAppId"/> or Google.
 		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="APath.ExpandEnvVar"/>.
 		/// </param>
 		/// <param name="args">
@@ -57,16 +57,16 @@ namespace Au
 		/// Uses API <msdn>ShellExecuteEx</msdn>.
 		/// Similar to <see cref="Process.Start(string, string)"/>.
 		/// </remarks>
-		/// <seealso cref="Wnd.FindOrRun"/>
+		/// <seealso cref="AWnd.FindOrRun"/>
 		/// <example>
 		/// Run notepad and wait for its window.
 		/// <code><![CDATA[
-		/// Exec.Run("notepad.exe");
-		/// Wnd w = Wnd.Wait(10, true, "*- Notepad", "Notepad");
+		/// AExec.Run("notepad.exe");
+		/// AWnd w = AWnd.Wait(10, true, "*- Notepad", "Notepad");
 		/// ]]></code>
 		/// Run notepad or activate its window.
 		/// <code><![CDATA[
-		/// Wnd w = Wnd.FindOrRun("*- Notepad", run: () => Exec.Run("notepad.exe"));
+		/// AWnd w = AWnd.FindOrRun("*- Notepad", run: () => AExec.Run("notepad.exe"));
 		/// ]]></code>
 		/// </example>
 		public static RResult Run(string file, string args = null, RFlags flags = 0, RMore more = null)
@@ -114,7 +114,7 @@ namespace Au
 			}
 			if(!Empty(args)) x.lpParameters = APath.ExpandEnvVar(args);
 
-			Wnd.More.EnableActivate();
+			AWnd.More.EnableActivate();
 
 			bool ok = false;
 			try {
@@ -158,7 +158,7 @@ namespace Au
 			return R;
 
 			//tested: works well in MTA thread.
-			//rejected: in QM2, run also has a 'window' parameter. However it just makes limited, unclear etc, and therefore rarely used. Instead use Wnd.FindOrRun or Find/Run/Wait like in the examples.
+			//rejected: in QM2, run also has a 'window' parameter. However it just makes limited, unclear etc, and therefore rarely used. Instead use AWnd.FindOrRun or Find/Run/Wait like in the examples.
 			//rejected: in QM2, run also has 'autodelay'. Better don't add such hidden things. Let the script decide what to do.
 		}
 
@@ -172,7 +172,7 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="PrintWarning"/>
 		/// <seealso cref="OptDebug.DisableWarnings"/>
-		/// <seealso cref="Wnd.FindOrRun"/>
+		/// <seealso cref="AWnd.FindOrRun"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
 		public static RResult TryRun(string s, string args = null, RFlags flags = 0, RMore more = null)
 		{
@@ -222,9 +222,9 @@ namespace Au
 		/// </summary>
 		/// <param name="exe">
 		/// Path or name of an .exe or .bat file. Can be:
-		/// Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>Folders.System + "x.exe"</c>, <c>@"%Folders.System%\x.exe"</c>.
+		/// Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>AFolders.System + "x.exe"</c>, <c>@"%AFolders.System%\x.exe"</c>.
 		/// Filename, like <c>"x.exe"</c>. This function calls <see cref="AFile.SearchPath"/>.
-		/// Path relative to <see cref="Folders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
+		/// Path relative to <see cref="AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="APath.ExpandEnvVar"/>.
 		/// </param>
 		/// <param name="args">null or command line arguments.</param>
@@ -249,11 +249,11 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string v = "example";
-		/// int r1 = Exec.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
+		/// int r1 = AExec.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
 		/// 
-		/// int r2 = Exec.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
+		/// int r2 = AExec.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
 		/// 
-		/// int r3 = Exec.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
+		/// int r3 = AExec.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
 		/// Print(text);
 		/// ]]></code>
 		/// </example>
@@ -336,7 +336,7 @@ namespace Au
 						if(nr == 0) continue;
 						nr += offs;
 					} else {
-						if(WinError.Code != Api.ERROR_BROKEN_PIPE) throw new AException(0);
+						if(ALastError.Code != Api.ERROR_BROKEN_PIPE) throw new AException(0);
 						//process ended
 						if(offs == 0) break;
 						nr = offs;
@@ -416,14 +416,14 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="Exec.Run"/>.
+	/// Flags for <see cref="AExec.Run"/>.
 	/// </summary>
 	[Flags]
 	public enum RFlags
 	{
 		/// <summary>
 		/// Show error message box if fails, for example if file not found.
-		/// Note: this does not disable exceptions. Still need exception handling. Or call <see cref="Exec.TryRun"/>.
+		/// Note: this does not disable exceptions. Still need exception handling. Or call <see cref="AExec.TryRun"/>.
 		/// </summary>
 		ShowErrorUI = 1,
 
@@ -445,7 +445,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// More parameters for <see cref="Exec.Run"/>.
+	/// More parameters for <see cref="AExec.Run"/>.
 	/// </summary>
 	public class RMore
 	{
@@ -488,7 +488,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Results of <see cref="Exec.Run"/>.
+	/// Results of <see cref="AExec.Run"/>.
 	/// </summary>
 	public class RResult
 	{
@@ -512,9 +512,9 @@ namespace Au.Types
 		/// null if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
 		/// </summary>
 		/// <example>
-		/// This code does the same as <c>Exec.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
+		/// This code does the same as <c>AExec.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
 		/// <code><![CDATA[
-		/// var r = Exec.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
+		/// var r = AExec.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
 		/// using(var h = r.ProcessHandle) h?.WaitOne();
 		/// ]]></code>
 		/// </example>
@@ -530,7 +530,7 @@ namespace Au.Types
 	}
 
 	///// <summary>
-	///// Flags for <see cref="Exec.RunConsole"/>.
+	///// Flags for <see cref="AExec.RunConsole"/>.
 	///// </summary>
 	//[Flags]
 	//public enum RCFlags

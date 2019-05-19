@@ -67,7 +67,7 @@ namespace Au.Compiler
 	/// com Accessibility 1.1 44782f49.dll
 	/// ]]></code>
 	/// How this different from option r:
-	/// 1. If not full path, must be in @"%Folders.Workspace%\.interop".
+	/// 1. If not full path, must be in @"%AFolders.Workspace%\.interop".
 	/// 2. The interop assembly is used only when compiling, not at run time. It contains only metadata, not code. The compiler copies used parts of metadata to the output assembly. The real code is in native COM dll, which at run time must be registered as COM component and must match the bitness (64-bit or 32-bit) of the process that uses it. 
 	/// 
 	/// <h3>Files to add to managed resources</h3>
@@ -129,7 +129,7 @@ namespace Au.Compiler
 	/// <h3>Settings used to create assembly file</h3>
 	/// <code><![CDATA[
 	/// role miniProgram|exeProgram|editorExtension|classLibrary|classFile //purpose of this C# file. Also the type of the output assembly file (exe, dll, none). Default: miniProgram for scripts, classFile for class files. More info below.
-	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %Folders.Workspace%\bin. Default for classLibrary: %Folders.ThisApp%\Libraries.
+	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %AFolders.Workspace%\bin. Default for classLibrary: %AFolders.ThisApp%\Libraries.
 	/// console false|true //let the program run with console
 	/// icon file.ico //icon of the .exe/.dll file. Can be filename or relative path, like with 'c'.
 	/// manifest file.manifest //manifest file of the .exe file. Can be filename or relative path, like with 'c'.
@@ -144,7 +144,7 @@ namespace Au.Compiler
 	/// If role is 'classFile' (default for class files) does not create any output files from this C# file. Its purpose is to be compiled together with other C# code files.
 	/// If role is 'editorExtension', the task runs in the main UI thread of the editor process. Rarely used. Can be used to create editor extensions. The user cannot see and end the task. Creates memory leaks when executing recompiled assemblies (eg after editing the script), because old assembly versions cannot be unloaded until process exits.
 	/// 
-	/// Full path can be used with 'r', 'com', 'outputPath' and 'xmlDoc'. It can start with an environment variable or special folder name, like <c>%Folders.ThisAppDocuments%\file.exe</c>.
+	/// Full path can be used with 'r', 'com', 'outputPath' and 'xmlDoc'. It can start with an environment variable or special folder name, like <c>%AFolders.ThisAppDocuments%\file.exe</c>.
 	/// Files used with other options ('c', 'resource' etc) must be in this workspace.
 	/// 
 	/// About native resources:
@@ -653,7 +653,7 @@ namespace Au.Compiler
 					return _Error(0, "with role miniProgram (default role of script files) cannot use outputPath");
 				break;
 			case ERole.exeProgram:
-				if(OutputPath == null) OutputPath = Folders.Workspace + "bin";
+				if(OutputPath == null) OutputPath = AFolders.Workspace + "bin";
 				break;
 			case ERole.editorExtension:
 				if(Specified.HasAny(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
@@ -664,7 +664,7 @@ namespace Au.Compiler
 				if(Specified.HasAny(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
 					| EMSpecified.config | EMSpecified.manifest | EMSpecified.console))
 					return _Error(0, "with role classLibrary cannot use runMode, ifRunning, uac, prefer32bit, config, manifest, console");
-				if(OutputPath == null) OutputPath = Folders.ThisApp + "Libraries";
+				if(OutputPath == null) OutputPath = AFolders.ThisApp + "Libraries";
 				break;
 			case ERole.classFile:
 				if(Specified != 0) return _Error(0, "with role classFile (default role of class files) can be used only c, r, resource, com");

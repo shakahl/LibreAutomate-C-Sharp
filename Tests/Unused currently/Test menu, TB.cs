@@ -219,8 +219,8 @@ public partial class Test
 		tb.Click += (o, oo) =>
 		{
 			//Print("click");
-			var wo = (Wnd)tb.Owner.Handle;
-			//var wo = (Wnd)tb.Control.Handle;
+			var wo = (AWnd)tb.Owner.Handle;
+			//var wo = (AWnd)tb.Control.Handle;
 			//Print(wo);
 			ADialog.Show("td", owner: wo);
 			//MessageBox.Show(wo, "txt");
@@ -282,7 +282,7 @@ public partial class Test
 			//APerf.Next();
 			//m.Show(500, 300);
 			//m.Show();
-			m.Show(Mouse.X + 10, Mouse.Y + 10);
+			m.Show(AMouse.X + 10, AMouse.Y + 10);
 			//Print(2);
 			//Thread.Sleep(200); APerf.First(); m.Show(); Print(3);
 		}
@@ -309,7 +309,7 @@ public partial class Test
 		string folder;
 
 		//if(lnk) {
-		//	folder = Folders.CommonPrograms;
+		//	folder = AFolders.CommonPrograms;
 		//	foreach(var f in Directory.EnumerateFiles(folder, "*.lnk", System.IO.SearchOption.AllDirectories)) {
 		//		//Print(f);
 		//		a.Add(f);
@@ -334,14 +334,14 @@ public partial class Test
 		m.MouseClosingDistance = 100;
 		//m.ActivateMenuWindow = true;
 		//m.IconDirectory = @"q:\app";
-		Folders.ThisAppImages=@"q:\app";
+		AFolders.ThisAppImages=@"q:\app";
 		//m.CMS.ImageScalingSize = new Size(32, 32);
 		//m.CMS.ImageScalingSize = new Size(48,48);
 		//m.CMS.ImageScalingSize = new Size(64,64);
 		//m.CMS.ImageScalingSize = new Size(256,256);
 		//m.CMS.ImageScalingSize = new Size(24,24);
 
-		//m.IconCache = Folders.Temp + "test menu icon cache.xml";
+		//m.IconCache = AFolders.Temp + "test menu icon cache.xml";
 
 		foreach(var f in a) {
 			//Print(f);
@@ -366,28 +366,28 @@ public partial class Test
 		//m.Separator();
 		m["One", "Cut.ico"] = o => Print(o);
 		m["ILSpy", @"Q:\Programs\ILSpy\ILSpy.exe"] = o => Print(o);
-		m["Notepad", Folders.System + "notepad.exe"] = o => Print(o);
+		m["Notepad", AFolders.System + "notepad.exe"] = o => Print(o);
 		m["Two", "Copy.ico"] = o => Print(o);
 		m["Three", "Paste.ico"] = o => Print(o);
 		m["Four", "Run.ico"] = o => Print(o);
 		m["Five", "Tip.ico"] = o => Print(o);
 		//m["Six", "notepad.exe"] = o => Print(o);
 		m["Calc", @"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"] = o => Print(o);
-		m["PicPick", Folders.ProgramFilesX86 + @"PicPick\picpick.exe"] = o => Print(o);
+		m["PicPick", AFolders.ProgramFilesX86 + @"PicPick\picpick.exe"] = o => Print(o);
 		m["Dbgview", @"Q:\Programs\DebugView\Dbgview.exe"] = o => Print(o);
 		m["Procexp", @"Q:\Programs\ProcessExplorer\procexp.exe"] = o => Print(o);
-		m["Inno", Folders.ProgramFilesX86 + @"Inno Setup 5\Compil32.exe"] = o => Print(o);
-		m["hhw", Folders.ProgramFilesX86 + @"HTML Help Workshop\hhw.exe"] = o => Print(o);
-		m["FileZilla", Folders.ProgramFiles + @"FileZilla FTP Client\filezilla.exe"] = o => Print(o);
-		m["IE", Folders.ProgramFilesX86 + @"Internet Explorer\IEXPLORE.EXE"] = o => Print(o);
+		m["Inno", AFolders.ProgramFilesX86 + @"Inno Setup 5\Compil32.exe"] = o => Print(o);
+		m["hhw", AFolders.ProgramFilesX86 + @"HTML Help Workshop\hhw.exe"] = o => Print(o);
+		m["FileZilla", AFolders.ProgramFiles + @"FileZilla FTP Client\filezilla.exe"] = o => Print(o);
+		m["IE", AFolders.ProgramFilesX86 + @"Internet Explorer\IEXPLORE.EXE"] = o => Print(o);
 		m["Procmon", @"Q:\Programs\ProcessMonitor\Procmon.exe"] = o => Print(o);
-		m["ResourceHacker", Folders.ProgramFilesX86 + @"Resource Hacker\ResourceHacker.exe"] = o => Print(o);
+		m["ResourceHacker", AFolders.ProgramFilesX86 + @"Resource Hacker\ResourceHacker.exe"] = o => Print(o);
 		m["autoruns", @"Q:\programs\Autoruns\autoruns.exe"] = o => Print(o);
-		m["SyncBack", Folders.ProgramFilesX86 + @"SyncBackFree\SyncBackFree.exe"] = o => Print(o);
+		m["SyncBack", AFolders.ProgramFilesX86 + @"SyncBackFree\SyncBackFree.exe"] = o => Print(o);
 		m["PEview", @"Q:\Programs\PeView\PEview.exe"] = o => Print(o);
-		m["shell32.dll,25", Folders.System + @"shell32.dll,25"] = o => Print(o);
+		m["shell32.dll,25", AFolders.System + @"shell32.dll,25"] = o => Print(o);
 		m["app", @"q:\app"] = null;
-		m["Favorites", Folders.Favorites] = o => Print(o);
+		m["Favorites", AFolders.Favorites] = o => Print(o);
 		//m["", @""] = o => Print(o);
 		m["http://www...", "http://www.quickmacros.com/"] = o => Print(o);
 		m[".txt", ".txt"] = o => Print(o);
@@ -428,7 +428,7 @@ public partial class Test
 		//m["plus", @"q:\app\cut.ico"] = null;
 		//m["plus", @"q:\app\copy.ico"] = null;
 		//m["plus", @"q:\app\paste.ico"] = null;
-		//m.Show(Mouse.X + 10, Mouse.Y);
+		//m.Show(AMouse.X + 10, AMouse.Y);
 
 		//Print(1);
 		//ADialog.Show("");
@@ -562,7 +562,7 @@ public partial class Test
 			//this.MouseClick += (sender, e) =>
 			//{
 			//	//Print(e.Button); //no right-click event if a context menu assigned
-			//	//if(e.Button == MouseButtons.Right) Wnd.FindFast("QM_Editor").ActivateLL();
+			//	//if(e.Button == MouseButtons.Right) AWnd.FindFast("QM_Editor").ActivateLL();
 			//	//TestAuMenu(sender as Form);
 			//	ATimer.After(100, o => TestAuMenu(sender as Form));
 			//};
@@ -608,7 +608,7 @@ public partial class Test
 
 		protected override void WndProc(ref Message m)
 		{
-			//if(_outMsg) Wnd.More.PrintMsg(ref m);
+			//if(_outMsg) AWnd.More.PrintMsg(ref m);
 
 			base.WndProc(ref m);
 		}
@@ -624,7 +624,7 @@ public partial class Test
 
 		//with this loop does not show f
 		//Native.MSG u;
-		//while(Api.GetMessage(out u, default(Wnd), 0, 0) > 0) {
+		//while(Api.GetMessage(out u, default(AWnd), 0, 0) > 0) {
 		//	Api.TranslateMessage(ref u);
 		//	Api.DispatchMessage(ref u);
 		//}
@@ -706,19 +706,19 @@ public partial class Test
 			{
 				base.OnClosed(e);
 
-				//Api.DestroyWindow((Wnd)Handle);
+				//Api.DestroyWindow((AWnd)Handle);
 
 				//_cat = null;
 
 				ADebug.PrintFunc();
 
-				((Wnd)Handle).Post(Api.WM_CLOSE);
+				((AWnd)Handle).Post(Api.WM_CLOSE);
 
 			}
 
 			protected override void WndProc(ref Message m)
 			{
-				//Wnd.More.PrintMsg(ref m);
+				//AWnd.More.PrintMsg(ref m);
 
 				base.WndProc(ref m);
 
@@ -785,14 +785,14 @@ public partial class Test
 		//			_loop.Loop();
 		//			Print("after loop");
 
-		//			//Api.DestroyWindow((Wnd)t.CMS.Handle);
+		//			//Api.DestroyWindow((AWnd)t.CMS.Handle);
 		//			//Print(t.CMS.IsHandleCreated);
-		//			//if(t.CMS.IsHandleCreated) Print(((Wnd)t.CMS.Handle).IsAlive);
+		//			//if(t.CMS.IsHandleCreated) Print(((AWnd)t.CMS.Handle).IsAlive);
 
 		//			//t.CMS.Closed -= del;
 
 		//			//t.CMS.Dispose();
-		//			//Wnd w = (Wnd)t.CMS.Handle;
+		//			//AWnd w = (AWnd)t.CMS.Handle;
 		//			//w.Send(Api.WM_CLOSE);
 		//		}
 		//#endif
@@ -897,7 +897,7 @@ public partial class Test
 	//	APerf.Next();
 	//	//f.Show();
 	//	//f.Visible = true;
-	//	Wnd w = (Wnd)f;
+	//	AWnd w = (AWnd)f;
 	//	w.Show(true);
 	//	//w.ActivateLL();
 	//	APerf.Next();
@@ -937,7 +937,7 @@ public partial class Test
 	//	}
 	//}
 
-	//static LPARAM _WndprocAuBar(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	//static LPARAM _WndprocAuBar(AWnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	//{
 	//	//Print(msg);
 	//	//switch(msg) {
@@ -947,12 +947,12 @@ public partial class Test
 
 	//	return Api.DefWindowProc(w, msg, wParam, lParam);
 	//}
-	//static Wnd.Misc.MyWindowClass _tbWndClass;
+	//static AWnd.More.MyWindowClass _tbWndClass;
 
 	//static void TestToolbarStrip()
 	//{
 	//	if(_tbWndClass == null) {
-	//		_tbWndClass = Wnd.Misc.MyWindowClass.Register("AuBar1", _WndprocAuBar, 0, Api.CS_GLOBALCLASS);
+	//		_tbWndClass = AWnd.More.MyWindowClass.Register("AuBar1", _WndprocAuBar, 0, Api.CS_GLOBALCLASS);
 	//	}
 
 	//	APerf.First();
@@ -981,7 +981,7 @@ public partial class Test
 	//	f.Controls.Add(t);
 	//	t.ResumeLayout();
 	//	APerf.Next();
-	//	//Wnd w = (Wnd)f; w.Show(true); //slightly faster, but then need 2 clicks to make a button to respond
+	//	//AWnd w = (AWnd)f; w.Show(true); //slightly faster, but then need 2 clicks to make a button to respond
 	//	f.Show(); //does not activate if WS_EX_NOACTIVATE
 	//	APerf.Next();
 
@@ -1001,7 +1001,7 @@ public partial class Test
 
 	//	#region test toolbar strip in native window
 
-	//	static LPARAM _WndprocAuBar2(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	//	static LPARAM _WndprocAuBar2(AWnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	//	{
 	//		//Print(msg);
 	//		switch(msg) {
@@ -1025,7 +1025,7 @@ public partial class Test
 	//		return R;
 	//	}
 
-	//	static Wnd.Misc.MyWindowClass _tbWndClass2;
+	//	static AWnd.More.MyWindowClass _tbWndClass2;
 
 	//	class ToolStrip2 :ToolStrip
 	//	{
@@ -1048,13 +1048,13 @@ public partial class Test
 	//	{
 	//		APerf.First();
 	//		if(_tbWndClass2 == null) {
-	//			_tbWndClass2 = Wnd.Misc.MyWindowClass.Register("AuBar2", _WndprocAuBar2, IntPtr.Size, Api.CS_GLOBALCLASS);
+	//			_tbWndClass2 = AWnd.More.MyWindowClass.Register("AuBar2", _WndprocAuBar2, IntPtr.Size, Api.CS_GLOBALCLASS);
 	//			APerf.Next();
 	//		}
 
 	//		//bool topMost = true;
-	//		Wnd w = Api.CreateWindowEx(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST, _tbWndClass2.Name, null,
-	//			WS.POPUP | WS.CAPTION | WS.SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
+	//		AWnd w = Api.CreateWindowEx(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST, _tbWndClass2.Name, null,
+	//			WS.POPUP | WS.CAPTION | WS.SYSMENU, 400, 200, 1200, 80, default(AWnd), 0, default, 0);
 	//		APerf.Next();
 
 	//#if true
@@ -1076,7 +1076,7 @@ public partial class Test
 	//		}
 	//		APerf.Next();
 
-	//		//Wnd wt = (Wnd)t.Handle;
+	//		//AWnd wt = (AWnd)t.Handle;
 	//		//Print(wt);
 	//		//Print(wt.Get.DirectParent);
 	//		//if(Api.SetParent(wt, w).Is0) Print(new Win32Exception().Message);
@@ -1084,14 +1084,14 @@ public partial class Test
 
 	//		t.ResumeLayout();
 	//		t.CreateControl();
-	//		//Wnd wt = (Wnd)t.Handle;
+	//		//AWnd wt = (AWnd)t.Handle;
 
 	//		APerf.Next();
 	//#endif
 	//		w.Show(true);
 	//		//w.ActivateLL();
 	//		//APerf.Next();
-	//		//Wnd wt = (Wnd)t.Handle;
+	//		//AWnd wt = (AWnd)t.Handle;
 	//		//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
 	//		//w.Post(Api.WM_ACTIVATE, 1); w.Post(Api.WM_ACTIVATE, 0);
 	//		//t.Select();
@@ -1107,7 +1107,7 @@ public partial class Test
 
 	//#region test old toolbar in native window
 
-	//static LPARAM _WndprocAuBar3(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	//static LPARAM _WndprocAuBar3(AWnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	//{
 	//	//Print(msg);
 	//	switch(msg) {
@@ -1119,7 +1119,7 @@ public partial class Test
 	//	return Api.DefWindowProc(w, msg, wParam, lParam);
 	//}
 
-	//static Wnd.Misc.MyWindowClass _tbWndClass3;
+	//static AWnd.More.MyWindowClass _tbWndClass3;
 
 	//class ToolBar2 :ToolBar
 	//{
@@ -1141,13 +1141,13 @@ public partial class Test
 	//static void TestOldToolbarInNativeWindow()
 	//{
 	//	if(_tbWndClass3 == null) {
-	//		_tbWndClass3 = Wnd.Misc.MyWindowClass.Register("AuBar3", _WndprocAuBar2, 0, Api.CS_GLOBALCLASS);
+	//		_tbWndClass3 = AWnd.More.MyWindowClass.Register("AuBar3", _WndprocAuBar2, 0, Api.CS_GLOBALCLASS);
 	//	}
 
 	//	APerf.First();
 	//	//bool topMost = true;
-	//	Wnd w = Api.CreateWindowEx(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST, _tbWndClass3.Name, null,
-	//		WS.POPUP | WS.CAPTION | WS.SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
+	//	AWnd w = Api.CreateWindowEx(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST, _tbWndClass3.Name, null,
+	//		WS.POPUP | WS.CAPTION | WS.SYSMENU, 400, 200, 1200, 80, default(AWnd), 0, default, 0);
 	//	APerf.Next();
 
 
@@ -1171,7 +1171,7 @@ public partial class Test
 
 	//	//t.ResumeLayout();
 	//	t.CreateControl();
-	//	//Wnd wt = (Wnd)t.Handle;
+	//	//AWnd wt = (AWnd)t.Handle;
 
 	//	APerf.Next();
 	//	w.Show(true);
@@ -1185,7 +1185,7 @@ public partial class Test
 
 	#region test native window speed
 
-	//static LPARAM _WndprocNW(Wnd w, uint msg, LPARAM wParam, LPARAM lParam)
+	//static LPARAM _WndprocNW(AWnd w, uint msg, LPARAM wParam, LPARAM lParam)
 	//{
 	//	//Print(msg);
 	//	switch(msg) {
@@ -1199,24 +1199,24 @@ public partial class Test
 	//	return R;
 	//}
 
-	//static Wnd.Misc.MyWindowClass _WndClassNW;
+	//static AWnd.More.MyWindowClass _WndClassNW;
 
 	//static void TestNativeWindow()
 	//{
 	//	APerf.First();
 	//	if(_WndClassNW == null) {
-	//		_WndClassNW = Wnd.Misc.MyWindowClass.Register("NativeWi", _WndprocNW, IntPtr.Size, Api.CS_GLOBALCLASS);
+	//		_WndClassNW = AWnd.More.MyWindowClass.Register("NativeWi", _WndprocNW, IntPtr.Size, Api.CS_GLOBALCLASS);
 	//		APerf.Next();
 	//	}
 
 	//	//bool topMost = true;
-	//	Wnd w = Api.CreateWindowEx(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST, _WndClassNW.Name, null,
-	//		WS.POPUP | WS.CAPTION | WS.SYSMENU, 400, 200, 1200, 80, default(Wnd), 0, default, 0);
+	//	AWnd w = Api.CreateWindowEx(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE | WS_EX.TOPMOST, _WndClassNW.Name, null,
+	//		WS.POPUP | WS.CAPTION | WS.SYSMENU, 400, 200, 1200, 80, default(AWnd), 0, default, 0);
 	//	APerf.Next();
 	//	w.Show(true);
 	//	//w.ActivateLL();
 	//	//APerf.Next();
-	//	//Wnd wt = (Wnd)t.Handle;
+	//	//AWnd wt = (AWnd)t.Handle;
 	//	//w.Send(Api.WM_ACTIVATE, 1); w.Send(Api.WM_ACTIVATE, 0); //solves problem when in native window: the first button-click does not work
 	//	//w.Post(Api.WM_ACTIVATE, 1); w.Post(Api.WM_ACTIVATE, 0);
 	//	//t.Select();

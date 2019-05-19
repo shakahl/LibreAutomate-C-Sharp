@@ -173,12 +173,12 @@ internal static unsafe class API
 			//#if !TEST_SMALL
 			catch(ConverterException e) {
 				Print(e);
-				Wnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
+				AWnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
 				throw;
 			}
 			catch(Exception e) {
 				Print(e);
-				Wnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
+				AWnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
 				throw;
 			}
 			//#endif
@@ -283,7 +283,7 @@ internal static unsafe class API
 			_AddKeyword("IntPtr", new _CppType("IntPtr", _is32bit ? 4 : 8, false));
 
 			_AddSymbol("LPARAM", _sym_LPARAM = new _Struct("LPARAM", false), 0);
-			_AddSymbol("HWND", _sym_Wnd = new _Struct("Wnd", false), 0);
+			_AddSymbol("HWND", _sym_Wnd = new _Struct("AWnd", false), 0);
 		}
 
 		_Struct _sym_LPARAM, _sym_Wnd;
@@ -369,8 +369,8 @@ internal static unsafe class API
 			//}
 			//catch(ConverterException e) {
 			//	//Print(e);
-			//	Wnd.FindCN("QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
-			//	if(TaskDialog.Show("Error. Skip statement and continue?", e.Message, "YN").ButtonName != "Yes") throw e as Exception;
+			//	AWnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
+			//	if(ADialog.Show("Error. Skip statement and continue?", e.Message, "Yes|No").ButtonName != "Yes") throw e as Exception;
 			//	_SkipStatement();
 			//         }
 		}

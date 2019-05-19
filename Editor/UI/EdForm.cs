@@ -79,7 +79,7 @@ partial class EdForm : Form
 	{
 		Tasks = new RunningTasks();
 		Panels.Files.LoadWorkspace(CommandLine.WorkspaceDirectory, runStartupScript: false);
-		ADebug.PrintIf(((Wnd)this).IsVisible, "BAD: form became visible while loading workspace");
+		ADebug.PrintIf(((AWnd)this).IsVisible, "BAD: form became visible while loading workspace");
 		Au.Triggers.HooksServer.Start(false);
 		CommandLine.OnMainFormLoaded();
 		IsLoaded = true;
@@ -138,7 +138,7 @@ partial class EdForm : Form
 
 	protected override unsafe void WndProc(ref Message m)
 	{
-		Wnd w = (Wnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
+		AWnd w = (AWnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
 		//Print(m);
 
 		switch(m.Msg) {
@@ -152,12 +152,12 @@ partial class EdForm : Form
 				//TODO: SetForegroundWindow fails when started with Au.CL.exe /e
 				//workaround: If clicked a window after our app started but before w activated, w is at Z bottom and in some cases without taskbar button.
 				ADebug.Print("window inactive");
-				Wnd.More.TaskbarButton.Add(w);
-				if(!w.ActivateLL()) Wnd.More.TaskbarButton.Flash(w, 5);
+				AWnd.More.TaskbarButton.Add(w);
+				if(!w.ActivateLL()) AWnd.More.TaskbarButton.Flash(w, 5);
 			}
 			//restore focused control correctly
-			if(isActive == 0) _wFocus = Wnd.ThisThread.Focused;
-			else if(_wFocus.IsAlive) Wnd.ThisThread.Focus(_wFocus);
+			if(isActive == 0) _wFocus = AWnd.ThisThread.Focused;
+			else if(_wFocus.IsAlive) AWnd.ThisThread.Focus(_wFocus);
 			return;
 		}
 
@@ -180,7 +180,7 @@ partial class EdForm : Form
 		}
 	}
 
-	Wnd _wFocus;
+	AWnd _wFocus;
 
 	protected override void SetVisibleCore(bool value)
 	{
@@ -229,7 +229,7 @@ partial class EdForm : Form
 
 			switch(m.Msg) {
 			case Api.WM_MOUSEWHEEL: //let's scroll the mouse control, not the focused control
-				var w1 = Wnd.FromMouse();
+				var w1 = AWnd.FromMouse();
 				if(w1.IsOfThisThread) m.HWnd = w1.Handle;
 				break;
 			}
@@ -252,7 +252,7 @@ partial class EdForm : Form
 		else title = app + " - " + Model.WorkspaceName + " - " + Model.CurrentFile.ItemPath;
 #endif
 		//Text = title; //no, makes form visible
-		((Wnd)Handle).SendS(Api.WM_SETTEXT, 0, title);
+		((AWnd)Handle).SendS(Api.WM_SETTEXT, 0, title);
 	}
 }
 
@@ -285,7 +285,7 @@ public static class Panels
 
 		var m = PanelManager = new AuDockPanel();
 		m.Name = "Panels";
-		m.Create(Folders.ThisAppBS + @"Default\Panels.xml", Folders.ThisAppDocuments + @"!Settings\Panels.xml",
+		m.Create(AFolders.ThisAppBS + @"Default\Panels.xml", AFolders.ThisAppDocuments + @"!Settings\Panels.xml",
 			Editor, Files, Output, Find, Open, Running, Recent,
 #if TEST
 			c,

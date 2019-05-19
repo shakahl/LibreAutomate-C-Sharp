@@ -38,7 +38,7 @@ namespace Au
 	/// })) {
 	/// 	MessageBox.Show("hook");
 	/// 	//or
-	/// 	//WaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
+	/// 	//AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
 	/// 	//Print("the end");
 	/// }
 	/// ]]></code>
@@ -114,7 +114,7 @@ namespace Au
 			for(int i = 0; i < events.Length; i++) {
 				var e = events[i]; if(e == 0) continue;
 				var hh = Api.SetWinEventHook(e, e, default, _proc1, idProcess, idThread, flags);
-				if(hh == default) { var ec = WinError.Code; Unhook(); throw new AException(ec, "*set hook for " + e.ToString()); }
+				if(hh == default) { var ec = ALastError.Code; Unhook(); throw new AException(ec, "*set hook for " + e.ToString()); }
 				_ahh[i] = hh;
 			}
 		}
@@ -160,7 +160,7 @@ namespace Au
 		///
 		~AHookAcc() { PrintWarning("Non-disposed AHookAcc variable."); } //unhooking makes no sense
 
-		void _HookProc(IntPtr hHook, AccEVENT ev, Wnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
+		void _HookProc(IntPtr hHook, AccEVENT ev, AWnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
 		{
 			try {
 				_proc2(new HookData.AccHookData(this, ev, wnd, idObject, idChild, idThread, eventTime));
@@ -184,7 +184,7 @@ namespace Au.Types
 			public readonly AHookAcc hook;
 
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
-			public readonly Wnd wnd;
+			public readonly AWnd wnd;
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly AccEVENT ev;
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
@@ -196,7 +196,7 @@ namespace Au.Types
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly int eventTime;
 
-			internal AccHookData(AHookAcc hook, AccEVENT ev, Wnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
+			internal AccHookData(AHookAcc hook, AccEVENT ev, AWnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
 			{
 				this.hook = hook;
 				this.ev = ev;
@@ -208,11 +208,11 @@ namespace Au.Types
 			}
 
 			/// <summary>
-			/// Calls <see cref="Acc.FromEvent"/>.
+			/// Calls <see cref="AAcc.FromEvent"/>.
 			/// </summary>
-			public Acc GetAcc()
+			public AAcc GetAcc()
 			{
-				return Acc.FromEvent(wnd, idObject, idChild);
+				return AAcc.FromEvent(wnd, idObject, idChild);
 			}
 		}
 	}

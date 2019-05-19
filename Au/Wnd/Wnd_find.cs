@@ -18,16 +18,16 @@ using static Au.AStatic;
 
 namespace Au
 {
-	public unsafe partial struct Wnd
+	public unsafe partial struct AWnd
 	{
 		/// <summary>
 		/// Contains top-level window properties and can be used to find the window.
 		/// </summary>
 		/// <remarks>
-		/// Can be used instead of <see cref="Wnd.Find"/> or <see cref="Wnd.FindAll"/>.
+		/// Can be used instead of <see cref="AWnd.Find"/> or <see cref="AWnd.FindAll"/>.
 		/// These codes are equivalent:
-		/// <code>Wnd w = Wnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);</code>
-		/// <code>var p = new Wnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
+		/// <code>AWnd w = AWnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);</code>
+		/// <code>var p = new AWnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
 		/// Also can find in a list of windows.
 		/// </remarks>
 		public class Finder
@@ -35,11 +35,11 @@ namespace Au
 			readonly AWildex _name;
 			readonly AWildex _cn;
 			readonly AWildex _program;
-			readonly Func<Wnd, bool> _also;
+			readonly Func<AWnd, bool> _also;
 			readonly WFFlags _flags;
 			readonly int _processId;
 			readonly int _threadId;
-			readonly Wnd _owner;
+			readonly AWnd _owner;
 			readonly object _contains;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
@@ -57,11 +57,11 @@ namespace Au
 				public AWildex name => _f._name;
 				public AWildex cn => _f._cn;
 				public AWildex program => _f._program;
-				public Func<Wnd, bool> also => _f._also;
+				public Func<AWnd, bool> also => _f._also;
 				public WFFlags flags => _f._flags;
 				public int processId => _f._processId;
 				public int threadId => _f._threadId;
-				public Wnd owner => _f._owner;
+				public AWnd owner => _f._owner;
 				public object contains => _f._contains;
 
 				/// <summary>
@@ -86,7 +86,7 @@ namespace Au
 					//if(_contains!=null) {
 					//string s = null;
 					//switch(_contains) {
-					//case Acc.Finder _: s = "acc"; break;
+					//case AAcc.Finder _: s = "acc"; break;
 					//case ChildFinder _: s = "child"; break;
 					//default: s = "image"; break; //note: avoid loading System.Drawing.dll. It can be Bitmap, ColorInt, etc.
 					//}
@@ -105,12 +105,12 @@ namespace Au
 #pragma warning restore CS1591
 
 			/// <summary>
-			/// See <see cref="Wnd.Find"/>.
+			/// See <see cref="AWnd.Find"/>.
 			/// </summary>
-			/// <exception cref="ArgumentException">See <see cref="Wnd.Find"/>.</exception>
+			/// <exception cref="ArgumentException">See <see cref="AWnd.Find"/>.</exception>
 			public Finder(
 				string name = null, string cn = null, WF3 program = default,
-				WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
+				WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
 			{
 				_name = name;
 				if(cn != null) _cn = cn.Length != 0 ? cn : throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
@@ -123,7 +123,7 @@ namespace Au
 			object _ParseContains(object contains)
 			{
 				switch(contains) {
-				case string s: //accessible object or control or image. Acc format: "a'role' name" or "name". Control: "c'class' text". Image: "image:...".
+				case string s: //accessible object or control or image. AO format: "a'role' name" or "name". Control: "c'class' text". Image: "image:...".
 					if(s.Length == 0) return null;
 					string role = null, name = s; bool isControl = false;
 					switch(s[0]) {
@@ -135,10 +135,10 @@ namespace Au
 						return _LoadImage(s);
 					}
 					if(isControl) return new ChildFinder(name, role);
-					return new Acc.Finder(role, name, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
+					return new AAcc.Finder(role, name, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
 				default:
 					return contains;
-					//case Acc.Finder _:
+					//case AAcc.Finder _:
 					//case ChildFinder _:
 					//case System.Drawing.Bitmap _: //note: avoid loading System.Drawing.dll. It can be Bitmap, ColorInt, etc. If invalid type, will throw later.
 					//	return contains;
@@ -148,7 +148,7 @@ namespace Au
 			}
 
 			[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading System.Drawing.dll when image not used
-			static object _LoadImage(string s) => WinImage.LoadImage(s);
+			static object _LoadImage(string s) => AWinImage.LoadImage(s);
 
 			/// <summary>
 			/// Implicit conversion from string that can contain window name, class name, program and/or an object.
@@ -156,7 +156,7 @@ namespace Au
 			/// </summary>
 			/// <param name="s">
 			/// One or more comma-separated window properties: name, class, program and/or an object. Empty parts are considered null.
-			/// The same as parameters of <see cref="Wnd.Find"/>. The first 3 parts are <i>name</i>, <i>cn</i> and <i>program</i>. The last part is <i>contains</i> as string; can specify an accessible object, control or image.
+			/// The same as parameters of <see cref="AWnd.Find"/>. The first 3 parts are <i>name</i>, <i>cn</i> and <i>program</i>. The last part is <i>contains</i> as string; can specify an accessible object, control or image.
 			/// The first 3 comma-separated parts cannot contain commas. Alternatively, parts can be separated by '\0' characters, like <c>"name\0"+"cn\0"+"program\0"+"object"</c>. Then parts can contain commas. Example: <c>"*one, two, three*\0"</c> (name with commas).
 			/// </param>
 			/// <exception cref="Exception">Exceptions of the constructor.</exception>
@@ -179,10 +179,10 @@ namespace Au
 			/// <summary>
 			/// The found window.
 			/// </summary>
-			public Wnd Result { get; internal set; }
+			public AWnd Result { get; internal set; }
 
 			/// <summary>
-			/// Finds the specified window, like <see cref="Wnd.Find"/>.
+			/// Finds the specified window, like <see cref="AWnd.Find"/>.
 			/// Returns true if found.
 			/// The <see cref="Result"/> property will be the window.
 			/// </summary>
@@ -192,7 +192,7 @@ namespace Au
 				return _FindOrMatch(k) >= 0;
 			}
 
-			Util.LibArrayBuilder<Wnd> _AllWindows()
+			Util.LibArrayBuilder<AWnd> _AllWindows()
 			{
 				//FUTURE: optimization: if cn not wildcard etc, at first find atom.
 				//	If not found, don't search. If found, compare atom, not class name string.
@@ -207,35 +207,35 @@ namespace Au
 			/// The <see cref="Result"/> property will be the window.
 			/// </summary>
 			/// <param name="a">Array or list of windows, for example returned by <see cref="GetWnd.AllWindows"/>.</param>
-			public int FindInList(IEnumerable<Wnd> a)
+			public int FindInList(IEnumerable<AWnd> a)
 			{
 				using var k = new _WndList(a);
 				return _FindOrMatch(k);
 			}
 
 			/// <summary>
-			/// Finds all matching windows, like <see cref="Wnd.FindAll"/>.
-			/// Returns array containing 0 or more window handles as <b>Wnd</b>.
+			/// Finds all matching windows, like <see cref="AWnd.FindAll"/>.
+			/// Returns array containing 0 or more window handles as <b>AWnd</b>.
 			/// </summary>
-			public Wnd[] FindAll()
+			public AWnd[] FindAll()
 			{
 				return _FindAll(new _WndList(_AllWindows()));
 			}
 
 			/// <summary>
 			/// Finds all matching windows in a list of windows.
-			/// Returns array containing 0 or more window handles as <b>Wnd</b>.
+			/// Returns array containing 0 or more window handles as <b>AWnd</b>.
 			/// </summary>
 			/// <param name="a">Array or list of windows, for example returned by <see cref="GetWnd.AllWindows"/>.</param>
-			public Wnd[] FindAllInList(IEnumerable<Wnd> a)
+			public AWnd[] FindAllInList(IEnumerable<AWnd> a)
 			{
 				return _FindAll(new _WndList(a));
 			}
 
-			Wnd[] _FindAll(_WndList k)
+			AWnd[] _FindAll(_WndList k)
 			{
 				using(k) {
-					using var ab = new Util.LibArrayBuilder<Wnd>();
+					using var ab = new Util.LibArrayBuilder<AWnd>();
 					_FindOrMatch(k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
 					return ab.ToArray();
 				}
@@ -245,10 +245,10 @@ namespace Au
 			/// Returns index of matching element or -1.
 			/// Returns -1 if using getAll.
 			/// </summary>
-			/// <param name="a">List of Wnd. Does not dispose it.</param>
+			/// <param name="a">List of AWnd. Does not dispose it.</param>
 			/// <param name="getAll">If not null, calls it for all matching and returns -1.</param>
 			/// <param name="cache"></param>
-			int _FindOrMatch(_WndList a, Action<Wnd> getAll = null, WFCache cache = null)
+			int _FindOrMatch(_WndList a, Action<AWnd> getAll = null, WFCache cache = null)
 			{
 				Result = default;
 				_stopProp = 0;
@@ -260,7 +260,7 @@ namespace Au
 				bool isTid = inList ? _threadId != 0 : false;
 				List<int> pids = null; bool programNamePlanB = false; //variables for faster getting/matching program name
 
-				for(int index = 0; a.Next(out Wnd w); index++) {
+				for(int index = 0; a.Next(out AWnd w); index++) {
 					if(w.Is0) continue;
 
 					//With warm CPU, speed of 1000 times getting:
@@ -374,9 +374,9 @@ namespace Au
 						bool found = false;
 						try {
 							switch(_contains) {
-							case Acc.Finder f: found = f.Find(w); break;
+							case AAcc.Finder f: found = f.Find(w); break;
 							case ChildFinder f: found = f.Find(w); break;
-							default: found = null != WinImage.Find(w, _contains, WIFlags.WindowDC); break; //FUTURE: optimize. //note: avoid loading System.Drawing.dll. It can be Bitmap, ColorInt, etc.
+							default: found = null != AWinImage.Find(w, _contains, WIFlags.WindowDC); break; //FUTURE: optimize. //note: avoid loading System.Drawing.dll. It can be Bitmap, ColorInt, etc.
 							}
 						}
 						catch(Exception ex) when(!(ex is ThreadAbortException)) {
@@ -402,16 +402,16 @@ namespace Au
 			/// </summary>
 			/// <param name="w">A top-level window. If 0 or invalid, returns false.</param>
 			/// <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in <i>cache</i>; next time it gets these strings from <i>cache</i>.</param>
-			public bool IsMatch(Wnd w, WFCache cache = null)
+			public bool IsMatch(AWnd w, WFCache cache = null)
 			{
 				return 0 == _FindOrMatch(new _WndList(w), cache: cache);
 			}
 		}
 
 		/// <summary>
-		/// Finds a top-level window and returns its handle as <b>Wnd</b>.
+		/// Finds a top-level window and returns its handle as <b>AWnd</b>.
 		/// </summary>
-		/// <returns>Returns <c>default(Wnd)</c> if not found.</returns>
+		/// <returns>Returns <c>default(AWnd)</c> if not found.</returns>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
 		/// String format: [](xref:wildcard_expression). null means 'can be any'. "" means 'must not have name'.
@@ -437,14 +437,14 @@ namespace Au
 		/// <param name="contains">
 		/// Text, image or other object in the client area of the window. Depends on type:
 		/// <ul>
-		/// <li><see cref="Acc.Finder"/> - arguments for <see cref="Acc.Find"/>. Defines an accessible object that must be in the window.</li>
+		/// <li><see cref="AAcc.Finder"/> - arguments for <see cref="AAcc.Find"/>. Defines an accessible object that must be in the window.</li>
 		/// <li><see cref="ChildFinder"/> - arguments for <see cref="Child"/>. Defines a child control that must be in the window.</li>
-		/// <li><see cref="System.Drawing.Bitmap"/> or other, except string - image(s) or color(s) that must be visible in the window. This function calls <see cref="WinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>, and uses this value for the <i>image</i> parameter. See also <see cref="WinImage.LoadImage"/>.</li>
+		/// <li><see cref="System.Drawing.Bitmap"/> or other, except string - image(s) or color(s) that must be visible in the window. This function calls <see cref="AWinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>, and uses this value for the <i>image</i> parameter. See also <see cref="AWinImage.LoadImage"/>.</li>
 		/// <li>string - an object that must be in the window. Depends on string format:
 		/// <ul>
-		/// <li><c>"a 'role' name"</c> or <c>"name"</c> or <c>"a 'role'"</c> - accessible object. See <see cref="Acc.Find"/>.</li>
+		/// <li><c>"a 'role' name"</c> or <c>"name"</c> or <c>"a 'role'"</c> - accessible object. See <see cref="AAcc.Find"/>.</li>
 		/// <li><c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c> - child control. See <see cref="Child"/>.</li>
-		/// <li><c>"image:..."</c> - image. See <see cref="WinImage.Find"/>, <see cref="WinImage.LoadImage"/>.</li>
+		/// <li><c>"image:..."</c> - image. See <see cref="AWinImage.Find"/>, <see cref="AWinImage.LoadImage"/>.</li>
 		/// </ul>
 		/// </li>
 		/// </ul>
@@ -467,18 +467,18 @@ namespace Au
 		/// <example>
 		/// Try to find Notepad window. Return if not found.
 		/// <code>
-		/// Wnd w = Wnd.Find("* Notepad");
+		/// AWnd w = AWnd.Find("* Notepad");
 		/// if(w.Is0) { Print("not found"); return; }
 		/// </code>
 		/// Try to find Notepad window. Throw NotFoundException if not found.
 		/// <code>
-		/// Wnd w1 = Wnd.Find("* Notepad").OrThrow();
+		/// AWnd w1 = AWnd.Find("* Notepad").OrThrow();
 		/// </code>
 		/// </example>
 		[MethodImpl(MethodImplOptions.NoInlining)] //inlined code makes harder to debug using disassembly
-		public static Wnd Find(
+		public static AWnd Find(
 			string name = null, string cn = null, WF3 program = default,
-			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
+			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
 		{
 			var f = new Finder(name, cn, program, flags, also, contains);
 			f.Find();
@@ -491,13 +491,13 @@ namespace Au
 		///// Gets arguments and result of this thread's last call to <see cref="Find"/> or <see cref="FindAll"/>.
 		///// </summary>
 		///// <remarks>
-		///// <b>Wnd.Wait</b> and similar functions don't change this property. <see cref="FindOrRun"/> and some other functions of this library change this property because they call <see cref="Find"/> internally.
+		///// <b>AWnd.Wait</b> and similar functions don't change this property. <see cref="FindOrRun"/> and some other functions of this library change this property because they call <see cref="Find"/> internally.
 		///// </remarks>
 		///// <example>
 		///// This example is similar to what <see cref="FindOrRun"/> does.
 		///// <code><![CDATA[
-		///// Wnd w = Wnd.Find("*- Notepad", "Notepad");
-		///// if(w.Is0) { Exec.Run("notepad.exe"); w = Wnd.WaitAny(60, true, Wnd.LastFind); }
+		///// AWnd w = AWnd.Find("*- Notepad", "Notepad");
+		///// if(w.Is0) { AExec.Run("notepad.exe"); w = AWnd.WaitAny(60, true, AWnd.LastFind); }
 		///// ]]></code>
 		///// </example>
 		//[field: ThreadStatic]
@@ -505,7 +505,7 @@ namespace Au
 
 		/// <summary>
 		/// Finds all matching windows.
-		/// Returns array containing 0 or more window handles as Wnd.
+		/// Returns array containing 0 or more window handles as AWnd.
 		/// Parameters etc are the same as <see cref="Find"/>.
 		/// </summary>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
@@ -515,9 +515,9 @@ namespace Au
 		/// <seealso cref="GetWnd.AllWindows"/>
 		/// <seealso cref="GetWnd.MainWindows"/>
 		/// <seealso cref="GetWnd.ThreadWindows"/>
-		public static Wnd[] FindAll(
+		public static AWnd[] FindAll(
 			string name = null, string cn = null, WF3 program = default,
-			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null)
+			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
 		{
 			var f = new Finder(name, cn, program, flags, also, contains);
 			var a = f.FindAll();
@@ -526,8 +526,8 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a top-level window and returns its handle as <b>Wnd</b>.
-		/// Returns <c>default(Wnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(Wnd)"/>.
+		/// Finds a top-level window and returns its handle as <b>AWnd</b>.
+		/// Returns <c>default(AWnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(AWnd)"/>.
 		/// </summary>
 		/// <param name="name">
 		/// Name.
@@ -545,10 +545,10 @@ namespace Au
 		/// Faster than <see cref="Find"/>, which uses API <msdn>EnumWindows</msdn>.
 		/// Finds hidden windows too.
 		/// To find message-only windows use <see cref="More.FindMessageOnlyWindow"/> instead.
-		/// Supports <see cref="WinError"/>.
+		/// Supports <see cref="ALastError"/>.
 		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
 		/// </remarks>
-		public static Wnd FindFast(string name, string cn, Wnd wAfter = default)
+		public static AWnd FindFast(string name, string cn, AWnd wAfter = default)
 		{
 			return Api.FindWindowEx(default, wAfter, cn, name);
 		}
@@ -556,8 +556,8 @@ namespace Au
 		public static partial class More
 		{
 			/// <summary>
-			/// Finds a message-only window and returns its handle as <b>Wnd</b>.
-			/// Returns <c>default(Wnd)</c> if not found.
+			/// Finds a message-only window and returns its handle as <b>AWnd</b>.
+			/// Returns <c>default(AWnd)</c> if not found.
 			/// </summary>
 			/// <param name="name">
 			/// Name.
@@ -574,17 +574,17 @@ namespace Au
 			/// Calls API <msdn>FindWindowEx</msdn>.
 			/// Faster than <see cref="Find"/>, which does not find message-only windows.
 			/// Finds hidden windows too.
-			/// Supports <see cref="WinError"/>.
+			/// Supports <see cref="ALastError"/>.
 			/// </remarks>
-			public static Wnd FindMessageOnlyWindow(string name, string cn, Wnd wAfter = default)
+			public static AWnd FindMessageOnlyWindow(string name, string cn, AWnd wAfter = default)
 			{
 				return Api.FindWindowEx(Native.HWND.MESSAGE, wAfter, cn, name);
 			}
 		}
 
 		/// <summary>
-		/// Finds a top-level window (calls <see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="Exec.Run"/>.
-		/// Returns window handle as <b>Wnd</b>. Returns <c>default(Wnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
+		/// Finds a top-level window (calls <see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="AExec.Run"/>.
+		/// Returns window handle as <b>AWnd</b>. Returns <c>default(AWnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
 		/// </summary>
 		/// <param name="name">See <see cref="Find"/>.</param>
 		/// <param name="cn">See <see cref="Find"/>.</param>
@@ -600,24 +600,24 @@ namespace Au
 		/// <remarks>
 		/// The algorithm is:
 		/// <code>
-		/// var w=Wnd.Find(...);
-		/// if(w.Is0) { run(); w=Wnd.Wait(runWaitS, needActiveWindow, ...); }
+		/// var w=AWnd.Find(...);
+		/// if(w.Is0) { run(); w=AWnd.Wait(runWaitS, needActiveWindow, ...); }
 		/// else if(needActiveWindow) w.Activate();
 		/// return w;
 		/// </code>
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// Wnd w = Wnd.FindOrRun("* Notepad", run: () => Exec.Run("notepad.exe"));
+		/// AWnd w = AWnd.FindOrRun("* Notepad", run: () => AExec.Run("notepad.exe"));
 		/// Print(w);
 		/// ]]></code>
 		/// </example>
-		public static Wnd FindOrRun(
+		public static AWnd FindOrRun(
 			string name = null, string cn = null, WF3 program = default,
-			WFFlags flags = 0, Func<Wnd, bool> also = null, object contains = null,
+			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null,
 			Action run = null, double runWaitS = 60.0, bool needActiveWindow = true)
 		{
-			Wnd w = default;
+			AWnd w = default;
 			var f = new Finder(name, cn, program, flags, also, contains);
 			if(f.Find()) {
 				w = f.Result;
@@ -633,7 +633,7 @@ namespace Au
 		{
 			/// <summary>
 			/// Gets top-level windows.
-			/// Returns array containing window handles as <b>Wnd</b>.
+			/// Returns array containing window handles as <b>AWnd</b>.
 			/// </summary>
 			/// <param name="onlyVisible">
 			/// Need only visible windows.
@@ -647,11 +647,11 @@ namespace Au
 			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows"/>.</note>
 			/// Does not get message-only windows. Use <see cref="More.FindMessageOnlyWindow"/> if need.
 			/// On Windows 8 and later does not get Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has [](xref:uac) integrity level uiAccess or High+uiAccess or its manifest contains disableWindowFiltering; to get such windows you can use <see cref="FindFast"/>.
-			/// Tip: To get top-level and child windows in single array: <c>var a = Wnd.GetWnd.Root.Get.Children();</c>.
+			/// Tip: To get top-level and child windows in single array: <c>var a = AWnd.GetWnd.Root.Get.Children();</c>.
 			/// </remarks>
 			/// <seealso cref="Children"/>
 			/// <seealso cref="FindAll"/>
-			public static Wnd[] AllWindows(bool onlyVisible = false, bool sortFirstVisible = false)
+			public static AWnd[] AllWindows(bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				return Lib.EnumWindows(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible);
 			}
@@ -659,25 +659,25 @@ namespace Au
 			/// <summary>
 			/// Gets top-level windows.
 			/// </summary>
-			/// <param name="a">Receives window handles as <b>Wnd</b>. If null, this function creates new List, else clears before adding items.</param>
+			/// <param name="a">Receives window handles as <b>AWnd</b>. If null, this function creates new List, else clears before adding items.</param>
 			/// <param name="onlyVisible"></param>
 			/// <param name="sortFirstVisible"></param>
 			/// <remarks>
 			/// Use this overload to avoid much garbage when calling frequently with the same List variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
 			/// </remarks>
-			public static void AllWindows(ref List<Wnd> a, bool onlyVisible = false, bool sortFirstVisible = false)
+			public static void AllWindows(ref List<AWnd> a, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
-				Lib.EnumWindows2(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ?? (a = new List<Wnd>()));
+				Lib.EnumWindows2(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ?? (a = new List<AWnd>()));
 			}
 
 			/// <summary>
 			/// Gets top-level windows of a thread.
-			/// Returns array containing 0 or more window handles as <b>Wnd</b>.
+			/// Returns array containing 0 or more window handles as <b>AWnd</b>.
 			/// </summary>
 			/// <param name="threadId">
 			/// Unmanaged thread id.
 			/// See <see cref="AThread.NativeId"/>, <see cref="ThreadId"/>.
-			/// If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="WinError"/>.
+			/// If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="ALastError"/>.
 			/// </param>
 			/// <param name="onlyVisible">Need only visible windows.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden windows at the end of the array, even if the hidden windows are before some visible windows in the Z order.</param>
@@ -686,7 +686,7 @@ namespace Au
 			/// Calls API <msdn>EnumThreadWindows</msdn>.
 			/// </remarks>
 			/// <seealso cref="AThread.HasMessageLoop"/>
-			public static Wnd[] ThreadWindows(int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
+			public static AWnd[] ThreadWindows(int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				if(threadId == 0) throw new ArgumentException("0 threadId.");
 				return Lib.EnumWindows(Lib.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId);
@@ -696,10 +696,10 @@ namespace Au
 			/// Gets top-level windows of a thread.
 			/// </summary>
 			/// <remarks>This overload can be used to avoid much garbage when caling frequently.</remarks>
-			public static void ThreadWindows(ref List<Wnd> a, int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
+			public static void ThreadWindows(ref List<AWnd> a, int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				if(threadId == 0) throw new ArgumentException("0 threadId.");
-				Lib.EnumWindows2(Lib.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ?? (a = new List<Wnd>()));
+				Lib.EnumWindows2(Lib.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ?? (a = new List<AWnd>()));
 			}
 		}
 
@@ -710,8 +710,8 @@ namespace Au
 		{
 			internal enum EnumAPI { EnumWindows, EnumThreadWindows, EnumChildWindows, }
 
-			internal static Wnd[] EnumWindows(EnumAPI api,
-				bool onlyVisible, bool sortFirstVisible, Wnd wParent = default, bool directChild = false, int threadId = 0)
+			internal static AWnd[] EnumWindows(EnumAPI api,
+				bool onlyVisible, bool sortFirstVisible, AWnd wParent = default, bool directChild = false, int threadId = 0)
 			{
 				using var a = EnumWindows2(api, onlyVisible, sortFirstVisible, wParent, directChild, threadId);
 				return a.ToArray();
@@ -722,13 +722,13 @@ namespace Au
 			/// The caller must dispose the returned LibArrayBuilder, unless list is not null.
 			/// If list is not null, adds windows there (clears at first) and returns default(LibArrayBuilder).
 			/// </summary>
-			internal static Util.LibArrayBuilder<Wnd> EnumWindows2(EnumAPI api,
-				bool onlyVisible, bool sortFirstVisible = false, Wnd wParent = default, bool directChild = false, int threadId = 0,
-				Func<Wnd, object, bool> predicate = null, object predParam = default, List<Wnd> list = null)
+			internal static Util.LibArrayBuilder<AWnd> EnumWindows2(EnumAPI api,
+				bool onlyVisible, bool sortFirstVisible = false, AWnd wParent = default, bool directChild = false, int threadId = 0,
+				Func<AWnd, object, bool> predicate = null, object predParam = default, List<AWnd> list = null)
 			{
 				if(directChild && wParent == GetWnd.Root) { api = EnumAPI.EnumWindows; wParent = default; }
 
-				Util.LibArrayBuilder<Wnd> ab = default;
+				Util.LibArrayBuilder<AWnd> ab = default;
 				bool disposeArray = true;
 				var d = new _EnumData { api = api, onlyVisible = onlyVisible, directChild = directChild, wParent = wParent };
 				try {
@@ -749,7 +749,7 @@ namespace Au
 						if(predicate != null) {
 							n = 0;
 							for(int i = 0; i < d.len; i++) {
-								if(predicate((Wnd)d.a[i], predParam)) d.a[n++] = d.a[i];
+								if(predicate((AWnd)d.a[i], predParam)) d.a[n++] = d.a[i];
 							}
 						}
 
@@ -762,7 +762,7 @@ namespace Au
 						if(sortFirstVisible && !onlyVisible) {
 							int j = 0;
 							for(int i = 0; i < n; i++) {
-								var w = (Wnd)d.a[i];
+								var w = (AWnd)d.a[i];
 								if(!_EnumIsVisible(w, api, wParent)) continue;
 								if(list != null) list.Add(w); else ab[j++] = w;
 								d.a[i] = 0;
@@ -770,13 +770,13 @@ namespace Au
 							for(int i = 0; i < n; i++) {
 								int wi = d.a[i];
 								if(wi == 0) continue;
-								var w = (Wnd)wi;
+								var w = (AWnd)wi;
 								if(list != null) list.Add(w); else ab[j++] = w;
 							}
 						} else if(list != null) {
-							for(int i = 0; i < n; i++) list.Add((Wnd)d.a[i]);
+							for(int i = 0; i < n; i++) list.Add((AWnd)d.a[i]);
 						} else {
-							for(int i = 0; i < n; i++) ab[i] = (Wnd)d.a[i];
+							for(int i = 0; i < n; i++) ab[i] = (AWnd)d.a[i];
 						}
 					}
 					disposeArray = false;
@@ -796,9 +796,9 @@ namespace Au
 				int _cap;
 				public EnumAPI api;
 				public bool onlyVisible, directChild;
-				public Wnd wParent;
+				public AWnd wParent;
 
-				public int Proc(Wnd w)
+				public int Proc(AWnd w)
 				{
 					if(onlyVisible && !_EnumIsVisible(w, api, wParent)) return 1;
 					if(api == EnumAPI.EnumChildWindows) {
@@ -823,13 +823,13 @@ namespace Au
 				*/
 			}
 
-			static bool _EnumIsVisible(Wnd w, EnumAPI api, Wnd wParent)
+			static bool _EnumIsVisible(AWnd w, EnumAPI api, AWnd wParent)
 				=> api == EnumAPI.EnumChildWindows ? w.LibIsVisibleIn(wParent) : w.IsVisible;
 		}
 
 		/// <summary>
-		/// An enumerable list of Wnd for <see cref="Finder._FindOrMatch"/> and <see cref="ChildFinder._FindInList"/>.
-		/// Holds Util.LibArrayBuilder or IEnumerator or single Wnd or none.
+		/// An enumerable list of AWnd for <see cref="Finder._FindOrMatch"/> and <see cref="ChildFinder._FindInList"/>.
+		/// Holds Util.LibArrayBuilder or IEnumerator or single AWnd or none.
 		/// Must be disposed if it is Util.LibArrayBuilder or IEnumerator, else disposing is optional.
 		/// </summary>
 		struct _WndList : IDisposable
@@ -838,17 +838,17 @@ namespace Au
 
 			ListType _t;
 			int _i;
-			Wnd _w;
-			IEnumerator<Wnd> _en;
-			Util.LibArrayBuilder<Wnd> _ab;
+			AWnd _w;
+			IEnumerator<AWnd> _en;
+			Util.LibArrayBuilder<AWnd> _ab;
 
-			internal _WndList(Util.LibArrayBuilder<Wnd> ab) : this()
+			internal _WndList(Util.LibArrayBuilder<AWnd> ab) : this()
 			{
 				_ab = ab;
 				_t = ListType.ArrayBuilder;
 			}
 
-			internal _WndList(IEnumerable<Wnd> en) : this()
+			internal _WndList(IEnumerable<AWnd> en) : this()
 			{
 				var e = en?.GetEnumerator();
 				if(e != null) {
@@ -857,7 +857,7 @@ namespace Au
 				}
 			}
 
-			internal _WndList(Wnd w) : this()
+			internal _WndList(AWnd w) : this()
 			{
 				if(!w.Is0) {
 					_w = w;
@@ -867,7 +867,7 @@ namespace Au
 
 			internal ListType Type => _t;
 
-			internal bool Next(out Wnd w)
+			internal bool Next(out AWnd w)
 			{
 				w = default;
 				switch(_t) {
@@ -903,27 +903,27 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags of <see cref="Wnd.Find"/>.
+	/// Flags of <see cref="AWnd.Find"/>.
 	/// </summary>
 	[Flags]
 	public enum WFFlags
 	{
 		/// <summary>
-		/// Can find invisible windows. See <see cref="Wnd.IsVisible"/>.
+		/// Can find invisible windows. See <see cref="AWnd.IsVisible"/>.
 		/// Use this carefully. Always use <i>cn</i> (class name), not just <i>name</i>, to avoid finding a wrong window with the same name.
 		/// </summary>
 		HiddenToo = 1,
 
 		/// <summary>
-		/// Can find cloaked windows. See <see cref="Wnd.IsCloaked"/>.
-		/// Cloaked are windows hidden not in the classic way, therefore <see cref="Wnd.IsVisible"/> does not detect it, but <see cref="Wnd.IsCloaked"/> detects. For example, windows on inactive Windows 10 virtual desktops, ghost windows of inactive Windows Store apps, various hidden system windows.
+		/// Can find cloaked windows. See <see cref="AWnd.IsCloaked"/>.
+		/// Cloaked are windows hidden not in the classic way, therefore <see cref="AWnd.IsVisible"/> does not detect it, but <see cref="AWnd.IsCloaked"/> detects. For example, windows on inactive Windows 10 virtual desktops, ghost windows of inactive Windows Store apps, various hidden system windows.
 		/// Use this carefully. Always use <i>cn</i> (class name), not just <i>name</i>, to avoid finding a wrong window with the same name.
 		/// </summary>
 		CloakedToo = 2,
 	}
 
 	/// <summary>
-	/// <i>program</i> of <see cref="Wnd.Find"/>.
+	/// <i>program</i> of <see cref="AWnd.Find"/>.
 	/// Program name, process id, thread id or owner window handle.
 	/// </summary>
 	public struct WF3
@@ -948,7 +948,7 @@ namespace Au.Types
 		/// Other variables will be null/0.
 		/// </summary>
 		/// <exception cref="ArgumentException">The value is "" or 0 or contains \ or /.</exception>
-		public void GetValue(out AWildex program, out int pid, out int tid, out Wnd owner)
+		public void GetValue(out AWildex program, out int pid, out int tid, out AWnd owner)
 		{
 			program = null; pid = 0; tid = 0; owner = default;
 			switch(_o) {
@@ -992,11 +992,11 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Can be used with <see cref="Wnd.Finder.IsMatch"/>.
+	/// Can be used with <see cref="AWnd.Finder.IsMatch"/>.
 	/// </summary>
 	public class WFCache
 	{
-		Wnd _w;
+		AWnd _w;
 		long _time;
 		internal string Name, Class, Program;
 		internal int Tid, Pid;
@@ -1015,7 +1015,7 @@ namespace Au.Types
 		/// </summary>
 		public bool NoTimeout { get; set; }
 
-		internal void Begin(Wnd w)
+		internal void Begin(AWnd w)
 		{
 			if(NoTimeout) {
 				if(w != _w) {

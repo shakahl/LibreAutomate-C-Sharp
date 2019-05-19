@@ -123,16 +123,16 @@ namespace Au.Tools
 		/// <summary>
 		/// Returns code to find window wnd and optionally control con in it.
 		/// If wnd/con is same as previous and code of this control is valid, gets code from this code control, from the start to ZReadonlyStart.
-		/// Else creates code "var w = Wnd.Find(...).OrThrow();". If wnd is invalid, creates code "Wnd w = default;".
-		/// The returned wndVar is final Wnd variable name (of window or control).
+		/// Else creates code "var w = AWnd.Find(...).OrThrow();". If wnd is invalid, creates code "AWnd w = default;".
+		/// The returned wndVar is final AWnd variable name (of window or control).
 		/// </summary>
-		public (string code, string wndVar) ZGetWndFindCode(Wnd wnd, Wnd con = default)
+		public (string code, string wndVar) ZGetWndFindCode(AWnd wnd, AWnd con = default)
 		{
 			string R = null, sCode = null, wndVar = "w", conVar = "c", cls = null;
 			if(!wnd.Is0) {
 				if(wnd == _wnd) {
 					sCode = ST.RangeText(0, _ReadonlyStartUtf8);
-					if(sCode.RegexMatch(@"^(?:var|Wnd) (\w+)((?s).+\R(?:var|Wnd) (\w+).+$)?", out var m)) {
+					if(sCode.RegexMatch(@"^(?:var|AWnd) (\w+)((?s).+\R(?:var|AWnd) (\w+).+$)?", out var m)) {
 						bool isConCode = m[3].Exists;
 						if(con == _con && !con.Is0 == isConCode) return (sCode, m[isConCode ? 3 : 1].Value);
 						wndVar = m[1].Value;
@@ -145,7 +145,7 @@ namespace Au.Tools
 				var b = new StringBuilder();
 				if(sCode != null) b.Append(sCode);
 				else if((cls = wnd.ClassName) != null) {
-					b.Append("var w = Wnd.Find(");
+					b.Append("var w = AWnd.Find(");
 					b.AppendStringArg(TUtil.EscapeWindowName(wnd.LibNameTL, true), noComma: true);
 					b.AppendStringArg(TUtil.StripWndClassName(cls, true));
 					string fl = null;
@@ -197,12 +197,12 @@ namespace Au.Tools
 
 			if(R == null) {
 				_wnd = default; _con = default;
-				return ("Wnd w = default;", "w");
+				return ("AWnd w = default;", "w");
 			}
 			_wnd = wnd; _con = con;
 			return (R, wndVar);
 		}
-		Wnd _wnd, _con;
+		AWnd _wnd, _con;
 
 		//rejected. Better don't update changed window name than overwrite user-edited code.
 		///// <summary>
@@ -216,7 +216,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Shows <see cref="Form_Wnd"/> and updates text.
 		/// </summary>
-		public (bool ok, Wnd wnd, Wnd con, bool useCon) ZShowWndTool(Wnd wnd, Wnd con, bool uncheckControl)
+		public (bool ok, AWnd wnd, AWnd con, bool useCon) ZShowWndTool(AWnd wnd, AWnd con, bool uncheckControl)
 		{
 			using(var f = new Form_Wnd(con.Is0 ? wnd : con, uncheckControl)) {
 				if(f.ShowDialog(FindForm()) != DialogResult.OK) return default;
