@@ -23,7 +23,7 @@ namespace Au
 	/// Mouse functions.
 	/// </summary>
 	/// <remarks>
-	/// Should not be used to click windows of own thread. It may work or not. If need, use another thread. Example in <see cref="AKeyboard.Key"/>.
+	/// Should not be used to click windows of own thread. It may work or not. If need, use another thread. Example in <see cref="AKeys.Key"/>.
 	/// </remarks>
 	public static partial class AMouse
 	{
@@ -344,8 +344,8 @@ namespace Au
 		/// </summary>
 		static void _SendButton(MButton button, bool down, POINT p)
 		{
-			//CONSIDER: release user-pressed modifier keys, like AKeyboard does.
-			//CONSIDER: block user input, like AKeyboard does.
+			//CONSIDER: release user-pressed modifier keys, like AKeys does.
+			//CONSIDER: block user input, like AKeys does.
 
 			Api.IMFlags f; MButtons mb = 0;
 			switch(button & (MButton.Left | MButton.Right | MButton.Middle | MButton.X1 | MButton.X2)) {
@@ -902,17 +902,17 @@ namespace Au
 		/// <param name="buttons">Return true if some of these buttons are down. Default: any (Left, Right, Middle, X1 or X2).</param>
 		/// <remarks>
 		/// Uses API <msdn>GetAsyncKeyState</msdn>.
-		/// When processing user input in UI code (forms, WPF), instead use class <see cref="AKeyboard.UI"/> or .NET functions. They use API <msdn>GetKeyState</msdn>.
+		/// When processing user input in UI code (forms, WPF), instead use class <see cref="AKeys.UI"/> or .NET functions. They use API <msdn>GetKeyState</msdn>.
 		/// When mouse left and right buttons are swapped, gets logical state, not physical.
 		/// </remarks>
 		/// <seealso cref="WaitForNoButtonsPressed"/>
 		public static bool IsPressed(MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
-			if(0 != (buttons & MButtons.Left) && AKeyboard.IsPressed(KKey.MouseLeft)) return true;
-			if(0 != (buttons & MButtons.Right) && AKeyboard.IsPressed(KKey.MouseRight)) return true;
-			if(0 != (buttons & MButtons.Middle) && AKeyboard.IsPressed(KKey.MouseMiddle)) return true;
-			if(0 != (buttons & MButtons.X1) && AKeyboard.IsPressed(KKey.MouseX1)) return true;
-			if(0 != (buttons & MButtons.X2) && AKeyboard.IsPressed(KKey.MouseX2)) return true;
+			if(0 != (buttons & MButtons.Left) && AKeys.IsPressed(KKey.MouseLeft)) return true;
+			if(0 != (buttons & MButtons.Right) && AKeys.IsPressed(KKey.MouseRight)) return true;
+			if(0 != (buttons & MButtons.Middle) && AKeys.IsPressed(KKey.MouseMiddle)) return true;
+			if(0 != (buttons & MButtons.X1) && AKeys.IsPressed(KKey.MouseX1)) return true;
+			if(0 != (buttons & MButtons.X2) && AKeys.IsPressed(KKey.MouseX2)) return true;
 			return false;
 		}
 
@@ -925,11 +925,11 @@ namespace Au
 		//public static MButtons Buttons(MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		//{
 		//	MButtons R = 0;
-		//	if(0 != (buttons & MButtons.Left) && AKeyboard.IsKey(KKey.MouseLeft)) R |= MButtons.Left;
-		//	if(0 != (buttons & MButtons.Right) && AKeyboard.IsKey(KKey.MouseRight)) R |= MButtons.Right;
-		//	if(0 != (buttons & MButtons.Middle) && AKeyboard.IsKey(KKey.MouseMiddle)) R |= MButtons.Middle;
-		//	if(0 != (buttons & MButtons.X1) && AKeyboard.IsKey(KKey.MouseX1)) return R |= MButtons.X1;
-		//	if(0 != (buttons & MButtons.X2) && AKeyboard.IsKey(KKey.MouseX2)) return R |= MButtons.X2;
+		//	if(0 != (buttons & MButtons.Left) && AKeys.IsKey(KKey.MouseLeft)) R |= MButtons.Left;
+		//	if(0 != (buttons & MButtons.Right) && AKeys.IsKey(KKey.MouseRight)) R |= MButtons.Right;
+		//	if(0 != (buttons & MButtons.Middle) && AKeys.IsKey(KKey.MouseMiddle)) R |= MButtons.Middle;
+		//	if(0 != (buttons & MButtons.X1) && AKeys.IsKey(KKey.MouseX1)) return R |= MButtons.X1;
+		//	if(0 != (buttons & MButtons.X2) && AKeys.IsKey(KKey.MouseX2)) return R |= MButtons.X2;
 		//	return R;
 		//}
 
@@ -938,13 +938,13 @@ namespace Au
 		///// Returns true if the left mouse button is down (pressed).
 		///// </summary>
 		///// <remarks>See <see cref="IsPressed"/>.</remarks>
-		//public static bool IsLeft => AKeyboard.IsPressed(KKey.MouseLeft);
+		//public static bool IsLeft => AKeys.IsPressed(KKey.MouseLeft);
 
 		///// <summary>
 		///// Returns true if the right mouse button is down (pressed).
 		///// </summary>
 		///// <remarks>See <see cref="IsPressed"/>.</remarks>
-		//public static bool IsRight => AKeyboard.IsPressed(KKey.MouseRight);
+		//public static bool IsRight => AKeys.IsPressed(KKey.MouseRight);
 
 		/// <summary>
 		/// Waits while some mouse buttons are down (pressed). See <see cref="IsPressed"/>.
@@ -953,10 +953,10 @@ namespace Au
 		/// <param name="buttons">Wait only for these buttons. Default - all.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <seealso cref="AKeyboard.WaitForNoModifierKeysAndMouseButtons"/>
+		/// <seealso cref="AKeys.WaitForNoModifierKeysAndMouseButtons"/>
 		public static bool WaitForNoButtonsPressed(double secondsTimeout = 0.0, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
-			return AKeyboard.WaitForNoModifierKeysAndMouseButtons(secondsTimeout, 0, buttons);
+			return AKeys.WaitForNoModifierKeysAndMouseButtons(secondsTimeout, 0, buttons);
 		}
 
 		/// <summary>
@@ -1023,7 +1023,7 @@ namespace Au
 
 		static MButtons _WaitForClick(double secondsTimeout, MButtons button, bool up, bool block)
 		{
-			//info: this and related functions use similar code as AKeyboard._WaitForKey.
+			//info: this and related functions use similar code as AKeys._WaitForKey.
 
 			MButtons R = 0;
 			using(AHookWin.Mouse(x => {
@@ -1128,8 +1128,8 @@ namespace Au
 
 			static void _Send(AWnd w, uint message, uint wParam, uint lParam, bool isCtrl, bool isShift)
 			{
-				if(isCtrl || AKeyboard.IsCtrl) wParam |= 8; //Api.MK_CONTROL
-				if(isShift || AKeyboard.IsShift) wParam |= 4; //Api.MK_SHIFT
+				if(isCtrl || AKeys.IsCtrl) wParam |= 8; //Api.MK_CONTROL
+				if(isShift || AKeys.IsShift) wParam |= 4; //Api.MK_SHIFT
 				if(!w.Post(message, wParam, lParam)) throw new AException(0);
 				_SleepMax(-1, w.IsOfThisThread);
 			}

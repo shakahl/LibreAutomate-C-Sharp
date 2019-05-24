@@ -50,8 +50,8 @@ namespace Au
 			//return Environment.ExpandEnvironmentVariables(s); //5 times slower
 
 			//support known folders, like @"%AFolders.Documents%\..."
-			if(i >= 12 && s.Starts("%AFolders.")) {
-				var k = AFolders.GetFolder(s.Substring(9, i - 9));
+			if(i > 12 && s.Starts("%AFolders.")) {
+				var k = AFolders.GetFolder(s.Substring(10, i - 10));
 				if(k != null) return k + s.Substring(i + 1);
 				return s;
 			}
@@ -90,7 +90,6 @@ namespace Au
 		/// Returns true if environment variable exists.
 		/// </summary>
 		/// <param name="name">Case-insensitive name.</param>
-		/// <returns></returns>
 		internal static bool LibEnvVarExists(string name)
 		{
 			return 0 != Api.GetEnvironmentVariable(name, null, 0);

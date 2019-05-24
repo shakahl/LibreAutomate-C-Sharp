@@ -664,7 +664,7 @@ namespace Au.Controls
 		/// </summary>
 		internal void LibOnLinkClick(int pos, bool ctrl)
 		{
-			if(AKeyboard.UI.IsAlt) return;
+			if(AKeys.UI.IsAlt) return;
 
 			int iTag, iText, k;
 			//to find beginning of link text (after <tag>), search for STYLE_HIDDEN before
@@ -781,7 +781,7 @@ namespace Au.Controls
 
 		internal void LibOnLButtonDownWhenNotFocused(ref Message m, ref bool setFocus)
 		{
-			if(setFocus && _c.InitReadOnlyAlways && !AKeyboard.UI.IsAlt) {
+			if(setFocus && _c.InitReadOnlyAlways && !AKeys.UI.IsAlt) {
 				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
 				//Print(pos);
 				if(pos >= 0 && _t.StyleHotspot(_t.GetStyleAt(pos))) setFocus = false;

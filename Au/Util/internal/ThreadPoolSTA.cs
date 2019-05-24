@@ -110,7 +110,7 @@ namespace Au.Util
 					_completionCallback = completionCallback;
 					//we need WindowsFormsSynchronizationContext to call _completionCallback in this thread
 					_context = LibEnsureWindowsFormsSynchronizationContext.EnsurePermanently();
-					//TODO: loads Forms dll. Try to avoid it. Also, test with WPF.
+					//SHOULDDO: loads Forms dll. Try to avoid it. Also, test with WPF.
 				}
 
 				_gc = GCHandle.Alloc(this);

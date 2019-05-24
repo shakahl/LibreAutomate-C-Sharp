@@ -129,9 +129,7 @@ namespace Au
 		/// <summary>
 		/// Compiles regular expression string.
 		/// </summary>
-		/// <param name="rx">
-		/// Regular expression. Cannot be null.
-		/// </param>
+		/// <param name="rx">Regular expression. Cannot be null.</param>
 		/// <param name="flags">
 		/// Options.
 		/// Default 0. Flag UTF is implicitly added if <i>rx</i> contains non-ASCII characters and there is no flag NEVER_UTF.
@@ -1079,13 +1077,16 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.IsMatch(string, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string. If null, returns false.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static bool Regex(this string s, string rx, RXFlags flags = 0, RXMore more = null)
+		public static bool Regex(this string t, string rx, RXFlags flags = 0, RXMore more = null)
 		{
-			if(s == null) return false;
 			var x = _cache.AddOrGet(rx, flags);
-			return x.IsMatch(s, more);
+			return x.IsMatch(t, more);
 		}
 
 		/// <summary>
@@ -1094,13 +1095,17 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Match(string, out RXMatch, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string. If null, returns false.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="result">Receives match info.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static bool RegexMatch(this string s, string rx, out RXMatch result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexMatch(this string t, string rx, out RXMatch result, RXFlags flags = 0, RXMore more = null)
 		{
-			if(s == null) { result = null; return false; }
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Match(s, out result, more);
+			return x.Match(t, out result, more);
 		}
 
 		/// <summary>
@@ -1109,13 +1114,19 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.MatchS(string, out string, int, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string. If null, returns false.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="group">Group number (1-based index) of result. If 0 (default) - whole match.</param>
+		/// <param name="result">Receives the match value.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static bool RegexMatch(this string s, string rx, int group, out string result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexMatch(this string t, string rx, int group, out string result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.MatchS(s, out result, group, more);
+			return x.MatchS(t, out result, group, more);
 		}
 
 		/// <summary>
@@ -1124,13 +1135,19 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.MatchG(string, out RXGroup, int, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string. If null, returns false.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="group">Group number (1-based index) of result. If 0 (default) - whole match.</param>
+		/// <param name="result">Receives match info.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static bool RegexMatch(this string s, string rx, int group, out RXGroup result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexMatch(this string t, string rx, int group, out RXGroup result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.MatchG(s, out result, group, more);
+			return x.MatchG(t, out result, group, more);
 		}
 
 		/// <summary>
@@ -1139,12 +1156,17 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAll(string, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static IEnumerable<RXMatch> RegexFindAll(this string s, string rx, RXFlags flags = 0, RXMore more = null)
+		public static IEnumerable<RXMatch> RegexFindAll(this string t, string rx, RXFlags flags = 0, RXMore more = null)
 		{
+			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAll(s, more);
+			return x.FindAll(t, more);
 		}
 
 		/// <summary>
@@ -1153,12 +1175,18 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAll(string, out RXMatch[], RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="result">Receives all found matches.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static bool RegexFindAll(this string s, string rx, out RXMatch[] result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexFindAll(this string t, string rx, out RXMatch[] result, RXFlags flags = 0, RXMore more = null)
 		{
+			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAll(s, out result, more);
+			return x.FindAll(t, out result, more);
 		}
 
 		/// <summary>
@@ -1167,13 +1195,19 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAllS(string, int, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="group">Group number (1-based index) of results. If 0 (default) - whole match.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static IEnumerable<string> RegexFindAll(this string s, string rx, int group, RXFlags flags = 0, RXMore more = null)
+		public static IEnumerable<string> RegexFindAll(this string t, string rx, int group, RXFlags flags = 0, RXMore more = null)
 		{
+			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAllS(s, group, more);
+			return x.FindAllS(t, group, more);
 		}
 
 		/// <summary>
@@ -1182,13 +1216,20 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAllS(string, out string[], int, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="group">Group number (1-based index) of results. If 0 (default) - whole match.</param>
+		/// <param name="result">Receives all found matches.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static bool RegexFindAll(this string s, string rx, int group, out string[] result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexFindAll(this string t, string rx, int group, out string[] result, RXFlags flags = 0, RXMore more = null)
 		{
+			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAllS(s, out result, group, more);
+			return x.FindAllS(t, out result, group, more);
 		}
 
 		/// <summary>
@@ -1197,12 +1238,19 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, string, int, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="repl">Replacement pattern.</param>
+		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static string RegexReplace(this string s, string rx, string repl, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static string RegexReplace(this string t, string rx, string repl, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
+			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(s, repl, maxCount, more);
+			return x.Replace(t, repl, maxCount, more);
 		}
 
 		/// <summary>
@@ -1211,12 +1259,20 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, string, out string, int, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="repl">Replacement pattern.</param>
+		/// <param name="result">The result string.</param>
+		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static int RegexReplace(this string s, string rx, string repl, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static int RegexReplace(this string t, string rx, string repl, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
+			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(s, repl, out result, maxCount, more);
+			return x.Replace(t, repl, out result, maxCount, more);
 		}
 
 		/// <summary>
@@ -1225,12 +1281,19 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, Func{RXMatch, string}, int, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="replFunc">Callback function that receives found matches and returns replacements.</param>
+		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static string RegexReplace(this string s, string rx, Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static string RegexReplace(this string t, string rx, Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
+			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(s, replFunc, maxCount, more);
+			return x.Replace(t, replFunc, maxCount, more);
 		}
 
 		/// <summary>
@@ -1239,12 +1302,20 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, Func{RXMatch, string}, out string, int, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="replFunc">Callback function that receives found matches and returns replacements.</param>
+		/// <param name="result">The result string.</param>
+		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static int RegexReplace(this string s, string rx, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static int RegexReplace(this string t, string rx, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
+			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(s, replFunc, out result, maxCount, more);
+			return x.Replace(t, replFunc, out result, maxCount, more);
 		}
 
 		/// <summary>
@@ -1252,12 +1323,18 @@ namespace Au
 		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Split(string, int, RXMore)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="rx">Regular expression.</param>
+		/// <param name="maxCount">The maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
+		/// <param name="flags"></param>
+		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AException">Failed (unlikely).</exception>
-		public static string[] RegexSplit(this string s, string rx, int maxCount = 0, RXFlags flags = 0, RXMore more = null)
+		public static string[] RegexSplit(this string t, string rx, int maxCount = 0, RXFlags flags = 0, RXMore more = null)
 		{
+			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Split(s, maxCount, more);
+			return x.Split(t, maxCount, more);
 		}
 
 		static _RegexCache _cache = new _RegexCache();

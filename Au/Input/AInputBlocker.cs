@@ -47,7 +47,7 @@ namespace Au
 	{
 		LibHandle _syncEvent, _stopEvent;
 		LibHandle _threadHandle;
-		AKeyboard _blockedKeys;
+		AKeys _blockedKeys;
 		long _startTime;
 		BIEvents _block;
 		int _threadId;
@@ -126,7 +126,7 @@ namespace Au
 		/// Plays back blocked keys if need. See <see cref="ResendBlockedKeys"/>.
 		/// Does nothing if currently is not blocking.
 		/// </summary>
-		/// <param name="discardBlockedKeys">Do not play back blocked keys recorded because of <see cref="ResendBlockedKeys"/>.</param>
+		/// <param name="discardBlockedKeys">Do not play back blocked key-down events recorded because of <see cref="ResendBlockedKeys"/>.</param>
 		public void Stop(bool discardBlockedKeys = false)
 		{
 			if(_block == 0) return;
@@ -164,11 +164,9 @@ namespace Au
 
 				AWaitFor.LibWait(-1, WHFlags.DoEvents, _stopEvent, _threadHandle);
 
-				if(_blockedKeys != null && !_discardBlockedKeys) {
-					if(ATime.WinMilliseconds - _startTime < c_maxResendTime) {
-						_blockedKeys.LibSendBlocked();
-					}
-					//TODO: send all 'up' always
+				if(_blockedKeys != null) {
+					bool onlyUp = _discardBlockedKeys || ATime.WinMilliseconds - _startTime > c_maxResendTime;
+					_blockedKeys.LibSendBlocked(onlyUp);
 				}
 				//Print("ended");
 			}
@@ -199,7 +197,7 @@ namespace Au
 			//}
 
 			if(ResendBlockedKeys && ATime.WinMilliseconds - _startTime < c_maxResendTime) {
-				if(_blockedKeys == null) _blockedKeys = new AKeyboard(AOpt.Static.Key);
+				if(_blockedKeys == null) _blockedKeys = new AKeys(AOpt.Static.Key);
 				//Print("blocked", x.vkCode, !x.IsUp);
 				_blockedKeys.LibAddRaw(x.vkCode, (ushort)x.scanCode, x.LibSendInputFlags);
 			}
@@ -259,7 +257,7 @@ namespace Au
 		/// Record blocked keys, and play back when stopped blocking.
 		/// </summary>
 		/// <remarks>
-		/// Will not play back if: 1. The blocking time is &gt;= 10 seconds. 2. Detected Ctrl+Alt+Delete, [](xref:uac) consent or some other special screen. 3. Called <see cref="Pause"/>.
+		/// Will not play back if: 1. The blocking time is &gt; 10 seconds; then plays back only key-up events. 2. Detected Ctrl+Alt+Delete, [](xref:uac) consent or some other special screen. 3. Called <see cref="Pause"/>.
 		/// </remarks>
 		public bool ResendBlockedKeys { get; set; }
 

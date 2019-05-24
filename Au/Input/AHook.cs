@@ -391,18 +391,18 @@ namespace Au
 							}
 							if(vk == KKey.MouseX2 && kll->dwExtraInfo == 1354291109) goto gr; //QM2 sync code
 						} else {
-							//When AKeyboard.Lib.ReleaseModAndCapsLock sends Shift to turn off CapsLock,
+							//When AKeys.Lib.ReleaseModAndCapsLock sends Shift to turn off CapsLock,
 							//	hooks receive a non-injected LShift down, CapsLock down/up and injected LShift up.
 							//	Our triggers would recover, but cannot auto-repeat. Better don't call the hookproc.
 							if((vk == KKey.CapsLock || vk == KKey.LShift) && _ignoreAuInjected && _IgnoreLShiftCaps) goto gr;
 
 							//Test how our triggers recover when a modifier down or up event is lost. Or when triggers started while a modifier is down.
-							//if(AKeyboard.IsScrollLock) {
+							//if(AKeys.IsScrollLock) {
 							//	//if(vk == KKey.LCtrl && !kll->IsUp) { Print("lost Ctrl down"); goto gr; }
 							//	if(vk == KKey.LCtrl && kll->IsUp) { Print("lost Ctrl up"); goto gr; }
 							//}
 						}
-						if(AKeyboard.LibKeyTypes.IsMod(vk) && _IgnoreMod) goto gr;
+						if(AKeys.LibKeyTypes.IsMod(vk) && _IgnoreMod) goto gr;
 						t1 = ATime.PerfMilliseconds;
 						p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
 						if(R = kll->BlockEvent) kll->BlockEvent = false;
@@ -621,7 +621,7 @@ namespace Au.Types
 			/// <summary>
 			/// If the key is a modifier key (Shift, Ctrl, Alt, Win), returns the modifier flag. Else returns 0.
 			/// </summary>
-			public KMod Mod => AKeyboard.Lib.KeyToMod((KKey)_x->vkCode);
+			public KMod Mod => AKeys.Lib.KeyToMod((KKey)_x->vkCode);
 
 			/// <summary>
 			/// If <b>vkCode</b> is a left or right modifier key code (LShift, LCtrl, LAlt, RShift, RCtrl, RAlt, RWin), returns the common modifier key code (Shift, Ctrl, Alt, Win). Else returns <b>vkCode</b>.

@@ -163,7 +163,7 @@ namespace Au.Types
 			if(!x.IsEmpty || !y.IsEmpty) {
 				RECT r;
 				if(nonClient) {
-					w.GetRectInClientOf(w, out r);
+					w.GetRectIn(w, out r);
 				} else if(_NeedRect(x, y)) {
 					r = w.ClientRect;
 				} else r = default;

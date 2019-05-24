@@ -33,7 +33,7 @@ namespace Au
 		{
 			_w = new AWnd.More.MyWindow(WndProc);
 		}
-		AWnd.More.MyWindow _w; //TODO: _wClass. And AWnd _w.
+		AWnd.More.MyWindow _w;
 
 		/// <summary>Destroys the OSD window.</summary>
 		protected virtual void Dispose(bool disposing)

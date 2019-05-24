@@ -3,7 +3,7 @@
 using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}
 
 //{{ main
-unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
+class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
 
 //To run this C# script, click the Run button on the toolbar.
 

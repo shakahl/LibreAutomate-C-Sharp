@@ -113,7 +113,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <param name="button"></param>
 		/// <param name="modKeys">
-		/// Modifier keys, like with the <see cref="AKeyboard.Key"/> function.
+		/// Modifier keys, like with the <see cref="AKeys.Key"/> function.
 		/// Examples: "Ctrl", "Ctrl+Shift+Alt+Win".
 		/// To ignore modifiers: "?". Then the trigger works with any combination of modifiers.
 		/// To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
@@ -203,7 +203,7 @@ namespace Au.Triggers
 			if(noMod) {
 				if(flags.HasAny(subtype == ESubtype.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
 			} else {
-				if(!AKeyboard.More.LibParseHotkeyTriggerString(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
+				if(!AKeys.More.LibParseHotkeyTriggerString(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 			}
 			var t = new MouseTrigger(_triggers, f, mod, modAny, flags, screen, ps);
 			t.DictAdd(_d, _DictKey(subtype, data));
@@ -351,7 +351,7 @@ namespace Au.Triggers
 					if(mod != 0) {
 						_SetTempKeybHook();
 						if(thc.trigger != null) thc.muteMod = TriggerActionThreads.c_modRelease;
-						else ThreadPool.QueueUserWorkItem(_ => AKeyboard.Lib.ReleaseModAndDisableModMenu());
+						else ThreadPool.QueueUserWorkItem(_ => AKeys.Lib.ReleaseModAndDisableModMenu());
 					}
 
 					//Print(mEvent, pt, mod);

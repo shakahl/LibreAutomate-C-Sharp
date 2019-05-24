@@ -26,7 +26,6 @@ namespace Au.Controls
 	{
 		#region au modifications
 
-		//public const int SCI_UPDATESCROLLBARS= 9501; //don't need anymore
 		public const int SCI_MARGINSTYLENEXT = 9502;
 		public delegate void Sci_NotifyCallback(void* cbParam, ref SCNotification n);
 		public const int SCI_SETNOTIFYCALLBACK = 9503;
@@ -34,9 +33,6 @@ namespace Au.Controls
 		public const int SCI_SETANNOTATIONDRAWCALLBACK = 9504;
 		public const int SCI_ISXINMARGIN = 9506;
 		public const int SCI_DRAGDROP = 9507;
-		//these not impl
-		//public const int SC_DOCUMENT_USERDATA_OFFSET= 12;
-		//public const int SC_DOCUMENT_USERDATA_SIZE= 4;
 
 #pragma warning disable 649
 		public unsafe struct Sci_AnnotationDrawCallbackData
@@ -161,6 +157,7 @@ namespace Au.Controls
 		public const int SC_MARK_UNDERLINE = 29;
 		public const int SC_MARK_RGBAIMAGE = 30;
 		public const int SC_MARK_BOOKMARK = 31;
+		public const int SC_MARK_VERTICALBOOKMARK = 32;
 		public const int SC_MARK_CHARACTER = 10000;
 		public const int SC_MARKNUM_FOLDEREND = 25;
 		public const int SC_MARKNUM_FOLDEROPENMID = 26;
@@ -292,6 +289,8 @@ namespace Au.Controls
 		public const int SCI_SETCARETPERIOD = 2076;
 		public const int SCI_SETWORDCHARS = 2077;
 		public const int SCI_GETWORDCHARS = 2646;
+		public const int SCI_SETCHARACTERCATEGORYOPTIMIZATION = 2720;
+		public const int SCI_GETCHARACTERCATEGORYOPTIMIZATION = 2721;
 		public const int SCI_BEGINUNDOACTION = 2078;
 		public const int SCI_ENDUNDOACTION = 2079;
 		public const int INDIC_PLAIN = 0;
@@ -350,6 +349,8 @@ namespace Au.Controls
 		public const int SCI_SETCARETLINEVISIBLE = 2096;
 		public const int SCI_GETCARETLINEBACK = 2097;
 		public const int SCI_SETCARETLINEBACK = 2098;
+		public const int SCI_GETCARETLINEFRAME = 2704;
+		public const int SCI_SETCARETLINEFRAME = 2705;
 		public const int SCI_STYLESETCHANGEABLE = 2099;
 		public const int SCI_AUTOCSHOW = 2100;
 		public const int SCI_AUTOCCANCEL = 2101;
@@ -389,6 +390,7 @@ namespace Au.Controls
 		public const int SCI_GETLINEINDENTPOSITION = 2128;
 		public const int SCI_GETCOLUMN = 2129;
 		public const int SCI_COUNTCHARACTERS = 2633;
+		public const int SCI_COUNTCODEUNITS = 2715;
 		public const int SCI_SETHSCROLLBAR = 2130;
 		public const int SCI_GETHSCROLLBAR = 2131;
 		public const int SC_IV_NONE = 0;
@@ -416,6 +418,7 @@ namespace Au.Controls
 		public const int SC_PRINT_BLACKONWHITE = 2;
 		public const int SC_PRINT_COLOURONWHITE = 3;
 		public const int SC_PRINT_COLOURONWHITEDEFAULTBG = 4;
+		public const int SC_PRINT_SCREENCOLOURS = 5;
 		public const int SCI_SETPRINTCOLOURMODE = 2148;
 		public const int SCI_GETPRINTCOLOURMODE = 2149;
 		public const int SCFIND_WHOLEWORD = 0x2;
@@ -512,6 +515,9 @@ namespace Au.Controls
 		public const int SC_FOLDDISPLAYTEXT_STANDARD = 1;
 		public const int SC_FOLDDISPLAYTEXT_BOXED = 2;
 		public const int SCI_FOLDDISPLAYTEXTSETSTYLE = 2701;
+		public const int SCI_FOLDDISPLAYTEXTGETSTYLE = 2707;
+		public const int SCI_SETDEFAULTFOLDDISPLAYTEXT = 2722;
+		public const int SCI_GETDEFAULTFOLDDISPLAYTEXT = 2723;
 		public const int SC_FOLDACTION_CONTRACT = 0;
 		public const int SC_FOLDACTION_EXPAND = 1;
 		public const int SC_FOLDACTION_TOGGLE = 2;
@@ -571,6 +577,7 @@ namespace Au.Controls
 		public const int SC_WRAPINDENT_FIXED = 0;
 		public const int SC_WRAPINDENT_SAME = 1;
 		public const int SC_WRAPINDENT_INDENT = 2;
+		public const int SC_WRAPINDENT_DEEPINDENT = 3;
 		public const int SCI_SETWRAPINDENTMODE = 2472;
 		public const int SCI_GETWRAPINDENTMODE = 2473;
 		public const int SC_CACHE_NONE = 0;
@@ -590,8 +597,6 @@ namespace Au.Controls
 		public const int SCI_SETVSCROLLBAR = 2280;
 		public const int SCI_GETVSCROLLBAR = 2281;
 		public const int SCI_APPENDTEXT = 2282;
-		public const int SCI_GETTWOPHASEDRAW = 2283;
-		public const int SCI_SETTWOPHASEDRAW = 2284;
 		public const int SC_PHASES_ONE = 0;
 		public const int SC_PHASES_TWO = 1;
 		public const int SC_PHASES_MULTIPLE = 2;
@@ -659,6 +664,7 @@ namespace Au.Controls
 		public const int SCI_LINECUT = 2337;
 		public const int SCI_LINEDELETE = 2338;
 		public const int SCI_LINETRANSPOSE = 2339;
+		public const int SCI_LINEREVERSE = 2354;
 		public const int SCI_LINEDUPLICATE = 2404;
 		public const int SCI_LOWERCASE = 2340;
 		public const int SCI_UPPERCASE = 2341;
@@ -711,10 +717,16 @@ namespace Au.Controls
 		public const int SCI_SELECTIONISRECTANGLE = 2372;
 		public const int SCI_SETZOOM = 2373;
 		public const int SCI_GETZOOM = 2374;
+		public const int SC_DOCUMENTOPTION_DEFAULT = 0;
+		public const int SC_DOCUMENTOPTION_STYLES_NONE = 0x1;
+		public const int SC_DOCUMENTOPTION_TEXT_LARGE = 0x100;
 		public const int SCI_CREATEDOCUMENT = 2375;
 		public const int SCI_ADDREFDOCUMENT = 2376;
 		public const int SCI_RELEASEDOCUMENT = 2377;
+		public const int SCI_GETDOCUMENTOPTIONS = 2379;
 		public const int SCI_GETMODEVENTMASK = 2378;
+		public const int SCI_SETCOMMANDEVENTS = 2717;
+		public const int SCI_GETCOMMANDEVENTS = 2718;
 		public const int SCI_SETFOCUS = 2380;
 		public const int SCI_GETFOCUS = 2381;
 		public const int SC_STATUS_OK = 0;
@@ -772,9 +784,7 @@ namespace Au.Controls
 		public const int SCI_POSITIONBEFORE = 2417;
 		public const int SCI_POSITIONAFTER = 2418;
 		public const int SCI_POSITIONRELATIVE = 2670;
-		//TODO: SCI_POSITIONRELATIVE and SCI_COUNTCHARACTERS use UTF-32.
-		//	Replace with SCI_POSITIONRELATIVECODEUNITS and SCI_COUNTCODEUNITS.
-		//	In our Scintilla version they are unavailable. Need to upgrade and reapply all modifications.
+		public const int SCI_POSITIONRELATIVECODEUNITS = 2716; //TODO: SCI_POSITIONRELATIVE and SCI_COUNTCHARACTERS use UTF-32. Replace with SCI_POSITIONRELATIVECODEUNITS and SCI_COUNTCODEUNITS.
 		public const int SCI_COPYRANGE = 2419;
 		public const int SCI_COPYTEXT = 2420;
 		public const int SC_SEL_STREAM = 0;
@@ -783,6 +793,7 @@ namespace Au.Controls
 		public const int SC_SEL_THIN = 3;
 		public const int SCI_SETSELECTIONMODE = 2422;
 		public const int SCI_GETSELECTIONMODE = 2423;
+		public const int SCI_GETMOVEEXTENDSSELECTION = 2706;
 		public const int SCI_GETLINESELSTARTPOSITION = 2424;
 		public const int SCI_GETLINESELENDPOSITION = 2425;
 		public const int SCI_LINEDOWNRECTEXTEND = 2426;
@@ -844,6 +855,9 @@ namespace Au.Controls
 		public const int CARETSTYLE_INVISIBLE = 0;
 		public const int CARETSTYLE_LINE = 1;
 		public const int CARETSTYLE_BLOCK = 2;
+		public const int CARETSTYLE_OVERSTRIKE_BAR = 0;
+		public const int CARETSTYLE_OVERSTRIKE_BLOCK = 16;
+		public const int CARETSTYLE_INS_MASK = 0xF;
 		public const int SCI_SETCARETSTYLE = 2512;
 		public const int SCI_GETCARETSTYLE = 2513;
 		public const int SCI_SETINDICATORCURRENT = 2500;
@@ -1014,7 +1028,6 @@ namespace Au.Controls
 		public const int SCI_GETPROPERTY = 4008;
 		public const int SCI_GETPROPERTYEXPANDED = 4009;
 		public const int SCI_GETPROPERTYINT = 4010;
-		public const int SCI_GETSTYLEBITSNEEDED = 4011;
 		public const int SCI_GETLEXERLANGUAGE = 4012;
 		public const int SCI_PRIVATELEXERCALL = 4013;
 		public const int SCI_PROPERTYNAMES = 4014;
@@ -1034,6 +1047,10 @@ namespace Au.Controls
 		public const int SCI_SETIDENTIFIERS = 4024;
 		public const int SCI_DISTANCETOSECONDARYSTYLES = 4025;
 		public const int SCI_GETSUBSTYLEBASES = 4026;
+		public const int SCI_GETNAMEDSTYLES = 4029;
+		public const int SCI_NAMEOFSTYLE = 4030;
+		public const int SCI_TAGSOFSTYLE = 4031;
+		public const int SCI_DESCRIPTIONOFSTYLE = 4032;
 		[Flags]
 		public enum MOD
 		{
@@ -1132,7 +1149,21 @@ namespace Au.Controls
 			SCN_FOCUSOUT = 2029,
 			SCN_AUTOCCOMPLETED = 2030,
 			SCN_MARGINRIGHTCLICK = 2031,
+			SCN_AUTOCSELECTIONCHANGE = 2032,
 		}
+		public const int SC_BIDIRECTIONAL_DISABLED = 0;
+		public const int SC_BIDIRECTIONAL_L2R = 1;
+		public const int SC_BIDIRECTIONAL_R2L = 2;
+		public const int SCI_GETBIDIRECTIONAL = 2708;
+		public const int SCI_SETBIDIRECTIONAL = 2709;
+		public const int SC_LINECHARACTERINDEX_NONE = 0;
+		public const int SC_LINECHARACTERINDEX_UTF32 = 1;
+		public const int SC_LINECHARACTERINDEX_UTF16 = 2;
+		public const int SCI_GETLINECHARACTERINDEX = 2710;
+		public const int SCI_ALLOCATELINECHARACTERINDEX = 2711;
+		public const int SCI_RELEASELINECHARACTERINDEX = 2712;
+		public const int SCI_LINEFROMINDEXPOSITION = 2713;
+		public const int SCI_INDEXPOSITIONFROMLINE = 2714;
 
 		public struct Sci_CharacterRange
 		{
@@ -1179,18 +1210,23 @@ namespace Au.Controls
 
 		public struct SCNotification
 		{
+#pragma warning disable 649 //field never assigned
 			public Sci_NotifyHeader nmhdr;
-			public int position;
+			LPARAM _position;
+			public int position => (int)_position;
 			public int ch;
 			public int modifiers;
 			public MOD modificationType;
 			public byte* textUTF8;
-			public int length;
-			public int linesAdded;
+			LPARAM _length;
+			public int length => (int)_length;
+			LPARAM _linesAdded;
+			public int linesAdded => (int)_linesAdded;
 			public int message;
 			public LPARAM wParam;
 			public LPARAM lParam;
-			public int line;
+			LPARAM _line;
+			public int line => (int)_line;
 			public int foldLevelNow;
 			public int foldLevelPrev;
 			public int margin;
@@ -1198,19 +1234,19 @@ namespace Au.Controls
 			public int x;
 			public int y;
 			public int token;
-			public int annotationLinesAdded;
+			LPARAM _annotationLinesAdded;
+			public int annotationLinesAdded => (int)_annotationLinesAdded;
 			public int updated;
 			public int listCompletionMethod;
+#pragma warning restore 649 //field never assigned
 
 			/// <summary>
 			/// Converts textUTF8 to C# string.
 			/// Returns null if textUTF8 is null.
 			/// Don't call this property multiple times for the same notification. Store the return value in a variable and use it.
 			/// </summary>
-			public string Text
-			{
-				get
-				{
+			public string Text {
+				get {
 					if(textUTF8 == null) return null;
 					if(textUTF8[0] == 0) return "";
 					return new string((sbyte*)textUTF8, 0, length, Encoding.UTF8);
@@ -1224,14 +1260,16 @@ namespace Au.Controls
 		{
 			SCLEX_CONTAINER = 0,
 			SCLEX_NULL = 1,
+			SCLEX_PYTHON = 2,
 			SCLEX_CPP = 3,
 			SCLEX_HTML = 4,
 			SCLEX_XML = 5,
 			SCLEX_SQL = 7,
 			SCLEX_VB = 8,
-			SCLEX_VBSCRIPT = 28,
 			SCLEX_CSS = 38,
+			SCLEX_YAML = 48,
 			SCLEX_POWERSHELL = 88,
+			SCLEX_MARKDOWN = 98,
 			SCLEX_JSON = 120,
 		}
 

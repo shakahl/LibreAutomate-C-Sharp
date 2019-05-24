@@ -32,7 +32,7 @@ namespace Au
 	/// <seealso cref="ATime"/>
 	/// <example>
 	/// <code><![CDATA[
-	/// AWaitFor.Condition(0, () => AKeyboard.IsScrollLock);
+	/// AWaitFor.Condition(0, () => AKeys.IsScrollLock);
 	/// Print("ScrollLock now is toggled");
 	/// ]]></code>
 	/// Using in a Form/Control event handler.
@@ -41,7 +41,7 @@ namespace Au
 	/// f.Click += async (unu, sed) =>
 	///   {
 	/// 	  Print("waiting...");
-	/// 	  var result = await Task.Run(() => AWaitFor.Condition(-10, () => AKeyboard.IsScrollLock));
+	/// 	  var result = await Task.Run(() => AWaitFor.Condition(-10, () => AKeys.IsScrollLock));
 	/// 	  if(w.Is0) Print("timeout"); else Print(result);
 	///   };
 	/// f.ShowDialog();

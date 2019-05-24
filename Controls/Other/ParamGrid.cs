@@ -25,9 +25,6 @@ using SG = SourceGrid;
 using Editors = SourceGrid.Cells.Editors;
 using DevAge.Drawing;
 
-//TODO: don't select text of clicked cell. Instead place caret there.
-//CRAZY: try to make ParamGrid from AuScintilla. Easier to edit text. The grid control is so difficult to use without a wrapper.
-
 namespace Au.Controls
 {
 	/// <summary>
@@ -40,7 +37,7 @@ namespace Au.Controls
 		_CellController _controller;
 		SG.Cells.Controllers.ToolTipText _controllerTooltip0, _controllerTooltip1;
 
-		const SG.EditableMode c_editableMode = SG.EditableMode.SingleClick | SG.EditableMode.F2Key | SG.EditableMode.AnyKey; //double click -> single click. See also OnMouseDown.
+		const SG.EditableMode c_editableMode = SG.EditableMode.F2Key | SG.EditableMode.AnyKey; //default is these + doubleclick. See also OnMouseDown.
 
 		public ParamGrid()
 		{
@@ -189,6 +186,12 @@ namespace Au.Controls
 				_grid.ZOnValueChanged(c);
 			}
 
+			//public override void OnEditStarting(SG.CellContext sender, CancelEventArgs e)
+			//{
+			//	base.OnEditStarting(sender, e);
+			//	ATime.SleepDoEvents(500);
+			//}
+
 			public override void OnEditStarted(SG.CellContext c, EventArgs e)
 			{
 				//ADebug.PrintFunc();
@@ -196,9 +199,8 @@ namespace Au.Controls
 				if(c.Cell.Editor is Editors.ComboBox cb) { //read-only combo. The grid shows a ComboBox control.
 					cb.Control.DroppedDown = true;
 				} else if(c.Cell is ComboCell cc) { //editable combo. We show PopupList _comboDD. With ComboBox too ugly and limited, eg cannot edit multiline.
-					var t = (cc.Editor as Editors.TextBox).Control;
-					t.Width -= cc.MeasuredButtonWidth; //don't hide the drop-down button
-					if(_grid._clickX >= t.Right) cc.ShowDropDown(); //clicked the drop-down button
+					var tb = (cc.Editor as Editors.TextBox).Control;
+					tb.Width -= cc.MeasuredButtonWidth; //don't hide the drop-down button
 				}
 
 				base.OnEditStarted(c, e);
@@ -219,34 +221,37 @@ namespace Au.Controls
 				if(t?.Info != null) _grid.ZOnShowEditInfo(c, show ? t.Info : null);
 			}
 
-			//public override void OnMouseEnter(SG.CellContext c, EventArgs e)
-			//{
-			//	var row = c.Position.Row; //if(row == _hoverRow) return;
-			//	_hoverRow = row;
+			public override void OnMouseDown(SG.CellContext c, MouseEventArgs e)
+			{
+				base.OnMouseDown(c, e);
 
-			//	if(_hoverTimer == null) _hoverTimer = new ATimer(t => {
-			//		if(_hoverRow < 0) return;
-			//		Print(_hoverRow);
-			//	});
-			//	_hoverTimer.Start(1000, true);
+				//Start cell editing on mouse button down, prevent selecting all text, and set caret correctly.
 
-			//	base.OnMouseEnter(c, e);
-			//}
+				//Print(sender.Cell.Editor);
+				c.StartEdit();
 
-			//public override void OnMouseLeave(SG.CellContext c, EventArgs e)
-			//{
-			//	_hoverRow = -1;
-			//	_hoverTimer.Stop();
-			//	base.OnMouseLeave(c, e);
-			//}
-
-			//ATimer _hoverTimer;
-			//int _hoverRow = -1;
+				TextBox tb = null;
+				switch(c.Cell.Editor) {
+				case Editors.TextBox ce: tb = ce.Control; break;
+				case Editors.TextBoxButton ce: tb = ce.Control.TextBox; break;
+				}
+				if(tb != null) {
+					var wt = (AWnd)tb;
+					//tb.SelectionLength = 0; tb.SelectionStart = 0; tb.ScrollToCaret();
+					wt.Send(Api.WM_HSCROLL, Api.SB_TOP);
+					if(e.X < tb.Right) {
+						POINT p = (e.X, e.Y); ((AWnd)_grid).MapClientToClientOf(wt, ref p);
+						wt.Post(Api.WM_LBUTTONDOWN, Api.MK_LBUTTON, AMath.MakeUint(p.x, p.y));
+					} else if(c.Cell is ComboCell cc) {
+						cc.ShowDropDown(); //clicked the drop-down button
+					}
+				}
+			}
 		}
 
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
-			if(ZGetEditCell(out var c)) {
+			if(ZGetEditCell(out var c)) { //if in edit mode
 				if(c.Position != PositionAtPoint(e.Location)) {
 					c.EndEdit(cancel: false);
 				} else if(c.Cell is ComboCell cc && !_comboNoDD) {
@@ -281,14 +286,6 @@ namespace Au.Controls
 			}
 			return base.ProcessCmdKey(ref msg, keyData);
 		}
-
-		protected override void OnMouseClick(MouseEventArgs e)
-		{
-			_clickX = e.Location.X;
-			base.OnMouseClick(e);
-			_clickX = 0;
-		}
-		int _clickX;
 
 		protected virtual void ZOnValueChanged(SG.CellContext sender)
 		{
@@ -901,7 +898,8 @@ namespace Au.Controls
 		/// <exception cref="ArgumentException"></exception>
 		public void ZShowRows(bool visible, int from, int count, int fromOpposite = 0, int countOpposite = 0)
 		{
-			//TODO: throw if invalid
+			_ThrowIfRowInvalid(from);
+			_ThrowIfRowInvalid(fromOpposite);
 			int to = count < 0 ? RowsCount : from + count;
 			int toOpposite = countOpposite < 0 ? RowsCount : fromOpposite + countOpposite;
 			for(int i = from; i < to; i++) Rows.ShowRow(i, visible);

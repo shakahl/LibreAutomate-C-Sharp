@@ -139,7 +139,7 @@ namespace Au.Tools
 			g.ZEnableCell(0, 0, false);
 			g.ZAdd("rect", "Search in rectangle", "(left, top, width, height)", etype: ParamGrid.EditType.TextButton, buttonAction: _MenuRect,
 				tt: "Limit the search area to this rectangle in the client area of the window or control.\nSmaller = faster.");
-			g.ZAddCheck("WindowDC", "Window can be in background", tt: "Flag WindowDC.\nMakes faster etc.");
+			g.ZAdd("windowPixels", "Get window pixels", "WIFlags.WindowDC|WIFlags.PrintWindow", tt: "Window can be in background.\nWorks not with all windows.\nWindowDC makes faster.\nPrintWindow works with more windows.", etype: ParamGrid.EditType.ComboList, comboIndex: 0);
 			g.ZAdd("colorDiff", "Allow color difference", "10", tt: "Parameter colorDiff.\nValid values: 0 - 250.\nBigger = slower.");
 			g.ZAdd("skip", "Skip matching images", "1", tt: "0-based index of matching image.\nFor example, if 1, gets the second matching image.");
 
@@ -181,10 +181,11 @@ namespace Au.Tools
 					if(_useCon = on) _wnd.MapClientToClientOf(_con, ref _rect); else _con.MapClientToClientOf(_wnd, ref _rect);
 					_Check("rect", false);
 					break;
-				case "WindowDC":
-					if(_image != null) {
+				case "windowPixels":
+					if(!_onceInfoWindowPixels && _image != null) {
+						_onceInfoWindowPixels = true;
 						_errorProvider.Icon = AIcon.GetStockIcon(StockIcon.INFO, 16);
-						_errorProvider.SetError(_bTest, "After changing 'Window can be in background' may need to capture again.\nClick Test. If not found, click Capture.");
+						_errorProvider.SetError(_bTest, "After changing 'Get window pixels' may need to capture again.\nClick Test. If not found, click Capture.");
 					}
 					break;
 				case "skip": if(on) _Check("all", false); break;
@@ -201,6 +202,7 @@ namespace Au.Tools
 			_UpdateCodeBox();
 		}
 		bool _noeventGridValueChanged;
+		bool _onceInfoWindowPixels;
 
 		(string code, string wndVar) _FormatCode(bool forTest = false)
 		{
@@ -233,7 +235,8 @@ namespace Au.Tools
 			b.AppendOtherArg(isColor ? "0x" : "image");
 			if(isColor) b.Append(_color.ToString("X6"));
 
-			if(_IsChecked("WindowDC")) b.AppendOtherArg("WIFlags.WindowDC");
+			if(_grid.ZGetValue("windowPixels", out var wpFlag, false)) b.AppendOtherArg(wpFlag);
+
 			if(_grid.ZGetValue("colorDiff", out var colorDiff, true) && colorDiff != "0") b.AppendOtherArg(colorDiff, "colorDiff");
 
 			string also = null;
@@ -309,7 +312,8 @@ namespace Au.Tools
 			r = null;
 			WICFlags fl = 0;
 			if(rect) fl = WICFlags.Rectangle;
-			else if(_IsChecked("WindowDC")) fl |= WICFlags.WindowDC; //FUTURE: how rect is if DPI-scaled window?
+			else if(_grid.ZGetValue("windowPixels", out var wpFlag, false)) fl = wpFlag.Ends("WindowDC") ? WICFlags.WindowDC : WICFlags.PrintWindow; //FUTURE: how rect is if DPI-scaled window?
+
 			if(!AWinImage.CaptureUI(out r, fl, this)) return false;
 
 			string es = null;

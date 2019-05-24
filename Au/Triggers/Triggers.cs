@@ -92,7 +92,7 @@ namespace Au.Triggers
 	/// mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
 	/// mouse[TMMove.LeftRightInCenter50] = o => AWnd.SwitchActiveWindow();
 	/// 
-	/// Triggers.FuncOf.NextTrigger = o => AKeyboard.IsScrollLock; //example of a custom scope (aka context, condition)
+	/// Triggers.FuncOf.NextTrigger = o => AKeys.IsScrollLock; //example of a custom scope (aka context, condition)
 	/// mouse[TMWheel.Forward] = o => Print($"{o.Trigger} while ScrollLock is on");
 	/// 
 	/// Triggers.Of.Again(notepad); //let the following triggers work only when a Notepad window is active
@@ -822,7 +822,7 @@ namespace Au.Triggers
 				_mod = _modL | _modR;
 			} else if(!k.IsUp) {
 				//We cannot trust _mod, because hooks are unreliable. We may not receive some events because of hook timeout, other hooks, OS quirks, etc. Also triggers may start while a modifier key is pressed.
-				//And we cannot use AKeyboard.IsPressed, because our triggers release modifiers. Also Key() etc. Then triggers could not be auto-repeated.
+				//And we cannot use AKeys.IsPressed, because our triggers release modifiers. Also Key() etc. Then triggers could not be auto-repeated.
 				//We use both. If IsPressed(mod), add mod to _mod. Else remove from _mod after >5 s since the last seen key event. The max auto-repeat delay that you can set in CP is ~1 s.
 				TrigUtil.GetModLR(out modL, out modR);
 				//ADebug.PrintIf(modL != _modL || modR != _modR, $"KEY={k.vkCode}    modL={modL}  _modL={_modL}    modR={modR}  _modR={_modR}"); //normally should be only when auto-repeating a trigger

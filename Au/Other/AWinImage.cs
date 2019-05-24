@@ -26,11 +26,6 @@ using Au.Util;
 
 //FUTURE: test OpenCV - an open source library for computer vision.
 
-//TODO: add flag to use PrintWindow, and use flag PW_RENDERFULLCONTENT.
-//	It's new in Win8.1 and undocumented. Then can capture windows like Chrome, Edge, winstore. Tested.
-//	Or always use PrintWindow on Win8.1+ if it works well and fast.
-//		But read QM2 help and comments; there are many cases when PrintWindow without this flag does not work.
-
 namespace Au
 {
 	/// <summary>
@@ -209,8 +204,8 @@ namespace Au
 		/// Where to search. Can be a window/control, accessible object, another image or a rectangle in screen.
 		/// - <see cref="AWnd"/> - window or control. The search area is its client area.
 		/// - <see cref="AAcc"/> - accessible object.
-		/// - <see cref="Bitmap"/> - another image. These flags are invalid: <see cref="WIFlags.WindowDC"/>.
-		/// - <see cref="RECT"/> - a rectangle area in screen. These flags are invalid: <see cref="WIFlags.WindowDC"/>.
+		/// - <see cref="Bitmap"/> - another image. These flags are invalid: <see cref="WIFlags.WindowDC"/>, <see cref="WIFlags.PrintWindow"/>.
+		/// - <see cref="RECT"/> - a rectangle area in screen. These flags are invalid: <see cref="WIFlags.WindowDC"/>, <see cref="WIFlags.PrintWindow"/>.
 		/// - <see cref="WIArea"/> - can contain AWnd, AAcc or Bitmap. Also allows to specify a rectangle in it, which makes the search area smaller and the function faster. Example: <c>AWinImage.Find((w, (left, top, width, height)), "image.png");</c>.
 		/// </param>
 		/// <param name="image">
@@ -252,11 +247,11 @@ namespace Au
 		/// 
 		/// The speed mostly depends on:
 		/// 1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>(w, rectangle)</c>).
-		/// 2. Flag <see cref="WIFlags.WindowDC"/>. Usually makes several times faster. With this flag the speed depends on window.
-		/// 3. Video driver. Can be much slower if incorrect, generic or virtual PC driver is used. Flag <see cref="WIFlags.WindowDC"/> should help.
+		/// 2. Flags <see cref="WIFlags.WindowDC"/> (makes faster), <see cref="WIFlags.PrintWindow"/>. The speed depends on window.
+		/// 3. Video driver. Can be much slower if incorrect, generic or virtual PC driver is used. The above flags should help.
 		/// 4. <i>colorDiff</i>. Should be as small as possible.
 		/// 
-		/// If flag <see cref="WIFlags.WindowDC"/> not used, the search area must be visible on the screen, because this function then gets pixels from the screen.
+		/// If flag <see cref="WIFlags.WindowDC"/> or <see cref="WIFlags.PrintWindow"/> not used, the search area must be visible on the screen, because this function then gets pixels from the screen.
 		/// 
 		/// Can find only images that exactly match the specified image. With <i>colorDiff</i> can find images with slightly different colors and brightness. Cannot find images with different shapes.
 		/// 
@@ -402,9 +397,9 @@ namespace Au
 			struct _AreaData
 			{
 				public AMemoryBitmap mb; //reuse while waiting, it makes slightly faster
-				public int width, height, memSize; //_areaMB width and height, use for the same purpose
+				public int width, height, memSize; //mb width and height, use for the same purpose
 				public uint* pixels; //the same purpose. Allocating/freeing large memory is somehow slow.
-				public BitmapData bmpData; //of _bmp. Could be local, because we don't wait, but better do this way.
+				public BitmapData bmpData; //of _area.B. Could be local, because we don't wait, but better do this way.
 			}
 
 			//input
@@ -453,7 +448,7 @@ namespace Au
 
 				switch(_area.Type) {
 				case WIArea.AreaType.Screen:
-					badFlags = WIFlags.WindowDC;
+					badFlags = WIFlags.WindowDC | WIFlags.PrintWindow;
 					break;
 				case WIArea.AreaType.Wnd:
 					_area.W.ThrowIfInvalid();
@@ -463,7 +458,7 @@ namespace Au
 					_area.W = _area.A.WndContainer;
 					goto case WIArea.AreaType.Wnd;
 				case WIArea.AreaType.Bitmap:
-					badFlags = WIFlags.WindowDC;
+					badFlags = WIFlags.WindowDC | WIFlags.PrintWindow;
 					if(action != _Action.Find) throw new ArgumentException(); //there is no sense to wait for some changes in Bitmap
 					if(_area.B == null) throw new ArgumentNullException(nameof(area));
 					break;
@@ -529,7 +524,7 @@ namespace Au
 				//APerf.Next();
 				Result._Clear();
 
-				bool windowDC = 0 != (_flags & WIFlags.WindowDC);
+				bool inScreen = !_flags.HasAny(WIFlags.WindowDC | WIFlags.PrintWindow);
 				bool failedGetRect = false;
 
 				//Get area rectangle.
@@ -537,10 +532,10 @@ namespace Au
 				_resultOffset = default;
 				switch(_area.Type) {
 				case WIArea.AreaType.Wnd:
-					failedGetRect = !_area.W.GetClientRect(out r, !windowDC);
+					failedGetRect = !_area.W.GetClientRect(out r, inScreen);
 					break;
 				case WIArea.AreaType.Acc:
-					failedGetRect = !(windowDC ? _area.A.GetRect(out r, _area.W) : _area.A.GetRect(out r));
+					failedGetRect = !(inScreen ? _area.A.GetRect(out r) : _area.A.GetRect(out r, _area.W));
 					break;
 				case WIArea.AreaType.Bitmap:
 					r = (0, 0, _area.B.Width, _area.B.Height, false);
@@ -558,7 +553,7 @@ namespace Au
 				}
 				//FUTURE: DPI
 
-				//r is the area from where to get pixels. If windowDC, it is relative to the client area.
+				//r is the area from where to get pixels. If !inScreen, it is relative to the client area.
 				//Intermediate results will be relative to r. Then will be added _resultOffset if a limiting lectangle is used.
 
 				if(_area.HasRect) {
@@ -576,7 +571,7 @@ namespace Au
 					//	Never mind: should also adjust control rectangle in ancestors in the same way.
 					//		This is not so important because usually whole control is visible (resized, not clipped).
 					int x = r.left, y = r.top;
-					_area.W.GetClientRect(out var rw, !windowDC);
+					_area.W.GetClientRect(out var rw, inScreen);
 					r.Intersect(rw);
 					x -= r.left; y -= r.top;
 					_resultOffset.x -= x; _resultOffset.y -= y;
@@ -603,7 +598,7 @@ namespace Au
 				//Get area pixels.
 				if(_area.Type == WIArea.AreaType.Bitmap) {
 					if(_ad.bmpData == null) {
-						var pf = (_area.B.PixelFormat == PixelFormat.Format32bppArgb) ? PixelFormat.Format32bppArgb : PixelFormat.Format32bppRgb; //if possible, use PixelFormat of _bmp, to avoid conversion/copying. Both these formats are ok, we don't use alpha.
+						var pf = (_area.B.PixelFormat == PixelFormat.Format32bppArgb) ? PixelFormat.Format32bppArgb : PixelFormat.Format32bppRgb; //if possible, use PixelFormat of _area, to avoid conversion/copying. Both these formats are ok, we don't use alpha.
 						_ad.bmpData = _area.B.LockBits(r, ImageLockMode.ReadOnly, pf);
 						if(_ad.bmpData.Stride < 0) throw new ArgumentException("bottom-up Bitmap");
 					}
@@ -954,23 +949,31 @@ namespace Au
 
 				int areaWidth = r.Width, areaHeight = r.Height;
 				//_Debug("start", 1);
-				//create memory bitmap. When waiting, we reuse _areaMB, it makes slightly faster.
+				//create memory bitmap. When waiting, we reuse _ad.mb, it makes slightly faster.
 				if(_ad.mb == null || areaWidth != _ad.width || areaHeight != _ad.height) {
 					if(_ad.mb != null) { _ad.mb.Dispose(); _ad.mb = null; }
 					_ad.mb = new AMemoryBitmap(_ad.width = areaWidth, _ad.height = areaHeight);
 					//_Debug("created MemBmp");
 				}
-				//get DC of screen or window
-				bool windowDC = 0 != (_flags & WIFlags.WindowDC);
-				AWnd w = windowDC ? _area.W : default;
-				using(var dc = new LibWindowDC(w)) { //quite fast, when compared with other parts
-					if(dc.Is0 && windowDC) w.ThrowNoNative("Failed");
-					//_Debug("get DC");
-					//copy from screen/window DC to memory bitmap
-					uint rop = windowDC ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
-					bool bbOK = Api.BitBlt(_ad.mb.Hdc, 0, 0, areaWidth, areaHeight, dc, r.left, r.top, rop);
-					if(!bbOK) throw new AException("BitBlt"); //the API fails only if a HDC is invalid
+
+				//copy from screen/window to memory bitmap
+				if(0 != (_flags & WIFlags.PrintWindow) && Api.PrintWindow(_area.W, _ad.mb.Hdc, Api.PW_CLIENTONLY | (AVersion.MinWin8_1 ? Api.PW_RENDERFULLCONTENT : 0))) {
+					//PW_RENDERFULLCONTENT is new in Win8.1. Undocumented in MSDN, but defined in h. Then can capture windows like Chrome, Edge, winstore.
+					//Print("PrintWindow OK");
+				} else {
+					//get DC of screen or window
+					bool windowDC = 0 != (_flags & WIFlags.WindowDC);
+					AWnd w = windowDC ? _area.W : default;
+					using(var dc = new LibWindowDC(w)) { //quite fast, when compared with other parts
+						if(dc.Is0) w.ThrowNoNative("Failed");
+						//_Debug("get DC");
+						//copy from screen/window DC to memory bitmap
+						uint rop = windowDC ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
+						bool bbOK = Api.BitBlt(_ad.mb.Hdc, 0, 0, areaWidth, areaHeight, dc, r.left, r.top, rop);
+						if(!bbOK) throw new AException("BitBlt"); //the API fails only if a HDC is invalid
+					}
 				}
+
 				//_Debug("captured to MemBmp");
 				//get pixels
 				int memSize = areaWidth * areaHeight * 4; //7.5 MB for a max window in 1920*1080 monitor
@@ -1071,11 +1074,21 @@ namespace Au.Types
 		/// Get pixels from the device context (DC) of the window client area, not from screen DC. Usually much faster.
 		/// Can get pixels from window parts that are covered by other windows or offscreen. But not from hidden and minimized windows.
 		/// Does not work on Windows 7 if Aero theme is turned off. Then this flag is ignored.
-		/// If the window is DPI-scaled, the image must be captured from its non-scaled version.
 		/// Cannot find images in some windows (including Windows Store apps), and in some window parts (glass). All pixels captured from these windows/parts are black.
-		/// Not used when area is Bitmap.
+		/// If the window is DPI-scaled, the image must be captured from its non-scaled version.
 		/// </summary>
 		WindowDC = 1,
+
+		/// <summary>
+		/// Use API <msdn>PrintWindow</msdn> to get window pixels.
+		/// Like <b>WindowDC</b>, works with background windows, etc. Differences:
+		/// - On Windows 8.1 and later works with all windows (including Windows Store apps) and all window parts.
+		/// - Works without Aero theme too.
+		/// - Slower.
+		/// - Some windows may flicker.
+		/// - Does not work with windows of higher UAC integrity level. Then this flag is ignored.
+		/// </summary>
+		PrintWindow = 2,
 
 		//rejected: this was used in QM2. Now can use png alpha instead, and CaptureUI allows to capture it.
 		///// <summary>

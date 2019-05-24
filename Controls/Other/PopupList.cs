@@ -273,16 +273,16 @@ namespace Au.Controls
 			case Api.WM_NCRBUTTONDOWN:
 			case Api.WM_MBUTTONDOWN:
 			case Api.WM_NCMBUTTONDOWN:
-				if(((AWnd)m.HWnd).Window != (AWnd)_w) _Close(); //TODO: support owned windows of _w
+				if(((AWnd)m.HWnd).Window != (AWnd)_w) _Close(); //SHOULDDO: support owned windows of _w
 				break;
 			}
 			return false;
 
-			//TODO: implement wheel scrolling.
-			//	On Windows 10 it works automatically because of this Windows setting: Settings/Mouse/Scroll inactive windows....
+			//rejected: implement wheel scrolling.
+			//	On Windows 10 it works automatically because of this Windows setting: Settings/Mouse/Scroll inactive windows.
 			//	Window 7 does not have this setting.
 			//	But for it each list window must have a LL mouse hook. Or getmsg hook for this thread.
-			//	Probably better implement it in whole app. Anyway, this class rarely used when this thrad is not focused.
+			//	Probably better implement it in whole app. Anyway, this class rarely used when this thread is not focused.
 			//	Or implement using a LL hook only when this thrad is not focused.
 		}
 
@@ -314,7 +314,7 @@ namespace Au.Controls
 				if(x.Disabled) return !isSpace;
 				if(x.CheckType != default) {
 					if(isSpace) {
-						if(AKeyboard.UI.IsCtrl || AKeyboard.UI.IsShift) return false;
+						if(AKeys.UI.IsCtrl || AKeys.UI.IsShift) return false;
 						_ToggleCheckbox(node, x);
 						return true;
 					}

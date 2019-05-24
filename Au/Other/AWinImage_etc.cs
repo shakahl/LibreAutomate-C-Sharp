@@ -58,6 +58,7 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="rect">A rectangle in w client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
+		/// <param name="usePrintWindow">Use flag <see cref="WICFlags.PrintWindow"/>.</param>
 		/// <exception cref="WndException">Invalid w.</exception>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
 		/// <exception cref="AException">Failed. Probably there is not enough memory for bitmap of this size (with*height*4 bytes).</exception>
@@ -68,13 +69,13 @@ namespace Au
 		/// 3. Does not work with Windows Store app windows, Chrome and some other windows. Creates black image.
 		/// 4. If the window is DPI-scaled, captures its non-scaled view. And <i>rect</i> must contain non-scaled coordinates.
 		/// </remarks>
-		public static Bitmap Capture(AWnd w, RECT rect)
+		public static Bitmap Capture(AWnd w, RECT rect, bool usePrintWindow = false)
 		{
 			w.ThrowIfInvalid();
-			return _Capture(rect, w);
+			return _Capture(rect, w, usePrintWindow);
 		}
 
-		static unsafe Bitmap _Capture(RECT r, AWnd w = default, GraphicsPath path = null)
+		static unsafe Bitmap _Capture(RECT r, AWnd w = default, bool usePrintWindow = false, GraphicsPath path = null)
 		{
 			//Transfer from screen/window DC to memory DC (does not work without this) and get pixels.
 
@@ -85,12 +86,17 @@ namespace Au
 			//FUTURE: if w is DWM-scaled...
 
 			using var mb = new AMemoryBitmap(r.Width, r.Height);
-			using(var dc = new LibWindowDC(w)) {
-				if(dc.Is0 && !w.Is0) w.ThrowNoNative("Failed");
-				uint rop = !w.Is0 ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
-				bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, rop);
-				Debug.Assert(ok); //the API fails only if a HDC is invalid
+			if(usePrintWindow && Api.PrintWindow(w, mb.Hdc, Api.PW_CLIENTONLY | (AVersion.MinWin8_1 ? Api.PW_RENDERFULLCONTENT : 0))) {
+				//Print("PrintWindow OK");
+			} else {
+				using(var dc = new LibWindowDC(w)) {
+					if(dc.Is0) w.ThrowNoNative("Failed");
+					uint rop = !w.Is0 ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
+					bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, rop);
+					Debug.Assert(ok); //the API fails only if a HDC is invalid
+				}
 			}
+
 			var R = new Bitmap(r.Width, r.Height, PixelFormat.Format32bppRgb);
 			try {
 				var bh = new Api.BITMAPINFOHEADER() {
@@ -146,7 +152,7 @@ namespace Au
 			return new GraphicsPath(p, t);
 		}
 
-		static Bitmap _Capture(List<POINT> outline, AWnd w = default)
+		static Bitmap _Capture(List<POINT> outline, AWnd w = default, bool usePrintWindow = false)
 		{
 			int n = outline?.Count ?? 0;
 			if(n == 0) throw new ArgumentException();
@@ -158,7 +164,7 @@ namespace Au
 				path.Widen(Pens.Black); //will be transparent, but no exception. Difficult to make non-transparent line.
 				r = path.GetBounds();
 			}
-			return _Capture(r, w, path);
+			return _Capture(r, w, usePrintWindow, path);
 		}
 
 		/// <summary>
@@ -180,14 +186,15 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window or control.</param>
 		/// <param name="outline">The outline (shape) of the area in w client area coordinates. If single element, captures single pixel.</param>
+		/// <param name="usePrintWindow">Use flag <see cref="WICFlags.PrintWindow"/>.</param>
 		/// <exception cref="WndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
 		/// <exception cref="AException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
-		/// <remarks>More info: <see cref="Capture(AWnd, RECT)"/>.</remarks>
-		public static Bitmap Capture(AWnd w, List<POINT> outline)
+		/// <remarks>More info: <see cref="Capture(AWnd, RECT, bool)"/>.</remarks>
+		public static Bitmap Capture(AWnd w, List<POINT> outline, bool usePrintWindow = false)
 		{
 			w.ThrowIfInvalid();
-			return _Capture(outline, w);
+			return _Capture(outline, w, usePrintWindow);
 		}
 
 		#endregion
@@ -261,12 +268,12 @@ namespace Au
 				RECT rs = SystemInformation.VirtualScreen;
 				//RECT rs = Screen.PrimaryScreen.Bounds; //for testing, to see Print output in other screen
 				Bitmap bs;
-				bool windowDC = flags.Has(WICFlags.WindowDC);
-				if(windowDC) {
+				bool windowPixels = flags.HasAny(WICFlags.WindowDC | WICFlags.PrintWindow);
+				if(windowPixels) {
 					if(!_WaitForHotkey("Press F3 to select window from mouse pointer.")) return false;
 					var w = AWnd.FromMouse(WXYFlags.NeedWindow);
 					w.GetClientRect(out var rc, inScreen: true);
-					using var bw = Capture(w, w.ClientRect);
+					using var bw = Capture(w, w.ClientRect, flags.Has(WICFlags.PrintWindow));
 					bs = new Bitmap(rs.Width, rs.Height);
 					using var g = Graphics.FromImage(bs);
 					g.Clear(Color.Black);
@@ -280,7 +287,7 @@ namespace Au
 				switch(f.ShowDialog()) {
 				case DialogResult.OK: break;
 				case DialogResult.Retry:
-					if(!windowDC && !_WaitForHotkey("Press F3 when ready for new screenshot.")) return false;
+					if(!windowPixels && !_WaitForHotkey("Press F3 when ready for new screenshot.")) return false;
 					goto g1;
 				default: return false;
 				}
@@ -318,10 +325,10 @@ namespace Au
 		static bool _WaitForHotkey(string info)
 		{
 			using(AOsd.ShowText(info, Timeout.Infinite, icon: SystemIcons.Information)) {
-				//try { AKeyboard.WaitForHotkey(0, KKey.F3); }
+				//try { AKeys.WaitForHotkey(0, KKey.F3); }
 				//catch(AException) { ADialog.ShowError("Failed to register hotkey F3"); return false; }
 
-				AKeyboard.WaitForKey(0, KKey.F3, up: true, block: true);
+				AKeys.WaitForKey(0, KKey.F3, up: true, block: true);
 			}
 			return true;
 		}
@@ -596,6 +603,12 @@ namespace Au.Types
 		/// More info: <see cref="WIFlags.WindowDC"/>.
 		/// </summary>
 		WindowDC = 8,
+
+		/// <summary>
+		/// Get pixels from the client area of a user-selected window using API <msdn>PrintWindow</msdn>.
+		/// More info: <see cref="WIFlags.PrintWindow"/>.
+		/// </summary>
+		PrintWindow = 16,
 	}
 
 	/// <summary>

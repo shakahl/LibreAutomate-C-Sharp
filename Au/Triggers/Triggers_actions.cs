@@ -361,10 +361,10 @@ namespace Au.Triggers
 		{
 			switch(Interlocked.Exchange(ref muteMod, 0)) {
 			case c_modRelease:
-				AKeyboard.Lib.ReleaseModAndDisableModMenu();
+				AKeys.Lib.ReleaseModAndDisableModMenu();
 				break;
 			case c_modCtrl:
-				AKeyboard.Lib.SendKey(KKey.Ctrl); //disable Alt/Win menu
+				AKeys.Lib.SendKey(KKey.Ctrl); //disable Alt/Win menu
 				break;
 			}
 		}

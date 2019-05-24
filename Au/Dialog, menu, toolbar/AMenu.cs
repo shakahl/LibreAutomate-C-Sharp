@@ -20,20 +20,33 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Util;
 
-//TODO: AMenu etc should have before/after delegate properties too. And dedicated threads. Like TriggerOptions.
-
 namespace Au
 {
 	/// <summary>
-	/// TODO
+	/// Popup menu based on <see cref="ContextMenuStrip"/>. Can be used everywhere, not only in forms.
 	/// </summary>
+	/// <example>
+	/// <code><![CDATA[
+	/// var m = new AMenu();
+	/// m["One"] = o => Print(o);
+	/// m["Two", icon: AFolders.System + "shell32.dll,15"] = o => { Print(o); ADialog.Show(o.ToString()); };
+	/// m.LastItem.ToolTipText = "tooltip";
+	/// using(m.Submenu("Submenu")) {
+	/// 	m["Three"] = o => Print(o);
+	/// 	m["Four"] = o => Print(o);
+	/// }
+	/// m.ExtractIconPathFromCode = true;
+	/// m["notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
+	/// m.Show();
+	/// ]]></code>
+	/// </example>
 	public class AMenu : AMTBase, IDisposable
 	{
 		//The main wrapped object. The class is derived from ContextMenuStrip.
 		ContextMenuStrip_ _cm;
 
 		/// <summary>
-		/// Gets ContextMenuStrip that is used to show the main drop-down menu.
+		/// Gets <see cref="ContextMenuStrip"/> that is used to show the main drop-down menu.
 		/// You can use all its properties, methods and events. You can assign it to a control or toolstrip's drop-down button etc.
 		/// </summary>
 		public ContextMenuStrip CMS => _cm;
@@ -113,7 +126,7 @@ namespace Au
 		/// m["Three"] = o => { Print(o.MenuItem.Checked); };
 		/// m.LastMenuItem.Checked = true;
 		/// m.ExtractIconPathFromCode = true;
-		/// m["notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe"));
+		/// m["notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
@@ -142,9 +155,9 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// var m = new AMenu();
-		/// m.Add("One", o => Print(o), @"icon file path");
-		/// m.Add("Two", o => { Print(o.MenuItem.Checked); ADialog.Show(o.ToString()); });
-		/// m.LastMenuItem.Checked = true;
+		/// m.Add("One", o => Print(o), icon: AFolders.System + "shell32.dll,9");
+		/// var mi = m.Add("Two", o => { Print(o.MenuItem.Checked); ADialog.Show(o.ToString()); });
+		/// mi.Checked = true;
 		/// m.ExtractIconPathFromCode = true;
 		/// m.Add("notepad", o => AExec.TryRun(AFolders.System + "notepad.exe"));
 		/// m.Show();
@@ -322,10 +335,7 @@ namespace Au
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
-		public void EndSubmenu()
-		{
-			var dd = _submenuStack.Pop();
-		}
+		public void EndSubmenu() => _submenuStack.Pop();
 
 		/// <summary>
 		/// Adds new item (<see cref="ToolStripMenuItem"/>) that will open a submenu.
@@ -467,7 +477,7 @@ namespace Au
 			case 2: _cm.Show(new Point(x, y), direction); break;
 			case 3: _cm.Show(control, new Point(x, y), direction); break;
 			case 4:
-				AKeyboard.More.GetTextCursorRect(out RECT cr, out _, orMouse: true);
+				AKeys.More.GetTextCursorRect(out RECT cr, out _, orMouse: true);
 				_cm.Show(new Point(cr.left - 32, cr.bottom + 2));
 				break;
 			}

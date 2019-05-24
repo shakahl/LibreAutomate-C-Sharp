@@ -129,9 +129,9 @@ static partial class Test
 
 	/*
 	print(...); //AOutput.Write(...);
-	key(...); //AKeyboard.Key(...);
-	tkey(...); //AKeyboard.Text(...); //or txt
-	paste(...); //AKeyboard.Paste(...);
+	key(...); //AKeys.Key(...);
+	tkey(...); //AKeys.Text(...); //or txt
+	paste(...); //AKeys.Paste(...);
 	msgbox(...); //ADialog.Show(...);
 	click(...); //AMouse.Click(...);
 	mmove(...); //AMouse.Move(...);

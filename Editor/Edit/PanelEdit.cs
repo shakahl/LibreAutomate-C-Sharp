@@ -215,72 +215,6 @@ partial class PanelEdit : Control
 
 	}
 
-	public unsafe void Test()
-	{
-		//Print(EImageUtil.ImageTypeFromString(true, @"C:\any.dll,-85"));
-		//Print(EImageUtil.ImageTypeFromString(true, @"C:\a.bmp"));
-		//Print(EImageUtil.ImageTypeFromString(true, @"C:\.bmp"));
-		//Print(EImageUtil.ImageTypeFromString(true, @"C:\any.ico"));
-		//Print(EImageUtil.ImageTypeFromString(true, @"\\a\b\any.png"));
-		//Print(EImageUtil.ImageTypeFromString(true, @"~:123456"));
-		//Print(EImageUtil.ImageTypeFromString(true, @"resource:mmm"));
-
-		//_img.ClearCache();
-
-		//for(int i = 0; i < 10; i++) Print($"{i}: '{_t.AnnotationText(i)}'");
-		//for(int i = 0; i < 10; i++) _t.AnnotationText(i, "||||new text");
-		//for(int i = 0; i < 10; i++) _t.AnnotationText(i, null);
-
-		//_t.AnnotationText(0, "Test\nAnnotations");
-		//_t.AnnotationText(0, Empty(_t.AnnotationText(0)) ? "Test\nAnnotations" : "");
-		//_t.AnnotationText(0, (_t.AnnotationText(0).Length<5) ? "Test\nAnnotations" : "abc");
-
-		//Print(_c.Images.Visible);
-
-		//switch(_c.Images.Visible) {
-		//case Sci.AnnotationsVisible.ANNOTATION_HIDDEN:
-		//	_c.Images.Visible = Sci.AnnotationsVisible.ANNOTATION_STANDARD;
-		//	//_c.Images.Visible = Sci.AnnotationsVisible.ANNOTATION_BOXED;
-		//	break;
-		//default:
-		//	_c.Images.Visible = Sci.AnnotationsVisible.ANNOTATION_HIDDEN;
-		//	//_c.Images.Visible = Sci.AnnotationsVisible.ANNOTATION_BOXED;
-		//	break;
-		//}
-
-		//switch((Sci.AnnotationsVisible)(int)_c.Call(Sci.SCI_ANNOTATIONGETVISIBLE)) {
-		//case Sci.AnnotationsVisible.ANNOTATION_HIDDEN:
-		//	_c.Call(Sci.SCI_ANNOTATIONSETVISIBLE, (int)Sci.AnnotationsVisible.ANNOTATION_STANDARD);
-		//	break;
-		//default:
-		//	_c.Call(Sci.SCI_ANNOTATIONSETVISIBLE, (int)Sci.AnnotationsVisible.ANNOTATION_HIDDEN);
-		//	break;
-		//}
-
-		//var o = Panels.Output;
-		//o.Write(@"Three green strips: <image ""C:\Users\G\Documents\Untitled.bmp"">");
-		//Print(_c.Text);
-		AOutput.Clear();
-		//Print(_activeDoc?.Text);
-		//_c.Text = "";
-
-		//Print("one\0two");
-		//Print("<><c 0x8000>one\0two</c>");
-
-
-		//foreach(var f in AFile.EnumDirectory(AFolders.ProgramFiles, FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
-		//	if(f.IsDirectory) continue;
-		//	if(0 == f.Name.Ends(true, ".png", ".bmp", ".jpg", ".gif", ".ico")) continue;
-		//	//Print(f.FullPath);
-		//	MainForm.Panels.AOutput.Write($"<image \"{f.FullPath}\">");
-		//	ATime.DoEvents();
-		//}
-	}
-
-	//static bool _debugOnce;
-
-
-
 	public class SciCode : AuScintilla
 	{
 		public readonly FileNode FN;
@@ -396,7 +330,7 @@ partial class PanelEdit : Control
 				break;
 			case Api.WM_KEYDOWN:
 				char key = (char)(int)m.WParam;
-				var mod = AKeyboard.UI.GetMod();
+				var mod = AKeys.UI.GetMod();
 				if(mod == KMod.Ctrl) {
 					switch(key) {
 					case 'C':
@@ -954,7 +888,7 @@ partial class PanelEdit : Control
 		const string c_usings = @"//{{ using
 using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}";
 		const string c_scriptMain = @"//{{ main
-unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}";
+class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}";
 
 		public bool PasteModified()
 		{

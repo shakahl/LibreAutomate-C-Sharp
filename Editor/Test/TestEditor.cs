@@ -24,7 +24,7 @@ using Au.Controls;
 using static Au.Controls.Sci;
 //using DiffMatchPatch;
 
-#if TEST
+#if TEST && DEBUG
 
 #pragma warning disable 169
 
@@ -49,23 +49,23 @@ partial class EdForm
 		//return;
 
 
-		//var doc = Panels.Editor.ActiveDoc;
-		var doc = Panels.Output.Controls[0] as AuScintilla;
+		var doc = Panels.Editor.ActiveDoc;
+		//var doc = Panels.Output.Controls[0] as AuScintilla;
 		var t = doc.ST;
 		var s = doc.Text;
 
 		//AOutput.QM2.Write(s);
 
-		int len=t.TextLengthBytes;
-		var b = stackalloc byte[len * 2 + 2];
+		//int len=t.TextLengthBytes;
+		//var b = stackalloc byte[len * 2 + 2];
 
-		Sci.Sci_TextRange tr = default;
-		tr.chrg.cpMax = len;
-		tr.lpstrText = b;
-		t.Call(Sci.SCI_GETSTYLEDTEXT, 0, &tr);
-		for(int i = 0; i < len*2; i++) {
-			Print(b[i]);
-		}
+		//Sci.Sci_TextRange tr = default;
+		//tr.chrg.cpMax = len;
+		//tr.lpstrText = b;
+		//t.Call(Sci.SCI_GETSTYLEDTEXT, 0, &tr);
+		//for(int i = 0; i < len*2; i++) {
+		//	Print(b[i]);
+		//}
 
 		//t.Call(SCI_FOLDALL);
 		//for(int i = 0; i < 3; i++) Print((uint)t.Call(SCI_GETFOLDLEVEL, i));
@@ -126,7 +126,7 @@ partial class EdForm
 		//TestTools();
 		//TestReplaceFile();
 
-		//doc.CommentLines(!AKeyboard.IsShift);
+		//doc.CommentLines(!AKeys.IsShift);
 
 		//Au.Triggers.ActionTriggers.DisabledEverywhere ^= true;
 
@@ -134,7 +134,7 @@ partial class EdForm
 		////{{ using
 		//using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}
 		////{{ main
-		//unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
+		//class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
 		//";
 		//		var s2 = @"/*/ role exeProgram; outputPath %AFolders.Workspace%\bin; console true; /*/ //{{
 		////{{ using
@@ -142,7 +142,7 @@ partial class EdForm
 		//using My.NS1; //ąčę îôû
 		//using My.NS2;
 		////{{ main
-		//unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
+		//class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
 		//";
 
 		//		var dmp = new diff_match_patch();
@@ -155,8 +155,74 @@ partial class EdForm
 		//		//Print(d2);
 		//		Print(dmp.diff_text2(d2));
 
+		//Print(t.CountBytesFromChars(2), t.CountBytesFromChars(4, 2));
+		//Print(t.CountBytesToChars(0, 4));
+
 	}
-	static bool s_test1;
+	//static bool s_test1;
+
+	public unsafe void TestOld()
+	{
+		//Print(EImageUtil.ImageTypeFromString(true, @"C:\any.dll,-85"));
+		//Print(EImageUtil.ImageTypeFromString(true, @"C:\a.bmp"));
+		//Print(EImageUtil.ImageTypeFromString(true, @"C:\.bmp"));
+		//Print(EImageUtil.ImageTypeFromString(true, @"C:\any.ico"));
+		//Print(EImageUtil.ImageTypeFromString(true, @"\\a\b\any.png"));
+		//Print(EImageUtil.ImageTypeFromString(true, @"~:123456"));
+		//Print(EImageUtil.ImageTypeFromString(true, @"resource:mmm"));
+
+		//_img.ClearCache();
+
+		//for(int i = 0; i < 10; i++) Print($"{i}: '{_t.AnnotationText(i)}'");
+		//for(int i = 0; i < 10; i++) _t.AnnotationText(i, "||||new text");
+		//for(int i = 0; i < 10; i++) _t.AnnotationText(i, null);
+
+		//_t.AnnotationText(0, "Test\nAnnotations");
+		//_t.AnnotationText(0, Empty(_t.AnnotationText(0)) ? "Test\nAnnotations" : "");
+		//_t.AnnotationText(0, (_t.AnnotationText(0).Length<5) ? "Test\nAnnotations" : "abc");
+
+		//Print(_c.Images.Visible);
+
+		//switch(_c.Images.Visible) {
+		//case Sci.AnnotationsVisible.ANNOTATION_HIDDEN:
+		//	_c.Images.Visible = Sci.AnnotationsVisible.ANNOTATION_STANDARD;
+		//	//_c.Images.Visible = Sci.AnnotationsVisible.ANNOTATION_BOXED;
+		//	break;
+		//default:
+		//	_c.Images.Visible = Sci.AnnotationsVisible.ANNOTATION_HIDDEN;
+		//	//_c.Images.Visible = Sci.AnnotationsVisible.ANNOTATION_BOXED;
+		//	break;
+		//}
+
+		//switch((Sci.AnnotationsVisible)(int)_c.Call(Sci.SCI_ANNOTATIONGETVISIBLE)) {
+		//case Sci.AnnotationsVisible.ANNOTATION_HIDDEN:
+		//	_c.Call(Sci.SCI_ANNOTATIONSETVISIBLE, (int)Sci.AnnotationsVisible.ANNOTATION_STANDARD);
+		//	break;
+		//default:
+		//	_c.Call(Sci.SCI_ANNOTATIONSETVISIBLE, (int)Sci.AnnotationsVisible.ANNOTATION_HIDDEN);
+		//	break;
+		//}
+
+		//var o = Panels.Output;
+		//o.Write(@"Three green strips: <image ""C:\Users\G\Documents\Untitled.bmp"">");
+		//Print(_c.Text);
+		AOutput.Clear();
+		//Print(_activeDoc?.Text);
+		//_c.Text = "";
+
+		//Print("one\0two");
+		//Print("<><c 0x8000>one\0two</c>");
+
+
+		//foreach(var f in AFile.EnumDirectory(AFolders.ProgramFiles, FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)) {
+		//	if(f.IsDirectory) continue;
+		//	if(0 == f.Name.Ends(true, ".png", ".bmp", ".jpg", ".gif", ".ico")) continue;
+		//	//Print(f.FullPath);
+		//	MainForm.Panels.AOutput.Write($"<image \"{f.FullPath}\">");
+		//	ATime.DoEvents();
+		//}
+	}
+	//static bool _debugOnce;
 
 	void TestMC()
 	{

@@ -1272,14 +1272,14 @@ namespace Au
 
 			//We'll hide the progress bar control and create our Edit control in its place.
 			AWnd prog = parent.Child(cn: "msctls_progress32", flags: WCFlags.HiddenToo);
-			prog.GetRectInClientOf(parent, out r);
+			prog.GetRectIn(parent, out r);
 
 			if(_editType == DEdit.Multiline) {
 				int top = r.top;
 				if(!_c.pszContent.Ends(c_multilineString)) {
 					_c.pszContent += c_multilineString;
 					_dlg.SendS((int)Native.TDM.SET_ELEMENT_TEXT, (int)Native.TDE.CONTENT, _c.pszContent);
-					prog.GetRectInClientOf(parent, out r); //used to calculate Edit control height: after changing text, prog is moved down, and we know its previous location...
+					prog.GetRectIn(parent, out r); //used to calculate Edit control height: after changing text, prog is moved down, and we know its previous location...
 				}
 				if(_editMultilineHeight == 0) { _editMultilineHeight = r.bottom - top; } else top = r.bottom - _editMultilineHeight;
 				r.top = top;

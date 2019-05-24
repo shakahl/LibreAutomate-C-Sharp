@@ -80,7 +80,7 @@ namespace Au
 		/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
 		/// A single variable cannot register multiple hotkeys simultaneously. Use multiple variables, for example array.
 		/// </remarks>
-		/// <seealso cref="AKeyboard.WaitForHotkey"/>
+		/// <seealso cref="AKeys.WaitForHotkey"/>
 		/// <example>See <see cref="ARegisteredHotkey"/>.</example>
 		public bool Register(int id, KHotkey hotkey, AnyWnd window = default)
 		{

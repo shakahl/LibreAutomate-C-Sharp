@@ -195,22 +195,19 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Converts UTF-16 position to UTF-8 position.
-		/// Note: currently actually UTF-32. Will need to replace SCI_POSITIONRELATIVE with SCI_POSITIONRELATIVECODEUNITS.
 		/// </summary>
-		public int CountBytesFromChars(int charsPos) => charsPos > 0 ? Call(SCI_POSITIONRELATIVE, 0, charsPos) : 0;
+		public int CountBytesFromChars(int charsPos) => charsPos > 0 ? Call(SCI_POSITIONRELATIVECODEUNITS, 0, charsPos) : 0;
 
 		/// <summary>
 		/// Counts a number of UTF-16 characters before or after the UTF-8 position and return that UTF-8 position.
-		/// Note: currently actually UTF-32. Will need to replace SCI_POSITIONRELATIVE with SCI_POSITIONRELATIVECODEUNITS.
 		/// charsRelative can be negative.
 		/// </summary>
-		public int CountBytesFromChars(int bytesPos, int charsRelative) => Call(SCI_POSITIONRELATIVE, bytesPos, charsRelative);
+		public int CountBytesFromChars(int bytesPos, int charsRelative) => Call(SCI_POSITIONRELATIVECODEUNITS, bytesPos, charsRelative);
 
 		/// <summary>
 		/// Returns the number of UTF-16 characters between two UTF-8 positions.
-		/// Note: currently actually UTF-32. Will need to replace SCI_COUNTCHARACTERS with SCI_COUNTCODEUNITS.
 		/// </summary>
-		public int CountBytesToChars(int bytesStart, int bytesEnd) => Call(SCI_COUNTCHARACTERS, bytesStart, bytesEnd);
+		public int CountBytesToChars(int bytesStart, int bytesEnd) => Call(SCI_COUNTCODEUNITS, bytesStart, bytesEnd);
 
 		struct _NoReadonly : IDisposable
 		{

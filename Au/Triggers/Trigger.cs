@@ -437,7 +437,7 @@ namespace Au.Triggers
 	/// <example>
 	/// <code><![CDATA[
 	/// //examples of assigning a CF to a single trigger
-	/// Triggers.FuncOf.NextTrigger = o => AKeyboard.IsCapsLock; //o => AKeyboard.IsCapsLock is the callback function (lambda)
+	/// Triggers.FuncOf.NextTrigger = o => AKeys.IsCapsLock; //o => AKeys.IsCapsLock is the callback function (lambda)
 	/// Triggers.Hotkey["Ctrl+K"] = o => Print("action: Ctrl+K while CapsLock is on");
 	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; Print($"func: mod={v.Mod}"); return AMouse.IsPressed(MButtons.Left); };
 	/// Triggers.Hotkey["Ctrl+Shift?+B"] = o => Print("action: mouse left button + Ctrl+B or Ctrl+Shift+B");

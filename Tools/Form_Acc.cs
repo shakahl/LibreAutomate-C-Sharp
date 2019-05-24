@@ -576,7 +576,7 @@ namespace Au.Tools
 		//	Usually faster than recreating tree, but in some cases can be slower. Slower when fails to find.
 		bool _TrySelectInSameTree()
 		{
-			//if(AKeyboard.IsScrollLock) return false;
+			//if(AKeys.IsScrollLock) return false;
 			int elem = _acc.SimpleElementId;
 			var ri = _acc.RoleInt;
 			if(!_acc.GetProperties(ri == 0 ? "Rrn" : "rn", out var p)) return false;

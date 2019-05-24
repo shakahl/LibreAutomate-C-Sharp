@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using Au;
@@ -19,8 +19,48 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Triggers;
 
-unsafe partial class Script : AScript
+class Script : AScript
 {
+	//static void _Sleep(AWnd w)
+	//{
+	//	var c = w.Child("Save", "Button", WCFlags.HiddenToo).OrThrow();
+	//	int n = 16;
+	//	var a = new AWnd[n];
+	//	var b = new bool[n];
+	//	for(int i = 0; i < n; i++) {
+	//		a[i] = AWnd.Focused;
+	//		b[i] = c.LibIsVisibleIn(w);
+	//		1.ms();
+	//	}
+	//	//Print(a);
+	//	for(int i = 0; i < n; i++) Print(b[i], a[i]);
+	//}
+
+	//static void _Sleep()
+	//{
+	//	int n = 16;
+	//	var a = new bool[n];
+	//	var ht = AThread.Handle;
+	//	Api.SetThreadPriority(ht, -2);
+	//	for(int i = 0; i < n; i++) {
+	//		//Print(1 << (i & 3));
+	//		SetThreadAffinityMask(ht, 1 << (i & 3));
+	//		for(var t0 = ATime.PerfMicroseconds; ATime.PerfMicroseconds - t0 < 100;) { }
+	//		a[i]=SwitchToThread();
+	//		//a[i] = Thread.Yield();
+	//		//Thread.Sleep(0);
+	//		//1.ms();
+	//	}
+	//	SetThreadAffinityMask(ht, 15);
+	//	Api.SetThreadPriority(ht, 0);
+	//	Print(a);
+	//}
+
+	//[DllImport("kernel32.dll")]
+	//internal static extern bool SwitchToThread();
+	//[DllImport("kernel32.dll")]
+	//internal static extern LPARAM SetThreadAffinityMask(IntPtr hThread, LPARAM dwThreadAffinityMask);
+
 	void TestOptReset()
 	{
 		//Opt.Static.Debug.Verbose = false;
@@ -54,7 +94,7 @@ unsafe partial class Script : AScript
 		//Print(Opt.Key.TextSpeed);
 	}
 
-	void Test1()
+	unsafe void Test1()
 	{
 		//var w = AWnd.Find("Options").OrThrow();
 		var w = AWnd.Find("Test", "Cabinet*").OrThrow();
@@ -280,10 +320,10 @@ unsafe partial class Script : AScript
 	void Test2CharKeysAndVK()
 	{
 		AWnd.Find("* Notepad").Activate();
-		//AKeyboard.WaitForKey(0, "VK65", true);
+		//AKeys.WaitForKey(0, "VK65", true);
 		//Key("VK65 Vk0x42");
-		//Print(AKeyboard.More.ParseKeysString("VK65 Vk0x42"));
-		if(AKeyboard.More.ParseHotkeyString("Ctrl+VK65", out var mod, out var key)) Print(mod, key);
+		//Print(AKeys.More.ParseKeysString("VK65 Vk0x42"));
+		if(AKeys.More.ParseHotkeyString("Ctrl+VK65", out var mod, out var key)) Print(mod, key);
 	}
 
 	void TestAcc()
@@ -315,10 +355,10 @@ unsafe partial class Script : AScript
 		//var w = AWnd.Find("FileZilla", "wxWindowNR").OrThrow();
 		//var a = AAcc.Find(w, "STATICTEXT", "Local site:", "id=-31741").OrThrow();
 
-		//var fa = new Au.Tools.Form_Acc();
-		////var fa = new Au.Tools.Form_Wnd();
-		////var fa = new Au.Tools.Form_WinImage();
-		//fa.ShowDialog();
+		var fa = new Au.Tools.Form_Acc();
+		//var fa = new Au.Tools.Form_Wnd();
+		//var fa = new Au.Tools.Form_WinImage();
+		fa.ShowDialog();
 
 		//ADialog.Show("unload dll");
 
@@ -326,11 +366,11 @@ unsafe partial class Script : AScript
 		//var a = AAcc.Find(w, "BUTTON", "Au - Microsoft Visual Studio - 1 running window", "class=MSTaskListWClass").OrThrow();
 		//var w = AWnd.Find("Calculator", "ApplicationFrameWindow").OrThrow();
 		//var a = AAcc.Find(w, "BUTTON", "Seven", "class=Windows.UI.Core.CoreWindow").OrThrow();
-		var w = AWnd.Find("Calculator", "ApplicationFrameWindow").OrThrow();
-		var c = w.Child("Calculator", "Windows.UI.Core.CoreWindow").OrThrow();
-		var a = AAcc.Find(c, "BUTTON", "Seven").OrThrow();
-		Print(a);
-		Print(a.MiscFlags);
+		//var w = AWnd.Find("Calculator", "ApplicationFrameWindow").OrThrow();
+		//var c = w.Child("Calculator", "Windows.UI.Core.CoreWindow").OrThrow();
+		//var a = AAcc.Find(c, "BUTTON", "Seven").OrThrow();
+		//Print(a);
+		//Print(a.MiscFlags);
 
 #else
 		//var w = AWnd.Find("FileZilla", "wxWindowNR").OrThrow();
@@ -509,9 +549,6 @@ unsafe partial class Script : AScript
 		//Triggers.Hotkey["Ctrl+Q"] = o => { Print("Ctrl+Q (stop)"); Triggers.Stop(); };
 		//Triggers.Hotkey.Last.EnabledAlways = true;
 
-		//TODO: maybe better Triggers.Window.FuncOfNextTrigger. Then args can be WindowTriggerArgs and don't need to cast.
-		//	Or let func be a parameter. Use FuncOf only for common functions; move it into Options: Options.AfterOf/BeforeOf.
-
 		//Triggers.FuncOf.NextTrigger = o => { var v = o as WindowTriggerArgs; var ac = v.Window.Get.Children(); Print(ac); Print(ac.Length); return true; };
 		Func<AWnd, bool> also = o => { var ac = o.Get.Children(); foreach(var v in ac) Print(v, v.Style & (WS)0xffff0000); Print(ac.Length); return true; };
 		//Func<AWnd, bool> also = o => { /*100.ms();*/ Print(o.Get.Children().Length); return true; };
@@ -567,6 +604,20 @@ unsafe partial class Script : AScript
 		//Triggers.Run();
 	}
 
+	bool _DebugFilterEvent(AWnd w)
+	{
+		if(0 != w.ClassNameIs("*tooltip*", "SysShadow", "#32774", "QM_toolbar", "TaskList*", "ClassicShell.*"
+			, "IME", "MSCTFIME UI", "OleDde*", ".NET-Broadcast*", "GDI+ Hook*", "UIRibbonStdCompMgr"
+			)) return false;
+		//if(w.HasExStyle(WS_EX.NOACTIVATE) && 0 != w.ProgramNameIs("devenv.exe")) return;
+		var es = w.ExStyle;
+		bool ret = es.Has(WS_EX.TRANSPARENT | WS_EX.LAYERED) && es.HasAny(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE); //tooltips etc
+		if(!ret) ret = es.Has(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE) && es.Has(WS_EX.LAYERED); //eg VS code tips
+		if(ret) { /*Print($"<><c 0x80e0e0>    {e}, {w}, {es}</c>");*/ return false; }
+		if(Debugger.IsAttached && w.LibNameTL.Like("*Visual Studio")) return false;
+		return true;
+	}
+
 	void TestMouseTriggers()
 	{
 		Triggers.Options.RunActionInThread(0, 500);
@@ -608,7 +659,7 @@ unsafe partial class Script : AScript
 		//tm[TMClick.Right, "Alt", TMFlags.ButtonModUp | TMFlags.ShareEvent] = o => Print(o.Trigger);
 		Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 50; /*Opt.Key.NoBlockInput = true;*/ };
 		//tm[TMClick.Right, "Alt"] = o => Key("some Spa text Spa for Spa testing Spa Enter");
-		//tm[TMClick.Right, "Alt"] = o => Print("wait", AKeyboard.WaitForKey(0, true, true));
+		//tm[TMClick.Right, "Alt"] = o => Print("wait", AKeys.WaitForKey(0, true, true));
 		//tm[TMClick.Right, "Win"] = o => Print(o.Trigger);
 		//tm[TMClick.Right, "Shift"] = o => Print(o.Trigger);
 		tm[TMClick.Right, "Win", TMFlags.ButtonModUp] = o => Print(o.Trigger);
@@ -668,24 +719,24 @@ unsafe partial class Script : AScript
 		tk["F12"] = o => { Key("ghijk"); };
 
 #elif true
-		//tk["Shift+K"] = o => { Print(AKeyboard.IsShift); AMouse.Click(); };
-		//tk["Shift+K", TKFlags.NoModOff] = o => { Print(AKeyboard.IsShift); AMouse.Click(); };
-		//tk["Shift+K", TKFlags.NoModOff] = o => { Print(AKeyboard.IsShift); Key("keys", "some Text"); };
-		//tk["Shift+K", TKFlags.NoModOff] = o => { Print(AKeyboard.IsShift); Opt.Key.NoModOff = true; Key("keys", "some Text"); };
-		//tk["Shift+K"] = o => { Print(AKeyboard.IsShift); Opt.Key.NoModOff = true; Key("keys", "some Text"); };
+		//tk["Shift+K"] = o => { Print(AKeys.IsShift); AMouse.Click(); };
+		//tk["Shift+K", TKFlags.NoModOff] = o => { Print(AKeys.IsShift); AMouse.Click(); };
+		//tk["Shift+K", TKFlags.NoModOff] = o => { Print(AKeys.IsShift); Key("keys", "some Text"); };
+		//tk["Shift+K", TKFlags.NoModOff] = o => { Print(AKeys.IsShift); Opt.Key.NoModOff = true; Key("keys", "some Text"); };
+		//tk["Shift+K"] = o => { Print(AKeys.IsShift); Opt.Key.NoModOff = true; Key("keys", "some Text"); };
 		tk["Ctrl+K"] = o => { Print(o.Trigger); };
 		//tk["Ctrl+K", TKFlags.NoModOff] = o => { Print(o.Trigger); };
-		//tk["Ctrl+K"] = o => { Print(o.Trigger, AKeyboard.IsCtrl); };
-		//tk["Ctrl+K"] = o => { Print(o.Trigger, AKeyboard.IsCtrl); Text(" ...."); };
-		//tk["Ctrl+K"] = o => { Print(o.Trigger, AKeyboard.IsCtrl); Text(" ..", 30, "", ".."); };
-		//tk["Ctrl+K"] = o => { Opt.Key.NoBlockInput = true; Print(o.Trigger, AKeyboard.IsCtrl); Text(" ...."); };
-		//tk["Ctrl+K"] = o => { Print(o.Trigger, AKeyboard.IsCtrl); 1.s(); Print(AKeyboard.IsCtrl); };
+		//tk["Ctrl+K"] = o => { Print(o.Trigger, AKeys.IsCtrl); };
+		//tk["Ctrl+K"] = o => { Print(o.Trigger, AKeys.IsCtrl); Text(" ...."); };
+		//tk["Ctrl+K"] = o => { Print(o.Trigger, AKeys.IsCtrl); Text(" ..", 30, "", ".."); };
+		//tk["Ctrl+K"] = o => { Opt.Key.NoBlockInput = true; Print(o.Trigger, AKeys.IsCtrl); Text(" ...."); };
+		//tk["Ctrl+K"] = o => { Print(o.Trigger, AKeys.IsCtrl); 1.s(); Print(AKeys.IsCtrl); };
 		tk["Ctrl+L", TKFlags.LeftMod] = o => { Print(o.Trigger); };
 		tk["Ctrl+R", TKFlags.RightMod] = o => { Print(o.Trigger); };
 		//tk["Alt+F"] = o => { Print(o.Trigger); };
 		//tk["Win+R"] = o => { Print(o.Trigger); };
-		//tk["Alt+F", TKFlags.NoModOff] = o => { Print(o.Trigger, AKeyboard.IsAlt); };
-		//tk["Win+R", TKFlags.NoModOff] = o => { Print(o.Trigger, AKeyboard.IsWin); };
+		//tk["Alt+F", TKFlags.NoModOff] = o => { Print(o.Trigger, AKeys.IsAlt); };
+		//tk["Win+R", TKFlags.NoModOff] = o => { Print(o.Trigger, AKeys.IsWin); };
 		//tk["Shift+T", TKFlags.NoModOff] = o => { Opt.Key.NoModOff = true; Opt.Key.TextOption = KTextOption.Keys; Text("some Text"); };
 		//tk["Alt+F", TKFlags.ShareEvent] = o => { Print(o.Trigger); };
 		//tk["Win+R", TKFlags.ShareEvent] = o => { Print(o.Trigger); };
@@ -829,7 +880,7 @@ unsafe partial class Script : AScript
 
 	void TestProcessStarter()
 	{
-		var exe = @"Q:\My QM\console4.exe";
+		//var exe = @"Q:\My QM\console4.exe";
 
 		//var ps = new Au.Util.LibProcessStarter(exe, "COMMAND", "", "moo=KKK");
 		//ps.Start();
@@ -858,6 +909,9 @@ unsafe partial class Script : AScript
 		//Print(text);
 
 		//Print("exit");
+
+		//if(AKeys.IsCtrl);
+		//if(AKeys.IsCtrl);
 	}
 
 	void TestRunConsole()
@@ -917,45 +971,45 @@ unsafe partial class Script : AScript
 	//	public override void WriteLine(string message) => AOutput.Write(message);
 	//}
 
-	void TestCs8()
-	{
-		int i = 1, j = 2;
-		switch(i, j) {
-		case (1, 2):
-			Print("yess");
-			break;
-		}
+	//void TestCs8()
+	//{
+	//	int i = 1, j = 2;
+	//	switch(i, j) {
+	//	case (1, 2):
+	//		Print("yess");
+	//		break;
+	//	}
 
-		int k = j switch { 1 => 10, 2 => 20, _ => 0 };
-		Print(k);
+	//	int k = j switch { 1 => 10, 2 => 20, _ => 0 };
+	//	Print(k);
 
-		POINT p = (3, 4);
-		if(p is POINT { x: 3, y: 4 }) Print("POINT(3,4)");
+	//	POINT p = (3, 4);
+	//	if(p is POINT { x: 3, y: 4 }) Print("POINT(3,4)");
 
-		//Range range = 1..5; //no
-		//var s = "one"; Print(s[^1]); //no
+	//	//Range range = 1..5; //no
+	//	//var s = "one"; Print(s[^1]); //no
 
-		//using var _ = new TestUsing();
-		//using new TestUsing(); //no
-		//TestUsing v = null; using v; //no
+	//	//using var _ = new TestUsing();
+	//	//using new TestUsing(); //no
+	//	//TestUsing v = null; using v; //no
 
-		Loc(i);
-		static void Loc(int u)
-		{
-			Print(u);
-		}
+	//	Loc(i);
+	//	static void Loc(int u)
+	//	{
+	//		Print(u);
+	//	}
 
 
-		switch(ADialog.Show("test", "mmm", "1 OK|2 Cancel")) {
+	//	switch(ADialog.Show("test", "mmm", "1 OK|2 Cancel")) {
 
-		}
+	//	}
 
-		int dr = ADialog.Show("test", "mmm", "1 OK|2 Cancel") switch
-		{
-			1 => 10,
-			_ => 20
-		};
-	}
+	//	int dr = ADialog.Show("test", "mmm", "1 OK|2 Cancel") switch
+	//	{
+	//		1 => 10,
+	//		_ => 20
+	//	};
+	//}
 
 	class TestCs8Using : IDisposable
 	{
@@ -1061,7 +1115,7 @@ unsafe partial class Script : AScript
 		//m["articles/Wildcard expression"] = f;
 		//m.Show();
 
-		string s = "abcdefghijklmnoprstuv";
+		//string s = "abcdefghijklmnoprstuv";
 		//Print(s.Starts("ab"));
 		//Print(s.Starts("Ab"));
 		//Print(s.Starts("Ab", true));
@@ -1205,10 +1259,78 @@ unsafe partial class Script : AScript
 		//	Print(f.FullPath);
 		//}
 
-		foreach(var f in AFile.EnumDirectory(@"C:\Users", FEFlags.AndSubdirectories, filter: k => !k.Name.Eqi("G"), errorHandler: p => Print("failed", p))) {
-			//if(f.IsDirectory) continue;
-			Print(f.FullPath);
-		}
+		//foreach(var f in AFile.EnumDirectory(@"C:\Users", FEFlags.AndSubdirectories, filter: k => !k.Name.Eqi("G"), errorHandler: p => Print("failed", p))) {
+		//	//if(f.IsDirectory) continue;
+		//	Print(f.FullPath);
+		//}
+
+		//AWnd.Find("* Notepad").Activate();
+		//2.s();
+		//Print("start");
+		//using var bi = new AInputBlocker(BIEvents.Keys);
+		//bi.ResendBlockedKeys = true;
+		//2.s();
+		//Print("stop");
+		//bi.Stop(true);
+
+		//var f = new Au.Tools.Form_WinImage();
+		//f.ShowDialog();
+
+		//string s1 = "abcdefgh";
+		//string s2 = null;
+		//Print(s1.Eq(null), s2.Eq(null), s1.Eq("abcdefgh"), s2.Eq("abcdefgh"));
+		//Print(s1.Eqi(null), s2.Eqi(null), s1.Eqi("abcdefgh"), s2.Eqi("abcdefgh"));
+		//Print(s1.Eq(false, null, "abcdefgh"), s2.Eq(false, null, "abcdefgh"), s1.Eq(false, "abcdefgh", null), s2.Eq(false, "abcdefgh", null));
+		//Print(s1.Eq(2, "cd"), s2.Eq(2, "cd"), s1.Eq(20, "cd"), s1.Eq(2, false, "cd"), s2.Eq(2, false, "cd"));
+		//Print(s1.Ends("abcdefgh"), s2.Ends("abcdefgh"));
+		//Print(s1.Starts("abcdefgh"), s2.Starts("abcdefgh"));
+		//Print(s1.Like("abcdefgh"), s2.Like("abcdefgh"));
+		//Print(s1.Find("cd"), s2.Find("cd"));
+		//Print(s1.Has("cd"), s2.Has("cd"));
+		//Print(s1.FindChars("cd"), s2.FindChars("cd"));
+		//Print(s1.FindLastChars("cd"), s2.FindLastChars("cd"));
+		//Print(s1.FindWord("abcdefgh"), s2.FindWord("abcdefgh"));
+		//s1 = "12 kb"; Print(s1.ToInt(), s2.ToInt());
+		//Print(s1.Regex("cd"), s2.Regex("cd"));
+		//Print(s1.RegexMatch("cd", out var r1), s2.RegexMatch("cd", out var r2));
+		//Print(s1.RegexMatch("cd", 0, out string r3), s2.RegexMatch("cd", 0, out string r4));
+		//Print(s1.RegexMatch("cd", 0, out RXGroup r5), s2.RegexMatch("cd", 0, out RXGroup r6));
+
+		//var (i, w) = AWnd.WaitAny(10, true, "* Notepad", new AWnd.Finder("* Word"));
+		//Print(i, w);
+
+		//AOutput.RedirectConsoleOutput = true;
+
+		//#if true
+		//		var w = AWnd.Find("Quick *").OrThrow();
+		//#if true
+		//		var f = new Au.Tools.Form_Wnd(w);
+		//		f.ShowDialog();
+		//#else
+		//		var f2 = new Au.Tools.Form_WinImage();
+		//		f2.ShowDialog();
+		//#endif
+		//#else
+		//		var f = new Form();
+		//		var t1 = new TextBox { Location = new Point(10, 10), Text = "one" };
+		//		var t2 = new TextBox { Location = new Point(10, 50), Text = "two" };
+		//		f.Controls.Add(t1);
+		//		f.Controls.Add(t2);
+		//		f.ShowDialog();
+		//#endif
+
+		//Print(APath.ExpandEnvVar("%AFolders.Documents%"));
+
+		//var f = new Form();
+		//f.StartPosition = FormStartPosition.CenterScreen;
+		//var e = new TextBox();
+		//f.Controls.Add(e);
+		//f.Click += (unu, sed) => {
+		//	var k = new Au.Controls.PopupList();
+		//	k.Items = AWnd.GetWnd.AllWindows().Select(o=>o.ToString()).ToArray();
+		//	k.Show(e);
+		//};
+		//f.ShowDialog();
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
@@ -1217,9 +1339,9 @@ unsafe partial class Script : AScript
 #if true
 		AOutput.QM2.UseQM2 = true;
 		AOutput.Clear();
-		100.ms();
+		//100.ms();
 
-		TestTodo();
+		//TestTodo();
 		//TestDiffMatchpatch();
 		//TestIronPython();
 		//TestCs8(); //ADialog.Show();
@@ -1264,60 +1386,5 @@ unsafe partial class Script : AScript
 		//}
 		////finally {  }
 		////ADialog.Show("dll unloaded");
-	}
-
-	//static void _Sleep(AWnd w)
-	//{
-	//	var c = w.Child("Save", "Button", WCFlags.HiddenToo).OrThrow();
-	//	int n = 16;
-	//	var a = new AWnd[n];
-	//	var b = new bool[n];
-	//	for(int i = 0; i < n; i++) {
-	//		a[i] = AWnd.Focused;
-	//		b[i] = c.LibIsVisibleIn(w);
-	//		1.ms();
-	//	}
-	//	//Print(a);
-	//	for(int i = 0; i < n; i++) Print(b[i], a[i]);
-	//}
-
-	//static void _Sleep()
-	//{
-	//	int n = 16;
-	//	var a = new bool[n];
-	//	var ht = AThread.Handle;
-	//	Api.SetThreadPriority(ht, -2);
-	//	for(int i = 0; i < n; i++) {
-	//		//Print(1 << (i & 3));
-	//		SetThreadAffinityMask(ht, 1 << (i & 3));
-	//		for(var t0 = ATime.PerfMicroseconds; ATime.PerfMicroseconds - t0 < 100;) { }
-	//		a[i]=SwitchToThread();
-	//		//a[i] = Thread.Yield();
-	//		//Thread.Sleep(0);
-	//		//1.ms();
-	//	}
-	//	SetThreadAffinityMask(ht, 15);
-	//	Api.SetThreadPriority(ht, 0);
-	//	Print(a);
-	//}
-
-	[DllImport("kernel32.dll")]
-	internal static extern bool SwitchToThread();
-	[DllImport("kernel32.dll")]
-	internal static extern LPARAM SetThreadAffinityMask(IntPtr hThread, LPARAM dwThreadAffinityMask);
-
-
-	bool _DebugFilterEvent(AWnd w)
-	{
-		if(0 != w.ClassNameIs("*tooltip*", "SysShadow", "#32774", "QM_toolbar", "TaskList*", "ClassicShell.*"
-			, "IME", "MSCTFIME UI", "OleDde*", ".NET-Broadcast*", "GDI+ Hook*", "UIRibbonStdCompMgr"
-			)) return false;
-		//if(w.HasExStyle(WS_EX.NOACTIVATE) && 0 != w.ProgramNameIs("devenv.exe")) return;
-		var es = w.ExStyle;
-		bool ret = es.Has(WS_EX.TRANSPARENT | WS_EX.LAYERED) && es.HasAny(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE); //tooltips etc
-		if(!ret) ret = es.Has(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE) && es.Has(WS_EX.LAYERED); //eg VS code tips
-		if(ret) { /*Print($"<><c 0x80e0e0>    {e}, {w}, {es}</c>");*/ return false; }
-		if(Debugger.IsAttached && w.LibNameTL.Like("*Visual Studio")) return false;
-		return true;
 	}
 }

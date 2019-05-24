@@ -1266,5 +1266,11 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte* lpKeyState, char* pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
 
+		internal const uint PW_CLIENTONLY = 0x1;
+		internal const uint PW_RENDERFULLCONTENT = 0x2;
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool PrintWindow(AWnd hwnd, IntPtr hdcBlt, uint nFlags);
+
 	}
 }

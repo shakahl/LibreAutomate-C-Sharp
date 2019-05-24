@@ -87,7 +87,18 @@ namespace Au
 		/// </summary>
 		public const int OfActiveWindow = -2;
 
-		//TODO: use enum for index, like now TMScreen (mouse triggers).
+		/// <summary>
+		/// Screen index of the first non-primary screen. Value 1.
+		/// Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
+		/// </summary>
+		public const int NonPrimary1 = 1;
+
+		/// <summary>
+		/// Screen index of the second non-primary screen. Value 2.
+		/// Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
+		/// </summary>
+		public const int NonPrimary2 = 2;
+
 		/// <summary>
 		/// Gets <see cref="Screen"/> object from screen index.
 		/// </summary>
@@ -119,8 +130,10 @@ namespace Au
 				//	but in my recent tests with NetMeeting (noticed this long ago on an old OS version) and UltraVnc (wiki etc say) they didn't.
 				//	Therefore I cannot test and add filtering. No problems if they are the last in the list. Never mind.
 				//	Wiki about mirror drivers: https://en.wikipedia.org/wiki/Mirror_driver
-			} else if(screenIndex == OfMouse) return Screen.FromPoint(AMouse.XY);
-			else if(screenIndex == OfActiveWindow) return ScreenFromWindow(AWnd.Active);
+			} else {
+				if(screenIndex == OfMouse) return Screen.FromPoint(AMouse.XY);
+				if(screenIndex == OfActiveWindow) return ScreenFromWindow(AWnd.Active);
+			}
 
 			if(screenIndex != 0) PrintWarning("Invalid screen index.");
 			return Screen.PrimaryScreen;

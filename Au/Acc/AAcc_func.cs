@@ -438,7 +438,7 @@ namespace Au
 			//FUTURE: Chrome bug: OFFSCREEN is not updated after scrolling.
 
 			var xy = AMath.MakeUint(r.CenterX, r.CenterY);
-			uint b = 0; if(AKeyboard.IsCtrl) b |= Api.MK_CONTROL; if(AKeyboard.IsShift) b |= Api.MK_SHIFT;
+			uint b = 0; if(AKeys.IsCtrl) b |= Api.MK_CONTROL; if(AKeys.IsShift) b |= Api.MK_SHIFT;
 			uint b1 = b | (right ? Api.MK_RBUTTON : Api.MK_LBUTTON);
 			w.Post(right ? Api.WM_RBUTTONDOWN : Api.WM_LBUTTONDOWN, b1, xy);
 			w.Post(Api.WM_MOUSEMOVE, b1, xy);

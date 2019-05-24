@@ -239,7 +239,7 @@ class PanelOutput : Control
 
 			var t = doc.ST;
 			int i = t.LineStart(line);
-			if(column > 0) i = t.Call(SCI_POSITIONRELATIVE, i, column); //not SCI_FINDCOLUMN, it calculates tabs
+			if(column > 0) i = t.CountBytesFromChars(i, column); //not SCI_FINDCOLUMN, it calculates tabs
 			t.GoToPos(i);
 		}
 

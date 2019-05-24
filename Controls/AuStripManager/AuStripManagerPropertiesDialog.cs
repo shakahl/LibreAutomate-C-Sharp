@@ -157,7 +157,7 @@ namespace Au.Controls
 		{
 			int iSel = -1;
 			var s = textHotkey.Text.Trim();
-			if(AKeyboard.More.ParseHotkeyString(s, out var hk)) {
+			if(AKeys.More.ParseHotkeyString(s, out var hk)) {
 				var x = FindUsedHotkey(hk, _x);
 				if(x != null) iSel = _hotkeys.IndexOf(x);
 			}
@@ -170,7 +170,7 @@ namespace Au.Controls
 			var s = textHotkey.Text.Trim();
 			if(Empty(s)) return;
 			bool ok = true;
-			if(!AKeyboard.More.ParseHotkeyString(s, out var mod, out var k) || mod.Has(KMod.Win)) ok = false;
+			if(!AKeys.More.ParseHotkeyString(s, out var mod, out var k) || mod.Has(KMod.Win)) ok = false;
 			else if(!mod.HasAny(KMod.Ctrl | KMod.Alt)) ok = (k >= KKey.F2 && k <= KKey.F24);
 
 			if(!ok) {
@@ -185,7 +185,7 @@ namespace Au.Controls
 				foreach(var x in _hotkeys) {
 					if(x == xSkip) continue;
 					var s = x.Attr("hk");
-					if(AKeyboard.More.ParseHotkeyString(s, out var k) && k == hk) return x;
+					if(AKeys.More.ParseHotkeyString(s, out var k) && k == hk) return x;
 				}
 			}
 			return null;

@@ -53,7 +53,7 @@ static partial class Test
 		//return;
 
 		AppDomain.CurrentDomain.AssemblyLoad += CurrentDomain_AssemblyLoad;
-		//if(AKeyboard.IsCtrl) Print("ctrl");
+		//if(AKeys.IsCtrl) Print("ctrl");
 		//ADialog.ShowEx(secondsTimeout: 1);
 
 		//Print(AThread.LibIsLoadedFormsWpf());
@@ -83,7 +83,7 @@ static partial class Test
 		//var m = new AOsd();
 
 		//APerf.First();
-		//var k = new AKeyboard(null);
+		//var k = new AKeys(null);
 		//APerf.Next();
 		//for(int i = 0; i < 5; i++) {
 		//	k.AddKeys("Left");
@@ -2113,9 +2113,9 @@ a1,-8";
 		//var f = new AWnd.Finder("Quick*");
 		//f.
 
-		//Print(AWnd.WaitAny(0, false, new AWnd.Finder("Quick*")));
-		Print(AWnd.WaitAny(10, true, "Quick*,,,'LISTITEM' one, two, three", "*Notepad"));
-		//Print(AWnd.WaitAny(10, true, "*one, two, three*\0", "*Notepad"));
+		//Print(AWnd.WaitAny(0, false, new AWnd.Finder("Quick*"))).wnd;
+		Print(AWnd.WaitAny(10, true, "Quick*,,,'LISTITEM' one, two, three", "*Notepad")).wnd;
+		//Print(AWnd.WaitAny(10, true, "*one, two, three*\0", "*Notepad")).wnd;
 		//Print(AWnd.WaitNot(10, "*Notepad"));
 		//Print(AWnd.WaitNot(10, out _, ",,Notepad.exe"));
 	}

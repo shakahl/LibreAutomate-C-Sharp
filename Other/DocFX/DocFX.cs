@@ -374,10 +374,12 @@ unsafe class Program
 		//upload
 		pass = Encoding.UTF8.GetString(Au.Util.AConvert.Base64Decode(pass));
 		var name = @"\_site.tar.bz2";
+		var path = docDir + name;
 		using(var client = new WebClient()) {
 			client.Credentials = new NetworkCredential(user, pass);
-			client.UploadFile("ftp://ftp.quickmacros.com/public_html/3" + name, WebRequestMethods.Ftp.UploadFile, docDir + name);
+			client.UploadFile("ftp://ftp.quickmacros.com/public_html/3" + name, WebRequestMethods.Ftp.UploadFile, path);
 		}
+		AFile.Delete(path);
 		Print("Uploaded");
 
 		//extract

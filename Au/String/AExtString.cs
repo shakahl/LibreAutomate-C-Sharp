@@ -31,7 +31,7 @@ namespace Au
 	/// 
 	/// This class also adds more methods.
 	/// The nested class <see cref="More"/> contains some less often used static methods.
-	/// You also can find string functions in other classes of this library, including <see cref="ARegex"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="AStringSegment"/>, <see cref="ACsv"/>, <see cref="AKeyboard.More"/>, <see cref="AConvert"/>, <see cref="AHash"/>.
+	/// You also can find string functions in other classes of this library, including <see cref="ARegex"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="AStringSegment"/>, <see cref="ACsv"/>, <see cref="AKeys.More"/>, <see cref="AConvert"/>, <see cref="AHash"/>.
 	/// </remarks>
 	public static unsafe partial class AExtString
 	{
@@ -66,8 +66,8 @@ namespace Au
 		/// <summary>
 		/// Compares this and other string. Returns true if equal.
 		/// </summary>
-		/// <param name="t">This string.</param>
-		/// <param name="s">Other string.</param>
+		/// <param name="t">This string. Can be null.</param>
+		/// <param name="s">Other string. Can be null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
@@ -76,8 +76,9 @@ namespace Au
 		/// <seealso cref="string.CompareOrdinal"/>
 		public static bool Eq(this string t, string s, bool ignoreCase = false)
 		{
-			int len = t.Length; //NullReferenceException
-			if(s is null || len != s.Length) return false;
+			if(t == null) return s == null;
+			int len = t.Length;
+			if(s == null || len != s.Length) return false;
 			if(ReferenceEquals(t, s)) return true;
 			fixed (char* a = t, b = s) return _Eq(a, b, len, ignoreCase);
 		}
@@ -86,27 +87,26 @@ namespace Au
 		/// Compares this strings with multiple strings.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. Can be null.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
-		/// <param name="strings">Other strings.</param>
+		/// <param name="strings">Other strings. Strings can be null.</param>
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
 		public static int Eq(this string t, bool ignoreCase = false, params string[] strings)
 		{
-			for(int i = 0; i < strings.Length; i++) if(t.Eq(strings[i], ignoreCase)) return i + 1;
+			for(int i = 0; i < strings.Length; i++) if(Eq(t, strings[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
 		/// <summary>
 		/// Compares part of this string with other string. Returns true if equal.
 		/// </summary>
-		/// <param name="t">This string.</param>
-		/// <param name="startIndex">Offset in this string.</param>
+		/// <param name="t">This string. If null, returns false.</param>
+		/// <param name="startIndex">Offset in this string. If invalid, returns false.</param>
 		/// <param name="s">Other string.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
@@ -114,7 +114,8 @@ namespace Au
 		/// <seealso cref="string.CompareOrdinal"/>
 		public static bool Eq(this string t, int startIndex, string s, bool ignoreCase = false)
 		{
-			if((uint)startIndex > t.Length) throw new ArgumentOutOfRangeException(); //and NullReferenceException
+			if(t == null) return false;
+			if((uint)startIndex > t.Length) return false;
 			int n = s?.Length ?? throw new ArgumentNullException();
 			if(n > t.Length - startIndex) return false;
 			fixed (char* a = t, b = s) return _Eq(a + startIndex, b, n, ignoreCase);
@@ -124,18 +125,17 @@ namespace Au
 		/// Compares part of this string with multiple strings.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		/// <param name="t">This string.</param>
-		/// <param name="startIndex">Offset in this string.</param>
+		/// <param name="t">This string. If null, returns false.</param>
+		/// <param name="startIndex">Offset in this string. If invalid, returns false.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <param name="strings">Other strings.</param>
 		/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
 		public static int Eq(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
 		{
-			for(int i = 0; i < strings.Length; i++) if(t.Eq(startIndex, strings[i], ignoreCase)) return i + 1;
+			for(int i = 0; i < strings.Length; i++) if(Eq(t, startIndex, strings[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
@@ -148,8 +148,8 @@ namespace Au
 		/// <summary>
 		/// Compares this and other string ignoring case (case-insensitive). Returns true if equal.
 		/// </summary>
-		/// <param name="t">This string.</param>
-		/// <param name="s">Other string.</param>
+		/// <param name="t">This string. Can be null.</param>
+		/// <param name="s">Other string. Can be null.</param>
 		/// <remarks>
 		/// Calls <see cref="Eq(string, string, bool)"/> with <i>ignoreCase</i> true.
 		/// Uses ordinal comparison (does not depend on current culture/locale).
@@ -162,7 +162,7 @@ namespace Au
 		/// <summary>
 		/// Compares the end of this string with other string. Returns true if equal.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns false.</param>
 		/// <param name="s">Other string.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
@@ -171,8 +171,10 @@ namespace Au
 		/// </remarks>
 		public static bool Ends(this string t, string s, bool ignoreCase = false)
 		{
-			int tLen = t.Length; //NullReferenceException
-			int n = s?.Length ?? throw new ArgumentNullException(); if(n > tLen) return false;
+			if(t == null) return false;
+			int tLen = t.Length;
+			int n = s?.Length ?? throw new ArgumentNullException();
+			if(n > tLen) return false;
 			fixed (char* a = t, b = s) return _Eq(a + tLen - n, b, n, ignoreCase);
 		}
 
@@ -180,7 +182,7 @@ namespace Au
 		/// Compares the end of this string with multiple strings.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns false.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <param name="strings">Other strings.</param>
 		/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
@@ -189,17 +191,18 @@ namespace Au
 		/// </remarks>
 		public static int Ends(this string t, bool ignoreCase = false, params string[] strings)
 		{
-			for(int i = 0; i < strings.Length; i++) if(t.Ends(strings[i], ignoreCase)) return i + 1;
+			for(int i = 0; i < strings.Length; i++) if(Ends(t, strings[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
 		/// <summary>
 		/// Returns true if this string ends with the specified character.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns false.</param>
 		/// <param name="c">The character.</param>
 		public static bool Ends(this string t, char c)
 		{
+			if(t == null) return false;
 			int i = t.Length - 1;
 			return i >= 0 && t[i] == c;
 		}
@@ -207,7 +210,7 @@ namespace Au
 		/// <summary>
 		/// Compares the beginning of this string with other string. Returns true if equal.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns false.</param>
 		/// <param name="s">Other string.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
@@ -216,8 +219,10 @@ namespace Au
 		/// </remarks>
 		public static bool Starts(this string t, string s, bool ignoreCase = false)
 		{
-			int tLen = t.Length; //NullReferenceException
-			int n = s?.Length ?? throw new ArgumentNullException(); if(n > tLen) return false;
+			if(t == null) return false;
+			int tLen = t.Length;
+			int n = s?.Length ?? throw new ArgumentNullException();
+			if(n > tLen) return false;
 			fixed (char* a = t, b = s) return _Eq(a, b, n, ignoreCase);
 		}
 
@@ -225,7 +230,7 @@ namespace Au
 		/// Compares the beginning of this string with multiple strings.
 		/// Returns 1-based index of matching string, or 0 if none.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns false.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <param name="strings">Other strings.</param>
 		/// <exception cref="ArgumentNullException">A string in <i>strings</i> is null.</exception>
@@ -234,24 +239,25 @@ namespace Au
 		/// </remarks>
 		public static int Starts(this string t, bool ignoreCase = false, params string[] strings)
 		{
-			for(int i = 0; i < strings.Length; i++) if(t.Starts(strings[i], ignoreCase)) return i + 1;
+			for(int i = 0; i < strings.Length; i++) if(Starts(t, strings[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
 		/// <summary>
 		/// Returns true if this string starts with the specified character.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns false.</param>
 		/// <param name="c">The character.</param>
 		public static bool Starts(this string t, char c)
 		{
+			if(t == null) return false;
 			return t.Length > 0 && t[0] == c;
 		}
 
 		/// <summary>
 		/// Finds substring in this string. Returns its zero-based index, or -1 if not found.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="s">Subtring to find.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
@@ -261,13 +267,13 @@ namespace Au
 		/// </remarks>
 		public static int Find(this string t, string s, bool ignoreCase = false)
 		{
-			return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			return t?.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? -1;
 		}
 
 		/// <summary>
 		/// Finds substring in part of this string. Returns its zero-based index, or -1 if not found.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="s">Subtring to find.</param>
 		/// <param name="startIndex">The search starting position.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
@@ -279,13 +285,13 @@ namespace Au
 		/// </remarks>
 		public static int Find(this string t, string s, int startIndex, bool ignoreCase = false)
 		{
-			return t.IndexOf(s, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			return t?.IndexOf(s, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? -1;
 		}
 
 		/// <summary>
 		/// Finds substring in part of this string. Returns its zero-based index, or -1 if not found.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="s">Subtring to find.</param>
 		/// <param name="startIndex">The search starting position.</param>
 		/// <param name="count">The number of characters to examine.</param>
@@ -298,13 +304,13 @@ namespace Au
 		/// </remarks>
 		public static int Find(this string t, string s, int startIndex, int count, bool ignoreCase = false)
 		{
-			return t.IndexOf(s, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
+			return t?.IndexOf(s, startIndex, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? -1;
 		}
 
 		/// <summary>
 		/// Returns true if this string contains the specified substring.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns false.</param>
 		/// <param name="s">Subtring to find.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
@@ -314,52 +320,34 @@ namespace Au
 		/// </remarks>
 		public static bool Has(this string t, string s, bool ignoreCase = false)
 		{
-			return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) >= 0;
+			return (t?.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? -1) >= 0;
 		}
 
 		/// <summary>
 		/// Returns true if this string contains the specified character.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns false.</param>
 		/// <param name="c">Character to find.</param>
 		public static bool Has(this string t, char c)
 		{
-			return t.IndexOf(c) >= 0;
+			return (t?.IndexOf(c) ?? -1) >= 0;
 		}
 
 		/// <summary>
 		/// Finds the first occurence in this string of any character in (or not in) a character set. Returns its zero-based index, or -1 if not found.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="chars">Characters to find.</param>
-		/// <param name="not">Find character not specified in <i>chars</i>.</param>
-		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-		public static int FindChars(this string t, string chars, bool not = false) => FindChars(t, chars, 0, t.Length, not);
-
-		/// <summary>
-		/// Finds the first occurence in part of this string of any character in (or not in) a character set. Returns its zero-based index, or -1 if not found.
-		/// </summary>
-		/// <param name="t">This string.</param>
-		/// <param name="chars">Characters to find.</param>
-		/// <param name="startIndex">The search starting position.</param>
-		/// <param name="not">Find character not specified in <i>chars</i>.</param>
-		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
-		public static int FindChars(this string t, string chars, int startIndex, bool not = false) => FindChars(t, chars, startIndex, t.Length - startIndex, not);
-
-		/// <summary>
-		/// Finds the first occurence in part of this string of any character in (or not in) a character set. Returns its zero-based index, or -1 if not found.
-		/// </summary>
-		/// <param name="t">This string.</param>
-		/// <param name="chars">Characters to find.</param>
-		/// <param name="startIndex">The search starting position.</param>
-		/// <param name="count">The number of characters to examine.</param>
+		/// <param name="startIndex">The search starting position. Default 0.</param>
+		/// <param name="count">The number of characters to examine. If -1 (default), until the end of string.</param>
 		/// <param name="not">Find character not specified in <i>chars</i>.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
-		public static int FindChars(this string t, string chars, int startIndex, int count, bool not = false)
+		public static int FindChars(this string t, string chars, int startIndex = 0, int count = -1, bool not = false)
 		{
-			if((uint)startIndex > t.Length || (uint)count > t.Length - startIndex) throw new ArgumentOutOfRangeException(); //and NullReferenceException
+			if(t == null) return -1;
+			if(count == -1) count = t.Length - startIndex;
+			if((uint)startIndex > t.Length || (uint)count > t.Length - startIndex) throw new ArgumentOutOfRangeException();
 			if(chars == null) throw new ArgumentNullException();
 			if(not) {
 				for(int i = startIndex, n = startIndex + count; i < n; i++) {
@@ -380,13 +368,14 @@ namespace Au
 		/// <summary>
 		/// Finds the last occurence in this string of any character in (or not in) a character set. Returns its zero-based index, or -1 if not found.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="chars">Characters to find.</param>
 		/// <param name="not">Find character not specified in <i>chars</i>.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
 		public static int FindLastChars(this string t, string chars, bool not = false)
 		{
-			int len = t.Length; //NullReferenceException
+			if(t == null) return -1;
+			int len = t.Length;
 			if(chars == null) throw new ArgumentNullException();
 			if(not) {
 				for(int i = len - 1; i >= 0; i--) {
@@ -424,7 +413,7 @@ namespace Au
 		/// <summary>
 		/// Finds whole word. Returns its zero-based index, or -1 if not found.
 		/// </summary>
-		/// <param name="t">This string.</param>
+		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="s">Subtring to find.</param>
 		/// <param name="startIndex">The search starting position.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
@@ -439,6 +428,7 @@ namespace Au
 		/// </remarks>
 		public static int FindWord(this string t, string s, int startIndex = 0, bool ignoreCase = false, string otherWordChars = null)
 		{
+			if(t == null) return -1;
 			if((uint)startIndex > t.Length) throw new ArgumentOutOfRangeException();
 			if(s == null) throw new ArgumentNullException();
 			int lens = s.Length; if(lens == 0) return 0; //like IndexOf and Find
@@ -594,21 +584,21 @@ namespace Au
 		/// <remarks>
 		/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
 		/// 
-		/// Unlike int.Parse and Convert.ToInt32:
-		///		The number in string can be followed by more text, like "123text".
-		///		Has startIndex parameter that allows to get number from middle, like "text123text".
+		/// Unlike <b>int.Parse</b> and <b>Convert.ToInt32</b>:
+		///		The number in string can be followed by more text, like <c>"123text"</c>.
+		///		Has <i>startIndex</i> parameter that allows to get number from middle, like <c>"text123text"</c>.
 		///		Gets the end of the number part.
 		///		No exception when cannot convert.
-		///		Supports hexadecimal format, like "0x1A", case-insensitive.
+		///		Supports hexadecimal format, like <c>"0x1A"</c>, case-insensitive.
 		///		Much faster.
 		///	
-		/// The number in string can begin with ASCII spaces, tabs or newlines, like " 5".
-		/// The number in string can be with "-" or "+", like "-5", but not like "- 5".
-		/// Fails if the number is greater than +- uint.MaxValue (0xffffffff).
-		/// The return value becomes negative if the number is greater than int.MaxValue, for example "0xffffffff" is -1, but it becomes correct if assigned to uint (need cast).
-		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=startIndex+1.
+		/// The number in string can begin with ASCII spaces, tabs or newlines, like <c>" 5"</c>.
+		/// The number in string can be with <c>"-"</c> or <c>"+"</c>, like <c>"-5"</c>, but not like <c>"- 5"</c>.
+		/// Fails if the number is greater than +- <b>uint.MaxValue</b> (0xffffffff).
+		/// The return value becomes negative if the number is greater than <b>int.MaxValue</b>, for example <c>"0xffffffff"</c> is -1, but it becomes correct if assigned to uint (need cast).
+		/// Does not support non-integer numbers; for example, for <c>"3.5E4"</c> returns 3 and sets <c>numberEndIndex=startIndex+1</c>.
 		/// </remarks>
-		/// <exception cref="ArgumentOutOfRangeException">startIndex is less than 0 or greater than string length.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
 		public static int ToInt(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0)
 		{
 			return (int)_ToInt(t, startIndex, out numberEndIndex, false, flags);
@@ -643,21 +633,21 @@ namespace Au
 		/// <remarks>
 		/// Fails to convert when string is null, "", does not begin with a number or the number is too big.
 		/// 
-		/// Unlike long.Parse and Convert.ToInt64:
-		///		The number in string can be followed by more text, like "123text".
-		///		Has startIndex parameter that allows to get number from middle, like "text123text".
+		/// Unlike <b>long.Parse</b> and <b>Convert.ToInt64</b>:
+		///		The number in string can be followed by more text, like <c>"123text"</c>.
+		///		Has <i>startIndex</i> parameter that allows to get number from middle, like <c>"text123text"</c>.
 		///		Gets the end of the number part.
 		///		No exception when cannot convert.
-		///		Supports hexadecimal format, like "0x1A", case-insensitive.
+		///		Supports hexadecimal format, like <c>"0x1A"</c>, case-insensitive.
 		///		Much faster.
 		///	
-		/// The number in string can begin with ASCII spaces, tabs or newlines, like " 5".
-		/// The number in string can be with "-" or "+", like "-5", but not like "- 5".
-		/// Fails if the number is greater than +- ulong.MaxValue (0xffffffffffffffff).
-		/// The return value becomes negative if the number is greater than long.MaxValue, for example "0xffffffffffffffff" is -1, but it becomes correct if assigned to ulong (need cast).
-		/// Does not support non-integer numbers; for example, for "3.5E4" returns 3 and sets numberEndIndex=startIndex+1.
+		/// The number in string can begin with ASCII spaces, tabs or newlines, like <c>" 5"</c>.
+		/// The number in string can be with <c>"-"</c> or <c>"+"</c>, like <c>"-5"</c>, but not like <c>"- 5"</c>.
+		/// Fails if the number is greater than +- <b>ulong.MaxValue</b> (0xffffffffffffffff).
+		/// The return value becomes negative if the number is greater than <b>long.MaxValue</b>, for example <c>"0xffffffffffffffff"</c> is -1, but it becomes correct if assigned to ulong (need cast).
+		/// Does not support non-integer numbers; for example, for <c>"3.5E4"</c> returns 3 and sets <c>numberEndIndex=startIndex+1</c>.
 		/// </remarks>
-		/// <exception cref="ArgumentOutOfRangeException">startIndex is less than 0 or greater than string length.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
 		public static long ToInt64(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0)
 		{
 			return _ToInt(t, startIndex, out numberEndIndex, true, flags);
@@ -684,9 +674,10 @@ namespace Au
 		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong, STIFlags flags)
 		{
 			numberEndIndex = 0;
-			int len = t == null ? 0 : t.Length;
+			if(t == null) return 0;
+			int len = t.Length;
 			if((uint)startIndex > len) throw new ArgumentOutOfRangeException("startIndex");
-			int i = startIndex; char c = default;
+			int i = startIndex; char c;
 
 			//skip spaces
 			for(; ; i++) {

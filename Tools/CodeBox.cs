@@ -72,7 +72,7 @@ namespace Au.Tools
 				if(0 != (n.updated & Sci.SC_UPDATE_SELECTION)) { //selection changed
 					if(_readonlyLenUtf8 > 0) {
 						int i = Call(Sci.SCI_GETSELECTIONEND);
-						ST.Call(Sci.SCI_SETREADONLY, i > _ReadonlyStartUtf8 || _LenUtf8 == 0);
+						ST.Call(Sci.SCI_SETREADONLY, i > _ReadonlyStartUtf8 || _LenUtf8 == 0); //small bug: if caret is at the boundary, allows to delete readonly text, etc.
 					}
 				}
 				break;
@@ -93,7 +93,7 @@ namespace Au.Tools
 			ST.Call(Sci.SCI_SETREADONLY, false);
 			ST.SetText(s, noUndo: true, noNotif: true);
 			if(readonlyFrom > 0) {
-				_readonlyLenUtf8 = _LenUtf8 - _LenToUtf8(0, readonlyFrom);
+				_readonlyLenUtf8 = _LenUtf8 - ST.CountBytesFromChars(0, readonlyFrom);
 			} else {
 				ST.Call(Sci.SCI_SETREADONLY, true);
 				_readonlyLenUtf8 = -1;
@@ -103,13 +103,13 @@ namespace Au.Tools
 		public event EventHandler ZTextChanged;
 
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : _LenFromUtf8(0, _ReadonlyStartUtf8);
+		public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : ST.CountBytesToChars(0, _ReadonlyStartUtf8); //currently not used
+
 		int _readonlyLenUtf8;
+
 		int _ReadonlyStartUtf8 => _readonlyLenUtf8 < 0 ? 0 : _LenUtf8 - _readonlyLenUtf8;
 
-		int _LenUtf8 => Call(Sci.SCI_GETLENGTH);
-		int _LenFromUtf8(int start, int end) => Call(Sci.SCI_COUNTCHARACTERS, start, end);
-		int _LenToUtf8(int start, int end) => Call(Sci.SCI_POSITIONRELATIVE, start, end - start);
+		int _LenUtf8 => Call(Sci.SCI_GETTEXTLENGTH);
 
 		protected override bool IsInputKey(Keys keyData)
 		{

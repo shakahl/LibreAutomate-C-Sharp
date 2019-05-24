@@ -588,6 +588,12 @@ namespace Au.Types
 
 		#endregion
 
+		#region SB_
+
+		internal const int SB_TOP = 6;
+
+		#endregion
+
 		#region misc
 
 		internal const int IDI_APPLICATION = 32512;

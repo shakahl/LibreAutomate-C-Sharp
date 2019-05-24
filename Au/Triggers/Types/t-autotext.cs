@@ -238,7 +238,7 @@ namespace Au.Triggers
 		public KKey PostfixKey {
 			get => _postfixKey;
 			set {
-				var mod = AKeyboard.Lib.KeyToMod(value);
+				var mod = AKeys.Lib.KeyToMod(value);
 				switch(mod) {
 				case KMod.Ctrl: case KMod.Shift: break;
 				default: throw new ArgumentException("Must be Ctrl, Shift, LCtrl, RCtrl, LShift or RShift.");
@@ -508,7 +508,7 @@ namespace Au.Triggers
 				ks[(int)KKey.Ctrl] = (byte)((0 != (m & KMod.Ctrl)) ? 0x80 : 0);
 				ks[(int)KKey.Alt] = (byte)((0 != (m & KMod.Alt)) ? 0x80 : 0);
 				ks[(int)KKey.Win] = (byte)((0 != (m & KMod.Win)) ? 0x80 : 0);
-				ks[(int)KKey.CapsLock] = (byte)(AKeyboard.IsCapsLock ? 1 : 0); //don't need this for num lock
+				ks[(int)KKey.CapsLock] = (byte)(AKeys.IsCapsLock ? 1 : 0); //don't need this for num lock
 			}
 
 			return n;
@@ -630,7 +630,7 @@ namespace Au.Triggers
 		/// Replaces the user-typed text with the specified text.
 		/// </summary>
 		/// <param name="text">The replacement text.</param>
-		/// <param name="keysEtc">Optionally more parameters that can generate keys etc. The same as with <see cref="AKeyboard.Text"/>.</param>
+		/// <param name="keysEtc">Optionally more parameters that can generate keys etc. The same as with <see cref="AKeys.Text"/>.</param>
 		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		/// <remarks>
 		/// Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="AutotextTriggers.DefaultFlags"/>. Uses these flags: <see cref="TAFlags.DontErase"/> <see cref="TAFlags.RemovePostfix"/> <see cref="TAFlags.ReplaceRaw"/> <see cref="TAFlags.Confirm"/>.
@@ -673,7 +673,7 @@ namespace Au.Triggers
 				}
 			}
 
-			var k = new AKeyboard(AOpt.Key);
+			var k = new AKeys(AOpt.Key);
 			int erase = 0 == (flags & TAFlags.DontErase) ? t.Length : pc;
 			if(erase > 0) {
 				k.AddKey(KKey.Back);

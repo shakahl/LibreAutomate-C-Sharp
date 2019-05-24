@@ -133,16 +133,9 @@ namespace Au.Compiler
 			_b.AppendFormat("<><Z #{0}>Compilation: ", ErrorCount != 0 ? "F0E080" : "A0E0A0");
 			if(ErrorCount != 0) _b.Append(ErrorCount).Append(" errors").Append(WarningCount != 0 ? ", " : "");
 			if(WarningCount != 0) _b.Append(WarningCount).Append(
-@" warnings <fold>	Example of disabling some warnings in several lines of code:
-<code>		#pragma warning disable 168, 649
-		code
-		code
-		#pragma warning restore
-</code>	Example of disabling some warnings in whole compilation (at the very start of code):
-<code>		/*/ noWarnings 168, 649; */
-</code>	Also look in program options, maybe you can disable some warnings in all scripts.</fold>");
+@" warnings <fold>	Warnings can be disabled in Properties -> noWarnings or warningLevel.
+	Warnings for part of code can be disabled with <google>#pragma warning<>.</fold>");
 			_b.AppendLine("<>");
-			//FUTURE: this should be <help>, not <fold>.
 
 			//errors and warnings
 			_b.Append(s);

@@ -5,7 +5,7 @@ using Au.Triggers; //need this for triggers
 using System.Windows.Forms; //need this for some examples in this script
 
 //{{ main
-unsafe partial class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
+class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
 
 //Triggers are used to execute parts of a running script. Not to launch scripts.
 //This script contains examples of all trigger types. The code is copied from the ActionTriggers class help topic.
@@ -54,7 +54,7 @@ mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => Print(o.Trigger);
 mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
 mouse[TMMove.LeftRightInCenter50] = o => AWnd.SwitchActiveWindow();
 
-Triggers.FuncOf.NextTrigger = o => AKeyboard.IsScrollLock; //example of a custom scope (aka context, condition)
+Triggers.FuncOf.NextTrigger = o => AKeys.IsScrollLock; //example of a custom scope (aka context, condition)
 mouse[TMWheel.Forward] = o => Print($"{o.Trigger} while ScrollLock is on");
 
 Triggers.Of.Again(notepad); //let the following triggers work only when a Notepad window is active

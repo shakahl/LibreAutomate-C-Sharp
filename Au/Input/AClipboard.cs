@@ -28,7 +28,7 @@ namespace Au
 	/// 
 	/// To set/get clipboard data of non-text formats, use class <see cref="AClipboardData"/>; to paste, use it with <see cref="PasteData"/>; to copy (get from the active app), use it with <see cref="CopyData"/>.
 	/// 
-	/// Should not be used to copy/paste in windows of own thread. In most cases it works, but strange problems are possible, because it waits until the window processes the copy/paste request, and while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. Example in <see cref="AKeyboard.Key"/>.
+	/// Should not be used to copy/paste in windows of own thread. In most cases it works, but strange problems are possible, because it waits until the window processes the copy/paste request, and while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. Example in <see cref="AKeys.Key"/>.
 	/// </remarks>
 	public static partial class AClipboard
 	{
@@ -149,7 +149,7 @@ namespace Au
 			var oc = new LibOpenClipboard(createOwner: true, noOpenNow: !restore);
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
-				AKeyboard.Lib.ReleaseModAndDisableModMenu();
+				AKeys.Lib.ReleaseModAndDisableModMenu();
 
 				var save = new _SaveRestore();
 				if(restore) {
@@ -157,11 +157,11 @@ namespace Au
 					oc.Close(false); //close clipboard; don't destroy our clipboard owner window
 				}
 
-				AWnd wFocus = AKeyboard.Lib.GetWndFocusedOrActive();
+				AWnd wFocus = AKeys.Lib.GetWndFocusedOrActive();
 				listener = new _ClipboardListener(false, null, oc.WndClipOwner, wFocus);
 
 				if(!Api.AddClipboardFormatListener(oc.WndClipOwner)) throw new AException();
-				var ctrlC = new AKeyboard.Lib.SendCopyPaste();
+				var ctrlC = new AKeys.Lib.SendCopyPaste();
 				try {
 					if(wFocus.IsConsole) {
 						wFocus.Post(Api.WM_SYSCOMMAND, 65520);
@@ -215,7 +215,7 @@ namespace Au
 		/// A clipboard viewer/manager program can make this function slower and less reliable, unless it supports <see cref="ClipFormats.ClipboardViewerIgnore"/> or gets clipboard data with a delay.
 		/// Possible problems with some virtual PC programs. Either pasting does not work in their windows, or they use a hidden clipboard viewer that makes this function slower and less reliable.
 		/// </remarks>
-		/// <seealso cref="AKeyboard.Text"/>
+		/// <seealso cref="AKeys.Text"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// AClipboard.PasteText("Example\r\n");
@@ -227,7 +227,7 @@ namespace Au
 			if(Empty(text)) return;
 			_Paste(text, options);
 		}
-		//TODO: fails to paste in VMware player. QM2 too. Maybe add an option to not sync etc.
+		//problem: fails to paste in VMware player. QM2 too. Could add an option to not sync, but fails anyway because VMware gets clipboard with a big delay.
 
 		/// <summary>
 		/// Pastes data added to a <see cref="AClipboardData"/> variable into the focused app using the clipboard.
@@ -259,12 +259,12 @@ namespace Au
 
 		static void _Paste(object data, OptKey options = null)
 		{
-			var wFocus = AKeyboard.Lib.GetWndFocusedOrActive();
+			var wFocus = AKeys.Lib.GetWndFocusedOrActive();
 			var opt = options ?? AOpt.Key;
 			var bi = new AInputBlocker() { ResendBlockedKeys = true };
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
-				AKeyboard.Lib.ReleaseModAndDisableModMenu();
+				AKeys.Lib.ReleaseModAndDisableModMenu();
 				opt = opt.LibGetHookOptionsOrThis(wFocus);
 				LibPaste(data, opt, wFocus);
 			}
@@ -273,11 +273,11 @@ namespace Au
 			}
 
 			int sleepFinally = opt.SleepFinally;
-			if(sleepFinally > 0) AKeyboard.Lib.Sleep(sleepFinally);
+			if(sleepFinally > 0) AKeys.Lib.Sleep(sleepFinally);
 		}
 
 		/// <summary>
-		/// Used by AClipboard and AKeyboard.
+		/// Used by AClipboard and AKeys.
 		/// The caller should block user input (if need), release modifier keys, get opt/wFocus, sleep finally (if need).
 		/// </summary>
 		/// <param name="data">string or Data.</param>
@@ -292,7 +292,7 @@ namespace Au
 				if(enter = s != null && s.Ends('\n') && !isConsole) {
 					s = s.RemoveSuffix(s.Ends("\r\n") ? 2 : 1);
 					if(s.Length == 0) {
-						AKeyboard.Lib.SendCopyPaste.Enter(opt);
+						AKeys.Lib.SendCopyPaste.Enter(opt);
 						return;
 					}
 					data = s;
@@ -320,7 +320,7 @@ namespace Au
 				//	oc ctor creates a temporary message-only clipboard owner window. Its wndproc initially is DefWindowProc.
 				//	listener ctor subclasses it. Its wndproc receives WM_RENDERFORMAT which sets clipboard data etc.
 
-				var ctrlV = new AKeyboard.Lib.SendCopyPaste();
+				var ctrlV = new AKeys.Lib.SendCopyPaste();
 				try {
 					if(isConsole) {
 						wFocus.Post(Api.WM_SYSCOMMAND, 65521);
@@ -336,7 +336,7 @@ namespace Au
 						if(listener.IsBadWindow) sync = false;
 					}
 					if(!sync) {
-						AKeyboard.Lib.Sleep(AKeyboard.Lib.LimitSleepTime(opt.KeySpeedClipboard)); //if too long, may autorepeat, eg BlueStacks after 500 ms
+						AKeys.Lib.Sleep(AKeys.Lib.LimitSleepTime(opt.KeySpeedClipboard)); //if too long, may autorepeat, eg BlueStacks after 500 ms
 					}
 				}
 				finally {
@@ -348,7 +348,7 @@ namespace Au
 				//CONSIDER: opt.SleepClipboard. If 0, uses smart sync, else simply sleeps.
 				for(int i = 0, n = sync ? 3 : (restore ? 25 : 15); i < n; i++) {
 					wFocus.SendTimeout(1000, 0, flags: 0);
-					AKeyboard.Lib.Sleep(i + 3);
+					AKeys.Lib.Sleep(i + 3);
 
 					//info: repeats this min 3 times as a workaround for this Dreamweaver problem:
 					//	First time after starting DW, if several Paste called in loop, the first pasted text if of the second Paste.
@@ -417,7 +417,7 @@ namespace Au
 			/// Throws AException on timeout (3 s normally, 28 s if the target window is hung).
 			/// </summary>
 			/// <param name="ctrlKey">The variable that was used to send Ctrl+V or Ctrl+C. This function may call Release to avoid too long Ctrl down.</param>
-			public void Wait(ref AKeyboard.Lib.SendCopyPaste ctrlKey)
+			public void Wait(ref AKeys.Lib.SendCopyPaste ctrlKey)
 			{
 				//Print(Success); //on Paste often already true, because SendInput dispatches sent messages
 				for(int n = 6; !Success;) { //max 3 s (6*500 ms). If hung, max 28 s.

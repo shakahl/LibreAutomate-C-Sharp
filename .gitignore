@@ -215,6 +215,7 @@ ModelManifest.xml
 # Au
 /_/
 /Test Projects/
+/Other/Api/
 
 # To delete files or folders from git:
 # In Team Explorer pane click Actions link and open VS command prompt.

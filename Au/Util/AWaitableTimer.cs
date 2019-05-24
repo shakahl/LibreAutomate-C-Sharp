@@ -19,10 +19,11 @@ using static Au.AStatic;
 namespace Au.Util
 {
 	/// <summary>
-	/// Wraps a waitable timer handle. Allows to create, open, set and wait.
-	/// More info: API <msdn>CreateWaitableTimer</msdn>.
-	/// Note: will need to dispose.
+	/// Wraps a waitable timer handle.
 	/// </summary>
+	/// <remarks>
+	/// More info: API <msdn>CreateWaitableTimer</msdn>.
+	/// </remarks>
 	public class AWaitableTimer : WaitHandle
 	{
 		AWaitableTimer(IntPtr h) => SafeWaitHandle = new Microsoft.Win32.SafeHandles.SafeWaitHandle(h, true);

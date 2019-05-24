@@ -25,7 +25,7 @@ namespace Au
 	/// Options used by some functions of this library.
 	/// </summary>
 	/// <remarks>
-	/// Some frequently used static functions of this library have some options (settings). For example <see cref="AKeyboard.Key"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead you can set options using static properties. This class contains several groups of options for functions of various classes. See examples.
+	/// Some frequently used static functions of this library have some options (settings). For example <see cref="AKeys.Key"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead you can set options using static properties. This class contains several groups of options for functions of various classes. See examples.
 	/// 
 	/// There are two sets of identical or similar options - in class <b>AOpt</b> and in class <see cref="AOpt.Static"/>:
 	/// - <b>AOpt</b> - thread-static options (each thread has its own instance). Functions of this library use them. You can change or change-restore them anywhere in script. Initial options are automatically copied from <b>AOpt.Static</b> when that group of options (<b>Key</b>, <b>Mouse</b>, etc) is used first time in that thread (explicitly or by library functions).
@@ -34,20 +34,20 @@ namespace Au
 	public static class AOpt
 	{
 		/// <summary>
-		/// Options for keyboard and clipboard functions (classes <see cref="AKeyboard"/>, <see cref="AClipboard"/> and functions that use them).
+		/// Options for keyboard and clipboard functions (classes <see cref="AKeys"/>, <see cref="AClipboard"/> and functions that use them).
 		/// </summary>
 		/// <remarks>
 		/// Each thread has its own <b>AOpt.Key</b> instance. It inherits options from <see cref="AOpt.Static.Key"/>.
-		/// Also can be used when creating <see cref="AKeyboard"/> instances. See the second example.
+		/// Also can be used when creating <see cref="AKeys"/> instances. See the second example.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// AOpt.Key.KeySpeed = 20;
 		/// Key("Tab Ctrl+V");
 		/// ]]></code>
-		/// Use a AKeyboard instance.
+		/// Use a AKeys instance.
 		/// <code><![CDATA[
-		/// var k = new AKeyboard(AOpt.Key); //create new AKeyboard instance and copy options from AOpt.Key to it
+		/// var k = new AKeys(AOpt.Key); //create new AKeys instance and copy options from AOpt.Key to it
 		/// k.Options.KeySpeed = 100; //changes option of k but not of AOpt.Key
 		/// k.Add("Tab Ctrl+V").Send(); //uses options of k
 		/// ]]></code>
@@ -119,7 +119,7 @@ namespace Au
 			/// Default option values for <see cref="AOpt.Key"/> of each thread.
 			/// </summary>
 			/// <remarks>
-			/// Also can be used when creating <see cref="AKeyboard"/> instances. See the second example.
+			/// Also can be used when creating <see cref="AKeys"/> instances. See the second example.
 			/// </remarks>
 			/// <example>
 			/// <code><![CDATA[
@@ -127,9 +127,9 @@ namespace Au
 			/// ...
 			/// Key("Tab Ctrl+V"); //uses AOpt.Key, which is implicitly copied from AOpt.Static.Key
 			/// ]]></code>
-			/// Use a AKeyboard instance.
+			/// Use a AKeys instance.
 			/// <code><![CDATA[
-			/// var k = new AKeyboard(AOpt.Static.Key); //create new AKeyboard instance and copy options from AOpt.Static.Key to it
+			/// var k = new AKeys(AOpt.Static.Key); //create new AKeys instance and copy options from AOpt.Static.Key to it
 			/// k.Options.KeySpeed = 100; //changes option of k but not of AOpt.Static.Key
 			/// k.Add("Tab Ctrl+V").Send(); //uses options of k
 			/// ]]></code>
@@ -445,7 +445,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Options for functions of class <see cref="AKeyboard"/>.
+	/// Options for functions of class <see cref="AKeys"/>.
 	/// Some options also are used with <see cref="AClipboard"/> functions that send keys (Ctrl+V etc).
 	/// </summary>
 	/// <seealso cref="AOpt.Key"/>
@@ -514,7 +514,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// How long to wait (milliseconds) between pressing and releasing each character key of 'text' parameters of <see cref="AKeyboard.Text"/>, <see cref="AKeyboard.Key"/> and similar functions.
+		/// How long to wait (milliseconds) between pressing and releasing each character key of 'text' parameters of <see cref="AKeys.Text"/>, <see cref="AKeys.Key"/> and similar functions.
 		/// Default: 0. Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -528,7 +528,7 @@ namespace Au.Types
 		int _textSpeed;
 
 		/// <summary>
-		/// How long to wait (milliseconds) between pressing and releasing each key of 'keys' parameters of <see cref="AKeyboard.Key"/> and similar functions.
+		/// How long to wait (milliseconds) between pressing and releasing each key of 'keys' parameters of <see cref="AKeys.Key"/> and similar functions.
 		/// Default: 1. Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -698,7 +698,7 @@ namespace Au.Types
 		/// Default: null.
 		/// </summary>
 		/// <remarks>
-		/// The callback function is called by <see cref="Key"/>, <see cref="Text"/>, <see cref="AKeyboard.Send"/>, <see cref="AClipboard.PasteText"/> and similar functions. Not called by <see cref="AClipboard.CopyText"/>.
+		/// The callback function is called by <see cref="Key"/>, <see cref="Text"/>, <see cref="AKeys.Send"/>, <see cref="AClipboard.PasteText"/> and similar functions. Not called by <see cref="AClipboard.CopyText"/>.
 		/// </remarks>
 		/// <seealso cref="KOHookData"/>
 		public Action<KOHookData> Hook { get; set; }

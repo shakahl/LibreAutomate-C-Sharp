@@ -394,14 +394,14 @@ namespace Au.Triggers
 		/// </summary>
 		internal unsafe void LibTimer()
 		{
-			//bool print = !AKeyboard.IsNumLock;
+			//bool print = !AKeys.IsNumLock;
 			//if(print) Print(ATime.PerfMilliseconds % 10000);
 
 			int period = _triggers.LibWinTimerPeriod;
 			if(period < 250) _triggers.LibWinTimerPeriod = Math.Min(period += period / 10 + 1, 250);
 
-			//bool verbose = !AKeyboard.IsNumLock;
-			//if(AKeyboard.IsNumLock) return;
+			//bool verbose = !AKeys.IsNumLock;
+			//if(AKeys.IsNumLock) return;
 			//APerf.First();
 			//var a = AWnd.GetWnd.AllWindows(true);
 
@@ -552,7 +552,7 @@ namespace Au.Triggers
 		/// <param name="k"></param>
 		void _HookProc(HookData.AccHookData k)
 		{
-			//if(!AKeyboard.IsNumLock) Print(k.ev, k.idObject, k.idChild, k.wnd);
+			//if(!AKeys.IsNumLock) Print(k.ev, k.idObject, k.idChild, k.wnd);
 
 			if(k.idObject != AccOBJID.WINDOW) return;
 			if(k.idChild != 0 || k.wnd.Is0) return;
