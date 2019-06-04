@@ -41,55 +41,6 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
-		/// Returns 1 if gets user model id, 2 if gets path, 0 if fails.
-		/// </summary>
-		/// <param name="w">Window.</param>
-		/// <param name="appId">Receives app ID.</param>
-		/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
-		/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
-		static int _GetWindowsStoreAppId(AWnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
-		{
-			appId = null;
-
-			if(AVersion.MinWin8) {
-				switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
-				case 1:
-					using(var p = LibHandle.OpenProcess(w)) {
-						if(!p.Is0) {
-							var b = Util.AMemoryArray.LibChar(1000, out int na);
-							if(0 == Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);
-						}
-					}
-					break;
-				case 2:
-					if(AVersion.MinWin10) {
-						if(0 == Api.SHGetPropertyStoreForWindow(w, Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
-							if(0 == ps.GetValue(Api.PKEY_AppUserModel_ID, out var v)) {
-								if(v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
-								v.Dispose();
-							}
-							Marshal.ReleaseComObject(ps);
-						}
-					}
-					break;
-				}
-
-				if(appId != null) {
-					if(prependShellAppsFolder) appId = @"shell:AppsFolder\" + appId;
-					return 1;
-				}
-			}
-
-			if(getExePathIfNotWinStoreApp) {
-				appId = w.ProgramPath;
-				if(appId != null) return 2;
-			}
-
-			return 0;
-		}
-
-		/// <summary>
 		/// On Win10+, if w is "ApplicationFrameWindow", returns the real app window "Windows.UI.Core.CoreWindow" hosted by w.
 		/// If w is minimized, cloaked (eg on other desktop) or the app is starting, the "Windows.UI.Core.CoreWindow" is not its child. Then searches for a top-level window named like w. It is unreliable, but MS does not provide API for this.
 		/// Info: "Windows.UI.Core.CoreWindow" windows hosted by "ApplicationFrameWindow" belong to separate processes. All "ApplicationFrameWindow" windows belong to a single process.
@@ -130,6 +81,55 @@ namespace Au
 
 		internal static partial class Lib
 		{
+			/// <summary>
+			/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
+			/// Returns 1 if gets user model id, 2 if gets path, 0 if fails.
+			/// </summary>
+			/// <param name="w">Window.</param>
+			/// <param name="appId">Receives app ID.</param>
+			/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
+			/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
+			internal static int GetWindowsStoreAppId(AWnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
+			{
+				appId = null;
+
+				if(AVersion.MinWin8) {
+					switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
+					case 1:
+						using(var p = LibHandle.OpenProcess(w)) {
+							if(!p.Is0) {
+								var b = Util.AMemoryArray.LibChar(1000, out int na);
+								if(0 == Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);
+							}
+						}
+						break;
+					case 2:
+						if(AVersion.MinWin10) {
+							if(0 == Api.SHGetPropertyStoreForWindow(w, Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
+								if(0 == ps.GetValue(Api.PKEY_AppUserModel_ID, out var v)) {
+									if(v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
+									v.Dispose();
+								}
+								Marshal.ReleaseComObject(ps);
+							}
+						}
+						break;
+					}
+
+					if(appId != null) {
+						if(prependShellAppsFolder) appId = @"shell:AppsFolder\" + appId;
+						return 1;
+					}
+				}
+
+				if(getExePathIfNotWinStoreApp) {
+					appId = w.ProgramPath;
+					if(appId != null) return 2;
+				}
+
+				return 0;
+			}
+
 			[Flags]
 			internal enum WFlags
 			{

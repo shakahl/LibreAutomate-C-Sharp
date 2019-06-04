@@ -9,7 +9,7 @@ title: Print tags
 
 For most tags use this format: `<tag>text<>` or `<tag attribute>text<>`.
 
-These tags must end with `</tag>`: `<code>code</code>`, `<_>literal text</_>`, `<fold>text</fold>`.
+For these tags use `<tag>text</tag>`: `<code>`, `<_>`, `<\a>`, `<fold>`.
 
 This tag does not have a closing tag: `<image "attribute">`.
 
@@ -50,7 +50,7 @@ Print("<>Code example:\r\n<code>Mouse.Click(10, 20); //comments</code>");
 #### Other tags
 | Examples | Comments
 | - | -
-| `<_>text</_>` | Literal text. Tags in it are ignored.
+| `<_>text</_>` or `<\a>text</\a>` | Literal text. Tags in it are ignored.<br/>Here `\a` is escape sequence for character code 7.
 | `<code>var s="example";</code>` | Colored C# code. Tags in it are ignored.
 | `<fold>text</fold>` | Folded (hidden) lines. Adds a link to unfold (show).
 

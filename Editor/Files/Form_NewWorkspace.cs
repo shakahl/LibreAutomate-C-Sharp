@@ -23,15 +23,15 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 using static Program;
-
+using Au.Controls;
 
 #if !DESIGNER
 partial class FilesModel
 {
 #endif
-	class _FormNewWorkspace :AFormBase
+	class Form_NewWorkspace :AFormBase
 	{
-		public _FormNewWorkspace()
+		public Form_NewWorkspace()
 		{
 			InitializeComponent();
 
@@ -85,13 +85,13 @@ partial class FilesModel
 		/// </summary>
 		private void InitializeComponent()
 		{
-			this.buttonOK = new System.Windows.Forms.Button();
-			this.buttonCancel = new System.Windows.Forms.Button();
+			this.buttonOK = new Au.Controls.AuButtonOK();
+			this.buttonCancel = new Au.Controls.AuButtonCancel();
 			this.label1 = new System.Windows.Forms.Label();
 			this.textName = new System.Windows.Forms.TextBox();
 			this.label2 = new System.Windows.Forms.Label();
 			this.textLocation = new System.Windows.Forms.TextBox();
-			this.buttonBrowse = new System.Windows.Forms.Button();
+			this.buttonBrowse = new Au.Controls.AuButton();
 			this.label3 = new System.Windows.Forms.Label();
 			this.textPath = new System.Windows.Forms.TextBox();
 			this.SuspendLayout();
@@ -104,7 +104,6 @@ partial class FilesModel
 			this.buttonOK.Size = new System.Drawing.Size(72, 24);
 			this.buttonOK.TabIndex = 7;
 			this.buttonOK.Text = "OK";
-			this.buttonOK.UseVisualStyleBackColor = true;
 			// 
 			// buttonCancel
 			// 
@@ -115,7 +114,6 @@ partial class FilesModel
 			this.buttonCancel.Size = new System.Drawing.Size(72, 24);
 			this.buttonCancel.TabIndex = 8;
 			this.buttonCancel.Text = "Cancel";
-			this.buttonCancel.UseVisualStyleBackColor = true;
 			// 
 			// label1
 			// 
@@ -159,7 +157,6 @@ partial class FilesModel
 			this.buttonBrowse.Size = new System.Drawing.Size(72, 24);
 			this.buttonBrowse.TabIndex = 4;
 			this.buttonBrowse.Text = "Browse...";
-			this.buttonBrowse.UseVisualStyleBackColor = true;
 			// 
 			// label3
 			// 
@@ -210,8 +207,8 @@ partial class FilesModel
 
 		#endregion
 
-		private Button buttonOK;
-		private Button buttonCancel;
+		private AuButtonOK buttonOK;
+		private AuButtonCancel buttonCancel;
 		private Label label1;
 		public TextBox textName;
 		private Label label2;

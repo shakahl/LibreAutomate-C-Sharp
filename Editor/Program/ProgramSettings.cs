@@ -89,14 +89,11 @@ class ProgramSettings
 		}
 	}
 
-	//CONSIDER: use dynamic.
-
 	/// <summary>
 	/// Gets a setting of type string.
 	/// If exists, returns true. Else sets value=defaultValue and returns false.
-	/// Note: The .NET XML reader replaces \r\n with \n, even in CDATA. If the caller needs \r\n, eg for an Edit control, let it replace \n with \r\n.
 	/// </summary>
-	public bool Get(string name, out string value, string defaultValue = null)
+	public bool GetString(string name, out string value, string defaultValue = null)
 	{
 		if(_Get(name, out value)) return true;
 		value = defaultValue; return false;
@@ -105,11 +102,10 @@ class ProgramSettings
 	/// <summary>
 	/// Gets a setting of type string.
 	/// If does not exist, returns defaultValue.
-	/// Note: The .NET XML reader replaces \r\n with \n, even in CDATA. If the caller needs \r\n, eg for an Edit control, let it replace \n with \r\n.
 	/// </summary>
-	public string Get(string name, string defaultValue = null)
+	public string GetString(string name, string defaultValue = null)
 	{
-		Get(name, out string value, defaultValue);
+		GetString(name, out string value, defaultValue);
 		return value;
 	}
 
@@ -117,7 +113,7 @@ class ProgramSettings
 	/// Gets a setting of type int.
 	/// If exists, returns true. Else sets value=defaultValue and returns false.
 	/// </summary>
-	public bool Get(string name, out int value, int defaultValue = 0)
+	public bool GetInt(string name, out int value, int defaultValue = 0)
 	{
 		if(_Get(name, out var s)) { value = s.ToInt(); return true; }
 		value = defaultValue; return false;
@@ -127,9 +123,9 @@ class ProgramSettings
 	/// Gets a setting of type int.
 	/// If does not exist, returns defaultValue.
 	/// </summary>
-	public int Get(string name, int defaultValue)
+	public int GetInt(string name, int defaultValue = 0)
 	{
-		Get(name, out int value, defaultValue);
+		GetInt(name, out int value, defaultValue);
 		return value;
 	}
 
@@ -137,7 +133,7 @@ class ProgramSettings
 	/// Gets a setting of type bool.
 	/// If exists, returns true. Else sets value=defaultValue and returns false.
 	/// </summary>
-	public bool Get(string name, out bool value, bool defaultValue = false)
+	public bool GetBool(string name, out bool value, bool defaultValue = false)
 	{
 		if(_Get(name, out var s)) { value = s == "true" ? true : false; return true; }
 		value = defaultValue; return false;
@@ -147,9 +143,9 @@ class ProgramSettings
 	/// Gets a setting of type bool.
 	/// If does not exist, returns defaultValue.
 	/// </summary>
-	public bool Get(string name, bool defaultValue)
+	public bool GetBool(string name, bool defaultValue = false)
 	{
-		Get(name, out bool value, defaultValue);
+		GetBool(name, out bool value, defaultValue);
 		return value;
 	}
 

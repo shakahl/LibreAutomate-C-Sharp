@@ -32,6 +32,11 @@ static class Strips
 	static CmdHandlers _cmd; //all menu/toolbar commands. Contains command handlers, their names and delegates.
 	static AuStripManager _strips;
 
+	/// <summary>
+	/// Can be used to execute commands directly. Example: <c>Strips.Cmd.File_Exit();</c>.
+	/// </summary>
+	public static CmdHandlers Cmd => _cmd;
+
 	public static void Init()
 	{
 		//var p = APerf.StartNew();

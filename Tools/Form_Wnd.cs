@@ -710,7 +710,7 @@ namespace Au.Tools
 					//if(!Empty(cLabel)) b.Append("<i>NameLabel<>:    ").AppendLine(cLabel);
 					if(!Empty(cAcc)) b.Append("<i>NameAcc<>:    ").AppendLine(cAcc);
 					if(!Empty(cWF)) b.Append("<i>NameWinForms<>:    ").AppendLine(cWF);
-					if(!Empty(cText)) b.Append("<i>ControlText<>:    ").Append("<_>").Append(cText.Escape(10000, true)).AppendLine("</_>");
+					if(!Empty(cText)) b.Append("<i>ControlText<>:    ").Append("<\a>").Append(cText.Escape(10000, true)).AppendLine("</\a>");
 					b.Append("<i>ControlId<>:    ").AppendLine(cId.ToString());
 					b.AppendFormat("<+rect {0}><i>RectInWindow<><>:    ", sh).AppendLine(w.RectInWindow.ToString());
 				} else {

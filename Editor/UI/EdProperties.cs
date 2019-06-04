@@ -29,7 +29,8 @@ using System.Globalization;
 
 partial class EdCodeFileProperties : AFormBase, IMessageFilter
 {
-	FileNode _f, _fProjectFolder;
+	FileNode _f;
+	//FileNode _fProjectFolder;
 	EdMetaCommentsParser _meta;
 	bool _isClass;
 	ERole _role;
@@ -39,7 +40,7 @@ partial class EdCodeFileProperties : AFormBase, IMessageFilter
 		InitializeComponent();
 
 		_f = f;
-		f.FindProject(out _fProjectFolder, out _);
+		//f.FindProject(out _fProjectFolder, out _);
 		_isClass = f.IsClass;
 
 		this.Text = _f.Name + " Properties";
@@ -108,7 +109,7 @@ Unlike most other options, this option is saved not in meta comments. It is save
  • <i>green</i> (default) - multiple green tasks cannot run simultaneously.
  • <i>blue</i> - multiple blue tasks can run simultaneously.
 
-Green tasks change the tray icon and afraid the ""End task"" hotkey; blue tasks don't.
+Green tasks change the tray icon and obey the ""End task"" hotkey; blue tasks don't.
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");
@@ -417,7 +418,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 	{
 		if(Model.CurrentFile != _f && !Model.SetCurrentFile(_f)) return;
 		var t = Panels.Editor.ActiveDoc.ST;
-		var code = t.GetText();
+		var code = t.AllText();
 		MetaComments.FindMetaComments(code, out int endOf);
 
 		if(!_GetGrid()) { this.DialogResult = DialogResult.None; return; };

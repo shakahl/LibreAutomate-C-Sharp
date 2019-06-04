@@ -22,13 +22,13 @@ using static Au.AStatic;
 using static Program;
 using Au.Controls;
 
-class PanelStatus :Control
+class PanelStatus : AUserControlBase
 {
 	AuScintilla _c;
 
 	public PanelStatus()
 	{
-		var z = TextRenderer.MeasureText("A\nj", MainForm.Font);
+		var z = TextRenderer.MeasureText("A\nj", Font);
 		this.Size = new Size(0, z.Height + 3);
 		this.Dock = DockStyle.Bottom;
 
@@ -39,10 +39,9 @@ class PanelStatus :Control
 		_c.AccessibleRole = AccessibleRole.StatusBar;
 
 		_c.InitReadOnlyAlways = true;
+		_c.InitTagsStyle = AuScintilla.TagsStyle.AutoWithPrefix;
 		_c.WrapLines = true;
 		_c.HandleCreated += _c_HandleCreated;
-
-		_c.InitTagsStyle = AuScintilla.TagsStyle.AutoWithPrefix;
 
 		this.Controls.Add(_c);
 
@@ -53,19 +52,18 @@ class PanelStatus :Control
 	{
 		var t = _c.ST;
 		t.StyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
-		var font = MainForm.Font;
-		t.StyleFont(Sci.STYLE_DEFAULT, font.Name, (int)font.Size);
+		t.StyleFont(Sci.STYLE_DEFAULT, Font);
 		t.MarginWidth(1, 4);
 		t.StyleClearAll();
 		_c.Call(Sci.SCI_SETHSCROLLBAR); _c.Call(Sci.SCI_SETVSCROLLBAR);
 	}
 
-	protected override void Dispose(bool disposing)
-	{
-		//Print(disposing);
-		MousePosChangedWhenProgramVisible -= _MouseInfo;
-		base.Dispose(disposing);
-	}
+	//protected override void Dispose(bool disposing)
+	//{
+	//	//Print(disposing);
+	//	MousePosChangedWhenProgramVisible -= _MouseInfo;
+	//	base.Dispose(disposing);
+	//}
 
 	public void SetText(string text)
 	{
@@ -89,5 +87,5 @@ class PanelStatus :Control
 		//remember: limit long text, each line separatelly
 	}
 
-	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
+	//protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 }

@@ -41,7 +41,7 @@ namespace Au.Controls
 					brushActiveTabBack = Brushes.WhiteSmoke;
 					txtFormatHorz = new StringFormat(StringFormatFlags.NoWrap);
 					txtFormatVert = new StringFormat(StringFormatFlags.NoWrap | StringFormatFlags.DirectionVertical);
-					txtFormatHorz.LineAlignment = txtFormatVert.LineAlignment= StringAlignment.Center;
+					txtFormatHorz.LineAlignment = txtFormatVert.LineAlignment = StringAlignment.Center;
 					txtFormatHorz.Trimming = StringTrimming.EllipsisCharacter;
 					//txtFormatVert.Trimming = StringTrimming.EllipsisCharacter; //.NET bug with vertical: displays a rectangle or nothing, instead of ...
 					_inited = true;
@@ -114,7 +114,7 @@ namespace Au.Controls
 			internal virtual void Save(XmlWriter x) { }
 		}
 
-		class _DummyNode :_Node
+		class _DummyNode : _Node
 		{
 			internal _DummyNode(AuDockPanel manager, _Split parentSplit) : base(manager, parentSplit)
 			{
@@ -132,7 +132,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Base of _Panel and _Tab.
 		/// </summary>
-		abstract class _ContentNode :_Node
+		abstract class _ContentNode : _Node
 		{
 			internal Rectangle CaptionBounds; //in current parent client area. If _Tab, it is whole caption area (includes child panel buttons); else if _Tab child panel and there are more visible siblings, only its button; else whole caption area.
 			internal Rectangle SavedFloatingBounds; //when docked etc, contains bounds when was floating, to restore when floating again
@@ -342,7 +342,10 @@ namespace Au.Controls
 				RECT rect = new RECT();
 				if(state == _DockState.Floating) {
 					if(!onStartDrag && !SavedFloatingBounds.IsEmptyRect()) {
-						rect = SavedFloatingBounds;
+						if(SavedFloatingBounds.X == int.MinValue) { //specified only width and height
+							var mp = AMouse.XY;
+							rect = (mp.x - 15, mp.y - 15, SavedFloatingBounds.Width, SavedFloatingBounds.Height);
+						} else rect = SavedFloatingBounds;
 						rect.EnsureInScreen();
 					} else if(this.ParentSplit != null) {
 						rect = this.RectangleInScreen;
@@ -356,7 +359,12 @@ namespace Au.Controls
 
 				var panels = isTab ? gt.Items.FindAll(v => v.IsDocked) : new List<_Panel>(1) { gp };
 
-				(isTab ? gt.ActiveItem : gp)?.Content.Hide();
+				//(isTab ? gt.ActiveItem : gp)?.Content.Hide();
+				var gtp = isTab ? gt.ActiveItem : gp;
+				if(gtp != null) {
+					if(state != _DockState.Docked && _manager.FocusControlOnUndockEtc != null && gtp.Content.ContainsFocus) _manager.FocusControlOnUndockEtc.Focus();
+					gtp.Content.Hide();
+				}
 
 				Action postAction = null;
 
@@ -502,12 +510,11 @@ namespace Au.Controls
 					}
 					if(!hide) {
 						PaintEventHandler eh = null;
-						eh = (object sender, PaintEventArgs e) =>
-							{
-								_manager.Paint -= eh;
-								//SetDockState(_DockState.Floating);
-								ATimer.After(200, () => SetDockState(_DockState.Floating));
-							};
+						eh = (object sender, PaintEventArgs e) => {
+							_manager.Paint -= eh;
+							//SetDockState(_DockState.Floating);
+							ATimer.After(200, () => SetDockState(_DockState.Floating));
+						};
 						_manager.Paint += eh;
 					}
 				}
@@ -538,6 +545,7 @@ namespace Au.Controls
 
 			static string _RectToString(Rectangle r)
 			{
+				if(r.X == int.MinValue) return $"{r.Width} {r.Height}";
 				return $"{r.X} {r.Y} {r.Width} {r.Height}";
 			}
 
@@ -548,7 +556,9 @@ namespace Au.Controls
 					r.X = s.ToInt(0, out int i);
 					r.Y = s.ToInt(i, out i);
 					r.Width = s.ToInt(i, out i);
-					r.Height = s.ToInt(i, out i);
+					if(i > 0) r.Height = s.ToInt(i);
+					else r = new Rectangle(int.MinValue, 0, r.X, r.Y);
+					//If saved 4 values, it is x y width height. If 2 values, it is width height, and we'll calc x y when used.
 				}
 				return r;
 			}

@@ -518,6 +518,7 @@ namespace Au
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
+		/// <seealso cref="More.LineAndColumn"/>
 		public static int LineCount(this string t, bool preferMore = false)
 		{
 			if(t.Length == 0) return preferMore ? 1 : 0;

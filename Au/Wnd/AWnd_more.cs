@@ -99,7 +99,7 @@ namespace Au
 			public static AWnd CreateWindowAndSetFont(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
 			{
 				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
-				if(!w.Is0) SetFontHandle(w, (customFontHandle == default) ? Util.LibNativeFont.RegularCached : customFontHandle);
+				if(!w.Is0) w.Send(Api.WM_SETFONT, (customFontHandle == default) ? Util.LibNativeFont.RegularCached : customFontHandle);
 				return w;
 			}
 
@@ -152,76 +152,44 @@ namespace Au
 			/// </remarks>
 			public static string GetWindowsStoreAppId(AWnd w, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
 			{
-				if(0 != _GetWindowsStoreAppId(w, out var R, prependShellAppsFolder, getExePathIfNotWinStoreApp)) return R;
+				if(0 != Lib.GetWindowsStoreAppId(w, out var R, prependShellAppsFolder, getExePathIfNotWinStoreApp)) return R;
 				return null;
 			}
 
-			/// <summary>
-			/// Sets native font handle.
-			/// Sends message API <msdn>WM_SETFONT</msdn> with lParam 1.
-			/// Does not copy the font; don't dispose it while the window is alive.
-			/// Use this function only with windows of current process.
-			/// </summary>
-			public static void SetFontHandle(AWnd w, IntPtr fontHandle)
-			{
-				w.Send(Api.WM_SETFONT, fontHandle, 1);
-			}
+			//rejected. Rarely used. Easy to send message.
+			///// <summary>
+			///// Sets native font handle.
+			///// Sends message API <msdn>WM_SETFONT</msdn> with lParam 1.
+			///// Does not copy the font; don't dispose it while the window is alive.
+			///// Use this function only with windows of current process.
+			///// </summary>
+			//public static void SetFontHandle(AWnd w, IntPtr fontHandle)
+			//{
+			//	w.Send(Api.WM_SETFONT, fontHandle, 1);
+			//}
 
-			/// <summary>
-			/// Gets native font handle.
-			/// Sends message API <msdn>WM_GETFONT</msdn>.
-			/// Does not copy the font; don't need to dispose.
-			/// Use this function only with windows of current process.
-			/// </summary>
-			public static IntPtr GetFontHandle(AWnd w)
-			{
-				return w.Send(Api.WM_GETFONT);
-			}
+			///// <summary>
+			///// Gets native font handle.
+			///// Sends message API <msdn>WM_GETFONT</msdn>.
+			///// Does not copy the font; don't need to dispose.
+			///// Use this function only with windows of current process.
+			///// </summary>
+			//public static IntPtr GetFontHandle(AWnd w)
+			//{
+			//	return w.Send(Api.WM_GETFONT);
+			//}
 
-			/// <summary>
-			/// Sets native icon handle.
-			/// Sends message API <msdn>WM_SETICON</msdn>.
-			/// Does not copy the icon; don't dispose it while the window is alive.
-			/// Use this function only with windows of current process.
-			/// </summary>
-			/// <seealso cref="AIcon"/>
-			public static void SetIconHandle(AWnd w, IntPtr iconHandle, bool size32 = false)
-			{
-				w.Send(Api.WM_SETICON, size32, iconHandle);
-			}
-
-			/// <summary>
-			/// Gets icon that is displayed in window title bar and in its taskbar button.
-			/// Returns icon handle if successful, else default(IntPtr). Later call <see cref="AIcon.DestroyIconHandle"/> or <see cref="AIcon.HandleToIcon"/> or <see cref="AIcon.HandleToImage"/>.
-			/// </summary>
-			/// <param name="w"></param>
-			/// <param name="size32">Get 32x32 icon. If false, gets 16x16 icon.</param>
-			/// <remarks>
-			/// Icon size depends on DPI (text size, can be changed in Windows Settings). By default small is 16, large 32.
-			/// This function can be used with windows of any process.
-			/// </remarks>
-			/// <seealso cref="AIcon"/>
-			public static IntPtr GetIconHandle(AWnd w, bool size32 = false)
-			{
-				int size = Api.GetSystemMetrics(size32 ? Api.SM_CXICON : Api.SM_CXSMICON);
-
-				//support Windows Store apps
-				if(1 == _GetWindowsStoreAppId(w, out var appId, true)) {
-					IntPtr hi = AIcon.GetFileIconHandle(appId, size);
-					if(hi != default) return hi;
-				}
-
-				bool ok = w.SendTimeout(2000, out LPARAM R, Api.WM_GETICON, size32);
-				if(R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, !size32);
-				if(R == 0) R = GetClassLong(w, size32 ? Native.GCL.HICON : Native.GCL.HICONSM);
-				if(R == 0) R = GetClassLong(w, size32 ? Native.GCL.HICONSM : Native.GCL.HICON);
-				//tested this code with DPI 125%. Small icon of most windows match DPI (20), some 16, some 24.
-				//TEST: undocumented API InternalGetWindowIcon.
-
-				//Copy, because will DestroyIcon, also it resizes if need.
-				if(R != 0) return Api.CopyImage(R, Api.IMAGE_ICON, size, size, 0);
-				return default;
-			}
+			///// <summary>
+			///// Sets native icon handle.
+			///// Sends message API <msdn>WM_SETICON</msdn>.
+			///// Does not copy the icon; don't dispose it while the window is alive.
+			///// Use this function only with windows of current process.
+			///// </summary>
+			///// <seealso cref="AIcon"/>
+			//public static void SetIconHandle(AWnd w, IntPtr iconHandle, bool size32 = false)
+			//{
+			//	w.Send(Api.WM_SETICON, size32, iconHandle);
+			//}
 
 			/// <summary>
 			/// Calls API <msdn>GetClassLongPtr</msdn>.

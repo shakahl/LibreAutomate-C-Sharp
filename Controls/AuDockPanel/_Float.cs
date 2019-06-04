@@ -108,7 +108,7 @@ namespace Au.Controls
 			{
 				if(_manager._WndProcBefore_Common(this, ref m)) return;
 
-				//Util.LibDebug_.PrintMsg(ref m);
+				//Util.LibDebug_.PrintMsg(m);
 				//LPARAM WP = m.WParam, LP = m.LParam;
 
 				switch(m.Msg) {
@@ -126,6 +126,15 @@ namespace Au.Controls
 				base.WndProc(ref m);
 
 				_manager._WndProcAfter_Common(this, ref m);
+			}
+
+			protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+			{
+				if(base.ProcessCmdKey(ref msg, keyData)) return true;
+				if(keyData == Keys.Escape) {
+					_manager.FocusControlOnUndockEtc?.Focus();
+				}
+				return false;
 			}
 
 			bool _sizeChanged;

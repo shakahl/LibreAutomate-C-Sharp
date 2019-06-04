@@ -165,6 +165,22 @@ static class EdStock
 	/// Bold version of <see cref="Regular"/> font.
 	/// </summary>
 	public static Font FontBold = Au.Util.AFonts.Bold;
+
+	static Icon _iconAppNormal, _iconTrayNormal, _iconTrayDisabled, _iconTrayRunning;
+
+	public static Icon IconAppNormal => _iconAppNormal ?? (_iconAppNormal = Project.Properties.Resources.app_normal); //contains icons of multiple sizes
+
+	public static Icon IconTrayNormal => _iconTrayNormal ?? (_iconTrayNormal = _Icon(IconAppNormal));
+
+	public static Icon IconAppDisabled => _iconTrayDisabled ?? (_iconTrayDisabled = _Icon(Project.Properties.Resources.app_disabled));
+
+	public static Icon IconAppRunning => _iconTrayRunning ?? (_iconTrayRunning = _Icon(Project.Properties.Resources.app_running));
+
+	static Icon _Icon(Icon icon)
+	{
+		int size = AIcon.GetShellIconSize(IconSize.SysSmall);
+		return new Icon(icon, size, size);
+	}
 }
 
 /// <summary>
@@ -176,3 +192,17 @@ class XN
 {
 	public static readonly XName f = "f", n = "n";
 }
+
+#if DEBUG
+
+static class EdDebug
+{
+	internal static void PrintTabOrder(Control c, int level = 0)
+	{
+		var tabs = "".PadLeft(level, ' ');
+		Print($"{tabs}{c.GetType().Name} \"{c.Name}\"  {c.TabStop} {c.TabIndex}");
+		foreach(Control v in c.Controls) PrintTabOrder(v, level + 1);
+	}
+}
+
+#endif

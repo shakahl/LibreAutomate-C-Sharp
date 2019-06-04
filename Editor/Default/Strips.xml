@@ -86,7 +86,8 @@
 				<File_WorkspaceProperties t="Workspace Properties..."/>
 			</File_Workspace>
 			<sep/>
-			<File_Exit hkText="Alt+F4"/>
+			<File_CloseWindow hkText="Alt+F4"/>
+			<File_Exit hk="Ctrl+Alt+F4"/>
 		</Menu_File>
 		<Menu_Edit>
 			<Edit_Undo i="undo" hkText="Ctrl+Z"/>
@@ -97,7 +98,7 @@
 			<Edit_Paste i="paste" hkText="Ctrl+V"/>
 			<Edit_CopyForForum/>
 			<sep/>
-			<Edit_Find i="find"/>
+			<Edit_Find i="find" hk="Ctrl+F"/>
 			<Edit_FindReferences/>
 			<sep/>
 			<Edit_GoToDefinition/>
@@ -132,9 +133,14 @@
 			<Run_Pause i="back2"/>
 			<Run_Compile i="compile"/>
 			<sep/>
-			<Run_AutoMinimize/>
 			<Run_DisableTriggers/>
 			<sep/>
+			<Debug_Breakpoints>
+				<Debug_ToggleBreakpoint/>
+				<Debug_PersistentBreakpoint/>
+				<Debug_ClearLocalBreakpoints/>
+				<Debug_ClearAllBreakpoints/>
+			</Debug_Breakpoints>
 			<Run_Debug>
 				<Debug_RunToBreakpoint i="deb_run"/>
 				<Debug_RunToCursor i="deb_cursor"/>
@@ -142,15 +148,7 @@
 				<Debug_StepOver i="deb_next"/>
 				<Debug_StepOut i="deb_out"/>
 			</Run_Debug>
-			<Debug_Breakpoints>
-				<Debug_ToggleBreakpoint/>
-				<Debug_PersistentBreakpoint/>
-				<Debug_ClearLocalBreakpoints/>
-				<Debug_ClearAllBreakpoints/>
-			</Debug_Breakpoints>
 			<Debug_DebugOptions/>
-			<sep/>
-			<Run_MakeExe t="Make Exe..."/>
 		</Menu_Run>
 		<Menu_Tools>
 			<Tools_Record i="record"/>

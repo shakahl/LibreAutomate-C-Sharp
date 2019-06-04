@@ -27,7 +27,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>3001,3002,3003,3009,162,649,169</NoWarn>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -41,7 +41,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>3001,3002,3003,3009</NoWarn>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -61,7 +61,7 @@
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
-    <ApplicationIcon>Resources\qm.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\app_normal.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -91,6 +91,12 @@
     </None>
     <Compile Include="Files\Save.cs" />
     <Compile Include="Files\TreeViewFiles.cs" />
+    <Compile Include="Panels\etc\Form_FindOptions.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Panels\PanelFound.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Properties\GlobalSuppressions.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -110,8 +116,18 @@
       <DependentUpon>EdProperties.cs</DependentUpon>
     </Compile>
     <None Include="Unused\DiffMatchPatch.cs" />
+    <Compile Include="UI\TrayIcon.cs" />
     <Compile Include="Util\EdMetaCommentsParser.cs" />
     <Compile Include="Util\UacDragDrop.cs" />
+    <EmbeddedResource Include="Panels\etc\Form_FindOptions.resx">
+      <DependentUpon>Form_FindOptions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Panels\PanelFind.resx">
+      <DependentUpon>PanelFind.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\EdForm.resx">
+      <DependentUpon>EdForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="UI\EdOptions.resx">
       <DependentUpon>EdOptions.cs</DependentUpon>
     </EmbeddedResource>
@@ -137,9 +153,9 @@
     </None>
     <Compile Include="UI\CmdHandlers.cs" />
     <Compile Include="Edit\PanelEdit.cs">
-      <SubType>Component</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Files\_FormNewCollection.cs" />
+    <Compile Include="Files\Form_NewWorkspace.cs" />
     <Compile Include="Program\CommandLine.cs" />
     <Compile Include="Program\ProgramSettings.cs" />
     <None Include="Default\files\Script1.cs">
@@ -148,29 +164,31 @@
     <Compile Include="Files\FileNode.cs" />
     <Compile Include="Files\FilesModel.cs" />
     <Compile Include="Panels\PanelFind.cs">
-      <SubType>Component</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Panels\PanelOpen.cs">
-      <SubType>Component</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Panels\PanelOutput.cs">
-      <SubType>Component</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Panels\PanelRecent.cs">
-      <SubType>Component</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Panels\PanelRunning.cs">
-      <SubType>Component</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Panels\PanelStatus.cs">
-      <SubType>Component</SubType>
+      <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Util\EApi.cs" />
     <Compile Include="Util\EdUtil.cs" />
     <Compile Include="Files\PanelFiles-test.cs" />
     <Compile Include="Test\TestEditor.cs" />
     <None Include="Properties\Au.pfx" />
-    <Compile Include="Files\PanelFiles.cs" />
+    <Compile Include="Files\PanelFiles.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="UI\EdForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -279,11 +297,11 @@
     <None Include="Resources\NewSolutionFolder_16x.png" />
     <Content Include="Resources\fileScript.png" />
     <None Include="Resources\project.png" />
-    <Content Include="Resources\qm.ico" />
+    <Content Include="Resources\app_normal.ico" />
     <None Include="Templates\include\using.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\qm_running.ico" />
+    <None Include="Resources\app_running.ico" />
     <None Include="Templates\New File\TextFile.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -293,6 +311,8 @@
     <None Include="Templates\include\main.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="Resources\app_disabled.ico" />
+    <Content Include="Resources\app_native.ico" />
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
   <ItemGroup />

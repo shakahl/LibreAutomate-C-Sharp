@@ -236,6 +236,8 @@ namespace Au.Controls
 			//TEST: API CalculatePopupWindowPosition.
 		}
 
+		public bool IsModal { get; set; }
+
 		bool IMessageFilter.PreFilterMessage(ref Message m)
 		{
 			//AWnd.More.PrintMsg(m, 0x118, Api.WM_TIMER, Api.WM_PAINT, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x60, 0xc341, 0x2a2);
@@ -366,6 +368,7 @@ namespace Au.Controls
 			Font _font, _fontBold;
 			bool _showedOnce;
 			bool _up;
+			Util.AMessageLoop _msgLoop;
 
 			public Font FontBold => _fontBold ?? (_fontBold = new Font(Font, FontStyle.Bold)); //clone not _font, because caller may change Font
 
@@ -417,6 +420,11 @@ namespace Au.Controls
 					if(changedOwner) ((AWnd)this).ZorderTopmost();
 				}
 				_showedOnce = true;
+
+				if(_p.IsModal) {
+					if(_msgLoop == null) _msgLoop = new Util.AMessageLoop();
+					_msgLoop.Loop();
+				}
 			}
 
 			protected override CreateParams CreateParams {
@@ -471,6 +479,7 @@ namespace Au.Controls
 				_isVisible = visible;
 
 				if(!visible) {
+					if(_p.IsModal) _msgLoop.Stop();
 					_p.ClosedAction?.Invoke(_p);
 					if(!onDestroy && !_p.MultiShow) _p._w.Close();
 				} else {

@@ -140,7 +140,7 @@ namespace Au.Controls
 
 		protected override void WndProc(ref Message m)
 		{
-			//AWnd.More.PrintMsg(ref m);
+			//AWnd.More.PrintMsg(m);
 			//LPARAM WP = m.WParam, LP = m.LParam;
 
 			switch(m.Msg) {
@@ -174,7 +174,7 @@ namespace Au.Controls
 
 		protected override void WndProc(ref Message m)
 		{
-			//AWnd.More.PrintMsg(ref m);
+			//AWnd.More.PrintMsg(m);
 			//LPARAM WP = m.WParam, LP = m.LParam;
 
 			switch(m.Msg) {

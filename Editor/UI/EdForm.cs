@@ -30,7 +30,7 @@ partial class EdForm : Form
 		Application.Run(new EdForm());
 	}
 
-	static bool _StartsVisible => true; //TODO: if commandline /v
+	static bool _StartsVisible => Settings.GetBool("_alwaysVisible") || CommandLine.StartVisible;
 
 	public EdForm()
 	{
@@ -48,6 +48,7 @@ partial class EdForm : Form
 		this.StartPosition = FormStartPosition.Manual;
 		this.Location = new Point(100, 100);
 		this.ClientSize = new Size(900, 600);
+		this.Icon = EdStock.IconAppNormal;
 
 		//APerf.Next();
 		Strips.Init();
@@ -58,7 +59,6 @@ partial class EdForm : Form
 		this.Controls.Add(Panels.PanelManager);
 		this.Controls.Add(Panels.Status);
 
-		_DisableTabOrderOfControls(this);
 		this.ResumeLayout(false);
 
 		Application.AddMessageFilter(new _AppMessageFilter());
@@ -79,6 +79,7 @@ partial class EdForm : Form
 	{
 		Tasks = new RunningTasks();
 		Panels.Files.LoadWorkspace(CommandLine.WorkspaceDirectory, runStartupScript: false);
+		EdTrayIcon.Add();
 		ADebug.PrintIf(((AWnd)this).IsVisible, "BAD: form became visible while loading workspace");
 		Au.Triggers.HooksServer.Start(false);
 		CommandLine.OnMainFormLoaded();
@@ -86,14 +87,28 @@ partial class EdForm : Form
 		Model.RunStartupScripts();
 		//APerf.Next();
 
-		ATimer.After(1, () => { //TODO
+#if TEST
+		ATimer.After(1, () => {
 			var s = CommandLine.TestArg;
 			if(s != null) {
 				Print(ATime.PerfMicroseconds - Convert.ToInt64(s));
 			}
 			APerf.Next('P');
 			//APerf.Write();
+
+			//EdDebug.PrintTabOrder(this);
 		});
+#endif
+	}
+
+	protected override void OnFormClosing(FormClosingEventArgs e)
+	{
+		base.OnFormClosing(e);
+		if(e.CloseReason == CloseReason.UserClosing && Visible && !Settings.GetBool("_alwaysVisible")) {
+			e.Cancel = true;
+			this.WindowState = FormWindowState.Minimized;
+			this.Visible = false;
+		}
 	}
 
 	protected override void OnFormClosed(FormClosedEventArgs e)
@@ -104,6 +119,7 @@ partial class EdForm : Form
 		Au.Triggers.HooksServer.Stop();
 		UacDragDrop.AdminProcess.Enable(false);
 		Panels.Files.UnloadOnFormClosed();
+		EdTrayIcon.Dispose();
 	}
 
 	/// <summary>
@@ -149,8 +165,7 @@ partial class EdForm : Form
 			int isActive = AMath.LoUshort(wParam); //0 inactive, 1 active, 2 click-active
 			if(isActive == 1 && !w.IsActive && !Api.SetForegroundWindow(w)) {
 				//Normally at startup always inactive, because started as admin from task scheduler. SetForegroundWindow sometimes works, sometimes not.
-				//TODO: SetForegroundWindow fails when started with Au.CL.exe /e
-				//workaround: If clicked a window after our app started but before w activated, w is at Z bottom and in some cases without taskbar button.
+				//workaround for: If clicked a window after our app started but before w activated, w is at Z bottom and in some cases without taskbar button.
 				ADebug.Print("window inactive");
 				AWnd.More.TaskbarButton.Add(w);
 				if(!w.ActivateLL()) AWnd.More.TaskbarButton.Flash(w, 5);
@@ -159,13 +174,16 @@ partial class EdForm : Form
 			if(isActive == 0) _wFocus = AWnd.ThisThread.Focused;
 			else if(_wFocus.IsAlive) AWnd.ThisThread.Focus(_wFocus);
 			return;
+		case Api.WM_POWERBROADCAST:
+			if(wParam == 4) Tasks.EndTask(); //PBT_APMSUSPEND
+			break;
 		}
 
 		base.WndProc(ref m);
 
 		switch(m.Msg) {
 		case Api.WM_CREATE:
-			if(Settings.Get("wndPos", out string wndPos))
+			if(Settings.GetString("wndPos", out string wndPos))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 			break;
 		case Api.WM_DESTROY:
@@ -182,6 +200,7 @@ partial class EdForm : Form
 
 	AWnd _wFocus;
 
+#if true
 	protected override void SetVisibleCore(bool value)
 	{
 		//Workaround for .NET inability to create hidden form normally.
@@ -193,6 +212,13 @@ partial class EdForm : Form
 		}
 		base.SetVisibleCore(value);
 	}
+#else
+	protected override void OnLoad(EventArgs e)
+	{
+		base.OnLoad(e);
+		_OnLoad();
+	}
+#endif
 
 	///// <summary>
 	///// WM_USER+n messages.
@@ -201,13 +227,30 @@ partial class EdForm : Form
 	//{
 	//}
 
-	static void _DisableTabOrderOfControls(Control c)
+	protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
 	{
-		foreach(Control cc in c.Controls) {
-			cc.TabStop = false;
-			_DisableTabOrderOfControls(cc);
+		if(base.ProcessCmdKey(ref msg, keyData)) return true;
+		//let Esc focus the code editor. If editor focused - previously focused control or the Files treeview. Because the code editor is excluded from tabstopping.
+		if(keyData == Keys.Escape) {
+			var doc = Panels.Editor.ActiveDoc;
+			if(doc != null) {
+				if(doc.Focused) {
+					var c = _escFocus;
+					for(int i = 0; ; i++) {
+						if(c != null && !c.IsDisposed && c.Visible && c.FindForm() == this && c.Focus()) break;
+						if(i == 0) c = Panels.Files.Control;
+						else if(i == 1) c = this.GetNextControl(doc, true);
+						else break;
+					}
+				} else {
+					_escFocus = Control.FromHandle(msg.HWnd);
+					doc.Focus();
+				}
+			}
 		}
+		return false;
 	}
+	Control _escFocus;
 
 	/// <summary>
 	/// Modifies message loop of this thread, for all forms.
@@ -216,17 +259,6 @@ partial class EdForm : Form
 	{
 		public bool PreFilterMessage(ref Message m)
 		{
-			//switch(m.Msg) {
-			//case Api.WM_PAINT:
-			//case Api.WM_TIMER:
-			//case Api.WM_MOUSEMOVE:
-			//case Api.WM_NCMOUSEMOVE:
-			//case 0xc281:
-			//case 0x60:
-			//	return false;
-			//}
-			//Print(m);
-
 			switch(m.Msg) {
 			case Api.WM_MOUSEWHEEL: //let's scroll the mouse control, not the focused control
 				var w1 = AWnd.FromMouse();
@@ -239,8 +271,7 @@ partial class EdForm : Form
 
 	public void SetTitle()
 	{
-		const string app = "QM#";
-		string title;
+		string title, app = Program.AppName;
 #if true
 		var f = Model?.CurrentFile;
 		if(f == null) title = app;
@@ -265,7 +296,8 @@ public static class Panels
 	internal static PanelRunning Running;
 	internal static PanelRecent Recent;
 	internal static PanelOutput Output;
-	internal static PanelFind Find;
+	internal static Find Find;
+	internal static PanelFound Found;
 	internal static PanelStatus Status;
 
 	internal static void Init()
@@ -276,31 +308,34 @@ public static class Panels
 		Running = new PanelRunning();
 		Recent = new PanelRecent();
 		Output = new PanelOutput();
-		Find = new PanelFind();
+		Find = new Find();
+		Found = new PanelFound();
 		Status = new PanelStatus();
-#if TEST
-		var c = new RichTextBox();
-		c.Name = "Results";
-#endif
+		//#if TEST
+		//		var c = new RichTextBox();
+		//		c.Name = "Results";
+		//#endif
 
 		var m = PanelManager = new AuDockPanel();
 		m.Name = "Panels";
 		m.Create(AFolders.ThisAppBS + @"Default\Panels.xml", AFolders.ThisAppDocuments + @"!Settings\Panels.xml",
-			Editor, Files, Output, Find, Open, Running, Recent,
-#if TEST
-			c,
-#endif
+			Editor, Files, Find, Found, Output, Open, Running, Recent,
+			//#if TEST
+			//			c,
+			//#endif
 			Strips.Menubar, Strips.tbFile, Strips.tbEdit, Strips.tbRun, Strips.tbTools, Strips.tbHelp, Strips.tbCustom1, Strips.tbCustom2
 			);
 		//info: would be easier to specify these in the default XML, but then cannot change in new app versions.
 		m.GetPanel(Open).Init("Currently open files", EdResources.GetImageUseCache("open"));
 		m.GetPanel(Output).Init("Errors and other information", EdResources.GetImageUseCache("output"));
 		m.GetPanel(Find).Init("Find files, text, triggers", EdResources.GetImageUseCache("find"));
+		m.GetPanel(Found).Init("Results of find");
 		m.GetPanel(Files).Init("All files of this workspace");
 		m.GetPanel(Running).Init("Running tasks");
 		m.GetPanel(Recent).Init("Recent tasks");
-#if TEST
-		m.GetPanel(c).Init("New panel", EdResources.GetImageUseCache("paste"));
-#endif
+		m.FocusControlOnUndockEtc = Editor;
+		//#if TEST
+		//		m.GetPanel(c).Init("New panel", EdResources.GetImageUseCache("paste"));
+		//#endif
 	}
 }

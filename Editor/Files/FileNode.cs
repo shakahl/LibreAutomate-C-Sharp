@@ -378,14 +378,23 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	/// Returns "" if file not found.
 	/// </summary>
 	/// <param name="saved">Always get text from file. If false (default), gets editor text if this is current file.</param>
-	/// <param name="warningIfNotFound">Print warning if file not found.</param>
+	/// <param name="warningIfNotFound">Print warning if file not found. If false, prints only other exceptions.</param>
 	public string GetText(bool saved = false, bool warningIfNotFound = false)
 	{
+		if(IsFolder) return "";
 		if(!saved && this == _model.CurrentFile) {
 			return Panels.Editor.ActiveDoc.Text;
 		}
-		try { return AFile.LoadText(FilePath); }
-		catch(FileNotFoundException ex) { if(warningIfNotFound) PrintWarning(ex.Message, -1); }
+		string path = FilePath, es = null;
+		try {
+			using var sr = AFile.WaitIfLocked(() => new StreamReader(path, Encoding.UTF8));
+			if(sr.BaseStream.Length > 100_000_000) es = "File too big, > 100_000_000.";
+			else return sr.ReadToEnd();
+		}
+		catch(Exception ex) {
+			if(warningIfNotFound || !(ex is FileNotFoundException || ex is DirectoryNotFoundException)) es = ex.ToStringWithoutStack();
+		}
+		if(es != null) PrintWarning($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
 		return "";
 	}
 
@@ -696,7 +705,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	}
 
 	public bool IsSelected {
-		get => TreeNodeAdv?.IsSelected ?? false; //TEST: maybe faster _model.SelectedItems.Contains(this);
+		get => TreeNodeAdv?.IsSelected ?? false; //shoulddo: test: maybe faster _model.SelectedItems.Contains(this);
 		set => TreeNodeAdv.IsSelected = value;
 	}
 

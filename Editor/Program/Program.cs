@@ -81,7 +81,7 @@ static class Program
 
 		Settings = new ProgramSettings();
 
-		if(!Settings.Get("user", out UserGuid)) Settings.Set("user", Guid.NewGuid().ToString());
+		if(!Settings.GetString("user", out UserGuid)) Settings.Set("user", Guid.NewGuid().ToString());
 
 		ATimer.Every(1000, t => _TimerProc(t));
 		//note: timer can make Process Hacker show constant CPU, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, 0 of 1000.
@@ -99,6 +99,7 @@ static class Program
 	internal static FilesModel Model;
 	internal static RunningTasks Tasks;
 	internal static string UserGuid;
+	internal const string AppName = "QM#";
 
 	/// <summary>
 	/// Timer with 1 s period.

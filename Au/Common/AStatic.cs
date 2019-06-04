@@ -188,14 +188,14 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Warning text.</param>
 		/// <param name="showStackFromThisFrame">If &gt;= 0, appends the stack trace, skipping this number of frames. Default 0.</param>
-		/// <param name="prefix">Text before <i>text</i>. Default "Warning: ".</param>
+		/// <param name="prefix">Text before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
 		/// <remarks>
 		/// Calls <see cref="AOutput.Write"/>.
 		/// Does not show more that 1 warning/second, unless <b>AOpt.Debug.</b><see cref="OptDebug.Verbose"/> == true.
 		/// To disable some warnings, use <b>AOpt.Debug.</b><see cref="OptDebug.DisableWarnings"/>.
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static void PrintWarning(string text, int showStackFromThisFrame = 0, string prefix = "Warning: ")
+		public static void PrintWarning(string text, int showStackFromThisFrame = 0, string prefix = "<>Warning: ")
 		{
 			if(AOpt.Debug.IsWarningDisabled(text)) return;
 
@@ -225,5 +225,26 @@ namespace Au
 		/// Returns true if the collection (array, List, etc) is null or empty.
 		/// </summary>
 		public static bool Empty(System.Collections.ICollection a) => (a?.Count ?? 0) == 0;
+
+		//rejected. Cannot use 'break' etc. Better add UI to create 'for' loop to "repeat n times".
+		//public static void Repeat(int count, Action action)
+		//{
+		//	for(int i = 0; i < count; i++) {
+		//		action();
+		//	}
+		//}
+		//public static void Repeat(int count, Action<int> action)
+		//{
+		//	for(int i = 0; i < count; i++) {
+		//		action(i);
+		//	}
+		//}
+		//rejected. The code is longer and not easier than 'for'.
+		//public static IEnumerable<int> Repeat(int n)
+		//{
+		//	for(int i = 0; i < n; i++) {
+		//		yield return i;
+		//	}
+		//}
 	}
 }

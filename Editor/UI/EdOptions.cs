@@ -52,13 +52,15 @@ partial class EdOptions : AFormBase
 		base.OnLoad(e);
 
 		_startupScripts.Text = Model.StartupScriptsCsv?.Replace("\n", "\r\n");
+
+		_alwaysVisible.Checked = Settings.GetBool("_alwaysVisible");
 	}
 
 	private void _bOK_Click(object sender, EventArgs e)
 	{
 		if(_startupScripts.Modified) Model.StartupScriptsCsv = _startupScripts.Text;
 
-
+		Settings.Set("_alwaysVisible", _alwaysVisible.Checked);
 	}
 
 	private void _startupScripts_Validating(object sender, CancelEventArgs e)

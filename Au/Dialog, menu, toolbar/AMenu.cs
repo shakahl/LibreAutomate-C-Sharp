@@ -557,7 +557,7 @@ namespace Au
 
 			protected override void WndProc(ref Message m)
 			{
-				//AWnd.More.PrintMsg(ref m, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_ERASEBKGND, Api.WM_CTLCOLOREDIT);
+				//AWnd.More.PrintMsg(m, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_ERASEBKGND, Api.WM_CTLCOLOREDIT);
 
 				if(_am._WndProc_Before(true, this, ref m)) return;
 				//var t = APerf.StartNew();
@@ -881,7 +881,7 @@ namespace Au
 				//Close menu windows. Else they are just hidden and prevent garbage collection until appdomain ends.
 				foreach(var k in _windows) ((AWnd)k.Handle).Post(Api.WM_CLOSE, _wmCloseWparam);
 
-				if(!MultiShow && !_isModal) ATimer.After(10, () => { Dispose(); }); //cannot dispose now, exception
+				if(!MultiShow && !_isModal) ATimer.After(10, () => Dispose()); //cannot dispose now, exception
 
 				if(_isModal) _msgLoop.Stop();
 			}

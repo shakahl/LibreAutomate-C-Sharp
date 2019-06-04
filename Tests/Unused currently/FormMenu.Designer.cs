@@ -29,7 +29,7 @@
 			this.menuStrip1 = new System.Windows.Forms.MenuStrip();
 			this.fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 			this.testToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-			this.button1 = new System.Windows.Forms.Button();
+			this.button1 = new Au.Controls.AuButton();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.menuStrip1.SuspendLayout();
 			this.SuspendLayout();
@@ -68,7 +68,6 @@
 			this.button1.TabIndex = 1;
 			this.button1.Text = "button1";
 			this.toolTip1.SetToolTip(this.button1, "Toooool");
-			this.button1.UseVisualStyleBackColor = true;
 			// 
 			// FormMenu
 			// 
@@ -92,6 +91,6 @@
 	private System.Windows.Forms.MenuStrip menuStrip1;
 	private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem;
 	private System.Windows.Forms.ToolStripMenuItem testToolStripMenuItem;
-	private System.Windows.Forms.Button button1;
+	private Au.Controls.AuButton button1;
 	private System.Windows.Forms.ToolTip toolTip1;
 }

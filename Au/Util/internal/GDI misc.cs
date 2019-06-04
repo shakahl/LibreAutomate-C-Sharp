@@ -46,8 +46,12 @@ namespace Au.Util
 		IntPtr _dc;
 		AWnd _w;
 
+		public LibWindowDC(IntPtr dc, AWnd w) { _dc = dc; _w = w; }
+
 		public LibWindowDC(AWnd w) => _dc = Api.GetDC(_w = w);
+
 		public static implicit operator IntPtr(LibWindowDC dc) => dc._dc;
+
 		public bool Is0 => _dc == default;
 
 		public void Dispose() => ReleaseHdc();
@@ -132,42 +136,42 @@ namespace Au.Util
 		static LibNativeFont _verdana;
 	}
 
-	/// <summary>
-	/// Misc GDI util.
-	/// </summary>
-	internal static class LibGDI
-	{
-		//rejected: now we use BufferedGraphics. Same speed. With BufferedGraphics no TextRenderer problems.
-		///// <summary>
-		///// Copies a .NET Bitmap to a native DC in a fast way.
-		///// </summary>
-		///// <remarks>
-		///// Can be used for double-buffering: create Bitmap and Graphics from it, draw in that Graphics, then call this func.
-		///// The bitmap should be PixelFormat.Format32bppArgb (normal), else slower etc. Must be top-down (normal).
-		///// </remarks>
-		//public static unsafe void CopyNetBitmapToDC(Bitmap b, IntPtr dc)
-		//{
-		//	var r = new Rectangle(0, 0, b.Width, b.Height);
-		//	var d = b.LockBits(r, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-		//	try {
-		//		Api.BITMAPINFOHEADER h = default;
-		//		h.biSize = sizeof(Api.BITMAPINFOHEADER);
-		//		h.biWidth = d.Width;
-		//		h.biHeight = -d.Height;
-		//		h.biPlanes = 1;
-		//		h.biBitCount = 32;
-		//		int k = Api.SetDIBitsToDevice(dc, 0, 0, d.Width, d.Height, 0, 0, 0, d.Height, (void*)d.Scan0, &h, 0);
-		//		Debug.Assert(k > 0);
-		//	}
-		//	finally { b.UnlockBits(d); }
+	///// <summary>
+	///// Misc GDI util.
+	///// </summary>
+	//internal static class LibGDI
+	//{
+	//	//rejected: now we use BufferedGraphics. Same speed. With BufferedGraphics no TextRenderer problems.
+	//	///// <summary>
+	//	///// Copies a .NET Bitmap to a native DC in a fast way.
+	//	///// </summary>
+	//	///// <remarks>
+	//	///// Can be used for double-buffering: create Bitmap and Graphics from it, draw in that Graphics, then call this func.
+	//	///// The bitmap should be PixelFormat.Format32bppArgb (normal), else slower etc. Must be top-down (normal).
+	//	///// </remarks>
+	//	//public static unsafe void CopyNetBitmapToDC(Bitmap b, IntPtr dc)
+	//	//{
+	//	//	var r = new Rectangle(0, 0, b.Width, b.Height);
+	//	//	var d = b.LockBits(r, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+	//	//	try {
+	//	//		Api.BITMAPINFOHEADER h = default;
+	//	//		h.biSize = sizeof(Api.BITMAPINFOHEADER);
+	//	//		h.biWidth = d.Width;
+	//	//		h.biHeight = -d.Height;
+	//	//		h.biPlanes = 1;
+	//	//		h.biBitCount = 32;
+	//	//		int k = Api.SetDIBitsToDevice(dc, 0, 0, d.Width, d.Height, 0, 0, 0, d.Height, (void*)d.Scan0, &h, 0);
+	//	//		Debug.Assert(k > 0);
+	//	//	}
+	//	//	finally { b.UnlockBits(d); }
 
-		//	//speed: 6-7 times faster than Graphics.FromHdc/DrawImageUnscaled. When testing, the dc was from BeginPaint.
-		//}
-		//public static unsafe void CopyNetBitmapToDC2(Bitmap b, IntPtr dc)
-		//{
-		//	using(var g = Graphics.FromHdc(dc)) {
-		//		g.DrawImageUnscaled(b, 0, 0);
-		//	}
-		//}
-	}
+	//	//	//speed: 6-7 times faster than Graphics.FromHdc/DrawImageUnscaled. When testing, the dc was from BeginPaint.
+	//	//}
+	//	//public static unsafe void CopyNetBitmapToDC2(Bitmap b, IntPtr dc)
+	//	//{
+	//	//	using(var g = Graphics.FromHdc(dc)) {
+	//	//		g.DrawImageUnscaled(b, 0, 0);
+	//	//	}
+	//	//}
+	//}
 }

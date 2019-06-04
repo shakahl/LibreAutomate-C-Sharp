@@ -1222,7 +1222,7 @@ namespace Au
 		/// Writes any data to a file in a safe way, using a callback function.
 		/// </summary>
 		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>. The file can exist or not; this function overwrites it.</param>
-		/// <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file. The file normally does not exist, but can.</param>
+		/// <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file, which normally still does not exist.</param>
 		/// <param name="backup">Create backup file named file + "~backup".</param>
 		/// <param name="lockedWaitMS">If cannot open file because it is open by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>

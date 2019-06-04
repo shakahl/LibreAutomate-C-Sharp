@@ -205,7 +205,9 @@ namespace Aga.Controls.Tree
 			else {
 				args.Control?.MouseUp(args);
 
-				if(!args.Handled && args.Button == MouseButtons.Left && !ShowPlusMinus && args.Node != null) {
+				if(!args.Handled && args.Button == MouseButtons.Left && !ShowPlusMinus && args.Node != null
+					&& ModifierKeys == 0 //Au: prevent expanding when with Ctrl, Shift or Alt
+					) {
 					args.Node.IsExpanded = !args.Node.IsExpanded;
 				}
 

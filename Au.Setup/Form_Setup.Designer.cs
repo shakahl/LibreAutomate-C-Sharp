@@ -25,7 +25,7 @@
 	/// </summary>
 	private void InitializeComponent()
 	{
-			this.button1 = new System.Windows.Forms.Button();
+			this.button1 = new Au.Controls.AuButton();
 			this.SuspendLayout();
 			// 
 			// button1
@@ -35,7 +35,6 @@
 			this.button1.Size = new System.Drawing.Size(80, 24);
 			this.button1.TabIndex = 0;
 			this.button1.Text = "Install";
-			this.button1.UseVisualStyleBackColor = true;
 			this.button1.Click += new System.EventHandler(this.button1_Click);
 			// 
 			// Form_Setup
@@ -53,6 +52,6 @@
 
 	#endregion
 
-	private System.Windows.Forms.Button button1;
+	private Au.Controls.AuButton button1;
 }
 

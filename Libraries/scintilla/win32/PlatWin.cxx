@@ -3309,6 +3309,8 @@ unsigned int Platform::DoubleClickTime() {
 
 void Platform::DebugDisplay(const char *s) {
 	::OutputDebugStringA(s);
+	//au:
+	SendMessageA(FindWindowA("QM_Editor", nullptr), WM_SETTEXT, (WPARAM)(-1), (LPARAM)s);
 }
 
 //#define TRACE
@@ -3350,8 +3352,9 @@ void Platform::Assert(const char *c, const char *file, int line) {
 		}
 	} else {
 		Platform::DebugDisplay(buffer);
-		::DebugBreak();
-		abort();
+		//au: ignore, don't break/abort
+		//::DebugBreak();
+		//abort();
 	}
 }
 

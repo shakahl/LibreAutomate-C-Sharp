@@ -76,6 +76,9 @@
     <Compile Include="Files, data, system\AIconCache.cs" />
     <Compile Include="Input\ARegisteredHotkey.cs" />
     <Compile Include="Other\AOutputServer.cs" />
+    <Compile Include="Util\AUserControlBase.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Util\AFormBase.cs">
       <SubType>Form</SubType>
     </Compile>

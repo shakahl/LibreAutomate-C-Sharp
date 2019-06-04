@@ -150,21 +150,19 @@ namespace Au.Controls
 
 		protected override void WndProc(ref Message m)
 		{
-			//if(this.Parent?.Name == "Output") AWnd.More.PrintMsg(ref m, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
+			//if(this.Parent?.Name == "Output") AWnd.More.PrintMsg(m, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
+			//if(Focused) AWnd.More.PrintMsg(m, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
 
 			//LPARAM wParam = m.WParam, lParam = m.LParam;
 
 			switch(m.Msg) {
 			case Api.WM_SETCURSOR:
-			case Api.WM_SETFOCUS:
-			case Api.WM_KILLFOCUS:
+			//case Api.WM_SETFOCUS: //no, it prevents changing default button etc. Don't remember why it was added here.
+			//case Api.WM_KILLFOCUS:
 			case Api.WM_LBUTTONUP:
 			case Api.WM_LBUTTONDBLCLK:
 				_DefWndProc(ref m);
 				return;
-
-			//case Api.WM_DESTROY:
-			//	break;
 
 			case Api.WM_LBUTTONDOWN:
 				if(Api.GetFocus() != (AWnd)Handle) {
@@ -183,14 +181,14 @@ namespace Au.Controls
 		void _DefWndProc(ref Message m)
 		{
 			m.Result = CallRetPtr(m.Msg, m.WParam, m.LParam);
-			//This is faster, why to go through CallWindowProc.
+			//This is faster than base.DefWndProc, which calls CallWindowProc.
 			//Howewer cannot override DefWndProc with this. Then crashes.
 		}
 
 		unsafe void _NotifyCallback(void* cbParam, ref SCNotification n)
 		{
 			var code = n.nmhdr.code;
-			//if(code != NOTIF.SCN_PAINTED) Print(code);
+			//if(code != NOTIF.SCN_PAINTED) AOutput.QM2.Write(code.ToString());
 			switch(code) {
 			case NOTIF.SCN_MODIFIED:
 				_NotifyModified(ref n);
@@ -373,10 +371,31 @@ namespace Au.Controls
 		}
 		bool _wrapLines;
 
+		/// <summary>
+		/// Like <see cref="TextBox.AcceptsReturn"/>.
+		/// If null (default), does not accept if <see cref="InitReadOnlyAlways"/> is true.
+		/// </summary>
+		public bool? AcceptsReturn { get; set; }
+
+		//Enables tabstopping when InitReadOnlyAlways (scintilla would eat Tab). Implements AcceptsReturn.
+		protected override bool IsInputKey(Keys keyData)
+		{
+			switch(keyData & Keys.KeyCode) {
+			case Keys.Left: case Keys.Right: case Keys.Up: case Keys.Down: return true;
+			case Keys.Enter when AcceptsReturn != null: return AcceptsReturn.GetValueOrDefault();
+			}
+			return !InitReadOnlyAlways;
+			//don't call base. It sends WM_GETDLGCODE, and scintilla always returns DLGC_WANTALLKEYS.
+		}
+
 		//[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden), EditorBrowsable(EditorBrowsableState.Never)]
 		//[Obsolete("Use ST.SetText or ST.SetTextNewDocument", true)] //because we don't know how to set text, with undo or as new document
 		//public new virtual string Text { get; set; }
-		public new virtual string Text => ST.GetText();
+		/// <summary>
+		/// Calls <see cref="SciText.AllText"/> (ST.AllText).
+		/// To set text, use <see cref="SciText.SetText"/> etc. It has options that you may need.
+		/// </summary>
+		public new virtual string Text => ST.AllText();
 
 		protected override AccessibleObject CreateAccessibilityInstance()
 		{

@@ -23,9 +23,9 @@ using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
 
-class PanelOutput : Control
+class PanelOutput : AUserControlBase
 {
-	SciOutput _c;
+	_SciOutput _c;
 	Queue<OutServMessage> _history;
 	StringBuilder _sb;
 
@@ -33,7 +33,7 @@ class PanelOutput : Control
 
 	public PanelOutput()
 	{
-		_c = new SciOutput();
+		_c = new _SciOutput();
 		_c.Dock = DockStyle.Fill;
 		_c.AccessibleName = _c.Name = "Output_text";
 		this.AccessibleName = this.Name = "Output";
@@ -85,7 +85,7 @@ class PanelOutput : Control
 								.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
 
 								bool isMain = k.Starts("   at Script._Main(String[] args) in ");
-								if(!isMain || !f.IsScript) b.Append(", <_>").Append(s, k.Offset + 6, g.Index - k.Offset - 10).Append("</_>");
+								if(!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.Offset + 6, g.Index - k.Offset - 10).Append("</\a>");
 								b.AppendLine();
 
 								replaced = true;
@@ -94,7 +94,7 @@ class PanelOutput : Control
 						}
 					}
 					if(replaced) {
-						b.Append("   <fold>   --- Raw stack trace ---\r\n<_>").Append(s, i, stackLen).Append("</_></fold>");
+						b.Append("   <fold>   --- Raw stack trace ---\r\n<\a>").Append(s, i, stackLen).Append("</\a></fold>");
 						m.Text = b.ToString();
 					}
 					if(_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
@@ -110,7 +110,7 @@ class PanelOutput : Control
 	}
 	static ARegex s_rx1, s_rx2;
 
-	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
+	//protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 
 	public void Clear() { _c.ST.ClearText(); }
 
@@ -136,7 +136,7 @@ class PanelOutput : Control
 	bool _inInitSettings;
 
 	public bool WrapLines {
-		get => Settings.Get("Tools_Output_WrapLines", false);
+		get => Settings.GetBool("Tools_Output_WrapLines");
 		set {
 			Debug.Assert(!_inInitSettings || value);
 			if(!_inInitSettings) Settings.Set("Tools_Output_WrapLines", value);
@@ -148,7 +148,7 @@ class PanelOutput : Control
 	}
 
 	public bool WhiteSpace {
-		get => Settings.Get("Tools_Output_WhiteSpace", false);
+		get => Settings.GetBool("Tools_Output_WhiteSpace");
 		set {
 			Debug.Assert(!_inInitSettings || value);
 			if(!_inInitSettings) Settings.Set("Tools_Output_WhiteSpace", value);
@@ -159,7 +159,7 @@ class PanelOutput : Control
 	}
 
 	public bool Topmost {
-		get => Settings.Get("Tools_Output_Topmost", false);
+		get => Settings.GetBool("Tools_Output_Topmost");
 		set {
 			var p = Panels.PanelManager.GetPanel(this);
 			//if(value) p.Floating = true;
@@ -190,9 +190,9 @@ class PanelOutput : Control
 		base.OnParentChanged(e);
 	}
 
-	class SciOutput : AuScintilla
+	class _SciOutput : AuScintilla
 	{
-		public SciOutput()
+		public _SciOutput()
 		{
 			InitReadOnlyAlways = true;
 			InitTagsStyle = TagsStyle.AutoWithPrefix;

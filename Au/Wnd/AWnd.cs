@@ -524,8 +524,8 @@ namespace Au
 		/// Returns true if the window is enabled for mouse and keyboard input.
 		/// Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
 		/// </summary>
-		/// <param name="ancestorsToo">Check whether all ancestors of this control are enabled too. If false, this function simply calls API <msdn>IsWindowEnabled</msdn>, which usualy returns true for controls in disabled windows.</param>
-		public bool IsEnabled(bool ancestorsToo)
+		/// <param name="ancestorsToo">Check whether all ancestors of this control are enabled too. If false (default), this function simply calls API <msdn>IsWindowEnabled</msdn>, which usualy returns true for controls in disabled windows.</param>
+		public bool IsEnabled(bool ancestorsToo = false)
 		{
 			if(!ancestorsToo) return Api.IsWindowEnabled(this);
 			for(var w = this; ;) {

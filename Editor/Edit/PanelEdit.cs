@@ -24,7 +24,7 @@ using Au.Controls;
 using static Au.Controls.Sci;
 using Au.Util;
 
-partial class PanelEdit : Control
+partial class PanelEdit : UserControl
 {
 	List<SciCode> _docs = new List<SciCode>(); //documents that are actually open currently. Note: FilesModel.OpenFiles contains not only these.
 	SciCode _activeDoc;
@@ -36,6 +36,7 @@ partial class PanelEdit : Control
 	public PanelEdit()
 	{
 		this.AccessibleName = this.Name = "Code";
+		this.TabStop = false;
 		this.BackColor = SystemColors.AppWorkspace;
 	}
 
@@ -45,7 +46,7 @@ partial class PanelEdit : Control
 		_UpdateUI_IsOpen();
 	}
 
-	protected override void OnGotFocus(EventArgs e) { _activeDoc?.Focus(); }
+	//protected override void OnGotFocus(EventArgs e) { _activeDoc?.Focus(); }
 
 	//public SciControl SC => _activeDoc;
 
@@ -91,6 +92,7 @@ partial class PanelEdit : Control
 		if(focus) _activeDoc.Focus();
 
 		_UpdateUI_IsOpen();
+		Panels.Find.UpdateEditor();
 		return true;
 	}
 
@@ -245,6 +247,7 @@ partial class PanelEdit : Control
 
 			int dpi = ADpi.BaseDPI;
 
+			Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT));
 			Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
 			ST.MarginWidth(c_marginLineNumbers, 40 * dpi / 96);
 			//Call(SCI_SETMARGINTYPEN, c_marginMarkers, SC_MARGIN_SYMBOL);
@@ -282,11 +285,11 @@ partial class PanelEdit : Control
 		protected override void OnSciNotify(ref SCNotification n)
 		{
 			//switch(n.nmhdr.code) {
-			////case NOTIF.SCN_PAINTED:
-			////case NOTIF.SCN_UPDATEUI:
-			////case NOTIF.SCN_FOCUSIN:
-			////case NOTIF.SCN_FOCUSOUT:
-			////	break;
+			//case NOTIF.SCN_PAINTED:
+			//case NOTIF.SCN_UPDATEUI:
+			//case NOTIF.SCN_FOCUSIN:
+			//case NOTIF.SCN_FOCUSOUT:
+			//	break;
 			//case NOTIF.SCN_MODIFIED:
 			//	Print(n.nmhdr.code, n.modificationType);
 			//	break;
@@ -303,7 +306,10 @@ partial class PanelEdit : Control
 				//never mind: we should cancel the 'save text later'
 				break;
 			case NOTIF.SCN_MODIFIED:
-
+				//Print(n.modificationType);
+				if(0 != (n.modificationType&(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
+					Panels.Find.UpdateEditor();
+				}
 				break;
 			case NOTIF.SCN_UPDATEUI:
 				if(_initDeferred != null) { var f = _initDeferred; _initDeferred = null; f(); }
@@ -640,7 +646,7 @@ partial class PanelEdit : Control
 			if(_drag != _DD_DataType.Text) {
 				t = new StringBuilder();
 				if(FN.IsCodeFile) {
-					var text = ST.GetText();
+					var text = ST.AllText();
 					if(Au.Compiler.MetaComments.FindMetaComments(text, out endOfMeta) && pos < endOfMeta) inMeta = true;
 					else if(pos > endOfMeta) text.RegexMatch(@"\b(\w+)\s*=\s*new\s+Au(?:Menu|Toolbar)", 1, out menuVar, 0, new RXMore(endOfMeta, pos));
 				}
@@ -981,6 +987,41 @@ class Script :AScript { [STAThread] static void Main(string[] args) { new Script
 			}
 		}
 
+
+		#endregion
+
+		#region indicators
+
+		const int c_indicFind = 8; //can be used 8 - 31. 0-7 used by lexers.
+		bool _indicFindInited;
+		bool _findHilited;
+
+		public void HiliteFind(List<POINT> a)
+		{
+			if(_findHilited) {
+				_findHilited = false;
+				ST.IndicatorClear(c_indicFind);
+			}
+			if(a == null || a.Count == 0) return;
+			_findHilited = true;
+
+			if(!_indicFindInited) {
+				_indicFindInited = true;
+				Call(SCI_INDICSETSTYLE, c_indicFind, INDIC_STRAIGHTBOX);
+				Call(SCI_INDICSETFORE, c_indicFind, 0x00ffff); Call(SCI_INDICSETALPHA, c_indicFind, 95); //0xa0ffff if white background
+				Call(SCI_INDICSETUNDER, c_indicFind, 1); //draw before text
+			}
+
+			int i8 = 0, i16 = 0;
+			foreach(var v in a) {
+				int i = ST.CountBytesFromChars(i8, v.x - i16);
+				i16 = v.x + v.y;
+				i8 = ST.CountBytesFromChars(i, v.y);
+				int len = i8 - i;
+				//Print(v.x, i, v.y, len);
+				ST.IndicatorAdd(c_indicFind, i, len);
+			}
+		}
 
 		#endregion
 	}

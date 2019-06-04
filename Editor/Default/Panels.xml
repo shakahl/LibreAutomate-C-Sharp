@@ -27,8 +27,11 @@
 		</split>
 		<!--panels-->
 		<split w1="200">
-			<panel name="Files" captionAt="Top" />
-			<split hor="" w2="150">
+			<split hor="" w2="162">
+			  <panel name="Files" captionAt="Top" />
+        <panel name="Find" rectFloating="469 222" captionAt="Top" />
+      </split>
+			<split hor="" w2="142">
 				<split w2="130">
 					<panel name="Code" doc="" />
 					<split hor="" f="0.5">
@@ -41,8 +44,7 @@
 				</split>
 				<tab>
 					<panel name="Output" />
-					<panel name="Find" />
-					<panel name="Results" />
+					<panel name="Found" />
 				</tab>
 			</split>
 		</split>

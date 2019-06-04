@@ -24,7 +24,7 @@ using Au.Controls;
 using static Au.Controls.Sci;
 //using DiffMatchPatch;
 
-#if TEST && DEBUG
+#if TEST
 
 #pragma warning disable 169
 
@@ -34,6 +34,10 @@ partial class EdForm
 {
 	internal unsafe void TestEditor()
 	{
+		//Print(Control.FromHandle(Api.GetFocus().Handle));
+		//Print(MainForm.AcceptButton);
+		//return;
+
 		//TestMC();
 		////TestDragDrop();
 		//return;
@@ -46,13 +50,34 @@ partial class EdForm
 		//th.IsBackground = true;
 		//th.Start();
 
+
+		//Settings.Set("test.multiline", "a\r\nb");
+		//Print(Settings.GetString("test.multiline").Length);
+
+		//var file = @"Q:\Test\test1.xml";
+		//var s = "<x>a\r\nb</x>";
+		//File.WriteAllText(file, s);
+
+		////var x = XElement.Load(file);
+		////var x = AExtXml.LoadElem(file);
+		////var x = XDocument.Load(file).Root;
+		//var x = AExtXml.LoadDoc(file).Root;
+		//Print(x.Value.Length);
+
+
 		//return;
 
 
 		var doc = Panels.Editor.ActiveDoc;
 		//var doc = Panels.Output.Controls[0] as AuScintilla;
 		var t = doc.ST;
-		var s = doc.Text;
+		//var s = doc.Text;
+
+		//int n = t.Call(SCI_GETWORDCHARS, 0, 0);
+		//var s = t.GetString(SCI_GETWORDCHARS, 0);
+		//Print(n);
+		//Print(s);
+
 
 		//AOutput.QM2.Write(s);
 

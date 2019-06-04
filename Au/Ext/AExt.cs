@@ -84,6 +84,56 @@ namespace Au
 		//	return "0x" + t.ToString("X");
 		//}
 
+		//rejected. Cannot use 'break' etc. Better add UI to create 'for' loop to "repeat n times".
+		///// <summary>
+		///// Executes code this number of times. Can be used instead of 'for' to "repeat code n times".
+		///// </summary>
+		///// <param name="t">This variable. Specifies the number of times to execute code.</param>
+		///// <param name="code">Lambda function containing code.</param>
+		///// <example>
+		///// <code><![CDATA[
+		///// for(int i = 0; i < 3; i++) {
+		///// 	Print(1);
+		///// }
+		///// 
+		///// //this can be used instead of the above code with 'for'
+		///// 3.Times(() => {
+		///// 	Print(2);
+		///// });
+		///// ]]></code>
+		///// </example>
+		//public static void Times(this int t, Action code)
+		//{
+		//	for(int i = 0; i < t; i++) {
+		//		code();
+		//	}
+		//}
+
+		///// <summary>
+		///// Executes code this number of times. Can be used instead of 'for' to "repeat code n times".
+		///// Use this overload when need a counter variable.
+		///// </summary>
+		///// <param name="t">This variable. Specifies the number of times to execute code.</param>
+		///// <param name="code">Lambda function containing code. The parameter is a counter variable; starts from 0.</param>
+		///// <example>
+		///// <code><![CDATA[
+		///// for(int i = 0; i < 3; i++) {
+		///// 	Print(i);
+		///// }
+		///// 
+		///// //this can be used instead of the above code with 'for'
+		///// 3.Times(i => {
+		///// 	Print(i);
+		///// });
+		///// ]]></code>
+		///// </example>
+		//public static void Times(this int t, Action<int> code)
+		//{
+		//	for(int i = 0; i < t; i++) {
+		//		code(i);
+		//	}
+		//}
+
 		#endregion
 
 		#region enum

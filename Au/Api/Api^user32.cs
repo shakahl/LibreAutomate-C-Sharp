@@ -1272,5 +1272,46 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool PrintWindow(AWnd hwnd, IntPtr hdcBlt, uint nFlags);
 
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern IntPtr GetDC(AWnd hWnd);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern IntPtr GetWindowDC(AWnd hWnd);
+
+		[DllImport("user32.dll")] //note: no SetLastError = true
+		internal static extern int ReleaseDC(AWnd hWnd, IntPtr hDC);
+
+		[DllImport("user32.dll")]
+		internal static extern int FillRect(IntPtr hDC, in RECT lprc, IntPtr hbr);
+
+		internal const uint RDW_FRAME = 0x400;
+		internal const uint RDW_INVALIDATE = 0x1;
+
+		[DllImport("user32.dll")]
+		internal static extern bool RedrawWindow(AWnd hWnd, RECT* lprcUpdate = null, IntPtr hrgnUpdate = default, uint flags = 0);
+
+		internal const uint TME_LEAVE = 0x2;
+		internal const uint TME_NONCLIENT = 0x10;
+		internal const uint TME_CANCEL = 0x80000000;
+
+		internal struct TRACKMOUSEEVENT
+		{
+			public int cbSize;
+			public uint dwFlags;
+			public AWnd hwndTrack;
+			public int dwHoverTime;
+
+			public TRACKMOUSEEVENT(AWnd w, uint flags, int hoverTime = 0)
+			{
+				cbSize = sizeof(TRACKMOUSEEVENT);
+				hwndTrack = w;
+				dwFlags = flags;
+				dwHoverTime = hoverTime;
+			}
+		}
+
+		[DllImport("comctl32.dll", EntryPoint = "_TrackMouseEvent")]
+		internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT lpEventTrack);
+
 	}
 }

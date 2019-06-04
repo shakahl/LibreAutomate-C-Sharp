@@ -35,8 +35,10 @@ static class CommandLine
 		if(a.Length > 0) {
 			//Print(a);
 
-			for(int i = 0; i < a.Length; i++) if(a[i].Starts('-')) a[i] = a[i].ReplaceAt(0, 1, "/");
-			for(int i = 0; i < a.Length; i++) if(a[i].Starts('/')) a[i] = a[i].Lower();
+			for(int i = 0; i < a.Length; i++) {
+				if(a[i].Starts('-')) a[i] = a[i].ReplaceAt(0, 1, "/");
+				if(a[i].Starts('/')) a[i] = a[i].Lower();
+			}
 
 			s = a[0];
 			if(s.Starts('/')) {
@@ -45,6 +47,9 @@ static class CommandLine
 					switch(s) {
 					case "/test":
 						if(++i < a.Length) TestArg = a[i];
+						break;
+					case "/v":
+						StartVisible = true;
 						break;
 					default:
 						ADialog.ShowError("Unknown command line parameter", s);
@@ -97,9 +102,14 @@ static class CommandLine
 	/// </summary>
 	public static string TestArg;
 
+	/// <summary>
+	/// true if /v
+	/// </summary>
+	public static bool StartVisible;
+
 	public static void OnMainFormLoaded()
 	{
-		AWnd.More.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER);
+		AWnd.More.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER, Api.WM_CLOSE);
 		AWnd.More.MyWindow.RegisterClass("Au.Editor.Msg");
 		_msgWnd = new AWnd.More.MyWindow(_WndProc);
 		_msgWnd.CreateMessageOnlyWindow("Au.Editor.Msg");

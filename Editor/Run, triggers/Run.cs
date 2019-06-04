@@ -27,6 +27,7 @@ using static Au.AStatic;
 using static Program;
 using Au.Compiler;
 using Au.Controls;
+using Au.Triggers;
 
 static class Run
 {
@@ -134,6 +135,20 @@ static class Run
 		}
 	}
 	static bool s_isRegisteredLinkRCF;
+
+	/// <summary>
+	/// Disables, enables or toggles triggers in all processes. See <see cref="ActionTriggers.DisabledEverywhere"/>.
+	/// Also updates UI: changes tray icon and checks/unchecks the menu item.
+	/// </summary>
+	/// <param name="disable">If null, toggles.</param>
+	public static void DisableTriggers(bool? disable)
+	{
+		bool dis = disable switch { true => true, false => false, _ => !ActionTriggers.DisabledEverywhere };
+		if(dis == ActionTriggers.DisabledEverywhere) return;
+		ActionTriggers.DisabledEverywhere = dis;
+		EdTrayIcon.Disabled = dis;
+		Strips.CheckCmd(nameof(CmdHandlers.Run_DisableTriggers), dis);
+	}
 }
 
 /// <summary>
@@ -200,7 +215,7 @@ class RunningTask
 			//note: TerminateProcess kills process not immediately. Need at least several ms.
 		}
 		return true;
-		//TODO: release pressed keys.
+		//SHOULDDO: release pressed keys.
 	}
 }
 
@@ -259,7 +274,7 @@ class RunningTasks
 	}
 
 	/// <summary>
-	/// Adds a started task (thread or process) to the 'running' and 'recent' lists.
+	/// Adds a started task to the 'running' and 'recent' lists.
 	/// Must be called in the main thread.
 	/// </summary>
 	/// <param name="rt"></param>
@@ -301,7 +316,7 @@ class RunningTasks
 		var rt = _a[i];
 		_a.RemoveAt(i);
 		_RecentEnded(rt.f);
-		Au.Triggers.HooksServer.Instance?.RemoveTask(rt.processId);
+		HooksServer.Instance?.RemoveTask(rt.processId);
 
 		for(int j = _q.Count - 1; j >= 0; j--) {
 			var t = _q[j];
@@ -317,9 +332,16 @@ class RunningTasks
 
 	void _TimerUpdateUI()
 	{
-		if(!_updateUI || !MainForm.Visible) return;
+		if(!_updateUI) return;
+		EdTrayIcon.Running = GetGreenTask() != null;
+		if(!MainForm.Visible) return;
 		_UpdatePanels();
 	}
+	//void _TimerUpdateUI()
+	//{
+	//	if(!_updateUI || !MainForm.Visible) return;
+	//	_UpdatePanels();
+	//}
 
 	void _UpdatePanels()
 	{
@@ -390,9 +412,11 @@ class RunningTasks
 
 	/// <summary>
 	/// Ends single task, if still running.
+	/// If rt==null, ends the green task, if running.
 	/// </summary>
-	public void EndTask(RunningTask rt)
+	public void EndTask(RunningTask rt = null)
 	{
+		if(rt == null) { rt = Tasks.GetGreenTask(); if(rt == null) return; }
 		if(_a.Contains(rt)) _EndTask(rt);
 	}
 

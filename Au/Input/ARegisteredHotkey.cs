@@ -41,12 +41,12 @@ namespace Au
 	/// 	protected override void WndProc(ref Message m)
 	/// 	{
 	/// 		switch(m.Msg) {
-	/// 		case WM_CREATE: //0x1
+	/// 		case 1: //WM_CREATE
 	/// 			bool r1 = _hk1.Register(1, "Ctrl+Alt+F10", this);
 	/// 			bool r2 = _hk2.Register(2, (KMod.Ctrl | KMod.Shift, KKey.D), this); //Ctrl+Shift+D
 	/// 			Print(r1, r2);
 	/// 			break;
-	/// 		case WM_DESTROY: //0x2
+	/// 		case 2: //WM_DESTROY
 	/// 			_hk1.Unregister();
 	/// 			_hk2.Unregister();
 	/// 			break;

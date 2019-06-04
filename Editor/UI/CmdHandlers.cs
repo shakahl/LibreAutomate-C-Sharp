@@ -95,6 +95,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(File_FindInWorkspaces), File_FindInWorkspaces);
 		_dict.Add(nameof(File_WorkspaceProperties), File_WorkspaceProperties);
 		_dict.Add(nameof(File_SaveNow), File_SaveNow);
+		_dict.Add(nameof(File_CloseWindow), File_CloseWindow);
 		_dict.Add(nameof(File_Exit), File_Exit);
 		_dict.Add(nameof(Edit_Undo), Edit_Undo);
 		_dict.Add(nameof(Edit_Redo), Edit_Redo);
@@ -126,9 +127,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Run_End), Run_End);
 		_dict.Add(nameof(Run_Pause), Run_Pause);
 		_dict.Add(nameof(Run_Compile), Run_Compile);
-		_dict.Add(nameof(Run_AutoMinimize), Run_AutoMinimize);
 		_dict.Add(nameof(Run_DisableTriggers), Run_DisableTriggers);
-		_dict.Add(nameof(Run_MakeExe), Run_MakeExe);
 		_dict.Add(nameof(Debug_RunToBreakpoint), Debug_RunToBreakpoint);
 		_dict.Add(nameof(Debug_RunToCursor), Debug_RunToCursor);
 		_dict.Add(nameof(Debug_StepInto), Debug_StepInto);
@@ -336,8 +335,14 @@ class CmdHandlers : IGStripManagerCallbacks
 		Model?.Save.AllNowIfNeed();
 	}
 
+	public void File_CloseWindow()
+	{
+		MainForm.Close();
+	}
+
 	public void File_Exit()
 	{
+		MainForm.Visible = false;
 		MainForm.Close();
 	}
 
@@ -380,7 +385,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Edit_Find()
 	{
-
+		Panels.Find.CtrlF();
 	}
 
 	public void Edit_Members()
@@ -536,24 +541,34 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	}
 
-	public void Run_AutoMinimize()
-	{
-
-	}
-
 	public void Run_DisableTriggers()
 	{
-
-	}
-
-	public void Run_MakeExe()
-	{
-
+		Run.DisableTriggers(null);
 	}
 
 	#endregion
 
 	#region menu Debug
+
+	public void Debug_ToggleBreakpoint()
+	{
+
+	}
+
+	public void Debug_PersistentBreakpoint()
+	{
+
+	}
+
+	public void Debug_ClearLocalBreakpoints()
+	{
+
+	}
+
+	public void Debug_ClearAllBreakpoints()
+	{
+
+	}
 
 	public void Debug_RunToBreakpoint()
 	{
@@ -576,26 +591,6 @@ class CmdHandlers : IGStripManagerCallbacks
 	}
 
 	public void Debug_StepOut()
-	{
-
-	}
-
-	public void Debug_ToggleBreakpoint()
-	{
-
-	}
-
-	public void Debug_PersistentBreakpoint()
-	{
-
-	}
-
-	public void Debug_ClearLocalBreakpoints()
-	{
-
-	}
-
-	public void Debug_ClearAllBreakpoints()
 	{
 
 	}
@@ -743,7 +738,7 @@ class CmdHandlers : IGStripManagerCallbacks
 	public void Tools_Output_Topmost()
 	{
 		var v = Panels.Output;
-		v.Topmost = !v.Topmost;
+		v.Topmost ^= true;
 	}
 
 	#endregion

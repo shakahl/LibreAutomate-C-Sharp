@@ -25,27 +25,27 @@
 	/// </summary>
 	private void InitializeComponent()
 	{
-			this._bOK = new Au.Controls.ButtonOK();
-			this._bCancel = new Au.Controls.ButtonCancel();
+			this._bOK = new Au.Controls.AuButtonOK();
+			this._bCancel = new Au.Controls.AuButtonCancel();
 			this._info = new Au.Controls.AuInfoBox();
 			this._grid = new Au.Controls.ParamGrid();
 			this.label4 = new System.Windows.Forms.Label();
 			this._tFindInList = new System.Windows.Forms.TextBox();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
 			this.label5 = new System.Windows.Forms.Label();
-			this._bAddComBrowse = new System.Windows.Forms.Button();
+			this._bAddComBrowse = new Au.Controls.AuButton();
 			this.label3 = new System.Windows.Forms.Label();
 			this.label2 = new System.Windows.Forms.Label();
 			this.label1 = new System.Windows.Forms.Label();
-			this._bAddBrowseNet = new System.Windows.Forms.Button();
-			this._bAddBrowseOther = new System.Windows.Forms.Button();
-			this._bAddGacNewest = new System.Windows.Forms.Button();
-			this._bAddGacVersion = new System.Windows.Forms.Button();
-			this._bAddMyLibraryProject = new System.Windows.Forms.Button();
-			this._bAddComRegistry = new System.Windows.Forms.Button();
+			this._bAddBrowseNet = new Au.Controls.AuButton();
+			this._bAddBrowseOther = new Au.Controls.AuButton();
+			this._bAddGacNewest = new Au.Controls.AuButton();
+			this._bAddGacVersion = new Au.Controls.AuButton();
+			this._bAddMyLibraryProject = new Au.Controls.AuButton();
+			this._bAddComRegistry = new Au.Controls.AuButton();
 			this.groupBox2 = new System.Windows.Forms.GroupBox();
-			this._bAddClass = new System.Windows.Forms.Button();
-			this._bAddResource = new System.Windows.Forms.Button();
+			this._bAddClass = new Au.Controls.AuButton();
+			this._bAddResource = new Au.Controls.AuButton();
 			this.groupBox1.SuspendLayout();
 			this.groupBox2.SuspendLayout();
 			this.SuspendLayout();
@@ -131,7 +131,7 @@
 			this.groupBox1.Location = new System.Drawing.Point(320, 100);
 			this.groupBox1.Name = "groupBox1";
 			this.groupBox1.Size = new System.Drawing.Size(208, 152);
-			this.groupBox1.TabIndex = 2;
+			this.groupBox1.TabIndex = 7;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Add assembly reference";
 			// 
@@ -152,7 +152,6 @@
 			this._bAddComBrowse.TabIndex = 8;
 			this._bAddComBrowse.Text = "Browse...";
 			this._bAddComBrowse.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			this._bAddComBrowse.UseVisualStyleBackColor = true;
 			this._bAddComBrowse.Click += new System.EventHandler(this._bAddComBrowse_Click);
 			// 
 			// label3
@@ -190,7 +189,6 @@
 			this._bAddBrowseNet.TabIndex = 1;
 			this._bAddBrowseNet.Text = ".NET...";
 			this._bAddBrowseNet.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			this._bAddBrowseNet.UseVisualStyleBackColor = true;
 			this._bAddBrowseNet.Click += new System.EventHandler(this._bAddBrowse_Click);
 			// 
 			// _bAddBrowseOther
@@ -201,7 +199,6 @@
 			this._bAddBrowseOther.TabIndex = 1;
 			this._bAddBrowseOther.Text = "Other...";
 			this._bAddBrowseOther.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			this._bAddBrowseOther.UseVisualStyleBackColor = true;
 			this._bAddBrowseOther.Click += new System.EventHandler(this._bAddBrowse_Click);
 			// 
 			// _bAddGacNewest
@@ -212,7 +209,6 @@
 			this._bAddGacNewest.TabIndex = 1;
 			this._bAddGacNewest.Text = "Newest...";
 			this._bAddGacNewest.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			this._bAddGacNewest.UseVisualStyleBackColor = true;
 			this._bAddGacNewest.Click += new System.EventHandler(this._bAddGac_Click);
 			// 
 			// _bAddGacVersion
@@ -223,7 +219,6 @@
 			this._bAddGacVersion.TabIndex = 1;
 			this._bAddGacVersion.Text = "Version...";
 			this._bAddGacVersion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			this._bAddGacVersion.UseVisualStyleBackColor = true;
 			this._bAddGacVersion.Click += new System.EventHandler(this._bAddGac_Click);
 			// 
 			// _bAddMyLibraryProject
@@ -234,7 +229,6 @@
 			this._bAddMyLibraryProject.TabIndex = 1;
 			this._bAddMyLibraryProject.Text = "Library project...";
 			this._bAddMyLibraryProject.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			this._bAddMyLibraryProject.UseVisualStyleBackColor = true;
 			this._bAddMyLibraryProject.Click += new System.EventHandler(this._bAddMyLibraryProject_Click);
 			// 
 			// _bAddComRegistry
@@ -245,7 +239,6 @@
 			this._bAddComRegistry.TabIndex = 1;
 			this._bAddComRegistry.Text = "Registry...";
 			this._bAddComRegistry.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			this._bAddComRegistry.UseVisualStyleBackColor = true;
 			this._bAddComRegistry.Click += new System.EventHandler(this._bAddComRegistry_Click);
 			// 
 			// groupBox2
@@ -255,7 +248,7 @@
 			this.groupBox2.Location = new System.Drawing.Point(536, 100);
 			this.groupBox2.Name = "groupBox2";
 			this.groupBox2.Size = new System.Drawing.Size(96, 84);
-			this.groupBox2.TabIndex = 3;
+			this.groupBox2.TabIndex = 6;
 			this.groupBox2.TabStop = false;
 			this.groupBox2.Text = "Add file";
 			// 
@@ -267,7 +260,6 @@
 			this._bAddClass.TabIndex = 1;
 			this._bAddClass.Text = "Class file...";
 			this._bAddClass.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			this._bAddClass.UseVisualStyleBackColor = true;
 			this._bAddClass.Click += new System.EventHandler(this._bAddClass_Click);
 			// 
 			// _bAddResource
@@ -278,7 +270,6 @@
 			this._bAddResource.TabIndex = 1;
 			this._bAddResource.Text = "Resource...";
 			this._bAddResource.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-			this._bAddResource.UseVisualStyleBackColor = true;
 			this._bAddResource.Click += new System.EventHandler(this._bAddResource_Click);
 			// 
 			// EdCodeFileProperties
@@ -312,24 +303,24 @@
 
 	#endregion
 
-	private Au.Controls.ButtonOK _bOK;
-	private Au.Controls.ButtonCancel _bCancel;
+	private Au.Controls.AuButtonOK _bOK;
+	private Au.Controls.AuButtonCancel _bCancel;
 	private Au.Controls.AuInfoBox _info;
 	private Au.Controls.ParamGrid _grid;
-	private System.Windows.Forms.Button _bAddBrowseNet;
-	private System.Windows.Forms.Button _bAddMyLibraryProject;
-	private System.Windows.Forms.Button _bAddResource;
-	private System.Windows.Forms.Button _bAddClass;
-	private System.Windows.Forms.Button _bAddBrowseOther;
-	private System.Windows.Forms.Button _bAddGacNewest;
-	private System.Windows.Forms.Button _bAddComRegistry;
-	private System.Windows.Forms.Button _bAddGacVersion;
+	private Au.Controls.AuButton _bAddBrowseNet;
+	private Au.Controls.AuButton _bAddMyLibraryProject;
+	private Au.Controls.AuButton _bAddResource;
+	private Au.Controls.AuButton _bAddClass;
+	private Au.Controls.AuButton _bAddBrowseOther;
+	private Au.Controls.AuButton _bAddGacNewest;
+	private Au.Controls.AuButton _bAddComRegistry;
+	private Au.Controls.AuButton _bAddGacVersion;
 	private System.Windows.Forms.GroupBox groupBox2;
 	private System.Windows.Forms.GroupBox groupBox1;
 	private System.Windows.Forms.TextBox _tFindInList;
 	private System.Windows.Forms.Label label4;
 	private System.Windows.Forms.Label label5;
-	private System.Windows.Forms.Button _bAddComBrowse;
+	private Au.Controls.AuButton _bAddComBrowse;
 	private System.Windows.Forms.Label label3;
 	private System.Windows.Forms.Label label2;
 	private System.Windows.Forms.Label label1;

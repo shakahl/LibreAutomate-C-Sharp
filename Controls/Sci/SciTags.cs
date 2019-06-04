@@ -31,6 +31,7 @@ NEW TAGS:
    <size n> - font size (1-127).
    <fold> - collapsed lines.
    <explore> - select file in File Explorer.
+   <\a>text</\a> - alternative for <_>text</_>.
 
 NEW PARAMETERS:
    <c ColorName> - .NET color name for text color. Also color can be #RRGGBB.
@@ -46,7 +47,7 @@ REMOVED TAGS:
 
 DIFFERENT SYNTAX:
 	Most tags can be closed with <> or </> or </anything>.
-		Except these: <_>text</_>, <code>code</code>, <fold>text</fold>.
+		Except these: <_>text</_>, <\a>text</\a>, <code>code</code>, <fold>text</fold>.
 		No closing tag: <image "file">.
 	Attributes can be enclosed with "" or '' or non-enclosed (except for <image>).
 		Does not support escape sequences. An attribute ends with "> (if starts with ") or '> (if starts with ') or > (if non-enclosed).
@@ -124,7 +125,10 @@ namespace Au.Controls
 				if(Size > 0) t1 &= 0x1ffffff;
 				u1 |= t1;
 				var t2 = x.u2;
-				if(HasBackColor) t2 &= 0xff000000;
+				if(HasBackColor) {
+					t2 &= 0xff000000;
+					t2 &= unchecked((uint)~0x10000000); //don't inherit Eol
+				}
 				u2 |= t2;
 			}
 			public bool IsEmpty => u1 == 0 & u2 == 0;
@@ -354,7 +358,7 @@ namespace Au.Controls
 				}
 
 				//read tag name
-				ch = *s; if(ch == '_' || ch == '+') s++;
+				ch = *s; if(ch == '_' || ch == '\a' || ch == '+') s++;
 				while(AChar.IsAsciiAlpha(*s)) s++;
 				int tagLen = (int)(s - tag);
 				if(tagLen == 0) goto ge;
@@ -431,8 +435,8 @@ namespace Au.Controls
 					else goto ge;
 					break;
 				case 1 << 16 | '_': //<_>text where tags are ignored</_>
-					i2 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), "</_>"); if(i2 < 0) goto ge;
-					//use </_> because <> is much more often used, eg as operator or our tag ending. Could also support <> if </_> not found, but it is not good.
+				case 1 << 16 | '\a': //<\a>text where tags are ignored</\a>
+					i2 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), ch == '_' ? "</_>" : "</\a>"); if(i2 < 0) goto ge;
 					while(i2-- > 0) _Write(*s++, currentStyle);
 					s += 4;
 					//hasTags = true;

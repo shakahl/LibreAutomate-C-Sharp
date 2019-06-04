@@ -21,9 +21,7 @@ using Au.Types;
 using static Au.AStatic;
 using static Program;
 
-partial class ThisIsNotAFormFile { }
-
-partial class PanelFiles : Control
+partial class PanelFiles : AUserControlBase
 {
 	//idea: when file clicked, open it and show AMenu of its functions (if > 1).
 
@@ -42,7 +40,7 @@ partial class PanelFiles : Control
 
 	public FilesModel Model => _model;
 
-	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
+	//protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 
 	/// <summary>
 	/// Loads existing or new workspace.
@@ -59,7 +57,7 @@ partial class PanelFiles : Control
 	/// <param name="runStartupScript"></param>
 	public FilesModel LoadWorkspace(string wsDir = null, bool runStartupScript = true)
 	{
-		if(wsDir == null) wsDir = Settings.Get("workspace");
+		if(wsDir == null) wsDir = Settings.GetString("workspace");
 		if(Empty(wsDir)) wsDir = AFolders.ThisAppDocuments + @"Main";
 		var xmlFile = wsDir + @"\files.xml";
 		var oldModel = _model;
@@ -115,10 +113,14 @@ partial class PanelFiles : Control
 		else m.LoadState();
 		if(m.CurrentFile == null) MainForm.SetTitle();
 
+		WorkspaceLoaded?.Invoke();
+
 		if(runStartupScript) Model.RunStartupScripts();
 
 		return _model;
 	}
+
+	public event Action WorkspaceLoaded;
 
 	public void UnloadOnFormClosed()
 	{
@@ -164,7 +166,7 @@ partial class PanelFiles : Control
 		lock(Settings) {
 			var x1 = Settings.XmlOf("recent");
 			if(x1 == null) return;
-			var current = Settings.Get("workspace");
+			var current = Settings.GetString("workspace");
 			dd.SuspendLayout();
 			dd.Items.Clear();
 			bool currentOK = false;

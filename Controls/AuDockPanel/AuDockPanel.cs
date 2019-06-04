@@ -23,7 +23,7 @@ using static Au.AStatic;
 
 namespace Au.Controls
 {
-	public sealed partial class AuDockPanel :Control
+	public sealed partial class AuDockPanel :UserControl
 	{
 		List<_Split> _aSplit;
 		List<_Tab> _aTab;
@@ -80,6 +80,7 @@ namespace Au.Controls
 
 			SuspendLayout();
 			this.SetStyle(ControlStyles.ContainerControl | ControlStyles.ResizeRedraw | ControlStyles.Opaque | ControlStyles.OptimizedDoubleBuffer, true); //default: UserPaint, AllPaintingInWmPaint; not OptimizedDoubleBuffer, DoubleBuffer, Opaque. Opaque prevents erasing background, which prevents flickering when moving a splitter.
+			//this.SetStyle(ControlStyles.Selectable, false); //no, creates tabstopping problems
 			this.Dock = DockStyle.Fill;
 			foreach(var c in controls) this.Controls.Add(c);
 			ResumeLayout();
@@ -553,6 +554,11 @@ namespace Au.Controls
 			foreach(var v in _aPanel) if(v.IsFloating) ((AWnd)v.ParentControl).Enable(enable);
 			foreach(var v in _aTab) if(v.IsFloating) ((AWnd)v.ParentControl).Enable(enable);
 		}
+
+		/// <summary>
+		/// A control to focus when making a docked panel floating or hidden when it contains focus. Also when Esc pressed in focused floating panel.
+		/// </summary>
+		public Control FocusControlOnUndockEtc { get; set; }
 
 		/// <summary>
 		/// Used with many AuDockPanel events and othe callbacks.

@@ -174,7 +174,7 @@ namespace Au.Controls
 		/// <param name="to">If -1, and no <b>ToIsLength</b>, uses <see cref="TextLengthBytes"/>.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		void _NormalizeRange(ref int from, ref int to, SciFromTo flags)
+		public void NormalizeRange(ref int from, ref int to, SciFromTo flags)
 		{
 			bool isLen = flags.Has(SciFromTo.ToIsLength);
 			if(from < 0 || to < (isLen ? 0 : -1) || (!isLen && to < from)) throw new ArgumentOutOfRangeException();
@@ -404,7 +404,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Gets all text.
 		/// </summary>
-		public string GetText()
+		public string AllText()
 		{
 			int n = TextLengthBytes;
 			return GetStringOfLength(SCI_GETTEXT, n + 1, n);
@@ -626,7 +626,7 @@ namespace Au.Controls
 		public void ReplaceRange(int from, int to, string s, SciFromTo flags = 0)
 		{
 			using(new _NoReadonly(this)) {
-				_NormalizeRange(ref from, ref to, flags);
+				NormalizeRange(ref from, ref to, flags);
 				Call(SCI_SETTARGETRANGE, from, to);
 				SetString(SCI_REPLACETARGET, 0, s, true);
 			}
@@ -641,7 +641,7 @@ namespace Au.Controls
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public string RangeText(int from, int to, SciFromTo flags = 0)
 		{
-			_NormalizeRange(ref from, ref to, flags);
+			NormalizeRange(ref from, ref to, flags);
 			int n = to - from; if(n == 0) return "";
 			fixed (byte* b = LibByte(n)) {
 				var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = b };
@@ -709,31 +709,30 @@ namespace Au.Controls
 			public byte[] Load(string file)
 			{
 				_enc = _Encoding.Binary;
-				if(0 != APath.GetExtension(file).Eq(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
+				if(0 != file.Ends(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
 					if(!AFile.ExistsAsFile(file)) throw new FileNotFoundException($"Could not find file '{file}'.");
 					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"\0");
 				}
 
-				using(var fr = AFile.WaitIfLocked(() => File.OpenRead(file))) {
-					var fileSize = fr.Length;
-					if(fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.\0");
-					int trySize = (int)Math.Min(fileSize, 65_000);
-					var b = new byte[trySize + 4];
-					trySize = fr.Read(b, 0, trySize);
-					fixed (byte* p = b) _enc = _DetectEncoding(p, trySize);
-					if(_enc == _Encoding.Binary) return Encoding.UTF8.GetBytes("//Cannot edit. The file is binary, not text.\0");
-					int bomLength = (int)_enc >> 4;
-					//Print(_enc, bomLength, fileSize);
+				using var fr = AFile.WaitIfLocked(() => File.OpenRead(file));
+				var fileSize = fr.Length;
+				if(fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.\0");
+				int trySize = (int)Math.Min(fileSize, 65_000);
+				var b = new byte[trySize + 4];
+				trySize = fr.Read(b, 0, trySize);
+				fixed (byte* p = b) _enc = _DetectEncoding(p, trySize);
+				if(_enc == _Encoding.Binary) return Encoding.UTF8.GetBytes("//Cannot edit. The file is binary, not text.\0");
+				int bomLength = (int)_enc >> 4;
+				//Print(_enc, bomLength, fileSize);
 
-					if(fileSize > trySize) {
-						var old = b; b = new byte[fileSize + 4]; Array.Copy(old, b, trySize);
-						fr.Read(b, trySize, (int)fileSize - trySize);
-					}
-
-					Encoding e = _NetEncoding();
-					if(e != null) b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength + e.GetByteCount("\0"));
-					return b;
+				if(fileSize > trySize) {
+					var old = b; b = new byte[fileSize + 4]; Array.Copy(old, b, trySize);
+					fr.Read(b, trySize, (int)fileSize - trySize);
 				}
+
+				Encoding e = _NetEncoding();
+				if(e != null) b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength + e.GetByteCount("\0"));
+				return b;
 			}
 
 			Encoding _NetEncoding()
@@ -905,6 +904,32 @@ namespace Au.Controls
 			public int selStart, selEnd, linesStart, linesEnd;
 			public string text;
 		}
+
+		public string SelectedText()
+		{
+			int i = SelectionStart, j = SelectionEnd;
+			return j > i ? RangeText(i, j) : "";
+		}
+
+		public void IndicatorClear(int indic)
+		{
+			Call(SCI_SETINDICATORCURRENT, indic);
+			Call(SCI_INDICATORCLEARRANGE, 0, this.TextLengthBytes);
+		}
+
+		public void IndicatorAdd(int indic, int from, int length)
+		{
+			Call(SCI_SETINDICATORCURRENT, indic);
+			Call(SCI_INDICATORFILLRANGE, from, length);
+		}
+
+		public void IndicatorAdd(int indic, int from, int length, int _value)
+		{
+			Call(SCI_SETINDICATORCURRENT, indic);
+			Call(SCI_SETINDICATORVALUE, _value);
+			Call(SCI_INDICATORFILLRANGE, from, length);
+		}
+
 	}
 
 	[Flags]

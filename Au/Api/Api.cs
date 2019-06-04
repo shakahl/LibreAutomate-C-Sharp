@@ -93,14 +93,8 @@ namespace Au.Types
 		[DllImport("gdi32.dll")]
 		internal static extern bool SetRectRgn(IntPtr hrgn, int left, int top, int right, int bottom);
 
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern IntPtr GetDC(AWnd hWnd);
-
-		//[DllImport("user32.dll", SetLastError = true)]
-		//internal static extern IntPtr GetWindowDC(AWnd hWnd);
-
-		[DllImport("user32.dll")] //note: no SetLastError = true
-		internal static extern int ReleaseDC(AWnd hWnd, IntPtr hDC);
+		[DllImport("gdi32.dll")]
+		internal static extern IntPtr CreateRectRgnIndirect(in RECT lprect);
 
 		[DllImport("gdi32.dll")]
 		internal static extern IntPtr CreateCompatibleDC(IntPtr hdc);
@@ -125,12 +119,6 @@ namespace Au.Types
 
 		[DllImport("gdi32.dll", EntryPoint = "CreateFontW")]
 		internal static extern IntPtr CreateFont(int cHeight, int cWidth = 0, int cEscapement = 0, int cOrientation = 0, int cWeight = 0, int bItalic = 0, int bUnderline = 0, int bStrikeOut = 0, int iCharSet = 0, int iOutPrecision = 0, int iClipPrecision = 0, int iQuality = 0, int iPitchAndFamily = 0, string pszFaceName = null);
-
-		//[DllImport("user32.dll", EntryPoint = "CharUpperBuffW")]
-		//internal static unsafe extern int CharUpperBuff(char* lpsz, int cchLength);
-
-		[DllImport("user32.dll")]
-		internal static extern int FillRect(IntPtr hDC, in RECT lprc, IntPtr hbr);
 
 		internal const uint SRCCOPY = 0xCC0020;
 		internal const uint CAPTUREBLT = 0x40000000;
@@ -186,15 +174,11 @@ namespace Au.Types
 		[DllImport("gdi32.dll")]
 		internal static extern IntPtr GetStockObject(int i);
 
-		//[DllImport("gdi32.dll")]
-		//internal static extern IntPtr CreateSolidBrush(uint color);
+		[DllImport("gdi32.dll")]
+		internal static extern IntPtr CreateSolidBrush(int color);
 
-		//[DllImport("gdi32.dll")]
-		//internal static extern IntPtr CreateRectRgnIndirect(in RECT lprect);
-
-		//[DllImport("gdi32.dll")]
-		//internal static extern bool FrameRgn(IntPtr hdc, IntPtr hrgn, IntPtr hbr, int w, int h);
-
+		[DllImport("gdi32.dll")]
+		internal static extern int IntersectClipRect(IntPtr hdc, int left, int top, int right, int bottom);
 
 
 

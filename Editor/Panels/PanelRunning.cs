@@ -25,7 +25,7 @@ using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 using System.Collections;
 
-class PanelRunning :Control, ITreeModel
+class PanelRunning : AUserControlBase, ITreeModel
 {
 	_TreeViewAdv _c;
 	NodeIcon _ccIcon;

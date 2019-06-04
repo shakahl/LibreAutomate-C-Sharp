@@ -60,7 +60,6 @@ namespace Au
 		/// More info: <see cref="GetFileIcon"/>.
 		/// </summary>
 		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-		/// <seealso cref="AWnd.More.GetIconHandle"/>
 		public static IntPtr GetFileIconHandle(string file, int size, GIFlags flags = 0)
 		{
 			if(Empty(file)) return default;
@@ -467,6 +466,51 @@ namespace Au
 			//I could not find a .NET method to get icon directly from native resources of assembly.
 			//Could use the resource emumeration API...
 			//info: MSDN lies that with LR_SHARED gets a cached icon regardless of size argument. Caches each size separately. Tested on Win 10, 7, XP.
+		}
+
+		/// <summary>
+		/// Gets icon that is displayed in window title bar and in taskbar button.
+		/// </summary>
+		/// <returns>Returns null if failed.</returns>
+		/// <param name="w"></param>
+		/// <param name="size32">Get 32x32 icon. If false, gets 16x16 icon.</param>
+		/// <remarks>
+		/// Icon size depends on DPI (text size, can be changed in Windows Settings). By default small is 16, large 32.
+		/// This function can be used with windows of any process.
+		/// </remarks>
+		public static Icon GetWindowIcon(AWnd w, bool size32 = false)
+			=> HandleToIcon(GetWindowIconHandle(w, size32), true);
+
+		/// <summary>
+		/// Gets icon that is displayed in window title bar and in taskbar button.
+		/// </summary>
+		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
+		/// <param name="w"></param>
+		/// <param name="size32">Get 32x32 icon. If false, gets 16x16 icon.</param>
+		/// <remarks>
+		/// Icon size depends on DPI (text size, can be changed in Windows Settings). By default small is 16, large 32.
+		/// This function can be used with windows of any process.
+		/// </remarks>
+		public static IntPtr GetWindowIconHandle(AWnd w, bool size32 = false)
+		{
+			int size = Api.GetSystemMetrics(size32 ? Api.SM_CXICON : Api.SM_CXSMICON);
+
+			//support Windows Store apps
+			if(1 == AWnd.Lib.GetWindowsStoreAppId(w, out var appId, true)) {
+				IntPtr hi = GetFileIconHandle(appId, size);
+				if(hi != default) return hi;
+			}
+
+			bool ok = w.SendTimeout(2000, out LPARAM R, Api.WM_GETICON, size32);
+			if(R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, !size32);
+			if(R == 0) R = AWnd.More.GetClassLong(w, size32 ? Native.GCL.HICON : Native.GCL.HICONSM);
+			if(R == 0) R = AWnd.More.GetClassLong(w, size32 ? Native.GCL.HICONSM : Native.GCL.HICON);
+			//tested this code with DPI 125%. Small icon of most windows match DPI (20), some 16, some 24.
+			//TEST: undocumented API InternalGetWindowIcon.
+
+			//Copy, because will DestroyIcon, also it resizes if need.
+			if(R != 0) return Api.CopyImage(R, Api.IMAGE_ICON, size, size, 0);
+			return default;
 		}
 
 		/// <summary>

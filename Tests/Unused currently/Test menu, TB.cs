@@ -608,7 +608,7 @@ public partial class Test
 
 		protected override void WndProc(ref Message m)
 		{
-			//if(_outMsg) AWnd.More.PrintMsg(ref m);
+			//if(_outMsg) AWnd.More.PrintMsg(m);
 
 			base.WndProc(ref m);
 		}
@@ -718,7 +718,7 @@ public partial class Test
 
 			protected override void WndProc(ref Message m)
 			{
-				//AWnd.More.PrintMsg(ref m);
+				//AWnd.More.PrintMsg(m);
 
 				base.WndProc(ref m);
 

@@ -235,10 +235,16 @@ namespace Au
 		/// <param name="options"></param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="XElement.Load"/>.</exception>
+		/// <remarks>
+		/// Unlike <see cref="XElement.Load(string, LoadOptions)"/>, does not replace <c>\r\n</c> with <c>\n</c>.
+		/// </remarks>
 		public static XElement LoadElem(string file, LoadOptions options = default)
 		{
 			file = APath.LibNormalizeForNET(file);
-			return AFile.WaitIfLocked(() => XElement.Load(file, options));
+			return AFile.WaitIfLocked(() => {
+				using var tr = new System.Xml.XmlTextReader(file); //to preserve \r\n
+				return XElement.Load(tr, options);
+			});
 		}
 
 		/// <summary>
@@ -248,8 +254,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="XElement.Save"/> and <see cref="AFile.Save"/>.</exception>
 		public static void SaveElem(this XElement t, string file, bool backup = false, SaveOptions? options = default)
 		{
-			AFile.Save(file, temp =>
-			{
+			AFile.Save(file, temp => {
 				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
 			}, backup);
 		}
@@ -262,10 +267,16 @@ namespace Au
 		/// <param name="options"></param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Load"/>.</exception>
+		/// <remarks>
+		/// Unlike <see cref="XDocument.Load(string, LoadOptions)"/>, does not replace <c>\r\n</c> with <c>\n</c>.
+		/// </remarks>
 		public static XDocument LoadDoc(string file, LoadOptions options = default)
 		{
 			file = APath.LibNormalizeForNET(file);
-			return AFile.WaitIfLocked(() => XDocument.Load(file, options));
+			return AFile.WaitIfLocked(() => {
+				using var tr = new System.Xml.XmlTextReader(file); //to preserve \r\n
+				return XDocument.Load(tr, options);
+			});
 		}
 
 		/// <summary>
@@ -275,8 +286,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Save"/> and <see cref="AFile.Save"/>.</exception>
 		public static void SaveDoc(this XDocument t, string file, bool backup = false, SaveOptions? options = default)
 		{
-			AFile.Save(file, temp =>
-			{
+			AFile.Save(file, temp => {
 				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
 			}, backup);
 		}

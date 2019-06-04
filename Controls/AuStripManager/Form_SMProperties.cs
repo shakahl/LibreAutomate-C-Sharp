@@ -31,14 +31,14 @@ namespace Au.Controls
 	public partial class AuStripManager
 	{
 #endif
-	class AuStripManagerPropertiesDialog : AFormBase
+	class Form_SMProperties : AFormBase
 	{
 		AuStripManager _man;
 		XElement _x;
 		bool _isMenu;
 		List<XElement> _hotkeys;
 
-		internal AuStripManagerPropertiesDialog(AuStripManager man, XElement x, bool isMenu)
+		internal Form_SMProperties(AuStripManager man, XElement x, bool isMenu)
 		{
 			_man = man;
 			_x = x;
@@ -207,17 +207,17 @@ namespace Au.Controls
 		private Label label3;
 		internal TextBox textIcon;
 		private GroupBox groupStyle;
-		internal RadioButton radioDefault;
-		internal RadioButton radioIconAndText;
-		internal RadioButton radioOnlyIcon;
-		internal RadioButton radioOnlyText;
+		internal AuRadioButton radioDefault;
+		internal AuRadioButton radioIconAndText;
+		internal AuRadioButton radioOnlyIcon;
+		internal AuRadioButton radioOnlyText;
 		private GroupBox groupHotkey;
 		private Label label4;
 		internal TextBox textHotkey;
 		private Label label6;
 		private ComboBox comboUsedHotkeys;
-		private Button button1;
-		private Button button2;
+		private AuButtonOK button1;
+		private AuButtonCancel button2;
 		private ToolTip toolTip1;
 
 		/// <summary>
@@ -247,17 +247,17 @@ namespace Au.Controls
 		{
 			this.components = new System.ComponentModel.Container();
 			this.groupStyle = new System.Windows.Forms.GroupBox();
-			this.radioIconAndText = new System.Windows.Forms.RadioButton();
-			this.radioOnlyIcon = new System.Windows.Forms.RadioButton();
-			this.radioDefault = new System.Windows.Forms.RadioButton();
-			this.radioOnlyText = new System.Windows.Forms.RadioButton();
+			this.radioIconAndText = new Au.Controls.AuRadioButton();
+			this.radioOnlyIcon = new Au.Controls.AuRadioButton();
+			this.radioDefault = new Au.Controls.AuRadioButton();
+			this.radioOnlyText = new Au.Controls.AuRadioButton();
 			this.label1 = new System.Windows.Forms.Label();
 			this.textText = new System.Windows.Forms.TextBox();
 			this.label2 = new System.Windows.Forms.Label();
 			this.label3 = new System.Windows.Forms.Label();
 			this.textIcon = new System.Windows.Forms.TextBox();
-			this.button1 = new System.Windows.Forms.Button();
-			this.button2 = new System.Windows.Forms.Button();
+			this.button1 = new Au.Controls.AuButtonOK();
+			this.button2 = new Au.Controls.AuButtonCancel();
 			this.comboColor = new System.Windows.Forms.ComboBox();
 			this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
 			this.textHotkey = new System.Windows.Forms.TextBox();
@@ -290,7 +290,6 @@ namespace Au.Controls
 			this.radioIconAndText.Size = new System.Drawing.Size(94, 19);
 			this.radioIconAndText.TabIndex = 3;
 			this.radioIconAndText.Text = "Icon and text";
-			this.radioIconAndText.UseVisualStyleBackColor = true;
 			// 
 			// radioOnlyIcon
 			// 
@@ -300,7 +299,6 @@ namespace Au.Controls
 			this.radioOnlyIcon.Size = new System.Drawing.Size(48, 19);
 			this.radioOnlyIcon.TabIndex = 2;
 			this.radioOnlyIcon.Text = "Icon";
-			this.radioOnlyIcon.UseVisualStyleBackColor = true;
 			// 
 			// radioDefault
 			// 
@@ -312,7 +310,6 @@ namespace Au.Controls
 			this.radioDefault.TabIndex = 0;
 			this.radioDefault.TabStop = true;
 			this.radioDefault.Text = "Default";
-			this.radioDefault.UseVisualStyleBackColor = true;
 			// 
 			// radioOnlyText
 			// 
@@ -322,7 +319,6 @@ namespace Au.Controls
 			this.radioOnlyText.Size = new System.Drawing.Size(46, 19);
 			this.radioOnlyText.TabIndex = 1;
 			this.radioOnlyText.Text = "Text";
-			this.radioOnlyText.UseVisualStyleBackColor = true;
 			// 
 			// label1
 			// 
@@ -369,24 +365,19 @@ namespace Au.Controls
 			// 
 			// button1
 			// 
-			this.button1.DialogResult = System.Windows.Forms.DialogResult.OK;
 			this.button1.Location = new System.Drawing.Point(336, 280);
 			this.button1.Name = "button1";
 			this.button1.Size = new System.Drawing.Size(72, 24);
 			this.button1.TabIndex = 8;
 			this.button1.Text = "OK";
-			this.button1.UseVisualStyleBackColor = true;
 			// 
 			// button2
 			// 
-			this.button2.CausesValidation = false;
-			this.button2.DialogResult = System.Windows.Forms.DialogResult.Cancel;
 			this.button2.Location = new System.Drawing.Point(416, 280);
 			this.button2.Name = "button2";
 			this.button2.Size = new System.Drawing.Size(72, 24);
 			this.button2.TabIndex = 9;
 			this.button2.Text = "Cancel";
-			this.button2.UseVisualStyleBackColor = true;
 			// 
 			// comboColor
 			// 

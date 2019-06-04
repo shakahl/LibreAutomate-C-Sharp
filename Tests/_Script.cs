@@ -1101,6 +1101,34 @@ class Script : AScript
 	//	//Print(la);
 	//}
 
+	class FormRegisterHotkey : Form
+	{
+		ARegisteredHotkey[] _a = new ARegisteredHotkey[7];
+
+		protected override void WndProc(ref Message m)
+		{
+			switch(m.Msg) {
+			case 1: //0x1
+				bool r1 = _a[0].Register(1, "F1", this);
+				bool r2 = _a[1].Register(2, "Shift+F1", this);
+				bool r3 = _a[2].Register(3, "Ctrl+F1", this);
+				bool r4 = _a[3].Register(4, "Alt+F1", this);
+				bool r5 = _a[4].Register(5, "Win+F2", this);
+				bool r6 = _a[5].Register(6, "Pause", this);
+				bool r7 = _a[6].Register(7, "Alt+Pause", this);
+				Print(r1, r2, r3, r4, r5, r6, r7);
+				break;
+			case 2: //0x2
+				foreach(var v in _a) v.Unregister();
+				break;
+			case ARegisteredHotkey.WM_HOTKEY:
+				Print(m.WParam);
+				break;
+			}
+			base.WndProc(ref m);
+		}
+	}
+
 	void TestTodo()
 	{
 		//Action<MTClickArgs> f=o => Au.Util.AHelp.AuHelp(o.ToString());
@@ -1331,6 +1359,138 @@ class Script : AScript
 		//	k.Show(e);
 		//};
 		//f.ShowDialog();
+
+		//var f = new FormRegisterHotkey();
+		//f.ShowDialog();
+
+		//using(new AInputBlocker(BIEvents.Keys)) {
+		//	ADialog.ShowYesNo();
+		//}
+
+		//var w = AWnd.Find("* Notepad");
+		//for(int i = 0; i < 3; i++) {
+		//	2.s();
+		//	w.Activate();
+		//}
+
+		//for(int i = 0; i < 10; i++) {
+		//	Print(i);
+		//}
+
+		//foreach(int i in Times(10)) {
+		//	Print(i);
+		//}
+
+		//for(_i = 0; _i < 10; _i++) {
+		//	Print(_i);
+		//}
+
+		//foreach(_i in Times(10)) {
+		//	Print(_i);
+		//}
+
+		//10.Times(() => {
+		//	Print(1);
+		//});
+
+		//10.Times(i => {
+		//	Print(i);
+		//});
+
+		//3.Times(i => {
+		//	3.Times(i => {
+		//		Print(i);
+		//	});
+		//	Print("outer", i);
+		//});
+
+
+		//for(int i = 0; i < 3; i++) {
+		//	Print(1);
+		//}
+
+		//3.Times(() => {
+		//	Print(2);
+		//});
+
+		//for(int i = 0; i < 3; i++) {
+		//	Print(i);
+		//}
+
+		//3.Times(i => {
+		//	Print(i);
+		//});
+
+		//3.Times(i => Print(i));
+
+		//for(int i = 0; i < 3; i++) Print(i);
+
+		//Repeat(3, i => Print(i));
+
+		//for(int i = 0; i < 3; i++) {
+		//	Print(i);
+		//}
+
+		//foreach(int i in Repeat(3)) {
+		//	Print(i);
+		//}
+
+		//var f = new Form();
+		//var n = new NotifyIcon();
+		//n.Text = "test";
+		//n.Icon = AIcon.GetWindowIcon(AWnd.Find("* Firefox"));
+		//n.MouseClick += (se, e) => {
+		//	var m = new AMenu();
+		//	m["test"] = o => Print(o);
+		//	m.Show();
+		//};
+		//f.Load += (unu, sed) => { n.Visible = true;};
+		//f.ShowDialog();
+		//n.Dispose();
+
+		//Print("ab\r\n".Regex("^", RXFlags.MULTILINE | RXFlags.ALT_CIRCUMFLEX, new RXMore(1)));
+
+		//string s;
+		//using(StreamReader sr = new StreamReader("", Encoding.UTF8)) {
+		//	_=(sr.BaseStream as FileStream).Length;
+		//	s = sr.ReadToEnd();
+		//}
+
+		//var s = "one\r\ntwo\r\nthree\r\n\four\r\n";
+		//Print(s.LineCount());
+
+		var m = new RegexMenu();
+		//m.CMS.ItemClicked += CMS_ItemClicked;
+		m.Show();
+	}
+
+	private void CMS_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+	{
+		Print("clicked", e.ClickedItem);
+	}
+
+	public class RegexMenu : AMenu
+	{
+		public RegexMenu()
+		{
+			_action = _Action;
+
+			_Add("One");
+			_Add("Two", "tooltip\r\nline2");
+		}
+
+		void _Add(string s, string tt=null)
+		{
+			var k = Add(s, _action);
+			if(tt != null) k.ToolTipText = tt;
+		}
+
+		void _Action(MTClickArgs e)
+		{
+			var s = e.MenuItem.Text;
+			Print(s);
+		}
+		Action<MTClickArgs> _action;
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
@@ -1341,7 +1501,7 @@ class Script : AScript
 		AOutput.Clear();
 		//100.ms();
 
-		//TestTodo();
+		TestTodo();
 		//TestDiffMatchpatch();
 		//TestIronPython();
 		//TestCs8(); //ADialog.Show();

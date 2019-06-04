@@ -25,6 +25,57 @@ using System.Collections;
 
 namespace Au.Controls
 {
+	/// <summary>
+	/// Button without owner-draw style which disables theme animation.
+	/// </summary>
+	public class AuButton : Button
+	{
+		public AuButton()
+		{
+			base.FlatStyle = FlatStyle.System;
+		}
+
+		[DefaultValue(FlatStyle.System)]
+		public new FlatStyle FlatStyle { get => base.FlatStyle; set => base.FlatStyle = value; }
+
+		[DefaultValue(true)]
+		public new bool UseVisualStyleBackColor { get => base.UseVisualStyleBackColor; set => base.UseVisualStyleBackColor = value; }
+	}
+
+	/// <summary>
+	/// CheckBox without owner-draw style which disables theme animation and draws 1 pixel above normal.
+	/// </summary>
+	public class AuCheckBox : CheckBox
+	{
+		public AuCheckBox()
+		{
+			base.FlatStyle = FlatStyle.System;
+		}
+
+		[DefaultValue(FlatStyle.System)]
+		public new FlatStyle FlatStyle { get => base.FlatStyle; set => base.FlatStyle = value; }
+
+		[DefaultValue(true)]
+		public new bool UseVisualStyleBackColor { get => base.UseVisualStyleBackColor; set => base.UseVisualStyleBackColor = value; }
+	}
+
+	/// <summary>
+	/// RadioButton without owner-draw style which disables theme animation.
+	/// </summary>
+	public class AuRadioButton : RadioButton
+	{
+		public AuRadioButton()
+		{
+			base.FlatStyle = FlatStyle.System;
+		}
+
+		[DefaultValue(FlatStyle.System)]
+		public new FlatStyle FlatStyle { get => base.FlatStyle; set => base.FlatStyle = value; }
+
+		[DefaultValue(true)]
+		public new bool UseVisualStyleBackColor { get => base.UseVisualStyleBackColor; set => base.UseVisualStyleBackColor = value; }
+	}
+
 	//Problem with controls derived from Button: designer sets Text=Name and ignores [DefaultValue] of the Text override.
 	//This class sets correct Text, but still need [DefaultValue] to make it non-bold. Cannot set Name.
 	class _ButtonDesigner : ControlDesigner
@@ -42,9 +93,9 @@ namespace Au.Controls
 	/// Button that automatically sets its Text = "OK", DialogResult = DialogResult.OK and form's AcceptButton.
 	/// </summary>
 	[Designer(typeof(_ButtonDesigner))]
-	public class ButtonOK : Button
+	public class AuButtonOK : AuButton
 	{
-		public ButtonOK()
+		public AuButtonOK()
 		{
 			base.DialogResult = DialogResult.OK;
 			base.Text = "&OK";
@@ -76,9 +127,9 @@ namespace Au.Controls
 	/// Button that automatically sets its Text = "Cancel", DialogResult = DialogResult.Cancel and form's CancelButton.
 	/// </summary>
 	[Designer(typeof(_ButtonDesigner))]
-	public class ButtonCancel : Button
+	public class AuButtonCancel : AuButton
 	{
-		public ButtonCancel()
+		public AuButtonCancel()
 		{
 			base.DialogResult = DialogResult.Cancel;
 			base.Text = "Cancel";
@@ -108,5 +159,20 @@ namespace Au.Controls
 			var f = FindForm();
 			if(!f.Modal && f.DialogResult == DialogResult.Cancel) f.Close();
 		}
+	}
+
+	/// <summary>
+	/// Makes Padding.Top = 2, to align text with adjacent TextBox and other controls.
+	/// </summary>
+	public class AuLabel : Label
+	{
+		public AuLabel()
+		{
+			base.Padding = new Padding(0, 2, 0, 0);
+		}
+
+		public new Padding Padding { get => base.Padding; set => base.Padding = value; }
+
+		bool ShouldSerializePadding() { return base.Padding != new Padding(0, 2, 0, 0); }
 	}
 }

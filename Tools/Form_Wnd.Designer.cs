@@ -30,10 +30,10 @@
 			this.components = new System.ComponentModel.Container();
 			this._info = new Au.Controls.AuInfoBox();
 			this._lSpeed = new System.Windows.Forms.Label();
-			this._bTest = new System.Windows.Forms.Button();
-			this._bOK = new Au.Controls.ButtonOK();
-			this._bCancel = new Au.Controls.ButtonCancel();
-			this._cCapture = new System.Windows.Forms.CheckBox();
+			this._bTest = new Au.Controls.AuButton();
+			this._bOK = new Au.Controls.AuButtonOK();
+			this._bCancel = new Au.Controls.AuButtonCancel();
+			this._cCapture = new Au.Controls.AuCheckBox();
 			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
 			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
 			this._grid = new Au.Controls.ParamGrid();
@@ -91,7 +91,6 @@
 			this._bTest.Text = "&Test";
 			this._toolTip.SetToolTip(this._bTest, "Executes the \'find\' code (without wait, etc). If window/control found, shows its " +
         "rectangle.");
-			this._bTest.UseVisualStyleBackColor = true;
 			this._bTest.Click += new System.EventHandler(this._bTest_Click);
 			// 
 			// _bOK
@@ -101,7 +100,6 @@
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
 			this._bOK.TabIndex = 10;
-			this._bOK.UseVisualStyleBackColor = true;
 			this._bOK.Click += new System.EventHandler(this._bOK_Click);
 			// 
 			// _bCancel
@@ -110,7 +108,6 @@
 			this._bCancel.Name = "_bCancel";
 			this._bCancel.Size = new System.Drawing.Size(72, 24);
 			this._bCancel.TabIndex = 11;
-			this._bCancel.UseVisualStyleBackColor = true;
 			// 
 			// _cCapture
 			// 
@@ -121,7 +118,6 @@
 			this._cCapture.TabIndex = 8;
 			this._cCapture.Text = "&Capture";
 			this._toolTip.SetToolTip(this._cCapture, "Enables key F3. Shows window/control rectangles when moving the mouse.");
-			this._cCapture.UseVisualStyleBackColor = true;
 			this._cCapture.CheckedChanged += new System.EventHandler(this._cCapture_CheckedChanged);
 			// 
 			// splitContainer1
@@ -327,10 +323,10 @@
 		private CodeBox _code;
 		private Controls.AuInfoBox _info;
 		private System.Windows.Forms.Label _lSpeed;
-		private System.Windows.Forms.Button _bTest;
-		private Au.Controls.ButtonOK _bOK;
-		private Au.Controls.ButtonCancel _bCancel;
-		private System.Windows.Forms.CheckBox _cCapture;
+		private Au.Controls.AuButton _bTest;
+		private Au.Controls.AuButtonOK _bOK;
+		private Au.Controls.AuButtonCancel _bCancel;
+		private Au.Controls.AuCheckBox _cCapture;
 		private System.Windows.Forms.SplitContainer splitContainer1;
 		private System.Windows.Forms.SplitContainer splitContainer2;
 		private Controls.ParamGrid _grid;

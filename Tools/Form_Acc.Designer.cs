@@ -35,14 +35,14 @@ namespace Au.Tools
 			this._grid = new Au.Controls.ParamGrid();
 			this._grid2 = new Au.Controls.ParamGrid();
 			this.splitContainer3 = new System.Windows.Forms.SplitContainer();
-			this._cCapture = new System.Windows.Forms.CheckBox();
-			this._bOK = new Au.Controls.ButtonOK();
-			this._bCancel = new Au.Controls.ButtonCancel();
-			this._bTest = new System.Windows.Forms.Button();
+			this._cCapture = new Au.Controls.AuCheckBox();
+			this._bOK = new Au.Controls.AuButtonOK();
+			this._bCancel = new Au.Controls.AuButtonCancel();
+			this._bTest = new Au.Controls.AuButton();
 			this._lSpeed = new System.Windows.Forms.Label();
 			this._info = new Au.Controls.AuInfoBox();
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
-			this._bEtc = new System.Windows.Forms.Button();
+			this._bEtc = new Au.Controls.AuButton();
 			this._code = new Au.Tools.CodeBox();
 			this._tree = new Aga.Controls.Tree.TreeViewAdv();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -174,7 +174,6 @@ namespace Au.Tools
 			this._cCapture.TabIndex = 0;
 			this._cCapture.Text = "&Capture";
 			this._toolTip.SetToolTip(this._cCapture, "Enables key F3. Shows AO rectangles when moving the mouse.");
-			this._cCapture.UseVisualStyleBackColor = true;
 			this._cCapture.CheckedChanged += new System.EventHandler(this._cCapture_CheckedChanged);
 			// 
 			// _bOK
@@ -184,7 +183,6 @@ namespace Au.Tools
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
 			this._bOK.TabIndex = 2;
-			this._bOK.UseVisualStyleBackColor = true;
 			this._bOK.Click += new System.EventHandler(this._bOK_Click);
 			// 
 			// _bCancel
@@ -193,7 +191,6 @@ namespace Au.Tools
 			this._bCancel.Name = "_bCancel";
 			this._bCancel.Size = new System.Drawing.Size(72, 24);
 			this._bCancel.TabIndex = 3;
-			this._bCancel.UseVisualStyleBackColor = true;
 			// 
 			// _bTest
 			// 
@@ -204,7 +201,6 @@ namespace Au.Tools
 			this._bTest.TabIndex = 1;
 			this._bTest.Text = "&Test";
 			this._toolTip.SetToolTip(this._bTest, "Executes the \'find\' code (without wait, etc). If AO found, shows its rectangle.");
-			this._bTest.UseVisualStyleBackColor = true;
 			this._bTest.Click += new System.EventHandler(this._bTest_Click);
 			// 
 			// _lSpeed
@@ -234,7 +230,6 @@ namespace Au.Tools
 			this._bEtc.Size = new System.Drawing.Size(32, 24);
 			this._bEtc.TabIndex = 4;
 			this._bEtc.Text = "&...";
-			this._bEtc.UseVisualStyleBackColor = true;
 			this._bEtc.Click += new System.EventHandler(this._bEtc_Click);
 			// 
 			// _code
@@ -299,11 +294,11 @@ namespace Au.Tools
 		}
 
 		#endregion
-		private CheckBox _cCapture;
-		private Button _bTest;
+		private Au.Controls.AuCheckBox _cCapture;
+		private Au.Controls.AuButton _bTest;
 		private Label _lSpeed;
-		private Au.Controls.ButtonOK _bOK;
-		private Au.Controls.ButtonCancel _bCancel;
+		private Au.Controls.AuButtonOK _bOK;
+		private Au.Controls.AuButtonCancel _bCancel;
 		private SplitContainer splitContainer1;
 		private SplitContainer splitContainer2;
 		private Au.Controls.ParamGrid _grid;
@@ -313,6 +308,6 @@ namespace Au.Tools
 		private ToolTip _toolTip;
 		private CodeBox _code;
 		private SplitContainer splitContainer3;
-		private Button _bEtc;
+		private Au.Controls.AuButton _bEtc;
 	}
 }

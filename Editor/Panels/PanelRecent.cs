@@ -25,7 +25,7 @@ using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 using System.Collections;
 
-class PanelRecent :Control, ITreeModel
+class PanelRecent : AUserControlBase, ITreeModel
 {
 	_TreeViewAdv _c;
 	NodeIcon _ccIcon;

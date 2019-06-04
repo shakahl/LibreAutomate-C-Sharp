@@ -22,7 +22,7 @@ using static Au.AStatic;
 namespace Au.Types
 {
 	/// <summary>
-	/// Can be used as base class for forms when you want to use correct dialog font and correct auto-scaling when high DPI.
+	/// Can be used as base class for forms when you want to use standard Windows font and correct auto-scaling when high DPI.
 	/// </summary>
 	/// <remarks>
 	/// Sets these properties:

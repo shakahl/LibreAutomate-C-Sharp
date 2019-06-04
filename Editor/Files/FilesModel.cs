@@ -981,7 +981,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// <param name="location">Default parent directory of the main directory of the workspace.</param>
 	public static string GetDirectoryPathForNewWorkspace(string name = null, string location = null)
 	{
-		var f = new _FormNewWorkspace();
+		var f = new Form_NewWorkspace();
 		f.textName.Text = name;
 		f.textLocation.Text = location ?? AFolders.ThisAppDocuments;
 		if(f.ShowDialog() != DialogResult.OK) return null;
