@@ -21,7 +21,7 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
 
-class PanelFound : AUserControlBase
+class PanelFound : AuUserControlBase
 {
 	AuScintilla _c;
 

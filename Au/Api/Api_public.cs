@@ -200,7 +200,7 @@ namespace Au.Types
 		public delegate LPARAM WNDPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
 
 		/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
-		public delegate LPARAM SUBCLASSPROC(AWnd hWnd, uint msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
+		public delegate LPARAM SUBCLASSPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
 
 		/// <summary>API <msdn>SetWindowPos</msdn> flags.</summary>
 		[Flags]

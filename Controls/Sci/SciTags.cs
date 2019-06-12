@@ -86,7 +86,7 @@ namespace Au.Controls
 	/// Also you can register custom link tags that call your callback functions.
 	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
 	/// 
-	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au editor it is the output (use <b>Print</b>, like in the example below). In this library - the <see cref="AuInfoBox"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.InitTagsStyle"/> and optionally <see cref="AuScintilla.InitImagesStyle"/>.
+	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au editor it is the output (use <b>Print</b>, like in the example below). In this library - the <see cref="InfoBox"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.InitTagsStyle"/> and optionally <see cref="AuScintilla.InitImagesStyle"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -132,6 +132,29 @@ namespace Au.Controls
 				u2 |= t2;
 			}
 			public bool IsEmpty => u1 == 0 & u2 == 0;
+
+			public _TagStyle(UserDefinedStyle k)
+			{
+				u1 = u2 = 0;
+				if(k.textColor != null) Color = (int)k.textColor.GetValueOrDefault();
+				if(k.backColor != null) BackColor = (int)k.backColor.GetValueOrDefault();
+				Size = k.size;
+				Bold = k.bold;
+				Italic = k.italic;
+				Underline = k.underline;
+				Eol = k.eolFilled;
+				Mono = k.monospace;
+			}
+		}
+
+		/// <summary>
+		/// For <see cref="AddStyleTag"/>.
+		/// </summary>
+		public class UserDefinedStyle
+		{
+			public ColorInt? textColor, backColor;
+			public int size;
+			public bool bold, italic, underline, eolFilled, monospace;
 		}
 
 		AuScintilla _c;
@@ -264,7 +287,7 @@ namespace Au.Controls
 
 			//test slow client
 			//Thread.Sleep(500);
-			//AOutput.LibWriteQM2(s.Length / 1048576d);
+			//AOutput.QM2.Write(s.Length / 1048576d);
 		}
 
 		/// <summary>
@@ -358,7 +381,7 @@ namespace Au.Controls
 				}
 
 				//read tag name
-				ch = *s; if(ch == '_' || ch == '\a' || ch == '+') s++;
+				ch = *s; if(ch == '_' || ch == '\a' || ch == '+' || ch == '.') s++;
 				while(AChar.IsAsciiAlpha(*s)) s++;
 				int tagLen = (int)(s - tag);
 				if(tagLen == 0) goto ge;
@@ -382,7 +405,7 @@ namespace Au.Controls
 
 				//tags
 				_TagStyle style = default;
-				bool hideTag = false, noEndTag = false, userTag = false;
+				bool hideTag = false, noEndTag = false, userLinkTag = false;
 				string linkTag = null;
 				int stackInt = 0;
 				int i2;
@@ -479,22 +502,28 @@ namespace Au.Controls
 					break;
 				default:
 					//user-defined tag or unknown.
-					//user-defined tags must start with '+'.
-					//don't hide unknown tags, unless start with '+'. Can be either misspelled (hiding would make harder to debug) or not intended for us (forgot <_>).
-					if(ch != '+') goto ge;
-					//if(!_userLinkTags.ContainsKey(linkTag = new string((sbyte*)tag, 0, tagLen))) goto ge; //no, it makes slower and creates garbage. Also would need to look in the static dictionary too. It's not so important to check now because we use '+' prefix.
-					//info: initially was used '_', not '+'. But it creates more problems. Eg C# stack trace can contain "... at Script.<>c.<_Main>b__1_0() ...".
-					linkTag = "";
-					userTag = true;
+					//user-defined tags must start with '+' (links) or '.' (styles).
+					//don't hide unknown tags, unless start with '+' etc. Can be either misspelled (hiding would make harder to debug) or not intended for us (forgot <_>).
+					if(ch == '+') {
+						//if(!_userLinkTags.ContainsKey(linkTag = new string((sbyte*)tag, 0, tagLen))) goto ge; //no, it makes slower and creates garbage. Also would need to look in the static dictionary too. It's not so important to check now because we use '+' prefix.
+						//info: initially was used '_', not '+'. But it creates more problems. Eg C# stack trace can contain "... at Script.<>c.<_Main>b__1_0() ...".
+						linkTag = "";
+						userLinkTag = true;
+					} else if(ch == '.' && _userStyles != null && _userStyles.TryGetValue(new string((sbyte*)tag, 0, tagLen), out style)) {
+						//userStyleTag = true;
+					} else goto ge;
 					break;
 				}
 
 				if(linkTag != null) {
-					if(!userTag && !LibCharPtr.AsciiStarts(tag, linkTag)) goto ge;
+					if(!userLinkTag && !LibCharPtr.AsciiStarts(tag, linkTag)) goto ge;
 					//if(attr == null) goto ge; //no, use text as attribute
+					if(_linkStyle != null) style = new _TagStyle(_linkStyle);
+					else {
+						style.Color =  0x0080FF;
+						style.Underline = true;
+					}
 					style.Hotspot = true;
-					style.Color = 0x80FF;
-					style.Underline = true;
 					hideTag = true;
 				}
 
@@ -735,6 +764,14 @@ namespace Au.Controls
 			}
 		}
 
+		public void SetLinkStyle(UserDefinedStyle style, ColorInt? activeColor = null, bool? activeUnderline = null)
+		{
+			_linkStyle = style;
+			if(activeColor != null) _c.Call(SCI_SETHOTSPOTACTIVEFORE, true, (int)activeColor.Value);
+			if(activeUnderline != null) _c.Call(SCI_SETHOTSPOTACTIVEUNDERLINE, activeUnderline.Value);
+		}
+		UserDefinedStyle _linkStyle;
+
 		Dictionary<string, Action<string>> _userLinkTags = new Dictionary<string, Action<string>>();
 		static ConcurrentDictionary<string, Action<string>> s_userLinkTags = new ConcurrentDictionary<string, Action<string>>();
 
@@ -752,6 +789,9 @@ namespace Au.Controls
 		/// It's string parameter contains tag's attribute (if "&lt;name "attribute"&gt;TEXT&lt;&gt;) or link text (if "&lt;name&gt;TEXT&lt;&gt;).
 		/// The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
 		/// </param>
+		/// <remarks>
+		/// Call this function when control handle is already created. Until that <see cref="AuScintilla.Tags"/> returns null.
+		/// </remarks>
 		/// <seealso cref="AddCommonLinkTag"/>
 		public void AddLinkTag(string name, Action<string> a)
 		{
@@ -777,6 +817,28 @@ namespace Au.Controls
 		{
 			s_userLinkTags[name] = a;
 		}
+
+		/// <summary>
+		/// Adds (registers) a user-defined style tag for this control.
+		/// </summary>
+		/// <param name="name">
+		/// Tag name, like ".my".
+		/// Must start with '.'. Other characters must be 'a'-'z', 'A'-'Z'. Case-sensitive.
+		/// </param>
+		/// <param name="style"></param>
+		/// <exception cref="ArgumentException">name does not start with '.'.</exception>
+		/// <exception cref="InvalidOperationException">Trying to add more than 100 styles.</exception>
+		/// <remarks>
+		/// Call this function when control handle is already created. Until that <see cref="AuScintilla.Tags"/> returns null.
+		/// </remarks>
+		public void AddStyleTag(string name, UserDefinedStyle style)
+		{
+			if(_userStyles == null) _userStyles = new Dictionary<string, _TagStyle>();
+			if(_userStyles.Count >= 100) throw new InvalidOperationException();
+			if(!name.Starts('.')) throw new ArgumentException();
+			_userStyles.Add(name, new _TagStyle(style));
+		}
+		Dictionary<string, _TagStyle> _userStyles;
 
 		//internal void LibOnMessage(ref Message m)
 		//{

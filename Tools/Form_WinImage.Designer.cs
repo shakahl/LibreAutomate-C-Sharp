@@ -28,7 +28,7 @@
 		private void InitializeComponent()
 		{
 			this.components = new System.ComponentModel.Container();
-			this._info = new Au.Controls.AuInfoBox();
+			this._info = new Au.Controls.InfoBox();
 			this._lSpeed = new System.Windows.Forms.Label();
 			this._bTest = new Au.Controls.AuButton();
 			this._bOK = new Au.Controls.AuButtonOK();
@@ -204,7 +204,7 @@
 
 		#endregion
 
-		private Controls.AuInfoBox _info;
+		private Controls.InfoBox _info;
 		private System.Windows.Forms.Label _lSpeed;
 		private Au.Controls.AuButton _bTest;
 		private Au.Controls.AuButtonOK _bOK;

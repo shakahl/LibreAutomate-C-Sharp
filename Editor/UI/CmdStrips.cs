@@ -71,6 +71,8 @@ static class Strips
 
 		//get controls
 		cHelpFind = tbHelp.Items["Help_Find"] as ToolStripSpringTextBox;
+		var cw1 = new ComboWrapper(cHelpFind.Control);
+		cw1.ArrowButtonPressed += (unu, sed) => Print("not implemented");
 
 		//p.NW();
 
@@ -89,8 +91,7 @@ static class Strips
 
 #if TEST
 		//tbCustom2.Items.Add("Test", null, TestCompiler.Test);
-		tbCustom2.Items.Add("Test", null, (unu, sed) =>
-		{
+		tbCustom2.Items.Add("Test", null, (unu, sed) => {
 			MainForm.TestEditor();
 			//Panels.Files.Test();
 			//Panels.Editor.Test();

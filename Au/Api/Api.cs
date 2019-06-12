@@ -783,6 +783,29 @@ namespace Au.Types
 		[DllImport("comctl32.dll")]
 		internal static extern bool ImageList_GetIconSize(IntPtr himl, out int cx, out int cy);
 
+		internal const uint TME_LEAVE = 0x2;
+		internal const uint TME_NONCLIENT = 0x10;
+		internal const uint TME_CANCEL = 0x80000000;
+
+		internal struct TRACKMOUSEEVENT
+		{
+			public int cbSize;
+			public uint dwFlags;
+			public AWnd hwndTrack;
+			public int dwHoverTime;
+
+			public TRACKMOUSEEVENT(AWnd w, uint flags, int hoverTime = 0)
+			{
+				cbSize = sizeof(TRACKMOUSEEVENT);
+				hwndTrack = w;
+				dwFlags = flags;
+				dwHoverTime = hoverTime;
+			}
+		}
+
+		[DllImport("comctl32.dll", EntryPoint = "_TrackMouseEvent")]
+		internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT lpEventTrack);
+
 
 
 

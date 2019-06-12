@@ -473,10 +473,11 @@ namespace Au
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="SegSep"/> constants.</param>
-		/// <param name="maxCount">The maximal number of substrings to get. If negative, gets all.</param>
+		/// <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more substrings, the last element will contain single substring, unlike with <see cref="String.Split"/>.</param>
 		/// <param name="flags"></param>
 		/// <seealso cref="Segments(string, string, SegFlags)"/>
 		/// <seealso cref="SegLines"/>
+		/// <seealso cref="SegParser"/>
 		/// <seealso cref="string.Split"/>
 		/// <seealso cref="string.Join"/>
 		public static string[] SegSplit(this string t, string separators, int maxCount, SegFlags flags = 0)
@@ -501,12 +502,26 @@ namespace Au
 		/// Splits this string into lines using separators "\r\n", "\n", "\r".
 		/// </summary>
 		/// <param name="t">This string.</param>
-		/// <param name="noEmptyLines">Don't get empty lines.</param>
+		/// <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more lines, the last element will contain single line, unlike with <see cref="String.Split"/></param>
+		/// <param name="noEmptyLines">Don't need empty lines.</param>
 		/// <remarks>
 		/// Uses this code: <c>return t.SegSplit(SegSep.Line, noEmptyLines ? SegFlags.NoEmpty : 0);</c>.
 		/// See <see cref="SegSplit(string, string, int, SegFlags)"/>, <see cref="SegSep.Line"/>, <see cref="SegFlags.NoEmpty"/>.
 		/// </remarks>
-		/// <seealso cref="Segments(string, string, SegFlags)"/>
+		public static string[] SegLines(this string t, int maxCount, bool noEmptyLines = false)
+		{
+			return SegSplit(t, SegSep.Line, maxCount, noEmptyLines ? SegFlags.NoEmpty : 0);
+		}
+
+		/// <summary>
+		/// Splits this string into lines using separators "\r\n", "\n", "\r".
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="noEmptyLines">Don't need empty lines.</param>
+		/// <remarks>
+		/// Uses this code: <c>return t.SegSplit(SegSep.Line, noEmptyLines ? SegFlags.NoEmpty : 0);</c>.
+		/// See <see cref="SegSplit(string, string, SegFlags)"/>, <see cref="SegSep.Line"/>, <see cref="SegFlags.NoEmpty"/>.
+		/// </remarks>
 		public static string[] SegLines(this string t, bool noEmptyLines = false)
 		{
 			return SegSplit(t, SegSep.Line, noEmptyLines ? SegFlags.NoEmpty : 0);

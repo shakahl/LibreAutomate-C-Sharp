@@ -25,6 +25,44 @@ using static Au.AStatic;
 
 namespace Au.Controls
 {
+	public class ToolStripSpringTextBox :ToolStripTextBox
+	{
+		public ToolStripSpringTextBox()
+		{
+			ToolStripSpringBox.SetDefaultProperties(this);
+		}
+
+		public override Size GetPreferredSize(Size constrainingSize)
+		{
+			return ToolStripSpringBox.CalcPreferredWidth(this, base.GetPreferredSize(constrainingSize));
+		}
+
+		public void SetCueBanner(string text, bool showWhenFocused = false)
+		{
+			var c = this.Control as TextBox;
+			c.SetCueBanner(text, showWhenFocused);
+		}
+	}
+
+	public class ToolStripSpringComboBox :ToolStripComboBox
+	{
+		public ToolStripSpringComboBox()
+		{
+			ToolStripSpringBox.SetDefaultProperties(this);
+		}
+
+		public override Size GetPreferredSize(Size constrainingSize)
+		{
+			return ToolStripSpringBox.CalcPreferredWidth(this, base.GetPreferredSize(constrainingSize));
+		}
+
+		public void SetCueBanner(string text)
+		{
+			var c = this.Control as ComboBox;
+			c.SetCueBanner(text);
+		}
+	}
+
 	//Contains static function used by ToolStripSpringTextBox, ToolStripSpringComboBox and possibly with other classes derived from ToolStripControlHost.
 	internal static class ToolStripSpringBox
 	{
@@ -92,44 +130,6 @@ namespace Au.Controls
 			//Easiest is to change font, because the default Segoe UI 9 font has too many space above.
 			//Another way - set AutoSize = false for c and c.Control, and then resize c when resizing its toolstrip. Difficult, because we receive the Resize event too late. Tried unsuccessfully.
 			c.Font = _font;
-		}
-	}
-
-	public class ToolStripSpringTextBox :ToolStripTextBox
-	{
-		public ToolStripSpringTextBox()
-		{
-			ToolStripSpringBox.SetDefaultProperties(this);
-		}
-
-		public override Size GetPreferredSize(Size constrainingSize)
-		{
-			return ToolStripSpringBox.CalcPreferredWidth(this, base.GetPreferredSize(constrainingSize));
-		}
-
-		public void SetCueBanner(string text, bool showWhenFocused = false)
-		{
-			var c = this.Control as TextBox;
-			c.SetCueBanner(text, showWhenFocused);
-		}
-	}
-
-	public class ToolStripSpringComboBox :ToolStripComboBox
-	{
-		public ToolStripSpringComboBox()
-		{
-			ToolStripSpringBox.SetDefaultProperties(this);
-		}
-
-		public override Size GetPreferredSize(Size constrainingSize)
-		{
-			return ToolStripSpringBox.CalcPreferredWidth(this, base.GetPreferredSize(constrainingSize));
-		}
-
-		public void SetCueBanner(string text)
-		{
-			var c = this.Control as ComboBox;
-			c.SetCueBanner(text);
 		}
 	}
 }

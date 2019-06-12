@@ -28,7 +28,7 @@
 		private void InitializeComponent()
 		{
 			this.components = new System.ComponentModel.Container();
-			this._info = new Au.Controls.AuInfoBox();
+			this._info = new Au.Controls.InfoBox();
 			this._lSpeed = new System.Windows.Forms.Label();
 			this._bTest = new Au.Controls.AuButton();
 			this._bOK = new Au.Controls.AuButtonOK();
@@ -42,7 +42,7 @@
 			this._code = new Au.Tools.CodeBox();
 			this.splitContainer4 = new System.Windows.Forms.SplitContainer();
 			this._tree = new Aga.Controls.Tree.TreeViewAdv();
-			this._winInfo = new Au.Controls.AuInfoBox();
+			this._winInfo = new Au.Controls.InfoBox();
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
@@ -321,7 +321,7 @@
 		#endregion
 
 		private CodeBox _code;
-		private Controls.AuInfoBox _info;
+		private Controls.InfoBox _info;
 		private System.Windows.Forms.Label _lSpeed;
 		private Au.Controls.AuButton _bTest;
 		private Au.Controls.AuButtonOK _bOK;
@@ -334,7 +334,7 @@
 		private Aga.Controls.Tree.TreeViewAdv _tree;
 		private System.Windows.Forms.SplitContainer splitContainer3;
 		private System.Windows.Forms.SplitContainer splitContainer4;
-		private Controls.AuInfoBox _winInfo;
+		private Controls.InfoBox _winInfo;
 		private System.Windows.Forms.ToolTip _toolTip;
 	}
 }

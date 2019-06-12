@@ -1439,7 +1439,7 @@ sptr_t ScintillaWin::WndProc(unsigned int iMessage, uptr_t wParam, sptr_t lParam
 			break;
 
 		case WM_RBUTTONDOWN: {
-				::SetFocus(MainHWND());
+				//::SetFocus(MainHWND()); //Au
 				const Point pt = PointFromLParam(lParam);
 				if (!PointInSelection(pt)) {
 					CancelModes();

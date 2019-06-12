@@ -71,6 +71,7 @@ namespace Au.Controls
 					 ControlStyles.UserPaint,
 					 false);
 
+			this.Size = new Size(200, 100);
 			this.AccessibleRole = AccessibleRole.Text;
 		}
 
@@ -97,9 +98,10 @@ namespace Au.Controls
 			}
 		}
 
-		protected unsafe override void OnHandleCreated(EventArgs e)
+		protected override unsafe void OnHandleCreated(EventArgs e)
 		{
-			_ptrDirect = ((AWnd)Handle).Send(SCI_GETDIRECTPOINTER);
+			var hwnd = (AWnd)Handle;
+			_ptrDirect = hwnd.Send(SCI_GETDIRECTPOINTER);
 			Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
 
 			bool hasImages = InitImagesStyle != ImagesStyle.NoImages;
@@ -123,14 +125,14 @@ namespace Au.Controls
 				Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
 			}
 
-			//note: cannot set styles here, because later parent will call StyleClearAll. It sets some special styles.
+			//note: cannot set styles here, because later inherited class will call StyleClearAll, which sets some special styles.
 
 			if(hasImages) Images = new SciImages(this, InitImagesStyle == ImagesStyle.AnyString);
 			if(hasTags) Tags = new SciTags(this);
 
 			if(AccessibleName == null) AccessibleName = Name;
 
-			if(this.AllowDrop) Api.RevokeDragDrop((AWnd)this);
+			if(this.AllowDrop) Api.RevokeDragDrop(hwnd);
 
 			base.OnHandleCreated(e);
 		}
@@ -153,6 +155,7 @@ namespace Au.Controls
 			//if(this.Parent?.Name == "Output") AWnd.More.PrintMsg(m, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
 			//if(Focused) AWnd.More.PrintMsg(m, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
 
+			var hwnd = (AWnd)m.HWnd;
 			//LPARAM wParam = m.WParam, lParam = m.LParam;
 
 			switch(m.Msg) {
@@ -165,18 +168,38 @@ namespace Au.Controls
 				return;
 
 			case Api.WM_LBUTTONDOWN:
-				if(Api.GetFocus() != (AWnd)Handle) {
+				if(Api.GetFocus() != hwnd) {
 					bool setFocus = true;
 					Tags?.LibOnLButtonDownWhenNotFocused(ref m, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
-					if(setFocus) Api.SetFocus((AWnd)Handle);
+					if(setFocus && !NoMouseLeftSetFocus) Api.SetFocus(hwnd);
 				}
-
+				break;//TODO
+				_DefWndProc(ref m);
+				return;
+			case Api.WM_RBUTTONDOWN:
+				if(!NoMouseRightSetFocus) Api.SetFocus(hwnd);
 				_DefWndProc(ref m);
 				return;
 			}
 
 			base.WndProc(ref m);
+
+			switch(m.Msg) {
+			case Api.WM_CREATE: //after inherited classes set styles etc
+				if(_text != null) ST.SetText(_text);
+				break;
+			}
 		}
+
+		/// <summary>
+		/// Don't set focus on mouse left button down.
+		/// </summary>
+		public bool NoMouseLeftSetFocus { get; set; }
+
+		/// <summary>
+		/// Don't set focus on mouse right button down.
+		/// </summary>
+		public bool NoMouseRightSetFocus { get; set; }
 
 		void _DefWndProc(ref Message m)
 		{
@@ -388,14 +411,16 @@ namespace Au.Controls
 			//don't call base. It sends WM_GETDLGCODE, and scintilla always returns DLGC_WANTALLKEYS.
 		}
 
-		//[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden), EditorBrowsable(EditorBrowsableState.Never)]
-		//[Obsolete("Use ST.SetText or ST.SetTextNewDocument", true)] //because we don't know how to set text, with undo or as new document
-		//public new virtual string Text { get; set; }
 		/// <summary>
-		/// Calls <see cref="SciText.AllText"/> (ST.AllText).
-		/// To set text, use <see cref="SciText.SetText"/> etc. It has options that you may need.
+		/// The 'get' function calls <see cref="SciText.AllText"/> (ST.AllText).
+		/// The 'set' function calls <see cref="SciText.SetText"/> (ST.SetText) with default parameters (with undo and notifications, unless InitReadOnlyAlways).
+		/// Unlike the above methods, this property can be used before creating handle.
 		/// </summary>
-		public new virtual string Text => ST.AllText();
+		public override string Text {
+			get { if(IsHandleCreated) _text = ST.AllText(); return _text; }
+			set { _text = value; if(IsHandleCreated) ST.SetText(_text); }
+		}
+		string _text;
 
 		protected override AccessibleObject CreateAccessibilityInstance()
 		{

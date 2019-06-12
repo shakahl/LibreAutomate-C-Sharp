@@ -290,19 +290,19 @@ namespace Au
 
 			/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#410")]
-			public static extern bool SetWindowSubclass(AWnd hWnd, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData);
+			public static extern bool SetWindowSubclass(AWnd w, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData = default);
 
 			/// <summary>API <msdn>GetWindowSubclass</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
-			public static extern bool GetWindowSubclass(AWnd hWnd, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
+			public static extern bool GetWindowSubclass(AWnd w, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
 
 			/// <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#412")]
-			public static extern bool RemoveWindowSubclass(AWnd hWnd, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
+			public static extern bool RemoveWindowSubclass(AWnd w, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
 
 			/// <summary>API <msdn>DefSubclassProc</msdn></summary>
 			[DllImport("comctl32.dll", EntryPoint = "#413")]
-			public static extern LPARAM DefSubclassProc(AWnd hWnd, uint uMsg, LPARAM wParam, LPARAM lParam);
+			public static extern LPARAM DefSubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
 		}
 	}
 }

@@ -20,6 +20,7 @@ using System.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
+using Au.Controls;
 
 namespace Au.Tools
 {
@@ -501,7 +502,7 @@ namespace Au.Tools
 	/// <summary>
 	/// All tool forms of this library should inherit from this class and override its virtual functions.
 	/// </summary>
-	public class ToolForm :AFormBase
+	public class ToolForm :AuFormBase
 	{
 		public virtual string ResultCode { get; protected set; }
 

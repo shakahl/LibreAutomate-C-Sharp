@@ -128,7 +128,7 @@ namespace Au.Controls
 		/// <exception cref="InvalidOperationException">Exceptions of <see cref="Form.Show(IWin32Window)"/>.</exception>
 		public void Show(Control anchor)
 		{
-			if(!(anchor?.IsHandleCreated ?? false)) throw new ArgumentException();
+			_ = anchor?.IsHandleCreated ?? throw new ArgumentException();
 			_Show(anchor, ((AWnd)anchor).Rect);
 		}
 
@@ -141,7 +141,7 @@ namespace Au.Controls
 		/// <exception cref="InvalidOperationException">Exceptions of <see cref="Form.Show(IWin32Window)"/>.</exception>
 		public void Show(Control control, Rectangle anchor)
 		{
-			if(!(control?.IsHandleCreated ?? false)) throw new ArgumentException();
+			_ = control?.IsHandleCreated ?? throw new ArgumentException();
 			_Show(control, control.RectangleToScreen(anchor));
 		}
 
@@ -231,9 +231,9 @@ namespace Au.Controls
 			_c.Model = null;
 			_c.Model = _c;
 
-			_w.ShowPopup(anchor, !down);
+			_w.ShowAt(anchor, !down);
 
-			//TEST: API CalculatePopupWindowPosition.
+			//SHOULDDO: maybe beter with API CalculatePopupWindowPosition.
 		}
 
 		public bool IsModal { get; set; }
@@ -375,17 +375,13 @@ namespace Au.Controls
 			public _Window(PopupList p)
 			{
 				_p = p;
-				_font = Util.AFonts.Regular;
 
 				this.SuspendLayout();
 				this.AutoScaleMode = AutoScaleMode.None;
-				this.Font = _font;
+				this.Font = _font  = Util.AFonts.Regular;
 				this.StartPosition = FormStartPosition.Manual;
 				this.FormBorderStyle = FormBorderStyle.None;
 				this.Text = "Au.PopupList";
-
-				//SetStyle(ControlStyles.Opaque, true);
-
 				this.ResumeLayout();
 			}
 
@@ -398,7 +394,7 @@ namespace Au.Controls
 				base.Dispose(disposing);
 			}
 
-			public void ShowPopup(Control anchor, bool up)
+			public void ShowAt(Control anchor, bool up)
 			{
 				var owner = anchor?.TopLevelControl;
 				bool changedOwner = false;

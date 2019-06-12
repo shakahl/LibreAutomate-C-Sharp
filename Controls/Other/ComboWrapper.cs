@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -24,8 +25,11 @@ using static Au.AStatic;
 namespace Au.Controls
 {
 
-	public unsafe class AuComboBox : TextBox
+	public unsafe class ComboWrapper
 	{
+		Native.SUBCLASSPROC _wndProc; //keeps delegate from GC; also for RemoveWindowSubclass
+		EventHandler _handleCreated; //keeps this instance from GC
+		Control _c;
 		AWnd _hwnd;
 		int _buttonWidth; //width of buttons (arrow+image)
 		RECT _border; //border widths in all sides
@@ -34,43 +38,66 @@ namespace Au.Controls
 		byte _isPressed, //flags: 1 - arrow pressed; 2 - image pressed
 			_isHot; //flags: 1 - arrow hot; 2 - image hot
 
-		protected override void Dispose(bool disposing)
-		{
-			if(disposing) {
-				//if(_buttonImage!=null) { _buttonImage.Dispose(); _buttonImage = null; } //no, allow to share it
-			}
-			base.Dispose(disposing);
-		}
-
-		//public AuComboBox()
+		//protected override void Dispose(bool disposing)
 		//{
+		//	if(disposing) {
+		//		//if(_buttonImage!=null) { _buttonImage.Dispose(); _buttonImage = null; } //no, allow to share it
+		//	}
+		//}
+		//~ComboWrapper()
+		//{
+		//	Print("~ComboWrapper");
+		//	//Dispose(false);
 		//}
 
-		protected override void WndProc(ref Message m)
+		public ComboWrapper(Control c)
 		{
-			//Print(m);
-			switch(m.Msg) {
-			case Api.WM_NCCREATE: _hwnd = (AWnd)m.HWnd; break;
-			case Api.WM_NCCALCSIZE: _OnNcCalcSize(ref m); return; //adds nonclient area for our buttons
-			case Api.WM_NCPAINT: if(_Paint(m)) return; break;
+			_c = c;
+			_c.HandleCreated += _handleCreated = (unu, sed) => _Subclass();
+			if(_c.IsHandleCreated) _Subclass();
+		}
+
+		void _Subclass()
+		{
+			_wndProc = _WndProc;
+
+			_hwnd = (AWnd)_c;
+			//Print(_hwnd);
+			AWnd.More.SetWindowSubclass(_hwnd, _wndProc, 40159885, default);
+			_Redraw(true); //need WM_NCCALCSIZE etc
+		}
+
+		LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData)
+		{
+			switch(msg) {
+			case Api.WM_NCCALCSIZE: _OnNcCalcSize(w, msg, wParam, lParam); return 0; //adds nonclient area for our buttons
+			case Api.WM_NCPAINT: if(_Paint(w, msg, wParam, lParam)) return 0; break;
 			case Api.WM_THEMECHANGED: _Redraw(false); break;
-			case Api.WM_NCLBUTTONDOWN: if(_OnNcLbuttonDown(m.LParam)) return; break;
-			case Api.WM_NCMOUSEMOVE: if(_OnNcMouseMove(false, m.LParam)) return; break;
+			case Api.WM_NCLBUTTONDOWN: if(_OnNcLbuttonDown(lParam)) return 0; break;
+			case Api.WM_NCMOUSEMOVE: if(_OnNcMouseMove(false, lParam)) return 0; break;
 			case Api.WM_NCMOUSELEAVE: _OnNcMouseMove(true); break;
-			case Api.WM_NCHITTEST: if(0 != _IsCursorInButton(m.LParam)) { m.Result = (IntPtr)5; return; } break; //HTMENU
-			case Api.WM_MBUTTONDOWN: if(!base.ReadOnly) { base.SelectAll(); base.Paste(""); } return; //clear with Undo
-			case Api.WM_SYSKEYDOWN: if(_OnSysKeyDown(m)) return; break;
+			case Api.WM_NCHITTEST: if(0 != _IsCursorInButton(lParam)) return 5; break; //HTMENU
+			case Api.WM_MBUTTONDOWN: _OnNcMbuttonDown(); return 0; //clear with Undo
+			case Api.WM_SYSKEYDOWN: if(_OnSysKeyDown(wParam)) return 0; break;
 			}
 
-			base.WndProc(ref m);
+			var R = AWnd.More.DefSubclassProc(w, msg, wParam, lParam);
+
+			if(msg == Api.WM_NCDESTROY) {
+				//Print("WM_NCDESTROY");
+				AWnd.More.RemoveWindowSubclass(w, _wndProc, 40159885);
+				if(!_c.RecreatingHandle) _c.HandleCreated -= _handleCreated; //allow GC-collect _c and this
+			}
+
+			return R;
 		}
 
 		//Adds nonclient space at the right, to draw our buttons.
-		void _OnNcCalcSize(ref Message m)
+		void _OnNcCalcSize(AWnd w, int msg, LPARAM wParam, LPARAM lParam)
 		{
-			ref RECT r = ref *(RECT*)m.LParam;
+			ref RECT r = ref *(RECT*)lParam;
 			RECT p = r;
-			base.WndProc(ref m);
+			AWnd.More.DefSubclassProc(w, msg, wParam, lParam);
 			_border.left = r.left - p.left; _border.top = r.top - p.top; _border.right = p.right - r.right; _border.bottom = p.bottom - r.bottom;
 			if(_border.right > _border.left) _border.right = _border.left; //vert scrollbar is inside
 
@@ -93,7 +120,7 @@ namespace Au.Controls
 			//When wParam is 1, getwindowrect gives old rect.
 		}
 
-		bool _Paint(Message m = default)
+		bool _Paint(AWnd w, int msg, LPARAM wParam, LPARAM lParam)
 		{
 			if(_buttonWidth == 0) return false;
 			RECT rb, rw;
@@ -101,8 +128,8 @@ namespace Au.Controls
 
 			//Let the base Edit control draw its nonclient first.
 			//Exclude our button region from the update region. Need it to avoid flickering etc.
-			if(m.Msg == Api.WM_NCPAINT) {
-				IntPtr hrgn = m.WParam;
+			if(msg == Api.WM_NCPAINT) {
+				IntPtr hrgn = wParam;
 				int buttonRgnType, baseRgnType;
 				if(hrgn == (IntPtr)1) buttonRgnType = baseRgnType = SIMPLEREGION; //paint whole window
 				else { //wParam is region handle; are our buttons included?
@@ -111,7 +138,7 @@ namespace Au.Controls
 					baseRgnType = Api.CombineRgn(hrgn, hrgn, hrButton, Api.RGN_DIFF);
 					Api.DeleteObject(hrButton);
 				}
-				if(baseRgnType != NULLREGION) base.WndProc(ref m);
+				if(baseRgnType != NULLREGION) AWnd.More.DefSubclassProc(w, msg, wParam, lParam);
 				//Print(baseRgnType, buttonRgnType, hrgn);
 				if(buttonRgnType == NULLREGION) return true; //our buttons excluded
 			}
@@ -133,6 +160,8 @@ namespace Au.Controls
 
 			return true;
 		}
+
+		void _Paint() => _Paint(default, default, default, default);
 
 		const int NULLREGION = 1; //empty
 		const int SIMPLEREGION = 2; //rect
@@ -224,7 +253,7 @@ namespace Au.Controls
 		{
 			byte bc = _IsCursorInButton(xyScreen);
 			if(bc == 0) return false;
-			Focus();
+			Api.SetFocus(_hwnd);
 			if(_isPressed == 0) {
 				_isPressed = bc;
 				_Paint();
@@ -246,10 +275,17 @@ namespace Au.Controls
 			return true;
 		}
 
-		//Returns true if processes the key (arrows etc).
-		bool _OnSysKeyDown(in Message m)
+		void _OnNcMbuttonDown()
 		{
-			KKey vk = (KKey)m.WParam;
+			if(_c is TextBox t) {
+				if(!t.ReadOnly) { t.SelectAll(); t.Paste(""); }
+			}
+		}
+
+		//Returns true if processes the key (arrows etc).
+		bool _OnSysKeyDown(LPARAM wParam)
+		{
+			KKey vk = (KKey)(int)wParam;
 			if(_isPressed == 0) {
 				switch(vk) {
 				case KKey.Down: ArrowButtonPressed?.Invoke(this, EventArgs.Empty); return true;
@@ -265,7 +301,7 @@ namespace Au.Controls
 			set {
 				if(value != _noArrow) {
 					_noArrow = value;
-					if(IsHandleCreated) _Redraw(true);
+					if(_c.IsHandleCreated) _Redraw(true);
 				}
 			}
 		}
@@ -277,7 +313,7 @@ namespace Au.Controls
 				if(value != _buttonImage) {
 					bool ncChanged = (value == null) != (_buttonImage == null);
 					_buttonImage = value;
-					if(IsHandleCreated) _Redraw(ncChanged);
+					if(_c.IsHandleCreated) _Redraw(ncChanged);
 				}
 			}
 		}

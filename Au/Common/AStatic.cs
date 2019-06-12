@@ -208,7 +208,8 @@ namespace Au
 			string s = text ?? "";
 			if(showStackFromThisFrame >= 0) {
 				var x = new StackTrace(showStackFromThisFrame + 1, true);
-				s = prefix + s + "\r\n" + x.ToString();
+				var st = x.ToString(); var rn = st.Ends('\n') ? "" : "\r\n";
+				s = $"{prefix}{s} <fold>\r\n{st}{rn}</fold>";
 			} else s = prefix + s;
 
 			AOutput.Write(s);

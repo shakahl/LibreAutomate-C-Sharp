@@ -23,7 +23,7 @@ using static Au.AStatic;
 using Au.Controls;
 using static Au.Controls.Sci;
 
-class OutputForm : AFormBase
+class OutputForm : AuFormBase
 {
 	AuScintilla _c;
 

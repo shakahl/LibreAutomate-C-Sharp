@@ -120,13 +120,13 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Calls SCI_STYLECLEARALL, which sets all styles to be the same as STYLE_DEFAULT.
-		/// Then also sets some special styles, eg STYLE_HIDDEN.
+		/// Then also sets some special styles, eg STYLE_HIDDEN and hotspot color.
 		/// </summary>
 		public void StyleClearAll()
 		{
 			Call(SCI_STYLECLEARALL);
 			StyleHidden(STYLE_HIDDEN, true);
-			Call(SCI_SETHOTSPOTACTIVEFORE, true, 0xFF0080); //or 0x80FF
+			Call(SCI_SETHOTSPOTACTIVEFORE, true, 0xFF0080); //inactive 0x0080FF
 
 			//STYLE_HOTSPOT currently unused
 			//StyleHotspot(STYLE_HOTSPOT, true);

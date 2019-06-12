@@ -1587,7 +1587,7 @@ a1,-8";
 
 		protected override void OnVisibleChanged(EventArgs e)
 		{
-			//AOutput.LibWriteQM2($"_canShow={_canShow}, _visibleOnce={_visibleOnce}, Visible={Visible}");
+			//AOutput.QM2.Write($"_canShow={_canShow}, _visibleOnce={_visibleOnce}, Visible={Visible}");
 			Print("OnVisibleChanged");
 		}
 
@@ -1793,7 +1793,7 @@ a1,-8";
 			APerf.Next();
 			s = x.ToString();
 			APerf.NW();
-			//AOutput.LibWriteQM2("'" + s + "'");
+			//AOutput.QM2.Write("'" + s + "'");
 			Print(s);
 
 			//APerf.First();
@@ -1804,7 +1804,7 @@ a1,-8";
 			//	APerf.Next();
 			//	s = e.ToString();
 			//	APerf.NW();
-			//	//AOutput.LibWriteQM2("'" + s + "'");
+			//	//AOutput.QM2.Write("'" + s + "'");
 			//	Print(s);
 			//}
 		}

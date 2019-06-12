@@ -27,7 +27,7 @@ using Au.Compiler;
 using System.Runtime.InteropServices.ComTypes;
 using System.Globalization;
 
-partial class EdCodeFileProperties : AFormBase, IMessageFilter
+partial class EdCodeFileProperties : AuFormBase, IMessageFilter
 {
 	FileNode _f;
 	//FileNode _fProjectFolder;
@@ -683,7 +683,7 @@ In script code you can add <help Au.Triggers.ActionTriggers>triggers<> (hotkey e
 ";
 		const string c_class = "This file is a C# class. It can contain standard C# code: one or more classes, namespaces, etc.";
 		_info.ST.SetText(
-@"Most file properties are saved in code as <i>meta comments<> - comments starting with <c green>/*/<> at the very start of code. You can change them here or in the code editor.
+@"Most file properties are saved in <c green>/*/ meta comments /*/<> at the very start of code. You can change them here or in the code editor.
 
 Use Google when you don't know some words in help text or don't understand some options. Most such words and options are used in C#/.NET programming in Visual Studio etc.
 

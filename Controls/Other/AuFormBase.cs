@@ -19,7 +19,7 @@ using System.Drawing;
 using Au.Types;
 using static Au.AStatic;
 
-namespace Au.Types
+namespace Au.Controls
 {
 	/// <summary>
 	/// Can be used as base class for forms when you want to use standard Windows font and correct auto-scaling when high DPI.
@@ -32,12 +32,12 @@ namespace Au.Types
 	/// The Visual Studio form designer uses these properties as default. It also adds 'this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);', it's OK.
 	/// <note>Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font). Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form at run time.</note>
 	/// </remarks>
-	public class AFormBase : Form
+	public class AuFormBase : Form
 	{
 		Font _font;
 
 		///
-		public AFormBase()
+		public AuFormBase()
 		{
 			_font = Util.AFonts.Regular;
 			this.Font = _font; //must be before 'AutoScaleMode = ...'
@@ -85,7 +85,7 @@ namespace Au.Types
 			if(IsPopup && !Modal) {
 				var fo = Owner;
 				if(fo != null) {
-					var w = ((AWnd)this);
+					var w = (AWnd)this;
 					if(w.IsActive) {
 						Owner = null;
 						w.Owner = (AWnd)fo;

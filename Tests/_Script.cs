@@ -18,6 +18,8 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Triggers;
+using Au.Controls;
+using System.Runtime.CompilerServices;
 
 class Script : AScript
 {
@@ -1459,38 +1461,265 @@ class Script : AScript
 		//var s = "one\r\ntwo\r\nthree\r\n\four\r\n";
 		//Print(s.LineCount());
 
-		var m = new RegexMenu();
-		//m.CMS.ItemClicked += CMS_ItemClicked;
-		m.Show();
 	}
 
-	private void CMS_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	void _TestComboWrapper(Control c)
 	{
-		Print("clicked", e.ClickedItem);
+		var x = new ComboWrapper(c);
+		x.ArrowButtonPressed += (unu, sed) => Print("arrow");
+		x.ButtonImage = AIcon.GetFileIconImage(@"c:\", 16);
+		x.ImageButtonClicked += (unu, sed) => Print("image");
 	}
 
-	public class RegexMenu : AMenu
+	void TestComboWrapper()
 	{
-		public RegexMenu()
+		Task.Run(() => { for(; ; ) { 1.s(); GC.Collect(); } });
+		var f = new AuFormBase();
+#if true
+		var c = new TextBox();
+		//var c = new RichTextBox();
+		//var c = new AuScintilla { InitBorderStyle = BorderStyle.FixedSingle };
+		//var c = new Button { Text = "OK", Width = 100 };
+		_TestComboWrapper(c);
+		//ATimer.After(2000, () => _TestComboWrapper(c));
+
+		//var x = new ComboWrapper(c);
+		//x.ArrowButtonPressed += (unu, sed) => Print("arrow");
+		//x.ButtonImage=AIcon.GetFileIconImage(@"c:\", 16);
+		//x.ImageButtonClicked += (unu, sed) => Print("image");
+
+		//ATimer.After(2000, () => c.Dispose());
+		//ATimer.After(2000, () => { c.Multiline = true; });
+#else
+		var c = new AuComboBox();
+#endif
+		f.Controls.Add(c);
+		f.ShowDialog();
+		f.Dispose();
+
+		//ADialog.Show();
+	}
+
+	void TestSciTagsRegisteredStyles()
+	{
+		var f = new AuFormBase();
+		var t = new InfoBox();
+		t.InitUseControlFont = true;
+
+		t.HandleCreated += (unu, sed) => {
+			t.Tags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0xff, italic = true, backColor = 0x00ff00 });
+			t.Tags.AddStyleTag(".r", new SciTags.UserDefinedStyle { textColor = 0xf08080 });
+		};
+		//ATimer.After(2000, () => t.Text = "<.k>user<> tag <c green>green<>");
+		ATimer.After(2000, () => {
+			t.Tags.AddStyleTag(".late", new SciTags.UserDefinedStyle { backColor = 0x00ffff });
+			t.Text = "<.late>user<> tag <c green>green<>";
+		});
+
+		string s;
+		s = "aa <c green>green<>\n<.k>user<> tag <.k>user<> tag <c green>green<>";
+		//s = "aa <size 15>big <.k>user<> big<> bb";
+		//s = "<.r>(?m)<> - multiline";
+
+		t.Text = s;
+		f.Controls.Add(t);
+		f.ShowDialog();
+	}
+
+	public class RegexMenu
+	{
+		AMenu _m;
+		Action<MTClickArgs> _action;
+		ARegex _rx1;
+
+		public AMenu Menu => _m;
+
+		public Action<RegexMenuArgs> ItemAction { get; set; }
+
+		public RegexMenu(string xml, bool replacement = false)
 		{
+			_m = new AMenu();
 			_action = _Action;
 
-			_Add("One");
-			_Add("Two", "tooltip\r\nline2");
+			_m.CMS.ShowImageMargin = false;
+
+			var x = xml[0] == '<' ? XElement.Parse(xml) : XElement.Load(xml);
+			if(x.Name != "regex") throw new XmlException();
+			x = x.Element(replacement ? "replace" : "find") ?? throw new XmlException();
+			_rx1 = new ARegex(@"(?m)^ +");
+			_AddGroup(x);
+			_rx1 = null;
 		}
 
-		void _Add(string s, string tt=null)
+		void _AddGroup(XElement x)
 		{
-			var k = Add(s, _action);
-			if(tt != null) k.ToolTipText = tt;
+			foreach(var v in x.Elements()) {
+				switch(v.Name.LocalName) {
+				case "r":
+					var (text, tooltip) = _ParseXmlValue(v);
+					var k = _m.Add(text, _action);
+					k.ToolTipText = tooltip;
+					var r = v.Attr("r");
+					if(r != null) {
+						if(r.Length > 0) k.Tag = r;
+						else k.Enabled = false;
+					}
+					break;
+				case "group":
+					using(_m.Submenu(v.Attr("name"))) {
+						_AddGroup(v);
+					}
+					break;
+				case "sep":
+					_m.Separator();
+					break;
+				case "link":
+					var (text2, url) = _ParseXmlValue(v);
+					url ??= text2;
+					_m.Add(text2, o => AExec.TryRun(url));
+					break;
+				}
+			}
+		}
+
+		(string text, string tooltip) _ParseXmlValue(XElement e)
+		{
+			string text = e.Value.Trim(), tooltip = null;
+			int i = text.IndexOf('\n');
+			if(i >= 0) {
+				tooltip = _rx1.Replace(text.Substring(i + 1));
+				text = text.Remove(i);
+			}
+			return (text, tooltip);
 		}
 
 		void _Action(MTClickArgs e)
 		{
-			var s = e.MenuItem.Text;
-			Print(s);
+			var mi = e.MenuItem;
+			int moveLeft = 0;
+			if(mi.Tag is string s) {
+				int i = s.IndexOf('%');
+				if(i >= 0) { s = s.Remove(i, 1); moveLeft = s.Length - i; }
+			} else {
+				s = mi.Text;
+				int i = s.Find("  -  ");
+				if(i >= 0) s = s.Remove(i);
+			}
+
+			if(ItemAction != null) {
+				var k = new RegexMenuArgs { MenuItem = e.MenuItem, AddText = s, MoveCaretLeft = moveLeft };
+				ItemAction.Invoke(k);
+			} else {
+
+			}
 		}
-		Action<MTClickArgs> _action;
+
+		public void Show(bool byCaret = false)
+		{
+			_m.Show(byCaret);
+		}
+
+		public void Show(Control c)
+		{
+			_m.Show(c);
+		}
+	}
+
+	public class RegexMenuArgs
+	{
+		public string AddText;
+		public int MoveCaretLeft;
+		public ToolStripMenuItem MenuItem;
+	}
+
+	void TestRegexMenu()
+	{
+		var m = new RegexMenu(@"Q:\app\Au\Editor\Default\Regex.xml");
+		m.ItemAction = o => {
+			Print(o.AddText, o.MoveCaretLeft);
+		};
+		m.Show();
+	}
+
+	void TestCalculatePopupWindowPosition()
+	{
+		var w = AWnd.Find("* Notepad").OrThrow();
+		w.Activate();
+		var er = w.Rect;
+
+		SIZE z = (200, 200);
+		POINT p = (er.right, er.top);
+
+		if(!Api.CalculatePopupWindowPosition(p, z, 0, er, out var r)) throw new AException(0);
+		var osd = new AOsdRect();
+		osd.Rect = r;
+		osd.Show();
+		1.s();
+	}
+
+	void TestAuInfoWindow()
+	{
+		var f = new Form();
+		var t = new InfoWindow();
+		t.Text = "My <c green>green<>\n<link http://www.quickmacros.com>QM2<>\nfold <fold>one\ntwo</fold>";
+		//t.Text = AClipboard.Text;
+		//t.Size = (200, 100);
+		t.Caption = "Regex info";
+		f.Click += (unu, sed) => {
+			t.Show(f);
+			//t.Show(new Rectangle(100, 100, 100, 100));
+			//t.Show(f, new Rectangle(100, 100, 100, 100));
+			//ATimer.After(2000, () => t.Hide());
+			////ATimer.After(2000, () => t.Dispose());
+			//ATimer.After(4000, () => t.Show(f));
+			//ATimer.After(2000, () => t.Show(f)); //during that time move the owner form
+			//ATimer.After(2000, () => t.Size=(500,500));
+			//ATimer.After(2000, () => { t.Hide(); t.Size = (500, 500); t.Show(f); });
+		};
+		f.ShowDialog();
+	}
+
+	void TestRegexInfoWindow()
+	{
+		var f = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(400, 1200) };
+		var t = new InfoWindow(Au.Util.ADpi.ScaleInt(250));
+		t.Size = Au.Util.ADpi.ScaleSize((800, 245));
+		t.Caption = "Regex info";
+		f.Load += (unu, sed) => {
+			t.Show(f);
+			t.Control2.Tags.AddLinkTag("+a", o => Print(o));
+			t.Control2.Tags.AddStyleTag(".h", new SciTags.UserDefinedStyle { backColor = 0xC0E0C0, bold=true, eolFilled=true });
+			for(int i = 0; i < 2; i++) {
+				var c = i == 0 ? t.Control : t.Control2;
+				c.Tags.AddStyleTag(".r", new SciTags.UserDefinedStyle { textColor = 0xf08080 });
+				c.Tags.AddLinkTag("+p", o => _SetText2(o));
+				c.Tags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false });
+			}
+			t.Control2.Call(Sci.SCI_SETWRAPSTARTINDENT, 4);
+
+			_SetText();
+		};
+		f.Click += (unu, sed) => {
+			_SetText();
+		};
+		t.Control.Click += (unu, sed) => Print("click");
+		f.ShowDialog();
+
+		void _SetText()
+		{
+			var s = File.ReadAllText(@"Q:\app\Au\Editor\Default\Regex.txt");
+			s = s.Remove(s.Find("\r\n\r\n-- "));
+			t.Text = s;
+			_SetText2("help");
+		}
+
+		void _SetText2(string href)
+		{
+			var s = File.ReadAllText(@"Q:\app\Au\Editor\Default\Regex.txt");
+			if(!s.RegexMatch($@"(?ms)^-- {href} --\R\R(.+?)\R-- ", 1, out s)) s = "Topic not found.";
+			t.Text2 = s;
+		}
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
@@ -1501,7 +1730,36 @@ class Script : AScript
 		AOutput.Clear();
 		//100.ms();
 
-		TestTodo();
+		//string s = "abč,";
+		//Print(s.RegexMatch(@"(*UCP).\b", out var m), m?.Index??-1);
+
+		//		string s, rx;
+
+		//		s = "one #twothree";
+		//		rx = @"one #two(?#comment)three";
+		//		Print(s.Regex(rx));
+		//		rx = @"(?x)
+		//one
+		//\ \#two
+
+		//#comment
+		//three";
+		//		Print(s.Regex(rx));
+
+		//string s, rx;
+		//s = "one-three";
+		////rx = @"(\w+)-(?1)";
+		//rx = @"(?(DEFINE)(\w+))(?1)-(?1)";
+		//rx = @"(?(DEFINE)(?'Word'\w+))(?&Word)-(?&Word)";
+		//if(s.RegexMatch(rx, out var m)) Print(m);
+
+		TestRegexInfoWindow();
+		//TestAuInfoWindow();
+		//TestSciTagsRegisteredStyles();
+		//TestCalculatePopupWindowPosition();
+		//TestRegexMenu();
+		//TestComboWrapper();
+		//TestTodo();
 		//TestDiffMatchpatch();
 		//TestIronPython();
 		//TestCs8(); //ADialog.Show();

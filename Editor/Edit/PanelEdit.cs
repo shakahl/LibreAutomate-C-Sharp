@@ -278,7 +278,7 @@ partial class PanelEdit : UserControl
 
 		//protected override void Dispose(bool disposing)
 		//{
-		//	AOutput.LibWriteQM2($"Dispose disposing={disposing} IsHandleCreated={IsHandleCreated} Visible={Visible}");
+		//	AOutput.QM2.Write($"Dispose disposing={disposing} IsHandleCreated={IsHandleCreated} Visible={Visible}");
 		//	base.Dispose(disposing);
 		//}
 

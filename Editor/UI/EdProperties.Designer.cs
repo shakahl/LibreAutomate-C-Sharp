@@ -27,7 +27,7 @@
 	{
 			this._bOK = new Au.Controls.AuButtonOK();
 			this._bCancel = new Au.Controls.AuButtonCancel();
-			this._info = new Au.Controls.AuInfoBox();
+			this._info = new Au.Controls.InfoBox();
 			this._grid = new Au.Controls.ParamGrid();
 			this.label4 = new System.Windows.Forms.Label();
 			this._tFindInList = new System.Windows.Forms.TextBox();
@@ -305,7 +305,7 @@
 
 	private Au.Controls.AuButtonOK _bOK;
 	private Au.Controls.AuButtonCancel _bCancel;
-	private Au.Controls.AuInfoBox _info;
+	private Au.Controls.InfoBox _info;
 	private Au.Controls.ParamGrid _grid;
 	private Au.Controls.AuButton _bAddBrowseNet;
 	private Au.Controls.AuButton _bAddMyLibraryProject;

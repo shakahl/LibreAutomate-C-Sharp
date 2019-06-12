@@ -19,9 +19,10 @@ using System.Xml.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
+using Au.Controls;
 using static Program;
 
-partial class PanelFiles : AUserControlBase
+partial class PanelFiles : AuUserControlBase
 {
 	//idea: when file clicked, open it and show AMenu of its functions (if > 1).
 

@@ -23,7 +23,7 @@ using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
 
-class PanelOutput : AUserControlBase
+class PanelOutput : AuUserControlBase
 {
 	_SciOutput _c;
 	Queue<OutServMessage> _history;
@@ -61,41 +61,52 @@ class PanelOutput : AUserControlBase
 						return $"<open \"{f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}\">{f.Name}{x[2].Value}<>: ";
 					});
 				} else if((i = s.IndexOf("\n   at ") + 1) > 0 && s.IndexOf(":line ", i) > 0) { //stack trace with source file info
-					int j = s.LastIndexOf("\r\n   at Script.Main(String[] args) in ");
-					if(j >= 0) j = s.Find("\r\n", j + 30);
-					if(j < 0) { j = s.Length; if(s.Ends("\r\n")) j -= 2; } //include the Main line, because _Main may be missing
-					int stackLen = j - i;
 					if(_sb == null) _sb = new StringBuilder(s.Length + 2000); else _sb.Clear();
 					var b = _sb;
-					//AOutput.LibWriteQM2("'" + s + "'");
+					//AOutput.QM2.Write("'" + s + "'");
 					if(!s.Starts("<>")) b.Append("<>");
-					b.Append(s, 0, i);
+					bool isFold = i >= 8 && s.Eq(i - 8, "<fold>\r\n"); //eg PrintWarning
+					b.Append(s, 0, isFold ? i - 2 : i);
 					var rx = s_rx2; if(rx == null) s_rx2 = rx = new ARegex(@" in (.+?):line (?=\d+$)");
 					var rxm = new RXMore();
-					bool replaced = false;
-					foreach(var k in s.Segments(i, stackLen, "\r\n", SegFlags.NoEmpty)) {
-						//AOutput.LibWriteQM2("'"+k+"'");
+					bool replaced = false, isMain = false;
+					int stackEnd = s.Length/*, stackEnd2 = 0*/;
+					foreach(var k in s.Segments(i, s.Length - i, "\r\n", SegFlags.NoEmpty)) {
+						//AOutput.QM2.Write("'"+k+"'");
 						rxm.start = k.Offset + 6; rxm.end = k.EndOffset;
-						if(k.Starts("   at ") && rx.MatchG(s, out var g, 1, rxm)) { //note: no "   at " if this is an inner exception marker
-							var f = Model.FindByFilePath(g.Value);
-							if(f != null) {
-								int i1 = g.EndIndex + 6, len1 = k.EndOffset - i1;
-								b.Append("   at ").
-								Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
-								.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
-
-								bool isMain = k.Starts("   at Script._Main(String[] args) in ");
-								if(!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.Offset + 6, g.Index - k.Offset - 10).Append("</\a>");
-								b.AppendLine();
-
-								replaced = true;
-								if(isMain) break;
+						if(k.Starts("   at ")) {
+							if(isMain) {
+								//if(stackEnd2 == 0 && k.Starts("   at Script.Main(String[] args) in ")) stackEnd2 = k.Offset; //rejected. In some cases may cut something important.
+								continue;
 							}
+							if(!rx.MatchG(s, out var g, 1, rxm)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
+							var f = Model.FindByFilePath(g.Value); if(f == null) continue;
+							int i1 = g.EndIndex + 6, len1 = k.EndOffset - i1;
+							b.Append("   at ").
+							Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
+							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
+
+							isMain = k.Starts("   at Script._Main(String[] args) in ");
+							if(!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.Offset + 6, g.Index - k.Offset - 10).Append("</\a>");
+							b.AppendLine();
+
+							replaced = true;
+						} else if(!(k.Starts("   ---") || k.Starts("---"))) {
+							stackEnd = k.Offset;
+							break;
 						}
 					}
 					if(replaced) {
-						b.Append("   <fold>   --- Raw stack trace ---\r\n<\a>").Append(s, i, stackLen).Append("</\a></fold>");
+						int j = stackEnd; //int j = stackEnd2 > 0 ? stackEnd2 : stackEnd;
+						if(s[j - 1] == '\n') { if(s[--j - 1] == '\r') j--; }
+						b.Append("   <fold>   --- Raw stack trace ---\r\n<\a>").Append(s, i, j - i).Append("</\a></fold>");
+						int more = s.Length - stackEnd;
+						if(more > 0) {
+							if(!s.Eq(stackEnd, "</fold>")) b.AppendLine();
+							b.Append(s, stackEnd, more);
+						}
 						m.Text = b.ToString();
+						//AOutput.QM2.Write(m.Text);
 					}
 					if(_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
 				}

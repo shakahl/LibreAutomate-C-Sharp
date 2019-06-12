@@ -19,20 +19,20 @@ using System.Drawing;
 using Au.Types;
 using static Au.AStatic;
 
-namespace Au.Types
+namespace Au.Controls
 {
 	/// <summary>
 	/// Can be used as base class for user controls instead of UserControl when you want to use standard Windows font and correct auto-scaling when high DPI.
 	/// </summary>
 	/// <remarks>
-	/// More info: <see cref="AFormBase"/>.
+	/// More info: <see cref="AuFormBase"/>.
 	/// </remarks>
-	public class AUserControlBase : UserControl
+	public class AuUserControlBase : UserControl
 	{
 		Font _font;
 
 		///
-		public AUserControlBase()
+		public AuUserControlBase()
 		{
 			_font = Util.AFonts.Regular;
 			this.Font = _font; //must be before 'AutoScaleMode = ...'

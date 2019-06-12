@@ -22,7 +22,7 @@ using static Au.AStatic;
 using static Program;
 using Au.Controls;
 
-class PanelStatus : AUserControlBase
+class PanelStatus : AuUserControlBase
 {
 	AuScintilla _c;
 

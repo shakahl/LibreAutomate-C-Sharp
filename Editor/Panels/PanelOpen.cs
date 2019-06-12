@@ -19,13 +19,14 @@ using System.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
+using Au.Controls;
 using static Program;
 
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 using System.Collections;
 
-class PanelOpen : AUserControlBase, ITreeModel
+class PanelOpen : AuUserControlBase, ITreeModel
 {
 	_TreeViewAdv _c;
 	NodeIcon _ccIcon;

@@ -22,7 +22,7 @@ using static Au.AStatic;
 using Au.Controls;
 using static Program;
 
-class Form_FindOptions : AFormBase
+class Form_FindOptions : AuFormBase
 {
 	public Form_FindOptions()
 	{

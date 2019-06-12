@@ -22,20 +22,20 @@ using static Au.AStatic;
 using Au.Controls;
 using static Program;
 
-class Find : AUserControlBase
+class Find : AuUserControlBase
 {
 	private void InitializeComponent()
 	{
 			this.components = new System.ComponentModel.Container();
 			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-			this._tFind = new Au.Controls.AuComboBox();
+			this._tFind = new System.Windows.Forms.TextBox();
 			this._bFind = new Au.Controls.AuButton();
 			this._bFindIF = new Au.Controls.AuButton();
 			this._bName = new Au.Controls.AuButton();
 			this._cCase = new Au.Controls.AuCheckBox();
 			this._cWord = new Au.Controls.AuCheckBox();
 			this._cRegex = new Au.Controls.AuCheckBox();
-			this._tReplace = new Au.Controls.AuComboBox();
+			this._tReplace = new System.Windows.Forms.TextBox();
 			this._bReplace = new Au.Controls.AuButton();
 			this._bReplaceAll = new Au.Controls.AuButton();
 			this._bOptions = new Au.Controls.AuButton();
@@ -88,8 +88,6 @@ class Find : AUserControlBase
 			this._tFind.Size = new System.Drawing.Size(199, 23);
 			this._tFind.TabIndex = 0;
 			this._toolTip.SetToolTip(this._tFind, "Text to find");
-			this._tFind.ArrowButtonPressed += new System.EventHandler(this._tFind_ArrowButtonPressed);
-			this._tFind.ImageButtonClicked += new System.EventHandler(this._tFind_ImageButtonClicked);
 			this._tFind.TextChanged += new System.EventHandler(this._tFind_TextChanged);
 			// 
 			// _bFind
@@ -234,14 +232,14 @@ class Find : AUserControlBase
 	}
 
 	private TableLayoutPanel tableLayoutPanel1;
-	private AuComboBox _tFind;
+	private TextBox _tFind;
 	private AuButton _bFind;
 	private AuButton _bFindIF;
 	private AuButton _bName;
 	private AuCheckBox _cCase;
 	private AuCheckBox _cWord;
 	private AuCheckBox _cRegex;
-	private AuComboBox _tReplace;
+	private TextBox _tReplace;
 	private AuButton _bReplace;
 	private AuButton _bReplaceAll;
 	private AuButton _bOptions;
@@ -249,15 +247,23 @@ class Find : AUserControlBase
 	private ToolTip _toolTip;
 	private IContainer components;
 
+	ComboWrapper _comboFind, _comboReplace;
+
 	public Find()
 	{
 		InitializeComponent();
 
-		//the following code is to test AuComboBox
+		_comboFind = new ComboWrapper(_tFind);
+		_comboReplace = new ComboWrapper(_tReplace);
+		_comboFind.ArrowButtonPressed += _tFind_ArrowButtonPressed;
+		_comboFind.ImageButtonClicked += _tFind_ImageButtonClicked;
+		_comboReplace.ArrowButtonPressed += _tReplace_ArrowButtonPressed;
+		_comboReplace.ImageButtonClicked += _tReplace_ImageButtonClicked;
+
+		//the following code is to test ComboWrapper
 
 		//_tFind.NoArrow = true;
 		//_tFind.ButtonIcon = AIcon.GetAppIcon(16);
-		_tFind.ButtonImage = Project.Properties.Resources.folderOpen;
 		//_tFind.IconButtonClicked += _tFind_IconButtonClicked;
 
 		//_tFind.Multiline = false;
@@ -311,9 +317,19 @@ class Find : AUserControlBase
 		m.Show(_tFind);
 	}
 
+	private void _tReplace_ArrowButtonPressed(object sender, EventArgs e)
+	{
+		Print("_tReplace_ArrowButtonPressed");
+	}
+
 	private void _tFind_ImageButtonClicked(object sender, EventArgs e)
 	{
 		Print("_tFind_ImageButtonClicked");
+	}
+
+	private void _tReplace_ImageButtonClicked(object sender, EventArgs e)
+	{
+		Print("_tReplace_ImageButtonClicked");
 	}
 
 	private void _cCase_CheckedChanged(object sender, EventArgs e)
@@ -331,7 +347,14 @@ class Find : AUserControlBase
 
 	private void _cRegex_CheckedChanged(object sender, EventArgs e)
 	{
-		if(_cRegex.Checked) _cWord.Checked = false;
+		if(_cRegex.Checked) {
+			_cWord.Checked = false;
+			_comboFind.ButtonImage = Project.Properties.Resources.folder;
+			_comboReplace.ButtonImage = Project.Properties.Resources.folderOpen;
+		} else {
+			_comboFind.ButtonImage.Dispose(); _comboFind.ButtonImage = null;
+			_comboReplace.ButtonImage.Dispose(); _comboReplace.ButtonImage = null;
+		}
 		UpdateEditor();
 		//_replacePreview = false;
 	}

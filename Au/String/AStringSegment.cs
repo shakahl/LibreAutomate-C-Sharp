@@ -726,7 +726,7 @@ namespace Au.Types
 		/// <summary>
 		/// Returns segment values as string[].
 		/// </summary>
-		/// <param name="maxCount">The maximal number of substrings to get. If negative (default), gets all.</param>
+		/// <param name="maxCount">The maximal number of substrings to get. If negative (default), gets all. Else if there are more substrings, the last element will contain single substring, unlike with <see cref="String.Split"/>.</param>
 		public unsafe string[] ToStringArray(int maxCount = -1)
 		{
 			//All this big code is just to make this function as fast as String.Split or faster. Also less garbage.

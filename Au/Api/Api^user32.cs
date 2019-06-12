@@ -1290,28 +1290,8 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern bool RedrawWindow(AWnd hWnd, RECT* lprcUpdate = null, IntPtr hrgnUpdate = default, uint flags = 0);
 
-		internal const uint TME_LEAVE = 0x2;
-		internal const uint TME_NONCLIENT = 0x10;
-		internal const uint TME_CANCEL = 0x80000000;
-
-		internal struct TRACKMOUSEEVENT
-		{
-			public int cbSize;
-			public uint dwFlags;
-			public AWnd hwndTrack;
-			public int dwHoverTime;
-
-			public TRACKMOUSEEVENT(AWnd w, uint flags, int hoverTime = 0)
-			{
-				cbSize = sizeof(TRACKMOUSEEVENT);
-				hwndTrack = w;
-				dwFlags = flags;
-				dwHoverTime = hoverTime;
-			}
-		}
-
-		[DllImport("comctl32.dll", EntryPoint = "_TrackMouseEvent")]
-		internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT lpEventTrack);
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool CalculatePopupWindowPosition(in POINT anchorPoint, in SIZE windowSize, uint flags, in RECT excludeRect, out RECT popupWindowPosition);
 
 	}
 }

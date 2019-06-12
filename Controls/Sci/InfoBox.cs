@@ -27,9 +27,9 @@ namespace Au.Controls
 	/// Scintilla-based control to show formatted information text.
 	/// To set text use the <see cref="Text"/> property. For formatting and links use tags: <see cref="SciTags"/>.
 	/// </summary>
-	public class AuInfoBox :AuScintilla
+	public class InfoBox :AuScintilla
 	{
-		public AuInfoBox()
+		public InfoBox()
 		{
 			InitReadOnlyAlways = true;
 			InitTagsStyle = TagsStyle.AutoAlways;
@@ -45,6 +45,7 @@ namespace Au.Controls
 			base.OnHandleCreated(e); //note: must be first
 
 			ST.StyleBackColor(Sci.STYLE_DEFAULT, 0xf8fff0);
+			if(InitUseControlFont) ST.StyleFont(Sci.STYLE_DEFAULT, Font); //Segoe UI 9 is narrower but taller than the default Verdana 8
 			ST.StyleClearAll();
 			ST.MarginWidth(1, 0);
 		}
@@ -73,6 +74,11 @@ namespace Au.Controls
 		public new bool TabStop { get => base.TabStop; set => base.TabStop = value; }
 
 		#endregion
+
+		/// <summary>
+		/// Use control's <b>Font</b> instead of the default font Verdana 8.
+		/// </summary>
+		public bool InitUseControlFont { get; set; }
 
 		protected override bool IsInputKey(Keys keyData)
 		{

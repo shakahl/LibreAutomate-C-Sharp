@@ -25,14 +25,14 @@ using Au.Controls;
 namespace Au.Tools
 {
 	/// <summary>
-	/// Can be used by tool dialogs to display common info in <see cref="AuInfoBox"/> control.
+	/// Can be used by tool dialogs to display common info in <see cref="InfoBox"/> control.
 	/// The control must support tags.
 	/// </summary>
 	internal class CommonInfos
 	{
-		AuInfoBox _control;
+		InfoBox _control;
 
-		public CommonInfos(AuInfoBox control)
+		public CommonInfos(InfoBox control)
 		{
 			_control = control;
 			_control.Tags.AddLinkTag("+examples", what => _Examples(what));
