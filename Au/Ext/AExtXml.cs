@@ -14,6 +14,7 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Linq;
 using System.Xml.Linq;
+using System.Xml;
 
 using static Au.AStatic;
 
@@ -123,20 +124,18 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds the first descendant element that has the specified attribute.
+		/// Finds the first descendant element that has the specified attribute or value.
 		/// Returns null if not found.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="name">Element name. If null, can be any name.</param>
-		/// <param name="attributeName">Attribute name.</param>
-		/// <param name="attributeValue">Attribute value. If null, can be any value.</param>
+		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or Value). If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
 		public static XElement Desc(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
 		{
 			foreach(var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
-				var a = el.Attribute(attributeName); if(a == null) continue;
-				if(attributeValue != null && !a.Value.Eq(attributeValue, ignoreCase)) continue;
-				return el;
+				if(_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) return el;
 			}
 			return null;
 
@@ -144,40 +143,63 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds all descendant elements that have the specified attribute.
+		/// Finds all descendant elements that have the specified attribute or value.
 		/// Returns null if not found.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="name">Element name. If null, can be any name.</param>
-		/// <param name="attributeName">Attribute name.</param>
-		/// <param name="attributeValue">Attribute value. If null, can be any value.</param>
+		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or Value). If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
 		public static IEnumerable<XElement> Descs(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
 		{
 			foreach(var el in (name != null) ? t.Descendants(name) : t.Descendants()) {
-				var a = el.Attribute(attributeName); if(a == null) continue;
-				if(attributeValue != null && !a.Value.Eq(attributeValue, ignoreCase)) continue;
-				yield return el;
+				if(_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) yield return el;
 			}
 		}
 
 		/// <summary>
-		/// Gets the first found direct child element that has the specified attribute.
+		/// Gets the first found direct child element that has the specified attribute or value.
 		/// Returns null if not found.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="name">Element name. If null, can be any name.</param>
-		/// <param name="attributeName">Attribute name.</param>
-		/// <param name="attributeValue">Attribute value. If null, can be any value.</param>
+		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or Value). If null, can be any value.</param>
 		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
 		public static XElement Elem(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
 		{
 			foreach(var el in (name != null) ? t.Elements(name) : t.Elements()) {
-				var a = el.Attribute(attributeName); if(a == null) continue;
-				if(attributeValue != null && !a.Value.Eq(attributeValue, ignoreCase)) continue;
-				return el;
+				if(_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) return el;
 			}
 			return null;
+		}
+
+		/// <summary>
+		/// Gets all direct child elements that have the specified attribute or value.
+		/// Returns null if not found.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="name">Element name. If null, can be any name.</param>
+		/// <param name="attributeName">Attribute name. If null, uses the Value property of the element.</param>
+		/// <param name="attributeValue">Attribute value (or Value). If null, can be any value.</param>
+		/// <param name="ignoreCase">Case-insensitive attributeValue.</param>
+		public static IEnumerable<XElement> Elems(this XElement t, XName name, XName attributeName, string attributeValue = null, bool ignoreCase = false)
+		{
+			foreach(var el in (name != null) ? t.Elements(name) : t.Elements()) {
+				if(_CmpAttrOrValue(el, attributeName, attributeValue, ignoreCase)) yield return el;
+			}
+		}
+
+		static bool _CmpAttrOrValue(XElement el, XName attributeName, string attributeValue = null, bool ignoreCase = false)
+		{
+			if(attributeName != null) {
+				var a = el.Attribute(attributeName); if(a == null) return false;
+				if(attributeValue != null && !a.Value.Eq(attributeValue, ignoreCase)) return false;
+			} else {
+				if(attributeValue != null && !el.Value.Eq(attributeValue, ignoreCase)) return false;
+			}
+			return true;
 		}
 
 		/// <summary>
@@ -229,7 +251,7 @@ namespace Au
 
 		/// <summary>
 		/// Loads XML file in a safer way.
-		/// Uses <see cref="XElement.Load"/> and <see cref="AFile.WaitIfLocked"/>.
+		/// Uses <see cref="XElement.Load(XmlReader, LoadOptions)"/> and <see cref="AFile.WaitIfLocked"/>.
 		/// </summary>
 		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
 		/// <param name="options"></param>
@@ -242,9 +264,11 @@ namespace Au
 		{
 			file = APath.LibNormalizeForNET(file);
 			return AFile.WaitIfLocked(() => {
-				using var tr = new System.Xml.XmlTextReader(file); //to preserve \r\n
-				return XElement.Load(tr, options);
+				using var r = new XmlTextReader(file); //to preserve \r\n
+				if(0 == (options & LoadOptions.PreserveWhitespace)) r.WhitespaceHandling = WhitespaceHandling.Significant; //to save correctly formatted. Default of XElement.Load(string).
+				return XElement.Load(r, options);
 			});
+			//tested: XElement.Load(string) uses XmlReader.Create. It replaces \r\n with \n and does not have an option to preserve \r\n.
 		}
 
 		/// <summary>
@@ -261,7 +285,7 @@ namespace Au
 
 		/// <summary>
 		/// Loads XML file in a safer way.
-		/// Uses <see cref="XDocument.Load"/> and <see cref="AFile.WaitIfLocked"/>.
+		/// Uses <see cref="XDocument.Load(XmlReader, LoadOptions)"/> and <see cref="AFile.WaitIfLocked"/>.
 		/// </summary>
 		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
 		/// <param name="options"></param>
@@ -274,8 +298,9 @@ namespace Au
 		{
 			file = APath.LibNormalizeForNET(file);
 			return AFile.WaitIfLocked(() => {
-				using var tr = new System.Xml.XmlTextReader(file); //to preserve \r\n
-				return XDocument.Load(tr, options);
+				using var r = new XmlTextReader(file);
+				if(0 == (options & LoadOptions.PreserveWhitespace)) r.WhitespaceHandling = WhitespaceHandling.Significant;
+				return XDocument.Load(r, options);
 			});
 		}
 

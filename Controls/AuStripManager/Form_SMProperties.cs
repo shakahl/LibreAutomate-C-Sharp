@@ -31,7 +31,7 @@ namespace Au.Controls
 	public partial class AuStripManager
 	{
 #endif
-	class Form_SMProperties : AuFormBase
+	class Form_SMProperties : AuForm
 	{
 		AuStripManager _man;
 		XElement _x;

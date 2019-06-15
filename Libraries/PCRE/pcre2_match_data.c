@@ -7,7 +7,7 @@ and semantics are as close as possible to those of the Perl 5 language.
 
                        Written by Philip Hazel
      Original API code Copyright (c) 1997-2012 University of Cambridge
-          New API code Copyright (c) 2016-2017 University of Cambridge
+          New API code Copyright (c) 2016-2018 University of Cambridge
 
 -----------------------------------------------------------------------------
 Redistribution and use in source and binary forms, with or without
@@ -53,10 +53,10 @@ POSSIBILITY OF SUCH DAMAGE.
 //	Note: do it in C++. In C# slower, tested.
 static void* default_malloc(size_t size, void* data) { (void)data; return malloc(size); }
 static void default_free(void* block, void* data) { (void)data; free(block); }
-int pcre2_match_data_create_au(const pcre2_code *code, pcre2_match_data* md)
+int pcre2_match_data_create_au(const pcre2_code* code, pcre2_match_data* md)
 {
 	//code from pcre2_match_data_create_from_pattern (below)
-	int oveccount = ((pcre2_real_code *)code)->top_bracket + 1;
+	int oveccount = ((pcre2_real_code*)code)->top_bracket + 1;
 	int memSize = offsetof(pcre2_match_data, ovector) + 2 * oveccount * sizeof(PCRE2_SIZE);
 
 	if(md != NULL) {
@@ -71,6 +71,7 @@ int pcre2_match_data_create_au(const pcre2_code *code, pcre2_match_data* md)
 
 	return memSize;
 }
+
 
 
 /*************************************************
@@ -89,6 +90,7 @@ yield = PRIV(memctl_malloc)(
   (pcre2_memctl *)gcontext);
 if (yield == NULL) return NULL;
 yield->oveccount = oveccount;
+yield->flags = 0;
 return yield;
 }
 
@@ -119,7 +121,12 @@ PCRE2_EXP_DEFN void PCRE2_CALL_CONVENTION
 pcre2_match_data_free(pcre2_match_data *match_data)
 {
 if (match_data != NULL)
+  {
+  if ((match_data->flags & PCRE2_MD_COPIED_SUBJECT) != 0)
+    match_data->memctl.free((void *)match_data->subject,
+      match_data->memctl.memory_data);
   match_data->memctl.free(match_data, match_data->memctl.memory_data);
+  }
 }
 
 

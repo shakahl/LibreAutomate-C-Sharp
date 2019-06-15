@@ -21,7 +21,6 @@ namespace Au.Util
 	/// <summary>
 	/// Memory shared by all processes using this library.
 	/// </summary>
-	[DebuggerStepThrough]
 	[StructLayout(LayoutKind.Sequential, Size = 0x10000)]
 	unsafe struct LibSharedMemory
 	{

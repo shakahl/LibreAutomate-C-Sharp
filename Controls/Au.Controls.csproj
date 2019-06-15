@@ -59,7 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Other\AuFormBase.cs">
+    <Compile Include="Other\AuForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Other\AuUserControlBase.cs">

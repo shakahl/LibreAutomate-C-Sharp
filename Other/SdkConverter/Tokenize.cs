@@ -99,7 +99,6 @@ namespace SdkConverter
 		/// Error if the ending " is missing.
 		/// </summary>
 		//#if NEWSTRING
-		[DebuggerStepThrough]
 		int _SkipString(char* s)
 		{
 			Debug.Assert(*s == '\"');
@@ -164,7 +163,6 @@ namespace SdkConverter
 		/// Returns its length, including both '.
 		/// Error if the ending ' is missing.
 		/// </summary>
-		[DebuggerStepThrough]
 		int _SkipApos(char* s)
 		{
 			Debug.Assert(*s == '\'');
@@ -195,7 +193,6 @@ namespace SdkConverter
 		/// Parses a number literal and returns its length, including suffix.
 		/// Error if invalid.
 		/// </summary>
-		[DebuggerStepThrough]
 		int _LenNumber(char* s)
 		{
 			if(!_IsCharDigit(*s)) return 0;
@@ -252,7 +249,6 @@ namespace SdkConverter
 		/// </summary>
 		/// <param name="s"></param>
 		/// <param name="type">Receives flags: 1 unsigned, 2 __int64, 4 float.</param>
-		[DebuggerStepThrough]
 		int _NumberSuffix(char* s, bool floatingPoint, out uint type)
 		{
 			type = 0;

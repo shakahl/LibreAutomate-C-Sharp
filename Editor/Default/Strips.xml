@@ -187,12 +187,12 @@
 				<sep/>
 				<Tools_Output_Topmost t="Topmost When Floating"/>
 			</Tools_Output>
-			<Tools_StatusBar>
+			<!--<Tools_StatusBar>
 				<Tools_Statusbar_Floating/>
 				<Tools_Statusbar_MouseInfo/>
 				<Tools_Statusbar_AutoHeight/>
 				<Tools_Statusbar_SendToOutput/>
-			</Tools_StatusBar>
+			</Tools_StatusBar>-->
 			<sep/>
 			<Tools_Options i="options"/>
 		</Menu_Tools>

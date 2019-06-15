@@ -33,7 +33,7 @@ class PanelOutput : AuUserControlBase
 
 	public PanelOutput()
 	{
-		_c = new _SciOutput();
+		_c = new _SciOutput(this);
 		_c.Dock = DockStyle.Fill;
 		_c.AccessibleName = _c.Name = "Output_text";
 		this.AccessibleName = this.Name = "Output";
@@ -41,8 +41,6 @@ class PanelOutput : AuUserControlBase
 
 		_history = new Queue<OutServMessage>();
 		OutputServer.SetNotifications(_GetServerMessages, this);
-
-		_c.HandleCreated += _c_HandleCreated;
 	}
 
 	void _GetServerMessages()
@@ -117,9 +115,12 @@ class PanelOutput : AuUserControlBase
 				_history.Enqueue(m);
 				if(_history.Count > 50) _history.Dequeue();
 			}
+
+			(_iPanel ?? (_iPanel = Panels.PanelManager.GetPanel(this))).Visible = true;
 		});
 	}
 	static ARegex s_rx1, s_rx2;
+	AuDockPanel.IPanel _iPanel;
 
 	//protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 
@@ -134,10 +135,8 @@ class PanelOutput : AuUserControlBase
 		dd.Show(new Rectangle(AMouse.XY, default));
 	}
 
-	//not override void OnHandleCreated, because then _c handle still not created, and we need to Call //TODO
-	private void _c_HandleCreated(object sender, EventArgs e)
+	private void _c_HandleCreated()
 	{
-		var h = _c.Handle;
 		_inInitSettings = true;
 		if(WrapLines) WrapLines = true;
 		if(WhiteSpace) WhiteSpace = true;
@@ -203,8 +202,12 @@ class PanelOutput : AuUserControlBase
 
 	class _SciOutput : AuScintilla
 	{
-		public _SciOutput()
+		PanelOutput _p;
+
+		public _SciOutput(PanelOutput panel)
 		{
+			_p = panel;
+
 			InitReadOnlyAlways = true;
 			InitTagsStyle = TagsStyle.AutoWithPrefix;
 			InitImagesStyle = ImagesStyle.ImageTag;
@@ -217,6 +220,7 @@ class PanelOutput : AuUserControlBase
 		{
 			base.OnHandleCreated(e);
 
+			_p._c_HandleCreated();
 			ST.MarginWidth(1, 3);
 			ST.StyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
 			ST.StyleFont(STYLE_DEFAULT, "Courier New", 8);

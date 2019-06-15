@@ -29,7 +29,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Contains multiple _Panel.
 		/// </summary>
-		partial class _Tab :_ContentNode
+		partial class _Tab : _ContentNode
 		{
 			internal List<_Panel> Items; //all child panels, including hidden, floating etc
 			internal _Panel ActiveItem; //null if _dockedItemCount is 0 or if there is no active (currently impossible)
@@ -110,10 +110,8 @@ namespace Au.Controls
 
 			internal bool ShowsTabButtons => _dockedItemCount >= 2;
 
-			internal Rectangle CaptionBoundsExceptButtons
-			{
-				get
-				{
+			internal Rectangle CaptionBoundsExceptButtons {
+				get {
 					var b = this.CaptionBounds;
 					int o = _buttonsWidth;
 					if(this.IsVerticalCaption) { b.Height -= o; b.Y += o; } else { b.Width -= o; b.X += o; }
@@ -275,13 +273,17 @@ namespace Au.Controls
 			internal void SetActiveItem(_Panel gp, bool focusControl = false)
 			{
 				_AssertIsDockedChildOrNull(gp);
+				if(focusControl) focusControl = gp.Focusable;
 				if(gp != this.ActiveItem) {
-					this.ActiveItem?.Content.Hide();
+					var ai = this.ActiveItem;
 					this.ActiveItem = gp;
-					this.ActiveItem?.Content.Show();
+					gp?.Content.Show();
+					var oldCont = ai?.Content;
+					if(focusControl) gp.Content?.Focus();
+					else if(_manager.FocusControlOnUndockEtc != null && (oldCont?.ContainsFocus ?? false)) _manager.FocusControlOnUndockEtc.Focus();
+					oldCont?.Hide();
 					this.InvalidateCaption();
-				}
-				if(focusControl) gp.Content?.Focus();
+				} else if(focusControl) gp.Content?.Focus();
 			}
 
 			internal void OnItemUndocked(_Panel gp, out Action postAction)

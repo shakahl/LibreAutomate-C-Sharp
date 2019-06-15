@@ -23,7 +23,7 @@ using static Au.AStatic;
 using static Program;
 using Au.Controls;
 
-partial class EdOptions : AuFormBase
+partial class EdOptions : AuForm
 {
 	public EdOptions()
 	{

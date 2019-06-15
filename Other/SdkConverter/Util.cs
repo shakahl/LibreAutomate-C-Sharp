@@ -30,7 +30,6 @@ namespace SdkConverter
 		/// Returns pointer level.
 		/// </summary>
 		/// <param name="iTok">Used only for error place.</param>
-		[DebuggerStepThrough]
 		int _Unalias(int iTok, ref _Symbol x)
 		{
 			int ptr = 0;
@@ -45,7 +44,6 @@ namespace SdkConverter
 		/// <summary>
 		/// This overload has isConst parameter. If x is const _Typedef sets the isConst variable = true, else isConst unchanged.
 		/// </summary>
-		[DebuggerStepThrough]
 		int _Unalias(int iTok, ref _Symbol x, ref bool isConst)
 		{
 			int ptr = 0;
@@ -64,7 +62,6 @@ namespace SdkConverter
 		/// </summary>
 		/// <param name="iTokName">Token index of symbol name.</param>
 		/// <param name="addToGlobal">Add to _ns[0].sym.</param>
-		//[DebuggerStepThrough]
 		void _AddSymbol(int iTokName, _Symbol x, bool addToGlobal = false)
 		{
 			__AddSymbol(_tok[iTokName], x, iTokName, addToGlobal);
@@ -76,7 +73,6 @@ namespace SdkConverter
 		/// </summary>
 		/// <param name="iTokError">Where to show error if need.</param>
 		/// <param name="addToGlobal">Add to _ns[0].sym.</param>
-		//[DebuggerStepThrough]
 		void _AddSymbol(string name, _Symbol x, int iTokError, bool addToGlobal = false)
 		{
 			//Print(name);
@@ -89,7 +85,6 @@ namespace SdkConverter
 		/// </summary>
 		/// <param name="iTokError">Where to show error if need.</param>
 		/// <param name="addToGlobal">Add to _ns[0].sym.</param>
-		//[DebuggerStepThrough]
 		void __AddSymbol(_Token name, _Symbol x, int iTokError, bool addToGlobal)
 		{
 			Debug.Assert(_IsCharIdentStart(*name.s));
@@ -118,7 +113,6 @@ namespace SdkConverter
 		/// Finds symbol of token iTok in _keywords, _ns[_nsCurrent].sym and optionally in _ns[nsCurrent-1 ... 0].sym.
 		/// Error if not found or the token is not an identifier.
 		/// </summary>
-		[DebuggerStepThrough]
 		_Symbol _FindSymbol(int iTok, bool includingAncestorNamespaces)
 		{
 			_Symbol x;
@@ -130,7 +124,6 @@ namespace SdkConverter
 		/// Finds symbol of token iTok in _keywords, _ns[_nsCurrent].sym and optionally in _ns[nsCurrent-1 ... 0].sym.
 		/// Error if the token is not an identifier.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _TryFindSymbol(int iTok, out _Symbol x, bool includingAncestorNamespaces)
 		{
 			_Token token = _tok[iTok];
@@ -147,7 +140,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Finds symbol by string name.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _TryFindSymbol(string name, out _Symbol x, bool includingAncestorNamespaces)
 		{
 			fixed (char* n = name)
@@ -167,7 +159,6 @@ namespace SdkConverter
 		/// Finds symbol of T type of token iTok in _keywords, _ns[_nsCurrent].sym and optionally in _ns[nsCurrent-1 ... 0].sym.
 		/// Error if the token is not an identifier.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _TryFindSymbolAs<T>(int iTok, out T x, bool includingAncestorNamespaces) where T : _Symbol
 		{
 			x = null;
@@ -182,7 +173,6 @@ namespace SdkConverter
 		/// Error if not found or not a keyword or the token is not an identifier.
 		/// </summary>
 		/// <param name="kwType">If not _KeywordT.Any, error if the keyword is not of this type.</param>
-		[DebuggerStepThrough]
 		_Keyword _FindKeyword(int iTok, _KeywordT kwType = _KeywordT.Any)
 		{
 			_Symbol x = _FindSymbol(iTok, true);
@@ -196,7 +186,6 @@ namespace SdkConverter
 		/// Finds symbol of token iTok in _keywords, _ns[_nsCurrent].sym and optionally in _ns[nsCurrent-1 ... 0].sym.
 		/// Error if not found or not a type (struct, enum etc) or the token is not an identifier.
 		/// </summary>
-		[DebuggerStepThrough]
 		_Symbol _FindType(int iTok, bool includingAncestorNamespaces)
 		{
 			_Symbol x = _FindSymbol(iTok, includingAncestorNamespaces);
@@ -208,7 +197,6 @@ namespace SdkConverter
 		/// Returns true if symbol of token iTok exists in _keywords, _ns[_nsCurrent].sym and optionally in _ns[nsCurrent-1 ... 0].sym.
 		/// Error if the token is not an identifier.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _SymbolExists(int iTok, bool includingAncestorNamespaces)
 		{
 			_Symbol t;
@@ -222,13 +210,11 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns _tok[i].s.
 		/// </summary>
-		[DebuggerStepThrough]
 		char* T(int i) { return _tok[i].s; }
 
 		/// <summary>
 		/// Returns true if token iTok string is equal to s.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _TokIs(int iTok, string s)
 		{
 			return _tok[iTok].Equals(s);
@@ -237,7 +223,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns 1-based index of matching string at token iTok.
 		/// </summary>
-		[DebuggerStepThrough]
 		int _TokIs(int iTok, params string[] a)
 		{
 			for(int i = 0; i < a.Length; i++) if(_tok[iTok].Equals(a[i])) return i + 1;
@@ -247,7 +232,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if token iTok string starts with s.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _TokStarts(int iTok, string s)
 		{
 			return _tok[iTok].StartsWith(s);
@@ -256,7 +240,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if token iTok is an identifier.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _TokIsIdent(int iTok)
 		{
 			return _IsCharIdentStart(*T(iTok));
@@ -265,7 +248,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if token iTok is a number.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _TokIsNumber(int iTok)
 		{
 			return _IsCharDigit(*T(iTok));
@@ -274,7 +256,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if token iTok is an identifier or number.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _TokIsIdentOrNumber(int iTok)
 		{
 			return _IsCharIdent(*T(iTok));
@@ -283,7 +264,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if token iTok is character c.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _TokIsChar(int iTok, char c)
 		{
 			return *T(iTok) == c;
@@ -292,7 +272,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if token iTok is character c1 or c2.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _TokIsChar(int iTok, char c1, char c2)
 		{
 			char c = *T(iTok);
@@ -302,7 +281,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if token iTok is a character in chars.
 		/// </summary>
-		[DebuggerStepThrough]
 		bool _TokIsChar(int iTok, string chars)
 		{
 			char c = *T(iTok);
@@ -313,7 +291,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Converts token iTok from char* to string.
 		/// </summary>
-		[DebuggerStepThrough]
 		string _TokToString(int iTok)
 		{
 			return _tok[iTok].ToString();
@@ -322,7 +299,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Converts raw tokens iTokFrom to (not including) iTokTo from char* to string.
 		/// </summary>
-		[DebuggerStepThrough]
 		string _TokToString(int iTokFrom, int iTokTo)
 		{
 			iTokTo--;
@@ -353,7 +329,6 @@ namespace SdkConverter
 		/// Error if i character is not {([˂.
 		/// Error if the ending })]˃ is missing.
 		/// </summary>
-		[DebuggerStepThrough]
 		int _SkipEnclosed(int i)
 		{
 			char cStart = *T(i);
@@ -384,7 +359,6 @@ namespace SdkConverter
 		/// Error if _i character is not {([˂.
 		/// Error if the ending })]˃ is missing.
 		/// </summary>
-		[DebuggerStepThrough]
 		void _SkipEnclosed()
 		{
 			_i = _SkipEnclosed(_i);
@@ -406,7 +380,6 @@ namespace SdkConverter
 		/// Gets line length.
 		/// Scans string until first '\r', '\n' or '\0'.
 		/// </summary>
-		[DebuggerStepThrough]
 		static int _LenLine(char* s)
 		{
 			char* s0 = s;
@@ -418,7 +391,6 @@ namespace SdkConverter
 		/// Gets identifier length.
 		/// Returns 0 if s does not start with an identifier.
 		/// </summary>
-		[DebuggerStepThrough]
 		static int _LenIdent(char* s)
 		{
 			if(!_IsCharIdentStart(*s)) return 0;
@@ -430,7 +402,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if s starts with word and is not followed by a C++ identifier character.
 		/// </summary>
-		[DebuggerStepThrough]
 		static bool _IsWord(char* s, string word)
 		{
 			int i = 0;
@@ -441,7 +412,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if s starts with prefix.
 		/// </summary>
-		[DebuggerStepThrough]
 		static bool _IsPrefix(char* s, string prefix)
 		{
 			for(int i = 0; i < prefix.Length; i++) if(s[i] != prefix[i]) return false;
@@ -492,7 +462,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if c is a C++ identifier character: alphanumeric, '_', '$'.
 		/// </summary>
-		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool _IsCharIdent(char c)
 		{
@@ -502,7 +471,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if c is a C++ identifier start character: alpha, '_', '$'.
 		/// </summary>
-		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool _IsCharIdentStart(char c)
 		{
@@ -512,7 +480,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if c is a number digit '0' to '9'.
 		/// </summary>
-		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool _IsCharDigit(char c)
 		{
@@ -522,7 +489,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if c is a number digit '0' to '9'.
 		/// </summary>
-		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool _IsCharHexDigit(char c)
 		{
@@ -532,7 +498,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if c is a C++ space character, including new line characters: ' ', '\t', '\r', '\n', '\v', '\f'.
 		/// </summary>
-		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool _IsCharSpaceOrRN(char c)
 		{
@@ -542,7 +507,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if c is a C++ space character, except new line characters: ' ', '\t', '\v', '\f'.
 		/// </summary>
-		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool _IsCharSpaceNoRN(char c)
 		{
@@ -552,7 +516,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if c is a new line character: '\r', '\n'.
 		/// </summary>
-		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool _IsCharRN(char c)
 		{
@@ -562,7 +525,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if c is a new line character or end of string: '\r', '\n', '\0'.
 		/// </summary>
-		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool _IsCharRN0(char c)
 		{
@@ -572,7 +534,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Returns true if c is a C++ operator character, not including ,[](){}.
 		/// </summary>
-		[DebuggerStepThrough]
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static bool _IsCharOperator(char c)
 		{
@@ -594,7 +555,6 @@ namespace SdkConverter
 		/// <summary>
 		/// Throws exception indicating error at token iTok position.
 		/// </summary>
-		[DebuggerStepThrough]
 		void _Err(int iTok, string errorText, [CallerMemberName] string callerName = null, [CallerFilePath] string callerFile = null, [CallerLineNumber] int callerLine = 0)
 		{
 			__ThrowConverterException(_Pos(iTok), errorText, callerName, callerFile, callerLine);
@@ -603,13 +563,11 @@ namespace SdkConverter
 		/// <summary>
 		/// Throws exception indicating error at s position (s must be in _src).
 		/// </summary>
-		[DebuggerStepThrough]
 		void _Err(char* s, string errorText, [CallerMemberName] string callerName = null, [CallerFilePath] string callerFile = null, [CallerLineNumber] int callerLine = 0)
 		{
 			__ThrowConverterException((int)(s - _s0), errorText, callerName, callerFile, callerLine);
 		}
 
-		[DebuggerStepThrough]
 		void __ThrowConverterException(int pos, string errorText, string callerName, string callerFile, int callerLine)
 		{
 			throw new ConverterException(

@@ -164,10 +164,10 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Tools_Output_WrapLines), Tools_Output_WrapLines);
 		_dict.Add(nameof(Tools_Output_WhiteSpace), Tools_Output_WhiteSpace);
 		_dict.Add(nameof(Tools_Output_Topmost), Tools_Output_Topmost);
-		_dict.Add(nameof(Tools_Statusbar_Floating), Tools_Statusbar_Floating);
-		_dict.Add(nameof(Tools_Statusbar_MouseInfo), Tools_Statusbar_MouseInfo);
-		_dict.Add(nameof(Tools_Statusbar_AutoHeight), Tools_Statusbar_AutoHeight);
-		_dict.Add(nameof(Tools_Statusbar_SendToOutput), Tools_Statusbar_SendToOutput);
+		//_dict.Add(nameof(Tools_Statusbar_Floating), Tools_Statusbar_Floating);
+		//_dict.Add(nameof(Tools_Statusbar_MouseInfo), Tools_Statusbar_MouseInfo);
+		//_dict.Add(nameof(Tools_Statusbar_AutoHeight), Tools_Statusbar_AutoHeight);
+		//_dict.Add(nameof(Tools_Statusbar_SendToOutput), Tools_Statusbar_SendToOutput);
 		_dict.Add(nameof(Help_QuickStart), Help_QuickStart);
 		_dict.Add(nameof(Help_Reference), Help_Reference);
 		_dict.Add(nameof(Help_ContextHelp), Help_ContextHelp);
@@ -745,25 +745,25 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	#region menu_Statusbar
 
-	public void Tools_Statusbar_Floating()
-	{
+	//public void Tools_Statusbar_Floating()
+	//{
 
-	}
+	//}
 
-	public void Tools_Statusbar_MouseInfo()
-	{
+	//public void Tools_Statusbar_MouseInfo()
+	//{
 
-	}
+	//}
 
-	public void Tools_Statusbar_AutoHeight()
-	{
+	//public void Tools_Statusbar_AutoHeight()
+	//{
 
-	}
+	//}
 
-	public void Tools_Statusbar_SendToOutput()
-	{
+	//public void Tools_Statusbar_SendToOutput()
+	//{
 
-	}
+	//}
 
 	#endregion
 

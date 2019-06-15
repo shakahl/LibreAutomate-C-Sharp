@@ -502,7 +502,7 @@ namespace Au.Tools
 	/// <summary>
 	/// All tool forms of this library should inherit from this class and override its virtual functions.
 	/// </summary>
-	public class ToolForm :AuFormBase
+	public class ToolForm :AuForm
 	{
 		public virtual string ResultCode { get; protected set; }
 

@@ -22,7 +22,7 @@ using static Au.AStatic;
 using Au.Controls;
 using static Program;
 
-class Form_FindOptions : AuFormBase
+class Form_FindOptions : AuForm
 {
 	public Form_FindOptions()
 	{
@@ -75,29 +75,30 @@ class Form_FindOptions : AuFormBase
 			this._tSkip.Multiline = true;
 			this._tSkip.Name = "_tSkip";
 			this._tSkip.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-			this._tSkip.Size = new System.Drawing.Size(408, 116);
+			this._tSkip.Size = new System.Drawing.Size(312, 116);
 			this._tSkip.TabIndex = 3;
-			this._toolTip.SetToolTip(this._tSkip, "Examples:\r\n*.xml\r\n*.manifest\r\n\\Folder\\*\r\n\\Folder\\Subfolder\\*\r\n\r\nDon\'t need to specify these image types:\r\npng bmp jpg gif tif ico cur ani");
+			this._toolTip.SetToolTip(this._tSkip, "Examples:\r\n*.xml\r\n*.manifest\r\n\\Folder\\*\r\n\\Folder\\Subfolder\\*\r\n\r\nDon\'t need to spe" +
+        "cify these image types:\r\npng bmp jpg gif tif ico cur ani");
 			this._tSkip.WordWrap = false;
 			// 
 			// auLabel1
 			// 
 			this.auLabel1.Location = new System.Drawing.Point(8, 8);
 			this.auLabel1.Name = "auLabel1";
-			this.auLabel1.Size = new System.Drawing.Size(408, 24);
+			this.auLabel1.Size = new System.Drawing.Size(312, 24);
 			this.auLabel1.TabIndex = 2;
-			this.auLabel1.Text = "Don\'t find/replace in files where path matches one of these wildcards";
+			this.auLabel1.Text = "Let \'in files\' skip files where path matches wildcard";
 			// 
 			// _bOK
 			// 
-			this._bOK.Location = new System.Drawing.Point(264, 204);
+			this._bOK.Location = new System.Drawing.Point(168, 204);
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
 			this._bOK.TabIndex = 0;
 			// 
 			// _bCancel
 			// 
-			this._bCancel.Location = new System.Drawing.Point(344, 204);
+			this._bCancel.Location = new System.Drawing.Point(248, 204);
 			this._bCancel.Name = "_bCancel";
 			this._bCancel.Size = new System.Drawing.Size(72, 24);
 			this._bCancel.TabIndex = 1;
@@ -113,7 +114,7 @@ class Form_FindOptions : AuFormBase
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(424, 236);
+			this.ClientSize = new System.Drawing.Size(328, 236);
 			this.Controls.Add(this._bCancel);
 			this.Controls.Add(this._bOK);
 			this.Controls.Add(this.auLabel1);

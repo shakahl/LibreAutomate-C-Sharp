@@ -27,7 +27,7 @@ using Au.Compiler;
 using System.Runtime.InteropServices.ComTypes;
 using System.Globalization;
 
-partial class EdCodeFileProperties : AuFormBase, IMessageFilter
+partial class EdCodeFileProperties : AuForm, IMessageFilter
 {
 	FileNode _f;
 	//FileNode _fProjectFolder;

@@ -35,7 +35,6 @@ namespace SdkConverter
 			//Ignore, //volatile etc //removed in script
 		}
 
-		[DebuggerStepThrough]
 		class _Namespace
 		{
 			/// <summary>
@@ -58,14 +57,12 @@ namespace SdkConverter
 			}
 		}
 
-		[DebuggerStepThrough]
 		class _Symbol
 		{
 			public string csTypename;
 			public bool forwardDecl;
 		}
 
-		[DebuggerStepThrough]
 		class _Keyword :_Symbol
 		{
 			public _KeywordT kwType;
@@ -78,7 +75,6 @@ namespace SdkConverter
 			}
 		}
 
-		[DebuggerStepThrough]
 		class _CppType :_Symbol
 		{
 			public byte sizeBytesCpp;
@@ -92,7 +88,6 @@ namespace SdkConverter
 			}
 		}
 
-		[DebuggerStepThrough]
 		class _Enum :_Symbol
 		{
 			public char[] defAfterName;
@@ -113,7 +108,6 @@ namespace SdkConverter
 			}
 		}
 
-		[DebuggerStepThrough]
 		class _Struct :_Symbol
 		{
 			public bool isInterface, isClass;
@@ -135,7 +129,6 @@ namespace SdkConverter
 			}
 		}
 
-		[DebuggerStepThrough]
 		class _Callback :_Symbol
 		{
 			public _Callback(string csTypename)
@@ -144,7 +137,6 @@ namespace SdkConverter
 			}
 		}
 
-		[DebuggerStepThrough]
 		class _Typedef :_Symbol
 		{
 			/// <summary>
@@ -178,7 +170,6 @@ namespace SdkConverter
 
 		//}
 
-		[DebuggerStepThrough]
 		struct _Token :IEquatable<_Token>
 		{
 			public char* s { get; private set; }

@@ -448,13 +448,11 @@ namespace Au.Controls
 
 		#endregion mouse
 
-		[DebuggerStepThrough]
 		_Panel _FindPanel(Control control)
 		{
 			return _aPanel.Find(gp => gp.Content == control);
 		}
 
-		[DebuggerStepThrough]
 		_Panel _FindPanel(string name)
 		{
 			return _aPanel.Find(gp => gp.Name == name);

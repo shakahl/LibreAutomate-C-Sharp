@@ -28,7 +28,6 @@ namespace Au.Util
 	/// Using some other object with 'lock' would lock only in that appdomain. Maybe except Type.
 	/// Use this only in single module, because ngened modules have own interned strings.
 	/// </remarks>
-	[DebuggerStepThrough]
 	unsafe struct LibProcessMemory
 	{
 		#region variables used by our library classes
@@ -54,7 +53,6 @@ namespace Au.Util
 		/// </summary>
 		internal const int Size = 0x10000;
 
-		[DebuggerStepThrough]
 		static LibProcessMemory()
 		{
 #if true

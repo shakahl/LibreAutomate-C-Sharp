@@ -32,7 +32,6 @@ namespace Au
 	///		If a field value starts or ends with ASCII space or tab characters, it is enclosed in quote characters. Example: " ab ". Or use parameter <i>trimSpaces</i> false when parsing.
 	///		Rows in CSV text can have different field count. All rows in in-memory CSV table have equal field count.
 	/// </remarks>
-	[DebuggerStepThrough]
 	public class ACsv
 	{
 		List<string[]> _a;

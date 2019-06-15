@@ -1,38 +1,45 @@
-﻿<+p help>Help links<>
+﻿<+p help>Help<>
 <+p options>Options<> <.r>(?imsnxUJ)<> and <.r>(*...)<>
 <+p meta>Metacharacters<> <.r>^ $ . [ | ( ) * + ? { \<>
-<+p escape>Escaped chars<> <.r>\^ \n<> etc and text <.r>\Q\E<>
-<+p charTypes>Any char<> <.r>.<> and char types <.r>\d \w \R<> etc
-<+p charClasses>Character classes<> <.r>[...]<> and <.r>[:...:]<>
+<+p escape>Escaped chars<> <.r>\^ \n<> etc and text <.r>\Q...\E<>
+<+p charTypes>Any char, digit, word, space<> <.r>. \d \w \s \R<>
+<+p charClasses>Character classes<> <.r>[abc]<> and <.r>[:posix:]<>
 <+p repetition>Repetition quantifiers<> <.r>* + ? {n} {n,m}<>
 <+p startEnd>Start/end of string/line/word<> <.r>^ $ \b<> etc
-<+p or>Or<> <.r>A|B|C<>
+<+p or>OR operator<> <.r>A|B|C<>
 <+p groups>Groups<> <.r>(...)<> and backreferences <.r>\1<>
 <+p assertions>Follows/precedes<> <.r>(?=...)<> etc and <.r>\K<>
-<+p extended>Extended syntax<> <.r>(?e)<> and <.r>#comments<>
-<+p replace>Replacements<> <.r>$1<> etc
 
 <b>Advanced and rarely used<>
+<+p extended>Extended syntax<> <.r>(?e)<> and <.r>#comments<>
 <+p conditional>Conditional groups<> <.r>(?(if)yes|no)<>
-<+p subroutines>Subroutines, recurse<> <.r>(?&name) (?1) (?R)<>
-<+p callouts>Callouts<> <.r>(?C) (?C0)<> etc
+<+p subroutines>Subroutines, recursion<> <.r>(?&name) (?1) (?R)<>
+<+p callouts>Callouts<> <.r>(?C) (?C0) (?C'text')<> etc
 <+p backtracking>Backtracking control<> <.r>(*...)<>
-<+p charProp>Unicode character properties<> <.r>\p{...}<>
-<+p scripts>Unicode scripts<> <.r>\p{...}<> and <.r>(*sr:...)<>
+<+p charProp>Unicode character properties<> <.r>\p{Xx}<>
+<+p scripts>Unicode scripts<> <.r>\p{name}<> and <.r>(*sr:...)<>
+
+<b>Replacement<>
+<+p replace>Replacement<> <.r>$1 ${2} ${name} $$<> etc
 
 -- help --
 
-<.h>Help links<>
+<.h>Help<>
 
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html>PCRE regex syntax<>
 <link https://www.pcre.org/current/doc/html/pcre2syntax.html>PCRE regex syntax summary<>
 <link https://www.pcre.org/current/doc/html/pcre2api.html#SEC20>PCRE2_ flags<>
 <link https://www.pcre.org/current/doc/html/index.html>PCRE regex library reference<>
-
 <link>http://www.rexegg.com/<>
 <link>https://www.regular-expressions.info/<>
-
 <link http://www.google.com/search?q=regular+expression+tester,+PCRE>Find regex test tools<>
+
+This program uses PCRE2 version 10.33.
+
+<b>About this window<>
+The links at the left open regular expression help topics at the right. In help topics click regex links to insert in the text edit field.
+
+If Regex is checked in the Find pane, this window is visible when an edit field has focus. You can close this window. To show it again, press F1 or uncheck/check Regex.
 
 -- options --
 
@@ -105,7 +112,7 @@ In a character class <.r>[...]<> the only metacharacters are:
 <.r>^<>  -  negate the class, but only if the first character.
 <.r>-<>  -  indicates character range.
 <.r>]<>  -  terminates the character class.
-<.r>[:name:]<>  -  named character class.
+<.r>[:class:]<>  -  POSIX character class.
 <.r>\<>  -  general escape character.
 
 -- escape --
@@ -130,9 +137,9 @@ Escape sequences for non-printing characters:
 <+a \x{%}>\x{hhh..}<>  -  character with hex character code hhh...
 <+a \N{U+%}>\N{U+hhh..}<>  -  character with Unicode hex code point hhh...
 
-<+a \Q%\E>\Qtext\E<>  -  literal text. There are no metacharacters and escape sequences.
+<+a \Q%\E>\Q...\E<>  -  literal text. There are no metacharacters and escape sequences.
 
-Metacharacter <.r>\<> also has other uses. With regex functions use <c brown>@"verbatim string"<> to avoid C# escape sequences for every <.r>\<>.
+Metacharacter <.r>\<> also has other uses. With regex functions use <c green>@"verbatim string"<> to avoid C# escape sequences for every <.r>\<>.
 
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC5>Escape sequences etc<>
@@ -177,7 +184,7 @@ Metacharacter <.r>\<> also has other uses. With regex functions use <c brown>@"v
 <+a [%-]>[a-z]<>  -  one of characters in range a to z.
 <+a [^%-]>[^a-z]<>  -  any character not in range a to z.
 
-Can include several ranges, characters plus ranges, character types like <.r>\d<> (digit), escaped characters like <.r>\n<>, named character classes like <.r>[:alpha:]<>. For literal <.r>^ - ] \<> use <.r>\^ \- \] \\<>.
+Can include several ranges, characters plus ranges, character types like <.r>\d<> (digit), escaped characters like <.r>\n<>, POSIX character classes like <.r>[:alpha:]<>. For literal <.r>^ - ] \<> use <.r>\^ \- \] \\<>.
 
 <b>Examples<>
 <+a>[_\d]<>  -  character _ and digits 0-9.
@@ -185,7 +192,7 @@ Can include several ranges, characters plus ranges, character types like <.r>\d<
 <+a>[0-9A-Fa-f]<> or <+a>[[:xdigit:]]<>  -  a hexadecimal digit.
 <+a>[A-Za-z_]\w+<> or <+a>[[:alpha:]_]\w+<>  -  a C# identifier.
 
-<b>Named character classes in <.r>[...]<><>
+<b>POSIX character classes in <.r>[...]<><>
 <+a>[:alnum:]<>  -  letters and digits.
 <+a>[:alpha:]<>  -  letters.
 <+a>[:ascii:]<>  -  character codes 0 - 127.
@@ -204,11 +211,11 @@ Can include several ranges, characters plus ranges, character types like <.r>\d<
 See also: <+p charProp>Unicode character properties<> and <+p scripts>scripts<>.
 
 <b>Options<>
-<+a>(*UCP)<>  -  include non-ASCII characters in named classes. Flag <help Au.Types.RXFlags>RXFlags.UCP<>.
+<+a>(*UCP)<>  -  include non-ASCII characters in POSIX classes. Flag <help Au.Types.RXFlags>RXFlags.UCP<>.
 
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC9>Character classes [...]<>
-<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC10>Named (POSIX) character classes [:...:]<>
+<link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC10>POSIX character classes [:class:]<>
 
 -- repetition --
 
@@ -225,8 +232,8 @@ Examples: <.r><.r>.*<><> - 0 or more characters; <.r><.r>(\d{3}-)+<><> - 1 or mo
 <+a {%,}>{n,}<>  -  n or more.
 
 Quantifiers can be greedy, lazy or possessive. Default is greedy. Option <.r>(?U)<> makes lazy.
-Greedy - as many as possible. For example regex <.r><.+><> matches <c brown><ab> cd <ef><> in string <c brown><ab> cd <ef> gh<>.
-Lazy - as few as possible. For example regex <.r><.+?><> matches <c brown><ab><> in the above string.
+Greedy - as many as possible. For example regex <.r><.+><> matches <c green><ab> cd <ef><> in string <c green><ab> cd <ef> gh<>.
+Lazy - as few as possible. For example regex <.r><.+?><> matches <c green><ab><> in the above string.
 Possessive - once the regex part matched, it cannot be backtracked (retried smaller parts of it) when following regex part does not match; it can make faster. Greedy, ignores <.r>(?U)<>. The same as <+p groups>atomic groups<>, just simpler syntax.
 
 <+a>?<>  -  after a quantifier makes it lazy.
@@ -279,7 +286,7 @@ Default newlines are any of <.r>\r\n<>, <.r>\n<> and <.r>\r<>. There are <+p>opt
 
 -- or --
 
-<.h>Or<>
+<.h>OR operator<>
 
 <.r>red|green|blue<>  -  red or green or blue.
 <.r>red|green|<>  -  red or green or empty.
@@ -376,29 +383,6 @@ three<>
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2api.html#SEC20>Extended syntax (flag PCRE2_EXTENDED)<>
 
--- replace --
-
-<.h>In replacement string<>
-
-<+a>$0<>  -  whole match.
-<+a>$1<>  -  group 1. Part of string that matches the first regex part like <.r>(...)<>, except <.r>(?:...)<>.
-<+a>$2<>  -  group 2.
-<+a>$3<>  -  group 3.
-<+a>$4<>  -  group 4.
-<+a>$5<>  -  group 5.
-<+a>$6<>  -  group 6.
-<+a>$7<>  -  group 7.
-<+a>$8<>  -  group 8.
-<+a>$9<>  -  group 9.
-<+a ${%}>${n}<>  -  n-th group. Example: <.r>${10}<>.
-<+a ${%}>${name}<>  -  named group. Part of string that matches a named group like <.r>(?'name'...)<>.
-<+a>$+<>  -  last group.
-<+a>$*<>  -  last reached mark. The name of the last reached mark like <.r>(*MARK:NAME)<>.
-<+a>$`<>  -  string part before match.
-<+a>$'<>  -  string part after match.
-<+a>$_<>  -  whole string.
-<+a>$$<>  -  $ character.
-
 -- conditional --
 
 <.h>Conditional groups<>
@@ -433,7 +417,7 @@ Conditions:
 <+a (?(DEFINE)(%))>(?(DEFINE)(subroutine))<>  -  define a subroutine; don't evaluate it now.
 
 Recursive regex examples:
-<+a>\(([^()]++|(?R))*\)<>  -  match a string enclosed in ( ) that may contain any number of enclosed substrings, like <c brown>(...)<> or <c brown>(..(..)+(..))<> or <c brown>(..((..)..)..)<>.
+<+a>\(([^()]++|(?R))*\)<>  -  match a string enclosed in ( ) that may contain any number of enclosed substrings, like <c green>(...)<> or <c green>(..(..)+(..))<> or <c green>(..((..)..)..)<>.
 <+a>(\(([^()]++|(?-2))*\))<>  -  the same as above when it is part of a larger regular expression.
 
 A capturing group <.r>(...)<> can be reused in other parts of regular expression. It is like a subroutine that can be called like a function by its number or name. It also can be called recursively (from itself). Unlike a backreference (the substring captured by the referenced group), a subroutine call is like a copy of the group in the regular expression. For example, regex <.r>(\w+)-(?1)<> is the same as <.r>(\w+)-(\w+)<>; as well as <.r>(?(DEFINE)(\w+))(?1)-(?1)<> and <.r>(?(DEFINE)(?'word'\w+))(?&word)-(?&word)<>.
@@ -448,7 +432,7 @@ A capturing group <.r>(...)<> can be reused in other parts of regular expression
 
 <+a>(?C)<>  -  callout (assumed number 0).
 <+a (?C%)>(?Cn)<>  -  callout with numerical data n.
-<+a (?C"%")>(?C"text")<>  -  callout with string data.
+<+a (?C'%')>(?C'text')<>  -  callout with string data.
 
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC27>Callouts<>
@@ -480,11 +464,6 @@ The effect of one of these verbs in a group called as a subroutine is confined t
 -- charProp --
 
 <.h>Unicode character properties<>
-
-<+a \p{%}>\p{Xx}<> or <+a \p%>\pX<>  -  character with the Xx or X property.
-<+a \P{%}>\P{Xx}<> or <+a \P%>\PX<>  -  character without the Xx or X property.
-
-<b>Properties<>
 
 <+a>\pC<>  -  Other.
 <+a>\p{Cc}<>  -  Control.
@@ -563,5 +542,29 @@ A script run is a sequence of characters that are all from the same script.
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#uniextseq>Unicode character properties and scripts<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC21>Script runs<>
+
+-- replace --
+
+<.h>In the replacement text<>
+
+<+a>$0<>  -  whole match.
+<+a>$1<>  <+a>$2<>  <+a>$3<>  <+a>$4<>  <+a>$5<>  <+a>$6<>  <+a>$7<>  <+a>$8<>  <+a>$9<>  <+a>$10<>  -  string part that matches a capturing group <.r>(...)<>.
+<+a ${%}>${n}<>  -  the same as above. Here n is a group number. Example: <.r>${10}<>.
+<+a ${%}>${name}<>  -  string part that matches a named group like <.r>(?'name'...)<>.
+<+a>$+<>  -  string part that matches the last group.
+<+a>$*<>  -  last reached mark. The name of the last reached mark like <.r>(*MARK:NAME)<>.
+<+a>$`<>  -  string part before match.
+<+a>$'<>  -  string part after match.
+<+a>$_<>  -  whole string.
+<+a>$$<>  -  $ character.
+
+<b>Example<>
+String: <c green>10/08/2020<>
+Regex: <.r>^(\d+)/(\d+)/(\d+)$<>
+Replacement: <.r>$3-$1-$2<>
+Result: <c green>2020-10-08<>
+
+<b>Links<>
+<help>ARegex.Replace<>
 
 -- end --

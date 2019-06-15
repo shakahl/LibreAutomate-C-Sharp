@@ -149,7 +149,7 @@ namespace Au.Controls
 			/// </summary>
 			/// <param name="toolTip">Tooltip text.</param>
 			/// <param name="image">Image to display on tab button if it is too small for text.</param>
-			void Init(string toolTip, Image image = null);
+			void Init(string toolTip, Image image = null, bool focusable = false);
 
 			/// <summary>
 			/// The 'get' function returns true if the panel or its tab button is visible. Returns false if it is hidden or its parent tab group is hidden.
@@ -168,6 +168,11 @@ namespace Au.Controls
 			/// The 'set' function: if true, makes this panel floating and visible if it is currently docked or hidden; if false, makes it docked if it is currently floating and visible.
 			/// </summary>
 			bool Floating { get; set; }
+
+			/// <summary>
+			/// Focus the control when eg tab clicked.
+			/// </summary>
+			public bool Focusable { get; set; }
 
 			/// <summary>
 			/// Make the panel visible (like <see cref="Visible"/>) and focus its control.
@@ -200,10 +205,11 @@ namespace Au.Controls
 			}
 			Image _image;
 
-			public void Init(string toolTip, Image image = null)
+			public void Init(string toolTip, Image image = null, bool focusable = false)
 			{
 				ToolTipText = toolTip;
 				Image = image;
+				Focusable = focusable;
 			}
 
 			/// <summary>
@@ -240,6 +246,8 @@ namespace Au.Controls
 				get => this.IsFloating;
 				set { if(value != this.IsFloating) this.SetDockState(this.IsFloating ? _DockState.Docked : _DockState.Floating); }
 			}
+
+			public bool Focusable { get; set; }
 
 			public void Focus() { Show(true); }
 			#endregion

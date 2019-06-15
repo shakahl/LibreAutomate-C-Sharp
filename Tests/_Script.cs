@@ -1475,7 +1475,7 @@ class Script : AScript
 	void TestComboWrapper()
 	{
 		Task.Run(() => { for(; ; ) { 1.s(); GC.Collect(); } });
-		var f = new AuFormBase();
+		var f = new AuForm();
 #if true
 		var c = new TextBox();
 		//var c = new RichTextBox();
@@ -1503,7 +1503,7 @@ class Script : AScript
 
 	void TestSciTagsRegisteredStyles()
 	{
-		var f = new AuFormBase();
+		var f = new AuForm();
 		var t = new InfoBox();
 		t.InitUseControlFont = true;
 
@@ -1682,44 +1682,39 @@ class Script : AScript
 
 	void TestRegexInfoWindow()
 	{
-		var f = new Form { StartPosition = FormStartPosition.Manual, Location = new Point(400, 1200) };
-		var t = new InfoWindow(Au.Util.ADpi.ScaleInt(250));
-		t.Size = Au.Util.ADpi.ScaleSize((800, 245));
-		t.Caption = "Regex info";
-		f.Load += (unu, sed) => {
-			t.Show(f);
-			t.Control2.Tags.AddLinkTag("+a", o => Print(o));
-			t.Control2.Tags.AddStyleTag(".h", new SciTags.UserDefinedStyle { backColor = 0xC0E0C0, bold=true, eolFilled=true });
-			for(int i = 0; i < 2; i++) {
-				var c = i == 0 ? t.Control : t.Control2;
-				c.Tags.AddStyleTag(".r", new SciTags.UserDefinedStyle { textColor = 0xf08080 });
-				c.Tags.AddLinkTag("+p", o => _SetText2(o));
-				c.Tags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false });
-			}
-			t.Control2.Call(Sci.SCI_SETWRAPSTARTINDENT, 4);
+		var f = new AuForm { StartPosition = FormStartPosition.Manual, Location = new Point(400, 1200) };
+		var t = new TextBox();
+		f.Controls.Add(t);
+		var b = new Button { Text = "Test", Top = 50 };
+		f.Controls.Add(b);
 
-			_SetText();
+		var r = new Au.Tools.RegexInfoWindow { InsertInControl = t };
+		f.Load += (unu, sed) => {
+			//r.ContentText = @"Q:\app\Au\Tools\Regex.txt";
+			r.Show(f);
+			//b.Click+=(unu,sed)=> r.Show(f);
+			b.Click += (unu, sed) => { r.Dispose(); r.Show(f); };
 		};
 		f.Click += (unu, sed) => {
-			_SetText();
+			r.ContentText = @"Q:\app\Au\Tools\Regex.txt";
+			r.Refresh();
 		};
-		t.Control.Click += (unu, sed) => Print("click");
 		f.ShowDialog();
+	}
 
-		void _SetText()
-		{
-			var s = File.ReadAllText(@"Q:\app\Au\Editor\Default\Regex.txt");
-			s = s.Remove(s.Find("\r\n\r\n-- "));
-			t.Text = s;
-			_SetText2("help");
-		}
+	void TestXmlFormatting()
+	{
+		var x = AExtXml.LoadElem(@"C:\Users\G\Documents\Au\!Settings\Settings.xml");
+		Print(x.Element("n").Value.Length, x.Element("s").Value);
+		//var x = XElement.Load(@"C:\Users\G\Documents\Au\!Settings\Settings.xml");
+		x.SetElementValue("test", "value");
+		var f2 = @"C:\Users\G\Documents\Au\!Settings\Settings2.xml";
+		//x.SaveElem(f2);
 
-		void _SetText2(string href)
-		{
-			var s = File.ReadAllText(@"Q:\app\Au\Editor\Default\Regex.txt");
-			if(!s.RegexMatch($@"(?ms)^-- {href} --\R\R(.+?)\R-- ", 1, out s)) s = "Topic not found.";
-			t.Text2 = s;
-		}
+		x.Save(f2);
+
+
+		Print(File.ReadAllText(f2));
 	}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
@@ -1730,30 +1725,9 @@ class Script : AScript
 		AOutput.Clear();
 		//100.ms();
 
-		//string s = "abč,";
-		//Print(s.RegexMatch(@"(*UCP).\b", out var m), m?.Index??-1);
 
-		//		string s, rx;
-
-		//		s = "one #twothree";
-		//		rx = @"one #two(?#comment)three";
-		//		Print(s.Regex(rx));
-		//		rx = @"(?x)
-		//one
-		//\ \#two
-
-		//#comment
-		//three";
-		//		Print(s.Regex(rx));
-
-		//string s, rx;
-		//s = "one-three";
-		////rx = @"(\w+)-(?1)";
-		//rx = @"(?(DEFINE)(\w+))(?1)-(?1)";
-		//rx = @"(?(DEFINE)(?'Word'\w+))(?&Word)-(?&Word)";
-		//if(s.RegexMatch(rx, out var m)) Print(m);
-
-		TestRegexInfoWindow();
+		//TestXmlFormatting();
+		//TestRegexInfoWindow();
 		//TestAuInfoWindow();
 		//TestSciTagsRegisteredStyles();
 		//TestCalculatePopupWindowPosition();

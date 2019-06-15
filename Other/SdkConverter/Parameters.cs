@@ -41,7 +41,6 @@ namespace SdkConverter
 		/// Returns the number of parameters.
 		/// Currently used only with pragma.
 		/// </summary>
-		[DebuggerStepThrough]
 		int _GetParameters(List<_PARAMETER> p)
 		{
 			p.Clear();

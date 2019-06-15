@@ -19,7 +19,7 @@ namespace Au.Tools.Properties {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "15.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     internal class Resources {
@@ -57,6 +57,24 @@ namespace Au.Tools.Properties {
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;+p help&gt;Help links&lt;&gt;
+        ///&lt;+p options&gt;Options&lt;&gt; &lt;.r&gt;(?imsnxUJ)&lt;&gt; and &lt;.r&gt;(*...)&lt;&gt;
+        ///&lt;+p meta&gt;Metacharacters&lt;&gt; &lt;.r&gt;^ $ . [ | ( ) * + ? { \&lt;&gt;
+        ///&lt;+p escape&gt;Escaped chars&lt;&gt; &lt;.r&gt;\^ \n&lt;&gt; etc and text &lt;.r&gt;\Q...\E&lt;&gt;
+        ///&lt;+p charTypes&gt;Any char, digit, word, space&lt;&gt; &lt;.r&gt;. \d \w \s \R&lt;&gt;
+        ///&lt;+p charClasses&gt;Character classes&lt;&gt; &lt;.r&gt;[abc]&lt;&gt; and &lt;.r&gt;[:name:]&lt;&gt;
+        ///&lt;+p repetition&gt;Repetition quantifiers&lt;&gt; &lt;.r&gt;* + ? {n} {n,m}&lt;&gt;
+        ///&lt;+p startEnd&gt;Start/end of string/line/word&lt;&gt; &lt;.r&gt;^ $ \b&lt;&gt; etc
+        ///&lt;+p or&gt;OR operator&lt;&gt; &lt;.r&gt;A|B|C&lt;&gt;
+        ///&lt;+p groups&gt;Gro [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string Regex {
+            get {
+                return ResourceManager.GetString("Regex", resourceCulture);
             }
         }
     }

@@ -1199,6 +1199,14 @@ namespace Au
 			public static AWnd Focused => Api.GetFocus();
 
 			/// <summary>
+			/// Gets the focused control or form of this thread.
+			/// </summary>
+			/// <remarks>
+			/// Calls API <msdn>GetFocus</msdn> and <see cref="System.Windows.Forms.Control.FromHandle"/>.
+			/// </remarks>
+			public static System.Windows.Forms.Control FocusedControl => System.Windows.Forms.Control.FromHandle(Api.GetFocus().Handle);
+
+			/// <summary>
 			/// Returns true if w is the focused control or window of this thread.
 			/// </summary>
 			/// <remarks>

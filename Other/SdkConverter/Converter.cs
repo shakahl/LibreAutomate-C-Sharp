@@ -22,7 +22,7 @@ namespace SdkConverter
 		[STAThread]
 		static void Main(string[] args)
 		{
-			AOutput.LibUseQM2 = true;
+			AOutput.QM2.UseQM2 = true;
 			AOutput.Clear();
 			var x = new Converter();
 

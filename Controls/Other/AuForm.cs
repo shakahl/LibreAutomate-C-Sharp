@@ -32,12 +32,12 @@ namespace Au.Controls
 	/// The Visual Studio form designer uses these properties as default. It also adds 'this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);', it's OK.
 	/// <note>Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font). Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form at run time.</note>
 	/// </remarks>
-	public class AuFormBase : Form
+	public class AuForm : Form
 	{
 		Font _font;
 
 		///
-		public AuFormBase()
+		public AuForm()
 		{
 			_font = Util.AFonts.Regular;
 			this.Font = _font; //must be before 'AutoScaleMode = ...'

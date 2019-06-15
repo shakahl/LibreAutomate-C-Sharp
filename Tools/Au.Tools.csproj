@@ -79,6 +79,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="RegexInfoWindow.cs" />
     <Compile Include="TUtil.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -121,6 +122,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Properties\Au.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Regex.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

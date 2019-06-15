@@ -25,7 +25,6 @@ namespace Au.Util
 	/// Dispose() restores both if need. Does not restore context if was null.
 	/// Example: using(new Util.LibEnsureWindowsFormsSynchronizationContext()) { ... }
 	/// </summary>
-	[DebuggerStepThrough]
 	class LibEnsureWindowsFormsSynchronizationContext : IDisposable
 	{
 		[ThreadStatic] static WindowsFormsSynchronizationContext t_wfContext;

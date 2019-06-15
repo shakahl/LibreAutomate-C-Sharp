@@ -25,7 +25,7 @@ namespace Au.Controls
 	/// Can be used as base class for user controls instead of UserControl when you want to use standard Windows font and correct auto-scaling when high DPI.
 	/// </summary>
 	/// <remarks>
-	/// More info: <see cref="AuFormBase"/>.
+	/// More info: <see cref="AuForm"/>.
 	/// </remarks>
 	public class AuUserControlBase : UserControl
 	{

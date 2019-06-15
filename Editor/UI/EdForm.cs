@@ -46,8 +46,8 @@ partial class EdForm : Form
 		this.Font = EdStock.FontRegular;
 		this.AutoScaleMode = AutoScaleMode.None;
 		this.StartPosition = FormStartPosition.Manual;
-		this.Location = new Point(100, 100);
-		this.ClientSize = new Size(900, 600);
+		this.Location = new Point(100, 50);
+		this.Size = new Size((AScreen.PrimaryWidth-100) * 3 / 4, (AScreen.PrimaryHeight-50) * 4 / 5);
 		this.Icon = EdStock.IconAppNormal;
 
 		//APerf.Next();
@@ -328,9 +328,9 @@ public static class Panels
 		//info: would be easier to specify these in the default XML, but then cannot change in new app versions.
 		m.GetPanel(Open).Init("Currently open files", EdResources.GetImageUseCache("open"));
 		m.GetPanel(Output).Init("Errors and other information", EdResources.GetImageUseCache("output"));
-		m.GetPanel(Find).Init("Find files, text, triggers", EdResources.GetImageUseCache("find"));
+		m.GetPanel(Find).Init("Find files, text, triggers", EdResources.GetImageUseCache("find"), focusable: true);
 		m.GetPanel(Found).Init("Results of find");
-		m.GetPanel(Files).Init("All files of this workspace");
+		m.GetPanel(Files).Init("All files of this workspace", focusable: true);
 		m.GetPanel(Running).Init("Running tasks");
 		m.GetPanel(Recent).Init("Recent tasks");
 		m.FocusControlOnUndockEtc = Editor;

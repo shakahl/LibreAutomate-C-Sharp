@@ -27,13 +27,14 @@ namespace Au.Controls
 	/// <summary>
 	/// An info window, similar to tooltips but persistent, normally at the right side of a form/control/rectangle.
 	/// Supports print tags etc. Actually it is a floating <see cref="InfoBox"/>.
-	/// You can set text, resize and show/hide it many times, and finally dispose.
+	/// You can set text, resize and show/hide/dispose it many times.
 	/// User can middle-click to hide.
 	/// </summary>
 	public partial class InfoWindow
 	{
 		_Window _w;
 		_Control _c, _c2;
+		readonly int _twoControlsSplitPos;
 
 		/// <summary>
 		/// Initializes this instance.
@@ -41,40 +42,49 @@ namespace Au.Controls
 		/// <param name="twoControlsSplitPos">If not 0 (default), creates second <see cref="InfoBox"/> control at this horizontal offset.</param>
 		public InfoWindow(int twoControlsSplitPos = 0)
 		{
-			_w = new _Window(this);
-			_w.Controls.Add(_c = new _Control(this, 0, twoControlsSplitPos));
-			if(twoControlsSplitPos > 0) _w.Controls.Add(_c2 = new _Control(this, twoControlsSplitPos, twoControlsSplitPos));
+			_twoControlsSplitPos = twoControlsSplitPos;
 		}
 
 		/// <summary>
-		/// The top-level info window. Contains <see cref="Control"/>.
+		/// The top-level info window. Contains <see cref="Control1"/>.
 		/// </summary>
-		public Form Window => _w;
+		public Form Window => _W;
+
+		_Window _W {
+			get {
+				if(_w == default) {
+					_w = new _Window(this);
+					_w.Controls.Add(_c = new _Control(this, 0, _twoControlsSplitPos));
+					if(_twoControlsSplitPos > 0) _w.Controls.Add(_c2 = new _Control(this, _twoControlsSplitPos, _twoControlsSplitPos));
+				}
+				return _w;
+			}
+		}
 
 		/// <summary>
 		/// The child control of <see cref="Window"/>. Displays text.
 		/// </summary>
-		public InfoBox Control => _c;
+		public InfoBox Control1 { get { _ = _W; return _c; } }
 
 		/// <summary>
 		/// The second child control of <see cref="Window"/>. Displays text.
 		/// </summary>
-		public InfoBox Control2 => _c2;
+		public InfoBox Control2 { get { _ = _W; return _c2; } }
 
 		/// <summary>
 		/// Text with print tags.
 		/// </summary>
 		public string Text {
-			get => _c.Text;
-			set => _c.Text = value;
+			get => _c?.Text;
+			set => Control1.Text = value;
 		}
 
 		/// <summary>
 		/// Text of second control with print tags.
 		/// </summary>
 		public string Text2 {
-			get => _c2.Text;
-			set => _c2.Text = value;
+			get => _c2?.Text;
+			set => Control2.Text = value;
 		}
 
 		/// <summary>
@@ -86,51 +96,53 @@ namespace Au.Controls
 		/// </remarks>
 		public SIZE Size {
 			get => _size != default ? _size : Util.ADpi.ScaleSize((300, 200));
-			set { _size = value; if(_w.IsHandleCreated) _w.Size = _size; }
+			set { _size = value; if(_w?.IsHandleCreated ?? false) _w.Size = _size; }
 		}
 		SIZE _size;
 
 		/// <summary>
-		/// Shows the info window below or above the anchor control.
+		/// Shows the info window by the control.
 		/// </summary>
-		/// <param name="anchor">Control. Its top-level parent window will own the info window.</param>
-		/// <exception cref="ArgumentException">anchor is null or its handle is not created.</exception>
+		/// <param name="c">Control. Its top-level parent window will own the info window.</param>
+		/// <exception cref="ArgumentException">c is null or its handle is not created.</exception>
 		/// <exception cref="InvalidOperationException">Exceptions of <see cref="Form.Show(IWin32Window)"/>.</exception>
-		public void Show(Control anchor)
+		public void Show(Control c)
 		{
-			_ = anchor?.IsHandleCreated ?? throw new ArgumentException();
-			_Show(anchor, ((AWnd)anchor).Rect);
+			_ = c?.IsHandleCreated ?? throw new ArgumentException();
+			_Show(c, ((AWnd)c).Rect);
 		}
 
 		/// <summary>
-		/// Shows the info window below or above the anchor rectangle relative to control.
+		/// Shows the info window by the control and rectangle.
 		/// </summary>
-		/// <param name="control">Control or form. The top-level window will own the info window.</param>
-		/// <param name="anchor">Rectangle in control's client area.</param>
-		/// <exception cref="ArgumentException">control is null or its handle is not created.</exception>
+		/// <param name="c">Control or form. The top-level window will own the info window.</param>
+		/// <param name="r">Rectangle in control's client area or in screen.</param>
+		/// <param name="screenRect">r is in screen.</param>
+		/// <exception cref="ArgumentException">c is null or its handle is not created.</exception>
 		/// <exception cref="InvalidOperationException">Exceptions of <see cref="Form.Show(IWin32Window)"/>.</exception>
-		public void Show(Control control, Rectangle anchor)
+		public void Show(Control c, Rectangle r, bool screenRect)
 		{
-			_ = control?.IsHandleCreated ?? throw new ArgumentException();
-			_Show(control, control.RectangleToScreen(anchor));
+			_ = c?.IsHandleCreated ?? throw new ArgumentException();
+			if(!screenRect) r = c.RectangleToScreen(r);
+			_Show(c, r);
 		}
 
 		/// <summary>
-		/// Shows the info window below or above the anchor rectangle.
+		/// Shows the info window by the rectangle.
 		/// </summary>
-		/// <param name="anchor">Rectangle in screen.</param>
+		/// <param name="r">Rectangle in screen.</param>
 		/// <remarks>
 		/// The info window is top-most.
 		/// </remarks>
-		public void Show(Rectangle anchor)
+		public void Show(Rectangle r)
 		{
-			_Show(null, anchor);
+			_Show(null, r);
 		}
 
-		void _Show(Control anchor, Rectangle ra)
+		void _Show(Control c, Rectangle r)
 		{
-			_w.SetRect(ra, (ra.Right, ra.Top), Size);
-			_w.ShowAt(anchor);
+			_W.SetRect(r, (r.Right, r.Top), Size);
+			_w.ShowAt(c);
 		}
 
 		/// <summary>
@@ -139,16 +151,16 @@ namespace Au.Controls
 		/// </summary>
 		public void Hide()
 		{
-			_w.Hide();
+			_w?.Hide();
 		}
 
 		/// <summary>
 		/// Destroys the info window.
-		/// Then it cannot be shown again.
+		/// Later can be shown again.
 		/// </summary>
 		public void Dispose()
 		{
-			_w.Dispose();
+			_w?.Dispose();
 		}
 
 		/// <summary>
@@ -156,9 +168,20 @@ namespace Au.Controls
 		/// </summary>
 		public string Caption {
 			get => _caption;
-			set => _w.Text = _caption = value;
+			set => _W.Text = _caption = value;
 		}
 		string _caption;
+
+		/// <summary>
+		/// true if hidden when the user clicked the x button.
+		/// </summary>
+		public bool UserClosed { get; set; }
+
+		/// <summary>
+		/// Called when window loaded but still invisible.
+		/// InfoWindow.OnLoad does nothing. This function is just for overriding.
+		/// </summary>
+		protected virtual void OnLoad(EventArgs e) { }
 
 		class _Window : Form
 		{
@@ -184,6 +207,7 @@ namespace Au.Controls
 			{
 				if(disposing) {
 					_font.Dispose();
+					_t._w = null;
 				}
 				base.Dispose(disposing);
 			}
@@ -209,6 +233,7 @@ namespace Au.Controls
 					if(changedOwner) ((AWnd)this).ZorderTopmost();
 				}
 				_showedOnce = true;
+				_t.UserClosed = false;
 			}
 
 			public void SetRect(RECT exclude, POINT pos, SIZE size)
@@ -261,6 +286,7 @@ namespace Au.Controls
 				if(e.CloseReason == CloseReason.UserClosing) {
 					e.Cancel = true;
 					Hide();
+					_t.UserClosed = true;
 				}
 				base.OnFormClosing(e);
 			}
@@ -270,6 +296,12 @@ namespace Au.Controls
 			//	Print("OnClientSizeChanged");
 			//	base.OnClientSizeChanged(e);
 			//}
+
+			protected override void OnLoad(EventArgs e)
+			{
+				base.OnLoad(e);
+				_t.OnLoad(e);
+			}
 		}
 
 		class _Control : InfoBox

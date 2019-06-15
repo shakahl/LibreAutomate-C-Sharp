@@ -13,221 +13,222 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
-//using System.Xml.Linq;
+using System.Linq;
+using System.Xml.Linq;
 
 using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
 using static Program;
+using Au.Tools;
 
 class Find : AuUserControlBase
 {
 	private void InitializeComponent()
 	{
-			this.components = new System.ComponentModel.Container();
-			this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
-			this._tFind = new System.Windows.Forms.TextBox();
-			this._bFind = new Au.Controls.AuButton();
-			this._bFindIF = new Au.Controls.AuButton();
-			this._bName = new Au.Controls.AuButton();
-			this._cCase = new Au.Controls.AuCheckBox();
-			this._cWord = new Au.Controls.AuCheckBox();
-			this._cRegex = new Au.Controls.AuCheckBox();
-			this._tReplace = new System.Windows.Forms.TextBox();
-			this._bReplace = new Au.Controls.AuButton();
-			this._bReplaceAll = new Au.Controls.AuButton();
-			this._bOptions = new Au.Controls.AuButton();
-			this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
-			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
-			this.tableLayoutPanel1.SuspendLayout();
-			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
-			this.SuspendLayout();
-			// 
-			// tableLayoutPanel1
-			// 
-			this.tableLayoutPanel1.ColumnCount = 3;
-			this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33332F));
-			this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
-			this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
-			this.tableLayoutPanel1.Controls.Add(this._tFind, 0, 0);
-			this.tableLayoutPanel1.Controls.Add(this._bFind, 0, 1);
-			this.tableLayoutPanel1.Controls.Add(this._bFindIF, 1, 1);
-			this.tableLayoutPanel1.Controls.Add(this._bName, 2, 1);
-			this.tableLayoutPanel1.Controls.Add(this._cCase, 0, 2);
-			this.tableLayoutPanel1.Controls.Add(this._cWord, 1, 2);
-			this.tableLayoutPanel1.Controls.Add(this._cRegex, 2, 2);
-			this.tableLayoutPanel1.Controls.Add(this._tReplace, 0, 3);
-			this.tableLayoutPanel1.Controls.Add(this._bReplace, 0, 4);
-			this.tableLayoutPanel1.Controls.Add(this._bReplaceAll, 1, 4);
-			this.tableLayoutPanel1.Controls.Add(this._bOptions, 2, 4);
-			this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
-			this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
-			this.tableLayoutPanel1.MinimumSize = new System.Drawing.Size(60, 142);
-			this.tableLayoutPanel1.Name = "tableLayoutPanel1";
-			this.tableLayoutPanel1.RowCount = 5;
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
-			this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
-			this.tableLayoutPanel1.Size = new System.Drawing.Size(205, 142);
-			this.tableLayoutPanel1.TabIndex = 1;
-			// 
-			// _tFind
-			// 
-			this.tableLayoutPanel1.SetColumnSpan(this._tFind, 3);
-			this._tFind.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._tFind.Location = new System.Drawing.Point(3, 3);
-			this._tFind.Margin = new System.Windows.Forms.Padding(3, 3, 3, 0);
-			this._tFind.MinimumSize = new System.Drawing.Size(4, 21);
-			this._tFind.Multiline = true;
-			this._tFind.Name = "_tFind";
-			this._tFind.Size = new System.Drawing.Size(199, 23);
-			this._tFind.TabIndex = 0;
-			this._toolTip.SetToolTip(this._tFind, "Text to find");
-			this._tFind.TextChanged += new System.EventHandler(this._tFind_TextChanged);
-			// 
-			// _bFind
-			// 
-			this._bFind.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._bFind.Location = new System.Drawing.Point(3, 29);
-			this._bFind.Margin = new System.Windows.Forms.Padding(3, 3, 1, 3);
-			this._bFind.Name = "_bFind";
-			this._bFind.Size = new System.Drawing.Size(64, 24);
-			this._bFind.TabIndex = 2;
-			this._bFind.Text = "Find";
-			this._toolTip.SetToolTip(this._bFind, "Find next match in editor");
-			this._bFind.Click += new System.EventHandler(this._bFind_Click);
-			// 
-			// _bFindIF
-			// 
-			this._bFindIF.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._bFindIF.Location = new System.Drawing.Point(70, 29);
-			this._bFindIF.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
-			this._bFindIF.Name = "_bFindIF";
-			this._bFindIF.Size = new System.Drawing.Size(64, 24);
-			this._bFindIF.TabIndex = 3;
-			this._bFindIF.Text = "in files";
-			this._toolTip.SetToolTip(this._bFindIF, "Search in files.\r\nTo skip some files, click the ... button.");
-			this._bFindIF.Click += new System.EventHandler(this._bFindIF_Click);
-			// 
-			// _bName
-			// 
-			this._bName.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._bName.Location = new System.Drawing.Point(137, 29);
-			this._bName.Margin = new System.Windows.Forms.Padding(1, 3, 3, 3);
-			this._bName.Name = "_bName";
-			this._bName.Size = new System.Drawing.Size(65, 24);
-			this._bName.TabIndex = 3;
-			this._bName.Text = "name";
-			this._toolTip.SetToolTip(this._bName, "Search in filenames");
-			this._bName.Click += new System.EventHandler(this._bName_Click);
-			// 
-			// _cCase
-			// 
-			this._cCase.AutoSize = true;
-			this._cCase.Location = new System.Drawing.Point(4, 59);
-			this._cCase.Margin = new System.Windows.Forms.Padding(4, 3, 3, 3);
-			this._cCase.Name = "_cCase";
-			this._cCase.Size = new System.Drawing.Size(57, 20);
-			this._cCase.TabIndex = 0;
-			this._cCase.Text = "Case";
-			this._toolTip.SetToolTip(this._cCase, "Match case");
-			this._cCase.CheckedChanged += new System.EventHandler(this._cCase_CheckedChanged);
-			// 
-			// _cWord
-			// 
-			this._cWord.AutoSize = true;
-			this._cWord.Location = new System.Drawing.Point(71, 59);
-			this._cWord.Name = "_cWord";
-			this._cWord.Size = new System.Drawing.Size(61, 20);
-			this._cWord.TabIndex = 0;
-			this._cWord.Text = "Word";
-			this._toolTip.SetToolTip(this._cWord, "Whole word");
-			this._cWord.CheckedChanged += new System.EventHandler(this._cWord_CheckedChanged);
-			// 
-			// _cRegex
-			// 
-			this._cRegex.AutoSize = true;
-			this._cRegex.Location = new System.Drawing.Point(138, 59);
-			this._cRegex.Margin = new System.Windows.Forms.Padding(2, 3, 3, 3);
-			this._cRegex.Name = "_cRegex";
-			this._cRegex.Size = new System.Drawing.Size(64, 20);
-			this._cRegex.TabIndex = 0;
-			this._cRegex.Text = "Regex";
-			this._toolTip.SetToolTip(this._cRegex, "Regular expression");
-			this._cRegex.CheckedChanged += new System.EventHandler(this._cRegex_CheckedChanged);
-			// 
-			// _tReplace
-			// 
-			this.tableLayoutPanel1.SetColumnSpan(this._tReplace, 3);
-			this._tReplace.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._tReplace.Location = new System.Drawing.Point(3, 89);
-			this._tReplace.Margin = new System.Windows.Forms.Padding(3, 3, 3, 0);
-			this._tReplace.MinimumSize = new System.Drawing.Size(4, 21);
-			this._tReplace.Multiline = true;
-			this._tReplace.Name = "_tReplace";
-			this._tReplace.Size = new System.Drawing.Size(199, 23);
-			this._tReplace.TabIndex = 1;
-			this._toolTip.SetToolTip(this._tReplace, "Replacement text");
-			this._tReplace.TextChanged += new System.EventHandler(this._tReplace_TextChanged);
-			// 
-			// _bReplace
-			// 
-			this._bReplace.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._bReplace.Location = new System.Drawing.Point(3, 115);
-			this._bReplace.Margin = new System.Windows.Forms.Padding(3, 3, 1, 3);
-			this._bReplace.Name = "_bReplace";
-			this._bReplace.Size = new System.Drawing.Size(64, 24);
-			this._bReplace.TabIndex = 2;
-			this._bReplace.Text = "Replace";
-			this._toolTip.SetToolTip(this._bReplace, "Replace single match in editor.\r\nRight click - find next match.");
-			this._bReplace.Click += new System.EventHandler(this._bReplace_Click);
-			this._bReplace.MouseUp += new System.Windows.Forms.MouseEventHandler(this._bReplace_MouseUp);
-			// 
-			// _bReplaceAll
-			// 
-			this._bReplaceAll.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._bReplaceAll.Location = new System.Drawing.Point(70, 115);
-			this._bReplaceAll.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
-			this._bReplaceAll.Name = "_bReplaceAll";
-			this._bReplaceAll.Size = new System.Drawing.Size(64, 24);
-			this._bReplaceAll.TabIndex = 2;
-			this._bReplaceAll.Text = "all";
-			this._toolTip.SetToolTip(this._bReplaceAll, "Replaces all matches in editor");
-			this._bReplaceAll.Click += new System.EventHandler(this._bReplaceAll_Click);
-			// 
-			// _bOptions
-			// 
-			this._bOptions.Dock = System.Windows.Forms.DockStyle.Right;
-			this._bOptions.Location = new System.Drawing.Point(168, 115);
-			this._bOptions.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
-			this._bOptions.Name = "_bOptions";
-			this._bOptions.Size = new System.Drawing.Size(35, 24);
-			this._bOptions.TabIndex = 2;
-			this._bOptions.Text = "...";
-			this._toolTip.SetToolTip(this._bOptions, "Options");
-			this._bOptions.Click += new System.EventHandler(this._bOptions_Click);
-			// 
-			// _errorProvider
-			// 
-			this._errorProvider.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.NeverBlink;
-			this._errorProvider.ContainerControl = this;
-			// 
-			// Find
-			// 
-			this.AccessibleName = "Find";
-			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-			this.Controls.Add(this.tableLayoutPanel1);
-			this.Name = "Find";
-			this.Size = new System.Drawing.Size(205, 142);
-			this.tableLayoutPanel1.ResumeLayout(false);
-			this.tableLayoutPanel1.PerformLayout();
-			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).EndInit();
-			this.ResumeLayout(false);
+		this.components = new System.ComponentModel.Container();
+		this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
+		this._tFind = new System.Windows.Forms.TextBox();
+		this._bFind = new Au.Controls.AuButton();
+		this._bFindIF = new Au.Controls.AuButton();
+		this._bName = new Au.Controls.AuButton();
+		this._cCase = new Au.Controls.AuCheckBox();
+		this._cWord = new Au.Controls.AuCheckBox();
+		this._cRegex = new Au.Controls.AuCheckBox();
+		this._tReplace = new System.Windows.Forms.TextBox();
+		this._bReplace = new Au.Controls.AuButton();
+		this._bReplaceAll = new Au.Controls.AuButton();
+		this._bOptions = new Au.Controls.AuButton();
+		this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
+		this._toolTip = new System.Windows.Forms.ToolTip(this.components);
+		this.tableLayoutPanel1.SuspendLayout();
+		((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
+		this.SuspendLayout();
+		// 
+		// tableLayoutPanel1
+		// 
+		this.tableLayoutPanel1.ColumnCount = 3;
+		this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33332F));
+		this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
+		this.tableLayoutPanel1.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 33.33334F));
+		this.tableLayoutPanel1.Controls.Add(this._tFind, 0, 0);
+		this.tableLayoutPanel1.Controls.Add(this._bFind, 0, 1);
+		this.tableLayoutPanel1.Controls.Add(this._bFindIF, 1, 1);
+		this.tableLayoutPanel1.Controls.Add(this._bName, 2, 1);
+		this.tableLayoutPanel1.Controls.Add(this._cCase, 0, 2);
+		this.tableLayoutPanel1.Controls.Add(this._cWord, 1, 2);
+		this.tableLayoutPanel1.Controls.Add(this._cRegex, 2, 2);
+		this.tableLayoutPanel1.Controls.Add(this._tReplace, 0, 3);
+		this.tableLayoutPanel1.Controls.Add(this._bReplace, 0, 4);
+		this.tableLayoutPanel1.Controls.Add(this._bReplaceAll, 1, 4);
+		this.tableLayoutPanel1.Controls.Add(this._bOptions, 2, 4);
+		this.tableLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
+		this.tableLayoutPanel1.Location = new System.Drawing.Point(0, 0);
+		this.tableLayoutPanel1.MinimumSize = new System.Drawing.Size(60, 142);
+		this.tableLayoutPanel1.Name = "tableLayoutPanel1";
+		this.tableLayoutPanel1.RowCount = 5;
+		this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+		this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+		this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+		this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+		this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 30F));
+		this.tableLayoutPanel1.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+		this.tableLayoutPanel1.Size = new System.Drawing.Size(205, 142);
+		this.tableLayoutPanel1.TabIndex = 0;
+		// 
+		// _tFind
+		// 
+		this.tableLayoutPanel1.SetColumnSpan(this._tFind, 3);
+		this._tFind.Dock = System.Windows.Forms.DockStyle.Fill;
+		this._tFind.Location = new System.Drawing.Point(3, 3);
+		this._tFind.Margin = new System.Windows.Forms.Padding(3, 3, 3, 0);
+		this._tFind.MinimumSize = new System.Drawing.Size(4, 21);
+		this._tFind.Multiline = true;
+		this._tFind.Name = "_tFind";
+		this._tFind.Size = new System.Drawing.Size(199, 23);
+		this._tFind.TabIndex = 0;
+		this._toolTip.SetToolTip(this._tFind, "Text to find");
+		this._tFind.TextChanged += new System.EventHandler(this._tFind_TextChanged);
+		// 
+		// _bFind
+		// 
+		this._bFind.Dock = System.Windows.Forms.DockStyle.Fill;
+		this._bFind.Location = new System.Drawing.Point(3, 29);
+		this._bFind.Margin = new System.Windows.Forms.Padding(3, 3, 1, 3);
+		this._bFind.Name = "_bFind";
+		this._bFind.Size = new System.Drawing.Size(64, 24);
+		this._bFind.TabIndex = 1;
+		this._bFind.Text = "Find";
+		this._toolTip.SetToolTip(this._bFind, "Find next match in editor");
+		this._bFind.Click += new System.EventHandler(this._bFind_Click);
+		// 
+		// _bFindIF
+		// 
+		this._bFindIF.Dock = System.Windows.Forms.DockStyle.Fill;
+		this._bFindIF.Location = new System.Drawing.Point(70, 29);
+		this._bFindIF.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
+		this._bFindIF.Name = "_bFindIF";
+		this._bFindIF.Size = new System.Drawing.Size(64, 24);
+		this._bFindIF.TabIndex = 2;
+		this._bFindIF.Text = "in files";
+		this._toolTip.SetToolTip(this._bFindIF, "Search in files.\r\nTo skip some files, click the ... button.");
+		this._bFindIF.Click += new System.EventHandler(this._bFindIF_Click);
+		// 
+		// _bName
+		// 
+		this._bName.Dock = System.Windows.Forms.DockStyle.Fill;
+		this._bName.Location = new System.Drawing.Point(137, 29);
+		this._bName.Margin = new System.Windows.Forms.Padding(1, 3, 3, 3);
+		this._bName.Name = "_bName";
+		this._bName.Size = new System.Drawing.Size(65, 24);
+		this._bName.TabIndex = 3;
+		this._bName.Text = "name";
+		this._toolTip.SetToolTip(this._bName, "Search in filenames");
+		this._bName.Click += new System.EventHandler(this._bName_Click);
+		// 
+		// _cCase
+		// 
+		this._cCase.AutoSize = true;
+		this._cCase.Location = new System.Drawing.Point(4, 59);
+		this._cCase.Margin = new System.Windows.Forms.Padding(4, 3, 3, 3);
+		this._cCase.Name = "_cCase";
+		this._cCase.Size = new System.Drawing.Size(57, 20);
+		this._cCase.TabIndex = 4;
+		this._cCase.Text = "Case";
+		this._toolTip.SetToolTip(this._cCase, "Match case");
+		this._cCase.CheckedChanged += new System.EventHandler(this._cCase_CheckedChanged);
+		// 
+		// _cWord
+		// 
+		this._cWord.AutoSize = true;
+		this._cWord.Location = new System.Drawing.Point(71, 59);
+		this._cWord.Name = "_cWord";
+		this._cWord.Size = new System.Drawing.Size(61, 20);
+		this._cWord.TabIndex = 5;
+		this._cWord.Text = "Word";
+		this._toolTip.SetToolTip(this._cWord, "Whole word");
+		this._cWord.CheckedChanged += new System.EventHandler(this._cWord_CheckedChanged);
+		// 
+		// _cRegex
+		// 
+		this._cRegex.AutoSize = true;
+		this._cRegex.Location = new System.Drawing.Point(138, 59);
+		this._cRegex.Margin = new System.Windows.Forms.Padding(2, 3, 3, 3);
+		this._cRegex.Name = "_cRegex";
+		this._cRegex.Size = new System.Drawing.Size(64, 20);
+		this._cRegex.TabIndex = 6;
+		this._cRegex.Text = "Regex";
+		this._toolTip.SetToolTip(this._cRegex, "Regular expression");
+		this._cRegex.CheckedChanged += new System.EventHandler(this._cRegex_CheckedChanged);
+		// 
+		// _tReplace
+		// 
+		this.tableLayoutPanel1.SetColumnSpan(this._tReplace, 3);
+		this._tReplace.Dock = System.Windows.Forms.DockStyle.Fill;
+		this._tReplace.Location = new System.Drawing.Point(3, 89);
+		this._tReplace.Margin = new System.Windows.Forms.Padding(3, 3, 3, 0);
+		this._tReplace.MinimumSize = new System.Drawing.Size(4, 21);
+		this._tReplace.Multiline = true;
+		this._tReplace.Name = "_tReplace";
+		this._tReplace.Size = new System.Drawing.Size(199, 23);
+		this._tReplace.TabIndex = 7;
+		this._toolTip.SetToolTip(this._tReplace, "Replacement text");
+		this._tReplace.TextChanged += new System.EventHandler(this._tReplace_TextChanged);
+		// 
+		// _bReplace
+		// 
+		this._bReplace.Dock = System.Windows.Forms.DockStyle.Fill;
+		this._bReplace.Location = new System.Drawing.Point(3, 115);
+		this._bReplace.Margin = new System.Windows.Forms.Padding(3, 3, 1, 3);
+		this._bReplace.Name = "_bReplace";
+		this._bReplace.Size = new System.Drawing.Size(64, 24);
+		this._bReplace.TabIndex = 8;
+		this._bReplace.Text = "Replace";
+		this._toolTip.SetToolTip(this._bReplace, "Replace single match in editor.\r\nRight click - find next match.");
+		this._bReplace.Click += new System.EventHandler(this._bReplace_Click);
+		this._bReplace.MouseUp += new System.Windows.Forms.MouseEventHandler(this._bReplace_MouseUp);
+		// 
+		// _bReplaceAll
+		// 
+		this._bReplaceAll.Dock = System.Windows.Forms.DockStyle.Fill;
+		this._bReplaceAll.Location = new System.Drawing.Point(70, 115);
+		this._bReplaceAll.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
+		this._bReplaceAll.Name = "_bReplaceAll";
+		this._bReplaceAll.Size = new System.Drawing.Size(64, 24);
+		this._bReplaceAll.TabIndex = 9;
+		this._bReplaceAll.Text = "all";
+		this._toolTip.SetToolTip(this._bReplaceAll, "Replaces all matches in editor");
+		this._bReplaceAll.Click += new System.EventHandler(this._bReplaceAll_Click);
+		// 
+		// _bOptions
+		// 
+		this._bOptions.Dock = System.Windows.Forms.DockStyle.Right;
+		this._bOptions.Location = new System.Drawing.Point(168, 115);
+		this._bOptions.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
+		this._bOptions.Name = "_bOptions";
+		this._bOptions.Size = new System.Drawing.Size(35, 24);
+		this._bOptions.TabIndex = 10;
+		this._bOptions.Text = "...";
+		this._toolTip.SetToolTip(this._bOptions, "Options");
+		this._bOptions.Click += new System.EventHandler(this._bOptions_Click);
+		// 
+		// _errorProvider
+		// 
+		this._errorProvider.BlinkStyle = System.Windows.Forms.ErrorBlinkStyle.NeverBlink;
+		this._errorProvider.ContainerControl = this;
+		// 
+		// Find
+		// 
+		this.AccessibleName = "Find";
+		this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+		this.Controls.Add(this.tableLayoutPanel1);
+		this.Name = "Find";
+		this.Size = new System.Drawing.Size(205, 142);
+		this.tableLayoutPanel1.ResumeLayout(false);
+		this.tableLayoutPanel1.PerformLayout();
+		((System.ComponentModel.ISupportInitialize)(this._errorProvider)).EndInit();
+		this.ResumeLayout(false);
 
 	}
 
@@ -255,33 +256,10 @@ class Find : AuUserControlBase
 
 		_comboFind = new ComboWrapper(_tFind);
 		_comboReplace = new ComboWrapper(_tReplace);
-		_comboFind.ArrowButtonPressed += _tFind_ArrowButtonPressed;
-		_comboFind.ImageButtonClicked += _tFind_ImageButtonClicked;
-		_comboReplace.ArrowButtonPressed += _tReplace_ArrowButtonPressed;
-		_comboReplace.ImageButtonClicked += _tReplace_ImageButtonClicked;
-
-		//the following code is to test ComboWrapper
-
-		//_tFind.NoArrow = true;
-		//_tFind.ButtonIcon = AIcon.GetAppIcon(16);
-		//_tFind.IconButtonClicked += _tFind_IconButtonClicked;
-
-		//_tFind.Multiline = false;
-		//_tFind.ScrollBars = ScrollBars.Vertical;
-
-		//_tFind.Text = "init";
-		//_tFind.ReadOnly = true;
-
-		//ATimer.After(2000, () => _tFind.ButtonIcon = AIcon.GetStockIcon(StockIcon.DESKTOPPC, 16));
-		//ATimer.After(2000, () => _tFind.NoArrow = true);
-
-		//EdDebug.PrintTabOrder(this);
-		//Print("----");
-		//ATimer.After(100, () => {
-		//	//TabIndex = 0; TabStop = true;
-		//	//Print(TabStop, TabIndex);
-		//	EdDebug.PrintTabOrder(this);
-		//});
+		_comboFind.ArrowButtonPressed += _comboFindReplace_ArrowButtonPressed;
+		_comboReplace.ArrowButtonPressed += _comboFindReplace_ArrowButtonPressed;
+		//_tFind.LostFocus += _tFindReplace_LostFocus;
+		//_tReplace.LostFocus += _tFindReplace_LostFocus;
 	}
 
 	//protected override void OnGotFocus(EventArgs e) { _tFind.Focus(); }
@@ -309,29 +287,6 @@ class Find : AuUserControlBase
 		if(ml != (c.ScrollBars == ScrollBars.Vertical)) c.ScrollBars = ml ? ScrollBars.Vertical : 0;
 	}
 
-	private void _tFind_ArrowButtonPressed(object sender, EventArgs e)
-	{
-		var m = new PopupList { IsModal = true, ComboBoxAnimation = true };
-		m.Items = new string[] { "one", "two" };
-		m.ClosedAction = o => { Print(o.ResultIndex, o.ResultItem, o.ResultWasKey); };
-		m.Show(_tFind);
-	}
-
-	private void _tReplace_ArrowButtonPressed(object sender, EventArgs e)
-	{
-		Print("_tReplace_ArrowButtonPressed");
-	}
-
-	private void _tFind_ImageButtonClicked(object sender, EventArgs e)
-	{
-		Print("_tFind_ImageButtonClicked");
-	}
-
-	private void _tReplace_ImageButtonClicked(object sender, EventArgs e)
-	{
-		Print("_tReplace_ImageButtonClicked");
-	}
-
 	private void _cCase_CheckedChanged(object sender, EventArgs e)
 	{
 		UpdateEditor();
@@ -349,14 +304,62 @@ class Find : AuUserControlBase
 	{
 		if(_cRegex.Checked) {
 			_cWord.Checked = false;
-			_comboFind.ButtonImage = Project.Properties.Resources.folder;
-			_comboReplace.ButtonImage = Project.Properties.Resources.folderOpen;
+			if(_regexWindow == null) {
+				_regexWindow = new RegexInfoWindow();
+
+				EventHandler gotFocus = (co, _) => {
+					//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window
+					ATimer.After(70, () => { if((co as Control).Focused) _ShowRegexInfo(co, false); });
+				};
+				EventHandler lostFocus = (co, _) => {
+					if(_regexWindow != null && _regexWindow.Window.Visible) {
+						var c = AWnd.ThisThread.FocusedControl;
+						if(c == null || (c != _tFind && c != _tReplace && c != _regexWindow.Window && c.TopLevelControl != _regexWindow.Window)) {
+							_regexWindow.Hide();
+						}
+					}
+				};
+				_tFind.GotFocus += gotFocus; //not Enter/Leave, eg then we don't know which control will be focused (unless using a timer)
+				_tReplace.GotFocus += gotFocus;
+				_tFind.LostFocus += lostFocus;
+				_tReplace.LostFocus += lostFocus;
+
+				HelpEventHandler helpReq = (co, he) => { he.Handled = true; _ShowRegexInfo(co, true); };
+				_tFind.HelpRequested += helpReq;
+				_tReplace.HelpRequested += helpReq;
+			}
 		} else {
-			_comboFind.ButtonImage.Dispose(); _comboFind.ButtonImage = null;
-			_comboReplace.ButtonImage.Dispose(); _comboReplace.ButtonImage = null;
+			_regexWindow?.Dispose();
+			_regexWindow = null;
 		}
 		UpdateEditor();
-		//_replacePreview = false;
+	}
+
+	RegexInfoWindow _regexWindow;
+	string _regexTopic;
+
+	void _ShowRegexInfo(object textbox, bool F1)
+	{
+		if(_regexWindow == null || !_cRegex.Checked) return;
+		if(_regexWindow.UserClosed) { if(!F1) return; _regexWindow.UserClosed = false; }
+
+		if(!_regexWindow.Window.IsHandleCreated) {
+			var r = ((AWnd)this).Rect;
+			r.Offset(0, -20);
+			_regexWindow.Show(MainForm, r, true);
+		} else _regexWindow.Window.Show();
+
+		var c = textbox as TextBox;
+		_regexWindow.InsertInControl = c;
+
+		bool replace = c == _tReplace;
+		var s = _regexWindow.CurrentTopic;
+		if(s == "replace") {
+			if(!replace) _regexWindow.CurrentTopic = _regexTopic;
+		} else if(replace) {
+			_regexTopic = s;
+			_regexWindow.CurrentTopic = "replace";
+		}
 	}
 
 	private void _bFind_Click(object sender, EventArgs e)
@@ -432,6 +435,11 @@ class Find : AuUserControlBase
 		}
 	}
 
+	private void _bReplace_MouseUp(object sender, MouseEventArgs e)
+	{
+		if(e.Button == MouseButtons.Right) _bFind_Click(sender, e);
+	}
+
 	private void _bReplaceAll_Click(object sender, EventArgs e)
 	{
 		if(!_GetTextToFind(out var f, true)) return;
@@ -478,7 +486,7 @@ class Find : AuUserControlBase
 	void _FindAllInEditor()
 	{
 		_aEditor.Clear();
-		if(!_GetTextToFind(out var f, false)) return;
+		if(!_GetTextToFind(out var f, false, true)) return;
 		var text = Panels.Editor.ActiveDoc?.Text; if(text.Lenn() == 0) return;
 		_FindAllInText(text, f, _aEditor);
 	}
@@ -493,7 +501,7 @@ class Find : AuUserControlBase
 	{
 		if(!Visible) Panels.PanelManager.GetPanel(this).Visible = true;
 		string s = "";
-		switch(Control.FromHandle(Api.GetFocus().Handle)) {
+		switch(AWnd.ThisThread.FocusedControl) {
 		case AuScintilla c:
 			s = c.ST.SelectedText();
 			break;
@@ -537,7 +545,7 @@ class Find : AuUserControlBase
 		public bool matchCase;
 	}
 
-	bool _GetTextToFind(out _TextToFind f, bool forReplace)
+	bool _GetTextToFind(out _TextToFind f, bool forReplace, bool noRecent = false)
 	{
 		_errorProvider.Clear();
 		f = default;
@@ -551,11 +559,16 @@ class Find : AuUserControlBase
 				f.rx = new ARegex(f.findText, flags: fl);
 			}
 			catch(ArgumentException e) {
+				_errorProvider.SetIconAlignment(_tFind, ErrorIconAlignment.BottomRight);
+				_errorProvider.SetIconPadding(_tFind, -16);
 				_errorProvider.SetError(_tFind, e.Message);
 				return false;
 			}
 		} else f.wholeWord = _cWord.Checked;
 		if(forReplace) f.replaceText = _tReplace.Text;
+
+		if(!noRecent) _AddToRecent(f);
+
 		return true;
 	}
 
@@ -666,6 +679,8 @@ class Find : AuUserControlBase
 		}
 
 		Panels.Found.Control.ST.SetText(b.Append(bSlow).ToString());
+		var ip = Panels.PanelManager.GetPanel(Panels.Found);
+		ip.Visible = true;
 	}
 
 	//rejected: replace in files. Rarely used, dangerous, need much work to make more useful. It's easy to click each file in results and click 'Replace' or 'all'.
@@ -706,8 +721,80 @@ class Find : AuUserControlBase
 
 	#endregion
 
-	private void _bReplace_MouseUp(object sender, MouseEventArgs e)
+	#region recent
+
+	string _recentPrevFind, _recentPrevReplace;
+	int _recentPrevOptions;
+
+	void _AddToRecent(in _TextToFind f)
 	{
-		if(e.Button == MouseButtons.Right) _bFind_Click(sender, e);
+		int k = f.matchCase ? 1 : 0; if(f.wholeWord) k |= 2; else if(f.rx != null) k |= 4;
+		bool saveFind = f.findText != _recentPrevFind || k != _recentPrevOptions;
+		bool saveReplace = !Empty(f.replaceText) && f.replaceText != _recentPrevReplace;
+		if(!(saveFind | saveReplace)) return;
+
+		lock(Settings) {
+			if(saveFind) _XmlAdd("recentFind", _recentPrevFind = f.findText, _recentPrevOptions = k);
+			if(saveReplace) _XmlAdd("recentReplace", _recentPrevReplace = f.replaceText, 0);
+
+			static void _XmlAdd(string xName, string text, int options)
+			{
+				if(text.Length > 1000) {
+					if(0 != (options & 4)) PrintWarning("The find text of length > 1000 will not be saved to 'recent'.", -1);
+					return;
+				}
+				var xParent = Settings.XmlOf(xName, true);
+				var en = xParent.Elements("t");
+				en.FirstOrDefault(o => o.Value == text)?.Remove();
+				if(en.Count() >= 20) en.Last().Remove();
+				var x = new XElement("t", text);
+				if(options != 0) x.SetAttributeValue("f", options.ToString());
+				xParent.AddFirst(x);
+			}
+		}
 	}
+
+	private void _comboFindReplace_ArrowButtonPressed(object sender, EventArgs e)
+	{
+		bool replace = sender == _comboReplace;
+		object[] a = null;
+		lock(Settings) {
+			var xParent = Settings.XmlOf(replace ? "recentReplace" : "recentFind");
+			if(xParent == null) return;
+			var en = xParent.Elements("t");
+			if(replace) a = en.Select(o => (object)o.Value).ToArray();
+			else a = en.Select(o => (object)new _RecentItem { text = o.Value, options = o.Attr("f", 0) }).ToArray();
+		}
+		var c = replace ? _tReplace : _tFind;
+		var m = new PopupList { IsModal = true, ComboBoxAnimation = true };
+		m.Items = a;
+		m.SelectedAction = o => {
+			string s = null;
+			switch(o.ResultItem) {
+			case string repl:
+				s = repl;
+				break;
+			case _RecentItem find:
+				s = find.text;
+				int k = find.options;
+				_cCase.Checked = 0 != (k & 1);
+				_cWord.Checked = 0 != (k & 2);
+				_cRegex.Checked = 0 != (k & 4);
+				break;
+			}
+			c.SelectAll();
+			c.Paste(s);
+		};
+		m.Show(c);
+	}
+
+	class _RecentItem
+	{
+		public string text;
+		public int options;
+
+		public override string ToString() => text.Limit(100);
+	}
+
+	#endregion
 }

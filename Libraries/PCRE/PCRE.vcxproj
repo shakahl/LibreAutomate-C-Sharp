@@ -163,6 +163,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="pcre2_error.c" />
+    <ClCompile Include="pcre2_extuni.c" />
     <ClCompile Include="pcre2_find_bracket.c" />
     <ClCompile Include="pcre2_jit_compile.c" />
     <ClCompile Include="pcre2_maketables.c" />
@@ -171,6 +172,7 @@
     <ClCompile Include="pcre2_newline.c" />
     <ClCompile Include="pcre2_ord2utf.c" />
     <ClCompile Include="pcre2_pattern_info.c" />
+    <ClCompile Include="pcre2_script_run.c" />
     <ClCompile Include="pcre2_serialize.c" />
     <ClCompile Include="pcre2_string_utils.c" />
     <ClCompile Include="pcre2_study.c" />

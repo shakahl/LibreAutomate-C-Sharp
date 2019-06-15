@@ -29,7 +29,7 @@ using Au.Controls;
 partial class FilesModel
 {
 #endif
-	class Form_NewWorkspace :AuFormBase
+	class Form_NewWorkspace :AuForm
 	{
 		public Form_NewWorkspace()
 		{

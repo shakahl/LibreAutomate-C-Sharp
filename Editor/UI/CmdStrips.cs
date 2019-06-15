@@ -26,7 +26,7 @@ static class Strips
 {
 	public static MenuStrip Menubar;
 	public static AuToolStrip tbFile, tbEdit, tbRun, tbTools, tbHelp, tbCustom1, tbCustom2; //toolbars
-	public static ToolStripDropDownMenu ddFile, ddFileNew, ddEdit, ddOutput, ddStatusBar; //drop-down menus
+	public static ToolStripDropDownMenu ddFile, ddFileNew, ddEdit, ddOutput/*, ddStatusBar*/; //drop-down menus
 	public static ToolStripSpringTextBox cHelpFind; //controls on toolbars
 
 	static CmdHandlers _cmd; //all menu/toolbar commands. Contains command handlers, their names and delegates.
@@ -67,7 +67,7 @@ static class Strips
 		ddFile = _strips.Submenus["Menu_File"];
 		ddEdit = _strips.Submenus["Menu_Edit"];
 		ddOutput = _strips.Submenus["Tools_Output"];
-		ddStatusBar = _strips.Submenus["Tools_StatusBar"];
+		//ddStatusBar = _strips.Submenus["Tools_StatusBar"];
 
 		//get controls
 		cHelpFind = tbHelp.Items["Help_Find"] as ToolStripSpringTextBox;
