@@ -77,4 +77,4 @@ static extern int GetTickCount();
 //1. References: mscorlib, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
 //2. Attributes: [module: DefaultCharSet(CharSet.Unicode)], some version attributes.
 
-//This program uses C# version 7.3 and .NET Framework version 4.7.2.
+//This program uses C# version 8.0 and .NET Framework version 4.7.2.

@@ -1293,5 +1293,40 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool CalculatePopupWindowPosition(in POINT anchorPoint, in SIZE windowSize, uint flags, in RECT excludeRect, out RECT popupWindowPosition);
 
+		[DllImport("user32.dll")]
+		internal static extern int MenuItemFromPoint(AWnd hWnd, IntPtr hMenu, POINT ptScreen);
+
+		[DllImport("user32.dll")]
+		internal static extern int GetMenuItemID(IntPtr hMenu, int nPos);
+
+		internal struct MENUITEMINFO
+		{
+			public int cbSize;
+			public uint fMask;
+			public uint fType;
+			public uint fState;
+			public int wID;
+			public IntPtr hSubMenu;
+			public IntPtr hbmpChecked;
+			public IntPtr hbmpUnchecked;
+			public LPARAM dwItemData;
+			public char* dwTypeData;
+			public int cch;
+			public IntPtr hbmpItem;
+		}
+
+		internal const uint MIIM_TYPE = 0x10;
+
+		[DllImport("user32.dll", EntryPoint = "GetMenuItemInfoW")]
+		internal static extern bool GetMenuItemInfo(IntPtr hmenu, int item, bool fByPosition, ref MENUITEMINFO lpmii);
+
+		[DllImport("user32.dll")]
+		internal static extern IntPtr GetSystemMenu(AWnd hWnd, bool bRevert);
+
+		internal const uint MF_SEPARATOR = 0x800;
+
+		[DllImport("user32.dll", EntryPoint = "AppendMenuW")]
+		internal static extern bool AppendMenu(IntPtr hMenu, uint uFlags = MF_SEPARATOR, LPARAM uIDNewItem = default, string lpNewItem = null);
+
 	}
 }

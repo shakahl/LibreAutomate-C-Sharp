@@ -147,9 +147,10 @@
     <Compile Include="Util\AHelp.cs" />
     <Compile Include="Util\AMessageLoop.cs" />
     <Compile Include="Util\ARecording.cs" />
+    <Compile Include="Util\AMenuItemInfo.cs" />
     <Compile Include="Util\_.cs" />
     <Compile Include="Util\AModuleHandle.cs" />
-    <Compile Include="String\AExtString.More.cs" />
+    <Compile Include="String\AStringUtil.cs" />
     <Compile Include="Util\internal\GDI misc.cs" />
     <Compile Include="Input\AHook.cs" />
     <Compile Include="Util\internal\InterDomainVariables.cs" />
@@ -182,12 +183,10 @@
     <Compile Include="String\ACsv.cs" />
     <Compile Include="Util\ATreeBase.cs" />
     <Compile Include="Wnd\AWnd_wait.cs" />
-    <None Include="_doc\Aaa.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="packages.config" />
     <None Include="Properties\Au.snk" />
     <Compile Include="Time\ATime.cs" />
     <Compile Include="Time\AWaitFor.cs" />
@@ -221,46 +220,11 @@
     <None Include="Util\excluded\misc util.cs" />
     <Compile Include="Api\Api.cs" />
     <Compile Include="Util\internal\LibWorkarounds.cs" />
-    <None Include="_doc\api\index.md" />
-    <None Include="_doc\api\toc.yml" />
-    <None Include="_doc\articles\index.md" />
-    <None Include="_doc\articles\Wait timeout.md" />
-    <None Include="_doc\articles\Print tags.md" />
-    <None Include="_doc\articles\_test.md" />
-    <None Include="_doc\editor\Command line.md" />
-    <None Include="_doc\editor\Au editor.md" />
-    <None Include="_doc\articles\toc.yml" />
-    <None Include="_doc\editor\toc.yml" />
-    <None Include="_doc\articles\Wildcard expression.md" />
-    <None Include="_doc\docfx.json" />
-    <None Include="_doc\filter.yml" />
-    <None Include="_doc\index.md" />
-    <None Include="_doc\template1\layout\_master.tmpl" />
-    <None Include="_doc\template1\partials\class.header.tmpl.partial" />
-    <None Include="_doc\template1\partials\footer.tmpl.partial" />
-    <None Include="_doc\template1\partials\logo.tmpl.partial" />
-    <None Include="_doc\articles\UAC.md" />
-    <None Include="_doc\template1\partials\namespace.tmpl.partial" />
-    <None Include="_doc\template1\partials\navbar.tmpl.partial" />
-    <None Include="_doc\template2\partials\collection.tmpl.partial" />
-    <None Include="_doc\template2\partials\item.tmpl.partial" />
-    <None Include="_doc\toc.yml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\red_cross_cursor.cur" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="_doc\.gitignore" />
-    <Content Include="_doc\api\.gitignore" />
-    <Content Include="_doc\template1\favicon.ico" />
-    <Content Include="_doc\template1\mod.txt" />
-    <Content Include="_doc\template1\styles\main.css" />
-    <Content Include="_doc\template1\styles\main.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="_doc\apidoc\" />
-    <Folder Include="_doc\images\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

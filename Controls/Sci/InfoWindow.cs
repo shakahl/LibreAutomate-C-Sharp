@@ -54,8 +54,8 @@ namespace Au.Controls
 			get {
 				if(_w == default) {
 					_w = new _Window(this);
-					_w.Controls.Add(_c = new _Control(this, 0, _twoControlsSplitPos));
-					if(_twoControlsSplitPos > 0) _w.Controls.Add(_c2 = new _Control(this, _twoControlsSplitPos, _twoControlsSplitPos));
+					_w.Controls.Add(_c = new _Control(this, 0, _twoControlsSplitPos) { Name = "_c" });
+					if(_twoControlsSplitPos > 0) _w.Controls.Add(_c2 = new _Control(this, _twoControlsSplitPos, _twoControlsSplitPos) { Name = "_c2" });
 				}
 				return _w;
 			}

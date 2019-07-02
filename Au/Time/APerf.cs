@@ -37,8 +37,10 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Stores data in the variable, not in a static variable.
+		/// 
+		/// Don't need to dispose variables of this type. The <see cref="Dispose"/> function just calls <see cref="NW"/>.
 		/// </remarks>
-		public unsafe struct Inst
+		public unsafe struct Inst : IDisposable
 		{
 			static Inst()
 			{
@@ -143,6 +145,12 @@ namespace Au
 			/// <param name="cMark">A character to add to the results string like "A=150".</param>
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			public void NW(char cMark = '\0') { Next(cMark); Write(); }
+
+			/// <summary>
+			/// Calls <see cref="NW"/>, which calls <see cref="Next"/> and <see cref="Write"/>.
+			/// Don't need to dispose variables of this type. There is nothing to dispose. This just allows to use the 'using' pattern instead of <b>NW</b>.
+			/// </summary>
+			public void Dispose() => NW();
 
 			/// <summary>
 			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>, and shows it in the output.

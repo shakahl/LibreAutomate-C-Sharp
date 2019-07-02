@@ -103,7 +103,7 @@ namespace Au.Tools
 		public event EventHandler ZTextChanged;
 
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : ST.CountBytesToChars(0, _ReadonlyStartUtf8); //currently not used
+		public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : ST.CountBytesToChars(_ReadonlyStartUtf8); //currently not used
 
 		int _readonlyLenUtf8;
 

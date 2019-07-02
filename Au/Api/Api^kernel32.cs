@@ -746,6 +746,8 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern int GetOEMCP();
 
+		[DllImport("kernel32.dll")]
+		internal static extern bool SetProcessWorkingSetSize(IntPtr hProcess, LPARAM dwMinimumWorkingSetSize, LPARAM dwMaximumWorkingSetSize);
 
 
 

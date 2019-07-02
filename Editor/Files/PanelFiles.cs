@@ -99,6 +99,12 @@ partial class PanelFiles : AuUserControlBase
 		oldModel?.Dispose();
 		Program.Model = _model = m;
 
+		if(Codea != null) Codea.WorkspaceClosed();
+		else Codea = new CodeAssist();
+		//APerf.Next('a');
+		Codea.WorkspaceOpened(); //TODO: slow, 250 ms in Release with ngened CA assemblies, 700 ms non-ngened. Also then CPU noise.
+		//APerf.Next('b');
+
 		//CONSIDER: unexpand path
 		if(Settings.Set("workspace", wsDir)) {
 			//add to recent
@@ -110,6 +116,7 @@ partial class PanelFiles : AuUserControlBase
 			}
 		}
 
+		//open a file in editor
 		if(newFile) m.SetCurrentFile(m.Root.FirstChild, newFile: true);
 		else m.LoadState();
 		if(m.CurrentFile == null) MainForm.SetTitle();
@@ -198,7 +205,7 @@ partial class PanelFiles : AuUserControlBase
 	{
 		if(_newMenuDone) return; _newMenuDone = true;
 
-		var templDir = AFolders.ThisAppBS + @"Templates";
+		var templDir = AFolders.ThisAppBS + @"Default\Templates";
 		_CreateMenu(templDir, ddm, 0);
 
 		void _CreateMenu(string dir, ToolStripDropDownMenu ddParent, int level)

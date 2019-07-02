@@ -2550,7 +2550,7 @@ namespace Au
 		/// <param name="removeUnderlineAmpersand">
 		/// Remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// Removes only if this is a control (has style WS.CHILD).
-		/// Calls <see cref="AExtString.More.RemoveUnderlineAmpersand"/>.
+		/// Calls <see cref="AStringUtil.RemoveUnderlineAmpersand"/>.
 		/// </param>
 		/// <seealso cref="SetText"/>
 		/// <seealso cref="NameAcc"/>
@@ -2567,7 +2567,7 @@ namespace Au
 				&& !Empty(R)
 				//&& R.IndexOf('&') >= 0 //slower than HasStyle if the string is longer than 20
 				&& HasStyle(WS.CHILD)
-				) R = AExtString.More.RemoveUnderlineAmpersand(R);
+				) R = AStringUtil.RemoveUnderlineAmpersand(R);
 
 			return R;
 		}

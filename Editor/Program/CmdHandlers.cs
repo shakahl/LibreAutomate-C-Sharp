@@ -686,7 +686,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Tools_Options()
 	{
-		EdOptions.ShowForm();
+		FOptions.ShowForm();
 	}
 
 	#endregion

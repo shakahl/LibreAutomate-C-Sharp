@@ -506,7 +506,7 @@ class RunningTasks
 		_Preloaded pre = null; byte[] taskParams = null;
 		if(r.notInCache) { //meta role exeProgram
 			exeFile = r.file;
-			argsString = args == null ? null : AExtString.More.CommandLineFromArray(args);
+			argsString = args == null ? null : Au.Util.AStringUtil.CommandLineFromArray(args);
 		} else {
 			exeFile = AFolders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");
 

@@ -209,7 +209,7 @@ namespace Au
 			if(showStackFromThisFrame >= 0) {
 				var x = new StackTrace(showStackFromThisFrame + 1, true);
 				var st = x.ToString(); var rn = st.Ends('\n') ? "" : "\r\n";
-				s = $"{prefix}{s} <fold>\r\n{st}{rn}</fold>";
+				s = $"{prefix}{s} <fold><\a>\r\n{st}{rn}</\a></fold>";
 			} else s = prefix + s;
 
 			AOutput.Write(s);

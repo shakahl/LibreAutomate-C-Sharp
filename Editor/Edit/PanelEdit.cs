@@ -88,6 +88,8 @@ partial class PanelEdit : UserControl
 			doc.Init(text, newFile);
 			doc.AccessibleName = f.Name;
 			doc.AccessibleDescription = path;
+
+			Codea.FileOpened(doc);
 		}
 		if(focus) _activeDoc.Focus();
 
@@ -115,6 +117,7 @@ partial class PanelEdit : UserControl
 			doc = _docs.Find(v => v.FN == f);
 			if(doc == null) return;
 		}
+		Codea.FileClosed(doc);
 		doc.Dispose();
 		_docs.Remove(doc);
 		_UpdateUI_IsOpen();
@@ -221,6 +224,7 @@ partial class PanelEdit : UserControl
 	{
 		public readonly FileNode FN;
 		SciText.FileLoaderSaver _fls;
+		public CodeAssist.SciCodeData CodeaData; //used only by CodeAssist
 
 		const int c_marginFold = 0;
 		const int c_marginLineNumbers = 1;
@@ -308,8 +312,12 @@ partial class PanelEdit : UserControl
 			case NOTIF.SCN_MODIFIED:
 				//Print(n.modificationType);
 				if(0 != (n.modificationType&(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
+					Codea.TextChanged(this, n);
 					Panels.Find.UpdateEditor();
 				}
+				break;
+			case NOTIF.SCN_CHARADDED:
+				Codea.CharAdded(this, n.ch);
 				break;
 			case NOTIF.SCN_UPDATEUI:
 				if(_initDeferred != null) { var f = _initDeferred; _initDeferred = null; f(); }
@@ -406,24 +414,23 @@ partial class PanelEdit : UserControl
 			_initDeferred = () => {
 				var db = Model.DB; if(db == null) return;
 				try {
-					using(var p = db.Statement("SELECT lines FROM _editor WHERE id=?", FN.Id)) {
-						if(p.Step()) {
-							var a = p.GetList<int>(0);
-							if(a != null) {
-								_savedMD5 = _Hash(a);
-								for(int i = a.Count - 1; i >= 0; i--) { //must be in reverse order, else does not work
-									int v = a[i];
-									int line = v & 0x7FFFFFF, marker = v >> 27 & 31;
-									if(marker == 31) _FoldingFoldLine(line);
-									else Call(SCI_MARKERADDSET, line, 1 << marker);
-								}
+					using var p = db.Statement("SELECT lines FROM _editor WHERE id=?", FN.Id);
+					if(p.Step()) {
+						var a = p.GetList<int>(0);
+						if(a != null) {
+							_savedMD5 = _Hash(a);
+							for(int i = a.Count - 1; i >= 0; i--) { //must be in reverse order, else does not work
+								int v = a[i];
+								int line = v & 0x7FFFFFF, marker = v >> 27 & 31;
+								if(marker == 31) _FoldingFoldLine(line);
+								else Call(SCI_MARKERADDSET, line, 1 << marker);
 							}
-						} else if(newFile) {
-							//fold boilerplate code
-							if(this.Text.RegexMatch(@"//\{\{(\R//\{\{)? using\R", 0, out RXGroup g)) {
-								int i = ST.LineIndexFromPos(g.Index, true);
-								if(0 != (SC_FOLDLEVELHEADERFLAG & Call(SCI_GETFOLDLEVEL, i))) Call(SCI_FOLDCHILDREN, i);
-							}
+						}
+					} else if(newFile) {
+						//fold boilerplate code
+						if(this.Text.RegexMatch(@"//\{\{(\R//\{\{)? using\R", 0, out RXGroup g)) {
+							int i = ST.LineIndexFromPos(g.Index, true);
+							if(0 != (SC_FOLDLEVELHEADERFLAG & Call(SCI_GETFOLDLEVEL, i))) Call(SCI_FOLDCHILDREN, i);
 						}
 					}
 				}
@@ -646,7 +653,7 @@ partial class PanelEdit : UserControl
 			if(_drag != _DD_DataType.Text) {
 				t = new StringBuilder();
 				if(FN.IsCodeFile) {
-					var text = ST.AllText();
+					var text = this.Text;
 					if(Au.Compiler.MetaComments.FindMetaComments(text, out endOfMeta) && pos < endOfMeta) inMeta = true;
 					else if(pos > endOfMeta) text.RegexMatch(@"\b(\w+)\s*=\s*new\s+Au(?:Menu|Toolbar)", 1, out menuVar, 0, new RXMore(endOfMeta, pos));
 				}

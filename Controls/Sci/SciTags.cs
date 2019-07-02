@@ -344,27 +344,29 @@ namespace Au.Controls
 
 				//end tag. Support <> and </tag>, but don't care what tag it is. The </tag> form can be used just to make the code more readable.
 				if(s[0] == '/') {
-					s++; while(AChar.IsAsciiAlpha(*s)) s++;
+					s++;
+					ch = *s; if(ch == '+' || ch == '.') s++;
+					while(AChar.IsAsciiAlpha(*s)) s++;
 					if(s[0] != '>') goto ge;
 				}
 				if(s[0] == '>') {
 					int n = _stack.Count - 1;
 					if(n < 0) goto ge; //<> without tag
 					s++;
-					int i = _stack[n]; _stack.RemoveAt(n);
+					int i = _stack[n];
 					if(i >= 0) { //the tag is a style tag or some other styled tag (eg link)
 						if(currentStyle >= STYLE_FIRST_EX && _styles[currentStyle - STYLE_FIRST_EX].Eol) {
 							if(*s == '\r') _Write(*s++, currentStyle);
 							if(*s == '\n') _Write(*s++, currentStyle);
 						}
 						currentStyle = (byte)i;
-					} else {
+					} else { //currently can be only <fold>
 						i &= 0x7fffffff;
-						if(s - tag == 6 && LibCharPtr.AsciiStarts(tag + 1, "fold")) {
-							(folds ?? (folds = new List<POINT>())).Add((i, (int)(t - s0)));
-							//if(s < sEnd && *s != '\r' && *s != '\n') _WriteString("\r\n", STYLE_DEFAULT); //no, can be an end of tag there
-						}
+						if(!(s - tag == 6 && LibCharPtr.AsciiStarts(tag + 1, "fold"))) goto ge;
+						(folds ?? (folds = new List<POINT>())).Add((i, (int)(t - s0)));
+						//if(s < sEnd && *s != '\r' && *s != '\n') _WriteString("\r\n", STYLE_DEFAULT); //no, can be an end of tag there
 					}
+					_stack.RemoveAt(n);
 					continue;
 				}
 
@@ -454,8 +456,8 @@ namespace Au.Controls
 				//	break;
 				case 5 << 16 | 'i':
 					if(attr == null) goto ge;
-					if(LibCharPtr.AsciiStarts(tag + 1, "mage")) hideTag = noEndTag = true;
-					else goto ge;
+					if(!LibCharPtr.AsciiStarts(tag + 1, "mage")) goto ge;
+					hideTag = noEndTag = true;
 					break;
 				case 1 << 16 | '_': //<_>text where tags are ignored</_>
 				case 1 << 16 | '\a': //<\a>text where tags are ignored</\a>
@@ -480,7 +482,9 @@ namespace Au.Controls
 					//add 'expand/collapse' link in this line. Max 6 characters, because overwriting "<fold>".
 					_WriteString(" ", STYLE_HIDDEN); //it is how we later detect links
 					_WriteString(">>", _GetStyleIndex(new _TagStyle { Hotspot = true, Underline = true, Color = 0x80FF }, currentStyle));
-					_WriteString("\r\n", currentStyle); //let the folded text start from next line
+					//let the folded text start from next line
+					var s1 = s; if(s1[0] == '<' && (s1[1] == '_' || s1[1] == '\a') && s1[2] == '>') s1 += 3;
+					switch(*s1) { case 10: case 13: break; default: _WriteString("\r\n", currentStyle); break; }
 					break;
 				case 4 << 16 | 'l':
 					linkTag = "link";
@@ -520,7 +524,7 @@ namespace Au.Controls
 					//if(attr == null) goto ge; //no, use text as attribute
 					if(_linkStyle != null) style = new _TagStyle(_linkStyle);
 					else {
-						style.Color =  0x0080FF;
+						style.Color = 0x0080FF;
 						style.Underline = true;
 					}
 					style.Hotspot = true;

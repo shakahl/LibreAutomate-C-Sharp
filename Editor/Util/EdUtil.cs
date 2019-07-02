@@ -43,7 +43,7 @@ static class EdNetExtensions
 
 	///// <summary>
 	///// Checks or unchecks item by name.
-	///// See also: <see cref="EdForm.CheckCmd"/>
+	///// See also: <see cref="FMain.CheckCmd"/>
 	///// </summary>
 	///// <exception cref="NullReferenceException">Item does not exist.</exception>
 	//public static void CheckItem(this ToolStripDropDownMenu t, string itemName, bool check)
@@ -55,11 +55,12 @@ static class EdNetExtensions
 
 static class EdResources
 {
-	static EdResources()
-	{
-		//this makes the first access of managed resources 3 times faster. Then app starts ~10 ms faster. Default culture is en-US.
-		Project.Properties.Resources.Culture = System.Globalization.CultureInfo.InvariantCulture;
-	}
+	//static EdResources()
+	//{
+	//	//rejected. Instead use [assembly: NeutralResourcesLanguage("en-US")].
+	//	//This makes the first access of managed resources 3 times faster. Then app starts ~10 ms faster. Default culture is en-US.
+	//	Au.Editor.Properties.Resources.Culture = System.Globalization.CultureInfo.InvariantCulture;
+	//}
 
 #if false //currently not used. Imagelists have problems with high DPI.
 	/// <summary>
@@ -119,7 +120,7 @@ static class EdResources
 			object R = _cache[name];
 			if(R != null) return R;
 			//var p = APerf.StartNew();
-			R = Project.Properties.Resources.ResourceManager.GetObject(name, Project.Properties.Resources.Culture);
+			R = Au.Editor.Properties.Resources.ResourceManager.GetObject(name, Au.Editor.Properties.Resources.Culture);
 			//p.NW();
 			Debug.Assert(R != null);
 			if(R != null) _cache[name] = R;
@@ -146,12 +147,12 @@ static class EdResources
 	/// <param name="name">Image resource name.</param>
 	public static Bitmap GetImageNoCache(string name)
 	{
-		return Project.Properties.Resources.ResourceManager.GetObject(name, Project.Properties.Resources.Culture) as Bitmap;
+		return Au.Editor.Properties.Resources.ResourceManager.GetObject(name, Au.Editor.Properties.Resources.Culture) as Bitmap;
 	}
 }
 
 /// <summary>
-/// Various cached GDI objects etc.
+/// Various cached GDI+ objects etc.
 /// </summary>
 static class EdStock
 {
@@ -168,13 +169,13 @@ static class EdStock
 
 	static Icon _iconAppNormal, _iconTrayNormal, _iconTrayDisabled, _iconTrayRunning;
 
-	public static Icon IconAppNormal => _iconAppNormal ?? (_iconAppNormal = Project.Properties.Resources.app_normal); //contains icons of multiple sizes
+	public static Icon IconAppNormal => _iconAppNormal ?? (_iconAppNormal = Au.Editor.Properties.Resources.app_normal); //contains icons of multiple sizes
 
 	public static Icon IconTrayNormal => _iconTrayNormal ?? (_iconTrayNormal = _Icon(IconAppNormal));
 
-	public static Icon IconAppDisabled => _iconTrayDisabled ?? (_iconTrayDisabled = _Icon(Project.Properties.Resources.app_disabled));
+	public static Icon IconAppDisabled => _iconTrayDisabled ?? (_iconTrayDisabled = _Icon(Au.Editor.Properties.Resources.app_disabled));
 
-	public static Icon IconAppRunning => _iconTrayRunning ?? (_iconTrayRunning = _Icon(Project.Properties.Resources.app_running));
+	public static Icon IconAppRunning => _iconTrayRunning ?? (_iconTrayRunning = _Icon(Au.Editor.Properties.Resources.app_running));
 
 	static Icon _Icon(Icon icon)
 	{

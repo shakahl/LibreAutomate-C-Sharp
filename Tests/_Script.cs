@@ -1527,121 +1527,6 @@ class Script : AScript
 		f.ShowDialog();
 	}
 
-	public class RegexMenu
-	{
-		AMenu _m;
-		Action<MTClickArgs> _action;
-		ARegex _rx1;
-
-		public AMenu Menu => _m;
-
-		public Action<RegexMenuArgs> ItemAction { get; set; }
-
-		public RegexMenu(string xml, bool replacement = false)
-		{
-			_m = new AMenu();
-			_action = _Action;
-
-			_m.CMS.ShowImageMargin = false;
-
-			var x = xml[0] == '<' ? XElement.Parse(xml) : XElement.Load(xml);
-			if(x.Name != "regex") throw new XmlException();
-			x = x.Element(replacement ? "replace" : "find") ?? throw new XmlException();
-			_rx1 = new ARegex(@"(?m)^ +");
-			_AddGroup(x);
-			_rx1 = null;
-		}
-
-		void _AddGroup(XElement x)
-		{
-			foreach(var v in x.Elements()) {
-				switch(v.Name.LocalName) {
-				case "r":
-					var (text, tooltip) = _ParseXmlValue(v);
-					var k = _m.Add(text, _action);
-					k.ToolTipText = tooltip;
-					var r = v.Attr("r");
-					if(r != null) {
-						if(r.Length > 0) k.Tag = r;
-						else k.Enabled = false;
-					}
-					break;
-				case "group":
-					using(_m.Submenu(v.Attr("name"))) {
-						_AddGroup(v);
-					}
-					break;
-				case "sep":
-					_m.Separator();
-					break;
-				case "link":
-					var (text2, url) = _ParseXmlValue(v);
-					url ??= text2;
-					_m.Add(text2, o => AExec.TryRun(url));
-					break;
-				}
-			}
-		}
-
-		(string text, string tooltip) _ParseXmlValue(XElement e)
-		{
-			string text = e.Value.Trim(), tooltip = null;
-			int i = text.IndexOf('\n');
-			if(i >= 0) {
-				tooltip = _rx1.Replace(text.Substring(i + 1));
-				text = text.Remove(i);
-			}
-			return (text, tooltip);
-		}
-
-		void _Action(MTClickArgs e)
-		{
-			var mi = e.MenuItem;
-			int moveLeft = 0;
-			if(mi.Tag is string s) {
-				int i = s.IndexOf('%');
-				if(i >= 0) { s = s.Remove(i, 1); moveLeft = s.Length - i; }
-			} else {
-				s = mi.Text;
-				int i = s.Find("  -  ");
-				if(i >= 0) s = s.Remove(i);
-			}
-
-			if(ItemAction != null) {
-				var k = new RegexMenuArgs { MenuItem = e.MenuItem, AddText = s, MoveCaretLeft = moveLeft };
-				ItemAction.Invoke(k);
-			} else {
-
-			}
-		}
-
-		public void Show(bool byCaret = false)
-		{
-			_m.Show(byCaret);
-		}
-
-		public void Show(Control c)
-		{
-			_m.Show(c);
-		}
-	}
-
-	public class RegexMenuArgs
-	{
-		public string AddText;
-		public int MoveCaretLeft;
-		public ToolStripMenuItem MenuItem;
-	}
-
-	void TestRegexMenu()
-	{
-		var m = new RegexMenu(@"Q:\app\Au\Editor\Default\Regex.xml");
-		m.ItemAction = o => {
-			Print(o.AddText, o.MoveCaretLeft);
-		};
-		m.Show();
-	}
-
 	void TestCalculatePopupWindowPosition()
 	{
 		var w = AWnd.Find("* Notepad").OrThrow();
@@ -1688,7 +1573,7 @@ class Script : AScript
 		var b = new Button { Text = "Test", Top = 50 };
 		f.Controls.Add(b);
 
-		var r = new Au.Tools.RegexInfoWindow { InsertInControl = t };
+		var r = new Au.Tools.RegexWindow { InsertInControl = t };
 		f.Load += (unu, sed) => {
 			//r.ContentText = @"Q:\app\Au\Tools\Regex.txt";
 			r.Show(f);
@@ -1717,6 +1602,48 @@ class Script : AScript
 		Print(File.ReadAllText(f2));
 	}
 
+	void TestRegexReplaceEx()
+	{
+		var s = "yyn!";
+		var rx = "(y)?|n";
+		var rep = "${1:+yes:no}";
+
+		//var x = new Regex(rx);
+		//Print(x.Replace(s, rep));
+
+		//s = "/*/ meta /*/\nmore";
+		////s = "more";
+		//rx = @"(?s-m)^(/\*/.*?/\*/(*MARK: ))?+\R?+";
+		//rep = "$1$*//{{ using\n";
+
+		//Print(s.RegexReplace(rx, rep));
+
+		rx = @"(\d)\d+";
+		//rx = @"(\d)(?C)\d+";
+		s = "one 12 two 34 three";
+		rep = @"$1<R>";//rep = null;
+		var x = new ARegex(rx);
+		//x.Callout = o => { Print(o.current_position); };
+		Print(x.ReplaceEx(s, rep, out s, false), s);
+	}
+
+	void TestRegexMatchDataStack()
+	{
+		var x = new ARegex(@"(\d+)(\s+)!");
+		var s = "aadjksjdksjdk 123  ! 87 !";
+
+		if(x.MatchG(s, out var g, 1)) Print(g);
+
+		APerf.Cpu();
+		for(int i1 = 0; i1 < 5; i1++) {
+			int n2 = 1000;
+			APerf.First();
+			for(int i2 = 0; i2 < n2; i2++) { x.MatchG(s, out g, 1); }
+			APerf.NW();
+			Thread.Sleep(200);
+		}
+	}
+
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
 	void _Main(string[] args)
 	{ //}}//}}//}}//}}
@@ -1725,13 +1652,13 @@ class Script : AScript
 		AOutput.Clear();
 		//100.ms();
 
-
+		//TestRegexMatchDataStack();
+		//TestRegexReplaceEx();
 		//TestXmlFormatting();
 		//TestRegexInfoWindow();
 		//TestAuInfoWindow();
 		//TestSciTagsRegisteredStyles();
 		//TestCalculatePopupWindowPosition();
-		//TestRegexMenu();
 		//TestComboWrapper();
 		//TestTodo();
 		//TestDiffMatchpatch();
@@ -1779,4 +1706,9 @@ class Script : AScript
 		////finally {  }
 		////ADialog.Show("dll unloaded");
 	}
+}
+
+static class TestExt
+{
+
 }

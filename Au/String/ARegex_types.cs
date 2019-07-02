@@ -392,7 +392,8 @@ namespace Au.Types
 #pragma warning disable 649 //field never assigned
 		struct pcre2_callout_block
 		{
-			public int version, callout_number, capture_top, capture_last;
+			public int version;
+			public readonly int callout_number, capture_top, capture_last;
 			public readonly LPARAM* vec;
 			public readonly char* mark, subject;
 			public readonly LPARAM subject_length;
@@ -403,10 +404,11 @@ namespace Au.Types
 			public readonly LPARAM callout_string_offset;
 			public readonly LPARAM callout_string_length;
 			public readonly char* callout_string;
+			public readonly int callout_flags;
 		}
 #pragma warning restore 649
 
-		//We use pointer instead of adding pcre2_callout_block fields to this strust. Other ways are not good:
+		//We use pointer instead of adding pcre2_callout_block fields to this struct. Other ways are not good:
 		//	Passing whole block to the final callback by value is slow (104 bytes, tested speed). Also then cannot have Result like now.
 		//	With 'in' fast, but then users have to declare lambda parameters like 'in RXCalloutData d'. Now just 'd'.
 		pcre2_callout_block* _p;
@@ -442,6 +444,13 @@ namespace Au.Types
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
 		public int capture_last => _p->capture_last;
+
+		/// <summary>
+		/// Flags.
+		/// 1 PCRE2_CALLOUT_STARTMATCH, 2 PCRE2_CALLOUT_BACKTRACK.
+		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
+		/// </summary>
+		public int callout_flags => _p->callout_flags;
 
 		/// <summary>
 		/// The offset within the subject string at which the current match attempt started. But depends on \K etc.
@@ -648,10 +657,15 @@ namespace Au.Types
 			PcreCalloutT callout, out RegexMatch m, out BSTR errStr);
 		//note: don't use [MarshalAs(UnmanagedType.BStr)] out string errStr, it makes much slower.
 
-		//This version allows to pass m null. Using 2 versions makes programming simpler.
+		//This overload allows to pass m null. Using 2 overloads makes programming simpler.
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_RegexMatch(HandleRef code, string s, LPARAM len, LPARAM start, RXMatchFlags flags,
 			PcreCalloutT callout, RegexMatch* m, out BSTR errStr);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_RegexSubstitute(HandleRef code, string s, LPARAM len, LPARAM start, PCRE2_SUBSTITUTE_ flags,
+			string repl, LPARAM rlen, [Out] char[] outputbuffer, ref LPARAM outlen,
+			PcreCalloutT callout, out BSTR errStr);
 
 		#region PCRE API
 
@@ -660,6 +674,7 @@ namespace Au.Types
 		//	PARTIAL = 0, //note: the PCRE API value is -2, but our C++ dll API then returns 0
 		//	NOMATCH = -1,
 		//	CALLOUT = -37,
+		//	NOMEMORY = -48,
 		//	NOUNIQUESUBSTRING = -50,
 		//	//others not useful
 		//}
@@ -669,6 +684,15 @@ namespace Au.Types
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int pcre2_substring_nametable_scan(HandleRef code, char* name, ushort** first, ushort** last);
+
+		internal enum PCRE2_SUBSTITUTE_
+		{
+			EXTENDED = 0x00000200,
+			GLOBAL = 0x00000100,
+			OVERFLOW_LENGTH = 0x00001000,
+			UNKNOWN_UNSET = 0x00000800,
+			UNSET_EMPTY = 0x00000400,
+		}
 
 		internal enum PCRE2_INFO_
 		{

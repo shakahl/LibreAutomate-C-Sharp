@@ -173,7 +173,6 @@ namespace Au.Controls
 					Tags?.LibOnLButtonDownWhenNotFocused(ref m, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
 					if(setFocus && !NoMouseLeftSetFocus) Api.SetFocus(hwnd);
 				}
-				break;//TODO
 				_DefWndProc(ref m);
 				return;
 			case Api.WM_RBUTTONDOWN:
@@ -186,7 +185,7 @@ namespace Au.Controls
 
 			switch(m.Msg) {
 			case Api.WM_CREATE: //after inherited classes set styles etc
-				if(_text != null) ST.SetText(_text);
+				if(!Empty(_text)) ST.SetText(_text);
 				break;
 			}
 		}
@@ -224,8 +223,15 @@ namespace Au.Controls
 			OnSciNotify(ref n);
 		}
 
+		//void _Print(object text)
+		//{
+		//	var t = Name ?? GetType().ToString();
+		//	if(Name != "Status_text") AOutput.QM2.Write($"{t}: {text}");
+		//}
+
 		unsafe void _NotifyModified(ref SCNotification n)
 		{
+			_text = null;
 			var code = n.modificationType;
 			if((code & (MOD.SC_MULTISTEPUNDOREDO | MOD.SC_LASTSTEPINUNDOREDO)) == MOD.SC_MULTISTEPUNDOREDO) return;
 			//Print(code, n.position);
@@ -241,7 +247,11 @@ namespace Au.Controls
 		/// Raises the <see cref="SciNotify"/> event.
 		/// </summary>
 		/// <param name="n"></param>
-		protected virtual void OnSciNotify(ref SCNotification n) { SciNotify?.Invoke(this, ref n); }
+		protected virtual void OnSciNotify(ref SCNotification n) {
+			SciNotify?.Invoke(this, ref n);
+			var e = TextChanged;
+			if(e != null && n.nmhdr.code == NOTIF.SCN_MODIFIED && 0 != (n.modificationType & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) e(this, EventArgs.Empty);
+		}
 
 		public delegate void SciEventHandler(AuScintilla c, ref SCNotification n);
 
@@ -251,8 +261,13 @@ namespace Au.Controls
 		public event SciEventHandler SciNotify;
 
 		/// <summary>
-		/// On SCN_MODIFIED notifications suppress <see cref="OnSciNotify"/> and <see cref="SciNotify"/>.
-		/// Use to temporarily disable 'modified' notifications. Don't use SCI_SETMODEVENTMASK for it, because then will not work tags and images.
+		/// Occurs when text changed.
+		/// </summary>
+		public new event EventHandler TextChanged;
+
+		/// <summary>
+		/// On SCN_MODIFIED notifications suppress <see cref="OnSciNotify"/>, <see cref="SciNotify"/> and <see cref="TextChanged"/>.
+		/// Use to temporarily disable 'modified' notifications. Never use SCI_SETMODEVENTMASK, because then the control would stop working correctly.
 		/// </summary>
 		public bool DisableModifiedNotifications { get; set; }
 
@@ -412,13 +427,19 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// The 'get' function calls <see cref="SciText.AllText"/> (ST.AllText).
-		/// The 'set' function calls <see cref="SciText.SetText"/> (ST.SetText) with default parameters (with undo and notifications, unless InitReadOnlyAlways).
+		/// The 'get' function calls <see cref="SciText.AllText"/> (ST.AllText) when need.
+		/// The 'set' function calls <see cref="SciText.SetText"/> (ST.SetText) when need. Uses default parameters (with undo and notifications, unless InitReadOnlyAlways).
 		/// Unlike the above methods, this property can be used before creating handle.
 		/// </summary>
 		public override string Text {
-			get { if(IsHandleCreated) _text = ST.AllText(); return _text; }
-			set { _text = value; if(IsHandleCreated) ST.SetText(_text); }
+			get {
+				if(_text == null && IsHandleCreated) _text = ST.AllText(); //_NotifyModified sets _text=null
+				return _text;
+			}
+			set {
+				if(IsHandleCreated) ST.SetText(value); //_NotifyModified sets _text=null. Control text can be != value, eg when tags parsed.
+				else _text = value; //will set control text on WM_CREATE
+			}
 		}
 		string _text;
 

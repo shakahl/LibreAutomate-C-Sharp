@@ -79,7 +79,7 @@ static class CommandLine
 				AWnd wMain = (AWnd)w.Send(Api.WM_USER);
 				if(!wMain.Is0) {
 					try { wMain.Activate(); }
-					catch { }
+					catch(Exception ex) { ADebug.Print(ex); }
 				}
 			}
 
@@ -191,7 +191,7 @@ static class CommandLine
 			int mode = (int)wParam; //1 - wait, 3 - wait and get ATask.WriteResult output
 			string script; string[] args; string pipeName = null;
 			if(action == 99) {
-				var a = AExtString.More.CommandLineToArray(s); if(a.Length == 0) return 0;
+				var a = Au.Util.AStringUtil.CommandLineToArray(s); if(a.Length == 0) return 0;
 				int nRemove = 0;
 				if(0 != (mode & 2)) pipeName = a[nRemove++];
 				script = a[nRemove++];

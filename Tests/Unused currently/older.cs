@@ -200,8 +200,8 @@ static partial class Test
 		//		A2,4 100 -8 0x10";
 		//		var x = new ACsv(csv);
 		//		//var d = x.Data.ToDictionary(row => row[0], row => row[1], StringComparer.OrdinalIgnoreCase);
-		//		//var d = x.Data.ToDictionary(row => row[0], row => AExtString.More.StringToIntArray(row[1]), StringComparer.OrdinalIgnoreCase);
-		//		var d = x.ToDictionary(true, s => AExtString.More.StringToIntArray(s));
+		//		//var d = x.Data.ToDictionary(row => row[0], row => Au.Util.AStringUtil.StringToIntArray(row[1]), StringComparer.OrdinalIgnoreCase);
+		//		var d = x.ToDictionary(true, s => Au.Util.AStringUtil.StringToIntArray(s));
 		//		//Print(d);
 		//		foreach(var v in d) Print(v.Key, string.Join(" ", v.Value));
 		//		x.FromDictionary(d, v => string.Join(" ", v));
@@ -1754,7 +1754,7 @@ a1,-8";
 
 	static void TestHooks()
 	{
-		//AOutput.LibUseQM2 = true; AOutput.Clear();
+		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 
 		//using(var h = AHookWin.Keyboard(k => {
 		//	Print($"{k.Key}, {!k.IsUp}");

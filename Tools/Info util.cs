@@ -15,6 +15,7 @@ using System.Drawing;
 //using System.Xml.Linq;
 
 using Au.Types;
+using static Au.AStatic;
 using Au.Controls;
 
 namespace Au.Tools
@@ -29,7 +30,7 @@ namespace Au.Tools
 		public CommonInfos(InfoBox control)
 		{
 			_control = control;
-			_control.Tags.AddLinkTag("+examples", what => _Examples(what));
+			_control.Tags.AddLinkTag("+regex", o => _Regex(o));
 		}
 
 		/// <summary>
@@ -51,21 +52,32 @@ namespace Au.Tools
 			_control.ST.SetText(text);
 		}
 
-		void _Examples(string what)
+		void _Regex(string _)
 		{
-			switch(what) {
-			case "wildex":
-				_SetInfoText("whole text\n*end\nstart*\n*middle*\ntime ??:??\n**t literal text\n**c case-sensitive text\n**tc case-sensitive literal\n**r regular expression\n**rc case-sensitive regex\n**n not this\n**m this||or this||**r or this regex||**n and not this\n**m(^^^) this^^^or this^^^or this\n\nCan be verbatim string. Examples:\n@\"C:\\Example\"\n@\"**rc regular expression\"");
-				break;
-				//case "regex":
-				//	break;
-			}
+			if(_regexWindow == null) _regexWindow = new RegexWindow();
+			if(!_regexWindow.Window.IsHandleCreated) _regexWindow.Show(_control);
+			else _regexWindow.Window.Show();
 		}
 
-		//TODO: use RegexInfoWindow instead
+		RegexWindow _regexWindow;
+
 		const string c_infoWildex = @"
-The text is <help articles/Wildcard expression>wildcard expression<>. <+examples wildex>Examples<>.
-Regular expression info: <link https://www.pcre.org/current/doc/html/pcre2pattern.html>syntax</link>, <link https://www.pcre.org/current/doc/html/pcre2syntax.html>syntax summary</link>, <link http://www.rexegg.com/>rexegg.com</link>, <link https://www.regular-expressions.info/>regular-expressions.info</link>.
-Can be verbatim string. Examples: <c brown>@""C:\Example""<>,  <c brown>@""**rc regular expression""<>.";
+The text is <help articles/Wildcard expression>wildcard expression<>.
+Can be verbatim string and contain <+regex>regular expression<>, like <c brown>@""**rc regex""<>.
+Examples:
+whole text
+*end
+start*
+*middle*
+time ??:??
+**t literal text
+**c case-sensitive text
+**tc case-sensitive literal
+**r regular expression
+**rc case-sensitive regex
+**n not this
+**m this||or this||**r or this regex||**n and not this
+**m(^^^) this^^^or this^^^or this
+";
 	}
 }

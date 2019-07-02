@@ -23,9 +23,9 @@ using static Au.AStatic;
 using static Program;
 using Au.Controls;
 
-partial class EdOptions : AuForm
+partial class FOptions : AuForm
 {
-	public EdOptions()
+	public FOptions()
 	{
 		InitializeComponent();
 	}
@@ -33,13 +33,13 @@ partial class EdOptions : AuForm
 	public static void ShowForm()
 	{
 		if(s_form == null) {
-			s_form = new EdOptions();
+			s_form = new FOptions();
 			s_form.Show(MainForm);
 		} else {
 			s_form.Activate();
 		}
 	}
-	static EdOptions s_form;
+	static FOptions s_form;
 
 	protected override void OnFormClosed(FormClosedEventArgs e)
 	{

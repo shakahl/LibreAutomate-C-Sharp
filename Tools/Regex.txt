@@ -36,10 +36,7 @@
 
 This program uses PCRE2 version 10.33.
 
-<b>About this window<>
-The links at the left open regular expression help topics at the right. In help topics click regex links to insert in the text edit field.
-
-If Regex is checked in the Find pane, this window is visible when an edit field has focus. You can close this window. To show it again, press F1 or uncheck/check Regex.
+If Regex is checked in the Find pane, this window is visible when a text field has focus. You can close it. To show again, press F1 or uncheck/check Regex.
 
 -- options --
 
@@ -62,24 +59,25 @@ If Regex is checked in the Find pane, this window is visible when an edit field 
 <+a (?^%)>(?^im)<>  -  remove <.r>imsnx<> and add <.r>im<>.
 <+a (?%:)>(?i:...)<>  -  another way to set options in non-capturing groups. The same as <.r>(?:(?i)...)<>.
 
-The above options can be set anywhere in regular expression and are applied until its end or until the end of the group or other enclosed part or until unset.
+These options can be set anywhere in regular expression and are applied until its end or until the end of the <.r>(...)<> group/assertion/etc or until unset.
 
 Example regex: <.r>(?mi)^ab((?s).+?)cd(?-i)ef<>. Here option <.r>m<> is set for whole regex, option <.r>i<> until <.r>(?-i)<>, and option <.r>s<> added only in group <.r>(.+?)<>.
 
-The following are recognized only at the very start. Rarely used.
-
+<b>Rarely used options and flags<>
 <+a>(*BSR_UNICODE)<>  -  <.r>\R<> matches any Unicode newline characters, not only <.r>\n<>, <.r>\r<> and <.r>\r\n<>.
 <+a>(*ANY)<>  -  newline includes any Unicode newline characters, not only <.r>\n<>, <.r>\r<> and <.r>\r\n<>.
 <+a>(*LF)<>  -  newline is only <.r>\n<>.
 <+a>(*CR)<>  -  newline is only <.r>\r<>.
 <+a>(*CRLF)<>  -  newline is only <.r>\r\n<>.
-<+a>(*NOTEMPTY)<>  -  set this flag.
+<+a>(*NOTEMPTY)<>  -  set this flag. See the links below.
 <+a>(*NOTEMPTY_ATSTART)<>  -  set this flag.
 <+a>(*NO_AUTO_POSSESS)<>  -  set this flag.
 <+a>(*NO_DOTSTAR_ANCHOR)<>  -  set this flag.
 <+a>(*NO_START_OPT)<>  -  set this flag.
 <+a>(*UTF)<>  -  set this flag.
 <+a>(*UCP)<>  -  set this flag.
+
+These options can be set only at the start of regular expression.
 
 With regular expression functions you can also use flags <help>Au.Types.RXFlags<> and <help>Au.Types.RXMatchFlags<>. There are flags for most <.r>(?...)<> and <.r>(*...)<> options and more. Options <.r>(?...)<> set in regular expression override function's flags.
 
@@ -221,34 +219,15 @@ See also: <+p charProp>Unicode character properties<> and <+p scripts>scripts<>.
 
 <.h>Repetition quantifiers<>
 
+<+a>?<>  -  0 or 1. Lazy <+a>??<>, possessive <+a>?+<>.
+<+a>*<>  -  0 or more. Lazy <+a>*?<>, possessive <+a>*+<>.
+<+a>+<>  -  1 or more. Lazy <+a>+?<>, possessive <+a>++<>.
+<+a {%}>{n}<>  -  exactly n.
+<+a {%,}>{n,m}<>  -  at least n, no more than m. Lazy <+a {%,}?>{n,m}?<>, possessive <+a {%,}+>{n,m}+<>.
+<+a {%,}>{n,}<>  -  n or more. Lazy <+a {%,}?>{n,}?<>, possessive <+a {%,}+>{n,}+<>.
+
 A quantifier after a character/group/etc specifies how many times it must match.
 Examples: <.r><.r>.*<><> - 0 or more characters; <.r><.r>(\d{3}-)+<><> - 1 or more groups of 3 digits and -.
-
-<+a>?<>  -  0 or 1.
-<+a>*<>  -  0 or more.
-<+a>+<>  -  1 or more.
-<+a {%}>{n}<>  -  exactly n.
-<+a {%,}>{n,m}<>  -  at least n, no more than m.
-<+a {%,}>{n,}<>  -  n or more.
-
-Quantifiers can be greedy, lazy or possessive. Default is greedy. Option <.r>(?U)<> makes lazy.
-Greedy - as many as possible. For example regex <.r><.+><> matches <c green><ab> cd <ef><> in string <c green><ab> cd <ef> gh<>.
-Lazy - as few as possible. For example regex <.r><.+?><> matches <c green><ab><> in the above string.
-Possessive - once the regex part matched, it cannot be backtracked (retried smaller parts of it) when following regex part does not match; it can make faster. Greedy, ignores <.r>(?U)<>. The same as <+p groups>atomic groups<>, just simpler syntax.
-
-<+a>?<>  -  after a quantifier makes it lazy.
-<+a>+<>  -  after a quantifier makes it possessive.
-
-<+a>??<>  -  0 or 1, lazy.
-<+a>*?<>  -  0 or more, lazy.
-<+a>+?<>  -  1 or more, lazy.
-<+a {%,}?>{n,m}?<>  -  at least n, no more than m, lazy.
-<+a {%,}?>{n,}?<>  -  n or more, lazy.
-<+a>?+<>  -  0 or 1, possessive.
-<+a>*+<>  -  0 or more, possessive.
-<+a>++<>  -  1 or more, possessive.
-<+a {%,}+>{n,m}+<>  -  at least n, no more than m, possessive.
-<+a {%,}+>{n,}+<>  -  n or more, possessive.
 
 Quantifiers can be placed after:
   a character, such as <.r>c<> or <.r>\t<> (tab);
@@ -259,6 +238,11 @@ Quantifiers can be placed after:
   a group like <.r>(...)<> or <.r>(?:...)<> or assertion like <.r>(?=...)<> etc;
   a backreference, like <.r>\1<>;
   a subroutine call, like <.r>(?1)<> or <.r>(?R)<> or <.r>(?&name)<>.
+
+Quantifiers can be greedy (default), lazy (with <.r>?<> or option <.r>(?U)<>) or possessive (with <.r>+<>).
+• Greedy - as many as possible. For example regex <.r><.+><> matches <c green><ab> cd <ef><> in string <c green><ab> cd <ef> gh<>.
+• Lazy - as few as possible. For example regex <.r><.+?><> matches <c green><ab><> in the above string.
+• Possessive - once the regex part matched, it cannot be backtracked (retried smaller parts of it) when next regex part does not match; it can make faster. Greedy, ignores <.r>(?U)<>. The same as <+p groups>atomic groups<>, just simpler syntax.
 
 <b>Links<>
 <link https://www.pcre.org/current/doc/html/pcre2pattern.html#SEC17>Repetition<>
@@ -319,7 +303,7 @@ Capturing groups have numbers starting from 1. Non-capturing groups don't have n
 
 Groups can be nested, like <.r>(group1(group2))<>.
 
-Atomic groups can be used to avoid unnecessary backtracking and thus improve performance. Once the group matched, it cannot be backtracked (retried smaller parts of it) when following regex part does not match. For simple cases can instead be used <+p repetition>possessive quantifiers<>, which is the same just simpler syntax.
+Atomic groups can be used to avoid unnecessary backtracking and thus improve performance. Once the group matched, it cannot be backtracked (retried smaller parts of it) when next regex part does not match. For simple cases can instead be used <+p repetition>possessive quantifiers<>, which is the same just simpler syntax.
 
 <b>Backreferences<>
 <+a \g%>\gn<>  -  reference to group n (1, 2, ...). Or <+a \%>\n<>, but can be ambiguous.
@@ -552,10 +536,10 @@ A script run is a sequence of characters that are all from the same script.
 <+a ${%}>${n}<>  -  the same as above. Here n is a group number. Example: <.r>${10}<>.
 <+a ${%}>${name}<>  -  string part that matches a named group like <.r>(?'name'...)<>.
 <+a>$+<>  -  string part that matches the last group.
-<+a>$*<>  -  last reached mark. The name of the last reached mark like <.r>(*MARK:NAME)<>.
 <+a>$`<>  -  string part before match.
 <+a>$'<>  -  string part after match.
 <+a>$_<>  -  whole string.
+<+a>$*<>  -  the name of the last reached mark or other named <+p backtracking>verb<> like <.r>(*MARK:NAME)<>.
 <+a>$$<>  -  $ character.
 
 <b>Example<>
@@ -564,7 +548,23 @@ Regex: <.r>^(\d+)/(\d+)/(\d+)$<>
 Replacement: <.r>$3-$1-$2<>
 Result: <c green>2020-10-08<>
 
+<b>Extended syntax<>
+<+a>$^<>  -  option to use extended syntax. Must be at the start. Only in the Find pane.
+<.r>\n<> etc - <+p escape>escape sequences<>, same as in regex.
+<+a \Q%\E>\Q...\E<>  -  literal text.
+<+a \U%\E>\U...\E<>  -  uppercase text. Example: <.r>\U$0\E<>.
+<+a \L%\E>\L...\E<>  -  lowercase text.
+<+a>\u<>  -  make next character uppercase. Example: <.r>\u$0<>.
+<+a>\l<>  -  make next character lowercase.
+<+a ${%:-}>${n:-S2}<>  -  if group n (number or name) is set, use its value; else use expanded text S2.
+<+a ${%:+:}>${n:+S1:S2}<>  -  if group n is set, use expanded text S1; else use expanded text S2.
+<+a>${*MARK}<>  -  the name of the last reached mark or other named <+p backtracking>verb<>.
+<.r>$0-$99<>, <.r>${n}<>, <.r>${name}<> - same as with non-extended syntax.
+<.r>$+<>, <.r>$`<>, <.r>$'<>, <.r>$_<>, <.r>$*<> - not supported.
+
 <b>Links<>
 <help>ARegex.Replace<>
+<help>ARegex.ReplaceEx<>
+<link https://www.pcre.org/current/doc/html/pcre2api.html#SEC36>Extended syntax (pcre2_substitute)<>
 
 -- end --

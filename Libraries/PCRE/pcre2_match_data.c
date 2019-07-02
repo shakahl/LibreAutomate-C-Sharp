@@ -67,6 +67,7 @@ int pcre2_match_data_create_au(const pcre2_code* code, pcre2_match_data* md)
 
 		//code from pcre2_match_data_create (below)
 		md->oveccount = oveccount;
+		md->flags = 0;
 	}
 
 	return memSize;

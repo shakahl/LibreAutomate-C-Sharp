@@ -3,7 +3,7 @@
     {
       "src": [
         {
-		  "src": "../",
+		  "src": "../../../Au/",
           "files": [
             "Au.csproj"
           ]
@@ -57,13 +57,13 @@
       "_enableNewTab": true,
       "_disableBreadcrumb": true,
       "_disableAffix": true,
-      "_disableContribution": true,
+      "_disableContribution": true
     },
     "dest": "_site",
     "globalMetadataFiles": [],
     "fileMetadataFiles": [],
     "template": [
-      "default", "template1", "../../packages/memberpage.2.41.0/content", "template2",
+      "default", "template1", "../../packages/memberpage.2.41.0/content", "template2"
     ],
     "postProcessors": [],
     "markdownEngineName": "markdig",

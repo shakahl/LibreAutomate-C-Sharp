@@ -13,7 +13,7 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
+using System.Linq;
 using System.Xml.Linq;
 using System.Xml;
 
@@ -380,10 +380,7 @@ namespace Au.Controls
 					var f = this.ParentControl as _Float;
 					var parent = (gtParent != null) ? gtParent.ParentControl : _manager;
 					_parentControl = parent;
-					foreach(var v in panels) {
-						v._parentControl = parent;
-						v.Content.Parent = parent;
-					}
+					foreach(var v in panels) _ChangeParent(v, parent);
 					if(prevState == _DockState.Floating) this.SavedFloatingBounds = f.Bounds;
 					f.Close();
 					break;
@@ -397,10 +394,7 @@ namespace Au.Controls
 				case _DockState.Floating:
 					var f = new _Float(_manager, this);
 					this._parentControl = f;
-					foreach(var v in panels) {
-						v._parentControl = f;
-						v.Content.Parent = f;
-					}
+					foreach(var v in panels) _ChangeParent(v, f);
 
 					f.Bounds = rect;
 					f.Show(_manager.TopLevelControl);
@@ -418,6 +412,32 @@ namespace Au.Controls
 				//_manager.Invalidate(true);
 
 				if(prevState != _DockState.Hidden) _manager._OnMouseLeave_Common(this.ParentControl); //calls _UnhiliteTabButton and _HideTooltip
+			}
+
+			void _ChangeParent(_Panel panel, Control parent)
+			{
+				panel._parentControl = parent;
+				var content = panel.Content;
+				content.Parent = parent;
+
+				//restore tooltips
+				if((content is UserControl uc) && (uc.GetType().GetField("components", BindingFlags.Instance | BindingFlags.NonPublic)?.GetValue(uc) is IContainer co)) {
+					foreach(var tt in co.Components.OfType<ToolTip>()) {
+						_Controls(uc);
+						void _Controls(Control parent)
+						{
+							foreach(Control c in parent.Controls) {
+								var s = tt.GetToolTip(c);
+								if(!Empty(s)) {
+									//Print($"<>{c}, <c blue>{s}<>");
+									tt.SetToolTip(c, null);
+									tt.SetToolTip(c, s);
+								}
+								_Controls(c);
+							}
+						}
+					}
+				}
 			}
 
 			/// <summary>

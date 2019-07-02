@@ -43,7 +43,7 @@ unsafe class Program
 
 		var docfx = @"Q:\Programs\DocFx\docfx.exe";
 		var objDir = @"Q:\Temp\Au\DocFX\obj";
-		var docDir = @"Q:\app\Au\Au\_doc";
+		var docDir = @"Q:\app\Au\Other\DocFX\_doc";
 		var siteDir = docDir + @"\_site";
 		var apiDir = docDir + @"\api";
 

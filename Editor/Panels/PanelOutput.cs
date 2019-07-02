@@ -62,14 +62,18 @@ class PanelOutput : AuUserControlBase
 					if(_sb == null) _sb = new StringBuilder(s.Length + 2000); else _sb.Clear();
 					var b = _sb;
 					//AOutput.QM2.Write("'" + s + "'");
+					int iLiteral = 0;
 					if(!s.Starts("<>")) b.Append("<>");
-					bool isFold = i >= 8 && s.Eq(i - 8, "<fold>\r\n"); //eg PrintWarning
-					b.Append(s, 0, isFold ? i - 2 : i);
+					else {
+						iLiteral = i - 1; if(s[iLiteral - 1] == '\r') iLiteral--;
+						if(0 == s.Eq(iLiteral -= 3, false, "<_>", "<\a>")) iLiteral = 0;
+					}
+					if(iLiteral > 0) b.Append(s, 0, iLiteral).AppendLine(); else b.Append(s, 0, i);
 					var rx = s_rx2; if(rx == null) s_rx2 = rx = new ARegex(@" in (.+?):line (?=\d+$)");
 					var rxm = new RXMore();
 					bool replaced = false, isMain = false;
 					int stackEnd = s.Length/*, stackEnd2 = 0*/;
-					foreach(var k in s.Segments(i, s.Length - i, "\r\n", SegFlags.NoEmpty)) {
+					foreach(var k in s.Segments(i, s.Length - i, SegSep.Line)) {
 						//AOutput.QM2.Write("'"+k+"'");
 						rxm.start = k.Offset + 6; rxm.end = k.EndOffset;
 						if(k.Starts("   at ")) {
@@ -80,8 +84,8 @@ class PanelOutput : AuUserControlBase
 							if(!rx.MatchG(s, out var g, 1, rxm)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
 							var f = Model.FindByFilePath(g.Value); if(f == null) continue;
 							int i1 = g.EndIndex + 6, len1 = k.EndOffset - i1;
-							b.Append("   at ").
-							Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
+							b.Append("   at ")
+							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
 							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
 
 							isMain = k.Starts("   at Script._Main(String[] args) in ");
@@ -97,14 +101,15 @@ class PanelOutput : AuUserControlBase
 					if(replaced) {
 						int j = stackEnd; //int j = stackEnd2 > 0 ? stackEnd2 : stackEnd;
 						if(s[j - 1] == '\n') { if(s[--j - 1] == '\r') j--; }
-						b.Append("   <fold>   --- Raw stack trace ---\r\n<\a>").Append(s, i, j - i).Append("</\a></fold>");
+						b.Append("   <fold><\a>   --- Raw stack trace ---\r\n").Append(s, i, j - i).Append("</\a></fold>");
+						if(iLiteral > 0 && 0 != s.Eq(stackEnd, false, "</_>", "</\a")) stackEnd += 4;
 						int more = s.Length - stackEnd;
 						if(more > 0) {
 							if(!s.Eq(stackEnd, "</fold>")) b.AppendLine();
 							b.Append(s, stackEnd, more);
 						}
 						m.Text = b.ToString();
-						//AOutput.QM2.Write(m.Text);
+						//AOutput.QM2.Write("'" + m.Text + "'");
 					}
 					if(_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
 				}

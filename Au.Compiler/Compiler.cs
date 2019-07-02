@@ -144,7 +144,7 @@ namespace Au.Compiler
 			if(m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
 
 			var trees = new List<CSharpSyntaxTree>(m.CodeFiles.Count + 1);
-			var po = new CSharpParseOptions(LanguageVersion.Latest,
+			var po = new CSharpParseOptions(LanguageVersion.Preview, //CONSIDER: maybe later use .Latest, when C# 8 final available. In other place too.
 				m.XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None,
 				SourceCodeKind.Regular,
 				m.Defines);
@@ -348,7 +348,7 @@ namespace Au.Compiler
 					if(0 != (needAttr & 2)) sb.AppendLine("[assembly: AssemblyProduct(\"Script\")]");
 					if(0 != (needAttr & 4)) sb.AppendLine("[assembly: AssemblyInformationalVersion(\"0\")]");
 
-					var tree = CSharpSyntaxTree.ParseText(sb.ToString(), new CSharpParseOptions(LanguageVersion.Latest)) as CSharpSyntaxTree;
+					var tree = CSharpSyntaxTree.ParseText(sb.ToString(), new CSharpParseOptions(LanguageVersion.Preview)) as CSharpSyntaxTree;
 					compilation = compilation.AddSyntaxTrees(tree);
 				}
 			}
@@ -528,7 +528,7 @@ namespace Au.Compiler
 			if(x.s == null) {
 				args = new string[] { outFile };
 			} else {
-				args = AExtString.More.CommandLineToArray(x.s);
+				args = Util.AStringUtil.CommandLineToArray(x.s);
 
 				//replace variables like $(variable)
 				var f = m.CodeFiles[0].f;

@@ -87,13 +87,13 @@
     <ClCompile Include="pcre2_dfa_match.c">
       <Filter>Source Files\excluded</Filter>
     </ClCompile>
-    <ClCompile Include="pcre2_substitute.c">
-      <Filter>Source Files\excluded</Filter>
-    </ClCompile>
     <ClCompile Include="pcre2_extuni.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pcre2_script_run.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="pcre2_substitute.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

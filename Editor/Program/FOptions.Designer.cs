@@ -1,4 +1,4 @@
-﻿partial class EdOptions
+﻿partial class FOptions
 {
 	/// <summary>
 	/// Required designer variable.
@@ -118,7 +118,7 @@
 			this._alwaysVisible.Name = "_alwaysVisible";
 			this._alwaysVisible.Size = new System.Drawing.Size(180, 19);
 			this._alwaysVisible.TabIndex = 1;
-			this._alwaysVisible.Text = "Start visible, exit when closed";
+			this._alwaysVisible.Text = "Start visible; exit when closed";
 			// 
 			// _versionCheck
 			// 
@@ -185,7 +185,7 @@
 			this._toolTip.InitialDelay = 100;
 			this._toolTip.ReshowDelay = 100;
 			// 
-			// EdOptions
+			// FOptions
 			// 
 			this.AcceptButton = this._bOK;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -199,7 +199,6 @@
 			this.IsPopup = true;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
-			this.Name = "EdOptions";
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "Options";

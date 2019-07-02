@@ -759,7 +759,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			f = _currentFile;
 		}
 		if(f == null) return;
-		if(f.IsCodeFile) new EdCodeFileProperties(f).Show(MainForm);
+		if(f.IsCodeFile) new FProperties(f).Show(MainForm);
 		//else if(f.IsFolder) new EdFolderProperties(f).Show(MainForm);
 		//else new EdOtherFileProperties(f).Show(MainForm);
 	}
@@ -981,7 +981,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// <param name="location">Default parent directory of the main directory of the workspace.</param>
 	public static string GetDirectoryPathForNewWorkspace(string name = null, string location = null)
 	{
-		var f = new Form_NewWorkspace();
+		var f = new FNewWorkspace();
 		f.textName.Text = name;
 		f.textLocation.Text = location ?? AFolders.ThisAppDocuments;
 		if(f.ShowDialog() != DialogResult.OK) return null;

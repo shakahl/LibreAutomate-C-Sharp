@@ -69,6 +69,8 @@ namespace Au.Controls
 
 		LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData)
 		{
+			//AWnd.More.PrintMsg(w, msg, wParam, lParam);
+
 			switch(msg) {
 			case Api.WM_NCCALCSIZE: _OnNcCalcSize(w, msg, wParam, lParam); return 0; //adds nonclient area for our buttons
 			case Api.WM_NCPAINT: if(_Paint(w, msg, wParam, lParam)) return 0; break;

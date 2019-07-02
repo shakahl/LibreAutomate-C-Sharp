@@ -309,6 +309,8 @@ namespace Au.Types
 		internal const int CB_INSERTSTRING = 330;
 		internal const int CB_SETCUEBANNER = 0x1703;
 
+		internal const int MN_GETHMENU = 0x1E1;
+
 		#endregion
 
 		#region CS_

@@ -22,9 +22,9 @@ using static Au.AStatic;
 using Au.Controls;
 using static Program;
 
-class Form_FindOptions : AuForm
+class FFindOptions : AuForm
 {
-	public Form_FindOptions()
+	public FFindOptions()
 	{
 		InitializeComponent();
 	}

@@ -6004,7 +6004,7 @@ Returns:          > 0 => success; value is the number of ovector pairs filled
                  < -2 => some kind of unexpected problem
 */
 
-//au: added pcre2_match parameter: , int(*callout)(pcre2_callout_block *, void *)
+//au: added parameter: , int(*callout)(pcre2_callout_block *, void *)
 
 PCRE2_EXP_DEFN int PCRE2_CALL_CONVENTION
 pcre2_match(const pcre2_code *code, PCRE2_SPTR subject, PCRE2_SIZE length,

@@ -29,7 +29,7 @@ namespace Au.Compiler
 	/// Cache requires many MB of unmanaged memory, therefore is cleared (all unloaded) by GC. A reference to a MetaReferences variable prevents unloading.
 	/// For each compilation create a MetaReferences variable. Compilations can be in different threads, but a variable must be used in same thread as created.
 	/// </summary>
-	class MetaReferences
+	public class MetaReferences
 	{
 		static WeakReference<List<PortableExecutableReference>> s_refsWR = new WeakReference<List<PortableExecutableReference>>(null);
 		List<PortableExecutableReference> _cache; //all references resolved by any variables, + default. In s_refsWR.

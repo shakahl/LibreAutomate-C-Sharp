@@ -7,12 +7,14 @@
     <ProjectGuid>{466DE975-A615-4871-98BA-07C13E192953}</ProjectGuid>
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Project</RootNamespace>
+    <RootNamespace>Au.Editor</RootNamespace>
     <AssemblyName>Au.Editor</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -61,7 +63,7 @@
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
-    <ApplicationIcon>Resources\app_normal.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\ico\app_normal.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -75,10 +77,49 @@
     <ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CodeAnalysis, Version=3.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\_\Compiler\Microsoft.CodeAnalysis.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp, Version=3.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\_\Compiler\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp.Features, Version=3.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\_\Compiler\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces, Version=3.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\_\Compiler\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.Features, Version=3.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\_\Compiler\Microsoft.CodeAnalysis.Features.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.Workspaces, Version=3.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\_\Compiler\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Collections.Immutable, Version=1.2.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\_\Compiler\System.Collections.Immutable.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="System.Composition.Runtime, Version=1.0.31.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>False</Private>
+    </Reference>
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Drawing" />
@@ -86,12 +127,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Templates\Help\Hotkeys and other triggers.cs">
+    <None Include="Default\Templates\Help\Hotkeys and other triggers.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <Compile Include="Edit\CaWorkspace.cs" />
+    <Compile Include="Edit\CodeAssist.cs" />
     <Compile Include="Files\Save.cs" />
     <Compile Include="Files\TreeViewFiles.cs" />
-    <Compile Include="Panels\etc\Form_FindOptions.cs">
+    <Compile Include="Panels\etc\FFindOptions.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Panels\PanelFound.cs">
@@ -103,59 +146,58 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="UI\EdOptions.cs">
+    <Compile Include="Program\FOptions.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\EdOptions.Designer.cs">
-      <DependentUpon>EdOptions.cs</DependentUpon>
+    <Compile Include="Program\FOptions.Designer.cs">
+      <DependentUpon>FOptions.cs</DependentUpon>
     </Compile>
-    <Compile Include="UI\EdProperties.cs">
+    <Compile Include="Program\FProperties.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="UI\EdProperties.Designer.cs">
-      <DependentUpon>EdProperties.cs</DependentUpon>
+    <Compile Include="Program\FProperties.Designer.cs">
+      <DependentUpon>FProperties.cs</DependentUpon>
     </Compile>
     <None Include="Unused\DiffMatchPatch.cs" />
-    <Compile Include="UI\TrayIcon.cs" />
+    <Compile Include="Program\TrayIcon.cs" />
     <Compile Include="Util\EdMetaCommentsParser.cs" />
     <Compile Include="Util\UacDragDrop.cs" />
-    <EmbeddedResource Include="Panels\etc\Form_FindOptions.resx">
-      <DependentUpon>Form_FindOptions.cs</DependentUpon>
+    <EmbeddedResource Include="Panels\etc\FFindOptions.resx">
+      <DependentUpon>FFindOptions.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Panels\PanelFind.resx">
       <DependentUpon>PanelFind.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\EdForm.resx">
-      <DependentUpon>EdForm.cs</DependentUpon>
+    <EmbeddedResource Include="Program\FMain.resx">
+      <DependentUpon>FMain.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\EdOptions.resx">
-      <DependentUpon>EdOptions.cs</DependentUpon>
+    <EmbeddedResource Include="Program\FOptions.resx">
+      <DependentUpon>FOptions.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="UI\EdProperties.resx">
-      <DependentUpon>EdProperties.cs</DependentUpon>
+    <EmbeddedResource Include="Program\FProperties.resx">
+      <DependentUpon>FProperties.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="packages.config" />
     <None Include="Test\tree.csx" />
-    <None Include="Templates\Class.cs">
+    <None Include="Default\Templates\Class.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Templates\New Project\%40Library\!Library.cs">
+    <None Include="Default\Templates\New Project\%40Library\!Library.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Templates\Script.cs">
+    <None Include="Default\Templates\Script.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Test\tree.cs" />
     <None Include="Unused\TriggersUI.cs" />
     <Compile Include="Run, triggers\Run.cs" />
-    <None Include="Templates\New Project\%40Script\!Script.cs">
+    <None Include="Default\Templates\New Project\%40Script\!Script.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Compile Include="UI\CmdHandlers.cs" />
+    <Compile Include="Program\CmdHandlers.cs" />
     <Compile Include="Edit\PanelEdit.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="Files\Form_NewWorkspace.cs" />
+    <Compile Include="Files\etc\FNewWorkspace.cs" />
     <Compile Include="Program\CommandLine.cs" />
     <Compile Include="Program\ProgramSettings.cs" />
     <None Include="Default\files\Script1.cs">
@@ -184,17 +226,17 @@
     <Compile Include="Util\EApi.cs" />
     <Compile Include="Util\EdUtil.cs" />
     <Compile Include="Files\PanelFiles-test.cs" />
-    <Compile Include="Test\TestEditor.cs" />
+    <Compile Include="Edit\TestEditor.cs" />
     <None Include="Properties\Au.pfx" />
     <Compile Include="Files\PanelFiles.cs">
       <SubType>UserControl</SubType>
     </Compile>
-    <Compile Include="UI\EdForm.cs">
+    <Compile Include="Program\FMain.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="Program\Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UI\CmdStrips.cs" />
+    <Compile Include="Program\CmdStrips.cs" />
     <Compile Include="Test\DevTools.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -291,31 +333,30 @@
     <None Include="Resources\png icons\tip.png" />
     <None Include="Resources\png icons\tip_book.png" />
     <None Include="Resources\png icons\undo.png" />
-    <None Include="Resources\folder.png" />
-    <None Include="Resources\folderOpen.png" />
-    <None Include="Resources\fileClass.png" />
-    <None Include="Resources\NewSolutionFolder_16x.png" />
-    <Content Include="Resources\fileScript.png" />
-    <None Include="Resources\project.png" />
-    <Content Include="Resources\app_normal.ico" />
-    <None Include="Templates\include\using.txt">
+    <None Include="Resources\png\folder.png" />
+    <None Include="Resources\png\folderOpen.png" />
+    <None Include="Resources\png\fileClass.png" />
+    <None Include="Resources\png\NewSolutionFolder_16x.png" />
+    <Content Include="Resources\png\fileScript.png" />
+    <None Include="Resources\png\project.png" />
+    <Content Include="Resources\ico\app_normal.ico" />
+    <None Include="Default\Templates\include\using.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\app_running.ico" />
-    <None Include="Templates\New File\TextFile.txt">
+    <None Include="Resources\ico\app_running.ico" />
+    <None Include="Default\Templates\New File\TextFile.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Templates\Help\Script syntax.cs">
+    <None Include="Default\Templates\Help\Script syntax.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Templates\include\main.txt">
+    <None Include="Default\Templates\include\main.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Resources\app_disabled.ico" />
-    <Content Include="Resources\app_native.ico" />
+    <None Include="Resources\ico\app_disabled.ico" />
+    <Content Include="Resources\ico\app_native.ico" />
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>$(TargetDir)kill_Au.Editor.exe</PreBuildEvent>

@@ -156,7 +156,7 @@ namespace Au.Compiler
 	/// For scripts it is STA, and cannot be changed.
 	/// For apps it is STA if the Main function has [STAThread] attribute; or if role editorExtension. Else it is MTA.
 	/// </example>
-	class MetaComments
+	public class MetaComments
 	{
 		/// <summary>
 		/// Name of the main C# file, without ".cs".
@@ -734,7 +734,7 @@ namespace Au.Compiler
 		}
 	}
 
-	struct MetaCodeFile
+	public struct MetaCodeFile
 	{
 		public IWorkspaceFile f;
 		public string code;
@@ -742,7 +742,7 @@ namespace Au.Compiler
 		public MetaCodeFile(IWorkspaceFile f, string code) { this.f = f; this.code = code; }
 	}
 
-	struct MetaFileAndString
+	public struct MetaFileAndString
 	{
 		public IWorkspaceFile f;
 		public string s;

@@ -61,7 +61,7 @@ namespace Au
 					_className = cn;
 				}
 				if(name != null) {
-					switch(AExtString.More.ParseParam3Stars(ref name, "id", "text", "accName", "wfName"/*, "label"*/)) {
+					switch(AStringUtil.ParseParam3Stars(ref name, "id", "text", "accName", "wfName"/*, "label"*/)) {
 					case -1: throw new ArgumentException("Invalid name prefix. Can be: \"***id \", \"***text \", \"***accName \", \"***wfName \"."); //, \"***label \"
 					case 1: _nameIs = _NameIs.id; _id = name.ToInt(); break;
 					case 2: _nameIs = _NameIs.text; break;

@@ -62,6 +62,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	_State _state;
 	_Flags _flags;
 	object _misc; //null or icon path (string) or TMisc
+	public Microsoft.CodeAnalysis.DocumentId CaDocumentId;
 
 	void _CtorMisc(string linkTarget)
 	{
@@ -383,7 +384,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	{
 		if(IsFolder) return "";
 		if(!saved && this == _model.CurrentFile) {
-			return Panels.Editor.ActiveDoc.Text;
+			return Panels.Editor.ActiveDoc.Text; //TODO: can be 'null reference' exception when deleting (ActiveDoc null), eg when called by CodeAssist.
 		}
 		string path = FilePath, es = null;
 		try {
@@ -788,7 +789,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		}
 		return f;
 	}
-	static string s_dirTemplatesBS = AFolders.ThisAppBS + @"Templates\";
+	static string s_dirTemplatesBS = AFolders.ThisAppBS + @"Default\Templates\";
 
 	static void _NI_FillProjectFolder(FilesModel model, FileNode fnParent, string dirParent)
 	{

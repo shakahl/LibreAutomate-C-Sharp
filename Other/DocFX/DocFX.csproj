@@ -61,6 +61,31 @@
   <ItemGroup>
     <Compile Include="DocFX.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="_doc\Aaa.cs" />
+    <None Include="_doc\api\index.md" />
+    <None Include="_doc\api\toc.yml" />
+    <None Include="_doc\articles\index.md" />
+    <None Include="_doc\articles\Print tags.md" />
+    <None Include="_doc\articles\toc.yml" />
+    <None Include="_doc\articles\UAC.md" />
+    <None Include="_doc\articles\Wait timeout.md" />
+    <None Include="_doc\articles\Wildcard expression.md" />
+    <None Include="_doc\articles\_test.md" />
+    <None Include="_doc\docfx.json" />
+    <None Include="_doc\editor\Au editor.md" />
+    <None Include="_doc\editor\Command line.md" />
+    <None Include="_doc\editor\toc.yml" />
+    <None Include="_doc\filter.yml" />
+    <None Include="_doc\index.md" />
+    <None Include="_doc\template1\layout\_master.tmpl" />
+    <None Include="_doc\template1\partials\class.header.tmpl.partial" />
+    <None Include="_doc\template1\partials\footer.tmpl.partial" />
+    <None Include="_doc\template1\partials\logo.tmpl.partial" />
+    <None Include="_doc\template1\partials\namespace.tmpl.partial" />
+    <None Include="_doc\template1\partials\navbar.tmpl.partial" />
+    <None Include="_doc\template2\partials\collection.tmpl.partial" />
+    <None Include="_doc\template2\partials\item.tmpl.partial" />
+    <None Include="_doc\toc.yml" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -72,6 +97,18 @@
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
       <Name>Au</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="_doc\.gitignore" />
+    <Content Include="_doc\api\.gitignore" />
+    <Content Include="_doc\template1\favicon.ico" />
+    <Content Include="_doc\template1\mod.txt" />
+    <Content Include="_doc\template1\styles\main.css" />
+    <Content Include="_doc\template1\styles\main.js" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="_doc\apidoc\" />
+    <Folder Include="_doc\images\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

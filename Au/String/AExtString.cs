@@ -30,8 +30,7 @@ namespace Au
 	/// For example, <b>EndsWith</b> (of .NET) uses <b>StringComparison.CurrentCulture</b>, and <b>Ends</b> (of this class) uses <b>StringComparison.Ordinal</b>.
 	/// 
 	/// This class also adds more methods.
-	/// The nested class <see cref="More"/> contains some less often used static methods.
-	/// You also can find string functions in other classes of this library, including <see cref="ARegex"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="AStringSegment"/>, <see cref="ACsv"/>, <see cref="AKeys.More"/>, <see cref="AConvert"/>, <see cref="AHash"/>.
+	/// You also can find string functions in other classes of this library, including <see cref="AStringUtil"/>, <see cref="ARegex"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="AStringSegment"/>, <see cref="ACsv"/>, <see cref="AKeys.More"/>, <see cref="AConvert"/>, <see cref="AHash"/>.
 	/// </remarks>
 	public static unsafe partial class AExtString
 	{
@@ -533,7 +532,7 @@ namespace Au
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
-		/// <seealso cref="More.LineAndColumn"/>
+		/// <seealso cref="AStringUtil.LineAndColumn"/>
 		public static int LineCount(this string t, bool preferMore = false)
 		{
 			if(t.Length == 0) return preferMore ? 1 : 0;

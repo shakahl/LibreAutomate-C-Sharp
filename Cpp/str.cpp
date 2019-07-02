@@ -197,7 +197,7 @@ pcre2_code_16* Compile(STR rx, size_t len, __int64 flags /*= 0*/, out BSTR* errS
 	auto re = pcre2_compile_16(rx, len, f, &errCode, &errOffset, cc);
 	if(cc) pcre2_compile_context_free_16(cc);
 	if(re == null) {
-		if(errStr) *errStr = _GetErrorMessage(errCode, (int)errOffset);
+		if(errStr)* errStr = _GetErrorMessage(errCode, (int)errOffset);
 		return null;
 	}
 	return re;
@@ -237,7 +237,7 @@ EXPORT int Cpp_RegexDtor(pcre2_code_16* code)
 
 struct _RxMdVec { CHeapPtr<POINT> a; int n; };
 
-extern "C" int pcre2_match_data_create_au(const pcre2_code *code, pcre2_match_data* md);
+extern "C" int pcre2_match_data_create_au(const pcre2_code* code, pcre2_match_data* md);
 //add this in pcre2_match_data.c, and make sure it is still correct after upgrading PCRE library
 /*
 //au: allows the caller to allocate pcre2_match_data in a faster way than the default malloc/free.
@@ -260,6 +260,7 @@ int pcre2_match_data_create_au(const pcre2_code *code, pcre2_match_data* md)
 
 		//code from pcre2_match_data_create (below)
 		md->oveccount = oveccount;
+		md->flags = 0;
 	}
 
 	return memSize;
@@ -289,18 +290,23 @@ struct RegexMatch
 	STR mark;
 };
 
+#define STACK_MD 1
+
 //Calls pcre2_match_16 and returns its return value. If PCRE2_ERROR_PARTIAL, returns 0.
 //Allocates/frees match data in a fast way. Copies results to m, if not null.
 //errStr, if not null, receives error text when fails, except when no match or partial match. Caller then must SysFreeString it.
 //This version is called from C#. In this dll you can use Free; use this func when need match data (ovector etc).
 EXPORT int Cpp_RegexMatch(pcre2_code_16* code, STR s, size_t len, size_t start = 0, UINT flags = 0,
-	int(*callout)(pcre2_callout_block *, void *) = null, ref RegexMatch* m = null, out BSTR* errStr = null)
+	int(*callout)(pcre2_callout_block*, void*) = null, ref RegexMatch * m = null, out BSTR * errStr = null)
 {
+	pcre2_match_data_16* md;
+#ifdef STACK_MD
 	char stack[1000]; //ovector[~55]
 	int memSize = pcre2_match_data_create_au(code, null);
-	pcre2_match_data_16* md;
 	if(memSize <= 1000) pcre2_match_data_create_au(code, md = (pcre2_match_data_16*)stack);
-	else md = pcre2_match_data_create_from_pattern_16(code, null);
+	else
+#endif
+		md = pcre2_match_data_create_from_pattern_16(code, null);
 
 	int R = pcre2_match_16(code, s, len, start, flags, md, null, callout);
 
@@ -341,7 +347,10 @@ EXPORT int Cpp_RegexMatch(pcre2_code_16* code, STR s, size_t len, size_t start =
 		//FUTURE: if UTF error, in error text include the offset. It seems pcre2_get_startchar_16 returns it.
 	}
 
-	if((void*)md != stack) pcre2_match_data_free_16(md);
+#ifdef STACK_MD
+	if((void*)md != stack)
+#endif
+		pcre2_match_data_free_16(md);
 	return R;
 }
 
@@ -350,18 +359,37 @@ EXPORT int Cpp_RegexMatch(pcre2_code_16* code, STR s, size_t len, size_t start =
 //This version is used in this dll, eg by Wildex.
 bool Match(pcre2_code_16* code, STR s, size_t len, size_t start, UINT flags)
 {
+	pcre2_match_data_16* md;
+#ifdef STACK_MD
 	char stack[1000]; //ovector[~55]
 	int memSize = pcre2_match_data_create_au(code, null);
-	pcre2_match_data_16* md;
 	if(memSize <= 1000) pcre2_match_data_create_au(code, md = (pcre2_match_data_16*)stack);
-	else md = pcre2_match_data_create_from_pattern_16(code, null);
+	else
+#endif
+		md = pcre2_match_data_create_from_pattern_16(code, null);
 
 	int R = pcre2_match_16(code, s, len, start, flags, md, null, null);
 
-	if((void*)md != stack) pcre2_match_data_free_16(md);
+#ifdef STACK_MD
+	if((void*)md != stack)
+#endif
+		pcre2_match_data_free_16(md);
 	return R > 0 || R == PCRE2_ERROR_PARTIAL;
 }
 
+//Calls pcre2_substitute_16 and returns its return value.
+//errStr, if not null, receives error text when fails. Caller then must SysFreeString it.
+EXPORT int Cpp_RegexSubstitute(pcre2_code_16* code, STR s, size_t len, size_t start, UINT flags,
+	STR repl, size_t rlen, LPWSTR outputbuffer, size_t* outlen,
+	int(*callout)(pcre2_callout_block*, void*) = null, out BSTR* errStr = null)
+{
+	size_t outlen0 = *outlen;
+	int r = pcre2_substitute_16(code, s, len, start, flags, null, null, repl, rlen, outputbuffer, outlen, callout);
+	if(r < 0 && errStr != null && !(r == PCRE2_ERROR_NOMEMORY && *outlen > outlen0)) {
+		*errStr = GetErrorMessage(r);
+	}
+	return r;
+}
 }
 
 #pragma region Wildex
@@ -412,7 +440,7 @@ bool Wildex::Parse(STR w, size_t lenW, bool doNotCopyString/* = false*/, out BST
 			}
 		}
 	ge:
-		if(errStr) *errStr = SysAllocString(es);
+		if(errStr)* errStr = SysAllocString(es);
 		return false;
 	g1:
 		switch(_type) {

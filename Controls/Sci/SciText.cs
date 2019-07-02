@@ -38,7 +38,7 @@ namespace Au.Controls
 
 		[ThreadStatic] static WeakReference<byte[]> t_byte;
 
-		internal static byte[] LibByte(int n) { return AMemoryArray.Get(n, ref t_byte); }
+		internal static byte[] LibByte(int n) => AMemoryArray.Get(n, ref t_byte);
 		//these currently not used
 		//internal static AMemoryArray.ByteBuffer LibByte(ref int n) { var r = AMemoryArray.Get(n, ref t_byte); n = r.Length - 1; return r; }
 		//internal static AMemoryArray.ByteBuffer LibByte(int n, out int nHave) { var r = AMemoryArray.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
@@ -72,8 +72,7 @@ namespace Au.Controls
 		/// </summary>
 		public int SetString(int sciMessage, LPARAM wParam, string lParam, bool useUtf8LengthForWparam = false)
 		{
-			int len = 0;
-			fixed (byte* s = _ToUtf8(lParam, &len)) {
+			fixed (byte* s = _ToUtf8(lParam, out var len)) {
 				if(useUtf8LengthForWparam) wParam = len;
 				return SC.Call(sciMessage, wParam, s);
 			}
@@ -99,8 +98,7 @@ namespace Au.Controls
 		/// </summary>
 		public int SetStringString(int sciMessage, string wParam0lParam)
 		{
-			int len;
-			fixed (byte* s = _ToUtf8(wParam0lParam, &len)) {
+			fixed (byte* s = _ToUtf8(wParam0lParam, out var len)) {
 				int i = LibCharPtr.Length(s);
 				Debug.Assert(i < len);
 				return SC.Call(sciMessage, s, s + i + 1);
@@ -162,9 +160,16 @@ namespace Au.Controls
 			return AConvert.Utf8ToString(b, n);
 		}
 
-		byte[] _ToUtf8(string s, int* utf8Length = null)
+		byte[] _ToUtf8(string s)
 		{
-			return AConvert.LibUtf8FromString(s, ref t_byte, utf8Length);
+			return AConvert.Utf8FromString(s);
+		}
+
+		byte[] _ToUtf8(string s, out int utf8Length)
+		{
+			var r = AConvert.Utf8FromString(s);
+			utf8Length = r.Length - 1;
+			return r;
 		}
 
 		/// <summary>
@@ -203,6 +208,11 @@ namespace Au.Controls
 		/// charsRelative can be negative.
 		/// </summary>
 		public int CountBytesFromChars(int bytesPos, int charsRelative) => Call(SCI_POSITIONRELATIVECODEUNITS, bytesPos, charsRelative);
+
+		/// <summary>
+		/// Converts UTF-8 position to UTF-16 position.
+		/// </summary>
+		public int CountBytesToChars(int bytesPos) => Call(SCI_COUNTCODEUNITS, 0, bytesPos);
 
 		/// <summary>
 		/// Returns the number of UTF-16 characters between two UTF-8 positions.

@@ -26,7 +26,7 @@ using Microsoft.CodeAnalysis;
 namespace Au.Compiler
 {
 	/// <summary>Code errors text builder.</summary>
-	class ErrBuilder
+	public class ErrBuilder
 	{
 		StringBuilder _b;
 
@@ -81,7 +81,7 @@ namespace Au.Compiler
 		public void AddError(IWorkspaceFile f, string code, int pos, string message, params object[] formatArgs)
 		{
 			_StartAdd();
-			AExtString.More.LineAndColumn(code, pos, out int line, out int col);
+			Util.AStringUtil.LineAndColumn(code, pos, out int line, out int col);
 			_Append(f, line, col, message, formatArgs);
 		}
 

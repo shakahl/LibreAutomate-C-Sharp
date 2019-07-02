@@ -22,6 +22,7 @@ using static Au.AStatic;
 using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
+//using Au.Intellisense;
 //using DiffMatchPatch;
 
 #if TEST
@@ -30,10 +31,31 @@ using static Au.Controls.Sci;
 
 partial class ThisIsNotAFormFile { }
 
-partial class EdForm
+partial class FMain
 {
+	//CaCompletion _compl;
+
 	internal unsafe void TestEditor()
 	{
+
+		AOutput.Clear();
+
+		var doc = Panels.Editor.ActiveDoc;
+		//var doc = Panels.Output.Controls[0] as AuScintilla;
+		var t = doc.ST;
+		var s = doc.Text;
+
+		//var position = t.CountBytesToChars(0, t.CurrentPos);
+
+		//APerf.First();
+		////var _compl = new CaCompletion(null);
+		//if(_compl == null) _compl = new CaCompletion(null);
+		//APerf.Next();
+
+		//var a = _compl.GetCompletions(s, position, true);
+		//APerf.NW();
+		//Print(a);
+
 		//Print(Control.FromHandle(Api.GetFocus().Handle));
 		//Print(MainForm.AcceptButton);
 		//return;
@@ -67,11 +89,6 @@ partial class EdForm
 
 		//return;
 
-
-		var doc = Panels.Editor.ActiveDoc;
-		//var doc = Panels.Output.Controls[0] as AuScintilla;
-		var t = doc.ST;
-		//var s = doc.Text;
 
 		//int n = t.Call(SCI_GETWORDCHARS, 0, 0);
 		//var s = t.GetString(SCI_GETWORDCHARS, 0);
@@ -387,7 +404,12 @@ partial class EdForm
 	void SetHookToMonitorCreatedWindowsOfThisThread()
 	{
 		_hook = AHookWin.ThreadCbt(x => {
-			if(x.code == HookData.CbtEvent.CREATEWND) Print((AWnd)x.wParam);
+			if(x.code == HookData.CbtEvent.CREATEWND) {
+				var w = (AWnd)x.wParam;
+				Print(w);
+				//var c = Control.FromHandle(w.Handle); //always null
+				//if(c != null) Print(c); else Print(w);
+			}
 			return false;
 		});
 		Application.ApplicationExit += (unu, sed) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with AHookWin) 

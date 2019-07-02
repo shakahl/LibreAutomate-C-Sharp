@@ -10,9 +10,9 @@ using System.Diagnostics;
 
 namespace Au.Tools
 {
-	public class RegexInfoWindow : InfoWindow
+	public class RegexWindow : InfoWindow
 	{
-		public RegexInfoWindow() : base(Util.ADpi.ScaleInt(250))
+		public RegexWindow() : base(Util.ADpi.ScaleInt(250))
 		{
 			this.Size = Util.ADpi.ScaleSize((800, 220));
 			this.Caption = "Regex";

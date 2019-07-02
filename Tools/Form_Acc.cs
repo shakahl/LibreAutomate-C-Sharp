@@ -105,7 +105,7 @@ namespace Au.Tools
 
 			if(_grid2.RowsCount == 0) _FillGrid2();
 
-			if(!_FillGridThreeCode(captured, sameWnd)) return;
+			if(!_FillGridTreeCode(captured, sameWnd)) return;
 
 			_bTest.Enabled = true; _bOK.Enabled = true; _bEtc.Enabled = true;
 		}
@@ -117,10 +117,10 @@ namespace Au.Tools
 			_useCon = useCon && !_con.Is0;
 		}
 
-		bool _FillGridThreeCode(bool captured = false, bool sameWnd = false)
+		bool _FillGridTreeCode(bool captured = false, bool sameWnd = false)
 		{
 			//APerf.First();
-			bool sameTree = sameWnd && _TrySelectInSameTree();
+			bool sameTree = !_isTreeInfo && sameWnd && _TrySelectInSameTree();
 			//APerf.Next();
 
 			if(!sameTree) _ClearTree();
@@ -241,7 +241,7 @@ namespace Au.Tools
 			case 0:
 				if(g == _grid2 && g.ZGetRowKey(pos.Row) == nameof(AFFlags.UIA)) {
 					_uiaUserChecked = _IsChecked2(pos.Row);
-					_ShowTreeInfo("Please capture the AO again.");
+					_ShowTreeInfo("Please capture the AO again.\r\nNeed it when changed the 'UI Automation' option.");
 					_cCapture.Checked = true;
 				}
 				break;
@@ -388,7 +388,7 @@ namespace Au.Tools
 		private void _bEtc_Click(object sender, EventArgs e)
 		{
 			var m = new AMenu();
-			m["Control"] = o => { _useCon = o.MenuItem.Checked && !_con.Is0; _FillGridThreeCode(); };
+			m["Control"] = o => { _useCon = o.MenuItem.Checked && !_con.Is0; _FillGridTreeCode(); };
 			m.LastMenuItem.Enabled = !_con.Is0;
 			m.LastMenuItem.CheckOnClick = true;
 			m.LastMenuItem.Checked = _useCon;
@@ -399,7 +399,7 @@ namespace Au.Tools
 				if(captCheck) _cCapture.Checked = true;
 				if(!r.ok) return;
 				_SetWndCon(r.wnd, r.con, r.useCon);
-				if(_WndSearchIn != wPrev) _FillGridThreeCode();
+				if(_WndSearchIn != wPrev) _FillGridTreeCode();
 			};
 			m.LastMenuItem.ToolTipText = "Search only in control (if captured), not in whole window.\r\nTo edit window or/and control name etc, click 'Edit window/control...' or edit it in the code field.";
 			m.LastMenuItem.Enabled = !_wnd.Is0;
@@ -604,18 +604,20 @@ namespace Au.Tools
 
 		void _ShowTreeInfo(string text)
 		{
-			if(_lTreeInfo == null) _tree.Controls.Add(_lTreeInfo = new Label());
-			_lTreeInfo.Size = _tree.ClientSize;
+			if(_lTreeInfo == null) _tree.Controls.Add(_lTreeInfo = new Label { Dock = DockStyle.Fill });
 			_lTreeInfo.Text = text;
 			_lTreeInfo.Visible = true;
+			_isTreeInfo = true;
 		}
 
 		void _ClearTree()
 		{
 			_tree.Model = null;
 			_lTreeInfo?.Hide();
+			_isTreeInfo = false;
 		}
 
+		bool _isTreeInfo;
 		Label _lTreeInfo;
 		NodeTextBox _ccName;
 
@@ -754,9 +756,9 @@ namespace Au.Tools
 			_grid2.ZShowEditInfo += infoDelegate;
 
 			_tree.Paint += (object sender, PaintEventArgs e) => {
-				if(_tree.Model == null && !(_lTreeInfo?.Visible ?? false)) {
+				if(_tree.Model == null && !_isTreeInfo) {
 					e.Graphics.Clear(this.BackColor); //like grids
-					_OnPaintDrawBackText(sender, e, "Object tree.");
+					_OnPaintDrawBackText(sender, e, "All AOs in window.");
 				}
 			};
 

@@ -23,20 +23,20 @@ using static Au.AStatic;
 using static Program;
 using Au.Controls;
 
-partial class EdForm : Form
+partial class FMain : Form
 {
 	public static void RunApplication()
 	{
-		Application.Run(new EdForm());
+		Application.Run(new FMain());
 	}
 
-	static bool _StartsVisible => Settings.GetBool("_alwaysVisible") || CommandLine.StartVisible;
+	static bool _StartsVisible => CommandLine.StartVisible || Settings.GetBool("_alwaysVisible");
 
-	public EdForm()
+	public FMain()
 	{
-		//AOutput.LibUseQM2 = true; AOutput.Clear();
 
 		//#if DEBUG
+		//		AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//		SetHookToMonitorCreatedWindowsOfThisThread();
 		//#endif
 
@@ -47,7 +47,7 @@ partial class EdForm : Form
 		this.AutoScaleMode = AutoScaleMode.None;
 		this.StartPosition = FormStartPosition.Manual;
 		this.Location = new Point(100, 50);
-		this.Size = new Size((AScreen.PrimaryWidth-100) * 3 / 4, (AScreen.PrimaryHeight-50) * 4 / 5);
+		this.Size = new Size((AScreen.PrimaryWidth - 100) * 3 / 4, (AScreen.PrimaryHeight - 50) * 4 / 5);
 		this.Icon = EdStock.IconAppNormal;
 
 		//APerf.Next();
@@ -72,15 +72,21 @@ partial class EdForm : Form
 		//#endif
 	}
 
+	const int c_menuid_Exit = 101;
+
 	/// <summary>
 	/// Called after creating handles of form and controls, when form still invisible.
 	/// </summary>
 	void _OnLoad()
 	{
+		var hm = Api.GetSystemMenu(_Hwnd, false);
+		//Api.AppendMenu(hm);
+		Api.AppendMenu(hm, 0, c_menuid_Exit, "&Exit");
+
 		Tasks = new RunningTasks();
 		Panels.Files.LoadWorkspace(CommandLine.WorkspaceDirectory, runStartupScript: false);
 		EdTrayIcon.Add();
-		ADebug.PrintIf(((AWnd)this).IsVisible, "BAD: form became visible while loading workspace");
+		ADebug.PrintIf(_Hwnd.IsVisible, "BAD: form became visible while loading workspace");
 		Au.Triggers.HooksServer.Start(false);
 		CommandLine.OnMainFormLoaded();
 		IsLoaded = true;
@@ -99,16 +105,6 @@ partial class EdForm : Form
 			//EdDebug.PrintTabOrder(this);
 		});
 #endif
-	}
-
-	protected override void OnFormClosing(FormClosingEventArgs e)
-	{
-		base.OnFormClosing(e);
-		if(e.CloseReason == CloseReason.UserClosing && Visible && !Settings.GetBool("_alwaysVisible")) {
-			e.Cancel = true;
-			this.WindowState = FormWindowState.Minimized;
-			this.Visible = false;
-		}
 	}
 
 	protected override void OnFormClosed(FormClosedEventArgs e)
@@ -152,9 +148,11 @@ partial class EdForm : Form
 
 	public event Action VisibleFirstTime;
 
+	AWnd _Hwnd => (AWnd)Handle;
+
 	protected override unsafe void WndProc(ref Message m)
 	{
-		AWnd w = (AWnd)this; LPARAM wParam = m.WParam, lParam = m.LParam;
+		AWnd w = (AWnd)m.HWnd; LPARAM wParam = m.WParam, lParam = m.LParam;
 		//Print(m);
 
 		switch(m.Msg) {
@@ -174,6 +172,28 @@ partial class EdForm : Form
 			if(isActive == 0) _wFocus = AWnd.ThisThread.Focused;
 			else if(_wFocus.IsAlive) AWnd.ThisThread.Focus(_wFocus);
 			return;
+		case Api.WM_SYSCOMMAND:
+			int sc = (int)wParam;
+			if(sc >= 0xf000) { //system
+				sc &= 0xfff0;
+				if(sc == Api.SC_CLOSE && Visible && !Settings.GetBool("_alwaysVisible")) {
+					this.WindowState = FormWindowState.Minimized;
+					this.Visible = false;
+					ThreadPool.QueueUserWorkItem(_ => {
+						500.ms();
+						GC.Collect();
+						GC.WaitForPendingFinalizers();
+						Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1);
+					});
+					return;
+					//initially this code was in OnFormClosing, but sometimes hides instead of closing, because .NET gives incorrect CloseReason. Cannot reproduce and debug.
+				}
+			} else { //our
+				switch(sc) {
+				case c_menuid_Exit: Strips.Cmd.File_Exit(); return;
+				}
+			}
+			break;
 		case Api.WM_POWERBROADCAST:
 			if(wParam == 4) Tasks.EndTask(); //PBT_APMSUSPEND
 			break;
@@ -283,7 +303,7 @@ partial class EdForm : Form
 		else title = app + " - " + Model.WorkspaceName + " - " + Model.CurrentFile.ItemPath;
 #endif
 		//Text = title; //no, makes form visible
-		((AWnd)Handle).SendS(Api.WM_SETTEXT, 0, title);
+		_Hwnd.SendS(Api.WM_SETTEXT, 0, title);
 	}
 }
 
@@ -296,7 +316,7 @@ public static class Panels
 	internal static PanelRunning Running;
 	internal static PanelRecent Recent;
 	internal static PanelOutput Output;
-	internal static Find Find;
+	internal static PanelFind Find;
 	internal static PanelFound Found;
 	internal static PanelStatus Status;
 
@@ -308,7 +328,7 @@ public static class Panels
 		Running = new PanelRunning();
 		Recent = new PanelRecent();
 		Output = new PanelOutput();
-		Find = new Find();
+		Find = new PanelFind();
 		Found = new PanelFound();
 		Status = new PanelStatus();
 		//#if TEST

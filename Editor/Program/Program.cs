@@ -71,6 +71,7 @@ static class Program
 
 		OutputServer.NoNewline = true;
 		OutputServer.Start();
+
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
@@ -88,16 +89,17 @@ static class Program
 		//Timer1s += () => Print("1 s");
 		//Timer1sOr025s += () => Print("0.25 s");
 
-		EdForm.RunApplication();
+		FMain.RunApplication();
 
 		OutputServer.Stop();
 	}
 
 	internal static AOutputServer OutputServer = new AOutputServer(true);
 	internal static ProgramSettings Settings;
-	internal static EdForm MainForm;
+	internal static FMain MainForm;
 	internal static FilesModel Model;
 	internal static RunningTasks Tasks;
+	internal static CodeAssist Codea;
 	internal static string UserGuid;
 	internal const string AppName = "QM#";
 
@@ -167,7 +169,7 @@ static class Program
 
 		//RunUac.Test();
 
-		//AOutput.LibUseQM2 = true; AOutput.Clear();
+		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//using(var h = AHookWin.Keyboard(k => {
 		//	Print($"{k.Key}, {!k.IsUp}");
 		//	if(k.Key == KKey.Up && !k.IsUp) 400.ms();

@@ -27,7 +27,7 @@ using Au.Compiler;
 using System.Runtime.InteropServices.ComTypes;
 using System.Globalization;
 
-partial class EdCodeFileProperties : AuForm, IMessageFilter
+partial class FProperties : AuForm, IMessageFilter
 {
 	FileNode _f;
 	//FileNode _fProjectFolder;
@@ -35,7 +35,7 @@ partial class EdCodeFileProperties : AuForm, IMessageFilter
 	bool _isClass;
 	ERole _role;
 
-	public EdCodeFileProperties(FileNode f)
+	public FProperties(FileNode f)
 	{
 		InitializeComponent();
 
@@ -146,7 +146,7 @@ If not specified, and role is not exeProgram, at run time is used host program's
 
 		g.ZAddHeaderRow("Compile");
 		_AddCombo("optimize", "false|true", _meta.optimize,
-@"<b>optimize</b> - whether to optimize compiled code for speed; whether to define DEBUG.
+@"<b>optimize</b> - whether to make the compiled code as fast as possible.
  • <i>false</i> (default) - don't optimize. Define DEBUG symbol. This is known as ""Debug configuration"".
  • <i>true</i> - optimize. Don't define DEBUG symbol. This is known as ""Release configuration"".
 
@@ -417,8 +417,9 @@ The file must be in this workspace. Can be path relative to this file (examples:
 	private void _bOK_Click(object sender, EventArgs e)
 	{
 		if(Model.CurrentFile != _f && !Model.SetCurrentFile(_f)) return;
-		var t = Panels.Editor.ActiveDoc.ST;
-		var code = t.AllText();
+		var doc = Panels.Editor.ActiveDoc;
+		var t = doc.ST;
+		var code = doc.Text;
 		MetaComments.FindMetaComments(code, out int endOf);
 
 		if(!_GetGrid()) { this.DialogResult = DialogResult.None; return; };

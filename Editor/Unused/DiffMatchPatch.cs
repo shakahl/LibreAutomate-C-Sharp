@@ -674,7 +674,7 @@ namespace DiffMatchPatch {
      * @param text2 Second string.
      * @return The number of characters common to the start of each string.
      */
-    public int diff_commonPrefix(string text1, string text2) {
+    public static int diff_commonPrefix(string text1, string text2) {
       // Performance analysis: https://neil.fraser.name/news/2007/10/09/
       int n = Math.Min(text1.Length, text2.Length);
       for (int i = 0; i < n; i++) {
@@ -691,7 +691,7 @@ namespace DiffMatchPatch {
      * @param text2 Second string.
      * @return The number of characters common to the end of each string.
      */
-    public int diff_commonSuffix(string text1, string text2) {
+    public static int diff_commonSuffix(string text1, string text2) {
       // Performance analysis: https://neil.fraser.name/news/2007/10/09/
       int text1_length = text1.Length;
       int text2_length = text2.Length;
@@ -971,7 +971,7 @@ namespace DiffMatchPatch {
           string equality2 = diffs[pointer + 1].text;
 
           // First, shift the edit as far left as possible.
-          int commonOffset = this.diff_commonSuffix(equality1, edit);
+          int commonOffset = diff_commonSuffix(equality1, edit);
           if (commonOffset > 0) {
             string commonString = edit.Substring(edit.Length - commonOffset);
             equality1 = equality1.Substring(0, equality1.Length - commonOffset);
@@ -1192,7 +1192,7 @@ namespace DiffMatchPatch {
             if (count_delete + count_insert > 1) {
               if (count_delete != 0 && count_insert != 0) {
                 // Factor out any common prefixies.
-                commonlength = this.diff_commonPrefix(text_insert, text_delete);
+                commonlength = diff_commonPrefix(text_insert, text_delete);
                 if (commonlength != 0) {
                   if ((pointer - count_delete - count_insert) > 0 &&
                     diffs[pointer - count_delete - count_insert - 1].operation
@@ -1208,7 +1208,7 @@ namespace DiffMatchPatch {
                   text_delete = text_delete.Substring(commonlength);
                 }
                 // Factor out any common suffixies.
-                commonlength = this.diff_commonSuffix(text_insert, text_delete);
+                commonlength = diff_commonSuffix(text_insert, text_delete);
                 if (commonlength != 0) {
                   diffs[pointer].text = text_insert.Substring(text_insert.Length
                       - commonlength) + diffs[pointer].text;

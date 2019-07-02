@@ -324,7 +324,7 @@ namespace Au
 					isb = isf; ieb = ief; //reuse these vars to calc UTF8 lengths
 				}
 				//correct isf/ief if html part lenghts are different in UTF8
-				if(!AExtString.More.IsAscii(html)) {
+				if(!Util.AStringUtil.IsAscii(html)) {
 					fixed (char* p = html) {
 						int lenDiff1 = Encoding.UTF8.GetByteCount(p, isb) - isb;
 						int lenDiff2 = Encoding.UTF8.GetByteCount(p + isb, ieb - isb) - (ieb - isb);

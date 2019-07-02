@@ -29,9 +29,9 @@ using Au.Controls;
 partial class FilesModel
 {
 #endif
-	class Form_NewWorkspace :AuForm
+	class FNewWorkspace :AuForm
 	{
-		public Form_NewWorkspace()
+		public FNewWorkspace()
 		{
 			InitializeComponent();
 

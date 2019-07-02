@@ -494,36 +494,6 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Converts C# string to '\0'-terminated UTF8 string managed by a WeakReference variable.
-		/// </summary>
-		/// <param name="s">C# string. If null, returns null, unless allocExtraBytes is not 0.</param>
-		/// <param name="buffer">A WeakReference variable (probably [ThreadStatic]) that manages the returned array. If null, this function will create it.</param>
-		/// <param name="utf8Length">If not null, receives UTF8 text length, not including '\0' and allocExtraBytes.</param>
-		/// <param name="allocExtraBytes">Allocate this number of extra bytes after the string.</param>
-		internal static byte[] LibUtf8FromString(string s, ref WeakReference<byte[]> buffer, int* utf8Length = null, int allocExtraBytes = 0)
-		{
-			if(utf8Length != null) *utf8Length = 0;
-			if(s == null) {
-				if(allocExtraBytes == 0) return null;
-				s = "";
-			}
-			byte[] b; int len = s.Length;
-			if(len == 0) {
-				b = Util.AMemoryArray.Get(allocExtraBytes, ref buffer);
-				b[0] = 0;
-			} else {
-				int n = Utf8LengthFromString(s);
-				if(utf8Length != null) *utf8Length = n;
-				b = Util.AMemoryArray.Get(n + allocExtraBytes, ref buffer);
-				fixed (byte* p = b) {
-					var r = Utf8FromString(s, p, n + 1);
-					Debug.Assert(r == n);
-				}
-			}
-			return b;
-		}
-
-		/// <summary>
 		/// Returns the number of characters that would by produced by converting UTF8 to C# string.
 		/// The terminating '\0' character is not included in the return value.
 		/// </summary>
@@ -537,7 +507,7 @@ namespace Au.Util
 		{
 			if(utf8 == null) return 0;
 			int n = lengthBytes;
-			if(n < 0) n = Util.LibCharPtr.Length(utf8); else if(n > 0 && utf8[n - 1] == 0) n--;
+			if(n < 0) n = LibCharPtr.Length(utf8); else if(n > 0 && utf8[n - 1] == 0) n--;
 			if(n == 0) return 0;
 			return Api.MultiByteToWideChar(Api.CP_UTF8, 0, utf8, n, null, 0);
 		}
@@ -556,7 +526,7 @@ namespace Au.Util
 		{
 			if(utf8 == null) return null;
 			int n1 = lengthBytes;
-			if(n1 < 0) n1 = Util.LibCharPtr.Length(utf8); else if(n1 > 0 && utf8[n1 - 1] == 0) n1--;
+			if(n1 < 0) n1 = LibCharPtr.Length(utf8); else if(n1 > 0 && utf8[n1 - 1] == 0) n1--;
 			if(n1 == 0) return "";
 			int n2 = Api.MultiByteToWideChar(Api.CP_UTF8, 0, utf8, n1, null, 0);
 			var s = new string('\0', n2);
