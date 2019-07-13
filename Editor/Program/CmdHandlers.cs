@@ -18,16 +18,14 @@ using System.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 using Au.Controls;
 using Au.Tools;
 
 class CmdHandlers : IGStripManagerCallbacks
 {
-	internal delegate void CmdHandler();
-	Dictionary<string, CmdHandler> _dict = new Dictionary<string, CmdHandler>(200);
+	Dictionary<string, Action> _dict = new Dictionary<string, Action>(200);
 
-	internal Dictionary<string, CmdHandler> Dict { get { return _dict; } }
+	internal Dictionary<string, Action> Dict => _dict; //used to debug
 
 	EventHandler _onClick;
 
@@ -186,22 +184,22 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void File_NewScript()
 	{
-		Model.NewItem("Script.cs", beginRenaming: true);
+		Program.Model.NewItem("Script.cs", beginRenaming: true);
 	}
 
 	public void File_NewClass()
 	{
-		Model.NewItem("Class.cs", beginRenaming: true);
+		Program.Model.NewItem("Class.cs", beginRenaming: true);
 	}
 
 	public void File_NewFolder()
 	{
-		Model.NewItem("Folder", beginRenaming: true);
+		Program.Model.NewItem("Folder", beginRenaming: true);
 	}
 
 	public void File_Import()
 	{
-		Model.ImportFiles();
+		Program.Model.ImportFiles();
 	}
 
 	public void File_Disable()
@@ -211,83 +209,83 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void File_Rename()
 	{
-		Model.RenameSelected();
+		Program.Model.RenameSelected();
 	}
 
 	public void File_Delete()
 	{
-		Model.DeleteSelected();
+		Program.Model.DeleteSelected();
 	}
 
 	public void File_Properties()
 	{
-		Model.Properties();
+		Program.Model.Properties();
 	}
 
 	public void File_Open()
 	{
-		Model.OpenSelected(1);
+		Program.Model.OpenSelected(1);
 	}
 
 	//public void File_OpenInNewWindow()
 	//{
-	//	Model.OpenSelected(2);
+	//	Program.Model.OpenSelected(2);
 	//}
 
 	public void File_OpenInDefaultApp()
 	{
-		Model.OpenSelected(3);
+		Program.Model.OpenSelected(3);
 	}
 
 	public void File_SelectInExplorer()
 	{
-		Model.OpenSelected(4);
+		Program.Model.OpenSelected(4);
 	}
 
 	public void File_PreviousDocument()
 	{
-		var a = Model.OpenFiles;
-		if(a.Count > 1) Model.SetCurrentFile(a[1]);
+		var a = Program.Model.OpenFiles;
+		if(a.Count > 1) Program.Model.SetCurrentFile(a[1]);
 	}
 
 	public void File_Close()
 	{
-		Model.CloseEtc(1);
+		Program.Model.CloseEtc(1);
 	}
 
 	public void File_CloseAll()
 	{
-		Model.CloseEtc(2);
+		Program.Model.CloseEtc(2);
 	}
 
 	public void File_CollapseFolders()
 	{
-		Model.CloseEtc(3);
+		Program.Model.CloseEtc(3);
 	}
 
 	public void File_Cut()
 	{
-		Model.CutCopySelected(true);
+		Program.Model.CutCopySelected(true);
 	}
 
 	public void File_Copy()
 	{
-		Model.CutCopySelected(false);
+		Program.Model.CutCopySelected(false);
 	}
 
 	public void File_Paste()
 	{
-		Model.Paste();
+		Program.Model.Paste();
 	}
 
 	public void File_CopyRelativePath()
 	{
-		Model.SelectedCopyPath(false);
+		Program.Model.SelectedCopyPath(false);
 	}
 
 	public void File_CopyFullPath()
 	{
-		Model.SelectedCopyPath(true);
+		Program.Model.SelectedCopyPath(true);
 	}
 
 	public void File_PrintSetup()
@@ -312,12 +310,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void File_ExportWorkspace()
 	{
-		Model.ExportSelected();
+		Program.Model.ExportSelected();
 	}
 
 	public void File_ImportWorkspace()
 	{
-		Model.ImportWorkspace();
+		Program.Model.ImportWorkspace();
 	}
 
 	public void File_FindInWorkspaces()
@@ -332,18 +330,18 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void File_SaveNow()
 	{
-		Model?.Save.AllNowIfNeed();
+		Program.Model?.Save.AllNowIfNeed();
 	}
 
 	public void File_CloseWindow()
 	{
-		MainForm.Close();
+		Program.MainForm.Close(); //if visible, hides by default
 	}
 
 	public void File_Exit()
 	{
-		MainForm.Visible = false;
-		MainForm.Close();
+		Program.MainForm.Hide();
+		Program.MainForm.Close();
 	}
 
 	#endregion
@@ -494,7 +492,7 @@ class CmdHandlers : IGStripManagerCallbacks
 				}
 			}
 		};
-		f.Show(MainForm);
+		f.Show(Program.MainForm);
 	}
 
 	public void Code_Wnd()
@@ -518,22 +516,22 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Run_Compile()
 	{
-		Run.CompileAndRun(false, Model.CurrentFile);
+		Run.CompileAndRun(false, Program.Model.CurrentFile);
 	}
 
 	public void Run_Run()
 	{
-		Run.CompileAndRun(true, Model.CurrentFile);
+		Run.CompileAndRun(true, Program.Model.CurrentFile);
 	}
 
 	public void Run_End()
 	{
-		if(Tasks.EndTasksOf(Model.CurrentFile)) return;
-		var t = Tasks.GetGreenTask(); if(t == null) return;
+		if(Program.Tasks.EndTasksOf(Program.Model.CurrentFile)) return;
+		var t = Program.Tasks.GetGreenTask(); if(t == null) return;
 		var m = new AMenu();
 		m.Add("End task:", null).Enabled = false;
-		m[t.f.DisplayName] = o => Tasks.EndTask(t);
-		m.Show(MainForm);
+		m[t.f.DisplayName] = o => Program.Tasks.EndTask(t);
+		m.Show(Program.MainForm);
 	}
 
 	public void Run_Pause()

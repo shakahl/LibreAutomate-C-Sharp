@@ -220,6 +220,7 @@ namespace Au.Types
 			DEFERERASE = 0x2000,
 			ASYNCWINDOWPOS = 0x4000,
 		}
+		internal const SWP LibSwpPublicMask = (SWP)0x67ff; //public flags. WM_WINDOWPOSCHANGING etc may also receive eg 0x8000, which breaks ToString. Used for Print(p->flags&Native.LibSwpPublicMask);
 
 		/// <summary>
 		/// Special window handle values.

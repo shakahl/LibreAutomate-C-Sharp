@@ -21,7 +21,6 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Triggers;
-using static Program;
 
 //TODO: if registry "Control Panel\Desktop:LowLevelHooksTimeout" < 5000, print a note with a link to correct it.
 

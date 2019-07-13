@@ -20,7 +20,6 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
-using static Program;
 
 class FFindOptions : AuForm
 {

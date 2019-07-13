@@ -19,7 +19,6 @@ using System.Drawing;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 using Au.Controls;
 
 class PanelStatus : AuUserControlBase
@@ -47,7 +46,7 @@ class PanelStatus : AuUserControlBase
 
 		this.Controls.Add(_c);
 
-		MousePosChangedWhenProgramVisible += _MouseInfo;
+		Program.MousePosChangedWhenProgramVisible += _MouseInfo;
 	}
 
 	protected override void OnLoad(EventArgs e)
@@ -85,19 +84,21 @@ class PanelStatus : AuUserControlBase
 		using(new Au.Util.LibStringBuilder(out var b, 1000)) {
 			var c = AWnd.FromXY(p);
 			var w = c.Window;
-			var pc = p; w.MapScreenToClient(ref pc);
 			var cn = w.ClassName;
-			b.AppendFormat("Window  {0,5} {1,5}   .   {2}   .   cn={3}   .   styles=0x{4:X}, 0x{5:X}\r\nScreen     {6,5} {7,5}   ..   {8}",
-				pc.x, pc.y, w.Name.Escape(140), cn.Escape(70), w.Style, w.ExStyle, p.x, p.y, w.ProgramName.Escape(70));
-			if(c != w) {
-				b.AppendFormat("   ..   Control   id={0}   .   cn={1}   .   styles=0x{2:X}, 0x{3:X}",
-					c.ControlId, c.ClassName.Escape(70), c.Style, c.ExStyle);
-			} else if(cn == "#32768") {
-				var m = Au.Util.AMenuItemInfo.FromXY(p, w, 50);
-				if(m != null) {
-					b.AppendFormat("   ..   Menu   id={0}", m.ItemId);
-					if(m.IsSystem) b.Append(" (system)");
-					//Print(m.GetText(true, true));
+			if(cn != null) {
+				var pc = p; w.MapScreenToClient(ref pc);
+				b.AppendFormat("Window  {0,5} {1,5}   .   {2}   .   cn={3}   .   styles=0x{4:X}, 0x{5:X}\r\nScreen     {6,5} {7,5}   ..   {8}",
+					pc.x, pc.y, w.Name?.Escape(140), cn.Escape(70), w.Style, w.ExStyle, p.x, p.y, w.ProgramName?.Escape(70));
+				if(c != w) {
+					b.AppendFormat("   ..   Control   id={0}   .   cn={1}   .   styles=0x{2:X}, 0x{3:X}",
+						c.ControlId, c.ClassName?.Escape(70), c.Style, c.ExStyle);
+				} else if(cn == "#32768") {
+					var m = Au.Util.AMenuItemInfo.FromXY(p, w, 50);
+					if(m != null) {
+						b.AppendFormat("   ..   Menu   id={0}", m.ItemId);
+						if(m.IsSystem) b.Append(" (system)");
+						//Print(m.GetText(true, true));
+					}
 				}
 			}
 

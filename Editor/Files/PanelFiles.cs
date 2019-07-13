@@ -1,26 +1,13 @@
+using Au;
+using Au.Controls;
+using Au.Types;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.IO;
-using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
-using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
 using System.Drawing;
+using System.Windows.Forms;
 //using System.Linq;
 using System.Xml.Linq;
-
-using Au;
-using Au.Types;
 using static Au.AStatic;
-using Au.Controls;
-using static Program;
 
 partial class PanelFiles : AuUserControlBase
 {
@@ -55,22 +42,21 @@ partial class PanelFiles : AuUserControlBase
 	/// If the setting does not exist, uses AFolders.ThisAppDocuments + @"Main".
 	/// If the file does not exist, copies from AFolders.ThisApp + @"Default".
 	/// </param>
-	/// <param name="runStartupScript"></param>
-	public FilesModel LoadWorkspace(string wsDir = null, bool runStartupScript = true)
+	public FilesModel LoadWorkspace(string wsDir = null)
 	{
-		if(wsDir == null) wsDir = Settings.GetString("workspace");
+		if(wsDir == null) wsDir = Program.Settings.GetString("workspace");
 		if(Empty(wsDir)) wsDir = AFolders.ThisAppDocuments + @"Main";
 		var xmlFile = wsDir + @"\files.xml";
 		var oldModel = _model;
 		FilesModel m = null;
-		bool newFile = false;
+		_isNewWorkspace = false;
 		g1:
 		try {
 			//SHOULDDO: if editor runs as admin, the workspace directory should be write-protected from non-admin user processes.
 
 			//CONSIDER: use different logic. Now silently creates empty files, it's not always good.
 			//	Add parameter createNew. If false, show error if file not found.
-			if(newFile = !AFile.ExistsAsFile(xmlFile)) {
+			if(_isNewWorkspace = !AFile.ExistsAsFile(xmlFile)) {
 				AFile.CopyTo(AFolders.ThisAppBS + @"Default\files", wsDir);
 				AFile.Copy(AFolders.ThisAppBS + @"Default\files.xml", xmlFile);
 			}
@@ -99,36 +85,45 @@ partial class PanelFiles : AuUserControlBase
 		oldModel?.Dispose();
 		Program.Model = _model = m;
 
-		if(Codea != null) Codea.WorkspaceClosed();
-		else Codea = new CodeAssist();
+		if(Program.Codea != null) Program.Codea.WorkspaceClosed();
+		else Program.Codea = new CodeAssist();
 		//APerf.Next('a');
-		Codea.WorkspaceOpened(); //TODO: slow, 250 ms in Release with ngened CA assemblies, 700 ms non-ngened. Also then CPU noise.
+		//Codea.WorkspaceOpened(); //TODO: slow, 250 ms in Release with ngened CA assemblies, 700 ms non-ngened. Also then CPU noise.
 		//APerf.Next('b');
 
 		//CONSIDER: unexpand path
-		if(Settings.Set("workspace", wsDir)) {
+		if(Program.Settings.Set("workspace", wsDir)) {
 			//add to recent
-			lock(Settings) {
-				var x1 = Settings.XmlOf("recent", true);
+			lock(Program.Settings) {
+				var x1 = Program.Settings.XmlOf("recent", true);
 				var x2 = x1.Elem(XN.f, XN.n, wsDir, true);
 				if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
 				if(x2 == null) x1.AddFirst(new XElement(XN.f, new XAttribute(XN.n, wsDir)));
 			}
 		}
 
-		//open a file in editor
-		if(newFile) m.SetCurrentFile(m.Root.FirstChild, newFile: true);
-		else m.LoadState();
-		if(m.CurrentFile == null) MainForm.SetTitle();
-
-		WorkspaceLoaded?.Invoke();
-
-		if(runStartupScript) Model.RunStartupScripts();
+		Program.MainForm.SetTitle();
+		if(Program.Loaded >= EProgramState.LoadedWorkspace) {
+			OpenDocuments();
+			Model.RunStartupScripts();
+		}
 
 		return _model;
 	}
 
-	public event Action WorkspaceLoaded;
+	public void OpenDocuments()
+	{
+		var m = _model;
+		if(_isNewWorkspace) {
+			_isNewWorkspace = false;
+			m.SetCurrentFile(m.Root.FirstChild, newFile: true);
+		} else m.LoadState();
+
+		WorkspaceLoadedAndDocumentsOpened?.Invoke();
+	}
+	bool _isNewWorkspace;
+
+	public event Action WorkspaceLoadedAndDocumentsOpened;
 
 	public void UnloadOnFormClosed()
 	{
@@ -171,10 +166,10 @@ partial class PanelFiles : AuUserControlBase
 	/// </summary>
 	public void FillMenuRecentWorkspaces(ToolStripDropDownMenu dd)
 	{
-		lock(Settings) {
-			var x1 = Settings.XmlOf("recent");
+		lock(Program.Settings) {
+			var x1 = Program.Settings.XmlOf("recent");
 			if(x1 == null) return;
-			var current = Settings.GetString("workspace");
+			var current = Program.Settings.GetString("workspace");
 			dd.SuspendLayout();
 			dd.Items.Clear();
 			bool currentOK = false;

@@ -19,7 +19,6 @@ using System.Xml.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 
 partial class FilesModel
 {
@@ -32,15 +31,15 @@ partial class FilesModel
 		public AutoSave(FilesModel model)
 		{
 			_model = model;
-			Timer1s += _Program_Timer1s;
-			MainForm.VisibleChanged += _MainForm_VisibleChanged;
+			Program.Timer1s += _Program_Timer1s;
+			Program.MainForm.VisibleChanged += _MainForm_VisibleChanged;
 		}
 
 		public void Dispose()
 		{
 			_model = null;
-			Timer1s -= _Program_Timer1s;
-			MainForm.VisibleChanged -= _MainForm_VisibleChanged;
+			Program.Timer1s -= _Program_Timer1s;
+			Program.MainForm.VisibleChanged -= _MainForm_VisibleChanged;
 
 			//must be all saved or unchanged
 			Debug.Assert(_workspaceAfterS == 0);
@@ -144,7 +143,7 @@ partial class FilesModel
 
 		void _MainForm_VisibleChanged(object sender, EventArgs e)
 		{
-			if(!MainForm.Visible) AllNowIfNeed();
+			if(!Program.MainForm.Visible) AllNowIfNeed();
 		}
 	}
 
@@ -197,10 +196,10 @@ partial class FilesModel
 	/// </summary>
 	public void LoadState()
 	{
-		//Call LoadState when form loaded, ie when control handles created but form still invisible. Because:
+		//Call LoadState when control handles created but form still invisible. Because:
 		//	1. _control does not update scrollbars if folders expanded before creating handle.
 		//	2. SciControl handle must be created because _SetCurrentFile sets its text etc.
-		Debug.Assert(MainForm.IsHandleCreated);
+		_control.CreateHandleNow(); //not created if the panel is invisible
 
 		if(DB == null) return;
 		try {

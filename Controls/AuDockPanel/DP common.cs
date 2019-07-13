@@ -294,7 +294,7 @@ namespace Au.Controls
 				this.SetDockState(_DockState.LastVisible);
 				if(focus) {
 					var gt = this as _Tab;
-					var gp = (gt != null) ? gt.ActiveItem : (this as _Panel);
+					var gp = gt?.ActiveItem ?? (this as _Panel);
 					gp?.Content?.Focus();
 				}
 			}

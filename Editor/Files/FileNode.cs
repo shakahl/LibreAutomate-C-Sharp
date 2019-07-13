@@ -449,7 +449,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	/// Returns null if not found; also if name is null/"".
 	/// </summary>
 	/// <param name="name">Name like "name.cs" or relative path like @"\name.cs" or @"\subfolder\name.cs".</param>
-	/// <param name="folder">true - folder, false - file, null - any.</param>
+	/// <param name="folder">true - folder, false - file, null - any (prefer file if not relative).</param>
 	public FileNode FindDescendant(string name, bool? folder)
 	{
 		if(Empty(name)) return null;
@@ -677,24 +677,6 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	}
 
 	/// <summary>
-	/// Returns index of this XML element in parent.
-	/// Returns -1 if this is Root.
-	/// </summary>
-	internal int Index {
-		get {
-			var p = Parent;
-			if(p == null) { Debug.Assert(this == Root); return -1; }
-			int i = 0;
-			foreach(var t in p.Children()) {
-				if(t == this) return i;
-				i++;
-			}
-			Debug.Assert(false);
-			return -1;
-		}
-	}
-
-	/// <summary>
 	/// Unselects all and selects this. Does not open document.
 	/// If this is root, just unselects all.
 	/// </summary>
@@ -918,7 +900,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	/// </summary>
 	/// <param name="target"></param>
 	/// <param name="pos"></param>
-	internal bool FileMove(FileNode target, NodePosition pos)
+	public bool FileMove(FileNode target, NodePosition pos)
 	{
 		if(!CanMove(target, pos)) return false;
 

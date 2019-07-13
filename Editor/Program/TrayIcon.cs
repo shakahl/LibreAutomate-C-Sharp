@@ -20,7 +20,6 @@ using System.Xml.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 using Au.Controls;
 
 static class EdTrayIcon
@@ -34,25 +33,21 @@ static class EdTrayIcon
 		_trayIcon = null;
 	}
 
-#if true
-	static AMenu _menu;
-
 	public static void Add()
 	{
 		_trayIcon = new NotifyIcon();
 		_trayIcon.MouseClick += _trayIcon_MouseClick;
 		_trayIcon.Icon = EdStock.IconTrayNormal;
 		_trayIcon.Text = Program.AppName;
-
-		_menu = new AMenu { MultiShow = true, ActivateMenuWindow = true };
-		_menu["End green task\tSleep"] = o => Tasks.EndTask();
-		_menu["Disable triggers\tM-click"] = o => Run.DisableTriggers(null); var dt = _menu.LastMenuItem;
-		_menu.CMS.Opening += (unu, sed) => { dt.Checked = _disabled; };
-		_menu.Separator();
-		_menu["Exit"] = o => Strips.Cmd.File_Exit();
-		_trayIcon.ContextMenuStrip = _menu.CMS;
-
 		_trayIcon.Visible = true;
+
+		var m = new AMenu { MultiShow = true, ActivateMenuWindow = true };
+		m["End green task\tSleep"] = o => Program.Tasks.EndTask();
+		m["Disable triggers\tM-click"] = o => Run.DisableTriggers(null); var dt = m.LastMenuItem;
+		m.CMS.Opening += (unu, sed) => { dt.Checked = _disabled; };
+		m.Separator();
+		m["Exit"] = o => Strips.Cmd.File_Exit();
+		_trayIcon.ContextMenuStrip = m.CMS;
 	}
 
 	static void _trayIcon_MouseClick(object sender, MouseEventArgs e)
@@ -60,8 +55,8 @@ static class EdTrayIcon
 		//Print(e.Button);
 		switch(e.Button) {
 		case MouseButtons.Left:
-			MainForm.Visible = true;
-			var w = (AWnd)MainForm;
+			Program.MainForm.Show();
+			var w = (AWnd)Program.MainForm;
 			w.ShowNotMinimized(true);
 			w.ActivateLL();
 			break;
@@ -70,45 +65,6 @@ static class EdTrayIcon
 			break;
 		}
 	}
-#else //the above version is better because activates previous window when context menu closed. Also, it's standard, therefore possibly more reliable.
-	public static void Add()
-	{
-		_trayIcon = new NotifyIcon();
-		_trayIcon.MouseClick += _trayIcon_MouseClick;
-		_trayIcon.Icon = EdStock.IconTrayNormal;
-		_trayIcon.Text = Program.AppName;
-		_trayIcon.Visible = true;
-	}
-
-	static void _trayIcon_MouseClick(object sender, MouseEventArgs e)
-	{
-		//Print(e.Button);
-		switch(e.Button) {
-		case MouseButtons.Left:
-			MainForm.Visible = true;
-			var w = (AWnd)MainForm;
-			w.ShowNotMinimized(true);
-			w.ActivateLL();
-			break;
-		case MouseButtons.Right:
-			var m = new AMenu { ActivateMenuWindow = true };
-			m["End green task\tSleep"] = o => Tasks.EndTask();
-			m["Disable triggers\tM-click"] = o => Run.DisableTriggers(null);
-			m.LastMenuItem.Checked = _disabled;
-			m.Separator();
-			m["Exit"] = o => Strips.Cmd.File_Exit();
-			m.Show();
-			//never mind: without ActivateMenuWindow does not show second time. Shows first, third, etc, but not second.
-			//	.NET somehow closes CMS, and then AMenu disposes self.
-			//	Difficult to debug, because VS now does not show .NET source code when debugging.
-			//	Only when used with NotifyIcon.
-			break;
-		case MouseButtons.Middle:
-			Run.DisableTriggers(null);
-			break;
-		}
-	}
-#endif
 
 	public static bool Disabled {
 		get => _disabled;

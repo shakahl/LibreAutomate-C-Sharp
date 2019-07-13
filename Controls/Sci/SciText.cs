@@ -680,9 +680,9 @@ namespace Au.Controls
 		/// </summary>
 		public void GoToPos(int pos)
 		{
-			Call(SCI_GOTOPOS, pos);
 			int line = Call(SCI_LINEFROMPOSITION, pos);
 			Call(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
+			Call(SCI_GOTOPOS, pos);
 		}
 
 		/// <summary>
@@ -690,8 +690,18 @@ namespace Au.Controls
 		/// </summary>
 		public void GoToLine(int line)
 		{
-			Call(SCI_GOTOLINE, line);
 			Call(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
+			Call(SCI_GOTOLINE, line);
+		}
+
+		/// <summary>
+		/// SCI_SETSEL and ensures visible.
+		/// </summary>
+		public void SelectAndMakeVisible(int from, int to, SciFromTo flags = 0)
+		{
+			NormalizeRange(ref from, ref to, flags);
+			GoToPos(from); //ensures line visible and selection visible (without it in some cases selection to the left of the caret may be invisible)
+			Call(SCI_SETSEL, from, to);
 		}
 
 		/// <summary>

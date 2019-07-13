@@ -214,6 +214,27 @@ namespace Au.Util
 			}
 		}
 
+		/// <summary>
+		/// Returns 0-based index of this node in parent.
+		/// Returns -1 if no parent.
+		/// </summary>
+		/// <remarks>
+		/// Can be slow if there are many siblings. This class does not have an 'index' field and therefore has to walk the linked list of siblings.
+		/// </remarks>
+		public int Index {
+			get {
+				var p = _parent;
+				if(p != null) {
+					var n = p._lastChild;
+					for(int i = 0; ; i++) {
+						n = n._next;
+						if(n == this) return i;
+					}
+				}
+				return -1;
+			}
+		}
+
 		#endregion
 
 		#region methods

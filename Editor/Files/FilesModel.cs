@@ -20,7 +20,6 @@ using System.Collections;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
@@ -107,7 +106,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		if(_importing) return;
 		if(_initedFully) {
 			//_triggers.Dispose();
-			Tasks.OnWorkspaceClosed();
+			Program.Tasks.OnWorkspaceClosed();
 			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
 		}
 		Save?.Dispose();
@@ -189,31 +188,29 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// </summary>
 	/// <param name="name">
 	/// Can be:
-	/// Name, like "name.cs". If folder is false, can be just "name"; if does not find, tries to find with ".cs", and debugprints a note if finds.
+	/// Name, like "name.cs".
 	/// Relative path like @"\name.cs" or @"\subfolder\name.cs".
 	/// &lt;id&gt; - enclosed <see cref="FileNode.IdString"/>, or <see cref="FileNode.IdStringWithWorkspace"/>.
 	/// 
 	/// Case-insensitive. If enclosed in &lt;&gt;, can be followed by any text.
 	/// </param>
-	/// <param name="folder">true - folder, false - file, null - any.</param>
+	/// <param name="folder">true - folder, false - file, null - any (prefer file if not id and not relative).</param>
 	public FileNode Find(string name, bool? folder)
 	{
 		if(Empty(name)) return null;
 		if(name[0] == '<') return FindById(name.ToInt64(1));
-		var f = Root.FindDescendant(name, folder);
-		if(f == null && folder == false && !name.Ends(".cs", true)) {
-			f = Root.FindDescendant(name + ".cs", folder);
-			ADebug.PrintIf(f != null, "name without .cs");
-		}
-		return f;
+		return Root.FindDescendant(name, folder);
+		//rejected: support name without extension.
 	}
 
 	/// <summary>
 	/// Calls <see cref="Find(string, bool?)"/>(name, false).
 	/// </summary>
-	public FileNode FindFile(string name)
+	public FileNode FindScript(string name)
 	{
-		return Find(name, false);
+		var f = Find(name, false);
+		if(f == null && !name.Ends(".cs", true)) f = Find(name + ".cs", false);
+		return f;
 	}
 
 	/// <summary>
@@ -363,7 +360,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		if(f == _currentFile) {
 			if(activateOther && of.Count > 0 && _SetCurrentFile(of[0])) return true; //and don't select
 			_currentFile = null;
-			MainForm.SetTitle();
+			Program.MainForm.SetTitle();
 		}
 		f.UpdateControlRow();
 
@@ -397,7 +394,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		Panels.Editor.CloseAll(saveTextIfNeed: false);
 		OpenFiles.Clear();
 		Panels.Open.UpdateList();
-		MainForm.SetTitle();
+		Program.MainForm.SetTitle();
 	}
 
 	/// <summary>
@@ -456,7 +453,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		Panels.Open.UpdateCurrent(f);
 		Save.StateLater();
 
-		MainForm.SetTitle();
+		Program.MainForm.SetTitle();
 
 		return true;
 	}
@@ -759,7 +756,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			f = _currentFile;
 		}
 		if(f == null) return;
-		if(f.IsCodeFile) new FProperties(f).Show(MainForm);
+		if(f.IsCodeFile) new FProperties(f).Show(Program.MainForm);
 		//else if(f.IsFolder) new EdFolderProperties(f).Show(MainForm);
 		//else new EdOtherFileProperties(f).Show(MainForm);
 	}
@@ -797,7 +794,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 			var d = new OpenFileDialog();
 			d.Multiselect = true;
 			d.Title = "Import files to the workspace";
-			if(d.ShowDialog(MainForm) != DialogResult.OK) return;
+			if(d.ShowDialog(Program.MainForm) != DialogResult.OK) return;
 			a = d.FileNames;
 		}
 
@@ -817,7 +814,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		if(wsDir != null) xmlFile = wsDir + @"\files.xml";
 		else {
 			var d = new OpenFileDialog() { Title = "Import workspace", Filter = "files.xml|files.xml" };
-			if(d.ShowDialog(MainForm) != DialogResult.OK) return;
+			if(d.ShowDialog(Program.MainForm) != DialogResult.OK) return;
 			wsDir = APath.GetDirectoryPath(xmlFile = d.FileName);
 		}
 
@@ -1084,10 +1081,10 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// Note: the .NET XML reader replaces \r\n with \n, even in CDATA. If the caller needs \r\n, eg for an Edit control, let it replace \n with \r\n.
 	/// </summary>
 	public string StartupScriptsCsv {
-		get => SettingsXml?.Element("users")?.Elem("user", "guid", UserGuid, true)?.Element("startupScripts")?.Value;
+		get => SettingsXml?.Element("users")?.Elem("user", "guid", Program.UserGuid, true)?.Element("startupScripts")?.Value;
 		set {
 			if(SettingsXml == null) return;
-			var x = SettingsXml.ElemOrAdd("users").ElemOrAdd("user", "guid", UserGuid, true).ElemOrAdd("startupScripts");
+			var x = SettingsXml.ElemOrAdd("users").ElemOrAdd("user", "guid", Program.UserGuid, true).ElemOrAdd("startupScripts");
 			x.Value = value;
 			SaveWorkspaceSettings();
 		}
@@ -1098,7 +1095,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		var csv = StartupScriptsCsv; if(csv == null) return;
 		var x = ACsv.Parse(csv);
 		foreach(var row in x.Data) {
-			var f = FindFile(row[0]);
+			var f = FindScript(row[0]);
 			if(f == null) { Print("Startup script not found: " + row[0] + ". Please edit name in Options."); continue; }
 			int delay = 10;
 			if(x.ColumnCount > 1) {

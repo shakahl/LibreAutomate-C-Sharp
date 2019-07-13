@@ -21,7 +21,6 @@ using System.Reflection.Emit;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 using Au.Controls;
 using Au.Compiler;
 using System.Runtime.InteropServices.ComTypes;
@@ -45,7 +44,7 @@ partial class FProperties : AuForm, IMessageFilter
 
 		this.Text = _f.Name + " Properties";
 
-		var owner = MainForm;
+		var owner = Program.MainForm;
 		var p = owner.PointToScreen(owner.ClientRectangle.Location);
 		this.Location = new Point(p.X + 100, p.Y + 100); //note: this.StartPosition = FormStartPosition.CenterParent; does not work with Form.Show.
 	}
@@ -416,7 +415,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	private void _bOK_Click(object sender, EventArgs e)
 	{
-		if(Model.CurrentFile != _f && !Model.SetCurrentFile(_f)) return;
+		if(Program.Model.CurrentFile != _f && !Program.Model.SetCurrentFile(_f)) return;
 		var doc = Panels.Editor.ActiveDoc;
 		var t = doc.ST;
 		var code = doc.Text;
@@ -473,7 +472,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 	{
 		var sFind = _tFindInList.Text;
 		var a = new List<string>();
-		foreach(var f in Model.Root.Descendants()) {
+		foreach(var f in Program.Model.Root.Descendants()) {
 			var f2 = filter(f);
 			if(f2 == null) continue;
 			var path = f2.ItemPath;

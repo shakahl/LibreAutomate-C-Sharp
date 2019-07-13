@@ -19,7 +19,6 @@ using System.Xml.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 using Au.Controls;
 
 static class Strips
@@ -45,7 +44,7 @@ static class Strips
 		_cmd = new CmdHandlers();
 		//p.Next();
 
-		_strips = new AuStripManager(MainForm, _cmd);
+		_strips = new AuStripManager(Program.MainForm, _cmd);
 		_strips.BuildAll(AFolders.ThisAppBS + @"Default\Strips.xml", AFolders.ThisAppDocuments + @"!Settings\Strips.xml", new AuDockPanel.DockedToolStripRenderer());
 		//p.Next();
 
@@ -92,10 +91,10 @@ static class Strips
 #if TEST
 		//tbCustom2.Items.Add("Test", null, TestCompiler.Test);
 		tbCustom2.Items.Add("Test", null, (unu, sed) => {
-			MainForm.TestEditor();
+			Program.MainForm.TestEditor();
 			//Panels.Files.Test();
 			//Panels.Editor.Test();
-			//Model.LoadState();
+			//Program.Model.LoadState();
 			//TestCompiler.TestCompiling();
 			//TestCompiler.TestParsing();
 		});

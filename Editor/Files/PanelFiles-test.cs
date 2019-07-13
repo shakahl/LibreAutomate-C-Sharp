@@ -35,7 +35,7 @@ partial class PanelFiles
 //		//var name = "msvcrt";
 //		//var name = "Declarations";
 //		//var name = "Backup";
-//		var name = "QM# fileS.cs";
+//		var name = "QM3 fileS.cs";
 
 //		//var n = _c.AllNodes.ElementAt(2);
 //		var f = _model.Find(name, null);

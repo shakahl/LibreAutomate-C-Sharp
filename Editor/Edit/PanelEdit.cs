@@ -19,10 +19,11 @@ using System.Drawing;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
 using Au.Util;
+
+//TODO: when clicked selbar to select the fold header, should select all hidden lines.
 
 partial class PanelEdit : UserControl
 {
@@ -51,6 +52,11 @@ partial class PanelEdit : UserControl
 	//public SciControl SC => _activeDoc;
 
 	/// <summary>
+	/// If f is open (active or not), returns its SciCode, else null.
+	/// </summary>
+	public SciCode GetOpenDocOf(FileNode f) => _docs.Find(v => v.FN == f);
+
+	/// <summary>
 	///	If f is already open, unhides its control.
 	///	Else loads f text and creates control. If fails, does not change anything.
 	/// Hides current file's control.
@@ -61,12 +67,11 @@ partial class PanelEdit : UserControl
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
 	public bool Open(FileNode f, bool newFile)
 	{
-		Debug.Assert(MainForm.IsHandleCreated);
-		Debug.Assert(!Model.IsAlien(f));
+		Debug.Assert(!Program.Model.IsAlien(f));
 
 		if(f == _activeDoc?.FN) return true;
 		bool focus = _activeDoc != null ? _activeDoc.Focused : false;
-		var doc = _docs.Find(v => v.FN == f);
+		var doc = GetOpenDocOf(f);
 		if(doc != null) {
 			if(_activeDoc != null) _activeDoc.Visible = false;
 			_activeDoc = doc;
@@ -89,12 +94,12 @@ partial class PanelEdit : UserControl
 			doc.AccessibleName = f.Name;
 			doc.AccessibleDescription = path;
 
-			Codea.FileOpened(doc);
+			Program.Codea.FileOpened(doc);
 		}
 		if(focus) _activeDoc.Focus();
 
 		_UpdateUI_IsOpen();
-		Panels.Find.UpdateEditor();
+		Panels.Find.UpdateQuickResults(true);
 		return true;
 	}
 
@@ -110,14 +115,14 @@ partial class PanelEdit : UserControl
 		Debug.Assert(f != null);
 		SciCode doc;
 		if(f == _activeDoc?.FN) {
-			Model.Save.TextNowIfNeed();
+			Program.Model.Save.TextNowIfNeed();
 			doc = _activeDoc;
 			_activeDoc = null;
 		} else {
-			doc = _docs.Find(v => v.FN == f);
+			doc = GetOpenDocOf(f);
 			if(doc == null) return;
 		}
-		Codea.FileClosed(doc);
+		Program.Codea.FileClosed(doc);
 		doc.Dispose();
 		_docs.Remove(doc);
 		_UpdateUI_IsOpen();
@@ -128,7 +133,7 @@ partial class PanelEdit : UserControl
 	/// </summary>
 	public void CloseAll(bool saveTextIfNeed)
 	{
-		if(saveTextIfNeed) Model.Save.TextNowIfNeed();
+		if(saveTextIfNeed) Program.Model.Save.TextNowIfNeed();
 		_activeDoc = null;
 		foreach(var doc in _docs) doc.Dispose();
 		_docs.Clear();
@@ -278,6 +283,8 @@ partial class PanelEdit : UserControl
 
 				//Call(SCI_ASSIGNCMDKEY, 3 << 16 | 'C', SCI_COPY); //Ctrl+Shift+C = raw copy
 			}
+
+			//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
 		}
 
 		//protected override void Dispose(bool disposing)
@@ -304,7 +311,7 @@ partial class PanelEdit : UserControl
 
 			switch(n.nmhdr.code) {
 			case NOTIF.SCN_SAVEPOINTLEFT:
-				Model.Save.TextLater();
+				Program.Model.Save.TextLater();
 				break;
 			case NOTIF.SCN_SAVEPOINTREACHED:
 				//never mind: we should cancel the 'save text later'
@@ -312,12 +319,12 @@ partial class PanelEdit : UserControl
 			case NOTIF.SCN_MODIFIED:
 				//Print(n.modificationType);
 				if(0 != (n.modificationType&(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
-					Codea.TextChanged(this, n);
-					Panels.Find.UpdateEditor();
+					Program.Codea.TextChanged(this, n);
+					Panels.Find.UpdateQuickResults(true);
 				}
 				break;
 			case NOTIF.SCN_CHARADDED:
-				Codea.CharAdded(this, n.ch);
+				Program.Codea.CharAdded(this, n.ch);
 				break;
 			case NOTIF.SCN_UPDATEUI:
 				if(_initDeferred != null) { var f = _initDeferred; _initDeferred = null; f(); }
@@ -340,7 +347,7 @@ partial class PanelEdit : UserControl
 			//Print(m);
 			switch(m.Msg) {
 			case Api.WM_SETFOCUS:
-				if(!_noModelEnsureCurrentSelected) Model?.EnsureCurrentSelected();
+				if(!_noModelEnsureCurrentSelected) Program.Model?.EnsureCurrentSelected();
 				break;
 			case Api.WM_KEYDOWN:
 				char key = (char)(int)m.WParam;
@@ -392,7 +399,7 @@ partial class PanelEdit : UserControl
 		}
 		bool _noModelEnsureCurrentSelected;
 
-		internal bool IsUnsaved => 0 != Call(SCI_GETMODIFY);
+		public bool IsUnsaved => 0 != Call(SCI_GETMODIFY);
 
 		internal bool SaveText()
 		{
@@ -412,7 +419,7 @@ partial class PanelEdit : UserControl
 
 			//now folding does not work well. The first place where it works is SCN_UPDATEUI. Call _initDeferred there and set = null.
 			_initDeferred = () => {
-				var db = Model.DB; if(db == null) return;
+				var db = Program.Model.DB; if(db == null) return;
 				try {
 					using var p = db.Statement("SELECT lines FROM _editor WHERE id=?", FN.Id);
 					if(p.Step()) {
@@ -453,7 +460,7 @@ partial class PanelEdit : UserControl
 
 		internal void SaveEditorData()
 		{
-			var db = Model.DB; if(db == null) return;
+			var db = Program.Model.DB; if(db == null) return;
 			var a = new List<int>();
 			_GetLineDataToSave(0, a);
 			_GetLineDataToSave(1, a);
@@ -946,7 +953,7 @@ class Script :AScript { [STAThread] static void Main(string[] args) { new Script
 			switch(ADialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
 			case 0: break; //Cancel
 			case 1: //Create new file
-				Model.NewItem(isClass ? "Class.cs" : "Script.cs", name, text: new EdNewFileText(true, s));
+				Program.Model.NewItem(isClass ? "Class.cs" : "Script.cs", name, text: new EdNewFileText(true, s));
 				break;
 			case 2: //Replace all text
 				ST.SetText(s);
@@ -977,7 +984,7 @@ class Script :AScript { [STAThread] static void Main(string[] args) { new Script
 		/// Comments (adds //) or uncomments (removes //) selected lines or current line.
 		/// </summary>
 		/// <param name="comment">Comment (true), uncomment (false) or toggle (null).</param>
-		internal void CommentLines(bool? comment)
+		public void CommentLines(bool? comment)
 		{
 			if(ST.IsReadonly) return;
 			ST.GetSelectionLines(out var x);

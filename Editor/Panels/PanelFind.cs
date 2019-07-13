@@ -20,7 +20,6 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
-using static Program;
 using Au.Tools;
 
 class PanelFind : AuUserControlBase
@@ -32,7 +31,7 @@ class PanelFind : AuUserControlBase
 		this._tFind = new PanelFind._SciTextBox();
 		this._bFind = new Au.Controls.AuButton();
 		this._bFindIF = new Au.Controls.AuButton();
-		this._bName = new Au.Controls.AuButton();
+		this._cName = new Au.Controls.AuCheckBox();
 		this._cCase = new Au.Controls.AuCheckBox();
 		this._cWord = new Au.Controls.AuCheckBox();
 		this._cRegex = new Au.Controls.AuCheckBox();
@@ -55,7 +54,7 @@ class PanelFind : AuUserControlBase
 		this.tableLayoutPanel1.Controls.Add(this._tFind, 0, 0);
 		this.tableLayoutPanel1.Controls.Add(this._bFind, 0, 1);
 		this.tableLayoutPanel1.Controls.Add(this._bFindIF, 1, 1);
-		this.tableLayoutPanel1.Controls.Add(this._bName, 2, 1);
+		this.tableLayoutPanel1.Controls.Add(this._cName, 2, 1);
 		this.tableLayoutPanel1.Controls.Add(this._cCase, 0, 2);
 		this.tableLayoutPanel1.Controls.Add(this._cWord, 1, 2);
 		this.tableLayoutPanel1.Controls.Add(this._cRegex, 2, 2);
@@ -122,17 +121,17 @@ class PanelFind : AuUserControlBase
 		this._toolTip.SetToolTip(this._bFindIF, "Search in files.\r\nTo skip some files, click the ... button.");
 		this._bFindIF.Click += new System.EventHandler(this._bFindIF_Click);
 		// 
-		// _bName
+		// _cName
 		// 
-		this._bName.Dock = System.Windows.Forms.DockStyle.Fill;
-		this._bName.Location = new System.Drawing.Point(137, 26);
-		this._bName.Margin = new System.Windows.Forms.Padding(1, 3, 3, 3);
-		this._bName.Name = "_bName";
-		this._bName.Size = new System.Drawing.Size(65, 22);
-		this._bName.TabIndex = 3;
-		this._bName.Text = "name";
-		this._toolTip.SetToolTip(this._bName, "Search in filenames");
-		this._bName.Click += new System.EventHandler(this._bName_Click);
+		this._cName.AutoSize = true;
+		this._cName.Location = new System.Drawing.Point(137, 26);
+		this._cName.Margin = new System.Windows.Forms.Padding(2, 4, 3, 3);
+		this._cName.Name = "_cName";
+		this._cName.Size = new System.Drawing.Size(65, 22);
+		this._cName.TabIndex = 3;
+		this._cName.Text = "Name";
+		this._toolTip.SetToolTip(this._cName, "Search in filenames");
+		this._cName.CheckedChanged += new System.EventHandler(this._cName_CheckedChanged);
 		// 
 		// _cCase
 		// 
@@ -250,7 +249,7 @@ class PanelFind : AuUserControlBase
 	private _SciTextBox _tFind;
 	private AuButton _bFind;
 	private AuButton _bFindIF;
-	private AuButton _bName;
+	private AuCheckBox _cName;
 	private AuCheckBox _cCase;
 	private AuCheckBox _cWord;
 	private AuCheckBox _cRegex;
@@ -286,18 +285,18 @@ class PanelFind : AuUserControlBase
 
 	private void _tFind_TextChanged(object sender, EventArgs e)
 	{
-		UpdateEditor();
+		UpdateQuickResults(false);
 	}
 
 	private void _cCase_CheckedChanged(object sender, EventArgs e)
 	{
-		UpdateEditor();
+		UpdateQuickResults(false);
 	}
 
 	private void _cWord_CheckedChanged(object sender, EventArgs e)
 	{
 		if(_cWord.Checked) _cRegex.Checked = false;
-		UpdateEditor();
+		UpdateQuickResults(false);
 	}
 
 	private void _cRegex_CheckedChanged(object sender, EventArgs e)
@@ -311,7 +310,7 @@ class PanelFind : AuUserControlBase
 			_regexWindow?.Dispose();
 			_regexWindow = null;
 		}
-		UpdateEditor();
+		UpdateQuickResults(false);
 	}
 
 	RegexWindow _regexWindow;
@@ -325,7 +324,7 @@ class PanelFind : AuUserControlBase
 		if(!_regexWindow.Window.IsHandleCreated) {
 			var r = ((AWnd)this).Rect;
 			r.Offset(0, -20);
-			_regexWindow.Show(MainForm, r, true);
+			_regexWindow.Show(Program.MainForm, r, true);
 		} else _regexWindow.Window.Show();
 
 		_regexWindow.InsertInControl = tb;
@@ -358,16 +357,31 @@ class PanelFind : AuUserControlBase
 
 	private void _bFind_Click(object sender, EventArgs e)
 	{
+		_cName.Checked = false;
 		if(!_GetTextToFind(out var f, false)) return;
 		_FindNextInEditor(f, false);
 	}
 
-	private void _bFindIF_Click(object sender, EventArgs e) => _FindNameOrInFiles(false);
+	private void _bFindIF_Click(object sender, EventArgs e)
+	{
+		_cName.Checked = false;
+		using var _ = new _TempDisableControl(_bFindIF);
+		_FindAllInFiles(false);
+	}
 
-	private void _bName_Click(object sender, EventArgs e) => _FindNameOrInFiles(true);
+	private void _cName_CheckedChanged(object sender, EventArgs e)
+	{
+		Panels.Found.Control.ST.ClearText();
+		if(_cName.Checked) {
+			_aEditor.Clear();
+			Panels.Editor.ActiveDoc?.HiliteFind(null);
+		}
+		UpdateQuickResults(false);
+	}
 
 	private void _bReplace_Click(object sender, EventArgs e)
 	{
+		_cName.Checked = false;
 		if(!_GetTextToFind(out var f, true)) return;
 		_FindNextInEditor(f, true);
 	}
@@ -379,8 +393,93 @@ class PanelFind : AuUserControlBase
 
 		if(f.ShowDialog(this) != DialogResult.OK) return;
 
-		Settings.Set("Find.Skip", f._tSkip.Text);
+		Program.Settings.Set("Find.Skip", f._tSkip.Text);
 		_aSkipWildcards = null;
+	}
+
+	#endregion
+
+	#region common
+
+	/// <summary>
+	/// Called when changed find text or options. Also when activated another document.
+	/// Async-updates find-hiliting in editor or 'find name' results.
+	/// </summary>
+	public void UpdateQuickResults(bool onlyEditor)
+	{
+		if(!Visible) return;
+		if(onlyEditor && _cName.Checked) return;
+		//Print("UpdateQuickResults", Visible);
+
+		if(_timerUE == null) _timerUE = new ATimer(() => {
+			if(_cName.Checked) {
+				_FindAllInFiles(true);
+			} else {
+				_FindAllInEditor();
+				Panels.Editor.ActiveDoc?.HiliteFind(_aEditor);
+			}
+		});
+
+		_timerUE.Start(150, true);
+	}
+	ATimer _timerUE;
+
+	struct _TextToFind
+	{
+		public string findText;
+		public string replaceText;
+		public ARegex rx;
+		public bool wholeWord;
+		public bool matchCase;
+	}
+
+	bool _GetTextToFind(out _TextToFind f, bool forReplace, bool noRecent = false)
+	{
+		_errorProvider.Clear();
+		f = default;
+		f.findText = _tFind.Text;
+		if(f.findText.Length == 0) return false;
+		f.matchCase = _cCase.Checked;
+		if(_cRegex.Checked) {
+			try {
+				var fl = RXFlags.MULTILINE;
+				if(!f.matchCase) fl |= RXFlags.CASELESS;
+				f.rx = new ARegex(f.findText, flags: fl);
+			}
+			catch(ArgumentException e) {
+				_SetErrorProvider(_tFind, e.Message);
+				return false;
+			}
+		} else f.wholeWord = _cWord.Checked;
+		if(forReplace) f.replaceText = _tReplace.Text;
+
+		_AddToRecent(f, noRecent);
+
+		return true;
+	}
+
+	void _FindAllInString(string text, in _TextToFind f, List<POINT> a, bool one = false)
+	{
+		if(f.rx != null) {
+			foreach(var g in f.rx.FindAllG(text)) {
+				a.Add((g.Index, g.Length));
+				if(one) break;
+			}
+		} else {
+			for(int i = 0; i < text.Length; i += f.findText.Length) {
+				i = f.wholeWord ? text.FindWord(f.findText, i, !f.matchCase, "_") : text.Find(f.findText, i, !f.matchCase);
+				if(i < 0) break;
+				a.Add((i, f.findText.Length));
+				if(one) break;
+			}
+		}
+	}
+
+	void _SetErrorProvider(Control c, string text)
+	{
+		_errorProvider.SetIconAlignment(c, ErrorIconAlignment.BottomRight);
+		_errorProvider.SetIconPadding(c, -16);
+		_errorProvider.SetError(c, text);
 	}
 
 	#endregion
@@ -441,7 +540,7 @@ class PanelFind : AuUserControlBase
 			t.ReplaceSel(repl);
 			_FindNextInEditor(f, false);
 		} else {
-			t.Call(Sci.SCI_SETSEL, i, to);
+			t.SelectAndMakeVisible(i, to);
 		}
 	}
 
@@ -452,6 +551,7 @@ class PanelFind : AuUserControlBase
 
 	private void _bReplaceAll_Click(object sender, EventArgs e)
 	{
+		_cName.Checked = false;
 		if(!_GetTextToFind(out var f, true)) return;
 		var doc = Panels.Editor.ActiveDoc; if(doc == null) return;
 		var text = doc.Text;
@@ -464,7 +564,7 @@ class PanelFind : AuUserControlBase
 			if(n == 0) return;
 		} else {
 			_aEditor.Clear();
-			_FindAllInText(text, f, _aEditor);
+			_FindAllInString(text, f, _aEditor);
 			if(_aEditor.Count == 0) return;
 			var b = new StringBuilder();
 			int i = 0;
@@ -479,36 +579,20 @@ class PanelFind : AuUserControlBase
 		doc.ST.SetText(r);
 	}
 
-	/// <summary>
-	/// Async-updates find-hiliting in editor.
-	/// Called when changed find text or options. Also when activated another document.
-	/// </summary>
-	public void UpdateEditor()
-	{
-		if(!Visible) return;
-		//Print("UpdateEditor", Visible);
-		if(_timerUE == null) _timerUE = new ATimer(() => {
-			_FindAllInEditor();
-			Panels.Editor.ActiveDoc?.HiliteFind(_aEditor);
-		});
-		_timerUE.Start(150, true);
-	}
-	ATimer _timerUE;
-
 	List<POINT> _aEditor = new List<POINT>(); //index/length of all found instances in editor text
 
 	void _FindAllInEditor()
 	{
 		_aEditor.Clear();
-		if(!_GetTextToFind(out var f, false, true)) return;
+		if(!_GetTextToFind(out var f, false, noRecent: true)) return;
 		var text = Panels.Editor.ActiveDoc?.Text; if(text.Lenn() == 0) return;
-		_FindAllInText(text, f, _aEditor);
+		_FindAllInString(text, f, _aEditor);
 	}
 
 	protected override void OnVisibleChanged(EventArgs e)
 	{
 		base.OnVisibleChanged(e);
-		Panels.Editor.ActiveDoc?.HiliteFind(Visible ? _aEditor : null);
+		if(!_cName.Checked) Panels.Editor.ActiveDoc?.HiliteFind(Visible ? _aEditor : null);
 	}
 
 	public void CtrlF()
@@ -531,111 +615,47 @@ class PanelFind : AuUserControlBase
 
 	#endregion
 
-	#region common
-
-	void _FindAllInText(string text, in _TextToFind f, List<POINT> a, bool one = false)
-	{
-		if(f.rx != null) {
-			foreach(var g in f.rx.FindAllG(text)) {
-				a.Add((g.Index, g.Length));
-				if(one) break;
-			}
-		} else {
-			for(int i = 0; i < text.Length; i += f.findText.Length) {
-				i = f.wholeWord ? text.FindWord(f.findText, i, !f.matchCase, "_") : text.Find(f.findText, i, !f.matchCase);
-				if(i < 0) break;
-				a.Add((i, f.findText.Length));
-				if(one) break;
-			}
-		}
-	}
-
-	struct _TextToFind
-	{
-		public string findText;
-		public string replaceText;
-		public ARegex rx;
-		public bool wholeWord;
-		public bool matchCase;
-	}
-
-	bool _GetTextToFind(out _TextToFind f, bool forReplace, bool noRecent = false)
-	{
-		_errorProvider.Clear();
-		f = default;
-		f.findText = _tFind.Text;
-		if(f.findText.Length == 0) return false;
-		f.matchCase = _cCase.Checked;
-		if(_cRegex.Checked) {
-			try {
-				var fl = RXFlags.MULTILINE;
-				if(!f.matchCase) fl |= RXFlags.CASELESS;
-				f.rx = new ARegex(f.findText, flags: fl);
-			}
-			catch(ArgumentException e) {
-				_SetErrorProvider(_tFind, e.Message);
-				return false;
-			}
-		} else f.wholeWord = _cWord.Checked;
-		if(forReplace) f.replaceText = _tReplace.Text;
-
-		_AddToRecent(f, noRecent);
-
-		return true;
-	}
-
-	void _SetErrorProvider(Control c, string text)
-	{
-		_errorProvider.SetIconAlignment(c, ErrorIconAlignment.BottomRight);
-		_errorProvider.SetIconPadding(c, -16);
-		_errorProvider.SetError(c, text);
-	}
-
-	#endregion
-
 	#region in files
-
-	void _FindNameOrInFiles(bool names)
-	{
-		var button = names ? _bName : _bFindIF;
-		if(!_GetTextToFind(out var f, false)) return;
-		using var _ = new _TempDisableControl(button);
-		_FindAllInFiles(f, names);
-	}
 
 	List<FileNode> _aFiles;
 
-	string[] _SkipWildcards => _aSkipWildcards ?? (_aSkipWildcards = Settings.GetString("Find.Skip", "").SegSplit("\r\n", SegFlags.NoEmpty));
+	string[] _SkipWildcards => _aSkipWildcards ?? (_aSkipWildcards = Program.Settings.GetString("Find.Skip", "").SegSplit("\r\n", SegFlags.NoEmpty));
 	string[] _aSkipWildcards;
 	string[] _aSkipImages = new string[] { ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani" };
 
-	void _FindAllInFiles(in _TextToFind f, bool names/*, bool forReplace*/)
+	void _FindAllInFiles(bool names/*, bool forReplace*/)
 	{
+		_aFiles?.Clear();
+		if(!_GetTextToFind(out var f, false, noRecent: names)) {
+			Panels.Found.Control.ST.ClearText();
+			return;
+		}
+
 		if(!names && _aFiles == null) {
 			_aFiles = new List<FileNode>();
+			Panels.Found.Control.CreateHandleNow();
 			Panels.Found.Control.Tags.AddLinkTag("+f", s => {
 				var a = s.Split(' ');
-				if(!Model.SetCurrentFile(_aFiles[a[0].ToInt()])) return;
+				var f = _aFiles[a[0].ToInt()];
+				if(!Program.Model.SetCurrentFile(f)) return;
 				var doc = Panels.Editor.ActiveDoc;
 				doc.Focus();
-				var t = doc.ST;
-				int i = t.CountBytesFromChars(a[1].ToInt()), to = t.CountBytesFromChars(i, a[2].ToInt());
-				t.Call(Sci.SCI_SETSEL, i, to);
+				ATimer.After(10, () => doc.ST.SelectAndMakeVisible(a[1].ToInt(), a[2].ToInt(), SciFromTo.BothChars | SciFromTo.ToIsLength));
+				//info: scrolling works better with async when now opened the file
 			});
-			Panels.Files.WorkspaceLoaded += () => {
+			Panels.Files.WorkspaceLoadedAndDocumentsOpened += () => {
 				Panels.Found.Control.ST.ClearText();
 				_aFiles?.Clear();
 			};
 		}
-		_aFiles?.Clear();
 
 		var b = new StringBuilder();
 		var a = new List<POINT>();
 		var bSlow = !names && f.rx != null ? new StringBuilder() : null;
 		bool jited = false;
 
-		foreach(var v in Model.Root.Descendants()) {
-			string text = null;
+		foreach(var v in Program.Model.Root.Descendants()) {
+			string text = null, path = null;
 			if(names) {
 				text = v.Name;
 			} else {
@@ -644,7 +664,7 @@ class PanelFind : AuUserControlBase
 					if(v.IsFolder) continue;
 					if(0 != v.Name.Ends(true, _aSkipImages)) continue;
 				}
-				var sw = _SkipWildcards; if(sw.Length != 0 && 0 != v.ItemPath.Like(true, sw)) continue;
+				var sw = _SkipWildcards; if(sw.Length != 0 && 0 != (path = v.ItemPath).Like(true, sw)) continue;
 				text = v.GetText();
 				if(text.Length == 0) continue;
 				if(text.Has('\0')) continue;
@@ -654,30 +674,40 @@ class PanelFind : AuUserControlBase
 			long time = bSlow != null ? ATime.PerfMilliseconds : 0;
 
 			a.Clear();
-			_FindAllInText(text, f, a, names);
+			_FindAllInString(text, f, a, one: names);
 
 			if(a.Count != 0) {
 				if(!names) b.Append("<Z 0xC0E0C0>");
-				b.Append("<open>").Append(v.ItemPath).Append("<>");
+				path ??= v.ItemPath;
+				string link = v.IdStringWithWorkspace;
+				if(v.IsFolder) {
+					b.AppendFormat("<open \"{0}\"><c 0x808080>{1}<><>    <c 0x008000>//folder<>", link, path);
+				} else {
+					int i1 = path.LastIndexOf('\\') + 1;
+					b.AppendFormat("<c 0x808080>{0}<><open \"{1}\">{2}<>", path.Remove(i1), link, path.Substring(i1));
+				}
 				if(!names) b.Append("<>");
 				b.AppendLine();
-
-				if(!names && b.Length < 10_000_000) {
-					for(int i = 0; i < a.Count; i++) {
-						var p = a[i];
-						int lineStart = p.x, lineEnd = p.x + p.y;
-						int lsMax = Math.Max(lineStart - 100, 0), leMax = Math.Min(lineEnd + 200, text.Length); //start/end limits like in VS
-						for(; lineStart > lsMax; lineStart--) { char c = text[lineStart - 1]; if(c == '\n' || c == '\r') break; }
-						bool limitStart = lineStart == lsMax && lineStart > 0;
-						for(; lineEnd < leMax; lineEnd++) { char c = text[lineEnd]; if(c == '\r' || c == '\n') break; }
-						bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
-						Au.Util.AStringUtil.LineAndColumn(text, p.x, out int lineIndex, out _);
-						b.AppendFormat("<+f {0} {1} {2}>", _aFiles.Count.ToString(), p.x.ToString(), p.y.ToString()).Append((lineIndex + 1).ToString("D3")).Append(":<> ")
-							.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, p.x - lineStart).Append("</\a>")
-							.Append("<z 0xffffa0><\a>").Append(text, p.x, p.y).Append("</\a><>")
-							.Append("<\a>").Append(text, p.x + p.y, lineEnd - p.x - p.y).AppendLine(limitEnd ? "</\a>…" : "</\a>");
+				if(names) {
+					//FUTURE: icon; maybe hilite.
+				} else {
+					if(b.Length < 10_000_000) {
+						for(int i = 0; i < a.Count; i++) {
+							var p = a[i];
+							int lineStart = p.x, lineEnd = p.x + p.y;
+							int lsMax = Math.Max(lineStart - 100, 0), leMax = Math.Min(lineEnd + 200, text.Length); //start/end limits like in VS
+							for(; lineStart > lsMax; lineStart--) { char c = text[lineStart - 1]; if(c == '\n' || c == '\r') break; }
+							bool limitStart = lineStart == lsMax && lineStart > 0;
+							for(; lineEnd < leMax; lineEnd++) { char c = text[lineEnd]; if(c == '\r' || c == '\n') break; }
+							bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
+							Au.Util.AStringUtil.LineAndColumn(text, p.x, out int lineIndex, out _);
+							b.AppendFormat("<+f {0} {1} {2}>", _aFiles.Count.ToString(), p.x.ToString(), p.y.ToString()).Append((lineIndex + 1).ToString("D3")).Append(":<> ")
+								.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, p.x - lineStart).Append("</\a>")
+								.Append("<z 0xffffa0><\a>").Append(text, p.x, p.y).Append("</\a><>")
+								.Append("<\a>").Append(text, p.x + p.y, lineEnd - p.x - p.y).AppendLine(limitEnd ? "</\a>…" : "</\a>");
+						}
+						_aFiles.Add(v);
 					}
-					_aFiles.Add(v);
 				}
 			}
 
@@ -739,7 +769,7 @@ class PanelFind : AuUserControlBase
 		bool saveReplace = !Empty(f.replaceText) && f.replaceText != _recentPrevReplace;
 		if(!(saveFind | saveReplace)) return;
 
-		lock(Settings) {
+		lock(Program.Settings) {
 			if(saveFind) _XmlAdd(false, "recentFind", _recentPrevFind = f.findText, _recentPrevOptions = k);
 			if(saveReplace) _XmlAdd(true, "recentReplace", _recentPrevReplace = f.replaceText, 0);
 
@@ -749,7 +779,7 @@ class PanelFind : AuUserControlBase
 					//if(0 != (options & 4)) PrintWarning("The find text of length > 1000 will not be saved to 'recent'.", -1);
 					return;
 				}
-				var xParent = Settings.XmlOf(xName, true);
+				var xParent = Program.Settings.XmlOf(xName, true);
 				var en = xParent.Elements("t");
 				en.FirstOrDefault(o => o.Value == text)?.Remove(); //avoid duplicates
 				if(en.Count() >= 20) en.Last().Remove(); //limit count
@@ -764,8 +794,8 @@ class PanelFind : AuUserControlBase
 	{
 		bool replace = sender == _comboReplace;
 		object[] a = null;
-		lock(Settings) {
-			var xParent = Settings.XmlOf(replace ? "recentReplace" : "recentFind");
+		lock(Program.Settings) {
+			var xParent = Program.Settings.XmlOf(replace ? "recentReplace" : "recentFind");
 			if(xParent == null) return;
 			var en = xParent.Elements("t");
 			if(replace) a = en.Select(o => (object)o.Value).ToArray();
@@ -803,7 +833,7 @@ class PanelFind : AuUserControlBase
 
 	#endregion
 
-	#region scintilla
+	#region _SciTextBox
 
 	class _SciTextBox : AuScintilla
 	{

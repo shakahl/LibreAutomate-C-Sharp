@@ -24,7 +24,6 @@ using System.IO.Pipes;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 using Au.Compiler;
 using Au.Controls;
 using Au.Triggers;
@@ -52,8 +51,8 @@ static class Run
 		args = new string[] { ATime.PerfMicroseconds.ToString() }; //and in script use this code: Print(ATime.Microseconds-Convert.ToInt64(args[0]));
 #endif
 
-		Model.Save.TextNowIfNeed(onlyText: true);
-		Model.Save.WorkspaceNowIfNeed(); //because the script may kill editor, eg if runs in editor thread
+		Program.Model.Save.TextNowIfNeed(onlyText: true);
+		Program.Model.Save.WorkspaceNowIfNeed(); //because the script may kill editor, eg if runs in editor thread
 
 		if(f == null) return 0;
 		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
@@ -86,7 +85,7 @@ static class Run
 			return (int)ATask.ERunResult.editorThread;
 		}
 
-		return Tasks.RunCompiled(f, r, args, noDefer, wrPipeName);
+		return Program.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName);
 	}
 
 	static void _OnRunClassFile(FileNode f, FileNode projFolder)
@@ -100,11 +99,11 @@ static class Run
 	static void _SciLink_RunClassFile(string s)
 	{
 		int action = s.ToInt(); //1 add meta role miniProgram, 2 create Script project, 3 create new test script and set "run" attribute
-		var f = Model.Find(s.Substring(2), null); if(f == null) return;
+		var f = Program.Model.Find(s.Substring(2), null); if(f == null) return;
 		FileNode f2 = null;
 		if(action == 1) { //add meta role exeProgram
-			if(!Model.SetCurrentFile(f)) return;
-			Model.Properties();
+			if(!Program.Model.SetCurrentFile(f)) return;
+			Program.Model.Properties();
 		} else {
 			if(action == 2) { //create project
 				if(!_NewItem(out f2, @"New Project\@Script")) return;
@@ -129,7 +128,7 @@ static class Run
 					text.text = $"{(isProject ? "Library." : "")}Class1.Function1();\r\n";
 				}
 
-				ni = Model.NewItem(target, Aga.Controls.Tree.NodePosition.Before, template, name, text: text);
+				ni = Program.Model.NewItem(target, Aga.Controls.Tree.NodePosition.Before, template, name, text: text);
 				return ni != null;
 			}
 		}
@@ -178,7 +177,7 @@ class RunningTask
 			rwh.Unregister(_process);
 			var p = _process; _process = null;
 			p.Dispose();
-			Tasks.TaskEnded1(taskId);
+			Program.Tasks.TaskEnded1(taskId);
 		}, null, -1, true);
 	}
 
@@ -249,17 +248,17 @@ class RunningTasks
 		_a = new List<RunningTask>();
 		_q = new List<_WaitingTask>();
 		_recent = new List<RecentTask>();
-		_wMain = (AWnd)MainForm;
-		Timer1sOr025s += _TimerUpdateUI;
+		_wMain = (AWnd)Program.MainForm;
+		Program.Timer1sOr025s += _TimerUpdateUI;
 	}
 
 	public void OnWorkspaceClosed()
 	{
-		bool onExit = MainForm.IsClosed;
+		bool onExit = Program.Loaded >= EProgramState.Unloading;
 
 		if(onExit) {
 			_disposed = true;
-			Timer1sOr025s -= _TimerUpdateUI;
+			Program.Timer1sOr025s -= _TimerUpdateUI;
 		}
 
 		for(int i = _a.Count - 1; i >= 0; i--) {
@@ -334,7 +333,7 @@ class RunningTasks
 	{
 		if(!_updateUI) return;
 		EdTrayIcon.Running = GetGreenTask() != null;
-		if(!MainForm.Visible) return;
+		if(!Program.MainForm.Visible) return;
 		_UpdatePanels();
 	}
 	//void _TimerUpdateUI()
@@ -416,7 +415,7 @@ class RunningTasks
 	/// </summary>
 	public void EndTask(RunningTask rt = null)
 	{
-		if(rt == null) { rt = Tasks.GetGreenTask(); if(rt == null) return; }
+		if(rt == null) { rt = Program.Tasks.GetGreenTask(); if(rt == null) return; }
 		if(_a.Contains(rt)) _EndTask(rt);
 	}
 
@@ -683,7 +682,7 @@ class RunningTasks
 	{
 		if(IsRunning(f)) return;
 		int i = _RecentFind(f);
-		Debug.Assert(i >= 0 || f.Model != Model); if(i < 0) return;
+		Debug.Assert(i >= 0 || f.Model != Program.Model); if(i < 0) return;
 		_recent[i].running = false;
 	}
 

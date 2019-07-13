@@ -20,7 +20,6 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
-using static Program;
 
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
@@ -80,7 +79,7 @@ class PanelRecent : AuUserControlBase, ITreeModel
 	{
 		//ADebug.PrintFunc();
 		Debug.Assert(nodeTag == null);
-		return Tasks.Recent;
+		return Program.Tasks.Recent;
 	}
 
 	public bool IsLeaf(object nodeTag)
@@ -104,10 +103,10 @@ class PanelRecent : AuUserControlBase, ITreeModel
 		var f = t.f;
 		switch(e.Button) {
 		case MouseButtons.Left:
-			Model.SetCurrentFile(f);
+			Program.Model.SetCurrentFile(f);
 			break;
 		case MouseButtons.Middle:
-			Model.CloseFile(f, true);
+			Program.Model.CloseFile(f, true);
 			break;
 		}
 	}

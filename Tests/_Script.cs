@@ -1652,6 +1652,7 @@ class Script : AScript
 		AOutput.Clear();
 		//100.ms();
 
+
 		//TestRegexMatchDataStack();
 		//TestRegexReplaceEx();
 		//TestXmlFormatting();

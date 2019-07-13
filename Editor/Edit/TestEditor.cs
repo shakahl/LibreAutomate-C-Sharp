@@ -19,7 +19,6 @@ using System.Xml.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
 //using Au.Intellisense;
@@ -35,7 +34,7 @@ partial class FMain
 {
 	//CaCompletion _compl;
 
-	internal unsafe void TestEditor()
+	public unsafe void TestEditor()
 	{
 
 		AOutput.Clear();
@@ -270,7 +269,7 @@ partial class FMain
 	{
 		//var code = Model.CurrentFile.GetText();
 
-		var t=Panels.Editor.ActiveDoc.ST;
+		var t = Panels.Editor.ActiveDoc.ST;
 		//APerf.First();
 		//t.ReplaceRange(2, 4, "NEW TEXT");
 		//t.ReplaceRange(2, 4, "NEW TEXT", true, true);
@@ -281,9 +280,9 @@ partial class FMain
 		//var s=t.GetText();
 		//Print(s.Length, s, t.Call(SCI_POSITIONRELATIVE, 0, 1), t.Call(SCI_COUNTCHARACTERS, 0, 4));
 
-		foreach(var f in Model.Root.Descendants()) {
+		foreach(var f in Program.Model.Root.Descendants()) {
 			var k = f.GetClassFileRole();
-			if(k!= default) Print(k, f.ItemPath);
+			if(k != default) Print(k, f.ItemPath);
 		}
 	}
 
@@ -401,16 +400,21 @@ partial class FMain
 	//	//var compilation = CSharpCompilation.Create(name, new[] { tree }, references, options);
 	//}
 
-	void SetHookToMonitorCreatedWindowsOfThisThread()
+	unsafe void SetHookToMonitorCreatedWindowsOfThisThread()
 	{
-		_hook = AHookWin.ThreadCbt(x => {
-			if(x.code == HookData.CbtEvent.CREATEWND) {
-				var w = (AWnd)x.wParam;
-				Print(w);
-				//var c = Control.FromHandle(w.Handle); //always null
-				//if(c != null) Print(c); else Print(w);
+		_hook = AHookWin.ThreadCallWndProcRet(x => {
+			if(x.msg->message == Api.WM_CREATE) {
+				if(Program.MainForm.Visible) return;
+				var w = x.msg->hwnd;
+				var p = w.Get.DirectParent; if(p.Is0) p = w.Owner;
+				var c = Control.FromHandle(w.Handle); //always null in CBT hook proc
+				var s = c?.ToString() ?? "";
+				Print($"<><c 0xcc00>{w} ({s}), {p.Handle}</c>");
+
+				//if(c is Au.Controls.AuToolStrip) { //never mind: .NET bug: if toolstrip Custom1 has overflow and window is maximized, creates parked handle
+				//	int stop = 0;
+				//}
 			}
-			return false;
 		});
 		Application.ApplicationExit += (unu, sed) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with AHookWin) 
 	}

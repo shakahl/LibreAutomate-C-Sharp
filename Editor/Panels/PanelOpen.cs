@@ -20,7 +20,6 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
-using static Program;
 
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
@@ -67,7 +66,7 @@ class PanelOpen : AuUserControlBase, ITreeModel
 	public void UpdateList()
 	{
 		//ADebug.PrintFunc();
-		bool cmdPrevDisable = (Model?.OpenFiles.Count ?? 0) < 2;
+		bool cmdPrevDisable = (Program.Model?.OpenFiles.Count ?? 0) < 2;
 		if(cmdPrevDisable != _cmdPrevDisabled) {
 			_cmdPrevDisabled = cmdPrevDisable;
 			Strips.EnableCmd(nameof(CmdHandlers.File_PreviousDocument), !cmdPrevDisable);
@@ -85,7 +84,7 @@ class PanelOpen : AuUserControlBase, ITreeModel
 
 	#region ITreeModel
 
-	public IEnumerable GetChildren(object nodeTag) => Model?.OpenFiles;
+	public IEnumerable GetChildren(object nodeTag) => Program.Model?.OpenFiles;
 
 	public bool IsLeaf(object nodeTag) => true;
 
@@ -104,14 +103,14 @@ class PanelOpen : AuUserControlBase, ITreeModel
 		var f = e.Node.Tag as FileNode;
 		switch(e.Button) {
 		case MouseButtons.Left:
-			Model.SetCurrentFile(f);
+			Program.Model.SetCurrentFile(f);
 			break;
 		case MouseButtons.Right:
 			//_ItemRightClicked(f);
 			//_c.BeginInvoke(new Action(() => _ItemRightClicked(f)));
 			break;
 		case MouseButtons.Middle:
-			Model.CloseFile(f, true);
+			Program.Model.CloseFile(f, true);
 			break;
 		}
 	}

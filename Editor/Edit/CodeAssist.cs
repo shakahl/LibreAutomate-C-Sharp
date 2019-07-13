@@ -29,28 +29,28 @@ class CodeAssist
 
 	public void WorkspaceOpened()
 	{
-		_ws = new CaWorkspace();
+		//_ws = new CaWorkspace();
 	}
 
 	public void WorkspaceClosed()
 	{
-		_ws.Dispose();
-		_ws = null;
+		//_ws.Dispose();
+		//_ws = null;
 	}
 
 	public void FileOpened(PanelEdit.SciCode doc)
 	{
-		var f = doc.FN;
-		if(!f.IsCodeFile) return;
-		bool isProject = _FileNodeIsProject(f);
-		//Print("open", isProject, f);
+		//var f = doc.FN;
+		//if(!f.IsCodeFile) return;
+		//bool isProject = _FileNodeIsProject(f);
+		////Print("open", isProject, f);
 
-		if(isProject) {
-			if(!_ws.AddProject(f)) return;
+		//if(isProject) {
+		//	if(!_ws.AddProject(f)) return;
 
-		}
+		//}
 
-		doc.CodeaData = new SciCodeData { oldText = doc.Text };
+		//doc.CodeaData = new SciCodeData { oldText = doc.Text };
 	}
 
 	public void FileClosed(PanelEdit.SciCode doc)

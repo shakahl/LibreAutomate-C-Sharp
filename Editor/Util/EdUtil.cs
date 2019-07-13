@@ -198,7 +198,7 @@ class XN
 
 static class EdDebug
 {
-	internal static void PrintTabOrder(Control c, int level = 0)
+	public static void PrintTabOrder(Control c, int level = 0)
 	{
 		var tabs = "".PadLeft(level, ' ');
 		Print($"{tabs}{c.GetType().Name} \"{c.Name}\"  {c.TabStop} {c.TabIndex}");

@@ -278,16 +278,15 @@ namespace Au.Controls
 		[DebuggerStepThrough]
 		public LPARAM CallRetPtr(int sciMessage, LPARAM wParam, LPARAM lParam)
 		{
-			//if(!IsHandleCreated) {
-			//	Debug.Assert(!Visible);
-			//	CreateHandle(); //because did not create handle if initially Visible is false
-			//}
-			Debug.Assert(IsHandleCreated || this.DesignMode);
-			if(!IsHandleCreated) CreateHandle();
+			if(!IsHandleCreated) {
+				Debug.Assert(!Visible);
+				CreateHandle(); //because did not create handle if initially Visible is false
+			}
+			//Debug.Assert(IsHandleCreated || this.DesignMode);
+			//if(!IsHandleCreated) CreateHandle();
 			//note: auto-creating handle is not good:
 			//	1. May create parked control. Not good for performance.
 			//	2. Can be dangerous, eg if passing a reusable buffer that also is used by OnHandleCreated.
-			//Better create explicitly if need, eg 'CreateHandle();' or 'var h=_c.Handle;'.
 
 			return _fnDirect(_ptrDirect, sciMessage, wParam, lParam);
 		}

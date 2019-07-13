@@ -20,7 +20,6 @@ using System.Xml.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 using Au.Controls;
 
 partial class FOptions : AuForm
@@ -34,7 +33,7 @@ partial class FOptions : AuForm
 	{
 		if(s_form == null) {
 			s_form = new FOptions();
-			s_form.Show(MainForm);
+			s_form.Show(Program.MainForm);
 		} else {
 			s_form.Activate();
 		}
@@ -51,16 +50,16 @@ partial class FOptions : AuForm
 	{
 		base.OnLoad(e);
 
-		_startupScripts.Text = Model.StartupScriptsCsv?.Replace("\n", "\r\n");
+		_startupScripts.Text = Program.Model.StartupScriptsCsv?.Replace("\n", "\r\n");
 
-		_alwaysVisible.Checked = Settings.GetBool("_alwaysVisible");
+		_alwaysVisible.Checked = Program.Settings.GetBool("_alwaysVisible");
 	}
 
 	private void _bOK_Click(object sender, EventArgs e)
 	{
-		if(_startupScripts.Modified) Model.StartupScriptsCsv = _startupScripts.Text;
+		if(_startupScripts.Modified) Program.Model.StartupScriptsCsv = _startupScripts.Text;
 
-		Settings.Set("_alwaysVisible", _alwaysVisible.Checked);
+		Program.Settings.Set("_alwaysVisible", _alwaysVisible.Checked);
 	}
 
 	private void _startupScripts_Validating(object sender, CancelEventArgs e)
@@ -74,7 +73,7 @@ partial class FOptions : AuForm
 			if(t.ColumnCount > 2) { err = "Too many commas in a line. If script name contains comma, enclose in \"\"."; goto ge; }
 			foreach(var v in t.Data) {
 				var script = v[0];
-				if(Model.FindFile(script) == null) { err = "Script not found: " + script; break; }
+				if(Program.Model.FindScript(script) == null) { err = "Script not found: " + script; break; }
 				var delay = v.Length == 1 ? null : v[1];
 				if(!Empty(delay)) {
 					if(_rxDelay == null) _rxDelay = new ARegex(@"(?i)^\d+ *m?s$");

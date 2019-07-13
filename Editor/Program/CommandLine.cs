@@ -19,7 +19,6 @@ using System.Xml.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 
 static class CommandLine
 {
@@ -107,7 +106,7 @@ static class CommandLine
 	/// </summary>
 	public static bool StartVisible;
 
-	public static void OnMainFormLoaded()
+	public static void OnProgramLoaded()
 	{
 		AWnd.More.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER, Api.WM_CLOSE);
 		AWnd.More.MyWindow.RegisterClass("Au.Editor.Msg");
@@ -117,8 +116,9 @@ static class CommandLine
 		if(_importWorkspace != null || _importFiles != null) {
 			ATimer.After(10, () => {
 				try {
-					if(_importWorkspace != null) Model.ImportWorkspace(_importWorkspace);
-					else Model.ImportFiles(_importFiles);
+					Program.MainForm.Show();
+					if(_importWorkspace != null) Program.Model.ImportWorkspace(_importWorkspace);
+					else Program.Model.ImportFiles(_importFiles);
 				}
 				catch(Exception ex) { Print(ex.Message); }
 			});
@@ -145,15 +145,16 @@ static class CommandLine
 	{
 		switch(message) {
 		case Api.WM_COPYDATA:
-			if(MainForm.IsClosed) return default;
-			try { return _WmCopyData(wParam, lParam); } catch(Exception ex) { Print(ex.Message); }
+			if(Program.Loaded >= EProgramState.Unloading) return default;
+			try { return _WmCopyData(wParam, lParam); }
+			catch(Exception ex) { Print(ex.Message); }
 			return default;
 		case Api.WM_USER:
-			if(MainForm.IsClosed) return default;
+			if(Program.Loaded >= EProgramState.Unloading) return default;
 			int i = (int)wParam;
 			switch(i) {
 			case 0:
-				return MainForm.Handle; //return main form window handle
+				return Program.MainForm.Handle;
 			case 1:
 			case 2:
 			case 3: //received from our non-admin drop-target process on OnDragOver/Drop/Leave
@@ -177,14 +178,14 @@ static class CommandLine
 		byte[] b = isString ? null : c.GetBytes();
 		switch(action) {
 		case 1:
-			Model.ImportWorkspace(s);
+			Program.Model.ImportWorkspace(s);
 			break;
 		case 2:
 			Panels.Files.LoadWorkspace(s);
 			break;
 		case 3:
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show task dialog
-			Model.ImportFiles(s.SegSplit("\0"));
+			Program.Model.ImportFiles(s.SegSplit("\0"));
 			break;
 		case 99: //run script from Au.CL.exe command line
 		case 100: //run script from script (ATask.Run/RunWait)
@@ -200,7 +201,7 @@ static class CommandLine
 				var d = Au.Util.LibSerializer.Deserialize(b);
 				script = d[0]; args = d[1]; pipeName = d[2];
 			}
-			var f = Model?.FindFile(script);
+			var f = Program.Model?.FindScript(script);
 			if(f == null) {
 				if(action == 99) Print($"Command line: script '{script}' not found."); //else the caller script will throw exception
 				return (int)ATask.ERunResult.notFound;

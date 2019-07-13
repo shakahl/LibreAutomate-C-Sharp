@@ -19,7 +19,6 @@ using System.Drawing;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using static Program;
 using Au.Controls;
 using static Au.Controls.Sci;
 
@@ -40,12 +39,12 @@ class PanelOutput : AuUserControlBase
 		this.Controls.Add(_c);
 
 		_history = new Queue<OutServMessage>();
-		OutputServer.SetNotifications(_GetServerMessages, this);
+		Program.OutputServer.SetNotifications(_GetServerMessages, this);
 	}
 
 	void _GetServerMessages()
 	{
-		_c.Tags.OutputServerProcessMessages(OutputServer, m => {
+		_c.Tags.OutputServerProcessMessages(Program.OutputServer, m => {
 			if(m.Type != OutServMessageType.Write) return;
 
 			//create links in compilation errors/warnings or run-time stack trace
@@ -54,7 +53,7 @@ class PanelOutput : AuUserControlBase
 				if(s.Starts("<><Z #") && s.Eq(12, ">Compilation: ")) { //compilation
 					if(s_rx1 == null) s_rx1 = new ARegex(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
 					m.Text = s_rx1.Replace(s, x => {
-						var f = Model.FindByFilePath(x[1].Value);
+						var f = Program.Model.FindByFilePath(x[1].Value);
 						if(f == null) return x[0].Value;
 						return $"<open \"{f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}\">{f.Name}{x[2].Value}<>: ";
 					});
@@ -82,7 +81,7 @@ class PanelOutput : AuUserControlBase
 								continue;
 							}
 							if(!rx.MatchG(s, out var g, 1, rxm)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
-							var f = Model.FindByFilePath(g.Value); if(f == null) continue;
+							var f = Program.Model.FindByFilePath(g.Value); if(f == null) continue;
 							int i1 = g.EndIndex + 6, len1 = k.EndOffset - i1;
 							b.Append("   at ")
 							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
@@ -151,10 +150,10 @@ class PanelOutput : AuUserControlBase
 	bool _inInitSettings;
 
 	public bool WrapLines {
-		get => Settings.GetBool("Tools_Output_WrapLines");
+		get => Program.Settings.GetBool("Tools_Output_WrapLines");
 		set {
 			Debug.Assert(!_inInitSettings || value);
-			if(!_inInitSettings) Settings.Set("Tools_Output_WrapLines", value);
+			if(!_inInitSettings) Program.Settings.Set("Tools_Output_WrapLines", value);
 			//_c.Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END); //in SciControl.OnHandleCreated
 			//_c.Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT); //in SciControl.OnHandleCreated
 			_c.Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : 0);
@@ -163,10 +162,10 @@ class PanelOutput : AuUserControlBase
 	}
 
 	public bool WhiteSpace {
-		get => Settings.GetBool("Tools_Output_WhiteSpace");
+		get => Program.Settings.GetBool("Tools_Output_WhiteSpace");
 		set {
 			Debug.Assert(!_inInitSettings || value);
-			if(!_inInitSettings) Settings.Set("Tools_Output_WhiteSpace", value);
+			if(!_inInitSettings) Program.Settings.Set("Tools_Output_WhiteSpace", value);
 			_c.Call(SCI_SETWHITESPACEFORE, 1, 0xFF0080);
 			_c.Call(SCI_SETVIEWWS, value);
 			Strips.CheckCmd("Tools_Output_WhiteSpace", value);
@@ -174,12 +173,12 @@ class PanelOutput : AuUserControlBase
 	}
 
 	public bool Topmost {
-		get => Settings.GetBool("Tools_Output_Topmost");
+		get => Program.Settings.GetBool("Tools_Output_Topmost");
 		set {
 			var p = Panels.PanelManager.GetPanel(this);
 			//if(value) p.Floating = true;
 			if(p.Floating) _SetTopmost(value);
-			Settings.Set("Tools_Output_Topmost", value);
+			Program.Settings.Set("Tools_Output_Topmost", value);
 			Strips.CheckCmd("Tools_Output_Topmost", value);
 		}
 	}
@@ -194,7 +193,7 @@ class PanelOutput : AuUserControlBase
 			//AWnd.GetWnd.Root.ActivateLL(); w.ActivateLL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();
-			w.Owner = (AWnd)MainForm;
+			w.Owner = (AWnd)Program.MainForm;
 		}
 	}
 
@@ -249,24 +248,29 @@ class PanelOutput : AuUserControlBase
 		{
 			//Print(s);
 			var a = s.Split('|');
-			var fn = Model.FindFile(a[0]);
-			if(fn == null || !Model.SetCurrentFile(fn)) return;
-			var doc = Panels.Editor.ActiveDoc;
-			doc.Focus();
-			if(a.Length == 1) return;
-			int line = a[1].ToInt(0) - 1; if(line < 0) return;
-			int column = a.Length == 2 ? -1 : a[2].ToInt() - 1;
+			var f = Program.Model.Find(a[0], null);
+			if(f == null) return;
+			if(f.IsFolder) {
+				f.SelectSingle();
+			} else if(Program.Model.SetCurrentFile(f)) {
+				var doc = Panels.Editor.ActiveDoc;
+				doc.Focus();
+				if(a.Length == 1) return;
+				int line = a[1].ToInt(0) - 1; if(line < 0) return;
+				int column = a.Length == 2 ? -1 : a[2].ToInt() - 1;
 
-			var t = doc.ST;
-			int i = t.LineStart(line);
-			if(column > 0) i = t.CountBytesFromChars(i, column); //not SCI_FINDCOLUMN, it calculates tabs
-			t.GoToPos(i);
+				var t = doc.ST;
+				int i = t.LineStart(line);
+				if(column > 0) i = t.CountBytesFromChars(i, column); //not SCI_FINDCOLUMN, it calculates tabs
+				ATimer.After(10, () => t.GoToPos(i));
+				//info: scrolling works better with async when now opened the file. Or with doevents; not with BeginInvoke.
+			}
 		}
 
 		void _RunScript(string s)
 		{
 			var a = s.Split('|');
-			var f = Model.FindFile(a[0]); if(f == null) return;
+			var f = Program.Model.Find(a[0], false); if(f == null) return;
 			Run.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt(0));
 		}
 	}

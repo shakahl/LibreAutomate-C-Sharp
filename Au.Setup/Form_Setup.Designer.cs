@@ -45,7 +45,7 @@
 			this.Controls.Add(this.button1);
 			this.Name = "Form_Setup";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-			this.Text = "QM# Setup";
+			this.Text = "QM3 Setup";
 			this.ResumeLayout(false);
 
 	}

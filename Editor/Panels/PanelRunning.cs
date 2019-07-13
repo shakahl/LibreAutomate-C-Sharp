@@ -20,7 +20,6 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
-using static Program;
 
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
@@ -81,7 +80,7 @@ class PanelRunning : AuUserControlBase, ITreeModel
 	{
 		//ADebug.PrintFunc();
 		Debug.Assert(nodeTag == null);
-		return Tasks.Items;
+		return Program.Tasks.Items;
 		//FUTURE: also add folder with queed items.
 	}
 
@@ -106,17 +105,17 @@ class PanelRunning : AuUserControlBase, ITreeModel
 		var f = t.f;
 		switch(e.Button) {
 		case MouseButtons.Left:
-			Model.SetCurrentFile(f);
+			Program.Model.SetCurrentFile(f);
 			break;
 		case MouseButtons.Right:
 			var name = f.DisplayName;
 			var m = new AMenu();
-			m["End task '" + name + "'"] = o => Tasks.EndTask(t);
-			m["End all '" + name + "'"] = o => Tasks.EndTasksOf(f);
+			m["End task '" + name + "'"] = o => Program.Tasks.EndTask(t);
+			m["End all '" + name + "'"] = o => Program.Tasks.EndTasksOf(f);
 			m.Show(_c);
 			break;
 		case MouseButtons.Middle:
-			Model.CloseFile(f, true);
+			Program.Model.CloseFile(f, true);
 			break;
 		}
 	}
