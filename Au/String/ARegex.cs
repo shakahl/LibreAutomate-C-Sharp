@@ -17,6 +17,7 @@ using System.Text.RegularExpressions; //for XML doc links
 
 using Au.Types;
 using static Au.AStatic;
+using System.Collections.Concurrent;
 
 namespace Au
 {
@@ -735,7 +736,7 @@ namespace Au
 		/// <param name="repl">
 		/// Replacement pattern.
 		/// Can consist of any combination of literal text and substitutions like $1.
-		/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also replaces $* with the name of the last encountered mark.
+		/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also: replaces $* with the name of the last encountered mark; replaces ${+func} with the return value of a function registered with <see cref="AddReplaceFunc"/>.
 		/// </param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
 		/// <param name="more"></param>
@@ -768,7 +769,7 @@ namespace Au
 		/// <param name="repl">
 		/// Replacement pattern.
 		/// Can consist of any combination of literal text and substitutions like $1.
-		/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also replaces $* with the name of the last encountered mark.
+		/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also: replaces $* with the name of the last encountered mark; replaces ${+func} with the return value of a function registered with <see cref="AddReplaceFunc"/>.
 		/// </param>
 		/// <param name="result">The result string. Can be <i>s</i>.</param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
@@ -858,7 +859,7 @@ namespace Au
 		}
 
 		//Used by _ReplaceAll and RXMatch.ExpandReplacement.
-		//Fully supports .NET regular expression substitution syntax. Also replaces $* with the name of the last encountered mark.
+		//Fully supports .NET regular expression substitution syntax. Also: replaces $* with the name of the last encountered mark; replaces ${+func} with the return value of a function registered with <see cref="AddReplaceFunc"/>.
 		internal static void LibExpandReplacement(RXMatch m, string repl, StringBuilder b)
 		{
 			fixed (char* s0 = repl) {
@@ -879,7 +880,11 @@ namespace Au
 							char* t = ++s; while(t < eos && *t != '}') t++;
 							if(t == eos) break;
 							ch = *s;
-							if(ch >= '0' && ch <= '9') { //${number}. info: group name cannot start with digit, then PCRE returns error.
+							if(ch == '+') { //${+userFunc}
+								s++;
+								if(!s_userReplFuncs.TryGetValue(new string(s, 0, (int)(t - s)), out var replFunc)) continue;
+								b.Append(replFunc(m));
+							} else if(ch >= '0' && ch <= '9') { //${number}. info: group name cannot start with a digit, then PCRE returns error.
 								group = repl.ToInt((int)(s - s0), out int numEnd, STIFlags.NoHex);
 								if(s0 + numEnd != t || group < 0) continue;
 							} else { //${name}
@@ -927,51 +932,77 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds and replaces all match instances of the regular expression using PCRE extended replacement syntax which supports escape sequences, conditional, etc.
-		/// Returns the number of replacements made. Returns the result string through an out parameter.
+		/// Adds or replaces a function that is called when a regular expression replacement string contains ${+name}.
 		/// </summary>
-		/// <param name="s">Subject string. Cannot be null.</param>
-		/// <param name="repl">Replacement pattern. More info in remarks.
+		/// <param name="name">A string used to identify the function. Can contain any characters except '}'.</param>
+		/// <param name="replFunc">
+		/// Callback function's delegate, eg lambda. Called for each found match. Returns the replacement.
+		/// In the callback function you can use <see cref="RXMatch.ExpandReplacement"/>.
 		/// </param>
-		/// <param name="result">The result string. Can be <i>s</i>.</param>
-		/// <param name="one">Replace only the first found match. If false (default), replaces all.</param>
-		/// <param name="more"></param>
-		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
-		/// <exception cref="ArgumentException">1. Error in the replacement pattern. 2. Used a PARTIAL_ flag. 3. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_substitute</b> failed. Unlikely.</exception>
 		/// <remarks>
-		/// How this is different from <b>Replace</b>:
-		/// - Uses the PCRE API function <see href="https://www.pcre.org/current/doc/html/pcre2api.html#SEC36">pcre2_substitute</see>.
-		/// - Supports PCRE replacement pattern extended syntax. It is different than that of <b>Replace</b>, although most of the standard $1 etc are the same.
-		/// - Throws exception if the replacement pattern contains errors.
-		/// 
-		/// With <b>pcre2_substitute</b> uses flags PCRE2_SUBSTITUTE_EXTENDED, PCRE2_SUBSTITUTE_UNSET_EMPTY and optionally PCRE2_SUBSTITUTE_GLOBAL.
+		/// Can be used when there is no way to use <b>Replace</b> overloads with a <i>replFunc</i> parameter. For example in Find/Replace UI.
 		/// </remarks>
-		public int ReplaceEx(string s, string repl, out string result, bool one = false, RXMore more = null)
+		/// <example>
+		/// Create new script in the Au editor and add this code. In Properties set role editorExtension. Run.
+		/// Then in the Find pane in the replacement field you can use <c>${+Upper}</c> and <c>${+Lower}</c>.
+		/// <code><![CDATA[
+		/// ARegex.AddReplaceFunc("Upper", m => m.Value.Upper()); //make uppercase
+		/// ARegex.AddReplaceFunc("Lower", m => m.Value.Lower()); //make lowercase
+		/// ]]></code>
+		/// </example>
+		public static void AddReplaceFunc(string name, Func<RXMatch, string> replFunc)
 		{
-			result = null;
-			repl ??= "";
-			if(!_GetStartEnd(s, more, out int from, out int to)) throw new ArgumentNullException(nameof(s));
-
-			var flags = Cpp.PCRE2_SUBSTITUTE_.EXTENDED | Cpp.PCRE2_SUBSTITUTE_.OVERFLOW_LENGTH | Cpp.PCRE2_SUBSTITUTE_.UNSET_EMPTY;
-			if(!one) flags |= Cpp.PCRE2_SUBSTITUTE_.GLOBAL;
-			flags |= (Cpp.PCRE2_SUBSTITUTE_)_GetMatchFlags(more, throwIfPartial: true);
-
-			int na = s.Length + s.Length / 4 + 100;
-			g1:
-			var b = Util.AMemoryArray.LibChar(ref na);
-			LPARAM na2 = na;
-			int r = Cpp.Cpp_RegexSubstitute(_CodeHR, s, to, from, flags, repl, repl.Length, b, ref na2, _pcreCallout, out BSTR errStr);
-			if(r < 0) {
-				if(r == -48 && na2 > na) { na = (int)na2; goto g1; } //PCRE2_ERROR_NOMEMORY
-				var es = errStr.ToStringAndDispose(noCache: true);
-				if(r == -35 || r == -49 || (r <= -57 && r >= -60)) throw new ArgumentException("Replacement error: " + es); //replacement string syntax errors
-				throw new AException(es);
-			}
-			result = b.ToString((int)na2);
-			return r;
+			s_userReplFuncs[name] = replFunc;
 		}
+		static ConcurrentDictionary<string, Func<RXMatch, string>> s_userReplFuncs = new ConcurrentDictionary<string, Func<RXMatch, string>>();
+
+		//rejected. Not useful because: we cannot implement RXMatch.ExpandReplacementEx; we have AddReplaceFunc.
+		///// <summary>
+		///// Finds and replaces all match instances of the regular expression using PCRE extended replacement syntax which supports escape sequences, conditional, etc.
+		///// Returns the number of replacements made. Returns the result string through an out parameter.
+		///// </summary>
+		///// <param name="s">Subject string. Cannot be null.</param>
+		///// <param name="repl">Replacement pattern. More info in remarks.
+		///// </param>
+		///// <param name="result">The result string. Can be <i>s</i>.</param>
+		///// <param name="one">Replace only the first found match. If false (default), replaces all.</param>
+		///// <param name="more"></param>
+		///// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		///// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+		///// <exception cref="ArgumentException">1. Error in the replacement pattern. 2. Used a PARTIAL_ flag. 3. The regular expression contains <c>(?=...\K)</c>.</exception>
+		///// <exception cref="AException">The PCRE API function <b>pcre2_substitute</b> failed. Unlikely.</exception>
+		///// <remarks>
+		///// How this is different from <b>Replace</b>:
+		///// - Uses the PCRE API function <see href="https://www.pcre.org/current/doc/html/pcre2api.html#SEC36">pcre2_substitute</see>.
+		///// - Supports PCRE replacement pattern extended syntax. It is different than that of <b>Replace</b>, although most of the standard $1 etc are the same.
+		///// - Throws exception if the replacement pattern contains errors.
+		///// 
+		///// With <b>pcre2_substitute</b> uses flags PCRE2_SUBSTITUTE_EXTENDED, PCRE2_SUBSTITUTE_UNSET_EMPTY and optionally PCRE2_SUBSTITUTE_GLOBAL.
+		///// </remarks>
+		//public int ReplaceEx(string s, string repl, out string result, bool one = false, RXMore more = null)
+		//{
+		//	result = null;
+		//	repl ??= "";
+		//	if(!_GetStartEnd(s, more, out int from, out int to)) throw new ArgumentNullException(nameof(s));
+
+		//	var flags = Cpp.PCRE2_SUBSTITUTE_.EXTENDED | Cpp.PCRE2_SUBSTITUTE_.OVERFLOW_LENGTH | Cpp.PCRE2_SUBSTITUTE_.UNSET_EMPTY;
+		//	if(!one) flags |= Cpp.PCRE2_SUBSTITUTE_.GLOBAL;
+		//	flags |= (Cpp.PCRE2_SUBSTITUTE_)_GetMatchFlags(more, throwIfPartial: true);
+
+		//	int na = s.Length + s.Length / 4 + 100;
+		//	g1:
+		//	var b = Util.AMemoryArray.LibChar(ref na);
+		//	LPARAM na2 = na;
+		//	int r = Cpp.Cpp_RegexSubstitute(_CodeHR, s, to, from, flags, repl, repl.Length, b, ref na2, out BSTR errStr);
+		//	if(r < 0) {
+		//		if(r == -48 && na2 > na) { na = (int)na2; goto g1; } //PCRE2_ERROR_NOMEMORY
+		//		var es = errStr.ToStringAndDispose(noCache: true);
+		//		if(r == -35 || r == -49 || (r <= -57 && r >= -60)) throw new ArgumentException("Replacement error: " + es); //replacement string syntax errors
+		//		throw new AException(es);
+		//	}
+		//	result = b.ToString((int)na2);
+		//	return r;
+		//}
 
 		/// <summary>
 		/// Returns array of substrings delimited by regular expression matches.

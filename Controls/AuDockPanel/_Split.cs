@@ -28,7 +28,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Contains 2 _Node (_Panel, _Tab, _Split or _DummyNode) and a splitter.
 		/// </summary>
-		partial class _Split :_Node
+		partial class _Split : _Node
 		{
 			internal _Node Child1, Child2; //_Panel or _Split or _Tab
 			internal Rectangle SplitterBounds; //valid only when both children are docked
@@ -223,10 +223,8 @@ namespace Au.Controls
 				}
 			}
 
-			internal override int MinimalWidth
-			{
-				get
-				{
+			internal override int MinimalWidth {
+				get {
 					if(_dockedChildCount == 0) return 0;
 					int v1 = 0, v2 = 0;
 					if(Child1.IsDocked) v1 = Child1.MinimalWidth;
@@ -237,10 +235,8 @@ namespace Au.Controls
 				}
 			}
 
-			internal override int MinimalHeight
-			{
-				get
-				{
+			internal override int MinimalHeight {
+				get {
 					if(_dockedChildCount == 0) return 0;
 					int v1 = 0, v2 = 0;
 					if(Child1.IsDocked) v1 = Child1.MinimalHeight;
@@ -268,8 +264,7 @@ namespace Au.Controls
 				bool vert = this.IsVerticalSplit;
 				var p = _manager.MouseClientXY();
 				var offset = vert ? (p.x - this.SplitterBounds.X) : (p.y - this.SplitterBounds.Y);
-				Au.Util.ADragDrop.SimpleDragDrop(_manager, MButtons.Left, d =>
-				{
+				Au.Util.ADragDrop.SimpleDragDrop(_manager, MButtons.Left, d => {
 					if(d.Msg.message != Api.WM_MOUSEMOVE) return;
 					p = _manager.MouseClientXY();
 					var b = this.Bounds;
@@ -351,24 +346,25 @@ namespace Au.Controls
 			}
 
 			/// <summary>
-			/// Sets a child (of this, or of an ancestor if need) to have fixed width or height.
+			/// Sets a child to have fixed width or height.
 			/// Used for context menu.
 			/// </summary>
-			internal void SetChildFixedSize(_Node gn, bool useWidth, bool fixedSize)
+			internal void SetChildFixedSize(_Node gn, bool fixedSize)
 			{
 				//gn = _GetChildNotTabbedPanel(gn);
 				_AssertIsChild(gn);
-
-				bool vert = IsVerticalSplit;
-				if(vert != useWidth || _dockedChildCount < 2) {
-					this.ParentSplit?.SetChildFixedSize(this, useWidth, fixedSize);
-					return;
-				}
+				Debug.Assert(IsSplitterVisible);
 
 				_isFraction = !fixedSize;
 				_isWidth1 = gn == Child1;
 				int w, w1, w2;
-				if(vert) { w = this.Bounds.Width; w1 = Child1.Bounds.Width; w2 = Child2.Bounds.Width; } else { w = this.Bounds.Height; w1 = Child1.Bounds.Height; w2 = Child2.Bounds.Height; }
+				if(IsVerticalSplit) {
+					w = this.Bounds.Width;
+					w1 = Child1.Bounds.Width; w2 = Child2.Bounds.Width;
+				} else {
+					w = this.Bounds.Height;
+					w1 = Child1.Bounds.Height; w2 = Child2.Bounds.Height;
+				}
 				if(w < 1) return;
 				if(_isFraction) {
 					_fraction = (float)w1 / w;
@@ -378,19 +374,13 @@ namespace Au.Controls
 			}
 
 			/// <summary>
-			/// Gets whether a child (of this, or of an ancestor if need) has fixed width or height.
+			/// Gets whether a child has fixed width or height.
 			/// Used for context menu.
 			/// </summary>
-			internal bool IsChildFixedSize(_Node gn, bool useWidth)
+			internal bool IsChildFixedSize(_Node gn)
 			{
 				//gn = _GetChildNotTabbedPanel(gn);
 				_AssertIsChild(gn);
-
-				if(IsVerticalSplit != useWidth || _dockedChildCount < 2) {
-					var gs = this.ParentSplit;
-					if(gs == null) return false;
-					return gs.IsChildFixedSize(this, useWidth);
-				}
 
 				if(_isFraction) return false;
 				return (gn == Child1) == _isWidth1;
@@ -401,8 +391,7 @@ namespace Au.Controls
 				var m = new AMenu();
 				using(m.Submenu("Width")) {
 					for(int i = 1, k = this.SplitterWidth; i <= 10; i++)
-						m.Add(i.ToString(), o =>
-						{
+						m.Add(i.ToString(), o => {
 							this.SplitterWidth = o.Item.Text.ToInt();
 							_manager._UpdateLayout(true); //not this.UpdateLayout() because may need to apply minimal layouts
 						}).Checked = k == 0;

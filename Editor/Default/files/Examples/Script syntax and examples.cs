@@ -1,0 +1,80 @@
+/*/ ifRunning restart; /*/ //{{
+using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
+class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}
+
+/*
+This file is an example of an automation script.
+
+The programming language is C#. This program uses C# 8 and .NET framework 4.7.2.
+
+In scripts you can use classes/functions of the automation library provided by
+this program, as well as the .NET framework and everything that can be used in C#.
+Also you can create and use new functions, classes, .NET libraries, .exe programs.
+
+This program saves script properties in meta comments /*/ /*/, at the very start
+of script code. You can change them in the Properties dialog.
+
+Like all C# programs, a script starts with standard code: several 'using', a class
+and function Main (from it starts program execution). Click the small [+] box at
+the top-left to show and edit that code when need (add more 'using' etc).
+
+To avoid 'static' everywhere, function Main creates a class instance. Your script
+code is in the constructor function Script(string[] args).
+
+The //{{ and //}} are used to fold (hide) code lines. Like #region and #endregion.
+
+To run a script, you can click the Run button on the toolbar, or use command line,
+or launch from a script like ATask.Run("script5.cs"). There are no script triggers
+like hotkey; instead a script can contain many such triggers that work only when
+the script is running. Example: Example: script "Hotkeys and other triggers".
+*/
+
+//Examples of automation functions.
+
+Print("Main script code.");
+
+ADialog.Show("Message box.");
+
+AExec.Run(AFolders.System + "notepad.exe");
+var w = AWnd.Wait(0, true, "* - Notepad");
+Key("F5 Enter*2");
+Text(w.Name);
+2.s();
+w.Close();
+var w2 = AWnd.Wait(-3, true, "Notepad", "#32770");
+if(!w2.Is0) {
+	500.ms();
+	var c = w2.Child(null, "Button", skip: 1).OrThrow(); // "Don't Save"
+	AMouse.Click(c);
+	500.ms();
+}
+
+//Examples of .NET framework functions.
+
+string s = "Example";
+var b = new System.Text.StringBuilder();
+for(int i = 0; i < s.Length; i++) {
+	b.Append(s[i]).AppendLine();
+}
+System.Windows.Forms.MessageBox.Show(b.ToString());
+
+//Example of your function and shared variable.
+
+_sharedVariable = 1;
+FunctionExample("Example");
+Print(_sharedVariable);
+
+//{{
+} //end of main function. Optional if you don't need more functions etc. The comment line above is recommended to balance folding.
+
+//Here you can add functions, shared variables (class fields), nested classes, struct, enum, [DllImport], etc.
+
+void FunctionExample(string s) {
+	Print(s, _sharedVariable);
+	_sharedVariable++;
+}
+
+int _sharedVariable;
+
+//{{
+} //end of class. Optional if you don't need more classes here. If one or both } } are missing, the program adds them when compiling.

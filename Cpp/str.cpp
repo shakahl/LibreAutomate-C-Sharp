@@ -377,19 +377,19 @@ bool Match(pcre2_code_16* code, STR s, size_t len, size_t start, UINT flags)
 	return R > 0 || R == PCRE2_ERROR_PARTIAL;
 }
 
-//Calls pcre2_substitute_16 and returns its return value.
-//errStr, if not null, receives error text when fails. Caller then must SysFreeString it.
-EXPORT int Cpp_RegexSubstitute(pcre2_code_16* code, STR s, size_t len, size_t start, UINT flags,
-	STR repl, size_t rlen, LPWSTR outputbuffer, size_t* outlen,
-	int(*callout)(pcre2_callout_block*, void*) = null, out BSTR* errStr = null)
-{
-	size_t outlen0 = *outlen;
-	int r = pcre2_substitute_16(code, s, len, start, flags, null, null, repl, rlen, outputbuffer, outlen, callout);
-	if(r < 0 && errStr != null && !(r == PCRE2_ERROR_NOMEMORY && *outlen > outlen0)) {
-		*errStr = GetErrorMessage(r);
-	}
-	return r;
-}
+//rejected
+////Calls pcre2_substitute_16 and returns its return value.
+////errStr, if not null, receives error text when fails. Caller then must SysFreeString it.
+//EXPORT int Cpp_RegexSubstitute(pcre2_code_16* code, STR s, size_t len, size_t start, UINT flags,
+//	STR repl, size_t rlen, LPWSTR outputbuffer, size_t* outlen, out BSTR* errStr = null)
+//{
+//	size_t outlen0 = *outlen;
+//	int r = pcre2_substitute_16(code, s, len, start, flags, null, null, repl, rlen, outputbuffer, outlen);
+//	if(r < 0 && errStr != null && !(r == PCRE2_ERROR_NOMEMORY && *outlen > outlen0)) {
+//		*errStr = GetErrorMessage(r);
+//	}
+//	return r;
+//}
 }
 
 #pragma region Wildex

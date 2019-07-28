@@ -35,7 +35,7 @@ namespace Au.Compiler
 		/// Compiles C# file or project if need.
 		/// Returns false if fails (C# errors etc).
 		/// </summary>
-		/// <param name="forRun">Don't recompile if compiled.</param>
+		/// <param name="reason">Whether to recompile if compiled, etc. See also Remarks.</param>
 		/// <param name="r">Results.</param>
 		/// <param name="f">C# file. If projFolder used, must be the main file of the project.</param>
 		/// <param name="projFolder">null or project folder.</param>
@@ -45,22 +45,22 @@ namespace Au.Compiler
 		/// Adds <see cref="DefaultReferences"/>.
 		/// 
 		/// If f role is classFile:
-		///		If forRun, does not compile (just parses meta), sets r.role=classFile and returns false.
+		///		If CompReason.Run, does not compile (just parses meta), sets r.role=classFile and returns false.
 		///		Else compiles but does not create output files.
 		/// </remarks>
-		public static bool Compile(bool forRun, out CompResults r, IWorkspaceFile f, IWorkspaceFile projFolder = null)
+		public static bool Compile(ECompReason reason, out CompResults r, IWorkspaceFile f, IWorkspaceFile projFolder = null)
 		{
 			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
 			r = null;
 			var cache = XCompiled.OfCollection(f.IwfWorkspace);
-			bool isCompiled = forRun && cache.IsCompiled(f, out r, projFolder);
+			bool isCompiled = reason != ECompReason.CompileAlways && cache.IsCompiled(f, out r, projFolder);
 
 			//Print("isCompiled=" + isCompiled);
 
 			if(!isCompiled) {
 				bool ok = false;
 				try {
-					ok = _Compile(forRun, f, out r, projFolder);
+					ok = _Compile(reason == ECompReason.Run, f, out r, projFolder);
 				}
 				catch(Exception ex) {
 					Print($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack()}");
@@ -144,10 +144,7 @@ namespace Au.Compiler
 			if(m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
 
 			var trees = new List<CSharpSyntaxTree>(m.CodeFiles.Count + 1);
-			var po = new CSharpParseOptions(LanguageVersion.Preview, //CONSIDER: maybe later use .Latest, when C# 8 final available. In other place too.
-				m.XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None,
-				SourceCodeKind.Regular,
-				m.Defines);
+			var po = m.CreateParseOptions();
 
 			foreach(var f1 in m.CodeFiles) {
 				string code = f1.code;
@@ -174,23 +171,7 @@ namespace Au.Compiler
 			}
 			//APerf.Next('t');
 
-			OutputKind oKind;
-			if(m.Role == ERole.classLibrary || m.Role == ERole.classFile) oKind = OutputKind.DynamicallyLinkedLibrary;
-			else if(m.Console) oKind = OutputKind.ConsoleApplication;
-			else oKind = OutputKind.WindowsApplication;
-
-			var options = new CSharpCompilationOptions(
-			   oKind,
-			   optimizationLevel: m.Optimize ? OptimizationLevel.Release : OptimizationLevel.Debug, //speed: compile the same, load Release slightly slower. Default Debug.
-			   allowUnsafe: true,
-			   platform: m.Prefer32Bit ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
-			   warningLevel: m.WarningLevel,
-			   specificDiagnosticOptions: m.NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(AChar.IsAsciiDigit(wa[0]) ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
-			   cryptoKeyFile: m.SignFile?.FilePath, //also need strongNameProvider
-			   strongNameProvider: m.SignFile == null ? null : new DesktopStrongNameProvider()
-			   );
-
-			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, options);
+			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, m.CreateCompilationOptions());
 			//APerf.Next('c');
 
 			string pdbFile = null, xdFile = null;
@@ -547,7 +528,7 @@ namespace Au.Compiler
 				for(int i = 0; i < args.Length; i++) args[i] = s_rx1.Replace(args[i], _ReplFunc);
 			}
 
-			bool ok = Compile(true, out var r, x.f);
+			bool ok = Compile(ECompReason.Run, out var r, x.f);
 			if(r.role != ERole.editorExtension) throw new ArgumentException($"meta of '{x.f.Name}' must contain role editorExtension");
 			if(!ok) return false;
 
@@ -570,13 +551,13 @@ namespace Au.Compiler
 			//	Then, if compiling frequently, compiling is fast, also don't need frequent explicit GC collect. For 10 s we have constant 40 MB, then 21 MB.
 
 			if(Thread.CurrentThread.ManagedThreadId != 1) return;
-			if(t_timerGC == null) t_timerGC = new ATimer(() => {
+			if(t_timerGC == null) t_timerGC = new Timer(_ => {
 				GC.Collect();
 				//GC.WaitForPendingFinalizers(); SetProcessWorkingSetSize(AProcess.CurrentProcessHandle, -1, -1);
 			});
-			t_timerGC.Start(10_000, true);
+			t_timerGC.Change(10_000, -1); //note: must be > than timer in MetaReferences ctor.
 		}
-		static ATimer t_timerGC;
+		static Timer t_timerGC;
 
 		#region default references and usings
 
@@ -605,4 +586,6 @@ namespace Au.Compiler
 
 		#endregion
 	}
+
+	public enum ECompReason { Run, CompileAlways, CompileIfNeed }
 }

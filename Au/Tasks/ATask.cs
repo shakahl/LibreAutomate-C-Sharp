@@ -27,31 +27,22 @@ namespace Au
 	public static class ATask
 	{
 		/// <summary>
-		/// In an automation task process returns script file name without extension.
-		/// In other processes and non-default appdomains returns <see cref="AppDomain.FriendlyName"/>.
+		/// In an automation task process of a script with role miniProgram (defaut) returns script file name without extension.
+		/// In other processes and non-default appdomains returns <see cref="AppDomain.FriendlyName"/>; in default appdomain it is like "ProgramFile.exe".
 		/// </summary>
-		public static string Name {
-			get {
-				if(s_name != null) return s_name;
-				//if(t_name != null) return t_name;
-				//var s = Thread.CurrentThread.Name;
-				//if(s != null && s.Starts("[script] ")) return t_name = s.Substring(9);
-				return s_name = AppDomain.CurrentDomain.FriendlyName;
-			}
-			internal set {
-				s_name = value;
-			}
-		}
+		public static string Name => s_name ?? (s_name = AppDomain.CurrentDomain.FriendlyName);
 		static string s_name;
-		//[ThreadStatic] static string t_name;
 
 		/// <summary>
 		/// In an automation task process tells whether the task runs in host process (default), editor process or own .exe process. It matches meta role.
 		/// In other processes always returns <b>ExeProgram</b>.
 		/// </summary>
-		public static unsafe ATRole Role {
-			get => Util.LibProcessMemory.Ptr->taskRole;
-			internal set => Util.LibProcessMemory.Ptr->taskRole = value;
+		public static unsafe ATRole Role => Util.LibProcessMemory.Ptr->taskRole;
+
+		internal static unsafe void LibInit(ATRole role, string name = null)
+		{
+			Util.LibProcessMemory.Ptr->taskRole = role;
+			if(name != null) s_name = name;
 		}
 
 		/// <summary>

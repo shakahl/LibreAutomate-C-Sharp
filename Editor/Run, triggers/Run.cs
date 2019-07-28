@@ -70,7 +70,7 @@ static class Run
 
 		if(!f.IsCodeFile) return 0;
 
-		bool ok = Compiler.Compile(run, out var r, f, projFolder);
+		bool ok = Compiler.Compile(run ? ECompReason.Run : ECompReason.CompileAlways, out var r, f, projFolder);
 
 		if(run && (r.role == ERole.classFile || r.role == ERole.classLibrary)) { //info: if classFile, compiler sets r.role and returns false (does not compile)
 			_OnRunClassFile(f, projFolder);
@@ -247,9 +247,10 @@ class RunningTasks
 	{
 		_a = new List<RunningTask>();
 		_q = new List<_WaitingTask>();
-		_recent = new List<RecentTask>();
 		_wMain = (AWnd)Program.MainForm;
 		Program.Timer1sOr025s += _TimerUpdateUI;
+		ATask.LibInit(ATRole.EditorExtension);
+		AFile.Delete(LibLog.Run.FilePath);
 	}
 
 	public void OnWorkspaceClosed()
@@ -267,13 +268,12 @@ class RunningTasks
 
 		if(onExit) _a.Clear();
 		_q.Clear();
-		_recent.Clear();
 
 		if(!onExit) _UpdatePanels();
 	}
 
 	/// <summary>
-	/// Adds a started task to the 'running' and 'recent' lists.
+	/// Adds a started task to the 'running' list.
 	/// Must be called in the main thread.
 	/// </summary>
 	/// <param name="rt"></param>
@@ -281,7 +281,6 @@ class RunningTasks
 	{
 		Debug.Assert(!_disposed);
 		_a.Insert(0, rt);
-		_RecentStarted(rt.f);
 		_updateUI = true;
 	}
 
@@ -301,7 +300,7 @@ class RunningTasks
 	public const int WM_TASK_ENDED = Api.WM_USER + 900;
 
 	/// <summary>
-	/// Removes an ended task from the 'running' and 'recent' lists. If a task is queued and can run, starts it.
+	/// Removes an ended task from the 'running' list. If a task is queued and can run, starts it.
 	/// When task ended, TaskEnded1 posts to MainForm message WM_TASK_ENDED with task id in wParam. MainForm calls this function.
 	/// </summary>
 	internal void TaskEnded2(IntPtr wParam)
@@ -314,7 +313,6 @@ class RunningTasks
 
 		var rt = _a[i];
 		_a.RemoveAt(i);
-		_RecentEnded(rt.f);
 		HooksServer.Instance?.RemoveTask(rt.processId);
 
 		for(int j = _q.Count - 1; j >= 0; j--) {
@@ -336,17 +334,11 @@ class RunningTasks
 		if(!Program.MainForm.Visible) return;
 		_UpdatePanels();
 	}
-	//void _TimerUpdateUI()
-	//{
-	//	if(!_updateUI || !MainForm.Visible) return;
-	//	_UpdatePanels();
-	//}
 
 	void _UpdatePanels()
 	{
 		_updateUI = false;
 		Panels.Running.UpdateList(); //~1 ms when list small, not including wmpaint
-		Panels.Recent.UpdateList();
 	}
 
 	/// <summary>
@@ -462,7 +454,7 @@ class RunningTasks
 				return (int)ATask.ERunResult.deferred;
 			case EIfRunning.runIfBlue:
 				string s1 = (running.f == f) ? "it" : $"{running.f.SciLink}";
-				Print($"<>Cannot start {f.SciLink} because {s1} is running. Consider meta options <c green>runMode<>, <c green>ifRunning<>.");
+				Print($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>runMode<> or/and <c green>ifRunning<>.");
 				break;
 			}
 			return 0;
@@ -635,56 +627,4 @@ class RunningTasks
 		}
 		return -1;
 	}
-
-	#region recent tasks
-
-	public class RecentTask
-	{
-		public readonly FileNode f;
-		public bool running;
-		//FUTURE: startTime, endTime
-
-		public RecentTask(FileNode f)
-		{
-			this.f = f;
-			running = true;
-		}
-	}
-
-	List<RecentTask> _recent;
-
-	public IEnumerable<RecentTask> Recent => _recent;
-
-	int _RecentFind(FileNode f)
-	{
-		for(int i = 0; i < _recent.Count; i++) if(_recent[i].f == f) return i;
-		return -1;
-	}
-
-	void _RecentStarted(FileNode f)
-	{
-		int i = _RecentFind(f);
-		if(i >= 0) {
-			var x = _recent[i];
-			x.running = true;
-			if(i > 0) {
-				for(int j = i; j > 0; j--) _recent[j] = _recent[j - 1];
-				_recent[0] = x;
-			}
-		} else {
-			if(_recent.Count > 100) _recent.RemoveRange(100, _recent.Count - 100);
-
-			_recent.Insert(0, new RecentTask(f));
-		}
-	}
-
-	void _RecentEnded(FileNode f)
-	{
-		if(IsRunning(f)) return;
-		int i = _RecentFind(f);
-		Debug.Assert(i >= 0 || f.Model != Program.Model); if(i < 0) return;
-		_recent[i].running = false;
-	}
-
-	#endregion
 }

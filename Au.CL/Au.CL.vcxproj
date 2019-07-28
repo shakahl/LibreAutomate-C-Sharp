@@ -72,7 +72,7 @@
     <ResourceCompile Include="Au.CL.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Image Include="qm.ico" />
+    <Image Include="..\Editor\Resources\ico\app_native.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

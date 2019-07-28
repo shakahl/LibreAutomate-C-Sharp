@@ -85,13 +85,15 @@ partial class PanelFiles : AuUserControlBase
 		oldModel?.Dispose();
 		Program.Model = _model = m;
 
-		if(Program.Codea != null) Program.Codea.WorkspaceClosed();
-		else Program.Codea = new CodeAssist();
+		//if(Program.Codea != null) Program.Codea.WorkspaceClosed();
+		//else Program.Codea = new CodeAssist();
+		if(Program.Codein == null) Program.Codein = new CodeInfo();
+
 		//APerf.Next('a');
-		//Codea.WorkspaceOpened(); //TODO: slow, 250 ms in Release with ngened CA assemblies, 700 ms non-ngened. Also then CPU noise.
+		//Program.Codea.WorkspaceOpened(); //slow, 250 ms in Release with ngened CA assemblies, 700 ms non-ngened. Also then CPU noise.
 		//APerf.Next('b');
 
-		//CONSIDER: unexpand path
+			//CONSIDER: unexpand path
 		if(Program.Settings.Set("workspace", wsDir)) {
 			//add to recent
 			lock(Program.Settings) {

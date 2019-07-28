@@ -122,6 +122,7 @@
     <Compile Include="Util\AAssembly.cs" />
     <Compile Include="Util\ACursor.cs" />
     <Compile Include="Util\internal\LibActCtx.cs" />
+    <Compile Include="Util\internal\LibLog.cs" />
     <Compile Include="Util\internal\LibSharedMemory.cs" />
     <Compile Include="Util\internal\LibProcessMemory.cs" />
     <Compile Include="Util\AJit.cs" />

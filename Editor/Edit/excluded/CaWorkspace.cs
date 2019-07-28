@@ -73,7 +73,7 @@ class CaWorkspace : Workspace
 	{
 		var m = new MetaComments();
 		IWorkspaceFile projFolder = null;//TODO
-		if(!m.Parse(f, projFolder, 0)) return false;
+		if(!m.Parse(f, projFolder, EMPFlags.ForCodeInfo)) return false;
 
 		var projectId = ProjectId.CreateNewId();
 		var name = f.Name;

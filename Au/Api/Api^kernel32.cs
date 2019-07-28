@@ -335,7 +335,11 @@ namespace Au.Types
 		internal const uint FILE_FLAG_OPEN_REQUIRING_OPLOCK = 0x40000;
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateFileW", SetLastError = true)]
-		internal static extern LibHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, int creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default);
+		static extern IntPtr _CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, int creationDisposition, uint dwFlagsAndAttributes, IntPtr hTemplateFile);
+
+		internal static LibHandle CreateFile(string lpFileName, uint dwDesiredAccess, uint dwShareMode, IntPtr lpSecurityAttributes, int creationDisposition, uint dwFlagsAndAttributes = FILE_ATTRIBUTE_NORMAL, IntPtr hTemplateFile = default)
+			=> new LibHandle(_CreateFile(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, creationDisposition, dwFlagsAndAttributes, hTemplateFile));
+		//note: cannot return LibHandle directly from API because returns -1 if fails. The ctor then makes 0.
 
 		//note: not using parameter types SECURITY_ATTRIBUTES and OVERLAPPED* because it makes JIT-compiling much slower in some time-critical places.
 
@@ -398,7 +402,11 @@ namespace Au.Types
 		internal static extern bool SetEndOfFile(IntPtr hFile);
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateMailslotW", SetLastError = true)]
-		internal static extern LibHandle CreateMailslot(string lpName, uint nMaxMessageSize, int lReadTimeout, SECURITY_ATTRIBUTES lpSecurityAttributes);
+		static extern IntPtr _CreateMailslot(string lpName, uint nMaxMessageSize, int lReadTimeout, SECURITY_ATTRIBUTES lpSecurityAttributes);
+
+		internal static LibHandle CreateMailslot(string lpName, uint nMaxMessageSize, int lReadTimeout, SECURITY_ATTRIBUTES lpSecurityAttributes)
+			=> new LibHandle(_CreateMailslot(lpName, nMaxMessageSize, lReadTimeout, lpSecurityAttributes));
+		//note: cannot return LibHandle directly from API because returns -1 if fails. The ctor then makes 0.
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool GetMailslotInfo(IntPtr hMailslot, uint* lpMaxMessageSize, out int lpNextSize, out int lpMessageCount, int* lpReadTimeout = null);
@@ -449,10 +457,8 @@ namespace Au.Types
 			public fixed char cFileName[260];
 			public fixed char cAlternateFileName[14];
 
-			internal unsafe string Name
-			{
-				get
-				{
+			internal unsafe string Name {
+				get {
 					fixed (char* p = cFileName) {
 						if(p[0] == '.') {
 							if(p[1] == '\0') return null;
@@ -642,7 +648,7 @@ namespace Au.Types
 			public IntPtr lpAttributeList;
 		}
 
-		internal struct PROCESS_INFORMATION :IDisposable
+		internal struct PROCESS_INFORMATION : IDisposable
 		{
 			public LibHandle hProcess;
 			public LibHandle hThread;
@@ -698,7 +704,11 @@ namespace Au.Types
 		internal const uint PIPE_REJECT_REMOTE_CLIENTS = 0x8;
 
 		[DllImport("kernel32.dll", EntryPoint = "CreateNamedPipeW", SetLastError = true)]
-		internal static extern LibHandle CreateNamedPipe(string lpName, uint dwOpenMode, uint dwPipeMode, uint nMaxInstances, uint nOutBufferSize, uint nInBufferSize, uint nDefaultTimeOut, SECURITY_ATTRIBUTES lpSecurityAttributes);
+		static extern IntPtr _CreateNamedPipe(string lpName, uint dwOpenMode, uint dwPipeMode, uint nMaxInstances, uint nOutBufferSize, uint nInBufferSize, uint nDefaultTimeOut, SECURITY_ATTRIBUTES lpSecurityAttributes);
+
+		internal static LibHandle CreateNamedPipe(string lpName, uint dwOpenMode, uint dwPipeMode, uint nMaxInstances, uint nOutBufferSize, uint nInBufferSize, uint nDefaultTimeOut, SECURITY_ATTRIBUTES lpSecurityAttributes)
+			=> new LibHandle(_CreateNamedPipe(lpName, dwOpenMode, dwPipeMode, nMaxInstances, nOutBufferSize, nInBufferSize, nDefaultTimeOut, lpSecurityAttributes));
+		//note: cannot return LibHandle directly from API because returns -1 if fails. The ctor then makes 0.
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool CreatePipe(out LibHandle hReadPipe, out LibHandle hWritePipe, SECURITY_ATTRIBUTES lpPipeAttributes, uint nSize);

@@ -238,8 +238,7 @@ namespace Au.Controls
 			internal void ShowContextMenu(Point p)
 			{
 				var gp = this as _Panel;
-				var gt = this as _Tab;
-				bool isTab = gt != null;
+				bool isTab = this is _Tab gt;
 				var state = this.DockState;
 				var m = new AMenu();
 				m.CMS.Text = "Menu";
@@ -256,22 +255,34 @@ namespace Au.Controls
 
 				m.Separator();
 				var k = (!this.IsTabbedPanel || this.IsFloating) ? this : gp.ParentTab;
-				if(this.IsDockedOn(_manager)) {
-					//fixed width/height
-					var gs = k.ParentSplit;
-					//using(m.Submenu("Fixed Size")) {
-					bool fixedWidth = gs.IsChildFixedSize(k, true);
-					m.Add("Fixed Width", o => gs.SetChildFixedSize(k, true, !fixedWidth)).Checked = fixedWidth;
-					bool fixedHeight = gs.IsChildFixedSize(k, false);
-					m.Add("Fixed Height", o => gs.SetChildFixedSize(k, false, !fixedHeight)).Checked = fixedHeight;
-					//}
-				}
 				//caption edge
 				using(m.Submenu("Caption At")) {
 					m["Top"] = o => k._SetCaptionEdge(CaptionEdge.Top); if(k.CaptionAt == CaptionEdge.Top) m.LastMenuItem.Checked = true;
 					m["Bottom"] = o => k._SetCaptionEdge(CaptionEdge.Bottom); if(k.CaptionAt == CaptionEdge.Bottom) m.LastMenuItem.Checked = true;
 					m["Left"] = o => k._SetCaptionEdge(CaptionEdge.Left); if(k.CaptionAt == CaptionEdge.Left) m.LastMenuItem.Checked = true;
 					m["Right"] = o => k._SetCaptionEdge(CaptionEdge.Right); if(k.CaptionAt == CaptionEdge.Right) m.LastMenuItem.Checked = true;
+				}
+				//fixed width/height
+				if(this.IsDockedOn(_manager)) {
+					_AddFixedSize(k.ParentSplit, k);
+					void _AddFixedSize(_Split gs, _Node gn)
+					{
+						if(gs.IsSplitterVisible) {
+							bool fixedSize = gs.IsChildFixedSize(gn);
+							m.Add(gs.IsVerticalSplit ? "Fixed Width" : "Fixed Height", o => gs.SetChildFixedSize(gn, !fixedSize)).Checked = fixedSize;
+						}
+						var gs2 = gs.ParentSplit;
+						if(gs2 != null) {
+							using(m.Submenu("Container")) {
+								m.LastMenuItem.DropDown.Opened += (unu, sed) => {
+									var osd = new AOsdRect { Rect = _manager.RectangleToScreen(gs.Bounds), Color = 0x00c000 };
+									osd.Show();
+									ATimer.After(1000, () => osd.Dispose());
+								};
+								_AddFixedSize(gs2, gs);
+							}
+						}
+					}
 				}
 
 				//test
@@ -285,6 +296,56 @@ namespace Au.Controls
 
 				m.Show(this.ParentControl, p.X, p.Y);
 			}
+
+			//internal void ShowContextMenu(Point p)
+			//{
+			//	var gp = this as _Panel;
+			//	bool isTab = this is _Tab gt;
+			//	var state = this.DockState;
+			//	var m = new AMenu();
+			//	m.CMS.Text = "Menu";
+
+			//	//dock state
+			//	m.Add("Float\tD-click, drag", o => this.SetDockState(_DockState.Floating)).Enabled = state != _DockState.Floating;
+			//	m.Add("Dock    \tD-click, Alt+drag", o => this.SetDockState(_DockState.Docked)).Enabled = state != _DockState.Docked;
+			//	//menu.Add("Auto Hide", o => this.SetDockState(_DockState.AutoHide)).Enabled = state != _DockState.AutoHide && !isTab; //not implemented
+			//	m["Hide\tM-click"] = o => this.SetDockState(_DockState.Hidden);
+
+			//	m.Separator();
+			//	using(m.Submenu("Show Panel")) _manager.AddShowPanelsToMenu(m.LastMenuItem.DropDown, false);
+			//	using(m.Submenu("Show Toolbar")) _manager.AddShowPanelsToMenu(m.LastMenuItem.DropDown, true);
+
+			//	m.Separator();
+			//	var k = (!this.IsTabbedPanel || this.IsFloating) ? this : gp.ParentTab;
+			//	if(this.IsDockedOn(_manager)) {
+			//		//fixed width/height
+			//		var gs = k.ParentSplit;
+			//		//using(m.Submenu("Fixed Size")) {
+			//		bool fixedWidth = gs.IsChildFixedSize(k, true);
+			//		m.Add("Fixed Width", o => gs.SetChildFixedSize(k, true, !fixedWidth)).Checked = fixedWidth;
+			//		bool fixedHeight = gs.IsChildFixedSize(k, false);
+			//		m.Add("Fixed Height", o => gs.SetChildFixedSize(k, false, !fixedHeight)).Checked = fixedHeight;
+			//		//}
+			//	}
+			//	//caption edge
+			//	using(m.Submenu("Caption At")) {
+			//		m["Top"] = o => k._SetCaptionEdge(CaptionEdge.Top); if(k.CaptionAt == CaptionEdge.Top) m.LastMenuItem.Checked = true;
+			//		m["Bottom"] = o => k._SetCaptionEdge(CaptionEdge.Bottom); if(k.CaptionAt == CaptionEdge.Bottom) m.LastMenuItem.Checked = true;
+			//		m["Left"] = o => k._SetCaptionEdge(CaptionEdge.Left); if(k.CaptionAt == CaptionEdge.Left) m.LastMenuItem.Checked = true;
+			//		m["Right"] = o => k._SetCaptionEdge(CaptionEdge.Right); if(k.CaptionAt == CaptionEdge.Right) m.LastMenuItem.Checked = true;
+			//	}
+
+			//	//test
+			//	//m.Separator();
+			//	//m["test"] = o =>
+			//	//{
+			//	//};
+
+			//	//custom
+			//	_manager.PanelContextMenu?.Invoke(new DPContextMenuEventArgs(gp, m));
+
+			//	m.Show(this.ParentControl, p.X, p.Y);
+			//}
 
 			/// <summary>
 			/// Shows in the most recent visible state. Activates tab group panel.

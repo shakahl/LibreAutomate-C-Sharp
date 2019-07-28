@@ -41,6 +41,8 @@ namespace Au.Compiler
 
 		bool IsClass { get; }
 
+		string IfwText { get; }
+
 		IWorkspaceFiles IwfWorkspace { get; }
 
 		IWorkspaceFile IwfFindRelative(string relativePath, bool? folder);

@@ -63,7 +63,7 @@
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
-    <ApplicationIcon>Resources\ico\app_normal.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\ico\app_native.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -119,6 +119,10 @@
     <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.Runtime.Serialization" />
+    <Reference Include="System.ServiceModel" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="Microsoft.CSharp" />
@@ -127,11 +131,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Default\Templates\Help\Hotkeys and other triggers.cs">
+    <None Include="Default\files\Examples\Hotkeys and other triggers.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <Compile Include="Edit\CaWorkspace.cs" />
-    <Compile Include="Edit\CodeAssist.cs" />
+    <None Include="Default\files\Examples\Script syntax and examples.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Edit\excluded\CaWorkspace.cs" />
+    <None Include="Edit\excluded\CodeAssist.cs" />
+    <Compile Include="Edit\CodeInfo.cs" />
     <Compile Include="Files\Save.cs" />
     <Compile Include="Files\TreeViewFiles.cs" />
     <Compile Include="Panels\etc\FFindOptions.cs">
@@ -212,9 +220,6 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Panels\PanelOutput.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Panels\PanelRecent.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Panels\PanelRunning.cs">
@@ -337,7 +342,7 @@
     <None Include="Resources\png\folderOpen.png" />
     <None Include="Resources\png\fileClass.png" />
     <None Include="Resources\png\NewSolutionFolder_16x.png" />
-    <Content Include="Resources\png\fileScript.png" />
+    <None Include="Resources\png\fileScript.png" />
     <None Include="Resources\png\project.png" />
     <Content Include="Resources\ico\app_normal.ico" />
     <None Include="Default\Templates\include\using.txt">
@@ -345,9 +350,6 @@
     </None>
     <None Include="Resources\ico\app_running.ico" />
     <None Include="Default\Templates\New File\TextFile.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Default\Templates\Help\Script syntax.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="Default\Templates\include\main.txt">

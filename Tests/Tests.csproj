@@ -53,7 +53,7 @@
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
-    <ApplicationIcon>Resources\qm.ico</ApplicationIcon>
+    <ApplicationIcon>..\Editor\Resources\ico\app_native.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup />
@@ -84,6 +84,7 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Runtime.Caching" />
     <Reference Include="System.Web" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
@@ -171,8 +172,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Images\test.png" />
-    <None Include="Resources\macro.ico" />
-    <Content Include="Resources\qm.ico" />
     <None Include="Resources\VSDatasetInternalInfoFile.png" />
     <None Include="Resources\VSShell.png" />
     <None Include="Resources\VSTAAbout.png" />
@@ -231,6 +230,11 @@
     <None Include="Resources\XSLTTemplate.png" />
     <None Include="Resources\XSLTTransformFile.png" />
     <None Include="Resources\ZoomIn.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\Editor\Resources\ico\app_native.ico">
+      <Link>Resources\app_native.ico</Link>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

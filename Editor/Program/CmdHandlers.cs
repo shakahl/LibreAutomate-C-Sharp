@@ -100,7 +100,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Edit_Cut), Edit_Cut);
 		_dict.Add(nameof(Edit_Copy), Edit_Copy);
 		_dict.Add(nameof(Edit_Paste), Edit_Paste);
-		_dict.Add(nameof(Edit_CopyForForum), Edit_CopyForForum);
+		_dict.Add(nameof(Edit_ForumCopy), Edit_ForumCopy);
 		_dict.Add(nameof(Edit_Find), Edit_Find);
 		_dict.Add(nameof(Edit_Members), Edit_Members);
 		_dict.Add(nameof(Edit_ContextHelp), Edit_ContextHelp);
@@ -125,6 +125,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Run_End), Run_End);
 		_dict.Add(nameof(Run_Pause), Run_Pause);
 		_dict.Add(nameof(Run_Compile), Run_Compile);
+		_dict.Add(nameof(Run_Recent), Run_Recent);
 		_dict.Add(nameof(Run_DisableTriggers), Run_DisableTriggers);
 		_dict.Add(nameof(Debug_RunToBreakpoint), Debug_RunToBreakpoint);
 		_dict.Add(nameof(Debug_RunToCursor), Debug_RunToCursor);
@@ -370,7 +371,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		doc.Call(Sci.SCI_COPY);
 	}
 
-	public void Edit_CopyForForum()
+	public void Edit_ForumCopy()
 	{
 		Panels.Editor.ActiveDoc?.CopyModified();
 	}
@@ -537,6 +538,12 @@ class CmdHandlers : IGStripManagerCallbacks
 	public void Run_Pause()
 	{
 
+	}
+
+	public void Run_Recent()
+	{
+		var file = LibLog.Run.FilePath;
+		if(AFile.ExistsAsFile(file)) AExec.TryRun(file);
 	}
 
 	public void Run_DisableTriggers()

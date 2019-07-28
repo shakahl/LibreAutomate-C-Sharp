@@ -97,7 +97,7 @@ Default role for scripts is miniProgram; cannot be the last two. Default for cla
 		g.ZAddHeaderRow("Run");
 		_AddEdit("testScript", _f.TestScript?.ItemPath,
 @"<b>testScript</b> - a script to run when you click the Run button.
-Can be path relative to this file (examples: Script5, Folder\Script5, ..\Folder\Script5) or path in the workspace (examples: \Script5, \Folder\Script5).
+Can be path relative to this file (examples: Script5.cs, Folder\Script5.cs, ..\Folder\Script5.cs) or path in the workspace (examples: \Script5.cs, \Folder\Script5.cs).
 
 Usually it is used to test this class file or class library. It can contain meta option <c green>c this file<> that adds this file to the compilation, or meta option <c green>pr this file<> that adds the output dll file as a reference assembly. The recommended way to add this option correctly and easily is to try to run this file and click a link that is then printed in the output.
 
@@ -115,7 +115,7 @@ This option is ignored when the task runs as .exe program started not from edito
 		_AddCombo("ifRunning", "runIfBlue|dontRun|wait|restart|restartOrWait", _meta.ifRunning,
 @"<b>ifRunning</b> - whether/how to run if a task is running. Here ""a task"" means: if runMode green - ""a green task""; if runMode blue - ""another instance of this task"".
  • <i>runIfBlue</i> (default) - if runMode blue, run simultaneously. Else don't run; print a warning.
- • <i>dontRun</i> - don't run. Don't print a warning.
+ • <i>dontRun</i> - don't run. No warning.
  • <i>wait</i> - run later, when that task ends.
  • <i>restart</i> - if that task is another instance of this task, end it and run. Else like runIfBlue.
  • <i>restartOrWait</i> - if that task is another instance of this task, end it and run. Else wait.
@@ -179,10 +179,10 @@ See also <google C# #pragma warning>#pragma warning<>.
 ");
 		_AddEdit("preBuild", _meta.preBuild,
 @"<b>preBuild</b> - a script to run before compiling this code file.
-Can be path relative to this file (examples: Script5, Folder\Script5, ..\Folder\Script5) or path in the workspace (examples: \Script5, \Folder\Script5).
+Can be path relative to this file (examples: Script5.cs, Folder\Script5.cs, ..\Folder\Script5.cs) or path in the workspace (examples: \Script5.cs, \Folder\Script5.cs).
 
 The script must have role editorExtension. It runs synchronously in compiler's thread. To stop compilation, let it throw an exception.
-By default it receives full path of the assembly file in args[0]. If need more info, specify command line arguments, like in this example: Script5 /$(outputPath) $(optimize). The script will receive real values in args[0], args[1] and so on. You can use these variables:
+By default it receives full path of the assembly file in args[0]. If need more info, specify command line arguments, like in this example: Script5.cs /$(outputPath) $(optimize). The script will receive real values in args[0], args[1] and so on. You can use these variables:
  • $(source) - path of this C# code file in the workspace.
  • $(outputFile) - full path of the assembly file.
  • $(outputPath) - meta option 'outputPath'.
@@ -456,19 +456,19 @@ The file must be in this workspace. Can be path relative to this file (examples:
 	private void _bAddMyLibraryProject_Click(object sender, EventArgs e)
 		=> _AddFromWorkspace(
 			f => (f != _f && f.GetClassFileRole() == FileNode.EClassFileRole.Library) ? f : null,
-			_meta.pr, "class library projects", sender);
+			_meta.pr, sender);
 
 	private void _bAddClass_Click(object sender, EventArgs e)
 		=> _AddFromWorkspace(
 			f => (f != _f && f.IsClass && !f.FindProject(out _, out _) && f.GetClassFileRole() == FileNode.EClassFileRole.Class) ? f : null,
-			_meta.c, "class files", sender);
+			_meta.c, sender);
 
 	private void _bAddResource_Click(object sender, EventArgs e)
 		=> _AddFromWorkspace(
 			f => !(f.IsFolder || f.IsCodeFile) ? f : null,
-			_meta.resource, "resource files", sender);
+			_meta.resource, sender);
 
-	void _AddFromWorkspace(Func<FileNode, FileNode> filter, List<string> metaList, string ifNone, object button)
+	void _AddFromWorkspace(Func<FileNode, FileNode> filter, List<string> metaList, object button)
 	{
 		var sFind = _tFindInList.Text;
 		var a = new List<string>();
@@ -479,7 +479,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			if(sFind.Length > 0 && path.Find(sFind, true) < 0) continue;
 			if(!metaList.Contains(path, StringComparer.OrdinalIgnoreCase)) a.Add(path);
 		}
-		if(a.Count == 0) { ADialog.Show(sFind.Length > 0 ? "Not found" : $"This workspace contains 0 {ifNone}", sFind, owner: this); return; }
+		if(a.Count == 0) { _NotFound(button, sFind); return; }
 		a.Sort();
 		var dd = new PopupList { Items = a.ToArray(), SelectedAction = o => metaList.Add(o.ResultItem as string) };
 		dd.Show(button as Control);
@@ -490,19 +490,25 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		var en = GAC.EnumAssemblies(sender == _bAddGacVersion).Distinct();
 		var sFind = _tFindInList.Text; if(sFind.Length > 0) en = en.Where(s => s.Find(sFind, true) >= 0);
 		var a = en.ToArray();
-		if(a.Length == 0) { ADialog.Show("Not found", sFind, owner: this); return; }
+		if(a.Length == 0) { _NotFound(sender, sFind); return; }
 		Array.Sort(a);
 		var dd = new PopupList { Items = a, SelectedAction = o => _meta.r.Add(o.ResultItem as string) };
 		dd.Show(sender as Control);
+	}
+
+	void _NotFound(object button, string sFind)
+	{
+		var s = "The list is empty";
+		if(sFind.Length > 0) s = "The list contains 0 items containing " + sFind;
+		AOsd.ShowText(s, 0, button as Control);
 	}
 
 	#region COM
 
 	private void _bAddComBrowse_Click(object sender, EventArgs e)
 	{
-		using(var ofd = new OpenFileDialog { Filter = "Type library|*.dll;*.tlb;*.olb;*.ocx;*.exe|All files|*.*" }) {
-			if(ofd.ShowDialog(this) == DialogResult.OK) _ConvertTypeLibrary(ofd.FileName);
-		}
+		using var ofd = new OpenFileDialog { Filter = "Type library|*.dll;*.tlb;*.olb;*.ocx;*.exe|All files|*.*" };
+		if(ofd.ShowDialog(this) == DialogResult.OK) _ConvertTypeLibrary(ofd.FileName);
 	}
 
 	private void _bAddComRegistry_Click(object sender, EventArgs e)
@@ -515,20 +521,18 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			foreach(var sGuid in tlKey.GetSubKeyNames()) {
 				if(sGuid.Length != 38) continue;
 				//Print(sGuid);
-				using(var guidKey = tlKey.OpenSubKey(sGuid)) { //versions
-					foreach(var sVer in guidKey.GetSubKeyNames()) {
-						using(var verKey = guidKey.OpenSubKey(sVer)) {
-							if(verKey.GetValue("") is string description) {
-								if(rx.MatchG(description, out var g)) description = description.Remove(g.Index);
-								if(sFind.Length > 0 && description.Find(sFind, true) < 0) continue;
-								a.Add(new _RegTypelib { guid = sGuid, text = description + ", " + sVer, version = sVer });
-							} //else Print(sGuid); //some Microsoft typelibs. VS does not show these too.
-						}
-					}
+				using var guidKey = tlKey.OpenSubKey(sGuid);
+				foreach(var sVer in guidKey.GetSubKeyNames()) {
+					using var verKey = guidKey.OpenSubKey(sVer);
+					if(verKey.GetValue("") is string description) {
+						if(rx.MatchG(description, out var g)) description = description.Remove(g.Index);
+						if(sFind.Length > 0 && description.Find(sFind, true) < 0) continue;
+						a.Add(new _RegTypelib { guid = sGuid, text = description + ", " + sVer, version = sVer });
+					} //else Print(sGuid); //some Microsoft typelibs. VS does not show these too.
 				}
 			}
 		}
-		if(a.Count == 0) { ADialog.Show("Not found", sFind, owner: this); return; }
+		if(a.Count == 0) { _NotFound(sender, sFind); return; }
 		a.Sort((x, y) => string.Compare(x.text, y.text, true));
 
 		var dd = new PopupList { Items = a.ToArray(), SelectedAction = o => _ConvertTypeLibrary(o.ResultItem as _RegTypelib) };
@@ -670,7 +674,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	void _InfoInit()
 	{
-		const string c_script = @"This file is a C# script. Script syntax help: menu File -> New -> Help -> Script syntax.
+		const string c_script = @"This file is a C# automation script.
 
 There are several ways to run a script:
 1. Click the Run button or menu item.
@@ -681,7 +685,7 @@ There are several ways to run a script:
 
 In script code you can add <help Au.Triggers.ActionTriggers>triggers<> (hotkey etc) to execute parts of script code when it is running. There are no such triggers to launch scripts.
 ";
-		const string c_class = "This file is a C# class. It can contain standard C# code: one or more classes, namespaces, etc.";
+		const string c_class = "This file is a C# class file.";
 		_info.ST.SetText(
 @"Most file properties are saved in <c green>/*/ meta comments /*/<> at the very start of code. You can change them here or in the code editor.
 
@@ -766,7 +770,7 @@ Examples of loading resources at run time:
 <code>var cursor = Au.Util.ACursor.LoadCursorFromMemory(Au.Util.AResources.GetAppResource(""file.cur"") as byte[]);</code>
 ");
 		_Add(_tFindInList,
-@"<b>Find in lists<> - in the drop-down lists of buttons show only items containing this text.
+@"<b>Find in lists<> - in the drop-down lists show only items containing this text.
 ");
 
 		void _Add(Control c, string s) => _infoDict.Add(c.Name, s);

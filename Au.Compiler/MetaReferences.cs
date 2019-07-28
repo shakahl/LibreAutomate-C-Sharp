@@ -35,6 +35,9 @@ namespace Au.Compiler
 		List<PortableExecutableReference> _cache; //all references resolved by any variables, + default. In s_refsWR.
 		Dictionary<string, string> _dict; //name/path of references resolved by this variable
 
+		static List<PortableExecutableReference> s_cacheKeeper;
+		static Timer s_timerCK = new Timer(_ => s_cacheKeeper = null);
+
 		/// <summary>
 		/// Returns list of references default and unique references for which was called Resolve of this MetaReferences variable.
 		/// Before calling any Resolve, contains only default references.
@@ -51,6 +54,12 @@ namespace Au.Compiler
 		{
 			lock(s_refsWR) {
 				if(!s_refsWR.TryGetTarget(out _cache)) s_refsWR.SetTarget(_cache = _CreateDefaultRefs());
+
+				//prevent GC the cache too early, eg in the middle of compiling hundreds of files.
+				//	Not important. Reloading references is quite fast. But I like such speed improvements.
+				//	Also tested MemoryCache, but it is too slow, ~30 mcs when cold, and need System.Runtime.Caching.dll.
+				s_cacheKeeper = _cache;
+				s_timerCK.Change(3000, -1); //fast. Note: must be < than timer in Compiler.LibSetTimerGC().
 
 				int nDefault = Compiler.DefaultReferences.Count;
 				Refs = new List<PortableExecutableReference>(nDefault);
@@ -169,6 +178,14 @@ namespace Au.Compiler
 			if(errorMessage.RegexMatch(@"'(.+?)'", 1, out string path))
 				lock(s_refsWR) { _cache.RemoveAll(v => v.FilePath.Eqi(path)); }
 		}
+
+#if DEBUG
+		internal static void DebugPrintCachedRefs()
+		{
+			if(!s_refsWR.TryGetTarget(out var c)) return;
+			foreach(var v in c) Print(v.Display);
+		}
+#endif
 	}
 
 	[System.Security.SuppressUnmanagedCodeSecurity]

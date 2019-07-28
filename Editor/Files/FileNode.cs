@@ -62,7 +62,8 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	_State _state;
 	_Flags _flags;
 	object _misc; //null or icon path (string) or TMisc
-	public Microsoft.CodeAnalysis.DocumentId CaDocumentId;
+
+	//public Microsoft.CodeAnalysis.DocumentId CaDocumentId;
 
 	void _CtorMisc(string linkTarget)
 	{
@@ -235,15 +236,9 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 
 	/// <summary>
 	/// File name with or without extension.
-	/// If is script and ends with ".cs", returns without extension.
+	/// If ends with ".cs", returns without extension.
 	/// </summary>
-	public string DisplayName {
-		get {
-			if(_displayName != null) return _displayName;
-			if(!IsScript || !_name.Ends(".cs", true)) return _name;
-			return _displayName = _name.RemoveSuffix(3);
-		}
-	}
+	public string DisplayName => _displayName ?? (_displayName = _name.RemoveSuffix(".cs", true));
 
 	/// <summary>
 	/// Unique id in this workspace. To find faster, with database, etc.
@@ -603,6 +598,8 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	#endregion
 
 	#region Au.Compiler.IWorkspaceFile
+
+	public string IfwText => GetText();
 
 	public IWorkspaceFiles IwfWorkspace => _model;
 
@@ -992,7 +989,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		var type = EFileType.NotCodeFile;
 		if(path.Ends(".cs", true)) {
 			type = EFileType.Class;
-			try { if(AFile.LoadText(path).Contains("//{{ main")) type = EFileType.Script; }
+			try { if(AFile.LoadText(path).Regex(@"\bclass Script\s*:\s*AScript\b")) type = EFileType.Script; }//TODO: test
 			catch(Exception ex) { ADebug.Print(ex); }
 		}
 		return type;

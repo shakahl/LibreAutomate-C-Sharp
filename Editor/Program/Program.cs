@@ -102,7 +102,7 @@ static class Program
 	public static FMain MainForm;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
-	public static CodeAssist Codea;
+	public static CodeInfo Codein;
 	public static string UserGuid;
 	public const string AppName = "QM3";
 

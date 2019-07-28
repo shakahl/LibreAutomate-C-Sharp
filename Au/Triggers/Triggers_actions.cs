@@ -185,6 +185,9 @@ namespace Au.Triggers
 				try {
 					_MuteMod(ref muteMod);
 
+					string sTrigger = null;
+					if(ATask.Role == ATRole.MiniProgram) LibLog.Run.Write($"Trigger action started. Trigger: {sTrigger = trigger.ToString()}");
+
 					AOpt.Reset();
 
 					var baArgs = new TOBAArgs(args); //struct
@@ -199,8 +202,17 @@ namespace Au.Triggers
 						opt.before(!called);
 					}
 #endif
-					try { trigger.Run(args); }
-					catch(Exception ex) when(!(ex is ThreadAbortException)) { baArgs.Exception = ex; Print(ex); }
+					try {
+						trigger.Run(args);
+
+						if(sTrigger != null) LibLog.Run.Write($"Trigger action ended. Trigger: {sTrigger}");
+					}
+					catch(Exception ex) when(!(ex is ThreadAbortException)) {
+						if(sTrigger != null) LibLog.Run.Write($"Unhandled exception in trigger action. Trigger: {sTrigger}. Exception: {ex.ToStringWithoutStack()}");
+
+						baArgs.Exception = ex;
+						Print(ex);
+					}
 					opt.after?.Invoke(baArgs);
 				}
 				catch(Exception e2) {

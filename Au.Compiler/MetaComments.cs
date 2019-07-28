@@ -12,12 +12,14 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Linq;
+using System.Linq;
 //using System.Xml.Linq;
 
 using Au;
 using Au.Types;
 using static Au.AStatic;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Au.Compiler
 {
@@ -394,7 +396,7 @@ namespace Au.Compiler
 		/// <param name="isMain">If false, it is a file added through meta option 'c'.</param>
 		void _ParseFile(IWorkspaceFile f, bool isMain)
 		{
-			string code = AFile.LoadText(f.FilePath);
+			string code = f.IfwText;
 			bool isScript = f.IsScript;
 
 			if(_isMain = isMain) {
@@ -419,7 +421,11 @@ namespace Au.Compiler
 			if(!FindMetaComments(code, out int endOf)) return;
 			if(isMain) EndOfMeta = endOf;
 
-			foreach(var t in EnumOptions(code, endOf)) _ParseOption(t.Name(), t.Value(), t.nameStart, t.valueStart);
+			foreach(var t in EnumOptions(code, endOf)) {
+				//var p1 = APerf.StartNew();
+				_ParseOption(t.Name(), t.Value(), t.nameStart, t.valueStart);
+				//p1.Next(); var t1 = p1.TimeTotal; if(t1 > 5) Print(t1, t.Name(), t.Value());
+			}
 		}
 
 		bool _isMain;
@@ -430,6 +436,7 @@ namespace Au.Compiler
 		{
 			//Print(name, value);
 			if(value.Length == 0) { _Error(iValue, "value cannot be empty"); return; }
+			bool forCodeInfo = 0 != (_flags & EMPFlags.ForCodeInfo);
 
 			switch(name) {
 			case "r":
@@ -457,10 +464,12 @@ namespace Au.Compiler
 				_filesC.Add(ff);
 				return;
 			case "resource":
-				var fs1 = _GetFileAndString(value, iValue); if(fs1.f == null) return;
-				if(Resources == null) Resources = new List<MetaFileAndString>();
-				else if(Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) return;
-				Resources.Add(fs1);
+				if(!forCodeInfo) {
+					var fs1 = _GetFileAndString(value, iValue); if(fs1.f == null) return;
+					if(Resources == null) Resources = new List<MetaFileAndString>();
+					else if(Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) return;
+					Resources.Add(fs1);
+				}
 				return;
 				//FUTURE: support wildcard:
 				// resource *.png //add to managed resources all matching files in this C# file's folder.
@@ -491,14 +500,6 @@ namespace Au.Compiler
 				Specified |= EMSpecified.noWarnings;
 				NoWarnings.AddRange(value.SegSplit(", ", SegFlags.NoEmpty));
 				break;
-			case "preBuild":
-				_Specified(EMSpecified.preBuild, iName);
-				PreBuild = _GetFileAndString(value, iValue);
-				break;
-			case "postBuild":
-				_Specified(EMSpecified.postBuild, iName);
-				PostBuild = _GetFileAndString(value, iValue);
-				break;
 			case "role":
 				_Specified(EMSpecified.role, iName);
 				if(_Enum(out ERole ro, value, iValue)) {
@@ -506,60 +507,73 @@ namespace Au.Compiler
 					if(IsScript && (ro == ERole.classFile || Role == ERole.classLibrary)) _Error(iValue, "role classFile and classLibrary can be only in class files");
 				}
 				break;
-			case "outputPath":
-				_Specified(EMSpecified.outputPath, iName);
-				OutputPath = _GetOutPath(value, iValue); //and creates directory if need
-				break;
-			case "runMode":
-				_Specified(EMSpecified.runMode, iName);
-				if(_Enum(out ERunMode rm, value, iValue)) RunMode = rm;
-				break;
-			case "ifRunning":
-				_Specified(EMSpecified.ifRunning, iName);
-				if(_Enum(out EIfRunning ifR, value, iValue)) IfRunning = ifR;
-				break;
-			case "uac":
-				_Specified(EMSpecified.uac, iName);
-				if(_Enum(out EUac uac, value, iValue)) Uac = uac;
-				break;
-			case "prefer32bit":
-				_Specified(EMSpecified.prefer32bit, iName);
-				if(_TrueFalse(out bool is32, value, iValue)) Prefer32Bit = is32;
-				break;
-			case "console":
-				_Specified(EMSpecified.console, iName);
-				if(_TrueFalse(out bool con, value, iValue)) Console = con;
-				break;
-			case "config":
-				_Specified(EMSpecified.config, iName);
-				ConfigFile = _GetFile(value, iValue);
-				break;
-			case "manifest":
-				_Specified(EMSpecified.manifest, iName);
-				ManifestFile = _GetFile(value, iValue);
-				break;
-			case "icon":
-				_Specified(EMSpecified.icon, iName);
-				IconFile = _GetFile(value, iValue);
-				break;
-			case "resFile":
-				_Specified(EMSpecified.resFile, iName);
-				ResFile = _GetFile(value, iValue);
-				break;
-			case "sign":
-				_Specified(EMSpecified.sign, iName);
-				SignFile = _GetFile(value, iValue);
-				break;
-			case "xmlDoc":
-				_Specified(EMSpecified.xmlDoc, iName);
-				XmlDocFile = value;
-				break;
-			//case "targetFramework": //need to use references of that framework? Where to get them at run time? Or just add [assembly: TargetFramework(...)]?
-			//	break;
-			//case "version": //will be auto-created from [assembly: AssemblyVersion] etc
-			//	break;
 			default:
-				_Error(iName, "unknown meta option");
+				if(forCodeInfo) break;
+				switch(name) {
+				case "preBuild":
+					_Specified(EMSpecified.preBuild, iName);
+					PreBuild = _GetFileAndString(value, iValue);
+					break;
+				case "postBuild":
+					_Specified(EMSpecified.postBuild, iName);
+					PostBuild = _GetFileAndString(value, iValue);
+					break;
+				case "outputPath":
+					_Specified(EMSpecified.outputPath, iName);
+					OutputPath = _GetOutPath(value, iValue); //and creates directory if need
+					break;
+				case "runMode":
+					_Specified(EMSpecified.runMode, iName);
+					if(_Enum(out ERunMode rm, value, iValue)) RunMode = rm;
+					break;
+				case "ifRunning":
+					_Specified(EMSpecified.ifRunning, iName);
+					if(_Enum(out EIfRunning ifR, value, iValue)) IfRunning = ifR;
+					break;
+				case "uac":
+					_Specified(EMSpecified.uac, iName);
+					if(_Enum(out EUac uac, value, iValue)) Uac = uac;
+					break;
+				case "prefer32bit":
+					_Specified(EMSpecified.prefer32bit, iName);
+					if(_TrueFalse(out bool is32, value, iValue)) Prefer32Bit = is32;
+					break;
+				case "console":
+					_Specified(EMSpecified.console, iName);
+					if(_TrueFalse(out bool con, value, iValue)) Console = con;
+					break;
+				case "config":
+					_Specified(EMSpecified.config, iName);
+					ConfigFile = _GetFile(value, iValue);
+					break;
+				case "manifest":
+					_Specified(EMSpecified.manifest, iName);
+					ManifestFile = _GetFile(value, iValue);
+					break;
+				case "icon":
+					_Specified(EMSpecified.icon, iName);
+					IconFile = _GetFile(value, iValue);
+					break;
+				case "resFile":
+					_Specified(EMSpecified.resFile, iName);
+					ResFile = _GetFile(value, iValue);
+					break;
+				case "sign":
+					_Specified(EMSpecified.sign, iName);
+					SignFile = _GetFile(value, iValue);
+					break;
+				case "xmlDoc":
+					_Specified(EMSpecified.xmlDoc, iName);
+					XmlDocFile = value;
+					break;
+				//case "targetFramework": //need to use references of that framework? Where to get them at run time? Or just add [assembly: TargetFramework(...)]?
+				//	break;
+				//case "version": //will be auto-created from [assembly: AssemblyVersion] etc
+				//	break;
+				default:
+					_Error(iName, "unknown meta option");
+					break;
+				}
 				break;
 			}
 
@@ -637,7 +651,7 @@ namespace Au.Compiler
 			var f = _GetFile(value, iValue); if(f == null) return false;
 			if(f.IwfFindProject(out var projFolder, out var projMain)) f = projMain;
 			foreach(var v in CodeFiles) if(v.f == f) return _Error(iValue, "circular reference");
-			if(!Compiler.Compile(false, out var r, f, projFolder)) return _Error(iValue, "failed to compile library");
+			if(!Compiler.Compile(ECompReason.CompileIfNeed, out var r, f, projFolder)) return _Error(iValue, "failed to compile library");
 			//Print(r.role, r.file);
 			if(r.role != ERole.classLibrary) return _Error(iValue, "it is not a class library (no meta role classLibrary)");
 			value = r.file;
@@ -679,6 +693,32 @@ namespace Au.Compiler
 			}
 
 			return true;
+		}
+
+		public CSharpCompilationOptions CreateCompilationOptions()
+		{
+			OutputKind oKind = OutputKind.WindowsApplication;
+			if(Role == ERole.classLibrary || Role == ERole.classFile) oKind = OutputKind.DynamicallyLinkedLibrary;
+			else if(Console) oKind = OutputKind.ConsoleApplication;
+
+			return new CSharpCompilationOptions(
+			   oKind,
+			   optimizationLevel: Optimize ? OptimizationLevel.Release : OptimizationLevel.Debug, //speed: compile the same, load Release slightly slower. Default Debug.
+			   allowUnsafe: true,
+			   platform: Prefer32Bit ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
+			   warningLevel: WarningLevel,
+			   specificDiagnosticOptions: NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(AChar.IsAsciiDigit(wa[0]) ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
+			   cryptoKeyFile: SignFile?.FilePath, //also need strongNameProvider
+			   strongNameProvider: SignFile == null ? null : new DesktopStrongNameProvider()
+			   );
+		}
+
+		public CSharpParseOptions CreateParseOptions()
+		{
+			return new CSharpParseOptions(LanguageVersion.Preview, //CONSIDER: maybe later use .Latest, when C# 8 final available. In other place too.
+				XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None,
+				SourceCodeKind.Regular,
+				Defines);
 		}
 
 		/// <summary>
@@ -770,10 +810,16 @@ namespace Au.Compiler
 		/// </summary>
 		PrintErrors = 1,
 
+		/// <summary>
+		/// Used for code info, not when compiling.
+		/// Ignores meta such as run options (ifRunning etc) and non-code/reference files (resource etc).
+		/// </summary>
+		ForCodeInfo = 2,
+
 		///// <summary>
 		///// Used for file Properties dialog etc, not when compiling.
 		///// </summary>
-		//ForFileProperties = 2,
+		//ForFileProperties = ,
 	}
 
 	[Flags]

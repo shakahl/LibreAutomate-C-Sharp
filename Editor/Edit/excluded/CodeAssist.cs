@@ -99,14 +99,13 @@ class CodeAssist
 	void _ShowCompletions(PanelEdit.SciCode doc, char ch, bool ctrlSpace)
 	{
 		var text = doc.Text;
-		var posBytes = doc.ST.CurrentPos;
-		var posChars = doc.ST.CountBytesToChars(posBytes);
+		var position = doc.ST.CurrentPosChars;
 		var f = doc.FN;
 		var document = _ws.CurrentSolution.GetDocument(f.CaDocumentId);
 
 		var completionService = CompletionService.GetService(document);
 		var trigger = ctrlSpace ? default : CompletionTrigger.CreateInsertionTrigger(ch);
-		var all = completionService.GetCompletionsAsync(document, posChars, trigger).Result;
+		var all = completionService.GetCompletionsAsync(document, position, trigger).Result;
 		//var all = completionService.GetCompletionsAsync(_document, posChars).Result;
 
 		if(all == null) return;

@@ -151,7 +151,6 @@
 			this._bAddComBrowse.Size = new System.Drawing.Size(72, 24);
 			this._bAddComBrowse.TabIndex = 8;
 			this._bAddComBrowse.Text = "Browse...";
-			this._bAddComBrowse.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddComBrowse.Click += new System.EventHandler(this._bAddComBrowse_Click);
 			// 
 			// label3
@@ -188,7 +187,6 @@
 			this._bAddBrowseNet.Size = new System.Drawing.Size(72, 24);
 			this._bAddBrowseNet.TabIndex = 1;
 			this._bAddBrowseNet.Text = ".NET...";
-			this._bAddBrowseNet.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddBrowseNet.Click += new System.EventHandler(this._bAddBrowse_Click);
 			// 
 			// _bAddBrowseOther
@@ -198,7 +196,6 @@
 			this._bAddBrowseOther.Size = new System.Drawing.Size(72, 24);
 			this._bAddBrowseOther.TabIndex = 1;
 			this._bAddBrowseOther.Text = "Other...";
-			this._bAddBrowseOther.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddBrowseOther.Click += new System.EventHandler(this._bAddBrowse_Click);
 			// 
 			// _bAddGacNewest
@@ -208,7 +205,6 @@
 			this._bAddGacNewest.Size = new System.Drawing.Size(72, 24);
 			this._bAddGacNewest.TabIndex = 1;
 			this._bAddGacNewest.Text = "Newest...";
-			this._bAddGacNewest.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddGacNewest.Click += new System.EventHandler(this._bAddGac_Click);
 			// 
 			// _bAddGacVersion
@@ -218,7 +214,6 @@
 			this._bAddGacVersion.Size = new System.Drawing.Size(72, 24);
 			this._bAddGacVersion.TabIndex = 1;
 			this._bAddGacVersion.Text = "Version...";
-			this._bAddGacVersion.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddGacVersion.Click += new System.EventHandler(this._bAddGac_Click);
 			// 
 			// _bAddMyLibraryProject
@@ -228,7 +223,6 @@
 			this._bAddMyLibraryProject.Size = new System.Drawing.Size(144, 24);
 			this._bAddMyLibraryProject.TabIndex = 1;
 			this._bAddMyLibraryProject.Text = "Library project...";
-			this._bAddMyLibraryProject.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddMyLibraryProject.Click += new System.EventHandler(this._bAddMyLibraryProject_Click);
 			// 
 			// _bAddComRegistry
@@ -238,7 +232,6 @@
 			this._bAddComRegistry.Size = new System.Drawing.Size(72, 24);
 			this._bAddComRegistry.TabIndex = 1;
 			this._bAddComRegistry.Text = "Registry...";
-			this._bAddComRegistry.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddComRegistry.Click += new System.EventHandler(this._bAddComRegistry_Click);
 			// 
 			// groupBox2
@@ -259,7 +252,6 @@
 			this._bAddClass.Size = new System.Drawing.Size(80, 24);
 			this._bAddClass.TabIndex = 1;
 			this._bAddClass.Text = "Class file...";
-			this._bAddClass.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddClass.Click += new System.EventHandler(this._bAddClass_Click);
 			// 
 			// _bAddResource
@@ -269,7 +261,6 @@
 			this._bAddResource.Size = new System.Drawing.Size(80, 24);
 			this._bAddResource.TabIndex = 1;
 			this._bAddResource.Text = "Resource...";
-			this._bAddResource.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
 			this._bAddResource.Click += new System.EventHandler(this._bAddResource_Click);
 			// 
 			// FProperties

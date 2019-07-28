@@ -93,6 +93,10 @@ partial class FMain : Form
 			Panels.Files.OpenDocuments();
 
 			Program.Loaded = EProgramState.LoadedUI;
+			Load?.Invoke(this, EventArgs.Empty);
+
+			Program.Codein.UiLoaded();
+
 #if TEST
 			ATimer.After(1, () => {
 				var s = CommandLine.TestArg;
@@ -111,6 +115,12 @@ partial class FMain : Form
 
 		base.OnVisibleChanged(e);
 	}
+
+	/// <summary>
+	/// When first time showing this form.
+	/// Documents are open, etc.
+	/// </summary>
+	public new event EventHandler Load;
 
 	protected override void OnFormClosed(FormClosedEventArgs e)
 	{
@@ -164,12 +174,7 @@ partial class FMain : Form
 				if(sc == Api.SC_CLOSE && Visible && !Program.Settings.GetBool("_alwaysVisible")) {
 					this.WindowState = FormWindowState.Minimized;
 					this.Visible = false;
-					ThreadPool.QueueUserWorkItem(_ => {
-						500.ms();
-						GC.Collect();
-						GC.WaitForPendingFinalizers();
-						Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1);
-					});
+					EdUtil.MinimizeProcessPhysicalMemory(500);
 					return;
 					//initially this code was in OnFormClosing, but sometimes hides instead of closing, because .NET gives incorrect CloseReason. Cannot reproduce and debug.
 				}
@@ -273,7 +278,6 @@ static class Panels
 	public static PanelFiles Files;
 	public static PanelOpen Open;
 	public static PanelRunning Running;
-	public static PanelRecent Recent;
 	public static PanelOutput Output;
 	public static PanelFind Find;
 	public static PanelFound Found;
@@ -285,7 +289,6 @@ static class Panels
 		Files = new PanelFiles();
 		Open = new PanelOpen();
 		Running = new PanelRunning();
-		Recent = new PanelRecent();
 		Output = new PanelOutput();
 		Find = new PanelFind();
 		Found = new PanelFound();
@@ -298,7 +301,7 @@ static class Panels
 		var m = PanelManager = new AuDockPanel();
 		m.Name = "Panels";
 		m.Create(AFolders.ThisAppBS + @"Default\Panels.xml", AFolders.ThisAppDocuments + @"!Settings\Panels.xml",
-			Editor, Files, Find, Found, Output, Open, Running, Recent,
+			Editor, Files, Find, Found, Output, Open, Running,
 			//#if TEST
 			//			c,
 			//#endif
@@ -311,7 +314,6 @@ static class Panels
 		m.GetPanel(Found).Init("Results of find");
 		m.GetPanel(Files).Init("All files of this workspace", focusable: true);
 		m.GetPanel(Running).Init("Running tasks");
-		m.GetPanel(Recent).Init("Recent tasks");
 		m.FocusControlOnUndockEtc = Editor;
 		//#if TEST
 		//		m.GetPanel(c).Init("New panel", EdResources.GetImageUseCache("paste"));

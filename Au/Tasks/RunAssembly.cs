@@ -25,7 +25,7 @@ namespace Au
 	/// <summary>
 	/// Used by other Au projects to execute a script assembly.
 	/// </summary>
-	internal unsafe class RunAssembly
+	static unsafe class RunAssembly
 	{
 		/// <summary>
 		/// Executes assembly in this appdomain in this thread. Must be main appdomain.
@@ -38,7 +38,8 @@ namespace Au
 		[HandleProcessCorruptedStateExceptions]
 		public static void Run(string asmFile, string[] args, int pdbOffset, RAFlags flags = 0)
 		{
-			bool findLoaded = 0 != (flags & RAFlags.InEditorThread);
+			bool inEditorThread = 0 != (flags & RAFlags.InEditorThread);
+			bool findLoaded = inEditorThread;
 			_LoadedScriptAssembly lsa = default;
 			Assembly asm = findLoaded ? lsa.Find(asmFile) : null;
 			if(asm == null) {
@@ -57,13 +58,13 @@ namespace Au
 					}
 					catch(Exception ex) { bPdb = null; ADebug.Print(ex); } //not very important
 				}
+				//APerf.First();
 				asm = Assembly.Load(bAsm, bPdb);
+				//APerf.NW(); //without AV 7 ms. With Windows Defender 10 ms, but first time 20-900 ms.
 				if(findLoaded) lsa.Add(asmFile, asm);
 
-				//never mind: it's possible that we load newer compiled assembly version of script than intended.
+				//never mind: it's possible that we load a newer compiled assembly version of script than intended.
 			}
-
-			ATask.Role = 0 != (flags & RAFlags.InEditorThread) ? ATRole.EditorExtension : ATRole.MiniProgram; //default ExeProgram
 
 			try {
 				var entryPoint = asm.EntryPoint ?? throw new InvalidOperationException("assembly without entry point (function Main)");
@@ -73,14 +74,21 @@ namespace Au
 					if(args == null) args = Array.Empty<string>();
 				}
 
+				if(!inEditorThread) LibLog.Run.Write($"Task started.");
+
 				if(useArgs) {
 					entryPoint.Invoke(null, new object[] { args });
 				} else {
 					entryPoint.Invoke(null, null);
 				}
+
+				if(!inEditorThread) LibLog.Run.Write($"Task ended.");
 			}
 			catch(TargetInvocationException te) {
 				var e = te.InnerException;
+
+				if(!inEditorThread) LibLog.Run.Write($"Unhandled exception: {e.ToStringWithoutStack()}");
+
 				if(0 != (flags & RAFlags.DontHandleExceptions)) throw e;
 				//Print(e);
 				AScript.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
@@ -140,8 +148,9 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	/// This class adds these features:
-	/// 1. Static constructor subscribes to <see cref="AppDomain.UnhandledException"/> event. On unhandled exception prints exception info. Without this class not all unhandled exceptions would be printed.
-	/// 2. Provides function OnUnhandledException. The script can override it.
+	/// 1. The static constructor subscribes to the <see cref="AppDomain.UnhandledException"/> event. On unhandled exception prints exception info. Without this class not all unhandled exceptions would be printed.
+	/// 2. Provides function <see cref="OnUnhandledException"/>. The script can override it.
+	/// 3. Provides property <see cref="Triggers"/>.
 	/// 
 	/// More features may be added in the future.
 	/// </remarks>
@@ -149,6 +158,7 @@ namespace Au.Types
 	{
 		static AScript()
 		{
+			//Print("static AScript"); //note: static ctor of inherited class is called BEFORE this. Never mind.
 			AppDomain.CurrentDomain.UnhandledException += (ad, e) => {
 				if((ad as AppDomain).Id != AppDomain.CurrentDomain.Id) return; //avoid printing twice if subscribed in main and other appdomain
 				OnHostHandledException(e);
@@ -212,7 +222,7 @@ namespace Au.Types
 	/// Flags for <see cref="RunAssembly.Run"/>.
 	/// </summary>
 	[Flags]
-	internal enum RAFlags
+	enum RAFlags
 	{
 		InEditorThread = 1,
 		DontHandleExceptions = 2,

@@ -94,7 +94,7 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="pcre2_substitute.c">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\excluded</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

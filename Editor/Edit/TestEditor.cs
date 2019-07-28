@@ -21,6 +21,10 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
 using static Au.Controls.Sci;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.Completion;
+using Au.Compiler;
 //using Au.Intellisense;
 //using DiffMatchPatch;
 
@@ -34,8 +38,357 @@ partial class FMain
 {
 	//CaCompletion _compl;
 
+	//NLog.Logger _log;
+
+	//[MethodImpl(MethodImplOptions.NoInlining)]
+	//void _TestNLog()
+	//{
+	//	APerf.Next();
+	//	if(_log == null) {
+	//		var config = new NLog.Config.LoggingConfiguration();
+	//		var logfile = new NLog.Targets.FileTarget("logfile") { FileName = @"Q:\test\run.log" };
+	//		config.AddRule(NLog.LogLevel.Info, NLog.LogLevel.Fatal, logfile);
+	//		config.
+	//		NLog.LogManager.Configuration = config;
+	//		_log = NLog.LogManager.GetLogger("Au.Editor");
+	//		APerf.Next();
+	//	}
+
+	//	_log.Info("one\r\ntwo");
+	//	APerf.NW();
+
+	//}
+
+	//FileStream _log;
+
+
+	private MetadataReference mscorlib;
+
+	private MetadataReference Mscorlib {
+		get {
+			if(mscorlib == null) {
+				mscorlib = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
+			}
+
+			return mscorlib;
+		}
+	}
+
+	public void GetInScopeSymbols()
+	{
+		string source = @"
+class C
+{
+}
+class Program
+{
+    private static int i = 0;
+    public static void Main()
+    {
+        int j = 0; j += i;
+ 
+        // What symbols are in scope here?
+    }
+}";
+		// Get position of the comment above.
+		int position = source.IndexOf("//");
+
+		var doc = Panels.Editor.ActiveDoc;
+		source = doc.Text;
+		position = doc.ST.CurrentPosChars;
+
+		APerf.First();
+		//var mr = new[] { Mscorlib };
+		var mr = new Au.Compiler.MetaReferences().Refs;
+		APerf.Next();
+		SyntaxTree tree = SyntaxFactory.ParseSyntaxTree(source);
+		CSharpCompilation compilation = CSharpCompilation.Create("MyCompilation",
+			syntaxTrees: new[] { tree }, references: mr);
+		SemanticModel model = compilation.GetSemanticModel(tree);
+
+		// Get 'all' symbols that are in scope at the above position. 
+		System.Collections.Immutable.ImmutableArray<ISymbol> symbols = model.LookupSymbols(position);
+		APerf.NW();
+
+		// Note: "Windows" only appears as a symbol at this location in Windows 8.1.
+		//string results = string.Join("\r\n", symbols
+		//	//.Where(symbol => symbol.Kind!= SymbolKind.NamedType)
+		//	//.Select(symbol => symbol.ToDisplayString() + "    " + symbol.Kind)
+		//	//.Select(symbol => symbol.Name + "    " + symbol.Kind + "    " + symbol.ContainingType?.Name)
+		//	.Select(symbol => symbol.MetadataName)
+		//	.OrderBy(s => s, StringComparer.Ordinal));
+
+		var a = new List<string>();
+		foreach(var v in symbols) {
+			var s = v.MetadataName;
+			int i = s.IndexOf('`');
+			if(i > 0) {
+				s = v.Name + "<>";
+				if(a.Contains(s)) continue;
+			}
+			a.Add(s);
+		}
+
+		string results = string.Join("\r\n", a.OrderBy(s => s, StringComparer.OrdinalIgnoreCase));
+
+		Print(results);
+		return;
+		//		Assert.Equal(@"C
+		//j
+		//Microsoft
+		//object.~Object()
+		//object.Equals(object)
+		//object.Equals(object, object)
+		//object.GetHashCode()
+		//object.GetType()
+		//object.MemberwiseClone()
+		//object.ReferenceEquals(object, object)
+		//object.ToString()
+		//Program
+		//Program.i
+		//Program.Main()
+		//System", results);
+
+		// Filter results - get everything except instance members.
+		symbols = model.LookupStaticMembers(position);
+
+		// Note: "Windows" only appears as a symbol at this location in Windows 8.1.
+		results = string.Join("\r\n", symbols.Select(symbol => symbol.ToDisplayString()).Where(s => s != "Windows").OrderBy(s => s));
+
+		Print("----");
+		Print(results);
+		//		Assert.Equal(@"C
+		//j
+		//Microsoft
+		//object.Equals(object, object)
+		//object.ReferenceEquals(object, object)
+		//Program
+		//Program.i
+		//Program.Main()
+		//System", results);
+
+		// Filter results by looking at Kind of returned symbols (only get locals and fields).
+		results = string.Join("\r\n", symbols
+			.Where(symbol => symbol.Kind == SymbolKind.Local || symbol.Kind == SymbolKind.Field)
+			.Select(symbol => symbol.ToDisplayString()).OrderBy(s => s));
+
+		Print("----");
+		Print(results);
+		//		Assert.Equal(@"j
+		//Program.i", results);
+	}
+
+	void _TestWorkspaces()
+	{
+		var doc = Panels.Editor.ActiveDoc;
+		var source = doc.Text;
+		var position = doc.ST.CurrentPosChars;
+
+		APerf.First();
+		//var mr = new[] { Mscorlib };
+		var mr = new MetaReferences().Refs;
+		APerf.Next();
+
+		ProjectId project1Id = ProjectId.CreateNewId();
+		DocumentId document1Id = DocumentId.CreateNewId(project1Id);
+
+		Solution solution = new AdhocWorkspace().CurrentSolution
+			.AddProject(project1Id, "Project1", "Project1", LanguageNames.CSharp)
+			.AddMetadataReferences(project1Id, mr)
+			.AddDocument(document1Id, "File1.cs", source);
+		APerf.Next();
+
+		var document = solution.GetDocument(document1Id);
+		var completionService = CompletionService.GetService(document);
+		APerf.Next();
+		var all = completionService.GetCompletionsAsync(document, position).Result;
+		APerf.NW();
+		if(all == null) return;
+		Print(all.Items);
+	}
+
+	void _TestWorkspaces2()
+	{
+		var doc = Panels.Editor.ActiveDoc;
+		var source = doc.Text;
+		var position = doc.ST.CurrentPosChars;
+
+		var mr = new MetaReferences();
+		APerf.Next();
+
+		ProjectId project1Id = ProjectId.CreateNewId();
+		DocumentId document1Id = DocumentId.CreateNewId(project1Id);
+
+		Solution solution = new AdhocWorkspace().CurrentSolution
+			.AddProject(project1Id, "Project1", "Project1", LanguageNames.CSharp)
+			.AddMetadataReferences(project1Id, mr.Refs)
+			.AddDocument(document1Id, "File1.cs", source);
+		APerf.Next();
+
+		var document = solution.GetDocument(document1Id);
+		var completionService = CompletionService.GetService(document);
+		APerf.Next();
+		var all = completionService.GetCompletionsAsync(document, position).Result;
+		APerf.NW();
+		if(all == null) return;
+		Print(all.Items);
+	}
+
+	void _TestWorkspaces3()
+	{
+		//GC.Collect(); GC.WaitForPendingFinalizers();
+
+		APerf.First();
+		var sol = new AdhocWorkspace().CurrentSolution;
+		APerf.NW();
+
+		APerf.Incremental = true;
+		var hsDone = new HashSet<FileNode>();
+		var adi = new List<DocumentInfo>();
+		foreach(var f0 in Program.Model.Root.Descendants()) {
+			var f = f0;
+			if(!f.IsCodeFile) continue;
+			if(f.Name == "5 M lines.cs") continue;
+			if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
+			if(hsDone.Contains(f)) continue;
+			hsDone.Add(f);
+			//Print(f.ItemPath);
+
+			APerf.First();
+			var m = new MetaComments();
+			if(!m.Parse(f, projFolder, EMPFlags.ForCodeInfo | EMPFlags.PrintErrors)) continue;
+			var err = m.Errors;
+			APerf.Next();
+
+			ProjectId projectId = ProjectId.CreateNewId();
+			adi.Clear();
+			foreach(var f1 in m.CodeFiles) {
+				var tav = TextAndVersion.Create(Microsoft.CodeAnalysis.Text.SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
+				var di = DocumentInfo.Create(DocumentId.CreateNewId(projectId), f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav));
+				adi.Add(di);
+			}
+			var pi = ProjectInfo.Create(projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
+				m.CreateCompilationOptions(), m.CreateParseOptions(), adi,
+				projectReferences: null, //TODO: create from m.ProjectReferences?
+				m.References.Refs); //TODO: set outputRefFilePath if library?
+			sol = sol.AddProject(pi);
+
+			APerf.Next();
+
+		}
+
+		APerf.Write();
+
+		//foreach(var proj in sol.Projects) {
+		//	Print(proj.Name);
+		//	var a = proj.Documents.ToArray();
+		//	if(a.Length != 1) {
+		//		Print("-- docs --");
+		//		foreach(var v in a) Print("\t" + v.Name);
+		//	}
+		//}
+
+		//MetaReferences.DebugPrintCachedRefs();
+	}
+
+	void _TestWorkspaces4()
+	{
+		var doc = Panels.Editor.ActiveDoc;
+		var f = doc.FN;
+		if(!f.IsCodeFile) return;
+		var f0 = f;
+		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
+
+		APerf.First();
+		var sol = new AdhocWorkspace().CurrentSolution;
+		APerf.Next();
+
+		var m = new MetaComments();
+		if(!m.Parse(f, projFolder, EMPFlags.ForCodeInfo)) {
+			var err = m.Errors;
+			err.PrintAll();
+			return;
+		}
+		APerf.Next();
+
+		DocumentId documentId = null;
+		ProjectId projectId = ProjectId.CreateNewId();
+		var adi = new List<DocumentInfo>();
+		foreach(var f1 in m.CodeFiles) {
+			var docId = DocumentId.CreateNewId(projectId);
+			var tav = TextAndVersion.Create(Microsoft.CodeAnalysis.Text.SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
+			adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav)));
+			if(f1.f == f0) {
+				documentId = docId;
+			}
+		}
+		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
+			m.CreateCompilationOptions(), m.CreateParseOptions(), adi,
+			projectReferences: null, //TODO: create from m.ProjectReferences?
+			m.References.Refs); //TODO: set outputRefFilePath if library?
+		sol = sol.AddProject(pi);
+
+		APerf.Next();
+
+		//var source = doc.Text;
+		var document = sol.GetDocument(documentId);
+		var completionService = CompletionService.GetService(document);
+		APerf.Next();
+		var position = doc.ST.CurrentPosChars;
+		var all = completionService.GetCompletionsAsync(document, position).Result;
+		APerf.NW();
+		if(all == null) return;
+		Print(all.Items);
+
+	}
+
+	//class _TextLoader : TextLoader
+	//{
+	//	FileNode _f;
+	//	public _TextLoader(FileNode f) => _f = f;
+	//	public override Task<TextAndVersion> LoadTextAndVersionAsync(Workspace workspace, DocumentId documentId, CancellationToken cancellationToken)
+	//	{
+	//		return new Task<TextAndVersion>(() => TextAndVersion.Create(Microsoft.CodeAnalysis.Text.SourceText.From(_f.GetText(), Encoding.UTF8), VersionStamp.Default, _f.FilePath));
+	//	}
+	//}
+
 	public unsafe void TestEditor()
 	{
+		AOutput.Clear();
+		_TestWorkspaces4();
+
+		//switch(ADialog.ShowList("Raw|Workspaces")) {
+		//case 1:
+		//	GetInScopeSymbols();
+		//	break;
+		//case 2:
+		//	_TestWorkspaces();
+		//	break;
+		//}
+
+		//ARegex.AddReplaceFunc("Upper", m => m.Value.Upper());
+		return;
+
+
+		//APerf.First();
+		//_TestNLog();
+
+		//var file = AFolders.ThisAppTemp + "run.log";
+		//_log?.Close();
+		////_log = new FileStream(file, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite, 4096, FileOptions.DeleteOnClose);
+		//_log = new FileStream(file, FileMode.Create, FileAccess.ReadWrite, FileShare.ReadWrite);
+		////_log = new FileStream(file, FileMode.Append, FileAccess.Write, FileShare.Write);
+		////_log.Seek(0, SeekOrigin.End);
+		////_log.Flush()
+
+		//using var mutex = new Mutex(false, "testLogFile");
+		//	mutex.WaitOne();
+
+
+		//	mutex.ReleaseMutex();
+
+		return;
+
 
 		AOutput.Clear();
 
@@ -172,18 +525,14 @@ partial class FMain
 		//Au.Triggers.ActionTriggers.DisabledEverywhere ^= true;
 
 		//		var s1 = @"//{{
-		////{{ using
-		//using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}
-		////{{ main
-		//class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
+		//using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
+		//class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}
 		//";
 		//		var s2 = @"/*/ role exeProgram; outputPath %AFolders.Workspace%\bin; console true; /*/ //{{
-		////{{ using
-		//using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}
+		//using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
 		//using My.NS1; //ąčę îôû
 		//using My.NS2;
-		////{{ main
-		//class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
+		//class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}
 		//";
 
 		//		var dmp = new diff_match_patch();

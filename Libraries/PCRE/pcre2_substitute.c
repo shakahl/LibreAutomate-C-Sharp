@@ -213,13 +213,11 @@ length. */
 
 /* Here's the function */
 
-//au: added parameter: , int(*callout)(pcre2_callout_block *, void *)
-
 PCRE2_EXP_DEFN int PCRE2_CALL_CONVENTION
 pcre2_substitute(const pcre2_code *code, PCRE2_SPTR subject, PCRE2_SIZE length,
   PCRE2_SIZE start_offset, uint32_t options, pcre2_match_data *match_data,
   pcre2_match_context *mcontext, PCRE2_SPTR replacement, PCRE2_SIZE rlength,
-  PCRE2_UCHAR *buffer, PCRE2_SIZE *blength, int(*callout)(pcre2_callout_block*, void*))
+  PCRE2_UCHAR *buffer, PCRE2_SIZE *blength)
 {
 int rc;
 int subs;
@@ -321,7 +319,7 @@ do
   uint32_t ptrstackptr = 0;
 
   rc = pcre2_match(code, subject, length, start_offset, options|goptions,
-    match_data, mcontext, callout);
+    match_data, mcontext, NULL);
 
 #ifdef SUPPORT_UNICODE
   if (utf) options |= PCRE2_NO_UTF_CHECK;  /* Only need to check once */

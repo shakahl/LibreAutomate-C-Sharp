@@ -1,11 +1,9 @@
 /*/ runMode blue; ifRunning restart; /*/ //{{
-//{{ using
-using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}
+using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
 using Au.Triggers; //need this for triggers
 using System.Windows.Forms; //need this for some examples in this script
 
-//{{ main
-class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}
+class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}
 
 //Triggers are used to execute parts of a running script. Not to launch scripts.
 //This script contains examples of all trigger types. The code is copied from the ActionTriggers class help topic.
@@ -75,7 +73,7 @@ tt["los"] = o => o.Replace("Los Angeles");
 tt["WIndows", TAFlags.MatchCase] = o => o.Replace("Windows");
 tt.DefaultPostfixType = TAPostfix.None;
 tt["<b>"] = o => o.Replace("<b>[[|]]</b>");
-Triggers.Options.BeforeAction = o => { Opt.Key.TextOption = KTextOption.Paste; }; //the best way to set thread-local options
+Triggers.Options.BeforeAction = o => { AOpt.Key.TextOption = KTextOption.Paste; }; //the best way to set thread-local options
 tt["#file"] = o => {
 	o.Replace("");
 	var fd = new OpenFileDialog();
@@ -108,6 +106,6 @@ Triggers.Run();
 //Triggers.Run returns when is called Triggers.Stop (see the "Ctrl+Alt+Q" trigger above).
 Print("called Triggers.Stop");
 
-//Recommended properties for scripts containg triggers: 'runMode'='blue' and 'ifRunning'='restart'. You can set it in the Properties dialog.
+//Recommended properties for scripts containg triggers: runMode blue; ifRunning restart;. You can set it in the Properties dialog.
 //The first property allows other scripts to start while this script is running.
 //The second property makes easy to restart the script after editing: just click the Run button.

@@ -96,7 +96,7 @@
 			<Edit_Cut i="cut" hkText="Ctrl+X"/>
 			<Edit_Copy i="copy" hkText="Ctrl+C"/>
 			<Edit_Paste i="paste" hkText="Ctrl+V"/>
-			<Edit_CopyForForum/>
+			<Edit_ForumCopy/>
 			<sep/>
 			<Edit_Find i="find" hk="Ctrl+F"/>
 			<Edit_FindReferences/>
@@ -132,6 +132,7 @@
 			<Run_End i="deb_end"/>
 			<Run_Pause i="back2"/>
 			<Run_Compile i="compile"/>
+			<Run_Recent t="Recent..."/>
 			<sep/>
 			<Run_DisableTriggers/>
 			<sep/>

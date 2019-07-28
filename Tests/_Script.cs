@@ -20,6 +20,7 @@ using static Au.AStatic;
 using Au.Triggers;
 using Au.Controls;
 using System.Runtime.CompilerServices;
+using System.Runtime.Caching;
 
 class Script : AScript
 {
@@ -1621,10 +1622,13 @@ class Script : AScript
 		rx = @"(\d)\d+";
 		//rx = @"(\d)(?C)\d+";
 		s = "one 12 two 34 three";
-		rep = @"$1<R>";//rep = null;
+		rep = @"$1<R>$>";//rep = null;
+
 		var x = new ARegex(rx);
 		//x.Callout = o => { Print(o.current_position); };
-		Print(x.ReplaceEx(s, rep, out s, false), s);
+
+		//Print(x.ReplaceEx(s, rep, out s, false), s);
+		Print(x.Replace(s, rep, out s), s);
 	}
 
 	void TestRegexMatchDataStack()
@@ -1644,6 +1648,108 @@ class Script : AScript
 		}
 	}
 
+	public static class Caching
+	{
+		/// <summary>
+		/// A generic method for getting and setting objects to the memory cache.
+		/// </summary>
+		/// <typeparam name="T">The type of the object to be returned.</typeparam>
+		/// <param name="cacheItemName">The name to be used when storing this object in the cache.</param>
+		/// <param name="cacheTimeMS">The cache entry will be evicted if it has not been accessed in this time (ms).</param>
+		/// <param name="objectSettingFunction">A parameterless function to call if the object isn't in the cache and you need to set it.</param>
+		/// <returns>An object of the type you asked for</returns>
+		public static T GetObjectFromCache<T>(string cacheItemName, int cacheTimeMS, Func<T> objectSettingFunction, CacheEntryRemovedCallback removedCallback = null)
+		{
+			APerf.Next();
+			ObjectCache cache = MemoryCache.Default;
+			var cachedObject = (T)cache[cacheItemName]; //~30 mcs. Why so slow?
+			if(cachedObject == null) {
+				APerf.Next();
+				CacheItemPolicy policy = new CacheItemPolicy();
+				policy.SlidingExpiration = TimeSpan.FromMilliseconds(cacheTimeMS); //bug: if eg 2000 ms, and we access every 1000 ms, expires anyway
+				policy.RemovedCallback = removedCallback;
+				cachedObject = objectSettingFunction();
+				cache.Set(cacheItemName, cachedObject, policy);
+			}
+			APerf.NW();
+			return cachedObject;
+		}
+	}
+
+	class Cached :IDisposable
+	{
+		public Cached()
+		{
+			Print("ctor");
+		}
+
+		~Cached() => Dispose(false);
+
+		public void Dispose() => Dispose(true);
+
+		protected void Dispose(bool disposing)
+		{
+			Print("dispose", disposing);
+		}
+	}
+
+	void TestMemoryCache()
+	{
+		Task.Run(() => { for(; ; ) { 200.ms(); GC.Collect(); } });
+		//_TestMemoryCache();
+		ATimer.Every(1000, () => _TestMemoryCache()); //why removes if 1000? Not if 500 or 1500.
+		ADialog.Show();
+	}
+
+	void _TestMemoryCache()
+	{
+			APerf.First();
+		var c = Caching.GetObjectFromCache("test", 2000, () => new Cached(), o => Print("removed", o.RemovedReason));
+	}
+
+	void TestWeakReferenceWithTimeout()
+	{
+		Task.Run(() => { for(; ; ) { 1000.ms(); GC.Collect(); } });
+		var w = new WeakReference<Cached>(null);
+		_TestWeakReferenceWithTimeout(w);
+		ADialog.Show();
+	}
+
+	void _TestWeakReferenceWithTimeout(WeakReference<Cached> w)
+	{
+		//w.SetTarget(new Cached());
+		w.SetTargetWithTimeout(new Cached(), 3000);
+	}
+
+	void TestNetTimer()
+	{
+		var t = new System.Threading.Timer(o => { var k = Thread.CurrentThread; Print("timer", k.ManagedThreadId, k.GetApartmentState(), k.IsBackground, k.IsThreadPoolThread); });
+		//t.Change(2000, -1);
+		//ADialog.Show();
+		var m = new ATimer(() => Print("A"));
+		var f = new Form();
+		f.Click += (unu, sed) => { APerf.First(); t.Change(2000, -1); APerf.NW(); };
+		//f.Click += (unu, sed) => { APerf.First(); m.Start(1000, true); APerf.NW(); };
+		f.ShowDialog();
+	}
+
+	void TestCalcellationToken()
+	{
+		var cancel = new CancellationTokenSource();
+		var token = cancel.Token;
+		Task.Run(() => {
+			for(int i = 0; i < 1000; i++) {
+				10.ms();
+				if(token.IsCancellationRequested) { Print(i); break; }
+			}
+		});
+		1000.ms();
+		cancel.Cancel();
+		cancel.Cancel();
+		100.ms();
+		Print(cancel.IsCancellationRequested, token.IsCancellationRequested);
+	}
+
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
 	void _Main(string[] args)
 	{ //}}//}}//}}//}}
@@ -1652,7 +1758,10 @@ class Script : AScript
 		AOutput.Clear();
 		//100.ms();
 
-
+		TestCalcellationToken();
+		//TestNetTimer();
+		//TestWeakReferenceWithTimeout();
+		//TestMemoryCache();
 		//TestRegexMatchDataStack();
 		//TestRegexReplaceEx();
 		//TestXmlFormatting();
@@ -1711,5 +1820,10 @@ class Script : AScript
 
 static class TestExt
 {
-
+	public static void SetTargetWithTimeout<T>(this WeakReference<T> t, T target, int timeoutMS) where T: class
+	{
+		t.SetTarget(target);
+		//Task.Delay(timeoutMS).ContinueWith(_ => GC.KeepAlive(target));
+		ATimer.After(timeoutMS, () => GC.KeepAlive(target));
+	}
 }

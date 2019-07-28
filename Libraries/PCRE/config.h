@@ -396,17 +396,6 @@ typedef wchar_t PCRE2_UCHAR16;
 
 ----
 
-//Add callout parameter to pcre2_match and pcre2_substitute definition and declaration:
-, int(*callout)(pcre2_callout_block *, void *)
-//In pcre2_match replace
-mb->callout = mcontext->callout;
-mb->callout_data = mcontext->callout_data;
-with
-mb->callout = callout;
-//In pcre2_substitute pass callout to pcre2_match.
-
-----
-
 //Add pcre2_match_data_create_au(). The copied code is in str.h. Make sure it is still correct after upgrading PCRE library.
 
 #endif

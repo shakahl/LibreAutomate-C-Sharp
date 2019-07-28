@@ -1,3 +1,5 @@
+//#define TEST_COPYPASTE
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -31,6 +33,8 @@ partial class PanelEdit : UserControl
 	SciCode _activeDoc;
 
 	public SciCode ActiveDoc => _activeDoc;
+
+	public event Action ActiveDocChanged;
 
 	public bool IsOpen => _activeDoc != null;
 
@@ -76,6 +80,7 @@ partial class PanelEdit : UserControl
 			if(_activeDoc != null) _activeDoc.Visible = false;
 			_activeDoc = doc;
 			_activeDoc.Visible = true;
+			ActiveDocChanged?.Invoke();
 			_UpdateUI_Cmd();
 		} else {
 			var path = f.FilePath;
@@ -94,7 +99,8 @@ partial class PanelEdit : UserControl
 			doc.AccessibleName = f.Name;
 			doc.AccessibleDescription = path;
 
-			Program.Codea.FileOpened(doc);
+			ActiveDocChanged?.Invoke();
+			//Program.Codein.FileOpened(doc);
 		}
 		if(focus) _activeDoc.Focus();
 
@@ -118,11 +124,12 @@ partial class PanelEdit : UserControl
 			Program.Model.Save.TextNowIfNeed();
 			doc = _activeDoc;
 			_activeDoc = null;
+			ActiveDocChanged?.Invoke();
 		} else {
 			doc = GetOpenDocOf(f);
 			if(doc == null) return;
 		}
-		Program.Codea.FileClosed(doc);
+		//Program.Codein.FileClosed(doc);
 		doc.Dispose();
 		_docs.Remove(doc);
 		_UpdateUI_IsOpen();
@@ -135,6 +142,7 @@ partial class PanelEdit : UserControl
 	{
 		if(saveTextIfNeed) Program.Model.Save.TextNowIfNeed();
 		_activeDoc = null;
+		ActiveDocChanged?.Invoke();
 		foreach(var doc in _docs) doc.Dispose();
 		_docs.Clear();
 		_UpdateUI_IsOpen();
@@ -229,7 +237,7 @@ partial class PanelEdit : UserControl
 	{
 		public readonly FileNode FN;
 		SciText.FileLoaderSaver _fls;
-		public CodeAssist.SciCodeData CodeaData; //used only by CodeAssist
+		//public CodeAssist.SciCodeData CodeaData; //used only by CodeAssist
 
 		const int c_marginFold = 0;
 		const int c_marginLineNumbers = 1;
@@ -297,7 +305,7 @@ partial class PanelEdit : UserControl
 		{
 			//switch(n.nmhdr.code) {
 			//case NOTIF.SCN_PAINTED:
-			//case NOTIF.SCN_UPDATEUI:
+			////case NOTIF.SCN_UPDATEUI:
 			//case NOTIF.SCN_FOCUSIN:
 			//case NOTIF.SCN_FOCUSOUT:
 			//	break;
@@ -318,13 +326,13 @@ partial class PanelEdit : UserControl
 				break;
 			case NOTIF.SCN_MODIFIED:
 				//Print(n.modificationType);
-				if(0 != (n.modificationType&(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
-					Program.Codea.TextChanged(this, n);
+				if(0 != (n.modificationType & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
+					Program.Codein.TextChanged(this, n);
 					Panels.Find.UpdateQuickResults(true);
 				}
 				break;
 			case NOTIF.SCN_CHARADDED:
-				Program.Codea.CharAdded(this, n.ch);
+				Program.Codein.CharAdded(this, n.ch);
 				break;
 			case NOTIF.SCN_UPDATEUI:
 				if(_initDeferred != null) { var f = _initDeferred; _initDeferred = null; f(); }
@@ -350,6 +358,7 @@ partial class PanelEdit : UserControl
 				if(!_noModelEnsureCurrentSelected) Program.Model?.EnsureCurrentSelected();
 				break;
 			case Api.WM_KEYDOWN:
+				//Program.Codein.Cancel();
 				char key = (char)(int)m.WParam;
 				var mod = AKeys.UI.GetMod();
 				if(mod == KMod.Ctrl) {
@@ -435,8 +444,9 @@ partial class PanelEdit : UserControl
 						}
 					} else if(newFile) {
 						//fold boilerplate code
-						if(this.Text.RegexMatch(@"//\{\{(\R//\{\{)? using\R", 0, out RXGroup g)) {
-							int i = ST.LineIndexFromPos(g.Index, true);
+						int i = this.Text.Find("//{{\r\nusing Au;");
+						if(i >= 0) {
+							i = ST.LineIndexFromPos(i, true);
 							if(0 != (SC_FOLDLEVELHEADERFLAG & Call(SCI_GETFOLDLEVEL, i))) Call(SCI_FOLDCHILDREN, i);
 						}
 					}
@@ -472,9 +482,8 @@ partial class PanelEdit : UserControl
 					if(a.Count == 0) {
 						db.Execute("DELETE FROM _editor WHERE id=?", FN.Id);
 					} else {
-						using(var p = db.Statement("REPLACE INTO _editor (id,lines) VALUES (?,?)")) {
-							p.Bind(1, FN.Id).Bind(2, a).Step();
-						}
+						using var p = db.Statement("REPLACE INTO _editor (id,lines) VALUES (?,?)");
+						p.Bind(1, FN.Id).Bind(2, a).Step();
 					}
 					_savedMD5 = hash;
 				}
@@ -854,7 +863,7 @@ partial class PanelEdit : UserControl
 			bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !FN.IsCodeFile;
 			if(onlyInfo) {
 				if(isFragment || s_infoCopy) return; s_infoCopy = true;
-				Print("Info: To copy C# code for pasting in the forum, use menu Edit -> Copy For Forum. Then simply paste there; don't use the Code button.");
+				Print("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
 				return;
 			}
 
@@ -867,48 +876,42 @@ partial class PanelEdit : UserControl
 			} else {
 				var name = FN.Name; if(name.Regex(@"(?i)^(Script|Class)\d*\.cs")) name = null;
 				var sType = isScript ? "script" : "class";
-				var rx = isScript ? _RxScript : _RxClass;
 				//APerf.First();
-				if(rx.Match(s, out var m)) {
+				if(isScript && _RxScriptHeader.Match(s, out var m) && s.Find("\n// using //", m.Index) < 0 && s.Find("\n// main //", m.Index) < 0) {
 					//APerf.NW();
-					bool hasM2 = m[2].Length > 0;
+					bool hasM12 = m[1].Length > 0 || m[2].Length > 0;
 					int i = m.EndIndex;
-					if(isScript && name == null && m.Index == 0 && m[1].Length == 0 && !hasM2) { //if standard script named like "ScriptN.cs", copy as fragment
+					if(name == null && m.Index == 0 && !hasM12) { //if standard script named like "ScriptN.cs", copy as fragment
 						while(i < s.Length && (s[i] == '\r' || s[i] == '\n')) i++;
 					} else {
-						//Start with prefix '//-- type "name"'. Then format code like it is displayed in editor when folded.
-						b.AppendFormat("//-- {0} \"{1}\"{2}", sType, name, s[0] == '/' ? " " : "\r\n").Append(s, 0, m.Index);
-						if(isScript) {
-							b.Append("//{{");
-							if(m[1].Length > 0 || hasM2) {
-								b.Append(s, m[1].Index, m[1].Length).Append("\r\n//{{ using")
-									.Append(s, m[2].Index, m[2].Length).Append("\r\n//{{ main");
-							}
-						} else {
-							b.Append("//{{ using");
+						//Start with prefix '//- type "name"'.
+						b.AppendFormat("//- {0} \"{1}\"{2}", sType, name, s[0] == '/' ? " " : "\r\n")
+							.Append(s, 0, m.Index);
+						b.Append("//{{");
+						if(hasM12) { //If there is something above or below standard usings, replace standard codes with '// using //' and '// main //'.
+							b.Append(s, m[1].Index, m[1].Length).Append("\r\n// using //")
+								.Append(s, m[2].Index, m[2].Length).Append("\r\n// main //");
 						}
 					}
 					b.Append(s, i, s.Length - i);
-				} else { //raw
-					b.AppendFormat("//~~ {0} \"{1}\"\r\n{2}", sType, name, s);
+				} else { //raw. Start with prefix '//~ type "name"'.
+					b.AppendFormat("//~ {0} \"{1}\"\r\n{2}", sType, name, s);
 				}
 			}
 			b.AppendLine("[/code2]");
-			//_Print(s, true);
+#if TEST_COPYPASTE
+			_Print(s, true);
+#endif
 			s = b.ToString();
-			//_Print(s);
+#if TEST_COPYPASTE
+			_Print(s);
+#endif
 			new AClipboardData().AddText(s).SetClipboard();
-			//PasteModified(); //testing
+#if TEST_COPYPASTE
+			PasteModified();
+#endif
 		}
 		static bool s_infoCopy;
-
-		static ARegex _RxScript => s_rxScript ?? (s_rxScript = new ARegex($@"(?sm)//{{{{(.*?)\R\Q{c_usings}\E$(?:\R|(.*?))\R\Q{c_scriptMain}\E$"));
-		static ARegex _RxClass => s_rxClass ?? (s_rxClass = new ARegex($@"(?m)^\Q{c_usings}\E$"));
-		static ARegex s_rxScript, s_rxClass;
-		const string c_usings = @"//{{ using
-using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; //}}";
-		const string c_scriptMain = @"//{{ main
-class Script :AScript { [STAThread] static void Main(string[] args) { new Script()._Main(args); } void _Main(string[] args) { //}}//}}//}}//}}";
 
 		public bool PasteModified()
 		{
@@ -916,35 +919,30 @@ class Script :AScript { [STAThread] static void Main(string[] args) { new Script
 			if(s == null) return false;
 			if(s.Starts("[code2]") && s.Ends("[/code2]\r\n")) s = s.Substring(7, s.Length - 17);
 
-			if(!s.RegexMatch(@"^//(?:--|~~) (script|class) ""(.*?)""( |\R)", out var m)) return false;
-			bool isClass = s[5] == 'c';
+			if(!s.RegexMatch(@"^//[\-~] (script|class) ""(.*?)""( |\R)", out var m)) return false;
+			bool isClass = s[4] == 'c';
 			int i = m.EndIndex;
-			if(s[3] == '~') { //raw
+			if(s[2] == '~') { //raw
 				s = s.Substring(i);
 			} else {
+				Debug.Assert(!isClass);
+				if(!s.RegexMatch(@"[ \n]//{{", 0, out RXGroup m1)) return false;
+				int j = m1.EndIndex;
 				var b = new StringBuilder();
-				if(isClass) {
-					if(!s.RegexMatch(@"[ \n]//{{ using\R", 0, out RXGroup m1)) return false;
-					int u = m1.Index + 1;
-					b.Append(s, i, u - i).Append(c_usings);
-					u += 10;
-					b.Append(s, u, s.Length - u);
+				b.Append(s, i, j - i);
+				if(s.RegexMatch(@"(?ms)(.*?)^// using //\R(.*?)^// main //$", out var k, more: new RXMore(j))) {
+					b.Append(s, j, k[1].Length).AppendLine(c_usings).Append(s, k[2].Index, k[2].Length);
+					i = k.EndIndex;
 				} else {
-					if(!s.RegexMatch(@"[ \n]//{{", 0, out RXGroup m1)) return false;
-					int j = m1.EndIndex;
-					b.Append(s, i, j - i);
-					if(s.RegexMatch(@"(?ms)(.*?)^//{{ using\R(.*?)^//{{ main$", out var k, more: new RXMore(j))) {
-						b.Append(s, j, k[1].Length).AppendLine(c_usings).Append(s, k[2].Index, k[2].Length);
-						i = k.EndIndex;
-					} else {
-						b.AppendLine().AppendLine(c_usings).AppendLine();
-						i = j;
-					}
-					b.Append(c_scriptMain).Append(s, i, s.Length - i);
+					b.AppendLine().AppendLine(c_usings);
+					i = j;
 				}
+				b.Append(c_scriptMain).Append(s, i, s.Length - i);
 				s = b.ToString();
 			}
-			//_Print(s); return false;
+#if TEST_COPYPASTE
+			_Print(s); return false;
+#endif
 			var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");
 
 			string buttons = FN.FileType != (isClass ? EFileType.Class : EFileType.Script)
@@ -966,7 +964,7 @@ class Script :AScript { [STAThread] static void Main(string[] args) { new Script
 			return true;
 		}
 
-#if DEBUG
+#if DEBUG && TEST_COPYPASTE
 		void _Print(string s, bool first = false)
 		{
 			if(first) AOutput.Clear();
@@ -975,6 +973,35 @@ class Script :AScript { [STAThread] static void Main(string[] args) { new Script
 			Print("<><Z 0xc0e0c0><>");
 		}
 #endif
+
+		#endregion
+
+		#region script header
+
+		public const string c_usings = "using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;";
+		public const string c_scriptMain = "class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}";
+
+		static ARegex _RxScriptHeader => s_rxScript ?? (s_rxScript = new ARegex(@"(?sm)//{{(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$"));
+		static ARegex s_rxScript;
+
+		///// <summary>
+		///// Finds script header //{{...//}} using regular expression.
+		///// </summary>
+		///// <param name="s">Script text.</param>
+		///// <param name="m">
+		///// Group 1 is "" or text between //{{ and c_usings. Includes the starting newline but not the ending newline.
+		///// Group 2 is "" or text between c_usings and c_scriptMain. Includes the starting newline but not the ending newline.
+		///// </param>
+		//public static bool FindScriptHeader(string s, out RXMatch m) => _RxScript.Match(s, out m);
+
+		//bool _IsScriptHeaderFolded()
+		//{
+		//	if(!FN.IsScript) return false;
+		//	string s = Text;
+		//	if(!_RxScriptHeader.Match(s, out var m)) return false;
+		//	int line = ST.LineIndexFromPos(m.Index, utf16: true);
+		//	return 0 == Call(SCI_GETFOLDEXPANDED, line);
+		//}
 
 		#endregion
 

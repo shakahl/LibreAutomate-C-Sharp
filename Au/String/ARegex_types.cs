@@ -239,7 +239,7 @@ namespace Au.Types
 		/// <param name="repl">
 		/// Replacement pattern.
 		/// Can consist of any combination of literal text and substitutions like $1.
-		/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also replaces $* with the name of the last encountered mark.
+		/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also: replaces $* with the name of the last encountered mark; replaces ${+func} with the return value of a function registered with <see cref="ARegex.AddReplaceFunc"/>.
 		/// </param>
 		/// <remarks>
 		/// Works like <see cref="Match.Result"/>.
@@ -662,10 +662,10 @@ namespace Au.Types
 		internal static extern int Cpp_RegexMatch(HandleRef code, string s, LPARAM len, LPARAM start, RXMatchFlags flags,
 			PcreCalloutT callout, RegexMatch* m, out BSTR errStr);
 
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern int Cpp_RegexSubstitute(HandleRef code, string s, LPARAM len, LPARAM start, PCRE2_SUBSTITUTE_ flags,
-			string repl, LPARAM rlen, [Out] char[] outputbuffer, ref LPARAM outlen,
-			PcreCalloutT callout, out BSTR errStr);
+		//rejected
+		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		//internal static extern int Cpp_RegexSubstitute(HandleRef code, string s, LPARAM len, LPARAM start, PCRE2_SUBSTITUTE_ flags,
+		//	string repl, LPARAM rlen, [Out] char[] outputbuffer, ref LPARAM outlen, out BSTR errStr);
 
 		#region PCRE API
 

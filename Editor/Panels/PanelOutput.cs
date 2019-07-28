@@ -87,7 +87,7 @@ class PanelOutput : AuUserControlBase
 							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
 							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
 
-							isMain = k.Starts("   at Script._Main(String[] args) in ");
+							isMain = k.Starts("   at Script..ctor(String[] args) in ");
 							if(!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.Offset + 6, g.Index - k.Offset - 10).Append("</\a>");
 							b.AppendLine();
 
@@ -229,6 +229,12 @@ class PanelOutput : AuUserControlBase
 			ST.StyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
 			ST.StyleFont(STYLE_DEFAULT, "Courier New", 8);
 			ST.StyleClearAll();
+
+			Tags.AddLinkTag("+properties", fid => {
+				var f = Program.Model.FindScript(fid);
+				if(f == null || !Program.Model.SetCurrentFile(f)) return;
+				Strips.Cmd.File_Properties();
+			});
 		}
 
 		protected override void WndProc(ref Message m)

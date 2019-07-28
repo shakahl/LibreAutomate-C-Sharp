@@ -81,7 +81,8 @@ static unsafe class Program
 			if(!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
 			//APerf.Next();
 			var a = Au.Util.LibSerializer.Deserialize(b);
-			ATask.Name = a[0]; asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4];
+			ATask.LibInit(ATRole.MiniProgram, a[0]);
+			asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4];
 			string wrp = a[5]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
 		}
 #endif

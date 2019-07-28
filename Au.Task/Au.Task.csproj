@@ -27,7 +27,7 @@
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
   <PropertyGroup>
-    <ApplicationIcon>Resources\qm.ico</ApplicationIcon>
+    <ApplicationIcon>..\Editor\Resources\ico\app_native.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
@@ -85,13 +85,15 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\qm.ico" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\Au\Au.csproj">
       <Project>{d3087fac-a12d-4365-a620-7574cd89b17f}</Project>
       <Name>Au</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\Editor\Resources\ico\app_native.ico">
+      <Link>Resources\app_native.ico</Link>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

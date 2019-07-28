@@ -22,6 +22,21 @@ using Au.Types;
 using static Au.AStatic;
 
 /// <summary>
+/// Misc util functions.
+/// </summary>
+static class EdUtil
+{
+	public static void MinimizeProcessPhysicalMemory(int afterMS)
+	{
+		new System.Threading.Timer(_ => {
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+			Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1);
+		}, null, afterMS, -1);
+	}
+}
+
+/// <summary>
 /// Extension methods for .NET classes.
 /// See also <see cref="AExtensions"/>.
 /// </summary>

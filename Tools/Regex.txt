@@ -132,8 +132,8 @@ Escape sequences for non-printing characters:
 <+a>\r\n<>  -  Windows newline sequence. See also "any newline" <+p charTypes>\R<>.
 <+a>\t<>  -  tab (character code 9).
 <+a \x%>\xhh<>  -  character with hex character code hh.
-<+a \x{%}>\x{hhh..}<>  -  character with hex character code hhh...
-<+a \N{U+%}>\N{U+hhh..}<>  -  character with Unicode hex code point hhh...
+<+a \x{%}>\x{hhhh}<>  -  character with hex character code hhhh.
+<+a \N{U+%}>\N{U+hhhh}<>  -  character with Unicode hex code point hhhh.
 
 <+a \Q%\E>\Q...\E<>  -  literal text. There are no metacharacters and escape sequences.
 
@@ -540,6 +540,7 @@ A script run is a sequence of characters that are all from the same script.
 <+a>$'<>  -  string part after match.
 <+a>$_<>  -  whole string.
 <+a>$*<>  -  the name of the last reached mark or other named <+p backtracking>verb<> like <.r>(*MARK:NAME)<>.
+<+a ${+%}>${+func}<>  -  call a function added with <help>ARegex.AddReplaceFunc<> and use its return value.
 <+a>$$<>  -  $ character.
 
 <b>Example<>
@@ -548,23 +549,7 @@ Regex: <.r>^(\d+)/(\d+)/(\d+)$<>
 Replacement: <.r>$3-$1-$2<>
 Result: <c green>2020-10-08<>
 
-<b>Extended syntax<>
-<+a>$^<>  -  option to use extended syntax. Must be at the start. Only in the Find pane.
-<.r>\n<> etc - <+p escape>escape sequences<>, same as in regex.
-<+a \Q%\E>\Q...\E<>  -  literal text.
-<+a \U%\E>\U...\E<>  -  uppercase text. Example: <.r>\U$0\E<>.
-<+a \L%\E>\L...\E<>  -  lowercase text.
-<+a>\u<>  -  make next character uppercase. Example: <.r>\u$0<>.
-<+a>\l<>  -  make next character lowercase.
-<+a ${%:-}>${n:-S2}<>  -  if group n (number or name) is set, use its value; else use expanded text S2.
-<+a ${%:+:}>${n:+S1:S2}<>  -  if group n is set, use expanded text S1; else use expanded text S2.
-<+a>${*MARK}<>  -  the name of the last reached mark or other named <+p backtracking>verb<>.
-<.r>$0-$99<>, <.r>${n}<>, <.r>${name}<> - same as with non-extended syntax.
-<.r>$+<>, <.r>$`<>, <.r>$'<>, <.r>$_<>, <.r>$*<> - not supported.
-
 <b>Links<>
 <help>ARegex.Replace<>
-<help>ARegex.ReplaceEx<>
-<link https://www.pcre.org/current/doc/html/pcre2api.html#SEC36>Extended syntax (pcre2_substitute)<>
 
 -- end --

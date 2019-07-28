@@ -42,7 +42,7 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="qm.ico">
+    <Image Include="..\Editor\Resources\ico\app_native.ico">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

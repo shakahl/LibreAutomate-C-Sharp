@@ -36,10 +36,7 @@
 					<panel name="Code" doc="" />
 					<split hor="" f="0.5">
 						<panel name="Open" captionAt="Top" />
-						<tab captionAt="Top">
-							<panel name="Running" />
-							<panel name="Recent" />
-						</tab>
+						<panel name="Running" captionAt="Top" />
 					</split>
 				</split>
 				<tab>

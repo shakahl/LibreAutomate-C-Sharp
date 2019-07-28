@@ -390,11 +390,12 @@ class PanelFind : AuUserControlBase
 	{
 		using var f = new FFindOptions();
 		f._tSkip.Text = string.Join("\r\n", _SkipWildcards);
+		f._cbSearchIn.SelectedIndex = _SearchIn;
 
 		if(f.ShowDialog(this) != DialogResult.OK) return;
 
-		Program.Settings.Set("Find.Skip", f._tSkip.Text);
-		_aSkipWildcards = null;
+		Program.Settings.Set("Find.Skip", f._tSkip.Text); _searchIn = -1;
+		Program.Settings.Set("Find.SearchIn", f._cbSearchIn.SelectedIndex); _aSkipWildcards = null;
 	}
 
 	#endregion
@@ -460,6 +461,7 @@ class PanelFind : AuUserControlBase
 
 	void _FindAllInString(string text, in _TextToFind f, List<POINT> a, bool one = false)
 	{
+		a.Clear();
 		if(f.rx != null) {
 			foreach(var g in f.rx.FindAllG(text)) {
 				a.Add((g.Index, g.Length));
@@ -521,21 +523,7 @@ class PanelFind : AuUserControlBase
 		int to = t.CountBytesFromChars(i, len);
 		if(replace && i == from8 && to == t.SelectionEnd) {
 			var repl = f.replaceText;
-			if(rm != null) {
-				if(repl.Starts("$^")) { //extended syntax
-					string err = null;
-					try {
-						int nn = f.rx.ReplaceEx(text, repl.Substring(2), out repl, true, new RXMore(from, matchFlags: RXMatchFlags.ANCHORED));
-						if(nn == 1) repl = repl.Substring(from, repl.Length - from - (text.Length - from - len));
-						else err = "Extended replacement failed.";
-					}
-					catch(ArgumentException ex) { err = ex.Message; }
-					if(err != null) {
-						_SetErrorProvider(_tReplace, err);
-						return;
-					}
-				} else repl = rm.ExpandReplacement(repl);
-			}
+			if(rm != null) repl = rm.ExpandReplacement(repl);
 			//t.ReplaceRange(i, to, repl); //also would need to set caret pos = to
 			t.ReplaceSel(repl);
 			_FindNextInEditor(f, false);
@@ -556,27 +544,26 @@ class PanelFind : AuUserControlBase
 		var doc = Panels.Editor.ActiveDoc; if(doc == null) return;
 		var text = doc.Text;
 		var repl = f.replaceText;
-		string r;
 		if(f.rx != null) {
-			int n;
-			if(repl.Starts("$^")) n = f.rx.ReplaceEx(text, repl.Substring(2), out r);
-			else n = f.rx.Replace(text, repl, out r);
-			if(n == 0) return;
-		} else {
-			_aEditor.Clear();
-			_FindAllInString(text, f, _aEditor);
-			if(_aEditor.Count == 0) return;
-			var b = new StringBuilder();
-			int i = 0;
-			foreach(var v in _aEditor) {
-				b.Append(text, i, v.x - i).Append(repl);
-				i = v.x + v.y;
+			if(!f.rx.FindAll(text, out var ma)) return;
+			doc.Call(Sci.SCI_BEGINUNDOACTION);
+			for(int i = ma.Length - 1; i >= 0; i--) {
+				var m = ma[i];
+				doc.ST.ReplaceRange(m.Index, m.Length, m.ExpandReplacement(repl), SciFromTo.BothChars | SciFromTo.ToIsLength);
 			}
-			b.Append(text, i, text.Length - i);
-			r = b.ToString();
-			if(r == text) return;
+			doc.Call(Sci.SCI_ENDUNDOACTION);
+		} else {
+			var a = _aEditor;
+			_FindAllInString(text, f, a);
+			if(a.Count == 0) return;
+			doc.Call(Sci.SCI_BEGINUNDOACTION);
+			for(int i = a.Count - 1; i >= 0; i--) {
+				var v = a[i];
+				doc.ST.ReplaceRange(v.x, v.y, repl, SciFromTo.BothChars | SciFromTo.ToIsLength);
+			}
+			doc.Call(Sci.SCI_ENDUNDOACTION);
 		}
-		doc.ST.SetText(r);
+		//Easier/faster would be to create new text and call ST.SetText. But then all non-text data is lost: markers, folds, caret position...
 	}
 
 	List<POINT> _aEditor = new List<POINT>(); //index/length of all found instances in editor text
@@ -585,7 +572,7 @@ class PanelFind : AuUserControlBase
 	{
 		_aEditor.Clear();
 		if(!_GetTextToFind(out var f, false, noRecent: true)) return;
-		var text = Panels.Editor.ActiveDoc?.Text; if(text.Lenn() == 0) return;
+		var text = Panels.Editor.ActiveDoc?.Text; if(Empty(text)) return;
 		_FindAllInString(text, f, _aEditor);
 	}
 
@@ -617,42 +604,61 @@ class PanelFind : AuUserControlBase
 
 	#region in files
 
-	List<FileNode> _aFiles;
+	int _SearchIn => _searchIn >= 0 ? _searchIn : (_searchIn = Program.Settings.GetInt("Find.SearchIn"));
+	int _searchIn = -1;
 
 	string[] _SkipWildcards => _aSkipWildcards ?? (_aSkipWildcards = Program.Settings.GetString("Find.Skip", "").SegSplit("\r\n", SegFlags.NoEmpty));
 	string[] _aSkipWildcards;
 	string[] _aSkipImages = new string[] { ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani" };
+	bool _init1;
 
 	void _FindAllInFiles(bool names/*, bool forReplace*/)
 	{
-		_aFiles?.Clear();
 		if(!_GetTextToFind(out var f, false, noRecent: names)) {
 			Panels.Found.Control.ST.ClearText();
 			return;
 		}
 
-		if(!names && _aFiles == null) {
-			_aFiles = new List<FileNode>();
+		if(!_init1) {
+			_init1 = true;
 			Panels.Found.Control.CreateHandleNow();
+			Panels.Files.WorkspaceLoadedAndDocumentsOpened += () => Panels.Found.Control.ST.ClearText();
+
+			Panels.Found.Control.Tags.AddLinkTag("+open", s => {
+				_OpenLinkClicked(s);
+			});
+			Panels.Found.Control.Tags.AddLinkTag("+ra", s => {
+				if(!_OpenLinkClicked(s)) return;
+				ATimer.After(10, () => _bReplaceAll_Click(null, null));
+				//info: without timer sometimes does not set cursor pos correctly
+			});
 			Panels.Found.Control.Tags.AddLinkTag("+f", s => {
 				var a = s.Split(' ');
-				var f = _aFiles[a[0].ToInt()];
-				if(!Program.Model.SetCurrentFile(f)) return;
+				if(!_OpenLinkClicked(a[0])) return;
 				var doc = Panels.Editor.ActiveDoc;
-				doc.Focus();
+				//doc.Focus();
 				ATimer.After(10, () => doc.ST.SelectAndMakeVisible(a[1].ToInt(), a[2].ToInt(), SciFromTo.BothChars | SciFromTo.ToIsLength));
 				//info: scrolling works better with async when now opened the file
 			});
-			Panels.Files.WorkspaceLoadedAndDocumentsOpened += () => {
-				Panels.Found.Control.ST.ClearText();
-				_aFiles?.Clear();
-			};
+			bool _OpenLinkClicked(string file)
+			{
+				var f = Program.Model.Find(file, null); //<id>
+				if(f == null) return false;
+				if(f.IsFolder) f.SelectSingle();
+				else if(!Program.Model.SetCurrentFile(f)) return false;
+				//select the link line in the Found pane, to make it easier to find later
+				var t = Panels.Found.Control.ST;
+				int i=t.CurrentPos, i1=t.LineStartFromPos(i), i2=t.LineEndFromPos(i, withRN:true);
+				t.Call(Sci.SCI_SETSEL, i1, i2);
+				return true;
+			}
 		}
 
 		var b = new StringBuilder();
 		var a = new List<POINT>();
 		var bSlow = !names && f.rx != null ? new StringBuilder() : null;
 		bool jited = false;
+		int searchIn = names ? 0 : _SearchIn;
 
 		foreach(var v in Program.Model.Root.Descendants()) {
 			string text = null, path = null;
@@ -660,7 +666,14 @@ class PanelFind : AuUserControlBase
 				text = v.Name;
 			} else {
 				//APerf.First();
-				if(!v.IsCodeFile) {
+				if(v.IsCodeFile) {
+					switch(searchIn) { //0 all, 1 C#, 2 script, 3 class, 4 other
+					case 4: continue;
+					case 2 when !v.IsScript: continue;
+					case 3 when !v.IsClass: continue;
+					}
+				} else {
+					if(searchIn >= 1 && searchIn <= 3) continue;
 					if(v.IsFolder) continue;
 					if(0 != v.Name.Ends(true, _aSkipImages)) continue;
 				}
@@ -673,7 +686,6 @@ class PanelFind : AuUserControlBase
 
 			long time = bSlow != null ? ATime.PerfMilliseconds : 0;
 
-			a.Clear();
 			_FindAllInString(text, f, a, one: names);
 
 			if(a.Count != 0) {
@@ -681,10 +693,17 @@ class PanelFind : AuUserControlBase
 				path ??= v.ItemPath;
 				string link = v.IdStringWithWorkspace;
 				if(v.IsFolder) {
-					b.AppendFormat("<open \"{0}\"><c 0x808080>{1}<><>    <c 0x008000>//folder<>", link, path);
+					b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<><>    <c 0x008000>//folder<>", link, path);
 				} else {
 					int i1 = path.LastIndexOf('\\') + 1;
-					b.AppendFormat("<c 0x808080>{0}<><open \"{1}\">{2}<>", path.Remove(i1), link, path.Substring(i1));
+					string s1 = path.Remove(i1), s2 = path.Substring(i1);
+					if(names) {
+						b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<>{2}<>", link, s1, s2);
+					} else {
+						int ns = 120 - path.Length * 7 / 4;
+						b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<><b>{2}{3}      <><>    <+ra \"{0}\">Replace all<>",
+							link, s1, s2, ns > 0 ? new string(' ', ns) : null);
+					}
 				}
 				if(!names) b.Append("<>");
 				b.AppendLine();
@@ -701,12 +720,11 @@ class PanelFind : AuUserControlBase
 							for(; lineEnd < leMax; lineEnd++) { char c = text[lineEnd]; if(c == '\r' || c == '\n') break; }
 							bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
 							Au.Util.AStringUtil.LineAndColumn(text, p.x, out int lineIndex, out _);
-							b.AppendFormat("<+f {0} {1} {2}>", _aFiles.Count.ToString(), p.x.ToString(), p.y.ToString()).Append((lineIndex + 1).ToString("D3")).Append(":<> ")
+							b.AppendFormat("<+f \"{0} {1} {2}\">", link, p.x.ToString(), p.y.ToString()).Append((lineIndex + 1).ToString("D3")).Append(":<> ")
 								.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, p.x - lineStart).Append("</\a>")
 								.Append("<z 0xffffa0><\a>").Append(text, p.x, p.y).Append("</\a><>")
 								.Append("<\a>").Append(text, p.x + p.y, lineEnd - p.x - p.y).AppendLine(limitEnd ? "</\a>…" : "</\a>");
 						}
-						_aFiles.Add(v);
 					}
 				}
 			}
@@ -721,7 +739,12 @@ class PanelFind : AuUserControlBase
 			}
 		}
 
-		Panels.Found.Control.ST.SetText(b.Append(bSlow).ToString());
+		if(searchIn > 0) b.Append("<Z orange>Note: searched only in ")
+			.Append(searchIn switch { 1 => "C#", 2 => "C# script", 3 => "C# class", _ => "non-C#" })
+			.AppendLine(" files. It is set in Find options (the ... button).<>");
+		b.Append(bSlow);
+
+		Panels.Found.Control.ST.SetText(b.ToString());
 		var ip = Panels.PanelManager.GetPanel(Panels.Found);
 		ip.Visible = true;
 	}

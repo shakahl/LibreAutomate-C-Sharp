@@ -426,10 +426,16 @@ namespace Au.Controls
 		public int TextLengthBytes => Call(SCI_GETTEXTLENGTH);
 
 		/// <summary>
-		/// Gets or sets current caret position (SCI_GETCURRENTPOS/SCI_SETEMPTYSELECTION) in UTF-8 bytes.
+		/// Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-8 bytes.
 		/// The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
 		/// </summary>
 		public int CurrentPos { get => Call(SCI_GETCURRENTPOS); set => Call(SCI_SETEMPTYSELECTION, value); }
+
+		/// <summary>
+		/// Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-16 chars.
+		/// The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
+		/// </summary>
+		public int CurrentPosChars { get => CountBytesToChars(CurrentPos); set => Call(SCI_SETEMPTYSELECTION, CountBytesFromChars(value)); }
 
 		/// <summary>
 		/// SCI_GETSELECTIONSTART.

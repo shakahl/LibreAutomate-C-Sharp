@@ -36,7 +36,7 @@
   </PropertyGroup>
   <PropertyGroup />
   <PropertyGroup>
-    <ApplicationIcon>Resources\qm.ico</ApplicationIcon>
+    <ApplicationIcon>..\..\Editor\Resources\ico\app_native.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
@@ -75,7 +75,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Resources\qm.ico" />
+    <Content Include="..\..\Editor\Resources\ico\app_native.ico">
+      <Link>Resources\app_native.ico</Link>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

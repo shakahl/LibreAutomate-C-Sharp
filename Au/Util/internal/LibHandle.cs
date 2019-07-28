@@ -35,7 +35,7 @@ namespace Au.Types
 		/// <param name="handle"></param>
 		public LibHandle(IntPtr handle) { _h = handle.ToInt64() == -1 ? default : handle; }
 
-		//public static explicit operator LibHandle(IntPtr p) => new LibHandle(p);
+		//public static explicit operator LibHandle(IntPtr p) => new LibHandle(p); //no
 
 		public static implicit operator IntPtr(LibHandle p) => p._h;
 
