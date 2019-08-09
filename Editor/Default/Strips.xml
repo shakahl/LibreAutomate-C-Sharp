@@ -103,7 +103,7 @@
 			<sep/>
 			<Edit_GoToDefinition/>
 			<Edit_PeekDefinition/>
-			<Edit_Members/>
+			<Edit_Members hkText="Ctrl+Space"/>
 			<Edit_ContextHelp/>
 			<sep/>
 			<Edit_Lines>

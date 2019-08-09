@@ -33,11 +33,11 @@ class PanelOpen : AuUserControlBase, ITreeModel
 
 	public PanelOpen()
 	{
+		this.AccessibleName = this.Name = "Open";
 		_c = new _TreeViewAdv();
+		_c.AccessibleName = _c.Name = "Open_list";
 		_c.BorderStyle = BorderStyle.None;
 		_c.Dock = DockStyle.Fill;
-		_c.AccessibleName = _c.Name = "Open_list";
-		this.AccessibleName = this.Name = "Open";
 
 		_c.ShowLines = false;
 		_c.ShowPlusMinus = false;

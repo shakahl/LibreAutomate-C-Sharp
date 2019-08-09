@@ -32,10 +32,10 @@ class PanelOutput : AuUserControlBase
 
 	public PanelOutput()
 	{
-		_c = new _SciOutput(this);
-		_c.Dock = DockStyle.Fill;
-		_c.AccessibleName = _c.Name = "Output_text";
 		this.AccessibleName = this.Name = "Output";
+		_c = new _SciOutput(this);
+		_c.AccessibleName = _c.Name = "Output_text";
+		_c.Dock = DockStyle.Fill;
 		this.Controls.Add(_c);
 
 		_history = new Queue<OutServMessage>();
@@ -120,7 +120,7 @@ class PanelOutput : AuUserControlBase
 				if(_history.Count > 50) _history.Dequeue();
 			}
 
-			(_iPanel ?? (_iPanel = Panels.PanelManager.GetPanel(this))).Visible = true;
+			(_iPanel ??= Panels.PanelManager.GetPanel(this)).Visible = true;
 		});
 	}
 	static ARegex s_rx1, s_rx2;

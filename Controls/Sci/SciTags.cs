@@ -363,7 +363,7 @@ namespace Au.Controls
 					} else { //currently can be only <fold>
 						i &= 0x7fffffff;
 						if(!(s - tag == 6 && LibCharPtr.AsciiStarts(tag + 1, "fold"))) goto ge;
-						(folds ?? (folds = new List<POINT>())).Add((i, (int)(t - s0)));
+						(folds ??= new List<POINT>()).Add((i, (int)(t - s0)));
 						//if(s < sEnd && *s != '\r' && *s != '\n') _WriteString("\r\n", STYLE_DEFAULT); //no, can be an end of tag there
 					}
 					_stack.RemoveAt(n);

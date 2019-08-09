@@ -29,10 +29,10 @@ class PanelFound : AuUserControlBase
 
 	public PanelFound()
 	{
-		_c = new AuScintilla();
-		_c.Dock = DockStyle.Fill;
-		_c.AccessibleName = _c.Name = "Found_list";
 		this.AccessibleName = this.Name = "Found";
+		_c = new AuScintilla();
+		_c.AccessibleName = _c.Name = "Found_list";
+		_c.Dock = DockStyle.Fill;
 
 		_c.InitReadOnlyAlways = true;
 		_c.InitTagsStyle = AuScintilla.TagsStyle.AutoAlways;

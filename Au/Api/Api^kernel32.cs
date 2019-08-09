@@ -759,6 +759,23 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern bool SetProcessWorkingSetSize(IntPtr hProcess, LPARAM dwMinimumWorkingSetSize, LPARAM dwMaximumWorkingSetSize);
 
+		//internal struct PROCESS_MEMORY_COUNTERS
+		//{
+		//	public int cb;
+		//	public int PageFaultCount;
+		//	public LPARAM PeakWorkingSetSize;
+		//	public LPARAM WorkingSetSize;
+		//	public LPARAM QuotaPeakPagedPoolUsage;
+		//	public LPARAM QuotaPagedPoolUsage;
+		//	public LPARAM QuotaPeakNonPagedPoolUsage;
+		//	public LPARAM QuotaNonPagedPoolUsage;
+		//	public LPARAM PagefileUsage;
+		//	public LPARAM PeakPagefileUsage;
+		//}
+
+		//[DllImport("kernel32.dll", EntryPoint = "K32GetProcessMemoryInfo")]
+		//internal static extern bool GetProcessMemoryInfo(IntPtr Process, ref PROCESS_MEMORY_COUNTERS ppsmemCounters, int cb);
+
 
 
 

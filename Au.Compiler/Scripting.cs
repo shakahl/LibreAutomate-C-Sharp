@@ -75,8 +75,6 @@ namespace Au.Compiler
 			var memStream = new MemoryStream(4096);
 			var emitResult = compilation.Emit(memStream);
 
-			Compiler.LibSetTimerGC(); //after some time free many MB of unmanaged memory of metadata references
-
 			r = new Result();
 			if(!emitResult.Success) {
 				var sb = new StringBuilder();

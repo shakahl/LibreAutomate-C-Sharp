@@ -30,7 +30,7 @@ namespace Au
 		/// In an automation task process of a script with role miniProgram (defaut) returns script file name without extension.
 		/// In other processes and non-default appdomains returns <see cref="AppDomain.FriendlyName"/>; in default appdomain it is like "ProgramFile.exe".
 		/// </summary>
-		public static string Name => s_name ?? (s_name = AppDomain.CurrentDomain.FriendlyName);
+		public static string Name => s_name ??= AppDomain.CurrentDomain.FriendlyName;
 		static string s_name;
 
 		/// <summary>

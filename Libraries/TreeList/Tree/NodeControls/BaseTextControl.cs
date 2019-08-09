@@ -162,11 +162,16 @@ namespace Aga.Controls.Tree.NodeControls
 				pen.Dispose();
 			}
 
-			//using(var brush = new SolidBrush(textColor)) context.Graphics.DrawString(label, font, brush, bounds);
-			if(context.IsMemoryBitmap) { //au: TextRenderer.DrawText bug workaround: use backColor.
-				TextRenderer.DrawText(context.Graphics, label, font, bounds, textColor, node.Tree.BackColor, _formatFlags);
+			if(CustomDrawText != null) {
+				//au: custom draw
+				CustomDrawText(new CustomDrawTextArgs(node, context, bounds));
 			} else {
-				TextRenderer.DrawText(context.Graphics, label, font, bounds, textColor, _formatFlags);
+				//using(var brush = new SolidBrush(textColor)) context.Graphics.DrawString(label, font, brush, bounds);
+				if(context.IsMemoryBitmap) { //au: TextRenderer.DrawText bug workaround: use backColor.
+					TextRenderer.DrawText(context.Graphics, label, font, bounds, textColor, node.Tree.BackColor, _formatFlags);
+				} else {
+					TextRenderer.DrawText(context.Graphics, label, font, bounds, textColor, _formatFlags);
+				}
 			}
 			//au: when drawing frequently, eg scrolling, TextRenderer.DrawText adds several magabytes of used memory.
 			//	It seems it is later released by GC and then does not grow again. Multiple controls don't add more memory than single.
@@ -263,5 +268,27 @@ namespace Aga.Controls.Tree.NodeControls
 		/// It is for performance.
 		/// </summary>
 		public Func<TreeNodeAdv, bool> NeedDrawTextEvent;
+
+		//au: custom draw
+		public Action<CustomDrawTextArgs> CustomDrawText { get; set; }
+	}
+
+	//au: custom draw
+	public class CustomDrawTextArgs : NodeEventArgs
+	{
+		public DrawContext Context { get; }
+
+		public Rectangle Bounds { get; }
+
+		//public EditableControl Control { get; }
+
+		public CustomDrawTextArgs(TreeNodeAdv node, /*EditableControl control, */DrawContext context, Rectangle bounds)
+			: base(node)
+		{
+			//Control = control;
+			Context = context;
+			Bounds = bounds;
+		}
+
 	}
 }

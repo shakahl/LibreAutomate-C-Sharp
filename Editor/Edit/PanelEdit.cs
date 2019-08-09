@@ -357,24 +357,9 @@ partial class PanelEdit : UserControl
 			case Api.WM_SETFOCUS:
 				if(!_noModelEnsureCurrentSelected) Program.Model?.EnsureCurrentSelected();
 				break;
-			case Api.WM_KEYDOWN:
-				//Program.Codein.Cancel();
-				char key = (char)(int)m.WParam;
-				var mod = AKeys.UI.GetMod();
-				if(mod == KMod.Ctrl) {
-					switch(key) {
-					case 'C':
-						CopyModified(true);
-						break;
-					case 'V':
-						if(PasteModified()) return;
-						break;
-					}
-					//} else if(mod == (KMod.Ctrl | KMod.Shift)) {
-					//	switch(key) {
-					//	}
-				}
-				break;
+			//case Api.WM_KEYDOWN:
+			//	//Program.Codein.Cancel();
+			//	break;
 			case Api.WM_CHAR:
 				int c = (int)m.WParam;
 				if(c < 32 && !(c == 8 || c == 9 || c == 10 || c == 13)) return;
@@ -407,6 +392,22 @@ partial class PanelEdit : UserControl
 			base.WndProc(ref m);
 		}
 		bool _noModelEnsureCurrentSelected;
+
+		protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+		{
+			switch(keyData) {
+			case Keys.Control | Keys.C:
+				CopyModified(onlyInfo: true);
+				break;
+			case Keys.Control | Keys.V:
+				if(PasteModified()) return true;
+				break;
+			case Keys.Control | Keys.Space:
+				Program.Codein.ShowCompletionList();
+				return true;
+			}
+			return base.ProcessCmdKey(ref msg, keyData);
+		}
 
 		public bool IsUnsaved => 0 != Call(SCI_GETMODIFY);
 
@@ -981,7 +982,7 @@ partial class PanelEdit : UserControl
 		public const string c_usings = "using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;";
 		public const string c_scriptMain = "class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}";
 
-		static ARegex _RxScriptHeader => s_rxScript ?? (s_rxScript = new ARegex(@"(?sm)//{{(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$"));
+		static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//{{(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$");
 		static ARegex s_rxScript;
 
 		///// <summary>

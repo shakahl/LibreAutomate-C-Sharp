@@ -202,7 +202,7 @@ namespace Au
 			//	internal void SetTidPid(int tid, int pid) { _tid = tid; _pid = pid; }
 
 			//	[ThreadStatic] static LastWndProps _ofThread;
-			//	internal static LastWndProps OfThread => _ofThread ?? (_ofThread = new LastWndProps());
+			//	internal static LastWndProps OfThread => _ofThread ??= new LastWndProps();
 			//}
 
 			internal static AWnd CreateMessageWindowDefWndProc()

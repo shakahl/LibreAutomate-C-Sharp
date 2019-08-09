@@ -444,7 +444,7 @@ namespace Au.Controls
 
 		protected override AccessibleObject CreateAccessibilityInstance()
 		{
-			return _acc ?? (_acc = new _Acc(this));
+			return _acc ??= new _Acc(this);
 		}
 		_Acc _acc;
 

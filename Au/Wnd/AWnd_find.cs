@@ -450,7 +450,7 @@ namespace Au
 		/// </ul>
 		/// </param>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
+		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.FormAWnd</b> in Au.Tools.dll.
 		/// 
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
 		/// 
@@ -667,7 +667,7 @@ namespace Au
 			/// </remarks>
 			public static void AllWindows(ref List<AWnd> a, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
-				Lib.EnumWindows2(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ?? (a = new List<AWnd>()));
+				Lib.EnumWindows2(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ??= new List<AWnd>());
 			}
 
 			/// <summary>
@@ -699,7 +699,7 @@ namespace Au
 			public static void ThreadWindows(ref List<AWnd> a, int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				if(threadId == 0) throw new ArgumentException("0 threadId.");
-				Lib.EnumWindows2(Lib.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ?? (a = new List<AWnd>()));
+				Lib.EnumWindows2(Lib.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ??= new List<AWnd>());
 			}
 		}
 

@@ -145,15 +145,16 @@
     <Compile Include="Panels\etc\FFindOptions.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="Panels\FastListBox.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Panels\PanelCodein.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
     <Compile Include="Panels\PanelFound.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Properties\GlobalSuppressions.cs" />
-    <Compile Include="Properties\Resources.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
     <Compile Include="Program\FOptions.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -168,10 +169,18 @@
     </Compile>
     <None Include="Unused\DiffMatchPatch.cs" />
     <Compile Include="Program\TrayIcon.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Include="Util\EdMetaCommentsParser.cs" />
     <Compile Include="Util\UacDragDrop.cs" />
     <EmbeddedResource Include="Panels\etc\FFindOptions.resx">
       <DependentUpon>FFindOptions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Panels\PanelCodein.resx">
+      <DependentUpon>PanelCodein.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Panels\PanelFind.resx">
       <DependentUpon>PanelFind.cs</DependentUpon>
@@ -344,6 +353,32 @@
     <None Include="Resources\png\NewSolutionFolder_16x.png" />
     <None Include="Resources\png\fileScript.png" />
     <None Include="Resources\png\project.png" />
+    <None Include="Resources\Class_16x.png" />
+    <None Include="Resources\Enumerator_left_16x.png" />
+    <None Include="Resources\Delegate_left_16x.png" />
+    <None Include="Resources\Event_left_16x.png" />
+    <None Include="Resources\Constant_left_16x.png" />
+    <None Include="Resources\Field_left_16x.png" />
+    <None Include="Resources\EnumItem_left_16x.png" />
+    <None Include="Resources\ExtensionMethod_16x.png" />
+    <None Include="Resources\DelegatePrivate_16x.png" />
+    <None Include="Resources\DelegateProtected_16x.png" />
+    <None Include="Resources\DelegateFriend_16x.png" />
+    <None Include="Resources\ClassProtected_16x.png" />
+    <None Include="Resources\ClassFriend_16x.png" />
+    <None Include="Resources\ClassPrivate_16x.png" />
+    <None Include="Resources\EnumPrivate_16x.png" />
+    <None Include="Resources\EnumProtect_16x.png" />
+    <None Include="Resources\EnumFriend_16x.png" />
+    <None Include="Resources\EventPrivate_16x.png" />
+    <None Include="Resources\EventProtect_16x.png" />
+    <None Include="Resources\EventFriend_16x.png" />
+    <None Include="Resources\FieldProtect_16x.png" />
+    <None Include="Resources\FieldFriend_16x.png" />
+    <None Include="Resources\FieldPrivate_16x.png" />
+    <None Include="Resources\ConstantProtected_16x.png" />
+    <None Include="Resources\ConstantFriend_16x.png" />
+    <None Include="Resources\ConstantPrivate_16x.png" />
     <Content Include="Resources\ico\app_normal.ico" />
     <None Include="Default\Templates\include\using.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -357,6 +392,28 @@
     </None>
     <None Include="Resources\ico\app_disabled.ico" />
     <Content Include="Resources\ico\app_native.ico" />
+    <None Include="Resources\Namespace_16x.png" />
+    <None Include="Resources\Snippet_16x.png" />
+    <None Include="Resources\IntelliSenseKeyword_16x.png" />
+    <None Include="Resources\LocalVariable_16x.png" />
+    <None Include="Resources\Interface_16x.png" />
+    <None Include="Resources\Type_left_16x.png" />
+    <None Include="Resources\Label_16xMD.png" />
+    <None Include="Resources\ValueType_left_16x.png" />
+    <None Include="Resources\Method_left_16x.png" />
+    <None Include="Resources\Property_left_16x.png" />
+    <None Include="Resources\MethodFriend_16x.png" />
+    <None Include="Resources\MethodPrivate_16x.png" />
+    <None Include="Resources\MethodProtect_16x.png" />
+    <None Include="Resources\ValueTypeProtect_16x.png" />
+    <None Include="Resources\ValueTypeFriend_16x.png" />
+    <None Include="Resources\ValueTypePrivate_16x.png" />
+    <None Include="Resources\InterfaceProtect_16x.png" />
+    <None Include="Resources\InterfaceFriend_16x.png" />
+    <None Include="Resources\InterfacePrivate_16x.png" />
+    <None Include="Resources\PropertyPrivate_16x.png" />
+    <None Include="Resources\PropertyProtect_16x.png" />
+    <None Include="Resources\PropertyFriend_16x.png" />
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

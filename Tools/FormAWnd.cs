@@ -31,7 +31,7 @@ using Aga.Controls.Tree.NodeControls;
 
 namespace Au.Tools
 {
-	public partial class Form_Wnd : ToolForm
+	public partial class FormAWnd : ToolForm
 	{
 		AWnd _wnd, _con;
 		TUtil.CaptureWindowEtcWithHotkey _capt;
@@ -39,7 +39,7 @@ namespace Au.Tools
 		bool _uncheckControl;
 		string _wndName;
 
-		public Form_Wnd(AWnd wnd = default, bool uncheckControl = false)
+		public FormAWnd(AWnd wnd = default, bool uncheckControl = false)
 		{
 			InitializeComponent();
 			splitContainer3.SplitterWidth = 8;

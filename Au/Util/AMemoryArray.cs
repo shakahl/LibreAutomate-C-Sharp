@@ -48,7 +48,7 @@ namespace Au.Util
 	/// 	//a helper method
 	/// 	static Au.Util.AMemoryArray.CharBuffer _GetCharBuffer(ref int n) { var r = Au.Util.AMemoryArray.Get(n, ref t_char); n = r.Length - 1; return r; }
 	/// 
-	/// 	//we'll use this API in this example
+	/// 	//we use this API in this example
 	/// 	[DllImport("user32.dll", EntryPoint = "GetWindowTextW")]
 	/// 	static extern int GetWindowText(AWnd hWnd, [Out] char[] lpString, int nMaxCount);
 	/// }

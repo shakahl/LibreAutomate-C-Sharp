@@ -59,7 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Au\ScrollableControl_.cs">
+    <Compile Include="Au\AuScrollableControl.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Tree\TVAcc.cs">

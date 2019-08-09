@@ -212,7 +212,7 @@ namespace Au.Types
 		/// ]]></code>
 		/// </example>
 		protected Au.Triggers.ActionTriggers Triggers {
-			get => _triggers ?? (_triggers = new Au.Triggers.ActionTriggers());
+			get => _triggers ??= new Au.Triggers.ActionTriggers();
 			set => _triggers = value;
 		}
 		Au.Triggers.ActionTriggers _triggers;

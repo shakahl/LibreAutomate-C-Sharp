@@ -110,7 +110,7 @@
     </Compile>
     <Compile Include="Sci\Sci API.cs" />
     <Compile Include="Sci\SciImages.cs" />
-    <Compile Include="AuStripManager\Form_SMProperties.cs">
+    <Compile Include="AuStripManager\FSMProperties.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="AuStripManager\AuStripManager.cs" />
@@ -139,8 +139,8 @@
     <None Include="Properties\Au.pfx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="AuStripManager\Form_SMProperties.resx">
-      <DependentUpon>Form_SMProperties.cs</DependentUpon>
+    <None Include="AuStripManager\FSMProperties.resx">
+      <DependentUpon>FSMProperties.cs</DependentUpon>
       <SubType>Designer</SubType>
     </None>
   </ItemGroup>

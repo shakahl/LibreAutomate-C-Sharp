@@ -31,14 +31,14 @@ namespace Au.Controls
 	public partial class AuStripManager
 	{
 #endif
-	class Form_SMProperties : AuForm
+	class FSMProperties : AuForm
 	{
 		AuStripManager _man;
 		XElement _x;
 		bool _isMenu;
 		List<XElement> _hotkeys;
 
-		internal Form_SMProperties(AuStripManager man, XElement x, bool isMenu)
+		internal FSMProperties(AuStripManager man, XElement x, bool isMenu)
 		{
 			_man = man;
 			_x = x;

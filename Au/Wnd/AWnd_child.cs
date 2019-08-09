@@ -300,7 +300,7 @@ namespace Au
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
+		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.FormAWnd</b> in Au.Tools.dll.
 		/// </remarks>
 		public AWnd Child(string name = null, string cn = null, WCFlags flags = 0, Func<AWnd, bool> also = null, int skip = 0)
 		{
@@ -378,7 +378,7 @@ namespace Au
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.Form_Wnd</b> in Au.Tools.dll.
+		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.FormAWnd</b> in Au.Tools.dll.
 		/// 
 		/// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
 		/// </remarks>
@@ -494,7 +494,7 @@ namespace Au
 			public void Children(ref List<AWnd> a, bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false)
 			{
 				_w.ThrowIfInvalid();
-				Lib.EnumWindows2(Lib.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild, list: a ?? (a = new List<AWnd>()));
+				Lib.EnumWindows2(Lib.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild, list: a ??= new List<AWnd>());
 			}
 
 			//rejected: unreliable.

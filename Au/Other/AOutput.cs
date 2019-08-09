@@ -155,7 +155,7 @@ namespace Au
 				if(value.Ends('\n')) {
 					WriteLine(value.RemoveSuffix(value.Ends("\r\n") ? 2 : 1));
 				} else {
-					(_b ?? (_b = new StringBuilder())).Append(value);
+					(_b ??= new StringBuilder()).Append(value);
 				}
 			}
 			string _PrependBuilder(string value)

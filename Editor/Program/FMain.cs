@@ -71,6 +71,8 @@ partial class FMain : Form
 		//#if DEBUG
 		//		ADebug.Print("Ending form ctor. Must be no parked controls created; use SetHookToMonitorCreatedWindowsOfThisThread.");
 		//#endif
+
+		_MonitorGC();//TODO
 	}
 
 	AWnd _Hwnd => (AWnd)Handle;
@@ -281,6 +283,7 @@ static class Panels
 	public static PanelOutput Output;
 	public static PanelFind Find;
 	public static PanelFound Found;
+	public static PanelCodein Codein;
 	public static PanelStatus Status;
 
 	internal static void Init()
@@ -292,6 +295,7 @@ static class Panels
 		Output = new PanelOutput();
 		Find = new PanelFind();
 		Found = new PanelFound();
+		Codein = new PanelCodein();
 		Status = new PanelStatus();
 		//#if TEST
 		//		var c = new RichTextBox();
@@ -301,19 +305,20 @@ static class Panels
 		var m = PanelManager = new AuDockPanel();
 		m.Name = "Panels";
 		m.Create(AFolders.ThisAppBS + @"Default\Panels.xml", AFolders.ThisAppDocuments + @"!Settings\Panels.xml",
-			Editor, Files, Find, Found, Output, Open, Running,
+			Editor, Files, Find, Found, Output, Open, Running, Codein,
 			//#if TEST
 			//			c,
 			//#endif
 			Strips.Menubar, Strips.tbFile, Strips.tbEdit, Strips.tbRun, Strips.tbTools, Strips.tbHelp, Strips.tbCustom1, Strips.tbCustom2
 			);
 		//info: would be easier to specify these in the default XML, but then cannot change in new app versions.
-		m.GetPanel(Open).Init("Currently open files", EdResources.GetImageUseCache("open"));
-		m.GetPanel(Output).Init("Errors and other information", EdResources.GetImageUseCache("output"));
-		m.GetPanel(Find).Init("Find files, text, triggers", EdResources.GetImageUseCache("find"), focusable: true);
+		m.GetPanel(Open).Init("Currently open files"/*, EdResources.GetImageUseCache("open")*/);
+		m.GetPanel(Output).Init("Errors and other information"/*, EdResources.GetImageUseCache("output")*/);
+		m.GetPanel(Find).Init("Find files, text, triggers"/*, EdResources.GetImageUseCache("find")*/, focusable: true);
 		m.GetPanel(Found).Init("Results of find");
 		m.GetPanel(Files).Init("All files of this workspace", focusable: true);
 		m.GetPanel(Running).Init("Running tasks");
+		m.GetPanel(Codein).Init("Code info");
 		m.FocusControlOnUndockEtc = Editor;
 		//#if TEST
 		//		m.GetPanel(c).Init("New panel", EdResources.GetImageUseCache("paste"));

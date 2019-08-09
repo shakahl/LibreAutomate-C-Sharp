@@ -24,7 +24,7 @@ using SG = SourceGrid;
 
 namespace Au.Tools
 {
-	public partial class Form_WinImage : ToolForm
+	public partial class FormAWinImage : ToolForm
 	{
 		AWnd _wnd, _con;
 		bool _useCon;
@@ -34,7 +34,7 @@ namespace Au.Tools
 		int _color;
 		string _imageFile;
 
-		public Form_WinImage()
+		public FormAWinImage()
 		{
 			InitializeComponent();
 

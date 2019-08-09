@@ -196,10 +196,10 @@ namespace Au.Triggers
 		internal override void Run(TriggerArgs args) => RunT(args as WindowTriggerArgs);
 
 		/// <inheritdoc/>
-		public override string TypeString => _typeString ?? (_typeString = "Window." + (IsVisible ? "Visible" : "Active") + (IsNew ? "New" : (IsOnce ? "Once" : "")));
+		public override string TypeString => _typeString ??= "Window." + (IsVisible ? "Visible" : "Active") + (IsNew ? "New" : (IsOnce ? "Once" : ""));
 
 		/// <inheritdoc/>
-		public override string ParamsString => _paramsString ?? (_paramsString = finder.ToString());
+		public override string ParamsString => _paramsString ??= finder.ToString();
 
 		internal bool IsVisible => ev >= TWEvent.Visible;
 

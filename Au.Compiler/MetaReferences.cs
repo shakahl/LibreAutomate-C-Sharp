@@ -24,58 +24,109 @@ using System.Collections.Immutable;
 namespace Au.Compiler
 {
 	/// <summary>
-	/// Resolves assembly metadata references and adds to a temporary cache - a list of PortableExecutableReference objects.
-	/// Single static cache is used by all MetaReferences variables.
-	/// Cache requires many MB of unmanaged memory, therefore is cleared (all unloaded) by GC. A reference to a MetaReferences variable prevents unloading.
-	/// For each compilation create a MetaReferences variable. Compilations can be in different threads, but a variable must be used in same thread as created.
+	/// Resolves assembly metadata references (string to PortableExecutableReference).
+	/// For each compilation create a MetaReferences variable, call Resolve if need non-default references, then use Refs list.
 	/// </summary>
+	/// <remarks>
+	/// Temporarily keeps PortableExecutableReference objects in a cache. Single static cache is used by all MetaReferences variables.
+	/// Cache requires many MB of unmanaged memory, therefore PortableExecutableReference objects are removed and GC-collected when not used anywhere for some time. Reloading is quite fast.
+	///		A reference to a PortableExecutableReference variable prevents removing it from cache and GC-collecting.
+	///		A reference to a MetaReferences variable prevents removing/disposing is Refs items.
+	///		CodeAnalysis Project etc objects also have references, therefore need to manage their lifetimes too.
+	/// MetaReferences variables can be created in different threads, but a variable must be used in a single thread.
+	/// </remarks>
 	public class MetaReferences
 	{
-		static WeakReference<List<PortableExecutableReference>> s_refsWR = new WeakReference<List<PortableExecutableReference>>(null);
-		List<PortableExecutableReference> _cache; //all references resolved by any variables, + default. In s_refsWR.
-		Dictionary<string, string> _dict; //name/path of references resolved by this variable
+		class _MR
+		{
+			public string name, path;
+			WeakReference<PortableExecutableReference> _wr;
+			PortableExecutableReference _refKeeper;
+			long _timeout;
+			const int c_timerPeriod = 30_000;
 
-		static List<PortableExecutableReference> s_cacheKeeper;
-		static Timer s_timerCK = new Timer(_ => s_cacheKeeper = null);
+			public _MR(string name, string path)
+			{
+				this.name = name;
+				this.path = path;
+				_wr = new WeakReference<PortableExecutableReference>(null);
+			}
+
+			public PortableExecutableReference Ref {
+				get {
+					if(!_wr.TryGetTarget(out var r)) {
+						//for(int i=0;i<10;i++) //tested: process memory does not grow when loading same file several times
+						r = MetadataReference.CreateFromFile(path, (this as _MR2)?.Prop ?? default);
+						_wr.SetTarget(r);
+						//Print("LOADED", name, this is _MR2);
+
+						//prevent GC too early, eg in the middle of compiling many files
+						if(s_timer == null) {
+							s_timer = new Timer(_ => {
+								lock(s_cache) {
+									long timeNow = ATime.WinMilliseconds, maxTimeout = 0;
+									foreach(var v in s_cache) {
+										if(v._refKeeper == null) continue;
+										long t = v._timeout;
+										if(timeNow >= t) v._refKeeper = null;
+										else if(t > maxTimeout) maxTimeout = t;
+									}
+									//Print("timer", nRemoved);
+									s_isTimer = maxTimeout > 0 ? s_timer.Change(maxTimeout - timeNow + c_timerPeriod / 2, -1) : false;
+								}
+								if(!s_isTimer) GC.Collect();
+							});
+						}
+					} //else Print("cached", name, this is _MR2);
+
+					if(!s_isTimer) s_isTimer = s_timer.Change(c_timerPeriod, -1);
+					_timeout = ATime.WinMilliseconds + c_timerPeriod - 1000;
+					_refKeeper = r;
+					return r;
+				}
+			}
+		}
+
+		class _MR2 : _MR
+		{
+			string _alias;
+			bool _isCOM;
+
+			public _MR2(string name, string path, string alias, bool isCOM) : base(name, path) { _alias = alias; _isCOM = isCOM; }
+
+			public MetadataReferenceProperties Prop => new MetadataReferenceProperties(aliases: _alias == null ? default : ImmutableArray.Create(_alias), embedInteropTypes: _isCOM);
+
+			public bool PropEq(string alias, bool isCOM) => isCOM == _isCOM && alias == _alias;
+		}
+
+		static List<_MR> s_cache = new List<_MR>(16);
+		static Timer s_timer;
+		static bool s_isTimer;
 
 		/// <summary>
-		/// Returns list of references default and unique references for which was called Resolve of this MetaReferences variable.
+		/// List of default references and references for which was called Resolve of this MetaReferences variable.
 		/// Before calling any Resolve, contains only default references.
 		/// </summary>
 		public List<PortableExecutableReference> Refs { get; }
 
-		//unused. Also, would be not thread-safe.
-		///// <summary>
-		///// Returns list of default references and all resolved/loaded/cached references by any MetaReferences variables.
-		///// </summary>
-		//public List<PortableExecutableReference> Cache => _cache;
-
 		public MetaReferences()
 		{
-			lock(s_refsWR) {
-				if(!s_refsWR.TryGetTarget(out _cache)) s_refsWR.SetTarget(_cache = _CreateDefaultRefs());
-
-				//prevent GC the cache too early, eg in the middle of compiling hundreds of files.
-				//	Not important. Reloading references is quite fast. But I like such speed improvements.
-				//	Also tested MemoryCache, but it is too slow, ~30 mcs when cold, and need System.Runtime.Caching.dll.
-				s_cacheKeeper = _cache;
-				s_timerCK.Change(3000, -1); //fast. Note: must be < than timer in Compiler.LibSetTimerGC().
-
-				int nDefault = Compiler.DefaultReferences.Count;
-				Refs = new List<PortableExecutableReference>(nDefault);
-				for(int i = 0; i < nDefault; i++) Refs.Add(_cache[i]);
-			}
-
-			List<PortableExecutableReference> _CreateDefaultRefs()
-			{
-				var defRef = Compiler.DefaultReferences;
-				var refs = new List<PortableExecutableReference>(defRef.Count);
-				foreach(var s in defRef.Values) {
-					refs.Add(MetadataReference.CreateFromFile(s));
+			lock(s_cache) {
+				//var p1 = APerf.Create();
+				var def = Compiler.DefaultReferences;
+				if(s_cache.Count == 0) {
+					foreach(var x in def) {
+						s_cache.Add(new _MR(x.Key, x.Value));
+					}
 				}
-				return refs;
+				int nDef = def.Count;
+				Refs = new List<PortableExecutableReference>(nDef);
+				for(int i = 0; i < nDef; i++) _AddRef(i);
+				//p1.NW('R');
 			}
 		}
+
+		void _AddRef(int iCache) => Refs.Add(s_cache[iCache].Ref);
 
 		/// <summary>
 		/// Finds reference assembly file, creates PortableExecutableReference and adds to the cache.
@@ -99,34 +150,38 @@ namespace Au.Compiler
 				reference = reference.Substring(i + 1);
 			}
 
-			var defRef = Compiler.DefaultReferences;
-			if(!isCOM && defRef.ContainsKey(reference)) return true;
-			if(_dict?.ContainsKey(reference) ?? false) return true;
-
-			var path = _ResolvePath(reference, isCOM);
-			if(path == null) return false;
-			path = APath.LibNormalize(path);
-
-			//foreach(var v in _refs) Print(v.FilePath);
-			PortableExecutableReference mr;
-			lock(s_refsWR) {
-				mr = _cache.Find(v => v.FilePath.Eqi(path));
-				if(mr == null) {
-					MetadataReferenceProperties prop = alias == null && !isCOM
-						? default
-						: new MetadataReferenceProperties(aliases: alias == null ? default : ImmutableArray.Create(alias), embedInteropTypes: isCOM);
-
-					mr = MetadataReference.CreateFromFile(path, prop);
-					_cache.Add(mr);
+			var a = s_cache;
+			lock(a) {
+				int searchFrom = isCOM ? Compiler.DefaultReferences.Count : 0;
+				for(i = searchFrom; i < a.Count; i++) {
+					if(a[i].name.Eqi(reference) && _PropEq(a[i], alias, isCOM)) {
+						_AddRef(i);
+						return true;
+					}
 				}
+
+				var path = _ResolvePath(reference, isCOM);
+				if(path == null) return false;
+				path = APath.LibNormalize(path);
+
+				for(i = searchFrom; i < a.Count; i++) {
+					if(a[i].path.Eqi(path) && _PropEq(a[i], alias, isCOM)) goto g1;
+				}
+				_MR k;
+				if(isCOM || alias != null) k = new _MR2(reference, path, alias, isCOM);
+				else k = new _MR(reference, path);
+				a.Add(k);
+				g1:
+				_AddRef(i);
 			}
 
-			Refs.Add(mr);
-
-			if(_dict == null) _dict = new Dictionary<string, string>(defRef.Count * 2);
-			_dict.Add(reference, path);
-
 			return true;
+
+			bool _PropEq(_MR u, string alias, bool isCOM)
+			{
+				if(u is _MR2 m2) return m2.PropEq(alias, isCOM);
+				return !isCOM && alias == null;
+			}
 		}
 
 		static string _ResolvePath(string re, bool isCOM)
@@ -176,14 +231,15 @@ namespace Au.Compiler
 		public void RemoveBadReference(string errorMessage)
 		{
 			if(errorMessage.RegexMatch(@"'(.+?)'", 1, out string path))
-				lock(s_refsWR) { _cache.RemoveAll(v => v.FilePath.Eqi(path)); }
+				lock(s_cache) { s_cache.RemoveAll(v => v.path.Eqi(path)); }
 		}
 
 #if DEBUG
 		internal static void DebugPrintCachedRefs()
 		{
-			if(!s_refsWR.TryGetTarget(out var c)) return;
-			foreach(var v in c) Print(v.Display);
+			//TODO
+			//if(!s_refsWR.TryGetTarget(out var c)) return;
+			//foreach(var v in c) Print(v.Display);
 		}
 #endif
 	}
@@ -269,7 +325,6 @@ namespace Au.Compiler
 
 		static unsafe string _GetAssemblyPath(string assemblyName)
 		{
-			var p = APerf.StartNew();
 			ASSEMBLY_INFO x = default;
 			x.cbAssemblyInfo = Api.SizeOf<ASSEMBLY_INFO>();
 			x.cchBuf = 1024;

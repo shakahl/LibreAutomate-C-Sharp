@@ -113,7 +113,7 @@ namespace Au
 			}
 
 			[ThreadStatic] static _LastWndProps _ofThread;
-			internal static _LastWndProps OfThread => _ofThread ?? (_ofThread = new _LastWndProps());
+			internal static _LastWndProps OfThread => _ofThread ??= new _LastWndProps();
 		}
 
 		static bool _QueryFullProcessImageName(IntPtr hProcess, bool getFilename, out string s)
@@ -416,6 +416,14 @@ namespace Au
 		/// Calls <see cref="GetVersionInfo"/> and <see cref="FileVersionInfo.FileDescription"/>.
 		/// </remarks>
 		public static string GetDescription(int processId) => GetVersionInfo(processId)?.FileDescription;
+
+
+		//internal static (long WorkingSet, long PageFile) LibGetCurrentProcessMemoryInfo()
+		//{
+		//	Api.PROCESS_MEMORY_COUNTERS m = default; m.cb = sizeof(Api.PROCESS_MEMORY_COUNTERS);
+		//	Api.GetProcessMemoryInfo(CurrentProcessHandle, ref m, m.cb);
+		//	return ((long)m.WorkingSetSize, (long)m.PagefileUsage);
+		//}
 	}
 }
 

@@ -198,7 +198,7 @@ namespace Au
 		}
 
 		static IEnumerable<RXGroup> _SplitKeysString(string keys) =>
-			(s_rxKeys ?? (s_rxKeys = new ARegex(@"[A-Z]\w*|#\S|\*\s*(?:\d+|down|up)\b|[+$]\s*\(|\S")))
+			(s_rxKeys ??= new ARegex(@"[A-Z]\w*|#\S|\*\s*(?:\d+|down|up)\b|[+$]\s*\(|\S"))
 			.FindAllG(keys ?? "");
 		//KeyName | #n | *r | *down | *up | +( | $( | nonspace char
 		static ARegex s_rxKeys;

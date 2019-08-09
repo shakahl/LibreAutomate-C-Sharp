@@ -118,12 +118,12 @@ namespace Au
 		public static AFolderPath Profile => _Get(0x5E6C858F, 0x0E224760, 0x9AFEEA33, 0x17B67173);
 		public static AFolderPath ProgramData => _Get(0x62AB5D82, 0xFDC14DC3, 0xA9DD070D, 0x1D495D97);
 		/// <summary>More info in class help.</summary>
-		public static AFolderPath ProgramFiles => __ProgramFiles ?? (__ProgramFiles = _ProgramFiles);
+		public static AFolderPath ProgramFiles => __ProgramFiles ??= _ProgramFiles;
 		static string __ProgramFiles;
 		static AFolderPath _ProgramFiles => _Get(0x905e63b6, 0xc1bf494e, 0xb29c65b7, 0x32d3d21a);
 		//broken static AFolderPath ProgramFilesX64 => _Get(0x6D809377, 0x6AF0444b, 0x8957A377, 0x3F02200E);
 		/// <summary>More info in class help.</summary>
-		public static AFolderPath ProgramFilesX86 => __ProgramFilesX86 ?? (__ProgramFilesX86 = _ProgramFilesX86);
+		public static AFolderPath ProgramFilesX86 => __ProgramFilesX86 ??= _ProgramFilesX86;
 		static string __ProgramFilesX86;
 		static AFolderPath _ProgramFilesX86 => _Get(0x7C5A40EF, 0xA0FB4BFC, 0x874AC0F2, 0xE0B9FA8E);
 		/// <summary>More info in class help.</summary>
@@ -172,7 +172,7 @@ namespace Au
 		public static AFolderPath StartMenu => _Get(0x625B53C3, 0xAB484EC1, 0xBA1FA1EF, 0x4146FC19);
 		public static AFolderPath Startup => _Get(0xB97D20BB, 0xF46A4C97, 0xBA105E36, 0x08430854);
 		/// <summary>More info in class help.</summary>
-		public static AFolderPath System => __System ?? (__System = _System);
+		public static AFolderPath System => __System ??= _System;
 		static string __System;
 		static AFolderPath _System => _Get(0x1AC14E77, 0x02E74E5D, 0xB7442EB1, 0xAE5198B7);
 		/// <summary>More info in class help.</summary>
@@ -184,7 +184,7 @@ namespace Au
 		public static AFolderPath UserProgramFilesCommon => _Get(0xBCBD3057, 0xCA5C4622, 0xB42DBC56, 0xDB0AE516);
 		public static AFolderPath Videos => _Get(0x18989B1D, 0x99B5455B, 0x841CAB7C, 0x74E4DDFC);
 		public static AFolderPath VideosLibrary => _Get(0x491E922F, 0x56434AF4, 0xA7EB4E7A, 0x138D8174);
-		public static AFolderPath Windows => __Windows ?? (__Windows = _Windows);
+		public static AFolderPath Windows => __Windows ??= _Windows;
 		static string __Windows;
 		static AFolderPath _Windows => _Get(0xF38BF404, 0x1D4342F2, 0x930567DE, 0x0B28FC23);
 
@@ -257,7 +257,7 @@ namespace Au
 		/// <summary>
 		/// Temp folder (temporary files) of this user account.
 		/// </summary>
-		public static AFolderPath Temp => __temp ?? (__temp = Path.GetTempPath().TrimEnd('\\'));
+		public static AFolderPath Temp => __temp ??= Path.GetTempPath().TrimEnd('\\');
 		static string __temp;
 
 		/// <summary>
@@ -267,14 +267,14 @@ namespace Au
 		/// <remarks>
 		/// Unlike <see cref="ThisProcess"/>, this path can be different for each appdomain; it is set when creating the AppDomain.
 		/// </remarks>
-		public static AFolderPath ThisApp => __thisApp ?? (__thisApp = ThisAppBS.TrimEnd('\\'));
+		public static AFolderPath ThisApp => __thisApp ??= ThisAppBS.TrimEnd('\\');
 		static string __thisApp;
 
 		/// <summary>
 		/// <see cref="ThisApp"/> with appended backslash character.
 		/// Note: returns string, not <see cref="AFolderPath"/> like other functions.
 		/// </summary>
-		public static string ThisAppBS => __AppBS ?? (__AppBS = AppDomain.CurrentDomain.BaseDirectory);
+		public static string ThisAppBS => __AppBS ??= AppDomain.CurrentDomain.BaseDirectory;
 		static string __AppBS;
 
 		const string c_defaultAppSubDir = "Au";
@@ -410,7 +410,7 @@ namespace Au
 		/// Folder containing the program file of this process.
 		/// Unlike <see cref="ThisApp"/>, this path is the same in all app domains of this process.
 		/// </summary>
-		public static AFolderPath ThisProcess => __thisProcess ?? (__thisProcess = APath.GetDirectoryPath(Util.AModuleHandle.GetFilePath(default)));
+		public static AFolderPath ThisProcess => __thisProcess ??= APath.GetDirectoryPath(Util.AModuleHandle.GetFilePath(default));
 		static string __thisProcess;
 		//public static AFolderPath ThisProcess => Application.StartupPath; //no, loads Forms assembly
 
@@ -423,22 +423,22 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="Util.ADisableFsRedirection"/>
 		/// <seealso cref="AVersion.Is32BitProcessAnd64BitOS"/>
-		public static AFolderPath SystemX64 => __SystemX64 ?? (__SystemX64 = AVersion.Is32BitProcessAnd64BitOS ? (AFolderPath)(Windows + "Sysnative") : System);
+		public static AFolderPath SystemX64 => __SystemX64 ??= AVersion.Is32BitProcessAnd64BitOS ? (AFolderPath)(Windows + "Sysnative") : System;
 		static string __SystemX64;
 
 		/// <summary>More info in class help.</summary>
-		public static AFolderPath ProgramFilesX64 => __ProgramFilesX64 ?? (__ProgramFilesX64 = AVersion.Is32BitProcessAnd64BitOS ? EnvVar("ProgramW6432") : ProgramFiles);
+		public static AFolderPath ProgramFilesX64 => __ProgramFilesX64 ??= AVersion.Is32BitProcessAnd64BitOS ? EnvVar("ProgramW6432") : ProgramFiles;
 		static string __ProgramFilesX64;
 
 		/// <summary>More info in class help.</summary>
-		public static AFolderPath ProgramFilesCommonX64 => __ProgramFilesCommonX64 ?? (__ProgramFilesCommonX64 = AVersion.Is32BitProcessAnd64BitOS ? EnvVar("CommonProgramW6432") : ProgramFilesCommon);
+		public static AFolderPath ProgramFilesCommonX64 => __ProgramFilesCommonX64 ??= AVersion.Is32BitProcessAnd64BitOS ? EnvVar("CommonProgramW6432") : ProgramFilesCommon;
 		static string __ProgramFilesCommonX64;
 		//The normal retrieving method for these folders is broken. Fails even on 64-bit OS if process is 32-bit.
 
 		/// <summary>
 		/// Returns <see cref="RuntimeEnvironment.GetRuntimeDirectory"/> without <c>'\\'</c> at the end.
 		/// </summary>
-		public static AFolderPath NetFrameworkRuntime => __netFrameworkRuntime ?? (__netFrameworkRuntime = RuntimeEnvironment.GetRuntimeDirectory().TrimEnd('\\'));
+		public static AFolderPath NetFrameworkRuntime => __netFrameworkRuntime ??= RuntimeEnvironment.GetRuntimeDirectory().TrimEnd('\\');
 		static string __netFrameworkRuntime;
 
 		/// <summary>

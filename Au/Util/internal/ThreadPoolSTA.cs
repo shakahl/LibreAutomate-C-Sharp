@@ -245,7 +245,7 @@ namespace Au.Util
 		static void _CurrentDomain_DomainExit(object sender, EventArgs e)
 		{
 			_isAppDomainDying = true;
-			//var perf = APerf.StartNew();
+			//var perf = APerf.Create();
 			CloseThreadpoolCleanupGroupMembers(_env.CleanupGroup, true, default);
 			CloseThreadpoolCleanupGroup(_env.CleanupGroup);
 			//perf.NW();

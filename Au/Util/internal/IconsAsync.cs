@@ -147,7 +147,7 @@ namespace Au.Util
 						//But don't make the threshold too low, because then may need to wait unnecessarily, and it makes slower.
 						if(Interlocked.Increment(ref _nPending) >= 900) {
 							//Print(_nPending);
-							//var perf = APerf.StartNew();
+							//var perf = APerf.Create();
 							Thread.Sleep(10);
 							//while(_nPending >= 900) Thread.Sleep(10);
 							//perf.NW();

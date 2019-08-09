@@ -1,6 +1,6 @@
 ﻿namespace Au.Tools
 {
-	partial class Form_WinImage
+	partial class FormAWinImage
 	{
 		/// <summary>
 		/// Required designer variable.
@@ -172,7 +172,7 @@
 			// 
 			this._errorProvider.ContainerControl = this;
 			// 
-			// Form_WinImage
+			// FormAWinImage
 			// 
 			this.AcceptButton = this._bOK;
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -191,7 +191,7 @@
 			this.Controls.Add(this._bOK);
 			this.IsPopup = true;
 			this.MinimumSize = new System.Drawing.Size(500, 400);
-			this.Name = "Form_WinImage";
+			this.Name = "FormAWinImage";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
 			this.Text = "Find image or color in window";
 			((System.ComponentModel.ISupportInitialize)(this._pict)).EndInit();

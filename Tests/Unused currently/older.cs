@@ -422,7 +422,7 @@ a1,-8";
 	//				//x.folding = new List<int> { 3, 5 };
 	//				x.folding = new int[] { 3, 5 };
 	//				//x.Symbol = new string('A', 500);
-	//				var p = APerf.StartNew();
+	//				var p = APerf.Create();
 	//				db.BeginTransaction();
 	//				for(int i = 0; i < 1; i++) {
 	//#if false
@@ -1370,7 +1370,7 @@ a1,-8";
 	static void TestOptimizeTreeViewAdv()
 	{
 		var w = AWnd.FindFast(null, "QM_Editor").OrThrow();
-		var f = new Au.Tools.Form_Wnd(w);
+		var f = new Au.Tools.FormAWnd(w);
 		Application.Run(f);
 	}
 

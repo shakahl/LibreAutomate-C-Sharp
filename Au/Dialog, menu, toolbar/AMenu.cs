@@ -560,7 +560,7 @@ namespace Au
 				//AWnd.More.PrintMsg(m, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_ERASEBKGND, Api.WM_CTLCOLOREDIT);
 
 				if(_am._WndProc_Before(true, this, ref m)) return;
-				//var t = APerf.StartNew();
+				//var t = APerf.Create();
 				base.WndProc(ref m);
 				//t.Next(); if(t.TimeTotal >= 100) { Print(t.ToString(), m); }
 				_am._WndProc_After(true, this, ref m);
@@ -613,7 +613,7 @@ namespace Au
 
 			protected override void OnPaint(PaintEventArgs e)
 			{
-				//var perf = APerf.StartNew();
+				//var perf = APerf.Create();
 
 				//ADebug.PrintFunc();
 				base.OnPaint(e);
@@ -1194,7 +1194,7 @@ namespace Au.Types
 			if(il != null && il.Images.ContainsKey(s)) {
 				item.ImageKey = s;
 			} else {
-				//var perf = APerf.StartNew();
+				//var perf = APerf.Create();
 				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
 
 				if(_AsyncIcons == null) _AsyncIcons = new IconsAsync(); //used by submenus too

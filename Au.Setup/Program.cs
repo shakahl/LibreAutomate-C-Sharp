@@ -14,6 +14,6 @@ static class Program
 	{
 		//Application.EnableVisualStyles(); //we have manifest
 		Application.SetCompatibleTextRenderingDefault(false);
-		Application.Run(new Form_Setup());
+		Application.Run(new FSetup());
 	}
 }

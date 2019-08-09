@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Collections;
 using System.Text;
 using System.Diagnostics;
@@ -28,11 +29,11 @@ static class EdUtil
 {
 	public static void MinimizeProcessPhysicalMemory(int afterMS)
 	{
-		new System.Threading.Timer(_ => {
+		Task.Delay(afterMS).ContinueWith(_ => {
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
 			Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1);
-		}, null, afterMS, -1);
+		});
 	}
 }
 
@@ -124,45 +125,27 @@ static class EdResources
 	/// <summary>
 	/// Gets a non-string resource (eg Bitmap) from project resources.
 	/// Uses memory cache. Gets the same object when called multiple times for the same name. Don't dispose it.
-	/// Calling ResourceManager.GetObject would create object copies.
+	/// Calling Au.Editor.Properties.Resources.name or ResourceManager.GetObject would create object copies.
 	/// Thread-safe.
-	/// If not found (bad name), asserts and returns null.
+	/// If not found (bad name), returns null.
 	/// </summary>
-	/// <param name="name">Resource name. If fileIcon - file path.</param>
+	/// <param name="name">Resource name. Use <c>nameof(Au.Editor.Properties.Resources.name)</c>. If fileIcon - file path.</param>
 	public static object GetObjectUseCache(string name)
 	{
-		lock(_cache) {
-			object R = _cache[name];
-			if(R != null) return R;
-			//var p = APerf.StartNew();
-			R = Au.Editor.Properties.Resources.ResourceManager.GetObject(name, Au.Editor.Properties.Resources.Culture);
-			//p.NW();
-			Debug.Assert(R != null);
-			if(R != null) _cache[name] = R;
-			return R;
-		}
+		return _cache.GetOrAdd(name, n => Au.Editor.Properties.Resources.ResourceManager.GetObject(n, Au.Editor.Properties.Resources.Culture));
 	}
-	static Hashtable _cache = new Hashtable(); //CONSIDER: WeakReference<Hashtable>
+	static ConcurrentDictionary<string, object> _cache = new ConcurrentDictionary<string, object>();
+	//note: don't use WeakReference. Maybe could use weekreferences for each image etc, but not tested whether it is good.
 
 	/// <summary>
 	/// Gets a Bitmap resource from project resources or cache.
 	/// Uses memory cache. Gets the same object when called multiple times for the same name. Don't dispose it.
 	/// Calls <see cref="GetObjectUseCache"/> and casts to Bitmap.
 	/// </summary>
-	/// <param name="name">Image resource name.</param>
+	/// <param name="name">Image resource name. Use <c>nameof(Au.Editor.Properties.Resources.name)</c>.</param>
 	public static Bitmap GetImageUseCache(string name)
 	{
 		return GetObjectUseCache(name) as Bitmap;
-	}
-
-	/// <summary>
-	/// Gets a Bitmap resource from project resources.
-	/// If called multiple times, creates new object each time.
-	/// </summary>
-	/// <param name="name">Image resource name.</param>
-	public static Bitmap GetImageNoCache(string name)
-	{
-		return Au.Editor.Properties.Resources.ResourceManager.GetObject(name, Au.Editor.Properties.Resources.Culture) as Bitmap;
 	}
 }
 
@@ -184,19 +167,24 @@ static class EdStock
 
 	static Icon _iconAppNormal, _iconTrayNormal, _iconTrayDisabled, _iconTrayRunning;
 
-	public static Icon IconAppNormal => _iconAppNormal ?? (_iconAppNormal = Au.Editor.Properties.Resources.app_normal); //contains icons of multiple sizes
+	public static Icon IconAppNormal => _iconAppNormal ??= Au.Editor.Properties.Resources.app_normal; //contains icons of multiple sizes
 
-	public static Icon IconTrayNormal => _iconTrayNormal ?? (_iconTrayNormal = _Icon(IconAppNormal));
+	public static Icon IconTrayNormal => _iconTrayNormal ??= _Icon(IconAppNormal);
 
-	public static Icon IconAppDisabled => _iconTrayDisabled ?? (_iconTrayDisabled = _Icon(Au.Editor.Properties.Resources.app_disabled));
+	public static Icon IconAppDisabled => _iconTrayDisabled ??= _Icon(Au.Editor.Properties.Resources.app_disabled);
 
-	public static Icon IconAppRunning => _iconTrayRunning ?? (_iconTrayRunning = _Icon(Au.Editor.Properties.Resources.app_running));
+	public static Icon IconAppRunning => _iconTrayRunning ??= _Icon(Au.Editor.Properties.Resources.app_running);
 
 	static Icon _Icon(Icon icon)
 	{
 		int size = AIcon.GetShellIconSize(IconSize.SysSmall);
 		return new Icon(icon, size, size);
 	}
+
+	//rejected. Use EdResources.
+	//static Image _imageNamespace, _imageClass, _imageStruct, _imageEnum, _imageDelegate, _imageInterface,
+	//	_imageMethod, _imageProperty, _imageEvent, _imageField, _imageConst, _imageVar, _imageKeyword, _imageSnippet;
+	//public static Image ImageNamespace => _imageNamespace ??= Au.Editor.Properties.Resources.Namespace_16x;
 }
 
 /// <summary>

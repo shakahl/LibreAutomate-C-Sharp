@@ -21,10 +21,15 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
 using static Au.Controls.Sci;
+using Au.Compiler;
+using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Completion;
-using Au.Compiler;
+using Microsoft.CodeAnalysis.Text;
+using Microsoft.CodeAnalysis.Host.Mef;
+
 //using Au.Intellisense;
 //using DiffMatchPatch;
 
@@ -107,7 +112,7 @@ class Program
 		SemanticModel model = compilation.GetSemanticModel(tree);
 
 		// Get 'all' symbols that are in scope at the above position. 
-		System.Collections.Immutable.ImmutableArray<ISymbol> symbols = model.LookupSymbols(position);
+		ImmutableArray<ISymbol> symbols = model.LookupSymbols(position);
 		APerf.NW();
 
 		// Note: "Windows" only appears as a symbol at this location in Windows 8.1.
@@ -291,17 +296,70 @@ class Program
 		//MetaReferences.DebugPrintCachedRefs();
 	}
 
+	class TestGC
+	{
+		~TestGC()
+		{
+			Print("GC");
+			s_debug = false;
+		}
+	}
+	static bool s_debug, s_debug2;
+
+	void _MonitorGC()
+	{
+		if(!s_debug2) {
+			s_debug2 = true;
+			ATimer.Every(50, () => {
+				if(!s_debug) {
+					s_debug = true;
+					ATimer.After(100, () => new TestGC());
+				}
+			});
+		}
+	}
+
+	class CiWorkspace : Workspace
+	{
+		//public CaWorkspace(HostServices host) : base(host, WorkspaceKind.Host)
+		public CiWorkspace() : base(MefHostServices.DefaultHost, WorkspaceKind.Host) //TODO: Roslyn throws/handles 2 exceptions because does not find Workspaces and Features assemblies for VB
+		{
+
+		}
+
+		public Project AddProject(ProjectInfo projectInfo)
+		{
+			if(projectInfo == null) {
+				throw new ArgumentNullException(nameof(projectInfo));
+			}
+
+			this.OnProjectAdded(projectInfo);
+
+			this.UpdateReferencesAfterAdd();
+
+			return this.CurrentSolution.GetProject(projectInfo.Id);
+		}
+	}
+
 	void _TestWorkspaces4()
 	{
+		//if(!s_debug2) {
+		//	_MonitorGC();
+		//	return;
+		//}
+
+		200.ms();
+		if(s_sol != null && AKeys.IsScrollLock) {
+			_TestWorkspaces4_2();
+			return;
+		}
+
+		//AOutput.Clear();
+		APerf.First();
 		var doc = Panels.Editor.ActiveDoc;
 		var f = doc.FN;
-		if(!f.IsCodeFile) return;
 		var f0 = f;
 		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
-
-		APerf.First();
-		var sol = new AdhocWorkspace().CurrentSolution;
-		APerf.Next();
 
 		var m = new MetaComments();
 		if(!m.Parse(f, projFolder, EMPFlags.ForCodeInfo)) {
@@ -309,38 +367,133 @@ class Program
 			err.PrintAll();
 			return;
 		}
-		APerf.Next();
+		APerf.Next('M');
+		//return;
 
+		string code = null;
 		DocumentId documentId = null;
 		ProjectId projectId = ProjectId.CreateNewId();
 		var adi = new List<DocumentInfo>();
 		foreach(var f1 in m.CodeFiles) {
 			var docId = DocumentId.CreateNewId(projectId);
-			var tav = TextAndVersion.Create(Microsoft.CodeAnalysis.Text.SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
+			var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
 			adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav)));
 			if(f1.f == f0) {
 				documentId = docId;
+				code = f1.code;
 			}
 		}
 		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
 			m.CreateCompilationOptions(), m.CreateParseOptions(), adi,
 			projectReferences: null, //TODO: create from m.ProjectReferences?
 			m.References.Refs); //TODO: set outputRefFilePath if library?
-		sol = sol.AddProject(pi);
-
-		APerf.Next();
-
-		//var source = doc.Text;
+		APerf.Next('p');
+		var ws = new AdhocWorkspace();
+		//var ws = new CiWorkspace();
+		//s_ws = ws;
+		s_docId = documentId;
+#if true
+		var sol = ws.CurrentSolution;
+		sol = sol.AddProject(pi); //does not change ws.CurrentSolution, which then is invalid
+		s_sol = sol;
+#else
+		ws.AddProject(pi);
+		var sol = ws.CurrentSolution;
+#endif
+		APerf.NW('P');
 		var document = sol.GetDocument(documentId);
 		var completionService = CompletionService.GetService(document);
-		APerf.Next();
-		var position = doc.ST.CurrentPosChars;
-		var all = completionService.GetCompletionsAsync(document, position).Result;
-		APerf.NW();
-		if(all == null) return;
-		Print(all.Items);
+		APerf.Next('s');
 
+#if true
+		Action act = () => {
+			//APerf.Cpu(); //55 -> 20 ms
+			APerf.First();
+			var position = doc.ST.CurrentPosChars;
+			var r = completionService.GetCompletionsAsync(document, position).Result;
+			if(r == null) { Print("null"); return; }
+			//APerf.Next();
+			//var span = r.Span;
+			//var r2 = completionService.FilterItems(document, r.Items, code.Substring(span.Start, span.Length)); //returns r.Items
+			//var k = completionService.GetChangeAsync(document, r.Items[0]).Result;
+
+			APerf.NW();
+			Print(r.Items.Length);
+			//Print(r.Items.Length, k.TextChange);
+			//Print(r.Items.Length, r2.Length);
+
+			//var a = r.Items;
+			//foreach(var v in a) {
+			//	Print($"<><Z green>{v.DisplayText}<>");
+			//	var d = completionService.GetDescriptionAsync(document, v).Result;
+			//	Print(d.Text);
+			//}
+		};
+#else
+		Action act = () => {
+			//APerf.Cpu(); //7 -> 7 ms
+			APerf.First();
+			var position = doc.ST.CurrentPosChars;
+			var model = document.GetSemanticModelAsync().Result;
+			APerf.Next();
+			var symbols = model.LookupSymbols(position);
+			//var symbols = model.LookupLabels(position);
+			//var symbols = model.LookupNamespacesAndTypes(position);
+			//var symbols = model.LookupStaticMembers(position);
+			//var symbols = model.LookupBaseMembers(position);
+			//APerf.Next();
+			//var r = symbols.OrderBy(sy => sy.ToDisplayString(), StringComparer.OrdinalIgnoreCase);
+			APerf.NW();
+			Print(symbols.Length);
+		};
+#endif
+
+		act();
+		int n = 0;
+		//ATimer.Every(1000, tim => { if(n++ > 2) tim.Stop(); act(); });
 	}
+	//CiWorkspace s_ws;
+	Solution s_sol;
+	DocumentId s_docId;
+
+	void _TestWorkspaces4_2()
+	{
+		var doc = Panels.Editor.ActiveDoc;
+		var position = doc.ST.CurrentPosChars;
+		APerf.First();
+		s_sol = s_sol.WithDocumentText(s_docId, SourceText.From(doc.Text, Encoding.UTF8));
+		var document = s_sol.GetDocument(s_docId);
+		APerf.Next();
+		int n = 0;
+#if true
+		var completionService = CompletionService.GetService(document);
+		APerf.Next('s');
+		var r = completionService.GetCompletionsAsync(document, position).Result;
+		n = r?.Items.Length ?? 0;
+#else
+		if(!document.TryGetSemanticModel(out var model)) model = document.GetSemanticModelAsync().Result;
+		APerf.Next();
+		var symbols = model.LookupSymbols(position);
+		n=symbols.Length;
+#endif
+		APerf.NW();
+		Print(n);
+	}
+
+	//void _TestWorkspaces4_2()
+	//{
+	//	var doc = Panels.Editor.ActiveDoc;
+	//	APerf.First();
+	//	var sol = s_ws.CurrentSolution;
+	//	var document = sol.GetDocument(s_docId);
+
+	//	var position = doc.ST.CurrentPosChars;
+	//	var model = document.GetSemanticModelAsync().Result;
+	//	APerf.Next();
+	//	var symbols = model.LookupSymbols(position);
+	//	APerf.NW();
+	//	Print(symbols.Length);
+	//}
 
 	//class _TextLoader : TextLoader
 	//{
@@ -352,21 +505,105 @@ class Program
 	//	}
 	//}
 
+	//void _TestResources()
+	//{
+	//	//Print(Au.Editor.Properties.Resources.back);
+	//	//Print(EdResources.GetObjectUseCache(nameof(Au.Editor.Properties.Resources.back)));
+	//	//Print(EdResources.GetObjectUseCache2(nameof(Au.Editor.Properties.Resources.back)));
+
+	//	//APerf.Cpu();
+	//	for(int i1 = 0; i1 < 5; i1++) {
+	//		Thread.Sleep(200);
+	//		int n2 = 100;
+	//		APerf.First();
+	//		//for(int i2 = 0; i2 < n2; i2++) { var v = Au.Editor.Properties.Resources.back; }
+	//		APerf.Next();
+	//		for(int i2 = 0; i2 < n2; i2++) { var v = EdResources.GetObjectUseCache(nameof(Au.Editor.Properties.Resources.back)); }
+	//		APerf.Next();
+	//		for(int i2 = 0; i2 < n2; i2++) { var v = EdResources.GetObjectUseCache2(nameof(Au.Editor.Properties.Resources.back)); }
+	//		APerf.Next();
+	//		for(int i2 = 0; i2 < n2; i2++) { }
+	//		APerf.NW();
+	//	}
+	//}
+
+	//public class AObjectCache<T> where T : class
+	//{
+	//	WeakReference<T> _wr;
+	//	T _keeper;
+	//	System.Threading.Timer _timer;
+
+	//	public bool TryGet(out T x)
+	//	{
+	//		x = null;
+
+
+
+	//		return true;
+	//	}
+
+	//	public void Add(T x, int timeoutMS)
+	//	{
+
+	//	}
+	//}
+
+
+	//public class SimpleListCache<T> where T : class
+	//{
+	//	WeakReference<List<T>> _wr;
+	//	List<T> _a;
+
+	//	public SimpleListCache()
+	//	{
+	//		Program.Timer1s += _Timer1s;
+	//	}
+
+	//	private void _Timer1s()
+	//	{
+
+	//	}
+
+	//	public bool TryGet(out T x)
+	//	{
+	//		x = null;
+
+
+
+	//		return true;
+	//	}
+
+	//	public void Add(T x, int secondsTimeout)
+	//	{
+
+	//	}
+	//}
+
+
+	void _TestGetItemText()
+	{
+		int n = 0;
+		APerf.First();
+		foreach(var f in Program.Model.Root.Descendants()) {
+			if(!f.IsCodeFile) continue;
+			if(f.Name == "5 M lines.cs") continue;
+			n++;
+			//Print(f.Name);
+			//var s = f.GetText();
+			AFile.GetProperties(f.FilePath, out var p, FAFlags.UseRawPath);
+		}
+		APerf.NW();
+		Print(n);
+	}
+
 	public unsafe void TestEditor()
 	{
-		AOutput.Clear();
-		_TestWorkspaces4();
+		//AOutput.Clear();
+		//_TestGetItemText();
+		//_TestResources();
+		//_TestWorkspaces4();
+		//_MonitorGC();
 
-		//switch(ADialog.ShowList("Raw|Workspaces")) {
-		//case 1:
-		//	GetInScopeSymbols();
-		//	break;
-		//case 2:
-		//	_TestWorkspaces();
-		//	break;
-		//}
-
-		//ARegex.AddReplaceFunc("Upper", m => m.Value.Upper());
 		return;
 
 
@@ -681,9 +918,9 @@ class Program
 
 	void TestTools()
 	{
-		var f = new Au.Tools.Form_Wnd(AWnd.Find("Quick*"));
-		//var f = new Au.Tools.Form_Acc();
-		//var f = new Au.Tools.Form_WinImage();
+		var f = new Au.Tools.FormAWnd(AWnd.Find("Quick*"));
+		//var f = new Au.Tools.FormAAcc();
+		//var f = new Au.Tools.FormAWinImage();
 		//AWnd.GetWnd.Root.Activate();100.ms();
 		f.Show(this);
 		//f.ShowDialog();

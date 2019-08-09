@@ -30,7 +30,7 @@ using Aga.Controls.Tree.NodeControls;
 
 namespace Au.Tools
 {
-	public partial class Form_Acc : ToolForm
+	public partial class FormAAcc : ToolForm
 	{
 		AAcc _acc;
 		AWnd _wnd, _con;
@@ -39,7 +39,7 @@ namespace Au.Tools
 		CommonInfos _commonInfos;
 		string _wndName;
 
-		public Form_Acc(AAcc acc = null)
+		public FormAAcc(AAcc acc = null)
 		{
 			InitializeComponent();
 

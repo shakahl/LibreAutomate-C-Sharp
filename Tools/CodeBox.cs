@@ -214,11 +214,11 @@ namespace Au.Tools
 		//}
 
 		/// <summary>
-		/// Shows <see cref="Form_Wnd"/> and updates text.
+		/// Shows <see cref="FormAWnd"/> and updates text.
 		/// </summary>
 		public (bool ok, AWnd wnd, AWnd con, bool useCon) ZShowWndTool(AWnd wnd, AWnd con, bool uncheckControl)
 		{
-			using(var f = new Form_Wnd(con.Is0 ? wnd : con, uncheckControl)) {
+			using(var f = new FormAWnd(con.Is0 ? wnd : con, uncheckControl)) {
 				if(f.ShowDialog(FindForm()) != DialogResult.OK) return default;
 				var code = f.ResultCode;
 				_wnd = f.ResultWindow;

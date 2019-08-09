@@ -358,9 +358,9 @@ class Script : AScript
 		//var w = AWnd.Find("FileZilla", "wxWindowNR").OrThrow();
 		//var a = AAcc.Find(w, "STATICTEXT", "Local site:", "id=-31741").OrThrow();
 
-		var fa = new Au.Tools.Form_Acc();
-		//var fa = new Au.Tools.Form_Wnd();
-		//var fa = new Au.Tools.Form_WinImage();
+		var fa = new Au.Tools.FormAAcc();
+		//var fa = new Au.Tools.FormAWnd();
+		//var fa = new Au.Tools.FormAWinImage();
 		fa.ShowDialog();
 
 		//ADialog.Show("unload dll");
@@ -470,8 +470,8 @@ class Script : AScript
 
 	void TestToolForms()
 	{
-		//var fa = new Au.Tools.Form_Acc();
-		//var fa = new Au.Tools.Form_Wnd();
+		//var fa = new Au.Tools.FormAAcc();
+		//var fa = new Au.Tools.FormAWnd();
 		//try {
 		//	fa.ShowDialog();
 		//}
@@ -1304,7 +1304,7 @@ class Script : AScript
 		//Print("stop");
 		//bi.Stop(true);
 
-		//var f = new Au.Tools.Form_WinImage();
+		//var f = new Au.Tools.FormAWinImage();
 		//f.ShowDialog();
 
 		//string s1 = "abcdefgh";
@@ -1335,10 +1335,10 @@ class Script : AScript
 		//#if true
 		//		var w = AWnd.Find("Quick *").OrThrow();
 		//#if true
-		//		var f = new Au.Tools.Form_Wnd(w);
+		//		var f = new Au.Tools.FormAWnd(w);
 		//		f.ShowDialog();
 		//#else
-		//		var f2 = new Au.Tools.Form_WinImage();
+		//		var f2 = new Au.Tools.FormAWinImage();
 		//		f2.ShowDialog();
 		//#endif
 		//#else
@@ -1676,7 +1676,7 @@ class Script : AScript
 		}
 	}
 
-	class Cached :IDisposable
+	class Cached : IDisposable
 	{
 		public Cached()
 		{
@@ -1703,7 +1703,7 @@ class Script : AScript
 
 	void _TestMemoryCache()
 	{
-			APerf.First();
+		APerf.First();
 		var c = Caching.GetObjectFromCache("test", 2000, () => new Cached(), o => Print("removed", o.RemovedReason));
 	}
 
@@ -1750,6 +1750,163 @@ class Script : AScript
 		Print(cancel.IsCancellationRequested, token.IsCancellationRequested);
 	}
 
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	string _Initf(int b)
+	{
+		Print(b);
+		return "A" + b;
+	}
+
+	string _sku1;
+	string Sku1 => _sku1 ?? (_sku1 = _Initf(1));
+
+	string _sku2;
+	string Sku2 => _sku2 ??= _Initf(2);
+
+	void TestNullOperator()
+	{
+		//Print(Sku1, Sku2);
+		//Print(Sku1, Sku2);
+		Print(Sku2);
+	}
+
+	void TestWR()
+	{
+		var f = new Form();
+		var b1 = new Button { Text = "Get" };
+		b1.Click += (unu, sed) => {
+			if(s_wr.TryGetTarget(out var s)) Print("cached");
+			else {
+				Print("new");
+				var n = new _Dtor();
+				//s_var = n;
+				s_wr.SetTarget(new List<_Dtor> { n });
+			}
+		};
+		var b2 = new Button { Text = "GC", Location = new Point(80, 0) };
+		b2.Click += (unu, sed) => {
+			GC.Collect();
+		};
+		var b3 = new Button { Text = "=null", Location = new Point(160, 0) };
+		b3.Click += (unu, sed) => {
+			s_var = null;
+		};
+		f.Controls.Add(b1);
+		f.Controls.Add(b2);
+		f.Controls.Add(b3);
+		f.ShowDialog();
+	}
+	static WeakReference<List<_Dtor>> s_wr = new WeakReference<List<_Dtor>>(null);
+	static _Dtor s_var;
+	class _Dtor { ~_Dtor() => Print("dtor"); }
+
+	//void TestWR()
+	//{
+	//	var f = new Form();
+	//	var b1 = new Button { Text = "Get" };
+	//	b1.Click += (unu, sed) => {
+	//		if(s_wr.TryGetTarget(out var s)) Print("cached");
+	//		else {
+	//			Print("new");
+	//			var n = new _Dtor();
+	//			s_var = n;
+	//			s_wr.SetTarget(n);
+	//		}
+	//	};
+	//	var b2 = new Button { Text = "GC", Location=new Point(80,0) };
+	//	b2.Click += (unu, sed) => {
+	//		GC.Collect();
+	//	};
+	//	var b3 = new Button { Text = "=null", Location=new Point(160,0) };
+	//	b3.Click += (unu, sed) => {
+	//		s_var = null;
+	//	};
+	//	f.Controls.Add(b1);
+	//	f.Controls.Add(b2);
+	//	f.Controls.Add(b3);
+	//	f.ShowDialog();
+	//}
+	//static WeakReference<_Dtor> s_wr=new WeakReference<_Dtor>(null);
+	//static _Dtor s_var;
+	//class _Dtor { ~_Dtor() => Print("dtor"); }
+
+	struct _KV //:IEquatable<_KV>
+	{
+		public string k, v;
+		//public bool Equals(_KV other) => k.Eq(other.k);
+	}
+
+	void TestDictionaryAndListSearchSpeed()
+	{
+		var d = new Dictionary<string, string>();
+		//var d = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+		var k = new List<_KV>();
+		foreach(var v in AFile.EnumDirectory(AFolders.NetFrameworkRuntime)) {
+			if(!v.Name.Ends(".dll", true)) continue;
+			//Print(v.Name);
+			d.Add(v.Name, v.FullPath);
+			k.Add(new _KV { k = v.Name, v = v.FullPath });
+			if(k.Count == 100) break;
+		}
+		Print(k.Count);
+
+		APerf.Cpu();
+		for(int i1 = 0; i1 < 7; i1++) {
+			APerf.First();
+			foreach(var g in k) {
+				if(!d.TryGetValue(g.k, out var v)) Print("no");
+			}
+			APerf.Next();
+			foreach(var g in k) {
+				var s = g.k;
+				//if(!k.Exists(x => x.k.Eq(s))) Print("no");
+
+				bool found = false;
+				for(int i = 0; i < k.Count; i++) if(k[i].k == s) { found = true; break; }
+				if(!found) Print("no");
+
+				//if(!k.Contains(g)) Print("no");
+			}
+			APerf.NW();
+			Thread.Sleep(200);
+		}
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	void _TestTimers()
+	{
+		//new System.Threading.Timer(o => { Print("tim"); }, null, 1000, -1);
+
+		//var t = new System.Timers.Timer();
+		//t.Elapsed += (_, e) => Print("tim");
+		////t.Disposed += (unu, sed) => Print("disposed");
+		//t.AutoReset = false;
+		//t.Interval = 1000;
+		//t.Start();
+
+		//ATimer.After(1000, () => Print("tim"));
+
+		Task.Delay(1000).ContinueWith(_ => Print("tim"));
+	}
+
+	void TestTimers()
+	{
+		APerf.First();
+		_TestTimers();
+		APerf.NW();
+		//GC.Collect();
+		//ATimer.After(5000, () => GC.Collect());
+		ADialog.Show();
+		100.ms();
+	}
+
+	void TestTimersCpu()
+	{
+		ATimer.Every(100, () => { int i = 7; }); //0.045 %
+		//new System.Threading.Timer(_ => { int i = 7; }, null, 0, 100); //0.095 %
+		ADialog.Show();
+	}
+
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
 	void _Main(string[] args)
 	{ //}}//}}//}}//}}
@@ -1758,7 +1915,12 @@ class Script : AScript
 		AOutput.Clear();
 		//100.ms();
 
-		TestCalcellationToken();
+		//TestTimersCpu();
+		//for(int i = 0; i < 7; i++) TestTimers();
+		//TestDictionaryAndListSearchSpeed();
+		//TestWR();
+		//TestNullOperator();
+		//TestCalcellationToken();
 		//TestNetTimer();
 		//TestWeakReferenceWithTimeout();
 		//TestMemoryCache();
@@ -1820,7 +1982,7 @@ class Script : AScript
 
 static class TestExt
 {
-	public static void SetTargetWithTimeout<T>(this WeakReference<T> t, T target, int timeoutMS) where T: class
+	public static void SetTargetWithTimeout<T>(this WeakReference<T> t, T target, int timeoutMS) where T : class
 	{
 		t.SetTarget(target);
 		//Task.Delay(timeoutMS).ContinueWith(_ => GC.KeepAlive(target));

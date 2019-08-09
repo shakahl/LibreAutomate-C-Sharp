@@ -422,7 +422,7 @@ namespace Au.Compiler
 			if(isMain) EndOfMeta = endOf;
 
 			foreach(var t in EnumOptions(code, endOf)) {
-				//var p1 = APerf.StartNew();
+				//var p1 = APerf.Create();
 				_ParseOption(t.Name(), t.Value(), t.nameStart, t.valueStart);
 				//p1.Next(); var t1 = p1.TimeTotal; if(t1 > 5) Print(t1, t.Name(), t.Value());
 			}
@@ -448,9 +448,11 @@ namespace Au.Compiler
 				}
 
 				try {
+					//var p1 = APerf.Create();
 					if(!References.Resolve(value, name[0] == 'c')) {
 						_Error(iValue, "reference assembly not found: " + value); //FUTURE: need more info, or link to Help
 					}
+					//p1.NW('r');
 				}
 				catch(Exception e) {
 					_Error(iValue, "exception: " + e.Message); //unlikely. If bad format, will be error later, without position info.
@@ -655,7 +657,7 @@ namespace Au.Compiler
 			//Print(r.role, r.file);
 			if(r.role != ERole.classLibrary) return _Error(iValue, "it is not a class library (no meta role classLibrary)");
 			value = r.file;
-			(ProjectReferences ?? (ProjectReferences = new List<IWorkspaceFile>())).Add(f); //for XCompiled
+			(ProjectReferences ??= new List<IWorkspaceFile>()).Add(f); //for XCompiled
 			return true;
 		}
 

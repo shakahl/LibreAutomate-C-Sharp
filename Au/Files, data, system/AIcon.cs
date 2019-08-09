@@ -66,7 +66,7 @@ namespace Au
 			size = _NormalizeIconSizeParameter(size);
 			file = APath.ExpandEnvVar(file);
 
-			//var perf = APerf.StartNew();
+			//var perf = APerf.Create();
 			IntPtr R = _GetFileIcon(file, size, flags);
 			//perf.Next(); Print(perf.ToString(), file);
 			//Print($"<><c 0xff0000>{file}</c>");
@@ -590,7 +590,7 @@ namespace Au
 			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc.
 
 			if(hIcon == default) return null;
-			//var perf = APerf.StartNew();
+			//var perf = APerf.Create();
 			Icon ic = Icon.FromHandle(hIcon);
 			Bitmap im = null;
 			try { im = ic.ToBitmap(); } catch(Exception e) { ADebug.Print(e.Message); }

@@ -1328,5 +1328,46 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "AppendMenuW")]
 		internal static extern bool AppendMenu(IntPtr hMenu, uint uFlags = MF_SEPARATOR, LPARAM uIDNewItem = default, string lpNewItem = null);
 
+		internal const uint SIF_RANGE = 0x1;
+		internal const uint SIF_PAGE = 0x2;
+		internal const uint SIF_POS = 0x4;
+		internal const uint SIF_TRACKPOS = 0x10;
+
+		internal struct SCROLLINFO
+		{
+			public int cbSize;
+			public uint fMask;
+			public int nMin;
+			public int nMax;
+			public int nPage;
+			public int nPos;
+			public int nTrackPos;
+		}
+
+		[DllImport("user32.dll")]
+		internal static extern int SetScrollInfo(AWnd hwnd, bool vert, in SCROLLINFO lpsi, bool redraw);
+
+		[DllImport("user32.dll")]
+		internal static extern bool GetScrollInfo(AWnd hwnd, bool vert, ref SCROLLINFO lpsi);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool GetScrollBarInfo(AWnd hwnd, AccOBJID idObject, ref SCROLLBARINFO psbi);
+
+		internal struct SCROLLBARINFO
+		{
+			public int cbSize;
+			public RECT rcScrollBar;
+			public int dxyLineButton;
+			public int xyThumbTop;
+			public int xyThumbBottom;
+			public int reserved;
+			//public unsafe fixed uint rgstate[6];
+			public uint stateScrollbar, stateArrowTopRight, statePageUpRight, stateThumb, statePageDownLeft, stateArrowBottomLeft;
+		}
+		internal const uint STATE_SYSTEM_INVISIBLE = 0x8000;
+		internal const uint STATE_SYSTEM_OFFSCREEN = 0x10000;
+		internal const uint STATE_SYSTEM_PRESSED = 0x8;
+		internal const uint STATE_SYSTEM_UNAVAILABLE = 0x1;
+
 	}
 }

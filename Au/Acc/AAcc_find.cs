@@ -400,7 +400,7 @@ namespace Au
 		/// <exception cref="AException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// 
 		/// <remarks>
-		/// To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.Form_Acc</b> in Au.Tools.dll.
+		/// To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.FormAAcc</b> in Au.Tools.dll.
 		/// 
 		/// Walks the tree of accessible objects, until finds a matching AO.
 		/// 

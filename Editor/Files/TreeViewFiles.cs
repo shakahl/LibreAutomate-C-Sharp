@@ -227,7 +227,7 @@ partial class FilesModel
 			//Print(f);
 			Debug.Assert(node.IsLeaf != f.IsFolder);
 
-			if(_model.IsInPrivateClipboard(f, out bool cut)) return EdResources.GetImageUseCache(cut ? "cut" : "copy");
+			if(_model.IsInPrivateClipboard(f, out bool cut)) return EdResources.GetImageUseCache(cut ? nameof(Au.Editor.Properties.Resources.cut) : nameof(Au.Editor.Properties.Resources.copy));
 			return f.GetIcon(node.IsExpanded);
 		}
 

@@ -18,9 +18,9 @@ partial class PanelFiles : AuUserControlBase
 
 	public PanelFiles()
 	{
+		this.AccessibleName = this.Name = "Files";
 		_c = new FilesModel.TreeViewFiles();
 		_c.AccessibleName = _c.Name = "Files_list";
-		this.AccessibleName = this.Name = "Files";
 		this.Controls.Add(_c);
 	}
 
@@ -227,12 +227,12 @@ partial class PanelFiles : AuUserControlBase
 					_CreateMenu(dir + "\\" + name, ddSub, level + 1);
 				} else {
 					string si = null;
-					//if(isProject) si = "project";
-					if(isProject) si = "folder";
+					//if(isProject) si = nameof(Au.Editor.Properties.Resources.project);
+					if(isProject) si = nameof(Au.Editor.Properties.Resources.folder);
 					else {
 						switch(FileNode.DetectFileType(v.FullPath)) {
-						case EFileType.Script: si = "fileScript"; break;
-						case EFileType.Class: si = "fileClass"; break;
+						case EFileType.Script: si = nameof(Au.Editor.Properties.Resources.fileScript); break;
+						case EFileType.Class: si = nameof(Au.Editor.Properties.Resources.fileClass); break;
 						}
 					}
 					Bitmap im = si != null ? EdResources.GetImageUseCache(si) : FileNode.IconCache.GetImage(v.FullPath, true);

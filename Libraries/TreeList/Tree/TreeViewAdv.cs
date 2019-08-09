@@ -23,7 +23,7 @@ namespace Aga.Controls.Tree
 	/// <see cref="CheckBox"/>, Icon, Label... Drag and Drop highlighting. Load on
 	/// demand of nodes. Incremental search of nodes.
 	/// </summary>
-	public partial class TreeViewAdv : Au.Controls.ScrollableControl_
+	public partial class TreeViewAdv : Au.Controls.AuScrollableControl
 	{
 		int LeftMargin => ShowPlusMinus ? 5 : 0; //au: was private const int LeftMargin = 7;
 		internal const int ItemDragSensivity = 4;
@@ -394,8 +394,8 @@ namespace Aga.Controls.Tree
 			if(!IsHandleCreated) return;
 			//Print("UpdateScrollBars", ItemCount);
 			for(int i = 2; i >= 0; i--) {
-				SetScrollInfo(true, Math.Max(RowCount - 1, 0), _rowLayout.PageRowCount, true);
-				SetScrollInfo(false, ContentWidth, Math.Max(DisplayRectangle.Width, 0), true);
+				SetScrollInfo(true, Math.Max(RowCount - 1, 0), _rowLayout.PageRowCount, notify: true);
+				SetScrollInfo(false, ContentWidth, Math.Max(DisplayRectangle.Width, 0), notify: true);
 			}
 		}
 

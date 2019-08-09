@@ -30,11 +30,11 @@ class EdMetaCommentsParser
 		outputPath, console, icon, manifest, resFile, sign, xmlDoc;
 	List<string> _r, _pr, _c, _resource, _com;
 
-	public List<string> r => _r ?? (_r = new List<string>());
-	public List<string> pr => _pr ?? (_pr = new List<string>());
-	public List<string> c => _c ?? (_c = new List<string>());
-	public List<string> resource => _resource ?? (_resource = new List<string>());
-	public List<string> com => _com ?? (_com = new List<string>());
+	public List<string> r => _r ??= new List<string>();
+	public List<string> pr => _pr ??= new List<string>();
+	public List<string> c => _c ??= new List<string>();
+	public List<string> resource => _resource ??= new List<string>();
+	public List<string> com => _com ??= new List<string>();
 
 	public EdMetaCommentsParser(FileNode f) : this(f.GetText()) { _fn = f; }
 

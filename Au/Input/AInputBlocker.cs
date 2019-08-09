@@ -145,9 +145,9 @@ namespace Au
 			try {
 				try {
 					if(_block.Has(BIEvents.Keys))
-						hk = AHookWin.Keyboard(_keyHookProc ?? (_keyHookProc = _KeyHookProc));
+						hk = AHookWin.Keyboard(_keyHookProc ??= _KeyHookProc);
 					if(_block.HasAny(BIEvents.MouseClicks | BIEvents.MouseMoving))
-						hm = AHookWin.Mouse(_mouseHookProc ?? (_mouseHookProc = _MouseHookProc));
+						hm = AHookWin.Mouse(_mouseHookProc ??= _MouseHookProc);
 				}
 				catch(AException e1) { ADebug.Print(e1); _block = 0; return; } //failed to hook
 
@@ -159,7 +159,7 @@ namespace Au
 				Api.SetEvent(_syncEvent);
 
 				//the acc hook detects Ctrl+Alt+Del, Win+L, UAC consent, etc. SystemEvents.SessionSwitch only Win+L.
-				try { hwe = new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, _winEventProc ?? (_winEventProc = _WinEventProc)); }
+				try { hwe = new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, _winEventProc ??= _WinEventProc); }
 				catch(AException e1) { ADebug.Print(e1); } //failed to hook
 
 				AWaitFor.LibWait(-1, WHFlags.DoEvents, _stopEvent, _threadHandle);

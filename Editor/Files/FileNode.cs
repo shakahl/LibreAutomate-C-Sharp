@@ -238,7 +238,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	/// File name with or without extension.
 	/// If ends with ".cs", returns without extension.
 	/// </summary>
-	public string DisplayName => _displayName ?? (_displayName = _name.RemoveSuffix(".cs", true));
+	public string DisplayName => _displayName ??= _name.RemoveSuffix(".cs", true);
 
 	/// <summary>
 	/// Unique id in this workspace. To find faster, with database, etc.
@@ -342,7 +342,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 
 	string _ItemPath(string prefix = null)
 	{
-		var a = t_pathStack ?? (t_pathStack = new Stack<string>());
+		var a = t_pathStack ??= new Stack<string>();
 		a.Clear();
 		for(FileNode f = this, root = Root; f != root; f = f.Parent) {
 			if(f == null) { Debug.Assert(IsDeleted); return null; }
@@ -401,11 +401,11 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 			k = "delete";
 		} else {
 			switch(_type) {
-			case EFileType.Script: k = "fileScript"; break;
-			case EFileType.Class: k = "fileClass"; break;
+			case EFileType.Script: k = nameof(Au.Editor.Properties.Resources.fileScript); break;
+			case EFileType.Class: k = nameof(Au.Editor.Properties.Resources.fileClass); break;
 			case EFileType.Folder:
-				//if(IsProjectFolder()) k = "project"; else //rejected. Name starts with '@' character, it's visible without a different icon.
-				k = expandedFolder ? "folderOpen" : "folder";
+				//if(IsProjectFolder()) k = nameof(Au.Editor.Properties.Resources.project); else //rejected. Name starts with '@' character, it's visible without a different icon.
+				k = expandedFolder ? nameof(Au.Editor.Properties.Resources.folderOpen) : nameof(Au.Editor.Properties.Resources.folder);
 				break;
 			default: //_Type.NotCodeFile
 				return IconCache.GetImage(LinkTarget ?? FilePath, true);

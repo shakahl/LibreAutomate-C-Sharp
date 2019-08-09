@@ -42,8 +42,8 @@ namespace Au.Controls
 					txtFormatHorz = new StringFormat(StringFormatFlags.NoWrap);
 					txtFormatVert = new StringFormat(StringFormatFlags.NoWrap | StringFormatFlags.DirectionVertical);
 					txtFormatHorz.LineAlignment = txtFormatVert.LineAlignment = StringAlignment.Center;
-					txtFormatHorz.Trimming = StringTrimming.EllipsisCharacter;
 					//txtFormatVert.Trimming = StringTrimming.EllipsisCharacter; //.NET bug with vertical: displays a rectangle or nothing, instead of ...
+					//txtFormatHorz.Trimming = StringTrimming.EllipsisCharacter; //no. The string is short, and the ... just hides useful characters.
 					_inited = true;
 				}
 			}

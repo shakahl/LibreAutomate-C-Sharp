@@ -116,21 +116,6 @@ namespace Aga.Controls.Tree
 			return args;
 		}
 
-		protected override void OnMouseWheel(MouseEventArgs e)
-		{
-			//_search?.EndSearch();
-			int lines = e.Delta / 120 * SystemInformation.MouseWheelScrollLines;
-
-			var k = GetScrollInfo(true);
-			int newValue = k.Pos - lines;
-			newValue = Math.Min(k.Max - k.Page + 1, newValue);
-			newValue = Math.Min(k.Max, newValue);
-			var pos = Math.Max(0, newValue);
-			SetScrollPos(true, pos, true);
-
-			base.OnMouseWheel(e);
-		}
-
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
 			_dragEscaped = false;

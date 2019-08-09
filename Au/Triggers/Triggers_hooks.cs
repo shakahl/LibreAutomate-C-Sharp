@@ -206,7 +206,7 @@ namespace Au.Triggers
 
 		unsafe void _KeyboardHookProc(HookData.Keyboard k)
 		{
-			//var p = APerf.StartNew();
+			//var p = APerf.Create();
 			var d = new Api.KBDLLHOOKSTRUCT2(k.LibNativeStructPtr);
 			if(_Send(UsedEvents.Keyboard, &d, sizeof(Api.KBDLLHOOKSTRUCT2))) k.BlockEvent();
 			//p.NW();

@@ -65,9 +65,6 @@ namespace Au.Compiler
 				catch(Exception ex) {
 					Print($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack()}");
 				}
-				finally {
-					LibSetTimerGC();
-				}
 
 				if(!ok) {
 					f.IwfTriggers(null);
@@ -358,7 +355,7 @@ namespace Au.Compiler
 					for(int i = 0; i < n1; i++) k[i] = new KeyValuePair<string, object>(null, ca[i].Value);
 					for(int i = 0; i < n2; i++) k[i + n1] = new KeyValuePair<string, object>(na[i].Key, na[i].Value.Value);
 
-					(a ?? (a = new List<CompTriggerData>())).Add(new CompTriggerData(method, c.Name, k));
+					(a ??= new List<CompTriggerData>()).Add(new CompTriggerData(method, c.Name, k));
 				}
 			}
 		}
@@ -536,28 +533,6 @@ namespace Au.Compiler
 			return true;
 		}
 		static ARegex s_rx1;
-
-		/// <summary>
-		/// If Thread.CurrentThread.ManagedThreadId == 1, sets timer to call GC.Collect after 10 s.
-		/// </summary>
-		internal static void LibSetTimerGC()
-		{
-			//problem 1: GC does not start automatically to release PortableExecutableReference data, many MB. Probably most of it is unmanaged memory.
-			//	After first compilation Task Manager shows 40 MB. After several times can be 300 MB.
-			//	Explicit GC collect makes 21 MB.
-			//problem 2: Compiling is much slower if we always create all PortableExecutableReference.
-			//	We can cache them, but then always 40 MB.
-			//Solution: cache them in a WeakReference, and set timer to do GC collect after eg 10 s.
-			//	Then, if compiling frequently, compiling is fast, also don't need frequent explicit GC collect. For 10 s we have constant 40 MB, then 21 MB.
-
-			if(Thread.CurrentThread.ManagedThreadId != 1) return;
-			if(t_timerGC == null) t_timerGC = new Timer(_ => {
-				GC.Collect();
-				//GC.WaitForPendingFinalizers(); SetProcessWorkingSetSize(AProcess.CurrentProcessHandle, -1, -1);
-			});
-			t_timerGC.Change(10_000, -1); //note: must be > than timer in MetaReferences ctor.
-		}
-		static Timer t_timerGC;
 
 		#region default references and usings
 

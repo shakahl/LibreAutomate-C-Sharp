@@ -52,7 +52,7 @@ namespace Au
 		/// k.Add("Tab Ctrl+V").Send(); //uses options of k
 		/// ]]></code>
 		/// </example>
-		public static OptKey Key => t_key ?? (t_key = new OptKey(AOpt.Static.Key));
+		public static OptKey Key => t_key ??= new OptKey(AOpt.Static.Key);
 		[ThreadStatic] internal static OptKey t_key;
 
 		/// <summary>
@@ -67,7 +67,7 @@ namespace Au
 		/// AMouse.Click();
 		/// ]]></code>
 		/// </example>
-		public static OptMouse Mouse => t_mouse ?? (t_mouse = new OptMouse(AOpt.Static.Mouse));
+		public static OptMouse Mouse => t_mouse ??= new OptMouse(AOpt.Static.Mouse);
 		[ThreadStatic] internal static OptMouse t_mouse;
 
 		/// <summary>
@@ -83,7 +83,7 @@ namespace Au
 		/// PrintWarning("Example");
 		/// ]]></code>
 		/// </example>
-		public static OptDebug Debug => t_debug ?? (t_debug = new OptDebug(AOpt.Static.Debug));
+		public static OptDebug Debug => t_debug ??= new OptDebug(AOpt.Static.Debug);
 		[ThreadStatic] static OptDebug t_debug;
 
 		/// <summary>
@@ -93,7 +93,7 @@ namespace Au
 		/// Each thread has its own <b>AOpt.WaitFor</b> instance. There is no <b>AOpt.Static.WaitFor</b>.
 		/// Most 'wait for' functions of this library use these options. Functions of .NET classes don't.
 		/// </remarks>
-		public static OptWaitFor WaitFor => t_waitFor ?? (t_waitFor = new OptWaitFor());
+		public static OptWaitFor WaitFor => t_waitFor ??= new OptWaitFor();
 		[ThreadStatic] static OptWaitFor t_waitFor;
 
 		/// <summary>

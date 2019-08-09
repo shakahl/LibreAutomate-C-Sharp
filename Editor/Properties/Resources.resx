@@ -259,4 +259,148 @@
   <data name="app_running" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resources\ico\app_running.ico;System.Drawing.Icon, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="ClassFriend_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ClassFriend_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ClassPrivate_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ClassPrivate_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ClassProtected_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ClassProtected_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Class_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Class_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ConstantFriend_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ConstantFriend_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ConstantPrivate_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ConstantPrivate_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ConstantProtected_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ConstantProtected_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Constant_left_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Constant_left_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DelegateFriend_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DelegateFriend_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DelegatePrivate_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DelegatePrivate_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="DelegateProtected_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\DelegateProtected_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Delegate_left_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Delegate_left_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Enumerator_left_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Enumerator_left_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="EnumFriend_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\EnumFriend_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="EnumItem_left_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\EnumItem_left_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="EnumPrivate_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\EnumPrivate_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="EnumProtect_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\EnumProtect_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="EventFriend_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\EventFriend_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="EventPrivate_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\EventPrivate_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="EventProtect_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\EventProtect_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Event_left_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Event_left_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ExtensionMethod_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ExtensionMethod_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FieldFriend_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\FieldFriend_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FieldPrivate_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\FieldPrivate_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="FieldProtect_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\FieldProtect_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Field_left_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Field_left_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="IntelliSenseKeyword_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\IntelliSenseKeyword_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="InterfaceFriend_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\InterfaceFriend_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="InterfacePrivate_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\InterfacePrivate_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="InterfaceProtect_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\InterfaceProtect_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Interface_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Interface_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Label_16xMD" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Label_16xMD.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="LocalVariable_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\LocalVariable_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MethodFriend_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MethodFriend_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MethodPrivate_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MethodPrivate_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="MethodProtect_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\MethodProtect_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Method_left_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Method_left_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Namespace_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Namespace_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PropertyFriend_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PropertyFriend_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PropertyPrivate_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PropertyPrivate_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="PropertyProtect_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\PropertyProtect_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Property_left_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resources\property_left_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Snippet_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Snippet_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="Type_left_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\Type_left_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ValueTypeFriend_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ValueTypeFriend_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ValueTypePrivate_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ValueTypePrivate_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ValueTypeProtect_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ValueTypeProtect_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="ValueType_left_16x" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\ValueType_left_16x.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
 </root>

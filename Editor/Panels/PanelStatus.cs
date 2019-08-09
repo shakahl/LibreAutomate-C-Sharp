@@ -34,11 +34,10 @@ class PanelStatus : AuUserControlBase
 		this.Size = new Size(0, z.Height + 3);
 		this.Dock = DockStyle.Bottom;
 
-		_c = new AuScintilla();
-		_c.Dock = DockStyle.Fill;
-		_c.AccessibleName = _c.Name = "Status_text";
 		this.AccessibleName = this.Name = "Status";
+		_c = new AuScintilla { Name = "Status_text", AccessibleName = Name };
 		_c.AccessibleRole = AccessibleRole.StatusBar;
+		_c.Dock = DockStyle.Fill;
 
 		_c.InitReadOnlyAlways = true;
 		_c.InitTagsStyle = AuScintilla.TagsStyle.AutoWithPrefix;

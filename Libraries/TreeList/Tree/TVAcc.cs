@@ -26,11 +26,11 @@ namespace Aga.Controls.Tree
 {
 	partial class TreeViewAdv
 	{
-		internal AccContainer AccObj;
+		internal _AccContainer AccObj;
 
 		protected override AccessibleObject CreateAccessibilityInstance()
 		{
-			if(AccObj == null) AccObj = new AccContainer(this, this);
+			if(AccObj == null) AccObj = new _AccContainer(this);
 			return AccObj;
 		}
 
@@ -53,12 +53,12 @@ namespace Aga.Controls.Tree
 		//Tested how much memory for AO uses DataGrid control with the same number of items. More than 2 times more. It implements AO for rows and cells, therefore the AO count is *2.
 	}
 
-	class AccContainer : Control.ControlAccessibleObject
+	class _AccContainer : Control.ControlAccessibleObject
 	{
 		TreeViewAdv _tva;
-		AccHeader _accHeader;
+		_AccHeader _accHeader;
 
-		public AccContainer(Control ownerControl, TreeViewAdv tva) : base(ownerControl)
+		public _AccContainer(TreeViewAdv tva) : base(tva)
 		{
 			_tva = tva;
 		}
@@ -82,7 +82,7 @@ namespace Aga.Controls.Tree
 			return _tva.RowMap[index].Acc;
 		}
 
-		AccHeader _AccHeader => _accHeader ?? (_accHeader = new AccHeader(_tva));
+		_AccHeader _AccHeader => _accHeader ?? (_accHeader = new _AccHeader(_tva));
 
 		public override AccessibleObject HitTest(int x, int y)
 		{
@@ -100,11 +100,11 @@ namespace Aga.Controls.Tree
 	}
 
 
-	class AccNode : AccessibleObject
+	class _AccNode : AccessibleObject
 	{
 		TreeNodeAdv _tn;
 
-		internal AccNode(TreeNodeAdv tn)
+		internal _AccNode(TreeNodeAdv tn)
 		{
 			_tn = tn;
 		}
@@ -238,17 +238,17 @@ namespace Aga.Controls.Tree
 
 	partial class TreeNodeAdv
 	{
-		AccNode _acc;
+		_AccNode _acc;
 
-		internal AccNode Acc => _acc ?? (_acc = new AccNode(this));
+		internal _AccNode Acc => _acc ??= new _AccNode(this);
 	}
 
 
-	class AccHeader : AccessibleObject
+	class _AccHeader : AccessibleObject
 	{
 		TreeViewAdv _tva;
 
-		internal AccHeader(TreeViewAdv tva)
+		internal _AccHeader(TreeViewAdv tva)
 		{
 			_tva = tva;
 		}

@@ -370,7 +370,7 @@ namespace Au.Controls
 			bool _up;
 			Util.AMessageLoop _msgLoop;
 
-			public Font FontBold => _fontBold ?? (_fontBold = new Font(Font, FontStyle.Bold)); //clone not _font, because caller may change Font
+			public Font FontBold => _fontBold ??= new Font(Font, FontStyle.Bold); //clone not _font, because caller may change Font
 
 			public _Window(PopupList p)
 			{

@@ -1,4 +1,4 @@
-﻿partial class Form_Setup
+﻿partial class FSetup
 {
 	/// <summary>
 	/// Required designer variable.
@@ -37,13 +37,13 @@
 			this.button1.Text = "Install";
 			this.button1.Click += new System.EventHandler(this.button1_Click);
 			// 
-			// Form_Setup
+			// FSetup
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(800, 450);
 			this.Controls.Add(this.button1);
-			this.Name = "Form_Setup";
+			this.Name = "FSetup";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "QM3 Setup";
 			this.ResumeLayout(false);

@@ -38,7 +38,7 @@ static class Strips
 
 	public static void Init()
 	{
-		//var p = APerf.StartNew();
+		//var p = APerf.Create();
 
 		//map command handler names/delegates etc
 		_cmd = new CmdHandlers();
@@ -79,7 +79,7 @@ static class Strips
 
 #if DEBUG
 		//all commands have menu items?
-		//var p = APerf.StartNew();
+		//var p = APerf.Create();
 		foreach(var k in _cmd.Dict.Keys) {
 			//Print(k);
 			if(_strips.Xml.Desc(k) == null) PrintWarning("no menu item for command " + k);

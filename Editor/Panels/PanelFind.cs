@@ -233,7 +233,6 @@ class PanelFind : AuUserControlBase
 		// 
 		// PanelFind
 		// 
-		this.AccessibleName = "Find";
 		this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 		this.Controls.Add(this.tableLayoutPanel1);
 		this.Name = "PanelFind";
@@ -266,7 +265,7 @@ class PanelFind : AuUserControlBase
 	public PanelFind()
 	{
 		InitializeComponent();
-		this.Name = "Find"; //workaround for VS designer bug: changes Name to be = the class name.
+		this.AccessibleName = this.Name = "Find"; //note: VS designer bug: changes Name to be = the class name.
 
 		_tFind._f = this;
 		_tReplace._f = this;
@@ -607,7 +606,7 @@ class PanelFind : AuUserControlBase
 	int _SearchIn => _searchIn >= 0 ? _searchIn : (_searchIn = Program.Settings.GetInt("Find.SearchIn"));
 	int _searchIn = -1;
 
-	string[] _SkipWildcards => _aSkipWildcards ?? (_aSkipWildcards = Program.Settings.GetString("Find.Skip", "").SegSplit("\r\n", SegFlags.NoEmpty));
+	string[] _SkipWildcards => _aSkipWildcards ??= Program.Settings.GetString("Find.Skip", "").SegSplit("\r\n", SegFlags.NoEmpty);
 	string[] _aSkipWildcards;
 	string[] _aSkipImages = new string[] { ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani" };
 	bool _init1;

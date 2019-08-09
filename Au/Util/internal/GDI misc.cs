@@ -125,14 +125,14 @@ namespace Au.Util
 		/// Cached standard font used by most windows and controls.
 		/// On Windows 10 it is "Segoe UI" 9 by default.
 		/// </summary>
-		internal static LibNativeFont RegularCached => _regular ?? (_regular = new LibNativeFont(AFonts.LibRegularCached.ToHfont()));
+		internal static LibNativeFont RegularCached => _regular ??= new LibNativeFont(AFonts.LibRegularCached.ToHfont());
 		static LibNativeFont _regular;
 
 		/// <summary>
 		/// Cached font "Verdana" 9.
 		/// Used eg by ADialog for input Edit control.
 		/// </summary>
-		internal static LibNativeFont Verdana9Cached => _verdana ?? (_verdana = new LibNativeFont("Verdana", 9, true));
+		internal static LibNativeFont Verdana9Cached => _verdana ??= new LibNativeFont("Verdana", 9, true);
 		static LibNativeFont _verdana;
 	}
 

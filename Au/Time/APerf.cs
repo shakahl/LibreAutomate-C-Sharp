@@ -295,7 +295,7 @@ namespace Au
 		/// <summary>
 		/// Creates and returns new <see cref="Inst"/> variable and calls its <see cref="Inst.First"/>.
 		/// </summary>
-		public static Inst StartNew()
+		public static Inst Create()
 		{
 			var R = new Inst();
 			R.First();

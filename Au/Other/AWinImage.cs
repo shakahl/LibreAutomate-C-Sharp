@@ -243,7 +243,7 @@ namespace Au
 		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="AConvert.Decompress"/>.</exception>
 		/// <exception cref="AException">Something failed.</exception>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find image or color in window". It is form <b>Au.Tools.Form_WinImage</b> in Au.Tools.dll.
+		/// To create code for this function, use dialog "Find image or color in window". It is form <b>Au.Tools.FormAWinImage</b> in Au.Tools.dll.
 		/// 
 		/// The speed mostly depends on:
 		/// 1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>(w, rectangle)</c>).

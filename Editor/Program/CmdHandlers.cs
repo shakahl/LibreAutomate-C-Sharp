@@ -389,7 +389,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Edit_Members()
 	{
-
+		Program.Codein.ShowCompletionList();
 	}
 
 	public void Edit_ContextHelp()
@@ -498,17 +498,17 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Code_Wnd()
 	{
-		_ShowTool(new Form_Wnd());
+		_ShowTool(new FormAWnd());
 	}
 
 	public void Code_Acc()
 	{
-		_ShowTool(new Form_Acc());
+		_ShowTool(new FormAAcc());
 	}
 
 	public void Code_WinImage()
 	{
-		_ShowTool(new Form_WinImage());
+		_ShowTool(new FormAWinImage());
 	}
 
 	#endregion

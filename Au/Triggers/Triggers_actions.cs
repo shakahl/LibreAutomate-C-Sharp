@@ -56,7 +56,7 @@ namespace Au.Triggers
 	{
 		TOptions _new, _prev;
 
-		TOptions _New() => _new ?? (_new = _prev?.Clone() ?? new TOptions());
+		TOptions _New() => _new ??= (_prev?.Clone() ?? new TOptions());
 
 		/// <summary>
 		/// Run actions in a dedicated thread that does not end when actions end.
@@ -141,7 +141,7 @@ namespace Au.Triggers
 		internal TOptions Current {
 			get {
 				if(_new != null) { _prev = _new; _new = null; }
-				return _prev ?? s_empty ?? (s_empty = new TOptions());
+				return _prev ?? (s_empty ??= new TOptions());
 			}
 		}
 		static TOptions s_empty;

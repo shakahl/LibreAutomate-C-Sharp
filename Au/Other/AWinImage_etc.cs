@@ -438,7 +438,7 @@ namespace Au
 				//draw red crosshair
 				var redPen = Pens.Red;
 				k = magnWH / 2 + 4;
-				m.SetClip(_clip ?? (_clip = new Region(new Rectangle(k - 4, k - 4, 7, 7))), CombineMode.Exclude);
+				m.SetClip(_clip ??= new Region(new Rectangle(k - 4, k - 4, 7, 7)), CombineMode.Exclude);
 				m.DrawLine(redPen, k, 1, k, magnWH + 1);
 				m.DrawLine(redPen, 1, k, magnWH + 1, k);
 				m.ResetClip();

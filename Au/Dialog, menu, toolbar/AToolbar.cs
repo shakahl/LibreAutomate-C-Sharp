@@ -300,7 +300,7 @@ namespace Au
 
 			protected override void OnPaint(PaintEventArgs e)
 			{
-				//var perf = APerf.StartNew();
+				//var perf = APerf.Create();
 
 				//ThreadPriority tp = 0;
 				//if(!_paintedOnce) { //this could make the first paint faster if CPU is without hyperthreading

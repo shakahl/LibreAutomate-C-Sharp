@@ -501,7 +501,7 @@ namespace Au.Controls
 			var m = new AMenu();
 			m["Properties..."] = o =>
 			{
-				using(var f = new Form_SMProperties(this, item.Tag as XElement, isMenu)) {
+				using(var f = new FSMProperties(this, item.Tag as XElement, isMenu)) {
 					if(f.ShowDialog(_form) == DialogResult.OK)
 						_Strips_Customize(6, item, null, f);
 				}
@@ -601,7 +601,7 @@ namespace Au.Controls
 				item.Overflow = hide ? ToolStripItemOverflow.Always : ToolStripItemOverflow.AsNeeded;
 				break;
 			case 6: //properties
-				var f = etc as Form_SMProperties;
+				var f = etc as FSMProperties;
 				bool isMenu = item.Owner is ToolStripDropDownMenu;
 
 				s = f.textText.Text; if(s == "") s = null;

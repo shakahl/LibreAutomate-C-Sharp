@@ -732,9 +732,9 @@ namespace Au.Types
 			//All this big code is just to make this function as fast as String.Split or faster. Also less garbage.
 			//	Simple code is slower when substrings are very short. Now same speed when short, faster when normal or long.
 			//	With short substrings, the parsing code takes less than half of time. Creating strings and arrays is the slow part.
-			//	As an intermediate buffer we use a threadlocal array. stackalloc slower and cannot be string[]. Native memory much slower. WeakReference too slow.
+			//	As an intermediate buffer we use a threadlocal array. stackalloc slower and cannot be string[]. Native memory much slower. Weakreference too slow.
 
-			string[] a1 = t_a1 ?? (t_a1 = new string[c_a1Size]); //at first use the threadlocal array. When it is filled, use a2.
+			string[] a1 = t_a1 ??= new string[c_a1Size]; //at first use the threadlocal array. When it is filled, use a2.
 			List<string> a2 = null;
 
 			int n = 0;
@@ -762,8 +762,8 @@ namespace Au.Types
 			return r;
 		}
 
-		const int c_a1Size = 50; //400 bytes, in 32-bit 200
-		[ThreadStatic] static string[] t_a1; //tested: with WeakReference cannot make fast enough.
+		const int c_a1Size = 50; //400 bytes
+		[ThreadStatic] static string[] t_a1; //tested: with weakreference cannot make fast enough.
 
 		//rejected: not useful. Can use LINQ ToArray.
 		//public AStringSegment[] ToSegmentArray(int maxCount = -1)

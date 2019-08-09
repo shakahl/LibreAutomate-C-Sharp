@@ -25,11 +25,11 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 
-public partial class Form_Setup :Form
+public partial class FSetup :Form
 {
 	string _dir;
 
-	public Form_Setup()
+	public FSetup()
 	{
 		InitializeComponent();
 
