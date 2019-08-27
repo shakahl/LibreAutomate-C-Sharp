@@ -103,8 +103,8 @@
 			<sep/>
 			<Edit_GoToDefinition/>
 			<Edit_PeekDefinition/>
-			<Edit_Members hkText="Ctrl+Space"/>
-			<Edit_ContextHelp/>
+			<Edit_MembersList hkText="Ctrl+Space"/>
+			<Edit_ParameterInfo hkText="Ctrl+Shift+Space"/>
 			<sep/>
 			<Edit_Lines>
 				<Edit_Indent/>

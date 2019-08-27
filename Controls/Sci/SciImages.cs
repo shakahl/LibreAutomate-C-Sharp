@@ -370,7 +370,9 @@ namespace Au.Controls
 			string path = new string((sbyte*)s, i, i2 - i, Encoding.UTF8); //CONSIDER: it this the fastest way to convert UTF8 to string?
 
 			//load
+			long t1 = ATime.WinMillisecondsWithoutSleep;
 			byte[] b = ImageUtil.BmpFileDataFromString(path, imType, !_isEditor);
+			t1 = ATime.WinMillisecondsWithoutSleep - t1; if(t1 > 1000) PrintWarning($"Time to load image '{path}' is {t1} ms.", -1, prefix: "<>Note: "); //eg if network path unavailable, may wait ~7 s
 			if(b == null) goto g1;
 			if(!ImageUtil.LibGetBitmapFileInfo(b, out var q)) goto g1;
 

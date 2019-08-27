@@ -75,6 +75,24 @@ namespace Au.Controls
 			_SetScroll(resetPos: true);
 		}
 
+		/// <summary>
+		/// Index of the selected item, or -1.
+		/// </summary>
+		public int SelectedIndex {
+			get => _iSelected;
+			set {
+				if(value!= _iSelected) {
+					_iSelected = value;
+					this.SetScrollPos(true, value, true);
+				}
+			}
+		}
+
+		/// <summary>
+		/// Item height, calculated by <see cref="AddItems"/>.
+		/// </summary>
+		public int ItemHeight => _itemHeight;
+
 		//Sets _itemWidth. If iTo<0, sets _itemHeight too. Uses/sets _measuredItems.
 		void _MeasureItems(int iFrom, int iTo)
 		{
@@ -82,6 +100,7 @@ namespace Au.Controls
 			var oldFont = Api.SelectObject(dc, Au.Util.LibNativeFont.RegularCached);
 			try {
 				if(iTo < 0) {
+					Debug.Assert(this.Font.Equals(Util.AFonts.Regular));
 					var t = _itemText(0);
 					Api.GetTextExtentPoint32(dc, t, t.Length, out var z);
 					_itemHeight = Math.Max(17, z.height + 2);
@@ -206,6 +225,12 @@ namespace Au.Controls
 			}
 			base.OnMouseDown(e);
 		}
+
+		//protected override void WndProc(ref Message m)
+		//{
+		//	AWnd.More.PrintMsg(m, Api.WM_GETTEXTLENGTH, Api.WM_GETTEXT);
+		//	base.WndProc(ref m);
+		//}
 
 		/// <summary>
 		/// Gets index of item at y coordinate in client area.

@@ -419,7 +419,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		var doc = Panels.Editor.ActiveDoc;
 		var t = doc.ST;
 		var code = doc.Text;
-		MetaComments.FindMetaComments(code, out int endOf);
+		int endOf = MetaComments.FindMetaComments(code);
 
 		if(!_GetGrid()) { this.DialogResult = DialogResult.None; return; };
 

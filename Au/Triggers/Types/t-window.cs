@@ -195,10 +195,14 @@ namespace Au.Triggers
 
 		internal override void Run(TriggerArgs args) => RunT(args as WindowTriggerArgs);
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Returns a trigger type string, like "Window.ActiveNew".
+		/// </summary>
 		public override string TypeString => _typeString ??= "Window." + (IsVisible ? "Visible" : "Active") + (IsNew ? "New" : (IsOnce ? "Once" : ""));
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Returns a string containing trigger parameters.
+		/// </summary>
 		public override string ParamsString => _paramsString ??= finder.ToString();
 
 		internal bool IsVisible => ev >= TWEvent.Visible;
@@ -574,7 +578,7 @@ namespace Au.Triggers
 			_inProc = true;
 			try {
 				//ATime.SleepDoEvents(300); //test queue
-				//APerf.Cpu();
+				//APerf.SpeedUpCpu();
 				for(; ; ) {
 					TWLater e = 0;
 					switch(accEvent) {

@@ -997,7 +997,8 @@ namespace Au
 
 		/// <summary>
 		/// Creates parent directory for a new file, if does not exist.
-		/// The same as <see cref="CreateDirectory"/>, just removes filename from filePath.
+		/// The same as <see cref="CreateDirectory"/>, just removes filename from <i>filePath</i>.
+		/// Returns true if created new directory, false if the directory already exists. Throws exception if fails.
 		/// </summary>
 		/// <param name="filePath">Path of new file.</param>
 		/// <exception cref="ArgumentException">Not full path. No filename.</exception>
@@ -1009,11 +1010,11 @@ namespace Au
 		/// File.WriteAllText(path, "text"); //would fail if directory @"D:\Test\new" does not exist
 		/// ]]></code>
 		/// </example>
-		public static void CreateDirectoryFor(string filePath)
+		public static bool CreateDirectoryFor(string filePath)
 		{
 			filePath = _PreparePath(filePath);
 			var path = _RemoveFilename(filePath);
-			_CreateDirectory(path, pathIsPrepared: true);
+			return _CreateDirectory(path, pathIsPrepared: true);
 		}
 
 		static bool _CreateDirectory(string path, bool pathIsPrepared = false, string templateDirectory = null)
@@ -1221,13 +1222,22 @@ namespace Au
 		/// <summary>
 		/// Writes any data to a file in a safe way, using a callback function.
 		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>. The file can exist or not; this function overwrites it.</param>
-		/// <param name="writer">Lambda that creates/writes/closes temporary file. Its parameter is the full path of the temporary file, which normally still does not exist.</param>
-		/// <param name="backup">Create backup file named file + "~backup".</param>
+		/// <param name="file">
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.
+		/// The file can exist or not; this function overwrites it. If the directory does not exist, this function creates it.
+		/// </param>
+		/// <param name="writer">
+		/// Callback function (lambda etc) that creates/writes/closes a temporary file. Its parameter is the full path of the temporary file, which normally does not exist.
+		/// May be called multiple times, because this function retries if the file is locked or if the directory does not exist (if writer throws <b>DirectoryNotFoundException</b> exception).
+		/// </param>
+		/// <param name="backup">Create backup file named <i>file</i> + "~backup".</param>
+		/// <param name="tempDirectory">
+		/// Directory for backup file and temporary file. If null or "" - <i>file</i>'s directory. Can contain environment variales etc.
+		/// Must be in the same drive as <i>file</i>. If the directory does not exist, this function creates it.</param>
 		/// <param name="lockedWaitMS">If cannot open file because it is open by another process etc, wait max this number of milliseconds. Can be <see cref="Timeout.Infinite"/> (-1).</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
-		/// <exception cref="Exception">Exceptions of the file-write function.</exception>
-		/// <exception cref="IOException">Failed to replace file. The file-write function also can thow it.</exception>
+		/// <exception cref="Exception">Exceptions of the <i>writer</i> function.</exception>
+		/// <exception cref="IOException">Failed to replace file. The <i>writer</i> function also can thow it.</exception>
 		/// <remarks>
 		/// The file-write functions provided by .NET and Windows API are unreliable, because:
 		/// 1. Fails if the file is temporarily open by another process or thread without sharing.
@@ -1235,12 +1245,13 @@ namespace Au
 		/// 
 		/// To protect from 1, this functions waits/retries if the file is temporarily open/locked, like <see cref="WaitIfLocked"/>.
 		/// To protect from 2, this function writes to a temporary file and renames/replaces the specified file using API <msdn>ReplaceFile</msdn>. Although not completely atomic, it ensures that file data is not corrupt; if cannot write all data, does not change existing file data.
+		/// Also this function auto-creates directory if does not exist.
 		/// 
-		/// This function is slower; it can be important when saving many files.
+		/// This function is slower. Speed can be important when saving many files.
 		/// </remarks>
-		public static void Save(string file, Action<string> writer, bool backup = false, int lockedWaitMS = 2000)
+		public static void Save(string file, Action<string> writer, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000)
 		{
-			_Save(file, writer ?? throw new ArgumentNullException(), backup, lockedWaitMS);
+			_Save(file, writer ?? throw new ArgumentNullException(), backup, tempDirectory, lockedWaitMS);
 		}
 
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
@@ -1251,9 +1262,9 @@ namespace Au
 		/// <param name="text">Text to write.</param>
 		/// <param name="encoding">Text encoding in file. Default is UTF-8 without BOM.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Save"/>.</exception>
-		public static void SaveText(string file, string text, bool backup = false, int lockedWaitMS = 2000, Encoding encoding = null)
+		public static void SaveText(string file, string text, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000, Encoding encoding = null)
 		{
-			_Save(file, text ?? "", backup, lockedWaitMS, encoding);
+			_Save(file, text ?? "", backup, tempDirectory, lockedWaitMS, encoding);
 		}
 
 		/// <summary>
@@ -1262,17 +1273,18 @@ namespace Au
 		/// </summary>
 		/// <param name="bytes">Data to write.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Save"/>.</exception>
-		public static void SaveBytes(string file, byte[] bytes, bool backup = false, int lockedWaitMS = 2000)
+		public static void SaveBytes(string file, byte[] bytes, bool backup = false, string tempDirectory = null, int lockedWaitMS = 2000)
 		{
-			_Save(file, bytes ?? throw new ArgumentNullException(), backup, lockedWaitMS);
+			_Save(file, bytes ?? throw new ArgumentNullException(), backup, tempDirectory, lockedWaitMS);
 		}
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
-		static void _Save(string file, object data, bool backup, int lockedWaitMS, Encoding encoding = null)
+		static void _Save(string file, object data, bool backup, string tempDirectory, int lockedWaitMS, Encoding encoding = null)
 		{
-			file = APath.Normalize(file, null, PNFlags.DontPrefixLongPath);
-			string temp = file + "~temp";
-			string back = file + "~backup"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc
+			file = APath.Normalize(file, flags: PNFlags.DontPrefixLongPath);
+			string s1 = Empty(tempDirectory) ? file : APath.Combine(APath.Normalize(tempDirectory, flags: PNFlags.DontPrefixLongPath), APath.GetFileName(file), prefixLongPath: false);
+			string temp = s1 + "~temp";
+			string back = s1 + "~backup"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc
 
 			var w = new _LockedWaiter(lockedWaitMS);
 			g1:
@@ -1291,6 +1303,7 @@ namespace Au
 					break;
 				}
 			}
+			catch(DirectoryNotFoundException) when(_AutoCreateDir(temp)) { goto g1; }
 			catch(IOException e) when(w.ExceptionFilter(e)) { w.Sleep(); goto g1; }
 
 			w = new _LockedWaiter(lockedWaitMS);
@@ -1305,8 +1318,15 @@ namespace Au
 			}
 			if(es != null) {
 				int ec = ALastError.Code;
+				if(ec == Api.ERROR_PATH_NOT_FOUND && _AutoCreateDir(file)) goto g2;
 				if(w.ExceptionFilter(ec)) { w.Sleep(); goto g2; }
 				throw new IOException(es, ec);
+			}
+
+			static bool _AutoCreateDir(string filePath)
+			{
+				try { return CreateDirectoryFor(filePath); }
+				catch { return false; }
 			}
 		}
 

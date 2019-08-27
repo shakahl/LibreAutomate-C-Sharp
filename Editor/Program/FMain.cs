@@ -80,10 +80,10 @@ partial class FMain : Form
 	protected override void OnVisibleChanged(EventArgs e)
 	{
 		//Print("OnVisibleChanged", Visible, ((AWnd)this).IsVisible); //true, false
-		bool vis = Visible;
+		bool visible = Visible;
 
 		//note: we don't use OnLoad. It's unreliable, sometimes not called, eg when made visible from outside.
-		if(vis && Program.Loaded == EProgramState.LoadedWorkspace) {
+		if(visible && Program.Loaded == EProgramState.LoadedWorkspace) {
 
 			Panels.PanelManager.GetPanel(Panels.Output).Visible = true; //else Print etc would not auto set visible until the user makes it visible, because handle not created if invisible
 
@@ -97,7 +97,7 @@ partial class FMain : Form
 			Program.Loaded = EProgramState.LoadedUI;
 			Load?.Invoke(this, EventArgs.Empty);
 
-			Program.Codein.UiLoaded();
+			CodeInfo.UiLoaded();
 
 #if TEST
 			ATimer.After(1, () => {
@@ -105,15 +105,15 @@ partial class FMain : Form
 				if(s != null) {
 					Print(ATime.PerfMicroseconds - Convert.ToInt64(s));
 				}
-				APerf.Next('P');
-				//APerf.Write();
+				//APerf.NW('V');
 
 				//EdDebug.PrintTabOrder(this);
 			});
 #endif
 		}
 
-		UacDragDrop.AdminProcess.Enable(vis);
+		if(!visible) CodeInfo.Stop();
+		UacDragDrop.AdminProcess.Enable(visible);
 
 		base.OnVisibleChanged(e);
 	}
@@ -135,6 +135,7 @@ partial class FMain : Form
 
 		base.OnFormClosed(e);
 
+		CodeInfo.Stop();
 		Au.Triggers.HooksServer.Stop();
 		Panels.Files.UnloadOnFormClosed();
 		EdTrayIcon.Dispose();
@@ -169,6 +170,9 @@ partial class FMain : Form
 			if(isActive == 0) _wFocus = AWnd.ThisThread.Focused;
 			else if(_wFocus.IsAlive) AWnd.ThisThread.Focus(_wFocus);
 			return;
+		case Api.WM_ACTIVATEAPP:
+			if(wParam == default) CodeInfo.Stop();
+			break;
 		case Api.WM_SYSCOMMAND:
 			int sc = (int)wParam;
 			if(sc >= 0xf000) { //system

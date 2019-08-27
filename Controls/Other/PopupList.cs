@@ -233,7 +233,7 @@ namespace Au.Controls
 
 			_w.ShowAt(anchor, !down);
 
-			//SHOULDDO: maybe beter with API CalculatePopupWindowPosition.
+			//tested: API CalculatePopupWindowPosition does not work well here.
 		}
 
 		public bool IsModal { get; set; }
@@ -394,6 +394,25 @@ namespace Au.Controls
 				base.Dispose(disposing);
 			}
 
+			protected override CreateParams CreateParams {
+				get {
+					var p = base.CreateParams;
+					p.Style = unchecked((int)(WS.POPUP));
+					var es = WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE;
+					if(_p != null && _owner == null) es |= WS_EX.TOPMOST;
+					p.ExStyle = (int)es;
+					p.ClassStyle |= (int)Api.CS_DROPSHADOW;
+					return p;
+
+					//note: if WS_CLIPCHILDREN, often at startup briefly black until control finished painting
+				}
+			}
+
+			/// <summary>
+			/// 1. Prevents activating window when showing. 2. Allows to show ToolTip for inactive window.
+			/// </summary>
+			protected override bool ShowWithoutActivation => true;
+
 			public void ShowAt(Control anchor, bool up)
 			{
 				var owner = anchor?.TopLevelControl;
@@ -422,25 +441,6 @@ namespace Au.Controls
 					_msgLoop.Loop();
 				}
 			}
-
-			protected override CreateParams CreateParams {
-				get {
-					var p = base.CreateParams;
-					p.Style = unchecked((int)(WS.POPUP));
-					var es = WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE;
-					if(_p != null && _owner == null) es |= WS_EX.TOPMOST;
-					p.ExStyle = (int)es;
-					p.ClassStyle |= (int)Api.CS_DROPSHADOW;
-					return p;
-
-					//note: if WS_CLIPCHILDREN, often at startup briefly black until control finished painting
-				}
-			}
-
-			/// <summary>
-			/// 1. Prevents activating window when showing. 2. Allows to show ToolTip for inactive window.
-			/// </summary>
-			protected override bool ShowWithoutActivation => true;
 
 			protected override void WndProc(ref Message m)
 			{

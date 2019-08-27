@@ -374,12 +374,13 @@ namespace Au.Types
 			public IntPtr hEvent;
 		}
 
+		[StructLayout(LayoutKind.Sequential, Pack = 4)]
 		internal struct BY_HANDLE_FILE_INFORMATION
 		{
 			public uint dwFileAttributes;
-			public FILETIME ftCreationTime;
-			public FILETIME ftLastAccessTime;
-			public FILETIME ftLastWriteTime;
+			public long ftCreationTime;
+			public long ftLastAccessTime;
+			public long ftLastWriteTime;
 			public uint dwVolumeSerialNumber;
 			public uint nFileSizeHigh;
 			public uint nFileSizeLow;
@@ -391,12 +392,53 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool GetFileInformationByHandle(IntPtr hFile, out BY_HANDLE_FILE_INFORMATION lpFileInformation);
 
+		//internal enum FILE_INFO_BY_HANDLE_CLASS
+		//{
+		//	FileBasicInfo,
+		//	FileStandardInfo,
+		//	FileNameInfo,
+		//	FileRenameInfo,
+		//	FileDispositionInfo,
+		//	FileAllocationInfo,
+		//	FileEndOfFileInfo,
+		//	FileStreamInfo,
+		//	FileCompressionInfo,
+		//	FileAttributeTagInfo,
+		//	FileIdBothDirectoryInfo,
+		//	FileIdBothDirectoryRestartInfo,
+		//	FileIoPriorityHintInfo,
+		//	FileRemoteProtocolInfo,
+		//	FileFullDirectoryInfo,
+		//	FileFullDirectoryRestartInfo,
+		//	FileStorageInfo,
+		//	FileAlignmentInfo,
+		//	FileIdInfo,
+		//	FileIdExtdDirectoryInfo,
+		//	FileIdExtdDirectoryRestartInfo,
+		//	MaximumFileInfoByHandleClass
+		//}
+
+		//internal struct FILE_BASIC_INFO
+		//{
+		//	public long CreationTime;
+		//	public long LastAccessTime;
+		//	public long LastWriteTime;
+		//	public long ChangeTime;
+		//	public uint FileAttributes;
+		//}
+
+		//[DllImport("kernel32.dll", SetLastError = true)]
+		//internal static extern bool GetFileInformationByHandleEx(IntPtr hFile, int FileInformationClass, void* lpFileInformation, int dwBufferSize);
+
+		//[DllImport("kernel32.dll", SetLastError = true)]
+		//internal static extern bool SetFileInformationByHandle(IntPtr hFile, int FileInformationClass, void* lpFileInformation, int dwBufferSize);
+
 		internal const int FILE_BEGIN = 0;
 		internal const int FILE_CURRENT = 1;
 		internal const int FILE_END = 2;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool SetFilePointerEx(IntPtr hFile, long liDistanceToMove, long* lpNewFilePointer, uint dwMoveMethod);
+		internal static extern bool SetFilePointerEx(IntPtr hFile, long liDistanceToMove, long* lpNewFilePointer, int dwMoveMethod);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool SetEndOfFile(IntPtr hFile);

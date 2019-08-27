@@ -833,6 +833,8 @@ namespace Au.Types
 	/// Contains folder path (string) and has operator + to append a string with backslash if need. Has implicit conversions from/to string.
 	/// </summary>
 	public struct AFolderPath
+		//TODO: rename to AFPath or move into AFolders, because now annoying in intellisense.
+		//	Or rename AFolders to AFolder, then it is first in intellisense.
 	{
 		string _path;
 		AFolderPath(string path) { _path = path; }

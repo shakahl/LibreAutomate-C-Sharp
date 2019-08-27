@@ -30,8 +30,8 @@ using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Host.Mef;
 
-//using Au.Intellisense;
-//using DiffMatchPatch;
+using DiffMatchPatch;
+using System.Runtime;
 
 #if TEST
 
@@ -296,29 +296,6 @@ class Program
 		//MetaReferences.DebugPrintCachedRefs();
 	}
 
-	class TestGC
-	{
-		~TestGC()
-		{
-			Print("GC");
-			s_debug = false;
-		}
-	}
-	static bool s_debug, s_debug2;
-
-	void _MonitorGC()
-	{
-		if(!s_debug2) {
-			s_debug2 = true;
-			ATimer.Every(50, () => {
-				if(!s_debug) {
-					s_debug = true;
-					ATimer.After(100, () => new TestGC());
-				}
-			});
-		}
-	}
-
 	class CiWorkspace : Workspace
 	{
 		//public CaWorkspace(HostServices host) : base(host, WorkspaceKind.Host)
@@ -407,7 +384,7 @@ class Program
 
 #if true
 		Action act = () => {
-			//APerf.Cpu(); //55 -> 20 ms
+			//APerf.SpeedUpCpu(); //55 -> 20 ms
 			APerf.First();
 			var position = doc.ST.CurrentPosChars;
 			var r = completionService.GetCompletionsAsync(document, position).Result;
@@ -431,7 +408,7 @@ class Program
 		};
 #else
 		Action act = () => {
-			//APerf.Cpu(); //7 -> 7 ms
+			//APerf.SpeedUpCpu(); //7 -> 7 ms
 			APerf.First();
 			var position = doc.ST.CurrentPosChars;
 			var model = document.GetSemanticModelAsync().Result;
@@ -511,7 +488,7 @@ class Program
 	//	//Print(EdResources.GetObjectUseCache(nameof(Au.Editor.Properties.Resources.back)));
 	//	//Print(EdResources.GetObjectUseCache2(nameof(Au.Editor.Properties.Resources.back)));
 
-	//	//APerf.Cpu();
+	//	//APerf.SpeedUpCpu();
 	//	for(int i1 = 0; i1 < 5; i1++) {
 	//		Thread.Sleep(200);
 	//		int n2 = 100;
@@ -596,6 +573,100 @@ class Program
 		Print(n);
 	}
 
+	void TestFileNodeTextCache()
+	{
+		AOutput.Clear();
+		var f = Program.Model.CurrentFile;
+		APerf.First();
+		var s = f.GetText(saved: true, cache: true);
+		APerf.NW();
+		Print(s);
+	}
+
+	void TestReplaceTextGently()
+	{
+		var doc = Panels.Editor.ActiveDoc;
+		var s1 = doc.Text;
+		int i = s1.Find("//.");
+		//var s2 = s1 + "added\r\n";
+		var s2 = s1.Insert(i, "insert\r\n");
+		doc.ReplaceTextGently(s2);
+	}
+
+	void TestDiffMatchPatch()
+	{
+		var s1 = @"//{{
+using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
+class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}
+	
+	var s=""one"";
+";
+		var s2 = @"/*/ role exeProgram;		outputPath %AFolders.Workspace%\bin; console true; /*/ //{{
+using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
+using My.NS1; //ąčę îôû
+using My.NS2;
+class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}
+	var i=2;
+";
+
+		var dmp = new diff_match_patch();
+		List<Diff> diff = dmp.diff_main(s1, s2, true);
+		dmp.diff_cleanupSemantic(diff);
+		var delta = dmp.diff_toDelta(diff);
+		Print(delta);
+		Print("----");
+		var d2 = dmp.diff_fromDelta(s1, delta);
+		//Print(d2);
+		Print(dmp.diff_text2(d2));
+	}
+
+	void TestNoGcRegion()
+	{
+		for(int i = 0; i < 2; i++) {
+			ADebug.LibMemorySetAnchor();
+			bool noGC = GC.TryStartNoGCRegion(10_000_000);
+			var a = new byte[50_000_000];
+			for(int j = 0; j < a.Length; j++) a[j] = 1;
+			Print(noGC, GCSettings.LatencyMode == GCLatencyMode.NoGCRegion);
+			if(noGC && GCSettings.LatencyMode == GCLatencyMode.NoGCRegion) try { GC.EndNoGCRegion(); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
+			ADebug.LibMemoryPrint();
+			GC.Collect();
+			if(!ADialog.ShowYesNo("Continue?")) break;
+		}
+
+	}
+
+	class TestGC
+	{
+		~TestGC()
+		{
+			if(Environment.HasShutdownStarted) return;
+			if(AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
+			Print("GC", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
+			//ATimer.After(1, () => new TestGC());
+			//var f = Program.MainForm; if(!f.IsHandleCreated) return;
+			//f.BeginInvoke(new Action(() => new TestGC()));
+			new TestGC();
+		}
+	}
+	static bool s_debug2;
+
+	void _MonitorGC()
+	{
+		return;
+		if(!s_debug2) {
+			s_debug2 = true;
+			new TestGC();
+
+			//ATimer.Every(50, () => {
+			//	if(!s_debug) {
+			//		s_debug = true;
+			//		ATimer.After(100, () => new TestGC());
+			//	}
+			//});
+		}
+	}
+
 	public unsafe void TestEditor()
 	{
 		//AOutput.Clear();
@@ -603,6 +674,19 @@ class Program
 		//_TestResources();
 		//_TestWorkspaces4();
 		//_MonitorGC();
+		//TestFileNodeTextCache();
+		//TestReplaceTextGently();
+		//TestDiffMatchPatch();
+		//CodeInfo.Test();
+		//MetaReferences.DebugPrintCachedRefs();
+		//TestNoGcRegion();
+
+		for(int i = 0; i < 5; i++) {
+			_ = new byte[1_000_000];
+			GC.Collect();
+			GC.WaitForPendingFinalizers();
+			//1.ms();
+		}
 
 		return;
 
@@ -761,26 +845,6 @@ class Program
 
 		//Au.Triggers.ActionTriggers.DisabledEverywhere ^= true;
 
-		//		var s1 = @"//{{
-		//using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
-		//class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}
-		//";
-		//		var s2 = @"/*/ role exeProgram; outputPath %AFolders.Workspace%\bin; console true; /*/ //{{
-		//using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
-		//using My.NS1; //ąčę îôû
-		//using My.NS2;
-		//class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}
-		//";
-
-		//		var dmp = new diff_match_patch();
-		//		List<Diff> diff = dmp.diff_main(s1, s2, true);
-		//		dmp.diff_cleanupSemantic(diff);
-		//		var delta = dmp.diff_toDelta(diff);
-		//		Print(delta);
-		//		Print("----");
-		//		var d2 = dmp.diff_fromDelta(s1, delta);
-		//		//Print(d2);
-		//		Print(dmp.diff_text2(d2));
 
 		//Print(t.CountBytesFromChars(2), t.CountBytesFromChars(4, 2));
 		//Print(t.CountBytesToChars(0, 4));

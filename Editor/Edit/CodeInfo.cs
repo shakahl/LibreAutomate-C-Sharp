@@ -12,8 +12,8 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Windows.Forms;
-//using System.Drawing;
+using System.Windows.Forms;
+using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -22,103 +22,176 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Compiler;
 using Au.Controls;
+using Au.Editor.Properties;
+
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Completion;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.Tags;
+using Microsoft.CodeAnalysis.SignatureHelp;
+using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
+using Microsoft.CodeAnalysis.QuickInfo;
+using Microsoft.CodeAnalysis.CSharp.QuickInfo;
+using TheArtOfDev.HtmlRenderer.WinForms;
 
-class CodeInfo
+
+static class CodeInfo
 {
-	public void UiLoaded()
+	static CiCompletion _compl = new CiCompletion();
+	static CiSignature _signature = new CiSignature();
+	static CiQuickInfo _quickInfo = new CiQuickInfo();
+	//static MetaComments _meta;
+	static string _metaText;
+	static Solution _solution;
+	static ProjectId _projectId;
+	static DocumentId _documentId;
+	static bool _isWarm;
+	static bool _textChanged;
+
+	public static void UiLoaded()
 	{
-		//warm up
-		Task.Delay(2000).ContinueWith(_ => {
+		//warm up //TODO: 2000
+		Task.Delay(100).ContinueWith(_ => {
 			//return; //TODO
-			//500.ms();
-			//APerf.Cpu();
 			//var p1 = APerf.Create();
 			var code = @"using System; class C { static void Main() { } }";
 			int position = code.IndexOf('}');
-			var mscorlib = MetadataReference.CreateFromFile(typeof(object).Assembly.Location);
+			//var refs = new MetaReferences().Refs;
+			var refs = new MetadataReference[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) };
 			ProjectId projectId = ProjectId.CreateNewId();
 			DocumentId documentId = DocumentId.CreateNewId(projectId);
 			var sol = new AdhocWorkspace().CurrentSolution
 				.AddProject(projectId, "p", "p", LanguageNames.CSharp)
-				.AddMetadataReferences(projectId, new MetadataReference[] { mscorlib })
+				.AddMetadataReferences(projectId, refs)
 				.AddDocument(documentId, "f.cs", code);
 			//p1.Next();
-			200.ms(); //avoid CPU fan
+			//200.ms(); //avoid CPU fan (sometimes)
 			var document = sol.GetDocument(documentId);
 			var completionService = CompletionService.GetService(document);
 			completionService.GetCompletionsAsync(document, position);
+			//MetaReferences.CompactCache();
 			//p1.NW(); //600-1000 ms when ngened
-			//EdUtil.MinimizeProcessPhysicalMemory(500); //36 MB -> 1 MB. Later code info will make 36 again, but without this would make 54; but with this then significantly slower.
+			//EdUtil.MinimizeProcessPhysicalMemory(500); //with this later significantly slower
+			_isWarm = true;
 		});
 
-		Panels.Editor.ActiveDocChanged += Cancel;
+		Panels.Editor.ActiveDocChanged += Stop;
 	}
 
-	public void TextChanged(PanelEdit.SciCode doc, in Sci.SCNotification n)
+	static bool _CanWork(SciCode doc)
 	{
-		//bool added = 0 != (n.modificationType & Sci.MOD.SC_MOD_INSERTTEXT);
-		_ComplCancel();
+		if(!_isWarm) return false;
+		if(doc == null) return false;
+		if(!doc.FN.IsCodeFile) return false;
+		if(doc != Panels.Editor.ActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //TODO: what if isn't open?
+		return true;
 	}
 
-	public void Cancel()
+	static void _Uncache()
+	{
+		_solution = null;
+		_projectId = null;
+		_documentId = null;
+		//_meta = null;
+		_metaText = null;
+		_textChanged = false;
+	}
+
+	public static void Stop()
+	{
+		Cancel();
+		_Uncache();
+	}
+
+	public static void Cancel()
 	{
 		//Print("Cancel");
-		_ComplCancel();
-		CancelCompletionList();
+		_compl.Cancel();
 	}
 
-	void _ComplCancel()
+	public static void SciTextChanged(SciCode doc, in Sci.SCNotification n, bool userTyping)
 	{
-		_complCTS?.Cancel();
-		_complTimer?.Stop();
+		if(!_CanWork(doc)) { Debug.Assert(_solution == null); return; }
+		_textChanged = true;
+		if(!userTyping) { Cancel(); return; }
 
-	}
-
-	public void CharAdded(PanelEdit.SciCode doc, int chi)
-	{
-		//return; //TODO
-		if(chi > char.MaxValue) return;
-		var ch = (char)chi;
-		if(!(ch == '.' || ch == '_' || char.IsLetterOrDigit(ch))) return;
-		_ShowCompletionList(ch);
-	}
-
-	public void ShowCompletionList()
-	{
-		_ShowCompletionList();
-	}
-
-	ATimer _complTimer;
-	CancellationTokenSource _complCTS;
-	char _complChar;
-
-	void _ShowCompletionList(char ch = default)
-	{
-		_complCTS?.Cancel();
-		_complCTS = new CancellationTokenSource();
-		_complChar = ch;
-		if(ch == default || ch == '.') {
-			_ShowCompletionList2(_complCTS);
-		} else {
-			if(_complTimer == null) _complTimer = new ATimer(() => _ShowCompletionList2(_complCTS, _complChar));
-			_complTimer.Start(100, true);
-			_complTimer.Tag = _complCTS;
+		var code = doc.Text;
+		int endOfMeta = MetaComments.FindMetaComments(code);
+		if(n.position < endOfMeta) {
+			_Uncache();
+			_compl.SciTextChangedInMeta(n);
+			return;
 		}
+		if(_solution != null) {
+			bool uncache = endOfMeta != _metaText.Length || !code.Starts(_metaText);
+			if(uncache) _Uncache();
+			//else _ChangeSolution(code); //later
+		}
+
+		_compl.SciTextChanged(n);
 	}
 
-	async void _ShowCompletionList2(CancellationTokenSource cancel, char ch = default)
+	public static void SciUpdateUI(SciCode doc, bool modified)
 	{
-		//AOutput.Clear(); //TODO
-		APerf.First();
+		//Print("SciUpdateUI", modified, _tempNoAutoComplete);
+		if(!_CanWork(doc)) return;
+		if(!modified) _compl.SciPositionChangedNotModified();
+	}
+
+	public static void ShowCompletionList(SciCode doc)
+	{
+		if(!_CanWork(doc)) return;
+		_compl.ShowList();
+	}
+
+	public static void ShowSignature(SciCode doc)
+	{
+		if(!_CanWork(doc)) return;
+		_signature.ShowSignature();
+	}
+
+	public static void SciMouseDwellStarted(SciCode doc, int positionUtf8, int x, int y)
+	{
+		if(!_CanWork(doc)) return;
+		_quickInfo.SciMouseDwellStarted(positionUtf8, x, y);
+	}
+
+	public static void SciMouseDwellEnded(SciCode doc)
+	{
+		if(!_CanWork(doc)) return;
+		_quickInfo.SciMouseDwellEnded();
+	}
+
+	public static void SciMouseMoved(SciCode doc, int x, int y)
+	{
+		if(!_CanWork(doc)) return;
+		_quickInfo.SciMouseMoved(x, y);
+	}
+
+	public static Document GetDocument()
+	{
+		Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
+		if(_solution == null) _CreateSolution();
+		else if(_textChanged) _ChangeSolution();
+		return _solution.GetDocument(_documentId);
+	}
+
+	static void _ChangeSolution(string code=null)
+	{
+		code ??= Panels.Editor.ActiveDoc.Text;
+		_solution = _solution.WithDocumentText(_documentId, SourceText.From(code, Encoding.UTF8));
+		_textChanged = false;
+	}
+
+	static void _CreateSolution()
+	{
 		var doc = Panels.Editor.ActiveDoc;
+		var code = doc.Text;
+		_metaText = code.Remove(MetaComments.FindMetaComments(code));
+
 		var f = doc.FN;
-		if(!f.IsCodeFile) { CancelCompletionList(); return; }
 		var f0 = f;
 		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
 
@@ -126,11 +199,47 @@ class CodeInfo
 		if(!m.Parse(f, projFolder, EMPFlags.ForCodeInfo)) {
 			var err = m.Errors;
 			err.PrintAll();
-			CancelCompletionList(); return;
 		}
-		APerf.Next('M');
+		APerf.Next('m');
 
-		string code = null;
+		_projectId = ProjectId.CreateNewId();
+		var adi = new List<DocumentInfo>();
+		foreach(var f1 in m.CodeFiles) {
+			var docId = DocumentId.CreateNewId(_projectId);
+			var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
+			adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav)));
+			if(f1.f == f0) {
+				_documentId = docId;
+			}
+		}
+		var pi = ProjectInfo.Create(_projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
+			m.CreateCompilationOptions(),
+			m.CreateParseOptions(),
+			adi,
+			projectReferences: null, //TODO: create from m.ProjectReferences?
+			m.References.Refs); //TODO: set outputRefFilePath if library?
+		APerf.Next('p');
+
+		_solution = new AdhocWorkspace().CurrentSolution.AddProject(pi);
+	}
+
+	public static Document CreateTestDocumentForEditorCode(out string code, out int position)
+	{
+		var doc = Panels.Editor.ActiveDoc;
+		code = null;
+		position = doc.ST.CurrentPosChars;
+		var f = doc.FN;
+		if(!f.IsCodeFile) return null;
+		var f0 = f;
+		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
+
+		var m = new MetaComments();
+		if(!m.Parse(f, projFolder, EMPFlags.ForCodeInfo)) {
+			var err = m.Errors;
+			err.PrintAll();
+			return null;
+		}
+
 		DocumentId documentId = null;
 		ProjectId projectId = ProjectId.CreateNewId();
 		var adi = new List<DocumentInfo>();
@@ -143,135 +252,70 @@ class CodeInfo
 				code = f1.code;
 			}
 		}
+
 		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
 			m.CreateCompilationOptions(), m.CreateParseOptions(), adi,
 			projectReferences: null, //TODO: create from m.ProjectReferences?
-			m.References.Refs); //TODO: set outputRefFilePath if library?
-		APerf.Next('P');
+			m.References.Refs //TODO: set outputRefFilePath if library?
+			);
 
-		var position = doc.ST.CurrentPosChars;
-		APerf.Next();
-		Document document = null;
-		var cancelToken = cancel.Token;
-		try {
-			var r = await Task.Run(() => {
-				var sol = new AdhocWorkspace().CurrentSolution;
-				sol = sol.AddProject(pi);
-				APerf.Next('S');
-				document = sol.GetDocument(documentId);
-
-		//_=document.GetSemanticModelAsync().Result;
-		//APerf.Next('k');
-
-				var completionService = CompletionService.GetService(document);
-				APerf.Next('s');
-				if(cancelToken.IsCancellationRequested) return null;
-				//var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
-				return completionService.GetCompletionsAsync(document, position, /*trigger,*/ cancellationToken: cancelToken); //info: somehow GetCompletionsAsync is not async
-			});
-			APerf.Next('C');
-			if(r == null || cancelToken.IsCancellationRequested) { CancelCompletionList(); APerf.NW('z'); return; }
-			//Print(r.Items);
-			//Print(r.Items.Length);
-
-			if(!document.TryGetSemanticModel(out var model)) model = document.GetSemanticModelAsync().Result; //fast
-			var symbols = model.LookupSymbols(position); //1-2 ms
-			APerf.Next('M');
-
-			var d = new Dictionary<string, object>(symbols.Length);
-			foreach(var sy in symbols) {
-				string name = sy.Name;
-				if(d.TryGetValue(name, out var o)) {
-					switch(o) {
-					case ISymbol sy2: d[name] = new List<ISymbol> { sy2, sy }; break;
-					case List<ISymbol> list: list.Add(sy); break;
-					}
-				} else d.Add(name, sy);
-			}
-			APerf.Next('m');
-
-			var span = r.Span;
-			//Print(span, code.Substring(span.Start, span.Length));
-			List<CodeinItem> b;
-			if(span.Length > 0) {
-				var sub = code.Substring(span.Start, span.Length);
-				var subUpper = sub.Upper();
-				b = new List<CodeinItem>();
-				var ah = new List<int>();
-				foreach(var v in r.Items) {
-					ADebug.PrintIf(v.FilterText != v.DisplayText, $"{v.FilterText}, {v.DisplayText}");
-					//Print(v.DisplayText, v.FilterText, v.SortText, v.ToString());
-					int[] hilite;
-					var s = v.DisplayText;
-					int iSub = s.Find(sub, true);
-					if(iSub >= 0) {
-						hilite = new int[] { iSub, iSub + sub.Length };
-						//TODO: VS adds only if the substring starts with uppercase
-					} else if(sub.Length > 1) { //has all uppercase chars? Eg add OneTwoThree if sub is "ott" or "ot" or "tt".
-						ah.Clear();
-						bool no = false;
-						for(int i = 0, j = 0; i < subUpper.Length; i++, j++) {
-							j = s.IndexOf(subUpper[i], j);
-							if(j < 0) { no = true; break; }
-							ah.Add(j); ah.Add(j + 1);
-						}
-						if(no) continue;
-						hilite = ah.ToArray();
-					} else continue;
-					//TODO: support _ and all ucase, like WM_PAINT
-
-					b.Add(new CodeinItem(v, hilite));
-				}
-			} else {
-				b = new List<CodeinItem>(r.Items.Length);
-#if true
-				foreach(var v in r.Items) b.Add(new CodeinItem(v));
-#else
-				foreach(var v in r.Items) {
-					bool noFilter = false;
-					switch(v.Tags[0]) {
-					case WellKnownTags.Keyword:
-					case WellKnownTags.TypeParameter:
-					case WellKnownTags.EnumMember:
-					case WellKnownTags.Local:
-					case WellKnownTags.Parameter:
-					case WellKnownTags.RangeVariable:
-					case WellKnownTags.Label:
-					case WellKnownTags.Snippet:
-						noFilter = true;
-						break;
-					}
-					if(!noFilter) {
-						var name = v.DisplayText;
-						if(d.TryGetValue(name, out var o)) {
-							ISymbol sym = null;
-							switch(o) {
-							case ISymbol sy2: sym=sy2; break;
-							case List<ISymbol> list: sym=list[0]; break;
-							}
-
-							Print(name, sym);
-						} else {
-							Print($"<><c red>{name}, {v.Tags[0]}<>");
-						}
-					}
-
-					b.Add(new CodeinItem(v));
-				}
-#endif
-			}
-			APerf.Next('f');
-			//Print(b.Count);
-			Panels.Codein.SetListItems(b);
-			//ATimer.Every(100, () => Panels.Codein.SetListItems(b));
-			//APerf.Next();
-			APerf.NW();
-		}
-		catch(OperationCanceledException) { /*ADebug.Print("canceled");*/ CancelCompletionList(); }
+		var sol = new AdhocWorkspace().CurrentSolution;
+		sol = sol.AddProject(pi);
+		return sol.GetDocument(documentId);
 	}
 
-	public void CancelCompletionList()
+	public static void Test()
 	{
-		Panels.Codein.SetListItems(null);
+
+	}
+
+	static Bitmap[,] s_images;
+	static string[,] s_imageNames;
+
+	public static Bitmap GetImage(CiItemKind kind, CiItemAccess access = default)
+	{
+		if(s_images == null) {
+			s_images = new Bitmap[18, 4];
+			s_imageNames = new string[18, 4] {
+				{ nameof(Resources.ciClass), nameof(Resources.ciClassPrivate), nameof(Resources.ciClassProtected), nameof(Resources.ciClassInternal)},
+				{ nameof(Resources.ciStructure), nameof(Resources.ciStructurePrivate), nameof(Resources.ciStructureProtected), nameof(Resources.ciStructureInternal)},
+				{ nameof(Resources.ciEnum), nameof(Resources.ciEnumPrivate), nameof(Resources.ciEnumProtected), nameof(Resources.ciEnumInternal)},
+				{ nameof(Resources.ciDelegate), nameof(Resources.ciDelegatePrivate), nameof(Resources.ciDelegateProtected), nameof(Resources.ciDelegateInternal)},
+				{ nameof(Resources.ciInterface), nameof(Resources.ciInterfacePrivate), nameof(Resources.ciInterfaceProtected), nameof(Resources.ciInterfaceInternal)},
+				{ nameof(Resources.ciMethod), nameof(Resources.ciMethodPrivate), nameof(Resources.ciMethodProtected), nameof(Resources.ciMethodInternal)},
+				{ nameof(Resources.ciExtensionMethod),null,null,null},
+				{ nameof(Resources.ciProperty), nameof(Resources.ciPropertyPrivate), nameof(Resources.ciPropertyProtected), nameof(Resources.ciPropertyInternal)},
+				{ nameof(Resources.ciEvent), nameof(Resources.ciEventPrivate), nameof(Resources.ciEventProtected), nameof(Resources.ciEventInternal)},
+				{ nameof(Resources.ciField), nameof(Resources.ciFieldPrivate), nameof(Resources.ciFieldProtected), nameof(Resources.ciFieldInternal)},
+				{ nameof(Resources.ciLocal),null,null,null},
+				{ nameof(Resources.ciConstant), nameof(Resources.ciConstantPrivate), nameof(Resources.ciConstantProtected), nameof(Resources.ciConstantInternal)},
+				{ nameof(Resources.ciEnumMember),null,null,null},
+				{ nameof(Resources.ciKeyword),null,null,null},
+				{ nameof(Resources.ciNamespace),null,null,null},
+				{ nameof(Resources.ciLabel),null,null,null},
+				{ nameof(Resources.ciSnippet),null,null,null},
+				{ nameof(Resources.ciTypeParameter),null,null,null},
+			};
+		}
+		return s_images[(int)kind, (int)access] ??= EdResources.GetImageNoCache(s_imageNames[(int)kind, (int)access]);
+	}
+
+	public static string[] ItemKindNames { get; } = new string[] { "Class", "Structure", "Enum", "Delegate", "Interface", "Method", "ExtensionMethod", "Property", "Event", "Field", "Local", "Constant", "EnumMember", "Keyword", "Namespace", "Label", "Snippet", "TypeParameter" }; //must match enum EItemKind
+}
+
+public enum CiItemKind :byte { Class, Structure, Enum, Delegate, Interface, Method, ExtensionMethod, Property, Event, Field, Local, Constant, EnumMember, Keyword, Namespace, Label, Snippet, TypeParameter, None }
+
+public enum CiItemAccess :byte { Public, Private, Protected, Internal }
+
+[Flags]
+enum CiItemHiddenBy { Text = 1, Kind = 2, }
+
+class DocCodeInfo
+{
+	public Solution solution;
+
+	public DocCodeInfo(SciCode doc)
+	{
+
 	}
 }

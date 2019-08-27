@@ -70,11 +70,13 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <DefineConstants>TRACE;DEBUG;MOD</DefineConstants>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\Debug\SourceGrid.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|AnyCPU'">
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
     <DefineConstants>TRACE;MOD</DefineConstants>
     <Prefer32Bit>false</Prefer32Bit>
+    <DocumentationFile>bin\Debug\SourceGrid.xml</DocumentationFile>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.Targets" />
   <ItemGroup>

@@ -36,7 +36,7 @@ static partial class Test
 		_ = typeof(System.Linq.Enumerable).Assembly; //System.Core, +18 ms
 		Print("NEW");
 
-		//APerf.Cpu();
+		//APerf.SpeedUpCpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	APerf.First();
 		//	//AThread.LibIsLoadedFormsWpf();
@@ -617,7 +617,7 @@ a1,-8";
 		//#region MyTree
 		//var x = MyTree.Load(@"Q:\test\example.xml");
 
-		//APerf.Cpu();
+		//APerf.SpeedUpCpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int n2 = 1000;
 		//	APerf.First();
@@ -726,7 +726,7 @@ a1,-8";
 			d.Add(i, "");
 		}
 
-		APerf.Cpu();
+		APerf.SpeedUpCpu();
 		for(int i1 = 0; i1 < 5; i1++) {
 			int r1 = 0, r2 = 0;
 			APerf.First();
@@ -776,7 +776,7 @@ a1,-8";
 		AFile.Delete(file);
 		bool isNew = !AFile.ExistsAsFile(file);
 
-		APerf.Cpu();
+		APerf.SpeedUpCpu();
 		string dbsql = null;
 		//dbsql = "PRAGMA encoding='UTF-16'";
 		using(var db = new ASqlite(file, sql: dbsql)) {
@@ -1103,7 +1103,7 @@ a1,-8";
 		//Au.Util.LibTaskScheduler.RunTask(null, @"Quick Macros\test UAC"); //works
 #endif
 
-		//APerf.Cpu();
+		//APerf.SpeedUpCpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	APerf.First();
 		//	Au.Util.LibTaskScheduler.RunTask(@"\Quick Macros", "test UAC");
@@ -1509,7 +1509,7 @@ a1,-8";
 		var a3 = new Dictionary<int, RECT>();
 
 		Print("ADD");
-		APerf.Cpu();
+		APerf.SpeedUpCpu();
 		for(int i1 = 0; i1 < 5; i1++) {
 			a1.Clear(); a2.Clear(); a3.Clear();
 			APerf.First();
@@ -1523,7 +1523,7 @@ a1,-8";
 		}
 
 		//Print("FIND");
-		//APerf.Cpu();
+		//APerf.SpeedUpCpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int v1 = 0, v2 = 0, v3 = 0;
 
@@ -1539,7 +1539,7 @@ a1,-8";
 		//}
 
 		Print("REMOVE");
-		APerf.Cpu();
+		APerf.SpeedUpCpu();
 		for(int i1 = 0; i1 < 5; i1++) {
 			int rFrom = n2 / 4, rTo = n2 - rFrom;
 
@@ -1646,7 +1646,7 @@ a1,-8";
 		//JIT: 5.8, LibGetNameCached 6.5, WFCache 6.0
 
 
-		//APerf.Cpu();
+		//APerf.SpeedUpCpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int n2 = 10;
 		//	APerf.First();
@@ -1730,7 +1730,7 @@ a1,-8";
 		Print(ATime.PerfMilliseconds - Api.GetTickCount64());
 		Print(Milliseconds, Milliseconds - Api.GetTickCount64());
 
-		APerf.Cpu();
+		APerf.SpeedUpCpu();
 		for(int i1 = 0; i1 < 10; i1++) {
 			int n2 = 1000;
 			APerf.First();
@@ -1855,7 +1855,7 @@ a1,-8";
 		_Tdi1(a1);
 		_Tdi2(a2);
 
-		APerf.Cpu();
+		APerf.SpeedUpCpu();
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			APerf.First();
@@ -1950,7 +1950,7 @@ a1,-8";
 			Print(s);
 		};
 
-		APerf.Cpu();
+		APerf.SpeedUpCpu();
 		for(int i1 = 0; i1 < 5; i1++) {
 			APerf.First();
 			//Task.Run(() => APerf.NW()); //100

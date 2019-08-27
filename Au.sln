@@ -89,6 +89,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution", "solution", "{2C
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SciLexer", "Libraries\scintilla\win32\SciLexer.vcxproj", "{FBE04237-9C7B-4973-9C60-505975998B39}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompilerDlls", "Other\CompilerDlls\CompilerDlls.csproj", "{A55580DD-000F-4D1A-848F-6259541283A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -394,6 +396,18 @@ Global
 		{FBE04237-9C7B-4973-9C60-505975998B39}.Release|x64.Build.0 = Release|x64
 		{FBE04237-9C7B-4973-9C60-505975998B39}.Release|x86.ActiveCfg = Release|Win32
 		{FBE04237-9C7B-4973-9C60-505975998B39}.Release|x86.Build.0 = Release|Win32
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Debug|x64.Build.0 = Debug|Any CPU
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Debug|x86.Build.0 = Debug|Any CPU
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Release|x64.ActiveCfg = Release|Any CPU
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Release|x64.Build.0 = Release|Any CPU
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Release|x86.ActiveCfg = Release|Any CPU
+		{A55580DD-000F-4D1A-848F-6259541283A7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -429,6 +443,7 @@ Global
 		{EC35AA9D-EAEC-4472-B134-C754B21C96C8} = {82D5A236-3610-446D-95BA-3888BF6E8F25}
 		{C84FD40F-6D87-43FA-BBAD-5CA3C8B98E44} = {4B65F34E-129D-46F9-9464-25737BC43029}
 		{FBE04237-9C7B-4973-9C60-505975998B39} = {016834A7-5E0C-4356-81F4-E4034CD56BBD}
+		{A55580DD-000F-4D1A-848F-6259541283A7} = {4B65F34E-129D-46F9-9464-25737BC43029}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F4DC626A-22DF-4C8A-9686-8A694050B23E}

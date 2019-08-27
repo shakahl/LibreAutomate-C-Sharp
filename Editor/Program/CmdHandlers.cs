@@ -102,8 +102,8 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Edit_Paste), Edit_Paste);
 		_dict.Add(nameof(Edit_ForumCopy), Edit_ForumCopy);
 		_dict.Add(nameof(Edit_Find), Edit_Find);
-		_dict.Add(nameof(Edit_Members), Edit_Members);
-		_dict.Add(nameof(Edit_ContextHelp), Edit_ContextHelp);
+		_dict.Add(nameof(Edit_MembersList), Edit_MembersList);
+		_dict.Add(nameof(Edit_ParameterInfo), Edit_ParameterInfo);
 		_dict.Add(nameof(Edit_GoToDefinition), Edit_GoToDefinition);
 		_dict.Add(nameof(Edit_PeekDefinition), Edit_PeekDefinition);
 		_dict.Add(nameof(Edit_FindReferences), Edit_FindReferences);
@@ -387,14 +387,14 @@ class CmdHandlers : IGStripManagerCallbacks
 		Panels.Find.CtrlF();
 	}
 
-	public void Edit_Members()
+	public void Edit_MembersList()
 	{
-		Program.Codein.ShowCompletionList();
+		CodeInfo.ShowCompletionList(Panels.Editor.ActiveDoc);
 	}
 
-	public void Edit_ContextHelp()
+	public void Edit_ParameterInfo()
 	{
-
+		CodeInfo.ShowSignature(Panels.Editor.ActiveDoc);
 	}
 
 	public void Edit_GoToDefinition()

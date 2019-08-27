@@ -40,7 +40,8 @@ class EdMetaCommentsParser
 
 	public EdMetaCommentsParser(string code)
 	{
-		if(!MetaComments.FindMetaComments(code, out int endOf)) return;
+		int endOf = MetaComments.FindMetaComments(code);
+		if(endOf == 0) return;
 		EndOfMetaComments = endOf;
 		foreach(var t in MetaComments.EnumOptions(code, endOf)) _ParseOption(t.Name(), t.Value());
 	}

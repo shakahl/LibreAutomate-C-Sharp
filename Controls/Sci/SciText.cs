@@ -438,15 +438,26 @@ namespace Au.Controls
 		public int CurrentPosChars { get => CountBytesToChars(CurrentPos); set => Call(SCI_SETEMPTYSELECTION, CountBytesFromChars(value)); }
 
 		/// <summary>
-		/// SCI_GETSELECTIONSTART.
+		/// SCI_GETSELECTIONSTART UTF-8.
 		/// </summary>
 		public int SelectionStart => Call(SCI_GETSELECTIONSTART);
 
 		/// <summary>
-		/// SCI_GETSELECTIONEND.
+		/// SCI_GETSELECTIONSTART UTF-16.
+		/// </summary>
+		public int SelectionStartChars => CountBytesToChars(SelectionStart);
+
+		/// <summary>
+		/// SCI_GETSELECTIONEND UTF-8.
 		/// Always greater or equal than SelectionStart.
 		/// </summary>
 		public int SelectionEnd => Call(SCI_GETSELECTIONEND);
+
+		/// <summary>
+		/// SCI_GETSELECTIONEND UTF-16.
+		/// Always greater or equal than SelectionStartChars.
+		/// </summary>
+		public int SelectionEndChars => CountBytesToChars(SelectionEnd);
 
 		/// <summary>
 		/// Gets line index from character position (UTF-8 bytes by default).
@@ -607,32 +618,40 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// SCI_DELETERANGE.
-		/// </summary>
-		/// <param name="pos">Start index (UTF-8 bytes).</param>
-		/// <param name="length">Length (UTF-8 bytes).</param>
-		public void DeleteRange(int pos, int length)
-		{
-			using(new _NoReadonly(this))
-				Call(SCI_DELETERANGE, pos, length);
-		}
-
-		/// <summary>
 		/// SCI_INSERTTEXT.
 		/// Does not parse tags.
 		/// Does not change current selection; for it use <see cref="ReplaceSel"/>.
 		/// </summary>
 		/// <param name="pos">Start index (UTF-8 bytes). If -1, uses current position.</param>
-		/// <param name="s">Replacement text. Can be null.</param>
-		public void InsertText(int pos, string s)
+		/// <param name="s">Text to insert. Can be null.</param>
+		/// <param name="utf16"></param>
+		public void InsertText(int pos, string s, bool utf16 = false)
 		{
 			using(new _NoReadonly(this))
-				SetString(SCI_INSERTTEXT, pos, s);
+				SetString(SCI_INSERTTEXT, _Pos(pos, utf16), s);
+		}
+
+		/// <summary>
+		/// SCI_DELETERANGE.
+		/// Does not parse tags.
+		/// Does not change current selection; for it use <see cref="ReplaceSel"/>.
+		/// </summary>
+		/// <param name="from">Start index. By default UTF-8 bytes.</param>
+		/// <param name="to">End index. By default UTF-8 bytes. If -1, uses control text length.</param>
+		/// <param name="flags"></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public void DeleteRange(int from, int to, SciFromTo flags = 0)
+		{
+			using(new _NoReadonly(this)) {
+				NormalizeRange(ref from, ref to, flags);
+				Call(SCI_DELETERANGE, from, to - from);
+			}
 		}
 
 		/// <summary>
 		/// Replaces text range.
 		/// Does not parse tags.
+		/// Does not change current selection; for it use <see cref="ReplaceSel"/>.
 		/// </summary>
 		/// <param name="s">Replacement text. Can be null.</param>
 		/// <param name="from">Start index. By default UTF-8 bytes.</param>
@@ -673,19 +692,38 @@ namespace Au.Controls
 		/// If read-only, asserts and fails (unlike most other functions that change text).
 		/// </summary>
 		/// <param name="s">Replacement text. Can be null.</param>
-		/// <param name="pos">Start index (UTF-8 bytes). If -1 (default), replaces current selection; else at first goes to pos.</param>
-		public void ReplaceSel(string s, int pos = -1)
+		/// <param name="pos">Start index. If -1 (default), replaces current selection; else at first goes to pos.</param>
+		public void ReplaceSel(string s, int pos = -1, bool utf16 = false)
 		{
 			Debug.Assert(!IsReadonly);
-			if(pos >= 0) GoToPos(pos);
+			if(pos >= 0) GoToPos(pos, utf16);
+			SetString(SCI_REPLACESEL, 0, s);
+		}
+
+		/// <summary>
+		/// Sets selection (SCI_SETSEL) and replaces with new text (SCI_REPLACESEL).
+		/// Does not parse tags.
+		/// If read-only, asserts and fails (unlike most other functions that change text).
+		/// </summary>
+		/// <param name="s">Replacement text. Can be null.</param>
+		/// <param name="from">Start index. By default UTF-8 bytes.</param>
+		/// <param name="to">End index. By default UTF-8 bytes. If -1, uses control text length.</param>
+		/// <param name="flags"></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public void SetAndReplaceSel(int from, int to, string s, SciFromTo flags = 0)
+		{
+			Debug.Assert(!IsReadonly);
+			NormalizeRange(ref from, ref to, flags);
+			Call(SCI_SETSEL, from, to);
 			SetString(SCI_REPLACESEL, 0, s);
 		}
 
 		/// <summary>
 		/// SCI_GOTOPOS and ensures visible.
 		/// </summary>
-		public void GoToPos(int pos)
+		public void GoToPos(int pos, bool utf16 = false)
 		{
+			pos = _Pos(pos, utf16);
 			int line = Call(SCI_LINEFROMPOSITION, pos);
 			Call(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
 			Call(SCI_GOTOPOS, pos);
@@ -852,10 +890,11 @@ namespace Au.Controls
 			/// Saves control text with the same encoding/BOM as loaded. Uses <see cref="AFile.Save"/>.
 			/// </summary>
 			/// <param name="sci">Control's ST.</param>
-			/// <param name="file">To pass to File.OpenRead.</param>
-			/// <exception cref="Exception">Exceptions of File.OpenRead, File.Read, Encoding.Convert.</exception>
+			/// <param name="file">To pass to AFile.Save.</param>
+			/// <param name="tempDirectory">To pass to AFile.Save.</param>
+			/// <exception cref="Exception">Exceptions of AFile.Save.</exception>
 			/// <exception cref="InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
-			public unsafe void Save(SciText sci, string file)
+			public unsafe void Save(SciText sci, string file, string tempDirectory = null)
 			{
 				if(_enc == _Encoding.Binary) throw new InvalidOperationException();
 
@@ -885,7 +924,8 @@ namespace Au.Controls
 
 				//for(int i = 0; i < len; i++) Print(b[i]); return; //test
 
-				AFile.Save(file, temp => { using(var fs = File.OpenWrite(temp)) { fs.Write(b, 0, len); } });
+				AFile.Save(file, temp => { using var fs = File.OpenWrite(temp); fs.Write(b, 0, len); }, tempDirectory: tempDirectory);
+				//using(var fs = File.OpenWrite(file)) fs.Write(b, 0, len); //not much faster
 			}
 		}
 

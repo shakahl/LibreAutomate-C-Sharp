@@ -123,30 +123,40 @@ static class EdResources
 #endif
 
 	/// <summary>
-	/// Gets a non-string resource (eg Bitmap) from project resources.
+	/// Gets a non-string resource (eg Bitmap) from project resources or cache. Don't dispose it.
+	/// If not found (bad name), returns null.
+	/// </summary>
+	/// <param name="name">Resource name. Use <c>nameof(Au.Editor.Properties.Resources.name)</c>.</param>
+	/// <remarks>
 	/// Uses memory cache. Gets the same object when called multiple times for the same name. Don't dispose it.
 	/// Calling Au.Editor.Properties.Resources.name or ResourceManager.GetObject would create object copies.
 	/// Thread-safe.
-	/// If not found (bad name), returns null.
-	/// </summary>
-	/// <param name="name">Resource name. Use <c>nameof(Au.Editor.Properties.Resources.name)</c>. If fileIcon - file path.</param>
-	public static object GetObjectUseCache(string name)
-	{
-		return _cache.GetOrAdd(name, n => Au.Editor.Properties.Resources.ResourceManager.GetObject(n, Au.Editor.Properties.Resources.Culture));
-	}
-	static ConcurrentDictionary<string, object> _cache = new ConcurrentDictionary<string, object>();
-	//note: don't use WeakReference. Maybe could use weekreferences for each image etc, but not tested whether it is good.
+	/// </remarks>
+	public static object GetObjectUseCache(string name) => s_cache.GetOrAdd(name, n => GetObjectNoCache(n));
+	static ConcurrentDictionary<string, object> s_cache = new ConcurrentDictionary<string, object>();
+	//note: don't use WeakReference for s_cache. Maybe could use weekreferences for each image etc, but not tested whether it is good.
 
 	/// <summary>
-	/// Gets a Bitmap resource from project resources or cache.
-	/// Uses memory cache. Gets the same object when called multiple times for the same name. Don't dispose it.
+	/// Gets a Bitmap resource from project resources or cache. Don't dispose it.
+	/// If not found (bad name), returns null.
 	/// Calls <see cref="GetObjectUseCache"/> and casts to Bitmap.
 	/// </summary>
 	/// <param name="name">Image resource name. Use <c>nameof(Au.Editor.Properties.Resources.name)</c>.</param>
-	public static Bitmap GetImageUseCache(string name)
-	{
-		return GetObjectUseCache(name) as Bitmap;
-	}
+	public static Bitmap GetImageUseCache(string name) => GetObjectUseCache(name) as Bitmap;
+
+	/// <summary>
+	/// Gets a non-string resource (eg Bitmap) from project resources. Each time returns a new copy.
+	/// If not found (bad name), returns null.
+	/// </summary>
+	/// <param name="name">Resource name. Use <c>nameof(Au.Editor.Properties.Resources.name)</c>.</param>
+	public static object GetObjectNoCache(string name) => Au.Editor.Properties.Resources.ResourceManager.GetObject(name, Au.Editor.Properties.Resources.Culture);
+
+	/// <summary>
+	/// Gets a Bitmap resource from project resources. Each time returns a new copy.
+	/// If not found (bad name), returns null.
+	/// </summary>
+	/// <param name="name">Image resource name. Use <c>nameof(Au.Editor.Properties.Resources.name)</c>.</param>
+	public static Bitmap GetImageNoCache(string name) => GetObjectNoCache(name) as Bitmap;
 }
 
 /// <summary>

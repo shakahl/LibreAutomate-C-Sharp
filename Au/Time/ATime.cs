@@ -406,7 +406,7 @@ namespace Au
 			static long s_TS1_EndTime;
 
 			/// <summary>
-			/// Calls TempSetMax if sleepTimeMS is 1-99.
+			/// Calls TempSet1 if sleepTimeMS is 1-99.
 			/// </summary>
 			/// <param name="sleepTimeMS">milliseconds of the caller 'sleep' function.</param>
 			internal static void LibTempSet1(int sleepTimeMS)

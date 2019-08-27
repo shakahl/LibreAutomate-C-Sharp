@@ -46,8 +46,8 @@ namespace Au.Controls
 
 		protected override void Dispose(bool disposing)
 		{
-			if(_ttTimer != null) { _ttTimer.Stop(); _ttTimer = null; }
-			if(_ttToolTip != null) { _ttToolTip.Dispose(); _ttToolTip = null; }
+			_ttTimer?.Stop(); _ttTimer = null;
+			_ttToolTip?.Dispose(); _ttToolTip = null;
 			base.Dispose(disposing);
 		}
 

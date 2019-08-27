@@ -1,21 +1,4 @@
-﻿//C# compiler setup:
-//Install nuget package Microsoft.CodeAnalysis.CSharp or Microsoft.CodeAnalysis.CSharp.Scripting.
-//Problem - cluttering: it installs about 50 packages and 150 files/folders, adds them to References, to the main output folder, etc.
-//Workaround:
-//	Install it in another solution (Compiler) that contains single project (Compiler).
-//		In that project set output = subfolder "Compiler" of the main output folder "_".
-//		Compile that project. It adds all the dlls to the "Compiler" subfolder.
-//In this project (Au.Compiler.dll) add references from the "Compiler" subfolder:
-//	Microsoft.CodeAnalysis, Microsoft.CodeAnalysis.CSharp, System.Collections.Immutable. Make "copy local" = false.
-//Let this project's output be the "Compiler" subfolder. Also let its Au reference be "copy local" = false.
-//	It is workaround for: msbuild copies most CodeAnalysis dependencies (~50) to the main output folder.
-//		That is why all code that uses CodeAnalysis was moved to this new project. Would be less work to use C# compiler directly in projects that need it.
-//In projects that use this project as a reference:
-//	Make its "copy local" = false.
-//	In app.config add: configuration/runtime/assemblyBinding: <probing privatePath = "Compiler" />
-//	Don't need "Auto-generate binding redirects" in project properties. With framework 4.7.2, no problems with compiler assembly binding. Previously, with 4.6.2, 'auto generate...' did not work well; would need to add several binding redirections manually to app.config.
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Text;

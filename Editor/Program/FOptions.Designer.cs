@@ -116,27 +116,30 @@
 			this._alwaysVisible.AutoSize = true;
 			this._alwaysVisible.Location = new System.Drawing.Point(8, 32);
 			this._alwaysVisible.Name = "_alwaysVisible";
-			this._alwaysVisible.Size = new System.Drawing.Size(180, 19);
+			this._alwaysVisible.Size = new System.Drawing.Size(186, 20);
 			this._alwaysVisible.TabIndex = 1;
 			this._alwaysVisible.Text = "Start visible; exit when closed";
+			this._alwaysVisible.UseVisualStyleBackColor = false;
 			// 
 			// _versionCheck
 			// 
 			this._versionCheck.AutoSize = true;
 			this._versionCheck.Location = new System.Drawing.Point(8, 52);
 			this._versionCheck.Name = "_versionCheck";
-			this._versionCheck.Size = new System.Drawing.Size(171, 19);
+			this._versionCheck.Size = new System.Drawing.Size(177, 20);
 			this._versionCheck.TabIndex = 2;
 			this._versionCheck.Text = "Check for program updates";
+			this._versionCheck.UseVisualStyleBackColor = false;
 			// 
 			// _runAtStartup
 			// 
 			this._runAtStartup.AutoSize = true;
 			this._runAtStartup.Location = new System.Drawing.Point(8, 12);
 			this._runAtStartup.Name = "_runAtStartup";
-			this._runAtStartup.Size = new System.Drawing.Size(162, 19);
+			this._runAtStartup.Size = new System.Drawing.Size(168, 20);
 			this._runAtStartup.TabIndex = 0;
 			this._runAtStartup.Text = "Run when Windows starts";
+			this._runAtStartup.UseVisualStyleBackColor = false;
 			// 
 			// _tabFiles
 			// 
@@ -199,6 +202,7 @@
 			this.IsPopup = true;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
+			this.Name = "FOptions";
 			this.ShowInTaskbar = false;
 			this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
 			this.Text = "Options";

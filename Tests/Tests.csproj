@@ -74,6 +74,9 @@
   <PropertyGroup>
     <ApplicationManifest>Resources\Au.manifest</ApplicationManifest>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="PresentationCore" />
@@ -235,6 +238,7 @@
     <Content Include="..\Editor\Resources\ico\app_native.ico">
       <Link>Resources\app_native.ico</Link>
     </Content>
+    <Content Include="Unused currently\TextFile1.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

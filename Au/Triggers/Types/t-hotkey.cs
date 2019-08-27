@@ -81,10 +81,14 @@ namespace Au.Triggers
 
 		internal override void Run(TriggerArgs args) => RunT(args as HotkeyTriggerArgs);
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Returns "Hotkey".
+		/// </summary>
 		public override string TypeString => "Hotkey";
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Returns a string containing trigger parameters.
+		/// </summary>
 		public override string ParamsString => _paramsString;
 
 		///

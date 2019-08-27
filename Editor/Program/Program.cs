@@ -64,13 +64,13 @@ static class Program
 
 		if(CommandLine.OnProgramStarted(args)) return;
 
-#if !DEBUG
-		var fProfile = AFolders.ThisAppDataLocal + "ProfileOptimization";
-		AFile.CreateDirectory(fProfile);
-		ProfileOptimization.SetProfileRoot(fProfile);
-		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 680 -> 560 ms. Makes compiler startup faster 4000 -> 2500 (ngen 670).
-		APerf.Next();
-#endif
+//#if !DEBUG //TODO: uncomment
+//		var fProfile = AFolders.ThisAppDataLocal + "ProfileOptimization";
+//		AFile.CreateDirectory(fProfile);
+//		ProfileOptimization.SetProfileRoot(fProfile);
+//		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 680 -> 560 ms. Makes compiler startup faster 4000 -> 2500 (ngen 670).
+//		APerf.Next();
+//#endif
 
 		OutputServer.NoNewline = true;
 		OutputServer.Start();
@@ -102,7 +102,6 @@ static class Program
 	public static FMain MainForm;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
-	public static CodeInfo Codein;
 	public static string UserGuid;
 	public const string AppName = "QM3";
 

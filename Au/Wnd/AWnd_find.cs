@@ -113,7 +113,7 @@ namespace Au
 				WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
 			{
 				_name = name;
-				if(cn != null) _cn = cn.Length != 0 ? cn : throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
+				if(cn != null) _cn = cn.Length != 0 ? cn : throw new ArgumentException("Class name cannot be \"\". Use null.");
 				program.GetValue(out _program, out _processId, out _threadId, out _owner);
 				_flags = flags;
 				_also = also;
@@ -414,16 +414,20 @@ namespace Au
 		/// <returns>Returns <c>default(AWnd)</c> if not found.</returns>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
-		/// String format: [](xref:wildcard_expression). null means 'can be any'. "" means 'must not have name'.
+		/// String format: [](xref:wildcard_expression).
+		/// null means 'can be any'. "" means 'no name'.
 		/// </param>
 		/// <param name="cn">
 		/// Window class name.
-		/// String format: [](xref:wildcard_expression). null means 'can be any'. Cannot be "".
+		/// String format: [](xref:wildcard_expression).
+		/// null means 'can be any'. Cannot be "".
 		/// You can see window name, class name and program in editor's status bar and dialog "Find window or control".
 		/// </param>
 		/// <param name="program">
 		/// Program file name, like <c>"notepad.exe"</c>.
-		/// String format: [](xref:wildcard_expression). null means 'can be any'. Cannot be "". Cannot be path.
+		/// String format: [](xref:wildcard_expression).
+		/// null means 'can be any'. Cannot be "". Cannot be path.
+		/// 
 		/// Or <see cref="WF3.Process"/>(process id), <see cref="WF3.Thread"/>(thread id), <see cref="WF3.Owner"/>(owner window).
 		/// See <see cref="ProcessId"/>, <see cref="AProcess.CurrentProcessId"/>, <see cref="ThreadId"/>, <see cref="AThread.NativeId"/>, <see cref="Owner"/>.
 		/// </param>
@@ -531,13 +535,13 @@ namespace Au
 		/// </summary>
 		/// <param name="name">
 		/// Name.
-		/// Use null to match any.
 		/// Full, case-insensitive. Wildcard etc not supported.
+		/// null means 'can be any'. "" means 'no name'.
 		/// </param>
 		/// <param name="cn">
 		/// Class name.
-		/// Use null to match any. Cannot be "".
 		/// Full, case-insensitive. Wildcard etc not supported.
+		/// null means 'can be any'. Cannot be "".
 		/// </param>
 		/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
 		/// <remarks>
@@ -561,13 +565,13 @@ namespace Au
 			/// </summary>
 			/// <param name="name">
 			/// Name.
-			/// Use null to match any.
 			/// Full, case-insensitive. Wildcard etc not supported.
+			/// null means 'can be any'. "" means 'no name'.
 			/// </param>
 			/// <param name="cn">
 			/// Class name.
-			/// Use null to match any. Cannot be "".
 			/// Full, case-insensitive. Wildcard etc not supported.
+			/// null means 'can be any'. Cannot be "".
 			/// </param>
 			/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
 			/// <remarks>
@@ -954,7 +958,7 @@ namespace Au.Types
 			switch(_o) {
 			case string s:
 				//LibThrowIfInvalid(s);
-				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
+				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null.");
 				if(!s.Starts("**")) { //can be regex
 					if(s.FindChars(@"\/") >= 0) throw new ArgumentException("Program name contains \\ or /.");
 					if(APath.FindExtension(s) < 0 && !AWildex.HasWildcardChars(s)) PrintWarning("Program name without .exe.");
@@ -980,7 +984,7 @@ namespace Au.Types
 		///// <exception cref="ArgumentException">The value is "" or 0 or contains \ or /.</exception>
 		//internal static void LibThrowIfInvalid(string s)
 		//{
-		//	if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null to match any.");
+		//	if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null.");
 		//	if(s.IndexOfAny(AExtString.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
 		//	if(APath.FindExtension(s) < 0) PrintWarning("Program name without .exe.");
 		//}

@@ -128,7 +128,7 @@ static partial class Test
 			//TestEditAndContinue();
 			//TestDetectFileTextEncoding();
 			//TestCollectionEmpty();
-			//APerf.Cpu();
+			//APerf.SpeedUpCpu();
 			//APerf.First();
 			//TestSqlite();
 			//TestSqliteExamples();

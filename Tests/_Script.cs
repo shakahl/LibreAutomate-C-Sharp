@@ -21,6 +21,10 @@ using Au.Triggers;
 using Au.Controls;
 using System.Runtime.CompilerServices;
 using System.Runtime.Caching;
+using System.Reflection;
+using System.Runtime;
+//using CefSharp.WinForms;
+//using CefSharp;
 
 class Script : AScript
 {
@@ -270,7 +274,7 @@ class Script : AScript
 		1.s();
 		Print(AMouse.IsPressed(MButtons.Left), AMouse.IsPressed(MButtons.Right));
 
-		APerf.Cpu();
+		APerf.SpeedUpCpu();
 		for(int i1 = 0; i1 < 8; i1++) {
 			int n2 = 1;
 			APerf.First();
@@ -451,7 +455,7 @@ class Script : AScript
 
 		//		return;
 
-		//APerf.Cpu();
+		//APerf.SpeedUpCpu();
 		//for(int i1 = 0; i1 < 7; i1++) {
 		//	APerf.First();
 		//	Test2();
@@ -1207,7 +1211,7 @@ class Script : AScript
 		//Print(s.FindChars(" \r\n", not: true));
 		////return;
 
-		//APerf.Cpu();
+		//APerf.SpeedUpCpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int n2 = 1000;
 		//	APerf.First();
@@ -1232,7 +1236,7 @@ class Script : AScript
 		//Print(s.TrimChars("/\\"));
 
 		//string s1 = null, s2 = null, s3 = null;
-		//APerf.Cpu();
+		//APerf.SpeedUpCpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int n2 = 1000;
 		//	APerf.First();
@@ -1269,7 +1273,7 @@ class Script : AScript
 		//var rx = @"\bneedle\b";
 		//int i = 0, j = 0, k = 0, n=0;
 
-		//APerf.Cpu();
+		//APerf.SpeedUpCpu();
 		//for(int i1 = 0; i1 < 5; i1++) {
 		//	int n2 = 1000;
 		//	APerf.First();
@@ -1638,7 +1642,7 @@ class Script : AScript
 
 		if(x.MatchG(s, out var g, 1)) Print(g);
 
-		APerf.Cpu();
+		APerf.SpeedUpCpu();
 		for(int i1 = 0; i1 < 5; i1++) {
 			int n2 = 1000;
 			APerf.First();
@@ -1850,7 +1854,7 @@ class Script : AScript
 		}
 		Print(k.Count);
 
-		APerf.Cpu();
+		APerf.SpeedUpCpu();
 		for(int i1 = 0; i1 < 7; i1++) {
 			APerf.First();
 			foreach(var g in k) {
@@ -1903,9 +1907,148 @@ class Script : AScript
 	void TestTimersCpu()
 	{
 		ATimer.Every(100, () => { int i = 7; }); //0.045 %
-		//new System.Threading.Timer(_ => { int i = 7; }, null, 0, 100); //0.095 %
+												 //new System.Threading.Timer(_ => { int i = 7; }, null, 0, 100); //0.095 %
 		ADialog.Show();
 	}
+
+	void TestDecompressInvalidZipData()
+	{
+		APerf.First();
+		try {
+			var s = "123456";
+			var b = ImageUtil.BmpFileDataFromString(s, ImageUtil.ImageType.Base64CompressedBmp);
+
+		}
+		finally { APerf.NW(); }
+	}
+
+	void BuildDocumentationProviderDatabase()
+	{
+		var dbPath = AFolders.ThisAppBS + "CiDoc.db";
+		AFile.Delete(dbPath);
+		using var d = new ASqlite(dbPath, sql: "PRAGMA page_size = 8192;"); //8192 makes file smaller by 2-3 MB.
+		using var trans = d.Transaction();
+		d.Execute("CREATE TABLE data (name TEXT PRIMARY KEY, xml TEXT)");
+		using var statInsert = d.Statement("INSERT INTO data VALUES (?, ?)");
+		using var statDupl = d.Statement("SELECT xml FROM data WHERE name=?");
+		var haveRefs = new List<string>();
+		var uniq = new Dictionary<string, string>(); //name -> asmName
+
+		_AddFile("Au.dll", AFolders.ThisAppBS + "Au.xml");
+
+		var srcDir = @"C:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.7.2";
+		string netDir = AFolders.NetFrameworkRuntime + @"\", wpfDir = netDir + @"\WPF\";
+		foreach(var f in AFile.EnumDirectory(srcDir)) {
+			if(f.IsDirectory) continue;
+			if(!f.Name.Ends(".xml", true)) continue;
+			var refName = APath.GetFileName(f.Name, withoutExtension: true);
+			var xmlPath = f.FullPath;
+			if(f.Name.Eqi("namespaces.xml")) {
+				//remove tags now because wel'll have to get text differently
+				var s1 = File.ReadAllText(xmlPath);
+				s1 = s1.RegexReplace(@"<see cref="".:(.+?)"" ?/> ?", "$1 ")
+					.RegexReplace(@">\s*<summary> ?(.+?) ?</summary>\s*<", ">$1<");
+				//Print(s1); return;
+				File.WriteAllText(xmlPath = AFolders.Temp + "namespaces.xml", s1);
+			} else {
+				var dllName = Path.ChangeExtension(f.Name, "dll");
+				if(!(AFile.ExistsAsFile(netDir + dllName) || AFile.ExistsAsFile(wpfDir + dllName))) {
+					Print("<><c 0x808080>" + f.Name + "</c>");
+					continue;
+				}
+			}
+			_AddFile(refName, xmlPath, isNET: true);
+			//break;
+		}
+
+		statInsert.BindAll(".", string.Join("\n", haveRefs)).Step();
+
+		trans.Commit();
+		d.Execute("VACUUM");
+
+		Print("DONE");
+
+		void _AddFile(string refName, string xmlPath, bool isNET = false)
+		{
+			Print(refName);
+			haveRefs.Add(refName);
+			var xr = AExtXml.LoadElem(xmlPath);
+			foreach(var e in xr.Descendants("member")) {
+				var name = e.Attr("name");
+
+				//remove <remarks> and <example>. Does not save much space, because .NET xmls don't have it.
+				foreach(var v in e.Descendants("remarks").ToArray()) v.Remove();
+				foreach(var v in e.Descendants("example").ToArray()) v.Remove();
+
+				using var reader = e.CreateReader();
+				reader.MoveToContent();
+				var xml = reader.ReadInnerXml();
+				//Print(name, xml);
+
+				//remove some texts
+				xml = xml.Replace("To browse the .NET Framework source code for this type, see the Reference Source.", null);
+
+				if(uniq.TryGetValue(name, out var prevRef)) {
+					if(!statDupl.Bind(1, name).Step()) throw new Exception();
+					var prev = statDupl.GetText(0);
+					if(xml != prev && refName != "System.Linq") Print($"<>\t{name} already defined in {prevRef}\r\n<c 0xc000>{prev}</c>\r\n<c 0xff0000>{xml}</c>");
+					statDupl.Reset();
+				} else {
+					statInsert.BindAll(name, xml).Step();
+					uniq.Add(name, refName);
+				}
+				statInsert.Reset();
+			}
+		}
+	}
+
+	//Successfully compiles and starts. Did not try to create a web browser instance. Adds 334 MB of files to the output folder.
+	//void TestCefSharp()
+	//{
+	//	AppDomain.CurrentDomain.AssemblyResolve += _CefSharpResolver;
+	//	_TestCefSharp();
+	//}
+
+	//[MethodImpl(MethodImplOptions.NoInlining)]
+	//void _TestCefSharp()
+	//{
+	//	var settings = new CefSettings();
+
+	//	// Set BrowserSubProcessPath based on app bitness at runtime
+	//	settings.BrowserSubprocessPath = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase,
+	//										   Environment.Is64BitProcess ? "x64" : "x86",
+	//										   "CefSharp.BrowserSubprocess.exe");
+
+	//	// Make sure you set performDependencyCheck false
+	//	Cef.Initialize(settings, performDependencyCheck: false, browserProcessHandler: null);
+
+	//	var browser = new _CefSharpForm();
+	//	Application.Run(browser);
+	//}
+
+	//// Will attempt to load missing assembly from either x86 or x64 subdir
+	//private static Assembly _CefSharpResolver(object sender, ResolveEventArgs args)
+	//{
+	//	if(args.Name.StartsWith("CefSharp")) {
+	//		string assemblyName = args.Name.Split(new[] { ',' }, 2)[0] + ".dll";
+	//		string archSpecificPath = Path.Combine(AppDomain.CurrentDomain.SetupInformation.ApplicationBase,
+	//											   Environment.Is64BitProcess ? "x64" : "x86",
+	//											   assemblyName);
+
+	//		return File.Exists(archSpecificPath)
+	//				   ? Assembly.LoadFile(archSpecificPath)
+	//				   : null;
+	//	}
+
+	//	return null;
+	//}
+
+	//internal class _CefSharpForm :Form
+	//{
+	//	public _CefSharpForm()
+	//	{
+	//	}
+	//}
 
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
 	void _Main(string[] args)
@@ -1914,7 +2057,15 @@ class Script : AScript
 		AOutput.QM2.UseQM2 = true;
 		AOutput.Clear();
 		//100.ms();
+		//g1:
+		//AWnd k = AWnd.Find("dkdkdkdk", null, null, flags:WFFlags.);
+		//AWnd.Find("", "", default, )
 
+		//Print(1);
+
+		//BuildDocumentationProviderDatabase();
+		//TestCefSharp();
+		//TestDecompressInvalidZipData();
 		//TestTimersCpu();
 		//for(int i = 0; i < 7; i++) TestTimers();
 		//TestDictionaryAndListSearchSpeed();

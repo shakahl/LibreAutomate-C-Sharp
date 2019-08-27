@@ -38,7 +38,7 @@ class CodeAssist
 		//_ws = null;
 	}
 
-	public void FileOpened(PanelEdit.SciCode doc)
+	public void FileOpened(SciCode doc)
 	{
 		//var f = doc.FN;
 		//if(!f.IsCodeFile) return;
@@ -53,7 +53,7 @@ class CodeAssist
 		//doc.CodeaData = new SciCodeData { oldText = doc.Text };
 	}
 
-	public void FileClosed(PanelEdit.SciCode doc)
+	public void FileClosed(SciCode doc)
 	{
 		if(doc.CodeaData == null) return;
 		var f = doc.FN;
@@ -71,7 +71,7 @@ class CodeAssist
 
 	bool _FileNodeIsProject(FileNode f) => f.IsScript || f.GetClassFileRole() switch { FileNode.EClassFileRole.App => true, FileNode.EClassFileRole.Library => true, _ => false };
 
-	public void TextChanged(PanelEdit.SciCode doc, in Sci.SCNotification n)
+	public void TextChanged(SciCode doc, in Sci.SCNotification n)
 	{
 		if(doc.CodeaData == null) return;
 		bool added = 0 != (n.modificationType & Sci.MOD.SC_MOD_INSERTTEXT);
@@ -85,7 +85,7 @@ class CodeAssist
 		catch(Exception ex) { ADebug.Print(ex); }
 	}
 
-	public void CharAdded(PanelEdit.SciCode doc, int chi)
+	public void CharAdded(SciCode doc, int chi)
 	{
 		if(doc.CodeaData == null) return;
 		if(chi > char.MaxValue) return;
@@ -96,7 +96,7 @@ class CodeAssist
 		//_ShowCompletions(doc, ch, false); //TODO
 	}
 
-	void _ShowCompletions(PanelEdit.SciCode doc, char ch, bool ctrlSpace)
+	void _ShowCompletions(SciCode doc, char ch, bool ctrlSpace)
 	{
 		var text = doc.Text;
 		var position = doc.ST.CurrentPosChars;

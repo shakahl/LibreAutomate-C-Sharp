@@ -107,8 +107,8 @@ namespace Au.Compiler
 
 		static bool _Compile(bool forRun, IWorkspaceFile f, out CompResults r, IWorkspaceFile projFolder)
 		{
+			//APerf.First();
 			r = new CompResults();
-			//APerf.Next();
 
 			var m = new MetaComments();
 			if(!m.Parse(f, projFolder, EMPFlags.PrintErrors)) return false;
@@ -217,7 +217,7 @@ namespace Au.Compiler
 				foreach(var d in diag) {
 					if(d.Severity == DiagnosticSeverity.Hidden) continue;
 					err.AddErrorOrWarning(d, f);
-					if(d.Severity == DiagnosticSeverity.Error && d.Id == "CS0009") m.References.RemoveBadReference(d.GetMessage());
+					if(d.Severity == DiagnosticSeverity.Error && d.Id == "CS0009") MetaReferences.RemoveBadReference(d.GetMessage());
 				}
 				if(!err.IsEmpty) err.PrintAll();
 			}

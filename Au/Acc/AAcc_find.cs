@@ -309,7 +309,8 @@ namespace Au
 		/// AO role, like <c>"LINK"</c> or <c>nameof(AccROLE.LINK)</c>. Or path, like <c>"ROLE/ROLE/ROLE"</c>.
 		/// Can be used standard roles (see <see cref="AccROLE"/>) and custom roles (like <c>"div"</c> in Firefox). More info: <see cref="Role"/>.
 		/// 
-		/// Case-sensitive. Not wildcard. Use null to match any role. Cannot be "".
+		/// Case-sensitive. Not wildcard.
+		/// null means 'can be any'. Cannot be "".
 		/// 
 		/// Can have a prefix:
 		/// - <c>"web:"</c> - search only in the visible web page, not in whole window. Examples: <c>"web:LINK"</c>, <c>"web:/LIST/LISTITEM/LINK"</c>.\

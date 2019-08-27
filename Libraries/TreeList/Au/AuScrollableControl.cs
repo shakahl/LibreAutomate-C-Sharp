@@ -230,8 +230,14 @@ namespace Au.Controls
 					int? pos = resetPos ? (int?)0 : null;
 					this.SetScrollInfo(true, count - 1, z.Height / itemHeight, pos);
 					this.SetScrollInfo(false, itemWidth, z.Width, pos);
-					if(resetPos) Invalidate();
-					//p1.NW();
+					//p1.Next();
+					if(resetPos) {
+						//workaround for Windows or .NET bug: sometimes then mouse behaves incorrectly: on scrollbar generates client messages (eg WM_MOUSEMOVE instead of WM_NCMOUSEMOVE). This workaround makes this func almost 2 times slower, but I don't know a better way.
+						((AWnd)this).SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE | Native.SWP.NOZORDER | Native.SWP.NOSENDCHANGING);
+
+						Invalidate();
+					}
+					//p1.NW('S');
 					ADebug.PrintIf(z != ClientSize && Visible, $"calc={z}  now={ClientSize}");
 				}
 			}

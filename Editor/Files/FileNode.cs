@@ -28,7 +28,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 {
 	#region types
 
-	//Not saved in XML.
+	//Not saved in file.
 	[Flags]
 	enum _State : byte
 	{
@@ -37,17 +37,11 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 
 	}
 
-	//Saved in XML.
+	//Saved in file.
 	[Flags]
 	enum _Flags : byte
 	{
-		HasTriggers = 1,
-	}
-
-	class _Misc
-	{
-		public string iconOrLinkTarget;
-		public uint testScript;
+		HasTriggers = 1,//TODO
 	}
 
 	#endregion
@@ -61,7 +55,8 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	EFileType _type;
 	_State _state;
 	_Flags _flags;
-	object _misc; //null or icon path (string) or TMisc
+	string _iconOrLinkTarget;
+	uint _testScriptId;
 
 	//public Microsoft.CodeAnalysis.DocumentId CaDocumentId;
 
@@ -70,7 +65,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		if(!IsFolder) {
 			if(!Empty(linkTarget)) {
 				_state |= _State.Link;
-				_misc = linkTarget;
+				_iconOrLinkTarget = linkTarget;
 			}
 		}
 	}
@@ -107,7 +102,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	}
 
 	//this ctor is used when copying or importing a workspace.
-	//Deep-copies fields from f, except _model, _name, _id (generates new) and run.
+	//Deep-copies fields from f, except _model, _name, _id (generates new) and _testScriptId.
 	FileNode(FilesModel model, FileNode f, string name)
 	{
 		_model = model;
@@ -115,7 +110,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		_type = f._type;
 		_state = f._state;
 		_flags = f._flags;
-		if(f._misc is _Misc m) _misc = new _Misc { iconOrLinkTarget = m.iconOrLinkTarget }; else _misc = f._misc;
+		_iconOrLinkTarget = f._iconOrLinkTarget;
 		_id = _model.AddGetId(this);
 	}
 
@@ -123,7 +118,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	FileNode(XmlReader x, FileNode parent, FilesModel model)
 	{
 		_model = model;
-		if(parent == null) { //the root XML element
+		if(parent == null) { //the root node
 			if(x.Name != "files") throw new ArgumentException("XML root element name must be 'files'");
 			_model.MaxId = (uint)x["max-i"].ToInt64();
 		} else {
@@ -134,7 +129,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 			case "n": _type = EFileType.NotCodeFile; break;
 			default: throw new ArgumentException("XML element name must be 'd', 's', 'c' or 'n'");
 			}
-			uint id = 0, testScript = 0; string linkTarget = null, icon = null;
+			uint id = 0, testScriptId = 0; string linkTarget = null, icon = null;
 			while(x.MoveToNextAttribute()) {
 				var v = x.Value;
 				switch(x.Name) {
@@ -143,14 +138,14 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 				case "f": _flags = (_Flags)v.ToInt(); break;
 				case "path": linkTarget = v; break;
 				case "icon": icon = v; break;
-				case "run": testScript = (uint)v.ToInt64(); break;
+				case "run": testScriptId = (uint)v.ToInt64(); break;
 				}
 			}
 			if(Empty(_name)) throw new ArgumentException("no 'n' attribute in XML");
 			_id = _model.AddGetId(this, id);
 			_CtorMisc(linkTarget);
-			if(icon != null && linkTarget == null) { Debug.Assert(_misc == null); _misc = icon; }
-			if(testScript != 0) _GetSetMisc(true).testScript = testScript;
+			if(icon != null && linkTarget == null) _iconOrLinkTarget = icon;
+			if(testScriptId != 0) _testScriptId = testScriptId;
 		}
 	}
 
@@ -176,7 +171,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 			if(_flags != 0) x.WriteAttributeString("f", ((int)_flags).ToString());
 			if(IsLink) x.WriteAttributeString("path", LinkTarget);
 			var ico = CustomIcon; if(ico != null) x.WriteAttributeString("icon", ico);
-			if(!exporting) { uint ts = _TestScriptId; if(ts != 0) x.WriteAttributeString("run", ts.ToString()); }
+			if(!exporting && _testScriptId != 0) x.WriteAttributeString("run", _testScriptId.ToString());
 		}
 	}
 
@@ -271,33 +266,21 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	/// <summary>
 	/// If <see cref="IsLink"/>, returns target path, else null.
 	/// </summary>
-	public string LinkTarget => IsLink ? ((_misc is _Misc m) ? m.iconOrLinkTarget : (_misc as string)) : null;
-
-	_Misc _GetSetMisc(bool create)
-	{
-		if(!(_misc is _Misc m)) {
-			if(!create) return null;
-			m = new _Misc { iconOrLinkTarget = _misc as string };
-			_misc = m;
-		}
-		return m;
-	}
+	public string LinkTarget => IsLink ? _iconOrLinkTarget : null;
 
 	/// <summary>
 	/// Gets or sets custom icon path or null. For links always returns null; use LinkTarget.
 	/// The setter will save workspace.
 	/// </summary>
 	public string CustomIcon {
-		get => IsLink ? null : ((_misc is _Misc m) ? m.iconOrLinkTarget : (_misc as string));
+		get => IsLink ? null : _iconOrLinkTarget;
 		set {
 			Debug.Assert(!IsLink);
-			if(_misc is _Misc m) m.iconOrLinkTarget = value; else _misc = value;
+			_iconOrLinkTarget = value;
 			_model.Save.WorkspaceLater();
 			//FUTURE: call event to update other controls. It probably will be event of FilesModel.
 		}
 	}
-
-	uint _TestScriptId => (_misc is _Misc m) ? m.testScript : 0;
 
 	/// <summary>
 	/// Gets or sets other item to run instead of this. None if null.
@@ -305,18 +288,16 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	/// </summary>
 	public FileNode TestScript {
 		get {
-			uint runId = _TestScriptId;
-			if(runId != 0) {
-				var f = _model.FindById(runId); if(f != null) return f;
+			if(_testScriptId != 0) {
+				var f = _model.FindById(_testScriptId); if(f != null) return f;
 				TestScript = null;
 			}
 			return null;
 		}
 		set {
-			uint runId = value?._id ?? 0;
-			var m = _GetSetMisc(runId != 0); if(m == null) return;
-			if(m.testScript == runId) return;
-			m.testScript = runId;
+			uint id = value?._id ?? 0;
+			if(_testScriptId == id) return;
+			_testScriptId = id;
 			_model.Save.WorkspaceLater();
 		}
 	}
@@ -375,23 +356,39 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	/// </summary>
 	/// <param name="saved">Always get text from file. If false (default), gets editor text if this is current file.</param>
 	/// <param name="warningIfNotFound">Print warning if file not found. If false, prints only other exceptions.</param>
-	public string GetText(bool saved = false, bool warningIfNotFound = false)
+	/// <param name="cache">Remember text. Next time return that text. Not used if gets text from editor.</param>
+	public string GetText(bool saved = false, bool warningIfNotFound = false, bool cache = false)
 	{
 		if(IsFolder) return "";
 		if(!saved && this == _model.CurrentFile) {
 			return Panels.Editor.ActiveDoc.Text; //TODO: can be 'null reference' exception when deleting (ActiveDoc null), eg when called by CodeAssist.
 		}
-		string path = FilePath, es = null;
+		//if(cache) Print("GetText", Name, _text != null);
+		if(_text != null) return _text;
+		string r = null, es = null, path = FilePath;
 		try {
 			using var sr = AFile.WaitIfLocked(() => new StreamReader(path, Encoding.UTF8));
 			if(sr.BaseStream.Length > 100_000_000) es = "File too big, > 100_000_000.";
-			else return sr.ReadToEnd();
+			else r = sr.ReadToEnd();
 		}
 		catch(Exception ex) {
 			if(warningIfNotFound || !(ex is FileNotFoundException || ex is DirectoryNotFoundException)) es = ex.ToStringWithoutStack();
 		}
-		if(es != null) PrintWarning($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
-		return "";
+		r ??= "";
+		if(es != null) {
+			PrintWarning($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
+		} else if(cache && Model.IsWatchingFileChanges && !this.IsLink && r.Length < 1_000_000) { //don't cache links because we don't watch their file folders
+			_text = r; //FUTURE: set = null after some time if not used
+		}
+		return r;
+	}
+	string _text;
+
+	public void UnCacheText(bool fromWatcher = false)
+	{
+		//Print("UnCacheText", Name, _text != null);
+		_text = null;
+		if(fromWatcher) Panels.Editor.GetOpenDocOf(this)?.FileModifiedExternally();
 	}
 
 	public Bitmap GetIcon(bool expandedFolder = false)
@@ -573,7 +570,8 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	{
 		if(_type != EFileType.Class) return EClassFileRole.None;
 		var code = GetText();
-		if(!MetaComments.FindMetaComments(code, out int endOfMeta)) return EClassFileRole.Class;
+		int endOfMeta = MetaComments.FindMetaComments(code);
+		if(endOfMeta == 0) return EClassFileRole.Class;
 		foreach(var v in MetaComments.EnumOptions(code, endOfMeta)) {
 			if(!v.NameIs("role")) continue;
 			if(v.ValueIs("classLibrary")) return EClassFileRole.Library;
@@ -599,7 +597,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 
 	#region Au.Compiler.IWorkspaceFile
 
-	public string IfwText => GetText();
+	public string IfwText => GetText(cache: true);
 
 	public IWorkspaceFiles IwfWorkspace => _model;
 
@@ -753,11 +751,10 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 
 		//create file or folder
 		var path = newParent.FilePath + "\\" + name;
-		try {
+		if(!model.TryFileOperation(() => {
 			if(isFolder) AFile.CreateDirectory(path);
-			else AFile.SaveText(path, text);
-		}
-		catch(Exception ex) { Print(ex.Message); return null; }
+			else AFile.SaveText(path, text, tempDirectory: model.TempDirectory);
+		})) return null;
 
 		//create new FileNode and insert at the specified place
 		var f = new FileNode(model, name, path, isFolder, template: template);
@@ -852,10 +849,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		if(name == _name) return true;
 
 		if(!IsLink) {
-			try {
-				AFile.Rename(this.FilePath, name, IfExists.Fail);
-			}
-			catch(Exception ex) { Print(ex.Message); return false; }
+			if(!_model.TryFileOperation(() => AFile.Rename(this.FilePath, name, IfExists.Fail))) return false;
 		}
 
 		_name = name;
@@ -867,7 +861,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	}
 
 	/// <summary>
-	/// Returns true if can move the XML element into the specified position.
+	/// Returns true if can move the tree node into the specified position.
 	/// For example, cannot move parent into child etc.
 	/// Does not check whether can move the file.
 	/// </summary>
@@ -906,12 +900,11 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 			var oldParent = Parent;
 			var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
 			if(newParent != oldParent) {
-				try { AFile.Move(this.FilePath, newParent.FilePath + "\\" + _name, IfExists.Fail); }
-				catch(Exception ex) { Print(ex.Message); return false; }
+				if(!_model.TryFileOperation(() => AFile.Move(this.FilePath, newParent.FilePath + "\\" + _name, IfExists.Fail))) return false;
 			}
 		}
 
-		//move XML element
+		//move tree node
 		_model.OnNodeRemoved(this);
 		Remove();
 		_Common_MoveCopyNew(target, pos);
@@ -951,8 +944,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 
 		//copy file or directory
 		if(!IsLink) {
-			try { AFile.Copy(FilePath, newParent.FilePath + "\\" + name, IfExists.Fail); }
-			catch(Exception ex) { Print(ex.Message); return null; }
+			if(!_model.TryFileOperation(() => AFile.Copy(FilePath, newParent.FilePath + "\\" + name, IfExists.Fail))) return null;
 		}
 
 		//create new FileNode with descendants
@@ -989,7 +981,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		var type = EFileType.NotCodeFile;
 		if(path.Ends(".cs", true)) {
 			type = EFileType.Class;
-			try { if(AFile.LoadText(path).Regex(@"\bclass Script\s*:\s*AScript\b")) type = EFileType.Script; }//TODO: test
+			try { if(AFile.LoadText(path).Regex(@"\bclass Script\s*:\s*AScript\b")) type = EFileType.Script; }
 			catch(Exception ex) { ADebug.Print(ex); }
 		}
 		return type;

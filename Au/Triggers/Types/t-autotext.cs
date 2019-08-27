@@ -121,10 +121,14 @@ namespace Au.Triggers
 
 		internal override void Run(TriggerArgs args) => RunT(args as AutotextTriggerArgs);
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Returns "Autotext".
+		/// </summary>
 		public override string TypeString => "Autotext";
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Returns a string containing trigger parameters.
+		/// </summary>
 		public override string ParamsString => _paramsString;
 	}
 

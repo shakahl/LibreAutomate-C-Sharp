@@ -50,7 +50,7 @@ partial class FOptions : AuForm
 	{
 		base.OnLoad(e);
 
-		_startupScripts.Text = Program.Model.StartupScriptsCsv?.Replace("\n", "\r\n");
+		_startupScripts.Text = Program.Model.StartupScriptsCsv;
 
 		_alwaysVisible.Checked = Program.Settings.GetBool("_alwaysVisible");
 	}

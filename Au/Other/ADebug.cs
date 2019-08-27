@@ -30,35 +30,18 @@ namespace Au
 	[DebuggerStepThrough]
 	internal static class ADebug //FUTURE: make public, when will be more tested and if really need.
 	{
-		/// <summary>
-		/// Prefix for ADebug.Print, ADebug.PrintIf.
-		/// Default is "Debug: ".
-		/// </summary>
-		/// <example>
-		/// Blue text.
-		/// <code><![CDATA[
-		/// ADebug.TextPrefix = "<><c 0xff0000>"; ADebug.TextSuffix = "</c>";
-		/// ]]></code>
-		/// </example>
-		public static string TextPrefix { get; set; } = "Debug: ";
-		//info: named not Prefix, because intellisense selects it when we want Print, it is annoying
-
-		/// <summary>
-		/// Suffix for ADebug.Print, ADebug.PrintIf.
-		/// </summary>
-		/// <seealso cref="TextPrefix"/>
-		public static string TextSuffix { get; set; }
-
 		static void _Print(object text, string cp, int cln, string cmn)
 		{
 			string s = LibPrintObjectToString(text);
-			AOutput.Write($"{TextPrefix}{cmn} ({APath.GetFileName(cp)}:{cln}):  {s}{TextSuffix}");
+			string prefix = null; if(s.Starts("<>")) { prefix = "<>"; s = s.Substring(2); }
+			AOutput.Write($"{prefix}Debug: {cmn} ({APath.GetFileName(cp)}:{cln}):  {s}");
 		}
 
 		/// <summary>
 		/// Calls <see cref="AOutput.Write"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional arguments are not used explicitly.
+		/// If text starts with "&lt;&gt;", it can contain Print tags.
 		/// </summary>
 		[Conditional("DEBUG")]
 		public static void Print(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
@@ -68,6 +51,7 @@ namespace Au
 		/// If condition is true, calls <see cref="AOutput.Write"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional arguments are not used explicitly.
+		/// If text starts with "&lt;&gt;", it can contain Print tags.
 		/// </summary>
 		[Conditional("DEBUG")]
 		public static void PrintIf(bool condition, object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)

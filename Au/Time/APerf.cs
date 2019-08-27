@@ -398,7 +398,7 @@ namespace Au
 		/// You can make CPU speed constant in Control Panel -> Power Options -> ... Advanced -> Processor power management -> Minimum or maximum power state.
 		/// There are programs that show current CPU speed. For example HWMonitor.
 		/// </remarks>
-		public static void Cpu(int timeMilliseconds = 200)
+		public static void SpeedUpCpu(int timeMilliseconds = 200)
 		{
 			int n = 0;
 			for(long t0 = ATime.PerfMicroseconds; ATime.PerfMicroseconds - t0 < timeMilliseconds * 1000L; n++) { }

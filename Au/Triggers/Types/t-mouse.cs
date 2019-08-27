@@ -82,10 +82,14 @@ namespace Au.Triggers
 
 		internal override void Run(TriggerArgs args) => RunT(args as MouseTriggerArgs);
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Returns "Mouse".
+		/// </summary>
 		public override string TypeString => "Mouse";
 
-		/// <inheritdoc/>
+		/// <summary>
+		/// Returns a string containing trigger parameters.
+		/// </summary>
 		public override string ParamsString => _paramsString;
 
 		///

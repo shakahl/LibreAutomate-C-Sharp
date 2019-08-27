@@ -396,7 +396,9 @@ namespace Au.Compiler
 		/// <param name="isMain">If false, it is a file added through meta option 'c'.</param>
 		void _ParseFile(IWorkspaceFile f, bool isMain)
 		{
+			var p1 = APerf.Create();
 			string code = f.IfwText;
+			p1.Next();
 			bool isScript = f.IsScript;
 
 			if(_isMain = isMain) {
@@ -418,14 +420,17 @@ namespace Au.Compiler
 			_fn = f;
 			_code = code;
 
-			if(!FindMetaComments(code, out int endOf)) return;
-			if(isMain) EndOfMeta = endOf;
+			int endOf = FindMetaComments(code);
+			if(endOf > 0) {
+				if(isMain) EndOfMeta = endOf;
 
-			foreach(var t in EnumOptions(code, endOf)) {
-				//var p1 = APerf.Create();
-				_ParseOption(t.Name(), t.Value(), t.nameStart, t.valueStart);
-				//p1.Next(); var t1 = p1.TimeTotal; if(t1 > 5) Print(t1, t.Name(), t.Value());
+				foreach(var t in EnumOptions(code, endOf)) {
+					//var p1 = APerf.Create();
+					_ParseOption(t.Name(), t.Value(), t.nameStart, t.valueStart);
+					//p1.Next(); var t1 = p1.TimeTotal; if(t1 > 5) Print(t1, t.Name(), t.Value());
+				}
 			}
+			//p1.NW();
 		}
 
 		bool _isMain;
@@ -718,23 +723,20 @@ namespace Au.Compiler
 		public CSharpParseOptions CreateParseOptions()
 		{
 			return new CSharpParseOptions(LanguageVersion.Preview, //CONSIDER: maybe later use .Latest, when C# 8 final available. In other place too.
-				XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None,
+				_flags.Has(EMPFlags.ForCodeInfo) ? DocumentationMode.Diagnose : (XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None),
 				SourceCodeKind.Regular,
 				Defines);
 		}
 
 		/// <summary>
-		/// Returns true if code starts with metacomments "/*/ ... /*/".
+		/// Returns the length of metacomments "/*/ ... /*/" at the start of code. Returns 0 if no metacomments.
 		/// </summary>
 		/// <param name="code">Code. Can be null.</param>
-		/// <param name="endOfMetacomments">Receives the very end of metacomments.</param>
-		public static bool FindMetaComments(string code, out int endOfMetacomments)
+		public static int FindMetaComments(string code)
 		{
-			endOfMetacomments = 0;
-			if(code.Lenn() < 6 || !code.Starts("/*/")) return false;
-			int iTo = code.Find("/*/", 3); if(iTo < 0) return false;
-			endOfMetacomments = iTo + 3;
-			return true;
+			if(code.Lenn() < 6 || !code.Starts("/*/")) return 0;
+			int iTo = code.Find("/*/", 3); if(iTo < 0) return 0;
+			return iTo + 3;
 		}
 
 		/// <summary>

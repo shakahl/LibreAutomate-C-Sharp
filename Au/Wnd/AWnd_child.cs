@@ -57,7 +57,7 @@ namespace Au
 			public ChildFinder(string name = null, string cn = null, WCFlags flags = 0, Func<AWnd, bool> also = null, int skip = 0)
 			{
 				if(cn != null) {
-					if(cn.Length == 0) throw new ArgumentException("Class name cannot be \"\". Use null to match any.");
+					if(cn.Length == 0) throw new ArgumentException("Class name cannot be \"\". Use null.");
 					_className = cn;
 				}
 				if(name != null) {
@@ -262,16 +262,16 @@ namespace Au
 		/// <param name="name">
 		/// Control name.
 		/// String format: [](xref:wildcard_expression).
-		/// null means 'can be any'. "" means 'must not have name'.
+		/// null means 'can be any'. "" means 'no name'.
 		/// 
-		/// By default the function gets control names with <see cref="Name"/>.
+		/// By default to get control names this function uses <see cref="Name"/>.
 		/// Can start with these prefix strings:
 		/// - <c>"***text "</c> - use <see cref="ControlText"/>.
 		/// <br/>Slower and can be less reliable (because can get editable text), especially if not used cn (class name). Does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// - <c>"***accName "</c> - use <see cref="NameAcc"/>.
 		/// <br/>Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
 		/// - <c>"***wfName "</c> - use .NET Windows Forms Control Name property.
-		/// <br/>To get it this function uses <see cref="AWinFormsControlNames"/>. It is slower and can fail because of [](xref:uac).
+		/// <br/>To get it this function uses <see cref="AWinFormsControlNames"/>. Slower and can fail because of [](xref:uac).
 		/// - <c>"***id "</c> like <c>"***id 15"</c> - use control id.
 		/// <br/>To get it this function uses <see cref="ControlId"/>.
 		/// <br/>The id value cannot be wildcard expression.
@@ -437,14 +437,14 @@ namespace Au
 		/// </summary>
 		/// <param name="name">
 		/// Name.
-		/// Use null to match any. "" matches "" (no name).
 		/// Full, case-insensitive. Wildcard etc not supported.
+		/// null means 'can be any'. "" means 'no name'.
 		/// Must include the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// </param>
 		/// <param name="cn">
 		/// Class name.
-		/// Use null to match any. Cannot be "".
 		/// Full, case-insensitive. Wildcard etc not supported.
+		/// null means 'can be any'. Cannot be "".
 		/// </param>
 		/// <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
 		/// <remarks>

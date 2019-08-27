@@ -53,7 +53,9 @@ namespace Au
 			if(i > 12 && s.Starts("%AFolders.")) {
 				var k = AFolders.GetFolder(s.Substring(10, i - 10));
 				if(k != null) return k + s.Substring(i + 1);
-				return s;
+				return s; //TODO: dangerous to return such string. Eg then can create file like @"%AFolders.Documents%\..." in current directory. Should throw exception or show warning and return invalid path.
+
+				//CONSIDER: or/also support like @"%<Documents>%\..." or @"<Documents>\..." or @"%.Documents%\..." or @"%%Documents%%\..."
 			}
 
 			for(int na = s.Length + 100; ;) {
@@ -399,7 +401,7 @@ namespace Au
 				if(!noExpandEV) s = ExpandEnvVar(s);
 				Debug.Assert(!LibIsShellPath(s) && !IsUrl(s));
 
-				if(_EndsWithDriveWithoutSep(s)) s = s + "\\"; //API would append current directory
+				if(_EndsWithDriveWithoutSep(s)) s += "\\"; //API would append current directory
 
 				//note: although slower, call GetFullPathName always, not just when contains @"..\" etc.
 				//	Because it does many things (see Normalize doc), not all documented.
@@ -413,7 +415,7 @@ namespace Au
 				if(0 == (flags & PNFlags.DontExpandDosPath) && LibIsPossiblyDos(s)) s = LibExpandDosPath(s);
 
 				if(0 == (flags & PNFlags.DontRemoveEndSeparator)) s = _AddRemoveSep(s);
-				else if(_EndsWithDriveWithoutSep(s)) s = s + "\\";
+				else if(_EndsWithDriveWithoutSep(s)) s += "\\";
 
 				if(0 == (flags & PNFlags.DontPrefixLongPath)) s = PrefixLongPathIfNeed(s);
 			}

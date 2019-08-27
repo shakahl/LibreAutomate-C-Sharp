@@ -34,6 +34,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public readonly string WorkspaceDirectory;
 	public readonly string WorkspaceName;
 	public readonly string FilesDirectory;
+	public readonly string TempDirectory;
 	public readonly AutoSave Save;
 	readonly Dictionary<uint, FileNode> _idMap;
 	public readonly List<FileNode> OpenFiles;
@@ -60,6 +61,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		WorkspaceDirectory = APath.GetDirectoryPath(WorkspaceFile);
 		WorkspaceName = APath.GetFileName(WorkspaceDirectory);
 		FilesDirectory = WorkspaceDirectory + @"\files";
+		TempDirectory = WorkspaceDirectory + @"\.temp";
 		if(!_importing) {
 			WorkspaceSN = ++s_workspaceSN;
 			AFile.CreateDirectory(FilesDirectory);
@@ -613,8 +615,8 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		CloseFiles(e);
 
 		if(!doNotDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
-			try { AFile.Delete(f.FilePath, tryRecycleBin); } //FUTURE: use other thread, because very slow. Or better move to folder 'deleted'.
-			catch(Exception ex) { Print(ex.Message); return false; }
+			if(!TryFileOperation(() => AFile.Delete(f.FilePath, tryRecycleBin), deletion: true)) return false;
+			//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 		} else {
 			string s1 = doNotDeleteFile ? "File not deleted:" : "The deleted item was a link to";
 			Print($"<>Info: {s1} <explore>{f.FilePath}<>");
@@ -929,11 +931,10 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 					}
 					k = new FileNode(this, name, path, isDir);
 					if(isDir) _AddDir(path, k);
-					try {
+					if(!TryFileOperation(() => {
 						if(r == 2) AFile.CopyTo(path, newParentPath, IfExists.Fail);
 						else AFile.MoveTo(path, newParentPath, IfExists.Fail);
-					}
-					catch(Exception ex) { Print(ex.Message); continue; }
+					})) continue;
 				}
 				target.AddChildOrSibling(k, pos, false);
 				if(select) k.IsSelected = true;
@@ -1016,48 +1017,75 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	#region watch folder
 
 	FileSystemWatcher _watcher;
+	Action<FileSystemEventArgs> __watcherAction;
+
+	public bool IsWatchingFileChanges => _watcher != null;
 
 	void _InitWatcher()
 	{
-		_watcher = new FileSystemWatcher(FilesDirectory);
-		_watcher.IncludeSubdirectories = true;
-		_watcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite;
-		_watcher.Changed += _watcher_Changed;
-		_watcher.Created += _watcher_Created;
-		_watcher.Deleted += _watcher_Deleted;
-		_watcher.Renamed += _watcher_Renamed;
-		//_watcher.EnableRaisingEvents = true; //FUTURE
-		//TEST: System.Runtime.Caching.MemoryCache
+		//return;
+		try {
+			_watcher = new FileSystemWatcher(FilesDirectory) {
+				IncludeSubdirectories = true,
+				NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+				//,SynchronizingObject = _control //no, we call BeginInvoke eplicitly, for better performance etc
+			};
+			__watcherAction = _watcher_Event2;
+			_watcher.Changed += _watcher_Event;
+			_watcher.Created += _watcher_Event;
+			//_watcher.Deleted += _watcher_Event;
+			_watcher.Renamed += _watcher_Event;
+			_watcher.EnableRaisingEvents = true;
+		}
+		catch(Exception ex) {
+			_UninitWatcher();
+			ADebug.Print(ex);
+		}
 	}
 
 	void _UninitWatcher()
 	{
-		//_watcher.EnableRaisingEvents = false;
-		//_watcher.Changed -= _watcher_Changed;
-		//_watcher.Created -= _watcher_Created;
-		//_watcher.Deleted -= _watcher_Deleted;
-		//_watcher.Renamed -= _watcher_Renamed;
-		_watcher.Dispose(); //disables raising events and sets all events = null
+		_watcher?.Dispose(); //disables raising events and sets all events = null
+		_watcher = null;
 	}
 
-	private void _watcher_Renamed(object sender, RenamedEventArgs e)
+	private void _watcher_Event(object sender, FileSystemEventArgs e) //in thread pool
 	{
-		Print(e.ChangeType, e.OldName, e.Name, e.OldFullPath, e.FullPath);
+		//if(e.Name.Ends("~temp") || e.Name.Ends("~backup")) return; //no such events, because we use other directory for temp files
+		if(e.ChangeType == WatcherChangeTypes.Changed && AFile.ExistsAs(e.FullPath, true) != FileDir.File) return; //we receive 'directory changed' after every 'file changed' etc
+
+		try { _control?.BeginInvoke(__watcherAction, new object[] { e }); }
+		catch(Exception ex) { ADebug.Print(ex); }
 	}
 
-	private void _watcher_Deleted(object sender, FileSystemEventArgs e)
+	private void _watcher_Event2(FileSystemEventArgs e) //in main thread
 	{
-		Print(e.ChangeType, e.Name, e.FullPath);
+		var f = Find("\\" + e.Name, null);
+		//if(e is RenamedEventArgs r) Print(e.ChangeType, r.OldName, e.Name, r.OldFullPath, e.FullPath, f); else Print(e.ChangeType, e.Name, e.FullPath, f);
+		if(f == null || f.IsLink) return;
+		//ADebug.Print($"<><c blue>File {e.ChangeType.ToString().Lower()} externally: {f}  ({e.FullPath})<>");
+		if(f.IsFolder) {
+			//if(e.ChangeType == WatcherChangeTypes.Changed) return;
+			foreach(var v in f.Descendants()) v.UnCacheText(fromWatcher: true);
+		} else {
+			f.UnCacheText(fromWatcher: true);
+		}
 	}
 
-	private void _watcher_Created(object sender, FileSystemEventArgs e)
+	/// <summary>
+	/// Calls Action a in try/catch. On exception prints message and returns false.
+	/// Temporarily disables the file system watcher if need.
+	/// </summary>
+	public bool TryFileOperation(Action a, bool deletion = false)
 	{
-		Print(e.ChangeType, e.Name, e.FullPath);
-	}
-
-	private void _watcher_Changed(object sender, FileSystemEventArgs e)
-	{
-		Print(e.ChangeType, e.Name, e.FullPath);
+		bool pause = _watcher != null && !deletion;
+		try {
+			if(pause) _watcher.EnableRaisingEvents = false;
+			a();
+		}
+		catch(Exception ex) { Print(ex.ToStringWithoutStack()); return false; }
+		finally { if(pause) _watcher.EnableRaisingEvents = true; } //fast
+		return true;
 	}
 
 	#endregion
@@ -1077,9 +1105,6 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		return false;
 	}
 
-	/// <summary>
-	/// Note: the .NET XML reader replaces \r\n with \n, even in CDATA. If the caller needs \r\n, eg for an Edit control, let it replace \n with \r\n.
-	/// </summary>
 	public string StartupScriptsCsv {
 		get => SettingsXml?.Element("users")?.Elem("user", "guid", Program.UserGuid, true)?.Element("startupScripts")?.Value;
 		set {
