@@ -52,32 +52,64 @@ static class CodeInfo
 
 	public static void UiLoaded()
 	{
-		//warm up //TODO: 2000
-		Task.Delay(100).ContinueWith(_ => {
-			//return; //TODO
-			//var p1 = APerf.Create();
-			var code = @"using System; class C { static void Main() { } }";
-			int position = code.IndexOf('}');
-			//var refs = new MetaReferences().Refs;
-			var refs = new MetadataReference[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) };
-			ProjectId projectId = ProjectId.CreateNewId();
-			DocumentId documentId = DocumentId.CreateNewId(projectId);
-			var sol = new AdhocWorkspace().CurrentSolution
-				.AddProject(projectId, "p", "p", LanguageNames.CSharp)
-				.AddMetadataReferences(projectId, refs)
-				.AddDocument(documentId, "f.cs", code);
-			//p1.Next();
-			//200.ms(); //avoid CPU fan (sometimes)
-			var document = sol.GetDocument(documentId);
-			var completionService = CompletionService.GetService(document);
-			completionService.GetCompletionsAsync(document, position);
-			//MetaReferences.CompactCache();
-			//p1.NW(); //600-1000 ms when ngened
-			//EdUtil.MinimizeProcessPhysicalMemory(500); //with this later significantly slower
-			_isWarm = true;
+		//warm up
+		Task.Delay(500).ContinueWith(_1 => {
+			var p1 = APerf.Create();
+			//_isWarm = true;
+			//return;
+#if DEBUG
+			if(Debugger.IsAttached) { _isWarm = true; return; }
+#endif
+			_Warmup(ref p1);
 		});
 
 		Panels.Editor.ActiveDocChanged += Stop;
+	}
+
+	static void _Warmup(ref APerf.Inst p1)
+	{
+		p1.Next();
+		try {
+#if true
+			var code = @"//{{
+using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
+class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) {
+Print(1);
+} }";
+			var refs = new MetaReferences().Refs;
+#else
+			var code = @"using System; class C { static void Main() { } }";
+			var refs = new MetadataReference[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) };
+#endif
+			int position = code.IndexOf('}');
+			ProjectId projectId = ProjectId.CreateNewId();
+			DocumentId documentId = DocumentId.CreateNewId(projectId);
+			using var ws = new AdhocWorkspace();
+			var sol = ws.CurrentSolution
+				.AddProject(projectId, "p", "p", LanguageNames.CSharp)
+				.AddMetadataReferences(projectId, refs)
+				.AddDocument(documentId, "f.cs", code);
+			var document = sol.GetDocument(documentId);
+			p1.Next();
+			Task.Run(() => { Compiler.Warmup(document); /*p1.NW('c');*/ }); //if no ProfileOptimization (PO), makes GetCompletionsAsync faster, eg 3 -> 2.5 s, and total faster eg 4 -> 3.4. If with PO, same speed or slower.
+			var completionService = CompletionService.GetService(document);
+			var cr = completionService.GetCompletionsAsync(document, position).Result;
+			//MetaReferences.CompactCache();
+			_isWarm = true; //TODO: instead use cancellation token
+							//p1.Next(); //600-1000 ms when ngened, 2.1 s with ProfileOptimization, else 3 s (2.5 s with Compiler.Warmup above)
+							//Compiler.Warmup(document);
+			p1.NW('w');
+			if(cr == null) ADebug.Print("null"); //else Print(cr.Items.Length);
+
+			//EdUtil.MinimizeProcessPhysicalMemory(500); //with this later significantly slower
+		}
+		//catch(ReflectionTypeLoadException ex) {
+		//	ADebug.Print(ex.LoaderExceptions);
+		//	ADebug.Print(ex);
+		//}
+		catch(Exception ex) {
+			ADebug.Print(ex);
+		}
 	}
 
 	static bool _CanWork(SciCode doc)
@@ -178,7 +210,7 @@ static class CodeInfo
 		return _solution.GetDocument(_documentId);
 	}
 
-	static void _ChangeSolution(string code=null)
+	static void _ChangeSolution(string code = null)
 	{
 		code ??= Panels.Editor.ActiveDoc.Text;
 		_solution = _solution.WithDocumentText(_documentId, SourceText.From(code, Encoding.UTF8));
@@ -303,12 +335,12 @@ static class CodeInfo
 	public static string[] ItemKindNames { get; } = new string[] { "Class", "Structure", "Enum", "Delegate", "Interface", "Method", "ExtensionMethod", "Property", "Event", "Field", "Local", "Constant", "EnumMember", "Keyword", "Namespace", "Label", "Snippet", "TypeParameter" }; //must match enum EItemKind
 }
 
-public enum CiItemKind :byte { Class, Structure, Enum, Delegate, Interface, Method, ExtensionMethod, Property, Event, Field, Local, Constant, EnumMember, Keyword, Namespace, Label, Snippet, TypeParameter, None }
+public enum CiItemKind : byte { Class, Structure, Enum, Delegate, Interface, Method, ExtensionMethod, Property, Event, Field, Local, Constant, EnumMember, Keyword, Namespace, Label, Snippet, TypeParameter, None }
 
-public enum CiItemAccess :byte { Public, Private, Protected, Internal }
+public enum CiItemAccess : byte { Public, Private, Protected, Internal }
 
 [Flags]
-enum CiItemHiddenBy { Text = 1, Kind = 2, }
+enum CiItemHiddenBy { Text = 1, Kind = 2, Always = 4 }
 
 class DocCodeInfo
 {

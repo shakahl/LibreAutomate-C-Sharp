@@ -38,6 +38,11 @@ using TheArtOfDev.HtmlRenderer.WinForms;
 
 class CiQuickInfo
 {
+#if true
+	public void SciMouseDwellStarted(int positionUtf8, int x, int y)
+	{
+	}
+#else
 
 	public void SciMouseDwellStarted(int positionUtf8, int x, int y)
 	{
@@ -107,6 +112,7 @@ class CiQuickInfo
 		_ttWnd = (AWnd)nw.Handle;
 		//Print(_ttWnd);
 	}
+#endif
 
 	HtmlToolTip _tt;
 	AWnd _ttWnd;

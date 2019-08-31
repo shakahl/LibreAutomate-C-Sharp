@@ -49,7 +49,7 @@ namespace Au.Util
 		/// Returns true if Au.dll is compiled to native code using ngen.exe.
 		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
 		/// </summary>
-		internal static bool LibIsAuNgened => (s_auNgened ??= IsNgened(typeof(AAssembly).Assembly)).GetValueOrDefault();
+		internal static bool LibIsAuNgened => s_auNgened ??= IsNgened(typeof(AAssembly).Assembly);
 		static bool? s_auNgened;
 		//tested: Module.GetPEKind always gets ILOnly.
 

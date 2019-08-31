@@ -2058,11 +2058,15 @@ class Script : AScript
 		AOutput.Clear();
 		//100.ms();
 		//g1:
-		//AWnd k = AWnd.Find("dkdkdkdk", null, null, flags:WFFlags.);
+		//AWnd k = AWnd.Find("dkdkdkdk", null, null, );
 		//AWnd.Find("", "", default, )
-
+		//this.
+		//Form f = null; f.
 		//Print(1);
+		var s = "";
+		//_Dtor d; d.
 
+		//AExec.RunConsole(,)
 		//BuildDocumentationProviderDatabase();
 		//TestCefSharp();
 		//TestDecompressInvalidZipData();

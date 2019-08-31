@@ -33,7 +33,7 @@ class CiPopupList : IMessageFilter
 	CiCompletion _compl;
 
 	List<CiComplItem> _a;
-	List<int> _aVisible; //indices of visible _a items, or null if all visible
+	List<int> _aVisible; //indices of visible _a items
 	Func<CiComplItem, Task<CompletionDescription>> _itemDescription;
 
 	/// <summary>
@@ -74,7 +74,7 @@ class CiPopupList : IMessageFilter
 
 		void _AddButton(string text, Image image, string imageText)
 		{
-			ToolStripItem t = null;
+			ToolStripItem t;
 			if(imageText != null) {
 				t = _tb.Items.Add(imageText);
 				t.TextAlign = ContentAlignment.MiddleLeft;
@@ -98,19 +98,22 @@ class CiPopupList : IMessageFilter
 		var b = e.ClickedItem as ToolStripButton;
 		bool check = !b.Checked; b.Checked = check;
 
-		int kindsChecked = 0, kindsVisible = 0;
-		for(int i = 0, n = CodeInfo.ItemKindNames.Length; i < n; i++) {
-			var v = _tb.Items[i];
-			if(v.Visible) {
-				kindsVisible |= 1 << i;
-				if((v as ToolStripButton).Checked) kindsChecked |= 1 << i;
+		int index = _tb.Items.IndexOf(e.ClickedItem);
+		if(index< _nKindButtons) {
+			int kindsChecked = 0, kindsVisible = 0;
+			for(int i = 0, n = _nKindButtons; i < n; i++) {
+				var v = _tb.Items[i];
+				if(v.Visible) {
+					kindsVisible |= 1 << i;
+					if((v as ToolStripButton).Checked) kindsChecked |= 1 << i;
+				}
 			}
+			if(kindsChecked == 0) kindsChecked = kindsVisible;
+			foreach(var v in _a) {
+				if(0 != (kindsChecked & (1 << (int)v.kind))) v.hidden &= ~CiItemHiddenBy.Kind; else v.hidden |= CiItemHiddenBy.Kind;
+			}
+			UpdateVisibleItems();
 		}
-		if(kindsChecked == 0) kindsChecked = kindsVisible;
-		foreach(var v in _a) {
-			if(0 != (kindsChecked & (1 << (int)v.kind))) v.hidden &= ~CiItemHiddenBy.Kind; else v.hidden |= CiItemHiddenBy.Kind;
-		}
-		UpdateVisibleItems();
 	}
 
 	private void _list_ItemClick(object sender, FastListBox.ItemClickArgs e)
@@ -120,9 +123,9 @@ class CiPopupList : IMessageFilter
 		if(e.DoubleClick) _OnItemDClicked(e.Index); else _OnItemSelected(e.Index);
 	}
 
-	int _VisibleCount => _aVisible?.Count ?? _a.Count;
+	int _VisibleCount => _aVisible.Count;
 
-	CiComplItem _VisibleItem(int index) => _a[_aVisible?[index] ?? index];
+	CiComplItem _VisibleItem(int index) => _a[_aVisible[index]];
 
 	async void _OnItemSelected(int index)
 	{
@@ -150,26 +153,25 @@ class CiPopupList : IMessageFilter
 		_itemDescription = itemDescription;
 		_a = a;
 		UpdateVisibleItems();
-		for(int i = 0, n = CodeInfo.ItemKindNames.Length; i < n; i++) (_tb.Items[i] as ToolStripButton).Checked = false;
+		for(int i = 0, n = _nKindButtons; i < n; i++) (_tb.Items[i] as ToolStripButton).Checked = false;
 	}
 
 	public void UpdateVisibleItems()
 	{
 		int n1 = 0; foreach(var v in _a) if(v.hidden == 0) n1++;
-		if(n1 == _a.Count) {
-			_aVisible = null;
-		} else {
-			_aVisible = new List<int>(n1);
-			for(int i = 0; i < _a.Count; i++) if(_a[i].hidden == 0) _aVisible.Add(i);
-		}
+		_aVisible = new List<int>(n1);
+		for(int i = 0; i < _a.Count; i++) if(_a[i].hidden == 0) _aVisible.Add(i);
+		_Sort();
 
 		_list.AddItems(_VisibleCount, i => _VisibleItem(i).DisplayText, _TextHorzOffset, _DrawItem);
 
 		int kinds = 0;
 		foreach(var v in _a) if((v.hidden & ~CiItemHiddenBy.Kind) == 0) kinds |= 1 << (int)v.kind;
 		int nVisible = 0;
-		for(int i = 0, n = CodeInfo.ItemKindNames.Length; i < n; i++) if(_tb.Items[i].Visible = 0 != (kinds & (1 << i))) nVisible++;
+		_tb.SuspendLayout();
+		for(int i = 0, n = _nKindButtons; i < n; i++) if(_tb.Items[i].Visible = 0 != (kinds & (1 << i))) nVisible++;
 		//_tb.Visible = nVisible > 1;
+		_tb.ResumeLayout();
 	}
 
 	public void Show(SciCode doc, int position)
@@ -188,6 +190,18 @@ class CiPopupList : IMessageFilter
 		_aVisible = null;
 		_list.AddItems(0, null, 0, null);
 		_w.Hide();
+	}
+
+	void _Sort()
+	{
+		_aVisible.Sort((i1, i2) => {
+
+			CiComplItem c1 = _a[i1], c2 = _a[i2];
+			if(c1.inheritanceLevel > c2.inheritanceLevel) return 1;
+			if(c1.inheritanceLevel < c2.inheritanceLevel) return -1;
+
+			return string.Compare(c1.DisplayText, c2.DisplayText, StringComparison.OrdinalIgnoreCase);
+		});
 	}
 
 	void _SetRect(Control control, RECT anchor)
@@ -215,6 +229,17 @@ class CiPopupList : IMessageFilter
 		var ci = _VisibleItem(e.Index);
 		var r = e.Bounds;
 		//Print(e.Index, r);
+		bool isObsolete = false;
+		var sym = ci.FirstSymbol;
+		if(sym != null) {
+			//Print(ci.DisplayText, .Length);
+			foreach(var v in sym.GetAttributes()) { //fast
+				switch(v.AttributeClass.Name) {
+				case "ObsoleteAttribute": isObsolete = true; break;
+				}
+				//Print(ci.DisplayText, v.AttributeClass.Name);
+			}
+		}
 
 		//var p1 = APerf.Create();
 		var image = ci.Image;
@@ -228,6 +253,7 @@ class CiPopupList : IMessageFilter
 		var s = ci.DisplayText;
 		ADebug.PrintIf(!Empty(ci.ci.DisplayTextPrefix), s); //we don't support prefix; never seen.
 		var font = _list.Font;
+		if(isObsolete) font = new Font(font, FontStyle.Strikeout);
 
 		var a = ci.hilite;
 		if(a != null) {
@@ -247,8 +273,10 @@ class CiPopupList : IMessageFilter
 			}
 		}
 
-		TextRenderer.DrawText(g, ci.DisplayText, font, r, ci.isInherited ? Color.Gray : Color.Black, TextFormatFlags.PreserveGraphicsTranslateTransform | TextFormatFlags.Left | TextFormatFlags.NoPadding | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
+		TextRenderer.DrawText(g, ci.DisplayText, font, r, ci.inheritanceLevel > 0 ? Color.Gray : Color.Black, TextFormatFlags.PreserveGraphicsTranslateTransform | TextFormatFlags.Left | TextFormatFlags.NoPadding | TextFormatFlags.VerticalCenter | TextFormatFlags.NoPrefix);
 		//p1.NW();
+
+		if(isObsolete) font.Dispose();
 	}
 
 	static int _TextHorzOffset => Au.Util.ADpi.ScaleInt(24);

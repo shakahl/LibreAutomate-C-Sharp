@@ -38,6 +38,11 @@ using TheArtOfDev.HtmlRenderer.WinForms;
 
 class CiSignature
 {
+#if true
+	public void ShowSignature(char ch = default)
+	{
+	}
+#else
 
 	public void ShowSignature(char ch = default)
 	{
@@ -95,6 +100,7 @@ class CiSignature
 
 	List<ISignatureHelpProvider> SignatureHelpProviders => _shp ??= _GetSignatureHelpProviders();
 	List<ISignatureHelpProvider> _shp;
+#endif
 
 	public void Cancel(SciCode doc)
 	{

@@ -96,8 +96,8 @@ namespace Au.Controls
 		//Sets _itemWidth. If iTo<0, sets _itemHeight too. Uses/sets _measuredItems.
 		void _MeasureItems(int iFrom, int iTo)
 		{
-			var dc = new Au.Util.LibWindowDC((AWnd)this); //never mind: if no handle, gets screen DC; it's the same.
-			var oldFont = Api.SelectObject(dc, Au.Util.LibNativeFont.RegularCached);
+			var dc = new Util.LibWindowDC((AWnd)this); //never mind: if no handle, gets screen DC; it's the same.
+			var oldFont = Api.SelectObject(dc, Util.LibNativeFont.RegularCached);
 			try {
 				if(iTo < 0) {
 					Debug.Assert(this.Font.Equals(Util.AFonts.Regular));

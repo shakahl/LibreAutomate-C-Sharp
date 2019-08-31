@@ -107,13 +107,13 @@ namespace Au.Compiler
 
 		static bool _Compile(bool forRun, IWorkspaceFile f, out CompResults r, IWorkspaceFile projFolder)
 		{
-			//APerf.First();
+			APerf.First();
 			r = new CompResults();
 
 			var m = new MetaComments();
 			if(!m.Parse(f, projFolder, EMPFlags.PrintErrors)) return false;
 			var err = m.Errors;
-			//APerf.Next('m');
+			APerf.Next('m');
 
 			bool needOutputFiles = m.Role != ERole.classFile;
 
@@ -166,10 +166,10 @@ namespace Au.Compiler
 
 				trees.Add(tree);
 			}
-			//APerf.Next('t');
+			APerf.Next('t');
 
 			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, m.CreateCompilationOptions());
-			//APerf.Next('c');
+			APerf.Next('c');
 
 			string pdbFile = null, xdFile = null;
 			MemoryStream pdbStream = null;
@@ -203,6 +203,7 @@ namespace Au.Compiler
 				//EmbeddedText.FromX //it seems we can embed source code in PDB. Not tested.
 			}
 
+			APerf.Next();
 			var asmStream = new MemoryStream(4096);
 			var emitResult = compilation.Emit(asmStream, pdbStream, xdStream, resNat, resMan, eOpt);
 
@@ -210,7 +211,7 @@ namespace Au.Compiler
 				xdStream?.Dispose();
 				resNat?.Dispose(); //info: compiler disposes resMan
 			}
-			//APerf.Next('e');
+			APerf.Next('e');
 
 			var diag = emitResult.Diagnostics;
 			if(!diag.IsEmpty) {
@@ -286,8 +287,19 @@ namespace Au.Compiler
 			r.console = m.Console;
 			r.notInCache = m.OutputPath != null;
 
-			//APerf.NW();
+			APerf.NW('C');
 			return true;
+		}
+
+		public static void Warmup(Document document)
+		{
+			var compilation = document.Project.GetCompilationAsync().Result;
+			//var pdbStream = new MemoryStream();
+			//var eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
+			var asmStream = new MemoryStream(4096);
+			compilation.Emit(asmStream);
+			//compilation.Emit(asmStream, pdbStream, options: eOpt); //somehow makes slower later
+			//compilation.Emit(asmStream, pdbStream, xdStream, resNat, resMan, eOpt);
 		}
 
 		/// <summary>

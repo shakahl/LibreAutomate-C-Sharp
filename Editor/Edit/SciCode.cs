@@ -307,7 +307,7 @@ class SciCode : AuScintilla
 	AHash.MD5Result _savedMD5;
 	Action _initDeferred;
 
-	static unsafe AHash.MD5Result _Hash(List<int> a)
+	static AHash.MD5Result _Hash(List<int> a)
 	{
 		if(a.Count == 0) return default;
 		AHash.MD5 md5 = default;

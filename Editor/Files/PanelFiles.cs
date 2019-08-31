@@ -134,7 +134,7 @@ partial class PanelFiles : AuUserControlBase
 	/// </summary>
 	public FilesModel LoadAnotherWorkspace()
 	{
-		var d = new OpenFileDialog() { Title = "Open workspace", Filter = "files.xml|files.xml" };
+		var d = new OpenFileDialog { Title = "Open workspace", Filter = "files.xml|files.xml" };
 		if(d.ShowDialog(this) != DialogResult.OK) return null;
 		var filesXml = d.FileName;
 		if(!APath.GetFileName(filesXml).Eqi("files.xml")) {

@@ -169,7 +169,7 @@ static class CommandLine
 		return _msgWnd.DefWndProc(w, message, wParam, lParam);
 	}
 
-	static unsafe LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)
+	static LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)
 	{
 		var c = new AWnd.More.CopyDataStruct(lParam);
 		int action = c.DataId;

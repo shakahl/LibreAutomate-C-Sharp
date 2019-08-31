@@ -172,7 +172,7 @@ namespace Au.Controls
 			/// <summary>
 			/// Focus the control when eg tab clicked.
 			/// </summary>
-			public bool Focusable { get; set; }
+			bool Focusable { get; set; }
 
 			/// <summary>
 			/// Make the panel visible (like <see cref="Visible"/>) and focus its control.

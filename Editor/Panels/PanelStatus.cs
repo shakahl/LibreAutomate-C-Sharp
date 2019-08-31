@@ -78,7 +78,7 @@ class PanelStatus : AuUserControlBase
 		_c.ST.SetText(text);
 	}
 
-	unsafe void _MouseInfo(POINT p)
+	void _MouseInfo(POINT p)
 	{
 		using(new Au.Util.LibStringBuilder(out var b, 1000)) {
 			var c = AWnd.FromXY(p);

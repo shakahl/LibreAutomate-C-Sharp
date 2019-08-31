@@ -64,7 +64,7 @@ static class Program
 
 		if(CommandLine.OnProgramStarted(args)) return;
 
-//#if !DEBUG //TODO: uncomment
+//#if !DEBUG //TODO: does not work if stars invisible. Also then for several s uses < 1% CPU. Try to run this before showing window. Or don't use altogether.
 //		var fProfile = AFolders.ThisAppDataLocal + "ProfileOptimization";
 //		AFile.CreateDirectory(fProfile);
 //		ProfileOptimization.SetProfileRoot(fProfile);

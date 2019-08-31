@@ -63,5 +63,10 @@ namespace Au.Util
 		/// Underlined version of <see cref="Regular"/> font.
 		/// </summary>
 		public static Font Underline => new Font(LibRegularCached, FontStyle.Underline);
+
+		/// <summary>
+		/// Strikeout version of <see cref="Regular"/> font.
+		/// </summary>
+		public static Font Strikeout => new Font(LibRegularCached, FontStyle.Strikeout);
 	}
 }

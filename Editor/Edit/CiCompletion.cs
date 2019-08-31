@@ -1,4 +1,5 @@
 //#define NOGCREGION //Prevent GC while getting completions. In Debug build can reduce the time eg from 70 to 60 ms, but in Release almost same speed.
+#define HAVE_SYMBOLS //if the Roslyn project has been modified (added Symbols property to the CompletionItem class) and compiled
 
 using System;
 using System.Collections.Generic;
@@ -38,9 +39,11 @@ using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.CSharp.QuickInfo;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using System.Runtime;
+using Microsoft.CodeAnalysis.CSharp.ExtractMethod;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
+using Microsoft.CodeAnalysis.Shared.Extensions;
 
 class CiCompletion
 {
@@ -103,12 +106,17 @@ class CiCompletion
 
 	bool _IsAfterDot(int position)
 	{
-		if(position > 0) {
+		if(position > 1) {
 			var code = Panels.Editor.ActiveDoc.Text;
 			char c = code[position - 1];
-			switch(c) {
-			case '.':
-			case '>' when position > 2 && code[position - 2] == '-': return true;
+			if(c == '.') return true;
+			if(position > 2) {
+				char c2 = code[position - 2];
+				switch(c) {
+				case '>' when c2 == '-':
+				case ':' when c2 == ':':
+					return true;
+				}
 			}
 		}
 		return false;
@@ -149,8 +157,10 @@ class CiCompletion
 			var code = doc.Text;
 			char ch = _needTriggerChar && position > 0 ? code[position - 1] : default;
 			var cancelToken = _cancelTS.Token;
+#if DEBUG
+			if(Debugger.IsAttached) cancelToken = default;
+#endif
 			CompletionService completionService = null;
-			Dictionary<string, object> d = null;
 			INamedTypeSymbol typeSymbol = null;
 			var r = await Task.Run(async () => { //info: somehow GetCompletionsAsync etc are not async
 				completionService = CompletionService.GetService(document);
@@ -161,106 +171,67 @@ class CiCompletion
 				APerf.Next('C');
 				if(r1 != null) {
 
-					//foreach(var v in r1.Items) {
-					//	var prov = v.ProviderName;
-					//	if(!prov.Ends(".SymbolCompletionProvider"))
-					//		Print(v.DisplayText, v.ProviderName);
-					//}
-					//Print("----------");
-
-					//foreach(var v in r1.Items) {
-					//	//Print(v.DisplayText, v.ProviderName, string.Join("|", v.Properties), Microsoft.CodeAnalysis.Completion.Providers.SymbolCompletionItem.HasSymbols(v));
-					//	Print(v.DisplayText, v.Properties.Count, string.Join("|", v.Properties));
-					//	//Print(v.DisplayText, Microsoft.CodeAnalysis.Completion.Providers.SymbolCompletionItem.GetSymbolsAsync(v, document, default).Result.Length);
-					//}
-
-					var model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //fast
-					INamespaceOrTypeSymbol type = null;
-					bool onlyStatic = false, onlyInstance=false, isNamespace = false;
-					if(position > 1 && code[position - 1] == '.') { //TODO: or ->
-						var tree = model.SyntaxTree;
-#if true
-						int pos2 = position - 2; if(code[pos2] == '?' && pos2 > 0) pos2--;
-						pos2++;
-						var node = tree.GetRoot().FindToken(pos2).Parent;
-						Print(node, node.GetType());
-						if(node is MemberAccessExpressionSyntax ma) {
-							ExpressionSyntax es = ma.Expression;
-							Print(es.Kind());
-							var op = model.GetOperation(es);
-							if(op != null) Print("OPERATION", op, op.Kind, op.Type); //ILocalReferenceOperation
-							var u = model.GetSymbolInfo(es).Symbol;
-							if(u != null) Print("SYMBOL", u.Name, u.MetadataName, u.Kind, u.IsStatic, u.ContainingAssembly?.Name, u.ContainingNamespace, u.ContainingSymbol, u.ContainingType, u.IsDefinition, u.IsOverride, u.Locations[0]);
-							if(u == null) {
-								var oper = model.GetOperation(es);
-								if(oper != null && oper.Kind == OperationKind.Literal) { type = oper.Type; onlyInstance = true; } //eg "string".
-							} else if(u.Kind == SymbolKind.Namespace) {
-								isNamespace = true;
-								//onlyStatic = true; //same results but slower
-								type = u as INamespaceSymbol;
-							} else {
-								if(u.Kind == SymbolKind.NamedType) onlyStatic = true; else onlyInstance = true;
-								type = model.GetTypeInfo(es).Type;
-								typeSymbol = type as INamedTypeSymbol;
-								//Print("typeSymbol", typeSymbol);
-							}
-						}
-#else
-						int pos2 = position - 2; if(code[pos2] == '?' && pos2 > 0) pos2--;
-						var node = tree.GetRoot().FindToken(pos2).Parent;
-						Print(node, node.GetType());
-						if(node is ExpressionSyntax es) {
-							var op = model.GetOperation(es);
-							//OperationKind.
-							if(op != null) Print("OPERATION", op, op.Kind, op.Type); //ILocalReferenceOperation
-							var u = model.GetSymbolInfo(es).Symbol;
-							if(u != null) Print("SYMBOL", u.Name, u.MetadataName, u.Kind, u.IsStatic, u.ContainingAssembly?.Name, u.ContainingNamespace, u.ContainingSymbol, u.ContainingType, u.IsDefinition, u.IsOverride, u.Locations[0]);
-							if(u == null) {
-							} else if(u.Kind == SymbolKind.Namespace) {
-								isNamespace = true;
-								//onlyStatic = true; //same results but slower
-								type = u as INamespaceSymbol;
-							} else {
-								if(u.Kind == SymbolKind.NamedType) onlyStatic = true;
-								type = model.GetTypeInfo(node).Type;
-							}
-							//Print(type);
+					foreach(var v in r1.Items) {
+						//Print($"<><Z green>{v.DisplayText},    {v.ProviderName},    {string.Join("|", v.Properties)}<>");
+						Print($"<><Z 0x80c080>{v.DisplayText},    {string.Join("|", v.Tags)},    {string.Join("|", v.Properties)}<>");
+#if HAVE_SYMBOLS
+						if(v.Symbols!=null)
+						foreach(var j in v.Symbols) {
+							Print(j, j.Kind, j.ContainingType, j.OriginalDefinition, j.GetType());
 						}
 #endif
 					}
-					Print(type);
-					var p1 = APerf.Create();
-					var symbols = isNamespace ?
-					model.LookupNamespacesAndTypes(position, type)
-						: (onlyStatic
-							? model.LookupStaticMembers(position, type)
-							: model.LookupSymbols(position, type, includeReducedExtensionMethods: true));
-					p1.NW('L');
+
+					var model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //fast
+
+					INamespaceOrTypeSymbol type = null;
+					char dot = default; int pos2 = position - 1;
+					if(pos2 > 0 && code[pos2] == '.') {
+						dot = '.';
+						if(pos2 > 1 && code[pos2 - 1] == '?') pos2--;
+					} else if(pos2 > 1 && code[pos2] == '>' && code[pos2 - 1] == '-') {
+						dot = '>';
+						pos2--;
+					}
+					if(dot != default) {
+						var tree = model.SyntaxTree;
+						var node = tree.GetRoot().FindToken(pos2).Parent;
+						Print("NODE:", node, node.Kind(), node.GetType());
+
+						ExpressionSyntax es = null;
+						switch(node) {
+						case MemberAccessExpressionSyntax s1: es = s1.Expression; break;
+						case ConditionalAccessExpressionSyntax s1: es = s1.Expression; break;
+						case QualifiedNameSyntax s1: es = s1.Left; break;
+						}
+						if(es != null) {
+							Print("es kind:", es.Kind());
+							var u = model.GetSymbolInfo(es).Symbol;
+							if(u != null) {
+								if(u.Kind == SymbolKind.Namespace) {
+									//onlyStatic = true; //same results but slower
+									type = u as INamespaceSymbol;
+								} else {
+									type = model.GetTypeInfo(es).Type;
+								}
+							} else if(model.GetTypeInfo(es).Type is IErrorTypeSymbol ee) {
+								var can = ee.CandidateSymbols;
+								if(!can.IsEmpty) u = can[0];
+							}
+
+							if(type == null) {
+								type = model.GetSpeculativeTypeInfo(pos2, es, SpeculativeBindingOption.BindAsExpression).Type;
+							}
+
+							if(type is IPointerTypeSymbol pts) type = pts.PointedAtType;
+							typeSymbol = type as INamedTypeSymbol;
+
+						}
+					}
+
 					if(cancelToken.IsCancellationRequested) return null;
 					//APerf.Next('M');
 
-					Print(symbols.Length);
-					if(AKeys.IsScrollLock) {
-						Print(symbols);
-						Print("----------");
-					}
-					//foreach(var v in r1.Items) {
-					//	//CompletionItem
-					//	Print(v.DisplayText, v.ProviderName, string.Join("|", v.Properties));
-					//}
-
-					d = new Dictionary<string, object>(symbols.Length);
-					foreach(var sy in symbols) {
-						if(onlyInstance && sy.IsStatic) continue;
-						string name = sy.Name;
-						if(d.TryGetValue(name, out var o)) {
-							switch(o) {
-							case ISymbol sy2: d[name] = new List<ISymbol> { sy2, sy }; break;
-							case List<ISymbol> list: list.Add(sy); break;
-							}
-						} else d.Add(name, sy);
-					}
-					//APerf.Next('m');
 				}
 				return r1;
 			});
@@ -275,41 +246,22 @@ class CiCompletion
 			_results = r;
 			_items = new List<CiComplItem>(r.Items.Length);
 			foreach(var v in r.Items) {
-				bool noFilter = false;
-				switch(v.Tags[0]) {
-				case WellKnownTags.Keyword:
-				case WellKnownTags.TypeParameter:
-				case WellKnownTags.EnumMember:
-				case WellKnownTags.Local:
-				case WellKnownTags.Parameter:
-				case WellKnownTags.RangeVariable:
-				case WellKnownTags.Label:
-				case WellKnownTags.Snippet:
-					noFilter = true;
-					break;
-				}
-				object sym = null; bool isInherited = false;
-				if(!noFilter) {
-					var name = v.DisplayText;
-					if(d.TryGetValue(name, out sym)) {
-						ISymbol s1 = (sym is List<ISymbol> list) ? list[0] : (sym as ISymbol);
-						if(typeSymbol != null) {
-							var ct = s1.ContainingType;
-							if(ct != null && ct != typeSymbol) isInherited = true;
-							//Print(s1.Name, s1.ContainingType, s1.ContainingType == typeSymbol);
-						}
-
-						if(s1.Kind!= SymbolKind.NamedType && s1.Kind != SymbolKind.Namespace) {
-							if(sym is List<ISymbol> li) Print($"<><c blue>{name}, {string.Join("|", li)}<>");
-							else Print($"<><c green>{name}, {s1}<>");
-						}
-					} else {
-						Print($"<><c red>{name}, {v.Tags[0]}<>");
-					}
-				}
-
-				_items.Add(new CiComplItem(v, sym, isInherited));
+				_items.Add(new CiComplItem(v));
 			}
+
+			foreach(var v in _items) {
+				switch(v.kind) {
+				case CiItemKind.Keyword:
+				case CiItemKind.TypeParameter:
+				case CiItemKind.EnumMember:
+				case CiItemKind.Local:
+				case CiItemKind.Label:
+				case CiItemKind.Snippet:
+					continue;
+				}
+				//if(isHidden) v.hidden |= CiItemHiddenBy.Always;
+			}
+
 			if(!span.IsEmpty) _FilterItems(_popupText, false);
 			APerf.Next('F');
 
@@ -360,7 +312,7 @@ class CiCompletion
 				ADebug.PrintIf(v.ci.FilterText != v.ci.DisplayText, $"{v.ci.FilterText}, {v.ci.DisplayText}");
 				//Print(v.DisplayText, v.FilterText, v.SortText, v.ToString());
 				int[] hilite = null;
-				var s = v.DisplayText;
+				var s = v.ci.FilterText;
 				int iSub = s.Find(text, true);
 				if(iSub >= 0) {
 					hilite = new int[] { iSub, iSub + text.Length };
@@ -439,14 +391,14 @@ class CiCompletion
 class CiComplItem
 {
 	public readonly CompletionItem ci;
-	public readonly object symbol; //null or ISymbol or List<ISymbol>
 	public readonly CiItemKind kind;
 	public readonly CiItemAccess access;
 	public CiItemHiddenBy hidden;
-	public readonly bool isInherited;
-	public int[] hilite;
+	public byte inheritanceLevel;
+	public int[] hilite;//TODO
 
 	public string DisplayText => _text ??= ci.DisplayText + ci.DisplayTextSuffix;
+	//public string DisplayText => _text ??= (inheritanceLevel==0 ? null : new string('-', inheritanceLevel)) + ci.DisplayText + ci.DisplayTextSuffix;
 	string _text;
 
 	//string _GetDisplayText()
@@ -462,11 +414,11 @@ class CiComplItem
 
 	public Bitmap Image => CodeInfo.GetImage(kind, access);
 
-	public CiComplItem(CompletionItem ci, object symbol, bool isInherited)
+	public ISymbol FirstSymbol => ci.Symbols?[0];
+
+	public CiComplItem(CompletionItem ci)
 	{
 		this.ci = ci;
-		this.symbol = symbol;
-		this.isInherited = isInherited;
 		kind = ci.Tags[0] switch
 		{
 			WellKnownTags.Class => CiItemKind.Class,
