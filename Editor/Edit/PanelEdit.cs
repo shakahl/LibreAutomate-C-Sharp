@@ -23,9 +23,6 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
 using static Au.Controls.Sci;
-using Au.Util;
-
-//TODO: when clicked selbar to select the fold header, should select all hidden lines.
 
 partial class PanelEdit : UserControl
 {

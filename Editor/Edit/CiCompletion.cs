@@ -23,9 +23,7 @@ using System.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using Au.Compiler;
 using Au.Controls;
-using Au.Editor.Properties;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -33,81 +31,131 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Completion;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.Tags;
-using Microsoft.CodeAnalysis.SignatureHelp;
-using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
-using Microsoft.CodeAnalysis.QuickInfo;
-using Microsoft.CodeAnalysis.CSharp.QuickInfo;
-using TheArtOfDev.HtmlRenderer.WinForms;
-using System.Runtime;
-using Microsoft.CodeAnalysis.CSharp.ExtractMethod;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.Snippets;
 
 class CiCompletion
 {
-	ATimer _delayTimer;
-	CancellationTokenSource _cancelTS;
-	bool _needTriggerChar;
 	CiPopupList _popupList;
-	string _popupText;
-	CompletionService _completionService;
-	CompletionList _results;
-	List<CiComplItem> _items;
-	int _startPos;
+	_Data _data; //not null while the popup list window is visible
+	CancellationTokenSource _cancelTS;
+	CiTools _tools = new CiTools();
+
+	//public CiCompletion()
+	//{
+	//}
+
+	class _Data
+	{
+		public CompletionService completionService;
+		public Document document;
+		public List<CiComplItem> items;
+		public string code;
+		public TextSpan span;
+		public string filterText;
+		Dictionary<CompletionItem, CiComplItem> _map;
+		public SemanticModel model;
+
+		public Dictionary<CompletionItem, CiComplItem> Map {
+			get {
+				if(_map == null) {
+					_map = new Dictionary<CompletionItem, CiComplItem>(items.Count);
+					foreach(var v in items) _map.Add(v.ci, v);
+				}
+				return _map;
+			}
+		}
+	}
 
 	public void Cancel()
 	{
-		_CancelWork();
+		_cancelTS?.Cancel(); _cancelTS = null;
 		_CancelList();
 	}
 
-	void _CancelWork()
+	public void HideTools()
 	{
-		_cancelTS?.Cancel(); _cancelTS = null;
-		_delayTimer?.Stop();
-
+		_tools.RegexWindowHide();
 	}
 
 	void _CancelList()
 	{
-		_popupList?.Hide();
+		if(_data == null) return;
+		_data = null;
+		_popupList.Hide();
 	}
 
-	//class _ListState
-	//{
-
-	//}
-
-	public void SciPositionChangedNotModified()
+	public void SciPositionChanged(SciCode doc, bool modified)
 	{
-		var doc = Panels.Editor.ActiveDoc;
-		if(_IsAfterDot(doc.ST.SelectionStartChars)) {
-			_ShowList(needTriggerChar: false, withDelay: false);
-		} else {
-			Cancel();
+		//int pos = doc.ST.CurrentPosChars;
+		//var node = CiTools.NodeAt(pos);
+		//Print(CiTools.IsInString(ref node, pos));
+
+		_tools.RegexWindowHideIfNotInString(doc);
+
+		if(!modified) { //else we use SciCharAdded and SciTextChanged(SC_MOD_DELETETEXT)
+			int position = doc.ST.CurrentPos;
+			if(doc.Call(Sci.SCI_GETANCHOR) == position) { //if no selection
+				position = doc.ST.CountBytesToChars(position);
+				if(_IsAfterDot(doc.Text, position)) {
+					_ShowList(_ShowReason.clickedDot, position);
+				} else {
+					Cancel();
+				}
+			}
 		}
 	}
 
-	public void SciTextChanged(in Sci.SCNotification n)
+	public void SciCharAdded(SciCode doc)
 	{
-		bool added = 0 != (n.modificationType & Sci.MOD.SC_MOD_INSERTTEXT);
-		var doc = Panels.Editor.ActiveDoc;
-		int position = n.position; if(added) position += n.length; //CurrentPosChars now still old
-
-		if(_popupText != null) {
-
-		} else if(!added) return;
-
-		bool dot = _IsAfterDot(doc.ST.CountBytesToChars(position));
-		_ShowList(needTriggerChar: true, withDelay: !dot);
+		_CharAddedRemoved(doc, true, doc.ST.CurrentPosChars);
 	}
 
-	bool _IsAfterDot(int position)
+	public void SciTextChanged(SciCode doc, in Sci.SCNotification n)
+	{
+		if(0 == (n.modificationType & Sci.MOD.SC_MOD_DELETETEXT)) return; //info: instead of SC_MOD_INSERTTEXT we use SciCharAdded, because now cannot replace text range
+		if(_data == null) return;
+		_CharAddedRemoved(doc, false, doc.ST.CountBytesToChars(n.position));
+	}
+
+	void _CharAddedRemoved(SciCode doc, bool added, int position)
+	{
+		var code = doc.Text;
+		if(_data != null) {
+			if(code.Length >= _data.code.Length - _data.span.Length
+				&& code.Length - position == _data.code.Length - _data.span.End
+				&& 0 == string.CompareOrdinal(code, 0, _data.code, 0, _data.span.Start)
+				&& 0 == string.CompareOrdinal(code, position, _data.code, _data.span.End, code.Length - position)
+				&& !_data.items[0].IsRegex
+				) {
+				int len = position - _data.span.Start;
+				if(added) {
+					char c = code[position - 1];
+					if(!(char.IsLetterOrDigit(c) || c == '_' || (c == '@' && len == 1))) {
+						var ci = _popupList.SelectedItem;
+						if(ci != null) Commit(ci, c);
+						_CancelList();
+						position = doc.ST.CurrentPosChars;
+					}
+				}
+				if(_data != null) {
+					_data.filterText = code.Substring(_data.span.Start, len);
+					_FilterItems(true);
+					return;
+				}
+			} else if(!added) { //else _ShowList will do
+				_CancelList();
+			}
+		}
+
+		if(added) _ShowList(_ShowReason.charAdded, position);
+	}
+
+	bool _IsAfterDot(string code, int position)
 	{
 		if(position > 1) {
-			var code = Panels.Editor.ActiveDoc.Text;
 			char c = code[position - 1];
 			if(c == '.') return true;
 			if(position > 2) {
@@ -124,157 +172,301 @@ class CiCompletion
 
 	public void ShowList()
 	{
-		_ShowList(needTriggerChar: false, withDelay: false);
+		_ShowList(_ShowReason.command);
 	}
 
-	void _ShowList(bool needTriggerChar, bool withDelay)
+	enum _ShowReason { charAdded, clickedDot, command }
+
+	//long _debugTime;
+
+	async void _ShowList(_ShowReason showReason, int position = -1)
 	{
-		_cancelTS?.Cancel();
+		//long time = ATime.PerfMilliseconds;
+		//Print(_debugTime == 0 ? 0 : time - _debugTime, time);
+		//_debugTime = time;
+
+		var p1 = APerf.Create();
+		Cancel();
 		_cancelTS = new CancellationTokenSource();
-		_needTriggerChar = needTriggerChar;
-		int delay = withDelay ? 100 : 1;
-		if(_delayTimer == null) _delayTimer = new ATimer(() => _ShowListAsync());
-		_delayTimer.Start(delay, true);
-	}
+		var cancelTS = _cancelTS;
 
-	async void _ShowListAsync()
-	{
-		APerf.First();
 #if NOGCREGION
 		ADebug.LibMemorySetAnchor();
 		//Print(GCSettings.LatencyMode);
 		bool noGC = false;
 		if(AVersion.Is64BitProcess) try { noGC = GC.TryStartNoGCRegion(50_000_000); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
 #endif
+		char debugChar = default;
 		try {
 			var document = CodeInfo.GetDocument();
-			APerf.Next('d');
+			p1.Next('d');
 
 			//Print(document.GetTextAsync().Result);
 
 			var doc = Panels.Editor.ActiveDoc;
-			var position = doc.ST.CurrentPosChars;
+			if(position < 0) position = doc.ST.CurrentPosChars;
 			var code = doc.Text;
-			char ch = _needTriggerChar && position > 0 ? code[position - 1] : default;
-			var cancelToken = _cancelTS.Token;
+			char ch = showReason == _ShowReason.charAdded && position > 0 ? code[position - 1] : default;
+			debugChar = ch;
+			var cancelToken = cancelTS.Token;
+			bool isDot = false, canGroup = false; int isRegex = 0;
 #if DEBUG
 			if(Debugger.IsAttached) cancelToken = default;
 #endif
 			CompletionService completionService = null;
-			INamedTypeSymbol typeSymbol = null;
+			SemanticModel model = null;
+			//INamedTypeSymbol typeSymbol = null;
 			var r = await Task.Run(async () => { //info: somehow GetCompletionsAsync etc are not async
 				completionService = CompletionService.GetService(document);
-				//APerf.Next('s');
+
+				//var q = completionService.GetRules();
+				//Print(q.DefaultEnterKeyRule, q.DismissIfEmpty, q.DismissIfLastCharacterDeleted, q.SnippetsRule);
+				//Print(q.DefaultCommitCharacters);
+
+				//p1.Next('s');
 				if(cancelToken.IsCancellationRequested) return null;
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
+				//Print($"'{ch}'");
 				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
-				APerf.Next('C');
+				p1.Next('C');
 				if(r1 != null) {
-
-					foreach(var v in r1.Items) {
-						//Print($"<><Z green>{v.DisplayText},    {v.ProviderName},    {string.Join("|", v.Properties)}<>");
-						Print($"<><Z 0x80c080>{v.DisplayText},    {string.Join("|", v.Tags)},    {string.Join("|", v.Properties)}<>");
-#if HAVE_SYMBOLS
-						if(v.Symbols!=null)
-						foreach(var j in v.Symbols) {
-							Print(j, j.Kind, j.ContainingType, j.OriginalDefinition, j.GetType());
-						}
-#endif
-					}
-
-					var model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //fast
-
-					INamespaceOrTypeSymbol type = null;
-					char dot = default; int pos2 = position - 1;
-					if(pos2 > 0 && code[pos2] == '.') {
-						dot = '.';
+					model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false);
+					//INamespaceOrTypeSymbol type = null;
+					int pos2 = position - 1;
+					if(isDot = (pos2 > 0 && code[pos2] == '.')) {
 						if(pos2 > 1 && code[pos2 - 1] == '?') pos2--;
-					} else if(pos2 > 1 && code[pos2] == '>' && code[pos2 - 1] == '-') {
-						dot = '>';
+					} else if(isDot = (pos2 > 1 && (code[pos2] == '>' && code[pos2 - 1] == '-') || (code[pos2] == ':' && code[pos2 - 1] == ':'))) {
 						pos2--;
 					}
-					if(dot != default) {
+					if(isDot) {
 						var tree = model.SyntaxTree;
 						var node = tree.GetRoot().FindToken(pos2).Parent;
-						Print("NODE:", node, node.Kind(), node.GetType());
+						//Print($"NODE: {node.Kind()}, {node.GetType().Name}, <<{node}>>");
 
 						ExpressionSyntax es = null;
 						switch(node) {
-						case MemberAccessExpressionSyntax s1: es = s1.Expression; break;
-						case ConditionalAccessExpressionSyntax s1: es = s1.Expression; break;
-						case QualifiedNameSyntax s1: es = s1.Left; break;
+						case QualifiedNameSyntax s1: es = s1.Left; break; //can be namespace, type or value
+						case MemberAccessExpressionSyntax s1: es = s1.Expression; break; //can be namespace, type or value
+						case ConditionalAccessExpressionSyntax s1: canGroup = true; break; //can be only value
+																						   //case ConditionalAccessExpressionSyntax s1: es = s1.Expression; break;
+																						   //case AliasQualifiedNameSyntax s1: es = s1.Alias; break; //can be only root namespace
 						}
 						if(es != null) {
-							Print("es kind:", es.Kind());
+							canGroup = true;
+							//Print("es kind:", es.Kind());
 							var u = model.GetSymbolInfo(es).Symbol;
-							if(u != null) {
-								if(u.Kind == SymbolKind.Namespace) {
-									//onlyStatic = true; //same results but slower
-									type = u as INamespaceSymbol;
-								} else {
-									type = model.GetTypeInfo(es).Type;
-								}
-							} else if(model.GetTypeInfo(es).Type is IErrorTypeSymbol ee) {
+							if(u == null && model.GetTypeInfo(es).Type is IErrorTypeSymbol ee) {
 								var can = ee.CandidateSymbols;
 								if(!can.IsEmpty) u = can[0];
 							}
-
-							if(type == null) {
-								type = model.GetSpeculativeTypeInfo(pos2, es, SpeculativeBindingOption.BindAsExpression).Type;
+							//Print(u, u?.Kind??default);
+							if(u != null) {
+								if(u.Kind == SymbolKind.Namespace) {
+									canGroup = false;
+									//	type = u as INamespaceSymbol;
+									//} else {
+									//	type = model.GetTypeInfo(es).Type;
+								}
 							}
 
-							if(type is IPointerTypeSymbol pts) type = pts.PointedAtType;
-							typeSymbol = type as INamedTypeSymbol;
+							//if(type == null) {
+							//	type = model.GetSpeculativeTypeInfo(pos2, es, SpeculativeBindingOption.BindAsExpression).Type;
+							//}
 
+							//if(type is IPointerTypeSymbol pts) type = pts.PointedAtType;
+							//typeSymbol = type as INamedTypeSymbol;
 						}
+					} else {
+						canGroup = true;
 					}
+					//p1.Next('M');
+				} else if(showReason == _ShowReason.command) {
+					var model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false);
+					var root = model.SyntaxTree.GetRoot();
+					var node = root.FindToken(position).Parent;
+					if(CiTools.IsInString(ref node, position)) {
+						isRegex = CiTools.IsInRegexString(model, node, code, position);
 
-					if(cancelToken.IsCancellationRequested) return null;
-					//APerf.Next('M');
-
+					}
 				}
 				return r1;
 			});
-			if(r == null || cancelToken.IsCancellationRequested) { _CancelWork(); APerf.NW('z'); return; }
+
+			if(isRegex != 0) {
+				_tools.RegexWindowShow(doc, position, replace: isRegex == 2);
+				return;
+			}
+
+			if(r == null || cancelToken.IsCancellationRequested) return;
 			Debug.Assert(doc == Panels.Editor.ActiveDoc); //when active doc changed, cancellation must be requested
-			APerf.Next('T');
+			p1.Next('T');
 
 			var span = r.Span;
-			_completionService = completionService;
-			_startPos = span.Start;
-			_popupText = code.Substring(span.Start, span.Length);
-			_results = r;
-			_items = new List<CiComplItem>(r.Items.Length);
-			foreach(var v in r.Items) {
-				_items.Add(new CiComplItem(v));
-			}
+			if(span.Length > 0 && CiComplItem.IsRegexProvider(r.Items[0])) span = new TextSpan(position, 0);
 
-			foreach(var v in _items) {
+			_data = new _Data {
+				document = document,
+				completionService = completionService,
+				code = code,
+				span = span,
+				filterText = code.Substring(span.Start, span.Length),
+				items = new List<CiComplItem>(r.Items.Length),
+				model = model
+			};
+
+			var groups = canGroup ? new Dictionary<INamespaceOrTypeSymbol, List<int>>() : null;
+			List<int> keywordsGroup = null, etcGroup = null;
+			foreach(var ci in r.Items) {
+				var v = new CiComplItem(ci);
+				var sym = v.FirstSymbol;
+				//Print(v.DisplayText, sym, canGroup);
 				switch(v.kind) {
-				case CiItemKind.Keyword:
+				case CiItemKind.Method:
+					if(sym != null) {
+						if(sym.IsStatic) {
+							switch(ci.DisplayText) {
+							case "Equals":
+							case "ReferenceEquals":
+								if(sym.ContainingType.BaseType == null) if(isDot) continue; else v.moveDown = CiItemMoveDownBy.Name;
+								break;
+							case "Main" when sym.ContainingType.Name == "Script":
+								v.moveDown = CiItemMoveDownBy.Name;
+								break;
+							}
+						} else {
+							switch(ci.DisplayText) {
+							case "Equals":
+							case "GetHashCode":
+							case "GetType":
+							case "ToString":
+							case "MemberwiseClone":
+							case "GetEnumerator": //IEnumerable
+							case "CompareTo": //IComparable
+							case "GetTypeCode": //IConvertible
+							case "CreateObjRef": //MarshalByRefObject
+							case "GetLifetimeService": //MarshalByRefObject
+							case "InitializeLifetimeService": //MarshalByRefObject
+							case "OnUnhandledException" when sym.ContainingType.Name == "AScript":
+								v.moveDown = CiItemMoveDownBy.Name;
+								break;
+							}
+							//var ct = sym.ContainingType;
+							//Print(ct.ToString(), ct.Name, ct.ContainingNamespace.ToString(), ct.BaseType);
+						}
+					}
+					break;
 				case CiItemKind.TypeParameter:
+					if(sym == null && ci.DisplayText == "T") continue;
+					break;
 				case CiItemKind.EnumMember:
-				case CiItemKind.Local:
 				case CiItemKind.Label:
-				case CiItemKind.Snippet:
-					continue;
+					canGroup = false;
+					break;
+				case CiItemKind.LocalVariable:
+					if(isDot) continue; //see the bug comments below
+					break;
 				}
-				//if(isHidden) v.hidden |= CiItemHiddenBy.Always;
+
+				if(canGroup) {
+					int i = _data.items.Count;
+					if(sym == null) {
+						if(v.kind == CiItemKind.Keyword) (keywordsGroup ??= new List<int>()).Add(i);
+						else (etcGroup ??= new List<int>()).Add(i);
+					} else {
+						INamespaceOrTypeSymbol nts;
+						if(!isDot) nts = sym.ContainingNamespace;
+						//else if(sym is ReducedExtensionMethodSymbol em) nts = em.ReceiverType; //rejected. Didn't work well, eg with linq.
+						else nts = sym.ContainingType;
+
+						//Roslyn bug: sometimes adds some garbage items.
+						//To reproduce: invoke global list. Then invoke list for a string variable. Adds String, Object, all local string variables, etc. Next time works well. After Enum dot adds the enum type, even in VS; in VS sometimes adds enum methods and extmethods.
+						//ADebug.PrintIf(nts == null, sym.Name);
+						if(nts == null) continue;
+
+						if(groups.TryGetValue(nts, out var list)) list.Add(i); else groups.Add(nts, new List<int> { i });
+					}
+				}
+
+				if(sym != null && v.kind != CiItemKind.LocalVariable && v.kind != CiItemKind.Namespace && v.kind != CiItemKind.TypeParameter) {
+					bool isObsolete = false;
+					foreach(var k in sym.GetAttributes()) { //fast
+						switch(k.AttributeClass.Name) {
+						case "ObsoleteAttribute": isObsolete = true; break;
+						}
+						//Print(ci.DisplayText, v.AttributeClass.Name);
+					}
+					if(isObsolete) v.moveDown = CiItemMoveDownBy.Obsolete;
+				}
+
+				_data.items.Add(v);
 			}
 
-			if(!span.IsEmpty) _FilterItems(_popupText, false);
-			APerf.Next('F');
+			if(_data.items.Count == 0) {
+				_data = null;
+				return;
+			}
+
+			List<string> groupsList = null;
+			if(canGroup && groups.Count + (keywordsGroup == null ? 0 : 1) + (etcGroup == null ? 0 : 1) > 1) {
+				//foreach(var v in groups) Print(v.Key, v.Value.Count, v.Key.ContainingAssembly?.Name);
+				List<(string, List<int>)> g = null;
+				if(isDot) {
+					var gs = groups.ToList();
+					gs.Sort((k1, k2) => {
+						//let extension methods be at bottom, sorted by type name
+						int em1 = _data.items[k1.Value[0]].kind == CiItemKind.ExtensionMethod ? 1 : 0;
+						int em2 = _data.items[k2.Value[0]].kind == CiItemKind.ExtensionMethod ? 1 : 0;
+						int diff = em1 - em2;
+						if(diff != 0) return diff;
+						if(em1 == 1) return string.Compare(k1.Key.Name, k2.Key.Name, StringComparison.OrdinalIgnoreCase);
+						//sort non-extension members by inheritance
+						var t1 = k1.Key as INamedTypeSymbol; var t2 = k2.Key as INamedTypeSymbol;
+						if(_IsBase(t1, t2)) return -1;
+						if(_IsBase(t2, t1)) return 1;
+						ADebug.Print($"{t1}, {t2}");
+						return 0;
+					});
+					g = gs.Select(o => (o.Key.Name, o.Value)).ToList(); //list<(itype, list)> -> list<typeName, list>
+
+					static bool _IsBase(INamedTypeSymbol t, INamedTypeSymbol tBase)
+					{
+						for(t = t.BaseType; t != null; t = t.BaseType) if(t == tBase) return true;
+						return false;
+					}
+				} else {
+					g = groups.Select(o => (o.Key.QualifiedName(), o.Value)).ToList(); //dictionary<inamespace, list> -> list<namespaceName, list>
+					for(int i = g.Count - 1; i > 0; i--) { //join duplicate namespace names. If n assemblies have the same namespace, there are n namespace objects.
+						var nsName = g[i].Item1;
+						for(int j = 0; j < i; j++) if(g[j].Item1 == nsName) { g[j].Item2.AddRange(g[i].Item2); g.RemoveAt(i); break; }
+					}
+					//Print("----");
+					//foreach(var v in g) Print(v.Item1, v.Item2.Count);
+					g.Sort((e1, e2) => string.Compare(e1.Item1, e2.Item1, StringComparison.OrdinalIgnoreCase));
+				}
+				if(keywordsGroup != null) g.Add(("keywords", keywordsGroup));
+				if(etcGroup != null) g.Add(("etc", etcGroup));
+				for(int i = 0; i < g.Count; i++) {
+					foreach(var v in g[i].Item2) _data.items[v].group = i;
+				}
+				groupsList = g.Select(o => o.Item1).ToList();
+			}
+
+			if(!span.IsEmpty) _FilterItems(false);
+			p1.Next('F');
 
 			if(_popupList == null) {
 				_popupList = new CiPopupList(this);
 				_popupList.PopupWindow.VisibleChanged += _popupList_VisibleChanged;
 			}
-			_popupList.SetListItems(_items, o => _GetDescription(completionService, document, o.ci));
-			_SelectBestMatch(document);
+			_popupList.SetListItems(_data.items, groupsList, o => _GetDescription(o.ci)); //and calls SelectBestMatch
 			_popupList.Show(doc, span.Start);
-			//APerf.Next();
 		}
-		catch(OperationCanceledException) { /*ADebug.Print("canceled");*/ _CancelWork(); return; }
+		catch(OperationCanceledException) { /*ADebug.Print("canceled");*/ return; }
+		finally {
+			if(_data == null) { p1.Next('z'); Print($"{p1.ToString()}  |  ch='{(debugChar == default ? '-' : debugChar)}', canceled={cancelTS.IsCancellationRequested}"); }
+			cancelTS.Dispose();
+			if(cancelTS == _cancelTS) _cancelTS = null;
+		}
 #if NOGCREGION
 		finally {
 			Print(noGC, GCSettings.LatencyMode == GCLatencyMode.NoGCRegion);
@@ -286,69 +478,124 @@ class CiCompletion
 			}
 		}
 #endif
-		APerf.NW();
+		p1.NW();
 	}
 
 	private void _popupList_VisibleChanged(object sender, EventArgs e)
 	{
 		if((sender as Form).Visible) return;
-		_completionService = null;
-		_popupText = null;
-		_results = null;
-		_items = null;
+		_data = null;
 	}
 
-	void _FilterItems(string text, bool updatePopupList)
+	void _FilterItems(bool updatePopupList)
 	{
-		if(Empty(text)) {
-			foreach(var v in _items) {
-				v.hidden &= ~CiItemHiddenBy.Text;
-				v.hilite = null;
-			}
-		} else {
-			var textUpper = text.Upper();
-			var ah = new List<int>();
-			foreach(var v in _items) {
-				ADebug.PrintIf(v.ci.FilterText != v.ci.DisplayText, $"{v.ci.FilterText}, {v.ci.DisplayText}");
-				//Print(v.DisplayText, v.FilterText, v.SortText, v.ToString());
-				int[] hilite = null;
+		var filterText = _data.filterText;
+		foreach(var v in _data.items) {
+			v.hidden &= ~CiItemHiddenBy.FilterText;
+			v.hilite = default;
+			v.hilites = null;
+			v.moveDown &= ~CiItemMoveDownBy.FilterText;
+		}
+		if(!Empty(filterText)) {
+			string textLower = filterText.ToLower(), textUpper = filterText.Upper();
+			char c0Lower = textLower[0], c0Upper = textUpper[0];
+			var ah = new List<(int, int)>();
+			foreach(var v in _data.items) {
+				if(v.kind == CiItemKind.None) continue; //eg regex completion
+														//ADebug.PrintIf(v.ci.FilterText != v.ci.DisplayText, $"{v.ci.FilterText}, {v.ci.DisplayText}");
+														//Print(v.DisplayText, v.FilterText, v.SortText, v.ToString());
 				var s = v.ci.FilterText;
-				int iSub = s.Find(text, true);
-				if(iSub >= 0) {
-					hilite = new int[] { iSub, iSub + text.Length };
-					//TODO: VS adds only if the substring starts with uppercase
-				} else if(text.Length > 1) { //has all uppercase chars? Eg add OneTwoThree if text is "ott" or "ot" or "tt".
-					ah.Clear();
-					bool no = false;
-					for(int i = 0, j = 0; i < textUpper.Length; i++, j++) {
-						j = s.IndexOf(textUpper[i], j);
-						if(j < 0) { no = true; break; }
-						ah.Add(j); ah.Add(j + 1);
+				int iFirst = _FilterFindChar(s, 0, c0Lower, c0Upper), iFirstFirst = iFirst;
+				if(iFirst >= 0) {
+					if(filterText.Length == 1) {
+						v.hilite = (iFirst, iFirst + 1);
+					} else {
+						while(!s.Eq(iFirst, filterText, true)) {
+							iFirst = _FilterFindChar(s, iFirst + 1, c0Lower, c0Upper);
+							if(iFirst < 0) break;
+						}
+						if(iFirst >= 0) {
+							v.hilite = (iFirst, iFirst + filterText.Length);
+						} else { //has all uppercase chars? Eg add OneTwoThree if text is "ott" or "ot" or "tt".
+							ah.Clear();
+							bool no = false;
+							for(int i = 1, j = iFirstFirst + 1; i < filterText.Length; i++, j++) {
+								j = _FilterFindChar(s, j, textLower[i], textUpper[i], camel: true);
+								if(j < 0) { no = true; break; }
+								if(ah.Count == 0) ah.Add((iFirstFirst, iFirstFirst + 1));
+								ah.Add((j, j + 1));
+							}
+							if(!no) v.hilites = ah.ToArray();
+						}
 					}
-					if(!no) hilite = ah.ToArray();
 				}
-				//TODO: support _ and all ucase, like WM_PAINT
-
-				v.hilite = hilite;
-				if(hilite == null) v.hidden |= CiItemHiddenBy.Text; else v.hidden &= ~CiItemHiddenBy.Text;
+				if(v.hilite.end == 0 && v.hilites == null) {
+					if(filterText.Length > 1 && (iFirst = s.Find(filterText, true)) >= 0) {
+						v.moveDown |= CiItemMoveDownBy.FilterText; //sort bottom and hilite light yellow
+						v.hilite = (iFirst, iFirst + filterText.Length);
+					} else v.hidden |= CiItemHiddenBy.FilterText;
+				}
 			}
 		}
-		if(updatePopupList) {
-			_popupList.UpdateVisibleItems();
-			_SelectBestMatch();
-			//TODO: Invalidate?
-		}
+
+		if(updatePopupList) _popupList.UpdateVisibleItems(); //and calls SelectBestMatch
 	}
 
-	void _SelectBestMatch(Document document = null)
+	/// <summary>
+	/// Finds character in s where it is one of: uppercase; lowercase after '_'/'@'; not uppercase/lowercase; any at i=0.
+	/// </summary>
+	/// <param name="s"></param>
+	/// <param name="i">Start index.</param>
+	/// <param name="cLower">Lowercase version of character to find.</param>
+	/// <param name="cUpper">Uppercase version of character to find.</param>
+	/// <param name="camel">Uppercase must not be preceded and followed by uppercase.</param>
+	int _FilterFindChar(string s, int i, char cLower, char cUpper, bool camel = false)
 	{
-		document ??= CodeInfo.GetDocument();
-		var fi = _completionService.FilterItems(document, _results.Items, _popupText);
-		//Print(fi);
-		if(!fi.IsEmpty) _popupList.ListControl.SelectedIndex = _items.FindIndex(o => o.ci == fi[0]);
+		for(; i < s.Length; i++) {
+			char c = s[i];
+			if(c == cUpper) { //any not lowercase
+				if(!camel) return i;
+				if(i == 0 || !char.IsUpper(c)) return i;
+				if(!char.IsUpper(s[i - 1])) return i;
+				if(i + 1 < s.Length && char.IsLower(s[i + 1])) return i;
+			}
+			if(c == cLower) { //lowercase
+				if(i == 0) return i;
+				switch(s[i - 1]) { case '_': case '@': return i; }
+			}
+		}
+		return -1;
 	}
 
-	static async Task<CompletionDescription> _GetDescription(CompletionService completionService, Document document, CompletionItem v)
+	public void SelectBestMatch()
+	{
+		var filterText = _data.filterText;
+
+		//rejected. Need FilterItems anyway, eg to select enum type or 'new' type.
+		//if(Empty(filterText)) {
+		//	_popupList.SelectFirstVisible();
+		//	return;
+		//}
+
+		//APerf.First();
+		var visible = _data.items.Where(o => o.hidden == 0).Select(o => o.ci).ToImmutableArray();
+		//APerf.Next();
+		var fi = _data.completionService.FilterItems(_data.document, visible, filterText);
+		//APerf.Next();
+		//Print(fi);
+		CiComplItem ci = null;
+		int nv = visible.Length;
+		if(fi.Length < nv || nv == 1) {
+			foreach(var v in fi.Select(o => _data.Map[o])) {
+				if(v.moveDown == 0) { ci = v; break; }
+				if(ci == null || v.moveDown < ci.moveDown) ci = v;
+			}
+		}
+		//APerf.NW('b');
+		_popupList.SelectedItem = ci;
+	}
+
+	async Task<CompletionDescription> _GetDescription(CompletionItem v)
 	{
 		//bug workaround: GetDescriptionAsync sometimes gets wrong description. Then also wrong v.Properties["ContextPosition"].
 		//	To reproduce: code: "var v=AWnd.Find(); w.". Invoke completions after the first dot, then after the second, then after the first. Description/Properties of method Equals will be wrong second and third time. The second time will use the ones from the first time, and third time from second.
@@ -360,26 +607,48 @@ class CiCompletion
 			}
 		}
 		//return await completionService.GetDescriptionAsync(document, v); //why it is not async?
-		return await Task.Run(() => completionService.GetDescriptionAsync(document, v));
+		return await Task.Run(() => _data.completionService.GetDescriptionAsync(_data.document, v));
 	}
 
-	public void OnCompletionListItemDClicked(CiComplItem item)
+	public IEnumerable<TaggedText> GetDescription(ISymbol sym)//TODO
+	{
+		//var p1 = APerf.Create();
+		var model = _data.model;
+		var formatter = _data.document.Project.Solution.Workspace.Services.GetLanguageServices(model.Language).GetService<Microsoft.CodeAnalysis.DocumentationComments.IDocumentationCommentFormattingService>();
+		//p1.Next();
+		var tt = sym.GetDocumentationParts(model, _data.span.Start, formatter, default);
+		//p1.NW('G');
+		return tt;
+	}
+
+	public void Commit(CiComplItem item, char? commitCharacter = null)
 	{
 		var ci = item.ci;
-		Print(item.DisplayText, ci.Span);
+		var change = _data.completionService.GetChangeAsync(_data.document, ci).Result;
+		//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
+
 		var doc = Panels.Editor.ActiveDoc;
-		//var s = item.DisplayText;
-		var change = _completionService.GetChangeAsync(CodeInfo.GetDocument(), ci).Result; //TODO: commitCharacter
 		var s = change.TextChange.NewText;
-		//Print(change.TextChange.Span, change.NewPosition);
 		var span = change.TextChange.Span;
-		if(change.NewPosition.HasValue) {
-			doc.ST.ReplaceRange(span.Start, span.Length, s, SciFromTo.BothChars | SciFromTo.ToIsLength);
-			doc.ST.GoToPos(change.NewPosition.GetValueOrDefault(), true);
-		} else {
-			doc.ST.SetAndReplaceSel(span.Start, span.Length, s, SciFromTo.BothChars | SciFromTo.ToIsLength);
+		int i = span.Start, len = span.Length + (doc.ST.TextLengthChars - _data.code.Length);
+		//Print($"{change.NewPosition.HasValue}, cp={doc.ST.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
+		//Print($"'{s}'");
+		if(change.NewPosition.HasValue) { //xml doc, override, regex
+										  //ci.DebugPrint();
+			int newPos = change.NewPosition.GetValueOrDefault();
+			if(ci.ProviderName.Ends(".XmlDocCommentCompletionProvider") && !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag)) {
+				if(s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && Empty(s1))) newPos++;
+				s += "></" + tag + ">";
+			}
+			doc.ST.ReplaceRange(i, len, s, SciFromTo.BothChars | SciFromTo.ToIsLength);
+			doc.ST.GoToPos(newPos, true);
+		} else if(s != _data.filterText) {
+			if(commitCharacter.HasValue) s += commitCharacter.GetValueOrDefault(); //the undo will be better than with len--
+			doc.ST.SetAndReplaceSel(i, len, s, SciFromTo.BothChars | SciFromTo.ToIsLength);
 		}
+
 		//good: when changed text/pos with the above code, we don't receive notifications, because text/pos are modified by code.
+		//rejected: append () if method.
 	}
 
 	public void SciTextChangedInMeta(in Sci.SCNotification n)
@@ -388,74 +657,100 @@ class CiCompletion
 	}
 }
 
+[Flags]
+enum CiItemHiddenBy : byte { FilterText = 1, Kind = 2 }
+
+[Flags]
+enum CiItemMoveDownBy : sbyte { Name = 1, Obsolete = 2, FilterText = 4 }
+
 class CiComplItem
 {
 	public readonly CompletionItem ci;
 	public readonly CiItemKind kind;
 	public readonly CiItemAccess access;
 	public CiItemHiddenBy hidden;
-	public byte inheritanceLevel;
-	public int[] hilite;//TODO
-
-	public string DisplayText => _text ??= ci.DisplayText + ci.DisplayTextSuffix;
-	//public string DisplayText => _text ??= (inheritanceLevel==0 ? null : new string('-', inheritanceLevel)) + ci.DisplayText + ci.DisplayTextSuffix;
+	public CiItemMoveDownBy moveDown;
+	public int group;
+	public (int start, int end) hilite;
+	public (int start, int end)[] hilites;
 	string _text;
 
-	//string _GetDisplayText()
-	//{
-	//	string prefix = null;
-	//	ISymbol sym = null;
-	//	switch(symbol) {
-	//	case ISymbol k: sym = k;break;
-	//	case List<ISymbol> k: sym = k[0];break;
-	//	}
-	//	if(sym!=null && sym.)
-	//}
+	public string DisplayText => _text ??= ci.DisplayText + ci.DisplayTextSuffix;
 
-	public Bitmap Image => CodeInfo.GetImage(kind, access);
+	public Bitmap KindImage => CiUtil.GetKindImage(kind);
+
+	public Bitmap AccessImage => CiUtil.GetAccessImage(access);
 
 	public ISymbol FirstSymbol => ci.Symbols?[0];
+
+	public bool IsRegex => kind == CiItemKind.None && IsRegexProvider(ci);
+
+	public static bool IsRegexProvider(CompletionItem ci) => ci.Symbols == null && ci.Properties.Contains(new KeyValuePair<string, string>("EmbeddedProvider", "Microsoft.CodeAnalysis.Features.EmbeddedLanguages.RegularExpressions.RegexEmbeddedCompletionProvider"));
 
 	public CiComplItem(CompletionItem ci)
 	{
 		this.ci = ci;
-		kind = ci.Tags[0] switch
-		{
-			WellKnownTags.Class => CiItemKind.Class,
-			WellKnownTags.Structure => CiItemKind.Structure,
-			WellKnownTags.Enum => CiItemKind.Enum,
-			WellKnownTags.Delegate => CiItemKind.Delegate,
-			WellKnownTags.Interface => CiItemKind.Interface,
-			WellKnownTags.Method => CiItemKind.Method,
-			WellKnownTags.ExtensionMethod => CiItemKind.ExtensionMethod,
-			WellKnownTags.Property => CiItemKind.Property,
-			WellKnownTags.Event => CiItemKind.Event,
-			WellKnownTags.Field => CiItemKind.Field,
-			WellKnownTags.Local => CiItemKind.Local,
-			WellKnownTags.Parameter => CiItemKind.Local,
-			WellKnownTags.RangeVariable => CiItemKind.Local,
-			WellKnownTags.Constant => CiItemKind.Constant,
-			WellKnownTags.EnumMember => CiItemKind.EnumMember,
-			WellKnownTags.Keyword => CiItemKind.Keyword,
-			WellKnownTags.Namespace => CiItemKind.Namespace,
-			WellKnownTags.Label => CiItemKind.Label,
-			WellKnownTags.Snippet => CiItemKind.Snippet,
-			WellKnownTags.TypeParameter => CiItemKind.TypeParameter,
-			_ => CiItemKind.None
-		};
-		_PrintCI(kind == CiItemKind.None, "blue");
-		if(ci.Tags.Length > 1) {
-			access = ci.Tags[1] switch { WellKnownTags.Private => CiItemAccess.Private, WellKnownTags.Protected => CiItemAccess.Protected, WellKnownTags.Internal => CiItemAccess.Internal, _ => default };
-			_PrintCI(ci.Tags.Length > 2 || (access == default && ci.Tags[1] != WellKnownTags.Public), "green");
+		var tags = ci.Tags;
+		if(tags.Length > 0) {
+			kind = tags[0] switch
+			{
+				WellKnownTags.Class => CiItemKind.Class,
+				WellKnownTags.Structure => CiItemKind.Structure,
+				WellKnownTags.Enum => CiItemKind.Enum,
+				WellKnownTags.Delegate => CiItemKind.Delegate,
+				WellKnownTags.Interface => CiItemKind.Interface,
+				WellKnownTags.Method => CiItemKind.Method,
+				WellKnownTags.ExtensionMethod => CiItemKind.ExtensionMethod,
+				WellKnownTags.Property => CiItemKind.Property,
+				WellKnownTags.Event => CiItemKind.Event,
+				WellKnownTags.Field => CiItemKind.Field,
+				WellKnownTags.Local => CiItemKind.LocalVariable,
+				WellKnownTags.Parameter => CiItemKind.LocalVariable,
+				WellKnownTags.RangeVariable => CiItemKind.LocalVariable,
+				WellKnownTags.Constant => CiItemKind.Constant,
+				WellKnownTags.EnumMember => CiItemKind.EnumMember,
+				WellKnownTags.Keyword => CiItemKind.Keyword,
+				WellKnownTags.Namespace => CiItemKind.Namespace,
+				WellKnownTags.Label => CiItemKind.Label,
+				WellKnownTags.Snippet => CiItemKind.Snippet,
+				WellKnownTags.TypeParameter => CiItemKind.TypeParameter,
+				_ => CiItemKind.None
+			};
+			ci.DebugPrintIf(kind == CiItemKind.None);
+			if(ci.Tags.Length > 1) {
+				access = ci.Tags[1] switch { WellKnownTags.Private => CiItemAccess.Private, WellKnownTags.Protected => CiItemAccess.Protected, WellKnownTags.Internal => CiItemAccess.Internal, _ => default };
+				ci.DebugPrintIf(ci.Tags.Length > 2 || (access == default && ci.Tags[1] != WellKnownTags.Public), "green");
+			}
+		} else {
+			kind = CiItemKind.None;
+			ci.DebugPrintIf(!IsRegex);
 		}
+		//ci.DebugPrint();
+	}
+}
+
+static class CiExt
+{
+	[Conditional("DEBUG")]
+	public static void DebugPrint(this CompletionItem t, string color = "blue")
+	{
+		Print($"<><c {color}>{t.DisplayText},    {string.Join("|", t.Tags)},    prefix={t.DisplayTextPrefix},    suffix={t.DisplayTextSuffix},    filter={t.FilterText},    sort={t.SortText},    inline={t.InlineDescription},    automation={t.AutomationText},    provider={t.ProviderName}<>");
+		Print(string.Join("\n", t.Properties));
 	}
 
 	[Conditional("DEBUG")]
-	void _PrintCI(bool condition, string color)
+	public static void DebugPrintIf(this CompletionItem t, bool condition, string color = "blue")
 	{
-		if(!condition) return;
-		Print($"<><c {color}>{ci.DisplayText}<>");
-		foreach(var v in ci.Tags) Print(v);
-		//foreach(var v in ci.Properties) Print(v);
+		if(condition) DebugPrint(t, color);
 	}
+
+	public static string QualifiedName(this ISymbol t, bool onlyNamespace = false)
+	{
+		var g = s_qnStack ??= new Stack<string>();
+		g.Clear();
+		if(!onlyNamespace) for(var k = t; k != null; k = k.ContainingType) g.Push(k.Name);
+		for(var n = t.ContainingNamespace; n != null && !n.IsGlobalNamespace; n = n.ContainingNamespace) g.Push(n.Name);
+		return string.Join(".", g);
+	}
+	[ThreadStatic] static Stack<string> s_qnStack;
 }

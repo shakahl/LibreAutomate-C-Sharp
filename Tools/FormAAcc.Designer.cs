@@ -30,11 +30,13 @@ namespace Au.Tools
 		private void InitializeComponent()
 		{
 			this.components = new System.ComponentModel.Container();
-			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+			this.splitContainer1 = new Au.Controls.AuSplitContainer();
+			this.splitContainer2 = new Au.Controls.AuSplitContainer();
 			this._grid = new Au.Controls.ParamGrid();
 			this._grid2 = new Au.Controls.ParamGrid();
-			this.splitContainer3 = new System.Windows.Forms.SplitContainer();
+			this.splitContainer3 = new Au.Controls.AuSplitContainer();
+			this._code = new Au.Tools.CodeBox();
+			this._tree = new Aga.Controls.Tree.TreeViewAdv();
 			this._cCapture = new Au.Controls.AuCheckBox();
 			this._bOK = new Au.Controls.AuButtonOK();
 			this._bCancel = new Au.Controls.AuButtonCancel();
@@ -43,8 +45,6 @@ namespace Au.Tools
 			this._info = new Au.Controls.InfoBox();
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 			this._bEtc = new Au.Controls.AuButton();
-			this._code = new Au.Tools.CodeBox();
-			this._tree = new Aga.Controls.Tree.TreeViewAdv();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
 			this.splitContainer1.Panel1.SuspendLayout();
 			this.splitContainer1.Panel2.SuspendLayout();
@@ -165,6 +165,36 @@ namespace Au.Tools
 			this.splitContainer3.SplitterWidth = 8;
 			this.splitContainer3.TabIndex = 0;
 			// 
+			// _code
+			// 
+			this._code.AcceptsReturn = null;
+			this._code.AccessibleName = "_code";
+			this._code.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
+			this._code.DisableModifiedNotifications = false;
+			this._code.Dock = System.Windows.Forms.DockStyle.Fill;
+			this._code.Location = new System.Drawing.Point(0, 0);
+			this._code.Name = "_code";
+			this._code.NoMouseLeftSetFocus = false;
+			this._code.NoMouseRightSetFocus = false;
+			this._code.Size = new System.Drawing.Size(600, 59);
+			this._code.TabIndex = 4;
+			// 
+			// _tree
+			// 
+			this._tree.AccessibleCount = 1000;
+			this._tree.BackColor = System.Drawing.SystemColors.Window;
+			this._tree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+			this._tree.DefaultToolTipProvider = null;
+			this._tree.Dock = System.Windows.Forms.DockStyle.Fill;
+			this._tree.DragDropMarkColor = System.Drawing.Color.MidnightBlue;
+			this._tree.LineColor = System.Drawing.SystemColors.ControlDark;
+			this._tree.Location = new System.Drawing.Point(0, 0);
+			this._tree.Model = null;
+			this._tree.Name = "_tree";
+			this._tree.SelectedNode = null;
+			this._tree.Size = new System.Drawing.Size(600, 195);
+			this._tree.TabIndex = 0;
+			// 
 			// _cCapture
 			// 
 			this._cCapture.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
@@ -179,7 +209,7 @@ namespace Au.Tools
 			// _bOK
 			// 
 			this._bOK.Enabled = false;
-			this._bOK.Location = new System.Drawing.Point(184, 72);
+			this._bOK.Location = new System.Drawing.Point(192, 72);
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
 			this._bOK.TabIndex = 2;
@@ -187,7 +217,7 @@ namespace Au.Tools
 			// 
 			// _bCancel
 			// 
-			this._bCancel.Location = new System.Drawing.Point(264, 72);
+			this._bCancel.Location = new System.Drawing.Point(272, 72);
 			this._bCancel.Name = "_bCancel";
 			this._bCancel.Size = new System.Drawing.Size(72, 24);
 			this._bCancel.TabIndex = 3;
@@ -205,57 +235,38 @@ namespace Au.Tools
 			// 
 			// _lSpeed
 			// 
+			this._lSpeed.AutoSize = true;
 			this._lSpeed.Location = new System.Drawing.Point(87, 77);
 			this._lSpeed.Name = "_lSpeed";
-			this._lSpeed.Size = new System.Drawing.Size(97, 15);
+			this._lSpeed.Size = new System.Drawing.Size(0, 15);
 			this._lSpeed.TabIndex = 0;
 			this._toolTip.SetToolTip(this._lSpeed, "Shows the Test execution time. Red if not found.");
 			// 
 			// _info
 			// 
+			this._info.AcceptsReturn = null;
 			this._info.AccessibleName = "_info";
+			this._info.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._info.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this._info.DisableModifiedNotifications = false;
+			this._info.InitUseControlFont = false;
 			this._info.Location = new System.Drawing.Point(8, 8);
 			this._info.Name = "_info";
+			this._info.NoMouseLeftSetFocus = false;
+			this._info.NoMouseRightSetFocus = false;
 			this._info.Size = new System.Drawing.Size(600, 56);
 			this._info.TabIndex = 0;
 			// 
 			// _bEtc
 			// 
 			this._bEtc.Enabled = false;
-			this._bEtc.Location = new System.Drawing.Point(344, 72);
+			this._bEtc.Location = new System.Drawing.Point(352, 72);
 			this._bEtc.Name = "_bEtc";
 			this._bEtc.Size = new System.Drawing.Size(32, 24);
 			this._bEtc.TabIndex = 4;
 			this._bEtc.Text = "&...";
 			this._bEtc.Click += new System.EventHandler(this._bEtc_Click);
-			// 
-			// _code
-			// 
-			this._code.AccessibleName = "_code";
-			this._code.DisableModifiedNotifications = false;
-			this._code.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._code.Location = new System.Drawing.Point(0, 0);
-			this._code.Name = "_code";
-			this._code.Size = new System.Drawing.Size(600, 59);
-			this._code.TabIndex = 4;
-			// 
-			// _tree
-			// 
-			this._tree.BackColor = System.Drawing.SystemColors.Window;
-			this._tree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-			this._tree.DefaultToolTipProvider = null;
-			this._tree.Dock = System.Windows.Forms.DockStyle.Fill;
-			this._tree.DragDropMarkColor = System.Drawing.Color.MidnightBlue;
-			this._tree.LineColor = System.Drawing.SystemColors.ControlDark;
-			this._tree.Location = new System.Drawing.Point(0, 0);
-			this._tree.Model = null;
-			this._tree.Name = "_tree";
-			this._tree.SelectedNode = null;
-			this._tree.Size = new System.Drawing.Size(600, 195);
-			this._tree.TabIndex = 0;
 			// 
 			// FormAAcc
 			// 
@@ -290,6 +301,7 @@ namespace Au.Tools
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer3)).EndInit();
 			this.splitContainer3.ResumeLayout(false);
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 

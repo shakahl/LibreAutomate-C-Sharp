@@ -238,8 +238,8 @@ namespace Au
 		{
 			get
 			{
-				RECT r;
-				Api.SystemParametersInfo(Api.SPI_GETWORKAREA, 0, (void*)&r, 0);
+				RECT r=default;
+				Api.SystemParametersInfo(Api.SPI_GETWORKAREA, 0, &r, 0);
 				return r;
 			}
 		}

@@ -119,6 +119,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util, Api\CUtil.cs" />
+    <Compile Include="Util, Api\GdiTextRenderer.cs" />
     <Compile Include="Util, Api\ImageUtil.cs" />
   </ItemGroup>
   <ItemGroup>

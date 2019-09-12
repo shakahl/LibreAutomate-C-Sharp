@@ -2050,6 +2050,43 @@ class Script : AScript
 	//	}
 	//}
 
+	class _UniIdent
+	{
+		//public static void \u0066or() { }
+		//public static void a\ufe4db() { }
+		//public static void c\u0300d() { }
+		//public static void e\u0600f() { }
+		//public static void g\u0903h() { }
+		public static void Az() { }
+		public static void ak() { }
+		public static void _ac() { }
+		public static void ta() { }
+		public static void @abstract() { }
+		public static void AcBc() { }
+		public static void _bc() { }
+		//public static void @base() { }
+		public static void Bc() { }
+		public static void bd() { }
+		public static void CokaNoka() { }
+		public static void Coka_noka() { }
+		public static void KO_NGO() { }
+	}
+
+	//void TestScreenDC()
+	//{
+	//	string s = "One Two";
+	//	using var dc = new Au.Util.LibScreenDC(0);
+	//	var font = Au.Util.AFonts.Regular.ToHfont();
+	//	var oldFont = Api.SelectObject(dc, font);
+	//	if(Api.GetTextExtentPoint32(dc, s, s.Length, out var z)) Print(z);
+	//	Task.Run(() => {
+	//		using var dc = new Au.Util.LibScreenDC(0);
+	//		if(Api.GetTextExtentPoint32(dc, s, s.Length, out var z)) Print(z);
+	//	}).Wait();
+	//	Api.SelectObject(dc, oldFont);
+	//	Api.DeleteObject(font);
+	//}
+
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
 	void _Main(string[] args)
 	{ //}}//}}//}}//}}
@@ -2059,13 +2096,29 @@ class Script : AScript
 		//100.ms();
 		//g1:
 		//AWnd k = AWnd.Find("dkdkdkdk", null, null, );
-		//AWnd.Find("", "", default, )
+		AWnd.Find("", "", default, WFFlags.)
 		//this.
 		//Form f = null; f.
 		//Print(1);
 		var s = "";
+		int somegome = 1;
+		s.Remove(0);
 		//_Dtor d; d.
+		//_UniIdent.no
+		
+		//AWnd.Find("", "", "", 
 
+		var r1 = new Regex(@"j");
+		//r1.Replace("", "")
+		var r = new ARegex("^(.+)");
+		//r.Replace() - 2 repl
+		//"".RegexReplace() - 2 repl
+		//RXMatch m;m.ExpandReplacement() - 1 repl
+
+		//var f = new Au.Tools.FormAWinImage();
+		//f.ShowDialog();
+
+		//TestScreenDC();
 		//AExec.RunConsole(,)
 		//BuildDocumentationProviderDatabase();
 		//TestCefSharp();
@@ -2143,4 +2196,5 @@ static class TestExt
 		//Task.Delay(timeoutMS).ContinueWith(_ => GC.KeepAlive(target));
 		ATimer.After(timeoutMS, () => GC.KeepAlive(target));
 	}
+	public static void inda(this string t) { }
 }

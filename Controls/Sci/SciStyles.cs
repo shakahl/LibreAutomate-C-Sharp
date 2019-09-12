@@ -230,7 +230,7 @@ namespace Au.Controls
 			//StyleForeColor((int)LexCppStyles.SCE_C_OPERATOR, 0x80); //+,;( etc. Let it be black.
 			StyleForeColor((int)LexCppStyles.SCE_C_PREPROCESSOR, 0xFF8000);
 			StyleForeColor((int)LexCppStyles.SCE_C_WORD, 0xFF); //keywords
-			StyleForeColor((int)LexCppStyles.SCE_C_TASKMARKER, 0xFFFF00);
+			StyleForeColor((int)LexCppStyles.SCE_C_TASKMARKER, 0x00C000);
 			StyleBackColor((int)LexCppStyles.SCE_C_TASKMARKER, 0x0);
 			//StyleForeColor((int)LexCppStyles.SCE_C_WORD2, 0x80F0); //functions. Not using here.
 			//StyleForeColor((int)LexCppStyles.SCE_C_GLOBALCLASS, 0xC000C0); //types. Not using here.

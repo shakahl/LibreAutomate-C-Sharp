@@ -145,6 +145,11 @@ static class EdResources
 	public static Bitmap GetImageUseCache(string name) => GetObjectUseCache(name) as Bitmap;
 
 	/// <summary>
+	/// Same as <see cref="GetImageUseCache"/>, but appends suffix "_20" or "_24" or "_32" if high DPI.
+	/// </summary>
+	public static Bitmap GetImageUseCacheDpi(string name) => GetImageUseCache(_DpiImage(name));
+
+	/// <summary>
 	/// Gets a non-string resource (eg Bitmap) from project resources. Each time returns a new copy.
 	/// If not found (bad name), returns null.
 	/// </summary>
@@ -157,6 +162,18 @@ static class EdResources
 	/// </summary>
 	/// <param name="name">Image resource name. Use <c>nameof(Au.Editor.Properties.Resources.name)</c>.</param>
 	public static Bitmap GetImageNoCache(string name) => GetObjectNoCache(name) as Bitmap;
+
+	/// <summary>
+	/// Same as <see cref="GetImageNoCache"/>, but appends suffix "_20" or "_24" or "_32" if high DPI.
+	/// </summary>
+	public static Bitmap GetImageNoCacheDpi(string name) => GetImageNoCache(_DpiImage(name));
+
+	static string _DpiImage(string name)
+	{
+		int dpi = Au.Util.ADpi.BaseDPI;
+		if(dpi >= 120) name += dpi < 144 ? "_20" : (dpi < 192 ? "_24" : "_32");
+		return name;
+	}
 }
 
 /// <summary>
@@ -168,12 +185,12 @@ static class EdStock
 	/// Cached standard font used by most windows and controls.
 	/// On Windows 10 it is "Segoe UI" 9 by default.
 	/// </summary>
-	public static Font FontRegular = Au.Util.AFonts.Regular;
+	public static readonly Font FontRegular = Au.Util.AFonts.Regular;
 
 	/// <summary>
 	/// Bold version of <see cref="Regular"/> font.
 	/// </summary>
-	public static Font FontBold = Au.Util.AFonts.Bold;
+	public static readonly Font FontBold = Au.Util.AFonts.OfStyle(FontStyle.Bold);
 
 	static Icon _iconAppNormal, _iconTrayNormal, _iconTrayDisabled, _iconTrayRunning;
 

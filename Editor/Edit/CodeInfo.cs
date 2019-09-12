@@ -22,7 +22,6 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Compiler;
 using Au.Controls;
-using Au.Editor.Properties;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -133,19 +132,28 @@ Print(1);
 
 	public static void Stop()
 	{
-		Cancel();
+		Cancel(hideTools: true);
 		_Uncache();
 	}
 
-	public static void Cancel()
+	public static void Cancel(bool hideTools = false)
 	{
 		//Print("Cancel");
 		_compl.Cancel();
+		if(hideTools) {
+			_compl.HideTools();
+		}
+	}
+
+	public static void SciCharAdded(SciCode doc)
+	{
+		if(!_CanWork(doc)) return;
+		_compl.SciCharAdded(doc);
 	}
 
 	public static void SciTextChanged(SciCode doc, in Sci.SCNotification n, bool userTyping)
 	{
-		if(!_CanWork(doc)) { Debug.Assert(_solution == null); return; }
+		if(!_CanWork(doc)) return;
 		_textChanged = true;
 		if(!userTyping) { Cancel(); return; }
 
@@ -162,14 +170,14 @@ Print(1);
 			//else _ChangeSolution(code); //later
 		}
 
-		_compl.SciTextChanged(n);
+		_compl.SciTextChanged(doc, n);
 	}
 
 	public static void SciUpdateUI(SciCode doc, bool modified)
 	{
 		//Print("SciUpdateUI", modified, _tempNoAutoComplete);
 		if(!_CanWork(doc)) return;
-		if(!modified) _compl.SciPositionChangedNotModified();
+		_compl.SciPositionChanged(doc, modified);
 	}
 
 	public static void ShowCompletionList(SciCode doc)
@@ -219,6 +227,7 @@ Print(1);
 
 	static void _CreateSolution()
 	{
+		//var p1 = APerf.Create();
 		var doc = Panels.Editor.ActiveDoc;
 		var code = doc.Text;
 		_metaText = code.Remove(MetaComments.FindMetaComments(code));
@@ -232,7 +241,7 @@ Print(1);
 			var err = m.Errors;
 			err.PrintAll();
 		}
-		APerf.Next('m');
+		//p1.Next('m');
 
 		_projectId = ProjectId.CreateNewId();
 		var adi = new List<DocumentInfo>();
@@ -250,9 +259,10 @@ Print(1);
 			adi,
 			projectReferences: null, //TODO: create from m.ProjectReferences?
 			m.References.Refs); //TODO: set outputRefFilePath if library?
-		APerf.Next('p');
+								//p1.Next('p');
 
 		_solution = new AdhocWorkspace().CurrentSolution.AddProject(pi);
+		//p1.NW('s');
 	}
 
 	public static Document CreateTestDocumentForEditorCode(out string code, out int position)
@@ -300,54 +310,14 @@ Print(1);
 	{
 
 	}
-
-	static Bitmap[,] s_images;
-	static string[,] s_imageNames;
-
-	public static Bitmap GetImage(CiItemKind kind, CiItemAccess access = default)
-	{
-		if(s_images == null) {
-			s_images = new Bitmap[18, 4];
-			s_imageNames = new string[18, 4] {
-				{ nameof(Resources.ciClass), nameof(Resources.ciClassPrivate), nameof(Resources.ciClassProtected), nameof(Resources.ciClassInternal)},
-				{ nameof(Resources.ciStructure), nameof(Resources.ciStructurePrivate), nameof(Resources.ciStructureProtected), nameof(Resources.ciStructureInternal)},
-				{ nameof(Resources.ciEnum), nameof(Resources.ciEnumPrivate), nameof(Resources.ciEnumProtected), nameof(Resources.ciEnumInternal)},
-				{ nameof(Resources.ciDelegate), nameof(Resources.ciDelegatePrivate), nameof(Resources.ciDelegateProtected), nameof(Resources.ciDelegateInternal)},
-				{ nameof(Resources.ciInterface), nameof(Resources.ciInterfacePrivate), nameof(Resources.ciInterfaceProtected), nameof(Resources.ciInterfaceInternal)},
-				{ nameof(Resources.ciMethod), nameof(Resources.ciMethodPrivate), nameof(Resources.ciMethodProtected), nameof(Resources.ciMethodInternal)},
-				{ nameof(Resources.ciExtensionMethod),null,null,null},
-				{ nameof(Resources.ciProperty), nameof(Resources.ciPropertyPrivate), nameof(Resources.ciPropertyProtected), nameof(Resources.ciPropertyInternal)},
-				{ nameof(Resources.ciEvent), nameof(Resources.ciEventPrivate), nameof(Resources.ciEventProtected), nameof(Resources.ciEventInternal)},
-				{ nameof(Resources.ciField), nameof(Resources.ciFieldPrivate), nameof(Resources.ciFieldProtected), nameof(Resources.ciFieldInternal)},
-				{ nameof(Resources.ciLocal),null,null,null},
-				{ nameof(Resources.ciConstant), nameof(Resources.ciConstantPrivate), nameof(Resources.ciConstantProtected), nameof(Resources.ciConstantInternal)},
-				{ nameof(Resources.ciEnumMember),null,null,null},
-				{ nameof(Resources.ciKeyword),null,null,null},
-				{ nameof(Resources.ciNamespace),null,null,null},
-				{ nameof(Resources.ciLabel),null,null,null},
-				{ nameof(Resources.ciSnippet),null,null,null},
-				{ nameof(Resources.ciTypeParameter),null,null,null},
-			};
-		}
-		return s_images[(int)kind, (int)access] ??= EdResources.GetImageNoCache(s_imageNames[(int)kind, (int)access]);
-	}
-
-	public static string[] ItemKindNames { get; } = new string[] { "Class", "Structure", "Enum", "Delegate", "Interface", "Method", "ExtensionMethod", "Property", "Event", "Field", "Local", "Constant", "EnumMember", "Keyword", "Namespace", "Label", "Snippet", "TypeParameter" }; //must match enum EItemKind
 }
 
-public enum CiItemKind : byte { Class, Structure, Enum, Delegate, Interface, Method, ExtensionMethod, Property, Event, Field, Local, Constant, EnumMember, Keyword, Namespace, Label, Snippet, TypeParameter, None }
+//class DocCodeInfo
+//{
+//	public Solution solution;
 
-public enum CiItemAccess : byte { Public, Private, Protected, Internal }
+//	public DocCodeInfo(SciCode doc)
+//	{
 
-[Flags]
-enum CiItemHiddenBy { Text = 1, Kind = 2, Always = 4 }
-
-class DocCodeInfo
-{
-	public Solution solution;
-
-	public DocCodeInfo(SciCode doc)
-	{
-
-	}
-}
+//	}
+//}

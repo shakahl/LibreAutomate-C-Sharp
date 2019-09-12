@@ -2,6 +2,7 @@
 using Au.Controls;
 using Au.Types;
 using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Windows.Forms;
@@ -171,7 +172,12 @@ partial class FMain : Form
 			else if(_wFocus.IsAlive) AWnd.ThisThread.Focus(_wFocus);
 			return;
 		case Api.WM_ACTIVATEAPP:
-			if(wParam == default) CodeInfo.Stop();
+			if(wParam == default) {
+#if DEBUG
+				if(Debugger.IsAttached) break;
+#endif
+				CodeInfo.Stop();
+			}
 			break;
 		case Api.WM_SYSCOMMAND:
 			int sc = (int)wParam;
@@ -222,16 +228,20 @@ partial class FMain : Form
 	{
 		if(base.ProcessCmdKey(ref msg, keyData)) return true;
 		//let Esc focus the code editor. If editor focused - previously focused control or the Files treeview. Because the code editor is excluded from tabstopping.
-		if(keyData == Keys.Escape) {
+		if(keyData == Keys.Escape || keyData == (Keys.Escape| Keys.Shift)) {
 			var doc = Panels.Editor.ActiveDoc;
 			if(doc != null) {
 				if(doc.Focused) {
-					var c = _escFocus;
-					for(int i = 0; ; i++) {
-						if(c != null && !c.IsDisposed && c.Visible && c.FindForm() == this && c.Focus()) break;
-						if(i == 0) c = Panels.Files.Control;
-						else if(i == 1) c = this.GetNextControl(doc, true);
-						else break;
+					if(keyData == Keys.Escape) {
+						CodeInfo.Cancel(hideTools: true);
+					} else {
+						var c = _escFocus;
+						for(int i = 0; ; i++) {
+							if(c != null && !c.IsDisposed && c.Visible && c.FindForm() == this && c.Focus()) break;
+							if(i == 0) c = Panels.Files.Control;
+							else if(i == 1) c = this.GetNextControl(doc, true);
+							else break;
+						}
 					}
 				} else {
 					_escFocus = Control.FromHandle(msg.HWnd);

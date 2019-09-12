@@ -30,7 +30,7 @@ namespace Au.Controls
 	/// You can set text, resize and show/hide/dispose it many times.
 	/// User can middle-click to hide.
 	/// </summary>
-	public partial class InfoWindow
+	public partial class InfoWindow /*: IMessageFilter*/
 	{
 		_Window _w;
 		_Control _c, _c2;
@@ -106,10 +106,10 @@ namespace Au.Controls
 		/// <param name="c">Control. Its top-level parent window will own the info window.</param>
 		/// <exception cref="ArgumentException">c is null or its handle is not created.</exception>
 		/// <exception cref="InvalidOperationException">Exceptions of <see cref="Form.Show(IWin32Window)"/>.</exception>
-		public void Show(Control c)
+		public void Show(Control c, PopupAlignment align = default)
 		{
 			_ = c?.IsHandleCreated ?? throw new ArgumentException();
-			_Show(c, ((AWnd)c).Rect);
+			_Show(c, ((AWnd)c).Rect, align);
 		}
 
 		/// <summary>
@@ -120,11 +120,11 @@ namespace Au.Controls
 		/// <param name="screenRect">r is in screen.</param>
 		/// <exception cref="ArgumentException">c is null or its handle is not created.</exception>
 		/// <exception cref="InvalidOperationException">Exceptions of <see cref="Form.Show(IWin32Window)"/>.</exception>
-		public void Show(Control c, Rectangle r, bool screenRect)
+		public void Show(Control c, Rectangle r, bool screenRect, PopupAlignment align = 0)
 		{
 			_ = c?.IsHandleCreated ?? throw new ArgumentException();
 			if(!screenRect) r = c.RectangleToScreen(r);
-			_Show(c, r);
+			_Show(c, r, align);
 		}
 
 		/// <summary>
@@ -134,14 +134,14 @@ namespace Au.Controls
 		/// <remarks>
 		/// The info window is top-most.
 		/// </remarks>
-		public void Show(Rectangle r)
+		public void Show(Rectangle r, PopupAlignment align = 0)
 		{
-			_Show(null, r);
+			_Show(null, r, align);
 		}
 
-		void _Show(Control c, Rectangle r)
+		void _Show(Control c, Rectangle r, PopupAlignment align)
 		{
-			_W.SetRect(r, (r.Right, r.Top), Size);
+			_W.SetRect(r, (r.Right, r.Top), Size, align);
 			_w.ShowAt(c);
 		}
 
@@ -182,6 +182,24 @@ namespace Au.Controls
 		/// InfoWindow.OnLoad does nothing. This function is just for overriding.
 		/// </summary>
 		protected virtual void OnLoad(EventArgs e) { }
+
+		//rejected, unfinished
+		//public bool CloseOnEsc {
+		//	get => _closeOnEsc;
+		//	set {
+		//		if(value!= _closeOnEsc) {
+		//			if(_closeOnEsc = value) Application.AddMessageFilter(this);
+		//			else Application.RemoveMessageFilter(this);
+		//		}
+		//	}
+		//}
+		//bool _closeOnEsc;
+
+		//bool IMessageFilter.PreFilterMessage(ref Message m)
+		//{
+		//	Print(m);
+		//	return false;
+		//}
 
 		class _Window : Form
 		{
@@ -236,9 +254,9 @@ namespace Au.Controls
 				_t.UserClosed = false;
 			}
 
-			public void SetRect(RECT exclude, POINT pos, SIZE size)
+			public void SetRect(RECT exclude, POINT pos, SIZE size, PopupAlignment align)
 			{
-				Api.CalculatePopupWindowPosition(pos, size, 0, exclude, out var r);
+				Api.CalculatePopupWindowPosition(pos, size, (uint)align, exclude, out var r);
 				Bounds = r;
 			}
 
@@ -338,5 +356,16 @@ namespace Au.Controls
 				//base.NoMouseRightSetFocus = true;
 			}
 		}
+	}
+
+	[Flags]
+	public enum PopupAlignment
+	{
+		TPM_CENTERALIGN = 0x4,
+		TPM_RIGHTALIGN = 0x8,
+		TPM_VCENTERALIGN = 0x10,
+		TPM_BOTTOMALIGN = 0x20,
+		TPM_VERTICAL = 0x40,
+		TPM_WORKAREA = 0x10000,
 	}
 }

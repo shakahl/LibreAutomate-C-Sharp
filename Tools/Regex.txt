@@ -529,7 +529,7 @@ A script run is a sequence of characters that are all from the same script.
 
 -- replace --
 
-<.h>In the replacement text<>
+<.h>Replacement<>
 
 <+a>$0<>  -  whole match.
 <+a>$1<>  <+a>$2<>  <+a>$3<>  <+a>$4<>  <+a>$5<>  <+a>$6<>  <+a>$7<>  <+a>$8<>  <+a>$9<>  <+a>$10<>  -  string part that matches a capturing group <.r>(...)<>.
@@ -542,6 +542,8 @@ A script run is a sequence of characters that are all from the same script.
 <+a>$*<>  -  the name of the last reached mark or other named <+p backtracking>verb<> like <.r>(*MARK:NAME)<>.
 <+a ${+%}>${+func}<>  -  call a function added with <help>ARegex.AddReplaceFunc<> and use its return value.
 <+a>$$<>  -  $ character.
+
+These are used in the replacement text, not in the regular expression.
 
 <b>Example<>
 String: <c green>10/08/2020<>

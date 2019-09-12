@@ -38,7 +38,7 @@ using TheArtOfDev.HtmlRenderer.WinForms;
 
 class CiQuickInfo
 {
-#if true
+#if false
 	public void SciMouseDwellStarted(int positionUtf8, int x, int y)
 	{
 	}
@@ -51,7 +51,7 @@ class CiQuickInfo
 
 		//Print("dwell");
 		APerf.First();
-		var document = CodeInfo.CreateTestDocumentForEditorCode(out string code, out _);
+		var document = CodeInfo.GetDocument();
 
 		//var workspace = document.Project.Solution.Workspace;
 		//var descriptionService = workspace.Services.GetLanguageServices("C#").GetService<Microsoft.CodeAnalysis.LanguageServices.ISymbolDisplayService>();
@@ -98,7 +98,7 @@ class CiQuickInfo
 			_tt = new HtmlToolTip();
 			this._tt.AllowLinksHandling = true;
 			this._tt.BaseStylesheet = null;
-			this._tt.MaximumSize = new System.Drawing.Size(0, 0);
+			this._tt.MaximumSize = new Size(0, 0);
 			this._tt.OwnerDraw = true;
 			this._tt.TooltipCssClass = "htmltooltip";
 		}

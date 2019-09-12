@@ -107,13 +107,13 @@ namespace Au.Compiler
 
 		static bool _Compile(bool forRun, IWorkspaceFile f, out CompResults r, IWorkspaceFile projFolder)
 		{
-			APerf.First();
+			//APerf.First();
 			r = new CompResults();
 
 			var m = new MetaComments();
 			if(!m.Parse(f, projFolder, EMPFlags.PrintErrors)) return false;
 			var err = m.Errors;
-			APerf.Next('m');
+			//APerf.Next('m');
 
 			bool needOutputFiles = m.Role != ERole.classFile;
 
@@ -166,10 +166,10 @@ namespace Au.Compiler
 
 				trees.Add(tree);
 			}
-			APerf.Next('t');
+			//APerf.Next('t');
 
 			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, m.CreateCompilationOptions());
-			APerf.Next('c');
+			//APerf.Next('c');
 
 			string pdbFile = null, xdFile = null;
 			MemoryStream pdbStream = null;
@@ -203,7 +203,7 @@ namespace Au.Compiler
 				//EmbeddedText.FromX //it seems we can embed source code in PDB. Not tested.
 			}
 
-			APerf.Next();
+			//APerf.Next();
 			var asmStream = new MemoryStream(4096);
 			var emitResult = compilation.Emit(asmStream, pdbStream, xdStream, resNat, resMan, eOpt);
 
@@ -211,7 +211,7 @@ namespace Au.Compiler
 				xdStream?.Dispose();
 				resNat?.Dispose(); //info: compiler disposes resMan
 			}
-			APerf.Next('e');
+			//APerf.Next('e');
 
 			var diag = emitResult.Diagnostics;
 			if(!diag.IsEmpty) {
@@ -271,12 +271,10 @@ namespace Au.Compiler
 
 			if(m.PostBuild.f != null && !_RunPrePostBuildScript(true, m, outFile)) return false;
 
-			//APerf.First();
 			if(needOutputFiles) {
 				if(m.Role != ERole.classLibrary) _Triggers(f, compilation);
 				cache.AddCompiled(f, outFile, m, r.pdbOffset, r.mtaThread);
 			}
-			//APerf.NW();
 
 			r.name = m.Name;
 			r.role = m.Role;
@@ -287,7 +285,7 @@ namespace Au.Compiler
 			r.console = m.Console;
 			r.notInCache = m.OutputPath != null;
 
-			APerf.NW('C');
+			//APerf.NW('C');
 			return true;
 		}
 

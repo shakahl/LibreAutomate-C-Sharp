@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+
 namespace Au.Types
 {
 	internal static unsafe partial class Api
@@ -695,7 +697,7 @@ namespace Au.Types
 		internal const uint SPIF_SENDCHANGE = 0x2;
 
 		[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
-		internal static extern bool SystemParametersInfo(uint uiAction, uint uiParam, LPARAM pvParam, uint fWinIni);
+		internal static extern bool SystemParametersInfo(uint uiAction, int uiParam, LPARAM pvParam, uint fWinIni);
 
 		//[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
 		//internal static extern bool SystemParametersInfo(uint uiAction, uint uiParam, void* pvParam, uint fWinIni);
@@ -1290,6 +1292,7 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern bool RedrawWindow(AWnd hWnd, RECT* lprcUpdate = null, IntPtr hrgnUpdate = default, uint flags = 0);
 
+		/// <param name="flags">Au.Controls.PopupAlignment</param>
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool CalculatePopupWindowPosition(in POINT anchorPoint, in SIZE windowSize, uint flags, in RECT excludeRect, out RECT popupWindowPosition);
 

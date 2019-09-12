@@ -50,23 +50,8 @@ namespace Au.Util
 		public static Font Regular => LibRegularCached.Clone() as Font; //5-22 mcs
 
 		/// <summary>
-		/// Bold version of <see cref="Regular"/> font.
+		/// Bold, italic, etc version of <see cref="Regular"/> font.
 		/// </summary>
-		public static Font Bold => new Font(LibRegularCached, FontStyle.Bold); //slightly slower than Clone
-
-		/// <summary>
-		/// Italic version of <see cref="Regular"/> font.
-		/// </summary>
-		public static Font Italic => new Font(LibRegularCached, FontStyle.Italic);
-
-		/// <summary>
-		/// Underlined version of <see cref="Regular"/> font.
-		/// </summary>
-		public static Font Underline => new Font(LibRegularCached, FontStyle.Underline);
-
-		/// <summary>
-		/// Strikeout version of <see cref="Regular"/> font.
-		/// </summary>
-		public static Font Strikeout => new Font(LibRegularCached, FontStyle.Strikeout);
+		public static Font OfStyle(FontStyle style) => new Font(LibRegularCached, style);
 	}
 }

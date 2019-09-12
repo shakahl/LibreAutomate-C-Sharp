@@ -22,6 +22,7 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 using System.Collections;
+using System.Drawing;
 
 namespace Au.Controls
 {
@@ -174,5 +175,41 @@ namespace Au.Controls
 		public new Padding Padding { get => base.Padding; set => base.Padding = value; }
 
 		bool ShouldSerializePadding() { return base.Padding != new Padding(0, 2, 0, 0); }
+	}
+
+	/// <summary>
+	/// Auto-scales SplitterDistance depending on DPI.
+	/// </summary>
+	public class AuSplitContainer : SplitContainer
+	{
+		protected override void ScaleControl(SizeF factor, BoundsSpecified specified)
+		{
+			base.ScaleControl(factor, specified);
+			if(!(factor.Width == 1f && factor.Height == 1f && !this.IsSplitterFixed)) {
+				Size z = ClientSize;
+				_wh = this.Orientation == Orientation.Vertical ? z.Width : z.Height;
+				float f = this.Orientation == Orientation.Vertical ? factor.Width : factor.Height;
+				_sd = (int)(this.SplitterDistance * f);
+				//this.SplitterDistance = _sd; //now does not work. Later something sets SplitterDistance = the old or some strange value. Our value is ignored.
+			}
+		}
+		int _sd, _wh;
+
+		protected override void OnVisibleChanged(EventArgs e)
+		{
+			if(_wh != 0 && Visible) {
+				Size z = ClientSize;
+				int wh = this.Orientation == Orientation.Vertical ? z.Width : z.Height;
+				int sd;
+				switch(this.FixedPanel) {
+				case FixedPanel.Panel1: sd = _sd; break;
+				case FixedPanel.Panel2: sd = _sd + (wh - _wh); ADebug.Print("not tested"); break;
+				default: sd = _sd * wh / _wh; break;
+				}
+				this.SplitterDistance = sd;
+				_wh = 0;
+			}
+			base.OnVisibleChanged(e);
+		}
 	}
 }

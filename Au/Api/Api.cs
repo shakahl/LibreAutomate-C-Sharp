@@ -108,6 +108,27 @@ namespace Au.Types
 		[DllImport("gdi32.dll", EntryPoint = "GetObjectW")]
 		internal static extern int GetObject(IntPtr h, int c, void* pv);
 
+		[DllImport("gdi32.dll")]
+		internal static extern int SetBkMode(IntPtr hdc, int mode);
+
+		[DllImport("gdi32.dll", EntryPoint = "TextOutW")]
+		internal static extern bool TextOut(IntPtr hdc, int x, int y, string lpString, int c);
+
+		[DllImport("gdi32.dll", EntryPoint = "TextOutW")]
+		internal static extern bool TextOut(IntPtr hdc, int x, int y, char* lpString, int c);
+
+		[DllImport("gdi32.dll")]
+		internal static extern bool MoveToEx(IntPtr hdc, int x, int y, out POINT lppt);
+
+		[DllImport("gdi32.dll")]
+		internal static extern bool GetCurrentPositionEx(IntPtr hdc, out POINT lppt);
+
+		[DllImport("gdi32.dll")]
+		internal static extern uint SetTextAlign(IntPtr hdc, uint align);
+
+		[DllImport("gdi32.dll")]
+		internal static extern int SetTextColor(IntPtr hdc, int color);
+
 		[DllImport("gdi32.dll")] //tested: does not set last error
 		internal static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int cx, int cy);
 
@@ -117,8 +138,14 @@ namespace Au.Types
 		[DllImport("gdi32.dll", EntryPoint = "GetTextExtentPoint32W")]
 		internal static extern bool GetTextExtentPoint32(IntPtr hdc, string lpString, int c, out SIZE psizl);
 
+		[DllImport("gdi32.dll", EntryPoint = "GetTextExtentPoint32W")]
+		internal static extern bool GetTextExtentPoint32(IntPtr hdc, char* lpString, int c, out SIZE psizl);
+
 		[DllImport("gdi32.dll", EntryPoint = "CreateFontW")]
 		internal static extern IntPtr CreateFont(int cHeight, int cWidth = 0, int cEscapement = 0, int cOrientation = 0, int cWeight = 0, int bItalic = 0, int bUnderline = 0, int bStrikeOut = 0, int iCharSet = 0, int iOutPrecision = 0, int iClipPrecision = 0, int iQuality = 0, int iPitchAndFamily = 0, string pszFaceName = null);
+
+		[DllImport("gdi32.dll", EntryPoint = "CreateFontIndirectW")]
+		internal static extern IntPtr CreateFontIndirect(in LOGFONT lplf);
 
 		internal const uint SRCCOPY = 0xCC0020;
 		internal const uint CAPTUREBLT = 0x40000000;
@@ -180,6 +207,43 @@ namespace Au.Types
 		[DllImport("gdi32.dll")]
 		internal static extern int IntersectClipRect(IntPtr hdc, int left, int top, int right, int bottom);
 
+		internal struct LOGFONT
+		{
+			public int lfHeight;
+			public int lfWidth;
+			public int lfEscapement;
+			public int lfOrientation;
+			public int lfWeight;
+			public byte lfItalic;
+			public byte lfUnderline;
+			public byte lfStrikeOut;
+			public byte lfCharSet;
+			public byte lfOutPrecision;
+			public byte lfClipPrecision;
+			public byte lfQuality;
+			public byte lfPitchAndFamily;
+			public fixed char lfFaceName[32];
+		}
+
+		internal struct NONCLIENTMETRICS
+		{
+			public int cbSize;
+			public int iBorderWidth;
+			public int iScrollWidth;
+			public int iScrollHeight;
+			public int iCaptionWidth;
+			public int iCaptionHeight;
+			public LOGFONT lfCaptionFont;
+			public int iSmCaptionWidth;
+			public int iSmCaptionHeight;
+			public LOGFONT lfSmCaptionFont;
+			public int iMenuWidth;
+			public int iMenuHeight;
+			public LOGFONT lfMenuFont;
+			public LOGFONT lfStatusFont;
+			public LOGFONT lfMessageFont;
+			public int iPaddedBorderWidth;
+		}
 
 
 		#endregion

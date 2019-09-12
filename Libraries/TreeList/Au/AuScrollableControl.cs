@@ -104,7 +104,12 @@ namespace Au.Controls
 			ref var x = ref (vertical ? ref _v : ref _h);
 			x.fMask |= Api.SIF_PAGE | Api.SIF_RANGE;
 			x.nMax = max; x.nPage = page;
-			if(pos.HasValue) { x.fMask |= Api.SIF_POS; x.nPos = pos.GetValueOrDefault(); } else x.fMask &= ~Api.SIF_POS;
+			if(pos.HasValue) {
+				x.fMask |= Api.SIF_POS;
+				x.nPos = pos.GetValueOrDefault();
+			} else if(0 != (x.fMask & Api.SIF_POS)) { //can be when was no handle
+				if(x.nPos > max) x.nPos = max;
+			}
 			if(IsHandleCreated) _SetScrollInfo();
 
 			if(notify) OnScroll(GetScrollInfo(vertical));
@@ -122,18 +127,15 @@ namespace Au.Controls
 			}
 		}
 
-		protected override void OnHandleCreated(EventArgs e)
-		{
-			_SetScrollInfo();
-			base.OnHandleCreated(e);
-		}
-
 		protected override void WndProc(ref Message m)
 		{
 			switch(m.Msg) {
 			case Api.WM_HSCROLL:
 			case Api.WM_VSCROLL:
 				_OnScroll(m.Msg == Api.WM_VSCROLL, (ScrollEventType)AMath.LoUshort(m.WParam));
+				break;
+			case Api.WM_CREATE:
+				_SetScrollInfo();
 				break;
 			}
 			base.WndProc(ref m);

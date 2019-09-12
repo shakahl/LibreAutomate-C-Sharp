@@ -32,6 +32,7 @@ using Microsoft.CodeAnalysis.Host.Mef;
 
 using DiffMatchPatch;
 using System.Runtime;
+using System.Globalization;
 
 #if TEST
 
@@ -669,6 +670,31 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 
 	public unsafe void TestEditor()
 	{
+
+
+		//for(int i = 1; i < 0x10000; i++) {
+		//	char c = (char)i;
+		//	var k = char.GetUnicodeCategory(c);
+		//	switch(k) {
+		//	//case UnicodeCategory.LetterNumber:
+		//	//case UnicodeCategory.LowercaseLetter:
+		//	//case UnicodeCategory.ModifierLetter:
+		//	//case UnicodeCategory.OtherLetter:
+		//	//case UnicodeCategory.TitlecaseLetter:
+		//	//case UnicodeCategory.UppercaseLetter:
+		//	//case UnicodeCategory.SpacingCombiningMark:
+		//	//case UnicodeCategory.NonSpacingMark:
+		//	//case UnicodeCategory.DecimalDigitNumber:
+		//	case UnicodeCategory.ConnectorPunctuation:
+		//	//case UnicodeCategory.Format:
+		//		Print($"u{i:x4} '{c}' {k}");
+		//		break;
+		//	}
+		//	//Print($"u{i:x4} '{c}' {k}");
+		//}
+
+
+
 		//AOutput.Clear();
 		//_TestGetItemText();
 		//_TestResources();
@@ -681,14 +707,14 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 		//MetaReferences.DebugPrintCachedRefs();
 		//TestNoGcRegion();
 
-		for(int i = 0; i < 5; i++) {
-			_ = new byte[1_000_000];
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
-			//1.ms();
-		}
+		//for(int i = 0; i < 5; i++) {
+		//	_ = new byte[1_000_000];
+		//	GC.Collect();
+		//	GC.WaitForPendingFinalizers();
+		//	//1.ms();
+		//}
 
-		return;
+		//return;
 
 
 		//APerf.First();
@@ -708,7 +734,7 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 
 		//	mutex.ReleaseMutex();
 
-		return;
+		//return;
 
 
 		AOutput.Clear();
@@ -717,6 +743,11 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 		//var doc = Panels.Output.Controls[0] as AuScintilla;
 		var t = doc.ST;
 		var s = doc.Text;
+
+		//doc.DebugPrintMessages = true;
+
+		//int i = s.Find("Print");
+		//t.ReplaceRange(i, 5, "PRINT", SciFromTo.BothChars | SciFromTo.ToIsLength);
 
 		//var position = t.CountBytesToChars(0, t.CurrentPos);
 

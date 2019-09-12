@@ -396,9 +396,9 @@ namespace Au.Compiler
 		/// <param name="isMain">If false, it is a file added through meta option 'c'.</param>
 		void _ParseFile(IWorkspaceFile f, bool isMain)
 		{
-			var p1 = APerf.Create();
+			//var p1 = APerf.Create();
 			string code = f.IfwText;
-			p1.Next();
+			//p1.Next();
 			bool isScript = f.IsScript;
 
 			if(_isMain = isMain) {

@@ -6,10 +6,7 @@
 //TreeViewAdv (28 visible items): 55 ms.
 //Scintilla without images (32 visible lines): 7-8 ms. With images probably not possible because Scintilla allows max 32 markers. We need 46 or more.
 //ListBox (28 visible items): 430 ms. Not suitable for big lists.
-//This control: 5 ms (4-10).
-//When AddItems called every 100 ms (timer) with same list, process CPU is 6, 14, 4, ?, 3 %. Not including getting the completion items.
-
-//TODO: move to TreeList
+//This control: 5 ms.
 
 using System;
 using System.Collections.Generic;
@@ -38,12 +35,11 @@ namespace Au.Controls
 {
 	class FastListBox : AuScrollableControl
 	{
-		int _count, _itemWidth, _itemHeight, _widthPlus, _iSelected;
-		Func<int, string> _itemText;
-		Action<ItemDrawArgs> _drawFunc;
+		int _count, _itemWidth, _itemHeight, _iSelected;
+		Func<ItemMeasureArgs, int> _measureFunc;
+		Action<ItemDrawArgs> _drawAction;
+		Func<int, string> _accName;
 		System.Collections.BitArray _measuredItems;
-
-		//bool _debugPaintedOnce;
 
 		public FastListBox()
 		{
@@ -52,17 +48,14 @@ namespace Au.Controls
 			this.ResizeRedraw = true;
 		}
 
-		public void AddItems(int count, Func<int, string> itemText, int widthPlus, Action<ItemDrawArgs> drawFunc)
+		public void AddItems(int count, Func<ItemMeasureArgs, int> measureFunc, Action<ItemDrawArgs> drawAction, Func<int, string> accName)
 		{
-			//_debugPaintedOnce = false;
-
-			//if(!IsHandleCreated) throw new InvalidOperationException("Must be handle created");
 			if(count + _count == 0) return;
-			_itemText = itemText;
-			_drawFunc = drawFunc;
+			_measureFunc = measureFunc;
+			_drawAction = drawAction;
+			_accName = accName;
 			_iSelected = -1;
 			_aAcc = null;
-			_widthPlus = widthPlus;
 			_itemWidth = _itemHeight = 0;
 			_measuredItems = null;
 			_count = count;
@@ -75,50 +68,68 @@ namespace Au.Controls
 			_SetScroll(resetPos: true);
 		}
 
+		public void ReMeasure()
+		{
+			AddItems(_count, _measureFunc, _drawAction, _accName);
+		}
+
+		public int Count => _count;
+
 		/// <summary>
 		/// Index of the selected item, or -1.
 		/// </summary>
-		public int SelectedIndex {
-			get => _iSelected;
-			set {
-				if(value!= _iSelected) {
-					_iSelected = value;
-					this.SetScrollPos(true, value, true);
+		public int SelectedIndex => _iSelected;
+
+		public void SelectIndex(int i, bool scrollCenter)
+		{
+			if((uint)i >= _count) i = -1;
+			if(i == _iSelected) return;
+			_iSelected = i;
+			if(i < 0) {
+				this.SetScrollPos(true, 0, true);
+			} else {
+				var k = this.GetScrollInfo(true);
+				int min = k.Pos, max = k.Pos + k.Page - 1;
+				if((i < min || i > max) && k.Page > 0) {
+					if(scrollCenter && k.Page >= 5) i = Math.Max(i - k.Page / 5, 0);
+					else if(i > max) i = Math.Max(i - k.Page + 1, 0);
+					this.SetScrollPos(true, i, true);
 				}
 			}
+			this.Invalidate();
+			_OnSelectedIndexChanged(_iSelected);
 		}
 
-		/// <summary>
-		/// Item height, calculated by <see cref="AddItems"/>.
-		/// </summary>
-		public int ItemHeight => _itemHeight;
+		void _OnSelectedIndexChanged(int i)
+		{
+			SelectedIndexChanged?.Invoke(i);
+		}
+		public event Action<int> SelectedIndexChanged;
+
+		///// <summary>
+		///// Item height, calculated by <see cref="AddItems"/>.
+		///// </summary>
+		//public int ItemHeight => _itemHeight;
 
 		//Sets _itemWidth. If iTo<0, sets _itemHeight too. Uses/sets _measuredItems.
 		void _MeasureItems(int iFrom, int iTo)
 		{
-			var dc = new Util.LibWindowDC((AWnd)this); //never mind: if no handle, gets screen DC; it's the same.
-			var oldFont = Api.SelectObject(dc, Util.LibNativeFont.RegularCached);
-			try {
-				if(iTo < 0) {
-					Debug.Assert(this.Font.Equals(Util.AFonts.Regular));
-					var t = _itemText(0);
-					Api.GetTextExtentPoint32(dc, t, t.Length, out var z);
-					_itemHeight = Math.Max(17, z.height + 2);
-					_itemWidth = 0;
-					iFrom = 0;
-					iTo = Math.Min(_count, Size.Height / _itemHeight);
-				}
-				for(int i = iFrom; i < iTo; i++) {
-					if(_measuredItems[i]) continue;
-					var t = _itemText(i);
-					Api.GetTextExtentPoint32(dc, t, t.Length, out var z); //many times faster than TextRenderer.MeasureText
-					_itemWidth = Math.Max(_itemWidth, z.width + _widthPlus);
-					_measuredItems[i] = true;
-				}
+			using var m = new ItemMeasureArgs();
+			if(iTo < 0) {
+				Debug.Assert(this.Font.Equals(Util.AFonts.Regular));
+				m.index = 0;
+				var z = m.MeasureText("A");
+				_itemHeight = Math.Max(17, z.height + 2);
+				_itemWidth = 0;
+				iFrom = 0;
+				iTo = Math.Min(_count, Size.Height / _itemHeight);
 			}
-			finally {
-				Api.SelectObject(dc, oldFont);
-				dc.Dispose();
+			for(int i = iFrom; i < iTo; i++) {
+				if(_measuredItems[i]) continue;
+				m.index = i;
+				int width = _measureFunc(m); //many times faster than TextRenderer.MeasureText
+				_itemWidth = Math.Max(_itemWidth, width);
+				_measuredItems[i] = true;
 			}
 		}
 
@@ -151,11 +162,11 @@ namespace Au.Controls
 		protected override void OnPaint(PaintEventArgs e)
 		{
 			if(_count == 0) return;
+			//ADebug.LibMemorySetAnchor();
+			//var p1 = APerf.Create();
 
-			//if(!_debugPaintedOnce) _debugPaintedOnce = true; else APerf.First();
 			var g = e.Graphics;
 			int xScroll = this.GetScrollPos(false), yScroll = this.GetScrollPos(true) * _itemHeight;
-			if(xScroll + yScroll != 0) g.TranslateTransform(-xScroll, -yScroll);
 			//Print("OnPaint", e.ClipRectangle, g.VisibleClipBounds, xScroll, yScroll);
 
 			var clip = e.ClipRectangle;
@@ -163,15 +174,17 @@ namespace Au.Controls
 			int iFrom = yFrom / _itemHeight, iTo = Math.Min(_count, yTo / _itemHeight);
 			//Print(iFrom, iTo);
 
-			var args = new ItemDrawArgs { Graphics = g };
+			using var args = new ItemDrawArgs { graphics = g };
 			for(int i = iFrom; i < iTo; i++) {
-				args.Index = i;
-				args.Bounds = new Rectangle(0, i * _itemHeight, Math.Max(clip.Width, _itemWidth), _itemHeight);
-				args.IsSelected = i == _iSelected;
-				_drawFunc(args);
+				args.index = i;
+				args.bounds = new Rectangle(-xScroll, i * _itemHeight - yScroll, Math.Max(clip.Width, _itemWidth), _itemHeight);
+				args.isSelected = i == _iSelected;
+				_drawAction(args);
 			}
 
+			//p1.NW('P');
 			//APerf.Next();
+			//ADebug.LibMemoryPrint();
 
 			//base.OnPaint(e);
 		}
@@ -188,12 +201,68 @@ namespace Au.Controls
 			base.OnClientSizeChanged(e);
 		}
 
-		public class ItemDrawArgs
+		public class ItemMeasureArgs : IDisposable
 		{
-			public Graphics Graphics;
-			public int Index;
-			public Rectangle Bounds;
-			public bool IsSelected;
+			public int index;
+			IntPtr _dc, _oldFont;
+
+			public ItemMeasureArgs()
+			{
+				_dc = Api.GetDC(default);
+				_oldFont = Api.SelectObject(_dc, Util.LibNativeFont.RegularCached);
+			}
+
+			public void Dispose()
+			{
+				Api.SelectObject(_dc, _oldFont);
+				Api.ReleaseDC(default, _dc);
+			}
+
+			public unsafe SIZE MeasureText(string s, int from = 0, int len = -1)
+			{
+				if(len < 0) len = s.Lenn();
+				if(len == 0) return default;
+				fixed (char* p = s) {
+					Api.GetTextExtentPoint32(_dc, p + from, len, out var z); //many times faster than TextRenderer.MeasureText
+					return z;
+				}
+			}
+		}
+
+		public class ItemDrawArgs : IDisposable
+		{
+			public Graphics graphics;
+			public int index;
+			public Rectangle bounds;
+			public bool isSelected;
+			IntPtr _dc, _oldFont;
+
+			public ItemDrawArgs()
+			{
+				_dc = Api.GetDC(default);
+				_oldFont = Api.SelectObject(_dc, Util.LibNativeFont.RegularCached);
+			}
+
+			public void Dispose()
+			{
+				Api.SelectObject(_dc, _oldFont);
+				Api.ReleaseDC(default, _dc);
+			}
+
+			public unsafe int MeasureText(string s, int from, int len)
+			{
+				if(len == 0) return 0;
+				fixed (char* p = s) {
+					Api.GetTextExtentPoint32(_dc, p + from, len, out var z); //many times faster than TextRenderer.MeasureText
+					return z.width;
+				}
+			}
+			//public int MeasureText(string s, int from, int len, Font font)
+			//{
+			//	if(len == 0) return 0;
+			//	return TextRenderer.MeasureText(Graphics, s.Substring(from, len), font, new Size(int.MaxValue, int.MaxValue), TextFormatFlags.Left | TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix).Width;
+			//}
+
 		}
 
 		public class ItemClickArgs
@@ -220,6 +289,7 @@ namespace Au.Controls
 				if(i != _iSelected) {
 					_iSelected = i;
 					Invalidate(); //SHOULDDO: invalidate only part
+					_OnSelectedIndexChanged(_iSelected);
 				}
 				if(i >= 0 && e.Button == MouseButtons.Left) ItemClick?.Invoke(this, new ItemClickArgs(i, e.Clicks == 2));
 			}
@@ -255,6 +325,26 @@ namespace Au.Controls
 			if(i2 == i) i2 = -1;
 			if(i2 >= 0 && i2 < i) AMath.Swap(ref i, ref i2);
 			return new Rectangle(0, (i + this.GetScrollPos(true)) * _itemHeight, ClientSize.Width, i2 < i ? _itemHeight : _itemHeight * (i2 - i + 1));
+		}
+
+		/// <summary>
+		/// Scrolls on pressed arrow and page up/down keys.
+		/// </summary>
+		public void KeyboardNavigation(Keys k)
+		{
+			int i = _iSelected;
+			if(i >= 0) {
+				switch(k) {
+				case Keys.Down: i++; break;
+				case Keys.Up: i--; break;
+				case Keys.PageDown: i += this.GetScrollInfo(true).Page; break;
+				case Keys.PageUp: i -= this.GetScrollInfo(true).Page; break;
+				}
+				i = AMath.MinMax(i, 0, _count - 1);
+			} else if(_count > 0) {
+				i = 0;
+			}
+			SelectIndex(i, scrollCenter: false);
 		}
 
 		#region IAccessible
@@ -343,7 +433,7 @@ namespace Au.Controls
 				return base.Navigate(navdir);
 			}
 
-			public override string Name => _c._itemText(_index);
+			public override string Name => _c._accName(_index);
 
 			public override AccessibleStates State {
 				get {
@@ -367,12 +457,11 @@ namespace Au.Controls
 			if(i != _iSelected) {
 				Invalidate(_ItemBounds(i, _iSelected));
 				_iSelected = i;
+				_OnSelectedIndexChanged(_iSelected);
 			}
 			ItemClick?.Invoke(this, new ItemClickArgs(i, true));
 		}
 
 		#endregion
-
-		//FUTURE: keyboard navigation. Currently don't need because the control is never focused.
 	}
 }

@@ -153,9 +153,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciClassInternal {
+        internal static System.Drawing.Bitmap ciClass_20 {
             get {
-                object obj = ResourceManager.GetObject("ciClassInternal", resourceCulture);
+                object obj = ResourceManager.GetObject("ciClass_20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -163,9 +163,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciClassPrivate {
+        internal static System.Drawing.Bitmap ciClass_24 {
             get {
-                object obj = ResourceManager.GetObject("ciClassPrivate", resourceCulture);
+                object obj = ResourceManager.GetObject("ciClass_24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -173,9 +173,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciClassProtected {
+        internal static System.Drawing.Bitmap ciClass_32 {
             get {
-                object obj = ResourceManager.GetObject("ciClassProtected", resourceCulture);
+                object obj = ResourceManager.GetObject("ciClass_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -193,9 +193,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciConstantInternal {
+        internal static System.Drawing.Bitmap ciConstant_20 {
             get {
-                object obj = ResourceManager.GetObject("ciConstantInternal", resourceCulture);
+                object obj = ResourceManager.GetObject("ciConstant_20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -203,9 +203,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciConstantPrivate {
+        internal static System.Drawing.Bitmap ciConstant_24 {
             get {
-                object obj = ResourceManager.GetObject("ciConstantPrivate", resourceCulture);
+                object obj = ResourceManager.GetObject("ciConstant_24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -213,9 +213,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciConstantProtected {
+        internal static System.Drawing.Bitmap ciConstant_32 {
             get {
-                object obj = ResourceManager.GetObject("ciConstantProtected", resourceCulture);
+                object obj = ResourceManager.GetObject("ciConstant_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -233,9 +233,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciDelegateInternal {
+        internal static System.Drawing.Bitmap ciDelegate_20 {
             get {
-                object obj = ResourceManager.GetObject("ciDelegateInternal", resourceCulture);
+                object obj = ResourceManager.GetObject("ciDelegate_20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -243,9 +243,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciDelegatePrivate {
+        internal static System.Drawing.Bitmap ciDelegate_24 {
             get {
-                object obj = ResourceManager.GetObject("ciDelegatePrivate", resourceCulture);
+                object obj = ResourceManager.GetObject("ciDelegate_24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -253,9 +253,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciDelegateProtected {
+        internal static System.Drawing.Bitmap ciDelegate_32 {
             get {
-                object obj = ResourceManager.GetObject("ciDelegateProtected", resourceCulture);
+                object obj = ResourceManager.GetObject("ciDelegate_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -273,9 +273,29 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciEnumInternal {
+        internal static System.Drawing.Bitmap ciEnum_20 {
             get {
-                object obj = ResourceManager.GetObject("ciEnumInternal", resourceCulture);
+                object obj = ResourceManager.GetObject("ciEnum_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciEnum_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciEnum_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciEnum_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciEnum_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -293,9 +313,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciEnumPrivate {
+        internal static System.Drawing.Bitmap ciEnumMember_20 {
             get {
-                object obj = ResourceManager.GetObject("ciEnumPrivate", resourceCulture);
+                object obj = ResourceManager.GetObject("ciEnumMember_20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -303,9 +323,19 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciEnumProtected {
+        internal static System.Drawing.Bitmap ciEnumMember_24 {
             get {
-                object obj = ResourceManager.GetObject("ciEnumProtected", resourceCulture);
+                object obj = ResourceManager.GetObject("ciEnumMember_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciEnumMember_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciEnumMember_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -323,9 +353,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciEventInternal {
+        internal static System.Drawing.Bitmap ciEvent_20 {
             get {
-                object obj = ResourceManager.GetObject("ciEventInternal", resourceCulture);
+                object obj = ResourceManager.GetObject("ciEvent_20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -333,9 +363,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciEventPrivate {
+        internal static System.Drawing.Bitmap ciEvent_24 {
             get {
-                object obj = ResourceManager.GetObject("ciEventPrivate", resourceCulture);
+                object obj = ResourceManager.GetObject("ciEvent_24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -343,9 +373,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciEventProtected {
+        internal static System.Drawing.Bitmap ciEvent_32 {
             get {
-                object obj = ResourceManager.GetObject("ciEventProtected", resourceCulture);
+                object obj = ResourceManager.GetObject("ciEvent_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -363,6 +393,36 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ciExtensionMethod_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciExtensionMethod_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciExtensionMethod_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciExtensionMethod_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciExtensionMethod_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciExtensionMethod_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap ciField {
             get {
                 object obj = ResourceManager.GetObject("ciField", resourceCulture);
@@ -373,9 +433,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciFieldInternal {
+        internal static System.Drawing.Bitmap ciField_20 {
             get {
-                object obj = ResourceManager.GetObject("ciFieldInternal", resourceCulture);
+                object obj = ResourceManager.GetObject("ciField_20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -383,9 +443,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciFieldPrivate {
+        internal static System.Drawing.Bitmap ciField_24 {
             get {
-                object obj = ResourceManager.GetObject("ciFieldPrivate", resourceCulture);
+                object obj = ResourceManager.GetObject("ciField_24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -393,9 +453,49 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciFieldProtected {
+        internal static System.Drawing.Bitmap ciField_32 {
             get {
-                object obj = ResourceManager.GetObject("ciFieldProtected", resourceCulture);
+                object obj = ResourceManager.GetObject("ciField_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciGroupBy {
+            get {
+                object obj = ResourceManager.GetObject("ciGroupBy", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciGroupBy_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciGroupBy_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciGroupBy_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciGroupBy_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciGroupBy_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciGroupBy_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -413,9 +513,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciInterfaceInternal {
+        internal static System.Drawing.Bitmap ciInterface_20 {
             get {
-                object obj = ResourceManager.GetObject("ciInterfaceInternal", resourceCulture);
+                object obj = ResourceManager.GetObject("ciInterface_20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -423,9 +523,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciInterfacePrivate {
+        internal static System.Drawing.Bitmap ciInterface_24 {
             get {
-                object obj = ResourceManager.GetObject("ciInterfacePrivate", resourceCulture);
+                object obj = ResourceManager.GetObject("ciInterface_24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -433,9 +533,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciInterfaceProtected {
+        internal static System.Drawing.Bitmap ciInterface_32 {
             get {
-                object obj = ResourceManager.GetObject("ciInterfaceProtected", resourceCulture);
+                object obj = ResourceManager.GetObject("ciInterface_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -453,6 +553,36 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ciKeyword_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciKeyword_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciKeyword_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciKeyword_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciKeyword_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciKeyword_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap ciLabel {
             get {
                 object obj = ResourceManager.GetObject("ciLabel", resourceCulture);
@@ -463,9 +593,69 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciLocal {
+        internal static System.Drawing.Bitmap ciLabel_20 {
             get {
-                object obj = ResourceManager.GetObject("ciLocal", resourceCulture);
+                object obj = ResourceManager.GetObject("ciLabel_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciLabel_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciLabel_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciLabel_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciLabel_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciLocalVariable {
+            get {
+                object obj = ResourceManager.GetObject("ciLocalVariable", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciLocalVariable_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciLocalVariable_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciLocalVariable_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciLocalVariable_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciLocalVariable_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciLocalVariable_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -483,9 +673,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciMethodInternal {
+        internal static System.Drawing.Bitmap ciMethod_20 {
             get {
-                object obj = ResourceManager.GetObject("ciMethodInternal", resourceCulture);
+                object obj = ResourceManager.GetObject("ciMethod_20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -493,9 +683,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciMethodPrivate {
+        internal static System.Drawing.Bitmap ciMethod_24 {
             get {
-                object obj = ResourceManager.GetObject("ciMethodPrivate", resourceCulture);
+                object obj = ResourceManager.GetObject("ciMethod_24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -503,9 +693,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciMethodProtected {
+        internal static System.Drawing.Bitmap ciMethod_32 {
             get {
-                object obj = ResourceManager.GetObject("ciMethodProtected", resourceCulture);
+                object obj = ResourceManager.GetObject("ciMethod_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -523,6 +713,236 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ciNamespace_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciNamespace_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciNamespace_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciNamespace_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciNamespace_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciNamespace_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayAbstract {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayAbstract", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayAbstract_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayAbstract_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayAbstract_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayAbstract_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayAbstract_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayAbstract_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayInternal {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayInternal", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayInternal_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayInternal_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayInternal_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayInternal_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayInternal_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayInternal_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayPrivate {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayPrivate", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayPrivate_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayPrivate_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayPrivate_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayPrivate_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayPrivate_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayPrivate_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayProtected {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayProtected", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayProtected_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayProtected_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayProtected_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayProtected_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayProtected_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayProtected_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayStatic {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayStatic", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayStatic_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayStatic_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayStatic_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayStatic_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciOverlayStatic_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciOverlayStatic_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap ciProperty {
             get {
                 object obj = ResourceManager.GetObject("ciProperty", resourceCulture);
@@ -533,9 +953,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciPropertyInternal {
+        internal static System.Drawing.Bitmap ciProperty_20 {
             get {
-                object obj = ResourceManager.GetObject("ciPropertyInternal", resourceCulture);
+                object obj = ResourceManager.GetObject("ciProperty_20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -543,9 +963,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciPropertyPrivate {
+        internal static System.Drawing.Bitmap ciProperty_24 {
             get {
-                object obj = ResourceManager.GetObject("ciPropertyPrivate", resourceCulture);
+                object obj = ResourceManager.GetObject("ciProperty_24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -553,9 +973,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciPropertyProtected {
+        internal static System.Drawing.Bitmap ciProperty_32 {
             get {
-                object obj = ResourceManager.GetObject("ciPropertyProtected", resourceCulture);
+                object obj = ResourceManager.GetObject("ciProperty_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -573,6 +993,36 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
+        internal static System.Drawing.Bitmap ciSnippet_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciSnippet_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciSnippet_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciSnippet_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciSnippet_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciSnippet_32", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
         internal static System.Drawing.Bitmap ciStructure {
             get {
                 object obj = ResourceManager.GetObject("ciStructure", resourceCulture);
@@ -583,9 +1033,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciStructureInternal {
+        internal static System.Drawing.Bitmap ciStructure_20 {
             get {
-                object obj = ResourceManager.GetObject("ciStructureInternal", resourceCulture);
+                object obj = ResourceManager.GetObject("ciStructure_20", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -593,9 +1043,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciStructurePrivate {
+        internal static System.Drawing.Bitmap ciStructure_24 {
             get {
-                object obj = ResourceManager.GetObject("ciStructurePrivate", resourceCulture);
+                object obj = ResourceManager.GetObject("ciStructure_24", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -603,9 +1053,9 @@ namespace Au.Editor.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ciStructureProtected {
+        internal static System.Drawing.Bitmap ciStructure_32 {
             get {
-                object obj = ResourceManager.GetObject("ciStructureProtected", resourceCulture);
+                object obj = ResourceManager.GetObject("ciStructure_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -616,6 +1066,36 @@ namespace Au.Editor.Properties {
         internal static System.Drawing.Bitmap ciTypeParameter {
             get {
                 object obj = ResourceManager.GetObject("ciTypeParameter", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciTypeParameter_20 {
+            get {
+                object obj = ResourceManager.GetObject("ciTypeParameter_20", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciTypeParameter_24 {
+            get {
+                object obj = ResourceManager.GetObject("ciTypeParameter_24", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap ciTypeParameter_32 {
+            get {
+                object obj = ResourceManager.GetObject("ciTypeParameter_32", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

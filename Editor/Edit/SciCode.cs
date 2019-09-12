@@ -25,11 +25,13 @@ using static Au.Controls.Sci;
 using Au.Util;
 using DiffMatchPatch;
 
+//TODO: when clicked selbar to select the fold header, should select all hidden lines.
+
 class SciCode : AuScintilla
 {
 	public readonly FileNode FN;
 	SciText.FileLoaderSaver _fls;
-	public DocCodeInfo CI;
+	//public DocCodeInfo CI;
 
 	const int c_marginFold = 0;
 	const int c_marginLineNumbers = 1;
@@ -56,7 +58,7 @@ class SciCode : AuScintilla
 
 		int dpi = ADpi.BaseDPI;
 
-		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT));
+		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_BEFOREINSERT*/));
 		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
 		ST.MarginWidth(c_marginLineNumbers, 40 * dpi / 96);
 		//Call(SCI_SETMARGINTYPEN, c_marginMarkers, SC_MARGIN_SYMBOL);
@@ -95,7 +97,7 @@ class SciCode : AuScintilla
 	//	base.Dispose(disposing);
 	//}
 
-	protected override void OnSciNotify(ref SCNotification n)
+	protected unsafe override void OnSciNotify(ref SCNotification n)
 	{
 		//switch(n.nmhdr.code) {
 		//case NOTIF.SCN_PAINTED:
@@ -121,21 +123,33 @@ class SciCode : AuScintilla
 		case NOTIF.SCN_MODIFIED:
 			//Print("text changed", _userTyping, n.position, n.modificationType, n.Text);
 			//Print(n.modificationType);
-			if(0 != (n.modificationType & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
+			//if(n.modificationType.Has(MOD.SC_PERFORMED_USER | MOD.SC_MOD_BEFOREINSERT)) {
+			//	Print($"'{n.Text}'");
+			//	if(n.length == 2 && n.textUTF8!=null && n.textUTF8[0]=='\r' && n.textUTF8[1] == '\n') {
+			//		Call(SCI_BEGINUNDOACTION); Call(SCI_ENDUNDOACTION);
+			//	}
+			//}
+			if(n.modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) {
 				CodeInfo.SciTextChanged(this, n, _userTyping);
 				Panels.Find.UpdateQuickResults(true);
 			}
 			break;
-		//case NOTIF.SCN_CHARADDED:
-		//	CodeInfo.SciCharAdded(this, n.ch);
-		//	break;
+		case NOTIF.SCN_CHARADDED:
+			//Print($"SCN_CHARADDED  {n.ch}  '{(char)n.ch}'");
+			if(n.ch == '\n' /*|| n.ch == ';'*/) { //split scintilla Undo
+				Call(SCI_BEGINUNDOACTION); Call(SCI_ENDUNDOACTION);
+			}
+			if(n.ch != '\r') { //on Enter we receive notifications for '\r' and '\n'
+				CodeInfo.SciCharAdded(this);
+			}
+			break;
 		case NOTIF.SCN_UPDATEUI:
 			bool uuFirst = _initDeferred != null;
 			if(uuFirst) { var f = _initDeferred; _initDeferred = null; f(); }
 			//Print((uint)n.updated);
 			if(0 != (n.updated & 3)) { //text/styling (1) or selection (2); else scrolled
 				Panels.Editor._UpdateUI_Cmd();
-				if(!uuFirst) CodeInfo.SciUpdateUI(this, modified: 0!=(n.updated&1));
+				if(!uuFirst) CodeInfo.SciUpdateUI(this, modified: 0 != (n.updated & 1));
 			}
 			break;
 		case NOTIF.SCN_DWELLSTART:

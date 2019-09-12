@@ -15,6 +15,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
+using System.Reflection;
 
 using Au;
 using Au.Types;
@@ -278,6 +279,9 @@ namespace Au.Controls
 		[DebuggerStepThrough]
 		public LPARAM CallRetPtr(int sciMessage, LPARAM wParam, LPARAM lParam)
 		{
+#if DEBUG
+			if(DebugPrintMessages) _DebugPrintMessage(sciMessage);
+#endif
 			if(!IsHandleCreated) {
 				Debug.Assert(!Visible);
 				CreateHandle(); //because did not create handle if initially Visible is false
@@ -290,6 +294,39 @@ namespace Au.Controls
 
 			return _fnDirect(_ptrDirect, sciMessage, wParam, lParam);
 		}
+
+#if DEBUG
+		void _DebugPrintMessage(int sciMessage)
+		{
+			if(sciMessage < Sci.SCI_START) return;
+			switch(sciMessage) {
+			case SCI_COUNTCODEUNITS:
+			case SCI_POSITIONRELATIVECODEUNITS:
+			case SCI_CANUNDO:
+			case SCI_CANREDO:
+			case SCI_GETREADONLY:
+			case SCI_GETSELECTIONEMPTY:
+			//case SCI_GETTEXTLENGTH:
+				return;
+			}
+			if(s_debugPM == null) {
+				s_debugPM = new Dictionary<int, string>();
+				foreach(var v in typeof(Sci).GetFields()) {
+					var s = v.Name;
+					//Print(v.Name);
+					if(s.Starts("SCI_")) s_debugPM.Add((int)v.GetRawConstantValue(), s);
+				}
+			}
+			if(!s_debugPM.TryGetValue(sciMessage, out var k)) {
+				k = sciMessage.ToString();
+			}
+			AOutput.QM2.Write(k);
+		}
+		static Dictionary<int, string> s_debugPM;
+
+		[Browsable(false)]
+		public bool DebugPrintMessages { get; set; }
+#endif
 
 		/// <summary>
 		/// Sends a Scintilla message to the control and returns int.

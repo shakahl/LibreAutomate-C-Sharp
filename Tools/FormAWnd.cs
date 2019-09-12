@@ -42,7 +42,7 @@ namespace Au.Tools
 		public FormAWnd(AWnd wnd = default, bool uncheckControl = false)
 		{
 			InitializeComponent();
-			splitContainer3.SplitterWidth = 8;
+			splitContainer3.SplitterWidth = splitContainer1.SplitterWidth;
 
 			Action<SG.CellContext> f = _grid_ZValueChanged;
 			_grid.ZValueChanged += f;

@@ -34,13 +34,13 @@
 			this._bOK = new Au.Controls.AuButtonOK();
 			this._bCancel = new Au.Controls.AuButtonCancel();
 			this._cCapture = new Au.Controls.AuCheckBox();
-			this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-			this.splitContainer2 = new System.Windows.Forms.SplitContainer();
+			this.splitContainer1 = new Au.Controls.AuSplitContainer();
+			this.splitContainer2 = new Au.Controls.AuSplitContainer();
 			this._grid = new Au.Controls.ParamGrid();
 			this._grid2 = new Au.Controls.ParamGrid();
-			this.splitContainer3 = new System.Windows.Forms.SplitContainer();
+			this.splitContainer3 = new Au.Controls.AuSplitContainer();
 			this._code = new Au.Tools.CodeBox();
-			this.splitContainer4 = new System.Windows.Forms.SplitContainer();
+			this.splitContainer4 = new Au.Controls.AuSplitContainer();
 			this._tree = new Aga.Controls.Tree.TreeViewAdv();
 			this._winInfo = new Au.Controls.InfoBox();
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
@@ -64,20 +64,26 @@
 			// 
 			// _info
 			// 
+			this._info.AcceptsReturn = null;
 			this._info.AccessibleName = "_info";
+			this._info.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._info.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this._info.DisableModifiedNotifications = false;
+			this._info.InitUseControlFont = false;
 			this._info.Location = new System.Drawing.Point(8, 8);
 			this._info.Name = "_info";
+			this._info.NoMouseLeftSetFocus = false;
+			this._info.NoMouseRightSetFocus = false;
 			this._info.Size = new System.Drawing.Size(600, 56);
 			this._info.TabIndex = 6;
 			// 
 			// _lSpeed
 			// 
+			this._lSpeed.AutoSize = true;
 			this._lSpeed.Location = new System.Drawing.Point(87, 77);
 			this._lSpeed.Name = "_lSpeed";
-			this._lSpeed.Size = new System.Drawing.Size(97, 15);
+			this._lSpeed.Size = new System.Drawing.Size(0, 15);
 			this._lSpeed.TabIndex = 7;
 			this._toolTip.SetToolTip(this._lSpeed, "Shows the Test execution time. Red if not found.");
 			// 
@@ -96,7 +102,7 @@
 			// _bOK
 			// 
 			this._bOK.Enabled = false;
-			this._bOK.Location = new System.Drawing.Point(184, 72);
+			this._bOK.Location = new System.Drawing.Point(192, 72);
 			this._bOK.Name = "_bOK";
 			this._bOK.Size = new System.Drawing.Size(72, 24);
 			this._bOK.TabIndex = 10;
@@ -104,7 +110,7 @@
 			// 
 			// _bCancel
 			// 
-			this._bCancel.Location = new System.Drawing.Point(264, 72);
+			this._bCancel.Location = new System.Drawing.Point(272, 72);
 			this._bCancel.Name = "_bCancel";
 			this._bCancel.Size = new System.Drawing.Size(72, 24);
 			this._bCancel.TabIndex = 11;
@@ -156,7 +162,7 @@
 			// 
 			this.splitContainer2.Panel2.Controls.Add(this._grid2);
 			this.splitContainer2.Size = new System.Drawing.Size(600, 195);
-			this.splitContainer2.SplitterDistance = 406;
+			this.splitContainer2.SplitterDistance = 405;
 			this.splitContainer2.TabIndex = 0;
 			// 
 			// _grid
@@ -171,7 +177,7 @@
 			this._grid.Name = "_grid";
 			this._grid.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
 			this._grid.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-			this._grid.Size = new System.Drawing.Size(406, 195);
+			this._grid.Size = new System.Drawing.Size(405, 195);
 			this._grid.SpecialKeys = ((SourceGrid.GridSpecialKeys)((((((SourceGrid.GridSpecialKeys.Arrows | SourceGrid.GridSpecialKeys.PageDownUp) 
             | SourceGrid.GridSpecialKeys.Enter) 
             | SourceGrid.GridSpecialKeys.Escape) 
@@ -194,7 +200,7 @@
 			this._grid2.Name = "_grid2";
 			this._grid2.OptimizeMode = SourceGrid.CellOptimizeMode.ForRows;
 			this._grid2.SelectionMode = SourceGrid.GridSelectionMode.Cell;
-			this._grid2.Size = new System.Drawing.Size(190, 195);
+			this._grid2.Size = new System.Drawing.Size(191, 195);
 			this._grid2.SpecialKeys = ((SourceGrid.GridSpecialKeys)((((((SourceGrid.GridSpecialKeys.Arrows | SourceGrid.GridSpecialKeys.PageDownUp) 
             | SourceGrid.GridSpecialKeys.Enter) 
             | SourceGrid.GridSpecialKeys.Escape) 
@@ -226,11 +232,15 @@
 			// 
 			// _code
 			// 
+			this._code.AcceptsReturn = null;
 			this._code.AccessibleName = "_code";
+			this._code.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._code.DisableModifiedNotifications = false;
 			this._code.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._code.Location = new System.Drawing.Point(0, 0);
 			this._code.Name = "_code";
+			this._code.NoMouseLeftSetFocus = false;
+			this._code.NoMouseRightSetFocus = false;
 			this._code.Size = new System.Drawing.Size(600, 60);
 			this._code.TabIndex = 12;
 			// 
@@ -248,11 +258,12 @@
 			// 
 			this.splitContainer4.Panel2.Controls.Add(this._winInfo);
 			this.splitContainer4.Size = new System.Drawing.Size(600, 181);
-			this.splitContainer4.SplitterDistance = 297;
+			this.splitContainer4.SplitterDistance = 296;
 			this.splitContainer4.TabIndex = 0;
 			// 
 			// _tree
 			// 
+			this._tree.AccessibleCount = 1000;
 			this._tree.AccessibleName = "_tree";
 			this._tree.BackColor = System.Drawing.SystemColors.Window;
 			this._tree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -264,18 +275,23 @@
 			this._tree.Model = null;
 			this._tree.Name = "_tree";
 			this._tree.SelectedNode = null;
-			this._tree.Size = new System.Drawing.Size(297, 181);
+			this._tree.Size = new System.Drawing.Size(296, 181);
 			this._tree.TabIndex = 0;
 			// 
 			// _winInfo
 			// 
+			this._winInfo.AcceptsReturn = null;
 			this._winInfo.AccessibleName = "_winInfo";
+			this._winInfo.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._winInfo.DisableModifiedNotifications = false;
 			this._winInfo.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._winInfo.InitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+			this._winInfo.InitUseControlFont = false;
 			this._winInfo.Location = new System.Drawing.Point(0, 0);
 			this._winInfo.Name = "_winInfo";
-			this._winInfo.Size = new System.Drawing.Size(299, 181);
+			this._winInfo.NoMouseLeftSetFocus = false;
+			this._winInfo.NoMouseRightSetFocus = false;
+			this._winInfo.Size = new System.Drawing.Size(300, 181);
 			this._winInfo.TabIndex = 0;
 			this._winInfo.WrapLines = false;
 			// 
@@ -294,7 +310,7 @@
 			this.Controls.Add(this._cCapture);
 			this.Controls.Add(this.splitContainer1);
 			this.IsPopup = true;
-			this.MinimumSize = new System.Drawing.Size(500, 400);
+			this.MinimumSize = new System.Drawing.Size(500, 398);
 			this.Name = "FormAWnd";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
 			this.Text = "Find window or control";
@@ -315,6 +331,7 @@
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer4)).EndInit();
 			this.splitContainer4.ResumeLayout(false);
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 
@@ -327,13 +344,13 @@
 		private Au.Controls.AuButtonOK _bOK;
 		private Au.Controls.AuButtonCancel _bCancel;
 		private Au.Controls.AuCheckBox _cCapture;
-		private System.Windows.Forms.SplitContainer splitContainer1;
-		private System.Windows.Forms.SplitContainer splitContainer2;
+		private Au.Controls.AuSplitContainer splitContainer1;
+		private Au.Controls.AuSplitContainer splitContainer2;
 		private Controls.ParamGrid _grid;
 		private Controls.ParamGrid _grid2;
 		private Aga.Controls.Tree.TreeViewAdv _tree;
-		private System.Windows.Forms.SplitContainer splitContainer3;
-		private System.Windows.Forms.SplitContainer splitContainer4;
+		private Au.Controls.AuSplitContainer splitContainer3;
+		private Au.Controls.AuSplitContainer splitContainer4;
 		private Controls.InfoBox _winInfo;
 		private System.Windows.Forms.ToolTip _toolTip;
 	}

@@ -98,7 +98,7 @@ namespace Au.Util
 
 		public LibNativeFont(IntPtr handle) { Handle = handle; }
 
-		public static implicit operator IntPtr(LibNativeFont f) => (f == null) ? default : f.Handle;
+		public static implicit operator IntPtr(LibNativeFont f) => f?.Handle ?? default;
 
 		~LibNativeFont() { _Dispose(); }
 		public void Dispose() { _Dispose(); GC.SuppressFinalize(this); }
@@ -107,11 +107,17 @@ namespace Au.Util
 			if(Handle != default) { Api.DeleteObject(Handle); Handle = default; }
 		}
 
-		public LibNativeFont(string name, int height, bool calculateHeightOnScreen = false)
+		public LibNativeFont(string name, int height, FontStyle style = default, bool calculateHeightOnScreen = false)
 		{
 			using var dcs = new LibScreenDC(0);
-			int h2 = -AMath.MulDiv(height, Api.GetDeviceCaps(dcs, 90), 72);
-			Handle = Api.CreateFont(h2, iCharSet: 1, pszFaceName: name); //LOGPIXELSY=90
+			int h2 = -AMath.MulDiv(height, Api.GetDeviceCaps(dcs, 90), 72); //LOGPIXELSY=90
+			Handle = Api.CreateFont(h2,
+				cWeight: style.Has(FontStyle.Bold) ? 700 : 0, //FW_BOLD
+				bItalic: style.Has(FontStyle.Italic) ? 1 : 0,
+				bUnderline: style.Has(FontStyle.Underline) ? 1 : 0,
+				bStrikeOut: style.Has(FontStyle.Strikeout) ? 1 : 0,
+				iCharSet: 1,
+				pszFaceName: name);
 			if(calculateHeightOnScreen) {
 				using var dcMem = new LibCompatibleDC(dcs);
 				var of = Api.SelectObject(dcMem, Handle);
@@ -121,18 +127,33 @@ namespace Au.Util
 			}
 		}
 
+		static unsafe LibNativeFont _Create(bool bold, bool italic)
+		{
+			Api.NONCLIENTMETRICS m = default; m.cbSize = sizeof(Api.NONCLIENTMETRICS);
+			Api.SystemParametersInfo(Api.SPI_GETNONCLIENTMETRICS, m.cbSize, &m, 0);
+			if(bold) m.lfMessageFont.lfWeight = 700;
+			if(italic) m.lfMessageFont.lfItalic = 1;
+			return new LibNativeFont(Api.CreateFontIndirect(m.lfMessageFont));
+		}
+
 		/// <summary>
 		/// Cached standard font used by most windows and controls.
 		/// On Windows 10 it is "Segoe UI" 9 by default.
 		/// </summary>
-		internal static LibNativeFont RegularCached => _regular ??= new LibNativeFont(AFonts.LibRegularCached.ToHfont());
+		internal static LibNativeFont RegularCached => _regular ??= _Create(false, false);
 		static LibNativeFont _regular;
+
+		/// <summary>
+		/// Cached standard bold font used by most windows and controls.
+		/// </summary>
+		internal static LibNativeFont BoldCached => _bold ??= _Create(true, false);
+		static LibNativeFont _bold;
 
 		/// <summary>
 		/// Cached font "Verdana" 9.
 		/// Used eg by ADialog for input Edit control.
 		/// </summary>
-		internal static LibNativeFont Verdana9Cached => _verdana ??= new LibNativeFont("Verdana", 9, true);
+		internal static LibNativeFont Verdana9Cached => _verdana ??= new LibNativeFont("Verdana", 9, calculateHeightOnScreen: true);
 		static LibNativeFont _verdana;
 	}
 
