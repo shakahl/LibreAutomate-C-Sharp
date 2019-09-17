@@ -41,12 +41,12 @@ namespace Au.Compiler
 	/// <h3>References</h3>
 	/// <code><![CDATA[
 	/// r Assembly //.NET/GAC assembly reference. Without ".dll".
-	/// r Assembly.dll //other assembly reference. With ".dll" or ".exe". The file must be in the main Au folder or its subfolder Libraries.
+	/// r Assembly.dll //other assembly reference. With ".dll" or ".exe". The file/path must be in/relative the main Au folder or .NET framework folder.
 	/// r C:\X\Y\Assembly.dll //other assembly reference using full path or path relative to the main Au folder. May be problem finding it at run time.
 	/// r Assembly, Version=4.0.0.0 //GAC assembly of specific version. The ", Version=" part must be exactly as in the example. If version unspecified and there are several assemblies of different versions in GAC, is used assembly of the highest version.
 	/// r Alias=Assembly.dll //assembly reference that can be used with C# keyword 'extern alias'.
 	/// ]]></code>
-	/// Don't need to specify these references: mscorlib, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
+	/// Don't need to specify these references: mscorlib, Microsoft.CSharp, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
 	/// 
 	/// <h3>Other C# files to compile together</h3>
 	/// <code><![CDATA[
@@ -583,13 +583,6 @@ namespace Au.Compiler
 				}
 				break;
 			}
-
-			//rejected:
-			//pdb true|false //if true, creates .pdb file. Note: if false, can be difficult to find unhandled exception place in code. Default: true.
-			//skip  //don't compile this file when compiling multiple files ('c'). Must be the first line.
-			//c  //also compile all other class files in the same folder and subfolders. This option can be only in the main file, not in files compiled because of 'c'. Script files are not included.
-			//using Namespace; //\\r //.NET/GAC assembly reference, using assembly name = Namespace
-			//using Namespace; //\\r .dll //other assembly reference, using file name = Namespace.dll. The file must be in the main Au folder or its subfolder Libraries.
 		}
 
 		bool _Error(int pos, string s)

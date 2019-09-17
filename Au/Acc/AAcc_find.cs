@@ -116,7 +116,7 @@ namespace Au
 							return true;
 						}
 					}
-					catch(AException ex) when(!c.IsAlive) { ADebug.Print(ex.Message); } //don't throw WndException/AException if the window or a control is destroyed while searching, but throw AException if eg access denied
+					catch(AuException ex) when(!c.IsAlive) { ADebug.Print(ex.Message); } //don't throw WndException/AuException if the window or a control is destroyed while searching, but throw AuException if eg access denied
 				}
 				return false;
 			}
@@ -133,7 +133,7 @@ namespace Au
 			/// - flag <see cref="AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
 			/// </exception>
 			/// <exception cref="WndException">Invalid window.</exception>
-			/// <exception cref="AException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+			/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 			public bool Find(AWnd w)
 			{
 				return _FindOrWait(w, 0, false);
@@ -152,7 +152,7 @@ namespace Au
 			/// - flag <see cref="AFFlags.UIA"/>.
 			/// - <see cref="SimpleElementId"/> is not 0.
 			/// </exception>
-			/// <exception cref="AException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+			/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 			public bool Find(AAcc a)
 			{
 				return _FindOrWait(a, 0, false);
@@ -286,8 +286,8 @@ namespace Au
 					default:
 						Debug.Assert(!Cpp.IsCppError((int)hr));
 						if(hr == (Cpp.EError)Api.RPC_E_SERVER_CANTMARSHAL_DATA && !_flags.Has(AFFlags.NotInProc))
-							throw new AException((int)hr, "For this object need flag NotInProc");
-						throw new AException((int)hr);
+							throw new AuException((int)hr, "For this object need flag NotInProc");
+						throw new AuException((int)hr);
 					}
 
 					if(!doneThread) {
@@ -398,7 +398,7 @@ namespace Au
 		/// - <i>flags</i> has <see cref="AFFlags.UIA"/> when searching in web page (role prefix <c>"web:"</c> etc).
 		/// </exception>
 		/// <exception cref="WndException">Invalid window.</exception>
-		/// <exception cref="AException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// 
 		/// <remarks>
 		/// To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.FormAAcc</b> in Au.Tools.dll.
@@ -453,7 +453,7 @@ namespace Au
 		/// - <i>flags</i> has <see cref="AFFlags.UIA"/>.
 		/// - <see cref="SimpleElementId"/> is not 0.
 		/// </exception>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		public AAcc Find(string role = null, string name = null, string prop = null, AFFlags flags = 0,
 			Func<AAcc, bool> also = null, int skip = 0, string navig = null)
 		{
@@ -474,7 +474,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException"/>
 		/// <exception cref="WndException"/>
-		/// <exception cref="AException"/>
+		/// <exception cref="AuException"/>
 		public static AAcc Wait(double secondsTimeout, AWnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0,
 			Func<AAcc, bool> also = null, int skip = 0, string navig = null)
 		{
@@ -491,7 +491,7 @@ namespace Au
 		/// <returns>Returns the found AO. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"/>
 		/// <exception cref="ArgumentException"/>
-		/// <exception cref="AException"/>
+		/// <exception cref="AuException"/>
 		public AAcc Wait(double secondsTimeout, string role = null, string name = null, string prop = null, AFFlags flags = 0,
 			Func<AAcc, bool> also = null, int skip = 0, string navig = null)
 		{
@@ -510,7 +510,7 @@ namespace Au
 		/// <returns>Array of 0 or more elements.</returns>
 		/// <exception cref="ArgumentException"/>
 		/// <exception cref="WndException"/>
-		/// <exception cref="AException"/>
+		/// <exception cref="AuException"/>
 		/// <example>
 		/// Get all taskbar buttons (Windows 10).
 		/// <code><![CDATA[
@@ -535,7 +535,7 @@ namespace Au
 		/// </summary>
 		/// <returns>Array of 0 or more elements.</returns>
 		/// <exception cref="ArgumentException"/>
-		/// <exception cref="AException"/>
+		/// <exception cref="AuException"/>
 		/// <example>
 		/// Get all taskbar buttons (Windows 10).
 		/// <code><![CDATA[

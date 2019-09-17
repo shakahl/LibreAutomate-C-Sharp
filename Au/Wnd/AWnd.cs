@@ -30,7 +30,7 @@ namespace Au
 	/// 
 	/// More functions are in the nested classes - <see cref="More"/>, <see cref="More.Desktop"/> etc. They are used mostly in programming, rarely in automation scripts.
 	/// 
-	/// What happens when a AWnd function fails:
+	/// What happens when an AWnd function fails:
 	/// - Functions that get window properties don't throw exceptions. They return false/0/null/empty. Most of them support <see cref="ALastError"/>, and it is mentioned in function documentation.
 	/// - Many functions that change window properties throw exception. Exceptions are listed in function documentation. Almost all these functions throw only <see cref="WndException"/>.
 	/// - Other functions that change window properties return false. They are more often used in programming than in automation scripts.
@@ -385,7 +385,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Calls <see cref="Is0"/> and API <msdn>IsWindow</msdn>.
-		/// Although a AWnd variable holds a window handle, which is like a reference to a window, it does not prevent closing that window and making the handle invalid. After closing the window, the OS can even assign the same handle value to a new window, although normally it can happen only after long time.
+		/// Although an AWnd variable holds a window handle, which is like a reference to a window, it does not prevent closing that window and making the handle invalid. After closing the window, the OS can even assign the same handle value to a new window, although normally it can happen only after long time.
 		/// <note>Use this carefully with windows of other applications or threads. The window can be closed at any moment, even when your thread is still in this function.</note>
 		/// </remarks>
 		public bool IsAlive => !Is0 && Api.IsWindow(this);
@@ -995,14 +995,14 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Activates this window (brings to the foreground).
-		/// Also unhides, restores minimized etc, to ensure that the window is ready to receive sent keys, mouse clicks ect.
+		/// Activates this window. Also makes it visible and not minimized.
+		/// The active window is in the foreground and receives keyboard and mouse input.
 		/// </summary>
 		/// <remarks>
 		/// Activating a window usually also uncloaks it, for example switches to its virtual desktop on Windows 10.
 		/// Fails (throws exception) if cannot activate this window, except:
-		/// - If this is a control, activates its top-level parent window.
-		/// - If this is <see cref="GetWnd.Root"/>, just deactivates the currently active window.
+		/// - If this is a control. Then activates its top-level parent window.
+		/// - If this is <see cref="GetWnd.Root"/>. Then just deactivates the currently active window.
 		/// - When the target application instead activates another window of the same thread.
 		/// </remarks>
 		/// <exception cref="WndException"/>
@@ -2423,7 +2423,7 @@ namespace Au
 		{
 			if(!Is0 && IsUacAccessDenied) {
 				if(prefix == null) prefix = "Failed. The"; else if(prefix.Ends('.')) prefix += " The"; //this is to support prefix used by AMouse.Move: "The active"
-				throw new AException(Api.ERROR_ACCESS_DENIED, prefix + " window's process has a higher UAC integrity level (admin or uiAccess) than this process.");
+				throw new AuException(Api.ERROR_ACCESS_DENIED, prefix + " window's process has a higher UAC integrity level (admin or uiAccess) than this process.");
 			}
 		}
 

@@ -201,7 +201,7 @@ namespace Au
 		/// On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.
 		/// </returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="AException">Failed. For example a handle is invalid.</exception>
+		/// <exception cref="AuException">Failed. For example a handle is invalid.</exception>
 		/// <remarks>
 		/// Uses API <msdn>WaitForMultipleObjectsEx</msdn> or <msdn>MsgWaitForMultipleObjectsEx</msdn>. Alertable.
 		/// Does not use <see cref="AOpt.WaitFor"/>.
@@ -224,7 +224,7 @@ namespace Au
 			long timeMS = _TimeoutS2MS(secondsTimeout, out bool canThrow);
 
 			int r = LibWait(timeMS, flags, msgCallback, stopVar, handles);
-			if(r < 0) throw new AException(0);
+			if(r < 0) throw new AuException(0);
 			if(r == Api.WAIT_TIMEOUT) {
 				if(canThrow) throw new TimeoutException();
 				return 0;

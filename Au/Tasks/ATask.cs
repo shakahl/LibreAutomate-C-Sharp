@@ -56,7 +56,7 @@ namespace Au
 		/// <param name="script">Script name like "Script5.cs", or path like @"\Folder\Script5.cs".</param>
 		/// <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
-		/// <exception cref="AException">Failed to start script.</exception>
+		/// <exception cref="AuException">Failed to start script.</exception>
 		public static int Run(string script, params string[] args)
 			=> _Run(0, script, args, out _);
 
@@ -66,7 +66,7 @@ namespace Au
 		/// </summary>
 		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
-		/// <exception cref="AException">Failed to start script.</exception>
+		/// <exception cref="AuException">Failed to start script.</exception>
 		public static int RunWait(string script, params string[] args)
 			=> _Run(1, script, args, out _);
 
@@ -78,7 +78,7 @@ namespace Au
 		/// <param name="results">Receives <see cref="WriteResult"/> output.</param>
 		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
-		/// <exception cref="AException">Failed to start script.</exception>
+		/// <exception cref="AuException">Failed to start script.</exception>
 		public static int RunWait(out string results, string script, params string[] args)
 			=> _Run(3, script, args, out results);
 
@@ -89,32 +89,32 @@ namespace Au
 		/// <param name="results">Receives <see cref="WriteResult"/> output whenever the task calls it.</param>
 		/// <returns>The exit code of the task process. See <see cref="Environment.ExitCode"/>.</returns>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
-		/// <exception cref="AException">Failed to start script.</exception>
+		/// <exception cref="AuException">Failed to start script.</exception>
 		public static int RunWait(Action<string> results, string script, params string[] args)
 			=> _Run(3, script, args, out _, results);
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		static int _Run(int mode, string script, string[] args, out string resultS, Action<string> resultA = null)
 		{
-			var w = WndMsg; if(w.Is0) throw new AException("Au editor not found."); //CONSIDER: run editor program, if installed
+			var w = WndMsg; if(w.Is0) throw new AuException("Au editor not found."); //CONSIDER: run editor program, if installed
 			bool needResult = 0 != (mode & 2); resultS = null;
 			using var tr = new _TaskResults();
-			if(needResult && !tr.Init()) throw new AException("*get task results");
+			if(needResult && !tr.Init()) throw new AuException("*get task results");
 
 			var data = Util.LibSerializer.Serialize(script, args, tr.pipeName);
 			int pid = (int)AWnd.More.CopyDataStruct.SendBytes(w, 100, data, mode);
 			switch((ERunResult)pid) {
-			case ERunResult.failed: throw new AException("*start task");
+			case ERunResult.failed: throw new AuException("*start task");
 			case ERunResult.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
 			case ERunResult.editorThread: case ERunResult.deferred: return 0;
 			}
 
 			if(0 != (mode & 1)) {
 				using var hProcess = LibWaitHandle.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);
-				if(hProcess == null) throw new AException("*wait for task");
+				if(hProcess == null) throw new AuException("*wait for task");
 
 				if(!needResult) hProcess.WaitOne(-1);
-				else if(!tr.WaitAndRead(hProcess, resultA)) throw new AException("*get task result");
+				else if(!tr.WaitAndRead(hProcess, resultA)) throw new AuException("*get task result");
 				else if(resultA == null) resultS = tr.ResultString;
 
 				if(!Api.GetExitCodeProcess(hProcess.SafeWaitHandle.DangerousGetHandle(), out pid)) pid = int.MinValue;

@@ -35,7 +35,7 @@ namespace Au
 		/// <summary>
 		/// Clears the clipboard.
 		/// </summary>
-		/// <exception cref="AException">Failed to open clipboard (after 10 s of wait/retry).</exception>
+		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static void Clear()
 		{
 			using(new LibOpenClipboard(false)) LibEmptyClipboard();
@@ -49,7 +49,7 @@ namespace Au
 		/// <summary>
 		/// Gets or sets clipboard text.
 		/// </summary>
-		/// <exception cref="AException">Failed to open clipboard (after 10 s of wait/retry) or set clipboard data.</exception>
+		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry) or set clipboard data.</exception>
 		/// <exception cref="OutOfMemoryException">The 'set' function failed to allocate memory.</exception>
 		/// <remarks>
 		/// The 'get' function calls <see cref="AClipboardData.GetText"/>. Also can get file paths, as multiline text. Returns null if there is no text/files.
@@ -98,7 +98,7 @@ namespace Au
 		/// Options. If null (default), uses <see cref="AOpt.Key"/>.
 		/// Uses <see cref="OptKey.RestoreClipboard"/>, <see cref="OptKey.NoBlockInput"/>, <see cref="OptKey.KeySpeedClipboard"/>. Does not use <see cref="OptKey.Hook"/>.
 		/// </param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Also can get file paths, as multiline text.
 		/// Sends keys Ctrl+C, waits until the focused app sets clipboard data, gets it, finally restores clipboard data.
@@ -117,7 +117,7 @@ namespace Au
 		/// <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example the <see cref="AClipboardData"/> class or the .NET <see cref="System.Windows.Forms.Clipboard"/> class. Don't call copy/paste functions.</param>
 		/// <param name="cut">Use Ctrl+X.</param>
 		/// <param name="options">See <see cref="CopyText"/>.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the callback function.</exception>
 		/// <remarks>
 		/// Sends keys Ctrl+C, waits until the focused app sets clipboard data, calls callback function that gets it, finally restores clipboard data.
@@ -160,7 +160,7 @@ namespace Au
 				AWnd wFocus = AKeys.Lib.GetWndFocusedOrActive();
 				listener = new _ClipboardListener(false, null, oc.WndClipOwner, wFocus);
 
-				if(!Api.AddClipboardFormatListener(oc.WndClipOwner)) throw new AException();
+				if(!Api.AddClipboardFormatListener(oc.WndClipOwner)) throw new AuException();
 				var ctrlC = new AKeys.Lib.SendCopyPaste();
 				try {
 					if(wFocus.IsConsole) {
@@ -195,7 +195,7 @@ namespace Au
 				bi.Dispose();
 			}
 			GC.KeepAlive(listener);
-			if(R == null && callback == null) throw new AException("*copy text"); //no text in the clipboard. Probably not a text control; if text control but empty selection, usually throws in Wait, not here, because the target app then does not use the clipboard.
+			if(R == null && callback == null) throw new AuException("*copy text"); //no text in the clipboard. Probably not a text control; if text control but empty selection, usually throws in Wait, not here, because the target app then does not use the clipboard.
 			return R;
 		}
 
@@ -207,7 +207,7 @@ namespace Au
 		/// Options. If null (default), uses <see cref="AOpt.Key"/>.
 		/// Uses <see cref="OptKey.RestoreClipboard"/>, <see cref="OptKey.PasteEnter"/>, <see cref="OptKey.NoBlockInput"/>, <see cref="OptKey.SleepFinally"/>, <see cref="OptKey.Hook"/>, <see cref="OptKey.KeySpeedClipboard"/>.
 		/// </param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Adds to the clipboard, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
 		/// Fails (exception) if nothing gets clipboard data in several seconds.
@@ -233,7 +233,7 @@ namespace Au
 		/// Pastes data added to a <see cref="AClipboardData"/> variable into the focused app using the clipboard.
 		/// More info: <see cref="PasteText"/>.
 		/// </summary>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// Paste data of two formats: HTML and text.
 		/// <code><![CDATA[
@@ -332,7 +332,7 @@ namespace Au
 					//wait until the app gets clipboard text
 					if(sync) {
 						listener.Wait(ref ctrlV);
-						if(listener.FailedToSetData != null) throw new AException(listener.FailedToSetData.Message);
+						if(listener.FailedToSetData != null) throw new AuException(listener.FailedToSetData.Message);
 						if(listener.IsBadWindow) sync = false;
 					}
 					if(!sync) {
@@ -414,7 +414,7 @@ namespace Au
 
 			/// <summary>
 			/// Waits until the target app gets (Paste) or sets (Copy) clipboard text.
-			/// Throws AException on timeout (3 s normally, 28 s if the target window is hung).
+			/// Throws AuException on timeout (3 s normally, 28 s if the target window is hung).
 			/// </summary>
 			/// <param name="ctrlKey">The variable that was used to send Ctrl+V or Ctrl+C. This function may call Release to avoid too long Ctrl down.</param>
 			public void Wait(ref AKeys.Lib.SendCopyPaste ctrlKey)
@@ -425,7 +425,7 @@ namespace Au
 
 					if(Success) break;
 					//is hung?
-					if(--n == 0) throw new AException(_paste ? "*paste" : "*copy");
+					if(--n == 0) throw new AuException(_paste ? "*paste" : "*copy");
 					ctrlKey.Release();
 					_wFocus.SendTimeout(5000, 0, flags: 0);
 				}
@@ -492,7 +492,7 @@ namespace Au
 
 		/// <summary>
 		/// Opens and closes clipboard using API OpenClipboard and CloseClipboard.
-		/// Constructor tries to open for 10 s, then throws AException.
+		/// Constructor tries to open for 10 s, then throws AuException.
 		/// If the 'createOwner' parameter is true, creates temporary message-only clipboard owner window.
 		/// If the 'noOpenNow' parameter is true, does not open, only creates owner if need.
 		/// Dispose() closes clipboard and destroys the owner window.
@@ -522,7 +522,7 @@ namespace Au
 			/// Owner window should be not destroyed; does not create again.
 			/// </summary>
 			/// <param name="noThrow">If fails, return false, no exception. Also then waits 1 s instead of 10 s.</param>
-			/// <exception cref="AException">Failed to open.</exception>
+			/// <exception cref="AuException">Failed to open.</exception>
 			public bool Reopen(bool noThrow = false)
 			{
 				Debug.Assert(!_isOpen);
@@ -532,7 +532,7 @@ namespace Au
 					if(!to.Sleep()) {
 						Dispose();
 						if(noThrow) return false;
-						throw new AException(ec, "*open clipboard");
+						throw new AuException(ec, "*open clipboard");
 					}
 				}
 				_isOpen = true;
@@ -678,13 +678,13 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="AClipboard.PasteText"/>.
 		/// </summary>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		public static void Paste(string text) => AClipboard.PasteText(text);
 
 		/// <summary>
 		/// Calls <see cref="AClipboard.CopyText"/>.
 		/// </summary>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		public static string CopyText() => AClipboard.CopyText();
 	}
 }

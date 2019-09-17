@@ -246,7 +246,7 @@ namespace Au
 		/// <param name="waitUntilProcessEnds">Wait until the process of this window ends.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="AException">Failed to open process handle when <i>waitUntilProcessEnds</i> is true.</exception>
+		/// <exception cref="AuException">Failed to open process handle when <i>waitUntilProcessEnds</i> is true.</exception>
 		/// <remarks>
 		/// If the window is already closed, immediately returns true.
 		/// </remarks>
@@ -259,7 +259,7 @@ namespace Au
 			if(!IsAlive) return true;
 			using var ph = LibHandle.OpenProcess(this, Api.SYNCHRONIZE);
 			if(ph.Is0) {
-				var e = new AException(0, "*open process handle"); //info: with SYNCHRONIZE can open process of higher IL
+				var e = new AuException(0, "*open process handle"); //info: with SYNCHRONIZE can open process of higher IL
 				if(!IsAlive) return true;
 				throw e;
 			}

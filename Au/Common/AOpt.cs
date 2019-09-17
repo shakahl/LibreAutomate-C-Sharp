@@ -45,7 +45,7 @@ namespace Au
 		/// AOpt.Key.KeySpeed = 20;
 		/// Key("Tab Ctrl+V");
 		/// ]]></code>
-		/// Use a AKeys instance.
+		/// Use an AKeys instance.
 		/// <code><![CDATA[
 		/// var k = new AKeys(AOpt.Key); //create new AKeys instance and copy options from AOpt.Key to it
 		/// k.Options.KeySpeed = 100; //changes option of k but not of AOpt.Key
@@ -127,7 +127,7 @@ namespace Au
 			/// ...
 			/// Key("Tab Ctrl+V"); //uses AOpt.Key, which is implicitly copied from AOpt.Static.Key
 			/// ]]></code>
-			/// Use a AKeys instance.
+			/// Use an AKeys instance.
 			/// <code><![CDATA[
 			/// var k = new AKeys(AOpt.Static.Key); //create new AKeys instance and copy options from AOpt.Static.Key to it
 			/// k.Options.KeySpeed = 100; //changes option of k but not of AOpt.Static.Key

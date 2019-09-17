@@ -13,7 +13,7 @@ namespace DevAge.Patterns
 		/// <param name="events">Interface class that receive the events, can be null if no event class is needed.</param>
 		void Start(IActivityEvents events);
 		/// <summary>
-		/// Cancel the current activity and all sub activities throwing a ActivityCanceledException.
+		/// Cancel the current activity and all sub activities throwing an ActivityCanceledException.
 		/// </summary>
 		void Cancel();
 		
@@ -344,7 +344,7 @@ namespace DevAge.Patterns
 		}
 
 		/// <summary>
-		/// Cancel the current activity and all sub activities throwing a ActivityCanceledException.
+		/// Cancel the current activity and all sub activities throwing an ActivityCanceledException.
 		/// </summary>
 		public void Cancel()
 		{

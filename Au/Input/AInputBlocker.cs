@@ -149,7 +149,7 @@ namespace Au
 					if(_block.HasAny(BIEvents.MouseClicks | BIEvents.MouseMoving))
 						hm = AHookWin.Mouse(_mouseHookProc ??= _MouseHookProc);
 				}
-				catch(AException e1) { ADebug.Print(e1); _block = 0; return; } //failed to hook
+				catch(AuException e1) { ADebug.Print(e1); _block = 0; return; } //failed to hook
 
 				//This prevents occassional inserting a foreign key after the first our-script-pressed key.
 				//To reproduce, let our script send small series of chars in loop, and simultaneously a foreign script send other chars.
@@ -160,7 +160,7 @@ namespace Au
 
 				//the acc hook detects Ctrl+Alt+Del, Win+L, UAC consent, etc. SystemEvents.SessionSwitch only Win+L.
 				try { hwe = new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, _winEventProc ??= _WinEventProc); }
-				catch(AException e1) { ADebug.Print(e1); } //failed to hook
+				catch(AuException e1) { ADebug.Print(e1); } //failed to hook
 
 				AWaitFor.LibWait(-1, WHFlags.DoEvents, _stopEvent, _threadHandle);
 

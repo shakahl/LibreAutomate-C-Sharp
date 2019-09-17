@@ -25,15 +25,23 @@ namespace Au.Util
 	{
 #if true //online
 		/// <summary>
-		/// Opens a Au help topic onine.
-		/// The file must be in <see cref="AFolders.ThisApp"/>.
+		/// Opens an Au library help topic onine.
 		/// </summary>
 		/// <param name="topic">Topic file name, like "Au.AAcc.Find" or "AAcc.Find" or "articles/Wildcard expression".</param>
 		public static void AuHelp(string topic)
 		{
+			AExec.TryRun(AuHelpUrl(topic));
+		}
+
+		/// <summary>
+		/// Gets URL of an Au library help topic.
+		/// </summary>
+		/// <param name="topic">Topic file name, like "Au.AAcc.Find" or "AAcc.Find" or "articles/Wildcard expression".</param>
+		public static string AuHelpUrl(string topic)
+		{
 			var url = "http://3.quickmacros.com/help/";
 			if(!Empty(topic)) url = url + (topic.IndexOf('/') < 0 ? (topic.Starts("Au.") ? "api/" : "api/Au.") : null) + topic + (topic.Ends('/') ? null : ".html");
-			AExec.TryRun(url);
+			return url;
 		}
 #else //.chm
 		/// <summary>

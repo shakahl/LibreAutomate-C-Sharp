@@ -23,6 +23,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Caching;
 using System.Reflection;
 using System.Runtime;
+using Microsoft.Win32;
 //using CefSharp.WinForms;
 //using CefSharp;
 
@@ -1541,7 +1542,7 @@ class Script : AScript
 		SIZE z = (200, 200);
 		POINT p = (er.right, er.top);
 
-		if(!Api.CalculatePopupWindowPosition(p, z, 0, er, out var r)) throw new AException(0);
+		if(!Api.CalculatePopupWindowPosition(p, z, 0, er, out var r)) throw new AuException(0);
 		var osd = new AOsdRect();
 		osd.Rect = r;
 		osd.Show();
@@ -1943,14 +1944,7 @@ class Script : AScript
 			if(!f.Name.Ends(".xml", true)) continue;
 			var refName = APath.GetFileName(f.Name, withoutExtension: true);
 			var xmlPath = f.FullPath;
-			if(f.Name.Eqi("namespaces.xml")) {
-				//remove tags now because wel'll have to get text differently
-				var s1 = File.ReadAllText(xmlPath);
-				s1 = s1.RegexReplace(@"<see cref="".:(.+?)"" ?/> ?", "$1 ")
-					.RegexReplace(@">\s*<summary> ?(.+?) ?</summary>\s*<", ">$1<");
-				//Print(s1); return;
-				File.WriteAllText(xmlPath = AFolders.Temp + "namespaces.xml", s1);
-			} else {
+			if(!f.Name.Eqi("namespaces.xml")) {
 				var dllName = Path.ChangeExtension(f.Name, "dll");
 				if(!(AFile.ExistsAsFile(netDir + dllName) || AFile.ExistsAsFile(wpfDir + dllName))) {
 					Print("<><c 0x808080>" + f.Name + "</c>");
@@ -2094,9 +2088,11 @@ class Script : AScript
 		AOutput.QM2.UseQM2 = true;
 		AOutput.Clear();
 		//100.ms();
+
+#if false
 		//g1:
 		//AWnd k = AWnd.Find("dkdkdkdk", null, null, );
-		AWnd.Find("", "", default, WFFlags.)
+		AWnd.Find("", "", default, WFFlags.);
 		//this.
 		//Form f = null; f.
 		//Print(1);
@@ -2117,6 +2113,15 @@ class Script : AScript
 
 		//var f = new Au.Tools.FormAWinImage();
 		//f.ShowDialog();
+#endif
+		string s = "";
+		//s.
+		//this.TestA
+		s.Insert(0, "f");
+		File.Create("");
+		//List<int> a; a.ConvertAll
+		//var d = new Dictionary<int, int>(); d.
+		//AWnd w; w.
 
 		//TestScreenDC();
 		//AExec.RunConsole(,)
@@ -2186,6 +2191,18 @@ class Script : AScript
 		////finally {  }
 		////ADialog.Show("dll unloaded");
 	}
+	//async Task<int> TestAsync() { }
+
+	public int Pub2 {
+		[return: MarshalAs(UnmanagedType.Bool)]
+		get => 0;
+		//[param: DefaultParameterValue(5)]
+		[CompilerGenerated]
+		set { }
+	}
+
+	[field: ThreadStatic]
+	public int Pub3 { get; set; }
 }
 
 static class TestExt

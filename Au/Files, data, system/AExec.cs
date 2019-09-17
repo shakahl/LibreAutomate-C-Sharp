@@ -51,7 +51,7 @@ namespace Au
 		/// If string, it sets initial current directory for the new process. Use "" to get it from <i>file</i>. More info: <see cref="RMore.CurrentDirectory"/>.
 		/// </param>
 		/// <exception cref="ArgumentException">Used more.Verb and flag Admin.</exception>
-		/// <exception cref="AException">Failed. For example, the file does not exist.</exception>
+		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
 		/// <remarks>
 		/// It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
 		/// Uses API <msdn>ShellExecuteEx</msdn>.
@@ -123,7 +123,7 @@ namespace Au
 			finally {
 				pidl?.Dispose();
 			}
-			if(!ok) throw new AException(0, $"*run '{file}'");
+			if(!ok) throw new AuException(0, $"*run '{file}'");
 
 			var R = new RResult();
 			bool waitForExit = 0 != (flags & RFlags.WaitForExit);
@@ -168,7 +168,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
-		/// Handles only exception of type AException. It is thrown when fails, usually when the file does not exist.
+		/// Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
 		/// </remarks>
 		/// <seealso cref="PrintWarning"/>
 		/// <seealso cref="OptDebug.DisableWarnings"/>
@@ -179,7 +179,7 @@ namespace Au
 			try {
 				return Run(s, args, flags, more);
 			}
-			catch(AException e) {
+			catch(AuException e) {
 				PrintWarning(e.Message, 1);
 				return null;
 			}
@@ -239,7 +239,7 @@ namespace Au
 		/// If null (default), uses the default console text encoding (API <msdn>GetOEMCP</msdn>); it is not Unicode. Programs that display Unicode text use <see cref="Encoding.UTF8"/>.
 		/// </param>
 		/// <returns>The process exit code. Usually a non-0 value means error.</returns>
-		/// <exception cref="AException">Failed, for example file not found.</exception>
+		/// <exception cref="AuException">Failed, for example file not found.</exception>
 		/// <remarks>
 		/// The console window is hidden. The text that would be displayed in it is redirected to this function.
 		/// 
@@ -271,7 +271,7 @@ namespace Au
 		/// <param name="args"></param>
 		/// <param name="curDir"></param>
 		/// <param name="encoding"></param>
-		/// <exception cref="AException">Failed, for example file not found.</exception>
+		/// <exception cref="AuException">Failed, for example file not found.</exception>
 		public static unsafe int RunConsole(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null)
 		{
 			return _RunConsole(output, null, exe, args, curDir, encoding);
@@ -285,7 +285,7 @@ namespace Au
 		/// <param name="args"></param>
 		/// <param name="curDir"></param>
 		/// <param name="encoding"></param>
-		/// <exception cref="AException">Failed, for example file not found.</exception>
+		/// <exception cref="AuException">Failed, for example file not found.</exception>
 		public static unsafe int RunConsole(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null)
 		{
 			var b = new StringBuilder();
@@ -303,7 +303,7 @@ namespace Au
 
 			LibHandle hProcess = default;
 			var sa = new Api.SECURITY_ATTRIBUTES(null) { bInheritHandle = 1 };
-			if(!Api.CreatePipe(out LibHandle hOutRead, out LibHandle hOutWrite, sa, 0)) throw new AException(0);
+			if(!Api.CreatePipe(out LibHandle hOutRead, out LibHandle hOutWrite, sa, 0)) throw new AuException(0);
 
 			byte* b = null; char* c = null;
 			try {
@@ -314,7 +314,7 @@ namespace Au
 				ps.si.hStdError = hOutWrite;
 				ps.flags |= Api.CREATE_NEW_CONSOLE;
 
-				if(!ps.StartLL(out var pi, inheritHandles: true)) throw new AException(0);
+				if(!ps.StartLL(out var pi, inheritHandles: true)) throw new AuException(0);
 				hOutWrite.Dispose(); //important: must be here
 				pi.hThread.Dispose();
 				hProcess = pi.hProcess;
@@ -336,7 +336,7 @@ namespace Au
 						if(nr == 0) continue;
 						nr += offs;
 					} else {
-						if(ALastError.Code != Api.ERROR_BROKEN_PIPE) throw new AException(0);
+						if(ALastError.Code != Api.ERROR_BROKEN_PIPE) throw new AuException(0);
 						//process ended
 						if(offs == 0) break;
 						nr = offs;

@@ -60,7 +60,7 @@ namespace Au
 		/// </param>
 		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// var stop = false;
@@ -92,7 +92,7 @@ namespace Au
 		/// </param>
 		/// <param name="ignoreAuInjected">Don't call the hook procedure for events sent by functions of this library. Default true.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// var stop = false;
@@ -126,7 +126,7 @@ namespace Au
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// using(AHookWin.ThreadCbt(x => {
@@ -180,7 +180,7 @@ namespace Au
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// using(AHookWin.ThreadGetMessage(x => {
@@ -203,7 +203,7 @@ namespace Au
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// using(AHookWin.ThreadKeyboard(x => {
@@ -228,7 +228,7 @@ namespace Au
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// using(AHookWin.ThreadMouse(x => {
@@ -253,7 +253,7 @@ namespace Au
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// using(AHookWin.ThreadCallWndProc(x => {
@@ -279,7 +279,7 @@ namespace Au
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// using(AHookWin.ThreadCallWndProcRet(x => {
@@ -308,7 +308,7 @@ namespace Au
 		/// Sets the hook.
 		/// </summary>
 		/// <param name="threadId">If the hook type is a thread hook - thread id, or 0 for current thread. Else not used and must be 0.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="InvalidOperationException">The hook is already set.</exception>
 		/// <exception cref="ArgumentException">threadId not 0 and the hook type is not a thread hook.</exception>
 		/// <remarks>
@@ -324,7 +324,7 @@ namespace Au
 				threadId = Api.GetCurrentThreadId();
 			}
 			_hh = Api.SetWindowsHookEx(_hookType, _proc1, default, threadId);
-			if(_hh == default) throw new AException(0, "*set hook");
+			if(_hh == default) throw new AuException(0, "*set hook");
 		}
 
 		/// <summary>

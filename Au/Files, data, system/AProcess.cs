@@ -168,7 +168,7 @@ namespace Au
 						//Print(na); //eg 224000
 
 						if(status == 0) break;
-						if(status != Api.STATUS_INFO_LENGTH_MISMATCH) throw new AException(status);
+						if(status != Api.STATUS_INFO_LENGTH_MISMATCH) throw new AuException(status);
 						var t = b; b = null; AMemory.Free(t);
 					}
 
@@ -246,11 +246,11 @@ namespace Au
 		/// Gets basic info of all processes: name, id, session id.
 		/// </summary>
 		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
-		/// <exception cref="AException">Failed. Unlikely.</exception>
+		/// <exception cref="AuException">Failed. Unlikely.</exception>
 		public static ProcessInfo[] AllProcesses(bool ofThisSession = false)
 		{
 			using(new _AllProcesses(out var p, out int n)) {
-				if(n == 0) throw new AException();
+				if(n == 0) throw new AuException();
 				int sessionId = 0, ns = n;
 				if(ofThisSession) {
 					sessionId = CurrentSessionId;

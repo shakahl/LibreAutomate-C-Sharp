@@ -30,7 +30,7 @@ namespace Au.Util
 	/// Implemented in the same way as <see cref="System.Xml.Linq.XContainer"/>.
 	/// </remarks>
 	/// <example>
-	/// Shows how to declare a ATreeBase-derived class, load tree of nodes from an XML file, print descendant nodes, save the tree to an XML file.
+	/// Shows how to declare an ATreeBase-derived class, load tree of nodes from an XML file, print descendant nodes, save the tree to an XML file.
 	/// <code><![CDATA[
 	/// /*/ r System.Xml */
 	/// using System.Xml;

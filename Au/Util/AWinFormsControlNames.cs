@@ -43,7 +43,7 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="w">Any top-level or child window of that process.</param>
 		/// <exception cref="WndException">w invalid.</exception>
-		/// <exception cref="AException">Failed to allocate process memory (see <see cref="AProcessMemory"/>) needed to get control names, usually because of [](xref:uac).</exception>
+		/// <exception cref="AuException">Failed to allocate process memory (see <see cref="AProcessMemory"/>) needed to get control names, usually because of [](xref:uac).</exception>
 		public AWinFormsControlNames(AWnd w)
 		{
 			_pm = new AProcessMemory(w, 4096); //throws
@@ -80,7 +80,7 @@ namespace Au.Util
 		/// Returns null if it is not a Windows Forms control or if fails.
 		/// </summary>
 		/// <param name="c">The control. Can be top-level window too.</param>
-		/// <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create a AWinFormsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
+		/// <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create an AWinFormsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
 		public static string GetSingleControlName(AWnd c)
 		{
 			if(!IsWinFormsControl(c)) return null;

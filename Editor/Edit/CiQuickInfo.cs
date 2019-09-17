@@ -90,7 +90,7 @@ class CiQuickInfo
 			//}
 		}
 		if(docComm == null && r.Tags[0] == "Namespace" && descr != null && descr.RegexMatch(@"^namespace ([\w\.]+)", 1, out string ns)) {
-			docComm = MetaReferences.GetNamespaceDoc(ns);
+			docComm = MetaReferences.GetNamespaceDocXml(ns);
 			if(docComm != null) Print("DocumentationComments", docComm);
 		}
 

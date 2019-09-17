@@ -35,7 +35,7 @@ namespace Au
 		/// </summary>
 		/// <param name="rect">A rectangle in screen coordinates.</param>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
-		/// <exception cref="AException">Failed. Probably there is not enough memory for bitmap of this size (with*height*4 bytes).</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (with*height*4 bytes).</exception>
 		/// <remarks>
 		/// PixelFormat is always Format32bppRgb.
 		/// </remarks>
@@ -61,7 +61,7 @@ namespace Au
 		/// <param name="usePrintWindow">Use flag <see cref="WICFlags.PrintWindow"/>.</param>
 		/// <exception cref="WndException">Invalid w.</exception>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
-		/// <exception cref="AException">Failed. Probably there is not enough memory for bitmap of this size (with*height*4 bytes).</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (with*height*4 bytes).</exception>
 		/// <remarks>
 		/// How this is different from <see cref="Capture(RECT)"/>:
 		/// 1. Gets pixels from window's device context (DC), not from screen DC, unless the Aero theme is turned off (on Windows 7). The window can be under other windows. The image can be different.
@@ -108,7 +108,7 @@ namespace Au
 				var d = R.LockBits(new Rectangle(0, 0, r.Width, r.Height), ImageLockMode.ReadWrite, R.PixelFormat); //tested: fast, no copy
 				try {
 					var apiResult = Api.GetDIBits(mb.Hdc, mb.Hbitmap, 0, r.Height, (void*)d.Scan0, &bh, 0); //DIB_RGB_COLORS
-					if(apiResult != r.Height) throw new AException("GetDIBits");
+					if(apiResult != r.Height) throw new AuException("GetDIBits");
 					_SetAlpha(d, r, path);
 				}
 				finally { R.UnlockBits(d); } //tested: fast, no copy
@@ -172,7 +172,7 @@ namespace Au
 		/// </summary>
 		/// <param name="outline">The outline (shape) of the area in screen. If single element, captures single pixel.</param>
 		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
-		/// <exception cref="AException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
 		/// <remarks>
 		/// PixelFormat is always Format32bppRgb.
 		/// </remarks>
@@ -189,7 +189,7 @@ namespace Au
 		/// <param name="usePrintWindow">Use flag <see cref="WICFlags.PrintWindow"/>.</param>
 		/// <exception cref="WndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
-		/// <exception cref="AException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
 		/// <remarks>More info: <see cref="Capture(AWnd, RECT, bool)"/>.</remarks>
 		public static Bitmap Capture(AWnd w, List<POINT> outline, bool usePrintWindow = false)
 		{
@@ -210,7 +210,7 @@ namespace Au
 		/// 1. Image.FromHbitmap usually creates bottom-up bitmap, which is incompatible with <see cref="Find"/>. This function creates normal top-down bitmap, like <c>new Bitmap(...)</c>, <c>Bitmap.FromFile(...)</c> etc do.
 		/// 2. This function always creates bitmap of PixelFormat Format32bppRgb.
 		/// </remarks>
-		/// <exception cref="AException">Failed. For example hbitmap is default(IntPtr).</exception>
+		/// <exception cref="AuException">Failed. For example hbitmap is default(IntPtr).</exception>
 		/// <exception cref="Exception">Exceptions of Bitmap(int, int, PixelFormat) constructor.</exception>
 		public static unsafe Bitmap BitmapFromHbitmap(IntPtr hbitmap)
 		{
@@ -229,7 +229,7 @@ namespace Au
 				return R;
 			}
 			ge:
-			throw new AException();
+			throw new AuException();
 		}
 
 		#endregion
@@ -326,7 +326,7 @@ namespace Au
 		{
 			using(AOsd.ShowText(info, Timeout.Infinite, icon: SystemIcons.Information)) {
 				//try { AKeys.WaitForHotkey(0, KKey.F3); }
-				//catch(AException) { ADialog.ShowError("Failed to register hotkey F3"); return false; }
+				//catch(AuException) { ADialog.ShowError("Failed to register hotkey F3"); return false; }
 
 				AKeys.WaitForKey(0, KKey.F3, up: true, block: true);
 			}

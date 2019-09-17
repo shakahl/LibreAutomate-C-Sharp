@@ -36,11 +36,11 @@ class CiPopupList : IMessageFilter
 	List<CiComplItem> _a;
 	List<int> _aVisible; //indices of visible _a items
 	List<string> _groups;
-	Func<CiComplItem, Task<CompletionDescription>> _itemDescription;
 	ToolStripButton _groupButton;
 	bool _groupsEnabled;
 	Bitmap _imgStatic, _imgAbstract;
 	CiPopupHtml _popupHtml;
+	ATimer _popupTimer;
 
 	/// <summary>
 	/// The top-level popup window.
@@ -64,6 +64,7 @@ class CiPopupList : IMessageFilter
 		_list.SuspendLayout();
 		_list.AccessibleName = _list.Name = "Codein_list";
 		_list.Dock = DockStyle.Fill;
+		_list.BackColor = Color.White;
 		_list.ItemClick += _list_ItemClick;
 		_list.SelectedIndexChanged += _list_SelectedIndexChanged;
 
@@ -80,6 +81,8 @@ class CiPopupList : IMessageFilter
 		for(int i = 0; i < kindNames.Length; i++) _AddButton(kindNames[i], CiUtil.GetKindImage((CiItemKind)i));
 		_tb.Items.Add(new ToolStripSeparator());
 		_groupButton = _AddButton("Group by namespace or inheritance", EdResources.GetImageNoCacheDpi(nameof(Au.Editor.Properties.Resources.ciGroupBy)));
+		if(Program.Settings.GetBool("ciGroup", true)) _groupButton.Checked = true;
+		//TODO: _linqButton
 
 		ToolStripButton _AddButton(string text, Image image)
 		{
@@ -139,67 +142,29 @@ class CiPopupList : IMessageFilter
 		if(e.DoubleClick) _Commit(e.Index);
 	}
 
-#if true
-	private async void _list_SelectedIndexChanged(int index)
+	private void _list_SelectedIndexChanged(int index)
 	{
 		if((uint)index < _VisibleCount) {
-			var k = _VisibleItem(index);
-			APerf.First();
-			IEnumerable<TaggedText> tt = null;
-			var sym = k.ci.Symbols?[0];
-			if(sym != null) {
-				tt = _compl.GetDescription(sym);
-			} else {
-				var cd = await _itemDescription(k);
-				if(cd == null || cd.TaggedParts.IsEmpty) return;
-				tt = cd.TaggedParts;
-			}
-
-
-
-			//var cd = await _itemDescription(k);
-			//APerf.Next();
-			//if(cd == null || cd.TaggedParts.IsEmpty) return;
-
-			_popupHtml ??= new CiPopupHtml();
-			_popupHtml.SetHtml(k, tt);
-			_popupHtml.Show(Panels.Editor.ActiveDoc, _w.Bounds);
+			var ci = _VisibleItem(index);
+			_popupTimer ??= new ATimer(_ShowPopupHtml);
+			_popupTimer.Tag = ci;
+			_popupTimer.Start(300, true);
+			_popupHtml?.SetHtml(null);
 		} else {
 			_popupHtml?.Hide();
+			_popupTimer?.Stop();
 		}
 	}
-#elif true
-	private async void _list_SelectedIndexChanged(int index)
+
+	void _ShowPopupHtml(ATimer t)
 	{
-		if((uint)index < _VisibleCount) {
-			var k = _VisibleItem(index);
-			APerf.First();
-			var cd = await _itemDescription(k);
-			APerf.Next();
-			if(cd == null || cd.TaggedParts.IsEmpty) return;
-			_popupHtml ??= new CiPopupHtml();
-			_popupHtml.SetHtml(k, cd.TaggedParts);
-			_popupHtml.Show(Panels.Editor.ActiveDoc, _w.Bounds);
-		} else {
-			_popupHtml?.Hide();
-		}
+		var ci = t.Tag as CiComplItem;
+		var html = _compl.GetDescriptionHtml(ci, 0);
+		if(html == null) return;
+		_popupHtml ??= new CiPopupHtml();
+		_popupHtml.SetHtml(html, _compl, ci); //slow first time
+		_popupHtml.Show(Panels.Editor.ActiveDoc, _w.Bounds);
 	}
-#else
-
-	private async void _list_SelectedIndexChanged(int index)
-	{
-		if((uint)index < _VisibleCount) {
-			var k = _VisibleItem(index);
-			//var cd = await _itemDescription(k);
-			//if(cd == null || cd.TaggedParts.IsEmpty) return;
-			_popupHtml ??= new CiPopupHtml();
-			_popupHtml.SetHtml(k);
-			_popupHtml.Show(Panels.Editor.ActiveDoc, _w.Bounds);
-		} else {
-			_popupHtml?.Hide();
-		}
-	}
-#endif
 
 	int _VisibleCount => _aVisible.Count;
 
@@ -211,7 +176,7 @@ class CiPopupList : IMessageFilter
 		Hide();
 	}
 
-	public void SetListItems(List<CiComplItem> a, List<string> groups, Func<CiComplItem, Task<CompletionDescription>> itemDescription)
+	public void SetListItems(List<CiComplItem> a, List<string> groups)
 	{
 		if(Empty(a)) {
 			Hide();
@@ -220,7 +185,6 @@ class CiPopupList : IMessageFilter
 
 		_a = a;
 		_groups = groups;
-		_itemDescription = itemDescription;
 		_groupsEnabled = _groups != null && _groupButton.Checked;
 
 		for(int i = 0, n = _nKindButtons; i < n; i++) (_tb.Items[i] as ToolStripButton).Checked = false;
@@ -263,10 +227,10 @@ class CiPopupList : IMessageFilter
 		_a = null;
 		_aVisible = null;
 		_groups = null;
-		_itemDescription = null;
 		_list.AddItems(0, null, null, null);
 		_w.Hide();
 		_popupHtml?.Hide();
+		_popupTimer?.Stop();
 	}
 
 	public CiComplItem SelectedItem {
@@ -353,7 +317,7 @@ class CiPopupList : IMessageFilter
 
 		//draw selection
 		r.Width -= xText; r.X += xText;
-		if(e.isSelected) g.FillRectangle(SystemBrushes.Control, r);
+		if(e.isSelected) g.FillRectangle(s_selectedBrush, r);
 
 		//draw text
 		var s = ci.DisplayText;
@@ -403,6 +367,8 @@ class CiPopupList : IMessageFilter
 			}
 		}
 	}
+
+	static Brush s_selectedBrush = new SolidBrush((Color)(ColorInt)0xc4d5ff);
 
 	static int _TextHorzOffset => Au.Util.ADpi.ScaleInt(38);
 
@@ -500,6 +466,7 @@ class CiPopupList : IMessageFilter
 			switch(m.Msg) {
 			case Api.WM_DESTROY:
 				_OnVisibleChanged(false);
+				Program.Settings.Set("ciGroup", _p._groupButton.Checked);
 				break;
 			case Api.WM_MOUSEACTIVATE:
 				m.Result = (IntPtr)(((int)m.LParam >> 16 == Api.WM_LBUTTONDOWN) ? Api.MA_NOACTIVATE : Api.MA_NOACTIVATEANDEAT);

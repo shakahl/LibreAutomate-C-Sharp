@@ -109,11 +109,11 @@ static partial class Test
 	{
 		using(AHookWin.ThreadGetMessage(x => {
 			Print(x.msg->ToString(), x.PM_NOREMOVE);
-			//throw new AException("TEST");
+			//throw new AuException("TEST");
 		})) {
 			ATimer.Every(1000, () => {
 				Print(1);
-				//throw new AException("TEST");
+				//throw new AuException("TEST");
 				//Thread.CurrentThread.Abort();
 			});
 			MessageBox.Show("");
@@ -126,7 +126,7 @@ static partial class Test
 		//{
 		//	//Thread.Sleep(100);
 		//	//Thread.CurrentThread.Abort();
-		//	throw new AException("TEST");
+		//	throw new AuException("TEST");
 		//	Print(w);
 		//	return true;
 		//}, 0);

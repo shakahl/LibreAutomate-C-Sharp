@@ -148,7 +148,7 @@ namespace Au
 		/// Starts server.
 		/// Returns false if server already exists (if global - in any process).
 		/// </summary>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		public bool Start()
 		{
 			lock(this) {
@@ -157,7 +157,7 @@ namespace Au
 					if(m.Is0) {
 						var e = ALastError.Code;
 						if(e == Api.ERROR_ALREADY_EXISTS) return false; //called not first time, or exists in another process/appdomain
-						throw new AException(e, "*create mailslot");
+						throw new AuException(e, "*create mailslot");
 					}
 
 					_mailslot = m;

@@ -50,11 +50,11 @@ namespace Au.Util
 		/// Calls <see cref="Create"/>.
 		/// </summary>
 		/// <exception cref="ArgumentException">width or height is less than 1.</exception>
-		/// <exception cref="AException">Failed. Probably there is not enough memory for bitmap of specified size (need with*height*4 bytes).</exception>
+		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of specified size (need with*height*4 bytes).</exception>
 		public AMemoryBitmap(int width, int height)
 		{
 			if(width <= 0 || height <= 0) throw new ArgumentException();
-			if(!Create(width, height)) throw new AException("*create memory bitmap of specified size");
+			if(!Create(width, height)) throw new AuException("*create memory bitmap of specified size");
 		}
 
 		//rejected: not obvious, whether it attaches or copies. Also, attaching is rarely used.

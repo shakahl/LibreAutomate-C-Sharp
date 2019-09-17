@@ -276,7 +276,7 @@ namespace Au
 		/// Primary screen is 0. Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
 		/// </summary>
 		/// <param name="t"></param>
-		/// <exception cref="AException">Failed (probably the Screen object is invalid).</exception>
+		/// <exception cref="AuException">Failed (probably the Screen object is invalid).</exception>
 		public static int GetIndex(this Screen t)
 		{
 			if(t.Primary) return 0;
@@ -292,7 +292,7 @@ namespace Au
 					//When changed display settings, AllScreens objects are replaced with new objects. HMONITOR in most cases are the same. 
 				}
 			}
-			throw new AException();
+			throw new AuException();
 		}
 	}
 }

@@ -252,9 +252,7 @@ namespace Au.Compiler
 					var refs = m.References.Refs;
 					int j = DefaultReferences.Count;
 					if(refs.Count > j) {
-						//string netDir = AFolders.Windows + @"Microsoft.NET\";
-						string netDir = AFolders.NetFrameworkRuntime; //no GAC
-						var appDir = AFolders.ThisAppBS;
+						string netDir = AFolders.NetFrameworkRuntimeBS, appDir = AFolders.ThisAppBS;
 						for(; j < refs.Count; j++) {
 							var s1 = refs[j].FilePath;
 							if(s1.Starts(netDir, true)) continue;
@@ -337,7 +335,7 @@ namespace Au.Compiler
 			{
 				_data = null;
 				try { AFile.Delete(CacheDirectory); }
-				catch(AException e) { PrintWarning(e.ToString(), -1); }
+				catch(AuException e) { PrintWarning(e.ToString(), -1); }
 			}
 		}
 

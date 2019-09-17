@@ -29,27 +29,27 @@ namespace Au.Util
 		AWaitableTimer(IntPtr h) => SafeWaitHandle = new Microsoft.Win32.SafeHandles.SafeWaitHandle(h, true);
 
 		/// <summary>
-		/// Calls API <msdn>CreateWaitableTimer</msdn> and creates a AWaitableTimer object that wraps the timer handle.
+		/// Calls API <msdn>CreateWaitableTimer</msdn> and creates an AWaitableTimer object that wraps the timer handle.
 		/// </summary>
 		/// <param name="manualReset"></param>
 		/// <param name="timerName">Timer name. If a timer with this name already exists, opens it if possible. If null, creates unnamed timer.</param>
-		/// <exception cref="AException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
+		/// <exception cref="AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
 		public static AWaitableTimer Create(bool manualReset = false, string timerName = null)
 		{
 			var h = Api.CreateWaitableTimer(Api.SECURITY_ATTRIBUTES.ForLowIL, manualReset, timerName);
-			if(h.Is0) throw new AException(0, "*create timer");
+			if(h.Is0) throw new AuException(0, "*create timer");
 			return new AWaitableTimer(h);
 		}
 
 		/// <summary>
-		/// Calls API <msdn>OpenWaitableTimer</msdn> and creates a AWaitableTimer object that wraps the timer handle.
+		/// Calls API <msdn>OpenWaitableTimer</msdn> and creates an AWaitableTimer object that wraps the timer handle.
 		/// </summary>
 		/// <param name="timerName">Timer name. Fails if it does not exist; to open-or-create use <see cref="Create"/>.</param>
 		/// <param name="access">.See <msdn>Synchronization Object Security and Access Rights</msdn>. The default value TIMER_MODIFY_STATE|SYNCHRONIZE allows to set and wait.</param>
-		/// <exception cref="AException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
+		/// <exception cref="AuException">Failed. For example, a non-timer kernel object with this name already exists.</exception>
 		/// <param name="inheritHandle"></param>
 		/// <param name="noException">If fails, return null, don't throw exception. Supports <see cref="ALastError"/>.</param>
-		/// <exception cref="AException">Failed. For example, the timer does not exist.</exception>
+		/// <exception cref="AuException">Failed. For example, the timer does not exist.</exception>
 		public static AWaitableTimer Open(string timerName, uint access = Api.TIMER_MODIFY_STATE | Api.SYNCHRONIZE, bool inheritHandle = false, bool noException = false)
 		{
 			var h = Api.OpenWaitableTimer(access, inheritHandle, timerName);
@@ -59,7 +59,7 @@ namespace Au.Util
 					ALastError.Code = e;
 					return null;
 				}
-				throw new AException(e, "*open timer");
+				throw new AuException(e, "*open timer");
 			}
 			return new AWaitableTimer(h);
 		}

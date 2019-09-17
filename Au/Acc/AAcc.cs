@@ -318,7 +318,7 @@ namespace Au
 		/// <param name="objid">Window part id. Default AccOBJID.WINDOW. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
 		/// <param name="flags">Flags.</param>
 		/// <exception cref="WndException">Invalid window.</exception>
-		/// <exception cref="AException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// <exception cref="ArgumentException"><i>objid</i> is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromWindow</msdn>.
@@ -341,7 +341,7 @@ namespace Au
 			var hr = Cpp.Cpp_AccFromWindow(flags.Has(AWFlags.NotInProc) ? 1 : 0, w, objid, out var a, out _);
 			if(hr != 0) {
 				if(flags.Has(AWFlags.NoThrow)) return null;
-				if(spec && w.Is0) throw new AException();
+				if(spec && w.Is0) throw new AuException();
 				w.ThrowIfInvalid();
 				_WndThrow(hr, w, "*get accessible object from window.");
 			}
@@ -351,7 +351,7 @@ namespace Au
 		static void _WndThrow(int hr, AWnd w, string es)
 		{
 			w.LibUacCheckAndThrow(es);
-			throw new AException(hr, es);
+			throw new AuException(hr, es);
 		}
 
 		/// <summary>
@@ -362,7 +362,7 @@ namespace Au
 		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>var a = AAcc.FromXY((x, y, true));</c>. Also when need <see cref="Coord.Reverse"/> etc.
 		/// </param>
 		/// <param name="flags"></param>
-		/// <exception cref="AException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </remarks>
@@ -382,7 +382,7 @@ namespace Au
 		/// Gets accessible object from mouse cursor (pointer) position.
 		/// </summary>
 		/// <param name="flags"></param>
-		/// <exception cref="AException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </remarks>

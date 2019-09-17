@@ -60,7 +60,7 @@ namespace Au
 		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
 		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
 		/// <param name="flags"></param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>See <see cref="AHookAcc"/>.</example>
 		public AHookAcc(AccEVENT eventMin, AccEVENT eventMax, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
 		{
@@ -79,7 +79,7 @@ namespace Au
 		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
 		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
 		/// <param name="flags"></param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>See <see cref="AHookAcc"/>.</example>
 		public AHookAcc(AccEVENT[] events, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
 		{
@@ -98,7 +98,7 @@ namespace Au
 		{
 			_Throw1();
 			_hh = Api.SetWinEventHook(eventMin, eventMax, default, _proc1, idProcess, idThread, flags);
-			if(_hh == default) throw new AException(0, "*set hook");
+			if(_hh == default) throw new AuException(0, "*set hook");
 		}
 
 		/// <summary>
@@ -114,7 +114,7 @@ namespace Au
 			for(int i = 0; i < events.Length; i++) {
 				var e = events[i]; if(e == 0) continue;
 				var hh = Api.SetWinEventHook(e, e, default, _proc1, idProcess, idThread, flags);
-				if(hh == default) { var ec = ALastError.Code; Unhook(); throw new AException(ec, "*set hook for " + e.ToString()); }
+				if(hh == default) { var ec = ALastError.Code; Unhook(); throw new AuException(ec, "*set hook for " + e.ToString()); }
 				_ahh[i] = hh;
 			}
 		}

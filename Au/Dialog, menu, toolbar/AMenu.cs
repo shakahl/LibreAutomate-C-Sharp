@@ -143,7 +143,7 @@ namespace Au
 		/// - string - path of .ico or any other file or folder or non-file object. See <see cref="AIcon.GetFileIcon"/>. If not full path, searches in <see cref="AFolders.ThisAppImages"/>; see also <see cref="AMTBase.IconFlags"/>.
 		/// - string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// - int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
-		/// - Icon, Image, AFolderPath.
+		/// - Icon, Image, FolderPath.
 		/// - null (default) - no icon. If <see cref="AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AExec.TryRun(@"c:\path\file.exe")</c> or <c>AExec.TryRun(AFolders.System + "file.exe")</c>.
 		/// - "" - no icon.
 		/// </param>
@@ -1167,7 +1167,7 @@ namespace Au.Types
 					case int index: if(index >= 0) item.ImageIndex = index; break;
 					case Image img: item.Image = img; break;
 					case Icon ico: item.Image = ico.ToBitmap(); break;
-					case AFolderPath fp: _SetItemFileIcon(isBar, item, fp); break;
+					case FolderPath fp: _SetItemFileIcon(isBar, item, fp); break;
 					}
 				}
 				catch(Exception e) { ADebug.Print(e.Message); } //ToBitmap() may throw
@@ -1311,9 +1311,9 @@ namespace Au.Types
 		static string _IconPathFromCode(MethodInfo mi)
 		{
 			//support code pattern like 'AFolders.System + "notepad.exe"'.
-			//	Opcodes: call(AFolders.System), ldstr("notepad.exe"), AFolderPath.op_Addition.
+			//	Opcodes: call(AFolders.System), ldstr("notepad.exe"), FolderPath.op_Addition.
 			//also code pattern like 'AFolders.System' or 'AFolders.Virtual.RecycleBin'.
-			//	Opcodes: call(AFolders.System), AFolderPath.op_Implicit(AFolderPath to string).
+			//	Opcodes: call(AFolders.System), FolderPath.op_Implicit(FolderPath to string).
 			//also code pattern like 'AExec.TryRun("notepad.exe")'.
 			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
 			try {
@@ -1336,20 +1336,20 @@ namespace Au.Types
 						//Print(f, f.DeclaringType, f.Name, f.MemberType, f.ReturnType, f.GetParameters().Length);
 						var dt = f.DeclaringType;
 						if(dt == typeof(AFolders) || dt == typeof(AFolders.Virtual)) {
-							if(f.ReturnType == typeof(AFolderPath) && f.GetParameters().Length == 0) {
+							if(f.ReturnType == typeof(FolderPath) && f.GetParameters().Length == 0) {
 								//Print(1);
 								f1 = f;
 								patternStart = i;
 							}
-						} else if(dt == typeof(AFolderPath)) {
+						} else if(dt == typeof(FolderPath)) {
 							if(i == patternStart + 2 && f.Name == "op_Addition") {
 								//Print(2);
-								var fp = (AFolderPath)f1.Invoke(null, null);
+								var fp = (FolderPath)f1.Invoke(null, null);
 								if((string)fp == null) return null;
 								return fp + filename;
 							} else if(i == patternStart + 1 && f.Name == "op_Implicit" && f.ReturnType == typeof(string)) {
 								//Print(3);
-								return (AFolderPath)f1.Invoke(null, null);
+								return (FolderPath)f1.Invoke(null, null);
 							}
 						}
 					}

@@ -548,11 +548,12 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// These references are added when compiling any script/library.
-		/// mscorlib, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
+		/// mscorlib, Microsoft.CSharp, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
 		/// </summary>
 		public static readonly Dictionary<string, string> DefaultReferences = new Dictionary<string, string>
 		{
 			{"mscorlib", typeof(object).Assembly.Location},
+			{"Microsoft.CSharp", typeof(Microsoft.CSharp.RuntimeBinder.RuntimeBinderException).Assembly.Location}, //need eg for dynamic support
 			{"System", typeof(Component).Assembly.Location},
 			{"System.Core", typeof(HashSet<>).Assembly.Location},
 			{"System.Windows.Forms", typeof(System.Windows.Forms.Form).Assembly.Location},

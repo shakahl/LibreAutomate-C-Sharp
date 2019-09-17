@@ -439,19 +439,24 @@ The file must be in this workspace. Can be path relative to this file (examples:
 	private void _bAddBrowse_Click(object sender, EventArgs e)
 	{
 		string fNET = AFolders.NetFrameworkRuntime, fApp = AFolders.ThisApp;
-		var d = new OpenFileDialog { InitialDirectory = sender == _bAddBrowseNet ? fNET : fApp, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
+		using var d = new OpenFileDialog { InitialDirectory = sender == _bAddBrowseNet ? fNET : fApp, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
 		if(d.ShowDialog(this) != DialogResult.OK) return;
 
 		//remove path and ext if need
-		bool noDir = false, noExt = false;
 		var a = d.FileNames;
-		var dir = APath.GetDirectoryPath(a[0]);
-		if(dir.Eqi(fNET) || dir.Eqi(fNET + @"\WPF")) noDir = noExt = true;
-		else if(dir.Eqi(fApp) || dir.Eqi(AFolders.ThisAppBS + "Libraries") || dir.Eqi(AFolders.ThisAppBS + "Compiler")) noDir = true; //App.config: <probing privatePath="Compiler;Libraries"/>
-		if(noDir) for(int i = 0; i < a.Length; i++) a[i] = APath.GetFileName(a[i], noExt);
+		int j = a[0].Starts(true, s_asmDirs ??= new string[] { AFolders.ThisAppBS, AFolders.NetFrameworkRuntimeBS + @"WPF\", AFolders.NetFrameworkRuntimeBS }) - 1;
+		if(j >= 0) {
+			int dirLen = s_asmDirs[j].Length;
+			for(int i = 0; i < a.Length; i++) {
+				if(j == 0 || a[i].IndexOf('\\', dirLen) > 0) a[i] = a[i].Substring(dirLen);
+				else a[i] = APath.GetFileName(a[i], true);
+			}
+			//App.config: <probing privatePath="Compiler;Libraries"/>
+		}
 
 		_meta.r.AddRange(a);
 	}
+	static string[] s_asmDirs;
 
 	private void _bAddMyLibraryProject_Click(object sender, EventArgs e)
 		=> _AddFromWorkspace(
@@ -698,12 +703,12 @@ Use Google when you don't know some words in help text or don't understand some 
 @"<b>Browse: .NET<> - browse the .NET framework folder. Add selected .dll files as references.
 Adds meta <c green>r FileName<>. The compiler will search in the .NET framework folder and GAC.
 
-Don't need to add mscorlib, System, System.Core, System.Windows.Forms, System.Drawing.
+Don't need to add mscorlib, Microsoft.CSharp, System, System.Core, System.Windows.Forms, System.Drawing.
 To remove, delete the line in the code editor.
 ");
 		_Add(_bAddBrowseOther,
 @"<b>Browse: Other<> - browse any folder. Add selected .dll files as references.
-Adds meta <c green>r FileName.dll<>. Full path if not in <link>%AFolders.ThisApp%<> or <link>%AFolders.ThisApp%\Libraries<>.
+Adds meta <c green>r FileName.dll<>. Full path if not in <link>%AFolders.ThisApp%<>.
 
 Don't need to add Au.dll.
 To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly.dll<>
@@ -713,7 +718,7 @@ To remove, delete the line in the code editor.
 @"<b>GAC: Newest<> - assemblies in GAC. Use the newest version as reference.
 Adds meta <c green>r Assembly<>. The compiler will search in the .NET framework folder and GAC.
 
-Don't need to add mscorlib, System, System.Core, System.Windows.Forms, System.Drawing.
+Don't need to add mscorlib, Microsoft.CSharp, System, System.Core, System.Windows.Forms, System.Drawing.
 To remove, delete the line in the code editor.
 ");
 		_Add(_bAddGacVersion,

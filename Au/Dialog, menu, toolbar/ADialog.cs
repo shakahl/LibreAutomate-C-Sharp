@@ -55,7 +55,6 @@ namespace Au
 	/// switch(r.Button) { case 1: Print("OK"); break; case DResult.Timeout: Print("timeout"); break; }
 	/// ]]></code>
 	/// </example>
-	//[DebuggerStepThrough]
 	public class ADialog
 	{
 		#region API
@@ -1125,7 +1124,7 @@ namespace Au
 		void _AssertIsOtherThread()
 		{
 			if(_threadIdInShow != 0 && _threadIdInShow == Thread.CurrentThread.ManagedThreadId)
-				throw new AException("wrong thread");
+				throw new AuException("wrong thread");
 		}
 
 		/// <summary>
@@ -1413,7 +1412,7 @@ namespace Au
 		/// The returned <see cref="DResult"/> variable has these properties: selected button id, selected radio button id, check box state.
 		/// Tip: DResult supports implicit cast to int. You can use code <c>switch(ADialog.ShowEx(...))</c> instead of <c>switch(ADialog.ShowEx(...).Button)</c> .
 		/// Tip: Use named arguments. Example: <c>ADialog.ShowEx("Text.", icon: DIcon.Info, title: "Title")</c> .
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a ADialog class instance, set properties and call ShowDialog. Example in <see cref="ADialog"/> class help.
+		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call ShowDialog. Example in <see cref="ADialog"/> class help.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1591,7 +1590,7 @@ namespace Au
 		/// ]]></code>
 		/// </param>
 		/// <remarks>
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a ADialog class instance, set properties and call ShowDialog. Example in <see cref="ADialog"/> class help.
+		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call ShowDialog. Example in <see cref="ADialog"/> class help.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1722,7 +1721,7 @@ namespace Au
 		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
 		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
 		/// <remarks>
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a ADialog class instance, set properties and call ShowDialog. Example in <see cref="ADialog"/> class help.
+		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call ShowDialog. Example in <see cref="ADialog"/> class help.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1787,7 +1786,7 @@ namespace Au
 		/// </summary>
 		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
 		/// <remarks>
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a ADialog class instance, set properties and call <see cref="ShowDialogNoWait"/>.
+		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call <see cref="ShowDialogNoWait"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -1800,7 +1799,7 @@ namespace Au
 		/// pd.Send.Close();
 		/// ]]></code>
 		/// </example>
-		/// <exception cref="AException">Failed to show dialog.</exception>
+		/// <exception cref="AuException">Failed to show dialog.</exception>
 		public static ADialog ShowProgressEx(bool marquee,
 			string text1 = null, string text2 = null, string buttons = "0 Cancel", DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
@@ -1843,7 +1842,7 @@ namespace Au
 		/// pd.Send.Close();
 		/// ]]></code>
 		/// </example>
-		/// <exception cref="AException">Failed to show dialog.</exception>
+		/// <exception cref="AuException">Failed to show dialog.</exception>
 		public static ADialog ShowProgress(bool marquee,
 			string text1 = null, string text2 = null, string buttons = "0 Cancel", DFlags flags = 0, AnyWnd owner = default,
 			Coord x = default, Coord y = default)
@@ -1864,7 +1863,7 @@ namespace Au
 		/// Parameters are the same as with <see cref="ShowEx"/>.
 		/// </summary>
 		/// <remarks>
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create a ADialog class instance, set properties and call <see cref="ShowDialogNoWait"/>.
+		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call <see cref="ShowDialogNoWait"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[

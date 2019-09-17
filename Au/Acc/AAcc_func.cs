@@ -298,7 +298,7 @@ namespace Au
 		/// <summary>
 		/// Gets or sets value.
 		/// </summary>
-		/// <exception cref="AException">Failed to set value.</exception>
+		/// <exception cref="AuException">Failed to set value.</exception>
 		/// <remarks>
 		/// Usually it is editable text or some other value that can be changed at run time, therefore in most cases it cannot be used to find or identify the object reliably.
 		/// The 'get' function returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
@@ -311,7 +311,7 @@ namespace Au
 			set
 			{
 				LibThrowIfDisposed();
-				AException.ThrowIfHresultNot0(Cpp.Cpp_AccAction(this, 'v', value));
+				AuException.ThrowIfHresultNot0(Cpp.Cpp_AccAction(this, 'v', value));
 				GC.KeepAlive(this);
 			}
 		}
@@ -380,7 +380,7 @@ namespace Au
 		/// <summary>
 		/// Performs the object's default action (see <see cref="DefaultAction"/>). Usually it is 'click', 'press' or similar.
 		/// </summary>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Fails if the object does not have a default action. Then you can use <see cref="AExtAu.MouseClick(AAcc, Coord, Coord, MButton)"/>, or try <see cref="VirtualClick"/>, <see cref="Select"/>, <see cref="Focus"/> and keyboard functions.
 		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="DoJavaAction"/> or one of the above functions (MouseClick etc).
@@ -391,7 +391,7 @@ namespace Au
 			LibThrowIfDisposed();
 			var hr = Cpp.Cpp_AccAction(this, 'a');
 			GC.KeepAlive(this);
-			AException.ThrowIfHresultNot0(hr);
+			AuException.ThrowIfHresultNot0(hr);
 			//_MinimalSleep(); //don't need. It does not make more reliable.
 		}
 
@@ -404,7 +404,7 @@ namespace Au
 		/// <summary>
 		/// Posts mouse-left-click message to the container window, using coordinates of this object.
 		/// </summary>
-		/// <exception cref="AException">Failed to get rectangle, or the object is invisible/offscreen.</exception>
+		/// <exception cref="AuException">Failed to get rectangle, or the object is invisible/offscreen.</exception>
 		/// <remarks>
 		/// Does not move the mouse.
 		/// Does not wait until the target application finishes processing the message.
@@ -419,7 +419,7 @@ namespace Au
 		/// <summary>
 		/// Posts mouse-right-click message to the container window, using coordinates of this object.
 		/// </summary>
-		/// <exception cref="AException">Failed to get rectangle, or the object is invisible/offscreen.</exception>
+		/// <exception cref="AuException">Failed to get rectangle, or the object is invisible/offscreen.</exception>
 		/// <remarks>
 		/// Does not move the mouse.
 		/// Does not wait until the target application finishes processing the message.
@@ -433,8 +433,8 @@ namespace Au
 		void _VirtualClick(bool right)
 		{
 			var w = WndContainer;
-			if(!GetRect(out var r, w)) throw new AException(0, "*get rectangle");
-			if(r.IsEmpty || State.HasAny(AccSTATE.INVISIBLE | AccSTATE.OFFSCREEN)) throw new AException(0, "Invisible or offscreen");
+			if(!GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
+			if(r.IsEmpty || State.HasAny(AccSTATE.INVISIBLE | AccSTATE.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
 			//FUTURE: Chrome bug: OFFSCREEN is not updated after scrolling.
 
 			var xy = AMath.MakeUint(r.CenterX, r.CenterY);
@@ -454,7 +454,7 @@ namespace Au
 		/// <param name="action">
 		/// Action name. See <see cref="DefaultAction"/>.
 		/// If null (default), performs default action (like <see cref="DoAction"/>) or posts Space key message. More info in Remarks.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Read more about Java accessible objects in <see cref="AAcc"/> topic.
 		/// 
@@ -487,7 +487,7 @@ namespace Au
 
 			var hr = Cpp.Cpp_AccAction(this, 'a', action);
 			GC.KeepAlive(this);
-			AException.ThrowIfHresultNot0(hr);
+			AuException.ThrowIfHresultNot0(hr);
 			//_MinimalSleep(); //probably don't need, because JAB doAccessibleActions is sync, which is bad.
 		}
 
@@ -500,7 +500,7 @@ namespace Au
 		/// <param name="action">If used, calls it instead of <see cref="DoAction"/>.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="AException">Failed. For example, when this object is invalid, or its top-level window does not contain a web page.</exception>
+		/// <exception cref="AuException">Failed. For example, when this object is invalid, or its top-level window does not contain a web page.</exception>
 		/// <exception cref="WndException">The window was closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions thrown by <see cref="DoAction"/> or by the <i>action</i> function.</exception>
 		/// <remarks>
@@ -510,8 +510,8 @@ namespace Au
 		/// </remarks>
 		public bool DoActionAndWaitForNewWebPage(double secondsTimeout = 60, Action<AAcc> action = null)
 		{
-			AWnd w = WndTopLevel; if(w.Is0) throw new AException("*get window");
-			AAcc doc = AAcc.Wait(-1, w, "web:"); if(doc == null) throw new AException("*find web page");
+			AWnd w = WndTopLevel; if(w.Is0) throw new AuException("*get window");
+			AAcc doc = AAcc.Wait(-1, w, "web:"); if(doc == null) throw new AuException("*find web page");
 
 			string wndName = w.LibNameTL, docName = doc.Name; Debug.Assert(!Empty(wndName) && !Empty(docName));
 			bool wndOK = false, docOK = false;
@@ -561,7 +561,7 @@ namespace Au
 
 			if(w.Is0) {
 				w = WndContainer;
-				if(w.Is0) throw new AException("*get window");
+				if(w.Is0) throw new AuException("*get window");
 			}
 
 			var hookEvent = AccEVENT.IA2_DOCUMENT_LOAD_COMPLETE;
@@ -630,7 +630,7 @@ namespace Au
 				}
 			};
 
-			var hh = Api.SetWinEventHook(hookEvent, hookEvent, default, hook, 0, tid, 0); if(hh == default) throw new AException();
+			var hh = Api.SetWinEventHook(hookEvent, hookEvent, default, hook, 0, tid, 0); if(hh == default) throw new AuException();
 			try {
 				eventNotify = new AutoResetEvent(false);
 				if(action != null) action(this); else DoAction();
@@ -651,7 +651,7 @@ namespace Au
 		/// Selects or deselects.
 		/// </summary>
 		/// <param name="how">Specifies whether to select, focus, add to selection etc. Can be two flags, for example <c>AccSELFLAG.TAKEFOCUS | AccSELFLAG.TAKESELECTION</c>.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="WndException">Failed to activate the window (<see cref="AWnd.Activate"/>) or focus the control (<see cref="AWnd.Focus"/>).</exception>
 		/// <remarks>
 		/// Uses <msdn>IAccessible.accSelect</msdn>.
@@ -665,7 +665,7 @@ namespace Au
 			//Workaround for Windows controls bugs, part 1.
 			AWnd w = default, wTL = default; bool focusingControl = false;
 			if(how.Has(AccSELFLAG.TAKEFOCUS) && 0 == _GetWnd(out w)) {
-				if(!w.IsEnabled(true)) throw new AException("*set focus. Disabled"); //accSelect would not fail
+				if(!w.IsEnabled(true)) throw new AuException("*set focus. Disabled"); //accSelect would not fail
 				wTL = w.Window;
 				wTL.Activate();
 				if(focusingControl = (w != wTL)) w.Focus();
@@ -678,8 +678,8 @@ namespace Au
 				GC.KeepAlive(this);
 				if(hr == 0) break;
 				if(hr == 1) continue; //some objects return S_FALSE even if did what asked. Eg combobox (focuses the child Edit), slider. Or may need to retry, eg when trying to focus a listitem in a non-focused listbox.
-				if(hr == Api.DISP_E_MEMBERNOTFOUND) throw new AException("This object does not support this state");
-				AException.ThrowIfHresultNegative(hr);
+				if(hr == Api.DISP_E_MEMBERNOTFOUND) throw new AuException("This object does not support this state");
+				AuException.ThrowIfHresultNegative(hr);
 			}
 
 			if(!w.Is0) w.LibMinimalSleepIfOtherThread(); //sleep only when focusing. Assume selection is sync. Also need for the bug, because the control may be activated a millisecond later.
@@ -958,7 +958,7 @@ namespace Au
 		/// <summary>
 		/// Scrolls this accessible object into view.
 		/// </summary>
-		/// <exception cref="AException">Failed to scroll, or the object does not support scrolling.</exception>
+		/// <exception cref="AuException">Failed to scroll, or the object does not support scrolling.</exception>
 		/// <remarks>
 		/// This function works with these objects:
 		/// - Web page objects in Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="AFFlags.NotInProc"/>.
@@ -973,7 +973,7 @@ namespace Au
 			else hr = Cpp.Cpp_AccWeb(this, "'s", out _);
 			GC.KeepAlive(this);
 
-			AException.ThrowIfHresultNot0(hr, "*scroll");
+			AuException.ThrowIfHresultNot0(hr, "*scroll");
 
 			//tested: Chrome and Firefox don't support UI Automation scrolling (IUIAutomationScrollItemPattern). IE and Edge support.
 		}

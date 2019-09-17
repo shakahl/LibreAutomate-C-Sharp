@@ -22,13 +22,13 @@ namespace Au
 	{
 		/// <summary>
 		/// Gets related windows and controls.
-		/// Use like <c>AWnd w2 = w1.Get.Owner;</c> (here w1 is a AWnd variable).
+		/// Use like <c>AWnd w2 = w1.Get.Owner;</c> (here w1 is an AWnd variable).
 		/// </summary>
 		public GetWnd Get => new GetWnd(this);
 
 		/// <summary>
 		/// Static functions of this class are used to get special windows (used like <c>AWnd w = AWnd.GetWnd.Top;</c>) and all windows.
-		/// Instances of this class are used to get related windows and controls, like <c>AWnd w2 = w1.Get.FirstChild;</c> (here w1 is a AWnd variable).
+		/// Instances of this class are used to get related windows and controls, like <c>AWnd w2 = w1.Get.FirstChild;</c> (here w1 is an AWnd variable).
 		/// </summary>
 		public partial struct GetWnd
 		{

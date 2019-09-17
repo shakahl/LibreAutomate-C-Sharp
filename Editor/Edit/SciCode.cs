@@ -564,7 +564,7 @@ class SciCode : AuScintilla
 							}
 							_AppendFile(target, name, args);
 						}
-						catch(AException) { break; }
+						catch(AuException) { break; }
 					}
 				}
 				s = t.ToString();

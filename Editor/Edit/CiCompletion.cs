@@ -36,6 +36,10 @@ using Microsoft.CodeAnalysis.CSharp.Symbols;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Snippets;
 
+//TODO: bug (Roslyn or my): After adding a reference, starts showing its members (namespaces) only after a text modification.
+//	After removing a reference, sometimes stops showing its members only after several text modifications.
+//	To reproduce, add/remove .NET assembly "Accessibility".
+
 class CiCompletion
 {
 	CiPopupList _popupList;
@@ -51,12 +55,12 @@ class CiCompletion
 	{
 		public CompletionService completionService;
 		public Document document;
+		public SemanticModel model;
 		public List<CiComplItem> items;
 		public string code;
 		public TextSpan span;
 		public string filterText;
 		Dictionary<CompletionItem, CiComplItem> _map;
-		public SemanticModel model;
 
 		public Dictionary<CompletionItem, CiComplItem> Map {
 			get {
@@ -257,7 +261,7 @@ class CiCompletion
 							var u = model.GetSymbolInfo(es).Symbol;
 							if(u == null && model.GetTypeInfo(es).Type is IErrorTypeSymbol ee) {
 								var can = ee.CandidateSymbols;
-								if(!can.IsEmpty) u = can[0];
+								if(!can.IsDefaultOrEmpty) u = can[0];
 							}
 							//Print(u, u?.Kind??default);
 							if(u != null) {
@@ -305,13 +309,13 @@ class CiCompletion
 			if(span.Length > 0 && CiComplItem.IsRegexProvider(r.Items[0])) span = new TextSpan(position, 0);
 
 			_data = new _Data {
-				document = document,
 				completionService = completionService,
+				document = document,
+				model = model,
 				code = code,
 				span = span,
 				filterText = code.Substring(span.Start, span.Length),
 				items = new List<CiComplItem>(r.Items.Length),
-				model = model
 			};
 
 			var groups = canGroup ? new Dictionary<INamespaceOrTypeSymbol, List<int>>() : null;
@@ -327,9 +331,12 @@ class CiCompletion
 							switch(ci.DisplayText) {
 							case "Equals":
 							case "ReferenceEquals":
-								if(sym.ContainingType.BaseType == null) if(isDot) continue; else v.moveDown = CiItemMoveDownBy.Name;
+								if(sym.ContainingType.BaseType == null) { //Object
+									if(isDot) continue;
+									v.moveDown = CiItemMoveDownBy.Name;
+								}
 								break;
-							case "Main" when sym.ContainingType.Name == "Script":
+							case "Main" when _IsOurScriptClass(sym.ContainingType):
 								v.moveDown = CiItemMoveDownBy.Name;
 								break;
 							}
@@ -358,6 +365,9 @@ class CiCompletion
 				case CiItemKind.TypeParameter:
 					if(sym == null && ci.DisplayText == "T") continue;
 					break;
+				case CiItemKind.Class:
+					if(!isDot && _IsOurScriptClass(sym as INamedTypeSymbol)) v.moveDown = CiItemMoveDownBy.Name;
+					break;
 				case CiItemKind.EnumMember:
 				case CiItemKind.Label:
 					canGroup = false;
@@ -366,6 +376,8 @@ class CiCompletion
 					if(isDot) continue; //see the bug comments below
 					break;
 				}
+
+				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name == "Script" && t.BaseType?.Name == "AScript";
 
 				if(canGroup) {
 					int i = _data.items.Count;
@@ -423,7 +435,7 @@ class CiCompletion
 						var t1 = k1.Key as INamedTypeSymbol; var t2 = k2.Key as INamedTypeSymbol;
 						if(_IsBase(t1, t2)) return -1;
 						if(_IsBase(t2, t1)) return 1;
-						ADebug.Print($"{t1}, {t2}");
+						ADebug.Print($"{t1}, {t2}, {k1.Value.Count}, {k2.Value.Count}"); //usually because of the above bug
 						return 0;
 					});
 					g = gs.Select(o => (o.Key.Name, o.Value)).ToList(); //list<(itype, list)> -> list<typeName, list>
@@ -458,12 +470,12 @@ class CiCompletion
 				_popupList = new CiPopupList(this);
 				_popupList.PopupWindow.VisibleChanged += _popupList_VisibleChanged;
 			}
-			_popupList.SetListItems(_data.items, groupsList, o => _GetDescription(o.ci)); //and calls SelectBestMatch
+			_popupList.SetListItems(_data.items, groupsList); //and calls SelectBestMatch
 			_popupList.Show(doc, span.Start);
 		}
 		catch(OperationCanceledException) { /*ADebug.Print("canceled");*/ return; }
 		finally {
-			if(_data == null) { p1.Next('z'); Print($"{p1.ToString()}  |  ch='{(debugChar == default ? '-' : debugChar)}', canceled={cancelTS.IsCancellationRequested}"); }
+			if(_data == null) { p1.Next('z'); Print($"{p1.ToString()}  |  ch='{(debugChar == default ? "" : debugChar.ToString())}', canceled={cancelTS.IsCancellationRequested}"); }
 			cancelTS.Dispose();
 			if(cancelTS == _cancelTS) _cancelTS = null;
 		}
@@ -595,30 +607,15 @@ class CiCompletion
 		_popupList.SelectedItem = ci;
 	}
 
-	async Task<CompletionDescription> _GetDescription(CompletionItem v)
+	public string GetDescriptionHtml(CiComplItem ci, int iSelect)
 	{
-		//bug workaround: GetDescriptionAsync sometimes gets wrong description. Then also wrong v.Properties["ContextPosition"].
-		//	To reproduce: code: "var v=AWnd.Find(); w.". Invoke completions after the first dot, then after the second, then after the first. Description/Properties of method Equals will be wrong second and third time. The second time will use the ones from the first time, and third time from second.
-		if(v.Properties.TryGetValue("ContextPosition", out var s)) {
-			int i = s.ToInt();
-			if(i < v.Span.Start || i > v.Span.End) {
-				//ADebug.Print(string.Join("|", v.Properties));
-				v = v.WithProperties(v.Properties.SetItem("ContextPosition", v.Span.Start.ToString()));
-			}
-		}
-		//return await completionService.GetDescriptionAsync(document, v); //why it is not async?
-		return await Task.Run(() => _data.completionService.GetDescriptionAsync(_data.document, v));
-	}
-
-	public IEnumerable<TaggedText> GetDescription(ISymbol sym)//TODO
-	{
-		//var p1 = APerf.Create();
-		var model = _data.model;
-		var formatter = _data.document.Project.Solution.Workspace.Services.GetLanguageServices(model.Language).GetService<Microsoft.CodeAnalysis.DocumentationComments.IDocumentationCommentFormattingService>();
-		//p1.Next();
-		var tt = sym.GetDocumentationParts(model, _data.span.Start, formatter, default);
-		//p1.NW('G');
-		return tt;
+		if(_data == null) return null;
+		var symbols = ci.ci.Symbols;
+		if(symbols != null) return CiUtil.SymbolsToHtml(symbols, iSelect, _data.model, _data.span.Start);
+		if(ci.kind == CiItemKind.Keyword) return CiUtil.KeywordToHtml(ci.DisplayText);
+		ADebug.PrintIf(ci.kind != CiItemKind.None, ci.kind); //None if Regex
+		var r = _data.completionService.GetDescriptionAsync(_data.document, ci.ci).Result; //fast if Regex, else not tested
+		return r == null ? null : CiUtil.TaggedPartsToHtml(r.TaggedParts);
 	}
 
 	public void Commit(CiComplItem item, char? commitCharacter = null)
@@ -727,30 +724,4 @@ class CiComplItem
 		}
 		//ci.DebugPrint();
 	}
-}
-
-static class CiExt
-{
-	[Conditional("DEBUG")]
-	public static void DebugPrint(this CompletionItem t, string color = "blue")
-	{
-		Print($"<><c {color}>{t.DisplayText},    {string.Join("|", t.Tags)},    prefix={t.DisplayTextPrefix},    suffix={t.DisplayTextSuffix},    filter={t.FilterText},    sort={t.SortText},    inline={t.InlineDescription},    automation={t.AutomationText},    provider={t.ProviderName}<>");
-		Print(string.Join("\n", t.Properties));
-	}
-
-	[Conditional("DEBUG")]
-	public static void DebugPrintIf(this CompletionItem t, bool condition, string color = "blue")
-	{
-		if(condition) DebugPrint(t, color);
-	}
-
-	public static string QualifiedName(this ISymbol t, bool onlyNamespace = false)
-	{
-		var g = s_qnStack ??= new Stack<string>();
-		g.Clear();
-		if(!onlyNamespace) for(var k = t; k != null; k = k.ContainingType) g.Push(k.Name);
-		for(var n = t.ContainingNamespace; n != null && !n.IsGlobalNamespace; n = n.ContainingNamespace) g.Push(n.Name);
-		return string.Join(".", g);
-	}
-	[ThreadStatic] static Stack<string> s_qnStack;
 }

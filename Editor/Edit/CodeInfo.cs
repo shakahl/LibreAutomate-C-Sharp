@@ -122,6 +122,7 @@ Print(1);
 
 	static void _Uncache()
 	{
+		CurrentWorkspace = null;
 		_solution = null;
 		_projectId = null;
 		_documentId = null;
@@ -261,9 +262,12 @@ Print(1);
 			m.References.Refs); //TODO: set outputRefFilePath if library?
 								//p1.Next('p');
 
-		_solution = new AdhocWorkspace().CurrentSolution.AddProject(pi);
+		CurrentWorkspace = new AdhocWorkspace();
+		_solution = CurrentWorkspace.CurrentSolution.AddProject(pi);
 		//p1.NW('s');
 	}
+
+	public static Workspace CurrentWorkspace { get; private set; }
 
 	public static Document CreateTestDocumentForEditorCode(out string code, out int position)
 	{

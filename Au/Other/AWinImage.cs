@@ -180,7 +180,7 @@ namespace Au
 			} else {
 				var w = _area.W;
 				if(_area.Type == WIArea.AreaType.Acc) {
-					if(!_area.A.GetRect(out var r, w)) throw new AException(0, "*get rectangle");
+					if(!_area.A.GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
 					p.x += r.left; p.y += r.top;
 				}
 				if(button == 0) AMouse.Move(w, p.x, p.y);
@@ -241,7 +241,7 @@ namespace Au
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The specified file does not exist.</exception>
 		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="AConvert.Decompress"/>.</exception>
-		/// <exception cref="AException">Something failed.</exception>
+		/// <exception cref="AuException">Something failed.</exception>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find image or color in window". It is form <b>Au.Tools.FormAWinImage</b> in Au.Tools.dll.
 		/// 
@@ -549,7 +549,7 @@ namespace Au
 				}
 				if(failedGetRect) {
 					_area.W.ThrowIfInvalid();
-					throw new AException("*get rectangle");
+					throw new AuException("*get rectangle");
 				}
 				//FUTURE: DPI
 
@@ -970,7 +970,7 @@ namespace Au
 						//copy from screen/window DC to memory bitmap
 						uint rop = windowDC ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
 						bool bbOK = Api.BitBlt(_ad.mb.Hdc, 0, 0, areaWidth, areaHeight, dc, r.left, r.top, rop);
-						if(!bbOK) throw new AException("BitBlt"); //the API fails only if a HDC is invalid
+						if(!bbOK) throw new AuException("BitBlt"); //the API fails only if a HDC is invalid
 					}
 				}
 
@@ -988,7 +988,7 @@ namespace Au
 					//biCompression = 0, //BI_RGB
 				};
 				if(Api.GetDIBits(_ad.mb.Hdc, _ad.mb.Hbitmap, 0, areaHeight, _ad.pixels, &h, 0) //DIB_RGB_COLORS
-					!= areaHeight) throw new AException("GetDIBits");
+					!= areaHeight) throw new AuException("GetDIBits");
 				//_Debug("_GetBitmapBits", 3);
 
 				//remove alpha (why it is here?). Currently don't need.

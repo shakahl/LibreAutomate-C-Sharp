@@ -164,7 +164,7 @@ namespace Au.Compiler
 		/// <param name="reference">Assembly name (like "System.Something") or filename (like "My.dll") or path.</param>
 		/// <exception cref="Exception">Some unexpected exception, eg failed to load the found file.</exception>
 		/// <remarks>
-		/// If used filename without full path, searches in <see cref="AFolders.ThisApp"/>, subfolder "Libraries", <see cref="AFolders.NetFrameworkRuntime"/> and GAC.
+		/// If used just filename or relative path, searches in <see cref="AFolders.ThisApp"/>, <see cref="AFolders.NetFrameworkRuntime"/> and GAC.
 		/// If used assembly name without ".dll", ".exe" or ", Version=", searches only in <see cref="AFolders.NetFrameworkRuntime"/> and GAC.
 		/// If contains", Version=", searches only in GAC.
 		/// Can be "Alias=X.dll" - assembly reference that can be used with C# keyword 'extern alias'.
@@ -222,16 +222,14 @@ namespace Au.Compiler
 
 			string path, ext; int i;
 			if(0 != re.Ends(true, s_asmExt)) {
-				foreach(var v in s_dirs) {
-					path = APath.Combine(v, re);
-					if(AFile.ExistsAsFile(path)) return path;
-				}
+				path = AFolders.ThisAppBS + re;
+				if(AFile.ExistsAsFile(path)) return path;
 				ext = null;
 			} else if((i = re.Find(", Version=")) > 0) {
 				return GAC.FindAssembly(re.Remove(i), re);
 			} else ext = ".dll";
 
-			var d = RuntimeEnvironment.GetRuntimeDirectory();
+			var d = AFolders.NetFrameworkRuntimeBS;
 			path = d + re + ext;
 			if(AFile.ExistsAsFile(path)) return path;
 
@@ -251,7 +249,6 @@ namespace Au.Compiler
 			//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
 		}
 		static readonly string[] s_asmExt = { ".dll", ".exe" };
-		static readonly string[] s_dirs = { AFolders.ThisApp, AFolders.ThisApp + "Libraries" };
 
 		/// <summary>
 		/// Extracts path from compiler error message CS0009 and removes the reference from cache.
@@ -298,7 +295,7 @@ namespace Au.Compiler
 			/// <param name="refName">Like "mscorlib" or "System.Core" or "Au.dll".</param>
 			public bool HaveRef(string refName) => _refs?.Contains(refName) ?? false;
 
-			protected override string GetDocumentationForSymbol(string documentationMemberID, CultureInfo preferredCulture, CancellationToken cancellationToken = default)
+			protected override string GetDocumentationForSymbol(string documentationMemberID, CultureInfo preferredCulture = null, CancellationToken cancellationToken = default)
 			{
 				if(_db != null) {
 					lock(_db) { //sometimes not in main thread
@@ -327,15 +324,11 @@ namespace Au.Compiler
 			}
 
 			public string GetNamespaceDoc(string namespaceName)
-			{
-				var s = GetDocumentationForSymbol("N:" + namespaceName, null, default);
-				if(s != null) s = s.Replace("&lt;", "<").Replace("&gt;", ">");
-				return s;
-				//info: the xml->db script removed <cref> and <summary> tags in namespaces.xml.
-			}
+				=> GetDocumentationForSymbol("N:" + namespaceName)
+				?? GetDocumentationForSymbol("T:" + namespaceName + ".NamespaceDoc");
 		}
 		static _DocumentationDatabase s_docDB = new _DocumentationDatabase();
 
-		public static string GetNamespaceDoc(string namespaceName) => s_docDB.GetNamespaceDoc(namespaceName);
+		public static string GetNamespaceDocXml(string namespaceName) => s_docDB.GetNamespaceDoc(namespaceName);
 	}
 }

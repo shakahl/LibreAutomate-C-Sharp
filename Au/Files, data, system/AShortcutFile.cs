@@ -53,7 +53,7 @@ namespace Au
 			_ipf = _isl as Api.IPersistFile;
 			_lnkPath = lnkPath;
 			if(mode != Api.STGM_WRITE && (mode == Api.STGM_READ || AFile.ExistsAsFile(_lnkPath))) {
-				AException.ThrowIfHresultNot0(_ipf.Load(_lnkPath, mode), "*open");
+				AuException.ThrowIfHresultNot0(_ipf.Load(_lnkPath, mode), "*open");
 				_isOpen = true;
 			}
 		}
@@ -63,7 +63,7 @@ namespace Au
 		/// Exception if shortcut file does not exist or cannot open it for read access.
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
-		/// <exception cref="AException">Failed to open .lnk file.</exception>
+		/// <exception cref="AuException">Failed to open .lnk file.</exception>
 		public static AShortcutFile Open(string lnkPath)
 		{
 			return new AShortcutFile(lnkPath, Api.STGM_READ);
@@ -87,7 +87,7 @@ namespace Au
 		/// If the shortcut file already exists, Save updates it.
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
-		/// <exception cref="AException">Failed to open existing .lnk file.</exception>
+		/// <exception cref="AuException">Failed to open existing .lnk file.</exception>
 		public static AShortcutFile OpenOrCreate(string lnkPath)
 		{
 			return new AShortcutFile(lnkPath, Api.STGM_READWRITE);
@@ -96,7 +96,7 @@ namespace Au
 		/// <summary>
 		/// Saves the Shortcut variable properties to the shortcut file.
 		/// </summary>
-		/// <exception cref="AException">Failed to save .lnk file.</exception>
+		/// <exception cref="AuException">Failed to save .lnk file.</exception>
 		/// <remarks>
 		/// Creates parent folder if need.
 		/// </remarks>
@@ -105,7 +105,7 @@ namespace Au
 			if(_changedHotkey && !_isOpen && AFile.ExistsAsFile(_lnkPath)) _UnregisterHotkey(_lnkPath);
 
 			AFile.CreateDirectoryFor(_lnkPath);
-			AException.ThrowIfHresultNot0(_ipf.Save(_lnkPath, true), "*save");
+			AuException.ThrowIfHresultNot0(_ipf.Save(_lnkPath, true), "*save");
 		}
 
 		/// <summary>
@@ -113,10 +113,10 @@ namespace Au
 		/// This property is null if target isn't a file system object, eg Control Panel or URL.
 		/// </summary>
 		/// <remarks>The 'get' function gets path with expanded environment variables. If possible, it corrects the target of MSI shortcuts and 64-bit Program Files shortcuts where IShellLink.GetPath() lies.</remarks>
-		/// <exception cref="AException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public string TargetPath {
 			get => _CorrectPath(_GetString(_WhatString.Path, 300), true);
-			set { AException.ThrowIfHresultNot0(_isl.SetPath(value)); }
+			set { AuException.ThrowIfHresultNot0(_isl.SetPath(value)); }
 		}
 
 		/// <summary>
@@ -133,10 +133,10 @@ namespace Au
 		/// Also can be used for any target type, but gets raw value, for example MSI shortcut target is incorrect.
 		/// Most but not all shortcuts have this property; the 'get' function returns null if the shortcut does not have it.
 		/// </remarks>
-		/// <exception cref="AException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public APidl TargetPidl {
 			get => (0 == _isl.GetIDList(out var pidl)) ? new APidl(pidl) : null;
-			set { AException.ThrowIfHresultNot0(_isl.SetIDList(value?.UnsafePtr ?? default)); GC.KeepAlive(value); }
+			set { AuException.ThrowIfHresultNot0(_isl.SetIDList(value?.UnsafePtr ?? default)); GC.KeepAlive(value); }
 		}
 
 		/// <summary>
@@ -144,7 +144,7 @@ namespace Au
 		/// Note: it is a .lnk shortcut, not a .url shortcut.
 		/// The 'get' function returns string "file:///..." if target is a file.
 		/// </summary>
-		/// <exception cref="AException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public string TargetURL {
 			get {
 				if(0 != _isl.GetIDList(out var pidl)) return null;
@@ -160,7 +160,7 @@ namespace Au
 		/// Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="APidl"/>).
 		/// The string can be used with <see cref="AExec.Run"/>.
 		/// </summary>
-		/// <exception cref="AException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public string TargetAnyType {
 			get {
 				var R = TargetPath; if(R != null) return R; //support MSI etc
@@ -169,7 +169,7 @@ namespace Au
 			}
 			set {
 				var pidl = APidl.LibFromString(value, true);
-				try { AException.ThrowIfHresultNot0(_isl.SetIDList(pidl)); } finally { Marshal.FreeCoTaskMem(pidl); }
+				try { AuException.ThrowIfHresultNot0(_isl.SetIDList(pidl)); } finally { Marshal.FreeCoTaskMem(pidl); }
 			}
 		}
 
@@ -190,44 +190,44 @@ namespace Au
 		/// </summary>
 		/// <param name="path"></param>
 		/// <param name="iconIndex">0 or icon index or negative icon resource id.</param>
-		/// <exception cref="AException"/>
+		/// <exception cref="AuException"/>
 		public void SetIconLocation(string path, int iconIndex = 0)
 		{
-			AException.ThrowIfHresultNot0(_isl.SetIconLocation(path, iconIndex));
+			AuException.ThrowIfHresultNot0(_isl.SetIconLocation(path, iconIndex));
 		}
 
 		/// <summary>
 		/// Gets or sets the working directory path (Start in).
 		/// </summary>
-		/// <exception cref="AException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public string WorkingDirectory {
 			get => _CorrectPath(_GetString(_WhatString.WorkingDirectory, 300));
-			set { AException.ThrowIfHresultNot0(_isl.SetWorkingDirectory(value)); }
+			set { AuException.ThrowIfHresultNot0(_isl.SetWorkingDirectory(value)); }
 		}
 
 		/// <summary>
 		/// Gets or sets the command-line arguments.
 		/// </summary>
-		/// <exception cref="AException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public string Arguments {
 			get => _GetString(_WhatString.Arguments, 1024);
-			set { AException.ThrowIfHresultNot0(_isl.SetArguments(value)); }
+			set { AuException.ThrowIfHresultNot0(_isl.SetArguments(value)); }
 		}
 
 		/// <summary>
 		/// Gets or sets the description text (Comment).
 		/// </summary>
-		/// <exception cref="AException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public string Description {
 			get => _GetString(_WhatString.Description, 1024);
-			set { AException.ThrowIfHresultNot0(_isl.SetDescription(value)); }
+			set { AuException.ThrowIfHresultNot0(_isl.SetDescription(value)); }
 		}
 
 		/// <summary>
 		/// Gets or sets hotkey.
 		/// Example: <c>x.Hotkey = Keys.Control | Keys.Alt | Keys.E;</c>
 		/// </summary>
-		/// <exception cref="AException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public System.Windows.Forms.Keys Hotkey {
 			get {
 				if(0 != _isl.GetHotkey(out ushort k2)) return 0;
@@ -236,7 +236,7 @@ namespace Au
 			}
 			set {
 				uint k = (uint)value;
-				AException.ThrowIfHresultNot0(_isl.SetHotkey((ushort)((k & 0xFF) | ((k & 0x70000) >> 8))));
+				AuException.ThrowIfHresultNot0(_isl.SetHotkey((ushort)((k & 0xFF) | ((k & 0x70000) >> 8))));
 				_changedHotkey = true;
 			}
 		}
@@ -246,10 +246,10 @@ namespace Au
 		/// The value can be 1 (normal, default), 2 (minimized) or 3 (maximized).
 		/// Most programs ignore it.
 		/// </summary>
-		/// <exception cref="AException">The 'set' function failed.</exception>
+		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public int ShowState {
 			get => (0 == _isl.GetShowCmd(out var R)) ? R : Api.SW_SHOWNORMAL;
-			set { AException.ThrowIfHresultNot0(_isl.SetShowCmd(value)); }
+			set { AuException.ThrowIfHresultNot0(_isl.SetShowCmd(value)); }
 		}
 
 		//Not implemented wrappers for these IShellLink methods:
@@ -263,7 +263,7 @@ namespace Au
 		/// Uses <see cref="Open"/> and <see cref="TargetAnyType"/>.
 		/// </summary>
 		/// <param name="lnkPath">Shortcut file (.lnk) path.</param>
-		/// <exception cref="AException">Failed to open.</exception>
+		/// <exception cref="AuException">Failed to open.</exception>
 		public static string GetTarget(string lnkPath)
 		{
 			return Open(lnkPath).TargetAnyType;
@@ -273,7 +273,7 @@ namespace Au
 		/// If shortcut file exists, unregisters its hotkey and deletes it.
 		/// </summary>
 		/// <param name="lnkPath">.lnk file path.</param>
-		/// <exception cref="AException">Failed to unregister hotkey.</exception>
+		/// <exception cref="AuException">Failed to unregister hotkey.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="AFile.Delete(string, bool)"/>.</exception>
 		public static void Delete(string lnkPath)
 		{
@@ -285,7 +285,7 @@ namespace Au
 		#endregion
 		#region private
 
-		/// <exception cref="AException">Failed to open or save.</exception>
+		/// <exception cref="AuException">Failed to open or save.</exception>
 		static void _UnregisterHotkey(string lnkPath)
 		{
 			Debug.Assert(AFile.ExistsAsFile(lnkPath));

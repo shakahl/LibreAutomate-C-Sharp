@@ -258,7 +258,7 @@ namespace Au
 		/// </param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
 		/// 
@@ -277,7 +277,7 @@ namespace Au
 			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(more), _pcreCallout, null, out BSTR errStr);
 			//Print(rc);
 			//info: 0 is partial match, -1 is no match, <-1 is error
-			if(rc < -1) throw new AException(errStr.ToStringAndDispose(noCache: true));
+			if(rc < -1) throw new AuException(errStr.ToStringAndDispose(noCache: true));
 			return rc >= 0;
 		}
 
@@ -292,7 +292,7 @@ namespace Au
 		/// <param name="result">Receives match info. Read more in Remarks.</param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// If full match, returns true, and <i>result</i> contains the match and all groups that exist in the regular expressions.
 		/// If partial match, returns true, and <i>result</i> contains the match without groups. Partial match is possible if used a PARTIAL_ flag.
@@ -332,7 +332,7 @@ namespace Au
 		/// </param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is a simplified version of <see cref="Match"/>.
 		/// If full match, returns true, and <i>result</i> contains the match or the specifed group.
@@ -372,7 +372,7 @@ namespace Au
 		/// </param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is a simplified version of <see cref="Match"/> and <see cref="MatchG"/>.
 		/// If full match, returns true, and <i>result</i> contains the value of the match or of the specifed group.
@@ -436,7 +436,7 @@ namespace Au
 			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(more), _pcreCallout, out m, out BSTR errStr);
 			//Print(rc);
 			//info: 0 is partial match, -1 is no match, <-1 is error
-			if(rc < -1) throw new AException(errStr.ToStringAndDispose(noCache: true));
+			if(rc < -1) throw new AuException(errStr.ToStringAndDispose(noCache: true));
 			if(group != 0 && rc >= 0 && (uint)group >= m.vecCount) throw new ArgumentOutOfRangeException(nameof(group));
 			return rc;
 		}
@@ -472,7 +472,7 @@ namespace Au
 				//Print(_rc);
 				//info: 0 cannot be (partial match), -1 is no match, <-1 is error
 				if(_rc < 0) {
-					if(_rc < -1) throw new AException(errStr.ToStringAndDispose(noCache: true));
+					if(_rc < -1) throw new AuException(errStr.ToStringAndDispose(noCache: true));
 					return false;
 				}
 				if(_group != 0 && (uint)_group >= _m.vecCount) throw new ArgumentOutOfRangeException("group");
@@ -519,7 +519,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is similar to <see cref="Regex.Matches(string)"/>.
 		/// </remarks>
@@ -546,7 +546,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is similar to <see cref="Regex.Matches(string)"/>.
 		/// </remarks>
@@ -577,7 +577,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is a simplified version of <see cref="FindAll(string, RXMore)"/>. Also it is similar to <see cref="Regex.Matches(string)"/>.
 		/// </remarks>
@@ -608,7 +608,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is a simplified version of <see cref="FindAll(string, out RXMatch[], RXMore)"/>. Also it is similar to <see cref="Regex.Matches(string)"/>.
 		/// </remarks>
@@ -639,7 +639,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is a simplified version of <see cref="FindAll(string, RXMore)"/> and <see cref="FindAllG(string, int, RXMore)"/>. Also it is similar to <see cref="Regex.Matches(string)"/>.
 		/// </remarks>
@@ -670,7 +670,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is a simplified version of <see cref="FindAll(string, out RXMatch[], RXMore)"/> and <see cref="FindAllG(string, out RXGroup[], int, RXMore)"/>. Also it is similar to <see cref="Regex.Matches(string)"/>.
 		/// </remarks>
@@ -743,7 +743,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is similar to <see cref="Regex.Replace(string, string, int)"/>.
 		/// </remarks>
@@ -777,7 +777,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is similar to <see cref="Regex.Replace(string, string, int)"/>.
 		/// </remarks>
@@ -808,7 +808,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is similar to <see cref="Regex.Replace(string, MatchEvaluator, int)"/>.
 		/// </remarks>
@@ -841,7 +841,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is similar to <see cref="Regex.Replace(string, MatchEvaluator, int)"/>.
 		/// </remarks>
@@ -970,7 +970,7 @@ namespace Au
 		///// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		///// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		///// <exception cref="ArgumentException">1. Error in the replacement pattern. 2. Used a PARTIAL_ flag. 3. The regular expression contains <c>(?=...\K)</c>.</exception>
-		///// <exception cref="AException">The PCRE API function <b>pcre2_substitute</b> failed. Unlikely.</exception>
+		///// <exception cref="AuException">The PCRE API function <b>pcre2_substitute</b> failed. Unlikely.</exception>
 		///// <remarks>
 		///// How this is different from <b>Replace</b>:
 		///// - Uses the PCRE API function <see href="https://www.pcre.org/current/doc/html/pcre2api.html#SEC36">pcre2_substitute</see>.
@@ -998,7 +998,7 @@ namespace Au
 		//		if(r == -48 && na2 > na) { na = (int)na2; goto g1; } //PCRE2_ERROR_NOMEMORY
 		//		var es = errStr.ToStringAndDispose(noCache: true);
 		//		if(r == -35 || r == -49 || (r <= -57 && r >= -60)) throw new ArgumentException("Replacement error: " + es); //replacement string syntax errors
-		//		throw new AException(es);
+		//		throw new AuException(es);
 		//	}
 		//	result = b.ToString((int)na2);
 		//	return r;
@@ -1013,7 +1013,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// Element 0 of the returned array is <i>s</i> substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is <i>s</i>.
 		/// 
@@ -1056,7 +1056,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
-		/// <exception cref="AException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
+		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// Element 0 of the returned array is <i>s</i> substring until the first match of the regular expression, element 1 is substring between the first and second match, and so on. If no matches, the array contains single element and it is <i>s</i>.
 		/// 
@@ -1165,7 +1165,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool Regex(this string t, string rx, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
@@ -1184,7 +1184,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RegexMatch(this string t, string rx, out RXMatch result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
@@ -1205,7 +1205,7 @@ namespace Au
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RegexMatch(this string t, string rx, int group, out string result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
@@ -1226,7 +1226,7 @@ namespace Au
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RegexMatch(this string t, string rx, int group, out RXGroup result, RXFlags flags = 0, RXMore more = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
@@ -1244,7 +1244,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static IEnumerable<RXMatch> RegexFindAll(this string t, string rx, RXFlags flags = 0, RXMore more = null)
 		{
 			if(t == null) throw new NullReferenceException();
@@ -1264,7 +1264,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RegexFindAll(this string t, string rx, out RXMatch[] result, RXFlags flags = 0, RXMore more = null)
 		{
 			if(t == null) throw new NullReferenceException();
@@ -1285,7 +1285,7 @@ namespace Au
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static IEnumerable<string> RegexFindAll(this string t, string rx, int group, RXFlags flags = 0, RXMore more = null)
 		{
 			if(t == null) throw new NullReferenceException();
@@ -1307,7 +1307,7 @@ namespace Au
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static bool RegexFindAll(this string t, string rx, int group, out string[] result, RXFlags flags = 0, RXMore more = null)
 		{
 			if(t == null) throw new NullReferenceException();
@@ -1328,7 +1328,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static string RegexReplace(this string t, string rx, string repl, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			if(t == null) throw new NullReferenceException();
@@ -1350,7 +1350,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static int RegexReplace(this string t, string rx, string repl, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			if(t == null) throw new NullReferenceException();
@@ -1371,7 +1371,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static string RegexReplace(this string t, string rx, Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			if(t == null) throw new NullReferenceException();
@@ -1393,7 +1393,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static int RegexReplace(this string t, string rx, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
 		{
 			if(t == null) throw new NullReferenceException();
@@ -1412,7 +1412,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="more"></param>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-		/// <exception cref="AException">Failed (unlikely).</exception>
+		/// <exception cref="AuException">Failed (unlikely).</exception>
 		public static string[] RegexSplit(this string t, string rx, int maxCount = 0, RXFlags flags = 0, RXMore more = null)
 		{
 			if(t == null) throw new NullReferenceException();

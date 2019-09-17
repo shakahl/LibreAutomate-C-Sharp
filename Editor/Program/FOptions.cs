@@ -81,7 +81,7 @@ partial class FOptions : AuForm
 				}
 			}
 		}
-		catch(AException ex) { err = ex.Message; }
+		catch(AuException ex) { err = ex.Message; }
 		ge:
 		if(err != null) {
 			_errorProvider.SetIconAlignment(_startupScripts, ErrorIconAlignment.TopLeft);

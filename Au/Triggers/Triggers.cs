@@ -277,7 +277,7 @@ namespace Au.Triggers
 		/// </remarks>
 		/// <example>See <see cref="ActionTriggers"/>.</example>
 		/// <exception cref="InvalidOperationException">Already running.</exception>
-		/// <exception cref="AException">Something failed.</exception>
+		/// <exception cref="AuException">Something failed.</exception>
 		public void Run()
 		{
 			//AppDomain.CurrentDomain.AssemblyLoad += (object sender, AssemblyLoadEventArgs args) => {
@@ -434,14 +434,14 @@ namespace Au.Triggers
 				Api.PIPE_ACCESS_DUPLEX | Api.FILE_FLAG_OVERLAPPED,
 				Api.PIPE_TYPE_MESSAGE | Api.PIPE_READMODE_MESSAGE | Api.PIPE_REJECT_REMOTE_CLIENTS,
 				1, 0, 0, 0, Api.SECURITY_ATTRIBUTES.ForPipes);
-			if(pipe.Is0) throw new AException(0, "*CreateNamedPipe");
+			if(pipe.Is0) throw new AuException(0, "*CreateNamedPipe");
 
 			var aCDS = new byte[8];
 			aCDS.WriteInt((int)usedEvents, 0);
 			aCDS.WriteInt(Api.GetCurrentProcessId(), 4);
 			if(1 != AWnd.More.CopyDataStruct.SendBytes(wMsg, 1, aCDS, threadId)) { //install hooks and start sending events to us
 				pipe.Dispose();
-				throw new AException("*SendBytes");
+				throw new AuException("*SendBytes");
 			}
 
 			LibHandle evHooks = Api.CreateEvent(true);

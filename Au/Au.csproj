@@ -149,6 +149,7 @@
     <Compile Include="Util\AMessageLoop.cs" />
     <Compile Include="Util\ARecording.cs" />
     <Compile Include="Util\AMenuItemInfo.cs" />
+    <Compile Include="Util\internal\NamespaceDoc.cs" />
     <Compile Include="Util\_.cs" />
     <Compile Include="Util\AModuleHandle.cs" />
     <Compile Include="String\AStringUtil.cs" />

@@ -302,7 +302,7 @@ namespace Au
 		/// <param name="waitModReleased">Also wait until hotkey modifier keys released.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="ArgumentException">Error in hotkey string.</exception>
-		/// <exception cref="AException">Failed to register hotkey.</exception>
+		/// <exception cref="AuException">Failed to register hotkey.</exception>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
 		/// Uses <see cref="ARegisteredHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
@@ -323,7 +323,7 @@ namespace Au
 		{
 			if(s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("WaitForHotkey");
 			using(ARegisteredHotkey rhk = default) {
-				if(!rhk.Register(s_atomWFH, hotkey)) throw new AException(0, "*register hotkey");
+				if(!rhk.Register(s_atomWFH, hotkey)) throw new AuException(0, "*register hotkey");
 				if(!AWaitFor.PostedMessage(secondsTimeout, (ref Native.MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
 			}
 			if(waitModReleased) return WaitForNoModifierKeys(secondsTimeout, hotkey.Mod);

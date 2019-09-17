@@ -139,9 +139,9 @@ namespace Au
 			APerf.Next();
 			try {
 				fo.SetOperationFlags(4); //FOF_SILENT. Without it shows a hidden dialog that becomes the active window.
-				AException.ThrowIfFailed(fo.RenameItem(si, newName, null), "*rename");
+				AuException.ThrowIfFailed(fo.RenameItem(si, newName, null), "*rename");
 				APerf.Next();
-				AException.ThrowIfFailed(fo.PerformOperations(), "*rename");
+				AuException.ThrowIfFailed(fo.PerformOperations(), "*rename");
 				APerf.Next();
 			}
 			finally {
@@ -156,7 +156,7 @@ namespace Au
 			var pidl = More.PidlFromString(path, true);
 			try {
 				var guid = typeof(Api.IShellItem).GUID;
-				AException.ThrowIfFailed(Api.SHCreateItemFromIDList(pidl, guid, out var R), errMsg);
+				AuException.ThrowIfFailed(Api.SHCreateItemFromIDList(pidl, guid, out var R), errMsg);
 				return R;
 			}
 			finally { Marshal.FreeCoTaskMem(pidl); }

@@ -80,7 +80,7 @@ namespace Au.Controls
 			get {
 				if(s_fnDirect == null) {
 					var path = SciLexerDllPath;
-					if(!Api.GetDelegate(out s_fnDirect, path, "Scintilla_DirectFunction")) throw new AException(0, $"*load '{path}'");
+					if(!Api.GetDelegate(out s_fnDirect, path, "Scintilla_DirectFunction")) throw new AuException(0, $"*load '{path}'");
 				}
 				_fnDirect = s_fnDirect;
 

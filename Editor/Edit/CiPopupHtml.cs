@@ -22,15 +22,14 @@ using Au.Types;
 using static Au.AStatic;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using Au.Controls;
-using System.Collections.Immutable;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
-using Microsoft.CodeAnalysis.Shared.Extensions;
+using TheArtOfDev.HtmlRenderer.Core.Entities;
 
 class CiPopupHtml
 {
 	_Window _w;
 	_HtmlPanel _html;
+	CiCompletion _compl;
+	CiComplItem _ci;
 
 	/// <summary>
 	/// The top-level popup window.
@@ -41,7 +40,7 @@ class CiPopupHtml
 	{
 		_w = new _Window(this);
 		_w.SuspendLayout();
-		_w.Size = Au.Util.ADpi.ScaleSize((600, 300));
+		_w.Size = new Size(Screen.FromControl(Program.MainForm).WorkingArea.Width / 3, Au.Util.ADpi.ScaleInt(300));
 
 		_html = new _HtmlPanel();
 		_html.SuspendLayout();
@@ -49,168 +48,20 @@ class CiPopupHtml
 		_html.Dock = DockStyle.Fill;
 		//_html.Font = EdStock.FontRegular;
 		_html.BaseStylesheet = CiUtil.TaggedPartsHtmlStyleSheet;
-		_html.BackColor = SystemColors.Info;
+		_html.BackColor = Color.LightYellow;
+		_html.LinkClicked += _html_LinkClicked;
 
 		_w.Controls.Add(_html);
 		_html.ResumeLayout();
 		_w.ResumeLayout(true);
 	}
 
-#if true
-	//public void SetHtml(CiComplItem ci, ImmutableArray<TaggedText> tags)
-	public void SetHtml(CiComplItem ci, IEnumerable<TaggedText> tags)
+	public void SetHtml(string html, CiCompletion compl = null, CiComplItem ci = null)
 	{
-		var b = new StringBuilder("<body>");
-		CiUtil.TaggedPartsToHtml(b, tags);
-		APerf.Next('s');
-
-		var symbols = ci.ci.Symbols;
-		if(symbols != null) {
-			int i = -1;
-			foreach(var v in symbols) {
-				i++;
-				b.Append(i==0?"<br/><br/>":"<br/>");
-				//if(v is ReducedExtensionMethodSymbol) b.Append("(extension) ");
-				//Print(v.Kind, v.ContainingType?.Name, v.IsStatic, v.CanBeReferencedByName, v.ContainingSymbol, v.GetType().Name, v.OriginalDefinition, v.Name, v.MetadataName);
-				//Print(v.Name);
-				//Print(v.GetDocumentationCommentId());
-				//Print(v.GetDocumentationCommentXml());
-				//Print("-----");
-				var parts = v.ToDisplayParts(new SymbolDisplayFormat(
-					SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
-					v.Kind == SymbolKind.NamedType ? SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces : SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
-					SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance | SymbolDisplayGenericsOptions.IncludeTypeConstraints,
-					SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeContainingType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeConstantValue | SymbolDisplayMemberOptions.IncludeModifiers | SymbolDisplayMemberOptions.IncludeRef | SymbolDisplayMemberOptions.IncludeExplicitInterface,
-					SymbolDisplayDelegateStyle.NameAndSignature,
-					SymbolDisplayExtensionMethodStyle.InstanceMethod,
-					SymbolDisplayParameterOptions.IncludeType | SymbolDisplayParameterOptions.IncludeName | SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeOptionalBrackets | SymbolDisplayParameterOptions.IncludeDefaultValue | SymbolDisplayParameterOptions.IncludeExtensionThis,
-					SymbolDisplayPropertyStyle.ShowReadWriteDescriptor,
-					SymbolDisplayLocalOptions.IncludeType | SymbolDisplayLocalOptions.IncludeRef | SymbolDisplayLocalOptions.IncludeConstantValue,
-					SymbolDisplayKindOptions.IncludeMemberKeyword | SymbolDisplayKindOptions.IncludeNamespaceKeyword | SymbolDisplayKindOptions.IncludeTypeKeyword,
-					SymbolDisplayMiscellaneousOptions.AllowDefaultLiteral | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier | SymbolDisplayMiscellaneousOptions.RemoveAttributeSuffix | SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName | SymbolDisplayMiscellaneousOptions.UseSpecialTypes
-					));
-				//Print(v.ToMinimalDisplayString());
-				CiUtil.TaggedPartsToHtml(b, parts.ToTaggedText());
-				//foreach(var k in parts)Print(k.)
-			}
-			APerf.Next();
-		}
-
-		b.Append("</body>");
-
-		var html = b.ToString();
-		//Print(html);
 		_html.Text = html;
-		APerf.NW();
+		_compl = compl;
+		_ci = ci;
 	}
-#elif true
-	//public void SetHtml(CiComplItem ci, ImmutableArray<TaggedText> tags)
-	public void SetHtml(CiComplItem ci, IEnumerable<TaggedText> tags)
-	{
-		var b = new StringBuilder("<body>");
-		CiUtil.TaggedPartsToHtml(b, tags);
-		APerf.Next();
-
-		var symbols = ci.ci.Symbols;
-		if(symbols != null && symbols.Count > 1) {
-			b.Append("<h4>Other</h4>");
-			int i = -1;
-			foreach(var v in symbols) {
-				if(++i == 0) continue;
-				if(i > 1) b.Append("<br/>");
-				//if(v is ReducedExtensionMethodSymbol) b.Append("(extension) ");
-				//Print(v.Kind, v.ContainingType?.Name, v.IsStatic, v.CanBeReferencedByName, v.ContainingSymbol, v.GetType().Name, v.OriginalDefinition, v.Name, v.MetadataName);
-				//Print(v.Name);
-				//Print(v.GetDocumentationCommentId());
-				//Print(v.GetDocumentationCommentXml());
-				//Print("-----");
-				var parts = v.ToDisplayParts(new SymbolDisplayFormat(
-					SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
-					v.Kind == SymbolKind.NamedType ? SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces : SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
-					SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance | SymbolDisplayGenericsOptions.IncludeTypeConstraints,
-					SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeContainingType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeConstantValue | SymbolDisplayMemberOptions.IncludeModifiers | SymbolDisplayMemberOptions.IncludeRef | SymbolDisplayMemberOptions.IncludeExplicitInterface,
-					SymbolDisplayDelegateStyle.NameAndSignature,
-					SymbolDisplayExtensionMethodStyle.InstanceMethod,
-					SymbolDisplayParameterOptions.IncludeType | SymbolDisplayParameterOptions.IncludeName | SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeOptionalBrackets | SymbolDisplayParameterOptions.IncludeDefaultValue | SymbolDisplayParameterOptions.IncludeExtensionThis,
-					SymbolDisplayPropertyStyle.ShowReadWriteDescriptor,
-					SymbolDisplayLocalOptions.IncludeType | SymbolDisplayLocalOptions.IncludeRef | SymbolDisplayLocalOptions.IncludeConstantValue,
-					SymbolDisplayKindOptions.IncludeMemberKeyword | SymbolDisplayKindOptions.IncludeNamespaceKeyword | SymbolDisplayKindOptions.IncludeTypeKeyword,
-					SymbolDisplayMiscellaneousOptions.AllowDefaultLiteral | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier | SymbolDisplayMiscellaneousOptions.RemoveAttributeSuffix | SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName | SymbolDisplayMiscellaneousOptions.UseSpecialTypes
-					));
-				//Print(v.ToMinimalDisplayString());
-				CiUtil.TaggedPartsToHtml(b, parts.ToTaggedText());
-				//foreach(var k in parts)Print(k.)
-			}
-			APerf.Next();
-		}
-
-		b.Append("</body>");
-
-		var html = b.ToString();
-		//Print(html);
-		_html.Text = html;
-		APerf.NW();
-	}
-#else
-
-	public void SetHtml(CiComplItem ci)
-	{
-		APerf.First();
-		var b = new StringBuilder("<body>");
-		var symbols = ci.ci.Symbols;
-		if(symbols != null) {
-			int i = -1;
-			foreach(var v in symbols) {
-				i++;
-				if(i==1)b.Append("<h4>Other</h4>");
-				if(i>1) b.Append("<br/>");
-				//if(v is ReducedExtensionMethodSymbol) b.Append("(extension) ");
-				//Print(v.Kind, v.ContainingType?.Name, v.IsStatic, v.CanBeReferencedByName, v.ContainingSymbol, v.GetType().Name, v.OriginalDefinition, v.Name, v.MetadataName);
-				//Print(v.Name);
-				//Print(v.GetDocumentationCommentId());
-				//Print(v.GetDocumentationCommentXml());
-				//Print("-----");
-				var parts = v.ToDisplayParts(new SymbolDisplayFormat(
-					SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
-					v.Kind == SymbolKind.NamedType ? SymbolDisplayTypeQualificationStyle.NameAndContainingTypesAndNamespaces : SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
-					SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance | SymbolDisplayGenericsOptions.IncludeTypeConstraints,
-					SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeContainingType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeConstantValue | SymbolDisplayMemberOptions.IncludeModifiers | SymbolDisplayMemberOptions.IncludeRef | SymbolDisplayMemberOptions.IncludeExplicitInterface,
-					SymbolDisplayDelegateStyle.NameAndSignature,
-					SymbolDisplayExtensionMethodStyle.InstanceMethod,
-					SymbolDisplayParameterOptions.IncludeType | SymbolDisplayParameterOptions.IncludeName | SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeOptionalBrackets | SymbolDisplayParameterOptions.IncludeDefaultValue | SymbolDisplayParameterOptions.IncludeExtensionThis,
-					SymbolDisplayPropertyStyle.ShowReadWriteDescriptor,
-					SymbolDisplayLocalOptions.IncludeType | SymbolDisplayLocalOptions.IncludeRef | SymbolDisplayLocalOptions.IncludeConstantValue,
-					SymbolDisplayKindOptions.IncludeMemberKeyword | SymbolDisplayKindOptions.IncludeNamespaceKeyword | SymbolDisplayKindOptions.IncludeTypeKeyword,
-					SymbolDisplayMiscellaneousOptions.AllowDefaultLiteral | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier | SymbolDisplayMiscellaneousOptions.RemoveAttributeSuffix | SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName | SymbolDisplayMiscellaneousOptions.UseSpecialTypes
-					));
-				//Print(v.ToMinimalDisplayString());
-				CiUtil.TaggedPartsToHtml(b, parts.ToTaggedText());
-				//foreach(var k in parts)Print(k.)
-
-				//var xmlDoc = v.GetDocumentationCommentXml();
-				////Print(xmlDoc);
-				//if(s_rxSummary.MatchS(xmlDoc, out string summary, 1)) {
-				//	Print(summary);
-				//}
-
-				//v.GetDocumentationParts()
-				//Microsoft.CodeAnalysis.Shared.Extensions.ISymbolExtensions.GetDocumentationComment();
-				//v.GetDocumentationComment()
-			}
-			APerf.Next();
-		}
-
-		b.Append("</body>");
-
-		var html = b.ToString();
-		//Print(html);
-		_html.Text = html;
-		APerf.NW();
-	}
-	static ARegex s_rxSummary = new ARegex(@"(?s)<summary>(.+?)</summary>");
-#endif
-
-
 
 	public void Show(SciCode doc, int position)
 	{
@@ -228,6 +79,21 @@ class CiPopupHtml
 	{
 		_w.Hide();
 		_html.Text = null;
+		_compl = null;
+		_ci = null;
+	}
+
+	private void _html_LinkClicked(object sender, HtmlLinkClickedEventArgs e)
+	{
+		if(e.Link.Starts('^')) {
+			e.Handled = true;
+			int i = e.Link.ToInt(1);
+			var html = _compl.GetDescriptionHtml(_ci, i);
+			_html.Text = html;
+		} else if(e.Link.Has("/a.html#")) {
+			e.Handled = true;
+			CiUtil.OpenSymbolSourceUrl(e.Link);
+		}
 	}
 
 	class _Window : Form
@@ -309,7 +175,21 @@ class CiPopupHtml
 
 		protected override void OnClick(EventArgs e)
 		{
-			//base.OnClick(e); //sets focus
+			//Print("OnClick");
+			//base.OnClick(e); //sets focus. Unwanted when link clicked. OnLinkClicked is after.
+		}
+
+		//protected override void OnLinkClicked(HtmlLinkClickedEventArgs e)
+		//{
+		//	Print("OnLinkClicked");
+		//	base.OnLinkClicked(e);
+		//}
+
+		protected override void OnMouseUp(MouseEventArgs e)
+		{
+			//Print("OnMouseUp");
+			if(!Empty(this.SelectedText)) Focus(); //the user may want Ctrl+C
+			base.OnMouseUp(e);
 		}
 	}
 }

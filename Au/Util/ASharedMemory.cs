@@ -34,7 +34,7 @@ namespace Au.Util
 		/// <param name="name">Shared memory name. Case-insensitive.</param>
 		/// <param name="size">Shared memory size. Ignored if the shared memory already exists.</param>
 		/// <param name="created">Receives true if created and not opened.</param>
-		/// <exception cref="AException">The API failed.</exception>
+		/// <exception cref="AuException">The API failed.</exception>
 		/// <remarks>
 		/// Once the memory is created, it is alive at least until this process ends. Other processes can keep the memory alive even after that.
 		/// There is no Close function to close the native shared memory object handle. The OS closes it when this process ends.
@@ -55,7 +55,7 @@ namespace Au.Util
 				return (void*)t;
 			}
 			ge:
-			throw new AException(0, "*open shared memory");
+			throw new AuException(0, "*open shared memory");
 		}
 	}
 }

@@ -93,14 +93,14 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="need">Which field to set in <b>Result</b>.</param>
 		/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		internal Result Start(Result.Need need = 0, bool inheritUiaccess = false)
 		{
 			bool suspended = need == Result.Need.NetProcess && !_NetProcessObject.IsFast, resetSuspendedFlag = false;
 			if(suspended && 0 == (flags & Api.CREATE_SUSPENDED)) { flags |= Api.CREATE_SUSPENDED; resetSuspendedFlag = true; }
 			bool ok = StartLL(out var pi, inheritUiaccess);
 			if(resetSuspendedFlag) flags &= ~Api.CREATE_SUSPENDED;
-			if(!ok) throw new AException(0, $"*start process '{_exe}'");
+			if(!ok) throw new AuException(0, $"*start process '{_exe}'");
 			return new Result(pi, need, suspended);
 		}
 
@@ -108,7 +108,7 @@ namespace Au.Util
 		/// Starts UAC Medium integrity level (IL) process from this admin process.
 		/// </summary>
 		/// <param name="need">Which field to set in <b>Result</b>.</param>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Actually the process will have the same IL and user session as the shell process (normally explorer).
 		/// Fails if there is no shell process (API GetShellWindow fails) for more than 2 s from calling this func.
@@ -137,7 +137,7 @@ namespace Au.Util
 				g1:
 				var w = Api.GetShellWindow();
 				if(w.Is0) { //if Explorer process killed or crashed, wait until it restarts
-					if(!AWaitFor.Condition(2, () => !Api.GetShellWindow().Is0)) throw new AException($"*start process '{_exe}' as user. There is no shell process.");
+					if(!AWaitFor.Condition(2, () => !Api.GetShellWindow().Is0)) throw new AuException($"*start process '{_exe}' as user. There is no shell process.");
 					500.ms();
 					w = Api.GetShellWindow();
 				}
@@ -174,7 +174,7 @@ namespace Au.Util
 			if(!ok) goto ge;
 			return new Result(pi, need, suspended);
 
-			ge: throw new AException(0, $"*start process '{_exe}' as user");
+			ge: throw new AuException(0, $"*start process '{_exe}' as user");
 		}
 		static SafeAccessTokenHandle s_userToken;
 

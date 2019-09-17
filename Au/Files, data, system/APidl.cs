@@ -112,8 +112,8 @@ namespace Au
 		/// Note: APidl is disposable.
 		/// </summary>
 		/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or ":: HexEncodedITEMIDLIST" (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="APath.ExpandEnvVar"/>).</param>
-		/// <param name="throwIfFailed">If failed, throw AException.</param>
-		/// <exception cref="AException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
+		/// <param name="throwIfFailed">If failed, throw AuException.</param>
+		/// <exception cref="AuException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
 		/// <remarks>
 		/// Calls <msdn>SHParseDisplayName</msdn>, except when string is ":: HexEncodedITEMIDLIST".
 		/// Never fails if s is ":: HexEncodedITEMIDLIST", even if it creates an invalid ITEMIDLIST.
@@ -143,7 +143,7 @@ namespace Au
 			} else { //file-system path or URL or shell object parsing name
 				var hr = Api.SHParseDisplayName(s, default, out R, 0, null);
 				if(hr != 0) {
-					if(throwIfFailed) throw new AException(hr);
+					if(throwIfFailed) throw new AuException(hr);
 					return default;
 				}
 			}
@@ -174,8 +174,8 @@ namespace Au
 		/// - Native.SIGDN.URL - if URL, returns URL. If file system object, returns its path like "file:///C:/a/b.txt". Else returns null.
 		/// - Native.SIGDN.DESKTOPABSOLUTEPARSING - returns path (if file system object) or URL (if URL) or shell object parsing name (if virtual object eg Control Panel). Note: not all returned parsing names can actually be parsed to create ITEMIDLIST again, therefore usually it's better to use <see cref="ToString"/> instead.
 		/// </param>
-		/// <param name="throwIfFailed">If failed, throw AException.</param>
-		/// <exception cref="AException">Failed, and throwIfFailed is true.</exception>
+		/// <param name="throwIfFailed">If failed, throw AuException.</param>
+		/// <exception cref="AuException">Failed, and throwIfFailed is true.</exception>
 		/// <remarks>
 		/// Calls <msdn>SHGetNameFromIDList</msdn>.
 		/// </remarks>
@@ -187,14 +187,14 @@ namespace Au
 		}
 
 		/// <summary>
-		/// This overload uses an ITEMIDLIST* that is not stored in a APidl variable.
+		/// This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
 		/// </summary>
 		public static string ToShellString(IntPtr pidl, Native.SIGDN stringType, bool throwIfFailed = false)
 		{
 			if(pidl == default) return null;
 			var hr = Api.SHGetNameFromIDList(pidl, stringType, out string R);
 			if(hr == 0) return R;
-			if(throwIfFailed) throw new AException(hr);
+			if(throwIfFailed) throw new AuException(hr);
 			return null;
 		}
 
@@ -212,7 +212,7 @@ namespace Au
 
 #if true
 		/// <summary>
-		/// This overload uses an ITEMIDLIST* that is not stored in a APidl variable.
+		/// This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
 		/// </summary>
 		public static string ToString(IntPtr pidl)
 		{
@@ -280,7 +280,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// This overload uses an ITEMIDLIST* that is not stored in a APidl variable.
+		/// This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
 		/// </summary>
 		public static string ToHexString(IntPtr pidl)
 		{

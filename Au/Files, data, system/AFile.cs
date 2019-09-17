@@ -58,7 +58,7 @@ namespace Au
 		/// <param name="properties">Receives properties.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
-		/// <exception cref="AException">The file/directory exist but failed to get its properties. Not thrown if used flag DoNotThrow.</exception>
+		/// <exception cref="AuException">The file/directory exist but failed to get its properties. Not thrown if used flag DoNotThrow.</exception>
 		/// <remarks>
 		/// For symbolic links etc, gets properties of the link, not of its target.
 		/// You can also get most of these properties with <see cref="EnumDirectory"/>.
@@ -88,7 +88,7 @@ namespace Au
 		/// <param name="attributes">Receives attributes, or 0 if failed.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
-		/// <exception cref="AException">Failed. Not thrown if used flag DoNotThrow.</exception>
+		/// <exception cref="AuException">Failed. Not thrown if used flag DoNotThrow.</exception>
 		/// <remarks>
 		/// For symbolic links etc, gets properties of the link, not of its target.
 		/// </remarks>
@@ -134,7 +134,7 @@ namespace Au
 				break;
 			}
 			if(0 != (flags & FAFlags.DontThrow)) return false;
-			throw new AException(ec, $"*get file attributes: '{path}'");
+			throw new AuException(ec, $"*get file attributes: '{path}'");
 
 			//tested:
 			//	If the file is in a protected directory, ERROR_ACCESS_DENIED.
@@ -327,7 +327,7 @@ namespace Au
 		/// </param>
 		/// <exception cref="ArgumentException"><i>directoryPath</i> is invalid path or not full path.</exception>
 		/// <exception cref="DirectoryNotFoundException"><i>directoryPath</i> directory does not exist.</exception>
-		/// <exception cref="AException">Failed to get children of <i>directoryPath</i> or of a subdirectory.</exception>
+		/// <exception cref="AuException">Failed to get children of <i>directoryPath</i> or of a subdirectory.</exception>
 		/// <remarks>
 		/// Uses API <msdn>FindFirstFile</msdn>.
 		/// 
@@ -409,7 +409,7 @@ namespace Au
 								break;
 							}
 							if(!itsOK) {
-								if(errorHandler == null || stack.Count == 0) throw new AException(ec, $"*enumerate directory '{path}'");
+								if(errorHandler == null || stack.Count == 0) throw new AuException(ec, $"*enumerate directory '{path}'");
 								Api.SetLastError(ec); //the above code possibly changed it, although currently it doesn't
 								errorHandler(path);
 							}
@@ -503,7 +503,7 @@ namespace Au
 				}
 				if(path2Parent != null) {
 					try { _CreateDirectory(path2Parent, pathIsPrepared: true); }
-					catch(Exception ex) { throw new AException($"*create directory: '{path2Parent}'", ex); }
+					catch(Exception ex) { throw new AuException($"*create directory: '{path2Parent}'", ex); }
 				}
 			}
 
@@ -547,7 +547,7 @@ namespace Au
 						}
 						break;
 					}
-					//if(!deleted) throw new AException(Api.ERROR_FILE_EXISTS, $"*{opName}"); //don't need, later API will fail
+					//if(!deleted) throw new AuException(Api.ERROR_FILE_EXISTS, $"*{opName}"); //don't need, later API will fail
 				}
 
 				if(!copy) {
@@ -566,7 +566,7 @@ namespace Au
 							ok = true;
 						}
 						catch(Exception ex) when(opType != _FileOpType.Copy) {
-							throw new AException($"*{opName} '{path1}' to '{path2}'", ex);
+							throw new AuException($"*{opName} '{path1}' to '{path2}'", ex);
 							//FUTURE: test when it is ThreadAbortException
 						}
 					} else {
@@ -577,7 +577,7 @@ namespace Au
 					}
 				}
 
-				if(!ok) throw new AException(0, $"*{opName} '{path1}' to '{path2}'");
+				if(!ok) throw new AuException(0, $"*{opName} '{path1}' to '{path2}'");
 
 				if(deleteSource) {
 					try {
@@ -586,7 +586,7 @@ namespace Au
 					catch(Exception ex) {
 						if(!path1.Ends(':')) //moving drive contents. Deleted contents but cannot delete drive.
 							PrintWarning($"Failed to delete '{path1}' after copying it to another drive. {ex.Message}");
-						//throw new AException("*move", ex); //don't. MoveFileEx also succeeds even if fails to delete source.
+						//throw new AuException("*move", ex); //don't. MoveFileEx also succeeds even if fails to delete source.
 					}
 				}
 			}
@@ -655,7 +655,7 @@ namespace Au
 			ge:
 			string se = $"*copy directory '{path1}' to '{path2}'";
 			if(s1 != null) se += $" ('{s1}' to '{s2}')";
-			throw new AException(0, se);
+			throw new AuException(0, se);
 			//never mind: wrong API error code if path1 and path2 is the same directory.
 		}
 
@@ -706,7 +706,7 @@ namespace Au
 		/// - <i>newName</i> is invalid filename.
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The file (path) does not exist or cannot be found.</exception>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Uses API <msdn>MoveFileEx</msdn>.
 		/// </remarks>
@@ -726,7 +726,7 @@ namespace Au
 		/// <param name="ifExists"></param>
 		/// <exception cref="ArgumentException">path or newPath is not full path (see <see cref="APath.IsFullPath"/>).</exception>
 		/// <exception cref="FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// In most cases uses API <msdn>MoveFileEx</msdn>. It's fast, because don't need to copy files.
 		/// In these cases copies/deletes: destination is on another drive; need to merge directories.
@@ -751,7 +751,7 @@ namespace Au
 		/// - <i>path</i> is drive. To move drive content, use <see cref="Move"/>.
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// In most cases uses API <msdn>MoveFileEx</msdn>. It's fast, because don't need to copy files.
 		/// In these cases copies/deletes: destination is on another drive; need to merge directories.
@@ -781,7 +781,7 @@ namespace Au
 		/// </param>
 		/// <exception cref="ArgumentException">path or newPath is not full path (see <see cref="APath.IsFullPath"/>).</exception>
 		/// <exception cref="FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Uses API <msdn>CopyFileEx</msdn>.
 		/// On Windows 7 does not copy security properties; sets default.
@@ -806,7 +806,7 @@ namespace Au
 		/// - <i>path</i> is drive. To copy drive content, use <see cref="Copy"/>.
 		/// </exception>
 		/// <exception cref="FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// Uses API <msdn>CopyFileEx</msdn>.
 		/// On Windows 7 does not copy security properties; sets default.
@@ -829,7 +829,7 @@ namespace Au
 		/// Note: it is much slower. To delete multiple, use <see cref="Delete(IEnumerable{string}, bool)"/>.
 		/// </param>
 		/// <exception cref="ArgumentException">path is not full path (see <see cref="APath.IsFullPath"/>).</exception>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// If directory, also deletes all its files and subdirectories. If fails to delete some, tries to delete as many as possible.
 		/// Deletes read-only files too.
@@ -874,7 +874,7 @@ namespace Au
 		{
 			var type = ExistsAs2(path, true);
 			if(type == FileDir2.NotFound) return type;
-			if(type == FileDir2.AccessDenied) throw new AException(0, $"*delete '{path}'");
+			if(type == FileDir2.AccessDenied) throw new AuException(0, $"*delete '{path}'");
 
 			if(tryRecycleBin) {
 				if(_DeleteShell(path, true)) return type;
@@ -905,7 +905,7 @@ namespace Au
 				ec = _DeleteLL(path, type == FileDir2.SymLinkDirectory);
 				if(ec == 0) return type;
 			}
-			if(ExistsAsAny(path, true)) throw new AException(ec, $"*delete '{path}'");
+			if(ExistsAsAny(path, true)) throw new AuException(ec, $"*delete '{path}'");
 
 			//info:
 			//RemoveDirectory fails if not empty.
@@ -984,7 +984,7 @@ namespace Au
 		/// <param name="path">Path of new directory.</param>
 		/// <param name="templateDirectory">Optional path of a template directory from which to copy some properties. See API <msdn>CreateDirectoryEx</msdn>.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
 		/// If the directory already exists, this function does nothing, and returns false.
 		/// Else, at first it creates missing parent/ancestor directories, then creates the specified directory.
@@ -1002,7 +1002,7 @@ namespace Au
 		/// </summary>
 		/// <param name="filePath">Path of new file.</param>
 		/// <exception cref="ArgumentException">Not full path. No filename.</exception>
-		/// <exception cref="AException">Failed.</exception>
+		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// string path = @"D:\Test\new\test.txt";
@@ -1028,7 +1028,7 @@ namespace Au
 			do {
 				stack.Push(s);
 				s = _RemoveFilename(s, true);
-				if(s == null) throw new AException($@"*create directory '{path}'. Drive not found.");
+				if(s == null) throw new AuException($@"*create directory '{path}'. Drive not found.");
 			} while(!ExistsAsDirectory(s, true));
 
 			while(stack.Count > 0) {
@@ -1042,7 +1042,7 @@ namespace Au
 					int ec = ALastError.Code;
 					if(ec == Api.ERROR_ALREADY_EXISTS) continue;
 					if(ec == Api.ERROR_ACCESS_DENIED && ++retry < 5) { Thread.Sleep(15); goto g1; } //sometimes access denied briefly, eg immediately after deleting the folder while its parent is open in Explorer. Now could not reproduce on Win10.
-					throw new AException(0, $@"*create directory '{path}'");
+					throw new AuException(0, $@"*create directory '{path}'");
 				}
 			}
 			return true;

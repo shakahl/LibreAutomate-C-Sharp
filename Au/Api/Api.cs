@@ -396,7 +396,7 @@ namespace Au.Types
 			public SECURITY_ATTRIBUTES(string securityDescriptor)
 			{
 				nLength = IntPtr.Size * 3;
-				if(securityDescriptor != null && !ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptor, 1, out lpSecurityDescriptor)) throw new AException(0, "SECURITY_ATTRIBUTES");
+				if(securityDescriptor != null && !ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptor, 1, out lpSecurityDescriptor)) throw new AuException(0, "SECURITY_ATTRIBUTES");
 			}
 
 			public void Dispose()

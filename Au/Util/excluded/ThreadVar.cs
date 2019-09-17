@@ -41,7 +41,7 @@ namespace Au//.Util
 						}
 					}
 				}
-				if(v->FlsIndex == -1) throw new AException();
+				if(v->FlsIndex == -1) throw new AuException();
 				FlsSetValue(v->FlsIndex, (IntPtr)_domainHandle);
 
 				//_Exit += value;

@@ -671,7 +671,6 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 	public unsafe void TestEditor()
 	{
 
-
 		//for(int i = 1; i < 0x10000; i++) {
 		//	char c = (char)i;
 		//	var k = char.GetUnicodeCategory(c);
