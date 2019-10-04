@@ -280,7 +280,7 @@ namespace Au.Controls
 					gp?.Content.Show();
 					var oldCont = ai?.Content;
 					if(focusControl) gp.Content?.Focus();
-					else if(_manager.FocusControlOnUndockEtc != null && (oldCont?.ContainsFocus ?? false)) _manager.FocusControlOnUndockEtc.Focus();
+					else if(_manager.ZFocusControlOnUndockEtc != null && (oldCont?.ContainsFocus ?? false)) _manager.ZFocusControlOnUndockEtc.Focus();
 					oldCont?.Hide();
 					this.InvalidateCaption();
 				} else if(focusControl) gp.Content?.Focus();

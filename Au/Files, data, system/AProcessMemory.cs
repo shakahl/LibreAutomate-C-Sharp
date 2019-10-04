@@ -109,7 +109,7 @@ namespace Au
 		/// <param name="w">A window in that process.</param>
 		/// <param name="nBytes">If not 0, allocates this number of bytes of memory in that process.</param>
 		/// <remarks>This is the preferred constructor when the process has windows. It works with windows of [](xref:uac) High integrity level when this process is Medium+uiAccess.</remarks>
-		/// <exception cref="WndException">w invalid.</exception>
+		/// <exception cref="AuWndException">w invalid.</exception>
 		/// <exception cref="AuException">Failed to open process handle (usually because of UAC) or allocate memory.</exception>
 		public AProcessMemory(AWnd w, int nBytes)
 		{

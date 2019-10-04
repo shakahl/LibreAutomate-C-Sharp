@@ -317,7 +317,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="objid">Window part id. Default AccOBJID.WINDOW. Also can be a custom id supported by that window, cast int to AccOBJID.</param>
 		/// <param name="flags">Flags.</param>
-		/// <exception cref="WndException">Invalid window.</exception>
+		/// <exception cref="AuWndException">Invalid window.</exception>
 		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// <exception cref="ArgumentException"><i>objid</i> is QUERYCLASSNAMEIDX or NATIVEOM.</exception>
 		/// <remarks>

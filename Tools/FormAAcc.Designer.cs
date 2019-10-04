@@ -167,21 +167,17 @@ namespace Au.Tools
 			// 
 			// _code
 			// 
-			this._code.AcceptsReturn = null;
 			this._code.AccessibleName = "_code";
 			this._code.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
-			this._code.DisableModifiedNotifications = false;
 			this._code.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._code.Location = new System.Drawing.Point(0, 0);
 			this._code.Name = "_code";
-			this._code.NoMouseLeftSetFocus = false;
-			this._code.NoMouseRightSetFocus = false;
 			this._code.Size = new System.Drawing.Size(600, 59);
 			this._code.TabIndex = 4;
 			// 
 			// _tree
 			// 
-			this._tree.AccessibleCount = 1000;
+			this._tree.ZAccessibleCount = 1000;
 			this._tree.BackColor = System.Drawing.SystemColors.Window;
 			this._tree.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this._tree.DefaultToolTipProvider = null;
@@ -244,17 +240,12 @@ namespace Au.Tools
 			// 
 			// _info
 			// 
-			this._info.AcceptsReturn = null;
 			this._info.AccessibleName = "_info";
 			this._info.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._info.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._info.DisableModifiedNotifications = false;
-			this._info.InitUseControlFont = false;
 			this._info.Location = new System.Drawing.Point(8, 8);
 			this._info.Name = "_info";
-			this._info.NoMouseLeftSetFocus = false;
-			this._info.NoMouseRightSetFocus = false;
 			this._info.Size = new System.Drawing.Size(600, 56);
 			this._info.TabIndex = 0;
 			// 
@@ -283,7 +274,7 @@ namespace Au.Tools
 			this.Controls.Add(this._bOK);
 			this.Controls.Add(this._cCapture);
 			this.Controls.Add(this.splitContainer1);
-			this.IsPopup = true;
+			this.ZIsPopup = true;
 			this.MinimumSize = new System.Drawing.Size(500, 400);
 			this.Name = "FormAAcc";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;

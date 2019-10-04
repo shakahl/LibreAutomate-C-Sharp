@@ -26,19 +26,13 @@ using static Au.AStatic;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Completion;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.Tags;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.CSharp.Symbols;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
-using Microsoft.CodeAnalysis.Snippets;
-
-//TODO: bug (Roslyn or my): After adding a reference, starts showing its members (namespaces) only after a text modification.
-//	After removing a reference, sometimes stops showing its members only after several text modifications.
-//	To reproduce, add/remove .NET assembly "Accessibility".
 
 class CiCompletion
 {
@@ -47,19 +41,15 @@ class CiCompletion
 	CancellationTokenSource _cancelTS;
 	CiTools _tools = new CiTools();
 
-	//public CiCompletion()
-	//{
-	//}
-
 	class _Data
 	{
 		public CompletionService completionService;
 		public Document document;
 		public SemanticModel model;
 		public List<CiComplItem> items;
-		public string code;
-		public TextSpan span;
+		public int codeLength;
 		public string filterText;
+		public SciCode.ITempRange tempRange;
 		Dictionary<CompletionItem, CiComplItem> _map;
 
 		public Dictionary<CompletionItem, CiComplItem> Map {
@@ -73,6 +63,8 @@ class CiCompletion
 		}
 	}
 
+	public bool IsVisibleUI => _data != null;
+
 	public void Cancel()
 	{
 		_cancelTS?.Cancel(); _cancelTS = null;
@@ -84,77 +76,77 @@ class CiCompletion
 		_tools.RegexWindowHide();
 	}
 
-	void _CancelList()
+	void _CancelList(bool popupListHidden = false, bool tempRangeRemoved = false)
 	{
+		//Print("_CancelList", _data != null);
 		if(_data == null) return;
+		if(!tempRangeRemoved) _data.tempRange.Remove();
 		_data = null;
-		_popupList.Hide();
+		if(!popupListHidden) _popupList.Hide();
 	}
 
-	public void SciPositionChanged(SciCode doc, bool modified)
+	public void SciUpdateUI(SciCode doc, bool modified) //position changed, clicked, etc
 	{
-		//int pos = doc.ST.CurrentPosChars;
+		//int pos = doc.Z.CurrentPosChars;
 		//var node = CiTools.NodeAt(pos);
 		//Print(CiTools.IsInString(ref node, pos));
 
 		_tools.RegexWindowHideIfNotInString(doc);
 
-		if(!modified) { //else we use SciCharAdded and SciTextChanged(SC_MOD_DELETETEXT)
-			int position = doc.ST.CurrentPos;
+		if(_data == null && !modified) { //else we use SciCharAdded and SciCharDeletedBack
+			int position = doc.Z.CurrentPos8;
 			if(doc.Call(Sci.SCI_GETANCHOR) == position) { //if no selection
-				position = doc.ST.CountBytesToChars(position);
+				position = doc.Z.CountBytesToChars(position);
 				if(_IsAfterDot(doc.Text, position)) {
 					_ShowList(_ShowReason.clickedDot, position);
-				} else {
-					Cancel();
 				}
 			}
 		}
 	}
 
-	public void SciCharAdded(SciCode doc)
+	/// <summary>
+	/// If showing popup list, synchronously commits the selected item if need (inserts text).
+	/// Called before <see cref="CiAutocorrect.SciCharAdded"/> and before passing the character to Scintilla.
+	/// Returns true if need to suppress the character; only if ch == ' '; then can add text anywhere and set caret anywhere.
+	/// Else inserts text at caret position and moves caret after the text.
+	/// </summary>
+	public bool SciCharAdding_Commit(SciCode doc, char ch)
 	{
-		_CharAddedRemoved(doc, true, doc.ST.CurrentPosChars);
-	}
-
-	public void SciTextChanged(SciCode doc, in Sci.SCNotification n)
-	{
-		if(0 == (n.modificationType & Sci.MOD.SC_MOD_DELETETEXT)) return; //info: instead of SC_MOD_INSERTTEXT we use SciCharAdded, because now cannot replace text range
-		if(_data == null) return;
-		_CharAddedRemoved(doc, false, doc.ST.CountBytesToChars(n.position));
-	}
-
-	void _CharAddedRemoved(SciCode doc, bool added, int position)
-	{
-		var code = doc.Text;
 		if(_data != null) {
-			if(code.Length >= _data.code.Length - _data.span.Length
-				&& code.Length - position == _data.code.Length - _data.span.End
-				&& 0 == string.CompareOrdinal(code, 0, _data.code, 0, _data.span.Start)
-				&& 0 == string.CompareOrdinal(code, position, _data.code, _data.span.End, code.Length - position)
-				&& !_data.items[0].IsRegex
-				) {
-				int len = position - _data.span.Start;
-				if(added) {
-					char c = code[position - 1];
-					if(!(char.IsLetterOrDigit(c) || c == '_' || (c == '@' && len == 1))) {
-						var ci = _popupList.SelectedItem;
-						if(ci != null) Commit(ci, c);
-						_CancelList();
-						position = doc.ST.CurrentPosChars;
-					}
-				}
-				if(_data != null) {
-					_data.filterText = code.Substring(_data.span.Start, len);
-					_FilterItems(true);
-					return;
-				}
-			} else if(!added) { //else _ShowList will do
+			if(!_IsValidChar(ch)) {
+				var ci = _popupList.SelectedItem;
+				bool suppress = ci != null && _Commit(ci, doc, ch);
 				_CancelList();
+				return suppress;
 			}
 		}
+		return false;
+	}
 
-		if(added) _ShowList(_ShowReason.charAdded, position);
+	static bool _IsValidChar(char ch) => char.IsLetterOrDigit(ch) || ch == '_' || ch == '@';
+
+	/// <summary>
+	/// Asynchronously shows popup list if need. If already showing, synchronously filters/selects items.
+	/// Called after <see cref="SciCharAdding_Commit"/> and <see cref="CiAutocorrect.SciCharAdded"/>.
+	/// </summary>
+	public void SciCharAdded_ShowList(CodeInfo.CharContext c)
+	{
+		if(_data == null) {
+			_ShowList(_cancelTS == null ? _ShowReason.charAdded : _ShowReason.charAdded2, -1, c.ch);
+		}
+	}
+
+	public void SciModified(SciCode doc, in Sci.SCNotification n)
+	{
+		if(_data != null) {
+			bool trValid = _data.tempRange.GetCurrentFromTo(out int from, out int to, utf8: true);
+			Debug.Assert(trValid); if(!trValid) { Cancel(); return; }
+			string s = doc.Z.RangeText(false, from, to);
+			foreach(var v in s) if(!_IsValidChar(v)) return; //mostly because now is before SciCharAddedCommit, which commits (or cancels) if added invalid char
+			_data.filterText = s;
+			_FilterItems(_data);
+			_popupList.UpdateVisibleItems(); //and calls SelectBestMatch
+		}
 	}
 
 	bool _IsAfterDot(string code, int position)
@@ -179,20 +171,35 @@ class CiCompletion
 		_ShowList(_ShowReason.command);
 	}
 
-	enum _ShowReason { charAdded, clickedDot, command }
+	enum _ShowReason { charAdded, charAdded2, clickedDot, command }
 
 	//long _debugTime;
 
-	async void _ShowList(_ShowReason showReason, int position = -1)
+	async void _ShowList(_ShowReason showReason, int position = -1, char ch = default)
 	{
 		//long time = ATime.PerfMilliseconds;
 		//Print(_debugTime == 0 ? 0 : time - _debugTime, time);
 		//_debugTime = time;
 
 		var p1 = APerf.Create();
+
+		//Print(_cancelTS);
 		Cancel();
-		_cancelTS = new CancellationTokenSource();
-		var cancelTS = _cancelTS;
+
+		if(showReason != _ShowReason.charAdded) ch = default;
+
+		if(!CodeInfo.GetContextWithoutDocument(out var cd, position)) return; //returns false if position is in meta comments
+		SciCode doc = cd.sciDoc;
+		position = cd.position; //changed if -1 or -2
+		string code = cd.code;
+
+		if(showReason == _ShowReason.charAdded) {
+			if(position > 1 && char.IsLetterOrDigit(ch) && char.IsLetterOrDigit(code[position - 2])) return; //middle of word
+
+			//FUTURE: try to improve performance when typing text (_ShowReason.charAdded).
+			//	Return if the text would not trigger autocompletion.
+			//	Eg if in comments, non-regex string. Then need to get syntax tree after GetDocument.
+		}
 
 #if NOGCREGION
 		ADebug.LibMemorySetAnchor();
@@ -200,35 +207,39 @@ class CiCompletion
 		bool noGC = false;
 		if(AVersion.Is64BitProcess) try { noGC = GC.TryStartNoGCRegion(50_000_000); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
 #endif
-		char debugChar = default;
-		try {
-			var document = CodeInfo.GetDocument();
-			p1.Next('d');
+		if(!cd.GetDocument()) return; //returns false if fails (unlikely)
+		Document document = cd.document;
+		Debug.Assert(code == document.GetTextAsync().Result.ToString());
+		p1.Next('d');
 
-			//Print(document.GetTextAsync().Result);
+		bool isDot = false, canGroup = false; int isRegex = 0;
+		CompletionService completionService = null;
+		SemanticModel model = null;
+		//INamedTypeSymbol typeSymbol = null;
 
-			var doc = Panels.Editor.ActiveDoc;
-			if(position < 0) position = doc.ST.CurrentPosChars;
-			var code = doc.Text;
-			char ch = showReason == _ShowReason.charAdded && position > 0 ? code[position - 1] : default;
-			debugChar = ch;
-			var cancelToken = cancelTS.Token;
-			bool isDot = false, canGroup = false; int isRegex = 0;
+		_cancelTS = new CancellationTokenSource();
+		var cancelTS = _cancelTS;
+		var cancelToken = cancelTS.Token;
 #if DEBUG
-			if(Debugger.IsAttached) cancelToken = default;
+		if(Debugger.IsAttached) { cancelToken = default; _cancelTS = null; }
 #endif
-			CompletionService completionService = null;
-			SemanticModel model = null;
-			//INamedTypeSymbol typeSymbol = null;
+
+		try {
 			var r = await Task.Run(async () => { //info: somehow GetCompletionsAsync etc are not async
 				completionService = CompletionService.GetService(document);
+				if(cancelToken.IsCancellationRequested) return null;
 
 				//var q = completionService.GetRules();
 				//Print(q.DefaultEnterKeyRule, q.DismissIfEmpty, q.DismissIfLastCharacterDeleted, q.SnippetsRule);
 				//Print(q.DefaultCommitCharacters);
-
 				//p1.Next('s');
-				if(cancelToken.IsCancellationRequested) return null;
+
+				if(showReason == _ShowReason.charAdded && ch == '[') { //attribute?
+					var node = cd.document.GetSyntaxRootAsync().Result.FindToken(position - 1).Parent;
+					//Print(node.Kind());
+					if(node.IsKind(SyntaxKind.AttributeList)) ch = default; //else GetCompletionsAsync does not work
+				}
+
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
 				//Print($"'{ch}'");
 				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
@@ -239,7 +250,7 @@ class CiCompletion
 					int pos2 = position - 1;
 					if(isDot = (pos2 > 0 && code[pos2] == '.')) {
 						if(pos2 > 1 && code[pos2 - 1] == '?') pos2--;
-					} else if(isDot = (pos2 > 1 && (code[pos2] == '>' && code[pos2 - 1] == '-') || (code[pos2] == ':' && code[pos2 - 1] == ':'))) {
+					} else if(isDot = (pos2 > 1 && ((code[pos2] == '>' && code[pos2 - 1] == '-') || (code[pos2] == ':' && code[pos2 - 1] == ':')))) {
 						pos2--;
 					}
 					if(isDot) {
@@ -302,18 +313,18 @@ class CiCompletion
 			}
 
 			if(r == null || cancelToken.IsCancellationRequested) return;
-			Debug.Assert(doc == Panels.Editor.ActiveDoc); //when active doc changed, cancellation must be requested
+			Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
+			if(doc != Panels.Editor.ZActiveDoc || position != doc.Z.CurrentPos16 || code != doc.Text) return; //we are async, so these changes are possible
 			p1.Next('T');
 
 			var span = r.Span;
 			if(span.Length > 0 && CiComplItem.IsRegexProvider(r.Items[0])) span = new TextSpan(position, 0);
 
-			_data = new _Data {
+			var d = new _Data {
 				completionService = completionService,
 				document = document,
 				model = model,
-				code = code,
-				span = span,
+				codeLength = code.Length,
 				filterText = code.Substring(span.Start, span.Length),
 				items = new List<CiComplItem>(r.Items.Length),
 			};
@@ -324,6 +335,13 @@ class CiCompletion
 				var v = new CiComplItem(ci);
 				var sym = v.FirstSymbol;
 				//Print(v.DisplayText, sym, canGroup);
+
+				//why cref provider adds internals from other assemblies?
+				if(v.access == CiItemAccess.Internal && sym != null && sym.Kind == SymbolKind.NamedType && !sym.IsInSource() && !model.IsAccessible(0, sym)) {
+					//Print(sym);
+					//continue;
+				}
+
 				switch(v.kind) {
 				case CiItemKind.Method:
 					if(sym != null) {
@@ -366,7 +384,7 @@ class CiCompletion
 					if(sym == null && ci.DisplayText == "T") continue;
 					break;
 				case CiItemKind.Class:
-					if(!isDot && _IsOurScriptClass(sym as INamedTypeSymbol)) v.moveDown = CiItemMoveDownBy.Name;
+					if(!isDot && sym is INamedTypeSymbol ins && _IsOurScriptClass(ins)) v.moveDown = CiItemMoveDownBy.Name;
 					break;
 				case CiItemKind.EnumMember:
 				case CiItemKind.Label:
@@ -380,7 +398,7 @@ class CiCompletion
 				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name == "Script" && t.BaseType?.Name == "AScript";
 
 				if(canGroup) {
-					int i = _data.items.Count;
+					int i = d.items.Count;
 					if(sym == null) {
 						if(v.kind == CiItemKind.Keyword) (keywordsGroup ??= new List<int>()).Add(i);
 						else (etcGroup ??= new List<int>()).Add(i);
@@ -410,13 +428,10 @@ class CiCompletion
 					if(isObsolete) v.moveDown = CiItemMoveDownBy.Obsolete;
 				}
 
-				_data.items.Add(v);
+				d.items.Add(v);
 			}
 
-			if(_data.items.Count == 0) {
-				_data = null;
-				return;
-			}
+			if(d.items.Count == 0) return;
 
 			List<string> groupsList = null;
 			if(canGroup && groups.Count + (keywordsGroup == null ? 0 : 1) + (etcGroup == null ? 0 : 1) > 1) {
@@ -426,8 +441,8 @@ class CiCompletion
 					var gs = groups.ToList();
 					gs.Sort((k1, k2) => {
 						//let extension methods be at bottom, sorted by type name
-						int em1 = _data.items[k1.Value[0]].kind == CiItemKind.ExtensionMethod ? 1 : 0;
-						int em2 = _data.items[k2.Value[0]].kind == CiItemKind.ExtensionMethod ? 1 : 0;
+						int em1 = d.items[k1.Value[0]].kind == CiItemKind.ExtensionMethod ? 1 : 0;
+						int em2 = d.items[k2.Value[0]].kind == CiItemKind.ExtensionMethod ? 1 : 0;
 						int diff = em1 - em2;
 						if(diff != 0) return diff;
 						if(em1 == 1) return string.Compare(k1.Key.Name, k2.Key.Name, StringComparison.OrdinalIgnoreCase);
@@ -458,24 +473,33 @@ class CiCompletion
 				if(keywordsGroup != null) g.Add(("keywords", keywordsGroup));
 				if(etcGroup != null) g.Add(("etc", etcGroup));
 				for(int i = 0; i < g.Count; i++) {
-					foreach(var v in g[i].Item2) _data.items[v].group = i;
+					foreach(var v in g[i].Item2) d.items[v].group = i;
 				}
 				groupsList = g.Select(o => o.Item1).ToList();
 			}
 
-			if(!span.IsEmpty) _FilterItems(false);
+			if(!span.IsEmpty) _FilterItems(d);
 			p1.Next('F');
 
+			d.tempRange = doc.ZTempRanges_Add(span.Start, span.End, () => {
+				//Print("leave", _data==d);
+				if(_data == d) _CancelList(tempRangeRemoved: true);
+			}, this, SciCode.ZTempRangeFlags.LeaveIfPosNotAtEndOfRange);
+
+			_data = d;
 			if(_popupList == null) {
 				_popupList = new CiPopupList(this);
-				_popupList.PopupWindow.VisibleChanged += _popupList_VisibleChanged;
+				_popupList.PopupWindow.ZHiddenOrDestroyed += destroyed => _CancelList(popupListHidden: true);
 			}
 			_popupList.SetListItems(_data.items, groupsList); //and calls SelectBestMatch
 			_popupList.Show(doc, span.Start);
 		}
 		catch(OperationCanceledException) { /*ADebug.Print("canceled");*/ return; }
 		finally {
-			if(_data == null) { p1.Next('z'); Print($"{p1.ToString()}  |  ch='{(debugChar == default ? "" : debugChar.ToString())}', canceled={cancelTS.IsCancellationRequested}"); }
+			if(_data == null) {
+				p1.Next('z');
+				//Print($"{p1.ToString()}  |  ch='{(ch == default ? "" : ch.ToString())}', canceled={cancelTS.IsCancellationRequested}");
+			}
 			cancelTS.Dispose();
 			if(cancelTS == _cancelTS) _cancelTS = null;
 		}
@@ -490,67 +514,76 @@ class CiCompletion
 			}
 		}
 #endif
-		p1.NW();
+		//p1.NW(); //FUTURE: remove all p1 code
 	}
 
-	private void _popupList_VisibleChanged(object sender, EventArgs e)
+	static void _FilterItems(_Data d)
 	{
-		if((sender as Form).Visible) return;
-		_data = null;
-	}
-
-	void _FilterItems(bool updatePopupList)
-	{
-		var filterText = _data.filterText;
-		foreach(var v in _data.items) {
+		var filterText = d.filterText;
+		foreach(var v in d.items) {
 			v.hidden &= ~CiItemHiddenBy.FilterText;
-			v.hilite = default;
-			v.hilites = null;
+			v.hilite = 0;
 			v.moveDown &= ~CiItemMoveDownBy.FilterText;
 		}
 		if(!Empty(filterText)) {
 			string textLower = filterText.ToLower(), textUpper = filterText.Upper();
 			char c0Lower = textLower[0], c0Upper = textUpper[0];
-			var ah = new List<(int, int)>();
-			foreach(var v in _data.items) {
+			foreach(var v in d.items) {
 				if(v.kind == CiItemKind.None) continue; //eg regex completion
-														//ADebug.PrintIf(v.ci.FilterText != v.ci.DisplayText, $"{v.ci.FilterText}, {v.ci.DisplayText}");
-														//Print(v.DisplayText, v.FilterText, v.SortText, v.ToString());
 				var s = v.ci.FilterText;
+				//ADebug.PrintIf(v.ci.FilterText != v.ci.DisplayText, $"{v.ci.FilterText}, {v.ci.DisplayText}");
+				//Print(v.ci.DisplayText, v.ci.FilterText, v.ci.SortText, v.ci.ToString());
+				bool found = false;
 				int iFirst = _FilterFindChar(s, 0, c0Lower, c0Upper), iFirstFirst = iFirst;
 				if(iFirst >= 0) {
 					if(filterText.Length == 1) {
-						v.hilite = (iFirst, iFirst + 1);
+						_HiliteChar(iFirst);
 					} else {
 						while(!s.Eq(iFirst, filterText, true)) {
 							iFirst = _FilterFindChar(s, iFirst + 1, c0Lower, c0Upper);
 							if(iFirst < 0) break;
 						}
 						if(iFirst >= 0) {
-							v.hilite = (iFirst, iFirst + filterText.Length);
+							_HiliteSubstring(iFirst);
 						} else { //has all uppercase chars? Eg add OneTwoThree if text is "ott" or "ot" or "tt".
-							ah.Clear();
-							bool no = false;
+							_HiliteChar(iFirstFirst);
 							for(int i = 1, j = iFirstFirst + 1; i < filterText.Length; i++, j++) {
 								j = _FilterFindChar(s, j, textLower[i], textUpper[i], camel: true);
-								if(j < 0) { no = true; break; }
-								if(ah.Count == 0) ah.Add((iFirstFirst, iFirstFirst + 1));
-								ah.Add((j, j + 1));
+								if(j < 0) { found = false; break; }
+								_HiliteChar(j);
 							}
-							if(!no) v.hilites = ah.ToArray();
 						}
 					}
 				}
-				if(v.hilite.end == 0 && v.hilites == null) {
+
+				void _HiliteChar(int i)
+				{
+					found = true;
+					if(i < 64) v.hilite |= 1UL << i;
+				}
+
+				void _HiliteSubstring(int i)
+				{
+					found = true;
+					int to = Math.Min(i + filterText.Length, 64);
+					while(i < to) v.hilite |= 1UL << i++;
+				}
+
+				if(!found) {
 					if(filterText.Length > 1 && (iFirst = s.Find(filterText, true)) >= 0) {
-						v.moveDown |= CiItemMoveDownBy.FilterText; //sort bottom and hilite light yellow
-						v.hilite = (iFirst, iFirst + filterText.Length);
+						v.moveDown |= CiItemMoveDownBy.FilterText; //sort bottom
+						_HiliteSubstring(iFirst);
 					} else v.hidden |= CiItemHiddenBy.FilterText;
+				}
+
+				//if DisplayText != FilterText, correct or clear hilites. Eg cref.
+				if(found && s != v.ci.DisplayText) {
+					//Print(v.ci.DisplayText, v.ci.FilterText);
+					iFirst = v.ci.DisplayText.Find(s);
+					if(iFirst < 0) v.hilite = 0; else v.hilite <<= iFirst;
 				}
 			}
 		}
-
-		if(updatePopupList) _popupList.UpdateVisibleItems(); //and calls SelectBestMatch
 	}
 
 	/// <summary>
@@ -561,7 +594,7 @@ class CiCompletion
 	/// <param name="cLower">Lowercase version of character to find.</param>
 	/// <param name="cUpper">Uppercase version of character to find.</param>
 	/// <param name="camel">Uppercase must not be preceded and followed by uppercase.</param>
-	int _FilterFindChar(string s, int i, char cLower, char cUpper, bool camel = false)
+	static int _FilterFindChar(string s, int i, char cLower, char cUpper, bool camel = false)
 	{
 		for(; i < s.Length; i++) {
 			char c = s[i];
@@ -579,9 +612,10 @@ class CiCompletion
 		return -1;
 	}
 
-	public void SelectBestMatch()
+	public void SelectBestMatch(IEnumerable<CompletionItem> listItems)
 	{
 		var filterText = _data.filterText;
+		CiComplItem ci = null;
 
 		//rejected. Need FilterItems anyway, eg to select enum type or 'new' type.
 		//if(Empty(filterText)) {
@@ -590,18 +624,14 @@ class CiCompletion
 		//}
 
 		//APerf.First();
-		var visible = _data.items.Where(o => o.hidden == 0).Select(o => o.ci).ToImmutableArray();
-		//APerf.Next();
-		var fi = _data.completionService.FilterItems(_data.document, visible, filterText);
-		//APerf.Next();
-		//Print(fi);
-		CiComplItem ci = null;
-		int nv = visible.Length;
-		if(fi.Length < nv || nv == 1) {
-			foreach(var v in fi.Select(o => _data.Map[o])) {
-				if(v.moveDown == 0) { ci = v; break; }
-				if(ci == null || v.moveDown < ci.moveDown) ci = v;
-			}
+		var visible = listItems.ToImmutableArray();
+		if(!visible.IsEmpty) {
+			//APerf.Next();
+			var fi = _data.completionService.FilterItems(_data.document, visible, filterText);
+			//APerf.Next();
+			//Print(fi);
+			//Print(visible.Length, fi.Length);
+			if(!fi.IsDefaultOrEmpty) if(fi.Length < visible.Length || filterText.Length > 0 || visible.Length == 1) ci = _data.Map[fi[0]];
 		}
 		//APerf.NW('b');
 		_popupList.SelectedItem = ci;
@@ -611,47 +641,149 @@ class CiCompletion
 	{
 		if(_data == null) return null;
 		var symbols = ci.ci.Symbols;
-		if(symbols != null) return CiUtil.SymbolsToHtml(symbols, iSelect, _data.model, _data.span.Start);
-		if(ci.kind == CiItemKind.Keyword) return CiUtil.KeywordToHtml(ci.DisplayText);
+		if(symbols != null) return CiHtml.SymbolsToHtml(symbols, iSelect, _data.model, _data.tempRange.CurrentFrom);
+		if(ci.kind == CiItemKind.Keyword) return CiHtml.KeywordToHtml(ci.DisplayText);
 		ADebug.PrintIf(ci.kind != CiItemKind.None, ci.kind); //None if Regex
 		var r = _data.completionService.GetDescriptionAsync(_data.document, ci.ci).Result; //fast if Regex, else not tested
-		return r == null ? null : CiUtil.TaggedPartsToHtml(r.TaggedParts);
+		return r == null ? null : CiHtml.TaggedPartsToHtml(r.TaggedParts);
 	}
 
-	public void Commit(CiComplItem item, char? commitCharacter = null)
+	/// <summary>
+	/// Inserts the replacement text of the completion item.
+	/// Returns true to suppress the character. It can happen only if c.ch == ' ', '\n' (Enter) or default (Tab). Then also may change c.ch.
+	/// </summary>
+	bool _Commit(CiComplItem item, SciCode doc, char ch)
 	{
+		bool suppressChar = false, isEnter = false;
+		switch(ch) { case ' ': ch = default; break; case '\n': ch = default; isEnter = true; break; }
+
 		var ci = item.ci;
 		var change = _data.completionService.GetChangeAsync(_data.document, ci).Result;
 		//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
 
-		var doc = Panels.Editor.ActiveDoc;
 		var s = change.TextChange.NewText;
 		var span = change.TextChange.Span;
-		int i = span.Start, len = span.Length + (doc.ST.TextLengthChars - _data.code.Length);
-		//Print($"{change.NewPosition.HasValue}, cp={doc.ST.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
+		int i = span.Start, len = span.Length + (doc.Z.TextLength16 - _data.codeLength);
+		//Print($"{change.NewPosition.HasValue}, cp={doc.Z.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
 		//Print($"'{s}'");
 		if(change.NewPosition.HasValue) { //xml doc, override, regex
-										  //ci.DebugPrint();
+			if(ch != default) return false;
+			//ci.DebugPrint();
 			int newPos = change.NewPosition.GetValueOrDefault();
 			if(ci.ProviderName.Ends(".XmlDocCommentCompletionProvider") && !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag)) {
 				if(s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && Empty(s1))) newPos++;
 				s += "></" + tag + ">";
 			}
-			doc.ST.ReplaceRange(i, len, s, SciFromTo.BothChars | SciFromTo.ToIsLength);
-			doc.ST.GoToPos(newPos, true);
-		} else if(s != _data.filterText) {
-			if(commitCharacter.HasValue) s += commitCharacter.GetValueOrDefault(); //the undo will be better than with len--
-			doc.ST.SetAndReplaceSel(i, len, s, SciFromTo.BothChars | SciFromTo.ToIsLength);
+			doc.Z.ReplaceRange(true, i, len, s, true);
+			doc.Z.GoToPos(true, newPos);
+			return true;
 		}
 
-		//good: when changed text/pos with the above code, we don't receive notifications, because text/pos are modified by code.
-		//rejected: append () if method.
+		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
+		int positionBack = 0, bracesFrom = 0, bracesLen = 0;
+		//ci.DebugPrint();
+		if(ch == default && s.FindChars("({[<") < 0) {
+			string s2 = null;
+			switch(item.kind) {
+			case CiItemKind.Method:
+			case CiItemKind.ExtensionMethod:
+				ch = '(';
+				break;
+			case CiItemKind.Keyword:
+				string name = item.DisplayText;
+				switch(name) {
+				case "nameof":
+				case "sizeof":
+				case "typeof":
+					ch = '(';
+					break;
+				case "for":
+				case "foreach":
+				case "while":
+				case "lock":
+				case "catch":
+				case "if" when !doc.Text.Eq(i - 1, "#"):
+				case "fixed" when _IsInFunction(): //else probably a fixed array field
+				case "using" when isEnter && _IsInFunction(): //else directive or without ()
+				case "when" when _IsInAncestorNodeOfType<CatchClauseSyntax>(i): //else switch case when
+					ch = '(';
+					s2 = " ()"; //users may prefer space, like 'if (i<1)'. If not, let they type '(' instead.
+					break;
+				case "try":
+				case "finally":
+					ch = '{';
+					break;
+				case "checked":
+				case "unchecked":
+					ch = isEnter ? '{' : '(';
+					break;
+				case "switch":
+					string code = doc.Text;
+					int j; for(j = i; j > 0; j--) { char k = code[j - 1]; if(!(k == '\t' || k == ' ' || k == ';')) break; }
+					if(j > 0 && code[j - 1] != '\n') { //probably switch expression
+						ch = '{';
+						break;
+					}
+					goto case "for";
+					break;
+				}
+				break;
+			case CiItemKind.Class:
+			case CiItemKind.Structure:
+				if(ci.DisplayTextSuffix == "<>") ch = '<';
+				//note: cannot add '()' after 'new Type' because the user may want 'new Type[]' or 'new Type { initializers }'
+				//TODO: after 'new Type' add '()'. If then user types '[' or '{', let the autocorrection replace '()' with '[]' or '{}'. If presses Enter, replaces with '{ newline }'.
+				break;
+			}
+
+			bool _IsInFunction() => _IsInAncestorNodeOfType<BaseMethodDeclarationSyntax>(i);
+
+			if(suppressChar = ch != default) {
+				if(ch == '{') {
+					if(isEnter) {
+						int indent = doc.Z.LineIndentationFromPos(true, i);
+						var b = new StringBuilder(" {\r\n");
+						b.Append('\t', indent + 1);
+						b.Append("\r\n").Append('\t', indent).Append('}');
+						s2 = b.ToString();
+						positionBack = indent + 3;
+					} else {
+						s2 = " {  }";
+						positionBack = 2;
+					}
+					bracesFrom = i + s.Length + 2;
+					bracesLen = s2.Length - 3;
+				} else {
+					s2 ??= ch == '(' ? "()" : "<>";
+					positionBack = 1;
+					bracesFrom = i + s.Length + s2.Length - 1;
+				}
+				s += s2;
+			}
+		}
+
+		if(suppressChar || s != _data.filterText) {
+			doc.Z.SetAndReplaceSel(true, i, len, s, true); //TODO
+			if(suppressChar) {
+				if(positionBack > 0) doc.Z.CurrentPos16 = i + s.Length - positionBack;
+				if(bracesFrom > 0) CodeInfo.BracesAdded(doc, bracesFrom, bracesFrom + bracesLen);
+				if(ch == '(' || ch == '<') CodeInfo.CompletionSignatureCharAdded(doc, ch);
+			}
+		}
+		return suppressChar;
 	}
 
-	public void SciTextChangedInMeta(in Sci.SCNotification n)
+	bool _IsInAncestorNodeOfType<T>(int pos) where T : SyntaxNode
+		=> CodeInfo.GetContextAndDocument(out var cd, pos) && null != cd.document.GetSyntaxRootAsync().Result.FindToken(pos).GetAncestor<T>();
+
+	//static string[] s_kwType = { "string", "object", "int", "uint", "long", "ulong", "byte", "sbyte", "short", "ushort", "char", "bool", "double", "float", "decimal" };
+
+	public void Commit(SciCode doc, CiComplItem item, Keys keyData)
 	{
-
+		_Commit(item, doc, keyData == Keys.Enter ? '\n' : default);
 	}
+
+	public bool OnCmdKey(Keys keyData) => _popupList?.OnCmdKey(keyData) ?? false;
 }
 
 [Flags]
@@ -668,8 +800,7 @@ class CiComplItem
 	public CiItemHiddenBy hidden;
 	public CiItemMoveDownBy moveDown;
 	public int group;
-	public (int start, int end) hilite;
-	public (int start, int end)[] hilites;
+	public ulong hilite; //bits for max 64 characters
 	string _text;
 
 	public string DisplayText => _text ??= ci.DisplayText + ci.DisplayTextSuffix;

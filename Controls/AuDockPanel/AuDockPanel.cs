@@ -23,7 +23,7 @@ using static Au.AStatic;
 
 namespace Au.Controls
 {
-	public sealed partial class AuDockPanel :UserControl
+	public sealed partial class AuDockPanel : UserControl
 	{
 		List<_Split> _aSplit;
 		List<_Tab> _aTab;
@@ -59,7 +59,7 @@ namespace Au.Controls
 		/// <param name="xmlFileDefault">XML file containing default panel/toolbar layout.</param>
 		/// <param name="xmlFileCustomized">XML file containing customized panel/toolbar layout. It will be created or updated when saving customizations.</param>
 		/// <param name="controls">Controls. Control Name must match the XML element (panel) name attribute in the XML.</param>
-		public void Create(string xmlFileDefault, string xmlFileCustomized, params Control[] controls)
+		public void ZCreate(string xmlFileDefault, string xmlFileCustomized, params Control[] controls)
 		{
 			_initControls = new Dictionary<string, Control>();
 			foreach(var c in controls) {
@@ -80,7 +80,7 @@ namespace Au.Controls
 
 			SuspendLayout();
 			this.SetStyle(ControlStyles.ContainerControl | ControlStyles.ResizeRedraw | ControlStyles.Opaque | ControlStyles.OptimizedDoubleBuffer, true); //default: UserPaint, AllPaintingInWmPaint; not OptimizedDoubleBuffer, DoubleBuffer, Opaque. Opaque prevents erasing background, which prevents flickering when moving a splitter.
-			//this.SetStyle(ControlStyles.Selectable, false); //no, creates tabstopping problems
+																																						   //this.SetStyle(ControlStyles.Selectable, false); //no, creates tabstopping problems
 			this.Dock = DockStyle.Fill;
 			foreach(var c in controls) this.Controls.Add(c);
 			ResumeLayout();
@@ -164,7 +164,7 @@ namespace Au.Controls
 		void _SaveLayout()
 		{
 			try {
-				if(ResetLayoutAfterRestart) {
+				if(ZResetLayoutAfterRestart) {
 					AFile.Delete(_xmlFile);
 					return;
 				}
@@ -174,8 +174,7 @@ namespace Au.Controls
 					Indent = true,
 					IndentChars = "\t"
 				};
-				AFile.Save(_xmlFile, temp =>
-				{
+				AFile.Save(_xmlFile, temp => {
 					using(var x = XmlWriter.Create(temp, sett)) {
 						x.WriteStartDocument();
 						x.WriteStartElement("panels");
@@ -312,8 +311,7 @@ namespace Au.Controls
 							int delay = _toolTipTabButton == null ? _toolTip.InitialDelay : _toolTip.ReshowDelay;
 							_HideTooltip();
 							_toolTipTabButton = ht.gp;
-							ATimer.After(delay, () =>
-							{
+							ATimer.After(delay, () => {
 								var gp = _toolTipTabButton; if(gp == null) return;
 								var p2 = gp.ParentControl.MouseClientXY();
 								_toolTip.Show(gp.ToolTipText, gp.ParentControl, p2.x, p2.y + 20, _toolTip.AutoPopDelay);
@@ -464,7 +462,7 @@ namespace Au.Controls
 		/// Gets control's host panel interface.
 		/// Returns null if not found.
 		/// </summary>
-		public IPanel GetPanel(Control c)
+		public IPanel ZGetPanel(Control c)
 		{
 			return _FindPanel(c);
 		}
@@ -474,7 +472,7 @@ namespace Au.Controls
 		/// Returns null if not found.
 		/// </summary>
 		/// <param name="name">Panel name, which is its control's Name property.</param>
-		public IPanel GetPanel(string name)
+		public IPanel ZGetPanel(string name)
 		{
 			return _FindPanel(name);
 		}
@@ -483,7 +481,7 @@ namespace Au.Controls
 		/// Adds menu items for all panels or toolbars, except the doc panel, to a menu.
 		/// On menu item click will show that panel.
 		/// </summary>
-		public void AddShowPanelsToMenu(ToolStripDropDown m, bool toolbars, bool clear = false)
+		public void ZAddShowPanelsToMenu(ToolStripDropDown m, bool toolbars, bool clear = false)
 		{
 			m.SuspendLayout();
 			if(clear) m.Items.Clear();
@@ -497,11 +495,10 @@ namespace Au.Controls
 			}
 			//add Reset...
 			m.Items.Add(new ToolStripSeparator());
-			(m.Items.Add("Reset...", null, (unu, sed) =>
-			{
-				if(ResetLayoutAfterRestart) ResetLayoutAfterRestart = false;
-				else ResetLayoutAfterRestart = ADialog.ShowOKCancel("Reset panel/toolbar layout", "After restarting this application.");
-			}) as ToolStripMenuItem).Checked = ResetLayoutAfterRestart;
+			(m.Items.Add("Reset...", null, (unu, sed) => {
+				if(ZResetLayoutAfterRestart) ZResetLayoutAfterRestart = false;
+				else ZResetLayoutAfterRestart = ADialog.ShowOKCancel("Reset panel/toolbar layout", "After restarting this application.");
+			}) as ToolStripMenuItem).Checked = ZResetLayoutAfterRestart;
 
 			m.ResumeLayout();
 		}
@@ -509,7 +506,7 @@ namespace Au.Controls
 		/// <summary>
 		/// When disposing this, delete the user's saved layout file. Then next time will use the default file.
 		/// </summary>
-		public bool ResetLayoutAfterRestart { get; set; }
+		public bool ZResetLayoutAfterRestart { get; set; }
 
 #if false
 		//This worked, but better don't use.
@@ -526,7 +523,7 @@ namespace Au.Controls
 		/// <param name="cBy">Add the new panel by the panel of this control.</param>
 		/// <param name="side">Specifies whether to add in a tab group or split, and at which side of cBy.</param>
 		/// <param name="xml">XML containing single element that stores panel settings, eg "&lt;panel text='Results' tooltip='Find results' image='15' hide='' /&gt;".</param>
-		public void AddPanel(Control c, Control cBy, DockSide side, string xml)
+		public void ZAddPanel(Control c, Control cBy, DockSide side, string xml)
 		{
 			if(_FindPanel(c) != null) return;
 
@@ -547,7 +544,7 @@ namespace Au.Controls
 		/// Call this in main window's WndProc override on WM_ENABLE.
 		/// </summary>
 		/// <param name="enable">Enable or disable.</param>
-		public void EnableDisableAllFloatingWindows(bool enable)
+		public void ZEnableDisableAllFloatingWindows(bool enable)
 		{
 			foreach(var v in _aPanel) if(v.IsFloating) ((AWnd)v.ParentControl).Enable(enable);
 			foreach(var v in _aTab) if(v.IsFloating) ((AWnd)v.ParentControl).Enable(enable);
@@ -556,12 +553,12 @@ namespace Au.Controls
 		/// <summary>
 		/// A control to focus when making a docked panel floating or hidden when it contains focus. Also when Esc pressed in focused floating panel.
 		/// </summary>
-		public Control FocusControlOnUndockEtc { get; set; }
+		public Control ZFocusControlOnUndockEtc { get; set; }
 
 		/// <summary>
 		/// Used with many AuDockPanel events and othe callbacks.
 		/// </summary>
-		public class DPEventArgs :EventArgs
+		public class ZEventArgs : EventArgs
 		{
 			public AuDockPanel dp { get; private set; }
 			public Control control { get; set; }
@@ -569,7 +566,7 @@ namespace Au.Controls
 
 			/// <summary>ctor.</summary>
 			/// <param name="gPanel">Must be _Panel. We use object because C# compiler does not allow to use _Panel (less accessible).</param>
-			internal DPEventArgs(object gPanel)
+			internal ZEventArgs(object gPanel)
 			{
 				var gp = gPanel as _Panel;
 				dp = gp.Manager;
@@ -581,13 +578,13 @@ namespace Au.Controls
 		/// <summary>
 		/// Used with many AuDockPanel events and other callbacks.
 		/// </summary>
-		public delegate void DPEventHandler<T>(T e);
+		public delegate void ZEventHandler<T>(T e);
 
-		public class DPContextMenuEventArgs :DPEventArgs
+		public class ZContextMenuEventArgs : ZEventArgs
 		{
 			public AMenu menu { get; internal set; }
 
-			internal DPContextMenuEventArgs(object gPanel, AMenu cm) : base(gPanel)
+			internal ZContextMenuEventArgs(object gPanel, AMenu cm) : base(gPanel)
 			{
 				menu = cm;
 			}
@@ -597,24 +594,19 @@ namespace Au.Controls
 		/// Before showing the context menu when the user right-clicks a panel tab button or caption.
 		/// The event handler can add/remove/etc menu items.
 		/// </summary>
-		public event DPEventHandler<DPContextMenuEventArgs> PanelContextMenu;
+		public event ZEventHandler<ZContextMenuEventArgs> ZPanelContextMenu;
 
 		/// <summary>
 		/// Removes rounded edges of the ToolStrip to which is assigned.
 		/// </summary>
-		public class DockedToolStripRenderer :ToolStripProfessionalRenderer
+		public class ZDockedToolStripRenderer : ToolStripProfessionalRenderer
 		{
-			public DockedToolStripRenderer()
+			public ZDockedToolStripRenderer()
 			{
 				this.RoundedEdges = false;
 			}
 		}
 
 		#endregion public
-
-		//public void Test()
-		//{
-
-		//}
 	}
 }

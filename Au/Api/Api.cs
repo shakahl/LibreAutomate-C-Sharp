@@ -13,7 +13,7 @@ namespace Au.Types
 {
 	[DebuggerStepThrough]
 	[System.Security.SuppressUnmanagedCodeSecurity]
-	internal static unsafe partial class Api
+	static unsafe partial class Api
 	{
 		#region util
 

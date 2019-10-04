@@ -63,7 +63,7 @@ class PanelOpen : AuUserControlBase, ITreeModel
 
 	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 
-	public void UpdateList()
+	public void ZUpdateList()
 	{
 		//ADebug.PrintFunc();
 		bool cmdPrevDisable = (Program.Model?.OpenFiles.Count ?? 0) < 2;
@@ -75,7 +75,7 @@ class PanelOpen : AuUserControlBase, ITreeModel
 	}
 	bool _cmdPrevDisabled;
 
-	public void UpdateCurrent(FileNode fn)
+	public void ZUpdateCurrent(FileNode fn)
 	{
 		//ADebug.PrintFunc();
 		if(fn == null) _c.ClearSelection();

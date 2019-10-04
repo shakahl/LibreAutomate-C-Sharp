@@ -24,16 +24,16 @@ using static Au.AStatic;
 using Au.Controls;
 using static Au.Controls.Sci;
 
-partial class PanelEdit : UserControl
+class PanelEdit : UserControl
 {
 	List<SciCode> _docs = new List<SciCode>(); //documents that are actually open currently. Note: FilesModel.OpenFiles contains not only these.
 	SciCode _activeDoc;
 
-	public SciCode ActiveDoc => _activeDoc;
+	public SciCode ZActiveDoc => _activeDoc;
 
-	public event Action ActiveDocChanged;
+	public event Action ZActiveDocChanged;
 
-	public bool IsOpen => _activeDoc != null;
+	public bool ZIsOpen => _activeDoc != null;
 
 	public PanelEdit()
 	{
@@ -55,7 +55,7 @@ partial class PanelEdit : UserControl
 	/// <summary>
 	/// If f is open (active or not), returns its SciCode, else null.
 	/// </summary>
-	public SciCode GetOpenDocOf(FileNode f) => _docs.Find(v => v.FN == f);
+	public SciCode ZGetOpenDocOf(FileNode f) => _docs.Find(v => v.ZFile == f);
 
 	/// <summary>
 	///	If f is already open, unhides its control.
@@ -66,19 +66,19 @@ partial class PanelEdit : UserControl
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
-	public bool Open(FileNode f, bool newFile)
+	public bool ZOpen(FileNode f, bool newFile)
 	{
 		Debug.Assert(!Program.Model.IsAlien(f));
 
-		if(f == _activeDoc?.FN) return true;
+		if(f == _activeDoc?.ZFile) return true;
 		bool focus = _activeDoc != null ? _activeDoc.Focused : false;
-		var doc = GetOpenDocOf(f);
+		var doc = ZGetOpenDocOf(f);
 		if(doc != null) {
 			if(_activeDoc != null) _activeDoc.Visible = false;
 			_activeDoc = doc;
 			_activeDoc.Visible = true;
-			ActiveDocChanged?.Invoke();
-			_UpdateUI_Cmd();
+			ZActiveDocChanged?.Invoke();
+			ZUpdateUI_Cmd();
 		} else {
 			var path = f.FilePath;
 			byte[] text = null;
@@ -92,17 +92,17 @@ partial class PanelEdit : UserControl
 			_docs.Add(doc);
 			_activeDoc = doc;
 			this.Controls.Add(doc);
-			doc.Init(text, newFile);
+			doc.ZInit(text, newFile);
 			doc.AccessibleName = f.Name;
 			doc.AccessibleDescription = path;
 
-			ActiveDocChanged?.Invoke();
+			ZActiveDocChanged?.Invoke();
 			//CodeInfo.FileOpened(doc);
 		}
 		if(focus) _activeDoc.Focus();
 
 		_UpdateUI_IsOpen();
-		Panels.Find.UpdateQuickResults(true);
+		Panels.Find.ZUpdateQuickResults(true);
 		return true;
 	}
 
@@ -113,17 +113,17 @@ partial class PanelEdit : UserControl
 	/// Does not show another document when closed the active document.
 	/// </summary>
 	/// <param name="f"></param>
-	public void Close(FileNode f)
+	public void ZClose(FileNode f)
 	{
 		Debug.Assert(f != null);
 		SciCode doc;
-		if(f == _activeDoc?.FN) {
+		if(f == _activeDoc?.ZFile) {
 			Program.Model.Save.TextNowIfNeed();
 			doc = _activeDoc;
 			_activeDoc = null;
-			ActiveDocChanged?.Invoke();
+			ZActiveDocChanged?.Invoke();
 		} else {
-			doc = GetOpenDocOf(f);
+			doc = ZGetOpenDocOf(f);
 			if(doc == null) return;
 		}
 		//CodeInfo.FileClosed(doc);
@@ -135,27 +135,27 @@ partial class PanelEdit : UserControl
 	/// <summary>
 	/// Closes all documents and destroys controls.
 	/// </summary>
-	public void CloseAll(bool saveTextIfNeed)
+	public void ZCloseAll(bool saveTextIfNeed)
 	{
 		if(saveTextIfNeed) Program.Model.Save.TextNowIfNeed();
 		_activeDoc = null;
-		ActiveDocChanged?.Invoke();
+		ZActiveDocChanged?.Invoke();
 		foreach(var doc in _docs) doc.Dispose();
 		_docs.Clear();
 		_UpdateUI_IsOpen();
 	}
 
-	public bool SaveText()
+	public bool ZSaveText()
 	{
-		return _activeDoc?.SaveText() ?? true;
+		return _activeDoc?.ZSaveText() ?? true;
 	}
 
-	public void SaveEditorData()
+	public void ZSaveEditorData()
 	{
-		_activeDoc?.SaveEditorData();
+		_activeDoc?.ZSaveEditorData();
 	}
 
-	//public bool IsModified => _activeDoc?.IsModified ?? false;
+	//public bool ZIsModified => _activeDoc?.IsModified ?? false;
 
 	/// <summary>
 	/// Enables/disables Edit and Run toolbars/menus and some other UI parts depending on whether a document is open in editor.
@@ -194,7 +194,7 @@ partial class PanelEdit : UserControl
 	/// Enables/disables commands (toolbar buttons, menu items) depending on document state such as "can undo".
 	/// Called on SCN_UPDATEUI.
 	/// </summary>
-	internal void _UpdateUI_Cmd()
+	internal void ZUpdateUI_Cmd()
 	{
 		EUpdateUI disable = 0;
 		var d = _activeDoc;
@@ -202,7 +202,7 @@ partial class PanelEdit : UserControl
 		if(0 == d.Call(SCI_CANUNDO)) disable |= EUpdateUI.Undo;
 		if(0 == d.Call(SCI_CANREDO)) disable |= EUpdateUI.Redo;
 		if(0 != d.Call(SCI_GETSELECTIONEMPTY)) disable |= EUpdateUI.Copy;
-		if(disable.Has(EUpdateUI.Copy) || d.ST.IsReadonly) disable |= EUpdateUI.Cut;
+		if(disable.Has(EUpdateUI.Copy) || d.Z.IsReadonly) disable |= EUpdateUI.Cut;
 		//if(0 == d.Call(SCI_CANPASTE)) disable |= EUpdateUI.Paste; //rejected. Often slow. Also need to see on focused etc.
 
 		var dif = disable ^ _cmdDisabled; if(dif == 0) return;

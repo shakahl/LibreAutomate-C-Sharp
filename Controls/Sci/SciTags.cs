@@ -86,7 +86,7 @@ namespace Au.Controls
 	/// Also you can register custom link tags that call your callback functions.
 	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
 	/// 
-	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au editor it is the output (use <b>Print</b>, like in the example below). In this library - the <see cref="InfoBox"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.InitTagsStyle"/> and optionally <see cref="AuScintilla.InitImagesStyle"/>.
+	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au editor it is the output (use <b>Print</b>, like in the example below). In this library - the <see cref="InfoBox"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.ZInitTagsStyle"/> and optionally <see cref="AuScintilla.ZInitImagesStyle"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -165,7 +165,7 @@ namespace Au.Controls
 		internal SciTags(AuScintilla c)
 		{
 			_c = c;
-			_t = c.ST;
+			_t = c.Z;
 		}
 
 		void _SetUserStyles(int from)
@@ -206,7 +206,7 @@ namespace Au.Controls
 		internal void LibOnTextChanged(bool inserted, ref SCNotification n)
 		{
 			//if deleted or replaced all text, clear user styles
-			if(!inserted && n.position == 0 && _t.TextLengthBytes == 0) {
+			if(!inserted && n.position == 0 && _t.TextLength8 == 0) {
 				_ClearUserStyles();
 				//_linkDelegates.Clear(); //no
 			}
@@ -237,7 +237,7 @@ namespace Au.Controls
 				onMessage?.Invoke(m);
 				switch(m.Type) {
 				case OutServMessageType.Clear:
-					_c.ST.ClearText();
+					_c.Z.ClearText();
 					s = null;
 					b?.Clear();
 					break;
@@ -273,17 +273,17 @@ namespace Au.Controls
 
 			//if(sb!=null) s += " >>>> " + sb.Capacity.ToString();
 
-			//_c.ST.AppendText(s, true, true, true); return;
+			//_c.Z.AppendText(s, true, true, true); return;
 
 			//limit
-			int len = _c.ST.TextLengthBytes;
+			int len = _c.Z.TextLength8;
 			if(len > 4 * 1024 * 1024) {
-				len = _c.ST.LineStartFromPos(len / 2);
-				if(len > 0) _c.ST.ReplaceRange(0, len, "...\r\n");
+				len = _c.Z.LineStartFromPos(false, len / 2);
+				if(len > 0) _c.Z.ReplaceRange(false, 0, len, "...\r\n");
 			}
 
 			if(hasTags) AddText(s, true, true);
-			else _c.ST.AppendText(s, true, true, true);
+			else _c.Z.AppendText(s, true, true, true);
 
 			//test slow client
 			//Thread.Sleep(500);
@@ -568,7 +568,7 @@ namespace Au.Controls
 			_t.LibAddText(append, s0, len);
 			if(!hasTags) return;
 
-			int endStyled = 0, prevLen = append ? _t.TextLengthBytes - len : 0;
+			int endStyled = 0, prevLen = append ? _t.TextLength8 - len : 0;
 
 			if(folds != null) {
 				for(int i = folds.Count - 1; i >= 0; i--) { //need reverse for nested folds
@@ -715,7 +715,7 @@ namespace Au.Controls
 				if(k < STYLE_FIRST_EX || !_t.StyleHotspot(k)) break;
 			}
 			//get text <tag>LinkText
-			var s = _t.RangeText(iTag, pos);
+			var s = _t.RangeText(false, iTag, pos);
 			//Print(iTag, iText, pos, s);
 
 			//is it <fold>?
@@ -794,7 +794,7 @@ namespace Au.Controls
 		/// The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
 		/// </param>
 		/// <remarks>
-		/// Call this function when control handle is already created. Until that <see cref="AuScintilla.Tags"/> returns null.
+		/// Call this function when control handle is already created. Until that <see cref="AuScintilla.ZTags"/> returns null.
 		/// </remarks>
 		/// <seealso cref="AddCommonLinkTag"/>
 		public void AddLinkTag(string name, Action<string> a)
@@ -833,7 +833,7 @@ namespace Au.Controls
 		/// <exception cref="ArgumentException">name does not start with '.'.</exception>
 		/// <exception cref="InvalidOperationException">Trying to add more than 100 styles.</exception>
 		/// <remarks>
-		/// Call this function when control handle is already created. Until that <see cref="AuScintilla.Tags"/> returns null.
+		/// Call this function when control handle is already created. Until that <see cref="AuScintilla.ZTags"/> returns null.
 		/// </remarks>
 		public void AddStyleTag(string name, UserDefinedStyle style)
 		{
@@ -851,7 +851,7 @@ namespace Au.Controls
 
 		internal void LibOnLButtonDownWhenNotFocused(ref Message m, ref bool setFocus)
 		{
-			if(setFocus && _c.InitReadOnlyAlways && !AKeys.UI.IsAlt) {
+			if(setFocus && _c.ZInitReadOnlyAlways && !AKeys.UI.IsAlt) {
 				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
 				//Print(pos);
 				if(pos >= 0 && _t.StyleHotspot(_t.GetStyleAt(pos))) setFocus = false;

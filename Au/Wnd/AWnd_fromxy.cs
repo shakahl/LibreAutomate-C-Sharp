@@ -106,7 +106,7 @@ namespace Au
 		/// <param name="y">Y coordinate in the client area of this window. Can be <b>Coord.Reverse</b> etc.</param>
 		/// <param name="screenXY">The coordinates are relative to the pimary screen, not to the client area.</param>
 		/// <param name="directChild">Get direct child, not a child of a child and so on.</param>
-		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		public AWnd ChildFromXY(Coord x, Coord y, bool screenXY = false, bool directChild = false)
 		{
 			ThrowIfInvalid();
@@ -117,7 +117,7 @@ namespace Au
 		/// <param name="p">Coordinates in the client area of this window.</param>
 		/// <param name="screenXY"></param>
 		/// <param name="directChild"></param>
-		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		public AWnd ChildFromXY(POINT p, bool screenXY = false, bool directChild = false)
 		{
 			ThrowIfInvalid();
@@ -203,7 +203,7 @@ namespace Au
 		/// If <i>direction</i> is <b>Above</b> or <b>Below</b>, 0 is the left edge, 1 is 1 pixel to the right, -1 is 1 pixel to the left, and so on.
 		/// </param>
 		/// <param name="topChild">If at that point is a visible child or descendant of the sibling, get that child/descendant. Default false.</param>
-		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <remarks>
 		/// This function is used mostly with controls, but supports top-level windows too.
 		/// </remarks>

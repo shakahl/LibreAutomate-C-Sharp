@@ -234,7 +234,7 @@ namespace Au
 		/// - Get rectangles etc of all matching images and stop waiting: <c>also: o => { list.Add(o); o.Found = true; return false; }</c>
 		/// - Do different actions depending on which list images found: <c>var found = new BitArray(images.Length); AWinImage.Find(w, images, also: o => { found[o.ListIndex] = true; return WIAlso.OkFindMoreOfList; }); if(found[0]) Print(0); if(found[1]) Print(1);</c>
 		/// </param>
-		/// <exception cref="WndException">Invalid window handle (the <i>area</i> argument).</exception>
+		/// <exception cref="AuWndException">Invalid window handle (the <i>area</i> argument).</exception>
 		/// <exception cref="ArgumentException">
 		/// - An argument is of unsupported type or is/contains a null/invalid value.
 		/// - Image or area is a bottom-up Bitmap object (see <see cref="BitmapData.Stride"/>). Such bitmaps are unusual in .NET (GDI+), but can be created by <b>Image.FromHbitmap</b> (instead use <see cref="BitmapFromHbitmap"/>).
@@ -285,7 +285,7 @@ namespace Au
 		/// <returns>Returns <see cref="AWinImage"/> object containing the rectangle of the found image. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		public static AWinImage Wait(double secondsTimeout, WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<AWinImage, WIAlso> also = null)
 		{
@@ -302,7 +302,7 @@ namespace Au
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		public static bool WaitNot(double secondsTimeout, WIArea area, object image, WIFlags flags = 0, int colorDiff = 0, Func<AWinImage, WIAlso> also = null)
 		{
@@ -316,7 +316,7 @@ namespace Au
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="WndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
+		/// <exception cref="AuWndException">Invalid window handle (the area argument), or the window closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
 		/// The same as <see cref="WaitNot"/>, but instead of <i>image</i> parameter this function captures the area image at the beginning.

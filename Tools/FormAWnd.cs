@@ -108,7 +108,7 @@ namespace Au.Tools
 
 			var g = _grid;
 
-			if(newWindow) g.Clear(); else g.RowsCount = 5;
+			if(newWindow) g.ZClear(); else g.RowsCount = 5;
 
 			_WinInfo f = default;
 
@@ -203,9 +203,9 @@ namespace Au.Tools
 				cn = w.ClassName;
 				if(cn != null) return true;
 				_propError = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + ALastError.Message;
-				_grid.Clear();
+				_grid.ZClear();
 				_grid.Invalidate();
-				_winInfo.ST.ClearText();
+				_winInfo.Z.ClearText();
 				return false;
 			}
 		}
@@ -414,31 +414,31 @@ namespace Au.Tools
 		#region OK, Test
 
 		/// <summary>
-		/// When OK clicked, the top-level window (even when <see cref="ResultUseControl"/> is true).
+		/// When OK clicked, the top-level window (even when <see cref="ZResultUseControl"/> is true).
 		/// </summary>
-		public AWnd ResultWindow => _wnd;
+		public AWnd ZResultWindow => _wnd;
 
 		/// <summary>
-		/// When OK clicked, the control (even when <see cref="ResultUseControl"/> is false) or default(AWnd).
+		/// When OK clicked, the control (even when <see cref="ZResultUseControl"/> is false) or default(AWnd).
 		/// </summary>
-		public AWnd ResultControl => _con;
+		public AWnd ZResultControl => _con;
 
 		/// <summary>
 		/// When OK clicked, true if a control was selected and the 'Control' checkbox checked.
-		/// Use <see cref="ResultWindow"/> or <see cref="ResultControl"/>, depending on this property.
+		/// Use <see cref="ZResultWindow"/> or <see cref="ZResultControl"/>, depending on this property.
 		/// </summary>
-		public bool ResultUseControl { get; private set; }
+		public bool ZResultUseControl { get; private set; }
 
 		/// <summary>
 		/// When OK clicked, contains C# code.
 		/// </summary>
-		public override string ResultCode { get; protected set; }
+		public override string ZResultCode { get; protected set; }
 
 		private void _bOK_Click(object sender, EventArgs e)
 		{
-			ResultCode = _code.Text;
-			if(Empty(ResultCode)) this.DialogResult = DialogResult.Cancel;
-			else ResultUseControl = !_con.Is0 && _IsChecked("Control");
+			ZResultCode = _code.Text;
+			if(Empty(ZResultCode)) this.DialogResult = DialogResult.Cancel;
+			else ZResultUseControl = !_con.Is0 && _IsChecked("Control");
 		}
 
 		private void _bTest_Click(object sender, EventArgs ea)
@@ -760,11 +760,11 @@ namespace Au.Tools
 		{
 			if(_wiWCP == 0) {
 				_wiWCP = 1;
-				_winInfo.Tags.AddLinkTag("+switch", s => {
+				_winInfo.ZTags.AddLinkTag("+switch", s => {
 					_wiWCP = s.ToInt();
 					_SetText(default);
 				});
-				_winInfo.Tags.AddLinkTag("+rect", s => {
+				_winInfo.ZTags.AddLinkTag("+rect", s => {
 					var w = (AWnd)s.ToInt(0, out int e);
 					int client = s.ToInt(e);
 					var r = client == 1 ? w.ClientRectInScreen : w.Rect;
@@ -776,7 +776,7 @@ namespace Au.Tools
 			void _SetText(in _WinInfo wi)
 			{
 				var s1 = wi.Format(_wnd, _con, _wiWCP);
-				_winInfo.ST.SetText(s1);
+				_winInfo.Z.SetText(s1);
 			}
 		}
 		int _wiWCP; //0 not inited, 1 window, 2 control, 3 program
@@ -807,7 +807,7 @@ namespace Au.Tools
 
 			_commonInfos = new CommonInfos(_info);
 
-			_info.Tags.AddLinkTag("+resetInfo", _ => _SetFormInfo(null));
+			_info.ZTags.AddLinkTag("+resetInfo", _ => _SetFormInfo(null));
 		}
 
 		string _propError;
@@ -820,7 +820,7 @@ namespace Au.Tools
 				_commonInfos.SetTextWithWildexInfo(info.RemoveSuffix(1));
 				return;
 			}
-			_info.ST.SetText(info);
+			_info.Z.SetText(info);
 		}
 
 		const string c_infoForm =

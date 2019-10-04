@@ -24,7 +24,7 @@ namespace Au.Util
 	/// </summary>
 	/// <remarks>
 	/// Extends <see cref="SystemFonts"/>. Much faster.
-	/// The properties return non-cached <b>Font</b> objects. It's safe to dispose them. They are cloned from a single cached <see cref="SystemFonts.MessageBoxFont"/>.
+	/// The properties return non-cached <b>Font</b> objects. It's safe to dispose them. It's OK to not dispose (GC will do; GDI+ fonts don't use much unmanaged memory). They are cloned from a single cached <see cref="SystemFonts.MessageBoxFont"/>.
 	/// </remarks>
 	public static class AFonts
 	{

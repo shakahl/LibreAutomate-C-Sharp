@@ -116,7 +116,7 @@ namespace Au
 							return true;
 						}
 					}
-					catch(AuException ex) when(!c.IsAlive) { ADebug.Print(ex.Message); } //don't throw WndException/AuException if the window or a control is destroyed while searching, but throw AuException if eg access denied
+					catch(AuException ex) when(!c.IsAlive) { ADebug.Print(ex.Message); } //don't throw AuWndException/AuException if the window or a control is destroyed while searching, but throw AuException if eg access denied
 				}
 				return false;
 			}
@@ -132,7 +132,7 @@ namespace Au
 			/// - <i>prop</i> has invalid format or contains unknown property names or invalid wildcard expressions.
 			/// - flag <see cref="AFFlags.UIA"/> when searching in web page (role prefix "web:" etc).
 			/// </exception>
-			/// <exception cref="WndException">Invalid window.</exception>
+			/// <exception cref="AuWndException">Invalid window.</exception>
 			/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 			public bool Find(AWnd w)
 			{
@@ -397,7 +397,7 @@ namespace Au
 		/// - <i>navig</i> string is invalid.
 		/// - <i>flags</i> has <see cref="AFFlags.UIA"/> when searching in web page (role prefix <c>"web:"</c> etc).
 		/// </exception>
-		/// <exception cref="WndException">Invalid window.</exception>
+		/// <exception cref="AuWndException">Invalid window.</exception>
 		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// 
 		/// <remarks>
@@ -473,7 +473,7 @@ namespace Au
 		/// <returns>Returns the found AO. On timeout returns null if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="ArgumentException"/>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <exception cref="AuException"/>
 		public static AAcc Wait(double secondsTimeout, AWnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0,
 			Func<AAcc, bool> also = null, int skip = 0, string navig = null)
@@ -509,7 +509,7 @@ namespace Au
 		/// </summary>
 		/// <returns>Array of 0 or more elements.</returns>
 		/// <exception cref="ArgumentException"/>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <exception cref="AuException"/>
 		/// <example>
 		/// Get all taskbar buttons (Windows 10).

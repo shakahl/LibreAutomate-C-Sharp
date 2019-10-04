@@ -361,7 +361,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	{
 		if(IsFolder) return "";
 		if(!saved && this == _model.CurrentFile) {
-			return Panels.Editor.ActiveDoc.Text; //TODO: can be 'null reference' exception when deleting (ActiveDoc null), eg when called by CodeAssist.
+			return Panels.Editor.ZActiveDoc.Text; //TODO: can be 'null reference' exception when deleting (ActiveDoc null), eg when called by CodeAssist.
 		}
 		//if(cache) Print("GetText", Name, _text != null);
 		if(_text != null) return _text;
@@ -388,7 +388,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	{
 		//Print("UnCacheText", Name, _text != null);
 		_text = null;
-		if(fromWatcher) Panels.Editor.GetOpenDocOf(this)?.FileModifiedExternally();
+		if(fromWatcher) Panels.Editor.ZGetOpenDocOf(this)?.ZFileModifiedExternally();
 	}
 
 	public Bitmap GetIcon(bool expandedFolder = false)
@@ -856,7 +856,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		_displayName = null;
 		_model.Save.WorkspaceLater();
 		if(!userEdited) UpdateControlRow();
-		if(this == _model.CurrentFile) Program.MainForm.SetTitle();
+		if(this == _model.CurrentFile) Program.MainForm.ZSetTitle();
 		return true;
 	}
 

@@ -22,7 +22,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>3001,3002,3003,3009,1591</NoWarn>
+    <NoWarn>3001,3002,3003,3009,1591,419</NoWarn>
     <DocumentationFile>bin\Debug\Au.Controls.xml</DocumentationFile>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
@@ -34,7 +34,7 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <NoWarn>3001,3002,3003,3009,1591</NoWarn>
+    <NoWarn>3001,3002,3003,3009,1591,419</NoWarn>
     <DocumentationFile>bin\Release\Au.Controls.xml</DocumentationFile>
     <LangVersion>preview</LangVersion>
   </PropertyGroup>
@@ -74,6 +74,9 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Other\PopupList.cs" />
+    <Compile Include="Other\InactiveWindow.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="Sci\InfoBox.cs">
       <SubType>Component</SubType>
     </Compile>

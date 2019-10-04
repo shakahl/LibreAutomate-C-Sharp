@@ -25,7 +25,7 @@ class PanelFound : AuUserControlBase
 {
 	AuScintilla _c;
 
-	public AuScintilla Control => _c;
+	public AuScintilla ZControl => _c;
 
 	public PanelFound()
 	{
@@ -34,9 +34,9 @@ class PanelFound : AuUserControlBase
 		_c.AccessibleName = _c.Name = "Found_list";
 		_c.Dock = DockStyle.Fill;
 
-		_c.InitReadOnlyAlways = true;
-		_c.InitTagsStyle = AuScintilla.TagsStyle.AutoAlways;
-		_c.AcceptsReturn = true;
+		_c.ZInitReadOnlyAlways = true;
+		_c.ZInitTagsStyle = AuScintilla.ZTagsStyle.AutoAlways;
+		_c.ZAcceptsReturn = true;
 		_c.HandleCreated += _c_HandleCreated;
 
 		this.Controls.Add(_c);
@@ -44,7 +44,7 @@ class PanelFound : AuUserControlBase
 
 	private void _c_HandleCreated(object sender, EventArgs e)
 	{
-		var t = _c.ST;
+		var t = _c.Z;
 		t.StyleFont(Sci.STYLE_DEFAULT, Font);
 
 		//t.Call(Sci.SCI_SETCARETLINEFRAME, 2);

@@ -201,9 +201,9 @@ Can include several ranges, characters plus ranges, character types like <.r>\d<
 <+a>[:lower:]<>  -  lower case letters.
 <+a>[:print:]<>  -  printing characters, including space.
 <+a>[:punct:]<>  -  printing characters, except letters and digits and space.
-<+a>[:space:]<>  -  white space (same as \s).
+<+a>[:space:]<>  -  white space (same as <.r>\s<>).
 <+a>[:upper:]<>  -  upper case letters.
-<+a>[:word:]<>  -  word characters (same as \w).
+<+a>[:word:]<>  -  word characters (same as <.r>\w<>).
 <+a>[:xdigit:]<>  -  hexadecimal digits.
 
 See also: <+p charProp>Unicode character properties<> and <+p scripts>scripts<>.

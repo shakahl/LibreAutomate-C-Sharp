@@ -186,7 +186,7 @@ namespace Au.Triggers
 					_MuteMod(ref muteMod);
 
 					string sTrigger = null;
-					if(ATask.Role == ATRole.MiniProgram) LibLog.Run.Write($"Trigger action started. Trigger: {sTrigger = trigger.ToString()}");
+					if(ATask.Role == ATRole.MiniProgram) Util.LibLog.Run.Write($"Trigger action started. Trigger: {sTrigger = trigger.ToString()}");
 
 					AOpt.Reset();
 
@@ -205,10 +205,10 @@ namespace Au.Triggers
 					try {
 						trigger.Run(args);
 
-						if(sTrigger != null) LibLog.Run.Write($"Trigger action ended. Trigger: {sTrigger}");
+						if(sTrigger != null) Util.LibLog.Run.Write($"Trigger action ended. Trigger: {sTrigger}");
 					}
 					catch(Exception ex) when(!(ex is ThreadAbortException)) {
-						if(sTrigger != null) LibLog.Run.Write($"Unhandled exception in trigger action. Trigger: {sTrigger}. Exception: {ex.ToStringWithoutStack()}");
+						if(sTrigger != null) Util.LibLog.Run.Write($"Unhandled exception in trigger action. Trigger: {sTrigger}. Exception: {ex.ToStringWithoutStack()}");
 
 						baArgs.Exception = ex;
 						Print(ex);

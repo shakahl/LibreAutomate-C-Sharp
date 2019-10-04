@@ -504,7 +504,7 @@ namespace Au.Tools
 	/// </summary>
 	public class ToolForm :AuForm
 	{
-		public virtual string ResultCode { get; protected set; }
+		public virtual string ZResultCode { get; protected set; }
 
 	}
 }

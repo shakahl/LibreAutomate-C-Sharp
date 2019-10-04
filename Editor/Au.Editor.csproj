@@ -145,14 +145,14 @@
     <None Include="Default\files\Examples\Script syntax and examples.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Edit\excluded\CaWorkspace.cs" />
-    <None Include="Edit\excluded\CodeAssist.cs" />
+    <Compile Include="Edit\CiAutocorrect.cs" />
     <Compile Include="Edit\CiPopupHtml.cs" />
     <Compile Include="Edit\CiPopupList.cs" />
     <Compile Include="Edit\CiCompletion.cs" />
     <Compile Include="Edit\CiQuickInfo.cs" />
     <Compile Include="Edit\CiSignature.cs" />
     <Compile Include="Edit\CiTools.cs" />
+    <Compile Include="Edit\CiHtml.cs" />
     <Compile Include="Edit\CiUtil.cs" />
     <Compile Include="Edit\CodeInfo.cs" />
     <Compile Include="Edit\SciCode.cs">
@@ -163,7 +163,7 @@
     <Compile Include="Panels\etc\FFindOptions.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="Controls\FastListBox.cs">
+    <Compile Include="Controls\ListControl.cs">
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Panels\PanelCodein.cs">
@@ -212,7 +212,6 @@
     <EmbeddedResource Include="Program\FProperties.resx">
       <DependentUpon>FProperties.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="Test\tree.csx" />
     <None Include="Default\Templates\Class.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -222,7 +221,6 @@
     <None Include="Default\Templates\Script.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Test\tree.cs" />
     <None Include="Unused\TriggersUI.cs" />
     <Compile Include="Run, triggers\Run.cs" />
     <None Include="Default\Templates\New Project\%40Script\!Script.cs">

@@ -42,7 +42,7 @@ namespace Au.Util
 		/// Prepares to get control names.
 		/// </summary>
 		/// <param name="w">Any top-level or child window of that process.</param>
-		/// <exception cref="WndException">w invalid.</exception>
+		/// <exception cref="AuWndException">w invalid.</exception>
 		/// <exception cref="AuException">Failed to allocate process memory (see <see cref="AProcessMemory"/>) needed to get control names, usually because of [](xref:uac).</exception>
 		public AWinFormsControlNames(AWnd w)
 		{

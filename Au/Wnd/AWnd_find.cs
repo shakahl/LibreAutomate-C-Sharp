@@ -366,7 +366,7 @@ namespace Au
 					if(_also != null) {
 						bool ok = false;
 						try { ok = _also(w); }
-						catch(WndException) { } //don't throw if w destroyed
+						catch(AuWndException) { } //don't throw if w destroyed
 						if(!ok) { _stopProp = EProps.also; continue; }
 					}
 
@@ -380,7 +380,7 @@ namespace Au
 							}
 						}
 						catch(Exception ex) when(!(ex is ThreadAbortException)) {
-							if(!(ex is WndException)) PrintWarning("Exception when tried to find the 'contains' object. " + ex.ToStringWithoutStack());
+							if(!(ex is AuWndException)) PrintWarning("Exception when tried to find the 'contains' object. " + ex.ToStringWithoutStack());
 						}
 						if(!found) { _stopProp = EProps.contains; continue; }
 					}

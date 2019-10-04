@@ -20,7 +20,6 @@ using System.Drawing;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using Au.Controls;
 
 namespace Au.Controls
 {
@@ -48,12 +47,12 @@ namespace Au.Controls
 		/// <summary>
 		/// The top-level info window. Contains <see cref="Control1"/>.
 		/// </summary>
-		public Form Window => _W;
+		public InactiveWindow Window => _W;
 
 		_Window _W {
 			get {
-				if(_w == default) {
-					_w = new _Window(this);
+				if(_w == null || _w.IsDisposed) {
+					_w = new _Window(this) { Text = _caption };
 					_w.Controls.Add(_c = new _Control(this, 0, _twoControlsSplitPos) { Name = "_c" });
 					if(_twoControlsSplitPos > 0) _w.Controls.Add(_c2 = new _Control(this, _twoControlsSplitPos, _twoControlsSplitPos) { Name = "_c2" });
 				}
@@ -104,6 +103,7 @@ namespace Au.Controls
 		/// Shows the info window by the control.
 		/// </summary>
 		/// <param name="c">Control. Its top-level parent window will own the info window.</param>
+		/// <param name="align"></param>
 		/// <exception cref="ArgumentException">c is null or its handle is not created.</exception>
 		/// <exception cref="InvalidOperationException">Exceptions of <see cref="Form.Show(IWin32Window)"/>.</exception>
 		public void Show(Control c, PopupAlignment align = default)
@@ -118,6 +118,7 @@ namespace Au.Controls
 		/// <param name="c">Control or form. The top-level window will own the info window.</param>
 		/// <param name="r">Rectangle in control's client area or in screen.</param>
 		/// <param name="screenRect">r is in screen.</param>
+		/// <param name="align"></param>
 		/// <exception cref="ArgumentException">c is null or its handle is not created.</exception>
 		/// <exception cref="InvalidOperationException">Exceptions of <see cref="Form.Show(IWin32Window)"/>.</exception>
 		public void Show(Control c, Rectangle r, bool screenRect, PopupAlignment align = 0)
@@ -131,6 +132,7 @@ namespace Au.Controls
 		/// Shows the info window by the rectangle.
 		/// </summary>
 		/// <param name="r">Rectangle in screen.</param>
+		/// <param name="align"></param>
 		/// <remarks>
 		/// The info window is top-most.
 		/// </remarks>
@@ -141,8 +143,8 @@ namespace Au.Controls
 
 		void _Show(Control c, Rectangle r, PopupAlignment align)
 		{
-			_W.SetRect(r, (r.Right, r.Top), Size, align);
-			_w.ShowAt(c);
+			_W.ZCalculateAndSetPosition(r.Right, r.Top, align, r, _size);
+			_w.ZShow(c);
 		}
 
 		/// <summary>
@@ -160,7 +162,7 @@ namespace Au.Controls
 		/// </summary>
 		public void Dispose()
 		{
-			_w?.Dispose();
+			_w?.Dispose(); //sets our _w = null
 		}
 
 		/// <summary>
@@ -168,7 +170,11 @@ namespace Au.Controls
 		/// </summary>
 		public string Caption {
 			get => _caption;
-			set => _W.Text = _caption = value;
+			set {
+				_caption = value;
+				Debug.Assert(_w == null || (_w.Text == null) == (_caption == null)); //we don't support adding/removing caption later
+				if(_w != null) _w.Text = _caption;
+			}
 		}
 		string _caption;
 
@@ -201,102 +207,30 @@ namespace Au.Controls
 		//	return false;
 		//}
 
-		class _Window : Form
+		class _Window : InactiveWindow
 		{
 			InfoWindow _t;
-			Control _owner;
-			Font _font;
-			bool _showedOnce;
 
-			public _Window(InfoWindow t)
+			public _Window(InfoWindow t) : base(t.Caption == null ? WS.POPUP : WS.POPUP | WS.CAPTION | WS.SYSMENU | WS.THICKFRAME, shadow: t.Caption == null)
 			{
 				_t = t;
 
-				this.SuspendLayout();
-				this.AutoScaleMode = AutoScaleMode.None;
-				this.Font = _font = Util.AFonts.Regular;
-				this.StartPosition = FormStartPosition.Manual;
-				this.FormBorderStyle = FormBorderStyle.None;
+				this.Font = Util.AFonts.Regular;
 				this.Text = "Au.InfoWindow";
-				this.ResumeLayout();
 			}
 
 			protected override void Dispose(bool disposing)
 			{
 				if(disposing) {
-					_font.Dispose();
 					_t._w = null;
 				}
 				base.Dispose(disposing);
 			}
 
-			public void ShowAt(Control anchor)
+			public override void ZShow(Control ownerControl)
 			{
-				var owner = anchor?.TopLevelControl;
-				bool changedOwner = false;
-				if(_showedOnce) {
-					changedOwner = owner != _owner;
-					if(Visible) {
-						if(!changedOwner) return;
-						Visible = false;
-					}
-				}
-				_owner = owner;
-
-				if(_owner != null) {
-					Show(_owner);
-					if(changedOwner) ((AWnd)this).ZorderAbove((AWnd)_owner);
-				} else {
-					Show(); //note: not the same as Show(null)
-					if(changedOwner) ((AWnd)this).ZorderTopmost();
-				}
-				_showedOnce = true;
+				base.ZShow(ownerControl);
 				_t.UserClosed = false;
-			}
-
-			public void SetRect(RECT exclude, POINT pos, SIZE size, PopupAlignment align)
-			{
-				Api.CalculatePopupWindowPosition(pos, size, (uint)align, exclude, out var r);
-				Bounds = r;
-			}
-
-			protected override CreateParams CreateParams {
-				get {
-					var p = base.CreateParams;
-					var st = WS.POPUP;
-					var es = WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE;
-					bool noShadow = false;
-					if(_t != null) {
-						if(_owner == null) es |= WS_EX.TOPMOST;
-						if(_t.Caption != null) {
-							noShadow = true;
-							st |= WS.CAPTION | WS.SYSMENU | WS.THICKFRAME;
-						}
-					}
-					p.Style = unchecked((int)st);
-					p.ExStyle = (int)es;
-					if(!noShadow) p.ClassStyle |= (int)Api.CS_DROPSHADOW;
-					return p;
-				}
-			}
-
-			protected override bool ShowWithoutActivation => true;
-
-			protected override void WndProc(ref Message m)
-			{
-				//AWnd.More.PrintMsg(m);
-
-				switch(m.Msg) {
-				case Api.WM_MOUSEACTIVATE:
-					m.Result = (IntPtr)Api.MA_NOACTIVATE;
-					if(AMath.HiShort(m.LParam) == Api.WM_MBUTTONDOWN) Hide();
-					return;
-					//case Api.WM_ACTIVATEAPP:
-					//	if(m.WParam == default && !_t.DontCloseWhenAppDeactivated) _t._Close();
-					//	break;
-				}
-
-				base.WndProc(ref m);
 			}
 
 			protected override void OnFormClosing(FormClosingEventArgs e)
@@ -308,12 +242,6 @@ namespace Au.Controls
 				}
 				base.OnFormClosing(e);
 			}
-
-			//protected override void OnClientSizeChanged(EventArgs e)
-			//{
-			//	Print("OnClientSizeChanged");
-			//	base.OnClientSizeChanged(e);
-			//}
 
 			protected override void OnLoad(EventArgs e)
 			{
@@ -329,7 +257,7 @@ namespace Au.Controls
 			public _Control(InfoWindow t, int left, int splitPos)
 			{
 				_t = t;
-				this.InitUseControlFont = true;
+				this.ZInitUseControlFont = true;
 				if(splitPos == 0) { //single control
 					this.Dock = DockStyle.Fill;
 				} else {
@@ -348,7 +276,7 @@ namespace Au.Controls
 
 			protected override void OnHandleCreated(EventArgs e)
 			{
-				if(_t.Caption == null) this.InitBorderStyle = BorderStyle.FixedSingle;
+				if(_t.Caption == null) this.ZInitBorderStyle = BorderStyle.FixedSingle;
 				base.OnHandleCreated(e);
 				Call(Sci.SCI_SETMARGINLEFT, 0, 4);
 				Call(Sci.SCI_SETMARGINRIGHT, 0, 4);
@@ -356,16 +284,5 @@ namespace Au.Controls
 				//base.NoMouseRightSetFocus = true;
 			}
 		}
-	}
-
-	[Flags]
-	public enum PopupAlignment
-	{
-		TPM_CENTERALIGN = 0x4,
-		TPM_RIGHTALIGN = 0x8,
-		TPM_VCENTERALIGN = 0x10,
-		TPM_BOTTOMALIGN = 0x20,
-		TPM_VERTICAL = 0x40,
-		TPM_WORKAREA = 0x10000,
 	}
 }

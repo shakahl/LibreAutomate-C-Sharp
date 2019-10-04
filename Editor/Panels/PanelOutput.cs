@@ -44,7 +44,7 @@ class PanelOutput : AuUserControlBase
 
 	void _GetServerMessages()
 	{
-		_c.Tags.OutputServerProcessMessages(Program.OutputServer, m => {
+		_c.ZTags.OutputServerProcessMessages(Program.OutputServer, m => {
 			if(m.Type != OutServMessageType.Write) return;
 
 			//create links in compilation errors/warnings or run-time stack trace
@@ -120,7 +120,7 @@ class PanelOutput : AuUserControlBase
 				if(_history.Count > 50) _history.Dequeue();
 			}
 
-			(_iPanel ??= Panels.PanelManager.GetPanel(this)).Visible = true;
+			(_iPanel ??= Panels.PanelManager.ZGetPanel(this)).Visible = true;
 		});
 	}
 	static ARegex s_rx1, s_rx2;
@@ -128,11 +128,11 @@ class PanelOutput : AuUserControlBase
 
 	//protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 
-	public void Clear() { _c.ST.ClearText(); }
+	public void ZClear() { _c.Z.ClearText(); }
 
-	public void Copy() { _c.Call(SCI_COPY); }
+	public void ZCopy() { _c.Call(SCI_COPY); }
 
-	public void History()
+	public void ZHistory()
 	{
 		var dd = new PopupList { Items = _history.ToArray() };
 		dd.SelectedAction = o => Print((o.ResultItem as OutServMessage).Text);
@@ -142,14 +142,14 @@ class PanelOutput : AuUserControlBase
 	private void _c_HandleCreated()
 	{
 		_inInitSettings = true;
-		if(WrapLines) WrapLines = true;
-		if(WhiteSpace) WhiteSpace = true;
-		if(Topmost) Strips.CheckCmd("Tools_Output_Topmost", true); //see also OnParentChanged, below
+		if(ZWrapLines) ZWrapLines = true;
+		if(ZWhiteSpace) ZWhiteSpace = true;
+		if(ZTopmost) Strips.CheckCmd("Tools_Output_Topmost", true); //see also OnParentChanged, below
 		_inInitSettings = false;
 	}
 	bool _inInitSettings;
 
-	public bool WrapLines {
+	public bool ZWrapLines {
 		get => Program.Settings.GetBool("Tools_Output_WrapLines");
 		set {
 			Debug.Assert(!_inInitSettings || value);
@@ -161,7 +161,7 @@ class PanelOutput : AuUserControlBase
 		}
 	}
 
-	public bool WhiteSpace {
+	public bool ZWhiteSpace {
 		get => Program.Settings.GetBool("Tools_Output_WhiteSpace");
 		set {
 			Debug.Assert(!_inInitSettings || value);
@@ -172,10 +172,10 @@ class PanelOutput : AuUserControlBase
 		}
 	}
 
-	public bool Topmost {
+	public bool ZTopmost {
 		get => Program.Settings.GetBool("Tools_Output_Topmost");
 		set {
-			var p = Panels.PanelManager.GetPanel(this);
+			var p = Panels.PanelManager.ZGetPanel(this);
 			//if(value) p.Floating = true;
 			if(p.Floating) _SetTopmost(value);
 			Program.Settings.Set("Tools_Output_Topmost", value);
@@ -199,7 +199,7 @@ class PanelOutput : AuUserControlBase
 
 	protected override void OnParentChanged(EventArgs e)
 	{
-		if(Parent is Form && Topmost) ATimer.After(1, () => _SetTopmost(true));
+		if(Parent is Form && ZTopmost) ATimer.After(1, () => _SetTopmost(true));
 
 		base.OnParentChanged(e);
 	}
@@ -212,9 +212,9 @@ class PanelOutput : AuUserControlBase
 		{
 			_p = panel;
 
-			InitReadOnlyAlways = true;
-			InitTagsStyle = TagsStyle.AutoWithPrefix;
-			InitImagesStyle = ImagesStyle.ImageTag;
+			ZInitReadOnlyAlways = true;
+			ZInitTagsStyle = ZTagsStyle.AutoWithPrefix;
+			ZInitImagesStyle = ZImagesStyle.ImageTag;
 
 			SciTags.AddCommonLinkTag("open", s => _OpenLink(s));
 			SciTags.AddCommonLinkTag("script", s => _RunScript(s));
@@ -225,12 +225,12 @@ class PanelOutput : AuUserControlBase
 			base.OnHandleCreated(e);
 
 			_p._c_HandleCreated();
-			ST.MarginWidth(1, 3);
-			ST.StyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
-			ST.StyleFont(STYLE_DEFAULT, "Courier New", 8);
-			ST.StyleClearAll();
+			Z.MarginWidth(1, 3);
+			Z.StyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
+			Z.StyleFont(STYLE_DEFAULT, "Courier New", 8);
+			Z.StyleClearAll();
 
-			Tags.AddLinkTag("+properties", fid => {
+			ZTags.AddLinkTag("+properties", fid => {
 				var f = Program.Model.FindScript(fid);
 				if(f == null || !Program.Model.SetCurrentFile(f)) return;
 				Strips.Cmd.File_Properties();
@@ -241,10 +241,10 @@ class PanelOutput : AuUserControlBase
 		{
 			switch(m.Msg) {
 			case Api.WM_MBUTTONDOWN:
-				ST.ClearText();
+				Z.ClearText();
 				return;
 			case Api.WM_CONTEXTMENU:
-				Strips.ddOutput.ShowAsContextMenu_((int)m.LParam == -1);
+				Strips.ddOutput.ZShowAsContextMenu((int)m.LParam == -1);
 				return;
 			}
 			base.WndProc(ref m);
@@ -254,29 +254,13 @@ class PanelOutput : AuUserControlBase
 		{
 			//Print(s);
 			var a = s.Split('|');
-			var f = Program.Model.Find(a[0], null);
-			if(f == null) return;
-			if(f.IsFolder) {
-				f.SelectSingle();
-			} else if(Program.Model.SetCurrentFile(f)) {
-				var doc = Panels.Editor.ActiveDoc;
-				doc.Focus();
-				if(a.Length == 1) return;
-				int line = a[1].ToInt(0) - 1; if(line < 0) return;
-				int column = a.Length == 2 ? -1 : a[2].ToInt() - 1;
-
-				var t = doc.ST;
-				int i = t.LineStart(line);
-				if(column > 0) i = t.CountBytesFromChars(i, column); //not SCI_FINDCOLUMN, it calculates tabs
-				ATimer.After(10, () => t.GoToPos(i));
-				//info: scrolling works better with async when now opened the file. Or with doevents; not with BeginInvoke.
-			}
+			Program.Model.OpenAndGoTo(a[0], a.Length > 1 ? a[1] : null, a.Length > 2 ? a[2] : null);
 		}
 
 		void _RunScript(string s)
 		{
 			var a = s.Split('|');
-			var f = Program.Model.Find(a[0], false); if(f == null) return;
+			var f = Program.Model.FindScript(a[0]); if(f == null) return;
 			Run.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt(0));
 		}
 	}

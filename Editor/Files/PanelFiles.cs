@@ -24,9 +24,9 @@ partial class PanelFiles : AuUserControlBase
 		this.Controls.Add(_c);
 	}
 
-	public FilesModel.TreeViewFiles Control => _c;
+	public FilesModel.TreeViewFiles ZControl => _c;
 
-	public FilesModel Model => _model;
+	public FilesModel ZModel => _model;
 
 	//protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 
@@ -42,7 +42,7 @@ partial class PanelFiles : AuUserControlBase
 	/// If the setting does not exist, uses AFolders.ThisAppDocuments + @"Main".
 	/// If the file does not exist, copies from AFolders.ThisApp + @"Default".
 	/// </param>
-	public FilesModel LoadWorkspace(string wsDir = null)
+	public FilesModel ZLoadWorkspace(string wsDir = null)
 	{
 		if(wsDir == null) wsDir = Program.Settings.GetString("workspace");
 		if(Empty(wsDir)) wsDir = AFolders.ThisAppDocuments + @"Main";
@@ -74,8 +74,8 @@ partial class PanelFiles : AuUserControlBase
 				"1 Retry|2 Load another|3 Create new|0 Cancel",
 				owner: this, expandedText: ex.ToString())) {
 			case 1: goto g1;
-			case 2: m = LoadAnotherWorkspace(); break;
-			case 3: m = LoadNewWorkspace(); break;
+			case 2: m = ZLoadAnotherWorkspace(); break;
+			case 3: m = ZLoadNewWorkspace(); break;
 			}
 			if(m != null) return m;
 			if(_model != null) return _model;
@@ -96,16 +96,16 @@ partial class PanelFiles : AuUserControlBase
 			}
 		}
 
-		Program.MainForm.SetTitle();
+		Program.MainForm.ZSetTitle();
 		if(Program.Loaded >= EProgramState.LoadedWorkspace) {
-			OpenDocuments();
-			Model.RunStartupScripts();
+			ZOpenDocuments();
+			ZModel.RunStartupScripts();
 		}
 
 		return _model;
 	}
 
-	public void OpenDocuments()
+	public void ZOpenDocuments()
 	{
 		var m = _model;
 		if(_isNewWorkspace) {
@@ -113,13 +113,13 @@ partial class PanelFiles : AuUserControlBase
 			m.SetCurrentFile(m.Root.FirstChild, newFile: true);
 		} else m.LoadState();
 
-		WorkspaceLoadedAndDocumentsOpened?.Invoke();
+		ZWorkspaceLoadedAndDocumentsOpened?.Invoke();
 	}
 	bool _isNewWorkspace;
 
-	public event Action WorkspaceLoadedAndDocumentsOpened;
+	public event Action ZWorkspaceLoadedAndDocumentsOpened;
 
-	public void UnloadOnFormClosed()
+	public void ZUnloadOnFormClosed()
 	{
 		if(_model == null) return;
 		_model.Save.AllNowIfNeed();
@@ -132,7 +132,7 @@ partial class PanelFiles : AuUserControlBase
 	/// Shows "Open" dialog to select an existing workspace.
 	/// On OK loads the selected workspace and returns FilesModel. On Cancel return null.
 	/// </summary>
-	public FilesModel LoadAnotherWorkspace()
+	public FilesModel ZLoadAnotherWorkspace()
 	{
 		var d = new OpenFileDialog { Title = "Open workspace", Filter = "files.xml|files.xml" };
 		if(d.ShowDialog(this) != DialogResult.OK) return null;
@@ -141,24 +141,24 @@ partial class PanelFiles : AuUserControlBase
 			ADialog.ShowError("Must be files.xml");
 			return null;
 		}
-		return LoadWorkspace(APath.GetDirectoryPath(filesXml));
+		return ZLoadWorkspace(APath.GetDirectoryPath(filesXml));
 	}
 
 	/// <summary>
 	/// Shows dialog to create new workspace.
 	/// On OK creates new workspace and returns FilesModel. On Cancel return null.
 	/// </summary>
-	public FilesModel LoadNewWorkspace()
+	public FilesModel ZLoadNewWorkspace()
 	{
 		var path = FilesModel.GetDirectoryPathForNewWorkspace();
 		if(path == null) return null;
-		return LoadWorkspace(path);
+		return ZLoadWorkspace(path);
 	}
 
 	/// <summary>
 	/// Fills submenu File -> Workspace -> Recent.
 	/// </summary>
-	public void FillMenuRecentWorkspaces(ToolStripDropDownMenu dd)
+	public void ZFillMenuRecentWorkspaces(ToolStripDropDownMenu dd)
 	{
 		lock(Program.Settings) {
 			var x1 = Program.Settings.XmlOf("recent");
@@ -174,7 +174,7 @@ partial class PanelFiles : AuUserControlBase
 					aRem.Add(x2);
 					continue;
 				}
-				var mi = dd.Items.Add(path, null, (o, u) => LoadWorkspace(o.ToString()));
+				var mi = dd.Items.Add(path, null, (o, u) => ZLoadWorkspace(o.ToString()));
 				if(!currentOK && (path == current)) {
 					currentOK = true;
 					mi.Font = EdStock.FontBold;
@@ -190,7 +190,7 @@ partial class PanelFiles : AuUserControlBase
 	/// <summary>
 	/// Adds templates to File -> New.
 	/// </summary>
-	public void FillMenuNew(ToolStripDropDownMenu ddm)
+	public void ZFillMenuNew(ToolStripDropDownMenu ddm)
 	{
 		if(_newMenuDone) return; _newMenuDone = true;
 
@@ -212,7 +212,7 @@ partial class PanelFiles : AuUserControlBase
 				}
 
 				bool isFolder = v.IsDirectory && !isProject;
-				var item = new ToolStripMenuItem(name, null, (unu, sed) => Model.NewItem(v.FullPath.Substring(templDir.Length + 1), beginRenaming: true));
+				var item = new ToolStripMenuItem(name, null, (unu, sed) => ZModel.NewItem(v.FullPath.Substring(templDir.Length + 1), beginRenaming: true));
 				if(isFolder) {
 					var ddSub = new ToolStripDropDownMenu();
 					item.DropDown = ddSub;

@@ -149,6 +149,7 @@ namespace Au.Controls
 			/// </summary>
 			/// <param name="toolTip">Tooltip text.</param>
 			/// <param name="image">Image to display on tab button if it is too small for text.</param>
+			/// <param name="focusable"></param>
 			void Init(string toolTip, Image image = null, bool focusable = false);
 
 			/// <summary>

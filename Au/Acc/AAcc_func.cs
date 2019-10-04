@@ -501,7 +501,7 @@ namespace Au
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuException">Failed. For example, when this object is invalid, or its top-level window does not contain a web page.</exception>
-		/// <exception cref="WndException">The window was closed while waiting.</exception>
+		/// <exception cref="AuWndException">The window was closed while waiting.</exception>
 		/// <exception cref="Exception">Exceptions thrown by <see cref="DoAction"/> or by the <i>action</i> function.</exception>
 		/// <remarks>
 		/// This function is used to click a link in a web page and wait until current web page is gone. It prevents a following 'wait for object' function from finding a matching object in the old page, which would be bad.
@@ -652,7 +652,7 @@ namespace Au
 		/// </summary>
 		/// <param name="how">Specifies whether to select, focus, add to selection etc. Can be two flags, for example <c>AccSELFLAG.TAKEFOCUS | AccSELFLAG.TAKESELECTION</c>.</param>
 		/// <exception cref="AuException">Failed.</exception>
-		/// <exception cref="WndException">Failed to activate the window (<see cref="AWnd.Activate"/>) or focus the control (<see cref="AWnd.Focus"/>).</exception>
+		/// <exception cref="AuWndException">Failed to activate the window (<see cref="AWnd.Activate"/>) or focus the control (<see cref="AWnd.Focus"/>).</exception>
 		/// <remarks>
 		/// Uses <msdn>IAccessible.accSelect</msdn>.
 		/// Not all objects support it. Most objects support not all flags. It depends on <see cref="AccSTATE"/> FOCUSABLE, SELECTABLE, MULTISELECTABLE, EXTSELECTABLE, DISABLED.

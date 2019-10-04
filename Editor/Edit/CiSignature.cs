@@ -20,70 +20,214 @@ using System.Linq;
 using Au;
 using Au.Types;
 using static Au.AStatic;
-using Au.Compiler;
 using Au.Controls;
-using Au.Editor.Properties;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.Completion;
 using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.Tags;
 using Microsoft.CodeAnalysis.SignatureHelp;
 using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
-using Microsoft.CodeAnalysis.QuickInfo;
-using Microsoft.CodeAnalysis.CSharp.QuickInfo;
-using TheArtOfDev.HtmlRenderer.WinForms;
+
+//TODO: show for lambda parameters
 
 class CiSignature
 {
-#if true
-	public void ShowSignature(char ch = default)
+	CiPopupHtml _popupHtml;
+	_Data _data; //not null while the popup window is visible
+
+	class _Data
 	{
-	}
-#else
+		//public Compilation compilation;
+		//public ISignatureHelpProvider provider;
+		//public string code;
+		public SignatureHelpItems r;
+		public _Span span;
+		public int iSelected, iUserSelected;
+		public SciCode sciDoc;
 
-	public void ShowSignature(char ch = default)
-	{
-		APerf.First();
-		var document = CodeInfo.CreateTestDocumentForEditorCode(out string code, out int position);
-		APerf.Next();
-		var providers = SignatureHelpProviders;
-		APerf.Next();
-		foreach(var p in providers) {
-			var r = p.GetItemsAsync(document, position, new SignatureHelpTriggerInfo(), default).Result;
-			if(r == null) continue;
-			Print($"<><c orange>{p}    nItems={r.Items.Count}  argCount={r.ArgumentCount} argIndex={r.ArgumentIndex} argName={r.ArgumentName} sel={r.SelectedItemIndex}<>");
-			//Print(r.Items);
-
-			string s;
-			if(r.Items.Count == 1) s = r.Items[0].ToString();
-			else s = string.Join("\n", r.Items);
-
-			var doc = Panels.Editor.ActiveDoc;
-			doc.ST.SetString(Sci.SCI_CALLTIPSHOW, doc.ST.CountBytesFromChars(position), s);
-
-			//foreach(var v in r.Items) {
-			var v = r.Items[0];
-			//Print(v.Parameters);
-			foreach(var k in v.Parameters) {
-				Print("--------");
-				Print(k.Name);
-				Print("DisplayParts:", string.Join("", k.DisplayParts));
-				Print("Documentation:", string.Join("", k.DocumentationFactory(default)));
-				//Print("PrefixDisplayParts:");
-				//Print(k.PrefixDisplayParts);
-				//Print("SelectedDisplayParts:");
-				//Print(k.SelectedDisplayParts);
-				//Print("SuffixDisplayParts:");
-				//Print(k.SuffixDisplayParts);
-			}
-			//}
-
-			break;
+		public bool IsSameSpan(_Span span2)
+		{
+			return span2.start == span.start && span2.fromEnd == span.fromEnd;
+			//never mind: we don't check whether text before and after is still the same. Not that important.
 		}
-		APerf.NW();
+
+		public int GetUserSelectedItemIfSameSpan(_Span span2, SignatureHelpItems r2)
+		{
+			if(iUserSelected < 0 || !IsSameSpan(span2) || r2.Items.Count != r.Items.Count) return -1;
+			for(int i = 0; i < r.Items.Count; i++) {
+				var hi1 = r.Items[i] as AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem;
+				var hi2 = r2.Items[i] as AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem;
+				Debug.Assert(!(hi1 == null || hi2 == null));
+				if(hi1 == null || hi2 == null || hi2.Symbol != hi1.Symbol) return -1;
+			}
+			return iUserSelected;
+		}
+	}
+
+	struct _Span
+	{
+		public int start, fromEnd;
+		public _Span(int start, int fromEnd) { this.start = start; this.fromEnd = fromEnd; }
+		public _Span(TextSpan span, string code) { this.start = span.Start; this.fromEnd = code.Length - span.End; }
+	}
+
+	public bool IsVisibleUI => _data != null;
+
+	public void Cancel()
+	{
+		if(_data == null) return;
+		foreach(var r in _data.sciDoc.ZTempRanges_Enum(this)) r.Remove();
+		_data = null;
+		_popupHtml.Hide();
+	}
+
+	public void SciPositionChanged(SciCode doc)
+	{
+		if(_afterCharAdded) { _afterCharAdded = false; return; }
+		if(_data == null) return;
+		_ShowSignature(doc, default);
+	}
+	bool _afterCharAdded;
+
+	public void SciCharAdded(SciCode doc, char ch)
+	{
+		switch(ch) { case '(': case '[': case '<': case ')': case ']': case '>': case ',': break; default: return; }
+		_ShowSignature(doc, ch);
+		_afterCharAdded = true;
+	}
+
+	public void ShowSignature(SciCode doc)
+	{
+		_ShowSignature(doc, default);
+	}
+
+	void _ShowSignature(SciCode doc, char ch)
+	{
+		//APerf.First();
+		if(!CodeInfo.GetContextAndDocument(out var cd, -2)) return; //returns false if position is in meta comments
+
+		//APerf.Next();
+		var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
+		var providers = SignatureHelpProviders;
+		//Print(providers);
+		//APerf.Next();
+		SignatureHelpItems r = null;
+		foreach(var p in providers) {
+			//APerf.First();
+			var r2 = p.GetItemsAsync(cd.document, cd.position, trigger, default).Result;
+			//APerf.NW(); //quite fast, don't need async. But in the future can try to wrap this foreach+SignatureHelpProviders in async Task. Need to test with large files.
+			if(r2 == null) continue;
+			if(r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) r = r2;
+			//Example: 'Print(new Something())'.
+			//	The first provider probably is for Print (invocation).
+			//	Then the second is for Something (object creation).
+			//	We need the innermost, in this case Something.
+		}
+
+		if(r == null) {
+			Cancel();
+			return;
+		}
+		//APerf.NW('s');
+		//Print($"<><c orange>pos={de.position}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
+
+		//var node = document.GetSyntaxRootAsync().Result;
+		var span = new _Span(r.ApplicableSpan, cd.code);
+		int iSel = _data?.GetUserSelectedItemIfSameSpan(span, r) ?? -1; //preserve user selection in same session
+
+		_data = new _Data {
+			r = r,
+			span = span,
+			iUserSelected = iSel,
+			sciDoc = doc,
+		};
+
+		if(iSel < 0) {
+			iSel = r.SelectedItemIndex ?? (r.ArgumentCount == 0 ? 0 : -1);
+			if(iSel < 0) {
+				for(int i = 0; i < r.Items.Count; i++) if(r.Items[i].Parameters.Length >= r.ArgumentCount) { iSel = i; break; }
+				if(iSel < 0) {
+					for(int i = 0; i < r.Items.Count; i++) if(r.Items[i].IsVariadic) { iSel = i; break; }
+					if(iSel < 0) iSel = 0;
+				}
+			}
+		}
+
+		string html = _FormatHtml(iSel, userSelected: false);
+
+		doc.ZTempRanges_Add(r.ApplicableSpan.Start, r.ApplicableSpan.End, onLeave: () => {
+			if(doc.ZTempRanges_Enum(doc.Z.CurrentPos8, this, utf8: true).Any()) return;
+			Cancel();
+		}, this, SciCode.ZTempRangeFlags.NoDuplicate);
+
+		var rect1 = CiUtil.GetCaretRectFromPos(doc, r.ApplicableSpan.Start);
+		var rect2 = CiUtil.GetCaretRectFromPos(doc, cd.position);
+		var rect = doc.RectangleToScreen(Rectangle.Union(rect1, rect2));
+		rect.Width += Au.Util.ADpi.ScaleInt(200);
+		rect.X -= 6;
+
+		_popupHtml ??= new CiPopupHtml(true, _ => _data = null);
+		_popupHtml.Show(Panels.Editor.ZActiveDoc, rect, PopupAlignment.TPM_VERTICAL);
+		_popupHtml.SetHtml(html, i => _FormatHtml(i, userSelected: true));
+		//APerf.NW();
+	}
+
+	string _FormatHtml(int iSel, bool userSelected)
+	{
+		_data.iSelected = iSel;
+		if(userSelected) _data.iUserSelected = iSel;
+
+		var r = _data.r;
+		ISymbol currentItem = null;
+		SignatureHelpParameter currentParameter = null;
+		var b = new StringBuilder("<body>");
+
+		for(int i = 0; i < r.Items.Count; i++) {
+			var k = r.Items[i];
+			if(k is AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem kk) {
+				var sym = kk.Symbol;
+				using var li = new CiHtml.HtmlListItem(b, i == iSel);
+				if(i != iSel) b.AppendFormat("<a href='^{0}'>", i); else currentItem = sym;
+				CiHtml.SymbolWithoutParametersToHtml(b, sym);
+				string b1 = "(", b2 = ")";
+				switch(sym.Kind) { case SymbolKind.Property: b1 = "["; b2 = "]"; break; case SymbolKind.NamedType: b1 = "&lt;"; b2 = "&gt;"; break; }
+				b.Append(b1);
+				int iArg = r.ArgumentIndex, lastParam = k.Parameters.Length - 1;
+				int selParam = iArg <= lastParam ? iArg : (k.IsVariadic ? lastParam : -1);
+				if(!Empty(r.ArgumentName) && sym is IMethodSymbol ims) {
+					var pa = ims.Parameters; for(int pi = 0; pi < pa.Length; pi++) if(pa[pi].Name == r.ArgumentName) { selParam = pi; break; }
+					//selParam = ims.Parameters.FirstOrDefault(o => o.Name == r.ArgumentName)?.Ordinal ?? selParam; //the same
+				}
+				CiHtml.ParametersToHtml(b, sym, selParam);
+				b.Append(b2);
+				if(i != iSel) b.Append("</a>"); else if(selParam >= 0) currentParameter = k.Parameters[selParam];
+			} else {
+				ADebug.Print(k);
+			}
+		}
+
+		if(currentItem != null) {
+			var tt = r.Items[iSel].DocumentationFactory?.Invoke(default);
+			bool haveDoc = tt?.Any() ?? false;
+			string helpUrl = CiUtil.GetSymbolHelpUrl(currentItem);
+			string sourceUrl = CiUtil.GetSymbolSourceRelativeUrl(currentItem);
+			bool haveLinks = helpUrl != null || sourceUrl != null;
+			if(haveDoc || haveLinks) {
+				b.Append("<p>");
+				if(haveDoc) CiHtml.TaggedPartsToHtml(b, tt);
+				if(haveLinks) CiHtml.SymbolLinksToHtml(b, helpUrl, sourceUrl, haveDoc ? " " : "", ".");
+				b.Append("</p>");
+			}
+		}
+
+		if(currentParameter != null) {
+			b.Append("<p class='parameter'><b>").Append(currentParameter.Name).Append(":</b> &nbsp;");
+			CiHtml.TaggedPartsToHtml(b, currentParameter.DocumentationFactory?.Invoke(default));
+			b.Append("</p>");
+		}
+
+		b.Append("</body>");
+		return b.ToString();
 	}
 
 	static List<ISignatureHelpProvider> _GetSignatureHelpProviders()
@@ -100,10 +244,26 @@ class CiSignature
 
 	List<ISignatureHelpProvider> SignatureHelpProviders => _shp ??= _GetSignatureHelpProviders();
 	List<ISignatureHelpProvider> _shp;
-#endif
 
-	public void Cancel(SciCode doc)
+	public bool OnCmdKey(Keys keyData)
 	{
-
+		if(_data != null) {
+			switch(keyData) {
+			case Keys.Escape:
+				Cancel();
+				return true;
+			case Keys.Down:
+			case Keys.Up:
+				int i = _data.iSelected, n = _data.r.Items.Count;
+				if(keyData == Keys.Down) {
+					if(++i >= n) i = 0;
+				} else {
+					if(--i < 0) i = n - 1;
+				}
+				if(i != _data.iSelected) _popupHtml.UpdateHtml(_FormatHtml(i, userSelected: true));
+				return true;
+			}
+		}
+		return false;
 	}
 }

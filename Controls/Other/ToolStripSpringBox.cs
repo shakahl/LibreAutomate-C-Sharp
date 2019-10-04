@@ -37,7 +37,7 @@ namespace Au.Controls
 			return ToolStripSpringBox.CalcPreferredWidth(this, base.GetPreferredSize(constrainingSize));
 		}
 
-		public void SetCueBanner(string text, bool showWhenFocused = false)
+		public void ZSetCueBanner(string text, bool showWhenFocused = false)
 		{
 			var c = this.Control as TextBox;
 			c.SetCueBanner(text, showWhenFocused);
@@ -56,7 +56,7 @@ namespace Au.Controls
 			return ToolStripSpringBox.CalcPreferredWidth(this, base.GetPreferredSize(constrainingSize));
 		}
 
-		public void SetCueBanner(string text)
+		public void ZSetCueBanner(string text)
 		{
 			var c = this.Control as ComboBox;
 			c.SetCueBanner(text);
@@ -64,7 +64,7 @@ namespace Au.Controls
 	}
 
 	//Contains static function used by ToolStripSpringTextBox, ToolStripSpringComboBox and possibly with other classes derived from ToolStripControlHost.
-	internal static class ToolStripSpringBox
+	static class ToolStripSpringBox
 	{
 		internal static Size CalcPreferredWidth(ToolStripControlHost c, Size basePreferredSize)
 		{

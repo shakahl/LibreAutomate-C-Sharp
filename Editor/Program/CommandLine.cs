@@ -181,7 +181,7 @@ static class CommandLine
 			Program.Model.ImportWorkspace(s);
 			break;
 		case 2:
-			Panels.Files.LoadWorkspace(s);
+			Panels.Files.ZLoadWorkspace(s);
 			break;
 		case 3:
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show task dialog

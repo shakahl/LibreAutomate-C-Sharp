@@ -30,7 +30,7 @@ namespace Au.Tools
 		public CommonInfos(InfoBox control)
 		{
 			_control = control;
-			_control.Tags.AddLinkTag("+regex", o => _Regex(o));
+			_control.ZTags.AddLinkTag("+regex", o => _Regex(o));
 		}
 
 		/// <summary>
@@ -49,7 +49,7 @@ namespace Au.Tools
 
 		void _SetInfoText(string text)
 		{
-			_control.ST.SetText(text);
+			_control.Z.SetText(text);
 		}
 
 		void _Regex(string _)

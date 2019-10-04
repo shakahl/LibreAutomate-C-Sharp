@@ -42,7 +42,11 @@ class CiTools
 	/// </summary>
 	public static SyntaxNode NodeAt(int position, Document document = null)
 	{
-		document ??= CodeInfo.GetDocument();
+		if(document == null) {
+			if(!CodeInfo.GetContextAndDocument(out var cd, position)) return null; //returns false if position is in meta comments
+			document = cd.document;
+			position = cd.position;
+		}
 		var root = document.GetSyntaxRootAsync().Result;
 		return root.FindToken(position).Parent;
 	}
@@ -54,6 +58,7 @@ class CiTools
 	/// <param name="position"></param>
 	public static bool IsInString(ref SyntaxNode node, int position)
 	{
+		if(node == null) return false;
 		var nk = node.Kind();
 		//Print(nk, position, node.Span, node.GetType(), node);
 		switch(nk) {
@@ -144,7 +149,10 @@ class CiTools
 
 	public void RegexWindowShow(SciCode doc, int position, bool replace)
 	{
-		if(_regexWindow == null) _regexWindow = new RegexWindow();
+		if(_regexWindow == null) {
+			_regexWindow = new RegexWindow();
+			_regexWindow.Window.Name = "Ci.Regex"; //prevent hiding when activated
+		}
 		var r = CiUtil.GetCaretRectFromPos(doc, position);
 		int i = Au.Util.ADpi.ScaleInt(100);
 		r.Width = i;
@@ -163,7 +171,7 @@ class CiTools
 	public void RegexWindowHideIfNotInString(SciCode doc)
 	{
 		if(!RegexWindowIsVisible) return;
-		int position = doc.ST.CurrentPosChars;
+		int position = doc.Z.CurrentPos16;
 		var node = NodeAt(position);
 		if(!IsInString(ref node, position)) _regexWindow.Hide();
 	}

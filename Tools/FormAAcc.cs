@@ -138,7 +138,7 @@ namespace Au.Tools
 		bool _FillGrid(out AccProperties p)
 		{
 			var g = _grid;
-			g.Clear();
+			g.ZClear();
 
 			if(!_acc.GetProperties("Rnuvdakh@srw", out p)) {
 				_propError = "Failed to get AO properties: \r\n" + ALastError.Message;
@@ -444,12 +444,12 @@ namespace Au.Tools
 		/// <summary>
 		/// When OK clicked, contains C# code.
 		/// </summary>
-		public override string ResultCode { get; protected set; }
+		public override string ZResultCode { get; protected set; }
 
 		private void _bOK_Click(object sender, EventArgs e)
 		{
-			ResultCode = _code.Text;
-			if(Empty(ResultCode)) this.DialogResult = DialogResult.Cancel;
+			ZResultCode = _code.Text;
+			if(Empty(ZResultCode)) this.DialogResult = DialogResult.Cancel;
 		}
 
 		private void _bTest_Click(object sender, EventArgs ea)
@@ -773,8 +773,8 @@ namespace Au.Tools
 
 			_commonInfos = new CommonInfos(_info);
 
-			_info.Tags.AddLinkTag("+resetInfo", _ => _SetFormInfo(null));
-			_info.Tags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
+			_info.ZTags.AddLinkTag("+resetInfo", _ => _SetFormInfo(null));
+			_info.ZTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
 		}
 
 		string _propError;
@@ -787,7 +787,7 @@ namespace Au.Tools
 				_commonInfos.SetTextWithWildexInfo(info.RemoveSuffix(1));
 				return;
 			}
-			_info.ST.SetText(info);
+			_info.Z.SetText(info);
 		}
 
 		const string c_infoForm =

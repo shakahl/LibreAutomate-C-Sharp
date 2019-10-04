@@ -77,24 +77,20 @@ class PanelFind : AuUserControlBase
 		// 
 		// _tFind
 		// 
-		this._tFind.AcceptsReturn = null;
 		this._tFind.AccessibleName = "_tFind";
 		this._tFind.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 		this.tableLayoutPanel1.SetColumnSpan(this._tFind, 3);
-		this._tFind.DisableModifiedNotifications = false;
 		this._tFind.Dock = System.Windows.Forms.DockStyle.Fill;
-		this._tFind.InitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-		this._tFind.InitUseDefaultContextMenu = true;
+		this._tFind.ZInitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this._tFind.ZInitUseDefaultContextMenu = true;
 		this._tFind.Location = new System.Drawing.Point(3, 3);
 		this._tFind.Margin = new System.Windows.Forms.Padding(3, 3, 3, 0);
 		this._tFind.MinimumSize = new System.Drawing.Size(4, 17);
 		this._tFind.Name = "_tFind";
-		this._tFind.NoMouseLeftSetFocus = false;
-		this._tFind.NoMouseRightSetFocus = false;
 		this._tFind.Size = new System.Drawing.Size(199, 20);
 		this._tFind.TabIndex = 0;
 		this._toolTip.SetToolTip(this._tFind, "Text to find");
-		this._tFind.TextChanged += new System.EventHandler(this._tFind_TextChanged);
+		this._tFind.ZTextChanged += new System.EventHandler(this._tFind_TextChanged);
 		this._tFind.MouseUp += new System.Windows.Forms.MouseEventHandler(this._tFind_MouseUp);
 		// 
 		// _bFind
@@ -170,20 +166,16 @@ class PanelFind : AuUserControlBase
 		// 
 		// _tReplace
 		// 
-		this._tReplace.AcceptsReturn = null;
 		this._tReplace.AccessibleName = "_tReplace";
 		this._tReplace.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 		this.tableLayoutPanel1.SetColumnSpan(this._tReplace, 3);
-		this._tReplace.DisableModifiedNotifications = false;
 		this._tReplace.Dock = System.Windows.Forms.DockStyle.Fill;
-		this._tReplace.InitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-		this._tReplace.InitUseDefaultContextMenu = true;
+		this._tReplace.ZInitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+		this._tReplace.ZInitUseDefaultContextMenu = true;
 		this._tReplace.Location = new System.Drawing.Point(3, 82);
 		this._tReplace.Margin = new System.Windows.Forms.Padding(3, 3, 3, 0);
 		this._tReplace.MinimumSize = new System.Drawing.Size(4, 17);
 		this._tReplace.Name = "_tReplace";
-		this._tReplace.NoMouseLeftSetFocus = false;
-		this._tReplace.NoMouseRightSetFocus = false;
 		this._tReplace.Size = new System.Drawing.Size(199, 20);
 		this._tReplace.TabIndex = 7;
 		this._toolTip.SetToolTip(this._tReplace, "Replacement text");
@@ -279,23 +271,23 @@ class PanelFind : AuUserControlBase
 
 	private void _tFind_MouseUp(object sender, MouseEventArgs e)
 	{
-		(sender as _SciTextBox).ST.ClearText();
+		(sender as _SciTextBox).Z.ClearText();
 	}
 
 	private void _tFind_TextChanged(object sender, EventArgs e)
 	{
-		UpdateQuickResults(false);
+		ZUpdateQuickResults(false);
 	}
 
 	private void _cCase_CheckedChanged(object sender, EventArgs e)
 	{
-		UpdateQuickResults(false);
+		ZUpdateQuickResults(false);
 	}
 
 	private void _cWord_CheckedChanged(object sender, EventArgs e)
 	{
 		if(_cWord.Checked) _cRegex.Checked = false;
-		UpdateQuickResults(false);
+		ZUpdateQuickResults(false);
 	}
 
 	private void _cRegex_CheckedChanged(object sender, EventArgs e)
@@ -309,7 +301,7 @@ class PanelFind : AuUserControlBase
 			_regexWindow?.Dispose();
 			_regexWindow = null;
 		}
-		UpdateQuickResults(false);
+		ZUpdateQuickResults(false);
 	}
 
 	RegexWindow _regexWindow;
@@ -370,12 +362,12 @@ class PanelFind : AuUserControlBase
 
 	private void _cName_CheckedChanged(object sender, EventArgs e)
 	{
-		Panels.Found.Control.ST.ClearText();
+		Panels.Found.ZControl.Z.ClearText();
 		if(_cName.Checked) {
 			_aEditor.Clear();
-			Panels.Editor.ActiveDoc?.HiliteFind(null);
+			Panels.Editor.ZActiveDoc?.ZHiliteFind(null);
 		}
-		UpdateQuickResults(false);
+		ZUpdateQuickResults(false);
 	}
 
 	private void _bReplace_Click(object sender, EventArgs e)
@@ -405,7 +397,7 @@ class PanelFind : AuUserControlBase
 	/// Called when changed find text or options. Also when activated another document.
 	/// Async-updates find-hiliting in editor or 'find name' results.
 	/// </summary>
-	public void UpdateQuickResults(bool onlyEditor)
+	public void ZUpdateQuickResults(bool onlyEditor)
 	{
 		if(!Visible) return;
 		if(onlyEditor && _cName.Checked) return;
@@ -416,7 +408,7 @@ class PanelFind : AuUserControlBase
 				_FindAllInFiles(true);
 			} else {
 				_FindAllInEditor();
-				Panels.Editor.ActiveDoc?.HiliteFind(_aEditor);
+				Panels.Editor.ZActiveDoc?.ZHiliteFind(_aEditor);
 			}
 		});
 
@@ -489,10 +481,10 @@ class PanelFind : AuUserControlBase
 
 	void _FindNextInEditor(in _TextToFind f, bool replace)
 	{
-		var doc = Panels.Editor.ActiveDoc; if(doc == null) return;
-		var t = doc.ST;
+		var doc = Panels.Editor.ZActiveDoc; if(doc == null) return;
+		var t = doc.Z;
 		var text = doc.Text; if(text.Length == 0) return;
-		int i, len = 0, from8 = replace ? t.SelectionStart : t.SelectionEnd, from = t.CountBytesToChars(from8);
+		int i, len = 0, from8 = replace ? t.SelectionStart8 : t.SelectionEnd8, from = t.CountBytesToChars(from8);
 		RXMatch rm = null;
 		bool retryFromStart = false, retryRx = false;
 		g1:
@@ -520,14 +512,14 @@ class PanelFind : AuUserControlBase
 		}
 		i = t.CountBytesFromChars(i);
 		int to = t.CountBytesFromChars(i, len);
-		if(replace && i == from8 && to == t.SelectionEnd) {
+		if(replace && i == from8 && to == t.SelectionEnd8) {
 			var repl = f.replaceText;
 			if(rm != null) repl = rm.ExpandReplacement(repl);
 			//t.ReplaceRange(i, to, repl); //also would need to set caret pos = to
 			t.ReplaceSel(repl);
 			_FindNextInEditor(f, false);
 		} else {
-			t.SelectAndMakeVisible(i, to);
+			t.SelectAndMakeVisible(false, i, to);
 		}
 	}
 
@@ -540,7 +532,7 @@ class PanelFind : AuUserControlBase
 	{
 		_cName.Checked = false;
 		if(!_GetTextToFind(out var f, true)) return;
-		var doc = Panels.Editor.ActiveDoc; if(doc == null) return;
+		var doc = Panels.Editor.ZActiveDoc; if(doc == null) return;
 		var text = doc.Text;
 		var repl = f.replaceText;
 		if(f.rx != null) {
@@ -548,7 +540,7 @@ class PanelFind : AuUserControlBase
 			doc.Call(Sci.SCI_BEGINUNDOACTION);
 			for(int i = ma.Length - 1; i >= 0; i--) {
 				var m = ma[i];
-				doc.ST.ReplaceRange(m.Index, m.Length, m.ExpandReplacement(repl), SciFromTo.BothChars | SciFromTo.ToIsLength);
+				doc.Z.ReplaceRange(true, m.Index, m.Length, m.ExpandReplacement(repl), true);
 			}
 			doc.Call(Sci.SCI_ENDUNDOACTION);
 		} else {
@@ -558,11 +550,11 @@ class PanelFind : AuUserControlBase
 			doc.Call(Sci.SCI_BEGINUNDOACTION);
 			for(int i = a.Count - 1; i >= 0; i--) {
 				var v = a[i];
-				doc.ST.ReplaceRange(v.x, v.y, repl, SciFromTo.BothChars | SciFromTo.ToIsLength);
+				doc.Z.ReplaceRange(true, v.x, v.y, repl, true);
 			}
 			doc.Call(Sci.SCI_ENDUNDOACTION);
 		}
-		//Easier/faster would be to create new text and call ST.SetText. But then all non-text data is lost: markers, folds, caret position...
+		//Easier/faster would be to create new text and call Z.SetText. But then all non-text data is lost: markers, folds, caret position...
 	}
 
 	List<POINT> _aEditor = new List<POINT>(); //index/length of all found instances in editor text
@@ -571,23 +563,23 @@ class PanelFind : AuUserControlBase
 	{
 		_aEditor.Clear();
 		if(!_GetTextToFind(out var f, false, noRecent: true)) return;
-		var text = Panels.Editor.ActiveDoc?.Text; if(Empty(text)) return;
+		var text = Panels.Editor.ZActiveDoc?.Text; if(Empty(text)) return;
 		_FindAllInString(text, f, _aEditor);
 	}
 
 	protected override void OnVisibleChanged(EventArgs e)
 	{
 		base.OnVisibleChanged(e);
-		if(!_cName.Checked) Panels.Editor.ActiveDoc?.HiliteFind(Visible ? _aEditor : null);
+		if(!_cName.Checked) Panels.Editor.ZActiveDoc?.ZHiliteFind(Visible ? _aEditor : null);
 	}
 
-	public void CtrlF()
+	public void ZCtrlF()
 	{
-		if(!Visible) Panels.PanelManager.GetPanel(this).Visible = true;
+		if(!Visible) Panels.PanelManager.ZGetPanel(this).Visible = true;
 		string s = "";
 		switch(AWnd.ThisThread.FocusedControl) {
 		case AuScintilla c:
-			s = c.ST.SelectedText();
+			s = c.Z.SelectedText();
 			break;
 		case TextBox c:
 			s = c.SelectedText;
@@ -614,29 +606,29 @@ class PanelFind : AuUserControlBase
 	void _FindAllInFiles(bool names/*, bool forReplace*/)
 	{
 		if(!_GetTextToFind(out var f, false, noRecent: names)) {
-			Panels.Found.Control.ST.ClearText();
+			Panels.Found.ZControl.Z.ClearText();
 			return;
 		}
 
 		if(!_init1) {
 			_init1 = true;
-			Panels.Found.Control.CreateHandleNow();
-			Panels.Files.WorkspaceLoadedAndDocumentsOpened += () => Panels.Found.Control.ST.ClearText();
+			Panels.Found.ZControl.CreateHandleNow();
+			Panels.Files.ZWorkspaceLoadedAndDocumentsOpened += () => Panels.Found.ZControl.Z.ClearText();
 
-			Panels.Found.Control.Tags.AddLinkTag("+open", s => {
+			Panels.Found.ZControl.ZTags.AddLinkTag("+open", s => {
 				_OpenLinkClicked(s);
 			});
-			Panels.Found.Control.Tags.AddLinkTag("+ra", s => {
+			Panels.Found.ZControl.ZTags.AddLinkTag("+ra", s => {
 				if(!_OpenLinkClicked(s)) return;
 				ATimer.After(10, () => _bReplaceAll_Click(null, null));
 				//info: without timer sometimes does not set cursor pos correctly
 			});
-			Panels.Found.Control.Tags.AddLinkTag("+f", s => {
+			Panels.Found.ZControl.ZTags.AddLinkTag("+f", s => {
 				var a = s.Split(' ');
 				if(!_OpenLinkClicked(a[0])) return;
-				var doc = Panels.Editor.ActiveDoc;
+				var doc = Panels.Editor.ZActiveDoc;
 				//doc.Focus();
-				ATimer.After(10, () => doc.ST.SelectAndMakeVisible(a[1].ToInt(), a[2].ToInt(), SciFromTo.BothChars | SciFromTo.ToIsLength));
+				ATimer.After(10, () => doc.Z.SelectAndMakeVisible(true, a[1].ToInt(), a[2].ToInt(), true));
 				//info: scrolling works better with async when now opened the file
 			});
 			bool _OpenLinkClicked(string file)
@@ -646,8 +638,8 @@ class PanelFind : AuUserControlBase
 				if(f.IsFolder) f.SelectSingle();
 				else if(!Program.Model.SetCurrentFile(f)) return false;
 				//select the link line in the Found pane, to make it easier to find later
-				var t = Panels.Found.Control.ST;
-				int i=t.CurrentPos, i1=t.LineStartFromPos(i), i2=t.LineEndFromPos(i, withRN:true);
+				var t = Panels.Found.ZControl.Z;
+				int i = t.CurrentPos8, i1 = t.LineStartFromPos(false, i), i2 = t.LineEndFromPos(false, i, withRN: true);
 				t.Call(Sci.SCI_SETSEL, i1, i2);
 				return true;
 			}
@@ -743,8 +735,8 @@ class PanelFind : AuUserControlBase
 			.AppendLine(" files. It is set in Find options (the ... button).<>");
 		b.Append(bSlow);
 
-		Panels.Found.Control.ST.SetText(b.ToString());
-		var ip = Panels.PanelManager.GetPanel(Panels.Found);
+		Panels.Found.ZControl.Z.SetText(b.ToString());
+		var ip = Panels.PanelManager.ZGetPanel(Panels.Found);
 		ip.Visible = true;
 	}
 
@@ -864,7 +856,7 @@ class PanelFind : AuUserControlBase
 		protected override void OnHandleCreated(EventArgs e)
 		{
 			base.OnHandleCreated(e);
-			ST.MarginWidth(1, 0);
+			Z.MarginWidth(1, 0);
 			Call(Sci.SCI_SETHSCROLLBAR);
 		}
 

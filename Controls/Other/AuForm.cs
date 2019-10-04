@@ -34,37 +34,24 @@ namespace Au.Controls
 	/// </remarks>
 	public class AuForm : Form
 	{
-		Font _font;
-
 		///
 		public AuForm()
 		{
-			_font = Util.AFonts.Regular;
-			this.Font = _font; //must be before 'AutoScaleMode = ...'
+			this.Font = Util.AFonts.Regular; //must be before 'AutoScaleMode = ...'
 			this.AutoScaleMode = AutoScaleMode.Font;
-		}
-
-		///
-		protected override void Dispose(bool disposing)
-		{
-			if(disposing) {
-				//Print("Dispose");
-				_font.Dispose();
-			}
-			base.Dispose(disposing);
 		}
 
 		/// <summary>
 		/// Adds WS_POPUP style. Also prevents activating an unrelated window when closing this active owned nonmodal form.
 		/// Set it before creating; later does nothing.
 		/// </summary>
-		public bool IsPopup { get; set; }
+		public bool ZIsPopup { get; set; }
 
 		///
 		protected override CreateParams CreateParams {
 			get {
 				var p = base.CreateParams;
-				if(IsPopup) {
+				if(ZIsPopup) {
 					if(((WS)p.Style).Has(WS.CHILD)) p.Style &= ~unchecked((int)WS.POPUP); //probably in designer
 					else p.Style |= unchecked((int)WS.POPUP);
 				}
@@ -82,7 +69,7 @@ namespace Au.Controls
 			//	But adding WS_POPUP for .NET forms is not enough.
 			//		When closing, before destroying the form window, .NET sets its owner window =0 (=TaskbarOwner if ShowInTaskbar==false).
 			//	We now set Owner = null, and set native owner. .NET does not know about it. Then OS will activate the owner.
-			if(IsPopup && !Modal) {
+			if(ZIsPopup && !Modal) {
 				var fo = Owner;
 				if(fo != null) {
 					var w = (AWnd)this;

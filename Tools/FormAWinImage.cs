@@ -51,7 +51,7 @@ namespace Au.Tools
 			if(ARegistry.GetString(out var wndPos, "wndPos", c_registryKey))
 				try { w.RestorePositionSizeState(wndPos, true); } catch { }
 
-			_info.ST.SetText(c_infoForm);
+			_info.Z.SetText(c_infoForm);
 			_FillGrid();
 		}
 
@@ -131,7 +131,7 @@ namespace Au.Tools
 		{
 			_noeventGridValueChanged = true;
 			var g = _grid;
-			g.Clear();
+			g.ZClear();
 
 			g.ZAdd(null, "Control", "Edit window/control...", false, etype: ParamGrid.EditType.Button,
 				buttonAction: (unu, sed) => { var r = _code.ZShowWndTool(_wnd, _con, !_useCon); if(r.ok) _SetWndCon(r.wnd, r.con, r.useCon, true); },
@@ -440,12 +440,12 @@ namespace Au.Tools
 		/// <summary>
 		/// When OK clicked, contains C# code.
 		/// </summary>
-		public override string ResultCode { get; protected set; }
+		public override string ZResultCode { get; protected set; }
 
 		private void _bOK_Click(object sender, EventArgs e)
 		{
-			ResultCode = _code.Text;
-			if(Empty(ResultCode)) this.DialogResult = DialogResult.Cancel;
+			ZResultCode = _code.Text;
+			if(Empty(ZResultCode)) this.DialogResult = DialogResult.Cancel;
 		}
 
 		private void _bTest_Click(object sender, EventArgs e)

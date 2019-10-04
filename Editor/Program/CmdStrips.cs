@@ -45,7 +45,7 @@ static class Strips
 		//p.Next();
 
 		_strips = new AuStripManager(Program.MainForm, _cmd);
-		_strips.BuildAll(AFolders.ThisAppBS + @"Default\Strips.xml", AFolders.ThisAppDocuments + @"!Settings\Strips.xml", new AuDockPanel.DockedToolStripRenderer());
+		_strips.BuildAll(AFolders.ThisAppBS + @"Default\Strips.xml", AFolders.ThisAppDocuments + @"!Settings\Strips.xml", new AuDockPanel.ZDockedToolStripRenderer());
 		//p.Next();
 
 		//get top-level toolstrips (menu bar and toolbars)
@@ -59,10 +59,10 @@ static class Strips
 		tbCustom2 = _strips.Toolbars["Custom2"];
 
 		//get submenus that will be filled later or used separately etc
-		(ddFileNew = _strips.Submenus["File_New"]).Opening += (o, e) => Panels.Files.FillMenuNew(o as ToolStripDropDownMenu);
-		_strips.Submenus["File_RecentWorkspaces"].Opening += (o, e) => Panels.Files.FillMenuRecentWorkspaces(o as ToolStripDropDownMenu);
-		_strips.Submenus["Tools_Panels"].Opening += (se, da) => Panels.PanelManager.AddShowPanelsToMenu(se as ToolStripDropDown, false, true);
-		_strips.Submenus["Tools_Toolbars"].Opening += (se, da) => Panels.PanelManager.AddShowPanelsToMenu(se as ToolStripDropDown, true, true);
+		(ddFileNew = _strips.Submenus["File_New"]).Opening += (o, e) => Panels.Files.ZFillMenuNew(o as ToolStripDropDownMenu);
+		_strips.Submenus["File_RecentWorkspaces"].Opening += (o, e) => Panels.Files.ZFillMenuRecentWorkspaces(o as ToolStripDropDownMenu);
+		_strips.Submenus["Tools_Panels"].Opening += (se, da) => Panels.PanelManager.ZAddShowPanelsToMenu(se as ToolStripDropDown, false, true);
+		_strips.Submenus["Tools_Toolbars"].Opening += (se, da) => Panels.PanelManager.ZAddShowPanelsToMenu(se as ToolStripDropDown, true, true);
 		ddFile = _strips.Submenus["Menu_File"];
 		ddEdit = _strips.Submenus["Menu_Edit"];
 		ddOutput = _strips.Submenus["Tools_Output"];

@@ -595,88 +595,48 @@ namespace Au
 			KFDF_PUBLISHEXPANDEDPATH = 0x20
 		}
 
-		[StructLayout(LayoutKind.Sequential)]
+#pragma warning disable CS0649 //field never assigned
 		struct KNOWNFOLDER_DEFINITION
 		{
 			public KF_CATEGORY category;
-
-			[MarshalAs(UnmanagedType.LPWStr)]
 			public string pszName;
-
-			[MarshalAs(UnmanagedType.LPWStr)]
 			public string pszDescription;
-
 			public Guid fidParent;
-
-			[MarshalAs(UnmanagedType.LPWStr)]
 			public string pszRelativePath;
-
-			[MarshalAs(UnmanagedType.LPWStr)]
 			public string pszParsingName;
-
-			[MarshalAs(UnmanagedType.LPWStr)]
 			public string pszToolTip;
-
-			[MarshalAs(UnmanagedType.LPWStr)]
 			public string pszLocalizedName;
-
-			[MarshalAs(UnmanagedType.LPWStr)]
 			public string pszIcon;
-
-			[MarshalAs(UnmanagedType.LPWStr)]
 			public string pszSecurity;
-
 			public uint dwAttributes;
 			public KF_DEFINITION_FLAGS kfdFlags;
 			public Guid ftidType;
 		}
+#pragma warning restore CS0649 //field never assigned
 
 		enum FFFP_MODE
 		{
-			FFFP_EXACTMATCH = 0,
-			FFFP_NEARESTPARENTMATCH = 1
+			FFFP_EXACTMATCH,
+			FFFP_NEARESTPARENTMATCH
 		}
 
 		[ComImport, Guid("8BE2D872-86AA-4d47-B776-32CCA40C7018"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		interface IKnownFolderManager
+		unsafe interface IKnownFolderManager
 		{
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int FolderIdFromCsidl(int nCsidl, out Guid pfid);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int FolderIdToCsidl(in Guid rfid, out int pnCsidl);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetFolderIds(out IntPtr ppKFId, out uint ids); //KNOWNFOLDERID** ppKFId
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetFolder(in Guid rfid, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetFolderByName([In, MarshalAs(UnmanagedType.LPWStr)] string pszCanonicalName, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int RegisterFolder(in Guid rfid, in KNOWNFOLDER_DEFINITION pKFD);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int UnregisterFolder(in Guid rfid);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int FindFolderFromPath([In, MarshalAs(UnmanagedType.LPWStr)] string pszPath, FFFP_MODE mode, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int FindFolderFromIDList(IntPtr pidl, [MarshalAs(UnmanagedType.Interface)] out IKnownFolder kf);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int Redirect(in Guid rfid, IntPtr hwnd, uint Flags,
-					[In, MarshalAs(UnmanagedType.LPWStr)] string pszTargetPath, uint cFolders,
-					in Guid pExclusion, [MarshalAs(UnmanagedType.LPWStr)] out string ppszError);
+			[PreserveSig] int FolderIdFromCsidl(int nCsidl, out Guid pfid);
+			[PreserveSig] int FolderIdToCsidl(in Guid rfid, out int pnCsidl);
+			[PreserveSig] int GetFolderIds(out Guid* ppKFId, out int pCount);
+			[PreserveSig] int GetFolder(in Guid rfid, out IKnownFolder ppkf);
+			[PreserveSig] int GetFolderByName([In, MarshalAs(UnmanagedType.LPWStr)] string pszCanonicalName, out IKnownFolder ppkf);
+			//[PreserveSig] int RegisterFolder(in Guid rfid, in KNOWNFOLDER_DEFINITION pKFD);
+			//[PreserveSig] int UnregisterFolder(in Guid rfid);
+			//[PreserveSig] int FindFolderFromPath([In, MarshalAs(UnmanagedType.LPWStr)] string pszPath, FFFP_MODE mode, out IKnownFolder ppkf);
+			//[PreserveSig] int FindFolderFromIDList(IntPtr pidl, out IKnownFolder ppkf);
+			//[PreserveSig] int Redirect(in Guid rfid, AWnd hwnd, uint flags, [In, MarshalAs(UnmanagedType.LPWStr)] string pszTargetPath, uint cFolders, [MarshalAs(UnmanagedType.LPArray)] [In] Guid[] pExclusion, char** ppszError);
 		}
 
-		[ComImport, Guid("4df0c730-df9d-4ae3-9153-aa6b82e9795a")]
-		class KnownFolderManager
-		{
-		}
+		[ComImport, Guid("4df0c730-df9d-4ae3-9153-aa6b82e9795a"), ClassInterface(ClassInterfaceType.None)]
+		class KnownFolderManager { }
 
 		enum KF_CATEGORY
 		{
@@ -687,35 +647,17 @@ namespace Au
 		}
 
 		[ComImport, Guid("3AA7AF7E-9B36-420c-A8E3-F77D4674A488"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
-		interface IKnownFolder
+		unsafe interface IKnownFolder
 		{
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetId(out Guid guid);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetCategory(out KF_CATEGORY category);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			//int GetShellItem(uint dwFlags, in Guid riid, out Api.IShellItem si);
-			int GetShellItem(uint dwFlags, in Guid riid, out IntPtr si);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetPath(uint dwFlags, [MarshalAs(UnmanagedType.LPWStr)]out string path);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int SetPath(uint dwFlags, [In, MarshalAs(UnmanagedType.LPWStr)] string pszPath);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetIDList(uint dwFlags, out IntPtr idList);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetFolderType(out Guid fType);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetRedirectionCapabilities(out uint caps);
-
-			[MethodImpl(MethodImplOptions.InternalCall, MethodCodeType = MethodCodeType.Runtime), PreserveSig]
-			int GetFolderDefinition(out KNOWNFOLDER_DEFINITION def);
+			[PreserveSig] int GetId(out Guid pkfid);
+			[PreserveSig] int GetCategory(out KF_CATEGORY pCategory);
+			[PreserveSig] int GetShellItem(uint dwFlags, in Guid riid, void** ppv);
+			[PreserveSig] int GetPath(uint dwFlags, [MarshalAs(UnmanagedType.LPWStr)] out string ppszPath); //tested: .NET correctly calls CoTaskMemFree
+			[PreserveSig] int SetPath(uint dwFlags, [In, MarshalAs(UnmanagedType.LPWStr)] string pszPath);
+			[PreserveSig] int GetIDList(uint dwFlags, out IntPtr ppidl);
+			[PreserveSig] int GetFolderType(out Guid pftid);
+			[PreserveSig] int GetRedirectionCapabilities(out uint pCapabilities);
+			[PreserveSig] int GetFolderDefinition(out KNOWNFOLDER_DEFINITION pKFD);
 		}
 
 		#endregion
@@ -724,42 +666,39 @@ namespace Au
 
 		/// <summary>
 		/// Gets canonical names and paths of all known folders, including custom known folders registerd by applications.
-		/// Can be useful for information. These names then can be used with <see cref="GetFolder"/>.
-		/// Example: <c>Print(AFolders.GetKnownFolders());</c>
+		/// These names can be used with <see cref="GetFolder"/>.
 		/// </summary>
-		public static Dictionary<string, string> GetKnownFolders()
+		public static unsafe Dictionary<string, string> GetKnownFolders()
 		{
 			var dict = new Dictionary<string, string>();
 
 			var man = new KnownFolderManager() as IKnownFolderManager;
-			IntPtr ipIds = default;
+			Guid* gp = null;
 			try {
-				if(man.GetFolderIds(out ipIds, out uint nIds) != 0) return null;
-				unsafe {
-					Guid* gp = (Guid*)ipIds;
-					for(uint i = 0; i < nIds; i++) {
-						IKnownFolder kf = null;
-						try {
-							if(man.GetFolder(gp[i], out kf) != 0) continue;
-							if(kf.GetFolderDefinition(out var fd) != 0) continue;
-							string path = null;
-							if(fd.category == KF_CATEGORY.KF_CATEGORY_VIRTUAL) {
-								path = "<virtual>";
-							} else {
-								if(kf.GetPath(0, out path) != 0) path = "<unavailable>";
-							}
-							dict.Add(fd.pszName, path);
+				if(man.GetFolderIds(out gp, out int nIds) != 0) return null;
+				for(int i = 0; i < nIds; i++) {
+					IKnownFolder kf = null;
+					try {
+						if(man.GetFolder(gp[i], out kf) != 0) continue;
+						if(kf.GetFolderDefinition(out var fd) != 0) continue;
+						string path = null;
+						if(fd.category == KF_CATEGORY.KF_CATEGORY_VIRTUAL) {
+							path = "<virtual>";
+						} else {
+							if(kf.GetPath(0, out path) != 0) path = "<unavailable>";
 						}
-						catch { }
-						finally { Api.ReleaseComObject(kf); }
+						dict.Add(fd.pszName, path);
+						//tested: .NET correctly frees struct strings. Don't need FreeKnownFolderDefinitionFields, which is an inline function that calls CoTaskMemFree.
 					}
+					catch { }
+					finally { Api.ReleaseComObject(kf); }
 				}
 			}
 			catch {
 				dict = null;
 			}
 			finally {
-				Marshal.FreeCoTaskMem(ipIds);
+				Marshal.FreeCoTaskMem((IntPtr)gp);
 				Api.ReleaseComObject(man);
 			}
 			return dict;

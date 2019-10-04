@@ -1,3 +1,5 @@
+//#define TRACE_TEMP_RANGES
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -29,7 +31,7 @@ using DiffMatchPatch;
 
 class SciCode : AuScintilla
 {
-	public readonly FileNode FN;
+	public readonly FileNode ZFile;
 	SciText.FileLoaderSaver _fls;
 	//public DocCodeInfo CI;
 
@@ -40,7 +42,7 @@ class SciCode : AuScintilla
 	internal SciCode(FileNode file, SciText.FileLoaderSaver fls)
 	{
 		//_edit = edit;
-		FN = file;
+		ZFile = file;
 		_fls = fls;
 
 		this.Dock = DockStyle.Fill;
@@ -48,8 +50,8 @@ class SciCode : AuScintilla
 		this.AccessibleRole = AccessibleRole.Document;
 		this.AllowDrop = true;
 
-		InitImagesStyle = ImagesStyle.AnyString;
-		if(fls.IsBinary) InitReadOnlyAlways = true;
+		ZInitImagesStyle = ZImagesStyle.AnyString;
+		if(fls.IsBinary) ZInitReadOnlyAlways = true;
 	}
 
 	protected override void OnHandleCreated(EventArgs e)
@@ -58,18 +60,18 @@ class SciCode : AuScintilla
 
 		int dpi = ADpi.BaseDPI;
 
-		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_BEFOREINSERT*/));
+		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT | MOD.SC_MOD_INSERTCHECK)); //TODO
 		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
-		ST.MarginWidth(c_marginLineNumbers, 40 * dpi / 96);
+		Z.MarginWidth(c_marginLineNumbers, 40 * dpi / 96);
 		//Call(SCI_SETMARGINTYPEN, c_marginMarkers, SC_MARGIN_SYMBOL);
-		//ST.MarginWidth(c_marginMarkers, 0);
+		//Z.MarginWidth(c_marginMarkers, 0);
 
-		ST.StyleFont(STYLE_DEFAULT, "Courier New", 8);
-		ST.StyleClearAll();
+		Z.StyleFont(STYLE_DEFAULT, "Courier New", 8);
+		Z.StyleClearAll();
 
-		if(FN.IsCodeFile) {
+		if(ZFile.IsCodeFile) {
 			//_SetLexer(LexLanguage.SCLEX_CPP);
-			ST.SetLexerCpp();
+			Z.SetLexerCpp();
 
 			//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
 			//	Scintilla and C++ lexer support it, but by default it is disabled.
@@ -97,7 +99,7 @@ class SciCode : AuScintilla
 	//	base.Dispose(disposing);
 	//}
 
-	protected unsafe override void OnSciNotify(ref SCNotification n)
+	protected unsafe override void ZOnSciNotify(ref SCNotification n)
 	{
 		//switch(n.nmhdr.code) {
 		//case NOTIF.SCN_PAINTED:
@@ -121,7 +123,7 @@ class SciCode : AuScintilla
 			//never mind: we should cancel the 'save text later'
 			break;
 		case NOTIF.SCN_MODIFIED:
-			//Print("text changed", _userTyping, n.position, n.modificationType, n.Text);
+			//Print("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, Z.CurrentPos, n.Text);
 			//Print(n.modificationType);
 			//if(n.modificationType.Has(MOD.SC_PERFORMED_USER | MOD.SC_MOD_BEFOREINSERT)) {
 			//	Print($"'{n.Text}'");
@@ -130,8 +132,16 @@ class SciCode : AuScintilla
 			//	}
 			//}
 			if(n.modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT)) {
-				CodeInfo.SciTextChanged(this, n, _userTyping);
-				Panels.Find.UpdateQuickResults(true);
+				_modified = true;
+				_TempRangeOnModifiedOrPosChanged(n.modificationType, n.position, n.length);
+				CodeInfo.SciModified(this, n);
+				Panels.Find.ZUpdateQuickResults(true);
+			} else if(n.modificationType.Has(MOD.SC_MOD_INSERTCHECK)) {
+				//Print(n.Text);
+				//if(n.length==1 && n.textUTF8[0] == ')') {
+				//	Call(Sci.SCI_SETOVERTYPE, _testOvertype = true);
+
+				//}
 			}
 			break;
 		case NOTIF.SCN_CHARADDED:
@@ -139,17 +149,22 @@ class SciCode : AuScintilla
 			if(n.ch == '\n' /*|| n.ch == ';'*/) { //split scintilla Undo
 				Call(SCI_BEGINUNDOACTION); Call(SCI_ENDUNDOACTION);
 			}
-			if(n.ch != '\r') { //on Enter we receive notifications for '\r' and '\n'
-				CodeInfo.SciCharAdded(this);
+			if(n.ch != '\r' && n.ch <= 0xffff) { //on Enter we receive notifications for '\r' and '\n'
+				CodeInfo.SciCharAdded(this, (char)n.ch);
 			}
 			break;
 		case NOTIF.SCN_UPDATEUI:
-			bool uuFirst = _initDeferred != null;
-			if(uuFirst) { var f = _initDeferred; _initDeferred = null; f(); }
-			//Print((uint)n.updated);
-			if(0 != (n.updated & 3)) { //text/styling (1) or selection (2); else scrolled
-				Panels.Editor._UpdateUI_Cmd();
-				if(!uuFirst) CodeInfo.SciUpdateUI(this, modified: 0 != (n.updated & 1));
+			if(_initDeferred != null) { var f = _initDeferred; _initDeferred = null; f(); }
+			//Print((uint)n.updated, _modified);
+			if(0 != (n.updated & 1)) {
+				if(_modified) _modified = false; else n.updated &= ~1; //ignore duplicate notification after adding or removing ()[]{}. Also the first after opening.
+			}
+			if(0 != (n.updated & 3)) { //text/styling (1), selection/click (2)
+				_TempRangeOnModifiedOrPosChanged(0, 0, 0);
+				Panels.Editor.ZUpdateUI_Cmd();
+				CodeInfo.SciUpdateUI(this, modified: 0 != (n.updated & 1));
+			} else if(0 != (n.updated & 12)) { //scrolled
+				CodeInfo.Cancel();
 			}
 			break;
 		case NOTIF.SCN_DWELLSTART:
@@ -159,15 +174,16 @@ class SciCode : AuScintilla
 			CodeInfo.SciMouseDwellEnded(this);
 			break;
 		case NOTIF.SCN_MARGINCLICK:
+			CodeInfo.Cancel();
 			if(n.margin == c_marginFold) {
 				_FoldingOnMarginClick(null, n.position);
 			}
 			break;
 		}
 
-		base.OnSciNotify(ref n);
+		base.ZOnSciNotify(ref n);
 	}
-	bool _userTyping;
+	bool _modified;
 
 	protected override void WndProc(ref Message m)
 	{
@@ -177,33 +193,36 @@ class SciCode : AuScintilla
 		case Api.WM_SETFOCUS:
 			if(!_noModelEnsureCurrentSelected) Program.Model?.EnsureCurrentSelected();
 			break;
-		case Api.WM_KEYDOWN:
-			switch((KKey)m.WParam) { case KKey.Back: case KKey.Delete: _userTyping = true; break; }
-			break;
 		case Api.WM_CHAR:
 			int c = (int)m.WParam;
-			if(c < 32 && !(c == 8 || c == 9 || c == 10 || c == 13)) return;
-			_userTyping = true;
+			if(c < 32) {
+				if(!(c == 9 || c == 10 || c == 13)) return;
+			} else {
+				if(CodeInfo.SciBeforeCharAdded(this, (char)c)) return;
+			}
+			break;
+		case Api.WM_KEYDOWN:
+			if((KKey)m.WParam == KKey.Insert) return;
 			break;
 		case Api.WM_RBUTTONDOWN:
 			//prevent changing selection when right-clicked margin if selection start is in that line
 			POINT p = (AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
-			if(ST.MarginFromPoint(p, false) >= 0) {
-				var k = ST.LineStartEndFromPos(ST.PosFromXY(p, false));
-				var cp = ST.SelectionStart;
+			if(Z.MarginFromPoint(p, false) >= 0) {
+				var k = Z.LineStartEndFromPos(false, Z.PosFromXY(false, p, false));
+				var cp = Z.SelectionStart8;
 				if(cp >= k.start && cp <= k.end) return;
 			}
 			break;
 		case Api.WM_CONTEXTMENU:
 			bool kbd = (int)m.LParam == -1;
-			int margin = kbd ? -1 : ST.MarginFromPoint((AMath.LoShort(m.LParam), AMath.HiShort(m.LParam)), true);
+			int margin = kbd ? -1 : Z.MarginFromPoint((AMath.LoShort(m.LParam), AMath.HiShort(m.LParam)), true);
 			switch(margin) {
 			case -1:
-				Strips.ddEdit.ShowAsContextMenu_(kbd);
+				Strips.ddEdit.ZShowAsContextMenu(kbd);
 				break;
 			case c_marginLineNumbers:
 			case c_marginMarkers:
-				CommentLines(null);
+				ZCommentLines(null);
 				break;
 				//case c_marginFold:
 				//	break;
@@ -213,11 +232,12 @@ class SciCode : AuScintilla
 
 		base.WndProc(ref m);
 
-		_userTyping = false;
-
 		switch(m.Msg) {
 		case Api.WM_MOUSEMOVE:
 			CodeInfo.SciMouseMoved(this, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
+			break;
+		case Api.WM_KILLFOCUS:
+			CodeInfo.SciKillFocus();
 			break;
 		}
 	}
@@ -227,22 +247,24 @@ class SciCode : AuScintilla
 	{
 		switch(keyData) {
 		case Keys.Control | Keys.C:
-			CopyModified(onlyInfo: true);
+			ZCopyModified(onlyInfo: true);
 			break;
 		case Keys.Control | Keys.V:
-			if(PasteModified()) return true;
+			if(ZPasteModified()) return true;
 			break;
-		case Keys.Control | Keys.Space:
-			CodeInfo.ShowCompletionList(this);
-			return true;
-		case Keys.Control | Keys.Shift | Keys.Space:
-			CodeInfo.ShowSignature(this);
-			return true;
+		default:
+			if(CodeInfo.SciCmdKey(this, keyData)) return true;
+			switch(keyData) {
+			case Keys.Enter:
+				Call(SCI_BEGINUNDOACTION); Call(SCI_ENDUNDOACTION);
+				break;
+			}
+			break;
 		}
 		return base.ProcessCmdKey(ref msg, keyData);
 	}
 
-	public bool IsUnsaved {
+	public bool ZIsUnsaved {
 		get => _isUnsaved || 0 != Call(SCI_GETMODIFY);
 		set {
 			if(_isUnsaved = value) Program.Model.Save.TextLater(1);
@@ -250,12 +272,12 @@ class SciCode : AuScintilla
 	}
 	bool _isUnsaved;
 
-	internal bool SaveText()
+	internal bool ZSaveText()
 	{
-		if(IsUnsaved) {
+		if(ZIsUnsaved) {
 			//AOutput.QM2.Write("saving");
-			FN.UnCacheText();
-			if(!Program.Model.TryFileOperation(() => _fls.Save(ST, FN.FilePath, tempDirectory: FN.IsLink ? null : FN.Model.TempDirectory))) return false;
+			ZFile.UnCacheText();
+			if(!Program.Model.TryFileOperation(() => _fls.Save(Z, ZFile.FilePath, tempDirectory: ZFile.IsLink ? null : ZFile.Model.TempDirectory))) return false;
 			//info: with tempDirectory less noise for FileSystemWatcher
 			_isUnsaved = false;
 			Call(SCI_SETSAVEPOINT);
@@ -263,35 +285,35 @@ class SciCode : AuScintilla
 		return true;
 	}
 
-	public void FileModifiedExternally()
+	public void ZFileModifiedExternally()
 	{
-		var text = FN.GetText(saved: true); if(text == this.Text) return;
-		ReplaceTextGently(text);
+		var text = ZFile.GetText(saved: true); if(text == this.Text) return;
+		ZReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
-		if(this == Panels.Editor.ActiveDoc) Print($"<>Info: file {FN.Name} has been modified by another program and therefore reloaded in editor. You can Undo.");
+		if(this == Panels.Editor.ZActiveDoc) Print($"<>Info: file {ZFile.Name} has been modified by another program and therefore reloaded in editor. You can Undo.");
 	}
-	//public void FileModifiedExternally()
+	//public void ZFileModifiedExternally()
 	//{
-	//	var text = FN.GetText(saved: true); if(text == this.Text) return;
+	//	var text = ZFile.GetText(saved: true); if(text == this.Text) return;
 	//	if(this == Panels.Editor.ActiveDoc && AWnd.Active.IsOfThisProcess) {
 	//		IsUnsaved = true;
-	//		Print($"<>Info: the active editor file {FN.SciLink} has been modified by another program. The modified file will be replaced with editor text.");
+	//		Print($"<>Info: the active editor file {ZFile.SciLink} has been modified by another program. The modified file will be replaced with editor text.");
 	//		return;
 	//	}
 	//	ReplaceTextGently(text);
 	//	Call(SCI_SETSAVEPOINT);
 	//}
 
-	internal void Init(byte[] text, bool newFile)
+	internal void ZInit(byte[] text, bool newFile)
 	{
 		if(!IsHandleCreated) CreateHandle();
-		_fls.SetText(ST, text);
+		_fls.SetText(Z, text);
 
 		//The first place where folding works well is SCN_UPDATEUI. Call _initDeferred there and set = null.
 		_initDeferred = () => {
 			var db = Program.Model.DB; if(db == null) return;
 			try {
-				using var p = db.Statement("SELECT lines FROM _editor WHERE id=?", FN.Id);
+				using var p = db.Statement("SELECT lines FROM _editor WHERE id=?", ZFile.Id);
 				if(p.Step()) {
 					var a = p.GetList<int>(0);
 					if(a != null) {
@@ -307,7 +329,7 @@ class SciCode : AuScintilla
 					//fold boilerplate code
 					int i = this.Text.Find("//{{\r\nusing Au;");
 					if(i >= 0) {
-						i = ST.LineIndexFromPos(i, true);
+						i = Z.LineIndexFromPos(true, i);
 						if(0 != (SC_FOLDLEVELHEADERFLAG & Call(SCI_GETFOLDLEVEL, i))) Call(SCI_FOLDCHILDREN, i);
 					}
 				}
@@ -329,7 +351,7 @@ class SciCode : AuScintilla
 		return md5.Hash;
 	}
 
-	internal void SaveEditorData()
+	internal void ZSaveEditorData()
 	{
 		var db = Program.Model.DB; if(db == null) return;
 		var a = new List<int>();
@@ -341,10 +363,10 @@ class SciCode : AuScintilla
 			//Print("changed");
 			try {
 				if(a.Count == 0) {
-					db.Execute("DELETE FROM _editor WHERE id=?", FN.Id);
+					db.Execute("DELETE FROM _editor WHERE id=?", ZFile.Id);
 				} else {
 					using var p = db.Statement("REPLACE INTO _editor (id,lines) VALUES (?,?)");
-					p.Bind(1, FN.Id).Bind(2, a).Step();
+					p.Bind(1, ZFile.Id).Bind(2, a).Step();
 				}
 				_savedMD5 = hash;
 			}
@@ -374,17 +396,17 @@ class SciCode : AuScintilla
 
 	void _FoldingInit()
 	{
-		ST.SetStringString(SCI_SETPROPERTY, "fold\0" + "1");
-		ST.SetStringString(SCI_SETPROPERTY, "fold.comment\0" + "1");
-		ST.SetStringString(SCI_SETPROPERTY, "fold.preprocessor\0" + "1");
-		ST.SetStringString(SCI_SETPROPERTY, "fold.cpp.preprocessor.at.else\0" + "1");
+		Z.SetStringString(SCI_SETPROPERTY, "fold\0" + "1");
+		Z.SetStringString(SCI_SETPROPERTY, "fold.comment\0" + "1");
+		Z.SetStringString(SCI_SETPROPERTY, "fold.preprocessor\0" + "1");
+		Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.preprocessor.at.else\0" + "1");
 #if false
-			ST.SetStringString(SCI_SETPROPERTY, "fold.cpp.syntax.based\0" + "0");
+			Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.syntax.based\0" + "0");
 #else
-		//ST.SetStringString(SCI_SETPROPERTY, "fold.at.else\0" + "1");
+		//Z.SetStringString(SCI_SETPROPERTY, "fold.at.else\0" + "1");
 #endif
-		ST.SetStringString(SCI_SETPROPERTY, "fold.cpp.explicit.start\0" + "//{{"); //default is //{
-		ST.SetStringString(SCI_SETPROPERTY, "fold.cpp.explicit.end\0" + "//}}");
+		Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.explicit.start\0" + "//{{"); //default is //{
+		Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.explicit.end\0" + "//}}");
 
 		Call(SCI_SETMARGINTYPEN, c_marginFold, SC_MARGIN_SYMBOL);
 		Call(SCI_SETMARGINMASKN, c_marginFold, SC_MASK_FOLDERS);
@@ -406,12 +428,12 @@ class SciCode : AuScintilla
 
 		Call(SCI_SETFOLDFLAGS, SC_FOLDFLAG_LINEAFTER_CONTRACTED);
 		Call(SCI_FOLDDISPLAYTEXTSETSTYLE, SC_FOLDDISPLAYTEXT_STANDARD);
-		ST.StyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
+		Z.StyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
 
 		Call(SCI_SETMARGINCURSORN, c_marginFold, SC_CURSORARROW);
 
 		int wid = Call(SCI_TEXTHEIGHT) - 4;
-		ST.MarginWidth(c_marginFold, Math.Max(wid, 12));
+		Z.MarginWidth(c_marginFold, Math.Max(wid, 12));
 	}
 
 	bool _FoldingOnMarginClick(bool? fold, int startPos)
@@ -423,10 +445,10 @@ class SciCode : AuScintilla
 		if(isExpanded) {
 			_FoldingFoldLine(line);
 			//move caret out of contracted region
-			int pos = ST.CurrentPos;
+			int pos = Z.CurrentPos8;
 			if(pos > startPos) {
-				int i = ST.LineEnd(Call(SCI_GETLASTCHILD, line, -1));
-				if(pos <= i) ST.CurrentPos = startPos;
+				int i = Z.LineEnd(false, Call(SCI_GETLASTCHILD, line, -1));
+				if(pos <= i) Z.CurrentPos8 = startPos;
 			}
 		} else {
 			Call(SCI_FOLDLINE, line, 1);
@@ -439,7 +461,7 @@ class SciCode : AuScintilla
 #if false
 			Call(SCI_FOLDLINE, line);
 #else
-		string s = ST.LineText(line), s2 = "";
+		string s = Z.LineText(line), s2 = "";
 		for(int i = 0; i < s.Length; i++) {
 			char c = s[i];
 			if(c == '{') { s2 = "... }"; break; }
@@ -453,7 +475,7 @@ class SciCode : AuScintilla
 		}
 		//problem: quite slow. At startup ~250 mcs. The above code is fast.
 		if(s2.Length == 0) Call(SCI_FOLDLINE, line); //slightly faster
-		else ST.SetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
+		else Z.SetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
 #endif
 	}
 
@@ -505,7 +527,7 @@ class SciCode : AuScintilla
 		var p = this.PointToClient(new Point(e.X, e.Y));
 		if(_drag != _DD_DataType.Text) { //if files etc, drop as lines, not anywhere
 			pos = Call(SCI_POSITIONFROMPOINT, p.X, p.Y);
-			pos = ST.LineStartFromPos(pos);
+			pos = Z.LineStartFromPos(false, pos);
 			p.X = Call(SCI_POINTXFROMPOSITION, 0, pos);
 			p.Y = Call(SCI_POINTYFROMPOSITION, 0, pos);
 		} else pos = 0;
@@ -529,7 +551,7 @@ class SciCode : AuScintilla
 
 		if(_drag != _DD_DataType.Text) {
 			t = new StringBuilder();
-			if(FN.IsCodeFile) {
+			if(ZFile.IsCodeFile) {
 				var text = this.Text;
 				endOfMeta = Au.Compiler.MetaComments.FindMetaComments(text);
 				if(pos < endOfMeta) inMeta = true;
@@ -601,7 +623,7 @@ class SciCode : AuScintilla
 		if(!Empty(s)) {
 			var z = new Sci_DragDropData { x = xy.X, y = xy.Y };
 			var b = AConvert.Utf8FromString(s);
-			fixed (byte* bp = b) {
+			fixed(byte* bp = b) {
 				z.text = bp;
 				z.len = b.Length - 1;
 				if(_drag != _DD_DataType.Text || 0 == (e.Effect & DragDropEffects.Move)) z.copy = 1;
@@ -618,7 +640,7 @@ class SciCode : AuScintilla
 
 		void _AppendFile(string path, string name, string args = null, FileNode fn = null)
 		{
-			if(!FN.IsCodeFile) {
+			if(!ZFile.IsCodeFile) {
 				t.Append(path);
 			} else if(inMeta) {
 				string opt = null;
@@ -638,7 +660,7 @@ class SciCode : AuScintilla
 				}
 				if(opt == null) return;
 				//make relative path
-				var p2 = FN.ItemPath; int i = p2.LastIndexOf('\\') + 1;
+				var p2 = ZFile.ItemPath; int i = p2.LastIndexOf('\\') + 1;
 				if(0 == string.CompareOrdinal(path, 0, p2, 0, i)) path = path.Substring(i);
 
 				t.Append(opt).Append(path).Append(';');
@@ -663,7 +685,7 @@ class SciCode : AuScintilla
 	DragDropEffects _DD_GetEffect(DragEventArgs e)
 	{
 		if(_drag == 0) return 0;
-		if(ST.IsReadonly) return 0;
+		if(Z.IsReadonly) return 0;
 		var ae = e.AllowedEffect;
 		DragDropEffects r = 0;
 		switch(e.KeyState & (4 | 8 | 32)) { case 0: r = DragDropEffects.Move; break; case 8: r = DragDropEffects.Copy; break; default: return 0; }
@@ -678,7 +700,7 @@ class SciCode : AuScintilla
 	{
 		shells = names = null;
 		var b = _DD_GetByteArray(d, "Shell IDList Array"); if(b == null) return;
-		fixed (byte* p = b) {
+		fixed(byte* p = b) {
 			int* pi = (int*)p;
 			int n = *pi++; if(n < 1) return;
 			shells = new string[n]; names = new string[n];
@@ -696,7 +718,7 @@ class SciCode : AuScintilla
 	{
 		url = text = null;
 		var b = _DD_GetByteArray(d, "FileGroupDescriptorW"); if(b == null) return;
-		fixed (byte* p = b) { //FILEGROUPDESCRIPTORW
+		fixed(byte* p = b) { //FILEGROUPDESCRIPTORW
 			if(*(int*)p != 1) return; //count of FILEDESCRIPTORW
 			var s = new string((char*)(p + 76));
 			if(!s.Ends(".url", true)) return;
@@ -718,11 +740,11 @@ class SciCode : AuScintilla
 
 	#region copy paste
 
-	public void CopyModified(bool onlyInfo = false)
+	public void ZCopyModified(bool onlyInfo = false)
 	{
-		int i1 = ST.SelectionStart, i2 = ST.SelectionEnd, textLen = ST.TextLengthBytes;
+		int i1 = Z.SelectionStart8, i2 = Z.SelectionEnd8, textLen = Z.TextLength8;
 		if(textLen == 0) return;
-		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !FN.IsCodeFile;
+		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !ZFile.IsCodeFile;
 		if(onlyInfo) {
 			if(isFragment || s_infoCopy) return; s_infoCopy = true;
 			Print("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
@@ -730,13 +752,13 @@ class SciCode : AuScintilla
 		}
 
 		if(!isFragment) { i1 = 0; i2 = textLen; }
-		string s = ST.RangeText(i1, i2);
-		bool isScript = FN.IsScript;
+		string s = Z.RangeText(false, i1, i2);
+		bool isScript = ZFile.IsScript;
 		var b = new StringBuilder("[code2]");
 		if(isFragment) {
 			b.Append(s);
 		} else {
-			var name = FN.Name; if(name.Regex(@"(?i)^(Script|Class)\d*\.cs")) name = null;
+			var name = ZFile.Name; if(name.Regex(@"(?i)^(Script|Class)\d*\.cs")) name = null;
 			var sType = isScript ? "script" : "class";
 			//APerf.First();
 			if(isScript && _RxScriptHeader.Match(s, out var m) && s.Find("\n// using //", m.Index) < 0 && s.Find("\n// main //", m.Index) < 0) {
@@ -775,7 +797,7 @@ class SciCode : AuScintilla
 	}
 	static bool s_infoCopy;
 
-	public bool PasteModified()
+	public bool ZPasteModified()
 	{
 		var s = AClipboardData.GetText();
 		if(s == null) return false;
@@ -807,7 +829,7 @@ class SciCode : AuScintilla
 #endif
 		var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");
 
-		string buttons = FN.FileType != (isClass ? EFileType.Class : EFileType.Script)
+		string buttons = ZFile.FileType != (isClass ? EFileType.Class : EFileType.Script)
 			? "1 Create new file|Cancel"
 			: "1 Create new file|2 Replace all text|3 Paste|Cancel";
 		switch(ADialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
@@ -816,10 +838,10 @@ class SciCode : AuScintilla
 			Program.Model.NewItem(isClass ? "Class.cs" : "Script.cs", name, text: new EdNewFileText(true, s));
 			break;
 		case 2: //Replace all text
-			ST.SetText(s);
+			Z.SetText(s);
 			break;
 		case 3: //Paste
-			ST.ReplaceSel(s);
+			Z.ReplaceSel(s);
 			break;
 		} //rejected: option to rename this file
 
@@ -840,8 +862,8 @@ class SciCode : AuScintilla
 
 	#region script header
 
-	public const string c_usings = "using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;";
-	public const string c_scriptMain = "class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}";
+	const string c_usings = "using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;";
+	const string c_scriptMain = "class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}";
 
 	static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//{{(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$");
 	static ARegex s_rxScript;
@@ -858,10 +880,10 @@ class SciCode : AuScintilla
 
 	//bool _IsScriptHeaderFolded()
 	//{
-	//	if(!FN.IsScript) return false;
+	//	if(!ZFile.IsScript) return false;
 	//	string s = Text;
 	//	if(!_RxScriptHeader.Match(s, out var m)) return false;
-	//	int line = ST.LineIndexFromPos(m.Index, utf16: true);
+	//	int line = Z.LineIndexFromPos(m.Index, utf16: true);
 	//	return 0 == Call(SCI_GETFOLDEXPANDED, line);
 	//}
 
@@ -873,11 +895,11 @@ class SciCode : AuScintilla
 	bool _indicFindInited;
 	bool _findHilited;
 
-	public void HiliteFind(List<POINT> a)
+	public void ZHiliteFind(List<POINT> a)
 	{
 		if(_findHilited) {
 			_findHilited = false;
-			ST.IndicatorClear(c_indicFind);
+			Z.IndicatorClear(c_indicFind);
 		}
 		if(a == null || a.Count == 0) return;
 		_findHilited = true;
@@ -891,12 +913,12 @@ class SciCode : AuScintilla
 
 		int i8 = 0, i16 = 0;
 		foreach(var v in a) {
-			int i = ST.CountBytesFromChars(i8, v.x - i16);
+			int i = Z.CountBytesFromChars(i8, v.x - i16);
 			i16 = v.x + v.y;
-			i8 = ST.CountBytesFromChars(i, v.y);
+			i8 = Z.CountBytesFromChars(i, v.y);
 			int len = i8 - i;
 			//Print(v.x, i, v.y, len);
-			ST.IndicatorAdd(c_indicFind, i, len);
+			Z.IndicatorAdd(false, c_indicFind, i, len);
 		}
 	}
 
@@ -907,7 +929,7 @@ class SciCode : AuScintilla
 	/// <summary>
 	/// Replaces text without losing markers, expanding folded code, etc.
 	/// </summary>
-	public void ReplaceTextGently(string s)
+	public void ZReplaceTextGently(string s)
 	{
 		int len = s.Lenn(); if(len == 0) goto gRaw;
 		string old = Text;
@@ -920,10 +942,10 @@ class SciCode : AuScintilla
 		for(int i = a.Count - 1, j = old.Length; i >= 0; i--) {
 			var d = a[i];
 			if(d.operation == Operation.INSERT) {
-				ST.InsertText(j, d.text, true);
+				Z.InsertText(true, j, d.text);
 			} else {
 				j -= d.text.Length;
-				if(d.operation == Operation.DELETE) ST.DeleteRange(j, d.text.Length, SciFromTo.BothChars | SciFromTo.ToIsLength);
+				if(d.operation == Operation.DELETE) Z.DeleteRange(true, j, d.text.Length, true);
 			}
 		}
 		Call(SCI_ENDUNDOACTION);
@@ -936,22 +958,239 @@ class SciCode : AuScintilla
 	/// Comments (adds //) or uncomments (removes //) selected lines or current line.
 	/// </summary>
 	/// <param name="comment">Comment (true), uncomment (false) or toggle (null).</param>
-	public void CommentLines(bool? comment)
+	public void ZCommentLines(bool? comment)
 	{
-		if(ST.IsReadonly) return;
-		ST.GetSelectionLines(out var x);
+		if(Z.IsReadonly) return;
+		Z.GetSelectionLines(out var x);
 		var s = x.text;
 		if(s.Length == 0) return;
 		bool wasSelection = x.selEnd > x.selStart;
-		bool caretAtEnd = wasSelection && ST.CurrentPos == x.linesEnd;
+		bool caretAtEnd = wasSelection && Z.CurrentPos8 == x.linesEnd;
 		bool com = comment ?? !s.Regex("^[ \t]*//(?!/[^/])");
 		s = com ? s.RegexReplace(@"(?m)^", "//") : s.RegexReplace(@"(?m)^([ \t]*)//", "$1");
-		ST.ReplaceRange(x.linesStart, x.linesEnd, s);
+		Z.ReplaceRange(false, x.linesStart, x.linesEnd, s);
 		if(wasSelection) {
-			int i = x.linesStart, j = ST.CountBytesFromChars(x.linesStart, s.Length);
+			int i = x.linesStart, j = Z.CountBytesFromChars(x.linesStart, s.Length);
 			Call(SCI_SETSEL, caretAtEnd ? i : j, caretAtEnd ? j : i);
 		}
 	}
+
+	#endregion
+
+	#region temp ranges
+
+	[Flags]
+	public enum ZTempRangeFlags
+	{
+		/// <summary>
+		/// Call onLeave etc when current position != current end of range.
+		/// </summary>
+		LeaveIfPosNotAtEndOfRange = 1,
+
+		/// <summary>
+		/// Call onLeave etc when range text modified.
+		/// </summary>
+		LeaveIfRangeTextModified = 2,
+
+		/// <summary>
+		/// Don't add new range if already exists a range with same current from, to, tag and flags. Then returns that range.
+		/// </summary>
+		NoDuplicate = 4,
+	}
+
+	public interface ITempRange
+	{
+		/// <summary>
+		/// Removes this range from the collection of ranges of the document.
+		/// Optional. Temp ranges are automatically removed sooner or later.
+		/// Does nothing if already removed.
+		/// </summary>
+		void Remove();
+
+		/// <summary>
+		/// Gets current start and end positions of this range added with <see cref="ZTempRanges_Add"/>.
+		/// Returns false if the range is removed; then sets from = to = -1.
+		/// </summary>
+		bool GetCurrentFromTo(out int from, out int to, bool utf8 = false);
+
+		/// <summary>
+		/// Gets current start position of this range added with <see cref="ZTempRanges_Add"/>. UTF-16.
+		/// Returns -1 if the range is removed.
+		/// </summary>
+		int CurrentFrom { get; }
+
+		/// <summary>
+		/// Gets current end position of this range added with <see cref="ZTempRanges_Add"/>. UTF-16.
+		/// Returns -1 if the range is removed.
+		/// </summary>
+		int CurrentTo { get; }
+
+		object Tag { get; set; }
+	}
+
+	class C_TempRange : ITempRange //TODO: rename all private types like this: C_Class, S_Struct, I_Interface, D_Delegate, E_Enum.
+	{
+		SciCode _doc;
+		readonly int _fromUtf16;
+		internal readonly int from;
+		internal int to;
+		internal readonly Action onLeave;
+		object _tag;
+		readonly ZTempRangeFlags _flags;
+
+		internal C_TempRange(SciCode doc, int fromUtf16, int fromUtf8, int toUtf8, Action onLeave, object tag, ZTempRangeFlags flags)
+		{
+			_doc = doc;
+			_fromUtf16 = fromUtf16;
+			from = fromUtf8;
+			to = toUtf8;
+			this.onLeave = onLeave;
+			_tag = tag;
+			_flags = flags;
+		}
+
+		public void Remove()
+		{
+			_TraceTempRange("remove", _tag);
+			if(_doc != null) {
+				_doc._tempRanges.Remove(this);
+				_doc = null;
+			}
+		}
+
+		internal void Leaved() => _doc = null;
+
+		public bool GetCurrentFromTo(out int from, out int to, bool utf8 = false)
+		{
+			if(_doc == null) { from = to = -1; return false; }
+			if(utf8) {
+				from = this.from;
+				to = this.to;
+			} else {
+				from = _fromUtf16;
+				to = CurrentTo;
+			}
+			return true;
+		}
+
+		public int CurrentFrom => _doc != null ? _fromUtf16 : -1;
+
+		public int CurrentTo => _doc != null ? (_fromUtf16 + _doc.Z.CountBytesToChars(from, to)) : -1;
+
+		public object Tag { get => _tag; set => _tag = value; }
+
+		internal bool MustLeave(int pos, int pos2, int modLen)
+		{
+			return pos < from || pos2 > to
+				|| (0 != (_flags & ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) && pos2 != to)
+				|| (0 != (_flags & ZTempRangeFlags.LeaveIfRangeTextModified) && modLen != 0);
+		}
+
+		internal bool Contains(int pos, object tag, bool endPosition)
+			=> (endPosition ? (pos == to) : (pos >= from || pos <= to)) && (tag?.Equals(_tag) ?? true);
+
+		internal bool Equals(int from2, int to2, object tag2, ZTempRangeFlags flags2)
+		{
+			if(from2 != from || to2 != to || flags2 != _flags
+				//|| onLeave2 != onLeave //delegate always different if captured variables
+				//|| !ReferenceEquals(onLeave2?.Method, onLeave2?.Method) //can be used but slow. Also tested Target, always different.
+				) return false;
+			return _tag?.Equals(tag2) ?? tag2 == null;
+		}
+
+		public override string ToString() => $"({CurrentFrom}, {CurrentTo}), tag={_tag}";
+	}
+
+	List<C_TempRange> _tempRanges = new List<C_TempRange>();
+
+	/// <summary>
+	/// Marks a temporary working range of text and later notifies when it is leaved.
+	/// Will automatically update range bounds when editing text inside it.
+	/// Supports many ranges, possibly overlapping.
+	/// The returned object can be used to get range info or remove it.
+	/// Used mostly for code info, eg to cancel the completion list or signature help.
+	/// </summary>
+	/// <param name="from">Start of range, UTF-16.</param>
+	/// <param name="to">End of range, UTF-16. Can be = from.</param>
+	/// <param name="onLeave">
+	/// Called when current position changed and is outside this range (before from or after to) or text modified outside it. Then also forgets the range.
+	/// Called after removing the range.
+	/// If leaved several ranges, called in LIFO order.
+	/// Can be null.
+	/// </param>
+	/// <param name="tag">Something to attach to this range.</param>
+	/// <param name="flags"></param>
+	public ITempRange ZTempRanges_Add(int from, int to, Action onLeave = null, object tag = null, ZTempRangeFlags flags = 0)
+	{
+		int fromUtf16 = from;
+		Z.NormalizeRange(true, ref from, ref to);
+		Debug.Assert(Z.CurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? Z.CurrentPos8 == to : Z.CurrentPos8 <= to));
+
+		if(flags.Has(ZTempRangeFlags.NoDuplicate)) {
+			for(int i = _tempRanges.Count - 1; i >= 0; i--) {
+				var t = _tempRanges[i];
+				if(t.Equals(from, to, tag, flags)) return t;
+			}
+		}
+
+		_TraceTempRange("ADD", tag);
+		var r = new C_TempRange(this, fromUtf16, from, to, onLeave, tag, flags);
+		_tempRanges.Add(r);
+		return r;
+	}
+
+	/// <summary>
+	/// Gets ranges containing the specified position and optionally tag, in LIFO order.
+	/// It's safe to remove the retrieved ranges while enumerating.
+	/// </summary>
+	/// <param name="position"></param>
+	/// <param name="tag">If not null, returns only ranges where tag.Equals(range.tag).</param>
+	/// <param name="endPosition">position must be at the end of the range.</param>
+	/// <param name="utf8"></param>
+	public IEnumerable<ITempRange> ZTempRanges_Enum(int position, object tag = null, bool endPosition = false, bool utf8 = false)
+	{
+		if(!utf8) position = Z.CountBytesFromChars(position);
+		for(int i = _tempRanges.Count - 1; i >= 0; i--) {
+			var r = _tempRanges[i];
+			if(r.Contains(position, tag, endPosition)) yield return r;
+		}
+	}
+
+	/// <summary>
+	/// Gets ranges containing the specified tag, in LIFO order.
+	/// It's safe to remove the retrieved ranges while enumerating.
+	/// </summary>
+	/// <param name="tag">Returns only ranges where tag.Equals(range.tag).</param>
+	public IEnumerable<ITempRange> ZTempRanges_Enum(object tag)
+	{
+		for(int i = _tempRanges.Count - 1; i >= 0; i--) {
+			var r = _tempRanges[i];
+			if(tag.Equals(r.Tag)) yield return r;
+		}
+	}
+
+	void _TempRangeOnModifiedOrPosChanged(MOD mod, int pos, int len)
+	{
+		if(_tempRanges.Count == 0) return;
+		if(mod == 0) pos = Z.CurrentPos8;
+		int pos2 = pos;
+		if(mod.Has(MOD.SC_MOD_DELETETEXT)) { pos2 += len; len = -len; }
+		for(int i = _tempRanges.Count - 1; i >= 0; i--) {
+			var r = _tempRanges[i];
+			if(r.MustLeave(pos, pos2, len)) {
+				_TraceTempRange("leave", r.Tag);
+				_tempRanges.RemoveAt(i);
+				r.Leaved();
+				r.onLeave?.Invoke();
+			} else {
+				r.to += len;
+				Debug.Assert(r.to >= r.from);
+			}
+		}
+	}
+
+	[Conditional("TRACE_TEMP_RANGES")]
+	static void _TraceTempRange(string action, object tag) => Print(action, tag);
 
 	#endregion
 }

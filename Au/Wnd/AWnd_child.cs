@@ -87,7 +87,7 @@ namespace Au
 			/// The <see cref="Result"/> property will be the control.
 			/// </summary>
 			/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
-			/// <exception cref="WndException">Invalid wParent.</exception>
+			/// <exception cref="AuWndException">Invalid wParent.</exception>
 			public bool Find(AWnd wParent)
 			{
 				using var k = new _WndList(_AllChildren(wParent));
@@ -122,7 +122,7 @@ namespace Au
 			/// Returns array containing 0 or more control handles as AWnd.
 			/// </summary>
 			/// <param name="wParent">Direct or indirect parent window. Can be top-level window or control.</param>
-			/// <exception cref="WndException">Invalid wParent.</exception>
+			/// <exception cref="AuWndException">Invalid wParent.</exception>
 			public AWnd[] FindAll(AWnd wParent)
 			{
 				return _FindAll(new _WndList(_AllChildren(wParent)), wParent);
@@ -201,7 +201,7 @@ namespace Au
 									try {
 										_wfControls = new AWinFormsControlNames(wParent.Is0 ? w : wParent);
 									}
-									catch(WndException) { //invalid parent window
+									catch(AuWndException) { //invalid parent window
 										return -1;
 									}
 									catch(AuException e) { //probably process of higher UAC integrity level
@@ -293,7 +293,7 @@ namespace Au
 		/// 0-based index of matching control.
 		/// For example, if 1, the function skips the first matching control and returns the second.
 		/// </param>
-		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		/// <exception cref="ArgumentException">
 		/// - <i>name</i> starts with <c>"***"</c>, but the prefix is invalid.
 		/// - <i>cn</i> is "". To match any, use null.
@@ -317,7 +317,7 @@ namespace Au
 		/// Using this function many times with same parameters is inefficient. Instead create new <see cref="ChildFinder"/> and call <see cref="ChildFinder.Find"/> or <see cref="HasChild(ChildFinder)"/>. See example.
 		/// </note>
 		/// </summary>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <exception cref="ArgumentException"/>
 		/// <example>
 		/// <code><![CDATA[
@@ -337,7 +337,7 @@ namespace Au
 		/// Returns true if this window contains the specified control.
 		/// Calls <see cref="ChildFinder.Find"/>.
 		/// </summary>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <example>
 		/// Find window that contains certain control, and get the control too.
 		/// <code><![CDATA[
@@ -356,7 +356,7 @@ namespace Au
 		/// Returns true if this window contains the specified accessible object.
 		/// Calls <see cref="AAcc.Finder.Find(AWnd, AWnd.ChildFinder)"/>.
 		/// </summary>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <example>
 		/// Find window that contains certain accessible object (AO), and get the AO too.
 		/// <code><![CDATA[
@@ -382,7 +382,7 @@ namespace Au
 		/// 
 		/// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
 		/// </remarks>
-		/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+		/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 		public AWnd ChildById(int id, WCFlags flags = 0)
 		{
 			ThrowIfInvalid();
@@ -414,7 +414,7 @@ namespace Au
 		/// Returns List containing 0 or more control handles as AWnd.
 		/// Everything except the return type is the same as with <see cref="Child"/>.
 		/// </summary>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <exception cref="ArgumentException"/>
 		/// <remarks>
 		/// In the returned list, hidden controls (when using WCFlags.HiddenToo) are always after visible controls.
@@ -469,7 +469,7 @@ namespace Au
 			/// <param name="onlyVisible">Need only visible controls.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
 			/// <param name="directChild">Need only direct children, not all descendants.</param>
-			/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
 			/// Calls API <msdn>EnumChildWindows</msdn>.
 			/// </remarks>
@@ -487,7 +487,7 @@ namespace Au
 			/// <param name="onlyVisible">Need only visible controls.</param>
 			/// <param name="sortFirstVisible">Place all array elements of hidden controls at the end of the array.</param>
 			/// <param name="directChild">Need only direct children, not all descendants.</param>
-			/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
 			/// Use this overload to avoid much garbage when calling frequently with the same List variable. Other overload always allocates new array. This overload in most cases reuses memory allocated for the list variable.
 			/// </remarks>
@@ -546,7 +546,7 @@ namespace Au
 			/// Sends a "click" message to this button control. Does not use the mouse.
 			/// </summary>
 			/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
-			/// <exception cref="WndException">This window is invalid.</exception>
+			/// <exception cref="AuWndException">This window is invalid.</exception>
 			/// <exception cref="AuException">Failed.</exception>
 			/// <remarks>
 			/// Works not with all button controls. Sometimes does not work if the window is inactive.
@@ -585,7 +585,7 @@ namespace Au
 			/// </summary>
 			/// <param name="on">Checks if true, unchecks if false.</param>
 			/// <param name="useAcc"></param>
-			/// <exception cref="WndException">This window is invalid.</exception>
+			/// <exception cref="AuWndException">This window is invalid.</exception>
 			/// <exception cref="AuException">Failed.</exception>
 			/// <remarks>
 			/// Works not with all button controls. Sometimes does not work if the window is inactive.
@@ -602,7 +602,7 @@ namespace Au
 			/// <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
 			/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
 			/// <exception cref="ArgumentOutOfRangeException">Invalid state.</exception>
-			/// <exception cref="WndException">This window is invalid.</exception>
+			/// <exception cref="AuWndException">This window is invalid.</exception>
 			/// <exception cref="AuException">Failed.</exception>
 			/// <remarks>
 			/// Does nothing if the check box already has the specified check state (if can get it).
@@ -762,7 +762,7 @@ namespace Au
 		/// </summary>
 		/// <param name="itemId">Menu item id. Must be in range 1 to 0xffff.</param>
 		/// <param name="systemMenu">The menu item is in the title bar's context menu, not in the menu bar. Posts <msdn>WM_SYSCOMMAND</msdn> instead.</param>
-		/// <exception cref="WndException">Invalid window.</exception>
+		/// <exception cref="AuWndException">Invalid window.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid itemId.</exception>
 		/// <remarks>
 		/// Works only with standard (classic) menus. The drop-down menu window class name must be "#32768". Works with menu items in window menu bar, system menu and some context menus.

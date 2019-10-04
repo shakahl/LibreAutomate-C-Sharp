@@ -129,7 +129,7 @@ namespace Au
 		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
-		/// <exception cref="WndException">
+		/// <exception cref="AuWndException">
 		/// - Invalid window.
 		/// - The top-level window is hidden. No exception if just cloaked, for example in another desktop; then on click will activate, which usually uncloaks.
 		/// - Other window-related failures.
@@ -144,7 +144,7 @@ namespace Au
 			LibWaitForNoButtonsPressed();
 			w.ThrowIfInvalid();
 			var wTL = w.Window;
-			if(!wTL.IsVisible) throw new WndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not. If cloaked because in an inactive virtual desktop etc, Click activates and it usually uncloaks.
+			if(!wTL.IsVisible) throw new AuWndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not. If cloaked because in an inactive virtual desktop etc, Click activates and it usually uncloaks.
 			if(wTL.IsMinimized) { wTL.ShowNotMinimized(true); _Sleep(500); } //never mind: if w is a control...
 			var p = Coord.NormalizeInWindow(x, y, w, nonClient, centerIfEmpty: true);
 			if(!w.MapClientToScreen(ref p)) w.ThrowUseNative();
@@ -471,7 +471,7 @@ namespace Au
 		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(AWnd, Coord, Coord, bool)"/>.</exception>
-		/// <exception cref="WndException">x y is not in the window (read more in Remarks).</exception>
+		/// <exception cref="AuWndException">x y is not in the window (read more in Remarks).</exception>
 		/// <remarks>
 		/// To move the mouse cursor, calls <see cref="Move(AWnd, Coord, Coord, bool)"/>. More info there.
 		/// Uses <see cref="AOpt.Mouse"/>: <see cref="OptMouse.MoveSpeed"/>, <see cref="OptMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="OptMouse.ClickSpeed"/>, <see cref="OptMouse.ClickSleepFinally"/>, <see cref="OptMouse.Relaxed"/>.
@@ -500,7 +500,7 @@ namespace Au
 
 					if(!bad) bad = !_CheckWindowFromPoint();
 				}
-				if(bad) throw new WndException(wTL, "Cannot click. The point is not in the window");
+				if(bad) throw new AuWndException(wTL, "Cannot click. The point is not in the window");
 
 				bool _CheckWindowFromPoint()
 				{

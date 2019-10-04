@@ -92,7 +92,7 @@ static class Program
 		//Timer1s += () => Print("1 s");
 		//Timer1sOr025s += () => Print("0.25 s");
 
-		FMain.RunApplication();
+		FMain.ZRunApplication();
 
 		OutputServer.Stop();
 	}

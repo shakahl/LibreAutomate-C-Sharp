@@ -69,7 +69,7 @@ class PanelRunning : AuUserControlBase, ITreeModel
 
 	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 
-	public void UpdateList()
+	public void ZUpdateList()
 	{
 		if(_c.Model == null) _c.Model = this; else StructureChanged?.Invoke(this, new TreePathEventArgs(TreePath.Empty));
 	}

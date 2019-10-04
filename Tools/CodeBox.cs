@@ -31,17 +31,17 @@ namespace Au.Tools
 	{
 		public CodeBox()
 		{
-			InitUseDefaultContextMenu = true;
-			InitBorderStyle = BorderStyle.FixedSingle;
+			ZInitUseDefaultContextMenu = true;
+			ZInitBorderStyle = BorderStyle.FixedSingle;
 		}
 
 		#region default property values for VS form designer
 
 		[DefaultValue(true)]
-		public override bool InitUseDefaultContextMenu { get => base.InitUseDefaultContextMenu; set => base.InitUseDefaultContextMenu = value; }
+		public override bool ZInitUseDefaultContextMenu { get => base.ZInitUseDefaultContextMenu; set => base.ZInitUseDefaultContextMenu = value; }
 
 		[DefaultValue(BorderStyle.FixedSingle)]
-		public override BorderStyle InitBorderStyle { get => base.InitBorderStyle; set => base.InitBorderStyle = value; }
+		public override BorderStyle ZInitBorderStyle { get => base.ZInitBorderStyle; set => base.ZInitBorderStyle = value; }
 
 		#endregion
 
@@ -49,13 +49,13 @@ namespace Au.Tools
 		{
 			base.OnHandleCreated(e); //note: must be first
 
-			ST.MarginWidth(1, 0);
-			//ST.StyleFont(Sci.STYLE_DEFAULT, Font);
-			ST.SetLexerCpp();
-			ST.Call(Sci.SCI_SETREADONLY, true);
+			Z.MarginWidth(1, 0);
+			//Z.StyleFont(Sci.STYLE_DEFAULT, Font);
+			Z.SetLexerCpp();
+			Z.Call(Sci.SCI_SETREADONLY, true);
 		}
 
-		protected override void OnSciNotify(ref Sci.SCNotification n)
+		protected override void ZOnSciNotify(ref Sci.SCNotification n)
 		{
 			//switch(n.nmhdr.code) {
 			//case Sci.NOTIF.SCN_PAINTED: case Sci.NOTIF.SCN_UPDATEUI: break;
@@ -63,16 +63,12 @@ namespace Au.Tools
 			//}
 
 			switch(n.nmhdr.code) {
-			case Sci.NOTIF.SCN_MODIFIED:
-				//Print(n.modificationType);
-				if(n.modificationType.HasAny(Sci.MOD.SC_MOD_INSERTTEXT | Sci.MOD.SC_MOD_DELETETEXT)) ZTextChanged?.Invoke(this, null);
-				break;
 			case Sci.NOTIF.SCN_UPDATEUI:
 				//make text after _ReadonlyStartUtf8 readonly
 				if(0 != (n.updated & Sci.SC_UPDATE_SELECTION)) { //selection changed
 					if(_readonlyLenUtf8 > 0) {
 						int i = Call(Sci.SCI_GETSELECTIONEND);
-						ST.Call(Sci.SCI_SETREADONLY, i > _ReadonlyStartUtf8 || _LenUtf8 == 0); //small bug: if caret is at the boundary, allows to delete readonly text, etc.
+						Z.Call(Sci.SCI_SETREADONLY, i > _ReadonlyStartUtf8 || _LenUtf8 == 0); //small bug: if caret is at the boundary, allows to delete readonly text, etc.
 					}
 				}
 				break;
@@ -80,7 +76,7 @@ namespace Au.Tools
 
 			//FUTURE: autosize (move splitter of parent splitcontainer).
 
-			base.OnSciNotify(ref n);
+			base.ZOnSciNotify(ref n);
 		}
 
 		/// <summary>
@@ -90,20 +86,18 @@ namespace Au.Tools
 		/// <param name="readonlyFrom"></param>
 		public void ZSetText(string s, int readonlyFrom = 0)
 		{
-			ST.Call(Sci.SCI_SETREADONLY, false);
-			ST.SetText(s, noUndo: true, noNotif: true);
+			Z.Call(Sci.SCI_SETREADONLY, false);
+			Z.SetText(s, SciSetTextFlags.NoUndoNoNotify);
 			if(readonlyFrom > 0) {
-				_readonlyLenUtf8 = _LenUtf8 - ST.CountBytesFromChars(0, readonlyFrom);
+				_readonlyLenUtf8 = _LenUtf8 - Z.CountBytesFromChars(readonlyFrom);
 			} else {
-				ST.Call(Sci.SCI_SETREADONLY, true);
+				Z.Call(Sci.SCI_SETREADONLY, true);
 				_readonlyLenUtf8 = -1;
 			}
 		}
 
-		public event EventHandler ZTextChanged;
-
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : ST.CountBytesToChars(_ReadonlyStartUtf8); //currently not used
+		public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : Z.CountBytesToChars(_ReadonlyStartUtf8); //currently not used
 
 		int _readonlyLenUtf8;
 
@@ -115,7 +109,7 @@ namespace Au.Tools
 		{
 			switch(keyData & Keys.KeyCode) {
 			case Keys.Tab: case Keys.Escape: return false;
-				//case Keys.Enter: return 0 == ST.Call(Sci.SCI_GETREADONLY);
+				//case Keys.Enter: return 0 == Z.Call(Sci.SCI_GETREADONLY);
 			}
 			return base.IsInputKey(keyData);
 		}
@@ -131,7 +125,7 @@ namespace Au.Tools
 			string R = null, sCode = null, wndVar = "w", conVar = "c", cls = null;
 			if(!wnd.Is0) {
 				if(wnd == _wnd) {
-					sCode = ST.RangeText(0, _ReadonlyStartUtf8);
+					sCode = Z.RangeText(false, 0, _ReadonlyStartUtf8);
 					if(sCode.RegexMatch(@"^(?:var|AWnd) (\w+)((?s).+\R(?:var|AWnd) (\w+).+$)?", out var m)) {
 						bool isConCode = m[3].Exists;
 						if(con == _con && !con.Is0 == isConCode) return (sCode, m[isConCode ? 3 : 1].Value);
@@ -220,14 +214,14 @@ namespace Au.Tools
 		{
 			using(var f = new FormAWnd(con.Is0 ? wnd : con, uncheckControl)) {
 				if(f.ShowDialog(FindForm()) != DialogResult.OK) return default;
-				var code = f.ResultCode;
-				_wnd = f.ResultWindow;
-				_con = f.ResultUseControl ? f.ResultControl : default;
+				var code = f.ZResultCode;
+				_wnd = f.ZResultWindow;
+				_con = f.ZResultUseControl ? f.ZResultControl : default;
 				int i = _ReadonlyStartUtf8;
-				var code2 = ST.RangeText(i, i + _readonlyLenUtf8);
-				ST.Call(Sci.SCI_SETREADONLY, false);
-				ST.SetText(code + code2);
-				return (true, f.ResultWindow, f.ResultControl, f.ResultUseControl);
+				var code2 = Z.RangeText(false, i, i + _readonlyLenUtf8);
+				Z.Call(Sci.SCI_SETREADONLY, false);
+				Z.SetText(code + code2);
+				return (true, f.ZResultWindow, f.ZResultControl, f.ZResultUseControl);
 			}
 		}
 	}

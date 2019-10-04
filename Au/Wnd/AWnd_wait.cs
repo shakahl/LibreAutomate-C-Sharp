@@ -178,7 +178,7 @@ namespace Au
 		/// </param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="WndException">The window handle is invalid or the window was closed while waiting.</exception>
+		/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// AWnd w = AWnd.Find("* Notepad");
@@ -231,7 +231,7 @@ namespace Au
 		/// </param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="WndException">The window handle is invalid or the window was closed while waiting.</exception>
+		/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
 		public bool WaitForName(double secondsTimeout, string name)
 		{

@@ -161,10 +161,10 @@ namespace Au
 	}
 
 	/// <summary>
-	/// This class implements [](xref:wildcard_expression) parsing and matching (comparing).
+	/// Parses and compares [](xref:wildcard_expression).
 	/// </summary>
 	/// <remarks>
-	/// Typically used in 'find' functions. For example, <see cref="AWnd.Find"/> uses it to compare window name, class name and program.
+	/// Used in 'find' functions. For example in <see cref="AWnd.Find"/> to compare window name, class name and program.
 	/// The 'find' function creates an <b>AWildex</b> instance (which parses the wildcard expression), then calls <see cref="Match"/> for each item (eg window) to compare some its property text.
 	/// </remarks>
 	/// <example>

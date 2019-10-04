@@ -361,16 +361,16 @@ namespace Au.Controls
 			}
 		}
 
-		class _Window : Form
+		class _Window : Form //TODO: try inherit from InactiveWindow
 		{
 			PopupList _p;
 			Control _owner;
-			Font _font, _fontBold;
+			Font _fontBold;
 			bool _showedOnce;
 			bool _up;
 			Util.AMessageLoop _msgLoop;
 
-			public Font FontBold => _fontBold ??= new Font(Font, FontStyle.Bold); //clone not _font, because caller may change Font
+			public Font FontBold => _fontBold ??= new Font(Font, FontStyle.Bold);
 
 			public _Window(PopupList p)
 			{
@@ -378,20 +378,11 @@ namespace Au.Controls
 
 				this.SuspendLayout();
 				this.AutoScaleMode = AutoScaleMode.None;
-				this.Font = _font  = Util.AFonts.Regular;
 				this.StartPosition = FormStartPosition.Manual;
 				this.FormBorderStyle = FormBorderStyle.None;
+				this.Font = Util.AFonts.Regular;
 				this.Text = "Au.PopupList";
 				this.ResumeLayout();
-			}
-
-			protected override void Dispose(bool disposing)
-			{
-				if(disposing) {
-					_font.Dispose();
-					_fontBold?.Dispose();
-				}
-				base.Dispose(disposing);
 			}
 
 			protected override CreateParams CreateParams {

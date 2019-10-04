@@ -7,20 +7,27 @@ using System.IO;
 using Mono.Cecil;
 using System.Runtime.CompilerServices;
 
-//This small program copies Roslyn dlls to _\Compiler folder.
-//Injects InternalsVisibleTo attribute to some. For it uses Mono.Cecil from NuGet.
-//The dlls are from NuGet package Microsoft.CodeAnalysis.Features, which is installed only for this project.
+//This small program does one of the following, depending on the '#if ...' below:
 
-//C# compiler setup:
-//Install or update Microsoft.CodeAnalysis.Features from NuGet in this project.
-//Run this project. It copies Roslyn dlls to _\Compiler folder and injects [InternalsVisibleTo] to some.
-//In other projects (Au.Compiler, Au.Editor) add references from _\Compiler folder and make "copy local" = false.
+//#if false: Copies Roslyn dlls to _\Compiler folder. Setup:
+//	Install or update Microsoft.CodeAnalysis.Features from NuGet in this project.
+//	Optionally remove the main 6 references, to reduce noise in Object Browser etc.
+//	Make '#if false' below and run this project. It copies Roslyn dlls to _\Compiler folder.
+//	Except main 6 dlls, which we build separately in Roslyn solution.
+
+//#if true: Adds modifications to the Roslyn solution. Setup:
+//	Download Roslyn solution to Q:\Downloads\roslyn-master.
+//	Make '#if true' below and run this project. It modifies Roslyn solution files.
+//	Currently does not add the InternalsVisible.cs files; will need to add them manually or edit this project.
+
+//Roslyn setup in other projects (Au.Compiler, Au.Editor):
+//Add references from _\Compiler folder and make "copy local" = false.
 //	For Au.Compiler need only Microsoft.CodeAnalysis, Microsoft.CodeAnalysis.CSharp, System.Collections.Immutable. For Au.Editor need more.
 //Let Au.Compiler output be _\Compiler folder. Also let its Au reference be "copy local" = false.
 //In projects that use Au.Compiler as a reference:
 //	Make its "copy local" = false.
 //	In app.config add: configuration/runtime/assemblyBinding: <probing privatePath = "Compiler" />
-//	Don't need "Auto-generate binding redirects" in project properties. With framework 4.7.2, no problems with compiler assembly binding. Previously, with 4.6.2, 'auto generate...' did not work well; would need to add several binding redirections manually to app.config.
+//	May need "Auto-generate binding redirects" in project properties.
 
 
 namespace CompilerDlls
@@ -42,7 +49,8 @@ namespace CompilerDlls
 
 			string roslynDir = @"Q:\Downloads\roslyn-master\src\";
 
-#if true //add Symbols property to the CompletionItem class
+#if true
+			//add Symbols property to the CompletionItem class
 			_Mod(@"Features\Core\Portable\Completion\CompletionItem.cs",
 (@"internal bool IsCached { get; set; }",
 @"
@@ -63,6 +71,18 @@ namespace CompilerDlls
 (@"",
 @"Microsoft.CodeAnalysis.Completion.CompletionItem.Symbols.get -> System.Collections.Generic.IReadOnlyList<Microsoft.CodeAnalysis.ISymbol>
 ", -1)
+				);
+
+			//add Symbol property to the SymbolKeySignatureHelpItem class (this code still not tested)
+			_Mod(@"Features\Core\Portable\SignatureHelp\AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem.cs",
+(@"public SymbolKey? SymbolKey { get; }",
+@"
+            public ISymbol Symbol { get; } //au
+", 1),
+(@"SymbolKey = symbol?.GetSymbolKey();",
+@"
+                Symbol = symbol; //au
+", 1)
 				);
 #endif
 
@@ -157,8 +177,9 @@ namespace CompilerDlls
 				case "Microsoft.CodeAnalysis.CSharp.Features.dll":
 				case "Microsoft.CodeAnalysis.Workspaces.dll":
 				case "Microsoft.CodeAnalysis.CSharp.Workspaces.dll":
-					Console.ForegroundColor = ConsoleColor.Green;
-					Console.WriteLine(s);
+					//don't copy because now we build these in the Roslyn solution and directly copy where need.
+					//Console.ForegroundColor = ConsoleColor.Green;
+					//Console.WriteLine(s);
 					//File.Copy(@"Q:\Downloads\roslyn-master\artifacts\bin\" + Path.GetFileNameWithoutExtension(s) + @"\Debug\netstandard2.0\" + s, s2, true);
 					break;
 				default:

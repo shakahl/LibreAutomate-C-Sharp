@@ -1157,6 +1157,7 @@ struct Sci_DragDropData
 	int len;
 	int copy; //bool
 };
+
 //these not impl
 //#define SC_DOCUMENT_USERDATA_OFFSET 12
 //#define SC_DOCUMENT_USERDATA_SIZE 4

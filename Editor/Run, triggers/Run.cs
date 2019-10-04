@@ -250,7 +250,7 @@ class RunningTasks
 		_wMain = (AWnd)Program.MainForm;
 		Program.Timer1sOr025s += _TimerUpdateUI;
 		ATask.LibInit(ATRole.EditorExtension);
-		AFile.Delete(LibLog.Run.FilePath);
+		AFile.Delete(Au.Util.LibLog.Run.FilePath);
 	}
 
 	public void OnWorkspaceClosed()
@@ -338,7 +338,7 @@ class RunningTasks
 	void _UpdatePanels()
 	{
 		_updateUI = false;
-		Panels.Running.UpdateList(); //~1 ms when list small, not including wmpaint
+		Panels.Running.ZUpdateList(); //~1 ms when list small, not including wmpaint
 	}
 
 	/// <summary>

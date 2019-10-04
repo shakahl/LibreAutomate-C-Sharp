@@ -92,7 +92,7 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Eq(this string t, bool ignoreCase = false, params string[] strings)
+		public static int Eq(this string t, bool ignoreCase, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(Eq(t, strings[i], ignoreCase)) return i + 1;
 			return 0;
@@ -188,7 +188,7 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Ends(this string t, bool ignoreCase = false, params string[] strings)
+		public static int Ends(this string t, bool ignoreCase, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(Ends(t, strings[i], ignoreCase)) return i + 1;
 			return 0;
@@ -236,7 +236,7 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Starts(this string t, bool ignoreCase = false, params string[] strings)
+		public static int Starts(this string t, bool ignoreCase, params string[] strings)
 		{
 			for(int i = 0; i < strings.Length; i++) if(Starts(t, strings[i], ignoreCase)) return i + 1;
 			return 0;
@@ -254,7 +254,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds substring in this string. Returns its zero-based index, or -1 if not found.
+		/// Finds substring in this string. Returns its 0-based index, or -1 if not found.
 		/// </summary>
 		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="s">Subtring to find.</param>
@@ -270,7 +270,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds substring in part of this string. Returns its zero-based index, or -1 if not found.
+		/// Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
 		/// </summary>
 		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="s">Subtring to find.</param>
@@ -288,7 +288,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds substring in part of this string. Returns its zero-based index, or -1 if not found.
+		/// Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
 		/// </summary>
 		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="s">Subtring to find.</param>
@@ -333,7 +333,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds the first occurence in this string of any character in (or not in) a character set. Returns its zero-based index, or -1 if not found.
+		/// Finds the first occurence in this string of any character in (or not in) a character set. Returns its 0-based index, or -1 if not found.
 		/// </summary>
 		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="chars">Characters to find.</param>
@@ -365,7 +365,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds the last occurence in this string of any character in (or not in) a character set. Returns its zero-based index, or -1 if not found.
+		/// Finds the last occurence in this string of any character in (or not in) a character set. Returns its 0-based index, or -1 if not found.
 		/// </summary>
 		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="chars">Characters to find.</param>
@@ -410,7 +410,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds whole word. Returns its zero-based index, or -1 if not found.
+		/// Finds whole word. Returns its 0-based index, or -1 if not found.
 		/// </summary>
 		/// <param name="t">This string. If null, returns -1.</param>
 		/// <param name="s">Subtring to find.</param>

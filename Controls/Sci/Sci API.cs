@@ -1252,6 +1252,19 @@ namespace Au.Controls
 					return new string((sbyte*)textUTF8, 0, length, Encoding.UTF8);
 				}
 			}
+
+			/// <summary>
+			/// Returns position, UTF-8. If SCN_MODIFIED(SC_MOD_INSERTTEXT|SC_MOD_BEFOREINSERT|SC_MOD_INSERTCHECK), adds length, because position then is old position.
+			/// </summary>
+			public int FinalPosition {
+				get {
+					int r = position;
+					if(length > 0 && nmhdr.code == NOTIF.SCN_MODIFIED
+						&& modificationType.HasAny(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_BEFOREINSERT | MOD.SC_MOD_INSERTCHECK)
+						) r += length;
+					return r;
+				}
+			}
 		}
 
 		//from SciLexer.h

@@ -29,27 +29,14 @@ namespace Au.Controls
 	/// </remarks>
 	public class AuUserControlBase : UserControl
 	{
-		Font _font;
-
 		///
 		public AuUserControlBase()
 		{
-			_font = Util.AFonts.Regular;
-			this.Font = _font; //must be before 'AutoScaleMode = ...'
+			this.Font = Util.AFonts.Regular; //must be before 'AutoScaleMode = ...'
 			this.AutoScaleMode = AutoScaleMode.Font;
 
 			//this.TabStop = false; //no, breaks tabstopping
 			//this.SetStyle(ControlStyles.Selectable, false); //the same
-		}
-
-		///
-		protected override void Dispose(bool disposing)
-		{
-			if(disposing) {
-				//Print("Dispose");
-				_font.Dispose();
-			}
-			base.Dispose(disposing);
 		}
 	}
 }

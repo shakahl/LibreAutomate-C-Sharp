@@ -33,22 +33,22 @@ using static Au.AStatic;
 
 namespace Au.Controls
 {
-	class FastListBox : AuScrollableControl
+	class AuListControl : AuScrollableControl
 	{
 		int _count, _itemWidth, _itemHeight, _iSelected;
-		Func<ItemMeasureArgs, int> _measureFunc;
-		Action<ItemDrawArgs> _drawAction;
+		Func<ZItemMeasureArgs, int> _measureFunc;
+		Action<ZItemDrawArgs> _drawAction;
 		Func<int, string> _accName;
 		System.Collections.BitArray _measuredItems;
 
-		public FastListBox()
+		public AuListControl()
 		{
 			this.BackColor = SystemColors.Window;
 			this.DoubleBuffered = true;
 			this.ResizeRedraw = true;
 		}
 
-		public void AddItems(int count, Func<ItemMeasureArgs, int> measureFunc, Action<ItemDrawArgs> drawAction, Func<int, string> accName)
+		public void ZAddItems(int count, Func<ZItemMeasureArgs, int> measureFunc, Action<ZItemDrawArgs> drawAction, Func<int, string> accName)
 		{
 			if(count + _count == 0) return;
 			_measureFunc = measureFunc;
@@ -68,19 +68,19 @@ namespace Au.Controls
 			_SetScroll(resetPos: true);
 		}
 
-		public void ReMeasure()
+		public void ZReMeasure()
 		{
-			AddItems(_count, _measureFunc, _drawAction, _accName);
+			ZAddItems(_count, _measureFunc, _drawAction, _accName);
 		}
 
-		public int Count => _count;
+		public int ZCount => _count;
 
 		/// <summary>
 		/// Index of the selected item, or -1.
 		/// </summary>
-		public int SelectedIndex => _iSelected;
+		public int ZSelectedIndex => _iSelected;
 
-		public void SelectIndex(int i, bool scrollCenter)
+		public void ZSelectIndex(int i, bool scrollCenter)
 		{
 			if((uint)i >= _count) i = -1;
 			if(i == _iSelected) return;
@@ -102,9 +102,9 @@ namespace Au.Controls
 
 		void _OnSelectedIndexChanged(int i)
 		{
-			SelectedIndexChanged?.Invoke(i);
+			ZSelectedIndexChanged?.Invoke(i);
 		}
-		public event Action<int> SelectedIndexChanged;
+		public event Action<int> ZSelectedIndexChanged;
 
 		///// <summary>
 		///// Item height, calculated by <see cref="AddItems"/>.
@@ -114,9 +114,8 @@ namespace Au.Controls
 		//Sets _itemWidth. If iTo<0, sets _itemHeight too. Uses/sets _measuredItems.
 		void _MeasureItems(int iFrom, int iTo)
 		{
-			using var m = new ItemMeasureArgs();
+			using var m = new ZItemMeasureArgs();
 			if(iTo < 0) {
-				Debug.Assert(this.Font.Equals(Util.AFonts.Regular));
 				m.index = 0;
 				var z = m.MeasureText("A");
 				_itemHeight = Math.Max(17, z.height + 2);
@@ -174,7 +173,7 @@ namespace Au.Controls
 			int iFrom = yFrom / _itemHeight, iTo = Math.Min(_count, yTo / _itemHeight);
 			//Print(iFrom, iTo);
 
-			using var args = new ItemDrawArgs { graphics = g };
+			using var args = new ZItemDrawArgs { graphics = g };
 			for(int i = iFrom; i < iTo; i++) {
 				args.index = i;
 				args.bounds = new Rectangle(-xScroll, i * _itemHeight - yScroll, Math.Max(clip.Width, _itemWidth), _itemHeight);
@@ -201,12 +200,12 @@ namespace Au.Controls
 			base.OnClientSizeChanged(e);
 		}
 
-		public class ItemMeasureArgs : IDisposable
+		public class ZItemMeasureArgs : IDisposable
 		{
 			public int index;
 			IntPtr _dc, _oldFont;
 
-			public ItemMeasureArgs()
+			public ZItemMeasureArgs()
 			{
 				_dc = Api.GetDC(default);
 				_oldFont = Api.SelectObject(_dc, Util.LibNativeFont.RegularCached);
@@ -229,7 +228,7 @@ namespace Au.Controls
 			}
 		}
 
-		public class ItemDrawArgs : IDisposable
+		public class ZItemDrawArgs : IDisposable
 		{
 			public Graphics graphics;
 			public int index;
@@ -237,7 +236,7 @@ namespace Au.Controls
 			public bool isSelected;
 			IntPtr _dc, _oldFont;
 
-			public ItemDrawArgs()
+			public ZItemDrawArgs()
 			{
 				_dc = Api.GetDC(default);
 				_oldFont = Api.SelectObject(_dc, Util.LibNativeFont.RegularCached);
@@ -265,9 +264,9 @@ namespace Au.Controls
 
 		}
 
-		public class ItemClickArgs
+		public class ZItemClickArgs
 		{
-			public ItemClickArgs(int index, bool doubleClick)
+			public ZItemClickArgs(int index, bool doubleClick)
 			{
 				Index = index;
 				DoubleClick = doubleClick;
@@ -279,7 +278,7 @@ namespace Au.Controls
 		/// <summary>
 		/// When an item left-clicked or double-clicked.
 		/// </summary>
-		public event EventHandler<ItemClickArgs> ItemClick;
+		public event EventHandler<ZItemClickArgs> ZItemClick;
 
 		protected override void OnMouseDown(MouseEventArgs e)
 		{
@@ -291,7 +290,7 @@ namespace Au.Controls
 					Invalidate(); //SHOULDDO: invalidate only part
 					_OnSelectedIndexChanged(_iSelected);
 				}
-				if(i >= 0 && e.Button == MouseButtons.Left) ItemClick?.Invoke(this, new ItemClickArgs(i, e.Clicks == 2));
+				if(i >= 0 && e.Button == MouseButtons.Left) ZItemClick?.Invoke(this, new ZItemClickArgs(i, e.Clicks == 2));
 			}
 			base.OnMouseDown(e);
 		}
@@ -330,7 +329,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Scrolls on pressed arrow and page up/down keys.
 		/// </summary>
-		public void KeyboardNavigation(Keys k)
+		public void ZKeyboardNavigation(Keys k)
 		{
 			int i = _iSelected;
 			if(i >= 0) {
@@ -344,7 +343,7 @@ namespace Au.Controls
 			} else if(_count > 0) {
 				i = 0;
 			}
-			SelectIndex(i, scrollCenter: false);
+			ZSelectIndex(i, scrollCenter: false);
 		}
 
 		#region IAccessible
@@ -362,18 +361,18 @@ namespace Au.Controls
 		/// Controls with large number of visible items consume much memory for accessible objects, because of very inefficient accessibility implementation of .NET. For example 120 MB of physical memory for 10000 items. Luckily accessible objects are created only when/if some accessibility/automation/etc app wants to use them.
 		/// This property limits the number of accessible objects when some app wants to get all objects, but not when wants to get object from point or the focused/selected object.
 		/// </remarks>
-		public int AccessibleCount { get; set; } = 1000;
+		public int ZAccessibleCount { get; set; } = 1000;
 		//see comments in TVAcc.cs in TreeList project.
 
 		class _AccContainer : ControlAccessibleObject
 		{
-			FastListBox _c;
+			AuListControl _c;
 
-			public _AccContainer(FastListBox c) : base(c) => _c = c;
+			public _AccContainer(AuListControl c) : base(c) => _c = c;
 
 			public override AccessibleRole Role => AccessibleRole.List;
 
-			public override int GetChildCount() => Math.Min(_c._count, _c.AccessibleCount);
+			public override int GetChildCount() => Math.Min(_c._count, _c.ZAccessibleCount);
 
 			public override AccessibleObject GetChild(int index) => _c._ItemAcc(index);
 
@@ -400,10 +399,10 @@ namespace Au.Controls
 
 		class _AccNode : AccessibleObject
 		{
-			FastListBox _c;
+			AuListControl _c;
 			int _index;
 
-			public _AccNode(FastListBox c, int index)
+			public _AccNode(AuListControl c, int index)
 			{
 				_c = c;
 				_index = index;
@@ -459,7 +458,7 @@ namespace Au.Controls
 				_iSelected = i;
 				_OnSelectedIndexChanged(_iSelected);
 			}
-			ItemClick?.Invoke(this, new ItemClickArgs(i, true));
+			ZItemClick?.Invoke(this, new ZItemClickArgs(i, true));
 		}
 
 		#endregion

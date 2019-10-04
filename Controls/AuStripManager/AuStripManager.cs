@@ -217,12 +217,12 @@ namespace Au.Controls
 				switch(s) {
 				case "edit":
 					var ed = new ToolStripSpringTextBox();
-					if(cue != null) ed.SetCueBanner(cue);
+					if(cue != null) ed.ZSetCueBanner(cue);
 					item = ed;
 					break;
 				case "combo":
 					var combo = new ToolStripSpringComboBox();
-					if(cue != null) combo.SetCueBanner(cue);
+					if(cue != null) combo.ZSetCueBanner(cue);
 					item = combo;
 					break;
 				default:

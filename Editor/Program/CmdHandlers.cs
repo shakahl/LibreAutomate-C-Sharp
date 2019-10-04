@@ -301,12 +301,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void File_OpenWorkspace()
 	{
-		Panels.Files.LoadAnotherWorkspace();
+		Panels.Files.ZLoadAnotherWorkspace();
 	}
 
 	public void File_NewWorkspace()
 	{
-		Panels.Files.LoadNewWorkspace();
+		Panels.Files.ZLoadNewWorkspace();
 	}
 
 	public void File_ExportWorkspace()
@@ -351,50 +351,50 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Edit_Undo()
 	{
-		Panels.Editor.ActiveDoc?.Call(Sci.SCI_UNDO);
+		Panels.Editor.ZActiveDoc?.Call(Sci.SCI_UNDO);
 	}
 
 	public void Edit_Redo()
 	{
-		Panels.Editor.ActiveDoc?.Call(Sci.SCI_REDO);
+		Panels.Editor.ZActiveDoc?.Call(Sci.SCI_REDO);
 	}
 
 	public void Edit_Cut()
 	{
-		Panels.Editor.ActiveDoc?.Call(Sci.SCI_CUT);
+		Panels.Editor.ZActiveDoc?.Call(Sci.SCI_CUT);
 	}
 
 	public void Edit_Copy()
 	{
-		var doc = Panels.Editor.ActiveDoc; if(doc == null) return;
-		doc.CopyModified(onlyInfo: true);
+		var doc = Panels.Editor.ZActiveDoc; if(doc == null) return;
+		doc.ZCopyModified(onlyInfo: true);
 		doc.Call(Sci.SCI_COPY);
 	}
 
 	public void Edit_ForumCopy()
 	{
-		Panels.Editor.ActiveDoc?.CopyModified();
+		Panels.Editor.ZActiveDoc?.ZCopyModified();
 	}
 
 	public void Edit_Paste()
 	{
-		var doc = Panels.Editor.ActiveDoc; if(doc == null) return;
-		if(!doc.PasteModified()) doc.Call(Sci.SCI_PASTE);
+		var doc = Panels.Editor.ZActiveDoc; if(doc == null) return;
+		if(!doc.ZPasteModified()) doc.Call(Sci.SCI_PASTE);
 	}
 
 	public void Edit_Find()
 	{
-		Panels.Find.CtrlF();
+		Panels.Find.ZCtrlF();
 	}
 
 	public void Edit_MembersList()
 	{
-		CodeInfo.ShowCompletionList(Panels.Editor.ActiveDoc);
+		CodeInfo.ShowCompletionList(Panels.Editor.ZActiveDoc);
 	}
 
 	public void Edit_ParameterInfo()
 	{
-		CodeInfo.ShowSignature(Panels.Editor.ActiveDoc);
+		CodeInfo.ShowSignature(Panels.Editor.ZActiveDoc);
 	}
 
 	public void Edit_GoToDefinition()
@@ -424,12 +424,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Edit_Comment()
 	{
-		Panels.Editor.ActiveDoc?.CommentLines(true);
+		Panels.Editor.ZActiveDoc?.ZCommentLines(true);
 	}
 
 	public void Edit_Uncomment()
 	{
-		Panels.Editor.ActiveDoc?.CommentLines(false);
+		Panels.Editor.ZActiveDoc?.ZCommentLines(false);
 	}
 
 	public void Edit_HideRegion()
@@ -480,16 +480,23 @@ class CmdHandlers : IGStripManagerCallbacks
 	{
 		f.FormClosed += (unu, e) => {
 			if(e.CloseReason == CloseReason.UserClosing && f.DialogResult == DialogResult.OK) {
-				var s = f.ResultCode;
-				var d = Panels.Editor.ActiveDoc; if(d == null) return;
-				var t = d.ST;
+				var s = f.ZResultCode;
+				var d = Panels.Editor.ZActiveDoc; if(d == null) return;
+				var t = d.Z;
 				if(t.IsReadonly) {
 					Print(s);
 				} else {
 					d.Focus();
-					int i = t.LineStartFromPos(t.CurrentPos);
-					s += "\r\n";
-					t.ReplaceSel(s, i);
+					int start = t.LineStartFromPos(false, t.CurrentPos8, out int line);
+					int indent = t.LineIndentationFromPos(false, start);
+					if(indent == 0) {
+						s += "\r\n";
+					} else {
+						var b = new StringBuilder();
+						foreach(var v in s.SegLines()) b.Append('\t', indent).AppendLine(v);
+						s = b.ToString();
+					}
+					t.ReplaceSel(false, start, s);
 				}
 			}
 		};
@@ -542,7 +549,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Run_Recent()
 	{
-		var file = LibLog.Run.FilePath;
+		var file = Au.Util.LibLog.Run.FilePath;
 		if(AFile.ExistsAsFile(file)) AExec.TryRun(file);
 	}
 
@@ -691,7 +698,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Tools_Options()
 	{
-		FOptions.ShowForm();
+		FOptions.ZShow();
 	}
 
 	#endregion
@@ -700,12 +707,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Tools_Output_Clear()
 	{
-		Panels.Output.Clear();
+		Panels.Output.ZClear();
 	}
 
 	public void Tools_Output_Copy()
 	{
-		Panels.Output.Copy();
+		Panels.Output.ZCopy();
 	}
 
 	public void Tools_Output_FindSelectedText()
@@ -715,7 +722,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Tools_Output_History()
 	{
-		Panels.Output.History();
+		Panels.Output.ZHistory();
 	}
 
 	public void Tools_Output_LogWindowEvents()
@@ -731,19 +738,19 @@ class CmdHandlers : IGStripManagerCallbacks
 	public void Tools_Output_WrapLines()
 	{
 		var v = Panels.Output;
-		v.WrapLines = !v.WrapLines;
+		v.ZWrapLines = !v.ZWrapLines;
 	}
 
 	public void Tools_Output_WhiteSpace()
 	{
 		var v = Panels.Output;
-		v.WhiteSpace = !v.WhiteSpace;
+		v.ZWhiteSpace = !v.ZWhiteSpace;
 	}
 
 	public void Tools_Output_Topmost()
 	{
 		var v = Panels.Output;
-		v.Topmost ^= true;
+		v.ZTopmost ^= true;
 	}
 
 	#endregion

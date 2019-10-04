@@ -42,7 +42,7 @@ namespace Aga.Controls.Tree
 		/// Controls with large number of visible items consume much memory for accessible objects, because of very inefficient accessibility implementation of .NET. For example 120 MB of physical memory for 10000 items. Luckily accessible objects are created only when/if some accessibility/automation/etc app wants to use them.
 		/// This property limits the number of accessible objects when some app wants to get all objects, but not when wants to get object from point or the focused/selected object.
 		/// </remarks>
-		public int AccessibleCount { get; set; } = 1000;
+		public int ZAccessibleCount { get; set; } = 1000;
 
 		//Tried to implement so that items would have only childID, not IAccessible. Failed. Although the same algorithm works well in C++, tested.
 		//At first tried to implement (override) IAccessible (defined by .NET, need reference Accessibility).
@@ -67,7 +67,7 @@ namespace Aga.Controls.Tree
 
 		public override int GetChildCount()
 		{
-			int n = Math.Min(_tva.RowCount, _tva.AccessibleCount);
+			int n = Math.Min(_tva.RowCount, _tva.ZAccessibleCount);
 			if(_tva.UseColumns) n++;
 			return n;
 		}

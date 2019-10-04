@@ -199,7 +199,7 @@
 			this.Controls.Add(this._bCancel);
 			this.Controls.Add(this._bOK);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-			this.IsPopup = true;
+			this.ZIsPopup = true;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
 			this.Name = "FOptions";

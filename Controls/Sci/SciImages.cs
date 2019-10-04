@@ -110,7 +110,7 @@ namespace Au.Controls
 		{
 			if(t_data == null) t_data = new _ThreadSharedData();
 			_c = c;
-			_t = c.ST;
+			_t = c.Z;
 			_isEditor = isEditor;
 			_sci_AnnotationDrawCallback = _AnnotationDrawCallback_;
 			_callbackPtr = Marshal.GetFunctionPointerForDelegate(_sci_AnnotationDrawCallback);
@@ -427,7 +427,7 @@ namespace Au.Controls
 			//Cannot store array indices in annotation, because they may change.
 			//Also cannot store image strings in annotation, because then boxed annotation would be too wide (depends on text length).
 			//Getting/parsing text takes less than 20% time. Other time - drawing image.
-			int from = _t.LineStart(c.line), to = _t.LineEnd(c.line), len = to - from;
+			int from = _t.LineStart(false, c.line), to = _t.LineEnd(false, c.line), len = to - from;
 			var text = _GetTextRange(from, to);
 
 			//find image strings and draw the images
@@ -540,7 +540,7 @@ namespace Au.Controls
 			int from = n.position, to = from + (inserted ? n.length : 0), len = 0, firstLine = 0, textPos = 0;
 			bool allText = false;
 			if(from == 0) {
-				len = _t.TextLengthBytes;
+				len = _t.TextLength8;
 				if(len < 10) return; //eg 0 when deleted all text
 				if(inserted && len == n.length) { //added all text
 					allText = true;
@@ -548,10 +548,10 @@ namespace Au.Controls
 				}
 			}
 			if(s == null) {
-				firstLine = _t.LineIndexFromPos(from);
-				int from2 = _t.LineStart(firstLine);
+				firstLine = _t.LineIndexFromPos(false, from);
+				int from2 = _t.LineStart(false, firstLine);
 				if(!inserted && from2 == from) return; //deleted whole lines or characters at line start, which cannot create new image string in text
-				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _t.LineEndFromPos(to);
+				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _t.LineEndFromPos(false, to);
 				len = to2 - from2;
 				//Print(inserted, from, to, from2, to2, len);
 				if(len < 10) return;
@@ -569,7 +569,7 @@ namespace Au.Controls
 			//tested: all this is faster than SCI_FINDTEXT. Much faster when need to search in big text.
 
 			//Print(firstLine, $"'{new string((sbyte*)s, 0, len, Encoding.UTF8)}'");
-			this._SetImagesForTextRange(firstLine, s, len, allText, textPos);
+			_SetImagesForTextRange(firstLine, s, len, allText, textPos);
 		}
 
 		/// <summary>

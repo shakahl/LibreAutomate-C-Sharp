@@ -827,7 +827,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Removes all rows.
 		/// </summary>
-		public void Clear()
+		public void ZClear()
 		{
 			//this.Rows.Clear(); //makes editors invalid
 			ZEndEdit(true);

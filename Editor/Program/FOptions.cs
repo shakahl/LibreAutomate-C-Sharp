@@ -29,7 +29,7 @@ partial class FOptions : AuForm
 		InitializeComponent();
 	}
 
-	public static void ShowForm()
+	public static void ZShow()
 	{
 		if(s_form == null) {
 			s_form = new FOptions();

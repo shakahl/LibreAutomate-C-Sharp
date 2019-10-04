@@ -13,7 +13,7 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
-using System.Drawing;
+//using System.Drawing;
 //using System.Linq;
 //using System.Xml.Linq;
 
@@ -24,30 +24,24 @@ using Au.Compiler;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Completion;
-using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.Tags;
-using Microsoft.CodeAnalysis.SignatureHelp;
-using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
-using Microsoft.CodeAnalysis.QuickInfo;
-using Microsoft.CodeAnalysis.CSharp.QuickInfo;
-using TheArtOfDev.HtmlRenderer.WinForms;
-
 
 static class CodeInfo
 {
 	static CiCompletion _compl = new CiCompletion();
 	static CiSignature _signature = new CiSignature();
+	static CiAutocorrect _correct = new CiAutocorrect();
 	static CiQuickInfo _quickInfo = new CiQuickInfo();
 	//static MetaComments _meta;
 	static string _metaText;
 	static Solution _solution;
 	static ProjectId _projectId;
 	static DocumentId _documentId;
+	static Document _document;
 	static bool _isWarm;
-	static bool _textChanged;
+	static bool _isUI;
+	static RECT _sciRect;
 
 	public static void UiLoaded()
 	{
@@ -62,7 +56,8 @@ static class CodeInfo
 			_Warmup(ref p1);
 		});
 
-		Panels.Editor.ActiveDocChanged += Stop;
+		Panels.Editor.ZActiveDocChanged += Stop;
+		Program.Timer1sOr025s += _Program_Timer1sOr025s;
 	}
 
 	static void _Warmup(ref APerf.Inst p1)
@@ -115,70 +110,139 @@ Print(1);
 	{
 		if(!_isWarm) return false;
 		if(doc == null) return false;
-		if(!doc.FN.IsCodeFile) return false;
-		if(doc != Panels.Editor.ActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //TODO: what if isn't open?
+		if(!doc.ZFile.IsCodeFile) return false;
+		if(doc != Panels.Editor.ZActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //TODO: what if isn't open?
 		return true;
 	}
 
 	static void _Uncache()
 	{
+		//Print("_Uncache");
 		CurrentWorkspace = null;
 		_solution = null;
 		_projectId = null;
 		_documentId = null;
+		_document = null;
 		//_meta = null;
 		_metaText = null;
-		_textChanged = false;
 	}
 
 	public static void Stop()
 	{
-		Cancel(hideTools: true);
+		Cancel();
 		_Uncache();
 	}
 
-	public static void Cancel(bool hideTools = false)
+	public static void Cancel()
 	{
-		//Print("Cancel");
 		_compl.Cancel();
-		if(hideTools) {
-			_compl.HideTools();
-		}
+		_compl.HideTools();
+		_signature.Cancel();
+	}
+	//TODO: now does not cancel when clicked empty space after all code.
+
+	public static void SciKillFocus()
+	{
+#if DEBUG
+		if(Debugger.IsAttached) return;
+#endif
+		//hide code info windows, except when a code info window is focused. Code info window names start with "Ci.".
+		var aw = AWnd.ThisThread.Active;
+		if(aw.Is0) Stop(); else if(!(Control.FromHandle(aw.Handle) is Form f && f.Name.Starts("Ci."))) Cancel();
 	}
 
-	public static void SciCharAdded(SciCode doc)
+	public static bool SciCmdKey(SciCode doc, Keys keyData)
 	{
-		if(!_CanWork(doc)) return;
-		_compl.SciCharAdded(doc);
+		if(!_CanWork(doc)) return false;
+		switch(keyData) {
+		case Keys.Control | Keys.Space:
+			ShowCompletionList(doc);
+			return true;
+		case Keys.Control | Keys.Shift | Keys.Space:
+			ShowSignature(doc);
+			return true;
+		case Keys.Escape:
+		case Keys.Down:
+		case Keys.Up:
+		case Keys.PageDown:
+		case Keys.PageUp:
+			if(_compl.OnCmdKey(keyData)) return true;
+			if(_signature.OnCmdKey(keyData)) return true;
+			break;
+		case Keys.Enter:
+		case Keys.Enter | Keys.Shift:
+		case Keys.Enter | Keys.Control:
+		case Keys.OemSemicolon | Keys.Control:
+			bool completed = _compl.OnCmdKey(keyData & Keys.KeyCode);
+			return completed | _correct.SciBeforeKey(doc, keyData, completed); //note: not ||. Need to call both, and return true if any returns true.
+		case Keys.Tab:
+			return _compl.OnCmdKey(keyData) || _correct.SciBeforeKey(doc, keyData, false); //note: not |. Need _correct only if !_compl.
+		case Keys.Back:
+			return _correct.SciBeforeKey(doc, keyData, false);
+		}
+		return false;
 	}
 
-	public static void SciTextChanged(SciCode doc, in Sci.SCNotification n, bool userTyping)
+	public static bool SciBeforeCharAdded(SciCode doc, char ch)
+	{
+		if(!_CanWork(doc)) return false;
+
+		if(_correct.SciBeforeCharAdded(doc, ch, out var b)) {
+			if(_compl.IsVisibleUI) {
+				int diff = b.newPosUtf8 - b.oldPosUtf8;
+				bool suppress = _compl.SciCharAdding_Commit(doc, ch);
+				Debug.Assert(!suppress); if(suppress) return true; //can suppress only on space, which is not handled by SciBeforeCharAdded
+				b.newPosUtf8 = doc.Z.CurrentPos8 + diff;
+			}
+
+			doc.Z.CurrentPos8 = b.newPosUtf8;
+			if(!b.dontSuppress) return true;
+		} else if(_compl.IsVisibleUI) {
+			return _compl.SciCharAdding_Commit(doc, ch);
+		}
+		return false;
+	}
+
+	public static void SciModified(SciCode doc, in Sci.SCNotification n)
 	{
 		if(!_CanWork(doc)) return;
-		_textChanged = true;
-		if(!userTyping) { Cancel(); return; }
+		_document = null;
+		_compl.SciModified(doc, in n);
+	}
 
-		var code = doc.Text;
-		int endOfMeta = MetaComments.FindMetaComments(code);
-		if(n.position < endOfMeta) {
-			_Uncache();
-			_compl.SciTextChangedInMeta(n);
-			return;
-		}
-		if(_solution != null) {
-			bool uncache = endOfMeta != _metaText.Length || !code.Starts(_metaText);
-			if(uncache) _Uncache();
-			//else _ChangeSolution(code); //later
+	public static void SciCharAdded(SciCode doc, char ch)
+	{
+		if(!_CanWork(doc)) return;
+
+		using var c = new CharContext(doc, ch);
+		_correct.SciCharAdded(c); //sync adds or removes ')' etc if need.
+		if(!c.ignoreChar) {
+			_compl.SciCharAdded_ShowList(c); //async gets completions and shows popup list. If already showing, filters/selects items.
+			_signature.SciCharAdded(c.doc, c.ch); //sync shows signature help.
 		}
 
-		_compl.SciTextChanged(doc, n);
+		//Example: user types 'pri('.
+		//	When typed 'p', _compl.SciCharAdded_ShowList shows popup list (async).
+		//	While typing 'ri', _compl.SciModified in the list selects Print.
+		//	When typed '(':
+		//		_compl.SciCharAdded_Commit replaces 'pri(' with 'Print('. Caret is after '('.
+		//		_correct adds ')'. Caret is still after '('.
+		//		_signature shows signature help.
+		//	If then user types 'tr)':
+		//		_compl on 't' shows popup list and on ')' replaces 'tr)' with 'true)'.
+		//		_correct deletes the ')' it added before.
+		//		_signature not called because discardChar==true. To hide signature help are used temp ranges.
+		//	Finally we have 'Print(true)', and caret is after it, and no double '))'.
+		//	If instead types 'tr;':
+		//		_correct on ';' moves caret after ')', and finally we have 'Print(true);', and caret after ';'.
 	}
 
 	public static void SciUpdateUI(SciCode doc, bool modified)
 	{
 		//Print("SciUpdateUI", modified, _tempNoAutoComplete);
 		if(!_CanWork(doc)) return;
-		_compl.SciPositionChanged(doc, modified);
+		_compl.SciUpdateUI(doc, modified);
+		_signature.SciPositionChanged(doc);
 	}
 
 	public static void ShowCompletionList(SciCode doc)
@@ -190,7 +254,7 @@ Print(1);
 	public static void ShowSignature(SciCode doc)
 	{
 		if(!_CanWork(doc)) return;
-		_signature.ShowSignature();
+		_signature.ShowSignature(doc);
 	}
 
 	public static void SciMouseDwellStarted(SciCode doc, int positionUtf8, int x, int y)
@@ -211,29 +275,103 @@ Print(1);
 		_quickInfo.SciMouseMoved(x, y);
 	}
 
-	public static Document GetDocument()
+	/// <summary>
+	/// Called to show signature help after committing a completion item with mouse, Tab, Enter or ' ', when added '(' after method etc.
+	/// </summary>
+	public static void CompletionSignatureCharAdded(SciCode doc, char ch) => _signature.SciCharAdded(doc, ch);
+
+	/// <summary>
+	/// Called when added text containing { } etc and want the same behavior like when the user types { etc and it is corrected to { } etc.
+	/// </summary>
+	public static void BracesAdded(SciCode doc, int innerFrom, int innerTo) => _correct.BracesAdded(doc, innerFrom, innerTo);
+
+	//public static void CharSuppressedByCompletion(SciCode doc, char signatureChar, int bracesFromInner, int bracesToInner){
+	//could join the above 2
+	//}
+
+	public struct Context
 	{
-		Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
-		if(_solution == null) _CreateSolution();
-		else if(_textChanged) _ChangeSolution();
-		return _solution.GetDocument(_documentId);
+		public Document document;
+		public SciCode sciDoc;
+		public string code;
+		public int metaEnd;
+		public int position;
+
+		/// <summary>
+		/// Initializes all fields except document.
+		/// </summary>
+		/// <param name="pos"></param>
+		public Context(int pos)
+		{
+			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
+
+			document = null;
+			sciDoc = Panels.Editor.ZActiveDoc;
+			if(pos == -1) pos = sciDoc.Z.CurrentPos16; else if(pos == -2) pos = sciDoc.Z.SelectionStar16;
+			position = pos;
+			code = sciDoc.Text;
+			metaEnd = MetaComments.FindMetaComments(code);
+		}
+
+		/// <summary>
+		/// Initializes the document field.
+		/// Creates or updates Solution if need.
+		/// Returns false if fails, unlikely.
+		/// </summary>
+		public bool GetDocument()
+		{
+			if(_document != null) {
+				document = _document;
+				return true;
+			}
+
+			if(_solution != null && !code.Starts(_metaText)) _Uncache();
+			if(_solution == null) _metaText = code.Remove(metaEnd);
+
+			try {
+				if(_solution == null) {
+					_CreateSolution(sciDoc.ZFile);
+				} else {
+					_solution = _solution.WithDocumentText(_documentId, SourceText.From(code, Encoding.UTF8));
+				}
+			}
+			catch(Exception ex) { //never seen
+				ADebug.Print(ex);
+				return false;
+			}
+
+			document = _document = _solution.GetDocument(_documentId);
+			return document != null;
+		}
 	}
 
-	static void _ChangeSolution(string code = null)
+	/// <summary>
+	/// Creates new Context. Calls its GetContextAndDocument, unless position is in meta comments.
+	/// Returns false if position is in meta comments or if fails to create/update Solution (unlikely). Then r.document is null.
+	/// Else returns true. Then r.document is Document for Panels.Editor.ActiveDoc. If need, parses meta, creates Project, Solution, etc.
+	/// Always sets other r fields.
+	/// If position -1, gets current position. If position -2, gets selection start.
+	/// </summary>
+	public static bool GetContextAndDocument(out Context r, int position = -1)
 	{
-		code ??= Panels.Editor.ActiveDoc.Text;
-		_solution = _solution.WithDocumentText(_documentId, SourceText.From(code, Encoding.UTF8));
-		_textChanged = false;
+		if(!GetContextWithoutDocument(out r, position)) return false;
+		return r.GetDocument();
 	}
 
-	static void _CreateSolution()
+	/// <summary>
+	/// Creates new Context with document=null.
+	/// Returns false if position is in meta comments.
+	/// If position -1, gets current position. If position -2, gets selection start.
+	/// </summary>
+	public static bool GetContextWithoutDocument(out Context r, int position = -1)
+	{
+		r = new Context(position);
+		return r.position >= r.metaEnd;
+	}
+
+	static void _CreateSolution(FileNode f)
 	{
 		//var p1 = APerf.Create();
-		var doc = Panels.Editor.ActiveDoc;
-		var code = doc.Text;
-		_metaText = code.Remove(MetaComments.FindMetaComments(code));
-
-		var f = doc.FN;
 		var f0 = f;
 		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
 
@@ -249,7 +387,7 @@ Print(1);
 		foreach(var f1 in m.CodeFiles) {
 			var docId = DocumentId.CreateNewId(_projectId);
 			var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
-			adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav)));
+			adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav), f1.f.ItemPath));
 			if(f1.f == f0) {
 				_documentId = docId;
 			}
@@ -269,59 +407,55 @@ Print(1);
 
 	public static Workspace CurrentWorkspace { get; private set; }
 
-	public static Document CreateTestDocumentForEditorCode(out string code, out int position)
+	private static void _Program_Timer1sOr025s()
 	{
-		var doc = Panels.Editor.ActiveDoc;
-		code = null;
-		position = doc.ST.CurrentPosChars;
-		var f = doc.FN;
-		if(!f.IsCodeFile) return null;
-		var f0 = f;
-		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
+		//cancel if changed the screen rectangle of the document window
+		if(_compl.IsVisibleUI || _signature.IsVisibleUI) {
+			var r = ((AWnd)Panels.Editor.ZActiveDoc).Rect;
+			if(!_isUI) {
+				_isUI = true;
+				_sciRect = r;
+			} else if(r != _sciRect) { //moved/resized top-level window or eg moved some splitter
+				_isUI = false;
+				Cancel();
+			}
+		} else if(_isUI) {
+			_isUI = false;
+		}
+	}
 
-		var m = new MetaComments();
-		if(!m.Parse(f, projFolder, EMPFlags.ForCodeInfo)) {
-			var err = m.Errors;
-			err.PrintAll();
-			return null;
+	public class CharContext : IDisposable
+	{
+		public readonly SciCode doc;
+		public char ch;
+		public bool ignoreChar;
+		bool _undoStarted; //TODO: unused
+
+		public CharContext(SciCode doc, char ch)
+		{
+			this.doc = doc;
+			this.ch = ch;
 		}
 
-		DocumentId documentId = null;
-		ProjectId projectId = ProjectId.CreateNewId();
-		var adi = new List<DocumentInfo>();
-		foreach(var f1 in m.CodeFiles) {
-			var docId = DocumentId.CreateNewId(projectId);
-			var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
-			adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav)));
-			if(f1.f == f0) {
-				documentId = docId;
-				code = f1.code;
+		public void BeginUndoAction()
+		{
+			if(!_undoStarted) {
+				_undoStarted = true;
+				doc.Call(Sci.SCI_BEGINUNDOACTION);
 			}
 		}
 
-		var pi = ProjectInfo.Create(projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
-			m.CreateCompilationOptions(), m.CreateParseOptions(), adi,
-			projectReferences: null, //TODO: create from m.ProjectReferences?
-			m.References.Refs //TODO: set outputRefFilePath if library?
-			);
-
-		var sol = new AdhocWorkspace().CurrentSolution;
-		sol = sol.AddProject(pi);
-		return sol.GetDocument(documentId);
+		public void Dispose()
+		{
+			if(_undoStarted) {
+				_undoStarted = false;
+				doc.Call(Sci.SCI_ENDUNDOACTION);
+			}
+		}
 	}
 
-	public static void Test()
-	{
+	//public static void Test()
+	//{
 
-	}
+	//}
 }
-
-//class DocCodeInfo
-//{
-//	public Solution solution;
-
-//	public DocCodeInfo(SciCode doc)
-//	{
-
-//	}
-//}

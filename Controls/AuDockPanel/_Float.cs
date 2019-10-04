@@ -132,7 +132,7 @@ namespace Au.Controls
 			{
 				if(base.ProcessCmdKey(ref msg, keyData)) return true;
 				if(keyData == Keys.Escape) {
-					_manager.FocusControlOnUndockEtc?.Focus();
+					_manager.ZFocusControlOnUndockEtc?.Focus();
 				}
 				return false;
 			}

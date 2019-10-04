@@ -29,7 +29,7 @@ namespace Au
 		/// <param name="opacity">Opacity from 0.0 (completely transparent) to 1.0 (opaque). If null, sets default value (opaque).</param>
 		/// <param name="colorRGB">Make pixels painted with this color completely transparent. If null, sets default value (no transparent color). The alpha byte is not used.</param>
 		/// <exception cref="ArgumentOutOfRangeException">opacity is less than 0.0 or greater than 1.0.</exception>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		public void SetTransparency(bool allowTransparency, double? opacity = null, ColorInt? colorRGB = null)
 		{
 			var est = ExStyle;
@@ -186,7 +186,7 @@ namespace Au
 		/// <param name="s">The string. Can be null/"".</param>
 		/// <param name="ensureInScreen">Call <see cref="EnsureInScreen"/>. Even when s is null/"".</param>
 		/// <param name="showActivate">Call <see cref="Show"/>(true) and <see cref="ActivateLL"/>. Even when s is null/"".</param>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		public unsafe void RestorePositionSizeState(string s, bool ensureInScreen = false, bool showActivate = false)
 		{
 			Api.WINDOWPLACEMENT p; int siz = sizeof(Api.WINDOWPLACEMENT);

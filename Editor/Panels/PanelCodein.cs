@@ -33,14 +33,14 @@ using Microsoft.CodeAnalysis.Tags;
 
 class PanelCodein : AuUserControlBase
 {
-	//FastListBox _list;
+	//AuListControl _list;
 
-	//public FastListBox Control => _list;
+	//public AuListControl Control => _list;
 
 	public PanelCodein()
 	{
 		this.AccessibleName = this.Name = "Codein";
-		//_list = new FastListBox();
+		//_list = new AuListControl();
 		//_list.AccessibleName = _list.Name = "Codein_list";
 		////_list.BorderStyle = BorderStyle.None;
 		//_list.Dock = DockStyle.Fill;

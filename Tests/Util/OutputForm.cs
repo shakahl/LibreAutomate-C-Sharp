@@ -50,7 +50,7 @@ class OutputForm : AuForm
 	void _ProcessMessages()
 	{
 		if(_paused) return;
-		_c.Tags.OutputServerProcessMessages(_os);
+		_c.ZTags.OutputServerProcessMessages(_os);
 	}
 	bool _paused;
 
@@ -74,19 +74,19 @@ class OutputForm : AuForm
 		public SciOutput(OutputForm f)
 		{
 			_f = f;
-			InitReadOnlyAlways = true;
-			InitTagsStyle = TagsStyle.AutoWithPrefix;
-			InitImagesStyle = ImagesStyle.ImageTag;
+			ZInitReadOnlyAlways = true;
+			ZInitTagsStyle = ZTagsStyle.AutoWithPrefix;
+			ZInitImagesStyle = ZImagesStyle.ImageTag;
 		}
 
 		protected override void OnHandleCreated(EventArgs e)
 		{
 			base.OnHandleCreated(e);
 
-			ST.MarginWidth(1, 3);
-			ST.StyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
-			ST.StyleFont(STYLE_DEFAULT, "Courier New", 8);
-			ST.StyleClearAll();
+			Z.MarginWidth(1, 3);
+			Z.StyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
+			Z.StyleFont(STYLE_DEFAULT, "Courier New", 8);
+			Z.StyleClearAll();
 		}
 
 		protected override void OnMouseDown(MouseEventArgs e)
@@ -94,7 +94,7 @@ class OutputForm : AuForm
 			if(ModifierKeys != 0) return;
 			switch(e.Button) {
 			case MouseButtons.Middle:
-				ST.ClearText();
+				Z.ClearText();
 				break;
 			case MouseButtons.Right:
 				if(!_f._paused) { AOsd.ShowText("OutputForm info: right-click pauses output. Right click again to resume.", xy: PopupXY.Mouse); }

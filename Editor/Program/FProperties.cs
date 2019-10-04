@@ -416,8 +416,8 @@ The file must be in this workspace. Can be path relative to this file (examples:
 	private void _bOK_Click(object sender, EventArgs e)
 	{
 		if(Program.Model.CurrentFile != _f && !Program.Model.SetCurrentFile(_f)) return;
-		var doc = Panels.Editor.ActiveDoc;
-		var t = doc.ST;
+		var doc = Panels.Editor.ZActiveDoc;
+		var t = doc.Z;
 		var code = doc.Text;
 		int endOf = MetaComments.FindMetaComments(code);
 
@@ -430,10 +430,10 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			if(endOf == 0) return;
 			while(endOf < code.Length && code[endOf] <= ' ') endOf++;
 		} else if(s.Length == endOf) {
-			if(s == t.RangeText(0, endOf, SciFromTo.ToIsChars)) return; //did not change
+			if(s == t.RangeText(true, 0, endOf, false)) return; //did not change
 		}
 
-		t.ReplaceRange(0, endOf, s, SciFromTo.ToIsChars);
+		t.ReplaceRange(true, 0, endOf, s, false);
 	}
 
 	private void _bAddBrowse_Click(object sender, EventArgs e)
@@ -691,7 +691,7 @@ There are several ways to run a script:
 In script code you can add <help Au.Triggers.ActionTriggers>triggers<> (hotkey etc) to execute parts of script code when it is running. There are no such triggers to launch scripts.
 ";
 		const string c_class = "This file is a C# class file.";
-		_info.ST.SetText(
+		_info.Z.SetText(
 @"Most file properties are saved in <c green>/*/ meta comments /*/<> at the very start of code. You can change them here or in the code editor.
 
 Use Google when you don't know some words in help text or don't understand some options. Most such words and options are used in C#/.NET programming in Visual Studio etc.
@@ -788,7 +788,7 @@ Examples of loading resources at run time:
 		{
 			if(infoText == null || _gridEditMode || infoText == _infoTextPrev) return;
 			_infoTextPrev = infoText;
-			_info.ST.SetText(infoText);
+			_info.Z.SetText(infoText);
 		}
 	}
 

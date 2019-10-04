@@ -49,7 +49,7 @@ static class EdNetExtensions
 	/// <remarks>
 	/// This way is undocumented and possibly will stop working in future .NET versions. I did not find a better way.
 	/// </remarks>
-	public static void ShowAsContextMenu_(this ToolStripDropDownMenu t, bool caret = false)
+	public static void ZShowAsContextMenu(this ToolStripDropDownMenu t, bool caret = false)
 	{
 		POINT p; if(caret && Api.GetCaretPos(out p)) Api.GetFocus().MapClientToScreen(ref p); else p = AMouse.XY;
 		var oi = t.OwnerItem; t.OwnerItem = null; //to set position
@@ -62,7 +62,7 @@ static class EdNetExtensions
 	///// See also: <see cref="FMain.CheckCmd"/>
 	///// </summary>
 	///// <exception cref="NullReferenceException">Item does not exist.</exception>
-	//public static void CheckItem(this ToolStripDropDownMenu t, string itemName, bool check)
+	//public static void ZCheckItem(this ToolStripDropDownMenu t, string itemName, bool check)
 	//{
 	//	(t.Items[itemName] as ToolStripMenuItem).Checked = check;
 	//}

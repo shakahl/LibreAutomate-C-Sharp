@@ -39,8 +39,8 @@ class PanelStatus : AuUserControlBase
 		_c.AccessibleRole = AccessibleRole.StatusBar;
 		_c.Dock = DockStyle.Fill;
 
-		_c.InitReadOnlyAlways = true;
-		_c.InitTagsStyle = AuScintilla.TagsStyle.AutoWithPrefix;
+		_c.ZInitReadOnlyAlways = true;
+		_c.ZInitTagsStyle = AuScintilla.ZTagsStyle.AutoWithPrefix;
 		//_c.WrapLines = true;
 
 		this.Controls.Add(_c);
@@ -50,7 +50,7 @@ class PanelStatus : AuUserControlBase
 
 	protected override void OnLoad(EventArgs e)
 	{
-		var t = _c.ST;
+		var t = _c.Z;
 		t.StyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
 		t.StyleFont(Sci.STYLE_DEFAULT, _font);
 		t.MarginWidth(1, 4);
@@ -67,7 +67,7 @@ class PanelStatus : AuUserControlBase
 	//	base.Dispose(disposing);
 	//}
 
-	public void SetText(string text)
+	public void ZSetText(string text)
 	{
 		if(this.InvokeRequired) BeginInvoke(new Action(() => _SetText(text)));
 		else _SetText(text);
@@ -75,7 +75,7 @@ class PanelStatus : AuUserControlBase
 
 	void _SetText(string text)
 	{
-		_c.ST.SetText(text);
+		_c.Z.SetText(text);
 	}
 
 	void _MouseInfo(POINT p)
@@ -101,7 +101,7 @@ class PanelStatus : AuUserControlBase
 				}
 			}
 
-			_c.ST.SetText(b.ToString());
+			_c.Z.SetText(b.ToString());
 		}
 	}
 

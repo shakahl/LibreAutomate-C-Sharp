@@ -48,17 +48,12 @@
 			// 
 			// _info
 			// 
-			this._info.AcceptsReturn = null;
 			this._info.AccessibleName = "_info";
 			this._info.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._info.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._info.DisableModifiedNotifications = false;
-			this._info.InitUseControlFont = false;
 			this._info.Location = new System.Drawing.Point(8, 8);
 			this._info.Name = "_info";
-			this._info.NoMouseLeftSetFocus = false;
-			this._info.NoMouseRightSetFocus = false;
 			this._info.Size = new System.Drawing.Size(600, 56);
 			this._info.TabIndex = 9;
 			// 
@@ -164,17 +159,13 @@
 			// 
 			// _code
 			// 
-			this._code.AcceptsReturn = null;
 			this._code.AccessibleName = "_code";
 			this._code.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._code.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._code.DisableModifiedNotifications = false;
 			this._code.Location = new System.Drawing.Point(8, 272);
 			this._code.Name = "_code";
-			this._code.NoMouseLeftSetFocus = false;
-			this._code.NoMouseRightSetFocus = false;
 			this._code.Size = new System.Drawing.Size(600, 104);
 			this._code.TabIndex = 6;
 			// 
@@ -199,7 +190,7 @@
 			this.Controls.Add(this._bCapture);
 			this.Controls.Add(this._bTest);
 			this.Controls.Add(this._bOK);
-			this.IsPopup = true;
+			this.ZIsPopup = true;
 			this.MinimumSize = new System.Drawing.Size(500, 400);
 			this.Name = "FormAWinImage";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;

@@ -11,7 +11,7 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Linq;
+using System.Linq;
 
 using Au.Types;
 using static Au.AStatic;
@@ -205,7 +205,7 @@ namespace Au
 			///// <summary>
 			///// Calls API <msdn>SetClassLongPtr</msdn> (SetClassLong in 32-bit process).
 			///// </summary>
-			///// <exception cref="WndException"/>
+			///// <exception cref="AuWndException"/>
 			//public static LPARAM SetClassLong(AWnd w, int index, LPARAM newValue)
 			//{
 			//	ALastError.Clear();
@@ -250,17 +250,46 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Writes a Windows message to the output.
+			/// Writes a Windows message to a string.
+			/// If the message is one of specified in <i>ignore</i> (which can be null), sets <c>s=null</c> and returns false.
 			/// </summary>
-			/// <param name="m"></param>
-			/// <param name="ignore">Messages to not show.</param>
-			public static void PrintMsg(in System.Windows.Forms.Message m, params int[] ignore)
+			public static bool PrintMsg(out string s, in System.Windows.Forms.Message m, params int[] ignore)
 			{
-				if(ignore != null) foreach(uint t in ignore) { if(t == m.Msg) return; }
+				if(ignore != null && ignore.Contains(m.Msg)) { s = null; return false; }
 
 				AWnd w = (AWnd)m.HWnd;
 				uint counter = (uint)w.Prop["PrintMsg"]; w.Prop.Set("PrintMsg", ++counter);
-				Print(counter.ToString(), m.ToString());
+				s=counter.ToString()+", "+m.ToString();
+				return true;
+			}
+
+			/// <summary>
+			/// Writes a Windows message to a string.
+			/// If the message is one of specified in <i>ignore</i> (which can be null), sets <c>s=null</c> and returns false.
+			/// </summary>
+			public static bool PrintMsg(out string s, AWnd w, int msg, LPARAM wParam, LPARAM lParam, params int[] ignore)
+			{
+				var m = System.Windows.Forms.Message.Create(w.Handle, msg, wParam, lParam);
+				return PrintMsg(out s, in m, ignore);
+			}
+
+			/// <summary>
+			/// Writes a Windows message to a string.
+			/// If the message is one of specified in <i>ignore</i> (which can be null), sets <c>s=null</c> and returns false.
+			/// </summary>
+			public static bool PrintMsg(out string s, in Native.MSG m, params int[] ignore)
+			{
+				return PrintMsg(out s, m.hwnd, m.message, m.wParam, m.lParam, ignore);
+			}
+
+			/// <summary>
+			/// Writes a Windows message to the output.
+			/// </summary>
+			/// <param name="m"></param>
+			/// <param name="ignore">Messages to skip. Can be null.</param>
+			public static void PrintMsg(in System.Windows.Forms.Message m, params int[] ignore)
+			{
+				if(PrintMsg(out var s, in m, ignore)) Print(s);
 			}
 
 			/// <summary>
@@ -270,19 +299,18 @@ namespace Au
 			/// <param name="msg"></param>
 			/// <param name="wParam"></param>
 			/// <param name="lParam"></param>
-			/// <param name="ignore">Messages to not show.</param>
+			/// <param name="ignore">Messages to skip. Can be null.</param>
 			public static void PrintMsg(AWnd w, int msg, LPARAM wParam, LPARAM lParam, params int[] ignore)
 			{
-				if(ignore != null) foreach(uint t in ignore) { if(t == msg) return; }
-				var m = System.Windows.Forms.Message.Create(w.Handle, (int)msg, wParam, lParam);
-				PrintMsg(in m);
+				var m = System.Windows.Forms.Message.Create(w.Handle, msg, wParam, lParam);
+				PrintMsg(in m, ignore);
 			}
 
 			/// <summary>
 			/// Writes a Windows message to the output.
 			/// </summary>
 			/// <param name="m">API <msdn>MSG</msdn>.</param>
-			/// <param name="ignore">Messages to not show.</param>
+			/// <param name="ignore">Messages to skip. Can be null.</param>
 			public static void PrintMsg(in Native.MSG m, params int[] ignore)
 			{
 				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, ignore);

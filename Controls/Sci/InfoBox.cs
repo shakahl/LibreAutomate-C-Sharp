@@ -31,12 +31,12 @@ namespace Au.Controls
 	{
 		public InfoBox()
 		{
-			InitReadOnlyAlways = true;
-			InitTagsStyle = TagsStyle.AutoAlways;
-			InitImagesStyle = ImagesStyle.ImageTag;
-			InitUseDefaultContextMenu = true;
-			InitWrapVisuals = false;
-			WrapLines = true;
+			ZInitReadOnlyAlways = true;
+			ZInitTagsStyle = ZTagsStyle.AutoAlways;
+			ZInitImagesStyle = ZImagesStyle.ImageTag;
+			ZInitUseDefaultContextMenu = true;
+			ZInitWrapVisuals = false;
+			ZWrapLines = true;
 			TabStop = false;
 		}
 
@@ -44,31 +44,31 @@ namespace Au.Controls
 		{
 			base.OnHandleCreated(e); //note: must be first
 
-			ST.StyleBackColor(Sci.STYLE_DEFAULT, 0xf8fff0);
-			if(InitUseControlFont) ST.StyleFont(Sci.STYLE_DEFAULT, Font); //Segoe UI 9 is narrower but taller than the default Verdana 8
-			ST.StyleClearAll();
-			ST.MarginWidth(1, 0);
+			Z.StyleBackColor(Sci.STYLE_DEFAULT, 0xf8fff0);
+			if(ZInitUseControlFont) Z.StyleFont(Sci.STYLE_DEFAULT, Font); //Segoe UI 9 is narrower but taller than the default Verdana 8
+			Z.StyleClearAll();
+			Z.MarginWidth(1, 0);
 		}
 
 		#region default property values for VS form designer
 
 		[DefaultValue(true)]
-		public override bool InitReadOnlyAlways { get => base.InitReadOnlyAlways; set => base.InitReadOnlyAlways = value; }
+		public override bool ZInitReadOnlyAlways { get => base.ZInitReadOnlyAlways; set => base.ZInitReadOnlyAlways = value; }
 
-		[DefaultValue(TagsStyle.AutoAlways)]
-		public override TagsStyle InitTagsStyle { get => base.InitTagsStyle; set => base.InitTagsStyle = value; }
+		[DefaultValue(ZTagsStyle.AutoAlways)]
+		public override ZTagsStyle ZInitTagsStyle { get => base.ZInitTagsStyle; set => base.ZInitTagsStyle = value; }
 
-		[DefaultValue(ImagesStyle.ImageTag)]
-		public override ImagesStyle InitImagesStyle { get => base.InitImagesStyle; set => base.InitImagesStyle = value; }
+		[DefaultValue(ZImagesStyle.ImageTag)]
+		public override ZImagesStyle ZInitImagesStyle { get => base.ZInitImagesStyle; set => base.ZInitImagesStyle = value; }
 
 		[DefaultValue(true)]
-		public override bool InitUseDefaultContextMenu { get => base.InitUseDefaultContextMenu; set => base.InitUseDefaultContextMenu = value; }
+		public override bool ZInitUseDefaultContextMenu { get => base.ZInitUseDefaultContextMenu; set => base.ZInitUseDefaultContextMenu = value; }
 
 		[DefaultValue(false)]
-		public override bool InitWrapVisuals { get => base.InitWrapVisuals; set => base.InitWrapVisuals = value; }
+		public override bool ZInitWrapVisuals { get => base.ZInitWrapVisuals; set => base.ZInitWrapVisuals = value; }
 
 		[DefaultValue(true)]
-		public override bool WrapLines { get => base.WrapLines; set => base.WrapLines = value; }
+		public override bool ZWrapLines { get => base.ZWrapLines; set => base.ZWrapLines = value; }
 
 		[DefaultValue(false)]
 		public new bool TabStop { get => base.TabStop; set => base.TabStop = value; }
@@ -78,7 +78,8 @@ namespace Au.Controls
 		/// <summary>
 		/// Use control's <b>Font</b> instead of the default font Verdana 8.
 		/// </summary>
-		public bool InitUseControlFont { get; set; }
+		[DefaultValue(false)]
+		public bool ZInitUseControlFont { get; set; }
 
 		protected override bool IsInputKey(Keys keyData)
 		{

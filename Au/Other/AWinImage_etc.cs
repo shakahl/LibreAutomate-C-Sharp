@@ -59,7 +59,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="rect">A rectangle in w client area coordinates. Use <c>w.ClientRect</c> to get whole client area.</param>
 		/// <param name="usePrintWindow">Use flag <see cref="WICFlags.PrintWindow"/>.</param>
-		/// <exception cref="WndException">Invalid w.</exception>
+		/// <exception cref="AuWndException">Invalid w.</exception>
 		/// <exception cref="ArgumentException">Empty rectangle.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size (with*height*4 bytes).</exception>
 		/// <remarks>
@@ -187,7 +187,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="outline">The outline (shape) of the area in w client area coordinates. If single element, captures single pixel.</param>
 		/// <param name="usePrintWindow">Use flag <see cref="WICFlags.PrintWindow"/>.</param>
-		/// <exception cref="WndException">Invalid <i>w</i>.</exception>
+		/// <exception cref="AuWndException">Invalid <i>w</i>.</exception>
 		/// <exception cref="ArgumentException"><i>outline</i> is null or has 0 elements.</exception>
 		/// <exception cref="AuException">Failed. Probably there is not enough memory for bitmap of this size.</exception>
 		/// <remarks>More info: <see cref="Capture(AWnd, RECT, bool)"/>.</remarks>

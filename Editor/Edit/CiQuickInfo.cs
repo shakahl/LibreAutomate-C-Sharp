@@ -34,11 +34,10 @@ using Microsoft.CodeAnalysis.SignatureHelp;
 using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.CSharp.QuickInfo;
-using TheArtOfDev.HtmlRenderer.WinForms;
 
 class CiQuickInfo
 {
-#if false
+#if true
 	public void SciMouseDwellStarted(int positionUtf8, int x, int y)
 	{
 	}
@@ -60,7 +59,7 @@ class CiQuickInfo
 
 		APerf.Next();
 		var doc = Panels.Editor.ActiveDoc;
-		int position = doc.ST.CountBytesToChars(positionUtf8);
+		int position = doc.Z.CountBytesToChars(positionUtf8);
 		Print("dwell", position);
 		var context = new QuickInfoContext(document, position, default);
 
@@ -114,7 +113,6 @@ class CiQuickInfo
 	}
 #endif
 
-	HtmlToolTip _tt;
 	AWnd _ttWnd;
 	TextSpan _ttSpan;
 
@@ -122,23 +120,23 @@ class CiQuickInfo
 	{
 		//Print("end", AWnd.FromMouse());
 		//_htmlToolTip?.Hide(doc);
-		if(_tt != null) {
-			//Print(_htmlToolTip.Visible);
-			//Print((AWnd)_htmlToolTip.)
-		}
+		//if(_tt != null) {
+		//	//Print(_htmlToolTip.Visible);
+		//	//Print((AWnd)_htmlToolTip.)
+		//}
 	}
 
 	public void SciMouseMoved(int x, int y)
 	{
-		if(!_ttSpan.IsEmpty) {
-			var doc = Panels.Editor.ActiveDoc;
-			int pos = doc.ST.PosFromXY((x, y), minusOneIfFar: true);
-			if(pos >= 0) pos = doc.ST.CountBytesToChars(pos);
-			Print(pos);
-			if(!_ttSpan.Contains(pos)) {
-				_ttSpan = default;
-				_tt.Hide(doc);
-			}
-		}
+		//if(!_ttSpan.IsEmpty) {
+		//	var doc = Panels.Editor.ActiveDoc;
+		//	int pos = doc.Z.PosFromXY((x, y), minusOneIfFar: true);
+		//	if(pos >= 0) pos = doc.Z.CountBytesToChars(pos);
+		//	Print(pos);
+		//	if(!_ttSpan.Contains(pos)) {
+		//		_ttSpan = default;
+		//		_tt.Hide(doc);
+		//	}
+		//}
 	}
 }

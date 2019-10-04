@@ -45,7 +45,7 @@ namespace Au
 			/// <param name="distance">Horizontal distance from the left of this control. Default 10.</param>
 			/// <param name="yOffset">Vertical offset from the top of this control. If negative - up. Default 5.</param>
 			/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
-			/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
 			/// This function is used mostly with controls, but supports top-level windows too.
 			/// </remarks>
@@ -58,7 +58,7 @@ namespace Au
 			/// <param name="distance">Horizontal distance from the right of this control. Default 10.</param>
 			/// <param name="yOffset">Vertical offset from the top of this control. If negative - up. Default 5.</param>
 			/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
-			/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
 			/// This function is used mostly with controls, but supports top-level windows too.
 			/// </remarks>
@@ -71,7 +71,7 @@ namespace Au
 			/// <param name="distance">Vertical distance from the top of this control. Default 10.</param>
 			/// <param name="xOffset">Horizontal offset from the left of this control. If negative - to the left. Default 5.</param>
 			/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
-			/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
 			/// This function is used mostly with controls, but supports top-level windows too.
 			/// </remarks>
@@ -84,7 +84,7 @@ namespace Au
 			/// <param name="distance">Vertical distance from the bottom of this control. Default 10.</param>
 			/// <param name="xOffset">Horizontal offset from the left of this control. If negative - to the left. Default 5.</param>
 			/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
-			/// <exception cref="WndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
 			/// This function is used mostly with controls, but supports top-level windows too.
 			/// </remarks>
@@ -252,15 +252,25 @@ namespace Au
 			//[Obsolete("Unreliable")]
 			//public AWnd GetParentApi => Api.GetParent(_w);
 
-			//rejected. Not useful.
-			///// <summary>
-			///// Gets an enabled owned window in the chain of windows owned by this window, or this window itself if there are no such windows.
-			///// </summary>
-			///// <remarks>
-			///// Calls API <msdn>GetWindow</msdn>(GW_ENABLEDPOPUP).
-			///// Supports <see cref="ALastError"/>.
-			///// </remarks>
-			//public AWnd EnabledOwnedOrThis => return Api.GetWindow(_w, Api.GW_ENABLEDPOPUP);
+			/// <summary>
+			/// Gets the first (in Z order) enabled window owned by this window.
+			/// </summary>
+			/// <param name="orThis">Return this window if there are no enabled owned windows. If false, then returns default(AWnd).</param>
+			/// <remarks>
+			/// Calls API <msdn>GetWindow</msdn>(GW_ENABLEDPOPUP).
+			/// Supports <see cref="ALastError"/>.
+			/// </remarks>
+			public AWnd EnabledOwned(bool orThis)
+			{
+				var r = Api.GetWindow(_w, Api.GW_ENABLEDPOPUP);
+				if(orThis) {
+					if(r.Is0) r = _w;
+				} else {
+					if(r == _w) r = default;
+				}
+				return r;
+				//MSDN documentation is incorrect. It says returns this window if there are no owned. But returns 0.
+			}
 
 			/// <summary>
 			/// Gets the most recently active window in the chain of windows owned by this window, or this window itself if there are no such windows.
@@ -512,7 +522,7 @@ namespace Au
 					}
 				}
 			}
-			catch(WndException) { }
+			catch(AuWndException) { }
 			return false;
 
 			//notes:
@@ -534,7 +544,7 @@ namespace Au
 		/// <summary>
 		/// Gets or sets the owner window of this top-level window.
 		/// </summary>
-		/// <exception cref="WndException">Failed (only the 'set' function).</exception>
+		/// <exception cref="AuWndException">Failed (only the 'set' function).</exception>
 		/// <remarks>
 		/// A window that has an owner window is always on top of it.
 		/// Don't call this for controls, they don't have an owner window.

@@ -163,7 +163,7 @@ namespace Au.Types
 	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If ends with "*", replaces the "*" with " window.". If does not end with ".", appends ".".
 	/// </remarks>
 	[Serializable]
-	public class WndException :AuException, ISerializable
+	public class AuWndException :AuException, ISerializable
 	{
 		const string _errStr_0Handle = "The window handle is 0. Usually it means 'window not found'.";
 		const string _errStr_InvalidHandle = "Invalid window handle. Usually it means 'the window was closed'.";
@@ -172,38 +172,38 @@ namespace Au.Types
 		/// Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
 		/// Sets Message = "Failed.".
 		/// </summary>
-		public WndException(AWnd w)
+		public AuWndException(AWnd w)
 			: base() { Window = w; NativeErrorCode = _Code(0, w); }
 
 		/// <summary>
 		/// Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
 		/// </summary>
-		public WndException(AWnd w, string message)
+		public AuWndException(AWnd w, string message)
 			: base(message) { Window = w; NativeErrorCode = _Code(0, w); }
 
 		/// <summary>
 		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
 		/// Sets Message = "Failed.".
 		/// </summary>
-		public WndException(AWnd w, int winApiErrorCode)
+		public AuWndException(AWnd w, int winApiErrorCode)
 			: base(_Code(winApiErrorCode, w)) { Window = w; }
 
 		/// <summary>
 		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
 		/// </summary>
-		public WndException(AWnd w, int winApiErrorCode, string message)
+		public AuWndException(AWnd w, int winApiErrorCode, string message)
 			: base(_Code(winApiErrorCode, w), message) { Window = w; }
 
 		/// <summary>
 		/// Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
 		/// </summary>
-		public WndException(AWnd w, string message, Exception innerException)
+		public AuWndException(AWnd w, string message, Exception innerException)
 			: base(message, innerException) { Window = w; NativeErrorCode = _Code(0, w); }
 
 		/// <summary>
 		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
 		/// </summary>
-		public WndException(AWnd w, int winApiErrorCode, string message, Exception innerException)
+		public AuWndException(AWnd w, int winApiErrorCode, string message, Exception innerException)
 			: base(_Code(winApiErrorCode, w), message, innerException) { Window = w; }
 
 		static int _Code(int code, AWnd w)
@@ -241,7 +241,7 @@ namespace Au.Types
 		}
 
 		///
-		protected WndException(SerializationInfo info, StreamingContext context) : base(info, context)
+		protected AuWndException(SerializationInfo info, StreamingContext context) : base(info, context)
 		{
 			Window = (AWnd)info.GetInt32("Window");
 		}

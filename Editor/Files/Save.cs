@@ -99,7 +99,7 @@ partial class FilesModel
 		{
 			if(_textAfterS > 0) _SaveTextNow();
 			if(onlyText) return;
-			Panels.Editor.SaveEditorData();
+			Panels.Editor.ZSaveEditorData();
 		}
 
 		void _SaveWorkspaceNow()
@@ -120,8 +120,8 @@ partial class FilesModel
 		{
 			_textAfterS = 0;
 			Debug.Assert(_model != null); if(_model == null) return;
-			Debug.Assert(Panels.Editor.IsOpen);
-			if(!Panels.Editor.SaveText()) _textAfterS = 300; //if fails, retry later
+			Debug.Assert(Panels.Editor.ZIsOpen);
+			if(!Panels.Editor.ZSaveText()) _textAfterS = 300; //if fails, retry later
 		}
 
 		/// <summary>
@@ -228,7 +228,7 @@ partial class FilesModel
 					if(i == iActive) fnActive = fn;
 				}
 				//APerf.Next();
-				if(fnActive == null || !_SetCurrentFile(fnActive)) Panels.Open.UpdateList();
+				if(fnActive == null || !_SetCurrentFile(fnActive)) Panels.Open.ZUpdateList();
 				//APerf.NW();
 			}
 		}

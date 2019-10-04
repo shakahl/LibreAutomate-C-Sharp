@@ -71,7 +71,6 @@
 			this._info.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._info.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-			this._info.DisableModifiedNotifications = false;
 			this._info.Location = new System.Drawing.Point(8, 8);
 			this._info.Name = "_info";
 			this._info.Size = new System.Drawing.Size(624, 80);
@@ -277,7 +276,7 @@
 			this.Controls.Add(this._bCancel);
 			this.Controls.Add(this._info);
 			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-			this.IsPopup = true;
+			this.ZIsPopup = true;
 			this.MaximizeBox = false;
 			this.MinimizeBox = false;
 			this.ShowIcon = false;

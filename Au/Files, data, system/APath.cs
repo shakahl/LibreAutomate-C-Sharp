@@ -33,7 +33,7 @@ namespace Au
 		/// Supports known folder names. See <see cref="AFolders"/>.
 		/// Example: <c>@"%AFolders.Documents%\file.txt"</c>.
 		/// Example: <c>@"%AFolders.Virtual.ControlPanel%" //gets ":: HexEncodedITEMIDLIST"</c>.
-		/// Usually known folders are used like <c>string path = AFolders.Documents + "file.txt"</c>. It's easier and faster. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
+		/// Usually known folders are used like <c>string path = AFolders.Documents + "file.txt"</c>. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
 		/// To get known folder path, this function calls <see cref="AFolders.GetFolder"/>.
 		///
 		/// This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>AExec</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
@@ -51,11 +51,11 @@ namespace Au
 
 			//support known folders, like @"%AFolders.Documents%\..."
 			if(i > 12 && s.Starts("%AFolders.")) {
-				var k = AFolders.GetFolder(s.Substring(10, i - 10));
+				var prop = s.Substring(10, i - 10);
+				var k = AFolders.GetFolder(prop);
 				if(k != null) return k + s.Substring(i + 1);
-				return s; //TODO: dangerous to return such string. Eg then can create file like @"%AFolders.Documents%\..." in current directory. Should throw exception or show warning and return invalid path.
-
-				//CONSIDER: or/also support like @"%<Documents>%\..." or @"<Documents>\..." or @"%.Documents%\..." or @"%%Documents%%\..."
+				//throw new AuException("AFolders does not have property " + prop);
+				return s;
 			}
 
 			for(int na = s.Length + 100; ;) {
@@ -291,6 +291,7 @@ namespace Au
 		/// Unlike <see cref="Combine"/>, fails if some part is empty or <c>@"\"</c> or if s2 is <c>@"\\"</c>. Also does not check s2 full path.
 		/// If fails, throws exception or returns null (if noException).
 		/// </summary>
+		/// <exception cref="ArgumentException"></exception>
 		internal static string LibCombine(string s1, string s2, bool noException = false)
 		{
 			if(!Empty(s1) && !Empty(s2)) {

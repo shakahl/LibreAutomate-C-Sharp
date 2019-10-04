@@ -250,8 +250,8 @@ namespace Au.Controls
 				m["Hide\tM-click"] = o => this.SetDockState(_DockState.Hidden);
 
 				m.Separator();
-				using(m.Submenu("Show Panel")) _manager.AddShowPanelsToMenu(m.LastMenuItem.DropDown, false);
-				using(m.Submenu("Show Toolbar")) _manager.AddShowPanelsToMenu(m.LastMenuItem.DropDown, true);
+				using(m.Submenu("Show Panel")) _manager.ZAddShowPanelsToMenu(m.LastMenuItem.DropDown, false);
+				using(m.Submenu("Show Toolbar")) _manager.ZAddShowPanelsToMenu(m.LastMenuItem.DropDown, true);
 
 				m.Separator();
 				var k = (!this.IsTabbedPanel || this.IsFloating) ? this : gp.ParentTab;
@@ -292,7 +292,7 @@ namespace Au.Controls
 				//};
 
 				//custom
-				_manager.PanelContextMenu?.Invoke(new DPContextMenuEventArgs(gp, m));
+				_manager.ZPanelContextMenu?.Invoke(new ZContextMenuEventArgs(gp, m));
 
 				m.Show(this.ParentControl, p.X, p.Y);
 			}
@@ -423,7 +423,7 @@ namespace Au.Controls
 				//(isTab ? gt.ActiveItem : gp)?.Content.Hide();
 				var gtp = isTab ? gt.ActiveItem : gp;
 				if(gtp != null) {
-					if(state != _DockState.Docked && _manager.FocusControlOnUndockEtc != null && gtp.Content.ContainsFocus) _manager.FocusControlOnUndockEtc.Focus();
+					if(state != _DockState.Docked && _manager.ZFocusControlOnUndockEtc != null && gtp.Content.ContainsFocus) _manager.ZFocusControlOnUndockEtc.Focus();
 					gtp.Content.Hide();
 				}
 

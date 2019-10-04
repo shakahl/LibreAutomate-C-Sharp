@@ -32,7 +32,7 @@ namespace Au
 	/// 
 	/// What happens when an AWnd function fails:
 	/// - Functions that get window properties don't throw exceptions. They return false/0/null/empty. Most of them support <see cref="ALastError"/>, and it is mentioned in function documentation.
-	/// - Many functions that change window properties throw exception. Exceptions are listed in function documentation. Almost all these functions throw only <see cref="WndException"/>.
+	/// - Many functions that change window properties throw exception. Exceptions are listed in function documentation. Almost all these functions throw only <see cref="AuWndException"/>.
 	/// - Other functions that change window properties return false. They are more often used in programming than in automation scripts.
 	/// - When a 'find' function does not find the window or control, it returns default(AWnd) (window handle 0). Then <see cref="Is0"/> will return true.
 	/// - If a function does not follow these rules, it is mentioned in function documentation.
@@ -309,61 +309,61 @@ namespace Au
 		#region throw, valid
 
 		/// <summary>
-		/// If <see cref="Is0"/>, throws <see cref="WndException"/>.
+		/// If <see cref="Is0"/>, throws <see cref="AuWndException"/>.
 		/// </summary>
-		/// <exception cref="WndException"></exception>
+		/// <exception cref="AuWndException"></exception>
 		public void ThrowIf0()
 		{
-			if(_h == null) throw new WndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+			if(_h == null) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
 		}
 
 		/// <summary>
-		/// If <see cref="Is0"/> or !<see cref="IsAlive"/>, throws <see cref="WndException"/>.
+		/// If <see cref="Is0"/> or !<see cref="IsAlive"/>, throws <see cref="AuWndException"/>.
 		/// </summary>
-		/// <exception cref="WndException"></exception>
+		/// <exception cref="AuWndException"></exception>
 		public void ThrowIfInvalid()
 		{
-			if(_h == null || !Api.IsWindow(this)) throw new WndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+			if(_h == null || !Api.IsWindow(this)) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
 		}
 
 		/// <summary>
-		/// Throws <see cref="WndException"/> that uses the last Windows API error (code and message).
+		/// Throws <see cref="AuWndException"/> that uses the last Windows API error (code and message).
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
-		/// <exception cref="WndException"></exception>
+		/// <exception cref="AuWndException"></exception>
 		public void ThrowUseNative()
 		{
-			throw new WndException(this, 0);
+			throw new AuWndException(this, 0);
 		}
 
 		/// <summary>
-		/// Throws <see cref="WndException"/> that uses mainMessage and the last Windows API error (code and message).
+		/// Throws <see cref="AuWndException"/> that uses mainMessage and the last Windows API error (code and message).
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
-		/// <exception cref="WndException"></exception>
+		/// <exception cref="AuWndException"></exception>
 		public void ThrowUseNative(string mainMessage)
 		{
-			throw new WndException(this, 0, mainMessage);
+			throw new AuWndException(this, 0, mainMessage);
 		}
 
 		/// <summary>
-		/// Throws <see cref="WndException"/> that uses mainMessage and the specified Windows API error code.
+		/// Throws <see cref="AuWndException"/> that uses mainMessage and the specified Windows API error code.
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
-		/// <exception cref="WndException"></exception>
+		/// <exception cref="AuWndException"></exception>
 		public void ThrowUseNative(int errorCode, string mainMessage)
 		{
-			throw new WndException(this, errorCode, mainMessage);
+			throw new AuWndException(this, errorCode, mainMessage);
 		}
 
 		/// <summary>
-		/// Throws <see cref="WndException"/> that uses mainMessage and does not use the last Windows API error.
+		/// Throws <see cref="AuWndException"/> that uses mainMessage and does not use the last Windows API error.
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
-		/// <exception cref="WndException"></exception>
+		/// <exception cref="AuWndException"></exception>
 		public void ThrowNoNative(string mainMessage)
 		{
-			throw new WndException(this, mainMessage);
+			throw new AuWndException(this, mainMessage);
 		}
 
 		/// <summary>
@@ -482,7 +482,7 @@ namespace Au
 		/// <remarks>
 		/// Calls API <msdn>ShowWindow</msdn> with SW_SHOWNA or SW_HIDE.
 		/// </remarks>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		public void Show(bool show)
 		{
 			if(!ShowLL(show)) ThrowUseNative(show ? "*show*" : "*hide*");
@@ -540,7 +540,7 @@ namespace Au
 		/// Calls API <msdn>EnableWindow</msdn>.
 		/// </summary>
 		/// <param name="enable">Enable or disable.</param>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		public void Enable(bool enable)
 		{
 			ALastError.Clear();
@@ -595,7 +595,7 @@ namespace Au
 		/// Also unhides.
 		/// </summary>
 		/// <param name="noAnimation">Visually fast, without animation.</param>
-		/// <exception cref="WndException">The API call failed. No exception if the window did not obey.</exception>
+		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
 		public void ShowMinimized(bool noAnimation = false)
 		{
 			_MinMaxRes(Api.SW_MINIMIZE, noAnimation);
@@ -606,7 +606,7 @@ namespace Au
 		/// Also unhides.
 		/// </summary>
 		/// <param name="noAnimation">Visually fast, without animation.</param>
-		/// <exception cref="WndException">The API call failed. No exception if the window did not obey.</exception>
+		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
 		public void ShowMaximized(bool noAnimation = false)
 		{
 			_MinMaxRes(Api.SW_SHOWMAXIMIZED, noAnimation);
@@ -617,7 +617,7 @@ namespace Au
 		/// Also unhides.
 		/// </summary>
 		/// <param name="noAnimation">Visually fast, without animation.</param>
-		/// <exception cref="WndException">The API call failed. No exception if the window did not obey.</exception>
+		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
 		public void ShowNotMinMax(bool noAnimation = false)
 		{
 			_MinMaxRes(Api.SW_SHOWNORMAL, noAnimation);
@@ -628,7 +628,7 @@ namespace Au
 		/// Also unhides.
 		/// </summary>
 		/// <param name="noAnimation">Visually fast, without animation.</param>
-		/// <exception cref="WndException">The API call failed. No exception if the window did not obey.</exception>
+		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
 		public void ShowNotMinimized(bool noAnimation = false)
 		{
 			_MinMaxRes(Api.SW_RESTORE, noAnimation);
@@ -640,7 +640,7 @@ namespace Au
 		/// </summary>
 		/// <param name="state">Must be SW_MINIMIZE, SW_RESTORE (restores to normal/max if minimized), SW_SHOWNORMAL or SW_SHOWMAXIMIZED.</param>
 		/// <param name="noAnimation">Use SetWindowPlacement (no animation).</param>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		void _MinMaxRes(int state, bool noAnimation)
 		{
 			Debug.Assert(state == Api.SW_MINIMIZE || state == Api.SW_RESTORE || state == Api.SW_SHOWNORMAL || state == Api.SW_SHOWMAXIMIZED);
@@ -718,7 +718,7 @@ namespace Au
 		/// Initializes a WINDOWPLACEMENT struct and calls API <msdn>GetWindowPlacement</msdn>.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		/// <exception cref="WndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
+		/// <exception cref="AuWndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
 		internal bool LibGetWindowPlacement(out Api.WINDOWPLACEMENT wp, string errStr = null)
 		{
 			//initially this was public, but probably don't need.
@@ -732,7 +732,7 @@ namespace Au
 		/// <summary>
 		/// Sets WINDOWPLACEMENT <b>length</b> field and calls API <msdn>SetWindowPlacement</msdn>.
 		/// </summary>
-		/// <exception cref="WndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
+		/// <exception cref="AuWndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
 		internal bool LibSetWindowPlacement(ref Api.WINDOWPLACEMENT wp, string errStr = null)
 		{
 			//initially this was public, but probably don't need.
@@ -856,7 +856,7 @@ namespace Au
 					//CONSIDER: if GetForegroundWindow is not w, send WM_NULL. Info: https://blogs.msdn.microsoft.com/oldnewthing/20161118-00/?p=94745
 					return More.WaitForAnActiveWindow();
 				}
-				//catch(WndException) { return false; }
+				//catch(AuWndException) { return false; }
 				catch { return false; }
 			}
 
@@ -891,7 +891,7 @@ namespace Au
 		/// The same as <see cref="Activate()"/>, but has some options.
 		/// Returns false if does not activate because of flag IgnoreIfNoActivateStyleEtc.
 		/// </summary>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		internal bool LibActivate(Lib.ActivateFlags flags)
 		{
 			if(!flags.Has(Lib.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
@@ -1005,7 +1005,7 @@ namespace Au
 		/// - If this is <see cref="GetWnd.Root"/>. Then just deactivates the currently active window.
 		/// - When the target application instead activates another window of the same thread.
 		/// </remarks>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <seealso cref="ActivateLL"/>
 		/// <seealso cref="IsActive"/>
 		/// <seealso cref="Active"/>
@@ -1086,7 +1086,7 @@ namespace Au
 		/// Can instead focus a child control. For example, if this is a ComboBox, it will focus its child Edit control. Then does not throw exception.
 		/// This can be control or top-level window. Top-level windows also can have focus.
 		/// </remarks>
-		/// <exception cref="WndException">
+		/// <exception cref="AuWndException">
 		/// - Invalid handle.
 		/// - Disabled.
 		/// - Failed to set focus.
@@ -1424,7 +1424,7 @@ namespace Au
 		/// </summary>
 		/// <param name="width">Width. Use null to not change.</param>
 		/// <param name="height">Height. Use null to not change.</param>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		public void SetClientSize(int? width, int? height)
 		{
 			if(LibGetWindowInfo(out var u)) {
@@ -1787,7 +1787,7 @@ namespace Au
 		/// For top-level windows use screen coordinates. For controls - direct parent client area coordinates.
 		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int, int, int, Native.SWP)"/>.
 		/// </remarks>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, AScreen screen = default)
 		{
 			ThrowIfInvalid();
@@ -1832,7 +1832,7 @@ namespace Au
 		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
 		/// <param name="workArea"><i>x y</i> are relative to the work area. Not used when this is a child window.</param>
 		/// <param name="screen"><i>x y</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window.</param>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
@@ -1850,7 +1850,7 @@ namespace Au
 		/// <param name="height">Height. If default(Coord), does not change height.</param>
 		/// <param name="workArea">For <see cref="Coord.Fraction"/> etc use width/height of the work area. Not used when this is a child window.</param>
 		/// <param name="screen">For <b>Coord.Fraction</b> etc use width/height of this screen. Default - primary. Not used when this is a child window.</param>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// With windows of current thread usually it's better to use <see cref="ResizeLL(int, int)"/>.
@@ -1959,7 +1959,7 @@ namespace Au
 		/// <param name="screen">Move to this screen (see <see cref="AScreen"/>). If default, uses screen of this window.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of window is not in screen, move and/or resize it so that entire window would be in screen. Default true.</param>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately, except when moving maximized to another screen.
 		/// </remarks>
@@ -1975,7 +1975,7 @@ namespace Au
 		/// </summary>
 		/// <param name="screen">Move to this screen (see <see cref="AScreen"/>). If default, uses screen of this window.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
 		/// </remarks>
@@ -1990,7 +1990,7 @@ namespace Au
 		/// Moves this window to the center of the screen.
 		/// </summary>
 		/// <param name="screen">Move to this screen (see <see cref="AScreen"/>). If default, uses screen of this window.</param>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <remarks>Calls <c>ShowNotMinMax(true)</c> and <c>MoveInScreen(default, default, screen, true)</c>.</remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
 		public void MoveToScreenCenter(AScreen screen = default)
@@ -2215,7 +2215,7 @@ namespace Au
 		/// <param name="how"></param>
 		/// <param name="updateNC">Update non-client area (frame, title bar).</param>
 		/// <param name="updateClient">Update client area.</param>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <seealso cref="Style"/>
 		public void SetStyle(WS style, SetAddRemove how = SetAddRemove.Set, bool updateNC = false, bool updateClient = false)
 		{
@@ -2229,7 +2229,7 @@ namespace Au
 		/// <param name="how"></param>
 		/// <param name="updateNC">Update non-client area (frame, title bar).</param>
 		/// <param name="updateClient">Update client area.</param>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		/// <seealso cref="ExStyle"/>
 		public void SetExStyle(WS_EX style, SetAddRemove how = SetAddRemove.Set, bool updateNC = false, bool updateClient = false)
 		{
@@ -2291,7 +2291,7 @@ namespace Au
 		/// For index can be used constants from <see cref="Native.GWL"/>.
 		/// In 32-bit process actually calls <b>SetWindowLong</b>, because <b>SetWindowLongPtr</b> is unavailable.
 		/// </remarks>
-		/// <exception cref="WndException"/>
+		/// <exception cref="AuWndException"/>
 		public LPARAM SetWindowLong(int index, LPARAM newValue)
 		{
 			ALastError.Clear();
@@ -2304,7 +2304,7 @@ namespace Au
 		/// Gets or sets id of this control.
 		/// The 'get' function supports <see cref="ALastError"/>.
 		/// </summary>
-		/// <exception cref="WndException">Failed (only 'set' function).</exception>
+		/// <exception cref="AuWndException">Failed (only 'set' function).</exception>
 		public int ControlId {
 			get => Api.GetDlgCtrlID(this);
 			set { SetWindowLong(Native.GWL.ID, value); }
@@ -2631,7 +2631,7 @@ namespace Au
 		/// For variable-text controls (edit, combo box, status bar, ...) this usually is the text that <see cref="ControlText"/> would get.
 		/// For other controls (button, static, ...) and top-level windows this usually is the text that <see cref="Name"/> would get.
 		/// </remarks>
-		/// <exception cref="WndException">Failed, for example the window is closed.</exception>
+		/// <exception cref="AuWndException">Failed, for example the window is closed.</exception>
 		/// <seealso cref="GetText"/>
 		/// <seealso cref="Name"/>
 		/// <seealso cref="ControlText"/>

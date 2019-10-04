@@ -1511,15 +1511,15 @@ class Script : AScript
 	{
 		var f = new AuForm();
 		var t = new InfoBox();
-		t.InitUseControlFont = true;
+		t.ZInitUseControlFont = true;
 
 		t.HandleCreated += (unu, sed) => {
-			t.Tags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0xff, italic = true, backColor = 0x00ff00 });
-			t.Tags.AddStyleTag(".r", new SciTags.UserDefinedStyle { textColor = 0xf08080 });
+			t.ZTags.AddStyleTag(".k", new SciTags.UserDefinedStyle { textColor = 0xff, italic = true, backColor = 0x00ff00 });
+			t.ZTags.AddStyleTag(".r", new SciTags.UserDefinedStyle { textColor = 0xf08080 });
 		};
 		//ATimer.After(2000, () => t.Text = "<.k>user<> tag <c green>green<>");
 		ATimer.After(2000, () => {
-			t.Tags.AddStyleTag(".late", new SciTags.UserDefinedStyle { backColor = 0x00ffff });
+			t.ZTags.AddStyleTag(".late", new SciTags.UserDefinedStyle { backColor = 0x00ffff });
 			t.Text = "<.late>user<> tag <c green>green<>";
 		});
 
@@ -2081,6 +2081,29 @@ class Script : AScript
 	//	Api.DeleteObject(font);
 	//}
 
+	void TestKnownFolders()
+	{
+		Print(AFolders.GetKnownFolders());
+
+		//AFolders.GetKnownFolders();
+		//3.s();
+		//var t1 = ATime.WinMilliseconds;
+		//while(ATime.WinMilliseconds-t1<10000) AFolders.GetKnownFolders();
+	}
+
+	void TestFont()
+	{
+		ADebug.LibMemorySetAnchor();
+		for(int i = 0; i < 10000; i++) {
+			//var f = new Font("Segoe UI", 8f+(i/100f));
+			var f = Au.Util.AFonts.Regular;
+			var z = f.Size;
+			//f.Dispose();
+			if(0 == (i % 1000)) ADebug.LibMemoryPrint();
+			1.ms();
+		}
+	}
+
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
 	void _Main(string[] args)
 	{ //}}//}}//}}//}}
@@ -2113,54 +2136,37 @@ class Script : AScript
 
 		//var f = new Au.Tools.FormAWinImage();
 		//f.ShowDialog();
-#endif
-		string s = "";
+		string swwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww = "";
 		//s.
 		//this.TestA
-		s.Insert(0, "f");
-		File.Create("");
+		//s.Insert(0, "f");
 		//List<int> a; a.ConvertAll
 		//var d = new Dictionary<int, int>(); d.
 		//AWnd w; w.
+		swwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.Find("d");
 
-		//TestScreenDC();
-		//AExec.RunConsole(,)
-		//BuildDocumentationProviderDatabase();
-		//TestCefSharp();
-		//TestDecompressInvalidZipData();
-		//TestTimersCpu();
-		//for(int i = 0; i < 7; i++) TestTimers();
-		//TestDictionaryAndListSearchSpeed();
-		//TestWR();
-		//TestNullOperator();
-		//TestCalcellationToken();
-		//TestNetTimer();
-		//TestWeakReferenceWithTimeout();
-		//TestMemoryCache();
-		//TestRegexMatchDataStack();
-		//TestRegexReplaceEx();
-		//TestXmlFormatting();
-		//TestRegexInfoWindow();
-		//TestAuInfoWindow();
-		//TestSciTagsRegisteredStyles();
-		//TestCalculatePopupWindowPosition();
-		//TestComboWrapper();
-		//TestTodo();
-		//TestDiffMatchpatch();
-		//TestIronPython();
-		//TestCs8(); //ADialog.Show();
-		//TestOptReset();
-		//TestRunConsole();
-		//TestProcessStarter();
-		//TestXmlNewlines();
-		//TestIndexerOverload();
-		//TestCharUpperNonBmp();
-		//TestBlockInputReliability();
-		//TestGetKeyState();
-		//TestCapsLock();
-		//Test2CharKeysAndVK();
-		//TestTurnOffCapsLockWithShift();
-		//TestMouseRelative();
+		Print(new string(' ', 5), new Dictionary<int, int>(2, null), 7, );
+
+		//AWnd.Find(
+		//	"",
+		//	""
+
+		//Microsoft.CodeAnalysis.
+		//ImmutableArray<int> k; k.
+		//System.Collections.Immutable.ImmutableList
+		//"".Ends(  );
+		int kk = 7;
+#endif
+		//Print(Empty(), 1)
+		var k = (1 + 2);
+
+		if(true)
+			Print(1);
+		k = (1 + 2);
+		
+
+
+
 #else
 		AThread.Start(() => {
 #if true
@@ -2203,6 +2209,16 @@ class Script : AScript
 
 	[field: ThreadStatic]
 	public int Pub3 { get; set; }
+}
+
+partial class PartClass{
+	partial void Part();
+
+	partial void Part( ) { }
+}
+
+abstract class AbstractClass{
+	public abstract void Abs();
 }
 
 static class TestExt

@@ -302,7 +302,7 @@ namespace Au.Triggers
 		/// Sets scope "only this window". Hotkey, autotext and mouse triggers added afterwards will work only when the specified window is active.
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-		/// <exception cref="WndException">Invalid window handle.</exception>
+		/// <exception cref="AuWndException">Invalid window handle.</exception>
 		public TriggerScope Window(AWnd w)
 			=> _Add(false, w);
 
@@ -310,7 +310,7 @@ namespace Au.Triggers
 		/// Sets scope "not this window". Hotkey, autotext and mouse triggers added afterwards will not work when the specified window is active.
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-		/// <exception cref="WndException">Invalid window handle.</exception>
+		/// <exception cref="AuWndException">Invalid window handle.</exception>
 		public TriggerScope NotWindow(AWnd w)
 			=> _Add(true, w);
 
@@ -325,7 +325,7 @@ namespace Au.Triggers
 		/// The easiest way to specify "all windows of program X.exe": <c>Triggers.Of.Windows(",,X.exe")</c>.
 		/// </param>
 		/// <exception cref="ArgumentException">Unsupported object type.</exception>
-		/// <exception cref="WndException">Invalid window handle (when object type is <b>AWnd</b>).</exception>
+		/// <exception cref="AuWndException">Invalid window handle (when object type is <b>AWnd</b>).</exception>
 		public TriggerScope Windows(params object[] any)
 			=> _Add(false, any);
 
@@ -335,7 +335,7 @@ namespace Au.Triggers
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <param name="any">See <see cref="Windows"/>.</param>
 		/// <exception cref="ArgumentException">Unsupported object type.</exception>
-		/// <exception cref="WndException">Invalid window handle (when object type is <b>AWnd</b>).</exception>
+		/// <exception cref="AuWndException">Invalid window handle (when object type is <b>AWnd</b>).</exception>
 		public TriggerScope NotWindows(params object[] any)
 			=> _Add(true, any);
 

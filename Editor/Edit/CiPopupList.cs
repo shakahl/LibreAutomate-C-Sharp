@@ -14,24 +14,23 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
+using System.Linq;
 //using System.Xml.Linq;
 
 using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
-using Microsoft.CodeAnalysis.Completion;
-using TheArtOfDev.HtmlRenderer.Core;
-using Microsoft.CodeAnalysis;
 
-class CiPopupList : IMessageFilter
+class CiPopupList
 {
 	_Window _w;
 	_FastListBox _list;
 	AuToolStrip _tb;
 	int _nKindButtons;
 	int _height;
+
+	SciCode _doc;
 	CiCompletion _compl;
 	List<CiComplItem> _a;
 	List<int> _aVisible; //indices of visible _a items
@@ -45,12 +44,12 @@ class CiPopupList : IMessageFilter
 	/// <summary>
 	/// The top-level popup window.
 	/// </summary>
-	public Form PopupWindow => _w;
+	public InactiveWindow PopupWindow => _w;
 
 	///// <summary>
 	///// The child list control.
 	///// </summary>
-	//public FastListBox ListControl => _list;
+	//public AuListControl ListControl => _list;
 
 	public CiPopupList(CiCompletion compl)
 	{
@@ -65,13 +64,13 @@ class CiPopupList : IMessageFilter
 		_list.AccessibleName = _list.Name = "Codein_list";
 		_list.Dock = DockStyle.Fill;
 		_list.BackColor = Color.White;
-		_list.ItemClick += _list_ItemClick;
-		_list.SelectedIndexChanged += _list_SelectedIndexChanged;
+		_list.ZItemClick += _list_ItemClick;
+		_list.ZSelectedIndexChanged += _list_SelectedIndexChanged;
 
 		_tb = new AuToolStrip();
 		_tb.SuspendLayout();
 		_tb.AccessibleName = _tb.Name = "Codein_listFilter";
-		_tb.Renderer = new AuDockPanel.DockedToolStripRenderer();
+		_tb.Renderer = new AuDockPanel.ZDockedToolStripRenderer();
 		_tb.GripStyle = ToolStripGripStyle.Hidden;
 		_tb.LayoutStyle = ToolStripLayoutStyle.VerticalStackWithOverflow;
 		int tbWidth = 0;
@@ -82,7 +81,7 @@ class CiPopupList : IMessageFilter
 		_tb.Items.Add(new ToolStripSeparator());
 		_groupButton = _AddButton("Group by namespace or inheritance", EdResources.GetImageNoCacheDpi(nameof(Au.Editor.Properties.Resources.ciGroupBy)));
 		if(Program.Settings.GetBool("ciGroup", true)) _groupButton.Checked = true;
-		//TODO: _linqButton
+		//TODO: _linqButton. Or always sort below (maybe only for string).
 
 		ToolStripButton _AddButton(string text, Image image)
 		{
@@ -133,13 +132,13 @@ class CiPopupList : IMessageFilter
 			_groupsEnabled = check && _groups != null;
 			_Sort();
 			this.SelectedItem = null;
-			_list.ReMeasure();
+			_list.ZReMeasure();
 		}
 	}
 
-	private void _list_ItemClick(object sender, FastListBox.ItemClickArgs e)
+	private void _list_ItemClick(object sender, AuListControl.ZItemClickArgs e)
 	{
-		if(e.DoubleClick) _Commit(e.Index);
+		if(e.DoubleClick) _Commit(e.Index, default);
 	}
 
 	private void _list_SelectedIndexChanged(int index)
@@ -161,18 +160,18 @@ class CiPopupList : IMessageFilter
 		var ci = t.Tag as CiComplItem;
 		var html = _compl.GetDescriptionHtml(ci, 0);
 		if(html == null) return;
-		_popupHtml ??= new CiPopupHtml();
-		_popupHtml.SetHtml(html, _compl, ci); //slow first time
-		_popupHtml.Show(Panels.Editor.ActiveDoc, _w.Bounds);
+		_popupHtml ??= new CiPopupHtml(false);
+		_popupHtml.Show(Panels.Editor.ZActiveDoc, _w.Bounds);
+		_popupHtml.SetHtml(html, iSel => _compl.GetDescriptionHtml(ci, iSel));
 	}
 
 	int _VisibleCount => _aVisible.Count;
 
 	CiComplItem _VisibleItem(int index) => _a[_aVisible[index]];
 
-	void _Commit(int index)
+	void _Commit(int index, Keys keyData)
 	{
-		if((uint)index < _VisibleCount) _compl.Commit(_VisibleItem(index));
+		if((uint)index < _VisibleCount) _compl.Commit(_doc, _VisibleItem(index), keyData);
 		Hide();
 	}
 
@@ -199,11 +198,11 @@ class CiPopupList : IMessageFilter
 		for(int i = 0; i < _a.Count; i++) if(_a[i].hidden == 0) _aVisible.Add(i);
 		_Sort();
 
-		_list.AddItems(_VisibleCount,
+		_list.ZAddItems(_VisibleCount,
 			o => _TextHorzOffset + o.MeasureText(_VisibleItem(o.index).DisplayText).width + o.MeasureText(_GreenSuffix(o.index)).width,
 			_DrawItem,
 			i => _VisibleItem(i).DisplayText);
-		_compl.SelectBestMatch();
+		_compl.SelectBestMatch(_aVisible.Select(i => _a[i].ci)); //pass items sorted like in the visible list
 		_list.Invalidate();
 
 		int kinds = 0;
@@ -215,11 +214,13 @@ class CiPopupList : IMessageFilter
 
 	public void Show(SciCode doc, int position)
 	{
+		_doc = doc;
+
 		var r = CiUtil.GetCaretRectFromPos(doc, position);
 		r.X -= _tb.Width + _TextHorzOffset + 6;
 
-		_SetRect(doc, r);
-		_w.ShowAt(doc);
+		_SetRect(r);
+		_w.ZShow(doc);
 	}
 
 	public void Hide()
@@ -227,7 +228,7 @@ class CiPopupList : IMessageFilter
 		_a = null;
 		_aVisible = null;
 		_groups = null;
-		_list.AddItems(0, null, null, null);
+		_list.ZAddItems(0, null, null, null);
 		_w.Hide();
 		_popupHtml?.Hide();
 		_popupTimer?.Stop();
@@ -235,15 +236,15 @@ class CiPopupList : IMessageFilter
 
 	public CiComplItem SelectedItem {
 		get {
-			int i = _list.SelectedIndex;
+			int i = _list.ZSelectedIndex;
 			return i >= 0 ? _VisibleItem(i) : null;
 		}
 		set {
 			int i = -1;
 			if(value != null)
 				for(int j = 0; j < _aVisible.Count; j++) if(_VisibleItem(j) == value) { i = j; break; }
-			if(_list.SelectedIndex == i) return;
-			_list.SelectIndex(i, scrollCenter: true);
+			if(_list.ZSelectedIndex == i) return;
+			_list.ZSelectIndex(i, scrollCenter: true);
 		}
 	}
 
@@ -268,9 +269,9 @@ class CiPopupList : IMessageFilter
 		});
 	}
 
-	void _SetRect(Control control, RECT anchor)
+	void _SetRect(RECT anchor)
 	{
-		var ra = control.RectangleToScreen(anchor);
+		var ra = _doc.RectangleToScreen(anchor);
 		var rs = Screen.FromRectangle(ra).WorkingArea;
 		rs.Inflate(-1, -5);
 		int heiAbove = ra.Top - rs.Top, heiBelow = rs.Bottom - ra.Bottom;
@@ -287,7 +288,7 @@ class CiPopupList : IMessageFilter
 		_w.Bounds = r;
 	}
 
-	void _DrawItem(FastListBox.ItemDrawArgs e)
+	void _DrawItem(AuListControl.ZItemDrawArgs e)
 	{
 		//var p1 = APerf.Create();
 		var g = e.graphics;
@@ -326,24 +327,17 @@ class CiPopupList : IMessageFilter
 		using(var tr = new GdiTextRenderer(g)) {
 			ColorInt color = ci.moveDown.HasAny(CiItemMoveDownBy.Name | CiItemMoveDownBy.FilterText) ? 0x808080 : 0;
 			tr.MoveTo(r.X, r.Y);
-			if(ci.hilite.end > 0) {
-				_DrawSlice(0, ci.hilite.start, ci.hilite.end, true);
-			} else if(ci.hilites != null) {
-				var a = ci.hilites;
-				for(int i = 0, startNonhilited = 0; i < a.Length; i++) {
-					_DrawSlice(startNonhilited, a[i].start, startNonhilited = a[i].end, i == a.Length - 1);
+			if(ci.hilite != 0) {
+				ulong h = ci.hilite;
+				for(int normalFrom = 0, boldFrom, boldTo, to = s.Length; normalFrom < to; normalFrom = boldTo) {
+					for(boldFrom = normalFrom; boldFrom < to && 0 == (h & 1); boldFrom++) h >>= 1;
+					tr.DrawText(s, color, normalFrom, boldFrom);
+					if(boldFrom == to) break;
+					for(boldTo = boldFrom; boldTo < to && 0 != (h & 1); boldTo++) h >>= 1;
+					tr.FontBold(); tr.DrawText(s, color, boldFrom, boldTo); tr.FontNormal();
 				}
 			} else {
 				tr.DrawText(s, color);
-			}
-
-			void _DrawSlice(int normalFrom, int boldFrom, int boldTo, bool last)
-			{
-				tr.DrawText(s, color, normalFrom, boldFrom);
-				tr.FontBold();
-				tr.DrawText(s, color, boldFrom, boldTo);
-				tr.FontNormal();
-				if(last) tr.DrawText(s, color, boldTo, s.Length);
 			}
 
 			if(ci.moveDown.Has(CiItemMoveDownBy.Obsolete)) xEndOfText = tr.GetCurrentPosition().x;
@@ -380,122 +374,54 @@ class CiPopupList : IMessageFilter
 		return Empty(r) ? null : "    //" + r;
 	}
 
-	bool IMessageFilter.PreFilterMessage(ref Message m)
+	public bool OnCmdKey(Keys keyData)
 	{
-		switch(m.Msg) {
-		case Api.WM_KEYDOWN:
-			var k = (Keys)m.WParam;
-			switch(k) {
+		if(_w.Visible) {
+			switch(keyData) {
 			case Keys.Escape:
 				Hide();
 				return true;
 			case Keys.Enter:
 			case Keys.Tab:
-				_Commit(_list.SelectedIndex);
+				_Commit(_list.ZSelectedIndex, keyData);
 				return true;
 			case Keys.Down:
 			case Keys.Up:
 			case Keys.PageDown:
 			case Keys.PageUp:
-				_list.KeyboardNavigation(k);
+				_list.ZKeyboardNavigation(keyData);
 				return true;
 			}
-			break;
-		case Api.WM_KEYUP:
-			switch((Keys)m.WParam) {
-			case Keys.Down: case Keys.Up: case Keys.PageDown: case Keys.PageUp: return true;
-			}
-			break;
 		}
 		return false;
 	}
 
-	class _Window : Form
+	class _Window : InactiveWindow
 	{
 		CiPopupList _p;
-		Control _owner;
-		bool _showedOnce;
 
 		public _Window(CiPopupList p)
 		{
 			_p = p;
 
-			this.AutoScaleMode = AutoScaleMode.None;
-			this.StartPosition = FormStartPosition.Manual;
-			this.FormBorderStyle = FormBorderStyle.None;
-			this.Text = "Au.CiPopupList";
+			this.Name = this.Text = "Ci.PopupList";
 			this.MinimumSize = Au.Util.ADpi.ScaleSize((150, 150));
-			this.Font = Au.Util.AFonts.Regular;
 		}
 
-		protected override CreateParams CreateParams {
-			get {
-				var p = base.CreateParams;
-				p.Style = unchecked((int)(WS.POPUP | WS.THICKFRAME));
-				p.ExStyle = (int)(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE);
-				return p;
-
-				//note: if WS_CLIPCHILDREN, often at startup briefly black until control finished painting
-			}
-		}
-
-		protected override bool ShowWithoutActivation => true;
-
-		public void ShowAt(Control anchor)
+		protected override unsafe void WndProc(ref Message m)
 		{
-			var owner = anchor.TopLevelControl;
-			bool changedOwner = false;
-			if(_showedOnce) {
-				changedOwner = owner != _owner;
-				if(Visible) {
-					if(!changedOwner) return;
-					Visible = false;
-				}
-			}
-			_owner = owner;
-
-			Show(_owner);
-			if(changedOwner) ((AWnd)this).ZorderAbove((AWnd)_owner);
-			_showedOnce = true;
-		}
-
-		protected override void WndProc(ref Message m)
-		{
-			//AWnd.More.PrintMsg(m);
-
+			//AWnd.More.PrintMsg(m, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_NCMOUSEMOVE);
 			switch(m.Msg) {
 			case Api.WM_DESTROY:
-				_OnVisibleChanged(false);
 				Program.Settings.Set("ciGroup", _p._groupButton.Checked);
 				break;
-			case Api.WM_MOUSEACTIVATE:
-				m.Result = (IntPtr)(((int)m.LParam >> 16 == Api.WM_LBUTTONDOWN) ? Api.MA_NOACTIVATE : Api.MA_NOACTIVATEANDEAT);
-				return;
-			//case Api.WM_ACTIVATEAPP:
-			//	if(m.WParam == default) _p.Hide();
-			//	break;
 			}
 
 			base.WndProc(ref m);
-
-			switch(m.Msg) {
-			case Api.WM_SHOWWINDOW:
-				_OnVisibleChanged(m.WParam != default);
-				break;
-			}
 		}
-
-		void _OnVisibleChanged(bool visible)
-		{
-			if(visible == _isVisible) return;
-			if(visible) Application.AddMessageFilter(_p);
-			else Application.RemoveMessageFilter(_p);
-			_isVisible = visible;
-		}
-		bool _isVisible;
 	}
 
-	class _FastListBox : FastListBox
+	class _FastListBox : AuListControl
 	{
 		//CiPopupList _p;
 

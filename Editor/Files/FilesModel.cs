@@ -356,18 +356,18 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		var of = OpenFiles;
 		if(!of.Remove(f)) return false;
 
-		Panels.Editor.Close(f);
+		Panels.Editor.ZClose(f);
 		SelectDeselectItem(f, false);
 
 		if(f == _currentFile) {
 			if(activateOther && of.Count > 0 && _SetCurrentFile(of[0])) return true; //and don't select
 			_currentFile = null;
-			Program.MainForm.SetTitle();
+			Program.MainForm.ZSetTitle();
 		}
 		f.UpdateControlRow();
 
-		Panels.Open.UpdateList();
-		Panels.Open.UpdateCurrent(_currentFile);
+		Panels.Open.ZUpdateList();
+		Panels.Open.ZUpdateCurrent(_currentFile);
 		Save.StateLater();
 
 		return true;
@@ -386,17 +386,17 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	}
 
 	/// <summary>
-	/// Called by <see cref="PanelFiles.LoadWorkspace"/> before opening another workspace and disposing this.
+	/// Called by <see cref="PanelFiles.ZLoadWorkspace"/> before opening another workspace and disposing this.
 	/// Saves all, closes documents, sets _currentFile = null.
 	/// </summary>
 	public void UnloadingWorkspace()
 	{
 		Save.AllNowIfNeed();
 		_currentFile = null;
-		Panels.Editor.CloseAll(saveTextIfNeed: false);
+		Panels.Editor.ZCloseAll(saveTextIfNeed: false);
 		OpenFiles.Clear();
-		Panels.Open.UpdateList();
-		Program.MainForm.SetTitle();
+		Panels.Open.ZUpdateList();
+		Program.MainForm.ZSetTitle();
 	}
 
 	/// <summary>
@@ -439,9 +439,9 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		var fPrev = _currentFile;
 		_currentFile = f;
 
-		if(!Panels.Editor.Open(f, newFile)) {
+		if(!Panels.Editor.ZOpen(f, newFile)) {
 			_currentFile = fPrev;
-			if(OpenFiles.Contains(f)) Panels.Open.UpdateCurrent(_currentFile);
+			if(OpenFiles.Contains(f)) Panels.Open.ZUpdateCurrent(_currentFile);
 			return false;
 		}
 
@@ -451,11 +451,11 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		var of = OpenFiles;
 		of.Remove(f);
 		of.Insert(0, f);
-		Panels.Open.UpdateList();
-		Panels.Open.UpdateCurrent(f);
+		Panels.Open.ZUpdateList();
+		Panels.Open.ZUpdateCurrent(f);
 		Save.StateLater();
 
-		Program.MainForm.SetTitle();
+		Program.MainForm.ZSetTitle();
 
 		return true;
 	}
@@ -487,7 +487,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 
 		_inContextMenu = true;
 		try {
-			m.ShowAsContextMenu_();
+			m.ZShowAsContextMenu();
 			_msgLoop.Loop();
 			if(_control == null) return; //loaded another workspace
 			if(f != _currentFile && _control.SelectedNodes.Count < 2) {
@@ -512,6 +512,56 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	{
 		if(e.Node.Level == 0) return;
 		Save.StateLater();
+	}
+
+	/// <summary>
+	/// Selects the node, opens its file in the code editor, optionally goes to the specified position or line or line/column.
+	/// Returns false if failed to select, for example if f is a folder.
+	/// </summary>
+	/// <param name="f"></param>
+	/// <param name="line">If not negative, goes to this 0-based line.</param>
+	/// <param name="columnOrPos">If not negative, goes to this 0-based position in text (if line negative) or to this 0-based column in line.</param>
+	public bool OpenAndGoTo(FileNode f, int line = -1, int columnOrPos = -1)
+	{
+		bool wasOpen = _currentFile == f;
+		if(!SetCurrentFile(f)) return false;
+		var doc = Panels.Editor.ZActiveDoc;
+		doc.Focus();
+		if(line >= 0 || columnOrPos >= 0) {
+			var t = doc.Z;
+			if(line >= 0) {
+				int i = t.LineStart(false, line);
+				if(columnOrPos > 0) i = t.CountBytesFromChars(i, columnOrPos); //not SCI_FINDCOLUMN, it calculates tabs
+				columnOrPos = i;
+			}
+			if(wasOpen) t.GoToPos(false, columnOrPos);
+			else ATimer.After(10, () => t.GoToPos(false, columnOrPos));
+			//info: scrolling works better with async when now opened the file. Or with doevents; not with BeginInvoke.
+		}
+		return true;
+	}
+
+	/// <summary>
+	/// Finds file or folder and selects the node. If not folder, opens its file in the code editor, optionally goes to the specified position or line or line/column.
+	/// Returns false if failed to find or select.
+	/// </summary>
+	/// <param name="fileOrFolder">See <see cref="Find"/>.</param>
+	/// <param name="line1Based">If not empty, goes to this 1-based line.</param>
+	/// <param name="column1BasedOrPos">If not empty, goes to this 0-based position in text (if line empty) or to this 1-based column in line.</param>
+	/// <remarks>
+	/// If column1BasedOrPos or line1Based not empty, searches only files, not folders.
+	/// </remarks>
+	public bool OpenAndGoTo(string fileOrFolder, string line1Based = null, string column1BasedOrPos = null)
+	{
+		var f = Empty(line1Based) && Empty(column1BasedOrPos) ? Find(fileOrFolder, null) : FindScript(fileOrFolder);
+		if(f == null) return false;
+		if(f.IsFolder) {
+			f.SelectSingle();
+			return true;
+		}
+		int line = Empty(line1Based) ? -1 : line1Based.ToInt() - 1;
+		int columnOrPos = -1; if(!Empty(column1BasedOrPos)) columnOrPos = column1BasedOrPos.ToInt() - (line < 0 ? 0 : 1);
+		return OpenAndGoTo(f, line, columnOrPos);
 	}
 
 	#endregion
@@ -580,7 +630,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 
 		if(text != null && f == CurrentFile) {
 			string s = text.meta + (text.replaceTemplate ? null : f.GetText()) + text.text;
-			Panels.Editor.ActiveDoc.ST.SetText(s);
+			Panels.Editor.ZActiveDoc.Z.SetText(s);
 		}
 
 		if(beginRenaming && f.IsSelected) RenameSelected();
@@ -777,7 +827,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		} else {
 			if(files.Length == 1 && IsWorkspaceDirectory(files[0])) {
 				switch(ADialog.ShowEx("Workspace", files[0], "1 Open|2 Import|0 Cancel", footerText: GetSecurityInfo("v|"))) {
-				case 1: ATimer.After(1, () => Panels.Files.LoadWorkspace(files[0])); break;
+				case 1: ATimer.After(1, () => Panels.Files.ZLoadWorkspace(files[0])); break;
 				case 2: ImportWorkspace(files[0], target, pos); break;
 				}
 				return;
