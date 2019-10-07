@@ -169,10 +169,11 @@ class CiPopupList
 
 	CiComplItem _VisibleItem(int index) => _a[_aVisible[index]];
 
-	void _Commit(int index, Keys keyData)
+	CiComplResult _Commit(int index, Keys keyData)
 	{
-		if((uint)index < _VisibleCount) _compl.Commit(_doc, _VisibleItem(index), keyData);
+		var R = (uint)index < _VisibleCount ? _compl.Commit(_doc, _VisibleItem(index), keyData) : CiComplResult.None;
 		Hide();
+		return R;
 	}
 
 	public void SetListItems(List<CiComplItem> a, List<string> groups)
@@ -374,8 +375,10 @@ class CiPopupList
 		return Empty(r) ? null : "    //" + r;
 	}
 
-	public bool OnCmdKey(Keys keyData)
+	public bool OnCmdKey(Keys keyData, out CiComplResult complResult)
 	{
+		Debug.Assert(!keyData.HasAny(Keys.Modifiers));
+		complResult = CiComplResult.None;
 		if(_w.Visible) {
 			switch(keyData) {
 			case Keys.Escape:
@@ -383,8 +386,9 @@ class CiPopupList
 				return true;
 			case Keys.Enter:
 			case Keys.Tab:
-				_Commit(_list.ZSelectedIndex, keyData);
-				return true;
+			case Keys.OemSemicolon:
+				complResult = _Commit(_list.ZSelectedIndex, keyData);
+				return complResult != CiComplResult.None;
 			case Keys.Down:
 			case Keys.Up:
 			case Keys.PageDown:

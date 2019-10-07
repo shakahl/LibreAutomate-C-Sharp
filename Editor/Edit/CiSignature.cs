@@ -155,10 +155,10 @@ class CiSignature
 
 		string html = _FormatHtml(iSel, userSelected: false);
 
-		doc.ZTempRanges_Add(r.ApplicableSpan.Start, r.ApplicableSpan.End, onLeave: () => {
+		doc.ZTempRanges_Add(this, r.ApplicableSpan.Start, r.ApplicableSpan.End, onLeave: () => {
 			if(doc.ZTempRanges_Enum(doc.Z.CurrentPos8, this, utf8: true).Any()) return;
 			Cancel();
-		}, this, SciCode.ZTempRangeFlags.NoDuplicate);
+		}, SciCode.ZTempRangeFlags.NoDuplicate);
 
 		var rect1 = CiUtil.GetCaretRectFromPos(doc, r.ApplicableSpan.Start);
 		var rect2 = CiUtil.GetCaretRectFromPos(doc, cd.position);

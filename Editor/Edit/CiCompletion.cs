@@ -107,20 +107,20 @@ class CiCompletion
 	/// <summary>
 	/// If showing popup list, synchronously commits the selected item if need (inserts text).
 	/// Called before <see cref="CiAutocorrect.SciCharAdded"/> and before passing the character to Scintilla.
-	/// Returns true if need to suppress the character; only if ch == ' '; then can add text anywhere and set caret anywhere.
-	/// Else inserts text at caret position and moves caret after the text.
+	/// Else inserts text at caret position and now caret is after the text.
 	/// </summary>
-	public bool SciCharAdding_Commit(SciCode doc, char ch)
+	public CiComplResult SciCharAdding_Commit(SciCode doc, char ch)
 	{
+		CiComplResult R = CiComplResult.None;
 		if(_data != null) {
 			if(!_IsValidChar(ch)) {
 				var ci = _popupList.SelectedItem;
-				bool suppress = ci != null && _Commit(ci, doc, ch);
+				if(ci != null) R = _Commit(ci, doc, ch);
 				_CancelList();
-				return suppress;
+				//return;
 			}
 		}
-		return false;
+		return R;
 	}
 
 	static bool _IsValidChar(char ch) => char.IsLetterOrDigit(ch) || ch == '_' || ch == '@';
@@ -481,10 +481,10 @@ class CiCompletion
 			if(!span.IsEmpty) _FilterItems(d);
 			p1.Next('F');
 
-			d.tempRange = doc.ZTempRanges_Add(span.Start, span.End, () => {
+			d.tempRange = doc.ZTempRanges_Add(this, span.Start, span.End, () => {
 				//Print("leave", _data==d);
 				if(_data == d) _CancelList(tempRangeRemoved: true);
-			}, this, SciCode.ZTempRangeFlags.LeaveIfPosNotAtEndOfRange);
+			}, SciCode.ZTempRangeFlags.LeaveIfPosNotAtEndOfRange);
 
 			_data = d;
 			if(_popupList == null) {
@@ -514,7 +514,7 @@ class CiCompletion
 			}
 		}
 #endif
-		//p1.NW(); //FUTURE: remove all p1 code
+		//p1.NW(); //FUTURE: remove all p1 lines
 	}
 
 	static void _FilterItems(_Data d)
@@ -650,12 +650,10 @@ class CiCompletion
 
 	/// <summary>
 	/// Inserts the replacement text of the completion item.
-	/// Returns true to suppress the character. It can happen only if c.ch == ' ', '\n' (Enter) or default (Tab). Then also may change c.ch.
 	/// </summary>
-	bool _Commit(CiComplItem item, SciCode doc, char ch)
+	CiComplResult _Commit(CiComplItem item, SciCode doc, char ch, bool isEnter = false)
 	{
-		bool suppressChar = false, isEnter = false;
-		switch(ch) { case ' ': ch = default; break; case '\n': ch = default; isEnter = true; break; }
+		if(ch == ' ') ch = default;
 
 		var ci = item.ci;
 		var change = _data.completionService.GetChangeAsync(_data.document, ci).Result;
@@ -667,7 +665,7 @@ class CiCompletion
 		//Print($"{change.NewPosition.HasValue}, cp={doc.Z.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
 		//Print($"'{s}'");
 		if(change.NewPosition.HasValue) { //xml doc, override, regex
-			if(ch != default) return false;
+			if(ch != default) return CiComplResult.None;
 			//ci.DebugPrint();
 			int newPos = change.NewPosition.GetValueOrDefault();
 			if(ci.ProviderName.Ends(".XmlDocCommentCompletionProvider") && !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag)) {
@@ -676,10 +674,12 @@ class CiCompletion
 			}
 			doc.Z.ReplaceRange(true, i, len, s, true);
 			doc.Z.GoToPos(true, newPos);
-			return true;
+			return CiComplResult.Complex;
 		}
 
 		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
+		bool isComplex = false;
+		CiAutocorrect.EBraces bracesOperation = default;
 		int positionBack = 0, bracesFrom = 0, bracesLen = 0;
 		//ci.DebugPrint();
 		if(ch == default && s.FindChars("({[<") < 0) {
@@ -709,8 +709,15 @@ class CiCompletion
 					ch = '(';
 					s2 = " ()"; //users may prefer space, like 'if (i<1)'. If not, let they type '(' instead.
 					break;
+				case "else":
+				case "do":
 				case "try":
 				case "finally":
+				case "get":
+				case "set":
+				case "add":
+				case "remove":
+				case "unsafe" when isEnter:
 					ch = '{';
 					break;
 				case "checked":
@@ -718,27 +725,41 @@ class CiCompletion
 					ch = isEnter ? '{' : '(';
 					break;
 				case "switch":
-					string code = doc.Text;
-					int j; for(j = i; j > 0; j--) { char k = code[j - 1]; if(!(k == '\t' || k == ' ' || k == ';')) break; }
-					if(j > 0 && code[j - 1] != '\n') { //probably switch expression
-						ch = '{';
-						break;
+					//is it switch statement or switch expression? Difficult to detect. Detect some common cases.
+					if(i > 0 && CodeInfo.GetContextWithoutDocument(out var cd, i)) {
+						if(cd.code[i - 1] == ' ' && cd.GetDocument()) {
+							var node = cd.document.GetSyntaxRootAsync().Result.FindToken(i - 1).Parent;
+							//Print(node.Kind(), i, node.Span, node);
+							if(node.SpanStart < i) switch(node) { case ExpressionSyntax _: case BaseArgumentListSyntax _: ch = '{'; break; } //expression
+						}
+						if(ch == default) goto case "for";
 					}
-					goto case "for";
+					break;
+				default:
+					if(0 != name.Eq(false, s_kwType)) _NewExpression();
 					break;
 				}
 				break;
 			case CiItemKind.Class:
 			case CiItemKind.Structure:
 				if(ci.DisplayTextSuffix == "<>") ch = '<';
-				//note: cannot add '()' after 'new Type' because the user may want 'new Type[]' or 'new Type { initializers }'
-				//TODO: after 'new Type' add '()'. If then user types '[' or '{', let the autocorrection replace '()' with '[]' or '{}'. If presses Enter, replaces with '{ newline }'.
+				else _NewExpression();
 				break;
 			}
 
 			bool _IsInFunction() => _IsInAncestorNodeOfType<BaseMethodDeclarationSyntax>(i);
 
-			if(suppressChar = ch != default) {
+			//If 'new Type', adds '()'.
+			//If then the user types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
+			void _NewExpression()
+			{
+				if(_IsInAncestorNodeOfType<ObjectCreationExpressionSyntax>(i)) {
+					ch = '(';
+					bracesOperation = CiAutocorrect.EBraces.NewExpression;
+				}
+			}
+
+			if(isComplex = ch != default) {
 				if(ch == '{') {
 					if(isEnter) {
 						int indent = doc.Z.LineIndentationFromPos(true, i);
@@ -762,28 +783,37 @@ class CiCompletion
 			}
 		}
 
-		if(suppressChar || s != _data.filterText) {
-			doc.Z.SetAndReplaceSel(true, i, len, s, true); //TODO
-			if(suppressChar) {
-				if(positionBack > 0) doc.Z.CurrentPos16 = i + s.Length - positionBack;
-				if(bracesFrom > 0) CodeInfo.BracesAdded(doc, bracesFrom, bracesFrom + bracesLen);
-				if(ch == '(' || ch == '<') CodeInfo.CompletionSignatureCharAdded(doc, ch);
-			}
+		if(!isComplex && s == _data.filterText) return CiComplResult.None;
+
+		doc.Z.SetAndReplaceSel(true, i, len, s, true);
+		if(isComplex) {
+			if(positionBack > 0) doc.Z.CurrentPos16 = i + s.Length - positionBack;
+			if(bracesFrom > 0) CodeInfo.BracesAdded(doc, bracesFrom, bracesFrom + bracesLen, bracesOperation);
+			if(ch == '(' || ch == '<') CodeInfo.CompletionSignatureCharAdded(doc, ch);
+			return CiComplResult.Complex;
 		}
-		return suppressChar;
+
+		return CiComplResult.Simple;
 	}
 
 	bool _IsInAncestorNodeOfType<T>(int pos) where T : SyntaxNode
-		=> CodeInfo.GetContextAndDocument(out var cd, pos) && null != cd.document.GetSyntaxRootAsync().Result.FindToken(pos).GetAncestor<T>();
+		=> CodeInfo.GetDocumentAndFindNode(out _, out var node, pos) && null != node.GetAncestor<T>();
 
-	//static string[] s_kwType = { "string", "object", "int", "uint", "long", "ulong", "byte", "sbyte", "short", "ushort", "char", "bool", "double", "float", "decimal" };
+	static string[] s_kwType = { "string", "object", "int", "uint", "long", "ulong", "byte", "sbyte", "short", "ushort", "char", "bool", "double", "float", "decimal" };
 
-	public void Commit(SciCode doc, CiComplItem item, Keys keyData)
+	public CiComplResult Commit(SciCode doc, CiComplItem item, Keys keyData)
 	{
-		_Commit(item, doc, keyData == Keys.Enter ? '\n' : default);
+		var r=_Commit(item, doc, default, keyData == Keys.Enter);
+		if(r == CiComplResult.None && keyData == Keys.Tab) r = CiComplResult.Simple;
+		return r;
 	}
 
-	public bool OnCmdKey(Keys keyData) => _popupList?.OnCmdKey(keyData) ?? false;
+	public bool OnCmdKey(Keys keyData, out CiComplResult complResult)
+	{
+		if(_popupList != null) return _popupList.OnCmdKey(keyData, out complResult);
+		complResult = CiComplResult.None;
+		return false;
+	}
 }
 
 [Flags]
@@ -855,4 +885,23 @@ class CiComplItem
 		}
 		//ci.DebugPrint();
 	}
+}
+
+public enum CiComplResult
+{
+	/// <summary>
+	/// No completion.
+	/// </summary>
+	None,
+
+	/// <summary>
+	/// Inserted text displayed in the popup list. Now caret is after it.
+	/// </summary>
+	Simple,
+
+	/// <summary>
+	/// Inserted more text than displayed in the popup list, eg "(" or "{  }" or override. Now caret probably is somewhere in middle of it. Also if regex.
+	/// Only if ch == ' ', '\n' (Enter) or default (Tab).
+	/// </summary>
+	Complex,
 }

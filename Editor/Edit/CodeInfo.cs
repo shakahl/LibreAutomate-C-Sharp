@@ -166,19 +166,20 @@ Print(1);
 		case Keys.Up:
 		case Keys.PageDown:
 		case Keys.PageUp:
-			if(_compl.OnCmdKey(keyData)) return true;
+			if(_compl.OnCmdKey(keyData, out _)) return true;
 			if(_signature.OnCmdKey(keyData)) return true;
 			break;
+		case Keys.Tab:
 		case Keys.Enter:
+			return _compl.OnCmdKey(keyData, out _) || _correct.SciBeforeKey(doc, keyData);
 		case Keys.Enter | Keys.Shift:
 		case Keys.Enter | Keys.Control:
 		case Keys.OemSemicolon | Keys.Control:
-			bool completed = _compl.OnCmdKey(keyData & Keys.KeyCode);
-			return completed | _correct.SciBeforeKey(doc, keyData, completed); //note: not ||. Need to call both, and return true if any returns true.
-		case Keys.Tab:
-			return _compl.OnCmdKey(keyData) || _correct.SciBeforeKey(doc, keyData, false); //note: not |. Need _correct only if !_compl.
+			bool completed = _compl.OnCmdKey(keyData & Keys.KeyCode, out var complResult);
+			if(complResult == CiComplResult.Complex) return true;
+			return _correct.SciBeforeKey(doc, keyData) | completed;
 		case Keys.Back:
-			return _correct.SciBeforeKey(doc, keyData, false);
+			return _correct.SciBeforeKey(doc, keyData);
 		}
 		return false;
 	}
@@ -190,15 +191,14 @@ Print(1);
 		if(_correct.SciBeforeCharAdded(doc, ch, out var b)) {
 			if(_compl.IsVisibleUI) {
 				int diff = b.newPosUtf8 - b.oldPosUtf8;
-				bool suppress = _compl.SciCharAdding_Commit(doc, ch);
-				Debug.Assert(!suppress); if(suppress) return true; //can suppress only on space, which is not handled by SciBeforeCharAdded
+				_compl.SciCharAdding_Commit(doc, ch);
 				b.newPosUtf8 = doc.Z.CurrentPos8 + diff;
 			}
 
 			doc.Z.CurrentPos8 = b.newPosUtf8;
 			if(!b.dontSuppress) return true;
 		} else if(_compl.IsVisibleUI) {
-			return _compl.SciCharAdding_Commit(doc, ch);
+			if(CiComplResult.Complex == _compl.SciCharAdding_Commit(doc, ch)) return true;
 		}
 		return false;
 	}
@@ -283,7 +283,7 @@ Print(1);
 	/// <summary>
 	/// Called when added text containing { } etc and want the same behavior like when the user types { etc and it is corrected to { } etc.
 	/// </summary>
-	public static void BracesAdded(SciCode doc, int innerFrom, int innerTo) => _correct.BracesAdded(doc, innerFrom, innerTo);
+	public static void BracesAdded(SciCode doc, int innerFrom, int innerTo, CiAutocorrect.EBraces operation) => _correct.BracesAdded(doc, innerFrom, innerTo, operation);
 
 	//public static void CharSuppressedByCompletion(SciCode doc, char signatureChar, int bracesFromInner, int bracesToInner){
 	//could join the above 2
@@ -343,6 +343,20 @@ Print(1);
 			document = _document = _solution.GetDocument(_documentId);
 			return document != null;
 		}
+
+		//public bool GetDocumentAndSyntaxRoot(out SyntaxNode root)
+		//{
+		//	if(!GetDocument()) { root = null; return false; }
+		//	root = document.GetSyntaxRootAsync().Result;
+		//	return true;
+		//}
+
+		//public bool GetDocumentAndFindNode(out SyntaxNode node)
+		//{
+		//	if(!GetDocument()) { node = null; return false; }
+		//	node = document.GetSyntaxRootAsync().Result.FindToken(position).Parent;
+		//	return true;
+		//}
 	}
 
 	/// <summary>
@@ -367,6 +381,16 @@ Print(1);
 	{
 		r = new Context(position);
 		return r.position >= r.metaEnd;
+	}
+
+	/// <summary>
+	/// Calls <see cref="GetContextAndDocument"/>, gets its syntax root and finds node.
+	/// </summary>
+	public static bool GetDocumentAndFindNode(out Context r, out SyntaxNode node, int position = -1)
+	{
+		if(!GetContextAndDocument(out r, position)) { node = null; return false; }
+		node = r.document.GetSyntaxRootAsync().Result.FindToken(r.position).Parent;
+		return true;
 	}
 
 	static void _CreateSolution(FileNode f)

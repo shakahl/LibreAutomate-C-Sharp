@@ -162,10 +162,24 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 		//AOutput.Clear();
 
 		var doc = Panels.Editor.ZActiveDoc;
-		//var s = doc.Text;
+		var s = doc.Text;
 
-		_testOvertype ^= true;
-		doc.Call(Sci.SCI_SETOVERTYPE, _testOvertype);
+		//_testOvertype ^= true;
+		//doc.Call(Sci.SCI_SETOVERTYPE, _testOvertype);
+
+		int k = 20;
+		doc.Z.StyleClearRange(k, k + 1);
+		//doc.Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL);
+		doc.Z.StyleBackColor(k, 0xf0f0f0);
+		doc.Z.StyleEolFilled(k, true);
+		doc.Z.StyleForeColor(k, 0xffffff);
+		doc.Z.StyleHotspot(k, true);
+
+		int i = s.Find("\n}")+1;
+		Print(i);
+		doc.Call(SCI_STARTSTYLING, i);
+		doc.Call(SCI_SETSTYLING, s.Length-i, k);
+		doc.Invalidate();
 
 		//doc.Z.ReplaceRange(2, 3, "-", 0, SciFinalCurrentPos.AtEnd);
 
@@ -189,7 +203,7 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 
 	}
 	SciCode.ITempRange _tr;
-	bool _testOvertype;
+	//bool _testOvertype;
 
 	unsafe void SetHookToMonitorCreatedWindowsOfThisThread()
 	{

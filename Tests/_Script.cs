@@ -2158,13 +2158,19 @@ class Script : AScript
 		int kk = 7;
 #endif
 		//Print(Empty(), 1)
-		var k = (1 + 2);
+		//var k = (1 + 2);
 
-		if(true)
-			Print(1);
-		k = (1 + 2);
-		
+		//if(true)
+		//	Print(1);
+		//k = (1 + 2);
+		//if(true) { }
 
+		//if(true) if(true) if(true) {
+
+		//		}
+#if true
+#else
+#endif
 
 
 #else

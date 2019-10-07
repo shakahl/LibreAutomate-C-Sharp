@@ -993,7 +993,7 @@ class SciCode : AuScintilla
 		LeaveIfRangeTextModified = 2,
 
 		/// <summary>
-		/// Don't add new range if already exists a range with same current from, to, tag and flags. Then returns that range.
+		/// Don't add new range if already exists a range with same current from, to, owner and flags. Then returns that range.
 		/// </summary>
 		NoDuplicate = 4,
 	}
@@ -1025,33 +1025,38 @@ class SciCode : AuScintilla
 		/// </summary>
 		int CurrentTo { get; }
 
-		object Tag { get; set; }
+		object Owner { get; }
+
+		/// <summary>
+		/// Any data. Not used by temp range functions.
+		/// </summary>
+		object OwnerData { get; set; }
 	}
 
 	class C_TempRange : ITempRange //TODO: rename all private types like this: C_Class, S_Struct, I_Interface, D_Delegate, E_Enum.
 	{
 		SciCode _doc;
+		readonly object _owner;
 		readonly int _fromUtf16;
 		internal readonly int from;
 		internal int to;
 		internal readonly Action onLeave;
-		object _tag;
 		readonly ZTempRangeFlags _flags;
 
-		internal C_TempRange(SciCode doc, int fromUtf16, int fromUtf8, int toUtf8, Action onLeave, object tag, ZTempRangeFlags flags)
+		internal C_TempRange(SciCode doc, object owner, int fromUtf16, int fromUtf8, int toUtf8, Action onLeave, ZTempRangeFlags flags)
 		{
 			_doc = doc;
+			_owner = owner;
 			_fromUtf16 = fromUtf16;
 			from = fromUtf8;
 			to = toUtf8;
 			this.onLeave = onLeave;
-			_tag = tag;
 			_flags = flags;
 		}
 
 		public void Remove()
 		{
-			_TraceTempRange("remove", _tag);
+			_TraceTempRange("remove", _owner);
 			if(_doc != null) {
 				_doc._tempRanges.Remove(this);
 				_doc = null;
@@ -1077,7 +1082,9 @@ class SciCode : AuScintilla
 
 		public int CurrentTo => _doc != null ? (_fromUtf16 + _doc.Z.CountBytesToChars(from, to)) : -1;
 
-		public object Tag { get => _tag; set => _tag = value; }
+		public object Owner => _owner;
+
+		public object OwnerData { get; set; }
 
 		internal bool MustLeave(int pos, int pos2, int modLen)
 		{
@@ -1086,19 +1093,19 @@ class SciCode : AuScintilla
 				|| (0 != (_flags & ZTempRangeFlags.LeaveIfRangeTextModified) && modLen != 0);
 		}
 
-		internal bool Contains(int pos, object tag, bool endPosition)
-			=> (endPosition ? (pos == to) : (pos >= from || pos <= to)) && (tag?.Equals(_tag) ?? true);
+		internal bool Contains(int pos, object owner, bool endPosition)
+			=> (endPosition ? (pos == to) : (pos >= from || pos <= to)) && (owner == null || ReferenceEquals(owner, _owner));
 
-		internal bool Equals(int from2, int to2, object tag2, ZTempRangeFlags flags2)
+		internal bool Equals(int from2, int to2, object owner2, ZTempRangeFlags flags2)
 		{
 			if(from2 != from || to2 != to || flags2 != _flags
 				//|| onLeave2 != onLeave //delegate always different if captured variables
 				//|| !ReferenceEquals(onLeave2?.Method, onLeave2?.Method) //can be used but slow. Also tested Target, always different.
 				) return false;
-			return _tag?.Equals(tag2) ?? tag2 == null;
+			return ReferenceEquals(owner2, _owner);
 		}
 
-		public override string ToString() => $"({CurrentFrom}, {CurrentTo}), tag={_tag}";
+		public override string ToString() => $"({CurrentFrom}, {CurrentTo}), owner={_owner}";
 	}
 
 	List<C_TempRange> _tempRanges = new List<C_TempRange>();
@@ -1110,6 +1117,7 @@ class SciCode : AuScintilla
 	/// The returned object can be used to get range info or remove it.
 	/// Used mostly for code info, eg to cancel the completion list or signature help.
 	/// </summary>
+	/// <param name="owner">Owner of the range. See also <see cref="ITempRange.OwnerData"/>.</param>
 	/// <param name="from">Start of range, UTF-16.</param>
 	/// <param name="to">End of range, UTF-16. Can be = from.</param>
 	/// <param name="onLeave">
@@ -1118,9 +1126,8 @@ class SciCode : AuScintilla
 	/// If leaved several ranges, called in LIFO order.
 	/// Can be null.
 	/// </param>
-	/// <param name="tag">Something to attach to this range.</param>
 	/// <param name="flags"></param>
-	public ITempRange ZTempRanges_Add(int from, int to, Action onLeave = null, object tag = null, ZTempRangeFlags flags = 0)
+	public ITempRange ZTempRanges_Add(object owner, int from, int to, Action onLeave = null, ZTempRangeFlags flags = 0)
 	{
 		int fromUtf16 = from;
 		Z.NormalizeRange(true, ref from, ref to);
@@ -1129,43 +1136,43 @@ class SciCode : AuScintilla
 		if(flags.Has(ZTempRangeFlags.NoDuplicate)) {
 			for(int i = _tempRanges.Count - 1; i >= 0; i--) {
 				var t = _tempRanges[i];
-				if(t.Equals(from, to, tag, flags)) return t;
+				if(t.Equals(from, to, owner, flags)) return t;
 			}
 		}
 
-		_TraceTempRange("ADD", tag);
-		var r = new C_TempRange(this, fromUtf16, from, to, onLeave, tag, flags);
+		_TraceTempRange("ADD", owner);
+		var r = new C_TempRange(this, owner, fromUtf16, from, to, onLeave, flags);
 		_tempRanges.Add(r);
 		return r;
 	}
 
 	/// <summary>
-	/// Gets ranges containing the specified position and optionally tag, in LIFO order.
+	/// Gets ranges containing the specified position and optionally of the specified owner, in LIFO order.
 	/// It's safe to remove the retrieved ranges while enumerating.
 	/// </summary>
 	/// <param name="position"></param>
-	/// <param name="tag">If not null, returns only ranges where tag.Equals(range.tag).</param>
+	/// <param name="owner">If not null, returns only ranges where ReferenceEquals(owner, range.owner).</param>
 	/// <param name="endPosition">position must be at the end of the range.</param>
 	/// <param name="utf8"></param>
-	public IEnumerable<ITempRange> ZTempRanges_Enum(int position, object tag = null, bool endPosition = false, bool utf8 = false)
+	public IEnumerable<ITempRange> ZTempRanges_Enum(int position, object owner = null, bool endPosition = false, bool utf8 = false)
 	{
 		if(!utf8) position = Z.CountBytesFromChars(position);
 		for(int i = _tempRanges.Count - 1; i >= 0; i--) {
 			var r = _tempRanges[i];
-			if(r.Contains(position, tag, endPosition)) yield return r;
+			if(r.Contains(position, owner, endPosition)) yield return r;
 		}
 	}
 
 	/// <summary>
-	/// Gets ranges containing the specified tag, in LIFO order.
+	/// Gets ranges of the specified owner, in LIFO order.
 	/// It's safe to remove the retrieved ranges while enumerating.
 	/// </summary>
-	/// <param name="tag">Returns only ranges where tag.Equals(range.tag).</param>
-	public IEnumerable<ITempRange> ZTempRanges_Enum(object tag)
+	/// <param name="owner">Returns only ranges where ReferenceEquals(owner, range.owner).</param>
+	public IEnumerable<ITempRange> ZTempRanges_Enum(object owner)
 	{
 		for(int i = _tempRanges.Count - 1; i >= 0; i--) {
 			var r = _tempRanges[i];
-			if(tag.Equals(r.Tag)) yield return r;
+			if(ReferenceEquals(owner, r.Owner)) yield return r;
 		}
 	}
 
@@ -1178,7 +1185,7 @@ class SciCode : AuScintilla
 		for(int i = _tempRanges.Count - 1; i >= 0; i--) {
 			var r = _tempRanges[i];
 			if(r.MustLeave(pos, pos2, len)) {
-				_TraceTempRange("leave", r.Tag);
+				_TraceTempRange("leave", r.Owner);
 				_tempRanges.RemoveAt(i);
 				r.Leaved();
 				r.onLeave?.Invoke();
@@ -1190,7 +1197,7 @@ class SciCode : AuScintilla
 	}
 
 	[Conditional("TRACE_TEMP_RANGES")]
-	static void _TraceTempRange(string action, object tag) => Print(action, tag);
+	static void _TraceTempRange(string action, object owner) => Print(action, owner);
 
 	#endregion
 }
