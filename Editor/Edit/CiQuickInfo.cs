@@ -12,131 +12,96 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-using System.Drawing;
-using System.Linq;
+//using System.Linq;
 //using System.Xml.Linq;
 
 using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Compiler;
-using Au.Controls;
-using Au.Editor.Properties;
 
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.Completion;
-using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.Tags;
-using Microsoft.CodeAnalysis.SignatureHelp;
-using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.CSharp.QuickInfo;
 
 class CiQuickInfo
 {
-#if true
-	public void SciMouseDwellStarted(int positionUtf8, int x, int y)
+	public async void SciMouseDwellStarted(SciCode doc, int positionUtf8)
 	{
-	}
-#else
+		var pi = Panels.Info;
+		if(!pi.Visible) return;
 
-	public void SciMouseDwellStarted(int positionUtf8, int x, int y)
-	{
-		return;
-		//_htmlToolTip?.Hide(doc);
+		if(positionUtf8 <= 0) { pi.ZSetAboutInfo(); return; }
 
-		//Print("dwell");
-		APerf.First();
-		var document = CodeInfo.GetDocument();
-
-		//var workspace = document.Project.Solution.Workspace;
-		//var descriptionService = workspace.Services.GetLanguageServices("C#").GetService<Microsoft.CodeAnalysis.LanguageServices.ISymbolDisplayService>();
-		//Print(descriptionService);
-		//var sections = descriptionService.ToDescriptionGroupsAsync(workspace, document.GetSemanticModelAsync().Result, position, symbols.AsImmutable()).Result;
-
-		APerf.Next();
-		var doc = Panels.Editor.ActiveDoc;
+		//APerf.First();
 		int position = doc.Z.CountBytesToChars(positionUtf8);
-		Print("dwell", position);
-		var context = new QuickInfoContext(document, position, default);
+		if(!CodeInfo.GetContextAndDocument(out var cd, position)) { pi.ZSetAboutInfo(cd.metaEnd > 0); return; }
 
-		APerf.Next();
+		//APerf.Next();
+		var context = new QuickInfoContext(cd.document, position, default);
+
+		//APerf.Next();
 		var provider = new CSharpSemanticQuickInfoProvider();
-		var r = provider.GetQuickInfoAsync(context).Result;
-		//APerf.NW();
-		if(r == null) return;
+		//var r = await provider.GetQuickInfoAsync(context); //not async
+		var r = await Task.Run(async () => await provider.GetQuickInfoAsync(context));
+		//APerf.Next();
+		if(r == null) { pi.ZSetAboutInfo(); return; }
 
-		//Print("-----");
-		//Print(r.Span, r.RelatedSpans, r.Sections, r.Tags);
+		//Print(r.Span, r.RelatedSpans);
 		//Print(r.Tags);
-		//Print(r.Sections);
 
-		var b = new StringBuilder();
+		var b = new StringBuilder("<body><div>");
 
-		string descr = null, docComm = null;
-		foreach(var se in r.Sections) {
+		//image
+		CiUtil.TagsToKindAndAccess(r.Tags, out var kind, out var access);
+		if(kind != CiItemKind.None) {
+			if(access != default) b.AppendFormat("<img src='@a{0}' style='padding-top: 6px' />", (int)access);
+			b.AppendFormat("<img src='@k{0}' style='padding-top: 2px' />", (int)kind);
+		}
+
+		bool hasDocComm = false;
+		QuickInfoSection descr = null;
+		var a = r.Sections;
+		for(int i = 0; i < a.Length; i++) {
+			var se = a[i];
 			//Print(se.Kind, se.Text);
+			int excFrom = 0;
 			switch(se.Kind) {
-			case QuickInfoSectionKinds.Description: descr = se.Text; break;
-			case QuickInfoSectionKinds.DocumentationComments: docComm = se.Text; break;
+			case QuickInfoSectionKinds.Description:
+				descr = se;
+				break;
+			case QuickInfoSectionKinds.DocumentationComments:
+				hasDocComm = true;
+				break;
+			case QuickInfoSectionKinds.Exception:
+				excFrom = b.Length + 12;
+				break;
 			}
-			//Print(se.TaggedParts);
-			//foreach(var tp in se.TaggedParts) {
-			//	Print(tp.Text, tp.Tag);
-			//}
-		}
-		if(docComm == null && r.Tags[0] == "Namespace" && descr != null && descr.RegexMatch(@"^namespace ([\w\.]+)", 1, out string ns)) {
-			docComm = MetaReferences.GetNamespaceDocXml(ns);
-			if(docComm != null) Print("DocumentationComments", docComm);
+			if(i > 0) b.Append("<p>");
+			CiHtml.TaggedPartsToHtml(b, se.TaggedParts);
+			b.Append(i > 0 ? "</p>" : "</div>");
+
+			if(excFrom > 0) b.Replace(":<br>", ": ", excFrom, b.Length - excFrom).Replace("><br>", ">, ", excFrom, b.Length - excFrom); //exceptions make single line
 		}
 
-		if(_tt == null) {
-			_tt = new HtmlToolTip();
-			this._tt.AllowLinksHandling = true;
-			this._tt.BaseStylesheet = null;
-			this._tt.MaximumSize = new Size(0, 0);
-			this._tt.OwnerDraw = true;
-			this._tt.TooltipCssClass = "htmltooltip";
+		//get namespace XML doc
+		if(!hasDocComm && !r.Tags.IsDefaultOrEmpty && r.Tags[0] == "Namespace" && descr != null && descr.Text.RegexMatch(@"^namespace ([\w\.]+)", 1, out string ns)) {
+			string xml = MetaReferences.GetNamespaceDocXml(ns);
+			if(xml != null) {
+				b.Append("<p>");
+				var model = await cd.document.GetSemanticModelAsync(); //fast. Usually TryGetSemanticModel succeeds.
+				var tt = CiHtml.GetTaggedTextForXml(xml, model, position);
+				CiHtml.TaggedPartsToHtml(b, tt);
+				b.Append("</p>");
+			}
 		}
-		var xy = doc.MouseClientXY(); xy.x -= 10; xy.y -= 1;
-		_ttSpan = r.Span;
-		_tt.Show("tooltip <b>bold</b>", doc, xy);
-		//ATimer.After(600, () => _htmlToolTip.Hide(doc));
 
-		var fi = typeof(ToolTip).GetField("window", BindingFlags.NonPublic | BindingFlags.Instance);
-		var nw = fi.GetValue(_tt) as NativeWindow;
-		_ttWnd = (AWnd)nw.Handle;
-		//Print(_ttWnd);
-	}
-#endif
-
-	AWnd _ttWnd;
-	TextSpan _ttSpan;
-
-	public void SciMouseDwellEnded()
-	{
-		//Print("end", AWnd.FromMouse());
-		//_htmlToolTip?.Hide(doc);
-		//if(_tt != null) {
-		//	//Print(_htmlToolTip.Visible);
-		//	//Print((AWnd)_htmlToolTip.)
-		//}
-	}
-
-	public void SciMouseMoved(int x, int y)
-	{
-		//if(!_ttSpan.IsEmpty) {
-		//	var doc = Panels.Editor.ActiveDoc;
-		//	int pos = doc.Z.PosFromXY((x, y), minusOneIfFar: true);
-		//	if(pos >= 0) pos = doc.Z.CountBytesToChars(pos);
-		//	Print(pos);
-		//	if(!_ttSpan.Contains(pos)) {
-		//		_ttSpan = default;
-		//		_tt.Hide(doc);
-		//	}
-		//}
+		b.Append("</body>");
+		var html = b.ToString();
+		//Print(html);
+		html = html.Replace("<p><br>", "<p>");
+		html = html.Replace("><br>", ">&nbsp;<br>"); //workaround for HtmlRenderer bug: adds 2 lines.
+													 //APerf.Next();
+		pi.ZSetText(html);
+		//APerf.NW();
 	}
 }

@@ -27,8 +27,6 @@ using static Au.Controls.Sci;
 using Au.Util;
 using DiffMatchPatch;
 
-//TODO: when clicked selbar to select the fold header, should select all hidden lines.
-
 class SciCode : AuScintilla
 {
 	public readonly FileNode ZFile;
@@ -91,6 +89,8 @@ class SciCode : AuScintilla
 		}
 
 		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
+
+		Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc); //TODO
 	}
 
 	//protected override void Dispose(bool disposing)
@@ -106,6 +106,9 @@ class SciCode : AuScintilla
 		////case NOTIF.SCN_UPDATEUI:
 		//case NOTIF.SCN_FOCUSIN:
 		//case NOTIF.SCN_FOCUSOUT:
+		//case NOTIF.SCN_DWELLSTART:
+		//case NOTIF.SCN_DWELLEND:
+		//case NOTIF.SCN_NEEDSHOWN:
 		//	break;
 		//case NOTIF.SCN_MODIFIED:
 		//	Print(n.nmhdr.code, n.modificationType);
@@ -168,16 +171,18 @@ class SciCode : AuScintilla
 			}
 			break;
 		case NOTIF.SCN_DWELLSTART:
-			CodeInfo.SciMouseDwellStarted(this, n.position, n.x, n.y);
+			CodeInfo.SciMouseDwellStarted(this, n.position);
 			break;
-		case NOTIF.SCN_DWELLEND:
-			CodeInfo.SciMouseDwellEnded(this);
-			break;
+		//case NOTIF.SCN_DWELLEND:
+		//	CodeInfo.SciMouseDwellEnded(this);
+		//	break;
 		case NOTIF.SCN_MARGINCLICK:
 			CodeInfo.Cancel();
 			if(n.margin == c_marginFold) {
 				_FoldingOnMarginClick(null, n.position);
 			}
+
+			//SHOULDDO: when clicked selbar to select a fold header line, should select all hidden lines. Like in VS.
 			break;
 		}
 
@@ -233,9 +238,9 @@ class SciCode : AuScintilla
 		base.WndProc(ref m);
 
 		switch(m.Msg) {
-		case Api.WM_MOUSEMOVE:
-			CodeInfo.SciMouseMoved(this, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
-			break;
+		//case Api.WM_MOUSEMOVE:
+		//	CodeInfo.SciMouseMoved(this, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
+		//	break;
 		case Api.WM_KILLFOCUS:
 			CodeInfo.SciKillFocus();
 			break;
@@ -426,6 +431,8 @@ class SciCode : AuScintilla
 		}
 		//Call(SCI_MARKERENABLEHIGHLIGHT, 1); //why dos not work?
 
+		Call(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_SHOW //show hidden lines when header line deleted
+			| SC_AUTOMATICFOLD_CHANGE); //show hidden lines when header line modified like '#region' -> '//#region'
 		Call(SCI_SETFOLDFLAGS, SC_FOLDFLAG_LINEAFTER_CONTRACTED);
 		Call(SCI_FOLDDISPLAYTEXTSETSTYLE, SC_FOLDDISPLAYTEXT_STANDARD);
 		Z.StyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
@@ -1033,7 +1040,7 @@ class SciCode : AuScintilla
 		object OwnerData { get; set; }
 	}
 
-	class C_TempRange : ITempRange //TODO: rename all private types like this: C_Class, S_Struct, I_Interface, D_Delegate, E_Enum.
+	class _TempRange : ITempRange
 	{
 		SciCode _doc;
 		readonly object _owner;
@@ -1043,7 +1050,7 @@ class SciCode : AuScintilla
 		internal readonly Action onLeave;
 		readonly ZTempRangeFlags _flags;
 
-		internal C_TempRange(SciCode doc, object owner, int fromUtf16, int fromUtf8, int toUtf8, Action onLeave, ZTempRangeFlags flags)
+		internal _TempRange(SciCode doc, object owner, int fromUtf16, int fromUtf8, int toUtf8, Action onLeave, ZTempRangeFlags flags)
 		{
 			_doc = doc;
 			_owner = owner;
@@ -1108,7 +1115,7 @@ class SciCode : AuScintilla
 		public override string ToString() => $"({CurrentFrom}, {CurrentTo}), owner={_owner}";
 	}
 
-	List<C_TempRange> _tempRanges = new List<C_TempRange>();
+	List<_TempRange> _tempRanges = new List<_TempRange>();
 
 	/// <summary>
 	/// Marks a temporary working range of text and later notifies when it is leaved.
@@ -1141,7 +1148,7 @@ class SciCode : AuScintilla
 		}
 
 		_TraceTempRange("ADD", owner);
-		var r = new C_TempRange(this, owner, fromUtf16, from, to, onLeave, flags);
+		var r = new _TempRange(this, owner, fromUtf16, from, to, onLeave, flags);
 		_tempRanges.Add(r);
 		return r;
 	}

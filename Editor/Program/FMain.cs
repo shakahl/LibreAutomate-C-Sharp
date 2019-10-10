@@ -53,7 +53,6 @@ partial class FMain : Form
 		Panels.Init();
 
 		this.Controls.Add(Panels.PanelManager);
-		this.Controls.Add(Panels.Status);
 
 		this.ResumeLayout(false);
 
@@ -289,42 +288,50 @@ static class Panels
 	public static PanelOutput Output;
 	public static PanelFind Find;
 	public static PanelFound Found;
-	public static PanelCodein Codein;
-	public static PanelStatus Status;
+	public static PanelInfo Info;
 
 	internal static void Init()
 	{
+		//Print("----");
+		//var p1 = APerf.Create();
 		Editor = new PanelEdit();
+		//p1.Next('e');
 		Files = new PanelFiles();
+		//p1.Next('f');
 		Open = new PanelOpen();
 		Running = new PanelRunning();
+		//p1.Next('r');
 		Output = new PanelOutput();
+		//p1.Next('o');
 		Find = new PanelFind();
+		//p1.Next('1');
 		Found = new PanelFound();
-		Codein = new PanelCodein();
-		Status = new PanelStatus();
+		//p1.Next('2');
+		Info = new PanelInfo();
+		//p1.Next('i');
+		//p1.Write();
 		//#if TEST
 		//		var c = new RichTextBox();
-		//		c.Name = "Results";
+		//		c.Name = "Test";
 		//#endif
 
 		var m = PanelManager = new AuDockPanel();
 		m.Name = "Panels";
 		m.ZCreate(AFolders.ThisAppBS + @"Default\Panels.xml", AFolders.ThisAppDocuments + @"!Settings\Panels.xml",
-			Editor, Files, Find, Found, Output, Open, Running, Codein,
+			Editor, Files, Find, Found, Output, Open, Running, Info,
 			//#if TEST
 			//			c,
 			//#endif
 			Strips.Menubar, Strips.tbFile, Strips.tbEdit, Strips.tbRun, Strips.tbTools, Strips.tbHelp, Strips.tbCustom1, Strips.tbCustom2
 			);
-		//info: would be easier to specify these in the default XML, but then cannot change in new app versions.
-		m.ZGetPanel(Open).Init("Currently open files"/*, EdResources.GetImageUseCache("open")*/);
-		m.ZGetPanel(Output).Init("Errors and other information"/*, EdResources.GetImageUseCache("output")*/);
-		m.ZGetPanel(Find).Init("Find files, text, triggers"/*, EdResources.GetImageUseCache("find")*/, focusable: true);
-		m.ZGetPanel(Found).Init("Results of find");
+		//info: would be easier to specify these in default XML, but then cannot change in new app versions.
 		m.ZGetPanel(Files).Init("All files of this workspace", focusable: true);
+		m.ZGetPanel(Open).Init("Currently open files"/*, EdResources.GetImageUseCache("open")*/);
 		m.ZGetPanel(Running).Init("Running tasks");
-		m.ZGetPanel(Codein).Init("Code info");
+		m.ZGetPanel(Output).Init("Output: errors and other information", EdResources.GetImageUseCache("output"));
+		m.ZGetPanel(Info).Init("Info: code quick info and mouse/window/control info", EdResources.GetImageUseCache("info"));
+		m.ZGetPanel(Found).Init("Find results", EdResources.GetImageUseCache("found"));
+		m.ZGetPanel(Find).Init("Find files, text, triggers"/*, EdResources.GetImageUseCache("find")*/, focusable: true);
 		m.ZFocusControlOnUndockEtc = Editor;
 		//#if TEST
 		//		m.GetPanel(c).Init("New panel", EdResources.GetImageUseCache("paste"));

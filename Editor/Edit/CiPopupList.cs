@@ -81,7 +81,6 @@ class CiPopupList
 		_tb.Items.Add(new ToolStripSeparator());
 		_groupButton = _AddButton("Group by namespace or inheritance", EdResources.GetImageNoCacheDpi(nameof(Au.Editor.Properties.Resources.ciGroupBy)));
 		if(Program.Settings.GetBool("ciGroup", true)) _groupButton.Checked = true;
-		//TODO: _linqButton. Or always sort below (maybe only for string).
 
 		ToolStripButton _AddButton(string text, Image image)
 		{
@@ -138,7 +137,10 @@ class CiPopupList
 
 	private void _list_ItemClick(object sender, AuListControl.ZItemClickArgs e)
 	{
-		if(e.DoubleClick) _Commit(e.Index, default);
+		if(e.DoubleClick) {
+			_compl.Commit(_doc, _VisibleItem(e.Index));
+			Hide();
+		}
 	}
 
 	private void _list_SelectedIndexChanged(int index)
@@ -168,13 +170,6 @@ class CiPopupList
 	int _VisibleCount => _aVisible.Count;
 
 	CiComplItem _VisibleItem(int index) => _a[_aVisible[index]];
-
-	CiComplResult _Commit(int index, Keys keyData)
-	{
-		var R = (uint)index < _VisibleCount ? _compl.Commit(_doc, _VisibleItem(index), keyData) : CiComplResult.None;
-		Hide();
-		return R;
-	}
 
 	public void SetListItems(List<CiComplItem> a, List<string> groups)
 	{
@@ -375,20 +370,13 @@ class CiPopupList
 		return Empty(r) ? null : "    //" + r;
 	}
 
-	public bool OnCmdKey(Keys keyData, out CiComplResult complResult)
+	public bool OnCmdKey(Keys keyData)
 	{
-		Debug.Assert(!keyData.HasAny(Keys.Modifiers));
-		complResult = CiComplResult.None;
 		if(_w.Visible) {
 			switch(keyData) {
 			case Keys.Escape:
 				Hide();
 				return true;
-			case Keys.Enter:
-			case Keys.Tab:
-			case Keys.OemSemicolon:
-				complResult = _Commit(_list.ZSelectedIndex, keyData);
-				return complResult != CiComplResult.None;
 			case Keys.Down:
 			case Keys.Up:
 			case Keys.PageDown:

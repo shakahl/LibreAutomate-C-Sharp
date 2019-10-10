@@ -29,7 +29,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.Completion;
 using System.Collections.Immutable;
-using Microsoft.CodeAnalysis.Tags;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
@@ -115,7 +114,7 @@ class CiCompletion
 		if(_data != null) {
 			if(!_IsValidChar(ch)) {
 				var ci = _popupList.SelectedItem;
-				if(ci != null) R = _Commit(ci, doc, ch);
+				if(ci != null) R = _Commit(doc, ci, ch, default);
 				_CancelList();
 				//return;
 			}
@@ -317,8 +316,10 @@ class CiCompletion
 			if(doc != Panels.Editor.ZActiveDoc || position != doc.Z.CurrentPos16 || code != doc.Text) return; //we are async, so these changes are possible
 			p1.Next('T');
 
+			var provider = CiComplItem.Provider(r.Items[0]);
+
 			var span = r.Span;
-			if(span.Length > 0 && CiComplItem.IsRegexProvider(r.Items[0])) span = new TextSpan(position, 0);
+			if(span.Length > 0 && provider == CiComplProvider.Regex) span = new TextSpan(position, 0);
 
 			var d = new _Data {
 				completionService = completionService,
@@ -337,9 +338,20 @@ class CiCompletion
 				//Print(v.DisplayText, sym, canGroup);
 
 				//why cref provider adds internals from other assemblies?
-				if(v.access == CiItemAccess.Internal && sym != null && sym.Kind == SymbolKind.NamedType && !sym.IsInSource() && !model.IsAccessible(0, sym)) {
-					//Print(sym);
-					//continue;
+				if(provider == CiComplProvider.Cref && sym != null) {
+					switch(sym.Kind) {
+					case SymbolKind.NamedType when v.access == CiItemAccess.Internal && !sym.IsInSource() && !model.IsAccessible(0, sym):
+						//Print(sym);
+						continue;
+					case SymbolKind.Namespace:
+						//Print(sym, sym.ContainingAssembly.Name);
+						switch(sym.Name) {
+						case "Internal" when sym.ContainingAssembly.Name == "System.Core":
+						case "Windows" when sym.ContainingAssembly.Name == "mscorlib":
+							continue;
+						}
+						break;
+					}
 				}
 
 				switch(v.kind) {
@@ -650,9 +662,14 @@ class CiCompletion
 
 	/// <summary>
 	/// Inserts the replacement text of the completion item.
+	/// ch == default if clicked or pressed Enter or Tab or a hotkey eg Ctrl+Enter.
+	/// key == default if clicked or typed a character (except Tab and Enter). Does not include hotkey modifiers.
 	/// </summary>
-	CiComplResult _Commit(CiComplItem item, SciCode doc, char ch, bool isEnter = false)
+	CiComplResult _Commit(SciCode doc, CiComplItem item, char ch, Keys key)
 	{
+		if(item.IsRegex) { //can complete only on click or Tab
+			if(ch != default || !(key == default || key == Keys.Tab)) return CiComplResult.None;
+		}
 		if(ch == ' ') ch = default;
 
 		var ci = item.ci;
@@ -664,10 +681,12 @@ class CiCompletion
 		int i = span.Start, len = span.Length + (doc.Z.TextLength16 - _data.codeLength);
 		//Print($"{change.NewPosition.HasValue}, cp={doc.Z.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
 		//Print($"'{s}'");
-		if(change.NewPosition.HasValue) { //xml doc, override, regex
+		ADebug.PrintIf(i != _data.tempRange.CurrentFrom && !item.IsRegex, $"{_data.tempRange.CurrentFrom}, {i}");
+		bool isComplex = change.NewPosition.HasValue;
+		if(isComplex) { //xml doc, override, regex
 			if(ch != default) return CiComplResult.None;
 			//ci.DebugPrint();
-			int newPos = change.NewPosition.GetValueOrDefault();
+			int newPos = change.NewPosition ?? (i + len);
 			if(ci.ProviderName.Ends(".XmlDocCommentCompletionProvider") && !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag)) {
 				if(s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && Empty(s1))) newPos++;
 				s += "></" + tag + ">";
@@ -676,11 +695,12 @@ class CiCompletion
 			doc.Z.GoToPos(true, newPos);
 			return CiComplResult.Complex;
 		}
+		//ci.DebugPrint();
 
 		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
-		bool isComplex = false;
 		CiAutocorrect.EBraces bracesOperation = default;
 		int positionBack = 0, bracesFrom = 0, bracesLen = 0;
+		bool isEnter = key == Keys.Enter;
 		//ci.DebugPrint();
 		if(ch == default && s.FindChars("({[<") < 0) {
 			string s2 = null;
@@ -702,14 +722,13 @@ class CiCompletion
 				case "while":
 				case "lock":
 				case "catch":
-				case "if" when !doc.Text.Eq(i - 1, "#"):
+				case "if" when !_IsDirective():
 				case "fixed" when _IsInFunction(): //else probably a fixed array field
 				case "using" when isEnter && _IsInFunction(): //else directive or without ()
 				case "when" when _IsInAncestorNodeOfType<CatchClauseSyntax>(i): //else switch case when
 					ch = '(';
 					s2 = " ()"; //users may prefer space, like 'if (i<1)'. If not, let they type '(' instead.
 					break;
-				case "else":
 				case "do":
 				case "try":
 				case "finally":
@@ -718,6 +737,7 @@ class CiCompletion
 				case "add":
 				case "remove":
 				case "unsafe" when isEnter:
+				case "else" when !_IsDirective():
 					ch = '{';
 					break;
 				case "checked":
@@ -748,6 +768,8 @@ class CiCompletion
 			}
 
 			bool _IsInFunction() => _IsInAncestorNodeOfType<BaseMethodDeclarationSyntax>(i);
+
+			bool _IsDirective() => doc.Text.Eq(i - 1, "#"); //info: CompletionItem of 'if' and '#if' are identical. Nevermind: this code does not detect '# if'.
 
 			//If 'new Type', adds '()'.
 			//If then the user types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
@@ -801,19 +823,32 @@ class CiCompletion
 
 	static string[] s_kwType = { "string", "object", "int", "uint", "long", "ulong", "byte", "sbyte", "short", "ushort", "char", "bool", "double", "float", "decimal" };
 
-	public CiComplResult Commit(SciCode doc, CiComplItem item, Keys keyData)
+	/// <summary>
+	/// Double-clicked item in list.
+	/// </summary>
+	public void Commit(SciCode doc, CiComplItem item) => _Commit(doc, item, default, default);
+
+	/// <summary>
+	/// Tab, Enter, Shift+Enter, Ctrl+Enter, Ctrl+;.
+	/// </summary>
+	public CiComplResult OnCmdKey_Commit(SciCode doc, Keys keyData)
 	{
-		var r=_Commit(item, doc, default, keyData == Keys.Enter);
-		if(r == CiComplResult.None && keyData == Keys.Tab) r = CiComplResult.Simple;
-		return r;
+		var R = CiComplResult.None;
+		if(_data != null) {
+			var ci = _popupList.SelectedItem;
+			if(ci != null) {
+				R = _Commit(doc, ci, default, keyData & Keys.KeyCode);
+				if(R == CiComplResult.None && keyData == Keys.Tab) R = CiComplResult.Simple; //always suppress Tab
+			}
+			_CancelList();
+		}
+		return R;
 	}
 
-	public bool OnCmdKey(Keys keyData, out CiComplResult complResult)
-	{
-		if(_popupList != null) return _popupList.OnCmdKey(keyData, out complResult);
-		complResult = CiComplResult.None;
-		return false;
-	}
+	/// <summary>
+	/// Esc, Arrow, Page.
+	/// </summary>
+	public bool OnCmdKey_SelectOrHide(Keys keyData) => _data == null ? false : _popupList.OnCmdKey(keyData);
 }
 
 [Flags]
@@ -841,50 +876,42 @@ class CiComplItem
 
 	public ISymbol FirstSymbol => ci.Symbols?[0];
 
-	public bool IsRegex => kind == CiItemKind.None && IsRegexProvider(ci);
+	public bool IsRegex => kind == CiItemKind.None && Provider(ci) == CiComplProvider.Regex;
 
-	public static bool IsRegexProvider(CompletionItem ci) => ci.Symbols == null && ci.Properties.Contains(new KeyValuePair<string, string>("EmbeddedProvider", "Microsoft.CodeAnalysis.Features.EmbeddedLanguages.RegularExpressions.RegexEmbeddedCompletionProvider"));
+	public static CiComplProvider Provider(CompletionItem ci)
+	{
+		var s = ci.ProviderName;
+		int i = s.LastIndexOf('.') + 1;
+		Debug.Assert(i > 0);
+		s = s.Substring(i);
+		//Print(s);
+		return s switch
+		{
+			"SymbolCompletionProvider" => CiComplProvider.Symbol,
+			"KeywordCompletionProvider" => CiComplProvider.Keyword,
+			"CrefCompletionProvider" => CiComplProvider.Cref,
+			"EmbeddedLanguageCompletionProvider" => CiComplProvider.Regex,
+			//"OverrideCompletionProvider" => CiComplProvider.Override,
+			_ => CiComplProvider.Other
+		};
+	}
 
 	public CiComplItem(CompletionItem ci)
 	{
 		this.ci = ci;
-		var tags = ci.Tags;
-		if(tags.Length > 0) {
-			kind = tags[0] switch
-			{
-				WellKnownTags.Class => CiItemKind.Class,
-				WellKnownTags.Structure => CiItemKind.Structure,
-				WellKnownTags.Enum => CiItemKind.Enum,
-				WellKnownTags.Delegate => CiItemKind.Delegate,
-				WellKnownTags.Interface => CiItemKind.Interface,
-				WellKnownTags.Method => CiItemKind.Method,
-				WellKnownTags.ExtensionMethod => CiItemKind.ExtensionMethod,
-				WellKnownTags.Property => CiItemKind.Property,
-				WellKnownTags.Event => CiItemKind.Event,
-				WellKnownTags.Field => CiItemKind.Field,
-				WellKnownTags.Local => CiItemKind.LocalVariable,
-				WellKnownTags.Parameter => CiItemKind.LocalVariable,
-				WellKnownTags.RangeVariable => CiItemKind.LocalVariable,
-				WellKnownTags.Constant => CiItemKind.Constant,
-				WellKnownTags.EnumMember => CiItemKind.EnumMember,
-				WellKnownTags.Keyword => CiItemKind.Keyword,
-				WellKnownTags.Namespace => CiItemKind.Namespace,
-				WellKnownTags.Label => CiItemKind.Label,
-				WellKnownTags.Snippet => CiItemKind.Snippet,
-				WellKnownTags.TypeParameter => CiItemKind.TypeParameter,
-				_ => CiItemKind.None
-			};
-			ci.DebugPrintIf(kind == CiItemKind.None);
-			if(ci.Tags.Length > 1) {
-				access = ci.Tags[1] switch { WellKnownTags.Private => CiItemAccess.Private, WellKnownTags.Protected => CiItemAccess.Protected, WellKnownTags.Internal => CiItemAccess.Internal, _ => default };
-				ci.DebugPrintIf(ci.Tags.Length > 2 || (access == default && ci.Tags[1] != WellKnownTags.Public), "green");
-			}
-		} else {
-			kind = CiItemKind.None;
-			ci.DebugPrintIf(!IsRegex);
-		}
+		CiUtil.TagsToKindAndAccess(ci.Tags, out kind, out access);
 		//ci.DebugPrint();
 	}
+}
+
+public enum CiComplProvider
+{
+	Other,
+	Symbol,
+	Keyword,
+	Cref,
+	Regex,
+	//Override,
 }
 
 public enum CiComplResult

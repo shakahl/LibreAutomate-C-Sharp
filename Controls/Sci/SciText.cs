@@ -529,6 +529,11 @@ namespace Au.Controls
 		public int SelectionEnd16 => CountBytesToChars(SelectionEnd8);
 
 		/// <summary>
+		/// true if there is selected text.
+		/// </summary>
+		public bool IsSelection => 0 == Call(SCI_GETSELECTIONEMPTY);
+
+		/// <summary>
 		/// Gets line index from character position.
 		/// </summary>
 		/// <param name="utf16"></param>

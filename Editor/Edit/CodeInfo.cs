@@ -166,19 +166,20 @@ Print(1);
 		case Keys.Up:
 		case Keys.PageDown:
 		case Keys.PageUp:
-			if(_compl.OnCmdKey(keyData, out _)) return true;
+			if(_compl.OnCmdKey_SelectOrHide(keyData)) return true;
 			if(_signature.OnCmdKey(keyData)) return true;
 			break;
 		case Keys.Tab:
 		case Keys.Enter:
-			return _compl.OnCmdKey(keyData, out _) || _correct.SciBeforeKey(doc, keyData);
+			return _compl.OnCmdKey_Commit(doc, keyData) != CiComplResult.None || _correct.SciBeforeKey(doc, keyData);
 		case Keys.Enter | Keys.Shift:
 		case Keys.Enter | Keys.Control:
 		case Keys.OemSemicolon | Keys.Control:
-			bool completed = _compl.OnCmdKey(keyData & Keys.KeyCode, out var complResult);
+			var complResult = _compl.OnCmdKey_Commit(doc, keyData);
 			if(complResult == CiComplResult.Complex) return true;
-			return _correct.SciBeforeKey(doc, keyData) | completed;
+			return _correct.SciBeforeKey(doc, keyData) | (complResult != CiComplResult.None);
 		case Keys.Back:
+		case Keys.Delete:
 			return _correct.SciBeforeKey(doc, keyData);
 		}
 		return false;
@@ -257,23 +258,23 @@ Print(1);
 		_signature.ShowSignature(doc);
 	}
 
-	public static void SciMouseDwellStarted(SciCode doc, int positionUtf8, int x, int y)
+	public static void SciMouseDwellStarted(SciCode doc, int positionUtf8)
 	{
 		if(!_CanWork(doc)) return;
-		_quickInfo.SciMouseDwellStarted(positionUtf8, x, y);
+		_quickInfo.SciMouseDwellStarted(doc, positionUtf8);
 	}
 
-	public static void SciMouseDwellEnded(SciCode doc)
-	{
-		if(!_CanWork(doc)) return;
-		_quickInfo.SciMouseDwellEnded();
-	}
+	//public static void SciMouseDwellEnded(SciCode doc)
+	//{
+	//	if(!_CanWork(doc)) return;
+	//	_quickInfo.SciMouseDwellEnded();
+	//}
 
-	public static void SciMouseMoved(SciCode doc, int x, int y)
-	{
-		if(!_CanWork(doc)) return;
-		_quickInfo.SciMouseMoved(x, y);
-	}
+	//public static void SciMouseMoved(SciCode doc, int x, int y)
+	//{
+	//	if(!_CanWork(doc)) return;
+	//	_quickInfo.SciMouseMoved(x, y);
+	//}
 
 	/// <summary>
 	/// Called to show signature help after committing a completion item with mouse, Tab, Enter or ' ', when added '(' after method etc.

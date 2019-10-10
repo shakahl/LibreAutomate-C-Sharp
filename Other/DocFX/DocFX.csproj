@@ -73,6 +73,7 @@
     <None Include="_doc\articles\_test.md" />
     <None Include="_doc\docfx.json" />
     <None Include="_doc\editor\Au editor.md" />
+    <None Include="_doc\editor\Code editor.md" />
     <None Include="_doc\editor\Command line.md" />
     <None Include="_doc\editor\toc.yml" />
     <None Include="_doc\filter.yml" />

@@ -45,7 +45,7 @@ namespace Au.Controls
 			base.OnHandleCreated(e); //note: must be first
 
 			Z.StyleBackColor(Sci.STYLE_DEFAULT, 0xf8fff0);
-			if(ZInitUseControlFont) Z.StyleFont(Sci.STYLE_DEFAULT, Font); //Segoe UI 9 is narrower but taller than the default Verdana 8
+			if(ZInitUseControlFont) Z.StyleFont(Sci.STYLE_DEFAULT, Font); //Segoe UI 9 is narrower but taller than the default Verdana 8. Also tested Calibri 9 (used for HtmlRenderer), but Verdana looks better.
 			Z.StyleClearAll();
 			Z.MarginWidth(1, 0);
 		}

@@ -73,35 +73,10 @@ class CiPopupHtml
 			_html.SuspendLayout();
 			_html.AccessibleName = _html.Name = "Codein_info";
 			_html.Dock = DockStyle.Fill;
-			_html.BaseStylesheet = @"
-body { font: 9.8pt 'Segoe UI'; margin: 0 4px 4px 4px; }
-span.type { color: #088 }
-span.keyword { color: #00f }
-span.string { color: #a74 }
-span.number { color: #a40 }
-span.namespace { color: #777 }
-span.comment { color: #080 }
-span.dot { color: #ccc }
-span.dotSelected { color: #c0f }
-span.hilite { background-color: #fca }
-p { margin: 0.5em 0 0.5em 0 }
-p.parameter { background-color: #dec; margin-bottom: 0; }
-div.selected, div.link { padding: 0 0 2px 2px; }
-div.selected { background-color: #f8f0a0; }
-div.link a { color: #000; text-decoration: none; }
-code { background-color: #f0f0f0; font: 100% Consolas; }
-hr { border: none; border-top: 1px solid #ccc; margin: 0.5em 0 0.5em 0; }
-div.br2 { margin: 0.3em 0 0.3em 0; }
-
-/* workarounds for HtmlRenderer's bugs and limitations */
-div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom because draws too high */
-";
-			//also text-decoration underline is too high or low if font eg small or 9pt. Good range is 9.4 - 10.1pt. Not tested high DPI.
-			//HtmlRenderer's default font is Segoe UI 11pt. WebBrowser's - 12pt (16px).
-
 			_html.BackColor = Color.LightYellow;
 			_w.BackColor = Color.LightYellow; //until the control loaded
 			_html.UseSystemCursors = true;
+			_html.BaseStylesheet = CiHtml.s_CSS;
 			_html.LinkClicked += _html_LinkClicked;
 
 			_w.Controls.Add(_html);

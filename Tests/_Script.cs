@@ -2112,65 +2112,11 @@ class Script : AScript
 		AOutput.Clear();
 		//100.ms();
 
-#if false
-		//g1:
-		//AWnd k = AWnd.Find("dkdkdkdk", null, null, );
-		AWnd.Find("", "", default, WFFlags.);
-		//this.
-		//Form f = null; f.
-		//Print(1);
-		var s = "";
-		int somegome = 1;
-		s.Remove(0);
-		//_Dtor d; d.
-		//_UniIdent.no
-		
-		//AWnd.Find("", "", "", 
+		//string s = "asd, skf";
+		//Print(s.IndexOfAny(stackalloc[] { ',', ' ' }));
 
-		var r1 = new Regex(@"j");
-		//r1.Replace("", "")
-		var r = new ARegex("^(.+)");
-		//r.Replace() - 2 repl
-		//"".RegexReplace() - 2 repl
-		//RXMatch m;m.ExpandReplacement() - 1 repl
 
-		//var f = new Au.Tools.FormAWinImage();
-		//f.ShowDialog();
-		string swwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww = "";
-		//s.
-		//this.TestA
-		//s.Insert(0, "f");
-		//List<int> a; a.ConvertAll
-		//var d = new Dictionary<int, int>(); d.
-		//AWnd w; w.
-		swwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww.Find("d");
-
-		Print(new string(' ', 5), new Dictionary<int, int>(2, null), 7, );
-
-		//AWnd.Find(
-		//	"",
-		//	""
-
-		//Microsoft.CodeAnalysis.
-		//ImmutableArray<int> k; k.
-		//System.Collections.Immutable.ImmutableList
-		//"".Ends(  );
-		int kk = 7;
-#endif
-		//Print(Empty(), 1)
-		//var k = (1 + 2);
-
-		//if(true)
-		//	Print(1);
-		//k = (1 + 2);
-		//if(true) { }
-
-		//if(true) if(true) if(true) {
-
-		//		}
-#if true
-#else
-#endif
+		//AWnd.Find("dsdsds", "jkjk")
 
 
 #else
@@ -2215,16 +2161,6 @@ class Script : AScript
 
 	[field: ThreadStatic]
 	public int Pub3 { get; set; }
-}
-
-partial class PartClass{
-	partial void Part();
-
-	partial void Part( ) { }
-}
-
-abstract class AbstractClass{
-	public abstract void Abs();
 }
 
 static class TestExt

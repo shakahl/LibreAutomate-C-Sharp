@@ -26,7 +26,7 @@ using Au.Editor.Properties;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Shared.Extensions;
-using Microsoft.CodeAnalysis.DocumentationComments;
+using Microsoft.CodeAnalysis.Tags;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -164,25 +164,65 @@ static class CiUtil
 	}
 
 #if DEBUG
-	public static void PrintNode(SyntaxNode x, bool printNode = true, bool printErrors = false)
+	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false)
 	{
 		if(x == null) { Print("null"); return; }
-		if(printNode) Print($"<><c blue>{x.Span}, {x.Kind()}, {x.GetType().Name},<> '<c green>{x}<>'");
+		if(printNode) Print($"<><c blue>{pos}, {x.Span}, {x.Kind()}, {x.GetType().Name},<> '<c green>{x}<>'");
 		if(printErrors) foreach(var d in x.GetDiagnostics()) Print(d.Code, d.Location.SourceSpan, d);
 	}
 
-	public static void PrintNode(SyntaxToken x, bool printNode = true, bool printErrors = false)
+	public static void PrintNode(SyntaxToken x, int pos = 0, bool printNode = true, bool printErrors = false)
 	{
-		if(printNode) Print($"<><c blue>{x.Span}, {x.Kind()},<> '<c green>{x}<>'");
+		if(printNode) Print($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
 		if(printErrors) foreach(var d in x.GetDiagnostics()) Print(d.Code, d.Location.SourceSpan, d);
 	}
 
-	public static void PrintNode(SyntaxTrivia x, bool printNode = true, bool printErrors = false)
+	public static void PrintNode(SyntaxTrivia x, int pos = 0, bool printNode = true, bool printErrors = false)
 	{
-		if(printNode) Print($"<><c blue>{x.Span}, {x.Kind()},<> '<c green>{x}<>'");
+		if(printNode) Print($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
 		if(printErrors) foreach(var d in x.GetDiagnostics()) Print(d.Code, d.Location.SourceSpan, d);
 	}
 #endif
+
+	public static void TagsToKindAndAccess(ImmutableArray<string> tags, out CiItemKind kind, out CiItemAccess access)
+	{
+		kind = CiItemKind.None;
+		access = default;
+		if(tags.IsDefaultOrEmpty) return;
+		kind = tags[0] switch
+		{
+			WellKnownTags.Class => CiItemKind.Class,
+			WellKnownTags.Structure => CiItemKind.Structure,
+			WellKnownTags.Enum => CiItemKind.Enum,
+			WellKnownTags.Delegate => CiItemKind.Delegate,
+			WellKnownTags.Interface => CiItemKind.Interface,
+			WellKnownTags.Method => CiItemKind.Method,
+			WellKnownTags.ExtensionMethod => CiItemKind.ExtensionMethod,
+			WellKnownTags.Property => CiItemKind.Property,
+			WellKnownTags.Event => CiItemKind.Event,
+			WellKnownTags.Field => CiItemKind.Field,
+			WellKnownTags.Local => CiItemKind.LocalVariable,
+			WellKnownTags.Parameter => CiItemKind.LocalVariable,
+			WellKnownTags.RangeVariable => CiItemKind.LocalVariable,
+			WellKnownTags.Constant => CiItemKind.Constant,
+			WellKnownTags.EnumMember => CiItemKind.EnumMember,
+			WellKnownTags.Keyword => CiItemKind.Keyword,
+			WellKnownTags.Namespace => CiItemKind.Namespace,
+			WellKnownTags.Label => CiItemKind.Label,
+			WellKnownTags.Snippet => CiItemKind.Snippet,
+			WellKnownTags.TypeParameter => CiItemKind.TypeParameter,
+			_ => CiItemKind.None
+		};
+		if(tags.Length > 1) {
+			access = tags[1] switch
+			{
+				WellKnownTags.Private => CiItemAccess.Private,
+				WellKnownTags.Protected => CiItemAccess.Protected,
+				WellKnownTags.Internal => CiItemAccess.Internal,
+				_ => default
+			};
+		}
+	}
 
 	static Bitmap[] s_images;
 	static string[] s_imageNames;
@@ -222,7 +262,7 @@ static class CiUtil
 
 	public static Bitmap GetKindImage(CiItemKind kind)
 	{
-		if(kind == CiItemKind.None) return default;
+		if(kind == CiItemKind.None) return null;
 		_InitImages();
 		return s_images[(int)kind] ??= _ResImage((int)kind);
 	}

@@ -166,7 +166,7 @@
     <Compile Include="Controls\ListControl.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="Panels\PanelCodein.cs">
+    <Compile Include="Panels\PanelInfo.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Panels\PanelFound.cs">
@@ -196,9 +196,6 @@
     <Compile Include="Util\UacDragDrop.cs" />
     <EmbeddedResource Include="Panels\etc\FFindOptions.resx">
       <DependentUpon>FFindOptions.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Panels\PanelCodein.resx">
-      <DependentUpon>PanelCodein.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Panels\PanelFind.resx">
       <DependentUpon>PanelFind.cs</DependentUpon>
@@ -248,9 +245,6 @@
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Panels\PanelRunning.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Include="Panels\PanelStatus.cs">
       <SubType>UserControl</SubType>
     </Compile>
     <Compile Include="Util\EApi.cs" />
@@ -478,6 +472,7 @@
     <None Include="Resources\png_ci\ciOverlayAbstract_20.png" />
     <None Include="Resources\png_ci\ciOverlayAbstract_24.png" />
     <None Include="Resources\png_ci\ciOverlayAbstract_32.png" />
+    <Content Include="Resources\png_tb\found.png" />
     <Content Include="Unused\unused1.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

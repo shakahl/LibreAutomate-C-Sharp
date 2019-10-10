@@ -265,7 +265,6 @@
 			// FProperties
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
-			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
 			this.ClientSize = new System.Drawing.Size(640, 436);
 			this.Controls.Add(this.label4);
 			this.Controls.Add(this._grid);

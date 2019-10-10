@@ -27,8 +27,38 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.DocumentationComments;
 using Microsoft.CodeAnalysis.CSharp;
 
+//SHOULDDO: test whether are displayed ref and readonly modifiers of types, functions and fields. Now functions can be readonly, which means they don't modify state.
+
 static class CiHtml
 {
+	public const string s_CSS = @"
+body { font: 10.5pt Calibri; margin: 0 4px 4px 4px; }
+span.type { color: #088 }
+span.keyword { color: #00f }
+span.string { color: #a74 }
+span.number { color: #a40 }
+span.namespace { color: #777 }
+span.comment { color: #080 }
+span.dot { color: #ccc }
+span.dotSelected { color: #c0f }
+span.hilite { background-color: #fca }
+p { margin: 0.5em 0 0.5em 0 }
+p.parameter { background-color: #dec; margin-bottom: 0; }
+div.selected, div.link { padding: 0 0 1px 3px; }
+div.selected { background-color: #f8f0a0; }
+div.link a { color: #000; text-decoration: none; }
+code { background-color: #f0f0f0; font: 100% Consolas; }
+hr { border: none; border-top: 1px solid #ccc; margin: 0.5em 0 0.5em 0; }
+div.br2 { margin: 0.3em 0 0.3em 0; }
+body.grayText { color: #999 }
+
+/* workarounds for HtmlRenderer's bugs and limitations */
+div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom because draws too high */
+";
+	//HtmlRenderer bug: text-decoration underline is randomly too high or low if using 'Segoe UI' font of good size.
+	//	Workaround: body { font: 10.5pt Calibri; }. Or could use it only for links, and use body { font: 9.8pt 'Segoe UI'; }. But Calibri is better.
+	//HtmlRenderer's default font is 'Segoe UI' 11pt. WebBrowser's - 12pt (16px).
+
 	public static void TaggedPartsToHtml(StringBuilder b, IEnumerable<TaggedText> tags)
 	{
 		if(tags == null) return;
@@ -387,15 +417,22 @@ static class CiHtml
 
 	public static IEnumerable<TaggedText> GetSymbolDescription(ISymbol sym, SemanticModel model, int position)
 	{
-		s_formatter ??= CodeInfo.CurrentWorkspace.Services.GetLanguageServices("C#").GetService<IDocumentationCommentFormattingService>();
+
 		if(sym.Kind == SymbolKind.Namespace) { //INamespaceSymbol does not give XML doc
 			string xml = Au.Compiler.MetaReferences.GetNamespaceDocXml(sym.QualifiedName());
-			if(xml == null) return Enumerable.Empty<TaggedText>();
-			return s_formatter.Format(xml, model, position, ISymbolExtensions2.CrefFormat);
+			return GetTaggedTextForXml(xml, model, position);
 		} else {
-			return sym.GetDocumentationParts(model, position, s_formatter, default);
+			return sym.GetDocumentationParts(model, position, _Formatter, default);
 		}
 	}
+
+	public static IEnumerable<TaggedText> GetTaggedTextForXml(string xml, SemanticModel model, int position)
+	{
+		if(xml == null) return Enumerable.Empty<TaggedText>();
+		return _Formatter.Format(xml, model, position, ISymbolExtensions2.CrefFormat);
+	}
+
+	static IDocumentationCommentFormattingService _Formatter => s_formatter ??= CodeInfo.CurrentWorkspace.Services.GetLanguageServices("C#").GetService<IDocumentationCommentFormattingService>();
 	static IDocumentationCommentFormattingService s_formatter;
 
 	const SymbolDisplayMiscellaneousOptions s_miscDisplayOptions = SymbolDisplayMiscellaneousOptions.AllowDefaultLiteral | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier | SymbolDisplayMiscellaneousOptions.RemoveAttributeSuffix | SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName | SymbolDisplayMiscellaneousOptions.UseSpecialTypes;

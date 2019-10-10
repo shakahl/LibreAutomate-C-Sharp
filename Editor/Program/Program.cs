@@ -29,6 +29,7 @@ static class Program
 		APerf.First();
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) Print(v);
+		//Print("----");
 		//AppDomain.CurrentDomain.AssemblyLoad += (object sender, AssemblyLoadEventArgs e) => Print(e.LoadedAssembly);
 	}
 

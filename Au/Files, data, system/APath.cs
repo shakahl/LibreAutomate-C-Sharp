@@ -304,12 +304,11 @@ namespace Au
 					if(s2.Length == 1 || LibIsSepChar(s2[1])) goto ge;
 					k |= 2;
 				}
-				string r;
-				switch(k) {
-				case 0: r = s1 + @"\" + s2; break;
-				case 3: r = s1 + s2.Substring(1); break;
-				default: r = s1 + s2; break;
-				}
+				var r = k switch {
+					0 => s1 + @"\" + s2,
+					3 => s1 + s2.Substring(1),
+					_ => s1 + s2,
+				};
 				return PrefixLongPathIfNeed(r);
 			}
 			ge:

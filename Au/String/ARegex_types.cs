@@ -326,10 +326,17 @@ namespace Au.Types
 		/// </remarks>
 		public bool Exists => _index >= 0;
 
+#if true
 		/// <summary>
 		/// Returns <see cref="Value"/>.
 		/// </summary>
 		public override string ToString() => Value;
+#else //this would be better for debug, but now cannot change without breaking some code that uses it probably implicitly and therefore difficult to find.
+		/// <summary>
+		/// Returns string containing index, end index and value.
+		/// </summary>
+		public override string ToString() => $"[{Index}, {EndIndex}) = '{Value}'";
+#endif
 	}
 
 	/// <summary>
