@@ -387,12 +387,12 @@ namespace Au.Triggers
 			//APerf.Next();
 
 			//prevent big delay later on first LL hook event while hook proc waits
-			bool ngened = Util.AAssembly.LibIsAuNgened;
+			bool ngened = Util.LibAssembly.LibIsAuNgened;
 			bool scopeUsed = scopes.Used || funcs.Used;
 			if(!ngened || scopeUsed) { //never mind: should do it once. Several Triggers.Run in task is rare. Fast next time.
 				ThreadPool.QueueUserWorkItem(_ => {
 					try {
-						if(scopeUsed) Util.AAssembly.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
+						if(scopeUsed) Util.LibAssembly.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
 						if(!ngened) {
 							if(scopeUsed) new AWnd.Finder("*a").IsMatch(AWnd.Active);
 							_ = ATime.PerfMicroseconds;

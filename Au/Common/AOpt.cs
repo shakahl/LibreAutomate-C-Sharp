@@ -13,7 +13,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Linq;
-//using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -250,7 +249,7 @@ namespace Au.Types
 
 		static bool _IsAppDebugConfig()
 		{
-			var a = Util.AAssembly.EntryAssembly.GetCustomAttribute<DebuggableAttribute>();
+			var a = Assembly.GetEntryAssembly().GetCustomAttribute<DebuggableAttribute>();
 			if(a == null) return false;
 			//return a.IsJITOptimizerDisabled; //depends on 'Optimize code' checkbox in project Properties, regardless of config
 			return a.IsJITTrackingEnabled; //depends on config, but not 100% reliable, eg may be changed explicitly in source code (maybe the above too)

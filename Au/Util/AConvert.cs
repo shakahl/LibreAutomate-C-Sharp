@@ -12,7 +12,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Linq;
-//using System.Xml.Linq;
 using System.IO.Compression;
 
 using Au.Types;
@@ -294,7 +293,7 @@ namespace Au.Util
 		{
 			if(bufferSize < len * 3L / 4) throw new ArgumentException("bufferSize too small");
 			byte* r = (byte*)resultBuffer;
-			byte* t = Util.LibTables.Base64;
+			var t = Util.LibTables.Base64;
 
 			var sTo = s + len;
 			uint x = 0x80;
@@ -339,7 +338,7 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="s">Base64 string. Can be null, then returns null.</param>
 		/// <remarks>
-		/// How this function is different than <see cref="Convert.FromBase64String"/>:
+		/// How this function differs from <see cref="Convert.FromBase64String"/>:
 		/// 1. Allows (discards) non-base64 characters.
 		/// 2. Supports URL-safe characters: '-' for '+' and '_' for '/'.
 		/// 3. No exception when string length is not multiple of 4, eg if does not contain '=' characters for padding. 

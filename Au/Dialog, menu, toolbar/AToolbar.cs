@@ -28,10 +28,9 @@ namespace Au
 	{
 		static AToolbar()
 		{
-			AWnd.More.MyWindow.RegisterClass("AToolbar");
+			AWnd.More.RegisterWindowClass("AToolbar");
 		}
 
-		AWnd.More.MyWindow _wClass;
 		AWnd _w;
 		ToolStrip_ _ts;
 
@@ -150,8 +149,7 @@ namespace Au
 			//RECT r = Screen.PrimaryScreen.WorkingArea; r.Inflate(-2, -2); r.top += 4;
 			RECT r = (0, 0, 200, 200);
 
-			_wClass = new AWnd.More.MyWindow(WndProc);
-			if(!_wClass.Create("AToolbar", null, style, exStyle, r.top, r.left, r.Width, r.Height)) throw new Win32Exception();
+			AWnd.More.CreateWindow(WndProc, "AToolbar", null, style, exStyle, r.top, r.left, r.Width, r.Height);
 			APerf.Next();
 
 			_ts = new ToolStrip_(this);
@@ -197,7 +195,7 @@ namespace Au
 				break;
 			}
 
-			var R = _wClass.DefWndProc(w, message, wParam, lParam);
+			var R = Api.DefWindowProc(w, message, wParam, lParam);
 
 			switch(message) {
 			case Api.WM_PAINT:

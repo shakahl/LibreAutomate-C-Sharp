@@ -13,7 +13,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Linq;
-//using System.Xml.Linq;
 
 using Au;
 using Au.Types;

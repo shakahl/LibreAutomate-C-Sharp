@@ -207,10 +207,13 @@ namespace Au
 
 			internal static AWnd CreateMessageWindowDefWndProc()
 			{
-				if(s_atomDWP == 0) s_atomDWP = More.MyWindow.RegisterClass(c_wndClassDWP);
+				if(!s_registeredDWP) {
+					More.RegisterWindowClass(c_wndClassDWP);
+					s_registeredDWP = true;
+				}
 				return More.CreateMessageOnlyWindow(c_wndClassDWP);
 			}
-			static ushort s_atomDWP;
+			static bool s_registeredDWP;
 			const string c_wndClassDWP = "Au.DWP";
 
 			/// <summary>

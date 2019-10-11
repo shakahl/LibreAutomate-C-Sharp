@@ -474,7 +474,7 @@ namespace Au.Compiler
 		static void _CopyReferenceFiles(MetaComments m)
 		{
 			//info: tried to get all used references, unsuccessfully.
-			//	Would need to create appdomain, load the assembly and get its references through reflection.
+			//	Would need to create apppdomain, load the assembly and get its references through reflection.
 			//	And don't need it. We'll copy Au.dll and all non-default references that are not in the .NET folder.
 
 			_CopyFileIfNeed(typeof(AWnd).Assembly.Location, m.OutputPath + @"\Au.dll");

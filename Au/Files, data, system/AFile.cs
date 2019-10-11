@@ -35,7 +35,7 @@ namespace Au
 		#region attributes, exists, search, enum
 
 		/// <summary>
-		/// Adds SEM_FAILCRITICALERRORS to the error mode of this process, as MSDN recommends. Does this once in appdomain.
+		/// Adds SEM_FAILCRITICALERRORS to the error mode of this process, as MSDN recommends. Once in process.
 		/// It is to avoid unnecessary message boxes when an API tries to access an ejected CD/DVD etc.
 		/// </summary>
 		static void _DisableDeviceNotReadyMessageBox()

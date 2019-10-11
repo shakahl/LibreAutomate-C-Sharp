@@ -165,7 +165,7 @@ namespace Au
 				set { _defaultTitle = value; }
 			}
 			static string _defaultTitle;
-			//consider: use [assembly: AssemblyTitle("...")]. var a=Assembly.GetEntryAssembly(); But exception if appdomain runs with DoCallBack().
+			//CONSIDER: use [assembly: AssemblyTitle("...")]. var a=Assembly.GetEntryAssembly();
 
 			/// <summary>
 			/// Right-to-left layout.
@@ -767,7 +767,7 @@ namespace Au
 
 			_result = null;
 			_isClosed = false;
-			_isAppDomainEnding = false;
+			_isProcessEnding = false;
 
 			SetTitleBarText(_c.pszWindowTitle); //if not set, sets default
 			_EditControlInitBeforeShowDialog(); //don't reorder, must be before flags
@@ -800,8 +800,7 @@ namespace Au
 			}
 
 			if(_c.hMainIcon == default && Options.UseAppIcon) SetIcon(DIcon.App);
-			//if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = AModuleHandle.OfAppIcon();
-			if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = AModuleHandle.OfProcessExe();
+			if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = AProcess.ExeModuleHandle;
 			//info: DIcon.App is IDI_APPLICATION (32512).
 			//Although MSDN does not mention that IDI_APPLICATION can be used when hInstance is NULL, it works. Even works for many other undocumented system resource ids, eg 100.
 			//Non-NULL hInstance is ignored for the icons specified as TD_x. It is documented and logical.
@@ -859,7 +858,7 @@ namespace Au
 				//But on Thread.Abort or other exception it is not called and the dialog is still alive and visible.
 				//Therefore Windows shows its annoying "stopped working" UI.
 				//To avoid it, destroy the dialog now. Also to avoid possible memory leaks etc.
-				//However still bad if we use a timer (of ADialog API or own). We also use AAppDomain.Exit event for this.
+				//However still bad if we use a timer (of ADialog API or own). We also use AProcess.Exit event for this.
 				if(!_dlg.Is0) Api.DestroyWindow(_dlg);
 
 				_SetClosed();
@@ -869,9 +868,9 @@ namespace Au
 			}
 
 			if(hr != 0) throw new Win32Exception(hr);
-			if(_isAppDomainEnding) {
+			if(_isProcessEnding) {
 				//Print("closed");
-				_isAppDomainEnding = false;
+				_isProcessEnding = false;
 				//Thread.CurrentThread.Abort();
 				Thread.Sleep(Timeout.Infinite); //CLR will throw ThreadAbortException
 			}
@@ -963,7 +962,7 @@ namespace Au
 				Send = new DSend(this); //note: must be before setting _dlg, because another thread may call if(d.IsOpen) d.Send.Message(..).
 				_dlg = w;
 
-				AAppDomain.Exit += _AppDomain__Exit; //closes dialog, to avoid the annoying "stopped working" UI
+				AProcess.Exit += _AProcess_Exit; //closes dialog, to avoid the annoying "stopped working" UI
 				break;
 			case Native.TDN.DESTROYED:
 				//Print(w.IsAlive); //valid
@@ -1030,18 +1029,18 @@ namespace Au
 			return R;
 		}
 
-		private void _AppDomain__Exit(object sender, EventArgs e)
+		private void _AProcess_Exit(object sender, EventArgs e)
 		{
 			if(IsOpen) {
 				//Print("closing");
-				_isAppDomainEnding = true; //let ShowDialog not return. It will set this = false.
+				_isProcessEnding = true; //let ShowDialog not return. It will set this = false.
 				Send.Close();
 				if(!_dlg.IsOfThisThread) {
-					while(_isAppDomainEnding) Thread.Sleep(15); //to avoid terminating this process, wait until the API modal loop ends, only then let CLR abort the dialog thread
+					while(_isProcessEnding) Thread.Sleep(15); //to avoid terminating this process, wait until the API modal loop ends, only then let CLR abort the dialog thread
 				}
 			}
 		}
-		bool _isAppDomainEnding;
+		bool _isProcessEnding;
 
 		/// <summary>
 		/// ADialog events.
@@ -1138,7 +1137,7 @@ namespace Au
 			if(_dlg.Is0) return;
 			_dlg = default;
 			Send.LibClear();
-			AAppDomain.Exit -= _AppDomain__Exit;
+			AProcess.Exit -= _AProcess_Exit;
 		}
 		bool _isClosed;
 

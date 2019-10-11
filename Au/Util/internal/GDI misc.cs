@@ -15,7 +15,6 @@ using System.Runtime.ExceptionServices;
 using System.Drawing;
 using Forms = System.Windows.Forms;
 //using System.Linq;
-//using System.Xml.Linq;
 
 using Au;
 using Au.Types;

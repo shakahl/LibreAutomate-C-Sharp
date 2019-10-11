@@ -19,9 +19,9 @@ using Au.Types;
 using static Au.AStatic;
 
 //rejected: store the static instance in shared memory. This is how it was implemented initially.
-//	Then would be easy to measure speed of appdomain or process startup.
-//	However then too slow APerf startup (JIT + opening shared memory), eg 5 ms vs 1 ms. With process memory 3-4 ms.
-//	Also rejected Serialize: pass the string eg as command line args, then in that appdomain/process create new Inst variable.
+//	Then would be easy to measure speed of process startup.
+//	However then too slow APerf startup (JIT + opening shared memory), eg 5 ms vs 1 ms.
+//	Also rejected Serialize: pass the string eg as command line args, then in that process create new Inst variable.
 //	Instead use ATime.PerfMicroseconds, eg with command line.
 
 namespace Au
@@ -45,7 +45,7 @@ namespace Au
 			static Inst()
 			{
 				//Prevent JIT delay when calling Next etc if not ngened.
-				//if(!Util.AAssembly.LibIsAuNgened) { //unnecessary and makes slower
+				//if(!Util.LibAssembly.LibIsAuNgened) { //unnecessary and makes slower
 #if PREPAREMETHOD
 				Util.AJit.Compile(typeof(Inst), "Next", "NW");
 #if DEBUG //else these methods are inlined

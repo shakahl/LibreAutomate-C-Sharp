@@ -81,7 +81,7 @@ namespace Au.Util
 		/// <param name="inheritHandles">API parameter <i>bInheritHandles</i>.</param>
 		public bool StartLL(out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool inheritHandles = false)
 		{
-			if(inheritUiaccess && Api.OpenProcessToken(AProcess.CurrentProcessHandle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out LibHandle hToken)) {
+			if(inheritUiaccess && Api.OpenProcessToken(AProcess.ProcessHandle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out LibHandle hToken)) {
 				using(hToken) return Api.CreateProcessAsUser(hToken, null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
 			} else {
 				return Api.CreateProcess(null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);

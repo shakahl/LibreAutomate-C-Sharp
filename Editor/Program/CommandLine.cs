@@ -14,7 +14,6 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -109,9 +108,8 @@ static class CommandLine
 	public static void OnProgramLoaded()
 	{
 		AWnd.More.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER, Api.WM_CLOSE);
-		AWnd.More.MyWindow.RegisterClass("Au.Editor.Msg");
-		_msgWnd = new AWnd.More.MyWindow(_WndProc);
-		_msgWnd.CreateMessageOnlyWindow("Au.Editor.Msg");
+		AWnd.More.RegisterWindowClass("Au.Editor.Msg", _WndProc);
+		_msgWnd = AWnd.More.CreateMessageOnlyWindow("Au.Editor.Msg");
 
 		if(_importWorkspace != null || _importFiles != null) {
 			ATimer.After(10, () => {
@@ -133,13 +131,13 @@ static class CommandLine
 	static string _importWorkspace;
 	static string[] _importFiles;
 
-	static AWnd.More.MyWindow _msgWnd;
+	static AWnd _msgWnd;
 
 	/// <summary>
 	/// The message-only window.
 	/// Don't call before the program is fully inited and OnMainFormLoaded called.
 	/// </summary>
-	public static AWnd MsgWnd => _msgWnd.Handle;
+	public static AWnd MsgWnd => _msgWnd;
 
 	static LPARAM _WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam)
 	{
@@ -166,7 +164,7 @@ static class CommandLine
 			return 0;
 		}
 
-		return _msgWnd.DefWndProc(w, message, wParam, lParam);
+		return Api.DefWindowProc(w, message, wParam, lParam);
 	}
 
 	static LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)

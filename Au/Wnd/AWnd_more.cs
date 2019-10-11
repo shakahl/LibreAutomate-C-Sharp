@@ -80,38 +80,164 @@ namespace Au
 			//		//Only programmers would need it, and they can call the API directly.
 			//}
 
+
+			/// <summary>
+			/// Registers new window class in this process.
+			/// </summary>
+			/// <param name="className">Class name.</param>
+			/// <param name="wndProc">
+			/// Window procedure. See <msdn>Window Procedures</msdn>.
+			/// I null, sets API <msdn>DefWindowProc</msdn> as window procedure; then you can create windows with <see cref="CreateWindow(Native.WNDPROC, string, string, WS, WS_EX, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="CreateMessageOnlyWindow(Native.WNDPROC, string)"/>.
+			/// If not null, it must be a static method; then you can create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
+			/// </param>
+			/// <param name="ex">
+			/// Can be used to specify more fields of <msdn>WNDCLASSEX</msdn> that is passed to API <msdn>RegisterClassEx</msdn>.
+			/// Defaults: hCursor = arrow; hbrBackground = COLOR_BTNFACE+1; style = CS_GLOBALCLASS; others = 0/null/default.
+			/// This function also adds CS_GLOBALCLASS style.
+			/// </param>
+			/// <exception cref="ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null.</exception>
+			/// <exception cref="InvalidOperationException">The class already registered with this function and different <i>wndProc</i> method.</exception>
+			/// <exception cref="Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
+			/// <remarks>
+			/// Calls API <msdn>RegisterClassEx</msdn>.
+			/// The window class is registered until this process ends. Don't need to unregister.
+			/// If called next time for the same class, does nothing if <i>wndProc</i> is the same method (or both null); then ignores <i>ex</i>. Throws exception if another method.
+			/// Thread-safe.
+			/// Protects the <i>wndProc</i> delegate from GC.
+			/// </remarks>
+			public static unsafe void RegisterWindowClass(string className, Native.WNDPROC wndProc = null, WndClassEx ex = null)
+			{
+				var isInstance = wndProc?.Target != null;
+				Debug.Assert(!isInstance);
+				if(isInstance) throw new ArgumentException("wndProc must be static method or null");
+
+				lock(s_classes) {
+					if(s_classes.TryGetValue(className, out var wpPrev)) {
+						if(wpPrev != wndProc) throw new InvalidOperationException("Window class already registered");
+						return;
+					}
+					var x = new Api.WNDCLASSEX(ex);
+
+					fixed(char* pCN = className) {
+						x.lpszClassName = pCN;
+						x.lpfnWndProc = wndProc != null ? Marshal.GetFunctionPointerForDelegate(wndProc) : s_defWindowProc;
+						x.style |= Api.CS_GLOBALCLASS;
+
+						if(0 == Api.RegisterClassEx(x)) throw new Win32Exception();
+						//note: we don't return atom because: 1. Rarely used. 2. If assigned to an unused field, compiler may remove the function call.
+
+						s_classes.Add(className, wndProc);
+					}
+				}
+			}
+
+			static readonly IntPtr s_defWindowProc = Api.GetProcAddress("user32.dll", "DefWindowProcW");
+			static Dictionary<string, Native.WNDPROC> s_classes = new Dictionary<string, Native.WNDPROC>(StringComparer.OrdinalIgnoreCase); //allows to find registered classes and protects wndProc delegates from GC
+			[ThreadStatic] static List<(AWnd w, Native.WNDPROC p)> t_windows; //protects wndProc delegates of windows created in this thread from GC
+
+			/// <summary>
+			/// Creates native/unmanaged window of a class registered with <see cref="RegisterWindowClass"/> with null <i>wndProc</i>, and sets its window procedure.
+			/// </summary>
+			/// <exception cref="ArgumentException">The class is not registered with <see cref="RegisterWindowClass"/>, or registered with non-null <i>wndProc</i>.</exception>
+			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
+			/// <remarks>
+			/// Calls API <msdn>CreateWindowEx</msdn>.
+			/// Protects the <i>wndProc</i> delegate from GC.
+			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
+			/// </remarks>
+			public static AWnd CreateWindow(Native.WNDPROC wndProc, string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
+			{
+				var a = t_windows ??= new List<(AWnd w, Native.WNDPROC p)>();
+				for(int i = a.Count - 1; i >= 0; i--) if(!a[i].w.IsAlive) a.RemoveAt(i);
+
+				lock(s_classes) {
+					if(!s_classes.TryGetValue(className, out var wp) || wp != null) throw new ArgumentException("Window class must be registered with RegisterWindowClass with null wndProc");
+				}
+
+				//cannot subclass when CreateWindowEx returns, because wndProc must receive creation messages. Use CBT hook to subclass before any messages.
+				using(AHookWin.ThreadCbt(c => {
+					if(c.code == HookData.CbtEvent.CREATEWND) {
+						//note: unhook as soon as possible. Else possible exception etc.
+						//	If eg hook proc uses 'lock' and that 'lock' must wait,
+						//	our hook proc is called again and again while waiting, until 'lock' throws exception.
+						//	It is known that 'lock' in STA thread dispatches messages, but I don't know why hook proc
+						//	is called multiple times for same event.
+						c.hook.Unhook();
+
+						var ww = (AWnd)c.wParam;
+						Debug.Assert(ww.ClassNameIs(className));
+						ww.SetWindowLong(Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+					} else Debug.Assert(false);
+					return false;
+				})) {
+					var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
+					if(w.Is0) throw new AuException(0);
+					a.Add((w, wndProc));
+					return w;
+				}
+			}
+
 			/// <summary>
 			/// Creates native/unmanaged window.
+			/// </summary>
+			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
+			/// <remarks>
 			/// Calls API <msdn>CreateWindowEx</msdn>.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
-			/// Usually don't need to specify hInstance.
-			/// </summary>
+			/// </remarks>
+			/// <seealso cref="RegisterWindowClass"/>
 			public static AWnd CreateWindow(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
 			{
-				return Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
+				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
+				if(w.Is0) throw new AuException(0);
+				return w;
 			}
 
 			/// <summary>
 			/// Creates native/unmanaged window like <see cref="CreateWindow"/> and sets font.
-			/// If customFontHandle not specified, sets the system UI font, usually it is Segoe UI, 9.
-			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </summary>
+			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
+			/// <remarks>
+			/// If <i>customFontHandle</i> not specified, sets the system UI font, usually it is Segoe UI, 9.
+			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
+			/// </remarks>
 			public static AWnd CreateWindowAndSetFont(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
 			{
-				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
-				if(!w.Is0) w.Send(Api.WM_SETFONT, (customFontHandle == default) ? Util.LibNativeFont.RegularCached : customFontHandle);
+				var w = CreateWindow(className, name, style, exStyle, x, y, width, height, parent, controlId, hInstance, param);
+				w.Send(Api.WM_SETFONT, (customFontHandle == default) ? Util.LibNativeFont.RegularCached : customFontHandle);
 				return w;
 			}
 
 			/// <summary>
 			/// Creates native/unmanaged <msdn>message-only window</msdn>.
-			/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
-			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </summary>
 			/// <param name="className">Window class name. Can be any existing class.</param>
+			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
+			/// <remarks>
+			/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
+			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
+			/// </remarks>
 			public static AWnd CreateMessageOnlyWindow(string className)
 			{
 				return CreateWindow(className, null, WS.POPUP, WS_EX.NOACTIVATE, parent: Native.HWND.MESSAGE);
+				//note: WS_EX_NOACTIVATE is important.
+			}
+
+			/// <summary>
+			/// Creates native/unmanaged <msdn>message-only window</msdn> of a class registered with <see cref="RegisterWindowClass"/> with null <i>wndProc</i>, and sets its window procedure.
+			/// </summary>
+			/// <param name="className">Window class name.</param>
+			/// <param name="wndProc"></param>
+			/// <exception cref="ArgumentException">The class is not registered with <see cref="RegisterWindowClass"/>, or registered with non-null <i>wndProc</i>.</exception>
+			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
+			/// <remarks>
+			/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
+			/// Protects the <i>wndProc</i> delegate from GC.
+			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
+			/// </remarks>
+			public static AWnd CreateMessageOnlyWindow(Native.WNDPROC wndProc, string className)
+			{
+				return CreateWindow(wndProc, className, null, WS.POPUP, WS_EX.NOACTIVATE, parent: Native.HWND.MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
 			}
 
@@ -259,7 +385,7 @@ namespace Au
 
 				AWnd w = (AWnd)m.HWnd;
 				uint counter = (uint)w.Prop["PrintMsg"]; w.Prop.Set("PrintMsg", ++counter);
-				s=counter.ToString()+", "+m.ToString();
+				s = counter.ToString() + ", " + m.ToString();
 				return true;
 			}
 
@@ -332,5 +458,25 @@ namespace Au
 			[DllImport("comctl32.dll", EntryPoint = "#413")]
 			public static extern LPARAM DefSubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
 		}
+	}
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// Used with <see cref="AWnd.More.RegisterWindowClass"/>.
+	/// </summary>
+	[NoDoc]
+	public class WndClassEx
+	{
+#pragma warning disable 1591 //XML doc
+		public uint style;
+		public int cbClsExtra;
+		public int cbWndExtra;
+		public IntPtr hIcon;
+		public IntPtr? hCursor;
+		public IntPtr? hbrBackground;
+		public IntPtr hIconSm;
+#pragma warning restore 1591 //XML doc
 	}
 }

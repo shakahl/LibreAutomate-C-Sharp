@@ -429,7 +429,7 @@ namespace Au
 		/// null means 'can be any'. Cannot be "". Cannot be path.
 		/// 
 		/// Or <see cref="WF3.Process"/>(process id), <see cref="WF3.Thread"/>(thread id), <see cref="WF3.Owner"/>(owner window).
-		/// See <see cref="ProcessId"/>, <see cref="AProcess.CurrentProcessId"/>, <see cref="ThreadId"/>, <see cref="AThread.NativeId"/>, <see cref="Owner"/>.
+		/// See <see cref="ProcessId"/>, <see cref="AProcess.ProcessId"/>, <see cref="ThreadId"/>, <see cref="AThread.NativeId"/>, <see cref="Owner"/>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">

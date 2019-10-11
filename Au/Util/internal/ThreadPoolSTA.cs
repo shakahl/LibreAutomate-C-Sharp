@@ -17,8 +17,8 @@ using Au.Types;
 using static Au.AStatic;
 
 //CONSIDER: instead use standard C# STA pool code.
-//	Initially I rejected it because each appdomain that uses it creates 4 threads. But now we rarely have multiple appdomains.
-//	Initially automation tasks by default were executed in appdomains. Later appdomains were completely rejected because unstable.
+//	Initially I rejected it because each apppdomain that uses it creates 4 threads. But now we don't support multiple apppdomains.
+//	Initially automation tasks by default were executed in apppdomains. Later apppdomains were completely rejected because unstable.
 
 namespace Au.Util
 {
@@ -70,7 +70,7 @@ namespace Au.Util
 		/// <param name="workCallback">Callback function to call in a thread pool thread.</param>
 		/// <param name="completionCallback">Optional callback function to call in this thread after workCallback.</param>
 		/// <remarks>
-		/// Call Dispose() to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
+		/// Call Dispose() to avoid memory leaks. If not called, the object and related OS object remain in memory until this process ends.
 		/// </remarks>
 		/// <exception cref="Win32Exception"/>
 		/// <exception cref="InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
@@ -91,7 +91,7 @@ namespace Au.Util
 		/// }
 		/// ]]></code>
 		/// </example>
-		public class Work :IDisposable
+		public class Work : IDisposable
 		{
 			GCHandle _gc; //to manage the lifetime of this object
 			object _state; //client's objects to pass to callbacks
@@ -157,7 +157,7 @@ namespace Au.Util
 
 			/// <summary>
 			/// Calls <see cref="Cancel"/>, releases all resources used by this object and allows this object to be garbage-collected.
-			/// Call this to avoid memory leaks. If not called, the object and related OS object remain in memory until this appdomain ends.
+			/// Call this to avoid memory leaks. If not called, the object and related OS object remain in memory until this process ends.
 			/// </summary>
 			public void Dispose()
 			{
@@ -183,11 +183,11 @@ namespace Au.Util
 			void _Callback()
 			{
 				//set STA
-#if false //this is the documented/legal way, but then in 'domain.DoCallBack(() => { Application.Exit(); });' sometimes strange exceptions in .NET internal func ThreadContext.ExitCommon().
+#if false //this is the documented/legal way, but then something did not work well when multiple apppdomains were supported
 				var apState = System.Windows.Forms.Application.OleRequired();
 				Debug.Assert(apState == ApartmentState.STA);
 #elif false //works, but slower (JIT etc)
-				int hr = Api.CoGetApartmentType(out var apt, out var aptq); //cannot use [ThreadStatic] because thread pool is shared by appdomains
+				int hr = Api.CoGetApartmentType(out var apt, out var aptq); //never mind: after dropping multiapppdomain support can instead use [ThreadStatic]
 				if(hr == 0 && apt != Api.APTTYPE.APTTYPE_STA) {
 					hr = Api.OleInitialize(default);
 					//Thread.CurrentThread.Priority = ThreadPriority.BelowNormal; //does not make getting/displaying icons better
@@ -203,8 +203,7 @@ namespace Au.Util
 				try {
 					var d = new WorkCallbackData() { state = _state, completionCallback = _completionCallback };
 					_workCallback(d);
-					if(_context != null && d.completionCallback != null && !_isAppDomainDying) _context.Post(d.completionCallback, d.state);
-					//info: Post() throws InvalidOperationException when appdomain is being unloaded. Usually then _isAppDomainDying is true.
+					if(_context != null && d.completionCallback != null && !_isProcessDying) _context.Post(d.completionCallback, d.state);
 					//note: don't use Send(), it is very slow with icons, maybe paints each time because there are no other messages in the queue.
 				}
 				catch(Exception e) { ADebug.Print(e); }
@@ -221,51 +220,33 @@ namespace Au.Util
 
 		static ThreadPoolSTA()
 		{
-			var p = _ProcVar;
-			if(p->pool == default) {
-				lock("d3+gzRQ2mkiiOHFKsRGCXw") {
-					if(p->pool == default) {
-						var pool = CreateThreadpool(default);
-						//SetThreadpoolThreadMinimum(pool, 2); //don't need this
-						SetThreadpoolThreadMaximum(pool, 4); //info: 3-4 is optimal for getting icons
-						p->pool = pool;
-					}
-				}
-			}
+			var pool = CreateThreadpool(default);
+			//SetThreadpoolThreadMinimum(pool, 2); //don't need this
+			SetThreadpoolThreadMaximum(pool, 4); //info: 3-4 is optimal for getting icons
 
 			_env.Size = Api.SizeOf<TP_CALLBACK_ENVIRON_V3>();
 			_env.Version = 3;
 			_env.CallbackPriority = (int)TP_CALLBACK_PRIORITY.TP_CALLBACK_PRIORITY_NORMAL; //tested: low etc does not change speeds
-			_env.Pool = p->pool;
+			_env.Pool = pool;
 			_env.CleanupGroup = CreateThreadpoolCleanupGroup();
 
-			AAppDomain.Exit += _CurrentDomain_DomainExit;
+			AProcess.Exit += _AProcess_Exit;
 		}
 
-		static void _CurrentDomain_DomainExit(object sender, EventArgs e)
+		static void _AProcess_Exit(object sender, EventArgs e)
 		{
-			_isAppDomainDying = true;
+			_isProcessDying = true;
 			//var perf = APerf.Create();
 			CloseThreadpoolCleanupGroupMembers(_env.CleanupGroup, true, default);
 			CloseThreadpoolCleanupGroup(_env.CleanupGroup);
 			//perf.NW();
 			//info:
-			//	When unloading a non-default domain, CloseThreadpoolCleanupGroupMembers can wait until callbacks finished.
-			//	When default domain is ending - can wait max 2 s, then process silently exits. It is documented.
-			//info:
+			//	When process is ending - can wait max 2 s, then process silently exits. It is documented.
 			//	Bad things happen if we don't call CloseThreadpoolCleanupGroupMembers (or call too late, in a static finalizer).
-			//	If there are pending callbacks, we get "thread aborted" exception there, and next appdomain somehow does not run (process exits).
+			//		If there are pending callbacks, we get "thread aborted" exception there.
 		}
 
-		static bool _isAppDomainDying;
-
-		internal struct ProcessVariables
-		{
-			public IntPtr pool;
-		}
-		static ProcessVariables* _ProcVar => &LibProcessMemory.Ptr->threadPool;
-
-		//Each appdomain has its own TP_CALLBACK_ENVIRON_V3 with its own cleanup group and shared thread pool.
+		static bool _isProcessDying;
 		static TP_CALLBACK_ENVIRON_V3 _env;
 
 		#region api

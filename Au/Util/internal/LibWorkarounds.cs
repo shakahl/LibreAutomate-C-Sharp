@@ -18,13 +18,9 @@ using static Au.AStatic;
 
 namespace Au.Util
 {
-	internal static partial class LibWorkarounds
+	static partial class LibWorkarounds
 	{
-		internal struct ProcessVariables
-		{
-			public bool doneWaitCursorWhenShowingMenuEtc;
-		}
-		static bool _workaroundWaitCursor;
+		static bool s_workaroundWaitCursor;
 
 		/// <summary>
 		/// A workaround for:
@@ -37,11 +33,7 @@ namespace Au.Util
 		internal static unsafe void WaitCursorWhenShowingMenuEtc()
 		{
 			//APerf.First();
-			//tested: this workaround can be executed once in process, in any thread.
-			if(_workaroundWaitCursor) return; _workaroundWaitCursor = true;
-			var onceInProcess = &LibProcessMemory.Ptr->workarounds.doneWaitCursorWhenShowingMenuEtc;
-			if(*onceInProcess) return; *onceInProcess = true;
-			//Print("workaround", AppDomain.CurrentDomain.Id);
+			if(s_workaroundWaitCursor) return; s_workaroundWaitCursor = true;
 
 			//Print(Api.GetActiveWindow());
 			if(AWnd.Active.IsOfThisProcess) return;

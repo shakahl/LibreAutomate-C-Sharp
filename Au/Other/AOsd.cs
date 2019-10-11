@@ -15,7 +15,6 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms; //SHOULDDO: avoid loading Forms dll. Now from it uses TextRenderer and Screen.
 using System.Drawing;
 //using System.Linq;
-//using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -28,18 +27,14 @@ namespace Au
 	/// </summary>
 	public abstract class AOsdWindow : IDisposable
 	{
-		///
-		public AOsdWindow()
-		{
-			_w = new AWnd.More.MyWindow(WndProc);
-		}
-		AWnd.More.MyWindow _w;
+		AWnd _w;
 
 		/// <summary>Destroys the OSD window.</summary>
 		protected virtual void Dispose(bool disposing)
 		{
-			if(!IsHandleCreated) return;
-			_w.Handle.Close();
+			if(_w.Is0) return;
+			_w.Close();
+			_w = default;
 		}
 
 		/// <summary>Destroys the OSD window.</summary>
@@ -49,12 +44,12 @@ namespace Au
 		public void Close() => Dispose(true);
 
 		/// <summary>OSD window handle or default(AWnd).</summary>
-		public AWnd Handle => _w.Handle;
+		public AWnd Handle => _w;
 
 		/// <summary>
 		/// Returns true if the OSD window is created.
 		/// </summary>
-		protected bool IsHandleCreated => !_w.Handle.Is0;
+		protected bool IsHandleCreated => !_w.Is0;
 
 		/// <summary>
 		/// Redraws the OSD window immediately.
@@ -63,9 +58,8 @@ namespace Au
 		protected void Redraw()
 		{
 			if(!Visible) return;
-			var w = _w.Handle;
-			Api.InvalidateRect(w, default, false);
-			Api.UpdateWindow(w);
+			Api.InvalidateRect(_w, default, false);
+			Api.UpdateWindow(_w);
 		}
 
 		/// <summary>
@@ -75,8 +69,7 @@ namespace Au
 		protected void Invalidate()
 		{
 			if(!Visible) return;
-			var w = _w.Handle;
-			Api.InvalidateRect(w, default, false);
+			Api.InvalidateRect(_w, default, false);
 		}
 
 		/// <summary>
@@ -102,9 +95,8 @@ namespace Au
 
 		void _SetOpacity()
 		{
-			var w = _w.Handle;
-			if(_opacity > 0) Api.SetLayeredWindowAttributes(w, 0, (byte)(uint)(_opacity * 255), 2);
-			else Api.SetLayeredWindowAttributes(w, (uint)TransparentColor.ToBGR(), 0, 1);
+			if(_opacity > 0) Api.SetLayeredWindowAttributes(_w, 0, (byte)(uint)(_opacity * 255), 2);
+			else Api.SetLayeredWindowAttributes(_w, (uint)TransparentColor.ToBGR(), 0, 1);
 		}
 
 		/// <summary>
@@ -127,7 +119,7 @@ namespace Au
 			set {
 				if(value == _r) return;
 				_r = value;
-				if(IsHandleCreated) _w.Handle.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
+				if(IsHandleCreated) _w.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
 			}
 		}
 		RECT _r;
@@ -137,7 +129,7 @@ namespace Au
 		/// The 'set' function calls <see cref="Show"/> (it creates OSD window if need) or <see cref="Hide"/> (it does not destroy the OSD window).
 		/// </summary>
 		public bool Visible {
-			get => _w.Handle.IsVisible;
+			get => _w.IsVisible;
 			set { if(value) Show(); else Hide(); } //note: if overridden, calls the override func
 		}
 
@@ -149,14 +141,13 @@ namespace Au
 		/// </remarks>
 		public virtual void Show()
 		{
-			var w = _w.Handle;
 			if(Visible) {
-				w.ZorderTopmost();
+				_w.ZorderTopmost();
 			} else {
-				if(w.Is0) w = _CreateWindow();
-				w.ShowLL(true);
-				w.ZorderTopmost();
-				Api.UpdateWindow(w);
+				if(_w.Is0) _CreateWindow();
+				_w.ShowLL(true);
+				_w.ZorderTopmost();
+				Api.UpdateWindow(_w);
 			}
 		}
 
@@ -167,27 +158,26 @@ namespace Au
 		public virtual void Hide()
 		{
 			if(!Visible) return;
-			_w.Handle.ShowLL(false);
+			_w.ShowLL(false);
 		}
 
-		AWnd _CreateWindow()
+		void _CreateWindow()
 		{
 			//register window class if need. Need another class if shadow.
 			string cn; byte regMask;
 			if(Shadow) { cn = "Au.OSD2"; regMask = 2; } else { cn = "Au.OSD"; regMask = 1; }
 			if((s_isWinClassRegistered & regMask) == 0) {
-				var ce = new MWWndClassEx() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, hbrBackground = default(IntPtr) };
+				var ce = new WndClassEx() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, hbrBackground = default(IntPtr) };
 				if(Shadow) ce.style |= Api.CS_DROPSHADOW;
-				AWnd.More.MyWindow.RegisterClass(cn, ce);
+				AWnd.More.RegisterWindowClass(cn, null, ce);
 				s_isWinClassRegistered |= regMask;
 			}
 
 			var es = WS_EX.TOOLWINDOW | WS_EX.TOPMOST | WS_EX.LAYERED | WS_EX.TRANSPARENT | WS_EX.NOACTIVATE;
 			if(ClickToClose) es &= ~WS_EX.TRANSPARENT;
-			_w.Create(cn, Name, WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
+			_w = AWnd.More.CreateWindow(WndProc, cn, Name, WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
 			_SetOpacity();
-			if(!_r.Is0) _w.Handle.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
-			return _w.Handle;
+			if(!_r.Is0) _w.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
 		}
 		static byte s_isWinClassRegistered;
 
@@ -221,7 +211,7 @@ namespace Au
 				break;
 			}
 
-			return _w.DefWndProc(w, message, wParam, lParam);
+			return Api.DefWindowProc(w, message, wParam, lParam);
 		}
 
 		/// <summary>
@@ -268,7 +258,7 @@ namespace Au
 		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [](xref:wildcard_expression).</param>
 		public static void CloseAll(string name = null)
 		{
-			foreach(var w in AWnd.FindAll(name, "**m Au.OSD||Au.OSD2", WF3.Process(AProcess.CurrentProcessId))) w.Close(noWait: true);
+			foreach(var w in AWnd.FindAll(name, "**m Au.OSD||Au.OSD2", WF3.Process(AProcess.ProcessId))) w.Close(noWait: true);
 		}
 	}
 

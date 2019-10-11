@@ -23,7 +23,7 @@ namespace Au.Types
 	{
 		static Cpp()
 		{
-			if(default != Api.GetModuleHandle("AuCpp.dll")) return; //probably loaded in other appdomain
+			Debug.Assert(default == Api.GetModuleHandle("AuCpp.dll"));
 
 			string s = AVersion.Is64BitProcess ? @"Dll\64bit\AuCpp.dll" : @"Dll\32bit\AuCpp.dll";
 			if(default != Api.LoadLibrary(AFolders.ThisAppBS + s)) return; //normal

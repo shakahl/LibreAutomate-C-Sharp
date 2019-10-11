@@ -15,7 +15,6 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
 //using System.Linq;
-//using System.Xml.Linq;
 
 using Au;
 using Au.Types;

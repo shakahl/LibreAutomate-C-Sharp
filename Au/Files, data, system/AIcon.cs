@@ -456,8 +456,7 @@ namespace Au
 		/// <remarks>The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.</remarks>
 		internal static IntPtr GetAppIconHandle(int size)
 		{
-			//var h = AModuleHandle.OfAppIcon();
-			var h = AModuleHandle.OfProcessExe();
+			var h = AProcess.ExeModuleHandle;
 			if(h == default) return default;
 			size = _NormalizeIconSizeParameter(size);
 			return Api.LoadImage(h, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED);

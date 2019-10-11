@@ -18,7 +18,6 @@ using System.Runtime.ExceptionServices;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Linq;
-//using System.Xml.Linq;
 
 using Au.Types;
 using static Au.AStatic;

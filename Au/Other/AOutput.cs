@@ -13,7 +13,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Linq;
-//using System.Xml.Linq;
 
 using Au.Types;
 using static Au.AStatic;
@@ -29,8 +28,8 @@ namespace Au
 	/// - If redirected, to wherever it is redirected. See <see cref="Writer"/>.
 	/// - Else if using log file (<see cref="LogFile"/> not null), writes to the file.
 	/// - Else if using console (<see cref="IsWritingToConsole"/> returns true), writes to console.
-	/// - Else if using local <see cref="AOutputServer"/> (in this appdomain), writes to it.
-	/// - Else if exists global <see cref="AOutputServer"/> (in any process/appdomain), writes to it.
+	/// - Else if using local <see cref="AOutputServer"/> (in this process), writes to it.
+	/// - Else if exists global <see cref="AOutputServer"/> (in any process), writes to it.
 	/// - Else nowhere.
 	/// </remarks>
 	//[DebuggerStepThrough]
@@ -116,7 +115,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// If you want to redirect, modify or just monitor output text, use code like in the example. It is known as "output redirection".
-		/// Redirection is applied to whole appdomain, and does not affect other appdomains.
+		/// Redirection is applied to whole process, not just this thread.
 		/// Redirection affects <see cref="Write"/>, <see cref="Print"/> and similar functions, also <see cref="RedirectConsoleOutput"/> and <see cref="RedirectDebugOutput"/>. It does not affect <see cref="WriteDirectly"/> and <see cref="Clear"/>.
 		/// Don't call <see cref="Write"/>, <see cref="Print"/> etc in method <b>WriteLine</b> of your writer class. It would call itself and create stack overflow. But you can call <see cref="WriteDirectly"/>.
 		/// </remarks>
@@ -236,10 +235,9 @@ namespace Au
 		/// If value is null - restores default behavior.
 		/// </summary>
 		/// <remarks>
-		/// The first <see cref="Write"/> etc call (in this appdomain) creates or opens the file and deletes old content if the file already exists.
-		/// Multiple appdomains cannot use the same file. If the file is open for writing, <see cref="Write"/> makes unique filename and changes <b>LogFile</b> value.
+		/// The first <see cref="Write"/> etc call (in this process) creates or opens the file and deletes old content if the file already exists.
 		/// 
-		/// Also supports mailslots. For <b>LogFile</b> use mailslot name, as documented in <msdn>CreateMailslot</msdn>. Multiple appdomains and processes can use the same mailslot.
+		/// Also supports mailslots. For <b>LogFile</b> use mailslot name, as documented in <msdn>CreateMailslot</msdn>. Multiple processes can use the same mailslot.
 		/// </remarks>
 		/// <exception cref="ArgumentException">The 'set' function throws this exception if the value is not full path and not null.</exception>
 		public static string LogFile {
@@ -314,9 +312,6 @@ namespace Au
 			/// Opens LogFile file handle for writing.
 			/// Uses CREATE_ALWAYS, GENERIC_WRITE, FILE_SHARE_READ.
 			/// </summary>
-			/// <remarks>
-			/// Multiple appdomains cannot use the same file. Each appdomain overwrites it when opens first time.
-			/// </remarks>
 			public static _LogFile Open()
 			{
 				var path = LogFile;

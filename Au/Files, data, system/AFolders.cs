@@ -261,12 +261,8 @@ namespace Au
 		static string __temp;
 
 		/// <summary>
-		/// Folder containing assemblies of this appdomain.
-		/// Calls <see cref="AppDomain.BaseDirectory"/>.
+		/// Folder containing assemblies of this app.
 		/// </summary>
-		/// <remarks>
-		/// Unlike <see cref="ThisProcess"/>, this path can be different for each appdomain; it is set when creating the AppDomain.
-		/// </remarks>
 		public static FolderPath ThisApp => __thisApp ??= ThisAppBS.TrimEnd('\\');
 		static string __thisApp;
 
@@ -311,8 +307,8 @@ namespace Au
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
-		/// Creates the folder if does not exist.
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
+		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
 		/// </remarks>
 		public static FolderPath ThisAppTemp {
 			get => __thisAppTemp ?? _SetAuto(ref __thisAppTemp, Temp + c_defaultAppSubDir, create: true);
@@ -326,8 +322,8 @@ namespace Au
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
-		/// Creates the folder if does not exist when 'set' or 'get' function called first time in app.
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
+		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
 		/// </remarks>
 		public static FolderPath ThisAppDocuments {
 			get => __thisAppDocuments ?? _SetAuto(ref __thisAppDocuments, Documents + c_defaultAppSubDir, create: true);
@@ -341,8 +337,8 @@ namespace Au
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
-		/// Creates the folder if does not exist when 'set' or 'get' function called first time in app.
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
+		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
 		/// </remarks>
 		public static FolderPath ThisAppData {
 			get => __thisAppData ?? _SetAuto(ref __thisAppData, RoamingAppData + c_defaultAppSubDir, create: true);
@@ -356,8 +352,8 @@ namespace Au
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
-		/// Creates the folder if does not exist when 'set' or 'get' function called first time in app.
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
+		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
 		/// </remarks>
 		public static FolderPath ThisAppDataLocal {
 			get => __thisAppDataLocal ?? _SetAuto(ref __thisAppDataLocal, LocalAppData + c_defaultAppSubDir, create: true);
@@ -371,7 +367,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
-		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this appdomain.
+		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
 		/// Note: the ProgramData folder has special permissions. Programs running not as administrator usually cannot write there.
 		/// This function does not auto-create the folder; usually it is created when installing the application.
 		/// </remarks>
@@ -405,14 +401,6 @@ namespace Au
 			internal set => __workspace = value;
 		}
 		static string __workspace;
-
-		/// <summary>
-		/// Folder containing the program file of this process.
-		/// Unlike <see cref="ThisApp"/>, this path is the same in all app domains of this process.
-		/// </summary>
-		public static FolderPath ThisProcess => __thisProcess ??= APath.GetDirectoryPath(Util.AModuleHandle.GetFilePath(default));
-		static string __thisProcess;
-		//public static FolderPath ThisProcess => Application.StartupPath; //no, loads Forms assembly
 
 		/// <summary>
 		/// Gets non-redirected path of the System32 folder.

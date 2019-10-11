@@ -160,10 +160,8 @@ namespace Au.Types
 		/// <remarks>
 		/// If more than 1 group have this name, prefers the first group that matched (<see cref="RXGroup.Exists"/> is true).
 		/// </remarks>
-		public ref RXGroup this[string groupName]
-		{
-			get
-			{
+		public ref RXGroup this[string groupName] {
+			get {
 				int i = GroupNumberFromName(groupName);
 				if(i < 0) throw new ArgumentException("Unknown group name.");
 				return ref _groups[i];
@@ -186,7 +184,7 @@ namespace Au.Types
 		public int GroupNumberFromName(string groupName)
 		{
 			if(groupName == null) throw new ArgumentNullException();
-			fixed (char* p = groupName) return LibGroupNumberFromName(p, groupName.Length, out _);
+			fixed(char* p = groupName) return LibGroupNumberFromName(p, groupName.Length, out _);
 		}
 
 		/// <summary>
@@ -206,7 +204,7 @@ namespace Au.Types
 		public int GroupNumberFromName(string groupName, out bool notUnique)
 		{
 			if(groupName == null) throw new ArgumentNullException();
-			fixed (char* p = groupName) return LibGroupNumberFromName(p, groupName.Length, out notUnique);
+			fixed(char* p = groupName) return LibGroupNumberFromName(p, groupName.Length, out notUnique);
 		}
 
 		//Used by ARegex.ReplaceAll to avoid repl.Substring.
@@ -306,10 +304,8 @@ namespace Au.Types
 		/// <summary>
 		/// String value of the group match in the subject string.
 		/// </summary>
-		public string Value
-		{
-			get
-			{
+		public string Value {
+			get {
 				if(_len > 0) return _subject.Substring(_index, _len);
 				return _index < 0 ? null : "";
 			}
@@ -340,12 +336,17 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Rarely used parameters for <see cref="ARegex"/> class functions.
+	/// More parameters for <see cref="ARegex"/> class functions.
 	/// </summary>
 	/// <remarks>
-	/// The constructor allows you to set initial values of fields. You can modify them later if need. ARegex functions don't modify them.
+	/// The constructor allows you to set initial values of fields. You can modify them later if need. <b>ARegex</b> functions don't modify them.
 	/// 
-	/// The start/end fields can be used to specify part of subject string. When a function has parameter <i>group</i>, the start/end fields don't depend on it; they are used to specify where to search for whole match.
+	/// The <see cref="start"/> and <see cref="end"/> fields can be used to specify part of subject string. When a function has parameter <i>group</i>, the start/end fields don't depend on it; they are used to specify where to search for whole match.
+	/// 
+	/// There are implicit conversions to <b>RXMore</b>:
+	/// - from int - sets <b>start</b>. For example <c>s.Regex(@"\d", more: i)</c> is same as <c>s.Regex(@"\d", more: new RXMore(i))</c>.
+	/// - from tuple (int, int) - sets <b>start</b> and <b>end</b>. For example <c>s.Regex(@"\d", more: (0, i))</c> is same as <c>s.Regex(@"\d", more: new RXMore(0, i))</c>.
+	/// - from <see cref="RXMatchFlags"/> - sets <see cref="matchFlags"/>.
 	/// </remarks>
 	public class RXMore
 	{
@@ -377,7 +378,22 @@ namespace Au.Types
 			this.start = start; this.end = end; this.matchFlags = matchFlags;
 		}
 
-		private RXMore() { }
+		/// <summary>
+		/// Sets <see cref="start"/>.
+		/// </summary>
+		public static implicit operator RXMore(int start) => new RXMore(start);
+
+		/// <summary>
+		/// Sets <see cref="start"/> and <see cref="end"/>.
+		/// </summary>
+		public static implicit operator RXMore((int start, int end) t) => new RXMore(t.start, t.end);
+
+		//FUTURE: try ranges, like [from..], [from..to], [..to].
+
+		/// <summary>
+		/// Sets <see cref="matchFlags"/>.
+		/// </summary>
+		public static implicit operator RXMore(RXMatchFlags matchFlags) => new RXMore(matchFlags: matchFlags);
 	}
 
 	#region callout
@@ -555,7 +571,7 @@ namespace Au.Types
 	/// Some of RXFlags flags also exist in <see cref="RXMatchFlags"/>. You can set them either when calling ARegex constructor or when calling ARegex functions that have parameter <i>more</i>. You can use different flags for each function call with the same ARegex variable.
 	/// </remarks>
 	[Flags]
-	public enum RXFlags :ulong
+	public enum RXFlags : ulong
 	{
 		ANCHORED = 0x80000000,
 		ENDANCHORED = 0x20000000,
@@ -619,7 +635,7 @@ namespace Au.Types
 	/// These flags also exist in <see cref="RXFlags"/> (ARegex constructor flags). You can set them either when calling constructor or when calling other functions.
 	/// </remarks>
 	[Flags]
-	public enum RXMatchFlags :uint
+	public enum RXMatchFlags : uint
 	{
 		//These are the same as in RXFlags, and can be used either when compiling or when matching.
 

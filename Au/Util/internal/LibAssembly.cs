@@ -21,41 +21,25 @@ namespace Au.Util
 	/// <summary>
 	/// Assembly functions.
 	/// </summary>
-	public static class AAssembly
+	static class LibAssembly
 	{
-		/// <summary>
-		/// Gets the entry assembly of this appdomain.
-		/// Normally instead can be used <see cref="Assembly.GetEntryAssembly"/>, but it returns null if appdomain launched through <see cref="AppDomain.DoCallBack"/>.
-		/// </summary>
-		public static Assembly EntryAssembly {
-			get {
-				if(_appdomainAssembly == null) {
-					var asm = Assembly.GetEntryAssembly(); //fails if this domain launched through DoCallBack
-					if(asm == null) asm = AppDomain.CurrentDomain.GetAssemblies()[1]; //[0] is mscorlib, 1 should be our assembly
-					_appdomainAssembly = asm;
-				}
-				return _appdomainAssembly;
-			}
-		}
-		static Assembly _appdomainAssembly;
-
-		//not used. Don't add Au to GAC, because then appdomains start very slowly, don't know why.
+		//not used. Don't add Au to GAC, because then process may start slowly, don't know why.
 		///// <summary>
 		///// Returns true if Au.dll is installed in the global assembly cache.
 		///// </summary>
-		//internal static bool LibIsAuInGAC => typeof(AAssembly).Assembly.GlobalAssemblyCache;
+		//internal static bool LibIsAuInGAC => typeof(LibAssembly).Assembly.GlobalAssemblyCache;
 
 		/// <summary>
 		/// Returns true if Au.dll is compiled to native code using ngen.exe.
-		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
+		/// It means - no JIT-compiling delay when its functions are called first time in process.
 		/// </summary>
-		internal static bool LibIsAuNgened => s_auNgened ??= IsNgened(typeof(AAssembly).Assembly);
+		internal static bool LibIsAuNgened => s_auNgened ??= IsNgened(typeof(LibAssembly).Assembly);
 		static bool? s_auNgened;
 		//tested: Module.GetPEKind always gets ILOnly.
 
 		/// <summary>
 		/// Returns true if assembly asm is compiled to native code using ngen.exe.
-		/// It means - no JIT-compiling delay when its functions are called first time in process or appdomain.
+		/// It means - no JIT-compiling delay when its functions are called first time in process.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
 		public static bool IsNgened(Assembly asm)

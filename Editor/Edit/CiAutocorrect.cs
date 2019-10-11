@@ -15,7 +15,6 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 //using System.Drawing;
 using System.Linq;
-//using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -62,7 +61,7 @@ class CiAutocorrect
 	/// Enter: If before ')' or ']' and not after ',': leaves the argument list etc and adds newline, maybe semicolon, braces, indentation, and returns true.
 	/// Shift+Enter or Ctrl+Enter: The same as above, but anywhere.
 	/// Ctrl+;: Like SciBeforeCharAdded(';'), but anywhere; and inserts semicolon now.
-	/// Tab: not impl. Returns false.
+	/// Tab: calls/returns SciBeforeCharAdded, which skips auto-added ')' etc.
 	/// Backspace: If inside an empty temp range, selects the '()' etc to erase and returns false.
 	/// Delete, Backspace: If after deleting newline would be tabs after caret, deletes newline with tabs and returns true.
 	/// </summary>
@@ -79,10 +78,11 @@ class CiAutocorrect
 			_OnEnterOrSemicolon(anywhere: true, onSemicolon: true, out _);
 			return true;
 		case Keys.Back:
-		case Keys.Tab:
 			return _OnBackspaceOrDelete(doc, true) || SciBeforeCharAdded(doc, (char)keyData, out _);
 		case Keys.Delete:
 			return _OnBackspaceOrDelete(doc, false);
+		case Keys.Tab:
+			return SciBeforeCharAdded(doc, (char)keyData, out _);
 		default:
 			Debug.Assert(false);
 			return false;
@@ -244,7 +244,8 @@ class CiAutocorrect
 
 	bool _OnEnterOrSemicolon(bool anywhere, bool onSemicolon, out BeforeCharContext bcc)
 	{
-		bcc = null; //need to create it only if onSemicolon==true and anywhere==false and returns true
+		bcc = null; //need to return it only if onSemicolon==true and anywhere==false and returns true
+
 		g1:
 		if(!CodeInfo.GetContextWithoutDocument(out var cd)) return false;
 		var doc = cd.sciDoc;
@@ -287,9 +288,10 @@ class CiAutocorrect
 		//CiUtil.PrintNode(nodeFromPos, printErrors: true);
 
 		SyntaxNode node = null, indentNode = null;
-		bool needSemicolon = false, needBlock = false, dontIndent = false;
+		bool needSemicolon = false, needBlock = false, canExitBlock = false, dontIndent = false;
 		SyntaxToken token = default; _Block block = null;
 		foreach(var v in nodeFromPos.AncestorsAndSelf()) {
+			//Print(v.GetType().Name);
 			if(v is StatementSyntax ss) {
 				node = v;
 				switch(ss) {
@@ -325,6 +327,7 @@ class CiAutocorrect
 				case SwitchStatementSyntax k:
 					token = k.CloseParenToken;
 					block = k;
+					canExitBlock = block != null;
 					dontIndent = true;
 					break;
 				case LocalFunctionStatementSyntax k:
@@ -336,7 +339,7 @@ class CiAutocorrect
 					break;
 				case BlockSyntax k:
 					if(k.Parent is ExpressionSyntax && anywhere) continue; //eg lambda
-					canCorrect = false;
+					canExitBlock = true;
 					break;
 				default: //method invocation, assignment expression, return, throw etc. Many cannot have parentheses or children, eg break, goto, empty (;).
 					needSemicolon = true;
@@ -353,10 +356,12 @@ class CiAutocorrect
 					if(!k.OpenBraceToken.IsMissing) block = k;
 					else if(!(k.Name?.IsMissing ?? true)) token = k.Name.GetLastToken();
 					else return false;
+					canExitBlock = block != null;
 					dontIndent = true;
 					break;
 				case BaseTypeDeclarationSyntax k: //class, struct, interface, enum
 					block = k;
+					canExitBlock = block != null;
 					break;
 				case EnumMemberDeclarationSyntax _:
 					canCorrect = false;
@@ -418,6 +423,14 @@ class CiAutocorrect
 					break;
 				case SwitchSectionSyntax _:
 					canCorrect = false;
+					if(!onSemicolon) canAutoindent = true;
+					break;
+				case AccessorListSyntax k:
+					canExitBlock = true;
+					break;
+				case AccessorDeclarationSyntax k:
+					if(k.ExpressionBody != null) needSemicolon = true;
+					else block = k.Body;
 					break;
 				case UsingDirectiveSyntax _:
 				case ExternAliasDirectiveSyntax _:
@@ -428,6 +441,14 @@ class CiAutocorrect
 				node = v;
 				if(canCorrect2 && !(canCorrect | onSemicolon) && block == null && pos > v.SpanStart) canCorrect = true;
 			}
+
+			if(onSemicolon) canExitBlock = false;
+			if(canExitBlock) {
+				canCorrect = false;
+				canAutoindent = true;
+				canExitBlock = anywhere && node == nodeFromPos && tok1.IsKind(SyntaxKind.CloseBraceToken) && pos <= tok1.SpanStart;
+			}
+			//Print(canCorrect, canAutoindent, canExitBlock);
 
 			if(canCorrect) {
 				if(needSemicolon) {
@@ -444,6 +465,7 @@ class CiAutocorrect
 		}
 
 		//Print("----");
+		//CiUtil.PrintNode(nodeFromPos);
 		//CiUtil.PrintNode(node);
 
 		if(node == null) {
@@ -512,8 +534,10 @@ class CiAutocorrect
 					if(endOfBlock > endOfFullSpan) {
 						replaceLen += endOfBlock - endOfFullSpan;
 						b.Append(code, endOfFullSpan, endOfBlock - endOfFullSpan);
-						if(!hasNewline) b.AppendLine();
-						if(--indent > 0) b.Append('\t', indent);
+						if(!hasNewline) {
+							b.AppendLine();
+							if(--indent > 0) b.Append('\t', indent);
+						}
 					}
 				}
 
@@ -531,25 +555,29 @@ class CiAutocorrect
 			int from = pos, to = pos;
 			while(from > 0 && _IsSpace(code[from - 1])) from--;
 			while(to < code.Length && _IsSpace(code[to])) to++;
-			int replaceFrom = from;
+			int replaceFrom = from, replaceTo = to;
 
-			//if we are not inside node span, find the first ancestor node where we are inside
-			TextSpan spanN = node.Span;
-			if(!(from >= spanN.End && tok1.IsKind(SyntaxKind.CloseParenToken))) { //if after ')', we are after eg if(...) or inside an expression
-				for(; !(from > spanN.Start && from < spanN.End); spanN = node.Span) {
-					if(node is SwitchSectionSyntax && from >= spanN.End && !(nodeFromPos is BreakStatementSyntax)) break; //indent switch section statements and 'break'
-					node = node.Parent;
-					if(node == null) return false;
+			if(canExitBlock && (canExitBlock = code.RegexMatch(@"(?m)^[\t \r\n]*\}", 0, out RXGroup g, RXFlags.ANCHORED, more: from))) replaceTo = g.EndIndex;
+
+			if(!canExitBlock) {
+				//if we are not inside node span, find the first ancestor node where we are inside
+				TextSpan spanN = node.Span;
+				if(!(from >= spanN.End && tok1.IsKind(SyntaxKind.CloseParenToken))) { //if after ')', we are after eg if(...) or inside an expression
+					for(; !(from > spanN.Start && from < spanN.End); spanN = node.Span) {
+						if(node is SwitchSectionSyntax && from >= spanN.End && !(nodeFromPos is BreakStatementSyntax)) break; //indent switch section statements and 'break'
+						node = node.Parent;
+						if(node == null) return false;
+					}
 				}
-			}
 
-			//don't indent if we are after 'do ...' or 'try ...' or 'try ... catch ...'
-			SyntaxNode doTryChild = null;
-			switch(node) {
-			case DoStatementSyntax k1: doTryChild = k1.Statement; break;
-			case TryStatementSyntax k2: doTryChild = k2.Block; break;
+				//don't indent if we are after 'do ...' or 'try ...' or 'try ... catch ...'
+				SyntaxNode doTryChild = null;
+				switch(node) {
+				case DoStatementSyntax k1: doTryChild = k1.Statement; break;
+				case TryStatementSyntax k2: doTryChild = k2.Block; break;
+				}
+				if(doTryChild != null && spanN.End >= doTryChild.Span.End) node = node.Parent;
 			}
-			if(doTryChild != null && spanN.End >= doTryChild.Span.End) node = node.Parent;
 
 			//get indentation
 			int indent = 0;
@@ -592,12 +620,6 @@ class CiAutocorrect
 			}
 			endLoop1:
 
-			//indent if we are directly in switch statement below breakless section
-			if(node == nodeFromPos && node is SwitchStatementSyntax ss) {
-				var sectionAbove = ss.Sections.LastOrDefault(o => o.FullSpan.End <= pos);
-				if(sectionAbove != null && !sectionAbove.Statements.Any(o => o is BreakStatementSyntax)) indent++;
-			}
-
 			//maybe need to add 1 line when breaking line inside '{  }', add tabs in current line, decrement indent in '}' line, etc
 			int iOB = 0, iCB = 0;
 			switch(node) {
@@ -605,23 +627,36 @@ class CiAutocorrect
 			case SwitchStatementSyntax k: iOB = k.OpenBraceToken.Span.End; iCB = k.CloseBraceToken.SpanStart; break;
 			case BaseTypeDeclarationSyntax k: iOB = k.OpenBraceToken.Span.End; iCB = k.CloseBraceToken.SpanStart; break;
 			case NamespaceDeclarationSyntax k: iOB = k.OpenBraceToken.Span.End; iCB = k.CloseBraceToken.SpanStart; break;
-			case BasePropertyDeclarationSyntax k: //property, event, indexer
-				var al = k.AccessorList;
-				if(al != null) { iOB = al.OpenBraceToken.Span.End; iCB = al.CloseBraceToken.SpanStart; }
-				break;
+			case AccessorListSyntax k: iOB = k.OpenBraceToken.Span.End; iCB = k.CloseBraceToken.SpanStart; break;
 			}
 			bool isBraceLine = to == iCB, expandBraces = isBraceLine && from == iOB;
+
+			//indent if we are directly in switch statement below breakless section. If Ctrl+Enter, instead add 'break;' line.
+			bool addBreak = false;
+			if(!expandBraces) {
+				if(node == nodeFromPos && node is SwitchStatementSyntax ss) {
+					var sectionAbove = ss.Sections.LastOrDefault(o => o.FullSpan.End <= pos);
+					if(sectionAbove != null && _IsBreaklessSection(sectionAbove)) {
+						if(!anywhere) indent++; else addBreak = true;
+					}
+				} else if(anywhere && nodeFromPos is SwitchLabelSyntax && from >= nodeFromPos.Span.End && node is SwitchSectionSyntax ses && _IsBreaklessSection(ses)) {
+					addBreak = true;
+				}
+				static bool _IsBreaklessSection(SwitchSectionSyntax ss) => !ss.Statements.Any(o => o is BreakStatementSyntax);
+			}
 
 			//Print($"from={from}, to={to}, nodeFromPos={nodeFromPos.GetType().Name}, node={node.GetType().Name}");
 			//Print($"indent={indent}, isBraceLine={isBraceLine}, expandBraces={expandBraces}");
 
-			if(indent < 1 && !expandBraces) return false;
+			if(indent < 1 && !(expandBraces | addBreak | canExitBlock)) return false;
 
 			var b = new StringBuilder();
 
-			//correct 'case' if indented too much. It happens when there are multiple 'case'.
-			if(indent > 0 && node is SwitchSectionSyntax && nodeFromPos is SwitchLabelSyntax sl && from >= sl.Span.End) {
-				int i = sl.SpanStart, j = i;
+			if(canExitBlock) if(addBreak || expandBraces) { canExitBlock = false; replaceTo = to; }
+
+			//correct 'case' if indented too much. It happens when it is not the first 'case' in section.
+			if(!expandBraces && indent > 0 && node is SwitchSectionSyntax && nodeFromPos is SwitchLabelSyntax && from >= nodeFromPos.Span.End) {
+				int i = nodeFromPos.SpanStart, j = i;
 				if(cd.sciDoc.Z.LineIndentationFromPos(true, i) != indent - 1) {
 					while(_IsSpace(code[i - 1])) i--;
 					if(code[i - 1] == '\n') {
@@ -633,18 +668,27 @@ class CiAutocorrect
 			}
 
 			//append newlines and tabs
-			if(expandBraces || from == 0 || code[from - 1] == '\n') {
-				if(expandBraces) b.AppendLine();
-				b.Append('\t', indent);
+			if(canExitBlock) {
+				if(!dontIndent && indent>0) indent--;
+				b.Append('\t', indent).AppendLine("}");
+			} else {
+				if(addBreak) {
+					if(code[from - 1] == '\n') b.Append('\t', indent + 1); else b.Append(' ');
+					b.Append("break;");
+					if(node is SwitchSectionSyntax) indent--;
+				} else if(expandBraces || from == 0 || code[from - 1] == '\n') {
+					if(expandBraces) b.AppendLine();
+					b.Append('\t', indent);
+				}
+				b.AppendLine();
+				if(indent > 0 && isBraceLine && !dontIndent) indent--;
 			}
-			b.AppendLine();
-			if(indent > 0 && isBraceLine && !(node is SwitchStatementSyntax)) indent--;
 			if(indent > 0) b.Append('\t', indent);
 
 			//replace text and set caret position
 			var s = b.ToString();
 			//Print($"'{s}'");
-			doc.Z.ReplaceRange(true, replaceFrom, to - replaceFrom, s, true);
+			doc.Z.ReplaceRange(true, replaceFrom, replaceTo - replaceFrom, s, true);
 			pos = replaceFrom + s.Length;
 			if(expandBraces) pos -= indent + 2; else if(isBraceLine && code.Eq(replaceFrom - 1, "\n")) pos -= indent;
 			doc.Z.GoToPos(true, pos);

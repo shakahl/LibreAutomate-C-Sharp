@@ -49,17 +49,12 @@ namespace Au.Util
 		/// </summary>
 		internal const int Size = 0x10000;
 
-		/// <summary>
-		/// Creates or opens shared memory on demand in a thread-safe and process-safe way.
-		/// </summary>
-		static LibSharedMemory* _sm;
-
 		static LibSharedMemory()
 		{
-			_sm = (LibSharedMemory*)ASharedMemory.CreateOrGet("Au_SM_0x10000", Size, out var created);
+			Ptr = (LibSharedMemory*)CreateOrGet("Au_SM_0x10000", Size, out var created);
 #if DEBUG
 			if(created) { //must be zero-inited, it's documented
-				int* p = (int*)_sm;
+				int* p = (int*)Ptr;
 				int i, n = 1000;
 				for(i = 0; i < n; i++) if(p[i] != 0) break;
 				Debug.Assert(i == n);
@@ -70,6 +65,34 @@ namespace Au.Util
 		/// <summary>
 		/// Gets pointer to the shared memory.
 		/// </summary>
-		public static LibSharedMemory* Ptr => _sm;
+		public static readonly LibSharedMemory* Ptr;
+
+		/// <summary>
+		/// Creates named shared memory of specified size. Opens if already exists.
+		/// Returns shared memory address in this process.
+		/// Calls API <msdn>CreateFileMapping</msdn> and API <msdn>MapViewOfFile</msdn>.
+		/// </summary>
+		/// <param name="name">Shared memory name. Case-insensitive.</param>
+		/// <param name="size">Shared memory size. Ignored if the shared memory already exists.</param>
+		/// <param name="created">Receives true if created and not opened.</param>
+		/// <exception cref="AuException">The API failed.</exception>
+		/// <remarks>
+		/// Once the memory is created, it is alive at least until this process ends. Other processes can keep the memory alive even after that.
+		/// There is no Close function to close the native shared memory object handle. The OS closes it when this process ends.
+		/// </remarks>
+		public static void* CreateOrGet(string name, uint size, out bool created)
+		{
+			Debug.Assert(AppDomain.CurrentDomain.IsDefaultAppDomain());
+
+			created = false;
+			var hm = Api.CreateFileMapping((IntPtr)~0, Api.SECURITY_ATTRIBUTES.ForLowIL, Api.PAGE_READWRITE, 0, size, name);
+			if(!hm.Is0) {
+				created = ALastError.Code != Api.ERROR_ALREADY_EXISTS;
+				var r = Api.MapViewOfFile(hm, 0x000F001F, 0, 0, 0);
+				if(r != default) return (void*)r;
+				hm.Dispose();
+			}
+			throw new AuException(0, "*open shared memory");
+		}
 	}
 }

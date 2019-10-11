@@ -14,7 +14,6 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-//using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -78,7 +77,7 @@ class PanelInfo : AuUserControlBase
 			BaseStylesheet = CiHtml.s_CSS
 		};
 		_html.ImageLoad += _html_ImageLoad;
-		//_html.LinkClicked += _html_LinkClicked;
+		_html.LinkClicked += _html_LinkClicked;
 		this.splitContainer1.Panel1.Controls.Add(_html);
 
 		_html.Hide(); //workaround for: HtmlPanel flickers (temp hscrollbar) when setting text first time. Now hide, then show after setting text.
@@ -96,23 +95,25 @@ class PanelInfo : AuUserControlBase
 		}
 	}
 
-	//private void _html_LinkClicked(object sender, HtmlLinkClickedEventArgs e)
-	//{
-	//	e.Handled = true;
-	//	//var s = e.Link;
-	//	//if(s.Starts('|')) { //open symbol source file and go to
-	//	//	CiUtil.OpenSymbolSourceFile(s, _w);
-	//	//} else if(s.Has("/a.html#")) { //open symbol source web page
-	//	//	CiUtil.OpenSymbolSourceUrl(s);
-	//	//} else if(s.Starts('#')) { //anchor
-	//	//	e.Handled = false;
-	//	//} else {
-	//	//	AExec.TryRun(s);
-	//	//}
-	//}
+	private void _html_LinkClicked(object sender, HtmlLinkClickedEventArgs e)
+	{
+		e.Handled = true;
+		var s = e.Link;
+		if(s=="?") {
+			ZSetText(c_aboutHtml);
+			//} else if(s.Starts('|')) { //open symbol source file and go to
+			//	CiUtil.OpenSymbolSourceFile(s, _w);
+			//} else if(s.Has("/a.html#")) { //open symbol source web page
+			//	CiUtil.OpenSymbolSourceUrl(s);
+		} else if(s.Starts('#')) { //anchor
+			e.Handled = false;
+		} else {
+			AExec.TryRun(s);
+		}
+	}
 
-	const string c_defaultMetaHtml = @"<body class='grayText'>The /*/ comments /*/ is file properties. Use the Properties dialog to edit and read about.</body>";
-	string _defaultHtml = @"<body class='grayText'>
+	const string c_metaHtml = @"<body>The <span class='comment'>/*/ comments /*/</span> is file properties. Use the Properties dialog to edit and read about.</body>";
+	const string c_aboutHtml = @"<body>
 This pane displays some info for a function, class or other symbol from mouse in the code editor.
 <p>Below: mouse x y in window client area, window info, mouse x y in screen, program, control info.</p>
 <p>Other features that help to write code:</p>
@@ -123,16 +124,10 @@ This pane displays some info for a function, class or other symbol from mouse in
 <li>Get window/control/object info and create code: use dialogs 'Find window or control' and 'Find accessible object' (menu Code).</li>
 </ul>
 </body>";
-	long _aboutInfoEndTime;
 
 	public void ZSetAboutInfo(bool metaComents = false)
 	{
-		if(!metaComents && _defaultHtml != null) { //stop showing the about text after 1 minute
-			var t = ATime.WinMilliseconds;
-			if(_aboutInfoEndTime == 0) _aboutInfoEndTime = t + 60_000;
-			else if(t > _aboutInfoEndTime) _defaultHtml = null;
-		}
-		ZSetText(metaComents ? c_defaultMetaHtml : _defaultHtml);
+		ZSetText(metaComents ? c_metaHtml : "<body><a href='?' style='color: #999'>?</a></body>");
 	}
 
 	public void ZSetText(string html)

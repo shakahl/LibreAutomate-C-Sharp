@@ -15,7 +15,6 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
-//using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -139,7 +138,6 @@ Print(1);
 		_compl.HideTools();
 		_signature.Cancel();
 	}
-	//TODO: now does not cancel when clicked empty space after all code.
 
 	public static void SciKillFocus()
 	{
@@ -176,7 +174,7 @@ Print(1);
 		case Keys.Enter | Keys.Control:
 		case Keys.OemSemicolon | Keys.Control:
 			var complResult = _compl.OnCmdKey_Commit(doc, keyData);
-			if(complResult == CiComplResult.Complex) return true;
+			if(complResult == CiComplResult.Complex && !keyData.HasAny(Keys.Modifiers)) return true;
 			return _correct.SciBeforeKey(doc, keyData) | (complResult != CiComplResult.None);
 		case Keys.Back:
 		case Keys.Delete:
@@ -454,7 +452,7 @@ Print(1);
 		public readonly SciCode doc;
 		public char ch;
 		public bool ignoreChar;
-		bool _undoStarted; //TODO: unused
+		//bool _undoStarted;
 
 		public CharContext(SciCode doc, char ch)
 		{
@@ -462,20 +460,20 @@ Print(1);
 			this.ch = ch;
 		}
 
-		public void BeginUndoAction()
-		{
-			if(!_undoStarted) {
-				_undoStarted = true;
-				doc.Call(Sci.SCI_BEGINUNDOACTION);
-			}
-		}
+		//public void BeginUndoAction()
+		//{
+		//	if(!_undoStarted) {
+		//		_undoStarted = true;
+		//		doc.Call(Sci.SCI_BEGINUNDOACTION);
+		//	}
+		//}
 
 		public void Dispose()
 		{
-			if(_undoStarted) {
-				_undoStarted = false;
-				doc.Call(Sci.SCI_ENDUNDOACTION);
-			}
+			//if(_undoStarted) {
+			//	_undoStarted = false;
+			//	doc.Call(Sci.SCI_ENDUNDOACTION);
+			//}
 		}
 	}
 

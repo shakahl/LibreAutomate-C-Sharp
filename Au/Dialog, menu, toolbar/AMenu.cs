@@ -878,7 +878,7 @@ namespace Au
 			} else {
 				_InitUninitClosing(false);
 
-				//Close menu windows. Else they are just hidden and prevent garbage collection until appdomain ends.
+				//Close menu windows. Else they are just hidden and prevent GC until process ends.
 				foreach(var k in _windows) ((AWnd)k.Handle).Post(Api.WM_CLOSE, _wmCloseWparam);
 
 				if(!MultiShow && !_isModal) ATimer.After(10, () => Dispose()); //cannot dispose now, exception

@@ -12,7 +12,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Linq;
-using System.Xml.Linq;
 
 using Au.Types;
 using static Au.AStatic;
@@ -76,7 +75,6 @@ namespace Au//.Util
 
 		static GCHandle _domainHandle=GCHandle.Alloc(AppDomain.CurrentDomain);
 
-		//always runs in default domain
 		static void _SetCallback()
 		{
 			var v = _ProcVar;
@@ -87,18 +85,9 @@ namespace Au//.Util
 
 		static PFLS_CALLBACK_FUNCTION _flsCallback;
 
-		//always runs in default domain
 		static void _FlsCallback(IntPtr param)
 		{
-			//Print("_FlsCallback", Api.GetCurrentThreadId());
-
-			var domain = GCHandle.FromIntPtr(param).Target as AppDomain;
-			if(domain.IsDefaultAppDomain()) _OnExit(); else domain.DoCallBack(_OnExit);
-		}
-
-		static void _OnExit()
-		{
-			Print("_OnExit", Api.GetCurrentThreadId(), Thread.GetDomainID()/*, _exit!=null, _exit2.IsValueCreated*/);
+			Print("_FlsCallback", Api.GetCurrentThreadId(), Thread.GetDomainID()/*, _exit!=null, _exit2.IsValueCreated*/);
 
 			//_Exit?.Invoke(null, null);
 

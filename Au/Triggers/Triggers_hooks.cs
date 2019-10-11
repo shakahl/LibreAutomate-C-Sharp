@@ -15,7 +15,6 @@ using System.Runtime.ExceptionServices;
 //using System.Windows.Forms;
 //using System.Drawing;
 using System.Linq;
-//using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -78,7 +77,7 @@ namespace Au.Triggers
 			MouseEdgeMove = 0x40, //Mouse edge and move triggers
 		}
 
-		readonly AWnd.More.MyWindow _msgWnd;
+		AWnd _msgWnd;
 		readonly Thread _thread;
 		readonly List<_ThreadPipe> _pipes;
 		AHookWin _hookK, _hookM;
@@ -97,8 +96,6 @@ namespace Au.Triggers
 		{
 			_inTaskProcess = inTaskProcess;
 			_pipes = new List<_ThreadPipe>();
-
-			_msgWnd = new AWnd.More.MyWindow(_WndProc);
 			_event = Api.CreateEvent(true);
 			_thread = AThread.Start(_Thread);
 		}
@@ -106,12 +103,12 @@ namespace Au.Triggers
 		void _Thread()
 		{
 			string cn = _inTaskProcess ? "Au.Hooks.Exe" : "Au.Hooks.Server";
-			AWnd.More.MyWindow.RegisterClass(cn);
-			_msgWnd.CreateMessageOnlyWindow(cn);
+			AWnd.More.RegisterWindowClass(cn);
+			_msgWnd = AWnd.More.CreateMessageOnlyWindow(_WndProc, cn);
 			Api.SetEvent(_event);
-			if(_inTaskProcess) Util.AAppDomain.Exit += (unu, sed) => _msgWnd.Handle.SendTimeout(1000, Api.WM_CLOSE); //unhook etc
+			if(_inTaskProcess) AProcess.Exit += (unu, sed) => _msgWnd.SendTimeout(1000, Api.WM_CLOSE); //unhook etc
 
-			if(!Util.AAssembly.LibIsAuNgened) {
+			if(!Util.LibAssembly.LibIsAuNgened) {
 				Util.AJit.Compile(typeof(HooksServer), "_Send", "_KeyboardHookProc", "_MouseHookProc");
 				Util.AJit.Compile(typeof(Api), "WriteFile", "ReadFile", "WaitForMultipleObjectsEx");
 				_ = ATime.PerfMilliseconds;
@@ -124,9 +121,8 @@ namespace Au.Triggers
 
 		public AWnd MsgWnd {
 			get {
-				var w = _msgWnd.Handle;
-				if(w.Is0) { Api.WaitForSingleObject(_event, -1); w = _msgWnd.Handle; }
-				return w;
+				if(_msgWnd.Is0) Api.WaitForSingleObject(_event, -1);
+				return _msgWnd;
 			}
 		}
 
@@ -159,7 +155,7 @@ namespace Au.Triggers
 			}
 			catch(Exception ex) { ADebug.Print(ex.Message); return default; }
 
-			return _msgWnd.DefWndProc(w, message, wParam, lParam);
+			return Api.DefWindowProc(w, message, wParam, lParam);
 		}
 
 		unsafe LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)
@@ -262,7 +258,7 @@ namespace Au.Triggers
 			lock(_pipes) {
 				foreach(var v in _pipes) if((v?.processId ?? 0) == processId) { has = true; break; }
 			}
-			if(has) _msgWnd.Handle.Post(Api.WM_USER, 2, processId);
+			if(has) _msgWnd.Post(Api.WM_USER, 2, processId);
 
 			//This function is called in the main thread. All other functions that use _pipes are called in our thread.
 			//	We lock _pipes only here and in functions that modify it.

@@ -253,7 +253,7 @@ namespace Au
 				if(n == 0) throw new AuException();
 				int sessionId = 0, ns = n;
 				if(ofThisSession) {
-					sessionId = CurrentSessionId;
+					sessionId = ProcessSessionId;
 					for(int i = 0; i < n; i++) if(p[i].sessionID != sessionId) ns--;
 				}
 				var a = new ProcessInfo[ns];
@@ -307,7 +307,7 @@ namespace Au
 		{
 			a?.Clear();
 
-			int sessionId = ofThisSession ? CurrentSessionId : 0;
+			int sessionId = ofThisSession ? ProcessSessionId : 0;
 
 			using(new _AllProcesses(out var p, out int n)) {
 				for(int i = 0; i < n; i++) {
@@ -345,16 +345,22 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls API <msdn>GetCurrentProcessId</msdn>.
+		/// Gets current process id.
+		/// See API <msdn>GetCurrentProcessId</msdn>.
 		/// </summary>
-		public static int CurrentProcessId => Api.GetCurrentProcessId();
+		public static int ProcessId => Api.GetCurrentProcessId();
 
 		/// <summary>
 		/// Returns current process handle.
-		/// Calls API <msdn>GetCurrentProcess</msdn>.
+		/// See API <msdn>GetCurrentProcess</msdn>.
 		/// Don't need to close the handle.
 		/// </summary>
-		public static IntPtr CurrentProcessHandle => Api.GetCurrentProcess();
+		public static IntPtr ProcessHandle => Api.GetCurrentProcess();
+
+		/// <summary>
+		/// Gets native module handle of the program file of this process.
+		/// </summary>
+		public static IntPtr ExeModuleHandle => Api.GetModuleHandle(null);
 
 		/// <summary>
 		/// Gets process id from handle.
@@ -376,7 +382,7 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Gets user session id of process.
+		/// Gets user session id of a process.
 		/// Returns -1 if failed. Supports <see cref="ALastError"/>.
 		/// Calls API <msdn>ProcessIdToSessionId</msdn>.
 		/// </summary>
@@ -391,7 +397,7 @@ namespace Au
 		/// Gets user session id of this process.
 		/// Calls API <msdn>ProcessIdToSessionId</msdn> and <msdn>GetCurrentProcessId</msdn>.
 		/// </summary>
-		public static int CurrentSessionId => GetSessionId(Api.GetCurrentProcessId());
+		public static int ProcessSessionId => GetSessionId(Api.GetCurrentProcessId());
 
 		/// <summary>
 		/// Gets version info of process executable file.
@@ -421,9 +427,46 @@ namespace Au
 		//internal static (long WorkingSet, long PageFile) LibGetCurrentProcessMemoryInfo()
 		//{
 		//	Api.PROCESS_MEMORY_COUNTERS m = default; m.cb = sizeof(Api.PROCESS_MEMORY_COUNTERS);
-		//	Api.GetProcessMemoryInfo(CurrentProcessHandle, ref m, m.cb);
+		//	Api.GetProcessMemoryInfo(ProcessHandle, ref m, m.cb);
 		//	return ((long)m.WorkingSetSize, (long)m.PagefileUsage);
 		//}
+
+		/// <summary>
+		/// Before this process exits, either normally or on unhandled exception.
+		/// </summary>
+		/// <remarks>
+		/// The event handler is called when one of these events occur, with their parameters: <see cref="AppDomain.ProcessExit"/>, <see cref="AppDomain.UnhandledException"/>.
+		/// The event handler is called before static object finalizers.
+		/// </remarks>
+		public static event EventHandler Exit {
+			add {
+				if(!_subscribedEventExit) {
+					lock("AVCyoRcQCkSl+3W8ZTi5oA") {
+						if(!_subscribedEventExit) {
+							var d = AppDomain.CurrentDomain;
+							Debug.Assert(d.IsDefaultAppDomain());
+							d.ProcessExit += _ProcessExit;
+							d.UnhandledException += _ProcessExit; //because ProcessExit is missing on exception
+							_subscribedEventExit = true;
+						}
+					}
+				}
+				_eventExit += value;
+			}
+			remove {
+				_eventExit -= value;
+			}
+		}
+		static EventHandler _eventExit;
+		static bool _subscribedEventExit;
+
+		//[HandleProcessCorruptedStateExceptions, System.Security.SecurityCritical] ;;tried to enable this event for corrupted state exceptions, but does not work
+		static void _ProcessExit(object sender, EventArgs e)
+		{
+			if(e is UnhandledExceptionEventArgs u && !u.IsTerminating) return;
+			var k = _eventExit;
+			if(k != null) try { k(sender, e); } catch { }
+		}
 	}
 }
 

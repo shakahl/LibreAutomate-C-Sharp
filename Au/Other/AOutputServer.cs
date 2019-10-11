@@ -1,15 +1,15 @@
 //#define NEED_CALLER //rejected. Too slow and generates much garbage.
 
 /*
-Only single global server is supported in this user session.
-Only single local server is supported in this appdomain.
+Single global server is supported in this user session.
+Single local server is supported in this process.
 
 AOutputServer does not implement an output window etc. It just collects messages and notifies an output window. Asynchronously.
 
 How global output server/client is implemented:
 	Single server and multiple clients.
 	Server receives messages sent by clients.
-	Clients - processes and appdomains that send text messages to the server. The server's appdomain also can be client.
+	Clients - processes that send text messages to the server. The server's process also can be client.
 	For IPC is used mailslot, waitable timer and shared memory (SM).
 	Server:
 		Creates mailslot and timer. Sets a bool about it in SM.
@@ -25,7 +25,7 @@ How global output server/client is implemented:
 
 How local output server/client is implemented:
 	Similar to global. Differences:
-	Single server and single client (the same appdomain).
+	Single server and single client (the same process).
 	Uses waitable timer, but not mailslot/SM. Instead of mailslot, adds messages directly to _messages. Instead of SM, uses static variables.
 
 */
@@ -46,7 +46,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Linq;
-//using System.Xml.Linq;
 
 using Au.Types;
 using static Au.AStatic;
@@ -58,7 +57,7 @@ namespace Au
 	/// Receives messages sent by <see cref="AOutput.Write"/> and related methods (<b>Print</b> etc).
 	/// </summary>
 	/// <remarks>
-	/// If server is global, clients can be multiple appdomains and processes, including this. Else only this appdomain.
+	/// If server is global, clients can be multiple processes, including this. Else only this process.
 	/// Works asynchronously, to make writing messages faster.
 	/// When a client writes a message, the message arrives to the server with some delay and is placed in a queue.
 	/// You then can get/remove messages from the queue (call <see cref="GetMessage"/>) and display them in a window (for example).
@@ -100,7 +99,7 @@ namespace Au
 	/// 				break;
 	/// 			case OutServMessageType.Write:
 	/// 				//_tb.AppendText(m.Text);
-	/// 				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Domain}  {m.Text}");
+	/// 				_tb.AppendText($"{DateTime.FromFileTimeUtc(m.TimeUtc).ToLocalTime()}  {m.Caller}  {m.Text}");
 	/// 				break;
 	/// 			}
 	/// 		}
@@ -140,7 +139,7 @@ namespace Au
 		bool _isLocalTimer;
 
 		/// <param name="isGlobal">
-		/// If true, will receive output from all appdomains and processes that don't have local server.
+		/// If true, will receive output from all processes that don't have local server.
 		/// </param>
 		public AOutputServer(bool isGlobal) => _isGlobal = isGlobal;
 
@@ -156,7 +155,7 @@ namespace Au
 					var m = Api.CreateMailslot(LibMailslotName, 0, 0, Api.SECURITY_ATTRIBUTES.ForLowIL);
 					if(m.Is0) {
 						var e = ALastError.Code;
-						if(e == Api.ERROR_ALREADY_EXISTS) return false; //called not first time, or exists in another process/appdomain
+						if(e == Api.ERROR_ALREADY_EXISTS) return false; //called not first time, or exists in another process
 						throw new AuException(e, "*create mailslot");
 					}
 
@@ -401,7 +400,7 @@ namespace Au
 		internal static string LibMailslotName {
 			get {
 				if(_mailslotName == null) {
-					_mailslotName = @"\\.\mailslot\Au.AOutput\" + AProcess.CurrentSessionId.ToString();
+					_mailslotName = @"\\.\mailslot\Au.AOutput\" + AProcess.ProcessSessionId.ToString();
 				}
 				return _mailslotName;
 			}
@@ -477,7 +476,7 @@ namespace Au
 
 		unsafe class _ClientOfGlobalServer
 		{
-			//info: the mailslot/timer are implicitly disposed when appdomain ends.
+			//info: the mailslot/timer are implicitly disposed when process ends.
 
 			LibHandle _mailslot;
 			AWaitableTimer _timer;
@@ -646,7 +645,7 @@ namespace Au.Types
 
 #if NEED_CALLER
 			/// <summary>
-			/// The <see cref="ATask.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
+			/// The <see cref="ATask.Name"/> property value of the process that called the Write/Print/etc method.
 			/// Used with OutServMessageType.Write.
 			/// If <see cref="NeedCallerMethod"/> is true, also includes the caller method. Format: "scriptname:type.method".
 			/// </summary>
@@ -661,7 +660,7 @@ namespace Au.Types
 			}
 #else
 		/// <summary>
-		/// The <see cref="ATask.Name"/> property value of the process, appdomain or thread that called the Write/Print/etc method.
+		/// The <see cref="ATask.Name"/> property value of the process that called the Write/Print/etc method.
 		/// Used with OutServMessageType.Write.
 		/// </summary>
 		public string Caller { get; }

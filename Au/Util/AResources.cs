@@ -26,7 +26,7 @@ namespace Au.Util
 	public static class AResources
 	{
 		/// <summary>
-		/// Gets an Image or other object from managed resources of appdomain's entry assembly.
+		/// Gets an Image or other object from managed resources of the app assembly (exe file).
 		/// Returns null if not found.
 		/// </summary>
 		/// <param name="name">Resource name, like "example", not like "Project.Properties.Resources.example".</param>
@@ -58,7 +58,7 @@ namespace Au.Util
 		static string s_appResourcesName;
 
 		/// <summary>
-		/// Gets ResourceManager of appdomain's entry assembly.
+		/// Gets ResourceManager of the process entry assembly.
 		/// Returns null if fails or if the assembly does not have resources.
 		/// Note: if the assembly contains multiple embedded .resource files, may need to set <see cref="AppResourcesName"/> before.
 		/// </summary>
@@ -66,7 +66,7 @@ namespace Au.Util
 		{
 			if(_appResourceManager == null) {
 				culture = null;
-				var asm = AAssembly.EntryAssembly; if(asm == null) return null;
+				var asm = Assembly.GetEntryAssembly();
 				var a = asm.GetManifestResourceNames(); if(a == null || a.Length == 0) return null; //no resources
 				string s;
 				if(s_appResourcesName != null) {

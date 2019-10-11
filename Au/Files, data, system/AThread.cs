@@ -15,7 +15,6 @@ using System.Runtime.ExceptionServices;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
-//using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -61,7 +60,7 @@ namespace Au
 			//info: we don't call .NET functions directly to avoid loading assemblies.
 
 			isWPF = false;
-			int f = Util.AAssembly.LibIsLoadedFormsWpf();
+			int f = Util.LibAssembly.LibIsLoadedFormsWpf();
 			if(0 != (f & 1) && _HML_Forms()) return true;
 			if(0 != (f & 2) && _HML_Wpf()) return isWPF = true;
 			return false;

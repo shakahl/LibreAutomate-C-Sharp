@@ -112,7 +112,7 @@ static unsafe class Program
 		_SetComApartment(ApartmentState.STA);
 
 		//JIT slowest-to-JIT methods
-		if(!Au.Util.AAssembly.LibIsAuNgened) {
+		if(!Au.Util.LibAssembly.LibIsAuNgened) {
 			Au.Util.AJit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
 			Au.Util.AJit.Compile(typeof(Au.Util.LibSerializer), "Deserialize");
 			AFile.WaitIfLocked(() => (FileStream)null);

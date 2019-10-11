@@ -223,7 +223,7 @@ namespace Au
 			/// This struct is <msdn>COPYDATASTRUCT</msdn>.
 			/// <note>By default [](xref:uac) blocks messages sent from processes of lower integrity level. Call <see cref="EnableReceivingWM_COPYDATA"/> if need.</note>
 			/// </remarks>
-			/// <seealso cref="Util.ASharedMemory"/>
+			/// <seealso cref="System.IO.MemoryMappedFiles.MemoryMappedFile"/>
 			/// <seealso cref="System.IO.Pipes.NamedPipeServerStream"/>
 			public unsafe struct CopyDataStruct
 			{

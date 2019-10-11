@@ -14,8 +14,6 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
-using System.Xml;
-using System.Xml.Linq;
 
 using Au;
 using static Au.AStatic;

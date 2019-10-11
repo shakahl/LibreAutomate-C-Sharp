@@ -2104,6 +2104,37 @@ class Script : AScript
 		}
 	}
 
+	unsafe void TestTablesSpeed()
+	{
+		//POINT p = (10, 20), r = default;
+		//var s = Au.Util.AConvert.HexEncode(&p, sizeof(POINT));
+		//Print(s);
+		//Au.Util.AConvert.HexDecode(s, &r, sizeof(POINT));
+		//Print(r);
+
+		//APerf.SpeedUpCpu();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int n2 = 1000;
+		//	APerf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { s = Au.Util.AConvert.HexEncode(&p, sizeof(POINT)); }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { Au.Util.AConvert.HexDecode(s, &r, sizeof(POINT)); }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	APerf.NW();
+		//	Thread.Sleep(200);
+		//}
+
+		var a = new byte[] { 12, 20 };
+		var s = Convert.ToBase64String(a);
+		Print(s);
+		a = Au.Util.AConvert.Base64Decode(s);
+		Print(a);
+
+	}
+
 	[STAThread] static void Main(string[] args) { new Script()._Main(args); }
 	void _Main(string[] args)
 	{ //}}//}}//}}//}}
@@ -2112,12 +2143,22 @@ class Script : AScript
 		AOutput.Clear();
 		//100.ms();
 
-		//string s = "asd, skf";
-		//Print(s.IndexOfAny(stackalloc[] { ',', ' ' }));
+		//string s=""; int i = 3; ;
+		//s.Regex(@"\d", more: i);
+		//s.Regex(@"\d", more: new RXMore(i));
 
+		do {
 
-		//AWnd.Find("dsdsds", "jkjk")
+		}
+		while(true);
 
+		if(true) {
+
+		} else {
+
+		}
+
+		if(true) { }
 
 #else
 		AThread.Start(() => {

@@ -18,7 +18,6 @@ using System.Runtime.ExceptionServices;
 //using System.Drawing;
 using System.Linq;
 using System.Xml;
-//using System.Xml.Linq;
 using System.IO.Pipes;
 
 using Au;

@@ -1,6 +1,6 @@
 ﻿//Why Forms extension methods are in separate class, not in AExtensions?
-//Initially it was in AExtensions. Then I noticed: appdomains are loaded much slower if the code uses ExtOther.Has.
-//Reason: .NET loaded Forms and Drawing dlls, although Has does not use them. Moving Forms extensions to a separate class fixed it.
+//Initially it was in AExtensions. Then I noticed: process starts slower if the code uses ExtOther.Has.
+//Reason: .NET loads Forms and Drawing dlls, although Has does not use them. Moving Forms extensions to a separate class fixed it.
 
 using System;
 using System.Collections.Generic;
@@ -15,10 +15,9 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Linq;
-using System.Xml.Linq;
 using System.Windows.Forms;
 using System.Drawing;
+//using System.Linq;
 
 using Au.Types;
 using static Au.AStatic;

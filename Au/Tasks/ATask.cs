@@ -28,7 +28,7 @@ namespace Au
 	{
 		/// <summary>
 		/// In an automation task process of a script with role miniProgram (defaut) returns script file name without extension.
-		/// In other processes and non-default appdomains returns <see cref="AppDomain.FriendlyName"/>; in default appdomain it is like "ProgramFile.exe".
+		/// In other processes returns <see cref="AppDomain.FriendlyName"/>, like "ProgramFile.exe".
 		/// </summary>
 		public static string Name => s_name ??= AppDomain.CurrentDomain.FriendlyName;
 		static string s_name;
@@ -37,11 +37,11 @@ namespace Au
 		/// In an automation task process tells whether the task runs in host process (default), editor process or own .exe process. It matches meta role.
 		/// In other processes always returns <b>ExeProgram</b>.
 		/// </summary>
-		public static unsafe ATRole Role => Util.LibProcessMemory.Ptr->taskRole;
+		public static unsafe ATRole Role { get; private set; }
 
 		internal static unsafe void LibInit(ATRole role, string name = null)
 		{
-			Util.LibProcessMemory.Ptr->taskRole = role;
+			Role = role;
 			if(name != null) s_name = name;
 		}
 

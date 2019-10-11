@@ -154,8 +154,28 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 		}
 	}
 
+	//static ushort atom = AWnd.More.RegisterWindowClass("uuuuuuu", (w, m, wp, lp) => {
+	//	AWnd.More.PrintMsg(w, m, wp, lp);
+	//	return Api.DefWindowProc(w, m, wp, lp);
+	//});
+
+	static bool classRegistered;
+
+	static LPARAM _Wndproc(AWnd w, int m, LPARAM wp, LPARAM lp)
+	{
+		AWnd.More.PrintMsg(w, m, wp, lp);
+		return Api.DefWindowProc(w, m, wp, lp);
+	}
+
 	public unsafe void TestEditor()
 	{
+		//if(!classRegistered) {
+		//	AWnd.More.RegisterWindowClass("uuuuuuu", _Wndproc);
+		//	//classRegistered = true;
+		//}
+		////Print(atom);
+		//var w = AWnd.More.CreateWindow("uuuuuuu", "Test window", WS.VISIBLE | WS.CAPTION | WS.SYSMENU, 0, 200, 200, 200, 200);
+		//Print(w);
 		//return;
 
 
@@ -167,7 +187,7 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 		//int i = s.IndexOf("?");
 		//doc.Z.ReplaceRange(true, i, i + 0, "-");
 
-		doc.Call(SCI_SETLINEINDENTATION, 4, 8);
+		//doc.Call(SCI_SETLINEINDENTATION, 4, 8);
 
 		//_testOvertype ^= true;
 		//doc.Call(Sci.SCI_SETOVERTYPE, _testOvertype);

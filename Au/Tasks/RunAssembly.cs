@@ -15,7 +15,6 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Linq;
-//using System.Xml.Linq;
 
 using Au.Types;
 using static Au.AStatic;
@@ -28,7 +27,7 @@ namespace Au
 	static unsafe class RunAssembly
 	{
 		/// <summary>
-		/// Executes assembly in this appdomain in this thread. Must be main appdomain.
+		/// Executes assembly in this thread.
 		/// Handles exceptions.
 		/// </summary>
 		/// <param name="asmFile">Full path of assembly file.</param>
@@ -102,7 +101,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Remembers and finds script assemblies loaded in this appdomain, to avoid loading the same unchanged assembly multiple times.
+		/// Remembers and finds script assemblies loaded in this process, to avoid loading the same unchanged assembly multiple times.
 		/// </summary>
 		struct _LoadedScriptAssembly
 		{
@@ -149,7 +148,7 @@ namespace Au.Types
 	/// <remarks>
 	/// This class adds these features:
 	/// 1. The static constructor subscribes to the <see cref="AppDomain.UnhandledException"/> event. On unhandled exception prints exception info. Without this class not all unhandled exceptions would be printed.
-	/// 2. Provides function <see cref="OnUnhandledException"/>. The script can override it.
+	/// 2. Provides virtual function <see cref="OnUnhandledException"/>. The script can override it.
 	/// 3. Provides property <see cref="Triggers"/>.
 	/// 
 	/// More features may be added in the future.
@@ -160,12 +159,10 @@ namespace Au.Types
 		{
 			//Print("static AScript"); //note: static ctor of inherited class is called BEFORE this. Never mind.
 			AppDomain.CurrentDomain.UnhandledException += (ad, e) => {
-				if((ad as AppDomain).Id != AppDomain.CurrentDomain.Id) return; //avoid printing twice if subscribed in main and other appdomain
 				OnHostHandledException(e);
 
 				//Does not see exceptions:
-				//1. thrown in the primary thread of a non-primary appdomain. Workaround: our host process uses try/catch.
-				//2. thrown in Task.Run etc threads. It's OK. .NET handles exceptions silently, unless something waits for the task.
+				//1. thrown in Task.Run etc threads. It's OK. .NET handles exceptions silently, unless something waits for the task.
 				//3. corrupted state exceptions. Tried [HandleProcessCorruptedStateExceptions] etc, unsuccessfully. Never mind.
 
 				//This is used for:

@@ -15,7 +15,6 @@ using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
-//using System.Xml.Linq;
 using System.Net;
 
 using Au;
@@ -50,7 +49,6 @@ div.link a { color: #000; text-decoration: none; }
 code { background-color: #f0f0f0; font: 100% Consolas; }
 hr { border: none; border-top: 1px solid #ccc; margin: 0.5em 0 0.5em 0; }
 div.br2 { margin: 0.3em 0 0.3em 0; }
-body.grayText { color: #999 }
 
 /* workarounds for HtmlRenderer's bugs and limitations */
 div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom because draws too high */
