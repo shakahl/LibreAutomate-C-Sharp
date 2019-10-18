@@ -3,9 +3,9 @@
     {
       "src": [
         {
-		  "src": "../../../Au/",
+		  "src": "../../../_Au/",
           "files": [
-            "Au.csproj"
+            "_Au.csproj"
           ]
         }
       ],
@@ -63,7 +63,10 @@
     "globalMetadataFiles": [],
     "fileMetadataFiles": [],
     "template": [
-      "default", "template1", "../../packages/memberpage.2.41.0/content", "template2"
+      "default",
+      "template1",
+      "C:/Users/G/.nuget/packages/memberpage/2.46.0/content",
+      "template2"
     ],
     "postProcessors": [],
     "markdownEngineName": "markdig",

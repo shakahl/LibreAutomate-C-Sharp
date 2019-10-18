@@ -67,7 +67,10 @@ unsafe class Program
 		var t1 = ATime.PerfMilliseconds;
 
 		using(var fw = new FileSystemWatcher(apiDir, "*.yml")) {
-			fw.Changed += (sen, e) => { if(e.Name.Starts("Au.", true)) ProcessYamlFile(e.FullPath, false); };
+			fw.Changed += (sen, e) => {
+				//Print(e.Name);
+				if(e.Name.Starts("Au.", true)) ProcessYamlFile(e.FullPath, false);
+			};
 			fw.EnableRaisingEvents = true;
 			fw.NotifyFilter = NotifyFilters.LastWrite;
 

@@ -55,16 +55,16 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)_\Dll\32bit\</OutDir>
+    <OutDir>$(SolutionDir)_\32\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)_\Dll\32bit\</OutDir>
+    <OutDir>$(SolutionDir)_\32\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)_\Dll\64bit\</OutDir>
+    <OutDir>$(SolutionDir)_\64\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)_\Dll\64bit\</OutDir>
+    <OutDir>$(SolutionDir)_\64\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

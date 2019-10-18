@@ -1,0 +1,6 @@
+﻿[FILENAMES]
+Exe=    64\Au.AppHost.exe
+SaveAs= Au.Tests.exe
+Log= CONSOLE
+[COMMANDS]
+-add ..\_Au.Editor\Resources\Au.manifest, MANIFEST,1,0

@@ -72,24 +72,24 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)_\Dll\32bit\</OutDir>
+    <OutDir>$(SolutionDir)_\32\</OutDir>
     <TargetName>AuCpp</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)_\Dll\64bit\</OutDir>
+    <OutDir>$(SolutionDir)_\64\</OutDir>
     <TargetName>AuCpp</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)_\Dll\32bit\</OutDir>
+    <OutDir>$(SolutionDir)_\32\</OutDir>
     <TargetName>AuCpp</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)_\Dll\64bit\</OutDir>
+    <OutDir>$(SolutionDir)_\64\</OutDir>
     <TargetName>AuCpp</TargetName>
     <GenerateManifest>false</GenerateManifest>
   </PropertyGroup>
