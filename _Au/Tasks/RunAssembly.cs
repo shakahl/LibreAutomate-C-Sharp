@@ -34,8 +34,9 @@ namespace Au
 		/// <param name="args">To pass to Main.</param>
 		/// <param name="pdbOffset">0 or offset of portable PDB in assembly file.</param>
 		/// <param name="flags"></param>
+		/// <param name="fullPathRefs">Paths of assemblies specified using full path.</param>
 		[HandleProcessCorruptedStateExceptions]
-		public static void Run(string asmFile, string[] args, int pdbOffset, RAFlags flags = 0)
+		public static void Run(string asmFile, string[] args, int pdbOffset, RAFlags flags = 0, string fullPathRefs = null)
 		{
 			ADebug.PrintIf(pdbOffset == 0, "pdbOffset 0");
 
@@ -96,21 +97,21 @@ namespace Au
 #endif
 				//APerf.Next('a');
 
-				//TODO: now probably don't need event
-				if(!s_isAssemblyResolvingEvent) {
-					s_isAssemblyResolvingEvent = true;
-					alc.Resolving += _Resolving;
-				}
-				static Assembly _Resolving(System.Runtime.Loader.AssemblyLoadContext alc, AssemblyName an){
-					//Print(an, an.Name, an.FullName);
-					//APerf.Next('r'); //fast
-					var path = AFolders.ThisAppBS + @"Libraries\" + an.Name + ".dll";
-					if(!AFile.ExistsAsFile(path)) return null;
-					//try {
-						var r = alc.LoadFromAssemblyPath(path);
-						//APerf.Next('R');
-						return r;
-					//} catch(Exception ex) { ADebug.Print(ex.ToStringWithoutStack()); return null; }
+				if(fullPathRefs != null) {
+					var fpr = fullPathRefs.SegSplit("|");
+					alc.Resolving += (System.Runtime.Loader.AssemblyLoadContext alc, AssemblyName an) => {
+						//Print(an, an.Name, an.FullName);
+						foreach(var v in fpr) {
+							var s1 = an.Name;
+							int iName = v.Length - s1.Length - 4;
+							if(iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, s1, true)) continue;
+							if(!AFile.ExistsAsFile(v)) continue;
+							//try {
+							return alc.LoadFromAssemblyPath(v);
+							//} catch(Exception ex) { ADebug.Print(ex.ToStringWithoutStack()); break; }
+						}
+						return null;
+					};
 				}
 
 				//ADebug.PrintLoadedAssemblies(true, true);
@@ -179,9 +180,6 @@ namespace Au
 			//		Only when ADialog.Show called, the GC.Collect makes it to disappear but the process does not exit.
 			//	note: the terminating behavior also can be set in registry or env var. It overrides <ThrowUnobservedTaskExceptions enabled="false"/>.
 		}
-#if true
-		static bool s_isAssemblyResolvingEvent;
-#endif
 
 		/// <summary>
 		/// Remembers and finds script assemblies loaded in this process, to avoid loading the same unchanged assembly multiple times.

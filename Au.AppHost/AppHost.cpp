@@ -120,6 +120,7 @@ void BuildTpaList(LPCSTR dir, std::string& tpaList)
 	HANDLE h = FindFirstFileA(wild.c_str(), &findData);
 	if(h != INVALID_HANDLE_VALUE) {
 		do {
+			//TODO: skip ., .., api-ms-
 			tpaList += dir;
 			tpaList += findData.cFileName;
 			tpaList += ";";

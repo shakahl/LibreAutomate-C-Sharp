@@ -34,7 +34,7 @@ namespace Au.Compiler
 		/// <param name="wrap">Add default usings and wrap code into "[module: DefaultCharSet(CharSet.Unicode)]\r\npublic class __script__ {\r\n#line 1" ... "}".</param>
 		/// <param name="load">Load in-memory assembly and get MethodInfo of the first static method for executing.</param>
 		/// <remarks>
-		/// Adds <see cref="Compiler.DefaultReferences"/>. If wrap is true, adds <see cref="Compiler.DefaultUsings"/>.
+		/// Adds <see cref="MetaReferences.DefaultReferences"/>. If wrap is true, adds <see cref="c_defaultUsings"/>.
 		/// 
 		/// Function's code does not throw exceptions, but the CodeAnalysis API may throw, although undocumented and never noticed.
 		/// 
@@ -44,7 +44,7 @@ namespace Au.Compiler
 		{
 			if(wrap) {
 				var b = new StringBuilder();
-				b.AppendLine(Compiler.DefaultUsings);
+				b.AppendLine(c_defaultUsings);
 				b.AppendLine("[module: DefaultCharSet(CharSet.Unicode)]\r\npublic class __script__ {\r\n#line 1");
 				b.AppendLine(code).Append("}");
 				code = b.ToString();
@@ -74,6 +74,8 @@ namespace Au.Compiler
 			}
 			return true;
 		}
+
+		const string c_defaultUsings = @"using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq;";
 
 		public class Result
 		{

@@ -19,6 +19,7 @@ using Au.Types;
 using static Au.AStatic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using System.Collections.Immutable;
 
 namespace Au.Compiler
 {
@@ -39,13 +40,11 @@ namespace Au.Compiler
 	/// <example>
 	/// <h3>References</h3>
 	/// <code><![CDATA[
-	/// r Assembly //.NET/GAC assembly reference. Without ".dll".
-	/// r Assembly.dll //other assembly reference. With ".dll" or ".exe". The file/path must be in/relative the main Au folder or .NET framework folder.
-	/// r C:\X\Y\Assembly.dll //other assembly reference using full path or path relative to the main Au folder. May be problem finding it at run time.
-	/// r Assembly, Version=4.0.0.0 //GAC assembly of specific version. The ", Version=" part must be exactly as in the example. If version unspecified and there are several assemblies of different versions in GAC, is used assembly of the highest version.
-	/// r Alias=Assembly.dll //assembly reference that can be used with C# keyword 'extern alias'.
+	/// r Assembly //assembly reference. With or without ".dll". Must be in AFolders.ThisApp.
+	/// r C:\X\Y\Assembly.dll //assembly reference using full path. If relative path, must be in AFolders.ThisApp.
+	/// r Alias=Assembly //assembly reference that can be used with C# keyword 'extern alias'.
 	/// ]]></code>
-	/// Don't need to specify these references: mscorlib, Microsoft.CSharp, System, System.Core, System.Windows.Forms, System.Drawing, Au.dll.
+	/// Don't need to add Au.dll and .NET Core runtime assemblies.
 	/// 
 	/// <h3>Other C# files to compile together</h3>
 	/// <code><![CDATA[
@@ -104,7 +103,6 @@ namespace Au.Compiler
 	/// ifRunning runIfBlue|dontRun|wait|restart|restartOrWait //whether/how to start new task if a task is running. Default: unspecified. More info below.
 	/// uac inherit|user|admin //UAC integrity level (IL) of the task process. Default: inherit. More info below.
 	/// prefer32bit false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
-	/// config app.config //let the running task use this configuration file. Can be filename or relative path, like with 'c'. The file is copied to the output directory unmodified but renamed to match the assembly name. This option cannot be used with dll. If not specified, will be used host program's config file.
 	/// ]]></code>
 	/// Here word "task" is used for "script that is running or should start".
 	/// Options 'runMode', 'ifRunning' and 'uac' are applied only when the task is started from editor, not when it runs as independent exe program.
@@ -213,10 +211,10 @@ namespace Au.Compiler
 		/// </summary>
 		public static List<string> DefaultNoWarnings { get; set; }
 
-		/// <summary>
-		/// Meta option 'config'.
-		/// </summary>
-		public IWorkspaceFile ConfigFile { get; private set; }
+		///// <summary>
+		///// Meta option 'config'.
+		///// </summary>
+		//public IWorkspaceFile ConfigFile { get; private set; }
 
 		/// <summary>
 		/// All meta errors of all files. Includes meta syntax errors, file 'not found' errors, exceptions.
@@ -548,10 +546,10 @@ namespace Au.Compiler
 					_Specified(EMSpecified.console, iName);
 					if(_TrueFalse(out bool con, value, iValue)) Console = con;
 					break;
-				case "config":
-					_Specified(EMSpecified.config, iName);
-					ConfigFile = _GetFile(value, iValue);
-					break;
+				//case "config":
+				//	_Specified(EMSpecified.config, iName);
+				//	ConfigFile = _GetFile(value, iValue);
+				//	break;
 				case "manifest":
 					_Specified(EMSpecified.manifest, iName);
 					ManifestFile = _GetFile(value, iValue);
@@ -670,13 +668,13 @@ namespace Au.Compiler
 				break;
 			case ERole.editorExtension:
 				if(Specified.HasAny(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
-					| EMSpecified.config | EMSpecified.manifest | EMSpecified.console | EMSpecified.outputPath))
-					return _Error(0, "with role editorExtension cannot use runMode, ifRunning, uac, prefer32bit, config, manifest, console, outputPath");
+					/*| EMSpecified.config*/ | EMSpecified.manifest | EMSpecified.console | EMSpecified.outputPath))
+					return _Error(0, "with role editorExtension cannot use runMode, ifRunning, uac, prefer32bit, manifest, console, outputPath");
 				break;
 			case ERole.classLibrary:
 				if(Specified.HasAny(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
-					| EMSpecified.config | EMSpecified.manifest | EMSpecified.console))
-					return _Error(0, "with role classLibrary cannot use runMode, ifRunning, uac, prefer32bit, config, manifest, console");
+					/*| EMSpecified.config*/ | EMSpecified.manifest | EMSpecified.console))
+					return _Error(0, "with role classLibrary cannot use runMode, ifRunning, uac, prefer32bit, manifest, console");
 				if(OutputPath == null) OutputPath = AFolders.ThisApp + "Libraries";
 				break;
 			case ERole.classFile:
@@ -825,7 +823,7 @@ namespace Au.Compiler
 		ifRunning = 2,
 		uac = 4,
 		prefer32bit = 8,
-		config = 0x10,
+		//config = 0x10,
 		optimize = 0x20,
 		define = 0x40,
 		noWarnings = 0x80,

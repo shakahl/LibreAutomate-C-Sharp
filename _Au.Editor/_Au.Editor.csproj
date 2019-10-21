@@ -203,9 +203,6 @@
     <EmbeddedResource Update="Program\FOptions.resx">
       <DependentUpon>FOptions.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Update="Program\FProperties.resx">
-      <DependentUpon>FProperties.cs</DependentUpon>
-    </EmbeddedResource>
     <EmbeddedResource Update="Resources\Resources.resx">
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>

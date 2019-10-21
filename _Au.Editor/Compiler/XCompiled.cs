@@ -133,6 +133,7 @@ namespace Au.Compiler
 							var dll = value.Substring(offs, s.EndOffset - offs);
 							if(!APath.IsFullPath(dll)) dll = AFolders.ThisApp + dll;
 							if(_IsFileModified2(dll)) return false;
+							r.AddToFullPathRefsIfNeed(dll);
 							break;
 						case 'l':
 						case 'c':
@@ -141,7 +142,7 @@ namespace Au.Compiler
 						case 'm':
 						case 'y':
 						case 's':
-						case 'o':
+							//case 'o':
 							var f2 = _coll.IwfFindById((uint)value.ToInt64(offs));
 							if(f2 == null) return false;
 							if(s[0] == 'l') {
@@ -152,11 +153,11 @@ namespace Au.Compiler
 								//Print("library is compiled");
 							} else {
 								if(_IsFileModified(f2)) return false;
-								switch(s[0]) {
-								case 'o': //f2 is the source config file
-									r.hasConfig = true;
-									break;
-								}
+								//switch(s[0]) {
+								//case 'o': //f2 is the source config file
+								//	r.hasConfig = true;
+								//	break;
+								//}
 							}
 							break;
 						default: return false;
@@ -217,7 +218,7 @@ namespace Au.Compiler
 	m - manifest
 	y - res
 	s - sign
-	o - config
+	o - config (now removed)
 	* - r
 				*/
 
@@ -246,16 +247,15 @@ namespace Au.Compiler
 					_AppendFile("|m", m.ManifestFile);
 					_AppendFile("|y", m.ResFile);
 					_AppendFile("|s", m.SignFile);
-					_AppendFile("|o", m.ConfigFile);
+					//_AppendFile("|o", m.ConfigFile);
 
 					//references
 					var refs = m.References.Refs;
-					int j = DefaultReferences.Count;
+					int j = MetaReferences.DefaultReferences.Count;
 					if(refs.Count > j) {
-						string netDir = AFolders.NetRuntimeBS, appDir = AFolders.ThisAppBS;
+						string appDir = AFolders.ThisAppBS;
 						for(; j < refs.Count; j++) {
 							var s1 = refs[j].FilePath;
-							if(s1.Starts(netDir, true)) continue;
 							if(s1.Starts(appDir, true)) s1 = s1.Substring(appDir.Length);
 							b.Append("|*").Append(s1);
 						}

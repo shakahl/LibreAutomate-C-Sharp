@@ -291,6 +291,8 @@ namespace Au.Types
 		public static implicit operator PopupXY(AWnd w) => new PopupXY { rect = w.Rect };
 		/// <summary>Specifies the center of the specified control or form.</summary>
 		public static implicit operator PopupXY(Control c) => new PopupXY { rect = ((AWnd)c).Rect };
+		/// <summary>Specifies position in the specified control or form.</summary>
+		public static implicit operator PopupXY((Control c, Coord x, Coord y) t) => new PopupXY(((AWnd)t.c).Rect, t.x, t.y);
 
 		//public bool IsRawXY => screen.IsNull && workArea == false && x.Type == Coord.CoordType.Normal && y.Type == Coord.CoordType.Normal;
 

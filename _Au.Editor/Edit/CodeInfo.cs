@@ -44,6 +44,8 @@ static class CodeInfo
 
 	public static void UiLoaded()
 	{
+		//return; //TODO
+
 		//warm up
 		Task.Delay(500).ContinueWith(_1 => {
 			var p1 = APerf.Create();
@@ -63,17 +65,12 @@ static class CodeInfo
 	{
 		p1.Next();
 		try {
-#if true
 			var code = @"//{{
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
 class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) {
 Print(1);
 } }";
 			var refs = new MetaReferences().Refs;
-#else
-			var code = @"using System; class C { static void Main() { } }";
-			var refs = new MetadataReference[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) };
-#endif
 			int position = code.IndexOf('}');
 			ProjectId projectId = ProjectId.CreateNewId();
 			DocumentId documentId = DocumentId.CreateNewId(projectId);

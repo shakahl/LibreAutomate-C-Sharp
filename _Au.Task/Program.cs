@@ -46,7 +46,7 @@ static unsafe class Program
 	//[STAThread] //we use TrySetApartmentState instead
 	static void Main(string[] args)
 	{
-		string asmFile; int pdbOffset, flags;
+		string asmFile, fullPathRefs; int pdbOffset, flags;
 
 		if(args.Length != 1) return;
 		string pipeName = args[0]; //if(!pipeName.Starts(@"\\.\pipe\Au.Task-")) return;
@@ -90,8 +90,8 @@ static unsafe class Program
 
 			var a = Au.Util.LibSerializer.Deserialize(b);
 			ATask.LibInit(ATRole.MiniProgram, a[0]);
-			asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4];
-			string wrp = a[5]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
+			asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4]; fullPathRefs = a[5];
+			string wrp = a[6]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
 		}
 #endif
 		//APerf.Next();
@@ -101,15 +101,15 @@ static unsafe class Program
 
 		if(0 != (flags & 4)) Api.AllocConsole(); //meta console true
 
-		if(0 != (flags & 1)) { //hasConfig
-			var config = asmFile + ".config";
-			if(AFile.ExistsAsFile(config, true)) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
-		}
+		//if(0 != (flags & 1)) { //hasConfig
+		//	var config = asmFile + ".config";
+		//	if(AFile.ExistsAsFile(config, true)) AppDomain.CurrentDomain.SetData("APP_CONFIG_FILE", config);
+		//}
 
 		if(s_hook == null) _Hook();
 
 		//APerf.Next();
-		try { RunAssembly.Run(asmFile, args, pdbOffset); }
+		try { RunAssembly.Run(asmFile, args, pdbOffset, fullPathRefs: fullPathRefs); }
 		catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
 		finally { s_hook?.Dispose(); }
 	}

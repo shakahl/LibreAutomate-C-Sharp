@@ -75,6 +75,7 @@ static class Program
 
 		OutputServer.NoNewline = true;
 		OutputServer.Start();
+		//TODO: now output is blocked when using AExec.RunConsole(o=>Print(o), ...). Maybe should run OutputServer in other thread.
 
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 

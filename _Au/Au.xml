@@ -2270,6 +2270,9 @@
         <member name="M:Au.Types.PopupXY.op_Implicit(System.Windows.Forms.Control)~Au.Types.PopupXY">
             <summary>Specifies the center of the specified control or form.</summary>
         </member>
+        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{System.Windows.Forms.Control,Au.Types.Coord,Au.Types.Coord})~Au.Types.PopupXY">
+            <summary>Specifies position in the specified control or form.</summary>
+        </member>
         <member name="P:Au.Types.PopupXY.Mouse">
             <summary>
             Gets point coordinates below mouse cursor, for showing a tooltip-like popup.
@@ -5355,7 +5358,7 @@
         </member>
         <member name="T:Au.Types.RAFlags">
             <summary>
-            Flags for <see cref="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.Types.RAFlags)"/>.
+            Flags for <see cref="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.Types.RAFlags,System.String)"/>.
             </summary>
         </member>
         <member name="T:Au.Types.WHFlags">
@@ -8457,12 +8460,22 @@
         </member>
         <member name="P:Au.AFolders.NetRuntime">
             <summary>
-            Returns <see cref="M:System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory"/> without <c>'\\'</c> at the end.
+            Gets .NET Core runtime folder, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.0.0</c>.
             </summary>
         </member>
         <member name="P:Au.AFolders.NetRuntimeBS">
             <summary>
-            Returns <see cref="M:System.Runtime.InteropServices.RuntimeEnvironment.GetRuntimeDirectory"/>. Ends with <c>'\\'</c>.
+            Gets .NET Core runtime folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.0.0\</c>.
+            </summary>
+        </member>
+        <member name="P:Au.AFolders.NetRuntimeDesktop">
+            <summary>
+            Gets .NET Core runtime desktop folder, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.0.0</c>.
+            </summary>
+        </member>
+        <member name="P:Au.AFolders.NetRuntimeDesktopBS">
+            <summary>
+            Gets .NET Core runtime desktop folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.0.0\</c>.
             </summary>
         </member>
         <member name="P:Au.AFolders.CdDvdDrive">
@@ -8714,18 +8727,10 @@
         <member name="M:Au.AIconCache.#ctor(System.String,System.Int32)">
             
         </member>
-        <member name="M:Au.AIconCache.Finalize">
-            
-        </member>
-        <member name="M:Au.AIconCache.Dispose">
-            <summary>
-            Calls <see cref="M:Au.AIconCache.SaveCacheFileNow"/>.
-            </summary>
-        </member>
         <member name="M:Au.AIconCache.SaveCacheFileNow">
             <summary>
             Saves to the cache file now, if need.
-            Don't need to call this explicitly. It is called by Dispose.
+            Automatically called on process exit.
             </summary>
         </member>
         <member name="M:Au.AIconCache.ClearCache">
@@ -9967,6 +9972,8 @@
             <remarks>
             This class wraps a SQLite API object sqlite3* and related sqlite3_x functions. They are documented perfectly in the SQLite website.
             Uses this unmanaged dll: AFolders.ThisApp + @"64\sqlite3.dll". In 32-bit process - "32" instead of "64".
+            
+            To correctly close the database file, at first need to dipose all child objects, such as <see cref="T:Au.ASqliteStatement"/>, then dispose the <b>ASqlite</b> object. To dispose a static <b>ASlite</b> variable, you may want to use <see cref="E:Au.AProcess.Exit"/> event. Although this class has a finalizer that disposes the object (closes database), you should always dispose explicitly. Finalizers don't run on process exit.
             </remarks>
             <seealso cref="T:Au.ASqliteStatement"/>
             <example>
@@ -14003,7 +14010,7 @@
             1. When your application starts, create an <b>AOutputServer</b> instance and assign to a static variable. Call <see cref="M:Au.AOutputServer.Start"/>.
             2. When your application creates its output window, call <see cref="M:Au.AOutputServer.SetNotifications(System.Action,System.Windows.Forms.Control)"/> to register callback function.
             3. In the callback function get/remove/display all new messages.
-            4. Call <see cref="M:Au.AOutputServer.Stop"/> when closing the window. Optional but recommended.
+            4. Call <see cref="M:Au.AOutputServer.Stop"/> when closing the window.
             </remarks>
             <example>
             Simple program with output window.
@@ -18269,6 +18276,14 @@
             </summary>
             <value>The length.</value>
         </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
+        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -19111,7 +19126,7 @@
             Used by other Au projects to execute a script assembly.
             </summary>
         </member>
-        <member name="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.Types.RAFlags)">
+        <member name="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.Types.RAFlags,System.String)">
             <summary>
             Executes assembly in this thread.
             Handles exceptions.
@@ -19120,6 +19135,7 @@
             <param name="args">To pass to Main.</param>
             <param name="pdbOffset">0 or offset of portable PDB in assembly file.</param>
             <param name="flags"></param>
+            <param name="fullPathRefs">Paths of assemblies specified using full path.</param>
         </member>
         <member name="T:Au.RunAssembly._LoadedScriptAssembly">
             <summary>

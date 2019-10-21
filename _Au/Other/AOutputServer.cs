@@ -67,7 +67,7 @@ namespace Au
 	/// 1. When your application starts, create an <b>AOutputServer</b> instance and assign to a static variable. Call <see cref="Start"/>.
 	/// 2. When your application creates its output window, call <see cref="SetNotifications"/> to register callback function.
 	/// 3. In the callback function get/remove/display all new messages.
-	/// 4. Call <see cref="Stop"/> when closing the window. Optional but recommended.
+	/// 4. Call <see cref="Stop"/> when closing the window.
 	/// </remarks>
 	/// <example>
 	/// Simple program with output window.

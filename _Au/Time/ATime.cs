@@ -404,6 +404,7 @@ namespace Au
 			}
 			static LibSleepPrecision s_TS1_Obj;
 			static long s_TS1_EndTime;
+			//never mind: finalizer is not called on process exit. Not a problem, because OS clears our set value (tested). Or we could use AProcess.Exit event.
 
 			/// <summary>
 			/// Calls TempSet1 if sleepTimeMS is 1-99.

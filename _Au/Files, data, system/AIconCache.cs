@@ -27,7 +27,7 @@ namespace Au
 	/// Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
 	/// </summary>
 	/// <threadsafety static="true" instance="true"/>
-	public sealed class AIconCache : IDisposable
+	public sealed class AIconCache
 	{
 		XElement _x;
 		Hashtable _table;
@@ -40,23 +40,12 @@ namespace Au
 		{
 			_cacheFile = cacheFile;
 			_iconSize = iconSize;
-		}
-
-		///
-		~AIconCache() { SaveCacheFileNow(); }
-
-		/// <summary>
-		/// Calls <see cref="SaveCacheFileNow"/>.
-		/// </summary>
-		public void Dispose()
-		{
-			SaveCacheFileNow();
-			GC.SuppressFinalize(this);
+			AProcess.Exit += (unu, sed) => SaveCacheFileNow();
 		}
 
 		/// <summary>
 		/// Saves to the cache file now, if need.
-		/// Don't need to call this explicitly. It is called by Dispose.
+		/// Automatically called on process exit.
 		/// </summary>
 		public void SaveCacheFileNow()
 		{

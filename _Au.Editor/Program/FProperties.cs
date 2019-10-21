@@ -134,13 +134,13 @@ This option is ignored when the task runs as .exe program started not from edito
  • <i>false</i> (default) - the process is 64-bit or 32-bit, the same as Windows on that computer.
  • <i>true</i> - the process is 32-bit on all computers.
 ");
-		_AddEdit("config", _meta.config,
-@"<b>config</b> - let the running task use this <google .NET config files>configuration file<>.
-The file must be in this workspace. Can be path relative to this file (examples: App.config, Folder\App.config, ..\Folder\App.config) or path in the workspace (examples: \App.config, \Folder\App.config).
+		//		_AddEdit("config", _meta.config,
+		//@"<b>config</b> - let the running task use this <google .NET config files>configuration file<>.
+		//The file must be in this workspace. Can be path relative to this file (examples: App.config, Folder\App.config, ..\Folder\App.config) or path in the workspace (examples: \App.config, \Folder\App.config).
 
-The compiler copies it to the output directory, renamed to match the assembly name.
-If not specified, and role is not exeProgram, at run time is used host program's config file.
-");
+		//The compiler copies it to the output directory, renamed to match the assembly name.
+		//If not specified, and role is not exeProgram, at run time is used host program's config file.
+		//");
 
 		g.ZAddHeaderRow("Compile");
 		_AddCombo("optimize", "false|true", _meta.optimize,
@@ -290,12 +290,14 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		switch(_role) {
 		case ERole.miniProgram: hide = "testScript outputPath icon-xmlDoc"; break;
 		case ERole.exeProgram: hide = "testScript"; break;
-		case ERole.editorExtension: hide = "Run-config outputPath-xmlDoc"; break;
-		case ERole.classLibrary: hide = "runMode-config console manifest"; break;
+		//case ERole.editorExtension: hide = "Run-config outputPath-xmlDoc"; break;
+		//case ERole.classLibrary: hide = "runMode-config console manifest"; break;
+		case ERole.editorExtension: hide = "Run-prefer32bit outputPath-xmlDoc"; break;
+		case ERole.classLibrary: hide = "runMode-prefer32bit console manifest"; break;
 		default: hide = "runMode-"; break;
 		}
 		_grid.ZShowRows(true, "Run-", hide);
-		_bAddMyLibraryProject.Enabled = _role != ERole.classFile;
+		_bAddLibraryProject.Enabled = _role != ERole.classFile;
 	}
 
 	private void _grid_ZValueChanged(SourceGrid.CellContext cc)
@@ -377,7 +379,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		_meta.ifRunning = _Get("ifRunning");
 		_meta.uac = _Get("uac");
 		_meta.prefer32bit = _Get("prefer32bit");
-		_meta.config = _Get("config");
+		//_meta.config = _Get("config");
 
 		_meta.optimize = _Get("optimize");
 		_meta.warningLevel = _Get("warningLevel");
@@ -403,7 +405,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				if(Empty(_meta.outputPath)) _meta.outputPath = _role == ERole.exeProgram ? @"%AFolders.Workspace%\bin" : @"%AFolders.ThisApp%\Libraries";
 				break;
 			}
-			if(_meta.config == "") _meta.config = "App.config";
+			//if(_meta.config == "") _meta.config = "App.config";
 			var name = APath.GetFileName(_f.Name, true);
 			if(_meta.xmlDoc == "") _meta.xmlDoc = name + ".xml";
 			if(_meta.manifest == "") _meta.manifest = name + ".exe.manifest";
@@ -435,29 +437,30 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		t.ReplaceRange(true, 0, endOf, s, false);
 	}
 
-	private void _bAddBrowse_Click(object sender, EventArgs e)
+	private void _bAddNet_Click(object button, EventArgs e)
 	{
-		string fNET = AFolders.NetRuntime, fApp = AFolders.ThisApp;
-		using var d = new System.Windows.Forms.OpenFileDialog { InitialDirectory = sender == _bAddBrowseNet ? fNET : fApp, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
+		using var d = new System.Windows.Forms.OpenFileDialog { InitialDirectory = AFolders.ThisApp, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
 		if(d.ShowDialog(this) != DialogResult.OK) return;
 
-		//remove path and ext if need
 		var a = d.FileNames;
-		int j = a[0].Starts(true, s_asmDirs ??= new string[] { AFolders.ThisAppBS, AFolders.NetRuntimeBS + @"WPF\", AFolders.NetRuntimeBS }) - 1;
-		if(j >= 0) {
-			int dirLen = s_asmDirs[j].Length;
-			for(int i = 0; i < a.Length; i++) {
-				if(j == 0 || a[i].IndexOf('\\', dirLen) > 0) a[i] = a[i].Substring(dirLen);
-				else a[i] = APath.GetFileName(a[i], true);
-			}
-			//App.config: <probing privatePath="Compiler;Libraries"/>
+
+		foreach(var v in a) {
+			if(MetaReferences.IsDotnetAssembly(v)) continue;
+			ADialog.ShowError("Not a .NET assembly.", v, owner: this);
+			return;
+		}
+
+		//remove path and ext if need
+		var thisApp = AFolders.ThisAppBS;
+		if(a[0].Starts(thisApp, true)) {
+			for(int i = 0; i < a.Length; i++) a[i] = a[i].Substring(thisApp.Length);
 		}
 
 		_meta.r.AddRange(a);
+		_Added(button, _meta.r);
 	}
-	static string[] s_asmDirs;
 
-	private void _bAddMyLibraryProject_Click(object sender, EventArgs e)
+	private void _bAddLibraryProject_Click(object sender, EventArgs e)
 		=> _AddFromWorkspace(
 			f => (f != _f && f.GetClassFileRole() == FileNode.EClassFileRole.Library) ? f : null,
 			_meta.pr, sender);
@@ -485,37 +488,39 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		}
 		if(a.Count == 0) { _NotFound(button, sFind); return; }
 		a.Sort();
-		var dd = new PopupList { Items = a.ToArray(), SelectedAction = o => metaList.Add(o.ResultItem as string) };
+		var dd = new PopupList {
+			Items = a.ToArray(),
+			SelectedAction = o => {
+				metaList.Add(o.ResultItem as string);
+				_Added(button, metaList);
+			}
+		};
 		dd.Show(button as Control);
-	}
-
-	private void _bAddGac_Click(object sender, EventArgs e)
-	{
-		var en = GAC.EnumAssemblies(sender == _bAddGacVersion).Distinct();
-		var sFind = _tFindInList.Text; if(sFind.Length > 0) en = en.Where(s => s.Find(sFind, true) >= 0);
-		var a = en.ToArray();
-		if(a.Length == 0) { _NotFound(sender, sFind); return; }
-		Array.Sort(a);
-		var dd = new PopupList { Items = a, SelectedAction = o => _meta.r.Add(o.ResultItem as string) };
-		dd.Show(sender as Control);
 	}
 
 	void _NotFound(object button, string sFind)
 	{
 		var s = "The list is empty";
 		if(sFind.Length > 0) s = "The list contains 0 items containing " + sFind;
-		AOsd.ShowText(s, 0, button as Control);
+		var c = button as Control;
+		AOsd.ShowText(s, 3, (c, c.Width, 0));
+	}
+
+	void _Added(object button, List<string> metaList)
+	{
+		var c = button as Control;
+		AOsd.ShowText(string.Join("\r\n", metaList) + "\r\n\r\nFinally click OK to save.", 5, (c, c.Width, 0));
 	}
 
 	#region COM
 
-	private void _bAddComBrowse_Click(object sender, EventArgs e)
+	private void _bAddComBrowse_Click(object button, EventArgs e)
 	{
 		using var ofd = new System.Windows.Forms.OpenFileDialog { Filter = "Type library|*.dll;*.tlb;*.olb;*.ocx;*.exe|All files|*.*" };
-		if(ofd.ShowDialog(this) == DialogResult.OK) _ConvertTypeLibrary(ofd.FileName);
+		if(ofd.ShowDialog(this) == DialogResult.OK) _ConvertTypeLibrary(ofd.FileName, button);
 	}
 
-	private void _bAddComRegistry_Click(object sender, EventArgs e)
+	private void _bAddComRegistry_Click(object button, EventArgs e)
 	{
 		//HKCU\TypeLib\typelibGuid\version\
 		var sFind = _tFindInList.Text;
@@ -536,12 +541,110 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				}
 			}
 		}
-		if(a.Count == 0) { _NotFound(sender, sFind); return; }
+		if(a.Count == 0) { _NotFound(button, sFind); return; }
 		a.Sort((x, y) => string.Compare(x.text, y.text, true));
 
-		var dd = new PopupList { Items = a.ToArray(), SelectedAction = o => _ConvertTypeLibrary(o.ResultItem as _RegTypelib) };
+		var dd = new PopupList { Items = a.ToArray(), SelectedAction = o => _ConvertTypeLibrary(o.ResultItem as _RegTypelib, button) };
 		dd.Show(_bAddComRegistry);
 	}
+
+	static string _convertedDir;
+
+	//To convert a COM type library we use TypeLibConverter class. However .NET Core does not have it.
+	//Workaround: the code is in Au.Net45.exe. It uses .NET Framework 4.5. We call it through RunConsole.
+	//We don't use tlbimp.exe:
+	//	1. If some used interop assemblies are in GAC (eg MS Office PIA), does not create files for them. But we cannot use GAC in Core app.
+	//	2. Does not tell what files created.
+	//	3. My PC somehow has MS Office PIA installed and there is no uninstaller. After deleting the GAC files tlbimp.exe created all files, but it took several minutes.
+	//Tested: impossible to convert .NET Framework TypeLibConverter code. Part of it is in extern methods.
+	//Tested: cannot use .NET Framework dll for it. Fails at run time because uses Core assemblies, and they don't have the class. Need exe.
+#if true
+
+	class _RegTypelib
+	{
+		public string text, guid, version;
+
+		public override string ToString() => text;
+
+		public string GePath(string locale)
+		{
+			var k0 = $@"TypeLib\{guid}\{version}\{locale}\win";
+			for(int i = 0; i < 2; i++) {
+				var bits = AVersion.Is64BitProcess == (i == 0) ? "64" : "32";
+				using var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits);
+				if(hk?.GetValue("") is string path) return path.TrimChars("\"");
+			}
+			return null;
+		}
+	}
+
+	async void _ConvertTypeLibrary(object tlDef, object button)
+	{
+		string comDll = null;
+		switch(tlDef) {
+		case string path:
+			comDll = path;
+			break;
+		case _RegTypelib r:
+			//can be several locales
+			var aloc = new List<string>(); //registry keys like "0" or "409"
+			var aloc2 = new List<string>(); //locale names for display in the list dialog
+			using(var verKey = Registry.ClassesRoot.OpenSubKey($@"TypeLib\{r.guid}\{r.version}")) {
+				foreach(var s1 in verKey.GetSubKeyNames()) {
+					int lcid = s1.ToInt(0, out int iEnd, STIFlags.IsHexWithout0x);
+					if(iEnd != s1.Length) continue; //"FLAGS" etc; must be hex number without 0x
+					aloc.Add(s1);
+					var s2 = "Neutral";
+					if(lcid > 0) {
+						try { s2 = new CultureInfo(lcid).DisplayName; } catch { s2 = s1; }
+					}
+					aloc2.Add(s2);
+				}
+			}
+			string locale;
+			if(aloc.Count == 1) locale = aloc[0];
+			else {
+				int i = ADialog.ShowList(aloc2, "Locale", owner: this);
+				if(i == 0) return;
+				locale = aloc[i - 1];
+			}
+			comDll = r.GePath(locale);
+			if(comDll == null || !AFile.ExistsAsFile(comDll)) {
+				ADialog.ShowError(comDll == null ? "Failed to get file path." : "File does not exist.", owner: this);
+				return;
+			}
+			break;
+		}
+
+		await Task.Run(() => {
+			this.Enabled = false;
+			Print($"Converting COM type library to .NET assembly.");
+			try {
+				if(_convertedDir == null) {
+					_convertedDir = AFolders.Workspace + @".interop\";
+					AFile.CreateDirectory(_convertedDir);
+				}
+				List<string> converted = new List<string>();
+				Action<string> callback = s => {
+					Print(s);
+					if(s.Starts("Converted: ")) {
+						s.RegexMatch(@"""(.+?)"".$", 1, out s);
+						converted.Add(s);
+					}
+				};
+				int rr = AExec.RunConsole(callback, AFolders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{_convertedDir}|{comDll}\"", encoding: Encoding.UTF8);
+				if(rr == 0) {
+					foreach(var v in converted) if(!_meta.com.Contains(v)) _meta.com.Add(v);
+					Print(@"<>Converted and saved in <link>%AFolders.Workspace%\.interop<>.");
+					_Added(button, _meta.com);
+				}
+			}
+			catch(Exception ex) { ADialog.ShowError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }
+			this.Enabled = true;
+		});
+	}
+
+#else //old code used with .NET Framework
 
 	class _RegTypelib
 	{
@@ -608,7 +711,6 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			return;
 		}
 
-#if false //TODO
 		//Convert type library tl to .NET assembly.
 		Cursor.Current = Cursors.WaitCursor;
 		Print($"Converting COM type library to .NET assembly.");
@@ -625,11 +727,10 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		catch(Exception ex) { ADialog.ShowError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }
 		Marshal.ReleaseComObject(tl);
 		Cursor.Current = Cursors.Arrow;
-#endif
 	}
 
-#if false //.NET Core does not have ITypeLibImporterNotifySink. //TODO
-	static string _convertedDir;
+	[DllImport("oleaut32.dll", EntryPoint = "#183", PreserveSig = true)]
+	static extern int LoadTypeLibEx(string szFile, int regkind, out ITypeLib pptlib);
 
 	class _TypelibConverter : ITypeLibImporterNotifySink
 	{
@@ -645,7 +746,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			var hash = Au.Util.AHash.Fnv1(ta).ToString("x");
 
 			tl.GetDocumentation(-1, out var tlName, out var tlDescription, out var _, out var _);
-			var fileName = $"{tlName} {ta.wMajorVerNum}.{ta.wMinorVerNum} {hash}.dll";
+			var fileName = $"{tlName} {ta.wMajorVerNum}.{ta.wMinorVerNum} #{hash}.dll";
 			var netPath = _convertedDir + fileName;
 
 			if(!s_converted.TryGetValue(fileName, out var asm) || !AFile.ExistsAsFile(netPath)) {
@@ -669,14 +770,12 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		Assembly ITypeLibImporterNotifySink.ResolveRef(object typeLib) => Convert(typeLib as ITypeLib);
 	}
+
 #endif
 
-	[DllImport("oleaut32.dll", EntryPoint = "#183", PreserveSig = true)]
-	static extern int LoadTypeLibEx(string szFile, int regkind, out ITypeLib pptlib);
+	#endregion
 
-#endregion
-
-#region info
+	#region info
 
 	Dictionary<string, string> _infoDict;
 
@@ -702,34 +801,15 @@ Use Google when you don't know some words in help text or don't understand some 
 " + (_isClass ? c_class : c_script));
 
 		_infoDict = new Dictionary<string, string>(32);
-		_Add(_bAddBrowseNet,
-@"<b>Browse: .NET<> - browse the .NET framework folder. Add selected .dll files as references.
-Adds meta <c green>r FileName<>. The compiler will search in the .NET framework folder and GAC.
+		_Add(_bAddNet,
+@"<b>.NET assembly<> - add one or more .NET assemblies (.dll files) as references.
+Adds meta <c green>r FileName<>.
 
-Don't need to add mscorlib, Microsoft.CSharp, System, System.Core, System.Windows.Forms, System.Drawing.
+Don't need to add Au.dll and .NET Core runtime dlls.
+To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly<>
 To remove, delete the line in the code editor.
-");
-		_Add(_bAddBrowseOther,
-@"<b>Browse: Other<> - browse any folder. Add selected .dll files as references.
-Adds meta <c green>r FileName.dll<>. Full path if not in <link>%AFolders.ThisApp%<>.
 
-Don't need to add Au.dll.
-To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly.dll<>
-To remove, delete the line in the code editor.
-");
-		_Add(_bAddGacNewest,
-@"<b>GAC: Newest<> - assemblies in GAC. Use the newest version as reference.
-Adds meta <c green>r Assembly<>. The compiler will search in the .NET framework folder and GAC.
-
-Don't need to add mscorlib, Microsoft.CSharp, System, System.Core, System.Windows.Forms, System.Drawing.
-To remove, delete the line in the code editor.
-");
-		_Add(_bAddGacVersion,
-@"<b>GAC: Version<> - assemblies in GAC. Use specific version as reference.
-Adds meta <c green>r Assembly, Version=...<>. The compiler will search only in GAC.
-
-To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly, Version=1.2.0.0<>
-To remove, delete the line in the code editor.
+Full path if the file is not in <link>%AFolders.ThisApp%<>. If role of the program file is not miniProgram, at run time the file must be directly in AFolders.ThisApp or AFolders.ThisApp\Libraries.
 ");
 		const string c_com = @" COM component's type library to an <i>interop assembly<>.
 Adds meta <c green>com FileName.dll<>. Saves the assembly file in <link>%AFolders.Workspace%\.interop<>.
@@ -739,11 +819,11 @@ An interop assembly is a .NET assembly without real code. Not used at run time. 
 To remove, delete the line in the code editor. Optionally delete unused interop assemblies.
 ";
 		_Add(_bAddComRegistry,
-@"<b>COM: Registry<> - convert a registered" + c_com);
+@"<b>COM<> - convert a registered" + c_com);
 		_Add(_bAddComBrowse,
-@"<b>COM: Browse<> - convert a" + c_com);
-		_Add(_bAddMyLibraryProject,
-@"<b>My: Library project<> - add a reference to a class library created in this workspace.
+@"<b>...<> - convert a" + c_com);
+		_Add(_bAddLibraryProject,
+@"<b>Library project<> - add a reference to a class library created in this workspace.
 Adds meta <c green>pr File.cs<>. The compiler will compile it if need and use the created dll file as a reference.
 
 The recommended outputPath of the library project is <link>%AFolders.ThisApp%\Libraries<>. Else may not find the dll at run time.
@@ -846,5 +926,5 @@ Examples of loading resources at run time:
 		return false;
 	}
 
-#endregion
+	#endregion
 }

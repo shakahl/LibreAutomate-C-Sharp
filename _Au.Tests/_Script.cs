@@ -21,14 +21,66 @@ using System.Runtime.CompilerServices;
 using System.Reflection;
 using System.Runtime;
 using Microsoft.Win32;
+using System.Runtime.InteropServices.ComTypes;
 
-class Script :AScript
+class Script : AScript
 {
+	void TestDtor2()
+	{
+		var v = new TestDtor();
+		Print(v);
+	}
+
+	static TestDtor s_dt;
+
 	[STAThread] static void Main(string[] args) { new Script(args); }
 	Script(string[] args)
 	{
-		AOutput.QM2.UseQM2 = true;
-		AOutput.Clear();
+		//AOutput.QM2.UseQM2 = true;
+		//AOutput.Clear();
+
+
+		//TestDtor2();
+		//GC.Collect();
+		//1500.ms();
+
+		//ITypeLib tl = null;
+
+		//tl.GetLibAttr(out IntPtr ipta);
+		//var ta = Marshal.PtrToStructure<System.Runtime.InteropServices.ComTypes.TYPELIBATTR>(ipta);
+		//tl.ReleaseTLibAttr(ipta);
+		//var hash = Au.Util.AHash.Fnv1(ta).ToString("x");
+
+		//Thread.Sleep(30);
+
+		//var x = new AutoItX3();
+		//x.Init();
+		//x.ClipPut("hhhh");
+		//Print(x.IsAdmin());
+		//Print(x.Run(@"c:\windows\system32\notepad.exe", "", 3));
+		//x.Send("abc{HOME}");
+
+		//var e = new Excel.Application();
+		////Print(e);
+		//e.Visible = true;
+		//ADialog.Show();
+		//e.Quit();
+
+		//Excel.Application xlApp = new Excel.Application();
+		//Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(@"C:\Users\G\Documents\Book1.xls");
+		//Excel._Worksheet xlWorksheet = xlWorkbook.Sheets[1];
+		//Excel.Range xlRange = xlWorksheet.UsedRange;
+
+		//ADialog.Show("");
+
+		//MessageBox(default, "", "", 0);
+
+		//var s = "abc.def.";
+		//Print(s.LastIndexOf('.', s.Length-2));
+
+
+
+		//Print(SimpleLib.Class1.Test);
 
 		//Print(Api.GetOEMCP());
 		//Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -74,17 +126,45 @@ class Script :AScript
 
 	}
 
+	[DllImport("user32.dll", EntryPoint = "MessageBoxW")]
+	internal static extern int MessageBox(AWnd hWnd, string lpText, string lpCaption, uint uType);
+
 	//FileStream OpenRead(string file)
 	//{
 	//	var h = Api.CreateFile(file, Api.GENERIC_READ, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING);
 	//	return new FileStream(h, FileAccess.Read, ownsHandle: true);
 	//}
 
-	string TestRange(string s, Range? range=null)
+	string TestRange(string s, Range? range = null)
 	{
 		var r = range ?? Range.All;
 		int i = r.Start.Value;
 		Print(r, r.Start, r.End, i);
 		return s[r];
+	}
+
+	class TestDtor :IDisposable
+	{
+		public TestDtor()
+		{
+			AProcess.Exit += AProcess_Exit;
+		}
+
+		private void AProcess_Exit(object sender, EventArgs e)
+		{
+			Dispose();
+		}
+
+		~TestDtor()
+		{
+			AOutput.QM2.Write("dtor");
+
+		}
+
+		public void Dispose()
+		{
+			AOutput.QM2.Write("Dispose");
+			
+		}
 	}
 }

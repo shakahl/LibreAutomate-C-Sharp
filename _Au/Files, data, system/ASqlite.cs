@@ -27,6 +27,8 @@ namespace Au
 	/// <remarks>
 	/// This class wraps a SQLite API object sqlite3* and related sqlite3_x functions. They are documented perfectly in the SQLite website.
 	/// Uses this unmanaged dll: AFolders.ThisApp + @"64\sqlite3.dll". In 32-bit process - "32" instead of "64".
+	/// 
+	/// To correctly close the database file, at first need to dipose all child objects, such as <see cref="ASqliteStatement"/>, then dispose the <b>ASqlite</b> object. To dispose a static <b>ASlite</b> variable, you may want to use <see cref="AProcess.Exit"/> event. Although this class has a finalizer that disposes the object (closes database), you should always dispose explicitly. Finalizers don't run on process exit.
 	/// </remarks>
 	/// <seealso cref="ASqliteStatement"/>
 	/// <example>

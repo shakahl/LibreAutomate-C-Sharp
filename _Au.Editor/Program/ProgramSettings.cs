@@ -54,11 +54,7 @@ class ProgramSettings
 
 		Program.Timer1s += _Program_Timer1s;
 		_x.Changed += _x_Changed; //use event because our XML can be modified externally. It is public through Xml and XmlOf.
-	}
-
-	~ProgramSettings()
-	{
-		_Program_Timer1s();
+		AProcess.Exit += (unu, sed) => _Program_Timer1s(); //info: Core does not call finalizers when process exits
 	}
 
 	private void _Program_Timer1s()
@@ -68,7 +64,7 @@ class ProgramSettings
 				_x.SaveElem(_settFile);
 			}
 			_isDirty = false;
-			//ADebug.Print("settings saved");
+			//AOutput.QM2.Write("settings saved");
 		}
 	}
 
@@ -190,10 +186,8 @@ class ProgramSettings
 	/// You then can manipulate settings directly. The changes will be saved automatically.
 	/// Need to lock(thisProgramSettingsObject). Asserts if not.
 	/// </summary>
-	public XElement Xml
-	{
-		get
-		{
+	public XElement Xml {
+		get {
 			Debug.Assert(Monitor.IsEntered(this));
 			return _x;
 		}

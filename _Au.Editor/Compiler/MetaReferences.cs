@@ -29,8 +29,9 @@ namespace Au.Compiler
 	/// For each compilation create a MetaReferences variable, call Resolve if need non-default references, then use Refs list.
 	/// </summary>
 	/// <remarks>
-	/// Temporarily keeps PortableExecutableReference objects in a cache. Single static cache is used by all MetaReferences variables.
-	/// Cache requires many MB of unmanaged memory, therefore PortableExecutableReference objects are removed and GC-collected when not used anywhere for some time. Reloading is quite fast.
+	/// Temporarily keeps PortableExecutableReference objects in a cache. Except Au and Core reference assemblies; Core assemblies are small (without code).
+	/// Single static cache is used by all MetaReferences variables.
+	/// Cache may require many MB of unmanaged memory, therefore PortableExecutableReference objects are removed and GC-collected when not used anywhere for some time. Reloading is quite fast.
 	///		A reference to a PortableExecutableReference variable prevents removing it from cache and GC-collecting.
 	///		A reference to a MetaReferences variable prevents removing/disposing is Refs items.
 	///		CodeAnalysis Project etc objects also have references, therefore need to manage their lifetimes too.
@@ -43,7 +44,7 @@ namespace Au.Compiler
 		/// </summary>
 		class _MR
 		{
-			public string name, path;
+			public readonly string name, path;
 			WeakReference<PortableExecutableReference> _wr;
 			PortableExecutableReference _refKeeper;
 			long _timeout;
@@ -63,13 +64,8 @@ namespace Au.Compiler
 					if(!_wr.TryGetTarget(out var r)) {
 						//for(int i=0;i<10;i++) //tested: process memory does not grow when loading same file several times
 						//APerf.First();
-						DocumentationProvider docProv = null;
-						if(s_docDB.HaveRef(name)) {
-							docProv = s_docDB;
-						} else {
-							var xmlPath = Path.ChangeExtension(path, "xml");
-							if(AFile.ExistsAsFile(xmlPath, true)) docProv = XmlDocumentationProvider.CreateFromFile(xmlPath);
-						}
+						var xmlPath = Path.ChangeExtension(path, "xml");
+						var docProv = AFile.ExistsAsFile(xmlPath, true) ? XmlDocumentationProvider.CreateFromFile(xmlPath) : null;
 						r = MetadataReference.CreateFromFile(path, (this as _MR2)?.Prop ?? default, docProv);
 						//APerf.NW();
 
@@ -121,53 +117,66 @@ namespace Au.Compiler
 			string _alias;
 			bool _isCOM;
 
-			public _MR2(string name, string path, string alias, bool isCOM) : base(name, path) { _alias = alias; _isCOM = isCOM; }
+			public _MR2(string name, string path, string alias, bool isCOM) : base(name, path)
+			{
+				_alias = alias;
+				_isCOM = isCOM;
+			}
 
-			public MetadataReferenceProperties Prop => new MetadataReferenceProperties(aliases: _alias == null ? default : ImmutableArray.Create(_alias), embedInteropTypes: _isCOM);
+			public MetadataReferenceProperties Prop
+				=> new MetadataReferenceProperties(aliases: _alias == null ? default : ImmutableArray.Create(_alias), embedInteropTypes: _isCOM);
 
 			public bool PropEq(string alias, bool isCOM) => isCOM == _isCOM && alias == _alias;
 		}
 
-		static List<_MR> s_cache = new List<_MR>(16);
+		static List<_MR> s_cache = new List<_MR>();
 		static Timer s_timer;
 		static bool s_isTimer;
 
 		/// <summary>
-		/// List of default references and references for which was called Resolve of this MetaReferences variable.
-		/// Before calling any Resolve, contains only default references.
+		/// List containing <see cref="DefaultReferences"/> + references for which was called <see cref="Resolve"/> of this MetaReferences variable.
 		/// </summary>
 		public List<PortableExecutableReference> Refs { get; }
 
-		public MetaReferences()
+		/// <summary>
+		/// These references are added when compiling any script/library.
+		/// Au.dll and all .NET Core design-time assemblies.
+		/// </summary>
+		public static readonly Dictionary<string, PortableExecutableReference> DefaultReferences;
+
+		static MetaReferences()
 		{
-			lock(s_cache) {
-				//var p1 = APerf.Create();
-				var def = Compiler.DefaultReferences;
-				//Print(def); //TODO
-				if(s_cache.Count == 0) {
-					foreach(var x in def) {
-						s_cache.Add(new _MR(x.Key, x.Value));
-					}
-				}
-				int nDef = def.Count;
-				Refs = new List<PortableExecutableReference>(nDef);
-				for(int i = 0; i < nDef; i++) _AddRef(i);
-				//p1.NW('R');
+			//var p1 = APerf.Create();
+			s_docDB = new _DocumentationDatabase();
+			//p1.Next('d');
+
+			DefaultReferences = new Dictionary<string, PortableExecutableReference>(300, StringComparer.OrdinalIgnoreCase);
+
+			using var db = new ASqlite(AFolders.ThisAppBS + "ref.db", SLFlags.SQLITE_OPEN_READONLY);
+			using var stat = db.Statement("SELECT * FROM ref");
+			while(stat.Step()) {
+				var asmName = stat.GetText(0);
+				var doc = s_docDB.HaveRef(asmName) ? s_docDB : null;
+				var r = MetadataReference.CreateFromImage(stat.GetArray<byte>(1), documentation: s_docDB, filePath: asmName);
+				DefaultReferences.Add(asmName, r);
 			}
+			//p1.NW('c');
 		}
 
-		void _AddRef(int iCache) => Refs.Add(s_cache[iCache].Ref);
+		public MetaReferences()
+		{
+			var def = DefaultReferences;
+			Refs = new List<PortableExecutableReference>(def.Count + 10);
+			foreach(var v in def) Refs.Add(v.Value);
+		}
 
 		/// <summary>
 		/// Finds reference assembly file, creates PortableExecutableReference and adds to the cache.
 		/// Returns false if file not found.
 		/// </summary>
-		/// <param name="reference">Assembly name (like "System.Something") or filename (like "My.dll") or path.</param>
+		/// <param name="reference">Assembly filename (like "My.dll" or "My"), relative path or full path. If not full path, must be in AFolders.ThisApp.</param>
 		/// <exception cref="Exception">Some unexpected exception, eg failed to load the found file.</exception>
 		/// <remarks>
-		/// If used just filename or relative path, searches in <see cref="AFolders.ThisApp"/>, <see cref="AFolders.NetRuntime"/> and GAC.
-		/// If used assembly name without ".dll", ".exe" or ", Version=", searches only in <see cref="AFolders.NetRuntime"/> and GAC.
-		/// If contains", Version=", searches only in GAC.
 		/// Can be "Alias=X.dll" - assembly reference that can be used with C# keyword 'extern alias'.
 		/// Loads the file but does not parse. If bad format, error later when compiling.
 		/// </remarks>
@@ -175,15 +184,14 @@ namespace Au.Compiler
 		{
 			string alias = null;
 			int i = reference.IndexOf('=');
-			if(i >= 0 && !(i > 9 && reference.Eq(i - 9, ", Version"))) {
+			if(i > 0) {
 				alias = reference.Remove(i);
 				reference = reference.Substring(i + 1);
 			}
 
 			var a = s_cache;
 			lock(a) {
-				int searchFrom = isCOM ? Compiler.DefaultReferences.Count : 0;
-				for(i = searchFrom; i < a.Count; i++) {
+				for(i = 0; i < a.Count; i++) {
 					if(a[i].name.Eqi(reference) && _PropEq(a[i], alias, isCOM)) {
 						_AddRef(i);
 						return true;
@@ -194,7 +202,7 @@ namespace Au.Compiler
 				if(path == null) return false;
 				path = APath.LibNormalize(path);
 
-				for(i = searchFrom; i < a.Count; i++) {
+				for(i = 0; i < a.Count; i++) {
 					if(a[i].path.Eqi(path) && _PropEq(a[i], alias, isCOM)) goto g1;
 				}
 				_MR k;
@@ -206,6 +214,12 @@ namespace Au.Compiler
 			}
 
 			return true;
+
+			void _AddRef(int iCache)
+			{
+				var r = s_cache[iCache];
+				Refs.Add(r.Ref);
+			}
 
 			bool _PropEq(_MR u, string alias, bool isCOM)
 			{
@@ -221,35 +235,12 @@ namespace Au.Compiler
 			if(!isFull && isCOM) { isFull = true; re = AFolders.Workspace + @".interop\" + re; }
 			if(isFull) return AFile.ExistsAsFile(re) ? re : null;
 
-			string path, ext; int i;
-			if(0 != re.Ends(true, s_asmExt)) {
-				path = AFolders.ThisAppBS + re;
-				if(AFile.ExistsAsFile(path)) return path;
-				ext = null;
-			} else if((i = re.Find(", Version=")) > 0) {
-				return GAC.FindAssembly(re.Remove(i), re);
-			} else ext = ".dll";
-
-			var d = AFolders.NetRuntimeBS;
-			path = d + re + ext;
-			if(AFile.ExistsAsFile(path)) return path;
-
-			bool isRelPath = re.FindChars(@"\/") >= 0;
-			if(!isRelPath) {
-				path = d + @"WPF\" + re + ext;
-				if(AFile.ExistsAsFile(path)) return path;
-			}
-
-			if(ext == null || isRelPath) path = null;
-			else path = GAC.FindAssembly(re);
-
-			//FUTURE: also look in DEVPATH env var, if config file contains <developmentMode developerInstallation="true"/>
-
-			return path;
+			if(!re.Ends(".dll", true)) re += ".dll";
+			re = AFolders.ThisAppBS + re;
+			return AFile.ExistsAsFile(re) ? re : null;
 
 			//note: we don't use Microsoft.CodeAnalysis.Scripting.ScriptMetadataResolver. It is very slow, makes compiling many times slower.
 		}
-		static readonly string[] s_asmExt = { ".dll", ".exe" };
 
 		/// <summary>
 		/// Extracts path from compiler error message CS0009 and removes the reference from cache.
@@ -263,6 +254,13 @@ namespace Au.Compiler
 
 		//public static void CompactCache() => _MR.CompactCache();
 
+		public static bool IsDotnetAssembly(string path)
+		{
+			using var stream = AFile.WaitIfLocked(() => File.OpenRead(path));
+			using var pr = new System.Reflection.PortableExecutable.PEReader(stream);
+			return pr.HasMetadata;
+		}
+
 #if DEBUG
 		internal static void DebugPrintCachedRefs()
 		{
@@ -271,8 +269,8 @@ namespace Au.Compiler
 #endif
 
 		/// <summary>
-		/// Gets XML documentation for .NET framework 4.7.2 assemblies and Au.dll.
-		/// Uses a 2-column SQLite database created from XML files using script BuildDocumentationProviderDatabase.
+		/// Gets XML documentation for .NET Core assemblies and Au.dll.
+		/// Uses a 2-column SQLite database created from XML files by <see cref="NetCoreDB.Create"/>.
 		/// Not XML files directly because it uses many MB of process memory, eg 210 MB instead of 70 MB.
 		/// </summary>
 		class _DocumentationDatabase : DocumentationProvider
@@ -284,8 +282,8 @@ namespace Au.Compiler
 			public _DocumentationDatabase()
 			{
 				try {
-					_db = new ASqlite(AFolders.ThisAppBS + "CiDoc.db", SLFlags.SQLITE_OPEN_READONLY);
-					if(_db.Get(out string s, "SELECT xml FROM data WHERE name='.'")) _refs = new HashSet<string>(s.SegSplit("\n"));
+					_db = new ASqlite(AFolders.ThisAppBS + "doc.db", SLFlags.SQLITE_OPEN_READONLY); //never mind: we don't dispose it on process exit
+					if(_db.Get(out string s, "SELECT xml FROM doc WHERE name='.'")) _refs = new HashSet<string>(s.SegSplit("\n"));
 				}
 				catch(SLException ex) { ADebug.Print(ex.Message); }
 			}
@@ -293,7 +291,7 @@ namespace Au.Compiler
 			/// <summary>
 			/// Returns true if the database contains XML doc of the reference assembly.
 			/// </summary>
-			/// <param name="refName">Like "mscorlib" or "System.Core" or "Au.dll".</param>
+			/// <param name="refName">Like "mscorlib" or "System.Core" or "Au".</param>
 			public bool HaveRef(string refName) => _refs?.Contains(refName) ?? false;
 
 			protected internal override string GetDocumentationForSymbol(string documentationMemberID, CultureInfo preferredCulture = null, CancellationToken cancellationToken = default)
@@ -301,7 +299,7 @@ namespace Au.Compiler
 				if(_db != null) {
 					lock(_db) { //sometimes not in main thread
 						try {
-							_stat ??= _db.Statement("SELECT xml FROM data WHERE name=?");
+							_stat ??= _db.Statement("SELECT xml FROM doc WHERE name=?");
 							if(_stat.Bind(1, documentationMemberID).Step()) return _stat.GetText(0);
 							//ADebug.Print(documentationMemberID);
 						}
@@ -325,10 +323,10 @@ namespace Au.Compiler
 			}
 
 			public string GetNamespaceDoc(string namespaceName)
-				=> GetDocumentationForSymbol("N:" + namespaceName)
+				=> GetDocumentationForSymbol("N:" + namespaceName) //currently we don't have Core namespace doc. With Framework it used to be namespaces.xml. Never mind.
 				?? GetDocumentationForSymbol("T:" + namespaceName + ".NamespaceDoc");
 		}
-		static _DocumentationDatabase s_docDB = new _DocumentationDatabase();
+		static _DocumentationDatabase s_docDB;
 
 		public static string GetNamespaceDocXml(string namespaceName) => s_docDB.GetNamespaceDoc(namespaceName);
 	}

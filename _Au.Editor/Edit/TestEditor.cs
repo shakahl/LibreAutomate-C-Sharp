@@ -169,8 +169,30 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 
 	public unsafe void TestEditor()
 	{
+		//NetCoreDB.Create();
 
 
+		//var p1 = APerf.Create();
+		//var d = new Dictionary<string, string>(300);
+		//foreach(var v in MetaReferences.NetDirs) {
+		//	//Print("-----");
+		//	foreach(var f in AFile.EnumDirectory(v, FEFlags.UseRawPath)) {
+		//		if(f.IsDirectory || !f.Name.Ends(".dll", true)) continue;
+		//		if(f.Name.IndexOf('-') >= 0 || f.Name.IndexOf('_') >= 0) continue;
+		//		var name = f.Name.RemoveSuffix(4);
+		//		if(d.ContainsKey(name)) continue; //System.Drawing, WindowsBase. Those in desktop are bigger.
+
+		//		using var h = Api.CreateFile(f.FullPath, Api.GENERIC_READ, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING);
+		//		if(h.Is0) Print("failed");
+
+		//		//using var stream = AFile.WaitIfLocked(() => File.OpenRead(f.FullPath));
+		//		//using var pr = new System.Reflection.PortableExecutable.PEReader(stream, System.Reflection.PortableExecutable.PEStreamOptions.Default);
+		//		////Print($"<><c {(pr.HasMetadata?"0":"red")}>{name}, {f.FullPath}<>");
+		//		//if(!pr.HasMetadata) continue;
+		//		d[name] = f.FullPath;
+		//	}
+		//}
+		//p1.NW('a');
 
 		//ATask.Run("Script90.cs", ATime.PerfMilliseconds.ToString());
 		return;

@@ -42,7 +42,7 @@ namespace Au.Compiler
 		/// <remarks>
 		/// Must be always called in the main UI thread (Thread.CurrentThread.ManagedThreadId == 1).
 		/// 
-		/// Adds <see cref="DefaultReferences"/>.
+		/// Adds <see cref="MetaReferences.DefaultReferences"/>.
 		/// 
 		/// If f role is classFile:
 		///		If CompReason.Run, does not compile (just parses meta), sets r.role=classFile and returns false.
@@ -91,8 +91,8 @@ namespace Au.Compiler
 			public bool prefer32bit;
 			public bool console;
 
-			/// <summary>Has config file this.file + ".config".</summary>
-			public bool hasConfig;
+			///// <summary>Has config file this.file + ".config".</summary>
+			//public bool hasConfig;
 
 			/// <summary>Main() does not have [STAThread].</summary>
 			public bool mtaThread;
@@ -102,17 +102,42 @@ namespace Au.Compiler
 
 			/// <summary>In cache assembly files we append portable PDB to the assembly file at this offset.</summary>
 			public int pdbOffset;
+
+			/// <summary>
+			/// |-separated list of full paths of references that are not directly in <see cref="AFolders.ThisApp"/> or its subfolder "Libraries".
+			/// </summary>
+			public string fullPathRefs;
+
+			/// <summary>
+			/// Adds path to <see cref="fullPathRefs"/> if it is not directly in <see cref="AFolders.ThisApp"/> or its subfolder "Libraries".
+			/// Does not add if role is not miniProgram (it must be set before) or if path does not end with ".dll".
+			/// </summary>
+			/// <param name="path">Full path.</param>
+			public void AddToFullPathRefsIfNeed(string path)
+			{
+				//Print(path);
+				if(role != ERole.miniProgram) return;
+				var ta = AFolders.ThisAppBS;
+				if(path.Starts(ta, true)) {
+					int i = ta.Length, j = path.IndexOf('\\', i);
+					if(j < 0) return;
+					if(j - i == 9 && path.Eq(i, "Libraries", true) && path.IndexOf('\\', j + 1) < 0) return;
+				}
+				if(!path.Ends(".dll", true)) return;
+				//Print("AddToFullPathRefsIfNeed", path);
+				fullPathRefs = fullPathRefs == null ? path : fullPathRefs + "|" + path;
+			}
 		}
 
 		static bool _Compile(bool forRun, IWorkspaceFile f, out CompResults r, IWorkspaceFile projFolder)
 		{
-			//APerf.First();
+			APerf.First();
 			r = new CompResults();
 
 			var m = new MetaComments();
 			if(!m.Parse(f, projFolder, EMPFlags.PrintErrors)) return false;
 			var err = m.Errors;
-			//APerf.Next('m');
+			APerf.Next('m');
 
 			bool needOutputFiles = m.Role != ERole.classFile;
 
@@ -169,15 +194,6 @@ namespace Au.Compiler
 
 			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, m.CreateCompilationOptions());
 			//APerf.Next('c');
-
-
-
-			//foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) Print(v);
-			//Print("-----");
-			//foreach(var v in m.References.Refs) Print(v.Display, v.FilePath);//TODO
-
-
-
 
 			string pdbFile = null, xdFile = null;
 			MemoryStream pdbStream = null;
@@ -268,13 +284,13 @@ namespace Au.Compiler
 				}
 
 				//copy config file to the output directory
-				var configFile = outFile + ".config";
-				if(m.ConfigFile != null) {
-					r.hasConfig = true;
-					_CopyFileIfNeed(m.ConfigFile.FilePath, configFile);
-				} else if(AFile.ExistsAsFile(configFile, true)) {
-					AFile.Delete(configFile);
-				}
+				//var configFile = outFile + ".config";
+				//if(m.ConfigFile != null) {
+				//	r.hasConfig = true;
+				//	_CopyFileIfNeed(m.ConfigFile.FilePath, configFile);
+				//} else if(AFile.ExistsAsFile(configFile, true)) {
+				//	AFile.Delete(configFile);
+				//}
 			}
 
 			if(m.PostBuild.f != null && !_RunPrePostBuildScript(true, m, outFile)) return false;
@@ -291,8 +307,10 @@ namespace Au.Compiler
 			r.prefer32bit = m.Prefer32Bit;
 			r.console = m.Console;
 			r.notInCache = m.OutputPath != null;
+			var refs = m.References.Refs;
+			for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) r.AddToFullPathRefsIfNeed(refs[i].FilePath);
 
-			//APerf.NW('C');
+			APerf.NW('C');
 			return true;
 		}
 
@@ -453,23 +471,17 @@ namespace Au.Compiler
 		static void _CopyReferenceFiles(MetaComments m)
 		{
 			//info: tried to get all used references, unsuccessfully.
-			//	Would need to create apppdomain, load the assembly and get its references through reflection.
-			//	And don't need it. We'll copy Au.dll and all non-default references that are not in the .NET folder.
+			//	And don't need it. We'll copy Au.dll and all non-default references that are not in runtime folders.
+			//	TODO: now can unload assemblies... Or use System.Runtime.Metadata.
 
 			_CopyFileIfNeed(typeof(AWnd).Assembly.Location, m.OutputPath + @"\Au.dll");
 
 			var refs = m.References.Refs;
-			int i = DefaultReferences.Count;
-			if(refs.Count > i) {
-				//string netDir = AFolders.NetFrameworkRuntime; //no GAC
-				string netDir = AFolders.Windows + @"Microsoft.NET\";
-				for(; i < refs.Count; i++) {
-					var s1 = refs[i].FilePath;
-					if(s1.Starts(netDir, true)) continue;
-					var s2 = m.OutputPath + "\\" + APath.GetFileName(s1);
-					//Print(s1, s2);
-					_CopyFileIfNeed(s1, s2);
-				}
+			for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) {
+				var s1 = refs[i].FilePath;
+				var s2 = m.OutputPath + "\\" + APath.GetFileName(s1);
+				//Print(s1, s2);
+				_CopyFileIfNeed(s1, s2);
 			}
 
 			//also copy C++ dlls
@@ -522,39 +534,6 @@ namespace Au.Compiler
 			return true;
 		}
 		static ARegex s_rx1;
-
-		#region default references and usings
-
-		/// <summary>
-		/// These references are added when compiling any script/library.
-		/// System.Private.CoreLib, System.Runtime, Microsoft.CSharp, System.Windows.Forms, System.Drawing.Primitives, Au.dll.
-		/// </summary>
-		public static readonly Dictionary<string, string> DefaultReferences = new Dictionary<string, string>
-		{
-			{"Au.dll", typeof(AWnd).Assembly.Location},
-			{"System.Private.CoreLib", typeof(object).Assembly.Location},
-			{"System.Runtime", _GetCoreAssemblyPath("System.Runtime")},
-			{"Microsoft.CSharp", _GetCoreAssemblyPath("Microsoft.CSharp")}, //need eg for dynamic support
-			{"System.Windows.Forms", typeof(System.Windows.Forms.Form).Assembly.Location},
-			{"System.Drawing.Primitives", typeof(System.Drawing.Point).Assembly.Location},
-			//TODO
-
-			//speed: many references makes compiling much slower. We use temporary caching. Permanent caching would add many MB of process memory.
-		};
-
-		static string _GetCoreAssemblyPath(string name) => _CorePath + name + ".dll";
-
-		static string _CorePath => s_corePath ??= APath.GetDirectoryPath(typeof(object).Assembly.Location, withSeparator: true);
-		static string s_corePath;
-
-		//note: DefaultReferences and using.txt/DefaultUsings must be in sync. If there is no reference for an using, will be compiler error.
-
-		/// <summary>
-		/// Usings for <see cref="Scripting.Compile"/>.
-		/// </summary>
-		public const string DefaultUsings = @"using Au; using static Au.AStatic; using Au.Types; using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq;";
-
-		#endregion
 	}
 
 	public enum ECompReason { Run, CompileAlways, CompileIfNeed }
