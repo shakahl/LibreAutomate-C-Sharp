@@ -528,7 +528,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 	public static bool SymbolLinksToHtml(StringBuilder b, ISymbol sym, string prefix, string suffix)
 	{
 		string helpUrl = CiUtil.GetSymbolHelpUrl(sym);
-		string sourceUrl = CiUtil.GetSymbolSourceRelativeUrl(sym);
+		string sourceUrl = CiGoTo.GetLinkData(sym);
 		if(helpUrl == null && sourceUrl == null) return false;
 		SymbolLinksToHtml(b, helpUrl, sourceUrl, prefix, suffix);
 		return true;

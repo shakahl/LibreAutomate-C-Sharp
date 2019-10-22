@@ -44,16 +44,14 @@ static class CodeInfo
 
 	public static void UiLoaded()
 	{
-		//return; //TODO
-
 		//warm up
 		Task.Delay(500).ContinueWith(_1 => {
 			var p1 = APerf.Create();
 			//_isWarm = true;
 			//return;
-//#if DEBUG
-//			if(Debugger.IsAttached) { _isWarm = true; return; }
-//#endif
+			//#if DEBUG
+			//			if(Debugger.IsAttached) { _isWarm = true; return; }
+			//#endif
 			_Warmup(ref p1);
 		});
 
@@ -85,9 +83,9 @@ Print(1);
 			var completionService = CompletionService.GetService(document);
 			var cr = completionService.GetCompletionsAsync(document, position).Result;
 			//MetaReferences.CompactCache();
-			_isWarm = true; //TODO: instead use cancellation token
-							//p1.Next(); //600-1000 ms when ngened, 2.1 s with ProfileOptimization, else 3 s (2.5 s with Compiler.Warmup above)
-							//Compiler.Warmup(document);
+			_isWarm = true;
+			//p1.Next(); //600-1000 ms when ngened, 2.1 s with ProfileOptimization, else 3 s (2.5 s with Compiler.Warmup above)
+			//Compiler.Warmup(document);
 			p1.NW('w');
 			if(cr == null) ADebug.Print("null"); //else Print(cr.Items.Length);
 

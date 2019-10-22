@@ -399,7 +399,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Edit_GoToDefinition()
 	{
-
+		CiGoTo.GoToSymbolFromPos();
 	}
 
 	public void Edit_PeekDefinition()
@@ -792,7 +792,11 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Help_ContextHelp()
 	{
-
+		var c = AWnd.ThisThread.FocusedControl;
+		if(c == null) return;
+		if(c == Panels.Editor.ZActiveDoc) {
+			CiUtil.OpenSymbolFromPosHelp();
+		}
 	}
 
 	public void Help_Download()

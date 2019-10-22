@@ -243,6 +243,9 @@ class SciCode : AuScintilla
 		case Api.WM_KILLFOCUS:
 			CodeInfo.SciKillFocus();
 			break;
+		case Api.WM_LBUTTONUP:
+			if(ModifierKeys == Keys.Control) CiGoTo.GoToSymbolFromPos(onCtrlClick: true);
+			break;
 		}
 	}
 	bool _noModelEnsureCurrentSelected;

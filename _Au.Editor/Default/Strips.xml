@@ -101,7 +101,7 @@
 			<Edit_Find i="find" hk="Ctrl+F"/>
 			<Edit_FindReferences/>
 			<sep/>
-			<Edit_GoToDefinition/>
+			<Edit_GoToDefinition hk="F12" hkText="Ctrl+click"/>
 			<Edit_PeekDefinition/>
 			<Edit_MembersList hkText="Ctrl+Space"/>
 			<Edit_ParameterInfo hkText="Ctrl+Shift+Space"/>
@@ -200,7 +200,7 @@
 		<Menu_Help>
 			<Help_QuickStart/>
 			<Help_Reference i="help"/>
-			<Help_ContextHelp/>
+			<Help_ContextHelp hk="F1"/>
 			<sep/>
 			<Help_Web>
 				<Help_Download/>

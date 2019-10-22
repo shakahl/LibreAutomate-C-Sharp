@@ -22,6 +22,7 @@ using System.Reflection;
 using System.Runtime;
 using Microsoft.Win32;
 using System.Runtime.InteropServices.ComTypes;
+//using AutoItX3Lib;
 
 class Script : AScript
 {
@@ -36,8 +37,14 @@ class Script : AScript
 	[STAThread] static void Main(string[] args) { new Script(args); }
 	Script(string[] args)
 	{
-		//AOutput.QM2.UseQM2 = true;
-		//AOutput.Clear();
+		AOutput.QM2.UseQM2 = true;
+		AOutput.Clear();
+
+		//Range r = 1..;
+
+		//unsafe {
+		//	Print(sizeof(Range));
+		//}
 
 
 		//TestDtor2();

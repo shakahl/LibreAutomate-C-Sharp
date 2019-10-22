@@ -542,6 +542,15 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	}
 
 	/// <summary>
+	/// Finds file and calls <see cref="OpenAndGoTo(FileNode, int, int)"/>. Does nothing if not found.
+	/// </summary>
+	public bool OpenAndGoTo(string file, int line = -1, int columnOrPos = -1)
+	{
+		var f = FindScript(file); if(f == null) return false;
+		return OpenAndGoTo(f, line, columnOrPos);
+	}
+
+	/// <summary>
 	/// Finds file or folder and selects the node. If not folder, opens its file in the code editor, optionally goes to the specified position or line or line/column.
 	/// Returns false if failed to find or select.
 	/// </summary>

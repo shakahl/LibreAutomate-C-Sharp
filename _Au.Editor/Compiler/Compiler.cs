@@ -472,7 +472,8 @@ namespace Au.Compiler
 		{
 			//info: tried to get all used references, unsuccessfully.
 			//	And don't need it. We'll copy Au.dll and all non-default references that are not in runtime folders.
-			//	TODO: now can unload assemblies... Or use System.Runtime.Metadata.
+			//	Can try: now can unload assemblies... Or use System.Runtime.Metadata.
+			//	Never mind. If explicitly specified, copy even if not used.
 
 			_CopyFileIfNeed(typeof(AWnd).Assembly.Location, m.OutputPath + @"\Au.dll");
 

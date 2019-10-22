@@ -209,7 +209,7 @@ class CiSignature
 			var tt = r.Items[iSel].DocumentationFactory?.Invoke(default);
 			bool haveDoc = tt?.Any() ?? false;
 			string helpUrl = CiUtil.GetSymbolHelpUrl(currentItem);
-			string sourceUrl = CiUtil.GetSymbolSourceRelativeUrl(currentItem);
+			string sourceUrl = CiGoTo.GetLinkData(currentItem);
 			bool haveLinks = helpUrl != null || sourceUrl != null;
 			if(haveDoc || haveLinks) {
 				b.Append("<p>");

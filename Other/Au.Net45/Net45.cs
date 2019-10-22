@@ -43,7 +43,6 @@ unsafe class Net45
 			c.Convert(tl);
 		}
 		catch(Exception ex) { Print("Failed to convert type library. " + ex.Message); return -2; }
-		finally { Marshal.ReleaseComObject(tl); }
 		return 0;
 	}
 
@@ -61,7 +60,7 @@ unsafe class Net45
 			tl.GetLibAttr(out IntPtr ipta);
 			var ta = *(_TYPELIBATTR*)ipta;
 			tl.ReleaseTLibAttr(ipta);
-			var hash = Fnv1((byte*)&ta, sizeof(_TYPELIBATTR)).ToString("x");
+			var hash = Fnv1((byte*)&ta, sizeof(_TYPELIBATTR) - 2).ToString("x");
 
 			tl.GetDocumentation(-1, out var tlName, out var tlDescription, out var _, out var _);
 			var fileName = $"{tlName} {ta.wMajorVerNum}.{ta.wMinorVerNum} #{hash}.dll";
@@ -72,7 +71,7 @@ unsafe class Net45
 
 				var converter = new TypeLibConverter();
 				asm = converter.ConvertTypeLibToAssembly(tl, netPath,
-					TypeLibImporterFlags.ReflectionOnlyLoading | TypeLibImporterFlags.UnsafeInterfaces,
+					TypeLibImporterFlags.ReflectionOnlyLoading | TypeLibImporterFlags.TransformDispRetVals | TypeLibImporterFlags.UnsafeInterfaces,
 					this, null, null, tlName, null);
 				asm.Save(fileName);
 				s_converted[fileName] = asm;
