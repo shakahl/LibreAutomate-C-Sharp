@@ -55,6 +55,7 @@ namespace Au
 		/// If null, prints "null".
 		/// 
 		/// This overload is used for all types except: strings, arrays, generic collections. They have own overloads; to use this function need to cast to object.
+		/// Also not used for ref struct types, because they cannot be boxed; use <c>Print(x.ToString());</c>.
 		/// </remarks>
 		public static void Print(object value)
 		{
@@ -82,6 +83,31 @@ namespace Au
 			return s;
 		}
 
+		///// <summary>
+		///// Writes Span to the output.
+		///// </summary>
+		//public static void Print<T>(T value) where T : struct //does not support ref struct
+		//{
+		//	AOutput.Write(value.ToString());
+		//}
+
+		//rejected. For ref struct use ToString.
+		///// <summary>
+		///// Writes Span to the output.
+		///// </summary>
+		//public static void Print<T>(Span<T> value)
+		//{
+		//	AOutput.Write(value.ToString());
+		//}
+
+		///// <summary>
+		///// Writes ReadOnlySpan to the output.
+		///// </summary>
+		//public static void Print<T>(ReadOnlySpan<T> value)
+		//{
+		//	AOutput.Write(value.ToString());
+		//}
+
 		/// <summary>
 		/// Writes array, List, Dictionary or other generic collection to the output, as a list of items separated by "\r\n".
 		/// </summary>
@@ -94,6 +120,7 @@ namespace Au
 			PrintListEx(value);
 		}
 
+		//TODO: rarely used
 		/// <summary>
 		/// Writes array, List, Dictionary or other generic collection to the output, as a list of items.
 		/// </summary>

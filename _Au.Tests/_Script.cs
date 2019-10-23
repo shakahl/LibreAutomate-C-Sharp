@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Linq;
+//using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using Au;
@@ -40,11 +40,144 @@ class Script : AScript
 		AOutput.QM2.UseQM2 = true;
 		AOutput.Clear();
 
+		//var s = "jhsdalkhgkjdhgjkhdjgkhdfjkghldkjhgldhgjkhdgjkg";
+
+		//s.
+
+		//APerf.SpeedUpCpu();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int n2 = 1000;
+		//	APerf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { _ = s.ToCharArray(); }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { _ = s.AsSpan(); }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { _ = s.AsMemory(); }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	APerf.NW();
+		//	Thread.Sleep(200);
+		//}
+
+		//var a = "abcd".ToCharArray();
+		//var v = a.AsSpan(2);
+		////v.Clear();
+		////v[0] = 'K';
+		////Print(v.Contains('a'), v.Contains('d'));
+		//v.
+		//Print(a);
+
+		unsafe {
+			//var s = "ab  cd";
+			//var g = s.AsSpan(2);
+			//Print(g[0]);
+			//g[0] = 'K';
+			//Print(g.IndexOf('d'));
+			//Print(g.SequenceEqual("cd"));
+			//Print(g.TrimStart(" ").ToString());
+			//var m = s.AsMemory(2);
+			//using(var h = m.Pin()) {
+			//	//Print(*(char*)h.Pointer);
+			//	*(char*)h.Pointer = 'K';
+			//}
+			//Print(s);
+
+			//var r = s.AsSpan(2);
+
+			//s.FindChars
+		}
+
+		//Print(~1);
+
+		//var r = 5..^3;
+		//Print(r.GetOffsetAndLength(10));
+
+		//ARange r = default;
+		//Print(r.GetRealRange(10));
+		//Print(r);
+
+		////r = ^3;
+		//r = 2..3;
+		//Print(r.GetRealRange(10));
+		//Print(r);
+		//r = 2..^3;
+		//Print(r.GetRealRange(10));
+		//Print(r);
+		//r = ^6..^3;
+		//Print(r.GetRealRange(10));
+		//Print(r);
+		//r = ..;
+		//Print(r.GetRealRange(10));
+		//Print(r);
+		//r = 4..;
+		//Print(r.GetRealRange(10));
+		//Print(r);
+		//r = ..7;
+		//Print(r.GetRealRange(10));
+		//Print(r);
+		//r = ..^7;
+		//Print(r.GetRealRange(10));
+		//Print(r);
+
+		//Range? r = 1..;
+
+		//var m = "abcd".AsMemory(2);
+
+		var s = "one, two, three, four.";
+		Print(s.RegexFindAll(@"\w+", 0, 3..11));
+
+		foreach(var v in s.Segments(" ")) {
+			//Print(v[v.EndOffset])
+		}
+
+
+
+		//Range rr = default;
+		//Print(Range.All);
+
+		//Nee(..);
+		//void Nee(Range k) { }
+
+		//var s = "ab cd";
+		//foreach(var v in s.EnumerateRunes()) Print(v., Rune.);
+
+		//unsafe {
+		//	Print(sizeof(Span<int>));
+		//}
+
+		//foreach(var i in 0..3) {
+
+		//}
+
+		//int[] a = { 3, 4, 5 };
+		//List<int> a = { 3, 4, 5 };
+		//Print(a[1..]);
+
+		//var m= a.AsMemory(1);
+		//m.
+
+		//a.CopyTo()
+		//"".Substring(1);
+		//var s = "*do it";
+		//Print("Failed to " + s.Substring(1));
+		//Print("Failed to " + s[1..]);
+
+
+		//switch(1) {
+		//case 0..3:
+
+		//	break;
+		//}
+
 		//Range r = 1..;
 
 		//unsafe {
 		//	Print(sizeof(Range));
 		//}
+
+		//var s = "one.two";
+		//Print(s.RemoveSuffix(3));
+		//Print(s[..^3]);
 
 
 		//TestDtor2();
@@ -150,7 +283,7 @@ class Script : AScript
 		return s[r];
 	}
 
-	class TestDtor :IDisposable
+	class TestDtor : IDisposable
 	{
 		public TestDtor()
 		{
@@ -171,7 +304,7 @@ class Script : AScript
 		public void Dispose()
 		{
 			AOutput.QM2.Write("Dispose");
-			
+
 		}
 	}
 }

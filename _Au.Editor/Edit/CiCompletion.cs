@@ -89,17 +89,18 @@ class CiCompletion
 		//var node = CiTools.NodeAt(pos);
 		//Print(CiTools.IsInString(ref node, pos));
 
-		_tools.RegexWindowHideIfNotInString(doc);
+		_tools.RegexWindowHideIfNotInString(doc); //TODO
 
-		if(_data == null && !modified) { //else we use SciCharAdded and SciCharDeletedBack
-			int position = doc.Z.CurrentPos8;
-			if(doc.Call(Sci.SCI_GETANCHOR) == position) { //if no selection
-				position = doc.Z.CountBytesToChars(position);
-				if(_IsAfterDot(doc.Text, position)) {
-					_ShowList(_ShowReason.clickedDot, position);
-				}
-			}
-		}
+		//rejected: show list when clicked after dot. More annoying than useful. Also this code shows list in .. range.
+		//if(_data == null && !modified) { //else we use SciCharAdded and SciCharDeletedBack
+		//	int position = doc.Z.CurrentPos8;
+		//	if(doc.Call(Sci.SCI_GETANCHOR) == position) { //if no selection
+		//		position = doc.Z.CountBytesToChars(position);
+		//		if(_IsAfterDot(doc.Text, position)) {
+		//			_ShowList(_ShowReason.clickedDot, position);
+		//		}
+		//	}
+		//}
 	}
 
 	/// <summary>

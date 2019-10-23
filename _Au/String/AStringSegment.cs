@@ -1,18 +1,17 @@
-﻿//Modified version of Microsoft.Extensions.Primitives.StringSegment. It is from github; current .NET does not have it.
+﻿//Modified version of Microsoft.Extensions.Primitives.StringSegment. It is from github; current .NET does not have it, need to get from NuGet.
 //Can be used instead of String.Split, especially when you want less garbage. Faster (the github version with StringTokenizer was slower).
 
 using System;
 using System.Runtime.CompilerServices;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
 
 using Au.Types;
 using static Au.AStatic;
 
 namespace Au
 {
-	//FUTURE: test more. Now not all functions tested. But wait, maybe new C# will have native slices etc.
+	//FUTURE: test more.
 
 	/// <summary>
 	/// An optimized representation of a substring (any part of a string).
@@ -26,7 +25,7 @@ namespace Au
 	/// 
 	/// Functions throw <b>ArgumentOutOfRangeException</b>, <b>ArgumentNullException</b>, <b>NullReferenceException</b> or <b>IndexOutOfRangeException</b> exception when an argument is invalid.
 	/// </remarks>
-	public struct AStringSegment :IEquatable<AStringSegment>, IEquatable<string>
+	public struct AStringSegment : IEquatable<AStringSegment>, IEquatable<string>
 	{
 		string _buffer;
 		int _offset, _length;
@@ -76,11 +75,9 @@ namespace Au
 		/// The setter also changes <see cref="Length"/>, but not <see cref="EndOffset"/>.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">The setter throws if value is less than 0 or greater than <see cref="EndOffset"/>.</exception>
-		public int Offset
-		{
+		public int Offset {
 			get => _offset;
-			set
-			{
+			set {
 				var e = _offset + _length;
 				if((uint)value > e) throw new ArgumentOutOfRangeException();
 				_length = e - value; _offset = value;
@@ -124,11 +121,9 @@ namespace Au
 		/// Gets or sets the length of the substring.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">The setter throws if value is less than 0 or new <see cref="EndOffset"/> would be greater than buffer length.</exception>
-		public int Length
-		{
+		public int Length {
 			get => _length;
-			set
-			{
+			set {
 				if(value < 0 || _offset + value > _buffer.Length) throw new ArgumentOutOfRangeException();
 				_length = value;
 			}
@@ -168,11 +163,9 @@ namespace Au
 		/// Gets or sets the end index of this substring within <see cref="Buffer"/>. It's <see cref="Offset"/> + <see cref="Length"/>.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">The setter throws if value is less than <see cref="Offset"/> or greater than buffer length.</exception>
-		public int EndOffset
-		{
+		public int EndOffset {
 			get => _offset + _length;
-			set
-			{
+			set {
 				int len = value - _offset;
 				if(len < 0 || value > _buffer.Length) throw new ArgumentOutOfRangeException();
 				_length = len;
@@ -244,10 +237,8 @@ namespace Au
 		/// </summary>
 		/// <param name="index">Character index in this substring.</param>
 		/// <exception cref="IndexOutOfRangeException">index is not in this substring, even if it is in <see cref="Buffer"/>.</exception>
-		public char this[int index]
-		{
-			get
-			{
+		public char this[int index] {
+			get {
 				if((uint)index >= _length) throw new IndexOutOfRangeException();
 
 				return _buffer[_offset + index]; //NullReferenceException, IndexOutOfRangeException
@@ -581,7 +572,7 @@ namespace Au.Types
 	/// Flags for <see cref="AExtString.Segments(string, string, SegFlags)"/> and some other functions.
 	/// </summary>
 	[Flags]
-	public enum SegFlags :byte
+	public enum SegFlags : byte
 	{
 		/// <summary>
 		/// Don't return empty substrings.
@@ -603,7 +594,7 @@ namespace Au.Types
 	/// Used with foreach. Also used internally by some functions of this library, for example <see cref="AExtString.SegSplit(string, string, SegFlags)"/> and <see cref="AExtString.SegLines"/>.
 	/// Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="AExtString.Segments(string, string, SegFlags)"/> or <see cref="AStringSegment.Split"/> with foreach.
 	/// </remarks>
-	public struct SegParser :IEnumerable<AStringSegment>, IEnumerator<AStringSegment>
+	public struct SegParser : IEnumerable<AStringSegment>, IEnumerator<AStringSegment>
 	{
 		readonly string _separators;
 		readonly string _s;
@@ -671,10 +662,10 @@ namespace Au.Types
 			string s = _s, sep = _separators;
 			switch(sep.Length) {
 			case 1: {
-					var c = sep[0];
-					for(; i < to; i++) if(s[i] == c) goto g1;
-				}
-				break;
+				var c = sep[0];
+				for(; i < to; i++) if(s[i] == c) goto g1;
+			}
+			break;
 			case 22:
 				if(ReferenceEquals(sep, SegSep.Whitespace)) {
 					for(; i < to; i++)
@@ -696,12 +687,12 @@ namespace Au.Types
 				} else goto default;
 				break;
 			default: {
-					for(; i < to; i++) {
-						var c = s[i];
-						for(int j = 0; j < sep.Length; j++) if(c == sep[j]) goto g1; //speed: reverse slower
-					}
+				for(; i < to; i++) {
+					var c = s[i];
+					for(int j = 0; j < sep.Length; j++) if(c == sep[j]) goto g1; //speed: reverse slower
 				}
-				break;
+			}
+			break;
 			}
 			g1:
 			_end = i;

@@ -4790,7 +4790,7 @@
         <member name="T:Au.Types.RXMatch">
             <summary>
             Regular expression match info.
-            Used with <see cref="T:Au.ARegex"/> class functions and String extension methods like <see cref="M:Au.AExtString.RegexMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,Au.Types.RXMore)"/>.
+            Used with <see cref="T:Au.ARegex"/> class functions and String extension methods like <see cref="M:Au.AExtString.RegexMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})"/>.
             </summary>
             <remarks>
             Contains info about a regular expression match found in the subject string: index, length, substring, etc.
@@ -4875,7 +4875,7 @@
         </member>
         <member name="P:Au.Types.RXMatch.Exists">
             <summary>
-            Gets the return value of the <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,Au.Types.RXMore)"/> call.
+            Gets the return value of the <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/> call.
             Can be false only when the function returned false but a mark is available (see <see cref="P:Au.Types.RXMatch.Mark"/>). Otherwise, when the function returns flase, it returns null instead of a RXMatch object.
             When false, all properties except Exists and Mark have undefined values or throw exception.
             </summary>
@@ -4948,7 +4948,7 @@
             </param>
             <remarks>
             Works like <see cref="M:System.Text.RegularExpressions.Match.Result(System.String)"/>.
-            See also: <see cref="M:Au.ARegex.Replace(System.String,System.String,System.Int32,Au.Types.RXMore)"/>.
+            See also: <see cref="M:Au.ARegex.Replace(System.String,System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             </remarks>
         </member>
         <member name="T:Au.Types.RXGroup">
@@ -4998,61 +4998,6 @@
         <member name="M:Au.Types.RXGroup.ToString">
             <summary>
             Returns <see cref="P:Au.Types.RXGroup.Value"/>.
-            </summary>
-        </member>
-        <member name="T:Au.Types.RXMore">
-            <summary>
-            More parameters for <see cref="T:Au.ARegex"/> class functions.
-            </summary>
-            <remarks>
-            The constructor allows you to set initial values of fields. You can modify them later if need. <b>ARegex</b> functions don't modify them.
-            
-            The <see cref="F:Au.Types.RXMore.start"/> and <see cref="F:Au.Types.RXMore.end"/> fields can be used to specify part of subject string. When a function has parameter <i>group</i>, the start/end fields don't depend on it; they are used to specify where to search for whole match.
-            
-            There are implicit conversions to <b>RXMore</b>:
-            - from int - sets <b>start</b>. For example <c>s.Regex(@"\d", more: i)</c> is same as <c>s.Regex(@"\d", more: new RXMore(i))</c>.
-            - from tuple (int, int) - sets <b>start</b> and <b>end</b>. For example <c>s.Regex(@"\d", more: (0, i))</c> is same as <c>s.Regex(@"\d", more: new RXMore(0, i))</c>.
-            - from <see cref="T:Au.Types.RXMatchFlags"/> - sets <see cref="F:Au.Types.RXMore.matchFlags"/>.
-            </remarks>
-        </member>
-        <member name="F:Au.Types.RXMore.start">
-            <summary>
-            The start index (offset) in the subject string.
-            Default 0. Valid values are from 0 to (including) subject length.
-            The subject part before it is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
-            </summary>
-        </member>
-        <member name="F:Au.Types.RXMore.end">
-            <summary>
-            The end index (offset) in the subject string. As if the string ends here.
-            If negative (default -1), is used subject string length. Else valid values are from <see cref="F:Au.Types.RXMore.start"/> to (including) subject length.
-            </summary>
-        </member>
-        <member name="F:Au.Types.RXMore.matchFlags">
-            <summary>
-            Options.
-            The same options also can be set when calling ARegex constructor. Constructor's flags and matchFlags are added, which means that matchFlags cannot unset flags set when calling constructor.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RXMore.#ctor(System.Int32,System.Int32,Au.Types.RXMatchFlags)">
-            <summary>
-            Sets field values.
-            If <i>end</i> is -1 (default), will be used subject string length.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RXMore.op_Implicit(System.Int32)~Au.Types.RXMore">
-            <summary>
-            Sets <see cref="F:Au.Types.RXMore.start"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RXMore.op_Implicit(System.ValueTuple{System.Int32,System.Int32})~Au.Types.RXMore">
-            <summary>
-            Sets <see cref="F:Au.Types.RXMore.start"/> and <see cref="F:Au.Types.RXMore.end"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.RXMore.op_Implicit(Au.Types.RXMatchFlags)~Au.Types.RXMore">
-            <summary>
-            Sets <see cref="F:Au.Types.RXMore.matchFlags"/>.
             </summary>
         </member>
         <member name="T:Au.Types.RXCalloutFunc">
@@ -5191,7 +5136,7 @@
         </member>
         <member name="T:Au.Types.RXMatchFlags">
             <summary>
-            Flags for <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,Au.Types.RXMore)"/> and other <see cref="T:Au.ARegex"/> class functions.
+            Flags for <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/> and other <see cref="T:Au.ARegex"/> class functions.
             Documented in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>.
             </summary>
             <remarks>
@@ -5280,7 +5225,7 @@
         <member name="F:Au.Types.WXType.RegexPcre">
             <summary>
             PCRE regular expression (option r).
-            <b>Match</b> calls <see cref="M:Au.ARegex.IsMatch(System.String,Au.Types.RXMore)"/>.
+            <b>Match</b> calls <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.WXType.RegexNet">
@@ -5904,6 +5849,7 @@
             If null, prints "null".
             
             This overload is used for all types except: strings, arrays, generic collections. They have own overloads; to use this function need to cast to object.
+            Also not used for ref struct types, because they cannot be boxed; use <c>Print(x.ToString());</c>.
             </remarks>
         </member>
         <member name="M:Au.AStatic.LibPrintObjectToString(System.Object)">
@@ -15342,39 +15288,41 @@
             Does not support \a \b \f \v \' \xXXXX \UXXXXXXXX.
             </remarks>
         </member>
-        <member name="M:Au.AExtString.Regex(System.String,System.String,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.Regex(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.IsMatch(System.String,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string. If null, returns false.</param>
             <param name="rx">Regular expression.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexMatch(System.String,System.String,Au.Types.RXMatch@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets match info as <see cref="T:Au.Types.RXMatch"/>.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string. If null, returns false.</param>
             <param name="rx">Regular expression.</param>
             <param name="result">Receives match info.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexMatch(System.String,System.String,System.Int32,System.String@,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexMatch(System.String,System.String,System.Int32,System.String@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets whole match or some group, as string.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.MatchS(System.String,System.String@,System.Int32,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.MatchS(System.String,System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string. If null, returns false.</param>
@@ -15382,16 +15330,16 @@
             <param name="group">Group number (1-based index) of result. If 0 (default) - whole match.</param>
             <param name="result">Receives the match value.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexMatch(System.String,System.String,System.Int32,Au.Types.RXGroup@,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexMatch(System.String,System.String,System.Int32,Au.Types.RXGroup@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Gets whole match or some group, as index and length.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.MatchG(System.String,Au.Types.RXGroup@,System.Int32,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.MatchG(System.String,Au.Types.RXGroup@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string. If null, returns false.</param>
@@ -15399,61 +15347,63 @@
             <param name="group">Group number (1-based index) of result. If 0 (default) - whole match.</param>
             <param name="result">Receives match info.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexFindAll(System.String,System.String,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexFindAll(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXMatch"/>&gt; object that can be used with foreach.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.FindAll(System.String,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.FindAll(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string.</param>
             <param name="rx">Regular expression.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexFindAll(System.String,System.String,Au.Types.RXMatch[]@,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexFindAll(System.String,System.String,Au.Types.RXMatch[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of <see cref="T:Au.Types.RXMatch"/>.
             Returns true if found 1 or more matches.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.FindAll(System.String,Au.Types.RXMatch[]@,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.FindAll(System.String,Au.Types.RXMatch[]@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string.</param>
             <param name="rx">Regular expression.</param>
             <param name="result">Receives all found matches.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexFindAll(System.String,System.String,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexFindAll(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXGroup"/>&gt; object that can be used with foreach.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.FindAllS(System.String,System.Int32,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.FindAllS(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string.</param>
             <param name="rx">Regular expression.</param>
             <param name="group">Group number (1-based index) of results. If 0 (default) - whole match.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexFindAll(System.String,System.String,System.Int32,System.String[]@,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexFindAll(System.String,System.String,System.Int32,System.String[]@,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of strings.
             Returns true if found 1 or more matches.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.FindAllS(System.String,System.String[]@,System.Int32,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.FindAllS(System.String,System.String[]@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string.</param>
@@ -15461,16 +15411,16 @@
             <param name="group">Group number (1-based index) of results. If 0 (default) - whole match.</param>
             <param name="result">Receives all found matches.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexReplace(System.String,System.String,System.String,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexReplace(System.String,System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
             Returns the result string.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Replace(System.String,System.String,System.Int32,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Replace(System.String,System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string.</param>
@@ -15478,15 +15428,16 @@
             <param name="repl">Replacement pattern.</param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexReplace(System.String,System.String,System.String,System.String@,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexReplace(System.String,System.String,System.String,System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
             Returns the number of replacements made.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Replace(System.String,System.String,System.String@,System.Int32,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Replace(System.String,System.String,System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string.</param>
@@ -15495,15 +15446,16 @@
             <param name="result">The result string.</param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
             Returns the result string.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string.</param>
@@ -15511,15 +15463,16 @@
             <param name="replFunc">Callback function that receives found matches and returns replacements.</param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexReplace(System.String,System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
             Returns the number of replacements made.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string.</param>
@@ -15528,21 +15481,23 @@
             <param name="result">The result string.</param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
-        <member name="M:Au.AExtString.RegexSplit(System.String,System.String,System.Int32,Au.Types.RXFlags,Au.Types.RXMore)">
+        <member name="M:Au.AExtString.RegexSplit(System.String,System.String,System.Int32,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns array of substrings delimited by PCRE regular expression <i>rx</i> matches.
-            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Split(System.String,System.Int32,Au.Types.RXMore)"/>.
+            Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.Split(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             Examples in <see cref="T:Au.ARegex"/> class help.
             </summary>
             <param name="t">This string.</param>
             <param name="rx">Regular expression.</param>
             <param name="maxCount">The maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
             <param name="flags"></param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
             <exception cref="T:Au.Types.AuException">Failed (unlikely).</exception>
         </member>
@@ -15646,7 +15601,7 @@
             
             This library uses an unmanaged code dll AuCpp.dll that contains PCRE code. This class is a managed wrapper for it. The main PCRE API functions used by this class are <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2_compile and pcre2_match</see>. The <b>ARegex</b> constructor calls <b>pcre2_compile</b> and stores the compiled code in the variable. Other <b>ARegex</b> functions call <b>pcre2_match</b>. Compiling to native code (JIT) is not supported.
             
-            A <b>ARegex</b> variable can be used by multiple threads simultaneously.
+            An <b>ARegex</b> variable can be used by multiple threads simultaneously.
             
             Also there are several <b>String</b> extension methods that use this class. The string variable is the subject string. These methods create and use cached <b>ARegex</b> instances for speed. The <b>ARegex</b> constructor does not use caching.
             </remarks>
@@ -15755,7 +15710,7 @@
             <value>Callback delegate (eg lambda) or null.</value>
             <remarks>
             Callouts can be used to: 1. Track the matching progress. 2. Get all instances of a group that can match multiple times. 3. Evaluate and reject some matches or match parts. 4. Etc.
-            The callback function is called by <see cref="M:Au.ARegex.IsMatch(System.String,Au.Types.RXMore)"/>, <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,Au.Types.RXMore)"/>, <see cref="M:Au.ARegex.FindAll(System.String,Au.Types.RXMore)"/>, <see cref="M:Au.ARegex.Replace(System.String,System.String,System.Int32,Au.Types.RXMore)"/>, <see cref="M:Au.ARegex.Split(System.String,System.Int32,Au.Types.RXMore)"/> and similar functions, when they reach callout points in regular expression. To insert callout points use (?C), (?C1), (?C2), (?C'name') etc or pass flag AUTO_CALLOUT to the constructor.
+            The callback function is called by <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.ARegex.FindAll(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.ARegex.Replace(System.String,System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.ARegex.Split(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/> and similar functions, when they reach callout points in regular expression. To insert callout points use (?C), (?C1), (?C2), (?C'name') etc or pass flag AUTO_CALLOUT to the constructor.
             More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
             See also: <see href="http://www.rexegg.com/pcre-callouts.html"/>
             </remarks>
@@ -15810,7 +15765,7 @@
             <seealso cref="M:Au.Types.RXMatch.GroupNumberFromName(System.String)"/>
             <seealso cref="M:Au.Types.RXMatch.GroupNumberFromName(System.String,System.Boolean@)"/>
         </member>
-        <member name="M:Au.ARegex.IsMatch(System.String,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Returns true if string <i>s</i> matches this regular expression.
             </summary>
@@ -15818,13 +15773,23 @@
             Subject string.
             If null, always returns false, even if the regular expression matches empty string.
             </param>
-            <param name="more"></param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+            <param name="range">
+            The start and end indexes (offsets) in the subject string. If null (default), uses whole string.
+            Examples: <c>i..j</c> (from i to j), <c>i..</c> (from i to the end of the subject string), <c>..j</c> (from 0 to j).
+            The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
+            The subject part after the end index is always ignored.
+            </param>
+            <param name="matchFlags">Options.
+            The same options also can be set in <b>ARegex</b> constructor's <i>flags</i>. Constructor's flags and <i>matchFlags</i> are added, which means that <i>matchFlags</i> cannot unset flags set by constructor.
+            </param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
             If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
             
             This function is similar to <see cref="M:System.Text.RegularExpressions.Regex.IsMatch(System.String)"/>.
+            
+            //TODO: Let other func doc link here. Review examples.
             </remarks>
             <example>
             <code><![CDATA[
@@ -15834,7 +15799,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Returns true if string <i>s</i> matches this regular expression.
             Gets match info as <see cref="T:Au.Types.RXMatch"/>.
@@ -15844,8 +15809,9 @@
             If null, always returns false, even if the regular expression matches empty string.
             </param>
             <param name="result">Receives match info. Read more in Remarks.</param>
-            <param name="more"></param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
             If full match, returns true, and <i>result</i> contains the match and all groups that exist in the regular expressions.
@@ -15862,7 +15828,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.MatchG(System.String,Au.Types.RXGroup@,System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.MatchG(System.String,Au.Types.RXGroup@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Returns true if string <i>s</i> matches this regular expression.
             Gets whole match or some group, as <see cref="T:Au.Types.RXGroup"/> (index, length, value).
@@ -15876,11 +15842,12 @@
             Group number (1-based index) of result. If 0 (default) - whole match.
             See also <see cref="M:Au.ARegex.GroupNumberFromName(System.String)"/>.
             </param>
-            <param name="more"></param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
-            This function is a simplified version of <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,Au.Types.RXMore)"/>.
+            This function is a simplified version of <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             If full match, returns true, and <i>result</i> contains the match or the specifed group.
             If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
             If no match, returns false, and <i>result</i> is empty.
@@ -15893,7 +15860,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.MatchS(System.String,System.String@,System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.MatchS(System.String,System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Returns true if string <i>s</i> matches this regular expression.
             Gets whole match or some group, as string.
@@ -15907,11 +15874,12 @@
             Group number (1-based index) of result. If 0 (default) - whole match.
             See also <see cref="M:Au.ARegex.GroupNumberFromName(System.String)"/>.
             </param>
-            <param name="more"></param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
-            This function is a simplified version of <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,Au.Types.RXMore)"/> and <see cref="M:Au.ARegex.MatchG(System.String,Au.Types.RXGroup@,System.Int32,Au.Types.RXMore)"/>.
+            This function is a simplified version of <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/> and <see cref="M:Au.ARegex.MatchG(System.String,Au.Types.RXGroup@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
             If full match, returns true, and <i>result</i> contains the value of the match or of the specifed group.
             If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag. Then cannot get groups, therefore <i>group</i> should be 0.
             If no match, returns false, and <i>result</i> is null.
@@ -15924,15 +15892,16 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.FindAll(System.String,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.FindAll(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds all match instances of the regular expression.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXMatch"/>&gt; object that can be used with foreach.
             </summary>
             <param name="s">Subject string. Cannot be null.</param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
@@ -15946,16 +15915,17 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.FindAll(System.String,Au.Types.RXMatch[]@,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.FindAll(System.String,Au.Types.RXMatch[]@,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds all match instances of the regular expression. Gets array of <see cref="T:Au.Types.RXMatch"/>.
             Returns true if found 1 or more matches.
             </summary>
             <param name="s">Subject string. Cannot be null.</param>
             <param name="result">Receives all found matches.</param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
@@ -15970,7 +15940,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.FindAllG(System.String,System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.FindAllG(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds all match instances of the regular expression.
             Returns a lazy IEnumerable&lt;<see cref="T:Au.Types.RXGroup"/>&gt; object that can be used with foreach.
@@ -15980,14 +15950,12 @@
             Group number (1-based index) of results. If 0 (default) - whole match.
             See also <see cref="M:Au.ARegex.GroupNumberFromName(System.String)"/>.
             </param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-            <remarks>
-            This function is a simplified version of <see cref="M:Au.ARegex.FindAll(System.String,Au.Types.RXMore)"/>. Also it is similar to <see cref="M:System.Text.RegularExpressions.Regex.Matches(System.String)"/>.
-            </remarks>
             <example>
             <code><![CDATA[
             var s = "one two three";
@@ -15996,7 +15964,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.FindAllG(System.String,Au.Types.RXGroup[]@,System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.FindAllG(System.String,Au.Types.RXGroup[]@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds all match instances of the regular expression. Gets array of <see cref="T:Au.Types.RXGroup"/> (index, length, value).
             Returns true if found 1 or more matches.
@@ -16007,14 +15975,12 @@
             Group number (1-based index) of results. If 0 (default) - whole match.
             See also <see cref="M:Au.ARegex.GroupNumberFromName(System.String)"/>.
             </param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-            <remarks>
-            This function is a simplified version of <see cref="M:Au.ARegex.FindAll(System.String,Au.Types.RXMatch[]@,Au.Types.RXMore)"/>. Also it is similar to <see cref="M:System.Text.RegularExpressions.Regex.Matches(System.String)"/>.
-            </remarks>
             <example>
             <code><![CDATA[
             var s = "one two three";
@@ -16024,7 +15990,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.FindAllS(System.String,System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.FindAllS(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds all match instances of the regular expression.
             Returns a lazy IEnumerable&lt;string&gt; object that can be used with foreach.
@@ -16034,14 +16000,12 @@
             Group number (1-based index) of results. If 0 (default) - whole match.
             See also <see cref="M:Au.ARegex.GroupNumberFromName(System.String)"/>.
             </param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-            <remarks>
-            This function is a simplified version of <see cref="M:Au.ARegex.FindAll(System.String,Au.Types.RXMore)"/> and <see cref="M:Au.ARegex.FindAllG(System.String,System.Int32,Au.Types.RXMore)"/>. Also it is similar to <see cref="M:System.Text.RegularExpressions.Regex.Matches(System.String)"/>.
-            </remarks>
             <example>
             <code><![CDATA[
             var s = "one two three";
@@ -16050,7 +16014,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.FindAllS(System.String,System.String[]@,System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.FindAllS(System.String,System.String[]@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds all match instances of the regular expression. Gets array of strings.
             Returns true if found 1 or more matches.
@@ -16061,14 +16025,12 @@
             Group number (1-based index) of results. If 0 (default) - whole match.
             See also <see cref="M:Au.ARegex.GroupNumberFromName(System.String)"/>.
             </param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-            <remarks>
-            This function is a simplified version of <see cref="M:Au.ARegex.FindAll(System.String,Au.Types.RXMatch[]@,Au.Types.RXMore)"/> and <see cref="M:Au.ARegex.FindAllG(System.String,Au.Types.RXGroup[]@,System.Int32,Au.Types.RXMore)"/>. Also it is similar to <see cref="M:System.Text.RegularExpressions.Regex.Matches(System.String)"/>.
-            </remarks>
             <example>
             <code><![CDATA[
             var s = "one two three";
@@ -16078,7 +16040,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.Replace(System.String,System.String,System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.Replace(System.String,System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds and replaces all match instances of the regular expression.
             Returns the result string.
@@ -16090,9 +16052,10 @@
             Supports .NET regular expression substitution syntax. See <see cref="M:System.Text.RegularExpressions.Regex.Replace(System.String,System.String,System.Int32)"/>. Also: replaces $* with the name of the last encountered mark; replaces ${+func} with the return value of a function registered with <see cref="M:Au.ARegex.AddReplaceFunc(System.String,System.Func{Au.Types.RXMatch,System.String})"/>.
             </param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
@@ -16107,7 +16070,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.Replace(System.String,System.String,System.String@,System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.Replace(System.String,System.String,System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds and replaces all match instances of the regular expression.
             Returns the number of replacements made. Returns the result string through an out parameter.
@@ -16120,9 +16083,10 @@
             </param>
             <param name="result">The result string. Can be <i>s</i>.</param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
@@ -16137,7 +16101,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds and replaces all match instances of the regular expression. Uses a callback function.
             Returns the result string.
@@ -16148,9 +16112,10 @@
             In the callback function you can use <see cref="M:Au.Types.RXMatch.ExpandReplacement(System.String)"/>.
             </param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
@@ -16165,7 +16130,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.Replace(System.String,System.Func{Au.Types.RXMatch,System.String},System.String@,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Finds and replaces all match instances of the regular expression. Uses a callback function.
             Returns the number of replacements made. Returns the result string through an out parameter.
@@ -16177,9 +16142,10 @@
             </param>
             <param name="result">The result string. Can be <i>s</i>.</param>
             <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
@@ -16215,15 +16181,16 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.Split(System.String,System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.Split(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Returns array of substrings delimited by regular expression matches.
             </summary>
             <param name="s">Subject string. Cannot be null.</param>
             <param name="maxCount">The maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>
@@ -16240,15 +16207,16 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.ARegex.SplitG(System.String,System.Int32,Au.Types.RXMore)">
+        <member name="M:Au.ARegex.SplitG(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)">
             <summary>
             Returns <see cref="T:Au.Types.RXGroup"/> array of substrings delimited by regular expression matches.
             </summary>
             <param name="s">Subject string. Cannot be null.</param>
             <param name="maxCount">The maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
-            <param name="more"></param>
+            <param name="range">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
+            <param name="matchFlags">See <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <exception cref="T:System.ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
             <exception cref="T:Au.Types.AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
             <remarks>

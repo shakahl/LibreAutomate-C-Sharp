@@ -68,18 +68,16 @@ class PanelOutput : AuUserControlBase
 					}
 					if(iLiteral > 0) b.Append(s, 0, iLiteral).AppendLine(); else b.Append(s, 0, i);
 					var rx = s_rx2; if(rx == null) s_rx2 = rx = new ARegex(@" in (.+?):line (?=\d+$)");
-					var rxm = new RXMore();
 					bool replaced = false, isMain = false;
 					int stackEnd = s.Length/*, stackEnd2 = 0*/;
 					foreach(var k in s.Segments(i, s.Length - i, SegSep.Line)) {
 						//AOutput.QM2.Write("'"+k+"'");
-						rxm.start = k.Offset + 6; rxm.end = k.EndOffset;
 						if(k.Starts("   at ")) {
 							if(isMain) {
 								//if(stackEnd2 == 0 && k.Starts("   at Script.Main(String[] args) in ")) stackEnd2 = k.Offset; //rejected. In some cases may cut something important.
 								continue;
 							}
-							if(!rx.MatchG(s, out var g, 1, rxm)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
+							if(!rx.MatchG(s, out var g, 1, (k.Offset + 6)..k.EndOffset)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
 							var f = Program.Model.FindByFilePath(g.Value); if(f == null) continue;
 							int i1 = g.EndIndex + 6, len1 = k.EndOffset - i1;
 							b.Append("   at ")

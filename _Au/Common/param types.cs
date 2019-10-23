@@ -18,6 +18,99 @@ using static Au.AStatic;
 
 namespace Au.Types
 {
+#if false //rejected. More convenient to use, but makes code less clear. With Range everything is clear: null means "whole string"; for just start index use 'i..'; many users know Range, and would have to learn about ARange.
+	/// <summary>
+	/// Represents a range that has start and end indexes.
+	/// </summary>
+	/// <remarks>
+	/// Similar to <see cref="Range"/>. Main differences:
+	/// 1. The default value is whole range (like <see cref="Range.All"/>), not empty range.
+	/// 2. Has implicit conversions from int and <see cref="Index"/>. It sets the start.
+	/// 
+	/// Used for parameters of functions that allow to specify a range (part) of a string, array or other collection. Callers can specify a range or just start index. Or callers can omit the optional parameter to use whole collection. The called function retrieves real start/end indexes with <see cref="GetRealRange"/>.
+	/// </remarks>
+	public struct ARange : IEquatable<ARange>
+	{
+		int _start;
+		int _endPlus1;
+
+		/// <summary>
+		/// Initializes a new <see cref="ARange"/> instance with the specified starting and ending indexes.
+		/// </summary>
+		/// <param name="start">The start index of the range.</param>
+		/// <param name="end">The end index of the range. The default value -1 means that the end index will be equal to the length of the collection (string, array, etc) with which will be used this variable.</param>
+		/// <exception cref="ArgumentOutOfRangeException"><i>start</i> is less than 0 or <i>end</i> is less than -1.</exception>
+		public ARange(int start, int end = -1)
+		{
+			if(start < 0 || end < -1) throw new ArgumentOutOfRangeException();
+			_start = start;
+			_endPlus1 = end + 1;
+		}
+
+		/// <summary>
+		/// Initializes a new <see cref="ARange"/> instance with the specified starting and ending indexes specified using <b>Index</b>.
+		/// </summary>
+		public ARange(Index start, Index end)
+		{
+			_start = start.IsFromEnd ? ~start.Value : start.Value;
+			_endPlus1 = (end.IsFromEnd ? ~end.Value : end.Value) + 1;
+		}
+
+		//rejected. Use GetRealRange instead. Now caller may not know how to interpret negative values.
+		//public int Start {
+		//	get => _start;
+		//	//set => _start = value; //not useful. Let it be immutable, like Range.
+		//}
+
+		//public int End {
+		//	get => _endPlus1 - 1;
+		//	//set => _endPlus1 = value + 1;
+		//}
+
+		/// <summary>
+		/// Gets real start and end offsets in a collection (string, array, etc) of specified length.
+		/// </summary>
+		/// <param name="length">Length of collection with which will be used this range.</param>
+		/// <exception cref="ArgumentOutOfRangeException">The result range is invalid: start is less than 0 or greater than <i>length</i>, or end is less than start or greater than length.</exception>
+		public (int start, int end) GetRealRange(int length)
+		{
+			int start = _start >= 0 ? _start : length + _start + 1;
+			int end = _endPlus1 > 0 ? _endPlus1 - 1 : length + _endPlus1;
+			if((uint)end > (uint)length || (uint)start > (uint)end) throw new ArgumentOutOfRangeException();
+			return (start, end);
+		}
+
+		///
+		public static implicit operator ARange(int start) => new ARange(start);
+
+		///
+		public static implicit operator ARange(Range r) => new ARange(r.Start, r.End);
+
+		///
+		public static implicit operator ARange(Index start) => new ARange(start, Index.End);
+
+		///
+		public override string ToString()
+		{
+			string op1 = _start >= 0 ? null : "^";
+			string num1 = _start == 0 ? null : (_start > 0 ? _start : ~_start).ToString();
+			string op2 = _endPlus1 >= 0 ? null : "^";
+			int end = _endPlus1 - 1;
+			string num2 = _endPlus1 == 0 ? null : (_endPlus1 > 0 ? end : ~end).ToString();
+			return op1 + num1 + ".." + op2 + num2;
+		}
+
+		///
+		public override bool Equals(object value) => value is ARange r && Equals(r);
+
+		///
+		public bool Equals(ARange other) => other._start == _start && other._endPlus1 == _endPlus1;
+
+		///
+		public override int GetHashCode() => HashCode.Combine(_start.GetHashCode(), _endPlus1.GetHashCode());
+	}
+#endif
+
 	/// <summary>
 	/// Contains x or y coordinate. Used for parameters of functions like AMouse.Move, AWnd.Move.
 	/// Allows to easily specify coordinates of these types: normal, reverse (from right or bottom of a rectangle), fractional (fraction of width or height of a rectangle), null.

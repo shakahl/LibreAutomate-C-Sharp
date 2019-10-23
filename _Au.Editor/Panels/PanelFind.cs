@@ -489,7 +489,7 @@ class PanelFind : AuUserControlBase
 		bool retryFromStart = false, retryRx = false;
 		g1:
 		if(f.rx != null) {
-			if(f.rx.Match(text, out rm, new RXMore(from))) {
+			if(f.rx.Match(text, out rm, from..)) {
 				i = rm.Index;
 				len = rm.Length;
 				if(i == from && len == 0 && !(replace | retryRx | retryFromStart)) {

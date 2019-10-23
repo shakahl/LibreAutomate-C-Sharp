@@ -241,7 +241,7 @@ namespace Au.Types
 		/// </param>
 		/// <remarks>
 		/// Works like <see cref="Match.Result"/>.
-		/// See also: <see cref="ARegex.Replace(string, string, int, RXMore)"/>.
+		/// See also: <see cref="ARegex.Replace(string, string, int, Range?, RXMatchFlags)"/>.
 		/// </remarks>
 		public string ExpandReplacement(string repl)
 		{
@@ -333,67 +333,6 @@ namespace Au.Types
 		/// </summary>
 		public override string ToString() => $"[{Index}, {EndIndex}) = '{Value}'";
 #endif
-	}
-
-	/// <summary>
-	/// More parameters for <see cref="ARegex"/> class functions.
-	/// </summary>
-	/// <remarks>
-	/// The constructor allows you to set initial values of fields. You can modify them later if need. <b>ARegex</b> functions don't modify them.
-	/// 
-	/// The <see cref="start"/> and <see cref="end"/> fields can be used to specify part of subject string. When a function has parameter <i>group</i>, the start/end fields don't depend on it; they are used to specify where to search for whole match.
-	/// 
-	/// There are implicit conversions to <b>RXMore</b>:
-	/// - from int - sets <b>start</b>. For example <c>s.Regex(@"\d", more: i)</c> is same as <c>s.Regex(@"\d", more: new RXMore(i))</c>.
-	/// - from tuple (int, int) - sets <b>start</b> and <b>end</b>. For example <c>s.Regex(@"\d", more: (0, i))</c> is same as <c>s.Regex(@"\d", more: new RXMore(0, i))</c>.
-	/// - from <see cref="RXMatchFlags"/> - sets <see cref="matchFlags"/>.
-	/// </remarks>
-	public class RXMore
-	{
-		/// <summary>
-		/// The start index (offset) in the subject string.
-		/// Default 0. Valid values are from 0 to (including) subject length.
-		/// The subject part before it is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
-		/// </summary>
-		public int start;
-
-		/// <summary>
-		/// The end index (offset) in the subject string. As if the string ends here.
-		/// If negative (default -1), is used subject string length. Else valid values are from <see cref="start"/> to (including) subject length.
-		/// </summary>
-		public int end;
-
-		/// <summary>
-		/// Options.
-		/// The same options also can be set when calling ARegex constructor. Constructor's flags and matchFlags are added, which means that matchFlags cannot unset flags set when calling constructor.
-		/// </summary>
-		public RXMatchFlags matchFlags;
-
-		/// <summary>
-		/// Sets field values.
-		/// If <i>end</i> is -1 (default), will be used subject string length.
-		/// </summary>
-		public RXMore(int start = 0, int end = -1, RXMatchFlags matchFlags = 0)
-		{
-			this.start = start; this.end = end; this.matchFlags = matchFlags;
-		}
-
-		/// <summary>
-		/// Sets <see cref="start"/>.
-		/// </summary>
-		public static implicit operator RXMore(int start) => new RXMore(start);
-
-		/// <summary>
-		/// Sets <see cref="start"/> and <see cref="end"/>.
-		/// </summary>
-		public static implicit operator RXMore((int start, int end) t) => new RXMore(t.start, t.end);
-
-		//FUTURE: try ranges, like [from..], [from..to], [..to].
-
-		/// <summary>
-		/// Sets <see cref="matchFlags"/>.
-		/// </summary>
-		public static implicit operator RXMore(RXMatchFlags matchFlags) => new RXMore(matchFlags: matchFlags);
 	}
 
 	#region callout

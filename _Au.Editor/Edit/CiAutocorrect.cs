@@ -559,7 +559,7 @@ class CiAutocorrect
 			while(to < code.Length && _IsSpace(code[to])) to++;
 			int replaceFrom = from, replaceTo = to;
 
-			if(canExitBlock && (canExitBlock = code.RegexMatch(@"(?m)^[\t \r\n]*\}", 0, out RXGroup g, RXFlags.ANCHORED, more: from))) replaceTo = g.EndIndex;
+			if(canExitBlock && (canExitBlock = code.RegexMatch(@"(?m)^[\t \r\n]*\}", 0, out RXGroup g, RXFlags.ANCHORED, from..))) replaceTo = g.EndIndex;
 
 			if(!canExitBlock) {
 				//if we are not inside node span, find the first ancestor node where we are inside
@@ -720,7 +720,7 @@ class CiAutocorrect
 				break;
 			case SyntaxKind.SingleLineDocumentationCommentTrivia:
 				suffix = "/// ";
-				newlineLast = cd.code.Regex(@"[ \t]*///", RXFlags.ANCHORED, new RXMore(pos));
+				newlineLast = cd.code.Regex(@"[ \t]*///", RXFlags.ANCHORED, pos..);
 				break;
 			default: return false;
 			}
@@ -759,7 +759,7 @@ class CiAutocorrect
 			suffix = "\"";
 			//indent more, unless line starts with "
 			int i = cd.sciDoc.Z.LineStartFromPos(true, pos);
-			if(!cd.code.Regex(@"[ \t]+\$?""", RXFlags.ANCHORED, new RXMore(i))) indent++;
+			if(!cd.code.Regex(@"[ \t]+\$?""", RXFlags.ANCHORED, i..)) indent++;
 		}
 
 		var doc = cd.sciDoc;
@@ -790,7 +790,7 @@ class CiAutocorrect
 			if(i > 0 && code[i - 1] == '\n') i--;
 			if(i > 0 && code[i - 1] == '\r') i--;
 		}
-		if(!code.RegexMatch(@"\R\t+", 0, out RXGroup g, RXFlags.ANCHORED, new RXMore(i))) return false;
+		if(!code.RegexMatch(@"\R\t+", 0, out RXGroup g, RXFlags.ANCHORED, i..)) return false;
 		z.DeleteRange(true, g.Index, g.Length, true);
 		return true;
 	}

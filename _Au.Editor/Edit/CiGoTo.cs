@@ -65,10 +65,9 @@ class CiGoTo
 			}
 			_canGoTo = _sourceLocations.Count > 0;
 		} else if(!onlyIfInSource) {
-			var assembly = sym.ContainingAssembly?.Name; if(assembly == null) return;
-			if(assembly == "Au" || assembly.Starts("Au.")) return;
-			if(s_sources.All(o => o.data != null) && _FindSourceSite(assembly, download: false) < 0) return;
-			_assembly = assembly;
+			_assembly = sym.ContainingAssembly?.Name; if(_assembly == null) return;
+			if(_assembly == "Au" || _assembly.Starts("Au.")) return;
+			if(s_sources.All(o => o.data != null) && _FindSourceSite(download: false) < 0) return;
 
 			//If wrong symbol, the site shows an error page.
 			//Look how SourceBrowser (github) gets correct symbol and its hash. We don't use everything from there.
@@ -80,15 +79,19 @@ class CiGoTo
 			if(!sym.IsDefinition) sym = sym.OriginalDefinition; //generic
 			_docId = sym.GetDocumentationCommentId().Replace("#ctor", "ctor");
 
-			//get type name to resolve forwarded type later
+			//get type name to resolve forwarded type later. For generic must be like "Namespace.Type`1".
 			for(var ct = sym.ContainingType; ct != null; ct = ct.ContainingType) sym = ct;
-			if(sym != null) _typeName = sym.QualifiedName();
+			if(sym != null) {
+				_typeName = sym.QualifiedName();
+				if(sym is INamedTypeSymbol nts && nts.IsGenericType) _typeName += "`" + nts.TypeParameters.Length.ToString();
+			}
+			//if(sym != null) _typeName = sym.GetDocumentationCommentId()[2..]; //ok too. ToXString etc with suffix "<T>".
 
 			_canGoTo = true;
 		}
 	}
 
-	static int _FindSourceSite(string assembly, bool download)
+	int _FindSourceSite(bool download)
 	{
 		int R = -1;
 		ARegex rx = null;
@@ -101,7 +104,7 @@ class CiGoTo
 				catch(WebException) { }
 			}
 			if(R >= 0) continue;
-			rx ??= new ARegex($@"(?m)^{assembly};\d");
+			rx ??= new ARegex($@"(?m)^{_assembly};\d");
 			if(rx.IsMatch(s_sources[i].data)) {
 				R = i;
 				if(!download) break;
@@ -181,36 +184,35 @@ class CiGoTo
 			static void _GoTo(_SourceLocation v) => Program.Model.OpenAndGoTo(v.file, v.line, v.column);
 		} else {
 			Task.Run(() => {
-				var assembly = _assembly;
-				if(_typeName != null) _GetAssemblyNameOfForwardedType(ref assembly);
+				if(_typeName != null) { _GetAssemblyNameOfForwardedType(); _typeName = null; }
 
-				int i = _FindSourceSite(assembly, download: true);
+				int i = _FindSourceSite(download: true);
 				if(i < 0) return;
 
 				Au.Util.AHash.MD5 md5 = default;
 				md5.Add(_docId);
 				var hash = md5.Hash.ToString().Remove(16);
 
-				AExec.TryRun(s_sources[i].site + $"/{assembly}/a.html#{hash}");
+				AExec.TryRun(s_sources[i].site + $"/{_assembly}/a.html#{hash}");
 			});
 		}
 	}
 
 	/// <summary>
-	/// If _typeName or its ancestor type is forwarded to another assembly, replaces the <i>assembly</i> parameter with the name of that assembly.
+	/// If _typeName or its ancestor type is forwarded to another assembly, replaces _assembly with the name of that assembly.
 	/// For example initially we get that String is in System.Runtime. But actually it is in System.Private.CoreLib, and its name must be passed to https://source.dot.net.
 	/// Speed: usually < 10 ms.
 	/// </summary>
-	void _GetAssemblyNameOfForwardedType(ref string assembly)
+	void _GetAssemblyNameOfForwardedType()
 	{
-		var path = AFolders.NetRuntimeBS + assembly + ".dll";
-		if(!(AFile.ExistsAsFile(path) || AFile.ExistsAsFile(path = AFolders.NetRuntimeDesktopBS + assembly + ".dll"))) return;
+		var path = AFolders.NetRuntimeBS + _assembly + ".dll";
+		if(!(AFile.ExistsAsFile(path) || AFile.ExistsAsFile(path = AFolders.NetRuntimeDesktopBS + _assembly + ".dll"))) return;
 
 		var alc = new System.Runtime.Loader.AssemblyLoadContext(null, true);
 		try {
 			var asm = alc.LoadFromAssemblyPath(path);
 			var ft = asm.GetForwardedTypes()?.FirstOrDefault(ty => ty.FullName == _typeName);
-			if(ft != null) assembly = ft.Assembly.GetName().Name;
+			if(ft != null) _assembly = ft.Assembly.GetName().Name;
 		}
 		catch(Exception ex) { ADebug.Print(ex); }
 		finally { alc.Unload(); }

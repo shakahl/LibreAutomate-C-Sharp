@@ -40,7 +40,7 @@ namespace Au
 	/// 
 	/// This library uses an unmanaged code dll AuCpp.dll that contains PCRE code. This class is a managed wrapper for it. The main PCRE API functions used by this class are <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2_compile and pcre2_match</see>. The <b>ARegex</b> constructor calls <b>pcre2_compile</b> and stores the compiled code in the variable. Other <b>ARegex</b> functions call <b>pcre2_match</b>. Compiling to native code (JIT) is not supported.
 	/// 
-	/// A <b>ARegex</b> variable can be used by multiple threads simultaneously.
+	/// An <b>ARegex</b> variable can be used by multiple threads simultaneously.
 	/// 
 	/// Also there are several <b>String</b> extension methods that use this class. The string variable is the subject string. These methods create and use cached <b>ARegex</b> instances for speed. The <b>ARegex</b> constructor does not use caching.
 	/// </remarks>
@@ -239,7 +239,7 @@ namespace Au
 		public int GroupNumberFromName(string groupName)
 		{
 			if(groupName == null) throw new ArgumentNullException();
-			fixed (char* p = groupName) {
+			fixed(char* p = groupName) {
 				int R = Cpp.pcre2_substring_nametable_scan(_CodeHR, p, null, null);
 				if(R <= 0) {
 					if(R == -50) throw new ArgumentException("Multiple groups have name " + groupName); //-50 PCRE2_ERROR_NOUNIQUESUBSTRING
@@ -256,13 +256,23 @@ namespace Au
 		/// Subject string.
 		/// If null, always returns false, even if the regular expression matches empty string.
 		/// </param>
-		/// <param name="more"></param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+		/// <param name="range">
+		/// The start and end indexes (offsets) in the subject string. If null (default), uses whole string.
+		/// Examples: <c>i..j</c> (from i to j), <c>i..</c> (from i to the end of the subject string), <c>..j</c> (from 0 to j).
+		/// The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
+		/// The subject part after the end index is always ignored.
+		/// </param>
+		/// <param name="matchFlags">Options.
+		/// The same options also can be set in <b>ARegex</b> constructor's <i>flags</i>. Constructor's flags and <i>matchFlags</i> are added, which means that <i>matchFlags</i> cannot unset flags set by constructor.
+		/// </param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
 		/// 
 		/// This function is similar to <see cref="Regex.IsMatch(string)"/>.
+		/// 
+		/// //TODO: Let other func doc link here. Review examples.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -271,10 +281,10 @@ namespace Au
 		/// Print(x.IsMatch(s));
 		/// ]]></code>
 		/// </example>
-		public bool IsMatch(string s, RXMore more = null)
+		public bool IsMatch(string s, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			if(!_GetStartEnd(s, more, out int start, out int end)) return false;
-			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(more), _pcreCallout, null, out BSTR errStr);
+			if(!_GetStartEnd(s, range, out int start, out int end)) return false;
+			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(matchFlags), _pcreCallout, null, out BSTR errStr);
 			//Print(rc);
 			//info: 0 is partial match, -1 is no match, <-1 is error
 			if(rc < -1) throw new AuException(errStr.ToStringAndDispose(noCache: true));
@@ -290,8 +300,9 @@ namespace Au
 		/// If null, always returns false, even if the regular expression matches empty string.
 		/// </param>
 		/// <param name="result">Receives match info. Read more in Remarks.</param>
-		/// <param name="more"></param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// If full match, returns true, and <i>result</i> contains the match and all groups that exist in the regular expressions.
@@ -307,10 +318,10 @@ namespace Au
 		/// if(x.Match(s, out var m)) Print(m.Value, m[1].Value, m[2].Value);
 		/// ]]></code>
 		/// </example>
-		public bool Match(string s, out RXMatch result, RXMore more = null)
+		public bool Match(string s, out RXMatch result, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
 			result = null;
-			int rc = _Match(s, 0, more, out var m);
+			int rc = _Match(s, 0, range, matchFlags, out var m);
 			if(rc >= 0 || m.mark != null) {
 				result = new RXMatch(this, s, rc, in m);
 			}
@@ -330,8 +341,9 @@ namespace Au
 		/// Group number (1-based index) of result. If 0 (default) - whole match.
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
-		/// <param name="more"></param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is a simplified version of <see cref="Match"/>.
@@ -346,9 +358,9 @@ namespace Au
 		/// if(x.MatchG(s, out var g)) Print(g.Value, g.Index);
 		/// ]]></code>
 		/// </example>
-		public bool MatchG(string s, out RXGroup result, int group = 0, RXMore more = null)
+		public bool MatchG(string s, out RXGroup result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			int rc = _Match(s, group, more, out var m);
+			int rc = _Match(s, group, range, matchFlags, out var m);
 			if(rc < 0) {
 				result = default;
 				return false;
@@ -370,8 +382,9 @@ namespace Au
 		/// Group number (1-based index) of result. If 0 (default) - whole match.
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
-		/// <param name="more"></param>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
 		/// This function is a simplified version of <see cref="Match"/> and <see cref="MatchG"/>.
@@ -386,40 +399,35 @@ namespace Au
 		/// if(x.MatchS(s, out var v)) Print(v);
 		/// ]]></code>
 		/// </example>
-		public bool MatchS(string s, out string result, int group = 0, RXMore more = null)
+		public bool MatchS(string s, out string result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
 			result = null;
-			if(!MatchG(s, out var g, group, more)) return false;
+			if(!MatchG(s, out var g, group, range, matchFlags)) return false;
 			result = g.Value;
 			return true;
 		}
 
 		//If s (subject) is null, returns false.
-		//Else if more is null, sets start=0, end=s.Length.
-		//Else sets start etc = more.start etc. If more.start<0, uses s.Length. If some is invalid, throws exception.
-		static bool _GetStartEnd(string s, RXMore more, out int start, out int end)
+		//Else gets real range in s. Throws ArgumentOutOfRangeException if invalid.
+		static bool _GetStartEnd(string s, Range? range, out int start, out int end)
 		{
-			start = 0;
-			if(s == null) { end = 0; return false; }
-			if(more == null) {
+			if(s == null) { start = end = 0; return false; }
+			if(range == null) {
+				start = 0;
 				end = s.Length;
 			} else {
-				start = more.start; end = more.end;
-				if((uint)start > s.Length) throw new ArgumentOutOfRangeException(nameof(more.start));
-				if(end < 0) end = s.Length; else if(end < more.start || end > s.Length) throw new ArgumentOutOfRangeException(nameof(more.end));
+				(start, end) = range.GetValueOrDefault().GetOffsetAndLength(s.Length);
+				end += start;
 			}
 			return true;
 		}
 
-		RXMatchFlags _GetMatchFlags(RXMore more, bool throwIfPartial = false)
+		RXMatchFlags _GetMatchFlags(RXMatchFlags matchFlags, bool throwIfPartial = false)
 		{
-			var f = (RXMatchFlags)_matchFlags;
-			if(more != null) {
-				f |= more.matchFlags;
-				if(throwIfPartial) {
-					if(0 != (f & (RXMatchFlags.PARTIAL_SOFT | RXMatchFlags.PARTIAL_HARD)))
-						throw new ArgumentException("This function does not support PARTIAL_ flags.", nameof(more));
-				}
+			var f = (RXMatchFlags)_matchFlags | matchFlags;
+			if(throwIfPartial) {
+				if(0 != (f & (RXMatchFlags.PARTIAL_SOFT | RXMatchFlags.PARTIAL_HARD)))
+					throw new ArgumentException("This function does not support PARTIAL_ flags.", nameof(matchFlags));
 			}
 			return f;
 		}
@@ -430,10 +438,10 @@ namespace Au
 		//m.mark is set even if no match, if available.
 		//s - subject. If null, returns rc -1.
 		//group - 0 or group number. Used only to throw if invalid.
-		int _Match(string s, int group, RXMore more, out Cpp.RegexMatch m)
+		int _Match(string s, int group, Range? range, RXMatchFlags matchFlags, out Cpp.RegexMatch m)
 		{
-			if(!_GetStartEnd(s, more, out int start, out int end)) { m = default; return -1; }
-			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(more), _pcreCallout, out m, out BSTR errStr);
+			if(!_GetStartEnd(s, range, out int start, out int end)) { m = default; return -1; }
+			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(matchFlags), _pcreCallout, out m, out BSTR errStr);
 			//Print(rc);
 			//info: 0 is partial match, -1 is no match, <-1 is error
 			if(rc < -1) throw new AuException(errStr.ToStringAndDispose(noCache: true));
@@ -452,11 +460,11 @@ namespace Au
 			public int foundCount;
 
 			//Calls _GetFromTo and inits fields. Throws if s is null or if invalid start/end or used 'partial' flags.
-			public _MatchEnum(ARegex regex, string s, int group, RXMore more, int maxCount = -1)
+			public _MatchEnum(ARegex regex, string s, int group, Range? range, RXMatchFlags matchFlags, int maxCount = -1)
 			{
 				_regex = regex; _subject = s; _group = group;
-				if(!_GetStartEnd(s, more, out _from, out _to)) throw new ArgumentNullException(nameof(s));
-				_matchFlags = regex._GetMatchFlags(more, throwIfPartial: true);
+				if(!_GetStartEnd(s, range, out _from, out _to)) throw new ArgumentNullException(nameof(s));
+				_matchFlags = regex._GetMatchFlags(matchFlags, throwIfPartial: true);
 				_maxCount = maxCount;
 				foundCount = _rc = 0;
 				_m = default;
@@ -515,9 +523,10 @@ namespace Au
 		/// Returns a lazy IEnumerable&lt;<see cref="RXMatch"/>&gt; object that can be used with foreach.
 		/// </summary>
 		/// <param name="s">Subject string. Cannot be null.</param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
@@ -530,9 +539,9 @@ namespace Au
 		/// foreach(var m in x.FindAll(s)) Print(m.Value, m[1].Value, m[2].Value);
 		/// ]]></code>
 		/// </example>
-		public IEnumerable<RXMatch> FindAll(string s, RXMore more = null)
+		public IEnumerable<RXMatch> FindAll(string s, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			var e = new _MatchEnum(this, s, 0, more);
+			var e = new _MatchEnum(this, s, 0, range, matchFlags);
 			while(e.Next()) yield return e.Match;
 		}
 
@@ -542,9 +551,10 @@ namespace Au
 		/// </summary>
 		/// <param name="s">Subject string. Cannot be null.</param>
 		/// <param name="result">Receives all found matches.</param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
@@ -558,9 +568,9 @@ namespace Au
 		/// foreach(var m in a) Print(m.Value, m[1].Value, m[2].Value);
 		/// ]]></code>
 		/// </example>
-		public bool FindAll(string s, out RXMatch[] result, RXMore more = null)
+		public bool FindAll(string s, out RXMatch[] result, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			result = FindAll(s, more).ToArray();
+			result = FindAll(s, range, matchFlags).ToArray();
 			return result.Length != 0;
 		}
 
@@ -573,14 +583,12 @@ namespace Au
 		/// Group number (1-based index) of results. If 0 (default) - whole match.
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-		/// <remarks>
-		/// This function is a simplified version of <see cref="FindAll(string, RXMore)"/>. Also it is similar to <see cref="Regex.Matches(string)"/>.
-		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var s = "one two three";
@@ -588,9 +596,9 @@ namespace Au
 		/// foreach(var g in x.FindAllG(s)) Print(g.Index, g.Value);
 		/// ]]></code>
 		/// </example>
-		public IEnumerable<RXGroup> FindAllG(string s, int group = 0, RXMore more = null)
+		public IEnumerable<RXGroup> FindAllG(string s, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			var e = new _MatchEnum(this, s, group, more);
+			var e = new _MatchEnum(this, s, group, range, matchFlags);
 			while(e.Next()) yield return e.GroupG;
 		}
 
@@ -604,14 +612,12 @@ namespace Au
 		/// Group number (1-based index) of results. If 0 (default) - whole match.
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-		/// <remarks>
-		/// This function is a simplified version of <see cref="FindAll(string, out RXMatch[], RXMore)"/>. Also it is similar to <see cref="Regex.Matches(string)"/>.
-		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var s = "one two three";
@@ -620,9 +626,9 @@ namespace Au
 		/// foreach(var g in a) Print(g.Index, g.Value);
 		/// ]]></code>
 		/// </example>
-		public bool FindAllG(string s, out RXGroup[] result, int group = 0, RXMore more = null)
+		public bool FindAllG(string s, out RXGroup[] result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			result = FindAllG(s, group, more).ToArray();
+			result = FindAllG(s, group, range, matchFlags).ToArray();
 			return result.Length != 0;
 		}
 
@@ -635,14 +641,12 @@ namespace Au
 		/// Group number (1-based index) of results. If 0 (default) - whole match.
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-		/// <remarks>
-		/// This function is a simplified version of <see cref="FindAll(string, RXMore)"/> and <see cref="FindAllG(string, int, RXMore)"/>. Also it is similar to <see cref="Regex.Matches(string)"/>.
-		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var s = "one two three";
@@ -650,9 +654,9 @@ namespace Au
 		/// foreach(var v in x.FindAllS(s)) Print(v);
 		/// ]]></code>
 		/// </example>
-		public IEnumerable<string> FindAllS(string s, int group = 0, RXMore more = null)
+		public IEnumerable<string> FindAllS(string s, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			var e = new _MatchEnum(this, s, group, more);
+			var e = new _MatchEnum(this, s, group, range, matchFlags);
 			while(e.Next()) yield return e.GroupS;
 		}
 
@@ -666,14 +670,12 @@ namespace Au
 		/// Group number (1-based index) of results. If 0 (default) - whole match.
 		/// See also <see cref="GroupNumberFromName"/>.
 		/// </param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
-		/// <remarks>
-		/// This function is a simplified version of <see cref="FindAll(string, out RXMatch[], RXMore)"/> and <see cref="FindAllG(string, out RXGroup[], int, RXMore)"/>. Also it is similar to <see cref="Regex.Matches(string)"/>.
-		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var s = "one two three";
@@ -682,20 +684,20 @@ namespace Au
 		/// foreach(var v in a) Print(v);
 		/// ]]></code>
 		/// </example>
-		public bool FindAllS(string s, out string[] result, int group = 0, RXMore more = null)
+		public bool FindAllS(string s, out string[] result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			result = FindAllS(s, group, more).ToArray();
+			result = FindAllS(s, group, range, matchFlags).ToArray();
 			return result.Length != 0;
 		}
 
-		int _Replace(string s, out string result, string repl, Func<RXMatch, string> replFunc, int maxCount, RXMore more)
+		int _Replace(string s, out string result, string repl, Func<RXMatch, string> replFunc, int maxCount, Range? range, RXMatchFlags matchFlags)
 		{
 			StringBuilder b = null;
 			Util.LibStringBuilder bCache = default;
 			int prevEnd = 0;
 			int replType = 0; //0 empty, 1 simple, 2 with $, 3 callback
 
-			var e = new _MatchEnum(this, s, 0, more, maxCount);
+			var e = new _MatchEnum(this, s, 0, range, matchFlags, maxCount);
 			while(e.Next()) {
 				//init variables
 				if(b == null) {
@@ -739,9 +741,10 @@ namespace Au
 		/// Supports .NET regular expression substitution syntax. See <see cref="Regex.Replace(string, string, int)"/>. Also: replaces $* with the name of the last encountered mark; replaces ${+func} with the return value of a function registered with <see cref="AddReplaceFunc"/>.
 		/// </param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
@@ -755,9 +758,9 @@ namespace Au
 		/// Print(s);
 		/// ]]></code>
 		/// </example>
-		public string Replace(string s, string repl = null, int maxCount = -1, RXMore more = null)
+		public string Replace(string s, string repl = null, int maxCount = -1, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			_Replace(s, out var R, repl, null, maxCount, more);
+			_Replace(s, out var R, repl, null, maxCount, range, matchFlags);
 			return R;
 		}
 
@@ -773,9 +776,10 @@ namespace Au
 		/// </param>
 		/// <param name="result">The result string. Can be <i>s</i>.</param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
@@ -789,9 +793,9 @@ namespace Au
 		/// else Print(s);
 		/// ]]></code>
 		/// </example>
-		public int Replace(string s, string repl, out string result, int maxCount = -1, RXMore more = null)
+		public int Replace(string s, string repl, out string result, int maxCount = -1, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			return _Replace(s, out result, repl, null, maxCount, more);
+			return _Replace(s, out result, repl, null, maxCount, range, matchFlags);
 		}
 
 		/// <summary>
@@ -804,9 +808,10 @@ namespace Au
 		/// In the callback function you can use <see cref="RXMatch.ExpandReplacement"/>.
 		/// </param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
@@ -820,9 +825,9 @@ namespace Au
 		/// Print(s);
 		/// ]]></code>
 		/// </example>
-		public string Replace(string s, Func<RXMatch, string> replFunc, int maxCount = -1, RXMore more = null)
+		public string Replace(string s, Func<RXMatch, string> replFunc, int maxCount = -1, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			_Replace(s, out var R, null, replFunc, maxCount, more);
+			_Replace(s, out var R, null, replFunc, maxCount, range, matchFlags);
 			return R;
 		}
 
@@ -837,9 +842,10 @@ namespace Au
 		/// </param>
 		/// <param name="result">The result string. Can be <i>s</i>.</param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
@@ -853,16 +859,16 @@ namespace Au
 		/// else Print(s);
 		/// ]]></code>
 		/// </example>
-		public int Replace(string s, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXMore more = null)
+		public int Replace(string s, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
-			return _Replace(s, out result, null, replFunc, maxCount, more);
+			return _Replace(s, out result, null, replFunc, maxCount, range, matchFlags);
 		}
 
 		//Used by _ReplaceAll and RXMatch.ExpandReplacement.
 		//Fully supports .NET regular expression substitution syntax. Also: replaces $* with the name of the last encountered mark; replaces ${+func} with the return value of a function registered with <see cref="AddReplaceFunc"/>.
 		internal static void LibExpandReplacement(RXMatch m, string repl, StringBuilder b)
 		{
-			fixed (char* s0 = repl) {
+			fixed(char* s0 = repl) {
 				char* s = s0, eos = s + repl.Length, e = s; //e is the end of s part added to b
 				while(s < eos) {
 					if(*s == '$') {
@@ -956,62 +962,17 @@ namespace Au
 		}
 		static ConcurrentDictionary<string, Func<RXMatch, string>> s_userReplFuncs = new ConcurrentDictionary<string, Func<RXMatch, string>>();
 
-		//rejected. Not useful because: we cannot implement RXMatch.ExpandReplacementEx; we have AddReplaceFunc.
-		///// <summary>
-		///// Finds and replaces all match instances of the regular expression using PCRE extended replacement syntax which supports escape sequences, conditional, etc.
-		///// Returns the number of replacements made. Returns the result string through an out parameter.
-		///// </summary>
-		///// <param name="s">Subject string. Cannot be null.</param>
-		///// <param name="repl">Replacement pattern. More info in remarks.
-		///// </param>
-		///// <param name="result">The result string. Can be <i>s</i>.</param>
-		///// <param name="one">Replace only the first found match. If false (default), replaces all.</param>
-		///// <param name="more"></param>
-		///// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		///// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
-		///// <exception cref="ArgumentException">1. Error in the replacement pattern. 2. Used a PARTIAL_ flag. 3. The regular expression contains <c>(?=...\K)</c>.</exception>
-		///// <exception cref="AuException">The PCRE API function <b>pcre2_substitute</b> failed. Unlikely.</exception>
-		///// <remarks>
-		///// How this is different from <b>Replace</b>:
-		///// - Uses the PCRE API function <see href="https://www.pcre.org/current/doc/html/pcre2api.html#SEC36">pcre2_substitute</see>.
-		///// - Supports PCRE replacement pattern extended syntax. It is different than that of <b>Replace</b>, although most of the standard $1 etc are the same.
-		///// - Throws exception if the replacement pattern contains errors.
-		///// 
-		///// With <b>pcre2_substitute</b> uses flags PCRE2_SUBSTITUTE_EXTENDED, PCRE2_SUBSTITUTE_UNSET_EMPTY and optionally PCRE2_SUBSTITUTE_GLOBAL.
-		///// </remarks>
-		//public int ReplaceEx(string s, string repl, out string result, bool one = false, RXMore more = null)
-		//{
-		//	result = null;
-		//	repl ??= "";
-		//	if(!_GetStartEnd(s, more, out int from, out int to)) throw new ArgumentNullException(nameof(s));
-
-		//	var flags = Cpp.PCRE2_SUBSTITUTE_.EXTENDED | Cpp.PCRE2_SUBSTITUTE_.OVERFLOW_LENGTH | Cpp.PCRE2_SUBSTITUTE_.UNSET_EMPTY;
-		//	if(!one) flags |= Cpp.PCRE2_SUBSTITUTE_.GLOBAL;
-		//	flags |= (Cpp.PCRE2_SUBSTITUTE_)_GetMatchFlags(more, throwIfPartial: true);
-
-		//	int na = s.Length + s.Length / 4 + 100;
-		//	g1:
-		//	var b = Util.AMemoryArray.LibChar(ref na);
-		//	LPARAM na2 = na;
-		//	int r = Cpp.Cpp_RegexSubstitute(_CodeHR, s, to, from, flags, repl, repl.Length, b, ref na2, out BSTR errStr);
-		//	if(r < 0) {
-		//		if(r == -48 && na2 > na) { na = (int)na2; goto g1; } //PCRE2_ERROR_NOMEMORY
-		//		var es = errStr.ToStringAndDispose(noCache: true);
-		//		if(r == -35 || r == -49 || (r <= -57 && r >= -60)) throw new ArgumentException("Replacement error: " + es); //replacement string syntax errors
-		//		throw new AuException(es);
-		//	}
-		//	result = b.ToString((int)na2);
-		//	return r;
-		//}
+		//rejected: use pcre2_substitute. Not useful because: we cannot implement RXMatch.ExpandReplacement with it; we have AddReplaceFunc.
 
 		/// <summary>
 		/// Returns array of substrings delimited by regular expression matches.
 		/// </summary>
 		/// <param name="s">Subject string. Cannot be null.</param>
 		/// <param name="maxCount">The maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
@@ -1027,13 +988,13 @@ namespace Au
 		/// for(int i = 0; i < a.Length; i++) Print(i, a[i]);
 		/// ]]></code>
 		/// </example>
-		public string[] Split(string s, int maxCount = 0, RXMore more = null)
+		public string[] Split(string s, int maxCount = 0, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
 			if(maxCount < 0) maxCount = 0;
 			if(maxCount != 1) {
 				var a = new List<string>();
 				int prevEnd = 0;
-				var e = new _MatchEnum(this, s, 0, more, maxCount - 1);
+				var e = new _MatchEnum(this, s, 0, range, matchFlags, maxCount - 1);
 				while(e.Next()) {
 					var p = e.GroupP;
 					a.Add(s.Substring(prevEnd, p.x - prevEnd));
@@ -1052,9 +1013,10 @@ namespace Au
 		/// </summary>
 		/// <param name="s">Subject string. Cannot be null.</param>
 		/// <param name="maxCount">The maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="IsMatch"/>.</param>
+		/// <param name="matchFlags">See <see cref="IsMatch"/>.</param>
 		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid from/to fields in <i>more</i>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">1. Used a PARTIAL_ flag. 2. The regular expression contains <c>(?=...\K)</c>.</exception>
 		/// <exception cref="AuException">The PCRE API function <b>pcre2_match</b> failed. Unlikely.</exception>
 		/// <remarks>
@@ -1070,13 +1032,13 @@ namespace Au
 		/// foreach(var v in a) Print(v.Index, v.Value);
 		/// ]]></code>
 		/// </example>
-		public RXGroup[] SplitG(string s, int maxCount = 0, RXMore more = null)
+		public RXGroup[] SplitG(string s, int maxCount = 0, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
 			if(maxCount < 0) maxCount = 0;
 			if(maxCount != 1) {
 				var a = new List<RXGroup>();
 				int prevEnd = 0;
-				var e = new _MatchEnum(this, s, 0, more, maxCount - 1);
+				var e = new _MatchEnum(this, s, 0, range, matchFlags, maxCount - 1);
 				while(e.Next()) {
 					var p = e.GroupP;
 					a.Add(new RXGroup(s, prevEnd, p.x));
@@ -1091,12 +1053,12 @@ namespace Au
 		}
 
 		//rejected: probably rarely used. Or need IEnumerable<string> too.
-		//public IEnumerable<RXGroup> SplitE(string s, int maxCount = 0, RXMore more = null)
+		//public IEnumerable<RXGroup> SplitE(string s, int maxCount = 0, Range? range = null, RXMatchFlags matchFlags = 0)
 		//{
 		//	if(maxCount< 0) maxCount = 0;
 		//	if(maxCount != 1) {
 		//		int prevEnd = 0;
-		//		var e = new _MatchEnum(this, s, 0, more, maxCount - 1);
+		//		var e = new _MatchEnum(this, s, 0, range, matchFlags, maxCount - 1);
 		//		while(e.Next()) {
 		//			var p = e.GroupP;
 		//			yield return new RXGroup(s, prevEnd, p.x);
@@ -1157,44 +1119,46 @@ namespace Au
 	{
 		/// <summary>
 		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.IsMatch(string, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.IsMatch"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string. If null, returns false.</param>
 		/// <param name="rx">Regular expression.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool Regex(this string t, string rx, RXFlags flags = 0, RXMore more = null)
+		public static bool Regex(this string t, string rx, RXFlags flags = 0, Range? range = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.IsMatch(t, more);
+			return x.IsMatch(t, range);
 		}
 
 		/// <summary>
 		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
 		/// Gets match info as <see cref="RXMatch"/>.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Match(string, out RXMatch, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Match"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string. If null, returns false.</param>
 		/// <param name="rx">Regular expression.</param>
 		/// <param name="result">Receives match info.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexMatch(this string t, string rx, out RXMatch result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexMatch(this string t, string rx, out RXMatch result, RXFlags flags = 0, Range? range = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Match(t, out result, more);
+			return x.Match(t, out result, range);
 		}
 
 		/// <summary>
 		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
 		/// Gets whole match or some group, as string.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.MatchS(string, out string, int, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.MatchS"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string. If null, returns false.</param>
@@ -1202,20 +1166,20 @@ namespace Au
 		/// <param name="group">Group number (1-based index) of result. If 0 (default) - whole match.</param>
 		/// <param name="result">Receives the match value.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexMatch(this string t, string rx, int group, out string result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexMatch(this string t, string rx, int group, out string result, RXFlags flags = 0, Range? range = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.MatchS(t, out result, group, more);
+			return x.MatchS(t, out result, group, range);
 		}
 
 		/// <summary>
 		/// Returns true if this string matches PCRE regular expression <i>rx</i>.
 		/// Gets whole match or some group, as index and length.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.MatchG(string, out RXGroup, int, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.MatchG"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string. If null, returns false.</param>
@@ -1223,80 +1187,82 @@ namespace Au
 		/// <param name="group">Group number (1-based index) of result. If 0 (default) - whole match.</param>
 		/// <param name="result">Receives match info.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexMatch(this string t, string rx, int group, out RXGroup result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexMatch(this string t, string rx, int group, out RXGroup result, RXFlags flags = 0, Range? range = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
-			return x.MatchG(t, out result, group, more);
+			return x.MatchG(t, out result, group, range);
 		}
 
 		/// <summary>
 		/// Finds all match instances of PCRE regular expression <i>rx</i>.
 		/// Returns a lazy IEnumerable&lt;<see cref="RXMatch"/>&gt; object that can be used with foreach.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAll(string, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAll(string, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="rx">Regular expression.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static IEnumerable<RXMatch> RegexFindAll(this string t, string rx, RXFlags flags = 0, RXMore more = null)
+		public static IEnumerable<RXMatch> RegexFindAll(this string t, string rx, RXFlags flags = 0, Range? range = null)
 		{
 			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAll(t, more);
+			return x.FindAll(t, range);
 		}
 
 		/// <summary>
 		/// Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of <see cref="RXMatch"/>.
 		/// Returns true if found 1 or more matches.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAll(string, out RXMatch[], RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAll(string, out RXMatch[], Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="rx">Regular expression.</param>
 		/// <param name="result">Receives all found matches.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexFindAll(this string t, string rx, out RXMatch[] result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexFindAll(this string t, string rx, out RXMatch[] result, RXFlags flags = 0, Range? range = null)
 		{
 			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAll(t, out result, more);
+			return x.FindAll(t, out result, range);
 		}
 
 		/// <summary>
 		/// Finds all match instances of PCRE regular expression <i>rx</i>.
 		/// Returns a lazy IEnumerable&lt;<see cref="RXGroup"/>&gt; object that can be used with foreach.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAllS(string, int, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAllS(string, int, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="rx">Regular expression.</param>
 		/// <param name="group">Group number (1-based index) of results. If 0 (default) - whole match.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static IEnumerable<string> RegexFindAll(this string t, string rx, int group, RXFlags flags = 0, RXMore more = null)
+		public static IEnumerable<string> RegexFindAll(this string t, string rx, int group, RXFlags flags = 0, Range? range = null)
 		{
 			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAllS(t, group, more);
+			return x.FindAllS(t, group, range);
 		}
 
 		/// <summary>
 		/// Finds all match instances of PCRE regular expression <i>rx</i>. Gets array of strings.
 		/// Returns true if found 1 or more matches.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAllS(string, out string[], int, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.FindAllS(string, out string[], int, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string.</param>
@@ -1304,21 +1270,21 @@ namespace Au
 		/// <param name="group">Group number (1-based index) of results. If 0 (default) - whole match.</param>
 		/// <param name="result">Receives all found matches.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i> or <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
-		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>group</i>.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool RegexFindAll(this string t, string rx, int group, out string[] result, RXFlags flags = 0, RXMore more = null)
+		public static bool RegexFindAll(this string t, string rx, int group, out string[] result, RXFlags flags = 0, Range? range = null)
 		{
 			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.FindAllS(t, out result, group, more);
+			return x.FindAllS(t, out result, group, range);
 		}
 
 		/// <summary>
 		/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
 		/// Returns the result string.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, string, int, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, string, int, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string.</param>
@@ -1326,20 +1292,21 @@ namespace Au
 		/// <param name="repl">Replacement pattern.</param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string RegexReplace(this string t, string rx, string repl, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static string RegexReplace(this string t, string rx, string repl, int maxCount = -1, RXFlags flags = 0, Range? range = null)
 		{
 			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(t, repl, maxCount, more);
+			return x.Replace(t, repl, maxCount, range);
 		}
 
 		/// <summary>
 		/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>.
 		/// Returns the number of replacements made.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, string, out string, int, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, string, out string, int, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string.</param>
@@ -1348,20 +1315,21 @@ namespace Au
 		/// <param name="result">The result string.</param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static int RegexReplace(this string t, string rx, string repl, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static int RegexReplace(this string t, string rx, string repl, out string result, int maxCount = -1, RXFlags flags = 0, Range? range = null)
 		{
 			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(t, repl, out result, maxCount, more);
+			return x.Replace(t, repl, out result, maxCount, range);
 		}
 
 		/// <summary>
 		/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
 		/// Returns the result string.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, Func{RXMatch, string}, int, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, Func{RXMatch, string}, int, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string.</param>
@@ -1369,20 +1337,21 @@ namespace Au
 		/// <param name="replFunc">Callback function that receives found matches and returns replacements.</param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string RegexReplace(this string t, string rx, Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static string RegexReplace(this string t, string rx, Func<RXMatch, string> replFunc, int maxCount = -1, RXFlags flags = 0, Range? range = null)
 		{
 			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(t, replFunc, maxCount, more);
+			return x.Replace(t, replFunc, maxCount, range);
 		}
 
 		/// <summary>
 		/// Finds and replaces all match instances of PCRE regular expression <i>rx</i>. Uses a callback function.
 		/// Returns the number of replacements made.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, Func{RXMatch, string}, out string, int, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Replace(string, Func{RXMatch, string}, out string, int, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string.</param>
@@ -1391,33 +1360,35 @@ namespace Au
 		/// <param name="result">The result string.</param>
 		/// <param name="maxCount">The maximal count of replacements to make. If -1 (default), replaces all.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static int RegexReplace(this string t, string rx, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, RXMore more = null)
+		public static int RegexReplace(this string t, string rx, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, RXFlags flags = 0, Range? range = null)
 		{
 			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Replace(t, replFunc, out result, maxCount, more);
+			return x.Replace(t, replFunc, out result, maxCount, range);
 		}
 
 		/// <summary>
 		/// Returns array of substrings delimited by PCRE regular expression <i>rx</i> matches.
-		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Split(string, int, RXMore)"/>.
+		/// Parameters etc are of <see cref="ARegex(string, RXFlags)"/> and <see cref="ARegex.Split(string, int, Range?, RXMatchFlags)"/>.
 		/// Examples in <see cref="ARegex"/> class help.
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="rx">Regular expression.</param>
 		/// <param name="maxCount">The maximal count of substrings to get. The last substring contains the unsplit remainder of the subject string. If 0 (default) or negative, gets all.</param>
 		/// <param name="flags"></param>
-		/// <param name="more"></param>
+		/// <param name="range">See <see cref="ARegex.IsMatch"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression. Or used a PARTIAL_ flag.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static string[] RegexSplit(this string t, string rx, int maxCount = 0, RXFlags flags = 0, RXMore more = null)
+		public static string[] RegexSplit(this string t, string rx, int maxCount = 0, RXFlags flags = 0, Range? range = null)
 		{
 			if(t == null) throw new NullReferenceException();
 			var x = _cache.AddOrGet(rx, flags);
-			return x.Split(t, maxCount, more);
+			return x.Split(t, maxCount, range);
 		}
 
 		static _RegexCache _cache = new _RegexCache();

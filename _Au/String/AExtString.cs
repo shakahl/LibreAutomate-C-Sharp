@@ -580,7 +580,7 @@ namespace Au
 			if(!firstCharOnly) return t.ToUpperInvariant();
 			if(t.Length == 0 || !char.IsLower(t, 0)) return t;
 			if(t.Length >= 2 && char.IsHighSurrogate(t[0]) && char.IsLowSurrogate(t[1]))
-				return t.Remove(2).ToUpperInvariant() + t.Substring(2);
+				return t.Remove(2).ToUpperInvariant() + t.Substring(2); //or can try Rune. This code is older.
 			fixed(char* p1 = t) {
 				var r = new string(p1, 0, t.Length); //string.Copy is obsolete
 				fixed(char* p2 = r) *p2 = char.ToUpperInvariant(*p2);

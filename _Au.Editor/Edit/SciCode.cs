@@ -564,7 +564,7 @@ class SciCode : AuScintilla
 				var text = this.Text;
 				endOfMeta = Au.Compiler.MetaComments.FindMetaComments(text);
 				if(pos < endOfMeta) inMeta = true;
-				else if(pos > endOfMeta) text.RegexMatch(@"\b(\w+)\s*=\s*new\s+Au(?:Menu|Toolbar)", 1, out menuVar, 0, new RXMore(endOfMeta, pos));
+				else if(pos > endOfMeta) text.RegexMatch(@"\b(\w+)\s*=\s*new\s+Au(?:Menu|Toolbar)", 1, out menuVar, 0, endOfMeta..pos);
 			}
 		}
 
@@ -810,7 +810,7 @@ class SciCode : AuScintilla
 	{
 		var s = AClipboardData.GetText();
 		if(s == null) return false;
-		if(s.Starts("[code2]") && s.Ends("[/code2]\r\n")) s = s.Substring(7, s.Length - 17);
+		if(s.Like("[code2]*[/code2]\r\n")) s = s[7..^10];
 
 		if(!s.RegexMatch(@"^//[\-~] (script|class) ""(.*?)""( |\R)", out var m)) return false;
 		bool isClass = s[4] == 'c';
@@ -823,7 +823,7 @@ class SciCode : AuScintilla
 			int j = m1.EndIndex;
 			var b = new StringBuilder();
 			b.Append(s, i, j - i);
-			if(s.RegexMatch(@"(?ms)(.*?)^// using //\R(.*?)^// main //$", out var k, more: new RXMore(j))) {
+			if(s.RegexMatch(@"(?ms)(.*?)^// using //\R(.*?)^// main //$", out var k, range: j..)) {
 				b.Append(s, j, k[1].Length).AppendLine(c_usings).Append(s, k[2].Index, k[2].Length);
 				i = k.EndIndex;
 			} else {
